@@ -97,6 +97,8 @@ public class AnnotationPanel extends JPanel implements TreeSelectionListener
     private void setupSignals() {
         annotationModel.workspaceChangedSignal.connect(workspaceInfoPanel.updateWorkspaceSlot);
         annotationModel.neuronChangedSignal.connect(neuronInfoPanel.updateNeuronSlot);
+
+        workspaceInfoPanel.neuronClickedSignal.connect(annotationModel.neuronSelectedSlot);
     }
 
     private void setupUI() {

@@ -4,6 +4,8 @@ package org.janelia.it.FlyWorkstation.gui.viewer3d.slice_viewer.annotation;
 // std lib imports
 
 import javax.swing.*;
+import javax.swing.event.ListSelectionEvent;
+import javax.swing.event.ListSelectionListener;
 
 import java.awt.*;
 import java.util.Collections;
@@ -15,6 +17,7 @@ import java.util.Vector;
 
 import org.janelia.it.FlyWorkstation.gui.util.swing_models.CollectionJListModel;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.slice_viewer.Slot1;
+import org.janelia.it.FlyWorkstation.gui.viewer3d.slice_viewer.Signal1;
 import org.janelia.it.jacs.model.user_data.tiledMicroscope.*;
 
 /**
@@ -28,8 +31,8 @@ public class WorkspaceInfoPanel extends JPanel
     private JLabel workspaceNameLabel;
 
     private JList neuronListBox;
+    private DefaultListModel neuronListModel;
     private JScrollPane neuronScrollPane;
-
 
     public Slot1<TmWorkspace> updateWorkspaceSlot = new Slot1<TmWorkspace>() {
         @Override
@@ -37,7 +40,7 @@ public class WorkspaceInfoPanel extends JPanel
             updateWorkspace(workspace);
         }
     };
-
+    public Signal1<TmNeuron> neuronClickedSignal = new Signal1<TmNeuron>();
 
 
     public WorkspaceInfoPanel() {
@@ -56,8 +59,30 @@ public class WorkspaceInfoPanel extends JPanel
 
         // list of neurons
 
-        neuronListBox = new JList();
+        neuronListModel = new DefaultListModel();
+        neuronListBox = new JList(neuronListModel);
         neuronScrollPane = new JScrollPane(neuronListBox);
+        neuronListBox.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+        neuronListBox.getSelectionModel().addListSelectionListener(
+                new ListSelectionListener() {
+                    @Override
+                    public void valueChanged(ListSelectionEvent listSelectionEvent) {
+                        if (!listSelectionEvent.getValueIsAdjusting()) {
+                            // dispatch this to those who need to know
+                            int index = neuronListBox.getSelectedIndex();
+                            TmNeuron selectedNeuron;
+                            if (index >= 0) {
+                                selectedNeuron = (TmNeuron) neuronListModel.getElementAt(index);
+                                System.out.println("neuron selected: " + selectedNeuron.getName());
+                            } else {
+                                System.out.println("no neuron selected");
+                                selectedNeuron = null;
+                            }
+                            neuronClickedSignal.emit(selectedNeuron);
+                        }
+                    }
+                }
+        );
         add(neuronScrollPane);
 
         updateWorkspace(null);
@@ -80,7 +105,12 @@ public class WorkspaceInfoPanel extends JPanel
                     return tmNeuron.getName().compareTo(tmNeuron2.getName());
                 }
             });
-            neuronListBox.setListData(neuronVector);
+            neuronListModel.clear();
+            for (TmNeuron tmNeuron: neuronVector) {
+                neuronListModel.addElement(tmNeuron);
+            }
+            // neuronListModel.copyInto(neuronVector);
+            // neuronListBox.setListData(neuronVector);
             }
         }
 

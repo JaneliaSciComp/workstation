@@ -6,6 +6,7 @@ package org.janelia.it.FlyWorkstation.gui.viewer3d.slice_viewer.annotation;
 import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr;
 
 import org.janelia.it.FlyWorkstation.gui.viewer3d.slice_viewer.Signal1;
+import org.janelia.it.FlyWorkstation.gui.viewer3d.slice_viewer.Slot1;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.Vec3;
 
 import org.janelia.it.FlyWorkstation.api.entity_model.management.ModelMgr;
@@ -31,9 +32,16 @@ public class AnnotationModel
     private Long currentWorkspaceID;
     private Long currentNeuronID;
 
-    // signals
+    // signals & slots
     public Signal1<TmWorkspace> workspaceChangedSignal = new Signal1<TmWorkspace>();
     public Signal1<TmNeuron> neuronChangedSignal = new Signal1<TmNeuron>();
+
+    public Slot1<TmNeuron> neuronSelectedSlot = new Slot1<TmNeuron>() {
+        @Override
+        public void execute(TmNeuron neuron) {
+            setCurrentNeuron(neuron);
+        }
+    };
 
 
     public TmWorkspace getCurrentWorkspace() {
@@ -76,6 +84,7 @@ public class AnnotationModel
         } else {
             currentNeuronID = null;
         }
+        neuronChangedSignal.emit(neuron);
     }
 
     public AnnotationModel() {
