@@ -230,10 +230,6 @@ public class AlignmentBoardViewer extends Viewer implements AlignmentBoardContro
         // Add this last.  "show-loading" removes it.  This way, it is shown only
         // when it becomes un-busy.
         addSettingsLaunchButton();
-        if ( wrapperPanel != null ) {
-            remove( wrapperPanel );
-        }
-
         add( wrapperPanel, BorderLayout.CENTER );
         mip3d.resetView();
 
@@ -508,6 +504,8 @@ public class AlignmentBoardViewer extends Viewer implements AlignmentBoardContro
                     GpuSampler sampler = getGpuSampler();
 
                     // Here, should load volumes, for all the different items given.
+                    loadWorker.setProgressMonitor( null );
+                    loadWorker = null;
                     if ( cachedDownSampleGuess == null ) {
                         loadWorker = new RenderablesLoadWorker(
                                 new ABContextDataSource( context ),
@@ -585,6 +583,10 @@ public class AlignmentBoardViewer extends Viewer implements AlignmentBoardContro
     }
 
     private JPanel createWrapperPanel( Mip3d mip3d ) {
+        if ( wrapperPanel != null ) {
+            wrapperPanel.removeAll();
+            remove( wrapperPanel );
+        }
         JPanel rtnVal = new JPanel();
         rtnVal.setLayout(new BorderLayout());
         rtnVal.add(mip3d, BorderLayout.CENTER);
@@ -622,6 +624,7 @@ public class AlignmentBoardViewer extends Viewer implements AlignmentBoardContro
                     setRendering( true );
 
                     // Here, simply make the rendering change.
+                    loadWorker = null;
                     loadWorker = new RenderablesLoadWorker(
                             new ABContextDataSource(context), renderMapping, this, settingsData
                     );

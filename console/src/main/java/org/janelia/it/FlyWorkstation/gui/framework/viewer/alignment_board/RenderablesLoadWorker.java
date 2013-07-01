@@ -214,7 +214,7 @@ public class RenderablesLoadWorker extends SimpleWorker implements VolumeLoader 
             renderChange(renderableDatas);
         }
 
-        logger.debug( "Ending load thread." );
+        logger.info( "Ending load thread." );
     }
 
     @Override
