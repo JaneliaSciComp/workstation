@@ -551,7 +551,7 @@ public class AlignmentBoardViewer extends Viewer implements AlignmentBoardContro
 
     private GpuSampler getGpuSampler() {
         // Must find the best downsample rate.
-        GpuSampler sampler = new GpuSampler( Color.red );//this.getBackground() );
+        GpuSampler sampler = new GpuSampler( this.getBackground() );
         GLJPanel feedbackPanel = new GLJPanel();
         feedbackPanel.setSize( new Dimension( 1, 1 ) );
         feedbackPanel.addGLEventListener( sampler );
