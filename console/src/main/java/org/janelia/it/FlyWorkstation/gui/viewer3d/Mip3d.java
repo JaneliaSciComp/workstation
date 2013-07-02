@@ -219,12 +219,6 @@ public class Mip3d extends BaseGLViewer implements ActionListener {
         repaint();
     }
 
-    public void setCropCoords( CropCoordSet cropCoordSet ) {
-        if ( cropCoordSet.getCurrentCoordinates() != null  || cropCoordSet.getAcceptedCoordinates().size() > 0 )
-            volumeModel.setCropCoords( cropCoordSet );
-        repaint();
-    }
-
     public void setCropOutLevel( float cropOutLevel ) {
         volumeModel.setCropOutLevel( cropOutLevel );
         repaint();

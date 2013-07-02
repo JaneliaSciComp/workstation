@@ -80,6 +80,8 @@ public class AlignmentBoardControlsDialog extends JDialog {
     private RangeSlider ySlider;
     private RangeSlider zSlider;
 
+    private ChangeListener selectionSliderListener;
+
     private int xMax;
     private int yMax;
     private int zMax;
@@ -99,7 +101,7 @@ public class AlignmentBoardControlsDialog extends JDialog {
      * @param centering this dialog will be centered over the "centering" component.
      */
     public AlignmentBoardControlsDialog( Component centering, VolumeModel volumeModel ) {
-        this( centering, volumeModel, new AlignmentBoardSettings() );
+        this(centering, volumeModel, new AlignmentBoardSettings());
     }
 
     /**
@@ -126,9 +128,9 @@ public class AlignmentBoardControlsDialog extends JDialog {
     public void setVisible( boolean visible ) {
         if ( visible ) {
             updateControlsFromSettings();
-            updateSlidersFromSettings();
+            updateCurrentSelectionFromSettings();
         }
-        super.setVisible( visible );
+        super.setVisible(visible);
     }
 
     /** Control who observes.  Synchronized for thread safety. */
@@ -149,6 +151,7 @@ public class AlignmentBoardControlsDialog extends JDialog {
         xMax = x;
         yMax = y;
         zMax = z;
+        initializeSelectionRanges();
     }
 
     /**
@@ -215,22 +218,7 @@ public class AlignmentBoardControlsDialog extends JDialog {
     }
 
     /** Call this when sufficient info is avail to get the sliders positions initialized off crop-coords. */
-    private void updateSlidersFromSettings() {
-        if ( xMax == 0 || yMax == 0 || zMax == 0 ) {
-            logger.error( "Updating sliders before maxima have been set." );
-        }
-        xSlider.setValue(0);
-        xSlider.setMaximum(xMax);
-        xSlider.setUpperValue(xMax);
-
-        ySlider.setValue(0);
-        ySlider.setMaximum(yMax);
-        ySlider.setUpperValue(yMax);
-
-        zSlider.setValue( 0 );
-        zSlider.setMaximum(zMax);
-        zSlider.setUpperValue(zMax);
-
+    private void updateCurrentSelectionFromSettings() {
         CropCoordSet cropCoordSet = volumeModel.getCropCoords();
         if ( cropCoordSet.isEmpty() ) {
             resetSelectionSliders();
@@ -259,6 +247,39 @@ public class AlignmentBoardControlsDialog extends JDialog {
             zSlider.setValue(Math.round(denormalizedCoords[4]));
             zSlider.setUpperValue(Math.round(denormalizedCoords[5]));
         }
+    }
+
+    /** As soon as the ranges are known (set), listeners, and initial ranges may be set on volume selection. */
+    private void initializeSelectionRanges() {
+        if ( selectionSliderListener != null  &&  xSlider != null ) {
+            xSlider.removeChangeListener( selectionSliderListener );
+            ySlider.removeChangeListener( selectionSliderListener );
+            zSlider.removeChangeListener( selectionSliderListener );
+        }
+
+        if ( xMax == 0 || yMax == 0 || zMax == 0 ) {
+            logger.error( "Updating sliders before maxima have been set." );
+        }
+        xSlider.setValue(0);
+        xSlider.setMaximum(xMax);
+        xSlider.setUpperValue(xMax);
+
+        ySlider.setValue(0);
+        ySlider.setMaximum(yMax);
+        ySlider.setUpperValue(yMax);
+
+        zSlider.setValue( 0 );
+        zSlider.setMaximum(zMax);
+        zSlider.setUpperValue(zMax);
+
+        selectionSliderListener = new SliderChangeListener(
+                new RangeSlider[]{ xSlider, ySlider, zSlider }, volumeModel, this
+        );
+
+        xSlider.addChangeListener(selectionSliderListener);
+        ySlider.addChangeListener(selectionSliderListener);
+        zSlider.addChangeListener(selectionSliderListener);
+
     }
 
     /** Set the rate in the GUI, for now, only. */
@@ -357,17 +378,9 @@ public class AlignmentBoardControlsDialog extends JDialog {
         ySlider = new RangeSlider();
         zSlider = new RangeSlider();
 
-        ChangeListener listener = new SliderChangeListener(
-                new RangeSlider[]{ xSlider, ySlider, zSlider }, volumeModel, this
-        );
-
-        xSlider.addChangeListener( listener );
-        ySlider.addChangeListener( listener );
-        zSlider.addChangeListener( listener );
-
         xSlider.setBorder( new TitledBorder( "Selection X Bounds" ) );
         ySlider.setBorder( new TitledBorder( "Selection Y Bounds" ) );
-        zSlider.setBorder( new TitledBorder( "Selection Z Bounds" ) );
+        zSlider.setBorder(new TitledBorder("Selection Z Bounds"));
 
         blackoutCheckbox = new JCheckBox( NON_SELECT_BLACKOUT );
         blackoutCheckbox.setToolTipText( NON_SELECT_BLACKOUT_TOOLTIP_TEXT );
@@ -459,7 +472,7 @@ public class AlignmentBoardControlsDialog extends JDialog {
                 resetSelectionSliders();
                 CropCoordSet cropCoordSet = volumeModel.getCropCoords();
                 cropCoordSet.setCurrentCoordinates( getCurrentCropCoords() );
-                cropCoordSet.setAcceptedCoordinates(new ArrayList<float[]>());
+                cropCoordSet.getAcceptedCoordinates().clear();
                 fireForceCropEvent(cropCoordSet);
             }
         });
@@ -783,7 +796,7 @@ public class AlignmentBoardControlsDialog extends JDialog {
         }
 
         public void stateChanged(ChangeEvent e) {
-            float[] cropCoords = new CoordCropper3D().getNormalizedCropCoords( sliders );
+            float[] cropCoords = new CoordCropper3D().getNormalizedCropCoords(sliders);
             CropCoordSet cropCoordSet = volumeModel.getCropCoords();
             cropCoordSet.setCurrentCoordinates( cropCoords );
             dialog.fireSettingsEvent( cropCoordSet );

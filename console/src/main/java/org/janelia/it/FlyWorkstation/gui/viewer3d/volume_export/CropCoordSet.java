@@ -32,7 +32,7 @@ public class CropCoordSet {
     }
 
     public boolean isEmpty() {
-        return ( getCurrentCoordinates() == null && getAcceptedCoordinates().isEmpty() );
+        return ( ( getCurrentCoordinates() == null || getCurrentCoordinates() == DEFAULT_CROP_COORDS ) && getAcceptedCoordinates().isEmpty() );
     }
 
     /** Push the current, putative coord volume into the accepted collection.  */
@@ -98,4 +98,5 @@ public class CropCoordSet {
         }
         return max;
     }
+
 }
