@@ -40,20 +40,20 @@ public class ViewMenu extends JMenu {
         add(ontologyMenuItem);
         
 
-        JMenuItem perspectivesMenu = new JMenu("Open Perspective");
-        
-        for(final Perspective perspective : Perspective.values()) {
-
-            JMenuItem perspectiveMenuItem = new JMenuItem(perspective.getName());
-            perspectiveMenuItem.addActionListener(new ActionListener() {
-                public void actionPerformed(ActionEvent e) {
-                    browser.setPerspective(perspective);
-                }
-            });
-            perspectivesMenu.add(perspectiveMenuItem);
-        }
-        
-        add(perspectivesMenu);
+//        JMenuItem perspectivesMenu = new JMenu("Open Perspective");
+//        
+//        for(final Perspective perspective : Perspective.values()) {
+//
+//            JMenuItem perspectiveMenuItem = new JMenuItem(perspective.getName());
+//            perspectiveMenuItem.addActionListener(new ActionListener() {
+//                public void actionPerformed(ActionEvent e) {
+//                    browser.setPerspective(perspective);
+//                }
+//            });
+//            perspectivesMenu.add(perspectiveMenuItem);
+//        }
+//        
+//        add(perspectivesMenu);
         
         JMenuItem resetWindow = new JMenuItem("Reset Window");
         resetWindow.addActionListener(new ActionListener() {
