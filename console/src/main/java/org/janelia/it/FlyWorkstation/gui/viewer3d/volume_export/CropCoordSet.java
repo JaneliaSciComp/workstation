@@ -18,7 +18,7 @@ import java.util.HashSet;
  */
 public class CropCoordSet {
     /** All -1 sends signal: no cropping requried. */
-    public static final float[] DEFAULT_CROP_COORDS = new float[] {
+    private static final float[] DEFAULT_CROP_COORDS = new float[] {
             -1.0f, -1.0f,  // startX, endX
             -1.0f, -1.0f,  // startY, endY
             -1.0f, -1.0f   // startZ, endZ

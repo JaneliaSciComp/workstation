@@ -15,8 +15,8 @@ import java.util.Collection;
  * Filters what winds up in the wrapped acceptor, based on crop coords.
  */
 public class FilteringAcceptorDecorator implements MaskChanDataAcceptorI {
-    private MaskChanDataAcceptorI wrappedAcceptor;
-    private Collection<float[]> cropCoordsCollection;
+    private final MaskChanDataAcceptorI wrappedAcceptor;
+    private final Collection<float[]> cropCoordsCollection;
 
     public FilteringAcceptorDecorator(MaskChanDataAcceptorI wrappedAcceptor, Collection<float[]> cropCoordsCollection) {
         this.wrappedAcceptor = wrappedAcceptor;

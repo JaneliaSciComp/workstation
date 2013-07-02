@@ -31,12 +31,12 @@ import java.util.Map;
  * A handler for interpreting the positions of the sliders and writing back data.
  */
 public class VolumeWritebackHandler {
-    private RenderMappingI renderMapping;
-    private Collection<float[]> cropCoords;
-    private Mip3d mip3d;
-    private CompletionListener completionListener;
+    private final RenderMappingI renderMapping;
+    private final Collection<float[]> cropCoords;
+    private final Mip3d mip3d;
+    private final CompletionListener completionListener;
 
-    private Logger logger = LoggerFactory.getLogger( VolumeWritebackHandler.class );
+    private final Logger logger = LoggerFactory.getLogger( VolumeWritebackHandler.class );
 
     public VolumeWritebackHandler(
             RenderMappingI renderMapping,

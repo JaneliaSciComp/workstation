@@ -34,7 +34,7 @@ import java.util.concurrent.TimeUnit;
  */
 public class TiffExporter {
     private static final int MAX_WRITEBACK_THREADS = 5;
-    private Logger logger = LoggerFactory.getLogger( TiffExporter.class );
+    private final Logger logger = LoggerFactory.getLogger( TiffExporter.class );
 
     private enum VoxelType {
         BYTE, SHORT, INT
@@ -43,7 +43,7 @@ public class TiffExporter {
     /**
      * Construct with temp-file name. Uses TIFF format, and tif/tiff extensions.
      */
-    public TiffExporter() throws IOException {
+    public TiffExporter() {
         super();
     }
 
@@ -312,10 +312,10 @@ public class TiffExporter {
 
     class SliceLoadWorker extends SimpleWorker {
 
-        private TextureDataI texture;
-        private int z;
-        private int textureSize;
-        private Collection<BufferedImage> imageList;
+        private final TextureDataI texture;
+        private final int z;
+        private final int textureSize;
+        private final Collection<BufferedImage> imageList;
 
         public SliceLoadWorker(
                 TextureDataI texture, int z, int textureSize, Collection<BufferedImage> imageList
