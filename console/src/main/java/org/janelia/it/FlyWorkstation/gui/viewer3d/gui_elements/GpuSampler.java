@@ -22,8 +22,8 @@ import java.util.concurrent.atomic.AtomicBoolean;
  * This minimal-footprint widget exists only so it can be queried for information off the graphics card.
  */
 public class GpuSampler implements GLEventListener {
-    public static final String UNKNOWN_VALUE = "Unknown";
     public static final String STANDARD_CARD_RENDERER_STR = "GeForce GTX 680";
+    private static final String UNKNOWN_VALUE = "Unknown";
 
     // See http://developer.download.nvidia.com/opengl/specs/GL_NVX_gpu_memory_info.txt
     private static final int GPU_MEMORY_INFO_CURRENT_AVAILABLE_VIDMEM_NVX = 0x9049;   // NVidia
@@ -33,13 +33,13 @@ public class GpuSampler implements GLEventListener {
     private static final int WAIT_TIME_MS = 100;
     private static final int MAX_WAIT_LOOPS = 10 * 1000 / WAIT_TIME_MS; // Up to this many seconds.
 
-    private Logger logger = LoggerFactory.getLogger( GpuSampler.class );
+    private final Logger logger = LoggerFactory.getLogger( GpuSampler.class );
 
     private int freeTexMem = 0;
     private String highestSupportedGlsl = "";
     private String venderIdString = null;
-    private AtomicBoolean isInitialized = new AtomicBoolean( false );
-    private Color camoColor;
+    private final AtomicBoolean isInitialized = new AtomicBoolean( false );
+    private final Color camoColor;
     private static final char GUI_ID_SEPARATOR = '#';
 
     public GpuSampler( Color camoColor ) {
@@ -143,7 +143,6 @@ public class GpuSampler implements GLEventListener {
      * leverages a program expected to be in a standard location, etc.  The string returned is also expected to match
      * what is seen when this program is queried.
      *
-     * @see #getEstimatedTextureMemory
      * @return can call get on the returned object to tell if this is standard or not.
      */
     public Future<Boolean> isDepartmentStandardGraphicsMac() {
@@ -207,8 +206,8 @@ public class GpuSampler implements GLEventListener {
 
     /** Processor thread to collect all output from stdout or sterr. */
     private class ProgOutputThread extends Thread {
-        private StringBuilder builder;
-        private BufferedReader br;
+        private final StringBuilder builder;
+        private final BufferedReader br;
         private Exception ex;
 
         public ProgOutputThread( BufferedReader br ) {
@@ -219,7 +218,7 @@ public class GpuSampler implements GLEventListener {
         @Override
         public void run() {
             try {
-                String nextLine = null;
+                String nextLine;
                 while ( null != ( nextLine = br.readLine() ) ) {
                     builder.append( nextLine ).append("\n");
                 }
@@ -254,7 +253,7 @@ public class GpuSampler implements GLEventListener {
 
          */
         gl.glGetError(); // Clear any old errors.
-        String rtnVal = null;
+        String rtnVal;
         String vendorStr = gl.glGetString( GL2.GL_VENDOR );
         if ( vendorStr == null ) {
             vendorStr = UNKNOWN_VALUE;

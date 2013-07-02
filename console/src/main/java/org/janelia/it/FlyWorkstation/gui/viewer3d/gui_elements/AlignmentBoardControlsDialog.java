@@ -71,7 +71,7 @@ public class AlignmentBoardControlsDialog extends JDialog {
     private static final String ESTIMATED_BEST_RESOLUTION = "Best Guess";
     private static final String DOWN_SAMPLE_PROP_NAME = "AlignmentBoard_Downsample_Rate";
 
-    private Component centering;
+    private final Component centering;
     private JSlider brightnessSlider;
     private JCheckBox useSignalDataCheckbox;
     private JComboBox downSampleRateDropdown;
@@ -89,11 +89,11 @@ public class AlignmentBoardControlsDialog extends JDialog {
     private boolean readyForOutput = false;
 
     private Map<Integer,Integer> downSampleRateToIndex;
-    private Collection<ControlsListener> listeners;
-    private VolumeModel volumeModel;
-    private AlignmentBoardSettings settings;
+    private final Collection<ControlsListener> listeners;
+    private final VolumeModel volumeModel;
+    private final AlignmentBoardSettings settings;
 
-    private Logger logger = LoggerFactory.getLogger( AlignmentBoardControlsDialog.class );
+    private final Logger logger = LoggerFactory.getLogger( AlignmentBoardControlsDialog.class );
 
     /**
      * @param centering this dialog will be centered over the "centering" component.
@@ -726,7 +726,7 @@ public class AlignmentBoardControlsDialog extends JDialog {
         }
 
         private String wrapWithDescription( Object item ) {
-            if ( item.equals( new Integer( 0 ) ) ) {
+            if ( item.equals( 0 ) ) {
                 return ESTIMATED_BEST_RESOLUTION;
             }
             else {
@@ -768,9 +768,9 @@ public class AlignmentBoardControlsDialog extends JDialog {
 
     /** This listener updates the current display with latest slider tweaks. */
     public static class SliderChangeListener implements ChangeListener {
-        private RangeSlider[] sliders;
-        private AlignmentBoardControlsDialog dialog;
-        private VolumeModel volumeModel;
+        private final RangeSlider[] sliders;
+        private final AlignmentBoardControlsDialog dialog;
+        private final VolumeModel volumeModel;
 
         public SliderChangeListener(
                 RangeSlider[] rangeSliders,

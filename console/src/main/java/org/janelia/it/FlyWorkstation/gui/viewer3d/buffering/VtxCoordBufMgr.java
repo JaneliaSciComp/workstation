@@ -18,9 +18,9 @@ import java.nio.*;
  */
 public class VtxCoordBufMgr {
     private static final int NUM_BUFFERS_PER_TYPE = 3 * 2; // 3=x,y,z;  2=pos,neg
-    public static final int VERTICES_PER_SLICE = 6;
-    public static final int COORDS_PER_VERTEX = 3;
-    public static final int NUM_AXES = 3;
+    private static final int VERTICES_PER_SLICE = 6;
+    private static final int COORDS_PER_VERTEX = 3;
+    private static final int NUM_AXES = 3;
 
     private boolean useVBO = true;
     private boolean drawWithElements = true;
@@ -28,9 +28,9 @@ public class VtxCoordBufMgr {
     // Buffer objects for setting geometry on the GPU side.
     //   I need one per starting direction (x,y,z) times one for positive, one for negative.
     //
-    private FloatBuffer texCoordBuf[] = new FloatBuffer[ NUM_BUFFERS_PER_TYPE ];
-    private FloatBuffer geometryCoordBuf[] = new FloatBuffer[ NUM_BUFFERS_PER_TYPE ];
-    private ShortBuffer indexBuf[] = new ShortBuffer[ NUM_BUFFERS_PER_TYPE ];
+    private final FloatBuffer texCoordBuf[] = new FloatBuffer[ NUM_BUFFERS_PER_TYPE ];
+    private final FloatBuffer geometryCoordBuf[] = new FloatBuffer[ NUM_BUFFERS_PER_TYPE ];
+    private final ShortBuffer indexBuf[] = new ShortBuffer[ NUM_BUFFERS_PER_TYPE ];
 
     private int[] vertexCountByAxis;
 
@@ -41,7 +41,7 @@ public class VtxCoordBufMgr {
 
     private TextureMediator textureMediator;
 
-    private Logger logger = LoggerFactory.getLogger(VtxCoordBufMgr.class);
+    private final Logger logger = LoggerFactory.getLogger(VtxCoordBufMgr.class);
 
     public VtxCoordBufMgr() {
     }
@@ -334,7 +334,7 @@ public class VtxCoordBufMgr {
     }
 
     /** Convenience method to cut down on repeated code. */
-    private int[] enableBuffersOfType(GL2 gl, Buffer[] buffers, int type ) throws Exception {
+    private int[] enableBuffersOfType(GL2 gl, Buffer[] buffers, int type ) {
         // Make handles for subsequent use.
         int[] rtnVal = new int[ NUM_BUFFERS_PER_TYPE ];
         gl.glGenBuffers( NUM_BUFFERS_PER_TYPE, rtnVal, 0 );
@@ -435,7 +435,7 @@ public class VtxCoordBufMgr {
     private int convertAxisDirectionToOffset(CoordinateAxis axis, double direction) {
         int directionOffset = 0;
         if ( axis == null  ||  (direction != 1.0  &&  direction != -1.0) ) {
-            logger.error("Failed to bind buffer for {}, {}.", axis.getName(), direction);
+            logger.error("Failed to bind buffer for {}, {}.", axis == null ? "null" : axis.getName(), direction);
             return -1;
         }
         else {
