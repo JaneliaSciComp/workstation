@@ -125,7 +125,7 @@ public class SearchConfiguration {
 				Collections.sort(terms, new Comparator<SageTerm>() {
 					@Override
 					public int compare(SageTerm o1, SageTerm o2) {
-						return o1.getName().compareTo(o2.getName());
+						return o1.getDisplayName().compareTo(o2.getDisplayName());
 					}
 				});
 				

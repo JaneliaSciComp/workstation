@@ -400,7 +400,15 @@ public class EntityDetailsPanel extends JPanel implements Accessibility, Refresh
         		
         		Set<String> attrNames = new HashSet<String>();
         		
-		        for (EntityData entityData : loadedEntity.getOrderedEntityData()) {
+        		List<EntityData> entityDatas = new ArrayList<EntityData>(loadedEntity.getEntityData());
+                Collections.sort(entityDatas, new Comparator<EntityData>() {
+                    @Override
+                    public int compare(EntityData o1, EntityData o2) {
+                        return o1.getEntityAttribute().getName().compareTo(o2.getEntityAttribute().getName());
+                    }
+                });
+                
+		        for (EntityData entityData : entityDatas) {
 		        	if (entityData.getChildEntity()==null) {
 		        	    String attrName = entityData.getEntityAttribute().getName();
 		        		AttributeValue attrValue = new AttributeValue(attrName, entityData.getValue());
@@ -415,9 +423,9 @@ public class EntityDetailsPanel extends JPanel implements Accessibility, Refresh
 	            		String value = searchConfig.getValue(doc, attr.getName());
 	            		if (value!=null) {
 	            		    String attrName = attr.getLabel();
-	            		    if (!attrName.contains(attrName)) {
+	            		    if (!attrNames.contains(attrName)) {
     	                        attrNames.add(attrName);
-    			        		AttributeValue attrValue = new AttributeValue(attrName, value);
+    			        		AttributeValue attrValue = new AttributeValue(attrName+" (SAGE)", value);
     			        		attributesTable.addRow(attrValue);
 	            		    }
 	            		}
