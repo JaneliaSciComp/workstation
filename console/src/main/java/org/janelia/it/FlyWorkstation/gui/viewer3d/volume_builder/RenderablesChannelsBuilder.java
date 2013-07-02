@@ -37,11 +37,11 @@ public class RenderablesChannelsBuilder extends RenderablesVolumeBuilder impleme
     private byte[] volumeData;
 
     private ChannelInterpreterI channelInterpreter;
-    private AlignmentBoardSettings settings;
-    private Collection<RenderableBean> renderableBeans;
+    private final AlignmentBoardSettings settings;
+    private final Collection<RenderableBean> renderableBeans;
 
     protected boolean needsChannelInit = false; // Initialized for emphasis.
-    private Logger logger = LoggerFactory.getLogger( RenderablesChannelsBuilder.class );
+    private final Logger logger = LoggerFactory.getLogger( RenderablesChannelsBuilder.class );
 
     public RenderablesChannelsBuilder( AlignmentBoardSettings settings, Collection<RenderableBean> renderableBeans ) {
         super();  // ...and I _mean_ that!
@@ -59,7 +59,7 @@ public class RenderablesChannelsBuilder extends RenderablesVolumeBuilder impleme
     }
 
     // DEBUG/TEST
-    public void test() throws Exception {
+    public void test() {
         int volumeDataZeroCount = 0;
         java.util.TreeMap<Byte,Integer> frequencies = new TreeMap<Byte,Integer>();
         for ( Byte aByte: volumeData ) {
@@ -194,7 +194,7 @@ public class RenderablesChannelsBuilder extends RenderablesVolumeBuilder impleme
         if ( channelInterpreter != null )
             channelInterpreter.close();
 
-        TextureDataI textureData = null;
+        TextureDataI textureData;
         double downSampleRate = settings.getAcceptedDownsampleRate();
         if ( downSampleRate != 0.0 ) {
             DownSampler downSampler = new DownSampler( paddedSx, paddedSy, paddedSz );
@@ -367,7 +367,7 @@ public class RenderablesChannelsBuilder extends RenderablesVolumeBuilder impleme
             java.io.PrintStream bos = new java.io.PrintStream( new java.io.FileOutputStream( "/users/fosterl/file_dump.txt" ) );
             bos.println("VOLUME DATA BEGINS------");
             int nextPos = 0;
-            byte[] inputArr = null;
+            byte[] inputArr;
             while ( nextPos < volumeData.length ) {
                 inputArr = Arrays.copyOfRange( volumeData, nextPos, nextPos + (int)sx );
                 for ( int i = 0; i < inputArr.length; i++ ) {

@@ -15,10 +15,10 @@ import org.slf4j.LoggerFactory;
  * loop) values can be done in only one place.
  */
 public class ChannelInterpreterToByte implements ChannelInterpreterI {
-    private byte[] volumeData;
+    private final byte[] volumeData;
 
     private int maxValue = 0;
-    private Logger logger = LoggerFactory.getLogger( ChannelInterpreterToByte.class );
+    private final Logger logger = LoggerFactory.getLogger( ChannelInterpreterToByte.class );
 
     public ChannelInterpreterToByte(byte[] volumeData) {
         this.volumeData = volumeData;

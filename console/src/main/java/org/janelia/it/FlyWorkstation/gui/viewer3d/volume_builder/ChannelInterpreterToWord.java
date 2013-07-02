@@ -13,7 +13,7 @@ import org.janelia.it.FlyWorkstation.gui.viewer3d.loader.ChannelMetaData;
  * loop) values can be done in only one place.
  */
 public class ChannelInterpreterToWord implements ChannelInterpreterI {
-    private byte[] volumeData;
+    private final byte[] volumeData;
 
     public ChannelInterpreterToWord( byte[] volumeData) {
         this.volumeData = volumeData;

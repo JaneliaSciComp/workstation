@@ -27,7 +27,7 @@ public abstract class RenderablesVolumeBuilder implements MaskChanDataAcceptorI 
     protected float[] coordCoverage;
 
     private int nextVolumeCount = 0;
-    private VolumeConsistencyChecker checker = new VolumeConsistencyChecker();
+    private final VolumeConsistencyChecker checker = new VolumeConsistencyChecker();
 
     //----------------------------------------IMPLEMENT MaskChanDataAcceptorI (partially)
     @Override

@@ -15,8 +15,8 @@ import org.janelia.it.FlyWorkstation.gui.viewer3d.texture.TextureDataBean;
  */
 public class VolumeTransposer {
 
-    private TextureDataI signalTextureBean;
-    private TextureDataI maskTextureBean;
+    private final TextureDataI signalTextureBean;
+    private final TextureDataI maskTextureBean;
 
     private TextureDataI transposedSignalTextureBean;
     private TextureDataI transposedMaskTextureBean;

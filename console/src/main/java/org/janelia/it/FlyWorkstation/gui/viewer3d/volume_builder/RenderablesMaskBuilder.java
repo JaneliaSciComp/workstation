@@ -30,11 +30,11 @@ public class RenderablesMaskBuilder extends RenderablesVolumeBuilder implements 
 
     private static final int UNIVERSAL_MASK_BYTE_COUNT = 2;
     private static final int UNIVERSAL_MASK_CHANNEL_COUNT = 1;
-    private Logger logger = LoggerFactory.getLogger( RenderablesMaskBuilder.class );
-    private Collection<RenderableBean> renderableBeans;
+    private final Logger logger = LoggerFactory.getLogger( RenderablesMaskBuilder.class );
+    private final Collection<RenderableBean> renderableBeans;
     private byte[] volumeData;
     private int byteCount = UNIVERSAL_MASK_BYTE_COUNT;
-    private AlignmentBoardSettings settings;
+    private final AlignmentBoardSettings settings;
     private boolean binary;   // Only two possible values for any given voxel.  1-byte per voxel.
 
     private boolean isInitialized = false;

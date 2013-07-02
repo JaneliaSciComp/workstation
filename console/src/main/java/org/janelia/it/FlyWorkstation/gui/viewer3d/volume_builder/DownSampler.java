@@ -20,7 +20,7 @@ import java.util.concurrent.TimeUnit;
 public class DownSampler {
 
     private static final int DOWNSAMPLE_THREAD_COUNT = 5;
-    private Logger logger = LoggerFactory.getLogger( DownSampler.class );
+    private final Logger logger = LoggerFactory.getLogger( DownSampler.class );
     private long sx;
     private long sy;
     private long sz;
@@ -242,8 +242,8 @@ public class DownSampler {
     }
 
     private boolean isZero( byte[] bytes ) {
-        for ( int i = 0; i < bytes.length; i++ ) {
-            if ( bytes[ i ] != (byte) 0 ) {
+        for (byte aByte : bytes) {
+            if (aByte != (byte) 0) {
                 return false;
             }
         }
@@ -271,8 +271,8 @@ public class DownSampler {
      */
     private static class SliceDownsampleParamBean {
         private int outY = 0;
-        private int z;
-        private int zOffset;
+        private final int z;
+        private final int zOffset;
 
         public SliceDownsampleParamBean( int z, int zOffset ) {
             this.z = z;
@@ -300,11 +300,11 @@ public class DownSampler {
      * Return-value object to conveniently-collect various values about downsample output.
      */
     public static class DownsampledTextureData {
-        private byte[] volume;
-        private int sx;
-        private int sy;
-        private int sz;
-        private int voxelBytes;
+        private final byte[] volume;
+        private final int sx;
+        private final int sy;
+        private final int sz;
+        private final int voxelBytes;
 
         private double xScale;
         private double yScale;
