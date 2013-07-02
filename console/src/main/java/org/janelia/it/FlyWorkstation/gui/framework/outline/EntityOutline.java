@@ -166,6 +166,10 @@ public abstract class EntityOutline extends EntityTree implements Refreshable, A
 		});
 	}
 	
+	public RootedEntity getRootedEntity(String uniqueId) {
+	    return new RootedEntity(uniqueId, getEntityDataByUniqueId(uniqueId));
+	}
+	
 	/**
 	 * Override this method to load the root list. This method will be called in
 	 * a worker thread.
@@ -668,6 +672,6 @@ public abstract class EntityOutline extends EntityTree implements Refreshable, A
 	        SessionMgr.getBrowser().getViewerManager().showEntityInActiveViewer(rootedEntity);
 		}
 		
-		SessionMgr.getBrowser().getViewerManager().showEntityInInspector(rootedEntity);
+//		SessionMgr.getBrowser().getViewerManager().showEntityInInspector(rootedEntity);
 	}
 }

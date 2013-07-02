@@ -130,7 +130,7 @@ public class ViewerManager {
 	}
 
     public void showLoadingIndicatorInInspector() {
-        SessionMgr.getBrowser().getEntityDetailsPanel().showLoadingIndicator();
+        SessionMgr.getBrowser().getEntityDetailsOutline().showLoadingIndicator();
     }
     
     public void showLoadingIndicatorInActiveViewer() {
@@ -138,7 +138,7 @@ public class ViewerManager {
     }
     
     public void showEntityInInspector(RootedEntity rootedEntity) {
-        SessionMgr.getBrowser().getEntityDetailsPanel().loadRootedEntity(rootedEntity, null);
+        SessionMgr.getBrowser().getEntityDetailsOutline().loadRootedEntity(rootedEntity);
     }
     
 	public void showEntityInActiveViewer(RootedEntity rootedEntity) {

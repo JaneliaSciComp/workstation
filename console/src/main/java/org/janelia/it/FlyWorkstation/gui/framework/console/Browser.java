@@ -112,7 +112,7 @@ public class Browser extends JFrame implements Cloneable {
     //    private FileOutline fileOutline;
     private SessionOutline sessionOutline;
     private EntityOutline entityOutline;
-    private EntityDetailsPanel entityDetailsPanel;
+    private EntityDetailsOutline entityDetailsOutline;
 //    private EntityWrapperOutline entityWrapperOutline;
     private TaskOutline taskOutline;
 
@@ -267,7 +267,7 @@ public class Browser extends JFrame implements Cloneable {
 			}
 		};
 		
-		entityDetailsPanel = new EntityDetailsPanel();
+		entityDetailsOutline = new EntityDetailsOutline();
 		
 //        entityWrapperOutline = new EntityWrapperOutline() {
 //            @Override
@@ -395,7 +395,7 @@ public class Browser extends JFrame implements Cloneable {
         centerRightHorizontalSplitPane.setDividerLocation(consolePosition.getHorizontalRightDividerLocation());
         centerRightHorizontalSplitPane.setBorder(BorderFactory.createEmptyBorder());
 
-        leftVerticalSplitPane = new JSplitPane(JSplitPane.VERTICAL_SPLIT, false, entityOutline, entityDetailsPanel);
+        leftVerticalSplitPane = new JSplitPane(JSplitPane.VERTICAL_SPLIT, false, entityOutline, entityDetailsOutline);
         leftVerticalSplitPane.setMinimumSize(new Dimension(0, 400));
         leftVerticalSplitPane.setOneTouchExpandable(true);
         leftVerticalSplitPane.setDividerLocation(consolePosition.getVerticalDividerLocation());
@@ -432,6 +432,7 @@ public class Browser extends JFrame implements Cloneable {
         SwingUtilities.invokeLater(new Runnable() {
 			@Override
 			public void run() {
+			    entityDetailsOutline.activate();
 		        entityOutline.activate();
 		        
 			    setPerspective(Perspective.ImageBrowser);
@@ -1349,8 +1350,8 @@ public class Browser extends JFrame implements Cloneable {
         throw new UnsupportedOperationException();
     }
     
-    public EntityDetailsPanel getEntityDetailsPanel() {
-        return entityDetailsPanel;
+    public EntityDetailsOutline getEntityDetailsOutline() {
+        return entityDetailsOutline;
     }
 
     public OntologyOutline getOntologyOutline() {
