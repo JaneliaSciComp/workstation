@@ -22,11 +22,11 @@ public class ABContextDataSource implements RenderableDataSourceI {
     // where '9' above is the label number, the usual mask/chan extensions apply, and the number shown
     // should match the location for the previously-known files fetched from the older pipeline.
     private static final byte NON_RENDER_INTENSITY = (byte) 0f;
-    private AlignmentBoardContext context;
+    private final AlignmentBoardContext context;
 
     private AlignedItem currentSample; // NOTE: use of this precludes multi-threaded use of this data source!
 
-    private Logger logger = LoggerFactory.getLogger( ABContextDataSource.class );
+    private final Logger logger = LoggerFactory.getLogger( ABContextDataSource.class );
     public ABContextDataSource( AlignmentBoardContext context ) {
         this.context = context;
     }

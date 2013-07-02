@@ -31,7 +31,7 @@ public class TextureMediator {
     private boolean isInitialized = false;
 
     private TextureDataI textureData;
-    private Logger logger = LoggerFactory.getLogger( TextureMediator.class );
+    private final Logger logger = LoggerFactory.getLogger( TextureMediator.class );
 
     private Map<Integer,String> glConstantToName;
 
@@ -413,9 +413,9 @@ public class TextureMediator {
         java.util.Map<Integer,Integer> allFoundFrequencies = new java.util.HashMap<Integer,Integer>();
 
         int nonZeroCount = 0;
-        for ( int i = 0; i < rawBuffer.length; i++ ) {
-            if ( rawBuffer[ i ] != 0 ) {
-                nonZeroCount ++;
+        for (byte aRawBuffer : rawBuffer) {
+            if (aRawBuffer != 0) {
+                nonZeroCount++;
             }
         }
         if ( nonZeroCount == 0 ) {

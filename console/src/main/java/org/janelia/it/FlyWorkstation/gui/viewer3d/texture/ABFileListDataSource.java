@@ -28,11 +28,11 @@ public class ABFileListDataSource implements RenderableDataSourceI {
     // should match the location for the previously-known files fetched from the older pipeline.
     private static final String MASK_EXTENSION = ".mask";
     private static final byte NON_RENDER_INTENSITY = (byte) 0f;
-    private String[] filenames;
+    private final String[] filenames;
 
-    private AlignmentBoardContext context;
+    private final AlignmentBoardContext context;
 
-    private Logger logger = LoggerFactory.getLogger( ABFileListDataSource.class );
+    private final Logger logger = LoggerFactory.getLogger( ABFileListDataSource.class );
     public ABFileListDataSource( String[] filenames, AlignmentBoardContext context ) {
         this.filenames = filenames;
         this.context = context;

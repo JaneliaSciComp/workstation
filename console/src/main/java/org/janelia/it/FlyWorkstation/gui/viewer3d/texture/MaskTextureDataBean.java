@@ -42,7 +42,6 @@ public class MaskTextureDataBean implements TextureDataI {
     private Integer explicitInternalFormat = TextureDataI.UNSET_VALUE;
     private Integer explicitVoxelComponentOrder = TextureDataI.UNSET_VALUE;
 
-    private boolean loaded;
     private boolean inverted = true; // Most tested masks were inverted.
 
     public MaskTextureDataBean() {

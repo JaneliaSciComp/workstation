@@ -40,7 +40,6 @@ public class TextureDataBean implements TextureDataI {
     private int pixelByteCount = 1;
     private int channelCount = 0;
 
-    private boolean loaded;
     private boolean inverted = true; // Tested stored images were inverted.
     private Integer voxelComponentFormat = UNSET_VALUE;
     private Integer internalFormat = UNSET_VALUE;
