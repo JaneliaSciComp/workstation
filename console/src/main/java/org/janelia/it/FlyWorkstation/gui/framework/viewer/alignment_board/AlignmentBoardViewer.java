@@ -4,8 +4,6 @@ import java.awt.*;
 import java.util.Collection;
 import java.util.List;
 import java.util.concurrent.Callable;
-import java.util.concurrent.Future;
-import java.util.concurrent.TimeUnit;
 
 import javax.media.opengl.awt.GLJPanel;
 import javax.swing.JButton;
@@ -504,7 +502,8 @@ public class AlignmentBoardViewer extends Viewer implements AlignmentBoardContro
                     GpuSampler sampler = getGpuSampler();
 
                     // Here, should load volumes, for all the different items given.
-                    if ( loadWorker != null ) {
+                    if ( loadWorker != null  &&  loadWorker.getProgressMonitor() != null ) {
+                        loadWorker.getProgressMonitor().close();
                         loadWorker.setProgressMonitor( null );
                     }
                     loadWorker = null;
