@@ -581,6 +581,7 @@ public class AlignmentBoardViewer extends Viewer implements AlignmentBoardContro
         }
         mip3d = new Mip3d();
         if ( settings == null ) {
+            logger.info("New settings");
             settings = new AlignmentBoardControlsDialog( mip3d, mip3d.getVolumeModel(), settingsData );
             settings.addSettingsListener(
                     new AlignmentBoardControlsListener( renderMapping, this )
@@ -680,7 +681,8 @@ public class AlignmentBoardViewer extends Viewer implements AlignmentBoardContro
         @Override
         public void setSelectedCoords( CropCoordSet cropCoordSet ) {
             if ( cropCoordSet.getCurrentCoordinates() != null  ||  cropCoordSet.getAcceptedCoordinates().size() > 0 ) {
-                viewer.mip3d.setCropCoords(cropCoordSet);
+                viewer.mip3d.getVolumeModel().setCropCoords( cropCoordSet );
+                viewer.mip3d.refresh();
 
                 AlignmentBoardContext context = SessionMgr.getBrowser().getLayersPanel().getAlignmentBoardContext();
                 viewer.updateRendering( context );
