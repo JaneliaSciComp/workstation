@@ -290,6 +290,13 @@ public class EntityDetailsPanel extends JPanel implements Accessibility, Refresh
         tabbedPane.addTab("Annotations", Icons.getIcon("page_white_edit.png"), annotationsPanel, "The user annotations");
     }
 
+    public void showNothing() {
+        attributesPanel.removeAll();
+        permissionsPanel.removeAll();
+        annotationsPanel.removeAll();
+        this.updateUI();
+    }
+    
     public void showLoadingIndicator() {
         showAttributesLoadingIndicator();
         showPermissionsLoadingIndicator();
@@ -317,6 +324,10 @@ public class EntityDetailsPanel extends JPanel implements Accessibility, Refresh
     }
     
     public void loadRootedEntity(RootedEntity rootedEntity, String defaultTab) {
+        if (rootedEntity==null) {
+            showNothing();
+            return;
+        }
     	EntityData entityData = rootedEntity.getEntityData();
     	loadEntity(rootedEntity.getEntity(), entityData.getEntityAttribute().getName(), defaultTab);
     }
@@ -488,7 +499,10 @@ public class EntityDetailsPanel extends JPanel implements Accessibility, Refresh
 				}
 				permissionsTable.updateTableModel();
                 permissionsPanel.removeAll();
+                permissionsPanel.add(permissionsButtonPane, BorderLayout.SOUTH);
                 permissionsPanel.add(permissionsTable, BorderLayout.CENTER);
+                permissionsPanel.revalidate();
+                permissionsPanel.repaint();
 			}
 			
 			@Override
