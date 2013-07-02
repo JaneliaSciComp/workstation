@@ -13,13 +13,10 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.FileReader;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.ObjectInputStream;
-import java.io.Serializable;
 import java.lang.reflect.Type;
 import java.net.MalformedURLException;
 import java.net.URL;
@@ -43,9 +40,7 @@ import java.net.URL;
  *
  * @author Eric Trautman
  */
-public class CachedFile implements Serializable {
-
-    private static final long serialVersionUID = 1522075002459504180L;
+public class CachedFile {
 
     private WebDavFile webDavFile;
     private File localFile;
@@ -378,59 +373,13 @@ public class CachedFile implements Serializable {
             final Gson gson = getGsonInstance();
             cachedFile = gson.fromJson(reader, CachedFile.class);
         } catch (Exception e) {
-            LOG.warn("failed to load JSON cache file meta data from {}, will attempt legacy load ...",
+            LOG.warn("failed to load JSON cache file meta data from {}",
                      metaFile.getAbsolutePath(),
                      e);
         } finally {
             if (reader != null) {
                 try {
                     reader.close();
-                } catch (IOException e) {
-                    LOG.warn("loadPreviouslyCachedFile: failed to close meta data file {}",
-                             metaFile.getAbsolutePath(),
-                             e);
-                }
-            }
-        }
-
-        // Try to load legacy format if JSON format load failed.
-        // TODO: remove block after all client caches are migrated to new format
-        if (cachedFile == null) {
-            cachedFile = loadJavaSerializedMetaFile(metaFile);
-            if (cachedFile != null) {
-                try {
-                    cachedFile.saveMetadata();
-                    LOG.info("replaced java serialized data in {} with JSON formatted data",
-                             metaFile.getAbsolutePath());
-                } catch (Exception e) {
-                    LOG.warn("failed to replace java serialized data in {}",
-                             metaFile.getAbsolutePath(), e);
-                }
-            }
-        }
-
-        return cachedFile;
-    }
-
-    /**
-     * Legacy method for loading using java serialized CacheFile.
-     * This should be removed after we are sure all client caches have
-     * been migrated to the new JSON format.
-     */
-    private static CachedFile loadJavaSerializedMetaFile(File metaFile) {
-
-        CachedFile cachedFile = null;
-        ObjectInputStream in = null;
-        try {
-            in = new ObjectInputStream(new FileInputStream(metaFile));
-            cachedFile = (CachedFile) in.readObject();
-        } catch (Exception e) {
-            LOG.warn("failed to load cache file meta data from {}",
-                     metaFile.getAbsolutePath(), e);
-        } finally {
-            if (in != null) {
-                try {
-                    in.close();
                 } catch (IOException e) {
                     LOG.warn("loadPreviouslyCachedFile: failed to close meta data file {}",
                              metaFile.getAbsolutePath(),

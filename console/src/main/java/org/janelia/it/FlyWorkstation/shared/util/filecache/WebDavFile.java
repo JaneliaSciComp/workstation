@@ -2,10 +2,13 @@ package org.janelia.it.FlyWorkstation.shared.util.filecache;
 
 import org.apache.http.HttpStatus;
 import org.apache.jackrabbit.webdav.MultiStatusResponse;
-import org.apache.jackrabbit.webdav.property.*;
+import org.apache.jackrabbit.webdav.property.DavProperty;
+import org.apache.jackrabbit.webdav.property.DavPropertyName;
+import org.apache.jackrabbit.webdav.property.DavPropertyNameSet;
+import org.apache.jackrabbit.webdav.property.DavPropertySet;
+import org.apache.jackrabbit.webdav.property.DefaultDavProperty;
 
 import java.io.File;
-import java.io.Serializable;
 import java.net.MalformedURLException;
 import java.net.URL;
 
@@ -15,9 +18,7 @@ import java.net.URL;
  *
  * @author Eric Trautman
  */
-public class WebDavFile implements Serializable {
-
-    private static final long serialVersionUID = 5605749480890497607L;
+public class WebDavFile {
 
     private URL url;
     private boolean isDirectory;

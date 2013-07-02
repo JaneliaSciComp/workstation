@@ -7,10 +7,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.File;
-import java.io.FileOutputStream;
 import java.io.FileWriter;
 import java.io.IOException;
-import java.io.ObjectOutputStream;
 import java.net.URI;
 import java.text.SimpleDateFormat;
 import java.util.Arrays;
@@ -98,11 +96,6 @@ public class CachedFileTest extends TestCase {
         validateDirectoryFileCount("after load", testCacheActiveDirectory, 1);
         validateDirectoryFileCount("after load", testCacheTempDirectory, 0);
 
-        saveMetaDataInLegacyFormat(cachedFile, metaFile);
-        reloadedCachedFile = CachedFile.loadPreviouslyCachedFile(metaFile);
-        assertEquals("reloaded legacy URL value differs",
-                     cachedFile.getUrl(), reloadedCachedFile.getUrl());
-
         cachedFile.remove(testCacheActiveDirectory);
 
         validateDirectoryFileCount("after remove", testCacheActiveDirectory, 0);
@@ -142,21 +135,6 @@ public class CachedFileTest extends TestCase {
                          directory.getAbsolutePath() +  ", found: " +
                          Arrays.asList(subDirectories),
                          expectedCount, subDirectories.length);
-        }
-    }
-
-    private void saveMetaDataInLegacyFormat(CachedFile cachedFile,
-                                            File metaFile)
-            throws Exception {
-
-        ObjectOutputStream out = null;
-        try {
-            out = new ObjectOutputStream(new FileOutputStream(metaFile));
-            out.writeObject(cachedFile);
-        } finally {
-            if (out != null) {
-                out.close();
-            }
         }
     }
 
