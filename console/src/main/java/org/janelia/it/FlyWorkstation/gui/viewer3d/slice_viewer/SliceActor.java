@@ -99,6 +99,14 @@ implements GLActor
 				}
 			}
 			numeralShader.setTexturePixels(tw, th);
+			// Put numerals right side up, even in rotated viewers
+			CoordinateAxis sliceAxis = viewTileManager.getTileConsumer().getSliceAxis();
+			if (sliceAxis == CoordinateAxis.Z)
+				numeralShader.setQuarterRotations(0);
+			else if (sliceAxis == CoordinateAxis.X)
+				numeralShader.setQuarterRotations(1);
+			else // Y
+				numeralShader.setQuarterRotations(3);
 			// render numerals
 			numeralShader.load(gl);
 			for (Tile2d tile: tiles) {

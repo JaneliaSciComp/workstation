@@ -6,14 +6,13 @@ import java.awt.image.BufferedImage;
 import java.nio.ByteBuffer;
 
 import javax.media.opengl.GL2;
-import javax.media.opengl.glu.GLU;
 import javax.swing.ImageIcon;
 
 import org.janelia.it.FlyWorkstation.gui.util.Icons;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.slice_viewer.ChannelColorModel;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.slice_viewer.ImageColorModel;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+// import org.slf4j.Logger;
+// import org.slf4j.LoggerFactory;
 
 public class NumeralShader extends PassThroughTextureShader 
 {
@@ -23,6 +22,13 @@ public class NumeralShader extends PassThroughTextureShader
 	private double micrometersPerPixel = 1.0;
 	private int textureWidth = 100;
 	private int textureHeight = 100;
+	// Allow for rotated pixels, to keep text upright
+	private float[][] rotations = { 
+			{1,0,0,1},
+			{0,1,-1,0},
+			{-1,0,0,-1},
+			{0,-1,1,0}};
+	private int quarterRotations = 0;
 
 	public ImageColorModel getImageColorModel() {
 		return imageColorModel;
@@ -99,6 +105,7 @@ public class NumeralShader extends PassThroughTextureShader
 		setUniform(gl, "format_max", nrange);
 		setUniform(gl, "data_max", (float) chan.getDataMax());
 		setUniform(gl, "micrometers_per_pixel", (float) micrometersPerPixel);
+		setUniformMatrix2fv(gl, "rotation", false, rotations[quarterRotations]);
 		float texturePixels[] = {textureWidth, textureHeight};
 		setUniform2fv(gl, "texture_pixels", 1, texturePixels);
 		// TODO - srgb_gamma, texture_pixels
@@ -114,6 +121,10 @@ public class NumeralShader extends PassThroughTextureShader
 		this.micrometersPerPixel = micrometersPerPixel;
 	}
 	
+	public void setQuarterRotations(int quarterRotations) {
+		this.quarterRotations = quarterRotations;
+	}
+
 	public void setTexturePixels(int width, int height) {
 		textureWidth = width;
 		textureHeight = height;

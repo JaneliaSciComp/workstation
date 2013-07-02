@@ -87,6 +87,14 @@ public class PassThroughTextureShader extends AbstractShader
         return true;
 	}
 	
+	public boolean setUniformMatrix2fv(GL2 gl, String varName, boolean transpose, float[] data) {
+        int uniformLoc = gl.glGetUniformLocation( getShaderProgram(), varName );
+        if ( uniformLoc < 0 ) 
+        	return false;
+        gl.glUniformMatrix2fv( uniformLoc, 1, transpose, data, 0);
+        return true;		
+	}
+	
 	@Override
     public void unload(GL2 gl) {
         gl.glUseProgram(previousShader);

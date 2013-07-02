@@ -23,33 +23,40 @@ import com.sun.media.jai.codec.TIFFEncodeParam;
 
 public class PermuteTiff {
 
+	private static boolean oneFolderAtATime = true;
+	
 	/**
 	 * @param args
 	 */
 	public static void main(String[] args) {
-		walk(args[0]);
-		/*
-		String fileName = args[0];
-		File tiff = new File(fileName);
-		File outTiff = new File(args[1]);
-		// Permute one or two levels
-		int permuteSteps = new Integer(args[2]);
-		permuteSteps = permuteSteps % 3;
-		try {
-			permuteTiff(tiff, outTiff, permuteSteps);
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+		// Sanity checks
+		if (args.length < 1) {
+			usage();
+			System.exit(1);
 		}
-		*/
+		File folder = new File(args[0]);
+		if (! folder.exists()) {
+			System.err.println("No such folder "+folder.getAbsolutePath());
+			usage();
+			System.exit(1);
+		}
+		// Grid mode vs. serial mode.
+		if (oneFolderAtATime)
+			permuteFolder(folder); // Permute contents of just one folder
+		else
+			permuteOctree(folder); // Serially permute entire tree
 	}
 	
-    public static void walk( String path ) 
+	public static void usage() {
+		System.out.println("Usage: java -jar PermuteTiff.jar <folder_path>");
+	}
+	
+    public static void permuteOctree( File folder ) 
     {
-        File root = new File( path );
-        File[] list = root.listFiles();
+        // Top folders first
+        permuteFolder(folder);
 
-    	Pattern filePattern = Pattern.compile("^default\\.(\\d+)\\.tif$");
+        File[] list = folder.listFiles();
         for ( File f : list ) {
             if ( f.isDirectory() ) {
             	// only want subdirectories "1", "2", ..., "8"
@@ -61,46 +68,29 @@ public class PermuteTiff {
             		continue;
             	if (ix > 8)
             		continue;
-                walk( f.getAbsolutePath() );
+                permuteOctree( f );
                 // System.out.println( "Dir:" + f.getAbsoluteFile() );
-            }
-            else {
-            	// Only want to convert default.?.tif
-            	Matcher matcher = filePattern.matcher(f.getName());
-            	if (! matcher.matches())
-            		continue;
-            	int channel = Integer.parseInt(matcher.group(1));
-                File yzFile = new File(f.getParentFile(), "YZ."+channel+".tif");
-                File zxFile = new File(f.getParentFile(), "ZX."+channel+".tif");
-                // System.out.println( "File:" + f.getAbsoluteFile());
-                // System.out.println( "  YZ:" + yzFile.getAbsoluteFile());
-                // System.out.println( "  ZX:" + zxFile.getAbsoluteFile());
-                if (! yzFile.exists()) {
-					try {
-		                System.out.println( "Creating:" + yzFile.getAbsoluteFile());
-						permuteTiff(f, yzFile, 1);
-					} catch (IOException e) {
-						// TODO Auto-generated catch block
-						e.printStackTrace();
-					}
-                }
-                if (! zxFile.exists()) {
-					try {
-		                System.out.println( "Creating:" + zxFile.getAbsoluteFile());
-						permuteTiff(f, zxFile, 2);
-					} catch (IOException e) {
-						// TODO Auto-generated catch block
-						e.printStackTrace();
-					}
-                }
             }
         }
     }
 	
-	public static void permuteOctree(File folder) {
-		// TODO
-	}
-	
+    public static void permuteFolder (File folder) {
+    	if (folder == null)
+    		return;
+    	if (! folder.exists())
+    		return;
+    	File[] list = folder.listFiles();
+    	if (list == null)
+    		return;
+    	for (File f : list) {
+    		if (f.isDirectory())
+    			continue;
+    		if (! f.exists())
+    			continue;
+    		permuteTiff(f);
+    	}
+    }
+    
 	public static void permuteTiff(File inTiff, File outTiff, int permuteSteps) 
 			throws IOException
 	{
@@ -150,6 +140,38 @@ public class PermuteTiff {
 		ImageEncoder encoder = ImageCodec.createImageEncoder("tiff", out, params);
 		encoder.encode(outSlices[0]); 
 		out.close(); 
+	}
+	
+	public static void permuteTiff(File tiffFile) {
+    	Pattern filePattern = Pattern.compile("^default\\.(\\d+)\\.tif$");
+    	// Only want to convert default.?.tif
+    	Matcher matcher = filePattern.matcher(tiffFile.getName());
+    	if (! matcher.matches())
+    		return;
+    	int channel = Integer.parseInt(matcher.group(1));
+        File yzFile = new File(tiffFile.getParentFile(), "YZ."+channel+".tif");
+        File zxFile = new File(tiffFile.getParentFile(), "ZX."+channel+".tif");
+        // System.out.println( "File:" + f.getAbsoluteFile());
+        // System.out.println( "  YZ:" + yzFile.getAbsoluteFile());
+        // System.out.println( "  ZX:" + zxFile.getAbsoluteFile());
+        if (! yzFile.exists()) {
+			try {
+                System.out.println( "Creating:" + yzFile.getAbsoluteFile());
+				permuteTiff(tiffFile, yzFile, 1);
+			} catch (IOException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+        }
+        if (! zxFile.exists()) {
+			try {
+                System.out.println( "Creating:" + zxFile.getAbsoluteFile());
+				permuteTiff(tiffFile, zxFile, 2);
+			} catch (IOException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+        }		
 	}
 	
 	private static void permute(int[] in, int count) {

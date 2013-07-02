@@ -218,7 +218,15 @@ implements MouseMode, KeyListener
 				Point finalPos = event.getPoint();
 				if (dragStart.distance(event.getPoint()) > 2.0) {
 					Vec3 location = worldFromPixel(finalPos);
-					dragAnchor.setLocation(location);
+					Vec3 oldLoc = dragAnchor.getLocation();
+					Vec3 dLoc = location.minus(oldLoc);
+					// Don't change slice direction value (change only screen X,Y)
+					Vec3 viewPlane = viewerInGround.inverse().times(new Vec3(1,1,0));
+					for (int i = 0; i < 3; ++i) {
+						dLoc.set(i, dLoc.get(i) * viewPlane.get(i));
+					}
+					Vec3 newLoc = oldLoc.plus(dLoc);
+					dragAnchor.setLocation(newLoc);
 				}
 			}
 			dragAnchor = null;

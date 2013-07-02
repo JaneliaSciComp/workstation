@@ -8,6 +8,7 @@ uniform float data_max;
 uniform bool srgb_gamma = false;
 uniform vec2 texture_pixels;
 uniform float micrometers_per_pixel;
+uniform mat2 rotation = mat2(1,0,0,1);
 
 const float left_margin = 0.1;
 const float right_margin = 0.9;
@@ -28,6 +29,10 @@ void main()
 {
     // pixel-relative texture coordinates
     vec2 local_coords = fract(texture_pixels * gl_TexCoord[0].xy);
+    // rotate numbers
+    local_coords = local_coords - vec2(0.5, 0.5); // place origin at center of voxel
+    local_coords = rotation * local_coords;
+    local_coords = local_coords + vec2(0.5, 0.5); // restore origin to corner
     
     // Trim to sub-region
     if (local_coords.x <= left_margin) discard;
