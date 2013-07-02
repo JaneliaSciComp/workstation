@@ -48,6 +48,10 @@ public class Mip3d extends BaseGLViewer implements ActionListener {
         popupMenu.add( action );
     }
 
+    public void releaseMenuActions() {
+        popupMenu.removeAll();
+    }
+
     public void refresh() {
         volumeModel.setVolumeUpdate();
     }

@@ -504,7 +504,9 @@ public class AlignmentBoardViewer extends Viewer implements AlignmentBoardContro
                     GpuSampler sampler = getGpuSampler();
 
                     // Here, should load volumes, for all the different items given.
-                    loadWorker.setProgressMonitor( null );
+                    if ( loadWorker != null ) {
+                        loadWorker.setProgressMonitor( null );
+                    }
                     loadWorker = null;
                     if ( cachedDownSampleGuess == null ) {
                         loadWorker = new RenderablesLoadWorker(
@@ -572,11 +574,19 @@ public class AlignmentBoardViewer extends Viewer implements AlignmentBoardContro
      * as needed.
      */
     private void createMip3d() {
+        //if ( settings != null ) {
+        //    settings.removeAllSettingsListeners();
+        //}
+        if ( mip3d != null ) {
+            mip3d.releaseMenuActions();
+        }
         mip3d = new Mip3d();
-        settings = new AlignmentBoardControlsDialog( mip3d, mip3d.getVolumeModel(), settingsData );
-        settings.addSettingsListener(
-                new AlignmentBoardControlsListener( renderMapping, this )
-        );
+        if ( settings == null ) {
+            settings = new AlignmentBoardControlsDialog( mip3d, mip3d.getVolumeModel(), settingsData );
+            settings.addSettingsListener(
+                    new AlignmentBoardControlsListener( renderMapping, this )
+            );
+        }
         deserializeSettings(SessionMgr.getBrowser().getLayersPanel().getAlignmentBoardContext());
 
         mip3d.addMenuAction(settings.getLaunchAction());
