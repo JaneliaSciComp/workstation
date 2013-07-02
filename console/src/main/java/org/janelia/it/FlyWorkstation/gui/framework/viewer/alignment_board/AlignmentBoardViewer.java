@@ -680,13 +680,12 @@ public class AlignmentBoardViewer extends Viewer implements AlignmentBoardContro
 
         @Override
         public void setSelectedCoords( CropCoordSet cropCoordSet ) {
-            if ( cropCoordSet.getCurrentCoordinates() != null  ||  cropCoordSet.getAcceptedCoordinates().size() > 0 ) {
-                viewer.mip3d.getVolumeModel().setCropCoords( cropCoordSet );
-                viewer.mip3d.refresh();
+//NOTE: serializing did not clear-after-app-cycle.
+            AlignmentBoardContext context = SessionMgr.getBrowser().getLayersPanel().getAlignmentBoardContext();
+            //viewer.serialize();
+            viewer.mip3d.refreshRendering();
 
-                AlignmentBoardContext context = SessionMgr.getBrowser().getLayersPanel().getAlignmentBoardContext();
-                viewer.updateRendering( context );
-            }
+            viewer.updateRendering( context );
         }
 
         @Override

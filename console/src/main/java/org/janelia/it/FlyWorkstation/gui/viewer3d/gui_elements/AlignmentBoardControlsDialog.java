@@ -350,7 +350,6 @@ public class AlignmentBoardControlsDialog extends JDialog {
     private synchronized void fireForceCropEvent( CropCoordSet cropCoordSet ) {
         for ( ControlsListener listener: listeners ) {
             listener.setSelectedCoords( cropCoordSet );
-            listener.updateSettings();
         }
     }
 

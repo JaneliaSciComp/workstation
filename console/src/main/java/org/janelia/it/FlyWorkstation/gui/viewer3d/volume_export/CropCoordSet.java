@@ -24,7 +24,7 @@ public class CropCoordSet {
             -1.0f, -1.0f   // startZ, endZ
     };
 
-    private Collection<float[]> acceptedCoordinates;
+    private final Collection<float[]> acceptedCoordinates;
     private float[] currentCoordinates;
 
     public CropCoordSet() {
@@ -48,7 +48,10 @@ public class CropCoordSet {
     }
 
     public void setAcceptedCoordinates(Collection<float[]> acceptedCoordinates) {
-        this.acceptedCoordinates = acceptedCoordinates;
+        this.acceptedCoordinates.clear();
+        if ( acceptedCoordinates  !=  null ) {
+            this.acceptedCoordinates.addAll( acceptedCoordinates );
+        }
     }
 
     /** These are being actively modified by the user. */

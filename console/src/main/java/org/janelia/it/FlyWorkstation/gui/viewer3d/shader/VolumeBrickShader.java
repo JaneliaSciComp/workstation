@@ -172,13 +172,8 @@ public class VolumeBrickShader extends AbstractShader {
                 for ( int i = 0; i < 6; i++ ) {
                     // Example: startCropX is for item i == 0.
                     // Example: endCropZ is for item i == 5.
-                    String startEnd = i % 2 == 0 ? "start" : "end";
-                    String xyz = "XYZ".substring( i/2, i/2 + 1 );
-                    String cropUniformName = String.format("%sCrop%s", startEnd, xyz);
-                    int adjustmentLoc = gl.glGetUniformLocation(shaderProgram, cropUniformName);
-                    if ( adjustmentLoc == -1 ) {
-                        throw new RuntimeException( "Failed to find uniform location for " + cropUniformName );
-                    }
+                    String cropUniformName = decodeCropUniformName(i);
+                    int adjustmentLoc = testUniformLoc(gl, shaderProgram, cropUniformName);
                     //System.out.println(
                     //        "Have adjustment location of " + adjustmentLoc + " for " + cropUniformName +
                     //                ", and setting it to " + cropCoordsCollection[ i ]
@@ -189,7 +184,7 @@ public class VolumeBrickShader extends AbstractShader {
                     );
                     int setUniformError = gl.glGetError();
                     if ( setUniformError != 0 ) {
-                        throw new RuntimeException( "Failed to set uniform for " + cropUniformName + " error is " + setUniformError );
+                        throw new RuntimeException( "Failed to set uniform for " + cropUniformName + ".  Error is " + setUniformError );
                     }
 
                 }
@@ -208,6 +203,36 @@ public class VolumeBrickShader extends AbstractShader {
                 }
             }
         }
+        else {
+            // Send "unused" values for all crop uniforms.
+            for ( int i = 0; i < 6; i++ ) {
+                String cropUniformName = decodeCropUniformName(i);
+                int adjustmentLoc = testUniformLoc(gl, shaderProgram, cropUniformName);
+                gl.glUniform1f(
+                        adjustmentLoc,
+                        -1.0f
+                );
+
+                int setUniformError = gl.glGetError();
+                if ( setUniformError != 0 ) {
+                    throw new RuntimeException( "Failed to clear uniform for " + cropUniformName + ".  Error is " + setUniformError );
+                }
+            }
+        }
+    }
+
+    private int testUniformLoc(GL2 gl, int shaderProgram, String cropUniformName) {
+        int adjustmentLoc = gl.glGetUniformLocation(shaderProgram, cropUniformName);
+        if ( adjustmentLoc == -1 ) {
+            throw new RuntimeException( "Failed to find uniform location for " + cropUniformName );
+        }
+        return adjustmentLoc;
+    }
+
+    private String decodeCropUniformName(int i) {
+        String startEnd = i % 2 == 0 ? "start" : "end";
+        String xyz = "XYZ".substring( i/2, i/2 + 1 );
+        return String.format("%sCrop%s", startEnd, xyz);
     }
 
     private void pushFilterUniform(GL2 gl, int shaderProgram) {
