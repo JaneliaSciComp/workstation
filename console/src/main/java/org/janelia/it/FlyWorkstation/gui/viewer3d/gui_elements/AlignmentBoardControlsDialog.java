@@ -10,6 +10,7 @@ import org.slf4j.LoggerFactory;
 
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
+import javax.swing.border.LineBorder;
 import javax.swing.border.TitledBorder;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
@@ -30,13 +31,19 @@ import java.util.List;
  */
 public class AlignmentBoardControlsDialog extends JDialog {
     public static final double UNSELECTED_DOWNSAMPLE_RATE = 0.0;
-    private static final String DOWN_SAMPLE_TOOLTIP =
+    private static final String DOWN_SAMPLE_TIP =
+            "Data sent to screen may be too large for your graphics card. Therefore, they are\n" +
+            "downsampled at the minimum rate found usable for your card. However, you may wish\n" +
+            "to move that rate up or down, depending on your knowledge of the advanced hardware\n" +
+            "on your system.  Higher values mean larger, blockier voxels, and less memory.";
+
+    private static final String DOWN_SAMPLE_TOOL_TIP =
             "<html>" +
-            "Data sent to screen may be too large for your graphics card.<br>" +
-            "Therefore, they are downsampled at the maximum rate found possible for your card." +
-            ".<br>However, you may wish to move that rate up or down, depending on your knowledge of the<br>" +
-            "advanced hardware on your system.  Higher values mean larger, blockier voxels, and less memory."
-            + "</html>";
+                    "Data sent to screen may be too large for your graphics card.<br>" +
+                    "Therefore, they are downsampled at the minimum rate found usable for your card." +
+                    "<br>However, you may wish to move that rate up or down, depending on your knowledge of the<br>" +
+                    "advanced hardware on your system.  Higher values mean larger, blockier voxels, and less memory."
+                    + "</html>";
 
     private static final String GEO_SEARCH_TOOLTIP = "<html>" +
             "Adjust the X, Y, and Z sliders, to leave only the template volume of <br>" +
@@ -49,9 +56,13 @@ public class AlignmentBoardControlsDialog extends JDialog {
     private static final String SAVE_AS_COLOR_TIFF = "Save Color TIFF";
     private static final String SAVE_AS_COLOR_TIFF_TOOLTIP_TEXT = SAVE_AS_COLOR_TIFF;
 
+    private static final int WIDTH = 600;
+    private static final int HEIGHT = 800;
+    private static final Dimension DOWNSAMPLE_TIP_DIM = new Dimension(WIDTH, 70);
+
     private static final String LAUNCH_AS = "Controls";
     private static final String LAUNCH_DESCRIPTION = "Present a dialog allowing users to change settings.";
-    private static final Dimension SIZE = new Dimension( 450, 600 );
+    private static final Dimension SIZE = new Dimension( WIDTH, HEIGHT);
     private static final String GAMMA_TOOLTIP = "Adjust the gamma level, or brightness.";
     private static final Dimension DN_SAMPLE_DROPDOWN_SIZE = new Dimension(130, 50);
     private static final String COMMIT_CHANGES = "Commit Changes";
@@ -117,9 +128,14 @@ public class AlignmentBoardControlsDialog extends JDialog {
         this.setDefaultCloseOperation( WindowConstants.HIDE_ON_CLOSE );
         this.volumeModel = volumeModel;
         createGui();
-        Double downsampleRate = (Double)SessionMgr.getSessionMgr().getModelProperty(DOWN_SAMPLE_PROP_NAME);
-        if ( downsampleRate == null ) {
-            downsampleRate = AlignmentBoardControlsDialog.UNSELECTED_DOWNSAMPLE_RATE;
+        Double downsampleRate = AlignmentBoardControlsDialog.UNSELECTED_DOWNSAMPLE_RATE;
+        try {
+            downsampleRate = (Double)SessionMgr.getSessionMgr().getModelProperty(DOWN_SAMPLE_PROP_NAME);
+            if ( downsampleRate == null ) {
+                downsampleRate = AlignmentBoardControlsDialog.UNSELECTED_DOWNSAMPLE_RATE;
+            }
+        } catch ( Throwable ex ) {
+            logger.warn( "Failed to fetch downsample rate setting." );
         }
         this.setNonSerializedDownSampleRate(downsampleRate);
     }
@@ -519,7 +535,7 @@ public class AlignmentBoardControlsDialog extends JDialog {
                 new ABSDComboBoxModel( downSampleRateToIndex )
         );
         downSampleRateDropdown.setBorder( new TitledBorder( DOWN_SAMPLE_RATE ) );
-        downSampleRateDropdown.setToolTipText( DOWN_SAMPLE_TOOLTIP );
+        downSampleRateDropdown.setToolTipText( DOWN_SAMPLE_TOOL_TIP );
 
         useSignalDataCheckbox = new JCheckBox( USE_SIGNAL_DATA );
         useSignalDataCheckbox.setSelected(true);
@@ -558,50 +574,75 @@ public class AlignmentBoardControlsDialog extends JDialog {
          * @param ipady     The initial ipady value.
          */
         Insets insets = new Insets( 8, 8, 8, 8 );
+        int rowHeight = 1;
+        int nextRow = 0;
         GridBagConstraints brightnessConstraints = new GridBagConstraints(
-                0, 0, 3, 1, 1.0, 0.0, GridBagConstraints.NORTH, GridBagConstraints.BOTH, insets, 0, 0
+                0, nextRow, 4, rowHeight, 1.0, 0.0, GridBagConstraints.NORTH, GridBagConstraints.BOTH, insets, 0, 0
         );
 
+        nextRow += rowHeight;
         GridBagConstraints downSampleConstraints = new GridBagConstraints(
-                0, 1, 3, 1, 1.0, 0.0, GridBagConstraints.NORTHWEST, GridBagConstraints.VERTICAL, insets, 0, 0
+                0, nextRow, 3, rowHeight, 1.0, 0.0, GridBagConstraints.NORTHWEST, GridBagConstraints.VERTICAL, insets, 0, 0
         );
         downSampleRateDropdown.setMinimumSize(DN_SAMPLE_DROPDOWN_SIZE);
         downSampleRateDropdown.setMaximumSize(DN_SAMPLE_DROPDOWN_SIZE);
         downSampleRateDropdown.setPreferredSize(DN_SAMPLE_DROPDOWN_SIZE);
 
+        nextRow += rowHeight;
         GridBagConstraints signalDataConstraints = new GridBagConstraints(
-                1, 1, 2, 1, 0.0, 0.0, GridBagConstraints.NORTHWEST, GridBagConstraints.VERTICAL, insets, 0, 0
+                1, nextRow, 2, rowHeight, 0.0, 0.0, GridBagConstraints.NORTHWEST, GridBagConstraints.VERTICAL, insets, 0, 0
         );
 
+        rowHeight = 2;
         GridBagConstraints commitBtnConstraints = new GridBagConstraints(
-                0, 2, 2, 2, 1.0, 1.0, GridBagConstraints.NORTHWEST, GridBagConstraints.NONE, insets, 0, 0
+                0, nextRow, 2, rowHeight, 1.0, 1.0, GridBagConstraints.NORTHWEST, GridBagConstraints.NONE, insets, 0, 0
         );
 
+        nextRow += rowHeight;
+        rowHeight = 3;
+        GridBagConstraints downSampleTipConstraints = new GridBagConstraints(
+                0, nextRow, 4, rowHeight, 1.0, 1.0, GridBagConstraints.NORTHWEST, GridBagConstraints.NONE, insets, 0, 0
+        );
+
+        nextRow += rowHeight;
+        rowHeight = 1;
         GridBagConstraints regionSelectionPanelConstraints = new GridBagConstraints(
-                0, 4, 3, 1, 1.0, 0.0, GridBagConstraints.NORTH, GridBagConstraints.BOTH, insets, 0, 0
+                0, nextRow, 3, rowHeight, 1.0, 0.0, GridBagConstraints.NORTH, GridBagConstraints.BOTH, insets, 0, 0
         );
 
+        nextRow += rowHeight;
         GridBagConstraints blackoutCheckboxConstraints = new GridBagConstraints(
-                0, 5, 3, 1, 1.0, 0.0, GridBagConstraints.NORTHWEST, GridBagConstraints.VERTICAL, insets, 0, 0
+                0, nextRow, 3, rowHeight, 1.0, 0.0, GridBagConstraints.NORTHWEST, GridBagConstraints.VERTICAL, insets, 0, 0
         );
 
+        nextRow += rowHeight;
         Insets buttonInsets = new Insets( 5, 5, 5, 5 );
         GridBagConstraints saveSearchConstraints = new GridBagConstraints(
-                0, 6, 1, 1, 1.0, 0.0, GridBagConstraints.NORTHWEST, GridBagConstraints.VERTICAL, buttonInsets, 0, 0
+                0, nextRow, 1, rowHeight, 1.0, 0.0, GridBagConstraints.NORTHWEST, GridBagConstraints.VERTICAL, buttonInsets, 0, 0
         );
 
         GridBagConstraints saveColorConstraints = new GridBagConstraints(
-                1, 6, 1, 1, 1.0, 0.0, GridBagConstraints.NORTHEAST, GridBagConstraints.VERTICAL, buttonInsets, 0, 0
+                1, nextRow, 1, rowHeight, 1.0, 0.0, GridBagConstraints.NORTHEAST, GridBagConstraints.VERTICAL, buttonInsets, 0, 0
         );
 
         GridBagConstraints saveScreenShotConstraints = new GridBagConstraints(
-                2, 6, 1, 1, 1.0, 0.0, GridBagConstraints.NORTHEAST, GridBagConstraints.VERTICAL, buttonInsets, 0, 0
+                2, nextRow, 1, rowHeight, 1.0, 0.0, GridBagConstraints.NORTHEAST, GridBagConstraints.VERTICAL, buttonInsets, 0, 0
         );
 
         centralPanel.add( brightnessSlider, brightnessConstraints );
         centralPanel.add( downSampleRateDropdown, downSampleConstraints );
         centralPanel.add( useSignalDataCheckbox, signalDataConstraints );
         centralPanel.add( commitButton, commitBtnConstraints );
+        JTextArea downSampleRateText = new JTextArea( DOWN_SAMPLE_TIP );
+        downSampleRateText.setLineWrap(true);
+        downSampleRateText.setColumns(DOWN_SAMPLE_TIP.length() / 2);
+        downSampleRateText.setEditable(false);
+        downSampleRateText.setBorder(new LineBorder(Color.black));
+        downSampleRateText.setPreferredSize( DOWNSAMPLE_TIP_DIM );
+        downSampleRateText.setSize( DOWNSAMPLE_TIP_DIM );
+        downSampleRateText.setMinimumSize( DOWNSAMPLE_TIP_DIM );
+
+        centralPanel.add(downSampleRateText, downSampleTipConstraints);
         centralPanel.add( blackoutCheckbox, blackoutCheckboxConstraints );
         centralPanel.add( regionSelectionPanel, regionSelectionPanelConstraints );
         centralPanel.add( searchSaveButton, saveSearchConstraints );
