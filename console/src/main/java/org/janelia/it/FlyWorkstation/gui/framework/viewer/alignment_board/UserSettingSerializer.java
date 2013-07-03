@@ -166,6 +166,20 @@ public class UserSettingSerializer implements Serializable {
 
         }
 
+        str = settingToValue.get( CAMERA_FOCUS_SETTING );
+        nonEmpty = str != null && str.trim().length() > 0;
+        if ( nonEmpty ) {
+            Collection<double[]> coordinateSets = new ArrayList<double[]>();
+            DoubleParseAcceptor doubleParseAcceptor = new DoubleParseAcceptor( coordinateSets );
+            parseTuples(str, 3, doubleParseAcceptor);
+            if ( coordinateSets.size() >= 1 ) {
+                double[] cameraFocusArr = coordinateSets.iterator().next();
+                volumeModel.getCamera3d().setFocus(
+                        cameraFocusArr[ X_OFFS ], cameraFocusArr[ Y_OFFS ], cameraFocusArr[ Z_OFFS ]
+                );
+            }
+        }
+
         str = settingToValue.get( CAMERA_ROTATION_SETTING );
         nonEmpty = str != null && str.trim().length() > 0;
         if ( nonEmpty ) {
@@ -187,20 +201,6 @@ public class UserSettingSerializer implements Serializable {
                          "Not restoring camera position.  Full settings string {}.",
                         settingsStrings
                 );
-            }
-        }
-
-        str = settingToValue.get( CAMERA_FOCUS_SETTING );
-        nonEmpty = str != null && str.trim().length() > 0;
-        if ( nonEmpty ) {
-            Collection<double[]> coordinateSets = new ArrayList<double[]>();
-            DoubleParseAcceptor doubleParseAcceptor = new DoubleParseAcceptor( coordinateSets );
-            parseTuples(str, 3, doubleParseAcceptor);
-            if ( coordinateSets.size() >= 1 ) {
-                double[] cameraFocusArr = coordinateSets.iterator().next();
-//                volumeModel.getCamera3d().setFocus(
-//                        cameraFocusArr[ X_OFFS ], cameraFocusArr[ Y_OFFS ], cameraFocusArr[ Z_OFFS ]
-//                );
             }
         }
 
