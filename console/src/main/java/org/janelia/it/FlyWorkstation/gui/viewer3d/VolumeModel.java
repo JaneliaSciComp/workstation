@@ -21,6 +21,7 @@ public class VolumeModel {
     private float gammaAdjustment = 1.0f;
     private float cropOutLevel = Mip3d.DEFAULT_CROPOUT;
     private Camera3d camera3d;
+    private Vec3 focusInGround = new Vec3( 0, 0, 0 );
     private float[] colorMask = { 1.0f, 1.0f, 1.0f };
 
     private Collection<UpdateListener> listeners = new ArrayList<UpdateListener>();
@@ -101,6 +102,14 @@ public class VolumeModel {
 
     public void setCamera3d(Camera3d camera3d) {
         this.camera3d = camera3d;
+    }
+
+    public Vec3 getFocusInGround() {
+        return focusInGround;
+    }
+
+    public void setFocusInGround(Vec3 focusInGround) {
+        this.focusInGround = focusInGround;
     }
 
     public static interface UpdateListener {

@@ -15,7 +15,6 @@ class MipRenderer
     private static final double DEFAULT_CAMERA_FOCUS_DISTANCE = 20.0;
 
     // camera parameters
-    Vec3 focusInGround = new Vec3(0,0,0);
     private Vec3 upInCamera = new Vec3(0,-1,0);
     private double distanceToScreenInPixels = 2000;
     private double defaultHeightInPixels = 400.0;
@@ -61,7 +60,7 @@ class MipRenderer
         gl.glLoadIdentity();
 
         gLDrawable.getWidth();
-        Vec3 f = focusInGround;
+        Vec3 f = volumeModel.getFocusInGround();
         Rotation3d rotation = getVolumeModel().getCamera3d().getRotation();
         Vec3 u = rotation.times(upInCamera);
         Vec3 c = f.plus(rotation.times( volumeModel.getCamera3d().getFocus()) );
@@ -94,7 +93,7 @@ class MipRenderer
     {
         // Adjust view to fit the actual objects present
         BoundingBox3d boundingBox = getBoundingBox();
-        focusInGround = boundingBox.getCenter();
+        volumeModel.setFocusInGround( boundingBox.getCenter() );
         getVolumeModel().getCamera3d().resetRotation();
         resetCameraFocus(boundingBox);
     }
@@ -141,7 +140,7 @@ class MipRenderer
 	public void translatePixels(double dx, double dy, double dz) {
 		// trackball translate
 		Vec3 t = new Vec3(-dx, -dy, -dz).times(glUnitsPerPixel());
-		focusInGround.plusEquals(getVolumeModel().getCamera3d().getRotation().times(t));
+		volumeModel.getFocusInGround().plusEquals(getVolumeModel().getCamera3d().getRotation().times(t));
 	}
 	
 	public void updateProjection(GL2 gl) {

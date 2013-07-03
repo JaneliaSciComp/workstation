@@ -25,6 +25,7 @@ public class UserSettingSerializer implements Serializable {
     private static final String GAMMA_SETTING = "Gamma";
     public static final String CAMERA_ROTATION_SETTING = "CameraRotation";
     public static final String CAMERA_FOCUS_SETTING = "CameraFocus";
+    public static final String GROUND_FOCUS_SETTING = "InGroundFocus";
 
     private static final int X_OFFS = 0;
     private static final int Y_OFFS = 1;
@@ -128,7 +129,7 @@ public class UserSettingSerializer implements Serializable {
 
         String str = null;
         str = settingToValue.get( GAMMA_SETTING );
-        boolean nonEmpty = str != null && str.trim().length() > 0;
+        boolean nonEmpty = nonEmpty(str);
         if ( nonEmpty ) {
             float gamma = Float.parseFloat( str );
             alignmentBoardSettings.setGammaFactor( gamma );
@@ -136,21 +137,21 @@ public class UserSettingSerializer implements Serializable {
         }
 
         str = settingToValue.get( CROP_OUT_LEVEL_SETTING );
-        nonEmpty = str != null && str.trim().length() > 0;
+        nonEmpty = nonEmpty(str);
         if ( nonEmpty ) {
             float cropOut = Float.parseFloat( str );
-            volumeModel.setCropOutLevel( cropOut );
+            volumeModel.setCropOutLevel(cropOut);
         }
 
         str = settingToValue.get( USE_SIGNAL_SETTING );
-        nonEmpty = str != null && str.trim().length() > 0;
+        nonEmpty = nonEmpty(str);
         if ( nonEmpty ) {
-            Boolean useSignal = Boolean.parseBoolean( str );
-            alignmentBoardSettings.setShowChannelData( useSignal );
+            Boolean useSignal = Boolean.parseBoolean(str);
+            alignmentBoardSettings.setShowChannelData(useSignal);
         }
 
         str = settingToValue.get( SELECTION_BOUNDS_SETTING );
-        nonEmpty = str != null && str.trim().length() > 0;
+        nonEmpty = nonEmpty(str);
         if ( nonEmpty ) {
             Collection<float[]> coordinateSets = new ArrayList<float[]>();
             FloatParseAcceptor floatParseAcceptor = new FloatParseAcceptor( coordinateSets );
@@ -167,7 +168,7 @@ public class UserSettingSerializer implements Serializable {
         }
 
         str = settingToValue.get( CAMERA_FOCUS_SETTING );
-        nonEmpty = str != null && str.trim().length() > 0;
+        nonEmpty = nonEmpty(str);
         if ( nonEmpty ) {
             Collection<double[]> coordinateSets = new ArrayList<double[]>();
             DoubleParseAcceptor doubleParseAcceptor = new DoubleParseAcceptor( coordinateSets );
@@ -180,8 +181,22 @@ public class UserSettingSerializer implements Serializable {
             }
         }
 
+        str = settingToValue.get( GROUND_FOCUS_SETTING );
+        nonEmpty = nonEmpty(str);
+        if ( nonEmpty ) {
+            Collection<double[]> coordinateSets = new ArrayList<double[]>();
+            DoubleParseAcceptor doubleParseAcceptor = new DoubleParseAcceptor( coordinateSets );
+            parseTuples(str, 3, doubleParseAcceptor);
+            if ( coordinateSets.size() >= 1 ) {
+                double[] cameraFocusArr = coordinateSets.iterator().next();
+                for ( int i = 0; i < 3; i++ ) {
+                    volumeModel.getFocusInGround().set( i, cameraFocusArr[ i ] );
+                }
+            }
+        }
+
         str = settingToValue.get( CAMERA_ROTATION_SETTING );
-        nonEmpty = str != null && str.trim().length() > 0;
+        nonEmpty = nonEmpty(str);
         if ( nonEmpty ) {
             Collection<double[]> coordinateSets = new ArrayList<double[]>();
             DoubleParseAcceptor doubleParseAcceptor = new DoubleParseAcceptor( coordinateSets );
@@ -198,12 +213,17 @@ public class UserSettingSerializer implements Serializable {
             else {
                 logger.warn(
                         "Invalid number of coordinates deserialized from camera rotation.  " +
-                         "Not restoring camera position.  Full settings string {}.",
+                                "Not restoring camera position.  Full settings string {}.",
                         settingsStrings
                 );
             }
         }
 
+    }
+
+    /** Quick method to test whether setting is empty. */
+    private boolean nonEmpty(String str) {
+        return str != null && str.trim().length() > 0;
     }
 
     String getSettingsString() {
@@ -249,6 +269,13 @@ public class UserSettingSerializer implements Serializable {
         }
         else {
             logger.info("Null rotation in Volume Model.");
+        }
+
+        Vec3 focusInGround = volumeModel.getFocusInGround();
+        if ( focusInGround != null ) {
+            builder.append(GROUND_FOCUS_SETTING).append( "=" );
+            appendVec3(builder, focusInGround );
+            builder.append( "\n" );
         }
 
         Vec3 focus = volumeModel.getCamera3d().getFocus();
