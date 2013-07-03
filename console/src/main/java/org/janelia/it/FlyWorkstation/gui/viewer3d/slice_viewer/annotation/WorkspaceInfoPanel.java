@@ -15,7 +15,6 @@ import java.util.Vector;
 
 // workstation imports
 
-import org.janelia.it.FlyWorkstation.gui.util.swing_models.CollectionJListModel;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.slice_viewer.Slot1;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.slice_viewer.Signal1;
 import org.janelia.it.jacs.model.user_data.tiledMicroscope.*;
@@ -68,7 +67,6 @@ public class WorkspaceInfoPanel extends JPanel
                     @Override
                     public void valueChanged(ListSelectionEvent listSelectionEvent) {
                         if (!listSelectionEvent.getValueIsAdjusting()) {
-                            // dispatch this to those who need to know
                             int index = neuronListBox.getSelectedIndex();
                             TmNeuron selectedNeuron;
                             if (index >= 0) {
@@ -87,7 +85,6 @@ public class WorkspaceInfoPanel extends JPanel
 
         updateWorkspace(null);
     }
-
 
     public void updateWorkspace(TmWorkspace workspace) {
         if (workspace == null) {
@@ -109,8 +106,6 @@ public class WorkspaceInfoPanel extends JPanel
             for (TmNeuron tmNeuron: neuronVector) {
                 neuronListModel.addElement(tmNeuron);
             }
-            // neuronListModel.copyInto(neuronVector);
-            // neuronListBox.setListData(neuronVector);
             }
         }
 

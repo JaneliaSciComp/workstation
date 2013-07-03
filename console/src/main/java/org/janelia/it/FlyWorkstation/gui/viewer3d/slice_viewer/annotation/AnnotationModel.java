@@ -11,15 +11,11 @@ import org.janelia.it.FlyWorkstation.gui.viewer3d.Vec3;
 
 import org.janelia.it.FlyWorkstation.api.entity_model.management.ModelMgr;
 
-import org.janelia.it.jacs.compute.access.DaoException;
 import org.janelia.it.jacs.model.entity.Entity;
 import org.janelia.it.jacs.model.user_data.Subject;
 import org.janelia.it.jacs.model.user_data.tiledMicroscope.*;
 
 
-// Java imports
-import java.util.ArrayList;
-import java.util.List;
 
 
 
@@ -141,13 +137,18 @@ public class AnnotationModel
 
     public void addRootAnnotation(TmWorkspace workspace, TmNeuron neuron, Vec3 xyz) {
 
-        // talk to the facade layer to do the add
+
+        // the null means "this is a root annotation" (would be the parent)
+        try {
+            TmGeoAnnotation ann = modelMgr.addGeometricAnnotation(neuron.getId(),
+                null, 0, xyz.x(), xyz.y(), xyz.z(), "testing");
+        } catch (Exception e) {
+            e.printStackTrace();
+            return;
+        }
 
         // notify interested parties
-        // what's the pattern going to be?  pass along the changed neuron?  or
-        //  somehow indicate the new annotation?
 
-           
 
     }
 

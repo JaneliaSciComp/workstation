@@ -100,21 +100,45 @@ public class AnnotationManager
 
     public void addAnnotation(Vec3 xyz) {
 
-        // get current workspace, brain, neurite, etc.
-        // if they don't exist, error
+        // get current workspace, etc.; if they don't exist, error
+        if (annotationModel.getCurrentWorkspace() == null) {
+            JOptionPane.showMessageDialog(null,
+                "You must load a workspace before beginning annotation!",
+                "No workspace!",
+                JOptionPane.ERROR_MESSAGE);
+            return;
+        }
+
+        if (annotationModel.getCurrentNeuron() == null) {
+            JOptionPane.showMessageDialog(null,
+                "You must select a neuron before beginning annotation!",
+                "No neuron!",
+                JOptionPane.ERROR_MESSAGE);
+            return;
+        }
+
 
         // if an annotation is selected, it's the parent
         // if not, check for existing root (currently can't handle > 1);
         //  if no existing root, new root annotation; else, fail
 
-        // annModel.addRootAnnotation(currentWorkspace, currentNeuron, xyz);
+        // for testing: just create one, assume it's a root for now
 
-        // update stuff?  or does this happen automatically?
-        //  - 2d view
-        //  - neurite tree 
+        // this should probably not take the ws and neuron (assume current), but
+        //  we're testing:
+        annotationModel.addRootAnnotation(annotationModel.getCurrentWorkspace(),
+            annotationModel.getCurrentNeuron(), xyz);
+
 
         // select new annotation
         // update selection listeners
+
+    }
+
+    public void createGeoAnnotation() {
+        System.out.println("pretending to add annotation");
+
+        addAnnotation(new Vec3(1, 2, 3));
 
     }
 

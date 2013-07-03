@@ -60,6 +60,15 @@ public class AnnotationPanel extends JPanel implements TreeSelectionListener
             }
         };
 
+    // this one is only for testing; will eventually be a mouse click thing, not
+    //  on the menu like the others
+    private final Action createGeoAnnAction = new AbstractAction() {
+        @Override
+        public void actionPerformed(ActionEvent actionEvent) {
+            annotationMgr.createGeoAnnotation();
+        }
+    };
+
     private final Action testItem1Action = new AbstractAction() {
         @Override
         public void actionPerformed(ActionEvent e) {
@@ -170,6 +179,12 @@ public class AnnotationPanel extends JPanel implements TreeSelectionListener
         createNeuronAction.putValue(Action.SHORT_DESCRIPTION, "Create a new neuron");
         createNeuronButton.setAction(createNeuronAction);        
         add(createNeuronButton);
+
+        JButton createGeoAnnButton = new JButton("Create GeoAnn");
+        createGeoAnnAction.putValue(Action.NAME, "Create GeoAnn");
+        createGeoAnnAction.putValue(Action.SHORT_DESCRIPTION, "Create a new annotation");
+        createGeoAnnButton.setAction(createGeoAnnAction);
+        add(createGeoAnnButton);
 
         JButton testItem1Button = new JButton("Test item 1");
         testItem1Action.putValue(Action.NAME, "Test item 1");

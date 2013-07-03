@@ -58,6 +58,20 @@ public class NeuronInfoPanel extends JPanel
             neuronNameLabel.setText("(no neuron)");
         } else {
             neuronNameLabel.setText(neuron.getName());
+
+            // try to extract some info and print it, for testing:
+            System.out.println("loaded neuron " + neuron.getName());
+            TmGeoAnnotation rootAnn = neuron.getRootAnnotation();
+            if (rootAnn == null) {
+                System.out.println("neuron has no root annotation");
+            } else {
+                double x = rootAnn.getX();
+                double y = rootAnn.getY();
+                double z = rootAnn.getZ();
+                int nChildren = rootAnn.getChildren().size();
+                System.out.println("root annotation at " + x + ", " + y + ", " + z);
+                System.out.println("root annotation has " + nChildren + " children");
+            }
         }
     }
 
