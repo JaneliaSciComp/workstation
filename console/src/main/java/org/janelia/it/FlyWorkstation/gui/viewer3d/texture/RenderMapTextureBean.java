@@ -1,10 +1,10 @@
 package org.janelia.it.FlyWorkstation.gui.viewer3d.texture;
 
 import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr;
+import org.janelia.it.FlyWorkstation.gui.viewer3d.VolumeModel;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.masking.RenderMappingI;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.renderable.RenderableBean;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.VolumeDataAcceptor;
-import org.janelia.it.FlyWorkstation.gui.viewer3d.volume_export.CropCoordSet;
 
 import javax.media.opengl.GL2;
 import java.nio.ByteOrder;
@@ -33,8 +33,9 @@ public class RenderMapTextureBean implements TextureDataI {
     // This must be divisible by (4 x line-width) for the graphics card.  It must also be divisible by entries-per-set.
     private static final int DIVISIBILITY_VALUE = ((4 * LINE_WIDTH) * ENTRIES_PER_COORD_SET) / 2; // Smallest size...
 
+    private VolumeModel volumeModel;
     private RenderMappingI renderMapping;
-    private CropCoordSet cropCoordSet;
+
     //private byte[] mapData;
     private boolean inverted = false; // Default probably carries the day.
     private Integer voxelComponentFormat = GL2.GL_UNSIGNED_INT_8_8_8_8_REV;
@@ -44,21 +45,21 @@ public class RenderMapTextureBean implements TextureDataI {
     private int voxelComponentOrder = GL2.GL_RGBA;
 
     /**
+     * This model's members are set from client code and used here, to avoid excessive parameter passing.
+     *
+     * @param volumeModel contains various controlling info.
+     */
+    public void setVolumeModel( VolumeModel volumeModel ) {
+        this.volumeModel = volumeModel;
+    }
+
+    /**
      * This implementation makes a big array of 64K * 3, to accommodate any possible neuron fragment number's
      * three colors.  It is wasteful in space, but far smaller than most uploaded textures.  It may be possible
      * to pack this into far smaller area, but with the sacrifice of processing time.
      */
     public void setMapping( RenderMappingI renderMapping ) {
         this.renderMapping = renderMapping;
-    }
-
-    /**
-     * Setting crop coords for the byte array. These need to be de-normalized to non 0..1 values.
-     *
-     * @param cropCoordSet collection of 6-float axial position delimiters. 2 for each 3D axis.
-     */
-    public void setCropCoords( CropCoordSet cropCoordSet ) {
-        this.cropCoordSet = cropCoordSet;
     }
 
     @Override
@@ -84,8 +85,8 @@ public class RenderMapTextureBean implements TextureDataI {
         }
 
         // Need de-normalized as-int values in the crop coords.
-        if ( cropCoordSet != null ) {
-            Collection<float[]> acceptedCoordinates = cropCoordSet.getAcceptedCoordinates();
+        if ( volumeModel.getCropCoords() != null ) {
+            Collection<float[]> acceptedCoordinates = volumeModel.getCropCoords().getAcceptedCoordinates();
             if ( acceptedCoordinates.size() > MAX_COORD_SETS ) {
                 acceptedCoordinates.clear();
                 SessionMgr.getSessionMgr().handleException(

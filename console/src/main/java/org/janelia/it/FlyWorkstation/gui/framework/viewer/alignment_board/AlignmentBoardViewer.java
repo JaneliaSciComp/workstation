@@ -28,7 +28,6 @@ import org.janelia.it.FlyWorkstation.gui.viewer3d.masking.ConfigurableColorMappi
 import org.janelia.it.FlyWorkstation.gui.viewer3d.masking.RenderMappingI;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.texture.ABContextDataSource;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.texture.TextureDataI;
-import org.janelia.it.FlyWorkstation.gui.viewer3d.volume_export.CropCoordSet;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.volume_export.VolumeWritebackHandler;
 import org.janelia.it.FlyWorkstation.model.domain.CompartmentSet;
 import org.janelia.it.FlyWorkstation.model.domain.EntityWrapper;
@@ -679,10 +678,8 @@ public class AlignmentBoardViewer extends Viewer implements AlignmentBoardContro
         }
 
         @Override
-        public void setSelectedCoords( CropCoordSet cropCoordSet ) {
-//NOTE: serializing did not clear-after-app-cycle.
+        public void updateCropCoords() {
             AlignmentBoardContext context = SessionMgr.getBrowser().getLayersPanel().getAlignmentBoardContext();
-            //viewer.serialize();
             viewer.mip3d.refreshRendering();
 
             viewer.updateRendering( context );

@@ -16,7 +16,7 @@ public interface ControlsListener {
     public enum ExportMethod { binary, color, mip }
     void setBrightness( double brightness );
     void updateSettings();
-    void setSelectedCoords( CropCoordSet cropCoordSet );
+    void updateCropCoords();
     void exportSelection( Collection<float[]> absoluteCoords, CompletionListener completionListener, ExportMethod method );
     void setCropBlackout( boolean blackout );
 }

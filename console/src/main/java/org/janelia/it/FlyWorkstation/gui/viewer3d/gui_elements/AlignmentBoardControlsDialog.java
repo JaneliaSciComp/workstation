@@ -339,17 +339,18 @@ public class AlignmentBoardControlsDialog extends JDialog {
         }
     }
 
-    private synchronized void fireSettingsEvent( CropCoordSet cropCoordSet ) {
+    private synchronized void fireCropEvent() {
+        CropCoordSet cropCoordSet = volumeModel.getCropCoords();
         if ( cropCoordSet.getAcceptedCoordinates().size() > 0  ||  cropCoordSet.getCurrentCoordinates() != null ) {
             for ( ControlsListener listener: listeners ) {
-                listener.setSelectedCoords( cropCoordSet );
+                listener.updateCropCoords();
             }
         }
     }
 
-    private synchronized void fireForceCropEvent( CropCoordSet cropCoordSet ) {
+    private synchronized void fireForceCropEvent() {
         for ( ControlsListener listener: listeners ) {
-            listener.setSelectedCoords( cropCoordSet );
+            listener.updateCropCoords();
         }
     }
 
@@ -470,9 +471,9 @@ public class AlignmentBoardControlsDialog extends JDialog {
             public void actionPerformed( ActionEvent ae ) {
                 resetSelectionSliders();
                 CropCoordSet cropCoordSet = volumeModel.getCropCoords();
-                cropCoordSet.setCurrentCoordinates( getCurrentCropCoords() );
+                cropCoordSet.setCurrentCoordinates(getCurrentCropCoords());
                 cropCoordSet.getAcceptedCoordinates().clear();
-                fireForceCropEvent(cropCoordSet);
+                fireForceCropEvent();
             }
         });
 
@@ -482,7 +483,7 @@ public class AlignmentBoardControlsDialog extends JDialog {
             public void actionPerformed( ActionEvent ae ) {
                 CropCoordSet cropCoordSet = volumeModel.getCropCoords();
                 cropCoordSet.acceptCurrentCoordinates();
-                fireSettingsEvent( cropCoordSet );
+                fireCropEvent();
             }
         });
 
@@ -798,7 +799,7 @@ public class AlignmentBoardControlsDialog extends JDialog {
             float[] cropCoords = new CoordCropper3D().getNormalizedCropCoords(sliders);
             CropCoordSet cropCoordSet = volumeModel.getCropCoords();
             cropCoordSet.setCurrentCoordinates( cropCoords );
-            dialog.fireSettingsEvent( cropCoordSet );
+            dialog.fireCropEvent();
         }
 
     }
