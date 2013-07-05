@@ -75,6 +75,7 @@ public class AlignmentBoardViewer extends Viewer implements AlignmentBoardContro
     private boolean boardOpen = false;
     private Double cachedDownSampleGuess = null;
     private AlignmentBoardSettings settingsData;
+    private ShutdownListener shutdownListener;
 
     public AlignmentBoardViewer(ViewerPane viewerPane) {
         super(viewerPane);
@@ -93,7 +94,8 @@ public class AlignmentBoardViewer extends Viewer implements AlignmentBoardContro
         });
 
         // Saveback settings.
-        SessionMgr.getSessionMgr().addSessionModelListener( new ShutdownListener() );
+        shutdownListener = new ShutdownListener();
+        SessionMgr.getSessionMgr().addSessionModelListener( shutdownListener );
     }
 
     @Override
@@ -133,6 +135,8 @@ public class AlignmentBoardViewer extends Viewer implements AlignmentBoardContro
     @Override
     public void close() {
         logger.info( "Closing" );
+        // Cleanup this listener to avoid mem leaks.
+        SessionMgr.getSessionMgr().removeSessionModelListener( shutdownListener );
 
         ModelMgr.getModelMgr().unregisterOnEventBus(this);
         serialize();
@@ -171,6 +175,7 @@ public class AlignmentBoardViewer extends Viewer implements AlignmentBoardContro
 
     @Subscribe
     public void handleItemChanged(AlignmentBoardItemChangeEvent event) {
+        logger.info( "Item changed" );
         // Check this, to prevent this being completed until the board has been first initialized.
         // Redundant events may be posted at startup.
         if ( boardOpen ) {
@@ -324,7 +329,7 @@ public class AlignmentBoardViewer extends Viewer implements AlignmentBoardContro
             printAlignmentBoardContext(abContext);
 
             // The true update!
-            //this.updateBoard(abContext);
+            this.updateBoard(abContext);
             boardOpen = true;
         }
     }
