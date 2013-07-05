@@ -25,6 +25,7 @@ public class ABContextDataSource implements RenderableDataSourceI {
     private final AlignmentBoardContext context;
 
     private AlignedItem currentSample; // NOTE: use of this precludes multi-threaded use of this data source!
+    private AlignedItem currentCompartmentSet;
 
     private final Logger logger = LoggerFactory.getLogger( ABContextDataSource.class );
     public ABContextDataSource( AlignmentBoardContext context ) {
@@ -71,6 +72,7 @@ public class ABContextDataSource implements RenderableDataSourceI {
             }
             else if ( itemEntity instanceof CompartmentSet) {
                 currentSample = null;
+                currentCompartmentSet = alignedItem;
 
                 CompartmentSet compartmentSet = (CompartmentSet)itemEntity;
                 Entity internalEntity = compartmentSet.getInternalEntity();
@@ -217,9 +219,7 @@ public class ABContextDataSource implements RenderableDataSourceI {
         Color renderColor = item.getColor();
         if ( renderColor == null ) {
             // Second chance at the render color, from the item parent.
-            if ( currentSample != null  &&  currentSample.getColor() != null ) {
-                renderColor = currentSample.getColor();
-            }
+            renderColor = getParentColor();
         }
 
         if ( renderColor == null ) {
@@ -233,32 +233,32 @@ public class ABContextDataSource implements RenderableDataSourceI {
                 rgb[ 3 ] = RenderMappingI.NON_RENDERING;
                 renderableBean.setRgb(rgb);
             }
-            else if ( item.isPassthroughRendering() ) {
+            else if ( item.isPassthroughRendering()  ||  parentIsPassthrough() ) {
                 byte[] rgb = new byte[ 4 ];
-                rgb[ 0 ] = 0;
-                rgb[ 1 ] = 0;
-                rgb[ 2 ] = 0;
-                rgb[ 3 ] = RenderMappingI.PASS_THROUGH_RENDERING;
+                setPassthroughRGB(rgb);
                 renderableBean.setRgb(rgb);
             }
             else if ( isCompartment ) {
                 Compartment compartment = (Compartment)item.getItemWrapper();
                 byte[] rgb = new byte[ 4 ];
-                int[] rawColor = compartment.getColor();
-                for ( int i = 0; i < 3; i++ ) {
-                    rgb[ i ] = (byte)rawColor[ i ];
+                if ( currentCompartmentSet.isPassthroughRendering() ) {
+                    setPassthroughRGB( rgb );
                 }
-                rgb[ 3 ] = RenderMappingI.COMPARTMENT_RENDERING;
-                renderableBean.setRgb( rgb );
+                else {
+                    int[] rawColor = compartment.getColor();
+                    for ( int i = 0; i < 3; i++ ) {
+                        rgb[ i ] = (byte)rawColor[ i ];
+                    }
+                    rgb[ 3 ] = RenderMappingI.COMPARTMENT_RENDERING;
+                    renderableBean.setRgb( rgb );
+                }
             }
         }
         else {
             logger.debug( "Render color is {} for {}.", renderColor, item.getItemWrapper().getName() );
             // A Neuron Color was set, but the neuron could still be "turned off" for render.
             byte[] rgb = new byte[ 4 ];
-            rgb[ 0 ] = (byte)renderColor.getRed();
-            rgb[ 1 ] = (byte)renderColor.getGreen();
-            rgb[ 2 ] = (byte)renderColor.getBlue();
+            setRgbFromColor(renderColor, rgb);
             byte renderMethod = RenderMappingI.FRAGMENT_RENDERING;
             if ( item.isPassthroughRendering() ) {
                 renderMethod = RenderMappingI.PASS_THROUGH_RENDERING;
@@ -267,7 +267,17 @@ public class ABContextDataSource implements RenderableDataSourceI {
                 renderMethod = RenderMappingI.NON_RENDERING;
             }
             else if ( isCompartment ) {
-                renderMethod = RenderMappingI.COMPARTMENT_RENDERING;
+                // Allow an override for all compartments, from parent.
+                if ( parentIsPassthrough() ) {
+                    setPassthroughRGB( rgb );
+                }
+                else if ( getParentColor() != null ) {
+                    setRgbFromColor(getParentColor(), rgb);
+                    renderMethod = RenderMappingI.COMPARTMENT_RENDERING;
+                }
+                else {
+                    renderMethod = RenderMappingI.COMPARTMENT_RENDERING;
+                }
             }
             rgb[ 3 ] = renderMethod;
             renderableBean.setRgb(rgb);
@@ -276,5 +286,40 @@ public class ABContextDataSource implements RenderableDataSourceI {
         return renderableBean;
     }
 
+    private Color getParentColor() {
+        Color renderColor = null;
+        if ( currentSample != null ) {
+            renderColor = getParentColor( currentSample );
+        }
+        else if ( currentCompartmentSet != null ) {
+            renderColor = getParentColor( currentCompartmentSet );
+        }
+        return renderColor;
+    }
 
+    private void setRgbFromColor(Color renderColor, byte[] rgb) {
+        rgb[ 0 ] = (byte)renderColor.getRed();
+        rgb[ 1 ] = (byte)renderColor.getGreen();
+        rgb[ 2 ] = (byte)renderColor.getBlue();
+    }
+
+    private void setPassthroughRGB(byte[] rgb) {
+        rgb[ 0 ] = 0;
+        rgb[ 1 ] = 0;
+        rgb[ 2 ] = 0;
+        rgb[ 3 ] = RenderMappingI.PASS_THROUGH_RENDERING;
+    }
+
+    private Color getParentColor( AlignedItem parent ) {
+        Color renderColor = null;
+        if ( parent != null  &&  parent.getColor() != null ) {
+            renderColor = parent.getColor();
+        }
+        return renderColor;
+    }
+
+    private boolean parentIsPassthrough() {
+        return (currentCompartmentSet != null  &&   currentCompartmentSet.isPassthroughRendering())  ||
+               (currentSample != null  &&  currentSample.isPassthroughRendering());
+    }
 }
