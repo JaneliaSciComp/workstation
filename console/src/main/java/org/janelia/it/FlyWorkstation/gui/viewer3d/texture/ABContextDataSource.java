@@ -51,6 +51,7 @@ public class ABContextDataSource implements RenderableDataSourceI {
             EntityWrapper itemEntity = alignedItem.getItemWrapper();
             if ( itemEntity instanceof Sample) {
                 currentSample = alignedItem;
+                currentCompartmentSet = null;
                 Sample sample = (Sample)itemEntity;
                 Entity internalEntity = sample.getInternalEntity();
 
