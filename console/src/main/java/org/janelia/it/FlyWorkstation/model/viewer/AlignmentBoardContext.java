@@ -182,7 +182,7 @@ public class AlignmentBoardContext extends AlignedItem {
                 parentAlignedItem.loadContextualizedChildren(getAlignmentContext());
 
                 for (Compartment child : parent.getCompartmentSet()) {
-                    log.info("Adding compartment {}.", child.getName());
+                    log.debug("Adding compartment {}.", child.getName());
                     AlignedItem alignedItem = ModelMgr.getModelMgr().addAlignedItem(parentAlignedItem, child);
                     alignedItem.loadContextualizedChildren(getAlignmentContext());
                     alignedItem.setIsVisible(true);
@@ -198,7 +198,7 @@ public class AlignmentBoardContext extends AlignedItem {
 
         }
         else if (wrapper instanceof Compartment) {
-            log.info("Handling compartment " + wrapper.getName());
+            log.debug("Handling compartment " + wrapper.getName());
             events.addAll(handleChildWrapper(wrapper));
         }
         else {
@@ -221,10 +221,10 @@ public class AlignmentBoardContext extends AlignedItem {
         if (parentAlignedItem==null) {
             parentAlignedItem = ModelMgr.getModelMgr().addAlignedItem(this, parent);
             parentAlignedItem.loadContextualizedChildren(getAlignmentContext());
-            log.info("No parent found for {}.", parent.getName());
+            log.debug("No parent found for {}.", parent.getName());
         }
         else {
-            log.info("Found parent item for {}, of {}.", parent.getName(), parentAlignedItem.getName() );
+            log.debug("Found parent item for {}, of {}.", parent.getName(), parentAlignedItem.getName() );
         }
 
         parentAlignedItem.setIsVisible(true);

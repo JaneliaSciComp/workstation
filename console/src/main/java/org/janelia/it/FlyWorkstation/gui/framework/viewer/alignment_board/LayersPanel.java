@@ -11,7 +11,6 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import javax.swing.*;
 import javax.swing.table.TableColumn;
 import javax.swing.table.TableColumnModel;
-import javax.swing.tree.TreeModel;
 import javax.swing.tree.TreePath;
 
 import org.janelia.it.FlyWorkstation.api.entity_model.events.EntityInvalidationEvent;
@@ -58,6 +57,7 @@ public class LayersPanel extends JPanel implements Refreshable, ActivatableView 
 
     private final JPanel treesPanel;
     private Outline outline;
+    private SampleTreeModel sampleTreeModel;
     
     private AlignmentBoardContext alignmentBoardContext;
     private SimpleWorker worker;
@@ -231,7 +231,7 @@ public class LayersPanel extends JPanel implements Refreshable, ActivatableView 
     
     public void openAlignmentBoard(long alignmentBoardId) {
         log.debug("openAlignmentBoard: {}",alignmentBoardId);
-        loadAlignmentBoard(alignmentBoardId, new Callable<Void>() {
+        loadAlignmentBoard(alignmentBoardId, null, new Callable<Void>() {
             @Override
             public Void call() throws Exception {
                 AlignmentBoardOpenEvent event = new AlignmentBoardOpenEvent(alignmentBoardContext);
@@ -248,8 +248,8 @@ public class LayersPanel extends JPanel implements Refreshable, ActivatableView 
     }
     
     private AtomicBoolean loadInProgress = new AtomicBoolean(false);
-    
-    public void loadAlignmentBoard(final long alignmentBoardId, final Callable<Void> success) {
+
+    private void loadAlignmentBoard(final long alignmentBoardId, final OutlineExpansionState expansionState, final Callable<Void> success) {
         
         showLoadingIndicator();
         
@@ -328,9 +328,12 @@ public class LayersPanel extends JPanel implements Refreshable, ActivatableView 
                 alignmentBoardContext = abContext;
                 
                 log.debug("loadAlignmentBoard was a success, updating the outline now");
-                
-                OutlineModel outlineModel = DefaultOutlineModel.createOutlineModel(new SampleTreeModel(), new AlignedEntityRowModel(), true, "Name");
+
+                sampleTreeModel = new SampleTreeModel(alignmentBoardContext);
+                OutlineModel outlineModel = DefaultOutlineModel.createOutlineModel(sampleTreeModel, new AlignedEntityRowModel(), true, "Name");
                 updateTableModel(outlineModel);
+                
+                if (expansionState!=null) expansionState.restoreExpansionState(true);
                 
                 loadInProgress.set(false);
                 showOutline();
@@ -433,7 +436,7 @@ public class LayersPanel extends JPanel implements Refreshable, ActivatableView 
         if (removedItem!=null) {
             log.debug("The removed item was one of our aligned items! Refresh everything.");
             // TODO: surgically modify the in-memory model without reloading everything
-            loadAlignmentBoard(alignmentBoardContext.getId(), new Callable<Void>() {
+            refresh(true, false, new Callable<Void>() {
                 @Override
                 public Void call() throws Exception {
                     final AlignmentBoardItemChangeEvent abEvent = new AlignmentBoardItemChangeEvent(
@@ -447,27 +450,34 @@ public class LayersPanel extends JPanel implements Refreshable, ActivatableView 
     
     @Subscribe 
     public void itemChanged(AlignmentBoardItemChangeEvent event) {
-        OutlineModel outlineModel = DefaultOutlineModel.createOutlineModel(new SampleTreeModel(), new AlignedEntityRowModel(), true, "Name");
-        updateTableModel(outlineModel);
+        // TODO: do we really need to recreate the model, or is there a more efficient way to force the update?
+        refresh();
     }
     
     @Override
     public void refresh() {
         log.debug("refresh");
-        refresh(false, null);
+        refresh(true, false, null);
     }
 
     @Override
     public void totalRefresh() {
         log.debug("totalRefresh");
-        refresh(true, null);
+        refresh(true, true, null);
     }
     
-    private void refresh(final boolean invalidateCache, final Callable<Void> success) {
+    private void refresh(final boolean restoreState, final boolean invalidateCache, final Callable<Void> success) {
         // TODO: respect cache invalidation parameter
-        if (alignmentBoardContext!=null) {
-            loadAlignmentBoard(alignmentBoardContext.getId(), success);
+        if (alignmentBoardContext==null) return;
+        if (restoreState) {
+            final OutlineExpansionState expansionState = new OutlineExpansionState(outline);
+            expansionState.storeExpansionState();
+            loadAlignmentBoard(alignmentBoardContext.getId(), expansionState, success);
         }
+        else {
+            loadAlignmentBoard(alignmentBoardContext.getId(), null, success);
+        }
+        
     }    
     
     private class OutlineTreeCellRenderer extends DefaultOutlineCellRenderer {
@@ -550,57 +560,6 @@ public class LayersPanel extends JPanel implements Refreshable, ActivatableView 
         }
     }
     
-    private class SampleTreeModel implements TreeModel {
-        
-        public SampleTreeModel() {
-        }
-
-        @Override
-        public void addTreeModelListener(javax.swing.event.TreeModelListener l) {
-        }
-
-        @Override
-        public Object getChild(Object parent, int index) {
-            AlignedItem item = (AlignedItem)parent;
-            if (item==null) return null;
-            Object child = item.getChildren()==null?0:item.getChildren().get(index);
-            return child;
-        }
-
-        @Override
-        public int getChildCount(Object parent) {
-            AlignedItem item = (AlignedItem)parent;
-            if (item==null) return 0;
-            int count = item.getChildren()==null?0:item.getChildren().size();
-            return count;
-        }
-
-        @Override
-        public int getIndexOfChild(Object parent, Object child) {
-            AlignedItem item = (AlignedItem)parent;
-            if (item==null) return 0;
-            int index = item.getChildren()==null?0:item.getChildren().indexOf(child);
-            return index;
-        }
-
-        @Override
-        public Object getRoot() {
-            return alignmentBoardContext;
-        }
-
-        @Override
-        public boolean isLeaf(Object node) {
-            return getChildCount(node)==0;
-        }
-
-        @Override
-        public void removeTreeModelListener(javax.swing.event.TreeModelListener l) {
-        }
-
-        @Override
-        public void valueForPathChanged(javax.swing.tree.TreePath path, Object newValue) {
-        }
-    }
     
     private class AlignedEntityRowModel implements RowModel {
 

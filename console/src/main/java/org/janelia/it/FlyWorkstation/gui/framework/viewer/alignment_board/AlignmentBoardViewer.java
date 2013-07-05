@@ -324,7 +324,7 @@ public class AlignmentBoardViewer extends Viewer implements AlignmentBoardContro
             printAlignmentBoardContext(abContext);
 
             // The true update!
-            this.updateBoard(abContext);
+            //this.updateBoard(abContext);
             boardOpen = true;
         }
     }
