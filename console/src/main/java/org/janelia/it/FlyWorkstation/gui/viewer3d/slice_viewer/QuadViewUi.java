@@ -131,7 +131,7 @@ public class QuadViewUi extends JPanel
 
 	// Actions
 	private final Action openFolderAction = new OpenFolderAction(volumeImage, sliceViewer);
-	private RecentFileList recentFileList = new RecentFileList(new JMenu());
+	private RecentFileList recentFileList = new RecentFileList(new JMenu("Open Recent"));
 	private final Action resetViewAction = new ResetViewAction(allSliceViewers, volumeImage);
 	private final Action resetColorsAction = new ResetColorsAction(imageColorModel);
 	// mode actions (and groups)
@@ -268,6 +268,7 @@ public class QuadViewUi extends JPanel
 	 */
 	public QuadViewUi(JFrame parentFrame, Entity initialEntity, boolean overrideFrameMenuBar)
 	{
+		volumeImage.volumeInitializedSignal.connect(onVolumeLoadedSlot);
 		sliceViewer.setImageColorModel(imageColorModel);
 		
 		colorChannelWidget_3.setVisible(false);
@@ -339,16 +340,10 @@ public class QuadViewUi extends JPanel
                     return result;
                 }
             });
-            ViewTileManager viewTileManager = new ViewTileManager(v.getViewer());
-            viewTileManager.setVolumeImage(volumeImage);
-            viewTileManager.setTextureCache(tileServer.getTextureCache());
-            SliceActor sliceActor = new SliceActor(viewTileManager);
-            sliceActor.setImageColorModel(imageColorModel);
+            v.setTileServer(tileServer);
+            v.getViewer().getSliceActor().setImageColorModel(imageColorModel);
             imageColorModel.getColorModelChangedSignal().connect(v.getViewer().repaintSlot);
-            v.getViewer().addActor(sliceActor);
-            tileServer.getViewTextureChangedSignal().connect(v.getViewer().repaintSlot);
-            // v.getViewer().addActor(new TileOutlineActor(viewTileManager)); // for debugging
-            tileServer.addViewTileManager(viewTileManager);
+            // v.getViewer().addActor(new TileOutlineActor(v.getViewTileManager())); // for debugging
             // Add skeleton actor AFTER slice actor
             v.getViewer().setSkeletonActor(sharedSkeletonActor);
         }
@@ -981,11 +976,12 @@ public class QuadViewUi extends JPanel
         mntmNewMenuItem_1.setAction(openFolderAction);
         mnFile.add(mntmNewMenuItem_1);
 
-        JMenu mnNewMenu = new JMenu("Open Recent");
-        mnNewMenu.setVisible(false);
-        mnFile.add(mnNewMenu);
-        recentFileList = new RecentFileList(mnNewMenu);
+        JMenu recentFileMenu = new JMenu("Open Recent");
+        recentFileMenu.setVisible(false);
+        mnFile.add(recentFileMenu);
+        recentFileList = new RecentFileList(recentFileMenu);
         recentFileList.getOpenUrlRequestedSignal().connect(loadUrlSlot);
+
         return mnFile;
     }
 
@@ -1056,12 +1052,15 @@ public class QuadViewUi extends JPanel
     }
     
     public boolean loadURL(URL url) {
-    	boolean result = volumeImage.loadURL(url);
-    	if (result) {
+    	return volumeImage.loadURL(url);
+    }
+    
+    public Slot1<URL> onVolumeLoadedSlot = new Slot1<URL>() {
+		@Override
+		public void execute(URL url) {
 			recentFileList.add(url);
 			imageColorModel.reset(volumeImage);
 			resetViewAction.actionPerformed(null);
-    	}
-    	return result;
-    }
+		}
+    };
 }

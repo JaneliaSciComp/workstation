@@ -11,35 +11,39 @@ import org.janelia.it.FlyWorkstation.gui.viewer3d.slice_viewer.TileIndex;
  * @author brunsc
  *
  */
-public class MinResZGenerator 
+public class MinResSliceGenerator 
 implements Iterable<TileIndex>, Iterator<TileIndex>
 {
 	TileIndex index1, index2;
-	int zMin, zMax;
+	int sliceMin, sliceMax;
 	boolean useFirst = true;
+	private CoordinateAxis sliceAxis;
 
-	public MinResZGenerator(TileFormat tileFormat) 
+	public MinResSliceGenerator(TileFormat tileFormat, CoordinateAxis sliceAxis) 
 	{
+		this.sliceAxis = sliceAxis;
 		int maxZoom = tileFormat.getZoomLevelCount() - 1;
-		int x = 0; // only one value of x and y at lowest resolution
-		int y = 0;
-		zMin = tileFormat.getOrigin()[2];
-		zMax = zMin + tileFormat.getVolumeSize()[2];
+		int xyz[] = {0,0,0};
+		int sa = sliceAxis.index();
+		sliceMin = tileFormat.getOrigin()[sa];
+		sliceMax = sliceMin + tileFormat.getVolumeSize()[sa];
 
 		// Start at center and move out
-		int z0 = (zMin + zMax)/2;
-		index1 = new TileIndex(x, y, z0, maxZoom, 
+		int slice0 = (sliceMin + sliceMax)/2;
+		xyz[sa] = slice0;
+		index1 = new TileIndex(xyz[0], xyz[1], xyz[2], maxZoom, 
 				maxZoom, tileFormat.getIndexStyle(),
-				CoordinateAxis.Z);
+				sliceAxis);
 		index2 = index1.nextSlice();		
 	}
 
 	@Override
 	public boolean hasNext() {
 		boolean result = false;
-		if ((index1 != null) && (index1.getZ() >= zMin))
+		int sa = sliceAxis.index();
+		if ((index1 != null) && (index1.getCoordinate(sa) >= sliceMin))
 			result = true;
-		if ((index2 != null) && (index2.getZ() <= zMax))
+		if ((index2 != null) && (index2.getCoordinate(sa) <= sliceMax))
 			result = true;
 		return result;
 	}
@@ -49,9 +53,9 @@ implements Iterable<TileIndex>, Iterator<TileIndex>
 		TileIndex result = index2;
 		if (useFirst)
 			result = index1; // because it is the turn of index1
-		if ((index1 == null) || (index1.getZ() < zMin))
+		if ((index1 == null) || (index1.getCoordinate(sliceAxis.index()) < sliceMin))
 			result = index2; // because index1 is out of bounds
-		if ((index2 == null) || (index2.getZ() > zMax))
+		if ((index2 == null) || (index2.getCoordinate(sliceAxis.index()) > sliceMax))
 			result = index1; // because index2 is out of bounds
 		// increment for next time
 		if (result == index1)

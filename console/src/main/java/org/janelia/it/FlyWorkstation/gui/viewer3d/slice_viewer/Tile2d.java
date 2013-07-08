@@ -75,8 +75,11 @@ implements GLActor
 			setStage(Stage.BEST_TEXTURE_LOADED);
 			return;
 		}
-		// System.out.println("cache miss "+ix);
+		if ((ix != null) && (ix.getSliceAxis() == CoordinateAxis.X))
+			log.info("cache miss "+ix);
 		ix = ix.zoomOut(); // Try some lower resolution textures
+		if ((ix != null) && (ix.getSliceAxis() == CoordinateAxis.X))
+			log.info("try lower texture "+ix);
 		while (ix != null) {
 			texture = textureCache.get(ix);
 			if (texture == null) {
@@ -90,11 +93,15 @@ implements GLActor
 				// log.info("cache miss texture not loaded "+ix);
 			}
 			else {
+				if ((ix != null) && (ix.getSliceAxis() == CoordinateAxis.X))
+					log.info("choosing lower texture "+ix);
 				bestTexture = texture;
 				setStage(Stage.COARSE_TEXTURE_LOADED);
 				return;
 			}
 			ix = ix.zoomOut();
+			if ((ix != null) && (ix.getSliceAxis() == CoordinateAxis.X))
+				log.info("try lower texture "+ix);
 		}
 		// No texture was found; maybe next time
 		// log.info("texture cache miss "+getIndex());
@@ -275,6 +282,14 @@ implements GLActor
 		if (sliceAxis == CoordinateAxis.X) whdToXyz = new int[]{2,1,0};
 		else if (sliceAxis == CoordinateAxis.Y) whdToXyz = new int[]{0,2,1};
 		return whdToXyz;
+	}
+	
+	private int[] getXyzToWhd() {
+		int xyzToWhd[] = {0,1,2};
+		CoordinateAxis sliceAxis = getIndex().getSliceAxis();
+		if (sliceAxis == CoordinateAxis.X) xyzToWhd = new int[]{0,1,2};
+		else if (sliceAxis == CoordinateAxis.Y) xyzToWhd = new int[]{0,1,2};
+		return xyzToWhd;
 	}
 	
 	private BoundingBox3d computeBoundingBox() {

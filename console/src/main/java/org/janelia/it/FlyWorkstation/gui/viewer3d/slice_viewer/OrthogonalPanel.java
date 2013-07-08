@@ -19,6 +19,7 @@ import org.janelia.it.FlyWorkstation.gui.viewer3d.BoundingBox3d;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.CoordinateAxis;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.Vec3;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.camera.ObservableCamera3d;
+import org.janelia.it.FlyWorkstation.gui.viewer3d.interfaces.VolumeImage3d;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.slice_viewer.action.MouseMode;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.slice_viewer.action.MouseMode.Mode;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.slice_viewer.action.WheelMode;
@@ -33,13 +34,16 @@ public class OrthogonalPanel
 extends JPanel
 {
     private JPanel scanPanel = new JPanel();
-	private OrthogonalViewer viewer;
 	private JSlider slider = new JSlider();
 	private JSpinner spinner = new JSpinner();
 	private SpinnerNumberModel spinnerNumberModel = new SpinnerNumberModel();
 	private CoordinateAxis axis;	
 	private ObservableCamera3d camera;
 	private SharedVolumeImage volume;
+
+	private OrthogonalViewer viewer;
+	private ViewTileManager viewTileManager;
+	private TileServer tileServer;
 	
 	public Slot1<MouseMode.Mode> setMouseModeSlot = new Slot1<MouseMode.Mode>() 
 	{
@@ -73,6 +77,8 @@ extends JPanel
 	}
 
 	private void init() {
+		viewTileManager = new ViewTileManager(viewer);
+		viewer.setSliceActor(new SliceActor(viewTileManager));
 		spinner.setModel(spinnerNumberModel);
 		setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
 		add(viewer);
@@ -84,7 +90,7 @@ extends JPanel
 		scanPanel.add(slider);
 		scanPanel.add(new ToolButton(new NextSliceAction()));
 		spinner.setPreferredSize(new Dimension(
-				60, // good value for showing up to thousands place
+				73, // good value for showing up to ten thousands place
 				spinner.getPreferredSize().height));
 		spinner.setMaximumSize(new Dimension(
 				spinner.getPreferredSize().width,
@@ -142,6 +148,8 @@ extends JPanel
 				int tickSpacing = 10;
 				if (range > 1000)
 					tickSpacing = 100;
+				if (range > 10000)
+					tickSpacing = 1000;
 				slider.setMajorTickSpacing(tickSpacing);
 			}
 			slider.setMinimum(s0);
@@ -166,8 +174,13 @@ extends JPanel
 			return;
 		int ix = axis.index(); // X, Y, or Z
 		double res = volume.getResolution(ix);
+		// At lower zoom, we must jump multiple slices to see a differenct
+		int deltaSlice = 1;
+		TileSet someTiles = viewTileManager.getLatestTiles();
+		if (someTiles.size() > 0)
+			deltaSlice = someTiles.iterator().next().getIndex().getDeltaSlice();
 		Vec3 dFocus = new Vec3(0,0,0);
-		dFocus.set(ix, sliceCount * res);
+		dFocus.set(ix, sliceCount * res * deltaSlice);
 		camera.setFocus(camera.getFocus().plus(dFocus));
 	}
 	
@@ -184,6 +197,15 @@ extends JPanel
 		this.volume = volumeImage3d;
 		viewer.setVolumeImage3d(volumeImage3d);
 		volume.volumeInitializedSignal.connect(setSliceSlot);
+		viewTileManager.setVolumeImage(volumeImage3d);
+	}
+	
+	public void setTileServer(TileServer tileServer) {
+		if (this.tileServer == tileServer)
+			return; // no change
+		viewTileManager.setTextureCache(tileServer.getTextureCache());
+		tileServer.addViewTileManager(viewTileManager);
+		tileServer.getViewTextureChangedSignal().connect(viewer.repaintSlot);
 	}
 	
 	public void setSystemMenuItemGenerator(MenuItemGenerator systemMenuItemGenerator) 
@@ -211,6 +233,18 @@ extends JPanel
 		newFocus.set(ix, newS);
 		camera.setFocus(newFocus);
 		return true;
+	}
+	
+	public JSlider getSlider() {
+		return slider;
+	}
+
+	public ViewTileManager getViewTileManager() {
+		return viewTileManager;
+	}
+
+	public void setSlider(JSlider slider) {
+		this.slider = slider;
 	}
 
 	class IncrementSliceAction extends AbstractAction {

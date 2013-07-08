@@ -29,9 +29,9 @@ implements Iterable<TileIndex>, Iterator<TileIndex>
 		int startZoom = tile.getIndex().getZoom();
 		int maxZoom = tile.getIndex().getMaxZoom();
 		// Go up in zoom
-		Iterator<Integer> coarseLod = new RangeIterator(startZoom+1, maxZoom+1, 1);		
+		Iterable<Integer> coarseLod = new RangeIterator(startZoom+1, maxZoom+1, 1);		
 		// Go down in zoom
-		Iterator<Integer> fineLod = new RangeIterator(startZoom-1, minZoom-1, -1);
+		Iterable<Integer> fineLod = new RangeIterator(startZoom-1, minZoom-1, -1);
 		// Alternate in zoom
 		allLod = new InterleavedIterator<Integer>(coarseLod, fineLod);
 	}

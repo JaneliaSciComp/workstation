@@ -310,6 +310,11 @@ extends AbstractTextureLoadAdapter
 		if (channelCount < 1)
 			return;
 		
+		// X and Y slices?
+		tileFormat.setHasXSlices(new File(topFolderParam, "YZ.0.tif").exists());
+		tileFormat.setHasYSlices(new File(topFolderParam, "ZX.0.tif").exists());			
+		tileFormat.setHasZSlices(new File(topFolderParam, "default.0.tif").exists());			
+		
 		// Deduce octree depth from directory structure depth
 		int octreeDepth = 0;
 		File deepFolder = topFolderParam;

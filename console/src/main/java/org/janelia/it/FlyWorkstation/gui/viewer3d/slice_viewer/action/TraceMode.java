@@ -10,7 +10,6 @@ import java.awt.event.KeyListener;
 import java.util.List;
 import java.util.Vector;
 import javax.swing.AbstractAction;
-import javax.swing.JComponent;
 import javax.swing.JMenuItem;
 
 import org.janelia.it.FlyWorkstation.gui.viewer3d.BoundingBox3d;
@@ -18,6 +17,7 @@ import org.janelia.it.FlyWorkstation.gui.viewer3d.Vec3;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.interfaces.Viewport;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.slice_viewer.MenuItemGenerator;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.slice_viewer.MouseModalWidget;
+import org.janelia.it.FlyWorkstation.gui.viewer3d.slice_viewer.Slot1;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.slice_viewer.skeleton.Anchor;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.slice_viewer.skeleton.Skeleton;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.slice_viewer.skeleton.SkeletonActor;
@@ -42,10 +42,20 @@ implements MouseMode, KeyListener
 	private BoundingBox3d boundingBox;
 	// private Anchor nextParent = null;
 	
+	public Slot1<Anchor> focusOnAnchorSlot = new Slot1<Anchor>() {
+		@Override
+		public void execute(Anchor anchor) {
+			skeletonActor.setNextParent(anchor);
+			camera.setFocus(anchor.getLocation());
+		}
+	};
+	
 	public TraceMode(Skeleton skeleton) {
 		this.skeleton = skeleton;
 		setHoverCursor(penCursor);
 		setDragCursor(crossCursor);
+		// Center on new anchors, and mark them with a "P"
+		skeleton.anchorAddedSignal.connect(focusOnAnchorSlot);
 	}
 
 	@Override 
@@ -88,15 +98,11 @@ implements MouseMode, KeyListener
 	}
 	
 	private void appendAnchor(Vec3 xyz) {
-		Anchor anchor = skeleton.addAnchorAtXyz(xyz, skeletonActor.getNextParent());
-		skeletonActor.setNextParent(anchor);
-		camera.setFocus(anchor.getLocation());
+		skeleton.addAnchorAtXyz(xyz, skeletonActor.getNextParent());
 	}
 	
 	private void seedAnchor(Vec3 xyz) {
-		Anchor anchor = skeleton.addAnchorAtXyz(xyz, null);
-		skeletonActor.setNextParent(anchor);
-		camera.setFocus(anchor.getLocation());		
+		skeleton.addAnchorAtXyz(xyz, null);
 	}
 	
 	private void onMouseActuallyClicked(MouseEvent event) {

@@ -1,5 +1,6 @@
 package org.janelia.it.FlyWorkstation.gui.viewer3d.slice_viewer;
 
+import java.net.URL;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -10,7 +11,7 @@ import java.util.Vector;
 
 import org.janelia.it.FlyWorkstation.gui.viewer3d.CoordinateAxis;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.slice_viewer.generator.InterleavedIterator;
-import org.janelia.it.FlyWorkstation.gui.viewer3d.slice_viewer.generator.MinResZGenerator;
+import org.janelia.it.FlyWorkstation.gui.viewer3d.slice_viewer.generator.MinResSliceGenerator;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.slice_viewer.generator.UmbrellaSliceGenerator;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.slice_viewer.generator.SliceGenerator;
 import org.slf4j.Logger;
@@ -42,14 +43,39 @@ public class TileServer
 	private Slot startMinResPreFetchSlot = new Slot() {
 		@Override
 		public void execute() {
-			// TODO - X and Y slices too, if available
+			log.info("starting pre fetch of lowest resolution tiles");
+			// Load X and Y slices too (in addition to Z), if available
 			if (sharedVolumeImage.getLoadAdapter() == null)
 				return;
 			// queue load of all low resolution textures
 			minResPreFetcher.clear();
-			MinResZGenerator g = new MinResZGenerator(sharedVolumeImage.getLoadAdapter().getTileFormat());
-			for (TileIndex i : g)
+			TileFormat format = sharedVolumeImage.getLoadAdapter().getTileFormat();
+			List<MinResSliceGenerator> generators = new Vector<MinResSliceGenerator>();
+			if (format.isHasXSlices())
+				generators.add(new MinResSliceGenerator(format, CoordinateAxis.X));
+			if (format.isHasYSlices())
+				generators.add(new MinResSliceGenerator(format, CoordinateAxis.Y));
+			if (format.isHasZSlices())
+				generators.add(new MinResSliceGenerator(format, CoordinateAxis.Z));
+
+			Iterable<TileIndex> tileGenerator;
+			if (generators.size() < 1)
+				return;
+			else if (generators.size() == 1)
+				tileGenerator = generators.get(0);
+			else {
+				Iterator<MinResSliceGenerator> i = generators.iterator();
+				tileGenerator = new InterleavedIterator<TileIndex>(i.next(), i.next());
+				while (i.hasNext()) {
+					tileGenerator = new InterleavedIterator<TileIndex>(tileGenerator, i.next());
+				}
+			}
+			int tileCount = 0;
+			for (TileIndex i : tileGenerator) {
 				minResPreFetcher.loadDisplayedTexture(i, TileServer.this);
+				tileCount += 1;
+			}
+			log.info(tileCount+" min resolution tiles queued");
 		}
 	};
 
@@ -108,12 +134,12 @@ public class TileServer
 					axisTiles.get(axis).add(tile);
 				}
 				// Create one umbrella generator for each (used) direction.
-				List<Iterator<TileIndex>> umbrellas = new Vector<Iterator<TileIndex>>();
-				List<Iterator<TileIndex>> fullSlices = new Vector<Iterator<TileIndex>>();
+				List<Iterable<TileIndex>> umbrellas = new Vector<Iterable<TileIndex>>();
+				List<Iterable<TileIndex>> fullSlices = new Vector<Iterable<TileIndex>>();
 				for (CoordinateAxis axis : axisTiles.keySet()) {
 					TileSet tiles = axisTiles.get(axis);
 					// Umbrella Z scan
-					Iterator<TileIndex> sliceGen = new UmbrellaSliceGenerator(getLoadAdapter().getTileFormat(), tiles);
+					Iterable<TileIndex> sliceGen = new UmbrellaSliceGenerator(getLoadAdapter().getTileFormat(), tiles);
 					umbrellas.add(sliceGen);
 					// Full resolution Z scan
 					sliceGen = new SliceGenerator(getLoadAdapter().getTileFormat(), tiles);
@@ -121,14 +147,14 @@ public class TileServer
 				}
 				// Interleave the various umbrella generators
 				if (umbrellas.size() > 0) {
-					Iterator<TileIndex> combinedUmbrella;
-					Iterator<TileIndex> combinedFullSlice;
+					Iterable<TileIndex> combinedUmbrella;
+					Iterable<TileIndex> combinedFullSlice;
 					if (umbrellas.size() == 1) {
 						combinedUmbrella = umbrellas.get(0);
 						combinedFullSlice = fullSlices.get(0);
 					}
 					else { // more than one axis
-						Iterator<Iterator<TileIndex>> sliceIter = umbrellas.iterator();
+						Iterator<Iterable<TileIndex>> sliceIter = umbrellas.iterator();
 						combinedUmbrella = new InterleavedIterator<TileIndex>(sliceIter.next(), sliceIter.next());
 						while (sliceIter.hasNext())
 							combinedUmbrella = new InterleavedIterator<TileIndex>(combinedUmbrella, sliceIter.next());
@@ -140,8 +166,7 @@ public class TileServer
 					}
 					
 					// Load umbrella slices
-					while (combinedUmbrella.hasNext()) {
-						TileIndex ix = combinedUmbrella.next();
+					for (TileIndex ix : combinedUmbrella) {
 						if (cacheableTextures.contains(ix))
 							continue;
 						if (cacheableTextures.size() >= maxCacheable)
@@ -151,8 +176,7 @@ public class TileServer
 					}
 
 					// Load full resolution slices
-					while (combinedFullSlice.hasNext()) {
-						TileIndex ix = combinedFullSlice.next();
+					for (TileIndex ix : combinedFullSlice) {
 						if (cacheableTextures.contains(ix))
 							continue;
 						if (cacheableTextures.size() >= maxCacheable)
@@ -232,6 +256,7 @@ public class TileServer
 				vtm.clear();
 			// queue disposal of textures on next display event
 			setCacheSizesAsFractionOfMaxHeap(0.15, 0.35);
+			clearCache();
 		}
 	};
 	
@@ -239,8 +264,6 @@ public class TileServer
 		setSharedVolumeImage(sharedVolumeImage);
 		minResPreFetcher.setTextureCache(getTextureCache());
 		futurePreFetcher.setTextureCache(getTextureCache());
-		// Don't pre-fetch before cache is cleared...
-		getTextureCache().getCacheClearedSignal().connect(startMinResPreFetchSlot);
 	}
 
 	public void addViewTileManager(ViewTileManager viewTileManager) {
@@ -251,14 +274,15 @@ public class TileServer
 		viewTileManager.setTextureCache(getTextureCache());
 	}
 	
-	public void clearCache() {
+	public void clearCache() 
+	{
 		TextureCache cache = getTextureCache();
 		if (cache == null)
 			return;
 		cache.clear();
 		startMinResPreFetchSlot.execute(); // start loading low-res volume
 		viewTextureChangedSignal.emit(); // start loading current view
-	}
+	};
 	
 	public TileSet createLatestTiles() {
 		TileSet result = new TileSet();
@@ -295,7 +319,7 @@ public class TileServer
 		return textureCache;
 	}
 	
-	public Signal getVolumeInitializedSignal() {
+	public Signal1<URL> getVolumeInitializedSignal() {
 		return sharedVolumeImage.volumeInitializedSignal;
 	}
 

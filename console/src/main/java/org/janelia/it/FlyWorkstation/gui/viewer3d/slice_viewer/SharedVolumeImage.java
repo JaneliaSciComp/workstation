@@ -19,7 +19,7 @@ implements VolumeImage3d
 	private AbstractTextureLoadAdapter loadAdapter;
 	private BoundingBox3d boundingBox3d = new BoundingBox3d();
 
-	public Signal volumeInitializedSignal = new Signal();
+	public Signal1<URL> volumeInitializedSignal = new Signal1<URL>();
 
 	@Override
 	public BoundingBox3d getBoundingBox3d() {
@@ -151,7 +151,7 @@ implements VolumeImage3d
 		boundingBox3d.setMin(b0);
 		boundingBox3d.setMax(b1);
 		
-		volumeInitializedSignal.emit();
+		volumeInitializedSignal.emit(folderUrl);
 		
 		return true;
 	}

@@ -373,6 +373,17 @@ implements MouseModalWidget, TileConsumer
 		return mouseMode;
 	}
 
+	public SliceActor getSliceActor() {
+		return sliceActor;
+	}
+
+	public void setSliceActor(SliceActor sliceActor) {
+		if (this.sliceActor == sliceActor)
+			return;
+		this.sliceActor = sliceActor;
+		addActor(sliceActor);
+	}
+
 	@Override
 	public CoordinateAxis getSliceAxis() {
 		return sliceAxis;

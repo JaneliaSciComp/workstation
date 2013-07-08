@@ -16,6 +16,9 @@ public class TileFormat
 	private int intensityMin = 0;
 	private boolean srgb = false;
 	private TileIndex.IndexStyle indexStyle = TileIndex.IndexStyle.QUADTREE;
+	private boolean hasZSlices = true;
+	private boolean hasXSlices = false;
+	private boolean hasYSlices = false;
 
 	public TileFormat() 
 	{
@@ -119,6 +122,9 @@ public class TileFormat
 		intensityMin = 0;
 		intensityMax = 255;
 		srgb = false;
+		hasXSlices = false;
+		hasYSlices = false;
+		hasZSlices = true;
 	}
 
 	public void setSrgb(boolean srgb) {
@@ -130,6 +136,30 @@ public class TileFormat
 		int h = getTileSize()[1];
 		int bpp = getChannelCount() * getBitDepth() / 8;
 		return w * h * bpp;
+	}
+
+	public boolean isHasZSlices() {
+		return hasZSlices;
+	}
+
+	public boolean isHasXSlices() {
+		return hasXSlices;
+	}
+
+	public boolean isHasYSlices() {
+		return hasYSlices;
+	}
+
+	public void setHasZSlices(boolean hasZSlices) {
+		this.hasZSlices = hasZSlices;
+	}
+
+	public void setHasXSlices(boolean hasXSlices) {
+		this.hasXSlices = hasXSlices;
+	}
+
+	public void setHasYSlices(boolean hasYSlices) {
+		this.hasYSlices = hasYSlices;
 	}
 
 }

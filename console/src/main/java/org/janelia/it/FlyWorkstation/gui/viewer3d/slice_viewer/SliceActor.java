@@ -35,18 +35,9 @@ implements GLActor
 	private NumeralShader numeralShader = new NumeralShader();
 	private OutlineShader outlineShader = new OutlineShader();
 	
-	private Slot clearDataSlot = new Slot() {
-		@Override
-		public void execute() {
-			needsGlDisposal = true;
-			needsTextureCacheClear = true;
-		}
-	};
-	
 	public SliceActor(ViewTileManager viewTileManager)
 	{
 		this.viewTileManager = viewTileManager;
-		viewTileManager.getVolumeImage().volumeInitializedSignal.connect(clearDataSlot);
 	}
 
 	@Override

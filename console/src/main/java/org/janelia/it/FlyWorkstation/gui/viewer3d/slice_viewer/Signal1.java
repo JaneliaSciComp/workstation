@@ -12,9 +12,13 @@ implements BasicSignalSlot1<T>
 		setChanged();
 		notifyObservers(arg);
 	}
-	
+
 	public void connect(BasicSignalSlot1<T> dest) {
 		addObserver(dest);
+	}
+
+	public void disconnect(BasicSignalSlot1<T> dest) {
+		deleteObserver(dest);
 	}
 
 	// Argument can be ignored by the listener with this version of connect()

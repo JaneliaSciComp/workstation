@@ -18,6 +18,7 @@ public class Anchor {
 		CUSTOM
 	};
 	
+	private Long janeliaWorkstationGuid;
 	private Vec3 location;
 	private Type anchorType = Type.UNDEFINED;
 	private double radius = 1.0;
@@ -49,6 +50,14 @@ public class Anchor {
 
 	public Type getAnchorType() {
 		return anchorType;
+	}
+
+	public Long getGuid() {
+		return this.janeliaWorkstationGuid;
+	}
+	
+	public void setGuid(Long id) {
+		this.janeliaWorkstationGuid = id;
 	}
 
 	public double getRadius() {

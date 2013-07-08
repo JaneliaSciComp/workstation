@@ -17,6 +17,10 @@ implements BasicSignalSlot
 		addObserver(dest);
 	}
 
+	public void disconnect(BasicSignalSlot dest) {
+		deleteObserver(dest);
+	}
+
 	@Override
 	public void update(Observable o, Object arg) {
 		emit();	
