@@ -149,7 +149,7 @@ public class AnnotationModel
         // the null means "this is a root annotation" (would be the parent)
         try {
             TmGeoAnnotation ann = modelMgr.addGeometricAnnotation(neuron.getId(),
-                null, 0, xyz.x(), xyz.y(), xyz.z(), "testing");
+                null, 0, xyz.x(), xyz.y(), xyz.z(), "root annotation");
         } catch (Exception e) {
             e.printStackTrace();
             return;

@@ -30,6 +30,8 @@ public class NeuronInfoPanel extends JPanel
     private JLabel neuronNameLabel;
 
     private JTree neuriteTree;
+    private DefaultTreeModel neuriteModel;
+    private DefaultMutableTreeNode neuronRootNode;
 
 
     public Slot1<TmNeuron> updateNeuronSlot = new Slot1<TmNeuron>() {
@@ -72,7 +74,11 @@ public class NeuronInfoPanel extends JPanel
         add(new JLabel("Neurite structure"));
 
         // create test tree and style it; no icons, please
-        neuriteTree = createTestTree();
+        neuronRootNode = new DefaultMutableTreeNode("invisible root node");
+        neuriteModel = new DefaultTreeModel(neuronRootNode);
+        neuriteTree = new JTree(neuriteModel);
+        neuriteTree.setRootVisible(false);
+        // neuriteTree = createTestTree();
         DefaultTreeCellRenderer renderer = (DefaultTreeCellRenderer) neuriteTree.getCellRenderer();
         renderer.setLeafIcon(null);
         renderer.setClosedIcon(null);
@@ -145,8 +151,38 @@ public class NeuronInfoPanel extends JPanel
         }        
     }
 
+    public void updateNeuriteTree(TmNeuron neuron) {
+        // for the short term, brute force it; recreate the tree every time; 
+        //  I don't know if that's idiomatic or not
+
+        neuronRootNode.removeAllChildren();
+
+        // if neuron is not null, traverse it and populate nodes
+        if (neuron != null) {
+
+            TmGeoAnnotation rootAnnotation = neuron.getRootAnnotation();
+            if (rootAnnotation != null) {
+
+                // first node is the parent node of the neuron, which is the first child
+                //  of the invisible root:
+                DefaultMutableTreeNode child = new DefaultMutableTreeNode(rootAnnotation);
+                neuriteModel.insertNodeInto(child, neuronRootNode, neuronRootNode.getChildCount());
+
+                // traverse tree
+
+
+                neuriteModel.reload();
+            }
+
+        }
+
+
+    }
+
     public void updateNeuron(TmNeuron neuron) {
         updateNeuronLabel(neuron);
+
+        updateNeuriteTree(neuron);
 
         // testing
         printNeuronInfo(neuron);
