@@ -4,13 +4,9 @@ package org.janelia.it.FlyWorkstation.gui.viewer3d.slice_viewer.annotation;
 // std lib imports
 
 import javax.swing.*;
-import javax.swing.event.TreeSelectionListener;
-import javax.swing.event.TreeSelectionEvent;
-import javax.swing.tree.*;
 
 import java.awt.*;
 import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
 
 
 // workstation imports
@@ -25,7 +21,7 @@ import org.janelia.it.jacs.model.user_data.Subject;
  *
  * djo, 5/13
  */
-public class AnnotationPanel extends JPanel implements TreeSelectionListener
+public class AnnotationPanel extends JPanel
 {
 
     // things we get data from
@@ -37,12 +33,7 @@ public class AnnotationPanel extends JPanel implements TreeSelectionListener
 
 
     // UI components
-    private JTree neuriteTree;
-
-    private JLabel nodeLabel;
-    
     private NeuronInfoPanel neuronInfoPanel;
-    private NeuriteTreePanel neuriteTreePanel;
     private WorkspaceInfoPanel workspaceInfoPanel;
 
     // actions
@@ -135,32 +126,7 @@ public class AnnotationPanel extends JPanel implements TreeSelectionListener
         add(neuronInfoPanel);
 
 
-        // neurite tree navigator
-        neuriteTreePanel = new NeuriteTreePanel();
-        add(neuriteTreePanel);
 
-        // move this into the class:
-        setupNeuriteTreeNavigator();
-
-
-
-        // neurite information; show name, type (axon, dendrite, etc), other attributes
-        //  of selected (current) neurite
-        // add(Box.createRigidArea(new Dimension(0, 20)));
-        // add(new JLabel("Neurite information"));
-
-
-
-
-        // info for individual annotations; maybe not much here...not clear what any one
-        //  node's going to need that's worthwhile; won't have user-defined names, or
-        //  any interesting attributes, I think; at best, maybe a free-form comment?
-        // could imagine wanting to bookmark nodes for later reference, but that
-        //  would be a separate list
-
-        // ...but for testing node selection, this is where we will put it:
-        // nodeLabel = new JLabel("no selection");
-        // add(nodeLabel);
 
 
         // at some point, we'll have our own sliceviewer menu; until then, attach those actions
@@ -207,74 +173,6 @@ public class AnnotationPanel extends JPanel implements TreeSelectionListener
     }
 
 
-    private void setupNeuriteTreeNavigator() {
-        add(Box.createRigidArea(new Dimension(0, 20)));
-        add(new JLabel("Neurite structure"));
-
-        // create test tree and style it; no icons, please
-        neuriteTree = createTestTree();
-        DefaultTreeCellRenderer renderer = (DefaultTreeCellRenderer) neuriteTree.getCellRenderer();
-        renderer.setLeafIcon(null);
-        renderer.setClosedIcon(null);
-        renderer.setOpenIcon(null);
-
-
-        // listen for when the selection changes
-        neuriteTree.getSelectionModel().setSelectionMode(TreeSelectionModel.SINGLE_TREE_SELECTION);
-        neuriteTree.addTreeSelectionListener(this);
-
-
-
-        // throw it into a scrolled panel; there's going to be a *lot* of them...
-        JScrollPane treePane = new JScrollPane(neuriteTree);
-        // if the tree knows how much to show, it'll tell the JScrollPane:
-        neuriteTree.setVisibleRowCount(10);
-        add(treePane);
-    }
-
-    private JTree createTestTree() {
-
-        DefaultMutableTreeNode root = new DefaultMutableTreeNode("root node");
-        neuriteTree = new JTree(root);
-
-
-        // add some nodes
-        root.add(new DefaultMutableTreeNode("link 1"));
-        root.add(new DefaultMutableTreeNode("link 2"));
-
-        DefaultMutableTreeNode branch1 = new DefaultMutableTreeNode("branch1");
-        root.add(branch1);
-
-        branch1.add(new DefaultMutableTreeNode("link 4"));        
-
-        root.add(new DefaultMutableTreeNode("link 3"));        
-
-        DefaultMutableTreeNode branch2 = new DefaultMutableTreeNode("branch2");
-        root.add(branch2);
-
-
-        return neuriteTree;
-
-    }
-
-    public void valueChanged(TreeSelectionEvent e) {
-        // (from tutorial example)
-        //Returns the last path element of the selection.
-        //This method is useful only when the selection model allows a single selection.
-        DefaultMutableTreeNode node = (DefaultMutableTreeNode) neuriteTree.getLastSelectedPathComponent();
-
-        if (node == null) {
-            //Nothing is selected.     
-            nodeLabel.setText("no selection");
-            return;
-        }
-
-        if (node.isLeaf()) {
-            nodeLabel.setText(node.toString());
-        } else {
-            nodeLabel.setText(node.toString());
-        }
-    }
 
 }
 

@@ -136,7 +136,15 @@ public class AnnotationModel
     }
 
     public void addRootAnnotation(TmWorkspace workspace, TmNeuron neuron, Vec3 xyz) {
+        // should assume current workspace and neuron?  don't need workspace at
+        //  all, since neuron knows its workspace
 
+        // does neuron already have a root annotation?  for now, we're restricted
+        //  to one (will remove this restriction); basically, if it's got any, it's
+        //  got a root
+        if (neuron.getRootAnnotation() != null) {
+            return;
+        }
 
         // the null means "this is a root annotation" (would be the parent)
         try {
@@ -148,6 +156,19 @@ public class AnnotationModel
         }
 
         // notify interested parties
+
+
+    }
+
+    public void addChildAnnotation(TmNeuron neuron, TmGeoAnnotation parentAnn, Vec3 xyz) {
+        // should assume current neuron?  does parentAnn know its neuron anyway?
+
+        // check parent ann?
+
+        // create it
+
+
+        // notify people
 
 
     }

@@ -136,7 +136,7 @@ public class AnnotationManager
     }
 
     public void createGeoAnnotation() {
-        System.out.println("pretending to add annotation");
+        // test, hard-coded
 
         addAnnotation(new Vec3(1, 2, 3));
 
