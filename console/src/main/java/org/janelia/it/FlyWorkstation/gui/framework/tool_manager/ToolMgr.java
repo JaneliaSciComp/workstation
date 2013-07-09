@@ -4,7 +4,6 @@ import org.janelia.it.FlyWorkstation.gui.framework.console.ToolsMenu;
 import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.BrowserModel;
 import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionModelListener;
-import org.janelia.it.FlyWorkstation.shared.filestore.PathTranslator;
 import org.janelia.it.FlyWorkstation.shared.preferences.InfoObject;
 import org.janelia.it.FlyWorkstation.shared.preferences.PrefMgrListener;
 import org.janelia.it.FlyWorkstation.shared.preferences.PreferenceManager;
@@ -14,13 +13,18 @@ import org.janelia.it.FlyWorkstation.shared.util.Utils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.swing.*;
 import java.awt.*;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
-import java.util.*;
-
-import javax.swing.JOptionPane;
+import java.util.ArrayList;
+import java.util.Enumeration;
+import java.util.Map;
+import java.util.Properties;
+import java.util.Set;
+import java.util.StringTokenizer;
+import java.util.TreeMap;
 
 /**
  * Created with IntelliJ IDEA.
@@ -295,32 +299,48 @@ public class ToolMgr extends PreferenceManager {
                 }
                 else {
                     ToolInfo tmpTool = getTool(tool);
-                    File tmpToolFile = new File(tmpTool.getPath());
-                    String exeCmd = tmpTool.getPath();
+                    // remove leading or trailing spaces to ensure checks work properly
+                    String toolPath = tmpTool.getPath().trim();
+
+                    StringBuilder cmd = new StringBuilder(128);
+                    cmd.append(toolPath);
 
                     if (TOOL_VAA3D.equals(tool)) {
-                        exeCmd = tmpTool.getPath()+" -i "+ file.getAbsolutePath();
+                        cmd.append(" -i ");
+                        cmd.append(file.getAbsolutePath());
                         if (MODE_3D.equals(mode)) {
-                            exeCmd+=" -v";
+                            cmd.append(" -v");
                         }
                     }
+
                     if (TOOL_FIJI.equals(tool)) {
-                        if (tmpTool.getPath().endsWith(".app")) {
-                            tmpTool.setPath(tmpTool.getPath()+"/Contents/MacOS/fiji-macosx");
+
+                        if (toolPath.endsWith(".app")) {
+                            final String relativeFijiPath = "/Contents/MacOS/fiji-macosx";
+                            cmd.append(relativeFijiPath);
+                            toolPath += relativeFijiPath;
+                            tmpTool.setPath(toolPath);
                         }
-                        exeCmd = tmpTool.getPath()+ " " + file.getAbsolutePath();
+                        cmd.append(" ");
+                        cmd.append(file.getAbsolutePath());
                     }
-                    System.out.println("Running command: "+exeCmd);
-                    if (tmpToolFile.exists()&&tmpToolFile.canExecute()) {
-                        if (exeCmd.endsWith(".app")) {
-                            runTool(tool);
-                        }
-                        else {
-                            Runtime.getRuntime().exec(exeCmd);
-                        }
+
+                    final File exeFile = new File(toolPath);
+                    if (! exeFile.exists()) {
+                        throw new IOException("Tool " + tool + " (" +
+                                              exeFile.getAbsolutePath() + ") does not exist.");
+                    } else if (! exeFile.canExecute()) {
+                        throw new IOException("Tool " + tool + " (" +
+                                              exeFile.getAbsolutePath() + ") cannot be executed.");
                     }
-                    else {
-                        throw new IOException("Tool "+tool+" does not exist or cannot be executed.");
+
+                    final String exeCmd = cmd.toString();
+                    log.info("Running command: {}", exeCmd);
+
+                    if (exeCmd.endsWith(".app")) {
+                        runTool(tool);
+                    } else {
+                        Runtime.getRuntime().exec(exeCmd);
                     }
                 }
             }
