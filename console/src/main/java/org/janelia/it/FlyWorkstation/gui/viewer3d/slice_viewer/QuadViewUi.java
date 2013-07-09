@@ -282,6 +282,9 @@ public class QuadViewUi extends JPanel
 		// must come after setupUi(), since it triggers UI changes:
 		annotationMgr.setInitialEntity(initialEntity);
 
+        // connect up text UI and model with graphic UI(s):
+        skeleton.addAnchorRequestedSignal.connect(annotationMgr.addAnchorRequestedSlot);
+        annotationModel.anchorAddedSignal.connect(skeleton.addAnchorSlot);
 
         // 
         clearCacheAction.putValue(Action.NAME, "Clear Cache");

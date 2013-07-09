@@ -165,18 +165,24 @@ public class NeuronInfoPanel extends JPanel
 
                 // first node is the parent node of the neuron, which is the first child
                 //  of the invisible root:
-                DefaultMutableTreeNode child = new DefaultMutableTreeNode(rootAnnotation);
-                neuriteModel.insertNodeInto(child, neuronRootNode, neuronRootNode.getChildCount());
+                DefaultMutableTreeNode rootNode = new DefaultMutableTreeNode(rootAnnotation);
+                neuriteModel.insertNodeInto(rootNode, neuronRootNode, neuronRootNode.getChildCount());
 
-                // traverse tree
+                // build tree
+                populateNeuriteTreeNode(rootAnnotation, rootNode);
 
-
-                neuriteModel.reload();
             }
-
         }
+        neuriteModel.reload();
+    }
 
-
+    private void populateNeuriteTreeNode(TmGeoAnnotation parentAnnotation, DefaultMutableTreeNode parentNode) {
+        // recurse through nodes
+        for (TmGeoAnnotation childAnnotation: parentAnnotation.getChildren()) {
+            DefaultMutableTreeNode childNode = new DefaultMutableTreeNode(childAnnotation);
+            neuriteModel.insertNodeInto(childNode, parentNode, parentNode.getChildCount());
+            populateNeuriteTreeNode(childAnnotation, childNode);
+        }
     }
 
     public void updateNeuron(TmNeuron neuron) {

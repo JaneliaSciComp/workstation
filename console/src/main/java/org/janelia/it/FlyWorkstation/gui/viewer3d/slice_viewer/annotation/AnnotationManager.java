@@ -9,6 +9,8 @@ import org.janelia.it.FlyWorkstation.gui.viewer3d.Vec3;
 
 import org.janelia.it.FlyWorkstation.api.entity_model.management.ModelMgr;
 
+import org.janelia.it.FlyWorkstation.gui.viewer3d.slice_viewer.Slot1;
+import org.janelia.it.FlyWorkstation.gui.viewer3d.slice_viewer.skeleton.Skeleton;
 import org.janelia.it.jacs.model.entity.Entity;
 import org.janelia.it.jacs.model.entity.EntityConstants;
 import org.janelia.it.jacs.model.user_data.tiledMicroscope.*;
@@ -27,12 +29,14 @@ public class AnnotationManager
     
     private Entity initialEntity;
 
-    // current workspace, brain sample
-    // current neuron
+    // signals & slots
+    public Slot1<Skeleton.AnchorSeed> addAnchorRequestedSlot = new Slot1<Skeleton.AnchorSeed>() {
+        @Override
+        public void execute(Skeleton.AnchorSeed seed) {
+            addAnnotation(seed.getLocation(), seed.getParentGuid());
+        }
+    };
 
-    // current neurite (?)
-
-    // current annotation
 
     // constants
     public static final String WORKSPACES_FOLDER_NAME = "Workspaces";
@@ -98,7 +102,7 @@ public class AnnotationManager
     //  much more than what tool is active and where the click was;
     //  we are responsible for 
 
-    public void addAnnotation(Vec3 xyz) {
+    public void addAnnotation(Vec3 xyz, Long parentID) {
 
         // get current workspace, etc.; if they don't exist, error
         if (annotationModel.getCurrentWorkspace() == null) {
@@ -109,7 +113,8 @@ public class AnnotationManager
             return;
         }
 
-        if (annotationModel.getCurrentNeuron() == null) {
+        TmNeuron currentNeuron = annotationModel.getCurrentNeuron();
+        if (currentNeuron == null) {
             JOptionPane.showMessageDialog(null,
                 "You must select a neuron before beginning annotation!",
                 "No neuron!",
@@ -118,27 +123,56 @@ public class AnnotationManager
         }
 
 
-        // if an annotation is selected, it's the parent
-        // if not, check for existing root (currently can't handle > 1);
-        //  if no existing root, new root annotation; else, fail
+        // if parentID is null, it's a new root in current neuron
+        if (parentID == null) {
+            // new root in current neuron:
 
-        // for testing: just create one, assume it's a root for now
+            // currently can't handle > 1 root per neuron
+            if (currentNeuron.getRootAnnotation() != null) {
+                JOptionPane.showMessageDialog(null,
+                        "This neuron already has a root annotation!  (This restriction will be remored in the future.)",
+                        "Already has a root!",
+                        JOptionPane.ERROR_MESSAGE);
+                return;
+            }
 
-        // this should probably not take the ws and neuron (assume current), but
-        //  we're testing:
-        annotationModel.addRootAnnotation(annotationModel.getCurrentWorkspace(),
-            annotationModel.getCurrentNeuron(), xyz);
+            // this should probably not take the ws and neuron (assume current), but
+            //  we're testing:
+            annotationModel.addRootAnnotation(annotationModel.getCurrentWorkspace(),
+                currentNeuron, xyz);
 
 
-        // select new annotation
-        // update selection listeners
+        } else {
+            // new node with existing parent
+
+            // verify the supposed parent annotation is in our neuron
+            //  (probably temporary; at some point, we'll have to handle display of,
+            //  and smooth switching of operations between, different neurons, triggered
+            //  from the 2D view)
+            if (!currentNeuron.getGeoAnnotationMap().containsKey(parentID)) {
+                JOptionPane.showMessageDialog(null,
+                        "Current neuron does not contain selected root annotation!",
+                        "Wrong neuron!",
+                        JOptionPane.ERROR_MESSAGE);
+                return;
+            }
+
+            annotationModel.addChildAnnotation(currentNeuron,
+                currentNeuron.getGeoAnnotationMap().get(parentID), xyz);
+
+        }
+
+        // select new annotation (?) (currently marked graphically?)
+
+
 
     }
 
     public void createGeoAnnotation() {
         // test, hard-coded
 
-        addAnnotation(new Vec3(1, 2, 3));
+        // changed signature--no longer works
+        // addAnnotation(new Vec3(1, 2, 3));
 
     }
 
@@ -164,9 +198,12 @@ public class AnnotationManager
             null,                           // icon
             null,                           // choice list; absent = freeform
             "new neuron");
+        if (neuronName == null) {
+            return;
+        }
 
         // validate neuron name;  are there any rules for entity names?
-        if ((neuronName == null) || (neuronName.length() == 0)) {
+        if (neuronName.length() == 0) {
             neuronName = "new neuron";
         }
 

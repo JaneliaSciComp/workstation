@@ -32,6 +32,8 @@ public class AnnotationModel
     public Signal1<TmWorkspace> workspaceChangedSignal = new Signal1<TmWorkspace>();
     public Signal1<TmNeuron> neuronChangedSignal = new Signal1<TmNeuron>();
 
+    public Signal1<TmGeoAnnotation> anchorAddedSignal = new Signal1<TmGeoAnnotation>();
+
     public Slot1<TmNeuron> neuronSelectedSlot = new Slot1<TmNeuron>() {
         @Override
         public void execute(TmNeuron neuron) {
@@ -143,12 +145,15 @@ public class AnnotationModel
         //  to one (will remove this restriction); basically, if it's got any, it's
         //  got a root
         if (neuron.getRootAnnotation() != null) {
+            // I am uncomfortable doing nothing silently, but I currently have no
+            //  way to return info upward
             return;
         }
 
         // the null means "this is a root annotation" (would be the parent)
+        TmGeoAnnotation annotation;
         try {
-            TmGeoAnnotation ann = modelMgr.addGeometricAnnotation(neuron.getId(),
+            annotation = modelMgr.addGeometricAnnotation(neuron.getId(),
                 null, 0, xyz.x(), xyz.y(), xyz.z(), "root annotation");
         } catch (Exception e) {
             e.printStackTrace();
@@ -156,7 +161,9 @@ public class AnnotationModel
         }
 
         // notify interested parties
+        neuronChangedSignal.emit(getCurrentNeuron());
 
+        anchorAddedSignal.emit(annotation);
 
     }
 
@@ -164,12 +171,25 @@ public class AnnotationModel
         // should assume current neuron?  does parentAnn know its neuron anyway?
 
         // check parent ann?
+        if (parentAnn == null) {
+            return;
+        }
 
         // create it
+        TmGeoAnnotation annotation;
+        try {
+            annotation = modelMgr.addGeometricAnnotation(neuron.getId(),
+                    parentAnn.getId(), 0, xyz.x(), xyz.y(), xyz.z(), "child annotation");
+        } catch (Exception e) {
+            e.printStackTrace();
+            return;
+        }
 
 
         // notify people
+        neuronChangedSignal.emit(getCurrentNeuron());
 
+        anchorAddedSignal.emit(annotation);
 
     }
 

@@ -73,7 +73,7 @@ public class Skeleton {
 	
 	public Skeleton() {
 		// TODO - don't make this connection when using workstation database
-		addAnchorRequestedSignal.connect(addShortCircuitAnchorSlot);
+		// addAnchorRequestedSignal.connect(addShortCircuitAnchorSlot);
 		//
 		// Adding an anchor changes the skeleton
 		anchorAddedSignal.connect(skeletonChangedSignal);
