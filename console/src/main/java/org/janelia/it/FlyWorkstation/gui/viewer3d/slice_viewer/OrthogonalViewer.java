@@ -82,6 +82,8 @@ implements MouseModalWidget, TileConsumer
         }
     };
 
+	private TileServer tileServer;
+
 	public OrthogonalViewer(CoordinateAxis axis) {
 		init(axis);
 	}
@@ -325,6 +327,7 @@ implements MouseModalWidget, TileConsumer
         else if (wheelModeId == WheelMode.Mode.SCAN) {
             ZScanMode scanMode = new ZScanMode(volume);
             scanMode.setSliceAxis(sliceAxis);
+            scanMode.setTileFormat(tileServer.getLoadAdapter().getTileFormat());
             this.wheelMode = scanMode;
         }
         this.wheelMode.setComponent(this, false);
@@ -402,6 +405,13 @@ implements MouseModalWidget, TileConsumer
 	@Override
 	public void keyReleased(KeyEvent event) {
 		mouseMode.keyPressed(event);
+	}
+
+	public void setTileServer(TileServer tileServer) {
+		if (tileServer == this.tileServer)
+			return;
+		this.tileServer = tileServer;
+		tileServer.getViewTextureChangedSignal().connect(repaintSlot);
 	}
 
 }

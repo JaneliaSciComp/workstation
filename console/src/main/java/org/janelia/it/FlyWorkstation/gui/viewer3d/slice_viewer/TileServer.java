@@ -287,7 +287,8 @@ public class TileServer
 	public TileSet createLatestTiles() {
 		TileSet result = new TileSet();
 		for (ViewTileManager vtm : viewTileManagers) {
-			result.addAll(vtm.createLatestTiles());
+			if (vtm.getTileConsumer().isShowing())
+				result.addAll(vtm.createLatestTiles());
 		}
 		return result;
 	}

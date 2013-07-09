@@ -47,6 +47,7 @@ import java.awt.event.ActionEvent;
 import java.awt.event.KeyEvent;
 import java.awt.event.MouseEvent;
 import java.io.File;
+import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.Arrays;
@@ -1034,17 +1035,20 @@ public class QuadViewUi extends JPanel
 	        {
 	        	String fileSuffix = pathToFile.replace(mbmPrefix, "");
 	        	for (String prefix : prefixesToTry) {
-	        		tmpFile = new File(prefix + fileSuffix);
-	        		if (tmpFile.exists())
+	        		File testFile = new File(prefix + fileSuffix);
+	        		if (testFile.exists()) {
+	        			tmpFile = testFile;
 	        			break;
+	        		}
 	        	}
 	        }
         }
         
         if (!tmpFile.exists()) {
             JOptionPane.showMessageDialog(this.getParent(),
-                    "Error opening folder " + tmpFile.getName(),
-                    "Could not load folder.",
+                    "Error opening folder " + tmpFile.getName()
+                    +" \nIs the file share mounted?",
+                    "Folder does not exist.",
                     JOptionPane.ERROR_MESSAGE);
             return false;
         }
@@ -1055,7 +1059,18 @@ public class QuadViewUi extends JPanel
     }
     
     public boolean loadURL(URL url) {
-    	return volumeImage.loadURL(url);
+    	// Check if url exists first...
+    	try {
+    		url.openStream();
+        	return volumeImage.loadURL(url);
+    	} catch (IOException exc) {
+            JOptionPane.showMessageDialog(this.getParent(),
+                    "Error opening folder " + url
+                    +" \nIs the file share mounted?",
+                    "Could not open folder",
+                    JOptionPane.ERROR_MESSAGE);
+            return false;
+    	}
     }
     
     public Slot1<URL> onVolumeLoadedSlot = new Slot1<URL>() {

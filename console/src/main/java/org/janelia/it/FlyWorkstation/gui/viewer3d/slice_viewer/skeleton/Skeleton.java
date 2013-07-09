@@ -8,6 +8,7 @@ import java.util.Set;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.Vec3;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.slice_viewer.Signal;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.slice_viewer.Signal1;
+import org.janelia.it.FlyWorkstation.gui.viewer3d.slice_viewer.Slot;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.slice_viewer.Slot1;
 import org.janelia.it.jacs.model.user_data.tiledMicroscope.TmGeoAnnotation;
 
@@ -71,6 +72,15 @@ public class Skeleton {
 	// AFTER anchor has already been added (not simply requested)
 	public Signal1<Anchor> anchorAddedSignal = new Signal1<Anchor>();
 	
+	public Slot clearSlot = new Slot() {
+		@Override
+		public void execute() {
+			clear();
+		}
+	};
+	public Signal clearedSignal = new Signal();
+	
+	
 	public Skeleton() {
 		// TODO - don't make this connection when using workstation database
 		// addAnchorRequestedSignal.connect(addShortCircuitAnchorSlot);
@@ -91,14 +101,20 @@ public class Skeleton {
 		return anchor;
 	}
 
-	public Set<Anchor> getAnchors() {
-		return anchors;
-	}
-
 	public void addAnchorAtXyz(Vec3 xyz, Anchor parent) {
 		addAnchorRequestedSignal.emit(new AnchorSeed(xyz, parent));
 	}
 
+	public void clear() {
+		if (anchors.size() == 0) {
+			return; // no change
+		}
+		anchors.clear();
+		anchorsByGuid.clear();
+		clearedSignal.emit();
+		skeletonChangedSignal.emit();
+	}
+	
 	public boolean connect(Anchor anchor1, Anchor anchor2) {
 		if (! anchors.contains(anchor1))
 			return false;
@@ -126,4 +142,9 @@ public class Skeleton {
 		skeletonChangedSignal.emit();
 		return true;
 	}
+
+	public Set<Anchor> getAnchors() {
+		return anchors;
+	}
+
 }

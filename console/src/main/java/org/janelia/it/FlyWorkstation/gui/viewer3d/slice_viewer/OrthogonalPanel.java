@@ -206,6 +206,7 @@ extends JPanel
 		viewTileManager.setTextureCache(tileServer.getTextureCache());
 		tileServer.addViewTileManager(viewTileManager);
 		tileServer.getViewTextureChangedSignal().connect(viewer.repaintSlot);
+		viewer.setTileServer(tileServer);
 	}
 	
 	public void setSystemMenuItemGenerator(MenuItemGenerator systemMenuItemGenerator) 
