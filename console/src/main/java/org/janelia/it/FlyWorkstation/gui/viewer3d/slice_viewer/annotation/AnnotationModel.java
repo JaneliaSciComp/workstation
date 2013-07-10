@@ -29,7 +29,8 @@ public class AnnotationModel
     private Long currentNeuronID;
 
     // signals & slots
-    public Signal1<TmWorkspace> workspaceChangedSignal = new Signal1<TmWorkspace>();
+    public Signal1<TmWorkspace> workspaceLoadedSignal = new Signal1<TmWorkspace>();
+    public Signal1<TmNeuron> neuronLoadedSignal = new Signal1<TmNeuron>();
     public Signal1<TmNeuron> neuronChangedSignal = new Signal1<TmNeuron>();
 
     public Signal1<TmGeoAnnotation> anchorAddedSignal = new Signal1<TmGeoAnnotation>();
@@ -82,7 +83,8 @@ public class AnnotationModel
         } else {
             currentNeuronID = null;
         }
-        neuronChangedSignal.emit(neuron);
+        // neuronChangedSignal.emit(neuron);
+        neuronLoadedSignal.emit(neuron);
     }
 
     public AnnotationModel() {
@@ -107,7 +109,7 @@ public class AnnotationModel
         neuronChangedSignal.emit(currentNeuron);
 
         // workspace info panel has neuron list, so it needs poking, too:
-        workspaceChangedSignal.emit(getCurrentWorkspace());
+        workspaceLoadedSignal.emit(getCurrentWorkspace());
 
         return true;
         
@@ -154,7 +156,7 @@ public class AnnotationModel
         TmGeoAnnotation annotation;
         try {
             annotation = modelMgr.addGeometricAnnotation(neuron.getId(),
-                null, 0, xyz.x(), xyz.y(), xyz.z(), "root annotation");
+                null, 0, xyz.x(), xyz.y(), xyz.z(), " ");
         } catch (Exception e) {
             e.printStackTrace();
             return;
@@ -179,7 +181,7 @@ public class AnnotationModel
         TmGeoAnnotation annotation;
         try {
             annotation = modelMgr.addGeometricAnnotation(neuron.getId(),
-                    parentAnn.getId(), 0, xyz.x(), xyz.y(), xyz.z(), "child annotation");
+                    parentAnn.getId(), 0, xyz.x(), xyz.y(), xyz.z(), " ");
         } catch (Exception e) {
             e.printStackTrace();
             return;
@@ -208,7 +210,7 @@ public class AnnotationModel
         setCurrentNeuron(null);
 
         // notify listeners
-        workspaceChangedSignal.emit(workspace);
+        workspaceLoadedSignal.emit(workspace);
         neuronChangedSignal.emit(null);
 
     }

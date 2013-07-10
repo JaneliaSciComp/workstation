@@ -30,9 +30,11 @@ import org.janelia.it.FlyWorkstation.gui.viewer3d.slice_viewer.action.ZoomScroll
 import org.janelia.it.FlyWorkstation.gui.viewer3d.slice_viewer.annotation.AnnotationManager;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.slice_viewer.annotation.AnnotationModel;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.slice_viewer.annotation.AnnotationPanel;
+import org.janelia.it.FlyWorkstation.gui.viewer3d.slice_viewer.annotation.SliceViewerTranslator;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.slice_viewer.skeleton.Skeleton;
 import org.janelia.it.jacs.model.entity.Entity;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.slice_viewer.skeleton.SkeletonActor;
+import org.janelia.it.jacs.model.user_data.tiledMicroscope.TmWorkspace;
 // import org.slf4j.Logger;
 // import org.slf4j.LoggerFactory;
 
@@ -129,6 +131,7 @@ public class QuadViewUi extends JPanel
 	// annotation things
 	private AnnotationModel annotationModel = new AnnotationModel();
 	private AnnotationManager annotationMgr = new AnnotationManager(annotationModel);
+    private SliceViewerTranslator sliceViewerTranslator = new SliceViewerTranslator();
 
 	// Actions
 	private final Action openFolderAction = new OpenFolderAction(volumeImage, sliceViewer);
@@ -287,7 +290,12 @@ public class QuadViewUi extends JPanel
         skeleton.addAnchorRequestedSignal.connect(annotationMgr.addAnchorRequestedSlot);
         annotationModel.anchorAddedSignal.connect(skeleton.addAnchorSlot);
 
-        // 
+        // hack to do clear/reload
+        sliceViewerTranslator.setSkeleton(skeleton);
+        annotationModel.neuronLoadedSignal.connect(sliceViewerTranslator.loadNeuronSlot);
+        sliceViewerTranslator.anchorAddedSignal.connect(skeleton.addAnchorSlot);
+
+        //
         clearCacheAction.putValue(Action.NAME, "Clear Cache");
         clearCacheAction.putValue(Action.SHORT_DESCRIPTION, 
 				"Empty image cache (for testing only)");

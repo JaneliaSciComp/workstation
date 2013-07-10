@@ -191,7 +191,7 @@ public class NeuronInfoPanel extends JPanel
         updateNeuriteTree(neuron);
 
         // testing
-        printNeuronInfo(neuron);
+        // printNeuronInfo(neuron);
     }
 
     public void updateNeuronLabel(TmNeuron neuron) {

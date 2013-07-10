@@ -14,7 +14,7 @@ import org.janelia.it.FlyWorkstation.gui.viewer3d.slice_viewer.skeleton.Skeleton
 import org.janelia.it.jacs.model.entity.Entity;
 import org.janelia.it.jacs.model.entity.EntityConstants;
 import org.janelia.it.jacs.model.user_data.tiledMicroscope.*;
-import sun.awt.ModalityListener;
+
 
 import javax.swing.*;
 

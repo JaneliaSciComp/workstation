@@ -51,15 +51,6 @@ public class AnnotationPanel extends JPanel
             }
         };
 
-    // this one is only for testing; will eventually be a mouse click thing, not
-    //  on the menu like the others
-    private final Action createGeoAnnAction = new AbstractAction() {
-        @Override
-        public void actionPerformed(ActionEvent actionEvent) {
-            annotationMgr.createGeoAnnotation();
-        }
-    };
-
     private final Action testItem1Action = new AbstractAction() {
         @Override
         public void actionPerformed(ActionEvent e) {
@@ -95,16 +86,15 @@ public class AnnotationPanel extends JPanel
     }
 
     private void setupSignals() {
-        annotationModel.workspaceChangedSignal.connect(workspaceInfoPanel.updateWorkspaceSlot);
+        annotationModel.workspaceLoadedSignal.connect(workspaceInfoPanel.updateWorkspaceSlot);
         annotationModel.neuronChangedSignal.connect(neuronInfoPanel.updateNeuronSlot);
+        annotationModel.neuronLoadedSignal.connect(neuronInfoPanel.updateNeuronSlot);
 
         workspaceInfoPanel.neuronClickedSignal.connect(annotationModel.neuronSelectedSlot);
     }
 
     private void setupUI() {
         setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
-
-
 
 
         // each of these placeholders will eventually be replaced by a
@@ -132,7 +122,8 @@ public class AnnotationPanel extends JPanel
         // at some point, we'll have our own sliceviewer menu; until then, attach those actions
         //  to buttons in plain view
         add(Box.createRigidArea(new Dimension(0, 20)));
-        add(new JLabel("Menu proxy"));
+        add(new JLabel("Commands"));
+        // add(new JLabel("Menu proxy"));
 
         JButton createWorkspaceButton = new JButton("Create workspace");
         createWorkspaceAction.putValue(Action.NAME, "Create workspace");
@@ -146,23 +137,19 @@ public class AnnotationPanel extends JPanel
         createNeuronButton.setAction(createNeuronAction);        
         add(createNeuronButton);
 
-        JButton createGeoAnnButton = new JButton("Create GeoAnn");
-        createGeoAnnAction.putValue(Action.NAME, "Create GeoAnn");
-        createGeoAnnAction.putValue(Action.SHORT_DESCRIPTION, "Create a new annotation");
-        createGeoAnnButton.setAction(createGeoAnnAction);
-        add(createGeoAnnButton);
 
+        // NOTE: don't add these buttons for release!
         JButton testItem1Button = new JButton("Test item 1");
         testItem1Action.putValue(Action.NAME, "Test item 1");
         testItem1Action.putValue(Action.SHORT_DESCRIPTION, "Test item 1");
         testItem1Button.setAction(testItem1Action);
-        add(testItem1Button);
+        // add(testItem1Button);
 
         JButton testItem2Button = new JButton("Test item 2");
         testItem2Action.putValue(Action.NAME, "Test item 2");
         testItem2Action.putValue(Action.SHORT_DESCRIPTION, "Test item 2");
         testItem2Button.setAction(testItem2Action);
-        add(testItem2Button);
+        // add(testItem2Button);
 
 
 

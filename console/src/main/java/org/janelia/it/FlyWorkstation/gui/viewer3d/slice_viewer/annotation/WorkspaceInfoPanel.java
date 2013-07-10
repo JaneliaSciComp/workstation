@@ -71,9 +71,7 @@ public class WorkspaceInfoPanel extends JPanel
                             TmNeuron selectedNeuron;
                             if (index >= 0) {
                                 selectedNeuron = (TmNeuron) neuronListModel.getElementAt(index);
-                                System.out.println("neuron selected: " + selectedNeuron.getName());
                             } else {
-                                System.out.println("no neuron selected");
                                 selectedNeuron = null;
                             }
                             neuronClickedSignal.emit(selectedNeuron);
