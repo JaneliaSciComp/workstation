@@ -52,21 +52,12 @@ public class SliceViewerTranslator {
         // clear existing
         skeleton.clear();
 
-        // load new; this is a cheat; we're going to send the same signal
-        //  that annModel would
-        System.out.println("original ordering");
-        for (TmGeoAnnotation ann: neuron.getGeoAnnotationMap().values()) {
-            System.out.println(String.format("drawing ann at %f, %f", ann.getX(), ann.getY()));
-            // anchorAddedSignal.emit(ann);
-        }
-
-        // replace above with a version that adds annotations in parent-child sequence,
-        //  so lines get drawn correctly; remember, for now, we're assuming one root
-        System.out.println("alternate ordering");
+        // note that we mus add annotations in parent-child sequence
+        //  so lines get drawn correctly
+        // remember, for now, we're assuming one root
         TmGeoAnnotation root = neuron.getRootAnnotation();
         if (root != null) {
             for (TmGeoAnnotation ann: root.getSubTreeList()) {
-                 System.out.println(String.format("drawing ann at %f, %f", ann.getX(), ann.getY()));
                  anchorAddedSignal.emit(ann);
             }
         }

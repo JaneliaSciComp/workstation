@@ -83,8 +83,9 @@ public class AnnotationModel
         } else {
             currentNeuronID = null;
         }
+        // refresh the neuron object!
         // neuronChangedSignal.emit(neuron);
-        neuronLoadedSignal.emit(neuron);
+        neuronLoadedSignal.emit(getCurrentNeuron());
     }
 
     public AnnotationModel() {
