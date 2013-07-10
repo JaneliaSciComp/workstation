@@ -75,11 +75,13 @@ implements GLActor
 			setStage(Stage.BEST_TEXTURE_LOADED);
 			return;
 		}
-		if ((ix != null) && (ix.getSliceAxis() == CoordinateAxis.X))
-			log.info("cache miss "+ix);
+		if ((ix != null) && (ix.getSliceAxis() == CoordinateAxis.X)) {
+			// log.info("cache miss "+ix);
+		}
 		ix = ix.zoomOut(); // Try some lower resolution textures
-		if ((ix != null) && (ix.getSliceAxis() == CoordinateAxis.X))
-			log.info("try lower texture "+ix);
+		if ((ix != null) && (ix.getSliceAxis() == CoordinateAxis.X)) {
+			// log.info("try lower texture "+ix);
+		}
 		while (ix != null) {
 			texture = textureCache.get(ix);
 			if (texture == null) {
@@ -93,15 +95,17 @@ implements GLActor
 				// log.info("cache miss texture not loaded "+ix);
 			}
 			else {
-				if ((ix != null) && (ix.getSliceAxis() == CoordinateAxis.X))
-					log.info("choosing lower texture "+ix);
+				if ((ix != null) && (ix.getSliceAxis() == CoordinateAxis.X)) {
+					// log.info("choosing lower texture "+ix);
+				}
 				bestTexture = texture;
 				setStage(Stage.COARSE_TEXTURE_LOADED);
 				return;
 			}
 			ix = ix.zoomOut();
-			if ((ix != null) && (ix.getSliceAxis() == CoordinateAxis.X))
+			if ((ix != null) && (ix.getSliceAxis() == CoordinateAxis.X)) {
 				log.info("try lower texture "+ix);
+			}
 		}
 		// No texture was found; maybe next time
 		// log.info("texture cache miss "+getIndex());
