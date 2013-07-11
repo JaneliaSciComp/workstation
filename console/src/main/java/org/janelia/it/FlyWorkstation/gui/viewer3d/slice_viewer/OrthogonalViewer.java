@@ -327,8 +327,12 @@ implements MouseModalWidget, TileConsumer
         else if (wheelModeId == WheelMode.Mode.SCAN) {
             ZScanMode scanMode = new ZScanMode(volume);
             scanMode.setSliceAxis(sliceAxis);
-            if (tileServer != null)
-            	scanMode.setTileFormat(tileServer.getLoadAdapter().getTileFormat());
+            if (tileServer != null) {
+            	AbstractTextureLoadAdapter loadAdapter = tileServer.getLoadAdapter();
+            	if (loadAdapter != null) {
+            		scanMode.setTileFormat(loadAdapter.getTileFormat());
+            	}
+            }
             this.wheelMode = scanMode;
         }
         this.wheelMode.setComponent(this, false);
