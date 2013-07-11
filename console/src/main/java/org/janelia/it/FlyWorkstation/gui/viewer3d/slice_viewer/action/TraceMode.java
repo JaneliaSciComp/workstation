@@ -21,6 +21,7 @@ import org.janelia.it.FlyWorkstation.gui.viewer3d.slice_viewer.Slot1;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.slice_viewer.skeleton.Anchor;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.slice_viewer.skeleton.Skeleton;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.slice_viewer.skeleton.SkeletonActor;
+import org.janelia.it.FlyWorkstation.gui.viewer3d.slice_viewer.skeleton.SkeletonSwcExporter;
 
 public class TraceMode extends BasicMouseMode 
 implements MouseMode, KeyListener
@@ -163,8 +164,8 @@ implements MouseMode, KeyListener
 		double minDist2 = 10 * cutoff; // start too big
 		Anchor closest = null;
 		for (Anchor a : skeleton.getAnchors()) {
-			double dz = xyz.getZ() - a.getLocation().getZ();
-			if (Math.abs(2.0 * dz) >= 0.9 * viewport.getDepth())
+			double dz = Math.abs(2.0 * (xyz.getZ() - a.getLocation().getZ()) * camera.getPixelsPerSceneUnit());
+			if (dz >= 0.95 * viewport.getDepth())
 				continue; // outside of Z (most of) range
 			// Use X/Y (not Z) for distance comparison
 			Vec3 dv = xyz.minus(a.getLocation());
@@ -283,7 +284,6 @@ implements MouseMode, KeyListener
                         @Override
                         public void actionPerformed(ActionEvent e) {} // does nothing (closes context menu)
                     }));
-                    // TODO - top level File, Edit, etc.
                     ///// Popup menu items that require an anchor under the mouse /////
                     if (getHoverAnchor() != null) {
                         result.add(null); // separator
@@ -317,11 +317,16 @@ implements MouseMode, KeyListener
                         }
                         // Delete
                         result.add(new JMenuItem(new AbstractAction("Delete this anchor") {
-                            private static final long serialVersionUID = 1L;
                             @Override
                             public void actionPerformed(ActionEvent e) {
                                 skeleton.delete(getHoverAnchor());
                             }
+                        }));
+                        result.add(new JMenuItem(new AbstractAction("Export SWC file rooted at this anchor") {
+							@Override
+							public void actionPerformed(ActionEvent event) {
+								new SkeletonSwcExporter(getHoverAnchor()).dialogAndExport(getComponent().getComponent());
+							}
                         }));
                     }
                     ///// Popup menu items that do not require an anchor under the mouse /////
