@@ -236,8 +236,8 @@ public class SearchConfiguration {
 			if ("annotations".equals(fieldName)) {
 				StringBuffer sb = new StringBuffer();
 				for(String subjectKey : SessionMgr.getSubjectKeys()) {
-					String fieldNamePrefix = SolrUtils.getFormattedName(subjectKey);
-					Object v = doc.getFieldValues(fieldNamePrefix+"_annotations");
+				    String owner = subjectKey.contains(":") ? subjectKey.split(":")[1] : subjectKey;
+					Object v = doc.getFieldValues(owner+"_annotations");
 					if (v!=null) {
 						if (sb.length()>0) sb.append(" ");
 						sb.append(getFormattedFieldValue(v, fieldName));
