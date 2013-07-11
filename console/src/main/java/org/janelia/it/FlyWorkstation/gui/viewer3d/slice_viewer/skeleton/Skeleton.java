@@ -6,6 +6,7 @@ import java.util.Map;
 import java.util.Set;
 
 import org.janelia.it.FlyWorkstation.gui.viewer3d.Vec3;
+import org.janelia.it.FlyWorkstation.gui.viewer3d.slice_viewer.HistoryStack;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.slice_viewer.Signal;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.slice_viewer.Signal1;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.slice_viewer.Slot;
@@ -42,6 +43,8 @@ public class Skeleton {
 	
 	private Set<Anchor> anchors = new LinkedHashSet<Anchor>();
 	private Map<Long, Anchor> anchorsByGuid = new HashMap<Long, Anchor>();
+	// TODO - anchor browsing history should maybe move farther back
+	private HistoryStack<Anchor> anchorHistory = new HistoryStack<Anchor>();
 
 	public Signal skeletonChangedSignal = new Signal();
 
@@ -97,6 +100,7 @@ public class Skeleton {
 		if (guid != null)
 			anchorsByGuid.put(guid, anchor);
 		anchor.anchorChangedSignal.connect(skeletonChangedSignal);
+		anchorHistory.push(anchor);
 		anchorAddedSignal.emit(anchor);
 		return anchor;
 	}
@@ -111,6 +115,7 @@ public class Skeleton {
 		}
 		anchors.clear();
 		anchorsByGuid.clear();
+		anchorHistory.clear();
 		clearedSignal.emit();
 		skeletonChangedSignal.emit();
 	}
@@ -139,12 +144,19 @@ public class Skeleton {
 		Long guid = anchor.getGuid();
 		if (guid != null)
 			anchorsByGuid.remove(guid);
+		//
+		anchorHistory.remove(anchor);
+		//
 		skeletonChangedSignal.emit();
 		return true;
 	}
 
 	public Set<Anchor> getAnchors() {
 		return anchors;
+	}
+	
+	public HistoryStack<Anchor> getHistory() {
+		return anchorHistory;
 	}
 
 }

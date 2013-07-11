@@ -124,7 +124,7 @@ implements MouseModalWidget, TileConsumer
         addMouseWheelListener(this);
         addKeyListener(this);
         pointComputer.setCamera(camera);
-        pointComputer.setComponent(this, false);
+        pointComputer.setWidget(this, false);
         pointComputer.setViewerInGround(getViewerInGround());
         //
 		renderer.setBackgroundColor(Color.black);
@@ -295,7 +295,7 @@ implements MouseModalWidget, TileConsumer
             return;
         }
         this.mouseMode.setCamera(camera);
-        this.mouseMode.setComponent(this, true);
+        this.mouseMode.setWidget(this, true);
         this.setToolTipText(mouseMode.getToolTipText());        
         this.modeMenuItemGenerator = mouseMode.getMenuItemGenerator();
     }
@@ -335,7 +335,7 @@ implements MouseModalWidget, TileConsumer
             }
             this.wheelMode = scanMode;
         }
-        this.wheelMode.setComponent(this, false);
+        this.wheelMode.setWidget(this, false);
         this.wheelMode.setCamera(camera);
     }
 
@@ -409,7 +409,7 @@ implements MouseModalWidget, TileConsumer
 
 	@Override
 	public void keyReleased(KeyEvent event) {
-		mouseMode.keyPressed(event);
+		mouseMode.keyReleased(event);
 	}
 
 	public void setTileServer(TileServer tileServer) {

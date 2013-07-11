@@ -23,10 +23,10 @@ extends MouseMotionListener, MouseListener, KeyListener
 	public void setDragCursor(Cursor dragCursor);
 	public Cursor getHoverCursor();
 	public void setHoverCursor(Cursor hoverCursor);
-	public MouseModalWidget getComponent();
+	public MouseModalWidget getWidget();
 	Camera3d getCamera();
 	void setCamera(Camera3d camera);
 	public String getToolTipText();
     public MenuItemGenerator getMenuItemGenerator();
-	void setComponent(MouseModalWidget widget, boolean updateCursor);
+	void setWidget(MouseModalWidget widget, boolean updateCursor);
 }

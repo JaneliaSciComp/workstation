@@ -47,6 +47,7 @@ implements MouseMode, KeyListener
 		@Override
 		public void execute(Anchor anchor) {
 			skeletonActor.setNextParent(anchor);
+			skeleton.getHistory().push(anchor);
 			camera.setFocus(anchor.getLocation());
 		}
 	};
@@ -90,6 +91,7 @@ implements MouseMode, KeyListener
             if (currentHover >= 0) {
                 Anchor hoverAnchor = skeletonActor.getAnchorAtIndex(currentHover);
                 camera.setFocus(hoverAnchor.getLocation());
+                skeleton.getHistory().push(hoverAnchor);
             }
             else {
 				// center on slice point
@@ -234,6 +236,7 @@ implements MouseMode, KeyListener
 					}
 					Vec3 newLoc = oldLoc.plus(dLoc);
 					dragAnchor.setLocation(newLoc);
+					skeleton.getHistory().push(dragAnchor);
 				}
 			}
 			dragAnchor = null;
@@ -292,6 +295,7 @@ implements MouseMode, KeyListener
                             private static final long serialVersionUID = 1L;
                             @Override
                             public void actionPerformed(ActionEvent e) {
+                            	skeleton.getHistory().push(getHoverAnchor());
                                 camera.setFocus(getHoverAnchor().getLocation());
                             }
                         }));                    
@@ -322,10 +326,10 @@ implements MouseMode, KeyListener
                                 skeleton.delete(getHoverAnchor());
                             }
                         }));
-                        result.add(new JMenuItem(new AbstractAction("Export SWC file rooted at this anchor") {
+                        result.add(new JMenuItem(new AbstractAction("Export SWC file rooted at this anchor...") {
 							@Override
 							public void actionPerformed(ActionEvent event) {
-								new SkeletonSwcExporter(getHoverAnchor()).dialogAndExport(getComponent().getComponent());
+								new SkeletonSwcExporter(getHoverAnchor()).dialogAndExport(getWidget().getComponent());
 							}
                         }));
                     }
@@ -364,8 +368,8 @@ implements MouseMode, KeyListener
     }
 	
 	@Override
-	public void setComponent(MouseModalWidget widget, boolean updateCursor) {
-		super.setComponent(widget, updateCursor);
+	public void setWidget(MouseModalWidget widget, boolean updateCursor) {
+		super.setWidget(widget, updateCursor);
 	}
 
 	public Viewport getViewport() {
@@ -382,6 +386,20 @@ implements MouseMode, KeyListener
 	@Override
 	public void keyPressed(KeyEvent event) {
 		checkShiftPlusCursor(event);
+		int keyCode = event.getKeyCode();
+		Anchor historyAnchor = null;
+		switch(keyCode) {
+		case KeyEvent.VK_LEFT:
+			System.out.println("back");
+			historyAnchor = skeleton.getHistory().back();
+			break;
+		case KeyEvent.VK_RIGHT:
+			System.out.println("next");
+			historyAnchor = skeleton.getHistory().next();
+			break;
+		}
+		if (historyAnchor != null)
+			camera.setFocus(historyAnchor.getLocation());
 	}
 
 	@Override

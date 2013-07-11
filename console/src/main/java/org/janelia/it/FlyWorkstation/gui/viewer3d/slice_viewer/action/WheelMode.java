@@ -12,8 +12,8 @@ extends MouseWheelListener
         ZOOM,
         SCAN
     }
-	public MouseModalWidget getComponent();
-	public void setComponent(MouseModalWidget widget, boolean updateCursor);
+	public MouseModalWidget getWidget();
+	public void setWidget(MouseModalWidget widget, boolean updateCursor);
 	Camera3d getCamera();
 	void setCamera(Camera3d camera);
 }

@@ -151,12 +151,12 @@ public class BasicMouseMode implements MouseMode
 	}
 
 	@Override
-	public MouseModalWidget getComponent() {
+	public MouseModalWidget getWidget() {
 		return widget;
 	}
 
 	@Override
-	public void setComponent(MouseModalWidget widget, boolean updateCursor) {
+	public void setWidget(MouseModalWidget widget, boolean updateCursor) {
 		if (this.widget == widget)
 			return;
 		this.widget = widget;
@@ -194,7 +194,7 @@ public class BasicMouseMode implements MouseMode
 		// Initialize to screen space position
 		Vec3 result = new Vec3(pixel.getX(), pixel.getY(), 0);
 		// Normalize to screen viewport center
-		Viewport vp = getComponent().getViewport();
+		Viewport vp = getWidget().getViewport();
 		// TODO - test non-zero origins
 		result = result.minus(new Vec3(vp.getOriginX(), vp.getOriginY(), 0)); // origin
 		result = result.minus(new Vec3(vp.getWidth()/2.0, vp.getHeight()/2.0, 0)); // center
@@ -216,7 +216,7 @@ public class BasicMouseMode implements MouseMode
 		result = viewerInGround.inverse().times(result);
 		result = result.times(getCamera().getPixelsPerSceneUnit());
 		// TODO - apply rotation, but only for rotatable viewers, UNLIKE slice viewer
-		Viewport vp = getComponent().getViewport();
+		Viewport vp = getWidget().getViewport();
 		result = result.plus(new Vec3(vp.getWidth()/2.0, vp.getHeight()/2.0, 0));
 		result = result.plus(new Vec3(vp.getOriginX(), vp.getOriginY(), 0));
 		return new Point((int)Math.round(result.getX()), (int)Math.round(result.getY()));

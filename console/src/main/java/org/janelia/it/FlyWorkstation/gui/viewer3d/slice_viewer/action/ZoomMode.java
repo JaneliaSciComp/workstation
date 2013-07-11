@@ -37,8 +37,8 @@ implements WheelMode, MouseMode
 	}
 
 	@Override
-	public MouseModalWidget getComponent() {
-		return mode.getComponent();
+	public MouseModalWidget getWidget() {
+		return mode.getWidget();
 	}
 
 	@Override
@@ -55,7 +55,7 @@ implements WheelMode, MouseMode
 		mode.mouseDragged(event);
 		if (event.isPopupTrigger())
 			return;
-		getComponent().getRubberBand().setEndPoint(event.getPoint());
+		getWidget().getRubberBand().setEndPoint(event.getPoint());
 	}
 
 	@Override
@@ -84,7 +84,7 @@ implements WheelMode, MouseMode
 		// Don't zoom and context menu at the same time
 		if (event.isPopupTrigger())
 			return;
-		RubberBand rb = getComponent().getRubberBand();
+		RubberBand rb = getWidget().getRubberBand();
 		rb.setStartPoint(event.getPoint());
 		rb.setEndPoint(event.getPoint());
 		rb.setVisible(true);
@@ -93,7 +93,7 @@ implements WheelMode, MouseMode
 	@Override
 	public void mouseReleased(MouseEvent event) {
 		mode.mouseReleased(event);
-		RubberBand rb = getComponent().getRubberBand();
+		RubberBand rb = getWidget().getRubberBand();
 		if (! rb.isVisible())
 			return;
 		rb.setVisible(false);
@@ -115,7 +115,7 @@ implements WheelMode, MouseMode
 			zoomRatio = 1.41421;
 		}
 		else {
-			Viewport vp = getComponent().getViewport();
+			Viewport vp = getWidget().getViewport();
 			int w = vp.getWidth();
 			int h = vp.getHeight();
 			zoomRatio = Math.max(dx/(double)(w), dy/(double)(h));
@@ -123,7 +123,7 @@ implements WheelMode, MouseMode
 		// recenter
 		double cx = 0.5 * (p0.x + p1.x);
 		double cy = 0.5 * (p0.y + p1.y);
-		Point2D newCenter = getComponent().getPixelOffsetFromCenter(new Point2D.Double(cx, cy));
+		Point2D newCenter = getWidget().getPixelOffsetFromCenter(new Point2D.Double(cx, cy));
 		getCamera().incrementFocusPixels(newCenter.getX(), newCenter.getY(), 0.0);
 		// zoom
 		getCamera().incrementZoom(1.0/zoomRatio);
@@ -142,7 +142,7 @@ implements WheelMode, MouseMode
 		double zoomRatio = Math.pow(2.0, -notches/20.0);
 		camera.incrementZoom(zoomRatio);
 		if (isCenterOnCursor()) {
-			Point2D dx = getComponent().getPixelOffsetFromCenter(event.getPoint());
+			Point2D dx = getWidget().getPixelOffsetFromCenter(event.getPoint());
 			Vec3 dv = new Vec3(dx.getX(), dx.getY(), 0.0);
 			dv = dv.times(zoomRatio - 1.0);
 			camera.incrementFocusPixels(dv);
@@ -159,8 +159,8 @@ implements WheelMode, MouseMode
 	}
 
 	@Override
-	public void setComponent(MouseModalWidget widget, boolean updateCursor) {
-		mode.setComponent(widget, updateCursor);
+	public void setWidget(MouseModalWidget widget, boolean updateCursor) {
+		mode.setWidget(widget, updateCursor);
 	}
 
 

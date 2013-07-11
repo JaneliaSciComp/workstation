@@ -134,7 +134,7 @@ implements MouseModalWidget, TileConsumer
         tileServer.getViewTextureChangedSignal().connect(getRepaintSlot());
         // Initialize pointComputer for interconverting pixelXY <=> sceneXYZ
 		pointComputer.setCamera(getCamera());
-		pointComputer.setComponent(this, false);
+		pointComputer.setWidget(this, false);
 		//
         renderer.addActor(skeletonActor);
         skeletonActor.skeletonActorChangedSignal.connect(repaintSlot);
@@ -320,7 +320,7 @@ implements MouseModalWidget, TileConsumer
             return;
         }
         this.mouseMode.setCamera(camera);
-        this.mouseMode.setComponent(this, true);
+        this.mouseMode.setWidget(this, true);
         this.setToolTipText(mouseMode.getToolTipText());        
         this.modeMenuItemGenerator = mouseMode.getMenuItemGenerator();
     }
@@ -350,7 +350,7 @@ implements MouseModalWidget, TileConsumer
 	    else if (wheelModeId == WheelMode.Mode.SCAN) {
 	        this.wheelMode = new ZScanMode(volumeImage);
 	    }
-		this.wheelMode.setComponent(this, false);
+		this.wheelMode.setWidget(this, false);
 		this.wheelMode.setCamera(camera);
 	}
 
