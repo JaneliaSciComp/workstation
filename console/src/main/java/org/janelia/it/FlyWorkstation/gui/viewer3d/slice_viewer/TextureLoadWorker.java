@@ -41,12 +41,12 @@ public class TextureLoadWorker implements Runnable
 		}
 		
 		if (textureCache.containsKey(index)) {
-			log.info("Skipping duplicate load of texture (2) "+index);
+			// log.info("Skipping duplicate load of texture (2) "+index);
 		}
 		// Don't load this texture if it is already loaded
 		else if (texture.getStage().ordinal() == TileTexture.Stage.RAM_LOADING.ordinal())
 		{
-			log.info("Skipping duplicate load of texture "+texture.getIndex());
+			// log.info("Skipping duplicate load of texture "+texture.getIndex());
 			// return; // already loading
 		}
 		else if (texture.getStage().ordinal() > TileTexture.Stage.RAM_LOADING.ordinal())
@@ -58,13 +58,13 @@ public class TextureLoadWorker implements Runnable
 		// log.info("Loading texture "+texture.getIndex());
 		else if (texture.loadImageToRam()) {
 			textureCache.add(texture);
-			texture.getRamLoadedSignal().emit(texture.getIndex()); // inform consumers (RavelerTileServer?)
+			textureCache.textureLoadedSignal.emit(texture.getIndex()); // inform consumers (RavelerTileServer?)
 			// log.info("Loaded texture "+texture.getIndex());
 		}
 		else {
 			log.warn("Failed to load texture " + texture.getIndex());
 		}
-		textureCache.getQueuedRequests().remove(index);
+		textureCache.setLoadQueued(index, false);
 	}
 
 }

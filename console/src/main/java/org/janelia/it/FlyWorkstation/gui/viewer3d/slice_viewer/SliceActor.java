@@ -23,6 +23,7 @@ import org.slf4j.LoggerFactory;
 public class SliceActor 
 implements GLActor
 {
+	@SuppressWarnings("unused")
 	private static final Logger log = LoggerFactory.getLogger(SliceActor.class);
 
 	private ViewTileManager viewTileManager;
@@ -108,20 +109,6 @@ implements GLActor
 			numeralShader.unload(gl);
 		}
 
-		// Outline tiles for viewer debugging
-		// TODO - why are outlines black on Windows?
-		final boolean bOutlineTiles = false;
-		if (bOutlineTiles) {
-			// Use simplest possible shader, to get color to work on Windows
-			outlineShader.load(gl);
-			gl.glLineWidth(1.0f);
-			for (Tile2d tile: tiles) {
-				tile.displayBoundingBox(gl, camera);
-			}
-			outlineShader.unload(gl);
-			// System.out.println("paint tile outline(1)");
-		}
-		
 		// Outline volume for debugging
 		final boolean bOutlineVolume = false;
 		if (bOutlineVolume) {
@@ -171,6 +158,10 @@ implements GLActor
 	
 	public ImageColorModel getImageColorModel() {
 		return imageColorModel;
+	}
+
+	public ViewTileManager getViewTileManager() {
+		return viewTileManager;
 	}
 
 	@Override

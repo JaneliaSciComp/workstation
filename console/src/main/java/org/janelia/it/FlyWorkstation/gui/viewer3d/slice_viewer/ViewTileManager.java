@@ -10,6 +10,8 @@ import org.janelia.it.FlyWorkstation.gui.viewer3d.Rotation3d;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.Vec3;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.interfaces.Camera3d;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.interfaces.Viewport;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * ViewTileManager is a per-viewer implementation of tile management that
@@ -18,6 +20,9 @@ import org.janelia.it.FlyWorkstation.gui.viewer3d.interfaces.Viewport;
  *
  */
 public class ViewTileManager {
+	@SuppressWarnings("unused")
+	private static final Logger log = LoggerFactory.getLogger(ViewTileManager.class);
+
 	/*
 	 * A TileSet is a group of rectangles that complete the SliceViewer image
 	 * display.
@@ -66,17 +71,25 @@ public class ViewTileManager {
 	// tiles are loading.
 	private TileSet lastGoodTiles;
 	private Set<TileIndex> neededTextures = new HashSet<TileIndex>();
+	private Set<TileIndex> displayableTextures = new HashSet<TileIndex>();
 
-	// signal for tile loaded
 	private double zoomOffset = 0.5; // tradeoff between optimal resolution (0.0) and speed.
 	private TileSet previousTiles;
 
 	private TileConsumer tileConsumer;
 	private TextureCache textureCache;
 	private SharedVolumeImage volumeImage;
-	
-	public Signal1<TileSet> tileSetChangedSignal = new Signal1<TileSet>();
 
+	public Slot1<TileIndex> onTextureLoadedSlot = new Slot1<TileIndex>() {
+		@Override
+		public void execute(TileIndex index) {
+			if (! displayableTextures.contains(index))
+				return;
+			// log.info("Needed texture loaded! "+index);
+			tileConsumer.getRepaintSlot().execute();
+		}
+	};
+	
 	public ViewTileManager(TileConsumer tileConsumer) 
 	{
 		this.tileConsumer = tileConsumer;
@@ -110,6 +123,8 @@ public class ViewTileManager {
 		TileSet result = new TileSet();
 		if (volumeImage.getLoadAdapter() == null)
 			return result;
+		if (! tileConsumer.isShowing()) // Hidden viewer shows no tiles.
+			return result; 
 
 		if (sliceAxis == CoordinateAxis.X) {
 			// System.out.println("X");
@@ -311,19 +326,37 @@ public class ViewTileManager {
 			log.info("  "+ix);
 		}
 		*/
-		synchronized(neededTextures) {
-			neededTextures.clear();
-			neededTextures.addAll(newNeededTextures);
+		if (! newNeededTextures.equals(neededTextures)) {
+			synchronized(neededTextures) {
+				neededTextures.clear();
+				neededTextures.addAll(newNeededTextures);
+			}
 		}
 		// queueTextureLoad(getNeededTextures());
 		
-		// put tile set changed signal here
 		if ( (! latestTiles.equals(previousTiles)) 
 				&& (latestTiles != null)
 				&& (latestTiles.size() > 0)
 				) {
 			previousTiles = latestTiles;
-			tileSetChangedSignal.emit(latestTiles);
+		}
+		
+		// Remember which textures might be useful
+		// Even if it's LOADED, it might not be PAINTED yet.
+		displayableTextures.clear();
+		for (Tile2d tile : latestTiles) {
+			// Best texture so far
+			if (tile.getBestTexture() != null)
+				displayableTextures.add(tile.getBestTexture().getIndex());
+			// Best possible
+			displayableTextures.add(tile.getIndex());
+		}
+		for (Tile2d tile : emergencyTiles) {
+			// Best texture so far
+			if (tile.getBestTexture() != null)
+				displayableTextures.add(tile.getBestTexture().getIndex());
+			// Best possible
+			displayableTextures.add(tile.getIndex());
 		}
 		
 		return result;

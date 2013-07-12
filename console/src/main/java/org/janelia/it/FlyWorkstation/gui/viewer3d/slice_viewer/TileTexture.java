@@ -44,8 +44,6 @@ public class TileTexture
 	private long uploadTextureTime = invalidTime;
 	private long firstDisplayTime = invalidTime;
 
-	private Signal1<TileIndex> ramLoadedSignal = new Signal1<TileIndex>();
-
 	public TileTexture(TileIndex index, AbstractTextureLoadAdapter loadAdapter) {
 		this.index = index;
 		this.loadAdapter = loadAdapter;
@@ -119,10 +117,6 @@ public class TileTexture
 
 	public TileIndex getIndex() {
 		return index;
-	}
-
-	public Signal1<TileIndex> getRamLoadedSignal() {
-		return ramLoadedSignal;
 	}
 
 	public PyramidTexture getTexture() {

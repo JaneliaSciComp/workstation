@@ -1,30 +1,21 @@
 package org.janelia.it.FlyWorkstation.gui.viewer3d.slice_viewer;
 
 import java.awt.Dimension;
-import java.awt.event.ActionEvent;
-
-import javax.swing.AbstractAction;
 import javax.swing.BoxLayout;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JSlider;
 import javax.swing.JSpinner;
-import javax.swing.KeyStroke;
 import javax.swing.SpinnerNumberModel;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 
-import org.janelia.it.FlyWorkstation.gui.util.Icons;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.BoundingBox3d;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.CoordinateAxis;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.Vec3;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.camera.ObservableCamera3d;
-import org.janelia.it.FlyWorkstation.gui.viewer3d.interfaces.VolumeImage3d;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.slice_viewer.action.MouseMode;
-import org.janelia.it.FlyWorkstation.gui.viewer3d.slice_viewer.action.MouseMode.Mode;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.slice_viewer.action.WheelMode;
-
-import com.jogamp.newt.event.KeyEvent;
 
 /*
  * GUI widget combining a slice viewer with a slice slider.
@@ -84,11 +75,11 @@ extends JPanel
 		add(viewer);
 		scanPanel.setLayout(new BoxLayout(scanPanel, BoxLayout.X_AXIS));
 		scanPanel.add(new JLabel(" "+axis.getName()));
-		scanPanel.add(new ToolButton(new PreviousSliceAction()));
+		scanPanel.add(new ToolButton(new OrthogonalViewer.PreviousSliceAction(viewer)));
 		slider.setMajorTickSpacing(10);
 		slider.setPaintTicks(true); // Avoid windows slider display bug
 		scanPanel.add(slider);
-		scanPanel.add(new ToolButton(new NextSliceAction()));
+		scanPanel.add(new ToolButton(new OrthogonalViewer.NextSliceAction(viewer)));
 		spinner.setPreferredSize(new Dimension(
 				73, // good value for showing up to ten thousands place
 				spinner.getPreferredSize().height));
@@ -165,25 +156,6 @@ extends JPanel
 		}
 	};
 
-	public void incrementSlice(int sliceCount) {
-		if (sliceCount == 0)
-			return;
-		if (camera == null)
-			return;
-		if (volume == null)
-			return;
-		int ix = axis.index(); // X, Y, or Z
-		double res = volume.getResolution(ix);
-		// At lower zoom, we must jump multiple slices to see a differenct
-		int deltaSlice = 1;
-		TileSet someTiles = viewTileManager.getLatestTiles();
-		if (someTiles.size() > 0)
-			deltaSlice = someTiles.iterator().next().getIndex().getDeltaSlice();
-		Vec3 dFocus = new Vec3(0,0,0);
-		dFocus.set(ix, sliceCount * res * deltaSlice);
-		camera.setFocus(camera.getFocus().plus(dFocus));
-	}
-	
 	public void setCamera(ObservableCamera3d camera) {
 		this.camera = camera;
 		viewer.setCamera(camera);
@@ -205,7 +177,8 @@ extends JPanel
 			return; // no change
 		viewTileManager.setTextureCache(tileServer.getTextureCache());
 		tileServer.addViewTileManager(viewTileManager);
-		tileServer.getViewTextureChangedSignal().connect(viewer.repaintSlot);
+		//
+		viewer.setTileServer(tileServer);
 		viewer.setTileServer(tileServer);
 	}
 	
@@ -246,51 +219,6 @@ extends JPanel
 
 	public void setSlider(JSlider slider) {
 		this.slider = slider;
-	}
-
-	class IncrementSliceAction extends AbstractAction {
-		int increment;
-
-		IncrementSliceAction(int increment) {
-			this.increment = increment;
-		}
-
-		@Override
-		public void actionPerformed(ActionEvent e) {
-			incrementSlice(increment);
-		}
-	}
-	
-	class PreviousSliceAction extends IncrementSliceAction {
-		PreviousSliceAction() {
-			super(-1);
-			putValue(NAME, "Previous "+axis.getName()+" Slice");
-			putValue(SMALL_ICON, Icons.getIcon("z_stack_up.png"));
-			putValue(MNEMONIC_KEY, KeyEvent.VK_PAGE_UP);
-			KeyStroke accelerator = KeyStroke.getKeyStroke(
-				KeyEvent.VK_PAGE_UP, 0);
-			putValue(ACCELERATOR_KEY, accelerator);
-			putValue(SHORT_DESCRIPTION,
-					"View previous "+axis.getName()+" slice"
-					+"\n (Shortcut: "+accelerator+")"
-					);		
-		}
-	}
-	
-	class NextSliceAction extends IncrementSliceAction {
-		NextSliceAction() {
-			super(1);
-			putValue(NAME, "Next "+axis.getName()+" Slice");
-			putValue(SMALL_ICON, Icons.getIcon("z_stack_down.png"));
-			putValue(MNEMONIC_KEY, KeyEvent.VK_PAGE_DOWN);
-			KeyStroke accelerator = KeyStroke.getKeyStroke(
-				KeyEvent.VK_PAGE_DOWN, 0);
-			putValue(ACCELERATOR_KEY, accelerator);
-			putValue(SHORT_DESCRIPTION,
-					"View next "+axis.getName()+" slice"
-					+"\n (Shortcut: "+accelerator+")"
-					);		
-		}
 	}
 
     public OrthogonalViewer getViewer() {

@@ -37,8 +37,10 @@ implements WheelMode
 		int notches = event.getWheelRotation();
 		if (notches == 0)
 			return;
+		
+		int deltaZ = 1;
 
-		sliceScanAction.setSliceCount(notches);
+		sliceScanAction.setSliceCount(notches*deltaZ);
 		sliceScanAction.actionPerformed(null);
 	}
 

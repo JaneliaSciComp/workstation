@@ -1,7 +1,9 @@
 package org.janelia.it.FlyWorkstation.gui.viewer3d.slice_viewer;
 
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Map;
 import java.util.Set;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -17,13 +19,16 @@ public class TextureCache
 	private HistoryCache historyCache = new HistoryCache(1000); // textures that have been displayed, ordered by LRU
 	private HistoryCache futureCache = new HistoryCache(3000); // textures we predict will be displayed
 	private PersistentCache persistentCache = new PersistentCache(); // lowest resolution textures for everything
-	private Set<TileIndex> queuedRequests = new HashSet<TileIndex>();
+	// private Set<TileIndex> queuedRequests = new HashSet<TileIndex>();
+	private Map<TileIndex, Long> queuedTextureTime = new HashMap<TileIndex, Long>();
 
 	public Signal getCacheClearedSignal() {
 		return cacheClearedSignal;
 	}
 
 	private Signal cacheClearedSignal = new Signal();
+
+	public Signal1<TileIndex> textureLoadedSignal = new Signal1<TileIndex>();
 
 	public synchronized void add(TileTexture texture) {
 		TileIndex index = texture.getIndex();
@@ -46,7 +51,7 @@ public class TextureCache
 		futureCache.clear();
 		historyCache.clear();
 		persistentCache.clear();
-		queuedRequests.clear();
+		queuedTextureTime.clear();
 		cacheClearedSignal.emit();
 	}
 
@@ -65,6 +70,32 @@ public class TextureCache
 			return futureCache.get(index);
 	}
 
+	// Keep track of recently queued textures, to avoid redundant loads
+	
+	public boolean isLoadQueued(TileIndex index) {
+		if (! queuedTextureTime.containsKey(index))
+			return false;
+		long elapsed = System.nanoTime() - queuedTextureTime.get(index);
+		// Don't wait longer than ten seconds
+		long maxSeconds = 10;
+		if (elapsed > maxSeconds * 1e9) {
+			// log.warn("Waited more than "+maxSeconds+" seconds for texture load "+index);
+			queuedTextureTime.remove(index);
+			return false;
+		}
+		return true; // queued for less than 5 seconds
+	}
+	
+	public void setLoadQueued(TileIndex index, boolean isQueued) {
+		if (isQueued) {
+			queuedTextureTime.put(index, System.nanoTime());
+		} else {
+			queuedTextureTime.remove(index);
+		}
+	}
+	
+	//
+	
 	// Indicate that a particular texture has been viewed, rather than simply
 	// pre-fetched.
 	public synchronized void markHistorical(TileTexture tile) {
@@ -112,10 +143,6 @@ public class TextureCache
 			i += 1;
 		}
 		return result;
-	}
-
-	public Set<TileIndex> getQueuedRequests() {
-		return queuedRequests;
 	}
 
 }

@@ -11,4 +11,5 @@ public interface TileConsumer {
 	CoordinateAxis getSliceAxis();
 	Rotation3d getViewerInGround();
 	boolean isShowing();
+	Slot getRepaintSlot();
 }

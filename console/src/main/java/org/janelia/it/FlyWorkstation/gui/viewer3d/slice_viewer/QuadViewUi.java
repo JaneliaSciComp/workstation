@@ -274,6 +274,7 @@ public class QuadViewUi extends JPanel
 	{
 		volumeImage.volumeInitializedSignal.connect(onVolumeLoadedSlot);
 		sliceViewer.setImageColorModel(imageColorModel);
+		camera.getViewChangedSignal().connect(tileServer.refreshCurrentTileSetSlot);
 		
 		colorChannelWidget_3.setVisible(false);
 		colorChannelWidget_2.setVisible(false);
@@ -404,13 +405,15 @@ public class QuadViewUi extends JPanel
 		neViewer.setVisible(true);
 		swViewer.setVisible(true);
 		seViewer.setVisible(true);
+		tileServer.refreshCurrentTileSetSlot.execute();
 	}
 	
 	private void setZViewMode() {
 		nwViewer.setVisible(true);
 		neViewer.setVisible(false);
 		swViewer.setVisible(false);
-		seViewer.setVisible(false);		
+		seViewer.setVisible(false);
+		tileServer.refreshCurrentTileSetSlot.execute();
 	}
 	
 	private void setupUi(JFrame parentFrame, boolean overrideFrameMenuBar) {

@@ -131,7 +131,6 @@ implements MouseModalWidget, TileConsumer
         // setToolTipText("Double click to center on a point.");
         renderer.addActor(sliceActor);
         // renderer.addActor(new TileOutlineActor(viewTileManager));
-        tileServer.getViewTextureChangedSignal().connect(getRepaintSlot());
         // Initialize pointComputer for interconverting pixelXY <=> sceneXYZ
 		pointComputer.setCamera(getCamera());
 		pointComputer.setWidget(this, false);
@@ -211,7 +210,7 @@ implements MouseModalWidget, TileConsumer
 		if (bs.size() > 1) {
 			imageColorModel.getChannel(maxChan).setWhiteLevel(max);
 			imageColorModel.getChannel(minChan).setBlackLevel(min);
-			log.info("max = "+max+"; min = "+min);
+			// log.info("max = "+max+"; min = "+min);
 		}
 	}
 

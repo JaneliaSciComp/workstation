@@ -104,7 +104,7 @@ implements GLActor
 			}
 			ix = ix.zoomOut();
 			if ((ix != null) && (ix.getSliceAxis() == CoordinateAxis.X)) {
-				log.info("try lower texture "+ix);
+				// log.info("try lower texture "+ix);
 			}
 		}
 		// No texture was found; maybe next time

@@ -1,7 +1,12 @@
 package org.janelia.it.FlyWorkstation.gui.viewer3d.slice_viewer;
 
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.Future;
+import java.util.concurrent.FutureTask;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
@@ -18,6 +23,7 @@ public class TexturePreFetcher
 	private ThreadPoolExecutor textureLoadExecutor;
 	// private Map<TileIndex, TileIndex> recentRequests; // LRU list of recent requests
 	// private Set<TileIndex> queuedRequests = new HashSet<TileIndex>();
+	private Map<Future<?>, TileIndex> futures = new HashMap<Future<?>, TileIndex>();
 
 	public TexturePreFetcher(int threadPoolSize) {
 		textureLoadExecutor = new ThreadPoolExecutor(
@@ -59,17 +65,14 @@ public class TexturePreFetcher
 		// This "recentRequests" hack is not solving the problem.
 		// if (recentRequests.containsKey(index))
 		// 	return false;
-		Set<TileIndex> queuedRequests = textureCache.getQueuedRequests();
-		synchronized(queuedRequests) {
-			if (queuedRequests.contains(index))
-				return false;
-			TileTexture texture = new TileTexture(index, loadAdapter);
-			texture.getRamLoadedSignal().connect(tileServer.getOnTextureLoadedSlot());
-			// TODO - handle MISSING textures vs. ERROR textures
-			textureLoadExecutor.submit(new TextureLoadWorker(texture, textureCache));
-			queuedRequests.add(index);
-			// recentRequests.put(index, index);
-		}
+		if (textureCache.isLoadQueued(index))
+			return false;
+		TileTexture texture = new TileTexture(index, loadAdapter);
+		// TODO - handle MISSING textures vs. ERROR textures
+		Future<?> foo = textureLoadExecutor.submit(new TextureLoadWorker(texture, textureCache));
+		futures.put(foo, texture.getIndex());
+		textureCache.setLoadQueued(index, true);
+		// recentRequests.put(index, index);
 		// Lowest resolution textures are in the persistent cache, and thus
 		// do not impact the future cache.
 		return (index.getZoom() != index.getMaxZoom());
@@ -84,20 +87,20 @@ public class TexturePreFetcher
 		//synchronize on it to prevent tasks from being polled
 		synchronized (blockingQueue) {
 			//clear the Queue
-			for (Runnable r : blockingQueue) { // removes too few
-				if (r instanceof TextureLoadWorker) { // never happens
-					TextureLoadWorker tlw = (TextureLoadWorker) r;
-					TileIndex ix = tlw.getTexture().getIndex();
-					textureCache.getQueuedRequests().remove(ix);
-				}
+			for (Runnable r : blockingQueue) {
+				if (futures.containsKey(r))
+					textureCache.setLoadQueued(futures.get(r), false);
 			}
 			blockingQueue.clear();
+			/*
 			Set<TileIndex> queued = textureCache.getQueuedRequests();
 			if (queued == null)
 				return;
 			queued.clear(); // removes too many...		
+			*/
 			//or else copy its contents here with a while loop and remove()
 		}
+		futures.clear();
 	}
 	
 	public AbstractTextureLoadAdapter getLoadAdapter() {

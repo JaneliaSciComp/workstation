@@ -3,6 +3,7 @@ package org.janelia.it.FlyWorkstation.gui.viewer3d.slice_viewer;
 import java.awt.Color;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
+import java.awt.event.ActionEvent;
 import java.awt.event.KeyEvent;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseWheelEvent;
@@ -15,10 +16,13 @@ import javax.media.opengl.GLCapabilities;
 import javax.media.opengl.GLCapabilitiesChooser;
 import javax.media.opengl.GLContext;
 import javax.media.opengl.awt.GLJPanel;
+import javax.swing.AbstractAction;
 import javax.swing.JComponent;
 import javax.swing.JMenuItem;
 import javax.swing.JPopupMenu;
+import javax.swing.KeyStroke;
 
+import org.janelia.it.FlyWorkstation.gui.util.Icons;
 import org.janelia.it.FlyWorkstation.gui.util.MouseHandler;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.CoordinateAxis;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.Rotation3d;
@@ -75,7 +79,7 @@ implements MouseModalWidget, TileConsumer
     private List<AwtActor> hudActors = new Vector<AwtActor>();
 
     public Signal1<String> statusMessageChanged = new Signal1<String>();
-    protected Slot repaintSlot = new Slot() {
+    public Slot repaintSlot = new Slot() {
         @Override
         public void execute() {
             repaint();
@@ -188,7 +192,6 @@ implements MouseModalWidget, TileConsumer
         renderer.setCamera(camera);
         mouseMode.setCamera(camera);
         wheelMode.setCamera(camera);
-        // tileServer.setCamera(camera); TODO
         pointComputer.setCamera(camera);
         if (skeletonActor != null)
             skeletonActor.setCamera(camera);
@@ -397,6 +400,25 @@ implements MouseModalWidget, TileConsumer
 		return sliceAxis;
 	}
 
+	public void incrementSlice(int sliceCount) {
+		if (sliceCount == 0)
+			return;
+		if (camera == null)
+			return;
+		if (volume == null)
+			return;
+		int ix = sliceAxis.index(); // X, Y, or Z
+		double res = volume.getResolution(ix);
+		// At lower zoom, we must jump multiple slices to see a different image
+		int deltaSlice = 1;
+		TileSet someTiles = sliceActor.getViewTileManager().getLatestTiles();
+		if (someTiles.size() > 0)
+			deltaSlice = someTiles.iterator().next().getIndex().getDeltaSlice();
+		Vec3 dFocus = new Vec3(0,0,0);
+		dFocus.set(ix, sliceCount * res * deltaSlice);
+		camera.setFocus(camera.getFocus().plus(dFocus));
+	}
+	
 	@Override
 	public void keyTyped(KeyEvent event) {
 		mouseMode.keyTyped(event);
@@ -412,11 +434,66 @@ implements MouseModalWidget, TileConsumer
 		mouseMode.keyReleased(event);
 	}
 
+	public static class IncrementSliceAction extends AbstractAction {
+		private int increment;
+		private OrthogonalViewer viewer;
+
+		IncrementSliceAction(int increment, OrthogonalViewer viewer) {
+			this.increment = increment;
+			this.viewer = viewer;
+		}
+
+		@Override
+		public void actionPerformed(ActionEvent e) {
+			viewer.incrementSlice(increment);
+		}
+	}
+	
+	public static class PreviousSliceAction extends IncrementSliceAction {
+		PreviousSliceAction(OrthogonalViewer viewer) {
+			super(-1, viewer);
+			putValue(NAME, "Previous "+viewer.sliceAxis.getName()+" Slice");
+			putValue(SMALL_ICON, Icons.getIcon("z_stack_up.png"));
+			putValue(MNEMONIC_KEY, KeyEvent.VK_PAGE_UP);
+			KeyStroke accelerator = KeyStroke.getKeyStroke(
+				KeyEvent.VK_PAGE_UP, 0);
+			putValue(ACCELERATOR_KEY, accelerator);
+			putValue(SHORT_DESCRIPTION,
+					"View previous "+viewer.sliceAxis.getName()+" slice"
+					+"\n (Shortcut: "+accelerator+")"
+					);		
+		}
+	}
+	
+	public static class NextSliceAction extends IncrementSliceAction {
+		NextSliceAction(OrthogonalViewer viewer) {
+			super(1, viewer);
+			putValue(NAME, "Next "+viewer.sliceAxis.getName()+" Slice");
+			putValue(SMALL_ICON, Icons.getIcon("z_stack_down.png"));
+			putValue(MNEMONIC_KEY, KeyEvent.VK_PAGE_DOWN);
+			KeyStroke accelerator = KeyStroke.getKeyStroke(
+				KeyEvent.VK_PAGE_DOWN, 0);
+			putValue(ACCELERATOR_KEY, accelerator);
+			putValue(SHORT_DESCRIPTION,
+					"View next "+viewer.sliceAxis.getName()+" slice"
+					+"\n (Shortcut: "+accelerator+")"
+					);		
+		}
+	}
+
 	public void setTileServer(TileServer tileServer) {
 		if (tileServer == this.tileServer)
 			return;
 		this.tileServer = tileServer;
-		tileServer.getViewTextureChangedSignal().connect(repaintSlot);
+		// Prepare to update tile set if viewer resizes
+		removeComponentListener(tileServer); // in case it's already there
+		addComponentListener(tileServer);
 	}
+
+	@Override
+	public Slot getRepaintSlot() {
+		return repaintSlot;
+	}
+
 
 }

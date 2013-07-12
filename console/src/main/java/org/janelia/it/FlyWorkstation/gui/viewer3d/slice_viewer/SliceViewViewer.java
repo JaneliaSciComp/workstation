@@ -30,9 +30,6 @@ import java.util.concurrent.Callable;
  * Shows Confocal Blocks data.
  */
 public class SliceViewViewer extends Viewer {
-
-    private static final Logger log = LoggerFactory.getLogger(SliceViewViewer.class);
-
     private Entity sliceSample;
     private RootedEntity slcRootedEntity;
 
@@ -116,7 +113,7 @@ public class SliceViewViewer extends Viewer {
 
     @Override
     public void refresh() {
-        logger.info("Refresh called.");
+        // logger.info("Refresh called.");
 
         if (sliceSample != null) {
             showLoadingIndicator();
