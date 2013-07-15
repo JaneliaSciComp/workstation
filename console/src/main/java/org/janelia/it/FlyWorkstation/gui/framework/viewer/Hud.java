@@ -267,6 +267,7 @@ public class Hud extends ModalDialog {
     	}
         try {
             mip3d = new Mip3d();
+            mip3d.setResetFirstRedraw(true);
             rgbMenu.setFocusable(false);
             rgbMenu.setRequestFocusEnabled(false);
             JMenuBar menuBar = new JMenuBar();

@@ -21,7 +21,7 @@ public class Mip3d extends BaseGLViewer implements ActionListener {
 	private MipRenderer renderer = new MipRenderer();
     private VolumeModel volumeModel = renderer.getVolumeModel();
 
-	public enum InteractionMode {
+    public enum InteractionMode {
 		ROTATE,
 		TRANSLATE,
 		ZOOM
@@ -74,6 +74,10 @@ public class Mip3d extends BaseGLViewer implements ActionListener {
         repaint();
     }
 
+    public void setResetFirstRedraw(boolean resetFirstRedraw) {
+        renderer.setResetFirstRedraw(resetFirstRedraw);
+    }
+
     /**
      * Load a simple signal volume.
      *
@@ -84,6 +88,8 @@ public class Mip3d extends BaseGLViewer implements ActionListener {
     public boolean loadVolume(String fileName, FileResolver resolver) {
         VolumeLoader volumeLoader = new VolumeLoader(resolver);
         if (volumeLoader.loadVolume(fileName)) {
+            volumeModel.removeAllListeners();
+            volumeModel.resetToDefaults();
             VolumeBrick brick = new VolumeBrick(volumeModel);
             volumeLoader.populateVolumeAcceptor(brick);
 

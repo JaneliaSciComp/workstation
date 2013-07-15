@@ -17,14 +17,29 @@ import java.util.Collection;
  * the GLActor abstraction.
  */
 public class VolumeModel {
+    public static final float DEFAULT_GAMMA_ADJUSTMENT = 1.0f;
+    public static final Vec3 DEFAULT_FOCUS_IN_GROUND = new Vec3(0, 0, 0);
+    public static final float[] DEFAULT_COLOR_MASK = {1.0f, 1.0f, 1.0f};
+
     private CropCoordSet cropCoordSet = CropCoordSet.getDefaultCropCoordSet();
-    private float gammaAdjustment = 1.0f;
+    private float gammaAdjustment = DEFAULT_GAMMA_ADJUSTMENT;
     private float cropOutLevel = Mip3d.DEFAULT_CROPOUT;
     private Camera3d camera3d;
-    private Vec3 focusInGround = new Vec3( 0, 0, 0 );
-    private float[] colorMask = { 1.0f, 1.0f, 1.0f };
+    private Vec3 focusInGround = DEFAULT_FOCUS_IN_GROUND;
+    private float[] colorMask = DEFAULT_COLOR_MASK;
 
     private Collection<UpdateListener> listeners = new ArrayList<UpdateListener>();
+
+    /** This may be useful for situations like the HUD, which retains a reference to
+     * the volume model across invocations.  Call this prior to reset.
+     */
+    public void resetToDefaults() {
+        cropCoordSet = CropCoordSet.getDefaultCropCoordSet();
+        gammaAdjustment = DEFAULT_GAMMA_ADJUSTMENT;
+        cropOutLevel = Mip3d.DEFAULT_CROPOUT;
+        focusInGround = DEFAULT_FOCUS_IN_GROUND;
+        colorMask = DEFAULT_COLOR_MASK;
+    }
 
     public CropCoordSet getCropCoords() {
         return cropCoordSet;

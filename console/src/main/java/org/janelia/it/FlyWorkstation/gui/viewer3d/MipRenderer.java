@@ -21,6 +21,8 @@ class MipRenderer
     private double widthInPixels = defaultHeightInPixels;
     private double heightInPixels = defaultHeightInPixels;
     private VolumeModel volumeModel;
+    private boolean resetFirstRedraw;
+    private boolean hasBeenReset = false;
 
     // scene objects
     public MipRenderer() {
@@ -41,6 +43,7 @@ class MipRenderer
     
     public void clear() {
 		actors.clear();
+        hasBeenReset = false;
     }
 
     @Override
@@ -49,6 +52,10 @@ class MipRenderer
 	    super.display(gLDrawable); // fills background
         widthInPixels = gLDrawable.getWidth();
         heightInPixels = gLDrawable.getHeight();
+        if (resetFirstRedraw && (! hasBeenReset)) {
+            resetView();
+            hasBeenReset = true;
+        }
 
         final GL2 gl = gLDrawable.getGL().getGL2();
         gl.glPushAttrib(GL2.GL_TRANSFORM_BIT);
@@ -234,4 +241,7 @@ class MipRenderer
         return boundingBox;
     }
 
+    public void setResetFirstRedraw(boolean resetFirstRedraw) {
+        this.resetFirstRedraw = resetFirstRedraw;
+    }
 }
