@@ -65,7 +65,7 @@ public class Skeleton {
 		}
 	};
 	// Direct connection in case there is no database. Connect to addAnchorRequestedSignal in this case.
-	// TODO - don't use this when workstation is functioning.
+	// Don't use this when workstation is functioning.
 	public Slot1<AnchorSeed> addShortCircuitAnchorSlot = new Slot1<AnchorSeed>() {
 		@Override
 		public void execute(AnchorSeed seed) {
@@ -74,6 +74,24 @@ public class Skeleton {
 	};
 	// AFTER anchor has already been added (not simply requested)
 	public Signal1<Anchor> anchorAddedSignal = new Signal1<Anchor>();
+	
+	// Anchor deletion
+	public Signal1<Anchor> anchorDeleteRequestedSignal =
+			new Signal1<Anchor>();
+	public Slot1<TmGeoAnnotation> deleteAnchorSlot = new Slot1<TmGeoAnnotation>() {
+		@Override
+		public void execute(TmGeoAnnotation tga) {
+			Anchor anchor = anchorsByGuid.get(tga.getId());
+			if (anchor == null)
+				return;
+			delete(anchor);
+		}
+	};
+	public Slot1<Anchor> deleteAnchorShortCircuitSlot = new Slot1<Anchor>() {
+		@Override
+		public void execute(Anchor anchor) {delete(anchor);}
+	};
+	public Signal1<Anchor> anchorDeletedSignal = new Signal1<Anchor>();
 	
 	public Slot clearSlot = new Slot() {
 		@Override
@@ -85,11 +103,13 @@ public class Skeleton {
 	
 	
 	public Skeleton() {
-		// TODO - don't make this connection when using workstation database
+		// Don't make this connection when using workstation database
 		// addAnchorRequestedSignal.connect(addShortCircuitAnchorSlot);
+		anchorDeleteRequestedSignal.connect(deleteAnchorShortCircuitSlot); // TODO remove
 		//
 		// Adding an anchor changes the skeleton
 		anchorAddedSignal.connect(skeletonChangedSignal);
+		anchorDeletedSignal.connect(skeletonChangedSignal);
 	}
 	
 	public Anchor addAnchor(Anchor anchor) {
@@ -147,7 +167,7 @@ public class Skeleton {
 		//
 		anchorHistory.remove(anchor);
 		//
-		skeletonChangedSignal.emit();
+		anchorDeletedSignal.emit(anchor);
 		return true;
 	}
 
