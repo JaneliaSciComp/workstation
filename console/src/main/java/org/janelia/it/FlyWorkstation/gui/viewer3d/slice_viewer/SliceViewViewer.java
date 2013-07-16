@@ -61,12 +61,24 @@ public class SliceViewViewer extends Viewer {
         if ( ! newEntity.equals( sliceSample ) ) {
             deleteAll();
         }
-        sliceSample = newEntity;
 
-        refresh();
-        
-        // the rooted entity may be data or may be a workspace; only load URL if it's data:
+        // rooted entity should be a brain sample or a workspace; we need the sample
+        //  either way to be able to open it:
         if (newEntity.getEntityType().getName().equals(EntityConstants.TYPE_3D_TILE_MICROSCOPE_SAMPLE)) {
+            sliceSample = newEntity;
+        } else if (newEntity.getEntityType().getName().equals(EntityConstants.TYPE_TILE_MICROSCOPE_WORKSPACE)) {
+            String sampleID = newEntity.getValueByAttributeName(EntityConstants.ATTRIBUTE_WORKSPACE_SAMPLE_IDS);
+            try {
+                sliceSample = ModelMgr.getModelMgr().getEntityById(sampleID);
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
+        
+        refresh();
+
+        // be sure we've successfully gotten the sample before loading it!
+        if (sliceSample.getEntityType().getName().equals(EntityConstants.TYPE_3D_TILE_MICROSCOPE_SAMPLE)) {
             try {
                 viewUI.loadFile(sliceSample.getValueByAttributeName(EntityConstants.ATTRIBUTE_FILE_PATH));
             }
