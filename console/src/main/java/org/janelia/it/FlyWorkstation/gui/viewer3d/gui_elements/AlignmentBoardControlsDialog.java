@@ -57,7 +57,7 @@ public class AlignmentBoardControlsDialog extends JDialog {
     private static final String SAVE_AS_COLOR_TIFF_TOOLTIP_TEXT = SAVE_AS_COLOR_TIFF;
 
     private static final int WIDTH = 600;
-    private static final int HEIGHT = 600;
+    private static final int HEIGHT = 640;
     private static final Dimension DOWNSAMPLE_TIP_DIM = new Dimension(WIDTH, 70);
 
     private static final String LAUNCH_AS = "Controls";
