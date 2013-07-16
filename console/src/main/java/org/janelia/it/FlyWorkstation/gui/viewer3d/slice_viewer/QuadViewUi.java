@@ -289,7 +289,6 @@ public class QuadViewUi extends JPanel
         annotationModel.anchorAddedSignal.connect(skeleton.addAnchorSlot);
 
         sliceViewerTranslator.setSkeleton(skeleton);
-        annotationModel.neuronLoadedSignal.connect(sliceViewerTranslator.loadNeuronSlot);
         annotationModel.workspaceLoadedSignal.connect(sliceViewerTranslator.loadWorkspaceSlot);
         annotationModel.neuronSelectedSignal.connect(sliceViewerTranslator.selectNeuronSlot);
 

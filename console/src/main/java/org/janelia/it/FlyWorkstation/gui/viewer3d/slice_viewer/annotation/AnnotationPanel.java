@@ -87,8 +87,6 @@ public class AnnotationPanel extends JPanel
 
     private void setupSignals() {
         // outgoing from the model:
-        annotationModel.neuronLoadedSignal.connect(neuronInfoPanel.neuronSelectedSlot);
-
         annotationModel.neuronSelectedSignal.connect(neuronInfoPanel.neuronSelectedSlot);
         annotationModel.neuronSelectedSignal.connect(workspaceInfoPanel.neuronSelectedSlot);
 

@@ -31,6 +31,8 @@ import java.util.concurrent.Callable;
  */
 public class SliceViewViewer extends Viewer {
     private Entity sliceSample;
+    private Entity initialEntity;
+
     private RootedEntity slcRootedEntity;
 
     private QuadViewUi viewUI;
@@ -57,17 +59,17 @@ public class SliceViewViewer extends Viewer {
 
     @Override
     public void loadEntity(RootedEntity rootedEntity) {
-        Entity newEntity = rootedEntity.getEntity();
-        if ( ! newEntity.equals( sliceSample ) ) {
+        initialEntity = rootedEntity.getEntity();
+        if ( ! initialEntity.equals( sliceSample ) ) {
             deleteAll();
         }
 
-        // rooted entity should be a brain sample or a workspace; we need the sample
-        //  either way to be able to open it:
-        if (newEntity.getEntityType().getName().equals(EntityConstants.TYPE_3D_TILE_MICROSCOPE_SAMPLE)) {
-            sliceSample = newEntity;
-        } else if (newEntity.getEntityType().getName().equals(EntityConstants.TYPE_TILE_MICROSCOPE_WORKSPACE)) {
-            String sampleID = newEntity.getValueByAttributeName(EntityConstants.ATTRIBUTE_WORKSPACE_SAMPLE_IDS);
+        // intial rooted entity should be a brain sample or a workspace; the QuadViewUI wants
+        //  the intial entity, but we need the sample either way to be able to open it:
+        if (initialEntity.getEntityType().getName().equals(EntityConstants.TYPE_3D_TILE_MICROSCOPE_SAMPLE)) {
+            sliceSample = initialEntity;
+        } else if (initialEntity.getEntityType().getName().equals(EntityConstants.TYPE_TILE_MICROSCOPE_WORKSPACE)) {
+            String sampleID = initialEntity.getValueByAttributeName(EntityConstants.ATTRIBUTE_WORKSPACE_SAMPLE_IDS);
             try {
                 sliceSample = ModelMgr.getModelMgr().getEntityById(sampleID);
             } catch (Exception e) {
@@ -131,7 +133,7 @@ public class SliceViewViewer extends Viewer {
             showLoadingIndicator();
 
             if ( viewUI == null ) {
-                viewUI = new QuadViewUi(SessionMgr.getBrowser(), sliceSample, false);
+                viewUI = new QuadViewUi(SessionMgr.getBrowser(), initialEntity, false);
             }
             removeAll();
             viewUI.setVisible(true);

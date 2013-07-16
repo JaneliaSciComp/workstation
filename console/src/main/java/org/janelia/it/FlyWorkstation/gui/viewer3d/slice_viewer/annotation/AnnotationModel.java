@@ -30,7 +30,6 @@ public class AnnotationModel
 
     // signals & slots
     public Signal1<TmWorkspace> workspaceLoadedSignal = new Signal1<TmWorkspace>();
-    public Signal1<TmNeuron> neuronLoadedSignal = new Signal1<TmNeuron>();
     public Signal1<TmNeuron> neuronSelectedSignal = new Signal1<TmNeuron>();
 
     public Signal1<TmGeoAnnotation> anchorAddedSignal = new Signal1<TmGeoAnnotation>();
@@ -85,11 +84,6 @@ public class AnnotationModel
         }
 
         // refresh the neuron object!
-
-        // note: eventually the "loaded" signal will not be sent!  the
-        //  workstation will load all neurons; for now, though, it is:
-        neuronLoadedSignal.emit(getCurrentNeuron());
-
         neuronSelectedSignal.emit(getCurrentNeuron());
     }
 
@@ -111,13 +105,9 @@ public class AnnotationModel
             return false;
         }
 
-        // workspace info panel has neuron list, so it needs poking; this may not be
-        //  the best way to do it?  should it listen on neuronLoadedSignal for that?
-        //  needs a new neuron signal?
+        // should eventually have an addNeuron signal and not reload entire workspace, but
+        //  for now, keep it simple
         workspaceLoadedSignal.emit(getCurrentWorkspace());
-
-        // load and select neuron
-        neuronLoadedSignal.emit(currentNeuron);
         neuronSelectedSignal.emit(currentNeuron);
 
         return true;

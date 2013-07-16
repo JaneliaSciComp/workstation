@@ -31,13 +31,6 @@ public class SliceViewerTranslator {
         }
     };
 
-    public Slot1<TmNeuron> loadNeuronSlot = new Slot1<TmNeuron>() {
-        @Override
-        public void execute(TmNeuron neuron) {
-            neuronLoaded(neuron);
-        }
-    };
-
     public Slot1<TmNeuron> selectNeuronSlot = new Slot1<TmNeuron>() {
         @Override
         public void execute(TmNeuron neuron) {
@@ -53,33 +46,10 @@ public class SliceViewerTranslator {
         anchorAddedSignal.connect(skeleton.addAnchorSlot);
     }
 
-
     public SliceViewerTranslator() {
 
         // pass
 
-    }
-
-    public void neuronLoaded(TmNeuron neuron) {
-        if (neuron == null) {
-            return;
-        }
-
-        // currently clears and then draws only the loaded neuron; will eventually
-        //  drop the clear so multiple neurons can be loaded
-
-        // clear existing 
-        skeleton.clear();
-
-        // note that we must add annotations in parent-child sequence
-        //  so lines get drawn correctly
-        // remember, for now, we're assuming one root
-        TmGeoAnnotation root = neuron.getRootAnnotation();
-        if (root != null) {
-            for (TmGeoAnnotation ann: root.getSubTreeList()) {
-                 anchorAddedSignal.emit(ann);
-            }
-        }
     }
 
     public void neuronSelected(TmNeuron neuron) {
@@ -91,14 +61,26 @@ public class SliceViewerTranslator {
 
     }
 
-
     public void workspaceLoaded(TmWorkspace workspace) {
         if (workspace == null) {
             return;
         }
 
-        // will eventually load all neurons here, when workspace is loaded
-        
-        
+        // clear existing
+        skeleton.clear();
+
+        // note that we must add annotations in parent-child sequence
+        //  so lines get drawn correctly
+        // remember, for now, we're assuming one root per neuron
+
+        for (TmNeuron neuron: workspace.getNeuronList()) {
+            TmGeoAnnotation root = neuron.getRootAnnotation();
+            if (root != null) {
+                for (TmGeoAnnotation ann: root.getSubTreeList()) {
+                    anchorAddedSignal.emit(ann);
+                }
+            }
+        }
+
     }
 }

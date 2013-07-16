@@ -8,9 +8,7 @@ import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
 
 import java.awt.*;
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.Vector;
+import java.util.*;
 
 
 // workstation imports
@@ -93,8 +91,26 @@ public class WorkspaceInfoPanel extends JPanel
     }
 
     public void selectNeuron(TmNeuron neuron) {
+        if (neuron == null) {
+            return;
+        }
+
+        // object identities vary; find the TmNeuron in the model that has
+        //  the desired ID:
+        Enumeration<TmNeuron> neuronEnumeration = (Enumeration<TmNeuron>) neuronListModel.elements();
+        TmNeuron foundNeuron = null;
+        while (neuronEnumeration.hasMoreElements()) {
+            TmNeuron testNeuron = neuronEnumeration.nextElement();
+            if (testNeuron.getId().equals(neuron.getId())) {
+                foundNeuron = testNeuron;
+                break;
+            }
+        }
+
         // select neuron in neuron list
-        neuronListBox.setSelectedValue(neuron, true);
+        if (foundNeuron != null) {
+            neuronListBox.setSelectedValue(foundNeuron, true);
+        }
     }
 
     public void loadWorkspace(TmWorkspace workspace) {
