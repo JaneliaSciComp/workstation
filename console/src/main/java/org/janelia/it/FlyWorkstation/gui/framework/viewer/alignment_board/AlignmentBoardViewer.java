@@ -616,15 +616,9 @@ public class AlignmentBoardViewer extends Viewer implements AlignmentBoardContro
         launchSettingsButton.setName(SETTINGS_LAUNCH_BTN_NAME);
 
         toolbar = new JToolBar( JToolBar.HORIZONTAL );
-        toolbar.add( launchSettingsButton );
+        toolbar.setLayout( new BorderLayout() );
+        toolbar.add( launchSettingsButton, BorderLayout.EAST );
         add( toolbar, BorderLayout.PAGE_START );
-
-//        GridBagConstraints btnConstraints = new GridBagConstraints(
-//                1, 0, 1, 1, 1.0, 1.0, GridBagConstraints.NORTHEAST, GridBagConstraints.NONE, new Insets(1,1,1,1), 0, 0
-//        );
-//
-//        JPanel buttonHolder = this.getViewerPane().getMainTitlePane();
-//        buttonHolder.add( launchSettingsButton, btnConstraints );
     }
 
     /** Cleanup old button, to avoid user temptation to use it, and ensure no duplication. */
