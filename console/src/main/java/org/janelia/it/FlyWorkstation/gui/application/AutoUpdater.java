@@ -316,7 +316,7 @@ public class AutoUpdater extends JFrame implements PropertyChangeListener {
     	
 		SimpleWorker updater = new SimpleWorker() {
 
-		    private File remoteFile;
+		    private String remoteFile;
 		    private File downloadsDir;
 		    private File downloadFile;
 		    private File extractedDir;
@@ -332,24 +332,24 @@ public class AutoUpdater extends JFrame implements PropertyChangeListener {
 	            if (SystemInfo.isMac) {
 	                log.info("Configuring for Mac...");
 	                newBuildDir = "JaneliaWorkstation_"+serverVersion;
-                    remoteFile = new File(PathTranslator.JACS_DATA_PATH_NFS,"JaneliaWorkstation/"+ newBuildDir +".tgz");
-	                downloadFile = new File(downloadsDir, remoteFile.getName());
+                    remoteFile = PathTranslator.JACS_DATA_PATH_NFS+"/JaneliaWorkstation/"+ newBuildDir +".tgz";
+	                downloadFile = new File(downloadsDir, newBuildDir +".tgz");
 	                extractedDir = new File(downloadsDir, newBuildDir);
 	                packageDir = new File(extractedDir, "JaneliaWorkstation.app");
 	            }
 	            else if (SystemInfo.isLinux) {
 	                log.info("Configuring for Linux...");
 	                newBuildDir = "JaneliaWorkstation_linux_"+serverVersion;
-	                remoteFile = new File(PathTranslator.JACS_DATA_PATH_NFS,"JaneliaWorkstation/"+ newBuildDir +".tgz");
-	                downloadFile = new File(downloadsDir, remoteFile.getName());
+                    remoteFile = PathTranslator.JACS_DATA_PATH_NFS+"/JaneliaWorkstation/"+ newBuildDir +".tgz";
+	                downloadFile = new File(downloadsDir, newBuildDir +".tgz");
 	                extractedDir = new File(downloadsDir, newBuildDir);
 	                packageDir = extractedDir;
 	            }
 	            else if (SystemInfo.isWindows) {
 	                log.info("Configuring for Windows...");
 	                newBuildDir = "JaneliaWorkstation_windows_"+serverVersion;
-	                remoteFile = new File(PathTranslator.JACS_DATA_PATH_NFS,"JaneliaWorkstation/"+ newBuildDir +".zip");
-	                downloadFile = new File(downloadsDir, remoteFile.getName());
+                    remoteFile = PathTranslator.JACS_DATA_PATH_NFS+"/JaneliaWorkstation/"+ newBuildDir +".zip";
+	                downloadFile = new File(downloadsDir, newBuildDir +".zip");
 	                extractedDir = new File(downloadsDir, newBuildDir);
 	                packageDir = extractedDir;
 	            }
@@ -372,8 +372,8 @@ public class AutoUpdater extends JFrame implements PropertyChangeListener {
 				}
 
 				try {
-    				log.info("Downloading update from {}",remoteFile.getAbsolutePath());
-    				copyURLToFile(remoteFile.getAbsolutePath(), downloadFile);
+    				log.info("Downloading update from {}",remoteFile);
+    				copyURLToFile(remoteFile, downloadFile);
 				}
 				catch (Exception e) {
 				    throw new Exception("Error downloading new version",e);
