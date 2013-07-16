@@ -179,6 +179,17 @@ public class AlignmentBoardControlsDialog extends JDialog {
         return new LaunchAction();
     }
 
+    public void dispose() {
+        removeAllSettingsListeners();
+        if ( selectionSliderListener != null ) {
+            xSlider.removeChangeListener( selectionSliderListener );
+            ySlider.removeChangeListener( selectionSliderListener );
+            zSlider.removeChangeListener( selectionSliderListener );
+        }
+        xSlider = ySlider = zSlider = null;
+        removeAll();
+    }
+
     //--------------------------------------------HELPERS
     private boolean isUseSignalData() {
         if ( ! readyForOutput ) {
@@ -267,12 +278,6 @@ public class AlignmentBoardControlsDialog extends JDialog {
 
     /** As soon as the ranges are known (set), listeners, and initial ranges may be set on volume selection. */
     private void initializeSelectionRanges() {
-        if ( selectionSliderListener != null  &&  xSlider != null ) {
-            xSlider.removeChangeListener( selectionSliderListener );
-            ySlider.removeChangeListener( selectionSliderListener );
-            zSlider.removeChangeListener( selectionSliderListener );
-        }
-
         if ( xMax == 0 || yMax == 0 || zMax == 0 ) {
             logger.error( "Updating sliders before maxima have been set." );
         }

@@ -56,6 +56,7 @@ import com.google.common.eventbus.Subscribe;
 public class AlignmentBoardViewer extends Viewer implements AlignmentBoardControllable {
 
     private static final Logger log = LoggerFactory.getLogger(AlignmentBoardViewer.class);
+    private static final String SETTINGS_LAUNCH_BTN_NAME = "AlignmentBoard::SettingsLaunchButton";
 
     private Mip3d mip3d;
     private RenderablesLoadWorker loadWorker;
@@ -63,7 +64,7 @@ public class AlignmentBoardViewer extends Viewer implements AlignmentBoardContro
 
     private RenderMappingI renderMapping;
     private BrainGlow brainGlow;
-    private AlignmentBoardControlsDialog settings;
+    private AlignmentBoardControlsDialog settingsDialog;
     private Logger logger = LoggerFactory.getLogger(AlignmentBoardViewer.class);
 
     private boolean loadingInProgress = false;
@@ -188,8 +189,7 @@ public class AlignmentBoardViewer extends Viewer implements AlignmentBoardContro
                     event.getChangeType().equals( AlignmentBoardItemChangeEvent.ChangeType.ColorChange ) ) {
 
                 // Changing the render mapping values.
-                if ( settings != null )
-                    this.updateRendering( abContext );
+                this.updateRendering( abContext );
 
             }
             else {
@@ -217,7 +217,7 @@ public class AlignmentBoardViewer extends Viewer implements AlignmentBoardContro
             logger.error( "Failed to load volume to mip3d." );
         }
         else {
-            settings.setVolumeMaxima(signalTexture.getSx(), signalTexture.getSy(), signalTexture.getSz());
+            settingsDialog.setVolumeMaxima(signalTexture.getSx(), signalTexture.getSy(), signalTexture.getSz());
         }
 
     }
@@ -312,12 +312,15 @@ public class AlignmentBoardViewer extends Viewer implements AlignmentBoardContro
         AlignmentBoardContext context = SessionMgr.getBrowser().getLayersPanel().getAlignmentBoardContext();
         if ( context != null ) {
             Entity alignmentBoard = context.getInternalEntity();
-            if ( mip3d != null && settings != null ) {
+            if ( mip3d != null && settingsDialog != null ) {
                 UserSettingSerializer userSettingSerializer = new UserSettingSerializer(
                         alignmentBoard, mip3d.getVolumeModel(), settingsData
                 );
 
                 userSettingSerializer.serializeSettings();
+            }
+            else {
+                logger.warn("Attempt at serializing while mip3d={} and settings dialog={}.", mip3d, settingsDialog);
             }
         }
     }
@@ -431,18 +434,26 @@ public class AlignmentBoardViewer extends Viewer implements AlignmentBoardContro
         if (loadWorker != null) {
             loadWorker.disregard();
         }
-        settings.removeAllSettingsListeners();
+        settingsDialog.removeAllSettingsListeners();
         removeSettingsLaunchButton();
         removeAll();
         boardOpen = false;
         mip3d = null;
     }
 
+    /** Cleanup old button, to avoid user temptation to use it, and ensure no duplication. */
     private void removeSettingsLaunchButton() {
-        Component[] components = getViewerPane().getMainTitlePane().getComponents();
-        for ( Component component: components ) {
-            if ( component instanceof JButton) {
-                getViewerPane().getMainTitlePane().remove( component );
+        JPanel buttonHolder = getViewerPane().getMainTitlePane();
+        if ( buttonHolder != null ) {
+            Component toRemove = null;
+            for ( Component comp: buttonHolder.getComponents() ) {
+                if ( SETTINGS_LAUNCH_BTN_NAME.equals(comp.getName()) ) {
+                    toRemove = comp;
+                    break;
+                }
+            }
+            if ( toRemove != null ) {
+                buttonHolder.remove( toRemove );
             }
         }
     }
@@ -492,11 +503,12 @@ public class AlignmentBoardViewer extends Viewer implements AlignmentBoardContro
             //} // TEMP
 
             if  (context != null ) {
-
                 if ( isLoading() ) {
                     setOutstandingLoadRequest( true );
                 }
                 else {
+                    // No launching settings at this point.
+                    removeSettingsLaunchButton();
                     showLoadingIndicator();
                     createMip3d();
                     wrapperPanel = createWrapperPanel( mip3d );
@@ -584,16 +596,21 @@ public class AlignmentBoardViewer extends Viewer implements AlignmentBoardContro
             mip3d.releaseMenuActions();
         }
         mip3d = new Mip3d();
-        if ( settings == null ) {
-            logger.info("New settings");
-            settings = new AlignmentBoardControlsDialog( mip3d, mip3d.getVolumeModel(), settingsData );
-            settings.addSettingsListener(
-                    new AlignmentBoardControlsListener( renderMapping, this )
-            );
+        // If the mip3d is re-created, so must the settings dialog be.  It depends on the Mip3d.
+        if ( settingsDialog != null ) {
+            settingsDialog.setVisible( false );
+            settingsDialog.removeAllSettingsListeners();
+            settingsDialog.dispose();
+            settingsDialog = null;
         }
+        logger.info("New settings");
+        settingsDialog = new AlignmentBoardControlsDialog( mip3d, mip3d.getVolumeModel(), settingsData );
+        settingsDialog.addSettingsListener(
+                new AlignmentBoardControlsListener( renderMapping, this )
+        );
         deserializeSettings(SessionMgr.getBrowser().getLayersPanel().getAlignmentBoardContext());
 
-        mip3d.addMenuAction(settings.getLaunchAction());
+        mip3d.addMenuAction(settingsDialog.getLaunchAction());
     }
 
     private JPanel createWrapperPanel( Mip3d mip3d ) {
@@ -613,12 +630,13 @@ public class AlignmentBoardViewer extends Viewer implements AlignmentBoardContro
         launchSettingsButton.setFocusable(false);
         launchSettingsButton.setRequestFocusEnabled(false);
         launchSettingsButton.setSelected(false);
-        launchSettingsButton.setAction(settings.getLaunchAction());
+        launchSettingsButton.setAction(settingsDialog.getLaunchAction());
         JPanel buttonHolder = this.getViewerPane().getMainTitlePane();
 
         GridBagConstraints btnConstraints = new GridBagConstraints(
                 1, 0, 1, 1, 1.0, 1.0, GridBagConstraints.NORTHEAST, GridBagConstraints.NONE, new Insets(1,1,1,1), 0, 0
         );
+        launchSettingsButton.setName( SETTINGS_LAUNCH_BTN_NAME );
 
         buttonHolder.add( launchSettingsButton, btnConstraints );
     }
