@@ -329,7 +329,7 @@ public class EntityWrapperIconPanel extends IconPanel {
 		hud = Hud.getSingletonInstance();
 		hud.addKeyListener(keyListener);
 		
-		splashPanel = new JLabel(Icons.getIcon("flylight_transparent_no_shadow.png"));
+		splashPanel = new JLabel(Icons.getIcon("workstation_logo_white.jpg"));
 		add(splashPanel);
 
 		iconDemoToolbar = createToolbar();

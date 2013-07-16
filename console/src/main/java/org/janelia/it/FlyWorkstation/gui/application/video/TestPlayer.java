@@ -24,15 +24,7 @@
 
 package org.janelia.it.FlyWorkstation.gui.application.video;
 
-import java.awt.*;
-import java.awt.event.WindowAdapter;
-import java.awt.event.WindowEvent;
-import java.awt.image.BufferedImage;
-import java.util.ArrayList;
-import java.util.List;
-
-import javax.swing.*;
-
+import com.sun.jna.platform.WindowUtils;
 import uk.co.caprica.vlcj.binding.internal.libvlc_media_t;
 import uk.co.caprica.vlcj.logger.Logger;
 import uk.co.caprica.vlcj.player.*;
@@ -42,8 +34,15 @@ import uk.co.caprica.vlcj.player.embedded.FullScreenStrategy;
 import uk.co.caprica.vlcj.runtime.RuntimeUtil;
 import uk.co.caprica.vlcj.runtime.windows.WindowsCanvas;
 
+import javax.swing.*;
+import java.awt.*;
+import java.awt.event.WindowAdapter;
+import java.awt.event.WindowEvent;
+import java.awt.image.BufferedImage;
+import java.util.ArrayList;
+import java.util.List;
+
 //import com.sun.awt.AWTUtilities;
-import com.sun.jna.platform.WindowUtils;
 
 /**
  * Simple test harness creates an AWT Window and plays a video.
@@ -106,7 +105,7 @@ public class TestPlayer extends VlcjTest {
 		Logger.debug("vlcArgs={}", vlcArgs);
 
 		mainFrame = new JFrame("VLCJ Test Player");
-		mainFrame.setIconImage(new ImageIcon(getClass().getResource("/images/fly.png")).getImage());
+		mainFrame.setIconImage(new ImageIcon(getClass().getResource("/images/workstation_128_icon.png")).getImage());
 
 		FullScreenStrategy fullScreenStrategy = new DefaultFullScreenStrategy(mainFrame);
 

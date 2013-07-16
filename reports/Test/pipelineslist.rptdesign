@@ -298,7 +298,7 @@ order by task.task_id asc
             <property name="fontSize">24pt</property>
             <property name="fontWeight">bold</property>
             <property name="textAlign">center</property>
-            <text-property name="text">FlyWorkstation - Pipelines</text-property>
+            <text-property name="text">Janelia Workstation - Pipelines</text-property>
         </label>
         <table id="413">
             <property name="backgroundColor">#F3FFFF</property>

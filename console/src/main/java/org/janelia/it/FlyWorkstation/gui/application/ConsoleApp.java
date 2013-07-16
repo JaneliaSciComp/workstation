@@ -1,10 +1,5 @@
 package org.janelia.it.FlyWorkstation.gui.application;
 
-import java.awt.SplashScreen;
-
-import javax.swing.JOptionPane;
-import javax.swing.SwingUtilities;
-
 import org.janelia.it.FlyWorkstation.api.entity_model.management.ModelMgr;
 import org.janelia.it.FlyWorkstation.api.facade.concrete_facade.ejb.EJBFacadeManager;
 import org.janelia.it.FlyWorkstation.api.facade.facade_mgr.FacadeManager;
@@ -22,6 +17,9 @@ import org.janelia.it.FlyWorkstation.shared.util.ConsoleProperties;
 import org.janelia.it.FlyWorkstation.shared.util.Utils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import javax.swing.*;
+import java.awt.*;
 
 /**
  * Created by IntelliJ IDEA.
@@ -78,7 +76,7 @@ public class ConsoleApp {
             sessionMgr.setNewBrowserTitle(ConsoleProperties.getString("console.Title") + " " + ConsoleProperties.getString("console.versionNumber"));
             sessionMgr.setApplicationName(ConsoleProperties.getString("console.Title"));
             sessionMgr.setApplicationVersion(ConsoleProperties.getString("console.versionNumber"));
-            sessionMgr.setNewBrowserImageIcon(Utils.getClasspathImage("fly.png"));
+            sessionMgr.setNewBrowserImageIcon(Utils.getClasspathImage("workstation_128_icon.png"));
             sessionMgr.setNewBrowserSize(.8f);
             sessionMgr.setNewBrowserMenuBar(ConsoleMenuBar.class);
             sessionMgr.startExternalHttpListener(30000);

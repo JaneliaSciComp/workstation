@@ -1,5 +1,7 @@
 package org.janelia.it.FlyWorkstation.model.viewer;
 
+import org.janelia.it.jacs.model.common.SystemConfigurationProperties;
+
 import java.io.File;
 
 /**
@@ -110,7 +112,7 @@ public class MaskedVolume {
     
     public static void main(String[] args) {
         
-        String baseDir = "/groups/scicomp/jacsData/filestore/leetlab/Separation/900/834/1834683205718900834/separate";
+        String baseDir = SystemConfigurationProperties.getString("FileStore.CentralDir")+"/leetlab/Separation/900/834/1834683205718900834/separate";
         MaskedVolume vol = new MaskedVolume(baseDir);
         confirm(vol.getReferenceVolumePath());
         confirm(vol.getSignalVolumePath());

@@ -218,7 +218,7 @@ FROM (SELECT concat(month(creation_date),'_',year(creation_date)) AS CreationDat
       <Visible>true</Visible>
       <Label>
         <Caption>
-          <Value>Flyworkstation Neurons Cumulative Sum</Value>
+          <Value>Janelia workstation Neurons Cumulative Sum</Value>
           <Font>
             <Size>16.0</Size>
             <Bold>true</Bold>

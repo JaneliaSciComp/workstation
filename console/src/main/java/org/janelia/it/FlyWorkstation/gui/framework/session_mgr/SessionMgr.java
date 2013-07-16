@@ -80,7 +80,7 @@ public class SessionMgr {
     private EmbeddedWebServer webServer;
     private File settingsFile;
     private String prefsDir = System.getProperty("user.home") + ConsoleProperties.getString("Console.Home.Path");
-    private String prefsFile = prefsDir + ".FW_Settings";
+    private String prefsFile = prefsDir + ".JW_Settings";
     private Map browserModelsToBrowser = new HashMap();
     private String backupFileName = null;
     private WindowListener myBrowserWindowListener = new MyBrowserListener();
@@ -99,7 +99,17 @@ public class SessionMgr {
     	
         settingsFile = new File(prefsFile);
         try {
-            settingsFile.createNewFile();  //only creates if does not exist
+            // @todo Remove this Dec 2013  :-)
+            //if you get this far, check to migrate over the old preferences
+            File oldDir = new File(System.getProperty("user.home") + "/.FlyWorkstationSuite/Console/");
+            if (oldDir.exists()) {
+                new File(System.getProperty("user.home") + "/.FlyWorkstationSuite/").renameTo(new File(System.getProperty("user.home") + "/.JaneliaWorkstationSuite/"));
+                new File(prefsDir + "/.FW_Settings").renameTo(settingsFile);
+                log.info("Renamed settings directory and files.");
+            }
+            else {
+                settingsFile.createNewFile();  //only creates if does not exist
+            }
         }
         catch (IOException ioEx) {
             try {

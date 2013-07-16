@@ -59,7 +59,7 @@ public class EditMenu extends JMenu {
             }
         });
         menuUnDo.setEnabled(false);
-//        add(menuUnDo);
+        add(menuUnDo);
 
         menuReDo = new JMenuItem("Redo", 'R');
         menuReDo.setHorizontalTextPosition(SwingConstants.RIGHT);
@@ -73,8 +73,8 @@ public class EditMenu extends JMenu {
             }
         });
         menuReDo.setEnabled(false);
-//        add(menuReDo);
-//        add(new JSeparator());
+        add(menuReDo);
+        add(new JSeparator());
         cutAction = new MyCutAction();
         cutAction.putValue(Action.NAME, "Cut");
         menuCut = new JMenuItem(cutAction);
@@ -86,6 +86,8 @@ public class EditMenu extends JMenu {
         menuCopy = new JMenuItem(copyAction);
         menuCopy.setAccelerator(KeyStroke.getKeyStroke(java.awt.event.KeyEvent.VK_C, java.awt.Event.META_MASK));
 //        add(menuCopy);
+
+
 
         pasteAction = new MyPasteAction();
         pasteAction.putValue(Action.NAME, "Paste");

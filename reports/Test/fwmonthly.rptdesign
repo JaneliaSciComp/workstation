@@ -645,7 +645,7 @@ from Customers
       <Visible>true</Visible>
       <Label>
         <Caption>
-          <Value>Flyworkstation Monthly Report</Value>
+          <Value>Janelia workstation Monthly Report</Value>
           <Font>
             <Size>16.0</Size>
             <Alignment>

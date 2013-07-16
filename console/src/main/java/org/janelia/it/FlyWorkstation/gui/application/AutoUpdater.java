@@ -1,15 +1,5 @@
 package org.janelia.it.FlyWorkstation.gui.application;
 
-import java.awt.*;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
-import java.beans.PropertyChangeEvent;
-import java.beans.PropertyChangeListener;
-import java.io.*;
-import java.net.URL;
-
-import javax.swing.*;
-
 import org.janelia.it.FlyWorkstation.api.facade.concrete_facade.ejb.EJBFacadeManager;
 import org.janelia.it.FlyWorkstation.api.facade.concrete_facade.ejb.EJBFactory;
 import org.janelia.it.FlyWorkstation.api.facade.facade_mgr.FacadeManager;
@@ -34,8 +24,17 @@ import org.janelia.it.jacs.shared.utils.SystemCall;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.swing.*;
+import java.awt.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.beans.PropertyChangeEvent;
+import java.beans.PropertyChangeListener;
+import java.io.*;
+import java.net.URL;
+
 /**
- * Check version against the JACS server and update the entire FlySuite if needed.
+ * Check version against the JACS server and update the entire Workstation if needed.
  * 
  * @author <a href="mailto:rokickik@janelia.hhmi.org">Konrad Rokicki</a>
  */
@@ -65,7 +64,7 @@ public class AutoUpdater extends JFrame implements PropertyChangeListener {
 	
 	private String serverVersion;
 	private String clientVersion;
-	private String suiteDir;
+	private String newBuildDir;
     private int state = 0;
 	
 	public AutoUpdater() {
@@ -169,15 +168,15 @@ public class AutoUpdater extends JFrame implements PropertyChangeListener {
             
             if (SystemInfo.isMac) {
             	log.info("Configuring for Mac...");
-            	suiteDir = "FlySuite_"+serverVersion;
+            	newBuildDir = "JaneliaWorkstation_"+serverVersion;
         	}
         	else if (SystemInfo.isLinux) {
         		log.info("Configuring for Linux...");
-        		suiteDir = "FlySuite_linux_"+serverVersion;
+        		newBuildDir = "JaneliaWorkstation_linux_"+serverVersion;
         	}
             else if (SystemInfo.isWindows) {
             	log.info("Configuring for Windows...");
-                suiteDir = "FlySuite_windows_"+serverVersion;
+                newBuildDir = "JaneliaWorkstation_windows_"+serverVersion;
             }
             else {
         		throw new IllegalStateException("Operation system not supported: "+SystemInfo.OS_NAME);
@@ -185,7 +184,7 @@ public class AutoUpdater extends JFrame implements PropertyChangeListener {
             
             String releaseNotes = null;
             try {
-                URL releaseNotesURL = SessionMgr.getURL(PathTranslator.JACS_DATA_PATH_NFS + "/FlySuite/"+suiteDir+"/releaseNotes.txt");
+                URL releaseNotesURL = SessionMgr.getURL(PathTranslator.JACS_DATA_PATH_NFS + "/JaneliaWorkstation/"+ newBuildDir +"/releaseNotes.txt");
                 releaseNotes = IOUtils.readInputStream(releaseNotesURL.openStream());
             }
             catch (Exception e) {
@@ -332,26 +331,26 @@ public class AutoUpdater extends JFrame implements PropertyChangeListener {
 	            
 	            if (SystemInfo.isMac) {
 	                log.info("Configuring for Mac...");
-	                suiteDir = "FlySuite_"+serverVersion;
-                    remoteFile = new File(PathTranslator.JACS_DATA_PATH_NFS,"FlySuite/"+suiteDir+".tgz");
+	                newBuildDir = "JaneliaWorkstation_"+serverVersion;
+                    remoteFile = new File(PathTranslator.JACS_DATA_PATH_NFS,"JaneliaWorkstation/"+ newBuildDir +".tgz");
 	                downloadFile = new File(downloadsDir, remoteFile.getName());
-	                extractedDir = new File(downloadsDir, suiteDir);
-	                packageDir = new File(extractedDir, "FlySuite.app");
+	                extractedDir = new File(downloadsDir, newBuildDir);
+	                packageDir = new File(extractedDir, "JaneliaWorkstation.app");
 	            }
 	            else if (SystemInfo.isLinux) {
 	                log.info("Configuring for Linux...");
-	                suiteDir = "FlySuite_linux_"+serverVersion;
-	                remoteFile = new File(PathTranslator.JACS_DATA_PATH_NFS,"FlySuite/"+suiteDir+".tgz");
+	                newBuildDir = "JaneliaWorkstation_linux_"+serverVersion;
+	                remoteFile = new File(PathTranslator.JACS_DATA_PATH_NFS,"JaneliaWorkstation/"+ newBuildDir +".tgz");
 	                downloadFile = new File(downloadsDir, remoteFile.getName());
-	                extractedDir = new File(downloadsDir, suiteDir);
+	                extractedDir = new File(downloadsDir, newBuildDir);
 	                packageDir = extractedDir;
 	            }
 	            else if (SystemInfo.isWindows) {
 	                log.info("Configuring for Windows...");
-	                suiteDir = "FlySuite_windows_"+serverVersion;
-	                remoteFile = new File(PathTranslator.JACS_DATA_PATH_NFS,"FlySuite/"+suiteDir+".zip");
+	                newBuildDir = "JaneliaWorkstation_windows_"+serverVersion;
+	                remoteFile = new File(PathTranslator.JACS_DATA_PATH_NFS,"JaneliaWorkstation/"+ newBuildDir +".zip");
 	                downloadFile = new File(downloadsDir, remoteFile.getName());
-	                extractedDir = new File(downloadsDir, suiteDir);
+	                extractedDir = new File(downloadsDir, newBuildDir);
 	                packageDir = extractedDir;
 	            }
 	            else {

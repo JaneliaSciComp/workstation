@@ -191,7 +191,7 @@ public class ToolMgr extends PreferenceManager {
 
         // Todo Remove this evil hack
         rootExecutablePath=rootExecutablePath.substring(0,rootExecutablePath.lastIndexOf(File.separator)+1);
-//      rootExecutablePath="/Applications/FlySuite.app/Contents/Resources/workstation.jar";
+//      rootExecutablePath="/Applications/JaneliaWorkstation.app/Contents/Resources/workstation.jar";
 
         log.info("Base root executable path: "+rootExecutablePath);
         

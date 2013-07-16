@@ -1,19 +1,5 @@
 package org.janelia.it.FlyWorkstation.gui.dialogs;
 
-import java.awt.BorderLayout;
-import java.awt.Color;
-import java.awt.Component;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
-import java.net.URL;
-import java.util.*;
-import java.util.concurrent.Callable;
-
-import javax.swing.*;
-import javax.swing.table.DefaultTableCellRenderer;
-import javax.swing.table.DefaultTableModel;
-import javax.swing.table.TableColumn;
-
 import org.janelia.it.FlyWorkstation.api.entity_model.management.EntitySelectionModel;
 import org.janelia.it.FlyWorkstation.api.entity_model.management.ModelMgr;
 import org.janelia.it.FlyWorkstation.gui.framework.outline.EntityOutline;
@@ -28,6 +14,18 @@ import org.janelia.it.jacs.model.entity.EntityData;
 import org.janelia.it.jacs.shared.annotation.MaskAnnotationDataManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import javax.swing.*;
+import javax.swing.table.DefaultTableCellRenderer;
+import javax.swing.table.DefaultTableModel;
+import javax.swing.table.TableColumn;
+import java.awt.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.net.URL;
+import java.util.*;
+import java.util.List;
+import java.util.concurrent.Callable;
 
 /**
  * Created by IntelliJ IDEA.
@@ -338,7 +336,8 @@ public class GiantFiberSearchDialog extends ModalDialog {
             protected void doStuff() throws Exception {
                 setTitle("Giant Fiber Compartment Search");
                 final String giantFiberResourcePath =
-                        getPath(SystemConfigurationProperties.getString("MaskSampleAnnotation.ResourceDir"),
+                        getPath(SystemConfigurationProperties.getString("FileStore.CentralDir")+
+                                SystemConfigurationProperties.getString("MaskSampleAnnotation.ResourceDir"),
                                 GIANT_FIBER_FOLDER_NAME);
                 final String maskSummaryPath =
                         getPath(giantFiberResourcePath,

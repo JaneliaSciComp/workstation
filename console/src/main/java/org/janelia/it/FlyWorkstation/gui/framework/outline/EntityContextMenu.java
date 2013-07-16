@@ -1,26 +1,13 @@
 package org.janelia.it.FlyWorkstation.gui.framework.outline;
 
-import static com.google.common.base.Preconditions.checkNotNull;
-
-import java.awt.Toolkit;
-import java.awt.datatransfer.StringSelection;
-import java.awt.datatransfer.Transferable;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
-import java.awt.event.KeyEvent;
-import java.util.*;
-import java.util.concurrent.Callable;
-
-import javax.swing.*;
-
 import org.janelia.it.FlyWorkstation.api.entity_model.management.EntitySelectionModel;
 import org.janelia.it.FlyWorkstation.api.entity_model.management.ModelMgr;
 import org.janelia.it.FlyWorkstation.api.entity_model.management.ModelMgrUtils;
 import org.janelia.it.FlyWorkstation.gui.dialogs.EntityDetailsDialog;
 import org.janelia.it.FlyWorkstation.gui.dialogs.SpecialAnnotationChooserDialog;
 import org.janelia.it.FlyWorkstation.gui.dialogs.TaskDetailsDialog;
-import org.janelia.it.FlyWorkstation.gui.framework.actions.*;
 import org.janelia.it.FlyWorkstation.gui.framework.actions.Action;
+import org.janelia.it.FlyWorkstation.gui.framework.actions.*;
 import org.janelia.it.FlyWorkstation.gui.framework.console.Browser;
 import org.janelia.it.FlyWorkstation.gui.framework.console.Perspective;
 import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr;
@@ -54,6 +41,19 @@ import org.janelia.it.jacs.shared.utils.MailHelper;
 import org.janelia.it.jacs.shared.utils.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import javax.swing.*;
+import java.awt.*;
+import java.awt.datatransfer.StringSelection;
+import java.awt.datatransfer.Transferable;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.awt.event.KeyEvent;
+import java.util.*;
+import java.util.List;
+import java.util.concurrent.Callable;
+
+import static com.google.common.base.Preconditions.checkNotNull;
 
 /**
  * Context pop up menu for entities.
@@ -572,23 +572,24 @@ public class EntityContextMenu extends JPopupMenu {
                 || type.equals(EntityConstants.TYPE_NEURON_SEPARATOR_PIPELINE_RESULT)
                 || type.equals(EntityConstants.TYPE_CURATED_NEURON)
                 || type.equals(EntityConstants.TYPE_CURATED_NEURON_COLLECTION)) {
-            add(relatedMenu,
-                    getAncestorEntityItem(entity, EntityConstants.TYPE_NEURON_SEPARATOR_PIPELINE_RESULT,
-                            EntityConstants.TYPE_NEURON_SEPARATOR_PIPELINE_RESULT));
+            add(relatedMenu, getAncestorEntityItem(entity, EntityConstants.TYPE_NEURON_SEPARATOR_PIPELINE_RESULT,
+                                EntityConstants.TYPE_NEURON_SEPARATOR_PIPELINE_RESULT));
             add(relatedMenu, getAncestorEntityItem(entity, EntityConstants.TYPE_SAMPLE, EntityConstants.TYPE_SAMPLE));
-        } else if (entity.getEntityType().getName().equals(EntityConstants.TYPE_FLY_LINE)) {
+        }
+        else if (entity.getEntityType().getName().equals(EntityConstants.TYPE_FLY_LINE)) {
             add(relatedMenu, getChildEntityItem(entity, EntityConstants.ATTRIBUTE_REPRESENTATIVE_SAMPLE));
             add(relatedMenu, getChildEntityItem(entity, EntityConstants.ATTRIBUTE_ORIGINAL_FLYLINE));
             add(relatedMenu, getChildEntityItem(entity, EntityConstants.ATTRIBUTE_BALANCED_FLYLINE));
-        } else if (EntityConstants.TYPE_ALIGNED_BRAIN_STACK.equals(type)) {
-            add(relatedMenu,
-                    getAncestorEntityItem(entity, EntityConstants.TYPE_SCREEN_SAMPLE,
-                            EntityConstants.TYPE_SCREEN_SAMPLE));
-            add(relatedMenu,
-                    getAncestorEntityItem(entity, EntityConstants.TYPE_FLY_LINE, EntityConstants.TYPE_FLY_LINE));
-        } else if (EntityConstants.TYPE_SCREEN_SAMPLE.equals(type)) {
-            add(relatedMenu,
-                    getAncestorEntityItem(entity, EntityConstants.TYPE_FLY_LINE, EntityConstants.TYPE_FLY_LINE));
+        }
+        else if (EntityConstants.TYPE_ALIGNED_BRAIN_STACK.equals(type)) {
+            add(relatedMenu, getAncestorEntityItem(entity, EntityConstants.TYPE_SCREEN_SAMPLE, EntityConstants.TYPE_SCREEN_SAMPLE));
+            add(relatedMenu, getAncestorEntityItem(entity, EntityConstants.TYPE_FLY_LINE, EntityConstants.TYPE_FLY_LINE));
+        }
+        else if (EntityConstants.TYPE_SCREEN_SAMPLE.equals(type)) {
+            add(relatedMenu, getAncestorEntityItem(entity, EntityConstants.TYPE_FLY_LINE, EntityConstants.TYPE_FLY_LINE));
+        }
+        else if (EntityConstants.TYPE_CELL_COUNTING_RESULT.equals(type)) {
+            add(relatedMenu, getAncestorEntityItem(entity, EntityConstants.TYPE_SAMPLE, EntityConstants.TYPE_SAMPLE));
         }
         return relatedMenu;
     }
