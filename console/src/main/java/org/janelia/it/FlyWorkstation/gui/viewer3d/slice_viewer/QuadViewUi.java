@@ -284,17 +284,17 @@ public class QuadViewUi extends JPanel
         interceptModifierKeyPresses();
         interceptModeChangeGestures();
 
-		// must come after setupUi(), since it triggers UI changes:
-		annotationMgr.setInitialEntity(initialEntity);
-
         // connect up text UI and model with graphic UI(s):
         skeleton.addAnchorRequestedSignal.connect(annotationMgr.addAnchorRequestedSlot);
         annotationModel.anchorAddedSignal.connect(skeleton.addAnchorSlot);
 
-        // hack to do clear/reload
         sliceViewerTranslator.setSkeleton(skeleton);
         annotationModel.neuronLoadedSignal.connect(sliceViewerTranslator.loadNeuronSlot);
-        sliceViewerTranslator.anchorAddedSignal.connect(skeleton.addAnchorSlot);
+        annotationModel.workspaceLoadedSignal.connect(sliceViewerTranslator.loadWorkspaceSlot);
+        annotationModel.neuronSelectedSignal.connect(sliceViewerTranslator.selectNeuronSlot);
+
+		// must come after setupUi() (etc), since it triggers UI changes:
+		annotationMgr.setInitialEntity(initialEntity);
 
         //
         clearCacheAction.putValue(Action.NAME, "Clear Cache");

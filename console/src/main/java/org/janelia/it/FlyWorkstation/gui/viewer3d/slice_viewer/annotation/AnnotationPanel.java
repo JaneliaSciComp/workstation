@@ -86,11 +86,16 @@ public class AnnotationPanel extends JPanel
     }
 
     private void setupSignals() {
-        annotationModel.workspaceLoadedSignal.connect(workspaceInfoPanel.updateWorkspaceSlot);
-        annotationModel.neuronChangedSignal.connect(neuronInfoPanel.updateNeuronSlot);
-        annotationModel.neuronLoadedSignal.connect(neuronInfoPanel.updateNeuronSlot);
+        // outgoing from the model:
+        annotationModel.neuronLoadedSignal.connect(neuronInfoPanel.neuronSelectedSlot);
 
-        workspaceInfoPanel.neuronClickedSignal.connect(annotationModel.neuronSelectedSlot);
+        annotationModel.neuronSelectedSignal.connect(neuronInfoPanel.neuronSelectedSlot);
+        annotationModel.neuronSelectedSignal.connect(workspaceInfoPanel.neuronSelectedSlot);
+
+        annotationModel.workspaceLoadedSignal.connect(workspaceInfoPanel.workspaceLoadedSlot);
+
+        // UI to model:
+        workspaceInfoPanel.neuronClickedSignal.connect(annotationModel.neuronClickedSlot);
     }
 
     private void setupUI() {

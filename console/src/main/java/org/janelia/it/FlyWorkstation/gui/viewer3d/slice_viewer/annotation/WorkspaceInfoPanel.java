@@ -33,12 +33,20 @@ public class WorkspaceInfoPanel extends JPanel
     private DefaultListModel neuronListModel;
     private JScrollPane neuronScrollPane;
 
-    public Slot1<TmWorkspace> updateWorkspaceSlot = new Slot1<TmWorkspace>() {
+    public Slot1<TmWorkspace> workspaceLoadedSlot = new Slot1<TmWorkspace>() {
         @Override
         public void execute(TmWorkspace workspace) {
-            updateWorkspace(workspace);
+            loadWorkspace(workspace);
         }
     };
+    public Slot1<TmNeuron> neuronSelectedSlot = new Slot1<TmNeuron>() {
+        @Override
+        public void execute(TmNeuron neuron) {
+            selectNeuron(neuron);
+        }
+    };
+
+
     public Signal1<TmNeuron> neuronClickedSignal = new Signal1<TmNeuron>();
 
 
@@ -81,10 +89,15 @@ public class WorkspaceInfoPanel extends JPanel
         );
         add(neuronScrollPane);
 
-        updateWorkspace(null);
+        loadWorkspace(null);
     }
 
-    public void updateWorkspace(TmWorkspace workspace) {
+    public void selectNeuron(TmNeuron neuron) {
+        // select neuron in neuron list
+        neuronListBox.setSelectedValue(neuron, true);
+    }
+
+    public void loadWorkspace(TmWorkspace workspace) {
         if (workspace == null) {
             // clear
             workspaceNameLabel.setText("(no workspace)");
@@ -104,9 +117,8 @@ public class WorkspaceInfoPanel extends JPanel
             for (TmNeuron tmNeuron: neuronVector) {
                 neuronListModel.addElement(tmNeuron);
             }
-            }
         }
-
-
     }
+
+}
 

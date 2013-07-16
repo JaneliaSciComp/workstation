@@ -7,8 +7,6 @@ import java.awt.*;
 import java.util.ArrayList;
 
 import javax.swing.*;
-import javax.swing.event.TreeSelectionListener;
-import javax.swing.event.TreeSelectionEvent;
 import javax.swing.tree.*;
 
 
@@ -34,10 +32,10 @@ public class NeuronInfoPanel extends JPanel
     private DefaultMutableTreeNode neuronRootNode;
 
 
-    public Slot1<TmNeuron> updateNeuronSlot = new Slot1<TmNeuron>() {
+    public Slot1<TmNeuron> neuronSelectedSlot = new Slot1<TmNeuron>() {
         @Override
         public void execute(TmNeuron neuron) {
-            updateNeuron(neuron);
+            loadNeuron(neuron);
         }
     };
 
@@ -66,7 +64,7 @@ public class NeuronInfoPanel extends JPanel
         //  of selected (current) neurite (not sure how this will be stored)
 
 
-        updateNeuron(null);
+        loadNeuron(null);
     }
 
     private void setupNeuriteTreeNavigator() {
@@ -98,33 +96,8 @@ public class NeuronInfoPanel extends JPanel
         add(treePane);
     }
 
-    private JTree createTestTree() {
-
-        DefaultMutableTreeNode root = new DefaultMutableTreeNode("root node");
-        neuriteTree = new JTree(root);
-
-
-        // add some nodes
-        root.add(new DefaultMutableTreeNode("link 1"));
-        root.add(new DefaultMutableTreeNode("link 2"));
-
-        DefaultMutableTreeNode branch1 = new DefaultMutableTreeNode("branch1");
-        root.add(branch1);
-
-        branch1.add(new DefaultMutableTreeNode("link 4"));        
-
-        root.add(new DefaultMutableTreeNode("link 3"));        
-
-        DefaultMutableTreeNode branch2 = new DefaultMutableTreeNode("branch2");
-        root.add(branch2);
-
-
-        return neuriteTree;
-
-    }
-
     public void printNeuronInfo(TmNeuron neuron) {
-        // try to extract some info and print it, for testing:
+        // print neuron info, for testing:
         if (neuron == null) {
             return;
         }
@@ -151,7 +124,7 @@ public class NeuronInfoPanel extends JPanel
         }        
     }
 
-    public void updateNeuriteTree(TmNeuron neuron) {
+    public void loadNeuriteTree(TmNeuron neuron) {
         // for the short term, brute force it; recreate the tree every time; 
         //  I don't know if that's idiomatic or not
 
@@ -185,10 +158,10 @@ public class NeuronInfoPanel extends JPanel
         }
     }
 
-    public void updateNeuron(TmNeuron neuron) {
+    public void loadNeuron(TmNeuron neuron) {
         updateNeuronLabel(neuron);
 
-        updateNeuriteTree(neuron);
+        loadNeuriteTree(neuron);
 
         // testing
         // printNeuronInfo(neuron);

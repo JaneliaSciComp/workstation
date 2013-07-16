@@ -31,11 +31,11 @@ public class AnnotationModel
     // signals & slots
     public Signal1<TmWorkspace> workspaceLoadedSignal = new Signal1<TmWorkspace>();
     public Signal1<TmNeuron> neuronLoadedSignal = new Signal1<TmNeuron>();
-    public Signal1<TmNeuron> neuronChangedSignal = new Signal1<TmNeuron>();
+    public Signal1<TmNeuron> neuronSelectedSignal = new Signal1<TmNeuron>();
 
     public Signal1<TmGeoAnnotation> anchorAddedSignal = new Signal1<TmGeoAnnotation>();
 
-    public Slot1<TmNeuron> neuronSelectedSlot = new Slot1<TmNeuron>() {
+    public Slot1<TmNeuron> neuronClickedSlot = new Slot1<TmNeuron>() {
         @Override
         public void execute(TmNeuron neuron) {
             setCurrentNeuron(neuron);
@@ -83,9 +83,14 @@ public class AnnotationModel
         } else {
             currentNeuronID = null;
         }
+
         // refresh the neuron object!
-        // neuronChangedSignal.emit(neuron);
+
+        // note: eventually the "loaded" signal will not be sent!  the
+        //  workstation will load all neurons; for now, though, it is:
         neuronLoadedSignal.emit(getCurrentNeuron());
+
+        neuronSelectedSignal.emit(getCurrentNeuron());
     }
 
     public AnnotationModel() {
@@ -106,11 +111,14 @@ public class AnnotationModel
             return false;
         }
 
-        // notify listeners
-        neuronChangedSignal.emit(currentNeuron);
-
-        // workspace info panel has neuron list, so it needs poking, too:
+        // workspace info panel has neuron list, so it needs poking; this may not be
+        //  the best way to do it?  should it listen on neuronLoadedSignal for that?
+        //  needs a new neuron signal?
         workspaceLoadedSignal.emit(getCurrentWorkspace());
+
+        // load and select neuron
+        neuronLoadedSignal.emit(currentNeuron);
+        neuronSelectedSignal.emit(currentNeuron);
 
         return true;
         
@@ -164,7 +172,7 @@ public class AnnotationModel
         }
 
         // notify interested parties
-        neuronChangedSignal.emit(getCurrentNeuron());
+        neuronSelectedSignal.emit(getCurrentNeuron());
 
         anchorAddedSignal.emit(annotation);
 
@@ -190,7 +198,7 @@ public class AnnotationModel
 
 
         // notify people
-        neuronChangedSignal.emit(getCurrentNeuron());
+        neuronSelectedSignal.emit(getCurrentNeuron());
 
         anchorAddedSignal.emit(annotation);
 
@@ -205,14 +213,16 @@ public class AnnotationModel
     }
 
     public void loadWorkspace(TmWorkspace workspace) {
-        setCurrentWorkspace(workspace);
+        if (workspace != null) {
+            currentWorkspaceID = workspace.getId();
+        } else {
+            currentWorkspaceID = null;
+        }
+        workspaceLoadedSignal.emit(workspace);
 
         // clear current neuron
         setCurrentNeuron(null);
-
-        // notify listeners
-        workspaceLoadedSignal.emit(workspace);
-        neuronChangedSignal.emit(null);
+        neuronSelectedSignal.emit(null);
 
     }
 
