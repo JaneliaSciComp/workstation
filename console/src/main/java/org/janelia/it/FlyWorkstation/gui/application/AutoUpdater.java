@@ -193,8 +193,8 @@ public class AutoUpdater extends JFrame implements PropertyChangeListener {
             
         	mainPane.removeAll();
 
-        	mainPane.add(new JLabel("A new version of FlyWorkstation is available."), BorderLayout.NORTH);
-        	
+        	mainPane.add(new JLabel("A new version of the Janelia Workstation is available."), BorderLayout.NORTH);
+
         	JPanel attrPanel = new JPanel(new GridBagLayout());
         	GridBagConstraints c = new GridBagConstraints();
         	c.anchor = GridBagConstraints.FIRST_LINE_START;
