@@ -6,10 +6,7 @@ import java.util.List;
 import java.util.concurrent.Callable;
 
 import javax.media.opengl.awt.GLJPanel;
-import javax.swing.JButton;
-import javax.swing.JComponent;
-import javax.swing.JLabel;
-import javax.swing.JPanel;
+import javax.swing.*;
 
 import org.janelia.it.FlyWorkstation.api.entity_model.management.ModelMgr;
 import org.janelia.it.FlyWorkstation.gui.framework.outline.EntityTransferHandler;
@@ -18,6 +15,7 @@ import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionModelListener;
 import org.janelia.it.FlyWorkstation.gui.framework.viewer.Viewer;
 import org.janelia.it.FlyWorkstation.gui.framework.viewer.ViewerPane;
+import org.janelia.it.FlyWorkstation.gui.framework.viewer.ViewerToolbar;
 import org.janelia.it.FlyWorkstation.gui.util.Icons;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.Mip3d;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.gui_elements.AlignmentBoardControlsDialog;
@@ -77,6 +75,7 @@ public class AlignmentBoardViewer extends Viewer implements AlignmentBoardContro
     private Double cachedDownSampleGuess = null;
     private AlignmentBoardSettings settingsData;
     private ShutdownListener shutdownListener;
+    private JToolBar toolbar;
 
     public AlignmentBoardViewer(ViewerPane viewerPane) {
         super(viewerPane);
@@ -441,23 +440,6 @@ public class AlignmentBoardViewer extends Viewer implements AlignmentBoardContro
         mip3d = null;
     }
 
-    /** Cleanup old button, to avoid user temptation to use it, and ensure no duplication. */
-    private void removeSettingsLaunchButton() {
-        JPanel buttonHolder = getViewerPane().getMainTitlePane();
-        if ( buttonHolder != null ) {
-            Component toRemove = null;
-            for ( Component comp: buttonHolder.getComponents() ) {
-                if ( SETTINGS_LAUNCH_BTN_NAME.equals(comp.getName()) ) {
-                    toRemove = comp;
-                    break;
-                }
-            }
-            if ( toRemove != null ) {
-                buttonHolder.remove( toRemove );
-            }
-        }
-    }
-
     private synchronized void setLoading( boolean loadingState ) {
         this.loadingInProgress = loadingState;
     }
@@ -631,14 +613,36 @@ public class AlignmentBoardViewer extends Viewer implements AlignmentBoardContro
         launchSettingsButton.setRequestFocusEnabled(false);
         launchSettingsButton.setSelected(false);
         launchSettingsButton.setAction(settingsDialog.getLaunchAction());
-        JPanel buttonHolder = this.getViewerPane().getMainTitlePane();
+        launchSettingsButton.setName(SETTINGS_LAUNCH_BTN_NAME);
 
-        GridBagConstraints btnConstraints = new GridBagConstraints(
-                1, 0, 1, 1, 1.0, 1.0, GridBagConstraints.NORTHEAST, GridBagConstraints.NONE, new Insets(1,1,1,1), 0, 0
-        );
-        launchSettingsButton.setName( SETTINGS_LAUNCH_BTN_NAME );
+        toolbar = new JToolBar( JToolBar.HORIZONTAL );
+        toolbar.add( launchSettingsButton );
+        add( toolbar, BorderLayout.PAGE_START );
 
-        buttonHolder.add( launchSettingsButton, btnConstraints );
+//        GridBagConstraints btnConstraints = new GridBagConstraints(
+//                1, 0, 1, 1, 1.0, 1.0, GridBagConstraints.NORTHEAST, GridBagConstraints.NONE, new Insets(1,1,1,1), 0, 0
+//        );
+//
+//        JPanel buttonHolder = this.getViewerPane().getMainTitlePane();
+//        buttonHolder.add( launchSettingsButton, btnConstraints );
+    }
+
+    /** Cleanup old button, to avoid user temptation to use it, and ensure no duplication. */
+    private void removeSettingsLaunchButton() {
+        if ( toolbar != null ) {
+            Component toRemove = null;
+            for ( Component comp: toolbar.getComponents() ) {
+                if ( SETTINGS_LAUNCH_BTN_NAME.equals(comp.getName()) ) {
+                    toRemove = comp;
+                    break;
+                }
+            }
+            if ( toRemove != null ) {
+                toolbar.remove( toRemove );
+            }
+
+            remove( toolbar );
+        }
     }
 
     /**
@@ -680,7 +684,6 @@ public class AlignmentBoardViewer extends Viewer implements AlignmentBoardContro
         }
         @Override
         public void setBrightness(double brightness) {
-            System.out.println("A-brdcontrolslistener setting brightness to " + brightness);
             viewer.mip3d.setGamma((float) brightness);
         }
 
