@@ -191,12 +191,16 @@ public class RenderablesChannelsBuilder extends RenderablesVolumeBuilder impleme
     //----------------------------------------IMPLEMENT TextureBuilderI
     @Override
     public TextureDataI buildTextureData() {
+        if ( needsChannelInit ) {
+            throw new RuntimeException( "Internal Error: attempting to produce final data, when no data has been added." );
+        }
+
         if ( channelInterpreter != null )
             channelInterpreter.close();
 
         TextureDataI textureData;
         double downSampleRate = settings.getAcceptedDownsampleRate();
-        if ( downSampleRate != 0.0 ) {
+        if ( downSampleRate != 0.0   &&   downSampleRate != 1.0 ) {
             DownSampler downSampler = new DownSampler( paddedSx, paddedSy, paddedSz );
             DownSampler.DownsampledTextureData downSampling = downSampler.getDownSampledVolume(
                     volumeData,
@@ -282,7 +286,7 @@ public class RenderablesChannelsBuilder extends RenderablesVolumeBuilder impleme
     private void init() {
         if ( needsChannelInit) {
             checkReady();
-            logger.debug( "Initialize called..." );
+            logger.info( "Initialize called..." );
 
             // The size of any one voxel will be the number of channels times the bytes per channel.
             if ( channelMetaData.rawChannelCount == 3 ) {

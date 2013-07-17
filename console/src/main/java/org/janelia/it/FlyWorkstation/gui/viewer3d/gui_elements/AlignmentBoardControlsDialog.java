@@ -440,7 +440,7 @@ public class AlignmentBoardControlsDialog extends JDialog {
                     }
                 };
 
-                Collection<float[]> acceptedCords = getCombinedCropCoords();
+                Collection<float[]> acceptedCords = getCombinedCropCoords( 1.0 );
                 fireSavebackEvent( acceptedCords, buttonEnableListener, ControlsListener.ExportMethod.binary );
 
             }
@@ -458,7 +458,7 @@ public class AlignmentBoardControlsDialog extends JDialog {
 
             public void actionPerformed(ActionEvent ae) {
                 setButtonBusy(colorSaveButton);
-                Collection<float[]> acceptedCords = getCombinedCropCoords();
+                Collection<float[]> acceptedCords = getCombinedCropCoords( 1.0 );
                 fireSavebackEvent(acceptedCords, buttonEnableListener, ControlsListener.ExportMethod.color);
             }
         });
@@ -492,7 +492,7 @@ public class AlignmentBoardControlsDialog extends JDialog {
             public void actionPerformed( ActionEvent ae ) {
                 resetSelectionSliders();
                 CropCoordSet cropCoordSet = volumeModel.getCropCoords();
-                cropCoordSet.setCurrentCoordinates(getCurrentCropCoords());
+                cropCoordSet.setCurrentCoordinates(getCurrentCropCoords( getDownsampleRate() ));
                 cropCoordSet.getAcceptedCoordinates().clear();
                 fireForceCropEvent();
             }
@@ -694,23 +694,13 @@ public class AlignmentBoardControlsDialog extends JDialog {
         rangeSlider.setValue(rangeSlider.getMinimum());
     }
 
-    private Collection<float[]> getMicrometerCropCoords() {
-        CropCoordSet cropCoordSet = volumeModel.getCropCoords();
-        Collection<float[]> micrometerCropCoords = new HashSet<float[]>( cropCoordSet.getAcceptedCoordinates().size() );
-        int[] maxima = new int[] {
-                xSlider.getMaximum(), ySlider.getMaximum(), zSlider.getMaximum()
-        };
-        for ( float[] nextAccepted: cropCoordSet.getAcceptedCoordinates() ) {
-            CoordCropper3D cropper3D = new CoordCropper3D();
-            float[] adjusted = cropper3D.getDenormalizedCropCoords( nextAccepted, maxima, getDownsampleRate() );
-            micrometerCropCoords.add( adjusted );
-        }
-        return micrometerCropCoords;
+    private Collection<float[]> getCombinedCropCoords() {
+        return getCombinedCropCoords( getDownsampleRate() );
     }
 
-    private Collection<float[]> getCombinedCropCoords() {
-        float[] absoluteCropCoords = getCurrentCropCoords();
-        Collection<float[]> acceptedCoords = getMicrometerCropCoords();
+    private Collection<float[]> getCombinedCropCoords( double downSampleRate ) {
+        float[] absoluteCropCoords = getCurrentCropCoords( downSampleRate );
+        Collection<float[]> acceptedCoords = getMicrometerCropCoords( downSampleRate );
         if ( ! CropCoordSet.alreadyAccepted( acceptedCoords, absoluteCropCoords ) ) {
             Collection<float[]> combinedCoords = new HashSet<float[]>();
             combinedCoords.add( absoluteCropCoords );
@@ -722,7 +712,21 @@ public class AlignmentBoardControlsDialog extends JDialog {
         }
     }
 
-    private float[] getCurrentCropCoords() {
+    private Collection<float[]> getMicrometerCropCoords( double downSampleRate ) {
+        CropCoordSet cropCoordSet = volumeModel.getCropCoords();
+        Collection<float[]> micrometerCropCoords = new HashSet<float[]>( cropCoordSet.getAcceptedCoordinates().size() );
+        int[] maxima = new int[] {
+                xSlider.getMaximum(), ySlider.getMaximum(), zSlider.getMaximum()
+        };
+        for ( float[] nextAccepted: cropCoordSet.getAcceptedCoordinates() ) {
+            CoordCropper3D cropper3D = new CoordCropper3D();
+            float[] adjusted = cropper3D.getDenormalizedCropCoords( nextAccepted, maxima, downSampleRate );
+            micrometerCropCoords.add( adjusted );
+        }
+        return micrometerCropCoords;
+    }
+
+    private float[] getCurrentCropCoords( double downSampleRate ) {
         boolean partialVolumeConstraints = false;
         if ( xSlider.getValue() != 0  ||  ySlider.getValue() != 0  ||  zSlider.getValue() != 0 ) {
             partialVolumeConstraints = true;
@@ -735,7 +739,7 @@ public class AlignmentBoardControlsDialog extends JDialog {
 
         CoordCropper3D cropper = new CoordCropper3D();
         return partialVolumeConstraints ?
-                cropper.getCropCoords( xSlider, ySlider, zSlider, getDownsampleRate() ) :
+                cropper.getCropCoords( xSlider, ySlider, zSlider, downSampleRate ) :
                 null;
     }
 
