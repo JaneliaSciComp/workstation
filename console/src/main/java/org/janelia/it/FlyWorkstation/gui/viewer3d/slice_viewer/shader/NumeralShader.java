@@ -101,7 +101,7 @@ public class NumeralShader extends PassThroughTextureShader
 		setUniform(gl, "channel_count", sc);
 		// NOTE: this assumes channel zero represents max value and bit depth for all
 		ChannelColorModel chan = imageColorModel.getChannel(0);
-		float nrange = (float)Math.pow(2.0, chan.getBitDepth());
+		float nrange = (float)Math.pow(2.0, chan.getBitDepth()) - 1;
 		setUniform(gl, "format_max", nrange);
 		setUniform(gl, "data_max", (float) chan.getDataMax());
 		setUniform(gl, "micrometers_per_pixel", (float) micrometersPerPixel);

@@ -357,7 +357,7 @@ extends AbstractTextureLoadAdapter
 
 		int bitDepth = ria.getColorModel().getPixelSize();
 		tileFormat.setBitDepth(bitDepth);
-		tileFormat.setIntensityMax((int)Math.pow(2, bitDepth));
+		tileFormat.setIntensityMax((int)Math.pow(2, bitDepth) - 1);
 
 		tileFormat.setSrgb(ria.getColorModel().getColorSpace().isCS_sRGB());
 		

@@ -174,9 +174,18 @@ public class ViewTileManager {
 		BoundingBox3d bb = volumeImage.getBoundingBox3d();
 		double bottomY = bb.getMax().getY();
 		if (xyzFromWhd[2] == 1) {
-			fD = bottomY - fD;
+			fD = bottomY - fD - 0.5; // bounding box extends 0.5 voxels past final slice
 		}
+		// Bounding box is actually 0.5 voxels bigger than number of slices at each end
+		int dMin = (int)(bb.getMin().get(xyzFromWhd[2])/volumeImage.getResolution(xyzFromWhd[2]) + 0.5);
+		int dMax = (int)(bb.getMax().get(xyzFromWhd[2])/volumeImage.getResolution(xyzFromWhd[2]) - 0.5);
 		int d = (int)Math.round(fD / volumeImage.getResolution(xyzFromWhd[2]) - 0.5);
+		d = Math.max(d, dMin);
+		d = Math.min(d, dMax);
+		/*
+		if (sliceAxis == CoordinateAxis.Y)
+			log.info("Y slice "+d);
+			*/
 		
 		// 3) x and y tile index range
 		

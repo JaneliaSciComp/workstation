@@ -45,7 +45,7 @@ public class SliceColorShader extends PassThroughTextureShader
 			channel_color[offset + 2] = col.getBlue()/255.0f;
 			int b = ccm.getBlackLevel();
 			int w = ccm.getWhiteLevel();
-			float nrange = (float)Math.pow(2.0, ccm.getBitDepth());
+			float nrange = (float)Math.pow(2.0, ccm.getBitDepth())-1;
 			channel_min[c] = b / nrange;
 			float crange = (float)Math.max(1.0, w - b); // avoid divide by zero
 			channel_scale[c] = nrange/crange;
