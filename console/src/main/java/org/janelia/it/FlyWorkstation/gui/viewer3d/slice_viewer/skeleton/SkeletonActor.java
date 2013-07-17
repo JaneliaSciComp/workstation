@@ -551,4 +551,17 @@ implements GLActor
 		}
 		skeletonActorChangedSignal.emit();
 	}
+	
+	public void lightweightPlaceAnchor(Anchor dragAnchor, Vec3 location) {
+		if (dragAnchor == null)
+			return;
+		int index = getIndexForAnchor(dragAnchor);
+		if (index < 0)
+			return;
+		int offset = index * vertexFloatCount;
+		for (int i = 0; i < 3; ++i) {
+			vertices.put( offset+i, (float)(double)location.get(i) );
+		}
+		skeletonActorChangedSignal.emit();
+	}
 }

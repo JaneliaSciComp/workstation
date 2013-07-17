@@ -5,6 +5,7 @@ import java.util.Set;
 
 import org.janelia.it.FlyWorkstation.gui.viewer3d.Vec3;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.slice_viewer.Signal;
+import org.janelia.it.FlyWorkstation.gui.viewer3d.slice_viewer.Signal1;
 
 public class Anchor {
 	public enum Type {
@@ -25,7 +26,7 @@ public class Anchor {
 	// No explicit edge objects, just symmetric neighbor references
 	private Set<Anchor> neighbors = new HashSet<Anchor>();
 	
-	public Signal anchorChangedSignal = new Signal();
+	public Signal1<Anchor> anchorMovedSignal = new Signal1<Anchor>();
 	
 	public Anchor(Vec3 location, Anchor parent) {
 		this.location = location;
@@ -72,7 +73,7 @@ public class Anchor {
 		if (location.equals(this.location))
 			return;
 		this.location = location;
-		anchorChangedSignal.emit();
+		anchorMovedSignal.emit(this);
 	}
 
 	public void setAnchorType(Type anchorType) {

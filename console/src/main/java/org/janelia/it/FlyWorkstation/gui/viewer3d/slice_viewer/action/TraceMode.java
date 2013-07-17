@@ -79,7 +79,7 @@ implements MouseMode, KeyListener
 				+"Scroll wheel to scan Z<br>" // done
 				+"SHIFT-scroll wheel to zoom<br>" // done
 				+"Double-click to recenter on a point<br>"
-				+"Right-click for context menu" // TODO
+				+"Right-click for context menu" // done
 				+"</html>";
 				*/
 	}
@@ -138,13 +138,8 @@ implements MouseMode, KeyListener
 		super.mouseDragged(event);
 		// We might be moving an anchor
 		if (dragAnchor != null) {
-			Point p1 = getPreviousPoint();
-			Point p2 = getPoint();
-			Point dx = new Point(p2.x - p1.x, p2.y - p1.y);
-			Vec3 dv = new Vec3(dx.x, dx.y, 0);
-			dv = dv.times(1.0/camera.getPixelsPerSceneUnit()); // convert to scene units
-			dv = viewerInGround.times(dv); // Rotate for viewer orientation
-			skeletonActor.lightweightNudgeAnchor(dragAnchor, dv);
+			Vec3 loc = worldFromPixel(event.getPoint());
+			skeletonActor.lightweightPlaceAnchor(dragAnchor, loc);
 		}
 		// Middle button drag to pan
 		if ((event.getModifiers() & InputEvent.BUTTON2_MASK) != 0) {
@@ -415,6 +410,13 @@ implements MouseMode, KeyListener
 		int keyCode = event.getKeyCode();
 		Anchor historyAnchor = null;
 		switch(keyCode) {
+		case KeyEvent.VK_BACK_SPACE:
+		case KeyEvent.VK_DELETE:
+			Anchor parentAnchor = skeletonActor.getNextParent();
+			if (parentAnchor != null) {
+				skeleton.delete(parentAnchor);
+			}
+			break;
 		case KeyEvent.VK_LEFT:
 			System.out.println("back");
 			historyAnchor = skeleton.getHistory().back();

@@ -51,6 +51,7 @@ public class Skeleton {
 	// API for synchronizing with back end database
 	// after discussion with Don Olbris July 8, 2013
 	// 
+	///// ADD
 	public Signal1<AnchorSeed> addAnchorRequestedSignal = 
 			new Signal1<AnchorSeed>();
 	// Response from database
@@ -74,7 +75,8 @@ public class Skeleton {
 	};
 	// AFTER anchor has already been added (not simply requested)
 	public Signal1<Anchor> anchorAddedSignal = new Signal1<Anchor>();
-	
+
+	///// DELETE
 	// Anchor deletion
 	public Signal1<Anchor> anchorDeleteRequestedSignal =
 			new Signal1<Anchor>();
@@ -92,7 +94,8 @@ public class Skeleton {
 		public void execute(Anchor anchor) {delete(anchor);}
 	};
 	public Signal1<Anchor> anchorDeletedSignal = new Signal1<Anchor>();
-	
+
+	///// CLEAR
 	public Slot clearSlot = new Slot() {
 		@Override
 		public void execute() {
@@ -100,7 +103,18 @@ public class Skeleton {
 		}
 	};
 	public Signal clearedSignal = new Signal();
-	
+
+	///// MOVE
+	public Signal1<Anchor> anchorMovedSignal = new Signal1<Anchor>();
+	public Slot1<TmGeoAnnotation> moveAnchorSlot = new Slot1<TmGeoAnnotation>() {
+		@Override
+		public void execute(TmGeoAnnotation tga) {
+			Anchor anchor = anchorsByGuid.get(tga.getId());
+			if (anchor == null)
+				return;
+			anchor.setLocation(new Vec3(tga.getX(), tga.getY(), tga.getZ()));
+		}
+	};
 	
 	public Skeleton() {
 		// Don't make this connection when using workstation database
@@ -110,6 +124,7 @@ public class Skeleton {
 		// Adding an anchor changes the skeleton
 		anchorAddedSignal.connect(skeletonChangedSignal);
 		anchorDeletedSignal.connect(skeletonChangedSignal);
+		anchorMovedSignal.connect(skeletonChangedSignal);
 	}
 	
 	public Anchor addAnchor(Anchor anchor) {
@@ -119,7 +134,8 @@ public class Skeleton {
 		Long guid = anchor.getGuid();
 		if (guid != null)
 			anchorsByGuid.put(guid, anchor);
-		anchor.anchorChangedSignal.connect(skeletonChangedSignal);
+		anchor.anchorMovedSignal.disconnect(this.anchorMovedSignal);
+		anchor.anchorMovedSignal.connect(this.anchorMovedSignal);
 		anchorHistory.push(anchor);
 		anchorAddedSignal.emit(anchor);
 		return anchor;
@@ -167,6 +183,7 @@ public class Skeleton {
 		//
 		anchorHistory.remove(anchor);
 		//
+		anchor.anchorMovedSignal.disconnect(this.anchorMovedSignal);
 		anchorDeletedSignal.emit(anchor);
 		return true;
 	}
