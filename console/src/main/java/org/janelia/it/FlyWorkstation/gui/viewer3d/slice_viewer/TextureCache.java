@@ -111,7 +111,7 @@ public class TextureCache
 	
 	public int size() {return futureCache.size() + historyCache.size() + persistentCache.size();}
 	
-	public Collection<TileTexture> values() {
+	public synchronized Collection<TileTexture> values() {
 		Set<TileTexture> result = new HashSet<TileTexture>();
 		result.addAll(historyCache.values());
 		result.addAll(futureCache.values());

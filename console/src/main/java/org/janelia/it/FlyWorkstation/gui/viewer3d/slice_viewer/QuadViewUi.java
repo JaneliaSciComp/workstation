@@ -216,6 +216,13 @@ public class QuadViewUi extends JPanel
 		}
 	};
 	
+	public Slot1<Vec3> setCameraFocusSlot = new Slot1<Vec3>() {
+		@Override
+		public void execute(Vec3 focus) {
+			camera.setFocus(focus);
+		}
+	};
+	
 	protected Slot updateRangesSlot = new Slot() {
 		@Override
 		public void execute() 
@@ -355,7 +362,7 @@ public class QuadViewUi extends JPanel
             v.setTileServer(tileServer);
             v.getViewer().getSliceActor().setImageColorModel(imageColorModel);
             imageColorModel.getColorModelChangedSignal().connect(v.getViewer().repaintSlot);
-            // v.getViewer().addActor(new TileOutlineActor(v.getViewTileManager())); // for debugging
+            v.getViewer().addActor(new TileOutlineActor(v.getViewTileManager())); // for debugging
             // Add skeleton actor AFTER slice actor
             v.getViewer().setSkeletonActor(sharedSkeletonActor);
         }

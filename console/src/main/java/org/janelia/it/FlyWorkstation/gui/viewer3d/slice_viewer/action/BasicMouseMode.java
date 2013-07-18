@@ -7,6 +7,7 @@ import java.awt.Graphics;
 import java.awt.Image;
 import java.awt.Point;
 import java.awt.Toolkit;
+import java.awt.event.InputEvent;
 import java.awt.event.KeyEvent;
 import java.awt.event.MouseEvent;
 import java.awt.image.BufferedImage;
@@ -87,7 +88,9 @@ public class BasicMouseMode implements MouseMode
 
 	@Override
 	public void mouseDragged(MouseEvent event) {
-		checkCursor(dragCursor);
+		if ((event.getModifiers() & InputEvent.BUTTON1_MASK) != 0) {
+			checkCursor(dragCursor);
+		}
 		setPreviousPoint(getPoint());
 		setPoint(event.getPoint());
 	}
@@ -116,7 +119,9 @@ public class BasicMouseMode implements MouseMode
 
 	@Override
 	public void mousePressed(MouseEvent event) {
-		checkCursor(dragCursor);
+		if ((event.getModifiers() & InputEvent.BUTTON1_MASK) != 0) {
+			checkCursor(dragCursor);
+		}
 		setPoint(event.getPoint());
 		setPreviousPoint(null);
 	}

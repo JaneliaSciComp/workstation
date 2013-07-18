@@ -3,8 +3,6 @@ package org.janelia.it.FlyWorkstation.gui.viewer3d.slice_viewer;
 import java.util.List;
 import java.util.Vector;
 
-import org.janelia.it.FlyWorkstation.gui.viewer3d.slice_viewer.skeleton.Anchor;
-
 public class HistoryStack<E>
 {
 	private List<E> stack = new Vector<E>();
@@ -53,14 +51,21 @@ public class HistoryStack<E>
 	}
 
 	public void remove(E item) {
-		int i = 0;
-		while (i < stack.size()) {
-			while (stack.get(i) == item) {
-				stack.remove(i);
-				if (currentIndex >= i)
-					currentIndex -= 1;
+		synchronized(stack) {
+			// 1 - Adjust currentIndex for what will be new arrangement
+			if (currentIndex != null) {
+				int max = Math.min(currentIndex, stack.size()-1);
+				for (int i = 0; i <= max; ++i)
+					if (stack.get(i) == item)
+						currentIndex -= 1; // There will be one less item
+				if (currentIndex < 0)
+					currentIndex = 0;
 			}
-			i += 1;
+			// 2 - Actually remove items
+			while (stack.remove(item))
+				; // keep removing until none of this item are left
+			if (stack.size() == 0)
+				currentIndex = null;
 		}
 	}
 }

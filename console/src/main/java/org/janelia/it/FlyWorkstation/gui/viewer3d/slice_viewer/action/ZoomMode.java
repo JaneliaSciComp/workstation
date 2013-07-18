@@ -55,7 +55,9 @@ implements WheelMode, MouseMode
 		mode.mouseDragged(event);
 		if (event.isPopupTrigger())
 			return;
-		getWidget().getRubberBand().setEndPoint(event.getPoint());
+		if ((event.getModifiers() & InputEvent.BUTTON1_MASK) != 0) {
+			getWidget().getRubberBand().setEndPoint(event.getPoint());
+		}
 	}
 
 	@Override
@@ -84,10 +86,12 @@ implements WheelMode, MouseMode
 		// Don't zoom and context menu at the same time
 		if (event.isPopupTrigger())
 			return;
-		RubberBand rb = getWidget().getRubberBand();
-		rb.setStartPoint(event.getPoint());
-		rb.setEndPoint(event.getPoint());
-		rb.setVisible(true);
+		if ((event.getModifiers() & InputEvent.BUTTON1_MASK) != 0) {
+			RubberBand rb = getWidget().getRubberBand();
+			rb.setStartPoint(event.getPoint());
+			rb.setEndPoint(event.getPoint());
+			rb.setVisible(true);
+		}
 	}
 
 	@Override

@@ -418,11 +418,11 @@ implements MouseMode, KeyListener
 			}
 			break;
 		case KeyEvent.VK_LEFT:
-			System.out.println("back");
+			// System.out.println("back");
 			historyAnchor = skeleton.getHistory().back();
 			break;
 		case KeyEvent.VK_RIGHT:
-			System.out.println("next");
+			// System.out.println("next");
 			historyAnchor = skeleton.getHistory().next();
 			break;
 		}
