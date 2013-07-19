@@ -1,6 +1,7 @@
 package org.janelia.it.FlyWorkstation.gui.framework.viewer.alignment_board;
 
 import java.util.Date;
+import java.util.Observer;
 
 /**
  * Created with IntelliJ IDEA.
@@ -18,6 +19,7 @@ public class AlignmentBoardSettings {
     private double gammaFactor =  DEFAULT_GAMMA;
     private boolean showChannelData = true;
     private double downSampleGuess;
+    private Observer sampleRateObserver;
 
     private Date creationStamp;
     public String toString() {
@@ -45,6 +47,10 @@ public class AlignmentBoardSettings {
         this.chosenDownSampleRate = downSampleRate;
     }
 
+    public void setDownSampleRateObserver( Observer o ) {
+        this.sampleRateObserver = o;
+    }
+
     /**
      * This "guess" is determined from graphics card, but never serialized.  If the user picks something
      * in particular, that will be used.  But if not, their guess will be used instead.
@@ -53,10 +59,18 @@ public class AlignmentBoardSettings {
      */
     public void setDownSampleGuess(double downSampleRate) {
         this.downSampleGuess = downSampleRate;
+        if ( sampleRateObserver != null ) {
+            sampleRateObserver.update( null, downSampleRate );
+        }
     }
 
     public double getDownSampleGuess() {
         return downSampleGuess;
+    }
+
+    public String getDownSampleGuessStr() {
+        String rtnVal = new Double( downSampleGuess ).toString();
+        return rtnVal.substring( 0, rtnVal.indexOf( '.' ) );
     }
 
     /** Call this to get the downsample rate that is actually used onscreen. */

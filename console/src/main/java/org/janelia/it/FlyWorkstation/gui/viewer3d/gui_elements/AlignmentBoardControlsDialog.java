@@ -64,7 +64,7 @@ public class AlignmentBoardControlsDialog extends JDialog {
     private static final String LAUNCH_DESCRIPTION = "Present a dialog allowing users to change settings.";
     private static final Dimension SIZE = new Dimension( WIDTH, HEIGHT);
     private static final String GAMMA_TOOLTIP = "Adjust the gamma level, or brightness.";
-    private static final Dimension DN_SAMPLE_DROPDOWN_SIZE = new Dimension(130, 50);
+    private static final Dimension DN_SAMPLE_DROPDOWN_SIZE = new Dimension(180, 50);
     private static final String COMMIT_CHANGES = "Commit Changes";
     private static final String COMMIT_CHANGES_TOOLTIP_TEXT = COMMIT_CHANGES;
     private static final String DISMISS_DIALOG = "Dismiss";
@@ -81,11 +81,13 @@ public class AlignmentBoardControlsDialog extends JDialog {
     private static final String NON_SELECT_BLACKOUT_TOOLTIP_TEXT = NON_SELECT_BLACKOUT;
     private static final String ESTIMATED_BEST_RESOLUTION = "Best Guess";
     private static final String DOWN_SAMPLE_PROP_NAME = "AlignmentBoard_Downsample_Rate";
+    private static final String GUESS_LABEL_FMT = "Best Guess: %s";
 
     private final Component centering;
     private JSlider brightnessSlider;
     private JCheckBox useSignalDataCheckbox;
     private JComboBox downSampleRateDropdown;
+    private JLabel downSampleGuess;
 
     private RangeSlider xSlider;
     private RangeSlider ySlider;
@@ -592,6 +594,10 @@ public class AlignmentBoardControlsDialog extends JDialog {
         downSampleRateDropdown.setMinimumSize(DN_SAMPLE_DROPDOWN_SIZE);
         downSampleRateDropdown.setMaximumSize(DN_SAMPLE_DROPDOWN_SIZE);
         downSampleRateDropdown.setPreferredSize(DN_SAMPLE_DROPDOWN_SIZE);
+        // This sits beside the downsample dropdown.
+        GridBagConstraints downSampleGuessConstraints = new GridBagConstraints(
+                1, nextRow, 1, rowHeight, 1.0, 0.0, GridBagConstraints.NORTHWEST, GridBagConstraints.VERTICAL, insets, 0, 0
+        );
 
         nextRow += rowHeight;
         GridBagConstraints signalDataConstraints = new GridBagConstraints(
@@ -636,6 +642,16 @@ public class AlignmentBoardControlsDialog extends JDialog {
 
         centralPanel.add( brightnessSlider, brightnessConstraints );
         centralPanel.add( downSampleRateDropdown, downSampleConstraints );
+        downSampleGuess = new JLabel( String.format( GUESS_LABEL_FMT, "0" ) );
+        Observer downsampleRateObserver = new Observer() {
+            @Override
+            public void update(Observable o, Object arg) {
+                downSampleGuess.setText(  String.format( GUESS_LABEL_FMT, settings.getDownSampleGuessStr() ) );
+            }
+        };
+        settings.setDownSampleRateObserver( downsampleRateObserver );
+        centralPanel.add( downSampleGuess, downSampleGuessConstraints );
+
         centralPanel.add( useSignalDataCheckbox, signalDataConstraints );
         centralPanel.add( commitButton, commitBtnConstraints );
         JTextArea downSampleRateText = new JTextArea( DOWN_SAMPLE_TIP );

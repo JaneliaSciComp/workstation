@@ -352,54 +352,51 @@ public class RenderablesLoadWorker extends SimpleWorker implements VolumeLoader 
     private AlignmentBoardSettings adjustDownsampleRateSetting() throws Exception {
 
         logger.info("Adjusting downsample rate from {}.", Thread.currentThread().getName());
-        if ( alignmentBoardSettings.getChosenDownSampleRate() == 0.0 ) {
-            try {
-                GpuSampler.GpuInfo gpuInfo = sampler.getGpuInfo();
+        try {
+            GpuSampler.GpuInfo gpuInfo = sampler.getGpuInfo();
 
-                // Must set the down sample rate to the newly-discovered best.
-                if ( gpuInfo != null ) {
-                    logger.info(
-                            "GPU vendor {}, renderer {} version " + gpuInfo.getVersion(), gpuInfo.getVender(), gpuInfo.getRenderer()
-                    );
+            // Must set the down sample rate to the newly-discovered best.
+            if ( gpuInfo != null ) {
+                logger.info(
+                        "GPU vendor {}, renderer {} version " + gpuInfo.getVersion(), gpuInfo.getVender(), gpuInfo.getRenderer()
+                );
 
-                    // 1.5Gb in Kb increments
-                    logger.info( "ABV seeing free memory estimate of {}.", gpuInfo.getFreeTexMem() );
-                    logger.info( "ABV seeting highest supported version of {}.", gpuInfo.getHighestGlslVersion() );
+                // 1.5Gb in Kb increments
+                logger.info( "ABV seeing free memory estimate of {}.", gpuInfo.getFreeTexMem() );
+                logger.info( "ABV seeting highest supported version of {}.", gpuInfo.getHighestGlslVersion() );
 
-                    if ( gpuInfo.getFreeTexMem() > LEAST_FULLSIZE_MEM ) {
-                        alignmentBoardSettings.setDownSampleGuess(1.0);
-                    }
-                    else if ( GpuSampler.isDeptStandardGpu( gpuInfo.getRenderer() ) ) {
-                        alignmentBoardSettings.setDownSampleGuess(1.0);
-                    }
-                    else {
-                        Future<Boolean> isDeptPreferred = sampler.isDepartmentStandardGraphicsMac();
-                        try {
-                            if ( isDeptPreferred.get() ) {
-                                logger.info("User has preferred card.");
-                                alignmentBoardSettings.setDownSampleGuess(1.0);
-                            }
-                            else {
-                                alignmentBoardSettings.setDownSampleGuess(2.0);
-                            }
-                        } catch ( Exception ex ) {
-                            logger.warn( "Ignore this message if this system is not a Mac: department-preferred grapchics detection not working on this platform." );
-                        }
-                    }
+                if ( gpuInfo.getFreeTexMem() > LEAST_FULLSIZE_MEM ) {
+                    alignmentBoardSettings.setDownSampleGuess(1.0);
+                }
+                else if ( GpuSampler.isDeptStandardGpu( gpuInfo.getRenderer() ) ) {
+                    alignmentBoardSettings.setDownSampleGuess(1.0);
                 }
                 else {
-                    logger.warn( "No vender data returned.  Forcing 'safe guess'." );
-                    alignmentBoardSettings.setDownSampleGuess(2.0);
+                    Future<Boolean> isDeptPreferred = sampler.isDepartmentStandardGraphicsMac();
+                    try {
+                        if ( isDeptPreferred.get() ) {
+                            logger.info("User has preferred card.");
+                            alignmentBoardSettings.setDownSampleGuess(1.0);
+                        }
+                        else {
+                            alignmentBoardSettings.setDownSampleGuess(2.0);
+                        }
+                    } catch ( Exception ex ) {
+                        logger.warn( "Ignore this message if this system is not a Mac: department-preferred grapchics detection not working on this platform." );
+                    }
                 }
-
-            } catch ( Exception ex ) {
-                ex.printStackTrace();
-                SessionMgr.getSessionMgr().handleException( ex );
+            }
+            else {
+                logger.warn( "No vender data returned.  Forcing 'safe guess'." );
+                alignmentBoardSettings.setDownSampleGuess(2.0);
             }
 
-            //this.remove( feedbackPanel );
-
+        } catch ( Exception ex ) {
+            ex.printStackTrace();
+            SessionMgr.getSessionMgr().handleException( ex );
         }
+
+        //this.remove( feedbackPanel );
 
         //todo find some way to return this and avoid re-processing.
         //cachedDownSampleGuess = alignmentBoardSettings.getDownSampleGuess();
