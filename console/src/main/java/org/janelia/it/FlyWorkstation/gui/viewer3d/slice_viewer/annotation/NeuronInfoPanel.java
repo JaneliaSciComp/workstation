@@ -17,6 +17,11 @@ import org.janelia.it.FlyWorkstation.gui.viewer3d.slice_viewer.Slot1;
 
 import org.janelia.it.jacs.model.user_data.tiledMicroscope.*;
 
+// other imports
+import com.google.common.collect.BiMap;
+import com.google.common.collect.HashBiMap;
+
+
 /**
  * this panel shows info on the selected neuron: name, type, etc.
  *
@@ -30,6 +35,7 @@ public class NeuronInfoPanel extends JPanel
     private JTree neuriteTree;
     private DefaultTreeModel neuriteModel;
     private DefaultMutableTreeNode neuronRootNode;
+    private HashBiMap<String, TmGeoAnnotation> labelToAnnotationMap;
 
 
     public Slot1<TmNeuron> neuronSelectedSlot = new Slot1<TmNeuron>() {
@@ -75,12 +81,14 @@ public class NeuronInfoPanel extends JPanel
         neuronRootNode = new DefaultMutableTreeNode("invisible root node");
         neuriteModel = new DefaultTreeModel(neuronRootNode);
         neuriteTree = new JTree(neuriteModel);
+        labelToAnnotationMap = HashBiMap.create();
+
         neuriteTree.setRootVisible(false);
-        // neuriteTree = createTestTree();
         DefaultTreeCellRenderer renderer = (DefaultTreeCellRenderer) neuriteTree.getCellRenderer();
         renderer.setLeafIcon(null);
         renderer.setClosedIcon(null);
         renderer.setOpenIcon(null);
+
 
 
         // listen for when the selection changes
@@ -173,6 +181,7 @@ public class NeuronInfoPanel extends JPanel
 
         // brute force recreate for now
         neuronRootNode.removeAllChildren();
+        labelToAnnotationMap.clear();
 
         if (neuron != null) {
             TmGeoAnnotation rootAnnotation = neuron.getRootAnnotation();
@@ -180,22 +189,62 @@ public class NeuronInfoPanel extends JPanel
 
                 // first node is the parent node of the neuron, which is the first child
                 //  of the invisible root:
-                DefaultMutableTreeNode rootNode = new DefaultMutableTreeNode(rootAnnotation);
+                String label = getTreeString(rootAnnotation);
+                DefaultMutableTreeNode rootNode = new DefaultMutableTreeNode(label);
                 neuriteModel.insertNodeInto(rootNode, neuronRootNode, neuronRootNode.getChildCount());
+                labelToAnnotationMap.put(label, rootAnnotation);
 
-                // build tree
+                // build tree;
+                populateNeuriteTreeNodeTagged(rootAnnotation, rootNode);
 
             }
 
         }
-
         neuriteModel.reload();
+
+        // Java doesn't give you a JTree.expandAll() method!  this is the idiom:
+        for (int i = 0; i < neuriteTree.getRowCount(); i++) {
+            neuriteTree.expandRow(i);
+        }
+    }
+
+    private void populateNeuriteTreeNodeTagged(TmGeoAnnotation parentAnnotation, DefaultMutableTreeNode rootNode) {
+        // recurse through nodes; note that everything is a child of the rootNode!
+        for (TmGeoAnnotation childAnnotation: parentAnnotation.getChildren()) {
+            if (getNodeType(childAnnotation)!= "node") {
+                String label = getTreeString(childAnnotation);
+                DefaultMutableTreeNode childNode = new DefaultMutableTreeNode(label);
+                neuriteModel.insertNodeInto(childNode, rootNode, rootNode.getChildCount());
+                labelToAnnotationMap.put(label, childAnnotation);
+            }
+            populateNeuriteTreeNodeTagged(childAnnotation, rootNode);
+        }
+    }
+
+    private String getNodeType(TmGeoAnnotation annotation) {
+        if (annotation.getParent() == null) {
+            return "root";
+        } else {
+            int nChildren = annotation.getChildren().size();
+            if (nChildren == 0) {
+                return "end";
+            } else if (nChildren == 1) {
+                return "node";
+            } else {
+                return "fork";
+            }
+        }
+    }
+
+    private String getTreeString(TmGeoAnnotation annotation) {
+        return getNodeType(annotation) + " at " + annotation.toString();
+        // return "node at " + annotation.toString();
     }
 
     public void loadNeuron(TmNeuron neuron) {
         updateNeuronLabel(neuron);
 
-        loadNeuriteTreeSimple(neuron);
+        loadNeuriteTreeTagged(neuron);
 
         // testing
         // printNeuronInfo(neuron);
