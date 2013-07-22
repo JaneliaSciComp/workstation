@@ -124,7 +124,11 @@ public class NeuronInfoPanel extends JPanel
         }        
     }
 
-    public void loadNeuriteTree(TmNeuron neuron) {
+    public void loadNeuriteTreeSimple(TmNeuron neuron) {
+        // this version shows the neurite trees as simple hierarchies, with each child
+        //  node being a child in the tree; it's easy, but it's probably not what you
+        //  want; there are too many levels that aren't needed
+
         // for the short term, brute force it; recreate the tree every time; 
         //  I don't know if that's idiomatic or not
 
@@ -143,7 +147,6 @@ public class NeuronInfoPanel extends JPanel
 
                 // build tree
                 populateNeuriteTreeNode(rootAnnotation, rootNode);
-
             }
         }
         neuriteModel.reload();
@@ -158,10 +161,41 @@ public class NeuronInfoPanel extends JPanel
         }
     }
 
+    public void loadNeuriteTreeTagged(TmNeuron neuron) {
+        // each neurite will be a root node, then a list of other branch and end nodes
+
+        // looks like I need to put text into tree, and keep a map to the actual
+        //  geoanns; why?  because the text depends on neuron-level knowledge, which
+        //  each geoann doesn't know about itself (so can't use .toString()); I
+        //  could probably override the TreeNode class to do that, but I'm not
+        //  going to mess with that for now
+        // use Guava BiMap for this? will want both mappings for selection management purposes
+
+        // brute force recreate for now
+        neuronRootNode.removeAllChildren();
+
+        if (neuron != null) {
+            TmGeoAnnotation rootAnnotation = neuron.getRootAnnotation();
+            if (rootAnnotation != null) {
+
+                // first node is the parent node of the neuron, which is the first child
+                //  of the invisible root:
+                DefaultMutableTreeNode rootNode = new DefaultMutableTreeNode(rootAnnotation);
+                neuriteModel.insertNodeInto(rootNode, neuronRootNode, neuronRootNode.getChildCount());
+
+                // build tree
+
+            }
+
+        }
+
+        neuriteModel.reload();
+    }
+
     public void loadNeuron(TmNeuron neuron) {
         updateNeuronLabel(neuron);
 
-        loadNeuriteTree(neuron);
+        loadNeuriteTreeSimple(neuron);
 
         // testing
         // printNeuronInfo(neuron);

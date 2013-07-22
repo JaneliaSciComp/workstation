@@ -10,6 +10,7 @@ import org.janelia.it.FlyWorkstation.gui.viewer3d.Vec3;
 import org.janelia.it.FlyWorkstation.api.entity_model.management.ModelMgr;
 
 import org.janelia.it.FlyWorkstation.gui.viewer3d.slice_viewer.Slot1;
+import org.janelia.it.FlyWorkstation.gui.viewer3d.slice_viewer.skeleton.Anchor;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.slice_viewer.skeleton.Skeleton;
 import org.janelia.it.jacs.model.entity.Entity;
 import org.janelia.it.jacs.model.entity.EntityConstants;
@@ -37,6 +38,13 @@ public class AnnotationManager
         }
     };
 
+    public Slot1<Anchor> deleteAnchorRequestedSlot = new Slot1<Anchor>() {
+        @Override
+        public void execute(Anchor anchor) {
+            // currently delete subtree, probably change later
+            deleteSubTree(anchor.getGuid());
+        }
+    };
 
     // constants
     public static final String WORKSPACES_FOLDER_NAME = "Workspaces";
@@ -168,12 +176,15 @@ public class AnnotationManager
 
     }
 
-    public void createGeoAnnotation() {
-        // test, hard-coded
+    public void deleteSubTree(Long annotationID) {
+        TmWorkspace workspace = annotationModel.getCurrentWorkspace();
+        if (workspace == null) {
+            // dialog?
 
-        // changed signature--no longer works
-        // addAnnotation(new Vec3(1, 2, 3));
-
+            return;
+        } else {
+            annotationModel.deleteSubTree(annotationModel.getGeoAnnotationFromID(annotationID));
+        }
     }
 
     public void createNeuron() {

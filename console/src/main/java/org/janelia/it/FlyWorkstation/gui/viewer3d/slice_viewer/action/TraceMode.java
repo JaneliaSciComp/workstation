@@ -357,7 +357,7 @@ implements MouseMode, KeyListener
                         result.add(new JMenuItem(new AbstractAction("Delete this anchor") {
                             @Override
                             public void actionPerformed(ActionEvent e) {
-                                skeleton.delete(getHoverAnchor());
+                                skeleton.deleteAnchorRequest(getHoverAnchor());
                             }
                         }));
                         result.add(new JMenuItem(new AbstractAction("Export SWC file rooted at this anchor...") {

@@ -119,9 +119,9 @@ public class Skeleton {
 	public Skeleton() {
 		// Don't make this connection when using workstation database
 		// addAnchorRequestedSignal.connect(addShortCircuitAnchorSlot);
-		anchorDeleteRequestedSignal.connect(deleteAnchorShortCircuitSlot); // TODO remove
+		// anchorDeleteRequestedSignal.connect(deleteAnchorShortCircuitSlot); // TODO remove
 		//
-		// Adding an anchor changes the skeleton
+		// once anchor changes are persisted in db, we get signals:
 		anchorAddedSignal.connect(skeletonChangedSignal);
 		anchorDeletedSignal.connect(skeletonChangedSignal);
 		anchorMovedSignal.connect(skeletonChangedSignal);
@@ -166,6 +166,10 @@ public class Skeleton {
 		skeletonChangedSignal.emit();
 		return true;
 	}
+
+    public void deleteAnchorRequest(Anchor anchor){
+        anchorDeleteRequestedSignal.emit(anchor);
+    }
 
 	public boolean delete(Anchor anchor) {
 		if (! anchors.contains(anchor))

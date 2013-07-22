@@ -15,11 +15,10 @@ import org.janelia.it.jacs.model.entity.Entity;
 import org.janelia.it.jacs.model.user_data.Subject;
 import org.janelia.it.jacs.model.user_data.tiledMicroscope.*;
 
+import java.util.List;
 
 
-
-
-public class AnnotationModel 
+public class AnnotationModel
 {
     private ModelMgr modelMgr;
     private SessionMgr sessionMgr;
@@ -33,6 +32,7 @@ public class AnnotationModel
     public Signal1<TmNeuron> neuronSelectedSignal = new Signal1<TmNeuron>();
 
     public Signal1<TmGeoAnnotation> anchorAddedSignal = new Signal1<TmGeoAnnotation>();
+    public Signal1<List<TmGeoAnnotation>> anchorsDeletedSignal = new Signal1<List<TmGeoAnnotation>>();
 
     public Slot1<TmNeuron> neuronClickedSlot = new Slot1<TmNeuron>() {
         @Override
@@ -40,7 +40,6 @@ public class AnnotationModel
             setCurrentNeuron(neuron);
         }
     };
-
 
     public TmWorkspace getCurrentWorkspace() {
         if (currentWorkspaceID != null) {
@@ -52,14 +51,6 @@ public class AnnotationModel
             }
         } else {
             return null;
-        }
-    }
-
-    private void setCurrentWorkspace(TmWorkspace workspace) {
-        if (workspace != null) {
-            currentWorkspaceID = workspace.getId();
-        } else {
-            currentWorkspaceID = null;
         }
     }
 
@@ -92,6 +83,22 @@ public class AnnotationModel
         modelMgr = ModelMgr.getModelMgr();
         sessionMgr = SessionMgr.getSessionMgr();
 
+    }
+
+    public TmGeoAnnotation getGeoAnnotationFromID(Long annotationID) {
+        TmWorkspace workspace = getCurrentWorkspace();
+        if (workspace == null) {
+            return null;
+        }
+
+        TmGeoAnnotation foundAnnotation = null;
+        for (TmNeuron neuron: workspace.getNeuronList()) {
+            if (neuron.getGeoAnnotationMap().containsKey(annotationID)) {
+                foundAnnotation = neuron.getGeoAnnotationMap().get(annotationID);
+                break;
+            }
+        }
+        return foundAnnotation;
     }
 
     public boolean createNeuron(String name) {
@@ -194,11 +201,29 @@ public class AnnotationModel
 
     }
 
-    public boolean exportSWC(String filename) {
 
-        // probably will actually get more info passed in, eg, which neurite to export
+    public void deleteSubTree(TmGeoAnnotation rootAnnotation) {
+        if (rootAnnotation == null) {
+            return;
+        }
 
-        return false;
+        // delete annotation
+        // in DAO, delete method is pretty simplistic; it doesn't update parents; however,
+        //  as we're deleting the whole tree, that doesn't matter for us
+        // delete in child-first order
+        try {
+            for (TmGeoAnnotation annotation: rootAnnotation.getSubTreeListReversed()) {
+                modelMgr.deleteGeometricAnnotation(annotation.getId());
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+            return;
+        }
+
+        // notify the public
+        neuronSelectedSignal.emit(getCurrentNeuron());
+        
+        anchorsDeletedSignal.emit(rootAnnotation.getSubTreeListReversed());
 
     }
 

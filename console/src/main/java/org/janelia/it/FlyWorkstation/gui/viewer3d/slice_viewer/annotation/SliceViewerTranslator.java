@@ -6,6 +6,7 @@ import org.janelia.it.FlyWorkstation.gui.viewer3d.slice_viewer.Slot1;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.slice_viewer.skeleton.Skeleton;
 import org.janelia.it.jacs.model.user_data.tiledMicroscope.*;
 
+import java.util.List;
 
 
 /**
@@ -38,12 +39,31 @@ public class SliceViewerTranslator {
         }
     };
 
+    public Slot1<TmGeoAnnotation> addAnchorSlot = new Slot1<TmGeoAnnotation>() {
+        @Override
+        public void execute(TmGeoAnnotation annotation) {
+            addAnchor(annotation);
+        }
+    };
+
+    public Slot1<List<TmGeoAnnotation>> deleteAnchorsSlot = new Slot1<List<TmGeoAnnotation>>() {
+        @Override
+        public void execute(List<TmGeoAnnotation> annotationList) {
+            anchorsDeleted(annotationList);
+        }
+    };
+
     public Signal1<TmGeoAnnotation> anchorAddedSignal = new Signal1<TmGeoAnnotation>();
+    public Signal1<TmGeoAnnotation> anchorDeletedSignal = new Signal1<TmGeoAnnotation>();
+
 
     public void setSkeleton(Skeleton skeleton) {
         this.skeleton = skeleton;
 
         anchorAddedSignal.connect(skeleton.addAnchorSlot);
+        anchorDeletedSignal.connect(skeleton.deleteAnchorSlot);
+
+
     }
 
     public SliceViewerTranslator() {
@@ -52,12 +72,27 @@ public class SliceViewerTranslator {
 
     }
 
+    public void addAnchor(TmGeoAnnotation annotation) {
+        if (annotation != null) {
+            anchorAddedSignal.emit(annotation);
+        }
+    }
+
     public void neuronSelected(TmNeuron neuron) {
         if (neuron == null) {
             return;
         }
 
         // will eventually visually style selected neuron
+
+    }
+
+    public void anchorsDeleted(List<TmGeoAnnotation> annotationList) {
+        // remove all the individual annotations from 2D view
+
+        for (TmGeoAnnotation ann: annotationList) {
+            anchorDeletedSignal.emit(ann);
+        }
 
     }
 

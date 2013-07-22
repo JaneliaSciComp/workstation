@@ -293,11 +293,14 @@ public class QuadViewUi extends JPanel
 
         // connect up text UI and model with graphic UI(s):
         skeleton.addAnchorRequestedSignal.connect(annotationMgr.addAnchorRequestedSlot);
-        annotationModel.anchorAddedSignal.connect(skeleton.addAnchorSlot);
+        skeleton.anchorDeleteRequestedSignal.connect(annotationMgr.deleteAnchorRequestedSlot);
 
         sliceViewerTranslator.setSkeleton(skeleton);
         annotationModel.workspaceLoadedSignal.connect(sliceViewerTranslator.loadWorkspaceSlot);
         annotationModel.neuronSelectedSignal.connect(sliceViewerTranslator.selectNeuronSlot);
+        annotationModel.anchorAddedSignal.connect(sliceViewerTranslator.addAnchorSlot);
+        annotationModel.anchorsDeletedSignal.connect(sliceViewerTranslator.deleteAnchorsSlot);
+
 
 		// must come after setupUi() (etc), since it triggers UI changes:
 		annotationMgr.setInitialEntity(initialEntity);
