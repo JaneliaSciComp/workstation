@@ -18,7 +18,6 @@ import org.janelia.it.FlyWorkstation.gui.viewer3d.slice_viewer.Slot1;
 import org.janelia.it.jacs.model.user_data.tiledMicroscope.*;
 
 // other imports
-import com.google.common.collect.BiMap;
 import com.google.common.collect.HashBiMap;
 
 

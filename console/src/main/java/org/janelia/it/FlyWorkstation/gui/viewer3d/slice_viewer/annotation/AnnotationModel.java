@@ -162,7 +162,7 @@ public class AnnotationModel
         TmGeoAnnotation annotation;
         try {
             annotation = modelMgr.addGeometricAnnotation(neuron.getId(),
-                null, 0, xyz.x(), xyz.y(), xyz.z(), " ");
+                null, 0, xyz.x(), xyz.y(), xyz.z(), "");
         } catch (Exception e) {
             e.printStackTrace();
             return;
@@ -187,7 +187,7 @@ public class AnnotationModel
         TmGeoAnnotation annotation;
         try {
             annotation = modelMgr.addGeometricAnnotation(neuron.getId(),
-                    parentAnn.getId(), 0, xyz.x(), xyz.y(), xyz.z(), " ");
+                    parentAnn.getId(), 0, xyz.x(), xyz.y(), xyz.z(), "");
         } catch (Exception e) {
             e.printStackTrace();
             return;
