@@ -4,6 +4,9 @@ package org.janelia.it.FlyWorkstation.gui.viewer3d.slice_viewer.annotation;
 // std lib imports
 
 import java.awt.*;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
+import java.awt.event.MouseListener;
 import java.util.ArrayList;
 
 import javax.swing.*;
@@ -13,6 +16,8 @@ import javax.swing.tree.*;
 
 // workstation imports
 
+import org.janelia.it.FlyWorkstation.gui.viewer3d.Vec3;
+import org.janelia.it.FlyWorkstation.gui.viewer3d.slice_viewer.Signal1;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.slice_viewer.Slot1;
 
 import org.janelia.it.jacs.model.user_data.tiledMicroscope.*;
@@ -36,6 +41,7 @@ public class NeuronInfoPanel extends JPanel
     private DefaultMutableTreeNode neuronRootNode;
     private HashBiMap<String, TmGeoAnnotation> labelToAnnotationMap;
 
+    private MouseListener treeListener;
 
     public Slot1<TmNeuron> neuronSelectedSlot = new Slot1<TmNeuron>() {
         @Override
@@ -44,6 +50,7 @@ public class NeuronInfoPanel extends JPanel
         }
     };
 
+    public Signal1<Vec3> cameraPanToSignal = new Signal1<Vec3>();
 
 
     public NeuronInfoPanel() {
@@ -90,10 +97,20 @@ public class NeuronInfoPanel extends JPanel
 
 
 
-        // listen for when the selection changes
-        // neuriteTree.getSelectionModel().setSelectionMode(TreeSelectionModel.SINGLE_TREE_SELECTION);
-        // neuriteTree.addTreeSelectionListener(this);
-
+        // listen for mouse clicks
+        treeListener = new MouseAdapter() {
+            @Override
+            public void mousePressed(MouseEvent event) {
+                TreePath path = neuriteTree.getPathForLocation(event.getX(), event.getY());
+                if (path != null) {
+                    // double-click
+                    if (event.getClickCount() == 2) {
+                        onAnnotationDoubleClicked(path);
+                    }
+                }
+            }
+        };
+        neuriteTree.addMouseListener(treeListener);
 
 
         // throw it into a scrolled panel; there's going to be a *lot* of them...
@@ -257,4 +274,16 @@ public class NeuronInfoPanel extends JPanel
         }
     }
 
+    private void onAnnotationDoubleClicked(TreePath path) {
+        // go to annotation at path
+        // is this idiomatic? the double casting kind of makes me feel ill
+        String label = (String) ((DefaultMutableTreeNode) path.getLastPathComponent()).getUserObject();
+        TmGeoAnnotation a= labelToAnnotationMap.get(label);
+
+        // emit signal
+        cameraPanToSignal.emit(new Vec3(a.getX(), a.getY(), a.getZ()));
+
+        // test: just print
+        // System.out.println("annotation clicked: " + a);
+    }
 }

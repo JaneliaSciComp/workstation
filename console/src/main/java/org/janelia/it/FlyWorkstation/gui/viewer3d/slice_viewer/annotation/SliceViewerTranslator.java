@@ -1,6 +1,7 @@
 package org.janelia.it.FlyWorkstation.gui.viewer3d.slice_viewer.annotation;
 
 
+import org.janelia.it.FlyWorkstation.gui.viewer3d.Vec3;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.slice_viewer.Signal1;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.slice_viewer.Slot1;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.slice_viewer.skeleton.Skeleton;
@@ -24,6 +25,8 @@ public class SliceViewerTranslator {
     // holds the skeleton; this is a temporary hack for short-term release;
     //  eventually we'll communicate with signals & slots instead of calling methods
     private Skeleton skeleton;
+
+    private AnnotationModel annModel;
 
     public Slot1<TmWorkspace> loadWorkspaceSlot = new Slot1<TmWorkspace>() {
         @Override
@@ -53,9 +56,26 @@ public class SliceViewerTranslator {
         }
     };
 
+    public Signal1<Vec3> cameraPanToSignal = new Signal1<Vec3>();
+
+    public Slot1<Vec3> cameraPanToSlot = new Slot1<Vec3>() {
+        @Override
+        public void execute(Vec3 location) {
+            cameraPanToSignal.emit(location);
+        }
+    };
+
     public Signal1<TmGeoAnnotation> anchorAddedSignal = new Signal1<TmGeoAnnotation>();
     public Signal1<TmGeoAnnotation> anchorDeletedSignal = new Signal1<TmGeoAnnotation>();
 
+
+    public SliceViewerTranslator(AnnotationModel annModel) {
+
+        this.annModel = annModel;
+
+        setupSignals();
+
+    }
 
     public void setSkeleton(Skeleton skeleton) {
         this.skeleton = skeleton;
@@ -66,9 +86,15 @@ public class SliceViewerTranslator {
 
     }
 
-    public SliceViewerTranslator() {
+    private void setupSignals() {
+        // things the model tells us to do:
+        annModel.workspaceLoadedSignal.connect(loadWorkspaceSlot);
+        annModel.neuronSelectedSignal.connect(selectNeuronSlot);
+        annModel.anchorAddedSignal.connect(addAnchorSlot);
+        annModel.anchorsDeletedSignal.connect(deleteAnchorsSlot);
 
-        // pass
+        // things we want done:
+        
 
     }
 

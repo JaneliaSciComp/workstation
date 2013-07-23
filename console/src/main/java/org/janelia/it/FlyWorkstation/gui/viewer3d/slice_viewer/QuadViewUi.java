@@ -131,7 +131,7 @@ public class QuadViewUi extends JPanel
 	// annotation things
 	private AnnotationModel annotationModel = new AnnotationModel();
 	private AnnotationManager annotationMgr = new AnnotationManager(annotationModel);
-    private SliceViewerTranslator sliceViewerTranslator = new SliceViewerTranslator();
+    private SliceViewerTranslator sliceViewerTranslator = new SliceViewerTranslator(annotationModel);
 
 	// Actions
 	private final Action openFolderAction = new OpenFolderAction(volumeImage, sliceViewer);
@@ -296,10 +296,7 @@ public class QuadViewUi extends JPanel
         skeleton.anchorDeleteRequestedSignal.connect(annotationMgr.deleteAnchorRequestedSlot);
 
         sliceViewerTranslator.setSkeleton(skeleton);
-        annotationModel.workspaceLoadedSignal.connect(sliceViewerTranslator.loadWorkspaceSlot);
-        annotationModel.neuronSelectedSignal.connect(sliceViewerTranslator.selectNeuronSlot);
-        annotationModel.anchorAddedSignal.connect(sliceViewerTranslator.addAnchorSlot);
-        annotationModel.anchorsDeletedSignal.connect(sliceViewerTranslator.deleteAnchorsSlot);
+        sliceViewerTranslator.cameraPanToSignal.connect(setCameraFocusSlot);
 
 
 		// must come after setupUi() (etc), since it triggers UI changes:
@@ -713,7 +710,7 @@ public class QuadViewUi extends JPanel
 		resetColorsButton.setAction(resetColorsAction);
 		buttonsPanel.add(resetColorsButton);
 		
-        AnnotationPanel annotationPanel = new AnnotationPanel(annotationMgr, annotationModel);
+        AnnotationPanel annotationPanel = new AnnotationPanel(annotationMgr, annotationModel, sliceViewerTranslator);
         controlsPanel.add(annotationPanel);
 
 

@@ -29,7 +29,7 @@ public class AnnotationPanel extends JPanel
     // on the other hand, even if so, we still need them just to hook everything up
     private AnnotationManager annotationMgr;
     private AnnotationModel annotationModel;
-
+    private SliceViewerTranslator sliceViewerTranslator;
 
 
     // UI components
@@ -76,9 +76,11 @@ public class AnnotationPanel extends JPanel
         };
 
 
-    public AnnotationPanel(AnnotationManager annotationMgr, AnnotationModel annotationModel) {
+    public AnnotationPanel(AnnotationManager annotationMgr, AnnotationModel annotationModel, 
+        SliceViewerTranslator sliceViewerTranslator) {
         this.annotationMgr = annotationMgr;
         this.annotationModel = annotationModel;
+        this.sliceViewerTranslator = sliceViewerTranslator;
 
         setupUI();
         setupSignals();
@@ -92,8 +94,13 @@ public class AnnotationPanel extends JPanel
 
         annotationModel.workspaceLoadedSignal.connect(workspaceInfoPanel.workspaceLoadedSlot);
 
-        // UI to model:
+        // us to model:
         workspaceInfoPanel.neuronClickedSignal.connect(annotationModel.neuronClickedSlot);
+
+        // us to graphics UI
+        neuronInfoPanel.cameraPanToSignal.connect(sliceViewerTranslator.cameraPanToSlot);
+        workspaceInfoPanel.cameraPanToSignal.connect(sliceViewerTranslator.cameraPanToSlot);
+
     }
 
     private void setupUI() {

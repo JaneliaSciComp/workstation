@@ -8,11 +8,15 @@ import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
 
 import java.awt.*;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
 import java.util.*;
 
 
 // workstation imports
 
+import org.janelia.it.FlyWorkstation.gui.viewer3d.BoundingBox3d;
+import org.janelia.it.FlyWorkstation.gui.viewer3d.Vec3;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.slice_viewer.Slot1;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.slice_viewer.Signal1;
 import org.janelia.it.jacs.model.user_data.tiledMicroscope.*;
@@ -47,6 +51,7 @@ public class WorkspaceInfoPanel extends JPanel
 
     public Signal1<TmNeuron> neuronClickedSignal = new Signal1<TmNeuron>();
 
+    public Signal1<Vec3> cameraPanToSignal = new Signal1<Vec3>();
 
     public WorkspaceInfoPanel() {
         setupUI();
@@ -69,22 +74,38 @@ public class WorkspaceInfoPanel extends JPanel
         neuronScrollPane = new JScrollPane(neuronListBox);
         neuronListBox.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
         neuronListBox.getSelectionModel().addListSelectionListener(
-                new ListSelectionListener() {
-                    @Override
-                    public void valueChanged(ListSelectionEvent listSelectionEvent) {
-                        if (!listSelectionEvent.getValueIsAdjusting()) {
-                            int index = neuronListBox.getSelectedIndex();
-                            TmNeuron selectedNeuron;
-                            if (index >= 0) {
-                                selectedNeuron = (TmNeuron) neuronListModel.getElementAt(index);
-                            } else {
-                                selectedNeuron = null;
-                            }
-                            neuronClickedSignal.emit(selectedNeuron);
+            new ListSelectionListener() {
+                @Override
+                public void valueChanged(ListSelectionEvent listSelectionEvent) {
+                    if (!listSelectionEvent.getValueIsAdjusting()) {
+                        int index = neuronListBox.getSelectedIndex();
+                        TmNeuron selectedNeuron;
+                        if (index >= 0) {
+                            selectedNeuron = (TmNeuron) neuronListModel.getElementAt(index);
+                        } else {
+                            selectedNeuron = null;
                         }
+                        neuronClickedSignal.emit(selectedNeuron);
                     }
                 }
+            }
         );
+        // ...and you have to do it again if you want to get mouse clicks, ugh:
+        neuronListBox.addMouseListener(
+            new MouseAdapter() {
+                @Override
+                public void mousePressed(MouseEvent mouseEvent) {
+                    JList list = (JList)mouseEvent.getSource();
+                    // double-click:
+                    if (mouseEvent.getClickCount() == 2) {
+                        int index = list.locationToIndex(mouseEvent.getPoint());
+                        TmNeuron neuron = (TmNeuron) list.getModel().getElementAt(index);
+                        onNeuronDoubleClicked(neuron);
+                    }
+                }
+            }
+        );
+
         add(neuronScrollPane);
 
         loadWorkspace(null);
@@ -136,5 +157,18 @@ public class WorkspaceInfoPanel extends JPanel
         }
     }
 
+    private void onNeuronDoubleClicked(TmNeuron neuron) {
+        // should pan to center of neuron; let's call that the center
+        //  of the bounding cube for its annotations
+        // I'd prefer this calculation be part of TmNeuron, but
+        //  I can't use BoundingBox3d there
+        if (neuron.getGeoAnnotationMap().size() != 0) {
+            BoundingBox3d bounds = new BoundingBox3d();
+            for (TmGeoAnnotation ann: neuron.getGeoAnnotationMap().values()) {
+                bounds.include(new Vec3(ann.getX(), ann.getY(), ann.getZ()));
+            }
+            cameraPanToSignal.emit(bounds.getCenter());
+        }
+    }
 }
 
