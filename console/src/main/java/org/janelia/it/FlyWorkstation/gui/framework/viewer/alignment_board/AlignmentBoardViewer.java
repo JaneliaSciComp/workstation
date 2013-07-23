@@ -179,8 +179,6 @@ public class AlignmentBoardViewer extends Viewer implements AlignmentBoardContro
         // Check this, to prevent this being completed until the board has been first initialized.
         // Redundant events may be posted at startup.
         if ( boardOpen ) {
-            serialize();
-
             AlignmentBoardContext abContext = event.getAlignmentBoardContext();
 
             printItemChanged(event.getAlignedItem(), event.getChangeType().toString());
@@ -194,6 +192,7 @@ public class AlignmentBoardViewer extends Viewer implements AlignmentBoardContro
 
             }
             else {
+                serialize();
                 this.updateBoard( abContext );
             }
         }
