@@ -659,9 +659,6 @@ public class AlignmentBoardControlsDialog extends JDialog {
         downSampleRateText.setColumns(DOWN_SAMPLE_TIP.length() / 2);
         downSampleRateText.setEditable(false);
         downSampleRateText.setBorder(new LineBorder(Color.black));
-//        downSampleRateText.setPreferredSize( DOWNSAMPLE_TIP_DIM );
-//        downSampleRateText.setSize( DOWNSAMPLE_TIP_DIM );
-//        downSampleRateText.setMinimumSize( DOWNSAMPLE_TIP_DIM );
         JScrollPane rateTextPane = new JScrollPane( downSampleRateText );
         rateTextPane.setHorizontalScrollBarPolicy( JScrollPane.HORIZONTAL_SCROLLBAR_AS_NEEDED );
         rateTextPane.setVerticalScrollBarPolicy( JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED );
