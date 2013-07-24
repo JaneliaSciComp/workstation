@@ -452,13 +452,15 @@ public class MaskChanSingleFileLoader {
 
                 // Here, must get the channel data.  This will include all bytes for each channel organized parallel.
                 if ( channelAcceptors.size() > 0 ) {
+                    int voxelBytesAlreadyRead = cummulativeVoxelsReadCount * channelMetaData.byteCount;
                     for ( int i = 0; i < channelMetaData.channelCount; i++ ) {
+                        int channelOffset = (i * channelMetaData.byteCount) + channelMetaData.byteCount - 1;
                         if ( channelData != null ) {
                             byte[] nextChannelData = channelData.get( i );
                             for ( int j=0; j < channelMetaData.byteCount; j++ ) {
                                 //                                                   REVERSING byte order for Java
-                                int targetOffset = (i * channelMetaData.byteCount) + channelMetaData.byteCount - j - 1;
-                                allChannelBytes[ targetOffset ] = (byte)(nextChannelData[ (cummulativeVoxelsReadCount * channelMetaData.byteCount) + j ] / intensityDivisor);
+                                int targetOffset = channelOffset - j;
+                                allChannelBytes[ targetOffset ] = (byte)(nextChannelData[ voxelBytesAlreadyRead + j ] / intensityDivisor);
                             }
                         }
                         else {

@@ -58,7 +58,7 @@ public class RenderablesMaskBuilder extends RenderablesVolumeBuilder implements 
      * @throws Exception thrown by called methods or if bad inputs are received.
      */
     @Override
-    public synchronized int addMaskData(Integer maskNumber, long position, long x, long y, long z ) throws Exception {
+    public int addMaskData(Integer maskNumber, long position, long x, long y, long z ) throws Exception {
         init();
 
         // Assumed little-endian.
@@ -182,9 +182,11 @@ public class RenderablesMaskBuilder extends RenderablesVolumeBuilder implements 
      */
     public void init() {
         if ( ! isInitialized ) {
-            logger.debug( "Initializing" );
-            volumeData = new byte[ (int)(paddedSx * paddedSy * paddedSz) * byteCount ];
-            isInitialized = true;
+            synchronized ( this ) {
+                logger.debug( "Initializing" );
+                volumeData = new byte[ (int)(paddedSx * paddedSy * paddedSz) * byteCount ];
+                isInitialized = true;
+            }
         }
     }
 

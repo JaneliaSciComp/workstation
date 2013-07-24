@@ -112,7 +112,7 @@ public class RenderablesChannelsBuilder extends RenderablesVolumeBuilder impleme
      * @throws Exception
      */
     @Override
-    public synchronized int addChannelData(
+    public int addChannelData(
             byte[] channelData, long volumePosition, long x, long y, long z, ChannelMetaData channelMetaData
     ) throws Exception {
         init();
@@ -285,65 +285,67 @@ public class RenderablesChannelsBuilder extends RenderablesVolumeBuilder impleme
     /** Call this prior to any update-data operations. */
     private void init() {
         if ( needsChannelInit) {
-            checkReady();
-            logger.info( "Initialize called..." );
+            synchronized (this) {
+                checkReady();
+                logger.info( "Initialize called..." );
 
-            // The size of any one voxel will be the number of channels times the bytes per channel.
-            if ( channelMetaData.rawChannelCount == 3 ) {
-                // Round out to four.
-                ChannelMetaData newChannelMetaData = cloneChannelMetaData();
-                newChannelMetaData.channelCount = channelMetaData.rawChannelCount + 1;
-                channelMetaData = newChannelMetaData;
+                // The size of any one voxel will be the number of channels times the bytes per channel.
+                if ( channelMetaData.rawChannelCount == 3 ) {
+                    // Round out to four.
+                    ChannelMetaData newChannelMetaData = cloneChannelMetaData();
+                    newChannelMetaData.channelCount = channelMetaData.rawChannelCount + 1;
+                    channelMetaData = newChannelMetaData;
+                    logger.info(
+                            "Padding out the channel count from {} to {}.",
+                            channelMetaData.rawChannelCount, channelMetaData.channelCount
+                    );
+                }
+                else if ( channelMetaData.rawChannelCount == 2 ) {
+                    // Round out to four.
+                    ChannelMetaData newChannelMetaData = cloneChannelMetaData();
+                    newChannelMetaData.channelCount = channelMetaData.rawChannelCount + 2;
+                    channelMetaData = newChannelMetaData;
+                    logger.info(
+                            "Padding out the channel count from {} to {}.",
+                            channelMetaData.rawChannelCount, channelMetaData.channelCount
+                    );
+                }
+                long arrayLength = paddedSx * paddedSy * paddedSz *
+                        channelMetaData.byteCount * channelMetaData.channelCount;
+                if ( arrayLength > Integer.MAX_VALUE ) {
+                    throw new IllegalArgumentException(
+                            "Total length of input: " + arrayLength  +
+                                    " exceeds maximum array size capacity.  " +
+                                    "If this is truly required, code redesign will be necessary."
+                    );
+                }
+                if ( arrayLength == 0 ) {
+                    throw new IllegalArgumentException(
+                            "Array length of zero, for all data."
+                    );
+                }
+
+                if ( sx > Integer.MAX_VALUE || sy > Integer.MAX_VALUE || sz > Integer.MAX_VALUE ) {
+                    throw new IllegalArgumentException(
+                            "One or more of the axial lengths (" + sx + "," + sy + "," + sz +
+                                    ") exceeds max value for an integer.  " +
+                                    "If this is truly required, code redesign will be necessary."
+                    );
+                }
+
+                if ( volumeData == null ) {
+                    volumeData = new byte[ (int) arrayLength ];
+                }
+
                 logger.info(
-                        "Padding out the channel count from {} to {}.",
-                        channelMetaData.rawChannelCount, channelMetaData.channelCount
+                        "Raw channel count: {}, full channel count: {}.",
+                        channelMetaData.rawChannelCount,
+                        channelMetaData.channelCount
                 );
-            }
-            else if ( channelMetaData.rawChannelCount == 2 ) {
-                // Round out to four.
-                ChannelMetaData newChannelMetaData = cloneChannelMetaData();
-                newChannelMetaData.channelCount = channelMetaData.rawChannelCount + 2;
-                channelMetaData = newChannelMetaData;
-                logger.info(
-                        "Padding out the channel count from {} to {}.",
-                        channelMetaData.rawChannelCount, channelMetaData.channelCount
-                );
-            }
-            long arrayLength = paddedSx * paddedSy * paddedSz *
-                               channelMetaData.byteCount * channelMetaData.channelCount;
-            if ( arrayLength > Integer.MAX_VALUE ) {
-                throw new IllegalArgumentException(
-                        "Total length of input: " + arrayLength  +
-                                " exceeds maximum array size capacity.  " +
-                                "If this is truly required, code redesign will be necessary."
-                );
-            }
-            if ( arrayLength == 0 ) {
-                throw new IllegalArgumentException(
-                        "Array length of zero, for all data."
-                );
-            }
+                channelInterpreter = new ChannelInterpreterToByte( volumeData );
 
-            if ( sx > Integer.MAX_VALUE || sy > Integer.MAX_VALUE || sz > Integer.MAX_VALUE ) {
-                throw new IllegalArgumentException(
-                        "One or more of the axial lengths (" + sx + "," + sy + "," + sz +
-                                ") exceeds max value for an integer.  " +
-                                "If this is truly required, code redesign will be necessary."
-                );
+                needsChannelInit = false;
             }
-
-            if ( volumeData == null ) {
-                volumeData = new byte[ (int) arrayLength ];
-            }
-
-            logger.info(
-                    "Raw channel count: {}, full channel count: {}.",
-                    channelMetaData.rawChannelCount,
-                    channelMetaData.channelCount
-            );
-            channelInterpreter = new ChannelInterpreterToByte( volumeData );
-
-            needsChannelInit = false;
         }
     }
 
