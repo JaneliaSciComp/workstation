@@ -37,7 +37,7 @@ import java.util.concurrent.*;
 public class RenderablesLoadWorker extends SimpleWorker implements VolumeLoader {
 
     private static final int LEAST_FULLSIZE_MEM = 1500000; // Ex: 1,565,620
-    private static final int MAX_FILE_LOAD_THREADS = 20;
+    private static final int MAX_FILE_LOAD_THREADS = 5;
     private Boolean loadFiles = true;
 
     private MaskChanMultiFileLoader compartmentLoader;
@@ -285,11 +285,6 @@ public class RenderablesLoadWorker extends SimpleWorker implements VolumeLoader 
 
             controlCallback.loadVolume(signalTexture, maskTexture);
 
-//            VolumeTransposer transposer = new VolumeTransposer( signalTexture, maskTexture );
-//            transposer.execute();
-//
-//            controlCallback.loadVolume( transposer.getSignalYZXOrder(), transposer.getMaskYZXOrder() );
-//
         } catch ( BrokenBarrierException bbe ) {
             logger.error( "Barrier await failed during texture build.", bbe );
             bbe.printStackTrace();
