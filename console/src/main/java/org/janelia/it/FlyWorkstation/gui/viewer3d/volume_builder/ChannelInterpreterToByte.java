@@ -56,9 +56,9 @@ public class ChannelInterpreterToByte implements ChannelInterpreterI {
 
                 //  block of in-memory, interleaving the channels as the offsets follow.
                 int channelInx = orderedRgbIndexes[ i ];
-                synchronized (this) {
-                    volumeData[ targetPos + channelInx ] = (byte)finalValue;
-                }
+                //synchronized (this) {
+                volumeData[ targetPos + channelInx ] = (byte)finalValue;
+                //}
             }
         }
 
