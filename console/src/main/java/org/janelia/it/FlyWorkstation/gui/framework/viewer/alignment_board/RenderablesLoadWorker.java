@@ -37,7 +37,7 @@ import java.util.concurrent.*;
 public class RenderablesLoadWorker extends SimpleWorker implements VolumeLoader {
 
     private static final int LEAST_FULLSIZE_MEM = 1500000; // Ex: 1,565,620
-    private static final int MAX_FILE_LOAD_THREADS = 5;
+    private static final int MAX_FILE_LOAD_THREADS = 1;
     private Boolean loadFiles = true;
 
     private MaskChanMultiFileLoader compartmentLoader;
