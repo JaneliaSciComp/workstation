@@ -83,7 +83,7 @@ public class AlignmentBoardControlsDialog extends JDialog {
     private static final String DOWN_SAMPLE_PROP_NAME = "AlignmentBoard_Downsample_Rate";
     private static final String GUESS_LABEL_FMT = "Best Guess: %s";
 
-    private final Component centering;
+    private Component centering;
     private JSlider brightnessSlider;
     private JCheckBox useSignalDataCheckbox;
     private JComboBox downSampleRateDropdown;
@@ -105,8 +105,8 @@ public class AlignmentBoardControlsDialog extends JDialog {
 
     private Map<Integer,Integer> downSampleRateToIndex;
     private final Collection<ControlsListener> listeners;
-    private final VolumeModel volumeModel;
-    private final AlignmentBoardSettings settings;
+    private VolumeModel volumeModel;
+    private AlignmentBoardSettings settings;
 
     private final Logger logger = LoggerFactory.getLogger( AlignmentBoardControlsDialog.class );
 
@@ -182,6 +182,7 @@ public class AlignmentBoardControlsDialog extends JDialog {
     }
 
     public void dispose() {
+        setVisible( false );
         removeAllSettingsListeners();
         if ( selectionSliderListener != null ) {
             xSlider.removeChangeListener( selectionSliderListener );
@@ -189,7 +190,11 @@ public class AlignmentBoardControlsDialog extends JDialog {
             zSlider.removeChangeListener( selectionSliderListener );
         }
         xSlider = ySlider = zSlider = null;
+        volumeModel = null;
+        centering = null;
+        settings = null;
         removeAll();
+        super.dispose();
     }
 
     //--------------------------------------------HELPERS

@@ -575,14 +575,13 @@ public class AlignmentBoardViewer extends Viewer implements AlignmentBoardContro
         //if ( settings != null ) {
         //    settings.removeAllSettingsListeners();
         //}
+        removeSettingsLaunchButton();
         if ( mip3d != null ) {
             mip3d.releaseMenuActions();
         }
         mip3d = new Mip3d();
         // If the mip3d is re-created, so must the settings dialog be.  It depends on the Mip3d.
         if ( settingsDialog != null ) {
-            settingsDialog.setVisible( false );
-            settingsDialog.removeAllSettingsListeners();
             settingsDialog.dispose();
             settingsDialog = null;
         }
@@ -616,8 +615,10 @@ public class AlignmentBoardViewer extends Viewer implements AlignmentBoardContro
         launchSettingsButton.setAction(settingsDialog.getLaunchAction());
         launchSettingsButton.setName(SETTINGS_LAUNCH_BTN_NAME);
 
-        toolbar = new JToolBar( JToolBar.HORIZONTAL );
-        toolbar.setLayout( new BorderLayout() );
+        if ( toolbar == null ) {
+            toolbar = new JToolBar( JToolBar.HORIZONTAL );
+            toolbar.setLayout( new BorderLayout() );
+        }
         toolbar.add( launchSettingsButton, BorderLayout.EAST );
         add( toolbar, BorderLayout.PAGE_START );
     }
@@ -637,6 +638,7 @@ public class AlignmentBoardViewer extends Viewer implements AlignmentBoardContro
             }
 
             remove( toolbar );
+            toolbar = null;
         }
     }
 
