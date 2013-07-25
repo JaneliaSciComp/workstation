@@ -101,6 +101,22 @@ public class Mip3d extends BaseGLViewer implements ActionListener {
     }
 
     /**
+     * This overload, for a simple signal volume, may be used if the signal texture must be built at
+     * some upstream process.
+     *
+     * @param signalTexture the pre-built texture.
+     */
+    public void setVolume( TextureDataI signalTexture ) {
+        if ( signalTexture != null ) {
+            volumeModel.removeAllListeners();
+            volumeModel.resetToDefaults();
+            RGBExcludableVolumeBrick brick = new RGBExcludableVolumeBrick(volumeModel);
+            brick.setTextureData( signalTexture );
+            addActorToRenderer( brick );
+        }
+    }
+
+    /**
      * A multi-thread-load-friendly overload of the set-volume method.  The texture objects may be
      * built at the caller's leisure, rather than being requested of passed-in builders.  This
      * method does NOT reset the view.
@@ -108,7 +124,6 @@ public class Mip3d extends BaseGLViewer implements ActionListener {
      * @param signalTexture for the intensity data.
      * @param maskTexture for the labels.
      * @param renderMapping for the mapping of labels to rendering techniques.
-     * @param gamma brightness control.
      * @return true if sufficient params passed.
      */
     public boolean setVolume(
