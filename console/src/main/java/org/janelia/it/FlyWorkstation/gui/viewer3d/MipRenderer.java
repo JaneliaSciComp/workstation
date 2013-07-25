@@ -31,7 +31,7 @@ class MipRenderer
         BasicCamera3d camera3d = new BasicCamera3d();
         camera3d.setFocus( 0.0, 0.0, -DEFAULT_CAMERA_FOCUS_DISTANCE );
         getVolumeModel().setCamera3d(camera3d);
-        addActor( new VolumeBrick( getVolumeModel() ) );
+        addActor( new MultiTexVolumeBrick( getVolumeModel() ) );
     }
     
     public void centerOnPixel(Point p) {

@@ -9,7 +9,7 @@ uniform vec3 textureVoxels; // for computing voxel boundaries
 // The size of one voxel in micrometers: x, y, z
 uniform vec3 voxelMicrometers;
 
-// Location of this fragment in the reference frame of the VolumeBrick:
+// Location of this fragment in the reference frame of the MultiTexVolumeBrick:
 //   origin is at volume corner
 //   X, Y, Z along volume axes
 //   units are micrometers

@@ -6,7 +6,6 @@ uniform sampler3D colorMapTexture;
 
 uniform float gammaAdjustment = 1.0;
 uniform float cropOutLevel = 0.05;
-uniform vec4 colorMask;
 uniform int hasMaskingTexture;
 
 // "Cropping" region driven by feeds into the shader.
@@ -17,20 +16,6 @@ uniform float startCropY = -1.0;
 uniform float endCropY = 1.0;
 uniform float startCropZ = -1.0;
 uniform float endCropZ = 1.0;
-
-// This takes the color as represented in the texture volume for this fragment and
-// eliminates colors opted out by the user.
-vec4 colorFilter()
-{
-    // texture3D returns vec4.
-    vec4 origColor = texture3D(signalTexture, gl_TexCoord[0].xyz);
-
-    // Here, apply the color mask.
-    origColor[0] = colorMask[0] * origColor[0];
-    origColor[1] = colorMask[1] * origColor[1];
-    origColor[2] = colorMask[2] * origColor[2];
-    return origColor;
-}
 
 vec3 getMapCoord( float location )
 {
@@ -248,12 +233,7 @@ vec4 crop(vec4 origColor)
 
 void main()
 {
-    // NOTE: if the use of colorMask is commented away, the shader Java counterpart
-    //  will fail to find the location of that uniform.  Hence, uncomment below if
-    //  that inexplicably happens.
-    vec4 throwAwayUse = colorMask;
-
-    vec4 origColor = colorFilter();
+    vec4 origColor = texture3D(signalTexture, gl_TexCoord[0].xyz);
     vec4 maskedColor = volumeMask(origColor);
     vec4 gammaAdjustedColor = gammaAdjust(maskedColor);
     gl_FragColor = crop(gammaAdjustedColor);

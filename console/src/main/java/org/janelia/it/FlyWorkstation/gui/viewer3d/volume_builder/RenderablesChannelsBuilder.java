@@ -1,7 +1,7 @@
 package org.janelia.it.FlyWorkstation.gui.viewer3d.volume_builder;
 
 import org.janelia.it.FlyWorkstation.gui.framework.viewer.alignment_board.AlignmentBoardSettings;
-import org.janelia.it.FlyWorkstation.gui.viewer3d.VolumeBrick;
+import org.janelia.it.FlyWorkstation.gui.viewer3d.MultiTexVolumeBrick;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.VolumeDataAcceptor;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.loader.ChannelMetaData;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.loader.VolumeLoaderI;
@@ -226,7 +226,7 @@ public class RenderablesChannelsBuilder extends RenderablesVolumeBuilder impleme
         }
         textureData.setChannelCount( channelMetaData.channelCount );
 
-        textureData.setColorSpace( VolumeBrick.TextureColorSpace.COLOR_SPACE_LINEAR );
+        textureData.setColorSpace( MultiTexVolumeBrick.TextureColorSpace.COLOR_SPACE_LINEAR );
         textureData.setVoxelMicrometers(new Double[]{1.0, 1.0, 1.0});
         textureData.setByteOrder(ByteOrder.nativeOrder());
         textureData.setPixelByteCount(FIXED_BYTE_PER_CHANNEL);

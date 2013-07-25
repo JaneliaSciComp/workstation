@@ -13,18 +13,13 @@ import java.nio.IntBuffer;
 import java.util.Arrays;
 import java.util.Collection;
 
-public class VolumeBrickShader extends AbstractShader {
+public class MultiTexVolumeBrickShader extends AbstractShader {
     // Shader GLSL source is expected to be in the same package as this class.  Otherwise,
     // a prefix of the relative path could be given, as in "shader_sub_pkg/AShader.glsl"
     public static final String VERTEX_SHADER = "VolumeBrickVtx.glsl";
     public static final String FRAGMENT_SHADER = "VolumeBrickFrg.glsl";
 
-    private static final float[] SHOW_ALL  = new float[] {
-        1.0f, 1.0f, 1.0f
-    };
-
     private int previousShader = 0;
-    private float[] rgb;
 
     private TextureMediator signalTextureMediator;
     private TextureMediator maskTextureMediator;
@@ -56,7 +51,6 @@ public class VolumeBrickShader extends AbstractShader {
 
         pushMaskUniform( gl, shaderProgram );
         pushGammaUniform( gl, shaderProgram );
-        pushFilterUniform( gl, shaderProgram );
         pushCropUniforms( gl, shaderProgram );
 
         setTextureUniforms( gl );
@@ -75,10 +69,6 @@ public class VolumeBrickShader extends AbstractShader {
         this.signalTextureMediator = signalTextureMediator;
         this.maskTextureMediator = maskTextureMediator;
         this.colorMapTextureMediator = colorMapTextureMediator;
-    }
-
-    public void setColorMask( float[] rgb ) {
-        this.rgb = rgb;
     }
 
     /**
@@ -235,28 +225,4 @@ public class VolumeBrickShader extends AbstractShader {
         return String.format("%sCrop%s", startEnd, xyz);
     }
 
-    private void pushFilterUniform(GL2 gl, int shaderProgram) {
-        // Need to push uniform for the filtering parameter.
-        int colorMaskLoc = gl.glGetUniformLocation(shaderProgram, "colorMask");
-        if ( colorMaskLoc == -1 ) {
-            throw new RuntimeException( "Failed to find color mask uniform location." );
-        }
-
-        float[] localrgb = null;
-        if ( rgb == null ) {
-            localrgb = SHOW_ALL;
-        }
-        else {
-            localrgb = rgb;
-        }
-
-        gl.glUniform4f(
-                colorMaskLoc,
-                localrgb[0],
-                localrgb[1],
-                localrgb[2],
-                1.0f
-        );
-
-    }
 }

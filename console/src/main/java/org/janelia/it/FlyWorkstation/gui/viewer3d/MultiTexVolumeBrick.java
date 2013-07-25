@@ -9,7 +9,7 @@ import com.jogamp.common.nio.Buffers;
 import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.buffering.VtxCoordBufMgr;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.interfaces.GLActor;
-import org.janelia.it.FlyWorkstation.gui.viewer3d.shader.VolumeBrickShader;
+import org.janelia.it.FlyWorkstation.gui.viewer3d.shader.MultiTexVolumeBrickShader;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.texture.TextureDataI;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.texture.TextureMediator;
 import org.slf4j.Logger;
@@ -20,11 +20,11 @@ import javax.media.opengl.GLCapabilities;
 import javax.media.opengl.GLProfile;
 
 /**
- * VolumeTexture class draws a transparent rectangular volume with a 3D opengl texture
+ * Class draws a transparent rectangular volume with a 3D opengl texture
  * @author brunsc
  *
  */
-public class VolumeBrick implements GLActor, VolumeDataAcceptor
+public class MultiTexVolumeBrick implements GLActor, VolumeDataAcceptor
 {
     public enum RenderMethod {MAXIMUM_INTENSITY, ALPHA_BLENDING}
 
@@ -54,7 +54,7 @@ public class VolumeBrick implements GLActor, VolumeDataAcceptor
     private boolean bColorMapTextureNeedsUpload = false;
     private boolean bBuffersNeedUpload = true;
 
-    private VolumeBrickShader volumeBrickShader = new VolumeBrickShader();
+    private MultiTexVolumeBrickShader volumeBrickShader = new MultiTexVolumeBrickShader();
 
     private boolean bIsInitialized;
     private boolean bUseSyntheticData = false;
@@ -62,7 +62,7 @@ public class VolumeBrick implements GLActor, VolumeDataAcceptor
     private VtxCoordBufMgr bufferManager;
     private VolumeModel volumeModel;
 
-    private static Logger logger = LoggerFactory.getLogger( VolumeBrick.class );
+    private static Logger logger = LoggerFactory.getLogger( MultiTexVolumeBrick.class );
 
     static {
         try {
@@ -81,7 +81,7 @@ public class VolumeBrick implements GLActor, VolumeDataAcceptor
 
     }
 
-    VolumeBrick(VolumeModel volumeModel) {
+    MultiTexVolumeBrick(VolumeModel volumeModel) {
         bufferManager = new VtxCoordBufMgr( true );
         setVolumeModel( volumeModel );
     }
@@ -186,7 +186,6 @@ public class VolumeBrick implements GLActor, VolumeDataAcceptor
             // gl.glBlendFunc(GL2.GL_ONE_MINUS_DST_COLOR, GL2.GL_ZERO); // inverted?  http://stackoverflow.com/questions/2656905/opengl-invert-framebuffer-pixels
         }
         if (bUseShader) {
-            volumeBrickShader.setColorMask(volumeModel.getColorMask());
             if ( maskTextureMediator != null ) {
                 volumeBrickShader.setVolumeMaskApplied();
             }

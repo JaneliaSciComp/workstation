@@ -1,6 +1,6 @@
 package org.janelia.it.FlyWorkstation.gui.viewer3d.loader;
 
-import org.janelia.it.FlyWorkstation.gui.viewer3d.VolumeBrick;
+import org.janelia.it.FlyWorkstation.gui.viewer3d.MultiTexVolumeBrick;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.VolumeDataAcceptor;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.texture.TextureDataI;
 
@@ -22,7 +22,7 @@ public abstract class TextureDataBuilder {
     protected int sx, sy, sz;
     protected int channelCount = 1; // Default for non-data-bearing file formats.
     protected VolumeDataAcceptor.TextureColorSpace colorSpace =
-            VolumeBrick.TextureColorSpace.COLOR_SPACE_LINEAR;
+            MultiTexVolumeBrick.TextureColorSpace.COLOR_SPACE_LINEAR;
     protected String header = null;
     protected int pixelBytes = 1;
     protected ByteOrder pixelByteOrder = ByteOrder.LITTLE_ENDIAN;

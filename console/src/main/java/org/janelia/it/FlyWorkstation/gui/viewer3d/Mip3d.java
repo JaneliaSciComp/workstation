@@ -116,7 +116,7 @@ public class Mip3d extends BaseGLViewer implements ActionListener {
             TextureDataI maskTexture,
             RenderMappingI renderMapping ) {
         if ( signalTexture != null ) {
-            VolumeBrick brick = new VolumeBrick( volumeModel );
+            MultiTexVolumeBrick brick = new MultiTexVolumeBrick( volumeModel );
             brick.setTextureData( signalTexture );
             if ( maskTexture != null ) {
                 brick.setMaskTextureData( maskTexture );
@@ -152,7 +152,7 @@ public class Mip3d extends BaseGLViewer implements ActionListener {
     ) {
 		VolumeLoader volumeLoader = new VolumeLoader(resolver);
 		if (volumeLoader.loadVolume(fileName)) {
-            VolumeBrick brick = new VolumeBrick( volumeModel );
+            MultiTexVolumeBrick brick = new MultiTexVolumeBrick( volumeModel );
             volumeModel.setGammaAdjustment(gamma);
 			volumeLoader.populateVolumeAcceptor(brick);
             if ( maskBuilder != null ) {
@@ -172,31 +172,6 @@ public class Mip3d extends BaseGLViewer implements ActionListener {
 			return false;
 	}
 
-//    /**
-//     * Load a volume which may have a color mask, rather than a voxel mask.
-//     *
-//     * @param fileName for signal file data.
-//     * @param colorMask for mask coloring--not mask texture. Color across all voxels, not fine-grained.
-//     * @param resolver flexibility: allows different ways of resolving the file, which may be server-based.
-//     * @return true if it worked; false otherwise.
-//     */
-//    public boolean loadVolume(
-//            String fileName, float[] colorMask,  FileResolver resolver, float gamma
-//    ) {
-//        VolumeLoader volumeLoader = new VolumeLoader(resolver);
-//        if (volumeLoader.loadVolume(fileName)) {
-//            VolumeBrick brick = new VolumeBrick( volumeModel );
-//            volumeModel.setColorMask( colorMask );
-//            volumeModel.setGammaAdjustment( gamma );
-//            volumeLoader.populateVolumeAcceptor(brick);
-//
-//            addActorToRenderer(brick);
-//            return true;
-//        }
-//        else
-//            return false;
-//    }
-//
     public void setGamma( float gamma ) {
         volumeModel.setGammaAdjustment( gamma );
         repaint();
