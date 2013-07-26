@@ -48,6 +48,9 @@ public class RecoloringAcceptorDecorator  implements MaskChanDataAcceptorI {
                 }
 
             }
+//            else if ( channelMetaData.channelCount == 1 ) {
+//                int dummyVal = 0;
+//            }
         }
         return wrappedAcceptor.addChannelData( channelData, position, x, y, z, channelMetaData );
     }
