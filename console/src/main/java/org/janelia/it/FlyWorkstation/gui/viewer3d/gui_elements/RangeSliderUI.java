@@ -32,6 +32,9 @@ package org.janelia.it.FlyWorkstation.gui.viewer3d.gui_elements;
 
  */
 
+import magicofcalculus.DPoint;
+import magicofcalculus.TriangleShape;
+
 import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.Graphics;
@@ -40,7 +43,7 @@ import java.awt.Rectangle;
 import java.awt.RenderingHints;
 import java.awt.Shape;
 import java.awt.event.MouseEvent;
-import java.awt.geom.Ellipse2D;
+import java.awt.geom.*;
 
 import javax.swing.JComponent;
 import javax.swing.JSlider;
@@ -279,7 +282,7 @@ class RangeSliderUI extends BasicSliderUI {
         Graphics2D g2d = (Graphics2D) g.create();
 
         // Create default thumb shape.
-        Shape thumbShape = createThumbShape(w - 1, h - 1);
+        Shape thumbShape = createTriangleThumbShape( false ); //createThumbShape(w - 1, h - 1);
 
         // Draw thumb.
         g2d.setRenderingHint(RenderingHints.KEY_ANTIALIASING,
@@ -308,7 +311,7 @@ class RangeSliderUI extends BasicSliderUI {
         Graphics2D g2d = (Graphics2D) g.create();
 
         // Create default thumb shape.
-        Shape thumbShape = createThumbShape(w - 1, h - 1);
+        Shape thumbShape = createTriangleThumbShape( true );//createThumbShape(w - 1, h - 1);
 
         // Draw thumb.
         g2d.setRenderingHint(RenderingHints.KEY_ANTIALIASING,
@@ -333,6 +336,86 @@ class RangeSliderUI extends BasicSliderUI {
         Ellipse2D shape = new Ellipse2D.Double(0, 0, width, height);
         return shape;
     }
+
+    private Shape createTriangleThumbShape( final boolean right ) {
+        TriangleShape triangleShape = new TriangleShape();
+        DPoint point1;
+        DPoint point2;
+        DPoint point3;
+        if ( right ) {
+            point1 = new DPoint( 10, 11 );
+            point2 = new DPoint( 10, 0 );
+            point3 = new DPoint( 5.0, 6 );
+        }
+        else {
+            point1 = new DPoint( 0, 11 );
+            point2 = new DPoint( 0, 0 );
+            point3 = new DPoint( 4.99, 6 );
+        }
+        triangleShape.setTriangle(
+                point1, point2, point3
+        );
+        return triangleShape;
+    }
+
+/*
+    private Shape createTriangleThumbShape( final boolean right, int width, int height ) {
+        RectangularShape shape = new Rectangle2D.Double( 0, 0, width, height ) {
+            @Override
+            public PathIterator getPathIterator(AffineTransform at) {
+                return new TriangleIterator();
+            }
+
+        };
+        return shape;
+    }
+
+    private class TriangleIterator implements PathIterator {
+
+        private int currentVertex = 0;
+
+        @Override
+        public int getWindingRule() {
+            return WIND_EVEN_ODD;
+        }
+
+        @Override
+        public boolean isDone() {
+            return currentVertex > 3;
+        }
+
+        @Override
+        public void next() {
+            currentVertex ++;
+        }
+
+        @Override
+        public int currentSegment(float[] coords) {
+            return currentSegment();
+        }
+
+        @Override
+        public int currentSegment(double[] coords) {
+            return currentSegment();
+        }
+
+        private int currentSegment() {
+            if ( isDone() ) {
+                throw new RuntimeException( "No such vertex." );
+            }
+            else if ( currentVertex == 3 ) {
+                return SEG_CLOSE;
+            }
+            else if ( currentVertex == 0 ) {
+                return SEG_MOVETO;
+            }
+            else if ( currentVertex == 2 || currentVertex == 1 ) {
+                return SEG_LINETO;
+            }
+            return 0;
+        }
+    }
+*/
 
     /**
      * Sets the location of the upper thumb, and repaints the slider.  This is
