@@ -108,6 +108,8 @@ public class VolumeWritebackHandler {
                 byte[] rendition = renderableIdVsRenderMethod.get( data.getBean().getTranslatedNum() );
                 if ( rendition != null  &&  rendition[ 3 ] != RenderMappingI.NON_RENDERING ) {
                     searchDatas.add( data );
+                    // Convert the rendition to the latest selected by the user.
+                    data.getBean().setRgb( rendition );
                 }
             }
 

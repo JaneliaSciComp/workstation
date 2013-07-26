@@ -1,5 +1,7 @@
 package org.janelia.it.FlyWorkstation.gui.viewer3d.loader;
 
+import org.janelia.it.FlyWorkstation.gui.viewer3d.renderable.RenderableBean;
+
 /**
  * Created with IntelliJ IDEA.
  * User: fosterl
@@ -16,6 +18,7 @@ public class ChannelMetaData {
     public int blueChannelInx = -1;
     public int greenChannelInx = -1;
     public int redChannelInx = -1;
+    public RenderableBean renderableBean;  // Optional bean associated with this meta data.
     private int[] orderedRgbIndexes;
 
     public int[] getOrderedRgbIndexes() {

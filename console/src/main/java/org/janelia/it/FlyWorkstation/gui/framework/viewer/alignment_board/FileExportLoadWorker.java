@@ -12,6 +12,7 @@ import org.janelia.it.FlyWorkstation.gui.viewer3d.renderable.RenderableBean;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.resolver.FileResolver;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.resolver.TrivialFileResolver;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.texture.TextureDataI;
+import org.janelia.it.FlyWorkstation.gui.viewer3d.volume_export.RecoloringAcceptorDecorator;
 import org.janelia.it.FlyWorkstation.shared.workers.SimpleWorker;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -133,13 +134,16 @@ public class FileExportLoadWorker extends SimpleWorker implements VolumeLoader {
         loader = new MaskChanMultiFileLoader();
         loader.setEnforcePadding( false ); // Do not extend dimensions of resulting volume beyond established space.
         loader.setCheckForConsistency( false );  // Do not force all files to share characteristics like channel count.
+        MaskChanDataAcceptorI outerAcceptor = null;
         if ( paramBean.getCropCoords() == null || paramBean.getCropCoords().size() == 0 ) {
-            loader.setAcceptors( Arrays.<MaskChanDataAcceptorI>asList(textureBuilder) );
+            outerAcceptor = textureBuilder;
         }
         else {
-            MaskChanDataAcceptorI filter = new FilteringAcceptorDecorator( textureBuilder, paramBean.getCropCoords() );
-            loader.setAcceptors( Arrays.<MaskChanDataAcceptorI>asList( filter ) );
+            outerAcceptor = new FilteringAcceptorDecorator( textureBuilder, paramBean.getCropCoords() );
         }
+        outerAcceptor = new RecoloringAcceptorDecorator( outerAcceptor );
+
+        loader.setAcceptors( Arrays.<MaskChanDataAcceptorI>asList( outerAcceptor ) );
 
         multiThreadedDataLoad( paramBean.getRenderableDatas() );
 

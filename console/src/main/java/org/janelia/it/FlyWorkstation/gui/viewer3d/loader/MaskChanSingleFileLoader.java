@@ -364,6 +364,7 @@ public class MaskChanSingleFileLoader {
         channelMetaData.blueChannelInx = readByte( channelStream );
         channelMetaData.greenChannelInx = readByte( channelStream );
         channelMetaData.byteCount = readByte( channelStream );
+        channelMetaData.renderableBean = this.renderableBean;
 
         //  Note: any type of read requires all the mask data.  But only channel-required will necessitate
         //  the channel data all be available.
