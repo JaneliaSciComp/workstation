@@ -142,15 +142,6 @@ public class AnnotationManager
         if (parentID == null) {
             // new root in current neuron:
 
-            // currently can't handle > 1 root per neuron
-            if (currentNeuron.getRootAnnotation() != null) {
-                JOptionPane.showMessageDialog(null,
-                        "This neuron already has a root annotation!  (This restriction will be remored in the future.)",
-                        "Already has a root!",
-                        JOptionPane.ERROR_MESSAGE);
-                return;
-            }
-
             // this should probably not take the ws and neuron (assume current), but
             //  we're testing:
             annotationModel.addRootAnnotation(annotationModel.getCurrentWorkspace(),

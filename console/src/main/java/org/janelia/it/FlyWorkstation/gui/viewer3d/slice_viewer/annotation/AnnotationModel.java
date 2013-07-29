@@ -153,15 +153,6 @@ public class AnnotationModel
         // should assume current workspace and neuron?  don't need workspace at
         //  all, since neuron knows its workspace
 
-        // does neuron already have a root annotation?  for now, we're restricted
-        //  to one (will remove this restriction); basically, if it's got any, it's
-        //  got a root
-        if (neuron.getRootAnnotation() != null) {
-            // I am uncomfortable doing nothing silently, but I currently have no
-            //  way to return info upward
-            return;
-        }
-
         // the null means "this is a root annotation" (would be the parent)
         TmGeoAnnotation annotation;
         try {

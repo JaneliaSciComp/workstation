@@ -135,8 +135,7 @@ public class SliceViewerTranslator {
         // remember, for now, we're assuming one root per neuron
 
         for (TmNeuron neuron: workspace.getNeuronList()) {
-            TmGeoAnnotation root = neuron.getRootAnnotation();
-            if (root != null) {
+            for (TmGeoAnnotation root: neuron.getRootAnnotations()) {
                 for (TmGeoAnnotation ann: root.getSubTreeList()) {
                     anchorAddedSignal.emit(ann);
                 }

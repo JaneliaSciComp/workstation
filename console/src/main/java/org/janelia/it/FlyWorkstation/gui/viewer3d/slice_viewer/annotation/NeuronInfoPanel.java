@@ -8,6 +8,7 @@ import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 import java.util.ArrayList;
+import java.util.List;
 
 import javax.swing.*;
 import javax.swing.tree.*;
@@ -127,22 +128,21 @@ public class NeuronInfoPanel extends JPanel
         }
 
         System.out.println("loaded neuron " + neuron.getName());
-        TmGeoAnnotation rootAnn = neuron.getRootAnnotation();
-        if (rootAnn == null) {
+        List<TmGeoAnnotation> roots = neuron.getRootAnnotations();
+        if (roots.size() == 0) {
             System.out.println("neuron has no root annotation");
         } else {
-            double x = rootAnn.getX();
-            double y = rootAnn.getY();
-            double z = rootAnn.getZ();
-            ArrayList<TmGeoAnnotation> children = new ArrayList<TmGeoAnnotation>(rootAnn.getChildren());
-            // why not something like this?
-            // List<TmGeoAnnotation> children = rootAnn.getChildren();
-            int nChildren = children.size();
-            System.out.println("root annotation at " + x + ", " + y + ", " + z);
-            System.out.println("root annotation has " + nChildren + " children");
-            if (nChildren > 0) {
-                for (TmGeoAnnotation child: children) {
-                    System.out.println("child at " + child.getX() + ", " + child.getY() + ", " + child.getZ());
+            for (TmGeoAnnotation r: roots) {
+                double x = r.getX();
+                double y = r.getY();
+                double z = r.getZ();
+                int nChildren = r.getChildren().size();
+                System.out.println("root annotation at " + x + ", " + y + ", " + z);
+                System.out.println("root annotation has " + nChildren + " children");
+                if (nChildren > 0) {
+                    for (TmGeoAnnotation child: r.getChildren()) {
+                        System.out.println("child at " + child.getX() + ", " + child.getY() + ", " + child.getZ());
+                    }
                 }
             }
         }        
@@ -163,21 +163,17 @@ public class NeuronInfoPanel extends JPanel
         labelToAnnotationMap.clear();
 
         if (neuron != null) {
-            TmGeoAnnotation rootAnnotation = neuron.getRootAnnotation();
-            if (rootAnnotation != null) {
-
+            for (TmGeoAnnotation root: neuron.getRootAnnotations()) {
                 // first node is the parent node of the neuron, which is the first child
                 //  of the invisible root:
-                String label = getTreeString(rootAnnotation);
+                String label = getTreeString(root);
                 DefaultMutableTreeNode rootNode = new DefaultMutableTreeNode(label);
                 neuriteModel.insertNodeInto(rootNode, neuronRootNode, neuronRootNode.getChildCount());
-                labelToAnnotationMap.put(label, rootAnnotation);
+                labelToAnnotationMap.put(label, root);
 
                 // build tree;
-                populateNeuriteTreeNodeTagged(rootAnnotation, rootNode);
-
+                populateNeuriteTreeNodeTagged(root, rootNode);
             }
-
         }
         neuriteModel.reload();
 
@@ -190,7 +186,7 @@ public class NeuronInfoPanel extends JPanel
     private void populateNeuriteTreeNodeTagged(TmGeoAnnotation parentAnnotation, DefaultMutableTreeNode rootNode) {
         // recurse through nodes; note that everything is a child of the rootNode!
         for (TmGeoAnnotation childAnnotation: parentAnnotation.getChildren()) {
-            if (getNodeType(childAnnotation)!= "node") {
+            if (!getNodeType(childAnnotation).equals("node")) {
                 String label = getTreeString(childAnnotation);
                 DefaultMutableTreeNode childNode = new DefaultMutableTreeNode(label);
                 neuriteModel.insertNodeInto(childNode, rootNode, rootNode.getChildCount());
