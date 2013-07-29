@@ -148,43 +148,6 @@ public class NeuronInfoPanel extends JPanel
         }        
     }
 
-    public void loadNeuriteTreeSimple(TmNeuron neuron) {
-        // this version shows the neurite trees as simple hierarchies, with each child
-        //  node being a child in the tree; it's easy, but it's probably not what you
-        //  want; there are too many levels that aren't needed
-
-        // for the short term, brute force it; recreate the tree every time; 
-        //  I don't know if that's idiomatic or not
-
-        neuronRootNode.removeAllChildren();
-
-        // if neuron is not null, traverse it and populate nodes
-        if (neuron != null) {
-
-            TmGeoAnnotation rootAnnotation = neuron.getRootAnnotation();
-            if (rootAnnotation != null) {
-
-                // first node is the parent node of the neuron, which is the first child
-                //  of the invisible root:
-                DefaultMutableTreeNode rootNode = new DefaultMutableTreeNode(rootAnnotation);
-                neuriteModel.insertNodeInto(rootNode, neuronRootNode, neuronRootNode.getChildCount());
-
-                // build tree
-                populateNeuriteTreeNode(rootAnnotation, rootNode);
-            }
-        }
-        neuriteModel.reload();
-    }
-
-    private void populateNeuriteTreeNode(TmGeoAnnotation parentAnnotation, DefaultMutableTreeNode parentNode) {
-        // recurse through nodes
-        for (TmGeoAnnotation childAnnotation: parentAnnotation.getChildren()) {
-            DefaultMutableTreeNode childNode = new DefaultMutableTreeNode(childAnnotation);
-            neuriteModel.insertNodeInto(childNode, parentNode, parentNode.getChildCount());
-            populateNeuriteTreeNode(childAnnotation, childNode);
-        }
-    }
-
     public void loadNeuriteTreeTagged(TmNeuron neuron) {
         // each neurite will be a root node, then a list of other branch and end nodes
 

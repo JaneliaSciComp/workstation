@@ -46,6 +46,13 @@ public class AnnotationManager
         }
     };
 
+    public Slot1<Anchor> moveAnchorRequestedSlot = new Slot1<Anchor>() {
+        @Override
+        public void execute(Anchor anchor) {
+            moveAnnotation(anchor.getGuid(), anchor.getLocation());
+        }
+    };
+
     // constants
     public static final String WORKSPACES_FOLDER_NAME = "Workspaces";
 
@@ -185,6 +192,18 @@ public class AnnotationManager
         } else {
             annotationModel.deleteSubTree(annotationModel.getGeoAnnotationFromID(annotationID));
         }
+    }
+
+    public void moveAnnotation(Long annotationID, Vec3 location) {
+        TmWorkspace workspace = annotationModel.getCurrentWorkspace();
+        if (workspace == null) {
+            // dialog?
+
+            return;
+        } else {
+            annotationModel.moveAnnotation(annotationID, location);
+        }
+
     }
 
     public void createNeuron() {

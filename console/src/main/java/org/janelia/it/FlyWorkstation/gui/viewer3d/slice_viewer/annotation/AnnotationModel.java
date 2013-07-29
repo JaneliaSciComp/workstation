@@ -34,6 +34,10 @@ public class AnnotationModel
     public Signal1<TmGeoAnnotation> anchorAddedSignal = new Signal1<TmGeoAnnotation>();
     public Signal1<List<TmGeoAnnotation>> anchorsDeletedSignal = new Signal1<List<TmGeoAnnotation>>();
 
+    // move or change, eg, comment:
+    public Signal1<TmGeoAnnotation> anchorUpdatedSignal = new Signal1<TmGeoAnnotation>();
+
+
     public Slot1<TmNeuron> neuronClickedSlot = new Slot1<TmNeuron>() {
         @Override
         public void execute(TmNeuron neuron) {
@@ -201,6 +205,21 @@ public class AnnotationModel
 
     }
 
+    public void moveAnnotation(Long annotationID, Vec3 location) {
+        TmGeoAnnotation annotation = getGeoAnnotationFromID(annotationID);
+        try {
+            modelMgr.updateGeometricAnnotation(annotation, annotation.getIndex(),
+                location.getX(), location.getY(), location.getZ(),
+                annotation.getComment());
+        } catch(Exception e) {
+            e.printStackTrace();
+            return;
+        }
+
+        // notify
+        anchorUpdatedSignal.emit(getGeoAnnotationFromID(annotationID));
+
+    }
 
     public void deleteSubTree(TmGeoAnnotation rootAnnotation) {
         if (rootAnnotation == null) {
