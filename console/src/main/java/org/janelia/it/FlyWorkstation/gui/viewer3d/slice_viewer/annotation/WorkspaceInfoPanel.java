@@ -15,10 +15,12 @@ import java.util.*;
 
 // workstation imports
 
+import org.janelia.it.FlyWorkstation.api.entity_model.management.ModelMgr;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.BoundingBox3d;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.Vec3;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.slice_viewer.Slot1;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.slice_viewer.Signal1;
+import org.janelia.it.jacs.model.entity.Entity;
 import org.janelia.it.jacs.model.user_data.tiledMicroscope.*;
 
 /**
@@ -30,6 +32,7 @@ public class WorkspaceInfoPanel extends JPanel
 {
 
     private JLabel workspaceNameLabel;
+    private JLabel sampleNameLabel;
 
     private JList neuronListBox;
     private DefaultListModel neuronListModel;
@@ -58,17 +61,24 @@ public class WorkspaceInfoPanel extends JPanel
     }
 
     private void setupUI() {
-        setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
+        setLayout(new BoxLayout(this, BoxLayout.PAGE_AXIS));
     
         // workspace information; show name, whatever attributes
-        add(Box.createRigidArea(new Dimension(0, 20)));
-        add(new JLabel("Workspace information panel"));
+        add(new JLabel("Workspace", JLabel.CENTER));
+        add(Box.createRigidArea(new Dimension(0, 10)));
 
-        workspaceNameLabel = new JLabel("");
+        workspaceNameLabel = new JLabel("", JLabel.LEADING);
         add(workspaceNameLabel);
+
+        sampleNameLabel = new JLabel("", JLabel.LEADING);
+        add(sampleNameLabel);
+
+
 
         // list of neurons
 
+        add(Box.createRigidArea(new Dimension(0, 10)));
+        add(new JLabel("Neurons", JLabel.CENTER));
         neuronListModel = new DefaultListModel();
         neuronListBox = new JList(neuronListModel);
         neuronScrollPane = new JScrollPane(neuronListBox);
@@ -135,13 +145,9 @@ public class WorkspaceInfoPanel extends JPanel
     }
 
     public void loadWorkspace(TmWorkspace workspace) {
-        if (workspace == null) {
-            // clear
-            workspaceNameLabel.setText("(no workspace)");
-        } else {
-            // normal update
-            workspaceNameLabel.setText(workspace.getName());
+        updateMetaData(workspace);
 
+        if (workspace != null) {
             // repopulate neuron list
             Vector<TmNeuron> neuronVector = new Vector<TmNeuron>(workspace.getNeuronList());
             Collections.sort(neuronVector, new Comparator<TmNeuron>() {
@@ -168,6 +174,23 @@ public class WorkspaceInfoPanel extends JPanel
                 bounds.include(new Vec3(ann.getX(), ann.getY(), ann.getZ()));
             }
             cameraPanToSignal.emit(bounds.getCenter());
+        }
+    }
+
+    private void updateMetaData(TmWorkspace workspace) {
+        if (workspace == null) {
+            workspaceNameLabel.setText("Name: (no workspace)");
+            sampleNameLabel.setText("Sample:");
+        } else {
+            workspaceNameLabel.setText("Name: " + workspace.getName());
+            Entity sample;
+            try {
+                sample = ModelMgr.getModelMgr().getEntityById(workspace.getSampleID());
+            } catch (Exception e) {
+                e.printStackTrace();
+                return;
+            }
+            sampleNameLabel.setText("Sample: " + sample.getName());
         }
     }
 }

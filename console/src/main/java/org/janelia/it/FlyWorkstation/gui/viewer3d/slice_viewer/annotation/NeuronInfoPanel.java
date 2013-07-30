@@ -62,11 +62,11 @@ public class NeuronInfoPanel extends JPanel
         setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
     
         // neuron information; show name, whatever attributes
-        add(Box.createRigidArea(new Dimension(0, 20)));
-        add(new JLabel("Neuron information panel"));
+        // hide until we have something to show besides the name (which is
+        //  visible in the list above)!
 
         neuronNameLabel = new JLabel("");
-        add(neuronNameLabel);
+        // add(neuronNameLabel);
 
 
         // neurite tree
@@ -81,8 +81,8 @@ public class NeuronInfoPanel extends JPanel
     }
 
     private void setupNeuriteTreeNavigator() {
-        add(Box.createRigidArea(new Dimension(0, 20)));
-        add(new JLabel("Neurite structure"));
+        add(Box.createRigidArea(new Dimension(0, 10)));
+        add(new JLabel("Neurites", JLabel.CENTER));
 
         // create test tree and style it; no icons, please
         neuronRootNode = new DefaultMutableTreeNode("invisible root node");
@@ -133,12 +133,9 @@ public class NeuronInfoPanel extends JPanel
             System.out.println("neuron has no root annotation");
         } else {
             for (TmGeoAnnotation r: roots) {
-                double x = r.getX();
-                double y = r.getY();
-                double z = r.getZ();
                 int nChildren = r.getChildren().size();
-                System.out.println("root annotation at " + x + ", " + y + ", " + z);
-                System.out.println("root annotation has " + nChildren + " children");
+                System.out.println(String.format("root annotation at %.1f, %.1f, %.1f has %d children",
+                        r.getX(), r.getY(), r.getZ(), nChildren));
                 if (nChildren > 0) {
                     for (TmGeoAnnotation child: r.getChildren()) {
                         System.out.println("child at " + child.getX() + ", " + child.getY() + ", " + child.getZ());
