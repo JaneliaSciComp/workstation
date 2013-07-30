@@ -30,5 +30,50 @@ public class ChannelMetaData {
         }
         return orderedRgbIndexes;
     }
+
+    @Override
+    public ChannelMetaData clone() {
+        ChannelMetaData rtnVal = new ChannelMetaData();
+        rtnVal.byteCount = this.byteCount;
+        rtnVal.channelCount = this.channelCount;
+        rtnVal.rawChannelCount = this.rawChannelCount;
+        rtnVal.blueChannelInx = this.blueChannelInx;
+        rtnVal.redChannelInx = this.redChannelInx;
+        rtnVal.greenChannelInx = this.greenChannelInx;
+        rtnVal.renderableBean = this.renderableBean;
+        rtnVal.orderedRgbIndexes = this.orderedRgbIndexes;
+        if ( this.orderedRgbIndexes != null ) {
+            rtnVal.orderedRgbIndexes = new int[ this.orderedRgbIndexes.length ];
+            for ( int i = 0; i < orderedRgbIndexes.length; i++ ) {
+                rtnVal.orderedRgbIndexes[ i ] = this.orderedRgbIndexes[ i ];
+            }
+        }
+
+        return rtnVal;
+    }
+
+    @Override
+    public boolean equals( Object other ) {
+        if ( other == null || (! ( other instanceof ChannelMetaData ) ) ) {
+            return false;
+        }
+        else {
+            ChannelMetaData otherCmd = (ChannelMetaData)other;
+            return otherCmd.byteCount == this.byteCount  &&
+                   otherCmd.greenChannelInx == this.greenChannelInx  &&
+                   otherCmd.blueChannelInx == this.blueChannelInx  &&
+                   otherCmd.redChannelInx == this.redChannelInx  &&
+                   otherCmd.channelCount == this.channelCount  &&
+                   otherCmd.rawChannelCount == this.rawChannelCount  &&
+                   otherCmd.orderedRgbIndexes.length == this.orderedRgbIndexes.length  &&
+                   otherCmd.renderableBean.equals( this.renderableBean );
+        }
+    }
+
+    @Override
+    public int hashCode() {
+        return renderableBean.hashCode();
+    }
+
 }
 
