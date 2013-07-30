@@ -18,13 +18,12 @@ import java.util.Map;
  *
  * Apply this decorator if recoloring of masked regions is required on the CPU side, not the GPU side.
  */
-public class RecoloringAcceptorDecorator  implements MaskChanDataAcceptorI {
+public class RecoloringAcceptorDecorator  extends AbstractAcceptorDecorator {
     private Logger logger = LoggerFactory.getLogger(RecoloringAcceptorDecorator.class);
     private Map<ChannelMetaData,ChannelMetaData> metaDataMap;
-    private MaskChanDataAcceptorI wrappedAcceptor;
 
     public RecoloringAcceptorDecorator( MaskChanDataAcceptorI acceptor ) {
-        this.wrappedAcceptor = acceptor;
+        setWrappedAcceptor( acceptor );
     }
 
     @Override
@@ -64,31 +63,6 @@ public class RecoloringAcceptorDecorator  implements MaskChanDataAcceptorI {
     @Override
     public int addMaskData(Integer maskNumber, long position, long x, long y, long z) throws Exception {
         return wrappedAcceptor.addMaskData( maskNumber, position, x, y, z );
-    }
-
-    @Override
-    public void setSpaceSize(long x, long y, long z, long paddedX, long paddedY, long paddedZ, float[] coordCoverage) {
-        wrappedAcceptor.setSpaceSize( x, y, z, paddedX, paddedY, paddedZ, coordCoverage );
-    }
-
-    @Override
-    public Acceptable getAcceptableInputs() {
-        return wrappedAcceptor.getAcceptableInputs();
-    }
-
-    @Override
-    public int getChannelCount() {
-        return wrappedAcceptor.getChannelCount();
-    }
-
-    @Override
-    public void setChannelMetaData(ChannelMetaData metaData) {
-        wrappedAcceptor.setChannelMetaData( metaData );
-    }
-
-    @Override
-    public void endData(Logger logger) {
-        wrappedAcceptor.endData( logger );
     }
 
     /** Finds maximum "color" or "channel" value among all channel data. */

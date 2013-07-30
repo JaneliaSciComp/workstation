@@ -2,7 +2,6 @@ package org.janelia.it.FlyWorkstation.gui.viewer3d.volume_export;
 
 import org.janelia.it.FlyWorkstation.gui.viewer3d.loader.ChannelMetaData;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.loader.MaskChanDataAcceptorI;
-import org.slf4j.Logger;
 
 import java.util.Collection;
 
@@ -14,12 +13,11 @@ import java.util.Collection;
  *
  * Filters what winds up in the wrapped acceptor, based on crop coords.
  */
-public class FilteringAcceptorDecorator implements MaskChanDataAcceptorI {
-    private final MaskChanDataAcceptorI wrappedAcceptor;
+public class FilteringAcceptorDecorator extends AbstractAcceptorDecorator {
     private final Collection<float[]> cropCoordsCollection;
 
     public FilteringAcceptorDecorator(MaskChanDataAcceptorI wrappedAcceptor, Collection<float[]> cropCoordsCollection) {
-        this.wrappedAcceptor = wrappedAcceptor;
+        setWrappedAcceptor( wrappedAcceptor );
         this.cropCoordsCollection = cropCoordsCollection;
     }
 
@@ -47,31 +45,6 @@ public class FilteringAcceptorDecorator implements MaskChanDataAcceptorI {
         }
 
         return 1;
-    }
-
-    @Override
-    public void setSpaceSize(long x, long y, long z, long paddedX, long paddedY, long paddedZ, float[] coordCoverage) {
-        wrappedAcceptor.setSpaceSize( x, y, z, paddedX, paddedY, paddedZ, coordCoverage );
-    }
-
-    @Override
-    public Acceptable getAcceptableInputs() {
-        return wrappedAcceptor.getAcceptableInputs();
-    }
-
-    @Override
-    public int getChannelCount() {
-        return wrappedAcceptor.getChannelCount();
-    }
-
-    @Override
-    public void setChannelMetaData(ChannelMetaData metaData) {
-        wrappedAcceptor.setChannelMetaData( metaData );
-    }
-
-    @Override
-    public void endData(Logger logger) {
-        wrappedAcceptor.endData( logger );
     }
 
     /** Test for coordinate bounds met by x,y,z */
