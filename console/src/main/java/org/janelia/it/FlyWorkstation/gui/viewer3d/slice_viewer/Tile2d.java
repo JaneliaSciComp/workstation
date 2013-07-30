@@ -32,7 +32,7 @@ import com.jogamp.opengl.util.texture.TextureCoords;
 public class Tile2d 
 implements GLActor
 {
-	public static enum Stage {
+	public static enum LoadStatus {
 	    NO_TEXTURE_LOADED,
 	    COARSE_TEXTURE_LOADED,
 	    BEST_TEXTURE_LOADED
@@ -40,7 +40,7 @@ implements GLActor
 
 	private static final Logger log = LoggerFactory.getLogger(Tile2d.class);
 	
-	private Stage stage = Stage.NO_TEXTURE_LOADED;
+	private LoadStatus loadStatus = LoadStatus.NO_TEXTURE_LOADED;
 	private TileTexture bestTexture;
 	private TileIndex index;
 	private double yMax = 0; // To help flip Raveler tiles in Y
@@ -60,7 +60,7 @@ implements GLActor
 	// Choose the best available texture for this tile
 	public void assignTexture(TextureCache textureCache) 
 	{
-		if (getStage().ordinal() >= Stage.BEST_TEXTURE_LOADED.ordinal())
+		if (getLoadStatus().ordinal() >= LoadStatus.BEST_TEXTURE_LOADED.ordinal())
 			return; // Already as good as it gets
 		TileIndex ix = getIndex();
 		if (ix == null) {
@@ -68,11 +68,11 @@ implements GLActor
 			return;
 		}
 		TileTexture texture = textureCache.get(ix);
-		if ((texture != null) && (texture.getStage().ordinal() >= TileTexture.Stage.RAM_LOADED.ordinal()))
+		if ((texture != null) && (texture.getLoadStatus().ordinal() >= TileTexture.LoadStatus.RAM_LOADED.ordinal()))
 		{
 			// Hey! I just noticed I have the best possible texture
 			bestTexture = texture;
-			setStage(Stage.BEST_TEXTURE_LOADED);
+			setLoadStatus(LoadStatus.BEST_TEXTURE_LOADED);
 			return;
 		}
 		if ((ix != null) && (ix.getSliceAxis() == CoordinateAxis.X)) {
@@ -91,7 +91,7 @@ implements GLActor
 					// texture = textureCache.get(ix);
 				}
 			}
-			else if (texture.getStage().ordinal() < TileTexture.Stage.RAM_LOADED.ordinal()) {
+			else if (texture.getLoadStatus().ordinal() < TileTexture.LoadStatus.RAM_LOADED.ordinal()) {
 				// log.info("cache miss texture not loaded "+ix);
 			}
 			else {
@@ -99,7 +99,7 @@ implements GLActor
 					// log.info("choosing lower texture "+ix);
 				}
 				bestTexture = texture;
-				setStage(Stage.COARSE_TEXTURE_LOADED);
+				setLoadStatus(LoadStatus.COARSE_TEXTURE_LOADED);
 				return;
 			}
 			ix = ix.zoomOut();
@@ -149,12 +149,12 @@ implements GLActor
 		return index;
 	}
 
-	public Stage getStage() {
-		return stage;
+	public LoadStatus getLoadStatus() {
+		return loadStatus;
 	}
 
-	public void setStage(Stage stage) {
-		this.stage = stage;
+	public void setLoadStatus(LoadStatus stage) {
+		this.loadStatus = stage;
 	}
 
 	public void setBestTexture(TileTexture bestTexture) {
@@ -172,7 +172,7 @@ implements GLActor
 			log.info("tile with no texture "+getIndex());
 			return;
 		}
-		if (getStage().ordinal() < Stage.COARSE_TEXTURE_LOADED.ordinal())
+		if (getLoadStatus().ordinal() < LoadStatus.COARSE_TEXTURE_LOADED.ordinal())
 			return;
 		// log.info("Rendering tile "+getIndex());
 		bestTexture.init(gl);

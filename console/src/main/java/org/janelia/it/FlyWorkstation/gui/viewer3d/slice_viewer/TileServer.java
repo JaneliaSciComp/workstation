@@ -24,8 +24,17 @@ implements ComponentListener // so changes in viewer size/visibility can be trac
 // implements VolumeImage3d
 {
 	private static final Logger log = LoggerFactory.getLogger(TileServer.class);
+
+	// TODO - derived from individual ViewTileManagers
+	public static enum LoadStatus {
+		PREFETCH_COMPLETE,
+		BEST_TEXTURES_LOADED,
+		IMPERFECT_TEXTURES_LOADED,
+		UNINITIALIZED
+	};
 	
 	private boolean doPrefetch = true;
+	private LoadStatus loadStatus = LoadStatus.UNINITIALIZED;
 	
 	// One thread pool to load minimal representation of volume
 	private TexturePreFetcher minResPreFetcher = new TexturePreFetcher(10);
@@ -143,6 +152,14 @@ implements ComponentListener // so changes in viewer size/visibility can be trac
 	
 	public Set<ViewTileManager> getViewTileManagers() {
 		return viewTileManagers;
+	}
+
+	public LoadStatus getLoadStatus() {
+		return loadStatus;
+	}
+
+	public void setLoadStatus(LoadStatus loadStatus) {
+		this.loadStatus = loadStatus;
 	}
 
 	public SharedVolumeImage getSharedVolumeImage() {

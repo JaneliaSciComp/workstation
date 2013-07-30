@@ -16,7 +16,7 @@ public class TileTexture
 	 * @author brunsc
 	 *
 	 */
-	public static enum Stage 
+	public static enum LoadStatus 
 	{
 		LOAD_FAILED, // worst
 	    UNINITIALIZED, // initial state
@@ -27,7 +27,7 @@ public class TileTexture
 	    GL_LOADED // best; in texture memory
 	}
 	
-	private Stage stage = Stage.UNINITIALIZED;
+	private LoadStatus loadStatus = LoadStatus.UNINITIALIZED;
 	private TileIndex index;
 	// private URL url;
 	private TextureData2dGL textureData;
@@ -87,7 +87,7 @@ public class TileTexture
 		if (textureData != null)
 			textureData.releaseMemory();
 		textureData = null;
-		setStage(Stage.UNINITIALIZED);
+		setLoadStatus(LoadStatus.UNINITIALIZED);
 		texture = null;
 	}
 
@@ -127,27 +127,27 @@ public class TileTexture
 	{
 		if (textureData == null)
 			return;
-		if (getStage().ordinal() < Stage.RAM_LOADED.ordinal())
+		if (getLoadStatus().ordinal() < LoadStatus.RAM_LOADED.ordinal())
 			return; // not ready to init
-		if (getStage().ordinal() >= Stage.GL_LOADED.ordinal())
+		if (getLoadStatus().ordinal() >= LoadStatus.GL_LOADED.ordinal())
 			return; // already initialized
 		texture = textureData.createTexture(gl);
-		setStage(Stage.GL_LOADED);
+		setLoadStatus(LoadStatus.GL_LOADED);
 		uploadTextureTime = System.nanoTime();
 	}
 
 	public synchronized boolean loadImageToRam() {
-		setStage(Stage.RAM_LOADING);
+		setLoadStatus(LoadStatus.RAM_LOADING);
 		try {
 			textureData = loadAdapter.loadToRam(index);
 		} catch (TileLoadError e) {
-			setStage(Stage.LOAD_FAILED); // error
+			setLoadStatus(LoadStatus.LOAD_FAILED); // error
 			return false;
 		} catch (MissingTileException e) { // texture correctly has no data
-			setStage(Stage.MISSING);
+			setLoadStatus(LoadStatus.MISSING);
 			return true; // because missing is a valid state
 		}
-		setStage(Stage.RAM_LOADED); // Yay!
+		setLoadStatus(LoadStatus.RAM_LOADED); // Yay!
 		return true;
 	}
 
@@ -155,16 +155,16 @@ public class TileTexture
 		this.index = index;
 	}
 
-	public Stage getStage() {
-		return stage;
+	public LoadStatus getLoadStatus() {
+		return loadStatus;
 	}
 
-	public void setStage(Stage stage) {
-		this.stage = stage;
+	public void setLoadStatus(LoadStatus stage) {
+		this.loadStatus = stage;
 	}
 
 	public ImageBrightnessStats getBrightnessStats() {
-		if (stage.ordinal() < Stage.RAM_LOADED.ordinal())
+		if (loadStatus.ordinal() < LoadStatus.RAM_LOADED.ordinal())
 			return null;
 		return textureData.getBrightnessStats();
 	}

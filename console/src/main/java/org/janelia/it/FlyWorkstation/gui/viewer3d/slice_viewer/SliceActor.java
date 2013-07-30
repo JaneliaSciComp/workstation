@@ -142,11 +142,11 @@ implements GLActor
 		// System.out.println("dispose RavelerTileServer");
 		TextureCache textureCache = viewTileManager.getTextureCache();
 		for (TileTexture tileTexture : textureCache.values()) {
-			if (tileTexture.getStage().ordinal() < TileTexture.Stage.GL_LOADED.ordinal())
+			if (tileTexture.getLoadStatus().ordinal() < TileTexture.LoadStatus.GL_LOADED.ordinal())
 				continue;
 			PyramidTexture joglTexture = tileTexture.getTexture();
 			joglTexture.destroy(gl);
-			tileTexture.setStage(TileTexture.Stage.RAM_LOADED);
+			tileTexture.setLoadStatus(TileTexture.LoadStatus.RAM_LOADED);
 		}
 		needsGlDisposal = false;
 	}

@@ -19,8 +19,8 @@ public class TextureLoadWorker implements Runnable
 
 	public TextureLoadWorker(TileTexture texture, TextureCache textureCache) 
 	{
-		if (texture.getStage().ordinal() < TileTexture.Stage.LOAD_QUEUED.ordinal())
-			texture.setStage(TileTexture.Stage.LOAD_QUEUED);
+		if (texture.getLoadStatus().ordinal() < TileTexture.LoadStatus.LOAD_QUEUED.ordinal())
+			texture.setLoadStatus(TileTexture.LoadStatus.LOAD_QUEUED);
 		this.texture = texture;
 		this.textureCache = textureCache;
 	}
@@ -44,12 +44,12 @@ public class TextureLoadWorker implements Runnable
 			// log.info("Skipping duplicate load of texture (2) "+index);
 		}
 		// Don't load this texture if it is already loaded
-		else if (texture.getStage().ordinal() == TileTexture.Stage.RAM_LOADING.ordinal())
+		else if (texture.getLoadStatus().ordinal() == TileTexture.LoadStatus.RAM_LOADING.ordinal())
 		{
 			// log.info("Skipping duplicate load of texture "+texture.getIndex());
 			// return; // already loading
 		}
-		else if (texture.getStage().ordinal() > TileTexture.Stage.RAM_LOADING.ordinal())
+		else if (texture.getLoadStatus().ordinal() > TileTexture.LoadStatus.RAM_LOADING.ordinal())
 		{
 			// log.info("Skipping duplicate load of texture "+texture.getIndex());
 			// return; // already loaded or loading

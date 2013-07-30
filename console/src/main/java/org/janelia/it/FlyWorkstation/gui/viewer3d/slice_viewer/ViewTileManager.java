@@ -61,6 +61,16 @@ public class ViewTileManager {
 	 * tiles allows the scene to update in the fastest possible way, giving
 	 * the comforting impression of responsiveness. 
 	 */
+	
+	public static enum LoadStatus {
+		BEST_TEXTURES_LOADED,
+		IMPERFECT_TEXTURES_LOADED,
+		STALE_TEXTURES_LOADED,
+		NO_TEXTURES_LOADED
+	};
+	
+	private LoadStatus loadStatus = LoadStatus.NO_TEXTURES_LOADED;
+	
 	// Latest tiles list stores the current desired tile set, even if
 	// not all of the tiles are ready.
 	private TileSet latestTiles;
@@ -228,10 +238,10 @@ public class ViewTileManager {
 		// In tile units
 		int wMin = (int)Math.floor(wFMin / tileWidth);
 		int wMax = (int)Math.floor(wFMax / tileWidth);
-		
+
 		int hMin = (int)Math.floor(hFMin / tileHeight);
 		int hMax = (int)Math.floor(hFMax / tileHeight);
-		
+
 		TileIndex.IndexStyle indexStyle = tileFormat.getIndexStyle();
 		for (int w = wMin; w <= wMax; ++w) {
 			for (int h = hMin; h <= hMax; ++h) {
@@ -253,6 +263,16 @@ public class ViewTileManager {
 	
 	public TextureCache getTextureCache() {
 		return textureCache;
+	}
+
+	public LoadStatus getLoadStatus() {
+		return loadStatus;
+	}
+
+	public void setLoadStatus(LoadStatus loadStatus) {
+		if (loadStatus == this.loadStatus)
+			return;
+		this.loadStatus = loadStatus;
 	}
 
 	public void setTextureCache(TextureCache textureCache) {
@@ -299,6 +319,11 @@ public class ViewTileManager {
 		// Which tile set will we display this time?
 		TileSet result = latestTiles;
 		if (latestTiles.canDisplay()) {
+			if (latestTiles.getLoadStatus() == TileSet.LoadStatus.BEST_TEXTURES_LOADED)
+				setLoadStatus(LoadStatus.BEST_TEXTURES_LOADED);
+			else
+				setLoadStatus(LoadStatus.IMPERFECT_TEXTURES_LOADED);
+			// TODO - status
 			// log.info("Using Latest tiles");
 			emergencyTiles = latestTiles;
 			lastGoodTiles = latestTiles;
@@ -310,20 +335,27 @@ public class ViewTileManager {
 			result = emergencyTiles;
 			// These emergency tiles will now be displayed.
 			// So start a new batch of emergency tiles
-			emergencyTiles = latestTiles; 
+			emergencyTiles = latestTiles;
+			setLoadStatus(LoadStatus.STALE_TEXTURES_LOADED);
 		}
 		else {
 			// log.info("Using LastGood tiles");
 			// Fall back to a known displayable
 			result = lastGoodTiles;
+			if (lastGoodTiles == null)
+				setLoadStatus(LoadStatus.NO_TEXTURES_LOADED);
+			else if (lastGoodTiles.canDisplay())
+				setLoadStatus(LoadStatus.STALE_TEXTURES_LOADED);
+			else
+				setLoadStatus(LoadStatus.NO_TEXTURES_LOADED);
 		}
 		
 		// Keep working on loading both emergency and latest tiles only.
 		Set<TileIndex> newNeededTextures = new LinkedHashSet<TileIndex>();
 		newNeededTextures.addAll(emergencyTiles.getFastNeededTextures());
 		// Decide whether to load fastest textures or best textures
-		Tile2d.Stage stage = latestTiles.getMinStage();
-		if (stage.ordinal() < Tile2d.Stage.COARSE_TEXTURE_LOADED.ordinal())
+		Tile2d.LoadStatus stage = latestTiles.getMinStage();
+		if (stage.ordinal() < Tile2d.LoadStatus.COARSE_TEXTURE_LOADED.ordinal())
 			// First load the fast ones
 			newNeededTextures.addAll(latestTiles.getFastNeededTextures());
 		// Then load the best ones
