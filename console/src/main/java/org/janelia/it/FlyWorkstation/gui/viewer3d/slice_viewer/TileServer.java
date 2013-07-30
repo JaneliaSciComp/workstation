@@ -19,6 +19,8 @@ import org.janelia.it.FlyWorkstation.gui.viewer3d.slice_viewer.generator.SliceGe
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.google.common.util.concurrent.FutureCallback;
+
 public class TileServer 
 implements ComponentListener // so changes in viewer size/visibility can be tracked
 // implements VolumeImage3d
@@ -27,10 +29,11 @@ implements ComponentListener // so changes in viewer size/visibility can be trac
 
 	// TODO - derived from individual ViewTileManagers
 	public static enum LoadStatus {
-		PREFETCH_COMPLETE,
-		BEST_TEXTURES_LOADED,
+		UNINITIALIZED,
+		NO_TEXTURES_LOADED,
 		IMPERFECT_TEXTURES_LOADED,
-		UNINITIALIZED
+		BEST_TEXTURES_LOADED,
+		PREFETCH_COMPLETE, // Best textures shown, plus precache is full
 	};
 	
 	private boolean doPrefetch = true;
@@ -97,6 +100,7 @@ implements ComponentListener // so changes in viewer size/visibility can be trac
 	};
 
 	public Signal1<TileIndex> textureLoadedSignal = new Signal1<TileIndex>();
+	public Signal1<LoadStatus> loadStatusChangedSignal = new Signal1<LoadStatus>();
 
 	public Slot onVolumeInitializedSlot = new Slot() {
 		@Override
@@ -116,6 +120,13 @@ implements ComponentListener // so changes in viewer size/visibility can be trac
 		}
 	};
 	
+	private Slot updateLoadStatusSlot = new Slot() {
+		@Override
+		public void execute() {
+			updateLoadStatus();
+		}
+	};
+	
 	public TileServer(SharedVolumeImage sharedVolumeImage) {
 		setSharedVolumeImage(sharedVolumeImage);
 		minResPreFetcher.setTextureCache(getTextureCache());
@@ -128,6 +139,7 @@ implements ComponentListener // so changes in viewer size/visibility can be trac
 			return; // already there
 		viewTileManagers.add(viewTileManager);
 		textureLoadedSignal.connect(viewTileManager.onTextureLoadedSlot);
+		viewTileManager.loadStatusChanged.connect(updateLoadStatusSlot);
 		// viewTileManager.tileSetChangedSignal.connect(updateFuturePreFetchSlot);
 		viewTileManager.setTextureCache(getTextureCache());
 	}
@@ -159,7 +171,11 @@ implements ComponentListener // so changes in viewer size/visibility can be trac
 	}
 
 	public void setLoadStatus(LoadStatus loadStatus) {
+		if (this.loadStatus == loadStatus)
+			return; // no change
+		log.info("Load status changed to "+loadStatus);
 		this.loadStatus = loadStatus;
+		loadStatusChangedSignal.emit(loadStatus);
 	}
 
 	public SharedVolumeImage getSharedVolumeImage() {
@@ -181,7 +197,51 @@ implements ComponentListener // so changes in viewer size/visibility can be trac
 		return sharedVolumeImage.volumeInitializedSignal;
 	}
 
+	private void updateLoadStatus() {
+		LoadStatus result;
+		if (sharedVolumeImage == null) {
+			setLoadStatus(LoadStatus.UNINITIALIZED);
+			return;
+		}
+		// Prepare to analyze each ViewTileManager's loadStatus
+		int totalVtmCount = 0;
+		int bestVtmCount = 0;
+		int imperfectVtmCount = 0;
+		int emptyVtmCount = 0;
+		for (ViewTileManager vtm : viewTileManagers) {
+			if (! vtm.getTileConsumer().isShowing())
+				continue;
+			totalVtmCount += 1;
+			if (vtm.getLoadStatus() == ViewTileManager.LoadStatus.BEST_TEXTURES_LOADED)
+				bestVtmCount += 1;
+			else if (vtm.getLoadStatus() == ViewTileManager.LoadStatus.IMPERFECT_TEXTURES_LOADED)
+				imperfectVtmCount += 1;
+			else
+				emptyVtmCount += 1;
+		}
+		LoadStatus activeLoadStatus;
+		if (totalVtmCount == bestVtmCount)
+			activeLoadStatus = LoadStatus.BEST_TEXTURES_LOADED;
+		else if (emptyVtmCount == totalVtmCount)
+			activeLoadStatus = LoadStatus.NO_TEXTURES_LOADED;
+		else
+			activeLoadStatus = LoadStatus.IMPERFECT_TEXTURES_LOADED;
+		if (activeLoadStatus.ordinal() < LoadStatus.BEST_TEXTURES_LOADED.ordinal())
+			// precache does not matter if there are missing display textures
+			setLoadStatus(activeLoadStatus);
+		// Is prefetch cache full?
+		else if (textureCache.hasQueuedTextures())
+			setLoadStatus(activeLoadStatus);
+		else
+			setLoadStatus(LoadStatus.PREFETCH_COMPLETE);
+	}
+	
 	private void rearrangeLoadQueue(TileSet currentTiles) {
+		for (ViewTileManager vtm : viewTileManagers) {
+			vtm.updateDisplayTiles();
+		}
+		updateLoadStatus();
+		
 		// log.info("updatePreFetchSlot");
 		futurePreFetcher.clear();
 		
@@ -189,12 +249,10 @@ implements ComponentListener // so changes in viewer size/visibility can be trac
 		int maxCacheable = (int)(0.90 * getTextureCache().getFutureCache().getMaxSize());
 
 		// First in line are current display tiles
-		// TODO - separate these into low res and max res
-		// getDisplayTiles(); // update current view
+		// Prepare to analyze each ViewTileManager's loadStatus
 		for (ViewTileManager vtm : viewTileManagers) {
 			if (! vtm.getTileConsumer().isShowing())
 				continue;
-			vtm.updateDisplayTiles();
 			for (TileIndex ix : vtm.getNeededTextures()) {
 				if (cacheableTextures.contains(ix))
 					continue; // already noted
@@ -311,7 +369,9 @@ implements ComponentListener // so changes in viewer size/visibility can be trac
 
 		}			
 
-		// log.info("Number of queued textures = "+cacheableTextures.size());	
+		// log.info("Number of queued textures = "+cacheableTextures.size());
+		
+		updateLoadStatus();
 	}
 	
 	// Part of new way July 9, 2013

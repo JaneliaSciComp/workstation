@@ -4,6 +4,7 @@ import org.janelia.it.FlyWorkstation.gui.viewer3d.BoundingBox3d;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.CoordinateAxis;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.Vec3;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.camera.BasicObservableCamera3d;
+import org.janelia.it.FlyWorkstation.gui.viewer3d.slice_viewer.TileServer.LoadStatus;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.slice_viewer.action.AdvanceZSlicesAction;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.slice_viewer.action.GoBackZSlicesAction;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.slice_viewer.action.MouseMode;
@@ -35,6 +36,8 @@ import org.janelia.it.FlyWorkstation.gui.viewer3d.slice_viewer.skeleton.Skeleton
 import org.janelia.it.jacs.model.entity.Entity;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.slice_viewer.skeleton.SkeletonActor;
 import org.janelia.it.jacs.model.user_data.tiledMicroscope.TmWorkspace;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 // import org.slf4j.Logger;
 // import org.slf4j.LoggerFactory;
 
@@ -65,6 +68,8 @@ import java.util.List;
  */
 public class QuadViewUi extends JPanel
 {
+	private static final Logger log = LoggerFactory.getLogger(QuadViewUi.class);
+	
 	public static GLProfile glProfile = GLProfile.get(GLProfile.GL2);
 	// private static final Logger log = LoggerFactory.getLogger(QuadViewUi.class);
 
@@ -125,6 +130,7 @@ public class QuadViewUi extends JPanel
 		colorChannelWidget_3
 	};
 	private JLabel statusLabel = new JLabel("status area");
+	private LoadStatusLabel loadStatusLabel = new LoadStatusLabel();
 	
 	ZScanMode zScanMode = new ZScanMode(volumeImage);
 	
@@ -274,6 +280,14 @@ public class QuadViewUi extends JPanel
 		}
 	};
 	
+	private Slot1<TileServer.LoadStatus> onLoadStatusChangedSlot = new Slot1<TileServer.LoadStatus>() {
+		@Override
+		public void execute(LoadStatus status) {
+			log.info("load status ordinal "+status.ordinal());
+			loadStatusLabel.setLoadStatus(status);
+		}
+	};
+	
 	/**
 	 * Create the frame.
 	 */
@@ -282,6 +296,7 @@ public class QuadViewUi extends JPanel
 		volumeImage.volumeInitializedSignal.connect(onVolumeLoadedSlot);
 		sliceViewer.setImageColorModel(imageColorModel);
 		camera.getViewChangedSignal().connect(tileServer.refreshCurrentTileSetSlot);
+		tileServer.loadStatusChangedSignal.connect(onLoadStatusChangedSlot);
 		
 		colorChannelWidget_3.setVisible(false);
 		colorChannelWidget_2.setVisible(false);
@@ -550,28 +565,31 @@ public class QuadViewUi extends JPanel
 		JPanel viewerPanel = new JPanel();
 		splitPane_1.setLeftComponent(viewerPanel);
 		viewerPanel.setLayout(new GridBagLayout());
-		GridBagConstraints c = new GridBagConstraints();
-		c.gridx = 0; c.gridy = 0;
-		c.gridwidth = 1; c.gridheight = 1;
-		c.fill = GridBagConstraints.BOTH;
-		c.weightx = 1.0;
-		c.weighty = 1.0;
-		c.insets = new Insets(1,1,1,1);
+		
+		// Stupid WindowBuilder won't accept reuse of GridBagConstraints object;
+		// ...so the usual Java "create another class"...
+		class QuadrantConstraints extends GridBagConstraints {
+			public QuadrantConstraints(int x, int y) {
+				this.gridx = x; this.gridy = y;
+				this.gridwidth = 1; this.gridheight = 1;
+				this.fill = GridBagConstraints.BOTH;
+				this.weightx = 1.0;
+				this.weighty = 1.0;
+				this.insets = new Insets(1,1,1,1);				
+			}
+		};
 		
 		// Four quadrants for orthogonal views
 		// One panel for Z slice viewer (upper left northwest)
-		viewerPanel.add(nwViewer, c);
-		zViewerPanel.setLayout(new BoxLayout(zViewerPanel, BoxLayout.Y_AXIS));
-		// TODO - other three quadrants
-		c.gridx = 1; c.gridy = 0;
-		viewerPanel.add(neViewer, c);
-		c.gridx = 0; c.gridy = 1;
-		viewerPanel.add(swViewer, c);
-		c.gridx = 1; c.gridy = 1;
-		viewerPanel.add(seViewer, c);
+		viewerPanel.add(nwViewer, new QuadrantConstraints(0,0));
+		// other three quadrants
+		viewerPanel.add(neViewer, new QuadrantConstraints(1,0));
+		viewerPanel.add(swViewer, new QuadrantConstraints(0,1));
+		viewerPanel.add(seViewer, new QuadrantConstraints(1,1));
 		
 		sliceViewer.setCamera(camera);
 		sliceViewer.setBackground(Color.DARK_GRAY);
+		zViewerPanel.setLayout(new BoxLayout(zViewerPanel, BoxLayout.Y_AXIS));
 		zViewerPanel.add(sliceViewer);
 		volumeImage.volumeInitializedSignal.connect(updateRangesSlot);
 		camera.getZoomChangedSignal().connect(changeZoom);
@@ -696,6 +714,8 @@ public class QuadViewUi extends JPanel
 		
 		Component verticalGlue = Box.createVerticalGlue();
 		buttonsPanel.add(verticalGlue);
+		
+		buttonsPanel.add(loadStatusLabel);
 		
 		JButton btnClearCache = new JButton("Clear Cache");
 		btnClearCache.setAction(clearCacheAction);
@@ -1102,5 +1122,36 @@ public class QuadViewUi extends JPanel
 			imageColorModel.reset(volumeImage);
 			resetViewAction.actionPerformed(null);
 		}
+    };
+    
+    static class LoadStatusLabel extends JLabel {
+    	private TileServer.LoadStatus loadStatus = null;
+    	private ImageIcon busyIcon;
+    	private ImageIcon checkIcon;
+    	private ImageIcon emptyIcon;
+    	
+    	LoadStatusLabel() {
+    		this.busyIcon = new ImageIcon(QuadViewUi.class.getResource("/images/spinner.gif"));
+    		this.checkIcon = new ImageIcon(QuadViewUi.class.getResource("/images/Green_check.png"));
+    		this.emptyIcon = new ImageIcon(QuadViewUi.class.getResource("/images/folder_open.png"));
+    		// Place text over icon
+    		setHorizontalTextPosition(JLabel.CENTER);
+    		setVerticalTextPosition(JLabel.CENTER);
+    		//
+    		setLoadStatus(TileServer.LoadStatus.UNINITIALIZED);
+    	}
+    	
+    	void setLoadStatus(TileServer.LoadStatus loadStatus) {
+    		if (this.loadStatus == loadStatus)
+    			return; // no change
+    		this.loadStatus = loadStatus;
+    		setText(Integer.toString(loadStatus.ordinal() - 1));
+    		if (loadStatus.ordinal() >= TileServer.LoadStatus.BEST_TEXTURES_LOADED.ordinal()) 
+    			setIcon(checkIcon);
+    		else if (loadStatus.ordinal() >= TileServer.LoadStatus.NO_TEXTURES_LOADED.ordinal())
+    			setIcon(busyIcon);
+    		else
+    			setIcon(emptyIcon);
+    	}
     };
 }

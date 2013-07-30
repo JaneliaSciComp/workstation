@@ -17,10 +17,10 @@ public class TileSet
 extends HashSet<Tile2d>
 {
 	public static enum LoadStatus {
-		BEST_TEXTURES_LOADED,
-		COARSE_TEXTURES_LOADED,
+		NO_TEXTURES_LOADED,
 		SOME_TEXTURES_LOADED,
-		NO_TEXTURES_LOADED
+		COARSE_TEXTURES_LOADED,
+		BEST_TEXTURES_LOADED,
 	};
 
 	private LoadStatus loadStatus;

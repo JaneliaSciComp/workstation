@@ -63,10 +63,10 @@ public class ViewTileManager {
 	 */
 	
 	public static enum LoadStatus {
-		BEST_TEXTURES_LOADED,
-		IMPERFECT_TEXTURES_LOADED,
+		NO_TEXTURES_LOADED,
 		STALE_TEXTURES_LOADED,
-		NO_TEXTURES_LOADED
+		IMPERFECT_TEXTURES_LOADED,
+		BEST_TEXTURES_LOADED,
 	};
 	
 	private LoadStatus loadStatus = LoadStatus.NO_TEXTURES_LOADED;
@@ -90,6 +90,8 @@ public class ViewTileManager {
 	private TextureCache textureCache;
 	private SharedVolumeImage volumeImage;
 
+	public Signal1<LoadStatus> loadStatusChanged = new Signal1<LoadStatus>();
+	
 	public Slot1<TileIndex> onTextureLoadedSlot = new Slot1<TileIndex>() {
 		@Override
 		public void execute(TileIndex index) {
@@ -273,6 +275,7 @@ public class ViewTileManager {
 		if (loadStatus == this.loadStatus)
 			return;
 		this.loadStatus = loadStatus;
+		loadStatusChanged.emit(loadStatus);
 	}
 
 	public void setTextureCache(TextureCache textureCache) {

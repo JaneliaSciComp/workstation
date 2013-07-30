@@ -72,6 +72,12 @@ public class TextureCache
 
 	// Keep track of recently queued textures, to avoid redundant loads
 	
+	public boolean hasQueuedTextures() {
+		if (queuedTextureTime.size() == 0)
+			return false;
+		return true;
+	}
+	
 	public boolean isLoadQueued(TileIndex index) {
 		if (! queuedTextureTime.containsKey(index))
 			return false;
