@@ -56,5 +56,6 @@
 	<classpathentry kind="con" path="org.eclipse.jdt.USER_LIBRARY/Snappy"/>
 	<classpathentry kind="con" path="org.eclipse.jdt.junit.JUNIT_CONTAINER/4"/>
 	<classpathentry combineaccessrules="false" kind="src" path="/common"/>
+	<classpathentry kind="lib" path="lib/MagicApplet.jar"/>
 	<classpathentry kind="output" path="build/eclipse"/>
 </classpath>
