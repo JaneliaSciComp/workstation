@@ -143,6 +143,12 @@ public class Mip3d extends BaseGLViewer implements ActionListener {
             }
 
             this.renderer.addActor( brick );
+            AxesActor axes = new AxesActor();
+            BoundingBox3d brickBox = brick.getBoundingBox3d();
+            axes.setAxisLengths( brickBox.getWidth(), brickBox.getHeight(), brickBox.getDepth() );
+            axes.setFullAxes( true );
+            this.renderer.addActor( axes );
+
             return true;
         }
         else {
