@@ -53,7 +53,7 @@ public class MaskedVolume {
     public MaskedVolume(String baseDir) {
         this.baseDir = baseDir;
         this.fastLoadDir = baseDir + "/fastLoad";
-        this.archiveFastLoadDir = baseDir.replaceFirst("/groups", "/archive") + "/archive/fastLoad";
+        this.archiveFastLoadDir = baseDir + "/archive/fastLoad";
     }
     
     public String getSignalVolumePath() {
