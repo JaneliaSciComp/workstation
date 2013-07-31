@@ -68,6 +68,7 @@ import java.util.List;
  */
 public class QuadViewUi extends JPanel
 {
+	@SuppressWarnings("unused")
 	private static final Logger log = LoggerFactory.getLogger(QuadViewUi.class);
 	
 	public static GLProfile glProfile = GLProfile.get(GLProfile.GL2);
@@ -283,7 +284,7 @@ public class QuadViewUi extends JPanel
 	private Slot1<TileServer.LoadStatus> onLoadStatusChangedSlot = new Slot1<TileServer.LoadStatus>() {
 		@Override
 		public void execute(LoadStatus status) {
-			log.info("load status ordinal "+status.ordinal());
+			// log.info("load status ordinal "+status.ordinal());
 			loadStatusLabel.setLoadStatus(status);
 		}
 	};

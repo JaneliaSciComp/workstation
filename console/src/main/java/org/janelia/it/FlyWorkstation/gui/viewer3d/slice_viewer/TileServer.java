@@ -19,15 +19,13 @@ import org.janelia.it.FlyWorkstation.gui.viewer3d.slice_viewer.generator.SliceGe
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.util.concurrent.FutureCallback;
-
 public class TileServer 
 implements ComponentListener // so changes in viewer size/visibility can be tracked
 // implements VolumeImage3d
 {
 	private static final Logger log = LoggerFactory.getLogger(TileServer.class);
 
-	// TODO - derived from individual ViewTileManagers
+	// Derived from individual ViewTileManagers
 	public static enum LoadStatus {
 		UNINITIALIZED,
 		NO_TEXTURES_LOADED,
@@ -173,7 +171,7 @@ implements ComponentListener // so changes in viewer size/visibility can be trac
 	public void setLoadStatus(LoadStatus loadStatus) {
 		if (this.loadStatus == loadStatus)
 			return; // no change
-		log.info("Load status changed to "+loadStatus);
+		// log.info("Load status changed to "+loadStatus);
 		this.loadStatus = loadStatus;
 		loadStatusChangedSignal.emit(loadStatus);
 	}
