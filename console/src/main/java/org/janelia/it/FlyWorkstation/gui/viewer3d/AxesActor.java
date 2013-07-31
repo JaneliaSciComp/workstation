@@ -275,15 +275,17 @@ public class AxesActor implements GLActor
         inxBuf.put( zInx );
         inxBuf.rewind();
 
-        for ( int i = 0; i < lineBuffer.capacity(); i++ ) {
-            System.out.println("Line buffer " + i + " = " + lineBuffer.get());
-        }
-        lineBuffer.rewind();
+        if ( logger.isDebugEnabled() ) {
+            for ( int i = 0; i < lineBuffer.capacity(); i++ ) {
+                System.out.println("Line buffer " + i + " = " + lineBuffer.get());
+            }
+            lineBuffer.rewind();
 
-        for ( int i = 0; i < inxBuf.capacity(); i++ ) {
-            System.out.println("Index buffer " + i + " = " + inxBuf.get());
+            for ( int i = 0; i < inxBuf.capacity(); i++ ) {
+                System.out.println("Index buffer " + i + " = " + inxBuf.get());
+            }
+            inxBuf.rewind();
         }
-        inxBuf.rewind();
 
         // Push the coords over to GPU.
         // Make handles for subsequent use.
