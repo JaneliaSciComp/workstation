@@ -125,8 +125,10 @@ public class UglyColorSlider extends JSlider
 	 */
 	@Override
 	public void updateUI() {
-		if (ui == null)
+		if (ui == null) {
 			ui = new UglyColorSliderUI(this);
+			addMouseWheelListener(ui.createTrackListener(this));
+		}
 		setUI(ui);
 		// Update UI for slider labels. This must be called after updating the
 		// UI of the slider. Refer to JSlider.updateUI().

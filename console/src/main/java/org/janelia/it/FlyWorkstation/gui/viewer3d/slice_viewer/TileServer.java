@@ -130,6 +130,7 @@ implements ComponentListener // so changes in viewer size/visibility can be trac
 		minResPreFetcher.setTextureCache(getTextureCache());
 		futurePreFetcher.setTextureCache(getTextureCache());
 		textureCache.textureLoadedSignal.connect(textureLoadedSignal);
+		getTextureCache().queueDrainedSignal.connect(updateLoadStatusSlot);
 	}
 
 	public void addViewTileManager(ViewTileManager viewTileManager) {

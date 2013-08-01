@@ -25,8 +25,9 @@ public class TextureCache
 	public Signal getCacheClearedSignal() {
 		return cacheClearedSignal;
 	}
-
 	private Signal cacheClearedSignal = new Signal();
+	
+	public Signal queueDrainedSignal = new Signal();
 
 	public Signal1<TileIndex> textureLoadedSignal = new Signal1<TileIndex>();
 
@@ -73,7 +74,7 @@ public class TextureCache
 	// Keep track of recently queued textures, to avoid redundant loads
 	
 	public boolean hasQueuedTextures() {
-		if (queuedTextureTime.size() == 0)
+		if (queuedTextureTime.isEmpty())
 			return false;
 		return true;
 	}
@@ -96,7 +97,11 @@ public class TextureCache
 		if (isQueued) {
 			queuedTextureTime.put(index, System.nanoTime());
 		} else {
+			if (! queuedTextureTime.containsKey(index))
+				return;
 			queuedTextureTime.remove(index);
+			if (queuedTextureTime.isEmpty())
+				queueDrainedSignal.emit();
 		}
 	}
 	

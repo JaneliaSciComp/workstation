@@ -8,6 +8,7 @@ import java.awt.Rectangle;
 import java.awt.RenderingHints;
 import java.awt.Shape;
 import java.awt.event.MouseEvent;
+import java.awt.event.MouseWheelEvent;
 import java.awt.geom.Ellipse2D;
 import java.awt.geom.Rectangle2D;
 
@@ -321,6 +322,7 @@ class UglyColorSliderUI extends BasicSliderUI
 	 * This method is called when the user presses the Page Up or Down keys.
 	 */
 	public void scrollByBlock(int direction) {
+		// System.out.println("scroll by block "+direction);
 		synchronized (slider) {
 			int blockIncrement = (slider.getMaximum() - slider.getMinimum()) / 10;
 			if (blockIncrement <= 0 && slider.getMaximum() > slider.getMinimum()) {
@@ -347,6 +349,7 @@ class UglyColorSliderUI extends BasicSliderUI
 	 * This method is called when the user presses one of the arrow keys.
 	 */
 	public void scrollByUnit(int direction) {
+		// System.out.println("scroll by unit "+direction);
 		synchronized (slider) {
 			int delta = 1 * ((direction > 0) ? POSITIVE_SCROLL : NEGATIVE_SCROLL);
 
@@ -359,7 +362,7 @@ class UglyColorSliderUI extends BasicSliderUI
 				colorSlider.setGrayLevel(oldValue + delta);
 			} else { // black
 				int oldValue = slider.getValue();
-			slider.setValue(oldValue + delta);
+				slider.setValue(oldValue + delta);
 			}
 		}
 	}
@@ -517,6 +520,7 @@ class UglyColorSliderUI extends BasicSliderUI
 			whiteDragging = false;
 			slider.setValueIsAdjusting(false);
 			super.mouseReleased(e);
+			// System.out.println("mouse release");
 		}
 
 		@Override
@@ -546,6 +550,16 @@ class UglyColorSliderUI extends BasicSliderUI
 			return false;
 		}
 
+		@Override 
+		public void mouseWheelMoved(MouseWheelEvent event) {
+			if (! slider.isEnabled())
+				return;
+			int notches = event.getWheelRotation();
+			if (notches == 0)
+				return;
+			scrollByUnit(notches);
+		}
+		
 		/**
 		 * Moves the location of the black thumb, and sets its corresponding
 		 * value in the slider.
