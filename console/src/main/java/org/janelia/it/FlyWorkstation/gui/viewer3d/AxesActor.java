@@ -22,6 +22,7 @@ import java.nio.IntBuffer;
 public class AxesActor implements GLActor
 {
     private static final double DEFAULT_AXIS_LEN = 1000.0;
+    public static final float TICK_SIZE = 15.0f;
 
     public enum RenderMethod {MAXIMUM_INTENSITY, ALPHA_BLENDING}
 
@@ -239,14 +240,11 @@ public class AxesActor implements GLActor
                 boundingBox.getMaxZ() + overhang + 2.0f
         );
 
-        ByteBuffer baseBuffer = ByteBuffer.allocateDirect( Float.SIZE / 8 * (coords.length + xShapeCoords.length + yShapeCoords.length + zShapeCoords.length) );
-        baseBuffer.order( ByteOrder.nativeOrder() );
-        FloatBuffer lineBuffer = baseBuffer.asFloatBuffer();
-        lineBuffer.put( coords );
-        lineBuffer.put( xShapeCoords );
-        lineBuffer.put( yShapeCoords );
-        lineBuffer.put( zShapeCoords );
-        lineBuffer.rewind();
+        float[] tickOrigin = new float[] {
+                (float)boundingBox.getMinX(),
+                (float)boundingBox.getMaxY(),
+                (float)boundingBox.getMaxZ()
+        };
 
         int numIndices = 6;
         int numVertices = 6;
@@ -260,6 +258,35 @@ public class AxesActor implements GLActor
         numIndices += 4;
         numVertices += zInx.length;
 
+        int[] numInxArr  = new int[] { numIndices };
+
+        Geometry xTicks = getTickGeometry( tickOrigin, TICK_SIZE, new AxisIteration( 0, 1 ), new AxisIteration( 1, -1 ), 2, numInxArr );
+        Geometry yTicks = getTickGeometry( tickOrigin, TICK_SIZE, new AxisIteration( 1, -1 ), new AxisIteration( 2, -1 ), 0, numInxArr );
+        Geometry zTicks = getTickGeometry( tickOrigin, TICK_SIZE, new AxisIteration( 2, -1 ), new AxisIteration( 0, 1 ), 1, numInxArr );
+        int tickTotal = xTicks.getIndices().length;
+        tickTotal += yTicks.getIndices().length;
+        tickTotal += zTicks.getIndices().length;
+        numIndices += tickTotal;
+
+        tickTotal = xTicks.getVertices().length;
+        tickTotal += yTicks.getVertices().length;
+        tickTotal += zTicks.getVertices().length;
+        numVertices += tickTotal;
+
+        ByteBuffer baseBuffer = ByteBuffer.allocateDirect(
+                Float.SIZE / 8 * (coords.length + xShapeCoords.length + yShapeCoords.length + zShapeCoords.length + xTicks.getVertices().length + yTicks.getVertices().length + zTicks.getVertices().length )
+        );
+        baseBuffer.order( ByteOrder.nativeOrder() );
+        FloatBuffer lineBuffer = baseBuffer.asFloatBuffer();
+        lineBuffer.put( coords );
+        lineBuffer.put( xShapeCoords );
+        lineBuffer.put( yShapeCoords );
+        lineBuffer.put( zShapeCoords );
+        lineBuffer.put( xTicks.getVertices() );
+        lineBuffer.put( yTicks.getVertices() );
+        lineBuffer.put( zTicks.getVertices() );
+        lineBuffer.rewind();
+
         ByteBuffer inxBase = ByteBuffer.allocateDirect( numVertices * Integer.SIZE / 8 );
         lineBufferVertexCount = numVertices;
 
@@ -272,6 +299,9 @@ public class AxesActor implements GLActor
         inxBuf.put( xInx );
         inxBuf.put( yInx );
         inxBuf.put( zInx );
+        inxBuf.put( xTicks.getIndices() );
+        inxBuf.put( yTicks.getIndices() );
+        inxBuf.put( zTicks.getIndices() );
         inxBuf.rewind();
 
         if ( logger.isDebugEnabled() ) {
@@ -315,23 +345,6 @@ public class AxesActor implements GLActor
                 inxBuf,
                 GL2.GL_STATIC_DRAW
         );
-    }
-
-    /** DEBUG code to help understand what is happening with vtx or tex points. */
-    private void printPoints(String type, double[] p1, double[] p2, double[] p3, double[] p4) {
-        System.out.print(type + " [");
-        printPoint(p1);
-        System.out.print("][");
-        printPoint(p2);
-        System.out.print("][");
-        printPoint(p3);
-        System.out.print("][");
-        printPoint(p4);
-        System.out.println("]");
-    }
-
-    private void printPoint(double[] p) {
-        System.out.printf("%s, %s, %s", Double.toString(p[0]), Double.toString(p[1]), Double.toString(p[2]));
     }
 
     private void reportError(GL2 gl, String source) {
@@ -446,14 +459,95 @@ public class AxesActor implements GLActor
         return axisLength / 100;
     }
 
-    private float[] getXTickVertices() {
-        int tickCount = getTickCount(new Float(axisLengths[0]).intValue());
-        float[] rtnVal = new float[ tickCount * 6 ];
-        for ( int i = 0; i < tickCount; i++ ) {
+    /**
+     * Ticks have all of a certain coordinate of one axis (the constant axis) the same.  They have an axis along
+     * which they progress (tick 1, tick 2, ... etc., occur along the tick axis).  They have a variance axis: that
+     * is the tick's line segment grows in one particular direction (the tick shape axis).  All are established
+     * relative to some origin.  Ticks move between one vertex and the other over a certain distance (the tick size).
+     *
+     * @param origin all vertices are relative to this.
+     * @param tickSize how big will the ticks be?
+     * @param tickAxis along which axis will ticks be placed?
+     * @param tickShapeAxis when a tick is drawn, which way?
+     * @param constantAxis this one stays same as that of origin, for all tick vertices.
+     * @param numInxarr pointer-like array, to hold starting/ending index offset.
+     * @return geometry containing both vertices and the line indices.
+     */
+    private Geometry getTickGeometry(
+            float[] origin, float tickSize,
+            AxisIteration tickAxis,
+            AxisIteration tickShapeAxisIteration,
+            int constantAxis,
+            int[] numInxarr
+    ) {
+        int tickCount = getTickCount(new Float(axisLengths[tickAxis.getAxisNum()]).intValue());
+        int tickOffset = (int)axisLengths[ tickAxis.getAxisNum() ] / tickCount;
+        float[] vertices = new float[ tickCount * 6 ];
+        int[] indices = new int[ 2 * tickCount ];
 
+        int baseInxOffset = numInxarr[ 0 ];
+        int indexCount = 0;
+        for ( int i = 0; i < tickCount; i++ ) {
+            // Drawing path along one axis.
+            float x = origin[ tickAxis.getAxisNum() ] + (tickAxis.getIterationDirectionMultiplier() * (float)(i * tickOffset) );
+            for ( int vertexI = 0; vertexI < 2; vertexI++ ) {
+                float tickVariance = origin[ tickShapeAxisIteration.getAxisNum() ] +
+                        ( tickShapeAxisIteration.getIterationDirectionMultiplier() * ( vertexI * tickSize ) );
+                vertices[ i * 6 + vertexI * 3 + tickAxis.getAxisNum() ] = x;
+                vertices[ i * 6 + vertexI * 3 + tickShapeAxisIteration.getAxisNum() ] = tickVariance;
+                vertices[ i * 6 + vertexI * 3 + constantAxis ] = origin[ constantAxis ];
+
+                // The indices of these little lines run n, n+1 for each.
+                indices[ indexCount ] = baseInxOffset + (indexCount ++);
+            }
         }
 
+        Geometry rtnVal = new Geometry();
+        rtnVal.setVertices( vertices );
+        rtnVal.setIndices( indices );
+        numInxarr[ 0 ] += indexCount;
         return rtnVal;
+    }
+
+    /** Convenience class to carry around all numbers associated with some thing to draw. */
+    private class Geometry {
+        private float[] vertices;
+        private int[] indices;
+
+        public float[] getVertices() {
+            return vertices;
+        }
+
+        public void setVertices(float[] vertices) {
+            this.vertices = vertices;
+        }
+
+        public int[] getIndices() {
+            return indices;
+        }
+
+        public void setIndices(int[] indices) {
+            this.indices = indices;
+        }
+    }
+
+    private class AxisIteration {
+        private int axisNum;
+        private int iterationDirectionMultiplier;
+
+        public AxisIteration( int axisNum, int iterationDirectionMultiplier ) {
+            this.axisNum = axisNum;
+            this.iterationDirectionMultiplier = iterationDirectionMultiplier;
+        }
+
+        public int getAxisNum() {
+            return axisNum;
+        }
+
+        public int getIterationDirectionMultiplier() {
+            return iterationDirectionMultiplier;
+        }
+
     }
 
 }
