@@ -130,7 +130,7 @@ public class AxesActor implements GLActor
         gl.glBindBuffer( GL2.GL_ARRAY_BUFFER, lineBufferHandle );
         reportError( gl, "Display of axes-actor 1" );
 
-        gl.glColor3f( 0.2f, 0.2f, 0.2f );
+        gl.glColor4f(0.2f, 0.2f, 0.2f, 0.4f);
         reportError( gl, "Display of axes-actor 2" );
 
         gl.glEnableClientState( GL2.GL_VERTEX_ARRAY );
@@ -148,7 +148,6 @@ public class AxesActor implements GLActor
         gl.glDisableClientState( GL2.GL_VERTEX_ARRAY );
         gl.glDisable( GL2.GL_LINE_SMOOTH );
         reportError( gl, "Display of axes-actor 6" );
-
 
 		gl.glPopAttrib();
 	}
@@ -439,6 +438,22 @@ public class AxesActor implements GLActor
         return new int[] {
                 0 + offset, 1 + offset, 0 + offset, 3 + offset, 2 + offset, 3 + offset
         };
+    }
+
+    // Tick mark support.
+    private int getTickCount( int axisLength ) {
+        // Going for one / 100
+        return axisLength / 100;
+    }
+
+    private float[] getXTickVertices() {
+        int tickCount = getTickCount(new Float(axisLengths[0]).intValue());
+        float[] rtnVal = new float[ tickCount * 6 ];
+        for ( int i = 0; i < tickCount; i++ ) {
+
+        }
+
+        return rtnVal;
     }
 
 }
