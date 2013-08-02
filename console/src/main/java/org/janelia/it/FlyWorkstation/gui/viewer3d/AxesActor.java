@@ -184,61 +184,28 @@ public class AxesActor implements GLActor
     }
 
     private void buildBuffers(GL2 gl) {
-        // Coords includes three line segments, requiring two endpoints, and one for each axis.
-        int coordsPerAxis = 3 * 2;
         BoundingBox3d boundingBox = getBoundingBox3d();
-        float[] coords = new float[ axisLengths.length * coordsPerAxis ];
-
-        // Notes on shape:
-        //   Want to have the axes all pass through the origin, but go beyond just a few voxels, to avoid having
-        //   lines on a single plane running together too much.
-
-        float overhang = (float)boundingBox.getDepth() / 8.0f;
-        // Start of X
-        coords[ 0 ] = (float)boundingBox.getMinX() - overhang;
-        coords[ 1 ] = (float)boundingBox.getMaxY();
-        coords[ 2 ] = (float)boundingBox.getMaxZ();
-
-        // End of X
-        coords[ 3 ] = bFullAxes ? (float)boundingBox.getMaxX() : (float)boundingBox.getMinX() + 100;
-        coords[ 4 ] = (float)boundingBox.getMaxY();
-        coords[ 5 ] = (float)boundingBox.getMaxZ();
-
-        // Start of Y
-        coords[ 6 ] = (float)boundingBox.getMinX();
-        coords[ 7 ] = (float)boundingBox.getMaxY() + overhang;
-        coords[ 8 ] = (float)boundingBox.getMaxZ();
-
-        // End of Y
-        coords[ 9 ] = (float)boundingBox.getMinX();
-        coords[ 10 ] = bFullAxes ? (float)boundingBox.getMinY() : (float)boundingBox.getMaxY() - 100;
-        coords[ 11 ] = (float)boundingBox.getMaxZ();
-
-        // Start of Z
-        coords[ 12 ] = (float)boundingBox.getMinX();
-        coords[ 13 ] = (float)boundingBox.getMaxY();
-        coords[ 14 ] = (float)boundingBox.getMaxZ() + overhang;
-
-        // End of Z
-        coords[ 15 ] = (float)boundingBox.getMinX();
-        coords[ 16 ] = (float)boundingBox.getMaxY();
-        coords[ 17 ] = bFullAxes ? (float)boundingBox.getMinZ() : (float)boundingBox.getMaxZ() - 100;
+        Geometry axisGeometry = getAxisGeometry(boundingBox, 0);
+        int numVertices = axisGeometry.getVertices().length;
 
         float[] xShapeCoords = getXShapeCoords(
-                boundingBox.getMinX() - overhang - 2.0f,
+                boundingBox.getMinX() - getOverhang( boundingBox ) - 2.0f,
                 boundingBox.getMaxY(),
                 boundingBox.getMaxZ()
         );
+        numVertices += xShapeCoords.length;
         float[] yShapeCoords = getYShapeCoords(
                 boundingBox.getMinX(),
-                boundingBox.getMaxY() + overhang + 2.0f,
+                boundingBox.getMaxY() + getOverhang( boundingBox ) + 2.0f,
                 boundingBox.getMaxZ()
         );
+        numVertices += yShapeCoords.length;
         float[] zShapeCoords = getZShapeCoords(
                 boundingBox.getMinX(),
                 boundingBox.getMaxY(),
-                boundingBox.getMaxZ() + overhang + 2.0f
+                boundingBox.getMaxZ() + getOverhang( boundingBox ) + 2.0f
         );
+        numVertices += zShapeCoords.length;
 
         float[] tickOrigin = new float[] {
                 (float)boundingBox.getMinX(),
@@ -246,23 +213,21 @@ public class AxesActor implements GLActor
                 (float)boundingBox.getMaxZ()
         };
 
-        int numIndices = 6;
-        int numVertices = 6;
+        int numIndices = axisGeometry.getIndices().length;
         int[] xInx = getXIndices( numIndices );
-        numIndices += 4;
-        numVertices += xInx.length;
-        int[] yInx = getYIndices(numIndices);
-        numIndices += 4;
-        numVertices += yInx.length;
+        numIndices += xInx.length;
+        int[] yInx = getYIndices( numIndices );
+        numIndices += yInx.length;
         int[] zInx = getZIndices( numIndices );
-        numIndices += 4;
-        numVertices += zInx.length;
+        numIndices += zInx.length;
 
-        int[] numInxArr  = new int[] { numIndices };
+        Geometry xTicks = getTickGeometry( tickOrigin, TICK_SIZE, new AxisIteration( 0, 1 ), new AxisIteration( 1, -1 ), 2, numIndices );
+        numIndices += xTicks.getIndices().length;
+        Geometry yTicks = getTickGeometry( tickOrigin, TICK_SIZE, new AxisIteration( 1, -1 ), new AxisIteration( 2, -1 ), 0, numIndices );
+        numIndices += yTicks.getIndices().length;
+        Geometry zTicks = getTickGeometry( tickOrigin, TICK_SIZE, new AxisIteration( 2, -1 ), new AxisIteration( 0, 1 ), 1, numIndices );
+        numIndices += zTicks.getIndices().length;
 
-        Geometry xTicks = getTickGeometry( tickOrigin, TICK_SIZE, new AxisIteration( 0, 1 ), new AxisIteration( 1, -1 ), 2, numInxArr );
-        Geometry yTicks = getTickGeometry( tickOrigin, TICK_SIZE, new AxisIteration( 1, -1 ), new AxisIteration( 2, -1 ), 0, numInxArr );
-        Geometry zTicks = getTickGeometry( tickOrigin, TICK_SIZE, new AxisIteration( 2, -1 ), new AxisIteration( 0, 1 ), 1, numInxArr );
         int tickTotal = xTicks.getIndices().length;
         tickTotal += yTicks.getIndices().length;
         tickTotal += zTicks.getIndices().length;
@@ -274,11 +239,11 @@ public class AxesActor implements GLActor
         numVertices += tickTotal;
 
         ByteBuffer baseBuffer = ByteBuffer.allocateDirect(
-                Float.SIZE / 8 * (coords.length + xShapeCoords.length + yShapeCoords.length + zShapeCoords.length + xTicks.getVertices().length + yTicks.getVertices().length + zTicks.getVertices().length )
+                Float.SIZE / 8 * (axisGeometry.getVertices().length + xShapeCoords.length + yShapeCoords.length + zShapeCoords.length + xTicks.getVertices().length + yTicks.getVertices().length + zTicks.getVertices().length )
         );
         baseBuffer.order( ByteOrder.nativeOrder() );
         FloatBuffer lineBuffer = baseBuffer.asFloatBuffer();
-        lineBuffer.put( coords );
+        lineBuffer.put( axisGeometry.getVertices() );
         lineBuffer.put( xShapeCoords );
         lineBuffer.put( yShapeCoords );
         lineBuffer.put( zShapeCoords );
@@ -292,10 +257,7 @@ public class AxesActor implements GLActor
 
         inxBase.order( ByteOrder.nativeOrder() );
         IntBuffer inxBuf = inxBase.asIntBuffer();
-        for ( int i = 0; i < 3; i++ ) {
-            inxBuf.put( 2*i );
-            inxBuf.put( 2*i + 1 );
-        }
+        inxBuf.put( axisGeometry.getIndices() );
         inxBuf.put( xInx );
         inxBuf.put( yInx );
         inxBuf.put( zInx );
@@ -345,6 +307,58 @@ public class AxesActor implements GLActor
                 inxBuf,
                 GL2.GL_STATIC_DRAW
         );
+    }
+
+    private Geometry getAxisGeometry(BoundingBox3d boundingBox, int indexOffset) {
+        // Coords includes three line segments, requiring two endpoints, and one for each axis.
+        int coordsPerAxis = 3 * 2;
+        float[] vertices = new float[ axisLengths.length * coordsPerAxis ];
+
+        // Notes on shape:
+        //   Want to have the axes all pass through the origin, but go beyond just a few voxels, to avoid having
+        //   lines on a single plane running together too much.
+        // Start of X
+        float overhang = getOverhang(boundingBox);
+        vertices[ 0 ] = (float)boundingBox.getMinX() - overhang;
+        vertices[ 1 ] = (float)boundingBox.getMaxY();
+        vertices[ 2 ] = (float)boundingBox.getMaxZ();
+
+        // End of X
+        vertices[ 3 ] = bFullAxes ? (float)boundingBox.getMaxX() : (float)boundingBox.getMinX() + 100;
+        vertices[ 4 ] = (float)boundingBox.getMaxY();
+        vertices[ 5 ] = (float)boundingBox.getMaxZ();
+
+        // Start of Y
+        vertices[ 6 ] = (float)boundingBox.getMinX();
+        vertices[ 7 ] = (float)boundingBox.getMaxY() + overhang;
+        vertices[ 8 ] = (float)boundingBox.getMaxZ();
+
+        // End of Y
+        vertices[ 9 ] = (float)boundingBox.getMinX();
+        vertices[ 10 ] = bFullAxes ? (float)boundingBox.getMinY() : (float)boundingBox.getMaxY() - 100;
+        vertices[ 11 ] = (float)boundingBox.getMaxZ();
+
+        // Start of Z
+        vertices[ 12 ] = (float)boundingBox.getMinX();
+        vertices[ 13 ] = (float)boundingBox.getMaxY();
+        vertices[ 14 ] = (float)boundingBox.getMaxZ() + overhang;
+
+        // End of Z
+        vertices[ 15 ] = (float)boundingBox.getMinX();
+        vertices[ 16 ] = (float)boundingBox.getMaxY();
+        vertices[ 17 ] = bFullAxes ? (float)boundingBox.getMinZ() : (float)boundingBox.getMaxZ() - 100;
+
+        int[] indices = new int[ coordsPerAxis ];
+        for ( int i = 0; i < 3; i++ ) {
+            indices[ 2*i ] = 2*i + indexOffset;
+            indices[ 2*i + 1 ] = 2*i + 1 + indexOffset;
+        }
+
+        return new Geometry( vertices, indices );
+    }
+
+    private float getOverhang(BoundingBox3d boundingBox) {
+        return (float)boundingBox.getDepth() / 8.0f;
     }
 
     private void reportError(GL2 gl, String source) {
@@ -478,14 +492,13 @@ public class AxesActor implements GLActor
             AxisIteration tickAxis,
             AxisIteration tickShapeAxisIteration,
             int constantAxis,
-            int[] numInxarr
+            int baseInxOffset
     ) {
         int tickCount = getTickCount(new Float(axisLengths[tickAxis.getAxisNum()]).intValue());
         int tickOffset = (int)axisLengths[ tickAxis.getAxisNum() ] / tickCount;
         float[] vertices = new float[ tickCount * 6 ];
         int[] indices = new int[ 2 * tickCount ];
 
-        int baseInxOffset = numInxarr[ 0 ];
         int indexCount = 0;
         for ( int i = 0; i < tickCount; i++ ) {
             // Drawing path along one axis.
@@ -505,7 +518,6 @@ public class AxesActor implements GLActor
         Geometry rtnVal = new Geometry();
         rtnVal.setVertices( vertices );
         rtnVal.setIndices( indices );
-        numInxarr[ 0 ] += indexCount;
         return rtnVal;
     }
 
@@ -513,6 +525,13 @@ public class AxesActor implements GLActor
     private class Geometry {
         private float[] vertices;
         private int[] indices;
+
+        public Geometry() {}
+
+        public Geometry( float[] vertices, int[] indices ) {
+            this.vertices = vertices;
+            this.indices = indices;
+        }
 
         public float[] getVertices() {
             return vertices;
