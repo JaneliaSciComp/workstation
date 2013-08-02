@@ -60,7 +60,8 @@ public class TestMip3d {
                     //String fn = "/Volumes/jacsData/filestore/asoy/Separation/206/690/1823963551044206690/separate/ConsolidatedSignal.v3dpbd";   // 1672 x 1024 x 360
                     //String fn = "/Volumes/jacsData/filestore/asoy/Separation/998/562/1823854828887998562/separate/ConsolidatedSignal.v3dpbd";
                     //String fn = "/Volumes/jacsData/filestore/asoy/Separation/475/490/1823622563356475490/separate/ConsolidatedSignal.v3dpbd";
-                    String fn = "/Volumes/jacsData/filestore/asoy/Separation/309/922/1822667866399309922/separate/ConsolidatedSignal.v3dpbd";
+                    //String fn = "/Volumes/jacsData/filestore/asoy/Separation/309/922/1822667866399309922/separate/ConsolidatedSignal.v3dpbd";
+                    String fn = "/Volumes/mousebrainmicro/render/2013-03-25-Liver/default.0.tif";
 
                     // All black.  String fn = "/Volumes/jacsData/MaskResources/Compartment/maskRGB.v3dpbd";
 

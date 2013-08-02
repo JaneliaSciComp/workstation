@@ -373,6 +373,12 @@ public class QuadViewUi extends JPanel
                 public List<JMenuItem> getMenus(MouseEvent event) {
                     List<JMenuItem> result = new Vector<JMenuItem>();
                     result.add(addFileMenuItem());
+/*
+LLF: the hookup for the 3d snapshot.
+                    for ( JMenuItem item: sliceViewer.getLocalItems() ) {
+                        result.add(item);
+                    }
+*/
                     result.add(addViewMenuItem());
                     return result;
                 }

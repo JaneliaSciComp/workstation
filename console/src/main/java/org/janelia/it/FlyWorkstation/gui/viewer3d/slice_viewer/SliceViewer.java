@@ -9,6 +9,8 @@ import org.janelia.it.FlyWorkstation.gui.viewer3d.camera.ObservableCamera3d;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.interfaces.GLActor;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.interfaces.Viewport;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.interfaces.VolumeImage3d;
+import org.janelia.it.FlyWorkstation.gui.viewer3d.passive_3d.Snapshot3d;
+import org.janelia.it.FlyWorkstation.gui.viewer3d.passive_3d.ViewTileManagerVolumeSource;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.slice_viewer.action.BasicMouseMode;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.slice_viewer.action.MouseMode;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.slice_viewer.action.PanMode;
@@ -31,11 +33,10 @@ import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
-import java.awt.event.KeyEvent;
-import java.awt.event.MouseEvent;
-import java.awt.event.MouseWheelEvent;
+import java.awt.event.*;
 import java.awt.geom.Point2D;
 import java.text.DecimalFormat;
+import java.util.Arrays;
 import java.util.List;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -46,6 +47,8 @@ extends GLJPanel
 implements MouseModalWidget, TileConsumer
 {
 	private static final Logger log = LoggerFactory.getLogger(SliceViewer.class);
+
+    private boolean optInStatic3d = false;
 
 	protected MouseMode mouseMode;
 	protected MouseMode.Mode mouseModeId;
@@ -144,7 +147,7 @@ implements MouseModalWidget, TileConsumer
             @Override
             protected void popupTriggered(MouseEvent e) {
                 // System.out.println("popup");
-                if (e.isConsumed()) 
+                if (e.isConsumed())
                     return;
                 JPopupMenu popupMenu = new JPopupMenu();
                 // Mode specific menu items first
@@ -431,5 +434,42 @@ implements MouseModalWidget, TileConsumer
 	public void keyReleased(KeyEvent event) {
 		mouseMode.keyPressed(event);
 	}
+
+    // TEMP public setting... LLF, 8/2/2013
+    public List<JMenuItem> getLocalItems() {
+        JMenuItem snapShot3dItem = new JMenuItem( "3D Snapshot" );
+
+        List<JMenuItem> rtnVal = Arrays.asList( snapShot3dItem );
+        snapShot3dItem.addActionListener( new ActionListener() {
+            @Override
+            public void actionPerformed( ActionEvent ae ) {
+                launch3dViewer();
+            }
+
+        });
+
+        return rtnVal;
+    }
+
+    /** Launches a 3D popup static-block viewer. */
+    private void launch3dViewer() {
+        // Todo make this runnable under a worker thread.
+        try {
+            ViewTileManagerVolumeSource collector = new ViewTileManagerVolumeSource(
+                    getCamera(),
+                    getViewport(),
+                    getSliceAxis(),
+                    getViewerInGround(),
+                    tileServer
+            );
+
+            Snapshot3d snapshotViewer = new Snapshot3d();
+            snapshotViewer.launch( collector );
+
+        } catch ( Exception ex ) {
+            System.err.println("Failed to launch viewer: " + ex.getMessage());
+            ex.printStackTrace();
+        }
+    }
 
 }

@@ -123,6 +123,11 @@ public class TileTexture
 		return texture;
 	}
 
+    /** Allows client to use data contents, rather than data contents being used exclusively/directly for GL display. */
+    public TextureData2dGL getTextureData() {
+        return textureData;
+    }
+
 	public void init(GL2 gl) 
 	{
 		if (textureData == null)
