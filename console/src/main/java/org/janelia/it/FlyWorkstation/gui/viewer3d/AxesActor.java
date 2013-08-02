@@ -186,40 +186,26 @@ public class AxesActor implements GLActor
     private void buildBuffers(GL2 gl) {
         BoundingBox3d boundingBox = getBoundingBox3d();
         Geometry axisGeometry = getAxisGeometry(boundingBox, 0);
+        int numIndices = axisGeometry.getIndices().length;
         int numVertices = axisGeometry.getVertices().length;
 
-        float[] xShapeCoords = getXShapeCoords(
-                boundingBox.getMinX() - getOverhang( boundingBox ) - 2.0f,
-                boundingBox.getMaxY(),
-                boundingBox.getMaxZ()
-        );
-        numVertices += xShapeCoords.length;
-        float[] yShapeCoords = getYShapeCoords(
-                boundingBox.getMinX(),
-                boundingBox.getMaxY() + getOverhang( boundingBox ) + 2.0f,
-                boundingBox.getMaxZ()
-        );
-        numVertices += yShapeCoords.length;
-        float[] zShapeCoords = getZShapeCoords(
-                boundingBox.getMinX(),
-                boundingBox.getMaxY(),
-                boundingBox.getMaxZ() + getOverhang( boundingBox ) + 2.0f
-        );
-        numVertices += zShapeCoords.length;
+        Geometry xShapeGeometry = getXShapeGeometry(boundingBox, numIndices);
+        numIndices += xShapeGeometry.getIndices().length;
+        numVertices += xShapeGeometry.getVertices().length;
+
+        Geometry yShapeGeometry = getYShapeGeometry(boundingBox, numIndices);
+        numIndices += yShapeGeometry.getIndices().length;
+        numVertices += yShapeGeometry.getVertices().length;
+
+        Geometry zShapeGeometry = getZShapeGeometry(boundingBox, numIndices);
+        numIndices += zShapeGeometry.getIndices().length;
+        numVertices += zShapeGeometry.getVertices().length;
 
         float[] tickOrigin = new float[] {
                 (float)boundingBox.getMinX(),
                 (float)boundingBox.getMaxY(),
                 (float)boundingBox.getMaxZ()
         };
-
-        int numIndices = axisGeometry.getIndices().length;
-        int[] xInx = getXIndices( numIndices );
-        numIndices += xInx.length;
-        int[] yInx = getYIndices( numIndices );
-        numIndices += yInx.length;
-        int[] zInx = getZIndices( numIndices );
-        numIndices += zInx.length;
 
         Geometry xTicks = getTickGeometry( tickOrigin, TICK_SIZE, new AxisIteration( 0, 1 ), new AxisIteration( 1, -1 ), 2, numIndices );
         numIndices += xTicks.getIndices().length;
@@ -233,14 +219,23 @@ public class AxesActor implements GLActor
         numVertices += zTicks.getVertices().length;
 
         ByteBuffer baseBuffer = ByteBuffer.allocateDirect(
-                Float.SIZE / 8 * (axisGeometry.getVertices().length + xShapeCoords.length + yShapeCoords.length + zShapeCoords.length + xTicks.getVertices().length + yTicks.getVertices().length + zTicks.getVertices().length )
+                Float.SIZE / 8 * (
+                        axisGeometry.getVertices().length +
+                        xShapeGeometry.getVertices().length +
+                        yShapeGeometry.getVertices().length +
+                        zShapeGeometry.getVertices().length +
+                        xTicks.getVertices().length +
+                        yTicks.getVertices().length +
+                        zTicks.getVertices().length
+                )
         );
+
         baseBuffer.order( ByteOrder.nativeOrder() );
         FloatBuffer lineBuffer = baseBuffer.asFloatBuffer();
         lineBuffer.put( axisGeometry.getVertices() );
-        lineBuffer.put( xShapeCoords );
-        lineBuffer.put( yShapeCoords );
-        lineBuffer.put( zShapeCoords );
+        lineBuffer.put( xShapeGeometry.getVertices() );
+        lineBuffer.put( yShapeGeometry.getVertices() );
+        lineBuffer.put( zShapeGeometry.getVertices() );
         lineBuffer.put( xTicks.getVertices() );
         lineBuffer.put( yTicks.getVertices() );
         lineBuffer.put( zTicks.getVertices() );
@@ -252,9 +247,9 @@ public class AxesActor implements GLActor
         inxBase.order( ByteOrder.nativeOrder() );
         IntBuffer inxBuf = inxBase.asIntBuffer();
         inxBuf.put( axisGeometry.getIndices() );
-        inxBuf.put( xInx );
-        inxBuf.put( yInx );
-        inxBuf.put( zInx );
+        inxBuf.put( xShapeGeometry.getIndices() );
+        inxBuf.put( yShapeGeometry.getIndices() );
+        inxBuf.put( zShapeGeometry.getIndices() );
         inxBuf.put( xTicks.getIndices() );
         inxBuf.put( yTicks.getIndices() );
         inxBuf.put( zTicks.getIndices() );
@@ -301,6 +296,37 @@ public class AxesActor implements GLActor
                 inxBuf,
                 GL2.GL_STATIC_DRAW
         );
+    }
+
+    private Geometry getXShapeGeometry(BoundingBox3d boundingBox, int numIndices) {
+        float[] vertices = getXShapeCoords(
+                    boundingBox.getMinX() - getOverhang( boundingBox ) - 2.0f,
+                    boundingBox.getMaxY(),
+                    boundingBox.getMaxZ()
+            );
+
+        int[] indices = getXIndices( numIndices );
+        return new Geometry( vertices, indices );
+    }
+
+    private Geometry getYShapeGeometry(BoundingBox3d boundingBox, int numIndices) {
+        float[] vertices = getYShapeCoords(
+                boundingBox.getMinX(),
+                boundingBox.getMaxY() + getOverhang( boundingBox ) + 2.0f,
+                boundingBox.getMaxZ()
+        );
+        int[] indices = getYIndices(numIndices);
+        return new Geometry( vertices, indices );
+    }
+
+    private Geometry getZShapeGeometry(BoundingBox3d boundingBox, int numIndices) {
+        float[] vertices = getZShapeCoords(
+                boundingBox.getMinX(),
+                boundingBox.getMaxY(),
+                boundingBox.getMaxZ() + getOverhang( boundingBox ) + 2.0f
+        );
+        int[] indices = getZIndices( numIndices );
+        return new Geometry( vertices, indices );
     }
 
     private Geometry getAxisGeometry(BoundingBox3d boundingBox, int indexOffset) {
@@ -510,7 +536,7 @@ public class AxesActor implements GLActor
         }
 
         Geometry rtnVal = new Geometry();
-        rtnVal.setVertices( vertices );
+        rtnVal.setVertices(vertices);
         rtnVal.setIndices( indices );
         return rtnVal;
     }
