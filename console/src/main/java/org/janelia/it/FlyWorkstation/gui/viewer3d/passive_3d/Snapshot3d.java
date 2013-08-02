@@ -32,11 +32,6 @@ public class Snapshot3d extends ModalDialog {
      */
     public void launch( VolumeSource volumeSource) {
         SnapshotWorker loadWorker = new SnapshotWorker( volumeSource );
-        IndeterminateProgressMonitor monitor =
-                new IndeterminateProgressMonitor(
-                        SessionMgr.getBrowser(), "Fetching slices...", "Slice Viewer 3D"
-                );
-        loadWorker.setProgressMonitor( monitor );
         loadWorker.execute();
     }
 
