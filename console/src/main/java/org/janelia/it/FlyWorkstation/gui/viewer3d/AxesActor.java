@@ -228,15 +228,9 @@ public class AxesActor implements GLActor
         Geometry zTicks = getTickGeometry( tickOrigin, TICK_SIZE, new AxisIteration( 2, -1 ), new AxisIteration( 0, 1 ), 1, numIndices );
         numIndices += zTicks.getIndices().length;
 
-        int tickTotal = xTicks.getIndices().length;
-        tickTotal += yTicks.getIndices().length;
-        tickTotal += zTicks.getIndices().length;
-        numIndices += tickTotal;
-
-        tickTotal = xTicks.getVertices().length;
-        tickTotal += yTicks.getVertices().length;
-        tickTotal += zTicks.getVertices().length;
-        numVertices += tickTotal;
+        numVertices += xTicks.getVertices().length;
+        numVertices += yTicks.getVertices().length;
+        numVertices += zTicks.getVertices().length;
 
         ByteBuffer baseBuffer = ByteBuffer.allocateDirect(
                 Float.SIZE / 8 * (axisGeometry.getVertices().length + xShapeCoords.length + yShapeCoords.length + zShapeCoords.length + xTicks.getVertices().length + yTicks.getVertices().length + zTicks.getVertices().length )
@@ -252,7 +246,7 @@ public class AxesActor implements GLActor
         lineBuffer.put( zTicks.getVertices() );
         lineBuffer.rewind();
 
-        ByteBuffer inxBase = ByteBuffer.allocateDirect( numVertices * Integer.SIZE / 8 );
+        ByteBuffer inxBase = ByteBuffer.allocateDirect( numIndices * Integer.SIZE / 8 );
         lineBufferVertexCount = numVertices;
 
         inxBase.order( ByteOrder.nativeOrder() );
