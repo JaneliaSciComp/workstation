@@ -210,11 +210,4 @@ public class ViewTileManagerVolumeSource implements VolumeSource {
         return standardValue;
     }
 
-    static class VSViewTileManager extends ViewTileManager {
-        public VSViewTileManager( TileConsumer tileConsumer ) {
-            super( tileConsumer );
-        }
-
-    }
-
 }
