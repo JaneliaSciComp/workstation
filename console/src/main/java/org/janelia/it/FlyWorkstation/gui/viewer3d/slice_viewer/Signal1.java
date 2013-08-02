@@ -21,6 +21,10 @@ implements BasicSignalSlot1<T>
 		deleteObserver(dest);
 	}
 
+	public void disconnect(BasicSignalSlot noArgDest) {
+		deleteObserver(noArgDest);
+	}
+	
 	// Argument can be ignored by the listener with this version of connect()
 	public void connect(BasicSignalSlot noArgListener) {
 		addObserver(noArgListener);
