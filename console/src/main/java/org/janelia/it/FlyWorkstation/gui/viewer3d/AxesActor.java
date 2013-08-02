@@ -185,17 +185,18 @@ public class AxesActor implements GLActor
 
     private void buildBuffers(GL2 gl) {
         BoundingBox3d boundingBox = getBoundingBox3d();
-        Geometry axisGeometry = getAxisGeometry(boundingBox, 0);
-        int nextIndex = axisGeometry.getIndices().length;
+        int nextVertexOffset = 0;
+        Geometry axisGeometry = getAxisGeometry(boundingBox, nextVertexOffset);
+        nextVertexOffset += axisGeometry.getVertexCount();
 
-        Geometry xShapeGeometry = getXShapeGeometry(boundingBox, nextIndex);
-        nextIndex += xShapeGeometry.getIndices().length;
+        Geometry xShapeGeometry = getXShapeGeometry(boundingBox, nextVertexOffset);
+        nextVertexOffset += xShapeGeometry.getVertexCount();
 
-        Geometry yShapeGeometry = getYShapeGeometry(boundingBox, nextIndex);
-        nextIndex += yShapeGeometry.getIndices().length;
+        Geometry yShapeGeometry = getYShapeGeometry(boundingBox, nextVertexOffset);
+        nextVertexOffset += yShapeGeometry.getVertexCount();
 
-        Geometry zShapeGeometry = getZShapeGeometry(boundingBox, nextIndex);
-        nextIndex += zShapeGeometry.getIndices().length;
+        Geometry zShapeGeometry = getZShapeGeometry(boundingBox, nextVertexOffset);
+        nextVertexOffset += zShapeGeometry.getVertexCount();
 
         float[] tickOrigin = new float[] {
                 (float)boundingBox.getMinX(),
@@ -203,38 +204,48 @@ public class AxesActor implements GLActor
                 (float)boundingBox.getMaxZ()
         };
 
-        Geometry xTicks = getTickGeometry( tickOrigin, TICK_SIZE, new AxisIteration( 0, 1 ), new AxisIteration( 1, -1 ), 2, nextIndex );
-        nextIndex += xTicks.getIndices().length;
-        Geometry yTicks = getTickGeometry( tickOrigin, TICK_SIZE, new AxisIteration( 1, -1 ), new AxisIteration( 2, -1 ), 0, nextIndex );
-        nextIndex += yTicks.getIndices().length;
-        Geometry zTicks = getTickGeometry( tickOrigin, TICK_SIZE, new AxisIteration( 2, -1 ), new AxisIteration( 0, 1 ), 1, nextIndex );
-        nextIndex += zTicks.getIndices().length;
+        Geometry xTicks = getTickGeometry(tickOrigin, TICK_SIZE, new AxisIteration(0, 1), new AxisIteration(1, -1), 2, nextVertexOffset);
+        nextVertexOffset += xTicks.getVertexCount();
+        Geometry yTicks = getTickGeometry( tickOrigin, TICK_SIZE, new AxisIteration( 1, -1 ), new AxisIteration( 2, -1 ), 0, nextVertexOffset );
+        nextVertexOffset += yTicks.getVertexCount();
+        Geometry zTicks = getTickGeometry( tickOrigin, TICK_SIZE, new AxisIteration( 2, -1 ), new AxisIteration( 0, 1 ), 1, nextVertexOffset );
+        nextVertexOffset += zTicks.getVertexCount();
 
         ByteBuffer baseBuffer = ByteBuffer.allocateDirect(
                 Float.SIZE / 8 * (
-                        axisGeometry.getVertices().length +
-                                xShapeGeometry.getVertices().length +
-                                yShapeGeometry.getVertices().length +
-                                zShapeGeometry.getVertices().length +
-                                xTicks.getVertices().length +
-                                yTicks.getVertices().length +
-                                zTicks.getVertices().length
+                        axisGeometry.getCoords().length +
+                                xShapeGeometry.getCoords().length +
+                                yShapeGeometry.getCoords().length +
+                                zShapeGeometry.getCoords().length +
+                                xTicks.getCoords().length +
+                                yTicks.getCoords().length +
+                                zTicks.getCoords().length
                 )
         );
 
         baseBuffer.order( ByteOrder.nativeOrder() );
         FloatBuffer lineBuffer = baseBuffer.asFloatBuffer();
-        lineBuffer.put( axisGeometry.getVertices() );
-        lineBuffer.put( xShapeGeometry.getVertices() );
-        lineBuffer.put( yShapeGeometry.getVertices() );
-        lineBuffer.put( zShapeGeometry.getVertices() );
-        lineBuffer.put(xTicks.getVertices());
-        lineBuffer.put( yTicks.getVertices() );
-        lineBuffer.put(zTicks.getVertices());
+        lineBuffer.put( axisGeometry.getCoords() );
+        lineBuffer.put( xShapeGeometry.getCoords() );
+        lineBuffer.put( yShapeGeometry.getCoords() );
+        lineBuffer.put( zShapeGeometry.getCoords() );
+        lineBuffer.put(xTicks.getCoords());
+        lineBuffer.put(yTicks.getCoords());
+        lineBuffer.put(zTicks.getCoords());
         lineBufferVertexCount = lineBuffer.capacity();
         lineBuffer.rewind();
 
-        ByteBuffer inxBase = ByteBuffer.allocateDirect( nextIndex * Integer.SIZE / 8 );
+        ByteBuffer inxBase = ByteBuffer.allocateDirect(
+                nextVertexOffset * Integer.SIZE / 8 *
+                        axisGeometry.getIndices().length +
+                        xShapeGeometry.getIndices().length +
+                        yShapeGeometry.getIndices().length +
+                        zShapeGeometry.getIndices().length +
+                        xTicks.getIndices().length +
+                        yTicks.getIndices().length +
+                        zTicks.getIndices().length
+
+        );
 
         inxBase.order( ByteOrder.nativeOrder() );
         IntBuffer inxBuf = inxBase.asIntBuffer();
@@ -307,7 +318,7 @@ public class AxesActor implements GLActor
                 boundingBox.getMaxY() + getOverhang( boundingBox ) + 2.0f,
                 boundingBox.getMaxZ()
         );
-        int[] indices = getYIndices(startingIndex);
+        int[] indices = getYIndices( startingIndex );
         return new Geometry( vertices, indices );
     }
 
@@ -474,7 +485,6 @@ public class AxesActor implements GLActor
     }
 
     private int[] getZIndices( int offset ) {
-offset-= 2;
         return new int[] {
                 0 + offset, 1 + offset, 0 + offset, 3 + offset, 2 + offset, 3 + offset
         };
@@ -532,7 +542,19 @@ offset-= 2;
         return rtnVal;
     }
 
-    /** Convenience class to carry around all numbers associated with some thing to draw. */
+    /**
+     * Convenience class to carry around all numbers associated with some thing to draw.
+     *
+     * A few subtle points about geometry:
+     * 1. indices point at vertices.
+     * 2. each vertex consists of three coordinates, here: 0th is x, 1st is y, 2nd is z
+     * 3. there are always 3x coords as vertices.
+     * 4. a count in an index (1,2,3...) corresponds to a by-3 in coords (3,6,9...)
+     *
+     * Since this class keeps all its data in one buffer for vertices and one for indices, it is
+     * important to keep this in mind when incrementing the count.  The value passed in as the next index
+     * is actually going to be the next _vertex_ after all vertices of the previous displayable 'shape'.
+     */
     private class Geometry {
         private float[] vertices;
         private int[] indices;
@@ -542,12 +564,16 @@ offset-= 2;
             this.indices = indices;
         }
 
-        public float[] getVertices() {
+        public float[] getCoords() {
             return vertices;
         }
 
         public int[] getIndices() {
             return indices;
+        }
+
+        public int getVertexCount() {
+            return getCoords().length / 3;
         }
 
     }
