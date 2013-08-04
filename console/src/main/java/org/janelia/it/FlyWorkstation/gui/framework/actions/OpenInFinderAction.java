@@ -5,7 +5,6 @@ import java.io.File;
 import javax.swing.JOptionPane;
 
 import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr;
-import org.janelia.it.FlyWorkstation.shared.filestore.PathTranslator;
 import org.janelia.it.FlyWorkstation.shared.util.FileCallable;
 import org.janelia.it.FlyWorkstation.shared.util.SystemInfo;
 import org.janelia.it.FlyWorkstation.shared.util.Utils;
@@ -72,7 +71,7 @@ public class OpenInFinderAction implements Action {
 		}
 	}
 
-	private void revealFile(File file) throws Exception {
+	public static void revealFile(File file) throws Exception {
 
         File parent = file.getParentFile();
         

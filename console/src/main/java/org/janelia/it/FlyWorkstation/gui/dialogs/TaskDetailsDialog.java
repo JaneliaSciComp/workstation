@@ -13,10 +13,13 @@ import javax.swing.*;
 import loci.plugins.config.SpringUtilities;
 
 import org.janelia.it.FlyWorkstation.api.entity_model.management.ModelMgr;
+import org.janelia.it.FlyWorkstation.gui.application.AutoUpdater;
 import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.FlyWorkstation.gui.util.Icons;
 import org.janelia.it.jacs.model.tasks.Event;
 import org.janelia.it.jacs.model.tasks.Task;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * A dialog for viewing details about a task.
@@ -24,6 +27,8 @@ import org.janelia.it.jacs.model.tasks.Task;
  * @author <a href="mailto:rokickik@janelia.hhmi.org">Konrad Rokicki</a>
  */
 public class TaskDetailsDialog extends ModalDialog {
+
+    private static final Logger log = LoggerFactory.getLogger(TaskDetailsDialog.class);
     
     protected static final DateFormat df = new SimpleDateFormat("yyyy/MM/dd HH:mm");
     protected static final int REFRESH_DELAY_MS = 2000;
@@ -86,7 +91,7 @@ public class TaskDetailsDialog extends ModalDialog {
     }
     
     private void endRefresh() {
-		System.out.println("Stopping refresh");
+		log.info("Stopping refresh");
     	if (refreshTimer!=null) {
     		if (refreshTimer.isRunning()) {
     			refreshTimer.stop();
@@ -128,7 +133,7 @@ public class TaskDetailsDialog extends ModalDialog {
 					@Override
 					public void actionPerformed(ActionEvent e) {
 						try {
-							System.out.println("Refresh "+taskId);
+							log.debug("Refresh "+taskId);
 							final Task updatedTask = ModelMgr.getModelMgr().getTaskById(taskId);
 							SwingUtilities.invokeLater(new Runnable() {
 								@Override
@@ -136,7 +141,6 @@ public class TaskDetailsDialog extends ModalDialog {
 									updateForTask(updatedTask);	
 								}
 							});
-							
 						}
 						catch (Exception error) {
 							SessionMgr.getSessionMgr().handleException(error);
@@ -145,6 +149,7 @@ public class TaskDetailsDialog extends ModalDialog {
 				});
 	        	refreshTimer.setInitialDelay(REFRESH_DELAY_MS);
 	        	refreshTimer.start(); 
+	        	log.info("Starting refresh, every {} ms",REFRESH_DELAY_MS);
 	        }
         }
         

@@ -1,9 +1,3 @@
-/*
- * Created by IntelliJ IDEA.
- * User: rokickik
- * Date: 6/26/11
- * Time: 7:16 PM
- */
 package org.janelia.it.FlyWorkstation.shared.util;
 
 import java.awt.*;
@@ -39,13 +33,19 @@ import org.janelia.it.FlyWorkstation.shared.filestore.PathTranslator;
 import org.janelia.it.FlyWorkstation.shared.workers.IndeterminateProgressMonitor;
 import org.janelia.it.FlyWorkstation.shared.workers.SimpleWorker;
 import org.janelia.it.jacs.model.entity.Entity;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
- * Common utilities for loading images, testing strings, etc.
+ * Common utilities for loading images, copying files, testing strings, etc.
  *
  * @author <a href="mailto:rokickik@janelia.hhmi.org">Konrad Rokicki</a>
  */
 public class Utils {
+
+    private static final Logger log = LoggerFactory.getLogger(Utils.class);
+    
+    private static final int DEFAULT_BUFFER_SIZE = 1024;
     
     public static ImageIcon grabOpenedIcon;
     public static ImageIcon grabClosedIcon;
@@ -482,7 +482,7 @@ public class Utils {
      * @param filePath
      * @param callback
      */
-    public static void cacheAndProcessFileAsync(final String filePath, final FileCallable callback) {
+    private static void cacheAndProcessFileAsync(final String filePath, final FileCallable callback) {
         SimpleWorker worker = new SimpleWorker() {
             
             private File file;
@@ -545,5 +545,68 @@ public class Utils {
                 }
             });
         }
+    }
+
+    public static void copyURLToFile(String standardPath, File destination, SimpleWorker worker) throws Exception {
+        
+        //does destination directory exist ?
+        if (destination.getParentFile() != null
+            && !destination.getParentFile().exists()) {
+            destination.getParentFile().mkdirs();
+        }
+
+        //make sure we can write to destination
+        if (destination.exists() && !destination.canWrite()) {
+            String message =
+                "Unable to open file " + destination + " for writing.";
+            throw new IOException(message);
+        }
+
+        WorkstationFile wfile = new WorkstationFile(standardPath);
+        wfile.get();
+        
+        InputStream input = wfile.getStream();
+        long length = wfile.getLength();
+        
+        log.debug("Effective URL: "+wfile.getEffectiveURL());
+        log.debug("Length: "+length);
+        
+        if (length==0) {
+            throw new Exception("Length of file was 0");
+        }
+        
+        if (wfile.getStatusCode()!=200) {
+            throw new Exception("Status code was "+wfile.getStatusCode());
+        }
+        
+        try {
+            FileOutputStream output = new FileOutputStream(destination);
+            try {
+                copy(input, output, length, worker);
+            } 
+            finally {
+                org.apache.commons.io.IOUtils.closeQuietly(output);
+            }
+        } 
+        finally {
+            org.apache.commons.io.IOUtils.closeQuietly(input);
+        }
+    }
+
+    /**
+     * Copied from Apache's commons-io, so that we could add progress indication
+     */
+    public static int copy(InputStream input, OutputStream output, long length, SimpleWorker worker) throws IOException {
+        byte[] buffer = new byte[DEFAULT_BUFFER_SIZE];
+        int count = 0;
+        int n = 0;
+        while (-1 != (n = input.read(buffer))) {
+            output.write(buffer, 0, n);
+            count += n;
+            if (worker!=null) {
+                worker.setProgress(count, (int)length);
+            }
+        }
+        return count;
     }
 }

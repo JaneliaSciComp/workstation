@@ -1,13 +1,27 @@
 package org.janelia.it.FlyWorkstation.gui.framework.outline;
 
+import static com.google.common.base.Preconditions.checkNotNull;
+
+import java.awt.Toolkit;
+import java.awt.datatransfer.StringSelection;
+import java.awt.datatransfer.Transferable;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.awt.event.KeyEvent;
+import java.io.File;
+import java.util.*;
+import java.util.concurrent.Callable;
+
+import javax.swing.*;
+
 import org.janelia.it.FlyWorkstation.api.entity_model.management.EntitySelectionModel;
 import org.janelia.it.FlyWorkstation.api.entity_model.management.ModelMgr;
 import org.janelia.it.FlyWorkstation.api.entity_model.management.ModelMgrUtils;
 import org.janelia.it.FlyWorkstation.gui.dialogs.EntityDetailsDialog;
 import org.janelia.it.FlyWorkstation.gui.dialogs.SpecialAnnotationChooserDialog;
 import org.janelia.it.FlyWorkstation.gui.dialogs.TaskDetailsDialog;
-import org.janelia.it.FlyWorkstation.gui.framework.actions.Action;
 import org.janelia.it.FlyWorkstation.gui.framework.actions.*;
+import org.janelia.it.FlyWorkstation.gui.framework.actions.Action;
 import org.janelia.it.FlyWorkstation.gui.framework.console.Browser;
 import org.janelia.it.FlyWorkstation.gui.framework.console.Perspective;
 import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr;
@@ -21,6 +35,7 @@ import org.janelia.it.FlyWorkstation.model.entity.RootedEntity;
 import org.janelia.it.FlyWorkstation.model.utils.AnnotationSession;
 import org.janelia.it.FlyWorkstation.model.viewer.AlignmentBoardContext;
 import org.janelia.it.FlyWorkstation.shared.util.ConsoleProperties;
+import org.janelia.it.FlyWorkstation.shared.util.SystemInfo;
 import org.janelia.it.FlyWorkstation.shared.util.Utils;
 import org.janelia.it.FlyWorkstation.shared.workers.IndeterminateProgressMonitor;
 import org.janelia.it.FlyWorkstation.shared.workers.SimpleWorker;
@@ -32,6 +47,7 @@ import org.janelia.it.jacs.model.ontology.OntologyAnnotation;
 import org.janelia.it.jacs.model.ontology.OntologyElement;
 import org.janelia.it.jacs.model.tasks.Event;
 import org.janelia.it.jacs.model.tasks.Task;
+import org.janelia.it.jacs.model.tasks.TaskMessage;
 import org.janelia.it.jacs.model.tasks.TaskParameter;
 import org.janelia.it.jacs.model.tasks.neuron.NeuronMergeTask;
 import org.janelia.it.jacs.model.tasks.utility.GenericTask;
@@ -41,19 +57,6 @@ import org.janelia.it.jacs.shared.utils.MailHelper;
 import org.janelia.it.jacs.shared.utils.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import javax.swing.*;
-import java.awt.*;
-import java.awt.datatransfer.StringSelection;
-import java.awt.datatransfer.Transferable;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
-import java.awt.event.KeyEvent;
-import java.util.*;
-import java.util.List;
-import java.util.concurrent.Callable;
-
-import static com.google.common.base.Preconditions.checkNotNull;
 
 /**
  * Context pop up menu for entities.
@@ -125,6 +128,7 @@ public class EntityContextMenu extends JPopupMenu {
         setNextAddRequiresSeparator(true);
         add(getMergeItem());
         add(getSortBySimilarityItem());
+        add(getSplitChannelsItem());
 //        add(getCreateSessionItem());
 
         setNextAddRequiresSeparator(true);
@@ -1095,7 +1099,6 @@ public class EntityContextMenu extends JPopupMenu {
 
         sortItem.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent actionEvent) {
-
                 try {
                     HashSet<TaskParameter> taskParameters = new HashSet<TaskParameter>();
                     taskParameters.add(new TaskParameter("folder id", folder.getId().toString(), null));
@@ -1109,8 +1112,8 @@ public class EntityContextMenu extends JPopupMenu {
                     final TaskDetailsDialog dialog = new TaskDetailsDialog(true);
                     dialog.showForTask(task);
                     SessionMgr.getBrowser().getViewerManager().getActiveViewer().refresh();
-
-                } catch (Exception e) {
+                } 
+                catch (Exception e) {
                     SessionMgr.getSessionMgr().handleException(e);
                 }
             }
@@ -1120,6 +1123,113 @@ public class EntityContextMenu extends JPopupMenu {
         return sortItem;
     }
 
+
+    protected JMenuItem getSplitChannelsItem() {
+
+        // If multiple items are selected then leave
+        if (multiple) {
+            return null;
+        }
+
+        final Entity targetEntity = rootedEntity.getEntity();
+        final String filepath = EntityUtils.getDefault3dImageFilePath(targetEntity);
+        
+        if (filepath==null) {
+            return null;
+        }
+        
+        JMenuItem sortItem = new JMenuItem("  Split Channels");
+
+        sortItem.addActionListener(new ActionListener() {
+            public void actionPerformed(ActionEvent actionEvent) {
+                try {
+                    HashSet<TaskParameter> taskParameters = new HashSet<TaskParameter>();
+                    taskParameters.add(new TaskParameter("filepath", filepath, null));
+                    Task task = new GenericTask(new HashSet<Node>(), SessionMgr.getSubjectKey(),
+                            new ArrayList<Event>(), taskParameters, "splitChannels", "Split Channels");
+                    task.setJobName("Split Channels Task");
+                    task = ModelMgr.getModelMgr().saveOrUpdateTask(task);
+                    ModelMgr.getModelMgr().submitJob("SplitChannels", task);
+
+                    final TaskDetailsDialog dialog = new TaskDetailsDialog(true);
+                    dialog.showForTask(task);
+                    
+                    task = ModelMgr.getModelMgr().getTaskById(task.getObjectId());
+                    
+                    // Since there is no way to log task output vars, we use a convention where the last message 
+                    // will contain the output directory path.
+
+                    String resultFilesTmp = null;
+                    List<TaskMessage> messages = new ArrayList<TaskMessage>(task.getMessages());
+                    if (!messages.isEmpty()) {
+                        Collections.sort(messages, new Comparator<TaskMessage>() {
+                            @Override
+                            public int compare(TaskMessage o1, TaskMessage o2) {
+                                return o2.getMessageId().compareTo(o1.getMessageId());
+                            }
+                        });
+                        resultFilesTmp = messages.get(0).getMessage();
+                    }
+                    
+                    final String resultFiles = resultFilesTmp;
+                    SimpleWorker worker = new SimpleWorker() {
+
+                        private Entity sample;
+                        private File targetDir;
+                        
+                        @Override
+                        protected void doStuff() throws Exception {
+
+                            sample = ModelMgr.getModelMgr().getAncestorWithType(targetEntity, EntityConstants.TYPE_SAMPLE);
+                            targetDir = new File(SystemInfo.getDownloadsDir(), sample.getName());
+                            
+                            log.info("GOT resultFiles: "+resultFiles);
+                            String[] pathAndFiles = resultFiles.split(":");
+                            String path = pathAndFiles[0];
+                            String[] files = pathAndFiles[1].split(",");
+                            for(String filepath : files) {
+                                File file = new File(path,filepath);
+                                copyChannelFile(file.getAbsolutePath());    
+                            }
+                            setProgress(100);
+                        }
+                        
+                        private void copyChannelFile(String standardFilepath) throws Exception {
+                            File remoteFile = new File(standardFilepath);
+                            File localFile = new File(targetDir, sample.getName()+"_"+remoteFile.getName());
+                            log.info("remoteFile: "+remoteFile);
+                            log.info("localFile: "+localFile);
+                            Utils.copyURLToFile(standardFilepath, localFile, this);
+                        }
+                        
+                        @Override
+                        protected void hadSuccess() {
+                            try {
+                                OpenInFinderAction.revealFile(targetDir);
+                            }
+                            catch (Exception e) {
+                                hadError(e);
+                            }
+                        }
+                        
+                        @Override
+                        protected void hadError(Throwable error) {
+                            SessionMgr.getSessionMgr().handleException(error);
+                        }
+                    };
+                    
+                    worker.setProgressMonitor(new ProgressMonitor(SessionMgr.getBrowser(), "Copying files to local drive", "", 0, 100));
+                    worker.execute();
+                } 
+                catch (Exception e) {
+                    SessionMgr.getSessionMgr().handleException(e);
+                }
+            }
+        });
+
+        return sortItem;
+    }
+    
     protected JMenuItem getOpenInFirstViewerItem() {
         if (multiple)
             return null;

@@ -1,5 +1,15 @@
 package org.janelia.it.FlyWorkstation.gui.application;
 
+import java.awt.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.beans.PropertyChangeEvent;
+import java.beans.PropertyChangeListener;
+import java.io.File;
+import java.net.URL;
+
+import javax.swing.*;
+
 import org.janelia.it.FlyWorkstation.api.facade.concrete_facade.ejb.EJBFacadeManager;
 import org.janelia.it.FlyWorkstation.api.facade.concrete_facade.ejb.EJBFactory;
 import org.janelia.it.FlyWorkstation.api.facade.facade_mgr.FacadeManager;
@@ -15,7 +25,7 @@ import org.janelia.it.FlyWorkstation.gui.util.panels.ViewerSettingsPanel;
 import org.janelia.it.FlyWorkstation.shared.filestore.PathTranslator;
 import org.janelia.it.FlyWorkstation.shared.util.ConsoleProperties;
 import org.janelia.it.FlyWorkstation.shared.util.SystemInfo;
-import org.janelia.it.FlyWorkstation.shared.util.WorkstationFile;
+import org.janelia.it.FlyWorkstation.shared.util.Utils;
 import org.janelia.it.FlyWorkstation.shared.workers.SimpleWorker;
 import org.janelia.it.jacs.compute.api.ComputeBeanRemote;
 import org.janelia.it.jacs.shared.utils.FileUtil;
@@ -23,15 +33,6 @@ import org.janelia.it.jacs.shared.utils.IOUtils;
 import org.janelia.it.jacs.shared.utils.SystemCall;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import javax.swing.*;
-import java.awt.*;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
-import java.beans.PropertyChangeEvent;
-import java.beans.PropertyChangeListener;
-import java.io.*;
-import java.net.URL;
 
 /**
  * Check version against the JACS server and update the entire Workstation if needed.
@@ -41,8 +42,6 @@ import java.net.URL;
 public class AutoUpdater extends JFrame implements PropertyChangeListener {
 
 	private static final Logger log = LoggerFactory.getLogger(AutoUpdater.class);
-	
-	private static final int DEFAULT_BUFFER_SIZE = 1024;
 	
 	private static final String UPDATE_STATE_PROPERTY = "updateState";
 	private static final int STATE_DOWNLOAD = 1;
@@ -373,7 +372,7 @@ public class AutoUpdater extends JFrame implements PropertyChangeListener {
 
 				try {
     				log.info("Downloading update from {}",remoteFile);
-    				copyURLToFile(remoteFile, downloadFile);
+    				Utils.copyURLToFile(remoteFile, downloadFile, this);
 				}
 				catch (Exception e) {
 				    throw new Exception("Error downloading new version",e);
@@ -430,67 +429,6 @@ public class AutoUpdater extends JFrame implements PropertyChangeListener {
 	            SessionMgr.getSessionMgr().handleException(error);
 	            printPathAndExit("",1);
 			}
-
-			private void copyURLToFile(String standardPath, File destination) throws Exception {
-			    
-		        //does destination directory exist ?
-		        if (destination.getParentFile() != null
-		            && !destination.getParentFile().exists()) {
-		            destination.getParentFile().mkdirs();
-		        }
-
-		        //make sure we can write to destination
-		        if (destination.exists() && !destination.canWrite()) {
-		            String message =
-		                "Unable to open file " + destination + " for writing.";
-		            throw new IOException(message);
-		        }
-
-		        WorkstationFile wfile = new WorkstationFile(standardPath);
-		        wfile.get();
-		        
-		        InputStream input = wfile.getStream();
-		        long length = wfile.getLength();
-		        
-		        log.info("Effective URL: "+wfile.getEffectiveURL());
-		        log.info("Length: "+length);
-		        
-		        if (length==0) {
-                    throw new Exception("Length of file was 0");
-                }
-		        
-		        if (wfile.getStatusCode()!=200) {
-		            throw new Exception("Status code was "+wfile.getStatusCode());
-		        }
-		        
-		        try {
-		            FileOutputStream output = new FileOutputStream(destination);
-		            try {
-		                copy(input, output, length);
-		            } 
-		            finally {
-		                org.apache.commons.io.IOUtils.closeQuietly(output);
-		            }
-		        } 
-		        finally {
-		            org.apache.commons.io.IOUtils.closeQuietly(input);
-		        }
-		    }
-
-            /**
-             * Copied from Apache's commons-io, so that we could add progress indication
-             */
-		    private int copy(InputStream input, OutputStream output, long length) throws IOException {
-		        byte[] buffer = new byte[DEFAULT_BUFFER_SIZE];
-		        int count = 0;
-		        int n = 0;
-		        while (-1 != (n = input.read(buffer))) {
-		            output.write(buffer, 0, n);
-		            count += n;
-		            setProgress(count, (int)length);
-		        }
-		        return count;
-		    }
 		};
 
 		updater.addPropertyChangeListener(this);
