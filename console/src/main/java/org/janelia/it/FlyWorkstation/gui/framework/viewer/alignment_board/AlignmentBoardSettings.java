@@ -14,12 +14,14 @@ import java.util.Observer;
  */
 public class AlignmentBoardSettings {
     public static final double DEFAULT_GAMMA = 1.0;
+    public static final long DEFAULT_MIN_VOX_COUNT = -1; // Unset value.
 
     private double chosenDownSampleRate;
     private double gammaFactor =  DEFAULT_GAMMA;
     private boolean showChannelData = true;
     private double downSampleGuess;
     private Observer sampleRateObserver;
+    private long minimumVoxelCount = DEFAULT_MIN_VOX_COUNT;
 
     private Date creationStamp;
     public String toString() {
@@ -102,5 +104,13 @@ public class AlignmentBoardSettings {
     public AlignmentBoardSettings clone() throws CloneNotSupportedException {
         //super.clone();
         return new AlignmentBoardSettings( getChosenDownSampleRate(), getDownSampleGuess(), getGammaFactor(), isShowChannelData() );
+    }
+
+    public long getMinimumVoxelCount() {
+        return minimumVoxelCount;
+    }
+
+    public void setMinimumVoxelCount(long minimumVoxelCount) {
+        this.minimumVoxelCount = minimumVoxelCount;
     }
 }

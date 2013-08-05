@@ -118,6 +118,27 @@ public class MaskChanSingleFileLoader {
         this.intensityDivisor = intensityDivisor;
     }
 
+    /**
+     * This can be called instead of the full read (below) to get only this one piece of metadata about
+     * the input.
+     *
+     * @param maskInputStream a mask file.
+     * @return its voxel count.
+     * @throws Exception by called methods.
+     */
+    public long getVoxelCount( InputStream maskInputStream ) throws Exception {
+        this.initializeMaskStream( maskInputStream );
+        return totalVoxels;
+    }
+
+    /**
+     * Call this to scan the full relevant data from the input files, so that info may be pushed to the
+     * acceptors as it is encountered.
+     *
+     * @param maskInputStream points to mask data of the pair.
+     * @param channelStream points to channel data of the pair.
+     * @throws Exception by called methods.
+     */
     public void read( InputStream maskInputStream, InputStream channelStream )
             throws Exception {
 
@@ -296,11 +317,15 @@ public class MaskChanSingleFileLoader {
 
         srcSliceSize = fastestSrcVaryingMax * secondFastestSrcVaryingMax;
 
-        for ( MaskChanDataAcceptorI acceptor: maskAcceptors ) {
-            acceptor.setSpaceSize( sx, sy, sz, volumeVoxels[0], volumeVoxels[1], volumeVoxels[2], coordCoverage );
+        if ( maskAcceptors != null ) {
+            for ( MaskChanDataAcceptorI acceptor: maskAcceptors ) {
+                acceptor.setSpaceSize( sx, sy, sz, volumeVoxels[0], volumeVoxels[1], volumeVoxels[2], coordCoverage );
+            }
         }
-        for ( MaskChanDataAcceptorI acceptor: channelAcceptors ) {
-            acceptor.setSpaceSize( sx, sy, sz, volumeVoxels[0], volumeVoxels[1], volumeVoxels[2], coordCoverage );
+        if ( channelAcceptors != null ) {
+            for ( MaskChanDataAcceptorI acceptor: channelAcceptors ) {
+                acceptor.setSpaceSize( sx, sy, sz, volumeVoxels[0], volumeVoxels[1], volumeVoxels[2], coordCoverage );
+            }
         }
 
     }

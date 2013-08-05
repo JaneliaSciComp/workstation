@@ -2,6 +2,7 @@ package org.janelia.it.FlyWorkstation.gui.framework.viewer.alignment_board;
 
 import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.gui_elements.GpuSampler;
+import org.janelia.it.FlyWorkstation.gui.viewer3d.loader.FragmentSizeFilter;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.loader.MaskChanDataAcceptorI;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.loader.MaskChanMultiFileLoader;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.masking.*;
@@ -179,6 +180,13 @@ public class RenderablesLoadWorker extends SimpleWorker implements VolumeLoader 
             alignmentBoardSettings = adjustDownsampleRateSetting();
 
         Collection<MaskChanRenderableData> renderableDatas = dataSource.getRenderableDatas();
+
+        // Cut down the to-renders: use only the larger ones.
+        long fragmentFilterSize = alignmentBoardSettings.getMinimumVoxelCount();
+        if ( fragmentFilterSize != -1 ) {
+            FragmentSizeFilter filter = new FragmentSizeFilter( fragmentFilterSize );
+            renderableDatas = filter.filter( renderableDatas );
+        }
 
         Collection<RenderableBean> renderableBeans = new ArrayList<RenderableBean>();
         for ( MaskChanRenderableData renderableData: renderableDatas ) {

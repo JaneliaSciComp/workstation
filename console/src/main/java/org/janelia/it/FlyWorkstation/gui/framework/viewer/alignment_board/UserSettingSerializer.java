@@ -26,6 +26,7 @@ public class UserSettingSerializer implements Serializable {
     public static final String CAMERA_ROTATION_SETTING = "CameraRotation";
     public static final String CAMERA_FOCUS_SETTING = "CameraFocus";
     public static final String GROUND_FOCUS_SETTING = "InGroundFocus";
+    public static final String MIN_VOXELS_SETTING = "MinVoxelCutoff";
 
     private static final int X_OFFS = 0;
     private static final int Y_OFFS = 1;
@@ -219,6 +220,20 @@ public class UserSettingSerializer implements Serializable {
             }
         }
 
+        str = settingToValue.get( MIN_VOXELS_SETTING );
+        nonEmpty = nonEmpty( str );
+        if ( nonEmpty ) {
+            try {
+                Long minVoxCountCuttoff = Long.parseLong( str );
+                alignmentBoardSettings.setMinimumVoxelCount( minVoxCountCuttoff );
+            } catch ( Exception ex ) {
+                logger.warn(
+                        "Invalid min voxel count cuttoff of {} stored.  Ignoring value.",
+                        str
+                );
+            }
+        }
+
     }
 
     /** Quick method to test whether setting is empty. */
@@ -284,6 +299,8 @@ public class UserSettingSerializer implements Serializable {
             appendVec3(builder, focus);
             builder.append("\n");
         }
+
+        builder.append( MIN_VOXELS_SETTING ).append("=").append(userClickSettings.getMinimumVoxelCount()).append("\n");
 
         logger.debug("SETTINGS: {} serialized", builder);
         return builder.toString();

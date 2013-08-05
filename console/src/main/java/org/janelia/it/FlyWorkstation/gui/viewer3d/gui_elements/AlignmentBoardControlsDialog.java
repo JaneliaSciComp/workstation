@@ -65,6 +65,7 @@ public class AlignmentBoardControlsDialog extends JDialog {
     private static final Dimension SIZE = new Dimension( WIDTH, HEIGHT);
     private static final String GAMMA_TOOLTIP = "Adjust the gamma level, or brightness.";
     private static final Dimension DN_SAMPLE_DROPDOWN_SIZE = new Dimension(180, 50);
+    private static final Dimension MIN_VOX_COUNT_SIZE = new Dimension(180, 50);
     private static final String COMMIT_CHANGES = "Commit Changes";
     private static final String COMMIT_CHANGES_TOOLTIP_TEXT = COMMIT_CHANGES;
     private static final String DISMISS_DIALOG = "Dismiss";
@@ -88,6 +89,7 @@ public class AlignmentBoardControlsDialog extends JDialog {
     private JCheckBox useSignalDataCheckbox;
     private JComboBox downSampleRateDropdown;
     private JLabel downSampleGuess;
+    private JTextField minimumVoxelCountTF;
 
     private RangeSlider xSlider;
     private RangeSlider ySlider;
@@ -239,6 +241,25 @@ public class AlignmentBoardControlsDialog extends JDialog {
             return 0.0;
     }
 
+    private long getMinimumVoxelCount() {
+        if ( ! readyForOutput )
+            return settings.getMinimumVoxelCount();
+        minimumVoxelCountTF.setForeground(this.getForeground());
+        String selectedValue = minimumVoxelCountTF.getText().trim();
+        long rtnVal = AlignmentBoardSettings.DEFAULT_MIN_VOX_COUNT;
+        try {
+            // Except out if the input value is non-numeric, out of range or less than 1.
+            rtnVal = Long.parseLong( selectedValue );
+            if ( rtnVal < AlignmentBoardSettings.DEFAULT_MIN_VOX_COUNT ) {
+                throw new RuntimeException();
+            }
+        } catch ( Exception ex ) {
+            SessionMgr.getSessionMgr().handleException( new RuntimeException("Failed to parse minimum voxel count value " + selectedValue + " to integer value.") );
+            minimumVoxelCountTF.setForeground( Color.red );
+        }
+        return rtnVal;
+    }
+
     /**
      * Causes the controls to be updated, per information in the settings.  Does not fire any listener updates.
      * Use this when a listener is causing the update, rather than receiving it.
@@ -249,6 +270,10 @@ public class AlignmentBoardControlsDialog extends JDialog {
 
         int value = (int)Math.round( ( ( settings.getGammaFactor() * -5.0 ) + 10.0 ) * 100.0 );
         brightnessSlider.setValue(value);
+
+        long minimumVoxelCount = settings.getMinimumVoxelCount();
+        if ( minimumVoxelCount != AlignmentBoardSettings.DEFAULT_MIN_VOX_COUNT )
+            minimumVoxelCountTF.setText( "" + minimumVoxelCount);
     }
 
     /** Call this when sufficient info is avail to get the sliders positions initialized off crop-coords. */
@@ -351,6 +376,12 @@ public class AlignmentBoardControlsDialog extends JDialog {
         if ( newDownSampleRate != settings.getChosenDownSampleRate() ) {
             settings.setChosenDownSampleRate(newDownSampleRate);
             serializeDownsampleRate( newDownSampleRate );
+            deltaSettings = true;
+        }
+
+        long minimumVoxelCount = getMinimumVoxelCount();
+        if ( minimumVoxelCount != settings.getMinimumVoxelCount() ) {
+            settings.setMinimumVoxelCount( minimumVoxelCount );
             deltaSettings = true;
         }
 
@@ -561,6 +592,17 @@ public class AlignmentBoardControlsDialog extends JDialog {
             }
         };
 
+        minimumVoxelCountTF = new JTextField("  -1");
+        minimumVoxelCountTF.setMinimumSize(MIN_VOX_COUNT_SIZE);
+        minimumVoxelCountTF.setPreferredSize(MIN_VOX_COUNT_SIZE);
+        minimumVoxelCountTF.setMaximumSize(MIN_VOX_COUNT_SIZE);
+        minimumVoxelCountTF.setBorder( new TitledBorder( "Minimum Neuron Voxels" ) );
+        minimumVoxelCountTF.setToolTipText(
+                "Integer: least number of neuron voxels before a neuron fragment is not rendered.\n" +
+                "Default value of -1 implies no such filtering."
+        );
+        minimumVoxelCountTF.addMouseListener( commitEnablerMouseListener );
+
         brightnessSlider.addMouseListener( commitEnablerMouseListener );
         downSampleRateDropdown.addMouseListener( commitEnablerMouseListener );
         for ( Component c: downSampleRateDropdown.getComponents() ) {
@@ -602,6 +644,9 @@ public class AlignmentBoardControlsDialog extends JDialog {
         // This sits beside the downsample dropdown.
         GridBagConstraints downSampleGuessConstraints = new GridBagConstraints(
                 1, nextRow, 1, rowHeight, 1.0, 0.0, GridBagConstraints.NORTHWEST, GridBagConstraints.VERTICAL, insets, 0, 0
+        );
+        GridBagConstraints minimumVoxelCountConstraints = new GridBagConstraints(
+                2, nextRow, 1, rowHeight, 1.0, 0.0, GridBagConstraints.NORTHWEST, GridBagConstraints.VERTICAL, insets, 0, 0
         );
 
         nextRow += rowHeight;
@@ -656,6 +701,7 @@ public class AlignmentBoardControlsDialog extends JDialog {
         };
         settings.setDownSampleRateObserver( downsampleRateObserver );
         centralPanel.add( downSampleGuess, downSampleGuessConstraints );
+        centralPanel.add( minimumVoxelCountTF, minimumVoxelCountConstraints );
 
         centralPanel.add( useSignalDataCheckbox, signalDataConstraints );
         centralPanel.add( commitButton, commitBtnConstraints );
