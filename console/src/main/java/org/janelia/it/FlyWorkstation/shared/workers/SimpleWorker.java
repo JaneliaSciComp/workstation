@@ -79,6 +79,14 @@ public abstract class SimpleWorker extends SwingWorker<Void, Void> implements Pr
     protected abstract void hadError(Throwable error);
 
     /**
+     * Return the error that occurred, or null if no error occurred.
+     * @return
+     */
+    public Throwable getError() {
+        return error;
+    }
+
+    /**
      * Get the progress monitor for this task, if one was been set.
      * @return
      */

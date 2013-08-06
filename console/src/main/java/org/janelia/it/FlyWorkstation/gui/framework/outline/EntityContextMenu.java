@@ -9,8 +9,10 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.KeyEvent;
 import java.io.File;
+import java.io.FilenameFilter;
 import java.util.*;
 import java.util.concurrent.Callable;
+import java.util.concurrent.CancellationException;
 
 import javax.swing.*;
 
@@ -24,6 +26,7 @@ import org.janelia.it.FlyWorkstation.gui.framework.actions.*;
 import org.janelia.it.FlyWorkstation.gui.framework.actions.Action;
 import org.janelia.it.FlyWorkstation.gui.framework.console.Browser;
 import org.janelia.it.FlyWorkstation.gui.framework.console.Perspective;
+import org.janelia.it.FlyWorkstation.gui.framework.progress_meter.WorkerProgressMeter;
 import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.FlyWorkstation.gui.framework.tool_manager.ToolMgr;
 import org.janelia.it.FlyWorkstation.gui.framework.viewer.Hud;
@@ -37,8 +40,10 @@ import org.janelia.it.FlyWorkstation.model.viewer.AlignmentBoardContext;
 import org.janelia.it.FlyWorkstation.shared.util.ConsoleProperties;
 import org.janelia.it.FlyWorkstation.shared.util.SystemInfo;
 import org.janelia.it.FlyWorkstation.shared.util.Utils;
+import org.janelia.it.FlyWorkstation.shared.workers.BackgroundWorker;
 import org.janelia.it.FlyWorkstation.shared.workers.IndeterminateProgressMonitor;
 import org.janelia.it.FlyWorkstation.shared.workers.SimpleWorker;
+import org.janelia.it.FlyWorkstation.shared.workers.TaskMonitoringWorker;
 import org.janelia.it.FlyWorkstation.ws.ExternalClient;
 import org.janelia.it.jacs.model.entity.Entity;
 import org.janelia.it.jacs.model.entity.EntityConstants;
@@ -53,6 +58,7 @@ import org.janelia.it.jacs.model.tasks.neuron.NeuronMergeTask;
 import org.janelia.it.jacs.model.tasks.utility.GenericTask;
 import org.janelia.it.jacs.model.user_data.Node;
 import org.janelia.it.jacs.shared.utils.EntityUtils;
+import org.janelia.it.jacs.shared.utils.FileUtil;
 import org.janelia.it.jacs.shared.utils.MailHelper;
 import org.janelia.it.jacs.shared.utils.StringUtils;
 import org.slf4j.Logger;
@@ -1125,108 +1131,181 @@ public class EntityContextMenu extends JPopupMenu {
 
 
     protected JMenuItem getSplitChannelsItem() {
-
-        // If multiple items are selected then leave
-        if (multiple) {
-            return null;
-        }
-
-        final Entity targetEntity = rootedEntity.getEntity();
-        final String filepath = EntityUtils.getDefault3dImageFilePath(targetEntity);
-        
-        if (filepath==null) {
-            return null;
-        }
         
         JMenuItem sortItem = new JMenuItem("  Split Channels");
 
         sortItem.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent actionEvent) {
                 try {
-                    HashSet<TaskParameter> taskParameters = new HashSet<TaskParameter>();
-                    taskParameters.add(new TaskParameter("filepath", filepath, null));
-                    Task task = new GenericTask(new HashSet<Node>(), SessionMgr.getSubjectKey(),
-                            new ArrayList<Event>(), taskParameters, "splitChannels", "Split Channels");
-                    task.setJobName("Split Channels Task");
-                    task = ModelMgr.getModelMgr().saveOrUpdateTask(task);
-                    ModelMgr.getModelMgr().submitJob("SplitChannels", task);
-
-                    final TaskDetailsDialog dialog = new TaskDetailsDialog(true);
-                    dialog.showForTask(task);
                     
-                    task = ModelMgr.getModelMgr().getTaskById(task.getObjectId());
+                    List<RootedEntity> started = new ArrayList<RootedEntity>();
+                    List<RootedEntity> ignored = new ArrayList<RootedEntity>();
                     
-                    // Since there is no way to log task output vars, we use a convention where the last message 
-                    // will contain the output directory path.
+                    for(final RootedEntity rootedEntity : rootedEntityList) {
 
-                    String resultFilesTmp = null;
-                    List<TaskMessage> messages = new ArrayList<TaskMessage>(task.getMessages());
-                    if (!messages.isEmpty()) {
-                        Collections.sort(messages, new Comparator<TaskMessage>() {
+                        final Entity targetEntity = rootedEntity.getEntity();
+                        final String filepath = EntityUtils.getDefault3dImageFilePath(targetEntity);
+                        if (filepath==null) {
+                            ignored.add(rootedEntity);
+                            continue;
+                        }
+                        
+                        SimpleWorker worker = new SimpleWorker() {
+
+                            protected String workerName;
+                            protected Entity default3dImage;
+                            protected Entity sample;
+                            protected File splitsDir;
+                            protected File targetDir;
+                            
                             @Override
-                            public int compare(TaskMessage o1, TaskMessage o2) {
-                                return o2.getMessageId().compareTo(o1.getMessageId());
+                            protected void doStuff() throws Exception {
+                                Entity targetLoaded = ModelMgr.getModelMgr().loadLazyEntity(targetEntity, false);
+                                this.default3dImage = targetLoaded.getChildByAttributeName(EntityConstants.ATTRIBUTE_DEFAULT_3D_IMAGE);
+                                if (targetEntity.getEntityType().getName().equals(EntityConstants.TYPE_SAMPLE)) {
+                                    this.sample = targetEntity;
+                                }
+                                else {
+                                    this.sample = ModelMgr.getModelMgr().getAncestorWithType(targetEntity, EntityConstants.TYPE_SAMPLE);
+                                }
+                                this.workerName = "Splitting channels for "+sample.getName();
+                                this.splitsDir = new File(SystemInfo.getDownloadsDir(), "SplitChannelImages");
+                                this.targetDir = new File(splitsDir, sample.getName());
                             }
-                        });
-                        resultFilesTmp = messages.get(0).getMessage();
+                            
+                            @Override
+                            protected void hadSuccess() {
+                                try {
+                                    final String localFilePrefix = sample.getName()+"_ID"+default3dImage.getId()+"_";
+                                    
+                                    log.info("Checking "+targetDir+" for files that start with "+localFilePrefix+" and end with .tif");
+                                    
+                                    File[] files = targetDir.listFiles(new FilenameFilter() {
+                                        @Override
+                                        public boolean accept(File dir, String name) {
+                                            return name.startsWith(localFilePrefix) && name.endsWith(".tif");
+                                        }
+                                    });
+
+                                    if (files!=null && files.length>0) {
+                                        Object[] options = { "Open folder", "Split channels" };
+                                        int n = JOptionPane.showOptionDialog(SessionMgr.getBrowser(), 
+                                                "Split channel files already exist, open existing folder, or run split channels anyway?", "Split channel files exists", JOptionPane.YES_NO_OPTION,
+                                                JOptionPane.QUESTION_MESSAGE, null, options, options[0]);
+                                        System.out.println("n="+n);
+                                        if (n==0) {
+                                            OpenInFinderAction.revealFile(targetDir);
+                                            return;
+                                        }
+                                    }
+                                    
+                                    HashSet<TaskParameter> taskParameters = new HashSet<TaskParameter>();
+                                    taskParameters.add(new TaskParameter("filepath", filepath, null));
+                                    Task task = new GenericTask(new HashSet<Node>(), SessionMgr.getSubjectKey(),
+                                            new ArrayList<Event>(), taskParameters, "splitChannels", "Split Channels");
+                                    task.setJobName("Split Channels Task");
+                                    task = ModelMgr.getModelMgr().saveOrUpdateTask(task);
+                                    ModelMgr.getModelMgr().submitJob("SplitChannels", task);
+
+                                    TaskMonitoringWorker taskWorker = new TaskMonitoringWorker(task.getObjectId()) {
+
+                                        @Override
+                                        public String getName() {
+                                            return workerName;
+                                        }
+
+                                        @Override
+                                        protected void doStuff() throws Exception {
+
+                                            setStatus("Grid execution");
+                                            
+                                            // Wait until task is finished
+                                            super.doStuff(); 
+                                            
+                                            if (isCancelled()) throw new CancellationException();
+                                            setStatus("Parse result");
+                                            
+                                            // Get the final task state
+                                            Task task = ModelMgr.getModelMgr().getTaskById(getTaskId());
+                                            
+                                            // Since there is no way to log task output vars, we use a convention where the last message 
+                                            // will contain the output directory path.
+                                            String resultFiles = null;
+                                            List<TaskMessage> messages = new ArrayList<TaskMessage>(task.getMessages());
+                                            if (!messages.isEmpty()) {
+                                                Collections.sort(messages, new Comparator<TaskMessage>() {
+                                                    @Override
+                                                    public int compare(TaskMessage o1, TaskMessage o2) {
+                                                        return o2.getMessageId().compareTo(o1.getMessageId());
+                                                    }
+                                                });
+                                                resultFiles = messages.get(0).getMessage();
+                                            }
+                                            
+                                            if (isCancelled()) throw new CancellationException();
+                                            
+                                            // Copy the files to the local drive
+                                            String[] pathAndFiles = resultFiles.split(":");
+                                            String path = pathAndFiles[0];
+                                            String[] files = pathAndFiles[1].split(",");
+                                            for(String filepath : files) {
+                                                File file = new File(path,filepath);
+                                                copyChannelFile(file.getAbsolutePath());    
+                                            }
+                                            
+                                            if (isCancelled()) throw new CancellationException();
+                                            setStatus("Done");
+                                            
+                                            setProgress(100);
+                                        }
+
+                                        private void copyChannelFile(String standardFilepath) throws Exception {
+                                            File remoteFile = new File(standardFilepath);
+                                            File localFile = new File(targetDir, localFilePrefix+"_"+remoteFile.getName());
+                                            setStatus("Downloading "+remoteFile.getName());
+                                            Utils.copyURLToFile(standardFilepath, localFile, this);
+                                        }
+                                        
+                                        @Override
+                                        public Callable<Void> getSuccessCallback() {
+                                            return new Callable<Void>() {
+                                                @Override
+                                                public Void call() throws Exception {
+                                                    OpenInFinderAction.revealFile(targetDir);
+                                                    return null;
+                                                }
+                                            };
+                                        }
+                                    };
+
+                                    WorkerProgressMeter.getProgressMeter().addWorker(taskWorker);
+                                    taskWorker.execute();
+                                    
+                                }
+                                catch (Exception e) {
+                                    hadError(e);
+                                    return;
+                                }   
+                            }
+                            
+                            @Override
+                            protected void hadError(Throwable error) {
+                                SessionMgr.getSessionMgr().handleException(error);
+                            }
+                        };
+                        
+                        worker.execute();
+                        started.add(rootedEntity);
                     }
                     
-                    final String resultFiles = resultFilesTmp;
-                    SimpleWorker worker = new SimpleWorker() {
-
-                        private Entity sample;
-                        private File targetDir;
-                        
-                        @Override
-                        protected void doStuff() throws Exception {
-
-                            sample = ModelMgr.getModelMgr().getAncestorWithType(targetEntity, EntityConstants.TYPE_SAMPLE);
-                            targetDir = new File(SystemInfo.getDownloadsDir(), sample.getName());
-                            
-                            log.info("GOT resultFiles: "+resultFiles);
-                            String[] pathAndFiles = resultFiles.split(":");
-                            String path = pathAndFiles[0];
-                            String[] files = pathAndFiles[1].split(",");
-                            for(String filepath : files) {
-                                File file = new File(path,filepath);
-                                copyChannelFile(file.getAbsolutePath());    
-                            }
-                            setProgress(100);
-                        }
-                        
-                        private void copyChannelFile(String standardFilepath) throws Exception {
-                            File remoteFile = new File(standardFilepath);
-                            File localFile = new File(targetDir, sample.getName()+"_"+remoteFile.getName());
-                            log.info("remoteFile: "+remoteFile);
-                            log.info("localFile: "+localFile);
-                            Utils.copyURLToFile(standardFilepath, localFile, this);
-                        }
-                        
-                        @Override
-                        protected void hadSuccess() {
-                            try {
-                                OpenInFinderAction.revealFile(targetDir);
-                            }
-                            catch (Exception e) {
-                                hadError(e);
-                            }
-                        }
-                        
-                        @Override
-                        protected void hadError(Throwable error) {
-                            SessionMgr.getSessionMgr().handleException(error);
-                        }
-                    };
                     
-                    worker.setProgressMonitor(new ProgressMonitor(SessionMgr.getBrowser(), "Copying files to local drive", "", 0, 100));
-                    worker.execute();
                 } 
                 catch (Exception e) {
                     SessionMgr.getSessionMgr().handleException(e);
                 }
             }
         });
-
+        
         return sortItem;
     }
     
