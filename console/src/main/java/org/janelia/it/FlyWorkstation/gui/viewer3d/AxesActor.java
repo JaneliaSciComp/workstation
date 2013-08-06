@@ -136,7 +136,7 @@ public class AxesActor implements GLActor
         reportError( gl, "Display of axes-actor 1" );
 
         float grayValue = 0.02f;
-        gl.glColor4f(grayValue, grayValue, grayValue, 0.0001f);
+        gl.glColor4f(0.05f, grayValue, grayValue, 1.0f);
         reportError( gl, "Display of axes-actor 2" );
 
         gl.glEnableClientState( GL2.GL_VERTEX_ARRAY );
