@@ -29,7 +29,7 @@ public class AxesActor implements GLActor
     // Vary these parameters to taste
 	// Rendering variables
 	private RenderMethod renderMethod =
-		// RenderMethod.ALPHA_BLENDING;
+		//RenderMethod.ALPHA_BLENDING;
 		RenderMethod.MAXIMUM_INTENSITY; // MIP
     private boolean bIsInitialized = false;
     private boolean bFullAxes = false;
@@ -38,7 +38,6 @@ public class AxesActor implements GLActor
     private boolean bBuffersNeedUpload = true;
     private double[] axisLengths = new double[ 3 ];
 
-    //private FloatBuffer lineBuffer;
     private int lineBufferHandle;
     private int inxBufferHandle;
 
@@ -110,6 +109,11 @@ public class AxesActor implements GLActor
 		gl.glShadeModel(GL2.GL_FLAT);
         gl.glDisable(GL2.GL_LIGHTING);
 
+//        gl.glClearColor( 0.0f, 0.0f, 0.0f, 0.0001f );
+//        gl.glClearDepth( 0.0f );
+//        gl.glEnable( GL2.GL_DEPTH_TEST );
+//        gl.glDepthFunc( GL2.GL_GREATER );
+
         // set blending to enable transparent voxels
         if (renderMethod == RenderMethod.ALPHA_BLENDING) {
             gl.glEnable(GL2.GL_BLEND);
@@ -131,7 +135,8 @@ public class AxesActor implements GLActor
         gl.glBindBuffer( GL2.GL_ARRAY_BUFFER, lineBufferHandle );
         reportError( gl, "Display of axes-actor 1" );
 
-        gl.glColor4f(0.02f, 0.02f, 0.02f, 0.0001f);
+        float grayValue = 0.02f;
+        gl.glColor4f(grayValue, grayValue, grayValue, 0.0001f);
         reportError( gl, "Display of axes-actor 2" );
 
         gl.glEnableClientState( GL2.GL_VERTEX_ARRAY );
@@ -150,7 +155,9 @@ public class AxesActor implements GLActor
         gl.glDisable( GL2.GL_LINE_SMOOTH );
         reportError( gl, "Display of axes-actor 6" );
 
-		gl.glPopAttrib();
+//        gl.glDisable(GL2.GL_DEPTH_TEST);
+
+        gl.glPopAttrib();
 	}
 
     @Override
