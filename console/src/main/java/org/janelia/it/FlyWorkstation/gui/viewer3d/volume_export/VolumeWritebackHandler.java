@@ -10,17 +10,17 @@ import org.janelia.it.FlyWorkstation.gui.viewer3d.renderable.MaskChanRenderableD
 import org.janelia.it.FlyWorkstation.gui.viewer3d.resolver.CacheFileResolver;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.texture.ABContextDataSource;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.texture.TextureDataI;
+import org.janelia.it.FlyWorkstation.model.domain.*;
+import org.janelia.it.FlyWorkstation.model.viewer.AlignmentBoardContext;
 import org.janelia.it.FlyWorkstation.shared.workers.SimpleWorker;
+import org.janelia.it.jacs.model.entity.Entity;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.swing.*;
 import java.awt.*;
-import java.io.File;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.Map;
+import java.io.*;
+import java.util.*;
 
 /**
  * Created with IntelliJ IDEA.
@@ -75,6 +75,8 @@ public class VolumeWritebackHandler {
                         // Write the tiff.
                         TiffExporter exporter = new TiffExporter();
                         exporter.export( bufferedImage, writeBackFile );
+
+                        writeMetaFile(writeBackFile);
                     }
                 }
 
@@ -127,6 +129,22 @@ public class VolumeWritebackHandler {
         }
     }
 
+    private void writeMetaFile(File writeBackFile) throws IOException {
+        File metaFile = new File( writeBackFile.getParent(), writeBackFile.getName() + ".metadata.txt");
+        PrintWriter pw = new PrintWriter( new FileWriter( metaFile ) );
+
+        AlignmentBoardContext abContext = SessionMgr.getBrowser().getLayersPanel().getAlignmentBoardContext();
+        java.util.List<EntityWrapper> children = abContext.getChildren();
+        for ( EntityWrapper nextChild: children ) {
+            pw.println("Container Item: NAME=" + nextChild.getName() + ", ID=" + nextChild.getUniqueId());
+            for ( EntityWrapper grandChild: nextChild.getChildren() ) {
+                pw.println("Neuron: ID=" + grandChild.getUniqueId() + " NAME=" + grandChild.getName() + " TYPE=" + grandChild.getType() + " OWNER=" + grandChild.getOwnerKey());
+            }
+        }
+
+        pw.close();
+    }
+
     /** Prompt for the user's output file to save, and return it. */
     private File getUserFileChoice() {
         JFileChooser fileChooser = new JFileChooser( "Choose Export File" );
@@ -162,6 +180,8 @@ public class VolumeWritebackHandler {
                     TiffExporter exporter = new TiffExporter();
                     exporter.export( texture, chosenFile );
                     exporter.close();
+
+                    writeMetaFile(chosenFile);
 
                 } catch ( Exception ex ) {
                     ex.printStackTrace();
