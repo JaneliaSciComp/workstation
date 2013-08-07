@@ -13,6 +13,8 @@ import java.io.FilenameFilter;
 import java.util.*;
 import java.util.concurrent.Callable;
 import java.util.concurrent.CancellationException;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantLock;
 
 import javax.swing.*;
 
@@ -26,7 +28,6 @@ import org.janelia.it.FlyWorkstation.gui.framework.actions.*;
 import org.janelia.it.FlyWorkstation.gui.framework.actions.Action;
 import org.janelia.it.FlyWorkstation.gui.framework.console.Browser;
 import org.janelia.it.FlyWorkstation.gui.framework.console.Perspective;
-import org.janelia.it.FlyWorkstation.gui.framework.progress_meter.WorkerProgressMeter;
 import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.FlyWorkstation.gui.framework.tool_manager.ToolMgr;
 import org.janelia.it.FlyWorkstation.gui.framework.viewer.Hud;
@@ -40,7 +41,6 @@ import org.janelia.it.FlyWorkstation.model.viewer.AlignmentBoardContext;
 import org.janelia.it.FlyWorkstation.shared.util.ConsoleProperties;
 import org.janelia.it.FlyWorkstation.shared.util.SystemInfo;
 import org.janelia.it.FlyWorkstation.shared.util.Utils;
-import org.janelia.it.FlyWorkstation.shared.workers.BackgroundWorker;
 import org.janelia.it.FlyWorkstation.shared.workers.IndeterminateProgressMonitor;
 import org.janelia.it.FlyWorkstation.shared.workers.SimpleWorker;
 import org.janelia.it.FlyWorkstation.shared.workers.TaskMonitoringWorker;
@@ -58,7 +58,6 @@ import org.janelia.it.jacs.model.tasks.neuron.NeuronMergeTask;
 import org.janelia.it.jacs.model.tasks.utility.GenericTask;
 import org.janelia.it.jacs.model.user_data.Node;
 import org.janelia.it.jacs.shared.utils.EntityUtils;
-import org.janelia.it.jacs.shared.utils.FileUtil;
 import org.janelia.it.jacs.shared.utils.MailHelper;
 import org.janelia.it.jacs.shared.utils.StringUtils;
 import org.slf4j.Logger;
@@ -1129,6 +1128,7 @@ public class EntityContextMenu extends JPopupMenu {
         return sortItem;
     }
 
+    private final Lock copyFileLock = new ReentrantLock();
 
     protected JMenuItem getSplitChannelsItem() {
         
@@ -1228,6 +1228,10 @@ public class EntityContextMenu extends JPopupMenu {
                                             // Get the final task state
                                             Task task = ModelMgr.getModelMgr().getTaskById(getTaskId());
                                             
+                                            if (task.getLastEvent().getEventType().equals(Event.ERROR_EVENT)) {
+                                                throw new Exception(task.getLastEvent().getDescription());
+                                            }
+                                            
                                             // Since there is no way to log task output vars, we use a convention where the last message 
                                             // will contain the output directory path.
                                             String resultFiles = null;
@@ -1243,6 +1247,10 @@ public class EntityContextMenu extends JPopupMenu {
                                             }
                                             
                                             if (isCancelled()) throw new CancellationException();
+                                            
+                                            if (resultFiles==null) {
+                                                throw new Exception("No result files generated");
+                                            }
                                             
                                             // Copy the files to the local drive
                                             String[] pathAndFiles = resultFiles.split(":");
@@ -1262,8 +1270,15 @@ public class EntityContextMenu extends JPopupMenu {
                                         private void copyChannelFile(String standardFilepath) throws Exception {
                                             File remoteFile = new File(standardFilepath);
                                             File localFile = new File(targetDir, localFilePrefix+"_"+remoteFile.getName());
-                                            setStatus("Downloading "+remoteFile.getName());
-                                            Utils.copyURLToFile(standardFilepath, localFile, this);
+
+                                            setStatus("Waiting to download...");
+                                            copyFileLock.lock();
+                                            try {
+                                                setStatus("Downloading "+remoteFile.getName());
+                                                Utils.copyURLToFile(standardFilepath, localFile, this);
+                                            } finally {
+                                                copyFileLock.unlock();
+                                            }    
                                         }
                                         
                                         @Override
@@ -1278,8 +1293,7 @@ public class EntityContextMenu extends JPopupMenu {
                                         }
                                     };
 
-                                    WorkerProgressMeter.getProgressMeter().addWorker(taskWorker);
-                                    taskWorker.execute();
+                                    taskWorker.executeWithEvents();
                                     
                                 }
                                 catch (Exception e) {

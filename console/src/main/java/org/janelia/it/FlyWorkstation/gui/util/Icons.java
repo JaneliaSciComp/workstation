@@ -36,7 +36,7 @@ public class Icons {
      * Returns an animated icon for representing a data loading state.
      * @return
      */
-    public static Icon getLoadingIcon() {
+    public static ImageIcon getLoadingIcon() {
     	return getIcon("spinner.gif");
     }
 
@@ -44,7 +44,7 @@ public class Icons {
      * Returns an icon for representing the "expand all" tree operation.
      * @return
      */
-    public static Icon getExpandAllIcon() {
+    public static ImageIcon getExpandAllIcon() {
     	return getIcon("expand_all.png");
     }
 
@@ -52,7 +52,7 @@ public class Icons {
      * Returns an icon for representing the "collapse all" tree operation.
      * @return
      */
-    public static Icon getCollapseAllIcon() {
+    public static ImageIcon getCollapseAllIcon() {
     	return getIcon("collapse_all.png");
     }
     
@@ -60,7 +60,7 @@ public class Icons {
      * Returns an icon for representing the "refresh" operation.
      * @return
      */
-    public static Icon getRefreshIcon() {
+    public static ImageIcon getRefreshIcon() {
     	return getIcon("refresh.png");
     }
     
