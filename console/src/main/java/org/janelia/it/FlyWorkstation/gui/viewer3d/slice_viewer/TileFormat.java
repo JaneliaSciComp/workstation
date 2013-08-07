@@ -1,5 +1,8 @@
 package org.janelia.it.FlyWorkstation.gui.viewer3d.slice_viewer;
 
+import org.janelia.it.FlyWorkstation.gui.viewer3d.CoordinateAxis;
+import org.janelia.it.FlyWorkstation.gui.viewer3d.Vec3;
+
 /*
  * Common metadata to back end tile data formats
  */
@@ -23,6 +26,127 @@ public class TileFormat
 	public TileFormat() 
 	{
 		setDefaultParameters();
+	}
+	
+	// new methods to help convert between TileIndex and xyz micrometer coordinates
+	/**
+	 * NOTE - it is possible for tileIndexForXyz to return 
+	 * invalid TileIndexes, for example when the xyz coordinate lies
+	 * outside the volume.
+	 * 
+	 * @param xyz
+	 * @param zoom
+	 * @param sliceDirection
+	 * @return
+	 */
+	public TileIndex tileIndexForXyz(Vec3 xyz, int zoom, CoordinateAxis sliceDirection)
+	{
+		int zoomMax = getZoomLevelCount() - 1;
+		Vec3 pixels = xyz.clone();
+		double zoomFactor = Math.pow(2.0, zoom);
+		int depthAxis = sliceDirection.index();
+		// To generalize Raveler format, invert vertical tile dimension
+		int verticalAxis = (depthAxis + 2) % 3;
+		for (int i = 0; i < 3; ++i) {
+			double val = pixels.get(i);
+			// convert micrometers to voxels
+			val /= getVoxelMicrometers()[i];
+			// shift to volume origin
+			val -= origin[i];
+			// invert vertical direction
+			if (i == verticalAxis)
+				val = volumeSize[i] - val;
+			// convert voxels to tiles
+			if (i != depthAxis) // but not in slice direction
+				val /= getTileSize()[i];
+			// scale by zoom level
+			if ((i != depthAxis) || (indexStyle == TileIndex.IndexStyle.OCTREE))
+				val /= zoomFactor;
+			// store result
+			pixels.set(i, val);
+		}
+		//
+		TileIndex result = new TileIndex(
+				(int)Math.floor(pixels.get(0)),
+				(int)Math.floor(pixels.get(1)),
+				(int)Math.floor(pixels.get(2)),
+				zoom, zoomMax, indexStyle, sliceDirection);
+		return result;
+	}
+	
+	/**
+	 * Returns four corners in Z order:
+	 *   1-----2
+	 *   |     |
+	 *   |     |
+	 *   3-----4
+	 *   
+	 * @param index
+	 * @return
+	 */
+	public Vec3[] cornersForTileIndex(TileIndex index) {
+		double zoomFactor = Math.pow(2.0, index.getZoom());
+		Vec3 v1 = new Vec3(index.getX(), index.getY(), index.getZ());
+		int depthAxis = index.getSliceAxis().index();
+		// To generalize Raveler format, invert vertical tile dimension
+		int verticalAxis = (depthAxis + 2) % 3;
+		int horizontalAxis = (depthAxis + 1) % 3;
+		Vec3 dv = new Vec3(); // diagonal vector across tile block
+		for (int i = 0; i < 3; ++i) {
+			dv.set(i, getTileSize()[i] * getVoxelMicrometers()[i]);
+			double val = v1.get(i);
+			// shift to center of slice
+			if (i == depthAxis)
+				val += 0.5;
+			// scale by zoom level
+			if ((i != depthAxis) || (indexStyle == TileIndex.IndexStyle.OCTREE))
+				val *= zoomFactor;
+			// convert tiles to voxels
+			if (i != depthAxis)
+				val *= getTileSize()[i];
+			// invert vertical direction; tile origin is bottom left, image origin is top left
+			if (i == verticalAxis)
+				val = volumeSize[i] - val + getTileSize()[i];
+			// Shift to world origin
+			val += origin[i];
+			// convert voxels to micrometers
+			val *= getVoxelMicrometers()[i];
+			// 
+			v1.set(i, val);
+		}
+		
+		Vec3 dw = new Vec3(0,0,0);
+		dw.set(horizontalAxis, dv.get(horizontalAxis));
+		Vec3 dh = new Vec3(0,0,0);
+		dh.set(verticalAxis, dv.get(verticalAxis));
+
+		Vec3[] result = new Vec3[4];
+		result[0] = v1;
+		result[1] = v1.plus(dw);
+		result[2] = v1.plus(dh);
+		result[3] = v1.plus(dh).plus(dw);
+		
+		return null;
+	}
+	
+	public int zoomLevelForCameraZoom(double pixelsPerSceneUnit) 
+	{
+		// use slightly lower resolution in the interest of speed.
+		final double zoomOffset = 0.5;
+		// 
+		double[] vm = getVoxelMicrometers();
+		double maxRes = Math.min(vm[0], Math.min(vm[1], vm[2]));
+		double voxelsPerPixel = 1.0 / (pixelsPerSceneUnit * maxRes);
+		int zoomMax = getZoomLevelCount() - 1;
+		int zoom = zoomMax; // default to very coarse zoom
+		if (voxelsPerPixel > 0.0) {
+			double topZoom = Math.log(voxelsPerPixel) / Math.log(2.0);
+			zoom = (int)(topZoom + zoomOffset);
+		}
+		int zoomMin = 0;
+		zoom = Math.max(zoom, zoomMin);
+		zoom = Math.min(zoom, zoomMax);
+		return zoom;
 	}
 	
 	public TileIndex.IndexStyle getIndexStyle() {

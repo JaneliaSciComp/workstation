@@ -83,7 +83,7 @@ public class ViewTileManager {
 	private Set<TileIndex> neededTextures = new HashSet<TileIndex>();
 	private Set<TileIndex> displayableTextures = new HashSet<TileIndex>();
 
-	private double zoomOffset = 0.5; // tradeoff between optimal resolution (0.0) and speed.
+	// private double zoomOffset = 0.5; // tradeoff between optimal resolution (0.0) and speed.
 	private TileSet previousTiles;
 
 	private TileConsumer tileConsumer;
@@ -145,21 +145,9 @@ public class ViewTileManager {
 		// Need to loop over x and y
 		// Need to compute z, and zoom
 		// 1) zoom
-		double maxRes = Math.min(
-				volumeImage.getXResolution(), 
-				Math.min(volumeImage.getYResolution(), 
-						volumeImage.getZResolution()));
-		double voxelsPerPixel = 1.0 / (camera.getPixelsPerSceneUnit() * maxRes);
-		int zoom = 20; // default to very coarse zoom
-		if (voxelsPerPixel > 0.0) {
-			double topZoom = Math.log(voxelsPerPixel) / Math.log(2.0);
-			zoom = (int)(topZoom + zoomOffset);
-		}
-		int zoomMin = 0;
 		TileFormat tileFormat = volumeImage.getLoadAdapter().getTileFormat();
+		int zoom = tileFormat.zoomLevelForCameraZoom(camera.getPixelsPerSceneUnit());
 		int zoomMax = tileFormat.getZoomLevelCount() - 1;
-		zoom = Math.max(zoom, zoomMin);
-		zoom = Math.min(zoom, zoomMax);
 
 		int xyzFromWhd[] = {0,1,2}; 
 		// Rearrange from rotation matrix

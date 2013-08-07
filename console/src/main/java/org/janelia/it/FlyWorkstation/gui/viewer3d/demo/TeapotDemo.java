@@ -24,6 +24,9 @@ public class TeapotDemo extends JFrame
         PerspectiveGLPanel teapotPanel = new PerspectiveGLPanel();
         // Apply mouse interactions: drag to rotate etc.
         new TrackballInteractor(teapotPanel, teapotPanel.getCamera());
+        //
+        // NOTE: The order in which these actors are added is important.
+        //
         // Set background color
         teapotPanel.addActor(new SolidBackgroundActor(0.9f,1,0.9f));
         // Use 3D lighting

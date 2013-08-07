@@ -45,17 +45,7 @@ public class SliceScanAction extends AbstractAction
 		int zoomedSliceCount = sliceCount;
 		if ((tileFormat != null) && (tileFormat.getIndexStyle() == TileIndex.IndexStyle.OCTREE))
 		{
-			double maxRes = Math.min(image.getXResolution(), Math.min(image.getYResolution(), image.getZResolution()));
-			double voxelsPerPixel = 1.0 / (camera.getPixelsPerSceneUnit() * maxRes);
-			int zoom = 20; // default to very coarse zoom
-			if (voxelsPerPixel > 0.0) {
-				double topZoom = Math.log(voxelsPerPixel) / Math.log(2.0);
-				zoom = (int)(topZoom + 0.5);
-			}
-			int zoomMin = 0;
-			int zoomMax = tileFormat.getZoomLevelCount() - 1;
-			zoom = Math.max(zoom, zoomMin);
-			zoom = Math.min(zoom, zoomMax);
+			int zoom = tileFormat.zoomLevelForCameraZoom(camera.getPixelsPerSceneUnit());
 			int deltaSlice = (int)Math.pow(2, zoom);
 			zoomedSliceCount = sliceCount * deltaSlice;
 		}

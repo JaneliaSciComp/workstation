@@ -17,6 +17,11 @@ public class Vec3 extends SizedVector<Double>
 		this.set(2, z);
 	}
 	
+	@Override
+    public synchronized Vec3 clone() {
+    	return new Vec3(get(0), get(1), get(2));
+    }
+    
 	public double dot(Vec3 rhs) {
 		double result = 0.0f;
 		for (int i = 0; i < 3; ++i) {
