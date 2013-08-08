@@ -7,6 +7,7 @@ import org.janelia.it.FlyWorkstation.gui.framework.roles.PrefEditor;
 import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.FlyWorkstation.shared.util.PropertyConfigurator;
 import org.janelia.it.FlyWorkstation.shared.util.text_component.StandardTextField;
+import org.janelia.it.FlyWorkstation.shared.workers.SimpleWorker;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -485,11 +486,11 @@ public class DataSourceSettingsPanel extends JPanel implements PrefEditor {
         fileCachePanel.add(fileCacheClearButton, c);
 
         updateFileCacheComponents(false);
-
+        
         return fileCachePanel;
     }
 
-    private void updateFileCacheComponents(boolean waitForReload) {
+    private void updateFileCacheComponents(final boolean waitForReload) {
 
         final SessionMgr sessionMgr = SessionMgr.getSessionMgr();
         final int capacity = sessionMgr.getFileCacheGigabyteCapacity();
@@ -501,31 +502,45 @@ public class DataSourceSettingsPanel extends JPanel implements PrefEditor {
             fileCacheEnabledRadioButton.setSelected(true);
             fileCacheSpinner.setEnabled(true);
 
-            if (waitForReload) {
-                try {
-                    // HACK! - give the cache a chance to reload before refreshing this view
-                    Thread.sleep(500);
-                } catch (InterruptedException e) {
-                    log.warn("ignoring exception", e);
+            SimpleWorker worker = new SimpleWorker() {
+                
+                double percentage;
+                
+                @Override
+                protected void doStuff() throws Exception {
+                    if (waitForReload) {
+                        try {
+                            // HACK! - give the cache a chance to reload before refreshing this view
+                            Thread.sleep(500);
+                        } catch (InterruptedException e) {
+                            log.warn("ignoring exception", e);
+                        }
+                    }
+                    double usage = sessionMgr.getFileCacheGigabyteUsage();
+                    this.percentage = (usage / capacity) * 100.0;
                 }
-            }
-
-            final double usage = sessionMgr.getFileCacheGigabyteUsage();
-            final double percentage = (usage / capacity) * 100.0;
-            fileCacheUsageBar.setValue((int) percentage);
-            fileCacheUsageBar.setVisible(true);
-
-            fileCacheClearButton.setEnabled(true);
-
-        } else {
-
+                
+                @Override
+                protected void hadSuccess() {
+                    fileCacheUsageBar.setValue((int) percentage);
+                    fileCacheUsageBar.setVisible(true);
+                    fileCacheClearButton.setEnabled(true);
+                }
+                
+                @Override
+                protected void hadError(Throwable error) {
+                    SessionMgr.getSessionMgr().handleException(error);
+                }
+            };
+            worker.execute();
+            
+        } 
+        else {
             fileCacheDisabledRadioButton.setSelected(true);
             fileCacheSpinner.setEnabled(false);
             fileCacheUsageBar.setVisible(false);
             fileCacheClearButton.setEnabled(false);
-
         }
-
     }
 
     private Object getModelProperty(String key,
