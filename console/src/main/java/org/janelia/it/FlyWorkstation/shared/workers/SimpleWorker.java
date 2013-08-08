@@ -6,6 +6,9 @@ import java.beans.PropertyChangeListener;
 import javax.swing.ProgressMonitor;
 import javax.swing.SwingWorker;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 /**
  * A simple worker class that handles exceptions. Also allows for easy attachment of a ProgressMonitor.
  *
@@ -13,6 +16,8 @@ import javax.swing.SwingWorker;
  */
 public abstract class SimpleWorker extends SwingWorker<Void, Void> implements PropertyChangeListener {
 
+    private static final Logger log = LoggerFactory.getLogger(SimpleWorker.class);
+    
     protected Throwable error;
     protected boolean disregard;
     protected ProgressMonitor progressMonitor; 
@@ -110,7 +115,12 @@ public abstract class SimpleWorker extends SwingWorker<Void, Void> implements Pr
 	public void setProgress(int curr, int total) {
     	double percentDone = (double)curr / (double)total;
     	int p = (int)Math.round(100*percentDone);
-        setProgress(p);
+        try {
+            setProgress(p);
+        }
+        catch (IllegalArgumentException e) {
+            log.error("Invalid progress: "+curr+"/"+total,e);
+        }
 	}
 	
 	/**

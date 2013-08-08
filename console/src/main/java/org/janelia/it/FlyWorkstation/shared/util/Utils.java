@@ -12,6 +12,7 @@ import java.nio.channels.Channels;
 import java.nio.channels.ReadableByteChannel;
 import java.nio.channels.WritableByteChannel;
 import java.util.List;
+import java.util.concurrent.CancellationException;
 
 import javax.media.jai.operator.InvertDescriptor;
 import javax.swing.ImageIcon;
@@ -582,7 +583,10 @@ public class Utils {
         try {
             FileOutputStream output = new FileOutputStream(destination);
             try {
-                copy(input, output, length, worker);
+                int copied = copy(input, output, length, worker);
+                if (copied != length) {
+                    throw new IOException("Bytes copied does not equal file length: "+copied+"!="+length);
+                }
             } 
             finally {
                 org.apache.commons.io.IOUtils.closeQuietly(output);
@@ -605,6 +609,7 @@ public class Utils {
             count += n;
             if (worker!=null) {
                 worker.setProgress(count, (int)length);
+                if (worker.isCancelled()) throw new CancellationException();
             }
         }
         return count;

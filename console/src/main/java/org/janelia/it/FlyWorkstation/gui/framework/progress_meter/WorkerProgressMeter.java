@@ -9,7 +9,6 @@ import java.util.HashSet;
 import java.util.Set;
 
 import javax.swing.*;
-import javax.swing.plaf.basic.BasicProgressBarUI;
 
 import org.janelia.it.FlyWorkstation.api.entity_model.events.WorkerChangedEvent;
 import org.janelia.it.FlyWorkstation.api.entity_model.events.WorkerEndedEvent;
@@ -32,7 +31,7 @@ public class WorkerProgressMeter extends JDialog {
     
     private static final Logger log = LoggerFactory.getLogger(WorkerProgressMeter.class);
     
-    private static final int LABEL_COLUMN_WIDTH = 300;
+    private static final int LABEL_COLUMN_WIDTH = 500;
     private static final int PROGRESS_COLUMN_WIDTH = 150;
     private static final int PROGRESS_BAR_HEIGHT = 12;
     
@@ -41,8 +40,10 @@ public class WorkerProgressMeter extends JDialog {
     private static WorkerProgressMeter progressMeter;
     
     private JPanel mainPanel = new JPanel();
+    private JButton clearButton;
+    private JButton okButton;
     
-    private ImageIcon animatedIcon = Icons.getIcon("cog_small_anim.gif");
+    private ImageIcon animatedIcon = Icons.getIcon("cog_small_anim_orange.gif");
     private ImageIcon staticIcon = Icons.getIcon("cog_small.gif");
     private JLabel menuLabel;
     
@@ -52,16 +53,23 @@ public class WorkerProgressMeter extends JDialog {
 
     private WorkerProgressMeter(Frame frame, String title, boolean modal) {
         super(frame, title, modal);
-        setMinimumSize(new Dimension(100, 100));
+
+        JPanel scrollLayer = new JPanel();
+        scrollLayer.setLayout(new BorderLayout());
+        scrollLayer.add(mainPanel, BorderLayout.CENTER);
+        scrollLayer.add(Box.createVerticalStrut(20), BorderLayout.SOUTH);
+        
         mainPanel.setLayout(new BoxLayout(mainPanel, BoxLayout.Y_AXIS));
         JScrollPane scrollPane = new JScrollPane();
-        scrollPane.setViewportView(mainPanel);
+        scrollPane.setViewportView(scrollLayer);
+        scrollPane.setHorizontalScrollBarPolicy(ScrollPaneConstants.HORIZONTAL_SCROLLBAR_NEVER);
         
         setLayout(new BorderLayout());
         add(scrollPane, BorderLayout.CENTER);
 
-        JButton clearButton = new JButton("Clear Completed");
+        this.clearButton = new JButton("Clear Completed");
         clearButton.setToolTipText("Remove all finished operations");
+        clearButton.setEnabled(false);
         clearButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
@@ -69,7 +77,7 @@ public class WorkerProgressMeter extends JDialog {
             }
         });
 
-        JButton okButton = new JButton("OK");
+        this.okButton = new JButton("OK");
         okButton.setToolTipText("Hide this window");
         okButton.addActionListener(new ActionListener() {
             @Override
@@ -97,15 +105,19 @@ public class WorkerProgressMeter extends JDialog {
         menuLabel = new JLabel(staticIcon);
         menuLabel.addMouseListener(new MouseAdapter() {
             public void mouseEntered(MouseEvent e) {
-                Point bp = SessionMgr.getBrowser().getLocation();
-                Dimension bs = SessionMgr.getBrowser().getSize();
-                Point tp = menuLabel.getLocation();
-                // Fudge the title bar height, since it's probably he same as the menu height
-                int titleBarHeight = SessionMgr.getBrowser().getJMenuBar().getSize().height;  
-                setLocation(new Point(bp.x + bs.width - getWidth(), bp.y + titleBarHeight + tp.y));
+                resetPosition();
                 setVisible(true);
             }
         });
+    }
+    
+    protected void resetPosition() {
+        Point bp = SessionMgr.getBrowser().getLocation();
+        Dimension bs = SessionMgr.getBrowser().getSize();
+        Point tp = menuLabel.getLocation();
+        // Fudge the title bar height, since it's probably he same as the menu height
+        int titleBarHeight = SessionMgr.getBrowser().getJMenuBar().getSize().height;  
+        setLocation(new Point(bp.x + bs.width - getWidth(), bp.y + titleBarHeight + tp.y));
     }
 
     public static WorkerProgressMeter getProgressMeter() {
@@ -127,11 +139,22 @@ public class WorkerProgressMeter extends JDialog {
         }
         return false;
     }
+
+    public boolean hasWorkersCompleted() {
+        for(Component child : mainPanel.getComponents()) {
+            if (child instanceof MonitoredWorkerPanel) {
+                MonitoredWorkerPanel workerPanel = (MonitoredWorkerPanel)child;
+                if (workerPanel.getWorker().isDone()) {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
     
     public void addWorker(BackgroundWorker worker) {
         mainPanel.add(new MonitoredWorkerPanel(worker));
         refresh();
-        pack();
     }
     
     private void stopWorker(MonitoredWorkerPanel workerPanel) {
@@ -157,13 +180,20 @@ public class WorkerProgressMeter extends JDialog {
         for(MonitoredWorkerPanel workerPanel : toRemove) {
             mainPanel.remove(workerPanel);
         }
-        mainPanel.revalidate();
-        mainPanel.repaint();
+        refresh();
     }
     
     private void refresh() {
-        mainPanel.revalidate();
-        mainPanel.repaint();
+        SwingUtilities.invokeLater(new Runnable() {
+            @Override
+            public void run() {
+                pack();
+                resetPosition();
+                clearButton.setEnabled(hasWorkersCompleted());
+                mainPanel.revalidate();
+                mainPanel.repaint();
+            }
+        });
     }
     
     public JLabel getMenuLabel() {
@@ -239,8 +269,7 @@ public class WorkerProgressMeter extends JDialog {
             setLayout(new BoxLayout(this, BoxLayout.X_AXIS));
             
             JPanel textPanel = new JPanel();
-            textPanel.setMinimumSize(new Dimension(LABEL_COLUMN_WIDTH, 10));
-            textPanel.setMaximumSize(new Dimension(LABEL_COLUMN_WIDTH, Integer.MAX_VALUE));
+            textPanel.setPreferredSize(new Dimension(LABEL_COLUMN_WIDTH, 20));
             textPanel.setLayout(new BoxLayout(textPanel, BoxLayout.Y_AXIS));
             textPanel.setBorder(BorderFactory.createEmptyBorder(2, 0, 2, 10));
             add(textPanel);
@@ -253,13 +282,10 @@ public class WorkerProgressMeter extends JDialog {
             textPanel.add(statusLabel);
             
             this.progressBar = new JProgressBar(1, 100);
-            progressBar.setMinimumSize(new Dimension(PROGRESS_COLUMN_WIDTH, PROGRESS_BAR_HEIGHT));
-            progressBar.setMaximumSize(new Dimension(PROGRESS_COLUMN_WIDTH, PROGRESS_BAR_HEIGHT));
+            progressBar.setPreferredSize(new Dimension(PROGRESS_COLUMN_WIDTH, PROGRESS_BAR_HEIGHT));
             progressBar.setIndeterminate(true);
-            progressBar.setUI(new MyProgressUI());
+            progressBar.setUI(new SharedProgressBarUI());
             add(progressBar);
-            
-            add(Box.createHorizontalGlue());
             
             this.nextButton = new JButton();
             nextButton.setIcon(Icons.getIcon("arrow_forward.gif"));
@@ -287,8 +313,8 @@ public class WorkerProgressMeter extends JDialog {
                         removeWorker(MonitoredWorkerPanel.this);
                     }
                     else {
-                        stopWorker(MonitoredWorkerPanel.this);  
                         cancelled = true;
+                        stopWorker(MonitoredWorkerPanel.this);  
                     }
                 }
             });
@@ -311,7 +337,6 @@ public class WorkerProgressMeter extends JDialog {
                 endedAt = System.currentTimeMillis();
                 progressBar.setValue(100);
                 progressBar.setIndeterminate(false);
-                ((MyProgressUI)progressBar.getUI()).finish();
                 closeButton.setToolTipText("Remove from this view");
             }
             
@@ -320,13 +345,11 @@ public class WorkerProgressMeter extends JDialog {
                 statusLabel.setText("Cancelled");
             }
             else if (error!=null) {
-                log.info("ERROR done="+worker.isDone());
                 log.error("Error running task",error);
                 statusLabel.setText("ERROR: "+error.getMessage());
             }
             else {
                 if (worker.isDone()) {
-                    log.info("DONE NO ERROR");
                     nextButton.setEnabled(true);
                 }
                 else {
@@ -340,14 +363,15 @@ public class WorkerProgressMeter extends JDialog {
             nameLabel.setToolTipText(nameLabel.getText());
             statusLabel.setToolTipText(statusLabel.getText());
             
+            clearButton.setEnabled(hasWorkersCompleted());
+            
             revalidate();
             repaint();
         }
-    }
-    
-    private class MyProgressUI extends BasicProgressBarUI {
-        public void finish() {
-            stopAnimationTimer();
+        
+        public JProgressBar getProgressBar() {
+            return progressBar;
         }
     }
+
 }

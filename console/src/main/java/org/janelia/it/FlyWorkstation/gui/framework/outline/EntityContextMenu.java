@@ -41,6 +41,7 @@ import org.janelia.it.FlyWorkstation.model.viewer.AlignmentBoardContext;
 import org.janelia.it.FlyWorkstation.shared.util.ConsoleProperties;
 import org.janelia.it.FlyWorkstation.shared.util.SystemInfo;
 import org.janelia.it.FlyWorkstation.shared.util.Utils;
+import org.janelia.it.FlyWorkstation.shared.workers.BackgroundWorker;
 import org.janelia.it.FlyWorkstation.shared.workers.IndeterminateProgressMonitor;
 import org.janelia.it.FlyWorkstation.shared.workers.SimpleWorker;
 import org.janelia.it.FlyWorkstation.shared.workers.TaskMonitoringWorker;
@@ -74,10 +75,17 @@ public class EntityContextMenu extends JPopupMenu {
 
     protected static final Browser browser = SessionMgr.getSessionMgr().getActiveBrowser();
 
+    // Download directories
+    private static final File downloadDir = new File(SystemInfo.getDownloadsDir(), "Workstation Images");
+    private static final File splitsDir = new File(SystemInfo.getDownloadsDir(), "Split Channel Images");
+
+    // Lock to make sure only one file is downloaded at a time 
+    private static final Lock copyFileLock = new ReentrantLock();
+    
+    // Current selection
     protected final List<RootedEntity> rootedEntityList;
     protected final RootedEntity rootedEntity;
     protected final boolean multiple;
-    private JMenu errorMenu;
 
     // Internal state
     protected boolean nextAddRequiresSeparator = false;
@@ -133,6 +141,7 @@ public class EntityContextMenu extends JPopupMenu {
         setNextAddRequiresSeparator(true);
         add(getMergeItem());
         add(getSortBySimilarityItem());
+        add(getDownloadDefault3dImageItem());
         add(getSplitChannelsItem());
 //        add(getCreateSessionItem());
 
@@ -148,7 +157,7 @@ public class EntityContextMenu extends JPopupMenu {
         }
     }
 
-    private void addBadDataButtons() {
+    private void addBadDataButtons(JMenu errorMenu) {
 
         if (null != ModelMgr.getModelMgr().getErrorOntology()) {
             List<OntologyElement> ontologyElements = ModelMgr.getModelMgr().getErrorOntology().getChildren();
@@ -216,9 +225,9 @@ public class EntityContextMenu extends JPopupMenu {
             // OntologyElementChooser("Please choose a bad data flag from the list",
             // ModelMgr.getModelMgr().getOntology(tmpErrorOntology.getId()));
             // flagType.setSize(400,400);
-            // flagType.setIconImage(SessionMgr.getBrowser().getIconImage());
+            // flagType.setIconImage(browser.getIconImage());
             // flagType.setCanAnnotate(true);
-            // flagType.showDialog(SessionMgr.getBrowser());
+            // flagType.showDialog(browser);
 
         }
     }
@@ -280,7 +289,7 @@ public class EntityContextMenu extends JPopupMenu {
 
     private void gotoEntity(final Entity entity, final String ancestorType) {
 
-        Utils.setWaitingCursor(SessionMgr.getBrowser());
+        Utils.setWaitingCursor(browser);
 
         SimpleWorker worker = new SimpleWorker() {
 
@@ -322,13 +331,13 @@ public class EntityContextMenu extends JPopupMenu {
 
             @Override
             protected void hadSuccess() {
-                SessionMgr.getBrowser().getEntityOutline().selectEntityByUniqueId(uniqueId);
-                Utils.setDefaultCursor(SessionMgr.getBrowser());
+                browser.getEntityOutline().selectEntityByUniqueId(uniqueId);
+                Utils.setDefaultCursor(browser);
             }
 
             @Override
             protected void hadError(Throwable error) {
-                Utils.setDefaultCursor(SessionMgr.getBrowser());
+                Utils.setDefaultCursor(browser);
                 SessionMgr.getSessionMgr().handleException(error);
             }
         };
@@ -369,7 +378,7 @@ public class EntityContextMenu extends JPopupMenu {
             @Override
             public void actionPerformed(ActionEvent actionEvent) {
                 try {
-                    final List<RootedEntity> selectedEntities = SessionMgr.getBrowser().getViewerManager()
+                    final List<RootedEntity> selectedEntities = browser.getViewerManager()
                             .getActiveViewer().getSelectedEntities();
                     OntologyAnnotation baseAnnotation = ModelMgr.getModelMgr().getCurrentSelectedOntologyAnnotation();
                     for (RootedEntity entity : selectedEntities) {
@@ -398,8 +407,8 @@ public class EntityContextMenu extends JPopupMenu {
                 alignBrdVwItem.addActionListener(new ActionListener() {
                     @Override
                     public void actionPerformed(ActionEvent e) {
-                        SessionMgr.getBrowser().setPerspective(Perspective.AlignmentBoard);
-                        SessionMgr.getBrowser().getLayersPanel().openAlignmentBoard(rootedEntity.getEntityId());
+                        browser.setPerspective(Perspective.AlignmentBoard);
+                        browser.getLayersPanel().openAlignmentBoard(rootedEntity.getEntityId());
                     }
                 });
             }
@@ -439,7 +448,7 @@ public class EntityContextMenu extends JPopupMenu {
                             protected void hadSuccess() {
                                 
                                 if (contexts.isEmpty()) {
-                                    JOptionPane.showMessageDialog(SessionMgr.getBrowser(),
+                                    JOptionPane.showMessageDialog(browser,
                                             "Sample is not aligned to a compatible alignment space", "Error", JOptionPane.ERROR_MESSAGE);
                                     return;
                                 }
@@ -447,7 +456,7 @@ public class EntityContextMenu extends JPopupMenu {
                                 // Pick an alignment context for the new board
                                 AlignmentContext values[] = new AlignmentContext[contexts.size()];
                                 contexts.toArray(values);
-                                final AlignmentContext alignmentContext = (AlignmentContext)JOptionPane.showInputDialog(SessionMgr.getBrowser(), "Choose an alignment space for this sample", 
+                                final AlignmentContext alignmentContext = (AlignmentContext)JOptionPane.showInputDialog(browser, "Choose an alignment space for this sample", 
                                         "Choose alignment space", JOptionPane.QUESTION_MESSAGE, Icons.getIcon("folder_graphite_palette.png"), 
                                         values, values[0]);
                                 if (alignmentContext==null) return;
@@ -472,12 +481,12 @@ public class EntityContextMenu extends JPopupMenu {
                                     @Override
                                     protected void hadSuccess() {
                                         // Update Tree UI
-                                        SessionMgr.getBrowser().getEntityOutline().totalRefresh(true, new Callable<Void>() {
+                                        browser.getEntityOutline().totalRefresh(true, new Callable<Void>() {
                                             @Override
                                             public Void call() throws Exception {
-                                                SessionMgr.getBrowser().getEntityOutline().selectEntityByUniqueId(newBoard.getUniqueId());
-                                                SessionMgr.getBrowser().setPerspective(Perspective.AlignmentBoard);
-                                                SessionMgr.getBrowser().getLayersPanel().openAlignmentBoard(newBoard.getEntityId());
+                                                browser.getEntityOutline().selectEntityByUniqueId(newBoard.getUniqueId());
+                                                browser.setPerspective(Perspective.AlignmentBoard);
+                                                browser.getLayersPanel().openAlignmentBoard(newBoard.getEntityId());
                                                 return null;
                                             }
                                         });
@@ -488,7 +497,7 @@ public class EntityContextMenu extends JPopupMenu {
                                         SessionMgr.getSessionMgr().handleException(error);
                                     }
                                 };
-                                worker.setProgressMonitor(new IndeterminateProgressMonitor(SessionMgr.getBrowser(), "Adding aligned entities...", ""));
+                                worker.setProgressMonitor(new IndeterminateProgressMonitor(browser, "Adding aligned entities...", ""));
                                 worker.execute();
                             }
                             
@@ -497,7 +506,7 @@ public class EntityContextMenu extends JPopupMenu {
                                 SessionMgr.getSessionMgr().handleException(error);
                             }
                         };
-                        worker.setProgressMonitor(new IndeterminateProgressMonitor(SessionMgr.getBrowser(), "Finding alignments...", ""));
+                        worker.setProgressMonitor(new IndeterminateProgressMonitor(browser, "Finding alignments...", ""));
                         worker.execute();
                     }
                 });
@@ -517,8 +526,8 @@ public class EntityContextMenu extends JPopupMenu {
                 sliceVwItem.addActionListener(new ActionListener() {
                     @Override
                     public void actionPerformed(ActionEvent e) {
-                        SessionMgr.getBrowser().setPerspective(Perspective.SliceViewer);
-                        SessionMgr.getBrowser().getViewerManager().getActiveViewer().loadEntity(rootedEntity);
+                        browser.setPerspective(Perspective.SliceViewer);
+                        browser.getViewerManager().getActiveViewer().loadEntity(rootedEntity);
                     }
                 });
             }
@@ -687,8 +696,8 @@ public class EntityContextMenu extends JPopupMenu {
     protected JMenu getErrorFlag() {
         if (multiple)
             return null;
-        errorMenu = new JMenu("  Report A Problem With This Data");
-        addBadDataButtons();
+        JMenu errorMenu = new JMenu("  Report A Problem With This Data");
+        addBadDataButtons(errorMenu);
         return errorMenu;
     }
 
@@ -719,9 +728,9 @@ public class EntityContextMenu extends JPopupMenu {
     // OntologyElementChooser("Please choose a bad data flag from the list",
     // ModelMgr.getModelMgr().getOntology(tmpErrorOntology.getId()));
     // flagType.setSize(400,400);
-    // flagType.setIconImage(SessionMgr.getBrowser().getIconImage());
+    // flagType.setIconImage(browser.getIconImage());
     // flagType.setCanAnnotate(true);
-    // flagType.showDialog(SessionMgr.getBrowser());
+    // flagType.showDialog(browser);
     //
     // }
     //
@@ -760,13 +769,13 @@ public class EntityContextMenu extends JPopupMenu {
 
     protected JMenu getAddToSplitPickingSessionItem() {
 
-        if (!SessionMgr.getBrowser().getScreenEvaluationDialog().isAccessible()) {
+        if (!browser.getScreenEvaluationDialog().isAccessible()) {
             return null;
         }
 
         JMenu newFolderMenu = new JMenu("  Add To Screen Picking Folder");
 
-        List<EntityData> rootEds = SessionMgr.getBrowser().getEntityOutline().getRootEntity().getOrderedEntityData();
+        List<EntityData> rootEds = browser.getEntityOutline().getRootEntity().getOrderedEntityData();
 
         for (final EntityData rootEd : rootEds) {
             final Entity commonRoot = rootEd.getChildEntity();
@@ -851,7 +860,7 @@ public class EntityContextMenu extends JPopupMenu {
 
         JMenu newFolderMenu = new JMenu("  Add To Top-Level Folder");
 
-        List<EntityData> rootEds = SessionMgr.getBrowser().getEntityOutline().getRootEntity().getOrderedEntityData();
+        List<EntityData> rootEds = browser.getEntityOutline().getRootEntity().getOrderedEntityData();
 
         for (EntityData rootEd : rootEds) {
             final Entity commonRoot = rootEd.getChildEntity();
@@ -1094,7 +1103,7 @@ public class EntityContextMenu extends JPopupMenu {
         }
 
         String parentId = Utils.getParentIdFromUniqueId(rootedEntity.getUniqueId());
-        final Entity folder = SessionMgr.getBrowser().getEntityOutline().getEntityByUniqueId(parentId);
+        final Entity folder = browser.getEntityOutline().getEntityByUniqueId(parentId);
 
         if (!folder.getEntityType().getName().equals(EntityConstants.TYPE_FOLDER)) {
             return null;
@@ -1116,7 +1125,7 @@ public class EntityContextMenu extends JPopupMenu {
 
                     final TaskDetailsDialog dialog = new TaskDetailsDialog(true);
                     dialog.showForTask(task);
-                    SessionMgr.getBrowser().getViewerManager().getActiveViewer().refresh();
+                    browser.getViewerManager().getActiveViewer().refresh();
                 } 
                 catch (Exception e) {
                     SessionMgr.getSessionMgr().handleException(e);
@@ -1127,35 +1136,173 @@ public class EntityContextMenu extends JPopupMenu {
         sortItem.setEnabled(ModelMgrUtils.hasWriteAccess(folder));
         return sortItem;
     }
+    
+    protected JMenuItem getDownloadDefault3dImageItem() {
 
-    private final Lock copyFileLock = new ReentrantLock();
-
-    protected JMenuItem getSplitChannelsItem() {
+        int numStacks = 0;
+        for(final RootedEntity rootedEntity : rootedEntityList) {
+            final Entity targetEntity = rootedEntity.getEntity();
+            final String filepath = EntityUtils.getDefault3dImageFilePath(targetEntity);
+            if (filepath!=null) {
+                numStacks++;
+            }
+        }
         
-        JMenuItem sortItem = new JMenuItem("  Split Channels");
+        if (numStacks<1) return null;
+        
+        JMenuItem downloadItem = new JMenuItem(multiple?"  Download "+numStacks+" 3D Images (Background Task)":"  Download 3D Image (Background Task)");
 
-        sortItem.addActionListener(new ActionListener() {
+        downloadItem.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent actionEvent) {
                 try {
-                    
-                    List<RootedEntity> started = new ArrayList<RootedEntity>();
-                    List<RootedEntity> ignored = new ArrayList<RootedEntity>();
-                    
                     for(final RootedEntity rootedEntity : rootedEntityList) {
 
                         final Entity targetEntity = rootedEntity.getEntity();
                         final String filepath = EntityUtils.getDefault3dImageFilePath(targetEntity);
-                        if (filepath==null) {
-                            ignored.add(rootedEntity);
-                            continue;
-                        }
+                        
+                        SimpleWorker worker = new SimpleWorker() {
+
+                            protected String workerName;
+                            protected File targetDir;
+                            protected File remoteFile;
+                            protected File localFile;
+                            
+                            @Override
+                            protected void doStuff() throws Exception {
+                                Entity targetLoaded = ModelMgr.getModelMgr().loadLazyEntity(targetEntity, false);
+                                Entity default3dImage = targetLoaded.getChildByAttributeName(EntityConstants.ATTRIBUTE_DEFAULT_3D_IMAGE);
+                                Entity sample = null;
+                                if (targetEntity.getEntityType().getName().equals(EntityConstants.TYPE_SAMPLE)) {
+                                    sample = targetEntity;
+                                }
+                                else {
+                                    sample = ModelMgr.getModelMgr().getAncestorWithType(targetEntity, EntityConstants.TYPE_SAMPLE);
+                                }
+                                this.workerName = "Downloading "+sample.getName();
+                                this.targetDir = new File(downloadDir, sample.getName());
+                                final String localFilePrefix = sample.getName()+"_ID"+default3dImage.getId()+"_";
+                                this.remoteFile = new File(filepath);
+                                this.localFile = new File(targetDir, localFilePrefix+"_"+remoteFile.getName());
+                            }
+                            
+                            @Override
+                            protected void hadSuccess() {
+                                try {
+                                    
+                                    log.debug("Checking {} for files that named {}",targetDir,localFile.getName());
+                                    
+                                    File[] files = targetDir.listFiles(new FilenameFilter() {
+                                        @Override
+                                        public boolean accept(File dir, String name) {
+                                            return name.equals(localFile.getName());
+                                        }
+                                    });
+
+                                    if (files!=null && files.length>0) {
+                                        Object[] options = { "Open folder", "Download file" };
+                                        int n = JOptionPane.showOptionDialog(browser, 
+                                                "File already exists locally, open existing folder, or download again?", "Files exists", JOptionPane.YES_NO_OPTION,
+                                                JOptionPane.QUESTION_MESSAGE, null, options, options[0]);
+                                        if (n==0) {
+                                            OpenInFinderAction.revealFile(targetDir);
+                                            return;
+                                        }
+                                    }
+                                    
+                                    BackgroundWorker taskWorker = new BackgroundWorker() {
+
+                                        @Override
+                                        public String getName() {
+                                            return workerName;
+                                        }
+
+                                        @Override
+                                        protected void doStuff() throws Exception {
+
+                                            File remoteFile = new File(filepath);
+
+                                            setStatus("Waiting to download...");
+                                            copyFileLock.lock();
+                                            try {
+                                                setStatus("Downloading "+remoteFile.getName());
+                                                Utils.copyURLToFile(filepath, localFile, this);
+                                            } finally {
+                                                copyFileLock.unlock();
+                                            }    
+                                            
+                                            if (isCancelled()) throw new CancellationException();
+                                            setStatus("Done");
+                                        }
+                                        
+                                        @Override
+                                        public Callable<Void> getSuccessCallback() {
+                                            return new Callable<Void>() {
+                                                @Override
+                                                public Void call() throws Exception {
+                                                    OpenInFinderAction.revealFile(targetDir);
+                                                    return null;
+                                                }
+                                            };
+                                        }
+                                    };
+
+                                    taskWorker.executeWithEvents();
+                                    
+                                }
+                                catch (Exception e) {
+                                    hadError(e);
+                                    return;
+                                }   
+                            }
+                            
+                            @Override
+                            protected void hadError(Throwable error) {
+                                SessionMgr.getSessionMgr().handleException(error);
+                            }
+                        };
+                        
+                        worker.execute();
+                    }
+                    
+                    
+                } 
+                catch (Exception e) {
+                    SessionMgr.getSessionMgr().handleException(e);
+                }
+            }
+        });
+        
+        return downloadItem;
+    }
+    
+    protected JMenuItem getSplitChannelsItem() {
+
+        int numStacks = 0;
+        for(final RootedEntity rootedEntity : rootedEntityList) {
+            final Entity targetEntity = rootedEntity.getEntity();
+            final String filepath = EntityUtils.getDefault3dImageFilePath(targetEntity);
+            if (filepath!=null) {
+                numStacks++;
+            }
+        }
+        
+        if (numStacks<1) return null;
+        
+        JMenuItem downloadSplitItem = new JMenuItem(multiple?"  Download "+numStacks+" 3D Images as Split Channel TIFFs (Background Task)":"  Download 3D Image as Split Channel TIFF (Background Task)");
+
+        downloadSplitItem.addActionListener(new ActionListener() {
+            public void actionPerformed(ActionEvent actionEvent) {
+                try {
+                    for(final RootedEntity rootedEntity : rootedEntityList) {
+
+                        final Entity targetEntity = rootedEntity.getEntity();
+                        final String filepath = EntityUtils.getDefault3dImageFilePath(targetEntity);
                         
                         SimpleWorker worker = new SimpleWorker() {
 
                             protected String workerName;
                             protected Entity default3dImage;
                             protected Entity sample;
-                            protected File splitsDir;
                             protected File targetDir;
                             
                             @Override
@@ -1169,7 +1316,6 @@ public class EntityContextMenu extends JPopupMenu {
                                     this.sample = ModelMgr.getModelMgr().getAncestorWithType(targetEntity, EntityConstants.TYPE_SAMPLE);
                                 }
                                 this.workerName = "Splitting channels for "+sample.getName();
-                                this.splitsDir = new File(SystemInfo.getDownloadsDir(), "SplitChannelImages");
                                 this.targetDir = new File(splitsDir, sample.getName());
                             }
                             
@@ -1178,7 +1324,7 @@ public class EntityContextMenu extends JPopupMenu {
                                 try {
                                     final String localFilePrefix = sample.getName()+"_ID"+default3dImage.getId()+"_";
                                     
-                                    log.info("Checking "+targetDir+" for files that start with "+localFilePrefix+" and end with .tif");
+                                    log.debug("Checking {} for files that start with {} and end with .tif",targetDir,localFilePrefix);
                                     
                                     File[] files = targetDir.listFiles(new FilenameFilter() {
                                         @Override
@@ -1189,10 +1335,9 @@ public class EntityContextMenu extends JPopupMenu {
 
                                     if (files!=null && files.length>0) {
                                         Object[] options = { "Open folder", "Split channels" };
-                                        int n = JOptionPane.showOptionDialog(SessionMgr.getBrowser(), 
+                                        int n = JOptionPane.showOptionDialog(browser, 
                                                 "Split channel files already exist, open existing folder, or run split channels anyway?", "Split channel files exists", JOptionPane.YES_NO_OPTION,
                                                 JOptionPane.QUESTION_MESSAGE, null, options, options[0]);
-                                        System.out.println("n="+n);
                                         if (n==0) {
                                             OpenInFinderAction.revealFile(targetDir);
                                             return;
@@ -1309,7 +1454,6 @@ public class EntityContextMenu extends JPopupMenu {
                         };
                         
                         worker.execute();
-                        started.add(rootedEntity);
                     }
                     
                     
@@ -1320,7 +1464,7 @@ public class EntityContextMenu extends JPopupMenu {
             }
         });
         
-        return sortItem;
+        return downloadSplitItem;
     }
     
     protected JMenuItem getOpenInFirstViewerItem() {
@@ -1344,7 +1488,7 @@ public class EntityContextMenu extends JPopupMenu {
 
                     @Override
                     protected void hadSuccess() {
-                        SessionMgr.getBrowser().getViewerManager().showEntityInMainViewer(rootedEntity);
+                        browser.getViewerManager().showEntityInMainViewer(rootedEntity);
                         ModelMgr.getModelMgr().getEntitySelectionModel()
                                 .selectEntity(EntitySelectionModel.CATEGORY_OUTLINE, rootedEntity.getUniqueId(), true);
                     }
@@ -1382,7 +1526,7 @@ public class EntityContextMenu extends JPopupMenu {
 
                     @Override
                     protected void hadSuccess() {
-                        SessionMgr.getBrowser().getViewerManager().showEntityInSecViewer(rootedEntity);
+                        browser.getViewerManager().showEntityInSecViewer(rootedEntity);
                         ModelMgr.getModelMgr().getEntitySelectionModel()
                                 .selectEntity(EntitySelectionModel.CATEGORY_OUTLINE, rootedEntity.getUniqueId(), true);
                     }
@@ -1448,7 +1592,7 @@ public class EntityContextMenu extends JPopupMenu {
                     try {
                         ToolMgr.openFile(ToolMgr.TOOL_FIJI, path, null);
                     } catch (Exception e) {
-                        JOptionPane.showMessageDialog(SessionMgr.getBrowser(), "Could not launch this tool. "
+                        JOptionPane.showMessageDialog(browser, "Could not launch this tool. "
                                 + "Please choose the appropriate file path from the Tools->Configure Tools area",
                                 "Tool Launch ERROR", JOptionPane.ERROR_MESSAGE);
                     }
@@ -1503,7 +1647,7 @@ public class EntityContextMenu extends JPopupMenu {
 
                             if (SessionMgr.getSessionMgr()
                                     .getExternalClientsByName(ModelMgr.NEURON_ANNOTATOR_CLIENT_NAME).isEmpty()) {
-                                JOptionPane.showMessageDialog(SessionMgr.getBrowser(),
+                                JOptionPane.showMessageDialog(browser,
                                         "Could not get Neuron Annotator to launch and connect. "
                                                 + "Please contact support.", "Launch ERROR", JOptionPane.ERROR_MESSAGE);
                                 return;
@@ -1552,7 +1696,7 @@ public class EntityContextMenu extends JPopupMenu {
                     try {
                         ToolMgr.openFile(ToolMgr.TOOL_VAA3D, path, null);
                     } catch (Exception e) {
-                        JOptionPane.showMessageDialog(SessionMgr.getBrowser(), "Could not launch this tool. "
+                        JOptionPane.showMessageDialog(browser, "Could not launch this tool. "
                                 + "Please choose the appropriate file path from the Tools->Configure Tools area",
                                 "ToolInfo Launch ERROR", JOptionPane.ERROR_MESSAGE);
                     }
@@ -1574,7 +1718,7 @@ public class EntityContextMenu extends JPopupMenu {
                     try {
                         ToolMgr.openFile(ToolMgr.TOOL_VAA3D, path, ToolMgr.MODE_3D);
                     } catch (Exception e) {
-                        JOptionPane.showMessageDialog(SessionMgr.getBrowser(), "Could not launch this tool. "
+                        JOptionPane.showMessageDialog(browser, "Could not launch this tool. "
                                 + "Please choose the appropriate file path from the Tools->Configure Tools area",
                                 "ToolInfo Launch ERROR", JOptionPane.ERROR_MESSAGE);
                     }
@@ -1715,7 +1859,7 @@ public class EntityContextMenu extends JPopupMenu {
             @Override
             public void actionPerformed(ActionEvent e) {
                 if (null == ModelMgr.getModelMgr().getCurrentOntology()) {
-                    JOptionPane.showMessageDialog(SessionMgr.getBrowser(),
+                    JOptionPane.showMessageDialog(browser,
                             "Please select an ontology in the ontology window.", "Null Ontology Warning",
                             JOptionPane.WARNING_MESSAGE);
                 } else {
