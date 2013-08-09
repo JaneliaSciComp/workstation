@@ -126,7 +126,7 @@ public class TileFormat
 		result[2] = v1.plus(dh);
 		result[3] = v1.plus(dh).plus(dw);
 		
-		return null;
+		return result;
 	}
 	
 	public int zoomLevelForCameraZoom(double pixelsPerSceneUnit) 
