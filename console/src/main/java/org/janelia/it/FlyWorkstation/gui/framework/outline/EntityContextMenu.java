@@ -1414,7 +1414,7 @@ public class EntityContextMenu extends JPopupMenu {
 
                                         private void copyChannelFile(String standardFilepath) throws Exception {
                                             File remoteFile = new File(standardFilepath);
-                                            File localFile = new File(targetDir, localFilePrefix+"_"+remoteFile.getName());
+                                            File localFile = new File(targetDir, localFilePrefix+remoteFile.getName());
 
                                             setStatus("Waiting to download...");
                                             copyFileLock.lock();
