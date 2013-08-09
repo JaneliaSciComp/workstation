@@ -1104,6 +1104,8 @@ LLF: the hookup for the 3d snapshot.
 
         // July 1, 2013 elevate url loading from SliceViewer to QuadViewUi.
         URL url = tmpFile.toURI().toURL();
+        sliceViewer.setUrl( url );
+
         return loadURL(url);
     }
     

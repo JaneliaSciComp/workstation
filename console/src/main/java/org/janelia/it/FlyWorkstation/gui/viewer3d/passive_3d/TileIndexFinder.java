@@ -31,24 +31,69 @@ public class TileIndexFinder {
 
     public List<TileIndex> execute( int startVoxX, int startVoxY, int startVoxZ, int endVoxX, int endVoxY, int endVoxZ ) {
         List<TileIndex> rtnVal = new ArrayList<TileIndex>();
-        Vec3 lowerLeftLocation = new Vec3(startVoxX, startVoxY, startVoxZ);
-        Vec3 upperRightLocation = new Vec3(endVoxX, endVoxY, endVoxZ);
+        Vec3 leastXYZLocation = new Vec3(startVoxX, startVoxY, startVoxZ);
+        Vec3 greatestXYZLocation = new Vec3(endVoxX, endVoxY, endVoxZ);
         TileIndex baseTileIndex = getIndexForLocation(
                 format,
-                lowerLeftLocation,
+                leastXYZLocation,
                 camera3d,
                 sliceAxis
         );
 
         // Next, get Z-stack extents, and use them to accumulate each slice in the stack.
-        Vec3 lowerLeftOfIndex = getLowerLeftOfIndex(format, baseTileIndex);
-        List<Vec3> sliceCoverage = getSliceCoverage( format, lowerLeftOfIndex, lowerLeftLocation, upperRightLocation );
+        Vec3 leastXYZOfIndex = getLeastXYZOfIndex(format, baseTileIndex);
+        List<Vec3> sliceCoverage = getSliceCoverage( format, leastXYZOfIndex, leastXYZLocation, greatestXYZLocation );
         int targetDepth = endVoxZ - startVoxZ;
-        int remainingZ = targetDepth - ((int)lowerLeftOfIndex.z() - startVoxZ);
+        int remainingZ = targetDepth - ((int)leastXYZOfIndex.z() - startVoxZ);
         for ( int i = 0; i < remainingZ; i++ ) {
             addSliceTileIndices(rtnVal, sliceCoverage, i);
         }
         return rtnVal;
+    }
+
+    public List<TileIndex> executeForTileCoords( int startTileX, int startTileY, int startTileZ, int endTileX, int endTileY, int endTileZ ) {
+
+        List<Vec3> tileCoords = new ArrayList<Vec3>();
+        for ( int i = startTileX; i <= endTileX; i++ ) {
+            for ( int j = startTileY; j <= endTileY; j++ ) {
+                for ( int k = startTileZ; k <= endTileZ; k++ ) {
+                    tileCoords.add( new Vec3( i, j, k ) );
+                }
+            }
+        }
+
+        List<TileIndex> rtnVal = new ArrayList<TileIndex>();
+        addSliceTileIndices( rtnVal, tileCoords, 0 );
+        return rtnVal;
+//        double xTileMultiplier =  format.getTileSize()[ 0 ] * format.getVoxelMicrometers()[ 0 ];
+//        double yTileMultiplier = format.getTileSize()[ 1 ] * format.getVoxelMicrometers()[ 1 ];
+//        double zTileMultiplier = format.getTileSize()[ 2 ];
+//        Vec3 leastXYZLocation = new Vec3(
+//                startTileX * xTileMultiplier,
+//                startTileY * yTileMultiplier,
+//                startTileZ * zTileMultiplier
+//        );
+//        Vec3 greatestXYZLocation = new Vec3(
+//                endTileX * xTileMultiplier,
+//                endTileY * yTileMultiplier,
+//                endTileZ * zTileMultiplier
+//        );
+//
+//        // Need to get the base cartesian coords of the tile containing the lowest point requested by user.
+//        //  Can do that by getting whichever tile contains those coords, and returning its info.
+//        TileIndex baseTileIndex = new TileIndex(
+//                startTileX, startTileY, startTileZ, 0, 0, format.getIndexStyle(), sliceAxis
+//        );
+//
+//        // Next, get Z-stack extents, and use them to accumulate each slice in the stack.
+//        Vec3 leastXYZOfIndex = getLeastXYZOfIndex(format, baseTileIndex);
+//        List<Vec3> sliceCoverage = getSliceCoverage( format, leastXYZOfIndex, leastXYZLocation, greatestXYZLocation );
+//        int targetDepth = endTileZ - startTileZ;
+//        int remainingZ = targetDepth - ((int)leastXYZOfIndex.z() - startTileZ);
+//        for ( int i = 0; i < remainingZ; i++ ) {
+//            addSliceTileIndices(rtnVal, sliceCoverage, i);
+//        }
+//        return rtnVal;
     }
 
     private void addSliceTileIndices(List<TileIndex> rtnVal, List<Vec3> sliceCoverage, int i) {
@@ -58,8 +103,9 @@ public class TileIndexFinder {
                     (int)protoVec.getX(),
                     (int)protoVec.getY(),
                     (int)(i + protoVec.getZ()),
-                    (int)camera3d.getPixelsPerSceneUnit(),
-                    (int)camera3d.getPixelsPerSceneUnit(),
+                    0, 0, // Zoom and max zoom at 0.
+//                    (int)camera3d.getPixelsPerSceneUnit(),
+//                    (int)camera3d.getPixelsPerSceneUnit(),
                     format.getIndexStyle(),
                     sliceAxis
             ); //xyz zoom maxzoom syle coordaxis
@@ -68,10 +114,10 @@ public class TileIndexFinder {
     }
 
     private TileIndex getIndexForLocation( TileFormat format, Vec3 location, Camera3d camera3d, CoordinateAxis sliceAxis ) {
-        return format.tileIndexForXyz( location, (int)camera3d.getFocus().getZ(), sliceAxis );
+        return format.tileIndexForXyz( location, 1/*(int)camera3d.getFocus().getZ()*/, sliceAxis );
     }
 
-    private Vec3 getLowerLeftOfIndex(TileFormat format, TileIndex baseIndex) {
+    private Vec3 getLeastXYZOfIndex(TileFormat format, TileIndex baseIndex) {
         Vec3[] baseCorners = format.cornersForTileIndex( baseIndex );
         Vec3 bottomLeft = baseCorners[ 0 ];
         return bottomLeft;
@@ -82,27 +128,30 @@ public class TileIndexFinder {
      * slice to complete the full depth.
      *
      * @param format what size of tiles do we mean?
-     * @param lowerLeftOfStartingTile starting point, to grow from.
+     * @param leastXYZOfStartingTile starting point, to grow from.
      * @return list of enough tile-coords, to get full coverage of the target area.
      */
     private List<Vec3> getSliceCoverage(
-            TileFormat format, Vec3 lowerLeftOfStartingTile, Vec3 lowerLeftTarget, Vec3 upperRightTarget
+            TileFormat format, Vec3 leastXYZOfStartingTile, Vec3 leastXYZOfTarget, Vec3 greatestXYZOfTarget
     ) {
-        int targetWidth = (int)(upperRightTarget.x() - lowerLeftTarget.x());
-        int targetHeight = (int)(upperRightTarget.y() - lowerLeftTarget.y());
+        int targetWidth = (int)(greatestXYZOfTarget.x() - leastXYZOfTarget.x());
+        int targetHeight = (int)(greatestXYZOfTarget.y() - leastXYZOfTarget.y());
 
-        int remainingX = targetWidth - ((int)lowerLeftOfStartingTile.x() - (int)lowerLeftTarget.x());
+        int remainingX = Math.max( 0, targetWidth - ((int)leastXYZOfTarget.x() - (int)leastXYZOfStartingTile.x()) );
         int tileWidth = format.getTileSize()[ 0 ];
         int xTileCount = (int)Math.ceil(remainingX / tileWidth);
+        if ( xTileCount == 0 )
+            xTileCount = 1;
 
-        int remainingY = targetHeight - ((int)lowerLeftOfStartingTile.y() - (int)lowerLeftTarget.y());
+        int remainingY = Math.max( 0, targetHeight - ((int)leastXYZOfTarget.y() - (int)leastXYZOfStartingTile.y()) );
         int tileHeight = format.getTileSize()[ 1 ];
         int yTileCount = (int)Math.ceil(remainingY / tileHeight);
+        if ( yTileCount == 0 )
+            yTileCount = 1;
 
-        // TODO: wonder why it's double?          Wonder if I'm missing a conversion.
-        int lowYInx = (int)lowerLeftOfStartingTile.y();
-        int lowXInx = (int)lowerLeftOfStartingTile.x();
-        int sliceZInx = (int)lowerLeftOfStartingTile.z();
+        int lowXInx = (int)leastXYZOfStartingTile.x();
+        int lowYInx = (int)leastXYZOfStartingTile.y();
+        int sliceZInx = (int)leastXYZOfStartingTile.z();
 
         List<Vec3> rtnVal = new ArrayList<Vec3>();
         for ( int i = 0; i < xTileCount; i++ ) {

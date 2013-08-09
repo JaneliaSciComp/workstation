@@ -35,6 +35,7 @@ import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.event.*;
 import java.awt.geom.Point2D;
+import java.net.URL;
 import java.text.DecimalFormat;
 import java.util.Arrays;
 import java.util.List;
@@ -49,6 +50,7 @@ implements MouseModalWidget, TileConsumer
 	private static final Logger log = LoggerFactory.getLogger(SliceViewer.class);
 
     private boolean optInStatic3d = false;
+    private URL dataUrl;
 
 	protected MouseMode mouseMode;
 	protected MouseMode.Mode mouseModeId;
@@ -435,6 +437,10 @@ implements MouseModalWidget, TileConsumer
 		mouseMode.keyPressed(event);
 	}
 
+    public void setUrl( URL url ) {
+        dataUrl = url;
+    }
+
     // TEMP public setting... LLF, 8/2/2013
     public List<JMenuItem> getLocalItems() {
         JMenuItem snapShot3dItem = new JMenuItem( "3D Snapshot" );
@@ -453,14 +459,13 @@ implements MouseModalWidget, TileConsumer
 
     /** Launches a 3D popup static-block viewer. */
     private void launch3dViewer() {
-        // Todo make this runnable under a worker thread.
         try {
             ViewTileManagerVolumeSource collector = new ViewTileManagerVolumeSource(
                     getCamera(),
                     getViewport(),
                     getSliceAxis(),
                     getViewerInGround(),
-                    tileServer
+                    dataUrl
             );
 
             Snapshot3d snapshotViewer = new Snapshot3d();
