@@ -65,7 +65,7 @@ public class SharedProgressBarUI extends BasicProgressBarUI {
      * indeterminate mode) using the "ProgressBar.repaintInterval" key in the
      * defaults table.
      */
-    private static int repaintInterval;
+    private int repaintInterval;
 
     /**
      * The number of milliseconds until the animation cycle repeats. The value
@@ -73,10 +73,10 @@ public class SharedProgressBarUI extends BasicProgressBarUI {
      * indeterminate mode) using the "ProgressBar.cycleTime" key in the defaults
      * table.
      */
-    private static int cycleTime; // must be repaintInterval*2*aPositiveInteger
+    private int cycleTime; // must be repaintInterval*2*aPositiveInteger
 
     // performance stuff
-    private static boolean ADJUSTTIMER = false; // makes a BIG difference;
+    private boolean ADJUSTTIMER = true; // makes a BIG difference;
     // make this false for
     // performance tests
 
@@ -86,7 +86,7 @@ public class SharedProgressBarUI extends BasicProgressBarUI {
      * 
      * @since 1.5
      */
-    private static Rectangle boxRect;
+    private Rectangle boxRect;
 
     /**
      * The rectangle to be updated the next time the animation thread calls
@@ -95,18 +95,18 @@ public class SharedProgressBarUI extends BasicProgressBarUI {
      * displayed next. This rectangle's values are set in the setAnimationIndex
      * method.
      */
-    private static Rectangle nextPaintRect;
+    private Rectangle nextPaintRect;
 
     // cache
     /** The component's painting area, not including the border. */
-    private static Rectangle componentInnards; // the current painting area
-    private static Rectangle oldComponentInnards; // used to see if the size
+    private Rectangle componentInnards; // the current painting area
+    private Rectangle oldComponentInnards; // used to see if the size
                                                   // changed
 
     /** For bouncing-box animation, the change in position per frame. */
-    private static double delta = 0.0;
+    private double delta = 0.0;
 
-    private static int maxPosition = 0; // maximum X (horiz) or Y box location
+    private int maxPosition = 0; // maximum X (horiz) or Y box location
 
     public static ComponentUI createUI(JComponent x) {
         return new SharedProgressBarUI();

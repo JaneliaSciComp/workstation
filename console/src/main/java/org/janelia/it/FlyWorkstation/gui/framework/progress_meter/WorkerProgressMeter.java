@@ -9,6 +9,7 @@ import java.util.HashSet;
 import java.util.Set;
 
 import javax.swing.*;
+import javax.swing.plaf.basic.BasicProgressBarUI;
 
 import org.janelia.it.FlyWorkstation.api.entity_model.events.WorkerChangedEvent;
 import org.janelia.it.FlyWorkstation.api.entity_model.events.WorkerEndedEvent;
@@ -31,7 +32,7 @@ public class WorkerProgressMeter extends JDialog {
     
     private static final Logger log = LoggerFactory.getLogger(WorkerProgressMeter.class);
     
-    private static final int LABEL_COLUMN_WIDTH = 500;
+    private static final int LABEL_COLUMN_WIDTH = 400;
     private static final int PROGRESS_COLUMN_WIDTH = 150;
     private static final int PROGRESS_BAR_HEIGHT = 12;
     
@@ -53,6 +54,8 @@ public class WorkerProgressMeter extends JDialog {
 
     private WorkerProgressMeter(Frame frame, String title, boolean modal) {
         super(frame, title, modal);
+        
+        setPreferredSize(new Dimension(800, 600));
 
         JPanel scrollLayer = new JPanel();
         scrollLayer.setLayout(new BorderLayout());
@@ -187,7 +190,6 @@ public class WorkerProgressMeter extends JDialog {
         SwingUtilities.invokeLater(new Runnable() {
             @Override
             public void run() {
-                pack();
                 resetPosition();
                 clearButton.setEnabled(hasWorkersCompleted());
                 mainPanel.revalidate();
@@ -284,7 +286,7 @@ public class WorkerProgressMeter extends JDialog {
             this.progressBar = new JProgressBar(1, 100);
             progressBar.setPreferredSize(new Dimension(PROGRESS_COLUMN_WIDTH, PROGRESS_BAR_HEIGHT));
             progressBar.setIndeterminate(true);
-            progressBar.setUI(new SharedProgressBarUI());
+            progressBar.setUI(new BasicProgressBarUI());
             add(progressBar);
             
             this.nextButton = new JButton();

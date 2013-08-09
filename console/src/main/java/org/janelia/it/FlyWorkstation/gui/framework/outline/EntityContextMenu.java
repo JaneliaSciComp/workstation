@@ -143,6 +143,7 @@ public class EntityContextMenu extends JPopupMenu {
         add(getSortBySimilarityItem());
         add(getDownloadDefault3dImageItem());
         add(getSplitChannelsItem());
+//        add(getTestProgressMeterItem());
 //        add(getCreateSessionItem());
 
         setNextAddRequiresSeparator(true);
@@ -1457,6 +1458,71 @@ public class EntityContextMenu extends JPopupMenu {
                     }
                     
                     
+                } 
+                catch (Exception e) {
+                    SessionMgr.getSessionMgr().handleException(e);
+                }
+            }
+        });
+        
+        return downloadSplitItem;
+    }
+
+    protected JMenuItem getTestProgressMeterItem() {
+
+        int numStacks = 0;
+        for(final RootedEntity rootedEntity : rootedEntityList) {
+            final Entity targetEntity = rootedEntity.getEntity();
+            final String filepath = EntityUtils.getDefault3dImageFilePath(targetEntity);
+            if (filepath!=null) {
+                numStacks++;
+            }
+        }
+        
+        if (numStacks<1) return null;
+        
+        JMenuItem downloadSplitItem = new JMenuItem(multiple?"  Do "+numStacks+" things":"  Do one thing");
+
+        downloadSplitItem.addActionListener(new ActionListener() {
+            public void actionPerformed(ActionEvent actionEvent) {
+                try {
+                    for(final RootedEntity rootedEntity : rootedEntityList) {
+
+                        BackgroundWorker taskWorker = new BackgroundWorker() {
+
+                            @Override
+                            public String getName() {
+                                return "Worker";
+                            }
+
+                            @Override
+                            protected void doStuff() throws Exception {
+
+                                setStatus("Grid execution");
+
+                                for(int i=0; i<50; i++) {
+                                    if (isCancelled()) throw new CancellationException();
+                                    Thread.sleep(5000);
+                                }
+                                
+                                setStatus("Done");
+                                
+                                setProgress(100);
+                            }
+                            
+                            @Override
+                            public Callable<Void> getSuccessCallback() {
+                                return new Callable<Void>() {
+                                    @Override
+                                    public Void call() throws Exception {
+                                        return null;
+                                    }
+                                };
+                            }
+                        };
+
+                        taskWorker.executeWithEvents();
+                    }
                 } 
                 catch (Exception e) {
                     SessionMgr.getSessionMgr().handleException(e);
