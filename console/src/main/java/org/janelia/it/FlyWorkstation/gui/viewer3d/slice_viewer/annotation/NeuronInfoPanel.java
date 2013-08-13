@@ -96,6 +96,9 @@ public class NeuronInfoPanel extends JPanel
         renderer.setClosedIcon(null);
         renderer.setOpenIcon(null);
 
+        // don't expand/collapse on double-click
+        neuriteTree.setToggleClickCount(0);
+
 
 
         // listen for mouse clicks
