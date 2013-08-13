@@ -59,10 +59,10 @@ public class SliceViewViewer extends Viewer {
 
     @Override
     public void loadEntity(RootedEntity rootedEntity) {
-        initialEntity = rootedEntity.getEntity();
-        if ( ! initialEntity.equals( sliceSample ) ) {
+        if (!rootedEntity.getEntity().equals(initialEntity)) {
             deleteAll();
         }
+        initialEntity = rootedEntity.getEntity();
 
         // intial rooted entity should be a brain sample or a workspace; the QuadViewUI wants
         //  the intial entity, but we need the sample either way to be able to open it:
@@ -156,6 +156,7 @@ public class SliceViewViewer extends Viewer {
     private void deleteAll() {
         clearObserver();
         sliceSample = null;
+        initialEntity = null;
         slcRootedEntity = null;
         removeAll();
         if (viewUI != null)
