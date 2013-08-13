@@ -375,6 +375,8 @@ public class AutoUpdater extends JFrame implements PropertyChangeListener {
     				Utils.copyURLToFile(remoteFile, downloadFile, this);
 				}
 				catch (Exception e) {
+                    log.info("Unable to download remote file: "+remoteFile);
+                    log.info("Already at latest version");
 				    throw new Exception("Error downloading new version",e);
 				}
 				
