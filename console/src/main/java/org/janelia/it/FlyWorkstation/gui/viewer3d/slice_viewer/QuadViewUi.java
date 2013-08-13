@@ -310,7 +310,7 @@ public class QuadViewUi extends JPanel
         // connect up text UI and model with graphic UI(s):
         skeleton.addAnchorRequestedSignal.connect(annotationMgr.addAnchorRequestedSlot);
         skeleton.anchorDeleteRequestedSignal.connect(annotationMgr.deleteAnchorRequestedSlot);
-        // not quite ready yet...
+        // TODO: not quite ready yet...
         // skeleton.anchorMovedSignal.connect(annotationMgr.moveAnchorRequestedSlot);
 
         sliceViewerTranslator.setSkeleton(skeleton);

@@ -53,6 +53,13 @@ public class AnnotationManager
         }
     };
 
+    public Slot1<Long> selectAnnotationSlot = new Slot1<Long>() {
+        @Override
+        public void execute(Long annotationID) {
+            selectNeuronFromAnnotation(annotationID);
+        }
+    };
+
     // constants
     public static final String WORKSPACES_FOLDER_NAME = "Workspaces";
 
@@ -78,16 +85,13 @@ public class AnnotationManager
         TmWorkspace workspace;
 
         if (initialEntity.getEntityType().getName().equals(EntityConstants.TYPE_3D_TILE_MICROSCOPE_SAMPLE)) {
-            // pass
+            // nothing to do right now
         }
 
         else if (initialEntity.getEntityType().getName().equals(EntityConstants.TYPE_TILE_MICROSCOPE_WORKSPACE)) {
-            // get associated brain sample and load it
-            // not done yet
-
-            // load the workspace itself
+            // make sure the entity's fully loaded or the workspace creation will fail
             try {
-                workspace = new TmWorkspace(initialEntity);
+                workspace = new TmWorkspace(ModelMgr.getModelMgr().loadLazyEntity(initialEntity, false));
             } catch (Exception e) {
                 e.printStackTrace();
                 return;
@@ -237,6 +241,15 @@ public class AnnotationManager
                 JOptionPane.ERROR_MESSAGE);
         }
 
+    }
+
+    public void selectNeuronFromAnnotation(Long annotationID) {
+        if (annotationID == null) {
+            return;
+        }
+
+        TmNeuron neuron = annotationModel.getNeuronFromAnnotation(annotationID);
+        annotationModel.setCurrentNeuron(neuron);
     }
 
     public void createWorkspace() {

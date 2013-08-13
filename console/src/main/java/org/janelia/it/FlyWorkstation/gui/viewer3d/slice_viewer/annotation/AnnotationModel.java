@@ -71,7 +71,7 @@ public class AnnotationModel
         }
     }
 
-    private void setCurrentNeuron(TmNeuron neuron) {
+    public void setCurrentNeuron(TmNeuron neuron) {
         if (neuron != null) {
             currentNeuronID = neuron.getId();
         } else {
@@ -103,6 +103,23 @@ public class AnnotationModel
             }
         }
         return foundAnnotation;
+    }
+
+    public TmNeuron getNeuronFromAnnotation(Long annotationID) {
+        TmWorkspace workspace = getCurrentWorkspace();
+        if (workspace == null) {
+            return null;
+        }
+
+        TmNeuron foundNeuron = null;
+        for (TmNeuron neuron: workspace.getNeuronList()) {
+            if (neuron.getGeoAnnotationMap().containsKey(annotationID)) {
+                foundNeuron = neuron;
+                break;
+            }
+        }
+        return foundNeuron;
+
     }
 
     public boolean createNeuron(String name) {

@@ -59,7 +59,9 @@ public class SliceViewViewer extends Viewer {
 
     @Override
     public void loadEntity(RootedEntity rootedEntity) {
-        if (!rootedEntity.getEntity().equals(initialEntity)) {
+        // don't reload if user tries to reload the same entity (is that a
+        //  good idea?  not clear)
+        if (rootedEntity.getEntity().getId() != initialEntity.getId()) {
             deleteAll();
         }
         initialEntity = rootedEntity.getEntity();
