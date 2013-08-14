@@ -16,11 +16,12 @@ import java.util.*;
 // workstation imports
 
 import org.janelia.it.FlyWorkstation.api.entity_model.management.ModelMgr;
+import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.BoundingBox3d;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.Vec3;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.slice_viewer.Slot1;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.slice_viewer.Signal1;
-import org.janelia.it.jacs.model.entity.Entity;
+import org.janelia.it.FlyWorkstation.shared.workers.SimpleWorker;
 import org.janelia.it.jacs.model.user_data.tiledMicroscope.*;
 
 /**
@@ -177,20 +178,33 @@ public class WorkspaceInfoPanel extends JPanel
         }
     }
 
-    private void updateMetaData(TmWorkspace workspace) {
+    private void updateMetaData(final TmWorkspace workspace) {
         if (workspace == null) {
             workspaceNameLabel.setText("Name: (no workspace)");
             sampleNameLabel.setText("Sample:");
         } else {
             workspaceNameLabel.setText("Name: " + workspace.getName());
-            Entity sample;
-            try {
-                sample = ModelMgr.getModelMgr().getEntityById(workspace.getSampleID());
-            } catch (Exception e) {
-                e.printStackTrace();
-                return;
-            }
-            sampleNameLabel.setText("Sample: " + sample.getName());
+
+            SimpleWorker labelFiller = new SimpleWorker() {
+                String sampleName;
+
+                @Override
+                protected void doStuff() throws Exception {
+                    sampleName = ModelMgr.getModelMgr().getEntityById(workspace.getSampleID()).getName();
+                }
+
+                @Override
+                protected void hadSuccess() {
+                    sampleNameLabel.setText("Sample: " + sampleName);
+                }
+
+                @Override
+                protected void hadError(Throwable error) {
+                    SessionMgr.getSessionMgr().handleException(error);
+                }
+            };
+            labelFiller.execute();
+
         }
     }
 }

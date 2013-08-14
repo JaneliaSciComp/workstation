@@ -45,6 +45,10 @@ public class AnnotationModel
         }
     };
 
+    public boolean hasCurrentWorkspace() {
+        return currentWorkspaceID != null;
+    }
+
     public TmWorkspace getCurrentWorkspace() {
         if (currentWorkspaceID != null) {
             try {

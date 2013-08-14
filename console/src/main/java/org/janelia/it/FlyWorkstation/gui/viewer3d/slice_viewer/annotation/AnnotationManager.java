@@ -5,6 +5,7 @@ package org.janelia.it.FlyWorkstation.gui.viewer3d.slice_viewer.annotation;
 // workstation imports
 
 
+import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.Vec3;
 
 import org.janelia.it.FlyWorkstation.api.entity_model.management.ModelMgr;
@@ -12,6 +13,7 @@ import org.janelia.it.FlyWorkstation.api.entity_model.management.ModelMgr;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.slice_viewer.Slot1;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.slice_viewer.skeleton.Anchor;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.slice_viewer.skeleton.Skeleton;
+import org.janelia.it.FlyWorkstation.shared.workers.SimpleWorker;
 import org.janelia.it.jacs.model.entity.Entity;
 import org.janelia.it.jacs.model.entity.EntityConstants;
 import org.janelia.it.jacs.model.user_data.tiledMicroscope.*;
@@ -81,36 +83,40 @@ public class AnnotationManager
         return initialEntity;
     }
 
-    public void setInitialEntity(Entity initialEntity) {
-        TmWorkspace workspace;
-
-        if (initialEntity.getEntityType().getName().equals(EntityConstants.TYPE_3D_TILE_MICROSCOPE_SAMPLE)) {
-            // nothing to do right now
-        }
-
-        else if (initialEntity.getEntityType().getName().equals(EntityConstants.TYPE_TILE_MICROSCOPE_WORKSPACE)) {
-            // make sure the entity's fully loaded or the workspace creation will fail
-            try {
-                workspace = new TmWorkspace(ModelMgr.getModelMgr().loadLazyEntity(initialEntity, false));
-            } catch (Exception e) {
-                e.printStackTrace();
-                return;
-            }
-            annotationModel.loadWorkspace(workspace);
-        }
+    public void setInitialEntity(final Entity initialEntity) {
 
         this.initialEntity = initialEntity;
 
+        if (initialEntity.getEntityType().getName().equals(EntityConstants.TYPE_3D_TILE_MICROSCOPE_SAMPLE)) {
+            // currently nothing to do for this case
+        }
 
+        else if (initialEntity.getEntityType().getName().equals(EntityConstants.TYPE_TILE_MICROSCOPE_WORKSPACE)) {
 
+            SimpleWorker loader = new SimpleWorker() {
+                @Override
+                protected void doStuff() throws Exception {
+                    // make sure the entity's fully loaded or the workspace creation will fail
+                    TmWorkspace workspace = new TmWorkspace(modelMgr.loadLazyEntity(initialEntity, false));
+                    annotationModel.loadWorkspace(workspace);
+                }
+
+                @Override
+                protected  void hadSuccess() {
+                    // no hadSuccess(); signals will be emitted in the loadWorkspace() call
+                }
+
+                @Override
+                protected void hadError(Throwable error) {
+                    SessionMgr.getSessionMgr().handleException(error);
+                }
+            };
+            loader.execute();
+
+        }
 
 
         // (eventually) update state to saved state (selection, visibility, etc)
-
-
-
-        // (now) update (populate) neuron list; or: model does this, notifies?
-
 
 
 
@@ -206,7 +212,7 @@ public class AnnotationManager
         //  yes; who should test?  who should pop up UI feedback to user?
         //  model shouldn't, but should annMgr? 
 
-        if (annotationModel.getCurrentWorkspace() == null) {
+        if (!annotationModel.hasCurrentWorkspace()) {
             // dialog?
 
             return;
@@ -262,7 +268,7 @@ public class AnnotationManager
         // NOTE: ask the user if you're creating a new workspace when one is
         //  already active
         Entity sampleEntity;
-        if (annotationModel.getCurrentWorkspace() != null) {
+        if (annotationModel.hasCurrentWorkspace()) {
             // dialog
             int ans = JOptionPane.showConfirmDialog(null,
                 "You already have an active workspace!  Close and create another?",
