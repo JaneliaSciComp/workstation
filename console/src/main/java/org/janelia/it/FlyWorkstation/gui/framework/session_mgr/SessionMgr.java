@@ -248,7 +248,7 @@ public class SessionMgr {
             // Do nothing, there are no preferences
         }
         catch (Exception ioEx) {
-            SessionMgr.getSessionMgr().handleException(ioEx);
+            ioEx.printStackTrace();
         } //new settingsFile
     }
 
