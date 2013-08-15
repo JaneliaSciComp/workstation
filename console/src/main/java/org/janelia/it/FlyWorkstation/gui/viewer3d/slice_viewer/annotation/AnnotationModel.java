@@ -126,24 +126,16 @@ public class AnnotationModel
 
     }
 
-    public boolean createNeuron(String name) {
+    public void createNeuron(String name) throws Exception {
 
-        TmNeuron currentNeuron;
-        try {
-            currentNeuron = modelMgr.createTiledMicroscopeNeuron(getCurrentWorkspace().getId(), name);
-            setCurrentNeuron(currentNeuron);
-        } catch (Exception e) {
-            e.printStackTrace();
-            return false;
-        }
+        TmNeuron currentNeuron = modelMgr.createTiledMicroscopeNeuron(getCurrentWorkspace().getId(), name);
+        setCurrentNeuron(currentNeuron);
 
         // should eventually have an addNeuron signal and not reload entire workspace, but
         //  for now, keep it simple
         workspaceLoadedSignal.emit(getCurrentWorkspace());
         neuronSelectedSignal.emit(currentNeuron);
 
-        return true;
-        
     }
 
     public boolean createWorkspace(Entity parentEntity, Entity brainSample, String name) {

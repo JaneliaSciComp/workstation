@@ -221,7 +221,7 @@ public class AnnotationManager
         // ask user for name; you *can* rename on the sidebar, but that will 
         //  trigger a need to reload the slice viewer, so don't make the user go 
         //  through that
-        String neuronName = (String)JOptionPane.showInputDialog(
+        final String neuronName = (String)JOptionPane.showInputDialog(
             null,
             "Neuron name:",
             "Create neuron",
@@ -229,23 +229,34 @@ public class AnnotationManager
             null,                           // icon
             null,                           // choice list; absent = freeform
             "new neuron");
-        if (neuronName == null) {
+        if (neuronName == null || neuronName.length() == 0) {
             return;
         }
 
         // validate neuron name;  are there any rules for entity names?
-        if (neuronName.length() == 0) {
-            neuronName = "new neuron";
-        }
 
 
         // create it:
-        if (!annotationModel.createNeuron(neuronName)) {
-            JOptionPane.showMessageDialog(null, 
-                "Could not create neuron!",
-                "Error",
-                JOptionPane.ERROR_MESSAGE);
-        }
+        SimpleWorker creator = new SimpleWorker() {
+            @Override
+            protected void doStuff() throws Exception {
+                annotationModel.createNeuron(neuronName);
+            }
+
+            @Override
+            protected void hadSuccess() {
+                // nothing here, annModel emits its own signals
+            }
+
+            @Override
+            protected void hadError(Throwable error) {
+                JOptionPane.showMessageDialog(null,
+                        "Could not create neuron!",
+                        "Error",
+                        JOptionPane.ERROR_MESSAGE);
+            }
+        };
+        creator.execute();
 
     }
 
