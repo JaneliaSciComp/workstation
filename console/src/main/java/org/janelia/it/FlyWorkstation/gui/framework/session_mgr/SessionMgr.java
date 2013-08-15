@@ -1,5 +1,19 @@
 package org.janelia.it.FlyWorkstation.gui.framework.session_mgr;
 
+import java.awt.Component;
+import java.awt.event.WindowAdapter;
+import java.awt.event.WindowEvent;
+import java.awt.event.WindowListener;
+import java.io.*;
+import java.net.InetAddress;
+import java.net.MalformedURLException;
+import java.net.URL;
+import java.net.UnknownHostException;
+import java.text.ParseException;
+import java.util.*;
+
+import javax.swing.*;
+
 import org.janelia.it.FlyWorkstation.api.entity_model.management.ModelMgr;
 import org.janelia.it.FlyWorkstation.api.facade.concrete_facade.ejb.EJBFactory;
 import org.janelia.it.FlyWorkstation.api.facade.facade_mgr.FacadeManager;
@@ -27,20 +41,6 @@ import org.janelia.it.jacs.shared.utils.MailHelper;
 import org.janelia.it.jacs.shared.utils.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import javax.swing.*;
-import java.awt.*;
-import java.awt.event.WindowAdapter;
-import java.awt.event.WindowEvent;
-import java.awt.event.WindowListener;
-import java.io.*;
-import java.net.InetAddress;
-import java.net.MalformedURLException;
-import java.net.URL;
-import java.net.UnknownHostException;
-import java.text.ParseException;
-import java.util.*;
-import java.util.List;
 
 
 public class SessionMgr {
@@ -112,12 +112,14 @@ public class SessionMgr {
             }
         }
         catch (IOException ioEx) {
+            if (!new File(prefsDir).mkdirs()) {
+                log.error("Could not create prefs dir at "+prefsDir);
+            }
             try {
-                new File(prefsDir).mkdirs();
                 settingsFile.createNewFile();  //only creates if does not exist
             }
-            catch (IOException ioEx1) {
-            	log.error("Cannot create settings file!! " + ioEx1.getMessage());
+            catch (IOException e) {
+                log.error("Cannot create settings file at: "+settingsFile, e);
             }
         }
 
