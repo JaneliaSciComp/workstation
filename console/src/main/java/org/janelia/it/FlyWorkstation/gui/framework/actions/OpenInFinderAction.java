@@ -4,12 +4,15 @@ import java.io.File;
 
 import javax.swing.JOptionPane;
 
+import org.eclipse.jetty.util.log.Log;
 import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.FlyWorkstation.shared.util.FileCallable;
 import org.janelia.it.FlyWorkstation.shared.util.SystemInfo;
 import org.janelia.it.FlyWorkstation.shared.util.Utils;
 import org.janelia.it.jacs.model.entity.Entity;
 import org.janelia.it.jacs.shared.utils.EntityUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Given an entity with a File Path, reveal the path in Finder.
@@ -18,6 +21,8 @@ import org.janelia.it.jacs.shared.utils.EntityUtils;
  */
 public class OpenInFinderAction implements Action {
 
+    private static final Logger log = LoggerFactory.getLogger(OpenInFinderAction.class);
+    
 	private Entity entity;
 	
 	/**
@@ -97,6 +102,11 @@ public class OpenInFinderAction implements Action {
                 cmdArr[0]="/usr/bin/open";
                 cmdArr[1]=file.getAbsolutePath();
             }
+            log.info("running: {}",cmdArr);
+            int returnCode = Runtime.getRuntime().exec(cmdArr).waitFor();
+            if (returnCode != 0) {
+                throw new Exception("Error opening file: "+file.getAbsolutePath());
+            }
         }
         else if (SystemInfo.isLinux) {
             cmdArr=new String[2];
@@ -106,6 +116,11 @@ public class OpenInFinderAction implements Action {
             }
             else {
                 cmdArr[1]=file.getAbsolutePath();
+            }
+            log.info("running: {}",cmdArr);
+            int returnCode = Runtime.getRuntime().exec(cmdArr).waitFor();
+            if (returnCode != 0) {
+                throw new Exception("Error opening file: "+file.getAbsolutePath());
             }
         }
         else if (SystemInfo.isWindows) {
@@ -117,11 +132,11 @@ public class OpenInFinderAction implements Action {
             else {
                 cmdArr[1]="/e,"+file.getAbsolutePath();
             }
-        }
-        int returnCode = Runtime.getRuntime().exec(cmdArr).waitFor();
-        if ((returnCode != 0 && !SystemInfo.isWindows) ||
-             (returnCode>1 && SystemInfo.isWindows)) {
-            throw new Exception("Error opening file: "+file.getAbsolutePath());
+            log.debug("running: {} {}",cmdArr[0],cmdArr[1]);
+            int returnCode = Runtime.getRuntime().exec(cmdArr[0]+" "+cmdArr[1]).waitFor();
+            if (returnCode>1) {
+                throw new Exception("Error opening file: "+file.getAbsolutePath());
+            }
         }
 	}
 }

@@ -549,6 +549,9 @@ public class Utils {
     }
 
     public static void copyURLToFile(String standardPath, File destination, SimpleWorker worker) throws Exception {
+
+        log.info("standardPath: "+standardPath);
+        log.info("destination: "+destination);
         
         //does destination directory exist ?
         if (destination.getParentFile() != null
@@ -569,8 +572,8 @@ public class Utils {
         InputStream input = wfile.getStream();
         long length = wfile.getLength();
         
-        log.debug("Effective URL: "+wfile.getEffectiveURL());
-        log.debug("Length: "+length);
+        log.info("Effective URL: "+wfile.getEffectiveURL());
+        log.info("Length: "+length);
         
         if (length==0) {
             throw new Exception("Length of file was 0");

@@ -122,7 +122,7 @@ public class SystemInfo {
             return new File("/tmp/");
         }
         else if (SystemInfo.isWindows) {
-            return new File(SessionMgr.getSessionMgr().getApplicationOutputDirectory()+"/tmp/");
+            return new File(System.getProperty("user.home"),"Downloads/");
         }
         else {
             throw new IllegalStateException("Operation system not supported: "+SystemInfo.OS_NAME);

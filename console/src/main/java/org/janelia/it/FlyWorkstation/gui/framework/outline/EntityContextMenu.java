@@ -1403,8 +1403,7 @@ public class EntityContextMenu extends JPopupMenu {
                                             String path = pathAndFiles[0];
                                             String[] files = pathAndFiles[1].split(",");
                                             for(String filepath : files) {
-                                                File file = new File(path,filepath);
-                                                copyChannelFile(file.getAbsolutePath());    
+                                                copyChannelFile(path+"/"+filepath);    
                                             }
                                             
                                             if (isCancelled()) throw new CancellationException();
