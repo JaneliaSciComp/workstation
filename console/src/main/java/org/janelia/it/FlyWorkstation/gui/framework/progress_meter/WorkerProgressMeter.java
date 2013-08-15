@@ -218,6 +218,7 @@ public class WorkerProgressMeter extends JDialog {
         log.debug("Worker started: {}",e.getWorker().getName());
         addWorker(e.getWorker());
         updateMenuLabel();
+        setVisible(true);
     }
     
     @Subscribe
@@ -297,7 +298,7 @@ public class WorkerProgressMeter extends JDialog {
             nextButton.addActionListener(new ActionListener() {
                 @Override
                 public void actionPerformed(ActionEvent e) {
-                    worker.executeSuccessCallback();
+                    worker.runSuccessCallback();
                 }
             });
             nextButton.setEnabled(false);

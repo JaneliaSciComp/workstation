@@ -64,7 +64,7 @@ public abstract class BackgroundWorker extends SimpleWorker {
         this.success = success;
     }
 
-    public void executeSuccessCallback() {
+    public void runSuccessCallback() {
         Callable<Void> success = getSuccessCallback();
         if (success!=null) {
             try {

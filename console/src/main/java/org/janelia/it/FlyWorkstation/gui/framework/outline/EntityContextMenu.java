@@ -117,7 +117,6 @@ public class EntityContextMenu extends JPopupMenu {
         add(getGotoRelatedItem());
 
         setNextAddRequiresSeparator(true);
-        add(getImportItem());
         add(getNewFolderItem());
         add(getAddToRootFolderItem());
         add(getAddToSplitPickingSessionItem());
@@ -142,7 +141,8 @@ public class EntityContextMenu extends JPopupMenu {
         add(getMergeItem());
         add(getSortBySimilarityItem());
         add(getDownloadDefault3dImageItem());
-        add(getSplitChannelsItem());
+        add(getDownloadSplitChannelsItem());
+        add(getImportItem());
 //        add(getTestProgressMeterItem());
 //        add(getCreateSessionItem());
 
@@ -1276,7 +1276,7 @@ public class EntityContextMenu extends JPopupMenu {
         return downloadItem;
     }
     
-    protected JMenuItem getSplitChannelsItem() {
+    protected JMenuItem getDownloadSplitChannelsItem() {
 
         int numStacks = 0;
         for(final RootedEntity rootedEntity : rootedEntityList) {
@@ -1371,17 +1371,10 @@ public class EntityContextMenu extends JPopupMenu {
                                             if (isCancelled()) throw new CancellationException();
                                             setStatus("Parse result");
                                             
-                                            // Get the final task state
-                                            Task task = ModelMgr.getModelMgr().getTaskById(getTaskId());
-                                            
-                                            if (task.getLastEvent().getEventType().equals(Event.ERROR_EVENT)) {
-                                                throw new Exception(task.getLastEvent().getDescription());
-                                            }
-                                            
                                             // Since there is no way to log task output vars, we use a convention where the last message 
                                             // will contain the output directory path.
                                             String resultFiles = null;
-                                            List<TaskMessage> messages = new ArrayList<TaskMessage>(task.getMessages());
+                                            List<TaskMessage> messages = new ArrayList<TaskMessage>(getTask().getMessages());
                                             if (!messages.isEmpty()) {
                                                 Collections.sort(messages, new Comparator<TaskMessage>() {
                                                     @Override
@@ -1455,8 +1448,6 @@ public class EntityContextMenu extends JPopupMenu {
                         
                         worker.execute();
                     }
-                    
-                    
                 } 
                 catch (Exception e) {
                     SessionMgr.getSessionMgr().handleException(e);
@@ -1497,15 +1488,12 @@ public class EntityContextMenu extends JPopupMenu {
                             @Override
                             protected void doStuff() throws Exception {
 
-                                setStatus("Grid execution");
-
+                                setStatus("Test background task ("+rootedEntity.getName()+")");
                                 for(int i=0; i<50; i++) {
                                     if (isCancelled()) throw new CancellationException();
                                     Thread.sleep(5000);
                                 }
-                                
                                 setStatus("Done");
-                                
                                 setProgress(100);
                             }
                             
@@ -1796,7 +1784,8 @@ public class EntityContextMenu extends JPopupMenu {
 
     protected JMenuItem getImportItem() {
         if (multiple) {return null;}
-        if (EntityConstants.TYPE_FOLDER.equals(rootedEntity.getEntity().getEntityType().getName())) {
+        String entityTypeName = rootedEntity.getEntity().getEntityType().getName();
+        if (EntityConstants.TYPE_FOLDER.equals(entityTypeName) || EntityConstants.TYPE_SAMPLE.equals(entityTypeName)) {
             JMenuItem newAttachmentItem = new JMenuItem("  Import File Here");
             newAttachmentItem.addActionListener(new ActionListener() {
                 public void actionPerformed(ActionEvent actionEvent) {

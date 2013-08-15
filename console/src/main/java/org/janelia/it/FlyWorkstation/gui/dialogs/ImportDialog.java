@@ -1,24 +1,8 @@
 package org.janelia.it.FlyWorkstation.gui.dialogs;
 
-import org.janelia.it.FlyWorkstation.api.entity_model.management.ModelMgr;
-import org.janelia.it.FlyWorkstation.gui.framework.console.Browser;
-import org.janelia.it.FlyWorkstation.gui.framework.outline.EntityOutline;
-import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr;
-import org.janelia.it.FlyWorkstation.model.entity.RootedEntity;
-import org.janelia.it.FlyWorkstation.shared.util.Utils;
-import org.janelia.it.FlyWorkstation.shared.util.filecache.WebDavUploader;
-import org.janelia.it.FlyWorkstation.shared.workers.SimpleWorker;
-import org.janelia.it.jacs.model.tasks.Event;
-import org.janelia.it.jacs.model.tasks.Task;
-import org.janelia.it.jacs.model.tasks.TaskParameter;
-import org.janelia.it.jacs.model.tasks.fileDiscovery.FileTreeLoaderPipelineTask;
-import org.janelia.it.jacs.model.user_data.Node;
-import org.jdesktop.swingx.VerticalLayout;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import javax.swing.*;
-import java.awt.*;
+import java.awt.BorderLayout;
+import java.awt.GridBagConstraints;
+import java.awt.GridBagLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.File;
@@ -28,6 +12,29 @@ import java.text.MessageFormat;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
+import java.util.concurrent.Callable;
+import java.util.concurrent.CancellationException;
+
+import javax.swing.*;
+
+import org.janelia.it.FlyWorkstation.api.entity_model.management.ModelMgr;
+import org.janelia.it.FlyWorkstation.gui.framework.console.Browser;
+import org.janelia.it.FlyWorkstation.gui.framework.outline.EntityOutline;
+import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr;
+import org.janelia.it.FlyWorkstation.model.entity.RootedEntity;
+import org.janelia.it.FlyWorkstation.shared.util.Utils;
+import org.janelia.it.FlyWorkstation.shared.util.filecache.WebDavUploader;
+import org.janelia.it.FlyWorkstation.shared.workers.BackgroundWorker;
+import org.janelia.it.FlyWorkstation.shared.workers.TaskMonitoringWorker;
+import org.janelia.it.jacs.model.entity.EntityConstants;
+import org.janelia.it.jacs.model.tasks.Event;
+import org.janelia.it.jacs.model.tasks.Task;
+import org.janelia.it.jacs.model.tasks.TaskParameter;
+import org.janelia.it.jacs.model.tasks.fileDiscovery.FileTreeLoaderPipelineTask;
+import org.janelia.it.jacs.model.user_data.Node;
+import org.jdesktop.swingx.VerticalLayout;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Created with IntelliJ IDEA.
@@ -40,9 +47,9 @@ public class ImportDialog extends ModalDialog {
     public static final String IMPORT_TARGET_FOLDER = "FileImport.TargetFolder";
     public static final String IMPORT_SOURCE_FOLDER = "FileImport.SourceFolder";
 
-    private static final Logger LOG = LoggerFactory.getLogger(ImportDialog.class);
+    private static final Logger log = LoggerFactory.getLogger(ImportDialog.class);
 
-    private static final String DEFAULT_FOLDER_NAME = " Imported Data";
+    private static final String DEFAULT_FOLDER_NAME = "Imported Data";
 
     private static final String TOOLTIP_TOP_LEVEL_FOLDER =
             "Name of the folder in which data should be loaded with the data.";
@@ -64,12 +71,12 @@ public class ImportDialog extends ModalDialog {
         JPanel attrPanel = new JPanel();
         attrPanel.setLayout(new GridBagLayout());
 
-        JLabel topLevelFolderLabel = new JLabel("Target Folder Name:");
-        topLevelFolderLabel.setToolTipText(TOOLTIP_TOP_LEVEL_FOLDER);
+        JLabel targetFolderNameLabel = new JLabel("Target Folder Name:");
+        targetFolderNameLabel.setToolTipText(TOOLTIP_TOP_LEVEL_FOLDER);
         folderField = new JTextField(40);
         // Use the previous destination; otherwise, suggest the default user location
         folderField.setToolTipText(TOOLTIP_TOP_LEVEL_FOLDER);
-        topLevelFolderLabel.setLabelFor(folderField);
+        targetFolderNameLabel.setLabelFor(folderField);
 
         JLabel pathLabel = new JLabel("Directory or File:");
         pathLabel.setToolTipText(TOOLTIP_INPUT_DIR);
@@ -91,7 +98,7 @@ public class ImportDialog extends ModalDialog {
         try {
             chooseFileIcon = Utils.getClasspathImage("magnifier.png");
         } catch (FileNotFoundException e) {
-            LOG.warn("failed to load button icon", e);
+            log.warn("failed to load button icon", e);
             chooseFileText = "...";
         }
 
@@ -117,7 +124,7 @@ public class ImportDialog extends ModalDialog {
         c.ipadx = 5;
         c.gridx = 0;
         c.gridy = 0;
-        attrPanel.add(topLevelFolderLabel, c);
+        attrPanel.add(targetFolderNameLabel, c);
 
         c.gridx = 1;
         attrPanel.add(folderField, 1);
@@ -143,7 +150,7 @@ public class ImportDialog extends ModalDialog {
                 try {
                     handleOkPress();
                 } catch (Exception e1) {
-                    LOG.error("import dialog failure", e1);
+                    log.error("import dialog failure", e1);
                     JOptionPane.showMessageDialog(SessionMgr.getBrowser(),
                                                   e1.getMessage(),
                                                   "Error",
@@ -184,33 +191,47 @@ public class ImportDialog extends ModalDialog {
 
         final SessionMgr sessionMgr = SessionMgr.getSessionMgr();
 
-        String importTopLevelFolderName;
+        String folderName;
         if (rootedEntity == null) {
             folderField.setEnabled(true);
             folderEntityId = null;
             final String modelName = (String)
                     sessionMgr.getModelProperty(IMPORT_TARGET_FOLDER);
             if ((modelName != null) && (modelName.trim().length() > 0)) {
-                importTopLevelFolderName = modelName;
+                folderName = modelName;
             } else {
-                importTopLevelFolderName = SessionMgr.getUsername() + DEFAULT_FOLDER_NAME;
+                folderName = SessionMgr.getUsername() + " " + DEFAULT_FOLDER_NAME;
             }
         } else {
-            folderField.setEnabled(false);
-            importTopLevelFolderName = rootedEntity.getName();
-            folderEntityId = rootedEntity.getEntityId();
+            
+
+            String rootEntityType = rootedEntity.getEntity().getEntityType().getName();
+            if (EntityConstants.TYPE_SAMPLE.equals(rootEntityType)) {                
+                folderField.setEnabled(false);
+                folderName = rootedEntity.getName()+"/"+DEFAULT_FOLDER_NAME;
+                folderEntityId = rootedEntity.getEntityId();
+            }
+            else {
+                folderField.setEnabled(false);
+                folderName = rootedEntity.getName();
+                folderEntityId = rootedEntity.getEntityId();
+            }
         }
 
-        folderField.setText(importTopLevelFolderName);
+        folderField.setText(folderName);
 
         packAndShow();
     }
 
     private void handleOkPress() throws Exception {
 
-        final String importTopLevelFolderName = folderField.getText();
+        String folderName = folderField.getText();
 
-        if (isEmpty(importTopLevelFolderName)) {
+        if (folderName.contains("/")) {
+            folderName = folderName.split("/")[1];
+        }
+        
+        if (isEmpty(folderName)) {
             throw new IllegalArgumentException(
                     "Please specify a folder into which the files should be imported.");
         }
@@ -218,7 +239,7 @@ public class ImportDialog extends ModalDialog {
         final SessionMgr sessionMgr = SessionMgr.getSessionMgr();
 
         // save the user preferences for later
-        sessionMgr.setModelProperty(IMPORT_TARGET_FOLDER, importTopLevelFolderName);
+        sessionMgr.setModelProperty(IMPORT_TARGET_FOLDER, folderName);
 
         int fileCount = 1;
         double transferMegabytes = 0;
@@ -295,7 +316,7 @@ public class ImportDialog extends ModalDialog {
         if (continueWithImport) {
             // close import dialog and run import in background thread
             this.setVisible(false);
-            runImport(selectedFile, selectedChildren, importTopLevelFolderName, folderEntityId);
+            runImport(selectedFile, selectedChildren, folderName, folderEntityId);
         }
     }
 
@@ -321,61 +342,68 @@ public class ImportDialog extends ModalDialog {
 
     private void runImport(final File selectedFile,
                            final List<File> selectedChildren,
-                           final String importTopLevelFolderName,
-                           final Long importTopLevelFolderId) {
+                           final String importFolderName,
+                           final Long importFolderId) {
 
-        SimpleWorker executeWorker = new SimpleWorker() {
+        try {            
+            BackgroundWorker executeWorker = new TaskMonitoringWorker() {
+    
+                @Override
+                public String getName() {
+                    return "Import files";
+                }
+    
+                @Override
+                protected void doStuff() throws Exception {
 
-            private ImportProgressMonitor importProgressMonitor;
-
-            @Override
-            protected void doStuff() throws Exception {
-                importProgressMonitor = new ImportProgressMonitor();
-                importFiles(selectedFile,
-                            selectedChildren,
-                            importTopLevelFolderName,
-                            importTopLevelFolderId,
-                            importProgressMonitor);
-            }
-
-            @Override
-            protected void hadSuccess() {
-                closeMonitorAndRefreshEnityOutline();
-                JOptionPane.showMessageDialog(SessionMgr.getBrowser(),
-                                              "Your files were imported succesfully.",
-                                              "Import Complete",
-                                              JOptionPane.INFORMATION_MESSAGE);
-            }
-
-            @Override
-            protected void hadError(Throwable error) {
-                LOG.error("failed import", error);
-                closeMonitorAndRefreshEnityOutline();
-                ModelMgr.getModelMgr().handleException(error);
-            }
-
-            private void closeMonitorAndRefreshEnityOutline() {
-                importProgressMonitor.close();
-                final Browser browser = SessionMgr.getBrowser();
-                final EntityOutline entityOutline = browser.getEntityOutline();
-                entityOutline.refresh(true, true, null);
-            }
-        };
-
-        executeWorker.execute();
+                    setStatus("Submitting task");
+                    
+                    Long taskId = startImportFilesTask(selectedFile,
+                                selectedChildren,
+                                importFolderName,
+                                importFolderId);
+                    
+                    setTaskId(taskId);
+                    
+                    setStatus("Grid execution");
+                    
+                    // Wait until task is finished
+                    super.doStuff(); 
+                    
+                    if (isCancelled()) throw new CancellationException();
+                    setStatus("Done importing");
+                }
+                
+                @Override
+                public Callable<Void> getSuccessCallback() {
+                    return new Callable<Void>() {
+                        @Override
+                        public Void call() throws Exception {
+                            final Browser browser = SessionMgr.getBrowser();
+                            final EntityOutline entityOutline = browser.getEntityOutline();
+                            entityOutline.refresh(true, true, null);
+                            return null;
+                        }
+                    };
+                }
+            };
+    
+            executeWorker.executeWithEvents();
+        }
+        catch (Exception e) {
+            SessionMgr.getSessionMgr().handleException(e);
+        }
+        
     }
 
-    private void importFiles(File selectedFile,
+    private long startImportFilesTask(File selectedFile,
                              List<File> selectedChildren,
                              String importTopLevelFolderName,
-                             Long importTopLevelFolderId,
-                             ImportProgressMonitor importProgressMonitor) throws Exception {
+                             Long importTopLevelFolderId) throws Exception {
 
         final SessionMgr sessionMgr = SessionMgr.getSessionMgr();
         final ModelMgr modelMgr = ModelMgr.getModelMgr();
         final WebDavUploader uploader = new WebDavUploader(sessionMgr.getWebDavClient());
-
-        importProgressMonitor.startTransfer();
 
         String uploadPath;
         if (selectedChildren == null) {
@@ -397,121 +425,96 @@ public class ImportDialog extends ModalDialog {
                                                    importTopLevelFolderId);
         task.setJobName("Import Files Task");
         task = modelMgr.saveOrUpdateTask(task);
-        final long taskID = task.getObjectId();
-
-        importProgressMonitor.startPipeline();
 
         // Submit the job
         modelMgr.submitJob(process, task);
-
-        // poll for task status on the simple worker thread (not EDT thread)
-        Task refreshedTask = task;
-        for (int i = 0; i < importProgressMonitor.getMaxRefreshCount(); i++) {
-            Thread.sleep(importProgressMonitor.getRefreshInterval());
-            refreshedTask = modelMgr.getTaskById(taskID);
-            if (refreshedTask.isDone()) {
-                final Event lastEvent = refreshedTask.getLastEvent();
-                final String lastEventType = lastEvent.getEventType();
-                if (Event.ERROR_EVENT.equals(lastEventType)) {
-                    throw new IllegalStateException("import task (ID: " + taskID +
-                                                    ") failed");
-                } else if (Event.CANCELED_EVENT.equals(lastEventType)) {
-                    throw new IllegalStateException("import task (ID: " + taskID +
-                                                    ") was cancelled");
-                }
-                break;
-            }
-        }
-
-        if (! refreshedTask.isDone()) {
-            throw new IllegalStateException("import task (ID: " + taskID +
-                                            ") is taking too long to complete");
-        }
+        
+        return task.getObjectId();
     }
-
-    private class ImportProgressMonitor implements ActionListener {
-
-        private long startTime;
-        private Long pipelineStartTime;
-        private int refreshInterval;
-        private int refreshCount;
-        private int maxRefreshCount;
-        private Timer refreshTimer;
-        private ProgressMonitor progressMonitor;
-
-        public ImportProgressMonitor() {
-            this.startTime = System.currentTimeMillis();
-            this.pipelineStartTime = null;
-            this.refreshInterval = 3000;
-            this.refreshCount = 0;
-            final double refreshesPerSecond = 1000.0 / this.refreshInterval;
-            final double refreshesPerMinute = 60 * refreshesPerSecond;
-            this.maxRefreshCount = (int) (60 * refreshesPerMinute); // 60 minutes
-            this.refreshTimer = new Timer(this.refreshInterval, this);
-            this.refreshTimer.setInitialDelay(0);
-            // hack: use long first message (and display immediately) to size dialog
-            this.progressMonitor =
-                    new ProgressMonitor(SessionMgr.getBrowser(),
-                                        "Import",
-                                        "Transferring Files to JACS Server for Pipeline Load (starting)",
-                                        0, 40);
-            this.progressMonitor.setMillisToDecideToPopup(0);
-            this.progressMonitor.setMillisToPopup(0);
-        }
-
-        private int getRefreshInterval() {
-            return refreshInterval;
-        }
-
-        private int getMaxRefreshCount() {
-            return maxRefreshCount;
-        }
-
-        public void startTransfer() {
-            this.startTime = System.currentTimeMillis();
-            this.refreshTimer.start();
-        }
-
-        public void startPipeline() {
-            this.pipelineStartTime = System.currentTimeMillis();
-        }
-
-        public void close() {
-            refreshTimer.stop();
-            progressMonitor.close();
-        }
-
-        @Override
-        public void actionPerformed(ActionEvent e) {
-
-            if (progressMonitor.isCanceled()) {
-
-                refreshTimer.stop();
-
-            } else {
-
-                long phaseStart;
-                String note;
-                if (pipelineStartTime == null) {
-                    phaseStart = startTime;
-                    note = "Transferring Files to JACS Server for Pipeline Load";
-                } else {
-                    phaseStart = pipelineStartTime;
-                    note = "JACS Server Pipeline Loading Files";
-                }
-
-                final long seconds = (System.currentTimeMillis() - phaseStart) / 1000;
-                if (seconds > 0) {
-                    progressMonitor.setNote(note + " (" + seconds + "s)");
-                } else {
-                    progressMonitor.setNote(note + " (starting)");
-                }
-
-                refreshCount++;
-                if (refreshCount < progressMonitor.getMaximum()) {
-                    progressMonitor.setProgress(refreshCount);
-                }
-            }
-        }
-    }
+//
+//    private class ImportProgressMonitor implements ActionListener {
+//
+//        private long startTime;
+//        private Long pipelineStartTime;
+//        private int refreshInterval;
+//        private int refreshCount;
+//        private int maxRefreshCount;
+//        private Timer refreshTimer;
+//        private ProgressMonitor progressMonitor;
+//
+//        public ImportProgressMonitor() {
+//            this.startTime = System.currentTimeMillis();
+//            this.pipelineStartTime = null;
+//            this.refreshInterval = 3000;
+//            this.refreshCount = 0;
+//            final double refreshesPerSecond = 1000.0 / this.refreshInterval;
+//            final double refreshesPerMinute = 60 * refreshesPerSecond;
+//            this.maxRefreshCount = (int) (60 * refreshesPerMinute); // 60 minutes
+//            this.refreshTimer = new Timer(this.refreshInterval, this);
+//            this.refreshTimer.setInitialDelay(0);
+//            // hack: use long first message (and display immediately) to size dialog
+//            this.progressMonitor =
+//                    new ProgressMonitor(SessionMgr.getBrowser(),
+//                                        "Import",
+//                                        "Transferring Files to JACS Server for Pipeline Load (starting)",
+//                                        0, 40);
+//            this.progressMonitor.setMillisToDecideToPopup(0);
+//            this.progressMonitor.setMillisToPopup(0);
+//        }
+//
+//        private int getRefreshInterval() {
+//            return refreshInterval;
+//        }
+//
+//        private int getMaxRefreshCount() {
+//            return maxRefreshCount;
+//        }
+//
+//        public void startTransfer() {
+//            this.startTime = System.currentTimeMillis();
+//            this.refreshTimer.start();
+//        }
+//
+//        public void startPipeline() {
+//            this.pipelineStartTime = System.currentTimeMillis();
+//        }
+//
+//        public void close() {
+//            refreshTimer.stop();
+//            progressMonitor.close();
+//        }
+//
+//        @Override
+//        public void actionPerformed(ActionEvent e) {
+//
+//            if (progressMonitor.isCanceled()) {
+//
+//                refreshTimer.stop();
+//
+//            } else {
+//
+//                long phaseStart;
+//                String note;
+//                if (pipelineStartTime == null) {
+//                    phaseStart = startTime;
+//                    note = "Transferring Files to JACS Server for Pipeline Load";
+//                } else {
+//                    phaseStart = pipelineStartTime;
+//                    note = "JACS Server Pipeline Loading Files";
+//                }
+//
+//                final long seconds = (System.currentTimeMillis() - phaseStart) / 1000;
+//                if (seconds > 0) {
+//                    progressMonitor.setNote(note + " (" + seconds + "s)");
+//                } else {
+//                    progressMonitor.setNote(note + " (starting)");
+//                }
+//
+//                refreshCount++;
+//                if (refreshCount < progressMonitor.getMaximum()) {
+//                    progressMonitor.setProgress(refreshCount);
+//                }
+//            }
+//        }
+//    }
 }

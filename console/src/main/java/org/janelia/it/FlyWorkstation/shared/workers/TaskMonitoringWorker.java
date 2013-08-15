@@ -2,6 +2,7 @@ package org.janelia.it.FlyWorkstation.shared.workers;
 
 import org.janelia.it.FlyWorkstation.api.entity_model.events.WorkerChangedEvent;
 import org.janelia.it.FlyWorkstation.api.entity_model.management.ModelMgr;
+import org.janelia.it.jacs.model.tasks.Event;
 import org.janelia.it.jacs.model.tasks.Task;
 
 /**
@@ -15,6 +16,9 @@ public class TaskMonitoringWorker extends BackgroundWorker {
     
     private Long taskId;
     private Task task;
+
+    public TaskMonitoringWorker() {
+    }
     
     public TaskMonitoringWorker(Long taskId) {
         this.taskId = taskId;
@@ -31,7 +35,14 @@ public class TaskMonitoringWorker extends BackgroundWorker {
             if (task==null) {
                 throw new IllegalStateException("Task does not exist: "+taskId);
             }
-            if (task.isDone()) return;
+
+            if (task.isDone()) {
+                // Check for errors
+                if (task.getLastEvent().getEventType().equals(Event.ERROR_EVENT)) {
+                    throw new Exception(task.getLastEvent().getDescription());
+                }
+                return;
+            }
             
             try {
                 Thread.sleep(REFRESH_DELAY_MS);
@@ -41,6 +52,10 @@ public class TaskMonitoringWorker extends BackgroundWorker {
                 return;
             }
         }
+    }
+
+    public void setTaskId(Long taskId) {
+        this.taskId = taskId;
     }
 
     public Long getTaskId() {
