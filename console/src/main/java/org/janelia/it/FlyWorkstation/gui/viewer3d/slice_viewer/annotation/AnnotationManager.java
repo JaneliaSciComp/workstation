@@ -184,25 +184,57 @@ public class AnnotationManager
 
     }
 
-    public void deleteSubTree(Long annotationID) {
-        TmWorkspace workspace = annotationModel.getCurrentWorkspace();
-        if (workspace == null) {
+    public void deleteSubTree(final Long annotationID) {
+        if (!annotationModel.hasCurrentWorkspace()) {
             // dialog?
 
             return;
         } else {
-            annotationModel.deleteSubTree(annotationModel.getGeoAnnotationFromID(annotationID));
+            SimpleWorker deleter = new SimpleWorker() {
+                @Override
+                protected void doStuff() throws Exception {
+                    annotationModel.deleteSubTree(annotationModel.getGeoAnnotationFromID(annotationID));
+                }
+
+                @Override
+                protected void hadSuccess() {
+                    // nothing here; annotationModel emits signals
+                }
+
+                @Override
+                protected void hadError(Throwable error) {
+                    SessionMgr.getSessionMgr().handleException(error);
+                }
+            };
+            deleter.execute();
         }
     }
 
-    public void moveAnnotation(Long annotationID, Vec3 location) {
-        TmWorkspace workspace = annotationModel.getCurrentWorkspace();
-        if (workspace == null) {
+    public void moveAnnotation(final Long annotationID, final Vec3 location) {
+        if (!annotationModel.hasCurrentWorkspace()) {
             // dialog?
 
             return;
         } else {
-            annotationModel.moveAnnotation(annotationID, location);
+
+            SimpleWorker mover = new SimpleWorker() {
+                @Override
+                protected void doStuff() throws Exception {
+                    annotationModel.moveAnnotation(annotationID, location);
+                }
+
+                @Override
+                protected void hadSuccess() {
+                    // nothing here; annotationModel will emit signals
+                }
+
+                @Override
+                protected void hadError(Throwable error) {
+                    SessionMgr.getSessionMgr().handleException(error);
+                }
+            };
+            mover.execute();
+
         }
 
     }
@@ -275,6 +307,38 @@ public class AnnotationManager
         //  open the slice viewer from either a brain sample or a workspace; if
         //  it's the latter, grab its brain sample
         // (currently can't open Slice Viewer without an initial entity)
+
+
+        // need to reorder stuff so I can isolate db stuff
+
+        // if no sample loaded, error
+        //  how do we even do this?
+
+        // ask re: new workspace if one is active
+
+        // ask for name (there's no cancel at this point; blank name = default name)
+
+        // db stuff:
+
+        // create new workspaces folder if needed (push down to annModel?  make it
+        //  a "checkcreateworkspacesfolder()" kind of thing?  currently provide 
+        //  the entity, but that should also be done in annModel, right?)
+        // not at all clear how to report errors from this part
+
+        // obtain sample to create it with (can we do w/o db call?  can annModel
+        //  figure out currently loaded sample (by now we know there is one that's
+        //  loaded)?)  (annMgr knows initialentity; annModel knows sample if it's a 
+        //  workspace, but not otherwise);  so just push initial entity down
+        //  and let it happen deeper in code?
+
+
+        // create workspace: need to pass:
+        //  - parent entity (workspaces, or create it) (so don't need to pass right now,
+        //      although later, we'll want to enable people to choose where to create)
+        //  - sample ID
+        //  - name
+
+
 
         // NOTE: ask the user if you're creating a new workspace when one is
         //  already active

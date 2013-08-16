@@ -45,6 +45,13 @@ public class AnnotationModel
         }
     };
 
+    public AnnotationModel() {
+        // set up
+        modelMgr = ModelMgr.getModelMgr();
+        sessionMgr = SessionMgr.getSessionMgr();
+
+    }
+
     public boolean hasCurrentWorkspace() {
         return currentWorkspaceID != null;
     }
@@ -84,13 +91,6 @@ public class AnnotationModel
 
         // refresh the neuron object!
         neuronSelectedSignal.emit(getCurrentNeuron());
-    }
-
-    public AnnotationModel() {
-        // set up
-        modelMgr = ModelMgr.getModelMgr();
-        sessionMgr = SessionMgr.getSessionMgr();
-
     }
 
     public TmGeoAnnotation getGeoAnnotationFromID(Long annotationID) {
@@ -209,23 +209,17 @@ public class AnnotationModel
 
     }
 
-    public void moveAnnotation(Long annotationID, Vec3 location) {
+    public void moveAnnotation(Long annotationID, Vec3 location) throws Exception {
         TmGeoAnnotation annotation = getGeoAnnotationFromID(annotationID);
-        try {
-            modelMgr.updateGeometricAnnotation(annotation, annotation.getIndex(),
-                location.getX(), location.getY(), location.getZ(),
-                annotation.getComment());
-        } catch(Exception e) {
-            e.printStackTrace();
-            return;
-        }
+        modelMgr.updateGeometricAnnotation(annotation, annotation.getIndex(),
+            location.getX(), location.getY(), location.getZ(),
+            annotation.getComment());
 
         // notify
         anchorUpdatedSignal.emit(getGeoAnnotationFromID(annotationID));
-
     }
 
-    public void deleteSubTree(TmGeoAnnotation rootAnnotation) {
+    public void deleteSubTree(TmGeoAnnotation rootAnnotation) throws Exception {
         if (rootAnnotation == null) {
             return;
         }
@@ -234,13 +228,8 @@ public class AnnotationModel
         // in DAO, delete method is pretty simplistic; it doesn't update parents; however,
         //  as we're deleting the whole tree, that doesn't matter for us
         // delete in child-first order
-        try {
-            for (TmGeoAnnotation annotation: rootAnnotation.getSubTreeListReversed()) {
-                modelMgr.deleteGeometricAnnotation(annotation.getId());
-            }
-        } catch (Exception e) {
-            e.printStackTrace();
-            return;
+        for (TmGeoAnnotation annotation: rootAnnotation.getSubTreeListReversed()) {
+            modelMgr.deleteGeometricAnnotation(annotation.getId());
         }
 
         // notify the public
