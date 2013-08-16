@@ -107,7 +107,7 @@ public class WorkerProgressMeter extends JDialog {
         // Exported UI element for use in the top level menu
         menuLabel = new JLabel(staticIcon);
         menuLabel.addMouseListener(new MouseAdapter() {
-            public void mouseEntered(MouseEvent e) {
+            public void mouseReleased(MouseEvent e) {
                 resetPosition();
                 setVisible(true);
             }
