@@ -1786,7 +1786,7 @@ public class EntityContextMenu extends JPopupMenu {
         if (multiple) {return null;}
         String entityTypeName = rootedEntity.getEntity().getEntityType().getName();
         if (EntityConstants.TYPE_FOLDER.equals(entityTypeName) || EntityConstants.TYPE_SAMPLE.equals(entityTypeName)) {
-            JMenuItem newAttachmentItem = new JMenuItem("  Import File Here");
+            JMenuItem newAttachmentItem = new JMenuItem("  Import File(s) Here");
             newAttachmentItem.addActionListener(new ActionListener() {
                 public void actionPerformed(ActionEvent actionEvent) {
                     try {
