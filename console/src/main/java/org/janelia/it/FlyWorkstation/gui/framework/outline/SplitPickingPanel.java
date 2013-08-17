@@ -903,7 +903,6 @@ public class SplitPickingPanel extends JPanel implements Refreshable {
     	
     	Task task = new GenericTask(new HashSet<Node>(), crossFolder.getEntity().getOwnerKey(), new ArrayList<Event>(), 
     			taskParameters, "screenSampleCrossService", "Screen Sample Cross Service");
-        task.setJobName("Screen Sample Cross Service");
         task = ModelMgr.getModelMgr().saveOrUpdateTask(task);
         
         log.info("Submitting task "+task.getDisplayName()+" id="+task.getObjectId());

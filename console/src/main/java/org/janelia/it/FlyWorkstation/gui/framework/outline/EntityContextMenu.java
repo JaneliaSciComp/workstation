@@ -140,9 +140,9 @@ public class EntityContextMenu extends JPopupMenu {
         setNextAddRequiresSeparator(true);
         add(getMergeItem());
         add(getSortBySimilarityItem());
-        add(getDownloadDefault3dImageItem());
-        add(getDownloadSplitChannelsItem());
-        add(getImportItem());
+//        add(getDownloadDefault3dImageItem());
+        add(getDownloadMenu());
+        add(getUploadItem());
 //        add(getTestProgressMeterItem());
 //        add(getCreateSessionItem());
 
@@ -241,8 +241,8 @@ public class EntityContextMenu extends JPopupMenu {
     }
 
     protected JMenuItem getDetailsItem() {
-        if (multiple)
-            return null;
+        if (multiple) return null;
+        
         JMenuItem detailsMenuItem = new JMenuItem("  View Details");
         detailsMenuItem.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_I, java.awt.Event.META_MASK));
         detailsMenuItem.addActionListener(new ActionListener() {
@@ -255,10 +255,10 @@ public class EntityContextMenu extends JPopupMenu {
     }
 
     protected JMenuItem getPermissionItem() {
-        if (multiple)
-            return null;
-        if (!ModelMgrUtils.isOwner(rootedEntity.getEntity()))
-            return null;
+        if (multiple) return null;
+        
+        if (!ModelMgrUtils.isOwner(rootedEntity.getEntity())) return null;
+        
         JMenuItem detailsMenuItem = new JMenuItem("  Change Permissions");
         detailsMenuItem.addActionListener(new ActionListener() {
             @Override
@@ -419,7 +419,6 @@ public class EntityContextMenu extends JPopupMenu {
     }
 
     public JMenuItem getOpenInNewAlignmentBoardItem() {
-        
         if (multiple) return null;
         
         JMenuItem alignmentBoardItem = null;
@@ -582,8 +581,8 @@ public class EntityContextMenu extends JPopupMenu {
     }
 
     protected JMenuItem getGotoRelatedItem() {
-        if (multiple)
-            return null;
+        if (multiple) return null;
+        
         JMenu relatedMenu = new JMenu("  Go To Related");
         Entity entity = rootedEntity.getEntity();
         String type = entity.getEntityType().getName();
@@ -615,14 +614,13 @@ public class EntityContextMenu extends JPopupMenu {
 
     private JMenuItem getChildEntityItem(Entity entity, String attributeName) {
         final EntityData ed = entity.getEntityDataByAttributeName(attributeName);
-        if (ed == null)
-            return null;
+        if (ed == null) return null;
         return getAncestorEntityItem(ed.getChildEntity(), null, attributeName);
     }
 
     private JMenuItem getAncestorEntityItem(final Entity entity, final String ancestorType, final String label) {
-        if (entity == null)
-            return null;
+        if (entity == null) return null;
+        
         JMenuItem relatedMenuItem = new JMenuItem(label);
         relatedMenuItem.addActionListener(new ActionListener() {
             @Override
@@ -634,8 +632,8 @@ public class EntityContextMenu extends JPopupMenu {
     }
 
     protected JMenuItem getCopyNameToClipboardItem() {
-        if (multiple)
-            return null;
+        if (multiple) return null;
+        
         JMenuItem copyMenuItem = new JMenuItem("  Copy Name To Clipboard");
         copyMenuItem.addActionListener(new ActionListener() {
             @Override
@@ -648,8 +646,8 @@ public class EntityContextMenu extends JPopupMenu {
     }
 
     protected JMenuItem getCopyIdToClipboardItem() {
-        if (multiple)
-            return null;
+        if (multiple) return null;
+        
         JMenuItem copyMenuItem = new JMenuItem("  Copy GUID To Clipboard");
         copyMenuItem.addActionListener(new ActionListener() {
             @Override
@@ -662,8 +660,8 @@ public class EntityContextMenu extends JPopupMenu {
     }
 
     protected JMenuItem getRenameItem() {
-        if (multiple)
-            return null;
+        if (multiple) return null;
+        
         JMenuItem renameItem = new JMenuItem("  Rename");
         renameItem.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent actionEvent) {
@@ -695,8 +693,8 @@ public class EntityContextMenu extends JPopupMenu {
     }
 
     protected JMenu getErrorFlag() {
-        if (multiple)
-            return null;
+        if (multiple) return null;
+        
         JMenu errorMenu = new JMenu("  Report A Problem With This Data");
         addBadDataButtons(errorMenu);
         return errorMenu;
@@ -1120,7 +1118,6 @@ public class EntityContextMenu extends JPopupMenu {
                     taskParameters.add(new TaskParameter("target stack id", targetEntity.getId().toString(), null));
                     Task task = new GenericTask(new HashSet<Node>(), SessionMgr.getSubjectKey(),
                             new ArrayList<Event>(), taskParameters, "sortBySimilarity", "Sort By Similarity");
-                    task.setJobName("Sort By Similarity Task");
                     task = ModelMgr.getModelMgr().saveOrUpdateTask(task);
                     ModelMgr.getModelMgr().submitJob("SortBySimilarity", task);
 
@@ -1137,187 +1134,222 @@ public class EntityContextMenu extends JPopupMenu {
         sortItem.setEnabled(ModelMgrUtils.hasWriteAccess(folder));
         return sortItem;
     }
-    
-    protected JMenuItem getDownloadDefault3dImageItem() {
 
-        int numStacks = 0;
+    protected JMenuItem getDownloadMenu() {
+
+        List<Entity> entitiesWithFilepaths = new ArrayList<Entity>();
         for(final RootedEntity rootedEntity : rootedEntityList) {
             final Entity targetEntity = rootedEntity.getEntity();
             final String filepath = EntityUtils.getDefault3dImageFilePath(targetEntity);
             if (filepath!=null) {
-                numStacks++;
+                entitiesWithFilepaths.add(targetEntity);
+            }
+        }
+        if (entitiesWithFilepaths.isEmpty()) return null;
+        
+        String[] DOWNLOAD_EXTENSIONS = {"tif", "v3draw", "v3dpbd"};
+        String itemTitle = null;
+        if (entitiesWithFilepaths.size()>1) {
+            itemTitle = "  Download "+entitiesWithFilepaths.size()+" 3D Images As...";
+        }
+        else {
+            itemTitle = "  Download 3D Image As...";
+        }
+        
+        JMenu downloadMenu = new JMenu(itemTitle);
+        for(String extension : DOWNLOAD_EXTENSIONS) {
+            add(downloadMenu, getDownloadItem(entitiesWithFilepaths, false, extension));    
+        }
+        for(String extension : DOWNLOAD_EXTENSIONS) {
+            add(downloadMenu, getDownloadItem(entitiesWithFilepaths, true, extension));    
+        }
+        return downloadMenu;
+    }
+    
+//    protected JMenuItem getDownloadDefault3dImageItem() {
+//
+//        int numStacks = 0;
+//        for(final RootedEntity rootedEntity : rootedEntityList) {
+//            final Entity targetEntity = rootedEntity.getEntity();
+//            final String filepath = EntityUtils.getDefault3dImageFilePath(targetEntity);
+//            if (filepath!=null) {
+//                numStacks++;
+//            }
+//        }
+//        
+//        if (numStacks<1) return null;
+//        
+//        JMenuItem downloadItem = new JMenuItem(multiple?"  Download "+numStacks+" 3D Images (Background Task)":"  Download 3D Image (Background Task)");
+//
+//        downloadItem.addActionListener(new ActionListener() {
+//            public void actionPerformed(ActionEvent actionEvent) {
+//                try {
+//                    for(final RootedEntity rootedEntity : rootedEntityList) {
+//
+//                        final Entity targetEntity = rootedEntity.getEntity();
+//                        final String filepath = EntityUtils.getDefault3dImageFilePath(targetEntity);
+//                        
+//                        SimpleWorker worker = new SimpleWorker() {
+//
+//                            protected String workerName;
+//                            protected File targetDir;
+//                            protected File remoteFile;
+//                            protected File localFile;
+//                            
+//                            @Override
+//                            protected void doStuff() throws Exception {
+//                                Entity targetLoaded = ModelMgr.getModelMgr().loadLazyEntity(targetEntity, false);
+//                                Entity default3dImage = targetLoaded.getChildByAttributeName(EntityConstants.ATTRIBUTE_DEFAULT_3D_IMAGE);
+//                                Entity sample = null;
+//                                if (targetEntity.getEntityType().getName().equals(EntityConstants.TYPE_SAMPLE)) {
+//                                    sample = targetEntity;
+//                                }
+//                                else {
+//                                    sample = ModelMgr.getModelMgr().getAncestorWithType(targetEntity, EntityConstants.TYPE_SAMPLE);
+//                                }
+//                                this.workerName = "Downloading "+sample.getName();
+//                                this.targetDir = new File(downloadDir, sample.getName());
+//                                final String localFilePrefix = sample.getName()+"_ID"+default3dImage.getId()+"_";
+//                                this.remoteFile = new File(filepath);
+//                                this.localFile = new File(targetDir, localFilePrefix+"_"+remoteFile.getName());
+//                            }
+//                            
+//                            @Override
+//                            protected void hadSuccess() {
+//                                try {
+//                                    
+//                                    log.debug("Checking {} for files that named {}",targetDir,localFile.getName());
+//                                    
+//                                    File[] files = targetDir.listFiles(new FilenameFilter() {
+//                                        @Override
+//                                        public boolean accept(File dir, String name) {
+//                                            return name.equals(localFile.getName());
+//                                        }
+//                                    });
+//
+//                                    if (files!=null && files.length>0) {
+//                                        Object[] options = { "Open folder", "Download file" };
+//                                        int n = JOptionPane.showOptionDialog(browser, 
+//                                                "File already exists locally, open existing folder, or download again?", "Files exists", JOptionPane.YES_NO_OPTION,
+//                                                JOptionPane.QUESTION_MESSAGE, null, options, options[0]);
+//                                        if (n==0) {
+//                                            OpenInFinderAction.revealFile(targetDir);
+//                                            return;
+//                                        }
+//                                    }
+//                                    
+//                                    BackgroundWorker taskWorker = new BackgroundWorker() {
+//
+//                                        @Override
+//                                        public String getName() {
+//                                            return workerName;
+//                                        }
+//
+//                                        @Override
+//                                        protected void doStuff() throws Exception {
+//
+//                                            File remoteFile = new File(filepath);
+//
+//                                            setStatus("Waiting to download...");
+//                                            copyFileLock.lock();
+//                                            try {
+//                                                setStatus("Downloading "+remoteFile.getName());
+//                                                Utils.copyURLToFile(filepath, localFile, this);
+//                                            } finally {
+//                                                copyFileLock.unlock();
+//                                            }    
+//                                            
+//                                            if (isCancelled()) throw new CancellationException();
+//                                            setStatus("Done");
+//                                        }
+//                                        
+//                                        @Override
+//                                        public Callable<Void> getSuccessCallback() {
+//                                            return new Callable<Void>() {
+//                                                @Override
+//                                                public Void call() throws Exception {
+//                                                    OpenInFinderAction.revealFile(targetDir);
+//                                                    return null;
+//                                                }
+//                                            };
+//                                        }
+//                                    };
+//
+//                                    taskWorker.executeWithEvents();
+//                                    
+//                                }
+//                                catch (Exception e) {
+//                                    hadError(e);
+//                                    return;
+//                                }   
+//                            }
+//                            
+//                            @Override
+//                            protected void hadError(Throwable error) {
+//                                SessionMgr.getSessionMgr().handleException(error);
+//                            }
+//                        };
+//                        
+//                        worker.execute();
+//                    }
+//                    
+//                    
+//                } 
+//                catch (Exception e) {
+//                    SessionMgr.getSessionMgr().handleException(e);
+//                }
+//            }
+//        });
+//        
+//        return downloadItem;
+//    }
+    
+    protected JMenuItem getDownloadItem(final List<Entity> entitiesWithFilepaths, final boolean splitChannels, final String extension) {
+        
+        String itemTitle = null;
+        if (splitChannels) {
+            if (multiple) {
+                itemTitle = "Split Channel "+extension+" Files (Background Task)";
+            }
+            else {
+                itemTitle = "Split Channel "+extension+" File (Background Task)";
+            }
+        }
+        else {
+            if (multiple) {
+                itemTitle = extension+" Files (Background Task)";
+            }
+            else {
+                itemTitle = extension+" File (Background Task)";
             }
         }
         
-        if (numStacks<1) return null;
-        
-        JMenuItem downloadItem = new JMenuItem(multiple?"  Download "+numStacks+" 3D Images (Background Task)":"  Download 3D Image (Background Task)");
+        JMenuItem downloadItem = new JMenuItem(itemTitle);
 
         downloadItem.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent actionEvent) {
                 try {
-                    for(final RootedEntity rootedEntity : rootedEntityList) {
+                    for(final Entity entity : entitiesWithFilepaths) {
 
-                        final Entity targetEntity = rootedEntity.getEntity();
-                        final String filepath = EntityUtils.getDefault3dImageFilePath(targetEntity);
+                        final String filepath = EntityUtils.getDefault3dImageFilePath(entity);
                         
                         SimpleWorker worker = new SimpleWorker() {
 
-                            protected String workerName;
-                            protected File targetDir;
-                            protected File remoteFile;
-                            protected File localFile;
-                            
-                            @Override
-                            protected void doStuff() throws Exception {
-                                Entity targetLoaded = ModelMgr.getModelMgr().loadLazyEntity(targetEntity, false);
-                                Entity default3dImage = targetLoaded.getChildByAttributeName(EntityConstants.ATTRIBUTE_DEFAULT_3D_IMAGE);
-                                Entity sample = null;
-                                if (targetEntity.getEntityType().getName().equals(EntityConstants.TYPE_SAMPLE)) {
-                                    sample = targetEntity;
-                                }
-                                else {
-                                    sample = ModelMgr.getModelMgr().getAncestorWithType(targetEntity, EntityConstants.TYPE_SAMPLE);
-                                }
-                                this.workerName = "Downloading "+sample.getName();
-                                this.targetDir = new File(downloadDir, sample.getName());
-                                final String localFilePrefix = sample.getName()+"_ID"+default3dImage.getId()+"_";
-                                this.remoteFile = new File(filepath);
-                                this.localFile = new File(targetDir, localFilePrefix+"_"+remoteFile.getName());
-                            }
-                            
-                            @Override
-                            protected void hadSuccess() {
-                                try {
-                                    
-                                    log.debug("Checking {} for files that named {}",targetDir,localFile.getName());
-                                    
-                                    File[] files = targetDir.listFiles(new FilenameFilter() {
-                                        @Override
-                                        public boolean accept(File dir, String name) {
-                                            return name.equals(localFile.getName());
-                                        }
-                                    });
-
-                                    if (files!=null && files.length>0) {
-                                        Object[] options = { "Open folder", "Download file" };
-                                        int n = JOptionPane.showOptionDialog(browser, 
-                                                "File already exists locally, open existing folder, or download again?", "Files exists", JOptionPane.YES_NO_OPTION,
-                                                JOptionPane.QUESTION_MESSAGE, null, options, options[0]);
-                                        if (n==0) {
-                                            OpenInFinderAction.revealFile(targetDir);
-                                            return;
-                                        }
-                                    }
-                                    
-                                    BackgroundWorker taskWorker = new BackgroundWorker() {
-
-                                        @Override
-                                        public String getName() {
-                                            return workerName;
-                                        }
-
-                                        @Override
-                                        protected void doStuff() throws Exception {
-
-                                            File remoteFile = new File(filepath);
-
-                                            setStatus("Waiting to download...");
-                                            copyFileLock.lock();
-                                            try {
-                                                setStatus("Downloading "+remoteFile.getName());
-                                                Utils.copyURLToFile(filepath, localFile, this);
-                                            } finally {
-                                                copyFileLock.unlock();
-                                            }    
-                                            
-                                            if (isCancelled()) throw new CancellationException();
-                                            setStatus("Done");
-                                        }
-                                        
-                                        @Override
-                                        public Callable<Void> getSuccessCallback() {
-                                            return new Callable<Void>() {
-                                                @Override
-                                                public Void call() throws Exception {
-                                                    OpenInFinderAction.revealFile(targetDir);
-                                                    return null;
-                                                }
-                                            };
-                                        }
-                                    };
-
-                                    taskWorker.executeWithEvents();
-                                    
-                                }
-                                catch (Exception e) {
-                                    hadError(e);
-                                    return;
-                                }   
-                            }
-                            
-                            @Override
-                            protected void hadError(Throwable error) {
-                                SessionMgr.getSessionMgr().handleException(error);
-                            }
-                        };
-                        
-                        worker.execute();
-                    }
-                    
-                    
-                } 
-                catch (Exception e) {
-                    SessionMgr.getSessionMgr().handleException(e);
-                }
-            }
-        });
-        
-        return downloadItem;
-    }
-    
-    protected JMenuItem getDownloadSplitChannelsItem() {
-
-        int numStacks = 0;
-        for(final RootedEntity rootedEntity : rootedEntityList) {
-            final Entity targetEntity = rootedEntity.getEntity();
-            final String filepath = EntityUtils.getDefault3dImageFilePath(targetEntity);
-            if (filepath!=null) {
-                numStacks++;
-            }
-        }
-        
-        if (numStacks<1) return null;
-        
-        JMenuItem downloadSplitItem = new JMenuItem(multiple?"  Download "+numStacks+" 3D Images as Split Channel TIFFs (Background Task)":"  Download 3D Image as Split Channel TIFF (Background Task)");
-
-        downloadSplitItem.addActionListener(new ActionListener() {
-            public void actionPerformed(ActionEvent actionEvent) {
-                try {
-                    for(final RootedEntity rootedEntity : rootedEntityList) {
-
-                        final Entity targetEntity = rootedEntity.getEntity();
-                        final String filepath = EntityUtils.getDefault3dImageFilePath(targetEntity);
-                        
-                        SimpleWorker worker = new SimpleWorker() {
-
-                            protected String workerName;
                             protected Entity default3dImage;
                             protected Entity sample;
                             protected File targetDir;
                             
                             @Override
                             protected void doStuff() throws Exception {
-                                Entity targetLoaded = ModelMgr.getModelMgr().loadLazyEntity(targetEntity, false);
+                                Entity targetLoaded = ModelMgr.getModelMgr().loadLazyEntity(entity, false);
                                 this.default3dImage = targetLoaded.getChildByAttributeName(EntityConstants.ATTRIBUTE_DEFAULT_3D_IMAGE);
-                                if (targetEntity.getEntityType().getName().equals(EntityConstants.TYPE_SAMPLE)) {
-                                    this.sample = targetEntity;
+                                if (entity.getEntityType().getName().equals(EntityConstants.TYPE_SAMPLE)) {
+                                    this.sample = entity;
                                 }
                                 else {
-                                    this.sample = ModelMgr.getModelMgr().getAncestorWithType(targetEntity, EntityConstants.TYPE_SAMPLE);
+                                    this.sample = ModelMgr.getModelMgr().getAncestorWithType(entity, EntityConstants.TYPE_SAMPLE);
                                 }
-                                this.workerName = "Splitting channels for "+sample.getName();
-                                this.targetDir = new File(splitsDir, sample.getName());
+                                this.targetDir = new File(splitChannels ? splitsDir : downloadDir, sample.getName());
                             }
                             
                             @Override
@@ -1325,19 +1357,19 @@ public class EntityContextMenu extends JPopupMenu {
                                 try {
                                     final String localFilePrefix = sample.getName()+"_ID"+default3dImage.getId()+"_";
                                     
-                                    log.debug("Checking {} for files that start with {} and end with .tif",targetDir,localFilePrefix);
+                                    log.debug("Checking {} for files that start with {} and end with "+extension,targetDir,localFilePrefix);
                                     
                                     File[] files = targetDir.listFiles(new FilenameFilter() {
                                         @Override
                                         public boolean accept(File dir, String name) {
-                                            return name.startsWith(localFilePrefix) && name.endsWith(".tif");
+                                            return name.startsWith(localFilePrefix) && name.endsWith(extension);
                                         }
                                     });
 
                                     if (files!=null && files.length>0) {
-                                        Object[] options = { "Open folder", "Split channels" };
+                                        Object[] options = { "Open folder", "Run anyway" };
                                         int n = JOptionPane.showOptionDialog(browser, 
-                                                "Split channel files already exist, open existing folder, or run split channels anyway?", "Split channel files exists", JOptionPane.YES_NO_OPTION,
+                                                "Files already exist. Open existing folder, or run the download anyway?", "Files already exist", JOptionPane.YES_NO_OPTION,
                                                 JOptionPane.QUESTION_MESSAGE, null, options, options[0]);
                                         if (n==0) {
                                             OpenInFinderAction.revealFile(targetDir);
@@ -1345,19 +1377,31 @@ public class EntityContextMenu extends JPopupMenu {
                                         }
                                     }
                                     
-                                    HashSet<TaskParameter> taskParameters = new HashSet<TaskParameter>();
-                                    taskParameters.add(new TaskParameter("filepath", filepath, null));
-                                    Task task = new GenericTask(new HashSet<Node>(), SessionMgr.getSubjectKey(),
-                                            new ArrayList<Event>(), taskParameters, "splitChannels", "Split Channels");
-                                    task.setJobName("Split Channels Task");
-                                    task = ModelMgr.getModelMgr().saveOrUpdateTask(task);
-                                    ModelMgr.getModelMgr().submitJob("SplitChannels", task);
+                                    Task task = null;
+                                    if (splitChannels) {
+                                        HashSet<TaskParameter> taskParameters = new HashSet<TaskParameter>();
+                                        taskParameters.add(new TaskParameter("filepath", filepath, null));
+                                        taskParameters.add(new TaskParameter("output extension", extension, null));
+                                        task = new GenericTask(new HashSet<Node>(), SessionMgr.getSubjectKey(),
+                                                new ArrayList<Event>(), taskParameters, "splitChannels", "Split Channels");
+                                        task = ModelMgr.getModelMgr().saveOrUpdateTask(task);
+                                        ModelMgr.getModelMgr().submitJob("ConsoleSplitChannels", task);
+                                    }
+                                    else {                                        
+                                        HashSet<TaskParameter> taskParameters = new HashSet<TaskParameter>();
+                                        taskParameters.add(new TaskParameter("filepath", filepath, null));
+                                        taskParameters.add(new TaskParameter("output extension", extension, null));
+                                        task = new GenericTask(new HashSet<Node>(), SessionMgr.getSubjectKey(),
+                                                new ArrayList<Event>(), taskParameters, "convertFile", "Convert File");
+                                        task = ModelMgr.getModelMgr().saveOrUpdateTask(task);
+                                        ModelMgr.getModelMgr().submitJob("ConsoleConvertFile", task);
+                                    }
 
                                     TaskMonitoringWorker taskWorker = new TaskMonitoringWorker(task.getObjectId()) {
 
                                         @Override
                                         public String getName() {
-                                            return workerName;
+                                            return "Downloading "+sample.getName();
                                         }
 
                                         @Override
@@ -1455,7 +1499,7 @@ public class EntityContextMenu extends JPopupMenu {
             }
         });
         
-        return downloadSplitItem;
+        return downloadItem;
     }
 
     protected JMenuItem getTestProgressMeterItem() {
@@ -1782,11 +1826,12 @@ public class EntityContextMenu extends JPopupMenu {
         return null;
     }
 
-    protected JMenuItem getImportItem() {
-        if (multiple) {return null;}
+    protected JMenuItem getUploadItem() {
+        if (multiple) return null;
+        
         String entityTypeName = rootedEntity.getEntity().getEntityType().getName();
         if (EntityConstants.TYPE_FOLDER.equals(entityTypeName) || EntityConstants.TYPE_SAMPLE.equals(entityTypeName)) {
-            JMenuItem newAttachmentItem = new JMenuItem("  Import File(s) Here");
+            JMenuItem newAttachmentItem = new JMenuItem("  Upload File(s) Here");
             newAttachmentItem.addActionListener(new ActionListener() {
                 public void actionPerformed(ActionEvent actionEvent) {
                     try {
@@ -1803,8 +1848,8 @@ public class EntityContextMenu extends JPopupMenu {
     }
 
     protected JMenuItem getNewFolderItem() {
-        if (multiple)
-            return null;
+        if (multiple) return null;
+        
         if (EntityConstants.TYPE_FOLDER.equals(rootedEntity.getEntity().getEntityType().getName())) {
             JMenuItem newFolderItem = new JMenuItem("  Create New Folder");
             newFolderItem.addActionListener(new ActionListener() {
@@ -1837,8 +1882,7 @@ public class EntityContextMenu extends JPopupMenu {
     }
 
     protected JMenuItem getCreateSessionItem() {
-        if (multiple)
-            return null;
+        if (multiple) return null;
 
         JMenuItem newFragSessionItem = new JMenuItem("  Create Annotation Session...");
         newFragSessionItem.addActionListener(new ActionListener() {
@@ -1880,8 +1924,8 @@ public class EntityContextMenu extends JPopupMenu {
     }
 
     protected JMenuItem getSearchHereItem() {
-        if (multiple)
-            return null;
+        if (multiple) return null;
+        
         JMenuItem searchHereMenuItem = new JMenuItem("  Search Here");
         searchHereMenuItem.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent actionEvent) {
