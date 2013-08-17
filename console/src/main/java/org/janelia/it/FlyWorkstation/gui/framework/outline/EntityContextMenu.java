@@ -1147,7 +1147,7 @@ public class EntityContextMenu extends JPopupMenu {
         }
         if (entitiesWithFilepaths.isEmpty()) return null;
         
-        String[] DOWNLOAD_EXTENSIONS = {"tif", "v3draw", "v3dpbd"};
+        String[] DOWNLOAD_EXTENSIONS = {"tif", "v3draw", "v3dpbd", "mp4"};
         String itemTitle = null;
         if (entitiesWithFilepaths.size()>1) {
             itemTitle = "  Download "+entitiesWithFilepaths.size()+" 3D Images As...";
