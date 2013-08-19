@@ -6,6 +6,7 @@ import org.janelia.it.FlyWorkstation.gui.viewer3d.masking.RenderMappingI;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.resolver.FileResolver;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.texture.RenderMapTextureBean;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.texture.TextureDataI;
+import org.janelia.it.FlyWorkstation.gui.viewer3d.texture.TextureMediator;
 
 import javax.swing.*;
 import java.awt.*;

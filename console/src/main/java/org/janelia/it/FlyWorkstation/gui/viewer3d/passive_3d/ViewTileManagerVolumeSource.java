@@ -13,7 +13,7 @@ import org.janelia.it.FlyWorkstation.gui.viewer3d.texture.TextureDataI;
 import java.io.File;
 import java.net.URL;
 import java.nio.ByteBuffer;
-import java.util.List;
+import java.util.Collection;
 
 /**
  * Created with IntelliJ IDEA.
@@ -80,36 +80,34 @@ public class ViewTileManagerVolumeSource implements VolumeSource {
         TileFormat tileFormat = dataAdapter.getTileFormat();
 
         absoluteReqVolStartX = (int) Math.floor((iterationCamera.getFocus().getX() - BRICK_WIDTH/2) / tileFormat.getVoxelMicrometers()[ 0 ]);
-        absoluteReqVolStartY = (int) Math.floor((iterationCamera.getFocus().getY() - BRICK_HEIGHT/2) / tileFormat.getVoxelMicrometers()[ 1 ]);
+        absoluteReqVolEndY = (int) Math.floor((iterationCamera.getFocus().getY() - BRICK_HEIGHT/2) / tileFormat.getVoxelMicrometers()[ 1 ]);
         absoluteReqVolStartZ = (int) Math.floor(iterationCamera.getFocus().getZ() - BRICK_DEPTH/2);
         if ( absoluteReqVolStartZ < 0 )
             absoluteReqVolStartZ = 0;
 
         absoluteReqVolEndX = absoluteReqVolStartX + BRICK_WIDTH;
-        absoluteReqVolEndY = absoluteReqVolStartY + BRICK_HEIGHT;
+        absoluteReqVolStartY = Math.max( 0, absoluteReqVolEndY - BRICK_HEIGHT );
         absoluteReqVolEndZ = absoluteReqVolStartZ + BRICK_DEPTH;
 
         // NOTE: camera has micrometer units.  TileIndex requires voxel units.  Hence need a conversion for x,y
-        int voxX = (int)((iterationCamera.getFocus().getX() - BRICK_WIDTH/2) / tileFormat.getVoxelMicrometers()[ 0 ] / tileFormat.getTileSize()[ 0 ] );
-        int voxY = (int)((iterationCamera.getFocus().getY() - BRICK_HEIGHT/2) / tileFormat.getVoxelMicrometers()[ 1 ] / tileFormat.getTileSize()[ 1 ] );
-        int voxZ = (int)((iterationCamera.getFocus().getZ()) / tileFormat.getVoxelMicrometers()[ 2 ] );
+        int voxStartX = (int)((iterationCamera.getFocus().getX() - BRICK_WIDTH/2) / tileFormat.getVoxelMicrometers()[ 0 ] / tileFormat.getTileSize()[ 0 ] );
+        int voxStartY = (int)((iterationCamera.getFocus().getY() - BRICK_HEIGHT/2) / tileFormat.getVoxelMicrometers()[ 1 ] / tileFormat.getTileSize()[ 1 ] );
+        int voxStartZ = (int)((iterationCamera.getFocus().getZ()) / tileFormat.getVoxelMicrometers()[ 2 ] );
 
         TileIndexFinder indexFinder = new TileIndexFinder( tileFormat, camera, sliceAxis );
         // Cover leftward/bottomward/inward by 256 including 0.  Cover rightward/upward/outward 255 beyond start point.
         //  Total coverage 512.
         //    Dimensions expected to be divisible by 2.
-        int volStartTileX = Math.max( 0, voxX );
-        int volStartTileY = Math.max( 0, voxY );
-        int volStartTileZ = Math.max( 0, voxZ );
-        int volEndTileX = (int)Math.ceil( volStartTileX + ( (BRICK_WIDTH / 2 - 1) / tileFormat.getVoxelMicrometers()[ 0 ] / tileFormat.getTileSize()[ 0 ] ) );
-        int volEndTileY = (int)Math.ceil( volStartTileY + (BRICK_HEIGHT / 2 - 1) / tileFormat.getVoxelMicrometers()[ 1 ] / tileFormat.getTileSize()[ 1 ] );
-        int volEndTileZ = volStartTileZ + BRICK_DEPTH / tileFormat.getTileSize()[ 2 ];
-        List<TileIndex> indices = indexFinder.executeForTileCoords(
-                volStartTileX, volStartTileY, volStartTileZ,
-                volEndTileX, volEndTileY, volEndTileZ // Assume: takes care of maxima on its own.
+        voxStartX = Math.max( 0, voxStartX );
+        voxStartY = Math.max( 0, voxStartY );
+        voxStartZ = Math.max( 0, voxStartZ );
+        int voxEndX = (int)Math.ceil( voxStartX + ( (BRICK_WIDTH / 2 - 1) / tileFormat.getVoxelMicrometers()[ 0 ] / tileFormat.getTileSize()[ 0 ] ) );
+        int voxEndY = (int)Math.ceil( voxStartY + (BRICK_HEIGHT / 2 - 1) / tileFormat.getVoxelMicrometers()[ 1 ] / tileFormat.getTileSize()[ 1 ] );
+        int voxEndZ = voxStartZ + BRICK_DEPTH / tileFormat.getTileSize()[ 2 ];
+        Collection<TileIndex> indices = indexFinder.executeForVoxelCoords(
+                voxStartX, voxStartY, voxStartZ,
+                voxEndX, voxEndY, voxEndZ // Assume: takes care of maxima on its own.
         );
-//                absoluteReqVolStartX, absoluteReqVolStartY, absoluteReqVolStartZ,
-//                absoluteReqVolEndX, absoluteReqVolEndY, absoluteReqVolEndZ
 
         int stdByteCount = 0;
         int stdChannelCount = 0;
@@ -163,8 +161,9 @@ public class ViewTileManagerVolumeSource implements VolumeSource {
         if ( yTileAbsEnd < yTileAbsStart ) throw new IllegalStateException("Start must be > end");
 
         // Check for non-overlap of ranges.  If the ranges do not overlap, assume this is not a relevant tile.
-        if ( ( yTileAbsStart > absoluteReqVolEndY  ||  yTileAbsEnd < absoluteReqVolStartY ) || ( xTileAbsStart > absoluteReqVolStartX || xTileAbsEnd < absoluteReqVolStartX ) ) {
-            System.out.println("Tile range not relevant to request: " + xTileAbsStart + ":" + xTileAbsEnd + "; " + yTileAbsStart + ":" + yTileAbsEnd);
+        if ( ( yTileAbsStart > absoluteReqVolEndY  ||  yTileAbsEnd < absoluteReqVolStartY ) || ( xTileAbsStart > absoluteReqVolEndX || xTileAbsEnd < absoluteReqVolStartX ) ) {
+            System.out.println("Tile range not relevant to request: " + xTileAbsStart+":"+xTileAbsEnd + "; " + yTileAbsStart+":"+yTileAbsEnd +
+                               ", requested was " + absoluteReqVolStartX+":"+absoluteReqVolEndX + "; " + absoluteReqVolStartY+":"+absoluteReqVolEndY );
             return;
         }
 
@@ -189,22 +188,28 @@ public class ViewTileManagerVolumeSource implements VolumeSource {
         int inVolEndY = calcInVolEnd( absoluteReqVolEndY, absoluteReqVolStartY, yTileAbsStart );
 
         int inTileStartX = calcInTileStart(absoluteReqVolStartX, xTileAbsStart );
-        int inTileStartY = calcInTileStart(absoluteReqVolStartY, tileFormat.getVolumeSize()[1] - yTileAbsStart );
+        int inTileStartY = calcInTileStart(absoluteReqVolStartY, /*tileFormat.getVolumeSize()[1] - */yTileAbsStart );
 
         // Now add to the growing volume.
-        int zOutputOffset = zTile * stdTileSize * byteCount;
+        int zOutputOffset = (zTile - absoluteReqVolStartZ) * stdTileSize * byteCount;
         int tileWidth = xTileAbsEnd - xTileAbsStart;
         for ( int brickY = 0; brickY < (inVolEndY - inVolStartY); brickY++ ) {
 
             int yOutputOffset = (brickY + inVolStartY) * BRICK_WIDTH * byteCount;
             int yInputOffset = (brickY + inTileStartY) * tileWidth * byteCount;
 
+            int sourceStart = yInputOffset + (inTileStartX * byteCount);
+            int destStart = zOutputOffset + yOutputOffset + (inVolStartX * byteCount);
+            int copyLength = (inVolEndX - inVolStartX) * byteCount;
+
+            //DEBUG System.out.println("Source start=" + sourceStart + ", destination start=" + destStart + ", source size=" + pixelArr.length + ", destination size=" + dataVolume.length);
+
             System.arraycopy(
                     pixelArr,
-                    yInputOffset + (inTileStartX * byteCount),
+                    sourceStart,
                     dataVolume,
-                    zOutputOffset + yOutputOffset + (inVolStartX * byteCount),
-                    (inVolEndX - inVolStartX) * byteCount
+                    destStart,
+                    copyLength
             );
 
         }

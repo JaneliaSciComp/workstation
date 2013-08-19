@@ -37,6 +37,7 @@ public class Snapshot3d extends ModalDialog {
 
     private void launch( TextureDataI textureData ) {
         Mip3d mip3d = new Mip3d();
+        mip3d.clear();
         mip3d.setVolume(textureData);
         this.setPreferredSize( size );
         this.setMinimumSize( size );

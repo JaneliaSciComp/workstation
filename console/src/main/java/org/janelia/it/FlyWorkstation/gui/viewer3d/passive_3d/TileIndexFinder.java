@@ -7,6 +7,8 @@ import org.janelia.it.FlyWorkstation.gui.viewer3d.slice_viewer.TileFormat;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.slice_viewer.TileIndex;
 
 import java.util.ArrayList;
+import java.util.Collection;
+import java.util.HashSet;
 import java.util.List;
 
 /**
@@ -29,83 +31,35 @@ public class TileIndexFinder {
         this.sliceAxis = sliceAxis;
     }
 
-    public List<TileIndex> execute( int startVoxX, int startVoxY, int startVoxZ, int endVoxX, int endVoxY, int endVoxZ ) {
-        List<TileIndex> rtnVal = new ArrayList<TileIndex>();
-        Vec3 leastXYZLocation = new Vec3(startVoxX, startVoxY, startVoxZ);
-        Vec3 greatestXYZLocation = new Vec3(endVoxX, endVoxY, endVoxZ);
-        TileIndex baseTileIndex = getIndexForLocation(
-                format,
-                leastXYZLocation,
-                camera3d,
-                sliceAxis
-        );
+    public Collection<TileIndex> executeForVoxelCoords(
+            int startVoxX, int startVoxY, int startVoxZ, int endVoxX, int endVoxY, int endVoxZ
+    ) {
 
-        // Next, get Z-stack extents, and use them to accumulate each slice in the stack.
-        Vec3 leastXYZOfIndex = getLeastXYZOfIndex(format, baseTileIndex);
-        List<Vec3> sliceCoverage = getSliceCoverage( format, leastXYZOfIndex, leastXYZLocation, greatestXYZLocation );
-        int targetDepth = endVoxZ - startVoxZ;
-        int remainingZ = targetDepth - ((int)leastXYZOfIndex.z() - startVoxZ);
-        for ( int i = 0; i < remainingZ; i++ ) {
-            addSliceTileIndices(rtnVal, sliceCoverage, i);
-        }
-        return rtnVal;
-    }
-
-    public List<TileIndex> executeForTileCoords( int startTileX, int startTileY, int startTileZ, int endTileX, int endTileY, int endTileZ ) {
-
-        List<Vec3> tileCoords = new ArrayList<Vec3>();
-        for ( int i = startTileX; i <= endTileX; i++ ) {
-            for ( int j = startTileY; j <= endTileY; j++ ) {
-                for ( int k = startTileZ; k <= endTileZ; k++ ) {
+        Collection<Vec3> tileCoords = new HashSet<Vec3>();
+        for ( int i = startVoxX; i <= endVoxX; i++ ) {
+            for ( int j = startVoxY; j <= endVoxY; j++ ) {
+                for ( int k = startVoxZ; k <= endVoxZ; k++ ) {
                     tileCoords.add( new Vec3( i, j, k ) );
                 }
             }
         }
 
-        List<TileIndex> rtnVal = new ArrayList<TileIndex>();
-        addSliceTileIndices( rtnVal, tileCoords, 0 );
-        return rtnVal;
-//        double xTileMultiplier =  format.getTileSize()[ 0 ] * format.getVoxelMicrometers()[ 0 ];
-//        double yTileMultiplier = format.getTileSize()[ 1 ] * format.getVoxelMicrometers()[ 1 ];
-//        double zTileMultiplier = format.getTileSize()[ 2 ];
-//        Vec3 leastXYZLocation = new Vec3(
-//                startTileX * xTileMultiplier,
-//                startTileY * yTileMultiplier,
-//                startTileZ * zTileMultiplier
-//        );
-//        Vec3 greatestXYZLocation = new Vec3(
-//                endTileX * xTileMultiplier,
-//                endTileY * yTileMultiplier,
-//                endTileZ * zTileMultiplier
-//        );
-//
-//        // Need to get the base cartesian coords of the tile containing the lowest point requested by user.
-//        //  Can do that by getting whichever tile contains those coords, and returning its info.
-//        TileIndex baseTileIndex = new TileIndex(
-//                startTileX, startTileY, startTileZ, 0, 0, format.getIndexStyle(), sliceAxis
-//        );
-//
-//        // Next, get Z-stack extents, and use them to accumulate each slice in the stack.
-//        Vec3 leastXYZOfIndex = getLeastXYZOfIndex(format, baseTileIndex);
-//        List<Vec3> sliceCoverage = getSliceCoverage( format, leastXYZOfIndex, leastXYZLocation, greatestXYZLocation );
-//        int targetDepth = endTileZ - startTileZ;
-//        int remainingZ = targetDepth - ((int)leastXYZOfIndex.z() - startTileZ);
-//        for ( int i = 0; i < remainingZ; i++ ) {
-//            addSliceTileIndices(rtnVal, sliceCoverage, i);
-//        }
-//        return rtnVal;
+        // Note: using set for collection, so that duplicates may be automatically avoided.  The current
+        // "exploring" algorithm for finding slices hits every voxel for its contribution, and this will
+        // be prone to duplication, as a tile covers far more than a single voxel.
+        Collection<TileIndex> sliceIndexSet = new HashSet<TileIndex>();
+        addSliceTileIndices( sliceIndexSet, tileCoords );
+        return sliceIndexSet;
     }
 
-    private void addSliceTileIndices(List<TileIndex> rtnVal, List<Vec3> sliceCoverage, int i) {
+    private void addSliceTileIndices(Collection<TileIndex> rtnVal, Collection<Vec3> sliceCoverage) {
         for ( Vec3 protoVec: sliceCoverage ) {
-            // Make a tile around this vector...
+            // Make an index around this vector.
             TileIndex nextTileInx = new TileIndex(
                     (int)protoVec.getX(),
                     (int)protoVec.getY(),
-                    (int)(i + protoVec.getZ()),
+                    (int)protoVec.getZ(),
                     0, 0, // Zoom and max zoom at 0.
-//                    (int)camera3d.getPixelsPerSceneUnit(),
-//                    (int)camera3d.getPixelsPerSceneUnit(),
                     format.getIndexStyle(),
                     sliceAxis
             ); //xyz zoom maxzoom syle coordaxis
