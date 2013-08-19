@@ -119,7 +119,7 @@ public class TileFormat
 				val *= getTileSize()[i];
 			// invert vertical direction; tile origin is bottom left, image origin is top left
 			if (i == verticalAxis) {
-				val = volumeSize[i] - val; // invert Y value
+				val = volumeSize[i] - val - getTileSize()[i]; // invert Y value
 			}
 			// Shift to world origin
 			val += origin[i];
@@ -132,7 +132,7 @@ public class TileFormat
 		Vec3 dw = new Vec3(0,0,0);
 		dw.set(horizontalAxis, dv.get(horizontalAxis));
 		Vec3 dh = new Vec3(0,0,0);
-		dh.set(verticalAxis, -dv.get(verticalAxis)); // invert Y axis step direction
+		dh.set(verticalAxis, dv.get(verticalAxis));
 
 		Vec3[] result = new Vec3[4];
 		result[0] = v1;

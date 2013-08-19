@@ -23,8 +23,9 @@ public class TestTileFormat {
 		Vec3 corners[] = format.cornersForTileIndex(ix);
 		assertTrue(xyz.getX() >= corners[0].getX() - 1e-6);
 		assertTrue(xyz.getX() <= corners[1].getX() + 1e-6);
-		assertTrue(xyz.getY() >= corners[2].getY() - 1e-6);
-		assertTrue(xyz.getY() <= corners[0].getY() + 1e-6);
+		// 
+		assertTrue(xyz.getY() >= corners[0].getY() - 1e-6);
+		assertTrue(xyz.getY() <= corners[2].getY() + 1e-6);
 	}
 	
 	@Test
@@ -73,10 +74,10 @@ public class TestTileFormat {
 		assertEquals(1024.0, corners[1].getX(), 1e-6);
 		assertEquals(1024.0, corners[3].getX(), 1e-6);
 		// Y : trickier because of inversion between Raveler and image order
-		assertEquals(1024.0, corners[0].getY(), 1e-6);
-		assertEquals(1024.0, corners[1].getY(), 1e-6);
-		assertEquals(0.0, corners[2].getY(), 1e-6);
-		assertEquals(0.0, corners[3].getY(), 1e-6);
+		assertEquals(0.0, corners[0].getY(), 1e-6);
+		assertEquals(0.0, corners[1].getY(), 1e-6);
+		assertEquals(1024.0, corners[2].getY(), 1e-6);
+		assertEquals(1024.0, corners[3].getY(), 1e-6);
 		// Z : constant
 		assertEquals(0.5, corners[0].getZ(), 1e-6);
 		assertEquals(0.5, corners[1].getZ(), 1e-6);
