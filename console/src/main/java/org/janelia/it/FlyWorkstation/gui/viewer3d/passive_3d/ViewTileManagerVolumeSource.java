@@ -151,11 +151,22 @@ public class ViewTileManagerVolumeSource implements VolumeSource {
         // Dealing with tile indices, need to be able to convert tile index back to absolute coordinates,
         // to figure out where the tile is placed within the slice.
         Vec3[] corners = tileFormat.cornersForTileIndex( tileIndex );
-        int yTileAbsStart = (int)corners[ 0 ].y();
-        int yTileAbsEnd = (int)corners[ 3 ].y();
+
+        // Adjust for the inversion of Y between tile set and screen.
+        // Note use of size - end for start, and - start for end.
+        int yTileAbsStart = tileFormat.getVolumeSize()[ 1 ] - (int)corners[ 3 ].y();
+        int yTileAbsEnd = tileFormat.getVolumeSize()[ 1 ] - (int)corners[ 0 ].y();
         int xTileAbsStart = (int)corners[ 0 ].x();
         int xTileAbsEnd = (int)corners[ 3 ].x();
         int zTile = (int)corners[ 0 ].z();
+
+        if ( yTileAbsEnd < yTileAbsStart ) throw new IllegalStateException("Start must be > end");
+
+        // Check for non-overlap of ranges.  If the ranges do not overlap, assume this is not a relevant tile.
+        if ( ( yTileAbsStart > absoluteReqVolEndY  ||  yTileAbsEnd < absoluteReqVolStartY ) || ( xTileAbsStart > absoluteReqVolStartX || xTileAbsEnd < absoluteReqVolStartX ) ) {
+            System.out.println("Tile range not relevant to request: " + xTileAbsStart + ":" + xTileAbsEnd + "; " + yTileAbsStart + ":" + yTileAbsEnd);
+            return;
+        }
 
         byte[] pixelArr = new byte[ pixels.capacity() ];
         pixels.rewind();
@@ -164,14 +175,18 @@ public class ViewTileManagerVolumeSource implements VolumeSource {
         // First, relevant start-x, y, z within tile and within the target volume.
         //  Recall that the tile has 512-voxel lines along X, and 512 of such lines to make Y.
         //  The "in-volume" coords are really relative, rather than being based at 0 for whole world of tiles.
-        // "Vol" and "vol" refer to the 1D array containing the 3D texture we are building.
+        // "VolStart" and "VolEnd" refer to the 1D array containing the 3D texture we are building.
         int inVolStartX = calcInVolStart( xTileAbsStart, absoluteReqVolStartX );
-        int inVolStartY = calcInVolStart( tileFormat.getVolumeSize()[1] - yTileAbsStart, absoluteReqVolStartY );
-
-        //    private int calcInVolEnd( int absVolEnd, int absVolStart, int absTileEnd ) {
+        int inVolStartY = calcInVolStart( yTileAbsStart, absoluteReqVolStartY );
+        System.out.println("VTMVS: absolute Y start of request=" + absoluteReqVolStartY +
+                ", absolute Y end of request=" + absoluteReqVolEndY +
+                ", absolute Y start of tile=" + yTileAbsStart +
+                ", absolute Y end of tile=" + yTileAbsEnd +
+                ", extend of volume, in Y=" + tileFormat.getVolumeSize()[ 1 ]
+        );
 
         int inVolEndX = calcInVolEnd( absoluteReqVolEndX, absoluteReqVolStartX, xTileAbsEnd );
-        int inVolEndY = calcInVolEnd( absoluteReqVolEndY, absoluteReqVolStartY, tileFormat.getVolumeSize()[1] - yTileAbsStart );
+        int inVolEndY = calcInVolEnd( absoluteReqVolEndY, absoluteReqVolStartY, yTileAbsStart );
 
         int inTileStartX = calcInTileStart(absoluteReqVolStartX, xTileAbsStart );
         int inTileStartY = calcInTileStart(absoluteReqVolStartY, tileFormat.getVolumeSize()[1] - yTileAbsStart );
