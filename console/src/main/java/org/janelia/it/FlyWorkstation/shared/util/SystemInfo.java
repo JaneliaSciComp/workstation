@@ -114,18 +114,31 @@ public class SystemInfo {
         return isMac && isLeopard() && !OS_VERSION.startsWith("10.5");
     }
     
+    public static void setDownloadsDir(String downloadsDir) {
+        SessionMgr.getSessionMgr().setModelProperty(SessionMgr.DOWNLOADS_DIR, downloadsDir);
+    }
+    
     public static File getDownloadsDir() {
-        if (SystemInfo.isMac) {
-            return new File(System.getProperty("user.home"),"Downloads/");
-        }
-        else if (SystemInfo.isLinux) {
-            return new File("/tmp/");
-        }
-        else if (SystemInfo.isWindows) {
-            return new File(System.getProperty("user.home"),"Downloads/");
+        String downloadsDir = (String) SessionMgr.getSessionMgr().getModelProperty(SessionMgr.DOWNLOADS_DIR);
+        File downloadsDirFile = null;
+        if (downloadsDir==null) {
+            if (SystemInfo.isMac) {
+                downloadsDirFile = new File(System.getProperty("user.home"),"Downloads/");
+            }
+            else if (SystemInfo.isLinux) {
+                downloadsDirFile = new File("/tmp/");
+            }
+            else if (SystemInfo.isWindows) {
+                downloadsDirFile = new File(System.getProperty("user.home"),"Downloads/");
+            }
+            else {
+                throw new IllegalStateException("Operation system not supported: "+SystemInfo.OS_NAME);
+            }
+            setDownloadsDir(downloadsDirFile.getAbsolutePath());
         }
         else {
-            throw new IllegalStateException("Operation system not supported: "+SystemInfo.OS_NAME);
+            downloadsDirFile = new File(downloadsDir);
         }
+        return downloadsDirFile;
     }
 }

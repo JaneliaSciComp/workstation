@@ -61,7 +61,8 @@ public class SessionMgr {
     public static String FILE_CACHE_DISABLED_PROPERTY = "console.localCache.disabled";
     public static String FILE_CACHE_GIGABYTE_CAPACITY_PROPERTY = "console.localCache.gigabyteCapacity";
     public static String RUN_AS_USER = "RunAs";
-
+    public static String DOWNLOADS_DIR = "DownloadsDir";
+    
     public static String DISPLAY_LOOK_AND_FEEL = "SessionMgr.JavaLookAndFeel";
 
     public static boolean isDarkLook = false;

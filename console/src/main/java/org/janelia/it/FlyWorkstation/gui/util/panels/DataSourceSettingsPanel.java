@@ -1,25 +1,33 @@
 package org.janelia.it.FlyWorkstation.gui.util.panels;
 
+import java.awt.Color;
+import java.awt.Dimension;
+import java.awt.GridBagConstraints;
+import java.awt.GridBagLayout;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.awt.event.FocusEvent;
+import java.awt.event.FocusListener;
+import java.io.File;
+import java.io.FileNotFoundException;
+
+import javax.swing.*;
+import javax.swing.border.TitledBorder;
+import javax.swing.plaf.basic.BasicProgressBarUI;
+import javax.swing.text.DefaultFormatter;
+
 import org.janelia.it.FlyWorkstation.api.facade.facade_mgr.FacadeManager;
 import org.janelia.it.FlyWorkstation.gui.framework.console.Perspective;
 import org.janelia.it.FlyWorkstation.gui.framework.pref_controller.PrefController;
 import org.janelia.it.FlyWorkstation.gui.framework.roles.PrefEditor;
 import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.FlyWorkstation.shared.util.PropertyConfigurator;
+import org.janelia.it.FlyWorkstation.shared.util.SystemInfo;
+import org.janelia.it.FlyWorkstation.shared.util.Utils;
 import org.janelia.it.FlyWorkstation.shared.util.text_component.StandardTextField;
 import org.janelia.it.FlyWorkstation.shared.workers.SimpleWorker;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import javax.swing.*;
-import javax.swing.border.TitledBorder;
-import javax.swing.plaf.basic.BasicProgressBarUI;
-import javax.swing.text.DefaultFormatter;
-import java.awt.*;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
-import java.awt.event.FocusEvent;
-import java.awt.event.FocusListener;
 
 public class DataSourceSettingsPanel extends JPanel implements PrefEditor {
     
@@ -31,23 +39,23 @@ public class DataSourceSettingsPanel extends JPanel implements PrefEditor {
     private String runAsUser = "";
     private Boolean cacheDisabled;
     private Integer cacheCapacity;
+    private String downloadsDir = "";
     private boolean settingsChanged = false;
-    JLabel requiredField = new JLabel("* indicates a required field");
+    
+    private JLabel requiredField = new JLabel("* indicates a required field");
+    
+    private JPanel loginPanel = new JPanel();
+    private JPasswordField passwordTextField;
+    private JLabel passwordLabel = new JLabel("* Password:");
+    private JLabel loginLabel = new JLabel("* User Name:");
+    private JTextField loginTextField;
+    private JPanel runAsPanel;
+    private JLabel runAsLabel = new JLabel("Run As User:");
+    private JTextField runAsTextField;
 
-    JPanel loginPanel = new JPanel();
-    TitledBorder loginBorder;
-    JPasswordField passwordTextField;
-    JLabel passwordLabel = new JLabel("* Password:");
-    JLabel loginLabel = new JLabel("* User Name:");
-    JTextField loginTextField = new StandardTextField();
-    JPanel runAsPanel = new JPanel();
-    JLabel runAsLabel = new JLabel("Run As User:");
-    JTextField runAsTextField = new StandardTextField();
-
-    JPanel emailPanel = new JPanel();
-    TitledBorder emailBorder;
-    JLabel emailLabel = new JLabel("* Email Address:");
-    JTextField emailTextField = new StandardTextField();
+    private JPanel emailPanel;
+    private JLabel emailLabel = new JLabel("* Email Address:");
+    private JTextField emailTextField;
 
     private JRadioButton fileCacheEnabledRadioButton;
     private JRadioButton fileCacheDisabledRadioButton;
@@ -55,6 +63,9 @@ public class DataSourceSettingsPanel extends JPanel implements PrefEditor {
     private JProgressBar fileCacheUsageBar;
     private JButton fileCacheClearButton;
 
+    private JLabel downloadsDirLabel = new JLabel("* Downloads Dir:");
+    private JTextField downloadsDirField = new JTextField(40);
+    
     public DataSourceSettingsPanel(@SuppressWarnings("UnusedParameters")
                                    JFrame parentFrame) {
         final SessionMgr sessionMgr = SessionMgr.getSessionMgr();
@@ -66,6 +77,7 @@ public class DataSourceSettingsPanel extends JPanel implements PrefEditor {
             cacheCapacity = (Integer) getModelProperty(SessionMgr.FILE_CACHE_GIGABYTE_CAPACITY_PROPERTY,
                                                    SessionMgr.MIN_FILE_CACHE_GIGABYTE_CAPACITY);
             runAsUser = (String) getModelProperty(SessionMgr.RUN_AS_USER, "");
+            downloadsDir = SystemInfo.getDownloadsDir().getAbsolutePath();
             jbInit();
         }
         catch (Exception ex) {
@@ -106,7 +118,8 @@ public class DataSourceSettingsPanel extends JPanel implements PrefEditor {
             !userEmail.equals(emailTextField.getText().trim()) ||
             !runAsUser.equals(runAsTextField.getText().trim()) ||
             !cacheDisabled.equals(fileCacheDisabledRadioButton.isSelected()) ||
-            !cacheCapacity.equals(fileCacheSpinner.getValue()))
+            !cacheCapacity.equals(fileCacheSpinner.getValue()) || 
+            !downloadsDir.equals(downloadsDirField.getText().trim()))
             settingsChanged = true;
         return settingsChanged;
     }
@@ -122,7 +135,8 @@ public class DataSourceSettingsPanel extends JPanel implements PrefEditor {
         runAsUser = runAsTextField.getText().trim();
         cacheDisabled = fileCacheDisabledRadioButton.isSelected();
         cacheCapacity = (Integer) fileCacheSpinner.getValue();
-
+        downloadsDir = downloadsDirField.getText().trim();
+        
         final SessionMgr sessionMgr = SessionMgr.getSessionMgr();
 
         final boolean cacheDisabledChanged =
@@ -162,6 +176,8 @@ public class DataSourceSettingsPanel extends JPanel implements PrefEditor {
         if (cacheDisabledChanged || cacheCapacityChanged) {
             updateFileCacheComponents(true);
         }
+        
+        SystemInfo.setDownloadsDir(downloadsDir);
 
         settingsChanged = false;
         return new String[0];
@@ -176,8 +192,7 @@ public class DataSourceSettingsPanel extends JPanel implements PrefEditor {
     private void jbInit() throws Exception {
         this.setPreferredSize(new Dimension(300,300));
         passwordTextField = new JPasswordField(userPassword, 40);
-        passwordTextField.setMaximumSize(new Dimension(100, 20));
-        passwordTextField.setMinimumSize(new Dimension(60, 20));
+        passwordTextField.setPreferredSize(new Dimension(60, 30));
         passwordTextField.setSize(100, 20);
         passwordTextField.addFocusListener(new FocusListener() {
             public void focusGained(FocusEvent e) {
@@ -188,8 +203,7 @@ public class DataSourceSettingsPanel extends JPanel implements PrefEditor {
             }
         });
         loginTextField = new StandardTextField(userLogin, 40);
-        loginTextField.setMaximumSize(new Dimension(100, 20));
-        loginTextField.setMinimumSize(new Dimension(60, 20));
+        loginTextField.setPreferredSize(new Dimension(60, 30));
         loginTextField.addFocusListener(new FocusListener() {
             public void focusGained(FocusEvent e) {
                 if (e.getSource() == loginTextField) loginTextField.selectAll();
@@ -199,8 +213,7 @@ public class DataSourceSettingsPanel extends JPanel implements PrefEditor {
             }
         });
         emailTextField = new StandardTextField(userEmail, 40);
-        emailTextField.setMaximumSize(new Dimension(200, 20));
-        emailTextField.setMinimumSize(new Dimension(80, 20));
+        emailTextField.setPreferredSize(new Dimension(80, 30));
         emailTextField.addFocusListener(new FocusListener() {
             public void focusGained(FocusEvent e) {
                 if (e.getSource() == emailTextField) emailTextField.selectAll();
@@ -209,9 +222,10 @@ public class DataSourceSettingsPanel extends JPanel implements PrefEditor {
             public void focusLost(FocusEvent e) {
             }
         });
-        loginBorder = new TitledBorder("Workstation Login Information");
+        
         setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
-        loginPanel.setBorder(loginBorder);
+        
+        loginPanel.setBorder(new TitledBorder("Workstation Login Information"));
         loginPanel.setLayout(new BoxLayout(loginPanel, BoxLayout.Y_AXIS));
         loginPanel.setMaximumSize(new Dimension(600, 100));
         JPanel userPassPanel = new JPanel();
@@ -226,18 +240,23 @@ public class DataSourceSettingsPanel extends JPanel implements PrefEditor {
         loginPanel.add(Box.createVerticalStrut(10));
         loginPanel.add(userPassPanel);
         loginPanel.add(Box.createVerticalStrut(10));
-        if (SessionMgr.authenticatedSubjectIsInGroup("admin")) {
-            runAsTextField = new StandardTextField(runAsUser, 40);
-            runAsPanel.setLayout(new BoxLayout(runAsPanel, BoxLayout.X_AXIS));
-            runAsPanel.add(runAsLabel);
-            runAsPanel.add(Box.createHorizontalStrut(10));
-            runAsPanel.add(runAsTextField);
+
+        runAsTextField = new StandardTextField(runAsUser, 40);
+        runAsTextField.setPreferredSize(new Dimension(80, 30));
+        
+        JPanel runAsPanel = new JPanel();
+        runAsPanel.setLayout(new BoxLayout(runAsPanel, BoxLayout.X_AXIS));
+        runAsPanel.add(runAsLabel);
+        runAsPanel.add(Box.createHorizontalStrut(10));
+        runAsPanel.add(runAsTextField);
+        
+        if (SessionMgr.authenticatedSubjectIsInGroup("admin")) {    
             loginPanel.add(runAsPanel);
             loginPanel.add(Box.createVerticalStrut(10));
         }
 
-        emailBorder = new TitledBorder("Email Address");
-        emailPanel.setBorder(emailBorder);
+        emailPanel = new JPanel();
+        emailPanel.setBorder(new TitledBorder("Email Address"));
         emailPanel.setLayout(new BoxLayout(emailPanel, BoxLayout.X_AXIS));
         emailPanel.setMaximumSize(new Dimension(600, 100));
         JPanel userEmailPanel = new JPanel();
@@ -257,12 +276,58 @@ public class DataSourceSettingsPanel extends JPanel implements PrefEditor {
         notePanel.setLayout(new BoxLayout(notePanel, BoxLayout.X_AXIS));
         notePanel.add(requiredField);
 
+
+        String chooseFileText = null;
+        ImageIcon chooseFileIcon = null;
+        try {
+            chooseFileIcon = Utils.getClasspathImage("magnifier.png");
+        } catch (FileNotFoundException e) {
+            log.warn("failed to load button icon", e);
+            chooseFileText = "...";
+        }
+
+        downloadsDirField = new JTextField(40);
+        downloadsDirField.setText(downloadsDir);
+        downloadsDirLabel.setLabelFor(downloadsDirField);
+
+        JButton chooseFileButton = new JButton(chooseFileText, chooseFileIcon);
+        chooseFileButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                File currentDir = new File(downloadsDirField.getText());
+                if (! currentDir.exists()) {
+                    currentDir = null;
+                }
+                JFileChooser fileChooser = new JFileChooser();
+                fileChooser.setFileSelectionMode(JFileChooser.FILES_AND_DIRECTORIES);
+                fileChooser.setCurrentDirectory(currentDir);
+                int returnVal = fileChooser.showOpenDialog(DataSourceSettingsPanel.this);
+                if (returnVal == JFileChooser.APPROVE_OPTION) {
+                    downloadsDirField.setText(fileChooser.getSelectedFile().getAbsolutePath());
+                }
+            }
+        });
+        
+        JPanel downloadDirPanel = new JPanel();
+        downloadDirPanel.setLayout(new BoxLayout(downloadDirPanel, BoxLayout.X_AXIS));
+        downloadDirPanel.add(downloadsDirLabel);
+        downloadDirPanel.add(downloadsDirField);
+        downloadDirPanel.add(chooseFileButton);
+        
+        JPanel dirsPanel = new JPanel();
+        dirsPanel.setLayout(new BoxLayout(dirsPanel, BoxLayout.Y_AXIS));
+        dirsPanel.setBorder(new TitledBorder("Local Directories"));
+        dirsPanel.add(downloadDirPanel);
+        dirsPanel.setMaximumSize(new Dimension(600, 100));
+        
         add(Box.createVerticalStrut(10));
         add(loginPanel);
         add(Box.createVerticalStrut(10));
         add(emailPanel);
         add(Box.createVerticalStrut(10));
         add(fileCachePanel);
+        add(Box.createVerticalStrut(10));
+        add(dirsPanel);
         add(Box.createVerticalGlue());
         add(notePanel);
 
