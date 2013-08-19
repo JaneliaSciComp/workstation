@@ -41,7 +41,6 @@ import org.janelia.it.FlyWorkstation.model.viewer.AlignmentBoardContext;
 import org.janelia.it.FlyWorkstation.shared.util.ConsoleProperties;
 import org.janelia.it.FlyWorkstation.shared.util.SystemInfo;
 import org.janelia.it.FlyWorkstation.shared.util.Utils;
-import org.janelia.it.FlyWorkstation.shared.workers.BackgroundWorker;
 import org.janelia.it.FlyWorkstation.shared.workers.IndeterminateProgressMonitor;
 import org.janelia.it.FlyWorkstation.shared.workers.SimpleWorker;
 import org.janelia.it.FlyWorkstation.shared.workers.TaskMonitoringWorker;
@@ -141,7 +140,7 @@ public class EntityContextMenu extends JPopupMenu {
         add(getMergeItem());
         add(getSortBySimilarityItem());
         add(getDownloadMenu());
-        add(getUploadItem());
+        add(getImportItem());
 //        add(getCreateSessionItem());
 
         setNextAddRequiresSeparator(true);
@@ -1624,12 +1623,12 @@ public class EntityContextMenu extends JPopupMenu {
         return null;
     }
 
-    protected JMenuItem getUploadItem() {
+    protected JMenuItem getImportItem() {
         if (multiple) return null;
         
         String entityTypeName = rootedEntity.getEntity().getEntityType().getName();
         if (EntityConstants.TYPE_FOLDER.equals(entityTypeName) || EntityConstants.TYPE_SAMPLE.equals(entityTypeName)) {
-            JMenuItem newAttachmentItem = new JMenuItem("  Upload File(s) Here");
+            JMenuItem newAttachmentItem = new JMenuItem("  Import File(s) Here");
             newAttachmentItem.addActionListener(new ActionListener() {
                 public void actionPerformed(ActionEvent actionEvent) {
                     try {

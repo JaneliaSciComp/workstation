@@ -25,6 +25,7 @@ import org.janelia.it.FlyWorkstation.model.entity.RootedEntity;
 import org.janelia.it.FlyWorkstation.shared.util.Utils;
 import org.janelia.it.FlyWorkstation.shared.util.filecache.WebDavUploader;
 import org.janelia.it.FlyWorkstation.shared.workers.BackgroundWorker;
+import org.janelia.it.FlyWorkstation.shared.workers.SimpleWorker;
 import org.janelia.it.FlyWorkstation.shared.workers.TaskMonitoringWorker;
 import org.janelia.it.jacs.model.entity.EntityConstants;
 import org.janelia.it.jacs.model.tasks.Event;
@@ -57,6 +58,7 @@ public class ImportDialog extends ModalDialog {
             "Directory of the tree that should be loaded into the database.";
 
     private JTextField folderField;
+    private RootedEntity rootedEntity;
     private Long folderEntityId;
     private JTextField pathTextField;
     private FilenameFilter selectedChildrenFilter;
@@ -189,6 +191,7 @@ public class ImportDialog extends ModalDialog {
 
     public void showDialog(RootedEntity rootedEntity) {
 
+        this.rootedEntity = rootedEntity;
         final SessionMgr sessionMgr = SessionMgr.getSessionMgr();
 
         String folderName;
@@ -350,7 +353,7 @@ public class ImportDialog extends ModalDialog {
     
                 @Override
                 public String getName() {
-                    return "Import files";
+                    return "Import "+selectedFile.getName();
                 }
     
                 @Override
@@ -381,7 +384,36 @@ public class ImportDialog extends ModalDialog {
                         public Void call() throws Exception {
                             final Browser browser = SessionMgr.getBrowser();
                             final EntityOutline entityOutline = browser.getEntityOutline();
-                            entityOutline.refresh(true, true, null);
+                            entityOutline.totalRefresh(true, new Callable<Void>() {
+                                @Override
+                                public Void call() throws Exception {
+                                    
+                                    SimpleWorker worker = new SimpleWorker() {
+                                        
+                                        @Override
+                                        protected void doStuff() throws Exception {
+                                            ModelMgr.getModelMgr().refreshChildren(rootedEntity.getEntity());
+                                        }
+                                        
+                                        @Override
+                                        protected void hadSuccess() {
+                                            RootedEntity importFolder = rootedEntity.getChildByName(importFolderName);
+                                            if (importFolder!=null) {
+                                                SessionMgr.getBrowser().getEntityOutline().expandByUniqueId(importFolder.getUniqueId());
+                                            }
+                                        }
+                                        
+                                        @Override
+                                        protected void hadError(Throwable error) {
+                                            SessionMgr.getSessionMgr().handleException(error);
+                                        }
+                                    };
+                                    
+                                    worker.execute();
+                                    
+                                    return null;
+                                }
+                            });
                             return null;
                         }
                     };
@@ -431,90 +463,4 @@ public class ImportDialog extends ModalDialog {
         
         return task.getObjectId();
     }
-//
-//    private class ImportProgressMonitor implements ActionListener {
-//
-//        private long startTime;
-//        private Long pipelineStartTime;
-//        private int refreshInterval;
-//        private int refreshCount;
-//        private int maxRefreshCount;
-//        private Timer refreshTimer;
-//        private ProgressMonitor progressMonitor;
-//
-//        public ImportProgressMonitor() {
-//            this.startTime = System.currentTimeMillis();
-//            this.pipelineStartTime = null;
-//            this.refreshInterval = 3000;
-//            this.refreshCount = 0;
-//            final double refreshesPerSecond = 1000.0 / this.refreshInterval;
-//            final double refreshesPerMinute = 60 * refreshesPerSecond;
-//            this.maxRefreshCount = (int) (60 * refreshesPerMinute); // 60 minutes
-//            this.refreshTimer = new Timer(this.refreshInterval, this);
-//            this.refreshTimer.setInitialDelay(0);
-//            // hack: use long first message (and display immediately) to size dialog
-//            this.progressMonitor =
-//                    new ProgressMonitor(SessionMgr.getBrowser(),
-//                                        "Import",
-//                                        "Transferring Files to JACS Server for Pipeline Load (starting)",
-//                                        0, 40);
-//            this.progressMonitor.setMillisToDecideToPopup(0);
-//            this.progressMonitor.setMillisToPopup(0);
-//        }
-//
-//        private int getRefreshInterval() {
-//            return refreshInterval;
-//        }
-//
-//        private int getMaxRefreshCount() {
-//            return maxRefreshCount;
-//        }
-//
-//        public void startTransfer() {
-//            this.startTime = System.currentTimeMillis();
-//            this.refreshTimer.start();
-//        }
-//
-//        public void startPipeline() {
-//            this.pipelineStartTime = System.currentTimeMillis();
-//        }
-//
-//        public void close() {
-//            refreshTimer.stop();
-//            progressMonitor.close();
-//        }
-//
-//        @Override
-//        public void actionPerformed(ActionEvent e) {
-//
-//            if (progressMonitor.isCanceled()) {
-//
-//                refreshTimer.stop();
-//
-//            } else {
-//
-//                long phaseStart;
-//                String note;
-//                if (pipelineStartTime == null) {
-//                    phaseStart = startTime;
-//                    note = "Transferring Files to JACS Server for Pipeline Load";
-//                } else {
-//                    phaseStart = pipelineStartTime;
-//                    note = "JACS Server Pipeline Loading Files";
-//                }
-//
-//                final long seconds = (System.currentTimeMillis() - phaseStart) / 1000;
-//                if (seconds > 0) {
-//                    progressMonitor.setNote(note + " (" + seconds + "s)");
-//                } else {
-//                    progressMonitor.setNote(note + " (starting)");
-//                }
-//
-//                refreshCount++;
-//                if (refreshCount < progressMonitor.getMaximum()) {
-//                    progressMonitor.setProgress(refreshCount);
-//                }
-//            }
-//        }
-//    }
 }
