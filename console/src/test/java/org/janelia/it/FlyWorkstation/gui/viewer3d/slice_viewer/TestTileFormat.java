@@ -26,6 +26,9 @@ public class TestTileFormat {
 		// 
 		assertTrue(xyz.getY() >= corners[0].getY() - 1e-6);
 		assertTrue(xyz.getY() <= corners[2].getY() + 1e-6);
+		// From Les Foster test 8/19/2013
+		assertTrue(corners[0].getY() <= corners[3].getY());
+		assertTrue(corners[0].getX() <= corners[3].getX());
 	}
 	
 	@Test
