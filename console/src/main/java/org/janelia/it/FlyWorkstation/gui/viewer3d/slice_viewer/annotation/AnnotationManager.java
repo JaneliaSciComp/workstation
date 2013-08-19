@@ -1,7 +1,6 @@
 package org.janelia.it.FlyWorkstation.gui.viewer3d.slice_viewer.annotation;
 
 
-
 // workstation imports
 
 
@@ -62,22 +61,13 @@ public class AnnotationManager
         }
     };
 
-    // constants
-    public static final String WORKSPACES_FOLDER_NAME = "Workspaces";
-
-
 
     public AnnotationManager(AnnotationModel annotationModel) {
-
-
         this.annotationModel = annotationModel;
 
         modelMgr = ModelMgr.getModelMgr();
 
-
-
     }
-
 
     public Entity getInitialEntity() {
         return initialEntity;
@@ -127,7 +117,7 @@ public class AnnotationManager
     //  much more than what tool is active and where the click was;
     //  we are responsible for 
 
-    public void addAnnotation(Vec3 xyz, Long parentID) {
+    public void addAnnotation(final Vec3 xyz, final Long parentID) {
 
         // get current workspace, etc.; if they don't exist, error
         if (annotationModel.getCurrentWorkspace() == null) {
@@ -138,7 +128,7 @@ public class AnnotationManager
             return;
         }
 
-        TmNeuron currentNeuron = annotationModel.getCurrentNeuron();
+        final TmNeuron currentNeuron = annotationModel.getCurrentNeuron();
         if (currentNeuron == null) {
             JOptionPane.showMessageDialog(null,
                 "You must select a neuron before beginning annotation!",
@@ -147,45 +137,53 @@ public class AnnotationManager
             return;
         }
 
-
-        // if parentID is null, it's a new root in current neuron
-        if (parentID == null) {
-            // new root in current neuron:
-
-            // this should probably not take the ws and neuron (assume current), but
-            //  we're testing:
-            annotationModel.addRootAnnotation(annotationModel.getCurrentWorkspace(),
-                currentNeuron, xyz);
-
-
-        } else {
-            // new node with existing parent
-
-            // verify the supposed parent annotation is in our neuron
-            //  (probably temporary; at some point, we'll have to handle display of,
-            //  and smooth switching of operations between, different neurons, triggered
-            //  from the 2D view)
-            if (!currentNeuron.getGeoAnnotationMap().containsKey(parentID)) {
-                JOptionPane.showMessageDialog(null,
-                        "Current neuron does not contain selected root annotation!",
-                        "Wrong neuron!",
-                        JOptionPane.ERROR_MESSAGE);
-                return;
-            }
-
-            annotationModel.addChildAnnotation(currentNeuron,
-                currentNeuron.getGeoAnnotationMap().get(parentID), xyz);
-
+        // verify the parent annotation (if there is one) is in our neuron
+        //  (probably temporary, it should auto-select or something, or perhaps
+        //  not even care)
+        if (parentID != null && !currentNeuron.getGeoAnnotationMap().containsKey(parentID)) {
+            JOptionPane.showMessageDialog(null,
+                    "Current neuron does not contain selected root annotation!",
+                    "Wrong neuron!",
+                    JOptionPane.ERROR_MESSAGE);
+            return;
         }
 
-        // select new annotation (?) (currently marked graphically?)
+        SimpleWorker adder = new SimpleWorker() {
+            @Override
+            protected void doStuff() throws Exception {
+                if (parentID == null) {
+                    // if parentID is null, it's a new root in current neuron
 
+                    // this should probably not take the ws and neuron (assume current),
+                    //  but it does for now
+                    annotationModel.addRootAnnotation(annotationModel.getCurrentWorkspace(),
+                        currentNeuron, xyz);
 
+                } else {
+                    // new node with existing parent
+
+                    annotationModel.addChildAnnotation(currentNeuron,
+                        currentNeuron.getGeoAnnotationMap().get(parentID), xyz);
+
+                }
+            }
+
+            @Override
+            protected void hadSuccess() {
+                // nothing here now; signals will be emitted in annotationModel
+            }
+
+            @Override
+            protected void hadError(Throwable error) {
+                SessionMgr.getSessionMgr().handleException(error);
+            }
+        };
+        adder.execute();
 
     }
 
     public void deleteSubTree(final Long annotationID) {
-        if (!annotationModel.hasCurrentWorkspace()) {
+        if (annotationModel.getCurrentWorkspace() == null) {
             // dialog?
 
             return;
@@ -211,7 +209,7 @@ public class AnnotationManager
     }
 
     public void moveAnnotation(final Long annotationID, final Vec3 location) {
-        if (!annotationModel.hasCurrentWorkspace()) {
+        if (annotationModel.getCurrentWorkspace() == null) {
             // dialog?
 
             return;
@@ -244,7 +242,7 @@ public class AnnotationManager
         //  yes; who should test?  who should pop up UI feedback to user?
         //  model shouldn't, but should annMgr? 
 
-        if (!annotationModel.hasCurrentWorkspace()) {
+        if (annotationModel.getCurrentWorkspace() == null) {
             // dialog?
 
             return;
@@ -265,7 +263,7 @@ public class AnnotationManager
             return;
         }
 
-        // validate neuron name;  are there any rules for entity names?
+        // validate neuron name?  are there any rules for entity names?
 
 
         // create it:
@@ -302,122 +300,83 @@ public class AnnotationManager
     }
 
     public void createWorkspace() {
-
-        // first we need to figure out the brain sample; the user may
-        //  open the slice viewer from either a brain sample or a workspace; if
-        //  it's the latter, grab its brain sample
-        // (currently can't open Slice Viewer without an initial entity)
-
-
-        // need to reorder stuff so I can isolate db stuff
-
         // if no sample loaded, error
-        //  how do we even do this?
-
-        // ask re: new workspace if one is active
-
-        // ask for name (there's no cancel at this point; blank name = default name)
-
-        // db stuff:
-
-        // create new workspaces folder if needed (push down to annModel?  make it
-        //  a "checkcreateworkspacesfolder()" kind of thing?  currently provide 
-        //  the entity, but that should also be done in annModel, right?)
-        // not at all clear how to report errors from this part
-
-        // obtain sample to create it with (can we do w/o db call?  can annModel
-        //  figure out currently loaded sample (by now we know there is one that's
-        //  loaded)?)  (annMgr knows initialentity; annModel knows sample if it's a 
-        //  workspace, but not otherwise);  so just push initial entity down
-        //  and let it happen deeper in code?
-
-
-        // create workspace: need to pass:
-        //  - parent entity (workspaces, or create it) (so don't need to pass right now,
-        //      although later, we'll want to enable people to choose where to create)
-        //  - sample ID
-        //  - name
-
-
-
-        // NOTE: ask the user if you're creating a new workspace when one is
-        //  already active
-        Entity sampleEntity;
-        if (annotationModel.hasCurrentWorkspace()) {
-            // dialog
-            int ans = JOptionPane.showConfirmDialog(null,
-                "You already have an active workspace!  Close and create another?",
-                "Workspace exists",
-                JOptionPane.YES_NO_OPTION);
-            if (ans == JOptionPane.YES_OPTION) {
-                Long sampleID = annotationModel.getCurrentWorkspace().getSampleID();
-                try {
-                    sampleEntity = modelMgr.getEntityById(sampleID);
-                } catch (Exception e) {
-                    e.printStackTrace();
-                    return;
-                }
-            } else {
-                // users says no
-                return;
-            }
-        } else {
-            // no workspace, look at initial entity; it must be a brain sample!
-            if (!initialEntity.getEntityType().getName().equals(EntityConstants.TYPE_3D_TILE_MICROSCOPE_SAMPLE)) {
-                JOptionPane.showMessageDialog(null,
-                        "You must load a brain sample before creating a workspace!",
-                        "No brain sample!",
-                        JOptionPane.ERROR_MESSAGE);
-                return;
-            }
-            sampleEntity= initialEntity;
-        }
-
-        // for now, we'll put the new workspace into a default, top-level folder
-        //  named "Workspaces", which we will create if it does not exit; later,
-        //  we'll create a dialog to let the user choose the location of the
-        //  new workspace, and perhaps the brain sample, too
-        Entity workspaceRootEntity;
-        try {
-            workspaceRootEntity = modelMgr.getCommonRootEntityByName(WORKSPACES_FOLDER_NAME);
-        } catch (Exception e) {
-            e.printStackTrace();
+        if (initialEntity == null) {
+            JOptionPane.showMessageDialog(null,
+                    "You must load a brain sample before creating a workspace!",
+                    "No brain sample!",
+                    JOptionPane.ERROR_MESSAGE);
             return;
         }
-        if (workspaceRootEntity == null) {
-            try {
-                workspaceRootEntity = modelMgr.createCommonRoot(WORKSPACES_FOLDER_NAME);
-            } catch (Exception e) {
-                e.printStackTrace();
-                // fail: dialog
-                JOptionPane.showMessageDialog(null,
-                    "Could not create Workspaces top-level folder!",
-                    "Error",
+
+        // check that the entity *is* a workspace or brain sample, and get the sample ID:
+        Long sampleID;
+        if (initialEntity.getEntityType().getName().equals(EntityConstants.TYPE_3D_TILE_MICROSCOPE_SAMPLE)) {
+            sampleID = initialEntity.getId();
+        } else if (initialEntity.getEntityType().getName().equals(EntityConstants.TYPE_TILE_MICROSCOPE_WORKSPACE)) {
+            sampleID = annotationModel.getCurrentWorkspace().getSampleID();
+        } else {
+            JOptionPane.showMessageDialog(null,
+                    "You must load a brain sample before creating a workspace!",
+                    "No brain sample!",
                     JOptionPane.ERROR_MESSAGE);
+            return;
+        }
+
+        // ask re: new workspace if one is active
+        if (annotationModel.getCurrentWorkspace() != null) {
+            int ans = JOptionPane.showConfirmDialog(null,
+                    "You already have an active workspace!  Close and create another?",
+                    "Workspace exists",
+                    JOptionPane.YES_NO_OPTION);
+            if (ans == JOptionPane.NO_OPTION) {
                 return;
             }
         }
 
         // get a name for the new workspace and validate (are there any rules for entity names?)
         String workspaceName = (String)JOptionPane.showInputDialog(
-            null,
-            "Workspace name:",
-            "Create workspace",
-            JOptionPane.PLAIN_MESSAGE,
-            null,                           // icon
-            null,                           // choice list; absent = freeform
-            "new workspace");
+                null,
+                "Workspace name:",
+                "Create workspace",
+                JOptionPane.PLAIN_MESSAGE,
+                null,                           // icon
+                null,                           // choice list; absent = freeform
+                "new workspace");
         if ((workspaceName == null) || (workspaceName.length() == 0)) {
             workspaceName = "new workspace";
         }
 
-        // create it
-        if (!annotationModel.createWorkspace(workspaceRootEntity, sampleEntity, workspaceName)) {
-            JOptionPane.showMessageDialog(null, 
-                "Could not create workspace!",
-                "Error",
-                JOptionPane.ERROR_MESSAGE);
-        }
+        // create it in another thread
+        // there is no doublt a better way to get these parameters in:
+        final String name = workspaceName;
+        final Long ID = sampleID;
+        SimpleWorker creator = new SimpleWorker() {
+            @Override
+            protected void doStuff() throws Exception {
+                // for now, we'll put the new workspace into a default, top-level folder
+                //  named "Workspaces", which we will create if it does not exit; later,
+                //  we'll create a dialog to let the user choose the location of the
+                //  new workspace, and perhaps the brain sample, too
+                Entity workspaceRootEntity = annotationModel.getOrCreateWorkspacesFolder();
+
+                // now we can create the workspace (finally)
+                // annotationModel.createWorkspace(workspaceRootEntity, sampleID, workspaceName);
+                annotationModel.createWorkspace(workspaceRootEntity, ID, name);
+
+            }
+
+            @Override
+            protected void hadSuccess() {
+                // nothing here, signals emitted within annotationModel
+            }
+
+            @Override
+            protected void hadError(Throwable error) {
+                SessionMgr.getSessionMgr().handleException(error);
+            }
+        };
+        creator.execute();
 
     }
 

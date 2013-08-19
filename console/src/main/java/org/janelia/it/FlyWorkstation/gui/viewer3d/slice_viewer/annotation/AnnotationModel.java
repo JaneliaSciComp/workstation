@@ -12,7 +12,6 @@ import org.janelia.it.FlyWorkstation.gui.viewer3d.Vec3;
 import org.janelia.it.FlyWorkstation.api.entity_model.management.ModelMgr;
 
 import org.janelia.it.jacs.model.entity.Entity;
-import org.janelia.it.jacs.model.user_data.Subject;
 import org.janelia.it.jacs.model.user_data.tiledMicroscope.*;
 
 import java.util.List;
@@ -24,8 +23,8 @@ public class AnnotationModel
     private SessionMgr sessionMgr;
 
 
-    private Long currentWorkspaceID;
-    private Long currentNeuronID;
+    private TmWorkspace currentWorkspace;
+    private TmNeuron currentNeuron;
 
     // signals & slots
     public Signal1<TmWorkspace> workspaceLoadedSignal = new Signal1<TmWorkspace>();
@@ -45,6 +44,10 @@ public class AnnotationModel
         }
     };
 
+    // constants
+    public static final String WORKSPACES_FOLDER_NAME = "Workspaces";
+
+
     public AnnotationModel() {
         // set up
         modelMgr = ModelMgr.getModelMgr();
@@ -52,45 +55,35 @@ public class AnnotationModel
 
     }
 
-    public boolean hasCurrentWorkspace() {
-        return currentWorkspaceID != null;
+    public TmWorkspace getCurrentWorkspace() {
+        return currentWorkspace;
     }
 
-    public TmWorkspace getCurrentWorkspace() {
-        if (currentWorkspaceID != null) {
-            try {
-                return modelMgr.loadWorkspace(currentWorkspaceID);
-            } catch (Exception e) {
-                e.printStackTrace();
-                return null;
-            }
-        } else {
-            return null;
+    private void updateCurrentWorkspace() {
+        try {
+            currentWorkspace = modelMgr.loadWorkspace(currentWorkspace.getId());
+        } catch (Exception e) {
+            e.printStackTrace();
         }
     }
 
     public TmNeuron getCurrentNeuron() {
-        if (currentNeuronID != null) {
-            try {
-                return modelMgr.loadNeuron(currentNeuronID);
-            } catch (Exception e) {
-                e.printStackTrace();
-                return null;
-            }
-        } else {
-            return null;
-        }
+        return currentNeuron;
     }
 
     public void setCurrentNeuron(TmNeuron neuron) {
-        if (neuron != null) {
-            currentNeuronID = neuron.getId();
-        } else {
-            currentNeuronID = null;
-        }
+        currentNeuron = neuron;
+        neuronSelectedSignal.emit(currentNeuron);
+    }
 
-        // refresh the neuron object!
-        neuronSelectedSignal.emit(getCurrentNeuron());
+    private void updateCurrentNeuron() {
+        if (currentNeuron != null) {
+            try {
+                currentNeuron = modelMgr.loadNeuron(currentNeuron.getId());
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
     }
 
     public TmGeoAnnotation getGeoAnnotationFromID(Long annotationID) {
@@ -128,52 +121,46 @@ public class AnnotationModel
 
     public void createNeuron(String name) throws Exception {
 
-        TmNeuron currentNeuron = modelMgr.createTiledMicroscopeNeuron(getCurrentWorkspace().getId(), name);
-        setCurrentNeuron(currentNeuron);
+        TmNeuron neuron = modelMgr.createTiledMicroscopeNeuron(getCurrentWorkspace().getId(), name);
+        setCurrentNeuron(neuron);
+
+        updateCurrentWorkspace();
+        updateCurrentNeuron();
 
         // should eventually have an addNeuron signal and not reload entire workspace, but
         //  for now, keep it simple
-        workspaceLoadedSignal.emit(getCurrentWorkspace());
+        workspaceLoadedSignal.emit(currentWorkspace);
         neuronSelectedSignal.emit(currentNeuron);
 
     }
 
-    public boolean createWorkspace(Entity parentEntity, Entity brainSample, String name) {
-        TmWorkspace workspace;
+    public void createWorkspace(Entity parentEntity, Long brainSampleID, String name) throws Exception {
+        TmWorkspace workspace = modelMgr.createTiledMicroscopeWorkspace(parentEntity.getId(),
+            brainSampleID, name, sessionMgr.getSubject().getKey());
 
-        // do stuff
-        Subject subject = sessionMgr.getSubject();
-
-        try {
-            workspace = modelMgr.createTiledMicroscopeWorkspace(parentEntity.getId(),
-                brainSample.getId(), name, subject.getKey());
-        }  catch (Exception e) {
-            e.printStackTrace();
-            return false;
-        }
-
-
-
-        // trigger workspace load
+        // trigger workspace load (no updates; this method takes care of it all)
         loadWorkspace(workspace);
-
-
-        return true;
-
     }
 
-    public void addRootAnnotation(TmWorkspace workspace, TmNeuron neuron, Vec3 xyz) {
+    public Entity getOrCreateWorkspacesFolder() throws Exception {
+        Entity workspaceRootEntity = modelMgr.getCommonRootEntityByName(WORKSPACES_FOLDER_NAME);
+        if (workspaceRootEntity == null) {
+            workspaceRootEntity = modelMgr.createCommonRoot(WORKSPACES_FOLDER_NAME);
+        }
+        return workspaceRootEntity;
+    }
+
+    public void addRootAnnotation(TmWorkspace workspace, TmNeuron neuron, Vec3 xyz) throws Exception {
         // should assume current workspace and neuron?  don't need workspace at
         //  all, since neuron knows its workspace
 
         // the null means "this is a root annotation" (would be the parent)
-        TmGeoAnnotation annotation;
-        try {
-            annotation = modelMgr.addGeometricAnnotation(neuron.getId(),
-                null, 0, xyz.x(), xyz.y(), xyz.z(), "");
-        } catch (Exception e) {
-            e.printStackTrace();
-            return;
+        TmGeoAnnotation annotation = modelMgr.addGeometricAnnotation(neuron.getId(),
+            null, 0, xyz.x(), xyz.y(), xyz.z(), "");
+
+        // update
+        if (neuron.getId().equals(currentNeuron.getId())) {
+            updateCurrentNeuron();
         }
 
         // notify interested parties
@@ -183,7 +170,7 @@ public class AnnotationModel
 
     }
 
-    public void addChildAnnotation(TmNeuron neuron, TmGeoAnnotation parentAnn, Vec3 xyz) {
+    public void addChildAnnotation(TmNeuron neuron, TmGeoAnnotation parentAnn, Vec3 xyz) throws Exception {
         // should assume current neuron?  does parentAnn know its neuron anyway?
 
         // check parent ann?
@@ -192,21 +179,17 @@ public class AnnotationModel
         }
 
         // create it
-        TmGeoAnnotation annotation;
-        try {
-            annotation = modelMgr.addGeometricAnnotation(neuron.getId(),
-                    parentAnn.getId(), 0, xyz.x(), xyz.y(), xyz.z(), "");
-        } catch (Exception e) {
-            e.printStackTrace();
-            return;
-        }
+        TmGeoAnnotation annotation = modelMgr.addGeometricAnnotation(neuron.getId(),
+            parentAnn.getId(), 0, xyz.x(), xyz.y(), xyz.z(), "");
 
+        // update
+        if (neuron.getId().equals(currentNeuron.getId())) {
+            updateCurrentNeuron();
+        }
 
         // notify people
         neuronSelectedSignal.emit(getCurrentNeuron());
-
         anchorAddedSignal.emit(annotation);
-
     }
 
     public void moveAnnotation(Long annotationID, Vec3 location) throws Exception {
@@ -214,6 +197,9 @@ public class AnnotationModel
         modelMgr.updateGeometricAnnotation(annotation, annotation.getIndex(),
             location.getX(), location.getY(), location.getZ(),
             annotation.getComment());
+
+        // update
+        updateCurrentNeuron();
 
         // notify
         anchorUpdatedSignal.emit(getGeoAnnotationFromID(annotationID));
@@ -232,18 +218,19 @@ public class AnnotationModel
             modelMgr.deleteGeometricAnnotation(annotation.getId());
         }
 
+        // update
+        updateCurrentNeuron();
+
         // notify the public
         neuronSelectedSignal.emit(getCurrentNeuron());
-        
         anchorsDeletedSignal.emit(rootAnnotation.getSubTreeListReversed());
-
     }
 
     public void loadWorkspace(TmWorkspace workspace) {
         if (workspace != null) {
-            currentWorkspaceID = workspace.getId();
+            currentWorkspace = workspace;
         } else {
-            currentWorkspaceID = null;
+            currentWorkspace = null;
         }
         workspaceLoadedSignal.emit(workspace);
 
