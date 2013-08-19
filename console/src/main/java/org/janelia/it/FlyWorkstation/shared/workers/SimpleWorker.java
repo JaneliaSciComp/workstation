@@ -112,7 +112,7 @@ public abstract class SimpleWorker extends SwingWorker<Void, Void> implements Pr
 	 * @param curr number of items completed
 	 * @param total total number of items
 	 */
-	public void setProgress(int curr, int total) {
+	public void setProgress(long curr, long total) {
     	double percentDone = (double)curr / (double)total;
     	int p = (int)Math.round(100*percentDone);
         try {

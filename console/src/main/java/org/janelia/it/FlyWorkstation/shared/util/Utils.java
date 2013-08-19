@@ -611,7 +611,7 @@ public class Utils {
             output.write(buffer, 0, n);
             count += n;
             if (worker!=null) {
-                worker.setProgress(count, (int)length);
+                worker.setProgress(count, length);
                 if (worker.isCancelled()) throw new CancellationException();
             }
         }
