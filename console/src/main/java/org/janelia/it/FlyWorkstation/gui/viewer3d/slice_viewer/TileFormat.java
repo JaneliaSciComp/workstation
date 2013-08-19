@@ -1,5 +1,6 @@
 package org.janelia.it.FlyWorkstation.gui.viewer3d.slice_viewer;
 
+import org.janelia.it.FlyWorkstation.gui.viewer3d.BoundingBox3d;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.CoordinateAxis;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.Vec3;
 
@@ -55,7 +56,7 @@ public class TileFormat
 			val -= origin[i];
 			// invert vertical direction
 			if (i == verticalAxis)
-				val = volumeSize[i] - val;
+				val = volumeSize[i] - val - 1;
 			// convert voxels to tiles
 			if (i != depthAxis) // but not in slice direction
 				val /= getTileSize()[i];
@@ -71,6 +72,18 @@ public class TileFormat
 				(int)Math.floor(pixels.get(1)),
 				(int)Math.floor(pixels.get(2)),
 				zoom, zoomMax, indexStyle, sliceDirection);
+		return result;
+	}
+	
+	public BoundingBox3d calcBoundingBox() {
+		double sv[] = getVoxelMicrometers();
+		int s0[] = getOrigin();
+		int s1[] = getVolumeSize();
+		Vec3 b0 = new Vec3(sv[0]*s0[0], sv[1]*s0[1], sv[2]*s0[2]);
+		Vec3 b1 = new Vec3(sv[0]*(s0[0]+s1[0]), sv[1]*(s0[1]+s1[1]), sv[2]*(s0[2]+s1[2]));
+		BoundingBox3d result = new BoundingBox3d();
+		result.setMin(b0);
+		result.setMax(b1);
 		return result;
 	}
 	
@@ -105,8 +118,9 @@ public class TileFormat
 			if (i != depthAxis)
 				val *= getTileSize()[i];
 			// invert vertical direction; tile origin is bottom left, image origin is top left
-			if (i == verticalAxis)
-				val = volumeSize[i] - val + getTileSize()[i];
+			if (i == verticalAxis) {
+				val = volumeSize[i] - val; // invert Y value
+			}
 			// Shift to world origin
 			val += origin[i];
 			// convert voxels to micrometers
@@ -118,7 +132,7 @@ public class TileFormat
 		Vec3 dw = new Vec3(0,0,0);
 		dw.set(horizontalAxis, dv.get(horizontalAxis));
 		Vec3 dh = new Vec3(0,0,0);
-		dh.set(verticalAxis, dv.get(verticalAxis));
+		dh.set(verticalAxis, -dv.get(verticalAxis)); // invert Y axis step direction
 
 		Vec3[] result = new Vec3[4];
 		result[0] = v1;

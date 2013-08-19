@@ -16,7 +16,11 @@ public class TeapotActor implements GLActor
         gl.glPushAttrib(GL2.GL_POLYGON_BIT); // remember current GL_FRONT_FACE indictor
         gl.glFrontFace( GL2.GL_CW ); 
         gl.glColor3f(0.40f, 0.27f, 0.00f);
+        gl.glMatrixMode(GL2.GL_MODELVIEW_MATRIX);
+        gl.glPushMatrix();
+        gl.glRotated(180, 1, 0, 0); // Flip teapot to match Y-down convention
         glut.glutSolidTeapot(1.0);
+        gl.glPopMatrix();
         gl.glPopAttrib(); // restore GL_FRONT_FACE
 	}
 

@@ -143,13 +143,9 @@ implements VolumeImage3d
 		// Update bounding box
 		// Compute bounding box
 		TileFormat tf = getLoadAdapter().getTileFormat();
-		double sv[] = tf.getVoxelMicrometers();
-		int s0[] = tf.getOrigin();
-		int s1[] = tf.getVolumeSize();
-		Vec3 b0 = new Vec3(sv[0]*s0[0], sv[1]*s0[1], sv[2]*s0[2]);
-		Vec3 b1 = new Vec3(sv[0]*(s0[0]+s1[0]), sv[1]*(s0[1]+s1[1]), sv[2]*(s0[2]+s1[2]));
-		boundingBox3d.setMin(b0);
-		boundingBox3d.setMax(b1);
+		BoundingBox3d newBox = tf.calcBoundingBox();
+		boundingBox3d.setMin(newBox.getMin());
+		boundingBox3d.setMax(newBox.getMax());
 		
 		volumeInitializedSignal.emit(folderUrl);
 		
