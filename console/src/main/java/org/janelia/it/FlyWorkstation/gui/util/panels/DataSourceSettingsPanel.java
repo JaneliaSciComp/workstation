@@ -244,7 +244,7 @@ public class DataSourceSettingsPanel extends JPanel implements PrefEditor {
         runAsTextField = new StandardTextField(runAsUser, 40);
         runAsTextField.setPreferredSize(new Dimension(80, 30));
         
-        JPanel runAsPanel = new JPanel();
+        runAsPanel = new JPanel();
         runAsPanel.setLayout(new BoxLayout(runAsPanel, BoxLayout.X_AXIS));
         runAsPanel.add(runAsLabel);
         runAsPanel.add(Box.createHorizontalStrut(10));
