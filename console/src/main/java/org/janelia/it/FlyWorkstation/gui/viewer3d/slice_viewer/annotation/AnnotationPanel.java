@@ -87,6 +87,14 @@ public class AnnotationPanel extends JPanel
 
     }
 
+    @Override
+    public Dimension getPreferredSize() {
+        // since we create components without data, they tend to start too narrow
+        //  for what they will eventually need, and that causes the split pane not
+        //  to size right; so, give it a hint   
+        return new Dimension(200, 0);
+    }
+
     private void setupSignals() {
         // outgoing from the model:
         annotationModel.neuronSelectedSignal.connect(neuronInfoPanel.neuronSelectedSlot);
@@ -113,9 +121,10 @@ public class AnnotationPanel extends JPanel
         //  something like that; probably QuadViewUi will instantiate and
         //  hook up everything
 
+        // add a little breathing space at the top of the panel
+        add(Box.createRigidArea(new Dimension(0, 20)));
 
         // workspace information; show name, whatever attributes
-        add(Box.createRigidArea(new Dimension(0, 20)));
         workspaceInfoPanel = new WorkspaceInfoPanel();
         add(workspaceInfoPanel);
 
