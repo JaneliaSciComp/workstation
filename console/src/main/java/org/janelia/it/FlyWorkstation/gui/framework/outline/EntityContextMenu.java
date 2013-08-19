@@ -140,10 +140,8 @@ public class EntityContextMenu extends JPopupMenu {
         setNextAddRequiresSeparator(true);
         add(getMergeItem());
         add(getSortBySimilarityItem());
-//        add(getDownloadDefault3dImageItem());
         add(getDownloadMenu());
         add(getUploadItem());
-//        add(getTestProgressMeterItem());
 //        add(getCreateSessionItem());
 
         setNextAddRequiresSeparator(true);
@@ -1166,144 +1164,6 @@ public class EntityContextMenu extends JPopupMenu {
         return downloadMenu;
     }
     
-//    protected JMenuItem getDownloadDefault3dImageItem() {
-//
-//        int numStacks = 0;
-//        for(final RootedEntity rootedEntity : rootedEntityList) {
-//            final Entity targetEntity = rootedEntity.getEntity();
-//            final String filepath = EntityUtils.getDefault3dImageFilePath(targetEntity);
-//            if (filepath!=null) {
-//                numStacks++;
-//            }
-//        }
-//        
-//        if (numStacks<1) return null;
-//        
-//        JMenuItem downloadItem = new JMenuItem(multiple?"  Download "+numStacks+" 3D Images (Background Task)":"  Download 3D Image (Background Task)");
-//
-//        downloadItem.addActionListener(new ActionListener() {
-//            public void actionPerformed(ActionEvent actionEvent) {
-//                try {
-//                    for(final RootedEntity rootedEntity : rootedEntityList) {
-//
-//                        final Entity targetEntity = rootedEntity.getEntity();
-//                        final String filepath = EntityUtils.getDefault3dImageFilePath(targetEntity);
-//                        
-//                        SimpleWorker worker = new SimpleWorker() {
-//
-//                            protected String workerName;
-//                            protected File targetDir;
-//                            protected File remoteFile;
-//                            protected File localFile;
-//                            
-//                            @Override
-//                            protected void doStuff() throws Exception {
-//                                Entity targetLoaded = ModelMgr.getModelMgr().loadLazyEntity(targetEntity, false);
-//                                Entity default3dImage = targetLoaded.getChildByAttributeName(EntityConstants.ATTRIBUTE_DEFAULT_3D_IMAGE);
-//                                Entity sample = null;
-//                                if (targetEntity.getEntityType().getName().equals(EntityConstants.TYPE_SAMPLE)) {
-//                                    sample = targetEntity;
-//                                }
-//                                else {
-//                                    sample = ModelMgr.getModelMgr().getAncestorWithType(targetEntity, EntityConstants.TYPE_SAMPLE);
-//                                }
-//                                this.workerName = "Downloading "+sample.getName();
-//                                this.targetDir = new File(downloadDir, sample.getName());
-//                                final String localFilePrefix = sample.getName()+"_ID"+default3dImage.getId()+"_";
-//                                this.remoteFile = new File(filepath);
-//                                this.localFile = new File(targetDir, localFilePrefix+"_"+remoteFile.getName());
-//                            }
-//                            
-//                            @Override
-//                            protected void hadSuccess() {
-//                                try {
-//                                    
-//                                    log.debug("Checking {} for files that named {}",targetDir,localFile.getName());
-//                                    
-//                                    File[] files = targetDir.listFiles(new FilenameFilter() {
-//                                        @Override
-//                                        public boolean accept(File dir, String name) {
-//                                            return name.equals(localFile.getName());
-//                                        }
-//                                    });
-//
-//                                    if (files!=null && files.length>0) {
-//                                        Object[] options = { "Open folder", "Download file" };
-//                                        int n = JOptionPane.showOptionDialog(browser, 
-//                                                "File already exists locally, open existing folder, or download again?", "Files exists", JOptionPane.YES_NO_OPTION,
-//                                                JOptionPane.QUESTION_MESSAGE, null, options, options[0]);
-//                                        if (n==0) {
-//                                            OpenInFinderAction.revealFile(targetDir);
-//                                            return;
-//                                        }
-//                                    }
-//                                    
-//                                    BackgroundWorker taskWorker = new BackgroundWorker() {
-//
-//                                        @Override
-//                                        public String getName() {
-//                                            return workerName;
-//                                        }
-//
-//                                        @Override
-//                                        protected void doStuff() throws Exception {
-//
-//                                            File remoteFile = new File(filepath);
-//
-//                                            setStatus("Waiting to download...");
-//                                            copyFileLock.lock();
-//                                            try {
-//                                                setStatus("Downloading "+remoteFile.getName());
-//                                                Utils.copyURLToFile(filepath, localFile, this);
-//                                            } finally {
-//                                                copyFileLock.unlock();
-//                                            }    
-//                                            
-//                                            if (isCancelled()) throw new CancellationException();
-//                                            setStatus("Done");
-//                                        }
-//                                        
-//                                        @Override
-//                                        public Callable<Void> getSuccessCallback() {
-//                                            return new Callable<Void>() {
-//                                                @Override
-//                                                public Void call() throws Exception {
-//                                                    OpenInFinderAction.revealFile(targetDir);
-//                                                    return null;
-//                                                }
-//                                            };
-//                                        }
-//                                    };
-//
-//                                    taskWorker.executeWithEvents();
-//                                    
-//                                }
-//                                catch (Exception e) {
-//                                    hadError(e);
-//                                    return;
-//                                }   
-//                            }
-//                            
-//                            @Override
-//                            protected void hadError(Throwable error) {
-//                                SessionMgr.getSessionMgr().handleException(error);
-//                            }
-//                        };
-//                        
-//                        worker.execute();
-//                    }
-//                    
-//                    
-//                } 
-//                catch (Exception e) {
-//                    SessionMgr.getSessionMgr().handleException(e);
-//                }
-//            }
-//        });
-//        
-//        return downloadItem;
-//    }
-    
     protected JMenuItem getDownloadItem(final List<Entity> entitiesWithFilepaths, final boolean splitChannels, final String extension) {
         
         String itemTitle = null;
@@ -1500,68 +1360,6 @@ public class EntityContextMenu extends JPopupMenu {
         });
         
         return downloadItem;
-    }
-
-    protected JMenuItem getTestProgressMeterItem() {
-
-        int numStacks = 0;
-        for(final RootedEntity rootedEntity : rootedEntityList) {
-            final Entity targetEntity = rootedEntity.getEntity();
-            final String filepath = EntityUtils.getDefault3dImageFilePath(targetEntity);
-            if (filepath!=null) {
-                numStacks++;
-            }
-        }
-        
-        if (numStacks<1) return null;
-        
-        JMenuItem downloadSplitItem = new JMenuItem(multiple?"  Do "+numStacks+" things":"  Do one thing");
-
-        downloadSplitItem.addActionListener(new ActionListener() {
-            public void actionPerformed(ActionEvent actionEvent) {
-                try {
-                    for(final RootedEntity rootedEntity : rootedEntityList) {
-
-                        BackgroundWorker taskWorker = new BackgroundWorker() {
-
-                            @Override
-                            public String getName() {
-                                return "Worker";
-                            }
-
-                            @Override
-                            protected void doStuff() throws Exception {
-
-                                setStatus("Test background task ("+rootedEntity.getName()+")");
-                                for(int i=0; i<50; i++) {
-                                    if (isCancelled()) throw new CancellationException();
-                                    Thread.sleep(5000);
-                                }
-                                setStatus("Done");
-                                setProgress(100);
-                            }
-                            
-                            @Override
-                            public Callable<Void> getSuccessCallback() {
-                                return new Callable<Void>() {
-                                    @Override
-                                    public Void call() throws Exception {
-                                        return null;
-                                    }
-                                };
-                            }
-                        };
-
-                        taskWorker.executeWithEvents();
-                    }
-                } 
-                catch (Exception e) {
-                    SessionMgr.getSessionMgr().handleException(e);
-                }
-            }
-        });
-        
-        return downloadSplitItem;
     }
     
     protected JMenuItem getOpenInFirstViewerItem() {

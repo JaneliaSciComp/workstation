@@ -30,12 +30,10 @@ public class ApplicationSettingsPanel extends JPanel implements PrefEditor {
         try {
             sessionMgr.addSessionModelListener(sessionModelListener);
             jbInit();
-        }
-        catch (Exception e) {
+        } catch (Exception e) {
             e.printStackTrace();
         }
     }
-
 
     public String getDescription() {
         return "Set various browser preferences, including Look and Feel and layout settings.";
@@ -46,11 +44,11 @@ public class ApplicationSettingsPanel extends JPanel implements PrefEditor {
     }
 
     private void jbInit() throws Exception {
-    	
-    	setPreferredSize(new Dimension(500, 600));
-    	
-    	JPanel mainPanel = new JPanel();
-    	
+
+        setPreferredSize(new Dimension(500, 600));
+
+        JPanel mainPanel = new JPanel();
+
         JPanel pnlLayoutOptions = new JPanel();
         pnlLayoutOptions.setLayout(new BoxLayout(pnlLayoutOptions, BoxLayout.Y_AXIS));
         pnlLayoutOptions.setBorder(new javax.swing.border.TitledBorder("Browser Options"));
@@ -60,7 +58,7 @@ public class ApplicationSettingsPanel extends JPanel implements PrefEditor {
                 settingsChanged = true;
             }
         });
-        if (null!=sessionMgr.getModelProperty(SessionMgr.DISPLAY_SUB_EDITOR_PROPERTY)) {
+        if (null != sessionMgr.getModelProperty(SessionMgr.DISPLAY_SUB_EDITOR_PROPERTY)) {
             subEditors.setSelected((Boolean) sessionMgr.getModelProperty(SessionMgr.DISPLAY_SUB_EDITOR_PROPERTY));
         }
 
@@ -73,8 +71,7 @@ public class ApplicationSettingsPanel extends JPanel implements PrefEditor {
         });
         if (SessionMgr.getSessionMgr().getModelProperty(SUBVIEW_FOCUS) == null) {
             SessionMgr.getSessionMgr().setModelProperty(SUBVIEW_FOCUS, Boolean.TRUE);
-        }
-        else {
+        } else {
             boolean tmpBoolean = (Boolean) SessionMgr.getSessionMgr().getModelProperty(SUBVIEW_FOCUS);
             subviewFocusCheckBox.setSelected(tmpBoolean);
         }
@@ -114,7 +111,7 @@ public class ApplicationSettingsPanel extends JPanel implements PrefEditor {
         popupPanel.add(Box.createVerticalStrut(5));
         mainPanel.add(Box.createVerticalStrut(20));
         mainPanel.add(popupPanel);
-        
+
         JPanel pnlLookAndFeelOptions = new JPanel();
         pnlLookAndFeelOptions.setBorder(new javax.swing.border.TitledBorder("Look and Feel Options"));
 
@@ -128,18 +125,19 @@ public class ApplicationSettingsPanel extends JPanel implements PrefEditor {
                     settingsChanged = true;
                 }
             });
-            if (UIManager.getLookAndFeel().getName().equals(info.getName())) rb.setSelected(true);
+            if (UIManager.getLookAndFeel().getName().equals(info.getName()))
+                rb.setSelected(true);
             buttonGroup.add(rb);
             buttonToLookAndFeel.put(rb.getModel(), info.getClassName());
             pnlLookAndFeelOptions.add(rb);
-//            pnlLookAndFeelOptions.add(Box.createVerticalStrut(5));
+            // pnlLookAndFeelOptions.add(Box.createVerticalStrut(5));
         }
         mainPanel.add(Box.createVerticalStrut(20));
         mainPanel.add(pnlLookAndFeelOptions);
-        
+
         JScrollPane scrollPane = new JScrollPane();
         scrollPane.setViewportView(mainPanel);
-        
+
         setLayout(new BorderLayout());
         add(scrollPane, BorderLayout.CENTER);
     }
@@ -152,7 +150,6 @@ public class ApplicationSettingsPanel extends JPanel implements PrefEditor {
         return "Application Settings";
     }
 
-
     class MySessionModelListener implements SessionModelListener {
         public void browserAdded(BrowserModel browserModel) {
         }
@@ -164,9 +161,12 @@ public class ApplicationSettingsPanel extends JPanel implements PrefEditor {
         }
 
         public void modelPropertyChanged(Object key, Object oldValue, Object newValue) {
-            if (key.equals(SessionMgr.DISPLAY_FREE_MEMORY_METER_PROPERTY)) memoryUsage.setSelected((Boolean) newValue);
-            if (key.equals(SUBVIEW_FOCUS)) subviewFocusCheckBox.setSelected((Boolean) newValue);
-            if (key.equals(SessionMgr.DISPLAY_SUB_EDITOR_PROPERTY)) subEditors.setSelected((Boolean) newValue);
+            if (key.equals(SessionMgr.DISPLAY_FREE_MEMORY_METER_PROPERTY))
+                memoryUsage.setSelected((Boolean) newValue);
+            if (key.equals(SUBVIEW_FOCUS))
+                subviewFocusCheckBox.setSelected((Boolean) newValue);
+            if (key.equals(SessionMgr.DISPLAY_SUB_EDITOR_PROPERTY))
+                subEditors.setSelected((Boolean) newValue);
         }
     }
 
@@ -180,29 +180,28 @@ public class ApplicationSettingsPanel extends JPanel implements PrefEditor {
 
     public String[] applyChanges() {
         settingsChanged = false;
-        if (memoryUsage.isSelected() != (Boolean) sessionMgr.
-                getModelProperty(SessionMgr.DISPLAY_FREE_MEMORY_METER_PROPERTY)) {
+        if (memoryUsage.isSelected() != (Boolean) sessionMgr
+                .getModelProperty(SessionMgr.DISPLAY_FREE_MEMORY_METER_PROPERTY)) {
             sessionMgr.setModelProperty(SessionMgr.DISPLAY_FREE_MEMORY_METER_PROPERTY, memoryUsage.isSelected());
         }
-        if (subEditors.isSelected() != (Boolean) sessionMgr.
-                getModelProperty(SessionMgr.DISPLAY_SUB_EDITOR_PROPERTY)) {
+        if (subEditors.isSelected() != (Boolean) sessionMgr.getModelProperty(SessionMgr.DISPLAY_SUB_EDITOR_PROPERTY)) {
             sessionMgr.setModelProperty(SessionMgr.DISPLAY_SUB_EDITOR_PROPERTY, subEditors.isSelected());
         }
-        if (subviewFocusCheckBox.isSelected() != (Boolean) sessionMgr.
-                getModelProperty(SUBVIEW_FOCUS)) {
+        if (subviewFocusCheckBox.isSelected() != (Boolean) sessionMgr.getModelProperty(SUBVIEW_FOCUS)) {
             sessionMgr.setModelProperty(SUBVIEW_FOCUS, subviewFocusCheckBox.isSelected());
         }
         AutoNavigationMgr.getAutoNavigationMgr().showNavigationCompleteMsgs(navComplete.isSelected());
         try {
-            sessionMgr.setModelProperty(SessionMgr.DISPLAY_LOOK_AND_FEEL,buttonToLookAndFeel.get(buttonGroup.getSelection()));
-//            SessionMgr.getSessionMgr().setLookAndFeel(buttonToLookAndFeel.get(buttonGroup.getSelection()));
-            JOptionPane.showMessageDialog(SessionMgr.getBrowser(), "You will need to restart the application to completely update the look and feel.", "Restart recommended", JOptionPane.INFORMATION_MESSAGE);
-        }
-        catch (Exception ex) {
+            sessionMgr.setModelProperty(SessionMgr.DISPLAY_LOOK_AND_FEEL,
+                    buttonToLookAndFeel.get(buttonGroup.getSelection()));
+            // SessionMgr.getSessionMgr().setLookAndFeel(buttonToLookAndFeel.get(buttonGroup.getSelection()));
+            JOptionPane.showMessageDialog(SessionMgr.getBrowser(),
+                    "You will need to restart the application to completely update the look and feel.",
+                    "Restart recommended", JOptionPane.INFORMATION_MESSAGE);
+        } catch (Exception ex) {
             SessionMgr.getSessionMgr().handleException(ex);
         }
         return NO_DELAYED_CHANGES;
     }
-
 
 }
