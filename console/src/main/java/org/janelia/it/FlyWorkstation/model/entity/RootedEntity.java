@@ -45,6 +45,9 @@ public class RootedEntity {
 	}
 
 	public Entity getEntity() {
+	    if (entityData==null) {
+	        throw new IllegalStateException("RootedEntity has null EntityData");
+	    }
 		return entityData.getChildEntity();
 	}
 	

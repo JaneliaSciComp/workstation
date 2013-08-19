@@ -46,6 +46,7 @@ public class EntityDetailsOutline extends JPanel implements Refreshable, Activat
     }
     
     public void loadRootedEntity(RootedEntity rootedEntity) {
+        if (rootedEntity==null) return;
         if (currRootedEntity!=null && currRootedEntity.getId().equals(rootedEntity.getId())) {
             return;
         }

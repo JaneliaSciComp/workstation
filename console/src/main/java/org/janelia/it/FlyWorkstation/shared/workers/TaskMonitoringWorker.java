@@ -2,6 +2,7 @@ package org.janelia.it.FlyWorkstation.shared.workers;
 
 import org.janelia.it.FlyWorkstation.api.entity_model.events.WorkerChangedEvent;
 import org.janelia.it.FlyWorkstation.api.entity_model.management.ModelMgr;
+import org.janelia.it.jacs.compute.engine.service.ServiceException;
 import org.janelia.it.jacs.model.tasks.Event;
 import org.janelia.it.jacs.model.tasks.Task;
 
@@ -39,7 +40,7 @@ public class TaskMonitoringWorker extends BackgroundWorker {
             if (task.isDone()) {
                 // Check for errors
                 if (task.getLastEvent().getEventType().equals(Event.ERROR_EVENT)) {
-                    throw new Exception(task.getLastEvent().getDescription());
+                    throw new ServiceException(task.getLastEvent().getDescription());
                 }
                 return;
             }

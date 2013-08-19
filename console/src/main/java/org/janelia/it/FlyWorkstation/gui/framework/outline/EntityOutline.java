@@ -167,7 +167,9 @@ public abstract class EntityOutline extends EntityTree implements Refreshable, A
 	}
 	
 	public RootedEntity getRootedEntity(String uniqueId) {
-	    return new RootedEntity(uniqueId, getEntityDataByUniqueId(uniqueId));
+	    EntityData ed = getEntityDataByUniqueId(uniqueId);
+	    if (ed==null) return null;
+	    return new RootedEntity(uniqueId, ed);
 	}
 	
 	/**
