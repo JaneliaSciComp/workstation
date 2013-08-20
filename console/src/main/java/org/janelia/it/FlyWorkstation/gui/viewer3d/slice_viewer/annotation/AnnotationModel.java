@@ -159,13 +159,13 @@ public class AnnotationModel
             null, 0, xyz.x(), xyz.y(), xyz.z(), "");
 
         // update
+        updateCurrentWorkspace();
         if (neuron.getId().equals(currentNeuron.getId())) {
             updateCurrentNeuron();
         }
 
         // notify interested parties
         neuronSelectedSignal.emit(getCurrentNeuron());
-
         anchorAddedSignal.emit(annotation);
 
     }
@@ -183,6 +183,7 @@ public class AnnotationModel
             parentAnn.getId(), 0, xyz.x(), xyz.y(), xyz.z(), "");
 
         // update
+        updateCurrentWorkspace();
         if (neuron.getId().equals(currentNeuron.getId())) {
             updateCurrentNeuron();
         }
