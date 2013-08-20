@@ -1,19 +1,5 @@
 package org.janelia.it.FlyWorkstation.gui.framework.session_mgr;
 
-import java.awt.Component;
-import java.awt.event.WindowAdapter;
-import java.awt.event.WindowEvent;
-import java.awt.event.WindowListener;
-import java.io.*;
-import java.net.InetAddress;
-import java.net.MalformedURLException;
-import java.net.URL;
-import java.net.UnknownHostException;
-import java.text.ParseException;
-import java.util.*;
-
-import javax.swing.*;
-
 import org.janelia.it.FlyWorkstation.api.entity_model.management.ModelMgr;
 import org.janelia.it.FlyWorkstation.api.facade.concrete_facade.ejb.EJBFactory;
 import org.janelia.it.FlyWorkstation.api.facade.facade_mgr.FacadeManager;
@@ -28,7 +14,6 @@ import org.janelia.it.FlyWorkstation.shared.filestore.PathTranslator;
 import org.janelia.it.FlyWorkstation.shared.util.ConsoleProperties;
 import org.janelia.it.FlyWorkstation.shared.util.PropertyConfigurator;
 import org.janelia.it.FlyWorkstation.shared.util.Utils;
-import org.janelia.it.FlyWorkstation.shared.util.filecache.CacheLoadEventListener;
 import org.janelia.it.FlyWorkstation.shared.util.filecache.LocalFileCache;
 import org.janelia.it.FlyWorkstation.shared.util.filecache.WebDavClient;
 import org.janelia.it.FlyWorkstation.web.EmbeddedWebServer;
@@ -37,10 +22,21 @@ import org.janelia.it.FlyWorkstation.ws.ExternalClient;
 import org.janelia.it.jacs.model.user_data.Subject;
 import org.janelia.it.jacs.model.user_data.SubjectRelationship;
 import org.janelia.it.jacs.model.user_data.User;
-import org.janelia.it.jacs.shared.utils.MailHelper;
 import org.janelia.it.jacs.shared.utils.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import javax.swing.*;
+import java.awt.*;
+import java.awt.event.WindowAdapter;
+import java.awt.event.WindowEvent;
+import java.awt.event.WindowListener;
+import java.io.*;
+import java.net.MalformedURLException;
+import java.net.URL;
+import java.text.ParseException;
+import java.util.*;
+import java.util.List;
 
 
 public class SessionMgr {
@@ -394,56 +390,10 @@ public class SessionMgr {
                                                     prefsDir);
                 final long kilobyteCapacity = getFileCacheGigabyteCapacity() * 1024 * 1024;
 
-                CacheLoadEventListener loadListener = new CacheLoadEventListener() {
-                    @Override
-                    public void loadCompleted(Set<File> unregisteredFiles) {
-                        if (unregisteredFiles.size() > 0) {
-
-                            final List<File> sortedList = new ArrayList<File>();
-                            sortedList.addAll(unregisteredFiles);
-                            Collections.sort(sortedList);
-
-                            StringBuilder msg = new StringBuilder(100 * sortedList.size());
-                            msg.append("The following files could not be registered ");
-                            msg.append("in the local cache on ");
-
-                            String hostAddress;
-                            try {
-                                InetAddress address = InetAddress.getLocalHost();
-                                hostAddress = address.getHostAddress();
-                            } catch (UnknownHostException e) {
-                                hostAddress = "unknown";
-                                log.warn("failed to derive client host address, ignoring error", e);
-                            }
-
-                            msg.append(hostAddress);
-                            msg.append(":\n\n");
-
-                            for (File unregisteredFile : sortedList) {
-                                msg.append(" ");
-                                msg.append(unregisteredFile.getAbsolutePath());
-                                msg.append('\n');
-                            }
-
-                            final MailHelper helper = new MailHelper();
-                            final String from = (String) getModelProperty(USER_EMAIL);
-                            final String to = ConsoleProperties.getString("console.HelpEmail");
-                            final String subject = hostAddress + " cache directory contains " +
-                                                   sortedList.size() + " unregistered files";
-
-                            log.info("sending email to {} about {} unregistered cache files",
-                                     to, sortedList.size());
-
-                            helper.sendEmail(from, to, subject, msg.toString());
-                        }
-
-                    }
-                };
-
                 localFileCache = new LocalFileCache(new File(localCacheRoot),
                                                     kilobyteCapacity,
                                                     webDavClient,
-                                                    loadListener);
+                                                    null);
             } catch (Exception e) {
                 localFileCache = null;
                 log.error("disabling local cache after initialization failure", e);

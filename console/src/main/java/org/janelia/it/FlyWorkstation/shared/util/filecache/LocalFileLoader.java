@@ -4,13 +4,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.File;
-import java.net.MalformedURLException;
-import java.net.URL;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 
 /**
  * This class traverses the local filesystem to identify files that were cached
@@ -22,8 +16,6 @@ import java.util.Set;
 public class LocalFileLoader {
 
     private File activeDirectory;
-    private WebDavClient webDavClient;
-    private String standardDerivationBasePath;
 
     private List<CachedFile> locallyCachedFiles;
     private Set<File> unregisteredFiles;
@@ -39,33 +31,11 @@ public class LocalFileLoader {
      * was acidentally provided, enabling this parameter would be a big problem.
      *
      * @param  activeDirectory                        the active directory for the local file cache.
-     * @param  webDavClient                           the session WebDAV client (for repairing
-     *                                                cache inconsistencies).
      */
-    public LocalFileLoader(File activeDirectory,
-                           WebDavClient webDavClient) {
+    public LocalFileLoader(File activeDirectory) {
         this.activeDirectory = activeDirectory;
-        this.webDavClient = webDavClient;
         this.locallyCachedFiles = new ArrayList<CachedFile>(1024);
         this.unregisteredFiles = new HashSet<File>(1024);
-
-        StringBuilder sb = new StringBuilder(128);
-        final String activeDirectoryPath = activeDirectory.getAbsolutePath();
-        if (activeDirectoryPath.endsWith("/")) {
-            sb.append(activeDirectoryPath.substring(0, activeDirectoryPath.length() - 1));
-        } else {
-            sb.append(activeDirectoryPath);
-        }
-        String relativeRootPath = "/";
-        try {
-            URL rootUrl = webDavClient.getWebDavUrl("/");
-            relativeRootPath = rootUrl.getPath();
-        } catch (MalformedURLException e) {
-            LOG.warn("failed to derive root URL", e);
-        }
-        sb.append(relativeRootPath);
-
-        this.standardDerivationBasePath = sb.toString();
     }
 
     /**
@@ -99,7 +69,17 @@ public class LocalFileLoader {
         }
 
         if (unregisteredFiles.size() > 0) {
-            repairOrphanFiles();
+
+            for (File unrgisteredFile : unregisteredFiles) {
+                if (unrgisteredFile.delete()) {
+                    LOG.info("removed unregistered cache file {}", unrgisteredFile.getAbsolutePath());
+                } else {
+                    LOG.warn("failed to remove unregistered cache file {}", unrgisteredFile.getAbsolutePath());
+                }
+            }
+
+        } else {
+            LOG.info("no unregistered files found in local cache");
         }
 
         return locallyCachedFiles;
@@ -140,54 +120,7 @@ public class LocalFileLoader {
 
             registerMetaFile(file, unregisteredSiblings);
 
-        } else if (".DS_Store".equals(file.getName())) {
-
-            if (file.delete()) {
-                unregisteredFiles.remove(file);
-            } else {
-                LOG.warn("failed to delete Mac finder file {}", file.getAbsolutePath());
-            }
-
         }
-    }
-
-    private void repairOrphanFiles() {
-
-        // credentials are set on a different thread
-        // wait here a bit for them to get set so that remote existence checks succeed
-        for (int i = 0; i < 5; i++) {
-            if (webDavClient.hasCredentials()) {
-                break;
-            } else {
-                LOG.info("repairOrphanFiles: waiting 1 second for WebDAV client credentials");
-                try {
-                    Thread.sleep(1000);
-                } catch (InterruptedException e) {
-                    LOG.warn("repairOrphanFiles: credential wait interrupted", e);
-                    break;
-                }
-            }
-        }
-
-        List<File> repairedFiles = new ArrayList<File>(unregisteredFiles.size());
-        CachedFile rebuiltMetaFile;
-        for (File orphan : unregisteredFiles) {
-            if (orphan.isFile()) {
-
-                rebuiltMetaFile = rebuildMetaFile(orphan, true);
-
-                if (rebuiltMetaFile != null) {
-                    locallyCachedFiles.add(rebuiltMetaFile);
-                    repairedFiles.add(orphan);
-                }
-
-            } else {
-                // should never get here, but just in case mark any directories as repaired
-                repairedFiles.add(orphan);
-            }
-        }
-
-        unregisteredFiles.removeAll(repairedFiles);
     }
 
     private void removeDirectoryIfEmpty(File directory) {
@@ -213,10 +146,6 @@ public class LocalFileLoader {
 
         CachedFile cachedFile = CachedFile.loadPreviouslyCachedFile(metaFile);
 
-        if (cachedFile == null) {
-            cachedFile = repairMetaFile(metaFile);
-        }
-
         if (cachedFile != null) {
 
             final File localFile = cachedFile.getLocalFile();
@@ -233,77 +162,26 @@ public class LocalFileLoader {
                     localFilePath = localFile.getAbsolutePath();
                 }
 
-                LOG.warn("registerMetaFile: removing meta data loaded from " +
-                         metaFile.getAbsolutePath() +
-                         " because it identifies missing local file " + localFilePath);
-
-                if (! metaFile.delete()) {
-                    LOG.warn("registerMetaFile: failed to remove problem meta-file " +
-                             metaFile.getAbsolutePath());
-                }
-
-            }
-
-        }
-    }
-
-    private CachedFile repairMetaFile(File metaFile) {
-
-        CachedFile cachedFile = null;
-
-        if (metaFile.delete()) {
-
-            final File localFile = CachedFile.getLocalFileBasedUponMetaFileName(metaFile);
-
-            if (localFile.exists()) {
-                cachedFile = rebuildMetaFile(localFile, false);
-            } else {
-                LOG.warn("repairMetaFile: local file " + localFile.getAbsolutePath() +
-                         " missing for problem meta-file " + metaFile.getAbsolutePath() +
-                         ", meta-file has simply been removed");
-            }
-
-        } else {
-            LOG.warn("repairMetaFile: failed to remove problem meta-file " +
-                     metaFile.getAbsolutePath());
-        }
-
-        return cachedFile;
-    }
-
-    private CachedFile rebuildMetaFile(File localFile,
-                                       boolean confirmExistenceOnRemoteServer) {
-
-        CachedFile cachedFile = null;
-
-        final String localPath = localFile.getAbsolutePath();
-        if (localPath.length() > standardDerivationBasePath.length() &&
-            localPath.startsWith(standardDerivationBasePath)) {
-            final String remotePath = localPath.substring(standardDerivationBasePath.length() - 1);
-            URL url;
-            try {
-                url = webDavClient.getWebDavUrl(remotePath);
-                cachedFile = new CachedFile(new WebDavFile(url, localFile), localFile);
-                if (confirmExistenceOnRemoteServer && (! webDavClient.isAvailable(url))) {
-                    cachedFile = null;
-                    LOG.info("rebuildMetaFile: skipping creation of meta-file for " +
-                             localFile.getAbsolutePath() + " because " + url + " cannot be found");
+                final String msg = "meta-file " + metaFile.getAbsolutePath() +
+                                   " because it identifies missing local file " + localFilePath;
+                if (metaFile.delete()) {
+                    LOG.info("registerMetaFile: removed {}", msg);
                 } else {
-                    cachedFile.saveMetadata();
-                    LOG.info("rebuildMetaFile: saved " +
-                             cachedFile.getMetaFile().getAbsolutePath());
+                    LOG.error("registerMetaFile: failed to remove {}", msg);
                 }
-            } catch (Exception e) {
-                cachedFile = null;
-                LOG.warn("rebuildMetaFile: failed to create meta-file for " +
-                         localFile.getAbsolutePath(), e);
-            }
-        } else {
-            LOG.warn("rebuildMetaFile: cannot derive remote path for " +
-                     localFile.getAbsolutePath());
-        }
 
-        return cachedFile;
+            }
+
+        } else {
+
+            final String msg = "meta-file " + metaFile.getAbsolutePath() + " because it cannot be parsed";
+            if (metaFile.delete()) {
+                LOG.info("registerMetaFile: removed {}", msg);
+            } else {
+                LOG.error("registerMetaFile: failed to remove {}", msg);
+            }
+
+        }
     }
 
     private static final Logger LOG = LoggerFactory.getLogger(LocalFileLoader.class);

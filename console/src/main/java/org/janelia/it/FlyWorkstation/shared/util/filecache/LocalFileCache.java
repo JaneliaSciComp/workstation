@@ -136,6 +136,20 @@ public class LocalFileCache {
             }
         };
 
+        final File[] tempFiles = tempDirectory.listFiles();
+        if ((tempFiles != null) && (tempFiles.length > 0)) {
+
+            // TODO: decide whether to clear-out temp cache directory at start-up
+
+            // The directory should be empty unless a load from a prior session was interrupted.
+            // Could just remove anything in temp at start-up (on a separate thread),
+            // but need to consider/handle possibility of concurrent load.
+            // Taking the easy way out at this point by just logging the anomaly.
+
+            LOG.warn("temp directory {} should be empty but contains {} files",
+                     tempDirectory.getAbsolutePath(), tempFiles.length);
+        }
+
         this.buildCacheAndScheduleLoad();
 
         LOG.info("<init>: exit");
@@ -476,7 +490,7 @@ public class LocalFileCache {
 
         LOG.info("loadCacheFromFilesystem: starting load");
 
-        LocalFileLoader loader = new LocalFileLoader(activeDirectory, webDavClient);
+        LocalFileLoader loader = new LocalFileLoader(activeDirectory);
         final List<CachedFile> cachedFiles = loader.locateCachedFiles();
         for (CachedFile cachedFile : cachedFiles) {
             // make sure newer cache record has not already been loaded

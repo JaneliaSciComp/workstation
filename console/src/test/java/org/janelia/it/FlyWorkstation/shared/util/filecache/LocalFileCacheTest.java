@@ -318,20 +318,18 @@ public class LocalFileCacheTest extends TestCase {
         writer.write("Power tends to corrupt,");
         writer.close();
 
-        final long lengthBeforeRepair = corruptMetaWithCacheFile.length();
-
         File corruptMetaWithoutCacheFile = new File(parentDirectory,
                                                     ".corrupt-meta-without-cache.jacs-cached-file");
         writer = new FileWriter(corruptMetaWithoutCacheFile);
         writer.write("and absolute power corrupts absolutely.");
         writer.close();
 
-        File ignoredFile = new File(parentDirectory, "this-file-should-be-igonored-by-load.txt");
-        writer = new FileWriter(ignoredFile);
+        File fileToRemove = new File(parentDirectory, "this-file-should-be-removed-by-load.txt");
+        writer = new FileWriter(fileToRemove);
         writer.write("Nothing to see here, please move on.");
         writer.close();
 
-        filesToDeleteDuringTearDown.add(ignoredFile);
+        filesToDeleteDuringTearDown.add(fileToRemove);
 
         // ---------------------------------------
         // reset capacity to force cache reload and clean-up of inconsistent data
@@ -344,35 +342,26 @@ public class LocalFileCacheTest extends TestCase {
         // ---------------------------------------
         // verify results ...
 
-        Assert.assertTrue("meta file " + deletedMetaFile.getAbsolutePath() +
-                          " not restored for orphaned cache file",
+        Assert.assertFalse("meta file " + deletedMetaFile.getAbsolutePath() +
+                          " should NOT have been restored for orphaned cache file",
                           deletedMetaFile.exists());
 
         Assert.assertFalse("valid but orphaned meta file " + orphanedMetaFile.getAbsolutePath() +
                            " was not removed",
                            orphanedMetaFile.exists());
 
-        Assert.assertTrue("corrupted meta file " + corruptMetaWithCacheFile.getAbsolutePath() +
-                          " is missing, but should have been repaired",
+        Assert.assertFalse("corrupted meta file " + corruptMetaWithCacheFile.getAbsolutePath() +
+                          " should have been removed",
                           corruptMetaWithCacheFile.exists());
-
-        Assert.assertTrue("corrupted meta file " + corruptMetaWithCacheFile.getAbsolutePath() +
-                          " was not repaired",
-                          lengthBeforeRepair != corruptMetaWithCacheFile.length());
 
         Assert.assertFalse("corrupted and orphaned meta file " +
                            corruptMetaWithoutCacheFile.getAbsolutePath() +
                           " was not removed",
                            corruptMetaWithoutCacheFile.exists());
 
-        Assert.assertTrue("file without meta data and not on remote server " +
-                          ignoredFile.getAbsolutePath() + " should have been left alone",
-                          ignoredFile.exists());
-
-        File ignoredMetaFile = new File(parentDirectory, CachedFile.getMetaFileName(ignoredFile));
-        Assert.assertFalse("meta data " + ignoredMetaFile.getAbsolutePath() +
-                           " should NOT have been created for file not on remote server",
-                           ignoredMetaFile.exists());
+        Assert.assertFalse("file without meta data " + fileToRemove.getAbsolutePath() +
+                           " should have been removed",
+                          fileToRemove.exists());
     }
 
     private static final Logger LOG = LoggerFactory.getLogger(LocalFileCacheTest.class);
