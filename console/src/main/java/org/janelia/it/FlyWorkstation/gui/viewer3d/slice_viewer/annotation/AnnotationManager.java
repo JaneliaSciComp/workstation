@@ -54,10 +54,10 @@ public class AnnotationManager
         }
     };
 
-    public Slot1<Long> selectAnnotationSlot = new Slot1<Long>() {
+    public Slot1<Anchor> selectAnnotationSlot = new Slot1<Anchor>() {
         @Override
-        public void execute(Long annotationID) {
-            selectNeuronFromAnnotation(annotationID);
+        public void execute(Anchor anchor) {
+            selectNeuronFromAnnotation(anchor.getGuid());
         }
     };
 

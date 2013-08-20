@@ -396,6 +396,9 @@ LLF: the hookup for the 3d snapshot.
         // Set starting interaction modes
         panModeAction.actionPerformed(new ActionEvent(this, ActionEvent.ACTION_PERFORMED, null));
         zoomScrollModeAction.actionPerformed(new ActionEvent(this, ActionEvent.ACTION_PERFORMED, null));
+
+        // one more signal to hook up
+        // sharedSkeletonActor.nextParentChangedSignal.connect(annotationMgr.selectAnnotationSlot);
 	}
 
 	public void clearCache() {

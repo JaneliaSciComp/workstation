@@ -20,6 +20,7 @@ import org.janelia.it.FlyWorkstation.gui.viewer3d.interfaces.Camera3d;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.interfaces.GLActor;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.shader.AbstractShader.ShaderCreationException;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.slice_viewer.Signal;
+import org.janelia.it.FlyWorkstation.gui.viewer3d.slice_viewer.Signal1;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.slice_viewer.Slot;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.slice_viewer.shader.PassThroughTextureShader;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.slice_viewer.shader.AnchorShader;
@@ -77,6 +78,8 @@ implements GLActor
 	private Anchor nextParent = null;
 	
 	public Signal skeletonActorChangedSignal = new Signal();
+
+    public Signal1<Anchor> nextParentChangedSignal = new Signal1<Anchor>();
 	
 	private Slot updateAnchorsSlot = new Slot() {
 		@Override
@@ -531,7 +534,10 @@ implements GLActor
 		if (parent == nextParent)
 			return false;
 		nextParent = parent;
-		skeletonActorChangedSignal.emit(); // marker changes
+        // first signal is for drawing the marker, second is for notifying
+        //  components that want to, eg, select the enclosing neuron
+		skeletonActorChangedSignal.emit();
+        nextParentChangedSignal.emit(nextParent);
 		return true;
 	}
 

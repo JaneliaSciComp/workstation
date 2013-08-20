@@ -210,20 +210,30 @@ public class AnnotationModel
             return;
         }
 
+        TmNeuron neuron = getNeuronFromAnnotation(rootAnnotation.getId());
+        if (neuron == null) {
+            // should this be an error?  it's a sign that the annotation has already
+            //  been deleted, or something else that shouldn't happen
+            return;
+        }
+
         // delete annotation
         // in DAO, delete method is pretty simplistic; it doesn't update parents; however,
         //  as we're deleting the whole tree, that doesn't matter for us
         // delete in child-first order
-        for (TmGeoAnnotation annotation: rootAnnotation.getSubTreeListReversed()) {
+        List<TmGeoAnnotation> deleteList = rootAnnotation.getSubTreeList();
+        for (TmGeoAnnotation annotation: deleteList) {
             modelMgr.deleteGeometricAnnotation(annotation.getId());
         }
 
         // update
+        updateCurrentWorkspace();
         updateCurrentNeuron();
 
         // notify the public
+        // why this notification??
         neuronSelectedSignal.emit(getCurrentNeuron());
-        anchorsDeletedSignal.emit(rootAnnotation.getSubTreeListReversed());
+        anchorsDeletedSignal.emit(deleteList);
     }
 
     public void loadWorkspace(TmWorkspace workspace) {
