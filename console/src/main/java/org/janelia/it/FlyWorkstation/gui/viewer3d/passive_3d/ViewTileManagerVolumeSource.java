@@ -123,9 +123,9 @@ public class ViewTileManagerVolumeSource implements VolumeSource {
             stdType = setAndStandardize( stdType, data.getType(), "Type" );
 
             if ( dataVolume == null ) {
-                dataVolume = new byte[ BRICK_WIDTH * BRICK_HEIGHT * BRICK_DEPTH * stdByteCount ];
+                dataVolume = new byte[ BRICK_WIDTH * BRICK_HEIGHT * BRICK_DEPTH * stdByteCount * stdChannelCount ];
             }
-            acceptTileData( data.getPixels(), index, stdByteCount );
+            acceptTileData( data.getPixels(), index, stdByteCount, stdChannelCount );
 
         }
 
@@ -142,7 +142,7 @@ public class ViewTileManagerVolumeSource implements VolumeSource {
         volumeAcceptor.accept( textureDataFor3D );
     }
 
-    private void acceptTileData(ByteBuffer pixels, TileIndex tileIndex, int byteCount) {
+    private void acceptTileData(ByteBuffer pixels, TileIndex tileIndex, int byteCount, int channelCount) {
         int stdTileSize = BRICK_WIDTH * BRICK_HEIGHT;
         TileFormat tileFormat = dataAdapter.getTileFormat();
 
@@ -152,13 +152,13 @@ public class ViewTileManagerVolumeSource implements VolumeSource {
 
         // Adjust for the inversion of Y between tile set and screen.
         // Note use of size - end for start, and - start for end.
-        int yTileAbsStart = tileFormat.getVolumeSize()[ 1 ] - (int)corners[ 3 ].y();
-        int yTileAbsEnd = tileFormat.getVolumeSize()[ 1 ] - (int)corners[ 0 ].y();
+        int yTileAbsStart = (int)corners[ 3 ].y();
+        int yTileAbsEnd = (int)corners[ 0 ].y();
         int xTileAbsStart = (int)corners[ 0 ].x();
         int xTileAbsEnd = (int)corners[ 3 ].x();
         int zTile = (int)corners[ 0 ].z();
 
-        if ( yTileAbsEnd < yTileAbsStart ) throw new IllegalStateException("Start must be > end");
+        if ( yTileAbsStart > yTileAbsEnd ) throw new IllegalStateException("Start must be < end");
 
         // Check for non-overlap of ranges.  If the ranges do not overlap, assume this is not a relevant tile.
         if ( ( yTileAbsStart > absoluteReqVolEndY  ||  yTileAbsEnd < absoluteReqVolStartY ) || ( xTileAbsStart > absoluteReqVolEndX || xTileAbsEnd < absoluteReqVolStartX ) ) {
@@ -188,19 +188,19 @@ public class ViewTileManagerVolumeSource implements VolumeSource {
         int inVolEndY = calcInVolEnd( absoluteReqVolEndY, absoluteReqVolStartY, yTileAbsStart );
 
         int inTileStartX = calcInTileStart(absoluteReqVolStartX, xTileAbsStart );
-        int inTileStartY = calcInTileStart(absoluteReqVolStartY, /*tileFormat.getVolumeSize()[1] - */yTileAbsStart );
+        int inTileStartY = calcInTileStart(absoluteReqVolStartY, yTileAbsStart );
 
         // Now add to the growing volume.
-        int zOutputOffset = (zTile - absoluteReqVolStartZ) * stdTileSize * byteCount;
+        int zOutputOffset = (zTile - absoluteReqVolStartZ) * stdTileSize * byteCount * channelCount;
         int tileWidth = xTileAbsEnd - xTileAbsStart;
         for ( int brickY = 0; brickY < (inVolEndY - inVolStartY); brickY++ ) {
 
-            int yOutputOffset = (brickY + inVolStartY) * BRICK_WIDTH * byteCount;
-            int yInputOffset = (brickY + inTileStartY) * tileWidth * byteCount;
+            int yOutputOffset = (brickY + inVolStartY) * BRICK_WIDTH * byteCount * channelCount;
+            int yInputOffset = (brickY + inTileStartY) * tileWidth * byteCount * channelCount;
 
-            int sourceStart = yInputOffset + (inTileStartX * byteCount);
-            int destStart = zOutputOffset + yOutputOffset + (inVolStartX * byteCount);
-            int copyLength = (inVolEndX - inVolStartX) * byteCount;
+            int sourceStart = yInputOffset + (inTileStartX * byteCount * channelCount);
+            int destStart = zOutputOffset + yOutputOffset + (inVolStartX * byteCount * channelCount);
+            int copyLength = (inVolEndX - inVolStartX) * byteCount * channelCount;
 
             //DEBUG System.out.println("Source start=" + sourceStart + ", destination start=" + destStart + ", source size=" + pixelArr.length + ", destination size=" + dataVolume.length);
 
