@@ -51,32 +51,7 @@ public class AnnotationPanel extends JPanel
             }
         };
 
-    private final Action testItem1Action = new AbstractAction() {
-        @Override
-        public void actionPerformed(ActionEvent e) {
-            // do test thing 1
-            // test: have we retrieved the initial entity properly?  yes!
-            System.out.println("initialEntity = " + annotationMgr.getInitialEntity());
-            System.out.println("initialEntity ID = " + annotationMgr.getInitialEntity().getId());
-
-            // can we get user?  yes, this works:
-            SessionMgr sessionMgr = SessionMgr.getSessionMgr();
-            Subject subject = sessionMgr.getSubject();
-            System.out.println("logged in subject name = " + subject.getName());
-            System.out.println("logged in subject key = " + subject.getKey());
-            }
-        };
-
-    private final Action testItem2Action = new AbstractAction() {
-        @Override
-        public void actionPerformed(ActionEvent e) {
-            // do test thing 2
-            System.out.println("test item 2");
-            }
-        };
-
-
-    public AnnotationPanel(AnnotationManager annotationMgr, AnnotationModel annotationModel, 
+    public AnnotationPanel(AnnotationManager annotationMgr, AnnotationModel annotationModel,
         SliceViewerTranslator sliceViewerTranslator) {
         this.annotationMgr = annotationMgr;
         this.annotationModel = annotationModel;
@@ -114,27 +89,18 @@ public class AnnotationPanel extends JPanel
     private void setupUI() {
         setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
 
-
-        // each of these placeholders will eventually be replaced by a
-        //  class that is connected to listen to the appropriate model
-        // eg, a WorkplaceInfoPanel will listen to a WorkplaceModel or
-        //  something like that; probably QuadViewUi will instantiate and
-        //  hook up everything
-
         // add a little breathing space at the top of the panel
         add(Box.createRigidArea(new Dimension(0, 20)));
 
-        // workspace information; show name, whatever attributes
+        // workspace information; show name, whatever attributes, list of neurons
         workspaceInfoPanel = new WorkspaceInfoPanel();
         add(workspaceInfoPanel);
 
 
-        // neuron information; show name, whatever attributes
+        // neuron information; show name, whatever attributes, list of neurites
         add(Box.createRigidArea(new Dimension(0, 20)));
         neuronInfoPanel = new NeuronInfoPanel();
         add(neuronInfoPanel);
-
-
 
 
 
@@ -155,20 +121,6 @@ public class AnnotationPanel extends JPanel
         createNeuronAction.putValue(Action.SHORT_DESCRIPTION, "Create a new neuron");
         createNeuronButton.setAction(createNeuronAction);        
         add(createNeuronButton);
-
-
-        // NOTE: don't add these buttons for release!
-        JButton testItem1Button = new JButton("Test item 1");
-        testItem1Action.putValue(Action.NAME, "Test item 1");
-        testItem1Action.putValue(Action.SHORT_DESCRIPTION, "Test item 1");
-        testItem1Button.setAction(testItem1Action);
-        // add(testItem1Button);
-
-        JButton testItem2Button = new JButton("Test item 2");
-        testItem2Action.putValue(Action.NAME, "Test item 2");
-        testItem2Action.putValue(Action.SHORT_DESCRIPTION, "Test item 2");
-        testItem2Button.setAction(testItem2Action);
-        // add(testItem2Button);
 
 
 
