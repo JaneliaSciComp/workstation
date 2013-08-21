@@ -31,7 +31,7 @@ public class TileIndexFinder {
         this.sliceAxis = sliceAxis;
     }
 
-    public Collection<TileIndex> executeForVoxelCoords(
+    public Collection<TileIndex> executeForTileCoords(
             int startVoxX, int startVoxY, int startVoxZ, int endVoxX, int endVoxY, int endVoxZ
     ) {
 
@@ -59,7 +59,7 @@ public class TileIndexFinder {
                     (int)protoVec.getX(),
                     (int)protoVec.getY(),
                     (int)protoVec.getZ(),
-                    0, 0, // Zoom and max zoom at 0.
+                    0, 0, // Zoom and max zoom at same value.
                     format.getIndexStyle(),
                     sliceAxis
             ); //xyz zoom maxzoom syle coordaxis
