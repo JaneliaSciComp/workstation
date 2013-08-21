@@ -73,6 +73,7 @@ public class AnnotationModel
 
     public void setCurrentNeuron(TmNeuron neuron) {
         currentNeuron = neuron;
+        updateCurrentNeuron();
         neuronSelectedSignal.emit(currentNeuron);
     }
 
@@ -122,16 +123,11 @@ public class AnnotationModel
     public void createNeuron(String name) throws Exception {
 
         TmNeuron neuron = modelMgr.createTiledMicroscopeNeuron(getCurrentWorkspace().getId(), name);
-        setCurrentNeuron(neuron);
 
         updateCurrentWorkspace();
-        updateCurrentNeuron();
-
-        // should eventually have an addNeuron signal and not reload entire workspace, but
-        //  for now, keep it simple
         workspaceLoadedSignal.emit(currentWorkspace);
-        neuronSelectedSignal.emit(currentNeuron);
 
+        setCurrentNeuron(neuron);
     }
 
     public void createWorkspace(Entity parentEntity, Long brainSampleID, String name) throws Exception {
