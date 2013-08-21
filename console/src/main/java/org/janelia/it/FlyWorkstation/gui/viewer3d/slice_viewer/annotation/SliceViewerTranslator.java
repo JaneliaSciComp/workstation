@@ -2,9 +2,12 @@ package org.janelia.it.FlyWorkstation.gui.viewer3d.slice_viewer.annotation;
 
 
 import org.janelia.it.FlyWorkstation.gui.viewer3d.Vec3;
+import org.janelia.it.FlyWorkstation.gui.viewer3d.slice_viewer.Signal;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.slice_viewer.Signal1;
+import org.janelia.it.FlyWorkstation.gui.viewer3d.slice_viewer.SliceViewer;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.slice_viewer.Slot1;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.slice_viewer.skeleton.Skeleton;
+import org.janelia.it.FlyWorkstation.gui.viewer3d.slice_viewer.skeleton.Anchor;
 import org.janelia.it.jacs.model.user_data.tiledMicroscope.*;
 
 import java.util.List;
@@ -22,11 +25,8 @@ import java.util.List;
  */
 public class SliceViewerTranslator {
 
-    // holds the skeleton; this is a temporary hack for short-term release;
-    //  eventually we'll communicate with signals & slots instead of calling methods
-    private Skeleton skeleton;
-
     private AnnotationModel annModel;
+    private SliceViewer sliceViewer;
 
     public Slot1<TmWorkspace> loadWorkspaceSlot = new Slot1<TmWorkspace>() {
         @Override
@@ -67,22 +67,25 @@ public class SliceViewerTranslator {
 
     public Signal1<TmGeoAnnotation> anchorAddedSignal = new Signal1<TmGeoAnnotation>();
     public Signal1<TmGeoAnnotation> anchorDeletedSignal = new Signal1<TmGeoAnnotation>();
+    public Signal clearSkeletonSignal = new Signal();
+    public  Signal clearNextParentSignal = new Signal();
 
-
-    public SliceViewerTranslator(AnnotationModel annModel) {
+    public SliceViewerTranslator(AnnotationModel annModel, SliceViewer sliceViewer) {
 
         this.annModel = annModel;
+        this.sliceViewer = sliceViewer;
 
         setupSignals();
 
     }
 
-    public void setSkeleton(Skeleton skeleton) {
-        this.skeleton = skeleton;
-
+    public void connectSkeletonSignals(Skeleton skeleton) {
         anchorAddedSignal.connect(skeleton.addAnchorSlot);
         anchorDeletedSignal.connect(skeleton.deleteAnchorSlot);
+        clearSkeletonSignal.connect(skeleton.clearSlot);
 
+        // experimental:
+        // clearNextParentSignal.connect(sliceViewer.getSkeletonActor().clearNextParentSlot);
 
     }
 
@@ -109,7 +112,14 @@ public class SliceViewerTranslator {
             return;
         }
 
-        // will eventually visually style selected neuron
+        // clear the selected parent annotation marker if it's not in the
+        //  selected neuron
+        Anchor anchor = sliceViewer.getSkeletonActor().getNextParent();
+        if (anchor != null && !neuron.getGeoAnnotationMap().containsKey(anchor.getGuid())) {
+            clearNextParentSignal.emit();
+        }
+
+        // may eventually visually style selected neuron here
 
     }
 
@@ -128,7 +138,7 @@ public class SliceViewerTranslator {
         }
 
         // clear existing
-        skeleton.clear();
+        clearSkeletonSignal.emit();
 
         // note that we must add annotations in parent-child sequence
         //  so lines get drawn correctly

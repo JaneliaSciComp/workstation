@@ -86,6 +86,13 @@ implements GLActor
 		public void execute() {updateAnchors();}
 	};
 
+    public Slot clearNextParentSlot = new Slot() {
+        @Override
+        public void execute() {
+            setNextParent(null);
+        }
+    };
+
 	public SkeletonActor() {}
 	
 	private void displayEdges(GL2 gl) {

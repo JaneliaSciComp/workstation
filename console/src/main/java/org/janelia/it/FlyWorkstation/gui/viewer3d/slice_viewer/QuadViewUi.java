@@ -35,7 +35,6 @@ import org.janelia.it.FlyWorkstation.gui.viewer3d.slice_viewer.annotation.SliceV
 import org.janelia.it.FlyWorkstation.gui.viewer3d.slice_viewer.skeleton.Skeleton;
 import org.janelia.it.jacs.model.entity.Entity;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.slice_viewer.skeleton.SkeletonActor;
-import org.janelia.it.jacs.model.user_data.tiledMicroscope.TmWorkspace;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 // import org.slf4j.Logger;
@@ -138,7 +137,7 @@ public class QuadViewUi extends JPanel
 	// annotation things
 	private AnnotationModel annotationModel = new AnnotationModel();
 	private AnnotationManager annotationMgr = new AnnotationManager(annotationModel);
-    private SliceViewerTranslator sliceViewerTranslator = new SliceViewerTranslator(annotationModel);
+    private SliceViewerTranslator sliceViewerTranslator = new SliceViewerTranslator(annotationModel, sliceViewer);
 
 	// Actions
 	private final Action openFolderAction = new OpenFolderAction(volumeImage, sliceViewer);
@@ -310,10 +309,11 @@ public class QuadViewUi extends JPanel
         // connect up text UI and model with graphic UI(s):
         skeleton.addAnchorRequestedSignal.connect(annotationMgr.addAnchorRequestedSlot);
         skeleton.anchorDeleteRequestedSignal.connect(annotationMgr.deleteAnchorRequestedSlot);
+        sliceViewer.getSkeletonActor().nextParentChangedSignal.connect(annotationMgr.selectAnnotationSlot);
         // TODO: not quite ready yet...
         // skeleton.anchorMovedSignal.connect(annotationMgr.moveAnchorRequestedSlot);
 
-        sliceViewerTranslator.setSkeleton(skeleton);
+        sliceViewerTranslator.connectSkeletonSignals(skeleton);
         sliceViewerTranslator.cameraPanToSignal.connect(setCameraFocusSlot);
 
 
@@ -337,14 +337,14 @@ public class QuadViewUi extends JPanel
         sliceViewer.setWheelMode(WheelMode.Mode.SCAN);
         // Respond to orthogonal mode changes
         orthogonalModeAction.orthogonalModeChanged.connect(new Slot1<OrthogonalMode>() {
-            	@Override
-        		public void execute(OrthogonalMode mode) {
-        			if (mode == OrthogonalMode.ORTHOGONAL) 
-        				setOrthogonalMode();
-        			else if (mode == OrthogonalMode.Z_VIEW) 
-        				setZViewMode();
-        			// repaint(); // not necessary.
-        		}
+            @Override
+            public void execute(OrthogonalMode mode) {
+                if (mode == OrthogonalMode.ORTHOGONAL)
+                    setOrthogonalMode();
+                else if (mode == OrthogonalMode.Z_VIEW)
+                    setZViewMode();
+                // repaint(); // not necessary.
+            }
         });
         setZViewMode();
         // Connect mode changes to widgets
@@ -396,9 +396,6 @@ LLF: the hookup for the 3d snapshot.
         // Set starting interaction modes
         panModeAction.actionPerformed(new ActionEvent(this, ActionEvent.ACTION_PERFORMED, null));
         zoomScrollModeAction.actionPerformed(new ActionEvent(this, ActionEvent.ACTION_PERFORMED, null));
-
-        // one more signal to hook up
-        sharedSkeletonActor.nextParentChangedSignal.connect(annotationMgr.selectAnnotationSlot);
 	}
 
 	public void clearCache() {
