@@ -53,13 +53,14 @@ public class TileIndexFinder {
     }
 
     private void addSliceTileIndices(Collection<TileIndex> rtnVal, Collection<Vec3> sliceCoverage) {
+        int zoomLevel = format.zoomLevelForCameraZoom(camera3d.getPixelsPerSceneUnit());
         for ( Vec3 protoVec: sliceCoverage ) {
             // Make an index around this vector.
             TileIndex nextTileInx = new TileIndex(
                     (int)protoVec.getX(),
                     (int)protoVec.getY(),
                     (int)protoVec.getZ(),
-                    0, 0, // Zoom and max zoom at same value.
+                    zoomLevel, zoomLevel, // Zoom and max zoom at same value.
                     format.getIndexStyle(),
                     sliceAxis
             ); //xyz zoom maxzoom syle coordaxis
