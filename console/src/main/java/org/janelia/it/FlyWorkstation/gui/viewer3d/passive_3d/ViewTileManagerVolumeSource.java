@@ -38,7 +38,7 @@ import java.util.concurrent.TimeUnit;
 public class ViewTileManagerVolumeSource implements VolumeSource {
     public static final int BRICK_WIDTH = 512;
     public static final int BRICK_HEIGHT = 512;
-    public static final int BRICK_DEPTH = 2;     //512
+    public static final int BRICK_DEPTH = 512;
     private Camera3d camera;
     private Viewport viewport;
     private CoordinateAxis sliceAxis;
@@ -94,29 +94,34 @@ public class ViewTileManagerVolumeSource implements VolumeSource {
         TileFormat tileFormat = dataAdapter.getTileFormat();
 
         absoluteReqVolStartX = (int) Math.floor((iterationCamera.getFocus().getX() - BRICK_WIDTH/2) / tileFormat.getVoxelMicrometers()[ 0 ]);
-        absoluteReqVolEndY = (int) Math.floor((iterationCamera.getFocus().getY() - BRICK_HEIGHT/2) / tileFormat.getVoxelMicrometers()[ 1 ]);
+        absoluteReqVolStartY = (int) Math.floor((iterationCamera.getFocus().getY() - BRICK_HEIGHT/2) / tileFormat.getVoxelMicrometers()[ 1 ]);
         absoluteReqVolStartZ = (int) Math.floor(iterationCamera.getFocus().getZ() - BRICK_DEPTH/2);
         if ( absoluteReqVolStartZ < 0 )
             absoluteReqVolStartZ = 0;
 
-        absoluteReqVolEndX = absoluteReqVolStartX + BRICK_WIDTH;
-        absoluteReqVolStartY = Math.max( 0, absoluteReqVolEndY - BRICK_HEIGHT );
-        absoluteReqVolEndZ = absoluteReqVolStartZ + BRICK_DEPTH;
+        absoluteReqVolEndX = absoluteReqVolStartX + BRICK_WIDTH - 1;
+        absoluteReqVolEndY = absoluteReqVolStartY + BRICK_HEIGHT - 1;
+        absoluteReqVolEndZ = absoluteReqVolStartZ + BRICK_DEPTH - 1;
+
+        logger.info("Absolute start/end Y are {}..{}.", absoluteReqVolStartY, absoluteReqVolEndY );
 
         // NOTE: camera has micrometer units.  TileIndex requires voxel units.  Hence need a conversion for x,y
         int startTileNumX = (int)((iterationCamera.getFocus().getX() - BRICK_WIDTH/2) / tileFormat.getVoxelMicrometers()[ 0 ] / tileFormat.getTileSize()[ 0 ] );
         int startTileNumY = (int)((iterationCamera.getFocus().getY() - BRICK_HEIGHT/2) / tileFormat.getVoxelMicrometers()[ 1 ] / tileFormat.getTileSize()[ 1 ] );
         int startTileNumZ = (int)((iterationCamera.getFocus().getZ()) / tileFormat.getVoxelMicrometers()[ 2 ] );
+        logger.info("Starting tile coords=(" + startTileNumX + "," + startTileNumY + "," + startTileNumZ + ")");
 
         // Cover leftward/bottomward/inward by 256 including 0.  Cover rightward/upward/outward 255 beyond start point.
         //  Total coverage 512.
         //    Dimensions expected to be divisible by 2.
+        // Subtracting 1 from all ending-tile numbers since (N-m)..(N+m) inclusive, covers 2m+1 distinct values.
         startTileNumX = Math.max( 0, startTileNumX );
         startTileNumY = Math.max( 0, startTileNumY );
         startTileNumZ = Math.max( 0, startTileNumZ );
-        int endTileNumX = (int)Math.ceil( startTileNumX + ( (BRICK_WIDTH / 2 - 1) / tileFormat.getVoxelMicrometers()[ 0 ] / tileFormat.getTileSize()[ 0 ] ) );
-        int endTileNumY = (int)Math.ceil( startTileNumY + (BRICK_HEIGHT / 2 - 1) / tileFormat.getVoxelMicrometers()[ 1 ] / tileFormat.getTileSize()[ 1 ] );
+        int endTileNumX = (int)Math.ceil( startTileNumX + ( (BRICK_WIDTH / 2 - 1) / tileFormat.getVoxelMicrometers()[ 0 ] / tileFormat.getTileSize()[ 0 ] ) ) - 1;
+        int endTileNumY = (int)Math.ceil( startTileNumY + (BRICK_HEIGHT / 2 - 1) / tileFormat.getVoxelMicrometers()[ 1 ] / tileFormat.getTileSize()[ 1 ] ) - 1;
         int endTileNumZ = (startTileNumZ + BRICK_DEPTH / (int)tileFormat.getVoxelMicrometers()[ 2 ]) - 1;
+        logger.info("Ending tile coords=(" + endTileNumX + "," + endTileNumY + "," + endTileNumZ + ")");
 
         TileIndexFinder indexFinder = new TileIndexFinder( tileFormat, camera, sliceAxis );
         Collection<TileIndex> indices = indexFinder.executeForTileCoords(
@@ -183,8 +188,8 @@ public class ViewTileManagerVolumeSource implements VolumeSource {
 
         // Adjust for the inversion of Y between tile set and screen.
         FragmentLoadParmBean paramBean = new FragmentLoadParmBean();
-        paramBean.yTileAbsStart = (int)corners[ 3 ].y();
-        paramBean.yTileAbsEnd = (int)corners[ 0 ].y();
+        paramBean.yTileAbsStart = (int)corners[ 0 ].y();
+        paramBean.yTileAbsEnd = (int)corners[ 3 ].y();
 
         paramBean.xTileAbsStart = (int)corners[ 0 ].x();
         paramBean.xTileAbsEnd = (int)corners[ 3 ].x();
@@ -192,7 +197,11 @@ public class ViewTileManagerVolumeSource implements VolumeSource {
 
         int zTile = (int)corners[ 0 ].z();
 
-        if ( paramBean.yTileAbsStart > paramBean.yTileAbsEnd ) throw new IllegalStateException("Start must be < end");
+        if ( paramBean.yTileAbsStart > paramBean.yTileAbsEnd ) {
+            logger.error("Start must be < end. Ignoring this tile [{},{}].", tileIndex.getX(), tileIndex.getY() );
+            logger.info("Ignored tile top-left={}.  bottom-right={}." + corners[0], corners[3]);
+            return;
+        }
 
         // Check for non-overlap of ranges.  If the ranges do not overlap, assume this is not a relevant tile.
         if ( ( paramBean.yTileAbsStart > absoluteReqVolEndY  ||  paramBean.yTileAbsEnd < absoluteReqVolStartY ) ||
@@ -244,7 +253,7 @@ public class ViewTileManagerVolumeSource implements VolumeSource {
         int zOutputOffset = (zTile - absoluteReqVolStartZ) * stdTileSize * byteCount * channelCount;
         paramBean.tileWidth = paramBean.xTileAbsEnd - paramBean.xTileAbsStart;
 //        ExecutorService threadPool = Executors.newFixedThreadPool( 5 );
-        for ( int yCounter = 0; yCounter < (paramBean.inVolEndY - paramBean.inVolStartY); yCounter++ ) {
+        for ( int yCounter = 0; yCounter < (paramBean.inVolEndY - paramBean.inVolStartY) - 1; yCounter++ ) {
 
             Runnable sliceLoadRunnable = new LineFragmentLoader(byteCount, channelCount, pixelArr, paramBean, zOutputOffset, yCounter);
             sliceLoadRunnable.run(); // TEMP: avoid clutter in output messages.
@@ -392,7 +401,7 @@ public class ViewTileManagerVolumeSource implements VolumeSource {
                     copyLength
             );
             } catch ( ArrayIndexOutOfBoundsException aioobe )  {
-                logger.error( "Out of bounds: " + sourceStart + ", source size=" + pixelArr.length + ".  Over " + copyLength + ". Dest start={};  Dest size={}.", destStart, dataVolume.length );
+                logger.error( "Out of bounds: " + sourceStart + ", source size=" + pixelArr.length + ".  Over " + copyLength + ". Dest start={};  Dest size={}.  zOutputOffset=" + zOutputOffset, destStart, dataVolume.length );
             }
         }
     }
