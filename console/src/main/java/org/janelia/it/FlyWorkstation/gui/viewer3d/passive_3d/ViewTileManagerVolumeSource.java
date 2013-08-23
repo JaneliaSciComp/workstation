@@ -93,35 +93,42 @@ public class ViewTileManagerVolumeSource implements VolumeSource {
         TextureDataI textureDataFor3D = null;
         TileFormat tileFormat = dataAdapter.getTileFormat();
 
-        absoluteReqVolStartX = (int) Math.floor((iterationCamera.getFocus().getX() - BRICK_WIDTH/2) / tileFormat.getVoxelMicrometers()[ 0 ]);
-        absoluteReqVolStartY = (int) Math.floor((iterationCamera.getFocus().getY() - BRICK_HEIGHT/2) / tileFormat.getVoxelMicrometers()[ 1 ]);
-        absoluteReqVolStartZ = (int) Math.floor(iterationCamera.getFocus().getZ() - BRICK_DEPTH/2);
+        logger.info("Absolute start/end Y are {}..{}.", absoluteReqVolStartY, absoluteReqVolEndY );
+
+        // NOTE: need to take zoom level into account for the expected return values.
+        int zoomFactor = (int)Math.pow( 2.0, tileFormat.zoomLevelForCameraZoom( camera.getPixelsPerSceneUnit()) );
+        // NOTE: camera has micrometer units.  TileIndex requires voxel units.  Hence need a conversion for x,y
+        int startTileNumX = (int)Math.floor((camera.getFocus().getX() - BRICK_WIDTH/2/zoomFactor) / tileFormat.getVoxelMicrometers()[ 0 ] / tileFormat.getTileSize()[ 0 ] );
+        int startTileNumY = (int)Math.floor((camera.getFocus().getY() - BRICK_HEIGHT/2/zoomFactor) / tileFormat.getVoxelMicrometers()[ 1 ] / tileFormat.getTileSize()[ 1 ] );
+        int startTileNumZ = (int)Math.floor((camera.getFocus().getZ()) / tileFormat.getVoxelMicrometers()[ 2 ] / tileFormat.getTileSize()[ 2 ] );
+        logger.info("Starting tile coords=(" + startTileNumX + "," + startTileNumY + "," + startTileNumZ + ")");
+
+        // Cover leftward/bottomward/inward by half brick dimension including 0.  Cover rightward/upward/outward
+        // half brick dimension beyond start point.
+        //  Total coverage full brick dimension.
+        //    Dimensions expected to be divisible by 2.
+        startTileNumX = Math.max( 0, startTileNumX );
+        startTileNumY = Math.max( 0, startTileNumY );
+        startTileNumZ = Math.max( 0, startTileNumZ );
+        int endTileNumX = (int)Math.ceil( startTileNumX + ( (BRICK_WIDTH / 2 - 1) / tileFormat.getVoxelMicrometers()[ 0 ] / tileFormat.getTileSize()[ 0 ] ) );
+        int endTileNumY = (int)Math.ceil( startTileNumY + ( (BRICK_HEIGHT / 2 - 1) / tileFormat.getVoxelMicrometers()[ 1 ] / tileFormat.getTileSize()[ 1 ] ) );
+        // Subtracting 1 from ending-tile Z since (N-m)..(N+m) inclusive, covers 2m+1 distinct values.
+        int endTileNumZ = (startTileNumZ + BRICK_DEPTH / (int)tileFormat.getVoxelMicrometers()[ 2 ] / tileFormat.getTileSize()[ 2 ]) - 1;
+        logger.info("Ending tile coords=(" + endTileNumX + "," + endTileNumY + "," + endTileNumZ + ")");
+
+        absoluteReqVolStartX = zoomFactor *
+                (int) Math.floor((camera.getFocus().getX() - BRICK_WIDTH/2/zoomFactor) / tileFormat.getVoxelMicrometers()[ 0 ]);
+        absoluteReqVolStartY = zoomFactor *
+                (int) Math.floor((camera.getFocus().getY() - BRICK_HEIGHT/2/zoomFactor) / tileFormat.getVoxelMicrometers()[ 1 ]);
+        absoluteReqVolStartZ = zoomFactor *
+                (int) Math.floor((camera.getFocus().getZ() - BRICK_DEPTH/2/zoomFactor) / tileFormat.getVoxelMicrometers()[ 2 ]);
+
         if ( absoluteReqVolStartZ < 0 )
             absoluteReqVolStartZ = 0;
 
         absoluteReqVolEndX = absoluteReqVolStartX + BRICK_WIDTH - 1;
         absoluteReqVolEndY = absoluteReqVolStartY + BRICK_HEIGHT - 1;
         absoluteReqVolEndZ = absoluteReqVolStartZ + BRICK_DEPTH - 1;
-
-        logger.info("Absolute start/end Y are {}..{}.", absoluteReqVolStartY, absoluteReqVolEndY );
-
-        // NOTE: camera has micrometer units.  TileIndex requires voxel units.  Hence need a conversion for x,y
-        int startTileNumX = (int)((iterationCamera.getFocus().getX() - BRICK_WIDTH/2) / tileFormat.getVoxelMicrometers()[ 0 ] / tileFormat.getTileSize()[ 0 ] );
-        int startTileNumY = (int)((iterationCamera.getFocus().getY() - BRICK_HEIGHT/2) / tileFormat.getVoxelMicrometers()[ 1 ] / tileFormat.getTileSize()[ 1 ] );
-        int startTileNumZ = (int)((iterationCamera.getFocus().getZ()) / tileFormat.getVoxelMicrometers()[ 2 ] );
-        logger.info("Starting tile coords=(" + startTileNumX + "," + startTileNumY + "," + startTileNumZ + ")");
-
-        // Cover leftward/bottomward/inward by 256 including 0.  Cover rightward/upward/outward 255 beyond start point.
-        //  Total coverage 512.
-        //    Dimensions expected to be divisible by 2.
-        // Subtracting 1 from all ending-tile numbers since (N-m)..(N+m) inclusive, covers 2m+1 distinct values.
-        startTileNumX = Math.max( 0, startTileNumX );
-        startTileNumY = Math.max( 0, startTileNumY );
-        startTileNumZ = Math.max( 0, startTileNumZ );
-        int endTileNumX = (int)Math.ceil( startTileNumX + ( (BRICK_WIDTH / 2 - 1) / tileFormat.getVoxelMicrometers()[ 0 ] / tileFormat.getTileSize()[ 0 ] ) ) - 1;
-        int endTileNumY = (int)Math.ceil( startTileNumY + (BRICK_HEIGHT / 2 - 1) / tileFormat.getVoxelMicrometers()[ 1 ] / tileFormat.getTileSize()[ 1 ] ) - 1;
-        int endTileNumZ = (startTileNumZ + BRICK_DEPTH / (int)tileFormat.getVoxelMicrometers()[ 2 ]) - 1;
-        logger.info("Ending tile coords=(" + endTileNumX + "," + endTileNumY + "," + endTileNumZ + ")");
 
         TileIndexFinder indexFinder = new TileIndexFinder( tileFormat, camera, sliceAxis );
         Collection<TileIndex> indices = indexFinder.executeForTileCoords(
@@ -233,21 +240,21 @@ public class ViewTileManagerVolumeSource implements VolumeSource {
         paramBean.inTileStartX = calcInTileStart( paramBean.xTileAbsStart, absoluteReqVolStartX );
         paramBean.inTileStartY = calcInTileStart( paramBean.yTileAbsStart, absoluteReqVolStartY );
 
-        logger.debug("absolute request X=(" + absoluteReqVolStartX +
+        logger.info("absolute request X=(" + absoluteReqVolStartX +
                 "," + absoluteReqVolEndX +
                 "), absolute tile X=(" + paramBean.xTileAbsStart +
                 "," + paramBean.xTileAbsEnd +
                 "), extent of volume, in X=" + tileFormat.getVolumeSize()[ 0 ] +
                 "; in-tile coords X start=" + paramBean.inTileStartX
         );
-        logger.debug("in-vol-X=(" + paramBean.inVolStartX + "," + paramBean.inVolEndX + ")");
+        logger.info("in-vol-X=(" + paramBean.inVolStartX + "," + paramBean.inVolEndX + ")");
 
-        logger.debug("absolute request Y=(" + absoluteReqVolStartY +
+        logger.info("absolute request Y=(" + absoluteReqVolStartY +
                 "," + absoluteReqVolEndY + "), absolute tile Y=(" + paramBean.yTileAbsStart +
                 "," + paramBean.yTileAbsEnd + "), extent of volume, in Y=" + tileFormat.getVolumeSize()[ 1 ] +
                 "; in-tile coords Y start=" + paramBean.inTileStartY
         );
-        logger.debug("in-vol-Y=(" + paramBean.inVolStartY + "," + paramBean.inVolEndY + ")");
+        logger.info("in-vol-Y=(" + paramBean.inVolStartY + "," + paramBean.inVolEndY + ")");
 
         // Now add to the growing volume.
         int zOutputOffset = (zTile - absoluteReqVolStartZ) * stdTileSize * byteCount * channelCount;
