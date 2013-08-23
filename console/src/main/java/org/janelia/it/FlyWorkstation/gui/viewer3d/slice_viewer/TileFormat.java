@@ -106,7 +106,7 @@ public class TileFormat
 		int horizontalAxis = (depthAxis + 1) % 3;
 		Vec3 dv = new Vec3(); // diagonal vector across tile block
 		for (int i = 0; i < 3; ++i) {
-			dv.set(i, getTileSize()[i] * getVoxelMicrometers()[i]);
+			dv.set(i, zoomFactor * getTileSize()[i] * getVoxelMicrometers()[i]);
 			double val = v1.get(i);
 			// shift to center of slice
 			if (i == depthAxis)
