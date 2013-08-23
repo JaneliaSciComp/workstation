@@ -409,6 +409,7 @@ public class ViewTileManagerVolumeSource implements VolumeSource {
             );
             } catch ( ArrayIndexOutOfBoundsException aioobe )  {
                 logger.error( "Out of bounds: " + sourceStart + ", source size=" + pixelArr.length + ".  Over " + copyLength + ". Dest start={};  Dest size={}.  zOutputOffset=" + zOutputOffset, destStart, dataVolume.length );
+                logger.error( "Out of bounds(2): yInputOffset=" + yInputOffset + ", sourceStart=" + sourceStart );
             }
         }
     }
