@@ -1,9 +1,20 @@
 package org.janelia.it.FlyWorkstation.gui.viewer3d.slice_viewer;
 
+import java.awt.image.BufferedImage;
 import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.OutputStream;
 import java.net.MalformedURLException;
+import java.util.Iterator;
 
 import org.janelia.it.FlyWorkstation.gui.viewer3d.Vec3;
+
+import com.google.common.collect.Iterators;
+import com.sun.media.jai.codec.ImageCodec;
+import com.sun.media.jai.codec.ImageEncoder;
+import com.sun.media.jai.codec.TIFFEncodeParam;
 
 public class ExtractOctreeSubvolume {
 
@@ -35,24 +46,36 @@ public class ExtractOctreeSubvolume {
 			System.err.println(e.getMessage());
 			usage(args);
 			System.exit(1);
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
 		}
 	}
 	
 	/**
 	 * Implementation with stronger type arguments than main() has...
-	 * @throws MalformedURLException 
+	 * @throws IOException 
 	 */
 	private static void extractSubvolume(
 			Vec3 corner1,
 			Vec3 corner2,
 			double resolutionMicrometers,
 			File inputOctreeFolder,
-			File outputTiff) throws MalformedURLException 
+			File outputTiff) throws IOException 
 	{
 		SharedVolumeImage wholeImage = new SharedVolumeImage();
 		wholeImage.loadURL(inputOctreeFolder.toURI().toURL());
 		Subvolume subvolume = Subvolume.loadSubvolumeMicrometers(corner1, corner2, resolutionMicrometers, wholeImage);
-		// TODO write tiff
+		// Write output tiff
+		BufferedImage outSlices[] = subvolume.getAsBufferedImages();
+		TIFFEncodeParam params = new TIFFEncodeParam();
+		Iterator<BufferedImage> it = Iterators.forArray(outSlices);
+		if (it.hasNext()) it.next(); // Avoid duplicate first slice
+		params.setExtraImages(it); 
+		OutputStream out = new FileOutputStream(outputTiff);
+		ImageEncoder encoder = ImageCodec.createImageEncoder("tiff", out, params);
+		encoder.encode(outSlices[0]); 
+		out.close(); 
 	}
 
 	private static void usage(String [] args) {

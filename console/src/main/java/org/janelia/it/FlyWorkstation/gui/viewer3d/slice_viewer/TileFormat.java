@@ -106,27 +106,34 @@ public class TileFormat
 		int horizontalAxis = (depthAxis + 1) % 3;
 		Vec3 dv = new Vec3(); // diagonal vector across tile block
 		for (int i = 0; i < 3; ++i) {
-			dv.set(i, zoomFactor * getTileSize()[i] * getVoxelMicrometers()[i]);
-			double val = v1.get(i);
-			// shift to center of slice
-			if (i == depthAxis)
-				val += 0.5;
-			// scale by zoom level
-			if ((i != depthAxis) || (indexStyle == TileIndex.IndexStyle.OCTREE))
-				val *= zoomFactor;
-			// convert tiles to voxels
-			if (i != depthAxis)
+			// dv.set(i, zoomFactor * getTileSize()[i] * getVoxelMicrometers()[i]);
+			double val = v1.get(i); // position of upper left front corner of tile, in micrometers
+			double dVal = 1.0; // size of tile in micrometers
+			if (i == depthAxis) {
+				val += 0.5; // shift to center of slice
+				dVal = 0.0; // Tile is flat in depth dimension
+			}
+			else { // convert tiles to voxels
 				val *= getTileSize()[i];
+				dVal *= getTileSize()[i];
+			}
+			// scale by zoom level
+			if ((i != depthAxis) || (indexStyle == TileIndex.IndexStyle.OCTREE)) {
+				val *= zoomFactor;
+				dVal *= zoomFactor;
+			}
 			// invert vertical direction; tile origin is bottom left, image origin is top left
 			if (i == verticalAxis) {
-				val = volumeSize[i] - val - getTileSize()[i]; // invert Y value
+				val = volumeSize[i] - val - dVal; // invert Y value
 			}
 			// Shift to world origin
 			val += origin[i];
 			// convert voxels to micrometers
 			val *= getVoxelMicrometers()[i];
+			dVal *= getVoxelMicrometers()[i];
 			// 
 			v1.set(i, val);
+			dv.set(i, dVal);
 		}
 		
 		Vec3 dw = new Vec3(0,0,0);

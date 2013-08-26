@@ -11,21 +11,23 @@ public class TestTileFormat {
 	// Volume like "M:/render/2013-04-25-AAV/"
 	private TileFormat createAavFormat() {
 		TileFormat tileFormat = new TileFormat();
+		tileFormat.setDefaultParameters();
 		tileFormat.setVolumeSize(new int[] {65536, 65536, 7936});
 		tileFormat.setVoxelMicrometers(new double[] {1.0, 1.0, 1.0});
 		tileFormat.setTileSize(new int[] {1024, 1024, 124});
+		tileFormat.setZoomLevelCount(7);
 		return tileFormat;
 	}
 	
 	// xyz->TileIndex->cornerXyz sanity check
-	private void sanityCheckXyz(Vec3 xyz, TileFormat format) {
-		TileIndex ix = format.tileIndexForXyz(xyz, 0, CoordinateAxis.Z);
+	private void sanityCheckXyz(Vec3 xyz, TileFormat format, int zoom) {
+		TileIndex ix = format.tileIndexForXyz(xyz, zoom, CoordinateAxis.Z);
 		Vec3 corners[] = format.cornersForTileIndex(ix);
 		assertTrue(xyz.getX() >= corners[0].getX() - 1e-6);
 		assertTrue(xyz.getX() <= corners[1].getX() + 1e-6);
 		// 
 		assertTrue(xyz.getY() >= corners[0].getY() - 1e-6);
-		assertTrue(xyz.getY() <= corners[2].getY() + 1e-6);
+		assertTrue(xyz.getY() <= corners[3].getY() + 1e-6);
 		// From Les Foster test 8/19/2013
 		assertTrue(corners[0].getY() <= corners[3].getY());
 		assertTrue(corners[0].getX() <= corners[3].getX());
@@ -49,10 +51,15 @@ public class TestTileFormat {
 		assertEquals(39, ix2.getY());
 		assertEquals(1243, ix2.getZ());
 		
-		sanityCheckXyz(new Vec3(0,0,0), tileFormat);
-		sanityCheckXyz(new Vec3(2048,2048,0), tileFormat);
-		sanityCheckXyz(new Vec3(2047,2047,0), tileFormat);
-		sanityCheckXyz(new Vec3(2049,2049,0), tileFormat);
+		sanityCheckXyz(new Vec3(0,0,0), tileFormat, 0);
+		sanityCheckXyz(new Vec3(2048,2048,0), tileFormat, 0);
+		sanityCheckXyz(new Vec3(2047,2047,0), tileFormat, 0);
+		sanityCheckXyz(new Vec3(2049,2049,0), tileFormat, 0);
+		
+		sanityCheckXyz(new Vec3(0,0,0), tileFormat, 3);
+		sanityCheckXyz(new Vec3(2048,2048,0), tileFormat, 3);
+		sanityCheckXyz(new Vec3(2047,2047,0), tileFormat, 3);
+		sanityCheckXyz(new Vec3(2049,2049,0), tileFormat, 3);
 	}
 
 	@Test

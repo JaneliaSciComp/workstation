@@ -1,5 +1,6 @@
 package org.janelia.it.FlyWorkstation.gui.viewer3d.slice_viewer;
 
+import java.awt.image.BufferedImage;
 import java.util.LinkedHashSet;
 import java.util.Set;
 
@@ -10,6 +11,8 @@ import org.janelia.it.FlyWorkstation.gui.viewer3d.slice_viewer.AbstractTextureLo
 import org.janelia.it.FlyWorkstation.gui.viewer3d.slice_viewer.AbstractTextureLoadAdapter.TileLoadError;
 
 public class Subvolume {
+	
+	private int extentVoxels[] = {0, 0, 0};
 	
 	// Load an octree subvolume into memory as a dense volume block
 	public static Subvolume loadSubvolumeMicrometers(
@@ -111,5 +114,19 @@ public class Subvolume {
 	public Signal1<Subvolume> subvolumeLoaded = new Signal1<Subvolume>();
 
 	private Subvolume() {}
+
+	public BufferedImage[] getAsBufferedImages() {
+		int sx = extentVoxels[0];
+		int sy = extentVoxels[1];
+		int sz = extentVoxels[2];
+		BufferedImage result[] = new BufferedImage[sz];
+		for (int z = 0; z < sz; ++z) {
+			// TODO
+			/* result[z] = new BufferedImage(sx, sy,
+					bufferedSlice1.getType());
+					*/
+		}
+		return null;
+	}
 	
 }
