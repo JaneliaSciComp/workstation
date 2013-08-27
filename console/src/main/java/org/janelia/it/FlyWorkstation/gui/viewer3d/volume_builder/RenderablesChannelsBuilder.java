@@ -52,7 +52,7 @@ public class RenderablesChannelsBuilder extends RenderablesVolumeBuilder impleme
         channelMetaData = new ChannelMetaData();
         channelMetaData.rawChannelCount = 3; // Forcing a good upper bound.
         channelMetaData.channelCount = 4;
-        channelMetaData.byteCount = 2; // Forcing a good upper bound.
+        channelMetaData.byteCount = FIXED_BYTE_PER_CHANNEL;
         channelMetaData.redChannelInx = 0;
         channelMetaData.greenChannelInx = 1;
         channelMetaData.blueChannelInx = 2;
