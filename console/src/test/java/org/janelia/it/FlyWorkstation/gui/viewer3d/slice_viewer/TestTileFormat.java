@@ -23,14 +23,28 @@ public class TestTileFormat {
 	private void sanityCheckXyz(Vec3 xyz, TileFormat format, int zoom) {
 		TileIndex ix = format.tileIndexForXyz(xyz, zoom, CoordinateAxis.Z);
 		Vec3 corners[] = format.cornersForTileIndex(ix);
-		assertTrue(xyz.getX() >= corners[0].getX() - 1e-6);
-		assertTrue(xyz.getX() <= corners[1].getX() + 1e-6);
+		// Verify that the tile corners bound the seed point xyz
+		double epsilon = 1e-6; // roundoff error tolerance
+		assertTrue(xyz.getX() >= corners[0].getX() - epsilon);
+		assertTrue(xyz.getX() <= corners[1].getX() + epsilon);
 		// 
-		assertTrue(xyz.getY() >= corners[0].getY() - 1e-6);
-		assertTrue(xyz.getY() <= corners[3].getY() + 1e-6);
+		assertTrue(xyz.getY() >= corners[0].getY() - epsilon);
+		assertTrue(xyz.getY() <= corners[3].getY() + epsilon);
 		// From Les Foster test 8/19/2013
+		// Verify relative position of corners
 		assertTrue(corners[0].getY() <= corners[3].getY());
 		assertTrue(corners[0].getX() <= corners[3].getX());
+		// Verify that adjacent tiles perfectly cover space
+		// Consider another tile to the lower right of ix
+		TileIndex ixDiag = new TileIndex(
+				ix.getX()+1, ix.getY()-1, ix.getZ(),
+				ix.getZoom(), ix.getMaxZoom(), 
+				ix.getIndexStyle(),
+				ix.getSliceAxis());
+		Vec3 cornersDiag[] = format.cornersForTileIndex(ixDiag);
+		assertEquals(corners[3].getX(), cornersDiag[0].getX(), epsilon);
+		assertEquals(corners[3].getY(), cornersDiag[0].getY(), epsilon);
+		assertEquals(corners[3].getZ(), cornersDiag[0].getZ(), epsilon);
 	}
 	
 	@Test
@@ -56,10 +70,13 @@ public class TestTileFormat {
 		sanityCheckXyz(new Vec3(2047,2047,0), tileFormat, 0);
 		sanityCheckXyz(new Vec3(2049,2049,0), tileFormat, 0);
 		
+		// Non-zero zoom
 		sanityCheckXyz(new Vec3(0,0,0), tileFormat, 3);
 		sanityCheckXyz(new Vec3(2048,2048,0), tileFormat, 3);
 		sanityCheckXyz(new Vec3(2047,2047,0), tileFormat, 3);
 		sanityCheckXyz(new Vec3(2049,2049,0), tileFormat, 3);
+		
+		// TODO - non-Z slices
 	}
 
 	@Test
@@ -79,20 +96,21 @@ public class TestTileFormat {
 		//  2 --- 3
 		//
 		// X coordinate : the easy case
-		assertEquals(0, corners[0].getX(), 1e-6);
-		assertEquals(0, corners[2].getX(), 1e-6);
-		assertEquals(1024.0, corners[1].getX(), 1e-6);
-		assertEquals(1024.0, corners[3].getX(), 1e-6);
+		double epsilon = 1e-6;
+		assertEquals(0, corners[0].getX(), epsilon);
+		assertEquals(0, corners[2].getX(), epsilon);
+		assertEquals(1024.0, corners[1].getX(), epsilon);
+		assertEquals(1024.0, corners[3].getX(), epsilon);
 		// Y : trickier because of inversion between Raveler and image order
-		assertEquals(0.0, corners[0].getY(), 1e-6);
-		assertEquals(0.0, corners[1].getY(), 1e-6);
-		assertEquals(1024.0, corners[2].getY(), 1e-6);
-		assertEquals(1024.0, corners[3].getY(), 1e-6);
+		assertEquals(0.0, corners[0].getY(), epsilon);
+		assertEquals(0.0, corners[1].getY(), epsilon);
+		assertEquals(1024.0, corners[2].getY(), epsilon);
+		assertEquals(1024.0, corners[3].getY(), epsilon);
 		// Z : constant
-		assertEquals(0.5, corners[0].getZ(), 1e-6);
-		assertEquals(0.5, corners[1].getZ(), 1e-6);
-		assertEquals(0.5, corners[2].getZ(), 1e-6);
-		assertEquals(0.5, corners[3].getZ(), 1e-6);
+		assertEquals(0.5, corners[0].getZ(), epsilon);
+		assertEquals(0.5, corners[1].getZ(), epsilon);
+		assertEquals(0.5, corners[2].getZ(), epsilon);
+		assertEquals(0.5, corners[3].getZ(), epsilon);
 	}
 
 	@Test
