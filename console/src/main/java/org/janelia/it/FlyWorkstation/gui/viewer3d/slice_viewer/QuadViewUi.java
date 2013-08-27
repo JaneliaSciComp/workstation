@@ -310,8 +310,7 @@ public class QuadViewUi extends JPanel
         skeleton.addAnchorRequestedSignal.connect(annotationMgr.addAnchorRequestedSlot);
         skeleton.anchorDeleteRequestedSignal.connect(annotationMgr.deleteAnchorRequestedSlot);
         sliceViewer.getSkeletonActor().nextParentChangedSignal.connect(annotationMgr.selectAnnotationSlot);
-        // TODO: not quite ready yet...
-        // skeleton.anchorMovedSignal.connect(annotationMgr.moveAnchorRequestedSlot);
+        skeleton.anchorMovedSignal.connect(annotationMgr.moveAnchorRequestedSlot);
 
         sliceViewerTranslator.connectSkeletonSignals(skeleton);
         sliceViewerTranslator.cameraPanToSignal.connect(setCameraFocusSlot);

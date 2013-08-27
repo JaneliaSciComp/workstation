@@ -191,9 +191,19 @@ public class AnnotationModel
 
     public void moveAnnotation(Long annotationID, Vec3 location) throws Exception {
         TmGeoAnnotation annotation = getGeoAnnotationFromID(annotationID);
+        try {
         modelMgr.updateGeometricAnnotation(annotation, annotation.getIndex(),
             location.getX(), location.getY(), location.getZ(),
             annotation.getComment());
+        } catch (Exception e) {
+            // error means not persisted; however, in the process of moving,
+            //  the marker's been moved; tell the view to update to current
+            //  position even after an error
+            // this is unfortunately untested, because I couldn't think of an
+            //  easy way to simulate or force a failure!
+            anchorUpdatedSignal.emit(getGeoAnnotationFromID(annotationID));
+            throw e;
+        }
 
         // update
         updateCurrentNeuron();
