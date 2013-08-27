@@ -17,10 +17,17 @@ import org.janelia.it.FlyWorkstation.gui.viewer3d.slice_viewer.Slot;
 public class AbstractStereoMode 
 implements GLEventListener
 {
-
+	
+	// Adjustable parameters for viewing geometry
+	// CMB 6.2 cm;
+	protected double intraOcularDistanceCm = 6.2; // varies per user
+	protected double screenEyeDistanceCm = 70.0; // varies per seat
+	// Library Dell U2713H 2560x1440 pixels; 59.67x33.57 cm; => 42.9 pixels/cm
+	protected double screenPixelsPerCm = 42.9; // varies per monitor
+	
 	private GLU glu = new GLU();
 	private Vec3 upInCamera = new Vec3(0,-1,0);
-	private double cameraDistanceInPixels = 2000;
+	// private double cameraDistanceInPixels = 2000;
 	private ObservableCamera3d camera;
 	private boolean viewChanged = false;
 	private boolean swapEyes = false;
@@ -196,14 +203,22 @@ implements GLEventListener
 		int w = viewportWidth;
 		int h = viewportHeight;
 		double aspect = w/(double)h;
-	    double camDist = cameraDistanceInPixels / camera.getPixelsPerSceneUnit();
-	    double tanx = cameraDistanceInPixels;
+		// Convert between 3 coordinate systems:
+		//  1) real world/user/lab in units of centimeters (cm)
+		//  2) monitor screen in units of pixels (px)
+		//  3) scene world in scene units (scene)
+		// Distance from user/camera to screen/focal point
+		double camDistCm = screenEyeDistanceCm;
+		double camDistPx = camDistCm * screenPixelsPerCm;
+	    double camDistScene = camDistPx / camera.getPixelsPerSceneUnit();
+	    double tanx = camDistPx;
 	    double tany = h / 2.0;
 	    double fovy = 2 * Math.atan2(tany, tanx) * 180 / Math.PI; // degrees
-	    double zNear = 0.3 * camDist;
-	    double zFar = 3.0 * camDist;
-	    // TODO make IOD adjustable and in lab units
-	    double IOD = 150 / camera.getPixelsPerSceneUnit(); // intra-ocular distance
+	    double zNear = 0.3 * camDistScene;
+	    double zFar = 3.0 * camDistScene;
+	    // Distance between the viewers eyes
+	    double iodPx = intraOcularDistanceCm * screenPixelsPerCm;
+	    double iodScene = iodPx / camera.getPixelsPerSceneUnit();
 
 	    gl.glMatrixMode(GL2.GL_PROJECTION);
 		gl.glLoadIdentity();
@@ -211,8 +226,10 @@ implements GLEventListener
 		// TODO - probably don't need both atan2() and tan()...
 		double top = zNear * Math.tan(fovy/360*Math.PI);
 		double right = aspect * top;
-		double frustumShift = -eye * (IOD/2) * (zNear/camDist);
-		double modelTranslation = -eye * IOD/2; // for right eye
+
+		double frustumShift = -eye * (iodScene/2) * (zNear/camDistScene);
+		
+		double modelTranslation = -eye * iodScene/2; // for right eye
 		gl.glFrustum(
 				-right + frustumShift, right + frustumShift,
 		        -top, top,
@@ -231,8 +248,11 @@ implements GLEventListener
 		Vec3 f = camera.getFocus();
 	    Rotation3d g_R_c = camera.getRotation();
 	    Vec3 u_g = g_R_c.times(upInCamera);
-	    double camDist = cameraDistanceInPixels / camera.getPixelsPerSceneUnit();
-	    Vec3 c = f.plus(g_R_c.times(new Vec3(0,0,-camDist)));
+		// Distance from user/camera to screen/focal point
+		double camDistCm = screenEyeDistanceCm;
+		double camDistPx = camDistCm * screenPixelsPerCm;
+	    double camDistScene = camDistPx / camera.getPixelsPerSceneUnit();
+	    Vec3 c = f.plus(g_R_c.times(new Vec3(0,0,-camDistScene)));
 	    glu.gluLookAt(c.x(), c.y(), c.z(), // camera in ground
 	            f.x(), f.y(), f.z(), // focus in ground
 	            u_g.x(), u_g.y(), u_g.z()); // up vector in ground

@@ -1,6 +1,12 @@
 package org.janelia.it.FlyWorkstation.gui.viewer3d.demo;
 
+import java.awt.Component;
 import java.awt.Dimension;
+
+import javax.media.opengl.GLCapabilities;
+import javax.media.opengl.GLCapabilitiesImmutable;
+import javax.media.opengl.GLProfile;
+import javax.media.opengl.awt.GLCanvas;
 import javax.media.opengl.awt.GLJPanel;
 import javax.swing.JFrame;
 
@@ -22,14 +28,18 @@ public class TeapotDemo extends JFrame
         });
 	}
 
-	
-	private GLJPanel glPanel = new GLJPanel();
+	Component glComponent;
 	
 	public TeapotDemo() {
     	setTitle("Teapot Demo");
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 
         // Create canvas for openGL display of teapot
+        GLCapabilities glCapabilities = new GLCapabilities(GLProfile.getDefault());
+        glCapabilities.setStereo(true);
+        GLCanvas glPanel = new GLCanvas(glCapabilities);
+        //
+        glComponent = glPanel;
         glPanel.setPreferredSize(new Dimension(1280, 800));
         getContentPane().add(glPanel);
 
@@ -50,16 +60,15 @@ public class TeapotDemo extends JFrame
 		camera.setPixelsPerSceneUnit(200);
 
 		// Wrap mono actor in stereo 3D mode
-        AbstractStereoMode stereoMode = new LeftRightStereoMode(
+        AbstractStereoMode stereoMode = new HardwareStereoMode(
         		camera, monoActor);
-        // so I can look at it cross-eyed for testing
         // stereoMode.setSwapEyes(true);
         glPanel.addGLEventListener(stereoMode);
         stereoMode.viewChangedSignal.connect(
         		new Slot() {
 					@Override
 					public void execute() {
-						glPanel.repaint();
+						glComponent.repaint();
 					}
         		});
         

@@ -6,9 +6,9 @@ import javax.media.opengl.GLEventListener;
 
 import org.janelia.it.FlyWorkstation.gui.viewer3d.camera.ObservableCamera3d;
 
-public class LeftRightStereoMode extends AbstractStereoMode 
+public class CrossEyeStereoMode extends AbstractStereoMode 
 {
-    public LeftRightStereoMode(
+    public CrossEyeStereoMode(
     		ObservableCamera3d camera, 
     		GLEventListener monoActor)
 	{
@@ -18,14 +18,14 @@ public class LeftRightStereoMode extends AbstractStereoMode
 	public void display(GLAutoDrawable glDrawable) {
 		// Clear color and depth just once for both views
 		super.clear(glDrawable);
-	    // Left eye view on left
+	    // Right eye view on left
 	    final GL2 gl = glDrawable.getGL().getGL2();
 		gl.glViewport(0, 0, viewportWidth, viewportHeight);
-		setLeftEyeView(gl);
-		paintScene(glDrawable);
-		// Right eye view on right
-		gl.glViewport(viewportWidth, 0, viewportWidth, viewportHeight);
 		setRightEyeView(gl);
+		paintScene(glDrawable);
+		// Left eye view on right
+		gl.glViewport(viewportWidth, 0, viewportWidth, viewportHeight);
+		setLeftEyeView(gl);
 		paintScene(glDrawable);
 	}
 
