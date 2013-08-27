@@ -137,18 +137,29 @@ public class RenderablesLoadWorker extends SimpleWorker implements VolumeLoader 
         }
 
         //  The mask stream is required in all cases.  But the channel path is optional.
+        String resolvedFilename = null;
+        try {
+            resolvedFilename = resolver.getResolvedFilename(maskChanRenderableData.getMaskPath());
+        } catch ( Throwable ex ) {
+            logger.warn( ex.getMessage() );
+            resolvedFilename = maskChanRenderableData.getMaskPath(); // Non-cached.
+        }
         InputStream maskStream =
                 new BufferedInputStream(
-                        new FileInputStream( resolver.getResolvedFilename( maskChanRenderableData.getMaskPath() )
-                        )
+                        new FileInputStream(resolvedFilename)
                 );
 
         InputStream chanStream = null;
+        try {
+            resolvedFilename = resolver.getResolvedFilename( maskChanRenderableData.getChannelPath() );
+        } catch ( Throwable ex ) {
+            logger.warn(ex.getMessage());
+            resolvedFilename = maskChanRenderableData.getChannelPath(); // Non-cached.
+        }
         if ( alignmentBoardSettings.isShowChannelData() ) {
             chanStream =
                     new BufferedInputStream(
-                            new FileInputStream( resolver.getResolvedFilename( maskChanRenderableData.getChannelPath() )
-                            )
+                            new FileInputStream( resolvedFilename )
                     );
         }
 
