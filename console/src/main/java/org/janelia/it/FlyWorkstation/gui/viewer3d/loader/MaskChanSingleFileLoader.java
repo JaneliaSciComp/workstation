@@ -153,6 +153,7 @@ public class MaskChanSingleFileLoader {
 
         List<byte[]> channelData = null;
         if ( channelStream == null ) {
+            logger.debug( "Creating empty channel metadata for nonexistent input stream." );
             createEmptyChannelMetaData();
         }
         else {
@@ -283,51 +284,54 @@ public class MaskChanSingleFileLoader {
      * @throws Exception thrown by any called methods.
      */
     private void initializeMaskStream(InputStream maskInputStream) throws Exception {
-        logger.debug( "Grabbing overhead data from mask." );
+        if ( totalVoxels == null ) {
+            logger.debug( "Grabbing overhead data from mask." );
 
-        sx = readLong(maskInputStream);
-        sy = readLong(maskInputStream);
-        sz = readLong(maskInputStream);
+            sx = readLong(maskInputStream);
+            sy = readLong(maskInputStream);
+            sz = readLong(maskInputStream);
+            logger.info( "Input Dimensions of {} x {} x " + sz, sx, sy );
 
-        xMicrons = readFloat(maskInputStream);
-        yMicrons = readFloat(maskInputStream);
-        zMicrons = readFloat(maskInputStream);
+            xMicrons = readFloat(maskInputStream);
+            yMicrons = readFloat(maskInputStream);
+            zMicrons = readFloat(maskInputStream);
 
-        // Reading the bounding box starts/ends.
-        boundsXCoords = new Long[2];
-        boundsXCoords[ 0 ] = readLong(maskInputStream);
-        boundsXCoords[ 1 ] = readLong(maskInputStream);
+            // Reading the bounding box starts/ends.
+            boundsXCoords = new Long[2];
+            boundsXCoords[ 0 ] = readLong(maskInputStream);
+            boundsXCoords[ 1 ] = readLong(maskInputStream);
 
-        boundsYCoords = new Long[2];
-        boundsYCoords[ 0 ] = readLong(maskInputStream);
-        boundsYCoords[ 1 ] = readLong(maskInputStream);
+            boundsYCoords = new Long[2];
+            boundsYCoords[ 0 ] = readLong(maskInputStream);
+            boundsYCoords[ 1 ] = readLong(maskInputStream);
 
-        boundsZCoords = new Long[2];
-        boundsZCoords[ 0 ] = readLong(maskInputStream);
-        boundsZCoords[ 1 ] = readLong(maskInputStream);
+            boundsZCoords = new Long[2];
+            boundsZCoords[ 0 ] = readLong(maskInputStream);
+            boundsZCoords[ 1 ] = readLong(maskInputStream);
 
-        totalVoxels = readLong(maskInputStream);
-        axis = readByte(maskInputStream);
-        logger.debug( "Got axis key of {}", axis );
-        this.setDimensionOrder( axis );
+            totalVoxels = readLong(maskInputStream);
+            logger.debug("Total voxels={}.  Combined vol size={}.", totalVoxels, sx*sy*sz);
+            axis = readByte(maskInputStream);
+            logger.debug( "Got axis key of {}", axis );
+            this.setDimensionOrder( axis );
 
-        volumeVoxels = getVolumeVoxels( sx, sy, sz );
+            volumeVoxels = getVolumeVoxels( sx, sy, sz );
 
-        targetSliceSize = volumeVoxels[0] * volumeVoxels[1]; // sx * sy
+            targetSliceSize = volumeVoxels[0] * volumeVoxels[1]; // sx * sy
 
-        srcSliceSize = fastestSrcVaryingMax * secondFastestSrcVaryingMax;
+            srcSliceSize = fastestSrcVaryingMax * secondFastestSrcVaryingMax;
 
-        if ( maskAcceptors != null ) {
-            for ( MaskChanDataAcceptorI acceptor: maskAcceptors ) {
-                acceptor.setSpaceSize( sx, sy, sz, volumeVoxels[0], volumeVoxels[1], volumeVoxels[2], coordCoverage );
+            if ( maskAcceptors != null ) {
+                for ( MaskChanDataAcceptorI acceptor: maskAcceptors ) {
+                    acceptor.setSpaceSize( sx, sy, sz, volumeVoxels[0], volumeVoxels[1], volumeVoxels[2], coordCoverage );
+                }
+            }
+            if ( channelAcceptors != null ) {
+                for ( MaskChanDataAcceptorI acceptor: channelAcceptors ) {
+                    acceptor.setSpaceSize( sx, sy, sz, volumeVoxels[0], volumeVoxels[1], volumeVoxels[2], coordCoverage );
+                }
             }
         }
-        if ( channelAcceptors != null ) {
-            for ( MaskChanDataAcceptorI acceptor: channelAcceptors ) {
-                acceptor.setSpaceSize( sx, sy, sz, volumeVoxels[0], volumeVoxels[1], volumeVoxels[2], coordCoverage );
-            }
-        }
-
     }
 
     private void setDimensionOrder( int dimensionOrder ) {
