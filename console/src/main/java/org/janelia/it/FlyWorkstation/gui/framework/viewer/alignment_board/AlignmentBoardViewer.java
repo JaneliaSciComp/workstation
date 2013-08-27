@@ -213,7 +213,7 @@ public class AlignmentBoardViewer extends Viewer implements AlignmentBoardContro
     @Override
     public void loadVolume( TextureDataI signalTexture, TextureDataI maskTexture ) {
 
-        if ( ! mip3d.setVolume( signalTexture, maskTexture, renderMapping ) ) {
+        if ( ! mip3d.setVolume( signalTexture, maskTexture, renderMapping, settingsData.getAcceptedDownsampleRate() ) ) {
             logger.error( "Failed to load volume to mip3d." );
         }
         else {

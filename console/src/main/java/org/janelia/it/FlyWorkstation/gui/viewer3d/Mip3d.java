@@ -125,12 +125,14 @@ public class Mip3d extends BaseGLViewer implements ActionListener {
      * @param signalTexture for the intensity data.
      * @param maskTexture for the labels.
      * @param renderMapping for the mapping of labels to rendering techniques.
+     * @param axisLengthDivisor divisor for axis lengths. Or zero.
      * @return true if sufficient params passed.
      */
     public boolean setVolume(
             TextureDataI signalTexture,
             TextureDataI maskTexture,
-            RenderMappingI renderMapping ) {
+            RenderMappingI renderMapping,
+            double axisLengthDivisor ) {
         if ( signalTexture != null ) {
             MultiTexVolumeBrick brick = new MultiTexVolumeBrick( volumeModel );
             brick.setTextureData( signalTexture );
@@ -146,6 +148,7 @@ public class Mip3d extends BaseGLViewer implements ActionListener {
             AxesActor axes = new AxesActor();
             BoundingBox3d brickBox = brick.getBoundingBox3d();
             axes.setAxisLengths( brickBox.getWidth(), brickBox.getHeight(), brickBox.getDepth() );
+            axes.setAxisLengthDivisor( axisLengthDivisor );
             axes.setFullAxes( true );
 
             // Enforce opaque, transparent ordering of actors.

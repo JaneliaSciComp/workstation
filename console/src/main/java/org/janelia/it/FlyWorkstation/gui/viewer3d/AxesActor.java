@@ -33,6 +33,7 @@ public class AxesActor implements GLActor
 		RenderMethod.MAXIMUM_INTENSITY; // MIP
     private boolean bIsInitialized = false;
     private boolean bFullAxes = false;
+    private double axisLengthDivisor = 1.0;
 
     // OpenGL state
     private boolean bBuffersNeedUpload = true;
@@ -70,6 +71,12 @@ public class AxesActor implements GLActor
         axisLengths[ 0 ] = xAxisLength;
         axisLengths[ 1 ] = yAxisLength;
         axisLengths[ 2 ] = zAxisLength;
+    }
+
+    public void setAxisLengthDivisor( double axisLengthDivisor ) {
+        if ( axisLengthDivisor != 0.0 ) {
+            this.axisLengthDivisor = axisLengthDivisor;
+        }
     }
 
     public boolean isFullAxes() {
@@ -500,7 +507,7 @@ public class AxesActor implements GLActor
     // Tick mark support.
     private int getTickCount( int axisLength ) {
         // Going for one / 100
-        return axisLength / 100;
+        return (int)(axisLength / 100.0 * axisLengthDivisor);
     }
 
     /**
@@ -525,6 +532,7 @@ public class AxesActor implements GLActor
             int baseInxOffset
     ) {
         int tickCount = getTickCount(new Float(axisLengths[tickAxis.getAxisNum()]).intValue());
+        if ( tickCount == 0 ) tickCount = 2;
         int tickOffset = (int)axisLengths[ tickAxis.getAxisNum() ] / tickCount;
         float[] vertices = new float[ tickCount * 6 ];
         int[] indices = new int[ 2 * tickCount ];
