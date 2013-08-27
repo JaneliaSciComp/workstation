@@ -56,15 +56,22 @@ public class ChannelInterpreterToByte implements ChannelInterpreterI {
 
                 //  block of in-memory, interleaving the channels as the offsets follow.
                 int channelInx = orderedRgbIndexes[ i ];
+
                 //synchronized (this) {
-                volumeData[ targetPos + channelInx ] = (byte)finalValue;
+                if ( targetPos + channelInx > 0  &&  (volumeData.length > targetPos+channelInx))
+                    volumeData[ targetPos + channelInx ] = (byte)finalValue;
+                else
+                    logger.debug("Outside the box");
                 //}
             }
         }
 
         // Pad out to the end, to create the alpha byte.
         if ( targetChannelMetaData.channelCount >= ( srcChannelMetaData.channelCount + 1 ) ) {
-            volumeData[ targetPos + targetChannelMetaData.channelCount - 1 ] = (byte)255;
+            if ( targetPos + targetChannelMetaData.channelCount - 1 > 0  &&  (volumeData.length > targetPos + targetChannelMetaData.channelCount - 1))
+                volumeData[ targetPos + targetChannelMetaData.channelCount - 1 ] = (byte)255;
+            else
+                logger.error("Outside the box");
         }
     }
 
