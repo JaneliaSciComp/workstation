@@ -5,7 +5,6 @@ import java.awt.Dimension;
 import java.awt.GridBagLayout;
 import java.awt.image.BufferedImage;
 import java.io.FileNotFoundException;
-import java.net.URL;
 import java.util.concurrent.Callable;
 
 import javax.swing.*;
@@ -15,7 +14,6 @@ import loci.formats.FormatException;
 import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.FlyWorkstation.gui.util.Icons;
 import org.janelia.it.FlyWorkstation.shared.util.Utils;
-import org.janelia.it.FlyWorkstation.shared.workers.SimpleWorker;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -42,11 +40,6 @@ public abstract class DynamicImagePanel extends JPanel {
     protected final JLabel errorLabel;
 
     private LoadImageWorker loadWorker;
-    private ImageCache imageCache; 
-
-	public DynamicImagePanel(String imageFilename) {
-		this(imageFilename, null);
-	}
 	
 	public DynamicImagePanel(String imageFilename, Integer maxSize) {
 
@@ -123,11 +116,9 @@ public abstract class DynamicImagePanel extends JPanel {
 		return viewable;
 	}
 
-	public void setCache(ImageCache imageCache) {
-		this.imageCache = imageCache;
-	}
-
 	public synchronized void rescaleImage(int imageSize) {
+	    if (displaySize==imageSize) return;
+	    
     	if (viewable) {
     		if (maxSizeImage == null) {
     			// Must be currently loading, in which case this method will get called again when the loading is done
@@ -176,13 +167,65 @@ public abstract class DynamicImagePanel extends JPanel {
      * 
      * @param wantViewable
      */
-	public synchronized void setViewable(boolean wantViewable, Callable success) {
+	public synchronized void setViewable(final boolean wantViewable, final Callable success) {
 		
 		if (imageFilename!=null) {
 			if (wantViewable) {
 				if (!this.viewable) {
-					loadWorker = new LoadImageWorker(success);
+				    
+					loadWorker = new LoadImageWorker(this, imageFilename) {
+
+					    @Override
+					    protected void hadSuccess() {
+					        
+					        if (isCancelled()) return;
+					        
+					        setDisplaySize(getNewDisplaySize());
+					        
+					        if (getNewScaledImage()==null) {
+					            log.warn("Scaled image is null");
+					            return;
+					        }
+					        
+                            setMaxSizeImage(getNewMaxSizeImage());
+				            setImageLabel(imageLabel);
+				            imageLabel.setIcon(new ImageIcon(getNewScaledImage()));    
+				            syncToViewerState();
+					        loadWorker = null;
+					        
+					        invalidate();
+					        
+					        try {
+					            if (success!=null) success.call();
+					        }
+					        catch (Exception e) {
+					            SessionMgr.getSessionMgr().handleException(e);
+					        }
+					    }
+
+					    @Override
+					    protected void hadError(Throwable error) {
+					        if (error instanceof FileNotFoundException) {
+					            log.warn("File not found: "+imageFilename);
+					            errorLabel.setText("File not found");
+					        }
+					        else if (error.getCause()!=null && (error.getCause() instanceof FormatException)) {
+					            log.warn("Image format not supported for: "+imageFilename);
+					            errorLabel.setText("Image format not supported");
+					            error.printStackTrace();
+					        }
+					        else {
+					            log.warn("Image could not be loaded: "+imageFilename);
+					            errorLabel.setText("Image could not be loaded");
+					            error.printStackTrace();
+					        }
+					        setImageLabel(errorLabel);
+					        revalidate();
+					        repaint();
+					    }
+					};
 					loadWorker.execute();
+			    
 				}
 				else {
 					syncToViewerState();
@@ -213,111 +256,29 @@ public abstract class DynamicImagePanel extends JPanel {
 		}
 		this.viewable = wantViewable;
 	}
-    
-	/**
-     * SwingWorker class that loads the image and rescales it to the current imageSizePercent sizing.  This
-     * thread supports being canceled.
-     * if an ImageCache has been set with setImageCache then this method will look there first.
-     */
-    private class LoadImageWorker extends SimpleWorker {
-    	
-    	private Callable success;
-    	
-    	public LoadImageWorker(Callable success) {
-    		this.success = success;
-    	}
-    	
-        @Override
-		protected void doStuff() throws Exception {
-            BufferedImage maxSizeImage = imageCache==null ? null : imageCache.get(imageFilename);
-            if (maxSizeImage == null) {
-                URL imageFileURL = SessionMgr.getURL(imageFilename);
-                // Some extra finagling is required because LOCI libraries do not like the file protocol for some reason
-                if (imageFileURL.getProtocol().equals("file")) {
-                    String localFilepath = imageFileURL.toString().replace("file:","");
-                    log.trace("loading cached file: {}", localFilepath);
-                    maxSizeImage = Utils.readImage(localFilepath);
-                }
-                else {
-                    log.trace("loading url: {}", imageFileURL);
-                    maxSizeImage = Utils.readImage(imageFileURL);
-                }
-                
-            	if (isCancelled()) return;
-            	if (maxSize != null) {
-            		int newWidth = maxSize;
-                    double scale = (double) newWidth / (double) maxSizeImage.getWidth();
-                    int newHeight = (int) Math.round(scale * maxSizeImage.getHeight());
-            		maxSizeImage = Utils.getScaledImage(maxSizeImage, newWidth, newHeight);
-            		displaySize = maxSize;
-            	}
-            	else {
-            		displaySize = Math.max(maxSizeImage.getWidth(), maxSizeImage.getHeight());
-            	}
-            }
-            if (isCancelled()) return;
-    		if (imageCache!=null) {
-    			imageCache.put(imageFilename, maxSizeImage);
-    		}
-            setMaxSizeImage(maxSizeImage);
-		}
 
-		@Override
-		protected void hadSuccess() {
-            loadDone();
-            try {
-            	if (success!=null) success.call();
-            }
-            catch (Exception e) {
-            	SessionMgr.getSessionMgr().handleException(e);
-            }
-		}
-
-		@Override
-		protected void hadError(Throwable error) {
-            loadError(error);
-		}
-    }
-
-    private synchronized void loadDone() {
-        setImageLabel(imageLabel);
-        revalidate();
-        syncToViewerState();
-        loadWorker = null;
-    }
-    
-    private synchronized void loadError(Throwable error) {
-        if (error instanceof FileNotFoundException) {
-        	log.warn("File not found: "+imageFilename);
-        	errorLabel.setText("File not found");
-        }
-        else if (error.getCause()!=null && (error.getCause() instanceof FormatException)) {
-        	log.warn("Image format not supported for: "+imageFilename);
-            errorLabel.setText("Image format not supported");
-            error.printStackTrace();
-        }
-        else {
-        	log.warn("Image could not be loaded: "+imageFilename);
-            errorLabel.setText("Image could not be loaded");
-            error.printStackTrace();
-        }
-        setImageLabel(errorLabel);
-        revalidate();
-        repaint();
-    }
-    
-	public synchronized BufferedImage getMaxSizeImage() {
+	public BufferedImage getMaxSizeImage() {
 		return (inverted) ? invertedMaxSizeImage : maxSizeImage;
 	}
 	
-	private synchronized void setMaxSizeImage(BufferedImage maxSizeImage) {
-		if (viewable) this.maxSizeImage = maxSizeImage;
+	private void setMaxSizeImage(BufferedImage maxSizeImage) {
+		if (viewable && maxSizeImage!=null) {
+		    this.maxSizeImage = maxSizeImage;
+		}
 	}
 	
-    private synchronized void setImageLabel(JLabel label) {
+    private void setImageLabel(JLabel label) {
         removeAll();
         add(label);
     }
 
-    protected abstract void syncToViewerState(); 
+    protected abstract void syncToViewerState();
+
+    public Integer getMaxSize() {
+        return maxSize;
+    }
+
+    public void setDisplaySize(int displaySize) {
+        this.displaySize = displaySize;
+    }
 }

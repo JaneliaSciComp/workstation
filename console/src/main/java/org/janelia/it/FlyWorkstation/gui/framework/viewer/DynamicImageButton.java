@@ -33,17 +33,14 @@ public class DynamicImageButton extends AnnotatedImageButton {
         }
 
         // send original file path so that file path translation or local caching occurs
-        // asyncronously within the the load image worker
-        this.dynamicImagePanel = new DynamicImagePanel(filepath, ImagesPanel.MAX_THUMBNAIL_SIZE) {
+        // asynchronously within the the load image worker
+        this.dynamicImagePanel = new DynamicImagePanel(filepath, ImagesPanel.MAX_IMAGE_WIDTH) {
             protected void syncToViewerState() {
-            	this.displaySize = iconPanel.getImagesPanel().getCurrImageSize();
+            	this.displaySize = iconPanel.getImagesPanel().getMaxImageWidth();
         		Boolean invertImages = (Boolean)SessionMgr.getSessionMgr().getModelProperty(
         				ViewerSettingsPanel.INVERT_IMAGE_COLORS_PROPERTY);
                 if (invertImages!=null && invertImages) {
                 	setInvertedColors(true);
-                }
-                else {
-                	rescaleImage(iconPanel.getImagesPanel().getCurrImageSize());
                 }
             }
         };
@@ -54,12 +51,8 @@ public class DynamicImageButton extends AnnotatedImageButton {
 		dynamicImagePanel.cancelLoad();
 	}
 
-	public void setCache(ImageCache imageCache) {
-		dynamicImagePanel.setCache(imageCache);
-	}
-
-	public void rescaleImage(int width, int height) {
-		super.rescaleImage(width, height);
+	public void setImageSize(int width, int height) {
+		super.setImageSize(width, height);
 		dynamicImagePanel.rescaleImage(width);
     	dynamicImagePanel.setPreferredSize(new Dimension(width, height));
 	}
@@ -77,7 +70,7 @@ public class DynamicImageButton extends AnnotatedImageButton {
                 if (dynamicImagePanel.getMaxSizeImage()!=null && dynamicImagePanel.getImage()!=null) {
                     double w = dynamicImagePanel.getImage().getIconWidth();
                     double h = dynamicImagePanel.getImage().getIconHeight();
-                    setAspectRatio(w, h);
+                    registerAspectRatio(w, h);
                 }
                 return null;
             }

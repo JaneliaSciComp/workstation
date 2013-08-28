@@ -303,11 +303,11 @@ public abstract class AnnotatedImageButton extends JPanel implements DragGesture
         return rootedEntity;
     }
     
-	public synchronized void rescaleImage(int width, int height) {
-    	setTitle(titleLabel.getText(), width);
+	public synchronized void setImageSize(int maxWidth, int maxHeight) {
+    	setTitle(titleLabel.getText(), maxWidth);
         JPanel annotationPanel = (JPanel)annotationView;
         if (annotationView instanceof AnnotationTablePanel) {
-        	annotationPanel.setPreferredSize(new Dimension(width, annotationPanel.getPreferredSize().height));
+        	annotationPanel.setPreferredSize(new Dimension(maxWidth, annotationPanel.getPreferredSize().height));
         }
 	}
 	
@@ -324,11 +324,7 @@ public abstract class AnnotatedImageButton extends JPanel implements DragGesture
 	public void setViewable(boolean wantViewable) {
 	}
 	
-	public synchronized Double getAspectRatio() {
-		return aspectRatio;
-	}
-
-	public synchronized void setAspectRatio(double width, double height) {
+	public synchronized void registerAspectRatio(double width, double height) {
 		double a = width/height;
 		if (a != this.aspectRatio) {
 			iconPanel.getImagesPanel().registerAspectRatio(a);

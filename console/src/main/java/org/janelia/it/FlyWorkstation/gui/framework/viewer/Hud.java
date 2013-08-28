@@ -186,12 +186,12 @@ public class Hud extends ModalDialog {
             if ( image == null ) {
                 logger.info("In HUD: must load image.");
                 final File imageFile = SessionMgr.getCachedFile(imagePath, false);
-                image = Utils.readImage(imageFile.getAbsolutePath());
-
-                if ( ic != null ) {
-                    ic.put( imagePath, image );
+                if (imageFile!=null ) {
+                    image = Utils.readImage(imageFile.getAbsolutePath());
+                    if ( ic != null ) {
+                        ic.put( imagePath, image );
+                    }
                 }
-
             }
 
             // No image loaded or cached.  Do nada.

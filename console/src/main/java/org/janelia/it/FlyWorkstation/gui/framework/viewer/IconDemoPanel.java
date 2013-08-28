@@ -530,7 +530,7 @@ public class IconDemoPanel extends IconPanel {
 					if (currTableHeight == tableHeight) return;
 					currTableHeight = tableHeight;
 					imagesPanel.resizeTables(tableHeight);
-					imagesPanel.rescaleImages(iconDemoToolbar.getCurrImageSize());
+					imagesPanel.setMaxImageWidth(iconDemoToolbar.getCurrImageSize());
 					imagesPanel.recalculateGrid();
 					imagesPanel.scrollSelectedEntitiesToCenter();
 					imagesPanel.loadUnloadImages();
@@ -575,7 +575,7 @@ public class IconDemoPanel extends IconPanel {
 					}
 					
 					button.refresh(rootedEntity);
-					imagesPanel.rescaleImages(imagesPanel.getCurrImageSize());
+					imagesPanel.setMaxImageWidth(imagesPanel.getMaxImageWidth());
 				}
 			}
 		}
@@ -663,7 +663,7 @@ public class IconDemoPanel extends IconPanel {
 			}
 			
 			protected void currImageSizeChanged(int imageSize) {
-				imagesPanel.rescaleImages(imageSize);
+				imagesPanel.setMaxImageWidth(imageSize);
 				imagesPanel.recalculateGrid();
 			}
 			
@@ -1027,7 +1027,7 @@ public class IconDemoPanel extends IconPanel {
 		// Since the images are not loaded yet, this will just resize the empty
 		// buttons so that we can calculate the grid correctly
 		imagesPanel.resizeTables(imagesPanel.getCurrTableHeight());
-		imagesPanel.rescaleImages(imagesPanel.getCurrImageSize());
+		imagesPanel.setMaxImageWidth(imagesPanel.getMaxImageWidth());
 
 		// Update selection
 		EntitySelectionModel esm = ModelMgr.getModelMgr().getEntitySelectionModel();
@@ -1287,6 +1287,7 @@ public class IconDemoPanel extends IconPanel {
 	}
 
 	public RootedEntity getPreviousEntity() {
+	    if (pageRootedEntities==null) return null;
 		int i = pageRootedEntities.indexOf(getLastSelectedEntity());
 		if (i < 1) {
 			// Already at the beginning
@@ -1296,6 +1297,7 @@ public class IconDemoPanel extends IconPanel {
 	}
 
 	public RootedEntity getNextEntity() {
+	    if (pageRootedEntities==null) return null;
 		int i = pageRootedEntities.indexOf(getLastSelectedEntity());
 		if (i > pageRootedEntities.size() - 2) {
 			// Already at the end

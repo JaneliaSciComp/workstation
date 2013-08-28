@@ -4,6 +4,7 @@ import java.awt.*;
 import java.awt.event.*;
 import java.util.*;
 import java.util.List;
+import java.util.Timer;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import javax.swing.*;
@@ -27,9 +28,9 @@ public class ImagesPanel extends JScrollPane {
 	
 	private static final Logger log = LoggerFactory.getLogger(ImagesPanel.class);
 	
-    public static final int MIN_THUMBNAIL_SIZE = 100;
+    public static final int MIN_IMAGE_WIDTH = 100;
     public static final int DEFAULT_THUMBNAIL_SIZE = 300;
-    public static final int MAX_THUMBNAIL_SIZE = 1000;
+    public static final int MAX_IMAGE_WIDTH = 1000;
 
 	public static final int MIN_TABLE_HEIGHT = 50;
 	public static final int DEFAULT_TABLE_HEIGHT = 200;
@@ -45,11 +46,13 @@ public class ImagesPanel extends JScrollPane {
     private ScrollableGridPanel buttonsPanel;
 
     private Double lowestAspectRatio;
-    private Integer currImageSize = DEFAULT_THUMBNAIL_SIZE;
+    private Integer maxImageWidth = DEFAULT_THUMBNAIL_SIZE;
     private Integer currTableHeight = DEFAULT_TABLE_HEIGHT;
 
     private Rectangle currViewRect;
 
+    private Timer timer;
+    
     // Listen for scroll events
     private final AdjustmentListener scrollListener = new AdjustmentListener() {
         @Override
@@ -63,7 +66,21 @@ public class ImagesPanel extends JScrollPane {
     		    		return;
     		    	}
     		    	currViewRect = viewRect;
-    	        	loadUnloadImages();
+    		    	if (!e.getValueIsAdjusting()) {
+    		    	    loadUnloadImages();
+    		    	}
+    		    	
+    		    	if (timer!=null) {
+    		    	    timer.cancel();
+    		    	}
+    		    	
+    		    	timer = new Timer();
+    		    	timer.schedule(new TimerTask() {
+                        @Override
+                        public void run() {
+                            loadUnloadImages();
+                        }
+    		    	}, 500);
     			}
     		});
         }
@@ -142,7 +159,6 @@ public class ImagesPanel extends JScrollPane {
             String filepath = EntityUtils.getImageFilePath(rootedEntity.getEntity(), iconPanel.getCurrImageRole());
             if (filepath != null) {
                 button = new DynamicImageButton(rootedEntity, iconPanel);
-                ((DynamicImageButton) button).setCache(SessionMgr.getBrowser().getImageCache());
             } else {
                 button = new StaticImageButton(rootedEntity, iconPanel);
             }
@@ -210,22 +226,21 @@ public class ImagesPanel extends JScrollPane {
 
 	/**
      * Scale all the images to the given max size.
-     *
      */
-    public synchronized void rescaleImages(int imageSize) {
-        if (imageSize < MIN_THUMBNAIL_SIZE || imageSize > MAX_THUMBNAIL_SIZE) {
+    public synchronized void setMaxImageWidth(int maxImageWidth) {
+        if (maxImageWidth < MIN_IMAGE_WIDTH || maxImageWidth > MAX_IMAGE_WIDTH) {
             return;
         }
-        log.trace("rescaleImages: {}", imageSize);
-        this.currImageSize = imageSize;
+        log.trace("setMaxImageWidth: {}", maxImageWidth);
+        this.maxImageWidth = maxImageWidth;
 
         double aspectRatio = lowestAspectRatio==null?1.0:lowestAspectRatio;
         
-		int imageHeight = (int)Math.round(imageSize/aspectRatio);
+		int maxImageHeight = (int)Math.round(maxImageWidth/aspectRatio);
 		
         for (AnnotatedImageButton button : buttons.values()) {
         	try {
-                button.rescaleImage(imageSize, imageHeight);
+                button.setImageSize(maxImageWidth, maxImageHeight);
 	    	}
 	    	catch (Exception e) {
 	    		SessionMgr.getSessionMgr().handleException(e);
@@ -269,8 +284,8 @@ public class ImagesPanel extends JScrollPane {
     	repaint();
     }
     
-    public int getCurrImageSize() {
-		return currImageSize;
+    public int getMaxImageWidth() {
+		return maxImageWidth;
 	}
     
     public int getCurrTableHeight() {
@@ -366,7 +381,7 @@ public class ImagesPanel extends JScrollPane {
 	public synchronized void registerAspectRatio(Double aspectRatio) {
 		if (lowestAspectRatio==null || aspectRatio<lowestAspectRatio) {
 			this.lowestAspectRatio = aspectRatio;
-			rescaleImages(currImageSize);
+			setMaxImageWidth(maxImageWidth);
 		}
 	}
 

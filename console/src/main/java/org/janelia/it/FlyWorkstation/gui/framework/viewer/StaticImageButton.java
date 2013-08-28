@@ -30,8 +30,8 @@ public class StaticImageButton extends AnnotatedImageButton {
     	return label;
     }
     
-	public void rescaleImage(int width, int height) {
-		super.rescaleImage(width, height);
+	public void setImageSize(int width, int height) {
+		super.setImageSize(width, height);
 		if (staticIcon!=null) {
 			if (width<=staticIcon.getWidth()) { // Don't scale up icons
 	        	label.setIcon(new ImageIcon(Utils.getScaledImage(staticIcon, width)));
@@ -53,9 +53,9 @@ public class StaticImageButton extends AnnotatedImageButton {
 			// Register our aspect ratio
 			double w = label.getIcon().getIconWidth();
 			double h = label.getIcon().getIconHeight();
-			setAspectRatio(w, h);
+			registerAspectRatio(w, h);
 			
-			int width = iconPanel.getImagesPanel().getCurrImageSize();
+			int width = iconPanel.getImagesPanel().getMaxImageWidth();
 			if (width<=staticIcon.getWidth()) { // Don't scale up icons
 				label.setIcon(new ImageIcon(Utils.getScaledImage(staticIcon, width)));	
 			}

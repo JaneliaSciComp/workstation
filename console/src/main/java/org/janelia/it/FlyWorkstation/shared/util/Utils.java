@@ -190,7 +190,7 @@ public class Utils {
         		throw new FormatException("File format is not supported: "+format);
         	}
             BufferedImageReader in = new BufferedImageReader(reader);
-            in.setId(path);            
+            in.setId(path);
             BufferedImage image = in.openImage(0);
             in.close();
             return image;
@@ -209,37 +209,15 @@ public class Utils {
      * @throws MalformedURLException
      */
     public static BufferedImage readImage(URL url) throws Exception {
-        try {
-            String path = url.getPath();
-            String format = path.substring(path.lastIndexOf(".")+1);
-            IFormatReader reader = null;
-            if (format.equals("tif") || format.equals("tiff")) {
-                reader = new TiffReader();
-            }
-            else if (format.equals("png")) {
-                reader = new APNGReader();
-            }
-            else if (format.equals("jpg")||format.equals("jpeg")){
-                reader = new JPEGReader();
-            }
-            else if (format.equals("bmp")){
-                reader = new BMPReader();
-            }
-            else if (format.equals("gif")){
-                reader = new GIFReader();
-            }
-            else {
-                throw new FormatException("File format is not supported: "+format);
-            }
-            BufferedImageReader in = new BufferedImageReader(reader);
-            in.setId(url.toString());            
-            BufferedImage image = in.openImage(0);
-            in.close();
-            return image;
+        // Some extra finagling is required because LOCI libraries do not like the file protocol for some reason
+        if (url.getProtocol().equals("file")) {
+            String localFilepath = url.toString().replace("file:","");
+            log.trace("loading cached file: {}", localFilepath);
+            return Utils.readImage(localFilepath);
         }
-        catch (Exception e) {
-            if (e instanceof IOException) throw (IOException) e;
-            throw new IOException("Error reading image: "+url, e);
+        else {
+            log.trace("loading url: {}", url);
+            return Utils.readImage(url.toString());
         }
     }
     
@@ -290,6 +268,19 @@ public class Utils {
         return getScaledImage(sourceImage, newWidth, newHeight);
     }
 
+    /**
+     * Create an image from the source image, scaled by the width.
+     *
+     * @param sourceImage image to work against
+     * @param size pixel size that the larger dimension should be
+     * @return returns a BufferedImage to work with
+     */
+    public static BufferedImage getScaledImageByWidth(BufferedImage sourceImage, int width) {
+        double scaledScale = (double) width / (double) sourceImage.getWidth();
+        int newScaledHeight = (int) Math.round(scaledScale * sourceImage.getHeight());
+        return Utils.getScaledImage(sourceImage, width, newScaledHeight);
+    }
+    
     /**
      * Resizes an image using a Graphics2D object backed by a BufferedImage.
      *

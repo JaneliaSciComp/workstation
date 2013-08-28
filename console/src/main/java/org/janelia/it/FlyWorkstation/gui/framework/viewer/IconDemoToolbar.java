@@ -38,7 +38,9 @@ public abstract class IconDemoToolbar extends ViewerToolbar {
         invertButton = new JToggleButton();
         invertButton.setIcon(Icons.getIcon("invert.png"));
         invertButton.setFocusable(false);
-        invertButton.setToolTipText("Invert the color space on all images");
+        invertButton.setEnabled(false);
+//        invertButton.setToolTipText("Invert the color space on all images");
+        invertButton.setToolTipText("This feature has been disabled and may be removed in the future. If you need this functionality, please contact the Janelia Workstation Team.");
         invertButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
@@ -106,7 +108,7 @@ public abstract class IconDemoToolbar extends ViewerToolbar {
 
 		toolbar.addSeparator();
 
-		imageSizeSlider = new JSlider(ImagesPanel.MIN_THUMBNAIL_SIZE, ImagesPanel.MAX_THUMBNAIL_SIZE,
+		imageSizeSlider = new JSlider(ImagesPanel.MIN_IMAGE_WIDTH, ImagesPanel.MAX_IMAGE_WIDTH,
 				ImagesPanel.DEFAULT_THUMBNAIL_SIZE);
 		imageSizeSlider.setFocusable(false);
 		imageSizeSlider.setMaximumSize(new Dimension(200, Integer.MAX_VALUE));
