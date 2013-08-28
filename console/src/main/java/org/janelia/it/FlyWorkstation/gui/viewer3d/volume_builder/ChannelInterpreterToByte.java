@@ -58,10 +58,14 @@ public class ChannelInterpreterToByte implements ChannelInterpreterI {
                 int channelInx = orderedRgbIndexes[ i ];
 
                 //synchronized (this) {
-                if ( targetPos + channelInx > 0  &&  (volumeData.length > targetPos+channelInx))
-                    volumeData[ targetPos + channelInx ] = (byte)finalValue;
-                else
+                if ( targetPos + channelInx > 0  &&  (volumeData.length > targetPos+channelInx)) {
+                    // Here enforced: keep only certain bits of any previous channel.  Allow low bits to vary.
+                    volumeData[ targetPos + channelInx ] &= (byte)0xF0;
+                    volumeData[ targetPos + channelInx ] |= (byte)finalValue;
+                }
+                else {
                     logger.debug("Outside the box");
+                }
                 //}
             }
         }

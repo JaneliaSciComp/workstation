@@ -54,9 +54,9 @@ public class RenderMapTextureBean implements TextureDataI {
     }
 
     /**
-     * This implementation makes a big array of 64K * 3, to accommodate any possible neuron fragment number's
-     * three colors.  It is wasteful in space, but far smaller than most uploaded textures.  It may be possible
-     * to pack this into far smaller area, but with the sacrifice of processing time.
+     * This implementation makes a big array of 64K * 4, to accommodate any possible neuron fragment number's
+     * colors & render method.  It is wasteful in space, but far smaller than most uploaded textures.  It may be
+     * possible to pack this into far smaller area, but with the sacrifice of processing time.
      */
     public void setMapping( RenderMappingI renderMapping ) {
         this.renderMapping = renderMapping;
