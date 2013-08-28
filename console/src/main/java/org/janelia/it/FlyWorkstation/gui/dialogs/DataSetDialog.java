@@ -1,6 +1,7 @@
 package org.janelia.it.FlyWorkstation.gui.dialogs;
 
 import java.awt.BorderLayout;
+import java.awt.Dimension;
 import java.awt.Font;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -22,6 +23,7 @@ import org.janelia.it.jacs.model.entity.EntityConstants;
 import org.janelia.it.jacs.model.entity.EntityData;
 import org.janelia.it.jacs.model.entity.cv.NamedEnum;
 import org.janelia.it.jacs.model.entity.cv.PipelineProcess;
+import org.janelia.it.jacs.model.entity.cv.SampleImageType;
 import org.janelia.it.jacs.shared.utils.EntityUtils;
 import org.janelia.it.jacs.shared.utils.StringUtils;
 
@@ -44,6 +46,8 @@ public class DataSetDialog extends ModalDialog implements Accessibility {
     private JTextField identifierInput;
     private JLabel sampleNamePatternLabel;
     private JTextField sampleNamePatternInput;
+    private JLabel sampleImageLabel;
+    private JComboBox sampleImageInput;
     private JCheckBox sageSyncCheckbox;
     private HashMap<String,JCheckBox> processCheckboxes = new HashMap<String,JCheckBox>();
     
@@ -93,10 +97,10 @@ public class DataSetDialog extends ModalDialog implements Accessibility {
     
     private Font separatorFont = new Font("Sans Serif", Font.BOLD, 12);
     
-    public void addSeparator(JPanel panel, String text) {
+    public void addSeparator(JPanel panel, String text, boolean first) {
     	JLabel label = new JLabel(text);
     	label.setFont(separatorFont);
-    	panel.add(label, "split 2, span, gaptop 10lp");
+    	panel.add(label, "split 2, span"+(first?"":", gaptop 10lp"));
     	panel.add(new JSeparator(SwingConstants.HORIZONTAL), "growx, wrap, gaptop 10lp");
     }
     
@@ -112,7 +116,7 @@ public class DataSetDialog extends ModalDialog implements Accessibility {
 
     	attrPanel.removeAll();
     	
-    	addSeparator(attrPanel, "Data Set Attributes");
+    	addSeparator(attrPanel, "Data Set Attributes", true);
     	
         nameLabel = new JLabel("Data Set Name: ");
         nameInput = new JTextField(40);
@@ -146,12 +150,26 @@ public class DataSetDialog extends ModalDialog implements Accessibility {
         sampleNamePatternLabel.setLabelFor(sampleNamePatternInput);
         attrPanel.add(sampleNamePatternLabel, "gap para");
         attrPanel.add(sampleNamePatternInput);
+
+        sampleImageLabel = new JLabel("Sample Image: ");
+        sampleImageInput = new JComboBox(SampleImageType.values());
+        sampleImageLabel.setLabelFor(sampleImageInput);
+        attrPanel.add(sampleImageLabel, "gap para");
+        attrPanel.add(sampleImageInput);
         
         sageSyncCheckbox = new JCheckBox("Synchronize images from SAGE");
         attrPanel.add(sageSyncCheckbox, "gap para, span 2");
         
-        addSeparator(attrPanel, "Pipelines");
-        addCheckboxes("Pipelines", PipelineProcess.values(), processCheckboxes, attrPanel);
+        JPanel pipelinesPanel = new JPanel();
+        pipelinesPanel.setLayout(new BoxLayout(pipelinesPanel, BoxLayout.PAGE_AXIS));
+        addCheckboxes("Pipelines", PipelineProcess.values(), processCheckboxes, pipelinesPanel);
+        
+        JScrollPane scrollPane = new JScrollPane();
+        scrollPane.setViewportView(pipelinesPanel);
+        scrollPane.setMaximumSize(new Dimension(Integer.MAX_VALUE, 300));
+        
+        addSeparator(attrPanel, "Pipelines", false);
+        attrPanel.add(scrollPane, "span 2, growx");
         
         if (dataSetEntity!=null) {
         	nameInput.setText(dataSetEntity.getName());
@@ -162,6 +180,10 @@ public class DataSetDialog extends ModalDialog implements Accessibility {
 			String sampleNamePattern = dataSetEntity.getValueByAttributeName(EntityConstants.ATTRIBUTE_SAMPLE_NAME_PATTERN);
             if (sampleNamePattern!=null) {
                 sampleNamePatternInput.setText(sampleNamePattern);
+            }   
+            String sampleImageType = dataSetEntity.getValueByAttributeName(EntityConstants.ATTRIBUTE_SAMPLE_IMAGE_TYPE);
+            if (sampleImageType!=null) {
+                sampleImageInput.setSelectedItem(SampleImageType.valueOf(sampleImageType));
             }   
         	if (dataSetEntity.getEntityDataByAttributeName(EntityConstants.ATTRIBUTE_SAGE_SYNC)!=null) {
         		sageSyncCheckbox.setSelected(true);
@@ -186,6 +208,8 @@ public class DataSetDialog extends ModalDialog implements Accessibility {
                     "Sample name pattern must contain the unique identifier \""+SLIDE_CODE_PATTERN+"\"", "Invalid Sample Name Pattern", JOptionPane.ERROR_MESSAGE);
             return;
         }
+
+        final String sampleImageType = ((SampleImageType)sampleImageInput.getSelectedItem()).name();
         
         SimpleWorker worker = new SimpleWorker() {
 
@@ -209,7 +233,18 @@ public class DataSetDialog extends ModalDialog implements Accessibility {
                         ModelMgr.getModelMgr().removeEntityData(patternEd);
                     }
 				}
-				
+
+                if (!StringUtils.isEmpty(sampleImageType)) {
+                    ModelMgr.getModelMgr().setAttributeValue(dataSetEntity, EntityConstants.ATTRIBUTE_SAMPLE_IMAGE_TYPE, sampleImageType);    
+                }
+                else {
+                    EntityData typeEd = dataSetEntity.getEntityDataByAttributeName(EntityConstants.ATTRIBUTE_SAMPLE_IMAGE_TYPE);
+                    if (typeEd!=null) {
+                        dataSetEntity.getEntityData().remove(typeEd);
+                        ModelMgr.getModelMgr().removeEntityData(typeEd);
+                    }
+                }
+                
 				ModelMgr.getModelMgr().setAttributeValue(dataSetEntity, EntityConstants.ATTRIBUTE_PIPELINE_PROCESS, getCheckboxValues(processCheckboxes));
 				
 				if (sageSyncCheckbox.isSelected()) {
@@ -246,7 +281,7 @@ public class DataSetDialog extends ModalDialog implements Accessibility {
     		NamedEnum namedEnum = ((NamedEnum)choice);
     		JCheckBox checkBox = new JCheckBox(namedEnum.getName());
     		checkboxes.put(namedEnum.toString(), checkBox);
-        	panel.add(checkBox, "gap para, span 2");
+        	panel.add(checkBox);
     	}
     }
     
