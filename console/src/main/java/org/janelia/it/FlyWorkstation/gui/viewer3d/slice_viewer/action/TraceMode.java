@@ -354,7 +354,7 @@ implements MouseMode, KeyListener
                         	}
                         }
                         // Delete
-                        result.add(new JMenuItem(new AbstractAction("Delete this anchor") {
+                        result.add(new JMenuItem(new AbstractAction("Delete subtree rooted at this anchor") {
                             @Override
                             public void actionPerformed(ActionEvent e) {
                                 skeleton.deleteAnchorRequest(getHoverAnchor());
