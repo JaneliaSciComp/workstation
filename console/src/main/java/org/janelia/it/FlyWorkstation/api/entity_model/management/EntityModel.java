@@ -407,7 +407,7 @@ public class EntityModel {
      */
 	public Entity getEntityTree(long entityId) throws Exception {
 		Entity entity = entityFacade.getEntityTree(entityId);
-		replaceUnloadedChildrenWithForbiddenEntities(entity, true);
+		replaceUnloadedChildrenWithForbiddenEntities(entity, true, null);
 		return putOrUpdate(entity, true);
 	}
 	
@@ -439,7 +439,7 @@ public class EntityModel {
         	Set<Entity> childEntitySet = entityFacade.getChildEntities(entity.getId());
         	putOrUpdateAll(childEntitySet);
             putOrUpdate(entity);
-            replaceUnloadedChildrenWithForbiddenEntities(entity, false);
+            replaceUnloadedChildrenWithForbiddenEntities(entity, false, null);
         }
         notifyEntityChildrenLoaded(entity);
     }
@@ -608,9 +608,10 @@ public class EntityModel {
     	checkIfCanonicalEntity(entity);
     	Entity canonicalEntity = null;
     	synchronized(this) {
-    	    replaceForbiddenEntitiesWithUnloadedChildren(entity, true);
+    	    Set<Long> forbiddenIds = new HashSet<Long>();
+    	    replaceForbiddenEntitiesWithUnloadedChildren(entity, true, forbiddenIds);
     	    Entity newEntity = entityFacade.saveEntity(entity);
-	    	replaceUnloadedChildrenWithForbiddenEntities(newEntity, true);
+	    	replaceUnloadedChildrenWithForbiddenEntities(newEntity, true, forbiddenIds);
     	    canonicalEntity = putOrUpdate(newEntity);
     	}
     	return canonicalEntity;
@@ -1022,18 +1023,18 @@ public class EntityModel {
      * load the children already, and the ones that didn't come back must be inaccessible to the current user.
      * @param parent
      */
-    private void replaceUnloadedChildrenWithForbiddenEntities(Entity parent, boolean recurse) {
+    private void replaceUnloadedChildrenWithForbiddenEntities(Entity parent, boolean recurse, Set<Long> forbiddenIds) {
         if (parent==null) return;
         if (parent instanceof ForbiddenEntity) return;
         if (parent.getEntityData()==null) return;
         for(EntityData ed : parent.getEntityData()) {
         	if (ed.getChildEntity()!=null) {
-	        	if (!EntityUtils.isInitialized(ed.getChildEntity())) {
+	        	if (!EntityUtils.isInitialized(ed.getChildEntity()) && (forbiddenIds==null||forbiddenIds.contains(ed.getChildEntity().getId()))) {
 	        	    log.trace("replacing unloaded entity with forbidden entity: {}",ed.getChildEntity().getId());
 	        		ed.setChildEntity(new ForbiddenEntity(ed.getChildEntity()));
 	        	}
 	        	else if (recurse) {
-	        		replaceUnloadedChildrenWithForbiddenEntities(ed.getChildEntity(), true);
+	        		replaceUnloadedChildrenWithForbiddenEntities(ed.getChildEntity(), true, forbiddenIds);
 	        	}
         	}
         }
@@ -1044,7 +1045,7 @@ public class EntityModel {
      * send the entity tree back to the server.
      * @param parent
      */
-    private void replaceForbiddenEntitiesWithUnloadedChildren(Entity parent, boolean recurse) {
+    private void replaceForbiddenEntitiesWithUnloadedChildren(Entity parent, boolean recurse, Set<Long> forbiddenIds) {
         if (parent==null) return;
         if (!EntityUtils.isInitialized(parent)) return;
         if (parent.getEntityData()==null) return;
@@ -1053,9 +1054,10 @@ public class EntityModel {
                 log.trace("replacing forbidden entity with unloaded entity: {}",ed.getChildEntity().getId());
                 ForbiddenEntity fe = (ForbiddenEntity)ed.getChildEntity();
                 ed.setChildEntity(fe.getEntity());
+                forbiddenIds.add(ed.getChildEntity().getId());
             }
             else if (recurse) {
-                replaceForbiddenEntitiesWithUnloadedChildren(ed.getChildEntity(), true);
+                replaceForbiddenEntitiesWithUnloadedChildren(ed.getChildEntity(), true, forbiddenIds);
             }
         }
     }
