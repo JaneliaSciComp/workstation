@@ -246,8 +246,8 @@ public class ImagesPanel extends JScrollPane {
 	    		SessionMgr.getSessionMgr().handleException(e);
 	    	}
         }
-        
-        loadUnloadImages();
+
+		recalculateGrid();
     }
 
     public synchronized void resizeTables(int tableHeight) {

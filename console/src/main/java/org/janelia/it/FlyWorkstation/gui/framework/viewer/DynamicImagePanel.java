@@ -128,10 +128,7 @@ public abstract class DynamicImagePanel extends JPanel {
 	    			setInvertedColors(true);
 	    		}
 	    		BufferedImage orig = inverted ? invertedMaxSizeImage : maxSizeImage;
-        		int newWidth = imageSize;
-                double scale = (double) newWidth / (double) maxSizeImage.getWidth();
-                int newHeight = (int) Math.round(scale * maxSizeImage.getHeight());
-                BufferedImage image = Utils.getScaledImage(orig, newWidth, newHeight);
+                BufferedImage image = Utils.getScaledImage(orig, imageSize);
 	            imageLabel.setIcon(new ImageIcon(image));
     		}
     	}
