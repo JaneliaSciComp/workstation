@@ -39,10 +39,9 @@ public class AnnotationManager
         }
     };
 
-    public Slot1<Anchor> deleteAnchorRequestedSlot = new Slot1<Anchor>() {
+    public Slot1<Anchor> deleteSubtreeRequestedSlot = new Slot1<Anchor>() {
         @Override
         public void execute(Anchor anchor) {
-            // currently delete subtree, probably change later
             deleteSubTree(anchor.getGuid());
         }
     };

@@ -78,7 +78,7 @@ public class Skeleton {
 
 	///// DELETE
 	// Anchor deletion
-	public Signal1<Anchor> anchorDeleteRequestedSignal =
+	public Signal1<Anchor> subtreeDeleteRequestedSignal =
 			new Signal1<Anchor>();
 	public Slot1<TmGeoAnnotation> deleteAnchorSlot = new Slot1<TmGeoAnnotation>() {
 		@Override
@@ -119,7 +119,7 @@ public class Skeleton {
 	public Skeleton() {
 		// Don't make this connection when using workstation database
 		// addAnchorRequestedSignal.connect(addShortCircuitAnchorSlot);
-		// anchorDeleteRequestedSignal.connect(deleteAnchorShortCircuitSlot); // TODO remove
+		// subtreeDeleteRequestedSignal.connect(deleteAnchorShortCircuitSlot); // TODO remove
 		//
 		// once anchor changes are persisted in db, we get signals:
 		anchorAddedSignal.connect(skeletonChangedSignal);
@@ -167,8 +167,8 @@ public class Skeleton {
 		return true;
 	}
 
-    public void deleteAnchorRequest(Anchor anchor){
-        anchorDeleteRequestedSignal.emit(anchor);
+    public void deleteSubtreeRequest(Anchor anchor){
+        subtreeDeleteRequestedSignal.emit(anchor);
     }
 
 	public boolean delete(Anchor anchor) {
