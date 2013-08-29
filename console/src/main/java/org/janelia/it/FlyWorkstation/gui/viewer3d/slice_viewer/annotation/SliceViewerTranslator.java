@@ -84,8 +84,7 @@ public class SliceViewerTranslator {
         anchorDeletedSignal.connect(skeleton.deleteAnchorSlot);
         clearSkeletonSignal.connect(skeleton.clearSlot);
 
-        // experimental:
-        // clearNextParentSignal.connect(sliceViewer.getSkeletonActor().clearNextParentSlot);
+        clearNextParentSignal.connect(sliceViewer.getSkeletonActor().clearNextParentSlot);
 
     }
 

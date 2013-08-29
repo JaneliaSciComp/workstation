@@ -57,7 +57,9 @@ public class AnnotationManager
     public Slot1<Anchor> selectAnnotationSlot = new Slot1<Anchor>() {
         @Override
         public void execute(Anchor anchor) {
-            selectNeuronFromAnnotation(anchor.getGuid());
+            if (anchor != null) {
+                selectNeuronFromAnnotation(anchor.getGuid());
+            }
         }
     };
 
@@ -86,8 +88,15 @@ public class AnnotationManager
             SimpleWorker loader = new SimpleWorker() {
                 @Override
                 protected void doStuff() throws Exception {
-                    // make sure the entity's fully loaded or the workspace creation will fail
-                    TmWorkspace workspace = new TmWorkspace(modelMgr.loadLazyEntity(initialEntity, false));
+                    // need to invalidate the cache and reload this entity; probably short-term, as
+                    //  we should fix the underlying problem (saving data and not telling the cache!)
+                    modelMgr.invalidateCache(initialEntity, true);
+                    Entity entity = modelMgr.getEntityById(initialEntity.getId());
+
+                    // now make sure the entity's children are fully loaded or
+                    //  the workspace creation will fail
+                    modelMgr.loadLazyEntity(entity, false);
+                    TmWorkspace workspace = new TmWorkspace(entity);
                     annotationModel.loadWorkspace(workspace);
                 }
 
