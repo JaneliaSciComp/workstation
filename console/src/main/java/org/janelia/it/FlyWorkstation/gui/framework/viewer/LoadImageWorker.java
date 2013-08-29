@@ -63,7 +63,7 @@ public abstract class LoadImageWorker extends SimpleWorker {
         this.displaySize = panel.getDisplaySize();
         this.scaledImage = Utils.getScaledImageByWidth(maxSizeImage, displaySize);
         if (TIMER) stopWatch.lap("getScaledImageByWidth");
-        if (TIMER) stopWatch.stop("doStuff");
+        if (TIMER) stopWatch.stop("LoadImageWorker");
 	}
     
     protected BufferedImage getNewMaxSizeImage() {

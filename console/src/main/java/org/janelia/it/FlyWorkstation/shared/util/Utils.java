@@ -225,7 +225,7 @@ public class Utils {
         else {
             log.trace("loading url: {}", url);
             image = Utils.readImage(url.toString());
-            if (TIMER) stopWatch.stop("readCachedImage");
+            if (TIMER) stopWatch.stop("readRemoteImage");
         }
         return image;
     }
