@@ -34,6 +34,8 @@ import org.janelia.it.FlyWorkstation.shared.filestore.PathTranslator;
 import org.janelia.it.FlyWorkstation.shared.workers.IndeterminateProgressMonitor;
 import org.janelia.it.FlyWorkstation.shared.workers.SimpleWorker;
 import org.janelia.it.jacs.model.entity.Entity;
+import org.perf4j.LoggingStopWatch;
+import org.perf4j.StopWatch;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -45,6 +47,8 @@ import org.slf4j.LoggerFactory;
 public class Utils {
 
     private static final Logger log = LoggerFactory.getLogger(Utils.class);
+    
+    private static final boolean TIMER = log.isDebugEnabled();
     
     private static final int DEFAULT_BUFFER_SIZE = 1024;
     
@@ -209,16 +213,21 @@ public class Utils {
      * @throws MalformedURLException
      */
     public static BufferedImage readImage(URL url) throws Exception {
+        BufferedImage image = null;
+        StopWatch stopWatch = TIMER ? new LoggingStopWatch() : null;
         // Some extra finagling is required because LOCI libraries do not like the file protocol for some reason
         if (url.getProtocol().equals("file")) {
             String localFilepath = url.toString().replace("file:","");
             log.trace("loading cached file: {}", localFilepath);
-            return Utils.readImage(localFilepath);
+            image = Utils.readImage(localFilepath);
+            if (TIMER) stopWatch.stop("readCachedImage");
         }
         else {
             log.trace("loading url: {}", url);
-            return Utils.readImage(url.toString());
+            image = Utils.readImage(url.toString());
+            if (TIMER) stopWatch.stop("readCachedImage");
         }
+        return image;
     }
     
     /**
@@ -290,6 +299,8 @@ public class Utils {
      * @return - the new resized image
      */
     public static BufferedImage getScaledImage(BufferedImage sourceImage, int w, int h) {
+        StopWatch stopWatch = TIMER ? new LoggingStopWatch() : null;
+        
     	int type = sourceImage.getType();
 
     	if (type==0) {
@@ -310,6 +321,7 @@ public class Utils {
     	
         g2.drawImage(sourceImage, 0, 0, w, h, null);
         g2.dispose();
+        if (TIMER) stopWatch.stop("getScaledImage");
         return resizedImg;
     }
     

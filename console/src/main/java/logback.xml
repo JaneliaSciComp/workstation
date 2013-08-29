@@ -19,15 +19,40 @@
   </appender>
 
   <logger name="org.janelia.it.FlyWorkstation" level="INFO"/>
-  <logger name="org.janelia.it.FlyWorkstation.gui" level="INFO"/>
+  
   <logger name="org.janelia.it.FlyWorkstation.api" level="INFO"/>
+  <logger name="org.janelia.it.FlyWorkstation.api.entity_model.management.EntityModel" level="INFO"/>
+  
+  <logger name="org.janelia.it.FlyWorkstation.model" level="INFO"/>
+  
+  <logger name="org.janelia.it.FlyWorkstation.gui" level="INFO"/>
+  <logger name="org.janelia.it.FlyWorkstation.gui.framework.outline" level="INFO"/>
+  
+  <logger name="org.janelia.it.FlyWorkstation.gui.framework.tree.ExpansionState" level="INFO"/>
+  
+  <logger name="org.janelia.it.FlyWorkstation.gui.framework.viewer" level="INFO"/>
+  <logger name="org.janelia.it.FlyWorkstation.gui.framework.viewer.DynamicImagePanel" level="INFO"/>
+  <logger name="org.janelia.it.FlyWorkstation.gui.framework.viewer.ImagesPanel" level="INFO"/>
+  <logger name="org.janelia.it.FlyWorkstation.gui.framework.viewer.IconDemoPanel" level="INFO"/>
+  
+  <logger name="org.janelia.it.FlyWorkstation.gui.framework.viewer.alignment_board" level="WARN"/>
+  <logger name="org.janelia.it.FlyWorkstation.gui.framework.viewer.alignment_board.LayersPanel" level="INFO"/>
+  <logger name="org.janelia.it.FlyWorkstation.gui.framework.viewer.alignment_board.OutlineExpansionState" level="INFO"/>
+  <logger name="org.janelia.it.FlyWorkstation.gui.framework.viewer.alignment_board.AlignmentBoardViewer" level="INFO"/>
+  
+  <logger name="org.janelia.it.jacs.shared.utils" level="INFO"/>
+  
   <logger name="loci" level="WARN"/>
-
+  
+  <!--  perf4j loggers must be set to DEBUG to log performance benchmarks-->
+  <logger name="org.janelia.it.FlyWorkstation.shared.util.Utils" level="INFO"/>
+  <logger name="org.janelia.it.FlyWorkstation.gui.framework.viewer.LoadingImageWorker" level="INFO"/>
+  
   <!--
   <logger name="org.janelia.it.FlyWorkstation.shared.util.filecache" level="DEBUG"/>
   -->
-
-    <!-- Strictly speaking, the level attribute is not necessary since -->
+  
+  <!-- Strictly speaking, the level attribute is not necessary since -->
   <!-- the level of the root level is set to DEBUG by default.       -->
   <root level="INFO">          
     <appender-ref ref="STDOUT" />

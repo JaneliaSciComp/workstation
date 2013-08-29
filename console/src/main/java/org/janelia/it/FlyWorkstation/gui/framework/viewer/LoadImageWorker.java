@@ -12,6 +12,8 @@ import java.util.concurrent.*;
 import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.FlyWorkstation.shared.util.Utils;
 import org.janelia.it.FlyWorkstation.shared.workers.SimpleWorker;
+import org.perf4j.LoggingStopWatch;
+import org.perf4j.StopWatch;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -28,6 +30,8 @@ public abstract class LoadImageWorker extends SimpleWorker {
 	
     private static final Logger log = LoggerFactory.getLogger(LoadImageWorker.class);
     
+    private static final boolean TIMER = log.isDebugEnabled();
+    
     private DynamicImagePanel panel;
     private String imageFilename;
     private BufferedImage maxSizeImage;
@@ -41,17 +45,25 @@ public abstract class LoadImageWorker extends SimpleWorker {
 	
     @Override
 	protected void doStuff() throws Exception {
-
+        
+        StopWatch stopWatch = TIMER ? new LoggingStopWatch("LoadImageWorker") : null;
+        
         this.maxSizeImage = SessionMgr.getBrowser().getImageCache().get(imageFilename);
+        if (TIMER) stopWatch.lap("getFromCache");
         
         if (maxSizeImage == null) {
             URL imageFileURL = SessionMgr.getURL(imageFilename);
+            if (TIMER) stopWatch.lap("getURL");
             maxSizeImage = Utils.readImage(imageFileURL);
+            if (TIMER) stopWatch.lap("readImage");
         	SessionMgr.getBrowser().getImageCache().put(imageFilename, maxSizeImage);
+        	if (TIMER) stopWatch.lap("putInCache");
         }
         
         this.displaySize = panel.getDisplaySize();
         this.scaledImage = Utils.getScaledImageByWidth(maxSizeImage, displaySize);
+        if (TIMER) stopWatch.lap("getScaledImageByWidth");
+        if (TIMER) stopWatch.stop("doStuff");
 	}
     
     protected BufferedImage getNewMaxSizeImage() {
