@@ -99,6 +99,27 @@ public class TileFormat
 		VoxelXyz voxLrb = voxelXyzForZoomedVoxelXyz(zVoxLrb, index.getZoom(), index.getSliceAxis());
 		MicrometerXyz lrbCorner = micrometerXyzForVoxelXyz(voxLrb, index.getSliceAxis());
 		//
+// Checking in commented code. Commented to avoid breaking Chris' other changes.
+//		Vec3 dv = new Vec3(); // diagonal vector across tile block
+//		for (int i = 0; i < 3; ++i) {
+//			dv.set(i, zoomFactor * getTileSize()[i] * getVoxelMicrometers()[i]);
+//			double val = v1.get(i);
+//			// shift to center of slice
+//			if (i == depthAxis)
+//				val += 0.5;
+//			// scale by zoom level
+//			if ((i != depthAxis) || (indexStyle == TileIndex.IndexStyle.OCTREE))
+//				val *= zoomFactor;
+//			// convert tiles to voxels
+//			if (i != depthAxis)
+//				val *= getTileSize()[i];
+//			// Shift to world origin
+//			val += origin[i];
+//			// convert voxels to micrometers
+//			val *= getVoxelMicrometers()[i];
+//			//
+//			v1.set(i, val);
+//		}
 		Vec3 ulf = new Vec3(ulfCorner.getX(), ulfCorner.getY(), ulfCorner.getZ());
 		Vec3 lrb = new Vec3(lrbCorner.getX(), lrbCorner.getY(), lrbCorner.getZ());
 		Vec3 dv = lrb.minus(ulf);
