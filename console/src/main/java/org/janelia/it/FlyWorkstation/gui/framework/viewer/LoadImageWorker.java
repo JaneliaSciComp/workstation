@@ -3,6 +3,7 @@ package org.janelia.it.FlyWorkstation.gui.framework.viewer;
 import java.awt.image.BufferedImage;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
+import java.io.File;
 import java.lang.ref.WeakReference;
 import java.net.URL;
 import java.security.AccessController;
@@ -41,6 +42,7 @@ public abstract class LoadImageWorker extends SimpleWorker {
 	public LoadImageWorker(DynamicImagePanel panel, String imageFilename) {
 	    this.panel = panel;
 	    this.imageFilename = imageFilename;
+	    this.displaySize = panel.getDisplaySize();
 	}
 	
     @Override
@@ -52,17 +54,25 @@ public abstract class LoadImageWorker extends SimpleWorker {
         if (TIMER) stopWatch.lap("getFromCache");
         
         if (maxSizeImage == null) {
+            
+//            File imageFile = SessionMgr.getCachedFile(imageFilename, false);
+//            maxSizeImage = Utils.readImage(imageFile.toURI().toURL());
+            
             URL imageFileURL = SessionMgr.getURL(imageFilename);
-            if (TIMER) stopWatch.lap("getURL");
             maxSizeImage = Utils.readImage(imageFileURL);
             if (TIMER) stopWatch.lap("readImage");
-        	SessionMgr.getBrowser().getImageCache().put(imageFilename, maxSizeImage);
-        	if (TIMER) stopWatch.lap("putInCache");
+            
+            if (maxSizeImage!=null) {
+                SessionMgr.getBrowser().getImageCache().put(imageFilename, maxSizeImage);
+                if (TIMER) stopWatch.lap("putInCache");
+            }
+        }
+
+        if (maxSizeImage != null) {
+            this.scaledImage = Utils.getScaledImageByWidth(maxSizeImage, displaySize);
+            if (TIMER) stopWatch.lap("getScaledImageByWidth");
         }
         
-        this.displaySize = panel.getDisplaySize();
-        this.scaledImage = Utils.getScaledImageByWidth(maxSizeImage, displaySize);
-        if (TIMER) stopWatch.lap("getScaledImageByWidth");
         if (TIMER) stopWatch.stop("LoadImageWorker");
 	}
     
@@ -100,7 +110,7 @@ public abstract class LoadImageWorker extends SimpleWorker {
                 };
 
             executorService =
-                new ThreadPoolExecutor(0, MAX_WORKER_THREADS,
+                new ThreadPoolExecutor(MAX_WORKER_THREADS, MAX_WORKER_THREADS,
                                        10L, TimeUnit.MINUTES,
                                        new LinkedBlockingQueue<Runnable>(),
                                        threadFactory);

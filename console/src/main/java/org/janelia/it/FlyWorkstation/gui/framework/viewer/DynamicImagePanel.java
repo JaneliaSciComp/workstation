@@ -221,7 +221,7 @@ public abstract class DynamicImagePanel extends JPanel {
 					        repaint();
 					    }
 					};
-					loadWorker.execute();
+					loadWorker.executeInImagePool();
 			    
 				}
 				else {

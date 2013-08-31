@@ -14,6 +14,7 @@ import java.nio.channels.WritableByteChannel;
 import java.util.List;
 import java.util.concurrent.CancellationException;
 
+import javax.imageio.ImageIO;
 import javax.media.jai.operator.InvertDescriptor;
 import javax.swing.ImageIcon;
 import javax.swing.JOptionPane;
@@ -29,6 +30,8 @@ import loci.formats.IFormatReader;
 import loci.formats.gui.BufferedImageReader;
 import loci.formats.in.*;
 
+import org.apache.commons.httpclient.HttpClient;
+import org.apache.commons.httpclient.methods.GetMethod;
 import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.FlyWorkstation.shared.filestore.PathTranslator;
 import org.janelia.it.FlyWorkstation.shared.workers.IndeterminateProgressMonitor;
@@ -173,30 +176,75 @@ public class Utils {
      */
     public static BufferedImage readImage(String path) throws Exception {
         try {
-        	String format = path.substring(path.lastIndexOf(".")+1);
-        	IFormatReader reader = null;
-        	if (format.equals("tif") || format.equals("tiff")) {
-        		reader = new TiffReader();
-        	}
-        	else if (format.equals("png")) {
-        		reader = new APNGReader();
-        	}
-            else if (format.equals("jpg")||format.equals("jpeg")){
-                reader = new JPEGReader();
+            String selectedRenderer = (String)SessionMgr.getSessionMgr().getModelProperty(SessionMgr.DISPLAY_RENDERER_2D);
+            
+            RendererType2D renderer = selectedRenderer==null ? RendererType2D.LOCI : RendererType2D.valueOf(selectedRenderer);
+            BufferedImage image = null;
+            
+            if (renderer==RendererType2D.IMAGE_IO) {
+
+                InputStream stream = null;
+                GetMethod get = null;
+                try {
+                    
+                    if (path.startsWith("http://")) {
+                        HttpClient client = SessionMgr.getSessionMgr().getWebDavClient().getHttpClient();
+                        get = new GetMethod(path);
+                        int responseCode = client.executeMethod(get);
+                        log.trace("readImage: GET "+responseCode+", path="+path);
+                        if (responseCode!=200) {
+                            throw new FileNotFoundException();
+                        }
+                        stream = get.getResponseBodyAsStream();
+                    }
+                    else {
+                        log.trace("readImage: FileInputStream path="+path);
+                        stream = new FileInputStream(new File(path));
+                    }
+                    
+                    // Supports GIF, PNG, JPEG, BMP, and WBMP 
+                    image = ImageIO.read(stream);
+                }
+                finally {
+                    if (get!=null) {
+                        get.releaseConnection();
+                    }
+                    if (stream != null) {
+                        try {
+                            stream.close();
+                        } catch (IOException e) {
+                            log.warn("readImage: failed to close {}", path, e);
+                        }
+                    }
+                }
             }
-            else if (format.equals("bmp")){
-                reader = new BMPReader();
+            else {
+                String format = path.substring(path.lastIndexOf(".")+1);
+                IFormatReader reader = null;
+                if (format.equals("tif") || format.equals("tiff")) {
+                    reader = new TiffReader();
+                }
+                else if (format.equals("png")) {
+                    reader = new APNGReader();
+                }
+                else if (format.equals("jpg")||format.equals("jpeg")){
+                    reader = new JPEGReader();
+                }
+                else if (format.equals("bmp")){
+                    reader = new BMPReader();
+                }
+                else if (format.equals("gif")){
+                    reader = new GIFReader();
+                }
+                else {
+                    throw new FormatException("File format is not supported: "+format);
+                }
+                BufferedImageReader in = new BufferedImageReader(reader);
+                in.setId(path);
+                image = in.openImage(0);
+                in.close();
             }
-            else if (format.equals("gif")){
-                reader = new GIFReader();
-            }
-        	else {
-        		throw new FormatException("File format is not supported: "+format);
-        	}
-            BufferedImageReader in = new BufferedImageReader(reader);
-            in.setId(path);
-            BufferedImage image = in.openImage(0);
-            in.close();
+            
             return image;
         }
         catch (Exception e) {
@@ -218,12 +266,12 @@ public class Utils {
         // Some extra finagling is required because LOCI libraries do not like the file protocol for some reason
         if (url.getProtocol().equals("file")) {
             String localFilepath = url.toString().replace("file:","");
-            log.trace("loading cached file: {}", localFilepath);
+            log.trace("Loading cached file: {}", localFilepath);
             image = Utils.readImage(localFilepath);
             if (TIMER) stopWatch.stop("readCachedImage");
         }
         else {
-            log.trace("loading url: {}", url);
+            log.trace("Loading url: {}", url);
             image = Utils.readImage(url.toString());
             if (TIMER) stopWatch.stop("readRemoteImage");
         }
@@ -312,13 +360,16 @@ public class Utils {
     		type = BufferedImage.TYPE_INT_RGB;	
     	}
     	
-        BufferedImage resizedImg = new BufferedImage(w, h, type);
+        BufferedImage resizedImg = new BufferedImage(w, h, type);        
         Graphics2D g2 = resizedImg.createGraphics();
 
-    	if (((double)sourceImage.getHeight()/(double)h > 2) || ((double)sourceImage.getWidth()/(double)w > 2)) {
+//    	if (((double)sourceImage.getHeight()/(double)h > 2) || ((double)sourceImage.getWidth()/(double)w > 2)) {
 //    		g2.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_BILINEAR);
-    	}
-    	
+//    	}
+
+        ((Graphics2D)g2).setRenderingHint(RenderingHints.KEY_INTERPOLATION,
+                RenderingHints.VALUE_INTERPOLATION_BILINEAR);
+        
         g2.drawImage(sourceImage, 0, 0, w, h, null);
         g2.dispose();
         if (TIMER) stopWatch.stop("getScaledImage");

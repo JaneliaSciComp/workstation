@@ -1,11 +1,14 @@
 package org.janelia.it.FlyWorkstation.shared.util.filecache;
 
-import com.google.common.base.CharMatcher;
-import com.google.common.cache.CacheLoader;
-
 import java.io.File;
 import java.net.URL;
 import java.util.concurrent.Callable;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import com.google.common.base.CharMatcher;
+import com.google.common.cache.CacheLoader;
 
 /**
  * This class manages loading remote files into the cache.
@@ -17,7 +20,7 @@ import java.util.concurrent.Callable;
 public abstract class RemoteFileLoader
         extends CacheLoader<URL, CachedFile>
         implements Callable<CachedFile> {
-
+    
     private URL url;
 
     public RemoteFileLoader() {
@@ -37,7 +40,7 @@ public abstract class RemoteFileLoader
 
     @Override
     public CachedFile load(URL url) throws Exception {
-
+        
         CachedFile cachedFile;
 
         final LocalFileCache cache = getCache();

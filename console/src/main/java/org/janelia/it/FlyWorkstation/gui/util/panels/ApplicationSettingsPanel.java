@@ -1,18 +1,22 @@
 package org.janelia.it.FlyWorkstation.gui.util.panels;
 
+import java.awt.BorderLayout;
+import java.awt.Dimension;
+import java.awt.Rectangle;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.util.HashMap;
+import java.util.Map;
+
+import javax.swing.*;
+
 import org.janelia.it.FlyWorkstation.gui.framework.navigation_tools.AutoNavigationMgr;
 import org.janelia.it.FlyWorkstation.gui.framework.pref_controller.PrefController;
 import org.janelia.it.FlyWorkstation.gui.framework.roles.PrefEditor;
 import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.BrowserModel;
 import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionModelListener;
-
-import javax.swing.*;
-import java.awt.*;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
-import java.util.HashMap;
-import java.util.Map;
+import org.janelia.it.FlyWorkstation.shared.util.RendererType2D;
 
 public class ApplicationSettingsPanel extends JPanel implements PrefEditor {
     private boolean settingsChanged = false;
@@ -23,9 +27,12 @@ public class ApplicationSettingsPanel extends JPanel implements PrefEditor {
     JCheckBox navComplete = new JCheckBox();
     SessionMgr sessionMgr = SessionMgr.getSessionMgr();
     MySessionModelListener sessionModelListener = new MySessionModelListener();
-    ButtonGroup buttonGroup = new ButtonGroup();
-    Map<ButtonModel, String> buttonToLookAndFeel = new HashMap<ButtonModel, String>();
+    ButtonGroup buttonLookAndFeelGroup = new ButtonGroup();
+    Map<ButtonModel, String> buttonToLafMap = new HashMap<ButtonModel, String>();
 
+    ButtonGroup rendererGroup = new ButtonGroup();
+    Map<ButtonModel, String> buttonToRendererMap = new HashMap<ButtonModel, String>();
+    
     public ApplicationSettingsPanel(JFrame parentFrame) {
         try {
             sessionMgr.addSessionModelListener(sessionModelListener);
@@ -117,23 +124,45 @@ public class ApplicationSettingsPanel extends JPanel implements PrefEditor {
 
         pnlLookAndFeelOptions.setLayout(new BoxLayout(pnlLookAndFeelOptions, BoxLayout.Y_AXIS));
         UIManager.LookAndFeelInfo[] infos = UIManager.getInstalledLookAndFeels();
-        JRadioButton rb;
+
         for (UIManager.LookAndFeelInfo info : infos) {
-            rb = new JRadioButton(info.getName());
+            JRadioButton rb = new JRadioButton(info.getName());
             rb.addActionListener(new ActionListener() {
                 public void actionPerformed(ActionEvent evt) {
                     settingsChanged = true;
                 }
-            });
+            }); 
             if (UIManager.getLookAndFeel().getName().equals(info.getName()))
                 rb.setSelected(true);
-            buttonGroup.add(rb);
-            buttonToLookAndFeel.put(rb.getModel(), info.getClassName());
+            buttonLookAndFeelGroup.add(rb);
+            buttonToLafMap.put(rb.getModel(), info.getClassName());
             pnlLookAndFeelOptions.add(rb);
             // pnlLookAndFeelOptions.add(Box.createVerticalStrut(5));
         }
         mainPanel.add(Box.createVerticalStrut(20));
         mainPanel.add(pnlLookAndFeelOptions);
+
+        JPanel pnlRendererOptions = new JPanel();
+        pnlRendererOptions.setBorder(new javax.swing.border.TitledBorder("2D Image Renderer"));
+
+        pnlRendererOptions.setLayout(new BoxLayout(pnlRendererOptions, BoxLayout.Y_AXIS));
+
+        String selectedRenderer = (String)SessionMgr.getSessionMgr().getModelProperty(SessionMgr.DISPLAY_RENDERER_2D);
+        for (RendererType2D type : RendererType2D.values()) {
+            JRadioButton  rb = new JRadioButton(type.getName());
+            rb.addActionListener(new ActionListener() {
+                public void actionPerformed(ActionEvent evt) {
+                    settingsChanged = true;
+                }
+            });
+            if (selectedRenderer.equals(type.name()))
+                rb.setSelected(true);
+            rendererGroup.add(rb);
+            buttonToRendererMap.put(rb.getModel(), type.name());
+            pnlRendererOptions.add(rb);
+        }
+        mainPanel.add(Box.createVerticalStrut(20));
+        mainPanel.add(pnlRendererOptions);
 
         JScrollPane scrollPane = new JScrollPane();
         scrollPane.setViewportView(mainPanel);
@@ -191,13 +220,18 @@ public class ApplicationSettingsPanel extends JPanel implements PrefEditor {
             sessionMgr.setModelProperty(SUBVIEW_FOCUS, subviewFocusCheckBox.isSelected());
         }
         AutoNavigationMgr.getAutoNavigationMgr().showNavigationCompleteMsgs(navComplete.isSelected());
+        
+        String newRenderer = buttonToRendererMap.get(rendererGroup.getSelection());
+        sessionMgr.setModelProperty(SessionMgr.DISPLAY_RENDERER_2D, newRenderer);
+
         try {
-            sessionMgr.setModelProperty(SessionMgr.DISPLAY_LOOK_AND_FEEL,
-                    buttonToLookAndFeel.get(buttonGroup.getSelection()));
-            // SessionMgr.getSessionMgr().setLookAndFeel(buttonToLookAndFeel.get(buttonGroup.getSelection()));
-            JOptionPane.showMessageDialog(SessionMgr.getBrowser(),
-                    "You will need to restart the application to completely update the look and feel.",
-                    "Restart recommended", JOptionPane.INFORMATION_MESSAGE);
+            String newLaf = buttonToLafMap.get(buttonLookAndFeelGroup.getSelection());
+            if (!newLaf.equals(sessionMgr.getModelProperty(SessionMgr.DISPLAY_LOOK_AND_FEEL))) {
+                JOptionPane.showMessageDialog(SessionMgr.getBrowser(),
+                        "You will need to restart the application to completely update the look and feel.",
+                        "Restart recommended", JOptionPane.INFORMATION_MESSAGE);
+                sessionMgr.setModelProperty(SessionMgr.DISPLAY_LOOK_AND_FEEL, newLaf);
+            }
         } catch (Exception ex) {
             SessionMgr.getSessionMgr().handleException(ex);
         }

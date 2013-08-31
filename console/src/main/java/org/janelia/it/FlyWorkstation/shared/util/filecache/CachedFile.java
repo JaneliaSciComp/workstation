@@ -9,6 +9,13 @@ import com.google.gson.JsonParseException;
 import com.google.gson.JsonPrimitive;
 import com.google.gson.JsonSerializationContext;
 import com.google.gson.JsonSerializer;
+
+import org.apache.commons.httpclient.HttpClient;
+import org.apache.commons.httpclient.HttpMethodBase;
+import org.apache.commons.httpclient.methods.GetMethod;
+import org.apache.commons.httpclient.methods.HeadMethod;
+import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr;
+import org.janelia.it.FlyWorkstation.shared.util.WorkstationFile;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -41,7 +48,7 @@ import java.net.URL;
  * @author Eric Trautman
  */
 public class CachedFile {
-
+    
     private WebDavFile webDavFile;
     private File localFile;
     private File metaFile;
@@ -138,10 +145,14 @@ public class CachedFile {
 
         InputStream input = null;
         FileOutputStream output = null;
-
+        GetMethod get = null;
+        
         try {
-
-            input = remoteFileUrl.openStream();
+            HttpClient client = SessionMgr.getSessionMgr().getWebDavClient().getHttpClient();
+            get = new GetMethod(remoteFileUrl.toString());
+            int responseCode = client.executeMethod(get);
+            LOG.trace("get: GET {} effectiveURL=",responseCode,remoteFileUrl);
+            input = get.getResponseBodyAsStream();
             output = new FileOutputStream(tempFile);
 
             byte[] buffer = new byte[BUFFER_SIZE];
@@ -155,6 +166,10 @@ public class CachedFile {
                     "failed to copy " + remoteFileUrl + " to " + tempFile.getAbsolutePath(), t);
         } finally {
 
+            if (get!=null) {
+                get.releaseConnection();
+            }
+            
             if (input != null) {
                 try {
                     input.close();

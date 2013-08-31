@@ -13,6 +13,7 @@ import org.janelia.it.FlyWorkstation.gui.framework.pref_controller.PrefControlle
 import org.janelia.it.FlyWorkstation.shared.filestore.PathTranslator;
 import org.janelia.it.FlyWorkstation.shared.util.ConsoleProperties;
 import org.janelia.it.FlyWorkstation.shared.util.PropertyConfigurator;
+import org.janelia.it.FlyWorkstation.shared.util.RendererType2D;
 import org.janelia.it.FlyWorkstation.shared.util.Utils;
 import org.janelia.it.FlyWorkstation.shared.util.filecache.LocalFileCache;
 import org.janelia.it.FlyWorkstation.shared.util.filecache.WebDavClient;
@@ -61,6 +62,8 @@ public class SessionMgr {
     
     public static String DISPLAY_LOOK_AND_FEEL = "SessionMgr.JavaLookAndFeel";
 
+    public static String DISPLAY_RENDERER_2D = "SessionMgr.Renderer2D";
+    
     public static boolean isDarkLook = false;
     
     //  private static String PROPERTY_CREATION_RULES="SessionMgr.PropertyCreationRules";
@@ -146,6 +149,11 @@ public class SessionMgr {
         if (getModelProperty(DISPLAY_SUB_EDITOR_PROPERTY) == null) { 
         	setModelProperty(DISPLAY_SUB_EDITOR_PROPERTY, true); 
         }
+
+        if (getModelProperty(SessionMgr.DISPLAY_RENDERER_2D) == null) {
+            setModelProperty(SessionMgr.DISPLAY_RENDERER_2D, RendererType2D.IMAGE_IO.toString());
+        } 
+    
         
 //      if (getModelProperty(PROPERTY_CREATION_RULES)!=null) {
 //        Set rules= (Set)getModelProperty(PROPERTY_CREATION_RULES);
