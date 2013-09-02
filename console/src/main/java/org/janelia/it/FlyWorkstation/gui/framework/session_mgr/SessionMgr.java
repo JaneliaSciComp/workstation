@@ -154,6 +154,7 @@ public class SessionMgr {
             setModelProperty(SessionMgr.DISPLAY_RENDERER_2D, RendererType2D.IMAGE_IO.toString());
         } 
     
+        log.info("Using 2d renderer: {}",getModelProperty(SessionMgr.DISPLAY_RENDERER_2D));
         
 //      if (getModelProperty(PROPERTY_CREATION_RULES)!=null) {
 //        Set rules= (Set)getModelProperty(PROPERTY_CREATION_RULES);

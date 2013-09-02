@@ -46,7 +46,7 @@
   
   <!--  perf4j loggers must be set to DEBUG to log performance benchmarks-->
   <logger name="org.janelia.it.FlyWorkstation.shared.util.Utils" level="INFO"/>
-  <logger name="org.janelia.it.FlyWorkstation.gui.framework.viewer.LoadingImageWorker" level="INFO"/>
+  <logger name="org.janelia.it.FlyWorkstation.gui.framework.viewer.LoadImageWorker" level="INFO"/>
   
   <!--
   <logger name="org.janelia.it.FlyWorkstation.shared.util.filecache" level="DEBUG"/>
