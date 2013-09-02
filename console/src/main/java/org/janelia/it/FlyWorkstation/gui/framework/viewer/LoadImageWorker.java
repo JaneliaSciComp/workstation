@@ -11,6 +11,7 @@ import java.security.PrivilegedAction;
 import java.util.concurrent.*;
 
 import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr;
+import org.janelia.it.FlyWorkstation.shared.util.ConsoleProperties;
 import org.janelia.it.FlyWorkstation.shared.util.Utils;
 import org.janelia.it.FlyWorkstation.shared.workers.SimpleWorker;
 import org.perf4j.LoggingStopWatch;
@@ -30,17 +31,33 @@ import sun.awt.AppContext;
 public abstract class LoadImageWorker extends SimpleWorker {
 	
     private static final Logger log = LoggerFactory.getLogger(LoadImageWorker.class);
-    
+
     private static final boolean TIMER = log.isDebugEnabled();
     
-    private DynamicImagePanel panel;
+    private static final String LOAD_IMAGE_WORKER_THREADS_PROPERTY = "console.images.workerThreads";
+    private static final String CACHE_BEHIND_PROPERTY = "console.images.ayncCacheBehind";
+    
+    public static final int numWorkerThreads = ConsoleProperties.getInt(LOAD_IMAGE_WORKER_THREADS_PROPERTY, 10);
+    public static final boolean useCacheBehind = ConsoleProperties.getBoolean(CACHE_BEHIND_PROPERTY, true);
+        
+    static {
+        if (log.isDebugEnabled()) {
+            log.debug("Using {} image loading threads.",numWorkerThreads);
+            if (useCacheBehind) {
+                log.debug("Using cache behind.");
+            }
+            else {
+                log.debug("Using cache ahead.");
+            }
+        }
+    }
+    
     private String imageFilename;
     private BufferedImage maxSizeImage;
     private BufferedImage scaledImage;
     private int displaySize;
     
 	public LoadImageWorker(DynamicImagePanel panel, String imageFilename) {
-	    this.panel = panel;
 	    this.imageFilename = imageFilename;
 	    this.displaySize = panel.getDisplaySize();
 	}
@@ -50,25 +67,37 @@ public abstract class LoadImageWorker extends SimpleWorker {
         
         StopWatch stopWatch = TIMER ? new LoggingStopWatch("LoadImageWorker") : null;
         
-        this.maxSizeImage = SessionMgr.getBrowser().getImageCache().get(imageFilename);
-        if (TIMER) stopWatch.lap("getFromCache");
+        ImageCache imageCache = SessionMgr.getBrowser().getImageCache();
+        if (imageCache!=null) {
+            this.maxSizeImage = SessionMgr.getBrowser().getImageCache().get(imageFilename);
+            if (maxSizeImage != null) {
+                if (TIMER) stopWatch.lap("getFromCache");
+                // Scale image to current image display size
+                this.scaledImage = Utils.getScaledImageByWidth(maxSizeImage, displaySize);
+                if (TIMER) stopWatch.lap("getScaledImageByWidth");
+                return;
+            }
+        }
         
-        if (maxSizeImage == null) {
-            
-//            File imageFile = SessionMgr.getCachedFile(imageFilename, false);
-//            maxSizeImage = Utils.readImage(imageFile.toURI().toURL());
-            
+        if (useCacheBehind) {
+            // Async cache-behind
             URL imageFileURL = SessionMgr.getURL(imageFilename);
             maxSizeImage = Utils.readImage(imageFileURL);
             if (TIMER) stopWatch.lap("readImage");
-            
             if (maxSizeImage!=null) {
                 SessionMgr.getBrowser().getImageCache().put(imageFilename, maxSizeImage);
                 if (TIMER) stopWatch.lap("putInCache");
             }
         }
-
+        else {
+            // Sync cache-ahead
+            File imageFile = SessionMgr.getCachedFile(imageFilename, false);
+            maxSizeImage = Utils.readImage(imageFile.toURI().toURL());
+            if (TIMER) stopWatch.lap("readCachedAheadImage");
+        }
+        
         if (maxSizeImage != null) {
+            // Scale image to current image display size
             this.scaledImage = Utils.getScaledImageByWidth(maxSizeImage, displaySize);
             if (TIMER) stopWatch.lap("getScaledImageByWidth");
         }
@@ -86,9 +115,8 @@ public abstract class LoadImageWorker extends SimpleWorker {
     protected int getNewDisplaySize() {
         return displaySize;
     }
-
-    private static final int MAX_WORKER_THREADS = 10;
     
+    /** Copied from SimpleWorker so that we can use a separate thread pool and customize the number of threads */
     private static synchronized ExecutorService getWorkersExecutorService() {
         final AppContext appContext = AppContext.getAppContext();
         ExecutorService executorService =
@@ -110,7 +138,7 @@ public abstract class LoadImageWorker extends SimpleWorker {
                 };
 
             executorService =
-                new ThreadPoolExecutor(MAX_WORKER_THREADS, MAX_WORKER_THREADS,
+                new ThreadPoolExecutor(numWorkerThreads, numWorkerThreads,
                                        10L, TimeUnit.MINUTES,
                                        new LinkedBlockingQueue<Runnable>(),
                                        threadFactory);
