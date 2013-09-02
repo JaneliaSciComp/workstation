@@ -5,8 +5,6 @@ import java.util.concurrent.Callable;
 
 import javax.swing.JComponent;
 
-import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr;
-import org.janelia.it.FlyWorkstation.gui.util.panels.ViewerSettingsPanel;
 import org.janelia.it.FlyWorkstation.model.entity.RootedEntity;
 import org.janelia.it.jacs.shared.utils.EntityUtils;
 
@@ -36,12 +34,12 @@ public class DynamicImageButton extends AnnotatedImageButton {
         // asynchronously within the the load image worker
         this.dynamicImagePanel = new DynamicImagePanel(filepath, ImagesPanel.MAX_IMAGE_WIDTH) {
             protected void syncToViewerState() {
-            	this.displaySize = iconPanel.getImagesPanel().getMaxImageWidth();
-        		Boolean invertImages = (Boolean)SessionMgr.getSessionMgr().getModelProperty(
-        				ViewerSettingsPanel.INVERT_IMAGE_COLORS_PROPERTY);
-                if (invertImages!=null && invertImages) {
-                	setInvertedColors(true);
-                }
+//            	this.displaySize = iconPanel.getImagesPanel().getMaxImageWidth();
+//        		Boolean invertImages = (Boolean)SessionMgr.getSessionMgr().getModelProperty(
+//        				ViewerSettingsPanel.INVERT_IMAGE_COLORS_PROPERTY);
+//                if (invertImages!=null && invertImages) {
+//                	setInvertedColors(true);
+//                }
             }
         };
         return dynamicImagePanel;

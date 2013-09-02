@@ -381,7 +381,8 @@ public class ImagesPanel extends JScrollPane {
 	public synchronized void registerAspectRatio(Double aspectRatio) {
 		if (lowestAspectRatio==null || aspectRatio<lowestAspectRatio) {
 			this.lowestAspectRatio = aspectRatio;
-			setMaxImageWidth(maxImageWidth);
+			// Is this needed? Doesn't seem to be...
+//			setMaxImageWidth(maxImageWidth);
 		}
 	}
 

@@ -1,4 +1,4 @@
-    package org.janelia.it.FlyWorkstation.gui.framework.viewer;
+package org.janelia.it.FlyWorkstation.gui.framework.viewer;
 
 import java.awt.Color;
 import java.awt.Dimension;
@@ -187,17 +187,18 @@ public abstract class DynamicImagePanel extends JPanel {
                             setMaxSizeImage(getNewMaxSizeImage());
 				            setImageLabel(imageLabel);
 				            imageLabel.setIcon(new ImageIcon(getNewScaledImage()));    
-				            syncToViewerState();
-					        loadWorker = null;
-					        
-					        invalidate();
+//				            syncToViewerState();
+//					        invalidate();
 					        
 					        try {
 					            if (success!=null) success.call();
+	                            
 					        }
 					        catch (Exception e) {
 					            SessionMgr.getSessionMgr().handleException(e);
 					        }
+					        
+					        loadWorker = null;
 					    }
 
 					    @Override
