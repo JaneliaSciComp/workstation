@@ -364,12 +364,9 @@ public class Utils {
         Graphics2D g2 = resizedImg.createGraphics();
 
 //    	if (((double)sourceImage.getHeight()/(double)h > 2) || ((double)sourceImage.getWidth()/(double)w > 2)) {
-//    		g2.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_BILINEAR);
+    		g2.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_BILINEAR);
 //    	}
 
-        ((Graphics2D)g2).setRenderingHint(RenderingHints.KEY_INTERPOLATION,
-                RenderingHints.VALUE_INTERPOLATION_BILINEAR);
-        
         g2.drawImage(sourceImage, 0, 0, w, h, null);
         g2.dispose();
         if (TIMER) stopWatch.stop("getScaledImage");

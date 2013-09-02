@@ -40,6 +40,8 @@
   <logger name="org.janelia.it.FlyWorkstation.gui.framework.viewer.alignment_board.OutlineExpansionState" level="INFO"/>
   <logger name="org.janelia.it.FlyWorkstation.gui.framework.viewer.alignment_board.AlignmentBoardViewer" level="INFO"/>
   
+  <logger name="org.janelia.it.FlyWorkstation.shared.util" level="INFO"/>
+  
   <logger name="org.janelia.it.jacs.shared.utils" level="INFO"/>
   
   <logger name="loci" level="WARN"/>
