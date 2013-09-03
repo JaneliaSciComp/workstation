@@ -67,7 +67,8 @@ public class TestMaskChan3DViz {
                             new Chan3DVizDataSource( args ),
                             renderMapping,
                             new TestControlCallback( mipWidget, renderMapping, frame.getContentPane() ),
-                            settings
+                            settings,
+                            null
                     );
                     loadWorker.setResolver( new TrivialFileResolver() );
                     loadWorker.execute();
