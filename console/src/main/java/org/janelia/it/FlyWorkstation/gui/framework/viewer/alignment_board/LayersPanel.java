@@ -4,6 +4,7 @@ import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Component;
 import java.awt.event.*;
+import java.util.Collection;
 import java.util.List;
 import java.util.concurrent.Callable;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -23,8 +24,11 @@ import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.FlyWorkstation.gui.framework.viewer.alignment_board.AlignmentBoardItemChangeEvent.ChangeType;
 import org.janelia.it.FlyWorkstation.gui.util.ColorSwatch;
 import org.janelia.it.FlyWorkstation.gui.util.Icons;
+import org.janelia.it.FlyWorkstation.gui.viewer3d.texture.DummyDataSource;
+import org.janelia.it.FlyWorkstation.model.domain.Compartment;
 import org.janelia.it.FlyWorkstation.model.domain.CompartmentSet;
 import org.janelia.it.FlyWorkstation.model.domain.EntityWrapper;
+import org.janelia.it.FlyWorkstation.model.domain.Sample;
 import org.janelia.it.FlyWorkstation.model.entity.RootedEntity;
 import org.janelia.it.FlyWorkstation.model.viewer.AlignedItem;
 import org.janelia.it.FlyWorkstation.model.viewer.AlignmentBoardContext;
@@ -277,7 +281,7 @@ public class LayersPanel extends JPanel implements Refreshable, ActivatableView 
                     throw new IllegalStateException("Alignment board does not exist");
                 }
                 this.abContext = new AlignmentBoardContext(abRootedEntity);
-                log.debug("loading ancestors for alignment board: {}",abContext);
+                log.debug("loading ancestors for alignment board: {}", abContext);
                 loadAncestors(abContext);
                 loadCompartmentSet(abContext);
             }
@@ -321,6 +325,25 @@ public class LayersPanel extends JPanel implements Refreshable, ActivatableView 
                         
                     }
                 }
+
+//                // Doctoring one of the compartment sets.
+//                for ( EntityWrapper child: context.getChildren() ) {
+//                    if ( child.getName().startsWith("Compartment Set") ) {
+//                        log.info("Context has a compartment set called {}.", child.getName());
+//                        CompartmentSet compartmentSet = (CompartmentSet)child;
+//                        compartmentSet.loadContextualizedChildren( context.getAlignmentContext() );
+//                        if ( ! compartmentSet.getChildren().isEmpty() ) {
+//                            Compartment firstChild = (Compartment)compartmentSet.getChildren().iterator().next();
+//                            Entity compartmentEntity = firstChild.getInternalEntity();
+//                            for ( Entity compartmentChild: compartmentEntity.getChildren() ) {
+//                                if ( compartmentChild.getEntityType().equals(EntityConstants.ATTRIBUTE_MASK_IMAGE) ) {
+//                                }
+//                                else if ( compartmentChild.getEntityType().equals(EntityConstants.ATTRIBUTE_CHAN_IMAGE ) ) {
+//                                }
+//                            }
+//                        }
+//                    }
+//                }
             }
 
             @Override

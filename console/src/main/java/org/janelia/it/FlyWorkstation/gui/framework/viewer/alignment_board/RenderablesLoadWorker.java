@@ -5,6 +5,7 @@ import org.janelia.it.FlyWorkstation.gui.viewer3d.gui_elements.GpuSampler;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.loader.FragmentSizeFilter;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.loader.MaskChanDataAcceptorI;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.loader.MaskChanMultiFileLoader;
+import org.janelia.it.FlyWorkstation.gui.viewer3d.loader.RemaskingAcceptorDecorator;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.masking.*;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.renderable.MaskChanRenderableData;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.renderable.RenderableBean;
@@ -49,6 +50,7 @@ public class RenderablesLoadWorker extends SimpleWorker implements VolumeLoader 
     private RenderablesChannelsBuilder signalTextureBuilder;
     private RenderableDataSourceI dataSource;
     private AlignmentBoardSettings alignmentBoardSettings;
+    private MultiMaskTracker multiMaskTracker;
 
     private AlignmentBoardControllable controlCallback;
     private GpuSampler sampler;
@@ -61,13 +63,15 @@ public class RenderablesLoadWorker extends SimpleWorker implements VolumeLoader 
             RenderableDataSourceI dataSource,
             RenderMappingI renderMapping,
             AlignmentBoardControllable controlCallback,
-            AlignmentBoardSettings settings
+            AlignmentBoardSettings settings,
+            MultiMaskTracker multiMaskTracker
     ) {
         logger = LoggerFactory.getLogger(RenderablesLoadWorker.class);
         this.dataSource = dataSource;
         this.renderMapping = renderMapping;
         this.alignmentBoardSettings = settings;
         this.controlCallback = controlCallback;
+        this.multiMaskTracker = multiMaskTracker;
     }
 
     /**
@@ -79,14 +83,11 @@ public class RenderablesLoadWorker extends SimpleWorker implements VolumeLoader 
             RenderMappingI renderMapping,
             AlignmentBoardControllable controlCallback,
             AlignmentBoardSettings settings,
+            MultiMaskTracker multiMaskTracker,
             GpuSampler sampler
     ) throws Exception {
-        logger = LoggerFactory.getLogger(RenderablesLoadWorker.class);
-        this.dataSource = dataSource;
-        this.renderMapping = renderMapping;
-        this.controlCallback = controlCallback;
+        this( dataSource, renderMapping, controlCallback, settings, multiMaskTracker );
         this.sampler = sampler;
-        this.alignmentBoardSettings = settings;
     }
 
     public void setResolver( FileResolver resolver ) {
@@ -200,13 +201,19 @@ public class RenderablesLoadWorker extends SimpleWorker implements VolumeLoader 
         }
 
         Collection<RenderableBean> renderableBeans = new ArrayList<RenderableBean>();
+        int lastUsedMask = -1;
         for ( MaskChanRenderableData renderableData: renderableDatas ) {
-            renderableBeans.add(renderableData.getBean());
+            RenderableBean bean = renderableData.getBean();
+            renderableBeans.add( bean );
+            if ( bean.getTranslatedNum() > lastUsedMask ) {
+                lastUsedMask = bean.getTranslatedNum();
+            }
+        }
+        if ( lastUsedMask > -1 ) {
+            multiMaskTracker.setFirstMaskNum( lastUsedMask + 1 ); // Add one to move past all allocated masks.
         }
 
         renderMapping.setRenderables( renderableBeans );
-
-        /* Establish all volume builders for this test. */
 
         // Establish the means for extracting the volume mask.
         maskTextureBuilder = new RenderablesMaskBuilder( alignmentBoardSettings, renderableBeans );
@@ -216,7 +223,16 @@ public class RenderablesLoadWorker extends SimpleWorker implements VolumeLoader 
 
         ArrayList<MaskChanDataAcceptorI> acceptors = new ArrayList<MaskChanDataAcceptorI>();
 
-        acceptors.add(maskTextureBuilder);
+        // Unfortunately, the wrapper knows the thing it wraps, but at least under a different definition.
+        //   TODO consider adding an interface to RenderableMaskBuilder, just for getting the volume bytes.
+        RemaskingAcceptorDecorator remaskingAcceptorDecorator = new RemaskingAcceptorDecorator(
+                maskTextureBuilder,
+                multiMaskTracker,
+                maskTextureBuilder,
+                RenderablesMaskBuilder.UNIVERSAL_MASK_BYTE_COUNT,
+                false    // NOT binary / search writeback.  That happens only for the file writeback code.
+        );
+        acceptors.add(remaskingAcceptorDecorator);
         acceptors.add(signalTextureBuilder);
 
         // Setup the loader to traverse all this data on demand.

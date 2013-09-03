@@ -13,6 +13,7 @@ import java.util.Collection;
 
 import org.janelia.it.FlyWorkstation.gui.viewer3d.texture.TextureDataBean;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.texture.TextureDataI;
+import org.janelia.it.FlyWorkstation.shared.annotations.NotThreadSafe;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 /**
@@ -28,7 +29,7 @@ import org.slf4j.LoggerFactory;
  */
 public class RenderablesMaskBuilder extends RenderablesVolumeBuilder implements MaskBuilderI, TextureBuilderI {
 
-    private static final int UNIVERSAL_MASK_BYTE_COUNT = 2;
+    public static final int UNIVERSAL_MASK_BYTE_COUNT = 2;
     private static final int UNIVERSAL_MASK_CHANNEL_COUNT = 1;
     private final Logger logger = LoggerFactory.getLogger( RenderablesMaskBuilder.class );
     private final Collection<RenderableBean> renderableBeans;
@@ -57,6 +58,7 @@ public class RenderablesMaskBuilder extends RenderablesVolumeBuilder implements 
      * @return total bytes read during this pairs-run.
      * @throws Exception thrown by called methods or if bad inputs are received.
      */
+    @NotThreadSafe( why="writes direct to volume data. May be called with diff masks.  No synchronized." )
     @Override
     public int addMaskData(Integer maskNumber, long position, long x, long y, long z ) throws Exception {
         init();
@@ -171,6 +173,7 @@ public class RenderablesMaskBuilder extends RenderablesVolumeBuilder implements 
 
     @Override
     public byte[] getVolumeData() {
+        init();
         return volumeData;
     }
 

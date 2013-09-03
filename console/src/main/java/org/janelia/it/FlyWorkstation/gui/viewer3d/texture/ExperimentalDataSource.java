@@ -5,21 +5,23 @@ import org.janelia.it.FlyWorkstation.gui.viewer3d.renderable.MaskChanRenderableD
 import org.janelia.it.FlyWorkstation.gui.viewer3d.renderable.RenderableBean;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.renderable.RenderableDataSourceI;
 import org.janelia.it.FlyWorkstation.model.domain.*;
+import org.janelia.it.FlyWorkstation.model.entity.RootedEntity;
 import org.janelia.it.FlyWorkstation.model.viewer.AlignedItem;
 import org.janelia.it.FlyWorkstation.model.viewer.AlignmentBoardContext;
 import org.janelia.it.jacs.model.entity.Entity;
 import org.janelia.it.jacs.model.entity.EntityConstants;
+import org.janelia.it.jacs.model.entity.EntityType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.awt.*;
-import java.util.*;
+import java.io.File;
+import java.util.ArrayList;
+import java.util.Collection;
 
-/** Implements the data source against the context of the alignment board. */
-public class ABContextDataSource implements RenderableDataSourceI {
+/** Implements the data source against a hardcoded file(s). */
+public class ExperimentalDataSource implements RenderableDataSourceI {
 
-    // This data was manually extracted from some Yoshi/standard-space-size data.  It is named as:
-    //   prefix_1822248087368761442_9.mask
     // where '9' above is the label number, the usual mask/chan extensions apply, and the number shown
     // should match the location for the previously-known files fetched from the older pipeline.
     private static final byte NON_RENDER_INTENSITY = (byte) 0f;
@@ -28,14 +30,14 @@ public class ABContextDataSource implements RenderableDataSourceI {
     private AlignedItem currentSample; // NOTE: use of this precludes multi-threaded use of this data source!
     private AlignedItem currentCompartmentSet;
 
-    private final Logger logger = LoggerFactory.getLogger( ABContextDataSource.class );
-    public ABContextDataSource( AlignmentBoardContext context ) {
+    private final Logger logger = LoggerFactory.getLogger( ExperimentalDataSource.class );
+    public ExperimentalDataSource(AlignmentBoardContext context) {
         this.context = context;
     }
 
     @Override
     public String getName() {
-        return ABContextDataSource.class.getSimpleName() + " Data Source";
+        return ExperimentalDataSource.class.getSimpleName() + " Data Source";
     }
 
     @Override
@@ -47,6 +49,42 @@ public class ABContextDataSource implements RenderableDataSourceI {
 
         int liveFileCount = 0;
 
+        // This impl is to create entities that look normal, out of the input files.
+        File loc = new File("/Volumes/jacsData/fosterl/maskFromStack");
+        File maskFile = new File( loc, "maskFromStack.mask" );
+        File chanFile = new File( loc, "maskFromStack.chan" );
+        if ( ! maskFile.canRead()  ||  ! chanFile.canRead() ) {
+            logger.error("Check exists/can read {} and {}.", maskFile, chanFile );
+            throw new RuntimeException( "Cannot open the mask/chan experimental files." );
+        }
+
+        // Establish an ersatz sample.
+        Entity sampleInnerEntity = new Entity();
+        sampleInnerEntity.setId( 444444L );
+        sampleInnerEntity.setName( "Experimental Containing Sample");
+        EntityType type = new EntityType();
+        type.setName( EntityConstants.TYPE_SAMPLE );
+        type.setId( 333333L );
+        sampleInnerEntity.setEntityType( type );
+        RootedEntity sampleRootedEntity = new RootedEntity( sampleInnerEntity );
+        EntityWrapper dummySampleItemEntity = new Sample( sampleRootedEntity );
+        currentCompartmentSet = null;
+        Sample dummySample = (Sample)dummySampleItemEntity;
+        sampleInnerEntity = dummySample.getInternalEntity();
+
+        MaskChanRenderableData dummyContainerRenderable = getNonRenderingRenderableData(sampleInnerEntity);
+        rtnVal.add( dummyContainerRenderable );
+
+        // Now establish an ersatz neuron.
+        int count = getRenderableData(
+                rtnVal,
+                nextTranslatedNum ++,
+                maskFile,
+                chanFile,
+                false
+        );
+
+        // Finally, pickup whatever has been established by normal Alignment Board interaction.
         for ( AlignedItem alignedItem : context.getAlignedItems() ) {
 
             EntityWrapper itemEntity = alignedItem.getItemWrapper();
@@ -150,12 +188,12 @@ public class ABContextDataSource implements RenderableDataSourceI {
 
         RenderableBean renderableBean = createRenderableBean( nextTranslatedNum, isCompartment, item );
         MaskChanRenderableData nfRenderable = new MaskChanRenderableData();
-        nfRenderable.setBean( renderableBean );
-        nfRenderable.setCompartment( isCompartment );
+        nfRenderable.setBean(renderableBean);
+        nfRenderable.setCompartment(isCompartment);
 
         Masked3d masked = (Masked3d)item.getItemWrapper();
         String maskPath = getMaskPath(masked);
-        nfRenderable.setMaskPath( maskPath );
+        nfRenderable.setMaskPath(maskPath);
         String channelPath = getChannelPath(masked);
         nfRenderable.setChannelPath( channelPath );
 
@@ -163,8 +201,60 @@ public class ABContextDataSource implements RenderableDataSourceI {
                 "" + renderableBean.getRenderableEntity(), maskPath, channelPath
         );
 
-        maskChanRenderableDatas.add( nfRenderable );
+        maskChanRenderableDatas.add(nfRenderable);
         return liveFileCount;
+    }
+
+    /**
+     * Create the common part of the renderable data versus a provided file.
+     *
+     * @param maskChanRenderableDatas to this collection will be added the new renderable data.
+     * @param nextTranslatedNum will be the target render-method id for this data
+     * @param isCompartment for special treatment of compartments.
+     * @return number of correct files found for this "translated number".
+     */
+    private int getRenderableData(
+            Collection<MaskChanRenderableData> maskChanRenderableDatas,
+            int nextTranslatedNum,
+            File maskPath,
+            File chanPath,
+            boolean isCompartment) {
+
+        RenderableBean renderableBean = new RenderableBean();
+        renderableBean.setInvertedY(true);
+        renderableBean.setLabelFileNum( nextTranslatedNum );
+
+        Entity renderableEntity = new Entity();
+        renderableEntity.setId(111111L);
+        renderableEntity.setName("Experimental Reference Channel");
+
+        EntityType type = new EntityType();
+        type.setName(EntityConstants.TYPE_NEURON_FRAGMENT );
+        type.setId( 222222L );
+
+        renderableEntity.setEntityType(type);
+        renderableBean.setRenderableEntity( renderableEntity );
+
+        // Trying fragment at first.
+        renderableBean.setRgb(
+                new byte[] {
+                        1,
+                        1,
+                        0,
+                        isCompartment ?
+                                RenderMappingI.COMPARTMENT_RENDERING : RenderMappingI.FRAGMENT_RENDERING
+                }
+        );
+
+        MaskChanRenderableData nfRenderable = new MaskChanRenderableData();
+        nfRenderable.setBean( renderableBean );
+        nfRenderable.setCompartment( isCompartment );
+
+        nfRenderable.setMaskPath( maskPath.getAbsolutePath() );
+        nfRenderable.setChannelPath( chanPath.getAbsolutePath() );
+
+        maskChanRenderableDatas.add( nfRenderable );
+        return 2;
     }
 
     /**
@@ -215,18 +305,7 @@ public class ABContextDataSource implements RenderableDataSourceI {
         renderableBean.setLabelFileNum(maskIndex);
         renderableBean.setTranslatedNum(translatedNum);
         renderableBean.setRenderableEntity(internalEntity);
-        if ( isCompartment ) {
-            renderableBean.setInvertedY( false );
-            renderableBean.setType(EntityConstants.TYPE_COMPARTMENT );
-        }
-        else {
-            renderableBean.setInvertedY( true );
-        }
-
-        // If a simplistic value has been set, change it.  Otherwise, would be something more specific.
-        if ( renderableBean.getType().equals( EntityConstants.TYPE_ALIGNED_ITEM ) ) {
-            renderableBean.setType(EntityConstants.TYPE_NEURON_FRAGMENT);
-        }
+        renderableBean.setInvertedY( ! isCompartment );
 
         // See to the appearance.
         Color renderColor = item.getColor();

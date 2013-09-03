@@ -4,9 +4,7 @@ import org.janelia.it.FlyWorkstation.gui.viewer3d.renderable.RenderableBean;
 import org.janelia.it.jacs.model.entity.Entity;
 import org.janelia.it.jacs.model.entity.EntityConstants;
 
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.*;
 
 /**
  * Created with IntelliJ IDEA.
@@ -20,6 +18,12 @@ public class ConfigurableColorMapping implements RenderMappingI {
 
     private Map<Long,Integer> guidToRenderMethod;
     private Collection<RenderableBean> renderableBeans;
+    private MultiMaskTracker multiMaskTracker;
+
+    public ConfigurableColorMapping() {}
+    public ConfigurableColorMapping( MultiMaskTracker multiMaskTracker ) {
+        this.multiMaskTracker = multiMaskTracker;
+    }
 
     @Override
     public void setRenderables( Collection<RenderableBean> renderables ) {
@@ -49,6 +53,7 @@ public class ConfigurableColorMapping implements RenderMappingI {
                 { (byte)0x00, (byte)0x8f, (byte)0x00, (byte)0xff },          //Dk G
         };
 
+        // 'Single mask' masks. They do not expand into anything.
         for ( RenderableBean renderableBean : renderableBeans ) {
             // Make the "back map" to the original fragment number.
             int translatedNum = renderableBean.getTranslatedNum();
@@ -83,7 +88,113 @@ public class ConfigurableColorMapping implements RenderMappingI {
             maskMappings.put( translatedNum, rgb );
         }
 
+        // Multi-masks: these are backed by lists of alternate masks, two or more each.  They will be
+        // mapped to the rendering technique (and color) of the highest-priority, visible alternate mask
+        // on their list.
+        if ( multiMaskTracker != null ) {
+            List<Integer> orderedMasks = prioritizeMasks();
+            Map<Integer,MultiMaskTracker.MultiMaskBean> multiMaskMap = multiMaskTracker.getMultiMaskBeans();
+            for ( Integer multiMask: multiMaskMap.keySet() ) {
+                MultiMaskTracker.MultiMaskBean bean = multiMaskMap.get( multiMask );
+                int leastPos = Integer.MAX_VALUE;
+                Integer chosenAltMask = null;
+                for ( Integer nextAltMask: bean.getAltMasks() ) {
+                    byte[] rgb = maskMappings.get( nextAltMask );
+                    if ( rgb != null  &&  rgb[ 3 ] != RenderMappingI.NON_RENDERING ) {
+                        int pos = orderedMasks.indexOf( nextAltMask );
+                        if ( pos < leastPos ) {
+                            chosenAltMask = nextAltMask;
+                        }
+                    }
+                }
+                // If any visible one found above, map the multimask to that value.
+                if ( chosenAltMask != null ) {
+                    maskMappings.put( multiMask, maskMappings.get( chosenAltMask ) );
+                }
+            }
+        }
+
         return maskMappings;
 
+    }
+
+    private List<Integer> prioritizeMasks() {
+        // Priority rules:
+        //  First Neurons, then reference channels, and finally compartments.
+        //  Within each type, rank by decreasing voxel count.
+        List<RenderableBean> sortedBeans = new ArrayList<RenderableBean>();
+        sortedBeans.addAll( renderableBeans );
+        Collections.sort( sortedBeans, new InvertingComparator( new RBComparator() ) );
+        /*
+            Debug
+        System.out.println("Check Sort Order from mapping class.");
+        for ( RenderableBean bean: sortedBeans ) {
+            System.out.println("SORTED:: " + bean.getRenderableEntity().getName() + "  " + bean.getType() + "  " + bean.getVoxelCount() );
+        }
+            */
+
+        // Remarshall into a list of ids.  They will now be in priority order.
+        List<Integer> prioritizedMasks = new ArrayList<Integer>();
+        for ( RenderableBean bean: sortedBeans ) {
+            prioritizedMasks.add( bean.getTranslatedNum() );
+        }
+        return prioritizedMasks;
+    }
+
+    private static class RBComparator implements Comparator<RenderableBean> {
+
+        private Map<String,Integer> rankMapping;
+        {
+            rankMapping = new HashMap<String,Integer>();
+            rankMapping.put( EntityConstants.TYPE_NEURON_FRAGMENT, 1 );
+            rankMapping.put( EntityConstants.TYPE_COMPARTMENT, 3 );
+            rankMapping.put( EntityConstants.TYPE_SAMPLE, 9 );
+            rankMapping.put( EntityConstants.TYPE_COMPARTMENT_SET, 10 );
+        }
+
+        /**
+         * Comparator for sorting renderable beans.  Should return descending order.
+         *
+         * @param second one handed in as 1st param.
+         * @param first one handed in as 2nd param.
+         * @return Negative : right < left; positive: right > left; 0: same</>
+         */
+        @Override
+        public int compare(RenderableBean first, RenderableBean second) {
+            int rtnVal = 0;
+            if ( first == null  &&   second == null ) {
+                return 0;
+            }
+            else if ( first == null ) {
+                rtnVal = 1;
+            }
+            else if ( second == null ) {
+                rtnVal = -1;
+            }
+            else if ( first.getType().equals(second.getType()) ) {
+                // Must compare the contents.  Ranks among same-typed renderables are ordered by size.
+                rtnVal = (int)(first.getVoxelCount() - second.getVoxelCount());
+            }
+            else {
+                String firstTypeName = first.getType();
+                int typeRankFirst = rankMapping.get(firstTypeName);
+                String secondTypeName = second.getType();
+                int typeRankSecond = rankMapping.get(secondTypeName);
+
+                rtnVal = typeRankSecond - typeRankFirst;
+            }
+            return rtnVal;
+        }
+
+    }
+
+    private static class InvertingComparator implements Comparator<RenderableBean> {
+        private Comparator<RenderableBean> wrappedComparator;
+        public InvertingComparator( Comparator<RenderableBean> wrappedComparator ) {
+            this.wrappedComparator = wrappedComparator;
+        }
+        public int compare(RenderableBean first, RenderableBean second) {
+            return wrappedComparator.compare( first, second ) * -1;
+        }
     }
 }

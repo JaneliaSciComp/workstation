@@ -9,6 +9,7 @@ import org.janelia.it.FlyWorkstation.gui.viewer3d.masking.*;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.renderable.RenderableBean;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.texture.TextureDataBean;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.texture.TextureDataI;
+import org.janelia.it.FlyWorkstation.shared.annotations.NotThreadSafe;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -111,6 +112,7 @@ public class RenderablesChannelsBuilder extends RenderablesVolumeBuilder impleme
      * @return total positions applied.
      * @throws Exception
      */
+    @NotThreadSafe( why="writes to channel interp. May be called with diff masks.  Not synchronized." )
     @Override
     public int addChannelData(
             byte[] channelData, long volumePosition, long x, long y, long z, ChannelMetaData channelMetaData

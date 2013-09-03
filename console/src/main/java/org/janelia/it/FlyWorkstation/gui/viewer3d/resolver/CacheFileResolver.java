@@ -15,6 +15,9 @@ import java.io.File;
 public class CacheFileResolver implements FileResolver {
     @Override
     public String getResolvedFilename(String fileName) {
+        if ( fileName.contains("fosterl" ) ) {
+            throw new IllegalArgumentException("Don't bother");
+        }
         File cachedFile = SessionMgr.getCachedFile( fileName, false );
         if ( cachedFile != null )
             return cachedFile.getAbsolutePath();

@@ -23,6 +23,7 @@ import org.janelia.it.FlyWorkstation.gui.viewer3d.gui_elements.CompletionListene
 import org.janelia.it.FlyWorkstation.gui.viewer3d.gui_elements.ControlsListener;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.gui_elements.GpuSampler;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.masking.ConfigurableColorMapping;
+import org.janelia.it.FlyWorkstation.gui.viewer3d.masking.MultiMaskTracker;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.masking.RenderMappingI;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.texture.ABContextDataSource;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.texture.TextureDataI;
@@ -61,6 +62,7 @@ public class AlignmentBoardViewer extends Viewer implements AlignmentBoardContro
     private JPanel wrapperPanel;
 
     private RenderMappingI renderMapping;
+    private MultiMaskTracker multiMaskTracker;
     private BrainGlow brainGlow;
     private AlignmentBoardControlsDialog settingsDialog;
     private Logger logger = LoggerFactory.getLogger(AlignmentBoardViewer.class);
@@ -82,7 +84,8 @@ public class AlignmentBoardViewer extends Viewer implements AlignmentBoardContro
 
         logger.info( "C'tor" );
         settingsData = new AlignmentBoardSettings();
-        renderMapping = new ConfigurableColorMapping();
+        multiMaskTracker = new MultiMaskTracker();
+        renderMapping = new ConfigurableColorMapping( multiMaskTracker );
         setLayout(new BorderLayout());
         ModelMgr.getModelMgr().registerOnEventBus(this);
         
@@ -499,6 +502,7 @@ public class AlignmentBoardViewer extends Viewer implements AlignmentBoardContro
                     mip3d.refresh();
 
                     GpuSampler sampler = getGpuSampler();
+                    multiMaskTracker.clear(); // New creation of board data implies discard old mask mappings.
 
                     // Here, should load volumes, for all the different items given.
                     if ( loadWorker != null  &&  loadWorker.getProgressMonitor() != null ) {
@@ -512,6 +516,7 @@ public class AlignmentBoardViewer extends Viewer implements AlignmentBoardContro
                                 renderMapping,
                                 AlignmentBoardViewer.this,
                                 settingsData,
+                                multiMaskTracker,
                                 sampler
                         );
                     }
@@ -520,7 +525,8 @@ public class AlignmentBoardViewer extends Viewer implements AlignmentBoardContro
                                 new ABContextDataSource( context ),
                                 renderMapping,
                                 AlignmentBoardViewer.this,
-                                settingsData
+                                settingsData,
+                                multiMaskTracker
                         );
                     }
 
@@ -659,7 +665,7 @@ public class AlignmentBoardViewer extends Viewer implements AlignmentBoardContro
                     // Here, simply make the rendering change.
                     loadWorker = null;
                     loadWorker = new RenderablesLoadWorker(
-                            new ABContextDataSource(context), renderMapping, this, settingsData
+                            new ABContextDataSource(context), renderMapping, this, settingsData, multiMaskTracker
                     );
                     loadWorker.setLoadFilesFlag( Boolean.FALSE );
                     loadWorker.execute();

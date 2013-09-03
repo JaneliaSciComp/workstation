@@ -29,7 +29,10 @@ public class ChannelInterpreterToByte implements ChannelInterpreterI {
     public void interpretChannelBytes(ChannelMetaData srcChannelMetaData, ChannelMetaData targetChannelMetaData, byte[] channelData, int targetPos) {
         if ( srcChannelMetaData.byteCount == 1  &&  srcChannelMetaData.channelCount == 1 ) {
             // 1:1 straight copy to volume.
-            System.arraycopy(channelData, 0, volumeData, targetPos, srcChannelMetaData.rawChannelCount);
+            for ( int i = 0; i < srcChannelMetaData.rawChannelCount; i++ ) {
+                volumeData[ targetPos + i ] |= channelData[ i ];
+            }
+//            System.arraycopy(channelData, 0, volumeData, targetPos, srcChannelMetaData.rawChannelCount);
         }
         else {
             int[] orderedRgbIndexes = srcChannelMetaData.getOrderedRgbIndexes();

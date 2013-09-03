@@ -17,6 +17,8 @@ public class RenderableBean {
     private byte[] rgb;
     private Entity renderableEntity;
     private boolean invertedY;
+    private String type;
+    private Long voxelCount = 0L; // Never null.
 
     public int getLabelFileNum() {
         return labelFileNum;
@@ -48,7 +50,11 @@ public class RenderableBean {
 
     public void setRenderableEntity(Entity entity) {
         this.renderableEntity = entity;
-        if ( entity.getEntityType().getName().equals( EntityConstants.TYPE_NEURON_FRAGMENT ) ) {
+        String typeName = entity.getEntityType().getName();
+        if ( this.type == null ) {
+            this.type = typeName;
+        }
+        if ( typeName.equals(EntityConstants.TYPE_NEURON_FRAGMENT) ) {
             String[] nameParts = entity.getName().trim().split(" ");
             // In establishing the label file number, must add one to account for 0-based neuron numbering
             // by name.  The number 0 cannot be used to represent a neuron, since it is needed for "nothing".
@@ -85,5 +91,22 @@ public class RenderableBean {
 
     public void setInvertedY(boolean invertedY) {
         this.invertedY = invertedY;
+    }
+
+    public String getType() {
+        return type;
+    }
+
+    /** Call this to override a simplistic type picked up from the entity itself. */
+    public void setType( String type ) {
+        this.type = type;
+    }
+
+    public Long getVoxelCount() {
+        return voxelCount;
+    }
+
+    public void setVoxelCount(Long voxelCount) {
+        this.voxelCount = voxelCount;
     }
 }

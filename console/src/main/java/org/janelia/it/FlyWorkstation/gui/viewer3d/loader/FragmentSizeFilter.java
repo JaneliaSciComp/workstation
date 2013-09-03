@@ -60,9 +60,13 @@ public class FragmentSizeFilter {
                         // Filter-in here.
                         if ( voxelCount >= thresholdVoxelCount ) {
                             rtnVal.add( data );
+                            logger.debug(
+                                    "Keeping {}, with {} voxels.",
+                                    infile, voxelCount
+                            );
                         }
                         else {
-                            logger.info(
+                            logger.debug(
                                     "Not keeping {}, file {}, because it has too few voxels.",
                                     data.getBean().getLabelFileNum(),
                                     infile

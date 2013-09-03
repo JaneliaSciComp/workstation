@@ -1,6 +1,7 @@
 package org.janelia.it.FlyWorkstation.gui.viewer3d.loader;
 
 import org.janelia.it.FlyWorkstation.gui.viewer3d.renderable.RenderableBean;
+import org.janelia.it.FlyWorkstation.shared.annotations.NotThreadSafe;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -139,6 +140,7 @@ public class MaskChanSingleFileLoader {
      * @param channelStream points to channel data of the pair.
      * @throws Exception by called methods.
      */
+    @NotThreadSafe(why = "calls addData")
     public void read( InputStream maskInputStream, InputStream channelStream )
             throws Exception {
 
@@ -290,7 +292,7 @@ public class MaskChanSingleFileLoader {
             sx = readLong(maskInputStream);
             sy = readLong(maskInputStream);
             sz = readLong(maskInputStream);
-            logger.info( "Input Dimensions of {} x {} x " + sz, sx, sy );
+            logger.debug( "Input Dimensions of {} x {} x " + sz, sx, sy );
 
             xMicrons = readFloat(maskInputStream);
             yMicrons = readFloat(maskInputStream);
@@ -424,6 +426,9 @@ public class MaskChanSingleFileLoader {
 
         }
 
+        if ( renderableBean != null ) {
+            renderableBean.setVoxelCount( totalVoxels );
+        }
         return returnValue;
     }
 
@@ -439,6 +444,7 @@ public class MaskChanSingleFileLoader {
      * @return total bytes read during this pairs-run.
      * @throws Exception thrown by caller or if bad inputs are received.
      */
+    @NotThreadSafe(why="Calls acceptors' addChannelData/addMaskData sans accounting for their lack of safety")
     private int addData(
             long skippedRayCount,
             long[][] pairsAlongRay,
@@ -494,7 +500,10 @@ public class MaskChanSingleFileLoader {
                             }
                         }
                         else {
-                            allChannelBytes = allFChannelBytes;
+                            allChannelBytes = new byte[ allFChannelBytes.length ];
+                            for ( int aci = 0; aci < allFChannelBytes.length; aci++ ) {
+                                allChannelBytes[ aci ] = (byte)(allFChannelBytes[ aci ] / intensityDivisor);
+                            }
                         }
                     }
                     for ( MaskChanDataAcceptorI acceptor: channelAcceptors ) {
