@@ -1,9 +1,6 @@
 package org.janelia.it.FlyWorkstation.shared.util.filecache;
 
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.IOException;
-import java.io.InputStream;
+import java.io.*;
 import java.net.*;
 import java.net.URI;
 import java.text.SimpleDateFormat;
@@ -15,7 +12,9 @@ import javax.servlet.http.HttpServletResponse;
 
 import org.apache.commons.httpclient.*;
 import org.apache.commons.httpclient.auth.AuthScope;
+import org.apache.commons.httpclient.methods.GetMethod;
 import org.apache.commons.httpclient.methods.InputStreamRequestEntity;
+import org.apache.commons.httpclient.params.HttpClientParams;
 import org.apache.commons.httpclient.params.HttpConnectionManagerParams;
 import org.apache.http.HttpStatus;
 import org.apache.jackrabbit.webdav.DavConstants;
@@ -36,8 +35,6 @@ import org.slf4j.LoggerFactory;
  */
 public class WebDavClient {
     
-    private static final Logger log = LoggerFactory.getLogger(WebDavClient.class);
-
     public static final String JACS_WEBDAV_BASE_URL = "http://jacs.int.janelia.org/WebDAV";
     
     private String protocol;
@@ -85,7 +82,7 @@ public class WebDavClient {
         final Credentials savedCredentials =
                 clientState.getCredentials(AuthScope.ANY);
         if (savedCredentials == null) {
-            log.warn("<init>: no credentials saved for WebDAV requests");
+            LOG.warn("<init>: no credentials saved for WebDAV requests");
         }
 
         InetAddress address;
@@ -94,7 +91,7 @@ public class WebDavClient {
             this.uploadClientHostAddress = address.getHostAddress();
         } catch (UnknownHostException e) {
             this.uploadClientHostAddress = "unknown";
-            log.warn("failed to derive client host address, ignoring error", e);
+            LOG.warn("failed to derive client host address, ignoring error", e);
         }
 
         final SimpleDateFormat sdf = new SimpleDateFormat("yyyyMMdd-HHmmss-SSS");
@@ -177,66 +174,38 @@ public class WebDavClient {
     }
 
     /**
-     * @return true if the credentials for this client have been set;
-     *         otherwise false.
-     */
-    public boolean hasCredentials() {
-        return userName != null;
-    }
-
-    /**
-     * Sets the default credentials for all requests.
+     * Sets the default credentials for all requests and
+     * enables pre-emptive authentication.
      *
      * @param  credentials  default credentials.
      */
     public void setCredentials(UsernamePasswordCredentials credentials) {
         userName = credentials.getUserName();
-        log.info("setCredentials: entry, userName={}", userName);
+        LOG.info("setCredentials: entry, userName={}", userName);
         final HttpState clientState = this.httpClient.getState();
         clientState.setCredentials(AuthScope.ANY, credentials);
+
+        // Pre-emptive authentication sends credentials with all requests
+        // instead of waiting for a 401 from the server.
+        // In the interest of halving the total number of requests,
+        // we're assuming here that all requests will require authentication
+        // (or at least that there is no harm in blindly sending credentials).
+        final HttpClientParams params = httpClient.getParams();
+        params.setAuthenticationPreemptive(true);
+
+        // NOTE: this method for enabling pre-emptive authentication only works for
+        //       the older HttpClient 3.1 library we currently use.
+        //       See version 16974 of this file for a commented-out interceptor
+        //       based solution Konrad prototyped for HttpClient 4.x.
     }
 
-// Interceptor based solution only worked with HttpClient 4.x, we're still using 3.1 :(
-//
-//    BasicHttpContext localContext = new BasicHttpContext();
-//
-//    BasicScheme basicAuth = new BasicScheme();
-//    localContext.setAttribute("preemptive-auth", basicAuth);
-//    httpClient.addRequestInterceptor(new PreemptiveAuthInterceptor(), 0);
-//    
-//    private class PreemptiveAuthInterceptor implements HttpRequestInterceptor {
-//
-//        public void process(final HttpRequest request, final HttpContext context) throws HttpException, IOException {
-//            AuthState authState = (AuthState) context.getAttribute(ClientContext.TARGET_AUTH_STATE);
-//
-//            // If no auth scheme avaialble yet, try to initialize it
-//            // preemptively
-//            if (authState.getAuthScheme() == null) {
-//                AuthScheme authScheme = (AuthScheme) context.getAttribute("preemptive-auth");
-//                CredentialsProvider credsProvider = (CredentialsProvider) context.getAttribute(ClientContext.CREDS_PROVIDER);
-//                HttpHost targetHost = (HttpHost) context.getAttribute(ExecutionContext.HTTP_TARGET_HOST);
-//                if (authScheme != null) {
-//                    Credentials creds = credsProvider.getCredentials(new AuthScope(targetHost.getHostName(), targetHost.getPort()));
-//                    if (creds == null) {
-//                        throw new HttpException("No credentials for preemptive authentication");
-//                    }
-//                    authState.setAuthScheme(authScheme);
-//                    authState.setCredentials(creds);
-//                }
-//            }
-//        }
-//    }
-//    
-    
     /**
      * Uses the {@link Authenticator} default credentials as the
      * default credentials for all WebDAV requests.
      */
     public void setCredentialsUsingAuthenticator() {
 
-        httpClient.getParams().setAuthenticationPreemptive(true);
-        
-        PasswordAuthentication defaultAuthentication =
+        final PasswordAuthentication defaultAuthentication =
                 Authenticator.requestPasswordAuthentication(
                         null,
                         null,
@@ -246,13 +215,15 @@ public class WebDavClient {
                         null);
 
         if (defaultAuthentication != null) {
+
             final String userName = defaultAuthentication.getUserName();
             final char[] password = defaultAuthentication.getPassword();
+
             if ((userName != null) && (password != null)) {
 
                 final UsernamePasswordCredentials credentials =
                         new UsernamePasswordCredentials(userName,
-                                String.valueOf(password));
+                                                        String.valueOf(password));
                 setCredentials(credentials);
             }
         }
@@ -355,9 +326,88 @@ public class WebDavClient {
             findFile(directoryUrl);
             canRead = true;
         } catch (WebDavException e) {
-            log.error("failed to access " + directoryUrl, e);
+            LOG.error("failed to access " + directoryUrl, e);
         }
         return canRead;
+    }
+
+    /**
+     * Retrieves the file identified by the URL and writes its contents to the
+     * specified output file.
+     *
+     * @param  remoteFileUrl  file URL to retrieve.
+     * @param  outputFile     local file in which to store contents.
+     *
+     * @return the specified output file.
+     *
+     * @throws WebDavException
+     *   if the file cannot be retrieved.
+     */
+    public File retrieveFile(URL remoteFileUrl,
+                             File outputFile) throws WebDavException {
+
+        InputStream input = null;
+        FileOutputStream output = null;
+        GetMethod getMethod = null;
+
+        try {
+
+            final String prototcol = remoteFileUrl.getProtocol();
+            if (prototcol.startsWith("http")) {
+
+                getMethod = new GetMethod(remoteFileUrl.toString());
+
+                final int responseCode = httpClient.executeMethod(getMethod);
+
+                LOG.trace("retrieveFile: {} returned for GET {}", responseCode, remoteFileUrl);
+
+                if (responseCode != HttpServletResponse.SC_OK) {
+                    throw new WebDavException(responseCode + " returned for GET " + remoteFileUrl,
+                                              responseCode);
+                }
+
+                input = getMethod.getResponseBodyAsStream();
+
+            } else {
+                // use java URL library for non-http resources (e.g. file://)
+                input = remoteFileUrl.openStream();
+            }
+
+            output = new FileOutputStream(outputFile);
+
+            byte[] buffer = new byte[BUFFER_SIZE];
+            int n;
+            while (EOF != (n = input.read(buffer))) {
+                output.write(buffer, 0, n);
+            }
+
+        } catch (Throwable t) {
+            throw new WebDavException(
+                    "failed to copy " + remoteFileUrl + " to " + outputFile.getAbsolutePath(), t);
+        } finally {
+
+            if (getMethod != null) {
+                getMethod.releaseConnection();
+            }
+
+            if (input != null) {
+                try {
+                    input.close();
+                } catch (IOException e) {
+                    LOG.warn("retrieveFile: failed to close " + remoteFileUrl, e);
+                }
+            }
+
+            if (output != null) {
+                try {
+                    output.close();
+                } catch (IOException e) {
+                    LOG.warn("retrieveFile: failed to close " + outputFile.getAbsolutePath(), e);
+                }
+            }
+        }
+
+        return outputFile;
     }
 
     /**
@@ -378,7 +428,7 @@ public class WebDavClient {
             method = new MkColMethod(directoryUrl.toString());
 
             responseCode = httpClient.executeMethod(method);
-            log.trace("createDirectory: MKCOL {} directoryUrl={}",responseCode,directoryUrl);
+            LOG.trace("createDirectory: {} returned for MKCOL {}", responseCode, directoryUrl);
 
             if (responseCode != HttpServletResponse.SC_CREATED) {
                 throw new WebDavException(responseCode + " returned for MKCOL " + directoryUrl,
@@ -429,8 +479,7 @@ public class WebDavClient {
             try {
                 fileStream.close();
             } catch (IOException e) {
-                log.warn("failed to close input stream for " + file.getAbsolutePath() +
-                        ", ignoring exception", e);
+                LOG.warn("failed to close input stream for " + file.getAbsolutePath() + ", ignoring exception", e);
             }
         }
     }
@@ -459,7 +508,7 @@ public class WebDavClient {
             method.setRequestEntity(new InputStreamRequestEntity(fileStream));
 
             responseCode = httpClient.executeMethod(method);
-            log.trace("saveFile: PUT {} url={}",responseCode,url);
+            LOG.trace("saveFile: {} returned for PUT {}", responseCode, url);
 
             if ((responseCode != HttpServletResponse.SC_CREATED) &&
                 (responseCode != HttpServletResponse.SC_NO_CONTENT)) {
@@ -510,7 +559,7 @@ public class WebDavClient {
                                         depth);
 
             final int responseCode = httpClient.executeMethod(method);
-            log.trace("getResponses: PROPFIND {} href={}",responseCode,href);
+            LOG.trace("getResponses: {} returned for PROPFIND {}", responseCode, href);
             
             if (responseCode == HttpStatus.SC_MULTI_STATUS) {
                 final MultiStatus multiStatus = method.getResponseBodyAsMultiStatus();
@@ -554,7 +603,7 @@ public class WebDavClient {
                                         RESOURCE_TYPE_PROPERTY_ONLY,
                                         DavConstants.DEPTH_0);
             responseCode = httpClient.executeMethod(method);
-            log.trace("getResourceTypeResponseCode: PROPFIND {} href={}",responseCode,href);
+            LOG.trace("getResourceTypeResponseCode: {} returned for PROPFIND {}", responseCode, href);
         } catch (Exception e) {
             throw new WebDavException("failed to retrieve WebDAV information for " + href, e);
         } finally {
@@ -570,6 +619,15 @@ public class WebDavClient {
         uploadCount++;
         return uploadCount;
     }
+
+    private static final Logger LOG = LoggerFactory.getLogger(WebDavClient.class);
+
+    private static final int EOF = -1;
+
+    // Use 2Mb buffer to reduce likelihood of out of memory errors
+    // when concurrent threads are loading images.
+    // Most of the dynamic image files are around 1Mb.
+    private static final int BUFFER_SIZE = 2 * 1024 * 1024; // 2Mb
 
     /**
      * The set of WebDAV properties required to populate a

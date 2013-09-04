@@ -63,13 +63,15 @@ public class CachedFileTest extends TestCase {
 
     public void testLoadAndDelete() throws Exception {
 
+        final MockWebDavClient mockWebDavClient = new MockWebDavClient();
+
         WebDavFile webDavFile = new WebDavFile(null, testRemoteFile);
         String urlPath = webDavFile.getUrl().getPath();
         File activeFile = new File(testCacheActiveDirectory, urlPath);
         File tempFile = new File(testCacheTempDirectory, "test-temp-file");
 
         CachedFile cachedFile = new CachedFile(webDavFile, activeFile);
-        cachedFile.loadRemoteFile(tempFile);
+        RemoteFileLoader.loadRemoteFile(webDavFile, tempFile, activeFile, mockWebDavClient);
 
         File localFile = cachedFile.getLocalFile();
         assertNotNull("local file is missing",
@@ -104,9 +106,8 @@ public class CachedFileTest extends TestCase {
         urlPath = webDavFile.getUrl().getPath();
         activeFile = new File(testCacheActiveDirectory, urlPath);
         tempFile = new File(testCacheTempDirectory, "test-temp-dir");
-        cachedFile = new CachedFile(webDavFile, activeFile);
         try {
-            cachedFile.loadRemoteFile(tempFile);
+            RemoteFileLoader.loadRemoteFile(webDavFile, tempFile, activeFile, mockWebDavClient);
             fail("attempt to load directory should have caused exception");
         } catch (IllegalArgumentException e) {
             LOG.debug("attempt to load directory correctly caused exception", e);

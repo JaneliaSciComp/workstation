@@ -118,6 +118,12 @@ public class LocalFileCacheTest extends TestCase {
                 // give removal a chance to complete
                 Thread.sleep(500);
             }
+
+            LOG.info("tearDown: clearing empty active cache directories");
+            // HACK: reset capacity to force reload and delete of empty directories
+            cache.setKilobyteCapacity(0);
+            Thread.sleep(500); // give removal a chance to complete
+
         } catch (Throwable t) {
             LOG.warn("tearDown: failed to clear test cache instance", t);
         }

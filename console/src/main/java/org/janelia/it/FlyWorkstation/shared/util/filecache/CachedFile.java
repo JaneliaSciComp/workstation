@@ -9,13 +9,6 @@ import com.google.gson.JsonParseException;
 import com.google.gson.JsonPrimitive;
 import com.google.gson.JsonSerializationContext;
 import com.google.gson.JsonSerializer;
-
-import org.apache.commons.httpclient.HttpClient;
-import org.apache.commons.httpclient.HttpMethodBase;
-import org.apache.commons.httpclient.methods.GetMethod;
-import org.apache.commons.httpclient.methods.HeadMethod;
-import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr;
-import org.janelia.it.FlyWorkstation.shared.util.WorkstationFile;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -23,7 +16,6 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.FileReader;
 import java.io.IOException;
-import java.io.InputStream;
 import java.lang.reflect.Type;
 import java.net.MalformedURLException;
 import java.net.URL;
@@ -118,95 +110,6 @@ public class CachedFile {
     }
 
     /**
-     * Copies the remote file into the local cache storage.
-     *
-     * @param  tempFile  the temporary local location for retrieval.
-     *                   The remote file is copied to this location first
-     *                   before being moved to its final location to
-     *                   ensure that only complete files are available
-     *                   in the cache.
-     *
-     * @throws IllegalArgumentException
-     *   if the remote file is a directory.
-     *
-     * @throws IllegalStateException
-     *   if the copy fails for any reason.
-     */
-    public void loadRemoteFile(File tempFile)
-            throws IllegalArgumentException, IllegalStateException {
-
-        final URL remoteFileUrl = webDavFile.getUrl();
-
-        if (webDavFile.isDirectory()) {
-            throw new IllegalArgumentException(
-                    "Requested load of directory " + remoteFileUrl +
-                    ".  Only files may be requested.");
-        }
-
-        InputStream input = null;
-        FileOutputStream output = null;
-        GetMethod get = null;
-        
-        try {
-            HttpClient client = SessionMgr.getSessionMgr().getWebDavClient().getHttpClient();
-            get = new GetMethod(remoteFileUrl.toString());
-            int responseCode = client.executeMethod(get);
-            LOG.trace("get: GET {} effectiveURL=",responseCode,remoteFileUrl);
-            input = get.getResponseBodyAsStream();
-            output = new FileOutputStream(tempFile);
-
-            byte[] buffer = new byte[BUFFER_SIZE];
-            int n;
-            while (EOF != (n = input.read(buffer))) {
-                output.write(buffer, 0, n);
-            }
-
-        } catch (Throwable t) {
-            throw new IllegalStateException(
-                    "failed to copy " + remoteFileUrl + " to " + tempFile.getAbsolutePath(), t);
-        } finally {
-
-            if (get!=null) {
-                get.releaseConnection();
-            }
-            
-            if (input != null) {
-                try {
-                    input.close();
-                } catch (IOException e) {
-                    LOG.warn("loadRemoteFile: failed to close {}", remoteFileUrl, e);
-                }
-            }
-
-            if (output != null) {
-                try {
-                    output.close();
-                } catch (IOException e) {
-                    LOG.warn("loadRemoteFile: failed to close {}", tempFile.getAbsolutePath(), e);
-                }
-            }
-        }
-
-        createParentDirectroiesIfNeccesary(localFile);
-
-        if (tempFile.renameTo(localFile)) {
-            LOG.debug("loadRemoteFile: copied {} to {}", remoteFileUrl, localFile.getAbsolutePath());
-        } else {
-            if (! tempFile.delete()) {
-                LOG.warn("loadRemoteFile: after move failure, failed to remove temp file {}",
-                         tempFile.getAbsolutePath());
-            }
-            throw new IllegalStateException(
-                    "failed to move " + tempFile.getAbsolutePath() +
-                            " to " + localFile.getAbsolutePath());
-        }
-
-        if (metaFile != null) {
-            saveMetadata();
-        }
-    }
-
-    /**
      * Removes this file from the local file system and any empty
      * parent directories that are within the cache.  Any exceptions
      * that occur during removal are simply logged (and ignored).
@@ -220,9 +123,7 @@ public class CachedFile {
         try {
             removeEmptyCacheParent(activeRootDirectory, localFile);
         } catch (IOException e) {
-            LOG.warn("remove: failed to remove empty parent directories for {}",
-                     localFile.getAbsolutePath(),
-                     e);
+            LOG.warn("remove: failed to remove empty parent directories for " + localFile.getAbsolutePath(), e);
         }
     }
 
@@ -235,7 +136,7 @@ public class CachedFile {
                     LOG.warn("removeFile: failed to remove {}", file.getAbsolutePath());
                 }
             } catch (Throwable t) {
-                LOG.warn("removeFile: failed to remove {}", file.getAbsolutePath(), t);
+                LOG.warn("removeFile: failed to remove " + file.getAbsolutePath(), t);
             }
         }
     }
@@ -288,51 +189,32 @@ public class CachedFile {
     }
 
     /**
-     * Creates any missing parent directories for the specified file.
-     *
-     * @param  child  file whose parents directroies need to exist.
+     * Writes the current meta data file if this cached file is not a directory.
      *
      * @throws IllegalStateException
-     *   if the parent directories do not exist and cannot be created.
+     *   if the meta data cannot be written.
      */
-    private void createParentDirectroiesIfNeccesary(File child)
+    public void saveMetadata()
             throws IllegalStateException {
 
-        final File parent = child.getParentFile();
-        if (! parent.exists()) {
-            if (! parent.mkdirs()) {
-                // check again for parent existence in case another thread
-                // created the directory while this thread was attempting
-                // to create it
-                if (! parent.exists()) {
-                    throw new IllegalStateException(
-                            "failed to create directory " + parent.getAbsolutePath());
-                }
-            }
-        }
-    }
+        if (metaFile != null) {
+            FileOutputStream out = null;
+            try {
+                out = new FileOutputStream(metaFile);
+                final Gson gson = getGsonInstance();
+                final String jsonValue = gson.toJson(this);
+                out.write(jsonValue.getBytes());
+            } catch (Exception e) {
+                throw new IllegalStateException(
+                        "failed to save cache file meta data to " + metaFile.getAbsolutePath(), e);
 
-    protected void saveMetadata()
-            throws IllegalStateException {
-
-        FileOutputStream out = null;
-        try {
-            out = new FileOutputStream(metaFile);
-            final Gson gson = getGsonInstance();
-            final String jsonValue = gson.toJson(this);
-            out.write(jsonValue.getBytes());
-        } catch (Exception e) {
-            throw new IllegalStateException(
-                    "failed to save cache file meta data to " + metaFile.getAbsolutePath(), e);
-
-        } finally {
-            if (out != null) {
-                try {
-                    out.close();
-                } catch (IOException e) {
-                    LOG.warn("saveMetadata: failed to close meta data file {}",
-                             metaFile.getAbsolutePath(),
-                             e);
+            } finally {
+                if (out != null) {
+                    try {
+                        out.close();
+                    } catch (IOException e) {
+                        LOG.warn("saveMetadata: failed to close meta data file " + metaFile.getAbsolutePath(), e);
+                    }
                 }
             }
         }
@@ -357,20 +239,6 @@ public class CachedFile {
         return "." + localFile.getName() + META_FILE_SUFFIX;
     }
 
-    public static File getLocalFileBasedUponMetaFileName(File metaFile) {
-
-        File localFile = null;
-
-        final String metaFileName = metaFile.getName();
-        final int cachedFileNameEnd = metaFileName.length() - META_FILE_SUFFIX.length();
-        if ((cachedFileNameEnd > 1) && metaFileName.endsWith(META_FILE_SUFFIX)) {
-            final String cachedFileName = metaFileName.substring(1, cachedFileNameEnd);
-            localFile = new File(metaFile.getParentFile(), cachedFileName);
-        }
-
-        return localFile;
-    }
-
     /**
      * Parses the the specified metdata file and returns the corresponding
      * {@link CachedFile} instance.
@@ -388,16 +256,13 @@ public class CachedFile {
             final Gson gson = getGsonInstance();
             cachedFile = gson.fromJson(reader, CachedFile.class);
         } catch (Exception e) {
-            LOG.warn("failed to load JSON cache file meta data from {}",
-                     metaFile.getAbsolutePath(),
-                     e);
+            LOG.warn("failed to load JSON cache file meta data from " + metaFile.getAbsolutePath(), e);
         } finally {
             if (reader != null) {
                 try {
                     reader.close();
                 } catch (IOException e) {
-                    LOG.warn("loadPreviouslyCachedFile: failed to close meta data file {}",
-                             metaFile.getAbsolutePath(),
+                    LOG.warn("loadPreviouslyCachedFile: failed to close meta data file " + metaFile.getAbsolutePath(),
                              e);
                 }
             }
@@ -421,13 +286,6 @@ public class CachedFile {
     private static final Logger LOG = LoggerFactory.getLogger(CachedFile.class);
 
     private static final long ONE_KILOBYTE = 1024;
-
-    private static final int EOF = -1;
-
-    // Use 2Mb buffer to reduce likelihood of out of memory errors
-    // when concurrent threads are loading images.
-    // Most of the dynamic image files are around 1Mb.
-    private static final int BUFFER_SIZE = 2 * 1024 * 1024; // 2Mb
 
     private static final String META_FILE_SUFFIX = ".jacs-cached-file";
 
