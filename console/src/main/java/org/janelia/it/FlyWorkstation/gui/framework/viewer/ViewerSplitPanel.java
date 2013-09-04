@@ -98,6 +98,10 @@ public class ViewerSplitPanel extends JPanel implements ViewerContainer {
 		return secViewerPane;
 	}
 
+	public boolean isSecViewerVisible() {
+	    return !mainViewerOnly;
+	}
+	
 	public void setSecViewerVisible(boolean visible) {
 
 		if (visible) {

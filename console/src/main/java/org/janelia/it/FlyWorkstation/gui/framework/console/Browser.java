@@ -64,7 +64,8 @@ public class Browser extends JFrame implements Cloneable {
 //    private static Map typeToDefaultEditorName = new HashMap();
     private static String BROWSER_POSITION = "BROWSER_POSITION_ON_SCREEN";
 	private static String SEARCH_HISTORY = "SEARCH_HISTORY";
-
+	private static String VIEWERS_LINKED = "Browser.ViewersLinked";
+	
     // Used by printing mechanism to ensure capacity.
     public static final String VIEW_SEARCH = "Search Toolbar";
     public static final String VIEW_OUTLINES = "Outlines Section";
@@ -153,8 +154,6 @@ public class Browser extends JFrame implements Cloneable {
     public Browser(float realEstatePercent, BrowserModel browserModel) {
         enableEvents(AWTEvent.WINDOW_EVENT_MASK);
         this.realEstatePercent = realEstatePercent;
-
-        viewerManager = new ViewerManager();
         
         try {
             jbInit(browserModel);
@@ -223,6 +222,15 @@ public class Browser extends JFrame implements Cloneable {
 //        showSubEditorWhenAvailable = ((Boolean) SessionMgr.getSessionMgr()
 //                                                          .getModelProperty(SessionMgr.DISPLAY_SUB_EDITOR_PROPERTY)).booleanValue();
 
+        viewerManager = new ViewerManager();
+        
+        Boolean isViewersLinked = (Boolean)SessionMgr.getSessionMgr().getModelProperty(VIEWERS_LINKED);
+        if (isViewersLinked==null) {
+            isViewersLinked = false;
+            SessionMgr.getSessionMgr().setModelProperty(VIEWERS_LINKED, isViewersLinked);
+        }
+        viewerManager.setIsViewersLinked(isViewersLinked);
+        
         Object useFreeProperty = SessionMgr.getSessionMgr().getModelProperty(SessionMgr.DISPLAY_FREE_MEMORY_METER_PROPERTY);
         if (null!=useFreeProperty && useFreeProperty instanceof Boolean) {
             useFreeMemoryViewer((Boolean)useFreeProperty);
@@ -1564,5 +1572,14 @@ public class Browser extends JFrame implements Cloneable {
         setLocation(position.getBrowserLocation());
         
         return position;
+    }
+
+    public boolean isViewersLinked() {
+        return viewerManager.isViewersLinked();
+    }
+    
+    public void setIsViewersLinked(boolean isViewersLinked) {
+        viewerManager.setIsViewersLinked(isViewersLinked);
+        SessionMgr.getSessionMgr().setModelProperty(VIEWERS_LINKED, isViewersLinked);
     }
 }

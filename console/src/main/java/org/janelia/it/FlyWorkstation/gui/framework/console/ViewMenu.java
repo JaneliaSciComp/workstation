@@ -1,13 +1,17 @@
 package org.janelia.it.FlyWorkstation.gui.framework.console;
 
-import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr;
-import org.janelia.it.FlyWorkstation.shared.util.SystemInfo;
-
-import javax.swing.*;
-import java.awt.*;
+import java.awt.Event;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.KeyEvent;
+
+import javax.swing.JCheckBoxMenuItem;
+import javax.swing.JMenu;
+import javax.swing.JMenuItem;
+import javax.swing.KeyStroke;
+
+import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr;
+import org.janelia.it.FlyWorkstation.shared.util.SystemInfo;
 
 /**
  * Created by IntelliJ IDEA.
@@ -54,6 +58,17 @@ public class ViewMenu extends JMenu {
 //        }
 //        
 //        add(perspectivesMenu);
+
+        
+        final JCheckBoxMenuItem linkViewersMenuItem = new JCheckBoxMenuItem("Link Left/Right Viewers", true);
+        linkViewersMenuItem.setSelected(browser.isViewersLinked());
+        linkViewersMenuItem.addActionListener(new ActionListener() {
+            public void actionPerformed(ActionEvent e) {
+                browser.setIsViewersLinked(linkViewersMenuItem.isSelected());
+            }
+        });
+        add(linkViewersMenuItem);
+        
         
         JMenuItem resetWindow = new JMenuItem("Reset Window");
         resetWindow.addActionListener(new ActionListener() {

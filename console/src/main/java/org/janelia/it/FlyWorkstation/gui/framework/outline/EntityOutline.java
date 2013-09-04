@@ -630,9 +630,16 @@ public abstract class EntityOutline extends EntityTree implements Refreshable, A
 		
 		if (!getDynamicTree().childrenAreLoaded(node)) {
 		    
-		    SessionMgr.getBrowser().getViewerManager().showLoadingIndicatorInActiveViewer();
-		    SessionMgr.getBrowser().getViewerManager().showLoadingIndicatorInInspector();
+		    ViewerManager viewerManager = SessionMgr.getBrowser().getViewerManager();
+	        if ((viewerManager.getActiveViewerPane()==viewerManager.getSecViewerPane() && viewerManager.getActiveViewer() instanceof AlignmentBoardViewer) || viewerManager.isViewersLinked()) {
+	            SessionMgr.getBrowser().getViewerManager().showLoadingIndicatorInMainViewer();
+	        }
+	        else {
+	            SessionMgr.getBrowser().getViewerManager().showLoadingIndicatorInActiveViewer();
+	        }
 			
+	        SessionMgr.getBrowser().getViewerManager().showLoadingIndicatorInInspector();   
+	        
 			// Load the children before displaying them
         	getDynamicTree().expandNodeWithLazyChildren(node, new Callable<Void>() {
 				@Override
@@ -666,8 +673,7 @@ public abstract class EntityOutline extends EntityTree implements Refreshable, A
 		log.debug("showEntityInActiveViewer: "+rootedEntity.getName());
 		
 		ViewerManager viewerManager = SessionMgr.getBrowser().getViewerManager();
-		
-		if (viewerManager.getActiveViewerPane()==viewerManager.getSecViewerPane() && viewerManager.getActiveViewer() instanceof AlignmentBoardViewer) {
+		if ((viewerManager.getActiveViewerPane()==viewerManager.getSecViewerPane() && viewerManager.getActiveViewer() instanceof AlignmentBoardViewer) || viewerManager.isViewersLinked()) {
 	        SessionMgr.getBrowser().getViewerManager().showEntityInMainViewer(rootedEntity);
 		}
 		else {

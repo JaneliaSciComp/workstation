@@ -46,7 +46,7 @@ public class SessionMgr {
     public static final int MAX_FILE_CACHE_GIGABYTE_CAPACITY = 1000;
 
     private static final Logger log = LoggerFactory.getLogger(SessionMgr.class);
-
+    
     public static String DISPLAY_FREE_MEMORY_METER_PROPERTY = "SessionMgr.DisplayFreeMemoryProperty";
     public static String DISPLAY_SUB_EDITOR_PROPERTY = "SessionMgr.DisplaySubEditorProperty";
     public static String JACS_DATA_PATH_PROPERTY = "SessionMgr.JacsDataPathProperty";

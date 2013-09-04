@@ -1,14 +1,17 @@
 package org.janelia.it.FlyWorkstation.gui.framework.console;
 
+import java.lang.reflect.Constructor;
+import java.util.concurrent.Callable;
+
+import org.janelia.it.FlyWorkstation.api.entity_model.access.ModelMgrAdapter;
+import org.janelia.it.FlyWorkstation.api.entity_model.management.EntitySelectionModel;
+import org.janelia.it.FlyWorkstation.api.entity_model.management.ModelMgr;
 import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.FlyWorkstation.gui.framework.viewer.*;
 import org.janelia.it.FlyWorkstation.model.entity.RootedEntity;
 import org.janelia.it.jacs.model.entity.EntityConstants;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import java.lang.reflect.Constructor;
-import java.util.concurrent.Callable;
 
 /**
  * Manages the viewers in the central panel, deciding, for instance, when to use a particular viewer class. 
@@ -20,9 +23,33 @@ public class ViewerManager {
     private static final Logger log = LoggerFactory.getLogger(ViewerManager.class);
     
 	private ViewerSplitPanel viewerContainer = new ViewerSplitPanel();
+
+	private ModelMgrAdapter modelMgrObserver;
+	
+    private boolean viewersLinked = false;
 	
 	public ViewerManager() {
 		ensureViewerClass(viewerContainer.getMainViewerPane(), IconDemoPanel.class);
+        		
+        modelMgrObserver = new ModelMgrAdapter() {
+            
+            @Override
+            public void entitySelected(String category, String entityId, boolean clearAll) {
+                if (!viewersLinked) return;
+                if (!category.equals(EntitySelectionModel.CATEGORY_MAIN_VIEW)) return;
+                if (!viewerContainer.isSecViewerVisible()) return;
+                RootedEntity rootedEntity = getMainViewerPane().getViewer().getRootedEntityById(entityId);
+                if (rootedEntity!=null) {
+                    showEntityInSecViewer(rootedEntity, null);
+                }
+            }
+
+            @Override
+            public void entityDeselected(String category, String entityId) {
+            }
+        };
+        
+        ModelMgr.getModelMgr().addModelMgrObserver(modelMgrObserver);
 	}
 	
 	public void clearAllViewers() {
@@ -134,7 +161,24 @@ public class ViewerManager {
     }
     
     public void showLoadingIndicatorInActiveViewer() {
-        SessionMgr.getBrowser().getViewerManager().getActiveViewer().showLoadingIndicator();
+        Viewer viewer = SessionMgr.getBrowser().getViewerManager().getActiveViewerPane().getViewer();
+        if (viewer!=null) {
+            viewer.showLoadingIndicator();
+        }
+    }
+
+    public void showLoadingIndicatorInMainViewer() {
+        Viewer viewer = SessionMgr.getBrowser().getViewerManager().getMainViewerPane().getViewer();
+        if (viewer!=null) {
+            viewer.showLoadingIndicator();
+        }
+    }
+
+    public void showLoadingIndicatorInSecViewer() {
+        Viewer viewer = SessionMgr.getBrowser().getViewerManager().getSecViewerPane().getViewer();
+        if (viewer!=null) {
+            viewer.showLoadingIndicator();
+        }
     }
     
     public void showEntityInInspector(RootedEntity rootedEntity) {
@@ -170,4 +214,12 @@ public class ViewerManager {
 	public ViewerSplitPanel getViewerContainer() {
 		return viewerContainer;
 	}
+
+	public boolean isViewersLinked() {
+	    return viewersLinked;
+	}
+
+    public void setIsViewersLinked(boolean isLinked) {
+        this.viewersLinked  = isLinked;
+    }
 }
