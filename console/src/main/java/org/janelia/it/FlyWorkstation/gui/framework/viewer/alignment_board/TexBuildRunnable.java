@@ -1,6 +1,6 @@
 package org.janelia.it.FlyWorkstation.gui.framework.viewer.alignment_board;
 
-import org.janelia.it.FlyWorkstation.gui.viewer3d.masking.TextureBuilderI;
+import org.janelia.it.FlyWorkstation.gui.alignment_board_viewer.masking.TextureBuilderI;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.texture.TextureDataI;
 
 import java.util.concurrent.CyclicBarrier;

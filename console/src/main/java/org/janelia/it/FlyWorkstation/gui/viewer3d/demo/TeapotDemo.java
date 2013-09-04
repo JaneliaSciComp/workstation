@@ -4,17 +4,15 @@ import java.awt.Component;
 import java.awt.Dimension;
 
 import javax.media.opengl.GLCapabilities;
-import javax.media.opengl.GLCapabilitiesImmutable;
 import javax.media.opengl.GLProfile;
 import javax.media.opengl.awt.GLCanvas;
-import javax.media.opengl.awt.GLJPanel;
 import javax.swing.JFrame;
 
 import org.janelia.it.FlyWorkstation.gui.viewer3d.TeapotActor;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.Vec3;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.camera.BasicObservableCamera3d;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.camera.ObservableCamera3d;
-import org.janelia.it.FlyWorkstation.gui.viewer3d.slice_viewer.Slot;
+import org.janelia.it.FlyWorkstation.gui.slice_viewer.Slot;
 
 @SuppressWarnings("serial")
 public class TeapotDemo extends JFrame

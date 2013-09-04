@@ -2,7 +2,7 @@ package org.janelia.it.FlyWorkstation.gui.viewer3d;
 
 import org.janelia.it.FlyWorkstation.gui.viewer3d.camera.BasicCamera3d;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.interfaces.Camera3d;
-import org.janelia.it.FlyWorkstation.gui.viewer3d.volume_export.CropCoordSet;
+import org.janelia.it.FlyWorkstation.gui.alignment_board_viewer.volume_export.CropCoordSet;
 
 import java.util.ArrayList;
 import java.util.Collection;

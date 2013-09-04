@@ -44,17 +44,17 @@ public class BoundingBox3d
 		this.physicalUnit = physicalUnit;
 	}
 
-	double getMaxX() {return max.getX();}
-    double getMaxY() {return max.getY();}
-    double getMaxZ() {return max.getZ();}
+    public double getMaxX() {return max.getX();}
+    public double getMaxY() {return max.getY();}
+    public double getMaxZ() {return max.getZ();}
 
 	public Vec3 getMin() {
 		return min;
 	}
 
-	double getMinX() {return min.getX();}
-    double getMinY() {return min.getY();}
-    double getMinZ() {return min.getZ();}
+    public double getMinX() {return min.getX();}
+    public double getMinY() {return min.getY();}
+    public double getMinZ() {return min.getZ();}
 
 	public double getWidth() {
 		return max.x() - min.x();

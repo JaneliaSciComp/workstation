@@ -1,12 +1,12 @@
 package org.janelia.it.FlyWorkstation.gui.viewer3d;
 
+import org.janelia.it.FlyWorkstation.gui.alignment_board_viewer.MultiTexVolumeBrick;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.interfaces.GLActor;
-import org.janelia.it.FlyWorkstation.gui.viewer3d.masking.MaskBuilderI;
-import org.janelia.it.FlyWorkstation.gui.viewer3d.masking.RenderMappingI;
+import org.janelia.it.FlyWorkstation.gui.alignment_board_viewer.masking.MaskBuilderI;
+import org.janelia.it.FlyWorkstation.gui.alignment_board_viewer.masking.RenderMappingI;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.resolver.FileResolver;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.texture.RenderMapTextureBean;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.texture.TextureDataI;
-import org.janelia.it.FlyWorkstation.gui.viewer3d.texture.TextureMediator;
 
 import javax.swing.*;
 import java.awt.*;
@@ -86,12 +86,12 @@ public class Mip3d extends BaseGLViewer implements ActionListener {
      * @param resolver flexibility: allows different ways of resolving the file, which may be server-based.
      * @return true if it worked; false otherwise.
      */
-    public boolean loadVolume(String fileName, FileResolver resolver) {
+    public boolean loadVolume(String fileName, VolumeBrickFactory volumeBrickFactory, FileResolver resolver) {
         VolumeLoader volumeLoader = new VolumeLoader(resolver);
         if (volumeLoader.loadVolume(fileName)) {
             volumeModel.removeAllListeners();
             volumeModel.resetToDefaults();
-            RGBExcludableVolumeBrick brick = new RGBExcludableVolumeBrick(volumeModel);
+            VolumeBrickI brick = volumeBrickFactory.getVolumeBrick( volumeModel );
             volumeLoader.populateVolumeAcceptor(brick);
 
             addActorToRenderer(brick);
@@ -107,11 +107,11 @@ public class Mip3d extends BaseGLViewer implements ActionListener {
      *
      * @param signalTexture the pre-built texture.
      */
-    public void setVolume( TextureDataI signalTexture ) {
+    public void setVolume( VolumeBrickFactory volumeBrickFactory, TextureDataI signalTexture ) {
         if ( signalTexture != null ) {
             volumeModel.removeAllListeners();
             volumeModel.resetToDefaults();
-            RGBExcludableVolumeBrick brick = new RGBExcludableVolumeBrick(volumeModel);
+            VolumeBrickI brick = volumeBrickFactory.getVolumeBrick(volumeModel);
             brick.setTextureData( signalTexture );
             addActorToRenderer( brick );
         }
@@ -131,19 +131,22 @@ public class Mip3d extends BaseGLViewer implements ActionListener {
     public boolean setVolume(
             TextureDataI signalTexture,
             TextureDataI maskTexture,
+            VolumeBrickFactory factory,
             RenderMappingI renderMapping,
             double axisLengthDivisor ) {
         if ( signalTexture != null ) {
-            MultiTexVolumeBrick brick = new MultiTexVolumeBrick( volumeModel );
-            brick.setTextureData( signalTexture );
+            VolumeBrickI brick = null;
             if ( maskTexture != null ) {
-                brick.setMaskTextureData( maskTexture );
-
                 RenderMapTextureBean renderMapTextureData = new RenderMapTextureBean();
                 renderMapTextureData.setMapping( renderMapping );
                 renderMapTextureData.setVolumeModel( volumeModel );
-                brick.setColorMapTextureData( renderMapTextureData );
+
+                brick = factory.getVolumeBrick( volumeModel, maskTexture, renderMapTextureData );
             }
+            else {
+                brick = factory.getVolumeBrick( volumeModel );
+            }
+            brick.setTextureData( signalTexture );
 
             AxesActor axes = new AxesActor();
             BoundingBox3d brickBox = brick.getBoundingBox3d();
@@ -174,22 +177,26 @@ public class Mip3d extends BaseGLViewer implements ActionListener {
             String fileName,
             MaskBuilderI maskBuilder,
             FileResolver resolver,
+            VolumeBrickFactory vbFactory,
             RenderMappingI renderMapping,
             float gamma
     ) {
 		VolumeLoader volumeLoader = new VolumeLoader(resolver);
 		if (volumeLoader.loadVolume(fileName)) {
-            MultiTexVolumeBrick brick = new MultiTexVolumeBrick( volumeModel );
             volumeModel.setGammaAdjustment(gamma);
-			volumeLoader.populateVolumeAcceptor(brick);
+            VolumeBrickI brick = null;
             if ( maskBuilder != null ) {
-                brick.setMaskTextureData( maskBuilder.getCombinedTextureData() );
+                volumeLoader.populateVolumeAcceptor(brick);
+                TextureDataI combinedTextureData = maskBuilder.getCombinedTextureData();
 
                 RenderMapTextureBean renderMapTextureData = new RenderMapTextureBean();
                 renderMapTextureData.setMapping( renderMapping );
                 renderMapTextureData.setVolumeModel( volumeModel );
 
-                brick.setColorMapTextureData( renderMapTextureData );
+                brick = vbFactory.getVolumeBrick( volumeModel, combinedTextureData, renderMapTextureData );
+            }
+            else {
+                brick = vbFactory.getVolumeBrick( volumeModel );
             }
 
             addActorToRenderer(brick);

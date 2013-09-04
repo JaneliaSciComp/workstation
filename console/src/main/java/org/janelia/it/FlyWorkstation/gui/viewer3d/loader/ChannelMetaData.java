@@ -1,6 +1,6 @@
 package org.janelia.it.FlyWorkstation.gui.viewer3d.loader;
 
-import org.janelia.it.FlyWorkstation.gui.viewer3d.renderable.RenderableBean;
+import org.janelia.it.FlyWorkstation.gui.alignment_board_viewer.renderable.RenderableBean;
 
 /**
  * Created with IntelliJ IDEA.

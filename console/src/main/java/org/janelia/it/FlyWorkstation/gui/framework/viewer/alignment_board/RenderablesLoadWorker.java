@@ -1,27 +1,24 @@
 package org.janelia.it.FlyWorkstation.gui.framework.viewer.alignment_board;
 
 import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr;
-import org.janelia.it.FlyWorkstation.gui.viewer3d.gui_elements.GpuSampler;
+import org.janelia.it.FlyWorkstation.gui.alignment_board_viewer.gui_elements.GpuSampler;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.loader.FragmentSizeFilter;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.loader.MaskChanDataAcceptorI;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.loader.MaskChanMultiFileLoader;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.loader.RemaskingAcceptorDecorator;
-import org.janelia.it.FlyWorkstation.gui.viewer3d.masking.*;
-import org.janelia.it.FlyWorkstation.gui.viewer3d.renderable.MaskChanRenderableData;
-import org.janelia.it.FlyWorkstation.gui.viewer3d.renderable.RenderableBean;
-import org.janelia.it.FlyWorkstation.gui.viewer3d.renderable.RenderableDataSourceI;
+import org.janelia.it.FlyWorkstation.gui.alignment_board_viewer.masking.*;
+import org.janelia.it.FlyWorkstation.gui.alignment_board_viewer.renderable.MaskChanRenderableData;
+import org.janelia.it.FlyWorkstation.gui.alignment_board_viewer.renderable.RenderableBean;
+import org.janelia.it.FlyWorkstation.gui.alignment_board_viewer.renderable.RenderableDataSourceI;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.resolver.CacheFileResolver;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.resolver.FileResolver;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.texture.TextureDataI;
-import org.janelia.it.FlyWorkstation.gui.viewer3d.volume_builder.RenderablesChannelsBuilder;
-import org.janelia.it.FlyWorkstation.gui.viewer3d.volume_builder.RenderablesMaskBuilder;
-import org.janelia.it.FlyWorkstation.gui.viewer3d.volume_builder.VolumeTransposer;
+import org.janelia.it.FlyWorkstation.gui.alignment_board_viewer.volume_builder.RenderablesChannelsBuilder;
+import org.janelia.it.FlyWorkstation.gui.alignment_board_viewer.volume_builder.RenderablesMaskBuilder;
 import org.janelia.it.FlyWorkstation.shared.workers.SimpleWorker;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.media.opengl.awt.GLJPanel;
-import java.awt.*;
 import java.io.BufferedInputStream;
 import java.io.FileInputStream;
 import java.io.InputStream;

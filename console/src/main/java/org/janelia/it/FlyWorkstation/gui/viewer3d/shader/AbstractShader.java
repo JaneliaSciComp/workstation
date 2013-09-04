@@ -2,7 +2,7 @@
  * This class may be extended to carry out all CPU work towards loading and talking with shader programs
  * in the GPU.
  *
- * Supports only vertex and fragment shaders. Both must be non-null.
+ * Supports only vertex and fragment shader. Both must be non-null.
  */
 package org.janelia.it.FlyWorkstation.gui.viewer3d.shader;
 

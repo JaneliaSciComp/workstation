@@ -11,8 +11,8 @@ import org.janelia.it.FlyWorkstation.gui.viewer3d.Rotation3d;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.Vec3;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.camera.ObservableCamera3d;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.interfaces.Camera3d;
-import org.janelia.it.FlyWorkstation.gui.viewer3d.slice_viewer.Signal;
-import org.janelia.it.FlyWorkstation.gui.viewer3d.slice_viewer.Slot;
+import org.janelia.it.FlyWorkstation.gui.slice_viewer.Signal;
+import org.janelia.it.FlyWorkstation.gui.slice_viewer.Slot;
 
 public class AbstractStereoMode 
 implements GLEventListener

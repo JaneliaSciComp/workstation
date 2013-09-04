@@ -10,7 +10,7 @@ package org.janelia.it.FlyWorkstation.gui.viewer3d.texture;
  * because masks like this can be switched on and off, changing their offsets at runtime.
  */
 
-import org.janelia.it.FlyWorkstation.gui.viewer3d.renderable.RenderableBean;
+import org.janelia.it.FlyWorkstation.gui.alignment_board_viewer.renderable.RenderableBean;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.VolumeDataAcceptor;
 
 import javax.media.opengl.GL2;

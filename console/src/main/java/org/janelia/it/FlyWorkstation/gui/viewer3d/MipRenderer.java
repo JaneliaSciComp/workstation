@@ -1,5 +1,6 @@
 package org.janelia.it.FlyWorkstation.gui.viewer3d;
 
+//import org.janelia.it.FlyWorkstation.gui.alignment_board_viewer.MultiTexVolumeBrick;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.camera.BasicCamera3d;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.error_trap.JaneliaDebugGL2;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.interfaces.GLActor;
@@ -31,7 +32,7 @@ class MipRenderer
         BasicCamera3d camera3d = new BasicCamera3d();
         camera3d.setFocus( 0.0, 0.0, -DEFAULT_CAMERA_FOCUS_DISTANCE );
         getVolumeModel().setCamera3d(camera3d);
-        addActor( new MultiTexVolumeBrick( getVolumeModel() ) );
+//        addActor( new MultiTexVolumeBrick( getVolumeModel() ) );
     }
     
     public void centerOnPixel(Point p) {

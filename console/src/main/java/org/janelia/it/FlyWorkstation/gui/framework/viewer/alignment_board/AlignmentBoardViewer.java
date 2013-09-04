@@ -9,25 +9,25 @@ import javax.media.opengl.awt.GLJPanel;
 import javax.swing.*;
 
 import org.janelia.it.FlyWorkstation.api.entity_model.management.ModelMgr;
+import org.janelia.it.FlyWorkstation.gui.alignment_board_viewer.MultiTexVolumeBrickFactory;
 import org.janelia.it.FlyWorkstation.gui.framework.outline.EntityTransferHandler;
 import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.BrowserModel;
 import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionModelListener;
 import org.janelia.it.FlyWorkstation.gui.framework.viewer.Viewer;
 import org.janelia.it.FlyWorkstation.gui.framework.viewer.ViewerPane;
-import org.janelia.it.FlyWorkstation.gui.framework.viewer.ViewerToolbar;
 import org.janelia.it.FlyWorkstation.gui.util.Icons;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.Mip3d;
-import org.janelia.it.FlyWorkstation.gui.viewer3d.gui_elements.AlignmentBoardControlsDialog;
-import org.janelia.it.FlyWorkstation.gui.viewer3d.gui_elements.CompletionListener;
-import org.janelia.it.FlyWorkstation.gui.viewer3d.gui_elements.ControlsListener;
-import org.janelia.it.FlyWorkstation.gui.viewer3d.gui_elements.GpuSampler;
-import org.janelia.it.FlyWorkstation.gui.viewer3d.masking.ConfigurableColorMapping;
-import org.janelia.it.FlyWorkstation.gui.viewer3d.masking.MultiMaskTracker;
-import org.janelia.it.FlyWorkstation.gui.viewer3d.masking.RenderMappingI;
-import org.janelia.it.FlyWorkstation.gui.viewer3d.texture.ABContextDataSource;
+import org.janelia.it.FlyWorkstation.gui.alignment_board_viewer.gui_elements.AlignmentBoardControlsDialog;
+import org.janelia.it.FlyWorkstation.gui.alignment_board_viewer.gui_elements.CompletionListener;
+import org.janelia.it.FlyWorkstation.gui.alignment_board_viewer.gui_elements.ControlsListener;
+import org.janelia.it.FlyWorkstation.gui.alignment_board_viewer.gui_elements.GpuSampler;
+import org.janelia.it.FlyWorkstation.gui.alignment_board_viewer.masking.ConfigurableColorMapping;
+import org.janelia.it.FlyWorkstation.gui.alignment_board_viewer.masking.MultiMaskTracker;
+import org.janelia.it.FlyWorkstation.gui.alignment_board_viewer.masking.RenderMappingI;
+import org.janelia.it.FlyWorkstation.gui.alignment_board_viewer.texture.ABContextDataSource;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.texture.TextureDataI;
-import org.janelia.it.FlyWorkstation.gui.viewer3d.volume_export.VolumeWritebackHandler;
+import org.janelia.it.FlyWorkstation.gui.alignment_board_viewer.volume_export.VolumeWritebackHandler;
 import org.janelia.it.FlyWorkstation.model.domain.CompartmentSet;
 import org.janelia.it.FlyWorkstation.model.domain.EntityWrapper;
 import org.janelia.it.FlyWorkstation.model.domain.Neuron;
@@ -216,7 +216,14 @@ public class AlignmentBoardViewer extends Viewer implements AlignmentBoardContro
     @Override
     public void loadVolume( TextureDataI signalTexture, TextureDataI maskTexture ) {
 
-        if ( ! mip3d.setVolume( signalTexture, maskTexture, renderMapping, settingsData.getAcceptedDownsampleRate() ) ) {
+        MultiTexVolumeBrickFactory volumeBrickFactory = new MultiTexVolumeBrickFactory();
+        if ( ! mip3d.setVolume(
+                signalTexture,
+                maskTexture,
+                volumeBrickFactory,
+                renderMapping,
+                settingsData.getAcceptedDownsampleRate() )
+            ) {
             logger.error( "Failed to load volume to mip3d." );
         }
         else {

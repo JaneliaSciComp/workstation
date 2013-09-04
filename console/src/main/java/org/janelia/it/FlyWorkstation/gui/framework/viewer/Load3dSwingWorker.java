@@ -8,8 +8,13 @@ package org.janelia.it.FlyWorkstation.gui.framework.viewer;
  *
  * A swing worker to load the volume from the filename, in background.
  */
+import org.janelia.it.FlyWorkstation.gui.static_view.RGBExcludableVolumeBrick;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.Mip3d;
+import org.janelia.it.FlyWorkstation.gui.viewer3d.VolumeBrickFactory;
+import org.janelia.it.FlyWorkstation.gui.viewer3d.VolumeBrickI;
+import org.janelia.it.FlyWorkstation.gui.viewer3d.VolumeModel;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.resolver.CacheFileResolver;
+import org.janelia.it.FlyWorkstation.gui.viewer3d.texture.TextureDataI;
 
 import javax.swing.*;
 
@@ -38,7 +43,18 @@ public class Load3dSwingWorker extends SwingWorker<Boolean,Boolean> {
     protected void done() {
         if ( filename != null ) {
             mip3d.clear();
-            mip3d.loadVolume(filename, new CacheFileResolver());
+            VolumeBrickFactory factory = new VolumeBrickFactory() {
+                @Override
+                public VolumeBrickI getVolumeBrick(VolumeModel model) {
+                    return new RGBExcludableVolumeBrick( model );
+                }
+
+                @Override
+                public VolumeBrickI getVolumeBrick(VolumeModel model, TextureDataI maskTextureData, TextureDataI renderMapTextureData ) {
+                    return null; // Trivial case.
+                }
+            };
+            mip3d.loadVolume(filename, factory, new CacheFileResolver());
             filenameSufficient();
         }
         else {

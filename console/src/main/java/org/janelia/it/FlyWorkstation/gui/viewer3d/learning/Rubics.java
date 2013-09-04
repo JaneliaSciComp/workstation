@@ -7,7 +7,6 @@ import org.janelia.it.FlyWorkstation.gui.viewer3d.buffering.VtxCoordBufMgr;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.interfaces.GLActor;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.texture.TextureMediator;
 
-import javax.media.opengl.GL;
 import javax.media.opengl.GL2;
 import java.nio.*;
 
