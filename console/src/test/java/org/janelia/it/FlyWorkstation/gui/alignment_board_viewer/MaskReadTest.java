@@ -1,11 +1,11 @@
-package org.janelia.it.FlyWorkstation.gui.viewer3d.channel;
+package org.janelia.it.FlyWorkstation.gui.alignment_board_viewer;
 
 import org.janelia.it.FlyWorkstation.gui.framework.viewer.alignment_board.AlignmentBoardSettings;
-import org.janelia.it.FlyWorkstation.gui.viewer3d.gui_elements.AlignmentBoardControlsDialog;
+import org.janelia.it.FlyWorkstation.gui.alignment_board_viewer.gui_elements.AlignmentBoardControlsDialog;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.loader.MaskChanDataAcceptorI;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.loader.MaskChanMultiFileLoader;
-import org.janelia.it.FlyWorkstation.gui.viewer3d.volume_builder.RenderablesMaskBuilder;
-import org.janelia.it.FlyWorkstation.gui.viewer3d.renderable.RenderableBean;
+import org.janelia.it.FlyWorkstation.gui.alignment_board_viewer.volume_builder.RenderablesMaskBuilder;
+import org.janelia.it.FlyWorkstation.gui.alignment_board_viewer.renderable.RenderableBean;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;

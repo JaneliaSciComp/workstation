@@ -1,12 +1,16 @@
 
-package org.janelia.it.FlyWorkstation.gui.viewer3d;
+package org.janelia.it.FlyWorkstation.gui.alignment_board_viewer;
 
 import org.janelia.it.FlyWorkstation.gui.framework.viewer.alignment_board.AlignmentBoardControllable;
 import org.janelia.it.FlyWorkstation.gui.framework.viewer.alignment_board.AlignmentBoardSettings;
 import org.janelia.it.FlyWorkstation.gui.framework.viewer.alignment_board.RenderablesLoadWorker;
-import org.janelia.it.FlyWorkstation.gui.viewer3d.gui_elements.AlignmentBoardControlsDialog;
-import org.janelia.it.FlyWorkstation.gui.viewer3d.masking.ConfigurableColorMapping;
-import org.janelia.it.FlyWorkstation.gui.viewer3d.masking.RenderMappingI;
+import org.janelia.it.FlyWorkstation.gui.alignment_board_viewer.gui_elements.AlignmentBoardControlsDialog;
+import org.janelia.it.FlyWorkstation.gui.alignment_board_viewer.masking.ConfigurableColorMapping;
+import org.janelia.it.FlyWorkstation.gui.alignment_board_viewer.masking.RenderMappingI;
+import org.janelia.it.FlyWorkstation.gui.viewer3d.Mip3d;
+import org.janelia.it.FlyWorkstation.gui.viewer3d.VolumeBrickFactory;
+import org.janelia.it.FlyWorkstation.gui.viewer3d.VolumeBrickI;
+import org.janelia.it.FlyWorkstation.gui.viewer3d.VolumeModel;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.resolver.TrivialFileResolver;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.texture.TextureDataI;
 import org.slf4j.Logger;
@@ -18,7 +22,7 @@ import java.awt.*;
 /**
  * This test-run class / standalone program will pull in a mask/channel pair and display the results.
  *
- * @see TestMaskedMip3d
+ * @see org.janelia.it.FlyWorkstation.gui.alignment_board_viewer.volume_builder.TestMaskedMip3d
  *
  * @author fosterl
  */
@@ -107,8 +111,9 @@ public class TestMaskChan3DViz {
         @Override
         public void loadVolume(TextureDataI signalTexture, TextureDataI maskTexture) {
             mip3d.getVolumeModel().setGammaAdjustment( (float)AlignmentBoardSettings.DEFAULT_GAMMA );
+            VolumeBrickFactory volumeBrickFactory = new MultiTexVolumeBrickFactory();
             if ( ! mip3d.setVolume(
-                    signalTexture, maskTexture, renderMapping, 1.0
+                    signalTexture, maskTexture, volumeBrickFactory, renderMapping, 1.0
             ) ) {
                 logger.error( "Failed to load volume to mip3d." );
             }

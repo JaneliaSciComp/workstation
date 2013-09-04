@@ -1,9 +1,9 @@
-package org.janelia.it.FlyWorkstation.gui.viewer3d;
+package org.janelia.it.FlyWorkstation.gui.alignment_board_viewer;
 
-import org.janelia.it.FlyWorkstation.gui.viewer3d.masking.RenderMappingI;
-import org.janelia.it.FlyWorkstation.gui.viewer3d.renderable.MaskChanRenderableData;
-import org.janelia.it.FlyWorkstation.gui.viewer3d.renderable.RenderableBean;
-import org.janelia.it.FlyWorkstation.gui.viewer3d.renderable.RenderableDataSourceI;
+import org.janelia.it.FlyWorkstation.gui.alignment_board_viewer.masking.RenderMappingI;
+import org.janelia.it.FlyWorkstation.gui.alignment_board_viewer.renderable.MaskChanRenderableData;
+import org.janelia.it.FlyWorkstation.gui.alignment_board_viewer.renderable.RenderableBean;
+import org.janelia.it.FlyWorkstation.gui.alignment_board_viewer.renderable.RenderableDataSourceI;
 
 import java.util.ArrayList;
 import java.util.Collection;

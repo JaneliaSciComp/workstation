@@ -1,10 +1,14 @@
 
-package org.janelia.it.FlyWorkstation.gui.viewer3d;
+package org.janelia.it.FlyWorkstation.gui.alignment_board_viewer.volume_builder;
 
-import org.janelia.it.FlyWorkstation.gui.viewer3d.masking.ConfigurableColorMapping;
-import org.janelia.it.FlyWorkstation.gui.viewer3d.masking.RenderMappingI;
-import org.janelia.it.FlyWorkstation.gui.viewer3d.masking.VolumeMaskBuilder;
-import org.janelia.it.FlyWorkstation.gui.viewer3d.renderable.RenderableBean;
+import org.janelia.it.FlyWorkstation.gui.alignment_board_viewer.MultiTexVolumeBrick;
+import org.janelia.it.FlyWorkstation.gui.alignment_board_viewer.MultiTexVolumeBrickFactory;
+import org.janelia.it.FlyWorkstation.gui.alignment_board_viewer.masking.ConfigurableColorMapping;
+import org.janelia.it.FlyWorkstation.gui.alignment_board_viewer.masking.RenderMappingI;
+import org.janelia.it.FlyWorkstation.gui.alignment_board_viewer.masking.VolumeMaskBuilder;
+import org.janelia.it.FlyWorkstation.gui.alignment_board_viewer.renderable.RenderableBean;
+import org.janelia.it.FlyWorkstation.gui.viewer3d.Mip3d;
+import org.janelia.it.FlyWorkstation.gui.viewer3d.VolumeLoader;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.resolver.FileResolver;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.resolver.TrivialFileResolver;
 import org.janelia.it.jacs.model.entity.Entity;
@@ -222,7 +226,9 @@ public class TestMaskedMip3d {
                         }
                         colorMapping.setRenderables( beans );
                     }
-                    if ( ! mipWidget.loadVolume( fn, vmb, resolver, colorMapping, 1.0f ) ) {
+
+                    MultiTexVolumeBrickFactory factory = new MultiTexVolumeBrickFactory();
+                    if ( ! mipWidget.loadVolume( fn, vmb, resolver, factory, colorMapping, 1.0f ) ) {
                         throw new RuntimeException( "Failed to load " + fn );
                     }
 

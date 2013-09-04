@@ -4,7 +4,9 @@
 
 package org.janelia.it.FlyWorkstation.gui.viewer3d;
 
+import org.janelia.it.FlyWorkstation.gui.static_view.RGBExcludableVolumeBrick;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.resolver.TrivialFileResolver;
+import org.janelia.it.FlyWorkstation.gui.viewer3d.texture.TextureDataI;
 
 import javax.swing.*;
 
@@ -65,7 +67,18 @@ public class TestMip3d {
 
                     // All black.  String fn = "/Volumes/jacsData/MaskResources/Compartment/maskRGB.v3dpbd";
 
-                    if ( ! mipWidget.loadVolume(fn, new TrivialFileResolver() ) )
+                    VolumeBrickFactory factory = new VolumeBrickFactory() {
+                        @Override
+                        public VolumeBrickI getVolumeBrick(VolumeModel model) {
+                            return new RGBExcludableVolumeBrick( model );
+                        }
+
+                        @Override
+                        public VolumeBrickI getVolumeBrick(VolumeModel model, TextureDataI maskTextureData, TextureDataI colorMapTextureData) {
+                            return null;
+                        }
+                    };
+                    if ( ! mipWidget.loadVolume(fn, factory, new TrivialFileResolver() ) )
                         System.out.println("Volume load failed.");
                 	// mipWidget.loadVolume("/Users/brunsc/projects/fast_load/test_dir2/fastLoad/ConsolidatedSignal2_25.v3dpbd", new TrivialFileResolver());
                 	// mipWidget.loadVolume("/Users/brunsc/projects/fast_load/test_dir2/fastLoad/ConsolidatedSignal2_25.v3draw");

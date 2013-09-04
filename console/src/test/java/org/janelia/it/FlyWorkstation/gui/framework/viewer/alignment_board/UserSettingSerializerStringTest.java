@@ -2,7 +2,7 @@ package org.janelia.it.FlyWorkstation.gui.framework.viewer.alignment_board;
 
 import junit.framework.Assert;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.VolumeModel;
-import org.janelia.it.FlyWorkstation.gui.viewer3d.volume_export.CropCoordSet;
+import org.janelia.it.FlyWorkstation.gui.alignment_board_viewer.volume_export.CropCoordSet;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
