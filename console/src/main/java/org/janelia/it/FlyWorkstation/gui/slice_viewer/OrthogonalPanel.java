@@ -10,12 +10,12 @@ import javax.swing.SpinnerNumberModel;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 
+import org.janelia.it.FlyWorkstation.geom.CoordinateAxis;
+import org.janelia.it.FlyWorkstation.geom.Vec3;
+import org.janelia.it.FlyWorkstation.gui.camera.ObservableCamera3d;
 import org.janelia.it.FlyWorkstation.gui.slice_viewer.action.MouseMode;
 import org.janelia.it.FlyWorkstation.gui.slice_viewer.action.WheelMode;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.BoundingBox3d;
-import org.janelia.it.FlyWorkstation.gui.viewer3d.CoordinateAxis;
-import org.janelia.it.FlyWorkstation.gui.viewer3d.Vec3;
-import org.janelia.it.FlyWorkstation.gui.viewer3d.camera.ObservableCamera3d;
 import org.janelia.it.FlyWorkstation.signal.Slot;
 import org.janelia.it.FlyWorkstation.signal.Slot1;
 

@@ -3,11 +3,12 @@ package org.janelia.it.FlyWorkstation.gui.slice_viewer;
 import java.awt.geom.Point2D;
 
 import javax.media.opengl.GL2;
+
+import org.janelia.it.FlyWorkstation.geom.CoordinateAxis;
+import org.janelia.it.FlyWorkstation.geom.Vec3;
+import org.janelia.it.FlyWorkstation.gui.camera.Camera3d;
+import org.janelia.it.FlyWorkstation.gui.opengl.GLActor;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.BoundingBox3d;
-import org.janelia.it.FlyWorkstation.gui.viewer3d.CoordinateAxis;
-import org.janelia.it.FlyWorkstation.gui.viewer3d.Vec3;
-import org.janelia.it.FlyWorkstation.gui.viewer3d.interfaces.Camera3d;
-import org.janelia.it.FlyWorkstation.gui.viewer3d.interfaces.GLActor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

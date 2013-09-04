@@ -1,10 +1,10 @@
 package org.janelia.it.FlyWorkstation.gui.viewer3d.learning;
 
+import org.janelia.it.FlyWorkstation.geom.CoordinateAxis;
+import org.janelia.it.FlyWorkstation.geom.Vec3;
+import org.janelia.it.FlyWorkstation.gui.opengl.GLActor;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.BoundingBox3d;
-import org.janelia.it.FlyWorkstation.gui.viewer3d.CoordinateAxis;
-import org.janelia.it.FlyWorkstation.gui.viewer3d.Vec3;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.buffering.VtxCoordBufMgr;
-import org.janelia.it.FlyWorkstation.gui.viewer3d.interfaces.GLActor;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.texture.TextureMediator;
 
 import javax.media.opengl.GL2;

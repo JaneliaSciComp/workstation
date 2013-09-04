@@ -2,7 +2,8 @@ package org.janelia.it.FlyWorkstation.gui.slice_viewer;
 
 import java.util.List;
 import java.util.Vector;
-import org.janelia.it.FlyWorkstation.gui.viewer3d.CoordinateAxis;
+
+import org.janelia.it.FlyWorkstation.geom.CoordinateAxis;
 
 /**
  * An efficiently hashable key that uniquely identifies a particular

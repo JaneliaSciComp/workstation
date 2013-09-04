@@ -2,8 +2,8 @@ package org.janelia.it.FlyWorkstation.gui.slice_viewer.action;
 
 import javax.swing.KeyStroke;
 
+import org.janelia.it.FlyWorkstation.gui.camera.Camera3d;
 import org.janelia.it.FlyWorkstation.gui.util.Icons;
-import org.janelia.it.FlyWorkstation.gui.viewer3d.interfaces.Camera3d;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.interfaces.VolumeImage3d;
 
 import com.jogamp.newt.event.KeyEvent;

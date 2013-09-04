@@ -3,7 +3,7 @@ package org.janelia.it.FlyWorkstation.gui.slice_viewer.skeleton;
 import java.util.HashSet;
 import java.util.Set;
 
-import org.janelia.it.FlyWorkstation.gui.viewer3d.Vec3;
+import org.janelia.it.FlyWorkstation.geom.Vec3;
 import org.janelia.it.FlyWorkstation.signal.Signal;
 import org.janelia.it.FlyWorkstation.signal.Signal1;
 

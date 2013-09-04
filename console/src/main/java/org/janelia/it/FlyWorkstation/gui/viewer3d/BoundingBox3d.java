@@ -1,5 +1,6 @@
 package org.janelia.it.FlyWorkstation.gui.viewer3d;
 
+import org.janelia.it.FlyWorkstation.geom.Vec3;
 import org.janelia.it.FlyWorkstation.units.BaseDimension.*;
 import org.janelia.it.FlyWorkstation.units.PhysicalUnit;
 import org.janelia.it.FlyWorkstation.units.SI;

@@ -1,4 +1,4 @@
-package org.janelia.it.FlyWorkstation.gui.viewer3d;
+package org.janelia.it.FlyWorkstation.geom;
 
 public enum CoordinateAxis {
 	X(0),

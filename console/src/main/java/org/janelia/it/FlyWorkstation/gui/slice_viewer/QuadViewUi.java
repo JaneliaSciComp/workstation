@@ -1,5 +1,8 @@
 package org.janelia.it.FlyWorkstation.gui.slice_viewer;
 
+import org.janelia.it.FlyWorkstation.geom.CoordinateAxis;
+import org.janelia.it.FlyWorkstation.geom.Vec3;
+import org.janelia.it.FlyWorkstation.gui.camera.BasicObservableCamera3d;
 import org.janelia.it.FlyWorkstation.gui.slice_viewer.TileServer.LoadStatus;
 import org.janelia.it.FlyWorkstation.gui.slice_viewer.action.AdvanceZSlicesAction;
 import org.janelia.it.FlyWorkstation.gui.slice_viewer.action.GoBackZSlicesAction;
@@ -31,9 +34,6 @@ import org.janelia.it.FlyWorkstation.gui.slice_viewer.annotation.SliceViewerTran
 import org.janelia.it.FlyWorkstation.gui.slice_viewer.skeleton.Skeleton;
 import org.janelia.it.FlyWorkstation.gui.slice_viewer.skeleton.SkeletonActor;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.BoundingBox3d;
-import org.janelia.it.FlyWorkstation.gui.viewer3d.CoordinateAxis;
-import org.janelia.it.FlyWorkstation.gui.viewer3d.Vec3;
-import org.janelia.it.FlyWorkstation.gui.viewer3d.camera.BasicObservableCamera3d;
 import org.janelia.it.jacs.model.entity.Entity;
 import org.janelia.it.FlyWorkstation.signal.Signal1;
 import org.janelia.it.FlyWorkstation.signal.Slot;

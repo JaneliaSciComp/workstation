@@ -9,10 +9,10 @@ import java.awt.event.MouseMotionListener;
 import java.awt.event.MouseWheelEvent;
 import java.awt.event.MouseWheelListener;
 
-import org.janelia.it.FlyWorkstation.gui.viewer3d.Rotation3d;
-import org.janelia.it.FlyWorkstation.gui.viewer3d.UnitVec3;
-import org.janelia.it.FlyWorkstation.gui.viewer3d.Vec3;
-import org.janelia.it.FlyWorkstation.gui.viewer3d.interfaces.Camera3d;
+import org.janelia.it.FlyWorkstation.geom.Rotation3d;
+import org.janelia.it.FlyWorkstation.geom.UnitVec3;
+import org.janelia.it.FlyWorkstation.geom.Vec3;
+import org.janelia.it.FlyWorkstation.gui.camera.Camera3d;
 
 /**
  * TrackballInteractor reads mouse events from a Component, and

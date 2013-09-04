@@ -1,6 +1,6 @@
-package org.janelia.it.FlyWorkstation.gui.viewer3d;
+package org.janelia.it.FlyWorkstation.geom;
 
-import org.janelia.it.FlyWorkstation.gui.viewer3d.Quaternion.AngleAxis;
+import org.janelia.it.FlyWorkstation.geom.Quaternion.AngleAxis;
 
 public class Rotation3d extends SizedVector<UnitVec3> 
 {

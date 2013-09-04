@@ -7,7 +7,6 @@ import javax.media.opengl.GL2;
 import javax.media.opengl.GLAutoDrawable;
 import javax.media.opengl.GLEventListener;
 
-import org.janelia.it.FlyWorkstation.gui.viewer3d.interfaces.GLActor;
 
 public class CompositeGLActor 
 implements GLEventListener

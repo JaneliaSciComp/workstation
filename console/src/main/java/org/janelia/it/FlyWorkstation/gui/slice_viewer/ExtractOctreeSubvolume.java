@@ -9,7 +9,7 @@ import java.io.OutputStream;
 import java.net.MalformedURLException;
 import java.util.Iterator;
 
-import org.janelia.it.FlyWorkstation.gui.viewer3d.Vec3;
+import org.janelia.it.FlyWorkstation.geom.Vec3;
 
 import com.google.common.collect.Iterators;
 import com.sun.media.jai.codec.ImageCodec;

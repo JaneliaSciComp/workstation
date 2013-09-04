@@ -3,7 +3,6 @@ package org.janelia.it.FlyWorkstation.gui.opengl;
 import javax.media.opengl.GL2;
 
 import org.janelia.it.FlyWorkstation.gui.viewer3d.BoundingBox3d;
-import org.janelia.it.FlyWorkstation.gui.viewer3d.interfaces.GLActor;
 
 public class LightingActor implements GLActor {
 

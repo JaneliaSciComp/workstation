@@ -1,7 +1,7 @@
 package org.janelia.it.FlyWorkstation.gui.viewer3d.vendor_demo;
 
-import org.janelia.it.FlyWorkstation.gui.viewer3d.Rotation3d;
-import org.janelia.it.FlyWorkstation.gui.viewer3d.UnitVec3;
+import org.janelia.it.FlyWorkstation.geom.Rotation3d;
+import org.janelia.it.FlyWorkstation.geom.UnitVec3;
 
 import javax.media.opengl.GL2;
 import javax.media.opengl.GLAutoDrawable;

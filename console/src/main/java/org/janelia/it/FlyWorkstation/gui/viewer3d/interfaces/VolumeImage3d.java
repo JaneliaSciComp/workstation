@@ -2,8 +2,8 @@ package org.janelia.it.FlyWorkstation.gui.viewer3d.interfaces;
 
 import java.net.URL;
 
+import org.janelia.it.FlyWorkstation.geom.Vec3;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.BoundingBox3d;
-import org.janelia.it.FlyWorkstation.gui.viewer3d.Vec3;
 
 public interface VolumeImage3d 
 {

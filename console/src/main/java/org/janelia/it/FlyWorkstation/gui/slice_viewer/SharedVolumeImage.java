@@ -7,10 +7,10 @@ import java.net.MalformedURLException;
 import java.net.URISyntaxException;
 import java.net.URL;
 
+import org.janelia.it.FlyWorkstation.geom.Vec3;
 import org.janelia.it.FlyWorkstation.gui.slice_viewer.AbstractTextureLoadAdapter.MissingTileException;
 import org.janelia.it.FlyWorkstation.gui.slice_viewer.AbstractTextureLoadAdapter.TileLoadError;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.BoundingBox3d;
-import org.janelia.it.FlyWorkstation.gui.viewer3d.Vec3;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.interfaces.VolumeImage3d;
 import org.janelia.it.FlyWorkstation.signal.Signal1;
 

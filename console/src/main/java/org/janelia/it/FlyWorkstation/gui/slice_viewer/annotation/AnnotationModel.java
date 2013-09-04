@@ -3,9 +3,9 @@ package org.janelia.it.FlyWorkstation.gui.slice_viewer.annotation;
 
 // workstation imports
 
+import org.janelia.it.FlyWorkstation.geom.Vec3;
 import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr;
 
-import org.janelia.it.FlyWorkstation.gui.viewer3d.Vec3;
 import org.janelia.it.FlyWorkstation.signal.Signal1;
 import org.janelia.it.FlyWorkstation.signal.Slot1;
 

@@ -1,9 +1,12 @@
 package org.janelia.it.FlyWorkstation.gui.viewer3d;
 
 //import org.janelia.it.FlyWorkstation.gui.alignment_board_viewer.MultiTexVolumeBrick;
-import org.janelia.it.FlyWorkstation.gui.viewer3d.camera.BasicCamera3d;
+import org.janelia.it.FlyWorkstation.geom.Rotation3d;
+import org.janelia.it.FlyWorkstation.geom.UnitVec3;
+import org.janelia.it.FlyWorkstation.geom.Vec3;
+import org.janelia.it.FlyWorkstation.gui.camera.BasicCamera3d;
+import org.janelia.it.FlyWorkstation.gui.opengl.GLActor;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.error_trap.JaneliaDebugGL2;
-import org.janelia.it.FlyWorkstation.gui.viewer3d.interfaces.GLActor;
 
 import javax.media.opengl.DebugGL2;
 import javax.media.opengl.GL2;

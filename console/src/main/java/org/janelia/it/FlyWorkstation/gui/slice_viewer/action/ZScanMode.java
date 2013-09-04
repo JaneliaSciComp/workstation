@@ -2,10 +2,10 @@ package org.janelia.it.FlyWorkstation.gui.slice_viewer.action;
 
 import java.awt.event.MouseWheelEvent;
 
+import org.janelia.it.FlyWorkstation.geom.CoordinateAxis;
+import org.janelia.it.FlyWorkstation.gui.camera.Camera3d;
 import org.janelia.it.FlyWorkstation.gui.slice_viewer.MouseModalWidget;
 import org.janelia.it.FlyWorkstation.gui.slice_viewer.TileFormat;
-import org.janelia.it.FlyWorkstation.gui.viewer3d.CoordinateAxis;
-import org.janelia.it.FlyWorkstation.gui.viewer3d.interfaces.Camera3d;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.interfaces.VolumeImage3d;
 
 public class ZScanMode 

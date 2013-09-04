@@ -3,12 +3,12 @@ package org.janelia.it.FlyWorkstation.gui.slice_viewer;
 import javax.media.opengl.GL2;
 import javax.media.opengl.GLAutoDrawable;
 
+import org.janelia.it.FlyWorkstation.geom.Rotation3d;
+import org.janelia.it.FlyWorkstation.gui.camera.Camera3d;
+import org.janelia.it.FlyWorkstation.gui.opengl.GLActor;
+import org.janelia.it.FlyWorkstation.gui.opengl.GLOrthoCamera;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.BaseRenderer;
-import org.janelia.it.FlyWorkstation.gui.viewer3d.Rotation3d;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.ViewportGL;
-import org.janelia.it.FlyWorkstation.gui.viewer3d.camera.GLOrthoCamera;
-import org.janelia.it.FlyWorkstation.gui.viewer3d.interfaces.Camera3d;
-import org.janelia.it.FlyWorkstation.gui.viewer3d.interfaces.GLActor;
 
 public class SliceRenderer
 extends BaseRenderer

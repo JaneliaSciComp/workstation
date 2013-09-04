@@ -1,4 +1,4 @@
-package org.janelia.it.FlyWorkstation.gui.viewer3d;
+package org.janelia.it.FlyWorkstation.geom;
 
 import java.util.Collection;
 import java.util.Vector;

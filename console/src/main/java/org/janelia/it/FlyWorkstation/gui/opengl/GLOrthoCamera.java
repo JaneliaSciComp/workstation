@@ -1,12 +1,12 @@
-package org.janelia.it.FlyWorkstation.gui.viewer3d.camera;
+package org.janelia.it.FlyWorkstation.gui.opengl;
 
 import javax.media.opengl.GL2;
 
-import org.janelia.it.FlyWorkstation.gui.viewer3d.Quaternion.AngleAxis;
-import org.janelia.it.FlyWorkstation.gui.viewer3d.Rotation3d;
-import org.janelia.it.FlyWorkstation.gui.viewer3d.Vec3;
+import org.janelia.it.FlyWorkstation.geom.Rotation3d;
+import org.janelia.it.FlyWorkstation.geom.Vec3;
+import org.janelia.it.FlyWorkstation.geom.Quaternion.AngleAxis;
+import org.janelia.it.FlyWorkstation.gui.camera.Camera3d;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.ViewportGL;
-import org.janelia.it.FlyWorkstation.gui.viewer3d.interfaces.Camera3d;
 
 // GLOrthoCamera sets up orthographic view for OpenGL from a Camera3d
 public class GLOrthoCamera 

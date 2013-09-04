@@ -1,4 +1,4 @@
-package org.janelia.it.FlyWorkstation.gui.viewer3d.interfaces;
+package org.janelia.it.FlyWorkstation.gui.opengl;
 
 import javax.media.opengl.GL2;
 

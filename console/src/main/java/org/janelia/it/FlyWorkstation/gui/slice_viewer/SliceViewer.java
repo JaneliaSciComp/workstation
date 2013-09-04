@@ -1,5 +1,8 @@
 package org.janelia.it.FlyWorkstation.gui.slice_viewer;
 
+import org.janelia.it.FlyWorkstation.geom.CoordinateAxis;
+import org.janelia.it.FlyWorkstation.geom.Rotation3d;
+import org.janelia.it.FlyWorkstation.geom.Vec3;
 import org.janelia.it.FlyWorkstation.gui.slice_viewer.action.BasicMouseMode;
 import org.janelia.it.FlyWorkstation.gui.slice_viewer.action.MouseMode;
 import org.janelia.it.FlyWorkstation.gui.slice_viewer.action.PanMode;
@@ -11,13 +14,10 @@ import org.janelia.it.FlyWorkstation.gui.slice_viewer.skeleton.Skeleton;
 import org.janelia.it.FlyWorkstation.gui.slice_viewer.skeleton.SkeletonActor;
 import org.janelia.it.FlyWorkstation.gui.util.MouseHandler;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.BoundingBox3d;
-import org.janelia.it.FlyWorkstation.gui.viewer3d.CoordinateAxis;
-import org.janelia.it.FlyWorkstation.gui.viewer3d.Rotation3d;
-import org.janelia.it.FlyWorkstation.gui.viewer3d.Vec3;
-import org.janelia.it.FlyWorkstation.gui.viewer3d.camera.ObservableCamera3d;
-import org.janelia.it.FlyWorkstation.gui.viewer3d.interfaces.GLActor;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.interfaces.Viewport;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.interfaces.VolumeImage3d;
+import org.janelia.it.FlyWorkstation.gui.camera.ObservableCamera3d;
+import org.janelia.it.FlyWorkstation.gui.opengl.GLActor;
 import org.janelia.it.FlyWorkstation.gui.passive_3d.Snapshot3d;
 import org.janelia.it.FlyWorkstation.gui.passive_3d.ViewTileManagerVolumeSource;
 import org.janelia.it.FlyWorkstation.signal.Signal1;

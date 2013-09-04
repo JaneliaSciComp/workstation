@@ -1,4 +1,5 @@
-package org.janelia.it.FlyWorkstation.gui.viewer3d;
+package org.janelia.it.FlyWorkstation.geom;
+
 
 /**
  * This class represents the rotate-and-shift transform which gives the

@@ -2,10 +2,10 @@ package org.janelia.it.FlyWorkstation.gui.slice_viewer;
 
 import javax.media.opengl.GL2;
 
+import org.janelia.it.FlyWorkstation.gui.camera.Camera3d;
+import org.janelia.it.FlyWorkstation.gui.opengl.GLActor;
 import org.janelia.it.FlyWorkstation.gui.slice_viewer.shader.OutlineShader;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.BoundingBox3d;
-import org.janelia.it.FlyWorkstation.gui.viewer3d.interfaces.Camera3d;
-import org.janelia.it.FlyWorkstation.gui.viewer3d.interfaces.GLActor;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.shader.AbstractShader.ShaderCreationException;
 
 public class TileOutlineActor 

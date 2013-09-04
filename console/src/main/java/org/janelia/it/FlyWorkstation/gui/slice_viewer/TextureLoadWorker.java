@@ -1,6 +1,6 @@
 package org.janelia.it.FlyWorkstation.gui.slice_viewer;
 
-import org.janelia.it.FlyWorkstation.gui.viewer3d.CoordinateAxis;
+import org.janelia.it.FlyWorkstation.geom.CoordinateAxis;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

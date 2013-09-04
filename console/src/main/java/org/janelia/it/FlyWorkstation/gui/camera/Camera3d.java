@@ -1,7 +1,8 @@
-package org.janelia.it.FlyWorkstation.gui.viewer3d.interfaces;
+package org.janelia.it.FlyWorkstation.gui.camera;
 
-import org.janelia.it.FlyWorkstation.gui.viewer3d.Rotation3d;
-import org.janelia.it.FlyWorkstation.gui.viewer3d.Vec3;
+import org.janelia.it.FlyWorkstation.geom.Rotation3d;
+import org.janelia.it.FlyWorkstation.geom.Vec3;
+
 
 // Camera3d manages rotation, translation, and scale in 3 dimensions.
 public interface Camera3d

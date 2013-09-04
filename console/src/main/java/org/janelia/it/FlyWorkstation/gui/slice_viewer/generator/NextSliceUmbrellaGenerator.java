@@ -2,8 +2,8 @@ package org.janelia.it.FlyWorkstation.gui.slice_viewer.generator;
 
 import java.util.Iterator;
 
+import org.janelia.it.FlyWorkstation.geom.CoordinateAxis;
 import org.janelia.it.FlyWorkstation.gui.slice_viewer.TileIndex;
-import org.janelia.it.FlyWorkstation.gui.viewer3d.CoordinateAxis;
 
 /**
  * Generate positive offset slice indices, as part of UmbrellaZGenerator

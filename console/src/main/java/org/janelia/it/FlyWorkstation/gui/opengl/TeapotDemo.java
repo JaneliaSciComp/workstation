@@ -10,12 +10,12 @@ import javax.media.opengl.awt.GLCanvas;
 // import javax.media.opengl.awt.GLJPanel;
 import javax.swing.JFrame;
 
+import org.janelia.it.FlyWorkstation.geom.Vec3;
 import org.janelia.it.FlyWorkstation.gui.FullScreenMode;
 import org.janelia.it.FlyWorkstation.gui.TrackballInteractor;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.TeapotActor;
-import org.janelia.it.FlyWorkstation.gui.viewer3d.Vec3;
-import org.janelia.it.FlyWorkstation.gui.viewer3d.camera.BasicObservableCamera3d;
-import org.janelia.it.FlyWorkstation.gui.viewer3d.camera.ObservableCamera3d;
+import org.janelia.it.FlyWorkstation.gui.camera.BasicObservableCamera3d;
+import org.janelia.it.FlyWorkstation.gui.camera.ObservableCamera3d;
 import org.janelia.it.FlyWorkstation.gui.opengl.stereo3d.AbstractStereoMode;
 import org.janelia.it.FlyWorkstation.gui.opengl.stereo3d.HardwareStereoMode;
 import org.janelia.it.FlyWorkstation.signal.Slot;

@@ -2,14 +2,14 @@ package org.janelia.it.FlyWorkstation.gui.slice_viewer.generator;
 
 import java.util.Iterator;
 
+import org.janelia.it.FlyWorkstation.gui.camera.BasicCamera3d;
+import org.janelia.it.FlyWorkstation.gui.camera.Camera3d;
 import org.janelia.it.FlyWorkstation.gui.slice_viewer.Tile2d;
 import org.janelia.it.FlyWorkstation.gui.slice_viewer.TileConsumer;
 import org.janelia.it.FlyWorkstation.gui.slice_viewer.TileIndex;
 import org.janelia.it.FlyWorkstation.gui.slice_viewer.TileServer;
 import org.janelia.it.FlyWorkstation.gui.slice_viewer.TileSet;
 import org.janelia.it.FlyWorkstation.gui.slice_viewer.ViewTileManager;
-import org.janelia.it.FlyWorkstation.gui.viewer3d.camera.BasicCamera3d;
-import org.janelia.it.FlyWorkstation.gui.viewer3d.interfaces.Camera3d;
 
 public class LodGenerator 
 implements Iterable<TileIndex>, Iterator<TileIndex>

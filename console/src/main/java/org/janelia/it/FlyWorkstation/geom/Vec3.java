@@ -1,4 +1,5 @@
-package org.janelia.it.FlyWorkstation.gui.viewer3d;
+package org.janelia.it.FlyWorkstation.geom;
+
 
 // Vec3 is an XYZ point or displacement in three dimensional space.
 // Units are unspecified.

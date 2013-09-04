@@ -8,8 +8,8 @@ import javax.media.opengl.GLAutoDrawable;
 import javax.media.opengl.GLEventListener;
 import javax.media.opengl.glu.GLU;
 
-import org.janelia.it.FlyWorkstation.gui.viewer3d.interfaces.Camera3d;
-import org.janelia.it.FlyWorkstation.gui.viewer3d.interfaces.GLActor;
+import org.janelia.it.FlyWorkstation.gui.camera.Camera3d;
+import org.janelia.it.FlyWorkstation.gui.opengl.GLActor;
 
 // Shared base class of MipRenderer and SliceRenderer
 public abstract class BaseRenderer implements GLEventListener

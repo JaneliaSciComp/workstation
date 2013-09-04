@@ -4,7 +4,7 @@ import javax.media.opengl.GL2;
 import javax.media.opengl.GLAutoDrawable;
 import javax.media.opengl.GLEventListener;
 
-import org.janelia.it.FlyWorkstation.gui.viewer3d.camera.ObservableCamera3d;
+import org.janelia.it.FlyWorkstation.gui.camera.ObservableCamera3d;
 
 public class CrossEyeStereoMode extends AbstractStereoMode 
 {

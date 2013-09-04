@@ -19,7 +19,7 @@ import java.util.Set;
 
 import javax.swing.JOptionPane;
 
-import org.janelia.it.FlyWorkstation.gui.viewer3d.Vec3;
+import org.janelia.it.FlyWorkstation.geom.Vec3;
 
 public class SkeletonSwcExporter {
 	private Anchor rootAnchor;

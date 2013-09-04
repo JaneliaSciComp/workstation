@@ -11,11 +11,11 @@ import java.util.Map;
 import java.util.Set;
 import java.util.Vector;
 
+import org.janelia.it.FlyWorkstation.geom.CoordinateAxis;
 import org.janelia.it.FlyWorkstation.gui.slice_viewer.generator.InterleavedIterator;
 import org.janelia.it.FlyWorkstation.gui.slice_viewer.generator.MinResSliceGenerator;
 import org.janelia.it.FlyWorkstation.gui.slice_viewer.generator.SliceGenerator;
 import org.janelia.it.FlyWorkstation.gui.slice_viewer.generator.UmbrellaSliceGenerator;
-import org.janelia.it.FlyWorkstation.gui.viewer3d.CoordinateAxis;
 import org.janelia.it.FlyWorkstation.signal.Signal1;
 import org.janelia.it.FlyWorkstation.signal.Slot;
 import org.slf4j.Logger;

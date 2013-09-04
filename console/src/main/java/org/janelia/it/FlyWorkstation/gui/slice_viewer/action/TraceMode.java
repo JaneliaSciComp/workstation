@@ -12,6 +12,7 @@ import java.util.Vector;
 import javax.swing.AbstractAction;
 import javax.swing.JMenuItem;
 
+import org.janelia.it.FlyWorkstation.geom.Vec3;
 import org.janelia.it.FlyWorkstation.gui.slice_viewer.MenuItemGenerator;
 import org.janelia.it.FlyWorkstation.gui.slice_viewer.MouseModalWidget;
 import org.janelia.it.FlyWorkstation.gui.slice_viewer.skeleton.Anchor;
@@ -19,7 +20,6 @@ import org.janelia.it.FlyWorkstation.gui.slice_viewer.skeleton.Skeleton;
 import org.janelia.it.FlyWorkstation.gui.slice_viewer.skeleton.SkeletonActor;
 import org.janelia.it.FlyWorkstation.gui.slice_viewer.skeleton.SkeletonSwcExporter;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.BoundingBox3d;
-import org.janelia.it.FlyWorkstation.gui.viewer3d.Vec3;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.interfaces.Viewport;
 import org.janelia.it.FlyWorkstation.signal.Slot1;
 

@@ -1,6 +1,6 @@
 package org.janelia.it.FlyWorkstation.gui.viewer3d;
 
-import org.janelia.it.FlyWorkstation.gui.viewer3d.interfaces.GLActor;
+import org.janelia.it.FlyWorkstation.gui.opengl.GLActor;
 
 /**
  * Created with IntelliJ IDEA.
