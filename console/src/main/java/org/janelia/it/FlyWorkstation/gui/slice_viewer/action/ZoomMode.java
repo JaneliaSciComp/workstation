@@ -12,12 +12,12 @@ import java.util.Vector;
 
 import javax.swing.JMenuItem;
 
-import org.janelia.it.FlyWorkstation.gui.viewer3d.Vec3;
-import org.janelia.it.FlyWorkstation.gui.viewer3d.interfaces.Camera3d;
-import org.janelia.it.FlyWorkstation.gui.viewer3d.interfaces.Viewport;
 import org.janelia.it.FlyWorkstation.gui.slice_viewer.MenuItemGenerator;
 import org.janelia.it.FlyWorkstation.gui.slice_viewer.MouseModalWidget;
 import org.janelia.it.FlyWorkstation.gui.slice_viewer.RubberBand;
+import org.janelia.it.FlyWorkstation.gui.viewer3d.Vec3;
+import org.janelia.it.FlyWorkstation.gui.viewer3d.interfaces.Camera3d;
+import org.janelia.it.FlyWorkstation.gui.viewer3d.interfaces.Viewport;
 
 public class ZoomMode 
 implements WheelMode, MouseMode

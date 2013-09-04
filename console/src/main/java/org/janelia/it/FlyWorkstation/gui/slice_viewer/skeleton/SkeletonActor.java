@@ -13,20 +13,20 @@ import java.util.Map;
 import javax.media.opengl.GL2;
 import javax.swing.ImageIcon;
 
+import org.janelia.it.FlyWorkstation.gui.slice_viewer.shader.AnchorShader;
+import org.janelia.it.FlyWorkstation.gui.slice_viewer.shader.PassThroughTextureShader;
+import org.janelia.it.FlyWorkstation.gui.slice_viewer.shader.PathShader;
 import org.janelia.it.FlyWorkstation.gui.util.Icons;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.BoundingBox3d;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.Vec3;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.interfaces.Camera3d;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.interfaces.GLActor;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.shader.AbstractShader.ShaderCreationException;
-import org.janelia.it.FlyWorkstation.gui.slice_viewer.Signal;
-import org.janelia.it.FlyWorkstation.gui.slice_viewer.Signal1;
-import org.janelia.it.FlyWorkstation.gui.slice_viewer.Slot;
-import org.janelia.it.FlyWorkstation.gui.slice_viewer.shader.PassThroughTextureShader;
-import org.janelia.it.FlyWorkstation.gui.slice_viewer.shader.AnchorShader;
-import org.janelia.it.FlyWorkstation.gui.slice_viewer.shader.PathShader;
 // import org.slf4j.Logger;
 // import org.slf4j.LoggerFactory;
+import org.janelia.it.FlyWorkstation.signal.Signal;
+import org.janelia.it.FlyWorkstation.signal.Signal1;
+import org.janelia.it.FlyWorkstation.signal.Slot;
 
 /**
  * SkeletonActor is responsible for painting neuron traces in the slice viewer.

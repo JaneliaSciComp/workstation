@@ -1,4 +1,4 @@
-package org.janelia.it.FlyWorkstation.gui.slice_viewer;
+package org.janelia.it.FlyWorkstation.signal;
 
 import java.util.Observable;
 

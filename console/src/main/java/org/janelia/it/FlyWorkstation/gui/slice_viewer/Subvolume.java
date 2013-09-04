@@ -4,11 +4,12 @@ import java.awt.image.BufferedImage;
 import java.util.LinkedHashSet;
 import java.util.Set;
 
+import org.janelia.it.FlyWorkstation.gui.slice_viewer.AbstractTextureLoadAdapter.MissingTileException;
+import org.janelia.it.FlyWorkstation.gui.slice_viewer.AbstractTextureLoadAdapter.TileLoadError;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.BoundingBox3d;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.CoordinateAxis;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.Vec3;
-import org.janelia.it.FlyWorkstation.gui.slice_viewer.AbstractTextureLoadAdapter.MissingTileException;
-import org.janelia.it.FlyWorkstation.gui.slice_viewer.AbstractTextureLoadAdapter.TileLoadError;
+import org.janelia.it.FlyWorkstation.signal.Signal1;
 
 public class Subvolume {
 	
@@ -31,34 +32,34 @@ public class Subvolume {
 		TileIndex cornerTileIx1 = tileFormat.tileIndexForXyz(corner1, zoom, sliceDirection);
 		TileIndex cornerTileIx2 = tileFormat.tileIndexForXyz(corner2, zoom, sliceDirection);
 		// Sort coordinates into lower/left/front vs. upper/right/rear (Raveler-style convention in TileIndex)
-		int xyzMin[] =  {
+		int minTileXyz[] =  {
 				Math.min(cornerTileIx1.getX(), cornerTileIx2.getX()),
 				Math.min(cornerTileIx1.getY(), cornerTileIx2.getY()),
 				Math.min(cornerTileIx1.getZ(), cornerTileIx2.getZ())};
-		int xyzMax[] =  {
+		int maxTileXyz[] =  {
 				Math.max(cornerTileIx1.getX(), cornerTileIx2.getX()),
 				Math.max(cornerTileIx1.getY(), cornerTileIx2.getY()),
 				Math.max(cornerTileIx1.getZ(), cornerTileIx2.getZ())};
 		// Check for case where entire subvolume is outside of parent Volume
 		boolean isEmpty = false;
 		BoundingBox3d bb = tileFormat.calcBoundingBox();
-		TileIndex wholeMinIx = tileFormat.tileIndexForXyz(bb.getMin(), zoom, sliceDirection);
-		TileIndex wholeMaxIx = tileFormat.tileIndexForXyz(bb.getMax(), zoom, sliceDirection);
+		TileIndex minGlobalVolTileIx = tileFormat.tileIndexForXyz(bb.getMin(), zoom, sliceDirection);
+		TileIndex maxGlobalVolTileIx = tileFormat.tileIndexForXyz(bb.getMax(), zoom, sliceDirection);
 		// filter by min/max, in case bounding box convention differs from TileIndex convention in Y
-		int wholeXyzMin[] = {
-				Math.min(wholeMinIx.getX(), wholeMaxIx.getX()),
-				Math.min(wholeMinIx.getY(), wholeMaxIx.getY()),
-				Math.min(wholeMinIx.getZ(), wholeMaxIx.getZ()),
+		int minGlobalTileXyz[] = {
+				Math.min(minGlobalVolTileIx.getX(), maxGlobalVolTileIx.getX()),
+				Math.min(minGlobalVolTileIx.getY(), maxGlobalVolTileIx.getY()),
+				Math.min(minGlobalVolTileIx.getZ(), maxGlobalVolTileIx.getZ()),
 		};
-		int wholeXyzMax[] = {
-				Math.max(wholeMinIx.getX(), wholeMaxIx.getX()),
-				Math.max(wholeMinIx.getY(), wholeMaxIx.getY()),
-				Math.max(wholeMinIx.getZ(), wholeMaxIx.getZ()),
+		int maxGlobalTileXyz[] = {
+				Math.max(minGlobalVolTileIx.getX(), maxGlobalVolTileIx.getX()),
+				Math.max(minGlobalVolTileIx.getY(), maxGlobalVolTileIx.getY()),
+				Math.max(minGlobalVolTileIx.getZ(), maxGlobalVolTileIx.getZ()),
 		};
 		for (int i = 0; i < 3; ++i) {
-			if (xyzMax[i] < wholeXyzMin[i])
+			if (maxTileXyz[i] < minGlobalTileXyz[i])
 				isEmpty = true; // entire subvolume below/left/front of parent
-			if (xyzMin[i] > wholeXyzMax[i])
+			if (minTileXyz[i] > maxGlobalTileXyz[i])
 				isEmpty = true; // entire subvolume above/right/behind parent
 		}
 		if (isEmpty)
@@ -66,10 +67,10 @@ public class Subvolume {
 		// Enumerate all tiles needed to fill this subvolume
 		Set<TileIndex> neededTiles = new LinkedHashSet<TileIndex>();
 		int maxZoom = cornerTileIx1.getMaxZoom();
-		for (int x = xyzMin[0]; x <= xyzMax[0]; ++x) {
-			for (int y = xyzMin[1]; y <= xyzMax[1]; ++y) {
+		for (int x = minTileXyz[0]; x <= maxTileXyz[0]; ++x) {
+			for (int y = minTileXyz[1]; y <= maxTileXyz[1]; ++y) {
 				// Step through Z fastest for efficiency
-				for (int z = xyzMin[2]; z <= xyzMax[2]; ++z) {
+				for (int z = minTileXyz[2]; z <= maxTileXyz[2]; ++z) {
 					TileIndex ix = new TileIndex(x, y, z, zoom,
 							maxZoom, tileFormat.getIndexStyle(),
 							sliceDirection);

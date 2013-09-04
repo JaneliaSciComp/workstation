@@ -3,6 +3,8 @@ package org.janelia.it.FlyWorkstation.gui.slice_viewer;
 import java.awt.Color;
 import java.util.Vector;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.interfaces.VolumeImage3d;
+import org.janelia.it.FlyWorkstation.signal.Signal;
+import org.janelia.it.FlyWorkstation.signal.Slot1;
 
 public class ImageColorModel 
 {

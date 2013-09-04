@@ -2,9 +2,9 @@ package org.janelia.it.FlyWorkstation.gui.slice_viewer.generator;
 
 import java.util.Iterator;
 
-import org.janelia.it.FlyWorkstation.gui.viewer3d.CoordinateAxis;
 import org.janelia.it.FlyWorkstation.gui.slice_viewer.TileFormat;
 import org.janelia.it.FlyWorkstation.gui.slice_viewer.TileIndex;
+import org.janelia.it.FlyWorkstation.gui.viewer3d.CoordinateAxis;
 
 /**
  * Generates tile indices that span entire volume at lowest resolution.

@@ -5,7 +5,10 @@ import java.net.URL;
 
 import javax.swing.AbstractAction;
 
-import org.janelia.it.FlyWorkstation.gui.slice_viewer.Signal1;
+import org.eclipse.jetty.util.log.Log;
+import org.janelia.it.FlyWorkstation.signal.Signal1;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Menu item to load a particular file from a URL

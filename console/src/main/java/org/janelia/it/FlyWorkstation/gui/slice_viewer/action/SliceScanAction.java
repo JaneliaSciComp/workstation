@@ -4,12 +4,12 @@ import java.awt.event.ActionEvent;
 
 import javax.swing.AbstractAction;
 
+import org.janelia.it.FlyWorkstation.gui.slice_viewer.TileFormat;
+import org.janelia.it.FlyWorkstation.gui.slice_viewer.TileIndex;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.CoordinateAxis;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.Vec3;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.interfaces.Camera3d;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.interfaces.VolumeImage3d;
-import org.janelia.it.FlyWorkstation.gui.slice_viewer.TileFormat;
-import org.janelia.it.FlyWorkstation.gui.slice_viewer.TileIndex;
 
 /**
  * Base class for z slice scanning actions in slice viewer.

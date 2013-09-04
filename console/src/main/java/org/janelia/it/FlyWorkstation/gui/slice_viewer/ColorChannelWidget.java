@@ -14,8 +14,9 @@ import javax.swing.JPanel;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 
-import org.janelia.it.FlyWorkstation.gui.util.Icons;
 import org.janelia.it.FlyWorkstation.gui.slice_viewer.color_slider.UglyColorSlider;
+import org.janelia.it.FlyWorkstation.gui.util.Icons;
+import org.janelia.it.FlyWorkstation.signal.Slot;
 
 public class ColorChannelWidget extends JPanel 
 {

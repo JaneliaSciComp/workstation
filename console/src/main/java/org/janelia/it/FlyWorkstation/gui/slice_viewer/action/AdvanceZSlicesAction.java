@@ -1,5 +1,7 @@
 package org.janelia.it.FlyWorkstation.gui.slice_viewer.action;
 
+import java.awt.event.InputEvent;
+
 import javax.swing.KeyStroke;
 
 import org.janelia.it.FlyWorkstation.gui.util.Icons;

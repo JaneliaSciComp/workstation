@@ -17,8 +17,8 @@ import javax.swing.tree.*;
 // workstation imports
 
 import org.janelia.it.FlyWorkstation.gui.viewer3d.Vec3;
-import org.janelia.it.FlyWorkstation.gui.slice_viewer.Signal1;
-import org.janelia.it.FlyWorkstation.gui.slice_viewer.Slot1;
+import org.janelia.it.FlyWorkstation.signal.Signal1;
+import org.janelia.it.FlyWorkstation.signal.Slot1;
 
 import org.janelia.it.jacs.model.user_data.tiledMicroscope.*;
 

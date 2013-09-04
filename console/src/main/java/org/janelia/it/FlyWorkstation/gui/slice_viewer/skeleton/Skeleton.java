@@ -5,12 +5,12 @@ import java.util.LinkedHashSet;
 import java.util.Map;
 import java.util.Set;
 
-import org.janelia.it.FlyWorkstation.gui.viewer3d.Vec3;
 import org.janelia.it.FlyWorkstation.gui.slice_viewer.HistoryStack;
-import org.janelia.it.FlyWorkstation.gui.slice_viewer.Signal;
-import org.janelia.it.FlyWorkstation.gui.slice_viewer.Signal1;
-import org.janelia.it.FlyWorkstation.gui.slice_viewer.Slot;
-import org.janelia.it.FlyWorkstation.gui.slice_viewer.Slot1;
+import org.janelia.it.FlyWorkstation.gui.viewer3d.Vec3;
+import org.janelia.it.FlyWorkstation.signal.Signal;
+import org.janelia.it.FlyWorkstation.signal.Signal1;
+import org.janelia.it.FlyWorkstation.signal.Slot;
+import org.janelia.it.FlyWorkstation.signal.Slot1;
 import org.janelia.it.jacs.model.user_data.tiledMicroscope.TmGeoAnnotation;
 
 public class Skeleton {

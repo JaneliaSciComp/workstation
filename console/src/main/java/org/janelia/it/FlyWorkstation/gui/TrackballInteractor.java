@@ -1,4 +1,4 @@
-package org.janelia.it.FlyWorkstation.gui.viewer3d.demo;
+package org.janelia.it.FlyWorkstation.gui;
 
 import java.awt.Component;
 import java.awt.Point;

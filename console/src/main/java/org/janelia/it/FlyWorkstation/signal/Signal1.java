@@ -1,6 +1,9 @@
-package org.janelia.it.FlyWorkstation.gui.slice_viewer;
+package org.janelia.it.FlyWorkstation.signal;
 
 import java.util.Observable;
+
+import org.janelia.it.FlyWorkstation.gui.slice_viewer.BasicSignalSlot;
+import org.janelia.it.FlyWorkstation.gui.slice_viewer.BasicSignalSlot1;
 
 
 // Java Observable that acts a bit like a Qt Signal

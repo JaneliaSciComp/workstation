@@ -4,7 +4,7 @@ import java.awt.event.ActionEvent;
 import javax.swing.AbstractAction;
 
 import org.janelia.it.FlyWorkstation.gui.util.Icons;
-import org.janelia.it.FlyWorkstation.gui.slice_viewer.Signal1;
+import org.janelia.it.FlyWorkstation.signal.Signal1;
 
 // PanModeAction puts the slice viewer into Pan mode.
 public class ZScanScrollModeAction extends AbstractAction 

@@ -14,6 +14,8 @@ import java.text.DecimalFormat;
 import java.text.NumberFormat;
 import java.util.Arrays;
 
+import net.jpountz.lz4.LZ4BlockInputStream;
+
 import org.apache.commons.io.IOUtils;
 
 public class PamOctreeLoadAdapter 

@@ -9,7 +9,7 @@ import javax.swing.event.ChangeListener;
 
 import org.janelia.it.FlyWorkstation.gui.slice_viewer.ChannelColorModel;
 import org.janelia.it.FlyWorkstation.gui.slice_viewer.ImageColorModel;
-import org.janelia.it.FlyWorkstation.gui.slice_viewer.Slot;
+import org.janelia.it.FlyWorkstation.signal.Slot;
 
 public class UglyColorSlider extends JSlider 
 {

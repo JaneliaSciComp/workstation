@@ -2,6 +2,8 @@ package org.janelia.it.FlyWorkstation.gui.slice_viewer;
 
 import java.awt.Color;
 
+import org.janelia.it.FlyWorkstation.signal.Signal1;
+
 public class ChannelColorModel 
 {
 	private Color color;

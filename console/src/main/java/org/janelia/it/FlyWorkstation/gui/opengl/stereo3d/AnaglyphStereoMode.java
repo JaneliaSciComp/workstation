@@ -1,4 +1,4 @@
-package org.janelia.it.FlyWorkstation.gui.viewer3d.demo;
+package org.janelia.it.FlyWorkstation.gui.opengl.stereo3d;
 
 import javax.media.opengl.GL2;
 import javax.media.opengl.GLAutoDrawable;

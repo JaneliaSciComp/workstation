@@ -1,4 +1,4 @@
-package org.janelia.it.FlyWorkstation.gui.viewer3d.demo;
+package org.janelia.it.FlyWorkstation.gui.opengl;
 
 import java.util.List;
 import java.util.Vector;

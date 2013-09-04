@@ -5,7 +5,7 @@ import java.awt.event.ActionEvent;
 import javax.swing.AbstractAction;
 
 import org.janelia.it.FlyWorkstation.gui.util.Icons;
-import org.janelia.it.FlyWorkstation.gui.slice_viewer.Signal1;
+import org.janelia.it.FlyWorkstation.signal.Signal1;
 
 /**
  * Change between separate X/Y/Z views and a single Z view.

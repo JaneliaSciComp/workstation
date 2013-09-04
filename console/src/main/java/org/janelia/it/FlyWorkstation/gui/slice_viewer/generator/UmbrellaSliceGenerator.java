@@ -6,8 +6,6 @@ import org.janelia.it.FlyWorkstation.gui.slice_viewer.Tile2d;
 import org.janelia.it.FlyWorkstation.gui.slice_viewer.TileFormat;
 import org.janelia.it.FlyWorkstation.gui.slice_viewer.TileIndex;
 import org.janelia.it.FlyWorkstation.gui.slice_viewer.TileSet;
-// import org.slf4j.Logger;
-// import org.slf4j.LoggerFactory;
 
 /**
  * Generate adjacent Z-slices.

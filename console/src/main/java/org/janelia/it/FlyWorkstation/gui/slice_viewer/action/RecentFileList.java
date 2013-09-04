@@ -8,9 +8,7 @@ import java.util.prefs.Preferences;
 
 import javax.swing.JMenu;
 
-import org.janelia.it.FlyWorkstation.gui.slice_viewer.Signal1;
-// import org.slf4j.Logger;
-// import org.slf4j.LoggerFactory;
+import org.janelia.it.FlyWorkstation.signal.Signal1;
 
 /**
  *  Memorized list of recently opened files for display in a menu.

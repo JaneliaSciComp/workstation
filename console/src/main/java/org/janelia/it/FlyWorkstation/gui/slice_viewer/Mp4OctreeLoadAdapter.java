@@ -1,14 +1,22 @@
 package org.janelia.it.FlyWorkstation.gui.slice_viewer;
 
+import java.awt.image.BufferedImage;
 import java.awt.image.RenderedImage;
+import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
 import java.net.MalformedURLException;
 import java.net.URISyntaxException;
 import java.net.URL;
+import java.nio.ByteBuffer;
+import java.nio.ByteOrder;
+import java.nio.channels.Channels;
 
 import javax.media.jai.JAI;
 import javax.media.jai.ParameterBlockJAI;
+
+import org.apache.commons.io.IOUtils;
 
 public class Mp4OctreeLoadAdapter extends AbstractTextureLoadAdapter 
 {

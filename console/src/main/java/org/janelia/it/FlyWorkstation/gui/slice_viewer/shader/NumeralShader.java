@@ -8,11 +8,9 @@ import java.nio.ByteBuffer;
 import javax.media.opengl.GL2;
 import javax.swing.ImageIcon;
 
-import org.janelia.it.FlyWorkstation.gui.util.Icons;
 import org.janelia.it.FlyWorkstation.gui.slice_viewer.ChannelColorModel;
 import org.janelia.it.FlyWorkstation.gui.slice_viewer.ImageColorModel;
-// import org.slf4j.Logger;
-// import org.slf4j.LoggerFactory;
+import org.janelia.it.FlyWorkstation.gui.util.Icons;
 
 public class NumeralShader extends PassThroughTextureShader 
 {

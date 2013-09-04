@@ -1,5 +1,14 @@
 package org.janelia.it.FlyWorkstation.gui.slice_viewer;
 
+import org.janelia.it.FlyWorkstation.gui.slice_viewer.action.BasicMouseMode;
+import org.janelia.it.FlyWorkstation.gui.slice_viewer.action.MouseMode;
+import org.janelia.it.FlyWorkstation.gui.slice_viewer.action.PanMode;
+import org.janelia.it.FlyWorkstation.gui.slice_viewer.action.TraceMode;
+import org.janelia.it.FlyWorkstation.gui.slice_viewer.action.WheelMode;
+import org.janelia.it.FlyWorkstation.gui.slice_viewer.action.ZScanMode;
+import org.janelia.it.FlyWorkstation.gui.slice_viewer.action.ZoomMode;
+import org.janelia.it.FlyWorkstation.gui.slice_viewer.skeleton.Skeleton;
+import org.janelia.it.FlyWorkstation.gui.slice_viewer.skeleton.SkeletonActor;
 import org.janelia.it.FlyWorkstation.gui.util.MouseHandler;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.BoundingBox3d;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.CoordinateAxis;
@@ -11,15 +20,9 @@ import org.janelia.it.FlyWorkstation.gui.viewer3d.interfaces.Viewport;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.interfaces.VolumeImage3d;
 import org.janelia.it.FlyWorkstation.gui.passive_3d.Snapshot3d;
 import org.janelia.it.FlyWorkstation.gui.passive_3d.ViewTileManagerVolumeSource;
-import org.janelia.it.FlyWorkstation.gui.slice_viewer.action.BasicMouseMode;
-import org.janelia.it.FlyWorkstation.gui.slice_viewer.action.MouseMode;
-import org.janelia.it.FlyWorkstation.gui.slice_viewer.action.PanMode;
-import org.janelia.it.FlyWorkstation.gui.slice_viewer.action.TraceMode;
-import org.janelia.it.FlyWorkstation.gui.slice_viewer.action.WheelMode;
-import org.janelia.it.FlyWorkstation.gui.slice_viewer.action.ZScanMode;
-import org.janelia.it.FlyWorkstation.gui.slice_viewer.action.ZoomMode;
-import org.janelia.it.FlyWorkstation.gui.slice_viewer.skeleton.Skeleton;
-import org.janelia.it.FlyWorkstation.gui.slice_viewer.skeleton.SkeletonActor;
+import org.janelia.it.FlyWorkstation.signal.Signal1;
+import org.janelia.it.FlyWorkstation.signal.Slot;
+import org.janelia.it.FlyWorkstation.signal.Slot1;
 
 import javax.media.opengl.GLCapabilities;
 import javax.media.opengl.GLCapabilitiesChooser;

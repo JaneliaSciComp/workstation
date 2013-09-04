@@ -1,4 +1,4 @@
-package org.janelia.it.FlyWorkstation.gui.viewer3d.demo;
+package org.janelia.it.FlyWorkstation.gui;
 
 import java.awt.DisplayMode;
 import java.awt.Frame;
@@ -8,6 +8,13 @@ import java.awt.Rectangle;
 import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
 
+/**
+ * FullScreenMode is a decorator that allows any java.awt.Frame to be toggled
+ * in and out of full screen mode using the "f" key.
+ * 
+ * @author brunsc
+ *
+ */
 public class FullScreenMode 
 implements KeyListener
 {

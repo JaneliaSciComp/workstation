@@ -17,13 +17,13 @@ import java.util.Vector;
 import javax.swing.ImageIcon;
 import javax.swing.JMenuItem;
 
+import org.janelia.it.FlyWorkstation.gui.slice_viewer.MenuItemGenerator;
+import org.janelia.it.FlyWorkstation.gui.slice_viewer.MouseModalWidget;
 import org.janelia.it.FlyWorkstation.gui.util.Icons;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.Rotation3d;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.Vec3;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.interfaces.Camera3d;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.interfaces.Viewport;
-import org.janelia.it.FlyWorkstation.gui.slice_viewer.MenuItemGenerator;
-import org.janelia.it.FlyWorkstation.gui.slice_viewer.MouseModalWidget;
 
 public class BasicMouseMode implements MouseMode 
 {

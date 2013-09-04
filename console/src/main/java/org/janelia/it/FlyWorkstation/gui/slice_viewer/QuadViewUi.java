@@ -1,9 +1,5 @@
 package org.janelia.it.FlyWorkstation.gui.slice_viewer;
 
-import org.janelia.it.FlyWorkstation.gui.viewer3d.BoundingBox3d;
-import org.janelia.it.FlyWorkstation.gui.viewer3d.CoordinateAxis;
-import org.janelia.it.FlyWorkstation.gui.viewer3d.Vec3;
-import org.janelia.it.FlyWorkstation.gui.viewer3d.camera.BasicObservableCamera3d;
 import org.janelia.it.FlyWorkstation.gui.slice_viewer.TileServer.LoadStatus;
 import org.janelia.it.FlyWorkstation.gui.slice_viewer.action.AdvanceZSlicesAction;
 import org.janelia.it.FlyWorkstation.gui.slice_viewer.action.GoBackZSlicesAction;
@@ -11,16 +7,15 @@ import org.janelia.it.FlyWorkstation.gui.slice_viewer.action.MouseMode;
 import org.janelia.it.FlyWorkstation.gui.slice_viewer.action.NextZSliceAction;
 import org.janelia.it.FlyWorkstation.gui.slice_viewer.action.OpenFolderAction;
 import org.janelia.it.FlyWorkstation.gui.slice_viewer.action.OrthogonalModeAction;
-import org.janelia.it.FlyWorkstation.gui.slice_viewer.action.OrthogonalModeAction.OrthogonalMode;
 import org.janelia.it.FlyWorkstation.gui.slice_viewer.action.PanModeAction;
 import org.janelia.it.FlyWorkstation.gui.slice_viewer.action.PreviousZSliceAction;
 import org.janelia.it.FlyWorkstation.gui.slice_viewer.action.RecentFileList;
 import org.janelia.it.FlyWorkstation.gui.slice_viewer.action.ResetColorsAction;
 import org.janelia.it.FlyWorkstation.gui.slice_viewer.action.ResetViewAction;
 import org.janelia.it.FlyWorkstation.gui.slice_viewer.action.ResetZoomAction;
+import org.janelia.it.FlyWorkstation.gui.slice_viewer.action.SliceScanAction;
 import org.janelia.it.FlyWorkstation.gui.slice_viewer.action.TraceMouseModeAction;
 import org.janelia.it.FlyWorkstation.gui.slice_viewer.action.WheelMode;
-import org.janelia.it.FlyWorkstation.gui.slice_viewer.action.SliceScanAction;
 import org.janelia.it.FlyWorkstation.gui.slice_viewer.action.ZScanMode;
 import org.janelia.it.FlyWorkstation.gui.slice_viewer.action.ZScanScrollModeAction;
 import org.janelia.it.FlyWorkstation.gui.slice_viewer.action.ZoomInAction;
@@ -28,13 +23,21 @@ import org.janelia.it.FlyWorkstation.gui.slice_viewer.action.ZoomMaxAction;
 import org.janelia.it.FlyWorkstation.gui.slice_viewer.action.ZoomMouseModeAction;
 import org.janelia.it.FlyWorkstation.gui.slice_viewer.action.ZoomOutAction;
 import org.janelia.it.FlyWorkstation.gui.slice_viewer.action.ZoomScrollModeAction;
+import org.janelia.it.FlyWorkstation.gui.slice_viewer.action.OrthogonalModeAction.OrthogonalMode;
 import org.janelia.it.FlyWorkstation.gui.slice_viewer.annotation.AnnotationManager;
 import org.janelia.it.FlyWorkstation.gui.slice_viewer.annotation.AnnotationModel;
 import org.janelia.it.FlyWorkstation.gui.slice_viewer.annotation.AnnotationPanel;
 import org.janelia.it.FlyWorkstation.gui.slice_viewer.annotation.SliceViewerTranslator;
 import org.janelia.it.FlyWorkstation.gui.slice_viewer.skeleton.Skeleton;
-import org.janelia.it.jacs.model.entity.Entity;
 import org.janelia.it.FlyWorkstation.gui.slice_viewer.skeleton.SkeletonActor;
+import org.janelia.it.FlyWorkstation.gui.viewer3d.BoundingBox3d;
+import org.janelia.it.FlyWorkstation.gui.viewer3d.CoordinateAxis;
+import org.janelia.it.FlyWorkstation.gui.viewer3d.Vec3;
+import org.janelia.it.FlyWorkstation.gui.viewer3d.camera.BasicObservableCamera3d;
+import org.janelia.it.jacs.model.entity.Entity;
+import org.janelia.it.FlyWorkstation.signal.Signal1;
+import org.janelia.it.FlyWorkstation.signal.Slot;
+import org.janelia.it.FlyWorkstation.signal.Slot1;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 // import org.slf4j.Logger;
@@ -374,7 +377,6 @@ public class QuadViewUi extends JPanel
                     result.add(addFileMenuItem());
 /*
 LLF: the hookup for the 3d snapshot.
-
                     for ( JMenuItem item: sliceViewer.getLocalItems() ) {
                         result.add(item);
                     }

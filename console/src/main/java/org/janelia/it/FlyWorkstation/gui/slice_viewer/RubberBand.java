@@ -7,6 +7,7 @@ import java.awt.Graphics2D;
 import java.awt.Point;
 
 import org.janelia.it.FlyWorkstation.gui.viewer3d.interfaces.AwtActor;
+import org.janelia.it.FlyWorkstation.signal.Signal;
 
 public class RubberBand
 implements AwtActor

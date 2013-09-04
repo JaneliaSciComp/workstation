@@ -8,9 +8,9 @@ import java.awt.geom.Point2D;
 
 import javax.swing.JComponent;
 
-import org.janelia.it.FlyWorkstation.gui.viewer3d.interfaces.Viewport;
 import org.janelia.it.FlyWorkstation.gui.slice_viewer.action.MouseMode;
 import org.janelia.it.FlyWorkstation.gui.slice_viewer.action.WheelMode;
+import org.janelia.it.FlyWorkstation.gui.viewer3d.interfaces.Viewport;
 
 public interface MouseModalWidget 
 extends MouseListener, MouseMotionListener, MouseWheelListener, KeyListener

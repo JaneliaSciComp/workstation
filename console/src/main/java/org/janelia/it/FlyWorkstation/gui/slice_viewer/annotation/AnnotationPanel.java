@@ -11,6 +11,10 @@ import java.awt.event.ActionEvent;
 
 // workstation imports
 
+import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr;
+import org.janelia.it.jacs.model.user_data.Subject;
+
+
 
 /**
  * main class for slice viewer annotation GUI

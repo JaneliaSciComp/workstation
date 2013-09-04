@@ -1,7 +1,6 @@
-package org.janelia.it.FlyWorkstation.gui.viewer3d.volume_builder;
+package org.janelia.it.FlyWorkstation.gui.alignment_board_viewer.volume_builder;
 
 import junit.framework.Assert;
-import org.janelia.it.FlyWorkstation.gui.viewer3d.volume_builder.DownSampler;
 import org.junit.Test;
 
 /**

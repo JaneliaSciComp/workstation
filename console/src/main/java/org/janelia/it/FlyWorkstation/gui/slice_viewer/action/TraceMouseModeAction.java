@@ -5,7 +5,7 @@ import javax.swing.AbstractAction;
 import javax.swing.KeyStroke;
 
 import org.janelia.it.FlyWorkstation.gui.util.Icons;
-import org.janelia.it.FlyWorkstation.gui.slice_viewer.Signal1;
+import org.janelia.it.FlyWorkstation.signal.Signal1;
 
 public class TraceMouseModeAction extends AbstractAction {
 	private static final long serialVersionUID = 1L;
