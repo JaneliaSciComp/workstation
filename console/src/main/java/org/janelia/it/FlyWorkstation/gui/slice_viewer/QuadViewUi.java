@@ -374,11 +374,10 @@ public class QuadViewUi extends JPanel
                     result.add(addFileMenuItem());
 /*
 LLF: the hookup for the 3d snapshot.
-*/
+
                     for ( JMenuItem item: sliceViewer.getLocalItems() ) {
                         result.add(item);
                     }
-/*
 */
                     result.add(addViewMenuItem());
                     return result;
