@@ -1029,9 +1029,11 @@ public class EntityModel {
         if (parent.getEntityData()==null) return;
         for(EntityData ed : parent.getEntityData()) {
         	if (ed.getChildEntity()!=null) {
-	        	if (!EntityUtils.isInitialized(ed.getChildEntity()) && (forbiddenIds==null||forbiddenIds.contains(ed.getChildEntity().getId()))) {
-	        	    log.trace("replacing unloaded entity with forbidden entity: {}",ed.getChildEntity().getId());
-	        		ed.setChildEntity(new ForbiddenEntity(ed.getChildEntity()));
+	        	if (!EntityUtils.isInitialized(ed.getChildEntity())) {
+	        	    if (forbiddenIds==null || forbiddenIds.contains(ed.getChildEntity().getId())) {
+    	        	    log.trace("replacing unloaded entity with forbidden entity: {}",ed.getChildEntity().getId());
+    	        		ed.setChildEntity(new ForbiddenEntity(ed.getChildEntity()));
+	        	    }
 	        	}
 	        	else if (recurse) {
 	        		replaceUnloadedChildrenWithForbiddenEntities(ed.getChildEntity(), true, forbiddenIds);
