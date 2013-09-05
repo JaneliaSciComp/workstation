@@ -14,6 +14,7 @@ import org.janelia.it.FlyWorkstation.api.entity_model.management.ModelMgr;
 import org.janelia.it.jacs.model.entity.Entity;
 import org.janelia.it.jacs.model.user_data.tiledMicroscope.*;
 
+import java.util.ArrayList;
 import java.util.List;
 
 
@@ -212,6 +213,71 @@ public class AnnotationModel
         anchorUpdatedSignal.emit(getGeoAnnotationFromID(annotationID));
     }
 
+    /**
+     * this method deletes a link, which is defined as an annotation with
+     * one parent and no more than one child (not a root, not a branch point)
+     *
+     * @param link
+     * @throws Exception
+     */
+    public void deleteLink(TmGeoAnnotation link) throws Exception {
+        if (link == null) {
+            return;
+        }
+
+        // check it's a link; trust no one
+        // error or return?
+        if (link.getParent() == null || link.getChildren().size() > 1) {
+            return;
+        }
+
+        // check we can find it
+        // again, not clear if this should be an exception or not?
+        TmNeuron neuron = getNeuronFromAnnotation(link.getId());
+        if (neuron == null) {
+            // should this be an error?  it's a sign that the annotation has already
+            //  been deleted, or something else that shouldn't happen
+            return;
+        }
+
+        // delete it; reparent its child (if any) to its parent
+        // so that means delete one annotation, update two others;
+        //  actually, since geo ann doesn't store children, only need
+        //  to update the one we reparent
+
+        TmGeoAnnotation parent = link.getParent();
+        if (link.getChildren().size() == 1) {
+            TmGeoAnnotation child = link.getChildren().get(0);
+            modelMgr.reparentGeometricAnnotation(child, parent.getId(), neuron);
+        }
+        // delete the deleted annotation that is to be deleted:
+        modelMgr.deleteGeometricAnnotation(link.getId());
+
+        // updates
+        updateCurrentWorkspace();
+        updateCurrentNeuron();
+
+
+        // notifications
+
+        // not sure if we have to update just the three annotations we
+        //  changed, or redraw the whole neurite; getting the lines to
+        //  show might require that we redraw everything from the updated
+        //  child downward
+
+        List<TmGeoAnnotation> deleteList = new ArrayList<TmGeoAnnotation>(1);
+        deleteList.add(link);
+        anchorsDeletedSignal.emit(deleteList);
+
+    }
+
+    /**
+     * this method deletes an annotation and all of its children, and its
+     * children's children, yea, unto every generation that liveth
+     *
+     * @param rootAnnotation
+     * @throws Exception
+     */
     public void deleteSubTree(TmGeoAnnotation rootAnnotation) throws Exception {
         if (rootAnnotation == null) {
             return;

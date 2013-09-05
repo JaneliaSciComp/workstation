@@ -78,6 +78,7 @@ public class Skeleton {
 
 	///// DELETE
 	// Anchor deletion
+    public Signal1<Anchor> linkDeleteRequestedSignal = new Signal1<Anchor>();
 	public Signal1<Anchor> subtreeDeleteRequestedSignal =
 			new Signal1<Anchor>();
 	public Slot1<TmGeoAnnotation> deleteAnchorSlot = new Slot1<TmGeoAnnotation>() {
@@ -166,6 +167,10 @@ public class Skeleton {
 		skeletonChangedSignal.emit();
 		return true;
 	}
+
+    public void deleteLinkRequest(Anchor anchor) {
+        linkDeleteRequestedSignal.emit(anchor);
+    }
 
     public void deleteSubtreeRequest(Anchor anchor){
         subtreeDeleteRequestedSignal.emit(anchor);

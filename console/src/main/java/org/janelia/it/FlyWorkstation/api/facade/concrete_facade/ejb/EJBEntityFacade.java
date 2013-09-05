@@ -219,6 +219,12 @@ public class EJBEntityFacade implements EntityFacade {
     }
 
     @Override
+    public void reparentGeometricAnnotation(TmGeoAnnotation annotation,
+                                            Long newParentAnnotationID, TmNeuron neuron) throws Exception {
+        EJBFactory.getRemoteTiledMicroscopeBean().reparentGeometricAnnotation(annotation, newParentAnnotationID, neuron);
+    }
+
+    @Override
     public void updateGeometricAnnotation(TmGeoAnnotation geoAnnotation,
                                           int index, double x, double y, double z, String comment) throws Exception {
         EJBFactory.getRemoteTiledMicroscopeBean().updateGeometricAnnotation(geoAnnotation, index, x, y, z, comment);

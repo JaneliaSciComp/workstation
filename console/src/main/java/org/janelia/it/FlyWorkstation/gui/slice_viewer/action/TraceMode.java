@@ -360,6 +360,12 @@ implements MouseMode, KeyListener
                                 skeleton.deleteSubtreeRequest(getHoverAnchor());
                             }
                         }));
+                        result.add(new JMenuItem(new AbstractAction("Delete link") {
+                            @Override
+                            public void actionPerformed(ActionEvent actionEvent) {
+                                skeleton.deleteLinkRequest(getHoverAnchor());
+                            }
+                        }));
                         result.add(new JMenuItem(new AbstractAction("Export SWC file rooted at this anchor...") {
 							@Override
 							public void actionPerformed(ActionEvent event) {

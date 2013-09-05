@@ -39,6 +39,13 @@ public class AnnotationManager
         }
     };
 
+    public Slot1<Anchor> deleteLinkRequestedSlot = new Slot1<Anchor>() {
+        @Override
+        public void execute(Anchor anchor) {
+            deleteLink(anchor.getGuid());
+        }
+    };
+
     public Slot1<Anchor> deleteSubtreeRequestedSlot = new Slot1<Anchor>() {
         @Override
         public void execute(Anchor anchor) {
@@ -188,6 +195,44 @@ public class AnnotationManager
         };
         adder.execute();
 
+    }
+
+    public void deleteLink(final Long annotationID) {
+        if (annotationModel.getCurrentWorkspace() == null) {
+            // dialog?
+
+            return;
+        } else {
+
+            // verify it's a link and not a root or branch:
+            TmGeoAnnotation annotation = annotationModel.getGeoAnnotationFromID(annotationID);
+            if (annotation.getParent() == null || annotation.getChildren().size() > 1) {
+                JOptionPane.showMessageDialog(null,
+                        "This annotation is either a root (no parent) or branch (many children), not a link!",
+                        "Not a link!",
+                        JOptionPane.ERROR_MESSAGE);
+                return;
+            }
+
+
+            SimpleWorker deleter = new SimpleWorker() {
+                @Override
+                protected void doStuff() throws Exception {
+                    annotationModel.deleteLink(annotationModel.getGeoAnnotationFromID(annotationID));
+                }
+
+                @Override
+                protected void hadSuccess() {
+                    // nothing here; annotationModel emits signals
+                }
+
+                @Override
+                protected void hadError(Throwable error) {
+                    SessionMgr.getSessionMgr().handleException(error);
+                }
+            };
+            deleter.execute();
+        }
     }
 
     public void deleteSubTree(final Long annotationID) {

@@ -1029,6 +1029,11 @@ public class ModelMgr {
         return FacadeManager.getFacadeManager().getEntityFacade().addGeometricAnnotation(neuronId, parentAnnotationId, index, x, y, z, comment);
     }
 
+    public void reparentGeometricAnnotation(TmGeoAnnotation annotation, Long newParentAnnotationID,
+                                            TmNeuron neuron) throws Exception {
+        FacadeManager.getFacadeManager().getEntityFacade().reparentGeometricAnnotation(annotation, newParentAnnotationID, neuron);
+    }
+
     public void updateGeometricAnnotation(TmGeoAnnotation geoAnnotation,
                                           int index, double x, double y, double z, String comment) throws Exception {
         FacadeManager.getFacadeManager().getEntityFacade().updateGeometricAnnotation(geoAnnotation, index, x, y, z, comment);
