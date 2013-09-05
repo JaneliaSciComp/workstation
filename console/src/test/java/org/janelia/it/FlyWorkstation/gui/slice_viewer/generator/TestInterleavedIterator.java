@@ -1,4 +1,4 @@
-package org.janelia.it.FlyWorkstation.gui.viewer3d.slice_viewer.generator;
+package org.janelia.it.FlyWorkstation.gui.slice_viewer.generator;
 
 import static org.junit.Assert.*;
 
