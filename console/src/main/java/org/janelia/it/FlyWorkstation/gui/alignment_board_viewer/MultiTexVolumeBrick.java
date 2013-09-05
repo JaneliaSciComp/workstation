@@ -9,7 +9,6 @@ import com.jogamp.common.nio.Buffers;
 import org.janelia.it.FlyWorkstation.geom.CoordinateAxis;
 import org.janelia.it.FlyWorkstation.geom.Vec3;
 import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr;
-import org.janelia.it.FlyWorkstation.gui.opengl.GLActor;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.*;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.buffering.VtxCoordBufMgr;
 import org.janelia.it.FlyWorkstation.gui.alignment_board_viewer.shader.MultiTexVolumeBrickShader;
@@ -60,6 +59,7 @@ public class MultiTexVolumeBrick implements VolumeBrickI
     private MultiTexVolumeBrickShader volumeBrickShader = new MultiTexVolumeBrickShader();
 
     private boolean bIsInitialized;
+    @SuppressWarnings("ALL")
     private boolean bUseSyntheticData = false;
 
     private VtxCoordBufMgr bufferManager;
@@ -299,11 +299,10 @@ public class MultiTexVolumeBrick implements VolumeBrickI
         // or backward.
         // "InGround" means in the WORLD object reference frame.
         // (the view vector in the EYE reference frame is always [0,0,-1])
-        Vec3 viewVectorInGround = volumeModel.getCamera3d().getRotation().times(new Vec3(0,0,1));
+        Vec3 vv = volumeModel.getCamera3d().getRotation().times(new Vec3(0,0,1));
 
         // Compute the principal axis of the view direction; that's the direction we will slice along.
         CoordinateAxis a1 = CoordinateAxis.X; // First guess principal axis is X.  Who knows?
-        Vec3 vv = viewVectorInGround;
         if ( Math.abs(vv.y()) > Math.abs(vv.get(a1.index())) )
             a1 = CoordinateAxis.Y; // OK, maybe Y axis is principal
         if ( Math.abs(vv.z()) > Math.abs(vv.get(a1.index())) )
@@ -424,6 +423,7 @@ public class MultiTexVolumeBrick implements VolumeBrickI
     }
 
     /** DEBUG code to help understand what is happening with vtx or tex points. */
+    @SuppressWarnings("unused")
     private void printPoints(String type, double[] p1, double[] p2, double[] p3, double[] p4) {
         System.out.print(type + " [");
         printPoint(p1);
