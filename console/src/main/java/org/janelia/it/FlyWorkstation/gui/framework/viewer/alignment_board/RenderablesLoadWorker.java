@@ -32,7 +32,6 @@ import java.util.concurrent.*;
 public class RenderablesLoadWorker extends SimpleWorker implements VolumeLoader {
 
     private static final int LEAST_FULLSIZE_MEM = 1500000; // Ex: 1,565,620
-    private static final int MAX_FILE_LOAD_THREADS = 1;    // This is necessary, because file-load is not thread safe.
     private Boolean loadFiles = true;
 
     private MaskChanMultiFileLoader compartmentLoader;
@@ -282,7 +281,7 @@ public class RenderablesLoadWorker extends SimpleWorker implements VolumeLoader 
             logger.debug( "In load thread, after getting bean list." );
 
             logger.debug("Starting multithreaded file load.");
-            multiThreadedFileLoad( metaDatas, MAX_FILE_LOAD_THREADS );
+            fileLoad(metaDatas);
 
             compartmentLoader.close();
             neuronFragmentLoader.close();
@@ -336,40 +335,13 @@ public class RenderablesLoadWorker extends SimpleWorker implements VolumeLoader 
         }
     }
 
-    private void multiThreadedFileLoad( Collection<MaskChanRenderableData> metaDatas, int maxThreads ) {
-        ExecutorService compartmentsThreadPool = Executors.newFixedThreadPool( maxThreads );
+    private void fileLoad( Collection<MaskChanRenderableData> metaDatas ) {
         for ( MaskChanRenderableData metaData: metaDatas ) {
-            logger.debug( "Scheduling mask path {} for load.", metaData.getMaskPath() );
-            if ( metaData.isCompartment() ) {
-                LoadRunnable runnable = new LoadRunnable( metaData, this, null );
-                compartmentsThreadPool.execute( runnable );
-            }
+            logger.info( "Scheduling mask path {} for load.", metaData.getMaskPath() );
+            LoadRunnable runnable = new LoadRunnable( metaData, this, null );
+            runnable.run();
         }
-        awaitThreadpoolCompletion( compartmentsThreadPool );
 
-        ExecutorService neuronFragmentsThreadPool = Executors.newFixedThreadPool( maxThreads );
-        for ( MaskChanRenderableData metaData: metaDatas ) {
-            logger.debug( "Scheduling mask path {} for load.", metaData.getMaskPath() );
-            if ( ! metaData.isCompartment() ) {
-                LoadRunnable runnable = new LoadRunnable( metaData, this, null );
-                neuronFragmentsThreadPool.execute(runnable);
-            }
-        }
-        awaitThreadpoolCompletion(neuronFragmentsThreadPool);
-    }
-
-    /** Wait until the threadpool has completed all processing. */
-    private void awaitThreadpoolCompletion(ExecutorService threadPool) {
-        try {
-            // Now that the pools is laden, we call the milder shutdown, which lets us wait for completion of all.
-            logger.debug("Awaiting shutdown.");
-            threadPool.shutdown();
-            threadPool.awaitTermination(10, TimeUnit.MINUTES);
-            logger.debug("Thread pool termination complete.");
-        } catch ( InterruptedException ie ) {
-            ie.printStackTrace();
-            SessionMgr.getSessionMgr().handleException(ie);
-        }
     }
 
     /**
