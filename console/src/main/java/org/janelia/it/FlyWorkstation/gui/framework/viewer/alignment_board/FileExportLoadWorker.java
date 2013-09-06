@@ -2,6 +2,8 @@ package org.janelia.it.FlyWorkstation.gui.framework.viewer.alignment_board;
 
 import org.janelia.it.FlyWorkstation.gui.alignment_board_viewer.gui_elements.ControlsListener;
 import org.janelia.it.FlyWorkstation.gui.alignment_board_viewer.masking.TextureBuilderI;
+import org.janelia.it.FlyWorkstation.gui.alignment_board_viewer.renderable.InvertingComparator;
+import org.janelia.it.FlyWorkstation.gui.alignment_board_viewer.renderable.RBComparator;
 import org.janelia.it.FlyWorkstation.gui.alignment_board_viewer.volume_builder.RenderablesChannelsBuilder;
 import org.janelia.it.FlyWorkstation.gui.alignment_board_viewer.volume_builder.RenderablesMaskBuilder;
 import org.janelia.it.FlyWorkstation.gui.alignment_board_viewer.volume_export.FilteringAcceptorDecorator;
@@ -20,9 +22,7 @@ import org.slf4j.LoggerFactory;
 import java.io.BufferedInputStream;
 import java.io.FileInputStream;
 import java.io.InputStream;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
+import java.util.*;
 import java.util.concurrent.*;
 
 /**
@@ -109,10 +109,11 @@ public class FileExportLoadWorker extends SimpleWorker implements VolumeLoader {
     @Override
     protected void doStuff() throws Exception {
 
-        Collection<RenderableBean> renderableBeans = new ArrayList<RenderableBean>();
+        List<RenderableBean> renderableBeans = new ArrayList<RenderableBean>();
         for ( MaskChanRenderableData renderableData: paramBean.getRenderableDatas() ) {
             renderableBeans.add( renderableData.getBean() );
         }
+        Collections.sort( renderableBeans, new InvertingComparator( new RBComparator() ) );
 
         // Establish the means for extracting the volume mask.
         AlignmentBoardSettings customWritebackSettings = new AlignmentBoardSettings();
@@ -134,7 +135,7 @@ public class FileExportLoadWorker extends SimpleWorker implements VolumeLoader {
         loader = new MaskChanMultiFileLoader();
         loader.setEnforcePadding( false ); // Do not extend dimensions of resulting volume beyond established space.
         loader.setCheckForConsistency( false );  // Do not force all files to share characteristics like channel count.
-        MaskChanDataAcceptorI outerAcceptor = null;
+        MaskChanDataAcceptorI outerAcceptor;
         if ( paramBean.getCropCoords() == null || paramBean.getCropCoords().size() == 0 ) {
             outerAcceptor = textureBuilder;
         }
@@ -197,6 +198,8 @@ public class FileExportLoadWorker extends SimpleWorker implements VolumeLoader {
         paramBean.getCallback().loadVolume(textureData);
     }
 
+    /** The multi-thread load may not be used, because of upstream problems with multi-threading. */
+    @SuppressWarnings("unused")
     private void multiThreadedFileLoad(Collection<MaskChanRenderableData> metaDatas) {
         // First load the compartments.
         final CyclicBarrier compartmentsLoadBarrier = new CyclicBarrier( metaDatas.size() + 1 );
