@@ -32,7 +32,7 @@ import java.util.concurrent.*;
 public class RenderablesLoadWorker extends SimpleWorker implements VolumeLoader {
 
     private static final int LEAST_FULLSIZE_MEM = 1500000; // Ex: 1,565,620
-    private static final int MAX_FILE_LOAD_THREADS = 1;
+    private static final int MAX_FILE_LOAD_THREADS = 1;    // This is necessary, because file-load is not thread safe.
     private Boolean loadFiles = true;
 
     private MaskChanMultiFileLoader compartmentLoader;
@@ -114,7 +114,7 @@ public class RenderablesLoadWorker extends SimpleWorker implements VolumeLoader 
             return;
         }
 
-        // Channel file is optional, unless channel data must be shown.
+        // Channel file is optional; presence implies channel data must be shown.
         if ( alignmentBoardSettings.isShowChannelData()  &&  maskChanRenderableData.getChannelPath() == null ) {
             logger.warn(
                     "Renderable {} has a missing channel file -- {}.",
@@ -230,7 +230,6 @@ public class RenderablesLoadWorker extends SimpleWorker implements VolumeLoader 
         ArrayList<MaskChanDataAcceptorI> acceptors = new ArrayList<MaskChanDataAcceptorI>();
 
         // Unfortunately, the wrapper knows the thing it wraps, but at least under a different definition.
-        //   TODO consider adding an interface to RenderableMaskBuilder, just for getting the volume bytes.
         RemaskingAcceptorDecorator remaskingAcceptorDecorator = new RemaskingAcceptorDecorator(
                 maskTextureBuilder,
                 multiMaskTracker,
