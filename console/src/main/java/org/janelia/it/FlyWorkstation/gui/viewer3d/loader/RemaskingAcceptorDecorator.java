@@ -1,7 +1,7 @@
 package org.janelia.it.FlyWorkstation.gui.viewer3d.loader;
 
 import org.janelia.it.FlyWorkstation.gui.alignment_board_viewer.masking.MultiMaskTracker;
-import org.janelia.it.FlyWorkstation.gui.alignment_board_viewer.volume_builder.RenderablesMaskBuilder;
+import org.janelia.it.FlyWorkstation.gui.alignment_board_viewer.masking.VolumeDataI;
 import org.janelia.it.FlyWorkstation.shared.annotations.NotThreadSafe;
 
 /**
@@ -13,7 +13,7 @@ import org.janelia.it.FlyWorkstation.shared.annotations.NotThreadSafe;
  * This can change the numbers of masks, and if it does, send these new masks off to be tracked.
  */
 public class RemaskingAcceptorDecorator extends AbstractAcceptorDecorator {
-    private RenderablesMaskBuilder maskBuilder;
+    private VolumeDataI maskVolumeData;
     private int pixelByteCount;
     private boolean binary;
     private MultiMaskTracker multiMaskTracker;
@@ -21,12 +21,12 @@ public class RemaskingAcceptorDecorator extends AbstractAcceptorDecorator {
     public RemaskingAcceptorDecorator(
             MaskChanDataAcceptorI wrappedAcceptor,
             MultiMaskTracker multiMaskTracker,
-            RenderablesMaskBuilder maskBuilder,
+            VolumeDataI maskVolumeData,
             int pixelByteCount,
             boolean binary
     ) {
         this.setWrappedAcceptor( wrappedAcceptor );
-        this.maskBuilder = maskBuilder;
+        this.maskVolumeData = maskVolumeData;
         this.pixelByteCount = pixelByteCount;
         this.multiMaskTracker = multiMaskTracker;
         this.binary = binary;
@@ -60,22 +60,24 @@ public class RemaskingAcceptorDecorator extends AbstractAcceptorDecorator {
 
         if ( ! binary ) {
             int oldVolumeMask = 0;
-            // NOTE: do not attempt to get the volume bytes too early. The volume bytes may not have been
-            // initialized prior to the builder having traversed its input data.
-            byte[] volumeData = maskBuilder.getVolumeData();
-            // Assumed little-endian.
-            for ( int j = 0; j < pixelByteCount; j++ ) {
-                int volumeLoc = j + ((int) position * pixelByteCount);
-                // Here enforced: need to take previous mask into account.
-                oldVolumeMask += volumeData[ volumeLoc ] << (8*j);
-            }
+            byte[] volumeData = this.maskVolumeData.getCurrentVolumeData();
+            if ( volumeData != null ) {
+                // Assumed little-endian.
+                for ( int j = 0; j < pixelByteCount; j++ ) {
+                    int volumeLoc = j + ((int) position * pixelByteCount);
+                    // Here enforced: need to take previous mask into account.
+                    oldVolumeMask += volumeData[ volumeLoc ] << (8*j);
+                }
 
-            // Got old mask.  Need to make changes?
-            if ( oldVolumeMask != 0 ) {
-                // The handoff.
-                finalMaskNumber = multiMaskTracker.getMask( maskNumber, oldVolumeMask );
+                // Got old mask.  Need to make changes?
+                if ( oldVolumeMask != 0 ) {
+                    // The handoff.
+                    finalMaskNumber = multiMaskTracker.getMask( maskNumber, oldVolumeMask );
+                }
             }
-
+            else {
+                throw new RuntimeException("No volume data available.  Cannot add mask data.");
+            }
         }
 
         return wrappedAcceptor.addMaskData( finalMaskNumber, position, x, y, z );
