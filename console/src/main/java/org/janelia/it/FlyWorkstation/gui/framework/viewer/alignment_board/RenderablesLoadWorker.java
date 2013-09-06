@@ -1,15 +1,10 @@
 package org.janelia.it.FlyWorkstation.gui.framework.viewer.alignment_board;
 
+import org.janelia.it.FlyWorkstation.gui.alignment_board_viewer.renderable.*;
 import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.FlyWorkstation.gui.alignment_board_viewer.gui_elements.GpuSampler;
-import org.janelia.it.FlyWorkstation.gui.viewer3d.loader.FragmentSizeFilter;
-import org.janelia.it.FlyWorkstation.gui.viewer3d.loader.MaskChanDataAcceptorI;
-import org.janelia.it.FlyWorkstation.gui.viewer3d.loader.MaskChanMultiFileLoader;
-import org.janelia.it.FlyWorkstation.gui.viewer3d.loader.RemaskingAcceptorDecorator;
+import org.janelia.it.FlyWorkstation.gui.viewer3d.loader.*;
 import org.janelia.it.FlyWorkstation.gui.alignment_board_viewer.masking.*;
-import org.janelia.it.FlyWorkstation.gui.alignment_board_viewer.renderable.MaskChanRenderableData;
-import org.janelia.it.FlyWorkstation.gui.alignment_board_viewer.renderable.RenderableBean;
-import org.janelia.it.FlyWorkstation.gui.alignment_board_viewer.renderable.RenderableDataSourceI;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.resolver.CacheFileResolver;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.resolver.FileResolver;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.texture.TextureDataI;
@@ -20,6 +15,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.BufferedInputStream;
+import java.io.File;
 import java.io.FileInputStream;
 import java.io.InputStream;
 import java.util.*;
@@ -135,7 +131,7 @@ public class RenderablesLoadWorker extends SimpleWorker implements VolumeLoader 
         }
 
         //  The mask stream is required in all cases.  But the channel path is optional.
-        String resolvedFilename = null;
+        String resolvedFilename;
         try {
             resolvedFilename = resolver.getResolvedFilename(maskChanRenderableData.getMaskPath());
         } catch ( Throwable ex ) {
@@ -176,13 +172,14 @@ public class RenderablesLoadWorker extends SimpleWorker implements VolumeLoader 
         logger.debug("In load thread, ENDED load of renderable {}.", maskChanRenderableData.getBean().getLabelFileNum() );
     }
 
-    public RenderMappingI getRenderMapping() {
-        return renderMapping;
-    }
-
     //----------------------------------------------OVERRIDE SimpleWorker
     @Override
     protected void doStuff() throws Exception {
+
+        if ( resolver == null ) {
+            //resolver = new TrivialFileResolver();  // swap comments, in testing.
+            resolver = new CacheFileResolver();
+        }
 
         logger.debug( "In load thread, before getting bean list." );
         if ( sampler != null )
@@ -197,10 +194,21 @@ public class RenderablesLoadWorker extends SimpleWorker implements VolumeLoader 
             renderableDatas = filter.filter( renderableDatas );
         }
 
-        Collection<RenderableBean> renderableBeans = new ArrayList<RenderableBean>();
+        List<RenderableBean> renderableBeans = new ArrayList<RenderableBean>();
         int lastUsedMask = -1;
         for ( MaskChanRenderableData renderableData: renderableDatas ) {
             RenderableBean bean = renderableData.getBean();
+
+            // Need to add sizing data to each renderable bean prior to sorting.
+            MaskChanSingleFileLoader loader = new MaskChanSingleFileLoader( null, null, bean );
+            if ( renderableData.getMaskPath() != null ) {
+                File infile = new File( resolver.getResolvedFilename( renderableData.getMaskPath() ) );
+                if ( infile.canRead() ) {
+                    FileInputStream fis = new FileInputStream( infile );
+                    long voxelCount = loader.getVoxelCount( fis );
+                    bean.setVoxelCount( voxelCount );
+                }
+            }
             renderableBeans.add( bean );
             if ( bean.getTranslatedNum() > lastUsedMask ) {
                 lastUsedMask = bean.getTranslatedNum();
@@ -209,6 +217,7 @@ public class RenderablesLoadWorker extends SimpleWorker implements VolumeLoader 
         if ( lastUsedMask > -1 ) {
             multiMaskTracker.setFirstMaskNum( lastUsedMask + 1 ); // Add one to move past all allocated masks.
         }
+        Collections.sort( renderableBeans, new InvertingComparator( new RBComparator() ) );
 
         renderMapping.setRenderables( renderableBeans );
 
@@ -272,11 +281,6 @@ public class RenderablesLoadWorker extends SimpleWorker implements VolumeLoader 
         }
         else {
             logger.debug( "In load thread, after getting bean list." );
-
-            if ( resolver == null ) {
-                //resolver = new TrivialFileResolver();  // todo swap comments, in production.
-                resolver = new CacheFileResolver();
-            }
 
             logger.debug("Starting multithreaded file load.");
             multiThreadedFileLoad( metaDatas, MAX_FILE_LOAD_THREADS );
@@ -428,17 +432,6 @@ public class RenderablesLoadWorker extends SimpleWorker implements VolumeLoader 
         //todo find some way to return this and avoid re-processing.
         //cachedDownSampleGuess = alignmentBoardSettings.getDownSampleGuess();
         return alignmentBoardSettings;
-    }
-
-    //  THis is a bypass alternative to resort to in case of problems with multi-threaded file load.
-    //   On 5/7/2013, I experienced a problem (cleared by bouncing IntelliJ IDEA) with multithreading.
-    //   the tasks were all completing, but there was never any triggering of the "end" detection for whole pool.
-    private void sequentialFileLoad( Collection<MaskChanRenderableData> metaDatas ) {
-        for ( MaskChanRenderableData metaData: metaDatas ) {
-            logger.debug( "Scheduling mask path {} for load.", metaData.getMaskPath() );
-            LoadRunnable runnable = new LoadRunnable( metaData, this, null );
-            runnable.run();
-        }
     }
 
     private void renderChange(Collection<MaskChanRenderableData> metaDatas) {
