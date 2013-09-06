@@ -172,7 +172,7 @@ public class RenderablesMaskBuilder extends RenderablesVolumeBuilder implements 
     }
 
     @Override
-    public byte[] getVolumeData() {
+    public byte[] getCurrentVolumeData() {
         init();
         return volumeData;
     }
@@ -183,9 +183,15 @@ public class RenderablesMaskBuilder extends RenderablesVolumeBuilder implements 
     /**
      * ORDER DEPENDENCY: call this only after the super space-set, and byte count set have been called.
      */
-    public void init() {
+    protected void init() {
         if ( ! isInitialized ) {
             synchronized ( this ) {
+                // This check and exception enforces an order dependency.  Order dependencies are undesirable,
+                // but since lazy-init of these padded sizes is needed, we throw this exception so that the
+                // programmer knows to delay any method that calls init.
+                if ( paddedSx == 0 || paddedSy == 0 || paddedSz == 0 ) {
+                    throw new RuntimeException("Space size not yet initialized.  Cannot initialize volume.");
+                }
                 logger.debug( "Initializing" );
                 volumeData = new byte[ (int)(paddedSx * paddedSy * paddedSz) * byteCount ];
                 isInitialized = true;

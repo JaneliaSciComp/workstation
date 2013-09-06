@@ -13,10 +13,10 @@ import java.nio.ByteOrder;
  *
  * Implement this to make something that can build a mask texture volume suitable for use in the alignment board viewer.
  */
-public interface MaskBuilderI {
+public interface MaskBuilderI extends VolumeDataI {
     int GPU_MULTIBYTE_DIVISIBILITY_VALUE = 4;
 
-    byte[] getVolumeData();
+    byte[] getCurrentVolumeData();
     Integer[] getVolumeMaskVoxels();
     ByteOrder getPixelByteOrder();
     int getPixelByteCount();
