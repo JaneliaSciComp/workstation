@@ -32,6 +32,7 @@ import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.FlyWorkstation.gui.framework.tool_manager.ToolMgr;
 import org.janelia.it.FlyWorkstation.gui.framework.viewer.Hud;
 import org.janelia.it.FlyWorkstation.gui.util.Icons;
+import org.janelia.it.FlyWorkstation.gui.util.JScrollMenu;
 import org.janelia.it.FlyWorkstation.model.domain.AlignmentContext;
 import org.janelia.it.FlyWorkstation.model.domain.EntityWrapperFactory;
 import org.janelia.it.FlyWorkstation.model.domain.Sample;
@@ -854,47 +855,7 @@ public class EntityContextMenu extends JPopupMenu {
             return null;
         }
 
-        JMenu newFolderMenu = new JMenu("  Add To Top-Level Folder");
-
-        List<EntityData> rootEds = browser.getEntityOutline().getRootEntity().getOrderedEntityData();
-
-        for (EntityData rootEd : rootEds) {
-            final Entity commonRoot = rootEd.getChildEntity();
-            if (!ModelMgrUtils.hasWriteAccess(commonRoot))
-                continue;
-
-            JMenuItem commonRootItem = new JMenuItem(commonRoot.getName());
-            commonRootItem.addActionListener(new ActionListener() {
-                public void actionPerformed(ActionEvent actionEvent) {
-                    SimpleWorker worker = new SimpleWorker() {
-                        @Override
-                        protected void doStuff() throws Exception {
-                            List<Long> ids = new ArrayList<Long>();
-                            for (RootedEntity rootedEntity : rootedEntityList) {
-                                ids.add(rootedEntity.getEntity().getId());
-                            }
-                            ModelMgr.getModelMgr().addChildren(commonRoot.getId(), ids,
-                                    EntityConstants.ATTRIBUTE_ENTITY);
-                        }
-
-                        @Override
-                        protected void hadSuccess() {
-                            // No need to update the UI, the event bus will get it done
-                        }
-
-                        @Override
-                        protected void hadError(Throwable error) {
-                            SessionMgr.getSessionMgr().handleException(error);
-                        }
-                    };
-                    worker.execute();
-                }
-            });
-
-            newFolderMenu.add(commonRootItem);
-        }
-
-        newFolderMenu.addSeparator();
+        JMenu newFolderMenu = new JScrollMenu("  Add To Top-Level Folder");
 
         JMenuItem createNewItem = new JMenuItem("Create New...");
 
@@ -936,6 +897,45 @@ public class EntityContextMenu extends JPopupMenu {
         });
 
         newFolderMenu.add(createNewItem);
+        newFolderMenu.addSeparator();
+        
+        List<EntityData> rootEds = browser.getEntityOutline().getRootEntity().getOrderedEntityData();
+
+        for (EntityData rootEd : rootEds) {
+            final Entity commonRoot = rootEd.getChildEntity();
+            if (!ModelMgrUtils.hasWriteAccess(commonRoot))
+                continue;
+
+            JMenuItem commonRootItem = new JMenuItem(commonRoot.getName());
+            commonRootItem.addActionListener(new ActionListener() {
+                public void actionPerformed(ActionEvent actionEvent) {
+                    SimpleWorker worker = new SimpleWorker() {
+                        @Override
+                        protected void doStuff() throws Exception {
+                            List<Long> ids = new ArrayList<Long>();
+                            for (RootedEntity rootedEntity : rootedEntityList) {
+                                ids.add(rootedEntity.getEntity().getId());
+                            }
+                            ModelMgr.getModelMgr().addChildren(commonRoot.getId(), ids,
+                                    EntityConstants.ATTRIBUTE_ENTITY);
+                        }
+
+                        @Override
+                        protected void hadSuccess() {
+                            // No need to update the UI, the event bus will get it done
+                        }
+
+                        @Override
+                        protected void hadError(Throwable error) {
+                            SessionMgr.getSessionMgr().handleException(error);
+                        }
+                    };
+                    worker.execute();
+                }
+            });
+
+            newFolderMenu.add(commonRootItem);
+        }
 
         return newFolderMenu;
     }
