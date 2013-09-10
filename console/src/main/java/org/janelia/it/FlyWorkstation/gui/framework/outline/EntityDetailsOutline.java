@@ -30,12 +30,16 @@ public class EntityDetailsOutline extends JPanel implements Refreshable, Activat
         this.mml = new ModelMgrAdapter() {
             @Override
             public void entitySelected(String category, String entityId, boolean clearAll) {
-                SessionMgr.getBrowser().getViewerManager().showEntityInInspector(SessionMgr.getBrowser().getEntityOutline().getRootedEntity(entityId));
+                if (clearAll) {
+                    SessionMgr.getBrowser().getViewerManager().showEntityInInspector(SessionMgr.getBrowser().getEntityOutline().getRootedEntity(entityId));
+                }
             }
 
             @Override
             public void entityDeselected(String category, String entityId) {
-                SessionMgr.getBrowser().getViewerManager().showEntityInInspector(null);
+                if (currRootedEntity!=null && currRootedEntity.getId().equals(entityId)) {
+                    SessionMgr.getBrowser().getViewerManager().showEntityInInspector(null);
+                }
             }
         };
         add(entityDetailsPanel, BorderLayout.CENTER);
