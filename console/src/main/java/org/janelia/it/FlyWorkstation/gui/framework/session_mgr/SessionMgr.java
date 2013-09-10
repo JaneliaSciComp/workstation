@@ -48,6 +48,7 @@ public class SessionMgr {
     private static final Logger log = LoggerFactory.getLogger(SessionMgr.class);
     
     public static String DISPLAY_FREE_MEMORY_METER_PROPERTY = "SessionMgr.DisplayFreeMemoryProperty";
+    public static String UNLOAD_IMAGES_PROPERTY = "SessionMgr.UnloadImagesProperty";
     public static String DISPLAY_SUB_EDITOR_PROPERTY = "SessionMgr.DisplaySubEditorProperty";
     public static String JACS_DATA_PATH_PROPERTY = "SessionMgr.JacsDataPathProperty";
     public static String JACS_INTERACTIVE_SERVER_PROPERTY = "SessionMgr.JacsInteractiveServerProperty";
@@ -144,6 +145,10 @@ public class SessionMgr {
         // -----------------------------------------------
         if (getModelProperty(DISPLAY_FREE_MEMORY_METER_PROPERTY) == null) {
             setModelProperty(DISPLAY_FREE_MEMORY_METER_PROPERTY, true);
+        }
+        
+        if (getModelProperty(UNLOAD_IMAGES_PROPERTY) == null) {
+            setModelProperty(UNLOAD_IMAGES_PROPERTY, false);
         }
         
         if (getModelProperty(DISPLAY_SUB_EDITOR_PROPERTY) == null) { 
@@ -612,6 +617,14 @@ public class SessionMgr {
         }
     }
 
+    public boolean isUnloadImages() {
+        Boolean unloadImagesBool = (Boolean)SessionMgr.getSessionMgr().getModelProperty(SessionMgr.UNLOAD_IMAGES_PROPERTY);
+        if (unloadImagesBool!=null && unloadImagesBool) {
+            return true;
+        }
+        return false;
+    }
+    
     public boolean isDarkLook() {
     	return isDarkLook;
     }

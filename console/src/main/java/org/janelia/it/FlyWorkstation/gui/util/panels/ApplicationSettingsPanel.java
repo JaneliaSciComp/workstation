@@ -25,6 +25,7 @@ public class ApplicationSettingsPanel extends JPanel implements PrefEditor {
     JCheckBox subEditors = new JCheckBox();
     JCheckBox memoryUsage = new JCheckBox();
     JCheckBox navComplete = new JCheckBox();
+    JCheckBox unloadImages = new JCheckBox();
     SessionMgr sessionMgr = SessionMgr.getSessionMgr();
     MySessionModelListener sessionModelListener = new MySessionModelListener();
     ButtonGroup buttonLookAndFeelGroup = new ButtonGroup();
@@ -56,6 +57,10 @@ public class ApplicationSettingsPanel extends JPanel implements PrefEditor {
 
         JPanel mainPanel = new JPanel();
 
+        // ------------------------------------------------------------------------------------------------------------
+        // Browser Options
+        // ------------------------------------------------------------------------------------------------------------
+        
         JPanel pnlLayoutOptions = new JPanel();
         pnlLayoutOptions.setLayout(new BoxLayout(pnlLayoutOptions, BoxLayout.Y_AXIS));
         pnlLayoutOptions.setBorder(new javax.swing.border.TitledBorder("Browser Options"));
@@ -82,7 +87,7 @@ public class ApplicationSettingsPanel extends JPanel implements PrefEditor {
             boolean tmpBoolean = (Boolean) SessionMgr.getSessionMgr().getModelProperty(SUBVIEW_FOCUS);
             subviewFocusCheckBox.setSelected(tmpBoolean);
         }
-
+        
         memoryUsage.setText("Display Memory Usage Meter");
         memoryUsage.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent evt) {
@@ -103,6 +108,10 @@ public class ApplicationSettingsPanel extends JPanel implements PrefEditor {
         mainPanel.add(Box.createVerticalStrut(10));
         mainPanel.add(pnlLayoutOptions);
 
+        // ------------------------------------------------------------------------------------------------------------
+        // Pop-ups
+        // ------------------------------------------------------------------------------------------------------------
+        
         JPanel popupPanel = new JPanel();
         popupPanel.setBorder(new javax.swing.border.TitledBorder("Pop-up Information Options"));
         navComplete.setText("Show Navigation/Search complete messages");
@@ -119,6 +128,10 @@ public class ApplicationSettingsPanel extends JPanel implements PrefEditor {
         mainPanel.add(Box.createVerticalStrut(20));
         mainPanel.add(popupPanel);
 
+        // ------------------------------------------------------------------------------------------------------------
+        // Look and Feel
+        // ------------------------------------------------------------------------------------------------------------
+        
         JPanel pnlLookAndFeelOptions = new JPanel();
         pnlLookAndFeelOptions.setBorder(new javax.swing.border.TitledBorder("Look and Feel Options"));
 
@@ -142,6 +155,10 @@ public class ApplicationSettingsPanel extends JPanel implements PrefEditor {
         mainPanel.add(Box.createVerticalStrut(20));
         mainPanel.add(pnlLookAndFeelOptions);
 
+        // ------------------------------------------------------------------------------------------------------------
+        // Image Renderer
+        // ------------------------------------------------------------------------------------------------------------
+        
         JPanel pnlRendererOptions = new JPanel();
         pnlRendererOptions.setBorder(new javax.swing.border.TitledBorder("2D Image Renderer"));
 
@@ -164,6 +181,32 @@ public class ApplicationSettingsPanel extends JPanel implements PrefEditor {
         mainPanel.add(Box.createVerticalStrut(20));
         mainPanel.add(pnlRendererOptions);
 
+
+        // ------------------------------------------------------------------------------------------------------------
+        // Image Loading
+        // ------------------------------------------------------------------------------------------------------------
+
+        JPanel imageLoadingPanel = new JPanel();
+        imageLoadingPanel.setBorder(new javax.swing.border.TitledBorder("Image Loading Options"));
+        unloadImages.setText("Unload images which are not visible on the screen");
+        unloadImages.addActionListener(new ActionListener() {
+            public void actionPerformed(ActionEvent evt) {
+                settingsChanged = true;
+            }
+        });
+        imageLoadingPanel.setLayout(new BoxLayout(imageLoadingPanel, BoxLayout.Y_AXIS));
+        imageLoadingPanel.add(Box.createVerticalStrut(5));
+        unloadImages.setSelected((Boolean) sessionMgr.getModelProperty(SessionMgr.UNLOAD_IMAGES_PROPERTY));
+        imageLoadingPanel.add(unloadImages);
+        imageLoadingPanel.add(Box.createVerticalStrut(5));
+        mainPanel.add(Box.createVerticalStrut(20));
+        mainPanel.add(imageLoadingPanel);
+
+        
+        // ------------------------------------------------------------------------------------------------------------
+        // Main Panel
+        // ------------------------------------------------------------------------------------------------------------
+        
         JScrollPane scrollPane = new JScrollPane();
         scrollPane.setViewportView(mainPanel);
 
@@ -220,9 +263,6 @@ public class ApplicationSettingsPanel extends JPanel implements PrefEditor {
             sessionMgr.setModelProperty(SUBVIEW_FOCUS, subviewFocusCheckBox.isSelected());
         }
         AutoNavigationMgr.getAutoNavigationMgr().showNavigationCompleteMsgs(navComplete.isSelected());
-        
-        String newRenderer = buttonToRendererMap.get(rendererGroup.getSelection());
-        sessionMgr.setModelProperty(SessionMgr.DISPLAY_RENDERER_2D, newRenderer);
 
         try {
             String newLaf = buttonToLafMap.get(buttonLookAndFeelGroup.getSelection());
@@ -235,6 +275,14 @@ public class ApplicationSettingsPanel extends JPanel implements PrefEditor {
         } catch (Exception ex) {
             SessionMgr.getSessionMgr().handleException(ex);
         }
+        
+        String newRenderer = buttonToRendererMap.get(rendererGroup.getSelection());
+        sessionMgr.setModelProperty(SessionMgr.DISPLAY_RENDERER_2D, newRenderer);
+
+        if (unloadImages.isSelected() != (Boolean) sessionMgr.getModelProperty(SessionMgr.UNLOAD_IMAGES_PROPERTY)) {
+            sessionMgr.setModelProperty(SessionMgr.UNLOAD_IMAGES_PROPERTY, unloadImages.isSelected());
+        }
+        
         return NO_DELAYED_CHANGES;
     }
 

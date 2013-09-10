@@ -42,7 +42,7 @@ public abstract class DynamicImagePanel extends JPanel {
     private LoadImageWorker loadWorker;
 	
 	public DynamicImagePanel(String imageFilename, Integer maxSize) {
-
+	    
 		setLayout(new GridBagLayout());
 		setOpaque(false);
 		
@@ -130,11 +130,6 @@ public abstract class DynamicImagePanel extends JPanel {
 	    		BufferedImage orig = inverted ? invertedMaxSizeImage : maxSizeImage;
                 BufferedImage image = Utils.getScaledImage(orig, imageSize);
 	            imageLabel.setIcon(new ImageIcon(image));
-    		}
-    	}
-    	else {
-    		if (maxSizeImage != null) {
-				log.warn("Non-viewable image has a non-null maxSizeImage in memory");
     		}
     	}
 
@@ -237,19 +232,21 @@ public abstract class DynamicImagePanel extends JPanel {
 					loadWorker.cancel(true);
 					loadWorker = null;
 				}
-		    	// Clear all references to the image data so that it can be cleared out of memory
-		    	maxSizeImage = null;
-		    	invertedMaxSizeImage = null;
-		    	imageLabel.setIcon(null);
-		    	// Show the loading label until the image needs to be loaded again
-		        setImageLabel(loadingLabel);
-				// Call the callback
-				try {
-					if (success!=null) success.call();
+				if (SessionMgr.getSessionMgr().isUnloadImages()) {
+    		    	// Clear all references to the image data so that it can be cleared out of memory
+    		    	maxSizeImage = null;
+    		    	invertedMaxSizeImage = null;
+    		    	imageLabel.setIcon(null);
+    		    	// Show the loading label until the image needs to be loaded again
+    		        setImageLabel(loadingLabel);
 				}
-				catch (Exception e) {
-					SessionMgr.getSessionMgr().handleException(e);
-				}
+                // Call the callback
+                try {
+                    if (success!=null) success.call();
+                }
+                catch (Exception e) {
+                    SessionMgr.getSessionMgr().handleException(e);
+                }
 			}
 		}
 		this.viewable = wantViewable;
