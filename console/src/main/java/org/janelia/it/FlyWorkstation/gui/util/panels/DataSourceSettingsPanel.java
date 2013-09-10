@@ -17,6 +17,7 @@ import javax.swing.plaf.basic.BasicProgressBarUI;
 import javax.swing.text.DefaultFormatter;
 
 import org.janelia.it.FlyWorkstation.api.facade.facade_mgr.FacadeManager;
+import org.janelia.it.FlyWorkstation.gui.framework.console.Browser;
 import org.janelia.it.FlyWorkstation.gui.framework.console.Perspective;
 import org.janelia.it.FlyWorkstation.gui.framework.pref_controller.PrefController;
 import org.janelia.it.FlyWorkstation.gui.framework.roles.PrefEditor;
@@ -169,7 +170,12 @@ public class DataSourceSettingsPanel extends JPanel implements PrefEditor {
             if (loginSuccess) {
                 runAsPanel.setVisible(SessionMgr.authenticatedSubjectIsInGroup("admin"));
             }
-            SessionMgr.getBrowser().setPerspective(Perspective.ImageBrowser);
+
+            final Browser browser = SessionMgr.getBrowser();
+            if (browser != null) {
+                browser.setPerspective(Perspective.ImageBrowser);
+            }
+
             FacadeManager.addProtocolToUseList(FacadeManager.getEJBProtocolString());
         }
 
