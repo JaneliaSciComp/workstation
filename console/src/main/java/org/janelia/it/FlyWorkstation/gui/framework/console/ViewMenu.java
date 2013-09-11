@@ -67,7 +67,8 @@ public class ViewMenu extends JMenu {
                 browser.setIsViewersLinked(linkViewersMenuItem.isSelected());
             }
         });
-        add(linkViewersMenuItem);
+        // Disabled this option until the entity selection model is revamped to support it
+//        add(linkViewersMenuItem);
         
         
         JMenuItem resetWindow = new JMenuItem("Reset Window");
