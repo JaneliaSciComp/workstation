@@ -224,11 +224,13 @@ public class Browser extends JFrame implements Cloneable {
 
         viewerManager = new ViewerManager();
         
-        Boolean isViewersLinked = (Boolean)SessionMgr.getSessionMgr().getModelProperty(VIEWERS_LINKED);
-        if (isViewersLinked==null) {
-            isViewersLinked = false;
-            SessionMgr.getSessionMgr().setModelProperty(VIEWERS_LINKED, isViewersLinked);
-        }
+//        Boolean isViewersLinked = (Boolean)SessionMgr.getSessionMgr().getModelProperty(VIEWERS_LINKED);
+//        if (isViewersLinked==null) {
+//            isViewersLinked = false;
+//            SessionMgr.getSessionMgr().setModelProperty(VIEWERS_LINKED, isViewersLinked);
+//        }
+        boolean isViewersLinked = false;
+        SessionMgr.getSessionMgr().setModelProperty(VIEWERS_LINKED, isViewersLinked);
         viewerManager.setIsViewersLinked(isViewersLinked);
         
         Object useFreeProperty = SessionMgr.getSessionMgr().getModelProperty(SessionMgr.DISPLAY_FREE_MEMORY_METER_PROPERTY);
