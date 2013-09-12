@@ -90,11 +90,20 @@ public class Skeleton {
 			delete(anchor);
 		}
 	};
+    public Slot1<TmGeoAnnotation> reparentAnchorSlot = new Slot1<TmGeoAnnotation>() {
+        @Override
+        public void execute(TmGeoAnnotation annotation) {
+            Anchor anchor = anchorsByGuid.get(annotation.getId());
+            Anchor parentAnchor = anchorsByGuid.get(annotation.getParent().getId());
+            reparent(anchor, parentAnchor);
+        }
+    };
 	public Slot1<Anchor> deleteAnchorShortCircuitSlot = new Slot1<Anchor>() {
 		@Override
 		public void execute(Anchor anchor) {delete(anchor);}
 	};
 	public Signal1<Anchor> anchorDeletedSignal = new Signal1<Anchor>();
+    public Signal1<Anchor> anchorReparentedSignal = new Signal1<Anchor>();
 
 	///// CLEAR
 	public Slot clearSlot = new Slot() {
@@ -125,6 +134,7 @@ public class Skeleton {
 		// once anchor changes are persisted in db, we get signals:
 		anchorAddedSignal.connect(skeletonChangedSignal);
 		anchorDeletedSignal.connect(skeletonChangedSignal);
+        anchorReparentedSignal.connect(skeletonChangedSignal);
 		anchorMovedSignal.connect(skeletonChangedSignal);
 	}
 	
@@ -196,6 +206,19 @@ public class Skeleton {
 		anchorDeletedSignal.emit(anchor);
 		return true;
 	}
+
+    public void reparent(Anchor anchor, Anchor newParent) {
+        if (anchor == null || newParent == null) {
+            return;
+        }
+
+        anchor.addNeighbor(newParent);
+        newParent.addNeighbor(anchor);
+        anchorReparentedSignal.emit(anchor);
+
+        // not sure why other similar methods are boolean (never used),
+        //  so this one returns void
+    }
 
 	public Set<Anchor> getAnchors() {
 		return anchors;

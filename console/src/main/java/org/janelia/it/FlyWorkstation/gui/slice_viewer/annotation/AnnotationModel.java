@@ -33,6 +33,7 @@ public class AnnotationModel
 
     public Signal1<TmGeoAnnotation> anchorAddedSignal = new Signal1<TmGeoAnnotation>();
     public Signal1<List<TmGeoAnnotation>> anchorsDeletedSignal = new Signal1<List<TmGeoAnnotation>>();
+    public Signal1<TmGeoAnnotation> anchorReparentedSignal = new Signal1<TmGeoAnnotation>();
 
     // move or change, eg, comment:
     public Signal1<TmGeoAnnotation> anchorUpdatedSignal = new Signal1<TmGeoAnnotation>();
@@ -246,8 +247,9 @@ public class AnnotationModel
         //  to update the one we reparent
 
         TmGeoAnnotation parent = link.getParent();
+        TmGeoAnnotation child = null;
         if (link.getChildren().size() == 1) {
-            TmGeoAnnotation child = link.getChildren().get(0);
+            child = link.getChildren().get(0);
             modelMgr.reparentGeometricAnnotation(child, parent.getId(), neuron);
         }
         // delete the deleted annotation that is to be deleted:
@@ -260,14 +262,21 @@ public class AnnotationModel
 
         // notifications
 
-        // not sure if we have to update just the three annotations we
-        //  changed, or redraw the whole neurite; getting the lines to
-        //  show might require that we redraw everything from the updated
-        //  child downward
-
+        // need to delete an anchor (which does undraw it); but then
+        //  need to redraw the neurite, because we need the link
+        //  from the reparenting to appear
         List<TmGeoAnnotation> deleteList = new ArrayList<TmGeoAnnotation>(1);
         deleteList.add(link);
         anchorsDeletedSignal.emit(deleteList);
+
+        if (child != null) {
+            // at this point, the child is stale (still has its old parent);
+            //  it's ok in the db, but the object is stale; grab it again:
+            // this works but I don't like it:
+            neuron = getNeuronFromAnnotation(child.getId());
+            child = neuron.getGeoAnnotationMap().get(child.getId());
+            anchorReparentedSignal.emit(child);
+        }
 
     }
 

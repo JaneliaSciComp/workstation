@@ -56,6 +56,13 @@ public class SliceViewerTranslator {
         }
     };
 
+    public Slot1<TmGeoAnnotation> reparentAnchorSlot = new Slot1<TmGeoAnnotation>() {
+        @Override
+        public void execute(TmGeoAnnotation annotation) {
+            anchorReparented(annotation);
+        }
+    };
+
     public Signal1<Vec3> cameraPanToSignal = new Signal1<Vec3>();
 
     public Slot1<Vec3> cameraPanToSlot = new Slot1<Vec3>() {
@@ -67,6 +74,7 @@ public class SliceViewerTranslator {
 
     public Signal1<TmGeoAnnotation> anchorAddedSignal = new Signal1<TmGeoAnnotation>();
     public Signal1<TmGeoAnnotation> anchorDeletedSignal = new Signal1<TmGeoAnnotation>();
+    public Signal1<TmGeoAnnotation> anchorReparentedSignal = new Signal1<TmGeoAnnotation>();
     public Signal clearSkeletonSignal = new Signal();
     public  Signal clearNextParentSignal = new Signal();
 
@@ -82,6 +90,7 @@ public class SliceViewerTranslator {
     public void connectSkeletonSignals(Skeleton skeleton) {
         anchorAddedSignal.connect(skeleton.addAnchorSlot);
         anchorDeletedSignal.connect(skeleton.deleteAnchorSlot);
+        anchorReparentedSignal.connect(skeleton.reparentAnchorSlot);
         clearSkeletonSignal.connect(skeleton.clearSlot);
 
         clearNextParentSignal.connect(sliceViewer.getSkeletonActor().clearNextParentSlot);
@@ -94,6 +103,7 @@ public class SliceViewerTranslator {
         annModel.neuronSelectedSignal.connect(selectNeuronSlot);
         annModel.anchorAddedSignal.connect(addAnchorSlot);
         annModel.anchorsDeletedSignal.connect(deleteAnchorsSlot);
+        annModel.anchorReparentedSignal.connect(reparentAnchorSlot);
 
         // things we want done:
         
@@ -129,6 +139,11 @@ public class SliceViewerTranslator {
             anchorDeletedSignal.emit(ann);
         }
 
+    }
+
+    public void anchorReparented(TmGeoAnnotation annotation) {
+        // pretty much a pass-through to the skeleton
+        anchorReparentedSignal.emit(annotation);
     }
 
     public void workspaceLoaded(TmWorkspace workspace) {
