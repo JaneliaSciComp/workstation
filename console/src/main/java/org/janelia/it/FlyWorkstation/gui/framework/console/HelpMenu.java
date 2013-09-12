@@ -23,8 +23,10 @@ public class HelpMenu extends JMenu {
         this.setMnemonic('H');
         parentFrame = console;
         add(new JMenuItem("Call Christopher - x4662"));
+        add(new JMenuItem("Call Don    - x4656"));
         add(new JMenuItem("Call Eric   - x4655"));
         add(new JMenuItem("Call Konrad - x4242"));
+        add(new JMenuItem("Call Les    - x4680"));
         add(new JMenuItem("Call Sean   - x4324"));
         add(new JMenuItem("Call Todd   - x4696"));
         add(new JMenuItem("Call Yang   - x4626"));
