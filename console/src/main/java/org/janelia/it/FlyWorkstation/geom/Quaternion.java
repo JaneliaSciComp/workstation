@@ -68,6 +68,57 @@ public class Quaternion {
 		q[3] = z;
 	}
 	
+    /**
+     * Spherical linear interpolation
+     * @param p2 the other Quaternion
+     * @param alpha the interpolation parameter, range 0-1
+     * @return
+     */
+    public Quaternion slerp(Quaternion p2, double alpha) {
+        return slerp(p2, alpha, 0.0);
+    }
+    
+    public Quaternion slerp(Quaternion p2, double alpha, double spin) 
+    {
+        /**
+        Spherical linear interpolation of quaternions.
+        From page 448 of "Visualizing Quaternions" by Andrew J. Hanson
+         */
+        double cos_t = 0;
+        double qA[] = q;
+        double qB[] = p2.q;
+        for (int i = 0; i < 4; ++i)
+            cos_t += qA[i] * qB[i];
+        // If qB is on opposite hemisphere from qA, use -qB instead
+        boolean bFlip = false;
+        if (cos_t < 0.0) {
+            cos_t = -cos_t;
+            bFlip = true;
+        }
+        // If qB is the same as qA (within precision)
+        // just linear interpolate between qA and qB.
+        // Can't do spins, since we don't know what direction to spin.
+        double beta;
+        if ((1.0 - cos_t) < 1e-7) {
+            beta = 1.0 - alpha;
+        }
+        else { // normal case
+            double theta = Math.acos(cos_t);
+            double phi = theta + spin * 3.14159;
+            double sin_t = Math.sin(theta);
+            beta = Math.sin(theta - alpha * phi) / sin_t;
+            alpha = Math.sin(alpha * phi) / sin_t;
+        }
+        if (bFlip)
+            alpha = -alpha;
+        // interpolate
+        double result[] = {0,0,0,0};
+        for (int i = 0; i < 4; ++i) {
+            result[i] = beta*qA[i] + alpha*qB[i];
+        }
+        return new Quaternion(result[0], result[1], result[2], result[3], false);
+    }
+
 	public double w() {return q[0];}
 	public double x() {return q[1];}
 	public double y() {return q[2];}
