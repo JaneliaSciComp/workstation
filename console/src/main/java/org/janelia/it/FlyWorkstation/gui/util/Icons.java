@@ -268,6 +268,9 @@ public class Icons {
         else if (EntityConstants.TYPE_ALIGNED_ITEM.equals(type)) {
             return getIcon(large ? "file_large.png" : "shape_handles.png");
         }
+        else if (EntityConstants.TYPE_PROCESSING_BLOCK.equals(type)) {
+            return getIcon(large ? "block_large.png" : "block.png");
+        }
         
         return getIcon(large ? "error_large.png" : "bullet_error.png");
     }

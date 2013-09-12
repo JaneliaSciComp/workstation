@@ -1,7 +1,12 @@
 package org.janelia.it.FlyWorkstation.api.entity_model.management;
 
-import com.google.common.eventbus.AsyncEventBus;
-import com.google.common.eventbus.EventBus;
+import java.awt.Color;
+import java.awt.EventQueue;
+import java.util.*;
+import java.util.concurrent.Executor;
+
+import javax.swing.SwingUtilities;
+
 import org.apache.solr.client.solrj.SolrQuery;
 import org.janelia.it.FlyWorkstation.api.entity_model.access.ModelMgrObserver;
 import org.janelia.it.FlyWorkstation.api.entity_model.fundtype.TaskFilter;
@@ -27,9 +32,13 @@ import org.janelia.it.jacs.model.ontology.OntologyAnnotation;
 import org.janelia.it.jacs.model.ontology.OntologyElement;
 import org.janelia.it.jacs.model.ontology.OntologyRoot;
 import org.janelia.it.jacs.model.ontology.types.OntologyElementType;
+import org.janelia.it.jacs.model.tasks.Event;
 import org.janelia.it.jacs.model.tasks.Task;
+import org.janelia.it.jacs.model.tasks.TaskParameter;
 import org.janelia.it.jacs.model.tasks.annotation.AnnotationSessionTask;
 import org.janelia.it.jacs.model.tasks.utility.ContinuousExecutionTask;
+import org.janelia.it.jacs.model.tasks.utility.GenericTask;
+import org.janelia.it.jacs.model.user_data.Node;
 import org.janelia.it.jacs.model.user_data.Subject;
 import org.janelia.it.jacs.model.user_data.prefs.SubjectPreference;
 import org.janelia.it.jacs.model.user_data.tiledMicroscope.*;
@@ -39,11 +48,8 @@ import org.janelia.it.jacs.shared.annotation.FilterResult;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.swing.*;
-import java.awt.*;
-import java.util.*;
-import java.util.List;
-import java.util.concurrent.Executor;
+import com.google.common.eventbus.AsyncEventBus;
+import com.google.common.eventbus.EventBus;
 
 public class ModelMgr {
 	
@@ -848,11 +854,28 @@ public class ModelMgr {
         FacadeManager.getFacadeManager().getComputeFacade().cancelTaskById(taskId);
     }
 
+    public Task submitJob(String processDefName, String displayName) throws Exception {
+        HashSet<TaskParameter> taskParameters = new HashSet<TaskParameter>();
+        return submitJob(processDefName, displayName, taskParameters);
+    }
+    
+    public Task submitJob(String processDefName, String displayName, HashSet<TaskParameter> parameters) throws Exception {
+        GenericTask task = new GenericTask(new HashSet<Node>(), SessionMgr.getSubjectKey(), new ArrayList<Event>(), 
+                parameters, processDefName, displayName);
+        return submitJob(task);
+    }
+    
+    private Task submitJob(GenericTask genericTask) throws Exception {
+        Task task = saveOrUpdateTask(genericTask);
+        submitJob(task.getTaskName(), task);
+        return task;
+    }
+    
     public TaskRequest submitJob(String processDefName, Task task) throws Exception {
         FacadeManager.getFacadeManager().getComputeFacade().submitJob(processDefName, task.getObjectId());
         return new TaskRequest(new TaskFilter(task.getJobName(), task.getObjectId()));
     }
-    
+
     public List<Task> getUserParentTasks() throws Exception {
         return FacadeManager.getFacadeManager().getComputeFacade().getUserParentTasks();
     }

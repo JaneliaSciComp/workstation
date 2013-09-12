@@ -900,15 +900,10 @@ public class SplitPickingPanel extends JPanel implements Refreshable {
     	taskParameters.add(new TaskParameter("output entity id_list", idList3Str, null));
     	taskParameters.add(new TaskParameter("intersection method", method, null));
     	taskParameters.add(new TaskParameter("kernel size", kernelSize, null));
-    	
-    	Task task = new GenericTask(new HashSet<Node>(), crossFolder.getEntity().getOwnerKey(), new ArrayList<Event>(), 
-    			taskParameters, "screenSampleCrossService", "Screen Sample Cross Service");
-        task = ModelMgr.getModelMgr().saveOrUpdateTask(task);
+        Task task = ModelMgr.getModelMgr().submitJob("ScreenSampleCrossService", "Screen Sample Cross Service", taskParameters);
         
-        log.info("Submitting task "+task.getDisplayName()+" id="+task.getObjectId());
-        
+        log.info("Submitted task "+task.getDisplayName()+" id="+task.getObjectId());
         runningTasks.add(task.getObjectId());
-        ModelMgr.getModelMgr().submitJob("ScreenSampleCrossService", task);
     }
     
     private String createNextCrossLabel() {

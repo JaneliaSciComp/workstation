@@ -123,7 +123,8 @@ public class EntityContextMenu extends JPopupMenu {
         add(getRenameItem());
         add(getErrorFlag());
         add(getDeleteItem());
-
+        add(getProcessingBlockItem());
+        
         setNextAddRequiresSeparator(true);
         add(getOpenInFirstViewerItem());
         add(getOpenInSecondViewerItem());
@@ -733,6 +734,76 @@ public class EntityContextMenu extends JPopupMenu {
     //
     // }
 
+    protected JMenuItem getProcessingBlockItem() {
+        if (multiple) return null;
+
+        final Entity sample = rootedEntity.getEntity();
+
+        if (!sample.getEntityType().getName().equals(EntityConstants.TYPE_SAMPLE)) {
+            return null;
+        }
+        
+        JMenuItem blockItem = new JMenuItem("  Purge And Block Processing (Background Task)");
+        blockItem.addActionListener(new ActionListener() {
+            public void actionPerformed(ActionEvent actionEvent) {
+
+                int result = JOptionPane.showConfirmDialog(browser, "Are you sure you want to purge " 
+                        + rootedEntity.getEntity().getName()+" by deleting all large files associated with it, " +
+                		"and block all of its future processing?",  "Purge And Block Processing", JOptionPane.OK_CANCEL_OPTION);
+                
+                if (result != 0) return;
+
+                Task task = null;
+                try {
+                    HashSet<TaskParameter> taskParameters = new HashSet<TaskParameter>();
+                    taskParameters.add(new TaskParameter("sample entity id", sample.getId().toString(), null));
+                    task = ModelMgr.getModelMgr().submitJob("ConsolePurgeAndBlockSample", "Purge And Block Sample", taskParameters);
+                }
+                catch (Exception e) {
+                    SessionMgr.getSessionMgr().handleException(e);
+                    return;
+                }
+
+                TaskMonitoringWorker taskWorker = new TaskMonitoringWorker(task.getObjectId()) {
+
+                    @Override
+                    public String getName() {
+                        return "Purging and blocking "+sample.getName();
+                    }
+
+                    @Override
+                    protected void doStuff() throws Exception {
+                        setStatus("Executing");
+                        super.doStuff(); 
+                    }
+                    
+                    @Override
+                    public Callable<Void> getSuccessCallback() {
+                        return new Callable<Void>() {
+                            @Override
+                            public Void call() throws Exception {
+                                SessionMgr.getBrowser().getEntityOutline().totalRefresh();
+                                return null;
+                            }
+                        };
+                    }
+                };
+
+                taskWorker.executeWithEvents();
+            }
+        });
+
+        if (sample.getEntityDataByAttributeName(EntityConstants.ATTRIBUTE_PROCESSING_BLOCK)!=null) {
+            blockItem.setEnabled(false);
+        }
+        
+        if (!ModelMgrUtils.hasWriteAccess(sample) || EntityUtils.isProtected(sample)) {
+            blockItem.setEnabled(false);
+        }
+
+        return blockItem;
+    }
+    
     private void addToSplitFolder(Entity commonRoot) throws Exception {
 
         final List<Long> ads = new ArrayList<Long>();
@@ -1055,14 +1126,11 @@ public class EntityContextMenu extends JPopupMenu {
                         if (null == parentId) {
                             return;
                         }
-                        NeuronMergeTask task = new NeuronMergeTask(new HashSet<Node>(), SessionMgr.getSubjectKey(),
-                                new ArrayList<org.janelia.it.jacs.model.tasks.Event>(), new HashSet<TaskParameter>());
-                        task.setJobName("Neuron Merge Task");
-                        task.setParameter(NeuronMergeTask.PARAM_separationEntityId, parentId.toString());
-                        task.setParameter(NeuronMergeTask.PARAM_commaSeparatedNeuronFragmentList,
-                                Task.csvStringFromCollection(fragmentIds));
-                        task = (NeuronMergeTask) ModelMgr.getModelMgr().saveOrUpdateTask(task);
-                        ModelMgr.getModelMgr().submitJob("NeuronMerge", task);
+                        
+                        HashSet<TaskParameter> taskParameters = new HashSet<TaskParameter>();
+                        taskParameters.add(new TaskParameter(NeuronMergeTask.PARAM_separationEntityId, parentId.toString(), null));
+                        taskParameters.add(new TaskParameter(NeuronMergeTask.PARAM_commaSeparatedNeuronFragmentList, Task.csvStringFromCollection(fragmentIds), null));
+                        ModelMgr.getModelMgr().submitJob("NeuronMerge", "Neuron Merge Task", taskParameters);
                     }
 
                     @Override
@@ -1113,10 +1181,7 @@ public class EntityContextMenu extends JPopupMenu {
                     HashSet<TaskParameter> taskParameters = new HashSet<TaskParameter>();
                     taskParameters.add(new TaskParameter("folder id", folder.getId().toString(), null));
                     taskParameters.add(new TaskParameter("target stack id", targetEntity.getId().toString(), null));
-                    Task task = new GenericTask(new HashSet<Node>(), SessionMgr.getSubjectKey(),
-                            new ArrayList<Event>(), taskParameters, "sortBySimilarity", "Sort By Similarity");
-                    task = ModelMgr.getModelMgr().saveOrUpdateTask(task);
-                    ModelMgr.getModelMgr().submitJob("SortBySimilarity", task);
+                    Task task = ModelMgr.getModelMgr().submitJob("SortBySimilarity", "Sort By Similarity", taskParameters);
 
                     final TaskDetailsDialog dialog = new TaskDetailsDialog(true);
                     dialog.showForTask(task);
@@ -1241,19 +1306,13 @@ public class EntityContextMenu extends JPopupMenu {
                                         HashSet<TaskParameter> taskParameters = new HashSet<TaskParameter>();
                                         taskParameters.add(new TaskParameter("filepath", filepath, null));
                                         taskParameters.add(new TaskParameter("output extension", extension, null));
-                                        task = new GenericTask(new HashSet<Node>(), SessionMgr.getSubjectKey(),
-                                                new ArrayList<Event>(), taskParameters, "splitChannels", "Split Channels");
-                                        task = ModelMgr.getModelMgr().saveOrUpdateTask(task);
-                                        ModelMgr.getModelMgr().submitJob("ConsoleSplitChannels", task);
+                                        ModelMgr.getModelMgr().submitJob("ConsoleSplitChannels", "Split Channels", taskParameters);
                                     }
-                                    else {                                        
+                                    else {    
                                         HashSet<TaskParameter> taskParameters = new HashSet<TaskParameter>();
                                         taskParameters.add(new TaskParameter("filepath", filepath, null));
                                         taskParameters.add(new TaskParameter("output extension", extension, null));
-                                        task = new GenericTask(new HashSet<Node>(), SessionMgr.getSubjectKey(),
-                                                new ArrayList<Event>(), taskParameters, "convertFile", "Convert File");
-                                        task = ModelMgr.getModelMgr().saveOrUpdateTask(task);
-                                        ModelMgr.getModelMgr().submitJob("ConsoleConvertFile", task);
+                                        ModelMgr.getModelMgr().submitJob("ConsoleConvertFile", "Convert File", taskParameters);
                                     }
 
                                     TaskMonitoringWorker taskWorker = new TaskMonitoringWorker(task.getObjectId()) {
