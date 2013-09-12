@@ -5,6 +5,7 @@ import org.janelia.it.FlyWorkstation.geom.Vec3;
 import org.janelia.it.FlyWorkstation.gui.camera.BasicObservableCamera3d;
 import org.janelia.it.FlyWorkstation.gui.slice_viewer.TileServer.LoadStatus;
 import org.janelia.it.FlyWorkstation.gui.slice_viewer.action.AdvanceZSlicesAction;
+import org.janelia.it.FlyWorkstation.gui.slice_viewer.action.CenterNextParentAction;
 import org.janelia.it.FlyWorkstation.gui.slice_viewer.action.GoBackZSlicesAction;
 import org.janelia.it.FlyWorkstation.gui.slice_viewer.action.MouseMode;
 import org.janelia.it.FlyWorkstation.gui.slice_viewer.action.NextZSliceAction;
@@ -31,6 +32,7 @@ import org.janelia.it.FlyWorkstation.gui.slice_viewer.annotation.AnnotationManag
 import org.janelia.it.FlyWorkstation.gui.slice_viewer.annotation.AnnotationModel;
 import org.janelia.it.FlyWorkstation.gui.slice_viewer.annotation.AnnotationPanel;
 import org.janelia.it.FlyWorkstation.gui.slice_viewer.annotation.SliceViewerTranslator;
+import org.janelia.it.FlyWorkstation.gui.slice_viewer.skeleton.Anchor;
 import org.janelia.it.FlyWorkstation.gui.slice_viewer.skeleton.Skeleton;
 import org.janelia.it.FlyWorkstation.gui.slice_viewer.skeleton.SkeletonActor;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.BoundingBox3d;
@@ -168,7 +170,9 @@ public class QuadViewUi extends JPanel
 	private final SliceScanAction previousZSliceAction = new PreviousZSliceAction(volumeImage, camera);
 	private final SliceScanAction advanceZSlicesAction = new AdvanceZSlicesAction(volumeImage, camera, 10);
 	private final SliceScanAction goBackZSlicesAction = new GoBackZSlicesAction(volumeImage, camera, -10);
-	//
+	// annotation-related
+    private final CenterNextParentAction centerNextParentAction = new CenterNextParentAction();
+
 	private final Action clearCacheAction = new AbstractAction() {
 		private static final long serialVersionUID = 1L;
 		@Override
@@ -290,6 +294,16 @@ public class QuadViewUi extends JPanel
 			loadStatusLabel.setLoadStatus(status);
 		}
 	};
+
+    public Slot centerNextParentSlot = new Slot() {
+        @Override
+        public void execute() {
+            Anchor anchor = sliceViewer.getSkeletonActor().getNextParent();
+            if (anchor != null) {
+                setCameraFocusSlot.execute(anchor.getLocation());
+            }
+        }
+    };
 	
 	/**
 	 * Create the frame.
@@ -308,6 +322,7 @@ public class QuadViewUi extends JPanel
 		setupUi(parentFrame, overrideFrameMenuBar);
         interceptModifierKeyPresses();
         interceptModeChangeGestures();
+        setupAnnotationGestures();
 
         // connect up text UI and model with graphic UI(s):
         skeleton.addAnchorRequestedSignal.connect(annotationMgr.addAnchorRequestedSlot);
@@ -361,6 +376,8 @@ public class QuadViewUi extends JPanel
         // Next connect that signal to various widgets
         mouseModeChangedSignal.connect(sliceViewer.setMouseModeSlot);
         wheelModeChangedSignal.connect(sliceViewer.setWheelModeSlot);
+        // annotation-related actions:
+        centerNextParentAction.centerNextParentSignal.connect(centerNextParentSlot);
         // TODO other orthogonal viewers
         OrthogonalPanel viewPanels[] = {neViewer, swViewer, nwViewer};
         SkeletonActor sharedSkeletonActor = sliceViewer.getSkeletonActor();
@@ -820,6 +837,23 @@ LLF: the hookup for the 3d snapshot.
         	getActionMap().put(actionName, action);
         }
 	}
+
+    private void setupAnnotationGestures() {
+        // like the two "intercept" routines, but annotation-related;
+        //  broken out for clarity and organization more than anything
+
+        Action modeActions[] = {
+                centerNextParentAction
+        };
+        InputMap inputMap = getInputMap(JComponent.WHEN_ANCESTOR_OF_FOCUSED_COMPONENT);
+        for (Action action : modeActions) {
+            KeyStroke accelerator = (KeyStroke)action.getValue(Action.ACCELERATOR_KEY);
+            String actionName = (String)action.getValue(Action.NAME);
+            inputMap.put(accelerator, actionName);
+            getActionMap().put(actionName, action);
+        }
+
+    }
 
 	private JPanel setupToolBar() {
 		add(toolBarPanel);
