@@ -2,6 +2,7 @@ package org.janelia.it.FlyWorkstation.gui.opengl;
 
 import java.awt.Component;
 import java.awt.Dimension;
+import java.io.IOException;
 
 import javax.media.opengl.GLCapabilities;
 import javax.media.opengl.GLProfile;
@@ -13,34 +14,34 @@ import javax.swing.JFrame;
 import org.janelia.it.FlyWorkstation.geom.Vec3;
 import org.janelia.it.FlyWorkstation.gui.FullScreenMode;
 import org.janelia.it.FlyWorkstation.gui.TrackballInteractor;
-import org.janelia.it.FlyWorkstation.gui.viewer3d.TeapotActor;
 import org.janelia.it.FlyWorkstation.gui.camera.BasicObservableCamera3d;
 import org.janelia.it.FlyWorkstation.gui.camera.ObservableCamera3d;
 import org.janelia.it.FlyWorkstation.gui.opengl.stereo3d.AbstractStereoMode;
-import org.janelia.it.FlyWorkstation.gui.opengl.stereo3d.HardwareStereoMode;
+// import org.janelia.it.FlyWorkstation.gui.opengl.stereo3d.HardwareStereoMode;
+import org.janelia.it.FlyWorkstation.gui.opengl.stereo3d.MonoStereoMode;
 import org.janelia.it.FlyWorkstation.signal.Slot;
 
 @SuppressWarnings("serial")
-public class TeapotDemo extends JFrame
+public class GourdDemo extends JFrame
 {
 
 	public static void main(String[] args) {
         javax.swing.SwingUtilities.invokeLater(new Runnable() {
             public void run() {
-            	new TeapotDemo();
+            	new GourdDemo();
             }
         });
 	}
 
 	Component glComponent;
 	
-	public TeapotDemo() {
-    	setTitle("Teapot Demo");
+	public GourdDemo() {
+    	setTitle("Gourd Demo");
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 
         // Create canvas for openGL display of teapot
         GLCapabilities glCapabilities = new GLCapabilities(GLProfile.getDefault());
-        glCapabilities.setStereo(true);
+        // glCapabilities.setStereo(true);
         GLCanvas glPanel = new GLCanvas(glCapabilities);
         //
         glComponent = glPanel;
@@ -55,16 +56,26 @@ public class TeapotDemo extends JFrame
         CompositeGLActor monoActor = new CompositeGLActor();
         // Use 3D lighting
         monoActor.addActor(new LightingActor());
-        // Prepare to draw a teapot
-		monoActor.addActor(new TeapotActor());
+
+        PolygonalMesh gourdMesh;
+        try {
+            gourdMesh = PolygonalMesh.createMeshFromObjFile(
+                    this.getClass().getResourceAsStream("gourd.obj"));
+        } catch (IOException e) {
+            e.printStackTrace();
+            return;
+        }
+		monoActor.addActor(new MeshActor(gourdMesh));
         
+		// monoActor.addActor(new TeapotActor());
+		
 		// Create camera
 		ObservableCamera3d camera = new BasicObservableCamera3d();
 		camera.setFocus(new Vec3(0, 0, 0));
 		camera.setPixelsPerSceneUnit(200);
 
 		// Wrap mono actor in stereo 3D mode
-        AbstractStereoMode stereoMode = new HardwareStereoMode(
+        AbstractStereoMode stereoMode = new MonoStereoMode(
         		camera, monoActor);
         // stereoMode.setSwapEyes(true);
         glPanel.addGLEventListener(stereoMode);

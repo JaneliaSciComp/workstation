@@ -23,6 +23,13 @@ public class Vec3 extends SizedVector<Double>
     	return new Vec3(get(0), get(1), get(2));
     }
     
+    public Vec3 cross(Vec3 rhs) {
+        return new Vec3(
+                getY()*rhs.getZ() - getZ()*rhs.getY(),
+                getZ()*rhs.getX() - getX()*rhs.getZ(),
+                getX()*rhs.getY() - getY()*rhs.getX());
+    }
+    
 	public double dot(Vec3 rhs) {
 		double result = 0.0f;
 		for (int i = 0; i < 3; ++i) {
@@ -117,5 +124,6 @@ public class Vec3 extends SizedVector<Double>
 	public double z() {
 		return get(2);
 	}
+
 
 }

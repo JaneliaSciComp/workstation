@@ -2,7 +2,6 @@ package org.janelia.it.FlyWorkstation.gui.opengl;
 
 import java.util.List;
 import java.util.Vector;
-
 import javax.media.opengl.GL2;
 import javax.media.opengl.GLAutoDrawable;
 import javax.media.opengl.GLEventListener;
