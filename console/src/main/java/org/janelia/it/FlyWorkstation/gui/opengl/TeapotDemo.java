@@ -38,11 +38,12 @@ public class TeapotDemo extends JFrame
     	setTitle("Teapot Demo");
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 
-        // Create canvas for openGL display of teapot
+        // Attempt to create a hardware stereo 3D capable OpenGL context
         GLCapabilities glCapabilities = new GLCapabilities(GLProfile.getDefault());
         glCapabilities.setStereo(true);
-        GLCanvas glPanel = new GLCanvas(glCapabilities);
         //
+        // Create canvas for openGL display of teapot
+        GLCanvas glPanel = new GLCanvas(glCapabilities);
         glComponent = glPanel;
         glPanel.setPreferredSize(new Dimension(1280, 800));
         getContentPane().add(glPanel);
