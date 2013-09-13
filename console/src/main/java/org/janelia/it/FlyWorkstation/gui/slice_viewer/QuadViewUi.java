@@ -140,6 +140,7 @@ public class QuadViewUi extends JPanel
 	ZScanMode zScanMode = new ZScanMode(volumeImage);
 	
 	// annotation things
+    private AnnotationPanel annotationPanel;
 	private AnnotationModel annotationModel = new AnnotationModel();
 	private AnnotationManager annotationMgr = new AnnotationManager(annotationModel);
     private SliceViewerTranslator sliceViewerTranslator = new SliceViewerTranslator(annotationModel, sliceViewer);
@@ -378,6 +379,7 @@ public class QuadViewUi extends JPanel
         wheelModeChangedSignal.connect(sliceViewer.setWheelModeSlot);
         // annotation-related actions:
         centerNextParentAction.centerNextParentSignal.connect(centerNextParentSlot);
+        annotationPanel.centerAnnotationSignal.connect(centerNextParentSlot);
         // TODO other orthogonal viewers
         OrthogonalPanel viewPanels[] = {neViewer, swViewer, nwViewer};
         SkeletonActor sharedSkeletonActor = sliceViewer.getSkeletonActor();
@@ -760,7 +762,7 @@ LLF: the hookup for the 3d snapshot.
 		resetColorsButton.setAction(resetColorsAction);
 		buttonsPanel.add(resetColorsButton);
 		
-        AnnotationPanel annotationPanel = new AnnotationPanel(annotationMgr, annotationModel, sliceViewerTranslator);
+        annotationPanel = new AnnotationPanel(annotationMgr, annotationModel, sliceViewerTranslator);
         controlsPanel.add(annotationPanel);
 
 
