@@ -1,12 +1,7 @@
 package org.janelia.it.FlyWorkstation.api.entity_model.management;
 
-import java.awt.Color;
-import java.awt.EventQueue;
-import java.util.*;
-import java.util.concurrent.Executor;
-
-import javax.swing.SwingUtilities;
-
+import com.google.common.eventbus.AsyncEventBus;
+import com.google.common.eventbus.EventBus;
 import org.apache.solr.client.solrj.SolrQuery;
 import org.janelia.it.FlyWorkstation.api.entity_model.access.ModelMgrObserver;
 import org.janelia.it.FlyWorkstation.api.entity_model.fundtype.TaskFilter;
@@ -48,8 +43,11 @@ import org.janelia.it.jacs.shared.annotation.FilterResult;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.eventbus.AsyncEventBus;
-import com.google.common.eventbus.EventBus;
+import javax.swing.*;
+import java.awt.*;
+import java.util.*;
+import java.util.List;
+import java.util.concurrent.Executor;
 
 public class ModelMgr {
 	
@@ -922,18 +920,6 @@ public class ModelMgr {
     	return FacadeManager.getFacadeManager().getSolrFacade().getFlyLightVocabulary();
     }
 
-    public Subject loginSubject() throws Exception {
-        Subject loggedInSubject = FacadeManager.getFacadeManager().getComputeFacade().loginSubject();
-        if (null!=loggedInSubject) {
-        	FacadeManager.getFacadeManager().getComputeFacade().beginSession();
-        }
-        return loggedInSubject;
-    }
-    
-    public void logoutSubject() throws Exception {
-    	FacadeManager.getFacadeManager().getComputeFacade().endSession();
-    }
-    
     public void addChildren(Long parentId, List<Long> childrenIds, String attributeName) throws Exception {
     	entityModel.addChildren(parentId, childrenIds, attributeName);
     	notifyEntityChildrenChanged(parentId);

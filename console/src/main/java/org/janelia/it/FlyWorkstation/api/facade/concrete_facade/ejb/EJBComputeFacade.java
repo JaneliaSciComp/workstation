@@ -1,9 +1,5 @@
 package org.janelia.it.FlyWorkstation.api.facade.concrete_facade.ejb;
 
-import java.net.Authenticator;
-import java.net.PasswordAuthentication;
-import java.util.List;
-
 import org.janelia.it.FlyWorkstation.api.facade.abstract_facade.ComputeFacade;
 import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.FlyWorkstation.shared.util.ConsoleProperties;
@@ -11,6 +7,11 @@ import org.janelia.it.FlyWorkstation.shared.util.filecache.WebDavClient;
 import org.janelia.it.jacs.compute.api.ComputeBeanRemote;
 import org.janelia.it.jacs.model.tasks.Task;
 import org.janelia.it.jacs.model.user_data.Subject;
+import org.janelia.it.jacs.model.user_data.UserToolEvent;
+
+import java.net.Authenticator;
+import java.net.PasswordAuthentication;
+import java.util.List;
 
 /**
  * Created by IntelliJ IDEA.
@@ -94,10 +95,8 @@ public class EJBComputeFacade implements ComputeFacade {
     @Override
     public Subject loginSubject() throws Exception {
         final SessionMgr mgr = SessionMgr.getSessionMgr();
-        final String userName = (String)
-                mgr.getModelProperty(SessionMgr.USER_NAME);
-        final String password = (String)
-                mgr.getModelProperty(SessionMgr.USER_PASSWORD);
+        final String userName = (String) mgr.getModelProperty(SessionMgr.USER_NAME);
+        final String password = (String) mgr.getModelProperty(SessionMgr.USER_PASSWORD);
         final ComputeBeanRemote compute = EJBFactory.getRemoteComputeBean();
         final Subject loggedInSubject = compute.login(userName, password);
 
@@ -118,15 +117,22 @@ public class EJBComputeFacade implements ComputeFacade {
     
     @Override
     public void beginSession() {
-        EJBFactory.getRemoteComputeBean().beginSession(
-        		(String)SessionMgr.getSessionMgr().getModelProperty(SessionMgr.USER_NAME),
+        UserToolEvent loginEvent = EJBFactory.getRemoteComputeBean().beginSession(
+                SessionMgr.getSessionMgr().getSubject().getName(),
+                ConsoleProperties.getString("console.Title"),
                 ConsoleProperties.getString("console.versionNumber"));
+        if (null!=loginEvent && null!=loginEvent.getSessionId()) {
+            SessionMgr.getSessionMgr().setCurrentSessionId(loginEvent.getSessionId());
+        }
     }
     
     @Override
     public void endSession() {
     	EJBFactory.getRemoteComputeBean().endSession(
-    	        (String)SessionMgr.getSessionMgr().getModelProperty(SessionMgr.USER_NAME));
+                SessionMgr.getSessionMgr().getSubject().getName(),
+                ConsoleProperties.getString("console.Title"),
+                SessionMgr.getSessionMgr().getCurrentSessionId());
+        SessionMgr.getSessionMgr().setCurrentSessionId(null);
     }
     
     @Override

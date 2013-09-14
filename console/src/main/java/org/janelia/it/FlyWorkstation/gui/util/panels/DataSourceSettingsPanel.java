@@ -1,21 +1,5 @@
 package org.janelia.it.FlyWorkstation.gui.util.panels;
 
-import java.awt.Color;
-import java.awt.Dimension;
-import java.awt.GridBagConstraints;
-import java.awt.GridBagLayout;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
-import java.awt.event.FocusEvent;
-import java.awt.event.FocusListener;
-import java.io.File;
-import java.io.FileNotFoundException;
-
-import javax.swing.*;
-import javax.swing.border.TitledBorder;
-import javax.swing.plaf.basic.BasicProgressBarUI;
-import javax.swing.text.DefaultFormatter;
-
 import org.janelia.it.FlyWorkstation.api.facade.facade_mgr.FacadeManager;
 import org.janelia.it.FlyWorkstation.gui.framework.console.Browser;
 import org.janelia.it.FlyWorkstation.gui.framework.console.Perspective;
@@ -27,8 +11,21 @@ import org.janelia.it.FlyWorkstation.shared.util.SystemInfo;
 import org.janelia.it.FlyWorkstation.shared.util.Utils;
 import org.janelia.it.FlyWorkstation.shared.util.text_component.StandardTextField;
 import org.janelia.it.FlyWorkstation.shared.workers.SimpleWorker;
+import org.janelia.it.jacs.model.user_data.Group;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import javax.swing.*;
+import javax.swing.border.TitledBorder;
+import javax.swing.plaf.basic.BasicProgressBarUI;
+import javax.swing.text.DefaultFormatter;
+import java.awt.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.awt.event.FocusEvent;
+import java.awt.event.FocusListener;
+import java.io.File;
+import java.io.FileNotFoundException;
 
 public class DataSourceSettingsPanel extends JPanel implements PrefEditor {
     
@@ -168,7 +165,7 @@ public class DataSourceSettingsPanel extends JPanel implements PrefEditor {
             sessionMgr.setModelProperty(SessionMgr.USER_EMAIL, userEmail);
             boolean loginSuccess = SessionMgr.getSessionMgr().loginSubject();
             if (loginSuccess) {
-                runAsPanel.setVisible(SessionMgr.authenticatedSubjectIsInGroup("admin"));
+                runAsPanel.setVisible(SessionMgr.authenticatedSubjectIsInGroup(Group.ADMIN_GROUP_NAME));
             }
 
             final Browser browser = SessionMgr.getBrowser();
@@ -256,7 +253,7 @@ public class DataSourceSettingsPanel extends JPanel implements PrefEditor {
         runAsPanel.add(Box.createHorizontalStrut(10));
         runAsPanel.add(runAsTextField);
         
-        if (SessionMgr.authenticatedSubjectIsInGroup("admin")) {    
+        if (SessionMgr.authenticatedSubjectIsInGroup(Group.ADMIN_GROUP_NAME)) {
             loginPanel.add(runAsPanel);
             loginPanel.add(Box.createVerticalStrut(10));
         }

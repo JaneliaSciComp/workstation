@@ -83,19 +83,17 @@ public class SessionMgr {
     private String prefsDir = System.getProperty("user.home") + ConsoleProperties.getString("Console.Home.Path");
     private String prefsFile = prefsDir + ".JW_Settings";
     private Map browserModelsToBrowser = new HashMap();
-    private String backupFileName = null;
     private WindowListener myBrowserWindowListener = new MyBrowserListener();
     private Browser activeBrowser;
     private String appName, appVersion;
-    private Date sessionCreationTime;
     private boolean isLoggedIn;
     private Subject loggedInSubject;
     private Subject authenticatedSubject;
+    private Long currentSessionId;
     private WebDavClient webDavClient;
     private LocalFileCache localFileCache;
     
     private SessionMgr() {
-    	
     	log.info("Initializing Session Manager");
     	
         settingsFile = new File(prefsFile);
@@ -212,7 +210,6 @@ public class SessionMgr {
         if (null!=tmpCache) {
             PropertyConfigurator.getProperties().setProperty(FILE_CACHE_GIGABYTE_CAPACITY_PROPERTY, tmpCache.toString());
         }
-        sessionCreationTime = new Date();
         // TODO: Bundle FIJI with Workstation
     } //Singleton enforcement
 
@@ -572,16 +569,6 @@ public class SessionMgr {
         return splashPanel;
     }
 
-    /**
-     * This method will be used to write out the Session Log in
-     * time in the annotationLog file. Note the SessionLog in time
-     * will be same if multiple browsers are open.
-     */
-    public Date getSessionCreationTime() {
-        return sessionCreationTime;
-    }
-
-
     public int getNumberOfOpenBrowsers() {
         return sessionModel.getNumberOfBrowserModels();
     }
@@ -758,10 +745,6 @@ public class SessionMgr {
     }
 
 
-    public void setBackupFileName(String userChosenLocation) {
-        backupFileName = userChosenLocation;
-    }
-    
     public boolean loginSubject() {
         try {
             boolean relogin = false;
@@ -771,8 +754,10 @@ public class SessionMgr {
         		log.info("RELOGIN");    
         		relogin = true;
         	}
-        	
-            authenticatedSubject =  ModelMgr.getModelMgr().loginSubject();
+
+            // Login and start the session
+            Subject tmpSubjectSubject = FacadeManager.getFacadeManager().getComputeFacade().loginSubject();
+            authenticatedSubject =  tmpSubjectSubject;
             if (null!=authenticatedSubject) { 
                 isLoggedIn = true; 
                 
@@ -790,7 +775,9 @@ public class SessionMgr {
                 else {
                     log.info("Authenticated as {}",authenticatedSubject.getKey());    
                 }
-                
+
+                FacadeManager.getFacadeManager().getComputeFacade().beginSession();
+
                 if (relogin) {
                     log.info("Clearing all caches");    
                     ModelMgr.getModelMgr().invalidateCache();
@@ -815,8 +802,8 @@ public class SessionMgr {
     public void logoutUser() {
     	try {
     	    if (loggedInSubject!=null) {
-        		ModelMgr.getModelMgr().logoutSubject();
-        		log.info("Logged out with: {}",loggedInSubject.getKey());
+                FacadeManager.getFacadeManager().getComputeFacade().endSession();
+                log.info("Logged out with: {}",loggedInSubject.getKey());
     	    }
     		isLoggedIn = false;
         	loggedInSubject = null;
@@ -985,5 +972,13 @@ public class SessionMgr {
             SessionMgr.getSessionMgr().handleException(e);
             return null;
         }
+    }
+
+    public Long getCurrentSessionId() {
+        return currentSessionId;
+    }
+
+    public void setCurrentSessionId(Long currentSessionId) {
+        this.currentSessionId = currentSessionId;
     }
 }
