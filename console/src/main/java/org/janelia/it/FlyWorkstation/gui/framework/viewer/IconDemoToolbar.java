@@ -48,7 +48,7 @@ public abstract class IconDemoToolbar extends ViewerToolbar {
                         Boolean.valueOf(invertButton.isSelected()));
             }
         });
-        toolbar.add(invertButton);
+//        toolbar.add(invertButton);
 
         showTitlesButton = new JToggleButton();
 		showTitlesButton.setIcon(Icons.getIcon("text_smallcaps.png"));
