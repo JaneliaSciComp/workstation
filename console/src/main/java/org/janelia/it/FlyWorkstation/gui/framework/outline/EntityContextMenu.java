@@ -20,6 +20,7 @@ import javax.swing.*;
 
 import org.janelia.it.FlyWorkstation.api.entity_model.management.EntitySelectionModel;
 import org.janelia.it.FlyWorkstation.api.entity_model.management.ModelMgr;
+import org.janelia.it.FlyWorkstation.api.entity_model.management.ModelMgrEntityLoader;
 import org.janelia.it.FlyWorkstation.api.entity_model.management.ModelMgrUtils;
 import org.janelia.it.FlyWorkstation.gui.dialogs.EntityDetailsDialog;
 import org.janelia.it.FlyWorkstation.gui.dialogs.SpecialAnnotationChooserDialog;
@@ -51,16 +52,15 @@ import org.janelia.it.jacs.model.entity.EntityConstants;
 import org.janelia.it.jacs.model.entity.EntityData;
 import org.janelia.it.jacs.model.ontology.OntologyAnnotation;
 import org.janelia.it.jacs.model.ontology.OntologyElement;
-import org.janelia.it.jacs.model.tasks.Event;
 import org.janelia.it.jacs.model.tasks.Task;
 import org.janelia.it.jacs.model.tasks.TaskMessage;
 import org.janelia.it.jacs.model.tasks.TaskParameter;
 import org.janelia.it.jacs.model.tasks.neuron.NeuronMergeTask;
-import org.janelia.it.jacs.model.tasks.utility.GenericTask;
-import org.janelia.it.jacs.model.user_data.Node;
 import org.janelia.it.jacs.shared.utils.EntityUtils;
 import org.janelia.it.jacs.shared.utils.MailHelper;
 import org.janelia.it.jacs.shared.utils.StringUtils;
+import org.janelia.it.jacs.shared.utils.entity.EntityVisitor;
+import org.janelia.it.jacs.shared.utils.entity.EntityVistationBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -124,6 +124,7 @@ public class EntityContextMenu extends JPopupMenu {
         add(getErrorFlag());
         add(getDeleteItem());
         add(getProcessingBlockItem());
+        add(getVerificationMovieItem());
         
         setNextAddRequiresSeparator(true);
         add(getOpenInFirstViewerItem());
@@ -802,6 +803,85 @@ public class EntityContextMenu extends JPopupMenu {
         }
 
         return blockItem;
+    }
+
+
+    private JMenuItem getVerificationMovieItem() {
+        if (multiple) return null;
+
+        if (!OpenWithDefaultAppAction.isSupported())
+            return null;
+        
+        final Entity sample = rootedEntity.getEntity();
+
+        if (!sample.getEntityType().getName().equals(EntityConstants.TYPE_SAMPLE)) {
+            return null;
+        }
+        
+        JMenuItem movieItem = new JMenuItem("  View Alignment Verification Movie");
+        movieItem.addActionListener(new ActionListener() {
+            public void actionPerformed(ActionEvent actionEvent) {
+
+                SimpleWorker worker = new SimpleWorker() {
+                  
+                    private Entity movie;
+                    
+                    @Override
+                    protected void doStuff() throws Exception {
+                        EntityVistationBuilder.create(new ModelMgrEntityLoader()).startAt(sample)
+                                .childrenOfType(EntityConstants.TYPE_PIPELINE_RUN)
+                                .childrenOfType(EntityConstants.TYPE_ALIGNMENT_RESULT)
+                                .childrenOfType(EntityConstants.TYPE_SUPPORTING_DATA)
+                                .childrenOfType(EntityConstants.TYPE_MOVIE)
+                                .run(new EntityVisitor() {
+                            public void visit(Entity movieEntity) throws Exception {
+                                if (movieEntity.getName().startsWith("AlignVerify")) {
+                                    movie = movieEntity;
+                                }
+                            }
+                        });
+                    }
+                    
+                    @Override
+                    protected void hadSuccess() {
+
+                        if (movie == null) {
+                            JOptionPane.showMessageDialog(browser, "Could not locate verification movie",
+                                    "Not Found", JOptionPane.ERROR_MESSAGE);
+                            return;
+                        }
+
+                        String filepath = EntityUtils.getAnyFilePath(movie);
+                        
+                        if (StringUtils.isEmpty(filepath)) {
+                            JOptionPane.showMessageDialog(browser, "Verification movie has no path",
+                                    "Not Found", JOptionPane.ERROR_MESSAGE);
+                            return;
+                        }
+                        
+                        OpenWithDefaultAppAction action = new OpenWithDefaultAppAction(movie);
+                        action.doAction();
+                    }
+                    
+                    @Override
+                    protected void hadError(Throwable error) {
+                        SessionMgr.getSessionMgr().handleException(error);
+                    }
+                };
+
+                worker.execute();
+            }
+        });
+
+        if (sample.getEntityDataByAttributeName(EntityConstants.ATTRIBUTE_PROCESSING_BLOCK)!=null) {
+            movieItem.setEnabled(false);
+        }
+        
+        if (!ModelMgrUtils.hasWriteAccess(sample) || EntityUtils.isProtected(sample)) {
+            movieItem.setEnabled(false);
+        }
+
+        return movieItem;
     }
     
     private void addToSplitFolder(Entity commonRoot) throws Exception {
