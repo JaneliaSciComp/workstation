@@ -29,6 +29,7 @@ public class WorkstationFile {
     private Long length;
     private Integer statusCode;
     private String contentType;
+    private HttpMethodBase method;
     private InputStream stream;
     
     public WorkstationFile(String standardPath) {
@@ -55,52 +56,37 @@ public class WorkstationFile {
         }
         else {
             HttpClient client = SessionMgr.getSessionMgr().getWebDavClient().getHttpClient();
-            HttpMethodBase method = null;
+        
+            if (headOnly) {
+                HeadMethod head = new HeadMethod(effectiveURL.toString());  
+                int responseCode = client.executeMethod(head);
+                log.trace("get: HEAD {} effectiveURL={}",responseCode,effectiveURL);
+                method = head;
+            }
+            else {
+                GetMethod get = new GetMethod(effectiveURL.toString());
+                int responseCode = client.executeMethod(get);
+                log.trace("get: GET {} effectiveURL={}",responseCode,effectiveURL);
+                method = get;
+                this.stream = get.getResponseBodyAsStream();
+            }
             
-            try {
-                if (headOnly) {
-                    HeadMethod head = new HeadMethod(effectiveURL.toString());  
-                    int responseCode = client.executeMethod(head);
-                    log.trace("get: HEAD {} effectiveURL={}",responseCode,effectiveURL);
-                    method = head;
-                }
-                else {
-                    GetMethod get = new GetMethod(effectiveURL.toString());
-                    int responseCode = client.executeMethod(get);
-                    log.trace("get: GET {} effectiveURL={}",responseCode,effectiveURL);
-                    method = get;
-                    this.stream = get.getResponseBodyAsStream();
-                }
-                
-                this.statusCode = method.getStatusCode();
-                
-                Header contentTypeHeader = method.getResponseHeader("Content-Type");
-                if (contentTypeHeader!=null) {
-                    this.contentType = contentTypeHeader.getValue();
-                }
-                
-                Header contentLengthHeader = method.getResponseHeader("Content-Length");
-                if (contentLengthHeader!=null) {
-                    this.length = Long.parseLong(contentLengthHeader.getValue());
-                }
-                
-                log.debug("Opened remote file: "+effectiveURL);
-                log.debug("  Length: "+length);
-                log.debug("  Content-type: "+contentType);
-                log.debug("  Status code: "+statusCode);
+            this.statusCode = method.getStatusCode();
+            
+            Header contentTypeHeader = method.getResponseHeader("Content-Type");
+            if (contentTypeHeader!=null) {
+                this.contentType = contentTypeHeader.getValue();
             }
-            finally {
-                if (method!=null) {
-                    method.releaseConnection();
-                }
-                if (stream != null) {
-                    try {
-                        stream.close();
-                    } catch (IOException e) {
-                        log.warn("get: failed to close {}", effectiveURL, e);
-                    }
-                }
+            
+            Header contentLengthHeader = method.getResponseHeader("Content-Length");
+            if (contentLengthHeader!=null) {
+                this.length = Long.parseLong(contentLengthHeader.getValue());
             }
+            
+            log.debug("Opened remote file: "+effectiveURL);
+            log.debug("  Length: "+length);
+            log.debug("  Content-type: "+contentType);
+            log.debug("  Status code: "+statusCode);
         }
     }
     
@@ -162,6 +148,22 @@ public class WorkstationFile {
      */
     public InputStream getStream() {
         return stream;
+    }
+    
+    /**
+     * Should be called in a finally block whenever calling get().
+     */
+    public void close() {
+        if (method != null) {
+            method.releaseConnection();
+        }
+        if (stream != null) {
+            try {
+                stream.close();
+            } catch (IOException e) {
+                log.warn("get: failed to close {}", effectiveURL, e);
+            }
+        }
     }
 
 }

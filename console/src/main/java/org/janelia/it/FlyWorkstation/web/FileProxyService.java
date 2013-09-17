@@ -37,7 +37,6 @@ public class FileProxyService extends AbstractHandler {
     	String method = request.getMethod();
 
         StopWatch stopwatch = new StopWatch("stream");
-        Long length = null;
         
         Pattern pattern = Pattern.compile("/(\\w+)(/.+)");
         Matcher matcher = pattern.matcher(request.getPathInfo());
@@ -61,12 +60,12 @@ public class FileProxyService extends AbstractHandler {
                 return;
             }
             
-            InputStream input = null;
+            WorkstationFile wfile = null;
             OutputStream output = null;
             
             try {
-                WorkstationFile wfile = new WorkstationFile(standardPath);
-               
+                wfile = new WorkstationFile(standardPath);
+                
                 // Read from WebDav
                 wfile.get("HEAD".equals(method));
                 log.info("Proxying {} for: {}",method,wfile.getEffectiveURL());
@@ -89,7 +88,7 @@ public class FileProxyService extends AbstractHandler {
                 }
                 else if ("GET".equals(method)) {
                     log.debug("Writing {} bytes", wfile.getLength());
-                    input = wfile.getStream();
+                    InputStream input = wfile.getStream();
                     output = response.getOutputStream();
                     Utils.copyNio(input, output, BUFFER_SIZE);
                 }
@@ -111,13 +110,8 @@ public class FileProxyService extends AbstractHandler {
                 e.printStackTrace(response.getWriter());
             } 
             finally {
-                if (input != null) {
-                    try {
-                        input.close();
-                    } 
-                    catch (IOException e) {
-                        log.warn("Failed to close input stream", e);
-                    }
+                if (wfile != null) {
+                    wfile.close();
                 }
                 if (output != null) {
                     try {
@@ -131,12 +125,12 @@ public class FileProxyService extends AbstractHandler {
             
             stopwatch.stop();
             
-            if (log.isDebugEnabled() && length!=null) {
-	            double timeMs = (double)stopwatch.getElapsedTime();
-	            double timeSec = (timeMs/1000);
-	            long bytesPerSec = Math.round((double)length / timeSec);
-	            log.debug("buffer="+BUFFER_SIZE+" length="+length+" timeMs="+timeMs+" timeSec="+timeSec+" bytesPerSec="+bytesPerSec);
-            }
+//            if (log.isDebugEnabled() && length!=null) {
+//	            double timeMs = (double)stopwatch.getElapsedTime();
+//	            double timeSec = (timeMs/1000);
+//	            long bytesPerSec = Math.round((double)length / timeSec);
+//	            log.debug("buffer="+BUFFER_SIZE+" length="+length+" timeMs="+timeMs+" timeSec="+timeSec+" bytesPerSec="+bytesPerSec);
+//            }
         }
         else {
             baseRequest.setHandled(true);
