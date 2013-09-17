@@ -617,24 +617,26 @@ public class Utils {
             throw new IOException(message);
         }
 
-        WorkstationFile wfile = new WorkstationFile(standardPath);
-        wfile.get();
-        
-        InputStream input = wfile.getStream();
-        long length = wfile.getLength();
-        
-        log.info("Effective URL: "+wfile.getEffectiveURL());
-        log.info("Length: "+length);
-        
-        if (length==0) {
-            throw new Exception("Length of file was 0");
-        }
-        
-        if (wfile.getStatusCode()!=200) {
-            throw new Exception("Status code was "+wfile.getStatusCode());
-        }
-        
+        WorkstationFile wfile = null;
+            
         try {
+            wfile = new WorkstationFile(standardPath);
+            wfile.get();
+            
+            InputStream input = wfile.getStream();
+            long length = wfile.getLength();
+            
+            log.info("Effective URL: "+wfile.getEffectiveURL());
+            log.info("Length: "+length);
+            
+            if (length==0) {
+                throw new Exception("Length of file was 0");
+            }
+            
+            if (wfile.getStatusCode()!=200) {
+                throw new Exception("Status code was "+wfile.getStatusCode());
+            }
+        
             FileOutputStream output = new FileOutputStream(destination);
             try {
                 int copied = copy(input, output, length, worker);
@@ -647,7 +649,7 @@ public class Utils {
             }
         } 
         finally {
-            org.apache.commons.io.IOUtils.closeQuietly(input);
+            wfile.close();
         }
     }
 
