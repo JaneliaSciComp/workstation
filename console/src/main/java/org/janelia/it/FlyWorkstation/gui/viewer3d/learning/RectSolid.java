@@ -9,6 +9,8 @@ import java.nio.ByteOrder;
 import java.nio.FloatBuffer;
 import javax.media.opengl.GL;
 import javax.media.opengl.GL2;
+import javax.media.opengl.GLAutoDrawable;
+
 import java.nio.*;
 
 public class RectSolid implements GLActor {
@@ -182,8 +184,9 @@ public class RectSolid implements GLActor {
 
     //---------------------------------------IMPLEMENTS GLActor
     @Override
-    public void display(GL2 gl) {
+    public void display(GLAutoDrawable glDrawable) {
         try {
+            GL2 gl = glDrawable.getGL().getGL2();
             draw( gl );
         } catch ( Exception ex ) {
             ex.printStackTrace();
@@ -203,7 +206,8 @@ public class RectSolid implements GLActor {
     }
 
     @Override
-    public void init(GL2 gl) {
+    public void init(GLAutoDrawable glDrawable) {
+        GL2 gl = glDrawable.getGL().getGL2();
         // Here, buffer-uploads are carried out.  This static data will reside in the shader until app completion.
         try {
             vertexBufHandle = enableBuffer(gl, mFVertexBuffer);
@@ -213,7 +217,7 @@ public class RectSolid implements GLActor {
     }
 
     @Override
-    public void dispose(GL2 gl) {
+    public void dispose(GLAutoDrawable glDrawable) {
         //To change body of implemented methods use File | Settings | File Templates.
     }
 

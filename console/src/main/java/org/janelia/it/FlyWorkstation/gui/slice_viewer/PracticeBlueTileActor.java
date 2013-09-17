@@ -1,6 +1,7 @@
 package org.janelia.it.FlyWorkstation.gui.slice_viewer;
 
 import javax.media.opengl.GL2;
+import javax.media.opengl.GLAutoDrawable;
 
 import org.janelia.it.FlyWorkstation.gui.opengl.GLActor;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.BoundingBox3d;
@@ -9,8 +10,9 @@ public class PracticeBlueTileActor
 implements GLActor
 {
 	@Override
-	public void display(GL2 gl) {
+	public void display(GLAutoDrawable glDrawable) {
 		// for initial testing, paint a blue square
+        GL2 gl = glDrawable.getGL().getGL2();
 		gl.glColor3d(0.2, 0.2, 1.0);
 		gl.glBegin(GL2.GL_QUADS);
 			gl.glVertex3d( 0,  0, 0);
@@ -30,10 +32,10 @@ implements GLActor
 	}
 
 	@Override
-	public void init(GL2 gl) {
+	public void init(GLAutoDrawable glDrawable) {
 	}
 
 	@Override
-	public void dispose(GL2 gl) {
+	public void dispose(GLAutoDrawable glDrawable) {
 	}
 }

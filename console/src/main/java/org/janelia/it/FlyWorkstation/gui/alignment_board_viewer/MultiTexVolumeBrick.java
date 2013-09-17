@@ -107,7 +107,7 @@ public class MultiTexVolumeBrick implements VolumeBrickI
 
     //---------------------------------------IMPLEMEMNTS GLActor
     @Override
-	public void init(GL2 gl) {
+	public void init(GLAutoDrawable glDrawable) {
 
         // Avoid carrying out any operations if there is no real data.
         if ( signalTextureMediator == null  &&  maskTextureMediator == null ) {
@@ -115,6 +115,7 @@ public class MultiTexVolumeBrick implements VolumeBrickI
             return;
         }
 
+        GL2 gl = glDrawable.getGL().getGL2();
         initMediators( gl );
         if (bUseSyntheticData) {
             createSyntheticData();
@@ -166,15 +167,16 @@ public class MultiTexVolumeBrick implements VolumeBrickI
 	}
 
     @Override
-	public void display(GL2 gl) {
+	public void display(GLAutoDrawable glDrawable) {
         // Avoid carrying out operations if there is no data.
         if ( maskTextureMediator == null  &&  signalTextureMediator == null ) {
             logger.warn( "No textures for volume brick." );
             return;
         }
 
+        GL2 gl = glDrawable.getGL().getGL2();
 		if (! bIsInitialized)
-			init(gl);
+			init(glDrawable);
 		if (bSignalTextureNeedsUpload)
 			uploadSignalTexture(gl);
         if (maskTextureMediator != null  &&  bMaskTextureNeedsUpload)
@@ -224,9 +226,10 @@ public class MultiTexVolumeBrick implements VolumeBrickI
 	}
 
     @Override
-	public void dispose(GL2 gl) {
+	public void dispose(GLAutoDrawable glDrawable) {
         // Were the volume model listener removed at this point, it would leave NO listener available to it,
         // and it would never subsequently be restored.
+        GL2 gl = glDrawable.getGL().getGL2();
         if ( textureIds != null )
 		    gl.glDeleteTextures(textureIds.length, textureIds, 0);
 		// Retarded JOGL GLJPanel frequently reallocates the GL context

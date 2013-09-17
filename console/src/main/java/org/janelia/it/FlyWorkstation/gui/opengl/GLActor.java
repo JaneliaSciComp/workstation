@@ -1,6 +1,7 @@
 package org.janelia.it.FlyWorkstation.gui.opengl;
 
-import javax.media.opengl.GL2;
+// import javax.media.opengl.GL2;
+import javax.media.opengl.GLAutoDrawable;
 
 import org.janelia.it.FlyWorkstation.gui.viewer3d.BoundingBox3d;
 
@@ -11,7 +12,7 @@ extends GLResource
 	 * Renders this actor in the given OpenGL context
 	 * @param gl
 	 */
-	public void display(GL2 gl);
+	public void display(GLAutoDrawable glDrawable);
 	
 	public BoundingBox3d getBoundingBox3d();
 
@@ -19,11 +20,11 @@ extends GLResource
 	 * Initializes this actor for the given OpenGL context
 	 * @param gl
 	 */
-	public void init(GL2 gl);
+	public void init(GLAutoDrawable glDrawable);
 	
 	/**
 	 * Disposes of resources allocated for this actor.
 	 * @param gl
 	 */
-	public void dispose(GL2 gl);
+	public void dispose(GLAutoDrawable glDrawable);
 }

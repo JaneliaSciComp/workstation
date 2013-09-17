@@ -13,6 +13,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.media.opengl.GL2;
+import javax.media.opengl.GLAutoDrawable;
 import javax.media.opengl.GLCapabilities;
 import javax.media.opengl.GLProfile;
 import java.util.ArrayList;
@@ -78,7 +79,7 @@ public class RGBExcludableVolumeBrick implements VolumeBrickI
     }
 
     @Override
-	public void init(GL2 gl) {
+	public void init(GLAutoDrawable glDrawable) {
 
         // Avoid carrying out any operations if there is no real data.
         if ( signalTextureMediator == null ) {
@@ -86,6 +87,7 @@ public class RGBExcludableVolumeBrick implements VolumeBrickI
             return;
         }
 
+        GL2 gl = glDrawable.getGL().getGL2();
         initMediators( gl );
 
 		gl.glPushAttrib(GL2.GL_TEXTURE_BIT | GL2.GL_ENABLE_BIT);
@@ -123,7 +125,7 @@ public class RGBExcludableVolumeBrick implements VolumeBrickI
 	}
 
     @Override
-	public void display(GL2 gl) {
+	public void display(GLAutoDrawable glDrawable) {
         // Avoid carrying out operations if there is no data.
         if ( signalTextureMediator == null ) {
             logger.warn( "No texture for volume brick." );
@@ -131,7 +133,8 @@ public class RGBExcludableVolumeBrick implements VolumeBrickI
         }
 
 		if (! bIsInitialized)
-			init(gl);
+			init(glDrawable);
+        GL2 gl = glDrawable.getGL().getGL2();
 		if (bSignalTextureNeedsUpload)
 			uploadSignalTexture(gl);
 
@@ -206,9 +209,10 @@ public class RGBExcludableVolumeBrick implements VolumeBrickI
     }
 
     @Override
-	public void dispose(GL2 gl) {
+	public void dispose(GLAutoDrawable glDrawable) {
         // Were the volume model listener removed at this point, it would leave NO listener available to it,
         // and it would never subsequently be restored.
+        GL2 gl = glDrawable.getGL().getGL2();
 		gl.glDeleteTextures(textureIds.length, textureIds, 0);
 		// Retarded JOGL GLJPanel frequently reallocates the GL context
 		// during resize. So we need to be ready to reinitialize everything.

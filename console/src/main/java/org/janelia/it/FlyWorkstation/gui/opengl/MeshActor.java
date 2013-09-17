@@ -6,6 +6,8 @@ import java.nio.IntBuffer;
 
 import javax.media.opengl.GL;
 import javax.media.opengl.GL2;
+import javax.media.opengl.GLAutoDrawable;
+
 import org.janelia.it.FlyWorkstation.geom.Vec3;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.BoundingBox3d;
 
@@ -47,13 +49,13 @@ implements GLActor
     }
 
     @Override
-    public void display(GL2 gl) {
+    public void display(GLAutoDrawable glDrawable) {
         if (displayMethod == DisplayMethod.IMMEDIATE_MODE)
-            displayUsingImmediateMode(gl);
+            displayUsingImmediateMode(glDrawable);
         else if (displayMethod == DisplayMethod.DISPLAY_LISTS)
-            displayUsingDisplayList(gl); // should be faster than immediate
+            displayUsingDisplayList(glDrawable); // should be faster than immediate
         else if (displayMethod == DisplayMethod.VERTEX_BUFFER_OBJECTS)
-            displayUsingVertexBufferObjects(gl); // should be faster than immediate
+            displayUsingVertexBufferObjects(glDrawable); // should be faster than immediate
         else
             throw new UnsupportedOperationException("Display mode not implemented yet: "+displayMethod);
     }
@@ -68,7 +70,8 @@ implements GLActor
      * 
      * @param gl OpenGL rendering context
      */
-    private void displayUsingImmediateMode(GL2 gl) {
+    private void displayUsingImmediateMode(GLAutoDrawable glDrawable) {
+        GL2 gl = glDrawable.getGL().getGL2();
         for (PolygonalMesh.Face face : mesh.getFaces()) {
             // Paint
             gl.glBegin(GL2.GL_TRIANGLE_FAN);
@@ -84,7 +87,8 @@ implements GLActor
         }
     }
     
-    private void displayUsingVertexBufferObjects(GL2 gl) {
+    private void displayUsingVertexBufferObjects(GLAutoDrawable glDrawable) {
+        GL2 gl = glDrawable.getGL().getGL2();
         if (vertexVbo == 0) {
             // Initialize vertex buffer objects
             int[] vbos = {0,0,0};
@@ -117,12 +121,13 @@ implements GLActor
      * Display lists are the old fashioned way to improve opengl performance
      * @param gl
      */
-    private void displayUsingDisplayList(GL2 gl) {
+    private void displayUsingDisplayList(GLAutoDrawable glDrawable) {
+        GL2 gl = glDrawable.getGL().getGL2();
         // The very first time, paint in immediate mode, and store a display list
         if (displayList < 1) {
             displayList = gl.glGenLists(1);
             gl.glNewList(displayList, GL2.GL_COMPILE);
-            displayUsingImmediateMode(gl); // just this one time!
+            displayUsingImmediateMode(glDrawable); // just this one time!
             gl.glEndList();
         }
         // On subsequent renders, use the display list
@@ -145,12 +150,13 @@ implements GLActor
     }
 
     @Override
-    public void init(GL2 gl) {
+    public void init(GLAutoDrawable glDrawable) {
     }
 
     @Override
-    public void dispose(GL2 gl) {
+    public void dispose(GLAutoDrawable glDrawable) {
         if (displayList > 0) {
+            GL2 gl = glDrawable.getGL().getGL2();
             gl.glDeleteLists(displayList, 1);
             displayList = 0;
         }

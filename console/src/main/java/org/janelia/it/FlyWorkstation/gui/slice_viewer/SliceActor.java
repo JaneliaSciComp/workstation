@@ -1,6 +1,7 @@
 package org.janelia.it.FlyWorkstation.gui.slice_viewer;
 
 import javax.media.opengl.GL2;
+import javax.media.opengl.GLAutoDrawable;
 
 import org.janelia.it.FlyWorkstation.geom.CoordinateAxis;
 import org.janelia.it.FlyWorkstation.geom.Vec3;
@@ -43,12 +44,12 @@ implements GLActor
 	}
 
 	@Override
-	public void display(GL2 gl) {
+	public void display(GLAutoDrawable glDrawable) {
 		// Fetch the best set of tiles to represent this volume
-		display(gl, viewTileManager.updateDisplayTiles());
+		display(glDrawable, viewTileManager.updateDisplayTiles());
 	}
 
-	public void display(GL2 gl, TileSet tiles) 
+	public void display(GLAutoDrawable glDrawable, TileSet tiles) 
 	{
 		if (tiles == null)
 			return;
@@ -57,7 +58,7 @@ implements GLActor
 			return;
 		// upload textures to video card, if needed
 		for (Tile2d tile: tiles) {
-			tile.init(gl);
+			tile.init(glDrawable);
 		}
 		
 		// Render tile textures.
@@ -70,10 +71,11 @@ implements GLActor
 		int filter = GL2.GL_LINEAR; // blended voxels at lower zoom
 		if (pixelsPerVoxel > 5.0)
 			filter = GL2.GL_NEAREST; // distinct voxels at high zoom
+        GL2 gl = glDrawable.getGL().getGL2();
 		shader.load(gl);
 		for (Tile2d tile: tiles) {
 			tile.setFilter(filter);
-			tile.display(gl, camera);
+			tile.display(glDrawable, camera);
 		}
 		shader.unload(gl);
 
@@ -105,7 +107,7 @@ implements GLActor
 			for (Tile2d tile: tiles) {
 				tile.setFilter(GL2.GL_NEAREST);
 				// numeralShader.setTexturePixels(???);
-				tile.display(gl, camera);
+				tile.display(glDrawable, camera);
 			}
 			numeralShader.unload(gl);
 		}
@@ -139,9 +141,10 @@ implements GLActor
 	}
 
 	@Override
-	public void dispose(GL2 gl) {
+	public void dispose(GLAutoDrawable glDrawable) {
 		// System.out.println("dispose RavelerTileServer");
 		TextureCache textureCache = viewTileManager.getTextureCache();
+        GL2 gl = glDrawable.getGL().getGL2();
 		for (TileTexture tileTexture : textureCache.values()) {
 			if (tileTexture.getLoadStatus().ordinal() < TileTexture.LoadStatus.GL_LOADED.ordinal())
 				continue;
@@ -166,7 +169,8 @@ implements GLActor
 	}
 
 	@Override
-	public void init(GL2 gl) {
+	public void init(GLAutoDrawable glDrawable) {
+        GL2 gl = glDrawable.getGL().getGL2();
 		try {
 			shader.init(gl);
 			numeralShader.init(gl);

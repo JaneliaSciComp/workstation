@@ -1,13 +1,14 @@
 package org.janelia.it.FlyWorkstation.gui.opengl;
 
 import javax.media.opengl.GL2;
+import javax.media.opengl.GLAutoDrawable;
 
 import org.janelia.it.FlyWorkstation.gui.viewer3d.BoundingBox3d;
 
 public class LightingActor implements GLActor {
 
 	@Override
-	public void display(GL2 gl) {}
+	public void display(GLAutoDrawable glDrawable) {}
 
 	@Override
 	public BoundingBox3d getBoundingBox3d() {
@@ -15,9 +16,10 @@ public class LightingActor implements GLActor {
 	}
 
 	@Override
-	public void init(GL2 gl) {
+	public void init(GLAutoDrawable glDrawable) {
 		final float YELLOW[]={1,1,0,0}, WHITE[]={1,1,1,0}, GREY[]={0.3f, 0.3f, 0.3f, 0 } ;
 	    
+        GL2 gl = glDrawable.getGL().getGL2();
 	    // Set up the appropriate processing steps for lighting.
 	    gl.glPolygonMode( GL2.GL_FRONT, GL2.GL_FILL ) ;
 	    gl.glEnable( GL2.GL_NORMALIZE ) ; 
@@ -35,6 +37,6 @@ public class LightingActor implements GLActor {
 	}
 
 	@Override
-	public void dispose(GL2 gl) {}
+	public void dispose(GLAutoDrawable glDrawable) {}
 
 }

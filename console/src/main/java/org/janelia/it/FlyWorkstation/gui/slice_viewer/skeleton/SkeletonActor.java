@@ -11,6 +11,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 import javax.media.opengl.GL2;
+import javax.media.opengl.GLAutoDrawable;
 import javax.swing.ImageIcon;
 
 import org.janelia.it.FlyWorkstation.geom.Vec3;
@@ -95,13 +96,14 @@ implements GLActor
 
 	public SkeletonActor() {}
 	
-	private void displayEdges(GL2 gl) {
+	private void displayEdges(GLAutoDrawable glDrawable) {
 		// Line segments using vertex buffer objects
 		if (edgeIndices == null)
 			return;
 		if (edgeIndices.capacity() < 2)
 			return;
 
+        GL2 gl = glDrawable.getGL().getGL2();
 		// if (verticesNeedCopy) { // TODO
         if (true) {
             gl.glBindBuffer( GL2.GL_ARRAY_BUFFER, vbo );
@@ -172,13 +174,14 @@ implements GLActor
         edgeShader.unload(gl);
 	}
 	
-	private synchronized void displayAnchors(GL2 gl) {
+	private synchronized void displayAnchors(GLAutoDrawable glDrawable) {
 		// Paint anchors as point sprites
 		if (pointIndices == null)
 			return;
 		if (pointIndices.capacity() < 1)
 			return;
 
+        GL2 gl = glDrawable.getGL().getGL2();
         gl.glEnable(GL2.GL_POINT_SPRITE);
         gl.glEnable(GL2.GL_VERTEX_PROGRAM_POINT_SIZE);
         gl.glEnable(GL2.GL_TEXTURE_2D);
@@ -279,15 +282,15 @@ implements GLActor
 	}
 	
 	@Override
-	public void display(GL2 gl) {
+	public void display(GLAutoDrawable glDrawable) {
 		if (vertexCount <= 0)
 			return;
 		if ( ! bIsGlInitialized )
-			init(gl);
+			init(glDrawable);
 
 		// System.out.println("painting skeleton");
-		displayEdges(gl);
-        displayAnchors(gl);
+		displayEdges(glDrawable);
+        displayAnchors(glDrawable);
 	}
 
 	public int getIndexForAnchor(Anchor anchor) {
@@ -414,10 +417,11 @@ implements GLActor
 	
 
 	@Override
-	public void init(GL2 gl) {
+	public void init(GLAutoDrawable glDrawable) {
 		// Required for gl_VertexID to be found in shader
 		// System.out.println("init");
 		// compile shader
+        GL2 gl = glDrawable.getGL().getGL2();
         PassThroughTextureShader.checkGlError(gl, "load anchor texture 000");
 		try {
 			edgeShader.init(gl);
@@ -517,10 +521,11 @@ implements GLActor
 	}
 
 	@Override
-	public void dispose(GL2 gl) {
+	public void dispose(GLAutoDrawable glDrawable) {
 		// System.out.println("dispose skeleton actor");
 		bIsGlInitialized = false;
 		int ix1[] = {anchorTextureId, parentAnchorTextureId};
+        GL2 gl = glDrawable.getGL().getGL2();
 		gl.glDeleteTextures(2, ix1, 0);
 		int ix2[] = {vbo, edgeIbo, pointIbo, colorBo};
 		gl.glDeleteBuffers(4, ix2, 0);

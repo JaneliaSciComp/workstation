@@ -8,6 +8,8 @@ import org.janelia.it.FlyWorkstation.gui.viewer3d.buffering.VtxCoordBufMgr;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.texture.TextureMediator;
 
 import javax.media.opengl.GL2;
+import javax.media.opengl.GLAutoDrawable;
+
 import java.nio.*;
 
 public class Rubics implements GLActor {
@@ -80,7 +82,8 @@ public class Rubics implements GLActor {
 
     }
 
-    public void draw( GL2 gl ) throws Exception {
+    public void draw( GLAutoDrawable glDrawable ) throws Exception {
+        GL2 gl = glDrawable.getGL().getGL2();
 //        new RectSolid().draw( gl );
         errorCheck( gl, "Before rubics draw...");
         appearance( gl );
@@ -90,9 +93,9 @@ public class Rubics implements GLActor {
 
     //---------------------------------------IMPLEMENTS GLActor
     @Override
-    public void display(GL2 gl) {
+    public void display(GLAutoDrawable glDrawable) {
         try {
-            draw( gl );
+            draw( glDrawable );
         } catch ( Exception ex ) {
             ex.printStackTrace();
         }
@@ -111,10 +114,11 @@ public class Rubics implements GLActor {
     }
 
     @Override
-    public void init(GL2 gl) {
+    public void init(GLAutoDrawable glDrawable) {
         // Here, buffer-uploads are carried out.  This static data will reside in the shader until app completion.
         try {
             bufferManager.buildBuffers();
+            GL2 gl = glDrawable.getGL().getGL2();
             bufferManager.enableBuffers(gl);
         } catch ( Exception ex ) {
             ex.printStackTrace();
@@ -122,7 +126,7 @@ public class Rubics implements GLActor {
     }
 
     @Override
-    public void dispose(GL2 gl) {
+    public void dispose(GLAutoDrawable glDrawable) {
         bufferManager.dropBuffers();
     }
 

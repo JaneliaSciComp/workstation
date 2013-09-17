@@ -2,7 +2,8 @@ package org.janelia.it.FlyWorkstation.gui.slice_viewer;
 
 import java.net.URL;
 
-import javax.media.opengl.GL2;
+// import javax.media.opengl.GL2;
+import javax.media.opengl.GLAutoDrawable;
 
 import org.janelia.it.FlyWorkstation.geom.Vec3;
 import org.janelia.it.FlyWorkstation.gui.opengl.GLActor;
@@ -49,18 +50,18 @@ implements VolumeImage3d, GLActor
 	}
 
 	@Override
-	public void display(GL2 gl) {
-		actor.display(gl);
+	public void display(GLAutoDrawable glDrawable) {
+		actor.display(glDrawable);
 	}
 
 	@Override
-	public void init(GL2 gl) {
-		actor.init(gl);
+	public void init(GLAutoDrawable glDrawable) {
+		actor.init(glDrawable);
 	}
 
 	@Override
-	public void dispose(GL2 gl) {
-		actor.dispose(gl);
+	public void dispose(GLAutoDrawable glDrawable) {
+		actor.dispose(glDrawable);
 	}
 
 	@Override

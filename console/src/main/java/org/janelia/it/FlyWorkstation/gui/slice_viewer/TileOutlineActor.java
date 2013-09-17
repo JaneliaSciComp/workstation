@@ -1,6 +1,7 @@
 package org.janelia.it.FlyWorkstation.gui.slice_viewer;
 
 import javax.media.opengl.GL2;
+import javax.media.opengl.GLAutoDrawable;
 
 import org.janelia.it.FlyWorkstation.gui.camera.Camera3d;
 import org.janelia.it.FlyWorkstation.gui.opengl.GLActor;
@@ -19,16 +20,17 @@ implements GLActor
 	}
 	
 	@Override
-	public void display(GL2 gl) {
-		display(gl, viewTileManager.createLatestTiles());
+	public void display(GLAutoDrawable glDrawable) {
+		display(glDrawable, viewTileManager.createLatestTiles());
 	}
 	
-	private void display(GL2 gl, TileSet tiles) {
+	private void display(GLAutoDrawable glDrawable, TileSet tiles) {
 		if (tiles == null)
 			return;
 		if (tiles.size() < 1)
 			return;
 		Camera3d camera = viewTileManager.getTileConsumer().getCamera();
+        GL2 gl = glDrawable.getGL().getGL2();
 		outlineShader.load(gl);
 		gl.glLineWidth(2.0f);
 		for (Tile2d tile : tiles) {
@@ -44,8 +46,9 @@ implements GLActor
 	}
 
 	@Override
-	public void init(GL2 gl) {
+	public void init(GLAutoDrawable glDrawable) {
 		try {
+	        GL2 gl = glDrawable.getGL().getGL2();
 			outlineShader.init(gl);
 		} catch (ShaderCreationException e) {
 			// TODO Auto-generated catch block
@@ -54,7 +57,7 @@ implements GLActor
 	}
 
 	@Override
-	public void dispose(GL2 gl) {
+	public void dispose(GLAutoDrawable glDrawable) {
 		// TODO shader?
 	}
 

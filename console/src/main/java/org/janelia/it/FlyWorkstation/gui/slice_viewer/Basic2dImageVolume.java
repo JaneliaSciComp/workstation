@@ -9,6 +9,7 @@ import java.net.URL;
 
 import javax.imageio.ImageIO;
 import javax.media.opengl.GL2;
+import javax.media.opengl.GLAutoDrawable;
 
 import org.janelia.it.FlyWorkstation.geom.Vec3;
 import org.janelia.it.FlyWorkstation.gui.opengl.GLActor;
@@ -44,11 +45,12 @@ public class Basic2dImageVolume implements VolumeImage3d, GLActor
 	}
 	
 	@Override
-	public void display(GL2 gl) {
+	public void display(GLAutoDrawable glDrawable) {
 		if (! glIsInitialized)
-			init(gl);
+			init(glDrawable);
 		if (texture == null)
 			return;
+        GL2 gl = glDrawable.getGL().getGL2();
 		texture.enable(gl);
 		texture.bind(gl);
 		texture.setTexParameteri(gl, GL2.GL_TEXTURE_WRAP_S, GL2.GL_CLAMP_TO_EDGE);
@@ -73,17 +75,19 @@ public class Basic2dImageVolume implements VolumeImage3d, GLActor
 	}
 
 	@Override
-	public void init(GL2 gl) {
+	public void init(GLAutoDrawable glDrawable) {
 		if (textureData == null)
 			return;
-		gl.glEnable(GL2.GL_FRAMEBUFFER_SRGB);
+        GL2 gl = glDrawable.getGL().getGL2();
+        gl.glEnable(GL2.GL_FRAMEBUFFER_SRGB);
 		texture = TextureIO.newTexture(gl, textureData);
 		glIsInitialized = true;
 	}
 
 	@Override
-	public void dispose(GL2 gl) {
+	public void dispose(GLAutoDrawable glDrawable) {
 		if (texture != null) {
+	        GL2 gl = glDrawable.getGL().getGL2();
 			texture.destroy(gl);
 			texture = null;
 			glIsInitialized = false;

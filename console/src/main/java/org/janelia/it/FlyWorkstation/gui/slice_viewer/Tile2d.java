@@ -3,6 +3,7 @@ package org.janelia.it.FlyWorkstation.gui.slice_viewer;
 import java.awt.geom.Point2D;
 
 import javax.media.opengl.GL2;
+import javax.media.opengl.GLAutoDrawable;
 
 import org.janelia.it.FlyWorkstation.geom.CoordinateAxis;
 import org.janelia.it.FlyWorkstation.geom.Vec3;
@@ -164,11 +165,11 @@ implements GLActor
 	}
 
 	@Override
-	public void display(GL2 gl) {
-		display(gl, null);
+	public void display(GLAutoDrawable glDrawable) {
+		display(glDrawable, null);
 	}
 	
-	public void display(GL2 gl, Camera3d camera) {
+	public void display(GLAutoDrawable glDrawable, Camera3d camera) {
 		if (bestTexture == null) {
 			log.info("tile with no texture "+getIndex());
 			return;
@@ -176,6 +177,7 @@ implements GLActor
 		if (getLoadStatus().ordinal() < LoadStatus.COARSE_TEXTURE_LOADED.ordinal())
 			return;
 		// log.info("Rendering tile "+getIndex());
+        GL2 gl = glDrawable.getGL().getGL2();
 		bestTexture.init(gl);
 		PyramidTexture texture = bestTexture.getTexture();
 		assert(texture != null);
@@ -373,14 +375,15 @@ implements GLActor
 	}
 
 	@Override
-	public void init(GL2 gl) {
+	public void init(GLAutoDrawable glDrawable) {
 		if (bestTexture == null)
 			return;
+        GL2 gl = glDrawable.getGL().getGL2();
 		bestTexture.init(gl);
 	}
 
 	@Override
-	public void dispose(GL2 gl) {
+	public void dispose(GLAutoDrawable glDrawable) {
 	}
 
 	public TileTexture getBestTexture() {

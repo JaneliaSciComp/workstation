@@ -51,17 +51,17 @@ class MipRenderer
     }
 
     @Override
-    public void display(GLAutoDrawable gLDrawable) 
+    public void display(GLAutoDrawable glDrawable) 
     {
-	    super.display(gLDrawable); // fills background
-        widthInPixels = gLDrawable.getWidth();
-        heightInPixels = gLDrawable.getHeight();
+	    super.display(glDrawable); // fills background
+        widthInPixels = glDrawable.getWidth();
+        heightInPixels = glDrawable.getHeight();
         if (resetFirstRedraw && (! hasBeenReset)) {
             resetView();
             hasBeenReset = true;
         }
 
-        final GL2 gl = gLDrawable.getGL().getGL2();
+        final GL2 gl = glDrawable.getGL().getGL2();
         gl.glPushAttrib(GL2.GL_TRANSFORM_BIT);
         gl.glMatrixMode(GL2.GL_PROJECTION);
         gl.glPushMatrix();
@@ -70,7 +70,7 @@ class MipRenderer
         gl.glPushMatrix();
         gl.glLoadIdentity();
 
-        gLDrawable.getWidth();
+        glDrawable.getWidth();
         Vec3 f = volumeModel.getFocusInGround();
         Rotation3d rotation = getVolumeModel().getCamera3d().getRotation();
         Vec3 u = rotation.times(upInCamera);
@@ -81,12 +81,12 @@ class MipRenderer
 
         if ( System.getProperty( "glComposablePipelineDebug", "f" ).toLowerCase().startsWith("t") ) {
             DebugGL2 debugGl2 = new JaneliaDebugGL2(gl);
-            gLDrawable.setGL(debugGl2);
+            glDrawable.setGL(debugGl2);
         }
 
         java.util.List<GLActor> localActors = new java.util.ArrayList<GLActor>( actors );
         for (GLActor actor : localActors)
-            actor.display(gl);
+            actor.display(glDrawable);
 
         gl.glMatrixMode(GL2.GL_PROJECTION);
         gl.glPopMatrix();
@@ -110,13 +110,13 @@ class MipRenderer
     }
 
     @Override
-    public void reshape(GLAutoDrawable gLDrawable, int x, int y, int width, int height)
+    public void reshape(GLAutoDrawable glDrawable, int x, int y, int width, int height)
     {
         this.widthInPixels = width;
         this.heightInPixels = height;
 
         // System.out.println("reshape() called: x = "+x+", y = "+y+", width = "+width+", height = "+height);
-        final GL2 gl = gLDrawable.getGL().getGL2();
+        final GL2 gl = glDrawable.getGL().getGL2();
  
         updateProjection(gl);
         gl.glMatrixMode(GL2.GL_MODELVIEW);

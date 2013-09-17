@@ -51,7 +51,7 @@ public abstract class BaseRenderer implements GLEventListener
 	{
         final GL2 gl = glDrawable.getGL().getGL2();
 		for (GLActor actor : actors)
-			actor.dispose(gl);
+			actor.dispose(glDrawable);
 	}
 
     public List<GLActor> getActors() {
@@ -74,7 +74,7 @@ public abstract class BaseRenderer implements GLEventListener
         gl.glEnable(GL2.GL_FRAMEBUFFER_SRGB);
         List<GLActor> localActors = new ArrayList<GLActor>( getActors() );
 		for (GLActor actor : localActors) {
-            actor.init(gl);
+            actor.init(gLDrawable);
         }
     }
 

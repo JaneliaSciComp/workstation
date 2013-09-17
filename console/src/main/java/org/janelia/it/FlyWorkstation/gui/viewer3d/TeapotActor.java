@@ -1,6 +1,7 @@
 package org.janelia.it.FlyWorkstation.gui.viewer3d;
 
 import javax.media.opengl.GL2;
+import javax.media.opengl.GLAutoDrawable;
 
 import org.janelia.it.FlyWorkstation.geom.Vec3;
 import org.janelia.it.FlyWorkstation.gui.opengl.GLActor;
@@ -12,7 +13,8 @@ public class TeapotActor implements GLActor
     private GLUT glut = new GLUT();
 
 	@Override
-	public void display(GL2 gl) {
+	public void display(GLAutoDrawable glDrawable) {
+        GL2 gl = glDrawable.getGL().getGL2();
 		// due to a bug in glutSolidTeapot, triangle vertices are in CW order 
         gl.glPushAttrib(GL2.GL_POLYGON_BIT); // remember current GL_FRONT_FACE indictor
         gl.glFrontFace( GL2.GL_CW ); 
@@ -33,8 +35,8 @@ public class TeapotActor implements GLActor
 	}
 	
 	@Override
-	public void init(GL2 gl) {}
+	public void init(GLAutoDrawable glDrawable) {}
 
 	@Override
-	public void dispose(GL2 gl) {}
+	public void dispose(GLAutoDrawable glDrawable) {}
 }

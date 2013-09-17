@@ -7,6 +7,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.media.opengl.GL2;
+import javax.media.opengl.GLAutoDrawable;
 import javax.media.opengl.GLCapabilities;
 import javax.media.opengl.GLProfile;
 import java.nio.ByteBuffer;
@@ -90,7 +91,8 @@ public class AxesActor implements GLActor
 
     //---------------------------------------IMPLEMEMNTS GLActor
     @Override
-	public void init(GL2 gl) {
+	public void init(GLAutoDrawable glDrawable) {
+        GL2 gl = glDrawable.getGL().getGL2();
 
         if (bBuffersNeedUpload) {
             try {
@@ -108,7 +110,8 @@ public class AxesActor implements GLActor
 	}
 
     @Override
-	public void display(GL2 gl) {
+	public void display(GLAutoDrawable glDrawable) {
+        GL2 gl = glDrawable.getGL().getGL2();
 
         gl.glDisable(GL2.GL_CULL_FACE);
         gl.glFrontFace(GL2.GL_CW);
@@ -169,7 +172,8 @@ public class AxesActor implements GLActor
 	}
 
     @Override
-	public void dispose(GL2 gl) {
+	public void dispose(GLAutoDrawable glDrawable) {
+        GL2 gl = glDrawable.getGL().getGL2();
 
 		// Retarded JOGL GLJPanel frequently reallocates the GL context
 		// during resize. So we need to be ready to reinitialize everything.
