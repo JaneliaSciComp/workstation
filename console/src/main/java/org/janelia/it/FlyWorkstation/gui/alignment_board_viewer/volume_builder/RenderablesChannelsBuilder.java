@@ -79,10 +79,13 @@ public class RenderablesChannelsBuilder extends RenderablesVolumeBuilder impleme
         }
 
         for ( Byte key: frequencies.keySet() ) {
-            System.out.println("Encountered " + frequencies.get( key ) + " occurrences of " + key );
+            logger.info("Encountered " + frequencies.get( key ) + " occurrences of " + key );
         }
 
-        System.out.println("Found zeros in " + volumeDataZeroCount + " / " + volumeData.length + ", or " + ((double)volumeDataZeroCount/(double)volumeData.length * 100.0) + "%." );
+        logger.info(
+                "Found zeros in " + volumeDataZeroCount + " / " + volumeData.length + ", or " +
+                ((double)volumeDataZeroCount/(double)volumeData.length * 100.0) + "%."
+        );
     }
 
     //----------------------------------------IMPLEMENT MaskChanDataAcceptorI
@@ -115,7 +118,11 @@ public class RenderablesChannelsBuilder extends RenderablesVolumeBuilder impleme
     @NotThreadSafe( why="writes to channel interp. May be called with diff masks.  Not synchronized." )
     @Override
     public int addChannelData(
-            byte[] channelData, long volumePosition, long x, long y, long z, ChannelMetaData channelMetaData
+            Integer orignalMaskNum,
+            byte[] channelData,
+            long volumePosition,
+            long x, long y, long z,
+            ChannelMetaData channelMetaData
     ) throws Exception {
         init();
 

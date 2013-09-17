@@ -43,7 +43,7 @@ public class MultiMaskTracker {
      * @param discoveredMask given as a renderable mask to be set in the target cell.
      * @param oldVolumeMask found to have been set earlier, at the target cell of the volume.
      * @return existing old volume mask, if the discovered mask is already one of its 'constituents'. Otherwise,
-     *        some newly-created volume mask, which inverits the old mask's constituents and adds the discovered one.
+     *        some newly-created volume mask, which inherits the old mask's constituents and adds the discovered one.
      */
     public Integer getMask(int discoveredMask, int oldVolumeMask) {
         Integer rtnVal = oldVolumeMask;
@@ -78,39 +78,58 @@ public class MultiMaskTracker {
             extendedMultiMaskBean.incrementVoxelCount();
         }
         else {
-            // Need a new one.  C'tor sets count to 1.
-            MultiMaskBean newBean = new MultiMaskBean();
-            newBean.setMultiMaskNum( nextMaskNum );
-            // Any mask in the list referenced by the old mask, should be referenced by the newly-created mask.
-            //  In addition, the newly-created mask's list must also contain the new mask that the calling
-            //  process was _going_ to put in this slot.
-            if ( altMasks != null ) {
-                newBean.addAll( altMasks );
-            }
-            else {
-                newBean.addAltMask( oldVolumeMask );
-            }
-            newBean.addAltMask( discoveredMask );
+            rtnVal = createIncrementedMultimask(discoveredMask, oldVolumeMask, altMasks);
 
-            maskIdToBean.put( nextMaskNum, newBean );
-            altMasksToBean.put( newBean.getInvertedKey(), newBean );
-            nextMaskNum ++;
         }
-//        else {
-//            MultiMaskBean newBean = new MultiMaskBean();
-//            newBean.setMultiMaskNum( nextMaskNum );
-//            newBean.addAltMask( oldVolumeMask );
-//            newBean.addAltMask( discoveredMask );
-//            maskIdToBean.put( nextMaskNum, newBean );
-//            altMasksToBean.put( newBean.getInvertedKey(), newBean );
-//            nextMaskNum ++;
-//        }
         return rtnVal;
     }
 
     /** Expose the collection created here, for actual use. */
     public Map<Integer,MultiMaskBean> getMultiMaskBeans() {
         return this.maskIdToBean;
+    }
+
+    /** Assumed that if the mask id is not in the mapping, must be a single-mask.  Otherwise rtn #-of-sub-masks. */
+    public int getMaskExpansionCount( Integer maskId ) {
+        MultiMaskBean maskBean = maskIdToBean.get( maskId );
+        return maskBean == null ? 1 : maskBean.getAltMasks().size();
+    }
+
+    /**
+     * Helper to make a new multimask whose alternate (or sub) masks include all those in the cell's previously
+     * occupying multimask, plus the newly-discovered single mask now also shown to occupy that cell.  The
+     * 'old volume mask' may have been a singly-assigned mask or a multimask.
+     *
+     * @param discoveredMask identifier for some new renderable that claims occupancy of current cell.
+     * @param oldVolumeMask identifier for old mask.  Does not include the discovered mask in its (possible) alts.
+     * @param altMasks
+     * @return
+     */
+    private Integer createIncrementedMultimask(int discoveredMask, int oldVolumeMask, List<Integer> altMasks) {
+        Integer rtnVal;// Need a new one.  C'tor sets count to 1.
+        MultiMaskBean newBean = new MultiMaskBean();
+        newBean.setMultiMaskNum( nextMaskNum );
+        // Any mask in the list referenced by the old mask, should be referenced by the newly-created mask.
+        //  In addition, the newly-created mask's list must also contain the new mask that the calling
+        //  process claims to belong in this slot.
+        if ( altMasks != null ) {
+            // Old vol mask was a multi mask, and all its sub's are added to the new bean's subs list.
+            newBean.addAll( altMasks );
+        }
+        else {
+            // Old vol mask was a single mask, and is added directly to the subs list.
+            newBean.addAltMask( oldVolumeMask );
+        }
+
+        // The new bean's alternates must include this new single mask.
+        newBean.addAltMask( discoveredMask );
+
+        maskIdToBean.put( nextMaskNum, newBean );
+        altMasksToBean.put( newBean.getInvertedKey(), newBean );
+        nextMaskNum ++;
+
+        rtnVal = newBean.getMultiMaskNum();
+        return rtnVal;
     }
 
     /** All info needed around a multi-mask. */
@@ -179,6 +198,11 @@ public class MultiMaskTracker {
 
         public void decrementVoxelCount() {
             voxelCount --;
+        }
+
+        /** Returns which priority among all sub-masks, this one is. */
+        public int getMaskOffset( Integer maskNum ) {
+            return this.getAltMasks().indexOf( maskNum );
         }
 
     }

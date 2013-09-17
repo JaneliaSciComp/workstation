@@ -14,7 +14,7 @@ import org.janelia.it.FlyWorkstation.shared.annotations.NotThreadSafe;
  */
 public class RemaskingAcceptorDecorator extends AbstractAcceptorDecorator {
     private VolumeDataI maskVolumeData;
-    private int pixelByteCount;
+    private int maskByteCount;
     private boolean binary;
     private MultiMaskTracker multiMaskTracker;
 
@@ -22,12 +22,12 @@ public class RemaskingAcceptorDecorator extends AbstractAcceptorDecorator {
             MaskChanDataAcceptorI wrappedAcceptor,
             MultiMaskTracker multiMaskTracker,
             VolumeDataI maskVolumeData,
-            int pixelByteCount,
+            int maskByteCount,
             boolean binary
     ) {
         this.setWrappedAcceptor( wrappedAcceptor );
         this.maskVolumeData = maskVolumeData;
-        this.pixelByteCount = pixelByteCount;
+        this.maskByteCount = maskByteCount;
         this.multiMaskTracker = multiMaskTracker;
         this.binary = binary;
     }
@@ -35,15 +35,15 @@ public class RemaskingAcceptorDecorator extends AbstractAcceptorDecorator {
     /** Pass through. */
     @Override
     public int addChannelData(
-            byte[] channelData, long position, long x, long y, long z, ChannelMetaData channelMetaData
+            Integer maskNum, byte[] channelData, long position, long x, long y, long z, ChannelMetaData channelMetaData
     ) throws Exception {
-        return wrappedAcceptor.addChannelData( channelData, position, x, y, z, channelMetaData );
+        return wrappedAcceptor.addChannelData( maskNum, channelData, position, x, y, z, channelMetaData );
     }
 
     /**
      * Figure out if the mask is already in use.
      *
-     * @param maskNumber what mask associated with the current use of this slot.
+     * @param maskNumber what mask to be added to this slot.
      * @param position convenience: where the mask goes in linear, 1D-array, coords.
      * @param x convenience: an alternative; x in 3D cords.
      * @param y in 3D
@@ -63,15 +63,15 @@ public class RemaskingAcceptorDecorator extends AbstractAcceptorDecorator {
             byte[] volumeData = this.maskVolumeData.getCurrentVolumeData();
             if ( volumeData != null ) {
                 // Assumed little-endian.
-                for ( int j = 0; j < pixelByteCount; j++ ) {
-                    int volumeLoc = j + ((int) position * pixelByteCount);
+                for ( int j = 0; j < maskByteCount; j++ ) {
+                    int volumeLoc = j + ((int) position * maskByteCount);
                     // Here enforced: need to take previous mask into account.
-                    oldVolumeMask += volumeData[ volumeLoc ] << (8*j);
+                    int nextMaskByte = volumeData[ volumeLoc ];
+                    oldVolumeMask += nextMaskByte << (8*j);
                 }
 
                 // Got old mask.  Need to make changes?
                 if ( oldVolumeMask != 0 ) {
-                    // The handoff.
                     finalMaskNumber = multiMaskTracker.getMask( maskNumber, oldVolumeMask );
                 }
             }

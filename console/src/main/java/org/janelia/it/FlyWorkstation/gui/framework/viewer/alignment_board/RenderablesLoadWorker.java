@@ -1,5 +1,6 @@
 package org.janelia.it.FlyWorkstation.gui.framework.viewer.alignment_board;
 
+import org.janelia.it.FlyWorkstation.gui.alignment_board_viewer.loader.ChannelMultiplexingAcceptorDecorator;
 import org.janelia.it.FlyWorkstation.gui.alignment_board_viewer.renderable.*;
 import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.FlyWorkstation.gui.alignment_board_viewer.gui_elements.GpuSampler;
@@ -37,6 +38,7 @@ public class RenderablesLoadWorker extends SimpleWorker implements VolumeLoader 
     private MaskChanMultiFileLoader compartmentLoader;
     private MaskChanMultiFileLoader neuronFragmentLoader;
     private RenderMappingI renderMapping;
+    private FileStats fileStats;
 
     private RenderablesMaskBuilder maskTextureBuilder;
     private RenderablesChannelsBuilder signalTextureBuilder;
@@ -88,6 +90,14 @@ public class RenderablesLoadWorker extends SimpleWorker implements VolumeLoader 
 
     public void setLoadFilesFlag( Boolean loadFiles ) {
         this.loadFiles = loadFiles;
+    }
+
+    public FileStats getFileStats() {
+        return fileStats;
+    }
+
+    public void setFileStats(FileStats fileStats) {
+        this.fileStats = fileStats;
     }
 
     //------------------------------------------IMPLEMENTS VolumeLoader
@@ -175,85 +185,103 @@ public class RenderablesLoadWorker extends SimpleWorker implements VolumeLoader 
     @Override
     protected void doStuff() throws Exception {
 
-        if ( resolver == null ) {
-            //resolver = new TrivialFileResolver();  // swap comments, in testing.
-            resolver = new CacheFileResolver();
-        }
-
-        logger.debug( "In load thread, before getting bean list." );
-        if ( sampler != null )
-            alignmentBoardSettings = adjustDownsampleRateSetting();
-
         Collection<MaskChanRenderableData> renderableDatas = dataSource.getRenderableDatas();
 
-        // Cut down the to-renders: use only the larger ones.
-        long fragmentFilterSize = alignmentBoardSettings.getMinimumVoxelCount();
-        if ( fragmentFilterSize != -1 ) {
-            FragmentSizeFilter filter = new FragmentSizeFilter( fragmentFilterSize );
-            renderableDatas = filter.filter( renderableDatas );
-        }
+        if ( loadFiles ) {
+            if ( resolver == null ) {
+                //resolver = new TrivialFileResolver();  // swap comments, in testing.
+                resolver = new CacheFileResolver();
+            }
 
-        List<RenderableBean> renderableBeans = new ArrayList<RenderableBean>();
-        int lastUsedMask = -1;
-        for ( MaskChanRenderableData renderableData: renderableDatas ) {
-            RenderableBean bean = renderableData.getBean();
+            logger.debug( "In load thread, before getting bean list." );
+            if ( sampler != null )
+                alignmentBoardSettings = adjustDownsampleRateSetting();
 
-            // Need to add sizing data to each renderable bean prior to sorting.
-            MaskChanSingleFileLoader loader = new MaskChanSingleFileLoader( null, null, bean );
-            if ( renderableData.getMaskPath() != null ) {
-                File infile = new File( resolver.getResolvedFilename( renderableData.getMaskPath() ) );
-                if ( infile.canRead() ) {
-                    FileInputStream fis = new FileInputStream( infile );
-                    long voxelCount = loader.getVoxelCount( fis );
-                    bean.setVoxelCount( voxelCount );
+            // Cut down the to-renders: use only the larger ones.
+            long fragmentFilterSize = alignmentBoardSettings.getMinimumVoxelCount();
+            if ( fragmentFilterSize != -1 ) {
+                FragmentSizeFilter filter = new FragmentSizeFilter( fragmentFilterSize );
+                renderableDatas = filter.filter( renderableDatas );
+            }
+
+            List<RenderableBean> renderableBeans = new ArrayList<RenderableBean>();
+            int lastUsedMask = -1;
+            for ( MaskChanRenderableData renderableData: renderableDatas ) {
+                RenderableBean bean = renderableData.getBean();
+
+                // Need to add sizing data to each renderable bean prior to sorting.
+                MaskChanSingleFileLoader loader = new MaskChanSingleFileLoader( null, null, bean, null );
+                if ( renderableData.getMaskPath() != null ) {
+                    File infile = new File( resolver.getResolvedFilename( renderableData.getMaskPath() ) );
+                    if ( infile.canRead() ) {
+                        FileInputStream fis = new FileInputStream( infile );
+                        long voxelCount = loader.getVoxelCount( fis );
+                        bean.setVoxelCount( voxelCount );
+                    }
+                }
+                renderableBeans.add( bean );
+                if ( bean.getTranslatedNum() > lastUsedMask ) {
+                    lastUsedMask = bean.getTranslatedNum();
                 }
             }
-            renderableBeans.add( bean );
-            if ( bean.getTranslatedNum() > lastUsedMask ) {
-                lastUsedMask = bean.getTranslatedNum();
+            if ( lastUsedMask > -1 ) {
+                multiMaskTracker.setFirstMaskNum( lastUsedMask + 1 ); // Add one to move past all allocated masks.
             }
-        }
-        if ( lastUsedMask > -1 ) {
-            multiMaskTracker.setFirstMaskNum( lastUsedMask + 1 ); // Add one to move past all allocated masks.
-        }
-        Collections.sort( renderableBeans, new InvertingComparator( new RBComparator() ) );
+            Collections.sort( renderableBeans, new InvertingComparator( new RBComparator() ) );
 
-        renderMapping.setRenderables( renderableBeans );
+            renderMapping.setRenderables( renderableBeans );
 
-        // Establish the means for extracting the volume mask.
-        maskTextureBuilder = new RenderablesMaskBuilder( alignmentBoardSettings, renderableBeans );
+            // Establish the means for extracting the volume mask.
+            maskTextureBuilder = new RenderablesMaskBuilder( alignmentBoardSettings, renderableBeans );
 
-        // Establish the means for extracting the signal data.
-        signalTextureBuilder = new RenderablesChannelsBuilder( alignmentBoardSettings, renderableBeans );
+            // Establish the means for extracting the signal data.
+            signalTextureBuilder = new RenderablesChannelsBuilder( alignmentBoardSettings, renderableBeans );
 
-        ArrayList<MaskChanDataAcceptorI> acceptors = new ArrayList<MaskChanDataAcceptorI>();
+            // Unfortunately, the wrapper knows the thing it wraps, but at least under a different definition.
+            RemaskingAcceptorDecorator remaskingAcceptorDecorator = new RemaskingAcceptorDecorator(
+                    maskTextureBuilder,
+                    multiMaskTracker,
+                    maskTextureBuilder,
+                    RenderablesMaskBuilder.UNIVERSAL_MASK_BYTE_COUNT,
+                    false    // NOT binary / search writeback.  That happens only for the file writeback code.
+            );
 
-        // Unfortunately, the wrapper knows the thing it wraps, but at least under a different definition.
-        RemaskingAcceptorDecorator remaskingAcceptorDecorator = new RemaskingAcceptorDecorator(
-                maskTextureBuilder,
-                multiMaskTracker,
-                maskTextureBuilder,
-                RenderablesMaskBuilder.UNIVERSAL_MASK_BYTE_COUNT,
-                false    // NOT binary / search writeback.  That happens only for the file writeback code.
-        );
-        acceptors.add(remaskingAcceptorDecorator);
-        acceptors.add(signalTextureBuilder);
+            ArrayList<MaskChanDataAcceptorI> acceptors = new ArrayList<MaskChanDataAcceptorI>();
+            acceptors.add(remaskingAcceptorDecorator);
 
-        // Setup the loader to traverse all this data on demand.
-        neuronFragmentLoader = new MaskChanMultiFileLoader();
-        neuronFragmentLoader.setAcceptors(acceptors);
+            // Setup the loader to traverse all this data on demand. Only the mask-tex-builder accepts data.
+            neuronFragmentLoader = new MaskChanMultiFileLoader();
+            neuronFragmentLoader.setAcceptors(acceptors);
+            neuronFragmentLoader.setFileStats( fileStats );
 
-        compartmentLoader = new MaskChanMultiFileLoader();
-        compartmentLoader.setAcceptors( acceptors );
+            compartmentLoader = new MaskChanMultiFileLoader();
+            compartmentLoader.setAcceptors( acceptors );
 
-        if ( loadFiles ) {
-            multiThreadedDataLoad(renderableDatas);
+            multiThreadedDataLoad(renderableDatas, false);
+
+            // RE-run the scan.  This time only the signal-texture-builder will accept the data.
+            acceptors.clear();
+            ChannelMultiplexingAcceptorDecorator channelDecorator = new ChannelMultiplexingAcceptorDecorator(
+                    multiMaskTracker,
+                    maskTextureBuilder,
+                    signalTextureBuilder,
+                    RenderablesMaskBuilder.UNIVERSAL_MASK_BYTE_COUNT
+            );
+            acceptors.add( channelDecorator );
+            neuronFragmentLoader.setAcceptors(acceptors);
+            compartmentLoader.setAcceptors( acceptors );
+
+            multiThreadedDataLoad(renderableDatas, true);
+
+            compartmentLoader.close();
+            neuronFragmentLoader.close();
+
         }
         else {
             renderChange(renderableDatas);
         }
 
-        logger.info( "Ending load thread." );
+        logger.info("Ending load thread.");
     }
 
     @Override
@@ -267,11 +295,11 @@ public class RenderablesLoadWorker extends SimpleWorker implements VolumeLoader 
     }
 
     /**
-     * Carries out all file-reading in parallel.
+     * Carries out all file-reading.
      *
      * @param metaDatas one thread for each of these.
      */
-    private void multiThreadedDataLoad(Collection<MaskChanRenderableData> metaDatas) {
+    private void multiThreadedDataLoad(Collection<MaskChanRenderableData> metaDatas, boolean buildTexture) {
         controlCallback.clearDisplay();
 
         if ( metaDatas == null  ||  metaDatas.size() == 0 ) {
@@ -283,11 +311,10 @@ public class RenderablesLoadWorker extends SimpleWorker implements VolumeLoader 
             logger.debug("Starting multithreaded file load.");
             fileLoad(metaDatas);
 
-            compartmentLoader.close();
-            neuronFragmentLoader.close();
-
-            logger.debug("Starting multithreaded texture build.");
-            multiThreadedTextureBuild();
+            if ( buildTexture ) {
+                logger.debug("Starting multithreaded texture build.");
+                multiThreadedTextureBuild();
+            }
 
         }
 

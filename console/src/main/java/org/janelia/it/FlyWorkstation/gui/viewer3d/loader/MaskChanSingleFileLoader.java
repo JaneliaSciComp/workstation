@@ -1,5 +1,6 @@
 package org.janelia.it.FlyWorkstation.gui.viewer3d.loader;
 
+import org.janelia.it.FlyWorkstation.gui.alignment_board_viewer.masking.FileStats;
 import org.janelia.it.FlyWorkstation.gui.alignment_board_viewer.renderable.RenderableBean;
 import org.janelia.it.FlyWorkstation.shared.annotations.NotThreadSafe;
 import org.slf4j.Logger;
@@ -92,6 +93,8 @@ public class MaskChanSingleFileLoader {
     private Logger logger = LoggerFactory.getLogger( MaskChanSingleFileLoader.class );
 
     private byte[] allFChannelBytes;
+    private double[] channelAverages;
+    private FileStats fileStats;
 
     /**
      * Construct a file loader for all data about a single renderable, and with all targets for that data.
@@ -103,12 +106,13 @@ public class MaskChanSingleFileLoader {
     public MaskChanSingleFileLoader(
             Collection<MaskChanDataAcceptorI> maskAcceptors,
             Collection<MaskChanDataAcceptorI> channelAcceptors,
-            RenderableBean renderableBean
+            RenderableBean renderableBean,
+            FileStats fileStats
     ) {
         this.maskAcceptors = maskAcceptors;
         this.channelAcceptors = channelAcceptors;
         this.renderableBean = renderableBean;
-
+        this.fileStats = fileStats;
     }
 
     public void setAxialLengthDivisibility( int minDivisibility ) {
@@ -173,6 +177,8 @@ public class MaskChanSingleFileLoader {
             );
         }
 
+        channelAverages = new double[ channelMetaData.rawChannelCount ];
+
         while ( cummulativeVoxelsReadCount < totalVoxels ) {
             Long skippedRayCount = readLong(maskInputStream);
             assert saneSkipCount( skippedRayCount ) :
@@ -189,6 +195,11 @@ public class MaskChanSingleFileLoader {
                 throw new Exception("Zero bytes read.");
             }
 
+        }
+
+        // Channel only available if presence of acceptors signalled its read.
+        if ( channelAcceptors.size() > 0  &&  renderableBean.getRenderableEntity() != null  &&  fileStats != null ) {
+            fileStats.recordChannelAverages( renderableBean.getRenderableEntity().getId(), channelAverages );
         }
 
         logger.debug( "Read complete." );
@@ -458,11 +469,11 @@ public class MaskChanSingleFileLoader {
 
         int totalPositionsAdded = 0;
 
-
         // Now, given we have dimension orderings, can leave two out of three coords in stasis, while only
         // the fastest-varying one, numbered 'axis', changes.
 
         int translatedNum = renderableBean.getTranslatedNum();
+        double totalVoxelFactor = 1.0 / ((double)totalVoxels * Math.pow( 256, channelMetaData.byteCount ) );
         byte[] allChannelBytes = new byte[ channelMetaData.byteCount * channelMetaData.channelCount ];
         for ( long[] pairAlongRay: pairsAlongRay ) {
             for ( long rayPosition = pairAlongRay[ 0 ]; rayPosition < pairAlongRay[ 1 ]; rayPosition++ ) {
@@ -489,6 +500,9 @@ public class MaskChanSingleFileLoader {
                 // Here, must get the channel data.  This will include all bytes for each channel organized parallel.
                 if ( channelAcceptors.size() > 0 ) {
                     int voxelBytesAlreadyRead = cummulativeVoxelsReadCount * channelMetaData.byteCount;
+                    int channelValue = 0;
+                    int[] orderedRgbIndexes = channelMetaData.getOrderedRgbIndexes();
+
                     for ( int i = 0; i < channelMetaData.channelCount; i++ ) {
                         int channelOffset = (i * channelMetaData.byteCount) + channelMetaData.byteCount - 1;
                         if ( channelData != null ) {
@@ -496,8 +510,14 @@ public class MaskChanSingleFileLoader {
                             for ( int j=0; j < channelMetaData.byteCount; j++ ) {
                                 //                                                   REVERSING byte order for Java
                                 int targetOffset = channelOffset - j;
-                                allChannelBytes[ targetOffset ] = (byte)(nextChannelData[ voxelBytesAlreadyRead + j ] / intensityDivisor);
+                                byte nextChannelValue = nextChannelData[voxelBytesAlreadyRead + j];
+                                allChannelBytes[ targetOffset ] = (byte)(nextChannelValue / intensityDivisor);
+
+                                // Save full channel value for statistical calculations.
+                                channelValue += nextChannelValue << (channelMetaData.byteCount - j);
                             }
+
+                            channelAverages[ orderedRgbIndexes[ i ] ] += channelValue * totalVoxelFactor;
                         }
                         else {
                             allChannelBytes = new byte[ allFChannelBytes.length ];
@@ -508,6 +528,7 @@ public class MaskChanSingleFileLoader {
                     }
                     for ( MaskChanDataAcceptorI acceptor: channelAcceptors ) {
                         acceptor.addChannelData(
+                                translatedNum,
                                 allChannelBytes, final1DCoord, xyzCoords[ 0 ], finalYCoord, xyzCoords[ 2 ],
                                 channelMetaData
                         );

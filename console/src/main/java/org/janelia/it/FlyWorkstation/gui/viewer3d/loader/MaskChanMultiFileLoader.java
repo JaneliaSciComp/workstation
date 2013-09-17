@@ -1,5 +1,6 @@
 package org.janelia.it.FlyWorkstation.gui.viewer3d.loader;
 
+import org.janelia.it.FlyWorkstation.gui.alignment_board_viewer.masking.FileStats;
 import org.janelia.it.FlyWorkstation.gui.alignment_board_viewer.masking.VolumeConsistencyChecker;
 import org.janelia.it.FlyWorkstation.gui.alignment_board_viewer.renderable.RenderableBean;
 import org.slf4j.Logger;
@@ -23,6 +24,7 @@ public class MaskChanMultiFileLoader {
 
     private Collection<MaskChanDataAcceptorI> maskAcceptors;
     private Collection<MaskChanDataAcceptorI> channelAcceptors;
+    private FileStats fileStats;
 
     private VolumeConsistencyChecker checker = new VolumeConsistencyChecker();
     private boolean enforcePadding = true;
@@ -61,7 +63,7 @@ public class MaskChanMultiFileLoader {
             throws Exception {
         logger.debug( "Read called." );
         MaskChanSingleFileLoader singleFileLoader =
-                new MaskChanSingleFileLoader( maskAcceptors, channelAcceptors, bean );
+                new MaskChanSingleFileLoader( maskAcceptors, channelAcceptors, bean, fileStats );
 
         // Here, may override the pad-out to ensure resulting volume exactly matches the original space.
         if ( ! enforcePadding ) {
@@ -111,5 +113,9 @@ public class MaskChanMultiFileLoader {
 
     public void setDimWriteback(boolean dimWriteback) {
         this.dimWriteback = dimWriteback;
+    }
+
+    public void setFileStats(FileStats fileStats) {
+        this.fileStats = fileStats;
     }
 }

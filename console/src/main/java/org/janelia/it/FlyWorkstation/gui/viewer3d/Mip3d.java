@@ -1,6 +1,5 @@
 package org.janelia.it.FlyWorkstation.gui.viewer3d;
 
-import org.janelia.it.FlyWorkstation.gui.alignment_board_viewer.MultiTexVolumeBrick;
 import org.janelia.it.FlyWorkstation.gui.opengl.GLActor;
 import org.janelia.it.FlyWorkstation.gui.alignment_board_viewer.masking.MaskBuilderI;
 import org.janelia.it.FlyWorkstation.gui.alignment_board_viewer.masking.RenderMappingI;

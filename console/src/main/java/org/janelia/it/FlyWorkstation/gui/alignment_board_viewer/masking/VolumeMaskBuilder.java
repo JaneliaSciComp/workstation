@@ -39,7 +39,7 @@ public class VolumeMaskBuilder implements VolumeDataAcceptor, MaskBuilderI {
 
     private String firstFileName = null;
 
-    private Logger logger = LoggerFactory.getLogger( VolumeDataAcceptor.class );
+    private Logger logger = LoggerFactory.getLogger( VolumeMaskBuilder.class );
 
     public VolumeMaskBuilder() {
     }
@@ -98,9 +98,9 @@ public class VolumeMaskBuilder implements VolumeDataAcceptor, MaskBuilderI {
                                     byte nextVoxelByte = maskData[ inputOffset + mi ];
                                     voxelVal += nextVoxelByte << (mi * 8);
                                 } catch ( RuntimeException ex ) {
-                                    System.out.println( ex.getMessage() + " offset=" + inputOffset +
-                                    " mi=" + mi + " zOffset=" + zOffsetInput + " yOffset=" + yOffsetInput +
-                                            " yOffs x consensusByteCt=" + yOffsetInput*maskBytCt + " x*consensusByteCount=" + x * consensusByteCount + " x,y,z="+x+","+y+","+z);
+                                    logger.error(ex.getMessage() + " offset=" + inputOffset +
+                                            " mi=" + mi + " zOffset=" + zOffsetInput + " yOffset=" + yOffsetInput +
+                                            " yOffs x consensusByteCt=" + yOffsetInput * maskBytCt + " x*consensusByteCount=" + x * consensusByteCount + " x,y,z=" + x + "," + y + "," + z);
                                     throw ex;
                                 }
                             }
@@ -137,11 +137,13 @@ public class VolumeMaskBuilder implements VolumeDataAcceptor, MaskBuilderI {
                     }
                 }
 
-                System.out.println("Values seen in file " + texBean.getFilename() + " in volume mask builder.");
+                StringBuilder builder = new StringBuilder();
+                builder.append("Values seen in file " + texBean.getFilename() + " in volume mask builder.");
+                builder.append("\n");
                 for ( Integer nextVal: values ) {
-                    System.out.print( nextVal + "," );
+                    builder.append( nextVal + "," );
                 }
-                System.out.println();
+                logger.info( builder.toString() );
             }
 
         }
@@ -301,10 +303,10 @@ public class VolumeMaskBuilder implements VolumeDataAcceptor, MaskBuilderI {
             }
         }
         if ( nonZeroCount > 0 ) {
-            System.out.println("In Texture " + textureData.getFilename() + ", found " + nonZeroCount + " non-zero values.");
+            logger.info("In Texture " + textureData.getFilename() + ", found " + nonZeroCount + " non-zero values.");
         }
         else {
-            System.out.println("All-zero texture " + textureData.getFilename());
+            logger.info("All-zero texture " + textureData.getFilename());
         }
         // END QUICK CHECK
     }

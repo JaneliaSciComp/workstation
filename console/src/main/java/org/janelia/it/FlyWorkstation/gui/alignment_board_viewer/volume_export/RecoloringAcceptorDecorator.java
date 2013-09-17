@@ -27,7 +27,7 @@ public class RecoloringAcceptorDecorator  extends AbstractAcceptorDecorator {
     }
 
     @Override
-    public int addChannelData(byte[] channelData, long position, long x, long y, long z, ChannelMetaData channelMetaData) throws Exception {
+    public int addChannelData(Integer originalMask, byte[] channelData, long position, long x, long y, long z, ChannelMetaData channelMetaData) throws Exception {
         int returnVal = 0;
         if ( channelMetaData.renderableBean != null   &&   channelMetaData.renderableBean.getRgb()[ 3 ] != RenderMappingI.PASS_THROUGH_RENDERING ) {
             if ( channelMetaData.channelCount == 3  ||  channelMetaData.channelCount == 4 ) {
@@ -39,7 +39,7 @@ public class RecoloringAcceptorDecorator  extends AbstractAcceptorDecorator {
                     substituteChannelData(channelData, channelMetaData, maxIntensity, rgbIndexes[i], i);
                 }
 
-                returnVal = wrappedAcceptor.addChannelData( channelData, position, x, y, z, channelMetaData );
+                returnVal = wrappedAcceptor.addChannelData( originalMask, channelData, position, x, y, z, channelMetaData );
             }
             else if ( channelMetaData.channelCount == 1 ) {
                 ChannelMetaData substitutedChannelMetaData = getLazySubsituteChannelData(channelMetaData);
@@ -50,7 +50,7 @@ public class RecoloringAcceptorDecorator  extends AbstractAcceptorDecorator {
                 for ( int i = 0; i < 3; i++ ) {
                     substituteChannelData(assumedChannelData, substitutedChannelMetaData, maxIntensity, i, i);
                 }
-                returnVal = wrappedAcceptor.addChannelData( assumedChannelData, position, x, y, z, substitutedChannelMetaData );
+                returnVal = wrappedAcceptor.addChannelData( originalMask, assumedChannelData, position, x, y, z, substitutedChannelMetaData );
             }
             else {
                 logger.error( "Unexpected channel count  of {}.  Expected only 3,4, or 1", channelMetaData.channelCount );

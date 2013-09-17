@@ -1,6 +1,8 @@
 package org.janelia.it.FlyWorkstation.gui.alignment_board_viewer.volume_export;
 
 import org.janelia.it.FlyWorkstation.gui.alignment_board_viewer.gui_elements.RangeSlider;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Created with IntelliJ IDEA.
@@ -11,6 +13,8 @@ import org.janelia.it.FlyWorkstation.gui.alignment_board_viewer.gui_elements.Ran
  * Common-use methods for getting standardized coordinate end points from sliders.
  */
 public class CoordCropper3D {
+    private Logger logger = LoggerFactory.getLogger( CoordCropper3D.class );
+
     /**
      * Given the user-selection among the sliders, return the full set of start/end coords in all three
      * dimensions.  If a non 1.0 down sample rate is given retro-adjust so that the pre-downsampled
@@ -67,10 +71,9 @@ public class CoordCropper3D {
             cropCoords[ i * 2 + 1 ] = maxima[ i ] * normalizedCoords[ i * 2 + 1 ] * (int)downSampleRate;
         }
 
-        for ( int i = 0; i < cropCoords.length; i++ ) {
-            System.out.print( cropCoords[ i ] + "  ");
+        if ( logger.isDebugEnabled() ) {
+            dump(cropCoords);
         }
-        System.out.println();
 
         return cropCoords;
     }
@@ -90,12 +93,20 @@ public class CoordCropper3D {
             cropCoords[ i * 2 + 1 ] = maxima[ i ] * normalizedCoords[ i * 2 + 1 ];
         }
 
-        for ( int i = 0; i < cropCoords.length; i++ ) {
-            System.out.print( cropCoords[ i ] + "  ");
+        if ( logger.isDebugEnabled() ) {
+            dump( cropCoords );
         }
-        System.out.println();
 
         return cropCoords;
+    }
+
+    private void dump(float[] cropCoords) {
+        StringBuilder bldr = new StringBuilder();
+        for ( int i = 0; i < cropCoords.length; i++ ) {
+            bldr.append(cropCoords[i]);
+            bldr.append( "  " );
+        }
+        logger.debug( bldr.toString() );
     }
 
 }

@@ -10,6 +10,8 @@ import javax.swing.*;
 
 import org.janelia.it.FlyWorkstation.api.entity_model.management.ModelMgr;
 import org.janelia.it.FlyWorkstation.gui.alignment_board_viewer.MultiTexVolumeBrickFactory;
+import org.janelia.it.FlyWorkstation.gui.alignment_board_viewer.masking.FileStats;
+import org.janelia.it.FlyWorkstation.gui.alignment_board_viewer.texture.CacheWrapperDataSource;
 import org.janelia.it.FlyWorkstation.gui.framework.outline.EntityTransferHandler;
 import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.BrowserModel;
 import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr;
@@ -78,6 +80,8 @@ public class AlignmentBoardViewer extends Viewer implements AlignmentBoardContro
     private AlignmentBoardSettings settingsData;
     private ShutdownListener shutdownListener;
     private JToolBar toolbar;
+    private ABContextDataSource dataSource;
+    private FileStats fileStats;
 
     public AlignmentBoardViewer(ViewerPane viewerPane) {
         super(viewerPane);
@@ -85,7 +89,8 @@ public class AlignmentBoardViewer extends Viewer implements AlignmentBoardContro
         logger.info( "C'tor" );
         settingsData = new AlignmentBoardSettings();
         multiMaskTracker = new MultiMaskTracker();
-        renderMapping = new ConfigurableColorMapping( multiMaskTracker );
+        fileStats = new FileStats();
+        renderMapping = new ConfigurableColorMapping( multiMaskTracker, fileStats );
         setLayout(new BorderLayout());
         ModelMgr.getModelMgr().registerOnEventBus(this);
         
@@ -196,7 +201,7 @@ public class AlignmentBoardViewer extends Viewer implements AlignmentBoardContro
             }
             else {
                 serialize();
-                this.updateBoard( abContext );
+                this.updateContents(abContext);
             }
         }
     }
@@ -294,7 +299,7 @@ public class AlignmentBoardViewer extends Viewer implements AlignmentBoardContro
 
             // Now launch the update-to-service-outstanding, which will be time-consuming
             setLoading( false );
-            updateBoard( abContext );
+            updateContents(abContext);
 
         }
         else {
@@ -342,7 +347,7 @@ public class AlignmentBoardViewer extends Viewer implements AlignmentBoardContro
             printAlignmentBoardContext(abContext);
 
             // The true update!
-            this.updateBoard(abContext);
+            this.updateContents(abContext);
             boardOpen = true;
         }
     }
@@ -487,7 +492,7 @@ public class AlignmentBoardViewer extends Viewer implements AlignmentBoardContro
     /**
      * This is called when the board data has been updated.
      */
-    private void updateBoard( final AlignmentBoardContext context ) {
+    private void updateContents(final AlignmentBoardContext context) {
         logger.warn("Update-board called.");
         try {
             // TEMP
@@ -517,9 +522,10 @@ public class AlignmentBoardViewer extends Viewer implements AlignmentBoardContro
                         loadWorker.setProgressMonitor( null );
                     }
                     loadWorker = null;
+                    dataSource = new ABContextDataSource(context);
                     if ( cachedDownSampleGuess == null ) {
                         loadWorker = new RenderablesLoadWorker(
-                                new ABContextDataSource( context ),
+                                dataSource,
                                 renderMapping,
                                 AlignmentBoardViewer.this,
                                 settingsData,
@@ -529,7 +535,7 @@ public class AlignmentBoardViewer extends Viewer implements AlignmentBoardContro
                     }
                     else {
                         loadWorker = new RenderablesLoadWorker(
-                                new ABContextDataSource( context ),
+                                dataSource,
                                 renderMapping,
                                 AlignmentBoardViewer.this,
                                 settingsData,
@@ -542,6 +548,8 @@ public class AlignmentBoardViewer extends Viewer implements AlignmentBoardContro
                                     SessionMgr.getBrowser(), "Updating alignment board...", context.getName()
                             );
                     loadWorker.setProgressMonitor( monitor );
+                    fileStats.clear();
+                    loadWorker.setFileStats( fileStats );
                     loadWorker.execute();
 
                 }
@@ -672,7 +680,7 @@ public class AlignmentBoardViewer extends Viewer implements AlignmentBoardContro
                     // Here, simply make the rendering change.
                     loadWorker = null;
                     loadWorker = new RenderablesLoadWorker(
-                            new ABContextDataSource(context), renderMapping, this, settingsData, multiMaskTracker
+                            dataSource, renderMapping, this, settingsData, multiMaskTracker
                     );
                     loadWorker.setLoadFilesFlag( Boolean.FALSE );
                     loadWorker.execute();
@@ -704,7 +712,7 @@ public class AlignmentBoardViewer extends Viewer implements AlignmentBoardContro
                     public void run() {
                         AlignmentBoardContext context = SessionMgr.getBrowser().getLayersPanel().getAlignmentBoardContext();
                         viewer.serialize();
-                        viewer.updateBoard(context);
+                        viewer.updateContents(context);
                     }
                 });
                 thread.start();

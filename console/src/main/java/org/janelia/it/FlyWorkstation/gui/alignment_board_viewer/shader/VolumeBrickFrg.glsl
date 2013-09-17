@@ -36,6 +36,75 @@ float computeMaxIntensity( vec4 inputColor ) {
     return maxIntensity;
 }
 
+
+float posInterpToBitCount( float posInterp )
+{ // Map the interpretation of position into a bit-count.
+    if ( posInterp == 0.0 )
+    {
+        return 24.0;
+    }
+    else if ( posInterp == 1.0 )
+    {
+        return 8.0;
+    }
+    else if ( posInterp == 2.0 )
+    {
+        return 4.0;
+    }
+}
+
+float lowBitAdd(float origVal, float testByte, float addOnSet)
+{
+    float rtnVal = origVal;
+    float bitVal = mod( testByte, 2.0 );
+    if ( bitVal == 1.0 )
+    {
+        rtnVal = rtnVal + addOnSet;
+    }
+
+    return rtnVal;
+}
+
+float computeIntensity( vec4 inputColor, float pos, float posInterp )
+{   // Get the intensity bits.
+    float rtnVal = 0.0;
+    if ( posInterp == 0.0 )
+    {
+        rtnVal = computeMaxIntensity( inputColor );
+    }
+    else
+    {
+        float bitCount = posInterpToBitCount( posInterp );
+        if ( bitCount == 8.0 )
+        {
+            rtnVal = inputColor[ int( pos ) ];
+        }
+        else if ( bitCount == 4.0 )
+        {   // Must do a calc down into the 4-bit locs.
+            float byteInx = pos / 2.0;
+            float byteInxFloor = floor( pos / 2.0 );
+            float byteUsed = inputColor[ int( byteInxFloor ) ];
+            if ( byteInxFloor == byteInx )
+            {   // Bottom nibble.
+                for (int i = 0; i < 4; i++)
+                {
+                    rtnVal += lowBitAdd( rtnVal, byteUsed, pow( 2.0, i ) );
+                    byteUsed = floor( byteUsed / 2.0 );
+                }
+            }
+            else
+            {   // Top nibble.
+                rtnVal = floor( byteUsed / 16.0 );
+            }
+
+            // Now, must re-expand the value found above, to cover the 8-bit range.
+            rtnVal = ( rtnVal * 16.0 ) + 15.0;
+        }
+    }
+
+    return rtnVal;
+}
+
 // This takes the results of the color filter and creates "coloring relief" of areas given by the
 // masking texture.
 vec4 volumeMask(vec4 origColor)
@@ -60,11 +129,39 @@ vec4 volumeMask(vec4 origColor)
             vec4 mappedColor = texture3D(colorMapTexture, cmCoord);
 
             // This finds the render-method byte, which is stored in the alpha byte of the uploaded mapping texture.
-            float renderMethod = floor(mappedColor[ 3 ] * 255.1);
+            float renderMethodByte = floor(mappedColor[ 3 ] * 255.1);
+
+            float renderMethod = 0.0f;
+            renderMethod = lowBitAdd( renderMethod, renderMethodByte, 1.0 );
+
+            renderMethodByte = floor( renderMethodByte / 2.0 );
+            renderMethod = lowBitAdd( renderMethod, renderMethodByte, 2.0 );
+
+            renderMethodByte = floor( renderMethodByte / 2.0 );
+            renderMethod = lowBitAdd( renderMethod, renderMethodByte, 4.0 );
+
+            // Gather the intensity position.
+            float intensityPos = 0.0f;
+            renderMethodByte = floor( renderMethodByte / 2.0 );
+            intensityPos = lowBitAdd( intensityPos, renderMethodByte, 1.0 );
+
+            renderMethodByte = floor( renderMethodByte / 2.0 );
+            intensityPos = lowBitAdd( intensityPos, renderMethodByte, 2.0 );
+
+            renderMethodByte = floor( renderMethodByte / 2.0 );
+            intensityPos = lowBitAdd( intensityPos, renderMethodByte, 4.0 );
+
+            // Gather the intensity position interpretation.
+            float posInterp = 0.0f;
+            renderMethodByte = floor( renderMethodByte / 2.0 );
+            posInterp = lowBitAdd( posInterp, renderMethodByte, 1.0 );
+
+            renderMethodByte = floor( renderMethodByte / 2.0 );
+            posInterp = lowBitAdd( posInterp, renderMethodByte, 2.0 );
 
             // Find the max intensity.
             vec4 signalColor = origColor;
-            float maxIntensity = computeMaxIntensity( signalColor );
+            float intensity = computeIntensity( signalColor, intensityPos, posInterp );
 
             if ( mappedColor[ 3 ] == 0.0 )
             {
@@ -73,8 +170,8 @@ vec4 volumeMask(vec4 origColor)
             }
             else if ( renderMethod == 4.0 )
             {
-                float multiplier = 0.4 * maxIntensity;
-                rtnVal = vec4( origColor[ 0 ] * multiplier, origColor[ 1 ] * multiplier, origColor[ 2 ] * multiplier, maxIntensity );
+                float multiplier = 0.4 * intensity;
+                rtnVal = vec4( origColor[ 0 ] * multiplier, origColor[ 1 ] * multiplier, origColor[ 2 ] * multiplier, intensity );
             }
             else if ( renderMethod == 3.0 )
             {
@@ -85,18 +182,18 @@ vec4 volumeMask(vec4 origColor)
             }
             else if ( renderMethod == 2.0 )
             {
-                float maxMappedIntensity = computeMaxIntensity( mappedColor );
+                float mappedIntensity = computeMaxIntensity( mappedColor );
 
                 // Special case: a translucent compartment.  Here, make a translucent gray appearance.
                 // For gray mappings, fill in solid gray for anything empty, but otherwise just use original.
-                if ( maxMappedIntensity < 0.05 )
+                if ( mappedIntensity < 0.05 )
                 {
                     mappedColor = vec4( 3.0, 3.0, 3.0, 1.0 ); // Need to "overpower" the gamma correction with >1 val
                 }
 
                 for (int i = 0; i < 3; i++)
                 {
-                    rtnVal[i] = mappedColor[ i ] * 0.1 * maxIntensity;
+                    rtnVal[i] = mappedColor[ i ] * 0.1 * intensity;
                 }
             }
             else if ( renderMethod == 1.0 )
@@ -105,7 +202,7 @@ vec4 volumeMask(vec4 origColor)
                 // maximum intensity of any signal color.
                 for (int i = 0; i < 3; i++)
                 {
-                    rtnVal[i] = mappedColor[ i ] * maxIntensity;
+                    rtnVal[i] = mappedColor[ i ] * intensity;
                 }
             }
             else

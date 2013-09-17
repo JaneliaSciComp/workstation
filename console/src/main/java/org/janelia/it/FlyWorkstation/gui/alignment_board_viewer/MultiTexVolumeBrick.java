@@ -17,9 +17,8 @@ import org.janelia.it.FlyWorkstation.gui.viewer3d.texture.TextureMediator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.media.opengl.GL2;
-import javax.media.opengl.GLCapabilities;
-import javax.media.opengl.GLProfile;
+import javax.media.opengl.*;
+import javax.swing.*;
 
 /**
  * Class draws a transparent rectangular volume with a 3D opengl texture
@@ -69,17 +68,34 @@ public class MultiTexVolumeBrick implements VolumeBrickI
 
     static {
         try {
-            GLProfile profile = GLProfile.get(GLProfile.GL3);
-            final GLCapabilities capabilities = new GLCapabilities(profile);
-            capabilities.setGLProfile( profile );
-            // KEEPING this for use of GL3 under MAC.  So far, unneeded, and not debugged.
-            //        SwingUtilities.invokeLater(new Runnable() {
-            //            public void run() {
-            //                new JOCLSimpleGL3(capabilities);
-            //            }
-            //        });
+            SwingUtilities.invokeLater(new Runnable() {
+                public void run() {
+// 3rd
+//                    GLProfile profile = GLProfile.get(GLProfile.GL3);
+//                    GLCapabilities glCaps = new GLCapabilities(profile);
+//                    glCaps.setPBuffer(true);
+//                    GLPBuffer pbuffer =
+//                    GLDrawableFactory.getFactory(profile).createGLPbuffer(glCaps,
+//                        new DefaultGLCapabilitiesChooser(),
+//                        1, 1, null);
+//                    GLCanvas canvas = new GLCanvas(glCaps, new DefaultGLCapabilitiesChooser(),
+//                            PanelGL.pbuffer.getContext(), null);
+
+// 2nd
+//                    GLProfile profile = GLProfile.get(GLProfile.GL2);
+//                    GLCapabilities capabilities = new GLCapabilities(profile);
+//                    capabilities.setGLProfile( profile );
+//                    capabilities.setPBuffer(true);
+//                    GLDrawableFactory factory = GLDrawableFactory.getFactory(profile);
+//                    GLContext ctx = factory.createExternalGLContext();  // Dies here.
+//                    GL2 gl = ctx.getGL().getGL2();
+
+// 1st
+//                    new JOCLSimpleGL2(capabilities);
+                }
+            });
         } catch ( Throwable th ) {
-            logger.error( "No GL3 profile available" );
+            logger.error( "No GL2 profile available" );
         }
 
     }
@@ -104,8 +120,8 @@ public class MultiTexVolumeBrick implements VolumeBrickI
             createSyntheticData();
         }
 
-		gl.glPushAttrib(GL2.GL_TEXTURE_BIT | GL2.GL_ENABLE_BIT);
-
+		//gl.glPushAttrib(GL2.GL_TEXTURE_BIT | GL2.GL_ENABLE_BIT);
+        gl.glEnable(GL2.GL_TEXTURE);
         if (bSignalTextureNeedsUpload) {
             uploadSignalTexture(gl);
         }
@@ -144,7 +160,8 @@ public class MultiTexVolumeBrick implements VolumeBrickI
             }
         }
 		// tidy up
-		gl.glPopAttrib();
+		//gl.glPopAttrib();
+        gl.glDisable(GL2.GL_TEXTURE);
 		bIsInitialized = true;
 	}
 
@@ -210,7 +227,8 @@ public class MultiTexVolumeBrick implements VolumeBrickI
 	public void dispose(GL2 gl) {
         // Were the volume model listener removed at this point, it would leave NO listener available to it,
         // and it would never subsequently be restored.
-		gl.glDeleteTextures(textureIds.length, textureIds, 0);
+        if ( textureIds != null )
+		    gl.glDeleteTextures(textureIds.length, textureIds, 0);
 		// Retarded JOGL GLJPanel frequently reallocates the GL context
 		// during resize. So we need to be ready to reinitialize everything.
         textureIds = null;
@@ -425,19 +443,16 @@ public class MultiTexVolumeBrick implements VolumeBrickI
     /** DEBUG code to help understand what is happening with vtx or tex points. */
     @SuppressWarnings("unused")
     private void printPoints(String type, double[] p1, double[] p2, double[] p3, double[] p4) {
-        System.out.print(type + " [");
-        printPoint(p1);
-        System.out.print("][");
-        printPoint(p2);
-        System.out.print("][");
-        printPoint(p3);
-        System.out.print("][");
-        printPoint(p4);
-        System.out.println("]");
+        printPoint(type, p1);
+        printPoint(type, p2);
+        printPoint(type, p3);
+        printPoint(type, p4);
     }
 
-    private void printPoint(double[] p) {
-        System.out.printf("%s, %s, %s", Double.toString(p[0]), Double.toString(p[1]), Double.toString(p[2]));
+    private void printPoint(String type, double[] p) {
+        logger.info(String.format(
+                "%s [%s, %s, %s]", type, Double.toString(p[0]), Double.toString(p[1]), Double.toString(p[2]))
+        );
     }
 
     private void reportError(GL2 gl, String source) {

@@ -24,6 +24,7 @@ public interface MaskChanDataAcceptorI {
      * @see #addMaskData(Integer, long, long, long, long)
      * should be called together, as this channel data applies to a specific mask number.
      *
+     * @param orignalMaskNum number of mask associated with this channel data, as it was originally read.
      * @param channelData all data applicable for the mask.
      * @param position where in the logical output would this string fall?
      * @param x logical x coordinate.
@@ -34,7 +35,7 @@ public interface MaskChanDataAcceptorI {
      * @throws Exception from called method.
      */
     int addChannelData(
-            byte[] channelData, long position, long x, long y, long z, ChannelMetaData channelMetaData
+        Integer orignalMaskNum, byte[] channelData, long position, long x, long y, long z, ChannelMetaData channelMetaData
     ) throws Exception;
 
     /**

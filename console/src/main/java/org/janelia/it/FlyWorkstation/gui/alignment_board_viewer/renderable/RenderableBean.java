@@ -82,7 +82,10 @@ public class RenderableBean {
     /** Hash based on contained entity. */
     @Override
     public int hashCode() {
-        return getRenderableEntity().getId().hashCode();
+        if ( getRenderableEntity() != null )
+            return getRenderableEntity().getId().hashCode();
+        else
+            return translatedNum;
     }
 
     public boolean isInvertedY() {
@@ -109,4 +112,5 @@ public class RenderableBean {
     public void setVoxelCount(Long voxelCount) {
         this.voxelCount = voxelCount;
     }
+
 }

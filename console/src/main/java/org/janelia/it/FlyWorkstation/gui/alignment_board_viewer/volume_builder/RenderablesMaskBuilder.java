@@ -34,7 +34,7 @@ public class RenderablesMaskBuilder extends RenderablesVolumeBuilder implements 
     private final Logger logger = LoggerFactory.getLogger( RenderablesMaskBuilder.class );
     private final Collection<RenderableBean> renderableBeans;
     private byte[] volumeData;
-    private int byteCount = UNIVERSAL_MASK_BYTE_COUNT;
+    private int maskByteCount = UNIVERSAL_MASK_BYTE_COUNT;
     private final AlignmentBoardSettings settings;
     private boolean binary;   // Only two possible values for any given voxel.  1-byte per voxel.
 
@@ -64,8 +64,8 @@ public class RenderablesMaskBuilder extends RenderablesVolumeBuilder implements 
         init();
 
         // Assumed little-endian.
-        for ( int j = 0; j < getPixelByteCount(); j++ ) {
-            int volumeLoc = j + ((int) position * getPixelByteCount());
+        for ( int j = 0; j < maskByteCount; j++ ) {
+            int volumeLoc = j + ((int) position * maskByteCount);
             if ( binary ) {
                 volumeData[ volumeLoc ] = (byte)255;
             }
@@ -79,7 +79,12 @@ public class RenderablesMaskBuilder extends RenderablesVolumeBuilder implements 
     }
 
     @Override
-    public int addChannelData(byte[] channelData, long position, long x, long y, long z, ChannelMetaData channelMetaData) throws Exception {
+    public int addChannelData(
+            Integer orignalMaskNum,
+            byte[] channelData,
+            long position,
+            long x, long y, long z,
+            ChannelMetaData channelMetaData) throws Exception {
         throw new IllegalArgumentException( "Not implemented" );
     }
 
@@ -122,7 +127,7 @@ public class RenderablesMaskBuilder extends RenderablesVolumeBuilder implements 
 
     @Override
     public int getPixelByteCount() {
-        return byteCount;
+        return maskByteCount;
     }
 
     @Override
@@ -133,7 +138,7 @@ public class RenderablesMaskBuilder extends RenderablesVolumeBuilder implements 
         if ( downSampleRate != 1.0  &&  downSampleRate != 0.0 ) {
             DownSampler downSampler = new DownSampler( paddedSx, paddedSy, paddedSz );
             DownSampler.DownsampledTextureData downSampling = downSampler.getDownSampledVolume(
-                    volumeData, byteCount, downSampleRate, downSampleRate, downSampleRate
+                    volumeData, maskByteCount, downSampleRate, downSampleRate, downSampleRate
             );
             textureData = new TextureDataBean(
                     downSampling.getVolume(), downSampling.getSx(), downSampling.getSy(), downSampling.getSz()
@@ -158,7 +163,7 @@ public class RenderablesMaskBuilder extends RenderablesVolumeBuilder implements 
         textureData.setInterpolationMethod(GL2.GL_NEAREST);
         textureData.setRenderables(renderableBeans);
         textureData.setCoordCoverage(coordCoverage);
-        textureData.setPixelByteCount(byteCount);
+        textureData.setPixelByteCount(maskByteCount);
         textureData.setExplicitVoxelComponentType( GL2.GL_UNSIGNED_SHORT );
         textureData.setExplicitInternalFormat( GL2.GL_LUMINANCE16 );
 
@@ -193,7 +198,7 @@ public class RenderablesMaskBuilder extends RenderablesVolumeBuilder implements 
                     throw new RuntimeException("Space size not yet initialized.  Cannot initialize volume.");
                 }
                 logger.debug( "Initializing" );
-                volumeData = new byte[ (int)(paddedSx * paddedSy * paddedSz) * byteCount ];
+                volumeData = new byte[ (int)(paddedSx * paddedSy * paddedSz) * maskByteCount];
                 isInitialized = true;
             }
         }

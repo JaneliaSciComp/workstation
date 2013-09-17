@@ -15,7 +15,9 @@ import org.slf4j.LoggerFactory;
 import java.awt.*;
 import java.util.*;
 
-/** Implements the data source against the context of the alignment board. */
+/**
+ * Implements the data source against the context of the alignment board.  New read pass each call.
+ */
 public class ABContextDataSource implements RenderableDataSourceI {
 
     // This data was manually extracted from some Yoshi/standard-space-size data.  It is named as:

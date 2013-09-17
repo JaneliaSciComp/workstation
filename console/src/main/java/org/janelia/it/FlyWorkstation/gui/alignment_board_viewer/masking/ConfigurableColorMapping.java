@@ -4,6 +4,8 @@ import org.janelia.it.FlyWorkstation.gui.alignment_board_viewer.renderable.Inver
 import org.janelia.it.FlyWorkstation.gui.alignment_board_viewer.renderable.RBComparator;
 import org.janelia.it.FlyWorkstation.gui.alignment_board_viewer.renderable.RenderableBean;
 import org.janelia.it.jacs.model.entity.Entity;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.*;
 
@@ -17,13 +19,22 @@ import java.util.*;
  */
 public class ConfigurableColorMapping implements RenderMappingI {
 
+    private static final int MAX_INTENSITY_OFFSET = 8;
+    private static final int RENDER_METHOD_BITS = 3;
+    private static final int POSITION_BITS = 3;
+    private static final int BYTE_INTENSITY_INTERP = 1 << POSITION_BITS + RENDER_METHOD_BITS;
+    private static final int NIBBLE_INTENSITY_INTERP = 2 << POSITION_BITS + RENDER_METHOD_BITS;
+
     private Map<Long,Integer> guidToRenderMethod;
     private Collection<RenderableBean> renderableBeans;
     private MultiMaskTracker multiMaskTracker;
+    private FileStats fileStats;
+    private Logger logger = LoggerFactory.getLogger(ConfigurableColorMapping.class);
 
     public ConfigurableColorMapping() {}
-    public ConfigurableColorMapping( MultiMaskTracker multiMaskTracker ) {
+    public ConfigurableColorMapping( MultiMaskTracker multiMaskTracker, FileStats fileStats ) {
         this.multiMaskTracker = multiMaskTracker;
+        this.fileStats = fileStats;
     }
 
     @Override
@@ -38,11 +49,92 @@ public class ConfigurableColorMapping implements RenderMappingI {
 
     @Override
     public Map<Integer,byte[]> getMapping() {
-        return makeMaskMappings( renderableBeans );
+        return makeMaskMappings();
     }
 
-    private Map<Integer,byte[]> makeMaskMappings( Collection<RenderableBean> renderableBeans ) {
+    /**
+     * Buildup a map of masks (or intercompatible renderable ids), to their rendering info.
+     *
+     * @param renderableBeans
+     * @return
+     */
+    private Map<Integer,byte[]> makeMaskMappings() {
         Map<Integer,byte[]> maskMappings = new HashMap<Integer,byte[]>();
+
+        mapSingleMasks(maskMappings);
+        mapMultiMasks(maskMappings);
+
+        return maskMappings;
+
+    }
+
+    /**
+     * Multi-masks: these are backed by lists of alternate masks, two or more each.  They will be
+     * mapped to the rendering technique (and color) of the highest-priority, visible alternate mask
+     * on their list.  Also, position and position-interpretation will be added in some bits of the
+     * render method byte.
+     *
+     * @param maskMappings add mappings to this.
+     */
+    private void mapMultiMasks(Map<Integer, byte[]> maskMappings) {
+        if ( multiMaskTracker != null ) {
+            List<Integer> orderedMasks = prioritizeMasks();
+            Map<Integer,MultiMaskTracker.MultiMaskBean> multiMaskMap = multiMaskTracker.getMultiMaskBeans();
+            for ( Integer multiMask: multiMaskMap.keySet() ) {
+                MultiMaskTracker.MultiMaskBean bean = multiMaskMap.get( multiMask );
+                int leastPos = Integer.MAX_VALUE;
+                Integer chosenAltMask = null;
+                for ( Integer nextAltMask: bean.getAltMasks() ) {
+                    byte[] rgb = maskMappings.get( nextAltMask );
+                    if ( rgb != null  &&  rgb[ 3 ] != RenderMappingI.NON_RENDERING ) {
+                        int pos = orderedMasks.indexOf( nextAltMask );
+                        if ( pos < leastPos ) {
+                            chosenAltMask = nextAltMask;
+                            leastPos = pos;
+                        }
+                    }
+                }
+
+                // If any visible one found above, map the multimask to that value.
+                if ( chosenAltMask != null ) {
+                    // Get the raw render info from the chosen alternative mask.
+                    byte[] rgb = new byte[ 4 ];
+                    System.arraycopy( maskMappings.get( chosenAltMask ), 0, rgb, 0, 4 );
+
+                    // Add info to the "render method" byte.
+                    // Using the offset of the chosen mask, within the whole alternates list.
+                    int intensityOffset = bean.getMaskOffset( chosenAltMask ) << RENDER_METHOD_BITS;
+                    if ( intensityOffset <= MAX_INTENSITY_OFFSET ) {
+                        int intensityOffsetInterp = 0;
+
+                        // Using the number of alternates to signal to shader how to treat the mask offset number.
+                        if ( bean.getAltMasks().size() <= 4 ) {
+                            intensityOffsetInterp = BYTE_INTENSITY_INTERP;
+                        }
+                        else {
+                            intensityOffsetInterp = NIBBLE_INTENSITY_INTERP;
+                        }
+                        rgb[ 3 ] |= intensityOffset | intensityOffsetInterp;
+                        maskMappings.put( multiMask, rgb );
+                    }
+                    else {
+                        // Here, nothing to add to the mapping.  Max depth exceeded.
+                        logger.warn(
+                                "Exceeded max depth for multimask rendering. Depth is {}, of max {}.",
+                                intensityOffset, MAX_INTENSITY_OFFSET
+                        );
+                    }
+                }
+            }
+        }
+    }
+
+    /**
+     * 'Single mask' masks. They do not expand into anything.
+     *
+     * @param maskMappings the output mapping between the mask and its render method/color.
+     */
+    private void mapSingleMasks( Map<Integer, byte[]> maskMappings ) {
         byte[][] colorWheel = {
                 { (byte)0x00, (byte)0xff, (byte)0x00, (byte)0xff },          //G
                 { (byte)0x00, (byte)0x00, (byte)0xff, (byte)0xff },          //B
@@ -54,11 +146,16 @@ public class ConfigurableColorMapping implements RenderMappingI {
                 { (byte)0x00, (byte)0x8f, (byte)0x00, (byte)0xff },          //Dk G
         };
 
-        // 'Single mask' masks. They do not expand into anything.
+        // Each renderable bean is represented by a single mask and color.
         for ( RenderableBean renderableBean : renderableBeans ) {
             // Make the "back map" to the original fragment number.
             int translatedNum = renderableBean.getTranslatedNum();
             byte[] rgb = renderableBean.getRgb();
+
+            if ( rgb == null ) {
+                // May be able to use averages collected during read.
+                rgb = setRgbFromAverageColor( renderableBean );
+            }
 
             if ( rgb == null ) {
                 rgb = colorWheel[ translatedNum % colorWheel.length ];
@@ -88,35 +185,6 @@ public class ConfigurableColorMapping implements RenderMappingI {
 
             maskMappings.put( translatedNum, rgb );
         }
-
-        // Multi-masks: these are backed by lists of alternate masks, two or more each.  They will be
-        // mapped to the rendering technique (and color) of the highest-priority, visible alternate mask
-        // on their list.
-        if ( multiMaskTracker != null ) {
-            List<Integer> orderedMasks = prioritizeMasks();
-            Map<Integer,MultiMaskTracker.MultiMaskBean> multiMaskMap = multiMaskTracker.getMultiMaskBeans();
-            for ( Integer multiMask: multiMaskMap.keySet() ) {
-                MultiMaskTracker.MultiMaskBean bean = multiMaskMap.get( multiMask );
-                int leastPos = Integer.MAX_VALUE;
-                Integer chosenAltMask = null;
-                for ( Integer nextAltMask: bean.getAltMasks() ) {
-                    byte[] rgb = maskMappings.get( nextAltMask );
-                    if ( rgb != null  &&  rgb[ 3 ] != RenderMappingI.NON_RENDERING ) {
-                        int pos = orderedMasks.indexOf( nextAltMask );
-                        if ( pos < leastPos ) {
-                            chosenAltMask = nextAltMask;
-                        }
-                    }
-                }
-                // If any visible one found above, map the multimask to that value.
-                if ( chosenAltMask != null ) {
-                    maskMappings.put( multiMask, maskMappings.get( chosenAltMask ) );
-                }
-            }
-        }
-
-        return maskMappings;
-
     }
 
     private List<Integer> prioritizeMasks() {
@@ -140,6 +208,28 @@ public class ConfigurableColorMapping implements RenderMappingI {
             prioritizedMasks.add( bean.getTranslatedNum() );
         }
         return prioritizedMasks;
+    }
+
+    /**
+     * Add defaulted (non-user-chosen) values to color rendering, iff user has not picked any.
+     *
+     * @param bean set on here.
+     * @param loader use info from here.
+     */
+    private byte[] setRgbFromAverageColor(RenderableBean bean) {
+        byte[] rtnVal = null;
+        // Taking average voxels into account.
+        if ( bean.getRenderableEntity() != null ) {
+            double[] colorAverages = fileStats.getChannelAverages( bean.getRenderableEntity().getId() );
+            if ( colorAverages != null ) {
+                rtnVal = new byte[ 4 ];
+                for ( int i = 0; i < colorAverages.length; i++ ) {
+                    rtnVal[ i ] = (byte)(256.0 * colorAverages[ i ]);
+                }
+                rtnVal[ 3 ] = RenderMappingI.FRAGMENT_RENDERING;
+            }
+        }
+        return rtnVal;
     }
 
 }

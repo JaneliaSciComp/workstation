@@ -1,10 +1,6 @@
 package org.janelia.it.FlyWorkstation.gui.viewer3d.loader;
 
-import org.janelia.it.FlyWorkstation.gui.viewer3d.loader.ChannelMetaData;
-import org.janelia.it.FlyWorkstation.gui.viewer3d.loader.MaskChanDataAcceptorI;
 import org.slf4j.Logger;
-
-import java.util.Collection;
 
 /**
  * Created with IntelliJ IDEA.
@@ -19,7 +15,7 @@ public abstract class AbstractAcceptorDecorator implements MaskChanDataAcceptorI
     protected MaskChanDataAcceptorI wrappedAcceptor; // This must be provided by impl.
 
     @Override
-    public abstract int addChannelData(byte[] channelData, long position, long x, long y, long z, ChannelMetaData channelMetaData) throws Exception;
+    public abstract int addChannelData(Integer maskNumber, byte[] channelData, long position, long x, long y, long z, ChannelMetaData channelMetaData) throws Exception;
 
     @Override
     public abstract int addMaskData(Integer maskNumber, long position, long x, long y, long z) throws Exception;
