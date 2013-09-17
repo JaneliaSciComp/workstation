@@ -39,7 +39,7 @@ public class GourdDemo extends JFrame
     	setTitle("Gourd Demo");
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 
-        // Create canvas for openGL display of teapot
+        // Create canvas for openGL display of gourd
         GLCapabilities glCapabilities = new GLCapabilities(GLProfile.getDefault());
         // glCapabilities.setStereo(true);
         GLCanvas glPanel = new GLCanvas(glCapabilities);

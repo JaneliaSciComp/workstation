@@ -1,5 +1,10 @@
 package org.janelia.it.FlyWorkstation.gui.opengl;
 
+import java.nio.ByteBuffer;
+import java.nio.FloatBuffer;
+import java.nio.IntBuffer;
+
+import javax.media.opengl.GL;
 import javax.media.opengl.GL2;
 import org.janelia.it.FlyWorkstation.geom.Vec3;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.BoundingBox3d;
@@ -7,10 +12,23 @@ import org.janelia.it.FlyWorkstation.gui.viewer3d.BoundingBox3d;
 public class MeshActor 
 implements GLActor
 {
+    public enum DisplayMethod {
+        IMMEDIATE_MODE,
+        DISPLAY_LISTS,
+        VERTEX_BUFFER_OBJECTS,
+    }
+    
     private boolean smoothing = true;
     private PolygonalMesh mesh;
     private BoundingBox3d boundingBox;
+    private DisplayMethod displayMethod = DisplayMethod.DISPLAY_LISTS;
+    // display list render method
     private int displayList = 0;
+    // vertex buffer object render method
+    private int vertexVbo = 0;
+    private int normalVbo = 0;
+    private int indexVbo = 0;
+    private int indexCount = 0;
     
     public MeshActor(PolygonalMesh mesh) {
         this.mesh = mesh;
@@ -30,8 +48,14 @@ implements GLActor
 
     @Override
     public void display(GL2 gl) {
-        // displayUsingImmediateMode(gl);
-        displayUsingDisplayList(gl); // should be faster than immediate
+        if (displayMethod == DisplayMethod.IMMEDIATE_MODE)
+            displayUsingImmediateMode(gl);
+        else if (displayMethod == DisplayMethod.DISPLAY_LISTS)
+            displayUsingDisplayList(gl); // should be faster than immediate
+        else if (displayMethod == DisplayMethod.VERTEX_BUFFER_OBJECTS)
+            displayUsingVertexBufferObjects(gl); // should be faster than immediate
+        else
+            throw new UnsupportedOperationException("Display mode not implemented yet: "+displayMethod);
     }
     
     /**
@@ -58,6 +82,35 @@ implements GLActor
             }
             gl.glEnd();
         }
+    }
+    
+    private void displayUsingVertexBufferObjects(GL2 gl) {
+        if (vertexVbo == 0) {
+            // Initialize vertex buffer objects
+            int[] vbos = {0,0,0};
+            gl.glGenBuffers(3, vbos, 0);
+            vertexVbo = vbos[0];
+            normalVbo = vbos[1];
+            indexVbo = vbos[2];
+            //
+            FloatBuffer vertices = ByteBuffer.allocateDirect(3 * 4 * mesh.getVertexes().size()).asFloatBuffer();
+            vertices.rewind();
+            for (PolygonalMesh.Vertex v : mesh.getVertexes()) {
+                vertices.put((float)v.getX());
+                vertices.put((float)v.getY());
+                vertices.put((float)v.getZ());
+            }
+            // TODO
+            // indexCount = ?;
+        }
+        gl.glEnableClientState(GL2.GL_VERTEX_ARRAY);
+
+        gl.glBindBuffer(GL.GL_ARRAY_BUFFER, vertexVbo);
+        gl.glVertexPointer(3, GL.GL_FLOAT, 0, 0);
+        gl.glBindBuffer(GL.GL_ELEMENT_ARRAY_BUFFER, indexVbo);
+        gl.glDrawElements(GL.GL_TRIANGLES, indexCount, GL.GL_UNSIGNED_INT, 0);
+
+        gl.glDisableClientState(GL2.GL_VERTEX_ARRAY);
     }
 
     /**
