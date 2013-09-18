@@ -33,7 +33,7 @@ public class NBitChannelSplitStrategy implements ChannelSplitStrategyI {
      * channel data into the bit width given for this strategy object.
      */
     @Override
-    public byte[] updateValue( ChannelMetaData channelMetaData, int originalMask, byte[] channelsData, int multiMaskId ) {
+    public byte[] getUpdatedValue(ChannelMetaData channelMetaData, int originalMask, byte[] channelsData, int multiMaskId) {
         assert channelsData.length == channelMetaData.byteCount * channelMetaData.channelCount
                 : "Unexpected raw data count " + channelsData.length;
 

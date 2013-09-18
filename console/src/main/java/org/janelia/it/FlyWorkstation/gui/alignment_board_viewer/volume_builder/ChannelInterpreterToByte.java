@@ -1,5 +1,9 @@
 package org.janelia.it.FlyWorkstation.gui.alignment_board_viewer.volume_builder;
 
+import org.janelia.it.FlyWorkstation.gui.alignment_board_viewer.channel_split.ChannelSplitStrategyFactory;
+import org.janelia.it.FlyWorkstation.gui.alignment_board_viewer.masking.MultiMaskTracker;
+import org.janelia.it.FlyWorkstation.gui.alignment_board_viewer.masking.VolumeDataI;
+import org.janelia.it.FlyWorkstation.gui.viewer3d.channel_split.ChannelSplitStrategyI;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.loader.ChannelMetaData;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -16,27 +20,39 @@ import org.slf4j.LoggerFactory;
  */
 public class ChannelInterpreterToByte implements ChannelInterpreterI {
     private final byte[] volumeData;
+    private VolumeDataI wholeMaskVolume;
 
     private int maxValue = 0;
     private final Logger logger = LoggerFactory.getLogger( ChannelInterpreterToByte.class );
+    private ChannelSplitStrategyFactory splitStrategyFactory;
 
-    public ChannelInterpreterToByte(byte[] volumeData) {
+    /**
+     * Construct with volume data to be modified, as well as the mask volume for reference.
+     *
+     * @param volumeData to modify with latest contribution of channel bytes.
+     * @param wholeMaskVolume to reference for mask in use.
+     * @param multiMaskTracker to help with mask-based channel data changes.
+     */
+    public ChannelInterpreterToByte(byte[] volumeData, VolumeDataI wholeMaskVolume, MultiMaskTracker multiMaskTracker) {
         this.volumeData = volumeData;
-
+        this.wholeMaskVolume = wholeMaskVolume;
+        splitStrategyFactory = new ChannelSplitStrategyFactory( multiMaskTracker );
     }
 
     @Override
-    public void interpretChannelBytes(ChannelMetaData srcChannelMetaData, ChannelMetaData targetChannelMetaData, byte[] channelData, int targetPos) {
-        if ( srcChannelMetaData.byteCount == 1  &&  srcChannelMetaData.channelCount == 1 ) {
+    public void interpretChannelBytes(ChannelMetaData srcChannelMetaData, ChannelMetaData targetChannelMetaData, int orignalMaskNum, byte[] channelData, int targetPos) {
+
+        int multiMaskId = getMaskValue( targetPos, targetChannelMetaData.channelCount, RenderablesMaskBuilder.UNIVERSAL_MASK_BYTE_COUNT );  //TODO consider passing mask-size into the interpreter or moving the constant somewhere more general.
+
+        if ( srcChannelMetaData.byteCount == 1  &&  srcChannelMetaData.channelCount == 1  &&  multiMaskId == orignalMaskNum ) {
             // 1:1 straight copy to volume.
-            for ( int i = 0; i < srcChannelMetaData.rawChannelCount; i++ ) {
-                volumeData[ targetPos + i ] |= channelData[ i ];
-            }
-//            System.arraycopy(channelData, 0, volumeData, targetPos, srcChannelMetaData.rawChannelCount);
+            volumeData[ targetPos ] = channelData[ 0 ];
         }
         else {
+            // First get the size-adjusted channel bytes.  These are suited to the target channel characteristics,
+            // rather than the source characteristics--those from the input file. Put differently: adapt in to out.
             int[] orderedRgbIndexes = srcChannelMetaData.getOrderedRgbIndexes();
-
+            byte[] targetChannelBytes = new byte[ targetChannelMetaData.byteCount * targetChannelMetaData.channelCount ];
             // N:1 divide by max-byte.
             for ( int i = 0; i < srcChannelMetaData.rawChannelCount; i++ ) {
                 int finalValue = 0;
@@ -62,19 +78,36 @@ public class ChannelInterpreterToByte implements ChannelInterpreterI {
 
                 //synchronized (this) {
                 if ( targetPos + channelInx > 0  &&  (volumeData.length > targetPos+channelInx)) {
-                    // Here enforced: keep only certain bits of any previous channel.  Allow low bits to vary.
-                    volumeData[ targetPos + channelInx ] &= (byte)0xF0;
-                    volumeData[ targetPos + channelInx ] |= (byte)finalValue;
+                    targetChannelBytes[ channelInx ] = (byte)finalValue;
                 }
                 else {
                     logger.debug("Outside the box");
                 }
                 //}
             }
+
+            // At this point, multiplex the just-created target bytes so any alternate masks are represented.
+            ChannelSplitStrategyI channelSplitStrategy = splitStrategyFactory.getStrategyForMask( multiMaskId );
+            if ( channelSplitStrategy != null ) {
+                targetChannelBytes = channelSplitStrategy.getUpdatedValue(
+                        targetChannelMetaData, orignalMaskNum, targetChannelBytes, multiMaskId
+                );
+            }
+            for ( int i = 0; i < targetChannelMetaData.channelCount; i++ ) {
+                //  block of in-memory, interleaving the channels as the offsets follow.
+                if ( targetPos + i >= 0  &&  (volumeData.length > targetPos+i)) {
+                    // Here enforced: multiplexing the channel data by "OR"-ing in the latest.
+                    volumeData[ targetPos + i ] |= targetChannelBytes[ i ];
+                }
+                else {
+                    logger.error("Outside the box at volume writeback time.");
+                }
+            }
         }
 
         // Pad out to the end, to create the alpha byte.
-        if ( targetChannelMetaData.channelCount >= ( srcChannelMetaData.channelCount + 1 ) ) {
+        if ( targetChannelMetaData.channelCount >= ( srcChannelMetaData.channelCount + 1 ) &&
+             multiMaskId == orignalMaskNum ) {
             if ( targetPos + targetChannelMetaData.channelCount - 1 > 0  &&  (volumeData.length > targetPos + targetChannelMetaData.channelCount - 1))
                 volumeData[ targetPos + targetChannelMetaData.channelCount - 1 ] = (byte)255;
             else
@@ -85,5 +118,32 @@ public class ChannelInterpreterToByte implements ChannelInterpreterI {
     @Override
     public void close() {
         logger.info( "Maximum value found during channel interpretation was {}.", maxValue );
+    }
+
+    /** Goes to the mask volume, finds and reconstructs the mask at position given. */
+    private int getMaskValue( int position, int targetChannelWidth, int maskByteCount ) {
+        // Find the appropriate slot in the mask data, and get its value.
+        byte[] maskVolumeData = this.wholeMaskVolume.getCurrentVolumeData();
+        int volumeMask = 0;
+        if ( maskVolumeData != null ) {
+            int volumeLoc = (position / targetChannelWidth) * maskByteCount;
+            // Assumed little-endian.
+            for ( int j = 0; j < maskByteCount; j++ ) {
+                // The volume mask is the one currently in use.  This could be a single or multi-mask.
+                int maskByte = maskVolumeData[volumeLoc];
+                if ( maskByte < 0 )
+                    maskByte += 256;
+                volumeMask += maskByte << (8*j);
+                volumeLoc++;
+            }
+if ( volumeMask < 0 )
+logger.error("Negative mask value " + volumeMask );
+        }
+        else {
+            throw new RuntimeException("No volume data available.  Cannot add mask data.");
+        }
+
+        return volumeMask;
+
     }
 }

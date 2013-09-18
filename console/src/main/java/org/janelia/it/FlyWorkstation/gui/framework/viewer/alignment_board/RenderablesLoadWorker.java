@@ -1,6 +1,5 @@
 package org.janelia.it.FlyWorkstation.gui.framework.viewer.alignment_board;
 
-import org.janelia.it.FlyWorkstation.gui.alignment_board_viewer.loader.ChannelMultiplexingAcceptorDecorator;
 import org.janelia.it.FlyWorkstation.gui.alignment_board_viewer.renderable.*;
 import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.FlyWorkstation.gui.alignment_board_viewer.gui_elements.GpuSampler;
@@ -235,7 +234,9 @@ public class RenderablesLoadWorker extends SimpleWorker implements VolumeLoader 
             maskTextureBuilder = new RenderablesMaskBuilder( alignmentBoardSettings, renderableBeans );
 
             // Establish the means for extracting the signal data.
-            signalTextureBuilder = new RenderablesChannelsBuilder( alignmentBoardSettings, renderableBeans );
+            signalTextureBuilder = new RenderablesChannelsBuilder(
+                    alignmentBoardSettings, multiMaskTracker, maskTextureBuilder, renderableBeans
+            );
 
             // Unfortunately, the wrapper knows the thing it wraps, but at least under a different definition.
             RemaskingAcceptorDecorator remaskingAcceptorDecorator = new RemaskingAcceptorDecorator(
@@ -261,13 +262,7 @@ public class RenderablesLoadWorker extends SimpleWorker implements VolumeLoader 
 
             // RE-run the scan.  This time only the signal-texture-builder will accept the data.
             acceptors.clear();
-            ChannelMultiplexingAcceptorDecorator channelDecorator = new ChannelMultiplexingAcceptorDecorator(
-                    multiMaskTracker,
-                    maskTextureBuilder,
-                    signalTextureBuilder,
-                    RenderablesMaskBuilder.UNIVERSAL_MASK_BYTE_COUNT
-            );
-            acceptors.add( channelDecorator );
+            acceptors.add( signalTextureBuilder );
             neuronFragmentLoader.setAcceptors(acceptors);
             compartmentLoader.setAcceptors( acceptors );
 

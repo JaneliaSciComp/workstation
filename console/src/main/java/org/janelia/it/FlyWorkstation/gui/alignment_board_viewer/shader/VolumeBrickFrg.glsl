@@ -26,7 +26,8 @@ vec3 getMapCoord( float location )
     return cmCoord;
 }
 
-float computeMaxIntensity( vec4 inputColor ) {
+float computeMaxIntensity( vec4 inputColor )
+{
     float maxIntensity = 0.0;
     for (int i = 0; i < 3; i++)
     {
@@ -77,7 +78,7 @@ float computeIntensity( vec4 inputColor, float pos, float posInterp )
         float bitCount = posInterpToBitCount( posInterp );
         if ( bitCount == 8.0 )
         {
-            rtnVal = inputColor[ int( pos ) ];
+            rtnVal = inputColor[ int(pos) ];
         }
         else if ( bitCount == 4.0 )
         {   // Must do a calc down into the 4-bit locs.
@@ -128,7 +129,9 @@ vec4 volumeMask(vec4 origColor)
             vec3 cmCoord = getMapCoord( floor( maskingColor.g * 65535.1 ) );
             vec4 mappedColor = texture3D(colorMapTexture, cmCoord);
 
-            // This finds the render-method byte, which is stored in the alpha byte of the uploaded mapping texture.
+            // Three masked-in values below will be "popped off" as if from a stack of bits.
+
+            // This finds the render-method byte, which is stored in the high byte of the uploaded mapping texture.
             float renderMethodByte = floor(mappedColor[ 3 ] * 255.1);
 
             float renderMethod = 0.0f;
@@ -204,6 +207,7 @@ vec4 volumeMask(vec4 origColor)
                 {
                     rtnVal[i] = mappedColor[ i ] * intensity;
                 }
+                rtnVal[3] = intensity;
             }
             else
             {

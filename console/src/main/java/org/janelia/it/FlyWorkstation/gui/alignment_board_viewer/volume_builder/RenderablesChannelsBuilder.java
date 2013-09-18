@@ -1,8 +1,10 @@
 package org.janelia.it.FlyWorkstation.gui.alignment_board_viewer.volume_builder;
 
+import org.janelia.it.FlyWorkstation.gui.alignment_board_viewer.channel_split.ChannelSplitStrategyFactory;
 import org.janelia.it.FlyWorkstation.gui.framework.viewer.alignment_board.AlignmentBoardSettings;
 import org.janelia.it.FlyWorkstation.gui.alignment_board_viewer.MultiTexVolumeBrick;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.VolumeDataAcceptor;
+import org.janelia.it.FlyWorkstation.gui.viewer3d.channel_split.ChannelSplitStrategyI;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.loader.ChannelMetaData;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.loader.VolumeLoaderI;
 import org.janelia.it.FlyWorkstation.gui.alignment_board_viewer.masking.*;
@@ -40,15 +42,24 @@ public class RenderablesChannelsBuilder extends RenderablesVolumeBuilder impleme
     private ChannelInterpreterI channelInterpreter;
     private final AlignmentBoardSettings settings;
     private final Collection<RenderableBean> renderableBeans;
+    private VolumeDataI maskVolumeData;
+    private MultiMaskTracker multiMaskTracker;
 
     protected boolean needsChannelInit = false; // Initialized for emphasis.
     private final Logger logger = LoggerFactory.getLogger( RenderablesChannelsBuilder.class );
 
-    public RenderablesChannelsBuilder( AlignmentBoardSettings settings, Collection<RenderableBean> renderableBeans ) {
+    public RenderablesChannelsBuilder(
+            AlignmentBoardSettings settings,
+            MultiMaskTracker multiMaskTracker,
+            VolumeDataI maskVolumeData,
+            Collection<RenderableBean> renderableBeans
+    ) {
         super();  // ...and I _mean_ that!
         needsChannelInit = true; // Must initialize the channel-specific data.
         this.settings = settings;
+        this.multiMaskTracker = multiMaskTracker;
         this.renderableBeans = renderableBeans;
+        this.maskVolumeData = maskVolumeData;
 
         channelMetaData = new ChannelMetaData();
         channelMetaData.rawChannelCount = 3; // Forcing a good upper bound.
@@ -109,7 +120,7 @@ public class RenderablesChannelsBuilder extends RenderablesVolumeBuilder impleme
      * Width of channel data is allowed by this routine to vary for each call.  Width will be
      * computed from the size of the incoming byte array.
      *
-     *
+     * @param orignalMaskNum this is the ultimate mask value that has gone into the mask volume.
      * @param volumePosition where it goes.  Not multiplied by number of channels.  Not an offset into the channel data!
      * @param channelMetaData helps interpret the placement of channel data, where applicable.
      * @return total positions applied.
@@ -127,7 +138,7 @@ public class RenderablesChannelsBuilder extends RenderablesVolumeBuilder impleme
         init();
 
         int targetPos = (int)( volumePosition * this.channelMetaData.channelCount * FIXED_BYTE_PER_CHANNEL );
-        channelInterpreter.interpretChannelBytes(channelMetaData, this.channelMetaData, channelData, targetPos);
+        channelInterpreter.interpretChannelBytes(channelMetaData, this.channelMetaData, orignalMaskNum, channelData, targetPos);
 
         return 1;
     }
@@ -351,7 +362,7 @@ public class RenderablesChannelsBuilder extends RenderablesVolumeBuilder impleme
                         channelMetaData.rawChannelCount,
                         channelMetaData.channelCount
                 );
-                channelInterpreter = new ChannelInterpreterToByte( volumeData );
+                channelInterpreter = new ChannelInterpreterToByte( volumeData, maskVolumeData, multiMaskTracker );
 
                 needsChannelInit = false;
             }

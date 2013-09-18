@@ -13,10 +13,12 @@ import org.janelia.it.FlyWorkstation.gui.viewer3d.channel_split.ChannelSplitStra
  */
 public class ChannelSplitStrategyFactory {
 
-    ChannelSplitStrategyI[] strategies;
+    private ChannelSplitStrategyI[] strategies;
+    private MultiMaskTracker multiMaskTracker;
 
     /** Constructor creates the lookup mechanism followed below. */
     public ChannelSplitStrategyFactory( MultiMaskTracker multiMaskTracker ) {
+        this.multiMaskTracker = multiMaskTracker;
         strategies = new ChannelSplitStrategyI[ 9 ];
         strategies[ 0 ] = null;
         strategies[ 1 ] = null;
@@ -32,6 +34,15 @@ public class ChannelSplitStrategyFactory {
 
     public ChannelSplitStrategyI getStrategyForSubmaskCount( int submaskCount ) {
         return strategies[ submaskCount ];
+    }
+
+    public ChannelSplitStrategyI getStrategyForMask( int maskId ) {
+        // First establish what the submask count is.
+        int submaskCount = 1;
+        if ( multiMaskTracker != null ) {
+            submaskCount = multiMaskTracker.getMaskExpansionCount( maskId );
+        }
+        return getStrategyForSubmaskCount( submaskCount );
     }
 
 }

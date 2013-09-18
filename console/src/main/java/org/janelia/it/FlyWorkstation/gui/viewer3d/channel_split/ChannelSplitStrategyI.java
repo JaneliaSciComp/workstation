@@ -12,5 +12,5 @@ import org.janelia.it.FlyWorkstation.gui.viewer3d.loader.ChannelMetaData;
  * appropriately into the channel data.  Channel data will be modified (it is an output).
  */
 public interface ChannelSplitStrategyI {
-    byte[] updateValue(ChannelMetaData channelMetaDatas, int originalMask, byte[] channelsData, int multiMaskId );
+    byte[] getUpdatedValue(ChannelMetaData channelMetaDatas, int originalMask, byte[] channelsData, int multiMaskId);
 }
