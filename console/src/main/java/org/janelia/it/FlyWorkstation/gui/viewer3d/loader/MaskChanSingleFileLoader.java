@@ -199,6 +199,9 @@ public class MaskChanSingleFileLoader {
 
         // Channel only available if presence of acceptors signalled its read.
         if ( channelAcceptors.size() > 0  &&  renderableBean.getRenderableEntity() != null  &&  fileStats != null ) {
+System.out.println("Average values for "+renderableBean.getRenderableEntity().getName() + " at total voxels of " +renderableBean.getVoxelCount() + " are:\n"
++"RED: "+channelAverages[0]+" / GREEN: "+channelAverages[1]+" / BLUE: "+channelAverages[2]
+);
             fileStats.recordChannelAverages( renderableBean.getRenderableEntity().getId(), channelAverages );
         }
 
@@ -403,8 +406,8 @@ public class MaskChanSingleFileLoader {
         channelMetaData.rawChannelCount = readByte( channelStream );
         channelMetaData.channelCount = channelMetaData.rawChannelCount;
         channelMetaData.redChannelInx = readByte( channelStream );
-        channelMetaData.blueChannelInx = readByte( channelStream );
         channelMetaData.greenChannelInx = readByte( channelStream );
+        channelMetaData.blueChannelInx = readByte( channelStream );
         channelMetaData.byteCount = readByte( channelStream );
         channelMetaData.renderableBean = this.renderableBean;
 
@@ -473,7 +476,7 @@ public class MaskChanSingleFileLoader {
         // the fastest-varying one, numbered 'axis', changes.
 
         int translatedNum = renderableBean.getTranslatedNum();
-        double totalVoxelFactor = 1.0 / ((double)totalVoxels * Math.pow( 256, channelMetaData.byteCount ) );
+        double totalVoxelFactor = 1.0 / ( (double)totalVoxels * Math.pow( 256, channelMetaData.byteCount ) );
         byte[] allChannelBytes = new byte[ channelMetaData.byteCount * channelMetaData.channelCount ];
         for ( long[] pairAlongRay: pairsAlongRay ) {
             for ( long rayPosition = pairAlongRay[ 0 ]; rayPosition < pairAlongRay[ 1 ]; rayPosition++ ) {
@@ -500,24 +503,27 @@ public class MaskChanSingleFileLoader {
                 // Here, must get the channel data.  This will include all bytes for each channel organized parallel.
                 if ( channelAcceptors.size() > 0 ) {
                     int voxelBytesAlreadyRead = cummulativeVoxelsReadCount * channelMetaData.byteCount;
-                    int channelValue = 0;
                     int[] orderedRgbIndexes = channelMetaData.getOrderedRgbIndexes();
-
-                    for ( int i = 0; i < channelMetaData.channelCount; i++ ) {
-                        int channelOffset = (i * channelMetaData.byteCount) + channelMetaData.byteCount - 1;
+                    for ( int iChnl = 0; iChnl < channelMetaData.channelCount; iChnl++ ) {
+                        int channelValue = 0;
+                        int channelOffset = (iChnl * channelMetaData.byteCount) + channelMetaData.byteCount - 1;
                         if ( channelData != null ) {
-                            byte[] nextChannelData = channelData.get( i );
-                            for ( int j=0; j < channelMetaData.byteCount; j++ ) {
+                            byte[] nextChannelData = channelData.get( iChnl );
+                            for ( int iByte = 0; iByte < channelMetaData.byteCount; iByte++ ) {
                                 //                                                   REVERSING byte order for Java
-                                int targetOffset = channelOffset - j;
-                                byte nextChannelValue = nextChannelData[voxelBytesAlreadyRead + j];
+                                int targetOffset = channelOffset - iByte;
+                                int nextChannelValue = nextChannelData[voxelBytesAlreadyRead + iByte];
+                                if ( nextChannelValue < 0 ) {
+                                    nextChannelValue += 256;
+                                }
                                 allChannelBytes[ targetOffset ] = (byte)(nextChannelValue / intensityDivisor);
 
                                 // Save full channel value for statistical calculations.
-                                channelValue += nextChannelValue << (channelMetaData.byteCount - j);
+                                channelValue += nextChannelValue
+                                             << 8 * (channelMetaData.byteCount - iByte - 1);
                             }
 
-                            channelAverages[ orderedRgbIndexes[ i ] ] += channelValue * totalVoxelFactor;
+                            channelAverages[ orderedRgbIndexes[ iChnl ] ] += channelValue * totalVoxelFactor;
                         }
                         else {
                             allChannelBytes = new byte[ allFChannelBytes.length ];
@@ -726,5 +732,41 @@ public class MaskChanSingleFileLoader {
 
         return longBuffer.getLong();
     }
+
+    /*
+      Format for mask and channel files.
+      Mask files:
+    long xsize; // space
+    long ysize; // space
+    long zsize; // space
+    long x0; // bounding box
+    long x1; // bounding box, such that x0 is inclusive, x1 exclusive, etc
+    long y0; // bb
+    long y1; // bb
+    long z0; // bb
+    long z1; // bb
+    long totalVoxels;
+    unsigned char axis; // 0=yz(x), 1=xz(y), 2=xy(z)
+    { // For each ray
+      long skip;
+      long pairs;
+      { // For each pair
+        long start;
+        long end; // such that end-start is length, i.e., end is exclusive
+      }
+    }
+    Channel files:
+    long totalVoxels;
+    unsigned char channels; // number of channels
+    unsigned char recommendedRedChannel;
+    unsigned char recommendedGreenChannel;
+    unsigned char recommendedBlueChannel;
+    unsigned char bytesPerChannel; // 1=8-bit, 2=16-bit
+    { // For each channel
+      { // For each voxel
+        B value;
+      }
+    }
+    */
 
 }

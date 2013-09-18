@@ -115,9 +115,6 @@ public class ConfigurableColorMapping implements RenderMappingI {
                             intensityOffsetInterp = NIBBLE_INTENSITY_INTERP;
                         }
                         rgb[ 3 ] |= intensityOffset | intensityOffsetInterp;
-//if ( intensityOffset != 8 ) {
-System.out.println("Got offset of " + intensityOffset + " for intensity " + chosenAltMask + " " + multiMask);
-//}
                         maskMappings.put( multiMask, rgb );
                     }
                     else if ( intensityOffset < 0 ) {

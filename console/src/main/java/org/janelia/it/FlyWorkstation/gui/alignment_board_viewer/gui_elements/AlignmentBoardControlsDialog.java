@@ -83,6 +83,7 @@ public class AlignmentBoardControlsDialog extends JDialog {
     private static final String ESTIMATED_BEST_RESOLUTION = "Best Guess";
     private static final String DOWN_SAMPLE_PROP_NAME = "AlignmentBoard_Downsample_Rate";
     private static final String GUESS_LABEL_FMT = "Best Guess: %s";
+    private static final String MINIMUM_VOXEL_COUNT = "  " + AlignmentBoardSettings.DEFAULT_MIN_VOX_COUNT;
 
     private Component centering;
     private JSlider brightnessSlider;
@@ -250,7 +251,7 @@ public class AlignmentBoardControlsDialog extends JDialog {
         try {
             // Except out if the input value is non-numeric, out of range or less than 1.
             rtnVal = Long.parseLong( selectedValue );
-            if ( rtnVal < AlignmentBoardSettings.DEFAULT_MIN_VOX_COUNT ) {
+            if ( rtnVal < AlignmentBoardSettings.NO_MINIMUM_VOXEL_COUNT ) {
                 throw new RuntimeException();
             }
         } catch ( Exception ex ) {
@@ -272,8 +273,7 @@ public class AlignmentBoardControlsDialog extends JDialog {
         brightnessSlider.setValue(value);
 
         long minimumVoxelCount = settings.getMinimumVoxelCount();
-        if ( minimumVoxelCount != AlignmentBoardSettings.DEFAULT_MIN_VOX_COUNT )
-            minimumVoxelCountTF.setText( "" + minimumVoxelCount);
+        minimumVoxelCountTF.setText( "" + minimumVoxelCount);
     }
 
     /** Call this when sufficient info is avail to get the sliders positions initialized off crop-coords. */
@@ -592,14 +592,14 @@ public class AlignmentBoardControlsDialog extends JDialog {
             }
         };
 
-        minimumVoxelCountTF = new JTextField("  -1");
+        minimumVoxelCountTF = new JTextField(MINIMUM_VOXEL_COUNT);
         minimumVoxelCountTF.setMinimumSize(MIN_VOX_COUNT_SIZE);
         minimumVoxelCountTF.setPreferredSize(MIN_VOX_COUNT_SIZE);
         minimumVoxelCountTF.setMaximumSize(MIN_VOX_COUNT_SIZE);
         minimumVoxelCountTF.setBorder( new TitledBorder( "Minimum Neuron Voxels" ) );
         minimumVoxelCountTF.setToolTipText(
                 "Integer: least number of neuron voxels before a neuron fragment is not rendered.\n" +
-                "Default value of -1 implies no such filtering."
+                "Value of "+ AlignmentBoardSettings.NO_MINIMUM_VOXEL_COUNT+" implies no such filtering."
         );
         minimumVoxelCountTF.addMouseListener( commitEnablerMouseListener );
 
