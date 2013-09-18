@@ -70,7 +70,7 @@ public class NBitChannelSplitStrategyTest {
         channelsData[ 3 ] = (byte)3;
         channelsData[ 4 ] = (byte)121;
         channelsData[ 5 ] = (byte)0;
-        byte[] finalChannelsData = channelSplitter.updateValue(channelMetaData, 1, channelsData, 57);
+        byte[] finalChannelsData = channelSplitter.getUpdatedValue(channelMetaData, 1, channelsData, 57);
         dumpAttempt(1, channelsData, finalChannelsData);
 
         channelsData = new byte[ channelMetaData.channelCount * channelMetaData.byteCount ];
@@ -80,7 +80,7 @@ public class NBitChannelSplitStrategyTest {
         channelsData[ 3 ] = (byte)9;
         channelsData[ 4 ] = (byte)4;
         channelsData[ 5 ] = (byte)4;
-        finalChannelsData = channelSplitter.updateValue(channelMetaData, 2, channelsData, 57);
+        finalChannelsData = channelSplitter.getUpdatedValue(channelMetaData, 2, channelsData, 57);
         dumpAttempt(2, channelsData, finalChannelsData);
 
         channelsData = new byte[ channelMetaData.channelCount * channelMetaData.byteCount ];
@@ -90,7 +90,7 @@ public class NBitChannelSplitStrategyTest {
         channelsData[ 3 ] = (byte)7;
         channelsData[ 4 ] = (byte)121;
         channelsData[ 5 ] = (byte)0;
-        finalChannelsData = channelSplitter.updateValue(channelMetaData, 4, channelsData, 57);
+        finalChannelsData = channelSplitter.getUpdatedValue(channelMetaData, 4, channelsData, 57);
         dumpAttempt(4, channelsData, finalChannelsData);
     }
 
@@ -134,7 +134,7 @@ public class NBitChannelSplitStrategyTest {
         channelsData[ 1 ] = (byte)255;
         channelsData[ 2 ] = (byte)7;
         channelsData[ 3 ] = (byte)3;
-        byte[] finalChannelsData = channelSplitter.updateValue(channelMetaData, 1, channelsData, 57);
+        byte[] finalChannelsData = channelSplitter.getUpdatedValue(channelMetaData, 1, channelsData, 57);
         dumpAttempt(1, channelsData, finalChannelsData);
 
         channelsData = new byte[ channelMetaData.channelCount * channelMetaData.byteCount ];
@@ -142,7 +142,7 @@ public class NBitChannelSplitStrategyTest {
         channelsData[ 1 ] = (byte)6;
         channelsData[ 2 ] = (byte)9;
         channelsData[ 3 ] = (byte)9;
-        finalChannelsData = channelSplitter.updateValue(channelMetaData, 2, channelsData, 57);
+        finalChannelsData = channelSplitter.getUpdatedValue(channelMetaData, 2, channelsData, 57);
         dumpAttempt(2, channelsData, finalChannelsData);
 
         channelsData = new byte[ channelMetaData.channelCount * channelMetaData.byteCount ];
@@ -150,7 +150,7 @@ public class NBitChannelSplitStrategyTest {
         channelsData[ 1 ] = (byte)3;
         channelsData[ 2 ] = (byte)25;
         channelsData[ 3 ] = (byte)7;
-        finalChannelsData = channelSplitter.updateValue(channelMetaData, 4, channelsData, 57);
+        finalChannelsData = channelSplitter.getUpdatedValue(channelMetaData, 4, channelsData, 57);
         dumpAttempt(4, channelsData, finalChannelsData);
     }
 

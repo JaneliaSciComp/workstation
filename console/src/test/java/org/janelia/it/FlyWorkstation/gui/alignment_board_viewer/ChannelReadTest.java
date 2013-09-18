@@ -75,7 +75,7 @@ public class ChannelReadTest {
         settings.setShowChannelData( true );
         settings.setGammaFactor( AlignmentBoardSettings.DEFAULT_GAMMA );
         settings.setChosenDownSampleRate(AlignmentBoardControlsDialog.UNSELECTED_DOWNSAMPLE_RATE);
-        RenderablesChannelsBuilder builder = new RenderablesChannelsBuilder( settings, null );
+        RenderablesChannelsBuilder builder = new RenderablesChannelsBuilder( settings, null, null, null );
         loader.setAcceptors( Arrays.<MaskChanDataAcceptorI>asList( builder ) );
 
         loader.read( bean, testMaskStream, testChannelStream );
