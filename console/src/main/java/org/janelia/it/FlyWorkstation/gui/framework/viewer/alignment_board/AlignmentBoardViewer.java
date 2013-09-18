@@ -11,7 +11,6 @@ import javax.swing.*;
 import org.janelia.it.FlyWorkstation.api.entity_model.management.ModelMgr;
 import org.janelia.it.FlyWorkstation.gui.alignment_board_viewer.MultiTexVolumeBrickFactory;
 import org.janelia.it.FlyWorkstation.gui.alignment_board_viewer.masking.FileStats;
-import org.janelia.it.FlyWorkstation.gui.alignment_board_viewer.texture.CacheWrapperDataSource;
 import org.janelia.it.FlyWorkstation.gui.framework.outline.EntityTransferHandler;
 import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.BrowserModel;
 import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr;
@@ -65,6 +64,7 @@ public class AlignmentBoardViewer extends Viewer implements AlignmentBoardContro
 
     private RenderMappingI renderMapping;
     private MultiMaskTracker multiMaskTracker;
+    @SuppressWarnings("unused")
     private BrainGlow brainGlow;
     private AlignmentBoardControlsDialog settingsDialog;
     private Logger logger = LoggerFactory.getLogger(AlignmentBoardViewer.class);
@@ -173,6 +173,7 @@ public class AlignmentBoardViewer extends Viewer implements AlignmentBoardContro
         refresh();
     }
 
+    @SuppressWarnings("unused")
     @Subscribe
     public void handleBoardOpened(AlignmentBoardOpenEvent event) {
         logger.info( "Board Opened" );
@@ -181,6 +182,7 @@ public class AlignmentBoardViewer extends Viewer implements AlignmentBoardContro
         handleBoardOpened(abContext);
     }
 
+    @SuppressWarnings("unused")
     @Subscribe
     public void handleItemChanged(AlignmentBoardItemChangeEvent event) {
         logger.debug( "Item changed" );
