@@ -14,6 +14,10 @@ public class VolumeDataBean implements VolumeDataI {
 
     private byte[] cachedVolume;
 
+    public VolumeDataBean( byte[] wholeVolume ) {
+        cachedVolume = wholeVolume;
+    }
+
     public VolumeDataBean( long size ) {
         cachedVolume = new byte[ (int)size ];
     }

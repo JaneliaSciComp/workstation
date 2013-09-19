@@ -10,7 +10,9 @@ package org.janelia.it.FlyWorkstation.gui.viewer3d.texture;
  * because masks like this can be switched on and off, changing their offsets at runtime.
  */
 
+import org.janelia.it.FlyWorkstation.gui.alignment_board_viewer.masking.VolumeDataI;
 import org.janelia.it.FlyWorkstation.gui.alignment_board_viewer.renderable.RenderableBean;
+import org.janelia.it.FlyWorkstation.gui.alignment_board_viewer.volume_builder.VolumeDataBean;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.VolumeDataAcceptor;
 
 import javax.media.opengl.GL2;
@@ -23,7 +25,7 @@ public class TextureDataBean implements TextureDataI {
     private static final int INTEGER_NUM_BYTES = (Integer.SIZE / 8);
 
     private String remoteFilename;
-    private byte[] textureData;
+    private VolumeDataI textureData;
     private Integer sx;
     private Integer sy;
     private Integer sz;
@@ -49,7 +51,7 @@ public class TextureDataBean implements TextureDataI {
 
     private Collection<RenderableBean> renderables;
 
-    public TextureDataBean(byte[] textureData, int sx, int sy, int sz) {
+    public TextureDataBean(VolumeDataI textureData, int sx, int sy, int sz) {
         this.textureData = textureData;
         setSx( sx );
         setSy( sy );
@@ -61,7 +63,8 @@ public class TextureDataBean implements TextureDataI {
         intermediate.order( ByteOrder.LITTLE_ENDIAN );
         IntBuffer intBuffer = intermediate.asIntBuffer();
         intBuffer.put( argbData );
-        textureData = intermediate.array();
+        byte[] array = intermediate.array();
+        textureData = new VolumeDataBean( array );
         setSx( sx );
         setSy( sy );
         setSz( sz );
@@ -83,34 +86,41 @@ public class TextureDataBean implements TextureDataI {
     }
 
     @Override
-    public void setTextureData( byte[] textureData ) {
+    public void setTextureData( VolumeDataI textureData ) {
         this.textureData = textureData;
     }
 
-    public byte[] getTextureData() {
+    @Override
+    public VolumeDataI getTextureData() {
         return textureData;
     }
 
+    @Override
     public int getSx() {
         return sx;
     }
 
+    @Override
     public int getSy() {
         return sy;
     }
 
+    @Override
     public int getSz() {
         return sz;
     }
 
+    @Override
     public void setSx(int sx) {
         this.sx = sx;
     }
 
+    @Override
     public void setSy(int sy) {
         this.sy = sy;
     }
 
+    @Override
     public void setSz(int sz) {
         this.sz = sz;
     }

@@ -196,7 +196,7 @@ public class VolumeWritebackHandler {
 
         /** This is a simple testing mechanism to sanity-check the contents of the texture being saved. */
         private void frequencyReport( TextureDataI texture ) {
-            byte[] textureBytes = texture.getTextureData();
+            byte[] textureBytes = texture.getTextureData().getCurrentVolumeData();
 
             Map<Byte,Integer> byteValToCount = new HashMap<Byte,Integer>();
             for ( int i = 0; i < textureBytes.length; i ++ ) {

@@ -1,5 +1,6 @@
 package org.janelia.it.FlyWorkstation.gui.viewer3d.texture;
 
+import org.janelia.it.FlyWorkstation.gui.alignment_board_viewer.masking.VolumeDataI;
 import org.janelia.it.FlyWorkstation.gui.alignment_board_viewer.renderable.RenderableBean;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.VolumeDataAcceptor;
 
@@ -17,8 +18,8 @@ import java.util.Collection;
 public interface TextureDataI {
     public static final int UNSET_VALUE = -1;
 
-    void setTextureData( byte[] textureData );
-    byte[] getTextureData();
+    void setTextureData( VolumeDataI textureData );
+    VolumeDataI getTextureData();
 
     int getSx();
 

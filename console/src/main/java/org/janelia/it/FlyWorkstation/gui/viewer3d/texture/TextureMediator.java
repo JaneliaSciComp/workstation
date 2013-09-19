@@ -66,7 +66,7 @@ public class TextureMediator {
             throw new RuntimeException("Failed to upload texture");
         }
 
-        ByteBuffer data = ByteBuffer.wrap( textureData.getTextureData() );
+        ByteBuffer data = ByteBuffer.wrap( textureData.getTextureData().getCurrentVolumeData() );
         if ( data != null ) {
             data.rewind();
 

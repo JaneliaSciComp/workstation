@@ -1,5 +1,6 @@
 package org.janelia.it.FlyWorkstation.gui.viewer3d.loader;
 
+import org.janelia.it.FlyWorkstation.gui.alignment_board_viewer.volume_builder.VolumeDataBean;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.stream.V3dRawImageStream;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.texture.TextureDataBean;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.texture.TextureDataI;
@@ -31,7 +32,7 @@ public class V3dSignalFileLoader extends TextureDataBuilder implements VolumeFil
             return textureDataBean;
         }
         else {
-            TextureDataBean textureDataBean = new TextureDataBean(textureByteArray, sx, sy, sz);
+            TextureDataBean textureDataBean = new TextureDataBean(new VolumeDataBean( textureByteArray ), sx, sy, sz);
             textureDataBean.setInterpolationMethod( interpolationMethod );
             return textureDataBean;
         }

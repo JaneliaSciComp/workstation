@@ -10,6 +10,7 @@ package org.janelia.it.FlyWorkstation.gui.viewer3d.texture;
  * as quick fetching of bytes.
  */
 
+import org.janelia.it.FlyWorkstation.gui.alignment_board_viewer.masking.VolumeDataI;
 import org.janelia.it.FlyWorkstation.gui.alignment_board_viewer.renderable.RenderableBean;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.VolumeDataAcceptor;
 
@@ -19,7 +20,7 @@ import java.util.Collection;
 
 public class MaskTextureDataBean implements TextureDataI {
     private String filename;
-    private byte[] textureData;
+    private VolumeDataI textureData;
     private Collection<RenderableBean> renderables;
     private Integer sx;
     private Integer sy;
@@ -48,7 +49,7 @@ public class MaskTextureDataBean implements TextureDataI {
         super();
     }
 
-    public MaskTextureDataBean(byte[] textureData, int sx, int sy, int sz) {
+    public MaskTextureDataBean(VolumeDataI textureData, int sx, int sy, int sz) {
         super();
         this.textureData = textureData;
         setSx( sx );
@@ -56,7 +57,7 @@ public class MaskTextureDataBean implements TextureDataI {
         setSz( sz );
     }
 
-    public MaskTextureDataBean(byte[] textureData, Integer[] voxels) {
+    public MaskTextureDataBean(VolumeDataI textureData, Integer[] voxels) {
         this(textureData, voxels[0], voxels[1], voxels[2]);
     }
 
@@ -75,15 +76,15 @@ public class MaskTextureDataBean implements TextureDataI {
         return filename.hashCode();
     }
 
-    public void setTextureData( byte[] textureData ) {
+    public void setTextureData( VolumeDataI textureData ) {
         this.textureData = textureData;
     }
 
-    public byte[] getTextureBytes() {
+    public VolumeDataI getTextureBytes() {
         return textureData;
     }
 
-    public byte[] getTextureData() {
+    public VolumeDataI getTextureData() {
         return textureData;
     }
 

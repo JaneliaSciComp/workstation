@@ -3,6 +3,7 @@ package org.janelia.it.FlyWorkstation.gui.passive_3d;
 import org.janelia.it.FlyWorkstation.geom.CoordinateAxis;
 import org.janelia.it.FlyWorkstation.geom.Rotation3d;
 import org.janelia.it.FlyWorkstation.geom.Vec3;
+import org.janelia.it.FlyWorkstation.gui.alignment_board_viewer.volume_builder.VolumeDataBean;
 import org.janelia.it.FlyWorkstation.gui.camera.BasicObservableCamera3d;
 import org.janelia.it.FlyWorkstation.gui.camera.Camera3d;
 import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr;
@@ -172,7 +173,7 @@ public class ViewTileManagerVolumeSource implements VolumeSource {
 
         // Now build the data volume.  The data volume bytes will be filled in later.
         textureDataFor3D = new TextureDataBean(
-                dataVolume, BRICK_WIDTH, BRICK_HEIGHT, BRICK_DEPTH
+                new VolumeDataBean( dataVolume ), BRICK_WIDTH, BRICK_HEIGHT, BRICK_DEPTH
         );
         textureDataFor3D.setVoxelMicrometers(new Double[]{1.0, 1.0, 1.0});
         textureDataFor3D.setChannelCount(stdChannelCount);

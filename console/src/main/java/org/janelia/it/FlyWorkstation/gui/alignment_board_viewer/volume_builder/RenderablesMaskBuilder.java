@@ -141,7 +141,7 @@ public class RenderablesMaskBuilder extends RenderablesVolumeBuilder implements 
                     volumeData, maskByteCount, downSampleRate, downSampleRate, downSampleRate
             );
             textureData = new TextureDataBean(
-                    downSampling.getVolume(), downSampling.getSx(), downSampling.getSy(), downSampling.getSz()
+                    new VolumeDataBean( downSampling.getVolume() ), downSampling.getSx(), downSampling.getSy(), downSampling.getSz()
             );
             textureData.setVolumeMicrometers(
                     new Double[]{(double) downSampling.getSx(), (double)downSampling.getSy(), (double)downSampling.getSz() }
@@ -149,7 +149,7 @@ public class RenderablesMaskBuilder extends RenderablesVolumeBuilder implements 
         }
         else {
             textureData = new TextureDataBean(
-                    volumeData, (int)paddedSx, (int)paddedSy, (int)paddedSz
+                    this, (int)paddedSx, (int)paddedSy, (int)paddedSz
             );
             textureData.setVolumeMicrometers( new Double[] { (double)paddedSx, (double)paddedSy, (double)paddedSz } );
         }

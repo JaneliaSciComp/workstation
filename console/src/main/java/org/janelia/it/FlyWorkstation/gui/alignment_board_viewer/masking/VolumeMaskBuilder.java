@@ -1,6 +1,7 @@
 package org.janelia.it.FlyWorkstation.gui.alignment_board_viewer.masking;
 
 import org.janelia.it.FlyWorkstation.gui.alignment_board_viewer.renderable.RenderableBean;
+import org.janelia.it.FlyWorkstation.gui.alignment_board_viewer.volume_builder.VolumeDataBean;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.texture.MaskTextureDataBean;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.VolumeDataAcceptor;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.texture.TextureDataI;
@@ -36,7 +37,7 @@ public class VolumeMaskBuilder implements VolumeDataAcceptor, MaskBuilderI {
     private int consensusChannelCount;
     private float[] coordCoverage;
     private Collection<RenderableBean> renderables;
-    private byte[] cachedByteBuffer;
+    private VolumeDataI cachedVolumeData;
 
     private String firstFileName = null;
 
@@ -57,7 +58,7 @@ public class VolumeMaskBuilder implements VolumeDataAcceptor, MaskBuilderI {
         }
 
         //  Need to create the cache, prior to returning it.
-        if ( cachedByteBuffer == null ) {
+        if ( cachedVolumeData == null ) {
             Integer[] volumeMaskVoxels = getVolumeMaskVoxels();
 
             // Build a volume big enough to hold them all.  The volume mask voxels array tells
@@ -68,13 +69,13 @@ public class VolumeMaskBuilder implements VolumeDataAcceptor, MaskBuilderI {
             // (even though wrong) that their voxels are the same size as all other voxels of
             // any other mask.
             int bufferSizeBytes = (volumeMaskVoxels[0] * consensusByteCount) * volumeMaskVoxels[1] * volumeMaskVoxels[2];
-            cachedByteBuffer = new byte[ bufferSizeBytes ];
+            cachedVolumeData = new VolumeDataBean( bufferSizeBytes );
             int dimMaskX = volumeMaskVoxels[ X_INX ];
             int dimMaskY = volumeMaskVoxels[ Y_INX ];
 
             // Shortcut bypass
             if ( maskingDataBeans.size() == 1  &&  maskingDataBeans.get(0).getRenderables() == null ) {
-                cachedByteBuffer = maskingDataBeans.get(0).getTextureData();
+                cachedVolumeData = maskingDataBeans.get(0).getTextureData();
             }
             else {
                 for ( TextureDataI texBean: maskingDataBeans ) {
@@ -87,7 +88,7 @@ public class VolumeMaskBuilder implements VolumeDataAcceptor, MaskBuilderI {
 
                     Collection<RenderableBean> renderableBeans = texBean.getRenderables();
 
-                    byte[] maskData = texBean.getTextureData();
+                    VolumeDataI maskData = texBean.getTextureData();
 
                     for ( int z = 0; z < dimBeanZ; z++ ) {
                         int zOffsetOutput = z * dimMaskX * dimMaskY * consensusByteCount; // Slice number * next z
@@ -103,7 +104,7 @@ public class VolumeMaskBuilder implements VolumeDataAcceptor, MaskBuilderI {
                                 int voxelVal = 0;
                                 for ( int mi = 0; mi < maskBytCt; mi++ ) {
                                     try {
-                                        byte nextVoxelByte = maskData[ inputOffset + mi ];
+                                        byte nextVoxelByte = maskData.getCurrentValue( inputOffset + mi );
                                         voxelVal += nextVoxelByte << (mi * 8);
                                     } catch ( RuntimeException ex ) {
                                         logger.error(ex.getMessage() + " offset=" + inputOffset +
@@ -138,7 +139,7 @@ public class VolumeMaskBuilder implements VolumeDataAcceptor, MaskBuilderI {
                                     // the higher-order bytes, as required.
                                     for ( int mi = 0; mi < consensusByteCount; mi ++ ) {
                                         byte mByte = (byte)(newVal >>> (mi * 8) & 0x000000ff);
-                                        cachedByteBuffer[ outputOffset + mi ] = mByte;
+                                        cachedVolumeData.setCurrentValue( outputOffset + mi, mByte );
                                     }
                                 }
                             }
@@ -157,7 +158,7 @@ public class VolumeMaskBuilder implements VolumeDataAcceptor, MaskBuilderI {
             }
 
         }
-        return cachedByteBuffer;
+        return cachedVolumeData.getCurrentVolumeData();
     }
 
     /**
@@ -185,7 +186,7 @@ public class VolumeMaskBuilder implements VolumeDataAcceptor, MaskBuilderI {
             return 0;
         }
         else {
-            return cachedByteBuffer.length;
+            return cachedVolumeData.length();
         }
     }
 
@@ -281,7 +282,7 @@ public class VolumeMaskBuilder implements VolumeDataAcceptor, MaskBuilderI {
      * @return "consensus" texture data object.
      */
     public TextureDataI getCombinedTextureData() {
-        TextureDataI rtnVal = new MaskTextureDataBean( getCurrentVolumeData(), getVolumeMaskVoxels() );
+        TextureDataI rtnVal = new MaskTextureDataBean( this, getVolumeMaskVoxels() );
         rtnVal.setByteOrder(getPixelByteOrder());
         rtnVal.setPixelByteCount(getPixelByteCount());
         rtnVal.setHeader("Accumulated");
@@ -335,8 +336,8 @@ public class VolumeMaskBuilder implements VolumeDataAcceptor, MaskBuilderI {
     private void zeroCheckDebug(TextureDataI textureData) {
         // QUICK CHECK
         int nonZeroCount = 0;
-        for ( int i = 0; i < textureData.getTextureData().length; i++ ) {
-            if ( textureData.getTextureData()[i] != 0 ) {
+        for ( int i = 0; i < textureData.getTextureData().length(); i++ ) {
+            if ( textureData.getTextureData().getCurrentValue(i) != 0 ) {
                 nonZeroCount ++;
             }
         }

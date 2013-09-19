@@ -1,5 +1,7 @@
 package org.janelia.it.FlyWorkstation.gui.viewer3d.texture;
 
+import org.janelia.it.FlyWorkstation.gui.alignment_board_viewer.masking.VolumeDataI;
+import org.janelia.it.FlyWorkstation.gui.alignment_board_viewer.volume_builder.VolumeDataBean;
 import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.VolumeModel;
 import org.janelia.it.FlyWorkstation.gui.alignment_board_viewer.masking.RenderMappingI;
@@ -63,12 +65,12 @@ public class RenderMapTextureBean implements TextureDataI {
     }
 
     @Override
-    public void setTextureData(byte[] textureData) {
+    public void setTextureData(VolumeDataI textureData) {
         // Ignored.
     }
 
     @Override
-    public byte[] getTextureData() {
+    public VolumeDataI getTextureData() {
         Map<Integer,byte[]> renderingMap = renderMapping.getMapping();
         if ( renderingMap == null || renderingMap.size() > MAP_SIZE ) {
             throw new IllegalArgumentException("Invalid inputs for render mapping");
@@ -112,7 +114,7 @@ public class RenderMapTextureBean implements TextureDataI {
 
         }
 
-        return rawMap;
+        return new VolumeDataBean( rawMap );
     }
 
     private void dumpAtLoc( int nextCropBoxOffset, float[] cropCoords, byte[] rawMap ) {

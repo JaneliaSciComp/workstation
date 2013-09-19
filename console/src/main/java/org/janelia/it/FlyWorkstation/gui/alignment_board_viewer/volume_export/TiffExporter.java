@@ -3,6 +3,7 @@ package org.janelia.it.FlyWorkstation.gui.alignment_board_viewer.volume_export;
 import com.sun.media.jai.codec.ImageCodec;
 import com.sun.media.jai.codec.ImageEncoder;
 import com.sun.media.jai.codec.TIFFEncodeParam;
+import org.janelia.it.FlyWorkstation.gui.alignment_board_viewer.masking.VolumeDataI;
 import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.texture.TextureDataI;
 import org.janelia.it.FlyWorkstation.shared.workers.SimpleWorker;
@@ -215,8 +216,8 @@ public class TiffExporter {
         switch ( type ) {
             case BYTE :
             {
-                byte[] byteArr = textureData.getTextureData();
-                rtnVal = new DataBufferByte( byteArr, sliceSize, sliceOffset );
+                VolumeDataI data = textureData.getTextureData();
+                rtnVal = new DataBufferByte( data.getCurrentVolumeData(), sliceSize, sliceOffset );
                 break;
             }
             case INT:
@@ -294,7 +295,7 @@ public class TiffExporter {
 
     private int[] initTexIntArray(TextureDataI textureData, int textureSize) {
         if ( texIntArray == null ) {
-            ByteBuffer byteBuffer = ByteBuffer.wrap( textureData.getTextureData() );
+            ByteBuffer byteBuffer = ByteBuffer.wrap( textureData.getTextureData().getCurrentVolumeData() );
             byteBuffer.rewind();
             byteBuffer.order( ByteOrder.LITTLE_ENDIAN );
             texIntArray = getIntArray( textureSize, byteBuffer );
@@ -304,7 +305,7 @@ public class TiffExporter {
 
     private short[] initTexShortArray(TextureDataI textureData, int textureSize) {
         if ( texShortArray == null ) {
-            ByteBuffer byteBuffer = ByteBuffer.wrap( textureData.getTextureData() );
+            ByteBuffer byteBuffer = ByteBuffer.wrap( textureData.getTextureData().getCurrentVolumeData() );
             byteBuffer.rewind();
             byteBuffer.order( ByteOrder.LITTLE_ENDIAN );
             texShortArray = getShortArray( textureSize, byteBuffer );

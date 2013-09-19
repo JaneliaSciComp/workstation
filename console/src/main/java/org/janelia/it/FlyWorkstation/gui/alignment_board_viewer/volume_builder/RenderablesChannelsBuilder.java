@@ -32,6 +32,7 @@ public class RenderablesChannelsBuilder extends RenderablesVolumeBuilder impleme
     private static final String COUNT_DISCREPANCY_FORMAT = "%s count mismatch. Old count was %d; new count is %d.\n";
 
     private static final int FIXED_BYTE_PER_CHANNEL = 1;
+    protected int bytesPerChannel = FIXED_BYTE_PER_CHANNEL;
 
     private ChannelMetaData channelMetaData;
     private VolumeDataI channelVolumeData;
@@ -221,13 +222,13 @@ public class RenderablesChannelsBuilder extends RenderablesVolumeBuilder impleme
             DownSampler downSampler = new DownSampler( paddedSx, paddedSy, paddedSz );
             DownSampler.DownsampledTextureData downSampling = downSampler.getDownSampledVolume(
                     channelVolumeData.getCurrentVolumeData(),
-                    channelMetaData.channelCount* FIXED_BYTE_PER_CHANNEL,
+                    channelMetaData.channelCount* bytesPerChannel,
                     downSampleRate,
                     downSampleRate,
                     downSampleRate
             );
             textureData = new TextureDataBean(
-                    downSampling.getVolume(), downSampling.getSx(), downSampling.getSy(), downSampling.getSz()
+                    new VolumeDataBean( downSampling.getVolume() ), downSampling.getSx(), downSampling.getSy(), downSampling.getSz()
             );
             textureData.setVolumeMicrometers(
                     new Double[]{
@@ -237,7 +238,7 @@ public class RenderablesChannelsBuilder extends RenderablesVolumeBuilder impleme
         }
         else {
             textureData = new TextureDataBean(
-                    channelVolumeData.getCurrentVolumeData(), (int)paddedSx, (int)paddedSy, (int)paddedSz
+                    channelVolumeData, (int)paddedSx, (int)paddedSy, (int)paddedSz
             );
             textureData.setVolumeMicrometers( new Double[] { (double)paddedSx, (double)paddedSy, (double)paddedSz } );
         }
@@ -246,7 +247,7 @@ public class RenderablesChannelsBuilder extends RenderablesVolumeBuilder impleme
         textureData.setColorSpace( MultiTexVolumeBrick.TextureColorSpace.COLOR_SPACE_LINEAR );
         textureData.setVoxelMicrometers(new Double[]{1.0, 1.0, 1.0});
         textureData.setByteOrder(ByteOrder.nativeOrder());
-        textureData.setPixelByteCount(FIXED_BYTE_PER_CHANNEL);
+        textureData.setPixelByteCount(bytesPerChannel);
         textureData.setFilename( "Channel Data" );
         textureData.setInverted( false );
         textureData.setCoordCoverage( coordCoverage );
@@ -260,9 +261,9 @@ public class RenderablesChannelsBuilder extends RenderablesVolumeBuilder impleme
         textureData.setExplicitInternalFormat( GL2.GL_RGBA16 );
          */
 
-        if ( FIXED_BYTE_PER_CHANNEL == 1 )
+        if ( bytesPerChannel == 1 )
             textureData.setExplicitVoxelComponentType( GL2.GL_BYTE ); //GL2.GL_UNSIGNED_INT_8_8_8_8 );
-        else if ( FIXED_BYTE_PER_CHANNEL == 2 )
+        else if ( bytesPerChannel == 2 )
             textureData.setExplicitVoxelComponentType( GL2.GL_UNSIGNED_SHORT );
         textureData.setExplicitVoxelComponentOrder( GL2.GL_RGBA );
         textureData.setExplicitInternalFormat( GL2.GL_RGBA );
