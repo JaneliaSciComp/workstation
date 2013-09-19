@@ -123,21 +123,18 @@ public class ChannelInterpreterToByte implements ChannelInterpreterI {
     /** Goes to the mask volume, finds and reconstructs the mask at position given. */
     private int getMaskValue( int position, int targetChannelWidth, int maskByteCount ) {
         // Find the appropriate slot in the mask data, and get its value.
-        byte[] maskVolumeData = this.wholeMaskVolume.getCurrentVolumeData();
         int volumeMask = 0;
-        if ( maskVolumeData != null ) {
+        if ( wholeMaskVolume.isVolumeAvailable() ) {
             int volumeLoc = (position / targetChannelWidth) * maskByteCount;
             // Assumed little-endian.
             for ( int j = 0; j < maskByteCount; j++ ) {
                 // The volume mask is the one currently in use.  This could be a single or multi-mask.
-                int maskByte = maskVolumeData[volumeLoc];
+                int maskByte = wholeMaskVolume.getCurrentValue( volumeLoc );
                 if ( maskByte < 0 )
                     maskByte += 256;
                 volumeMask += maskByte << (8*j);
                 volumeLoc++;
             }
-if ( volumeMask < 0 )
-logger.error("Negative mask value " + volumeMask );
         }
         else {
             throw new RuntimeException("No volume data available.  Cannot add mask data.");

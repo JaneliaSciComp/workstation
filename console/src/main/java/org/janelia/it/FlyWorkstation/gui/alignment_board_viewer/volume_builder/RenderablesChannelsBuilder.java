@@ -1,10 +1,8 @@
 package org.janelia.it.FlyWorkstation.gui.alignment_board_viewer.volume_builder;
 
-import org.janelia.it.FlyWorkstation.gui.alignment_board_viewer.channel_split.ChannelSplitStrategyFactory;
 import org.janelia.it.FlyWorkstation.gui.framework.viewer.alignment_board.AlignmentBoardSettings;
 import org.janelia.it.FlyWorkstation.gui.alignment_board_viewer.MultiTexVolumeBrick;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.VolumeDataAcceptor;
-import org.janelia.it.FlyWorkstation.gui.viewer3d.channel_split.ChannelSplitStrategyI;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.loader.ChannelMetaData;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.loader.VolumeLoaderI;
 import org.janelia.it.FlyWorkstation.gui.alignment_board_viewer.masking.*;
@@ -17,7 +15,6 @@ import org.slf4j.LoggerFactory;
 
 import javax.media.opengl.GL2;
 import java.nio.ByteOrder;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.TreeMap;
 
@@ -37,7 +34,7 @@ public class RenderablesChannelsBuilder extends RenderablesVolumeBuilder impleme
     private static final int FIXED_BYTE_PER_CHANNEL = 1;
 
     private ChannelMetaData channelMetaData;
-    private byte[] volumeData;
+    private byte[] channelVolumeData;
 
     private ChannelInterpreterI channelInterpreter;
     private final AlignmentBoardSettings settings;
@@ -74,7 +71,7 @@ public class RenderablesChannelsBuilder extends RenderablesVolumeBuilder impleme
     public void test() {
         int volumeDataZeroCount = 0;
         java.util.TreeMap<Byte,Integer> frequencies = new TreeMap<Byte,Integer>();
-        for ( Byte aByte: volumeData ) {
+        for ( Byte aByte: channelVolumeData) {
             if ( aByte == (byte)0 ) {
                 volumeDataZeroCount ++;
             }
@@ -94,8 +91,8 @@ public class RenderablesChannelsBuilder extends RenderablesVolumeBuilder impleme
         }
 
         logger.info(
-                "Found zeros in " + volumeDataZeroCount + " / " + volumeData.length + ", or " +
-                ((double)volumeDataZeroCount/(double)volumeData.length * 100.0) + "%."
+                "Found zeros in " + volumeDataZeroCount + " / " + channelVolumeData.length + ", or " +
+                ((double)volumeDataZeroCount/(double) channelVolumeData.length * 100.0) + "%."
         );
     }
 
@@ -223,7 +220,7 @@ public class RenderablesChannelsBuilder extends RenderablesVolumeBuilder impleme
         if ( downSampleRate != 0.0   &&   downSampleRate != 1.0 ) {
             DownSampler downSampler = new DownSampler( paddedSx, paddedSy, paddedSz );
             DownSampler.DownsampledTextureData downSampling = downSampler.getDownSampledVolume(
-                    volumeData,
+                    channelVolumeData,
                     channelMetaData.channelCount* FIXED_BYTE_PER_CHANNEL,
                     downSampleRate,
                     downSampleRate,
@@ -240,7 +237,7 @@ public class RenderablesChannelsBuilder extends RenderablesVolumeBuilder impleme
         }
         else {
             textureData = new TextureDataBean(
-                    volumeData, (int)paddedSx, (int)paddedSy, (int)paddedSz
+                    channelVolumeData, (int)paddedSx, (int)paddedSy, (int)paddedSz
             );
             textureData.setVolumeMicrometers( new Double[] { (double)paddedSx, (double)paddedSy, (double)paddedSz } );
         }
@@ -353,8 +350,8 @@ public class RenderablesChannelsBuilder extends RenderablesVolumeBuilder impleme
                     );
                 }
 
-                if ( volumeData == null ) {
-                    volumeData = new byte[ (int) arrayLength ];
+                if ( channelVolumeData == null ) {
+                    channelVolumeData = new byte[ (int) arrayLength ];
                 }
 
                 logger.info(
@@ -362,7 +359,7 @@ public class RenderablesChannelsBuilder extends RenderablesVolumeBuilder impleme
                         channelMetaData.rawChannelCount,
                         channelMetaData.channelCount
                 );
-                channelInterpreter = new ChannelInterpreterToByte( volumeData, maskVolumeData, multiMaskTracker );
+                channelInterpreter = new ChannelInterpreterToByte(channelVolumeData, maskVolumeData, multiMaskTracker);
 
                 needsChannelInit = false;
             }
@@ -385,41 +382,6 @@ public class RenderablesChannelsBuilder extends RenderablesVolumeBuilder impleme
         }
         if ( sx == 0L ) {
             throw new IllegalStateException( "Must have volume size parameters set prior to this call." );
-        }
-    }
-
-    private void dumpVolume() {
-        try {
-            java.io.PrintStream bos = new java.io.PrintStream( new java.io.FileOutputStream( "/users/fosterl/file_dump.txt" ) );
-            bos.println("VOLUME DATA BEGINS------");
-            int nextPos = 0;
-            byte[] inputArr;
-            while ( nextPos < volumeData.length ) {
-                inputArr = Arrays.copyOfRange( volumeData, nextPos, nextPos + (int)sx );
-                for ( int i = 0; i < inputArr.length; i++ ) {
-                    if ( inputArr[ i ] != 0 ) {
-                        // Print this one.
-                        bos.print( String.format( "%010d", nextPos ) );
-                        bos.print( ":  ");
-                        for ( int j = 0; j < inputArr.length; j++ ) {
-                            if ( inputArr[ j ] == (byte) 0 ) {
-                                bos.print( "  " );
-                            }
-                            else {
-                                bos.print( String.format( "%02x", (int)inputArr[ j ] ) );
-                            }
-                        }
-                        bos.println();
-
-                        break;
-                    }
-                }
-                nextPos += (int)sx;
-            }
-
-            bos.close();
-        } catch ( Exception ex ) {
-            ex.printStackTrace();
         }
     }
 

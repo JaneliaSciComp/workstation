@@ -16,7 +16,6 @@ import java.nio.ByteOrder;
 public interface MaskBuilderI extends VolumeDataI {
     int GPU_MULTIBYTE_DIVISIBILITY_VALUE = 4;
 
-    byte[] getCurrentVolumeData();
     Integer[] getVolumeMaskVoxels();
     ByteOrder getPixelByteOrder();
     int getPixelByteCount();

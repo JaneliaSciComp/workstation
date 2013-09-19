@@ -177,9 +177,25 @@ public class RenderablesMaskBuilder extends RenderablesVolumeBuilder implements 
     }
 
     @Override
+    public boolean isVolumeAvailable() {
+        return true;
+    }
+
+    @Override
     public byte[] getCurrentVolumeData() {
         init();
         return volumeData;
+    }
+
+    /**
+     * Return the appropriate byte from the volume data.
+     *
+     * @param location which offset, in bytes.  This impl can only return an int of addressing.
+     * @return
+     */
+    @Override
+    public byte getCurrentValue(long location) {
+        return getCurrentVolumeData()[ (int)location ];
     }
 
     //-------------END------------------------IMPLEMENT MaskBuilderI

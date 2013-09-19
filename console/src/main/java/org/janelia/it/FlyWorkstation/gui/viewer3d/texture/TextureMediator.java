@@ -152,23 +152,6 @@ public class TextureMediator {
         return textureOffset;
     }
 
-    public double[] textureCoordFromVoxelCoord(double[] voxelCoord) {
-        double[] tc = {voxelCoord[0], voxelCoord[1], voxelCoord[2]}; // micrometers, origin at center
-        int[] voxels = { textureData.getSx(), textureData.getSy(), textureData.getSz() };
-        Double[] volumeMicrometers = textureData.getVolumeMicrometers();
-        Double[] voxelMicrometers = textureData.getVoxelMicrometers();
-        for (int i =0; i < 3; ++i) {
-            // Move origin to upper left corner
-            tc[i] += volumeMicrometers[i] / 2.0; // micrometers, origin at corner
-            // Rescale from micrometers to voxels
-            tc[i] /= voxelMicrometers[i]; // voxels, origin at corner
-            // Rescale from voxels to texture units (range 0-1)
-            tc[i] /= voxels[i]; // texture units
-        }
-
-        return tc;
-    }
-
     /**
      * NOTE: Forcing coord back to 1, if greater, or back to 0, if lower, does not change appearance noticeably,
      * nor alleviate the end-on-X rendering problem.
@@ -191,26 +174,6 @@ public class TextureMediator {
         }
 
         return tc;
-    }
-
-    /**
-     * Set the coords for the texture.  Note that we may not call glGetError here, as this is done
-     * between glBegin and glGetEnd calls.
-     */
-    public void setTextureCoordinates( GL2 gl, double tX, double tY, double tZ ) {
-        float[] coordCoverage = textureData.getCoordCoverage();
-        if ( logger.isDebugEnabled() ) {
-            logger.debug( "Tex Coords: (" + tX + "," + tY + "," + tZ + ")");
-        }
-        gl.glMultiTexCoord3d(
-                textureSymbolicId, tX * coordCoverage[ 0 ], tY * coordCoverage[ 1 ], tZ * coordCoverage[ 2 ]
-        );
-        if ( logger.isDebugEnabled() ) {
-            logger.debug(
-                "Adjusted Tex Coords: (" + tX * coordCoverage[ 0 ] + "," + tY * coordCoverage[ 1 ] + ","
-                        + tZ * coordCoverage[ 2 ] + ")"
-            );
-        }
     }
 
     public Double[] getVolumeMicrometers() {
@@ -256,6 +219,7 @@ public class TextureMediator {
      *
      * @param gl for invoking the required OpenGL method.
      */
+    @SuppressWarnings("unused")
     public void testTextureContents( GL2 gl ) {
         gl.glActiveTexture( textureSymbolicId );
         reportError( "testTextureContents glActiveTexture", gl );
@@ -345,8 +309,7 @@ public class TextureMediator {
         rtnBuf.rewind();
         gl.glGetIntegerv(GL2.GL_MAX_TEXTURE_SIZE, rtnBuf);
         int[] rtnVals = rtnBuf.array();
-        int rtnVal = rtnVals[ 0 ];
-        return rtnVal;
+        return rtnVals[0];
     }
 
     private int getInternalFormat() {
@@ -393,21 +356,6 @@ public class TextureMediator {
     }
 
     //--------------------------- End: Helpers for glTexImage3D
-
-    /** Roll the relevant bytes of the integer down into a byte array. */
-    private int[] getInts(int i, int size) {
-        int[] rtnVal = new int[ size ];
-        int nextPos = 0;
-        rtnVal[ nextPos++ ] = (i & 0xff000000) >>> 24;
-        if ( size > 1 )
-            rtnVal[ nextPos++ ] = (i & 0x00ff0000) >>> 16;
-        if ( size > 2 )
-            rtnVal[ nextPos++ ] = (i & 0x0000ff00) >>> 8;
-        if ( size > 3 )
-            rtnVal[ nextPos ] = i & 0x000000ff;
-
-        return rtnVal;
-    }
 
     private void testRawBufferContents(int pixelByteCount, byte[] rawBuffer) {
         java.util.Map<Integer,Integer> allFoundFrequencies = new java.util.HashMap<Integer,Integer>();
@@ -501,8 +449,6 @@ public class TextureMediator {
 
             glConstantToName.put( GL2.GL_BGRA, "GL2.GL_BGRA" );
             glConstantToName.put( GL2.GL_RGBA16, "GL2.GL_RGBA16");
-            //glConstantToName.put( , "" );
-            //glConstantToName.put( , "" );
 
         }
         rtnVal = glConstantToName.get( openGlEnumConstant );
@@ -513,17 +459,4 @@ public class TextureMediator {
         return rtnVal;
     }
 
-//    private short[] getShorts(int i, int size) {
-//        short[] rtnVal = new short[ size ];
-//        int nextPos = 0;
-//        rtnVal[ nextPos++ ] = (short)((i & 0xff000000) >>> 24);
-//        if ( size > 1 )
-//            rtnVal[ nextPos++ ] = (short)((i & 0x00ff0000) >>> 16);
-//        if ( size > 2 )
-//            rtnVal[ nextPos++ ] = (short)((i & 0x0000ff00) >>> 8);
-//        if ( size > 3 )
-//            rtnVal[ nextPos ] = (short)(i & 0x000000ff);
-//
-//        return rtnVal;
-//    }
 }

@@ -36,6 +36,7 @@ public class VolumeMaskBuilder implements VolumeDataAcceptor, MaskBuilderI {
     private int consensusChannelCount;
     private float[] coordCoverage;
     private Collection<RenderableBean> renderables;
+    private byte[] cachedByteBuffer;
 
     private String firstFileName = null;
 
@@ -45,110 +46,129 @@ public class VolumeMaskBuilder implements VolumeDataAcceptor, MaskBuilderI {
     }
 
     @Override
+    public boolean isVolumeAvailable() {
+        return renderables != null;
+    }
+
+    @Override
     public byte[] getCurrentVolumeData() {
         if ( renderables == null ) {
             return null;
         }
 
-        Integer[] volumeMaskVoxels = getVolumeMaskVoxels();
+        //  Need to create the cache, prior to returning it.
+        if ( cachedByteBuffer == null ) {
+            Integer[] volumeMaskVoxels = getVolumeMaskVoxels();
 
-        // Build a volume big enough to hold them all.  The volume mask voxels array tells
-        // the maximum number of voxels from any direction from all input masks.
+            // Build a volume big enough to hold them all.  The volume mask voxels array tells
+            // the maximum number of voxels from any direction from all input masks.
 
-        // This terribly naive first cut will make a huge box big enough to hold any direction
-        // of any input.  Then the individual masks will be thrown into slots with an assumption
-        // (even though wrong) that their voxels are the same size as all other voxels of
-        // any other mask.
-        int bufferSizeBytes = (volumeMaskVoxels[0] * consensusByteCount) * volumeMaskVoxels[1] * volumeMaskVoxels[2];
-        byte[] rtnValue = new byte[ bufferSizeBytes ];
-        int dimMaskX = volumeMaskVoxels[ X_INX ];
-        int dimMaskY = volumeMaskVoxels[ Y_INX ];
+            // This terribly naive first cut will make a huge box big enough to hold any direction
+            // of any input.  Then the individual masks will be thrown into slots with an assumption
+            // (even though wrong) that their voxels are the same size as all other voxels of
+            // any other mask.
+            int bufferSizeBytes = (volumeMaskVoxels[0] * consensusByteCount) * volumeMaskVoxels[1] * volumeMaskVoxels[2];
+            cachedByteBuffer = new byte[ bufferSizeBytes ];
+            int dimMaskX = volumeMaskVoxels[ X_INX ];
+            int dimMaskY = volumeMaskVoxels[ Y_INX ];
 
-        // Shortcut bypass
-        if ( maskingDataBeans.size() == 1  &&  maskingDataBeans.get(0).getRenderables() == null ) {
-            rtnValue = maskingDataBeans.get(0).getTextureData();
-        }
-        else {
-            for ( TextureDataI texBean: maskingDataBeans ) {
-                int maskBytCt = texBean.getPixelByteCount();  // This is allowed to be non-consensus.
-                Set<Integer> values = new TreeSet<Integer>();
+            // Shortcut bypass
+            if ( maskingDataBeans.size() == 1  &&  maskingDataBeans.get(0).getRenderables() == null ) {
+                cachedByteBuffer = maskingDataBeans.get(0).getTextureData();
+            }
+            else {
+                for ( TextureDataI texBean: maskingDataBeans ) {
+                    int maskBytCt = texBean.getPixelByteCount();  // This is allowed to be non-consensus.
+                    Set<Integer> values = new TreeSet<Integer>();
 
-                int dimBeanX = texBean.getSx();
-                int dimBeanY = texBean.getSy();
-                int dimBeanZ = texBean.getSz();
+                    int dimBeanX = texBean.getSx();
+                    int dimBeanY = texBean.getSy();
+                    int dimBeanZ = texBean.getSz();
 
-                Collection<RenderableBean> renderableBeans = texBean.getRenderables();
+                    Collection<RenderableBean> renderableBeans = texBean.getRenderables();
 
-                byte[] maskData = texBean.getTextureData();
+                    byte[] maskData = texBean.getTextureData();
 
-                for ( int z = 0; z < dimBeanZ; z++ ) {
-                    int zOffsetOutput = z * dimMaskX * dimMaskY * consensusByteCount; // Slice number * next z
-                    int zOffsetInput = z * dimBeanX * dimBeanY * maskBytCt;
-                    for ( int y = 0; y < dimBeanY; y++ ) {
-                        int yOffsetOutput = calcYOffset( consensusByteCount, dimMaskX, dimMaskY, zOffsetOutput, y, false );
-                        int yOffsetInput = calcYOffset( maskBytCt, dimBeanX, dimBeanY, zOffsetInput, y, texBean.isInverted() );
-                        for ( int x = 0; x < dimBeanX; x++ ) {
-                            int outputOffset = yOffsetOutput + x*consensusByteCount;
-                            int inputOffset = yOffsetInput + x*maskBytCt;
+                    for ( int z = 0; z < dimBeanZ; z++ ) {
+                        int zOffsetOutput = z * dimMaskX * dimMaskY * consensusByteCount; // Slice number * next z
+                        int zOffsetInput = z * dimBeanX * dimBeanY * maskBytCt;
+                        for ( int y = 0; y < dimBeanY; y++ ) {
+                            int yOffsetOutput = calcYOffset( consensusByteCount, dimMaskX, dimMaskY, zOffsetOutput, y, false );
+                            int yOffsetInput = calcYOffset( maskBytCt, dimBeanX, dimBeanY, zOffsetInput, y, texBean.isInverted() );
+                            for ( int x = 0; x < dimBeanX; x++ ) {
+                                int outputOffset = yOffsetOutput + x*consensusByteCount;
+                                int inputOffset = yOffsetInput + x*maskBytCt;
 
-                            // The voxel value may be a multi-byte value.
-                            int voxelVal = 0;
-                            for ( int mi = 0; mi < maskBytCt; mi++ ) {
-                                try {
-                                    byte nextVoxelByte = maskData[ inputOffset + mi ];
-                                    voxelVal += nextVoxelByte << (mi * 8);
-                                } catch ( RuntimeException ex ) {
-                                    logger.error(ex.getMessage() + " offset=" + inputOffset +
-                                            " mi=" + mi + " zOffset=" + zOffsetInput + " yOffset=" + yOffsetInput +
-                                            " yOffs x consensusByteCt=" + yOffsetInput * maskBytCt + " x*consensusByteCount=" + x * consensusByteCount + " x,y,z=" + x + "," + y + "," + z);
-                                    throw ex;
-                                }
-                            }
-
-                            int newVal = 0;
-                            if ( voxelVal > 0 ) {
-                                values.add( voxelVal );
-                                if ( renderableBeans != null ) {
-                                    // This set-only technique will merely _set_ the value to the latest loaded mask's
-                                    // value at this location.  There is no overlap taken into account here.
-                                    // LAST PRECEDENT STRATEGY
-                                    for ( RenderableBean renderableBean : renderableBeans ) {
-                                        // Use only masks settings FROM the latest texture file.
-                                        if ( renderableBean.getLabelFileNum() == voxelVal ) {
-                                            newVal = renderableBean.getTranslatedNum();
-                                        }
+                                // The voxel value may be a multi-byte value.
+                                int voxelVal = 0;
+                                for ( int mi = 0; mi < maskBytCt; mi++ ) {
+                                    try {
+                                        byte nextVoxelByte = maskData[ inputOffset + mi ];
+                                        voxelVal += nextVoxelByte << (mi * 8);
+                                    } catch ( RuntimeException ex ) {
+                                        logger.error(ex.getMessage() + " offset=" + inputOffset +
+                                                " mi=" + mi + " zOffset=" + zOffsetInput + " yOffset=" + yOffsetInput +
+                                                " yOffs x consensusByteCt=" + yOffsetInput * maskBytCt + " x*consensusByteCount=" + x * consensusByteCount + " x,y,z=" + x + "," + y + "," + z);
+                                        throw ex;
                                     }
                                 }
 
-                            }
+                                int newVal = 0;
+                                if ( voxelVal > 0 ) {
+                                    values.add( voxelVal );
+                                    if ( renderableBeans != null ) {
+                                        // This set-only technique will merely _set_ the value to the latest loaded mask's
+                                        // value at this location.  There is no overlap taken into account here.
+                                        // LAST PRECEDENT STRATEGY
+                                        for ( RenderableBean renderableBean : renderableBeans ) {
+                                            // Use only masks settings FROM the latest texture file.
+                                            if ( renderableBean.getLabelFileNum() == voxelVal ) {
+                                                newVal = renderableBean.getTranslatedNum();
+                                            }
+                                        }
+                                    }
 
-                            // Either a new value will be set in the mask, or the original value
-                            // will wind up there.
-                            if ( newVal > 0 ) {
-                                // NOTE: consensus byte count may be larger than regular byte count.
-                                // If so, using the full consensus count for output size, will zero
-                                // the higher-order bytes, as required.
-                                for ( int mi = 0; mi < consensusByteCount; mi ++ ) {
-                                    byte mByte = (byte)(newVal >>> (mi * 8) & 0x000000ff);
-                                    rtnValue[ outputOffset + mi ] = mByte;
+                                }
+
+                                // Either a new value will be set in the mask, or the original value
+                                // will wind up there.
+                                if ( newVal > 0 ) {
+                                    // NOTE: consensus byte count may be larger than regular byte count.
+                                    // If so, using the full consensus count for output size, will zero
+                                    // the higher-order bytes, as required.
+                                    for ( int mi = 0; mi < consensusByteCount; mi ++ ) {
+                                        byte mByte = (byte)(newVal >>> (mi * 8) & 0x000000ff);
+                                        cachedByteBuffer[ outputOffset + mi ] = mByte;
+                                    }
                                 }
                             }
                         }
                     }
+
+                    StringBuilder builder = new StringBuilder();
+                    builder.append("Values seen in file " + texBean.getFilename() + " in volume mask builder.");
+                    builder.append("\n");
+                    for ( Integer nextVal: values ) {
+                        builder.append( nextVal + "," );
+                    }
+                    logger.info( builder.toString() );
                 }
 
-                StringBuilder builder = new StringBuilder();
-                builder.append("Values seen in file " + texBean.getFilename() + " in volume mask builder.");
-                builder.append("\n");
-                for ( Integer nextVal: values ) {
-                    builder.append( nextVal + "," );
-                }
-                logger.info( builder.toString() );
             }
 
         }
+        return cachedByteBuffer;
+    }
 
-        return rtnValue;
+    /**
+     * Just get the appropriate byte from the cached buffer.
+     *
+     * @param location which offset, in bytes.  A long value is used to get beyond as many restrictions as possible.
+     * @return
+     */
+    @Override
+    public byte getCurrentValue(long location) {
+        return getCurrentVolumeData()[ (int)location ];
     }
 
     /** Size of volume mask.  Numbers of voxels in all three directions. */
