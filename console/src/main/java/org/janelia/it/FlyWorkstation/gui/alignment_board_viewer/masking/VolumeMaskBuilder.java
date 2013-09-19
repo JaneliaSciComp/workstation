@@ -168,7 +168,25 @@ public class VolumeMaskBuilder implements VolumeDataAcceptor, MaskBuilderI {
      */
     @Override
     public byte getCurrentValue(long location) {
+        if ( location > length() ) {
+            throw new RuntimeException( "Request " + location + " exceeds capacity of " + length() );
+        }
         return getCurrentVolumeData()[ (int)location ];
+    }
+
+    @Override
+    public void setCurrentValue(long location, byte value) {
+        throw new RuntimeException( "Not implemented" );
+    }
+
+    @Override
+    public long length() {
+        if ( renderables == null ) {
+            return 0;
+        }
+        else {
+            return cachedByteBuffer.length;
+        }
     }
 
     /** Size of volume mask.  Numbers of voxels in all three directions. */

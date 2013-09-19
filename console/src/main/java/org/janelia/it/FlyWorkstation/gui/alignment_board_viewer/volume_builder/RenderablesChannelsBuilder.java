@@ -34,7 +34,7 @@ public class RenderablesChannelsBuilder extends RenderablesVolumeBuilder impleme
     private static final int FIXED_BYTE_PER_CHANNEL = 1;
 
     private ChannelMetaData channelMetaData;
-    private byte[] channelVolumeData;
+    private VolumeDataI channelVolumeData;
 
     private ChannelInterpreterI channelInterpreter;
     private final AlignmentBoardSettings settings;
@@ -71,7 +71,7 @@ public class RenderablesChannelsBuilder extends RenderablesVolumeBuilder impleme
     public void test() {
         int volumeDataZeroCount = 0;
         java.util.TreeMap<Byte,Integer> frequencies = new TreeMap<Byte,Integer>();
-        for ( Byte aByte: channelVolumeData) {
+        for ( Byte aByte: channelVolumeData.getCurrentVolumeData() ) {
             if ( aByte == (byte)0 ) {
                 volumeDataZeroCount ++;
             }
@@ -91,8 +91,8 @@ public class RenderablesChannelsBuilder extends RenderablesVolumeBuilder impleme
         }
 
         logger.info(
-                "Found zeros in " + volumeDataZeroCount + " / " + channelVolumeData.length + ", or " +
-                ((double)volumeDataZeroCount/(double) channelVolumeData.length * 100.0) + "%."
+                "Found zeros in " + volumeDataZeroCount + " / " + channelVolumeData.length() + ", or " +
+                ((double)volumeDataZeroCount/(double) channelVolumeData.length() * 100.0) + "%."
         );
     }
 
@@ -220,7 +220,7 @@ public class RenderablesChannelsBuilder extends RenderablesVolumeBuilder impleme
         if ( downSampleRate != 0.0   &&   downSampleRate != 1.0 ) {
             DownSampler downSampler = new DownSampler( paddedSx, paddedSy, paddedSz );
             DownSampler.DownsampledTextureData downSampling = downSampler.getDownSampledVolume(
-                    channelVolumeData,
+                    channelVolumeData.getCurrentVolumeData(),
                     channelMetaData.channelCount* FIXED_BYTE_PER_CHANNEL,
                     downSampleRate,
                     downSampleRate,
@@ -237,7 +237,7 @@ public class RenderablesChannelsBuilder extends RenderablesVolumeBuilder impleme
         }
         else {
             textureData = new TextureDataBean(
-                    channelVolumeData, (int)paddedSx, (int)paddedSy, (int)paddedSz
+                    channelVolumeData.getCurrentVolumeData(), (int)paddedSx, (int)paddedSy, (int)paddedSz
             );
             textureData.setVolumeMicrometers( new Double[] { (double)paddedSx, (double)paddedSy, (double)paddedSz } );
         }
@@ -351,7 +351,7 @@ public class RenderablesChannelsBuilder extends RenderablesVolumeBuilder impleme
                 }
 
                 if ( channelVolumeData == null ) {
-                    channelVolumeData = new byte[ (int) arrayLength ];
+                    channelVolumeData = new VolumeDataBean( (int)arrayLength );
                 }
 
                 logger.info(

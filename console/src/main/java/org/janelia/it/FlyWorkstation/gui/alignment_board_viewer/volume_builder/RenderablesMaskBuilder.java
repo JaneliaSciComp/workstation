@@ -195,7 +195,19 @@ public class RenderablesMaskBuilder extends RenderablesVolumeBuilder implements 
      */
     @Override
     public byte getCurrentValue(long location) {
+        init();
         return getCurrentVolumeData()[ (int)location ];
+    }
+
+    @Override
+    public void setCurrentValue(long location, byte value) {
+        throw new RuntimeException("Not implemented");
+    }
+
+    @Override
+    public long length() {
+        init();
+        return volumeData.length;
     }
 
     //-------------END------------------------IMPLEMENT MaskBuilderI

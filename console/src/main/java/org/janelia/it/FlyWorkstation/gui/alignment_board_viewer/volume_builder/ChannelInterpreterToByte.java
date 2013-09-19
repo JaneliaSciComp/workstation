@@ -19,7 +19,7 @@ import org.slf4j.LoggerFactory;
  * loop) values can be done in only one place.
  */
 public class ChannelInterpreterToByte implements ChannelInterpreterI {
-    private final byte[] volumeData;
+    private VolumeDataI wholeSignalVolume;
     private VolumeDataI wholeMaskVolume;
 
     private int maxValue = 0;
@@ -29,12 +29,12 @@ public class ChannelInterpreterToByte implements ChannelInterpreterI {
     /**
      * Construct with volume data to be modified, as well as the mask volume for reference.
      *
-     * @param volumeData to modify with latest contribution of channel bytes.
+     * @param signalVolume to modify with latest contribution of channel bytes.
      * @param wholeMaskVolume to reference for mask in use.
      * @param multiMaskTracker to help with mask-based channel data changes.
      */
-    public ChannelInterpreterToByte(byte[] volumeData, VolumeDataI wholeMaskVolume, MultiMaskTracker multiMaskTracker) {
-        this.volumeData = volumeData;
+    public ChannelInterpreterToByte(VolumeDataI signalVolume, VolumeDataI wholeMaskVolume, MultiMaskTracker multiMaskTracker) {
+        this.wholeSignalVolume = signalVolume;
         this.wholeMaskVolume = wholeMaskVolume;
         splitStrategyFactory = new ChannelSplitStrategyFactory( multiMaskTracker );
     }
@@ -46,7 +46,7 @@ public class ChannelInterpreterToByte implements ChannelInterpreterI {
 
         if ( srcChannelMetaData.byteCount == 1  &&  srcChannelMetaData.channelCount == 1  &&  multiMaskId == orignalMaskNum ) {
             // 1:1 straight copy to volume.
-            volumeData[ targetPos ] = channelData[ 0 ];
+            wholeSignalVolume.setCurrentValue( targetPos, channelData[ 0 ] );
         }
         else {
             // First get the size-adjusted channel bytes.  These are suited to the target channel characteristics,
@@ -77,7 +77,7 @@ public class ChannelInterpreterToByte implements ChannelInterpreterI {
                 int channelInx = orderedRgbIndexes[ i ];
 
                 //synchronized (this) {
-                if ( targetPos + channelInx > 0  &&  (volumeData.length > targetPos+channelInx)) {
+                if ( targetPos + channelInx > 0  &&  (wholeSignalVolume.length() > targetPos+channelInx)) {
                     targetChannelBytes[ channelInx ] = (byte)finalValue;
                 }
                 else {
@@ -95,9 +95,12 @@ public class ChannelInterpreterToByte implements ChannelInterpreterI {
             }
             for ( int i = 0; i < targetChannelMetaData.channelCount; i++ ) {
                 //  block of in-memory, interleaving the channels as the offsets follow.
-                if ( targetPos + i >= 0  &&  (volumeData.length > targetPos+i)) {
+                if ( targetPos + i >= 0  &&  (wholeSignalVolume.length() > targetPos+i)) {
                     // Here enforced: multiplexing the channel data by "OR"-ing in the latest.
-                    volumeData[ targetPos + i ] |= targetChannelBytes[ i ];
+                    wholeSignalVolume.setCurrentValue(
+                            targetPos + i,
+                            (byte)(wholeSignalVolume.getCurrentValue( targetPos + i ) | targetChannelBytes[ i ])
+                    );
                 }
                 else {
                     logger.error("Outside the box at volume writeback time.");
@@ -108,8 +111,8 @@ public class ChannelInterpreterToByte implements ChannelInterpreterI {
         // Pad out to the end, to create the alpha byte.
         if ( targetChannelMetaData.channelCount >= ( srcChannelMetaData.channelCount + 1 ) &&
              multiMaskId == orignalMaskNum ) {
-            if ( targetPos + targetChannelMetaData.channelCount - 1 > 0  &&  (volumeData.length > targetPos + targetChannelMetaData.channelCount - 1))
-                volumeData[ targetPos + targetChannelMetaData.channelCount - 1 ] = (byte)255;
+            if ( targetPos + targetChannelMetaData.channelCount - 1 > 0  &&  (wholeSignalVolume.length() > targetPos + targetChannelMetaData.channelCount - 1))
+                wholeSignalVolume.setCurrentValue( targetPos + targetChannelMetaData.channelCount - 1, (byte)255 );
             else
                 logger.error("Outside the box");
         }
