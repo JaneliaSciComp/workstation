@@ -835,7 +835,7 @@ public class EntityContextMenu extends JPopupMenu {
                                 .childrenOfType(EntityConstants.TYPE_MOVIE)
                                 .run(new EntityVisitor() {
                             public void visit(Entity movieEntity) throws Exception {
-                                if (movieEntity.getName().startsWith("AlignVerify")) {
+                                if (movieEntity.getName().startsWith("VerifyMovie")) {
                                     movie = movieEntity;
                                 }
                             }
@@ -1386,13 +1386,13 @@ public class EntityContextMenu extends JPopupMenu {
                                         HashSet<TaskParameter> taskParameters = new HashSet<TaskParameter>();
                                         taskParameters.add(new TaskParameter("filepath", filepath, null));
                                         taskParameters.add(new TaskParameter("output extension", extension, null));
-                                        ModelMgr.getModelMgr().submitJob("ConsoleSplitChannels", "Split Channels", taskParameters);
+                                        task = ModelMgr.getModelMgr().submitJob("ConsoleSplitChannels", "Split Channels", taskParameters);
                                     }
                                     else {    
                                         HashSet<TaskParameter> taskParameters = new HashSet<TaskParameter>();
                                         taskParameters.add(new TaskParameter("filepath", filepath, null));
                                         taskParameters.add(new TaskParameter("output extension", extension, null));
-                                        ModelMgr.getModelMgr().submitJob("ConsoleConvertFile", "Convert File", taskParameters);
+                                        task = ModelMgr.getModelMgr().submitJob("ConsoleConvertFile", "Convert File", taskParameters);
                                     }
 
                                     TaskMonitoringWorker taskWorker = new TaskMonitoringWorker(task.getObjectId()) {
