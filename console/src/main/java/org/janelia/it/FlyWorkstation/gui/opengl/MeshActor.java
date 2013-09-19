@@ -7,7 +7,6 @@ import java.nio.IntBuffer;
 
 import javax.media.opengl.GL;
 import javax.media.opengl.GL2;
-import javax.media.opengl.GL3;
 import javax.media.opengl.GLAutoDrawable;
 import javax.media.opengl.glu.GLU;
 
@@ -113,7 +112,7 @@ implements GLActor
     }
 
     private void initializeVbos(GLAutoDrawable glDrawable) {
-        GL3 gl = glDrawable.getGL().getGL3();
+        GL2 gl = glDrawable.getGL().getGL2();
         // Initialize vertex buffer objects
         int[] vbos = {0,0};
         gl.glGenBuffers(2, vbos, 0);

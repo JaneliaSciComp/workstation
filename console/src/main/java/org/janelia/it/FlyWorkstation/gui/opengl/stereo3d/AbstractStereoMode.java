@@ -2,6 +2,7 @@ package org.janelia.it.FlyWorkstation.gui.opengl.stereo3d;
 
 import java.awt.Color;
 
+import javax.media.opengl.GL;
 import javax.media.opengl.GL2;
 import javax.media.opengl.GLAutoDrawable;
 import javax.media.opengl.GLEventListener;
@@ -187,7 +188,7 @@ implements GLEventListener
 		updateProjectionMatrix(gl, 1);
 	}
 	
-	protected void updateViewport(GL2 gl) {
+	protected void updateViewport(GL gl) {
 		gl.glViewport(0, 0, viewportWidth, viewportHeight);
 	}
 
