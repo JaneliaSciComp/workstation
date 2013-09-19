@@ -70,6 +70,7 @@ public class TextureDataBean implements TextureDataI {
         setSz( sz );
     }
 
+    @SuppressWarnings("ALL")
     @Override
     public boolean equals( Object other ) {
         if ( other == null  ||  (! (other instanceof TextureDataBean ) ) ) {

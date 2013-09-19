@@ -117,6 +117,7 @@ public class RenderMapTextureBean implements TextureDataI {
         return new VolumeDataBean( rawMap );
     }
 
+    @SuppressWarnings("unused")
     private void dumpAtLoc( int nextCropBoxOffset, float[] cropCoords, byte[] rawMap ) {
         System.out.println("----Added to uploadable texture, there coord values (x,y,z order):");
         for ( int i = 0; i < cropCoords.length / 2; i++ ) {

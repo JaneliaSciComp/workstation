@@ -191,7 +191,7 @@ public class RenderablesMaskBuilder extends RenderablesVolumeBuilder implements 
      * Return the appropriate byte from the volume data.
      *
      * @param location which offset, in bytes.  This impl can only return an int of addressing.
-     * @return
+     * @return a byte at the location given.å
      */
     @Override
     public byte getCurrentValue(long location) {

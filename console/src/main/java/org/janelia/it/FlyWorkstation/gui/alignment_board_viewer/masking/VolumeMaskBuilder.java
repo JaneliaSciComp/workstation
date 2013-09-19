@@ -26,7 +26,6 @@ public class VolumeMaskBuilder implements VolumeDataAcceptor, MaskBuilderI {
     private static final int Y_INX = 1;
 
     private static final int SHADER_FRIENDLY_BYTE_COUNT = 2;
-    private static final long UNSET_MASK_UID = -1L;
 
     private List<TextureDataI> maskingDataBeans = new ArrayList<TextureDataI>();
     private ByteOrder consensusByteOrder;
@@ -147,10 +146,10 @@ public class VolumeMaskBuilder implements VolumeDataAcceptor, MaskBuilderI {
                     }
 
                     StringBuilder builder = new StringBuilder();
-                    builder.append("Values seen in file " + texBean.getFilename() + " in volume mask builder.");
+                    builder.append("Values seen in file ").append(texBean.getFilename()).append(" in volume mask builder.");
                     builder.append("\n");
                     for ( Integer nextVal: values ) {
-                        builder.append( nextVal + "," );
+                        builder.append(nextVal).append(",");
                     }
                     logger.info( builder.toString() );
                 }
@@ -165,7 +164,7 @@ public class VolumeMaskBuilder implements VolumeDataAcceptor, MaskBuilderI {
      * Just get the appropriate byte from the cached buffer.
      *
      * @param location which offset, in bytes.  A long value is used to get beyond as many restrictions as possible.
-     * @return
+     * @return value at location given.
      */
     @Override
     public byte getCurrentValue(long location) {
@@ -333,6 +332,7 @@ public class VolumeMaskBuilder implements VolumeDataAcceptor, MaskBuilderI {
         }
     }
 
+    @SuppressWarnings("unused")
     private void zeroCheckDebug(TextureDataI textureData) {
         // QUICK CHECK
         int nonZeroCount = 0;

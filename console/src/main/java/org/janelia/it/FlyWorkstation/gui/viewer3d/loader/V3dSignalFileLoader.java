@@ -61,7 +61,7 @@ public class V3dSignalFileLoader extends TextureDataBuilder implements VolumeFil
             loadV3dIntRaw( sliceStream, sc );
         }
         else if ( pixelBytes == 1 ) {
-            loadV3dByteRaw( sliceStream, sc );
+            loadV3dByteRaw( sliceStream );
         }
         else {
             throw new IOException("Unexpected pixelbytes count of " + pixelBytes);
@@ -106,12 +106,13 @@ public class V3dSignalFileLoader extends TextureDataBuilder implements VolumeFil
         header = sliceStream.getHeaderKey();
     }
 
-    private void loadV3dByteRaw(V3dRawImageStream sliceStream, int sc)
+    private void loadV3dByteRaw(V3dRawImageStream sliceStream)
             throws IOException, DataFormatException {
 
         V3dByteReader byteReader = new V3dByteReader();
         byteReader.setInvertedY( false );
-        Set<Integer> values= byteReader.readBytes( sliceStream, sx, sy, sz, pixelBytes );
+        // Bypass some bytes.
+        byteReader.readBytes( sliceStream, sx, sy, sz, pixelBytes );
         textureByteArray = byteReader.getTextureBytes();
         header = sliceStream.getHeaderKey();
     }

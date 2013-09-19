@@ -195,16 +195,17 @@ public class VolumeWritebackHandler {
         }
 
         /** This is a simple testing mechanism to sanity-check the contents of the texture being saved. */
+        @SuppressWarnings("unused")
         private void frequencyReport( TextureDataI texture ) {
             byte[] textureBytes = texture.getTextureData().getCurrentVolumeData();
 
             Map<Byte,Integer> byteValToCount = new HashMap<Byte,Integer>();
-            for ( int i = 0; i < textureBytes.length; i ++ ) {
-                Integer oldVal = byteValToCount.get( textureBytes[ i ] );
-                if ( oldVal == null ) {
+            for (byte textureByte : textureBytes) {
+                Integer oldVal = byteValToCount.get(textureByte);
+                if (oldVal == null) {
                     oldVal = 0;
                 }
-                byteValToCount.put( textureBytes[i], ++oldVal );
+                byteValToCount.put(textureByte, ++oldVal);
 
             }
 
