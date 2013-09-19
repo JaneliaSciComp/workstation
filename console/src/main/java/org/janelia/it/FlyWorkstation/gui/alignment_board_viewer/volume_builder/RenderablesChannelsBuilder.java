@@ -221,14 +221,14 @@ public class RenderablesChannelsBuilder extends RenderablesVolumeBuilder impleme
         if ( downSampleRate != 0.0   &&   downSampleRate != 1.0 ) {
             DownSampler downSampler = new DownSampler( paddedSx, paddedSy, paddedSz );
             DownSampler.DownsampledTextureData downSampling = downSampler.getDownSampledVolume(
-                    channelVolumeData.getCurrentVolumeData(),
+                    channelVolumeData,
                     channelMetaData.channelCount* bytesPerChannel,
                     downSampleRate,
                     downSampleRate,
                     downSampleRate
             );
             textureData = new TextureDataBean(
-                    new VolumeDataBean( downSampling.getVolume() ), downSampling.getSx(), downSampling.getSy(), downSampling.getSz()
+                    downSampling.getVolume(), downSampling.getSx(), downSampling.getSy(), downSampling.getSz()
             );
             textureData.setVolumeMicrometers(
                     new Double[]{

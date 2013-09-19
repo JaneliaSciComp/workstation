@@ -1,5 +1,6 @@
 package org.janelia.it.FlyWorkstation.gui.alignment_board_viewer.volume_builder;
 
+import org.janelia.it.FlyWorkstation.gui.alignment_board_viewer.masking.VolumeDataI;
 import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.FlyWorkstation.shared.workers.SimpleWorker;
 import org.slf4j.Logger;
@@ -35,7 +36,7 @@ public class DownSampler {
      * This allows us to carry out a kind of lossy compression of a 3D volume, to get it into a manageable
      * size for use on the GPU hardware.
      *
-     * @param oneDVolume an array of bytes, suitable for upload to GPU, but too large.
+     * @param fullSizeVolume an array of bytes, suitable for upload to GPU, but too large.
      * @param voxelBytes number of bytes in each voxel.
      * @param xScale multiplier in x direction.
      * @param yScale multiplier in y direction.
@@ -43,21 +44,19 @@ public class DownSampler {
      * @return an array of bytes, suitable ofr uplaod to GPU, but with some loss to reduce size.
      */
     protected DownsampledTextureData getDownSampledVolume(
-            byte[] oneDVolume, int voxelBytes, double xScale, double yScale, double zScale
+            VolumeDataI fullSizeVolume, int voxelBytes, double xScale, double yScale, double zScale
     ) {
         DownsampledTextureData rtnVal;
         if ( xScale == yScale  &&  yScale == zScale  &&  zScale == 1.0 ) {
             // Trivial case.
             rtnVal = new DownsampledTextureData(
-                    oneDVolume,
-                    (int)sx, (int)sy, (int)sz,
-                    voxelBytes,
-                    xScale, yScale, zScale
+                    fullSizeVolume,
+                    (int)sx, (int)sy, (int)sz
             );
         }
         else {
             rtnVal = getDownSampledVolumeHelper(
-                    oneDVolume,
+                    fullSizeVolume,
                     voxelBytes,
                     xScale,
                     yScale,
@@ -75,7 +74,7 @@ public class DownSampler {
      * @return set of all distinct label values found in all cells.
      */
     private DownsampledTextureData getDownSampledVolumeHelper(
-            byte[] fullSizeVolume, int voxelBytes,
+            VolumeDataI fullSizeVolume, int voxelBytes,
             double xScale,
             double yScale,
             double zScale
@@ -90,8 +89,8 @@ public class DownSampler {
 
         // Here, sample the neighborhoods (or _output_ voxels).
         // Java implicitly sets newly-allocated byte arrays to all zeros.
-        byte[] textureByteArray = new byte[(outSx * outSy * outSz) * voxelBytes];
-        final DownsampleParameter downsampleBean = new DownsampleParameter(fullSizeVolume, voxelBytes, xScale, yScale, zScale, outSx, outSy, textureByteArray);
+        VolumeDataI downsampledVolume = new VolumeDataBean( (outSx * outSy * outSz) * voxelBytes );
+        final DownsampleParameter downsampleBean = new DownsampleParameter(fullSizeVolume, voxelBytes, xScale, yScale, zScale, outSx, outSy, downsampledVolume);
 
         // Making a thread pool, and submitting slice-downsampling steps to that pool.
         ExecutorService downSamplingThreadPool = Executors.newFixedThreadPool( DOWNSAMPLE_THREAD_COUNT );
@@ -131,7 +130,7 @@ public class DownSampler {
         sz = outSz;
 
         DownsampledTextureData rtnVal = new DownsampledTextureData(
-                textureByteArray, outSx, outSy, outSz, voxelBytes, xScale, yScale, zScale
+                downsampledVolume, outSx, outSy, outSz
         );
         logger.info("Downsampling complete.");
 
@@ -165,7 +164,8 @@ public class DownSampler {
                     for ( int pi = 0; pi < downSampleParam.getVoxelBytes(); pi ++ ) {
                         //byte piByte = (byte)(value >>> (pi * 8) & 0x000000ff);
                         byte piByte = value[ pi ];
-                        downSampleParam.getTextureByteArray()[yOffset + (outX * downSampleParam.getVoxelBytes()) + (pi)] = piByte;
+                        int location = yOffset + (outX * downSampleParam.getVoxelBytes()) + (pi);
+                        downSampleParam.getDownsampledVolume().setCurrentValue( location, piByte );
                     }
                 }
 
@@ -207,14 +207,21 @@ public class DownSampler {
                     byte[] voxelVal = new byte[ sliceParameter.getVoxelBytes() ];
                     int arrayCopyLoc = nbhYOffset + (xNbh * sliceParameter.getVoxelBytes());
                     try {
-                    System.arraycopy(
-                            sliceParameter.getFullSizeVolume(), arrayCopyLoc, voxelVal, 0, sliceParameter.getVoxelBytes()
-                    );
+//                        for ( int i = 0; i < (sliceParameter.getVoxelBytes() ); i++ ) {
+//                            voxelVal[ i ] = sliceParameter.getFullSizeVolume().getCurrentValue( i + arrayCopyLoc );
+//                        }
+                        System.arraycopy(
+                                sliceParameter.getFullSizeVolume().getCurrentVolumeData(), arrayCopyLoc, voxelVal, 0, sliceParameter.getVoxelBytes()
+                        );
+
+//                    System.arraycopy(
+//                            sliceParameter.getFullSizeVolume(), arrayCopyLoc, voxelVal, 0, sliceParameter.getVoxelBytes()
+//                    );
                     } catch ( Exception ex ) {
                         logger.error(
                                 "Exception while trying to copy to {} with max of {}.",
                                 arrayCopyLoc,
-                                sliceParameter.getFullSizeVolume().length
+                                sliceParameter.getFullSizeVolume().length()
                         );
                         logger.info( "Expected dimensions are " + sx + " x " + sy + " x " + sz );
                         ex.printStackTrace();
@@ -300,31 +307,21 @@ public class DownSampler {
      * Return-value object to conveniently-collect various values about downsample output.
      */
     public static class DownsampledTextureData {
-        private final byte[] volume;
+        private final VolumeDataI volume;
         private final int sx;
         private final int sy;
         private final int sz;
-        private final int voxelBytes;
-
-        private double xScale;
-        private double yScale;
-        private double zScale;
 
         public DownsampledTextureData(
-                byte[] textureBytes, int sx, int sy, int sz, int voxelBytes,
-                double xScale, double yScale, double zScale
+                VolumeDataI textureBytes, int sx, int sy, int sz
         ) {
             this.volume = textureBytes;
-            this.voxelBytes = voxelBytes;
             this.sx = sx;
             this.sy = sy;
             this.sz = sz;
-            this.xScale = xScale;
-            this.yScale = yScale;
-            this.zScale = zScale;
         }
 
-        public byte[] getVolume() {
+        public VolumeDataI getVolume() {
             return volume;
         }
 
@@ -340,21 +337,6 @@ public class DownSampler {
             return sz;
         }
 
-        public int getVoxelBytes() {
-            return voxelBytes;
-        }
-
-        public double getxScale() {
-            return xScale;
-        }
-
-        public double getyScale() {
-            return yScale;
-        }
-
-        public double getzScale() {
-            return zScale;
-        }
     }
 
 }

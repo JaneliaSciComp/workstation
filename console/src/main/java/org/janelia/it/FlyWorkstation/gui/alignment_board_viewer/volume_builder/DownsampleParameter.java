@@ -1,16 +1,18 @@
 package org.janelia.it.FlyWorkstation.gui.alignment_board_viewer.volume_builder;
 
+import org.janelia.it.FlyWorkstation.gui.alignment_board_viewer.masking.VolumeDataI;
+
 public class DownsampleParameter {
-    private final byte[] fullSizeVolume;
+    private final VolumeDataI fullSizeVolume;
     private final int voxelBytes;
     private final double xScale;
     private final double yScale;
     private final double zScale;
     private final int outSx;
     private final int outSy;
-    private final byte[] textureByteArray;
+    private final VolumeDataI downsampledVolume;
 
-    public DownsampleParameter(byte[] fullSizeVolume, int voxelBytes, double xScale, double yScale, double zScale, int outSx, int outSy, byte[] textureByteArray) {
+    public DownsampleParameter(VolumeDataI fullSizeVolume, int voxelBytes, double xScale, double yScale, double zScale, int outSx, int outSy, VolumeDataI downsampledVolume) {
         this.fullSizeVolume = fullSizeVolume;
         this.voxelBytes = voxelBytes;
         this.xScale = xScale;
@@ -18,10 +20,10 @@ public class DownsampleParameter {
         this.zScale = zScale;
         this.outSx = outSx;
         this.outSy = outSy;
-        this.textureByteArray = textureByteArray;
+        this.downsampledVolume = downsampledVolume;
     }
 
-    public byte[] getFullSizeVolume() {
+    public VolumeDataI getFullSizeVolume() {
         return fullSizeVolume;
     }
 
@@ -49,8 +51,8 @@ public class DownsampleParameter {
         return outSy;
     }
 
-    public byte[] getTextureByteArray() {
-        return textureByteArray;
+    public VolumeDataI getDownsampledVolume() {
+        return downsampledVolume;
     }
 
 }
