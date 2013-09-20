@@ -14,7 +14,7 @@ public class ZoomLevel {
 	 * Integer log to the base 2 of the zoom-out factor
 	 * @return
 	 */
-	int getLog2ZoomOutFactor() {
+	public int getLog2ZoomOutFactor() {
 		return log2ZoomOutFactor;
 	}
 	
@@ -23,7 +23,8 @@ public class ZoomLevel {
 	 * zoom level.
 	 * @return
 	 */
-	int getZoomOutFactor() {
+	public int getZoomOutFactor() {
 		return zoomOutFactor;
 	}
+
 }

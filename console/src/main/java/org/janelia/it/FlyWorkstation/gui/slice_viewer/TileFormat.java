@@ -3,6 +3,8 @@ package org.janelia.it.FlyWorkstation.gui.slice_viewer;
 import org.janelia.it.FlyWorkstation.geom.CoordinateAxis;
 import org.janelia.it.FlyWorkstation.geom.Vec3;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.BoundingBox3d;
+import org.janelia.it.FlyWorkstation.octree.ZoomLevel;
+import org.janelia.it.FlyWorkstation.octree.ZoomedVoxelIndex;
 
 /*
  * Common metadata to back end tile data formats
@@ -44,17 +46,31 @@ public class TileFormat
 	 */
 	public TileIndex tileIndexForXyz(Vec3 xyz, int zoom, CoordinateAxis sliceDirection)
 	{
+	    ZoomLevel zoomLevel = new ZoomLevel(zoom); // TODO put in arg list
 		int zoomMax = getZoomLevelCount() - 1;
 		// New way
 		MicrometerXyz um = new MicrometerXyz(xyz.getX(), xyz.getY(), xyz.getZ());
 		VoxelXyz vox = voxelXyzForMicrometerXyz(um);
-		ZoomedVoxelXyz zvox = zoomedVoxelXyzForVoxelXyz(vox, zoom, sliceDirection);
-		TileXyz tileXyz = tileXyzForZoomedVoxelXyz(zvox, zoom, sliceDirection);
+		ZoomedVoxelIndex zvox = zoomedVoxelIndexForVoxelXyz(vox, zoomLevel, sliceDirection);
+		TileXyz tileXyz = tileXyzForZoomedVoxelIndex(zvox, sliceDirection);
 		return new TileIndex(
 				tileXyz.getX(), tileXyz.getY(), tileXyz.getZ(),
 				zoom, zoomMax, indexStyle, sliceDirection);
 	}
 	
+    public TileIndex tileIndexForZoomedVoxelIndex(ZoomedVoxelIndex ix,
+            CoordinateAxis sliceDirection) 
+    {
+        int zoom = ix.getZoomLevel().getLog2ZoomOutFactor();
+        TileXyz tileXyz = tileXyzForZoomedVoxelIndex(
+                ix, 
+                sliceDirection);
+        int zoomMax = getZoomLevelCount() - 1;
+        return new TileIndex(
+                tileXyz.getX(), tileXyz.getY(), tileXyz.getZ(),
+                zoom, zoomMax, indexStyle, sliceDirection);
+    }
+
 	public BoundingBox3d calcBoundingBox() {
 		double sv[] = getVoxelMicrometers();
 		int s0[] = getOrigin();
@@ -86,17 +102,18 @@ public class TileFormat
 	public Vec3[] cornersForTileIndex(TileIndex index) {
 		// New way
 		// upper left front corner of tile
+	    ZoomLevel zoomLevel = new ZoomLevel(index.getZoom());
 		TileXyz tileXyz = new TileXyz(index.getX(), index.getY(), index.getZ());
-		ZoomedVoxelXyz zvox = zoomedVoxelXyzForTileXyz(tileXyz, index.getZoom(), index.getSliceAxis());
-		VoxelXyz vox = voxelXyzForZoomedVoxelXyz(zvox, index.getZoom(), index.getSliceAxis());
+		ZoomedVoxelIndex zvox = zoomedVoxelIndexForTileXyz(tileXyz, zoomLevel, index.getSliceAxis());
+		VoxelXyz vox = voxelXyzForZoomedVoxelIndex(zvox, index.getZoom(), index.getSliceAxis());
 		MicrometerXyz ulfCorner = micrometerXyzForVoxelXyz(vox, index.getSliceAxis());
 		// lower right back corner
 		int dt[] = {1, -1, 1}; // shift by one tile to get opposite corner
 		int depthAxis = index.getSliceAxis().index();
 		dt[depthAxis] = 0; // but no shift in slice direction
 		TileXyz tileLrb = new TileXyz(index.getX() + dt[0], index.getY() + dt[1], index.getZ() + dt[2]);
-		ZoomedVoxelXyz zVoxLrb = zoomedVoxelXyzForTileXyz(tileLrb, index.getZoom(), index.getSliceAxis());
-		VoxelXyz voxLrb = voxelXyzForZoomedVoxelXyz(zVoxLrb, index.getZoom(), index.getSliceAxis());
+		ZoomedVoxelIndex zVoxLrb = zoomedVoxelIndexForTileXyz(tileLrb, zoomLevel, index.getSliceAxis());
+		VoxelXyz voxLrb = voxelXyzForZoomedVoxelIndex(zVoxLrb, index.getZoom(), index.getSliceAxis());
 		MicrometerXyz lrbCorner = micrometerXyzForVoxelXyz(voxLrb, index.getSliceAxis());
 		//
 // Checking in commented code. Commented to avoid breaking Chris' other changes.
@@ -400,7 +417,7 @@ public class TileFormat
 				(int)Math.floor(m.getZ() / getVoxelMicrometers()[2]) - origin[2]);
 	}
 	
-	public VoxelXyz voxelXyzForZoomedVoxelXyz(ZoomedVoxelXyz z, int zoomLevel, CoordinateAxis sliceAxis) {
+	public VoxelXyz voxelXyzForZoomedVoxelIndex(ZoomedVoxelIndex z, int zoomLevel, CoordinateAxis sliceAxis) {
 		int zoomFactor = (int)zoomFactorForZoomLevel(zoomLevel);
 		int xyz[] = {z.getX(), z.getY(), z.getZ()};
 		int depthAxis = sliceAxis.index();
@@ -411,9 +428,9 @@ public class TileFormat
 		}
 		return new VoxelXyz(xyz[0], xyz[1], xyz[2]);
 	}
-	public ZoomedVoxelXyz zoomedVoxelXyzForVoxelXyz(VoxelXyz v, int zoomLevel, CoordinateAxis sliceAxis) 
+	public ZoomedVoxelIndex zoomedVoxelIndexForVoxelXyz(VoxelXyz v, ZoomLevel zoomLevel, CoordinateAxis sliceAxis) 
 	{
-		int zoomFactor = (int)zoomFactorForZoomLevel(zoomLevel);
+		int zoomFactor = zoomLevel.getZoomOutFactor();
 		int xyz[] = {v.getX(), v.getY(), v.getZ()};
 		int depthAxis = sliceAxis.index();
 		for (int i = 0; i < 3; ++i) {
@@ -421,7 +438,7 @@ public class TileFormat
 				continue; // don't zoom on slice axis in quadtree mode
 			xyz[i] /= zoomFactor;
 		}
-		return new ZoomedVoxelXyz(xyz[0], xyz[1], xyz[2]);
+		return new ZoomedVoxelIndex(zoomLevel, xyz[0], xyz[1], xyz[2]);
 	}
 	
 	/**
@@ -430,7 +447,7 @@ public class TileFormat
 	 * @param sliceAxis
 	 * @return
 	 */
-	public ZoomedVoxelXyz zoomedVoxelXyzForTileXyz(TileXyz t, int zoomLevel, CoordinateAxis sliceAxis) {
+	public ZoomedVoxelIndex zoomedVoxelIndexForTileXyz(TileXyz t, ZoomLevel zoomLevel, CoordinateAxis sliceAxis) {
 		int xyz[] = {t.getX(), t.getY(), t.getZ()};
 		int depthAxis = sliceAxis.index();
 		for (int i = 0; i < 3; ++i) {
@@ -440,11 +457,11 @@ public class TileFormat
 				xyz[i] = xyz[i]*getTileSize()[i]; // scale horizontal and vertical
 		}
 		// Invert Y axis to convert to Raveler convention from image convention.
-		int zoomFactor = (int)zoomFactorForZoomLevel(zoomLevel);
+		int zoomFactor = zoomLevel.getZoomOutFactor();
 		int maxZoomVoxelY = volumeSize[1] / zoomFactor;
 		xyz[1] = maxZoomVoxelY - xyz[1] - getTileSize()[1];
 		//
-		return new ZoomedVoxelXyz(xyz[0], xyz[1], xyz[2]);
+		return new ZoomedVoxelIndex(zoomLevel, xyz[0], xyz[1], xyz[2]);
 	}
 	/**
 	 * TileIndex xyz containing ZoomedVoxel
@@ -453,10 +470,10 @@ public class TileFormat
 	 * @param sliceAxis
 	 * @return
 	 */
-	public TileXyz tileXyzForZoomedVoxelXyz(ZoomedVoxelXyz z, int zoomLevel, CoordinateAxis sliceAxis) {
+	public TileXyz tileXyzForZoomedVoxelIndex(ZoomedVoxelIndex z, CoordinateAxis sliceAxis) {
 		int xyz[] = {z.getX(), z.getY(), z.getZ()};
 		// Invert Y axis to convert to Raveler convention from image convention.
-		int zoomFactor = (int)zoomFactorForZoomLevel(zoomLevel);
+		int zoomFactor = z.getZoomLevel().getZoomOutFactor();
 		int maxZoomVoxelY = volumeSize[1] / zoomFactor - 1;
 		xyz[1] = maxZoomVoxelY - xyz[1];
 		int depthAxis = sliceAxis.index();
@@ -530,14 +547,16 @@ public class TileFormat
 		public VoxelXyz(int x, int y, int z) {super(x, y, z);}
 	}; // 2
 	
-	public static class ZoomedVoxelXyz extends UnittedVec3Int<ZoomedVoxelUnit> 
+	/* OBSOLETED in favor of ...octree.ZoomedVoxelIndex
+	public static class ZoomedVoxelIndex extends UnittedVec3Int<ZoomedVoxelUnit> 
 	{		
-		public ZoomedVoxelXyz(int x, int y, int z) {super(x, y, z);}
+		public ZoomedVoxelIndex(int x, int y, int z) {super(x, y, z);}
 	}; // 3
+	*/
 	
 	public static class TileXyz extends UnittedVec3Int<TileUnit> 
 	{
 		public TileXyz(int x, int y, int z) {super(x, y, z);}		
-	}; // 4
+	} // 4
 
 }

@@ -269,6 +269,7 @@ extends AbstractTextureLoadAdapter
 		for (int c = 0; c < sc; ++c) {
 			File tiff = new File(folder, tiffBase+"."+c+".tif");
 			// log.info(tiff.getAbsolutePath());
+            // System.out.println(tiff.getAbsolutePath());
 			// System.out.println(tileIndex+", "+tiff.toString());
 			if (! tiff.exists())
 				throw new MissingTileException();

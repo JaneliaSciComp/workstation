@@ -65,7 +65,7 @@ public class ExtractOctreeSubvolume {
 	{
 		SharedVolumeImage wholeImage = new SharedVolumeImage();
 		wholeImage.loadURL(inputOctreeFolder.toURI().toURL());
-		Subvolume subvolume = Subvolume.loadSubvolumeMicrometers(corner1, corner2, resolutionMicrometers, wholeImage);
+		Subvolume subvolume = new Subvolume(corner1, corner2, resolutionMicrometers, wholeImage);
 		// Write output tiff
 		BufferedImage outSlices[] = subvolume.getAsBufferedImages();
 		TIFFEncodeParam params = new TIFFEncodeParam();

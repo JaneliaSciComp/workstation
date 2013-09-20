@@ -126,7 +126,7 @@ implements TextureDataI
 		// (there would need to be a separate one for each thread)
 		byte byteArray[] = new byte[imageByteCount];
 		ByteBuffer byteBuffer = ByteBuffer.wrap(byteArray);
-		byteBuffer.order(ByteOrder.LITTLE_ENDIAN);
+		byteBuffer.order(ByteOrder.nativeOrder());
 		ShortBuffer shortBuffer = byteBuffer.asShortBuffer(); // for 16-bit case
 		//
 		Raster raster = image.getData();
