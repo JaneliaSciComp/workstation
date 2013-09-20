@@ -31,6 +31,7 @@
 			<fileset dir="${common.module}/Logging" includes="**/*.jar"/>
 			<fileset dir="${common.module}/Jetty" includes="**/*.jar"/>
 			<fileset dir="${common.module}/GWT-Serializable" includes="**/*.jar"/>
+            <fileset dir="${common.module}/Simple-Neurite-Tracer" includes="**/*.jar"/>
 			<fileset dir="${common.dir}/JBoss-Server-4.2.3.GA" includes="jbossall-client.jar"/>
 			<fileset dir="${common.dir}/JBoss-Server-4.2.3.GA" includes="javassist.jar"/>
 			<fileset dir="${shared.module}/lib" includes="**/*.jar"/>
