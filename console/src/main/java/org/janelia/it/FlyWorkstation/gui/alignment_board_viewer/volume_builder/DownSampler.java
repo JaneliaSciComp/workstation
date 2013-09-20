@@ -165,7 +165,7 @@ public class DownSampler {
                         //byte piByte = (byte)(value >>> (pi * 8) & 0x000000ff);
                         byte piByte = value[ pi ];
                         int location = yOffset + (outX * downSampleParam.getVoxelBytes()) + (pi);
-                        downSampleParam.getDownsampledVolume().setCurrentValue( location, piByte );
+                        downSampleParam.getDownsampledVolume().setValueAt(location, piByte);
                     }
                 }
 
@@ -207,12 +207,13 @@ public class DownSampler {
                     byte[] voxelVal = new byte[ sliceParameter.getVoxelBytes() ];
                     int arrayCopyLoc = nbhYOffset + (xNbh * sliceParameter.getVoxelBytes());
                     try {
-//                        for ( int i = 0; i < (sliceParameter.getVoxelBytes() ); i++ ) {
-//                            voxelVal[ i ] = sliceParameter.getFullSizeVolume().getCurrentValue( i + arrayCopyLoc );
-//                        }
-                        System.arraycopy(
-                                sliceParameter.getFullSizeVolume().getCurrentVolumeData(), arrayCopyLoc, voxelVal, 0, sliceParameter.getVoxelBytes()
-                        );
+                        VolumeDataI fullSizeVolume = sliceParameter.getFullSizeVolume();
+                        for ( int i = 0; i < (sliceParameter.getVoxelBytes() ); i++ ) {
+                            voxelVal[ i ] = fullSizeVolume.getValueAt(i + arrayCopyLoc);
+                        }
+//                        System.arraycopy(
+//                                sliceParameter.getFullSizeVolume().getCurrentVolumeData(), arrayCopyLoc, voxelVal, 0, sliceParameter.getVoxelBytes()
+//                        );
 
 //                    System.arraycopy(
 //                            sliceParameter.getFullSizeVolume(), arrayCopyLoc, voxelVal, 0, sliceParameter.getVoxelBytes()

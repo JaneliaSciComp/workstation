@@ -34,7 +34,7 @@ public interface VolumeDataI {
      * @param location which offset, in bytes.  A long value is used to get beyond as many restrictions as possible.
      * @return the value stored there.
      */
-    byte getCurrentValue( long location );
+    byte getValueAt(long location);
 
     /**
      * Call this to push one byte into the volume data.
@@ -43,7 +43,7 @@ public interface VolumeDataI {
      * @param location where to place the byte.
      * @param value what to place.
      */
-    void setCurrentValue( long location, byte value );
+    void setValueAt(long location, byte value);
 
     /**
      * Tells capacity of this volume data.

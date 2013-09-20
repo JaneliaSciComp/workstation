@@ -1,5 +1,6 @@
 package org.janelia.it.FlyWorkstation.gui.alignment_board_viewer.volume_builder;
 
+import org.janelia.it.FlyWorkstation.gui.alignment_board_viewer.masking.VolumeDataI;
 import org.janelia.it.FlyWorkstation.gui.framework.viewer.alignment_board.AlignmentBoardSettings;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.VolumeDataAcceptor;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.loader.ChannelMetaData;
@@ -33,7 +34,8 @@ public class RenderablesMaskBuilder extends RenderablesVolumeBuilder implements 
     private static final int UNIVERSAL_MASK_CHANNEL_COUNT = 1;
     private final Logger logger = LoggerFactory.getLogger( RenderablesMaskBuilder.class );
     private final Collection<RenderableBean> renderableBeans;
-    private byte[] volumeData;
+    private VolumeDataI volumeData;
+    //private byte[] volumeData;
     private int maskByteCount = UNIVERSAL_MASK_BYTE_COUNT;
     private final AlignmentBoardSettings settings;
     private boolean binary;   // Only two possible values for any given voxel.  1-byte per voxel.
@@ -67,11 +69,11 @@ public class RenderablesMaskBuilder extends RenderablesVolumeBuilder implements 
         for ( int j = 0; j < maskByteCount; j++ ) {
             int volumeLoc = j + ((int) position * maskByteCount);
             if ( binary ) {
-                volumeData[ volumeLoc ] = (byte)255;
+                volumeData.setValueAt(volumeLoc, (byte) 255);
             }
             else {
                 // Here enforced: last-added value at any given position takes precedence over any previously-added value.
-                volumeData[ volumeLoc ] = (byte)( ( maskNumber >>> (8*j) ) & 0x00ff );
+                volumeData.setValueAt(volumeLoc, (byte) ((maskNumber >>> (8 * j)) & 0x00ff));
             }
         }
 
@@ -138,7 +140,7 @@ public class RenderablesMaskBuilder extends RenderablesVolumeBuilder implements 
         if ( downSampleRate != 1.0  &&  downSampleRate != 0.0 ) {
             DownSampler downSampler = new DownSampler( paddedSx, paddedSy, paddedSz );
             DownSampler.DownsampledTextureData downSampling = downSampler.getDownSampledVolume(
-                    this, maskByteCount, downSampleRate, downSampleRate, downSampleRate
+                    volumeData, maskByteCount, downSampleRate, downSampleRate, downSampleRate
             );
             textureData = new TextureDataBean(
                     downSampling.getVolume(), downSampling.getSx(), downSampling.getSy(), downSampling.getSz()
@@ -149,7 +151,7 @@ public class RenderablesMaskBuilder extends RenderablesVolumeBuilder implements 
         }
         else {
             textureData = new TextureDataBean(
-                    this, (int)paddedSx, (int)paddedSy, (int)paddedSz
+                    volumeData, (int)paddedSx, (int)paddedSy, (int)paddedSz
             );
             textureData.setVolumeMicrometers( new Double[] { (double)paddedSx, (double)paddedSy, (double)paddedSz } );
         }
@@ -176,15 +178,15 @@ public class RenderablesMaskBuilder extends RenderablesVolumeBuilder implements 
         return VolumeDataAcceptor.TextureColorSpace.COLOR_SPACE_LINEAR;
     }
 
-    @Override
+    //-------------END------------------------IMPLEMENT MaskBuilderI
+    //----------------------------------------IMPLEMENT extended interface VolumeDataI
     public boolean isVolumeAvailable() {
         return true;
     }
 
-    @Override
     public byte[] getCurrentVolumeData() {
         init();
-        return volumeData;
+        return volumeData.getCurrentVolumeData();
     }
 
     /**
@@ -193,24 +195,20 @@ public class RenderablesMaskBuilder extends RenderablesVolumeBuilder implements 
      * @param location which offset, in bytes.  This impl can only return an int of addressing.
      * @return a byte at the location given.å
      */
-    @Override
-    public byte getCurrentValue(long location) {
+    public byte getValueAt(long location) {
         init();
-        return getCurrentVolumeData()[ (int)location ];
+        return volumeData.getValueAt(location);
     }
 
-    @Override
-    public void setCurrentValue(long location, byte value) {
+    public void setValueAt(long location, byte value) {
         throw new RuntimeException("Not implemented");
     }
 
-    @Override
     public long length() {
         init();
-        return volumeData.length;
+        return volumeData.length();
     }
-
-    //-------------END------------------------IMPLEMENT MaskBuilderI
+    //-----------END--------------------------IMPLEMENT VolumeDataI
 
     //----------------------------------------HELPER METHODS
     /**
@@ -226,7 +224,7 @@ public class RenderablesMaskBuilder extends RenderablesVolumeBuilder implements 
                     throw new RuntimeException("Space size not yet initialized.  Cannot initialize volume.");
                 }
                 logger.debug( "Initializing" );
-                volumeData = new byte[ (int)(paddedSx * paddedSy * paddedSz) * maskByteCount];
+                volumeData = new VolumeDataBean((int)( paddedSx * paddedSy * paddedSz) * maskByteCount );
                 isInitialized = true;
             }
         }

@@ -103,7 +103,7 @@ public class VolumeMaskBuilder implements VolumeDataAcceptor, MaskBuilderI {
                                 int voxelVal = 0;
                                 for ( int mi = 0; mi < maskBytCt; mi++ ) {
                                     try {
-                                        byte nextVoxelByte = maskData.getCurrentValue( inputOffset + mi );
+                                        byte nextVoxelByte = maskData.getValueAt(inputOffset + mi);
                                         voxelVal += nextVoxelByte << (mi * 8);
                                     } catch ( RuntimeException ex ) {
                                         logger.error(ex.getMessage() + " offset=" + inputOffset +
@@ -138,7 +138,7 @@ public class VolumeMaskBuilder implements VolumeDataAcceptor, MaskBuilderI {
                                     // the higher-order bytes, as required.
                                     for ( int mi = 0; mi < consensusByteCount; mi ++ ) {
                                         byte mByte = (byte)(newVal >>> (mi * 8) & 0x000000ff);
-                                        cachedVolumeData.setCurrentValue( outputOffset + mi, mByte );
+                                        cachedVolumeData.setValueAt(outputOffset + mi, mByte);
                                     }
                                 }
                             }
@@ -167,15 +167,23 @@ public class VolumeMaskBuilder implements VolumeDataAcceptor, MaskBuilderI {
      * @return value at location given.
      */
     @Override
-    public byte getCurrentValue(long location) {
+    public byte getValueAt(long location) {
+        if ( renderables == null ) {
+            return 0;
+        }
+
         if ( location > length() ) {
             throw new RuntimeException( "Request " + location + " exceeds capacity of " + length() );
         }
-        return getCurrentVolumeData()[ (int)location ];
+
+        if ( cachedVolumeData == null ) {
+            getCurrentVolumeData();
+        }
+        return cachedVolumeData.getValueAt( location );
     }
 
     @Override
-    public void setCurrentValue(long location, byte value) {
+    public void setValueAt(long location, byte value) {
         throw new RuntimeException( "Not implemented" );
     }
 
@@ -337,7 +345,7 @@ public class VolumeMaskBuilder implements VolumeDataAcceptor, MaskBuilderI {
         // QUICK CHECK
         int nonZeroCount = 0;
         for ( int i = 0; i < textureData.getTextureData().length(); i++ ) {
-            if ( textureData.getTextureData().getCurrentValue(i) != 0 ) {
+            if ( textureData.getTextureData().getValueAt(i) != 0 ) {
                 nonZeroCount ++;
             }
         }

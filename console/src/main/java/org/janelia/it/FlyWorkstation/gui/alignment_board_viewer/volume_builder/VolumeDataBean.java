@@ -33,12 +33,12 @@ public class VolumeDataBean implements VolumeDataI {
     }
 
     @Override
-    public byte getCurrentValue(long location) {
+    public byte getValueAt(long location) {
         return cachedVolume[ (int)location ];
     }
 
     @Override
-    public void setCurrentValue(long location, byte value) {
+    public void setValueAt(long location, byte value) {
         cachedVolume[ (int)location ] = value;
     }
 

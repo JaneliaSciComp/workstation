@@ -46,7 +46,7 @@ public class ChannelInterpreterToByte implements ChannelInterpreterI {
 
         if ( srcChannelMetaData.byteCount == 1  &&  srcChannelMetaData.channelCount == 1  &&  multiMaskId == orignalMaskNum ) {
             // 1:1 straight copy to volume.
-            wholeSignalVolume.setCurrentValue( targetPos, channelData[ 0 ] );
+            wholeSignalVolume.setValueAt(targetPos, channelData[0]);
         }
         else {
             // First get the size-adjusted channel bytes.  These are suited to the target channel characteristics,
@@ -97,9 +97,9 @@ public class ChannelInterpreterToByte implements ChannelInterpreterI {
                 //  block of in-memory, interleaving the channels as the offsets follow.
                 if ( targetPos + i >= 0  &&  (wholeSignalVolume.length() > targetPos+i)) {
                     // Here enforced: multiplexing the channel data by "OR"-ing in the latest.
-                    wholeSignalVolume.setCurrentValue(
+                    wholeSignalVolume.setValueAt(
                             targetPos + i,
-                            (byte)(wholeSignalVolume.getCurrentValue( targetPos + i ) | targetChannelBytes[ i ])
+                            (byte) (wholeSignalVolume.getValueAt(targetPos + i) | targetChannelBytes[i])
                     );
                 }
                 else {
@@ -112,7 +112,7 @@ public class ChannelInterpreterToByte implements ChannelInterpreterI {
         if ( targetChannelMetaData.channelCount >= ( srcChannelMetaData.channelCount + 1 ) &&
              multiMaskId == orignalMaskNum ) {
             if ( targetPos + targetChannelMetaData.channelCount - 1 > 0  &&  (wholeSignalVolume.length() > targetPos + targetChannelMetaData.channelCount - 1))
-                wholeSignalVolume.setCurrentValue( targetPos + targetChannelMetaData.channelCount - 1, (byte)255 );
+                wholeSignalVolume.setValueAt(targetPos + targetChannelMetaData.channelCount - 1, (byte) 255);
             else
                 logger.error("Outside the box");
         }
@@ -132,7 +132,7 @@ public class ChannelInterpreterToByte implements ChannelInterpreterI {
             // Assumed little-endian.
             for ( int j = 0; j < maskByteCount; j++ ) {
                 // The volume mask is the one currently in use.  This could be a single or multi-mask.
-                int maskByte = wholeMaskVolume.getCurrentValue( volumeLoc );
+                int maskByte = wholeMaskVolume.getValueAt(volumeLoc);
                 if ( maskByte < 0 )
                     maskByte += 256;
                 volumeMask += maskByte << (8*j);
