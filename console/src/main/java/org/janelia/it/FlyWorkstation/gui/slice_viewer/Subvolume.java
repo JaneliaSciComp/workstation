@@ -254,6 +254,22 @@ public class Subvolume {
 		return null;
 	}
 
+    public ByteBuffer getByteBuffer() {
+        return bytes;
+    }
+
+    public int getBytesPerIntensity() {
+        return bytesPerIntensity;
+    }
+
+    public int getChannelCount() {
+        return channelCount;
+    }
+
+    public VoxelIndex getExtent() {
+        return extent;
+    }
+
     public long getIntensityGlobal(ZoomedVoxelIndex v1, int channelIndex) 
     {
         int c = channelIndex;
@@ -278,6 +294,10 @@ public class Subvolume {
             return shorts.get(offset);
         else
             return bytes.get(offset);
+    }
+
+    public ZoomedVoxelIndex getOrigin() {
+        return origin;
     }
 	
 }
