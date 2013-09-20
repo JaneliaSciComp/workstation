@@ -264,16 +264,16 @@ public class DownSamplerTest {
 
         DownSampler downSampler = new DownSampler( sx, sy, sz );
         DownSampler.DownsampledTextureData data =
-                downSampler.getDownSampledVolume( volume, voxelBytes, xScale, yScale, zScale );
-        Assert.assertNotSame( "Zero-length volume.", data.getVolume().length, 0 );
-        for (int i = 0; i < data.getVolume().length; i++ ) {
+                downSampler.getDownSampledVolume( new VolumeDataBean( volume ), voxelBytes, xScale, yScale, zScale );
+        Assert.assertNotSame( "Zero-length volume.", data.getVolume().length(), 0 );
+        for (int i = 0; i < data.getVolume().length(); i++ ) {
             if ( i % (data.getSx() * voxelBytes) == 0 ) {
                 System.out.println();
             }
-            System.out.print( data.getVolume()[ i ] + ",");
+            System.out.print( data.getVolume().getCurrentValue(i)  + ",");
         }
         System.out.println();
-        System.out.println( "Length total=" + data.getVolume().length );
+        System.out.println( "Length total=" + data.getVolume().length() );
         System.out.println( "Dimensions are " + data.getSx() + " x " + data.getSy() + " x " + data.getSz() );
     }
 
