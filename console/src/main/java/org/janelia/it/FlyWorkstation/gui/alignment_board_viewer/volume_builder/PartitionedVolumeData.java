@@ -61,6 +61,10 @@ public class PartitionedVolumeData implements VolumeDataI {
         initializePartitions();
     }
 
+    public int[] getAxialDimensions() {
+        return new int[] { partitionParameters.getPartitionDimX(), partitionParameters.getPartitionDimY(), partitionParameters.getPartitionDimZ() };
+    }
+
     @Override
     public boolean isVolumeAvailable() {
         return true;
@@ -85,7 +89,15 @@ public class PartitionedVolumeData implements VolumeDataI {
     public void setValueAt(long location, byte value) {
         VolumeChunk volumeChunk = findChunk( location );
         int locationInChunk = getLocationInChunk(location, volumeChunk);
-        volumeChunk.getVolumeData()[ (int)location ] = value;
+        try {
+            volumeChunk.getVolumeData()[ locationInChunk ] = value;
+        } catch ( Exception ex ) {
+            System.err.println("Location in chunk = " +
+                    getLocationInChunk( location, volumeChunk )
+                    + " for chunk=" + volumeChunk.getChunksLocation()[0]+","+volumeChunk.getChunksLocation()[1]+","+volumeChunk.getChunksLocation()[2]+
+            " and for raw location=" + location);
+            ex.printStackTrace();
+        }
     }
 
     @Override
@@ -93,10 +105,14 @@ public class PartitionedVolumeData implements VolumeDataI {
         return partitionParameters.getTotalSize();
     }
 
+    /** Get the dump of everything. */
+    public VolumeChunk[][][] getCachedVolumeChunks() {
+        return cachedVolumeChunks;
+    }
+
+    //todo use 3D location to get the location in chunk.
     private int getLocationInChunk(long location, VolumeChunk volumeChunk) {
-        return (int)(location -
-                volumeChunk.getChunksLocation()[2] * partitionParameters.getSheetDivisor() -
-                volumeChunk.getChunksLocation()[1] * partitionParameters.getLineDivisor() );
+        return (int)(location - volumeChunk.getStart1D());
     }
 
     /**
@@ -108,17 +124,26 @@ public class PartitionedVolumeData implements VolumeDataI {
      * @return a chunk whose data should have this in it.
      */
     private VolumeChunk findChunk( long byteLoc ) {
+        //todo : convert byteLoc into a 3D location: three coords.  Then use that to compute the chunk.
         int chunkZ = (int)(byteLoc / partitionParameters.getSheetDivisor());
-        int chunkY = (int)(byteLoc - chunkZ * partitionParameters.getSheetDivisor() / partitionParameters.getLineDivisor() );
-        int chunkX = (int)(( byteLoc - chunkZ * partitionParameters.getSheetDivisor() - partitionParameters.getLineDivisor() * chunkY ) / partitionParameters.bytesPerAtom);
+        long zOffset = chunkZ * partitionParameters.getSheetDivisor();
+        int chunkY = (int)((byteLoc - zOffset) / partitionParameters.getLineDivisor() );
+        long yOffset = partitionParameters.getLineDivisor() * chunkY;
+        int chunkX = (int)((byteLoc - zOffset - yOffset) / partitionParameters.bytesPerAtom / partitionParameters.getPartitionDimX() / partitionParameters.getDimX());
 
-        return cachedVolumeChunks[ chunkX ][ chunkY ][ chunkZ ];
+        VolumeChunk rtnVal = null;
+        try {
+            rtnVal = cachedVolumeChunks[ chunkX ][ chunkY ][ chunkZ ];
+        } catch ( Exception ex ) {
+            ex.printStackTrace();
+        }
+        return rtnVal;
     }
 
     private void initializePartitions() {
-        int xPartCt = (int) Math.ceil(partitionParameters.getDimX() / partitionParameters.getPartitionDimX());
-        int yPartCt = (int) Math.ceil(partitionParameters.getDimY() / partitionParameters.getPartitionDimY());
-        int zPartCt = (int) Math.ceil(partitionParameters.getDimZ() / partitionParameters.getPartitionDimZ());
+        int xPartCt = (int) Math.ceil((double)partitionParameters.getDimX() / (double)partitionParameters.getPartitionDimX());
+        int yPartCt = (int) Math.ceil((double)partitionParameters.getDimY() / (double)partitionParameters.getPartitionDimY());
+        int zPartCt = (int) Math.ceil((double)partitionParameters.getDimZ() / (double)partitionParameters.getPartitionDimZ());
         cachedVolumeChunks = new VolumeChunk[ xPartCt ][ yPartCt ][ zPartCt ];
 
         for ( int iZ = 0; iZ < zPartCt; iZ++ ) {
@@ -127,7 +152,10 @@ public class PartitionedVolumeData implements VolumeDataI {
                     VolumeChunk nextChunk = new VolumeChunk();
 
                     // Setting up the X axis.
-                    nextChunk.setChunksLocation( iX, iY, iZ );
+                    nextChunk.setChunksLocation(
+                            iX, iY, iZ,
+                            partitionParameters.getSheetDivisor() * iZ + partitionParameters.getLineDivisor() * iY + partitionParameters.getPartitionDimX() * partitionParameters.getBytesPerAtom() * iX
+                    );
                     int partitionXDim;
                     if ( ( 1 + iX) * partitionParameters.getPartitionDimX() < partitionParameters.getDimX() ) {
                         partitionXDim = partitionParameters.getPartitionDimX();
@@ -259,7 +287,7 @@ public class PartitionedVolumeData implements VolumeDataI {
 
         public long getLineDivisor() {
             if ( lineDivisor == -1 ) {
-                lineDivisor = dimX * bytesPerAtom;
+                lineDivisor = dimX * bytesPerAtom * (int)(Math.floor( dimY / partitionDimY ) );
             }
             return lineDivisor;
         }
@@ -277,6 +305,7 @@ public class PartitionedVolumeData implements VolumeDataI {
         private int startX;
         private int startY;
         private int startZ;
+        private long start1D;
 
         // These correspond to x,y,z; however, they indicate how this chunk is stored, relative to
         // other chunks, in some array or other collection.
@@ -284,14 +313,15 @@ public class PartitionedVolumeData implements VolumeDataI {
         private int chunkRow;
         private int chunkSlice;
 
-        public void setChunksLocation( int[] chunksLocation ) {
-            setChunksLocation( chunksLocation[ 0 ], chunksLocation[ 1 ], chunksLocation[ 2 ] );
+        public void setChunksLocation( int[] chunksLocation, long start1D ) {
+            setChunksLocation( chunksLocation[ 0 ], chunksLocation[ 1 ], chunksLocation[ 2 ], start1D );
         }
 
-        public void setChunksLocation( int col, int row, int slice ) {
+        public void setChunksLocation( int col, int row, int slice, long start1D ) {
             chunkColumn = col;
             chunkRow = row;
             chunkSlice = slice;
+            this.start1D = start1D;
         }
 
         public int[] getChunksLocation() {
@@ -352,6 +382,10 @@ public class PartitionedVolumeData implements VolumeDataI {
 
         public void setStartZ(int startZ) {
             this.startZ = startZ;
+        }
+
+        public long getStart1D() {
+            return start1D;
         }
     }
 }
