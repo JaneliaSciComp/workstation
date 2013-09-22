@@ -270,7 +270,7 @@ public class DownSamplerTest {
             if ( i % (data.getSx() * voxelBytes) == 0 ) {
                 System.out.println();
             }
-            System.out.print( data.getVolume().getCurrentValue(i)  + ",");
+            System.out.print( data.getVolume().getValueAt(i)  + ",");
         }
         System.out.println();
         System.out.println( "Length total=" + data.getVolume().length() );
