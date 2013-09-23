@@ -264,7 +264,7 @@ public class DownSamplerTest {
 
         DownSampler downSampler = new DownSampler( sx, sy, sz );
         DownSampler.DownsampledTextureData data =
-                downSampler.getDownSampledVolume( new VolumeDataBean( volume ), voxelBytes, xScale, yScale, zScale );
+                downSampler.getDownSampledVolume( new VolumeDataBean( volume, sx, sy, sz ), voxelBytes, xScale, yScale, zScale );
         Assert.assertNotSame( "Zero-length volume.", data.getVolume().length(), 0 );
         for (int i = 0; i < data.getVolume().length(); i++ ) {
             if ( i % (data.getSx() * voxelBytes) == 0 ) {
