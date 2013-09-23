@@ -58,5 +58,6 @@
 	<classpathentry combineaccessrules="false" kind="src" path="/common"/>
 	<classpathentry kind="lib" path="lib/MagicApplet.jar"/>
 	<classpathentry kind="lib" path="lib/syntheticaBlueLight.jar"/>
+	<classpathentry kind="con" path="org.eclipse.jdt.USER_LIBRARY/SimpleNeuriteTracer"/>
 	<classpathentry kind="output" path="build/eclipse"/>
 </classpath>
