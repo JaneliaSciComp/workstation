@@ -1,7 +1,7 @@
 package org.janelia.it.FlyWorkstation.gui.viewer3d.loader;
 
 import org.janelia.it.FlyWorkstation.gui.alignment_board_viewer.masking.MultiMaskTracker;
-import org.janelia.it.FlyWorkstation.gui.alignment_board_viewer.masking.VolumeDataI;
+import org.janelia.it.FlyWorkstation.gui.viewer3d.masking.VolumeDataI;
 import org.janelia.it.FlyWorkstation.shared.annotations.NotThreadSafe;
 
 /**

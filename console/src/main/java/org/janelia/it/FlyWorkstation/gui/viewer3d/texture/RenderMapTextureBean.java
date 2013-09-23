@@ -1,6 +1,6 @@
 package org.janelia.it.FlyWorkstation.gui.viewer3d.texture;
 
-import org.janelia.it.FlyWorkstation.gui.alignment_board_viewer.masking.VolumeDataI;
+import org.janelia.it.FlyWorkstation.gui.viewer3d.masking.VolumeDataI;
 import org.janelia.it.FlyWorkstation.gui.alignment_board_viewer.volume_builder.VolumeDataBean;
 import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.VolumeModel;
@@ -114,7 +114,7 @@ public class RenderMapTextureBean implements TextureDataI {
 
         }
 
-        return new VolumeDataBean( rawMap );
+        return new VolumeDataBean( rawMap, getSx(), getSy(), getSz() );
     }
 
     @SuppressWarnings("unused")

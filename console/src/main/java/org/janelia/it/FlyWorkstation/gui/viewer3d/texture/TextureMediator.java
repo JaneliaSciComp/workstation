@@ -1,6 +1,7 @@
 package org.janelia.it.FlyWorkstation.gui.viewer3d.texture;
 
 import org.janelia.it.FlyWorkstation.gui.viewer3d.VolumeDataAcceptor;
+import org.janelia.it.FlyWorkstation.gui.viewer3d.volume_builder.VolumeDataChunk;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -66,9 +67,8 @@ public class TextureMediator {
             throw new RuntimeException("Failed to upload texture");
         }
 
-        ByteBuffer data = ByteBuffer.wrap( textureData.getTextureData().getCurrentVolumeData() );
-        if ( data != null ) {
-            data.rewind();
+
+        if ( textureData.getTextureData().getVolumeChunks() != null ) {
 
             logger.debug(
                     "[" +
@@ -80,20 +80,6 @@ public class TextureMediator {
                 logger.warn(
                         "Exceeding max coord in one or more size of texture data {}.  Results unpredictable.",
                         textureData.getFilename()
-                );
-            }
-
-            data.rewind();
-            int expectedRemaining = textureData.getSx() * textureData.getSy() * textureData.getSz()
-                    * textureData.getPixelByteCount() * textureData.getChannelCount();
-            if ( expectedRemaining != data.remaining() ) {
-                logger.warn( "Invalid remainder vs texture data dimensions.  Sx=" + textureData.getSx() +
-                             " Sy=" + textureData.getSy() + " Sz=" + textureData.getSz() +
-                             " storageFmtReq=" + getStorageFormatMultiplier() +
-                             " pixelByteCount=" + textureData.getPixelByteCount() +
-                             ";  total remaining is " +
-                             data.remaining() + " " + textureData.getFilename() +
-                             ";  expected remaining is " + expectedRemaining
                 );
             }
 
@@ -110,7 +96,119 @@ public class TextureMediator {
             reportError( "glTexEnv MODE-REPLACE", gl );
 
             try {
-                gl.glTexImage3D(GL2.GL_TEXTURE_3D,
+                gl.glTexImage3D(
+                        GL2.GL_TEXTURE_3D,
+                        0, // mipmap level
+                        getInternalFormat(), // as stored INTO graphics hardware, w/ srgb info (GLint internal format)
+                        textureData.getSx(), // width
+                        textureData.getSy(), // height
+                        textureData.getSz(), // depth
+                        0, // border
+                        getVoxelComponentOrder(), // voxel component order (GLenum format)
+                        getVoxelComponentType(), // voxel component type=packed RGBA values(GLenum type)
+                        null
+                );
+
+                for ( VolumeDataChunk volumeDataChunk: textureData.getTextureData().getVolumeChunks() ) {
+                    ByteBuffer data = ByteBuffer.wrap( volumeDataChunk.getData() );
+                    data.rewind();
+
+                    int expectedRemaining = textureData.getSx() * textureData.getSy() * textureData.getSz()
+                            * textureData.getPixelByteCount() * textureData.getChannelCount();
+                    if ( expectedRemaining != data.remaining() ) {
+                        logger.warn( "Invalid remainder vs texture data dimensions.  Sx=" + textureData.getSx() +
+                                " Sy=" + textureData.getSy() + " Sz=" + textureData.getSz() +
+                                " storageFmtReq=" + getStorageFormatMultiplier() +
+                                " pixelByteCount=" + textureData.getPixelByteCount() +
+                                ";  total remaining is " +
+                                data.remaining() + " " + textureData.getFilename() +
+                                ";  expected remaining is " + expectedRemaining
+                        );
+                    }
+                    logger.info("Sub-image: " + volumeDataChunk.getStartX() + "," + volumeDataChunk.getStartY() + "," + volumeDataChunk.getStartZ() );
+                    gl.glTexSubImage3D(
+                            GL2.GL_TEXTURE_3D,
+                            0, // mipmap level
+                            volumeDataChunk.getStartX(),
+                            volumeDataChunk.getStartY(),
+                            volumeDataChunk.getStartZ(),
+                            volumeDataChunk.getWidth(), // width
+                            volumeDataChunk.getHeight(), // height
+                            volumeDataChunk.getDepth(), // depth
+                            getVoxelComponentOrder(), // voxel component order (GLenum format)
+                            getVoxelComponentType(), // voxel component type=packed RGBA values(GLenum type)
+                            data
+                    );
+
+                }
+
+            } catch ( Exception exGlTexImage ) {
+                logger.error(
+                        "Exception reported during texture upload of NAME:OFFS={}, FORMAT:COMP-ORDER:MULTIPLIER={}",
+                        this.textureName + ":" + this.getTextureOffset(),
+                        this.getInternalFormat() + ":" + this.getVoxelComponentOrder() + ":" +
+                        this.getStorageFormatMultiplier()
+                );
+                exGlTexImage.printStackTrace();
+            }
+            reportError( "glTexImage", gl );
+
+            // DEBUG
+            //if ( expectedRemaining < 1000000 )
+            //    testTextureContents(gl);
+        }
+
+    }
+
+    public void contigUploadTexture( GL2 gl ) {
+        if ( ! isInitialized ) {
+            logger.error("Attempted to upload texture before mediator was initialized.");
+            throw new RuntimeException("Failed to upload texture");
+        }
+
+        // Just accumulate all the volume chunks into one big array, and send that over in one burst.
+        if ( textureData.getTextureData().getVolumeChunks() != null ) {
+
+            logger.debug(
+                    "[" +
+                            textureData.getFilename() +
+                            "]: Coords are " + textureData.getSx() + " * " + textureData.getSy() + " * " + textureData.getSz()
+            );
+            int maxCoord = getMaxTexCoord(gl);
+            if ( textureData.getSx() > maxCoord  || textureData.getSy() > maxCoord || textureData.getSz() > maxCoord ) {
+                logger.warn(
+                        "Exceeding max coord in one or more size of texture data {}.  Results unpredictable.",
+                        textureData.getFilename()
+                );
+            }
+
+            gl.glActiveTexture( textureSymbolicId );
+            reportError( "glActiveTexture", gl );
+
+            gl.glEnable( GL2.GL_TEXTURE_3D );
+            reportError( "glEnable", gl );
+
+            gl.glBindTexture( GL2.GL_TEXTURE_3D, textureName );
+            reportError( "glBindTexture", gl );
+
+            gl.glTexEnvi(GL2.GL_TEXTURE_ENV, GL2.GL_TEXTURE_ENV_MODE, GL2.GL_REPLACE);
+            reportError( "glTexEnv MODE-REPLACE", gl );
+
+            try {
+
+                //DEBUG: back to original, and see if can eliminate some possibilities.
+                byte[] rawBytes = new byte[ (int)textureData.getTextureData().length() ];
+                int nextInx = 0;
+                for ( VolumeDataChunk volumeDataChunk: textureData.getTextureData().getVolumeChunks() ) {
+                    System.arraycopy( volumeDataChunk.getData(), 0, rawBytes, nextInx, volumeDataChunk.getData().length );
+                    nextInx += volumeDataChunk.getData().length;
+                }
+
+                ByteBuffer data = ByteBuffer.wrap( rawBytes );
+                data.rewind();
+
+                gl.glTexImage3D(
+                        GL2.GL_TEXTURE_3D,
                         0, // mipmap level
                         getInternalFormat(), // as stored INTO graphics hardware, w/ srgb info (GLint internal format)
                         textureData.getSx(), // width
@@ -127,15 +225,11 @@ public class TextureMediator {
                         "Exception reported during texture upload of NAME:OFFS={}, FORMAT:COMP-ORDER:MULTIPLIER={}",
                         this.textureName + ":" + this.getTextureOffset(),
                         this.getInternalFormat() + ":" + this.getVoxelComponentOrder() + ":" +
-                        this.getStorageFormatMultiplier()
+                                this.getStorageFormatMultiplier()
                 );
                 exGlTexImage.printStackTrace();
             }
             reportError( "glTexImage", gl );
-
-            // DEBUG
-            //if ( expectedRemaining < 1000000 )
-            //    testTextureContents(gl);
         }
 
     }
@@ -335,8 +429,10 @@ public class TextureMediator {
             }
 
         }
-
-        logger.debug( "internalFormat = {} for {}", getConstantName( internalFormat ), textureData.getFilename() );
+if ( internalFormat == 0x8042 ) {
+logger.info("Internal format of " + 0x8042);
+}
+        logger.info( "internalFormat = {} for {}", getConstantName( internalFormat ), textureData.getFilename() );
         return internalFormat;
     }
 

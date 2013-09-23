@@ -33,7 +33,7 @@ public class V3dMaskFileLoader extends TextureDataBuilder implements VolumeFileL
 
     @Override
     protected TextureDataI createTextureDataBean() {
-        return new MaskTextureDataBean(new VolumeDataBean( textureByteArray ), sx, sy, sz );
+        return new MaskTextureDataBean(new VolumeDataBean( textureByteArray, sx, sy, sz ), sx, sy, sz );
     }
 
     @Override

@@ -32,7 +32,7 @@ public class V3dSignalFileLoader extends TextureDataBuilder implements VolumeFil
             return textureDataBean;
         }
         else {
-            TextureDataBean textureDataBean = new TextureDataBean(new VolumeDataBean( textureByteArray ), sx, sy, sz);
+            TextureDataBean textureDataBean = new TextureDataBean(new VolumeDataBean( textureByteArray, sx, sy, sz ), sx, sy, sz);
             textureDataBean.setInterpolationMethod( interpolationMethod );
             return textureDataBean;
         }

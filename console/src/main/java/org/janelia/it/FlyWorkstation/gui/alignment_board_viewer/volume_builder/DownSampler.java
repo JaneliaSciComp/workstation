@@ -1,6 +1,6 @@
 package org.janelia.it.FlyWorkstation.gui.alignment_board_viewer.volume_builder;
 
-import org.janelia.it.FlyWorkstation.gui.alignment_board_viewer.masking.VolumeDataI;
+import org.janelia.it.FlyWorkstation.gui.viewer3d.masking.VolumeDataI;
 import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.FlyWorkstation.shared.workers.SimpleWorker;
 import org.slf4j.Logger;
@@ -89,7 +89,7 @@ public class DownSampler {
 
         // Here, sample the neighborhoods (or _output_ voxels).
         // Java implicitly sets newly-allocated byte arrays to all zeros.
-        VolumeDataI downsampledVolume = new VolumeDataBean( (outSx * outSy * outSz) * voxelBytes );
+        VolumeDataI downsampledVolume = new VolumeDataBean( (outSx * outSy * outSz) * voxelBytes, outSx, outSy, outSz );
         final DownsampleParameter downsampleBean = new DownsampleParameter(fullSizeVolume, voxelBytes, xScale, yScale, zScale, outSx, outSy, downsampledVolume);
 
         // Making a thread pool, and submitting slice-downsampling steps to that pool.

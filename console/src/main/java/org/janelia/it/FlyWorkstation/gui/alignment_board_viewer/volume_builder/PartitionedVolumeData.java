@@ -1,6 +1,10 @@
 package org.janelia.it.FlyWorkstation.gui.alignment_board_viewer.volume_builder;
 
-import org.janelia.it.FlyWorkstation.gui.alignment_board_viewer.masking.VolumeDataI;
+import org.janelia.it.FlyWorkstation.gui.viewer3d.masking.VolumeDataI;
+import org.janelia.it.FlyWorkstation.gui.viewer3d.volume_builder.VolumeDataChunk;
+
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * Created with IntelliJ IDEA.
@@ -70,11 +74,40 @@ public class PartitionedVolumeData implements VolumeDataI {
         return true;
     }
 
-    /** This violates the assumption that we can have volumes greater than Max-Int in linear dimension. */
-    @Deprecated
     @Override
-    public byte[] getCurrentVolumeData() {
-        throw new IllegalStateException("This method shall not be called on this implementation.");
+    public VolumeDataChunk[] getVolumeChunks() {
+        List<VolumeDataChunk> rtnVal = new ArrayList<VolumeDataChunk>();
+        for ( int i = 0; i < cachedVolumeChunks.length; i++ ) {
+            for ( int j = 0; j < cachedVolumeChunks[ 0 ].length; j++ ) {
+                for ( int k = 0; k < cachedVolumeChunks[ 0 ][ 0 ].length; k++ ) {
+                    VolumeDataChunk chunk = new VolumeDataChunk();
+                    VolumeChunk internalChunk = cachedVolumeChunks[ i ][ j ][ k ];
+                    chunk.setData( internalChunk.getVolumeData() );
+                    chunk.setStartX( internalChunk.getStartX() );
+                    chunk.setStartY( internalChunk.getStartY() );
+                    chunk.setStartZ( internalChunk.getStartZ() );
+
+                    int width = (long)(partitionParameters.partitionDimX + internalChunk.getStartX()) > (long)partitionParameters.getDimX() ?
+                                (int)partitionParameters.getDimX() - internalChunk.getStartX()
+                                : partitionParameters.partitionDimX;
+
+                    int height = (long)(partitionParameters.partitionDimY + internalChunk.getStartY()) > (long)partitionParameters.getDimY() ?
+                                (int)partitionParameters.getDimY() - internalChunk.getStartY()
+                                : partitionParameters.partitionDimY;
+
+                    int depth = (long)(partitionParameters.partitionDimZ + internalChunk.getStartZ()) > (long)partitionParameters.getDimZ() ?
+                            (int)partitionParameters.getDimZ() - internalChunk.getStartZ()
+                            : partitionParameters.partitionDimY;
+
+                    chunk.setWidth( width );
+                    chunk.setHeight( height );
+                    chunk.setDepth( depth );
+
+                    rtnVal.add( chunk );
+                }
+            }
+        }
+        return (VolumeDataChunk[])rtnVal.toArray();
     }
 
     @Override

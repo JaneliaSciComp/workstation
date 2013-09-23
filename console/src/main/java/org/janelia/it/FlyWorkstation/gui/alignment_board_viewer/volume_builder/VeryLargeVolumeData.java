@@ -1,6 +1,7 @@
 package org.janelia.it.FlyWorkstation.gui.alignment_board_viewer.volume_builder;
 
-import org.janelia.it.FlyWorkstation.gui.alignment_board_viewer.masking.VolumeDataI;
+import org.janelia.it.FlyWorkstation.gui.viewer3d.masking.VolumeDataI;
+import org.janelia.it.FlyWorkstation.gui.viewer3d.volume_builder.VolumeDataChunk;
 
 /**
  * Created with IntelliJ IDEA.
@@ -19,13 +20,14 @@ public class VeryLargeVolumeData implements VolumeDataI {
     private long volumeExtent = 0L;
 
     private byte[][] slabs;
+    private VolumeDataChunk[] chunks;
 
     public VeryLargeVolumeData( int sizeX, int sizeY, int sizeZ, int bytesPerVoxel ) {
         this( sizeX, sizeY, sizeZ, bytesPerVoxel, DEFAULT_NUM_SLABS );
     }
 
     /**
-     * Construct with eno info to figure out how bit the single-voxel-thick slice is, including voxel
+     * Construct with eno info to figure out how big the single-voxel-thick slice is, including voxel
      * byte multiple.  The slice size must not exceed Integer.MAX.
      *
      * @param sizeX ct x
@@ -37,15 +39,22 @@ public class VeryLargeVolumeData implements VolumeDataI {
     public VeryLargeVolumeData( int sizeX, int sizeY, int sizeZ, int bytesPerVoxel, int numSlabs ) {
         int sliceSize = sizeX * sizeY * bytesPerVoxel;
         volumeExtent = sliceSize * sizeZ;
-        slabExtent = (int)((long)sliceSize * (long)sizeZ / (long) numSlabs);
+        long slicesPerSlab = (long) sizeZ / (long) numSlabs;
+        slabExtent = (int)((long) sliceSize * slicesPerSlab);
         slabs = new byte[ numSlabs ][];
+        chunks = new VolumeDataChunk[ numSlabs ];
         long slabEnd = 0L;
-        for ( int i = 0; i < numSlabs - 1; i++ ) {
-            slabs[ i ] = new byte[ slabExtent ];
+        int lastSlabIndex = numSlabs - 1;
+        for ( int slabIndex = 0; slabIndex < lastSlabIndex; slabIndex++ ) {
+            slabs[ slabIndex ] = new byte[ slabExtent ];
             slabEnd += slabExtent;
+            VolumeDataChunk chunk = getVolumeDataChunk( slicesPerSlab, slabIndex );
+            chunks[ slabIndex ] = chunk;
         }
         if ( slabEnd < volumeExtent ) {
-            slabs[ numSlabs - 1 ] = new byte[ (int)(volumeExtent - slabEnd) ];
+            slabs[ lastSlabIndex ] = new byte[ (int)(volumeExtent - slabEnd) ];
+            VolumeDataChunk chunk = getVolumeDataChunk( slicesPerSlab, lastSlabIndex );
+            chunks[ lastSlabIndex ] = chunk;
         }
     }
 
@@ -55,8 +64,8 @@ public class VeryLargeVolumeData implements VolumeDataI {
     }
 
     @Override
-    public byte[] getCurrentVolumeData() {
-        throw new RuntimeException("Not implmented");
+    public VolumeDataChunk[] getVolumeChunks() {
+        return chunks;
     }
 
     @Override
@@ -70,12 +79,28 @@ public class VeryLargeVolumeData implements VolumeDataI {
     public void setValueAt(long location, byte value) {
         int slabNo = getSlabNo( location );
         byte[] slab = slabs[ slabNo ];
-        slab[ getLocInSlab( location, slabNo )] = value;
+        slab[ getLocInSlab( location, slabNo ) ] = value;
     }
 
     @Override
     public long length() {
         return volumeExtent;
+    }
+
+    /**
+     * Helper for creating the final slabs to be cached, and returned later.
+     *
+     * @param slicesPerSlab for Z coord.
+     * @param slabNumber which slab
+     * @return fully-characterized volume chunk.
+     */
+    private VolumeDataChunk getVolumeDataChunk(long slicesPerSlab, int slabNumber) {
+        VolumeDataChunk chunk = new VolumeDataChunk();
+        chunk.setData( slabs[ slabNumber ] );
+        chunk.setStartX( 0 );
+        chunk.setStartY( 0 );
+        chunk.setStartZ( (int)(slicesPerSlab * slabNumber) );
+        return chunk;
     }
 
     private int getSlabNo(long location) {
@@ -86,3 +111,4 @@ public class VeryLargeVolumeData implements VolumeDataI {
         return (int)(location - ( (long)slabNo * slabExtent ) );
     }
 }
+

@@ -2,9 +2,11 @@ package org.janelia.it.FlyWorkstation.gui.alignment_board_viewer.masking;
 
 import org.janelia.it.FlyWorkstation.gui.alignment_board_viewer.renderable.RenderableBean;
 import org.janelia.it.FlyWorkstation.gui.alignment_board_viewer.volume_builder.VolumeDataBean;
+import org.janelia.it.FlyWorkstation.gui.viewer3d.masking.VolumeDataI;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.texture.MaskTextureDataBean;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.VolumeDataAcceptor;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.texture.TextureDataI;
+import org.janelia.it.FlyWorkstation.gui.viewer3d.volume_builder.VolumeDataChunk;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -51,7 +53,7 @@ public class VolumeMaskBuilder implements VolumeDataAcceptor, MaskBuilderI {
     }
 
     @Override
-    public byte[] getCurrentVolumeData() {
+    public VolumeDataChunk[] getVolumeChunks() {
         if ( renderables == null ) {
             return null;
         }
@@ -68,7 +70,7 @@ public class VolumeMaskBuilder implements VolumeDataAcceptor, MaskBuilderI {
             // (even though wrong) that their voxels are the same size as all other voxels of
             // any other mask.
             int bufferSizeBytes = (volumeMaskVoxels[0] * consensusByteCount) * volumeMaskVoxels[1] * volumeMaskVoxels[2];
-            cachedVolumeData = new VolumeDataBean( bufferSizeBytes );
+            cachedVolumeData = new VolumeDataBean( bufferSizeBytes, volumeMaskVoxels[ 0 ], volumeMaskVoxels[ 1 ], volumeMaskVoxels[ 2 ] );
             int dimMaskX = volumeMaskVoxels[ X_INX ];
             int dimMaskY = volumeMaskVoxels[ Y_INX ];
 
@@ -157,7 +159,7 @@ public class VolumeMaskBuilder implements VolumeDataAcceptor, MaskBuilderI {
             }
 
         }
-        return cachedVolumeData.getCurrentVolumeData();
+        return cachedVolumeData.getVolumeChunks();
     }
 
     /**
@@ -177,7 +179,7 @@ public class VolumeMaskBuilder implements VolumeDataAcceptor, MaskBuilderI {
         }
 
         if ( cachedVolumeData == null ) {
-            getCurrentVolumeData();
+            getVolumeChunks();
         }
         return cachedVolumeData.getValueAt( location );
     }

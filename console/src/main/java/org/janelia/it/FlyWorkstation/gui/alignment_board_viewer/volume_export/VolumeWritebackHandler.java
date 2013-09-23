@@ -10,6 +10,7 @@ import org.janelia.it.FlyWorkstation.gui.alignment_board_viewer.renderable.MaskC
 import org.janelia.it.FlyWorkstation.gui.viewer3d.resolver.CacheFileResolver;
 import org.janelia.it.FlyWorkstation.gui.alignment_board_viewer.texture.ABContextDataSource;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.texture.TextureDataI;
+import org.janelia.it.FlyWorkstation.gui.viewer3d.volume_builder.VolumeDataChunk;
 import org.janelia.it.FlyWorkstation.model.domain.*;
 import org.janelia.it.FlyWorkstation.model.viewer.AlignmentBoardContext;
 import org.janelia.it.FlyWorkstation.shared.workers.SimpleWorker;
@@ -197,16 +198,18 @@ public class VolumeWritebackHandler {
         /** This is a simple testing mechanism to sanity-check the contents of the texture being saved. */
         @SuppressWarnings("unused")
         private void frequencyReport( TextureDataI texture ) {
-            byte[] textureBytes = texture.getTextureData().getCurrentVolumeData();
-
             Map<Byte,Integer> byteValToCount = new HashMap<Byte,Integer>();
-            for (byte textureByte : textureBytes) {
-                Integer oldVal = byteValToCount.get(textureByte);
-                if (oldVal == null) {
-                    oldVal = 0;
-                }
-                byteValToCount.put(textureByte, ++oldVal);
+            for ( VolumeDataChunk chunk: texture.getTextureData().getVolumeChunks() ) {
+                byte[] textureBytes = chunk.getData();
 
+                for (byte textureByte : textureBytes) {
+                    Integer oldVal = byteValToCount.get(textureByte);
+                    if (oldVal == null) {
+                        oldVal = 0;
+                    }
+                    byteValToCount.put(textureByte, ++oldVal);
+
+                }
             }
 
             StringBuilder bldr = new StringBuilder( "---------------------" );
@@ -216,6 +219,7 @@ public class VolumeWritebackHandler {
                 bldr.append( System.getProperty("line.separator") );
             }
             logger.info( bldr.toString() );
+
         }
     }
 }

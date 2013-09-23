@@ -10,7 +10,7 @@ package org.janelia.it.FlyWorkstation.gui.viewer3d.texture;
  * because masks like this can be switched on and off, changing their offsets at runtime.
  */
 
-import org.janelia.it.FlyWorkstation.gui.alignment_board_viewer.masking.VolumeDataI;
+import org.janelia.it.FlyWorkstation.gui.viewer3d.masking.VolumeDataI;
 import org.janelia.it.FlyWorkstation.gui.alignment_board_viewer.renderable.RenderableBean;
 import org.janelia.it.FlyWorkstation.gui.alignment_board_viewer.volume_builder.VolumeDataBean;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.VolumeDataAcceptor;
@@ -64,7 +64,7 @@ public class TextureDataBean implements TextureDataI {
         IntBuffer intBuffer = intermediate.asIntBuffer();
         intBuffer.put( argbData );
         byte[] array = intermediate.array();
-        textureData = new VolumeDataBean( array );
+        textureData = new VolumeDataBean( array, sx, sy, sz );
         setSx( sx );
         setSy( sy );
         setSz( sz );

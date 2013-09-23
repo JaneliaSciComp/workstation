@@ -7,8 +7,10 @@ import org.janelia.it.FlyWorkstation.gui.viewer3d.loader.ChannelMetaData;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.loader.VolumeLoaderI;
 import org.janelia.it.FlyWorkstation.gui.alignment_board_viewer.masking.*;
 import org.janelia.it.FlyWorkstation.gui.alignment_board_viewer.renderable.RenderableBean;
+import org.janelia.it.FlyWorkstation.gui.viewer3d.masking.VolumeDataI;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.texture.TextureDataBean;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.texture.TextureDataI;
+import org.janelia.it.FlyWorkstation.gui.viewer3d.volume_builder.VolumeDataChunk;
 import org.janelia.it.FlyWorkstation.shared.annotations.NotThreadSafe;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -72,17 +74,19 @@ public class RenderablesChannelsBuilder extends RenderablesVolumeBuilder impleme
     public void test() {
         int volumeDataZeroCount = 0;
         java.util.TreeMap<Byte,Integer> frequencies = new TreeMap<Byte,Integer>();
-        for ( Byte aByte: channelVolumeData.getCurrentVolumeData() ) {
-            if ( aByte == (byte)0 ) {
-                volumeDataZeroCount ++;
-            }
-            else {
-                Integer count = frequencies.get( aByte );
-                if ( count == null ) {
-                    frequencies.put( aByte, 1 );
+        for (VolumeDataChunk chunk: channelVolumeData.getVolumeChunks() ) {
+            for ( Byte aByte: chunk.getData() ) {
+                if ( aByte == (byte)0 ) {
+                    volumeDataZeroCount ++;
                 }
                 else {
-                    frequencies.put( aByte, ++count );
+                    Integer count = frequencies.get( aByte );
+                    if ( count == null ) {
+                        frequencies.put( aByte, 1 );
+                    }
+                    else {
+                        frequencies.put( aByte, ++count );
+                    }
                 }
             }
         }
@@ -352,7 +356,7 @@ public class RenderablesChannelsBuilder extends RenderablesVolumeBuilder impleme
                 }
 
                 if ( channelVolumeData == null ) {
-                    channelVolumeData = new VolumeDataBean( (int)arrayLength );
+                    channelVolumeData = new VolumeDataBean( (int)arrayLength, (int)sx, (int)sy, (int)sz );
                 }
 
                 logger.info(

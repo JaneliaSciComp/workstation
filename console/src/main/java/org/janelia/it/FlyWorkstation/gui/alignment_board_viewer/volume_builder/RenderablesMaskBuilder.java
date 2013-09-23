@@ -1,6 +1,6 @@
 package org.janelia.it.FlyWorkstation.gui.alignment_board_viewer.volume_builder;
 
-import org.janelia.it.FlyWorkstation.gui.alignment_board_viewer.masking.VolumeDataI;
+import org.janelia.it.FlyWorkstation.gui.viewer3d.masking.VolumeDataI;
 import org.janelia.it.FlyWorkstation.gui.framework.viewer.alignment_board.AlignmentBoardSettings;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.VolumeDataAcceptor;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.loader.ChannelMetaData;
@@ -14,6 +14,7 @@ import java.util.Collection;
 
 import org.janelia.it.FlyWorkstation.gui.viewer3d.texture.TextureDataBean;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.texture.TextureDataI;
+import org.janelia.it.FlyWorkstation.gui.viewer3d.volume_builder.VolumeDataChunk;
 import org.janelia.it.FlyWorkstation.shared.annotations.NotThreadSafe;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -180,13 +181,15 @@ public class RenderablesMaskBuilder extends RenderablesVolumeBuilder implements 
 
     //-------------END------------------------IMPLEMENT MaskBuilderI
     //----------------------------------------IMPLEMENT extended interface VolumeDataI
+    @Override
     public boolean isVolumeAvailable() {
         return true;
     }
 
-    public byte[] getCurrentVolumeData() {
+    @Override
+    public VolumeDataChunk[] getVolumeChunks() {
         init();
-        return volumeData.getCurrentVolumeData();
+        return volumeData.getVolumeChunks();
     }
 
     /**
@@ -195,15 +198,18 @@ public class RenderablesMaskBuilder extends RenderablesVolumeBuilder implements 
      * @param location which offset, in bytes.  This impl can only return an int of addressing.
      * @return a byte at the location given.å
      */
+    @Override
     public byte getValueAt(long location) {
         init();
         return volumeData.getValueAt(location);
     }
 
+    @Override
     public void setValueAt(long location, byte value) {
         throw new RuntimeException("Not implemented");
     }
 
+    @Override
     public long length() {
         init();
         return volumeData.length();
@@ -224,7 +230,7 @@ public class RenderablesMaskBuilder extends RenderablesVolumeBuilder implements 
                     throw new RuntimeException("Space size not yet initialized.  Cannot initialize volume.");
                 }
                 logger.debug( "Initializing" );
-                volumeData = new VolumeDataBean((int)( paddedSx * paddedSy * paddedSz) * maskByteCount );
+                volumeData = new VolumeDataBean((int)( paddedSx * paddedSy * paddedSz) * maskByteCount, (int)paddedSx, (int)paddedSy, (int)paddedSz );
                 isInitialized = true;
             }
         }

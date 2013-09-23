@@ -173,7 +173,7 @@ public class ViewTileManagerVolumeSource implements VolumeSource {
 
         // Now build the data volume.  The data volume bytes will be filled in later.
         textureDataFor3D = new TextureDataBean(
-                new VolumeDataBean( dataVolume ), BRICK_WIDTH, BRICK_HEIGHT, BRICK_DEPTH
+                new VolumeDataBean( dataVolume, BRICK_WIDTH, BRICK_HEIGHT, BRICK_DEPTH ), BRICK_WIDTH, BRICK_HEIGHT, BRICK_DEPTH
         );
         textureDataFor3D.setVoxelMicrometers(new Double[]{1.0, 1.0, 1.0});
         textureDataFor3D.setChannelCount(stdChannelCount);

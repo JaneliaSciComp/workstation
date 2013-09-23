@@ -1,6 +1,7 @@
 package org.janelia.it.FlyWorkstation.gui.alignment_board_viewer.volume_builder;
 
-import org.janelia.it.FlyWorkstation.gui.alignment_board_viewer.masking.VolumeDataI;
+import org.janelia.it.FlyWorkstation.gui.viewer3d.masking.VolumeDataI;
+import org.janelia.it.FlyWorkstation.gui.viewer3d.volume_builder.VolumeDataChunk;
 
 /**
  * Created with IntelliJ IDEA.
@@ -12,14 +13,23 @@ import org.janelia.it.FlyWorkstation.gui.alignment_board_viewer.masking.VolumeDa
  */
 public class VolumeDataBean implements VolumeDataI {
 
-    private byte[] cachedVolume;
+    private VolumeDataChunk cachedChunk;
+    private VolumeDataChunk[] cachedChunkArray;
 
-    public VolumeDataBean( byte[] wholeVolume ) {
-        cachedVolume = wholeVolume;
+    public VolumeDataBean( byte[] wholeVolume, int sX, int sY, int sZ ) {
+        cachedChunk = new VolumeDataChunk();
+        cachedChunk.setStartX( 0 );
+        cachedChunk.setStartY( 0 );
+        cachedChunk.setStartZ( 0 );
+        cachedChunk.setWidth( sX );
+        cachedChunk.setHeight( sY );
+        cachedChunk.setDepth( sZ );
+        cachedChunk.setData( wholeVolume );
+        cachedChunkArray = new VolumeDataChunk[] { cachedChunk };
     }
 
-    public VolumeDataBean( long size ) {
-        cachedVolume = new byte[ (int)size ];
+    public VolumeDataBean( long size, int sX, int sY, int sZ ) {
+        this( new byte[ (int)size ], sX, sY, sZ );
     }
 
     @Override
@@ -28,22 +38,22 @@ public class VolumeDataBean implements VolumeDataI {
     }
 
     @Override
-    public byte[] getCurrentVolumeData() {
-        return cachedVolume;
+    public VolumeDataChunk[] getVolumeChunks() {
+        return cachedChunkArray;
     }
 
     @Override
     public byte getValueAt(long location) {
-        return cachedVolume[ (int)location ];
+        return cachedChunk.getData()[ (int)location ];
     }
 
     @Override
     public void setValueAt(long location, byte value) {
-        cachedVolume[ (int)location ] = value;
+        cachedChunk.getData()[ (int)location ] = value;
     }
 
     @Override
     public long length() {
-        return cachedVolume.length;
+        return cachedChunk.getData().length;
     }
 }

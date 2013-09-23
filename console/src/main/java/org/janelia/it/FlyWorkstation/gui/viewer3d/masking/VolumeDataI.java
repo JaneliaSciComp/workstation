@@ -1,4 +1,6 @@
-package org.janelia.it.FlyWorkstation.gui.alignment_board_viewer.masking;
+package org.janelia.it.FlyWorkstation.gui.viewer3d.masking;
+
+import org.janelia.it.FlyWorkstation.gui.viewer3d.volume_builder.VolumeDataChunk;
 
 /**
  * Created with IntelliJ IDEA.
@@ -19,12 +21,12 @@ public interface VolumeDataI {
     /**
      * Call this to get the volume data.  Do not cache this data, as it is meant to be dynamically
      * available/generated for use.  Also the implementation may use or enforce an order-of-calls
-     * dependency.
-     * @see #isVolumeAvailable() The return value may be null, if this method returns false.
+     * dependency. The data may be divided into 1 or more such chunks.
+     * @see #isVolumeAvailable() The return value may be null, if this is-er returns false.
      *
-     * @return bytes for all volume data currently available.
+     * @return
      */
-    byte[] getCurrentVolumeData();
+    VolumeDataChunk[] getVolumeChunks();
 
     /**
      * Call this to reference a specific byte in the volume.  This is not to be used at "interpretation"
