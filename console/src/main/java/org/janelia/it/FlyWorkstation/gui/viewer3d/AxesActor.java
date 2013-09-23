@@ -112,18 +112,18 @@ public class AxesActor implements GLActor
     @Override
 	public void display(GLAutoDrawable glDrawable) {
         GL2 gl = glDrawable.getGL().getGL2();
+        reportError( gl, "Display of axes-actor upon entry" );
 
         gl.glDisable(GL2.GL_CULL_FACE);
         gl.glFrontFace(GL2.GL_CW);
+        reportError( gl, "Display of axes-actor cull-face" );
 
 		gl.glPushAttrib(GL2.GL_LIGHTING_BIT | GL2.GL_ENABLE_BIT);
+        reportError( gl, "Display of axes-actor lighting 1" );
 		gl.glShadeModel(GL2.GL_FLAT);
+        reportError( gl, "Display of axes-actor lighting 2" );
         gl.glDisable(GL2.GL_LIGHTING);
-
-//        gl.glClearColor( 0.0f, 0.0f, 0.0f, 0.0001f );
-//        gl.glClearDepth( 0.0f );
-//        gl.glEnable( GL2.GL_DEPTH_TEST );
-//        gl.glDepthFunc( GL2.GL_GREATER );
+        reportError( gl, "Display of axes-actor lighting 3" );
 
         // set blending to enable transparent voxels
         if (renderMethod == RenderMethod.ALPHA_BLENDING) {
@@ -131,12 +131,13 @@ public class AxesActor implements GLActor
             gl.glBlendEquation(GL2.GL_FUNC_ADD);
             // Weight source by GL_ONE because we are using premultiplied alpha.
             gl.glBlendFunc(GL2.GL_ONE, GL2.GL_ONE_MINUS_SRC_ALPHA);
+            reportError( gl, "Display of axes-actor alpha" );
         }
         else if (renderMethod == RenderMethod.MAXIMUM_INTENSITY) {
     	    gl.glEnable(GL2.GL_BLEND);
             gl.glBlendEquation(GL2.GL_MAX);
             gl.glBlendFunc(GL2.GL_ONE, GL2.GL_DST_ALPHA);
-            // gl.glBlendFunc(GL2.GL_ONE_MINUS_DST_COLOR, GL2.GL_ZERO); // inverted?  http://stackoverflow.com/questions/2656905/opengl-invert-framebuffer-pixels
+            reportError( gl, "Display of axes-actor maxintensity" );
         }
 
         gl.glEnable( GL2.GL_LINE_SMOOTH );
@@ -169,6 +170,8 @@ public class AxesActor implements GLActor
 //        gl.glDisable(GL2.GL_DEPTH_TEST);
 
         gl.glPopAttrib();
+        reportError(gl, "Axes-actor, end of display.");
+
 	}
 
     @Override

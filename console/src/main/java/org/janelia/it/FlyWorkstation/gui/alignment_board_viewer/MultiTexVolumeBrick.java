@@ -116,6 +116,8 @@ public class MultiTexVolumeBrick implements VolumeBrickI
         }
 
         GL2 gl = glDrawable.getGL().getGL2();
+        reportError( gl, "mult-tex init upon entry" );
+
         initMediators( gl );
         if (bUseSyntheticData) {
             createSyntheticData();
@@ -125,14 +127,17 @@ public class MultiTexVolumeBrick implements VolumeBrickI
         gl.glEnable(GL2.GL_TEXTURE);
         if (bSignalTextureNeedsUpload) {
             uploadSignalTexture(gl);
+            reportError( gl, "init mux brick - upload signal" );
         }
 		if (bUseShader) {
             if ( maskTextureMediator != null  &&  bMaskTextureNeedsUpload ) {
                 uploadMaskingTexture(gl);
+                reportError( gl, "init mux brick - upload mask" );
             }
 
             if ( colorMapTextureMediator != null  &&  bColorMapTextureNeedsUpload ) {
                 uploadColorMapTexture(gl);
+                reportError( gl, "init mux brick - upload color" );
             }
 
             try {
@@ -140,6 +145,7 @@ public class MultiTexVolumeBrick implements VolumeBrickI
                         signalTextureMediator, maskTextureMediator, colorMapTextureMediator
                 );
                 volumeBrickShader.init(gl);
+                reportError( gl, "init mux brick - shader" );
             } catch ( Exception ex ) {
                 ex.printStackTrace();
                 bUseShader = false;
@@ -156,13 +162,15 @@ public class MultiTexVolumeBrick implements VolumeBrickI
                 bufferManager.dropBuffers();
 
                 bBuffersNeedUpload = false;
+                reportError( gl, "init mux brick - buffers" );
             } catch ( Exception ex ) {
                 SessionMgr.getSessionMgr().handleException( ex );
             }
         }
 		// tidy up
 		//gl.glPopAttrib();
-        gl.glDisable(GL2.GL_TEXTURE);
+        //gl.glDisable(GL2.GL_TEXTURE);
+        reportError( gl, "mult-tex init exit" );
 		bIsInitialized = true;
 	}
 
@@ -175,6 +183,7 @@ public class MultiTexVolumeBrick implements VolumeBrickI
         }
 
         GL2 gl = glDrawable.getGL().getGL2();
+        reportError( gl, "Upon entry to mux-tex display." );
 		if (! bIsInitialized)
 			init(glDrawable);
 		if (bSignalTextureNeedsUpload)
@@ -183,6 +192,8 @@ public class MultiTexVolumeBrick implements VolumeBrickI
             uploadMaskingTexture(gl);
         if (colorMapTextureMediator != null  &&  bColorMapTextureNeedsUpload)
             uploadColorMapTexture(gl);
+
+        reportError( gl, "display mux brick - flagged resource init" );
 
 		// debugging objects showing useful boundaries of what we want to render
 		//gl.glColor3d(1,1,1);
@@ -195,18 +206,22 @@ public class MultiTexVolumeBrick implements VolumeBrickI
         gl.glDisable(GL2.GL_LIGHTING);
         gl.glEnable(GL2.GL_TEXTURE_3D);
 
+        reportError( gl, "display mux brick - attribs" );
+
         // set blending to enable transparent voxels
         if (renderMethod == RenderMethod.ALPHA_BLENDING) {
             gl.glEnable(GL2.GL_BLEND);
             gl.glBlendEquation(GL2.GL_FUNC_ADD);
             // Weight source by GL_ONE because we are using premultiplied alpha.
             gl.glBlendFunc(GL2.GL_ONE, GL2.GL_ONE_MINUS_SRC_ALPHA);
+            reportError( gl, "display mux brick - alpha" );
         }
         else if (renderMethod == RenderMethod.MAXIMUM_INTENSITY) {
     	    gl.glEnable(GL2.GL_BLEND);
             gl.glBlendEquation(GL2.GL_MAX);
             gl.glBlendFunc(GL2.GL_ONE, GL2.GL_DST_ALPHA);
             // gl.glBlendFunc(GL2.GL_ONE_MINUS_DST_COLOR, GL2.GL_ZERO); // inverted?  http://stackoverflow.com/questions/2656905/opengl-invert-framebuffer-pixels
+            reportError( gl, "display mux brick - max intensity" );
         }
         if (bUseShader) {
             if ( maskTextureMediator != null ) {
@@ -216,14 +231,18 @@ public class MultiTexVolumeBrick implements VolumeBrickI
             volumeBrickShader.setCropOutLevel( volumeModel.getCropOutLevel() );
             volumeBrickShader.setCropCoords( volumeModel.getCropCoords() );
             volumeBrickShader.load(gl);
+            reportError( gl, "display mux brick - flagged shader init" );
         }
 
         displayVolumeSlices(gl);
 		if (bUseShader) {
             volumeBrickShader.unload(gl);
+            reportError( gl, "display mux brick - unload shader" );
         }
 		gl.glPopAttrib();
-	}
+        reportError(gl, "Volume Brick, end of display.");
+
+    }
 
     @Override
 	public void dispose(GLAutoDrawable glDrawable) {
@@ -332,6 +351,7 @@ public class MultiTexVolumeBrick implements VolumeBrickI
         setupSignalTexture(gl);
         setupMaskingTexture(gl);
         setupColorMapTexture(gl);
+        reportError( gl, "Volume Brick, display vol slices - setup tex's" );
 
         // If principal axis points away from viewer, draw slices front to back,
         // instead of back to front.

@@ -62,6 +62,7 @@ public class TextureMediator {
     }
 
     public void uploadTexture( GL2 gl ) {
+        reportError( "upon entry to uploadTexture", gl );
         if ( ! isInitialized ) {
             logger.error("Attempted to upload texture before mediator was initialized.");
             throw new RuntimeException("Failed to upload texture");
@@ -236,10 +237,12 @@ public class TextureMediator {
 
     /** Release the texture data memory from the GPU. */
     public void deleteTexture( GL2 gl ) {
+        reportError( "tex-mediator: upon entry to delete tex", gl );
         IntBuffer textureNameBuffer = IntBuffer.allocate( 1 );
         textureNameBuffer.put( textureName );
         textureNameBuffer.rewind();
         gl.glDeleteTextures( 1, textureNameBuffer );
+        reportError( "tex-mediator: delete texture", gl );
     }
 
     public int getTextureOffset() {
@@ -429,10 +432,7 @@ public class TextureMediator {
             }
 
         }
-if ( internalFormat == 0x8042 ) {
-logger.info("Internal format of " + 0x8042);
-}
-        logger.info( "internalFormat = {} for {}", getConstantName( internalFormat ), textureData.getFilename() );
+        logger.debug( "internalFormat = {} for {}", getConstantName( internalFormat ), textureData.getFilename() );
         return internalFormat;
     }
 
