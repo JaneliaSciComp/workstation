@@ -832,12 +832,10 @@ public class EntityContextMenu extends JPopupMenu {
                                 .childrenOfType(EntityConstants.TYPE_PIPELINE_RUN)
                                 .childrenOfType(EntityConstants.TYPE_ALIGNMENT_RESULT)
                                 .childrenOfType(EntityConstants.TYPE_SUPPORTING_DATA)
-                                .childrenOfType(EntityConstants.TYPE_MOVIE)
+                                .childOfName("VerifyMovie.mp4")
                                 .run(new EntityVisitor() {
                             public void visit(Entity movieEntity) throws Exception {
-                                if (movieEntity.getName().startsWith("VerifyMovie")) {
-                                    movie = movieEntity;
-                                }
+                            	movie = movieEntity;
                             }
                         });
                     }
