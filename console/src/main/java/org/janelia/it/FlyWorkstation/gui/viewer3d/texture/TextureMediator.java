@@ -110,22 +110,23 @@ public class TextureMediator {
                         null
                 );
 
+                int expectedRemaining = textureData.getSx() * textureData.getSy() * textureData.getSz()
+                        * textureData.getPixelByteCount() * textureData.getChannelCount();
+                if ( expectedRemaining != textureData.getTextureData().length() ) {
+                    logger.warn( "Invalid remainder vs texture data dimensions.  Sx=" + textureData.getSx() +
+                            " Sy=" + textureData.getSy() + " Sz=" + textureData.getSz() +
+                            " storageFmtReq=" + getStorageFormatMultiplier() +
+                            " pixelByteCount=" + textureData.getPixelByteCount() +
+                            ";  total remaining is " +
+                            textureData.getTextureData().length() + " " + textureData.getFilename() +
+                            ";  expected remaining is " + expectedRemaining
+                    );
+                }
+
                 for ( VolumeDataChunk volumeDataChunk: textureData.getTextureData().getVolumeChunks() ) {
                     ByteBuffer data = ByteBuffer.wrap( volumeDataChunk.getData() );
                     data.rewind();
 
-                    int expectedRemaining = textureData.getSx() * textureData.getSy() * textureData.getSz()
-                            * textureData.getPixelByteCount() * textureData.getChannelCount();
-                    if ( expectedRemaining != data.remaining() ) {
-                        logger.warn( "Invalid remainder vs texture data dimensions.  Sx=" + textureData.getSx() +
-                                " Sy=" + textureData.getSy() + " Sz=" + textureData.getSz() +
-                                " storageFmtReq=" + getStorageFormatMultiplier() +
-                                " pixelByteCount=" + textureData.getPixelByteCount() +
-                                ";  total remaining is " +
-                                data.remaining() + " " + textureData.getFilename() +
-                                ";  expected remaining is " + expectedRemaining
-                        );
-                    }
                     logger.info("Sub-image: " + volumeDataChunk.getStartX() + "," + volumeDataChunk.getStartY() + "," + volumeDataChunk.getStartZ() );
                     gl.glTexSubImage3D(
                             GL2.GL_TEXTURE_3D,
