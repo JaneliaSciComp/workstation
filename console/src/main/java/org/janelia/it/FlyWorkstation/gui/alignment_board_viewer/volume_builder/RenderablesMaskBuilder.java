@@ -230,7 +230,9 @@ public class RenderablesMaskBuilder extends RenderablesVolumeBuilder implements 
                     throw new RuntimeException("Space size not yet initialized.  Cannot initialize volume.");
                 }
                 logger.debug( "Initializing" );
-                volumeData = new VolumeDataBean((int)( paddedSx * paddedSy * paddedSz) * maskByteCount, (int)paddedSx, (int)paddedSy, (int)paddedSz );
+                // Old Way:
+                // volumeData = new VolumeDataBean((int)( paddedSx * paddedSy * paddedSz) * maskByteCount, (int)paddedSx, (int)paddedSy, (int)paddedSz );
+                volumeData = new VeryLargeVolumeData( (int)paddedSx, (int)paddedSy, (int)paddedSz, maskByteCount );
                 isInitialized = true;
             }
         }

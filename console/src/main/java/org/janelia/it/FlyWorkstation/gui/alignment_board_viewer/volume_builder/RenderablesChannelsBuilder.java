@@ -334,13 +334,6 @@ public class RenderablesChannelsBuilder extends RenderablesVolumeBuilder impleme
                 }
                 long arrayLength = paddedSx * paddedSy * paddedSz *
                         channelMetaData.byteCount * channelMetaData.channelCount;
-                if ( arrayLength > Integer.MAX_VALUE ) {
-                    throw new IllegalArgumentException(
-                            "Total length of input: " + arrayLength  +
-                                    " exceeds maximum array size capacity.  " +
-                                    "If this is truly required, code redesign will be necessary."
-                    );
-                }
                 if ( arrayLength == 0 ) {
                     throw new IllegalArgumentException(
                             "Array length of zero, for all data."
@@ -356,7 +349,11 @@ public class RenderablesChannelsBuilder extends RenderablesVolumeBuilder impleme
                 }
 
                 if ( channelVolumeData == null ) {
-                    channelVolumeData = new VolumeDataBean( (int)arrayLength, (int)sx, (int)sy, (int)sz );
+                    channelVolumeData = new VeryLargeVolumeData(
+                            (int)paddedSx, (int)paddedSy, (int)paddedSz, bytesPerChannel * channelMetaData.channelCount
+                    );
+                    // OLD WAY:
+                    //  channelVolumeData = new VolumeDataBean( (int)arrayLength, (int)paddedSx, (int)paddedSy, (int)paddedSz );
                 }
 
                 logger.info(
