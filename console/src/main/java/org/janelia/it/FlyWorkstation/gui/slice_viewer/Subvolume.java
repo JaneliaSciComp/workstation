@@ -299,5 +299,30 @@ public class Subvolume {
     public ZoomedVoxelIndex getOrigin() {
         return origin;
     }
+
+    public int getIntensityLocal(VoxelIndex v1, int channelIndex) {
+        int c = channelIndex;
+        int x = v1.getX();
+        int y = v1.getY();
+        int z = v1.getZ();
+        // Compute offset into local raster
+        int offset = 0;
+        // color channel is fastest moving dimension
+        int stride = 1;
+        offset += c * stride;
+        // x
+        stride *= channelCount;
+        offset += x * stride;
+        // y
+        stride *= extent.getX();
+        offset += y * stride;
+        // z
+        stride *= extent.getY();
+        offset += z * stride;
+        if (bytesPerIntensity == 2)
+            return shorts.get(offset);
+        else
+            return bytes.get(offset);
+    }
 	
 }
