@@ -162,6 +162,9 @@ public class TextureMediator {
 
     }
 
+    @Deprecated
+    @SuppressWarnings("unused")
+    /** This uploads all textures as one contiguous piece, by concatenating all chunks. */
     public void contigUploadTexture( GL2 gl ) {
         if ( ! isInitialized ) {
             logger.error("Attempted to upload texture before mediator was initialized.");
