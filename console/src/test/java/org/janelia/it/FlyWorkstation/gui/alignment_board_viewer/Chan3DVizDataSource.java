@@ -12,6 +12,7 @@ import java.util.Collection;
 public class Chan3DVizDataSource implements RenderableDataSourceI {
 
     private static final String MASK_EXTENSION = ".mask";
+    private static final String CHAN_EXTENSION = ".chan";
     private String[] filenames;
     public Chan3DVizDataSource(String[] filenames) {
         this.filenames = filenames;
@@ -113,6 +114,9 @@ public class Chan3DVizDataSource implements RenderableDataSourceI {
                 data.setBean( renderableBean );
                 data.setCompartment( true );
                 data.setMaskPath( fn );
+                if ( filenames[ i + 1 ].endsWith( CHAN_EXTENSION ) ) {
+                    data.setChannelPath( filenames[ i + 1 ] );
+                }
                 rtnVal.add(data);
 
                 nextTranslatedNum ++;

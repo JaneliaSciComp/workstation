@@ -1,6 +1,7 @@
 
 package org.janelia.it.FlyWorkstation.gui.alignment_board_viewer;
 
+import org.janelia.it.FlyWorkstation.gui.alignment_board_viewer.masking.MultiMaskTracker;
 import org.janelia.it.FlyWorkstation.gui.framework.viewer.alignment_board.AlignmentBoardControllable;
 import org.janelia.it.FlyWorkstation.gui.framework.viewer.alignment_board.AlignmentBoardSettings;
 import org.janelia.it.FlyWorkstation.gui.framework.viewer.alignment_board.RenderablesLoadWorker;
@@ -72,7 +73,7 @@ public class TestMaskChan3DViz {
                             renderMapping,
                             new TestControlCallback( mipWidget, renderMapping, frame.getContentPane() ),
                             settings,
-                            null
+                            new MultiMaskTracker()
                     );
                     loadWorker.setResolver( new TrivialFileResolver() );
                     loadWorker.execute();
