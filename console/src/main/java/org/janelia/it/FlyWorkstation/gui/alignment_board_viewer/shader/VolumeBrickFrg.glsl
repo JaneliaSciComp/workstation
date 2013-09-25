@@ -99,7 +99,7 @@ float computeIntensity( vec4 inputColor, float pos, float posInterp )
             }
 
             // Now, must re-expand the value found above, to cover the 8-bit range.
-            rtnVal = ( rtnVal * 16.0 ) + 15.0;
+            rtnVal = ( rtnVal * 16.0 ) + 7.5;
         }
     }
 

@@ -2,6 +2,7 @@ package org.janelia.it.FlyWorkstation.gui.alignment_board_viewer.channel_split;
 
 import org.janelia.it.FlyWorkstation.gui.alignment_board_viewer.masking.MultiMaskTracker;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.channel_split.ChannelSplitStrategyI;
+import org.janelia.it.FlyWorkstation.gui.viewer3d.loader.ChannelMetaData;
 
 /**
  * Created with IntelliJ IDEA.
@@ -15,6 +16,7 @@ public class ChannelSplitStrategyFactory {
 
     private ChannelSplitStrategyI[] strategies;
     private MultiMaskTracker multiMaskTracker;
+    private ChannelSplitStrategyI trivialStrategy;
 
     /** Constructor creates the lookup mechanism followed below. */
     public ChannelSplitStrategyFactory( MultiMaskTracker multiMaskTracker ) {
@@ -33,7 +35,24 @@ public class ChannelSplitStrategyFactory {
     }
 
     public ChannelSplitStrategyI getStrategyForSubmaskCount( int submaskCount ) {
-        return strategies[ submaskCount ];
+        ChannelSplitStrategyI strategy;
+        if ( strategies.length > submaskCount ) {
+            strategy = strategies[ submaskCount ];
+        }
+        else {
+            if ( trivialStrategy == null ) {
+                trivialStrategy = new ChannelSplitStrategyI() {
+                    // This trivial strategy simply preserves the bit value at the maximum depth allowed.
+                    // Lazy-init in case this depth is never reached.
+                    @Override
+                    public byte[] getUpdatedValue(ChannelMetaData channelMetaDatas, int originalMask, byte[] channelsData, int multiMaskId) {
+                        return channelsData;
+                    }
+                };
+            }
+            strategy = trivialStrategy;
+        }
+        return strategy;
     }
 
     public ChannelSplitStrategyI getStrategyForMask( int maskId ) {

@@ -59,7 +59,7 @@ public class NBitChannelSplitStrategy implements ChannelSplitStrategyI {
         int powEffectiveBits = (int) Math.pow(2, effectiveBitWidth);
         int bitWidthMaskingValue = powEffectiveBits - 1;
         double bitWidthCompressionFactor = (double)powEffectiveBits / (double)powByteCount;
-        int compressedValue = (int)Math.round((double)maxChannelValue * bitWidthCompressionFactor);
+        int compressedValue = (int)Math.ceil((double)maxChannelValue * bitWidthCompressionFactor);
         compressedValue = compressedValue > bitWidthMaskingValue ? bitWidthMaskingValue : compressedValue;
 
         logger.info(

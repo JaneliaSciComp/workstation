@@ -14,6 +14,8 @@ import java.util.*;
 public class MultiMaskTracker {
 
     public static final String MASK_HEX_FORMAT = "%04x";
+    public static final int MAX_MASK_DEPTH = 8;
+
     private Map<Integer,MultiMaskBean> maskIdToBean;
     private Map<String,MultiMaskBean> altMasksToBean;
 
@@ -106,7 +108,7 @@ public class MultiMaskTracker {
      * @return
      */
     private Integer createIncrementedMultimask(int discoveredMask, int oldVolumeMask, List<Integer> altMasks) {
-        Integer rtnVal;// Need a new one.  C'tor sets count to 1.
+        Integer rtnVal;// Need a new one.  C'tor sets voxel count to 1.
         MultiMaskBean newBean = new MultiMaskBean();
         newBean.setMultiMaskNum( nextMaskNum );
         // Any mask in the list referenced by the old mask, should be referenced by the newly-created mask.

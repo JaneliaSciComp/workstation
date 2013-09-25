@@ -19,7 +19,6 @@ import java.util.*;
  */
 public class ConfigurableColorMapping implements RenderMappingI {
 
-    private static final int MAX_INTENSITY_OFFSET = 8;
     private static final int RENDER_METHOD_BITS = 3;
     private static final int POSITION_BITS = 3;
     private static final int BYTE_INTENSITY_INTERP = 1 << POSITION_BITS + RENDER_METHOD_BITS;
@@ -104,7 +103,14 @@ public class ConfigurableColorMapping implements RenderMappingI {
                     // Add info to the "render method" byte.
                     // Using the offset of the chosen mask, within the whole alternates list.
                     int intensityOffset = bean.getMaskOffset( chosenAltMask ) << RENDER_METHOD_BITS;
-                    if ( intensityOffset <= MAX_INTENSITY_OFFSET ) {
+                    if ( intensityOffset < 0 ) {
+                        logger.warn(
+                                "Invalid negative alternative mask offset {}, for mask {}.",
+                                intensityOffset, chosenAltMask
+                        );
+                        rgb[ 3 ] = RenderMappingI.NON_RENDERING;
+                    }
+                    else if ( intensityOffset <= MultiMaskTracker.MAX_MASK_DEPTH ) {
                         int intensityOffsetInterp = 0;
 
                         // Using the number of alternates to signal to shader how to treat the mask offset number.
@@ -115,21 +121,18 @@ public class ConfigurableColorMapping implements RenderMappingI {
                             intensityOffsetInterp = NIBBLE_INTENSITY_INTERP;
                         }
                         rgb[ 3 ] |= intensityOffset | intensityOffsetInterp;
-                        maskMappings.put( multiMask, rgb );
-                    }
-                    else if ( intensityOffset < 0 ) {
-                        logger.warn(
-                                "Invalid negative alternative mask offset {}, for mask {}.",
-                                intensityOffset, chosenAltMask
-                        );
                     }
                     else {
+                        rgb[ 3 ] = RenderMappingI.NON_RENDERING;
+
                         // Here, nothing to add to the mapping.  Max depth exceeded.
                         logger.warn(
                                 "Exceeded max depth for multimask rendering. Depth is {}, of max {}.",
-                                intensityOffset, MAX_INTENSITY_OFFSET
+                                intensityOffset, MultiMaskTracker.MAX_MASK_DEPTH
                         );
                     }
+                    maskMappings.put( multiMask, rgb );
+
                 }
             }
         }
