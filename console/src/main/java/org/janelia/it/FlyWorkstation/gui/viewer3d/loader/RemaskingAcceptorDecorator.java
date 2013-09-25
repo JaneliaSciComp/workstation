@@ -66,6 +66,9 @@ public class RemaskingAcceptorDecorator extends AbstractAcceptorDecorator {
                     int volumeLoc = j + ((int) position * maskByteCount);
                     // Here enforced: need to take previous mask into account.
                     int nextMaskByte = maskVolumeData.getValueAt(volumeLoc);
+                    if ( nextMaskByte < 0 ) {
+                        nextMaskByte += 256;
+                    }
                     oldVolumeMask += nextMaskByte << (8*j);
                 }
 
