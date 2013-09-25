@@ -90,6 +90,7 @@ float computeIntensity( vec4 inputColor, float pos, float posInterp )
                 for (int i = 0; i < 4; i++)
                 {
                     rtnVal += lowBitAdd( rtnVal, byteUsed, pow( 2.0, i ) );
+                    // Must now pop the bottom bit off the "byte used" byte.
                     byteUsed = floor( byteUsed / 2.0 );
                 }
             }
@@ -99,7 +100,7 @@ float computeIntensity( vec4 inputColor, float pos, float posInterp )
             }
 
             // Now, must re-expand the value found above, to cover the 8-bit range.
-            rtnVal = ( rtnVal * 16.0 ) + 7.5;
+            rtnVal = rtnVal * 16.0;
         }
     }
 
