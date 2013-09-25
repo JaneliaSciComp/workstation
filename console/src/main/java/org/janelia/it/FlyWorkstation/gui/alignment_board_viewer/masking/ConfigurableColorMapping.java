@@ -53,9 +53,6 @@ public class ConfigurableColorMapping implements RenderMappingI {
 
     /**
      * Buildup a map of masks (or intercompatible renderable ids), to their rendering info.
-     *
-     * @param renderableBeans
-     * @return
      */
     private Map<Integer,byte[]> makeMaskMappings() {
         Map<Integer,byte[]> maskMappings = new HashMap<Integer,byte[]>();
@@ -102,16 +99,17 @@ public class ConfigurableColorMapping implements RenderMappingI {
 
                     // Add info to the "render method" byte.
                     // Using the offset of the chosen mask, within the whole alternates list.
-                    int intensityOffset = bean.getMaskOffset( chosenAltMask ) << RENDER_METHOD_BITS;
-                    if ( intensityOffset < 0 ) {
+                    int maskOffset = bean.getMaskOffset(chosenAltMask);
+                    int intensityOffset = maskOffset << RENDER_METHOD_BITS;
+                    if ( maskOffset < 0 ) {
                         logger.warn(
                                 "Invalid negative alternative mask offset {}, for mask {}.",
                                 intensityOffset, chosenAltMask
                         );
                         rgb[ 3 ] = RenderMappingI.NON_RENDERING;
                     }
-                    else if ( intensityOffset <= MultiMaskTracker.MAX_MASK_DEPTH ) {
-                        int intensityOffsetInterp = 0;
+                    else if ( maskOffset <= MultiMaskTracker.MAX_MASK_DEPTH ) {
+                        int intensityOffsetInterp;
 
                         // Using the number of alternates to signal to shader how to treat the mask offset number.
                         if ( bean.getAltMasks().size() <= 4 ) {
@@ -128,7 +126,7 @@ public class ConfigurableColorMapping implements RenderMappingI {
                         // Here, nothing to add to the mapping.  Max depth exceeded.
                         logger.warn(
                                 "Exceeded max depth for multimask rendering. Depth is {}, of max {}.",
-                                intensityOffset, MultiMaskTracker.MAX_MASK_DEPTH
+                                maskOffset, MultiMaskTracker.MAX_MASK_DEPTH
                         );
                     }
                     maskMappings.put( multiMask, rgb );
@@ -191,7 +189,6 @@ public class ConfigurableColorMapping implements RenderMappingI {
                     rgb[ 3 ] = renderMethodNum.byteValue();
                 }
             }
-
             maskMappings.put( translatedNum, rgb );
         }
     }
@@ -223,7 +220,6 @@ public class ConfigurableColorMapping implements RenderMappingI {
      * Add defaulted (non-user-chosen) values to color rendering, iff user has not picked any.
      *
      * @param bean set on here.
-     * @param loader use info from here.
      */
     private byte[] setRgbFromAverageColor(RenderableBean bean) {
         byte[] rtnVal = null;

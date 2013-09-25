@@ -22,6 +22,7 @@ public class NBitChannelSplitStrategy implements ChannelSplitStrategyI {
 
     public NBitChannelSplitStrategy(MultiMaskTracker multiMaskTracker, int bitWidth) {
         assert bitWidth < 8 : "Bit width " + bitWidth+" should be < 8, or this strategy is inappropriate.";
+        assert bitWidth == 2 || bitWidth == 8 : "Bit width " + bitWidth+" should be a power of 2.";
 
         this.multiMaskTracker = multiMaskTracker;
         this.outputValWidth = bitWidth;
@@ -59,7 +60,7 @@ public class NBitChannelSplitStrategy implements ChannelSplitStrategyI {
         int powEffectiveBits = (int) Math.pow(2, effectiveBitWidth);
         int bitWidthMaskingValue = powEffectiveBits - 1;
         double bitWidthCompressionFactor = (double)powEffectiveBits / (double)powByteCount;
-        int compressedValue = (int)Math.ceil((double)maxChannelValue * bitWidthCompressionFactor);
+        int compressedValue = (int)Math.ceil((double) maxChannelValue * bitWidthCompressionFactor);
         compressedValue = compressedValue > bitWidthMaskingValue ? bitWidthMaskingValue : compressedValue;
 
         logger.debug(
@@ -67,8 +68,10 @@ public class NBitChannelSplitStrategy implements ChannelSplitStrategyI {
                         " and compression factor of " + bitWidthCompressionFactor
         );
 
+        MultiMaskTracker.MultiMaskBean multiMaskBean = multiMaskTracker.getMultiMaskBeans().get(multiMaskId);
+
         // Which priority submask are we using?
-        int maskOffset = multiMaskTracker.getMultiMaskBeans().get( multiMaskId ).getMaskOffset( originalMask );
+        int maskOffset = multiMaskBean.getMaskOffset(originalMask);
 
         int bitOffset = totalAccessibleBits - (maskOffset+1) * effectiveBitWidth;
         int byteStartPos = bitOffset / 8;
