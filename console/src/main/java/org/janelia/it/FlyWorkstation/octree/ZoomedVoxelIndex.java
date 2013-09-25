@@ -52,4 +52,9 @@ public class ZoomedVoxelIndex
     public int getX() {return x;}
     public int getY() {return y;}
     public int getZ() {return z;}
+    
+    @Override
+    public String toString() {
+        return "ZoomedVoxelIndex("+zoomLevel+", "+x+", "+y+", "+z+")";
+    }
 }

@@ -270,7 +270,7 @@ public class Subvolume {
         return extent;
     }
 
-    public long getIntensityGlobal(ZoomedVoxelIndex v1, int channelIndex) 
+    public int getIntensityGlobal(ZoomedVoxelIndex v1, int channelIndex) 
     {
         int c = channelIndex;
         int x = v1.getX() - origin.getX();

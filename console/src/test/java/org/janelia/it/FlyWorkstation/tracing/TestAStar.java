@@ -38,7 +38,9 @@ public class TestAStar {
                 v2.getZoomLevel(),
                 v2.getX()-10, v2.getY()+10, v2.getZ()-10);
         //
+        System.out.println("Loading subvolume...");
         Subvolume subvolume = new Subvolume(v1pad, v2pad, wholeImage);
+        System.out.println("Finished loading subvolume.");
         // 
         int start_x = v1.getX() - subvolume.getOrigin().getX();
         int start_y = v1.getY() - subvolume.getOrigin().getY();
@@ -46,16 +48,21 @@ public class TestAStar {
         int  goal_x = v2.getX() - subvolume.getOrigin().getX();
         int  goal_y = v2.getY() - subvolume.getOrigin().getY();
         int  goal_z = v2.getZ() - subvolume.getOrigin().getZ();
-        AStar astar = new AStar();
-        List<VoxelIndex> path = astar.trace(
+        System.out.println("Initializing A*...");
+        AStar astar = new AStar(subvolume);
+        System.out.println("Finished initializing A*.");
+        System.out.println("Tracing path...");
+        List<ZoomedVoxelIndex> path = astar.trace(v1, v2);
+        /*
                 new VoxelIndex(start_x, start_y, start_z),
-                new VoxelIndex(goal_x, goal_y, goal_z),
-                subvolume);
+                new VoxelIndex(goal_x, goal_y, goal_z));
+                */
+        System.out.println("Finished tracing path.");
         assertNotNull(path);
         assertFalse(path.size() == 0);
         System.out.println("Number of points in path = "+path.size());
-        for (VoxelIndex p : path) {
-            System.out.println(p);
+        for (ZoomedVoxelIndex p : path) {
+            System.out.println(p + ": " +subvolume.getIntensityGlobal(p, 0));
         }
     }
 

@@ -9,6 +9,8 @@ import java.util.Map;
 import java.util.Set;
 import java.util.Vector;
 import org.janelia.it.FlyWorkstation.gui.slice_viewer.Subvolume;
+import org.janelia.it.FlyWorkstation.octree.ZoomLevel;
+import org.janelia.it.FlyWorkstation.octree.ZoomedVoxelIndex;
 import org.janelia.it.FlyWorkstation.raster.VoxelIndex;
 
 import com.google.common.collect.Lists;
@@ -19,27 +21,63 @@ import com.google.common.collect.Lists;
  * 
  * @author brunsc
  *
+ * TODO - store log(probability), not probability
  */
 public class AStar {
+    enum DistanceMetric {
+        EUCLIDEAN,
+        MANHATTAN,
+    }
+    private DistanceMetric distanceMetric = DistanceMetric.EUCLIDEAN;
+    
+    // How many neighbors to examine for each voxel?
+    // TODO - not implemented yet
+    enum NeighborClass {
+        SIX_CONNECTED,
+        // EIGHTEEN_CONNECTED, // I don't have all day here...
+        TWENTYSIX_CONNECTED,
+    }
+    private NeighborClass neighborClass = NeighborClass.TWENTYSIX_CONNECTED;
+    
+    private boolean debug = false;
     // Cached values
-    private double minStepCost = Double.NaN;
+    // stepCostLowerBound has a dramatic effect on performance 9-25-2013
+    // Numbers larger than <some small amount> take more time and cause more nodes to be explored.
+    // Non-zero values prevent meandering path.
+    private final double stepCostLowerBound = 1e-60;
+    
+    private double minStepCost = Double.NaN; // will be set from volume statistics
     private Subvolume volume;
     private Map<Integer, Double> pathCostForIntensity = new HashMap<Integer, Double>();
     private double meanIntensity = Double.NaN;
     private double stdDevIntensity = Double.NaN;
+    // In case of anisotropic voxel size
+    private double voxelSizeX = 1.0;
+    private double voxelSizeY = 1.0;
+    private double voxelSizeZ = 1.0;
     
-    public List<VoxelIndex> trace(
-            VoxelIndex start, 
-            VoxelIndex goal,
-            Subvolume volume) 
-    {
-        clearCachedValues();
+    public AStar(Subvolume volume) {
         this.volume = volume;
+        computeIntensityStats();
+    }
+    
+    public List<ZoomedVoxelIndex> trace(
+            ZoomedVoxelIndex start0, 
+            ZoomedVoxelIndex goal0) 
+    {
+        VoxelIndex start = new VoxelIndex(
+                start0.getX() - volume.getOrigin().getX(), 
+                start0.getY() - volume.getOrigin().getY(), 
+                start0.getZ() - volume.getOrigin().getZ());
+        VoxelIndex goal = new VoxelIndex(
+                goal0.getX() - volume.getOrigin().getX(), 
+                goal0.getY() - volume.getOrigin().getY(), 
+                goal0.getZ() - volume.getOrigin().getZ());
         // The set of nodes already evaluated
         Set<VoxelIndex> closedSet = new HashSet<VoxelIndex>();
         // The set of tentative nodes to be evaluated, initially containing the start node.
         Set<VoxelIndex> openSet = new HashSet<VoxelIndex>();
-        openSet.add(start);
+        openSet.add(new VoxelIndex(start.getX(), start.getY(), start.getZ()));
         // The map of navigated nodes
         Map<VoxelIndex, VoxelIndex> cameFrom = new HashMap<VoxelIndex, VoxelIndex>();
         // Cost from start along best known path
@@ -48,8 +86,11 @@ public class AStar {
         gScore.put(start, 0.0);
         fScore.put(start, gScore.get(start) + heuristicCostEstimate(start, goal));
         
+        long checkedVoxelCount = 0;
         while (openSet.size() > 0) {
             // Get node with lowest fScore in openSet
+            // TODO - perhaps a sorted list could be maintained, to avoid 
+            // exhaustive search each time.
             VoxelIndex current = null;
             for (VoxelIndex n : openSet) {
                 if (current == null) {
@@ -60,10 +101,13 @@ public class AStar {
                     current = n;
             }
             if (current.equals(goal))
-                return reconstructPath(cameFrom, start, goal);
+                return reconstructPath(cameFrom, start, goal, start0.getZoomLevel());
             // Remove current from openSet
             openSet.remove(current);
             closedSet.add(current);
+            checkedVoxelCount += 1;
+            if (debug && checkedVoxelCount % 10000 == 0)
+                System.out.println("Examined "+checkedVoxelCount+" voxels");
             for (VoxelIndex neighbor : getNeighbors(current)) 
             {
                 double tentativeGScore = gScore.get(current)
@@ -85,11 +129,23 @@ public class AStar {
         return null;
     }
     
-    private double distanceBetween(VoxelIndex first, VoxelIndex second) {
+    private double distanceBetween(VoxelIndex current, VoxelIndex neighbor) {
         // Set distance to cost of second node.
-        int intensity = volume.getIntensityLocal(second, 0);
+        int intensity = volume.getIntensityLocal(neighbor, 0);
         double pathScore = getPathStepCostForIntensity(intensity);
-        return pathScore;
+        // Use Manhattan distance, and prohibit diagonal moves (for performance)
+        double dx = (current.getX() - neighbor.getX()) * voxelSizeX;
+        double dy = (current.getY() - neighbor.getY()) * voxelSizeY;
+        double dz = (current.getZ() - neighbor.getZ()) * voxelSizeZ;
+        double distance = 0;
+        if (distanceMetric == DistanceMetric.MANHATTAN) {
+            distance += Math.abs(dx);
+            distance += Math.abs(dy);
+            distance += Math.abs(dz);
+        } else if (distanceMetric == DistanceMetric.EUCLIDEAN) {
+            distance = Math.sqrt(dx*dx + dy*dy + dz*dz);
+        }
+        return pathScore * distance;
     }
     
     private List<VoxelIndex> getNeighbors(VoxelIndex center) {
@@ -97,46 +153,67 @@ public class AStar {
         // Thus, up to six neighbors in 3D
         List<VoxelIndex> result = new Vector<VoxelIndex>();
         //
-        if (center.getX() > 0)
-            result.add(new VoxelIndex(center.getX()-1, center.getY(), center.getZ()));
-        if (center.getY() > 0)
-            result.add(new VoxelIndex(center.getX(), center.getY()-1, center.getZ()));
-        if (center.getZ() > 0)
-            result.add(new VoxelIndex(center.getX(), center.getY(), center.getZ()-1));
-        //
-        if (center.getX() < volume.getExtent().getX() - 1)
-            result.add(new VoxelIndex(center.getX()+1, center.getY(), center.getZ()));
-        if (center.getX() < volume.getExtent().getY() - 1)
-            result.add(new VoxelIndex(center.getX(), center.getY()+1, center.getZ()));
-        if (center.getX() < volume.getExtent().getZ() - 1)
-            result.add(new VoxelIndex(center.getX(), center.getY(), center.getZ()+1));
+        if (neighborClass == NeighborClass.SIX_CONNECTED) {
+            if (center.getX() > 0)
+                result.add(new VoxelIndex(center.getX()-1, center.getY(), center.getZ()));
+            if (center.getY() > 0)
+                result.add(new VoxelIndex(center.getX(), center.getY()-1, center.getZ()));
+            if (center.getZ() > 0)
+                result.add(new VoxelIndex(center.getX(), center.getY(), center.getZ()-1));
+            //
+            if (center.getX() < volume.getExtent().getX() - 1)
+                result.add(new VoxelIndex(center.getX()+1, center.getY(), center.getZ()));
+            if (center.getX() < volume.getExtent().getY() - 1)
+                result.add(new VoxelIndex(center.getX(), center.getY()+1, center.getZ()));
+            if (center.getX() < volume.getExtent().getZ() - 1)
+                result.add(new VoxelIndex(center.getX(), center.getY(), center.getZ()+1));
+        }
+        else if (neighborClass == NeighborClass.TWENTYSIX_CONNECTED) {
+            for (int dx = -1; dx <= 1; ++dx) {
+                int x = center.getX() + dx;
+                if (x < 0) continue;
+                if (x >= volume.getExtent().getX() - 1) continue;
+                for (int dy = -1; dy <= 1; ++dy) {
+                    int y = center.getY() + dy;
+                    if (y < 0) continue;
+                    if (y >= volume.getExtent().getY() - 1) continue;
+                    for (int dz = -1; dz <= 1; ++dz) {
+                        if ((dx == 0) && (dy == 0) && (dz == 0)) 
+                            continue; // self is not a neighbor
+                        int z = center.getZ() + dz;
+                        if (z < 0) continue;
+                        if (z >= volume.getExtent().getZ() - 1) continue;
+                        result.add(new VoxelIndex(x, y, z));
+                    }
+                }
+            }
+        }
         //
         return result;
     }
     
-    private List<VoxelIndex> reconstructPath(
+    private List<ZoomedVoxelIndex> reconstructPath(
             Map<VoxelIndex, VoxelIndex> cameFrom, 
             VoxelIndex start,
-            VoxelIndex goal) 
+            VoxelIndex goal,
+            ZoomLevel zoomLevel) 
     {
-        List<VoxelIndex> result = new Vector<VoxelIndex>();
+        List<ZoomedVoxelIndex> result = new Vector<ZoomedVoxelIndex>();
         VoxelIndex p = goal;
         while (! p.equals(start)) {
-            result.add(p);
+            result.add(new ZoomedVoxelIndex(zoomLevel, 
+                    p.getX() + volume.getOrigin().getX(), 
+                    p.getY() + volume.getOrigin().getY(), 
+                    p.getZ() + volume.getOrigin().getZ()));
             p = cameFrom.get(p);
         }
-        result.add(start);
+        result.add(new ZoomedVoxelIndex(zoomLevel, 
+                start.getX() + volume.getOrigin().getX(), 
+                start.getY() + volume.getOrigin().getY(), 
+                start.getZ() + volume.getOrigin().getZ()));
         return Lists.reverse(result);
     }
 
-    void clearCachedValues() {
-        volume = null;
-        minStepCost = Double.NaN;
-        pathCostForIntensity = new HashMap<Integer, Double>();
-        meanIntensity = Double.NaN;
-        stdDevIntensity = Double.NaN;
-    }
-    
     // Compute mean, standard deviation, and minimum path score
     void computeIntensityStats() {
         double sumIntensity = 0;
@@ -191,17 +268,20 @@ public class AStar {
         if (intensityCount > 0) 
             stdDevIntensity = Math.sqrt(delta/(double)intensityCount);
         // minStepCost must be computed AFTER mean/stddev
-        minStepCost = getPathStepCostForIntensity(maxIntensity);
+        minStepCost = getPathStepCostForIntensity(maxIntensity) 
+                + stepCostLowerBound
+                ;
     }
     
     // fractional error in math formula less than 1.2 * 10 ^ -7.
     // although subject to catastrophic cancellation when z in very close to 0
     // from Chebyshev fitting formula for erf(z) from Numerical Recipes, 6.2
-    public static double erf(double z) {
+    // CMB - return 1-erf for better numerical precision at high Z
+    public static double oneMinusErf(double z) {
         double t = 1.0 / (1.0 + 0.5 * Math.abs(z));
 
         // use Horner's method
-        double ans = 1 - t * Math.exp( -z*z   -   1.26551223 +
+        double result = t * Math.exp( -z*z   -   1.26551223 +
                                             t * ( 1.00002368 +
                                             t * ( 0.37409196 + 
                                             t * ( 0.09678418 + 
@@ -211,17 +291,11 @@ public class AStar {
                                             t * ( 1.48851587 + 
                                             t * (-0.82215223 + 
                                             t * ( 0.17087277))))))))));
-        if (z >= 0) return  ans;
-        else        return -ans;
+        if (z < 0) 
+            result = 2.0 - result;
+        return  result;
     }
 
-    double getMinStepCost() {
-        // Calculate the value once, then cache it for future use
-        if (Double.isNaN(minStepCost))
-            computeIntensityStats();
-        return minStepCost;
-    }
-    
     // Let path step cost be the probability that this intensity could 
     // occur by chance, given the intensity statistics.
     private double getPathStepCostForIntensity(int intensity) {
@@ -229,10 +303,10 @@ public class AStar {
         if (pathCostForIntensity.containsKey(intensity))
             result = pathCostForIntensity.get(intensity);
         else {
-            if (Double.isNaN(meanIntensity))
-                computeIntensityStats();
             double zScore = (intensity - meanIntensity) / stdDevIntensity;
-            result = 0.5 * (1.0 - erf(zScore));
+            // Reduce Z-score by a factor, so we can numerically distinguish more very bright values
+            final double zFudge = 0.80;
+            result = oneMinusErf(zFudge*zScore);
             // Store computed value for future use
             pathCostForIntensity.put(intensity, result);
         }
@@ -241,12 +315,19 @@ public class AStar {
 
     // Must not overestimate actual cost of path to goal
     double heuristicCostEstimate(VoxelIndex v1, VoxelIndex v2) {
-        int distance = 0;
-        // Use Manhattan distance, and prohibit diagonal moves (for performance)
-        distance += Math.abs(v1.getX() - v2.getX());
-        distance += Math.abs(v1.getY() - v2.getY());
-        distance += Math.abs(v1.getZ() - v2.getZ());
-        return distance * getMinStepCost();
+        double dx = (v1.getX() - v2.getX()) * voxelSizeX;
+        double dy = (v1.getY() - v2.getY()) * voxelSizeY;
+        double dz = (v1.getZ() - v2.getZ()) * voxelSizeZ;
+        double distance = 0;
+        if (distanceMetric == DistanceMetric.MANHATTAN) {
+            // Use Manhattan distance, and prohibit diagonal moves (for performance)
+            distance += Math.abs(dx);
+            distance += Math.abs(dy);
+            distance += Math.abs(dz);
+        } else if (distanceMetric == DistanceMetric.EUCLIDEAN) {
+            distance = Math.sqrt(dx*dx + dy*dy + dz*dz);
+        }
+        return distance * minStepCost;
     }
     
 }

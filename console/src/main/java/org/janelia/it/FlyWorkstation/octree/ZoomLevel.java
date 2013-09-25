@@ -48,5 +48,10 @@ public class ZoomLevel {
 	public int getZoomOutFactor() {
 		return zoomOutFactor;
 	}
+	
+	@Override
+	public String toString() {
+	    return "ZoomLevel("+log2ZoomOutFactor+")";
+	}
 
 }
