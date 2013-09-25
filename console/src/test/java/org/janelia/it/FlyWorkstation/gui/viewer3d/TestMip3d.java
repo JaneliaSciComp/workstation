@@ -19,7 +19,7 @@ public class TestMip3d {
 	/**
 	 * @param args
 	 */
-	public static void main(String[] args) {
+	public static void main(final String[] args) {
         javax.swing.SwingUtilities.invokeLater(new Runnable() {
             public void run() {
                 JFrame frame = new JFrame("Test MipWidget");
@@ -66,6 +66,10 @@ public class TestMip3d {
                     String fn = "/Volumes/mousebrainmicro/render/2013-03-25-Liver/default.0.tif";
 
                     // All black.  String fn = "/Volumes/jacsData/MaskResources/Compartment/maskRGB.v3dpbd";
+
+                    if ( args.length > 0 ) {
+                        fn = args[ 0 ];
+                    }
 
                     VolumeBrickFactory factory = new VolumeBrickFactory() {
                         @Override
