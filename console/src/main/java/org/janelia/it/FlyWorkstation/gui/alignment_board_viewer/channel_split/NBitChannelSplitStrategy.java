@@ -62,7 +62,7 @@ public class NBitChannelSplitStrategy implements ChannelSplitStrategyI {
         int compressedValue = (int)Math.ceil((double)maxChannelValue * bitWidthCompressionFactor);
         compressedValue = compressedValue > bitWidthMaskingValue ? bitWidthMaskingValue : compressedValue;
 
-        logger.info(
+        logger.debug(
                 "Found max channel value of " + maxChannelValue + " and compressed value of " + compressedValue +
                         " and compression factor of " + bitWidthCompressionFactor
         );
