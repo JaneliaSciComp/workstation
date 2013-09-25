@@ -127,7 +127,7 @@ public class TextureMediator {
                     ByteBuffer data = ByteBuffer.wrap( volumeDataChunk.getData() );
                     data.rewind();
 
-                    logger.info("Sub-image: " + volumeDataChunk.getStartX() + "," + volumeDataChunk.getStartY() + "," + volumeDataChunk.getStartZ() );
+                    logger.debug("Sub-image: {}, {}, " + volumeDataChunk.getStartZ(), volumeDataChunk.getStartX(), volumeDataChunk.getStartY() );
                     gl.glTexSubImage3D(
                             GL2.GL_TEXTURE_3D,
                             0, // mipmap level
