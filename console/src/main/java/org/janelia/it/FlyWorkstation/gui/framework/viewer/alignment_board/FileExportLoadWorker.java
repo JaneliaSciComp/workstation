@@ -1,16 +1,20 @@
 package org.janelia.it.FlyWorkstation.gui.framework.viewer.alignment_board;
 
 import org.janelia.it.FlyWorkstation.gui.alignment_board_viewer.gui_elements.ControlsListener;
+import org.janelia.it.FlyWorkstation.gui.alignment_board_viewer.masking.MultiMaskTracker;
 import org.janelia.it.FlyWorkstation.gui.alignment_board_viewer.masking.TextureBuilderI;
 import org.janelia.it.FlyWorkstation.gui.alignment_board_viewer.renderable.InvertingComparator;
 import org.janelia.it.FlyWorkstation.gui.alignment_board_viewer.renderable.RBComparator;
 import org.janelia.it.FlyWorkstation.gui.alignment_board_viewer.volume_builder.RenderablesChannelsBuilder;
 import org.janelia.it.FlyWorkstation.gui.alignment_board_viewer.volume_builder.RenderablesMaskBuilder;
+import org.janelia.it.FlyWorkstation.gui.alignment_board_viewer.volume_builder.VeryLargeVolumeData;
 import org.janelia.it.FlyWorkstation.gui.alignment_board_viewer.volume_export.FilteringAcceptorDecorator;
+import org.janelia.it.FlyWorkstation.gui.viewer3d.loader.FragmentSizeFilter;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.loader.MaskChanDataAcceptorI;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.loader.MaskChanMultiFileLoader;
 import org.janelia.it.FlyWorkstation.gui.alignment_board_viewer.renderable.MaskChanRenderableData;
 import org.janelia.it.FlyWorkstation.gui.alignment_board_viewer.renderable.RenderableBean;
+import org.janelia.it.FlyWorkstation.gui.viewer3d.masking.VolumeDataI;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.resolver.FileResolver;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.resolver.TrivialFileResolver;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.texture.TextureDataI;
@@ -38,6 +42,8 @@ public class FileExportLoadWorker extends SimpleWorker implements VolumeLoader {
     private MaskChanMultiFileLoader loader;
     private TextureBuilderI textureBuilder;
     private FileExportParamBean paramBean;
+    private MultiMaskTracker multiMaskTracker;
+    private VolumeDataI maskVolumeData;
 
     private FileResolver resolver;
 
@@ -46,7 +52,13 @@ public class FileExportLoadWorker extends SimpleWorker implements VolumeLoader {
     public FileExportLoadWorker( FileExportParamBean paramBean ) {
         logger = LoggerFactory.getLogger(FileExportLoadWorker.class);
         this.paramBean = paramBean;
+        this.multiMaskTracker = new MultiMaskTracker();
         this.paramBean.exceptIfNotInit();
+    }
+
+    public FileExportLoadWorker( FileExportParamBean paramBean, VolumeDataI maskVolumeData ) {
+        this( paramBean );
+        this.maskVolumeData = maskVolumeData;
     }
 
     public void setResolver( FileResolver resolver ) {
@@ -95,7 +107,7 @@ public class FileExportLoadWorker extends SimpleWorker implements VolumeLoader {
 
         // Iterating through these files will cause all the relevant data to be loaded into
         // the acceptors.
-        loader.setDimWriteback( maskChanRenderableData.isCompartment() );
+        loader.setDimWriteback(maskChanRenderableData.isCompartment());
         loader.read(maskChanRenderableData.getBean(), maskStream, channelStream);
         maskStream.close();
 
@@ -110,7 +122,15 @@ public class FileExportLoadWorker extends SimpleWorker implements VolumeLoader {
     protected void doStuff() throws Exception {
 
         List<RenderableBean> renderableBeans = new ArrayList<RenderableBean>();
-        for ( MaskChanRenderableData renderableData: paramBean.getRenderableDatas() ) {
+
+        // Cut down the to-renders: use only the larger ones.
+        long fragmentFilterSize = paramBean.getFilterSize();
+        Collection<MaskChanRenderableData> filteredRenderableDatas = paramBean.getRenderableDatas();
+        if ( fragmentFilterSize != -1 ) {
+            FragmentSizeFilter filter = new FragmentSizeFilter( fragmentFilterSize );
+            filteredRenderableDatas = filter.filter( paramBean.getRenderableDatas() );
+        }
+        for ( MaskChanRenderableData renderableData: filteredRenderableDatas ) {
             renderableBeans.add( renderableData.getBean() );
         }
         Collections.sort( renderableBeans, new InvertingComparator( new RBComparator() ) );
@@ -124,13 +144,29 @@ public class FileExportLoadWorker extends SimpleWorker implements VolumeLoader {
             // Using only binary values.
             customWritebackSettings.setShowChannelData( false );
             textureBuilder = new RenderablesMaskBuilder( customWritebackSettings, renderableBeans, true );
+
+            setupLoader();
+            multiThreadedDataLoad( paramBean.getRenderableDatas() );
+
         }
         else if ( paramBean.getMethod() == ControlsListener.ExportMethod.color ) {
             // Using full color values.
+
+            // HERE: change this like RenderablesLoadWorker, with two calls: one for mask, one for chan.
             customWritebackSettings.setShowChannelData( true );
-            textureBuilder = new RenderablesChannelsBuilder( customWritebackSettings, null, null, renderableBeans );
+            textureBuilder = new RenderablesChannelsBuilder(
+                    customWritebackSettings, null, null, renderableBeans
+            );
+
+            setupLoader();
+            multiThreadedDataLoad( paramBean.getRenderableDatas() );
+
         }
 
+        logger.info("Ending load thread.");
+    }
+
+    private void setupLoader() {
         // Setup the loader to traverse all this data on demand.
         loader = new MaskChanMultiFileLoader();
         loader.setEnforcePadding( false ); // Do not extend dimensions of resulting volume beyond established space.
@@ -144,11 +180,7 @@ public class FileExportLoadWorker extends SimpleWorker implements VolumeLoader {
         }
         outerAcceptor = new RecoloringAcceptorDecorator( outerAcceptor );
 
-        loader.setAcceptors( Arrays.<MaskChanDataAcceptorI>asList( outerAcceptor ) );
-
-        multiThreadedDataLoad( paramBean.getRenderableDatas() );
-
-        logger.info("Ending load thread.");
+        loader.setAcceptors( Arrays.<MaskChanDataAcceptorI>asList(outerAcceptor) );
     }
 
     @Override
@@ -276,6 +308,7 @@ public class FileExportLoadWorker extends SimpleWorker implements VolumeLoader {
         private Collection<float[]> cropCoords;
         private Callback callback;
         private ControlsListener.ExportMethod method;
+        private int filterSize;
 
         public Collection<MaskChanRenderableData> getRenderableDatas() {
             return renderableDatas;
@@ -313,6 +346,14 @@ public class FileExportLoadWorker extends SimpleWorker implements VolumeLoader {
 
         public void setMethod(ControlsListener.ExportMethod method) {
             this.method = method;
+        }
+
+        public int getFilterSize() {
+            return filterSize;
+        }
+
+        public void setFilterSize(int filterSize) {
+            this.filterSize = filterSize;
         }
     }
 

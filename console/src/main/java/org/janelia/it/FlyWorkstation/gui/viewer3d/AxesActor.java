@@ -73,6 +73,7 @@ public class AxesActor implements GLActor
         axisLengths[ 0 ] = xAxisLength;
         axisLengths[ 1 ] = yAxisLength;
         axisLengths[ 2 ] = zAxisLength;
+        logger.info("Axial lengths are {}, {} and " + zAxisLength, xAxisLength, yAxisLength);
     }
 
     public void setAxisLengthDivisor( double axisLengthDivisor ) {

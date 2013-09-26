@@ -745,8 +745,13 @@ public class AlignmentBoardViewer extends Viewer implements AlignmentBoardContro
                 Collection<float[]> absoluteCropCoords,
                 CompletionListener completionListener,
                 ControlsListener.ExportMethod method ) {
+            AlignmentBoardSettings settingsData = viewer.settingsData;
             VolumeWritebackHandler writebackHandler = new VolumeWritebackHandler(
-                    renderMapping, absoluteCropCoords, completionListener, viewer.mip3d
+                    renderMapping,
+                    absoluteCropCoords,
+                    completionListener,
+                    viewer.mip3d,
+                    (int)settingsData.getMinimumVoxelCount()
             );
             writebackHandler.writeBackVolumeSelection(method);
         }

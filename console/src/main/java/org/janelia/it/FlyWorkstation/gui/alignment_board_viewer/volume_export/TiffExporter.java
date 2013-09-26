@@ -190,7 +190,7 @@ public class TiffExporter {
                 rtnVal = getFlatBufferedImage(textureData, sliceNum, texIntArray[0], bufImgType);
             }
             else {
-                rtnVal = getBufferedImage(textureData, chunkNum, sliceNum, textureSize, type, bufImgType);
+                rtnVal = getBufferedImage(textureData, chunkNum, sliceNum, type, bufImgType);
             }
 
         } catch (Exception e) {
@@ -211,15 +211,12 @@ public class TiffExporter {
         return rtnVal;
     }
 
-    private BufferedImage getBufferedImage(TextureDataI textureData, int chunkNum, int sliceNum, int textureSize, VoxelType type, int bufImgType) {
+    private BufferedImage getBufferedImage(TextureDataI textureData, int chunkNum, int sliceNum, VoxelType type, int bufImgType) {
         BufferedImage rtnVal;
         int sliceSize = textureData.getSx() * textureData.getSy();
         int sliceOffset = sliceNum * sliceSize;
         rtnVal = new BufferedImage( textureData.getSx(), textureData.getSy(), bufImgType );
 
-        int chunkLength = textureData.getTextureData().getVolumeChunks()[chunkNum].getData().length;
-
-//TextureDataI textureData, int chunkNum, int sliceSize, int sliceOffset, VoxelType type
         DataBuffer dataBuffer = createDataBuffer( textureData, chunkNum, sliceSize, sliceOffset, type );
 
         int dataTypeSize = DataBuffer.getDataTypeSize( dataBuffer.getDataType() );
