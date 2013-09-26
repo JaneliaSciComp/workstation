@@ -12,6 +12,7 @@ import org.janelia.it.FlyWorkstation.gui.viewer3d.loader.MaskChanDataAcceptorI;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.loader.MaskChanMultiFileLoader;
 import org.janelia.it.FlyWorkstation.gui.alignment_board_viewer.renderable.MaskChanRenderableData;
 import org.janelia.it.FlyWorkstation.gui.alignment_board_viewer.renderable.RenderableBean;
+import org.janelia.it.FlyWorkstation.gui.viewer3d.loader.MaskChanSingleFileLoader;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.resolver.FileResolver;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.resolver.TrivialFileResolver;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.texture.TextureDataI;
@@ -21,6 +22,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.BufferedInputStream;
+import java.io.File;
 import java.io.FileInputStream;
 import java.io.InputStream;
 import java.util.*;
@@ -36,6 +38,7 @@ import java.util.concurrent.*;
  */
 public class FileExportLoadWorker extends SimpleWorker implements VolumeLoader {
 
+    public static final int ONLY_ONE_THREAD = 1;  // No thread safety, so constraining to 1-at-a-time.
     private MaskChanMultiFileLoader loader;
     private TextureBuilderI textureBuilder;
     private FileExportParamBean paramBean;
@@ -120,8 +123,21 @@ public class FileExportLoadWorker extends SimpleWorker implements VolumeLoader {
             filteredRenderableDatas = filter.filter( paramBean.getRenderableDatas() );
         }
         for ( MaskChanRenderableData renderableData: filteredRenderableDatas ) {
-            renderableBeans.add( renderableData.getBean() );
+            RenderableBean bean = renderableData.getBean();
+            renderableBeans.add( bean );
+
+            // Need to add sizing data to each renderable bean prior to sorting.
+            MaskChanSingleFileLoader loader = new MaskChanSingleFileLoader( null, null, bean, null );
+            if ( renderableData.getMaskPath() != null ) {
+                File infile = new File( resolver.getResolvedFilename( renderableData.getMaskPath() ) );
+                if ( infile.canRead() ) {
+                    FileInputStream fis = new FileInputStream( infile );
+                    long voxelCount = loader.getVoxelCount( fis );
+                    bean.setVoxelCount(voxelCount);
+                }
+            }
         }
+
         Collections.sort( renderableBeans, new InvertingComparator( new RBComparator() ) );
 
         // Establish the means for extracting the volume mask.
@@ -200,7 +216,7 @@ public class FileExportLoadWorker extends SimpleWorker implements VolumeLoader {
                 //resolver = new CacheFileResolver();
             }
 
-            multiThreadedFileLoad( metaDatas, 10 );
+            multiThreadedFileLoad( metaDatas, ONLY_ONE_THREAD);
 
             loader.close();
 

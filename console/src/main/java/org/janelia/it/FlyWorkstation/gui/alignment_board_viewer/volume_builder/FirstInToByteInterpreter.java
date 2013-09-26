@@ -54,6 +54,9 @@ public class FirstInToByteInterpreter implements ChannelInterpreterI {
             // Need to figure out if anything had been set in these channel bytes before.  Non-zero in any channel
             // means no-go.
             int maxChannelByte = 0;
+if ( targetPos == 218281544 ) {
+int jjj=6;
+}
             for ( int i = 0; i < targetChannelMetaData.channelCount; i++ ) {
                 if ( targetPos + i >= 0  &&  (wholeSignalVolume.length() > targetPos+i)) {
                     int nextChannelByte = wholeSignalVolume.getValueAt( targetPos + i );
@@ -73,6 +76,9 @@ public class FirstInToByteInterpreter implements ChannelInterpreterI {
                     //  block of in-memory, interleaving the channels as the offsets follow.
                     wholeSignalVolume.setValueAt( targetPos + i, targetChannelBytes[i] );
                 }
+            }
+            else {
+                logger.info("Voxel displaced for file mask " + fileMaskNum);
             }
         }
 
