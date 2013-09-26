@@ -42,8 +42,8 @@ public class FileExportLoadWorker extends SimpleWorker implements VolumeLoader {
     private MaskChanMultiFileLoader loader;
     private TextureBuilderI textureBuilder;
     private FileExportParamBean paramBean;
-    private MultiMaskTracker multiMaskTracker;
-    private VolumeDataI maskVolumeData;
+//    private MultiMaskTracker multiMaskTracker;
+//    private VolumeDataI maskVolumeData;
 
     private FileResolver resolver;
 
@@ -52,13 +52,13 @@ public class FileExportLoadWorker extends SimpleWorker implements VolumeLoader {
     public FileExportLoadWorker( FileExportParamBean paramBean ) {
         logger = LoggerFactory.getLogger(FileExportLoadWorker.class);
         this.paramBean = paramBean;
-        this.multiMaskTracker = new MultiMaskTracker();
+//        this.multiMaskTracker = new MultiMaskTracker();
         this.paramBean.exceptIfNotInit();
     }
 
     public FileExportLoadWorker( FileExportParamBean paramBean, VolumeDataI maskVolumeData ) {
         this( paramBean );
-        this.maskVolumeData = maskVolumeData;
+//        this.maskVolumeData = maskVolumeData;
     }
 
     public void setResolver( FileResolver resolver ) {
@@ -107,7 +107,7 @@ public class FileExportLoadWorker extends SimpleWorker implements VolumeLoader {
 
         // Iterating through these files will cause all the relevant data to be loaded into
         // the acceptors.
-        loader.setDimWriteback(maskChanRenderableData.isCompartment());
+        loader.setDimWriteback( maskChanRenderableData.isCompartment() );
         loader.read(maskChanRenderableData.getBean(), maskStream, channelStream);
         maskStream.close();
 
@@ -222,7 +222,6 @@ public class FileExportLoadWorker extends SimpleWorker implements VolumeLoader {
     }
 
     private void buildTexture() {
-        // These two texture-build steps will proceed in parallel.
         TextureDataI textureData = textureBuilder.buildTextureData();
         if ( textureData == null ) {
             throw new RuntimeException( "Null Texture Data Created." );

@@ -176,7 +176,7 @@ public class TiffExporter {
     }
 
     private BufferedImage createBufferedImage(
-            TextureDataI textureData, int chunkNum, int sliceNum, int textureSize, VoxelType type
+            TextureDataI textureData, int chunkNum, int sliceNum, VoxelType type
     ) {
         BufferedImage rtnVal = null;
         try {
@@ -187,7 +187,7 @@ public class TiffExporter {
                 bufImgType = BufferedImage.TYPE_4BYTE_ABGR;
 
             if ( type == VoxelType.INT ) {
-                rtnVal = getFlatBufferedImage(textureData, sliceNum, texIntArray[0], bufImgType);
+                rtnVal = getFlatBufferedImage(textureData, sliceNum, texIntArray[chunkNum], bufImgType);
             }
             else {
                 rtnVal = getBufferedImage(textureData, chunkNum, sliceNum, type, bufImgType);
@@ -272,7 +272,8 @@ public class TiffExporter {
         }
     }
 
-    // DEBUG CODE: find out if anything useful is in this array.
+    // DEBUG CODE: find out if anything useful is in this array.  Call these as needed.
+    @SuppressWarnings("unused")
     private void analyzeIntBuff( int[] intArr, int sliceNum ) {
         logger.info("Checking for non-zeros in slice {}.", sliceNum);
         int nonZeroCount = 0;
@@ -317,6 +318,21 @@ public class TiffExporter {
 
     }
 
+    @SuppressWarnings("unused")
+    private void analyzeByteBuffer( byte[] resultingArray ) {
+        int[] positionCount = new int[ 4 ];
+        for ( int i = 0; i < resultingArray.length; i += 4 ) {
+            for ( int pos = 0; pos < 4; pos++ ) {
+                if ( resultingArray[ i + pos ] != 0 ) {
+                    positionCount[ pos ]++;
+                }
+            }
+        }
+        for ( int i = 0; i < positionCount.length; i++ ) {
+            logger.info( "Position {} has {} non-zero bytes.", i, positionCount[ i ] );
+        }
+    }
+
     private int[][] initTexIntArray(TextureDataI textureData) {
         if ( texIntArray == null ) {
             VolumeDataChunk[] volumeChunks = textureData.getTextureData().getVolumeChunks();
@@ -351,55 +367,6 @@ public class TiffExporter {
         return texShortArray;
     }
 
-    private void analyzeByteBuffer( byte[] resultingArray ) {
-        int[] positionCount = new int[ 4 ];
-        for ( int i = 0; i < resultingArray.length; i += 4 ) {
-            for ( int pos = 0; pos < 4; pos++ ) {
-                if ( resultingArray[ i + pos ] != 0 ) {
-                    positionCount[ pos ]++;
-                }
-            }
-        }
-        for ( int i = 0; i < positionCount.length; i++ ) {
-            logger.info( "Position {} has {} non-zero bytes.", i, positionCount[ i ] );
-        }
-    }
-
-//    class SliceLoadWorker extends SimpleWorker {
-//
-//        private final TextureDataI texture;
-//        private final int z;
-//        private final int textureSize;
-//        private final Collection<BufferedImage> imageList;
-//
-//        public SliceLoadWorker(
-//                TextureDataI texture, int z, int textureSize, Collection<BufferedImage> imageList
-//        ) {
-//            this.texture = texture;
-//            this.z = z;
-//            this.textureSize = textureSize;
-//            this.imageList = imageList;
-//        }
-//
-//        @Override
-//        protected void doStuff() throws Exception {
-//            BufferedImage slice;
-//            VoxelType voxelType = getVoxelType( texture );
-//            slice = createBufferedImage( texture, z, textureSize, voxelType );
-//            imageList.add( slice );
-//        }
-//
-//        @Override
-//        protected void hadSuccess() {
-//        }
-//
-//        @Override
-//        protected void hadError(Throwable error) {
-//            SessionMgr.getSessionMgr().handleException( error );
-//        }
-//
-//    }
-
     class SliceLoadWorker extends SimpleWorker {
 
         private TextureDataI texture;
@@ -416,7 +383,7 @@ public class TiffExporter {
         @Override
         protected void doStuff() throws Exception {
             BufferedImage slice;
-            slice = createBufferedImage( texture, param.getChunkNum(), param.getRelativeZ(), param.getSize(), param.getVoxelType() );
+            slice = createBufferedImage( texture, param.getChunkNum(), param.getRelativeZ(), param.getVoxelType() );
             param.getImageList().add(slice);
         }
 
