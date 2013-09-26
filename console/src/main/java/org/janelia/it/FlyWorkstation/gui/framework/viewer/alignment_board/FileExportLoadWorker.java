@@ -1,20 +1,17 @@
 package org.janelia.it.FlyWorkstation.gui.framework.viewer.alignment_board;
 
 import org.janelia.it.FlyWorkstation.gui.alignment_board_viewer.gui_elements.ControlsListener;
-import org.janelia.it.FlyWorkstation.gui.alignment_board_viewer.masking.MultiMaskTracker;
 import org.janelia.it.FlyWorkstation.gui.alignment_board_viewer.masking.TextureBuilderI;
 import org.janelia.it.FlyWorkstation.gui.alignment_board_viewer.renderable.InvertingComparator;
 import org.janelia.it.FlyWorkstation.gui.alignment_board_viewer.renderable.RBComparator;
 import org.janelia.it.FlyWorkstation.gui.alignment_board_viewer.volume_builder.RenderablesChannelsBuilder;
 import org.janelia.it.FlyWorkstation.gui.alignment_board_viewer.volume_builder.RenderablesMaskBuilder;
-import org.janelia.it.FlyWorkstation.gui.alignment_board_viewer.volume_builder.VeryLargeVolumeData;
 import org.janelia.it.FlyWorkstation.gui.alignment_board_viewer.volume_export.FilteringAcceptorDecorator;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.loader.FragmentSizeFilter;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.loader.MaskChanDataAcceptorI;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.loader.MaskChanMultiFileLoader;
 import org.janelia.it.FlyWorkstation.gui.alignment_board_viewer.renderable.MaskChanRenderableData;
 import org.janelia.it.FlyWorkstation.gui.alignment_board_viewer.renderable.RenderableBean;
-import org.janelia.it.FlyWorkstation.gui.viewer3d.masking.VolumeDataI;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.resolver.FileResolver;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.resolver.TrivialFileResolver;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.texture.TextureDataI;
@@ -42,8 +39,6 @@ public class FileExportLoadWorker extends SimpleWorker implements VolumeLoader {
     private MaskChanMultiFileLoader loader;
     private TextureBuilderI textureBuilder;
     private FileExportParamBean paramBean;
-//    private MultiMaskTracker multiMaskTracker;
-//    private VolumeDataI maskVolumeData;
 
     private FileResolver resolver;
 
@@ -52,13 +47,7 @@ public class FileExportLoadWorker extends SimpleWorker implements VolumeLoader {
     public FileExportLoadWorker( FileExportParamBean paramBean ) {
         logger = LoggerFactory.getLogger(FileExportLoadWorker.class);
         this.paramBean = paramBean;
-//        this.multiMaskTracker = new MultiMaskTracker();
         this.paramBean.exceptIfNotInit();
-    }
-
-    public FileExportLoadWorker( FileExportParamBean paramBean, VolumeDataI maskVolumeData ) {
-        this( paramBean );
-//        this.maskVolumeData = maskVolumeData;
     }
 
     public void setResolver( FileResolver resolver ) {
