@@ -624,7 +624,16 @@ public class AlignmentBoardViewer extends Viewer implements AlignmentBoardContro
             remove( wrapperPanel );
         }
         JPanel rtnVal = new JPanel();
+        JLayeredPane overWritePane = new JLayeredPane();
         rtnVal.setLayout(new BorderLayout());
+
+        overWritePane.setPreferredSize( new Dimension(500,500) );
+        rtnVal.add(overWritePane);
+        overWritePane.setLayout( new BorderLayout() );
+        JLabel hello = new JLabel("Hello");
+        overWritePane.add(hello, BorderLayout.SOUTH, 1 );
+        overWritePane.moveToFront( hello );
+
         rtnVal.add(mip3d, BorderLayout.CENTER);
         return rtnVal;
     }
