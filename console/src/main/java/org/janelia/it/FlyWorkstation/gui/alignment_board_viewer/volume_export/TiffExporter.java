@@ -35,6 +35,8 @@ import java.util.concurrent.TimeUnit;
  */
 public class TiffExporter {
     private static final int MAX_WRITEBACK_THREADS = 5;
+    public static final int BYTES_PER_INT = (Integer.SIZE / 8);
+    public static final int BYTES_PER_SHORT = (Short.SIZE / 8);
     private final Logger logger = LoggerFactory.getLogger( TiffExporter.class );
     private int[][] texIntArray;
     private short[][] texShortArray;
@@ -61,10 +63,10 @@ public class TiffExporter {
             int textureSize = texture.getSz() * sliceSize;
             VoxelType voxelType = getVoxelType( texture );
             if ( voxelType == VoxelType.INT ) {
-                initTexIntArray(texture, textureSize);
+                initTexIntArray(texture);
             }
             else if ( voxelType == VoxelType.SHORT ) {
-                initTexShortArray(texture, textureSize);
+                initTexShortArray(texture);
             }
 
             logger.info( "Exporting texture {}.  Size={}", texture.getFilename(), textureSize );
@@ -72,9 +74,10 @@ public class TiffExporter {
             Collection<BufferedImage> imageList = new ArrayList<BufferedImage>( texture.getSz() );
             ExecutorService threadPool = Executors.newFixedThreadPool( MAX_WRITEBACK_THREADS );
             VolumeDataChunk[] volumeChunks = texture.getTextureData().getVolumeChunks();
+            int absoluteSliceNum = 0;
             for ( int chunkNum = 0; chunkNum < volumeChunks.length; chunkNum ++ ) {
                 byte[] data = volumeChunks[chunkNum].getData();
-                int slicesPerChunk = data.length / sliceSize;
+                int slicesPerChunk = volumeChunks[chunkNum].getDepth();
                 for ( int z = 0; z < slicesPerChunk; z++ ) {
 
                     SliceLoadWorkerParam param = new SliceLoadWorkerParam();
@@ -83,12 +86,15 @@ public class TiffExporter {
                     param.setSize( data.length );
                     param.setVoxelType( voxelType );
                     param.setData( data );
-                    param.setZ( z );
+                    param.setRelativeZ( z );
+                    param.setAbsoluteZ( absoluteSliceNum );
                     param.setOffset( sliceSize * z );
 
                     //texture, z, textureSize, imageList
                     SliceLoadWorker sliceLoadWorker = new SliceLoadWorker( param, texture );
                     threadPool.execute(sliceLoadWorker);
+
+                    absoluteSliceNum ++;
                 }
             }
 
@@ -180,12 +186,12 @@ public class TiffExporter {
             else if ( type == VoxelType.INT )
                 bufImgType = BufferedImage.TYPE_4BYTE_ABGR;
 
-//            if ( type == VoxelType.INT ) {
-//                rtnVal = getFlatBufferedImage(textureData, sliceNum, texIntArray[0], bufImgType);
-//            }
-//            else {
+            if ( type == VoxelType.INT ) {
+                rtnVal = getFlatBufferedImage(textureData, sliceNum, texIntArray[0], bufImgType);
+            }
+            else {
                 rtnVal = getBufferedImage(textureData, chunkNum, sliceNum, textureSize, type, bufImgType);
-//            }
+            }
 
         } catch (Exception e) {
             logger.error( e.getMessage() );
@@ -211,7 +217,10 @@ public class TiffExporter {
         int sliceOffset = sliceNum * sliceSize;
         rtnVal = new BufferedImage( textureData.getSx(), textureData.getSy(), bufImgType );
 
-        DataBuffer dataBuffer = createDataBuffer( textureData, chunkNum, textureSize, sliceOffset, type );
+        int chunkLength = textureData.getTextureData().getVolumeChunks()[chunkNum].getData().length;
+
+//TextureDataI textureData, int chunkNum, int sliceSize, int sliceOffset, VoxelType type
+        DataBuffer dataBuffer = createDataBuffer( textureData, chunkNum, sliceSize, sliceOffset, type );
 
         int dataTypeSize = DataBuffer.getDataTypeSize( dataBuffer.getDataType() );
         Raster raster = RasterFactory.createPackedRaster(
@@ -311,7 +320,7 @@ public class TiffExporter {
 
     }
 
-    private int[][] initTexIntArray(TextureDataI textureData, int textureSize) {
+    private int[][] initTexIntArray(TextureDataI textureData) {
         if ( texIntArray == null ) {
             VolumeDataChunk[] volumeChunks = textureData.getTextureData().getVolumeChunks();
             int numChunks = volumeChunks.length;
@@ -320,13 +329,15 @@ public class TiffExporter {
                 ByteBuffer byteBuffer = ByteBuffer.wrap(volumeChunks[i].getData());
                 byteBuffer.rewind();
                 byteBuffer.order( ByteOrder.LITTLE_ENDIAN );
-                texIntArray[ i ] = getIntArray( textureSize, byteBuffer );
+                texIntArray[ i ] = getIntArray(
+                        volumeChunks[i].getData().length / BYTES_PER_INT, byteBuffer
+                );
             }
         }
         return texIntArray;
     }
 
-    private short[][] initTexShortArray(TextureDataI textureData, int textureSize) {
+    private short[][] initTexShortArray(TextureDataI textureData) {
         if ( texShortArray == null ) {
             VolumeDataChunk[] volumeChunks = textureData.getTextureData().getVolumeChunks();
             int numChunks = volumeChunks.length;
@@ -335,7 +346,9 @@ public class TiffExporter {
                 ByteBuffer byteBuffer = ByteBuffer.wrap(volumeChunks[i].getData());
                 byteBuffer.rewind();
                 byteBuffer.order( ByteOrder.LITTLE_ENDIAN );
-                texShortArray[ i ] = getShortArray( textureSize, byteBuffer );
+                texShortArray[ i ] = getShortArray(
+                        volumeChunks[i].getData().length / BYTES_PER_SHORT, byteBuffer
+                );
             }
         }
         return texShortArray;
@@ -406,7 +419,7 @@ public class TiffExporter {
         @Override
         protected void doStuff() throws Exception {
             BufferedImage slice;
-            slice = createBufferedImage( texture, param.getChunkNum(), param.getZ(), param.getSize(), param.getVoxelType() );
+            slice = createBufferedImage( texture, param.getChunkNum(), param.getRelativeZ(), param.getSize(), param.getVoxelType() );
             param.getImageList().add(slice);
         }
 
@@ -427,7 +440,8 @@ public class TiffExporter {
         private int offset;
         private int chunkNum;
         private Collection<BufferedImage> imageList;
-        private int z;
+        private int absoluteZ;
+        private int relativeZ;
         private VoxelType voxelType;
 
         public byte[] getData() {
@@ -462,12 +476,20 @@ public class TiffExporter {
             this.imageList = imageList;
         }
 
-        public int getZ() {
-            return z;
+        public int getAbsoluteZ() {
+            return absoluteZ;
         }
 
-        public void setZ(int z) {
-            this.z = z;
+        public void setAbsoluteZ(int z) {
+            this.absoluteZ = z;
+        }
+
+        public int getRelativeZ() {
+            return relativeZ;
+        }
+
+        public void setRelativeZ(int z) {
+            this.relativeZ = z;
         }
 
         public VoxelType getVoxelType() {

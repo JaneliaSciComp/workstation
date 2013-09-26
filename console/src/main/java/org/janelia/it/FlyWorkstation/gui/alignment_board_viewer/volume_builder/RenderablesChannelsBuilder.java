@@ -361,7 +361,12 @@ public class RenderablesChannelsBuilder extends RenderablesVolumeBuilder impleme
                         channelMetaData.rawChannelCount,
                         channelMetaData.channelCount
                 );
-                channelInterpreter = new ChannelInterpreterToByte(channelVolumeData, maskVolumeData, multiMaskTracker);
+                if ( maskVolumeData == null ) {
+                    channelInterpreter = new FirstInToByteInterpreter(channelVolumeData);
+                }
+                else {
+                    channelInterpreter = new ChannelInterpreterToByte(channelVolumeData, maskVolumeData, multiMaskTracker);
+                }
 
                 needsChannelInit = false;
             }

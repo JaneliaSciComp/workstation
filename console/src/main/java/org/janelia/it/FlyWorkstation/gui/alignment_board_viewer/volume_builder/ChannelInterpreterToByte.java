@@ -21,8 +21,8 @@ import org.slf4j.LoggerFactory;
 public class ChannelInterpreterToByte implements ChannelInterpreterI {
     private VolumeDataI wholeSignalVolume;
     private VolumeDataI wholeMaskVolume;
+    private ByteChannelDelegate byteChannelDelegate;
 
-    private int maxValue = 0;
     private final Logger logger = LoggerFactory.getLogger( ChannelInterpreterToByte.class );
     private ChannelSplitStrategyFactory splitStrategyFactory;
 
@@ -36,13 +36,27 @@ public class ChannelInterpreterToByte implements ChannelInterpreterI {
     public ChannelInterpreterToByte(VolumeDataI signalVolume, VolumeDataI wholeMaskVolume, MultiMaskTracker multiMaskTracker) {
         this.wholeSignalVolume = signalVolume;
         this.wholeMaskVolume = wholeMaskVolume;
+        this.byteChannelDelegate = new ByteChannelDelegate( signalVolume );
+        if ( wholeMaskVolume == null || wholeSignalVolume == null ) {
+            throw new IllegalArgumentException("Null not allowed here.");
+        }
         splitStrategyFactory = new ChannelSplitStrategyFactory( multiMaskTracker );
     }
 
+    /**
+     * Takes mask-replacement into account, interpreting the data fed here; also ensures output channels fit into one
+     * byte each.
+     */
     @Override
-    public void interpretChannelBytes(ChannelMetaData srcChannelMetaData, ChannelMetaData targetChannelMetaData, int orignalMaskNum, byte[] channelData, int targetPos) {
+    public void interpretChannelBytes(
+            ChannelMetaData srcChannelMetaData,
+            ChannelMetaData targetChannelMetaData,
+            int orignalMaskNum,
+            byte[] channelData,
+            int targetPos
+    ) {
 
-        int multiMaskId = getMaskValue( targetPos, targetChannelMetaData.channelCount, RenderablesMaskBuilder.UNIVERSAL_MASK_BYTE_COUNT );  //TODO consider passing mask-size into the interpreter or moving the constant somewhere more general.
+        int multiMaskId = getMaskValue(targetPos, targetChannelMetaData.channelCount, RenderablesMaskBuilder.UNIVERSAL_MASK_BYTE_COUNT);  //TODO consider passing mask-size into the interpreter or moving the constant somewhere more general.
 
         if ( srcChannelMetaData.byteCount == 1  &&  srcChannelMetaData.channelCount == 1  &&  multiMaskId == orignalMaskNum ) {
             // 1:1 straight copy to volume.
@@ -51,40 +65,9 @@ public class ChannelInterpreterToByte implements ChannelInterpreterI {
         else {
             // First get the size-adjusted channel bytes.  These are suited to the target channel characteristics,
             // rather than the source characteristics--those from the input file. Put differently: adapt in to out.
-            int[] orderedRgbIndexes = srcChannelMetaData.getOrderedRgbIndexes();
-            byte[] targetChannelBytes = new byte[ targetChannelMetaData.byteCount * targetChannelMetaData.channelCount ];
-            // N:1 divide by max-byte.
-            for ( int i = 0; i < srcChannelMetaData.rawChannelCount; i++ ) {
-                int finalValue = 0;
-                // This is a local down-sample from N-bytes-per-channel to the required number only.
-                for ( int j = 0; j < srcChannelMetaData.byteCount; j++ ) {
-                    int nextByte = channelData[ (i * srcChannelMetaData.byteCount) + j ];
-                    if ( nextByte < 0 )
-                        nextByte += 256;
-                    int shifter = srcChannelMetaData.byteCount - j - 1;
-                    finalValue += (nextByte << (8 * shifter));
-                }
-                if ( srcChannelMetaData.byteCount == 2 )
-                    finalValue /= 256;
-                else if ( srcChannelMetaData.byteCount == 3 )
-                    finalValue /= 65535;
-
-                if ( finalValue > maxValue ) {
-                    maxValue = finalValue;
-                }
-
-                //  block of in-memory, interleaving the channels as the offsets follow.
-                int channelInx = orderedRgbIndexes[ i ];
-
-                //synchronized (this) {
-                if ( targetPos + channelInx > 0  &&  (wholeSignalVolume.length() > targetPos+channelInx)) {
-                    targetChannelBytes[ channelInx ] = (byte)finalValue;
-                }
-                else {
-                    logger.debug("Outside the box");
-                }
-                //}
-            }
+            byte[] targetChannelBytes = byteChannelDelegate.adjustChannelWidth(
+                    srcChannelMetaData, targetChannelMetaData, channelData, targetPos
+            );
 
             // At this point, multiplex the just-created target bytes so any alternate masks are represented.
             ChannelSplitStrategyI channelSplitStrategy = splitStrategyFactory.getStrategyForMask( multiMaskId );
@@ -96,7 +79,7 @@ public class ChannelInterpreterToByte implements ChannelInterpreterI {
             for ( int i = 0; i < targetChannelMetaData.channelCount; i++ ) {
                 //  block of in-memory, interleaving the channels as the offsets follow.
                 if ( targetPos + i >= 0  &&  (wholeSignalVolume.length() > targetPos+i)) {
-                    // Here enforced: multiplexing the channel data by "OR"-ing in the latest.
+                    // Here enforced: multiplexing the channel data by inserting latest.
                     wholeSignalVolume.setValueAt(
                             targetPos + i,
                             (byte) (wholeSignalVolume.getValueAt(targetPos + i) | targetChannelBytes[i])
@@ -108,19 +91,16 @@ public class ChannelInterpreterToByte implements ChannelInterpreterI {
             }
         }
 
-        // Pad out to the end, to create the alpha byte.
-        if ( targetChannelMetaData.channelCount >= ( srcChannelMetaData.channelCount + 1 ) &&
-             multiMaskId == orignalMaskNum ) {
-            if ( targetPos + targetChannelMetaData.channelCount - 1 > 0  &&  (wholeSignalVolume.length() > targetPos + targetChannelMetaData.channelCount - 1))
-                wholeSignalVolume.setValueAt(targetPos + targetChannelMetaData.channelCount - 1, (byte) 255);
-            else
-                logger.error("Outside the box");
+        if ( orignalMaskNum == multiMaskId ) {
+            byteChannelDelegate.padChannelBytes( srcChannelMetaData, targetChannelMetaData, targetPos );
         }
+
+
     }
 
     @Override
     public void close() {
-        logger.info( "Maximum value found during channel interpretation was {}.", maxValue );
+        logger.info( "Maximum value found during channel interpretation was {}.", byteChannelDelegate.getMaxValue() );
     }
 
     /** Goes to the mask volume, finds and reconstructs the mask at position given. */
@@ -140,7 +120,7 @@ public class ChannelInterpreterToByte implements ChannelInterpreterI {
             }
         }
         else {
-            throw new RuntimeException("No volume data available.  Cannot add mask data.");
+            throw new RuntimeException("No volume data available.  Cannot get mask data.");
         }
 
         return volumeMask;
