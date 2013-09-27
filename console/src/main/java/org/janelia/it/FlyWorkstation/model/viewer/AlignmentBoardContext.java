@@ -153,10 +153,10 @@ public class AlignmentBoardContext extends AlignedItem {
                 parentAlignedItem = ModelMgr.getModelMgr().addAlignedItem(this, parent);
                 parentAlignedItem.loadContextualizedChildren(getAlignmentContext());
                 
-                for (Neuron child : parent.getNeuronSet()) {
-                    AlignedItem neuronItem = ModelMgr.getModelMgr().addAlignedItem(parentAlignedItem, child);
-                    neuronItem.loadContextualizedChildren(getAlignmentContext());
-                    neuronItem.setIsVisible(true);
+                for (EntityWrapper child : parent.getChildren()) {
+                    AlignedItem childItem = ModelMgr.getModelMgr().addAlignedItem(parentAlignedItem, child);
+                    childItem.loadContextualizedChildren(getAlignmentContext());
+                    childItem.setIsVisible(true);
                 }
 
                 events.add(new AlignmentBoardItemChangeEvent(this, parentAlignedItem, ChangeType.Added));
@@ -188,7 +188,7 @@ public class AlignmentBoardContext extends AlignedItem {
                     alignedItem.setIsVisible(true);
                 }
 
-                events.add(new AlignmentBoardItemChangeEvent(this, parentAlignedItem, ChangeType.Added) );
+                events.add(new AlignmentBoardItemChangeEvent(this, parentAlignedItem, ChangeType.Added));
             }
             else {
                 events.add(new AlignmentBoardItemChangeEvent(this, parentAlignedItem, ChangeType.VisibilityChange));

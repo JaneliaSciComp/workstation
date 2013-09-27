@@ -22,6 +22,7 @@ public class Sample extends AlignedEntityWrapper implements Viewable2d, Viewable
     
     private String imagePathFast3d;
     private List<Neuron> neuronSet;
+    private VolumeImage reference;
     private MaskedVolume maskedVolume;
 
     public Sample(RootedEntity entity) {
@@ -129,16 +130,40 @@ public class Sample extends AlignedEntityWrapper implements Viewable2d, Viewable
                             if (opticalRes!=null && opticalRes.equals(alignmentContext.getOpticalResolution())) {
                                 matchedOpticalRes = opticalRes;
                                 if (pixelRes!=null && pixelRes.equals(alignmentContext.getPixelResolution())) {
+                                	
+                                	// This code runs every time we find an acceptable neuron separation, and each time
+                                	// it overwrites the selected entities, so that the final neuron separation that we
+                                	// accept is the one we end up using.
+                                	
                                     log.debug("      Accepted neuron separation (id={})",sep.getEntityId());  
                                     matchedPixelRes = pixelRes;
                                     separation = sep;
                                     fragmentCollection = sep.getChildOfType(EntityConstants.TYPE_NEURON_FRAGMENT_COLLECTION);
+
+                                    RootedEntity sepSupportingFiles = sep.getChildForAttribute(EntityConstants.ATTRIBUTE_SUPPORTING_FILES);
+                                    ModelMgr.getModelMgr().loadLazyEntity(sepSupportingFiles.getEntity(), false);
+                                    
+                                    // Reset the reference, so that we can make sure that we get the one for this neuron separation
+                                    reference = null;
+                    	        	for(RootedEntity image3d : sepSupportingFiles.getChildrenOfType(EntityConstants.TYPE_IMAGE_3D)) {
+                    	        		if (image3d.getName().startsWith("Reference.")) {
+                    	        			reference = new VolumeImage(image3d);
+                    	        		};
+                    	        	}
+                    	        	
+                    	        	if (reference==null) {
+                    	        		log.warn("Neuron separation has no reference! This should never happen.");
+                    	        	}
                                 }
                             }
                         }
                     }
                 }
             }
+        }
+        
+        if (reference!=null) {
+        	addChild(reference);
         }
         
         if (volume!=null) {
@@ -197,13 +222,16 @@ public class Sample extends AlignedEntityWrapper implements Viewable2d, Viewable
         return getInternalEntity().getValueByAttributeName(EntityConstants.ATTRIBUTE_DEFAULT_3D_IMAGE);
     }
 
-    @Override
     public String getFast3dImageFilepath() {
         return imagePathFast3d;
     }
 
     public List<Neuron> getNeuronSet() {
         return neuronSet;
+    }
+    
+    public VolumeImage getReference() {
+    	return reference;
     }
 
     @Override

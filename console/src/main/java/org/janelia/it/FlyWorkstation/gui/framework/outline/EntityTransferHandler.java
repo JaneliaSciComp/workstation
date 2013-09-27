@@ -308,10 +308,9 @@ public abstract class EntityTransferHandler extends TransferHandler {
                     @Override
                     protected void doStuff() throws Exception {
                         addEntities(SessionMgr.getBrowser().getLayersPanel().getAlignmentBoardContext(), rootedEntities);
-                        for(RootedEntity rootedEntity : rootedEntities) {
-                            EntityWrapperFactory.wrap(rootedEntity);
-                        }
-                           
+//                        for(RootedEntity rootedEntity : rootedEntities) {
+//                            EntityWrapperFactory.wrap(rootedEntity);
+//                        }
                     }
                     
                     @Override

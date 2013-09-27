@@ -549,6 +549,7 @@ public class ModelMgr {
 
         // Create and add a new aligned item context entity
         Entity parentEntity = parent.getInternalEntity();
+                
         Entity alignedItemEntity = createEntity(EntityConstants.TYPE_ALIGNED_ITEM, wrapper.getName());
         EntityData alignedItemEd = addEntityToParent(parentEntity, alignedItemEntity, parentEntity.getMaxOrderIndex()+1, EntityConstants.ATTRIBUTE_ITEM);
         

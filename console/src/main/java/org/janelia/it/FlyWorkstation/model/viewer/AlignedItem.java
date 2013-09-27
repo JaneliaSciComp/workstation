@@ -71,9 +71,9 @@ public class AlignedItem extends EntityWrapper {
      */
     public List<AlignedItem> getAlignedItems() {
         if (getChildren()==null) {
-            log.warn("This entity wrapper (name={},type={}) has not been initialized with children. " +
-                    "Calling getAlignedItems will return null.",getName(),getType());
-            return null;
+            throw new IllegalStateException("This entity wrapper (name="+getName()+
+            		",type="+getType()+") has not been initialized with children. " +
+                    "Calling getAlignedItems will return null.");
         }
         List<AlignedItem> alignedItems = new ArrayList<AlignedItem>();
         for(EntityWrapper wrapper : getChildren()) {

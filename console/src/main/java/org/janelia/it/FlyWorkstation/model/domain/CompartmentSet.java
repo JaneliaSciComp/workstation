@@ -1,16 +1,18 @@
 package org.janelia.it.FlyWorkstation.model.domain;
 
+import java.util.Collection;
+import java.util.Collections;
+import java.util.List;
+import java.util.Set;
+import java.util.TreeSet;
+
 import org.janelia.it.FlyWorkstation.api.entity_model.management.ModelMgr;
 import org.janelia.it.FlyWorkstation.model.entity.RootedEntity;
-import org.janelia.it.FlyWorkstation.model.viewer.AlignedItem;
 import org.janelia.it.FlyWorkstation.model.viewer.MaskedVolume;
 import org.janelia.it.jacs.model.entity.Entity;
 import org.janelia.it.jacs.model.entity.EntityConstants;
-import org.janelia.it.jacs.model.entity.EntityType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import java.util.*;
 
 /**
  * Created with IntelliJ IDEA.
@@ -43,7 +45,6 @@ public class CompartmentSet extends AlignedEntityWrapper implements Viewable2d, 
         return null;
     }
 
-    @Override
     public String getFast3dImageFilepath() {
         return null;
     }

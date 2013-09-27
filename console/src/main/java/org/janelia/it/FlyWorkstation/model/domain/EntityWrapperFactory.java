@@ -35,6 +35,9 @@ public class EntityWrapperFactory {
         else if (EntityConstants.TYPE_ALIGNMENT_BOARD.equals(type)) {
             return new AlignmentBoardContext(rootedEntity);
         }
+        else if (EntityConstants.TYPE_IMAGE_3D.equals(type)) {
+            return new VolumeImage(rootedEntity);
+        }
         
         throw new IllegalArgumentException("Cannot wrap entity type: "+type);
     }

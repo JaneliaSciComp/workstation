@@ -1,16 +1,32 @@
 package org.janelia.it.FlyWorkstation.gui.framework.viewer.alignment_board;
 
-import java.awt.*;
+import java.awt.BorderLayout;
+import java.awt.Component;
+import java.awt.Dimension;
 import java.util.Collection;
 import java.util.List;
 import java.util.concurrent.Callable;
 
 import javax.media.opengl.awt.GLJPanel;
-import javax.swing.*;
+import javax.swing.JButton;
+import javax.swing.JComponent;
+import javax.swing.JLabel;
+import javax.swing.JLayeredPane;
+import javax.swing.JPanel;
+import javax.swing.JToolBar;
 
 import org.janelia.it.FlyWorkstation.api.entity_model.management.ModelMgr;
 import org.janelia.it.FlyWorkstation.gui.alignment_board_viewer.MultiTexVolumeBrickFactory;
+import org.janelia.it.FlyWorkstation.gui.alignment_board_viewer.gui_elements.AlignmentBoardControlsDialog;
+import org.janelia.it.FlyWorkstation.gui.alignment_board_viewer.gui_elements.CompletionListener;
+import org.janelia.it.FlyWorkstation.gui.alignment_board_viewer.gui_elements.ControlsListener;
+import org.janelia.it.FlyWorkstation.gui.alignment_board_viewer.gui_elements.GpuSampler;
+import org.janelia.it.FlyWorkstation.gui.alignment_board_viewer.masking.ConfigurableColorMapping;
 import org.janelia.it.FlyWorkstation.gui.alignment_board_viewer.masking.FileStats;
+import org.janelia.it.FlyWorkstation.gui.alignment_board_viewer.masking.MultiMaskTracker;
+import org.janelia.it.FlyWorkstation.gui.alignment_board_viewer.masking.RenderMappingI;
+import org.janelia.it.FlyWorkstation.gui.alignment_board_viewer.texture.ABContextDataSource;
+import org.janelia.it.FlyWorkstation.gui.alignment_board_viewer.volume_export.VolumeWritebackHandler;
 import org.janelia.it.FlyWorkstation.gui.framework.outline.EntityTransferHandler;
 import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.BrowserModel;
 import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr;
@@ -19,22 +35,16 @@ import org.janelia.it.FlyWorkstation.gui.framework.viewer.Viewer;
 import org.janelia.it.FlyWorkstation.gui.framework.viewer.ViewerPane;
 import org.janelia.it.FlyWorkstation.gui.util.Icons;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.Mip3d;
-import org.janelia.it.FlyWorkstation.gui.alignment_board_viewer.gui_elements.AlignmentBoardControlsDialog;
-import org.janelia.it.FlyWorkstation.gui.alignment_board_viewer.gui_elements.CompletionListener;
-import org.janelia.it.FlyWorkstation.gui.alignment_board_viewer.gui_elements.ControlsListener;
-import org.janelia.it.FlyWorkstation.gui.alignment_board_viewer.gui_elements.GpuSampler;
-import org.janelia.it.FlyWorkstation.gui.alignment_board_viewer.masking.ConfigurableColorMapping;
-import org.janelia.it.FlyWorkstation.gui.alignment_board_viewer.masking.MultiMaskTracker;
-import org.janelia.it.FlyWorkstation.gui.alignment_board_viewer.masking.RenderMappingI;
-import org.janelia.it.FlyWorkstation.gui.alignment_board_viewer.texture.ABContextDataSource;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.texture.TextureDataI;
-import org.janelia.it.FlyWorkstation.gui.alignment_board_viewer.volume_export.VolumeWritebackHandler;
 import org.janelia.it.FlyWorkstation.model.domain.CompartmentSet;
 import org.janelia.it.FlyWorkstation.model.domain.EntityWrapper;
 import org.janelia.it.FlyWorkstation.model.domain.Neuron;
+import org.janelia.it.FlyWorkstation.model.domain.VolumeImage;
 import org.janelia.it.FlyWorkstation.model.domain.Sample;
 import org.janelia.it.FlyWorkstation.model.entity.RootedEntity;
-import org.janelia.it.FlyWorkstation.model.viewer.*;
+import org.janelia.it.FlyWorkstation.model.viewer.AlignedItem;
+import org.janelia.it.FlyWorkstation.model.viewer.AlignmentBoardContext;
+import org.janelia.it.FlyWorkstation.model.viewer.MaskedVolume;
 import org.janelia.it.FlyWorkstation.model.viewer.MaskedVolume.ArtifactType;
 import org.janelia.it.FlyWorkstation.model.viewer.MaskedVolume.Channels;
 import org.janelia.it.FlyWorkstation.model.viewer.MaskedVolume.Size;
@@ -371,7 +381,6 @@ public class AlignmentBoardViewer extends Viewer implements AlignmentBoardContro
 
                     log.debug("  Sample: "+sample.getName());
                     log.debug("  * 3d image: "+sample.get3dImageFilepath());
-                    log.debug("  * fast 3d image: "+sample.getFast3dImageFilepath());
 
                     if (sample.getChildren()==null) {
                         log.warn("  Sample children not loaded");
@@ -414,14 +423,20 @@ public class AlignmentBoardViewer extends Viewer implements AlignmentBoardContro
                         }
                     }
 
-                    log.debug("  neurons:");
+                    log.debug("  children:");
                     for(AlignedItem neuronAlignedItem : alignedItem.getAlignedItems()) {
-                        EntityWrapper neuronItemEntity = neuronAlignedItem.getItemWrapper();
-                        if (neuronItemEntity instanceof Neuron) {
-                            Neuron neuron = (Neuron)neuronItemEntity;
+                        EntityWrapper childItemEntity = neuronAlignedItem.getItemWrapper();
+                        if (childItemEntity instanceof Neuron) {
+                            Neuron neuron = (Neuron)childItemEntity;
                             log.debug("    "+neuron.getName()+" (visible="+neuronAlignedItem.isVisible()+", maskIndex="+neuron.getMaskIndex()+")");
                             log.debug("    * mask: "+neuron.getMask3dImageFilepath());
                             log.debug("    * chan: "+neuron.getChan3dImageFilepath());
+                        }
+                        else if (childItemEntity instanceof VolumeImage) {
+                            VolumeImage reference = (VolumeImage)childItemEntity;
+                            log.debug("    "+reference.getName()+" (visible="+neuronAlignedItem.isVisible()+")");
+                            log.debug("    * mask: "+reference.getMask3dImageFilepath());
+                            log.debug("    * chan: "+reference.getChan3dImageFilepath());
                         }
                     }
 
