@@ -1,5 +1,7 @@
 package org.janelia.it.FlyWorkstation.gui.alignment_board_viewer.renderable;
 
+import org.jboss.util.Null;
+
 /**
  * Created with IntelliJ IDEA.
  * User: fosterl
@@ -45,5 +47,26 @@ public class MaskChanRenderableData {
 
     public void setCompartment(boolean compartment) {
         this.compartment = compartment;
+    }
+
+    @Override
+    public boolean equals( Object other ) {
+        if ( other == null || ! ( other instanceof  MaskChanRenderableData ) )  {
+            return false;
+        }
+        else if ( ((MaskChanRenderableData)other).getBean() == null ) {
+            return bean == null;
+        }
+        else {
+            return ((MaskChanRenderableData)other).getBean().equals( this.bean );
+        }
+    }
+
+    @Override
+    public int hashCode() {
+        if ( bean == null ) {
+            return Null.VALUE.hashCode();
+        }
+        return this.bean.hashCode();
     }
 }

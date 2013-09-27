@@ -12,6 +12,15 @@ import java.util.Comparator;
  * with the renderable beans contained in the renderable datas.
  */
 public class RDComparator implements Comparator<MaskChanRenderableData> {
+    private boolean ascending;
+
+    public RDComparator() {
+        ascending = true;
+    }
+
+    public RDComparator( boolean ascending ) {
+        this.ascending = ascending;
+    }
 
     /**
      * Comparator for sorting things that contain renderable beans.  Should return descending order.
@@ -24,7 +33,7 @@ public class RDComparator implements Comparator<MaskChanRenderableData> {
     public int compare(MaskChanRenderableData first, MaskChanRenderableData second) {
         int rtnVal;
         if ( first == null  &&   second == null ) {
-            return 0;
+            rtnVal = 0;
         }
         else if ( first == null ) {
             rtnVal = 1;
@@ -37,6 +46,9 @@ public class RDComparator implements Comparator<MaskChanRenderableData> {
             RenderableBean secondBean = second.getBean();
 
             rtnVal = new RBComparator().compare( firstBean, secondBean );
+        }
+        if ( ! ascending ) {
+            rtnVal = -rtnVal;
         }
         return rtnVal;
     }

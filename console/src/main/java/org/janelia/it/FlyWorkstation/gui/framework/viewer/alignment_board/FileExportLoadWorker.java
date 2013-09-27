@@ -135,11 +135,11 @@ public class FileExportLoadWorker extends SimpleWorker implements VolumeLoader {
             }
         }
 
-        Collections.sort( renderableBeans, new InvertingComparator( new RBComparator() ) );
-        List<MaskChanRenderableData> sortedRenderableDatas = new ArrayList<MaskChanRenderableData>();
+        Collections.sort( renderableBeans, Collections.reverseOrder( new RBComparator() ) );
 
+        List<MaskChanRenderableData> sortedRenderableDatas = new ArrayList<MaskChanRenderableData>();
         sortedRenderableDatas.addAll( paramBean.getRenderableDatas() );
-        Collections.sort( sortedRenderableDatas, new RDComparator() );
+        Collections.sort( sortedRenderableDatas, Collections.reverseOrder( new RDComparator() ) );
 
         // Establish the means for extracting the volume mask.
         AlignmentBoardSettings customWritebackSettings = new AlignmentBoardSettings();
@@ -265,25 +265,14 @@ public class FileExportLoadWorker extends SimpleWorker implements VolumeLoader {
     }
 
     private void multiThreadedFileLoad( Collection<MaskChanRenderableData> metaDatas, int maxThreads ) {
-        ExecutorService compartmentsThreadPool = Executors.newFixedThreadPool(maxThreads);
+        ExecutorService threadPool = Executors.newFixedThreadPool(maxThreads);
         for ( MaskChanRenderableData metaData: metaDatas ) {
             logger.debug( "Scheduling mask path {} for load.", metaData.getMaskPath() );
-            if ( metaData.isCompartment() ) {
-                LoadRunnable runnable = new LoadRunnable( metaData, this, null );
-                compartmentsThreadPool.execute( runnable );
-            }
+            LoadRunnable runnable = new LoadRunnable( metaData, this, null );
+            threadPool.execute(runnable);
         }
-        awaitThreadpoolCompletion( compartmentsThreadPool );
+        awaitThreadpoolCompletion( threadPool );
 
-        ExecutorService neuronFragmentsThreadPool = Executors.newFixedThreadPool( maxThreads );
-        for ( MaskChanRenderableData metaData: metaDatas ) {
-            logger.debug( "Scheduling mask path {} for load.", metaData.getMaskPath() );
-            if ( ! metaData.isCompartment() ) {
-                LoadRunnable runnable = new LoadRunnable( metaData, this, null );
-                neuronFragmentsThreadPool.execute(runnable);
-            }
-        }
-        awaitThreadpoolCompletion(neuronFragmentsThreadPool);
     }
 
     /** Wait until the threadpool has completed all processing. */
