@@ -30,12 +30,13 @@ public class RecoloringAcceptorDecorator  extends AbstractAcceptorDecorator {
     public int addChannelData(Integer originalMask, byte[] channelData, long position, long x, long y, long z, ChannelMetaData channelMetaData) throws Exception {
         int returnVal = 0;
         if ( channelMetaData.renderableBean != null   &&   channelMetaData.renderableBean.getRgb()[ 3 ] != RenderMappingI.PASS_THROUGH_RENDERING ) {
-            if ( channelMetaData.channelCount == 3  ||  channelMetaData.channelCount == 4 ) {
+            if ( channelMetaData.channelCount == 3  ||  channelMetaData.channelCount == 4  ||  channelMetaData.channelCount == 2 ) {
                 int maxIntensity = getMaxIntensity( channelData, channelMetaData );
                 // Iterate over all the channels of information.
                 int[] rgbIndexes = channelMetaData.getOrderedRgbIndexes();
-                for ( int i = 0; i < 3; i++ ) {
-                    // NOTE: expect channel count to be exactly 3.  The 4th channel is unused, here.
+                int usedCount = channelMetaData.channelCount < 4 ? channelMetaData.channelCount : 3;
+                for ( int i = 0; i < usedCount; i++ ) {
+                    // NOTE: expect channel count to be 3 or less.  The 4th channel is unused, here.
                     substituteChannelData(channelData, channelMetaData, maxIntensity, rgbIndexes[i], i);
                 }
 
@@ -53,7 +54,8 @@ public class RecoloringAcceptorDecorator  extends AbstractAcceptorDecorator {
                 returnVal = wrappedAcceptor.addChannelData( originalMask, assumedChannelData, position, x, y, z, substitutedChannelMetaData );
             }
             else {
-                logger.error( "Unexpected channel count  of {}.  Expected only 3,4, or 1", channelMetaData.channelCount );
+                logger.error( "Unexpected channel count  of {}.  Expected only 1,2,3, or 4",
+                              channelMetaData.channelCount );
                 throw new RuntimeException( "Internal error.  Please refer to log output." );
             }
         }

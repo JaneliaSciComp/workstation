@@ -8,6 +8,7 @@ import javax.media.opengl.GLAutoDrawable;
 import javax.media.opengl.GLEventListener;
 import java.awt.*;
 import java.io.BufferedReader;
+import java.io.File;
 import java.io.InputStreamReader;
 import java.nio.IntBuffer;
 import java.util.concurrent.*;
@@ -152,36 +153,42 @@ public class GpuSampler implements GLEventListener {
                         boolean rtnVal = false;
                         try {
                             String cmd = "/opt/x11/bin/glxinfo";
-                            Process proc = Runtime.getRuntime().exec( cmd );
-                            BufferedReader progReader = new BufferedReader( new InputStreamReader( proc.getInputStream() ) );
-                            BufferedReader errReader = new BufferedReader( new InputStreamReader( proc.getErrorStream() ) );
+                            File cmdFile = new File( cmd );
+                            if ( cmdFile.canExecute() ) {
+                                Process proc = Runtime.getRuntime().exec( cmd );
+                                BufferedReader progReader = new BufferedReader( new InputStreamReader( proc.getInputStream() ) );
+                                BufferedReader errReader = new BufferedReader( new InputStreamReader( proc.getErrorStream() ) );
 
-                            ProgOutputThread progReaderThread = new ProgOutputThread( progReader );
-                            ProgOutputThread errReaderThread = new ProgOutputThread( errReader );
+                                ProgOutputThread progReaderThread = new ProgOutputThread( progReader );
+                                ProgOutputThread errReaderThread = new ProgOutputThread( errReader );
 
-                            progReaderThread.start();
-                            errReaderThread.start();
+                                progReaderThread.start();
+                                errReaderThread.start();
 
-                            int status = proc.waitFor();
+                                int status = proc.waitFor();
 
-                            progReaderThread.join();
-                            errReaderThread.join();
+                                progReaderThread.join();
+                                errReaderThread.join();
 
-                            String programOutput = progReaderThread.getResult();
-                            String programError = errReaderThread.getResult();
+                                String programOutput = progReaderThread.getResult();
+                                String programError = errReaderThread.getResult();
 
-                            // Could have failed with status...
-                            if ( status != 0 ) {
-                                throw new Exception("Failed with error " + status);
+                                // Could have failed with status...
+                                if ( status != 0 ) {
+                                    throw new Exception("Failed with error " + status);
+                                }
+                                else {
+                                    if ( programError != null  &&  programError.trim().length() > 0 ) {
+                                        throw new Exception( programError );
+                                    }
+                                }
+
+                                // Finally, parse the output.
+                                rtnVal = isDeptStandardGpu(programOutput);
                             }
                             else {
-                                if ( programError != null  &&  programError.trim().length() > 0 ) {
-                                    throw new Exception( programError );
-                                }
+                                logger.warn( "Could not use {} to check whether graphics card is dept standard.  Returning false.", cmd );
                             }
-
-                            // Finally, parse the output.
-                            rtnVal = isDeptStandardGpu(programOutput);
 
                         } catch ( Exception ex ) {
                             ex.printStackTrace();

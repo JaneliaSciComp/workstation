@@ -202,7 +202,7 @@ public class MaskChanSingleFileLoader {
             logger.debug(
                     "Average values for "+renderableBean.getRenderableEntity().getName() + " at total voxels of " +
                     renderableBean.getVoxelCount() + " are:\n"  + "RED: "+channelAverages[0]+" / GREEN: " +
-                    channelAverages[1]+" / BLUE: "+channelAverages[2]
+                    channelAverages[1]+" / BLUE: "+ ((channelAverages.length >= 3 ) ? channelAverages[2] : "")
             );
             fileStats.recordChannelAverages( renderableBean.getRenderableEntity().getId(), channelAverages );
         }
