@@ -2,16 +2,13 @@ package org.janelia.it.FlyWorkstation.gui.framework.viewer.alignment_board;
 
 import org.janelia.it.FlyWorkstation.gui.alignment_board_viewer.gui_elements.ControlsListener;
 import org.janelia.it.FlyWorkstation.gui.alignment_board_viewer.masking.TextureBuilderI;
-import org.janelia.it.FlyWorkstation.gui.alignment_board_viewer.renderable.InvertingComparator;
-import org.janelia.it.FlyWorkstation.gui.alignment_board_viewer.renderable.RBComparator;
+import org.janelia.it.FlyWorkstation.gui.alignment_board_viewer.renderable.*;
 import org.janelia.it.FlyWorkstation.gui.alignment_board_viewer.volume_builder.RenderablesChannelsBuilder;
 import org.janelia.it.FlyWorkstation.gui.alignment_board_viewer.volume_builder.RenderablesMaskBuilder;
 import org.janelia.it.FlyWorkstation.gui.alignment_board_viewer.volume_export.FilteringAcceptorDecorator;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.loader.FragmentSizeFilter;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.loader.MaskChanDataAcceptorI;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.loader.MaskChanMultiFileLoader;
-import org.janelia.it.FlyWorkstation.gui.alignment_board_viewer.renderable.MaskChanRenderableData;
-import org.janelia.it.FlyWorkstation.gui.alignment_board_viewer.renderable.RenderableBean;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.loader.MaskChanSingleFileLoader;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.resolver.FileResolver;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.resolver.TrivialFileResolver;
@@ -139,6 +136,10 @@ public class FileExportLoadWorker extends SimpleWorker implements VolumeLoader {
         }
 
         Collections.sort( renderableBeans, new InvertingComparator( new RBComparator() ) );
+        List<MaskChanRenderableData> sortedRenderableDatas = new ArrayList<MaskChanRenderableData>();
+
+        sortedRenderableDatas.addAll( paramBean.getRenderableDatas() );
+        Collections.sort( sortedRenderableDatas, new RDComparator() );
 
         // Establish the means for extracting the volume mask.
         AlignmentBoardSettings customWritebackSettings = new AlignmentBoardSettings();
@@ -151,7 +152,7 @@ public class FileExportLoadWorker extends SimpleWorker implements VolumeLoader {
             textureBuilder = new RenderablesMaskBuilder( customWritebackSettings, renderableBeans, true );
 
             setupLoader();
-            multiThreadedDataLoad( paramBean.getRenderableDatas() );
+            multiThreadedDataLoad( sortedRenderableDatas );
 
         }
         else if ( paramBean.getMethod() == ControlsListener.ExportMethod.color ) {
@@ -164,7 +165,7 @@ public class FileExportLoadWorker extends SimpleWorker implements VolumeLoader {
             );
 
             setupLoader();
-            multiThreadedDataLoad( paramBean.getRenderableDatas() );
+            multiThreadedDataLoad( sortedRenderableDatas );
 
         }
 
