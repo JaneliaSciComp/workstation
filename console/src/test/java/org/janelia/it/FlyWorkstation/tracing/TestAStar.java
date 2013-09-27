@@ -9,7 +9,6 @@ import org.janelia.it.FlyWorkstation.gui.slice_viewer.SharedVolumeImage;
 import org.janelia.it.FlyWorkstation.gui.slice_viewer.Subvolume;
 import org.janelia.it.FlyWorkstation.octree.ZoomLevel;
 import org.janelia.it.FlyWorkstation.octree.ZoomedVoxelIndex;
-import org.janelia.it.FlyWorkstation.raster.VoxelIndex;
 import org.junit.Test;
 
 public class TestAStar {
@@ -42,12 +41,6 @@ public class TestAStar {
         Subvolume subvolume = new Subvolume(v1pad, v2pad, wholeImage);
         System.out.println("Finished loading subvolume.");
         // 
-        int start_x = v1.getX() - subvolume.getOrigin().getX();
-        int start_y = v1.getY() - subvolume.getOrigin().getY();
-        int start_z = v1.getZ() - subvolume.getOrigin().getZ();
-        int  goal_x = v2.getX() - subvolume.getOrigin().getX();
-        int  goal_y = v2.getY() - subvolume.getOrigin().getY();
-        int  goal_z = v2.getZ() - subvolume.getOrigin().getZ();
         System.out.println("Initializing A*...");
         AStar astar = new AStar(subvolume);
         System.out.println("Finished initializing A*.");

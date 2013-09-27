@@ -1,4 +1,4 @@
-package org.janelia.it.FlyWorkstation.gui.opengl;
+package org.janelia.it.FlyWorkstation.gui.opengl.demo;
 
 import java.awt.Component;
 import java.awt.Dimension;
@@ -16,6 +16,8 @@ import org.janelia.it.FlyWorkstation.gui.TrackballInteractor;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.TeapotActor;
 import org.janelia.it.FlyWorkstation.gui.camera.BasicObservableCamera3d;
 import org.janelia.it.FlyWorkstation.gui.camera.ObservableCamera3d;
+import org.janelia.it.FlyWorkstation.gui.opengl.CompositeGLActor;
+import org.janelia.it.FlyWorkstation.gui.opengl.LightingActor;
 import org.janelia.it.FlyWorkstation.gui.opengl.stereo3d.AbstractStereoMode;
 import org.janelia.it.FlyWorkstation.gui.opengl.stereo3d.HardwareStereoMode;
 import org.janelia.it.FlyWorkstation.signal.Slot;

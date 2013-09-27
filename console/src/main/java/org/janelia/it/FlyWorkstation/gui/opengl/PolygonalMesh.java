@@ -21,7 +21,7 @@ public class PolygonalMesh {
      * @return
      * @throws IOException 
      */
-    static PolygonalMesh createMeshFromObjFile(InputStream objFileStream) 
+    static public PolygonalMesh createMeshFromObjFile(InputStream objFileStream) 
             throws IOException 
     {
         PolygonalMesh mesh = new PolygonalMesh();

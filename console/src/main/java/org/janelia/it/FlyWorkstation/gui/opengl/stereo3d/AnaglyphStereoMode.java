@@ -5,6 +5,7 @@ import javax.media.opengl.GLAutoDrawable;
 import javax.media.opengl.GLEventListener;
 
 import org.janelia.it.FlyWorkstation.gui.camera.ObservableCamera3d;
+import org.janelia.it.FlyWorkstation.gui.opengl.GLActor;
 
 public class AnaglyphStereoMode extends AbstractStereoMode 
 {
@@ -12,7 +13,7 @@ public class AnaglyphStereoMode extends AbstractStereoMode
 	
     public AnaglyphStereoMode(
     		ObservableCamera3d camera, 
-    		GLEventListener monoActor,
+    		GLActor monoActor,
     		boolean leftRed, boolean leftGreen, boolean leftBlue)
 	{
     	super(camera, monoActor);

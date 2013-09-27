@@ -3,9 +3,8 @@ package org.janelia.it.FlyWorkstation.gui.opengl.stereo3d;
 import javax.media.opengl.GL2;
 import javax.media.opengl.GLAutoDrawable;
 import javax.media.opengl.GLCapabilitiesImmutable;
-import javax.media.opengl.GLEventListener;
-
 import org.janelia.it.FlyWorkstation.gui.camera.ObservableCamera3d;
+import org.janelia.it.FlyWorkstation.gui.opengl.GLActor;
 
 public class HardwareStereoMode extends AbstractStereoMode 
 {
@@ -13,7 +12,7 @@ public class HardwareStereoMode extends AbstractStereoMode
 	
     public HardwareStereoMode(
     		ObservableCamera3d camera, 
-    		GLEventListener monoActor)
+    		GLActor monoActor)
 	{
     	super(camera, monoActor);
 	}

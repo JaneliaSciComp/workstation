@@ -2,13 +2,12 @@ package org.janelia.it.FlyWorkstation.gui.opengl;
 
 import java.util.List;
 import java.util.Vector;
-// import javax.media.opengl.GL2;
 import javax.media.opengl.GLAutoDrawable;
-import javax.media.opengl.GLEventListener;
+import org.janelia.it.FlyWorkstation.gui.viewer3d.BoundingBox3d;
 
 
 public class CompositeGLActor 
-implements GLEventListener
+implements GLActor
 {
     private List<GLActor> actors = new Vector<GLActor>();
 
@@ -34,8 +33,11 @@ implements GLEventListener
         	actor.init(glDrawable);
 	}
 
-	@Override
-	public void reshape(GLAutoDrawable glDrawable, int x, int y, int width, int height) 
-	{}
-
+    @Override
+    public BoundingBox3d getBoundingBox3d() {
+        BoundingBox3d result = new BoundingBox3d();
+        for (GLActor actor : actors)
+            result.include(actor.getBoundingBox3d());
+        return result;
+    }
 }

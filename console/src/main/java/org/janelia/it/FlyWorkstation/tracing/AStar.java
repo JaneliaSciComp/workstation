@@ -55,6 +55,7 @@ public class AStar {
     private double voxelSizeX = 1.0;
     private double voxelSizeY = 1.0;
     private double voxelSizeZ = 1.0;
+    Map<VoxelIndex, Node> allNodes = new HashMap<VoxelIndex, Node>();
     
     public AStar(Subvolume volume) {
         this.volume = volume;
@@ -65,63 +66,66 @@ public class AStar {
             ZoomedVoxelIndex start0, 
             ZoomedVoxelIndex goal0) 
     {
-        VoxelIndex start = new VoxelIndex(
+        Node start = getNode(new VoxelIndex(
                 start0.getX() - volume.getOrigin().getX(), 
                 start0.getY() - volume.getOrigin().getY(), 
-                start0.getZ() - volume.getOrigin().getZ());
-        VoxelIndex goal = new VoxelIndex(
+                start0.getZ() - volume.getOrigin().getZ()));
+        Node goal = getNode(new VoxelIndex(
                 goal0.getX() - volume.getOrigin().getX(), 
                 goal0.getY() - volume.getOrigin().getY(), 
-                goal0.getZ() - volume.getOrigin().getZ());
+                goal0.getZ() - volume.getOrigin().getZ()));
+        // 
         // The set of nodes already evaluated
-        Set<VoxelIndex> closedSet = new HashSet<VoxelIndex>();
+        Set<Node> closedSet = new HashSet<Node>();
         // The set of tentative nodes to be evaluated, initially containing the start node.
-        Set<VoxelIndex> openSet = new HashSet<VoxelIndex>();
-        openSet.add(new VoxelIndex(start.getX(), start.getY(), start.getZ()));
+        Set<Node> openSet = new HashSet<Node>();
+        openSet.add(start);
         // The map of navigated nodes
-        Map<VoxelIndex, VoxelIndex> cameFrom = new HashMap<VoxelIndex, VoxelIndex>();
+        // Map<VoxelIndex, VoxelIndex> cameFrom = new HashMap<VoxelIndex, VoxelIndex>();
         // Cost from start along best known path
-        Map<VoxelIndex, Double> gScore = new HashMap<VoxelIndex, Double>();
-        Map<VoxelIndex, Double> fScore = new HashMap<VoxelIndex, Double>();
-        gScore.put(start, 0.0);
-        fScore.put(start, gScore.get(start) + heuristicCostEstimate(start, goal));
+        // Map<VoxelIndex, Double> gScore = new HashMap<VoxelIndex, Double>();
+        // Map<VoxelIndex, Double> fScore = new HashMap<VoxelIndex, Double>();
+        //
+        start.gScore = 0.0;
+        start.fScore = start.gScore + heuristicCostEstimate(start.index, goal.index);
         
         long checkedVoxelCount = 0;
         while (openSet.size() > 0) {
             // Get node with lowest fScore in openSet
             // TODO - perhaps a sorted list could be maintained, to avoid 
             // exhaustive search each time.
-            VoxelIndex current = null;
-            for (VoxelIndex n : openSet) {
+            Node current = null;
+            for (Node n : openSet) {
                 if (current == null) {
                     current = n;
                     continue;
                 }
-                if (fScore.get(n) < fScore.get(current))
+                if (n.fScore < current.fScore)
                     current = n;
             }
             if (current.equals(goal))
-                return reconstructPath(cameFrom, start, goal, start0.getZoomLevel());
+                return reconstructPath(start, goal, start0.getZoomLevel());
             // Remove current from openSet
             openSet.remove(current);
             closedSet.add(current);
             checkedVoxelCount += 1;
             if (debug && checkedVoxelCount % 10000 == 0)
                 System.out.println("Examined "+checkedVoxelCount+" voxels");
-            for (VoxelIndex neighbor : getNeighbors(current)) 
+            for (VoxelIndex neighborIndex : getNeighbors(current.index)) 
             {
-                double tentativeGScore = gScore.get(current)
-                        + distanceBetween(current, neighbor);
+                Node neighbor = getNode(neighborIndex);
+                double tentativeGScore = current.gScore
+                        + distanceBetween(current.index, neighbor.index);
                 if ( closedSet.contains(neighbor)
-                       && (tentativeGScore >= gScore.get(neighbor) ) ) {
+                       && (tentativeGScore >= neighbor.gScore ) ) {
                     continue;
                 }
                 if ( (! openSet.contains(neighbor)) 
-                       || (tentativeGScore < gScore.get(neighbor)) )
+                       || (tentativeGScore < neighbor.gScore) )
                 {
-                    cameFrom.put(neighbor, current);
-                    gScore.put(neighbor, tentativeGScore);
-                    fScore.put(neighbor, gScore.get(neighbor) + heuristicCostEstimate(neighbor, goal));
+                    neighbor.cameFrom = current;
+                    neighbor.gScore = tentativeGScore;
+                    neighbor.fScore = neighbor.gScore + heuristicCostEstimate(neighbor.index, goal.index);
                     openSet.add(neighbor);
                 }
             }
@@ -192,25 +196,30 @@ public class AStar {
         return result;
     }
     
+    private Node getNode(VoxelIndex index) {
+        if (! allNodes.containsKey(index))
+            allNodes.put(index, new Node(index));
+        return allNodes.get(index);
+    }
+    
     private List<ZoomedVoxelIndex> reconstructPath(
-            Map<VoxelIndex, VoxelIndex> cameFrom, 
-            VoxelIndex start,
-            VoxelIndex goal,
+            Node start,
+            Node goal,
             ZoomLevel zoomLevel) 
     {
         List<ZoomedVoxelIndex> result = new Vector<ZoomedVoxelIndex>();
-        VoxelIndex p = goal;
+        Node p = goal;
         while (! p.equals(start)) {
             result.add(new ZoomedVoxelIndex(zoomLevel, 
-                    p.getX() + volume.getOrigin().getX(), 
-                    p.getY() + volume.getOrigin().getY(), 
-                    p.getZ() + volume.getOrigin().getZ()));
-            p = cameFrom.get(p);
+                    p.index.getX() + volume.getOrigin().getX(), 
+                    p.index.getY() + volume.getOrigin().getY(), 
+                    p.index.getZ() + volume.getOrigin().getZ()));
+            p = p.cameFrom;
         }
         result.add(new ZoomedVoxelIndex(zoomLevel, 
-                start.getX() + volume.getOrigin().getX(), 
-                start.getY() + volume.getOrigin().getY(), 
-                start.getZ() + volume.getOrigin().getZ()));
+                start.index.getX() + volume.getOrigin().getX(), 
+                start.index.getY() + volume.getOrigin().getY(), 
+                start.index.getZ() + volume.getOrigin().getZ()));
         return Lists.reverse(result);
     }
 
@@ -325,9 +334,37 @@ public class AStar {
             distance += Math.abs(dy);
             distance += Math.abs(dz);
         } else if (distanceMetric == DistanceMetric.EUCLIDEAN) {
+            // TODO - cache the 6? possible distances
             distance = Math.sqrt(dx*dx + dy*dy + dz*dz);
         }
         return distance * minStepCost;
     }
     
+    static class Node {
+        Node(VoxelIndex index) {
+            this.index = index;
+        }
+
+        @Override
+        public int hashCode() {
+            return index.hashCode();
+        }
+        
+        @Override
+        public boolean equals(Object obj) {
+            if (this == obj)
+                return true;
+            if (obj == null)
+                return false;
+            if (getClass() != obj.getClass())
+                return false;
+            Node other = (Node) obj;
+            return index.equals(other.index);
+        }
+
+        double fScore = Double.NaN;
+        double gScore = Double.NaN;
+        Node cameFrom = null;
+        VoxelIndex index;
+    }
 }

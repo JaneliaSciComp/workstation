@@ -12,6 +12,7 @@ import org.janelia.it.FlyWorkstation.geom.Rotation3d;
 import org.janelia.it.FlyWorkstation.geom.Vec3;
 import org.janelia.it.FlyWorkstation.gui.camera.Camera3d;
 import org.janelia.it.FlyWorkstation.gui.camera.ObservableCamera3d;
+import org.janelia.it.FlyWorkstation.gui.opengl.GLActor;
 import org.janelia.it.FlyWorkstation.signal.Signal;
 import org.janelia.it.FlyWorkstation.signal.Slot;
 
@@ -35,7 +36,7 @@ implements GLEventListener
 
 	private Color backgroundColor = null;
 	private boolean useDepth = true;
-	private GLEventListener monoActor;
+	private GLActor monoActor;
 	
 	protected int viewportWidth = 1;
 	protected int viewportHeight = 1;
@@ -51,7 +52,7 @@ implements GLEventListener
 	public Signal viewChangedSignal = new Signal();
 
 	public AbstractStereoMode(ObservableCamera3d camera, 
-			GLEventListener monoActor)
+			GLActor monoActor)
 	{
 		super();
 		setCamera(camera);
@@ -108,12 +109,12 @@ implements GLEventListener
 		return camera;
 	}
 
-	public GLEventListener getMonoActor() {
+	public GLActor getMonoActor() {
 		return monoActor;
 	}
 
-	public void setMonoActor(GLEventListener monoActor) {
-		this.monoActor = monoActor;
+	public void setMonoActor(GLActor monoActor2) {
+		this.monoActor = monoActor2;
 	}
 
 	public boolean isViewChanged() {
