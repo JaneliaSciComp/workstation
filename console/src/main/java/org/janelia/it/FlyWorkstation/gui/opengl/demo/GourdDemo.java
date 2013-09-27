@@ -47,7 +47,8 @@ public class GourdDemo extends JFrame
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 
         // Create canvas for openGL display of gourd
-        GLCapabilities glCapabilities = new GLCapabilities(GLProfile.getDefault());
+        GLCapabilities glCapabilities = new GLCapabilities(GLProfile.get(GLProfile.GL2));
+        // GLCapabilities glCapabilities = new GLCapabilities(GLProfile.getDefault());
         // glCapabilities.setStereo(true);
         GLCanvas glPanel = new GLCanvas(glCapabilities);
         //
@@ -93,7 +94,7 @@ public class GourdDemo extends JFrame
 		                }
 		            });
 		}
-		else { // no gourd... TODO
+		else {
 		    // Wrap mono actor in stereo 3D mode
 		    GLSceneComposer sceneComposer = 
 		            new GLSceneComposer(camera, glPanel);

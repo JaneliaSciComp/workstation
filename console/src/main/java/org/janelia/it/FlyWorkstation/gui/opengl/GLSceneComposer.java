@@ -1,14 +1,14 @@
 package org.janelia.it.FlyWorkstation.gui.opengl;
 
 import javax.media.opengl.GL;
-import javax.media.opengl.GL2;
+// import javax.media.opengl.GL2;
 import javax.media.opengl.GLAutoDrawable;
 import javax.media.opengl.GLEventListener;
-import javax.media.opengl.glu.GLU;
 
 import org.janelia.it.FlyWorkstation.geom.Rotation3d;
 import org.janelia.it.FlyWorkstation.geom.Vec3;
 import org.janelia.it.FlyWorkstation.gui.camera.ObservableCamera3d;
+import org.janelia.it.FlyWorkstation.gui.opengl.GL2Adapter.MatrixMode;
 import org.janelia.it.FlyWorkstation.signal.Signal;
 import org.janelia.it.FlyWorkstation.signal.Slot;
 
@@ -27,8 +27,6 @@ public class GLSceneComposer
 implements GLEventListener
 {
 	private static final Vec3 upInCamera = new Vec3(0,-1,0);
-    private static final GLU glu = new GLU();
-    private GL2Adapter gl2Adapter;
 
 	private ObservableCamera3d camera;
 	
@@ -54,6 +52,7 @@ implements GLEventListener
     };
 
     private GLAutoDrawable glComponent;
+    GL2Adapter gl2Adapter = null;
     
     private boolean viewChanged = true;
     private Slot onViewChangedSlot = new Slot() {
@@ -90,11 +89,12 @@ implements GLEventListener
 
 	@Override
 	public void display(GLAutoDrawable glDrawable) {
+	    GLActorContext actorContext = new GLActorContext(glDrawable, gl2Adapter);
 	    if (viewChanged) {
             // GL2 gl2 = glDrawable.getGL().getGL2();
 	        updateViewport(glDrawable);
-            updateProjectionMatrix(glDrawable);
-            updateModelViewMatrix(glDrawable);
+            updateProjectionMatrix(actorContext);
+            updateModelViewMatrix(actorContext);
 	        viewChanged = false;
 	    }
 	    // Render in 4 passes
@@ -116,6 +116,7 @@ implements GLEventListener
 	public void init(GLAutoDrawable glDrawable) {
 	    final GL gl = glDrawable.getGL();
 	    gl2Adapter = GL2AdapterFactory.createGL2Adapter(glDrawable);
+	    GLActorContext actorContext = new GLActorContext(glDrawable, gl2Adapter);
 		if (useDepth)
 			gl.glEnable(GL.GL_DEPTH_TEST);
 		for (GLActor actor : allActors)
@@ -133,7 +134,7 @@ implements GLEventListener
 		viewportWidth = w;
 		viewportHeight = h;
 	    updateViewport(glDrawable);
-		updateProjectionMatrix(glDrawable);
+		updateProjectionMatrix(new GLActorContext(glDrawable, gl2Adapter));
 		viewChanged = true;
 	}
 
@@ -147,7 +148,7 @@ implements GLEventListener
 	 * @param gl
 	 * @param eye -1 for left eye, +1 for right eye, 0 for mono
 	 */
-	protected void updateProjectionMatrix(GLAutoDrawable glDrawable) {
+	protected void updateProjectionMatrix(GLActorContext actorContext) {
 		int w = viewportWidth;
 		int h = viewportHeight;
 		double aspect = w/(double)h;
@@ -166,32 +167,25 @@ implements GLEventListener
 	    double zNear = 0.3 * camDistScene;
 	    double zFar = 3.0 * camDistScene;
 
-	    // TODO - get the GL2 out of here, for GL3
-	    GL2 gl = glDrawable.getGL().getGL2();
-	    gl.glMatrixMode(GL2.GL_PROJECTION);
-		gl.glLoadIdentity();
+	    GL2Adapter ga = actorContext.getGL2Adapter();
+	    ga.glMatrixMode(MatrixMode.GL_PROJECTION);
+		ga.glLoadIdentity();
 
 		// TODO - probably don't need both atan2() and tan()...
 		double top = zNear * Math.tan(fovy/360*Math.PI);
 		double right = aspect * top;
-		gl.glFrustum(
+		ga.glFrustum(
 				-right, right,
 		        -top, top,
 		        zNear, zFar);
 		
-		gl.glMatrixMode(GL2.GL_MODELVIEW);
+		ga.glMatrixMode(MatrixMode.GL_MODELVIEW);
 	}
 
-	protected void updateModelViewMatrix(GLAutoDrawable glDrawable) {
-        // TODO - get the GL2 out of here, for GL3
-        GL2 gl = glDrawable.getGL().getGL2();
-        /*
-		gl2Adapter.glMatrixMode(GL2Adapter.MatrixMode.GL_MODELVIEW);
-		gl2Adapter.glLoadIdentity();
-		*/
-        gl.glMatrixMode(GL2.GL_MODELVIEW);
-        gl.glLoadIdentity();
-        //
+	protected void updateModelViewMatrix(GLActorContext actorContext) {
+		GL2Adapter ga = actorContext.getGL2Adapter();
+		ga.glMatrixMode(GL2Adapter.MatrixMode.GL_MODELVIEW);
+		ga.glLoadIdentity();
 		Vec3 f = camera.getFocus();
 	    Rotation3d g_R_c = camera.getRotation();
 	    Vec3 u_g = g_R_c.times(upInCamera);
@@ -200,7 +194,7 @@ implements GLEventListener
 		double camDistPx = camDistCm * screenPixelsPerCm;
 	    double camDistScene = camDistPx / camera.getPixelsPerSceneUnit();
 	    Vec3 c = f.plus(g_R_c.times(new Vec3(0,0,-camDistScene)));
-	    glu.gluLookAt(c.x(), c.y(), c.z(), // camera in ground
+	    ga.gluLookAt(c.x(), c.y(), c.z(), // camera in ground
 	            f.x(), f.y(), f.z(), // focus in ground
 	            u_g.x(), u_g.y(), u_g.z()); // up vector in ground
 	}

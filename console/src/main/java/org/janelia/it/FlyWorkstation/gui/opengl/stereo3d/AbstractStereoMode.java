@@ -127,9 +127,9 @@ implements GLEventListener
 
 	@Override
 	public void init(GLAutoDrawable glDrawable) {
-	    final GL2 gl = glDrawable.getGL().getGL2();
+	    final GL gl = glDrawable.getGL();
 		if (useDepth)
-			gl.glEnable(GL2.GL_DEPTH_TEST);
+			gl.glEnable(GL.GL_DEPTH_TEST);
 		if (monoActor != null)
 			monoActor.init(glDrawable);
 	}

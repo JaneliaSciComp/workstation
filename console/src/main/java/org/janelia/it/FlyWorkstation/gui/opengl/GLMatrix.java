@@ -110,4 +110,19 @@ public class GLMatrix {
                 m[3], m[7], m[11], m[15]};
     }
 
+	public void glFrustum(double left, double right, double bottom, double top,
+			double zNear, double zFar) 
+	{
+		// http://www.opengl.org/sdk/docs/man2/xhtml/glFrustum.xml
+		double A = (right + left) / (right - left);
+		double B = (top + bottom) / (top - bottom);
+		double C = (zFar + zNear) / (zFar - zNear);
+		double D = 2*zFar*zNear/(zFar - zNear);
+        glMultMatrixd(new double[] {
+                2*zNear/(right-left), 0, 0, 0,
+                0, 2*zNear/(top-bottom), 0, 0,
+                A, B, C, -1,
+                0, 0, D, 0});
+	}
+
 }

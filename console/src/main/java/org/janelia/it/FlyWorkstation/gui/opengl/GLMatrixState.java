@@ -40,4 +40,8 @@ public class GLMatrixState {
             break;
         }
     }
+
+	public GLMatrix getCurrentMatrix() {
+		return currentMatrix;
+	}
 }
