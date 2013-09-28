@@ -172,6 +172,16 @@ public class FileExportLoadWorker extends SimpleWorker implements VolumeLoader {
         logger.info("Ending load thread.");
     }
 
+   @Override
+    protected void hadSuccess() {
+        paramBean.getCallback().loadSucceeded();
+    }
+
+    @Override
+    protected void hadError(Throwable error) {
+        paramBean.getCallback().loadFailed( error );
+    }
+
     private void setupLoader() {
         // Setup the loader to traverse all this data on demand.
         loader = new MaskChanMultiFileLoader();
@@ -187,16 +197,6 @@ public class FileExportLoadWorker extends SimpleWorker implements VolumeLoader {
         outerAcceptor = new RecoloringAcceptorDecorator( outerAcceptor );
 
         loader.setAcceptors( Arrays.<MaskChanDataAcceptorI>asList(outerAcceptor) );
-    }
-
-    @Override
-    protected void hadSuccess() {
-        paramBean.getCallback().loadSucceeded();
-    }
-
-    @Override
-    protected void hadError(Throwable error) {
-        paramBean.getCallback().loadFailed( error );
     }
 
     /**
