@@ -187,6 +187,7 @@ public class ABContextDataSource implements RenderableDataSourceI {
         setAppearance( false, item, renderableBean );
         MaskChanRenderableData data = new MaskChanRenderableData();
         data.setBean( renderableBean );
+        data.setCompartment( true ); // For render characteristics
 
         String maskPath = volumeImage.getMask3dImageFilepath();
         String channelPath = volumeImage.getChan3dImageFilepath();
