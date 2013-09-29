@@ -199,11 +199,15 @@ public class MaskChanSingleFileLoader {
 
         // Channel only available if presence of acceptors signalled its read.
         if ( channelAcceptors.size() > 0  &&  renderableBean.getRenderableEntity() != null  &&  fileStats != null ) {
-            logger.debug(
-                    "Average values for "+renderableBean.getRenderableEntity().getName() + " at total voxels of " +
-                    renderableBean.getVoxelCount() + " are:\n"  + "RED: "+channelAverages[0]+" / GREEN: " +
-                    channelAverages[1]+" / BLUE: "+ ((channelAverages.length >= 3 ) ? channelAverages[2] : "")
-            );
+            StringBuilder averages = new StringBuilder( "Average values for " )
+                .append( renderableBean.getRenderableEntity().getName() ).append( " at total voxels of " )
+                .append( renderableBean.getVoxelCount() ).append( " are:\n" );
+
+            for ( int i = 0; i < channelAverages.length; i++ ) {
+                averages.append( "Channel ").append( i ).append( channelAverages[ i ] ).append( "\n" );
+            }
+
+            logger.debug( averages.toString() );
             fileStats.recordChannelAverages( renderableBean.getRenderableEntity().getId(), channelAverages );
         }
 

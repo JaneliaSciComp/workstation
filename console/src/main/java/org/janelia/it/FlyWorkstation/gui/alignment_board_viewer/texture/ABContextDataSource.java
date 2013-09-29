@@ -30,6 +30,8 @@ public class ABContextDataSource implements RenderableDataSourceI {
     private AlignedItem currentSample; // NOTE: use of this precludes multi-threaded use of this data source!
     private AlignedItem currentCompartmentSet;
 
+    private boolean useReference = true;
+
     private final Logger logger = LoggerFactory.getLogger( ABContextDataSource.class );
     public ABContextDataSource( AlignmentBoardContext context ) {
         this.context = context;
@@ -69,6 +71,11 @@ public class ABContextDataSource implements RenderableDataSourceI {
                             liveFileCount += getRenderableData(rtnVal, nextTranslatedNum++, false, childItem);
                         }
                     }
+                }
+                VolumeImage image = sample.getReference();
+                if ( image != null  &&  useReference ) {
+                    liveFileCount += getRenderableData(rtnVal, nextTranslatedNum++, image);
+
                 }
             }
             else if ( itemEntity instanceof Neuron ) {
@@ -149,7 +156,6 @@ public class ABContextDataSource implements RenderableDataSourceI {
             int nextTranslatedNum,
             boolean isCompartment,
             AlignedItem item) {
-
         RenderableBean renderableBean = createRenderableBean( nextTranslatedNum, isCompartment, item );
         MaskChanRenderableData nfRenderable = new MaskChanRenderableData();
         nfRenderable.setBean( renderableBean );
@@ -166,6 +172,37 @@ public class ABContextDataSource implements RenderableDataSourceI {
         );
 
         maskChanRenderableDatas.add( nfRenderable );
+        return liveFileCount;
+    }
+
+    private int getRenderableData(
+        Collection<MaskChanRenderableData> maskChanRenderableDatas,
+        int nextTranslatedNum,
+        VolumeImage volumeImage
+    ) {
+        RenderableBean renderableBean = new RenderableBean();
+        renderableBean.setInvertedY(false);
+        renderableBean.setLabelFileNum(nextTranslatedNum);
+        renderableBean.setTranslatedNum(nextTranslatedNum);
+        renderableBean.setType("Reference");     //todo move this to EntityConstants
+        renderableBean.setRenderableEntity( volumeImage.getInternalEntity() );
+
+        MaskChanRenderableData data = new MaskChanRenderableData();
+        data.setBean( renderableBean );
+
+        String maskPath = volumeImage.getMask3dImageFilepath();
+        String channelPath = volumeImage.getChan3dImageFilepath();
+        if ( maskPath == null || channelPath == null ) {
+            logger.warn("No mask and/or channel pat for reference {}:{}.", renderableBean.getRenderableEntity().getName(), renderableBean.getRenderableEntity().getId() );
+        }
+        data.setChannelPath( channelPath );
+        data.setMaskPath( maskPath );
+
+        maskChanRenderableDatas.add( data );
+        int liveFileCount = getCorrectFilesFoundCount(
+                "" + renderableBean.getRenderableEntity(), maskPath, channelPath
+        );
+
         return liveFileCount;
     }
 

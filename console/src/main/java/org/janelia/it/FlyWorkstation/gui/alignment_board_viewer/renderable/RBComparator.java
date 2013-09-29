@@ -20,6 +20,7 @@ public class RBComparator implements Comparator<RenderableBean> {
     {
         rankMapping = new HashMap<String,Integer>();
         rankMapping.put( EntityConstants.TYPE_NEURON_FRAGMENT, 1 );
+        rankMapping.put( "Reference", 2 );      //todo move this to EntityConstants
         rankMapping.put( EntityConstants.TYPE_COMPARTMENT, 3 );
         rankMapping.put( EntityConstants.TYPE_SAMPLE, 9 );
         rankMapping.put( EntityConstants.TYPE_COMPARTMENT_SET, 10 );

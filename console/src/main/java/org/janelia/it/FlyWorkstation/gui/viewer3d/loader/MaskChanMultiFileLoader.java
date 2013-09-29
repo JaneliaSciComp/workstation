@@ -20,7 +20,7 @@ import java.util.*;
  */
 public class MaskChanMultiFileLoader {
 
-    private boolean checkForConsistency = true;
+    private boolean checkForConsistency = false;
 
     private Collection<MaskChanDataAcceptorI> maskAcceptors;
     private Collection<MaskChanDataAcceptorI> channelAcceptors;

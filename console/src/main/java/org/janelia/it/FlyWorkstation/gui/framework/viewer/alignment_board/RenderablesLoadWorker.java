@@ -114,11 +114,14 @@ public class RenderablesLoadWorker extends SimpleWorker implements VolumeLoader 
 
         // Mask file is always needed.
         if ( maskChanRenderableData.getMaskPath() == null ) {
-            logger.warn(
-                    "Renderable {} has a missing mask file. ID is {}.",
-                    maskChanRenderableData.getBean().getTranslatedNum(),
-                            + maskChanRenderableData.getBean().getRenderableEntity().getId()
-            );
+            int translatedNum = maskChanRenderableData.getBean().getTranslatedNum();
+            if ( translatedNum != 0 ) {
+                logger.warn(
+                        "Renderable {} has a missing mask file. ID is {}.",
+                        maskChanRenderableData.getBean().getTranslatedNum(),
+                        maskChanRenderableData.getBean().getRenderableEntity().getId()
+                );
+            }
             return;
         }
 
@@ -258,7 +261,9 @@ public class RenderablesLoadWorker extends SimpleWorker implements VolumeLoader 
             compartmentLoader = new MaskChanMultiFileLoader();
             compartmentLoader.setAcceptors( acceptors );
 
+            logger.info("Timing multi-thread data load for multi-mask-assbembly.");
             multiThreadedDataLoad(renderableDatas, false);
+            logger.info("End timing multi-mask-assembly");
 
             // RE-run the scan.  This time only the signal-texture-builder will accept the data.
             acceptors.clear();
@@ -266,7 +271,9 @@ public class RenderablesLoadWorker extends SimpleWorker implements VolumeLoader 
             neuronFragmentLoader.setAcceptors(acceptors);
             compartmentLoader.setAcceptors( acceptors );
 
+            logger.info("Timing multi-thread data load for signal.");
             multiThreadedDataLoad(renderableDatas, true);
+            logger.info("End timing signal load");
 
             compartmentLoader.close();
             neuronFragmentLoader.close();
