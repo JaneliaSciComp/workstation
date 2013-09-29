@@ -30,8 +30,6 @@ public class ABContextDataSource implements RenderableDataSourceI {
     private AlignedItem currentSample; // NOTE: use of this precludes multi-threaded use of this data source!
     private AlignedItem currentCompartmentSet;
 
-    private boolean useReference = true;
-
     private final Logger logger = LoggerFactory.getLogger( ABContextDataSource.class );
     public ABContextDataSource( AlignmentBoardContext context ) {
         this.context = context;
@@ -68,14 +66,13 @@ public class ABContextDataSource implements RenderableDataSourceI {
                 if ( childItems != null ) {
                     for ( AlignedItem childItem: childItems ) {
                         if ( childItem.getItemWrapper() instanceof Neuron) {
-                            liveFileCount += getRenderableData(rtnVal, nextTranslatedNum++, false, childItem);
+                            liveFileCount += getRenderableData( rtnVal, nextTranslatedNum++, false, childItem );
+                        }
+                        else if ( childItem.getItemWrapper() instanceof VolumeImage ) {
+                            VolumeImage image = sample.getReference();
+                            liveFileCount += getRenderableData( rtnVal, nextTranslatedNum++, image, childItem );
                         }
                     }
-                }
-                VolumeImage image = sample.getReference();
-                if ( image != null  &&  useReference ) {
-                    liveFileCount += getRenderableData(rtnVal, nextTranslatedNum++, image);
-
                 }
             }
             else if ( itemEntity instanceof Neuron ) {
@@ -178,7 +175,8 @@ public class ABContextDataSource implements RenderableDataSourceI {
     private int getRenderableData(
         Collection<MaskChanRenderableData> maskChanRenderableDatas,
         int nextTranslatedNum,
-        VolumeImage volumeImage
+        VolumeImage volumeImage,
+        AlignedItem item
     ) {
         RenderableBean renderableBean = new RenderableBean();
         renderableBean.setInvertedY(false);
@@ -186,7 +184,7 @@ public class ABContextDataSource implements RenderableDataSourceI {
         renderableBean.setTranslatedNum(nextTranslatedNum);
         renderableBean.setType("Reference");     //todo move this to EntityConstants
         renderableBean.setRenderableEntity( volumeImage.getInternalEntity() );
-
+        setAppearance( false, item, renderableBean );
         MaskChanRenderableData data = new MaskChanRenderableData();
         data.setBean( renderableBean );
 
@@ -266,7 +264,13 @@ public class ABContextDataSource implements RenderableDataSourceI {
         if ( renderableBean.getType().equals( EntityConstants.TYPE_ALIGNED_ITEM ) ) {
             renderableBean.setType(EntityConstants.TYPE_NEURON_FRAGMENT);
         }
+        setAppearance(isCompartment, item, renderableBean);
 
+
+        return renderableBean;
+    }
+
+    private void setAppearance(boolean isCompartment, AlignedItem item, RenderableBean renderableBean) {
         // See to the appearance.
         Color renderColor = item.getColor();
         if ( renderColor == null ) {
@@ -334,8 +338,6 @@ public class ABContextDataSource implements RenderableDataSourceI {
             rgb[ 3 ] = renderMethod;
             renderableBean.setRgb(rgb);
         }
-
-        return renderableBean;
     }
 
     private Color getParentColor() {
