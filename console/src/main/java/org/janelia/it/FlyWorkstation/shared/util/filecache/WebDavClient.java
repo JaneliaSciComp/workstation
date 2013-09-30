@@ -35,7 +35,7 @@ import org.slf4j.LoggerFactory;
  */
 public class WebDavClient {
     
-    public static final String JACS_WEBDAV_BASE_URL = "http://jacs.int.janelia.org/WebDAV";
+    public static final String JACS_WEBDAV_BASE_URL = "http://jacs-webdav.int.janelia.org/WebDAV";
     
     private String protocol;
     private String host;
@@ -73,7 +73,7 @@ public class WebDavClient {
         MultiThreadedHttpConnectionManager mgr = new MultiThreadedHttpConnectionManager();
         HttpConnectionManagerParams managerParams = mgr.getParams();
         managerParams.setDefaultMaxConnectionsPerHost(maxConnectionsPerHost); // default is 2
-        managerParams.setMaxTotalConnections(maxTotalConnections);            // default is 20
+        managerParams.setMaxTotalConnections(maxTotalConnections);            //��default is 20
         this.httpClient = new HttpClient(mgr);
         
         setCredentialsUsingAuthenticator();
