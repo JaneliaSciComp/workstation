@@ -69,7 +69,7 @@ public class ABContextDataSource implements RenderableDataSourceI {
                             liveFileCount += getRenderableData( rtnVal, nextTranslatedNum++, false, childItem );
                         }
                         else if ( childItem.getItemWrapper() instanceof VolumeImage ) {
-                            VolumeImage image = sample.getReference();
+                            VolumeImage image = (VolumeImage)childItem.getItemWrapper();
                             liveFileCount += getRenderableData( rtnVal, nextTranslatedNum++, image, childItem );
                         }
                     }
