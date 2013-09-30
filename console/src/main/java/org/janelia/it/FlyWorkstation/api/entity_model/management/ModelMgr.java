@@ -913,11 +913,7 @@ public class ModelMgr {
 
     public SolrResults searchSolr(SolrQuery query) throws Exception {
     	log.info("Searching SOLR: "+query.getQuery()+" start="+query.getStart()+" rows="+query.getRows());
-        try {
     	return FacadeManager.getFacadeManager().getSolrFacade().searchSolr(query);
-        } catch ( Exception ex ) {
-            return new SolrResults(null, null );
-        }
     }
     
     //todo "Flylight"? Maybe we can refctor out this explicit project knowledge?  Is there a nice, clean abstraction for this?

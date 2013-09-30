@@ -36,6 +36,8 @@ import org.janelia.it.jacs.model.entity.EntityActorPermission;
 import org.janelia.it.jacs.model.entity.EntityData;
 import org.janelia.it.jacs.model.ontology.OntologyAnnotation;
 import org.janelia.it.jacs.model.user_data.Subject;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.google.common.collect.ComparisonChain;
 
@@ -45,7 +47,9 @@ import com.google.common.collect.ComparisonChain;
  * @author <a href="mailto:rokickik@janelia.hhmi.org">Konrad Rokicki</a>
  */
 public class EntityDetailsPanel extends JPanel implements Accessibility, Refreshable {
-    
+
+	private static final Logger log = LoggerFactory.getLogger(EntityDetailsPanel.class);
+	
     protected static final DateFormat df = new SimpleDateFormat("yyyy/MM/dd HH:mm");
 
     private static final String ATTRIBUTES_COLUMN_KEY = "Attribute Name";
@@ -374,9 +378,14 @@ public class EntityDetailsPanel extends JPanel implements Accessibility, Refresh
 			@Override
 			protected void doStuff() throws Exception {
 				this.loadedEntity = ModelMgr.getModelMgr().getEntityById(entityId);
-	            SolrQuery query = new SolrQuery("id:"+entityId);
-	            SolrResults results = ModelMgr.getModelMgr().searchSolr(query);
-	            this.doc = results.getEntityDocuments().isEmpty() ? null : results.getEntityDocuments().iterator().next();
+				try {
+		            SolrQuery query = new SolrQuery("id:"+entityId);
+		            SolrResults results = ModelMgr.getModelMgr().searchSolr(query);
+		            this.doc = results.getEntityDocuments().isEmpty() ? null : results.getEntityDocuments().iterator().next();
+				}
+				catch (Exception e) {
+					log.error("Error loading Solr attributes",e);
+				}
 			}
 			
 			@Override
@@ -431,6 +440,9 @@ public class EntityDetailsPanel extends JPanel implements Accessibility, Refresh
 	            		}
 	            	}
 	            }
+		        else {
+		        	attributesTable.addRow(new AttributeValue("ERROR", "Could not query Solr server for additional attributes"));
+		        }
 		        
 		        attributesTable.updateTableModel();
 		        attributesPanel.removeAll();
