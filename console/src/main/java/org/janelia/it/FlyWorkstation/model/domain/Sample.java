@@ -162,7 +162,7 @@ public class Sample extends AlignedEntityWrapper implements Viewable2d, Viewable
             }
         }
         
-        if (reference!=null) {
+        if (reference!=null && reference.getMask3dImageFilepath()!=null) {
         	addChild(reference);
         }
         
