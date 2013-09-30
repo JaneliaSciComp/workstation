@@ -234,7 +234,7 @@ public class TiffExporter {
     private DataBuffer createDataBuffer(
             TextureDataI textureData, int chunkNum, int sliceSize, int sliceOffset, VoxelType type
     ) {
-        logger.info("Creating data buffer for type {}.", type );
+        logger.debug("Creating data buffer for type {}.", type );
         DataBuffer rtnVal = null;
         switch ( type ) {
             case BYTE :
