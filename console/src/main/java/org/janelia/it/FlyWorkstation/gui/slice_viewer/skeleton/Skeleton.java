@@ -1,9 +1,6 @@
 package org.janelia.it.FlyWorkstation.gui.slice_viewer.skeleton;
 
-import java.util.HashMap;
-import java.util.LinkedHashSet;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 
 import org.janelia.it.FlyWorkstation.geom.Vec3;
 import org.janelia.it.FlyWorkstation.gui.slice_viewer.HistoryStack;
@@ -94,8 +91,13 @@ public class Skeleton {
         @Override
         public void execute(TmGeoAnnotation annotation) {
             Anchor anchor = anchorsByGuid.get(annotation.getId());
-            Anchor parentAnchor = anchorsByGuid.get(annotation.getParent().getId());
-            reparent(anchor, parentAnchor);
+            HashSet<Long> annotationNeighbors = new HashSet<Long>(annotation.getChildren().size() + 1);
+            for (TmGeoAnnotation child: annotation.getChildren()) {
+                annotationNeighbors.add(child.getId());
+            }
+            annotationNeighbors.add(annotation.getParent().getId());
+
+            updateNeighbors(anchor, annotationNeighbors);
         }
     };
 	public Slot1<Anchor> deleteAnchorShortCircuitSlot = new Slot1<Anchor>() {
@@ -104,6 +106,10 @@ public class Skeleton {
 	};
 	public Signal1<Anchor> anchorDeletedSignal = new Signal1<Anchor>();
     public Signal1<Anchor> anchorReparentedSignal = new Signal1<Anchor>();
+    public Signal1<Anchor> anchorNeighborsUpdatedSignal = new Signal1<Anchor>();
+
+    ///// SPLIT
+    public Signal1<Anchor> splitAnchorRequestedSignal = new Signal1<Anchor>();
 
 	///// CLEAR
 	public Slot clearSlot = new Slot() {
@@ -135,6 +141,7 @@ public class Skeleton {
 		anchorAddedSignal.connect(skeletonChangedSignal);
 		anchorDeletedSignal.connect(skeletonChangedSignal);
         anchorReparentedSignal.connect(skeletonChangedSignal);
+        anchorNeighborsUpdatedSignal.connect(skeletonChangedSignal);
 		anchorMovedSignal.connect(skeletonChangedSignal);
 	}
 	
@@ -186,6 +193,10 @@ public class Skeleton {
         subtreeDeleteRequestedSignal.emit(anchor);
     }
 
+    public void splitAnchorRequest(Anchor anchor) {
+        splitAnchorRequestedSignal.emit(anchor);
+    }
+
 	public boolean delete(Anchor anchor) {
 		if (! anchors.contains(anchor))
 			return false;
@@ -207,17 +218,44 @@ public class Skeleton {
 		return true;
 	}
 
-    public void reparent(Anchor anchor, Anchor newParent) {
-        if (anchor == null || newParent == null) {
-            return;
+    /** given an anchor, update its neighbors to match the input set of
+     * IDs; intended to keep an anchor's hierarchy in sync with the
+     * annotations in the db; note that the update is bidirectional,
+     * since neighbors are bidirectional; that is, it will update the
+     * anchor at the other end of the neighbor relationship, too
+     *
+     * @param anchor
+     * @param newNeighborIDs
+     */
+    public void updateNeighbors(Anchor anchor, Set<Long> newNeighborIDs) {
+
+        HashSet<Long> currentNeighborIDs = new HashSet<Long>(anchor.getNeighbors().size());
+        for (Anchor a: anchor.getNeighbors()) {
+            currentNeighborIDs.add(a.getGuid());
         }
 
-        anchor.addNeighbor(newParent);
-        newParent.addNeighbor(anchor);
-        anchorReparentedSignal.emit(anchor);
+        // add anchors that are in new but not current:
+        // intersection is in-place, so create a copy before proceeding
+        HashSet<Long> toBeAdded = new HashSet<Long>(newNeighborIDs);
+        toBeAdded.removeAll(currentNeighborIDs);
+        for (Long id: toBeAdded) {
+            Anchor addAnchor = anchorsByGuid.get(id);
+            anchor.addNeighbor(addAnchor);
+            addAnchor.addNeighbor(anchor);
+        }
 
-        // not sure why other similar methods are boolean (never used),
-        //  so this one returns void
+        // remove anchors that are in current but not in new
+        HashSet<Long> toBeRemoved = new HashSet<Long>(currentNeighborIDs);
+        toBeRemoved.removeAll(newNeighborIDs);
+        for (Long id: toBeRemoved) {
+            Anchor removeAnchor = anchorsByGuid.get(id);
+            // hmm, Anchor class doesn't have remove method
+            anchor.getNeighbors().remove(removeAnchor);
+            removeAnchor.getNeighbors().remove(anchor);
+        }
+
+        anchorNeighborsUpdatedSignal.emit(anchor);
+
     }
 
 	public Set<Anchor> getAnchors() {

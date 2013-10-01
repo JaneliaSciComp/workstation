@@ -372,6 +372,12 @@ implements MouseMode, KeyListener
 								new SkeletonSwcExporter(getHoverAnchor()).dialogAndExport(getWidget().getComponent());
 							}
                         }));
+                        result.add(new JMenuItem(new AbstractAction("Split anchor") {
+                            @Override
+                            public void actionPerformed(ActionEvent actionEvent) {
+                                skeleton.splitAnchorRequest(getHoverAnchor());
+                            }
+                        }));
                     }
                     if (parent != null) {
                     	if (parent != hover) {

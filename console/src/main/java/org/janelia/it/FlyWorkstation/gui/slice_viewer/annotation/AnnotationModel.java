@@ -4,6 +4,7 @@ package org.janelia.it.FlyWorkstation.gui.slice_viewer.annotation;
 // workstation imports
 
 import org.janelia.it.FlyWorkstation.geom.Vec3;
+import org.janelia.it.FlyWorkstation.geom.ParametrizedLine;
 import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr;
 
 import org.janelia.it.FlyWorkstation.signal.Signal1;
@@ -48,6 +49,9 @@ public class AnnotationModel
 
     // constants
     public static final String WORKSPACES_FOLDER_NAME = "Workspaces";
+
+    // how far away to try to put split anchors (pixels)
+    private static final Double SPLIT_ANCHOR_DISTANCE = 60.0;
 
 
     public AnnotationModel() {
@@ -208,7 +212,9 @@ public class AnnotationModel
         }
 
         // update
+        updateCurrentWorkspace();
         updateCurrentNeuron();
+
 
         // notify
         anchorUpdatedSignal.emit(getGeoAnnotationFromID(annotationID));
@@ -316,6 +322,84 @@ public class AnnotationModel
         // why this notification??
         neuronSelectedSignal.emit(getCurrentNeuron());
         anchorsDeletedSignal.emit(deleteList);
+    }
+
+    /**
+     * this method "splits" an annotation; it creates a new annotation on the line
+     * between the input annotation and its parent, displaced a bit toward the parent;
+     * if it's a root, it inserts in the direction of either its single child, or it's an error
+     *
+     * @param annotation
+     */
+    public void splitAnnotation(TmGeoAnnotation annotation) throws Exception {
+        if (annotation == null) {
+            return;
+        }
+
+        TmNeuron neuron = getNeuronFromAnnotation(annotation.getId());
+
+        // ann1 is the child of ann2 in both cases; if reverse, place the new point
+        //  near ann2 instead of ann1
+        TmGeoAnnotation annotation1;
+        TmGeoAnnotation annotation2;
+        boolean reverse;
+
+        if (annotation.getParent() == null) {
+            // root case is special; if one child, split toward child; otherwise, error
+            //  (with zero or many children, ambiguous where to put new annotation)
+            if (annotation.getChildren().size() != 1) {
+                throw new Exception("cannot split root annotation with zero or many children");
+            }
+            annotation1 = annotation.getChildren().get(0);
+            annotation2 = annotation;
+            reverse = true;
+        } else {
+            // regular point: split toward the parent
+            annotation1 = annotation;
+            annotation2 = annotation.getParent();
+            reverse = false;
+        }
+
+        // heuristic: try for a default separation in pixels; we don't want to
+        //  go bigger, but we may need to go smaller; if the two anchors are
+        //  already really close together, don't go beyond the halfway point
+        //  between them
+        // (remember, our t=0 is the original point)
+        ParametrizedLine pLine = new ParametrizedLine(
+            new Vec3(annotation1.getX(), annotation1.getY(), annotation1.getZ()),
+            new Vec3(annotation2.getX(), annotation2.getY(), annotation2.getZ())
+            );
+        Double t = pLine.parameterFromPathLength(SPLIT_ANCHOR_DISTANCE);
+        if (t > 0.5) {
+            t = 0.5;
+        }
+        if (reverse) {
+            t = 1.0 - t;
+        }
+        Vec3 newPoint = pLine.getPoint(t);
+
+        // create the new annotation, child of original parent; then
+        //  reparent existing annotation to new annotation
+        TmGeoAnnotation newAnnotation = modelMgr.addGeometricAnnotation(neuron.getId(),
+                annotation2.getId(), 0, newPoint.x(), newPoint.y(), newPoint.z(), "");
+        // how to get the neuron to refresh here?
+        modelMgr.invalidateCache(modelMgr.getEntityById(neuron.getId()), true);
+        // retrieve *again*
+        neuron = new TmNeuron(modelMgr.getEntityById(neuron.getId()));
+        modelMgr.reparentGeometricAnnotation(annotation1, newAnnotation.getId(), neuron);
+
+        // updates and signals:
+        updateCurrentWorkspace();
+        updateCurrentNeuron();
+
+        anchorAddedSignal.emit(newAnnotation);
+
+        // carefully refresh *again* (I really need to fix the underlying issue here...)
+        modelMgr.invalidateCache(modelMgr.getEntityById(neuron.getId()), true);
+        neuron = new TmNeuron(modelMgr.getEntityById(neuron.getId()));
+        annotation1 = neuron.getGeoAnnotationMap().get(annotation1.getId());
+        anchorReparentedSignal.emit(annotation1);
+
     }
 
     public void loadWorkspace(TmWorkspace workspace) {

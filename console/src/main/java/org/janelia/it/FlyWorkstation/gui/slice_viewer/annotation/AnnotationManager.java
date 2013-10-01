@@ -53,6 +53,13 @@ public class AnnotationManager
         }
     };
 
+    public Slot1<Anchor> splitAnchorRequestedSlot = new Slot1<Anchor>() {
+        @Override
+        public void execute(Anchor anchor) {
+            splitAnchor(anchor.getGuid());
+        }
+    };
+
     public Slot1<Anchor> moveAnchorRequestedSlot = new Slot1<Anchor>() {
         @Override
         public void execute(Anchor anchor) {
@@ -287,6 +294,47 @@ public class AnnotationManager
             mover.execute();
 
         }
+
+    }
+
+    public void splitAnchor(Long annotationID) {
+        if (annotationModel.getCurrentWorkspace() == null) {
+            // dialog?
+
+            return;
+        }
+
+        // can't split a root if it has multiple children (ambiguous):
+        final TmGeoAnnotation annotation = annotationModel.getGeoAnnotationFromID(annotationID);
+        if (annotation.getParent() == null && annotation.getChildren().size() != 1) {
+            JOptionPane.showMessageDialog(null,
+                    "Cannot split root annotation with multiple children (ambiguous)!",
+                    "Error",
+                    JOptionPane.ERROR_MESSAGE
+            );
+            return;
+        }
+
+        SimpleWorker splitter = new SimpleWorker() {
+            @Override
+            protected void doStuff() throws Exception {
+                annotationModel.splitAnnotation(annotation);
+            }
+
+            @Override
+            protected void hadSuccess() {
+                // nothing here, model emits signals
+            }
+
+            @Override
+            protected void hadError(Throwable error) {
+                JOptionPane.showMessageDialog(null,
+                        "Could not split anchor!",
+                        "Error",
+                        JOptionPane.ERROR_MESSAGE);
+            }
+        };
+        splitter.execute();
 
     }
 

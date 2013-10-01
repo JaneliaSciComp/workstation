@@ -53,8 +53,6 @@ public class AnnotationPanel extends JPanel
     private final Action centerAnnotationAction = new AbstractAction() {
         @Override
         public void actionPerformed(ActionEvent actionEvent) {
-            // need to connect to centerNextParentSlot in QuadViewUi
-            // note sure a signal like this is the best way?
             centerAnnotationSignal.emit();
         }
     };
