@@ -12,7 +12,10 @@ import org.janelia.it.FlyWorkstation.geom.Rotation3d;
 import org.janelia.it.FlyWorkstation.geom.Vec3;
 import org.janelia.it.FlyWorkstation.gui.camera.Camera3d;
 import org.janelia.it.FlyWorkstation.gui.camera.ObservableCamera3d;
-import org.janelia.it.FlyWorkstation.gui.opengl.GLActor;
+import org.janelia.it.FlyWorkstation.gui.opengl.GL2Adapter;
+import org.janelia.it.FlyWorkstation.gui.opengl.GL2AdapterFactory;
+import org.janelia.it.FlyWorkstation.gui.opengl.GL3Actor;
+import org.janelia.it.FlyWorkstation.gui.opengl.GLActorContext;
 import org.janelia.it.FlyWorkstation.signal.Signal;
 import org.janelia.it.FlyWorkstation.signal.Slot;
 
@@ -36,11 +39,13 @@ implements GLEventListener
 
 	private Color backgroundColor = null;
 	private boolean useDepth = true;
-	private GLActor monoActor;
+	private GL3Actor monoActor;
 	
 	protected int viewportWidth = 1;
 	protected int viewportHeight = 1;
 
+    GL2Adapter gl2Adapter = null;
+	
 	private Slot onCameraChangedSlot = new Slot() {
 			@Override
 			public void execute() {
@@ -52,7 +57,7 @@ implements GLEventListener
 	public Signal viewChangedSignal = new Signal();
 
 	public AbstractStereoMode(ObservableCamera3d camera, 
-			GLActor monoActor)
+			GL3Actor monoActor)
 	{
 		super();
 		setCamera(camera);
@@ -92,7 +97,7 @@ implements GLEventListener
 	@Override
 	public void dispose(GLAutoDrawable glDrawable) {
 		if (monoActor != null)
-			monoActor.dispose(glDrawable);
+			monoActor.dispose(new GLActorContext(glDrawable, gl2Adapter));
 	}
 
 	public Color getBackgroundColor() {
@@ -109,11 +114,11 @@ implements GLEventListener
 		return camera;
 	}
 
-	public GLActor getMonoActor() {
+	public GL3Actor getMonoActor() {
 		return monoActor;
 	}
 
-	public void setMonoActor(GLActor monoActor2) {
+	public void setMonoActor(GL3Actor monoActor2) {
 		this.monoActor = monoActor2;
 	}
 
@@ -127,11 +132,12 @@ implements GLEventListener
 
 	@Override
 	public void init(GLAutoDrawable glDrawable) {
+	    gl2Adapter = GL2AdapterFactory.createGL2Adapter(glDrawable);
 	    final GL gl = glDrawable.getGL();
 		if (useDepth)
 			gl.glEnable(GL.GL_DEPTH_TEST);
 		if (monoActor != null)
-			monoActor.init(glDrawable);
+			monoActor.init(new GLActorContext(glDrawable, gl2Adapter));
 	}
 
 	public boolean isSwapEyes() {
@@ -148,7 +154,7 @@ implements GLEventListener
 
 	protected void paintScene(GLAutoDrawable glDrawable) {
 		if (monoActor != null)
-			monoActor.display(glDrawable);		
+			monoActor.display(new GLActorContext(glDrawable, gl2Adapter));		
 	}
 
 	@Override

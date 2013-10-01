@@ -14,7 +14,7 @@ public class GLMatrix {
     /**
      * Store in column major order, to match OpenGL docs    
      */
-    private double[] d = {
+    private float[] d = {
         1, 0, 0, 0, // looks like a row, but it's the first COLUMN
         0, 1, 0, 0,
         0, 0, 1, 0,
@@ -39,13 +39,13 @@ public class GLMatrix {
         Vec3 sNorm = s.times(1.0/s.norm());
         Vec3 u = sNorm.cross(f);
         // Transpose to keep with opengl docs visual nomenclature
-        double[] M = {
-            s.getX(), u.getX(), -f.getX(), 0,
-            s.getY(), u.getY(), -f.getY(), 0,
-            s.getZ(), u.getZ(), -f.getZ(), 0,
+        float[] M = {
+            (float)s.getX(), (float)u.getX(), (float)-f.getX(), 0,
+            (float)s.getY(), (float)u.getY(), (float)-f.getY(), 0,
+            (float)s.getZ(), (float)u.getZ(), (float)-f.getZ(), 0,
                    0,         0,        0, 1};
-        glMultMatrixd(M);
-        glTranslated(-eye.getX(), -eye.getY(), -eye.getZ());
+        glMultMatrixf(M);
+        glTranslatef((float)-eye.getX(), (float)-eye.getY(), (float)-eye.getZ());
     }
     
     /**
@@ -78,8 +78,8 @@ public class GLMatrix {
      * @param m Points to 16 consecutive values that are used as the elements 
      * of a 4 × 4 column-major matrix.   
      */
-    void glMultMatrixd(double[] m) {
-        double result[] = {
+    void glMultMatrixf(float[] m) {
+        float result[] = {
                 0,0,0,0,
                 0,0,0,0,
                 0,0,0,0,
@@ -91,8 +91,8 @@ public class GLMatrix {
         d = result;
     }
     
-    void glTranslated(double x, double y, double z) {
-        glMultMatrixd(new double[] {
+    void glTranslatef(float x, float y, float z) {
+        glMultMatrixf(new float[] {
                 1, 0, 0, 0,
                 0, 1, 0, 0,
                 0, 0, 1, 0,
@@ -102,8 +102,8 @@ public class GLMatrix {
     /**
      * Helper to convert row major to column major, to match visuals of OpenGL docs
      */
-    protected static double[] transpose(double m[]) {
-        return new double[] {
+    protected static float[] transpose(float m[]) {
+        return new float[] {
                 m[0], m[4], m[8], m[12],
                 m[1], m[5], m[9], m[13],
                 m[2], m[6], m[10], m[14],
@@ -116,13 +116,17 @@ public class GLMatrix {
 		// http://www.opengl.org/sdk/docs/man2/xhtml/glFrustum.xml
 		double A = (right + left) / (right - left);
 		double B = (top + bottom) / (top - bottom);
-		double C = (zFar + zNear) / (zFar - zNear);
-		double D = 2*zFar*zNear/(zFar - zNear);
-        glMultMatrixd(new double[] {
-                2*zNear/(right-left), 0, 0, 0,
-                0, 2*zNear/(top-bottom), 0, 0,
-                A, B, C, -1,
-                0, 0, D, 0});
+		double C = -(zFar + zNear) / (zFar - zNear);
+		double D = -2*zFar*zNear/(zFar - zNear);
+        glMultMatrixf(new float[] {
+                (float)(2*zNear/(right-left)), 0, 0, 0,
+                0, (float)(2*zNear/(top-bottom)), 0, 0,
+                (float)A, (float)B, (float)C, -1,
+                0, 0, (float)D, 0});
 	}
+
+    public float[] getFloatArray() {
+        return d;
+    }
 
 }

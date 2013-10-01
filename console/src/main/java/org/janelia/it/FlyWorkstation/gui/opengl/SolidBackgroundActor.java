@@ -3,12 +3,16 @@ package org.janelia.it.FlyWorkstation.gui.opengl;
 import java.awt.Color;
 
 import javax.media.opengl.GL;
-import javax.media.opengl.GLAutoDrawable;
 
 import org.janelia.it.FlyWorkstation.gui.viewer3d.BoundingBox3d;
 
+/**
+ * Should work for both GL2 and GL3
+ * @author brunsc
+ *
+ */
 public class SolidBackgroundActor 
-implements GLActor
+implements GL3Actor
 {
     private Color color;
     
@@ -17,8 +21,8 @@ implements GLActor
     }
 
     @Override
-    public void display(GLAutoDrawable glDrawable) {
-        GL gl = glDrawable.getGL();
+    public void display(GLActorContext context) {
+        GL gl = context.getGLAutoDrawable().getGL();
         gl.glClear(GL.GL_COLOR_BUFFER_BIT);
     }
 
@@ -28,8 +32,8 @@ implements GLActor
     }
 
     @Override
-    public void init(GLAutoDrawable glDrawable) {
-        GL gl = glDrawable.getGL();
+    public void init(GLActorContext context) {
+        GL gl = context.getGLAutoDrawable().getGL();
         gl.glClearColor(
                 color.getRed()/255.0f,
                 color.getGreen()/255.0f,
@@ -38,7 +42,7 @@ implements GLActor
     }
 
     @Override
-    public void dispose(GLAutoDrawable glDrawable) 
+    public void dispose(GLActorContext context) 
     {}
 
 }

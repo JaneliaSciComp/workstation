@@ -1,31 +1,17 @@
 package org.janelia.it.FlyWorkstation.gui.viewer3d;
 
+import javax.media.opengl.GL;
 import javax.media.opengl.GL2;
-import javax.media.opengl.GLAutoDrawable;
 
 import org.janelia.it.FlyWorkstation.geom.Vec3;
-import org.janelia.it.FlyWorkstation.gui.opengl.GLActor;
+import org.janelia.it.FlyWorkstation.gui.opengl.GL3Actor;
+import org.janelia.it.FlyWorkstation.gui.opengl.GLActorContext;
 
 import com.jogamp.opengl.util.gl2.GLUT;
 
-public class TeapotActor implements GLActor 
+public class TeapotActor implements GL3Actor 
 {
     private GLUT glut = new GLUT();
-
-	@Override
-	public void display(GLAutoDrawable glDrawable) {
-        GL2 gl = glDrawable.getGL().getGL2();
-		// due to a bug in glutSolidTeapot, triangle vertices are in CW order 
-        gl.glPushAttrib(GL2.GL_POLYGON_BIT); // remember current GL_FRONT_FACE indictor
-        gl.glFrontFace( GL2.GL_CW ); 
-        gl.glColor3f(0.40f, 0.27f, 0.00f);
-        gl.glMatrixMode(GL2.GL_MODELVIEW_MATRIX);
-        gl.glPushMatrix();
-        gl.glRotated(180, 1, 0, 0); // Flip teapot to match Y-down convention
-        glut.glutSolidTeapot(1.0);
-        gl.glPopMatrix();
-        gl.glPopAttrib(); // restore GL_FRONT_FACE
-	}
 
 	public BoundingBox3d getBoundingBox3d() {
 		BoundingBox3d result = new BoundingBox3d();
@@ -34,9 +20,34 @@ public class TeapotActor implements GLActor
 		return result;
 	}
 	
-	@Override
-	public void init(GLAutoDrawable glDrawable) {}
+    @Override
+    public void display(GLActorContext context) 
+    {
+        GL gl = context.getGLAutoDrawable().getGL();
+        if (gl.isGL2()) {
+            GL2 gl2 = gl.getGL2();
+            // due to a bug in glutSolidTeapot, triangle vertices are in CW order 
+            gl2.glPushAttrib(GL2.GL_POLYGON_BIT); // remember current GL_FRONT_FACE indictor
+            gl.glFrontFace( GL2.GL_CW ); 
+            gl2.glColor3f(0.40f, 0.27f, 0.00f);
+            gl2.glMatrixMode(GL2.GL_MODELVIEW_MATRIX);
+            gl2.glPushMatrix();
+            gl2.glRotated(180, 1, 0, 0); // Flip teapot to match Y-down convention
+            glut.glutSolidTeapot(1.0);
+            gl2.glPopMatrix();
+            gl2.glPopAttrib(); // restore GL_FRONT_FACE
+            
+        }
+        else {
+            // TODO - won't work with GL3...
+        }
+    }
 
-	@Override
-	public void dispose(GLAutoDrawable glDrawable) {}
+    @Override
+    public void init(GLActorContext context)
+    {}
+
+    @Override
+    public void dispose(GLActorContext context) 
+    {}
 }

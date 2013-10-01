@@ -3,13 +3,13 @@ package org.janelia.it.FlyWorkstation.gui.opengl.stereo3d;
 import javax.media.opengl.GL2;
 import javax.media.opengl.GLAutoDrawable;
 import org.janelia.it.FlyWorkstation.gui.camera.ObservableCamera3d;
-import org.janelia.it.FlyWorkstation.gui.opengl.GLActor;
+import org.janelia.it.FlyWorkstation.gui.opengl.GL3Actor;
 
 public class CrossEyeStereoMode extends AbstractStereoMode 
 {
     public CrossEyeStereoMode(
     		ObservableCamera3d camera, 
-    		GLActor monoActor)
+    		GL3Actor monoActor)
 	{
     	super(camera, monoActor);
 	}

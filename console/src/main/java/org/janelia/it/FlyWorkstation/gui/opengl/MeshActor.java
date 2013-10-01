@@ -7,7 +7,7 @@ import java.nio.IntBuffer;
 
 import javax.media.opengl.GL;
 import javax.media.opengl.GL2;
-import javax.media.opengl.GLAutoDrawable;
+import javax.media.opengl.GL2GL3;
 import javax.media.opengl.glu.GLU;
 
 import org.janelia.it.FlyWorkstation.geom.Vec3;
@@ -24,13 +24,15 @@ import org.slf4j.LoggerFactory;
  *
  */
 public class MeshActor 
-implements GLActor
+implements GL3Actor
 {
     private static Logger logger = LoggerFactory.getLogger( MeshActor.class );
     protected static GLU glu = new GLU();
     private final int floatsPerVertex = 4;
     private final int floatsPerNormal = 3;
     private final int bytesPerFloat = 4;
+    private int vertexLocation = 0; // shader program uniform index
+    private int normalLocation = 1;
 
     /**
      * Various rendering methodologies from simplest/oldest (IMMEDIATE_MODE)
@@ -43,18 +45,20 @@ implements GLActor
         IMMEDIATE_MODE,
         DISPLAY_LISTS,
         VERTEX_BUFFER_OBJECTS,
+        VBO_WITH_SHADER,
     }
     
     private boolean smoothing = true;
     private PolygonalMesh mesh;
     private BoundingBox3d boundingBox;
-    private DisplayMethod displayMethod = DisplayMethod.VERTEX_BUFFER_OBJECTS;
+    private DisplayMethod displayMethod = DisplayMethod.VBO_WITH_SHADER;
     // display list render method
     private int displayList = 0;
     // vertex buffer object render method
     private int vertexNormalVbo = 0;
     private int indexVbo = 0;
     private int indexCount = 0;
+    private int vertexArrayObject = 0;
     
     public MeshActor(PolygonalMesh mesh) {
         this.mesh = mesh;
@@ -72,16 +76,21 @@ implements GLActor
         this.boundingBox = bb;
     }
 
-    @Override
-    public void display(GLAutoDrawable glDrawable) {
+    private void displayGL2(GL2 gl2) {
         if (displayMethod == DisplayMethod.IMMEDIATE_MODE)
-            displayUsingImmediateMode(glDrawable);
+            displayUsingImmediateMode(gl2);
         else if (displayMethod == DisplayMethod.DISPLAY_LISTS)
-            displayUsingDisplayList(glDrawable); // should be faster than immediate
+            displayUsingDisplayList(gl2); // should be faster than immediate
         else if (displayMethod == DisplayMethod.VERTEX_BUFFER_OBJECTS)
-            displayUsingVertexBufferObjects(glDrawable); // should be faster than immediate
+            displayUsingVertexBufferObjects(gl2); // should be faster than immediate
+        else if (displayMethod == DisplayMethod.VBO_WITH_SHADER)
+            displayUsingVertexBufferObjectsWithShader(gl2); // should be faster than immediate
         else
             throw new UnsupportedOperationException("Display mode not implemented yet: "+displayMethod);
+    }
+    
+    private void displayGL2GL3(GL2GL3 gl2gl3) {
+        displayUsingVertexBufferObjectsWithShader(gl2gl3);
     }
     
     /**
@@ -94,25 +103,24 @@ implements GLActor
      * 
      * @param gl OpenGL rendering context
      */
-    private void displayUsingImmediateMode(GLAutoDrawable glDrawable) {
-        GL2 gl = glDrawable.getGL().getGL2();
+    private void displayUsingImmediateMode(GL2 gl2) {
         for (PolygonalMesh.Face face : mesh.getFaces()) {
             // Paint
-            gl.glBegin(GL2.GL_TRIANGLE_FAN);
+            gl2.glBegin(GL2.GL_TRIANGLE_FAN);
             if ((!smoothing) && (face.computedNormal != null))
-                gl.glNormal3d(face.computedNormal.getX(), face.computedNormal.getY(), face.computedNormal.getZ());
+                gl2.glNormal3d(face.computedNormal.getX(), face.computedNormal.getY(), face.computedNormal.getZ());
             for (int v : face.vertexIndexes) {
                 PolygonalMesh.Vertex vertex = mesh.getVertexes().get(v-1);
                 if (smoothing && (vertex.computedNormal != null))
-                    gl.glNormal3d(vertex.computedNormal.getX(), vertex.computedNormal.getY(), vertex.computedNormal.getZ());
-                gl.glVertex4d(vertex.getX(), vertex.getY(), vertex.getZ(), vertex.getW());
+                    gl2.glNormal3d(vertex.computedNormal.getX(), vertex.computedNormal.getY(), vertex.computedNormal.getZ());
+                gl2.glVertex4d(vertex.getX(), vertex.getY(), vertex.getZ(), vertex.getW());
             }
-            gl.glEnd();
+            gl2.glEnd();
         }
     }
 
-    private void initializeVbos(GLAutoDrawable glDrawable) {
-        GL2 gl = glDrawable.getGL().getGL2();
+    private void initializeVbos(GL2GL3 gl2gl3) {
+        GL gl = gl2gl3.getGL();
         // Initialize vertex buffer objects
         int[] vbos = {0,0};
         gl.glGenBuffers(2, vbos, 0);
@@ -179,43 +187,83 @@ implements GLActor
                 totalIndexByteCount, 
                 indices, GL.GL_STATIC_DRAW);
         gl.glBindBuffer(GL.GL_ELEMENT_ARRAY_BUFFER, 0);
+        // Vertex array object
+
+        int ix[] = {0};
+        gl2gl3.glGenVertexArrays(1, ix, 0);
+        vertexArrayObject = ix[0];
     }
     
-    private void displayUsingVertexBufferObjects(GLAutoDrawable glDrawable) {
-        GL2 gl = glDrawable.getGL().getGL2();
+    private void displayUsingVertexBufferObjects(GL2 gl2) {
+        GL gl = gl2.getGL();
+        GL2GL3 gl2gl3 = gl2.getGL2GL3();
+        // GL gl = glDrawable.getGL();
+        // GL2 gl2 = gl.getGL2();
         if (vertexNormalVbo < 1) // first time?
-            initializeVbos(glDrawable);
-        gl.glEnableClientState(GL2.GL_VERTEX_ARRAY);
-        gl.glEnableClientState(GL2.GL_NORMAL_ARRAY);
+            initializeVbos(gl2);
+        gl2gl3.glEnableClientState(GL2.GL_VERTEX_ARRAY);
+        gl2gl3.glEnableClientState(GL2.GL_NORMAL_ARRAY);
 
         final int bytesPerVertexNormal = (floatsPerVertex + floatsPerNormal)*bytesPerFloat;
+        gl2gl3.glBindBuffer(GL.GL_ARRAY_BUFFER, vertexNormalVbo);
+        gl2.glVertexPointer(floatsPerVertex, GL.GL_FLOAT, bytesPerVertexNormal, 0);
+        gl2.glNormalPointer(GL.GL_FLOAT, bytesPerVertexNormal, floatsPerVertex*bytesPerFloat);
+        gl2gl3.glBindBuffer(GL.GL_ELEMENT_ARRAY_BUFFER, indexVbo);
+        gl2gl3.glDrawElements(GL.GL_TRIANGLES, indexCount, GL.GL_UNSIGNED_INT, 0);
+
+        gl2gl3.glDisableClientState(GL2.GL_NORMAL_ARRAY);
+        gl2gl3.glDisableClientState(GL2.GL_VERTEX_ARRAY);
+        checkGlError(gl, "display mesh using vbos");
+    }
+
+    private void displayUsingVertexBufferObjectsWithShader(GL2GL3 gl2gl3) {
+        GL gl = gl2gl3.getGL();
+        // GL2 gl2 = gl.getGL2();
+        if (vertexNormalVbo < 1) // first time?
+            initializeVbos(gl2gl3);
+        gl2gl3.glBindVertexArray(vertexArrayObject);
+        
+        final int bytesPerVertexNormal = (floatsPerVertex + floatsPerNormal)*bytesPerFloat;
         gl.glBindBuffer(GL.GL_ARRAY_BUFFER, vertexNormalVbo);
-        gl.glVertexPointer(floatsPerVertex, GL.GL_FLOAT, bytesPerVertexNormal, 0);
-        gl.glNormalPointer(GL.GL_FLOAT, bytesPerVertexNormal, floatsPerVertex*bytesPerFloat);
+
+        checkGlError(gl, "display mesh using vbos and shader 1");
+        
+        // vertices
+        gl2gl3.glEnableVertexAttribArray(vertexLocation);
+
+        gl2gl3.glVertexAttribPointer(vertexLocation, floatsPerVertex, GL.GL_FLOAT, false, bytesPerVertexNormal, 0);
+
+        // normals
+        // Normal might be compiled away if not used...
+        if (normalLocation >= 0) {
+            gl2gl3.glEnableVertexAttribArray(normalLocation);
+            checkGlError(gl, "display mesh using vbos and shader 2");
+            gl2gl3.glVertexAttribPointer(normalLocation, floatsPerNormal, GL.GL_FLOAT, false, bytesPerVertexNormal, floatsPerVertex*bytesPerFloat);
+        }
+
+        checkGlError(gl, "display mesh using vbos and shader 3");
+        
         gl.glBindBuffer(GL.GL_ELEMENT_ARRAY_BUFFER, indexVbo);
         gl.glDrawElements(GL.GL_TRIANGLES, indexCount, GL.GL_UNSIGNED_INT, 0);
 
-        gl.glDisableClientState(GL2.GL_NORMAL_ARRAY);
-        gl.glDisableClientState(GL2.GL_VERTEX_ARRAY);
-        checkGlError(gl, "display mesh using vbos");
+        checkGlError(gl, "display mesh using vbos and shader 4");
     }
 
     /**
      * Display lists are the old fashioned way to improve opengl performance
      * @param gl
      */
-    private void displayUsingDisplayList(GLAutoDrawable glDrawable) {
-        GL2 gl = glDrawable.getGL().getGL2();
+    private void displayUsingDisplayList(GL2 gl2) {
         // The very first time, paint in immediate mode, and store a display list
         if (displayList < 1) {
-            displayList = gl.glGenLists(1);
-            gl.glNewList(displayList, GL2.GL_COMPILE);
-            displayUsingImmediateMode(glDrawable); // just this one time!
-            gl.glEndList();
+            displayList = gl2.glGenLists(1);
+            gl2.glNewList(displayList, GL2.GL_COMPILE);
+            displayUsingImmediateMode(gl2); // just this one time!
+            gl2.glEndList();
         }
         // On subsequent renders, use the display list
         else {
-            gl.glCallList(displayList);
+            gl2.glCallList(displayList);
         }
     }
     
@@ -228,27 +276,16 @@ implements GLActor
         return smoothing;
     }
 
+    public void setVertexLocation(int vertexLocation) {
+        this.vertexLocation = vertexLocation;
+    }
+
+    public void setNormalLocation(int normalLocation) {
+        this.normalLocation = normalLocation;
+    }
+
     public void setSmoothing(boolean smoothing) {
         this.smoothing = smoothing;
-    }
-
-    @Override
-    public void init(GLAutoDrawable glDrawable) {
-    }
-
-    @Override
-    public void dispose(GLAutoDrawable glDrawable) {
-        GL2 gl = glDrawable.getGL().getGL2();
-        if (displayList > 0) {
-            gl.glDeleteLists(displayList, 1);
-            displayList = 0;
-        }
-        if (vertexNormalVbo > 0) {
-            int[] vbos = {vertexNormalVbo, indexVbo};
-            gl.glDeleteBuffers(2, vbos, 0);
-            vertexNormalVbo = 0;
-            indexVbo = 0;
-        }
     }
 
     private void checkGlError(GL gl, String message) {
@@ -257,6 +294,43 @@ implements GLActor
             return;
         String errorStr = glu.gluErrorString(errorNumber);
         logger.error( "OpenGL Error " + errorNumber + ": " + errorStr + ": " + message );  
+    }
+
+    @Override
+    public void display(GLActorContext context) {
+        GL gl = context.getGLAutoDrawable().getGL();
+        if (gl.isGL2()) {
+            displayGL2(gl.getGL2());
+        }
+        else if (gl.isGL2GL3()) {
+            displayGL2GL3(gl.getGL2GL3());
+        }
+    }
+
+    @Override
+    public void init(GLActorContext context) {
+    }
+
+    @Override
+    public void dispose(GLActorContext context) {
+        GL gl = context.getGLAutoDrawable().getGL();
+        if (displayList > 0) {
+            GL2 gl2 = gl.getGL2();
+            gl2.glDeleteLists(displayList, 1);
+            displayList = 0;
+        }
+        if (vertexNormalVbo > 0) {
+            int[] vbos = {vertexNormalVbo, indexVbo};
+            gl.glDeleteBuffers(2, vbos, 0);
+            vertexNormalVbo = 0;
+            indexVbo = 0;
+        }
+        if (vertexArrayObject > 0) {
+            GL2GL3 gl2gl3 = gl.getGL2GL3();
+            int[] ix = {vertexArrayObject};
+            gl2gl3.glDeleteVertexArrays(1, ix, 0);
+            vertexArrayObject = 0;
+        }
     }
 
 }

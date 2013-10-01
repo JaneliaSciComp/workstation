@@ -28,6 +28,9 @@ public class GL2AdapterFactory {
         private GL2 gl;
         private static final GLU glu = new GLU();
         
+        private float projectionMatrixCache[] = new float[16];
+        private float modelViewMatrixCache[] = new float[16];
+        
         public GL2GL2Adapter(GL2 gl) {
             this.gl = gl;
         }
@@ -68,15 +71,28 @@ public class GL2AdapterFactory {
 				double top, double zNear, double zFar) {
 			gl.glFrustum(left, right, bottom, top, zNear, zFar);
 		}
+
+        @Override
+        public float[] getProjectionMatrix() {
+            gl.glGetFloatv(GL2.GL_PROJECTION_MATRIX, projectionMatrixCache, 0);
+            return projectionMatrixCache;
+        }
+
+        @Override
+        public float[] getModelViewMatrix() {
+            gl.glGetFloatv(GL2.GL_MODELVIEW_MATRIX, modelViewMatrixCache, 0);
+            return modelViewMatrixCache;
+        }
     }
     
     static class GL3GL2Adapter implements GL2Adapter {
         private GL3 gl;
-        private GLMatrixState glMatrixState;
-        
+        private GLMatrixState glMatrixState = new GLMatrixState();
+        private GLLightingState glLightingState = new GLLightingState();
+        private GLMaterialState glMaterialState = new GLMaterialState();
+
         public GL3GL2Adapter(GL3 gl) {
             this.gl = gl;
-            this.glMatrixState = new GLMatrixState();
         }
 
         @Override
@@ -120,6 +136,16 @@ public class GL2AdapterFactory {
 		{
 			glMatrixState.getCurrentMatrix().glFrustum(
 					left, right, bottom, top, zNear, zFar);
-		}        
+		}
+
+        @Override
+        public float[] getProjectionMatrix() {
+            return glMatrixState.getProjectionMatrix();
+        }
+
+        @Override
+        public float[] getModelViewMatrix() {
+            return glMatrixState.getModelViewMatrix();
+        }        
     }
 }

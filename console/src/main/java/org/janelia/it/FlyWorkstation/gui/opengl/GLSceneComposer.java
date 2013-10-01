@@ -44,7 +44,7 @@ implements GLEventListener
     private CompositeGLActor transparentActors = new CompositeGLActor();
     private CompositeGLActor hudActors = new CompositeGLActor();
     
-    private GLActor[] allActors = {
+    private GL3Actor[] allActors = {
             backgroundActors,
             opaqueActors,
             transparentActors,
@@ -79,11 +79,11 @@ implements GLEventListener
             }});
 	}
 
-    public void addBackgroundActor(GLActor actor) {
+    public void addBackgroundActor(GL3Actor actor) {
         backgroundActors.addActor(actor);        
     }
 
-    public void addOpaqueActor(GLActor actor) {
+    public void addOpaqueActor(GL3Actor actor) {
         opaqueActors.addActor(actor);
     }
 
@@ -102,14 +102,15 @@ implements GLEventListener
 	        GL gl = glDrawable.getGL();
 	        gl.glClear(GL.GL_DEPTH_BUFFER_BIT);
 	    }
-	    for (GLActor actor : allActors)
-	        actor.display(glDrawable);
+	    for (GL3Actor actor : allActors)
+	        actor.display(actorContext);
 	}
 
 	@Override
 	public void dispose(GLAutoDrawable glDrawable) {
-	    for (GLActor actor : allActors)
-	        actor.dispose(glDrawable);
+        GLActorContext actorContext = new GLActorContext(glDrawable, gl2Adapter);
+	    for (GL3Actor actor : allActors)
+	        actor.dispose(actorContext);
 	}
 
 	@Override
@@ -119,8 +120,8 @@ implements GLEventListener
 	    GLActorContext actorContext = new GLActorContext(glDrawable, gl2Adapter);
 		if (useDepth)
 			gl.glEnable(GL.GL_DEPTH_TEST);
-		for (GLActor actor : allActors)
-		    actor.init(glDrawable);
+		for (GL3Actor actor : allActors)
+		    actor.init(actorContext);
 	}
 
 	@Override

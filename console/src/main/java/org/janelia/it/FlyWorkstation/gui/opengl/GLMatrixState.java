@@ -1,18 +1,32 @@
 package org.janelia.it.FlyWorkstation.gui.opengl;
 
+import java.util.Stack;
+
 import org.janelia.it.FlyWorkstation.gui.opengl.GL2Adapter.MatrixMode;
 
+// Replacement for implicit transformation graph from OpenGL <= 3.0
+// for use in later versions of OpenGL
 public class GLMatrixState {    
-    private GLMatrix projectionMatrix = new GLMatrix();
-    private GLMatrix modelViewMatrix = new GLMatrix();
+    private Stack<GLMatrix> projectionMatrix = new Stack<GLMatrix>();
+    private Stack<GLMatrix> modelViewMatrix = new Stack<GLMatrix>();
     
-    private GLMatrix currentMatrix = modelViewMatrix;
+    private Stack<GLMatrix> currentMatrix = modelViewMatrix;
+
+    public GLMatrixState() {
+        // begin with at least one matrix on the stack
+        projectionMatrix.push(new GLMatrix());
+        modelViewMatrix.push(new GLMatrix());
+    }
+    
+    public GLMatrix getCurrentMatrix() {
+        return currentMatrix.peek();
+    }
 
     /**
      * Replace the current matrix with the identity matrix
      */
     void glLoadIdentity() {
-        currentMatrix.glLoadIdentity();
+        currentMatrix.peek().glLoadIdentity();
     }
     
     /**
@@ -41,7 +55,12 @@ public class GLMatrixState {
         }
     }
 
-	public GLMatrix getCurrentMatrix() {
-		return currentMatrix;
-	}
+    public float[] getModelViewMatrix() {
+        return modelViewMatrix.peek().getFloatArray();
+    }
+
+    public float[] getProjectionMatrix() {
+        return projectionMatrix.peek().getFloatArray();
+    }
+
 }

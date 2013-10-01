@@ -58,4 +58,7 @@ public interface GL2Adapter {
 			double bottom, double top, 
 			double zNear, double zFar);
 
+    float[] getProjectionMatrix();
+    float[] getModelViewMatrix();
+
 }

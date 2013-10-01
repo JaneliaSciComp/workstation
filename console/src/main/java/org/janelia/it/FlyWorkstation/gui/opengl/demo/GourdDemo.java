@@ -21,6 +21,7 @@ import org.janelia.it.FlyWorkstation.gui.opengl.CompositeGLActor;
 import org.janelia.it.FlyWorkstation.gui.opengl.GLSceneComposer;
 import org.janelia.it.FlyWorkstation.gui.opengl.LightingActor;
 import org.janelia.it.FlyWorkstation.gui.opengl.MeshActor;
+import org.janelia.it.FlyWorkstation.gui.opengl.MeshGroupActor;
 import org.janelia.it.FlyWorkstation.gui.opengl.PolygonalMesh;
 import org.janelia.it.FlyWorkstation.gui.opengl.SolidBackgroundActor;
 import org.janelia.it.FlyWorkstation.gui.opengl.stereo3d.AbstractStereoMode;
@@ -47,7 +48,7 @@ public class GourdDemo extends JFrame
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 
         // Create canvas for openGL display of gourd
-        GLCapabilities glCapabilities = new GLCapabilities(GLProfile.get(GLProfile.GL2));
+        GLCapabilities glCapabilities = new GLCapabilities(GLProfile.get(GLProfile.GL3));
         // GLCapabilities glCapabilities = new GLCapabilities(GLProfile.getDefault());
         // glCapabilities.setStereo(true);
         GLCanvas glPanel = new GLCanvas(glCapabilities);
@@ -74,35 +75,15 @@ public class GourdDemo extends JFrame
 		camera.setFocus(new Vec3(0, 0, 0));
 		camera.setPixelsPerSceneUnit(200);
 
-		boolean oldStereoMode = false;
-		if (oldStereoMode) { // works
-		    // Create non-stereo-3D actor component
-		    CompositeGLActor monoActor = new CompositeGLActor();
-		    // Use 3D lighting
-		    monoActor.addActor(new LightingActor());
-		    monoActor.addActor(new MeshActor(gourdMesh));
-		    AbstractStereoMode stereoMode = new MonoStereoMode(
-		            camera, monoActor);
-		    // stereoMode.setSwapEyes(true);
-		    glPanel.addGLEventListener(stereoMode);
-		    // Is this needed? YES
-		    camera.getViewChangedSignal().connect(
-		            new Slot() {
-		                @Override
-		                public void execute() {
-		                    glComponent.repaint();
-		                }
-		            });
-		}
-		else {
-		    // Wrap mono actor in stereo 3D mode
-		    GLSceneComposer sceneComposer = 
-		            new GLSceneComposer(camera, glPanel);
-		    sceneComposer.addBackgroundActor(new SolidBackgroundActor(
-		            Color.lightGray));
-		    sceneComposer.addOpaqueActor(new LightingActor());
-		    sceneComposer.addOpaqueActor(new MeshActor(gourdMesh));
-		}
+	    // Wrap mono actor in stereo 3D mode
+	    GLSceneComposer sceneComposer = 
+	            new GLSceneComposer(camera, glPanel);
+	    sceneComposer.addBackgroundActor(new SolidBackgroundActor(
+	            Color.lightGray));
+	    sceneComposer.addOpaqueActor(new LightingActor());
+	    MeshGroupActor meshGroup = new MeshGroupActor();
+	    meshGroup.addActor(new MeshActor(gourdMesh));
+	    sceneComposer.addOpaqueActor(meshGroup);
         
         // Apply mouse interactions: drag to rotate etc.
         // Another one-line functionality decorator!
