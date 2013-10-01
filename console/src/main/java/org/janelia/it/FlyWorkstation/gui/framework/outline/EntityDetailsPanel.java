@@ -374,6 +374,7 @@ public class EntityDetailsPanel extends JPanel implements Accessibility, Refresh
 
         	private Entity loadedEntity;
         	private EntityDocument doc;
+			private boolean solrError = false;
         	
 			@Override
 			protected void doStuff() throws Exception {
@@ -385,6 +386,7 @@ public class EntityDetailsPanel extends JPanel implements Accessibility, Refresh
 				}
 				catch (Exception e) {
 					log.error("Error loading Solr attributes",e);
+					solrError  = true;
 				}
 			}
 			
@@ -440,7 +442,8 @@ public class EntityDetailsPanel extends JPanel implements Accessibility, Refresh
 	            		}
 	            	}
 	            }
-		        else {
+		        
+		        if (solrError) {
 		        	attributesTable.addRow(new AttributeValue("ERROR", "Could not query Solr server for additional attributes"));
 		        }
 		        
