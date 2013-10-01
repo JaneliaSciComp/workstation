@@ -466,7 +466,9 @@ public class AlignmentBoardViewer extends Viewer implements AlignmentBoardContro
         if (loadWorker != null) {
             loadWorker.disregard();
         }
-        settingsDialog.removeAllSettingsListeners();
+        if ( settingsDialog != null ) {
+            settingsDialog.removeAllSettingsListeners();
+        }
         removeSettingsLaunchButton();
         removeAll();
         boardOpen = false;
