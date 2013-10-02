@@ -39,12 +39,23 @@ public class Subvolume {
 	        ZoomedVoxelIndex corner2,
 	        SharedVolumeImage wholeImage) 
 	{
-	    initialize(corner1, corner2, wholeImage);
+	    initialize(corner1, corner2, wholeImage, null);
 	}
 	
+    public Subvolume(
+            ZoomedVoxelIndex corner1,
+            ZoomedVoxelIndex corner2,
+            SharedVolumeImage wholeImage,
+            TextureCache textureCache) 
+    {
+        initialize(corner1, corner2, wholeImage, textureCache);
+    }
+    
 	private void initialize(ZoomedVoxelIndex corner1,
             ZoomedVoxelIndex corner2,
-            SharedVolumeImage wholeImage) {
+            SharedVolumeImage wholeImage,
+            TextureCache textureCache) 
+	{
 	    // Both corners must be the same zoom resolution
 	    assert(corner1.getZoomLevel().equals(corner2.getZoomLevel()));
 	    // Populate data fields
@@ -111,16 +122,21 @@ public class Subvolume {
         }
         for (TileIndex tileIx : neededTiles) {
             try {
-                TextureData2dGL tileData = loadAdapter.loadToRam(tileIx);
+                TextureData2dGL tileData = null;
+                // First try to get image from cache...
+                if ( (textureCache != null) && (textureCache.containsKey(tileIx)) )
+                {
+                    TileTexture tt = textureCache.get(tileIx);
+                    tileData = tt.getTextureData();
+                }
+                // ... if that fails, load the data right now.
+                if (tileData == null)
+                    tileData = loadAdapter.loadToRam(tileIx);
                 TileXyz tileXyz = new TileXyz(
                         tileIx.getX(), tileIx.getY(), tileIx.getZ());
                 ZoomedVoxelIndex tileOrigin = tileFormat.zoomedVoxelIndexForTileXyz(
                         tileXyz, zoom, tileIx.getSliceAxis());
                 
-                ShortBuffer sourceShorts = null;
-                if (bytesPerIntensity == 2)
-                    sourceShorts = tileData.getPixels().asShortBuffer();
-
                 // One Z-tile goes to one destination Z coordinate in this subvolume.
                 int dstZ = tileOrigin.getZ() - origin.getZ(); // local Z coordinate
                 // Y
@@ -207,10 +223,10 @@ public class Subvolume {
                 vix2, 
                 zoomLevel, CoordinateAxis.Z);
         //
-        initialize(zvix1, zvix2, wholeImage);
+        initialize(zvix1, zvix2, wholeImage, null);
     }
 
-	public BufferedImage[] getAsBufferedImages() {
+    public BufferedImage[] getAsBufferedImages() {
 		int sx = extent.getX();
 		int sy = extent.getY();
 		int sz = extent.getZ();

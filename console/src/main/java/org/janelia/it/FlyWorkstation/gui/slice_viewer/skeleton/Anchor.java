@@ -1,10 +1,9 @@
 package org.janelia.it.FlyWorkstation.gui.slice_viewer.skeleton;
 
-import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.Set;
 
 import org.janelia.it.FlyWorkstation.geom.Vec3;
-import org.janelia.it.FlyWorkstation.signal.Signal;
 import org.janelia.it.FlyWorkstation.signal.Signal1;
 
 public class Anchor {
@@ -24,7 +23,7 @@ public class Anchor {
 	private Type anchorType = Type.UNDEFINED;
 	private double radius = 1.0;
 	// No explicit edge objects, just symmetric neighbor references
-	private Set<Anchor> neighbors = new HashSet<Anchor>();
+	private Set<Anchor> neighbors = new LinkedHashSet<Anchor>();
 	
 	public Signal1<Anchor> anchorMovedSignal = new Signal1<Anchor>();
 	

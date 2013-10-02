@@ -330,7 +330,18 @@ implements MouseMode, KeyListener
                             	skeleton.getHistory().push(getHoverAnchor());
                                 camera.setFocus(getHoverAnchor().getLocation());
                             }
-                        }));                    
+                        }));
+                        // Trace connection to parent
+                        final boolean showTraceMenu = true; // just for initial debugging?
+                        if (showTraceMenu && (hover.getNeighbors().size() > 0)) {
+                            result.add(new JMenuItem(new AbstractAction("Trace connection to this anchor") {
+                                @Override
+                                public void actionPerformed(ActionEvent e) {
+                                    Anchor h = getHoverAnchor();
+                                    skeleton.traceAnchorConnection(h);
+                                }
+                            }));
+                        }
                         // Make Parent
                         if (hover != parent) {
 	                        result.add(new JMenuItem(new AbstractAction("Designate this anchor as parent [left click]") {

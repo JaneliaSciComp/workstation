@@ -8,6 +8,7 @@ import org.janelia.it.FlyWorkstation.signal.Signal;
 import org.janelia.it.FlyWorkstation.signal.Signal1;
 import org.janelia.it.FlyWorkstation.signal.Slot;
 import org.janelia.it.FlyWorkstation.signal.Slot1;
+import org.janelia.it.FlyWorkstation.tracing.PathTraceRequest;
 import org.janelia.it.jacs.model.user_data.tiledMicroscope.TmGeoAnnotation;
 
 public class Skeleton {
@@ -44,6 +45,7 @@ public class Skeleton {
 	private HistoryStack<Anchor> anchorHistory = new HistoryStack<Anchor>();
 
 	public Signal skeletonChangedSignal = new Signal();
+	public Signal1<PathTraceRequest> pathTraceRequestedSignal = new Signal1<PathTraceRequest>();
 
 	// API for synchronizing with back end database
 	// after discussion with Don Olbris July 8, 2013
@@ -265,5 +267,19 @@ public class Skeleton {
 	public HistoryStack<Anchor> getHistory() {
 		return anchorHistory;
 	}
+
+    public void traceAnchorConnection(Anchor anchor) {
+        if (anchor == null)
+            return;
+        if (anchor.getNeighbors().size() < 1)
+            return; // Nothing to connect to
+        Vec3 xyz1 = anchor.getLocation();
+        // Assume the first neighbor is the parent? // TODO
+        Anchor neighbor = anchor.getNeighbors().iterator().next();
+        Vec3 xyz2 = neighbor.getLocation();
+        PathTraceRequest pathTraceRequest = 
+                new PathTraceRequest(xyz1, xyz2, anchor.getGuid(), neighbor.getGuid());
+        pathTraceRequestedSignal.emit(pathTraceRequest);
+    }
 
 }

@@ -188,7 +188,7 @@ implements GL3Actor
                 indices, GL.GL_STATIC_DRAW);
         gl.glBindBuffer(GL.GL_ELEMENT_ARRAY_BUFFER, 0);
         // Vertex array object
-
+            
         int ix[] = {0};
         gl2gl3.glGenVertexArrays(1, ix, 0);
         vertexArrayObject = ix[0];

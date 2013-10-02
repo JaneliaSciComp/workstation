@@ -105,7 +105,7 @@ public class TileFormat
 	    ZoomLevel zoomLevel = new ZoomLevel(index.getZoom());
 		TileXyz tileXyz = new TileXyz(index.getX(), index.getY(), index.getZ());
 		ZoomedVoxelIndex zvox = zoomedVoxelIndexForTileXyz(tileXyz, zoomLevel, index.getSliceAxis());
-		VoxelXyz vox = voxelXyzForZoomedVoxelIndex(zvox, index.getZoom(), index.getSliceAxis());
+		VoxelXyz vox = voxelXyzForZoomedVoxelIndex(zvox, index.getSliceAxis());
 		MicrometerXyz ulfCorner = micrometerXyzForVoxelXyz(vox, index.getSliceAxis());
 		// lower right back corner
 		int dt[] = {1, -1, 1}; // shift by one tile to get opposite corner
@@ -113,7 +113,7 @@ public class TileFormat
 		dt[depthAxis] = 0; // but no shift in slice direction
 		TileXyz tileLrb = new TileXyz(index.getX() + dt[0], index.getY() + dt[1], index.getZ() + dt[2]);
 		ZoomedVoxelIndex zVoxLrb = zoomedVoxelIndexForTileXyz(tileLrb, zoomLevel, index.getSliceAxis());
-		VoxelXyz voxLrb = voxelXyzForZoomedVoxelIndex(zVoxLrb, index.getZoom(), index.getSliceAxis());
+		VoxelXyz voxLrb = voxelXyzForZoomedVoxelIndex(zVoxLrb, index.getSliceAxis());
 		MicrometerXyz lrbCorner = micrometerXyzForVoxelXyz(voxLrb, index.getSliceAxis());
 		//
 // Checking in commented code. Commented to avoid breaking Chris' other changes.
@@ -417,8 +417,8 @@ public class TileFormat
 				(int)Math.floor(m.getZ() / getVoxelMicrometers()[2]) - origin[2]);
 	}
 	
-	public VoxelXyz voxelXyzForZoomedVoxelIndex(ZoomedVoxelIndex z, int zoomLevel, CoordinateAxis sliceAxis) {
-		int zoomFactor = (int)zoomFactorForZoomLevel(zoomLevel);
+	public VoxelXyz voxelXyzForZoomedVoxelIndex(ZoomedVoxelIndex z, CoordinateAxis sliceAxis) {
+		int zoomFactor = z.getZoomLevel().getZoomOutFactor();
 		int xyz[] = {z.getX(), z.getY(), z.getZ()};
 		int depthAxis = sliceAxis.index();
 		for (int i = 0; i < 3; ++i) {
@@ -537,7 +537,7 @@ public class TileFormat
 	}; 
 	
 	// Base
-	public static class MicrometerXyz extends UnittedVec3Double<VoxelUnit>
+	public static class MicrometerXyz extends UnittedVec3Double<MicrometerUnit>
 	{
 		public MicrometerXyz(double x, double y, double z) {super(x,y,z);}
 	}; // 1	

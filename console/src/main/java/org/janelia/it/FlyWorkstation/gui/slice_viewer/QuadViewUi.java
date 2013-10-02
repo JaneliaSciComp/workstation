@@ -40,6 +40,10 @@ import org.janelia.it.jacs.model.entity.Entity;
 import org.janelia.it.FlyWorkstation.signal.Signal1;
 import org.janelia.it.FlyWorkstation.signal.Slot;
 import org.janelia.it.FlyWorkstation.signal.Slot1;
+import org.janelia.it.FlyWorkstation.tracing.PathTraceRequest;
+import org.janelia.it.FlyWorkstation.tracing.PathTracer;
+import org.janelia.it.FlyWorkstation.tracing.TracedPathActor;
+import org.janelia.it.FlyWorkstation.tracing.TracedPathSegment;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 // import org.slf4j.Logger;
@@ -173,6 +177,8 @@ public class QuadViewUi extends JPanel
 	private final SliceScanAction goBackZSlicesAction = new GoBackZSlicesAction(volumeImage, camera, -10);
 	// annotation-related
     private final CenterNextParentAction centerNextParentAction = new CenterNextParentAction();
+    //
+    private PathTracer pathTracer = new PathTracer(5);
 
 	private final Action clearCacheAction = new AbstractAction() {
 		private static final long serialVersionUID = 1L;
@@ -306,6 +312,26 @@ public class QuadViewUi extends JPanel
         }
     };
 	
+    public Slot1<PathTraceRequest> tracePathSegmentSlot = new Slot1<PathTraceRequest>() {
+        @Override
+        public void execute(PathTraceRequest request) {
+            pathTracer.tracePathAsynchronous(tileServer.getTextureCache(), volumeImage, request);
+            // System.out.println("tracePathSegmentSlot");
+        }
+    };
+    
+    public Slot1<TracedPathSegment> onPathTracedSlot = new Slot1<TracedPathSegment>() {
+        @Override
+        public void execute(TracedPathSegment path) {
+            System.out.println("onPathTracedSlot");
+            TracedPathActor actor = new TracedPathActor(path, 
+                    tileServer.getLoadAdapter().getTileFormat());
+            nwViewer.getViewer().addActor(actor);
+            nwViewer.getViewer().repaint();
+            // TODO - add to all viewers?
+        }
+    };
+    
 	/**
 	 * Create the frame.
 	 */
@@ -315,6 +341,8 @@ public class QuadViewUi extends JPanel
 		sliceViewer.setImageColorModel(imageColorModel);
 		camera.getViewChangedSignal().connect(tileServer.refreshCurrentTileSetSlot);
 		tileServer.loadStatusChangedSignal.connect(onLoadStatusChangedSlot);
+		
+		pathTracer.pathTracedSignal.connect(onPathTracedSlot);
 		
 		colorChannelWidget_3.setVisible(false);
 		colorChannelWidget_2.setVisible(false);
@@ -332,6 +360,7 @@ public class QuadViewUi extends JPanel
         skeleton.splitAnchorRequestedSignal.connect(annotationMgr.splitAnchorRequestedSlot);
         sliceViewer.getSkeletonActor().nextParentChangedSignal.connect(annotationMgr.selectAnnotationSlot);
         skeleton.anchorMovedSignal.connect(annotationMgr.moveAnchorRequestedSlot);
+        skeleton.pathTraceRequestedSignal.connect(tracePathSegmentSlot);
 
         sliceViewerTranslator.connectSkeletonSignals(skeleton);
         sliceViewerTranslator.cameraPanToSignal.connect(setCameraFocusSlot);
