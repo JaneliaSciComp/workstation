@@ -23,6 +23,7 @@ import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.FlyWorkstation.gui.framework.viewer.alignment_board.AlignmentBoardItemChangeEvent.ChangeType;
 import org.janelia.it.FlyWorkstation.gui.util.ColorSwatch;
 import org.janelia.it.FlyWorkstation.gui.util.Icons;
+import org.janelia.it.FlyWorkstation.model.domain.AlignmentSpace;
 import org.janelia.it.FlyWorkstation.model.domain.CompartmentSet;
 import org.janelia.it.FlyWorkstation.model.domain.EntityWrapper;
 import org.janelia.it.FlyWorkstation.model.entity.RootedEntity;
@@ -306,40 +307,27 @@ public class LayersPanel extends JPanel implements Refreshable, ActivatableView 
                 }
 
                 if ( ! hasCompartmentSet ) {
+                    AlignmentSpace targetSpace = new AlignmentSpace( abContext.getAlignmentContext() );
                     List<Entity> compartmentSets =
                             ModelMgr.getModelMgr().getEntitiesByTypeName(EntityConstants.TYPE_COMPARTMENT_SET);
                     if ( compartmentSets != null  &&  compartmentSets.size() > 0 ) {
-                        
+
                         for(Entity compartmentSetEntity : compartmentSets) {
-                            CompartmentSet compartmentSet = new CompartmentSet( new RootedEntity( compartmentSetEntity ) );
-                            compartmentSet.loadContextualizedChildren( context.getAlignmentContext() );
-                            if (!compartmentSet.getChildren().isEmpty()) {
-                                abContext.addNewAlignedEntity( compartmentSet );
-                                return;
+                            AlignmentSpace compartmentSetSpace = new AlignmentSpace( compartmentSetEntity );
+                            if ( targetSpace.equals( compartmentSetSpace ) ) {
+                                CompartmentSet compartmentSet = new CompartmentSet( new RootedEntity( compartmentSetEntity ) );
+                                compartmentSet.loadContextualizedChildren( context.getAlignmentContext() );
+                                if (!compartmentSet.getChildren().isEmpty()) {
+                                    abContext.addNewAlignedEntity( compartmentSet );
+                                    return;
+                                }
                             }
+
                         }
                         
                     }
                 }
 
-//                // Doctoring one of the compartment sets.
-//                for ( EntityWrapper child: context.getChildren() ) {
-//                    if ( child.getName().startsWith("Compartment Set") ) {
-//                        log.info("Context has a compartment set called {}.", child.getName());
-//                        CompartmentSet compartmentSet = (CompartmentSet)child;
-//                        compartmentSet.loadContextualizedChildren( context.getAlignmentContext() );
-//                        if ( ! compartmentSet.getChildren().isEmpty() ) {
-//                            Compartment firstChild = (Compartment)compartmentSet.getChildren().iterator().next();
-//                            Entity compartmentEntity = firstChild.getInternalEntity();
-//                            for ( Entity compartmentChild: compartmentEntity.getChildren() ) {
-//                                if ( compartmentChild.getEntityType().equals(EntityConstants.ATTRIBUTE_MASK_IMAGE) ) {
-//                                }
-//                                else if ( compartmentChild.getEntityType().equals(EntityConstants.ATTRIBUTE_CHAN_IMAGE ) ) {
-//                                }
-//                            }
-//                        }
-//                    }
-//                }
             }
 
             @Override

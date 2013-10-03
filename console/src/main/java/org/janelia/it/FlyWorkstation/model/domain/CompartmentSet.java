@@ -28,7 +28,6 @@ public class CompartmentSet extends AlignedEntityWrapper implements Viewable2d, 
 
     private Logger log;
     private Collection<Compartment> compartmentSet;
-    private MaskedVolume maskedVolume;
 
     public CompartmentSet( RootedEntity wrappedEntity ) {
         super( wrappedEntity );
@@ -51,7 +50,7 @@ public class CompartmentSet extends AlignedEntityWrapper implements Viewable2d, 
 
     @Override
     public MaskedVolume getMaskedVolume() {
-        return maskedVolume;
+        return null;
     }
 
     @Override
@@ -61,10 +60,7 @@ public class CompartmentSet extends AlignedEntityWrapper implements Viewable2d, 
 
         initChildren();
         ModelMgr.getModelMgr().loadLazyEntity(getInternalEntity(), false);
-
-        String targetAlignmentSpace = alignmentContext.getAlignmentSpaceName();
-        String targetOpticalResolution = alignmentContext.getOpticalResolution();
-        String targetPixelResolution = alignmentContext.getPixelResolution();
+        AlignmentSpace targetSpace = new AlignmentSpace( alignmentContext );
 
         this.compartmentSet = Collections.EMPTY_LIST;
 
@@ -74,11 +70,9 @@ public class CompartmentSet extends AlignedEntityWrapper implements Viewable2d, 
             log.debug("Checking compartment set '{}', (id={})", compartmentSetEntity.getName(), compartmentSetEntity.getId());
             ModelMgr.getModelMgr().loadLazyEntity( compartmentSetEntity, false );
 
-            String alignmentSpaceName = compartmentSetEntity.getValueByAttributeName( EntityConstants.ATTRIBUTE_ALIGNMENT_SPACE );
-            String opticalResolution = compartmentSetEntity.getValueByAttributeName( EntityConstants.ATTRIBUTE_OPTICAL_RESOLUTION );
-            String pixelResolution = compartmentSetEntity.getValueByAttributeName( EntityConstants.ATTRIBUTE_PIXEL_RESOLUTION );
+            AlignmentSpace compartmentSetSpace = new AlignmentSpace( compartmentSetEntity );
 
-            if ( targetAlignmentSpace.equals( alignmentSpaceName )  &&  targetOpticalResolution.equals( opticalResolution )  &&  targetPixelResolution.equals( pixelResolution ) ) {
+            if ( targetSpace.equals( compartmentSetSpace ) ) {
                 // Found the right one.
                 log.info("Found compartment set '{}', (id={}).", compartmentSetEntity.getName(), compartmentSetEntity.getId());
                 compartmentSet = new TreeSet<Compartment>();
