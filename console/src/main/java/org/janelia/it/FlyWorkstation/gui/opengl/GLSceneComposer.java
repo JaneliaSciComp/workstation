@@ -1,6 +1,7 @@
 package org.janelia.it.FlyWorkstation.gui.opengl;
 
 import javax.media.opengl.GL;
+import javax.media.opengl.GL2GL3;
 // import javax.media.opengl.GL2;
 import javax.media.opengl.GLAutoDrawable;
 import javax.media.opengl.GLEventListener;
@@ -116,6 +117,10 @@ implements GLEventListener
 	@Override
 	public void init(GLAutoDrawable glDrawable) {
 	    final GL gl = glDrawable.getGL();
+	    GL2GL3 gl2gl3 = gl.getGL2GL3();
+	    // Use sRGB framebuffer for correct lighting on computer screens
+	    gl2gl3.glEnable(GL2GL3.GL_FRAMEBUFFER_SRGB);
+	    // 
 	    gl2Adapter = GL2AdapterFactory.createGL2Adapter(glDrawable);
 	    GLActorContext actorContext = new GLActorContext(glDrawable, gl2Adapter);
 		if (useDepth)

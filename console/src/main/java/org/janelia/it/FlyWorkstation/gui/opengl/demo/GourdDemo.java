@@ -17,17 +17,12 @@ import org.janelia.it.FlyWorkstation.gui.FullScreenMode;
 import org.janelia.it.FlyWorkstation.gui.TrackballInteractor;
 import org.janelia.it.FlyWorkstation.gui.camera.BasicObservableCamera3d;
 import org.janelia.it.FlyWorkstation.gui.camera.ObservableCamera3d;
-import org.janelia.it.FlyWorkstation.gui.opengl.CompositeGLActor;
 import org.janelia.it.FlyWorkstation.gui.opengl.GLSceneComposer;
 import org.janelia.it.FlyWorkstation.gui.opengl.LightingActor;
 import org.janelia.it.FlyWorkstation.gui.opengl.MeshActor;
 import org.janelia.it.FlyWorkstation.gui.opengl.MeshGroupActor;
 import org.janelia.it.FlyWorkstation.gui.opengl.PolygonalMesh;
 import org.janelia.it.FlyWorkstation.gui.opengl.SolidBackgroundActor;
-import org.janelia.it.FlyWorkstation.gui.opengl.stereo3d.AbstractStereoMode;
-// import org.janelia.it.FlyWorkstation.gui.opengl.stereo3d.HardwareStereoMode;
-import org.janelia.it.FlyWorkstation.gui.opengl.stereo3d.MonoStereoMode;
-import org.janelia.it.FlyWorkstation.signal.Slot;
 
 @SuppressWarnings("serial")
 public class GourdDemo extends JFrame
