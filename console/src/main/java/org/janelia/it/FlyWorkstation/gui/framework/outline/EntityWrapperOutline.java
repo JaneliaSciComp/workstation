@@ -21,7 +21,9 @@ import org.janelia.it.FlyWorkstation.api.entity_model.management.ModelMgr;
 import org.janelia.it.FlyWorkstation.gui.dialogs.ScreenEvaluationDialog;
 import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.FlyWorkstation.gui.framework.tree.ExpansionState;
+import org.janelia.it.FlyWorkstation.gui.util.Icons;
 import org.janelia.it.FlyWorkstation.model.domain.AlignmentContext;
+import org.janelia.it.FlyWorkstation.model.domain.AlignmentContextFactory;
 import org.janelia.it.FlyWorkstation.model.domain.EntityWrapper;
 import org.janelia.it.FlyWorkstation.model.entity.RootedEntity;
 import org.janelia.it.FlyWorkstation.model.utils.ModelUtils;
@@ -127,11 +129,17 @@ public abstract class EntityWrapperOutline extends EntityWrapperTree implements 
                 }
             }
         };
-		
-        
-		// TODO: these parameters should be picked from a list, by the user, when creating the alignment board
-        AlignmentContext alignmentContext = new AlignmentContext(
-                "Unified 20x Alignment Space", "0.62x0.62x0.62", "1024x512x218");
+
+
+        // Pick an alignment context for the new board
+        AlignmentContext[] values = new AlignmentContextFactory().getAllAlignmentContexts();
+        final AlignmentContext alignmentContext =
+                (AlignmentContext)JOptionPane.showInputDialog(
+                    SessionMgr.getBrowser(), "Choose an alignment space for this alignment board",
+                    "Choose alignment space", JOptionPane.QUESTION_MESSAGE, Icons.getIcon("folder_graphite_palette.png"),
+                    values, values[0] );
+        if (alignmentContext==null) return;
+
         setAlignmentContext(alignmentContext);
 	}
 

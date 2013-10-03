@@ -35,6 +35,9 @@ import org.janelia.it.FlyWorkstation.gui.framework.console.ViewerManager;
 import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.FlyWorkstation.gui.framework.tree.ExpansionState;
 import org.janelia.it.FlyWorkstation.gui.framework.viewer.alignment_board.AlignmentBoardViewer;
+import org.janelia.it.FlyWorkstation.gui.util.Icons;
+import org.janelia.it.FlyWorkstation.model.domain.AlignmentContext;
+import org.janelia.it.FlyWorkstation.model.domain.AlignmentContextFactory;
 import org.janelia.it.FlyWorkstation.model.entity.RootedEntity;
 import org.janelia.it.FlyWorkstation.shared.workers.SimpleWorker;
 import org.janelia.it.jacs.model.entity.*;
@@ -259,9 +262,15 @@ public abstract class EntityOutline extends EntityTree implements Refreshable, A
                         private RootedEntity newBoard;
                         @Override
                         protected void doStuff() throws Exception {
+                            // Pick an alignment context for the new board
+                            AlignmentContext[] values = new AlignmentContextFactory().getAllAlignmentContexts();
+                            final AlignmentContext alignmentContext = (AlignmentContext)JOptionPane.showInputDialog(browser, "Choose an alignment space for this alignment board",
+                                    "Choose alignment space", JOptionPane.QUESTION_MESSAGE, Icons.getIcon("folder_graphite_palette.png"),
+                                    values, values[0]);
+                            if (alignmentContext==null) return;
+
                             // Update database
-                            // TODO: this should ask the user what kind of alignment board they want to create
-                            newBoard = ModelMgr.getModelMgr().createAlignmentBoard(boardName, "Unified 20x Alignment Space", "0.62x0.62x0.62", "1024x512x218");
+                            newBoard = ModelMgr.getModelMgr().createAlignmentBoard(boardName, alignmentContext.getAlignmentSpaceName(), alignmentContext.getOpticalResolution(), alignmentContext.getPixelResolution());
                         }
                         @Override
                         protected void hadSuccess() {
