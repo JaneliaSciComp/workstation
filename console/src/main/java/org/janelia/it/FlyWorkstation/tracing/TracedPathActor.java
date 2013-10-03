@@ -37,7 +37,6 @@ implements GLActor
     private int vertexArrayObject = 0;
     private ByteBuffer vertexByteBuffer;
     private int pointCount = 0;
-    private TracedPathShader shader = new TracedPathShader();
     private boolean bIsInitialized = false;
 
     public TracedPathActor(TracedPathSegment path, TileFormat tileFormat) 
@@ -87,9 +86,7 @@ implements GLActor
         gl2gl3.glEnableVertexAttribArray(vertexLocation);
         gl2gl3.glVertexAttribPointer(vertexLocation, floatsPerVertex, GL.GL_FLOAT, false, 0, 0);
         GL2 gl2 = gl.getGL2();
-        shader.load(gl.getGL2());
         gl.glDrawArrays(GL.GL_LINE_STRIP, 0, pointCount);
-        shader.unload(gl.getGL2());
         gl2gl3.glDisableVertexAttribArray(vertexLocation);
         checkGlError(gl, "render traced path");
     }
@@ -101,15 +98,6 @@ implements GLActor
 
     @Override
     public void init(GLAutoDrawable glDrawable) {
-        try {
-            shader.init(glDrawable.getGL().getGL2());
-        } catch (GLException e) {
-            // TODO Auto-generated catch block
-            e.printStackTrace();
-        } catch (ShaderCreationException e) {
-            // TODO Auto-generated catch block
-            e.printStackTrace();
-        }
         GL gl = glDrawable.getGL();
         // One-time initialization
         int[] vbos = {0};

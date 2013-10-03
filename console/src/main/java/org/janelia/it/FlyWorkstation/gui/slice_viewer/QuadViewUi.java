@@ -326,9 +326,7 @@ public class QuadViewUi extends JPanel
             System.out.println("onPathTracedSlot");
             TracedPathActor actor = new TracedPathActor(path, 
                     tileServer.getLoadAdapter().getTileFormat());
-            nwViewer.getViewer().addActor(actor);
-            nwViewer.getViewer().repaint();
-            // TODO - add to all viewers?
+            sliceViewer.getSkeletonActor().addTracedSegment(actor);
         }
     };
     

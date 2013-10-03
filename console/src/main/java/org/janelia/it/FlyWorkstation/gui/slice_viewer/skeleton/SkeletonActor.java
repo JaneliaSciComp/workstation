@@ -8,12 +8,16 @@ import java.nio.ByteOrder;
 import java.nio.FloatBuffer;
 import java.nio.IntBuffer;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
+import java.util.Vector;
 
+import javax.media.opengl.GL;
 import javax.media.opengl.GL2;
 import javax.media.opengl.GLAutoDrawable;
 import javax.swing.ImageIcon;
 
+import org.janelia.it.FlyWorkstation.geom.SizedVector;
 import org.janelia.it.FlyWorkstation.geom.Vec3;
 import org.janelia.it.FlyWorkstation.gui.camera.Camera3d;
 import org.janelia.it.FlyWorkstation.gui.opengl.GLActor;
@@ -28,6 +32,8 @@ import org.janelia.it.FlyWorkstation.gui.viewer3d.shader.AbstractShader.ShaderCr
 import org.janelia.it.FlyWorkstation.signal.Signal;
 import org.janelia.it.FlyWorkstation.signal.Signal1;
 import org.janelia.it.FlyWorkstation.signal.Slot;
+import org.janelia.it.FlyWorkstation.tracing.TracedPathActor;
+import org.janelia.it.FlyWorkstation.tracing.TracedPathShader;
 
 /**
  * SkeletonActor is responsible for painting neuron traces in the slice viewer.
@@ -77,6 +83,12 @@ implements GLActor
 	private float zThicknessInPixels = 100;
 	//
 	private Anchor nextParent = null;
+	//
+    private boolean bIsVisible = true;
+    private List<TracedPathActor> tracedSegments = new Vector<TracedPathActor>();
+    private float neuronColor[] = {0.8f,1.0f,0.3f};
+    private final float blackColor[] = {0,0,0};
+    private TracedPathShader tracedShader = new TracedPathShader();
 	
 	public Signal skeletonActorChangedSignal = new Signal();
 
@@ -150,7 +162,6 @@ implements GLActor
 		gl.glHint(GL2.GL_LINE_SMOOTH_HINT, GL2.GL_NICEST);
         // wider black line
 		gl.glLineWidth(3.5f);
-		float blackColor[] = {0,0,0};
 		edgeShader.setUniform3v(gl, "baseColor", 1, blackColor);
         // gl.glColor4f(0, 0, 0, 0.7f); // black
         gl.glDrawElements(GL2.GL_LINES, 
@@ -159,8 +170,7 @@ implements GLActor
         		0L);
         // narrower white line
 		gl.glLineWidth(1.5f);
-		float whiteColor[] = {1,1,1};
-		edgeShader.setUniform3v(gl, "baseColor", 1, whiteColor);
+		edgeShader.setUniform3v(gl, "baseColor", 1, neuronColor);
         // gl.glColor4f(1, 1, 1, 0.7f); // white
         gl.glDrawElements(GL2.GL_LINES, 
         		edgeIndices.capacity(), 
@@ -283,6 +293,8 @@ implements GLActor
 	
 	@Override
 	public void display(GLAutoDrawable glDrawable) {
+	    if (! bIsVisible)
+	        return;
 		if (vertexCount <= 0)
 			return;
 		if ( ! bIsGlInitialized )
@@ -290,6 +302,22 @@ implements GLActor
 
 		// System.out.println("painting skeleton");
 		displayEdges(glDrawable);
+
+		GL gl = glDrawable.getGL();
+		GL2 gl2 = gl.getGL2();
+		tracedShader.load(gl2);
+		// black background
+        gl.glLineWidth(4.0f);
+        tracedShader.setUniform3v(gl2, "neuronColor", 1, blackColor);
+		for (TracedPathActor segment : tracedSegments)
+		    segment.display(glDrawable);
+		// neuron colored foreground
+        gl.glLineWidth(2.5f);
+        tracedShader.setUniform3v(gl2, "neuronColor", 1, neuronColor);
+        for (TracedPathActor segment : tracedSegments)
+            segment.display(glDrawable);
+		tracedShader.unload(gl2);
+		
         displayAnchors(glDrawable);
 	}
 
@@ -369,9 +397,9 @@ implements GLActor
 			vertices.put((float)xyz.getY());
 			vertices.put((float)xyz.getZ());
 			//
-			colors.put(0.8f); // red
-			colors.put(1.0f); // green
-			colors.put(0.3f); // blue
+			colors.put(neuronColor[0]); // red
+			colors.put(neuronColor[1]); // green
+			colors.put(neuronColor[2]); // blue
 			//
 			anchorIndices.put(anchor, vertexIndex);
 			indexAnchors.put(vertexIndex, anchor);
@@ -426,6 +454,7 @@ implements GLActor
 		try {
 			edgeShader.init(gl);
 			anchorShader.init(gl);
+			tracedShader.init(gl);
 		} catch (ShaderCreationException e) {
 			e.printStackTrace();
 			return;
@@ -581,4 +610,19 @@ implements GLActor
 		}
 		skeletonActorChangedSignal.emit();
 	}
+
+	public boolean isVisible() {
+	    return bIsVisible;
+	}
+    public void setVisible(boolean b) {
+        if (bIsVisible == b)
+            return;
+        bIsVisible = b;
+        skeletonActorChangedSignal.emit();
+    }
+
+    public void addTracedSegment(TracedPathActor actor) {
+        tracedSegments.add(actor);
+        skeletonActorChangedSignal.emit();        
+    }
 }

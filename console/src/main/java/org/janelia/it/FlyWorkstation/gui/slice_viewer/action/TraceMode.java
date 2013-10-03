@@ -334,7 +334,7 @@ implements MouseMode, KeyListener
                         // Trace connection to parent
                         final boolean showTraceMenu = true; // just for initial debugging?
                         if (showTraceMenu && (hover.getNeighbors().size() > 0)) {
-                            result.add(new JMenuItem(new AbstractAction("Trace connection to this anchor") {
+                            result.add(new JMenuItem(new AbstractAction("Trace connection to this anchor (TESTING)") {
                                 @Override
                                 public void actionPerformed(ActionEvent e) {
                                     Anchor h = getHoverAnchor();
@@ -448,6 +448,9 @@ implements MouseMode, KeyListener
 			// System.out.println("next");
 			historyAnchor = skeleton.getHistory().next();
 			break;
+        case KeyEvent.VK_SPACE:
+            skeletonActor.setVisible(false);
+            break;
 		}
 		if (historyAnchor != null)
 			camera.setFocus(historyAnchor.getLocation());
@@ -456,6 +459,12 @@ implements MouseMode, KeyListener
 	@Override
 	public void keyReleased(KeyEvent event) {
 		checkShiftPlusCursor(event);
+        int keyCode = event.getKeyCode();
+        switch(keyCode) {
+        case KeyEvent.VK_SPACE:
+            skeletonActor.setVisible(true);
+            break;
+        }
 	}
 	
 	private void checkShiftPlusCursor(InputEvent event) {
