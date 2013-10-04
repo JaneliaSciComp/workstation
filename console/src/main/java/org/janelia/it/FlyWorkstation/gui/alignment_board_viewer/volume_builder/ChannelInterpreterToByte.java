@@ -69,26 +69,44 @@ public class ChannelInterpreterToByte implements ChannelInterpreterI {
                     srcChannelMetaData, targetChannelMetaData, channelData, targetPos
             );
 
-            // At this point, multiplex the just-created target bytes so any alternate masks are represented.
+            // At this point, multiplex the just-created target bytes so this alternate mask's data are positioned
+            // correctly within the final value pushed to the volume.
             ChannelSplitStrategyI channelSplitStrategy = splitStrategyFactory.getStrategyForMask( multiMaskId );
             if ( channelSplitStrategy != null ) {
                 targetChannelBytes = channelSplitStrategy.getUpdatedValue(
                         targetChannelMetaData, orignalMaskNum, targetChannelBytes, multiMaskId
                 );
             }
+            // NOTE: on DEBUG.  This code can serve to verify that the bytes from the incoming sub-masks (the
+            //  pre-ordered renderables under a given multimask) are donating their input bytes to the volume
+            //  in the proper order, and into the proper byte "slots".  If used in future, first the three
+            //  numeric values must be adjusted.  Find two sub-masks that go into a multimask.  Those will replace
+            //  the '4' and '33' below.  Find the multimask they make up.  That replaces '64'.
+
+            //  DEBUG if ( (orignalMaskNum  == 4 || orignalMaskNum==33) && multiMaskId == 64 ) {
+            //  DEBUG System.err.println("Position: " + targetPos + ", "+orignalMaskNum);
+            //  DEBUG }
             for ( int i = 0; i < targetChannelMetaData.channelCount; i++ ) {
                 //  block of in-memory, interleaving the channels as the offsets follow.
                 if ( targetPos + i >= 0  &&  (wholeSignalVolume.length() > targetPos+i)) {
                     // Here enforced: multiplexing the channel data by inserting latest.
+                    int existingValue = wholeSignalVolume.getValueAt(targetPos + i);
+                    if ( existingValue < 0 ) existingValue += 256;
+                    //  DEBUG if ( (orignalMaskNum  == 4 || orignalMaskNum==33) && multiMaskId == 64 ) {
+                    //  DEBUG System.err.print(" ("+i+"):"+existingValue+"|"+targetChannelBytes[i]);
+                    //  DEBUG }
                     wholeSignalVolume.setValueAt(
                             targetPos + i,
-                            (byte) (wholeSignalVolume.getValueAt(targetPos + i) | targetChannelBytes[i])
+                            (byte) (existingValue | targetChannelBytes[i])
                     );
                 }
                 else {
                     logger.error("Outside the box at volume writeback time.");
                 }
             }
+            //  DEBUG if ( (orignalMaskNum  == 4 || orignalMaskNum==33) && multiMaskId == 64 ) {
+            //  DEBUG System.err.println();
+            //  DEBUG }
         }
 
         if ( orignalMaskNum == multiMaskId ) {

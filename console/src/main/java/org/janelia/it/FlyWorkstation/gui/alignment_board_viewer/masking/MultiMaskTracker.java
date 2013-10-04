@@ -142,9 +142,9 @@ public class MultiMaskTracker {
         private int voxelCount = 1; // On construction, this instance variable will indicate that 1 voxel is masked.
 
         public String getInvertedKey() {
-            Collections.sort( altMasks );
+            List<Integer> sortedAltMasks = sortAltMasks();
             StringBuilder rtnVal = new StringBuilder();
-            for ( Integer altMask: altMasks ) {
+            for ( Integer altMask: sortedAltMasks ) {
                 String hexKey = String.format(MASK_HEX_FORMAT, altMask );
                 rtnVal.append( hexKey );
             }
@@ -152,10 +152,10 @@ public class MultiMaskTracker {
         }
 
         public String getExtendedInvertedKey( Integer newAltMask ) {
-            Collections.sort( altMasks );
+            List<Integer> sortedAltMasks = sortAltMasks();
             StringBuilder rtnVal = new StringBuilder();
             String newAltHex = String.format( MASK_HEX_FORMAT, newAltMask );
-            for ( Integer altMask: altMasks ) {
+            for ( Integer altMask: sortedAltMasks ) {
                 String hexKey = String.format( MASK_HEX_FORMAT, altMask );
                 if ( altMask > newAltMask ) {
                     rtnVal.append( newAltHex );
@@ -187,7 +187,7 @@ public class MultiMaskTracker {
         }
 
         public void addAll( List<Integer> altMasks ) {
-            this.altMasks.addAll( altMasks );
+            altMasks.addAll( altMasks );
         }
 
         public int getVoxelCount() {
@@ -205,6 +205,13 @@ public class MultiMaskTracker {
         /** Returns which priority among all sub-masks, this one is. */
         public int getMaskOffset( Integer maskNum ) {
             return this.getAltMasks().indexOf( maskNum );
+        }
+
+        private List<Integer> sortAltMasks() {
+            List<Integer> sortedAltMasks = new ArrayList<Integer>();
+            sortedAltMasks.addAll( altMasks );
+            Collections.sort(sortedAltMasks);
+            return sortedAltMasks;
         }
 
     }
