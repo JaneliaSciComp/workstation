@@ -21,14 +21,16 @@ public class BasicStereoMode implements StereoMode {
     {
         GLAutoDrawable glDrawable = actorContext.getGLAutoDrawable();
         updateViewport(glDrawable);
-        updateProjectionMatrix(actorContext, composer.getCameraScreenGeometry(), 0);
+        setMonoscopicView(actorContext, composer.getCameraScreenGeometry());
         composer.displayScene(actorContext);
     }
 
+    @Override
     public boolean isEyesSwapped() {
         return eyesSwapped;
     }
 
+    @Override
     public void setEyesSwapped(boolean eyesSwapped) {
         this.eyesSwapped = eyesSwapped;
     }

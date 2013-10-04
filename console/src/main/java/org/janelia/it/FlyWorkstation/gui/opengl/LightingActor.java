@@ -18,8 +18,8 @@ public class LightingActor implements GL3Actor {
         GL gl = gl2.getGL();
 	    // Set up the appropriate processing steps for lighting.
 	    gl2.glPolygonMode( GL2.GL_FRONT, GL2.GL_FILL ) ;
-	    gl.glEnable( GL2.GL_NORMALIZE ) ; 
-	    gl.glEnable( GL2.GL_LIGHTING ) ;
+	    gl2.glEnable( GL2.GL_NORMALIZE ) ; 
+	    gl2.glEnable( GL2.GL_LIGHTING ) ;
 
 	    // One Phong light source    
 	    float lightPos[]= {1,1,1,0} ;  

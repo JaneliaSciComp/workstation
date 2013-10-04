@@ -42,7 +42,7 @@ public class TeapotDemo extends JFrame
 
         // Attempt to create a hardware stereo 3D capable OpenGL context
         GLCapabilities glCapabilities = new GLCapabilities(GLProfile.get(GLProfile.GL2));
-        glCapabilities.setStereo(true);
+        // glCapabilities.setStereo(true);
         //
         // Create canvas for openGL display of teapot
         GLCanvas glPanel = new GLCanvas(glCapabilities);

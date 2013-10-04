@@ -51,9 +51,9 @@ public class GourdDemo extends JFrame
         // Create canvas for openGL display of gourd
         GLCapabilities glCapabilities = new GLCapabilities(GLProfile.get(GLProfile.GL2));
         // GLCapabilities glCapabilities = new GLCapabilities(GLProfile.getDefault());
-        // glCapabilities.setStereo(true);
-        // GLCanvas glPanel = new GLCanvas(glCapabilities);
-        GLJPanel glPanel = new GLJPanel(glCapabilities); // DOES NOT WORK WITH GL3!?!
+        glCapabilities.setStereo(true);
+        GLCanvas glPanel = new GLCanvas(glCapabilities);
+        // GLJPanel glPanel = new GLJPanel(glCapabilities); // DOES NOT WORK WITH GL3!?!
         //
         glPanel.setPreferredSize(new Dimension(1280, 800));
         getContentPane().add(glPanel);
@@ -76,16 +76,18 @@ public class GourdDemo extends JFrame
 		camera.setFocus(new Vec3(0, 0, 0));
 		camera.setPixelsPerSceneUnit(200);
 
-	    GLSceneComposer sceneComposer = new GLSceneComposer(camera, glPanel);
+	    GLSceneComposer sceneComposer = 
+	            new GLSceneComposer(camera, glPanel);
 	    sceneComposer.addBackgroundActor(new SolidBackgroundActor(
-	            Color.lightGray));
+	            Color.gray));
 	    sceneComposer.addOpaqueActor(new LightingActor());
 	    MeshGroupActor meshGroup = new MeshGroupActor();
 	    meshGroup.addActor(new MeshActor(gourdMesh));
 	    sceneComposer.addOpaqueActor(meshGroup);
+	    // sceneComposer.addOpaqueActor(new TeapotActor());
         
         // Enable stereo 3D selection
-        StereoModeChooser stereoModeChooser = new StereoModeChooser(glPanel);
+        StereoModeChooser stereoModeChooser = new StereoModeChooser();
         stereoModeChooser.stereoModeChangedSignal.connect(sceneComposer.setStereoModeSlot);
         // Menus
         JMenuBar menuBar = new JMenuBar();

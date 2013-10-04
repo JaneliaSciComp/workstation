@@ -2,11 +2,10 @@ package org.janelia.it.FlyWorkstation.gui.viewer3d;
 
 import javax.media.opengl.GL;
 import javax.media.opengl.GL2;
-
 import org.janelia.it.FlyWorkstation.geom.Vec3;
 import org.janelia.it.FlyWorkstation.gui.opengl.GL3Actor;
 import org.janelia.it.FlyWorkstation.gui.opengl.GLActorContext;
-
+import org.janelia.it.FlyWorkstation.gui.opengl.GLError;
 import com.jogamp.opengl.util.gl2.GLUT;
 
 public class TeapotActor implements GL3Actor 
@@ -27,10 +26,10 @@ public class TeapotActor implements GL3Actor
         if (gl.isGL2()) {
             GL2 gl2 = gl.getGL2();
             // due to a bug in glutSolidTeapot, triangle vertices are in CW order 
-            gl2.glPushAttrib(GL2.GL_POLYGON_BIT); // remember current GL_FRONT_FACE indictor
-            gl.glFrontFace( GL2.GL_CW ); 
+            gl2.glPushAttrib(GL2.GL_POLYGON_BIT); // remember current GL_FRONT_FACE indicator
+            gl.glFrontFace( GL.GL_CW ); 
             gl2.glColor3f(0.40f, 0.27f, 0.00f);
-            gl2.glMatrixMode(GL2.GL_MODELVIEW_MATRIX);
+            gl2.glMatrixMode(GL2.GL_MODELVIEW);
             gl2.glPushMatrix();
             gl2.glRotated(180, 1, 0, 0); // Flip teapot to match Y-down convention
             glut.glutSolidTeapot(1.0);
@@ -41,6 +40,7 @@ public class TeapotActor implements GL3Actor
         else {
             // TODO - won't work with GL3...
         }
+        GLError.checkGlError(gl, "TeapotActor display");
     }
 
     @Override

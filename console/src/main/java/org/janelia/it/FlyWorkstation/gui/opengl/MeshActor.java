@@ -51,7 +51,7 @@ implements GL3Actor
     private boolean smoothing = true;
     private PolygonalMesh mesh;
     private BoundingBox3d boundingBox;
-    private DisplayMethod displayMethod = DisplayMethod.VBO_WITH_SHADER;
+    private DisplayMethod displayMethod = DisplayMethod.VERTEX_BUFFER_OBJECTS; // GL2 only...
     // display list render method
     private int displayList = 0;
     // vertex buffer object render method
@@ -104,6 +104,7 @@ implements GL3Actor
      * @param gl OpenGL rendering context
      */
     private void displayUsingImmediateMode(GL2 gl2) {
+        checkGlError(gl2, "display mesh using immediate mode 0");
         for (PolygonalMesh.Face face : mesh.getFaces()) {
             // Paint
             gl2.glBegin(GL2.GL_TRIANGLE_FAN);
@@ -117,6 +118,7 @@ implements GL3Actor
             }
             gl2.glEnd();
         }
+        checkGlError(gl2, "display mesh using immediate mode 1");
     }
 
     private void initializeVbos(GL2GL3 gl2gl3) {
@@ -218,6 +220,7 @@ implements GL3Actor
 
     private void displayUsingVertexBufferObjectsWithShader(GL2GL3 gl2gl3) {
         GL gl = gl2gl3.getGL();
+        checkGlError(gl, "display mesh using vbos and shader 0");
         // GL2 gl2 = gl.getGL2();
         if (vertexNormalVbo < 1) // first time?
             initializeVbos(gl2gl3);

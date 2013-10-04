@@ -4,6 +4,7 @@ import javax.media.opengl.GL;
 import javax.media.opengl.GL2GL3;
 import javax.media.opengl.GLAutoDrawable;
 import javax.media.opengl.GLEventListener;
+import javax.media.opengl.glu.GLU;
 
 import org.janelia.it.FlyWorkstation.geom.Rotation3d;
 import org.janelia.it.FlyWorkstation.geom.Vec3;
@@ -12,6 +13,8 @@ import org.janelia.it.FlyWorkstation.gui.opengl.stereo3d.*;
 import org.janelia.it.FlyWorkstation.signal.Signal;
 import org.janelia.it.FlyWorkstation.signal.Slot;
 import org.janelia.it.FlyWorkstation.signal.Slot1;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 
 /**
@@ -28,8 +31,10 @@ import org.janelia.it.FlyWorkstation.signal.Slot1;
 public class GLSceneComposer 
 implements GLEventListener
 {
-    private StereoMode monoStereoMode = new MonoStereoMode();
-    private StereoMode stereoMode = monoStereoMode;
+    private static Logger logger = LoggerFactory.getLogger( GLSceneComposer.class );
+    protected static GLU glu = new GLU();
+
+    private StereoMode stereoMode = new MonoStereoMode();
 
 	private static final Vec3 upInCamera = new Vec3(0,-1,0);
 	private ObservableCamera3d camera;
@@ -101,14 +106,26 @@ implements GLEventListener
         opaqueActors.addActor(actor);
     }
 
+    private void checkGlError(GL gl, String message) {
+        int errorNumber = gl.glGetError();
+        if (errorNumber <= 0)
+            return;
+        String errorStr = glu.gluErrorString(errorNumber);
+        logger.error( "OpenGL Error " + errorNumber + ": " + errorStr + ": " + message );  
+    }
+
 	@Override
-	public void display(GLAutoDrawable glDrawable) {
+	public void display(GLAutoDrawable glDrawable) 
+	{
+	    GL gl = glDrawable.getGL();
+	    checkGlError(gl, "GLSceneComposer display 0");
 	    GLActorContext actorContext = new GLActorContext(glDrawable, gl2Adapter);
 	    if (viewChanged) {
             updateModelViewMatrix(actorContext);
 	        viewChanged = false;
 	    }
 	    stereoMode.display(actorContext, this);
+        checkGlError(gl, "GLSceneComposer display 1");
 	}
 
 	public void displayBackground(GLActorContext actorContext) {
@@ -191,9 +208,11 @@ implements GLEventListener
     }
 
 	public void setStereoMode(StereoMode mode) {
-		if (this.stereoMode == mode)
-			return;
-		stereoMode = mode;
+		// if (this.stereoMode == mode) return; // Just swap eye might have changed, still repaint
+	    if (this.stereoMode != mode) {
+	        stereoMode = mode;
+	        mode.reshape(glComponent.getWidth(), glComponent.getHeight());
+	    }
 		viewChangedSignal.emit();
 	}
 

@@ -13,4 +13,8 @@ public interface StereoMode {
 
 	void reshape(int width, int height);
 
+    boolean isEyesSwapped();
+
+    void setEyesSwapped(boolean eyesSwapped);
+
 }

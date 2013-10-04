@@ -1,14 +1,9 @@
 package org.janelia.it.FlyWorkstation.gui.opengl.stereo3d;
 
-import java.awt.CheckboxMenuItem;
-import java.awt.Component;
-import java.awt.Menu;
-import java.awt.MenuItem;
 import java.awt.event.ActionEvent;
 import java.util.List;
 import java.util.Vector;
 
-import javax.media.opengl.awt.GLJPanel;
 import javax.swing.AbstractAction;
 import javax.swing.Action;
 import javax.swing.ButtonGroup;
@@ -18,18 +13,28 @@ import javax.swing.JMenuItem;
 
 import org.janelia.it.FlyWorkstation.signal.Signal1;
 
-public class StereoModeChooser {
+public class StereoModeChooser 
+{
     private StereoMode stereoMode = null;
-
     private List<StereoAction> stereoActions = new Vector<StereoAction>();
+    boolean bEyesSwapped = false;
+    private Action swapEyesAction = new AbstractAction("Swap Eyes") {
+        {
+            // Initialize SELECTED_KEY, otherwise it remains null
+            putValue(Action.SELECTED_KEY, bEyesSwapped);
+        }
+        @Override
+        public void actionPerformed(ActionEvent e) {
+            boolean doSwap = getValue(Action.SELECTED_KEY) == Boolean.TRUE;
+            setEyesSwapped(doSwap);
+        }
+    };
     
     public Signal1<StereoMode> stereoModeChangedSignal = new Signal1<StereoMode>();
     
-	private Component glPanel;
 	
-    public StereoModeChooser(Component glPanel) 
+    public StereoModeChooser() 
     {
-    	this.glPanel = glPanel;
     	// Create a series of swing Actions.
     	stereoActions.add(new StereoAction(new MonoStereoMode(), "Off (Monoscopic)"));
     	stereoActions.add(new StereoAction(new LeftEyeStereoMode(), "Left Eye View"));
@@ -50,8 +55,20 @@ public class StereoModeChooser {
 			buttonGroup.add(item);
 			menu.add(item);
 		}
-		stereoActions.get(0).select();
+        stereoActions.get(0).select(); // Check mark by "Mono" option
+		menu.addSeparator();
+		menu.add(new JCheckBoxMenuItem(swapEyesAction));
 		return menu;
+	}
+	
+	public void setEyesSwapped(boolean isSwapped) {
+	    if (bEyesSwapped == isSwapped)
+	        return; // no change
+        for (StereoAction action : stereoActions) {
+            action.getMode().setEyesSwapped(isSwapped);
+        }
+        bEyesSwapped = isSwapped;
+        stereoModeChangedSignal.emit(stereoMode);
 	}
 	
 	@SuppressWarnings("serial")
@@ -70,12 +87,13 @@ public class StereoModeChooser {
 		public void actionPerformed(ActionEvent arg0) {
 			if (stereoMode == mode)
 				return; // no change
-			mode.reshape(glPanel.getWidth(), glPanel.getHeight());
+			select();
 			stereoModeChangedSignal.emit(mode);
 		}
 		
 		public void select() {
 			putValue(Action.SELECTED_KEY, Boolean.TRUE);
+			stereoMode = mode;
 		}
 	}
 

@@ -15,6 +15,7 @@ public class HardwareStereoMode extends BasicStereoMode
             GLSceneComposer composer) 
     {
         GLAutoDrawable glDrawable = actorContext.getGLAutoDrawable();
+        updateViewport(glDrawable);
 
         if (canDisplay(glDrawable)) {
             GL gl = glDrawable.getGL();
@@ -34,7 +35,7 @@ public class HardwareStereoMode extends BasicStereoMode
             gl2gl3.glDrawBuffer(GL2GL3.GL_BACK);
         }
         else {
-            updateViewport(glDrawable);
+            setMonoscopicView(actorContext, composer.getCameraScreenGeometry());
             composer.displayScene(actorContext);
         }
     }

@@ -1,5 +1,6 @@
 package org.janelia.it.FlyWorkstation.gui.opengl;
 
+import javax.media.opengl.GL;
 import javax.media.opengl.GL2GL3;
 
 import org.janelia.it.FlyWorkstation.gui.opengl.shader.BasicShader.ShaderCreationException;
@@ -16,37 +17,28 @@ implements GL3Actor
     private MeshShader shader = new MeshShader();
     private int vertexLocation = 0;
     private int normalLocation = 1;
+    private boolean bIsInitialized = false;
     
     @Override
     public void display(GLActorContext actorContext) {
-        GL2GL3 gl2gl3 = actorContext.getGLAutoDrawable().getGL().getGL2GL3();
-        shader.load(gl2gl3);
-        GL2Adapter gl2Adapter = actorContext.getGL2Adapter();
-        float pr[] = gl2Adapter.getProjectionMatrix();
-        shader.setUniformMatrix4fv(gl2gl3, "projection", false, pr);
-        float mv[] = gl2Adapter.getModelViewMatrix();
-        shader.setUniformMatrix4fv(gl2gl3, "modelView", false, mv);
-        super.display(actorContext);
-        shader.unload(gl2gl3);
-        // for debugging
-        /*
-        System.out.print("Projection matrix: ");
-        for (int i = 0; i < 16; ++i) {
-            System.out.print(pr[i]);
-            if (i < 15)
-                System.out.print(", ");
-            else
-                System.out.println("");
+        if (! bIsInitialized)
+            init(actorContext);
+        GL gl = actorContext.getGLAutoDrawable().getGL();
+        if (gl.isGL2()) {
+            // Don't use advanced shader with GL2...
+            super.display(actorContext);
         }
-        System.out.print("Modelview matrix: ");
-        for (int i = 0; i < 16; ++i) {
-            System.out.print(mv[i]);
-            if (i < 15)
-                System.out.print(", ");
-            else
-                System.out.println("");
+        else {
+            GL2GL3 gl2gl3 = gl.getGL2GL3();
+            shader.load(gl2gl3);
+            GL2Adapter gl2Adapter = actorContext.getGL2Adapter();
+            float pr[] = gl2Adapter.getProjectionMatrix();
+            shader.setUniformMatrix4fv(gl2gl3, "projection", false, pr);
+            float mv[] = gl2Adapter.getModelViewMatrix();
+            shader.setUniformMatrix4fv(gl2gl3, "modelView", false, mv);
+            super.display(actorContext);
+            shader.unload(gl2gl3);
         }
-        */
     }
     
     @Override
@@ -54,6 +46,7 @@ implements GL3Actor
         GL2GL3 gl2gl3 = actorContext.getGLAutoDrawable().getGL().getGL2GL3();
         shader.dispose(gl2gl3);
         super.dispose(actorContext);
+        bIsInitialized = false;
     }
     
     @Override
@@ -74,6 +67,7 @@ implements GL3Actor
                 ma.setNormalLocation(normalLocation);
             }
         }
+        bIsInitialized = true;
     }
 
 }
