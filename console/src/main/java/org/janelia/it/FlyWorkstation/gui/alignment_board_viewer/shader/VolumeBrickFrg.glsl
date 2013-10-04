@@ -107,7 +107,7 @@ float computeIntensity( vec4 inputColor, float pos, float posInterp )
     return rtnVal;
 }
 
-// This takes the results of the color filter and creates "coloring relief" of areas given by the
+// This takes the results any previous steps and creates "coloring relief" of areas given by the
 // masking texture.
 vec4 volumeMask(vec4 origColor)
 {
