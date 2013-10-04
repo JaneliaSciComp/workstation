@@ -59,7 +59,7 @@ public class RenderablesLoadWorker extends SimpleWorker implements VolumeLoader 
             AlignmentBoardSettings settings,
             MultiMaskTracker multiMaskTracker
     ) {
-        logger = LoggerFactory.getLogger(RenderablesLoadWorker.class);
+        logger = LoggerFactory.getLogger(SimpleWorker.class);
         this.dataSource = dataSource;
         this.renderMapping = renderMapping;
         this.alignmentBoardSettings = settings;
@@ -195,7 +195,6 @@ public class RenderablesLoadWorker extends SimpleWorker implements VolumeLoader 
                 resolver = new CacheFileResolver();
             }
 
-            logger.debug( "In load thread, before getting bean list." );
             if ( sampler != null )
                 alignmentBoardSettings = adjustDownsampleRateSetting();
 
@@ -365,8 +364,11 @@ public class RenderablesLoadWorker extends SimpleWorker implements VolumeLoader 
     }
 
     private void fileLoad( Collection<MaskChanRenderableData> metaDatas ) {
-        for ( MaskChanRenderableData metaData: metaDatas ) {
-            logger.info( "Scheduling mask path {} for load.", metaData.getMaskPath() );
+        List<MaskChanRenderableData> sortedMetaDatas = new ArrayList<MaskChanRenderableData>();
+        sortedMetaDatas.addAll( metaDatas );
+        Collections.sort( sortedMetaDatas, new RDComparator( false ) );
+        for ( MaskChanRenderableData metaData: sortedMetaDatas ) {
+            logger.info( "Scheduling mask path {} for load as {}.", metaData.getMaskPath(), metaData.getBean().getTranslatedNum() );
             LoadRunnable runnable = new LoadRunnable( metaData, this, null );
             runnable.run();
         }
