@@ -34,8 +34,7 @@ public class BasicStereoMode implements StereoMode {
     }
 
     @Override
-    public void reshape(GLAutoDrawable glDrawable, int x, int y, 
-            int width, int height) 
+    public void reshape(int width, int height) 
     {
         int w = Math.max(width, 1);
         int h = Math.max(height, 1);
@@ -43,6 +42,13 @@ public class BasicStereoMode implements StereoMode {
             return; // no change
         viewportWidth = w;
         viewportHeight = h;
+    }
+
+    @Override
+    public void reshape(GLAutoDrawable glDrawable, int x, int y, 
+            int width, int height) 
+    {
+        reshape(width, height);
         updateViewport(glDrawable);
     }
 

@@ -11,6 +11,7 @@ import org.janelia.it.FlyWorkstation.gui.camera.ObservableCamera3d;
 import org.janelia.it.FlyWorkstation.gui.opengl.stereo3d.*;
 import org.janelia.it.FlyWorkstation.signal.Signal;
 import org.janelia.it.FlyWorkstation.signal.Slot;
+import org.janelia.it.FlyWorkstation.signal.Slot1;
 
 
 /**
@@ -27,12 +28,6 @@ import org.janelia.it.FlyWorkstation.signal.Slot;
 public class GLSceneComposer 
 implements GLEventListener
 {
-    private StereoMode anaglyphGreenMagentaStereoMode = new AnaglyphGreenMagentaStereoMode();
-    private StereoMode anaglyphRedCyanStereoMode = new AnaglyphRedCyanStereoMode();
-    private StereoMode hardwareStereoMode = new HardwareStereoMode();
-    private StereoMode leftEyeStereoMode = new LeftEyeStereoMode();
-    private StereoMode rightEyeStereoMode = new RightEyeStereoMode();
-    private StereoMode leftRightStereoMode = new LeftRightStereoMode();    
     private StereoMode monoStereoMode = new MonoStereoMode();
     private StereoMode stereoMode = monoStereoMode;
 
@@ -57,7 +52,7 @@ implements GLEventListener
 
     private GLAutoDrawable glComponent;
     GL2Adapter gl2Adapter = null;
-    
+
     private boolean viewChanged = true;
     private Slot onViewChangedSlot = new Slot() {
         @Override
@@ -68,6 +63,13 @@ implements GLEventListener
     };
     
     public Signal viewChangedSignal = new Signal();
+
+	public Slot1<StereoMode> setStereoModeSlot = new Slot1<StereoMode>() {
+		@Override
+		public void execute(StereoMode mode) {
+			setStereoMode(mode);
+		}
+	};
 
 	public GLSceneComposer(ObservableCamera3d camera, GLAutoDrawable component)
 	{
@@ -187,5 +189,12 @@ implements GLEventListener
     public CameraScreenGeometry getCameraScreenGeometry() {
         return cameraScreenGeometry;
     }
+
+	public void setStereoMode(StereoMode mode) {
+		if (this.stereoMode == mode)
+			return;
+		stereoMode = mode;
+		viewChangedSignal.emit();
+	}
 
 }

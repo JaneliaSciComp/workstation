@@ -32,11 +32,10 @@ public class LeftRightStereoMode extends BasicStereoMode
     }
 
     @Override
-    public void reshape(GLAutoDrawable glDrawable, int x, int y, 
-            int width, int height) 
+    public void reshape(int width, int height) 
     {
         // Use only half width at one time
-        super.reshape(glDrawable, x, y, width/2, height);
+        super.reshape(width/2, height);
     }
 
 }

@@ -1,7 +1,6 @@
 package org.janelia.it.FlyWorkstation.gui.opengl.demo;
 
 import java.awt.Color;
-import java.awt.Component;
 import java.awt.Dimension;
 import java.io.IOException;
 
@@ -11,6 +10,9 @@ import javax.media.opengl.awt.GLCanvas;
 // GLJPanel won't work with GL3!
 import javax.media.opengl.awt.GLJPanel;
 import javax.swing.JFrame;
+import javax.swing.JMenu;
+import javax.swing.JMenuBar;
+import javax.swing.JPopupMenu;
 
 import org.janelia.it.FlyWorkstation.geom.Vec3;
 import org.janelia.it.FlyWorkstation.gui.FullScreenMode;
@@ -23,11 +25,17 @@ import org.janelia.it.FlyWorkstation.gui.opengl.MeshActor;
 import org.janelia.it.FlyWorkstation.gui.opengl.MeshGroupActor;
 import org.janelia.it.FlyWorkstation.gui.opengl.PolygonalMesh;
 import org.janelia.it.FlyWorkstation.gui.opengl.SolidBackgroundActor;
+import org.janelia.it.FlyWorkstation.gui.opengl.stereo3d.StereoModeChooser;
 
 @SuppressWarnings("serial")
 public class GourdDemo extends JFrame
 {
 
+	static {
+		// So GLCanvas will not occlude menus
+		JPopupMenu.setDefaultLightWeightPopupEnabled(false);
+	}
+	
 	public static void main(String[] args) {
         javax.swing.SwingUtilities.invokeLater(new Runnable() {
             public void run() {
@@ -36,20 +44,17 @@ public class GourdDemo extends JFrame
         });
 	}
 
-	Component glComponent;
-	
 	public GourdDemo() {
     	setTitle("Gourd Demo");
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 
         // Create canvas for openGL display of gourd
-        // GLCapabilities glCapabilities = new GLCapabilities(GLProfile.get(GLProfile.GL2));
-        GLCapabilities glCapabilities = new GLCapabilities(GLProfile.getDefault());
+        GLCapabilities glCapabilities = new GLCapabilities(GLProfile.get(GLProfile.GL2));
+        // GLCapabilities glCapabilities = new GLCapabilities(GLProfile.getDefault());
         // glCapabilities.setStereo(true);
-        GLCanvas glPanel = new GLCanvas(glCapabilities);
-        // GLJPanel glPanel = new GLJPanel(glCapabilities); // DOES NOT WORK WITH GL3!?!
+        // GLCanvas glPanel = new GLCanvas(glCapabilities);
+        GLJPanel glPanel = new GLJPanel(glCapabilities); // DOES NOT WORK WITH GL3!?!
         //
-        glComponent = glPanel;
         glPanel.setPreferredSize(new Dimension(1280, 800));
         getContentPane().add(glPanel);
 
@@ -71,9 +76,7 @@ public class GourdDemo extends JFrame
 		camera.setFocus(new Vec3(0, 0, 0));
 		camera.setPixelsPerSceneUnit(200);
 
-	    // Wrap mono actor in stereo 3D mode
-	    GLSceneComposer sceneComposer = 
-	            new GLSceneComposer(camera, glPanel);
+	    GLSceneComposer sceneComposer = new GLSceneComposer(camera, glPanel);
 	    sceneComposer.addBackgroundActor(new SolidBackgroundActor(
 	            Color.lightGray));
 	    sceneComposer.addOpaqueActor(new LightingActor());
@@ -81,6 +84,16 @@ public class GourdDemo extends JFrame
 	    meshGroup.addActor(new MeshActor(gourdMesh));
 	    sceneComposer.addOpaqueActor(meshGroup);
         
+        // Enable stereo 3D selection
+        StereoModeChooser stereoModeChooser = new StereoModeChooser(glPanel);
+        stereoModeChooser.stereoModeChangedSignal.connect(sceneComposer.setStereoModeSlot);
+        // Menus
+        JMenuBar menuBar = new JMenuBar();
+        JMenu viewMenu = new JMenu("View");
+        menuBar.add(viewMenu);
+        setJMenuBar(menuBar);        
+        viewMenu.add(stereoModeChooser.createJMenuItem());	    
+	    
         // Apply mouse interactions: drag to rotate etc.
         // Another one-line functionality decorator!
         new TrackballInteractor(glPanel, camera);        
