@@ -8,8 +8,8 @@ import java.io.IOException;
 import javax.media.opengl.GLCapabilities;
 import javax.media.opengl.GLProfile;
 import javax.media.opengl.awt.GLCanvas;
-// GLJPanel won't work with hardware stereo 3d
-// import javax.media.opengl.awt.GLJPanel;
+// GLJPanel won't work with GL3!
+import javax.media.opengl.awt.GLJPanel;
 import javax.swing.JFrame;
 
 import org.janelia.it.FlyWorkstation.geom.Vec3;
@@ -43,10 +43,11 @@ public class GourdDemo extends JFrame
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 
         // Create canvas for openGL display of gourd
-        GLCapabilities glCapabilities = new GLCapabilities(GLProfile.get(GLProfile.GL3));
-        // GLCapabilities glCapabilities = new GLCapabilities(GLProfile.getDefault());
+        // GLCapabilities glCapabilities = new GLCapabilities(GLProfile.get(GLProfile.GL2));
+        GLCapabilities glCapabilities = new GLCapabilities(GLProfile.getDefault());
         // glCapabilities.setStereo(true);
         GLCanvas glPanel = new GLCanvas(glCapabilities);
+        // GLJPanel glPanel = new GLJPanel(glCapabilities); // DOES NOT WORK WITH GL3!?!
         //
         glComponent = glPanel;
         glPanel.setPreferredSize(new Dimension(1280, 800));

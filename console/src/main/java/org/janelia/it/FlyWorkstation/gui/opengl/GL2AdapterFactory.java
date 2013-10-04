@@ -83,6 +83,11 @@ public class GL2AdapterFactory {
             gl.glGetFloatv(GL2.GL_MODELVIEW_MATRIX, modelViewMatrixCache, 0);
             return modelViewMatrixCache;
         }
+
+        @Override
+        public void glTranslated(double x, double y, double z) {
+            gl.glTranslated(x, y, z);
+        }
     }
     
     static class GL3GL2Adapter implements GL2Adapter {
@@ -146,6 +151,11 @@ public class GL2AdapterFactory {
         @Override
         public float[] getModelViewMatrix() {
             return glMatrixState.getModelViewMatrix();
+        }
+
+        @Override
+        public void glTranslated(double x, double y, double z) {
+            glMatrixState.getCurrentMatrix().glTranslatef((float)x, (float)y, (float)z);
         }        
     }
 }

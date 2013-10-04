@@ -2,16 +2,16 @@ package org.janelia.it.FlyWorkstation.gui.opengl;
 
 import javax.media.opengl.GL;
 import javax.media.opengl.GL2GL3;
-// import javax.media.opengl.GL2;
 import javax.media.opengl.GLAutoDrawable;
 import javax.media.opengl.GLEventListener;
 
 import org.janelia.it.FlyWorkstation.geom.Rotation3d;
 import org.janelia.it.FlyWorkstation.geom.Vec3;
 import org.janelia.it.FlyWorkstation.gui.camera.ObservableCamera3d;
-import org.janelia.it.FlyWorkstation.gui.opengl.GL2Adapter.MatrixMode;
+import org.janelia.it.FlyWorkstation.gui.opengl.stereo3d.*;
 import org.janelia.it.FlyWorkstation.signal.Signal;
 import org.janelia.it.FlyWorkstation.signal.Slot;
+
 
 /**
  * GLSceneComposer has two responsibilities:
@@ -27,16 +27,19 @@ import org.janelia.it.FlyWorkstation.signal.Slot;
 public class GLSceneComposer 
 implements GLEventListener
 {
-	private static final Vec3 upInCamera = new Vec3(0,-1,0);
+    private StereoMode anaglyphGreenMagentaStereoMode = new AnaglyphGreenMagentaStereoMode();
+    private StereoMode anaglyphRedCyanStereoMode = new AnaglyphRedCyanStereoMode();
+    private StereoMode hardwareStereoMode = new HardwareStereoMode();
+    private StereoMode leftEyeStereoMode = new LeftEyeStereoMode();
+    private StereoMode rightEyeStereoMode = new RightEyeStereoMode();
+    private StereoMode leftRightStereoMode = new LeftRightStereoMode();    
+    private StereoMode monoStereoMode = new MonoStereoMode();
+    private StereoMode stereoMode = monoStereoMode;
 
+	private static final Vec3 upInCamera = new Vec3(0,-1,0);
 	private ObservableCamera3d camera;
-	
-	// Screen geometry TODO - does this belong in its own class?
-	protected int viewportWidth = 1;
-	protected  int viewportHeight = 1;
-    protected double screenEyeDistanceCm = 70.0; // varies per seat
-    // Library Dell U2713H 2560x1440 pixels; 59.67x33.57 cm; => 42.9 pixels/cm
-    protected double screenPixelsPerCm = 42.9; // varies per monitor
+
+	private CameraScreenGeometry cameraScreenGeometry;
 
 	private boolean useDepth = true;
 	
@@ -71,6 +74,14 @@ implements GLEventListener
 	    this.camera = camera;
 	    camera.getViewChangedSignal().connect(onViewChangedSlot);
 	    //
+	    // double screenEyeDistanceCm = 70.0; // varies per seat
+	    // Library Dell U2713H 2560x1440 pixels; 59.67x33.57 cm; => 42.9 pixels/cm
+	    // double screenPixelsPerCm = 42.9; // varies per monitor
+	    cameraScreenGeometry = new CameraScreenGeometry(camera,
+	            70.0, // screenEyeDistanceCm
+	            42.9, // screenPixelsPerCm
+	            6.2); // intraOcularDistanceCm
+	    //
 	    this.glComponent = component;
 	    component.addGLEventListener(this);
         viewChangedSignal.connect(new Slot() {
@@ -81,7 +92,7 @@ implements GLEventListener
 	}
 
     public void addBackgroundActor(GL3Actor actor) {
-        backgroundActors.addActor(actor);        
+        backgroundActors.addActor(actor);
     }
 
     public void addOpaqueActor(GL3Actor actor) {
@@ -92,21 +103,40 @@ implements GLEventListener
 	public void display(GLAutoDrawable glDrawable) {
 	    GLActorContext actorContext = new GLActorContext(glDrawable, gl2Adapter);
 	    if (viewChanged) {
-            // GL2 gl2 = glDrawable.getGL().getGL2();
-	        updateViewport(glDrawable);
-            updateProjectionMatrix(actorContext);
             updateModelViewMatrix(actorContext);
 	        viewChanged = false;
 	    }
-	    // Render in 4 passes
-	    if (useDepth) {
-	        GL gl = glDrawable.getGL();
-	        gl.glClear(GL.GL_DEPTH_BUFFER_BIT);
-	    }
-	    for (GL3Actor actor : allActors)
-	        actor.display(actorContext);
+	    stereoMode.display(actorContext, this);
 	}
 
+	public void displayBackground(GLActorContext actorContext) {
+	    backgroundActors.display(actorContext);
+	}
+	
+    public void displayOpaque(GLActorContext actorContext) {
+        opaqueActors.display(actorContext);
+    }
+    
+    public void displayTransparent(GLActorContext actorContext) {
+        transparentActors.display(actorContext);
+    }
+    
+    public void displayHud(GLActorContext actorContext) {
+        hudActors.display(actorContext);
+    }
+    
+    public void displayScene(GLActorContext actorContext) {
+        if (useDepth) {
+            GL gl = actorContext.getGLAutoDrawable().getGL();
+            gl.glClear(GL.GL_DEPTH_BUFFER_BIT);
+        }
+        // Render in 4 passes
+        displayBackground(actorContext);
+        displayOpaque(actorContext);
+        displayTransparent(actorContext);
+        displayHud(actorContext);
+    }
+    
 	@Override
 	public void dispose(GLAutoDrawable glDrawable) {
         GLActorContext actorContext = new GLActorContext(glDrawable, gl2Adapter);
@@ -133,59 +163,8 @@ implements GLEventListener
 	public void reshape(GLAutoDrawable glDrawable, int x, int y, int width,
 			int height) 
 	{
-		int w = Math.max(width, 1);
-		int h = Math.max(height, 1);
-		if ((w == viewportWidth) && (h == viewportHeight))
-			return; // no change
-		viewportWidth = w;
-		viewportHeight = h;
-	    updateViewport(glDrawable);
-		updateProjectionMatrix(new GLActorContext(glDrawable, gl2Adapter));
+	    stereoMode.reshape(glDrawable, x, y, width, height);
 		viewChanged = true;
-	}
-
-	protected void updateViewport(GLAutoDrawable glDrawable) {
-	    GL gl = glDrawable.getGL();
-		gl.glViewport(0, 0, viewportWidth, viewportHeight);
-	}
-
-	/**
-	 * 
-	 * @param gl
-	 * @param eye -1 for left eye, +1 for right eye, 0 for mono
-	 */
-	protected void updateProjectionMatrix(GLActorContext actorContext) {
-		int w = viewportWidth;
-		int h = viewportHeight;
-		double aspect = w/(double)h;
-		// Convert between 3 coordinate systems:
-		//  1) real world/user/lab in units of centimeters (cm)
-		//  2) monitor screen in units of pixels (px)
-		//  3) scene world in scene units (scene)
-		// Distance from user/camera to screen/focal point
-		double camDistCm = screenEyeDistanceCm;
-		double camDistPx = camDistCm * screenPixelsPerCm;
-	    double camDistScene = camDistPx / camera.getPixelsPerSceneUnit();
-	    double tanx = camDistPx;
-	    double tany = h / 2.0;
-	    double fovy = 2 * Math.atan2(tany, tanx) * 180 / Math.PI; // degrees
-	    // TODO - expose near/far clip planes
-	    double zNear = 0.3 * camDistScene;
-	    double zFar = 3.0 * camDistScene;
-
-	    GL2Adapter ga = actorContext.getGL2Adapter();
-	    ga.glMatrixMode(MatrixMode.GL_PROJECTION);
-		ga.glLoadIdentity();
-
-		// TODO - probably don't need both atan2() and tan()...
-		double top = zNear * Math.tan(fovy/360*Math.PI);
-		double right = aspect * top;
-		ga.glFrustum(
-				-right, right,
-		        -top, top,
-		        zNear, zFar);
-		
-		ga.glMatrixMode(MatrixMode.GL_MODELVIEW);
 	}
 
 	protected void updateModelViewMatrix(GLActorContext actorContext) {
@@ -196,13 +175,17 @@ implements GLEventListener
 	    Rotation3d g_R_c = camera.getRotation();
 	    Vec3 u_g = g_R_c.times(upInCamera);
 		// Distance from user/camera to screen/focal point
-		double camDistCm = screenEyeDistanceCm;
-		double camDistPx = camDistCm * screenPixelsPerCm;
+		double camDistCm = cameraScreenGeometry.getScreenEyeDistanceCm(); // screenEyeDistanceCm;
+		double camDistPx = camDistCm * cameraScreenGeometry.getScreenPixelsPerCm(); // screenPixelsPerCm;
 	    double camDistScene = camDistPx / camera.getPixelsPerSceneUnit();
 	    Vec3 c = f.plus(g_R_c.times(new Vec3(0,0,-camDistScene)));
 	    ga.gluLookAt(c.x(), c.y(), c.z(), // camera in ground
 	            f.x(), f.y(), f.z(), // focus in ground
 	            u_g.x(), u_g.y(), u_g.z()); // up vector in ground
 	}
+
+    public CameraScreenGeometry getCameraScreenGeometry() {
+        return cameraScreenGeometry;
+    }
 
 }

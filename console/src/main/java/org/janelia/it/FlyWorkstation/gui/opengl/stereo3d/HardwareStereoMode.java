@@ -1,51 +1,46 @@
 package org.janelia.it.FlyWorkstation.gui.opengl.stereo3d;
 
+import javax.media.opengl.GL;
 import javax.media.opengl.GL2;
+import javax.media.opengl.GL2GL3;
 import javax.media.opengl.GLAutoDrawable;
 import javax.media.opengl.GLCapabilitiesImmutable;
-import org.janelia.it.FlyWorkstation.gui.camera.ObservableCamera3d;
-import org.janelia.it.FlyWorkstation.gui.opengl.GL3Actor;
+import org.janelia.it.FlyWorkstation.gui.opengl.GLActorContext;
+import org.janelia.it.FlyWorkstation.gui.opengl.GLSceneComposer;
 
-public class HardwareStereoMode extends AbstractStereoMode 
+public class HardwareStereoMode extends BasicStereoMode 
 {
-	private boolean stereoIsEnabled = false;
-	
-    public HardwareStereoMode(
-    		ObservableCamera3d camera, 
-    		GL3Actor monoActor)
-	{
-    	super(camera, monoActor);
-	}
+    @Override
+    public void display(GLActorContext actorContext,
+            GLSceneComposer composer) 
+    {
+        GLAutoDrawable glDrawable = actorContext.getGLAutoDrawable();
 
-    @Override
-	public void display(GLAutoDrawable glDrawable) {
-	    final GL2 gl = glDrawable.getGL().getGL2();
-		if (stereoIsEnabled) {
-		    // Left eye
-		    gl.glDrawBuffer(GL2.GL_BACK_LEFT);
-			super.clear(glDrawable);
-			setLeftEyeView(gl);
-			paintScene(glDrawable);
-			// Right eye
-		    gl.glDrawBuffer(GL2.GL_BACK_RIGHT);
-			super.clear(glDrawable);
-			setRightEyeView(gl);
-			paintScene(glDrawable);
-			// Restore default double buffer mode
-		    gl.glDrawBuffer(GL2.GL_BACK);
-		}
-		else {
-			super.display(glDrawable);
-		}
-	}
+        if (canDisplay(glDrawable)) {
+            GL gl = glDrawable.getGL();
+            GL2GL3 gl2gl3 = gl.getGL2GL3();
+            
+            // Left
+            setLeftEyeView(actorContext, composer.getCameraScreenGeometry());
+            gl2gl3.glDrawBuffer(GL2.GL_BACK_LEFT);
+            composer.displayScene(actorContext);
     
-    @Override
-    public void init(GLAutoDrawable glDrawable) {
-    	super.init(glDrawable);
+            // Right
+            setRightEyeView(actorContext, composer.getCameraScreenGeometry());
+            gl2gl3.glDrawBuffer(GL2.GL_BACK_RIGHT);
+            composer.displayScene(actorContext);
+            
+            // Restore default double buffer mode
+            gl2gl3.glDrawBuffer(GL2GL3.GL_BACK);
+        }
+        else {
+            updateViewport(glDrawable);
+            composer.displayScene(actorContext);
+        }
+    }
+
+    public boolean canDisplay(GLAutoDrawable glDrawable) {
 		GLCapabilitiesImmutable glCaps = glDrawable.getChosenGLCapabilities();
-		stereoIsEnabled = glCaps.getStereo();
-		if (! stereoIsEnabled) {
-			System.out.println("Stereo 3D not available");
-		}
+		return glCaps.getStereo();
     }
 }

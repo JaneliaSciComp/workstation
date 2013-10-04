@@ -1,5 +1,6 @@
 package org.janelia.it.FlyWorkstation.gui.opengl.demo;
 
+import java.awt.Color;
 import java.awt.Component;
 import java.awt.Dimension;
 
@@ -17,10 +18,9 @@ import org.janelia.it.FlyWorkstation.gui.viewer3d.TeapotActor;
 import org.janelia.it.FlyWorkstation.gui.camera.BasicObservableCamera3d;
 import org.janelia.it.FlyWorkstation.gui.camera.ObservableCamera3d;
 import org.janelia.it.FlyWorkstation.gui.opengl.CompositeGLActor;
+import org.janelia.it.FlyWorkstation.gui.opengl.GLSceneComposer;
 import org.janelia.it.FlyWorkstation.gui.opengl.LightingActor;
-import org.janelia.it.FlyWorkstation.gui.opengl.stereo3d.AbstractStereoMode;
-import org.janelia.it.FlyWorkstation.gui.opengl.stereo3d.HardwareStereoMode;
-import org.janelia.it.FlyWorkstation.signal.Slot;
+import org.janelia.it.FlyWorkstation.gui.opengl.SolidBackgroundActor;
 
 @SuppressWarnings("serial")
 public class TeapotDemo extends JFrame
@@ -41,7 +41,7 @@ public class TeapotDemo extends JFrame
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 
         // Attempt to create a hardware stereo 3D capable OpenGL context
-        GLCapabilities glCapabilities = new GLCapabilities(GLProfile.getDefault());
+        GLCapabilities glCapabilities = new GLCapabilities(GLProfile.get(GLProfile.GL2));
         glCapabilities.setStereo(true);
         //
         // Create canvas for openGL display of teapot
@@ -66,19 +66,12 @@ public class TeapotDemo extends JFrame
 		camera.setFocus(new Vec3(0, 0, 0));
 		camera.setPixelsPerSceneUnit(200);
 
-		// Wrap mono actor in stereo 3D mode
-        AbstractStereoMode stereoMode = new HardwareStereoMode(
-        		camera, monoActor);
-        // stereoMode.setSwapEyes(true);
-        glPanel.addGLEventListener(stereoMode);
-        stereoMode.viewChangedSignal.connect(
-        		new Slot() {
-					@Override
-					public void execute() {
-						glComponent.repaint();
-					}
-        		});
-        
+		GLSceneComposer sceneComposer = 
+		        new GLSceneComposer(camera, glPanel);
+		sceneComposer.addBackgroundActor(new SolidBackgroundActor(
+		        Color.lightGray));
+		sceneComposer.addOpaqueActor(monoActor);
+
         // Apply mouse interactions: drag to rotate etc.
         // Another one-line functionality decorator!
         new TrackballInteractor(glPanel, camera);        

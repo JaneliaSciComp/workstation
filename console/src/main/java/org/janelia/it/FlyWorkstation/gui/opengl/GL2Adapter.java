@@ -61,4 +61,6 @@ public interface GL2Adapter {
     float[] getProjectionMatrix();
     float[] getModelViewMatrix();
 
+    void glTranslated(double x, double y, double z);
+
 }
