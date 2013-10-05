@@ -4,6 +4,8 @@ import java.awt.event.ActionEvent;
 import java.util.List;
 import java.util.Vector;
 
+import javax.media.opengl.GLDrawable;
+import javax.media.opengl.awt.GLCanvas;
 import javax.swing.AbstractAction;
 import javax.swing.Action;
 import javax.swing.ButtonGroup;
@@ -31,10 +33,13 @@ public class StereoModeChooser
     };
     
     public Signal1<StereoMode> stereoModeChangedSignal = new Signal1<StereoMode>();
+	private GLDrawable glPanel;
     
 	
-    public StereoModeChooser() 
+    public StereoModeChooser(GLDrawable glPanel) 
     {
+    	this.glPanel = glPanel;
+    	
     	// Create a series of swing Actions.
     	stereoActions.add(new StereoAction(new MonoStereoMode(), "Off (Monoscopic)"));
     	stereoActions.add(new StereoAction(new LeftEyeStereoMode(), "Left Eye View"));
@@ -42,7 +47,8 @@ public class StereoModeChooser
     	stereoActions.add(new StereoAction(new LeftRightStereoMode(), "Side-by-Side"));
     	stereoActions.add(new StereoAction(new AnaglyphGreenMagentaStereoMode(), "Green/Magenta"));
     	stereoActions.add(new StereoAction(new AnaglyphRedCyanStereoMode(), "Red/Cyan"));
-    	stereoActions.add(new StereoAction(new HardwareStereoMode(), "Quad Buffered"));
+    	stereoActions.add(new HardwareStereoAction(
+    			new HardwareStereoMode(), "Quad Buffered"));
     	
     	stereoMode = stereoActions.get(0).getMode();
     }
@@ -94,6 +100,28 @@ public class StereoModeChooser
 		public void select() {
 			putValue(Action.SELECTED_KEY, Boolean.TRUE);
 			stereoMode = mode;
+		}
+	}
+	
+	class HardwareStereoAction extends StereoAction 
+	{
+		HardwareStereoMode hardwareMode;
+		
+		HardwareStereoAction(HardwareStereoMode mode, String menuString) {
+			super(mode, menuString);
+			hardwareMode = mode;
+		}
+		
+		@Override
+		public void actionPerformed(ActionEvent arg0) {
+			// Grey out option if it cannot be supported
+			if (! hardwareMode.canDisplay(glPanel)) {
+				setEnabled(false);
+				putValue(Action.SELECTED_KEY, Boolean.FALSE);
+				return;
+			}
+			else
+				super.actionPerformed(arg0);
 		}
 	}
 

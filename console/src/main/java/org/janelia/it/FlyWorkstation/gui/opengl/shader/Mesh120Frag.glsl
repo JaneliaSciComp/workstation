@@ -1,11 +1,8 @@
-#version 150 // Highest supported on Mac 10.8.4
-// pass through
+#version 120 // Highest supported on Mac 10.6
 
-in vec3 vertexColor;
-in vec3 halfWayVector;
-in vec3 normalDirection;
-
-out vec4 fragColor;
+varying vec3 vertexColor;
+varying vec3 halfWayVector;
+varying vec3 normalDirection;
 
 const float specularPower = 20.0;
 const vec3 specularColor = vec3(0.3,0.3,0.3);
@@ -18,5 +15,5 @@ void main()
     float specularIntensity = pow(clamp(nDotH, 0, 1), specularPower);
     vec3 color = vertexColor + specularIntensity * specularColor;
     
-    fragColor = vec4(color, 1);
+    gl_FragColor = vec4(color, 1);
 }

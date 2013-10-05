@@ -11,6 +11,7 @@ import javax.media.opengl.GL2GL3;
 import javax.media.opengl.glu.GLU;
 
 import org.janelia.it.FlyWorkstation.geom.Vec3;
+import org.janelia.it.FlyWorkstation.gui.opengl.MeshActor.DisplayMethod;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.BoundingBox3d;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -42,16 +43,18 @@ implements GL3Actor
      *
      */
     public enum DisplayMethod {
-        IMMEDIATE_MODE,
-        DISPLAY_LISTS,
-        VERTEX_BUFFER_OBJECTS,
+        GL2_IMMEDIATE_MODE,
+        GL2_DISPLAY_LISTS,
+        GL2_VERTEX_BUFFER_OBJECTS,
         VBO_WITH_SHADER,
     }
     
     private boolean smoothing = true;
     private PolygonalMesh mesh;
     private BoundingBox3d boundingBox;
-    private DisplayMethod displayMethod = DisplayMethod.VERTEX_BUFFER_OBJECTS; // GL2 only...
+    private DisplayMethod displayMethod 
+    	// = DisplayMethod.GL2_VERTEX_BUFFER_OBJECTS; // GL2 only...
+    	= DisplayMethod.VBO_WITH_SHADER;
     // display list render method
     private int displayList = 0;
     // vertex buffer object render method
@@ -77,11 +80,11 @@ implements GL3Actor
     }
 
     private void displayGL2(GL2 gl2) {
-        if (displayMethod == DisplayMethod.IMMEDIATE_MODE)
+        if (displayMethod == DisplayMethod.GL2_IMMEDIATE_MODE)
             displayUsingImmediateMode(gl2);
-        else if (displayMethod == DisplayMethod.DISPLAY_LISTS)
+        else if (displayMethod == DisplayMethod.GL2_DISPLAY_LISTS)
             displayUsingDisplayList(gl2); // should be faster than immediate
-        else if (displayMethod == DisplayMethod.VERTEX_BUFFER_OBJECTS)
+        else if (displayMethod == DisplayMethod.GL2_VERTEX_BUFFER_OBJECTS)
             displayUsingVertexBufferObjects(gl2); // should be faster than immediate
         else if (displayMethod == DisplayMethod.VBO_WITH_SHADER)
             displayUsingVertexBufferObjectsWithShader(gl2); // should be faster than immediate
@@ -335,5 +338,9 @@ implements GL3Actor
             vertexArrayObject = 0;
         }
     }
+
+	public DisplayMethod getDisplayMethod() {
+		return displayMethod;
+	}
 
 }

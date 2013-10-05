@@ -1,14 +1,14 @@
-#version 150 // Highest supported on Mac 10.8.4
+#version 120 // Highest supported on Mac 10.6
 
 uniform mat4 projection;
 uniform mat4 modelView;
 
-in vec4 vertex;
-in vec3 normal;
+attribute vec4 vertex;
+attribute vec3 normal;
 
-out vec3 halfWayVector;
-out vec3 vertexColor;
-out vec3 normalDirection;
+varying vec3 halfWayVector;
+varying vec3 vertexColor;
+varying vec3 normalDirection;
 
 struct Light
 {
@@ -51,6 +51,7 @@ void main(void) {
     normalDirection = normalize( (modelView * vec4(normal, 0)).xyz );
     vec3 viewDirection = normalize(-gl_Position.xyz);
     halfWayVector = normalize(viewDirection + lightDirection);
+    vertexColor = vec3(0,0,0);
     vertexColor += calcDiffuseColor(lightDirection, normalDirection, 
             light0.color, material.diffuseColor);
     

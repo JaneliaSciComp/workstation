@@ -1,15 +1,15 @@
 package org.janelia.it.FlyWorkstation.gui.opengl.shader;
 
-public class MeshShader extends BasicShader {
+public class Mesh150Shader extends BasicShader {
 
     @Override
     public String getVertexShaderResourceName() {
-        return "MeshVrtx.glsl";
+        return "Mesh150Vrtx.glsl";
     }
 
     @Override
     public String getFragmentShaderResourceName() {
-        return "MeshFrag.glsl";
+        return "Mesh150Frag.glsl";
     }
 
 }

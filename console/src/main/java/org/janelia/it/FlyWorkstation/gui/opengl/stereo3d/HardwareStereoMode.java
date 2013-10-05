@@ -5,6 +5,8 @@ import javax.media.opengl.GL2;
 import javax.media.opengl.GL2GL3;
 import javax.media.opengl.GLAutoDrawable;
 import javax.media.opengl.GLCapabilitiesImmutable;
+import javax.media.opengl.GLDrawable;
+
 import org.janelia.it.FlyWorkstation.gui.opengl.GLActorContext;
 import org.janelia.it.FlyWorkstation.gui.opengl.GLSceneComposer;
 
@@ -40,7 +42,7 @@ public class HardwareStereoMode extends BasicStereoMode
         }
     }
 
-    public boolean canDisplay(GLAutoDrawable glDrawable) {
+    public boolean canDisplay(GLDrawable glDrawable) {
 		GLCapabilitiesImmutable glCaps = glDrawable.getChosenGLCapabilities();
 		return glCaps.getStereo();
     }
