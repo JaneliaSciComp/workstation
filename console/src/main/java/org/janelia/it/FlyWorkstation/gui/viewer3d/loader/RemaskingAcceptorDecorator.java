@@ -81,7 +81,6 @@ public class RemaskingAcceptorDecorator extends AbstractAcceptorDecorator {
                 throw new RuntimeException("No volume data available.  Cannot add mask data.");
             }
         }
-
         return wrappedAcceptor.addMaskData( finalMaskNumber, position, x, y, z );
 
     }

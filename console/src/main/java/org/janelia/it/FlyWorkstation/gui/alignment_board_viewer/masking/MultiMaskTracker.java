@@ -58,8 +58,13 @@ public class MultiMaskTracker {
             // Decrement number of voxels referencing the old mask, because now we reference a new one.
             oldBean.decrementVoxelCount();
             altMasks = oldBean.getAltMasks();
-            // Generate a key for finding any existing combo of old + new.
-            fullInvertedKey = oldBean.getExtendedInvertedKey( discoveredMask );
+            if ( altMasks.contains( discoveredMask ) ) {
+                fullInvertedKey = oldBean.getInvertedKey();
+            }
+            else {
+                // Generate a key for finding any existing combo of old + new.
+                fullInvertedKey = oldBean.getExtendedInvertedKey( discoveredMask );
+            }
         }
         else {
             // Whatever mask had been set in the volume was NOT a multi-mask. But a multi-mask convering the
@@ -183,11 +188,12 @@ public class MultiMaskTracker {
         }
 
         public void addAltMask( Integer altMask ) {
-            altMasks.add( altMask );
+            if ( ! altMasks.contains( altMask ) )
+                altMasks.add( altMask );
         }
 
         public void addAll( List<Integer> altMasks ) {
-            altMasks.addAll( altMasks );
+            this.altMasks.addAll( altMasks );
         }
 
         public int getVoxelCount() {
