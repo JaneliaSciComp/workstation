@@ -5,7 +5,6 @@ import java.util.List;
 import java.util.Vector;
 
 import javax.media.opengl.GLDrawable;
-import javax.media.opengl.awt.GLCanvas;
 import javax.swing.AbstractAction;
 import javax.swing.Action;
 import javax.swing.ButtonGroup;
@@ -20,7 +19,8 @@ public class StereoModeChooser
     private StereoMode stereoMode = null;
     private List<StereoAction> stereoActions = new Vector<StereoAction>();
     boolean bEyesSwapped = false;
-    private Action swapEyesAction = new AbstractAction("Swap Eyes") {
+    @SuppressWarnings("serial")
+	private Action swapEyesAction = new AbstractAction("Swap Eyes") {
         {
             // Initialize SELECTED_KEY, otherwise it remains null
             putValue(Action.SELECTED_KEY, bEyesSwapped);
@@ -49,6 +49,7 @@ public class StereoModeChooser
     	stereoActions.add(new StereoAction(new AnaglyphRedCyanStereoMode(), "Red/Cyan"));
     	stereoActions.add(new HardwareStereoAction(
     			new HardwareStereoMode(), "Quad Buffered"));
+    	stereoActions.add(new StereoAction(new RowInterleavedStereoMode(), "Scan line interleaved"));
     	
     	stereoMode = stereoActions.get(0).getMode();
     }
@@ -103,6 +104,7 @@ public class StereoModeChooser
 		}
 	}
 	
+	@SuppressWarnings("serial")
 	class HardwareStereoAction extends StereoAction 
 	{
 		HardwareStereoMode hardwareMode;

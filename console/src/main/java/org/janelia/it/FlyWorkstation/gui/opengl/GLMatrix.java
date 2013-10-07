@@ -129,4 +129,26 @@ public class GLMatrix {
         return d;
     }
 
+	public GLMatrix cloneMatrix() {
+		GLMatrix result = new GLMatrix();
+		for (int i = 0; i < 16; ++i)
+			result.d[i] = d[i];
+		return result;
+	}
+
+	public void glOrtho(double left, double right, double bottom, double top,
+			double nearVal, double farVal) 
+	{
+		// http://www.opengl.org/sdk/docs/man2/xhtml/glOrtho.xml
+		float tx = -(float)((right+left)/(right-left));
+		float ty = -(float)((top+bottom)/(top-bottom));
+		float tz = -(float)((farVal+nearVal)/(farVal-nearVal));
+		glMultMatrixf(new float[] {
+			2/(float)(right-left), 0, 0, 0,
+			0, 2/(float)(top-bottom), 0, 0,
+			0, 0, -2/(float)(farVal-nearVal), 0,
+			tx, ty, tz, 1,
+		});
+	}
+
 }

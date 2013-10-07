@@ -63,4 +63,12 @@ public class GLMatrixState {
         return projectionMatrix.peek().getFloatArray();
     }
 
+	public void glPushMatrix() {
+		currentMatrix.push(getCurrentMatrix().cloneMatrix());
+	}
+
+	public void glPopMatrix() {
+		currentMatrix.pop();
+	}
+
 }

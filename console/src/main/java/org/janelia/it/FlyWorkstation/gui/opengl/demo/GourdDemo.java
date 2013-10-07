@@ -52,6 +52,7 @@ public class GourdDemo extends JFrame
         GLCapabilities glCapabilities = new GLCapabilities(GLProfile.get(GLProfile.GL2));
         // GLCapabilities glCapabilities = new GLCapabilities(GLProfile.getDefault());
         // glCapabilities.setStereo(true);
+        glCapabilities.setStencilBits(8);
         GLCanvas glPanel = new GLCanvas(glCapabilities);
         // GLJPanel glPanel = new GLJPanel(glCapabilities); // DOES NOT WORK WITH GL3!?!
         //

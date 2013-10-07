@@ -51,6 +51,8 @@ import org.slf4j.LoggerFactory;
 // import org.slf4j.LoggerFactory;
 
 
+
+
 import javax.media.opengl.GLProfile;
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
@@ -77,6 +79,7 @@ import java.util.List;
  * @author Christopher M. Bruns
  *
  */
+@SuppressWarnings("serial")
 public class QuadViewUi extends JPanel
 {
 	@SuppressWarnings("unused")

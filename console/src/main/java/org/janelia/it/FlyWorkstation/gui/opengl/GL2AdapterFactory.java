@@ -88,6 +88,23 @@ public class GL2AdapterFactory {
         public void glTranslated(double x, double y, double z) {
             gl.glTranslated(x, y, z);
         }
+
+		@Override
+		public void glPushMatrix() {
+			gl.glPushMatrix();
+		}
+
+		@Override
+		public void glPopMatrix() {
+			gl.glPopMatrix();
+		}
+
+		@Override
+		public void glOrtho(double left, double right, 
+				double bottom, double top,
+				double nearVal, double farVal) {
+			gl.glOrtho(left, right, bottom, top, nearVal, farVal);
+		}
     }
     
     static class GL3GL2Adapter implements GL2Adapter {
@@ -156,6 +173,24 @@ public class GL2AdapterFactory {
         @Override
         public void glTranslated(double x, double y, double z) {
             glMatrixState.getCurrentMatrix().glTranslatef((float)x, (float)y, (float)z);
-        }        
+        }
+
+		@Override
+		public void glPushMatrix() {
+			glMatrixState.glPushMatrix();
+		}
+
+		@Override
+		public void glPopMatrix() {
+			glMatrixState.glPopMatrix();
+		}
+
+		@Override
+		public void glOrtho(double left, double right, 
+				double bottom, double top,
+				double nearVal, double farVal) 
+		{
+			glMatrixState.getCurrentMatrix().glOrtho(left, right, bottom, top, nearVal, farVal);
+		}
     }
 }

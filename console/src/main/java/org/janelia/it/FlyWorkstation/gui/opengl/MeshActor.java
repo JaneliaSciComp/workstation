@@ -11,7 +11,6 @@ import javax.media.opengl.GL2GL3;
 import javax.media.opengl.glu.GLU;
 
 import org.janelia.it.FlyWorkstation.geom.Vec3;
-import org.janelia.it.FlyWorkstation.gui.opengl.MeshActor.DisplayMethod;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.BoundingBox3d;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -253,6 +252,9 @@ implements GL3Actor
         gl.glDrawElements(GL.GL_TRIANGLES, indexCount, GL.GL_UNSIGNED_INT, 0);
 
         checkGlError(gl, "display mesh using vbos and shader 4");
+
+        gl.glBindBuffer(GL.GL_ARRAY_BUFFER, 0);
+    	gl2gl3.glBindVertexArray(0);
     }
 
     /**

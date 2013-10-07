@@ -145,12 +145,15 @@ implements GLEventListener
     }
     
     public void displayScene(GLActorContext actorContext) {
+        GL gl = actorContext.getGLAutoDrawable().getGL();
         if (useDepth) {
-            GL gl = actorContext.getGLAutoDrawable().getGL();
             gl.glClear(GL.GL_DEPTH_BUFFER_BIT);
         }
         // Render in 4 passes
+        gl.glDisable(GL.GL_DEPTH_TEST);
         displayBackground(actorContext);
+        if (useDepth)
+            gl.glEnable(GL.GL_DEPTH_TEST);        	
         displayOpaque(actorContext);
         displayTransparent(actorContext);
         displayHud(actorContext);

@@ -16,5 +16,4 @@ public interface StereoMode {
     boolean isEyesSwapped();
 
     void setEyesSwapped(boolean eyesSwapped);
-
 }

@@ -63,4 +63,11 @@ public interface GL2Adapter {
 
     void glTranslated(double x, double y, double z);
 
+	void glPushMatrix();
+	void glPopMatrix();
+
+	public void glOrtho(double left, double right, 
+			double bottom, double top,
+			double nearVal, double farVal);
+
 }
