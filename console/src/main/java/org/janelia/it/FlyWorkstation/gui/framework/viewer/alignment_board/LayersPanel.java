@@ -269,7 +269,7 @@ public class LayersPanel extends JPanel implements Refreshable, ActivatableView 
             
             @Override
             protected void doStuff() throws Exception {
-                log.debug("load alignment board with id: {}",alignmentBoardId);
+                log.trace("load alignment board with id: {}",alignmentBoardId);
                 Entity commonRoot = ModelMgr.getModelMgr().getCommonRootEntityByName(ALIGNMENT_BOARDS_FOLDER);
                 ModelMgr.getModelMgr().loadLazyEntity(commonRoot, false);
                 RootedEntity commonRootedEntity = new RootedEntity(commonRoot);
@@ -278,7 +278,7 @@ public class LayersPanel extends JPanel implements Refreshable, ActivatableView 
                     throw new IllegalStateException("Alignment board does not exist");
                 }
                 this.abContext = new AlignmentBoardContext(abRootedEntity);
-                log.debug("loading ancestors for alignment board: {}", abContext);
+                log.trace("loading ancestors for alignment board: {}", abContext);
                 loadAncestors(abContext);
                 loadCompartmentSet(abContext);
             }
@@ -301,7 +301,7 @@ public class LayersPanel extends JPanel implements Refreshable, ActivatableView 
                 boolean hasCompartmentSet = false;
                 for ( EntityWrapper child: context.getChildren() ) {
                     if ( child.getName().startsWith("Compartment Set") ) {
-                        log.info("Context has a compartment set called {}.", child.getName());
+                        log.trace("Context has a compartment set called {}.", child.getName());
                         hasCompartmentSet = true;
                     }
                 }

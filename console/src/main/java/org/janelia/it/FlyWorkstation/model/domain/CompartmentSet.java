@@ -56,7 +56,7 @@ public class CompartmentSet extends AlignedEntityWrapper implements Viewable2d, 
     @Override
     public void loadContextualizedChildren(AlignmentContext alignmentContext) throws Exception {
 
-        log.info("Loading contextualized children for compartment set '{}' (id={})", getName(), getId());
+        log.debug("Loading contextualized children for compartment set '{}' (id={})", getName(), getId());
 
         initChildren();
         ModelMgr.getModelMgr().loadLazyEntity(getInternalEntity(), false);
@@ -74,7 +74,7 @@ public class CompartmentSet extends AlignedEntityWrapper implements Viewable2d, 
 
             if ( targetSpace.equals( compartmentSetSpace ) ) {
                 // Found the right one.
-                log.info("Found compartment set '{}', (id={}).", compartmentSetEntity.getName(), compartmentSetEntity.getId());
+                log.debug("Found compartment set '{}', (id={}).", compartmentSetEntity.getName(), compartmentSetEntity.getId());
                 compartmentSet = new TreeSet<Compartment>();
 
                 // Getting all the compartments.

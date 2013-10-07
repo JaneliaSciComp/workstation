@@ -62,11 +62,11 @@ public class VeryLargeVolumeData implements VolumeDataI {
         // Recalculate number of slabs, so that excess data is not allocated.
         numSlabs = (int)Math.ceil( (double)volumeExtent / (double)slabExtent );
 
-        logger.info("Slab extent is {}.", slabExtent );
-        logger.info("Volume extent over slab extent is {}.", (volumeExtent / slabExtent));
-        logger.info("Slices per slab is {}.", slicesPerSlab);
-        logger.info("Number of slabs is {}.", numSlabs);
-        logger.info("Volume extent is {}.", volumeExtent);
+        logger.debug("Slab extent is {}.", slabExtent );
+        logger.debug("Volume extent over slab extent is {}.", (volumeExtent / slabExtent));
+        logger.debug("Slices per slab is {}.", slicesPerSlab);
+        logger.debug("Number of slabs is {}.", numSlabs);
+        logger.debug("Volume extent is {}.", volumeExtent);
 
         slabs = new byte[ numSlabs ][];
         chunks = new VolumeDataChunk[ numSlabs ];

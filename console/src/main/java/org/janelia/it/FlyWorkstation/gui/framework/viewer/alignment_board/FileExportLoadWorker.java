@@ -139,7 +139,7 @@ public class FileExportLoadWorker extends SimpleWorker implements VolumeLoader {
 
         List<MaskChanRenderableData> sortedRenderableDatas = new ArrayList<MaskChanRenderableData>();
         sortedRenderableDatas.addAll( paramBean.getRenderableDatas() );
-        Collections.sort( sortedRenderableDatas, Collections.reverseOrder( new RDComparator() ) );
+        Collections.sort( sortedRenderableDatas, new RDComparator( false ) );
 
         // Establish the means for extracting the volume mask.
         AlignmentBoardSettings customWritebackSettings = new AlignmentBoardSettings();

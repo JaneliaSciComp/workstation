@@ -368,7 +368,7 @@ public class RenderablesLoadWorker extends SimpleWorker implements VolumeLoader 
         sortedMetaDatas.addAll( metaDatas );
         Collections.sort( sortedMetaDatas, new RDComparator( false ) );
         for ( MaskChanRenderableData metaData: sortedMetaDatas ) {
-            logger.info( "Scheduling mask path {} for load as {}.", metaData.getMaskPath(), metaData.getBean().getTranslatedNum() );
+            logger.debug( "Scheduling mask path {} for load as {}.", metaData.getMaskPath(), metaData.getBean().getTranslatedNum() );
             LoadRunnable runnable = new LoadRunnable( metaData, this, null );
             runnable.run();
         }
