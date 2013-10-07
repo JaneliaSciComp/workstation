@@ -88,6 +88,7 @@ implements GLActor
     private float neuronColor[] = {0.8f,1.0f,0.3f};
     private final float blackColor[] = {0,0,0};
     private TracedPathShader tracedShader = new TracedPathShader();
+    private boolean anchorsVisible = true;
 	
 	public Signal skeletonActorChangedSignal = new Signal();
 
@@ -317,7 +318,8 @@ implements GLActor
             segment.display(glDrawable);
 		tracedShader.unload(gl2);
 		
-        displayAnchors(glDrawable);
+		if (isAnchorsVisible())
+			displayAnchors(glDrawable);
 	}
 
 	public int getIndexForAnchor(Anchor anchor) {
@@ -364,6 +366,17 @@ implements GLActor
 	
 	public float getZThicknessInPixels() {
 		return zThicknessInPixels;
+	}
+
+	public boolean isAnchorsVisible() {
+		return anchorsVisible;
+	}
+
+	public void setAnchorsVisible(boolean anchorsVisible) {
+		if (anchorsVisible == this.anchorsVisible)
+			return; // no change
+		this.anchorsVisible = anchorsVisible;
+		skeletonActorChangedSignal.emit();
 	}
 
 	public void setZThicknessInPixels(float zThicknessInPixels) {

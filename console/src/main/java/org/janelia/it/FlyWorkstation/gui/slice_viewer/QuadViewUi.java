@@ -8,6 +8,7 @@ import org.janelia.it.FlyWorkstation.gui.slice_viewer.action.AdvanceZSlicesActio
 import org.janelia.it.FlyWorkstation.gui.slice_viewer.action.CenterNextParentAction;
 import org.janelia.it.FlyWorkstation.gui.slice_viewer.action.GoBackZSlicesAction;
 import org.janelia.it.FlyWorkstation.gui.slice_viewer.action.MouseMode;
+import org.janelia.it.FlyWorkstation.gui.slice_viewer.action.MouseMode.Mode;
 import org.janelia.it.FlyWorkstation.gui.slice_viewer.action.NextZSliceAction;
 import org.janelia.it.FlyWorkstation.gui.slice_viewer.action.OpenFolderAction;
 import org.janelia.it.FlyWorkstation.gui.slice_viewer.action.OrthogonalModeAction;
@@ -49,12 +50,14 @@ import org.slf4j.LoggerFactory;
 // import org.slf4j.Logger;
 // import org.slf4j.LoggerFactory;
 
+
 import javax.media.opengl.GLProfile;
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
 import javax.swing.border.EtchedBorder;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
+
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.KeyEvent;
@@ -207,6 +210,17 @@ public class QuadViewUi extends JPanel
 	    public Signal1<WheelMode.Mode> wheelModeChangedSignal = 
 	        new Signal1<WheelMode.Mode>();
 	
+	private Slot1<MouseMode.Mode> onMouseModeChangedSlot = new Slot1<MouseMode.Mode>() {
+		@Override
+		public void execute(Mode mode) {
+			// Only display anchors in Trace mode
+			if (mode == MouseMode.Mode.TRACE)
+				getSkeletonActor().setAnchorsVisible(true);
+			else
+				getSkeletonActor().setAnchorsVisible(false);
+		}
+	};
+	    
 	// Slots
 	private Slot1<URL> loadUrlSlot = new Slot1<URL>() {
 		@Override
@@ -305,7 +319,7 @@ public class QuadViewUi extends JPanel
     public Slot centerNextParentSlot = new Slot() {
         @Override
         public void execute() {
-            Anchor anchor = sliceViewer.getSkeletonActor().getNextParent();
+            Anchor anchor = getSkeletonActor().getNextParent();
             if (anchor != null) {
                 setCameraFocusSlot.execute(anchor.getLocation());
             }
@@ -326,7 +340,7 @@ public class QuadViewUi extends JPanel
             System.out.println("onPathTracedSlot");
             TracedPathActor actor = new TracedPathActor(path, 
                     tileServer.getLoadAdapter().getTileFormat());
-            sliceViewer.getSkeletonActor().addTracedSegment(actor);
+            getSkeletonActor().addTracedSegment(actor);
         }
     };
     
@@ -356,7 +370,7 @@ public class QuadViewUi extends JPanel
         skeleton.subtreeDeleteRequestedSignal.connect(annotationMgr.deleteSubtreeRequestedSlot);
         skeleton.linkDeleteRequestedSignal.connect(annotationMgr.deleteLinkRequestedSlot);
         skeleton.splitAnchorRequestedSignal.connect(annotationMgr.splitAnchorRequestedSlot);
-        sliceViewer.getSkeletonActor().nextParentChangedSignal.connect(annotationMgr.selectAnnotationSlot);
+        getSkeletonActor().nextParentChangedSignal.connect(annotationMgr.selectAnnotationSlot);
         skeleton.anchorMovedSignal.connect(annotationMgr.moveAnchorRequestedSlot);
         skeleton.pathTraceRequestedSignal.connect(tracePathSegmentSlot);
 
@@ -401,6 +415,7 @@ public class QuadViewUi extends JPanel
         traceMouseModeAction.setMouseModeSignal.connect(mouseModeChangedSignal);
         zoomScrollModeAction.setWheelModeSignal.connect(wheelModeChangedSignal);
         zScanScrollModeAction.setWheelModeSignal.connect(wheelModeChangedSignal);
+        mouseModeChangedSignal.connect(onMouseModeChangedSlot);
         // Next connect that signal to various widgets
         mouseModeChangedSignal.connect(sliceViewer.setMouseModeSlot);
         wheelModeChangedSignal.connect(sliceViewer.setWheelModeSlot);
@@ -409,7 +424,7 @@ public class QuadViewUi extends JPanel
         annotationPanel.centerAnnotationSignal.connect(centerNextParentSlot);
         // TODO other orthogonal viewers
         OrthogonalPanel viewPanels[] = {neViewer, swViewer, nwViewer};
-        SkeletonActor sharedSkeletonActor = sliceViewer.getSkeletonActor();
+        SkeletonActor sharedSkeletonActor = getSkeletonActor();
         sharedSkeletonActor.setSkeleton(sliceViewer.getSkeleton());
         for (OrthogonalPanel v : viewPanels) {
             mouseModeChangedSignal.connect(v.setMouseModeSlot);
@@ -489,6 +504,10 @@ LLF: the hookup for the 3d snapshot.
 		swViewer.setVisible(true);
 		seViewer.setVisible(true);
 		tileServer.refreshCurrentTileSetSlot.execute();
+	}
+	
+	private SkeletonActor getSkeletonActor() {
+		return sliceViewer.getSkeletonActor();
 	}
 	
 	private void setZViewMode() {
