@@ -256,7 +256,10 @@ public class RenderablesChannelsBuilder extends RenderablesVolumeBuilder impleme
         textureData.setInverted( false );
         textureData.setCoordCoverage( coordCoverage );
 
-        textureData.setInterpolationMethod( GL2.GL_LINEAR );
+        // NOTE: use of GL_LINEAR is usually preferred when sending intensity data.  However, with the modifications
+        // that the shader is making at the "fragment" level (which seem to occur after this interpolation), ghost
+        // effects appear around shader-modified voxels.
+        textureData.setInterpolationMethod( GL2.GL_NEAREST );
 
         // This set of inputs works against uploaded MP4 files.  T.o.Writing: YCD
         /*
