@@ -63,6 +63,7 @@ public class MaskChanMultiFileLoader {
     public void read( RenderableBean bean, MaskChanStreamSourceI streamSource )
             throws Exception {
         logger.debug( "Read called." );
+
         InputStream maskInputStream = streamSource.getMaskInputStream();
         InputStream channelStream = streamSource.getChannelInputStream();
 
@@ -76,18 +77,21 @@ public class MaskChanMultiFileLoader {
         if ( dimWriteback ) {
             singleFileLoader.setIntensityDivisor( 5 );
         }
+        else {
+            singleFileLoader.setIntensityDivisor( 1 );
+        }
         singleFileLoader.read( maskInputStream, channelStream );
+
+        maskInputStream.close();
+        if ( channelStream != null ) {
+            channelStream.close();
+        }
 
         // Accumulate information for final sanity check.
         if ( isCheckForConsistency() ) {
             checker.accumulate(
                 bean.getTranslatedNum(), singleFileLoader.getDimensions(), singleFileLoader.getChannelMetaData()
             );
-        }
-
-        maskInputStream.close();
-        if ( channelStream != null ) {
-            channelStream.close();
         }
 
         logger.debug( "Read complete." );
