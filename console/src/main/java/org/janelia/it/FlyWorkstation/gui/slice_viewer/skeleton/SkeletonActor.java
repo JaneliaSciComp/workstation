@@ -558,6 +558,11 @@ implements GLActor
 		PassThroughTextureShader.checkGlError(gl, "load anchor texture");
 		edgesNeedCopy = true;
 		verticesNeedCopy = true;
+		
+		// Apply transparency, even when anchors are not shown
+        gl.glEnable(GL2.GL_BLEND);
+        gl.glBlendFunc(GL2.GL_SRC_ALPHA, GL2.GL_ONE_MINUS_SRC_ALPHA);
+		
         bIsGlInitialized = true;
 	}
 

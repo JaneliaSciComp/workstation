@@ -52,8 +52,9 @@ implements GL3Actor
     private PolygonalMesh mesh;
     private BoundingBox3d boundingBox;
     private DisplayMethod displayMethod 
-    	// = DisplayMethod.GL2_VERTEX_BUFFER_OBJECTS; // GL2 only...
-    	= DisplayMethod.VBO_WITH_SHADER;
+     	= DisplayMethod.GL2_VERTEX_BUFFER_OBJECTS; // GL2 only...
+    	// = DisplayMethod.GL2_DISPLAY_LISTS;
+    	// = DisplayMethod.VBO_WITH_SHADER;
     // display list render method
     private int displayList = 0;
     // vertex buffer object render method
@@ -107,6 +108,7 @@ implements GL3Actor
      */
     private void displayUsingImmediateMode(GL2 gl2) {
         checkGlError(gl2, "display mesh using immediate mode 0");
+    	gl2.glEnable(GL2.GL_LIGHTING);
         for (PolygonalMesh.Face face : mesh.getFaces()) {
             // Paint
             gl2.glBegin(GL2.GL_TRIANGLE_FAN);
@@ -213,6 +215,8 @@ implements GL3Actor
         gl2.glVertexPointer(floatsPerVertex, GL.GL_FLOAT, bytesPerVertexNormal, 0);
         gl2.glNormalPointer(GL.GL_FLOAT, bytesPerVertexNormal, floatsPerVertex*bytesPerFloat);
         gl2gl3.glBindBuffer(GL.GL_ELEMENT_ARRAY_BUFFER, indexVbo);
+
+        gl2.glEnable(GL2.GL_LIGHTING);
         gl2gl3.glDrawElements(GL.GL_TRIANGLES, indexCount, GL.GL_UNSIGNED_INT, 0);
 
         gl2gl3.glDisableClientState(GL2.GL_NORMAL_ARRAY);

@@ -133,7 +133,7 @@ public class RowInterleavedStereoMode extends BasicStereoMode
         	vertices.put(width); vertices.put(y); vertices.put(0);
         }
         
-        System.out.println("height = "+height);
+        // System.out.println("height = "+height);
         
         // render lines
         vertices.rewind();
