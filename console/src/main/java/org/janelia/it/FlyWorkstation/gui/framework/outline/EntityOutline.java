@@ -561,6 +561,13 @@ public abstract class EntityOutline extends EntityTree implements Refreshable, A
 			}
 		}
 	}
+	
+	public void highlightEntityByUniqueId(final String uniqueId) {
+		DefaultMutableTreeNode node = getNodeByUniqueId(uniqueId);
+		if (node!=null) {
+			getDynamicTree().navigateToNode(node);
+		}
+	}
     
 	private synchronized void selectNode(final DefaultMutableTreeNode node) {
 

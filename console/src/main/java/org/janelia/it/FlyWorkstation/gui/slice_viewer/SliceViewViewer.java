@@ -105,6 +105,10 @@ public class SliceViewViewer extends Viewer {
         }
     }
 
+	public RootedEntity getContextRootedEntity() {
+		return slcRootedEntity;
+	}
+	
     @Override
     public List<RootedEntity> getRootedEntities() {
         return Arrays.asList(slcRootedEntity);

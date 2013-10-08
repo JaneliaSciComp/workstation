@@ -137,6 +137,10 @@ public class AlignmentBoardViewer extends Viewer implements AlignmentBoardContro
     @Override
     public void loadEntity(RootedEntity rootedEntity, Callable<Void> success) {}
 
+	public RootedEntity getContextRootedEntity() {
+		return SessionMgr.getBrowser().getLayersPanel().getAlignmentBoardContext().getInternalRootedEntity();
+	}
+	
     @Override
     public List<RootedEntity> getRootedEntities() {
         return null;

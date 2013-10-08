@@ -1401,14 +1401,6 @@ public class EntityWrapperIconPanel extends IconPanel {
 		return null;
 	}
 
-	@Override	
-	public void setAsActive() {		
-		super.setAsActive();
-		if (contextRootedEntity!=null) {
-			ModelMgr.getModelMgr().getEntitySelectionModel().selectEntity(EntitySelectionModel.CATEGORY_OUTLINE, contextRootedEntity.getId(), true);
-		}
-	}
-
     public boolean areTitlesVisible() {
         return getToolbar().areTitlesVisible();
     }

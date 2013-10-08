@@ -8,6 +8,7 @@ import java.util.concurrent.Callable;
 import javax.swing.JPanel;
 
 import org.janelia.it.FlyWorkstation.gui.framework.outline.Refreshable;
+import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.FlyWorkstation.model.entity.RootedEntity;
 
 /**
@@ -35,13 +36,21 @@ public abstract class Viewer extends JPanel implements Refreshable {
 		return viewerPane.getSelectionCategory();
 	}
 
-	public void setAsActive() {		
+	public void setAsActive() {	
+		if (!viewerPane.isActive()) {
+			RootedEntity contextRootedEntity = getContextRootedEntity();
+			if (contextRootedEntity!=null) {
+				SessionMgr.getBrowser().getEntityOutline().highlightEntityByUniqueId(contextRootedEntity.getId());
+			}	
+		}
 		viewerPane.setAsActive();
 	}
 	
 	public ViewerPane getViewerPane() {
 		return viewerPane;
 	}
+	
+	public abstract RootedEntity getContextRootedEntity();
 	
 	/**
 	 * Clear the view.

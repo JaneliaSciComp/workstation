@@ -274,4 +274,8 @@ public abstract class TextViewer extends Viewer {
 	public RootedEntity getRootedEntityById(String uniqueId) {
 		return contextRootedEntity.getUniqueId().equals(uniqueId)?contextRootedEntity:null;
 	}
+	
+	public RootedEntity getContextRootedEntity() {
+		return contextRootedEntity;
+	}
 }
