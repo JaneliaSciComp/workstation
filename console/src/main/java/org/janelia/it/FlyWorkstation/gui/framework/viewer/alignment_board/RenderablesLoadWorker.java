@@ -14,10 +14,7 @@ import org.janelia.it.FlyWorkstation.shared.workers.SimpleWorker;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.BufferedInputStream;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.InputStream;
+import java.io.*;
 import java.util.*;
 import java.util.concurrent.*;
 
@@ -112,61 +109,24 @@ public class RenderablesLoadWorker extends SimpleWorker implements VolumeLoader 
                 maskChanRenderableData.getBean().getTranslatedNum()
         );
 
-        // Mask file is always needed.
-        if ( maskChanRenderableData.getMaskPath() == null ) {
-            int translatedNum = maskChanRenderableData.getBean().getTranslatedNum();
-            if ( translatedNum != 0 ) {
-                logger.warn(
-                        "Renderable {} has a missing mask file. ID is {}.",
-                        maskChanRenderableData.getBean().getTranslatedNum(),
-                        maskChanRenderableData.getBean().getRenderableEntity().getId()
-                );
-            }
-            return;
-        }
-
-        // Channel file is optional; presence implies channel data must be shown.
-        if ( alignmentBoardSettings.isShowChannelData()  &&  maskChanRenderableData.getChannelPath() == null ) {
-            logger.warn(
-                    "Renderable {} has a missing channel file -- {}.",
-                    maskChanRenderableData.getBean().getTranslatedNum(),
-                    maskChanRenderableData.getMaskPath() + maskChanRenderableData.getChannelPath()
-            );
-            return;
-        }
-
         // Special case: the "signal" renderable will have a translated label number of zero.  It will not
         // require a file load.
         if ( maskChanRenderableData.getBean().getTranslatedNum() == 0 ) {
             return;
         }
 
-        //  The mask stream is required in all cases.  But the channel path is optional.
-        String resolvedFilename;
-        try {
-            resolvedFilename = resolver.getResolvedFilename(maskChanRenderableData.getMaskPath());
-        } catch ( Throwable ex ) {
-            logger.warn( ex.getMessage() );
-            resolvedFilename = maskChanRenderableData.getMaskPath(); // Non-cached.
-        }
-        InputStream maskStream =
-                new BufferedInputStream(
-                        new FileInputStream(resolvedFilename)
-                );
+        MaskChanStreamSource streamSource = new MaskChanStreamSource(
+                maskChanRenderableData, resolver, alignmentBoardSettings.isShowChannelData()
+        );
 
-        InputStream chanStream = null;
-        try {
-            resolvedFilename = resolver.getResolvedFilename( maskChanRenderableData.getChannelPath() );
-        } catch ( Throwable ex ) {
-            logger.warn(ex.getMessage());
-            resolvedFilename = maskChanRenderableData.getChannelPath(); // Non-cached.
+        MaskChanStreamSource.StreamSourceSanity sanity = streamSource.getSanity();
+        if ( ! sanity.isSane() ) {
+            logger.warn( sanity.getMessage() );
+            return;
         }
-        if ( alignmentBoardSettings.isShowChannelData() ) {
-            chanStream =
-                    new BufferedInputStream(
-                            new FileInputStream( resolvedFilename )
-                    );
-        }
+
+        InputStream maskStream = streamSource.getMaskInputStream();
+        InputStream chanStream = streamSource.getChannelInputStream();
 
         // Feed data to the acceptors.
         if ( maskChanRenderableData.isCompartment() ) {
@@ -182,6 +142,7 @@ public class RenderablesLoadWorker extends SimpleWorker implements VolumeLoader 
 
         logger.debug("In load thread, ENDED load of renderable {}.", maskChanRenderableData.getBean().getLabelFileNum() );
     }
+
 
     //----------------------------------------------OVERRIDE SimpleWorker
     @Override
