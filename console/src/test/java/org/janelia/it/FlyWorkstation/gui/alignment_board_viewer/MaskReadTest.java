@@ -2,6 +2,7 @@ package org.janelia.it.FlyWorkstation.gui.alignment_board_viewer;
 
 import org.janelia.it.FlyWorkstation.gui.framework.viewer.alignment_board.AlignmentBoardSettings;
 import org.janelia.it.FlyWorkstation.gui.alignment_board_viewer.gui_elements.AlignmentBoardControlsDialog;
+import org.janelia.it.FlyWorkstation.gui.framework.viewer.alignment_board.MaskChanStreamSourceI;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.loader.MaskChanDataAcceptorI;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.loader.MaskChanMultiFileLoader;
 import org.janelia.it.FlyWorkstation.gui.alignment_board_viewer.volume_builder.RenderablesMaskBuilder;
@@ -14,6 +15,7 @@ import org.slf4j.LoggerFactory;
 
 import java.io.BufferedInputStream;
 import java.io.FileInputStream;
+import java.io.IOException;
 import java.io.InputStream;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
@@ -76,8 +78,19 @@ public class MaskReadTest {
         RenderableBean bean = new RenderableBean();
         //loader.setRenderableBeans(Arrays.asList( bean ) );
 
-        // TODO make an alternative that takes the right stream:  see also RenMaskBldrTest.
-        loader.read( bean, new BufferedInputStream( testStream ), null );
+        MaskChanStreamSourceI streamSource = new MaskChanStreamSourceI() {
+            @Override
+            public InputStream getMaskInputStream() throws IOException {
+                return new BufferedInputStream( testStream );
+            }
+
+            @Override
+            public InputStream getChannelInputStream() throws IOException {
+                return null;
+            }
+        };
+
+        loader.read( bean, streamSource );
         logger.info( "Completed read-channel data." );
     }
 

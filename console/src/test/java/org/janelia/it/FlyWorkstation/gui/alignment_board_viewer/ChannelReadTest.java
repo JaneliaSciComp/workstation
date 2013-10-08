@@ -2,11 +2,15 @@ package org.janelia.it.FlyWorkstation.gui.alignment_board_viewer;
 
 import org.janelia.it.FlyWorkstation.gui.framework.viewer.alignment_board.AlignmentBoardSettings;
 import org.janelia.it.FlyWorkstation.gui.alignment_board_viewer.gui_elements.AlignmentBoardControlsDialog;
+import org.janelia.it.FlyWorkstation.gui.framework.viewer.alignment_board.MaskChanStreamSource;
+import org.janelia.it.FlyWorkstation.gui.framework.viewer.alignment_board.MaskChanStreamSourceI;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.loader.MaskChanDataAcceptorI;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.loader.MaskChanMultiFileLoader;
 import org.janelia.it.FlyWorkstation.gui.alignment_board_viewer.volume_builder.RenderablesChannelsBuilder;
 import org.janelia.it.FlyWorkstation.gui.alignment_board_viewer.renderable.RenderableBean;
 
+import org.janelia.it.FlyWorkstation.gui.viewer3d.resolver.FileResolver;
+import org.janelia.it.FlyWorkstation.gui.viewer3d.resolver.TrivialFileResolver;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -14,6 +18,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.FileInputStream;
+import java.io.IOException;
 import java.io.InputStream;
 import java.util.Arrays;
 
@@ -78,7 +83,18 @@ public class ChannelReadTest {
         RenderablesChannelsBuilder builder = new RenderablesChannelsBuilder( settings, null, null, null );
         loader.setAcceptors( Arrays.<MaskChanDataAcceptorI>asList( builder ) );
 
-        loader.read( bean, testMaskStream, testChannelStream );
+        MaskChanStreamSourceI streamSource = new MaskChanStreamSourceI() {
+            @Override
+            public InputStream getMaskInputStream() throws IOException {
+                return testMaskStream;
+            }
+
+            @Override
+            public InputStream getChannelInputStream() throws IOException {
+                return testChannelStream;
+            }
+        };
+        loader.read( bean, streamSource );
 
         builder.test();
     }
