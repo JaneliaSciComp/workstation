@@ -36,8 +36,8 @@ public class ByteChannelSplitStrategy implements ChannelSplitStrategyI {
     public byte[] getUpdatedValue(ChannelMetaData channelMetaData, int originalMask, byte[] channelsData, int multiMaskId) {
         assert channelsData.length == channelMetaData.byteCount * channelMetaData.channelCount
                 : "Unexpected raw data count " + channelsData.length;
-        MultiMaskTracker.MultiMaskBean multiMaskBean = multiMaskTracker.getMultiMaskBeans().get(multiMaskId);
-        int maskOffset = multiMaskBean.getMaskOffset(originalMask);
+        MultiMaskTracker.MultiMaskBean multiMaskBean = multiMaskTracker.getMultiMaskBean( multiMaskId );
+        int maskOffset = multiMaskBean.getMaskOffset( originalMask );
         byte[] rtnVal = new byte[ channelsData.length ];
         if ( maskOffset == -1 ) {
             logger.error( "Mismatched multimask {} between channel and mask.  Not updating channel data.", multiMaskId );

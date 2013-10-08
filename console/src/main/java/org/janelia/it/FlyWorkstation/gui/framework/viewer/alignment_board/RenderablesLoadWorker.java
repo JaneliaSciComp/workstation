@@ -240,7 +240,7 @@ public class RenderablesLoadWorker extends SimpleWorker implements VolumeLoader 
                     alignmentBoardSettings, multiMaskTracker, maskTextureBuilder, renderableBeans
             );
 
-            // Unfortunately, the wrapper knows the thing it wraps, but at least under a different definition.
+            // Unfortunately, the wrapped thing knows what wraps it, but at least by a different interface.
             RemaskingAcceptorDecorator remaskingAcceptorDecorator = new RemaskingAcceptorDecorator(
                     maskTextureBuilder,
                     multiMaskTracker,

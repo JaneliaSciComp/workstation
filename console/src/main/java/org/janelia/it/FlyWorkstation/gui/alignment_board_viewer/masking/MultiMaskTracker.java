@@ -13,7 +13,6 @@ import java.util.*;
  */
 public class MultiMaskTracker {
 
-    public static final String MASK_HEX_FORMAT = "%04x";
     public static final int MAX_MASK_DEPTH = 8;
 
     private Map<Integer,MultiMaskBean> maskIdToBean;
@@ -48,37 +47,84 @@ public class MultiMaskTracker {
      *        some newly-created volume mask, which inherits the old mask's constituents and adds the discovered one.
      */
     public Integer getMask(int discoveredMask, int oldVolumeMask) {
-        Integer rtnVal = oldVolumeMask;
+        Integer rtnVal;
 
         // Check if this exists in the current bean list.
         MultiMaskBean oldBean = maskIdToBean.get( oldVolumeMask );
         String fullInvertedKey;
         List<Integer> altMasks = null;
         if ( oldBean != null ) {
-            // Decrement number of voxels referencing the old mask, because now we reference a new one.
-            oldBean.decrementVoxelCount();
             altMasks = oldBean.getAltMasks();
             if ( altMasks.contains( discoveredMask ) ) {
                 fullInvertedKey = oldBean.getInvertedKey();
+                System.out.println("Unlikely scenario: found multimask " + oldVolumeMask + ", which also contains newly-adding submask " + discoveredMask);
             }
             else {
                 // Generate a key for finding any existing combo of old + new.
                 fullInvertedKey = oldBean.getExtendedInvertedKey( discoveredMask );
+                // Decrement number of voxels referencing the old mask, because now we reference a new one.
+                oldBean.decrementVoxelCount();
             }
         }
         else {
             // Whatever mask had been set in the volume was NOT a multi-mask. But a multi-mask convering the
             // combo of new+old may exist. Key will find that.
             if ( discoveredMask < oldVolumeMask ) {
-                fullInvertedKey = String.format( MASK_HEX_FORMAT, discoveredMask ) + String.format( MASK_HEX_FORMAT, oldVolumeMask );
+                fullInvertedKey = new StringBuilder()
+                        .append( discoveredMask )
+                        .append( ' ' )
+                        .append( oldVolumeMask )
+                        .append( ' ' )
+                        .toString();
+                        //String.format( DUAL_MASK_HEX_FORMAT, discoveredMask, oldVolumeMask );
             }
             else {
-                fullInvertedKey = String.format( MASK_HEX_FORMAT, oldVolumeMask ) + String.format( MASK_HEX_FORMAT, discoveredMask );
+                fullInvertedKey = new StringBuilder()
+                        .append( oldVolumeMask )
+                        .append( ' ' )
+                        .append( discoveredMask )
+                        .append( ' ' )
+                        .toString();
+                        //String.format( DUAL_MASK_HEX_FORMAT, oldVolumeMask, discoveredMask );
             }
         }
 
         // Need to see if there is a bean covering old alt masks plus this new one.
-        MultiMaskBean extendedMultiMaskBean = altMasksToBean.get( fullInvertedKey );
+        rtnVal = getExtendedMultiMask(discoveredMask, oldVolumeMask, fullInvertedKey, altMasks);
+        return rtnVal;
+    }
+
+    /** Expose the collection created here, for actual use. */
+    public Map<Integer,MultiMaskBean> getMultiMaskBeans() {
+        return this.maskIdToBean;
+    }
+
+    /** convenience helper: simpler interface for caller. */
+    public MultiMaskBean getMultiMaskBean( Integer multiMaskId ) {
+        return getMultiMaskBeans().get(multiMaskId);
+    }
+
+    /** Assumed that if the mask id is not in the mapping, must be a single-mask.  Otherwise rtn #-of-sub-masks. */
+    public int getMaskExpansionCount( Integer maskId ) {
+        MultiMaskBean maskBean = maskIdToBean.get( maskId );
+        return maskBean == null ? 1 : maskBean.getAltMasks().size();
+    }
+
+    /**
+     * Given a correct key for finding a multi-mask that covers all of the (one or more) sub-masks from the old volume
+     * mask, plus the newly discovered mask that also occupies that voxel, see if a bean/mask already exists that
+     * covers this (N+1) case.  If not, create it.
+     *
+     * @param discoveredMask supplied by a renderable, for a previously-occupied voxel. (+1)
+     * @param oldVolumeMask was occupying the voxel before this renderable encountered there.
+     * @param fullInvertedKey a search key covering all sub-masks involved.
+     * @param altMasks list of submasks against the oldVolumeMask. (N)
+     * @return a new multi-mask covering N+1
+     */
+    private synchronized Integer getExtendedMultiMask(
+            int discoveredMask, int oldVolumeMask, String fullInvertedKey, List<Integer> altMasks
+    ) {
+        Integer rtnVal;MultiMaskBean extendedMultiMaskBean = altMasksToBean.get( fullInvertedKey );
         if ( extendedMultiMaskBean != null ) {
             // This combination already exists.  Use this bean's mask.
             rtnVal = extendedMultiMaskBean.getMultiMaskNum();
@@ -89,17 +135,6 @@ public class MultiMaskTracker {
 
         }
         return rtnVal;
-    }
-
-    /** Expose the collection created here, for actual use. */
-    public Map<Integer,MultiMaskBean> getMultiMaskBeans() {
-        return this.maskIdToBean;
-    }
-
-    /** Assumed that if the mask id is not in the mapping, must be a single-mask.  Otherwise rtn #-of-sub-masks. */
-    public int getMaskExpansionCount( Integer maskId ) {
-        MultiMaskBean maskBean = maskIdToBean.get( maskId );
-        return maskBean == null ? 1 : maskBean.getAltMasks().size();
     }
 
     /**
@@ -150,28 +185,22 @@ public class MultiMaskTracker {
             List<Integer> sortedAltMasks = sortAltMasks();
             StringBuilder rtnVal = new StringBuilder();
             for ( Integer altMask: sortedAltMasks ) {
-                String hexKey = String.format(MASK_HEX_FORMAT, altMask );
-                rtnVal.append( hexKey );
+                // String hexKey = String.format(MASK_HEX_FORMAT, altMask );
+                rtnVal.append( altMask ).append( ' ' );
             }
             return rtnVal.toString();
         }
 
         public String getExtendedInvertedKey( Integer newAltMask ) {
-            List<Integer> sortedAltMasks = sortAltMasks();
-            StringBuilder rtnVal = new StringBuilder();
-            String newAltHex = String.format( MASK_HEX_FORMAT, newAltMask );
-            for ( Integer altMask: sortedAltMasks ) {
-                String hexKey = String.format( MASK_HEX_FORMAT, altMask );
-                if ( altMask > newAltMask ) {
-                    rtnVal.append( newAltHex );
-                    newAltHex = null;
-                }
-                rtnVal.append( hexKey );
-            }
-            if ( newAltHex != null ) {
-                rtnVal.append( newAltHex );
-            }
+            List<Integer> sortedAltMasks = new ArrayList<Integer>( altMasks );
+            sortedAltMasks.add( newAltMask );
+            Collections.sort( sortedAltMasks );
 
+            StringBuilder rtnVal = new StringBuilder();
+            for ( Integer altMask: sortedAltMasks ) {
+                //String nextKey = String.format(MASK_HEX_FORMAT, altMask );
+                rtnVal.append( altMask ).append( ' ' );
+            }
             return rtnVal.toString();
         }
 

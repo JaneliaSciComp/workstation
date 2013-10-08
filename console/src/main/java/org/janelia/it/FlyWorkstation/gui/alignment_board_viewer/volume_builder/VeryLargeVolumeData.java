@@ -105,14 +105,14 @@ public class VeryLargeVolumeData implements VolumeDataI {
     public byte getValueAt(long location) {
         int slabNo = getSlabNo( location );
         byte[] slab = slabs[ slabNo ];
-        return slab[ getLocInSlab( location, slabNo ) ];
+        return slab[ getLocInSlab( location ) ];
     }
 
     @Override
     public void setValueAt(long location, byte value) {
         int slabNo = getSlabNo( location );
         byte[] slab = slabs[ slabNo ];
-        slab[ getLocInSlab( location, slabNo ) ] = value;
+        slab[ getLocInSlab( location ) ] = value;
     }
 
     @Override
@@ -143,8 +143,8 @@ public class VeryLargeVolumeData implements VolumeDataI {
         return (int)(location / slabExtent);
     }
 
-    private int getLocInSlab(long location, int slabNo) {
-        return (int)(location - ( (long)slabNo * slabExtent ) );
+    private int getLocInSlab(long location) {
+        return (int)( location % slabExtent );
     }
 }
 
