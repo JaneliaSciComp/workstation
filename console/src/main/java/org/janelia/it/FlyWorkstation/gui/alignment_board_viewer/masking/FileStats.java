@@ -18,16 +18,22 @@ public class FileStats {
     }
 
     /** Record an average-channel value array by id.  */
-    public void recordChannelAverages( Long id, double[] channelAverages ) {
+    public synchronized void recordChannelAverages( Long id, double[] channelAverages ) {
+        double[] oldChannelAverages = channelAverageMap.get(id);
+        if ( oldChannelAverages !=  null ) {
+            for ( int i = 0; i < channelAverages.length; i++ ) {
+                oldChannelAverages[ i ] += channelAverages[ i ];
+            }
+        }
         channelAverageMap.put( id, channelAverages );
     }
 
     /** Return the averages for all channels associated with this identifier. */
-    public double[] getChannelAverages( Long id ) {
+    public synchronized double[] getChannelAverages( Long id ) {
         return channelAverageMap.get( id );
     }
 
-    public void clear() {
+    public synchronized void clear() {
         channelAverageMap.clear();
     }
 }

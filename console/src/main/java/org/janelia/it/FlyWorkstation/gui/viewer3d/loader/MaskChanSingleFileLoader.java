@@ -34,6 +34,9 @@ public class MaskChanSingleFileLoader {
     private long sy;
     private long sz;
 
+    private Long applicable1DStart;
+    private Long applicable1DEnd;
+
     private int minimumAxialDivisibility = REQUIRED_AXIAL_LENGTH_DIVISIBLE;
 
     private Long[] volumeVoxels;
@@ -121,6 +124,11 @@ public class MaskChanSingleFileLoader {
 
     public void setIntensityDivisor(int intensityDivisor) {
         this.intensityDivisor = intensityDivisor;
+    }
+
+    public void setApplicable1DRange( Long startOfRange, Long endOfRange ) {
+        applicable1DStart = startOfRange;
+        applicable1DEnd = endOfRange;
     }
 
     /**
@@ -504,9 +512,11 @@ public class MaskChanSingleFileLoader {
                 long yOffset = finalYCoord * volumeVoxels[0] + zOffset;  // Consuming lines to remainder.
 
                 final long final1DCoord = yOffset + xyzCoords[ 0 ];
-
-                writeToMaskAcceptors(xyzCoords, translatedNum, final1DCoord);
-                writeToChannelAcceptors(channelData, xyzCoords, translatedNum, totalVoxelFactor, allChannelBytes, fixedFinalYCoord, final1DCoord);
+                if ( applicable1DStart == null  ||
+                     ( final1DCoord >= applicable1DStart  &&  final1DCoord <= applicable1DEnd ) ) {
+                    writeToMaskAcceptors(xyzCoords, translatedNum, final1DCoord);
+                    writeToChannelAcceptors(channelData, xyzCoords, translatedNum, totalVoxelFactor, allChannelBytes, fixedFinalYCoord, final1DCoord);
+                }
 
                 cummulativeVoxelsReadCount++;
 

@@ -64,28 +64,31 @@ public class MaskChanMultiFileLoader {
             throws Exception {
         logger.debug( "Read called." );
 
-        InputStream maskInputStream = streamSource.getMaskInputStream();
-        InputStream channelStream = streamSource.getChannelInputStream();
+        MaskChanSingleFileLoader singleFileLoader = null;
 
-        MaskChanSingleFileLoader singleFileLoader =
-                new MaskChanSingleFileLoader( maskAcceptors, channelAcceptors, bean, fileStats );
+//        for ( int slabNo = 0; slabNo < 64; slabNo ++ ) {
+            singleFileLoader = new MaskChanSingleFileLoader( maskAcceptors, channelAcceptors, bean, fileStats );
 
-        // Here, may override the pad-out to ensure resulting volume exactly matches the original space.
-        if ( ! enforcePadding ) {
-            singleFileLoader.setAxialLengthDivisibility( 1 );
-        }
-        if ( dimWriteback ) {
-            singleFileLoader.setIntensityDivisor( 5 );
-        }
-        else {
-            singleFileLoader.setIntensityDivisor( 1 );
-        }
-        singleFileLoader.read( maskInputStream, channelStream );
+            // Here, may override the pad-out to ensure resulting volume exactly matches the original space.
+            if ( ! enforcePadding ) {
+                singleFileLoader.setAxialLengthDivisibility( 1 );
+            }
+            if ( dimWriteback ) {
+                singleFileLoader.setIntensityDivisor( 5 );
+            }
+            else {
+                singleFileLoader.setIntensityDivisor( 1 );
+            }
+            InputStream maskInputStream = streamSource.getMaskInputStream();
+            InputStream channelStream = streamSource.getChannelInputStream();
 
-        maskInputStream.close();
-        if ( channelStream != null ) {
-            channelStream.close();
-        }
+            singleFileLoader.read( maskInputStream, channelStream );
+
+            maskInputStream.close();
+            if ( channelStream != null ) {
+                channelStream.close();
+            }
+//        }
 
         // Accumulate information for final sanity check.
         if ( isCheckForConsistency() ) {
