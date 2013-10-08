@@ -61,48 +61,22 @@ public class FileExportLoadWorker extends SimpleWorker implements VolumeLoader {
                 maskChanRenderableData.getBean().getTranslatedNum()
         );
 
-        // Mask file is always needed.
-        if ( maskChanRenderableData.getMaskPath() == null  &&  maskChanRenderableData.getBean().getLabelFileNum() > 0 ) {
-            logger.warn(
-                    "Renderable {} has a missing mask file -- {}.",
-                    maskChanRenderableData.getBean().getTranslatedNum(),
-                    maskChanRenderableData.getMaskPath() + maskChanRenderableData.getChannelPath()
-            );
-            return;
-        }
-
         // Special case: the "signal" renderable will have a translated label number of zero.  It will not
         // require a file load.
         if ( maskChanRenderableData.getBean().getTranslatedNum() == 0 ) {
             return;
         }
 
-        logger.debug( "File {} in progress.", maskChanRenderableData.getMaskPath() );
-        //  The mask stream is required in all cases.  But the channel path is optional.
-        InputStream maskStream =
-                new BufferedInputStream(
-                        new FileInputStream( resolver.getResolvedFilename( maskChanRenderableData.getMaskPath() )
-                        )
-                );
-
-        InputStream channelStream = null;
-        if ( paramBean.getMethod() == ControlsListener.ExportMethod.color ) {
-            channelStream = new BufferedInputStream(
-                    new FileInputStream(
-                            resolver.getResolvedFilename( maskChanRenderableData.getChannelPath() )
-                    )
-            );
+        MaskChanStreamSource streamSource = new MaskChanStreamSource( maskChanRenderableData, resolver, paramBean.getMethod() == ControlsListener.ExportMethod.color );
+        if ( ! streamSource.getSanity().isSane() ) {
+            logger.warn( streamSource.getSanity().getMessage() );
+            return;
         }
 
         // Iterating through these files will cause all the relevant data to be loaded into
         // the acceptors.
         loader.setDimWriteback( maskChanRenderableData.isCompartment() );
-        loader.read(maskChanRenderableData.getBean(), maskStream, channelStream);
-        maskStream.close();
-
-        if ( channelStream != null ) {
-            channelStream.close();
-        }
+        loader.read(maskChanRenderableData.getBean(), streamSource);
 
         logger.debug("In load thread, ENDED load of renderable {}.", maskChanRenderableData.getBean().getLabelFileNum() );
     }

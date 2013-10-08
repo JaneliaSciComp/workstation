@@ -3,6 +3,8 @@ package org.janelia.it.FlyWorkstation.gui.viewer3d.loader;
 import org.janelia.it.FlyWorkstation.gui.alignment_board_viewer.masking.FileStats;
 import org.janelia.it.FlyWorkstation.gui.alignment_board_viewer.masking.VolumeConsistencyChecker;
 import org.janelia.it.FlyWorkstation.gui.alignment_board_viewer.renderable.RenderableBean;
+import org.janelia.it.FlyWorkstation.gui.framework.viewer.alignment_board.MaskChanStreamSource;
+import org.janelia.it.FlyWorkstation.gui.framework.viewer.alignment_board.MaskChanStreamSourceI;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -55,13 +57,15 @@ public class MaskChanMultiFileLoader {
      * This is the master-method that tells all the single-file-loaders to read their data into the common volume.
      *
      * @param bean info read is applicable to this
-     * @param maskInputStream this has the compression/ray data.
-     * @param channelStream this has the channel or intensity data.
+     * @param streamSource has the compression/ray data and the channel or intensity data.
      * @throws Exception thrown by called methods.
      */
-    public void read( RenderableBean bean, InputStream maskInputStream, InputStream channelStream )
+    public void read( RenderableBean bean, MaskChanStreamSourceI streamSource )
             throws Exception {
         logger.debug( "Read called." );
+        InputStream maskInputStream = streamSource.getMaskInputStream();
+        InputStream channelStream = streamSource.getChannelInputStream();
+
         MaskChanSingleFileLoader singleFileLoader =
                 new MaskChanSingleFileLoader( maskAcceptors, channelAcceptors, bean, fileStats );
 
@@ -79,6 +83,11 @@ public class MaskChanMultiFileLoader {
             checker.accumulate(
                 bean.getTranslatedNum(), singleFileLoader.getDimensions(), singleFileLoader.getChannelMetaData()
             );
+        }
+
+        maskInputStream.close();
+        if ( channelStream != null ) {
+            channelStream.close();
         }
 
         logger.debug( "Read complete." );

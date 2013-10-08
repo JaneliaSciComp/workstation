@@ -125,20 +125,13 @@ public class RenderablesLoadWorker extends SimpleWorker implements VolumeLoader 
             return;
         }
 
-        InputStream maskStream = streamSource.getMaskInputStream();
-        InputStream chanStream = streamSource.getChannelInputStream();
-
         // Feed data to the acceptors.
         if ( maskChanRenderableData.isCompartment() ) {
-            compartmentLoader.read(maskChanRenderableData.getBean(), maskStream, chanStream);
+            compartmentLoader.read(maskChanRenderableData.getBean(), streamSource);
         }
         else {
-            neuronFragmentLoader.read(maskChanRenderableData.getBean(), maskStream, chanStream);
+            neuronFragmentLoader.read(maskChanRenderableData.getBean(), streamSource);
         }
-
-        maskStream.close();
-        if ( chanStream != null )
-            chanStream.close();
 
         logger.debug("In load thread, ENDED load of renderable {}.", maskChanRenderableData.getBean().getLabelFileNum() );
     }

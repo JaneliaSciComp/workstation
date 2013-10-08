@@ -20,7 +20,7 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 
-public class MaskChanStreamSource {
+public class MaskChanStreamSource implements MaskChanStreamSourceI {
     private MaskChanRenderableData maskChanRenderableData;
     private boolean useChannelData;
     private FileResolver resolver;
@@ -62,6 +62,7 @@ public class MaskChanStreamSource {
         return new StreamSourceSanity( message, isSane );
     }
 
+    @Override
     public InputStream getMaskInputStream() throws IOException {
         //  The mask stream is required in all cases.  But the channel path is optional.
         String resolvedFilename;
@@ -79,6 +80,7 @@ public class MaskChanStreamSource {
         return maskStream;
     }
 
+    @Override
     public InputStream getChannelInputStream() throws IOException {
         InputStream chanStream = null;
         String resolvedFilename;
