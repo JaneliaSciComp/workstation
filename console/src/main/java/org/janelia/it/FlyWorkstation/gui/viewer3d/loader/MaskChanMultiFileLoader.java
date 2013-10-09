@@ -10,9 +10,7 @@ import org.slf4j.LoggerFactory;
 
 import java.io.InputStream;
 import java.util.*;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.TimeUnit;
+import java.util.concurrent.*;
 
 /**
  * Created with IntelliJ IDEA.
@@ -25,7 +23,7 @@ import java.util.concurrent.TimeUnit;
  */
 public class MaskChanMultiFileLoader {
 
-    public static final int NUM_SEGMENTS = 8;
+    public static final int NUM_SEGMENTS = 16;
     public static final int N_THREADS = 8;
     private boolean checkForConsistency = false;
 
@@ -70,54 +68,63 @@ public class MaskChanMultiFileLoader {
         logger.debug( "Read called." );
 
         ExecutorService executorService = Executors.newFixedThreadPool( N_THREADS );
+        List<Future<Void>> followUps = new ArrayList<Future<Void>>();
 
         for ( int slabNo = 0; slabNo < NUM_SEGMENTS; slabNo ++ ) {
             final int finalSlabNo = slabNo;
-            Runnable segmentTask = new Runnable() {
-                public void run() {
-                    try {
-                        MaskChanSingleFileLoader singleFileLoader = new MaskChanSingleFileLoader( maskAcceptors, channelAcceptors, bean, fileStats );
-                        singleFileLoader.setApplicableSegment( finalSlabNo, NUM_SEGMENTS );
+            Callable<Void> segmentTask = new Callable<Void>() {
+                public Void call() throws Exception {
+                    MaskChanSingleFileLoader singleFileLoader = new MaskChanSingleFileLoader( maskAcceptors, channelAcceptors, bean, fileStats );
+                    singleFileLoader.setApplicableSegment( finalSlabNo, NUM_SEGMENTS );
 
-                        // Here, may override the pad-out to ensure resulting volume exactly matches the original space.
-                        if ( ! enforcePadding ) {
-                            singleFileLoader.setAxialLengthDivisibility( 1 );
-                        }
-                        if ( dimWriteback ) {
-                            singleFileLoader.setIntensityDivisor( 5 );
-                        }
-                        else {
-                            singleFileLoader.setIntensityDivisor( 1 );
-                        }
-
-                        InputStream maskInputStream = streamSource.getMaskInputStream();
-                        InputStream channelStream = streamSource.getChannelInputStream();
-
-                        singleFileLoader.read( maskInputStream, channelStream );
-
-                        // Accumulate information for final sanity check.
-                        if ( isCheckForConsistency() ) {
-                            checker.accumulate(
-                                    bean.getTranslatedNum(), singleFileLoader.getDimensions(), singleFileLoader.getChannelMetaData()
-                            );
-                        }
-
-                        maskInputStream.close();
-                        if ( channelStream != null ) {
-                            channelStream.close();
-                        }
-                    } catch ( Throwable ex ) {
-                        ex.printStackTrace();
-                        SessionMgr.getSessionMgr().handleException( ex );
+                    // Here, may override the pad-out to ensure resulting volume exactly matches the original space.
+                    if ( ! enforcePadding ) {
+                        singleFileLoader.setAxialLengthDivisibility( 1 );
                     }
+                    if ( dimWriteback ) {
+                        singleFileLoader.setIntensityDivisor( 5 );
+                    }
+                    else {
+                        singleFileLoader.setIntensityDivisor( 1 );
+                    }
+
+                    InputStream maskInputStream = streamSource.getMaskInputStream();
+                    InputStream channelStream = streamSource.getChannelInputStream();
+
+                    singleFileLoader.read( maskInputStream, channelStream );
+
+                    // Accumulate information for final sanity check.
+                    if ( isCheckForConsistency() ) {
+                        checker.accumulate(
+                                bean.getTranslatedNum(), singleFileLoader.getDimensions(), singleFileLoader.getChannelMetaData()
+                        );
+                    }
+
+                    maskInputStream.close();
+                    if ( channelStream != null ) {
+                        channelStream.close();
+                    }
+                    return null;
                 }
             };
-
-            executorService.submit( segmentTask );
+            followUps.add( executorService.submit(segmentTask) );
         }
 
         executorService.shutdown();
         executorService.awaitTermination( 30, TimeUnit.MINUTES );
+
+        Exception lastException = null;
+        for ( Future<Void> future: followUps ) {
+            try {
+                future.get();
+            } catch ( Exception ex ) {
+                ex.printStackTrace();
+                lastException = ex;
+            }
+        }
+        if ( lastException != null ) {
+            throw lastException;
+        }
 
         logger.debug( "Read complete." );
     }
