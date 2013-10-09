@@ -3,13 +3,17 @@ package org.janelia.it.FlyWorkstation.gui.viewer3d.loader;
 import org.janelia.it.FlyWorkstation.gui.alignment_board_viewer.masking.FileStats;
 import org.janelia.it.FlyWorkstation.gui.alignment_board_viewer.masking.VolumeConsistencyChecker;
 import org.janelia.it.FlyWorkstation.gui.alignment_board_viewer.renderable.RenderableBean;
-import org.janelia.it.FlyWorkstation.gui.framework.viewer.alignment_board.MaskChanStreamSource;
+import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.FlyWorkstation.gui.framework.viewer.alignment_board.MaskChanStreamSourceI;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.jms.Session;
 import java.io.InputStream;
 import java.util.*;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
 
 /**
  * Created with IntelliJ IDEA.
@@ -22,6 +26,8 @@ import java.util.*;
  */
 public class MaskChanMultiFileLoader {
 
+    public static final int NUM_SEGMENTS = 8;
+    public static final int N_THREADS = 8;
     private boolean checkForConsistency = false;
 
     private Collection<MaskChanDataAcceptorI> maskAcceptors;
@@ -60,42 +66,59 @@ public class MaskChanMultiFileLoader {
      * @param streamSource has the compression/ray data and the channel or intensity data.
      * @throws Exception thrown by called methods.
      */
-    public void read( RenderableBean bean, MaskChanStreamSourceI streamSource )
+    public void read( final RenderableBean bean, final MaskChanStreamSourceI streamSource )
             throws Exception {
         logger.debug( "Read called." );
 
-        MaskChanSingleFileLoader singleFileLoader = null;
+        ExecutorService executorService = Executors.newFixedThreadPool( N_THREADS );
 
-//        for ( int slabNo = 0; slabNo < 64; slabNo ++ ) {
-            singleFileLoader = new MaskChanSingleFileLoader( maskAcceptors, channelAcceptors, bean, fileStats );
+        for ( int slabNo = 0; slabNo < NUM_SEGMENTS; slabNo ++ ) {
+            final int finalSlabNo = slabNo;
+            Runnable segmentTask = new Runnable() {
+                public void run() {
+                    try {
+                        MaskChanSingleFileLoader singleFileLoader = new MaskChanSingleFileLoader( maskAcceptors, channelAcceptors, bean, fileStats );
+                        singleFileLoader.setApplicableSegment( finalSlabNo, NUM_SEGMENTS );
 
-            // Here, may override the pad-out to ensure resulting volume exactly matches the original space.
-            if ( ! enforcePadding ) {
-                singleFileLoader.setAxialLengthDivisibility( 1 );
-            }
-            if ( dimWriteback ) {
-                singleFileLoader.setIntensityDivisor( 5 );
-            }
-            else {
-                singleFileLoader.setIntensityDivisor( 1 );
-            }
-            InputStream maskInputStream = streamSource.getMaskInputStream();
-            InputStream channelStream = streamSource.getChannelInputStream();
+                        // Here, may override the pad-out to ensure resulting volume exactly matches the original space.
+                        if ( ! enforcePadding ) {
+                            singleFileLoader.setAxialLengthDivisibility( 1 );
+                        }
+                        if ( dimWriteback ) {
+                            singleFileLoader.setIntensityDivisor( 5 );
+                        }
+                        else {
+                            singleFileLoader.setIntensityDivisor( 1 );
+                        }
 
-            singleFileLoader.read( maskInputStream, channelStream );
+                        InputStream maskInputStream = streamSource.getMaskInputStream();
+                        InputStream channelStream = streamSource.getChannelInputStream();
 
-            maskInputStream.close();
-            if ( channelStream != null ) {
-                channelStream.close();
-            }
-//        }
+                        singleFileLoader.read( maskInputStream, channelStream );
 
-        // Accumulate information for final sanity check.
-        if ( isCheckForConsistency() ) {
-            checker.accumulate(
-                bean.getTranslatedNum(), singleFileLoader.getDimensions(), singleFileLoader.getChannelMetaData()
-            );
+                        // Accumulate information for final sanity check.
+                        if ( isCheckForConsistency() ) {
+                            checker.accumulate(
+                                    bean.getTranslatedNum(), singleFileLoader.getDimensions(), singleFileLoader.getChannelMetaData()
+                            );
+                        }
+
+                        maskInputStream.close();
+                        if ( channelStream != null ) {
+                            channelStream.close();
+                        }
+                    } catch ( Throwable ex ) {
+                        ex.printStackTrace();
+                        SessionMgr.getSessionMgr().handleException( ex );
+                    }
+                }
+            };
+
+            executorService.submit( segmentTask );
         }
+
+        executorService.shutdown();
+        executorService.awaitTermination( 30, TimeUnit.MINUTES );
 
         logger.debug( "Read complete." );
     }
