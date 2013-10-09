@@ -1,5 +1,8 @@
 package org.janelia.it.FlyWorkstation.gui.alignment_board_viewer.masking;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.util.*;
 
 /**
@@ -17,6 +20,8 @@ public class MultiMaskTracker {
 
     private Map<Integer,MultiMaskBean> maskIdToBean;
     private Map<String,MultiMaskBean> altMasksToBean;
+
+    private List<Integer> dumpedList;
 
     private int nextMaskNum;
 
@@ -46,7 +51,7 @@ public class MultiMaskTracker {
      * @return existing old volume mask, if the discovered mask is already one of its 'constituents'. Otherwise,
      *        some newly-created volume mask, which inherits the old mask's constituents and adds the discovered one.
      */
-    public Integer getMask(int discoveredMask, int oldVolumeMask) {
+    public synchronized Integer getMask(int discoveredMask, int oldVolumeMask) {
         Integer rtnVal;
 
         // Check if this exists in the current bean list.
@@ -72,7 +77,7 @@ public class MultiMaskTracker {
             if ( discoveredMask < oldVolumeMask ) {
                 fullInvertedKey = new StringBuilder()
                         .append( discoveredMask )
-                        .append( ' ' )
+                        .append(' ')
                         .append( oldVolumeMask )
                         .append( ' ' )
                         .toString();
@@ -81,8 +86,8 @@ public class MultiMaskTracker {
             else {
                 fullInvertedKey = new StringBuilder()
                         .append( oldVolumeMask )
-                        .append( ' ' )
-                        .append( discoveredMask )
+                        .append(' ')
+                        .append(discoveredMask)
                         .append( ' ' )
                         .toString();
                         //String.format( DUAL_MASK_HEX_FORMAT, oldVolumeMask, discoveredMask );
@@ -110,6 +115,34 @@ public class MultiMaskTracker {
         return maskBean == null ? 1 : maskBean.getAltMasks().size();
     }
 
+    /** This is the "panic button" to press when things are going wrong, to help debug the problem. */
+    public void dumpMaskContents( Integer originalMask ) {
+        if ( dumpedList == null ) {
+            dumpedList = new ArrayList<Integer>();
+        }
+        if ( ! dumpedList.contains( originalMask ) ) {
+            dumpedList.add( originalMask );
+            Logger logger = LoggerFactory.getLogger( MultiMaskTracker.class );
+            StringBuilder totalDump = new StringBuilder("Dumping Mask Contents\n");
+            for ( Integer maskId: maskIdToBean.keySet() ) {
+                StringBuilder maskContents = new StringBuilder();
+                for ( Integer subMask: maskIdToBean.get( maskId ).getAltMasks() ) {
+                    maskContents.append( subMask ).append( ' ' );
+                }
+                totalDump.append( "Mask " ).append( maskId ).append(" contains these submasks [" ).append( maskContents.toString().trim() ).append( "]").append("\n");
+            }
+
+            logger.info( totalDump.toString() );
+            totalDump.setLength( 0 );
+            totalDump.append( "Dumping Inverted Mask Contents\n" );
+            for ( String invertedKey: this.altMasksToBean.keySet() ) {
+                totalDump.append( "Alt-Mask-Set ").append( invertedKey ).append( " refers to multimask " ).append( altMasksToBean.get( invertedKey ).getMultiMaskNum() ).append( "\n" );
+            }
+            logger.info( totalDump.toString() );
+        }
+
+    }
+
     /**
      * Given a correct key for finding a multi-mask that covers all of the (one or more) sub-masks from the old volume
      * mask, plus the newly discovered mask that also occupies that voxel, see if a bean/mask already exists that
@@ -124,7 +157,8 @@ public class MultiMaskTracker {
     private synchronized Integer getExtendedMultiMask(
             int discoveredMask, int oldVolumeMask, String fullInvertedKey, List<Integer> altMasks
     ) {
-        Integer rtnVal;MultiMaskBean extendedMultiMaskBean = altMasksToBean.get( fullInvertedKey );
+        Integer rtnVal;
+        MultiMaskBean extendedMultiMaskBean = altMasksToBean.get( fullInvertedKey );
         if ( extendedMultiMaskBean != null ) {
             // This combination already exists.  Use this bean's mask.
             rtnVal = extendedMultiMaskBean.getMultiMaskNum();

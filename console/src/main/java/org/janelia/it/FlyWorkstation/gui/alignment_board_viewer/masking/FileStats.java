@@ -22,7 +22,7 @@ public class FileStats {
         double[] oldChannelAverages = channelAverageMap.get(id);
         if ( oldChannelAverages !=  null ) {
             for ( int i = 0; i < channelAverages.length; i++ ) {
-                oldChannelAverages[ i ] += channelAverages[ i ];
+                channelAverages[ i ] += oldChannelAverages[ i ];
             }
         }
         channelAverageMap.put( id, channelAverages );

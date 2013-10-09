@@ -223,6 +223,10 @@ public class RenderablesMaskBuilder extends RenderablesVolumeBuilder implements 
     protected void init() {
         if ( ! isInitialized ) {
             synchronized ( this ) {
+                // Protective inner shield against initialization as the volume is being used.
+                if ( isInitialized ) {
+                    return;
+                }
                 // This check and exception enforces an order dependency.  Order dependencies are undesirable,
                 // but since lazy-init of these padded sizes is needed, we throw this exception so that the
                 // programmer knows to delay any method that calls init.

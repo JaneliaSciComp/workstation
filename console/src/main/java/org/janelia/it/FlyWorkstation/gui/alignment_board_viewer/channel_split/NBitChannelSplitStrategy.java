@@ -68,7 +68,7 @@ public class NBitChannelSplitStrategy implements ChannelSplitStrategyI {
                         " and compression factor of " + bitWidthCompressionFactor
         );
 
-        MultiMaskTracker.MultiMaskBean multiMaskBean = multiMaskTracker.getMultiMaskBeans().get(multiMaskId);
+        MultiMaskTracker.MultiMaskBean multiMaskBean = multiMaskTracker.getMultiMaskBean(multiMaskId);
 
         // Which priority submask are we using?
         int maskOffset = multiMaskBean.getMaskOffset(originalMask);
