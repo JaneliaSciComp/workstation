@@ -23,7 +23,7 @@ import java.util.concurrent.*;
 public class MaskChanMultiFileLoader {
 
     public static final int NUM_SEGMENTS = 16;
-    public static final int N_THREADS = 8;
+    public static final int N_THREADS = 16;
     private boolean checkForConsistency = false;
 
     private Collection<MaskChanDataAcceptorI> maskAcceptors;
