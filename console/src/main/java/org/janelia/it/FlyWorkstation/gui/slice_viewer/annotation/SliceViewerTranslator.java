@@ -49,24 +49,24 @@ public class SliceViewerTranslator {
         }
     };
 
-    public Slot1<TmGeoAnnotation> addAnchorSlot = new Slot1<TmGeoAnnotation>() {
+    public Slot1<TmGeoAnnotation> addAnnotationSlot = new Slot1<TmGeoAnnotation>() {
         @Override
         public void execute(TmGeoAnnotation annotation) {
-            addAnchor(annotation);
+            addAnnotation(annotation);
         }
     };
 
-    public Slot1<List<TmGeoAnnotation>> deleteAnchorsSlot = new Slot1<List<TmGeoAnnotation>>() {
+    public Slot1<List<TmGeoAnnotation>> deleteAnnotationsSlot = new Slot1<List<TmGeoAnnotation>>() {
         @Override
         public void execute(List<TmGeoAnnotation> annotationList) {
-            anchorsDeleted(annotationList);
+            deleteAnnotations(annotationList);
         }
     };
 
-    public Slot1<TmGeoAnnotation> reparentAnchorSlot = new Slot1<TmGeoAnnotation>() {
+    public Slot1<TmGeoAnnotation> reparentAnnotationSlot = new Slot1<TmGeoAnnotation>() {
         @Override
         public void execute(TmGeoAnnotation annotation) {
-            anchorReparented(annotation);
+            reparentAnnotation(annotation);
         }
     };
 
@@ -106,15 +106,15 @@ public class SliceViewerTranslator {
     private void setupSignals() {
         annModel.workspaceLoadedSignal.connect(loadWorkspaceSlot);
         annModel.neuronSelectedSignal.connect(selectNeuronSlot);
-        annModel.anchorAddedSignal.connect(addAnchorSlot);
-        annModel.anchorsDeletedSignal.connect(deleteAnchorsSlot);
-        annModel.anchorReparentedSignal.connect(reparentAnchorSlot);
+        annModel.annotationAddedSignal.connect(addAnnotationSlot);
+        annModel.annotationsDeletedSignal.connect(deleteAnnotationsSlot);
+        annModel.anotationReparentedSignal.connect(reparentAnnotationSlot);
     }
 
     /**
      * called when model adds a new annotation
      */
-    public void addAnchor(TmGeoAnnotation annotation) {
+    public void addAnnotation(TmGeoAnnotation annotation) {
         if (annotation != null) {
             anchorAddedSignal.emit(annotation);
         }
@@ -141,7 +141,7 @@ public class SliceViewerTranslator {
     /**
      * called by the model when it deletes annotations
      */
-    public void anchorsDeleted(List<TmGeoAnnotation> annotationList) {
+    public void deleteAnnotations(List<TmGeoAnnotation> annotationList) {
         // remove all the individual annotations from 2D view
 
         for (TmGeoAnnotation ann: annotationList) {
@@ -152,7 +152,7 @@ public class SliceViewerTranslator {
     /**
      * called by the model when it changes the parent of an annotation
      */
-    public void anchorReparented(TmGeoAnnotation annotation) {
+    public void reparentAnnotation(TmGeoAnnotation annotation) {
         // pretty much a pass-through to the skeleton
         anchorReparentedSignal.emit(annotation);
     }

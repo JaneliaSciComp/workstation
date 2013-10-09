@@ -52,11 +52,11 @@ that need to respond to changing data.
 
     public Signal1<TmNeuron> neuronSelectedSignal = new Signal1<TmNeuron>();
 
-    public Signal1<TmGeoAnnotation> anchorAddedSignal = new Signal1<TmGeoAnnotation>();
-    public Signal1<List<TmGeoAnnotation>> anchorsDeletedSignal = new Signal1<List<TmGeoAnnotation>>();
-    public Signal1<TmGeoAnnotation> anchorReparentedSignal = new Signal1<TmGeoAnnotation>();
+    public Signal1<TmGeoAnnotation> annotationAddedSignal = new Signal1<TmGeoAnnotation>();
+    public Signal1<List<TmGeoAnnotation>> annotationsDeletedSignal = new Signal1<List<TmGeoAnnotation>>();
+    public Signal1<TmGeoAnnotation> anotationReparentedSignal = new Signal1<TmGeoAnnotation>();
     // move or change attribute (eg, comment):
-    public Signal1<TmGeoAnnotation> anchorUpdatedSignal = new Signal1<TmGeoAnnotation>();
+    public Signal1<TmGeoAnnotation> annotationUpdatedSignal = new Signal1<TmGeoAnnotation>();
 
     // ----- slots
     public Slot1<TmNeuron> neuronClickedSlot = new Slot1<TmNeuron>() {
@@ -186,7 +186,7 @@ that need to respond to changing data.
      */
     public void createWorkspace(Entity parentEntity, Long brainSampleID, String name) throws Exception {
         TmWorkspace workspace = modelMgr.createTiledMicroscopeWorkspace(parentEntity.getId(),
-            brainSampleID, name, sessionMgr.getSubject().getKey());
+                brainSampleID, name, sessionMgr.getSubject().getKey());
 
         loadWorkspace(workspace);
     }
@@ -224,7 +224,7 @@ that need to respond to changing data.
         }
 
         neuronSelectedSignal.emit(getCurrentNeuron());
-        anchorAddedSignal.emit(annotation);
+        annotationAddedSignal.emit(annotation);
     }
 
     /**
@@ -249,7 +249,7 @@ that need to respond to changing data.
         }
 
         neuronSelectedSignal.emit(getCurrentNeuron());
-        anchorAddedSignal.emit(annotation);
+        annotationAddedSignal.emit(annotation);
     }
 
     /**
@@ -272,14 +272,14 @@ that need to respond to changing data.
             //  position (pre-move)
             // this is unfortunately untested, because I couldn't think of an
             //  easy way to simulate or force a failure!
-            anchorUpdatedSignal.emit(getGeoAnnotationFromID(annotationID));
+            annotationUpdatedSignal.emit(getGeoAnnotationFromID(annotationID));
             throw e;
         }
 
         updateCurrentWorkspace();
         updateCurrentNeuron();
 
-        anchorUpdatedSignal.emit(getGeoAnnotationFromID(annotationID));
+        annotationUpdatedSignal.emit(getGeoAnnotationFromID(annotationID));
     }
 
     /**
@@ -329,14 +329,14 @@ that need to respond to changing data.
         //  from the reparenting to appear
         List<TmGeoAnnotation> deleteList = new ArrayList<TmGeoAnnotation>(1);
         deleteList.add(link);
-        anchorsDeletedSignal.emit(deleteList);
+        annotationsDeletedSignal.emit(deleteList);
 
         if (child != null) {
             // at this point, the child object is stale (still has its old parent);
             // grab it again from the neuron
             neuron = getNeuronFromAnnotation(child.getId());
             child = neuron.getGeoAnnotationMap().get(child.getId());
-            anchorReparentedSignal.emit(child);
+            anotationReparentedSignal.emit(child);
         }
     }
 
@@ -373,7 +373,7 @@ that need to respond to changing data.
 
         // notify the public; "neuronSelected" will update the neurite tree
         neuronSelectedSignal.emit(getCurrentNeuron());
-        anchorsDeletedSignal.emit(deleteList);
+        annotationsDeletedSignal.emit(deleteList);
     }
 
     /**
@@ -446,9 +446,9 @@ that need to respond to changing data.
             updateCurrentNeuron();
         }
 
-        anchorAddedSignal.emit(newAnnotation);
+        annotationAddedSignal.emit(newAnnotation);
 
         annotation1 = neuron.getGeoAnnotationMap().get(annotation1.getId());
-        anchorReparentedSignal.emit(annotation1);
+        anotationReparentedSignal.emit(annotation1);
     }
 }
