@@ -25,6 +25,8 @@ import java.util.List;
 public class MaskChanSingleFileLoader {
 
     public static final int REQUIRED_AXIAL_LENGTH_DIVISIBLE = 64;
+    public static final int UNSET_SEGMENT = -1;
+
     private static final int FLOAT_BYTES = Float.SIZE / 8;
     private static final int LONG_BYTES = Long.SIZE / 8;
 
@@ -37,6 +39,9 @@ public class MaskChanSingleFileLoader {
     private Long applicable1DStart;
     private Long applicable1DEnd;
 
+    private int segment = UNSET_SEGMENT;
+    private int numSegments = UNSET_SEGMENT;
+
     private int minimumAxialDivisibility = REQUIRED_AXIAL_LENGTH_DIVISIBLE;
 
     private Long[] volumeVoxels;
@@ -48,14 +53,19 @@ public class MaskChanSingleFileLoader {
     private Long[] boundsYCoords;
     private Long[] boundsZCoords;
     //  These "microns" tell the extent of real-world space occupied by a single 3D point (or voxel).
+    @SuppressWarnings("unused")
     private float xMicrons;
+    @SuppressWarnings("unused")
     private float yMicrons;
+    @SuppressWarnings("unused")
     private float zMicrons;
 
     private long fastestSrcVaryingMax;
     private long secondFastestSrcVaryingMax;
     private long secondFastestSrcVaryingCoord;
+    @SuppressWarnings("unused")
     private long slowestSrcVaryingMax;
+    @SuppressWarnings("unused")
     private long slowestSrcVaryingCoord;
 
     private Byte axis;
@@ -92,6 +102,7 @@ public class MaskChanSingleFileLoader {
     // Tells how many rays have been passed over up to the current add call.
     private long latestRayNumber = 0;   // This is evolving state: it depends on previously-updated data.
     private int cummulativeVoxelsReadCount = 0;  // evolving state.
+    private long lastRayCount = 0;      // evolving state.
 
     private Logger logger = LoggerFactory.getLogger( MaskChanSingleFileLoader.class );
 
@@ -126,9 +137,10 @@ public class MaskChanSingleFileLoader {
         this.intensityDivisor = intensityDivisor;
     }
 
-    public void setApplicable1DRange( Long startOfRange, Long endOfRange ) {
-        applicable1DStart = startOfRange;
-        applicable1DEnd = endOfRange;
+    /** Seed with info used to establish 1D array boundaries for this loader. */
+    public void setApplicableSegment( int segment, int numSegments ) {
+        this.segment = segment;
+        this.numSegments = numSegments;
     }
 
     /**
@@ -207,15 +219,16 @@ public class MaskChanSingleFileLoader {
 
         // Channel only available if presence of acceptors signalled its read.
         if ( channelAcceptors.size() > 0  &&  renderableBean.getRenderableEntity() != null  &&  fileStats != null ) {
-            StringBuilder averages = new StringBuilder( "Average values for " )
-                .append( renderableBean.getRenderableEntity().getName() ).append( " at total voxels of " )
-                .append( renderableBean.getVoxelCount() ).append( " are:\n" );
-
-            for ( int i = 0; i < channelAverages.length; i++ ) {
-                averages.append( "Channel ").append( i ).append( channelAverages[ i ] ).append( "\n" );
+            if ( logger.isDebugEnabled() ) {
+                StringBuilder averages = new StringBuilder( "Average values for " )
+                        .append( renderableBean.getRenderableEntity().getName() ).append( " at total voxels of " )
+                        .append( renderableBean.getVoxelCount() ).append( " are:\n" );
+                for ( int i = 0; i < channelAverages.length; i++ ) {
+                    averages.append( "Channel ").append( i ).append(' ').append( channelAverages[ i ] ).append( "\n" );
+                }
+                logger.debug( averages.toString() );
             }
 
-            logger.debug( averages.toString() );
             fileStats.recordChannelAverages( renderableBean.getRenderableEntity().getId(), channelAverages );
         }
 
@@ -266,7 +279,6 @@ public class MaskChanSingleFileLoader {
      * @param skippedRayCount how many rays (spans of the fastest-varying dimension) is the cursor moved?
      * @return always true, to allow multiple assertion-driven tests.
      */
-    private long lastRayCount = 0;
     private boolean saneSkipCount( long skippedRayCount ) {
         if ( lastRayCount == 0 ) {
             // Skip the very first ray count.
@@ -278,7 +290,7 @@ public class MaskChanSingleFileLoader {
         if ( skippedRayCount == 0 )
             return true;
 
-        Long[] bounds = null;
+        Long[] bounds;
         if ( dimensionOrder == 2 ) {
             bounds = boundsYCoords;
         }
@@ -350,6 +362,19 @@ public class MaskChanSingleFileLoader {
             targetSliceSize = volumeVoxels[0] * volumeVoxels[1]; // sx * sy
 
             srcSliceSize = fastestSrcVaryingMax * secondFastestSrcVaryingMax;
+
+            // Establish applicable boundaries for this loader, if any were expected.
+            //  These are for multi-thread support, and mustn't be confused with the bounding box.
+            if ( segment != UNSET_SEGMENT ) {
+                long total1D = sx * sy * sz;
+                long segmentSize = total1D / numSegments;
+                applicable1DStart = segmentSize * segment;
+                applicable1DEnd = applicable1DStart + segmentSize;
+                if ( applicable1DEnd > total1D ) {
+                    applicable1DEnd = total1D;
+                }
+                logger.trace( "Single file loader looking at positions {} to {} for bean {}, t-num {}.", new Object[] {applicable1DStart, applicable1DEnd, renderableBean.getRenderableEntity().getName(), renderableBean.getTranslatedNum() } );
+            }
 
             if ( maskAcceptors != null ) {
                 for ( MaskChanDataAcceptorI acceptor: maskAcceptors ) {
@@ -513,7 +538,7 @@ public class MaskChanSingleFileLoader {
 
                 final long final1DCoord = yOffset + xyzCoords[ 0 ];
                 if ( applicable1DStart == null  ||
-                     ( final1DCoord >= applicable1DStart  &&  final1DCoord <= applicable1DEnd ) ) {
+                     ( final1DCoord >= applicable1DStart  &&  final1DCoord < applicable1DEnd ) ) {
                     writeToMaskAcceptors(xyzCoords, translatedNum, final1DCoord);
                     writeToChannelAcceptors(channelData, xyzCoords, translatedNum, totalVoxelFactor, allChannelBytes, fixedFinalYCoord, final1DCoord);
                 }
