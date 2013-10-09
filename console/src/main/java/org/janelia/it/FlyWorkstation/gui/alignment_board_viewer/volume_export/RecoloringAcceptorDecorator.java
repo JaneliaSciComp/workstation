@@ -30,7 +30,7 @@ public class RecoloringAcceptorDecorator  extends AbstractAcceptorDecorator {
     public int addChannelData(Integer originalMask, byte[] channelData, long position, long x, long y, long z, ChannelMetaData channelMetaData) throws Exception {
         int returnVal = 0;
         if ( channelMetaData.renderableBean != null   &&   channelMetaData.renderableBean.getRgb()[ 3 ] != RenderMappingI.PASS_THROUGH_RENDERING ) {
-            if ( channelMetaData.channelCount == 3  ||  channelMetaData.channelCount == 4  ||  channelMetaData.channelCount == 2 ) {
+            if ( channelMetaData.channelCount == 3  ||  channelMetaData.channelCount == 4 ) {
                 int maxIntensity = getMaxIntensity( channelData, channelMetaData );
                 // Iterate over all the channels of information.
                 int[] rgbIndexes = channelMetaData.getOrderedRgbIndexes();
@@ -42,7 +42,7 @@ public class RecoloringAcceptorDecorator  extends AbstractAcceptorDecorator {
 
                 returnVal = wrappedAcceptor.addChannelData( originalMask, channelData, position, x, y, z, channelMetaData );
             }
-            else if ( channelMetaData.channelCount == 1 ) {
+            else if ( channelMetaData.channelCount == 1  ||  channelMetaData.channelCount == 2 ) {
                 ChannelMetaData substitutedChannelMetaData = getLazySubsituteChannelData(channelMetaData);
 
                 // In this case, would like to expand the number of channels and fill them with the user-given values.
