@@ -15,13 +15,13 @@ import java.awt.event.ActionEvent;
 
 
 /**
- * main class for slice viewer annotation GUI
+ * this is the main class for slice viewer annotation GUI; it instantiates and contains
+ * the various other panels and whatnot.
  *
  * djo, 5/13
  */
 public class AnnotationPanel extends JPanel
 {
-
     // things we get data from
     // not clear these belong here!  should all info be shuffled through signals and actions?
     // on the other hand, even if so, we still need them just to hook everything up
@@ -34,7 +34,7 @@ public class AnnotationPanel extends JPanel
     private NeuronInfoPanel neuronInfoPanel;
     private WorkspaceInfoPanel workspaceInfoPanel;
 
-    // actions
+    // ----- actions
     private final Action createNeuronAction = new AbstractAction() {
         @Override
         public void actionPerformed(ActionEvent e) {
@@ -49,6 +49,7 @@ public class AnnotationPanel extends JPanel
             }
         };
 
+    // ----- signals
     public Signal centerAnnotationSignal = new Signal();
     private final Action centerAnnotationAction = new AbstractAction() {
         @Override
@@ -65,7 +66,6 @@ public class AnnotationPanel extends JPanel
 
         setupUI();
         setupSignals();
-
     }
 
     @Override
@@ -98,7 +98,7 @@ public class AnnotationPanel extends JPanel
         // add a little breathing space at the top of the panel
         add(Box.createRigidArea(new Dimension(0, 20)));
 
-        // workspace information; show name, whatever attributes, list of neurons
+        // ----- workspace information; show name, whatever attributes, list of neurons
         workspaceInfoPanel = new WorkspaceInfoPanel();
         add(workspaceInfoPanel);
 
@@ -114,13 +114,10 @@ public class AnnotationPanel extends JPanel
         createNeuronButtonPlus.setAction(createNeuronAction);
 
 
-
-
-        // neuron information; show name, whatever attributes, list of neurites
+        // ----- neuron information; show name, whatever attributes, list of neurites
         add(Box.createRigidArea(new Dimension(0, 20)));
         neuronInfoPanel = new NeuronInfoPanel();
         add(neuronInfoPanel);
-
 
         // buttons for acting on annotations or neurites (which are in the list immediately above):
         JPanel neuriteButtonsPanel = new JPanel();
@@ -138,11 +135,11 @@ public class AnnotationPanel extends JPanel
         neuriteButtonsPanel.add(centerAnnotationButton);
 
 
+        // ----- misc
         // at some point, we'll have our own sliceviewer menu; until then, attach those actions
         //  to buttons in plain view
         add(Box.createRigidArea(new Dimension(0, 20)));
         add(new JLabel("Commands"));
-        // add(new JLabel("Menu proxy"));
 
         JButton createWorkspaceButton = new JButton("Create workspace");
         createWorkspaceAction.putValue(Action.NAME, "Create workspace");
@@ -150,24 +147,10 @@ public class AnnotationPanel extends JPanel
         createWorkspaceButton.setAction(createWorkspaceAction);        
         add(createWorkspaceButton);
 
-        /*
-        // moved to button just under neuron list
-        JButton createNeuronButton = new JButton("Create neuron");
-        createNeuronAction.putValue(Action.NAME, "Create neuron");
-        createNeuronAction.putValue(Action.SHORT_DESCRIPTION, "Create a new neuron");
-        createNeuronButton.setAction(createNeuronAction);        
-        add(createNeuronButton);
-        */
-
 
         // the bilge...
         add(Box.createVerticalGlue());
-
-
     }
-
-
-
 }
 
 

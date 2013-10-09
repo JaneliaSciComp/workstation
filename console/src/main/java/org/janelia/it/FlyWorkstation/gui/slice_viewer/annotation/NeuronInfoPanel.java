@@ -1,8 +1,6 @@
 package org.janelia.it.FlyWorkstation.gui.slice_viewer.annotation;
 
 
-// std lib imports
-
 import java.awt.*;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
@@ -12,17 +10,12 @@ import java.util.List;
 import javax.swing.*;
 import javax.swing.tree.*;
 
-
-
-// workstation imports
-
 import org.janelia.it.FlyWorkstation.geom.Vec3;
 import org.janelia.it.FlyWorkstation.signal.Signal1;
 import org.janelia.it.FlyWorkstation.signal.Slot1;
 
 import org.janelia.it.jacs.model.user_data.tiledMicroscope.*;
 
-// other imports
 import com.google.common.collect.HashBiMap;
 
 
@@ -33,7 +26,6 @@ import com.google.common.collect.HashBiMap;
  */
 public class NeuronInfoPanel extends JPanel 
 {
-
     private JLabel neuronNameLabel;
 
     private JTree neuriteTree;
@@ -41,8 +33,7 @@ public class NeuronInfoPanel extends JPanel
     private DefaultMutableTreeNode neuronRootNode;
     private HashBiMap<String, TmGeoAnnotation> labelToAnnotationMap;
 
-    private MouseListener treeListener;
-
+    // ----- slots
     public Slot1<TmNeuron> neuronSelectedSlot = new Slot1<TmNeuron>() {
         @Override
         public void execute(TmNeuron neuron) {
@@ -50,8 +41,8 @@ public class NeuronInfoPanel extends JPanel
         }
     };
 
+    // ----- signals
     public Signal1<Vec3> cameraPanToSignal = new Signal1<Vec3>();
-
 
     public NeuronInfoPanel() {
         setupUI();
@@ -65,17 +56,12 @@ public class NeuronInfoPanel extends JPanel
         //  visible in the list above)!
 
         neuronNameLabel = new JLabel("");
-        // add(neuronNameLabel);
-
 
         // neurite tree
         setupNeuriteTreeNavigator();
 
-
         // neurite information; show name, type (axon, dendrite, etc), other attributes
         //  of selected (current) neurite (not sure how this will be stored)
-
-
         loadNeuron(null);
     }
 
@@ -98,10 +84,8 @@ public class NeuronInfoPanel extends JPanel
         // don't expand/collapse on double-click
         neuriteTree.setToggleClickCount(0);
 
-
-
         // listen for mouse clicks
-        treeListener = new MouseAdapter() {
+        MouseListener treeListener = new MouseAdapter() {
             @Override
             public void mousePressed(MouseEvent event) {
                 TreePath path = neuriteTree.getPathForLocation(event.getX(), event.getY());
@@ -114,7 +98,6 @@ public class NeuronInfoPanel extends JPanel
             }
         };
         neuriteTree.addMouseListener(treeListener);
-
 
         // throw it into a scrolled panel; there's going to be a *lot* of them...
         JScrollPane treePane = new JScrollPane(neuriteTree);

@@ -1,8 +1,5 @@
 package org.janelia.it.FlyWorkstation.gui.slice_viewer.annotation;
 
-
-// std lib imports
-
 import javax.swing.*;
 import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
@@ -12,8 +9,6 @@ import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.util.*;
 
-
-// workstation imports
 
 import org.janelia.it.FlyWorkstation.api.entity_model.management.ModelMgr;
 import org.janelia.it.FlyWorkstation.geom.Vec3;
@@ -31,14 +26,13 @@ import org.janelia.it.jacs.model.user_data.tiledMicroscope.*;
  */
 public class WorkspaceInfoPanel extends JPanel 
 {
-
     private JLabel workspaceNameLabel;
     private JLabel sampleNameLabel;
 
     private JList neuronListBox;
     private DefaultListModel neuronListModel;
-    private JScrollPane neuronScrollPane;
 
+    // ----- slots
     public Slot1<TmWorkspace> workspaceLoadedSlot = new Slot1<TmWorkspace>() {
         @Override
         public void execute(TmWorkspace workspace) {
@@ -52,10 +46,10 @@ public class WorkspaceInfoPanel extends JPanel
         }
     };
 
-
+    // ----- signals
     public Signal1<TmNeuron> neuronClickedSignal = new Signal1<TmNeuron>();
-
     public Signal1<Vec3> cameraPanToSignal = new Signal1<Vec3>();
+
 
     public WorkspaceInfoPanel() {
         setupUI();
@@ -74,15 +68,12 @@ public class WorkspaceInfoPanel extends JPanel
         sampleNameLabel = new JLabel("", JLabel.LEADING);
         add(sampleNameLabel);
 
-
-
         // list of neurons
-
         add(Box.createRigidArea(new Dimension(0, 10)));
         add(new JLabel("Neurons", JLabel.CENTER));
         neuronListModel = new DefaultListModel();
         neuronListBox = new JList(neuronListModel);
-        neuronScrollPane = new JScrollPane(neuronListBox);
+        JScrollPane neuronScrollPane = new JScrollPane(neuronListBox);
         neuronListBox.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
         neuronListBox.getSelectionModel().addListSelectionListener(
             new ListSelectionListener() {
@@ -122,13 +113,15 @@ public class WorkspaceInfoPanel extends JPanel
         loadWorkspace(null);
     }
 
+    /**
+     * called when current neuron changes
+     */
     public void selectNeuron(TmNeuron neuron) {
         if (neuron == null) {
             return;
         }
 
-        // object identities vary; find the TmNeuron in the model that has
-        //  the desired ID:
+        // find the neuron in the list model by ID:
         Enumeration<TmNeuron> neuronEnumeration = (Enumeration<TmNeuron>) neuronListModel.elements();
         TmNeuron foundNeuron = null;
         while (neuronEnumeration.hasMoreElements()) {
@@ -139,12 +132,14 @@ public class WorkspaceInfoPanel extends JPanel
             }
         }
 
-        // select neuron in neuron list
         if (foundNeuron != null) {
             neuronListBox.setSelectedValue(foundNeuron, true);
         }
     }
 
+    /**
+     * populate the UI with info from the input workspace
+     */
     public void loadWorkspace(TmWorkspace workspace) {
         updateMetaData(workspace);
 
@@ -178,6 +173,9 @@ public class WorkspaceInfoPanel extends JPanel
         }
     }
 
+    /**
+     * update the labels that display data about the workspace
+     */
     private void updateMetaData(final TmWorkspace workspace) {
         if (workspace == null) {
             workspaceNameLabel.setText("Name: (no workspace)");
@@ -204,7 +202,6 @@ public class WorkspaceInfoPanel extends JPanel
                 }
             };
             labelFiller.execute();
-
         }
     }
 }
