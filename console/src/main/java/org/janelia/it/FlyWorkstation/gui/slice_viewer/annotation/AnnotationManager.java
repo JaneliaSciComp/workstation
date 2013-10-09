@@ -1,9 +1,5 @@
 package org.janelia.it.FlyWorkstation.gui.slice_viewer.annotation;
 
-
-// workstation imports
-
-
 import org.janelia.it.FlyWorkstation.geom.Vec3;
 import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.FlyWorkstation.gui.slice_viewer.skeleton.Anchor;
@@ -16,7 +12,6 @@ import org.janelia.it.FlyWorkstation.signal.Slot1;
 import org.janelia.it.jacs.model.entity.Entity;
 import org.janelia.it.jacs.model.entity.EntityConstants;
 import org.janelia.it.jacs.model.user_data.tiledMicroscope.*;
-
 
 import javax.swing.*;
 
@@ -42,7 +37,8 @@ elements of what's been done; that's handled by signals emitted from AnnotationM
     
     private Entity initialEntity;
 
-    // signals & slots
+    // ----- slots
+
     public Slot1<Skeleton.AnchorSeed> addAnchorRequestedSlot = new Slot1<Skeleton.AnchorSeed>() {
         @Override
         public void execute(Skeleton.AnchorSeed seed) {
@@ -90,37 +86,28 @@ elements of what's been done; that's handled by signals emitted from AnnotationM
 
     public AnnotationManager(AnnotationModel annotationModel) {
         this.annotationModel = annotationModel;
-
         modelMgr = ModelMgr.getModelMgr();
-
     }
 
     public Entity getInitialEntity() {
         return initialEntity;
     }
 
+    /**
+     * @param initialEntity = entity the user right-clicked on to start the slice viewer
+     */
     public void setInitialEntity(final Entity initialEntity) {
-
         this.initialEntity = initialEntity;
-
         if (initialEntity.getEntityType().getName().equals(EntityConstants.TYPE_3D_TILE_MICROSCOPE_SAMPLE)) {
-            // currently nothing to do for this case
+            // if it's a bare sample, we don't have anything to do
         }
 
         else if (initialEntity.getEntityType().getName().equals(EntityConstants.TYPE_TILE_MICROSCOPE_WORKSPACE)) {
-
             SimpleWorker loader = new SimpleWorker() {
                 @Override
                 protected void doStuff() throws Exception {
-                    // need to invalidate the cache and reload this entity; probably short-term, as
-                    //  we should fix the underlying problem (saving data and not telling the cache!)
-                    modelMgr.invalidateCache(initialEntity, true);
-                    Entity entity = modelMgr.getEntityById(initialEntity.getId());
-
-                    // now make sure the entity's children are fully loaded or
-                    //  the workspace creation will fail
-                    modelMgr.loadLazyEntity(entity, false);
-                    TmWorkspace workspace = new TmWorkspace(entity);
+                    // at this point, we know the entity is a workspace, so:
+                    TmWorkspace workspace = modelMgr.loadWorkspace(initialEntity.getId());
                     annotationModel.loadWorkspace(workspace);
                 }
 
@@ -135,24 +122,25 @@ elements of what's been done; that's handled by signals emitted from AnnotationM
                 }
             };
             loader.execute();
-
         }
 
-
-        // (eventually) update state to saved state (selection, visibility, etc)
-
-
+        // (eventually) update state to saved state (selection, visibility, etc);
+        //  actually, although it should happen at about the time this method is called,
+        //  it may be better to make it a different method
 
     }
     
 
-    // methods that are called by actions from the 2d view; should be not
+    // ----- methods called from UI
+    // these methods are called by actions from the 2d view; should be not
     //  much more than what tool is active and where the click was;
-    //  we are responsible for 
+    //  we are responsible for everything else
 
+    /**
+     * add an annotation at the given location with the given parent ID;
+     * if no parent, pass in null
+     */
     public void addAnnotation(final Vec3 xyz, final Long parentID) {
-
-        // get current workspace, etc.; if they don't exist, error
         if (annotationModel.getCurrentWorkspace() == null) {
             JOptionPane.showMessageDialog(null,
                 "You must load a workspace before beginning annotation!",
@@ -170,9 +158,9 @@ elements of what's been done; that's handled by signals emitted from AnnotationM
             return;
         }
 
-        // verify the parent annotation (if there is one) is in our neuron
-        //  (probably temporary, it should auto-select or something, or perhaps
-        //  not even care)
+        // verify that the parent annotation (if there is one) is in our neuron;
+        //  this is probably no longer needed, as the neuron ought to be selected
+        //  when the parent annotation is selected
         if (parentID != null && !currentNeuron.getGeoAnnotationMap().containsKey(parentID)) {
             JOptionPane.showMessageDialog(null,
                     "Current neuron does not contain selected root annotation!",
@@ -186,18 +174,10 @@ elements of what's been done; that's handled by signals emitted from AnnotationM
             protected void doStuff() throws Exception {
                 if (parentID == null) {
                     // if parentID is null, it's a new root in current neuron
-
-                    // this should probably not take the ws and neuron (assume current),
-                    //  but it does for now
-                    annotationModel.addRootAnnotation(
-                            currentNeuron, xyz);
-
+                    annotationModel.addRootAnnotation(currentNeuron, xyz);
                 } else {
-                    // new node with existing parent
-
                     annotationModel.addChildAnnotation(
                             currentNeuron.getGeoAnnotationMap().get(parentID), xyz);
-
                 }
             }
 
@@ -212,16 +192,19 @@ elements of what's been done; that's handled by signals emitted from AnnotationM
             }
         };
         adder.execute();
-
     }
 
+    /**
+     * delete the annotation with the input ID; the annotation must be a "link", which
+     * is an annotation that is not a root (no parent) or branch point (many children);
+     * in other words, it's an end point, or an annotation with a parent and single child
+     * that can be connected up unambiguously
+     */
     public void deleteLink(final Long annotationID) {
         if (annotationModel.getCurrentWorkspace() == null) {
             // dialog?
-
             return;
         } else {
-
             // verify it's a link and not a root or branch:
             TmGeoAnnotation annotation = annotationModel.getGeoAnnotationFromID(annotationID);
             if (annotation.getParent() == null || annotation.getChildren().size() > 1) {
@@ -231,7 +214,6 @@ elements of what's been done; that's handled by signals emitted from AnnotationM
                         JOptionPane.ERROR_MESSAGE);
                 return;
             }
-
 
             SimpleWorker deleter = new SimpleWorker() {
                 @Override
@@ -253,10 +235,12 @@ elements of what's been done; that's handled by signals emitted from AnnotationM
         }
     }
 
+    /**
+     * delete the annotation with the input ID, and delete all of its descendants
+     */
     public void deleteSubTree(final Long annotationID) {
         if (annotationModel.getCurrentWorkspace() == null) {
             // dialog?
-
             return;
         } else {
             SimpleWorker deleter = new SimpleWorker() {
@@ -279,13 +263,14 @@ elements of what's been done; that's handled by signals emitted from AnnotationM
         }
     }
 
+    /**
+     * move the annotation with the input ID to the input location
+     */
     public void moveAnnotation(final Long annotationID, final Vec3 location) {
         if (annotationModel.getCurrentWorkspace() == null) {
             // dialog?
-
             return;
         } else {
-
             SimpleWorker mover = new SimpleWorker() {
                 @Override
                 protected void doStuff() throws Exception {
@@ -303,15 +288,19 @@ elements of what's been done; that's handled by signals emitted from AnnotationM
                 }
             };
             mover.execute();
-
         }
-
     }
 
+    /**
+     * place a new annotation near the annotation with the input ID; place it
+     * "nearby" in the direction of its parent if it has one; if it's a root
+     * annotation with one child, place it in the direction of the child instead;
+     * if it's a root with many children, it's an error, since there is no
+     * unambiguous location to place the new anchor
+     */
     public void splitAnchor(Long annotationID) {
         if (annotationModel.getCurrentWorkspace() == null) {
             // dialog?
-
             return;
         }
 
@@ -346,17 +335,14 @@ elements of what's been done; that's handled by signals emitted from AnnotationM
             }
         };
         splitter.execute();
-
     }
 
+    /**
+     * create a new neuron in the current workspace, prompting for name
+     */
     public void createNeuron() {
-        // is there a workspace?  if not, fail; actually, doesn't the model know?
-        //  yes; who should test?  who should pop up UI feedback to user?
-        //  model shouldn't, but should annMgr? 
-
         if (annotationModel.getCurrentWorkspace() == null) {
             // dialog?
-
             return;
         }
 
@@ -399,9 +385,11 @@ elements of what's been done; that's handled by signals emitted from AnnotationM
             }
         };
         creator.execute();
-
     }
 
+    /**
+     * given an annotation ID, select (make current) the neuron it belongs to
+     */
     public void selectNeuronFromAnnotation(Long annotationID) {
         if (annotationID == null) {
             return;
@@ -411,6 +399,9 @@ elements of what's been done; that's handled by signals emitted from AnnotationM
         annotationModel.setCurrentNeuron(neuron);
     }
 
+    /**
+     * create a new workspace with the currently loaded sample
+     */
     public void createWorkspace() {
         // if no sample loaded, error
         if (initialEntity == null) {
@@ -435,7 +426,7 @@ elements of what's been done; that's handled by signals emitted from AnnotationM
             return;
         }
 
-        // ask re: new workspace if one is active
+        // ask the user if they really want a new workspace if one is active
         if (annotationModel.getCurrentWorkspace() != null) {
             int ans = JOptionPane.showConfirmDialog(null,
                     "You already have an active workspace!  Close and create another?",
@@ -460,7 +451,7 @@ elements of what's been done; that's handled by signals emitted from AnnotationM
         }
 
         // create it in another thread
-        // there is no doublt a better way to get these parameters in:
+        // there is no doubt a better way to get these parameters in:
         final String name = workspaceName;
         final Long ID = sampleID;
         SimpleWorker creator = new SimpleWorker() {
@@ -473,9 +464,7 @@ elements of what's been done; that's handled by signals emitted from AnnotationM
                 Entity workspaceRootEntity = annotationModel.getOrCreateWorkspacesFolder();
 
                 // now we can create the workspace (finally)
-                // annotationModel.createWorkspace(workspaceRootEntity, sampleID, workspaceName);
                 annotationModel.createWorkspace(workspaceRootEntity, ID, name);
-
             }
 
             @Override
@@ -489,22 +478,6 @@ elements of what's been done; that's handled by signals emitted from AnnotationM
             }
         };
         creator.execute();
-
     }
-
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
