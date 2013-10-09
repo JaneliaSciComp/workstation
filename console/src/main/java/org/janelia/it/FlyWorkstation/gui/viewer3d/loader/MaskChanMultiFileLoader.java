@@ -8,7 +8,6 @@ import org.janelia.it.FlyWorkstation.gui.framework.viewer.alignment_board.MaskCh
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.jms.Session;
 import java.io.InputStream;
 import java.util.*;
 import java.util.concurrent.ExecutorService;
