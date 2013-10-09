@@ -61,7 +61,7 @@ public class RemaskingAcceptorDecorator extends AbstractAcceptorDecorator {
         if ( ! binary ) {
             int oldVolumeMask = 0;
             if ( maskVolumeData.isVolumeAvailable() ) {
-                // Assumed little-endian.
+                // Assumed little-endian.  Get all bytes of the mask that was previously at this position.
                 for ( int j = 0; j < maskByteCount; j++ ) {
                     int volumeLoc = j + ((int) position * maskByteCount);
                     // Here enforced: need to take previous mask into account.
