@@ -22,6 +22,17 @@ import javax.swing.*;
 
 
 public class AnnotationManager
+/*
+this class is the middleman between the UI and the model.  first, the UI makes naive requests 
+(eg, add annotation).  then this class determines if the request is valid (eg, can't add
+if no neuron), popping dialogs if needed.  lastly, this class gathers and/or reformats info as
+needed to actually make the call to the back end, usually spinning off a worker thread to
+do so.  
+
+this class's slots are usually connected to various UI signals, and its signals typically 
+hook up to AnnotationModel slots.  this class has no responsibilities in notifying UI 
+elements of what's been done; that's handled by signals emitted from AnnotationModel.
+*/
 {
 
     ModelMgr modelMgr;
@@ -178,14 +189,14 @@ public class AnnotationManager
 
                     // this should probably not take the ws and neuron (assume current),
                     //  but it does for now
-                    annotationModel.addRootAnnotation(annotationModel.getCurrentWorkspace(),
-                        currentNeuron, xyz);
+                    annotationModel.addRootAnnotation(
+                            currentNeuron, xyz);
 
                 } else {
                     // new node with existing parent
 
-                    annotationModel.addChildAnnotation(currentNeuron,
-                        currentNeuron.getGeoAnnotationMap().get(parentID), xyz);
+                    annotationModel.addChildAnnotation(
+                            currentNeuron.getGeoAnnotationMap().get(parentID), xyz);
 
                 }
             }

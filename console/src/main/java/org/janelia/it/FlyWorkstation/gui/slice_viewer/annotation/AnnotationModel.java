@@ -20,6 +20,25 @@ import java.util.List;
 
 
 public class AnnotationModel
+/*
+this class is responsible for handling requests from the AnnotationManager.  those
+requests are ready-to-execute; the AnnotationManager has taken care of validation.
+the requests may map one-to-one onto atomic operations in the TiledMicroscopeDAO,
+or they may package up several of those actions.
+
+public methods in this class that throw exceptions are the ones that involve db calls, and
+they should all be called from worker threads.  the others, typically getters of
+various info, do not.  private methods don't necessarily follow that pattern.
+
+a note on entities: in general, we want to only work with the domain objects in 
+this class.  use "updateCurrentWorkspace/Neuron" to keep the local copies of
+those objects in sync with the back end.  other components will limit themselves
+to accessing those two objects in general.
+
+this class does not interact directly with the UI.  its slots are connected to
+UI elements that select, and its signals are connected with a variety of UI elements
+that need to respond to changing data.
+*/
 {
     private ModelMgr modelMgr;
     private SessionMgr sessionMgr;
@@ -28,18 +47,18 @@ public class AnnotationModel
     private TmWorkspace currentWorkspace;
     private TmNeuron currentNeuron;
 
-    // signals & slots
+    // ----- signals
     public Signal1<TmWorkspace> workspaceLoadedSignal = new Signal1<TmWorkspace>();
+
     public Signal1<TmNeuron> neuronSelectedSignal = new Signal1<TmNeuron>();
 
     public Signal1<TmGeoAnnotation> anchorAddedSignal = new Signal1<TmGeoAnnotation>();
     public Signal1<List<TmGeoAnnotation>> anchorsDeletedSignal = new Signal1<List<TmGeoAnnotation>>();
     public Signal1<TmGeoAnnotation> anchorReparentedSignal = new Signal1<TmGeoAnnotation>();
-
-    // move or change, eg, comment:
+    // move or change attribute (eg, comment):
     public Signal1<TmGeoAnnotation> anchorUpdatedSignal = new Signal1<TmGeoAnnotation>();
 
-
+    // ----- slots
     public Slot1<TmNeuron> neuronClickedSlot = new Slot1<TmNeuron>() {
         @Override
         public void execute(TmNeuron neuron) {
@@ -47,7 +66,8 @@ public class AnnotationModel
         }
     };
 
-    // constants
+    // ----- constants
+    // name of entity that holds our workspaces
     public static final String WORKSPACES_FOLDER_NAME = "Workspaces";
 
     // how far away to try to put split anchors (pixels)
@@ -55,12 +75,12 @@ public class AnnotationModel
 
 
     public AnnotationModel() {
-        // set up
         modelMgr = ModelMgr.getModelMgr();
         sessionMgr = SessionMgr.getSessionMgr();
 
     }
 
+    // current workspace methods
     public TmWorkspace getCurrentWorkspace() {
         return currentWorkspace;
     }
@@ -73,6 +93,21 @@ public class AnnotationModel
         }
     }
 
+    public void loadWorkspace(TmWorkspace workspace) {
+        if (workspace != null) {
+            currentWorkspace = workspace;
+        } else {
+            currentWorkspace = null;
+        }
+        workspaceLoadedSignal.emit(workspace);
+
+        // clear current neuron
+        setCurrentNeuron(null);
+        neuronSelectedSignal.emit(null);
+
+    }
+
+    // current neuron methods
     public TmNeuron getCurrentNeuron() {
         return currentNeuron;
     }
@@ -93,57 +128,75 @@ public class AnnotationModel
         }
     }
 
+    // convenience methods
+    /**
+     * given the ID of an annotation, return an object wrapping it (or null)
+     */
     public TmGeoAnnotation getGeoAnnotationFromID(Long annotationID) {
-        TmWorkspace workspace = getCurrentWorkspace();
-        if (workspace == null) {
+        if (getCurrentWorkspace() == null) {
             return null;
         }
 
-        TmGeoAnnotation foundAnnotation = null;
-        for (TmNeuron neuron: workspace.getNeuronList()) {
-            if (neuron.getGeoAnnotationMap().containsKey(annotationID)) {
-                foundAnnotation = neuron.getGeoAnnotationMap().get(annotationID);
-                break;
-            }
+        TmNeuron foundNeuron = getNeuronFromAnnotation(annotationID);
+        if (foundNeuron != null) {
+            return foundNeuron.getGeoAnnotationMap().get(annotationID);
+        } else {
+            return null;
         }
-        return foundAnnotation;
     }
 
+    /**
+     * given the ID of an annotation, return the neuron that contains it (or null) 
+     */
     public TmNeuron getNeuronFromAnnotation(Long annotationID) {
-        TmWorkspace workspace = getCurrentWorkspace();
-        if (workspace == null) {
+        if (getCurrentWorkspace() == null) {
             return null;
         }
 
         TmNeuron foundNeuron = null;
-        for (TmNeuron neuron: workspace.getNeuronList()) {
+        for (TmNeuron neuron: getCurrentWorkspace().getNeuronList()) {
             if (neuron.getGeoAnnotationMap().containsKey(annotationID)) {
                 foundNeuron = neuron;
                 break;
             }
         }
         return foundNeuron;
-
     }
 
+    /**
+     * create a neuron in the current workspace
+     *
+     * @param name = name of neuron
+     * @throws Exception
+     */
     public void createNeuron(String name) throws Exception {
-
         TmNeuron neuron = modelMgr.createTiledMicroscopeNeuron(getCurrentWorkspace().getId(), name);
 
         updateCurrentWorkspace();
-        workspaceLoadedSignal.emit(currentWorkspace);
+        workspaceLoadedSignal.emit(getCurrentWorkspace());
 
         setCurrentNeuron(neuron);
     }
 
+    /**
+     * @param parentEntity = parent folder in hierarchy
+     * @param brainSampleID = tiled microscope sample ID
+     * @param name = name of new workspace
+     * @throws Exception
+     */
     public void createWorkspace(Entity parentEntity, Long brainSampleID, String name) throws Exception {
         TmWorkspace workspace = modelMgr.createTiledMicroscopeWorkspace(parentEntity.getId(),
             brainSampleID, name, sessionMgr.getSubject().getKey());
 
-        // trigger workspace load (no updates; this method takes care of it all)
         loadWorkspace(workspace);
     }
 
+    /**
+     * we save our workspaces in a pre-defined area; this method returns it, creating if needed
+     *
+     * @return workspace folder entity
+     * @throws Exception
+     */
     public Entity getOrCreateWorkspacesFolder() throws Exception {
         Entity workspaceRootEntity = modelMgr.getCommonRootEntityByName(WORKSPACES_FOLDER_NAME);
         if (workspaceRootEntity == null) {
@@ -152,71 +205,80 @@ public class AnnotationModel
         return workspaceRootEntity;
     }
 
-    public void addRootAnnotation(TmWorkspace workspace, TmNeuron neuron, Vec3 xyz) throws Exception {
-        // should assume current workspace and neuron?  don't need workspace at
-        //  all, since neuron knows its workspace
-
-        // the null means "this is a root annotation" (would be the parent)
+    /**
+     * add a root annotation to the given neuron; this is an annotation without a parent
+     *
+     * @param neuron = neuron object
+     * @param xyz = x, y, z location of new annotation
+     * @throws Exception
+     */
+    public void addRootAnnotation(TmNeuron neuron, Vec3 xyz) throws Exception {
+        // the null  in this call means "this is a root annotation" (would otherwise
+        //  be the parent)
         TmGeoAnnotation annotation = modelMgr.addGeometricAnnotation(neuron.getId(),
             null, 0, xyz.x(), xyz.y(), xyz.z(), "");
 
-        // update
         updateCurrentWorkspace();
-        if (neuron.getId().equals(currentNeuron.getId())) {
+        if (neuron.getId().equals(getCurrentNeuron().getId())) {
             updateCurrentNeuron();
         }
 
-        // notify interested parties
         neuronSelectedSignal.emit(getCurrentNeuron());
         anchorAddedSignal.emit(annotation);
-
     }
 
-    public void addChildAnnotation(TmNeuron neuron, TmGeoAnnotation parentAnn, Vec3 xyz) throws Exception {
-        // should assume current neuron?  does parentAnn know its neuron anyway?
-
-        // check parent ann?
+    /**
+     * add a child annotation
+     *
+     * @param parentAnn = parent annotation object
+     * @param xyz = location of new child annotation
+     * @throws Exception
+     */
+    public void addChildAnnotation(TmGeoAnnotation parentAnn, Vec3 xyz) throws Exception {
         if (parentAnn == null) {
             return;
         }
 
-        // create it
+        TmNeuron neuron = getNeuronFromAnnotation(parentAnn.getId());
         TmGeoAnnotation annotation = modelMgr.addGeometricAnnotation(neuron.getId(),
             parentAnn.getId(), 0, xyz.x(), xyz.y(), xyz.z(), "");
 
-        // update
         updateCurrentWorkspace();
-        if (neuron.getId().equals(currentNeuron.getId())) {
+        if (neuron.getId().equals(getCurrentNeuron().getId())) {
             updateCurrentNeuron();
         }
 
-        // notify people
         neuronSelectedSignal.emit(getCurrentNeuron());
         anchorAddedSignal.emit(annotation);
     }
 
+    /**
+     * move an existing annotation to a new location
+     *
+     * @param annotationID = ID of annotation to move
+     * @param location = new location
+     * @throws Exception
+     */
     public void moveAnnotation(Long annotationID, Vec3 location) throws Exception {
         TmGeoAnnotation annotation = getGeoAnnotationFromID(annotationID);
         try {
-        modelMgr.updateGeometricAnnotation(annotation, annotation.getIndex(),
-            location.getX(), location.getY(), location.getZ(),
-            annotation.getComment());
+            modelMgr.updateGeometricAnnotation(annotation, annotation.getIndex(),
+                location.getX(), location.getY(), location.getZ(),
+                annotation.getComment());
         } catch (Exception e) {
             // error means not persisted; however, in the process of moving,
-            //  the marker's been moved; tell the view to update to current
-            //  position even after an error
+            //  the marker's already been moved, to give interactive feedback
+            //  to the user; so in case of error, tell the view to update to current
+            //  position (pre-move)
             // this is unfortunately untested, because I couldn't think of an
             //  easy way to simulate or force a failure!
             anchorUpdatedSignal.emit(getGeoAnnotationFromID(annotationID));
             throw e;
         }
 
-        // update
         updateCurrentWorkspace();
         updateCurrentNeuron();
 
-
-        // notify
         anchorUpdatedSignal.emit(getGeoAnnotationFromID(annotationID));
     }
 
@@ -224,7 +286,7 @@ public class AnnotationModel
      * this method deletes a link, which is defined as an annotation with
      * one parent and no more than one child (not a root, not a branch point)
      *
-     * @param link
+     * @param link = annotation object
      * @throws Exception
      */
     public void deleteLink(TmGeoAnnotation link) throws Exception {
@@ -232,8 +294,7 @@ public class AnnotationModel
             return;
         }
 
-        // check it's a link; trust no one
-        // error or return?
+        // check it's a link; trust no one; error or return?
         if (link.getParent() == null || link.getChildren().size() > 1) {
             return;
         }
@@ -248,10 +309,6 @@ public class AnnotationModel
         }
 
         // delete it; reparent its child (if any) to its parent
-        // so that means delete one annotation, update two others;
-        //  actually, since geo ann doesn't store children, only need
-        //  to update the one we reparent
-
         TmGeoAnnotation parent = link.getParent();
         TmGeoAnnotation child = null;
         if (link.getChildren().size() == 1) {
@@ -261,7 +318,6 @@ public class AnnotationModel
         // delete the deleted annotation that is to be deleted:
         modelMgr.deleteGeometricAnnotation(link.getId());
 
-        // updates
         updateCurrentWorkspace();
         updateCurrentNeuron();
 
@@ -276,21 +332,19 @@ public class AnnotationModel
         anchorsDeletedSignal.emit(deleteList);
 
         if (child != null) {
-            // at this point, the child is stale (still has its old parent);
-            //  it's ok in the db, but the object is stale; grab it again:
-            // this works but I don't like it:
+            // at this point, the child object is stale (still has its old parent);
+            // grab it again from the neuron
             neuron = getNeuronFromAnnotation(child.getId());
             child = neuron.getGeoAnnotationMap().get(child.getId());
             anchorReparentedSignal.emit(child);
         }
-
     }
 
     /**
      * this method deletes an annotation and all of its children, and its
      * children's children, yea, unto every generation that liveth
      *
-     * @param rootAnnotation
+     * @param rootAnnotation = annotation to be deleted along with its descendents
      * @throws Exception
      */
     public void deleteSubTree(TmGeoAnnotation rootAnnotation) throws Exception {
@@ -314,12 +368,10 @@ public class AnnotationModel
             modelMgr.deleteGeometricAnnotation(annotation.getId());
         }
 
-        // update
         updateCurrentWorkspace();
         updateCurrentNeuron();
 
-        // notify the public
-        // why this notification??
+        // notify the public; "neuronSelected" will update the neurite tree
         neuronSelectedSignal.emit(getCurrentNeuron());
         anchorsDeletedSignal.emit(deleteList);
     }
@@ -329,7 +381,7 @@ public class AnnotationModel
      * between the input annotation and its parent, displaced a bit toward the parent;
      * if it's a root, it inserts in the direction of either its single child, or it's an error
      *
-     * @param annotation
+     * @param annotation = annotation to be split
      */
     public void splitAnnotation(TmGeoAnnotation annotation) throws Exception {
         if (annotation == null) {
@@ -382,38 +434,21 @@ public class AnnotationModel
         //  reparent existing annotation to new annotation
         TmGeoAnnotation newAnnotation = modelMgr.addGeometricAnnotation(neuron.getId(),
                 annotation2.getId(), 0, newPoint.x(), newPoint.y(), newPoint.z(), "");
-        // how to get the neuron to refresh here?
-        modelMgr.invalidateCache(modelMgr.getEntityById(neuron.getId()), true);
-        // retrieve *again*
-        neuron = new TmNeuron(modelMgr.getEntityById(neuron.getId()));
+
+        //refresh neuron, then again, for updates
+        neuron = modelMgr.loadNeuron(neuron.getId());
         modelMgr.reparentGeometricAnnotation(annotation1, newAnnotation.getId(), neuron);
+        neuron = modelMgr.loadNeuron(neuron.getId());
 
         // updates and signals:
         updateCurrentWorkspace();
-        updateCurrentNeuron();
+        if (neuron.getId().equals(getCurrentNeuron().getId())){
+            updateCurrentNeuron();
+        }
 
         anchorAddedSignal.emit(newAnnotation);
 
-        // carefully refresh *again* (I really need to fix the underlying issue here...)
-        modelMgr.invalidateCache(modelMgr.getEntityById(neuron.getId()), true);
-        neuron = new TmNeuron(modelMgr.getEntityById(neuron.getId()));
         annotation1 = neuron.getGeoAnnotationMap().get(annotation1.getId());
         anchorReparentedSignal.emit(annotation1);
-
     }
-
-    public void loadWorkspace(TmWorkspace workspace) {
-        if (workspace != null) {
-            currentWorkspace = workspace;
-        } else {
-            currentWorkspace = null;
-        }
-        workspaceLoadedSignal.emit(workspace);
-
-        // clear current neuron
-        setCurrentNeuron(null);
-        neuronSelectedSignal.emit(null);
-
-    }
-
 }
