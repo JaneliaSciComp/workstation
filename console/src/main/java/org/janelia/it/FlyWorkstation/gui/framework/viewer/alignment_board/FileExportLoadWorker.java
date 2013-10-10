@@ -143,7 +143,7 @@ public class FileExportLoadWorker extends SimpleWorker implements VolumeLoader {
 
         }
 
-        logger.info("Ending load thread.");
+        logger.debug("Ending load thread.");
     }
 
    @Override

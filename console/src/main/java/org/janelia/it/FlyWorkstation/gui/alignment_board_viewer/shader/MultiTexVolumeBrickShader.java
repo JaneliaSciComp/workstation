@@ -4,7 +4,7 @@
  */
 package org.janelia.it.FlyWorkstation.gui.alignment_board_viewer.shader;
 
-import org.janelia.it.FlyWorkstation.gui.viewer3d.Mip3d;
+import org.janelia.it.FlyWorkstation.gui.viewer3d.VolumeModel;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.shader.AbstractShader;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.texture.TextureMediator;
 import org.janelia.it.FlyWorkstation.gui.alignment_board_viewer.volume_export.CropCoordSet;
@@ -26,7 +26,7 @@ public class MultiTexVolumeBrickShader extends AbstractShader {
 
     private boolean volumeMaskApplied = false;
     private float gammaAdjustment = 1.0f;
-    private float cropOutLevel = Mip3d.DEFAULT_CROPOUT;
+    private float cropOutLevel = VolumeModel.DEFAULT_CROPOUT;
     private CropCoordSet cropCoordSet = CropCoordSet.getDefaultCropCoordSet();
 
     @Override

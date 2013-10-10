@@ -15,7 +15,6 @@ import java.awt.event.MouseEvent;
 import java.awt.event.MouseWheelEvent;
 
 public class Mip3d extends BaseGLViewer implements ActionListener {
-    public static final float DEFAULT_CROPOUT = 0.05f;
 
     private static final long serialVersionUID = 1L;
 	private MipRenderer renderer = new MipRenderer();

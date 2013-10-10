@@ -56,7 +56,7 @@ public class RenderablesLoadWorker extends SimpleWorker implements VolumeLoader 
             AlignmentBoardSettings settings,
             MultiMaskTracker multiMaskTracker
     ) {
-        logger = LoggerFactory.getLogger(SimpleWorker.class);
+        logger = LoggerFactory.getLogger(RenderablesLoadWorker.class);
         this.dataSource = dataSource;
         this.renderMapping = renderMapping;
         this.alignmentBoardSettings = settings;
@@ -236,7 +236,7 @@ public class RenderablesLoadWorker extends SimpleWorker implements VolumeLoader 
             renderChange(renderableDatas);
         }
 
-        logger.info("Ending load thread.");
+        logger.debug("Ending load thread.");
     }
 
     @Override
@@ -349,8 +349,8 @@ public class RenderablesLoadWorker extends SimpleWorker implements VolumeLoader 
                 );
 
                 // 1.5Gb in Kb increments
-                logger.info( "ABV seeing free memory estimate of {}.", gpuInfo.getFreeTexMem() );
-                logger.info( "ABV seeting highest supported version of {}.", gpuInfo.getHighestGlslVersion() );
+                logger.debug( "ABV seeing free memory estimate of {}.", gpuInfo.getFreeTexMem() );
+                logger.debug( "ABV seeing highest supported version of {}.", gpuInfo.getHighestGlslVersion() );
 
                 if ( gpuInfo.getFreeTexMem() > LEAST_FULLSIZE_MEM ) {
                     alignmentBoardSettings.setDownSampleGuess(1.0);
@@ -382,8 +382,6 @@ public class RenderablesLoadWorker extends SimpleWorker implements VolumeLoader 
             ex.printStackTrace();
             SessionMgr.getSessionMgr().handleException( ex );
         }
-
-        //this.remove( feedbackPanel );
 
         //todo find some way to return this and avoid re-processing.
         //cachedDownSampleGuess = alignmentBoardSettings.getDownSampleGuess();

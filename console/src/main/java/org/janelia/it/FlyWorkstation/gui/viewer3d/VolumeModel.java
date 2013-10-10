@@ -21,10 +21,11 @@ public class VolumeModel {
     public static final float DEFAULT_GAMMA_ADJUSTMENT = 1.0f;
     public static final Vec3 DEFAULT_FOCUS_IN_GROUND = new Vec3(0, 0, 0);
     public static final float[] DEFAULT_COLOR_MASK = {1.0f, 1.0f, 1.0f};
+    public static final float DEFAULT_CROPOUT = 0.05f;
 
     private CropCoordSet cropCoordSet = CropCoordSet.getDefaultCropCoordSet();
     private float gammaAdjustment = DEFAULT_GAMMA_ADJUSTMENT;
-    private float cropOutLevel = Mip3d.DEFAULT_CROPOUT;
+    private float cropOutLevel = DEFAULT_CROPOUT;
     private Camera3d camera3d;
     private Vec3 focusInGround = DEFAULT_FOCUS_IN_GROUND;
     private float[] colorMask = DEFAULT_COLOR_MASK;
@@ -37,7 +38,7 @@ public class VolumeModel {
     public void resetToDefaults() {
         cropCoordSet = CropCoordSet.getDefaultCropCoordSet();
         gammaAdjustment = DEFAULT_GAMMA_ADJUSTMENT;
-        cropOutLevel = Mip3d.DEFAULT_CROPOUT;
+        cropOutLevel = DEFAULT_CROPOUT;
         focusInGround = DEFAULT_FOCUS_IN_GROUND;
         colorMask = DEFAULT_COLOR_MASK;
     }

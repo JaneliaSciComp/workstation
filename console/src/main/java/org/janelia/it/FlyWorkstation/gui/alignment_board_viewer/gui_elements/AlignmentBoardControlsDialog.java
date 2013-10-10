@@ -150,6 +150,7 @@ public class AlignmentBoardControlsDialog extends JDialog {
         if ( visible ) {
             updateControlsFromSettings();
             updateCurrentSelectionFromSettings();
+            updateCropOutLevelFromVolumeModel();
         }
         super.setVisible(visible);
     }
@@ -306,6 +307,17 @@ public class AlignmentBoardControlsDialog extends JDialog {
             zSlider.setValue(Math.round(denormalizedCoords[4]));
             zSlider.setUpperValue(Math.round(denormalizedCoords[5]));
         }
+    }
+
+    private void updateCropOutLevelFromVolumeModel() {
+        // Cropout is either dim or dark.  The setting is a float, but varying the level is not being exploited at
+        // this time; hence the default is dim, and if the default is not in use, then the non-default of dark is used.
+        boolean isCropBlackout = false;
+        float cropOutLevel = volumeModel.getCropOutLevel();
+        if ( cropOutLevel != VolumeModel.DEFAULT_CROPOUT ) {
+            isCropBlackout = true;
+        }
+        blackoutCheckbox.setSelected( isCropBlackout );
     }
 
     /** As soon as the ranges are known (set), listeners, and initial ranges may be set on volume selection. */
