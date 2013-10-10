@@ -85,6 +85,7 @@ float computeIntensity( vec4 inputColor, float pos, float posInterp )
             float byteInx = pos / 2.0;
             float byteInxFloor = floor( pos / 2.0 );
             float byteUsed = inputColor[ int( byteInxFloor ) ];
+            byteUsed *= 256.0;
             if ( byteInxFloor == byteInx )
             {   // Bottom nibble.
                 for (int i = 0; i < 4; i++)
@@ -100,7 +101,7 @@ float computeIntensity( vec4 inputColor, float pos, float posInterp )
             }
 
             // Now, must re-expand the value found above, to cover the 8-bit range.
-            rtnVal = rtnVal * 16.0;
+            rtnVal = rtnVal * 16.0 / 256.0; // Re-normalize the output.
         }
     }
 
