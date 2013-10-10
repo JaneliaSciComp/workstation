@@ -23,7 +23,7 @@ import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.FlyWorkstation.gui.framework.viewer.alignment_board.AlignmentBoardItemChangeEvent.ChangeType;
 import org.janelia.it.FlyWorkstation.gui.util.ColorSwatch;
 import org.janelia.it.FlyWorkstation.gui.util.Icons;
-import org.janelia.it.FlyWorkstation.model.domain.AlignmentSpace;
+import org.janelia.it.FlyWorkstation.model.domain.AlignmentContext;
 import org.janelia.it.FlyWorkstation.model.domain.CompartmentSet;
 import org.janelia.it.FlyWorkstation.model.domain.EntityWrapper;
 import org.janelia.it.FlyWorkstation.model.entity.RootedEntity;
@@ -307,13 +307,18 @@ public class LayersPanel extends JPanel implements Refreshable, ActivatableView 
                 }
 
                 if ( ! hasCompartmentSet ) {
-                    AlignmentSpace targetSpace = new AlignmentSpace( abContext.getAlignmentContext() );
+                    AlignmentContext targetSpace = abContext.getAlignmentContext();
                     List<Entity> compartmentSets =
                             ModelMgr.getModelMgr().getEntitiesByTypeName(EntityConstants.TYPE_COMPARTMENT_SET);
                     if ( compartmentSets != null  &&  compartmentSets.size() > 0 ) {
 
                         for(Entity compartmentSetEntity : compartmentSets) {
-                            AlignmentSpace compartmentSetSpace = new AlignmentSpace( compartmentSetEntity );
+                            AlignmentContext compartmentSetSpace = new AlignmentContext(
+                                    compartmentSetEntity.getValueByAttributeName( EntityConstants.ATTRIBUTE_ALIGNMENT_SPACE ),
+                                    compartmentSetEntity.getValueByAttributeName( EntityConstants.ATTRIBUTE_OPTICAL_RESOLUTION ),
+                                    compartmentSetEntity.getValueByAttributeName( EntityConstants.ATTRIBUTE_PIXEL_RESOLUTION )
+                            );
+
                             if ( targetSpace.equals( compartmentSetSpace ) ) {
                                 CompartmentSet compartmentSet = new CompartmentSet( new RootedEntity( compartmentSetEntity ) );
                                 compartmentSet.loadContextualizedChildren( context.getAlignmentContext() );

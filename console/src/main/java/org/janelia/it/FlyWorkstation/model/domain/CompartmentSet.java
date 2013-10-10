@@ -54,14 +54,11 @@ public class CompartmentSet extends AlignedEntityWrapper implements Viewable2d, 
     }
 
     @Override
-    public void loadContextualizedChildren(AlignmentContext alignmentContext) throws Exception {
+    public void loadContextualizedChildren(AlignmentContext targetSpace) throws Exception {
 
         log.debug("Loading contextualized children for compartment set '{}' (id={})", getName(), getId());
 
         initChildren();
-        ModelMgr.getModelMgr().loadLazyEntity(getInternalEntity(), false);
-        AlignmentSpace targetSpace = new AlignmentSpace( alignmentContext );
-
         this.compartmentSet = Collections.EMPTY_LIST;
 
         List<Entity> compartmentSets = ModelMgr.getModelMgr().getEntitiesByTypeName(EntityConstants.TYPE_COMPARTMENT_SET);
@@ -70,7 +67,12 @@ public class CompartmentSet extends AlignedEntityWrapper implements Viewable2d, 
             log.debug("Checking compartment set '{}', (id={})", compartmentSetEntity.getName(), compartmentSetEntity.getId());
             ModelMgr.getModelMgr().loadLazyEntity( compartmentSetEntity, false );
 
-            AlignmentSpace compartmentSetSpace = new AlignmentSpace( compartmentSetEntity );
+            AlignmentContext compartmentSetSpace = new AlignmentContext(
+                    compartmentSetEntity.getValueByAttributeName( EntityConstants.ATTRIBUTE_ALIGNMENT_SPACE ),
+                    compartmentSetEntity.getValueByAttributeName( EntityConstants.ATTRIBUTE_OPTICAL_RESOLUTION ),
+                    compartmentSetEntity.getValueByAttributeName( EntityConstants.ATTRIBUTE_PIXEL_RESOLUTION )
+            );
+
 
             if ( targetSpace.equals( compartmentSetSpace ) ) {
                 // Found the right one.

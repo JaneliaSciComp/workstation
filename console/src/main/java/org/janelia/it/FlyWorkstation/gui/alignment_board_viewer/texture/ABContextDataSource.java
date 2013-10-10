@@ -89,14 +89,17 @@ public class ABContextDataSource implements RenderableDataSourceI {
 
                 rtnVal.add( containerRenderable );
 
-                AlignmentSpace targetAlignmentSpace = new AlignmentSpace( context.getAlignmentContext() );
+                AlignmentContext targetAlignmentSpace = context.getAlignmentContext();
 
                 Collection<AlignedItem> childItems = alignedItem.getAlignedItems();
                 if ( childItems != null ) {
                     for ( AlignedItem item: childItems ) {
                         if ( item.getItemWrapper() instanceof Compartment ) {
-                            Entity compartmentSetEntity = item.getInternalEntity();
-                            AlignmentSpace compartmentAlignmentSpace = new AlignmentSpace( internalEntity );
+                            AlignmentContext compartmentAlignmentSpace = new AlignmentContext(
+                                    internalEntity.getValueByAttributeName( EntityConstants.ATTRIBUTE_ALIGNMENT_SPACE ),
+                                    internalEntity.getValueByAttributeName( EntityConstants.ATTRIBUTE_OPTICAL_RESOLUTION ),
+                                    internalEntity.getValueByAttributeName( EntityConstants.ATTRIBUTE_PIXEL_RESOLUTION )
+                            );
                             if ( targetAlignmentSpace.equals( compartmentAlignmentSpace ) ) {
                                 liveFileCount += getRenderableData(rtnVal, nextTranslatedNum++, true, item);
                             }

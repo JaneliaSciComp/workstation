@@ -10,8 +10,11 @@ public class AlignmentContext {
     private String alignmentSpaceName;
     private String opticalResolution;
     private String pixelResolution;
-    
+
     public AlignmentContext(String alignmentSpaceName, String opticalResolution, String pixelResolution) {
+        if ( alignmentSpaceName == null || opticalResolution == null || pixelResolution == null ) {
+            throw new IllegalArgumentException( "No nulls in constructor." );
+        }
         this.alignmentSpaceName = alignmentSpaceName;
         this.opticalResolution = opticalResolution;
         this.pixelResolution = pixelResolution;
@@ -38,5 +41,25 @@ public class AlignmentContext {
     @Override
     public String toString() {
         return getAlignmentSpaceName()+" "+getOpticalResolution()+" "+getPixelResolution();
+    }
+    @Override
+    public boolean equals( Object other ) {
+        boolean rtnVal;
+        if ( other == null || ! ( other instanceof AlignmentContext ) ) {
+            rtnVal = false;
+        }
+        else {
+            AlignmentContext otherAlignmentSpace = (AlignmentContext)other;
+            rtnVal = otherAlignmentSpace.getAlignmentSpaceName().equals( getAlignmentSpaceName() ) &&
+                    otherAlignmentSpace.getPixelResolution().equals( getPixelResolution() ) &&
+                    otherAlignmentSpace.getOpticalResolution().equals( getOpticalResolution() );
+        }
+
+        return rtnVal;
+    }
+
+    @Override
+    public int hashCode() {
+        return toString().hashCode();
     }
 }
