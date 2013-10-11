@@ -15,13 +15,14 @@ import org.janelia.it.FlyWorkstation.gui.framework.actions.OpenWithDefaultAppAct
 import org.janelia.it.FlyWorkstation.gui.framework.console.Browser;
 import org.janelia.it.FlyWorkstation.gui.framework.context_menu.AbstractContextMenu;
 import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr;
-import org.janelia.it.FlyWorkstation.shared.filestore.PathTranslator;
 import org.janelia.it.FlyWorkstation.shared.util.Utils;
 import org.janelia.it.FlyWorkstation.shared.workers.SimpleWorker;
 import org.janelia.it.jacs.model.entity.Entity;
 import org.janelia.it.jacs.model.user_data.Subject;
 import org.janelia.it.jacs.shared.utils.EntityUtils;
 import org.janelia.it.jacs.shared.utils.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Context pop up menu for entities in the data viewer.
@@ -30,6 +31,8 @@ import org.janelia.it.jacs.shared.utils.StringUtils;
  */
 public class DataviewContextMenu extends AbstractContextMenu<Entity> {
 
+    private static final Logger log = LoggerFactory.getLogger(DataviewContextMenu.class);
+    
 	protected static final Browser browser = SessionMgr.getBrowser();
 
 	public DataviewContextMenu(List<Entity> selectedEntities, String label) {
@@ -42,7 +45,6 @@ public class DataviewContextMenu extends AbstractContextMenu<Entity> {
 		add(getTitleItem("Entity '"+entity.getName()+"'"));
         add(getDetailsItem());
         add(getRenameItem());
-//        add(getDeleteItem());
         add(getDeleteTreeItem());
         add(getUnlinkAndDeleteTreeItem());
         setNextAddRequiresSeparator(true);
@@ -52,8 +54,8 @@ public class DataviewContextMenu extends AbstractContextMenu<Entity> {
 	
 	@Override
 	protected void addMultipleSelectionItems() {
-//        add(getDeleteItem());
         add(getDeleteTreeItem());
+        add(getUnlinkAndDeleteTreeItem());
 	}
 	
 	protected JMenuItem getDetailsItem() {
@@ -91,52 +93,6 @@ public class DataviewContextMenu extends AbstractContextMenu<Entity> {
         return renameItem;
 	}
 
-//	private JMenuItem getDeleteItem() {
-//
-//		String name = isMultipleSelection() ? "Delete entities" : "Delete entity";
-//		
-//		JMenuItem deleteEntityMenuItem = new JMenuItem("  "+name);
-//        deleteEntityMenuItem.addActionListener(new ActionListener() {
-//			
-//			@Override
-//			public void actionPerformed(ActionEvent e) {
-//	            int deleteConfirmation = confirm("Are you sure you want to delete " + getSelectedElements().size() + 
-//	            		" entities? This can potentially orphan their children, if they have any.");
-//	            if (deleteConfirmation != 0) return;
-//
-//	            final List<Entity> toDelete = new ArrayList<Entity>(getSelectedElements());
-//
-//	            Utils.setWaitingCursor(DataviewApp.getMainFrame());
-//	            
-//	            SimpleWorker loadTask = new SimpleWorker() {
-//
-//	                @Override
-//	                protected void doStuff() throws Exception {
-//    		            // Update database
-//    		            for (Entity entity : toDelete) {
-//    		                ModelMgr.getModelMgr().deleteEntityById(entity.getId());
-//    		            }
-//	                }
-//
-//	                @Override
-//	                protected void hadSuccess() {
-//	                	Utils.setDefaultCursor(DataviewApp.getMainFrame());
-//	    	            //reshow();
-//	                }
-//
-//	                @Override
-//	                protected void hadError(Throwable error) {
-//	                	SessionMgr.getSessionMgr().handleException(error);
-//	                }
-//
-//	            };
-//
-//	            loadTask.execute();
-//			}
-//		});
-//        return deleteEntityMenuItem;
-//	}
-
 	private JMenuItem getDeleteTreeItem() {
 
 		String name = isMultipleSelection() ? "Delete entity trees" : "Delete entity tree";
@@ -151,56 +107,7 @@ public class DataviewContextMenu extends AbstractContextMenu<Entity> {
 	                return;
 	            }
 
-	            final List<Entity> toDelete = new ArrayList<Entity>(getSelectedElements());
-
-            	boolean su = false;
-	            for (Entity entity : toDelete) {
-                	if (SessionMgr.getSubjectKey()==null || !SessionMgr.getSubjectKey().equals(entity.getOwnerKey())) {
-        	            int overrideConfirmation = confirm("Override owner "+entity.getOwnerKey()+" to delete "+entity.getName()+"?");
-        	            if (overrideConfirmation != 0) {
-        	                continue;
-        	            }
-        	            su = true;
-        	            break;
-                	}
-	            }
-
-                final boolean needSu = su;
-	            
-	            Utils.setWaitingCursor(DataviewApp.getMainFrame());
-	            
-	            SimpleWorker loadTask = new SimpleWorker() {
-
-	                @Override
-	                protected void doStuff() throws Exception {
-	    	            // Update database
-                        Subject realSubject = SessionMgr.getSessionMgr().getSubject();
-	    	            for (Entity entity : toDelete) {
-	                        if (needSu) {
-	                            SessionMgr.getSessionMgr().setSubject(ModelMgr.getModelMgr().getSubject(entity.getOwnerKey()));
-	                        }
-	    	            	System.out.println("Deleting "+entity.getId());
-    	                    ModelMgr.getModelMgr().deleteEntityTree(entity.getId());
-	    	            }
-                        if (needSu) {
-                            SessionMgr.getSessionMgr().setSubject(realSubject);
-                        }
-	                }
-
-	                @Override
-	                protected void hadSuccess() {
-	                	Utils.setDefaultCursor(DataviewApp.getMainFrame());
-//	    	            reshow();
-	                }
-
-	                @Override
-	                protected void hadError(Throwable error) {
-	                    SessionMgr.getSessionMgr().handleException(error);
-	                }
-
-	            };
-
-	            loadTask.execute();
+	            deleteSelectedTrees(false);
 			}
 		});
         
@@ -220,42 +127,84 @@ public class DataviewContextMenu extends AbstractContextMenu<Entity> {
 	            if (deleteConfirmation != 0) {
 	                return;
 	            }
+	            
+	            deleteSelectedTrees(true);
+			}
+		});
+        
+        return deleteTreeMenuItem;
+	}
+	
+	private void deleteSelectedTrees(final boolean unlink) {
 
-	            final List<Entity> toDelete = new ArrayList<Entity>(getSelectedElements());
-
-            	boolean su = false;
-	            for (Entity entity : toDelete) {
-                	if (SessionMgr.getSubjectKey()==null || !SessionMgr.getSubjectKey().equals(entity.getOwnerKey())) {
-        	            int overrideConfirmation = confirm("Override owner "+entity.getOwnerKey()+" to delete "+entity.getName()+"?");
-        	            if (overrideConfirmation != 0) {
-        	                continue;
-        	            }
-        	            su = true;
-        	            break;
-                	}
+        final List<Entity> toDelete = new ArrayList<Entity>();
+        final List<Boolean> needSuArray = new ArrayList<Boolean>();
+        
+        for (Entity entity : getSelectedElements()) {
+        	if (SessionMgr.getSubjectKey()==null || !SessionMgr.getSubjectKey().equals(entity.getOwnerKey())) {
+	            int overrideConfirmation = confirm("Override owner "+entity.getOwnerKey()+" to delete "+entity.getName()+"?");
+	            if (overrideConfirmation == 0) {
+	            	needSuArray.add(true);
+	            	toDelete.add(entity);
 	            }
-	            
-	            final boolean needSu = su;
-	            
-	            Utils.setWaitingCursor(DataviewApp.getMainFrame());
-	            
-	            SimpleWorker loadTask = new SimpleWorker() {
+        	}
+        	else {
+        		needSuArray.add(false);
+        		toDelete.add(entity);
+        	}
+        }
+        
+        Utils.setWaitingCursor(DataviewApp.getMainFrame());
+        
+        SimpleWorker deleteTask = new SimpleWorker() {
+
+        	private List<Long> numAnnotated = new ArrayList<Long>();
+        	private List<Entity> toDeleteForReal = new ArrayList<Entity>();
+            final List<Boolean> needSuForReal = new ArrayList<Boolean>();
+        	
+            @Override
+            protected void doStuff() throws Exception {
+	            // Get number of annotations for each deletion candidate
+	            for (Entity entity : toDelete) {
+                    numAnnotated.add(ModelMgr.getModelMgr().getNumDescendantsAnnotated(entity.getId()));
+	            }
+            }
+
+            @Override
+            protected void hadSuccess() {
+            	
+            	for(int i=0; i<toDelete.size(); i++) {
+            		Entity entity = toDelete.get(i);
+            		Long annots = numAnnotated.get(i);
+                	Boolean needSu = needSuArray.get(i);
+            		log.info("Entity {} has {} descendant annotations", entity, annots);
+            		if (annots!=null && annots>0) {
+        	            int overrideConfirmation = confirm(entity.getName()+" has annotated descandants. Delete anyway?");
+        	            if (overrideConfirmation == 0) {
+        	                toDeleteForReal.add(entity);
+        	                needSuForReal.add(needSu);
+        	            }
+            		}
+            		else {
+            			toDeleteForReal.add(entity);
+            			needSuForReal.add(needSu);
+            		}
+            	}
+            	
+	            SimpleWorker realDeleteTask = new SimpleWorker() {
 
 	                @Override
 	                protected void doStuff() throws Exception {
 	    	            // Update database
 	                    Subject realSubject = SessionMgr.getSessionMgr().getSubject();
-	    	            for (Entity entity : toDelete) {
+	                    for(int i=0; i<toDeleteForReal.size(); i++) {
+	                    	Entity entity = toDeleteForReal.get(i);
+	                    	Boolean needSu = needSuForReal.get(i);
 	                        if (needSu) {
 	                            SessionMgr.getSessionMgr().setSubject(ModelMgr.getModelMgr().getSubject(entity.getOwnerKey()));
 	                        }
-	    	            	long numAnnotated = ModelMgr.getModelMgr().getNumDescendantsAnnotated(entity.getId());
-	    	            	if (numAnnotated>0) {
-	    	            		throw new Exception("Cannnot delete entity tree because "+numAnnotated+" descendants are annotated");
-		                	}
-		                	
 	    	            	System.out.println("Deleting "+entity.getId());
-    	                    ModelMgr.getModelMgr().deleteEntityTree(entity.getId(), true);
+    	                    ModelMgr.getModelMgr().deleteEntityTree(entity.getId(), unlink);
     	                    if (needSu) {
                                 SessionMgr.getSessionMgr().setSubject(realSubject);
                             }
@@ -273,11 +222,16 @@ public class DataviewContextMenu extends AbstractContextMenu<Entity> {
 	                }
 	            };
 
-	            loadTask.execute();
-			}
-		});
-        
-        return deleteTreeMenuItem;
+	            realDeleteTask.execute();  
+            }
+
+            @Override
+            protected void hadError(Throwable error) {
+                SessionMgr.getSessionMgr().handleException(error);
+            }
+        };
+
+        deleteTask.execute();
 	}
 	
 	protected JMenuItem getOpenInFinderItem() {
