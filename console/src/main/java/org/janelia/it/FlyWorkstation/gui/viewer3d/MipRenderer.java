@@ -175,10 +175,26 @@ class MipRenderer
 			return;
 		if (zoomRatio == 1.0)
 			return;
+        double zoomMin = Math.log(getMinZoom()) / Math.log(2.0);
+        double zoomMax = Math.log(getMaxZoom()) / Math.log(2.0);
+        //if ( zoomRatio > zoomMax ) {
+        //    return;
+        //}
+        //if ( zoomRatio < zoomMin ) {
+        //    return;
+        //}
+
         double cameraFocusDistance = volumeModel.getCamera3d().getFocus().getZ();
 		cameraFocusDistance /= zoomRatio;
         volumeModel.getCamera3d().setFocus( 0.0, 0.0, cameraFocusDistance );
-	}
+
+        double relativeZoom = zoomRatio / 1000.0;
+        double zoom = zoomMin + relativeZoom * (zoomMax - zoomMin);
+        // log scale
+        zoom = Math.pow(2.0, zoom);
+        getVolumeModel().getCamera3d().setPixelsPerSceneUnit(zoom);
+
+    }
 	
 	public void zoomPixels(Point newPoint, Point oldPoint) {
 		// Are we dragging away from the center, or toward the center?
@@ -192,7 +208,7 @@ class MipRenderer
 		double denom = Math.max(20.0, dC1);
 		double zoomRatio = 1.0 + dC/denom;
 		zoom(zoomRatio);
-	}
+    }
 
     public VolumeModel getVolumeModel() {
         return volumeModel;
@@ -248,4 +264,37 @@ class MipRenderer
     public void setResetFirstRedraw(boolean resetFirstRedraw) {
         this.resetFirstRedraw = resetFirstRedraw;
     }
+
+    private double getMaxZoom() {
+        VolumeModel model = getVolumeModel();
+        double maxRes = Math.min(
+            model.getVoxelMicrometers()[0],
+            Math.min(
+                model.getVoxelMicrometers()[1],
+                model.getVoxelMicrometers()[2]
+            )
+        );
+        return 20.0 / maxRes; // 300 pixels per voxel is probably zoomed enough...
+    }
+
+    private double getMinZoom() {
+        double result = getMaxZoom();
+        BoundingBox3d box = getBoundingBox();
+        Vec3 volSize = new Vec3(box.getWidth(), box.getHeight(), box.getDepth());
+
+        int w = getVolumeModel().getVoxelDimensions()[ 0 ];
+        int h = getVolumeModel().getVoxelDimensions()[ 1 ];
+        if (w > 0  &&  h > 0 ) {
+            // Fit two of the whole volume on the screen
+            // Rotate volume to match viewer orientation
+            Vec3 rotSize = getVolumeModel().getCamera3d().getRotation().inverse().times(volSize);
+            double zx = 0.5 * w / Math.abs(rotSize.x());
+            double zy = 0.5 * h / Math.abs(rotSize.y());
+            double z = Math.min(zx, zy);
+            result = Math.min(z, result);
+        }
+        return result;
+    }
+
+
 }

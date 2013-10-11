@@ -29,6 +29,8 @@ public class VolumeModel {
     private Camera3d camera3d;
     private Vec3 focusInGround = DEFAULT_FOCUS_IN_GROUND;
     private float[] colorMask = DEFAULT_COLOR_MASK;
+    private float[] voxelMicrometers;
+    private int[] voxelDimensions;
 
     private Collection<UpdateListener> listeners = new ArrayList<UpdateListener>();
 
@@ -127,6 +129,22 @@ public class VolumeModel {
 
     public void setFocusInGround(Vec3 focusInGround) {
         this.focusInGround = focusInGround;
+    }
+
+    public float[] getVoxelMicrometers() {
+        return voxelMicrometers;
+    }
+
+    public void setVoxelMicrometers(float[] voxelMicrometers) {
+        this.voxelMicrometers = voxelMicrometers;
+    }
+
+    public int[] getVoxelDimensions() {
+        return voxelDimensions;
+    }
+
+    public void setVoxelDimensions(int[] voxelDimensions) {
+        this.voxelDimensions = voxelDimensions;
     }
 
     public static interface UpdateListener {

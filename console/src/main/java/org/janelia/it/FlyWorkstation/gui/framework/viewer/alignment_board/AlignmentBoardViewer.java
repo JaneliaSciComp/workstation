@@ -537,6 +537,15 @@ public class AlignmentBoardViewer extends Viewer implements AlignmentBoardContro
 
                     mip3d.refresh();
 
+                    // Next, setup the volume model with some required data.
+                    VolumeModel volumeModel = mip3d.getVolumeModel();
+                    volumeModel.setVoxelMicrometers(
+                            parseResolution( context.getAlignmentContext().getOpticalResolution() )
+                    );
+                    volumeModel.setVoxelDimensions(
+                            parseDimensions( context.getAlignmentContext().getPixelResolution() )
+                    );
+
                     GpuSampler sampler = getGpuSampler();
                     multiMaskTracker.clear(); // New creation of board data implies discard old mask mappings.
 
@@ -723,6 +732,42 @@ public class AlignmentBoardViewer extends Viewer implements AlignmentBoardContro
             SessionMgr.getSessionMgr().handleException( th );
         }
 
+    }
+
+    private float[] parseResolution( String resolutionString ) {
+        float[] rtnVal = new float[ 3 ];
+        String[] resolutionStrs = resolutionString.split( "x" );
+        if ( resolutionStrs.length == rtnVal.length ) {
+            for ( int i = 0; i < rtnVal.length; i++ ) {
+                try {
+                    rtnVal[ i ] = Float.parseFloat( resolutionStrs[ i ] );
+                } catch ( NumberFormatException ex ) {
+                    logger.error( "Failed to parse {} member {}.", resolutionString, resolutionStrs[ i ] );
+                }
+            }
+        }
+        else {
+            logger.error( "Failed to parse {}.", resolutionString );
+        }
+        return rtnVal;
+    }
+
+    private int[] parseDimensions( String dimensionsString ) {
+        int[] rtnVal = new int[ 3 ];
+        String[] dimensionStrs = dimensionsString.split( "x" );
+        if ( dimensionStrs.length == rtnVal.length ) {
+            for ( int i = 0; i < rtnVal.length; i++ ) {
+                try {
+                    rtnVal[ i ] = Integer.parseInt(dimensionStrs[i]);
+                } catch ( NumberFormatException ex ) {
+                    logger.error( "Failed to parse {} member {}.", dimensionsString, dimensionStrs[ i ] );
+                }
+            }
+        }
+        else {
+            logger.error( "Failed to parse {}.", dimensionsString );
+        }
+        return rtnVal;
     }
 
     //------------------------------Inner Classes
