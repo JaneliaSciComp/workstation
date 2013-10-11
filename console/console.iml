@@ -13,8 +13,8 @@
     </content>
     <orderEntry type="inheritedJdk" />
     <orderEntry type="sourceFolder" forTests="false" />
-    <orderEntry type="module" module-name="Model" />
-    <orderEntry type="module-library">
+    <orderEntry type="module" module-name="Model" exported="" />
+    <orderEntry type="module-library" exported="">
       <library>
         <CLASSES>
           <root url="jar://$MODULE_DIR$/lib/owlapi-bin.jar!/" />
@@ -23,7 +23,7 @@
         <SOURCES />
       </library>
     </orderEntry>
-    <orderEntry type="module-library">
+    <orderEntry type="module-library" exported="">
       <library>
         <CLASSES>
           <root url="jar://$MODULE_DIR$/../common/JBoss-Server-4.2.3.GA/jbossall-client.jar!/" />
@@ -32,13 +32,13 @@
         <SOURCES />
       </library>
     </orderEntry>
-    <orderEntry type="library" name="JUnit" level="project" />
-    <orderEntry type="library" name="Axis2" level="project" />
-    <orderEntry type="library" name="LOCI" level="project" />
-    <orderEntry type="library" name="Hibernate" level="project" />
-    <orderEntry type="library" name="SAAJ" level="project" />
-    <orderEntry type="module" module-name="Shared" />
-    <orderEntry type="module-library">
+    <orderEntry type="library" exported="" name="JUnit" level="project" />
+    <orderEntry type="library" exported="" name="Axis2" level="project" />
+    <orderEntry type="library" exported="" name="LOCI" level="project" />
+    <orderEntry type="library" exported="" name="Hibernate" level="project" />
+    <orderEntry type="library" exported="" name="SAAJ" level="project" />
+    <orderEntry type="module" module-name="Shared" exported="" />
+    <orderEntry type="module-library" exported="">
       <library>
         <CLASSES>
           <root url="jar://$MODULE_DIR$/lib/jai_codec.jar!/" />
@@ -47,7 +47,7 @@
         <SOURCES />
       </library>
     </orderEntry>
-    <orderEntry type="module-library">
+    <orderEntry type="module-library" exported="">
       <library>
         <CLASSES>
           <root url="jar://$MODULE_DIR$/lib/jai_core.jar!/" />
@@ -56,8 +56,8 @@
         <SOURCES />
       </library>
     </orderEntry>
-    <orderEntry type="library" name="Solrj" level="project" />
-    <orderEntry type="module-library">
+    <orderEntry type="library" exported="" name="Solrj" level="project" />
+    <orderEntry type="module-library" exported="">
       <library>
         <CLASSES>
           <root url="jar://$MODULE_DIR$/lib/jdatepicker-1.3.2.jar!/" />
@@ -66,8 +66,8 @@
         <SOURCES />
       </library>
     </orderEntry>
-    <orderEntry type="library" name="Apache Commons" level="project" />
-    <orderEntry type="module-library">
+    <orderEntry type="library" exported="" name="Apache Commons" level="project" />
+    <orderEntry type="module-library" exported="">
       <library>
         <CLASSES>
           <root url="jar://$MODULE_DIR$/lib/forms-1.2.1.jar!/" />
@@ -76,7 +76,7 @@
         <SOURCES />
       </library>
     </orderEntry>
-    <orderEntry type="module-library">
+    <orderEntry type="module-library" exported="">
       <library>
         <CLASSES>
           <root url="jar://$MODULE_DIR$/lib/mac_widgets-0.9.5.jar!/" />
@@ -85,7 +85,7 @@
         <SOURCES />
       </library>
     </orderEntry>
-    <orderEntry type="module-library">
+    <orderEntry type="module-library" exported="">
       <library>
         <CLASSES>
           <root url="jar://$MODULE_DIR$/lib/vlcj-1.3.0-b1.jar!/" />
@@ -94,7 +94,7 @@
         <SOURCES />
       </library>
     </orderEntry>
-    <orderEntry type="module-library">
+    <orderEntry type="module-library" exported="">
       <library>
         <CLASSES>
           <root url="jar://$MODULE_DIR$/lib/platform.jar!/" />
@@ -103,7 +103,7 @@
         <SOURCES />
       </library>
     </orderEntry>
-    <orderEntry type="module-library">
+    <orderEntry type="module-library" exported="">
       <library>
         <CLASSES>
           <root url="jar://$MODULE_DIR$/lib/jna.jar!/" />
@@ -112,7 +112,7 @@
         <SOURCES />
       </library>
     </orderEntry>
-    <orderEntry type="module-library">
+    <orderEntry type="module-library" exported="">
       <library>
         <CLASSES>
           <root url="jar://$MODULE_DIR$/lib/swingx-all-1.6.3.jar!/" />
@@ -121,7 +121,7 @@
         <SOURCES />
       </library>
     </orderEntry>
-    <orderEntry type="module-library">
+    <orderEntry type="module-library" exported="">
       <library>
         <CLASSES>
           <root url="jar://$MODULE_DIR$/lib/synthetica.jar!/" />
@@ -130,7 +130,7 @@
         <SOURCES />
       </library>
     </orderEntry>
-    <orderEntry type="module-library">
+    <orderEntry type="module-library" exported="">
       <library>
         <CLASSES>
           <root url="jar://$MODULE_DIR$/lib/syntheticaBlackEye.jar!/" />
@@ -139,7 +139,7 @@
         <SOURCES />
       </library>
     </orderEntry>
-    <orderEntry type="module-library">
+    <orderEntry type="module-library" exported="">
       <library>
         <CLASSES>
           <root url="file://$MODULE_DIR$/lib/Jogl" />
@@ -149,7 +149,7 @@
         <jarDirectory url="file://$MODULE_DIR$/lib/Jogl" recursive="false" />
       </library>
     </orderEntry>
-    <orderEntry type="module-library">
+    <orderEntry type="module-library" exported="">
       <library>
         <CLASSES>
           <root url="file://$MODULE_DIR$/../common/Xuggler" />
@@ -159,7 +159,7 @@
         <jarDirectory url="file://$MODULE_DIR$/../common/Xuggler" recursive="false" />
       </library>
     </orderEntry>
-    <orderEntry type="module-library">
+    <orderEntry type="module-library" exported="">
       <library>
         <CLASSES>
           <root url="jar://$MODULE_DIR$/lib/miglayout-4.0-swing.jar!/" />
@@ -168,7 +168,7 @@
         <SOURCES />
       </library>
     </orderEntry>
-    <orderEntry type="module-library">
+    <orderEntry type="module-library" exported="">
       <library>
         <CLASSES>
           <root url="jar://$MODULE_DIR$/../common/Guava/guava-13.0.1.jar!/" />
@@ -177,8 +177,8 @@
         <SOURCES />
       </library>
     </orderEntry>
-    <orderEntry type="library" name="Logging" level="project" />
-    <orderEntry type="module-library">
+    <orderEntry type="library" exported="" name="Logging" level="project" />
+    <orderEntry type="module-library" exported="">
       <library>
         <CLASSES>
           <root url="jar://$MODULE_DIR$/lib/jackrabbit-webdav-2.5.2.jar!/" />
@@ -189,7 +189,7 @@
         </SOURCES>
       </library>
     </orderEntry>
-    <orderEntry type="module-library">
+    <orderEntry type="module-library" exported="">
       <library>
         <CLASSES>
           <root url="jar://$MODULE_DIR$/lib/org-netbeans-swing-outline.jar!/" />
@@ -198,9 +198,9 @@
         <SOURCES />
       </library>
     </orderEntry>
-    <orderEntry type="library" name="GWT-Serializable" level="project" />
-    <orderEntry type="library" name="Jetty" level="project" />
-    <orderEntry type="module-library" scope="TEST">
+    <orderEntry type="library" exported="" name="GWT-Serializable" level="project" />
+    <orderEntry type="library" exported="" name="Jetty" level="project" />
+    <orderEntry type="module-library" exported="" scope="TEST">
       <library>
         <CLASSES>
           <root url="jar://$APPLICATION_HOME_DIR$/lib/junit-4.10.jar!/" />
@@ -209,10 +209,10 @@
         <SOURCES />
       </library>
     </orderEntry>
-    <orderEntry type="library" name="JKtx" level="project" />
-    <orderEntry type="library" name="LZ4" level="project" />
-    <orderEntry type="library" name="Snappy" level="project" />
-    <orderEntry type="module-library">
+    <orderEntry type="library" exported="" name="JKtx" level="project" />
+    <orderEntry type="library" exported="" name="LZ4" level="project" />
+    <orderEntry type="library" exported="" name="Snappy" level="project" />
+    <orderEntry type="module-library" exported="">
       <library>
         <CLASSES>
           <root url="jar://$MODULE_DIR$/../common/JBoss-Server-4.2.3.GA/javassist.jar!/" />
@@ -221,7 +221,7 @@
         <SOURCES />
       </library>
     </orderEntry>
-    <orderEntry type="module-library">
+    <orderEntry type="module-library" exported="">
       <library>
         <CLASSES>
           <root url="jar://$MODULE_DIR$/../compute/build/jars/compute-client.jar!/" />
@@ -230,7 +230,7 @@
         <SOURCES />
       </library>
     </orderEntry>
-    <orderEntry type="module-library">
+    <orderEntry type="module-library" exported="">
       <library>
         <CLASSES>
           <root url="jar://$MODULE_DIR$/../common/Guava/gson-2.2.2.jar!/" />
@@ -241,8 +241,8 @@
         </SOURCES>
       </library>
     </orderEntry>
-    <orderEntry type="library" scope="TEST" name="Maven: junit:junit:3.8.1" level="project" />
-    <orderEntry type="module-library">
+    <orderEntry type="library" exported="" scope="TEST" name="Maven: junit:junit:3.8.1" level="project" />
+    <orderEntry type="module-library" exported="">
       <library>
         <CLASSES>
           <root url="jar://$MODULE_DIR$/lib/MagicApplet.jar!/" />
@@ -251,7 +251,7 @@
         <SOURCES />
       </library>
     </orderEntry>
-    <orderEntry type="module-library">
+    <orderEntry type="module-library" exported="">
       <library>
         <CLASSES>
           <root url="file://$MODULE_DIR$/../common/Simple-Neurite-Tracer" />
