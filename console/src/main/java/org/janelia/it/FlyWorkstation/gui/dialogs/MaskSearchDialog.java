@@ -9,6 +9,7 @@ import org.janelia.it.FlyWorkstation.api.entity_model.management.EntitySelection
 import org.janelia.it.FlyWorkstation.api.entity_model.management.ModelMgr;
 import org.janelia.it.FlyWorkstation.gui.framework.outline.EntityOutline;
 import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr;
+import org.janelia.it.FlyWorkstation.model.entity.RootedEntity;
 import org.janelia.it.FlyWorkstation.shared.util.ConsoleProperties;
 import org.janelia.it.FlyWorkstation.shared.util.Utils;
 import org.janelia.it.FlyWorkstation.shared.workers.SimpleWorker;
@@ -345,7 +346,8 @@ public class MaskSearchDialog extends ModalDialog {
                                     public Void call() throws Exception {
                                         ModelMgr.getModelMgr().getEntitySelectionModel().selectEntity(EntitySelectionModel.CATEGORY_OUTLINE,
                                                 tmpFolderEntity.getId().toString(), true);
-                                        entityOutline.selectEntityByUniqueId(tmpFolderEntity.getId().toString());
+                                        RootedEntity re = new RootedEntity(tmpFolderEntity);
+                                        entityOutline.selectEntityByUniqueId(re.getId());
                                         return null;
                                     }
                                 });
