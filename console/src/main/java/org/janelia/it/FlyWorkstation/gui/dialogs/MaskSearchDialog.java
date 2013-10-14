@@ -5,11 +5,15 @@ import org.janelia.it.FlyWorkstation.api.entity_model.fundtype.TaskRequest;
 import org.janelia.it.FlyWorkstation.api.entity_model.fundtype.TaskRequestState;
 import org.janelia.it.FlyWorkstation.api.entity_model.fundtype.TaskRequestStatus;
 import org.janelia.it.FlyWorkstation.api.entity_model.fundtype.TaskThreadBase;
+import org.janelia.it.FlyWorkstation.api.entity_model.management.EntitySelectionModel;
 import org.janelia.it.FlyWorkstation.api.entity_model.management.ModelMgr;
+import org.janelia.it.FlyWorkstation.gui.framework.outline.EntityOutline;
 import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.FlyWorkstation.shared.util.ConsoleProperties;
 import org.janelia.it.FlyWorkstation.shared.util.Utils;
 import org.janelia.it.FlyWorkstation.shared.workers.SimpleWorker;
+import org.janelia.it.FlyWorkstation.shared.workers.TaskMonitoringWorker;
+import org.janelia.it.jacs.model.entity.Entity;
 import org.janelia.it.jacs.model.tasks.Task;
 import org.janelia.it.jacs.model.tasks.TaskParameter;
 import org.janelia.it.jacs.model.tasks.maskSearch.MaskSearchTask;
@@ -24,6 +28,8 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.concurrent.Callable;
+import java.util.concurrent.CancellationException;
 
 /**
  * Created with IntelliJ IDEA.
@@ -302,16 +308,66 @@ public class MaskSearchDialog extends ModalDialog {
             task.setJobName("Mask Search Task");
             task = ModelMgr.getModelMgr().saveOrUpdateTask(task);
             currentTaskId = task.getObjectId();
+            final File tmpFile = new File(path);
             searchRequest = ModelMgr.getModelMgr().submitJob(process, task);
-            final TaskRequestStatus taskStatus = searchRequest.getTaskRequestStatus();
-            if (searchRequest.getTaskFilter().getTaskFilterStatus().isCompleted()) {
-                taskStatus.setTaskRequestState(TaskRequestStatus.COMPLETE);
-                return;
-            }
-            taskStatus.setPendingTaskRequestAndStateToWaiting(searchRequest);
-            final SearchWatcher searchWatcher = new SearchWatcher(searchRequest);
-            ModelMgr.getModelMgr().getLoaderThreadQueue().addQueue(searchWatcher);
-            waitForLoading(taskStatus);
+            TaskMonitoringWorker taskWorker = new TaskMonitoringWorker(currentTaskId) {
+
+                @Override
+                public String getName() {
+                    return "Mask search for file: "+tmpFile.getName();
+                }
+
+                @Override
+                protected void doStuff() throws Exception {
+
+                    setStatus("Grid execution");
+
+                    // Wait until task is finished
+                    super.doStuff();
+
+                    if (isCancelled()) throw new CancellationException();
+                    setStatus("Done");
+
+                    setProgress(100);
+                }
+
+                @Override
+                public Callable<Void> getSuccessCallback() {
+                    return new Callable<Void>() {
+                        @Override
+                        public Void call() throws Exception {
+                            ArrayList<Entity> tmpFolder = (ArrayList<Entity>)ModelMgr.getModelMgr().getEntitiesByName(folderField.getText().trim());
+                            if (null!=tmpFolder && tmpFolder.size()>0 && null!=tmpFolder.get(0).getId()) {
+                                final Entity tmpFolderEntity = ModelMgr.getModelMgr().getEntityById(tmpFolder.get(0).getId());
+                                final EntityOutline entityOutline = SessionMgr.getSessionMgr().getActiveBrowser().getEntityOutline();
+                                entityOutline.totalRefresh(true, new Callable<Void>() {
+                                    @Override
+                                    public Void call() throws Exception {
+                                        ModelMgr.getModelMgr().getEntitySelectionModel().selectEntity(EntitySelectionModel.CATEGORY_OUTLINE,
+                                                tmpFolderEntity.getId().toString(), true);
+                                        entityOutline.selectEntityByUniqueId(tmpFolderEntity.getId().toString());
+                                        return null;
+                                    }
+                                });
+
+                            }
+                            return null;
+                        }
+                    };
+                }
+            };
+
+            taskWorker.executeWithEvents();
+
+//            final TaskRequestStatus taskStatus = searchRequest.getTaskRequestStatus();
+//            if (searchRequest.getTaskFilter().getTaskFilterStatus().isCompleted()) {
+//                taskStatus.setTaskRequestState(TaskRequestStatus.COMPLETE);
+//                return;
+//            }
+//            taskStatus.setPendingTaskRequestAndStateToWaiting(searchRequest);
+//            final SearchWatcher searchWatcher = new SearchWatcher(searchRequest);
+//            ModelMgr.getModelMgr().getLoaderThreadQueue().addQueue(searchWatcher);
+//            waitForLoading(taskStatus);
         }
         catch (Exception e) {
             SessionMgr.getSessionMgr().handleException(e);
