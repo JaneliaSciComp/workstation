@@ -18,7 +18,8 @@ import org.janelia.it.FlyWorkstation.gui.framework.actions.Action;
 import org.janelia.it.FlyWorkstation.gui.framework.actions.RemoveEntityAction;
 import org.janelia.it.FlyWorkstation.gui.framework.console.Browser;
 import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr;
-import org.janelia.it.FlyWorkstation.gui.framework.viewer.alignment_board.AlignmentBoardItemChangeEvent.ChangeType;
+import org.janelia.it.FlyWorkstation.gui.framework.viewer.alignment_board.events.AlignmentBoardItemChangeEvent;
+import org.janelia.it.FlyWorkstation.gui.framework.viewer.alignment_board.events.AlignmentBoardItemChangeEvent.ChangeType;
 import org.janelia.it.FlyWorkstation.model.entity.RootedEntity;
 import org.janelia.it.FlyWorkstation.model.viewer.AlignedItem;
 import org.janelia.it.FlyWorkstation.model.viewer.AlignmentBoardContext;
@@ -111,30 +112,7 @@ public class LayerContextMenu extends JPopupMenu {
         copyMenuItem.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                
-                Color currColor = alignedItem.getColor();
-                final Color newColor = JColorChooser.showDialog(SessionMgr.getBrowser(), "Choose color", currColor);
-                if (newColor==null) return;
-                
-                SimpleWorker worker = new SimpleWorker() {
-                    @Override
-                    protected void doStuff() throws Exception {
-                        alignedItem.setColor(newColor);
-                    }
-                    
-                    @Override
-                    protected void hadSuccess() {
-                        AlignmentBoardItemChangeEvent event = new AlignmentBoardItemChangeEvent(
-                                alignmentBoardContext, alignedItem, ChangeType.ColorChange);
-                        ModelMgr.getModelMgr().postOnEventBus(event);
-                    }
-                    
-                    @Override
-                    protected void hadError(Throwable error) {
-                        SessionMgr.getSessionMgr().handleException(error);
-                    }
-                };
-                worker.execute();
+                SessionMgr.getBrowser().getLayersPanel().chooseColor(alignedItem);
             }
         });
         return copyMenuItem;

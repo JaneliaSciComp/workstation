@@ -113,6 +113,10 @@ public abstract class EntityWrapper {
         }
         children.add(child);
     }
+    
+    public void removeChild(EntityWrapper child) {
+        children.remove(child);
+    }
 
     @Override
     public String toString() {

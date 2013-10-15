@@ -7,9 +7,9 @@ import javax.swing.JOptionPane;
 
 import org.janelia.it.FlyWorkstation.api.entity_model.management.ModelMgr;
 import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr;
-import org.janelia.it.FlyWorkstation.gui.framework.viewer.alignment_board.AlignmentBoardEvent;
-import org.janelia.it.FlyWorkstation.gui.framework.viewer.alignment_board.AlignmentBoardItemChangeEvent;
-import org.janelia.it.FlyWorkstation.gui.framework.viewer.alignment_board.AlignmentBoardItemChangeEvent.ChangeType;
+import org.janelia.it.FlyWorkstation.gui.framework.viewer.alignment_board.events.AlignmentBoardEvent;
+import org.janelia.it.FlyWorkstation.gui.framework.viewer.alignment_board.events.AlignmentBoardItemChangeEvent;
+import org.janelia.it.FlyWorkstation.gui.framework.viewer.alignment_board.events.AlignmentBoardItemChangeEvent.ChangeType;
 import org.janelia.it.FlyWorkstation.model.domain.*;
 import org.janelia.it.FlyWorkstation.model.entity.RootedEntity;
 import org.janelia.it.jacs.model.entity.Entity;
@@ -242,23 +242,6 @@ public class AlignmentBoardContext extends AlignedItem {
         childAlignedItem.setIsVisible(true);
         
         return events;
-    }
-
-    /**
-     * Removes an aligned entity from the board. This method must be called from a worker thread.
-     * 
-     * @param alignedItem
-     * @throws Exception
-     */
-    public void removeAlignedEntity(final AlignedItem alignedItem) throws Exception {
-
-        RootedEntity rootedEntity = alignedItem.getInternalRootedEntity();
-        ModelMgr.getModelMgr().deleteEntityTree(rootedEntity.getEntityId());
-        
-        final AlignmentBoardItemChangeEvent event = new AlignmentBoardItemChangeEvent(
-                this, alignedItem, ChangeType.Removed);
-
-        ModelMgr.getModelMgr().postOnEventBus(event);
     }
 
 }

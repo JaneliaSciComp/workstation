@@ -200,4 +200,25 @@ public class AlignedItem extends EntityWrapper {
         ModelMgr.getModelMgr().saveOrUpdateEntity(entity);
     }
 
+
+    /**
+     * Removes an aligned entity from the board. This method must be called from a worker thread.
+     * 
+     * @param alignedItem
+     * @throws Exception
+     */
+    public void findAndRemoveAlignedEntity(final AlignedItem alignedItem) {
+
+        if (getChildren().contains(alignedItem)) {
+            removeChild(alignedItem);
+        }
+        else {
+            for(EntityWrapper entityWrapper : getChildren()) {
+                if (entityWrapper instanceof AlignedItem) {
+                    AlignedItem childAlignedItem = (AlignedItem)entityWrapper;
+                    childAlignedItem.findAndRemoveAlignedEntity(alignedItem);
+                }
+            }
+        }
+    }
 }

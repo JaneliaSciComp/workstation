@@ -3,12 +3,25 @@ package org.janelia.it.FlyWorkstation.gui.framework.viewer.alignment_board;
 import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Component;
-import java.awt.event.*;
+import java.awt.event.ComponentAdapter;
+import java.awt.event.ComponentEvent;
+import java.awt.event.InputEvent;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
 import java.util.List;
 import java.util.concurrent.Callable;
 import java.util.concurrent.atomic.AtomicBoolean;
 
-import javax.swing.*;
+import javax.swing.BorderFactory;
+import javax.swing.JColorChooser;
+import javax.swing.JComponent;
+import javax.swing.JLabel;
+import javax.swing.JPanel;
+import javax.swing.JScrollPane;
+import javax.swing.JTable;
+import javax.swing.ListSelectionModel;
+import javax.swing.SwingUtilities;
+import javax.swing.UIManager;
 import javax.swing.table.TableColumn;
 import javax.swing.table.TableColumnModel;
 import javax.swing.tree.TreePath;
@@ -20,7 +33,10 @@ import org.janelia.it.FlyWorkstation.gui.framework.outline.ActivatableView;
 import org.janelia.it.FlyWorkstation.gui.framework.outline.EntityTransferHandler;
 import org.janelia.it.FlyWorkstation.gui.framework.outline.Refreshable;
 import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr;
-import org.janelia.it.FlyWorkstation.gui.framework.viewer.alignment_board.AlignmentBoardItemChangeEvent.ChangeType;
+import org.janelia.it.FlyWorkstation.gui.framework.viewer.alignment_board.events.AlignmentBoardItemChangeEvent;
+import org.janelia.it.FlyWorkstation.gui.framework.viewer.alignment_board.events.AlignmentBoardItemChangeEvent.ChangeType;
+import org.janelia.it.FlyWorkstation.gui.framework.viewer.alignment_board.events.AlignmentBoardItemRemoveEvent;
+import org.janelia.it.FlyWorkstation.gui.framework.viewer.alignment_board.events.AlignmentBoardOpenEvent;
 import org.janelia.it.FlyWorkstation.gui.util.ColorSwatch;
 import org.janelia.it.FlyWorkstation.gui.util.Icons;
 import org.janelia.it.FlyWorkstation.model.domain.AlignmentContext;
@@ -32,7 +48,12 @@ import org.janelia.it.FlyWorkstation.model.viewer.AlignmentBoardContext;
 import org.janelia.it.FlyWorkstation.shared.workers.SimpleWorker;
 import org.janelia.it.jacs.model.entity.Entity;
 import org.janelia.it.jacs.model.entity.EntityConstants;
-import org.netbeans.swing.outline.*;
+import org.janelia.it.jacs.model.entity.EntityData;
+import org.netbeans.swing.outline.DefaultOutlineCellRenderer;
+import org.netbeans.swing.outline.DefaultOutlineModel;
+import org.netbeans.swing.outline.Outline;
+import org.netbeans.swing.outline.OutlineModel;
+import org.netbeans.swing.outline.RowModel;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -446,24 +467,38 @@ public class LayersPanel extends JPanel implements Refreshable, ActivatableView 
         log.debug("Some entities were removed, let's check if we care...");
         final AlignedItem removedItem = findAlignedItemByEntityId(alignmentBoardContext, event.getEntity().getId());
         if (removedItem!=null) {
-            log.debug("The removed item was one of our aligned items! Refresh everything.");
-            // TODO: surgically modify the in-memory model without reloading everything
-            refresh(true, false, new Callable<Void>() {
-                @Override
-                public Void call() throws Exception {
-                    final AlignmentBoardItemChangeEvent abEvent = new AlignmentBoardItemChangeEvent(
-                            alignmentBoardContext, removedItem, ChangeType.Removed);
-                    ModelMgr.getModelMgr().postOnEventBus(abEvent);
-                    return null;
+            
+            EntityData myEd = null;
+            for(EntityData ed : event.getParentEds()) {
+                if (ed.getParentEntity().getId().equals(removedItem.getParent().getId())) {
+                    myEd = ed;
                 }
-            });
+            }
+            
+            log.debug("The removed entity was an aligned item, firing alignment board event...");
+            final AlignmentBoardItemChangeEvent abEvent = new AlignmentBoardItemRemoveEvent(
+                    alignmentBoardContext, removedItem, myEd==null?null:myEd.getOrderIndex());
+            ModelMgr.getModelMgr().postOnEventBus(abEvent);
         }
     }
     
     @Subscribe 
     public void itemChanged(AlignmentBoardItemChangeEvent event) {
-        // TODO: do we really need to recreate the model, or is there a more efficient way to force the update?
-        refresh();
+
+        // Generating model events is hard (we don't know the UI indexes of what was deleted, for example), 
+        // so we just recreate the model here.
+        
+        final OutlineExpansionState expansionState = new OutlineExpansionState(outline);
+        expansionState.storeExpansionState();
+        
+        if (event.getChangeType()==ChangeType.Removed) {
+            alignmentBoardContext.findAndRemoveAlignedEntity(event.getAlignedItem());
+        }
+
+        OutlineModel outlineModel = DefaultOutlineModel.createOutlineModel(sampleTreeModel, new AlignedEntityRowModel(), true, "Name");
+        updateTableModel(outlineModel);
+
+        expansionState.restoreExpansionState(true);
     }
     
     @Override
@@ -491,6 +526,33 @@ public class LayersPanel extends JPanel implements Refreshable, ActivatableView 
         }
         
     }    
+    
+    public void chooseColor(final AlignedItem alignedItem) {
+
+        Color currColor = alignedItem.getColor();
+        final Color newColor = JColorChooser.showDialog(SessionMgr.getBrowser(), "Choose color", currColor);
+        if (newColor==null) return;
+        
+        SimpleWorker worker = new SimpleWorker() {
+            @Override
+            protected void doStuff() throws Exception {
+                alignedItem.setColor(newColor);
+            }
+            
+            @Override
+            protected void hadSuccess() {
+                AlignmentBoardItemChangeEvent event = new AlignmentBoardItemChangeEvent(
+                        alignmentBoardContext, alignedItem, ChangeType.ColorChange);
+                ModelMgr.getModelMgr().postOnEventBus(event);
+            }
+            
+            @Override
+            protected void hadError(Throwable error) {
+                SessionMgr.getSessionMgr().handleException(error);
+            }
+        };
+        worker.execute();
+    }
     
     private class OutlineTreeCellRenderer extends DefaultOutlineCellRenderer {
         
@@ -548,16 +610,12 @@ public class LayersPanel extends JPanel implements Refreshable, ActivatableView 
                 return cell;
             }
             
+            final AlignedItem alignedItem = (AlignedItem)value;
+            
             JLabel label = (JLabel)cell;
             if (label==null) return null;
 
-            if (value instanceof Color) {
-                ColorSwatch swatch = new ColorSwatch(COLOR_SWATCH_SIZE, (Color)value, Color.white);
-                label.setIcon(swatch);
-                label.setText("");
-                label.setToolTipText( "Chosen (mono) color rendering" );
-            }
-            else if (RAW_RENDERING_INDICATOR.equals( value.toString() ) ) {
+            if (alignedItem.isPassthroughRendering()) {
                 ColorSwatch swatch = new ColorSwatch(COLOR_SWATCH_SIZE, Color.pink, Color.black);
                 swatch.setMultiColor();
                 label.setIcon(swatch);
@@ -565,7 +623,10 @@ public class LayersPanel extends JPanel implements Refreshable, ActivatableView 
                 label.setToolTipText( "Raw rendering" );
             }
             else {
-                log.warn("Unrecognized value type in LayersPanel color column: "+value.getClass().getName());
+                ColorSwatch swatch = new ColorSwatch(COLOR_SWATCH_SIZE, alignedItem.getColor(), Color.white);
+                label.setIcon(swatch);
+                label.setText("");
+                label.setToolTipText( "Chosen (mono) color rendering" );
             }
             
             return label;
@@ -581,7 +642,7 @@ public class LayersPanel extends JPanel implements Refreshable, ActivatableView 
             case 0:
                 return Boolean.class;
             case 1:
-                return Color.class;
+                return AlignedItem.class;
             default:
                 assert false;
             }
@@ -607,9 +668,8 @@ public class LayersPanel extends JPanel implements Refreshable, ActivatableView 
                 return alignedItem.isVisible();            
             case 1:
                 if (alignedItem==alignmentBoardContext) return null;
-                else if (alignedItem.isPassthroughRendering())
-                    return RAW_RENDERING_INDICATOR;
-                return alignedItem.getColor();
+                return alignedItem;
+
             default:
                 assert false;
             }

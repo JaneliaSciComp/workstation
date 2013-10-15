@@ -700,6 +700,9 @@ public class EntityModel {
      */
     public void deleteEntityTree(Entity entity) throws Exception {
     	checkIfCanonicalEntity(entity);
+    	
+    	Set<EntityData> parentEds = new HashSet<EntityData>();
+    	
     	synchronized(this) {
     	    log.debug("Deleting entity tree "+entity.getId());
 	    	entityFacade.deleteEntityTree(entity.getId());
@@ -716,12 +719,13 @@ public class EntityModel {
 			        if (childEd.getChildEntity()!=null && childEd.getChildEntity().getId().equals(entity.getId())) {
 			            log.debug("  Removing parent link "+childEd.getId());
 			            edIterator.remove();
+			            parentEds.add(childEd);
 			            notifyEntityChanged(parent);
 			        }
 			    }   
 			}
     	}
-    	notifyEntityRemoved(entity);
+    	notifyEntityRemoved(entity, parentEds);
     }
     
     /**
@@ -1079,9 +1083,9 @@ public class EntityModel {
 		ModelMgr.getModelMgr().postOnEventBus(new EntityChangeEvent(entity));
 	}
 
-	private void notifyEntityRemoved(Entity entity) {
+	private void notifyEntityRemoved(Entity entity, Set<EntityData> parentEds) {
 		log.trace("Generating EntityRemoveEvent for {}",entity.getId());
-		ModelMgr.getModelMgr().postOnEventBus(new EntityRemoveEvent(entity));
+		ModelMgr.getModelMgr().postOnEventBus(new EntityRemoveEvent(entity, parentEds));
 	}
 
 	private void notifyEntitiesInvalidated(Collection<Entity> entities) {
