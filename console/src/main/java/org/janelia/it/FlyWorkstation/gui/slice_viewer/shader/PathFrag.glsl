@@ -13,5 +13,6 @@ void main()
         discard;
     gl_FragColor = pathColor;
     gl_FragColor.a *= (1.0 - absFog);
+    gl_FragColor.a *= 0.5; // So path is always transparent
     // gl_FragColor = vec4(1.0, 1.0, 0.3, 1.0); // for debugging
 }

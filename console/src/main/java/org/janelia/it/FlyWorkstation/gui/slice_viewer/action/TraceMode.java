@@ -327,8 +327,11 @@ implements MouseMode, KeyListener
                             private static final long serialVersionUID = 1L;
                             @Override
                             public void actionPerformed(ActionEvent e) {
-                            	skeleton.getHistory().push(getHoverAnchor());
-                                camera.setFocus(getHoverAnchor().getLocation());
+                            	Anchor h = getHoverAnchor();
+                            	if (h == null)
+                            		return;
+                            	skeleton.getHistory().push(h);
+                                camera.setFocus(h.getLocation());
                             }
                         }));
                         // Trace connection to parent

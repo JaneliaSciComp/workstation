@@ -18,6 +18,8 @@ import java.util.concurrent.ConcurrentHashMap;
 
 import javax.media.opengl.GL;
 import javax.media.opengl.GL2;
+// import javax.media.opengl.GL2;
+import javax.media.opengl.GL2GL3;
 import javax.media.opengl.GLAutoDrawable;
 import javax.swing.ImageIcon;
 
@@ -28,6 +30,7 @@ import org.janelia.it.FlyWorkstation.gui.slice_viewer.TileFormat;
 import org.janelia.it.FlyWorkstation.gui.slice_viewer.shader.AnchorShader;
 import org.janelia.it.FlyWorkstation.gui.slice_viewer.shader.PassThroughTextureShader;
 import org.janelia.it.FlyWorkstation.gui.slice_viewer.shader.PathShader;
+// import org.janelia.it.FlyWorkstation.gui.slice_viewer.shader.TracedPathShader;
 import org.janelia.it.FlyWorkstation.gui.util.Icons;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.BoundingBox3d;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.shader.AbstractShader.ShaderCreationException;
@@ -37,9 +40,7 @@ import org.janelia.it.FlyWorkstation.signal.Signal;
 import org.janelia.it.FlyWorkstation.signal.Signal1;
 import org.janelia.it.FlyWorkstation.signal.Slot;
 import org.janelia.it.FlyWorkstation.tracing.PathTraceRequest.SegmentIndex;
-import org.janelia.it.FlyWorkstation.tracing.TracedPathActor;
 import org.janelia.it.FlyWorkstation.tracing.TracedPathSegment;
-import org.janelia.it.FlyWorkstation.tracing.TracedPathShader;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -98,7 +99,7 @@ implements GLActor
     
     private float neuronColor[] = {0.8f,1.0f,0.3f};
     private final float blackColor[] = {0,0,0};
-    private TracedPathShader tracedShader = new TracedPathShader();
+    // private TracedPathShader tracedShader = new TracedPathShader();
     private boolean anchorsVisible = true;
 	
 	public Signal skeletonActorChangedSignal = new Signal();
@@ -122,49 +123,50 @@ implements GLActor
 		// log.info("New SkeletonActor");
 	}
 	
-	private void displayEdges(GLAutoDrawable glDrawable) {
+	private void displayLines(GLAutoDrawable glDrawable) {
 		// Line segments using vertex buffer objects
 		if (lineIndices == null)
 			return;
 		if (lineIndices.capacity() < 2)
 			return;
 
-        GL2 gl = glDrawable.getGL().getGL2();
+        GL2GL3 gl = glDrawable.getGL().getGL2GL3();
+        GL2 gl2 = gl.getGL2();
 		// if (verticesNeedCopy) { // TODO
         if (true) {
-            gl.glBindBuffer( GL2.GL_ARRAY_BUFFER, vbo );
+            gl.glBindBuffer( GL.GL_ARRAY_BUFFER, vbo );
         		vertices.rewind();
-	        gl.glBufferData(GL2.GL_ARRAY_BUFFER, 
+	        gl.glBufferData(GL.GL_ARRAY_BUFFER, 
 	        		vertexCount * floatByteCount * vertexFloatCount, 
-	        		vertices, GL2.GL_DYNAMIC_DRAW);
+	        		vertices, GL.GL_DYNAMIC_DRAW);
         		verticesNeedCopy = false;
 
     		// colors
 	        colors.rewind();
-	        gl.glBindBuffer(GL2.GL_ARRAY_BUFFER, colorBo);
-	        gl.glBufferData(GL2.GL_ARRAY_BUFFER, 
+	        gl.glBindBuffer(GL.GL_ARRAY_BUFFER, colorBo);
+	        gl.glBufferData(GL.GL_ARRAY_BUFFER, 
 	        		vertexCount * floatByteCount * colorFloatCount,
 	        		colors, 
-	        		GL2.GL_DYNAMIC_DRAW);
+	        		GL.GL_DYNAMIC_DRAW);
         }
 		// if (linesNeedCopy) // TODO
 		if (true) 
 		{
-	        gl.glBindBuffer(GL2.GL_ELEMENT_ARRAY_BUFFER, lineIbo);
+	        gl.glBindBuffer(GL.GL_ELEMENT_ARRAY_BUFFER, lineIbo);
 			lineIndices.rewind();
-	        gl.glBufferData(GL2.GL_ELEMENT_ARRAY_BUFFER, 
+	        gl.glBufferData(GL.GL_ELEMENT_ARRAY_BUFFER, 
 	        		lineIndices.capacity() * intByteCount,
-	        		lineIndices, GL2.GL_DYNAMIC_DRAW);
+	        		lineIndices, GL.GL_DYNAMIC_DRAW);
 	        linesNeedCopy = false;
 		}
         gl.glEnableClientState(GL2.GL_VERTEX_ARRAY);
         gl.glBindBuffer( GL2.GL_ARRAY_BUFFER, vbo );
-        gl.glVertexPointer(vertexFloatCount, GL2.GL_FLOAT, 0, 0L);
+        gl2.glVertexPointer(vertexFloatCount, GL2.GL_FLOAT, 0, 0L);
         gl.glEnableClientState(GL2.GL_COLOR_ARRAY);
         gl.glBindBuffer(GL2.GL_ARRAY_BUFFER, colorBo);
-        gl.glColorPointer(colorFloatCount, GL2.GL_FLOAT, 0, 0L);
+        gl2.glColorPointer(colorFloatCount, GL2.GL_FLOAT, 0, 0L);
         gl.glBindBuffer(GL2.GL_ELEMENT_ARRAY_BUFFER, lineIbo);
-		lineShader.load(gl);
+		lineShader.load(gl2);
  		lineShader.setUniform(gl, "zThickness", zThicknessInPixels);
  		// log.info("zThickness = "+zThickness);
  		float focus[] = {
@@ -195,7 +197,7 @@ implements GLActor
 	    gl.glDisableClientState(GL2.GL_COLOR_ARRAY);
         gl.glBindBuffer( GL2.GL_ARRAY_BUFFER, 0 );
         gl.glBindBuffer(GL2.GL_ELEMENT_ARRAY_BUFFER, 0);
-        lineShader.unload(gl);
+        lineShader.unload(gl2);
 	}
 	
 	private synchronized void displayAnchors(GLAutoDrawable glDrawable) {
@@ -227,6 +229,7 @@ implements GLActor
  		int parentIndex = getIndexForAnchor(nextParent);
  		anchorShader.setUniform(gl, "parentAnchorIndex", parentIndex);
  		// float zThickness = viewport.getDepth(); //  / (float)camera.getPixelsPerSceneUnit();
+ 		// At high zoom, keep thickness to at least 5 pixels deep.
  		anchorShader.setUniform(gl, "zThickness", zThicknessInPixels);
  		float focus[] = {
  	 			(float)camera.getFocus().getX(),
@@ -315,7 +318,7 @@ implements GLActor
 			init(glDrawable);
 
 		// System.out.println("painting skeleton");
-		displayEdges(glDrawable);
+		displayLines(glDrawable);
 
 		displayTracedSegments(glDrawable);
 		
@@ -326,19 +329,32 @@ implements GLActor
 	private void displayTracedSegments(GLAutoDrawable glDrawable) {
 		GL gl = glDrawable.getGL();
 		GL2 gl2 = gl.getGL2();
+		GL2GL3 gl2gl3 = gl.getGL2GL3();
 		// log.info("Displaying "+tracedSegments.size()+" traced segments");
-		tracedShader.load(gl2);
+		lineShader.load(gl2);
+ 		float zt = zThicknessInPixels;
+ 		float zoomLimit = 5.0f;
+ 		if (camera.getPixelsPerSceneUnit() > zoomLimit) {
+ 			zt = zThicknessInPixels * (float)camera.getPixelsPerSceneUnit() / zoomLimit;
+ 		}
+ 		lineShader.setUniform(gl2gl3, "zThickness", zt);
+ 		// log.info("zThickness = "+zThickness);
+ 		float focus[] = {
+ 			(float)camera.getFocus().getX(),
+ 			(float)camera.getFocus().getY(),
+ 			(float)camera.getFocus().getZ()};
+ 		lineShader.setUniform3v(gl2gl3, "focus", 1, focus);
 		// black background
-        gl.glLineWidth(4.0f);
-        tracedShader.setUniform3v(gl2, "neuronColor", 1, blackColor);
+        gl.glLineWidth(5.0f);
+		lineShader.setUniform3v(gl2gl3, "baseColor", 1, blackColor);
 		for (TracedPathActor segment : tracedSegments.values())
 		    segment.display(glDrawable);
 		// neuron colored foreground
-        gl.glLineWidth(2.5f);
-        tracedShader.setUniform3v(gl2, "neuronColor", 1, neuronColor);
+        gl.glLineWidth(3.0f);
+		lineShader.setUniform3v(gl2gl3, "baseColor", 1, neuronColor);
         for (TracedPathActor segment : tracedSegments.values())
             segment.display(glDrawable);
-		tracedShader.unload(gl2);
+		lineShader.unload(gl2);
 	}
 
 	public int getIndexForAnchor(Anchor anchor) {
@@ -460,7 +476,7 @@ implements GLActor
 		}
     	// log.info("tracedSegments.size() [492] = "+tracedSegments.size());
 		//
-		// Populate edge index buffer - AFTER traced segments have been finalized
+		// Populate line index buffer - AFTER traced segments have been finalized
 		List<Integer> tempLineIndices = new Vector<Integer>(); // because we don't know size yet
 		for (Anchor anchor : skeleton.getAnchors()) {
 			int i1 = getIndexForAnchor(anchor);
@@ -521,7 +537,7 @@ implements GLActor
 		try {
 			lineShader.init(gl);
 			anchorShader.init(gl);
-			tracedShader.init(gl);
+			// tracedShader.init(gl);
 		} catch (ShaderCreationException e) {
 			e.printStackTrace();
 			return;

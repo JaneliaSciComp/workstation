@@ -1,4 +1,4 @@
-package org.janelia.it.FlyWorkstation.tracing;
+package org.janelia.it.FlyWorkstation.gui.slice_viewer.skeleton;
 
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
@@ -20,6 +20,8 @@ import org.janelia.it.FlyWorkstation.gui.slice_viewer.TileFormat.VoxelXyz;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.BoundingBox3d;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.shader.AbstractShader.ShaderCreationException;
 import org.janelia.it.FlyWorkstation.octree.ZoomedVoxelIndex;
+import org.janelia.it.FlyWorkstation.tracing.PathTraceRequest;
+import org.janelia.it.FlyWorkstation.tracing.TracedPathSegment;
 import org.janelia.it.FlyWorkstation.tracing.PathTraceRequest.SegmentIndex;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

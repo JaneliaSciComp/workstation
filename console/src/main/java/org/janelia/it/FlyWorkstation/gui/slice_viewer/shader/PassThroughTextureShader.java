@@ -2,7 +2,12 @@ package org.janelia.it.FlyWorkstation.gui.slice_viewer.shader;
 
 import java.nio.IntBuffer;
 
+// import javax.media.opengl.GL2;
+
+
+import javax.media.opengl.GL;
 import javax.media.opengl.GL2;
+import javax.media.opengl.GL2GL3;
 import javax.media.opengl.glu.GLU;
 
 import org.janelia.it.FlyWorkstation.gui.viewer3d.shader.AbstractShader;
@@ -15,10 +20,10 @@ public class PassThroughTextureShader extends AbstractShader
 	protected static GLU glu = new GLU();
 	private static Logger logger = LoggerFactory.getLogger(PassThroughTextureShader.class);
 
-	static public void checkGlError(GL2 gl, String message) 
+	static public void checkGlError(GL gl, String message) 
 	{
         int errorNum = gl.glGetError();
-        if (errorNum == GL2.GL_NO_ERROR)
+        if (errorNum == GL.GL_NO_ERROR)
         		return;
         String errorStr = glu.gluErrorString(errorNum);
         logger.error( "OpenGL Error " + errorNum + ": " + errorStr + ": " + message );	
@@ -37,13 +42,13 @@ public class PassThroughTextureShader extends AbstractShader
 	@Override
 	public void load(GL2 gl) {
         IntBuffer buffer = IntBuffer.allocate( 1 );
-        gl.glGetIntegerv( GL2.GL_CURRENT_PROGRAM, buffer );
+        gl.glGetIntegerv( GL2GL3.GL_CURRENT_PROGRAM, buffer );
         previousShader = buffer.get();
         int shaderProgram = getShaderProgram();
         gl.glUseProgram(shaderProgram);
 	}
 
-	public boolean setUniform(GL2 gl, String varName, float value) {
+	public boolean setUniform(GL2GL3 gl, String varName, float value) {
         int uniformLoc = gl.glGetUniformLocation( getShaderProgram(), varName );
         if ( uniformLoc < 0 ) 
         	return false;
@@ -51,7 +56,7 @@ public class PassThroughTextureShader extends AbstractShader
         return true;
 	}
 
-	public boolean setUniform(GL2 gl, String varName, int value) 
+	public boolean setUniform(GL2GL3 gl, String varName, int value) 
 	{
         int uniformLoc = gl.glGetUniformLocation( getShaderProgram(), varName );
         if ( uniformLoc < 0 ) 
@@ -60,7 +65,7 @@ public class PassThroughTextureShader extends AbstractShader
         return true;
 	}
 	
-	public boolean setUniform2fv(GL2 gl, String varName, int vecCount, float[] data)
+	public boolean setUniform2fv(GL2GL3 gl, String varName, int vecCount, float[] data)
 	{
         int uniformLoc = gl.glGetUniformLocation( getShaderProgram(), varName );
         if ( uniformLoc < 0 ) 
@@ -69,7 +74,7 @@ public class PassThroughTextureShader extends AbstractShader
         return true;
 	}
 	
-	public boolean setUniform3v(GL2 gl, String varName, int vecCount, float[] data)
+	public boolean setUniform3v(GL2GL3 gl, String varName, int vecCount, float[] data)
 	{
         int uniformLoc = gl.glGetUniformLocation( getShaderProgram(), varName );
         if ( uniformLoc < 0 ) 
@@ -78,7 +83,7 @@ public class PassThroughTextureShader extends AbstractShader
         return true;
 	}
 	
-	public boolean setUniform4v(GL2 gl, String varName, int vecCount, float[] data)
+	public boolean setUniform4v(GL2GL3 gl, String varName, int vecCount, float[] data)
 	{
         int uniformLoc = gl.glGetUniformLocation( getShaderProgram(), varName );
         if ( uniformLoc < 0 ) 
@@ -87,7 +92,7 @@ public class PassThroughTextureShader extends AbstractShader
         return true;
 	}
 	
-	public boolean setUniformMatrix2fv(GL2 gl, String varName, boolean transpose, float[] data) {
+	public boolean setUniformMatrix2fv(GL2GL3 gl, String varName, boolean transpose, float[] data) {
         int uniformLoc = gl.glGetUniformLocation( getShaderProgram(), varName );
         if ( uniformLoc < 0 ) 
         	return false;

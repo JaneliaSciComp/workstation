@@ -36,6 +36,7 @@ import org.janelia.it.FlyWorkstation.gui.slice_viewer.annotation.SliceViewerTran
 import org.janelia.it.FlyWorkstation.gui.slice_viewer.skeleton.Anchor;
 import org.janelia.it.FlyWorkstation.gui.slice_viewer.skeleton.Skeleton;
 import org.janelia.it.FlyWorkstation.gui.slice_viewer.skeleton.SkeletonActor;
+import org.janelia.it.FlyWorkstation.gui.slice_viewer.skeleton.TracedPathActor;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.BoundingBox3d;
 import org.janelia.it.jacs.model.entity.Entity;
 import org.janelia.it.FlyWorkstation.signal.Signal1;
@@ -43,12 +44,12 @@ import org.janelia.it.FlyWorkstation.signal.Slot;
 import org.janelia.it.FlyWorkstation.signal.Slot1;
 import org.janelia.it.FlyWorkstation.tracing.PathTraceRequest;
 import org.janelia.it.FlyWorkstation.tracing.PathTracer;
-import org.janelia.it.FlyWorkstation.tracing.TracedPathActor;
 import org.janelia.it.FlyWorkstation.tracing.TracedPathSegment;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 // import org.slf4j.Logger;
 // import org.slf4j.LoggerFactory;
+
 
 
 

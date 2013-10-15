@@ -1,6 +1,5 @@
-package org.janelia.it.FlyWorkstation.tracing;
+package org.janelia.it.FlyWorkstation.gui.slice_viewer.shader;
 
-import org.janelia.it.FlyWorkstation.gui.slice_viewer.shader.PassThroughTextureShader;
 
 public class TracedPathShader extends PassThroughTextureShader {
     @Override
