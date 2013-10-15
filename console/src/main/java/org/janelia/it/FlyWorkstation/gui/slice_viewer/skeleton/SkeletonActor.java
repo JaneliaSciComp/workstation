@@ -34,11 +34,13 @@ import org.janelia.it.FlyWorkstation.gui.slice_viewer.shader.PathShader;
 import org.janelia.it.FlyWorkstation.gui.util.Icons;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.BoundingBox3d;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.shader.AbstractShader.ShaderCreationException;
+import org.janelia.it.FlyWorkstation.octree.ZoomedVoxelIndex;
 // import org.slf4j.Logger;
 // import org.slf4j.LoggerFactory;
 import org.janelia.it.FlyWorkstation.signal.Signal;
 import org.janelia.it.FlyWorkstation.signal.Signal1;
 import org.janelia.it.FlyWorkstation.signal.Slot;
+import org.janelia.it.FlyWorkstation.tracing.PathTraceRequest;
 import org.janelia.it.FlyWorkstation.tracing.PathTraceRequest.SegmentIndex;
 import org.janelia.it.FlyWorkstation.tracing.TracedPathSegment;
 import org.slf4j.Logger;
@@ -460,8 +462,23 @@ implements GLActor
 		for (TracedPathSegment segment : skeletonSegments) {
 			SegmentIndex ix = segment.getSegmentIndex();
 			foundSegments.add(ix);
-			if (tracedSegments.containsKey(ix))
-				continue; // already have this segment!
+			if (tracedSegments.containsKey(ix)) {
+				// Is the old traced segment still valid?
+				TracedPathSegment oldSegment = tracedSegments.get(ix).getSegment();
+				List<ZoomedVoxelIndex> p0 = oldSegment.getPath();
+				List<ZoomedVoxelIndex> p1 = segment.getPath();
+				boolean looksTheSame = true;
+				if (p0.size() != p1.size()) // same size?
+					looksTheSame = false;
+				else if (p0.get(0) != p1.get(0)) // same first voxel?
+					looksTheSame = false;
+				else if (p0.get(p0.size()-1) != p1.get(p1.size()-1)) // same final voxel?
+					looksTheSame = false;
+				if (looksTheSame)
+					continue; // already have this segment, no need to recompute!
+				else
+					tracedSegments.remove(ix); // obsolete. remove it.
+			}
 			TracedPathActor actor = new TracedPathActor(segment, getTileFormat());
 			addTracedSegment(actor);
 		}

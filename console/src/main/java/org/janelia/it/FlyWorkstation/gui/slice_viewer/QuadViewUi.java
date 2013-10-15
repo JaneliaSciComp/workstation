@@ -54,6 +54,7 @@ import org.slf4j.LoggerFactory;
 
 
 
+
 import javax.media.opengl.GLProfile;
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
@@ -63,6 +64,7 @@ import javax.swing.event.ChangeListener;
 
 import java.awt.*;
 import java.awt.event.ActionEvent;
+import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
 import java.awt.event.MouseEvent;
 import java.io.File;
@@ -341,7 +343,7 @@ public class QuadViewUi extends JPanel
     public Slot1<TracedPathSegment> onPathTracedSlot = new Slot1<TracedPathSegment>() {
         @Override
         public void execute(TracedPathSegment path) {
-            System.out.println("onPathTracedSlot");
+            // System.out.println("onPathTracedSlot");
             getSkeletonActor().setTileFormat(
             		tileServer.getLoadAdapter().getTileFormat());
             skeleton.addTracedSegment(path);
@@ -377,6 +379,26 @@ public class QuadViewUi extends JPanel
         getSkeletonActor().nextParentChangedSignal.connect(annotationMgr.selectAnnotationSlot);
         skeleton.anchorMovedSignal.connect(annotationMgr.moveAnchorRequestedSlot);
         skeleton.pathTraceRequestedSignal.connect(tracePathSegmentSlot);
+        
+        // Toggle skeleton actor with v key
+        InputMap inputMap = getInputMap(JComponent.WHEN_ANCESTOR_OF_FOCUSED_COMPONENT);
+        inputMap.put(KeyStroke.getKeyStroke(KeyEvent.VK_V, 0, false), "vKeyPressed");
+        inputMap.put(KeyStroke.getKeyStroke(KeyEvent.VK_V, 0, true), "vKeyReleased");
+        ActionMap actionMap = getActionMap();
+        actionMap.put("vKeyPressed", new AbstractAction() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+    			// log.info("Skeleton off");
+    			getSkeletonActor().setVisible(false);
+            }
+        });
+        actionMap.put("vKeyReleased", new AbstractAction() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+    			// log.info("Skeleton on");
+    			getSkeletonActor().setVisible(true);
+            }
+        });
 
         sliceViewerTranslator.connectSkeletonSignals(skeleton);
         sliceViewerTranslator.cameraPanToSignal.connect(setCameraFocusSlot);

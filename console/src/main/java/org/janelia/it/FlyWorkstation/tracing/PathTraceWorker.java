@@ -14,9 +14,13 @@ import org.janelia.it.FlyWorkstation.gui.slice_viewer.TileFormat.VoxelXyz;
 import org.janelia.it.FlyWorkstation.octree.ZoomLevel;
 import org.janelia.it.FlyWorkstation.octree.ZoomedVoxelIndex;
 import org.janelia.it.FlyWorkstation.signal.Signal1;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class PathTraceWorker implements Runnable 
 {
+	private static final Logger log = LoggerFactory.getLogger(PathTraceWorker.class);
+	
     private TextureCache textureCache;
     private SharedVolumeImage volume;
     private PathTraceRequest request;
@@ -61,21 +65,22 @@ public class PathTraceWorker implements Runnable
                 Math.max(zv1.getY(), zv2.getY()) + padPixels, 
                 Math.max(zv1.getZ(), zv2.getZ()) + padPixels);
         //
-        System.out.println("Loading subvolume...");
+        log.info("Loading subvolume...");
         Subvolume subvolume = new Subvolume(v1pad, v2pad, volume, textureCache);
-        System.out.println("Finished loading subvolume.");
+        // log.info("Finished loading subvolume.");
         // 
-        System.out.println("Initializing A*...");
+        log.info("Tracing path...");
+        // log.info("Initializing A*...");
         AStar astar = new AStar(subvolume);
-        System.out.println("Finished initializing A*.");
-        System.out.println("Tracing path...");
+        // log.info("Finished initializing A*.");
+        // log.info("Tracing path...");
         List<ZoomedVoxelIndex> path = astar.trace(zv1, zv2); // This is the slow part
-        System.out.println("Finished tracing path.");
-        System.out.println("Number of points in path = "+path.size());
+        log.info("Finished tracing path.");
+        // log.info("Number of points in path = "+path.size());
         List<Integer> intensities = new Vector<Integer>();
         for (ZoomedVoxelIndex p : path) {
             int intensity = subvolume.getIntensityGlobal(p, 0);
-            // System.out.println(p + ": " +intensity);
+            // log.info(p + ": " +intensity);
             intensities.add(intensity);
         }
         TracedPathSegment result = new TracedPathSegment(request, path, intensities);

@@ -9,6 +9,7 @@ import java.awt.event.MouseEvent;
 import java.awt.event.KeyListener;
 import java.util.List;
 import java.util.Vector;
+
 import javax.swing.AbstractAction;
 import javax.swing.JMenuItem;
 
@@ -278,7 +279,8 @@ implements MouseMode, KeyListener
 	@Override
     public MenuItemGenerator getMenuItemGenerator() {
         return new MenuItemGenerator() {
-            @Override
+            @SuppressWarnings("serial")
+			@Override
             public List<JMenuItem> getMenus(MouseEvent event) 
             {
             	    List<JMenuItem> result = new Vector<JMenuItem>();
@@ -428,9 +430,6 @@ implements MouseMode, KeyListener
 	}
 
 	@Override
-	public void keyTyped(KeyEvent e) {}
-
-	@Override
 	public void keyPressed(KeyEvent event) {
 		checkShiftPlusCursor(event);
 		int keyCode = event.getKeyCode();
@@ -451,25 +450,11 @@ implements MouseMode, KeyListener
 			// System.out.println("next");
 			historyAnchor = skeleton.getHistory().next();
 			break;
-        case KeyEvent.VK_SPACE:
-            skeletonActor.setVisible(false);
-            break;
 		}
 		if (historyAnchor != null)
 			camera.setFocus(historyAnchor.getLocation());
 	}
 
-	@Override
-	public void keyReleased(KeyEvent event) {
-		checkShiftPlusCursor(event);
-        int keyCode = event.getKeyCode();
-        switch(keyCode) {
-        case KeyEvent.VK_SPACE:
-            skeletonActor.setVisible(true);
-            break;
-        }
-	}
-	
 	private void checkShiftPlusCursor(InputEvent event) {
 		if (currentHover >= 0) // no adding points while hovering over another point
 			checkCursor(penCursor);

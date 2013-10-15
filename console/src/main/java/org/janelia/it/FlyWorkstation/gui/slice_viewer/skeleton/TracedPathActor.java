@@ -8,7 +8,6 @@ import javax.media.opengl.GL;
 import javax.media.opengl.GL2;
 import javax.media.opengl.GL2GL3;
 import javax.media.opengl.GLAutoDrawable;
-import javax.media.opengl.GLException;
 import javax.media.opengl.glu.GLU;
 
 import org.janelia.it.FlyWorkstation.geom.CoordinateAxis;
@@ -18,7 +17,6 @@ import org.janelia.it.FlyWorkstation.gui.slice_viewer.TileFormat;
 import org.janelia.it.FlyWorkstation.gui.slice_viewer.TileFormat.MicrometerXyz;
 import org.janelia.it.FlyWorkstation.gui.slice_viewer.TileFormat.VoxelXyz;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.BoundingBox3d;
-import org.janelia.it.FlyWorkstation.gui.viewer3d.shader.AbstractShader.ShaderCreationException;
 import org.janelia.it.FlyWorkstation.octree.ZoomedVoxelIndex;
 import org.janelia.it.FlyWorkstation.tracing.PathTraceRequest;
 import org.janelia.it.FlyWorkstation.tracing.TracedPathSegment;
@@ -42,9 +40,14 @@ implements GLActor
     private int pointCount = 0;
     private boolean bIsInitialized = false;
 	private SegmentIndex segmentIndex;
+	// For determining if traced path is still appropriate
+	TracedPathSegment segment;
 
     public TracedPathActor(TracedPathSegment path, TileFormat tileFormat) 
     {
+    	segment = path;
+    	// TODO guid
+    	//
         pointCount = path.getPath().size();
         // Store vertices
         long totalVertexByteCount = floatsPerVertex * bytesPerFloat * pointCount;
@@ -101,7 +104,11 @@ implements GLActor
         return boundingBox;
     }
 
-    @Override
+    public TracedPathSegment getSegment() {
+		return segment;
+	}
+
+	@Override
     public void init(GLAutoDrawable glDrawable) {
         GL gl = glDrawable.getGL();
         // One-time initialization
