@@ -341,9 +341,9 @@ public class QuadViewUi extends JPanel
         @Override
         public void execute(TracedPathSegment path) {
             System.out.println("onPathTracedSlot");
-            TracedPathActor actor = new TracedPathActor(path, 
-                    tileServer.getLoadAdapter().getTileFormat());
-            getSkeletonActor().addTracedSegment(actor);
+            getSkeletonActor().setTileFormat(
+            		tileServer.getLoadAdapter().getTileFormat());
+            skeleton.addTracedSegment(path);
         }
     };
     

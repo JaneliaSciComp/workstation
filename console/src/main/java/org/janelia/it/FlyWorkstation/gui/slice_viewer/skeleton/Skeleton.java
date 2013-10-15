@@ -1,17 +1,24 @@
 package org.janelia.it.FlyWorkstation.gui.slice_viewer.skeleton;
 
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 
 import org.janelia.it.FlyWorkstation.geom.Vec3;
 import org.janelia.it.FlyWorkstation.gui.slice_viewer.HistoryStack;
+import org.janelia.it.FlyWorkstation.gui.slice_viewer.SliceViewer;
 import org.janelia.it.FlyWorkstation.signal.Signal;
 import org.janelia.it.FlyWorkstation.signal.Signal1;
 import org.janelia.it.FlyWorkstation.signal.Slot;
 import org.janelia.it.FlyWorkstation.signal.Slot1;
 import org.janelia.it.FlyWorkstation.tracing.PathTraceRequest;
+import org.janelia.it.FlyWorkstation.tracing.PathTraceRequest.SegmentIndex;
+import org.janelia.it.FlyWorkstation.tracing.TracedPathSegment;
 import org.janelia.it.jacs.model.user_data.tiledMicroscope.TmGeoAnnotation;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class Skeleton {
+	private static final Logger log = LoggerFactory.getLogger(Skeleton.class);
 	
 	/**
 	 * AnchorSeed holds enough data to nucleate a new Anchor.
@@ -40,6 +47,10 @@ public class Skeleton {
 	};
 	
 	private Set<Anchor> anchors = new LinkedHashSet<Anchor>();
+	
+	private Map<SegmentIndex, TracedPathSegment> tracedSegments = 
+			new ConcurrentHashMap<SegmentIndex, TracedPathSegment>();
+	
 	private Map<Long, Anchor> anchorsByGuid = new HashMap<Long, Anchor>();
 	// TODO - anchor browsing history should maybe move farther back
 	private HistoryStack<Anchor> anchorHistory = new HistoryStack<Anchor>();
@@ -145,6 +156,7 @@ public class Skeleton {
         anchorReparentedSignal.connect(skeletonChangedSignal);
         anchorNeighborsUpdatedSignal.connect(skeletonChangedSignal);
 		anchorMovedSignal.connect(skeletonChangedSignal);
+		// log.info("Skeleton constructor");
 	}
 	
 	public Anchor addAnchor(Anchor anchor) {
@@ -281,5 +293,19 @@ public class Skeleton {
                 new PathTraceRequest(xyz1, xyz2, anchor.getGuid(), neighbor.getGuid());
         pathTraceRequestedSignal.emit(pathTraceRequest);
     }
+
+	public void addTracedSegment(TracedPathSegment path) 
+	{
+		tracedSegments.put(path.getSegmentIndex(), path);
+		// log.info("tracedSegments.size() [300] = "+tracedSegments.size());
+		skeletonChangedSignal.emit();
+	}
+
+	public Collection<TracedPathSegment> getTracedSegments() {
+		// log.info("tracedSegments.size() [305] = "+tracedSegments.size());
+		Collection<TracedPathSegment> result = tracedSegments.values();
+		// log.info("tracedSegments.values().size() [307] = "+result.size());
+		return result;
+	}
 
 }

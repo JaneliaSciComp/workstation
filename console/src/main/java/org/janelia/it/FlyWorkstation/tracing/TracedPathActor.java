@@ -20,6 +20,7 @@ import org.janelia.it.FlyWorkstation.gui.slice_viewer.TileFormat.VoxelXyz;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.BoundingBox3d;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.shader.AbstractShader.ShaderCreationException;
 import org.janelia.it.FlyWorkstation.octree.ZoomedVoxelIndex;
+import org.janelia.it.FlyWorkstation.tracing.PathTraceRequest.SegmentIndex;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -38,6 +39,7 @@ implements GLActor
     private ByteBuffer vertexByteBuffer;
     private int pointCount = 0;
     private boolean bIsInitialized = false;
+	private SegmentIndex segmentIndex;
 
     public TracedPathActor(TracedPathSegment path, TileFormat tileFormat) 
     {
@@ -65,6 +67,7 @@ implements GLActor
                 vertices.put(1.0f);
         }
         vertices.rewind();
+        this.segmentIndex = path.getSegmentIndex();
     }
 
     private void checkGlError(GL gl, String message) {
@@ -136,5 +139,9 @@ implements GLActor
         }
         bIsInitialized = false;
     }
+
+	public SegmentIndex getSegmentIndex() {
+		return segmentIndex;
+	}
 
 }

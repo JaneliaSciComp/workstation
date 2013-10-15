@@ -7,10 +7,14 @@ import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.nio.FloatBuffer;
 import java.nio.IntBuffer;
+import java.util.Collection;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.Vector;
+import java.util.concurrent.ConcurrentHashMap;
 
 import javax.media.opengl.GL;
 import javax.media.opengl.GL2;
@@ -20,6 +24,7 @@ import javax.swing.ImageIcon;
 import org.janelia.it.FlyWorkstation.geom.Vec3;
 import org.janelia.it.FlyWorkstation.gui.camera.Camera3d;
 import org.janelia.it.FlyWorkstation.gui.opengl.GLActor;
+import org.janelia.it.FlyWorkstation.gui.slice_viewer.TileFormat;
 import org.janelia.it.FlyWorkstation.gui.slice_viewer.shader.AnchorShader;
 import org.janelia.it.FlyWorkstation.gui.slice_viewer.shader.PassThroughTextureShader;
 import org.janelia.it.FlyWorkstation.gui.slice_viewer.shader.PathShader;
@@ -31,8 +36,12 @@ import org.janelia.it.FlyWorkstation.gui.viewer3d.shader.AbstractShader.ShaderCr
 import org.janelia.it.FlyWorkstation.signal.Signal;
 import org.janelia.it.FlyWorkstation.signal.Signal1;
 import org.janelia.it.FlyWorkstation.signal.Slot;
+import org.janelia.it.FlyWorkstation.tracing.PathTraceRequest.SegmentIndex;
 import org.janelia.it.FlyWorkstation.tracing.TracedPathActor;
+import org.janelia.it.FlyWorkstation.tracing.TracedPathSegment;
 import org.janelia.it.FlyWorkstation.tracing.TracedPathShader;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * SkeletonActor is responsible for painting neuron traces in the slice viewer.
@@ -42,13 +51,12 @@ import org.janelia.it.FlyWorkstation.tracing.TracedPathShader;
 public class SkeletonActor 
 implements GLActor
 {
-	// private static final Logger log = LoggerFactory.getLogger(SkeletonActor.class);
+	private static final Logger log = LoggerFactory.getLogger(SkeletonActor.class);
 	
 	// semantic constants for allocating byte arrays
 	private final int floatByteCount = 4;
 	private final int vertexFloatCount = 3;
 	private final int intByteCount = 4;
-	private final int edgeIntCount = 2;
 	private final int colorFloatCount = 3;
 
 	private int hoverAnchorIndex = -1;
@@ -58,14 +66,14 @@ implements GLActor
 	private FloatBuffer vertices;
 	private FloatBuffer colors;
 	private int vbo = -1;
-	private int edgeIbo = -1;
+	private int lineIbo = -1;
 	private int pointIbo = -1;
 	private int colorBo = -1;
-	private IntBuffer edgeIndices;
+	private IntBuffer lineIndices;
 	private IntBuffer pointIndices;
-	private boolean edgesNeedCopy = false;
+	private boolean linesNeedCopy = false;
 	private boolean verticesNeedCopy = false;
-	private PathShader edgeShader = new PathShader();
+	private PathShader lineShader = new PathShader();
 	private AnchorShader anchorShader = new AnchorShader();
 	private BoundingBox3d bb = new BoundingBox3d();
 	//
@@ -84,7 +92,10 @@ implements GLActor
 	private Anchor nextParent = null;
 	//
     private boolean bIsVisible = true;
-    private List<TracedPathActor> tracedSegments = new Vector<TracedPathActor>();
+    
+    private Map<SegmentIndex, TracedPathActor> tracedSegments = 
+    		new ConcurrentHashMap<SegmentIndex, TracedPathActor>();
+    
     private float neuronColor[] = {0.8f,1.0f,0.3f};
     private final float blackColor[] = {0,0,0};
     private TracedPathShader tracedShader = new TracedPathShader();
@@ -105,14 +116,17 @@ implements GLActor
             setNextParent(null);
         }
     };
+	private TileFormat tileFormat;
 
-	public SkeletonActor() {}
+	public SkeletonActor() {
+		// log.info("New SkeletonActor");
+	}
 	
 	private void displayEdges(GLAutoDrawable glDrawable) {
 		// Line segments using vertex buffer objects
-		if (edgeIndices == null)
+		if (lineIndices == null)
 			return;
-		if (edgeIndices.capacity() < 2)
+		if (lineIndices.capacity() < 2)
 			return;
 
         GL2 gl = glDrawable.getGL().getGL2();
@@ -133,15 +147,15 @@ implements GLActor
 	        		colors, 
 	        		GL2.GL_DYNAMIC_DRAW);
         }
-		// if (edgesNeedCopy) // TODO
+		// if (linesNeedCopy) // TODO
 		if (true) 
 		{
-	        gl.glBindBuffer(GL2.GL_ELEMENT_ARRAY_BUFFER, edgeIbo);
-			edgeIndices.rewind();
+	        gl.glBindBuffer(GL2.GL_ELEMENT_ARRAY_BUFFER, lineIbo);
+			lineIndices.rewind();
 	        gl.glBufferData(GL2.GL_ELEMENT_ARRAY_BUFFER, 
-	        		edgeIndices.capacity() * intByteCount,
-	        		edgeIndices, GL2.GL_DYNAMIC_DRAW);
-	        edgesNeedCopy = false;
+	        		lineIndices.capacity() * intByteCount,
+	        		lineIndices, GL2.GL_DYNAMIC_DRAW);
+	        linesNeedCopy = false;
 		}
         gl.glEnableClientState(GL2.GL_VERTEX_ARRAY);
         gl.glBindBuffer( GL2.GL_ARRAY_BUFFER, vbo );
@@ -149,31 +163,31 @@ implements GLActor
         gl.glEnableClientState(GL2.GL_COLOR_ARRAY);
         gl.glBindBuffer(GL2.GL_ARRAY_BUFFER, colorBo);
         gl.glColorPointer(colorFloatCount, GL2.GL_FLOAT, 0, 0L);
-        gl.glBindBuffer(GL2.GL_ELEMENT_ARRAY_BUFFER, edgeIbo);
-		edgeShader.load(gl);
- 		edgeShader.setUniform(gl, "zThickness", zThicknessInPixels);
+        gl.glBindBuffer(GL2.GL_ELEMENT_ARRAY_BUFFER, lineIbo);
+		lineShader.load(gl);
+ 		lineShader.setUniform(gl, "zThickness", zThicknessInPixels);
  		// log.info("zThickness = "+zThickness);
  		float focus[] = {
  			(float)camera.getFocus().getX(),
  			(float)camera.getFocus().getY(),
  			(float)camera.getFocus().getZ()};
- 		edgeShader.setUniform3v(gl, "focus", 1, focus);
+ 		lineShader.setUniform3v(gl, "focus", 1, focus);
 		gl.glEnable(GL2.GL_LINE_SMOOTH);
 		gl.glHint(GL2.GL_LINE_SMOOTH_HINT, GL2.GL_NICEST);
         // wider black line
 		gl.glLineWidth(3.5f);
-		edgeShader.setUniform3v(gl, "baseColor", 1, blackColor);
+		lineShader.setUniform3v(gl, "baseColor", 1, blackColor);
         // gl.glColor4f(0, 0, 0, 0.7f); // black
         gl.glDrawElements(GL2.GL_LINES, 
-        		edgeIndices.capacity(), 
+        		lineIndices.capacity(), 
         		GL2.GL_UNSIGNED_INT, 
         		0L);
         // narrower white line
 		gl.glLineWidth(1.5f);
-		edgeShader.setUniform3v(gl, "baseColor", 1, neuronColor);
+		lineShader.setUniform3v(gl, "baseColor", 1, neuronColor);
         // gl.glColor4f(1, 1, 1, 0.7f); // white
         gl.glDrawElements(GL2.GL_LINES, 
-        		edgeIndices.capacity(), 
+        		lineIndices.capacity(), 
         		GL2.GL_UNSIGNED_INT, 
         		0L);
         //
@@ -181,7 +195,7 @@ implements GLActor
 	    gl.glDisableClientState(GL2.GL_COLOR_ARRAY);
         gl.glBindBuffer( GL2.GL_ARRAY_BUFFER, 0 );
         gl.glBindBuffer(GL2.GL_ELEMENT_ARRAY_BUFFER, 0);
-        edgeShader.unload(gl);
+        lineShader.unload(gl);
 	}
 	
 	private synchronized void displayAnchors(GLAutoDrawable glDrawable) {
@@ -303,23 +317,28 @@ implements GLActor
 		// System.out.println("painting skeleton");
 		displayEdges(glDrawable);
 
+		displayTracedSegments(glDrawable);
+		
+		if (isAnchorsVisible())
+			displayAnchors(glDrawable);
+	}
+
+	private void displayTracedSegments(GLAutoDrawable glDrawable) {
 		GL gl = glDrawable.getGL();
 		GL2 gl2 = gl.getGL2();
+		// log.info("Displaying "+tracedSegments.size()+" traced segments");
 		tracedShader.load(gl2);
 		// black background
         gl.glLineWidth(4.0f);
         tracedShader.setUniform3v(gl2, "neuronColor", 1, blackColor);
-		for (TracedPathActor segment : tracedSegments)
+		for (TracedPathActor segment : tracedSegments.values())
 		    segment.display(glDrawable);
 		// neuron colored foreground
         gl.glLineWidth(2.5f);
         tracedShader.setUniform3v(gl2, "neuronColor", 1, neuronColor);
-        for (TracedPathActor segment : tracedSegments)
+        for (TracedPathActor segment : tracedSegments.values())
             segment.display(glDrawable);
 		tracedShader.unload(gl2);
-		
-		if (isAnchorsVisible())
-			displayAnchors(glDrawable);
 	}
 
 	public int getIndexForAnchor(Anchor anchor) {
@@ -400,7 +419,6 @@ implements GLActor
 		// Track vertex index, to support vertex buffer object
 		anchorIndices.clear();
 		indexAnchors.clear();
-		int edgeCount = 0;
 		int pointCount = 0;
 		// Populate vertex array
 		for (Anchor anchor : skeleton.getAnchors()) {
@@ -417,14 +435,33 @@ implements GLActor
 			indexAnchors.put(vertexIndex, anchor);
 			vertexIndex += 1;
 			pointCount += 1;
-			edgeCount += anchor.getNeighbors().size();
 		}
-		// Populate edge index buffer
-		edgeCount = edgeCount / 2; // both forward and back directions were counted.
-		ByteBuffer edgeBytes = ByteBuffer.allocateDirect(edgeCount*intByteCount*edgeIntCount);
-		edgeBytes.order(ByteOrder.nativeOrder());
-		edgeIndices = edgeBytes.asIntBuffer();
-		edgeIndices.rewind();
+		//
+		// Update Traced path actors
+		Set<SegmentIndex> foundSegments = new HashSet<SegmentIndex>();
+		Collection<TracedPathSegment> skeletonSegments = skeleton.getTracedSegments();
+		// log.info("Skeleton has " + skeletonSegments.size() + " traced segments");
+		for (TracedPathSegment segment : skeletonSegments) {
+			SegmentIndex ix = segment.getSegmentIndex();
+			foundSegments.add(ix);
+			if (tracedSegments.containsKey(ix))
+				continue; // already have this segment!
+			TracedPathActor actor = new TracedPathActor(segment, getTileFormat());
+			addTracedSegment(actor);
+		}
+    	// log.info("tracedSegments.size() [485] = "+tracedSegments.size());
+		// Delete obsolete traced segments
+    	// COPY the keyset, to avoid damaging the original tracedSegment keys.
+		Set<SegmentIndex> orphanSegments = new HashSet<SegmentIndex>(tracedSegments.keySet());
+		orphanSegments.removeAll(foundSegments);
+		for (SegmentIndex ix : orphanSegments) {
+			log.info("Removing orphan segment");
+			tracedSegments.remove(ix);
+		}
+    	// log.info("tracedSegments.size() [492] = "+tracedSegments.size());
+		//
+		// Populate edge index buffer - AFTER traced segments have been finalized
+		List<Integer> tempLineIndices = new Vector<Integer>(); // because we don't know size yet
 		for (Anchor anchor : skeleton.getAnchors()) {
 			int i1 = getIndexForAnchor(anchor);
 			if (i1 < 0)
@@ -433,14 +470,24 @@ implements GLActor
 				int i2 = getIndexForAnchor(neighbor);
 				if (i2 < 0)
 					continue;
-				if (i1 < i2) {// only use ascending pairs, for uniqueness
-					edgeIndices.put(i1);
-					edgeIndices.put(i2);
-				}
+				if (i1 >= i2)
+					continue; // only use ascending pairs, for uniqueness
+				SegmentIndex segmentIndex = new SegmentIndex(anchor.getGuid(), neighbor.getGuid());
+				// Don't draw lines where there is already a traced segment.
+				if (tracedSegments.containsKey(segmentIndex))
+					continue;
+				tempLineIndices.add(i1);
+				tempLineIndices.add(i2);
 			}
 		}
-		edgeIndices.rewind();
-		edgesNeedCopy = true;
+		ByteBuffer lineBytes = ByteBuffer.allocateDirect(tempLineIndices.size()*intByteCount);
+		lineBytes.order(ByteOrder.nativeOrder());
+		lineIndices = lineBytes.asIntBuffer();
+		lineIndices.rewind();
+		for (int i : tempLineIndices) // fill actual int buffer
+			lineIndices.put(i);
+		lineIndices.rewind();
+		linesNeedCopy = true;
 		// Populate point index buffer
 		ByteBuffer pointBytes = ByteBuffer.allocateDirect(pointCount*intByteCount);
 		pointBytes.order(ByteOrder.nativeOrder());
@@ -456,6 +503,14 @@ implements GLActor
 	}
 	
 
+	public void setTileFormat(TileFormat tileFormat) {
+		this.tileFormat = tileFormat;
+	}
+	
+	private TileFormat getTileFormat() {
+		return tileFormat;
+	}
+
 	@Override
 	public void init(GLAutoDrawable glDrawable) {
 		// Required for gl_VertexID to be found in shader
@@ -464,7 +519,7 @@ implements GLActor
         GL2 gl = glDrawable.getGL().getGL2();
         PassThroughTextureShader.checkGlError(gl, "load anchor texture 000");
 		try {
-			edgeShader.init(gl);
+			lineShader.init(gl);
 			anchorShader.init(gl);
 			tracedShader.init(gl);
 		} catch (ShaderCreationException e) {
@@ -546,17 +601,17 @@ implements GLActor
                 pixels);
         gl.glDisable(GL2.GL_TEXTURE_2D);
 
-        // Create a buffer object for edge indices
+        // Create a buffer object for line indices
         //
         int ix[] = {0, 0, 0, 0};
         gl.glGenBuffers( 4, ix, 0 );
         vbo = ix[0];
-        edgeIbo = ix[1];
+        lineIbo = ix[1];
         pointIbo = ix[2];
         colorBo = ix[3];
         //
 		PassThroughTextureShader.checkGlError(gl, "load anchor texture");
-		edgesNeedCopy = true;
+		linesNeedCopy = true;
 		verticesNeedCopy = true;
 		
 		// Apply transparency, even when anchors are not shown
@@ -573,8 +628,13 @@ implements GLActor
 		int ix1[] = {anchorTextureId, parentAnchorTextureId};
         GL2 gl = glDrawable.getGL().getGL2();
 		gl.glDeleteTextures(2, ix1, 0);
-		int ix2[] = {vbo, edgeIbo, pointIbo, colorBo};
+		int ix2[] = {vbo, lineIbo, pointIbo, colorBo};
 		gl.glDeleteBuffers(4, ix2, 0);
+		for (TracedPathActor path : tracedSegments.values())
+			path.dispose(glDrawable);
+		System.out.println("Clearing tracedSegments");
+		tracedSegments.clear();
+    	// log.info("tracedSegments.size() [629] = "+tracedSegments.size());
 	}
 
 	public synchronized void setHoverAnchorIndex(int ix) {
@@ -639,7 +699,10 @@ implements GLActor
     }
 
     public void addTracedSegment(TracedPathActor actor) {
-        tracedSegments.add(actor);
-        skeletonActorChangedSignal.emit();        
+    	// log.info("tracedSegments.size() [691] = "+tracedSegments.size());
+    	// log.info("Adding traced segment to SkeletonActor");
+        tracedSegments.put(actor.getSegmentIndex(), actor);
+    	// log.info("tracedSegments.size() [694] = "+tracedSegments.size());
+        skeletonActorChangedSignal.emit();
     }
 }
