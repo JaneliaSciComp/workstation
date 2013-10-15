@@ -37,6 +37,7 @@ import org.janelia.it.FlyWorkstation.gui.framework.viewer.alignment_board.events
 import org.janelia.it.FlyWorkstation.gui.framework.viewer.alignment_board.events.AlignmentBoardOpenEvent;
 import org.janelia.it.FlyWorkstation.gui.util.Icons;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.Mip3d;
+import org.janelia.it.FlyWorkstation.gui.alignment_board_viewer.ScaledMip3d;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.VolumeModel;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.texture.TextureDataI;
 import org.janelia.it.FlyWorkstation.model.domain.CompartmentSet;
@@ -195,8 +196,8 @@ public class AlignmentBoardViewer extends Viewer implements AlignmentBoardContro
     public void handleBoardOpened(AlignmentBoardOpenEvent event) {
         logger.info( "Board Opened" );
 
-//        AlignmentBoardContext abContext = event.getAlignmentBoardContext();
-//        handleBoardOpened(abContext);
+        AlignmentBoardContext abContext = event.getAlignmentBoardContext();
+        handleBoardOpened(abContext);
     }
 
     @SuppressWarnings("unused")
@@ -205,24 +206,24 @@ public class AlignmentBoardViewer extends Viewer implements AlignmentBoardContro
         logger.debug( "Item changed" );
         // Check this, to prevent this being completed until the board has been first initialized.
         // Redundant events may be posted at startup.
-//        if ( boardOpen ) {
-//            AlignmentBoardContext abContext = event.getAlignmentBoardContext();
-//
-//            printItemChanged(event.getAlignedItem(), event.getChangeType().toString());
-//            printAlignmentBoardContext(abContext);
-//
-//            if ( event.getChangeType().equals( AlignmentBoardItemChangeEvent.ChangeType.VisibilityChange )  ||
-//                    event.getChangeType().equals( AlignmentBoardItemChangeEvent.ChangeType.ColorChange ) ) {
-//
-//                // Changing the render mapping values.
-//                this.updateRendering( abContext );
-//
-//            }
-//            else {
-//                serialize();
-//                this.updateContents(abContext);
-//            }
-//        }
+        if ( boardOpen ) {
+            AlignmentBoardContext abContext = event.getAlignmentBoardContext();
+
+            printItemChanged(event.getAlignedItem(), event.getChangeType().toString());
+            printAlignmentBoardContext(abContext);
+
+            if ( event.getChangeType().equals( AlignmentBoardItemChangeEvent.ChangeType.VisibilityChange )  ||
+                    event.getChangeType().equals( AlignmentBoardItemChangeEvent.ChangeType.ColorChange ) ) {
+
+                // Changing the render mapping values.
+                this.updateRendering( abContext );
+
+            }
+            else {
+                serialize();
+                this.updateContents(abContext);
+            }
+        }
     }
 
     //---------------------------------------IMPLEMENTATION of AlignmentBoardControllable
@@ -635,7 +636,7 @@ public class AlignmentBoardViewer extends Viewer implements AlignmentBoardContro
         if ( mip3d != null ) {
             mip3d.releaseMenuActions();
         }
-        mip3d = new Mip3d();
+        mip3d = new ScaledMip3d();
         // If the mip3d is re-created, so must the settings dialog be.  It depends on the Mip3d.
         if ( settingsDialog != null ) {
             settingsDialog.dispose();

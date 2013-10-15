@@ -1,10 +1,9 @@
 package org.janelia.it.FlyWorkstation.gui.viewer3d;
 
-//import org.janelia.it.FlyWorkstation.gui.alignment_board_viewer.MultiTexVolumeBrick;
 import org.janelia.it.FlyWorkstation.geom.Rotation3d;
 import org.janelia.it.FlyWorkstation.geom.UnitVec3;
 import org.janelia.it.FlyWorkstation.geom.Vec3;
-import org.janelia.it.FlyWorkstation.gui.camera.BasicCamera3d;
+import org.janelia.it.FlyWorkstation.gui.camera.BasicObservableCamera3d;
 import org.janelia.it.FlyWorkstation.gui.opengl.GLActor;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.error_trap.JaneliaDebugGL2;
 
@@ -16,11 +15,16 @@ import java.awt.*;
 class MipRenderer 
     extends BaseRenderer
 {
+    public static final double DISTANCE_TO_SCREEN_IN_PIXELS = 2000;
+
+    public static final double MAX_PIXELS_PER_VOXEL = 100.0;
+    public static final double MIN_PIXELS_PER_VOXEL = 0.001;
     private static final double DEFAULT_CAMERA_FOCUS_DISTANCE = 20.0;
+    private static final double MIN_CAMERA_FOCUS_DISTANCE = -100000.0;
+    private static final double MAX_CAMERA_FOCUS_DISTANCE = -0.001;
+    private static final Vec3 UP_IN_CAMERA = new Vec3(0,-1,0);
 
     // camera parameters
-    private Vec3 upInCamera = new Vec3(0,-1,0);
-    private double distanceToScreenInPixels = 2000;
     private double defaultHeightInPixels = 400.0;
     private double widthInPixels = defaultHeightInPixels;
     private double heightInPixels = defaultHeightInPixels;
@@ -32,7 +36,7 @@ class MipRenderer
     public MipRenderer() {
 		// actors.add(new TeapotActor()); // solid shading is not supported right now
         volumeModel = new VolumeModel();
-        BasicCamera3d camera3d = new BasicCamera3d();
+        BasicObservableCamera3d camera3d = new BasicObservableCamera3d();
         camera3d.setFocus( 0.0, 0.0, -DEFAULT_CAMERA_FOCUS_DISTANCE );
         getVolumeModel().setCamera3d(camera3d);
 //        addActor( new MultiTexVolumeBrick( getVolumeModel() ) );
@@ -71,9 +75,9 @@ class MipRenderer
         gl.glLoadIdentity();
 
         glDrawable.getWidth();
-        Vec3 f = volumeModel.getFocusInGround();
+        Vec3 f = volumeModel.getFocusInGround();    // This is what allows (follows) drag in X and Y.
         Rotation3d rotation = getVolumeModel().getCamera3d().getRotation();
-        Vec3 u = rotation.times(upInCamera);
+        Vec3 u = rotation.times( UP_IN_CAMERA );
         Vec3 c = f.plus(rotation.times( volumeModel.getCamera3d().getFocus()) );
         glu.gluLookAt(c.x(), c.y(), c.z(), // camera in ground
                 f.x(), f.y(), f.z(), // focus in ground
@@ -97,7 +101,11 @@ class MipRenderer
     }
  
     public double glUnitsPerPixel() {
-    		return Math.abs( volumeModel.getCamera3d().getFocus().getZ() ) / distanceToScreenInPixels;
+        return Math.abs( volumeModel.getCamera3d().getFocus().getZ() ) / DISTANCE_TO_SCREEN_IN_PIXELS;
+    }
+
+    public double getVoxelsPerSceneUnit() {
+        return Math.abs( DISTANCE_TO_SCREEN_IN_PIXELS / volumeModel.getCamera3d().getFocus().getZ() );
     }
 
     public void resetView()
@@ -157,7 +165,7 @@ class MipRenderer
 	public void updateProjection(GL2 gl) {
         gl.glViewport(0, 0, (int)widthInPixels, (int)heightInPixels);
         double verticalApertureInDegrees = 180.0/Math.PI * 2.0 * Math.abs(
-        		Math.atan2(heightInPixels/2.0, distanceToScreenInPixels));
+        		Math.atan2(heightInPixels/2.0, DISTANCE_TO_SCREEN_IN_PIXELS));
         gl.glPushAttrib(GL2.GL_TRANSFORM_BIT);
         gl.glMatrixMode(GL2.GL_PROJECTION);
         gl.glLoadIdentity();
@@ -171,28 +179,25 @@ class MipRenderer
 	}
 	
 	public void zoom(double zoomRatio) {
-		if (zoomRatio <= 0.0)
+		if (zoomRatio <= 0.0) {
 			return;
-		if (zoomRatio == 1.0)
+        }
+		if (zoomRatio == 1.0) {
 			return;
-        double zoomMin = Math.log(getMinZoom()) / Math.log(2.0);
-        double zoomMax = Math.log(getMaxZoom()) / Math.log(2.0);
-        //if ( zoomRatio > zoomMax ) {
-        //    return;
-        //}
-        //if ( zoomRatio < zoomMin ) {
-        //    return;
-        //}
+        }
 
         double cameraFocusDistance = volumeModel.getCamera3d().getFocus().getZ();
-		cameraFocusDistance /= zoomRatio;
-        volumeModel.getCamera3d().setFocus( 0.0, 0.0, cameraFocusDistance );
+        cameraFocusDistance /= zoomRatio;
+        if ( cameraFocusDistance > MAX_CAMERA_FOCUS_DISTANCE ) {
+            return;
+        }
+        if ( cameraFocusDistance < MIN_CAMERA_FOCUS_DISTANCE ) {
+            return;
+        }
+        getVolumeModel().getCamera3d().setPixelsPerSceneUnit( Math.abs( DISTANCE_TO_SCREEN_IN_PIXELS / cameraFocusDistance ) );
 
-        double relativeZoom = zoomRatio / 1000.0;
-        double zoom = zoomMin + relativeZoom * (zoomMax - zoomMin);
-        // log scale
-        zoom = Math.pow(2.0, zoom);
-        getVolumeModel().getCamera3d().setPixelsPerSceneUnit(zoom);
+        volumeModel.getCamera3d().setFocus(0.0, 0.0, cameraFocusDistance);
+
 
     }
 	
@@ -246,7 +251,7 @@ class MipRenderer
         // System.out.println("Focus = " + focusInGround);
         // cameraFocusDistance = DEFAULT_CAMERA_FOCUS_DISTANCE * defaultHeightInPixels / heightInPixels;
         double finalAspectRatio = maxAspectRatio(boundingBox);
-        double cameraFocusDistance = finalAspectRatio * 1.05 * distanceToScreenInPixels * heightInMicrometers / heightInPixels;
+        double cameraFocusDistance = finalAspectRatio * 1.05 * DISTANCE_TO_SCREEN_IN_PIXELS * heightInMicrometers / heightInPixels;
         volumeModel.getCamera3d().setFocus( 0.0, 0.0, -cameraFocusDistance );
 
     }
@@ -266,35 +271,42 @@ class MipRenderer
     }
 
     private double getMaxZoom() {
+        double maxRes = getMaxRes();
+        return MAX_PIXELS_PER_VOXEL / maxRes; // This many pixels per voxel is probably zoomed enough...
+    }
+
+    private double getMaxRes() {
         VolumeModel model = getVolumeModel();
-        double maxRes = Math.min(
+        return (double) Math.min(
             model.getVoxelMicrometers()[0],
             Math.min(
                 model.getVoxelMicrometers()[1],
                 model.getVoxelMicrometers()[2]
             )
         );
-        return 20.0 / maxRes; // 300 pixels per voxel is probably zoomed enough...
     }
 
     private double getMinZoom() {
-        double result = getMaxZoom();
-        BoundingBox3d box = getBoundingBox();
-        Vec3 volSize = new Vec3(box.getWidth(), box.getHeight(), box.getDepth());
-
-        int w = getVolumeModel().getVoxelDimensions()[ 0 ];
-        int h = getVolumeModel().getVoxelDimensions()[ 1 ];
-        if (w > 0  &&  h > 0 ) {
-            // Fit two of the whole volume on the screen
-            // Rotate volume to match viewer orientation
-            Vec3 rotSize = getVolumeModel().getCamera3d().getRotation().inverse().times(volSize);
-            double zx = 0.5 * w / Math.abs(rotSize.x());
-            double zy = 0.5 * h / Math.abs(rotSize.y());
-            double z = Math.min(zx, zy);
-            result = Math.min(z, result);
-        }
-        return result;
+        return MIN_PIXELS_PER_VOXEL / getMaxRes();
+//        BoundingBox3d box = getBoundingBox();
+//        Vec3 volSize = new Vec3(box.getWidth(), box.getHeight(), box.getDepth());
+//
+//        int w = getVolumeModel().getVoxelDimensions()[ 0 ];
+//        int h = getVolumeModel().getVoxelDimensions()[ 1 ];
+//        if (w > 0  &&  h > 0 ) {
+//            // Fit two of the whole volume on the screen
+//            // Rotate volume to match viewer orientation
+////  Vec3 rotSize = viewer.getViewerInGround().inverse().times(volSize);
+////            Vec3 rotSize = getVolumeModel().getFocusInGround().transpose().times(volSize);
+//            Vec3 rotSize = getVolumeModel().getCamera3d().getRotation().inverse().times(volSize);
+//            double zx = 0.5 * w / Math.abs(rotSize.x());
+//            double zy = 0.5 * h / Math.abs(rotSize.y());
+//            result =
+//                Math.min(
+//                    Math.min(zx, zy),
+//                    result);
+//        }
+//        return result;
     }
-
 
 }

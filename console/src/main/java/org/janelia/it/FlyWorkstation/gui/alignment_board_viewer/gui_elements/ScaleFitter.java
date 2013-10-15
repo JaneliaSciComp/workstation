@@ -9,6 +9,13 @@ public class ScaleFitter {
     private int startOfRange;
     private int sizeOfRange;
 
+    /**
+     * Construct this with values specific to the caller.
+     *
+     * @param tolerance how close before we can call it a day?
+     * @param startOfRange nothing smaller than this.
+     * @param sizeOfRange end of range will be start + this.
+     */
     public ScaleFitter( double tolerance, int startOfRange, int sizeOfRange ) {
         this.tolerance = tolerance;
         this.startOfRange = startOfRange;
@@ -170,6 +177,10 @@ public class ScaleFitter {
 
         public void setPixelCount( int pixelCount ) {
             this.pixelCount = pixelCount;
+        }
+
+        public double getValue() {
+            return getPixelCount() * getPixelsPerMicron();
         }
     }
 }
