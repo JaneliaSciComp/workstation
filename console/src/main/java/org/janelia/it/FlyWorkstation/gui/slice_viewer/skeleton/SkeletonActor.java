@@ -40,9 +40,8 @@ import org.janelia.it.FlyWorkstation.octree.ZoomedVoxelIndex;
 import org.janelia.it.FlyWorkstation.signal.Signal;
 import org.janelia.it.FlyWorkstation.signal.Signal1;
 import org.janelia.it.FlyWorkstation.signal.Slot;
-import org.janelia.it.FlyWorkstation.tracing.PathTraceRequest;
+import org.janelia.it.FlyWorkstation.tracing.AnchoredVoxelPath;
 import org.janelia.it.FlyWorkstation.tracing.PathTraceRequest.SegmentIndex;
-import org.janelia.it.FlyWorkstation.tracing.TracedPathSegment;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -457,14 +456,14 @@ implements GLActor
 		//
 		// Update Traced path actors
 		Set<SegmentIndex> foundSegments = new HashSet<SegmentIndex>();
-		Collection<TracedPathSegment> skeletonSegments = skeleton.getTracedSegments();
+		Collection<AnchoredVoxelPath> skeletonSegments = skeleton.getTracedSegments();
 		// log.info("Skeleton has " + skeletonSegments.size() + " traced segments");
-		for (TracedPathSegment segment : skeletonSegments) {
+		for (AnchoredVoxelPath segment : skeletonSegments) {
 			SegmentIndex ix = segment.getSegmentIndex();
 			foundSegments.add(ix);
 			if (tracedSegments.containsKey(ix)) {
 				// Is the old traced segment still valid?
-				TracedPathSegment oldSegment = tracedSegments.get(ix).getSegment();
+				AnchoredVoxelPath oldSegment = tracedSegments.get(ix).getSegment();
 				List<ZoomedVoxelIndex> p0 = oldSegment.getPath();
 				List<ZoomedVoxelIndex> p1 = segment.getPath();
 				boolean looksTheSame = true;

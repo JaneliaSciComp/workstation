@@ -5,7 +5,9 @@ import java.util.List;
 import org.janelia.it.FlyWorkstation.octree.ZoomedVoxelIndex;
 import org.janelia.it.FlyWorkstation.tracing.PathTraceRequest.SegmentIndex;
 
-public class TracedPathSegment {
+public class TracedPathSegment 
+implements AnchoredVoxelPath
+{
     private PathTraceRequest request;
     private List<ZoomedVoxelIndex> path;
     private List<Integer> intensities;

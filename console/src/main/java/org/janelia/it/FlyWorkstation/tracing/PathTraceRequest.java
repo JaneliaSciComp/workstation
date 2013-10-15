@@ -1,7 +1,6 @@
 package org.janelia.it.FlyWorkstation.tracing;
 
 import org.janelia.it.FlyWorkstation.geom.Vec3;
-import org.janelia.it.FlyWorkstation.tracing.PathTraceRequest.SegmentIndex;
 
 public class PathTraceRequest {
 
@@ -93,6 +92,14 @@ public class PathTraceRequest {
 			return true;
 		}
 
+    }
+
+    public long getAnchor1Guid() {
+        return anchorGuid1;
+    }
+
+    public long getAnchor2Guid() {
+        return anchorGuid2;
     }
 
 }

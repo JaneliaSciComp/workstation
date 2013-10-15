@@ -5,7 +5,6 @@ import java.nio.ByteOrder;
 import java.nio.FloatBuffer;
 
 import javax.media.opengl.GL;
-import javax.media.opengl.GL2;
 import javax.media.opengl.GL2GL3;
 import javax.media.opengl.GLAutoDrawable;
 import javax.media.opengl.glu.GLU;
@@ -18,8 +17,7 @@ import org.janelia.it.FlyWorkstation.gui.slice_viewer.TileFormat.MicrometerXyz;
 import org.janelia.it.FlyWorkstation.gui.slice_viewer.TileFormat.VoxelXyz;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.BoundingBox3d;
 import org.janelia.it.FlyWorkstation.octree.ZoomedVoxelIndex;
-import org.janelia.it.FlyWorkstation.tracing.PathTraceRequest;
-import org.janelia.it.FlyWorkstation.tracing.TracedPathSegment;
+import org.janelia.it.FlyWorkstation.tracing.AnchoredVoxelPath;
 import org.janelia.it.FlyWorkstation.tracing.PathTraceRequest.SegmentIndex;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -41,14 +39,14 @@ implements GLActor
     private boolean bIsInitialized = false;
 	private SegmentIndex segmentIndex;
 	// For determining if traced path is still appropriate
-	TracedPathSegment segment;
+	AnchoredVoxelPath segment;
 
-    public TracedPathActor(TracedPathSegment path, TileFormat tileFormat) 
+    public TracedPathActor(AnchoredVoxelPath segment, TileFormat tileFormat) 
     {
-    	segment = path;
+    	this.segment = segment;
     	// TODO guid
     	//
-        pointCount = path.getPath().size();
+        pointCount = segment.getPath().size();
         // Store vertices
         long totalVertexByteCount = floatsPerVertex * bytesPerFloat * pointCount;
         vertexByteBuffer = ByteBuffer.allocateDirect(
@@ -56,7 +54,7 @@ implements GLActor
         vertexByteBuffer.order(ByteOrder.nativeOrder());
         FloatBuffer vertices = vertexByteBuffer.asFloatBuffer();
         vertices.rewind();
-        for (ZoomedVoxelIndex zv : path.getPath()) {
+        for (ZoomedVoxelIndex zv : segment.getPath()) {
             VoxelXyz vx = tileFormat.voxelXyzForZoomedVoxelIndex(zv, CoordinateAxis.Z);
             MicrometerXyz umXyz = tileFormat.micrometerXyzForVoxelXyz(vx, CoordinateAxis.Z);
             Vec3 v = new Vec3(
@@ -72,7 +70,7 @@ implements GLActor
                 vertices.put(1.0f);
         }
         vertices.rewind();
-        this.segmentIndex = path.getSegmentIndex();
+        this.segmentIndex = segment.getSegmentIndex();
     }
 
     private void checkGlError(GL gl, String message) {
@@ -93,7 +91,6 @@ implements GLActor
         gl.glBindBuffer(GL.GL_ARRAY_BUFFER, vertexVbo);
         gl2gl3.glEnableVertexAttribArray(vertexLocation);
         gl2gl3.glVertexAttribPointer(vertexLocation, floatsPerVertex, GL.GL_FLOAT, false, 0, 0);
-        GL2 gl2 = gl.getGL2();
         gl.glDrawArrays(GL.GL_LINE_STRIP, 0, pointCount);
         gl2gl3.glDisableVertexAttribArray(vertexLocation);
         checkGlError(gl, "render traced path");
@@ -104,7 +101,7 @@ implements GLActor
         return boundingBox;
     }
 
-    public TracedPathSegment getSegment() {
+    public AnchoredVoxelPath getSegment() {
 		return segment;
 	}
 
