@@ -604,12 +604,7 @@ public class LayersPanel extends JPanel implements Refreshable, ActivatableView 
             
             JComponent cell = (JComponent)super.getTableCellRendererComponent(
                     table, value, selected, hasFocus, row, column);
-            
-            if (value==null) {
-                cell.setToolTipText( "Default rendering" );
-                return cell;
-            }
-            
+                        
             final AlignedItem alignedItem = (AlignedItem)value;
             
             JLabel label = (JLabel)cell;
@@ -622,11 +617,15 @@ public class LayersPanel extends JPanel implements Refreshable, ActivatableView 
                 label.setText("");
                 label.setToolTipText( "Raw rendering" );
             }
-            else {
+            else if (alignedItem.getColor()!=null) {
                 ColorSwatch swatch = new ColorSwatch(COLOR_SWATCH_SIZE, alignedItem.getColor(), Color.white);
                 label.setIcon(swatch);
                 label.setText("");
                 label.setToolTipText( "Chosen (mono) color rendering" );
+            }
+            else {
+                label.setText("");
+                label.setToolTipText( "Default rendering" );
             }
             
             return label;
