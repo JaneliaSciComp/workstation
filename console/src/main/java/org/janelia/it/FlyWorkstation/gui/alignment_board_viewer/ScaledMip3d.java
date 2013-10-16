@@ -68,13 +68,12 @@ public class ScaledMip3d extends Mip3d {
 
     private ScaleFitter.FitReportBean getFitReport() throws Exception {
         double pixelsPerSceneUnit = getVolumeModel().getCamera3d().getPixelsPerSceneUnit();
-        //        / getVolumeModel().getVoxelMicrometers()[ 0 ];
-        System.out.println("Pixels per scene unit = "+ pixelsPerSceneUnit);
+        //System.out.println("Pixels per scene unit = "+ pixelsPerSceneUnit);
         double axisLengthDivisor = getAxisLengthDivisor();
         if ( axisLengthDivisor == 0.0 ) {
             axisLengthDivisor = 1.0;
         }
-        double factor = ( 1.0 / pixelsPerSceneUnit ) * axisLengthDivisor;
+        double factor = ( getVolumeModel().getVoxelMicrometers()[0] / pixelsPerSceneUnit ) * axisLengthDivisor ;
         ScaleFitter.FitReportBean fitReport = fitter.findClosestPixelWidth(factor, 1, previousMinimumIndex);
 
         // If the value changes too much, see if we can get closer going the other way.
@@ -86,7 +85,7 @@ public class ScaledMip3d extends Mip3d {
                 fitReport = oppositeFitReport;
             }
         }
-        System.out.println("Found a close value of " + fitReport.getValue() + ", and a line width of " + fitReport.getPixelCount());
+        //System.out.println("Found a close value of " + fitReport.getValue() + ", and a line width of " + fitReport.getPixelCount());
         return fitReport;
     }
 
