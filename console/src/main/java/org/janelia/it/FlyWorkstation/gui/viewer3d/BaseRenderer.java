@@ -14,6 +14,8 @@ import org.janelia.it.FlyWorkstation.gui.opengl.GLActor;
 // Shared base class of MipRenderer and SliceRenderer
 public abstract class BaseRenderer implements GLEventListener
 {
+    public static final double DISTANCE_TO_SCREEN_IN_PIXELS = 2000;
+
     protected GLU glu = new GLU();
     protected List<GLActor> actors = new ArrayList<GLActor>();
 	protected Color backgroundColor = new Color(0.0f, 0.0f, 0.0f, 0.0f);

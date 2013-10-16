@@ -6,6 +6,8 @@ import org.janelia.it.FlyWorkstation.geom.Vec3;
 import org.janelia.it.FlyWorkstation.gui.camera.BasicObservableCamera3d;
 import org.janelia.it.FlyWorkstation.gui.opengl.GLActor;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.error_trap.JaneliaDebugGL2;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.media.opengl.DebugGL2;
 import javax.media.opengl.GL2;
@@ -15,8 +17,6 @@ import java.awt.*;
 class MipRenderer 
     extends BaseRenderer
 {
-    public static final double DISTANCE_TO_SCREEN_IN_PIXELS = 2000;
-
     public static final double MAX_PIXELS_PER_VOXEL = 100.0;
     public static final double MIN_PIXELS_PER_VOXEL = 0.001;
     private static final double DEFAULT_CAMERA_FOCUS_DISTANCE = 20.0;
@@ -32,14 +32,16 @@ class MipRenderer
     private boolean resetFirstRedraw;
     private boolean hasBeenReset = false;
 
+    private Logger logger;
+
     // scene objects
     public MipRenderer() {
+        logger = LoggerFactory.getLogger(MipRenderer.class);
 		// actors.add(new TeapotActor()); // solid shading is not supported right now
         volumeModel = new VolumeModel();
         BasicObservableCamera3d camera3d = new BasicObservableCamera3d();
         camera3d.setFocus( 0.0, 0.0, -DEFAULT_CAMERA_FOCUS_DISTANCE );
         getVolumeModel().setCamera3d(camera3d);
-//        addActor( new MultiTexVolumeBrick( getVolumeModel() ) );
     }
     
     public void centerOnPixel(Point p) {
@@ -102,10 +104,6 @@ class MipRenderer
  
     public double glUnitsPerPixel() {
         return Math.abs( volumeModel.getCamera3d().getFocus().getZ() ) / DISTANCE_TO_SCREEN_IN_PIXELS;
-    }
-
-    public double getVoxelsPerSceneUnit() {
-        return Math.abs( DISTANCE_TO_SCREEN_IN_PIXELS / volumeModel.getCamera3d().getFocus().getZ() );
     }
 
     public void resetView()
@@ -186,7 +184,7 @@ class MipRenderer
 			return;
         }
 
-        double cameraFocusDistance = volumeModel.getCamera3d().getFocus().getZ();
+        double cameraFocusDistance = volumeModel.getCameraFocusDistance();
         cameraFocusDistance /= zoomRatio;
         if ( cameraFocusDistance > MAX_CAMERA_FOCUS_DISTANCE ) {
             return;
@@ -194,10 +192,9 @@ class MipRenderer
         if ( cameraFocusDistance < MIN_CAMERA_FOCUS_DISTANCE ) {
             return;
         }
-        getVolumeModel().getCamera3d().setPixelsPerSceneUnit( Math.abs( DISTANCE_TO_SCREEN_IN_PIXELS / cameraFocusDistance ) );
+        getVolumeModel().setCameraPixelsPerSceneUnit( DISTANCE_TO_SCREEN_IN_PIXELS, cameraFocusDistance );
 
         volumeModel.getCamera3d().setFocus(0.0, 0.0, cameraFocusDistance);
-
 
     }
 	
@@ -245,14 +242,17 @@ class MipRenderer
 
     private void resetCameraFocus(BoundingBox3d boundingBox) {
         double heightInMicrometers = boundingBox.getHeight();
-        if (! (heightInMicrometers >= 0.0)) // watch for NaN!
+        if (heightInMicrometers < 0.0) { // watch for NaN!
+            logger.warn("Adjusted height to account for zero-height bounding box.");
             heightInMicrometers = 2.0; // whatever
-
+        }
         // System.out.println("Focus = " + focusInGround);
         // cameraFocusDistance = DEFAULT_CAMERA_FOCUS_DISTANCE * defaultHeightInPixels / heightInPixels;
         double finalAspectRatio = maxAspectRatio(boundingBox);
-        double cameraFocusDistance = finalAspectRatio * 1.05 * DISTANCE_TO_SCREEN_IN_PIXELS * heightInMicrometers / heightInPixels;
-        volumeModel.getCamera3d().setFocus( 0.0, 0.0, -cameraFocusDistance );
+        double newFocusDistance = finalAspectRatio * 1.05 * DISTANCE_TO_SCREEN_IN_PIXELS * heightInMicrometers / heightInPixels;
+
+        volumeModel.getCamera3d().setFocus( 0.0, 0.0, -newFocusDistance );
+        getVolumeModel().setCameraPixelsPerSceneUnit( DISTANCE_TO_SCREEN_IN_PIXELS, getVolumeModel().getCameraFocusDistance() );
 
     }
 

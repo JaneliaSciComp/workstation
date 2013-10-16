@@ -119,6 +119,22 @@ public class VolumeModel {
         return camera3d;
     }
 
+    /** Convenience method to corral this calculation for consistent use. */
+    public double getCameraFocusDistance() {
+        if ( getCamera3d() == null ) {
+            return Double.MAX_VALUE;
+        }
+        return getCamera3d().getFocus().getZ();
+    }
+
+    /** Convenience method to corral this calculation for consistent use. */
+    public void setCameraPixelsPerSceneUnit( double screenPixelDistance, double cameraFocusDistance ) {
+        if ( getCamera3d() == null ) {
+            return;
+        }
+        getCamera3d().setPixelsPerSceneUnit( Math.abs( screenPixelDistance / cameraFocusDistance ) );
+    }
+
     public void setCamera3d(Camera3d camera3d) {
         this.camera3d = camera3d;
     }

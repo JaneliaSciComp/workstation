@@ -36,6 +36,7 @@ import org.janelia.it.FlyWorkstation.gui.framework.viewer.ViewerPane;
 import org.janelia.it.FlyWorkstation.gui.framework.viewer.alignment_board.events.AlignmentBoardItemChangeEvent;
 import org.janelia.it.FlyWorkstation.gui.framework.viewer.alignment_board.events.AlignmentBoardOpenEvent;
 import org.janelia.it.FlyWorkstation.gui.util.Icons;
+import org.janelia.it.FlyWorkstation.gui.viewer3d.BaseRenderer;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.Mip3d;
 import org.janelia.it.FlyWorkstation.gui.alignment_board_viewer.ScaledMip3d;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.VolumeModel;
@@ -267,12 +268,15 @@ public class AlignmentBoardViewer extends Viewer implements AlignmentBoardContro
         // Add this last.  "show-loading" removes it.  This way, it is shown only
         // when it becomes un-busy.
         addSettingsLaunchButton();
-        add( wrapperPanel, BorderLayout.CENTER );
+        add(wrapperPanel, BorderLayout.CENTER);
         mip3d.resetView();
 
         // Pull settings back in from last time.
         AlignmentBoardContext abContext = SessionMgr.getBrowser().getLayersPanel().getAlignmentBoardContext();
-        deserializeSettings( abContext );
+        deserializeSettings(abContext);
+
+        // Ensure pixels per scene unit properly accounted-for.
+        mip3d.getVolumeModel().setCameraPixelsPerSceneUnit( BaseRenderer.DISTANCE_TO_SCREEN_IN_PIXELS, mip3d.getVolumeModel().getCameraFocusDistance() );
     }
 
     @Override
@@ -280,7 +284,6 @@ public class AlignmentBoardViewer extends Viewer implements AlignmentBoardContro
         if ( successful ) {
             revalidate();
             repaint();
-
             if ( loadFiles ) {
                 mip3d.refresh();
             }
@@ -650,6 +653,8 @@ public class AlignmentBoardViewer extends Viewer implements AlignmentBoardContro
         deserializeSettings(SessionMgr.getBrowser().getLayersPanel().getAlignmentBoardContext());
 
         mip3d.addMenuAction(settingsDialog.getLaunchAction());
+        double cameraFocusDistance = mip3d.getVolumeModel().getCamera3d().getFocus().getZ();
+        mip3d.getVolumeModel().getCamera3d().setPixelsPerSceneUnit( Math.abs( BaseRenderer.DISTANCE_TO_SCREEN_IN_PIXELS / cameraFocusDistance ) );
     }
 
     private JPanel createWrapperPanel( Mip3d mip3d ) {

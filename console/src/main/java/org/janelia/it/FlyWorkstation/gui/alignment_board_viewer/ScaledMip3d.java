@@ -13,11 +13,12 @@ import org.janelia.it.FlyWorkstation.gui.viewer3d.Mip3d;import java.awt.*;
  */
 public class ScaledMip3d extends Mip3d {
 
-    public static final int MAX_LINEWIDTH = 300;
+    public static final int MAX_LINEWIDTH = 240;
     public static final int MIN_LINE_WIDTH = 85;
+    public static final String SCALE_UNITS = " \u03BCm";
 
     private ScaleFitter fitter;
-    private int previousClosesPixelWidth = (MAX_LINEWIDTH + MIN_LINE_WIDTH) / 2;
+    private int previousMinimumIndex = ((MAX_LINEWIDTH + MIN_LINE_WIDTH) / 2) - MIN_LINE_WIDTH;
 
     public ScaledMip3d() {
         fitter = new ScaleFitter( 0.01, MIN_LINE_WIDTH, MAX_LINEWIDTH - MIN_LINE_WIDTH );
@@ -36,33 +37,10 @@ public class ScaledMip3d extends Mip3d {
         }
 
         try {
-            double pixelsPerSceneUnit = getVolumeModel().getCamera3d().getPixelsPerSceneUnit();
-            //        / getVolumeModel().getVoxelMicrometers()[ 0 ];
-            System.out.println("Pixels per scene unit = "+ pixelsPerSceneUnit);
-            double factor = 1.0 / pixelsPerSceneUnit;
-            ScaleFitter.FitReportBean fitReport = fitter.findClosestPixelWidth(factor, 1, previousClosesPixelWidth);
-
-            if ( fitReport.getMinInx() < (previousClosesPixelWidth - 40 )) {
-                //DEBUG System.out.println("Recalculating");
-                fitReport = fitter.findClosestPixelWidth(factor, -1, previousClosesPixelWidth);
-            }
-            previousClosesPixelWidth = fitReport.getMinInx();
-            System.out.println("Found a close value of " + fitReport.getValue() + ", and a line width of " + fitReport.getPixelCount());
-
-            graphics.setColor( Color.white );
-            String labelText = (int)Math.round( fitReport.getValue() ) + " \u03BCm";
-            graphics.setFont( new Font("Ariel", Font.PLAIN, 10 ) );
-            int textHeight = graphics.getFontMetrics().getAscent(); // This is a better "height" estimate for most characters.
-            int textWidth = graphics.getFontMetrics().charsWidth( labelText.toCharArray(), 0, labelText.length() );
-
-            int lineWidth = fitReport.getPixelCount();
-
-            int textY = this.getHeight() - textHeight - 15;
-            int lineY = textY + textHeight;
-            int endX = this.getWidth() - 5;
-            int startX = endX - lineWidth;
-            graphics.drawString(labelText, endX - textWidth, textY );
-            graphics.drawLine( startX, lineY, endX, lineY );
+            ScaleFitter.FitReportBean fitReport = getFitReport();
+            previousMinimumIndex = fitReport.getMinInx();
+            String labelText = (int)Math.round( fitReport.getValue() ) + SCALE_UNITS;
+            paintScale(graphics, fitReport, labelText);
 
         } catch ( Exception ex ) {
             ex.printStackTrace();
@@ -72,5 +50,44 @@ public class ScaledMip3d extends Mip3d {
 
     }
 
-    /* Here will be a listener to the camera, so that the proper line length may be reflected. */
+    private void paintScale( Graphics graphics, ScaleFitter.FitReportBean fitReport, String labelText ) {
+        graphics.setColor( Color.white );
+        graphics.setFont( new Font("Ariel", Font.PLAIN, 10 ) );
+        int textHeight = graphics.getFontMetrics().getAscent(); // This is a better "height" estimate for most characters.
+        int textWidth = graphics.getFontMetrics().charsWidth( labelText.toCharArray(), 0, labelText.length() );
+
+        int lineWidth = fitReport.getPixelCount();
+
+        int textY = this.getHeight() - textHeight - 15;
+        int lineY = textY + textHeight;
+        int endX = this.getWidth() - 5;
+        int startX = endX - lineWidth;
+        graphics.drawString(labelText, endX - textWidth, textY );
+        graphics.drawLine( startX, lineY, endX, lineY );
+    }
+
+    private ScaleFitter.FitReportBean getFitReport() throws Exception {
+        double pixelsPerSceneUnit = getVolumeModel().getCamera3d().getPixelsPerSceneUnit();
+        //        / getVolumeModel().getVoxelMicrometers()[ 0 ];
+        System.out.println("Pixels per scene unit = "+ pixelsPerSceneUnit);
+        double axisLengthDivisor = getAxisLengthDivisor();
+        if ( axisLengthDivisor == 0.0 ) {
+            axisLengthDivisor = 1.0;
+        }
+        double factor = ( 1.0 / pixelsPerSceneUnit ) * axisLengthDivisor;
+        ScaleFitter.FitReportBean fitReport = fitter.findClosestPixelWidth(factor, 1, previousMinimumIndex);
+
+        // If the value changes too much, see if we can get closer going the other way.
+        if ( fitReport.getMinInx() < (previousMinimumIndex - 10 )) {
+            // Try and find a value within tolerance, that is still closer to the previous value.
+            ScaleFitter.FitReportBean oppositeFitReport = fitter.findClosestPixelWidth(factor, -1, previousMinimumIndex);
+            if ( Math.abs( oppositeFitReport.getMinInx() - previousMinimumIndex ) <
+                 Math.abs( fitReport.getMinInx() - previousMinimumIndex ) ) {
+                fitReport = oppositeFitReport;
+            }
+        }
+        System.out.println("Found a close value of " + fitReport.getValue() + ", and a line width of " + fitReport.getPixelCount());
+        return fitReport;
+    }
+
 }

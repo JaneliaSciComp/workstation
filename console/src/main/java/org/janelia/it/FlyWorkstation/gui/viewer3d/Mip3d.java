@@ -19,6 +19,7 @@ public class Mip3d extends BaseGLViewer implements ActionListener {
     private static final long serialVersionUID = 1L;
 	private MipRenderer renderer = new MipRenderer();
     private VolumeModel volumeModel = renderer.getVolumeModel();
+    private double axisLengthDivisor;
 
     public enum InteractionMode {
 		ROTATE,
@@ -77,6 +78,10 @@ public class Mip3d extends BaseGLViewer implements ActionListener {
         renderer.setResetFirstRedraw(resetFirstRedraw);
     }
 
+    public double getAxisLengthDivisor() {
+        return axisLengthDivisor;
+    }
+
     /**
      * Load a simple signal volume.
      *
@@ -132,6 +137,7 @@ public class Mip3d extends BaseGLViewer implements ActionListener {
             VolumeBrickFactory factory,
             RenderMappingI renderMapping,
             double axisLengthDivisor ) {
+        this.axisLengthDivisor = axisLengthDivisor;
         if ( signalTexture != null ) {
             VolumeBrickI brick = null;
             if ( maskTexture != null ) {

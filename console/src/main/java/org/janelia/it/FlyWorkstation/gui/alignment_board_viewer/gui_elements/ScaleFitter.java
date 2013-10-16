@@ -110,6 +110,7 @@ public class ScaleFitter {
             if ( i == previousBestInx ) {
                 endLoop = true;
             }
+            // DEBUG System.out.println("ScaleFitter: i=="+i+" previous best="+previousBestInx);
         }
 
         FitReportBean rtnVal = new FitReportBean();
