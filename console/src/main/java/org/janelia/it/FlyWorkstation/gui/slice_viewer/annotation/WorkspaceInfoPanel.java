@@ -132,7 +132,11 @@ public class WorkspaceInfoPanel extends JPanel
             }
         }
 
+        // I should probably just count the index during the enum
+        //  loop above...
         if (foundNeuron != null) {
+            int index = neuronListModel.indexOf(foundNeuron);
+            neuronListModel.setElementAt(neuron, index);
             neuronListBox.setSelectedValue(foundNeuron, true);
         }
     }
