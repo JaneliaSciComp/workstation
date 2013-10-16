@@ -70,6 +70,13 @@ public class SliceViewerTranslator {
         }
     };
 
+    public Slot1<TmGeoAnnotation> unmoveAnnotationSlot = new Slot1<TmGeoAnnotation>() {
+        @Override
+        public void execute(TmGeoAnnotation annotation) {
+            unmoveAnnotation(annotation);
+        }
+    };
+
     public Slot1<Vec3> cameraPanToSlot = new Slot1<Vec3>() {
         @Override
         public void execute(Vec3 location) {
@@ -83,6 +90,7 @@ public class SliceViewerTranslator {
     public Signal1<TmGeoAnnotation> anchorAddedSignal = new Signal1<TmGeoAnnotation>();
     public Signal1<TmGeoAnnotation> anchorDeletedSignal = new Signal1<TmGeoAnnotation>();
     public Signal1<TmGeoAnnotation> anchorReparentedSignal = new Signal1<TmGeoAnnotation>();
+    public Signal1<TmGeoAnnotation> anchorMovedSignal = new Signal1<TmGeoAnnotation>();
     public Signal clearSkeletonSignal = new Signal();
     public Signal clearNextParentSignal = new Signal();
 
@@ -98,6 +106,7 @@ public class SliceViewerTranslator {
         anchorAddedSignal.connect(skeleton.addAnchorSlot);
         anchorDeletedSignal.connect(skeleton.deleteAnchorSlot);
         anchorReparentedSignal.connect(skeleton.reparentAnchorSlot);
+        anchorMovedSignal.connect(skeleton.moveAnchorSlot);
         clearSkeletonSignal.connect(skeleton.clearSlot);
 
         clearNextParentSignal.connect(sliceViewer.getSkeletonActor().clearNextParentSlot);
@@ -108,7 +117,8 @@ public class SliceViewerTranslator {
         annModel.neuronSelectedSignal.connect(selectNeuronSlot);
         annModel.annotationAddedSignal.connect(addAnnotationSlot);
         annModel.annotationsDeletedSignal.connect(deleteAnnotationsSlot);
-        annModel.anotationReparentedSignal.connect(reparentAnnotationSlot);
+        annModel.annotationReparentedSignal.connect(reparentAnnotationSlot);
+        annModel.annotationNotMovedSignal.connect(unmoveAnnotationSlot);
     }
 
     /**
@@ -155,6 +165,15 @@ public class SliceViewerTranslator {
     public void reparentAnnotation(TmGeoAnnotation annotation) {
         // pretty much a pass-through to the skeleton
         anchorReparentedSignal.emit(annotation);
+    }
+
+    /**
+     * called by the model when it needs an annotation's anchor moved, whether
+     * because we moved it, or because the UI moved it and the operation failed,
+     * and we want it moved back
+     */
+    public void unmoveAnnotation(TmGeoAnnotation annotation) {
+        anchorMovedSignal.emit(annotation);
     }
 
     /**

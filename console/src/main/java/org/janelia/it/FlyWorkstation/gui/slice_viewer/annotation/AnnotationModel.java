@@ -54,9 +54,8 @@ that need to respond to changing data.
 
     public Signal1<TmGeoAnnotation> annotationAddedSignal = new Signal1<TmGeoAnnotation>();
     public Signal1<List<TmGeoAnnotation>> annotationsDeletedSignal = new Signal1<List<TmGeoAnnotation>>();
-    public Signal1<TmGeoAnnotation> anotationReparentedSignal = new Signal1<TmGeoAnnotation>();
-    // move or change attribute (eg, comment):
-    public Signal1<TmGeoAnnotation> annotationUpdatedSignal = new Signal1<TmGeoAnnotation>();
+    public Signal1<TmGeoAnnotation> annotationReparentedSignal = new Signal1<TmGeoAnnotation>();
+    public Signal1<TmGeoAnnotation> annotationNotMovedSignal = new Signal1<TmGeoAnnotation>();
 
     // ----- slots
     public Slot1<TmNeuron> neuronClickedSlot = new Slot1<TmNeuron>() {
@@ -272,7 +271,7 @@ that need to respond to changing data.
             //  position (pre-move)
             // this is unfortunately untested, because I couldn't think of an
             //  easy way to simulate or force a failure!
-            annotationUpdatedSignal.emit(getGeoAnnotationFromID(annotationID));
+            annotationNotMovedSignal.emit(getGeoAnnotationFromID(annotationID));
             throw e;
         }
 
@@ -280,9 +279,9 @@ that need to respond to changing data.
         updateCurrentNeuron();
 
         // this triggers the updates in, eg, the neurite list
-        if (currentNeuron != null) {
+        if (getCurrentNeuron() != null) {
             TmNeuron neuron = getNeuronFromAnnotation(annotationID);
-            if (neuron.getId().equals(currentNeuron.getId())) {
+            if (neuron.getId().equals(getCurrentNeuron().getId())) {
                 neuronSelectedSignal.emit(neuron);
             }
         }
@@ -343,7 +342,7 @@ that need to respond to changing data.
             // grab it again from the neuron
             neuron = getNeuronFromAnnotation(child.getId());
             child = neuron.getGeoAnnotationMap().get(child.getId());
-            anotationReparentedSignal.emit(child);
+            annotationReparentedSignal.emit(child);
         }
     }
 
@@ -456,6 +455,6 @@ that need to respond to changing data.
         annotationAddedSignal.emit(newAnnotation);
 
         annotation1 = neuron.getGeoAnnotationMap().get(annotation1.getId());
-        anotationReparentedSignal.emit(annotation1);
+        annotationReparentedSignal.emit(annotation1);
     }
 }
