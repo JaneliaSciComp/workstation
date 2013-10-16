@@ -25,6 +25,7 @@ public class AxesActor implements GLActor
 {
     private static final double DEFAULT_AXIS_LEN = 1000.0;
     public static final float TICK_SIZE = 15.0f;
+    public static final float SCENE_UNITS_BETWEEN_TICKS = 100.0f;
 
     public enum RenderMethod {MAXIMUM_INTENSITY, ALPHA_BLENDING}
 
@@ -516,7 +517,7 @@ public class AxesActor implements GLActor
     // Tick mark support.
     private int getTickCount( int axisLength ) {
         // Going for one / 100
-        return (int)(axisLength / 100.0 * axisLengthDivisor);
+        return (int)(axisLength / SCENE_UNITS_BETWEEN_TICKS * axisLengthDivisor) + 1;
     }
 
     /**
@@ -542,7 +543,8 @@ public class AxesActor implements GLActor
     ) {
         int tickCount = getTickCount(new Float(axisLengths[tickAxis.getAxisNum()]).intValue());
         if ( tickCount == 0 ) tickCount = 2;
-        int tickOffset = (int)axisLengths[ tickAxis.getAxisNum() ] / tickCount;
+        int tickOffsDiv = ( axisLengthDivisor == 0 ) ? 1 : (int)axisLengthDivisor;
+        int tickOffset = (int) SCENE_UNITS_BETWEEN_TICKS / tickOffsDiv; //(int)axisLengths[ tickAxis.getAxisNum() ] / tickCount;
         float[] vertices = new float[ tickCount * 6 ];
         int[] indices = new int[ 2 * tickCount ];
 
