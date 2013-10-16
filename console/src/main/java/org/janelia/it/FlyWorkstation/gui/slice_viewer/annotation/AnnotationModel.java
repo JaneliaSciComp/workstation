@@ -279,7 +279,14 @@ that need to respond to changing data.
         updateCurrentWorkspace();
         updateCurrentNeuron();
 
-        annotationUpdatedSignal.emit(getGeoAnnotationFromID(annotationID));
+        // this triggers the updates in, eg, the neurite list
+        if (currentNeuron != null) {
+            TmNeuron neuron = getNeuronFromAnnotation(annotationID);
+            if (neuron.getId().equals(currentNeuron.getId())) {
+                neuronSelectedSignal.emit(neuron);
+            }
+        }
+
     }
 
     /**
