@@ -5,6 +5,7 @@ import org.janelia.it.FlyWorkstation.api.facade.facade_mgr.DataSourceSelector;
 import org.janelia.it.FlyWorkstation.api.facade.facade_mgr.FacadeManager;
 import org.janelia.it.FlyWorkstation.api.facade.facade_mgr.FacadeManagerBase;
 import org.janelia.it.FlyWorkstation.gui.dialogs.EntityDetailsDialog;
+import org.janelia.it.FlyWorkstation.gui.framework.actions.CreateAlignmentBoardAction;
 import org.janelia.it.FlyWorkstation.gui.framework.pref_controller.PrefController;
 import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.BrowserModel;
 import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr;
@@ -100,7 +101,8 @@ public class FileMenu extends JMenu {
             }
         });
         menuNewItem.add(menuNewAlignmentBoard);
-        menuNewItem.add(menuNewSketch);
+        // LLF: uncommenting New.../Alignment Board, but omitting brain sketch from the menu, as it has empty action.
+        //menuNewItem.add(menuNewSketch);
 
         menuListOpen = new JMenuItem("List Open Data Sources", 'L');
         menuListOpen.addActionListener(new ActionListener() {
@@ -259,7 +261,7 @@ public class FileMenu extends JMenu {
 
     private void addMenuItems() {
         removeAll();
-//        add(menuNewItem);
+        add(menuNewItem);
         add(menuFileImport);
         add(new JSeparator());
 //        add(menuListOpen);
@@ -319,7 +321,8 @@ public class FileMenu extends JMenu {
     }
 
     private void menuNewAlignmentBoard_actionPerformed() {
-
+        CreateAlignmentBoardAction action = new CreateAlignmentBoardAction( "Create Alignment Board" );
+        action.doAction();
     }
 
     private void viewDetails_actionPerformed(ActionEvent e, String protocol, Object dataSource) throws Exception {
