@@ -443,8 +443,12 @@ public abstract class EntityTransferHandler extends TransferHandler {
             alignmentBoardContext.addRootedEntity(rootedEntity);
         }
     }
-    
-	/**
+
+    protected DataFlavor getNodesFlavor() {
+        return nodesFlavor;
+    }
+
+    /**
 	 * List of entities being transferred.  
 	 */
 	public class TransferableEntityList implements Transferable {

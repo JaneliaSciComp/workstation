@@ -130,6 +130,11 @@ public class AlignmentBoardContext extends AlignedItem {
             throw new Exception("This entity cannot be viewed in the alignment board.");
         }
     }
+
+    public boolean isAcceptedType( String type ) {
+        return EntityConstants.TYPE_NEURON_FRAGMENT.equals( type ) ||
+               EntityConstants.TYPE_SAMPLE.equals( type );
+    }
     
     /**
      * Add a new aligned entity to the board. This method must be called from a worker thread.

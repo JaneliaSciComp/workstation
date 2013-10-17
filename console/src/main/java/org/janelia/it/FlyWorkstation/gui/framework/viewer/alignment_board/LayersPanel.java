@@ -306,6 +306,10 @@ public class LayersPanel extends JPanel implements Refreshable, ActivatableView 
             
             private void loadAncestors(EntityWrapper wrapper) throws Exception {
                 log.trace("loadAncestors: {}",wrapper);
+                if ( wrapper == null || abContext == null ) {
+                    log.error("Null wrapper {} or abContext {}.", wrapper, abContext);
+                    return;
+                }
                 wrapper.loadContextualizedChildren(abContext.getAlignmentContext());
                 for(EntityWrapper childWrapper : wrapper.getChildren()) {
                     loadAncestors(childWrapper);

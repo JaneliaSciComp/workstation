@@ -312,7 +312,7 @@ public class RenderablesChannelsBuilder extends RenderablesVolumeBuilder impleme
         if ( needsChannelInit) {
             synchronized (this) {
                 checkReady();
-                logger.info( "Initialize called..." );
+                logger.debug( "Initialize called..." );
 
                 // The size of any one voxel will be the number of channels times the bytes per channel.
                 if ( channelMetaData.rawChannelCount == 3 ) {
@@ -320,7 +320,7 @@ public class RenderablesChannelsBuilder extends RenderablesVolumeBuilder impleme
                     ChannelMetaData newChannelMetaData = cloneChannelMetaData();
                     newChannelMetaData.channelCount = channelMetaData.rawChannelCount + 1;
                     channelMetaData = newChannelMetaData;
-                    logger.info(
+                    logger.debug(
                             "Padding out the channel count from {} to {}.",
                             channelMetaData.rawChannelCount, channelMetaData.channelCount
                     );
@@ -330,7 +330,7 @@ public class RenderablesChannelsBuilder extends RenderablesVolumeBuilder impleme
                     ChannelMetaData newChannelMetaData = cloneChannelMetaData();
                     newChannelMetaData.channelCount = channelMetaData.rawChannelCount + 2;
                     channelMetaData = newChannelMetaData;
-                    logger.info(
+                    logger.debug(
                             "Padding out the channel count from {} to {}.",
                             channelMetaData.rawChannelCount, channelMetaData.channelCount
                     );
@@ -359,7 +359,7 @@ public class RenderablesChannelsBuilder extends RenderablesVolumeBuilder impleme
                     //  channelVolumeData = new VolumeDataBean( (int)arrayLength, (int)paddedSx, (int)paddedSy, (int)paddedSz );
                 }
 
-                logger.info(
+                logger.debug(
                         "Raw channel count: {}, full channel count: {}.",
                         channelMetaData.rawChannelCount,
                         channelMetaData.channelCount

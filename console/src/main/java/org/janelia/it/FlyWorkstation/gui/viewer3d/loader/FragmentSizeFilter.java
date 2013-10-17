@@ -38,6 +38,7 @@ public class FragmentSizeFilter {
     public Collection<MaskChanRenderableData> filter( Collection<MaskChanRenderableData> rawList ) {
         List<MaskChanRenderableData> rtnVal = new ArrayList<MaskChanRenderableData>();
         FileResolver resolver = new CacheFileResolver();
+        int discardCount = 0;
         for ( MaskChanRenderableData data: rawList ) {
             // For each data, read up its voxel count.
             String maskPath = data.getMaskPath();
@@ -66,10 +67,14 @@ public class FragmentSizeFilter {
                             );
                         }
                         else {
+                            discardCount ++;
                             logger.debug(
-                                    "Not keeping {}, file {}, because it has too few voxels.",
+                                    "Not keeping {}, file {}, because it has only {} voxels.",
+                                    new Object[] {
                                     data.getBean().getLabelFileNum(),
-                                    infile
+                                    infile,
+                                    voxelCount
+                                    }
                             );
                         }
 
@@ -83,6 +88,7 @@ public class FragmentSizeFilter {
             }
 
         }
+        logger.info( "Discarded {} renderables.", discardCount );
 
         return rtnVal;
     }
