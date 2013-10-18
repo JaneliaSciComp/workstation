@@ -14,10 +14,7 @@ import javax.swing.*;
 
 import org.janelia.it.FlyWorkstation.api.entity_model.management.ModelMgr;
 import org.janelia.it.FlyWorkstation.gui.alignment_board_viewer.MultiTexVolumeBrickFactory;
-import org.janelia.it.FlyWorkstation.gui.alignment_board_viewer.gui_elements.AlignmentBoardControlsDialog;
-import org.janelia.it.FlyWorkstation.gui.alignment_board_viewer.gui_elements.CompletionListener;
-import org.janelia.it.FlyWorkstation.gui.alignment_board_viewer.gui_elements.ControlsListener;
-import org.janelia.it.FlyWorkstation.gui.alignment_board_viewer.gui_elements.GpuSampler;
+import org.janelia.it.FlyWorkstation.gui.alignment_board_viewer.gui_elements.*;
 import org.janelia.it.FlyWorkstation.gui.alignment_board_viewer.masking.ConfigurableColorMapping;
 import org.janelia.it.FlyWorkstation.gui.alignment_board_viewer.masking.FileStats;
 import org.janelia.it.FlyWorkstation.gui.alignment_board_viewer.masking.MultiMaskTracker;
@@ -803,19 +800,17 @@ public class AlignmentBoardViewer extends Viewer implements AlignmentBoardContro
         }
 
         @Override
-        public void exportSelection(
-                Collection<float[]> absoluteCropCoords,
-                CompletionListener completionListener,
-                ControlsListener.ExportMethod method ) {
+        public void exportSelection( SavebackEvent event ) {
             AlignmentBoardSettings settingsData = viewer.settingsData;
             VolumeWritebackHandler writebackHandler = new VolumeWritebackHandler(
                     renderMapping,
-                    absoluteCropCoords,
-                    completionListener,
+                    event.getAbsoluteCoords(),
+                    event.getCompletionListener(),
                     viewer.mip3d,
+                    event.getGammaFactor(),
                     (int)settingsData.getMinimumVoxelCount()
             );
-            writebackHandler.writeBackVolumeSelection(method);
+            writebackHandler.writeBackVolumeSelection(event.getMethod());
         }
 
         @Override

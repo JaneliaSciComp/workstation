@@ -21,9 +21,12 @@ import java.util.Map;
 public class RecoloringAcceptorDecorator  extends AbstractAcceptorDecorator {
     private Logger logger = LoggerFactory.getLogger(RecoloringAcceptorDecorator.class);
     private Map<ChannelMetaData,ChannelMetaData> metaDataMap;
+    private double gammaFactor;
 
-    public RecoloringAcceptorDecorator( MaskChanDataAcceptorI acceptor ) {
+    public RecoloringAcceptorDecorator( MaskChanDataAcceptorI acceptor, double gammaFactor ) {
         setWrappedAcceptor( acceptor );
+        this.gammaFactor = gammaFactor;
+        logger.info("Have gamma factor of {}.", gammaFactor);
     }
 
     @Override
@@ -31,7 +34,7 @@ public class RecoloringAcceptorDecorator  extends AbstractAcceptorDecorator {
         int returnVal = 0;
         if ( channelMetaData.renderableBean != null   &&   channelMetaData.renderableBean.getRgb()[ 3 ] != RenderMappingI.PASS_THROUGH_RENDERING ) {
             if ( channelMetaData.channelCount == 3  ||  channelMetaData.channelCount == 4 ) {
-                int maxIntensity = getMaxIntensity( channelData, channelMetaData );
+                int maxIntensity = getAdjustedMaxIntensity( getMaxIntensity( channelData, channelMetaData ) );
                 // Iterate over all the channels of information.
                 int[] rgbIndexes = channelMetaData.getOrderedRgbIndexes();
                 int usedCount = channelMetaData.channelCount < 4 ? channelMetaData.channelCount : 3;
@@ -46,7 +49,7 @@ public class RecoloringAcceptorDecorator  extends AbstractAcceptorDecorator {
                 ChannelMetaData substitutedChannelMetaData = getSubstitutedMetaData(channelMetaData);
 
                 // In this case, would like to expand the number of channels and fill them with the user-given values.
-                int maxIntensity = getMaxIntensity( channelData, channelMetaData );
+                int maxIntensity = getAdjustedMaxIntensity( getMaxIntensity( channelData, channelMetaData ) );
                 byte[] assumedChannelData = new byte[ channelMetaData.byteCount * 3 ];
                 for ( int i = 0; i < 3; i++ ) {
                     substituteChannelData(assumedChannelData, substitutedChannelMetaData, maxIntensity, i, i);
@@ -65,6 +68,17 @@ public class RecoloringAcceptorDecorator  extends AbstractAcceptorDecorator {
     @Override
     public int addMaskData(Integer maskNumber, long position, long x, long y, long z) throws Exception {
         return wrappedAcceptor.addMaskData( maskNumber, position, x, y, z );
+    }
+
+    private int getAdjustedMaxIntensity( int maxIntensity ) {
+        int newMaxIntensity = maxIntensity;
+        if ( gammaFactor != 1.0f ) {
+            // Classic gamma correction.
+            newMaxIntensity = (int)(Math.pow( (maxIntensity / 255.0), gammaFactor) * 255.0);
+        }
+        //        System.out.println("New max intensity for " + maxIntensity + " is " + newMaxIntensity);
+        //          System.out.println("Trying ... 1/(1-gamma) " + (Math.pow(maxIntensity, 1.0/(1.0-gammaFactor))));
+        return newMaxIntensity;
     }
 
     /** Finds maximum "color" or "channel" value among all channel data. */

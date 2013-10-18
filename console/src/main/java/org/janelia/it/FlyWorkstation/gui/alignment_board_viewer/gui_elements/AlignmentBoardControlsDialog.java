@@ -425,13 +425,9 @@ public class AlignmentBoardControlsDialog extends JDialog {
         }
     }
 
-    private synchronized void fireSavebackEvent(
-            Collection<float[]> absoluteCoords,
-            CompletionListener completionListener,
-            ControlsListener.ExportMethod method
-    ) {
+    private synchronized void fireSavebackEvent( SavebackEvent event ) {
         for ( ControlsListener listener: listeners ) {
-            listener.exportSelection(absoluteCoords, completionListener, method);
+            listener.exportSelection( event );
         }
 
     }
@@ -491,7 +487,12 @@ public class AlignmentBoardControlsDialog extends JDialog {
                 };
 
                 Collection<float[]> acceptedCords = getCombinedCropCoords( 1.0 );
-                fireSavebackEvent( acceptedCords, buttonEnableListener, ControlsListener.ExportMethod.binary );
+                SavebackEvent event = new SavebackEvent();
+                event.setAbsoluteCoords( acceptedCords );
+                event.setCompletionListener( buttonEnableListener );
+                event.setMethod( ControlsListener.ExportMethod.binary );
+                event.setGammaFactor( settings.getGammaFactor() );
+                fireSavebackEvent( event );
 
             }
         });
@@ -509,7 +510,12 @@ public class AlignmentBoardControlsDialog extends JDialog {
             public void actionPerformed(ActionEvent ae) {
                 setButtonBusy(colorSaveButton);
                 Collection<float[]> acceptedCords = getCombinedCropCoords( 1.0 );
-                fireSavebackEvent(acceptedCords, buttonEnableListener, ControlsListener.ExportMethod.color);
+                SavebackEvent event = new SavebackEvent();
+                event.setAbsoluteCoords( acceptedCords );
+                event.setCompletionListener( buttonEnableListener );
+                event.setMethod( ControlsListener.ExportMethod.color );
+                event.setGammaFactor( settings.getGammaFactor() );
+                fireSavebackEvent( event );
             }
         });
 
@@ -526,7 +532,12 @@ public class AlignmentBoardControlsDialog extends JDialog {
             public void actionPerformed( ActionEvent ae ) {
                 screenShotButton.setEnabled( false );
                 Collection<float[]> acceptedCords = getCombinedCropCoords();
-                fireSavebackEvent( acceptedCords, buttonEnableListener, ControlsListener.ExportMethod.mip );
+                SavebackEvent event = new SavebackEvent();
+                event.setAbsoluteCoords( acceptedCords );
+                event.setCompletionListener( buttonEnableListener );
+                event.setMethod( ControlsListener.ExportMethod.mip );
+                event.setGammaFactor( settings.getGammaFactor() );
+                fireSavebackEvent( event );
             }
         });
 

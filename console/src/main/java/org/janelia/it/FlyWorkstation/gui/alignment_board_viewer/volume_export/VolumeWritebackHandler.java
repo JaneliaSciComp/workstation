@@ -36,6 +36,7 @@ public class VolumeWritebackHandler {
     private final Mip3d mip3d;
     private final CompletionListener completionListener;
     private int filterSize;
+    private double gammaFactor;
 
     private final Logger logger = LoggerFactory.getLogger( VolumeWritebackHandler.class );
 
@@ -44,6 +45,7 @@ public class VolumeWritebackHandler {
             Collection<float[]> cropCoords,
             CompletionListener completionListener,
             Mip3d mip3d,
+            double gammaFactor,
             int filterSize
     ) {
 
@@ -52,6 +54,7 @@ public class VolumeWritebackHandler {
         this.completionListener = completionListener;
         this.mip3d = mip3d;
         this.filterSize = filterSize;
+        this.gammaFactor = gammaFactor;
     }
 
     /**
@@ -126,6 +129,7 @@ public class VolumeWritebackHandler {
             paramBean.setCropCoords(cropCoords);
             paramBean.setRenderableDatas(searchDatas);
             paramBean.setFilterSize(filterSize);
+            paramBean.setGammaFactor(gammaFactor);
 
             FileExportLoadWorker fileExportLoadWorker = new FileExportLoadWorker( paramBean );
             fileExportLoadWorker.setResolver(new CacheFileResolver());

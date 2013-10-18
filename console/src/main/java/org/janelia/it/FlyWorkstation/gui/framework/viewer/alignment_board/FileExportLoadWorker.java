@@ -118,7 +118,7 @@ public class FileExportLoadWorker extends SimpleWorker implements VolumeLoader {
         // Establish the means for extracting the volume mask.
         AlignmentBoardSettings customWritebackSettings = new AlignmentBoardSettings();
         customWritebackSettings.setChosenDownSampleRate(1.0);
-        customWritebackSettings.setGammaFactor(1.0);
+        customWritebackSettings.setGammaFactor( paramBean.getGammaFactor() );
 
         if ( paramBean.getMethod() == ControlsListener.ExportMethod.binary ) {
             // Using only binary values.
@@ -168,7 +168,7 @@ public class FileExportLoadWorker extends SimpleWorker implements VolumeLoader {
         else {
             outerAcceptor = new FilteringAcceptorDecorator( textureBuilder, paramBean.getCropCoords() );
         }
-        outerAcceptor = new RecoloringAcceptorDecorator( outerAcceptor );
+        outerAcceptor = new RecoloringAcceptorDecorator( outerAcceptor, paramBean.getGammaFactor() );
 
         loader.setAcceptors( Arrays.<MaskChanDataAcceptorI>asList(outerAcceptor) );
     }
@@ -277,6 +277,7 @@ public class FileExportLoadWorker extends SimpleWorker implements VolumeLoader {
         private Callback callback;
         private ControlsListener.ExportMethod method;
         private int filterSize;
+        private double gammaFactor;
 
         public Collection<MaskChanRenderableData> getRenderableDatas() {
             return renderableDatas;
@@ -322,6 +323,14 @@ public class FileExportLoadWorker extends SimpleWorker implements VolumeLoader {
 
         public void setFilterSize(int filterSize) {
             this.filterSize = filterSize;
+        }
+
+        public double getGammaFactor() {
+            return gammaFactor;
+        }
+
+        public void setGammaFactor(double gammaFactor) {
+            this.gammaFactor = gammaFactor;
         }
     }
 

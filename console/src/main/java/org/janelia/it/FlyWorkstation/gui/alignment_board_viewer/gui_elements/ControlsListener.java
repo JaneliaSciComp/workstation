@@ -15,7 +15,7 @@ public interface ControlsListener {
     void setBrightness( double brightness );
     void updateSettings();
     void updateCropCoords();
-    void exportSelection( Collection<float[]> absoluteCoords, CompletionListener completionListener, ExportMethod method );
+    void exportSelection( SavebackEvent savebackEvent );
     void setCropBlackout( boolean blackout );
 }
 
