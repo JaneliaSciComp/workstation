@@ -34,7 +34,7 @@ public class RecoloringAcceptorDecorator  extends AbstractAcceptorDecorator {
         int returnVal = 0;
         if ( channelMetaData.renderableBean != null   &&   channelMetaData.renderableBean.getRgb()[ 3 ] != RenderMappingI.PASS_THROUGH_RENDERING ) {
             if ( channelMetaData.channelCount == 3  ||  channelMetaData.channelCount == 4 ) {
-                int maxIntensity = getAdjustedMaxIntensity( getMaxIntensity( channelData, channelMetaData ) );
+                int maxIntensity = getGammaAdjusted(getMaxIntensity(channelData, channelMetaData));
                 // Iterate over all the channels of information.
                 int[] rgbIndexes = channelMetaData.getOrderedRgbIndexes();
                 int usedCount = channelMetaData.channelCount < 4 ? channelMetaData.channelCount : 3;
@@ -49,7 +49,7 @@ public class RecoloringAcceptorDecorator  extends AbstractAcceptorDecorator {
                 ChannelMetaData substitutedChannelMetaData = getSubstitutedMetaData(channelMetaData);
 
                 // In this case, would like to expand the number of channels and fill them with the user-given values.
-                int maxIntensity = getAdjustedMaxIntensity( getMaxIntensity( channelData, channelMetaData ) );
+                int maxIntensity = getGammaAdjusted(getMaxIntensity(channelData, channelMetaData));
                 byte[] assumedChannelData = new byte[ channelMetaData.byteCount * 3 ];
                 for ( int i = 0; i < 3; i++ ) {
                     substituteChannelData(assumedChannelData, substitutedChannelMetaData, maxIntensity, i, i);
@@ -70,7 +70,7 @@ public class RecoloringAcceptorDecorator  extends AbstractAcceptorDecorator {
         return wrappedAcceptor.addMaskData( maskNumber, position, x, y, z );
     }
 
-    private int getAdjustedMaxIntensity( int maxIntensity ) {
+    private int getGammaAdjusted(int maxIntensity) {
         int newMaxIntensity = maxIntensity;
         if ( gammaFactor != 1.0f ) {
             // Classic gamma correction.
@@ -115,7 +115,7 @@ public class RecoloringAcceptorDecorator  extends AbstractAcceptorDecorator {
 
     private void substituteChannelData(byte[] channelData, ChannelMetaData channelMetaData, int maxIntensity, int rgbIndex, int i) {
         byte channelAssignment = channelMetaData.renderableBean.getRgb()[ 2 - rgbIndex];
-        int channelValue = (int)((channelAssignment < 0 ? (256 + channelAssignment) : channelAssignment) * (maxIntensity/256.0f));
+        int channelValue = getGammaAdjusted((int) ((channelAssignment < 0 ? (256 + channelAssignment) : channelAssignment) * (maxIntensity/256.0f)) );
         for ( int j = 0; j < channelMetaData.byteCount; j++ ) {
             int nextPart = (channelValue >> ( 8 * (channelMetaData.byteCount - j - 1) ) ) & 0xff;
             channelData[ i * channelMetaData.byteCount + j ] = (byte)nextPart;
