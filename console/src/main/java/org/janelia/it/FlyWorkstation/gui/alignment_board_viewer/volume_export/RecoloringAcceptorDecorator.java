@@ -43,7 +43,7 @@ public class RecoloringAcceptorDecorator  extends AbstractAcceptorDecorator {
                 returnVal = wrappedAcceptor.addChannelData( originalMask, channelData, position, x, y, z, channelMetaData );
             }
             else if ( channelMetaData.channelCount == 1  ||  channelMetaData.channelCount == 2 ) {
-                ChannelMetaData substitutedChannelMetaData = getLazySubsituteChannelData(channelMetaData);
+                ChannelMetaData substitutedChannelMetaData = getSubstitutedMetaData(channelMetaData);
 
                 // In this case, would like to expand the number of channels and fill them with the user-given values.
                 int maxIntensity = getMaxIntensity( channelData, channelMetaData );
@@ -85,7 +85,7 @@ public class RecoloringAcceptorDecorator  extends AbstractAcceptorDecorator {
     }
 
     /** Channel data for some objects (at t-o-w, compartments) includes only a single byte, but this lets us use more powerful coloring systems. */
-    private ChannelMetaData getLazySubsituteChannelData(ChannelMetaData channelMetaData) {
+    private ChannelMetaData getSubstitutedMetaData(ChannelMetaData channelMetaData) {
         if ( metaDataMap == null ) {
             metaDataMap = new HashMap<ChannelMetaData,ChannelMetaData>();
         }
