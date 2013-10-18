@@ -11,11 +11,14 @@ import javax.swing.tree.TreePath;
 
 import org.janelia.it.FlyWorkstation.api.entity_model.events.EntityChangeEvent;
 import org.janelia.it.FlyWorkstation.api.entity_model.events.EntityChildrenLoadedEvent;
+import org.janelia.it.FlyWorkstation.api.entity_model.events.EntityCreateEvent;
+import org.janelia.it.FlyWorkstation.api.entity_model.events.EntityInvalidationEvent;
 import org.janelia.it.FlyWorkstation.api.entity_model.events.EntityRemoveEvent;
 import org.janelia.it.FlyWorkstation.api.entity_model.management.ModelMgr;
 import org.janelia.it.FlyWorkstation.api.entity_model.management.ModelMgrUtils;
 import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.FlyWorkstation.gui.framework.tree.DynamicTree;
+import org.janelia.it.FlyWorkstation.gui.framework.tree.ExpansionState;
 import org.janelia.it.FlyWorkstation.gui.framework.tree.LazyTreeNode;
 import org.janelia.it.FlyWorkstation.gui.framework.tree.LazyTreeNodeLoader;
 import org.janelia.it.FlyWorkstation.gui.util.Icons;
@@ -151,6 +154,44 @@ public class EntityTree extends JPanel implements ActivatableView {
         addNodes(null, rootEd, 0);
 
         showTree();
+    }
+
+    @Subscribe 
+    public void entityInvalidated(EntityInvalidationEvent event) {
+        
+        final Collection<DefaultMutableTreeNode> nodes = new HashSet<DefaultMutableTreeNode>();
+        
+        Collection<Entity> invalidated = event.getInvalidatedEntities();
+        for(Entity entity : invalidated) {
+            for(DefaultMutableTreeNode node : getNodesByEntityId(entity.getId())) {
+                nodes.add(node);
+                nodes.add((DefaultMutableTreeNode)node.getParent());
+            }
+        }
+        
+        log.debug("Entities affecting {} nodes were invalidated",nodes.size());   
+
+        try {
+            final ExpansionState expansionState = new ExpansionState();
+            expansionState.storeExpansionState(getDynamicTree());
+            
+            for(final DefaultMutableTreeNode node : new HashSet<DefaultMutableTreeNode>(nodes)) {
+                Entity treeEntity = getEntity(node);
+                if (treeEntity.getId()!=null) {
+                    // Not a dummy node, get a replacement entity
+                    getEntityData(node).setChildEntity(ModelMgr.getModelMgr().getEntityById(treeEntity.getId()));    
+                }
+            }   
+            
+            for(final DefaultMutableTreeNode node : new HashSet<DefaultMutableTreeNode>(nodes)) {
+                getDynamicTree().recreateChildNodes(node);
+            }
+
+            expansionState.restoreExpansionState(getDynamicTree(), true);
+        }
+        catch (Exception e) {
+            SessionMgr.getSessionMgr().handleException(e);
+        }
     }
     
 	@Subscribe 

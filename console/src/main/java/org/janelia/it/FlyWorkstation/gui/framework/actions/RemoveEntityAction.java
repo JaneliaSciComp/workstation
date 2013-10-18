@@ -1,6 +1,12 @@
 package org.janelia.it.FlyWorkstation.gui.framework.actions;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 import javax.swing.JOptionPane;
 
@@ -17,6 +23,8 @@ import org.janelia.it.jacs.model.entity.EntityConstants;
 import org.janelia.it.jacs.model.entity.EntityData;
 import org.janelia.it.jacs.model.tasks.Task;
 import org.janelia.it.jacs.shared.utils.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * This action removes an entity from some parent. If the entity becomes an orphan, then it is completely deleted.
@@ -24,7 +32,9 @@ import org.janelia.it.jacs.shared.utils.StringUtils;
  * @author <a href="mailto:rokickik@janelia.hhmi.org">Konrad Rokicki</a>
  */
 public class RemoveEntityAction implements Action {
-
+    
+    private static final Logger log = LoggerFactory.getLogger(RemoveEntityAction.class);
+    
 	private final List<RootedEntity> rootedEntityList;
 	private final boolean showConfirmationDialogs;
 	
@@ -209,12 +219,15 @@ public class RemoveEntityAction implements Action {
 					protected void doStuff() throws Exception {
 						for(EntityData ed : toReallyDelete) {
 							if (removeRootTag.contains(ed)) {
+							    log.debug("Demoting to common root: "+ed.getChildEntity().getName());
 								ModelMgr.getModelMgr().demoteCommonRootToFolder(ed.getChildEntity());
 							}
 							else if (removeReference.contains(ed)) {
+							    log.debug("Removing reference: "+ed.getId());
 								ModelMgr.getModelMgr().removeEntityData(ed);
 							} 
 							else if (removeTree.contains(ed)) {
+							    log.debug("Removing tree: "+ed.getChildEntity().getId());
 								ModelMgr.getModelMgr().deleteEntityTree(ed.getChildEntity().getId());
 							}
 							else {

@@ -35,6 +35,7 @@ public class OutlineExpansionState {
 	
     public void storeExpansionState() {
 
+        if (outline==null || outline.getOutlineModel()==null) return;
         log.trace("storeExpansionState:");
         
     	expanded.clear();
@@ -54,6 +55,9 @@ public class OutlineExpansionState {
     }
     
     public void restoreExpansionState(boolean restoreSelection) {
+        
+        if (outline==null) return;
+        
         log.trace("restoreExpansionState:");
         TreePath rootPath = new TreePath(outline.getOutlineModel().getRoot());
     	restoreExpansionState(rootPath, expanded, "");

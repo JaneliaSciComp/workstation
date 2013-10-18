@@ -75,7 +75,6 @@ public class LayersPanel extends JPanel implements Refreshable, ActivatableView 
     private static final int COLUMN_WIDTH_COLOR = 32;
     private static final int COLUMN_WIDTH_TREE_NEGATIVE = 80;
     private static final int COLOR_SWATCH_SIZE = 12;
-    private static final String RAW_RENDERING_INDICATOR = "RawRendering";
 
     private final JPanel treesPanel;
     private Outline outline;
@@ -489,6 +488,10 @@ public class LayersPanel extends JPanel implements Refreshable, ActivatableView 
     @Subscribe 
     public void itemChanged(AlignmentBoardItemChangeEvent event) {
 
+        if (sampleTreeModel==null) return;
+        
+        log.debug("Aligned item changed: "+event.getAlignedItem().getName());
+        
         // Generating model events is hard (we don't know the UI indexes of what was deleted, for example), 
         // so we just recreate the model here.
         

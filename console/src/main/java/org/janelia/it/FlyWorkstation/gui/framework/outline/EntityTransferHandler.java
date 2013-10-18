@@ -22,7 +22,6 @@ import org.janelia.it.FlyWorkstation.gui.framework.viewer.IconPanel;
 import org.janelia.it.FlyWorkstation.gui.framework.viewer.Viewer;
 import org.janelia.it.FlyWorkstation.gui.framework.viewer.alignment_board.AlignmentBoardViewer;
 import org.janelia.it.FlyWorkstation.gui.framework.viewer.alignment_board.LayersPanel;
-import org.janelia.it.FlyWorkstation.model.domain.EntityWrapperFactory;
 import org.janelia.it.FlyWorkstation.model.entity.RootedEntity;
 import org.janelia.it.FlyWorkstation.model.viewer.AlignmentBoardContext;
 import org.janelia.it.FlyWorkstation.shared.util.Utils;
@@ -289,7 +288,7 @@ public abstract class EntityTransferHandler extends TransferHandler {
                 JTree.DropLocation dl = (JTree.DropLocation) support.getDropLocation();
                 int childIndex = dl.getChildIndex();
                 TreePath targetPath = dl.getPath();
-                DefaultMutableTreeNode parent = (DefaultMutableTreeNode) targetPath.getLastPathComponent();
+                final DefaultMutableTreeNode parent = (DefaultMutableTreeNode) targetPath.getLastPathComponent();
                 
                 // Get drop index
                 int index = childIndex; // DropMode.INSERT
@@ -298,9 +297,27 @@ public abstract class EntityTransferHandler extends TransferHandler {
                     Entity parentEntity = parentEd.getChildEntity();
                     index = parentEntity.getChildren().size();
                 }
+                
+                final int finalIndex = index;
                         
-                // Actually perform the transfer
-                addEntities(parent, rootedEntities, index);
+                SimpleWorker worker = new SimpleWorker() {
+                    @Override
+                    protected void doStuff() throws Exception {
+                        // Actually perform the transfer
+                        addEntities(parent, rootedEntities, finalIndex);
+                    }
+                    
+                    @Override
+                    protected void hadSuccess() {
+                    }
+                    
+                    @Override
+                    protected void hadError(Throwable error) {
+                        SessionMgr.getSessionMgr().handleException(error);
+                    }
+                };
+                worker.setProgressMonitor(new IndeterminateProgressMonitor(SessionMgr.getBrowser(), "Adding entities...", ""));
+                worker.execute();
             }
             else if ((dropTarget instanceof LayersPanel) || (dropTarget instanceof AlignmentBoardViewer)) {
 
@@ -308,14 +325,10 @@ public abstract class EntityTransferHandler extends TransferHandler {
                     @Override
                     protected void doStuff() throws Exception {
                         addEntities(SessionMgr.getBrowser().getLayersPanel().getAlignmentBoardContext(), rootedEntities);
-//                        for(RootedEntity rootedEntity : rootedEntities) {
-//                            EntityWrapperFactory.wrap(rootedEntity);
-//                        }
                     }
                     
                     @Override
                     protected void hadSuccess() {
-                        //SessionMgr.getBrowser().getLayersPanel().refresh();
                     }
                     
                     @Override

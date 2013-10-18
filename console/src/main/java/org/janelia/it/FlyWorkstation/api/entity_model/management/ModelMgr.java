@@ -670,12 +670,7 @@ public class ModelMgr {
     }
 
     public Entity getCommonRootEntityByName(String name) throws Exception {
-        for(Entity entity : ModelMgr.getModelMgr().getCommonRootEntities()) {
-            if (name.equals(entity.getName()) && ModelMgrUtils.isOwner(entity)) {
-                return entity;
-            }
-        }
-        return null;
+        return entityModel.getCommonRootFolder(name);
     }
     
     public Entity getEntityAndChildren(long entityId) throws Exception {    	

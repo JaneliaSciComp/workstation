@@ -526,49 +526,47 @@ public class SplitPickingPanel extends JPanel implements Refreshable {
 
 				splitPickingFolder = new RootedEntity(splitPickingFolderEntity);
 				
-				SessionMgr.getBrowser().getEntityOutline().refresh(true, new Callable<Void>() {
-					@Override
-					public Void call() throws Exception {
+				SwingUtilities.invokeLater(new Runnable() {
+                    
+                    @Override
+                    public void run() {
+                        expandEntityOutline(splitPickingFolder.getUniqueId());
+                        
+                        final Long lastWorkingFolderId = (Long)SessionMgr.getSessionMgr().getModelProperty(LAST_WORKING_FOLDER_ID_PROPERTY);
+                        if (lastWorkingFolderId!=null) {
+                            for(EntityData childEd : splitPickingFolderEntity.getEntityData()) {
+                                Entity child = childEd.getChildEntity();
+                                if (child!=null && child.getId().equals(lastWorkingFolderId)) {
+                                    resultFolderEntityData = childEd;   
+                                    break;
+                                }
+                            }
+                        }
+                        
+                        if (resultFolderEntityData!=null) {
+                            setWorkingFolderEntity(resultFolderEntityData);
+                            
+                            // Refresh the image viewer
+                            crossesViewer.refresh();    
 
-						expandEntityOutline(splitPickingFolder.getUniqueId());
-						
-						final Long lastWorkingFolderId = (Long)SessionMgr.getSessionMgr().getModelProperty(LAST_WORKING_FOLDER_ID_PROPERTY);
-						if (lastWorkingFolderId!=null) {
-							for(EntityData childEd : splitPickingFolderEntity.getEntityData()) {
-								Entity child = childEd.getChildEntity();
-								if (child!=null && child.getId().equals(lastWorkingFolderId)) {
-									resultFolderEntityData = childEd;	
-									break;
-								}
-							}
-						}
-						
-						if (resultFolderEntityData!=null) {
-							setWorkingFolderEntity(resultFolderEntityData);
-							
-							// Refresh the image viewer
-							crossesViewer.refresh();	
-
-							// Resize the viewers
-							SwingUtilities.invokeLater(new Runnable() {
-								@Override
-								public void run() {
-									// Resize viewers
-									SessionMgr.getBrowser().getCenterRightHorizontalSplitPane().setDividerLocation(0.66);
-									SessionMgr.getBrowser().getViewerManager().getViewerContainer().getMainSplitPane().setDividerLocation(0.5);
-									// Resize images to 1 per row		
-									int fullWidth = SessionMgr.getBrowser().getViewerManager().getViewerContainer().getWidth();
-									int padding = 100;
-									mainViewer.getToolbar().getImageSizeSlider().setValue((int)((double)fullWidth/2-padding));
-									secViewer.getToolbar().getImageSizeSlider().setValue((int)((double)fullWidth/2-padding));
-									crossesViewer.getToolbar().getImageSizeSlider().setValue(crossesViewer.getWidth()-padding);		
-								}
-							});
-						}
-						
-						return null;
-					}
-				});	
+                            // Resize the viewers
+                            SwingUtilities.invokeLater(new Runnable() {
+                                @Override
+                                public void run() {
+                                    // Resize viewers
+                                    SessionMgr.getBrowser().getCenterRightHorizontalSplitPane().setDividerLocation(0.66);
+                                    SessionMgr.getBrowser().getViewerManager().getViewerContainer().getMainSplitPane().setDividerLocation(0.5);
+                                    // Resize images to 1 per row       
+                                    int fullWidth = SessionMgr.getBrowser().getViewerManager().getViewerContainer().getWidth();
+                                    int padding = 100;
+                                    mainViewer.getToolbar().getImageSizeSlider().setValue((int)((double)fullWidth/2-padding));
+                                    secViewer.getToolbar().getImageSizeSlider().setValue((int)((double)fullWidth/2-padding));
+                                    crossesViewer.getToolbar().getImageSizeSlider().setValue(crossesViewer.getWidth()-padding);     
+                                }
+                            });
+                        }   
+                    }
+                });
 			}
 			
 			@Override
@@ -851,7 +849,6 @@ public class SplitPickingPanel extends JPanel implements Refreshable {
 					
 					@Override
 					protected void hadSuccess() {
-						SessionMgr.getBrowser().getEntityOutline().refresh();
 						crossesViewer.refresh(new Callable<Void>() {
 							@Override
 							public Void call() throws Exception {

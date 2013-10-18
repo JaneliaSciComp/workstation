@@ -10,13 +10,22 @@ import java.awt.event.ActionListener;
 import java.awt.event.KeyEvent;
 import java.io.File;
 import java.io.FilenameFilter;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.HashSet;
+import java.util.LinkedHashSet;
+import java.util.List;
 import java.util.concurrent.Callable;
 import java.util.concurrent.CancellationException;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
-import javax.swing.*;
+import javax.swing.JMenu;
+import javax.swing.JMenuItem;
+import javax.swing.JOptionPane;
+import javax.swing.JPopupMenu;
+import javax.swing.KeyStroke;
 
 import org.janelia.it.FlyWorkstation.api.entity_model.management.EntitySelectionModel;
 import org.janelia.it.FlyWorkstation.api.entity_model.management.ModelMgr;
@@ -25,25 +34,23 @@ import org.janelia.it.FlyWorkstation.api.entity_model.management.ModelMgrUtils;
 import org.janelia.it.FlyWorkstation.gui.dialogs.EntityDetailsDialog;
 import org.janelia.it.FlyWorkstation.gui.dialogs.SpecialAnnotationChooserDialog;
 import org.janelia.it.FlyWorkstation.gui.dialogs.TaskDetailsDialog;
-import org.janelia.it.FlyWorkstation.gui.framework.actions.*;
 import org.janelia.it.FlyWorkstation.gui.framework.actions.Action;
+import org.janelia.it.FlyWorkstation.gui.framework.actions.AnnotateAction;
+import org.janelia.it.FlyWorkstation.gui.framework.actions.CreateAlignmentBoardAction;
+import org.janelia.it.FlyWorkstation.gui.framework.actions.OpenInFinderAction;
+import org.janelia.it.FlyWorkstation.gui.framework.actions.OpenWithDefaultAppAction;
+import org.janelia.it.FlyWorkstation.gui.framework.actions.RemoveEntityAction;
 import org.janelia.it.FlyWorkstation.gui.framework.console.Browser;
 import org.janelia.it.FlyWorkstation.gui.framework.console.Perspective;
 import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.FlyWorkstation.gui.framework.tool_manager.ToolMgr;
 import org.janelia.it.FlyWorkstation.gui.framework.viewer.Hud;
-import org.janelia.it.FlyWorkstation.gui.util.Icons;
 import org.janelia.it.FlyWorkstation.gui.util.JScrollMenu;
-import org.janelia.it.FlyWorkstation.model.domain.AlignmentContext;
-import org.janelia.it.FlyWorkstation.model.domain.EntityWrapperFactory;
-import org.janelia.it.FlyWorkstation.model.domain.Sample;
 import org.janelia.it.FlyWorkstation.model.entity.RootedEntity;
 import org.janelia.it.FlyWorkstation.model.utils.AnnotationSession;
-import org.janelia.it.FlyWorkstation.model.viewer.AlignmentBoardContext;
 import org.janelia.it.FlyWorkstation.shared.util.ConsoleProperties;
 import org.janelia.it.FlyWorkstation.shared.util.SystemInfo;
 import org.janelia.it.FlyWorkstation.shared.util.Utils;
-import org.janelia.it.FlyWorkstation.shared.workers.IndeterminateProgressMonitor;
 import org.janelia.it.FlyWorkstation.shared.workers.SimpleWorker;
 import org.janelia.it.FlyWorkstation.shared.workers.TaskMonitoringWorker;
 import org.janelia.it.FlyWorkstation.ws.ExternalClient;
@@ -425,91 +432,9 @@ public class EntityContextMenu extends JPopupMenu {
         
         if (rootedEntity != null && rootedEntity.getEntityData() != null) {
             Entity entity = rootedEntity.getEntity();
-            
             if (entity!=null && (entity.getEntityType().getName().equals(EntityConstants.TYPE_SAMPLE))) {
-                
-                alignmentBoardItem = new JMenuItem("  Open In New Alignment Board Viewer");
-                alignmentBoardItem.addActionListener(new ActionListener() {
-                    @Override
-                    public void actionPerformed(ActionEvent e) {
-
-                        SimpleWorker worker = new SimpleWorker() {
-                            
-                            private Sample sample;
-                            private List<AlignmentContext> contexts;
-                            
-                            @Override
-                            protected void doStuff() throws Exception {
-                                this.sample = (Sample)EntityWrapperFactory.wrap(rootedEntity);
-                                this.contexts = sample.getAvailableAlignmentContexts();
-                            }
-                            
-                            @Override
-                            protected void hadSuccess() {
-                                
-                                if (contexts.isEmpty()) {
-                                    JOptionPane.showMessageDialog(browser,
-                                            "Sample is not aligned to a compatible alignment space", "Error", JOptionPane.ERROR_MESSAGE);
-                                    return;
-                                }
-                                
-                                // Pick an alignment context for the new board
-                                AlignmentContext values[] = new AlignmentContext[contexts.size()];
-                                contexts.toArray(values);
-                                final AlignmentContext alignmentContext = (AlignmentContext)JOptionPane.showInputDialog(browser, "Choose an alignment space for this sample", 
-                                        "Choose alignment space", JOptionPane.QUESTION_MESSAGE, Icons.getIcon("folder_graphite_palette.png"), 
-                                        values, values[0]);
-                                if (alignmentContext==null) return;
-                                
-                                // Pick a name for the new board
-                                final String boardName = (String) JOptionPane.showInputDialog(browser, "Board Name:\n",
-                                        "Open In New Alignment Board", JOptionPane.PLAIN_MESSAGE, null, null, null);
-                                if (StringUtils.isEmpty(boardName)) return;
-                                
-                                SimpleWorker worker = new SimpleWorker() {
-                                    
-                                    private RootedEntity newBoard;
-                                    
-                                    @Override
-                                    protected void doStuff() throws Exception {
-                                        newBoard = ModelMgr.getModelMgr().createAlignmentBoard(boardName, 
-                                                alignmentContext.getAlignmentSpaceName(), alignmentContext.getOpticalResolution(), alignmentContext.getPixelResolution());
-                                        AlignmentBoardContext alignmentBoardContext = new AlignmentBoardContext(newBoard);
-                                        alignmentBoardContext.addNewAlignedEntity(sample);
-                                    }
-                                    
-                                    @Override
-                                    protected void hadSuccess() {
-                                        // Update Tree UI
-                                        browser.getEntityOutline().totalRefresh(true, new Callable<Void>() {
-                                            @Override
-                                            public Void call() throws Exception {
-                                                browser.getEntityOutline().selectEntityByUniqueId(newBoard.getUniqueId());
-                                                browser.setPerspective(Perspective.AlignmentBoard);
-                                                browser.getLayersPanel().openAlignmentBoard(newBoard.getEntityId());
-                                                return null;
-                                            }
-                                        });
-                                    }
-                                    
-                                    @Override
-                                    protected void hadError(Throwable error) {
-                                        SessionMgr.getSessionMgr().handleException(error);
-                                    }
-                                };
-                                worker.setProgressMonitor(new IndeterminateProgressMonitor(browser, "Adding aligned entities...", ""));
-                                worker.execute();
-                            }
-                            
-                            @Override
-                            protected void hadError(Throwable error) {
-                                SessionMgr.getSessionMgr().handleException(error);
-                            }
-                        };
-                        worker.setProgressMonitor(new IndeterminateProgressMonitor(browser, "Finding alignments...", ""));
-                        worker.execute();
-                    }
-                });
+                Action action = new CreateAlignmentBoardAction("  Open In New Alignment Board Viewer",rootedEntity);
+                alignmentBoardItem = getActionItem(action);
             }
         }
 
@@ -775,18 +700,8 @@ public class EntityContextMenu extends JPopupMenu {
                     @Override
                     protected void doStuff() throws Exception {
                         setStatus("Executing");
-                        super.doStuff(); 
-                    }
-                    
-                    @Override
-                    public Callable<Void> getSuccessCallback() {
-                        return new Callable<Void>() {
-                            @Override
-                            public Void call() throws Exception {
-                                SessionMgr.getBrowser().getEntityOutline().totalRefresh();
-                                return null;
-                            }
-                        };
+                        super.doStuff();
+                        ModelMgr.getModelMgr().invalidateCache(sample, true);
                     }
                 };
 
@@ -1874,7 +1789,7 @@ public class EntityContextMenu extends JPopupMenu {
         return searchHereMenuItem;
     }
 
-    private JMenuItem getActionItem(final Action action) {
+    protected JMenuItem getActionItem(final Action action) {
         JMenuItem actionMenuItem = new JMenuItem(action.getName());
         actionMenuItem.addActionListener(new ActionListener() {
             @Override

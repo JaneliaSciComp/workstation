@@ -227,17 +227,13 @@ public class GeneralSearchDialog extends ModalDialog {
 			
 			@Override
 			protected void hadSuccess() {
-				final EntityOutline entityOutline = SessionMgr.getSessionMgr().getActiveBrowser().getEntityOutline();
-				entityOutline.totalRefresh(true, new Callable<Void>() {
-					@Override
-					public Void call() throws Exception {
-		        		ModelMgr.getModelMgr().getEntitySelectionModel().selectEntity(EntitySelectionModel.CATEGORY_OUTLINE, saveFolder.getUniqueId(), true);	
-				    	Utils.setDefaultCursor(GeneralSearchDialog.this);
-			            setVisible(false);
-						return null;
-					}
-					
-				});
+			    SwingUtilities.invokeLater(new Runnable() {
+                    @Override
+                    public void run() {
+                        ModelMgr.getModelMgr().getEntitySelectionModel().selectEntity(EntitySelectionModel.CATEGORY_OUTLINE, saveFolder.getUniqueId(), true);
+                        setVisible(false);
+                    }
+                });
 			}
 			
 			@Override

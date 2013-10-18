@@ -132,7 +132,9 @@ public abstract class EntityWrapperOutline extends EntityWrapperTree implements 
 
 
         // Pick an alignment context for the new board
-        AlignmentContext[] values = new AlignmentContextFactory().getAllAlignmentContexts();
+        List<AlignmentContext> contexts = new AlignmentContextFactory().getAllAlignmentContexts();
+        AlignmentContext values[] = new AlignmentContext[contexts.size()];
+        contexts.toArray(values);
         final AlignmentContext alignmentContext =
                 (AlignmentContext)JOptionPane.showInputDialog(
                     SessionMgr.getBrowser(), "Choose an alignment space for this alignment board",

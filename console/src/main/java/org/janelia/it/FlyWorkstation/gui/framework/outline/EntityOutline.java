@@ -19,29 +19,35 @@ import java.util.concurrent.Callable;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.atomic.AtomicBoolean;
 
-import javax.swing.*;
+import javax.swing.AbstractAction;
+import javax.swing.DropMode;
+import javax.swing.JComponent;
+import javax.swing.JMenuItem;
+import javax.swing.JOptionPane;
+import javax.swing.JTree;
+import javax.swing.KeyStroke;
+import javax.swing.SwingUtilities;
 import javax.swing.tree.DefaultMutableTreeNode;
 import javax.swing.tree.TreePath;
 
 import org.janelia.it.FlyWorkstation.api.entity_model.access.ModelMgrAdapter;
 import org.janelia.it.FlyWorkstation.api.entity_model.events.EntityCreateEvent;
-import org.janelia.it.FlyWorkstation.api.entity_model.events.EntityInvalidationEvent;
 import org.janelia.it.FlyWorkstation.api.entity_model.management.EntitySelectionModel;
 import org.janelia.it.FlyWorkstation.api.entity_model.management.ModelMgr;
 import org.janelia.it.FlyWorkstation.api.entity_model.management.ModelMgrUtils;
 import org.janelia.it.FlyWorkstation.gui.dialogs.ScreenEvaluationDialog;
 import org.janelia.it.FlyWorkstation.gui.framework.actions.CreateAlignmentBoardAction;
-import org.janelia.it.FlyWorkstation.gui.framework.console.Perspective;
 import org.janelia.it.FlyWorkstation.gui.framework.console.ViewerManager;
 import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.FlyWorkstation.gui.framework.tree.ExpansionState;
 import org.janelia.it.FlyWorkstation.gui.framework.viewer.alignment_board.AlignmentBoardViewer;
-import org.janelia.it.FlyWorkstation.gui.util.Icons;
-import org.janelia.it.FlyWorkstation.model.domain.AlignmentContext;
-import org.janelia.it.FlyWorkstation.model.domain.AlignmentContextFactory;
 import org.janelia.it.FlyWorkstation.model.entity.RootedEntity;
 import org.janelia.it.FlyWorkstation.shared.workers.SimpleWorker;
-import org.janelia.it.jacs.model.entity.*;
+import org.janelia.it.jacs.model.entity.Entity;
+import org.janelia.it.jacs.model.entity.EntityAttribute;
+import org.janelia.it.jacs.model.entity.EntityConstants;
+import org.janelia.it.jacs.model.entity.EntityData;
+import org.janelia.it.jacs.model.entity.EntityType;
 import org.janelia.it.jacs.shared.utils.EntityUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -247,17 +253,8 @@ public abstract class EntityOutline extends EntityTree implements Refreshable, A
 
         public JMenuItem getNewAlignmentBoardItem() {
             if (multiple) return null;
-
-            final CreateAlignmentBoardAction action = new CreateAlignmentBoardAction(
-                    "  Create New Alignment Board"
-            );
-            JMenuItem newFolderItem = new JMenuItem( action.getName() );
-            newFolderItem.addActionListener( new ActionListener() {
-                public void actionPerformed( ActionEvent ae ) {
-                    action.doAction();
-                }
-            });
-
+            final CreateAlignmentBoardAction action = new CreateAlignmentBoardAction("  Create New Alignment Board");
+            JMenuItem newFolderItem = getActionItem(action);
             return newFolderItem;
         }
     }
@@ -351,12 +348,6 @@ public abstract class EntityOutline extends EntityTree implements Refreshable, A
             addNodes(getDynamicTree().getRootNode(), newEd, index);
         }
     }
-    
-	@Subscribe 
-	public void entityInvalidated(EntityInvalidationEvent event) {
-		log.debug("Some entities were invalidated so we're refreshing the tree");
-		refresh(false, true, null);
-	}
 
 	@Override
 	public void refresh() {
