@@ -15,6 +15,7 @@ import javax.swing.table.TableColumn;
 
 import org.janelia.it.FlyWorkstation.api.entity_model.management.EntitySelectionModel;
 import org.janelia.it.FlyWorkstation.api.entity_model.management.ModelMgr;
+import org.janelia.it.FlyWorkstation.gui.dialogs.search.GeneralSearchDialog;
 import org.janelia.it.FlyWorkstation.gui.framework.outline.EntityOutline;
 import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.FlyWorkstation.model.entity.RootedEntity;
@@ -62,6 +63,8 @@ public class PatternSearchDialog extends ModalDialog {
     private static final int FT_INDEX_MIN=3;
     private static final int FT_INDEX_MAX=4;
     private static final int FT_INDEX_LINES=5;
+
+    private static final int MAX_ENTITIES_IN_FOLDER = 2000;
 
     private final MinMaxSelectionRow globalMinMaxPanel;
     private final JTable filterTable;
@@ -689,6 +692,12 @@ public class PatternSearchDialog extends ModalDialog {
             setVisible(false);
 			return;
 		}
+
+		if (filterResult.getSampleList().size()>MAX_ENTITIES_IN_FOLDER) {
+            JOptionPane.showMessageDialog(PatternSearchDialog.this, "You can save a maximum of "+MAX_ENTITIES_IN_FOLDER+" results into a single folder. Please adjust your search criteria.", 
+                    "Result set has too many members", JOptionPane.ERROR_MESSAGE);
+            return;
+		}
 		
         SimpleWorker worker = new SimpleWorker() {
 
@@ -701,16 +710,12 @@ public class PatternSearchDialog extends ModalDialog {
 
             @Override
             protected void hadSuccess() {
-                final EntityOutline entityOutline = SessionMgr.getSessionMgr().getActiveBrowser().getEntityOutline();
-                entityOutline.totalRefresh(true, new Callable<Void>() {
+                SwingUtilities.invokeLater(new Runnable() {
                     @Override
-                    public Void call() throws Exception {
-                    	ModelMgr.getModelMgr().getEntitySelectionModel().selectEntity(
-                    			EntitySelectionModel.CATEGORY_OUTLINE, saveFolder.getUniqueId(), true);
-                        Utils.setDefaultCursor(PatternSearchDialog.this);
+                    public void run() {
+                        ModelMgr.getModelMgr().getEntitySelectionModel().selectEntity(EntitySelectionModel.CATEGORY_OUTLINE, saveFolder.getUniqueId(), true);
                         setVisible(false);
                         resetSearchState();
-                        return null;
                     }
                 });
             }
