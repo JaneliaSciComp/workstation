@@ -47,20 +47,15 @@ public class ByteFrequencyDumper {
     }
 
     public void close() throws Exception {
-        StringBuffer outBuf = new StringBuffer();
-        outBuf.append( name ).append("\n");
-        outBuf.append("--------------------").append("\n");
-        if ( colorFreq.size() > 0 )
+        if ( colorFreq.size() > 0 ) {
+            StringBuffer outBuf = new StringBuffer();
             analyze( outBuf );
 
-        //for ( FreqBean color: colorFreq.keySet() ) {
-        //    System.out.println( name + "\t" + color + "\t" + colorFreq.get( color ) );
-        //}
+            //for ( FreqBean color: colorFreq.keySet() ) {
+            //    System.out.println( name + "\t" + color + "\t" + colorFreq.get( color ) );
+            //}
 
-        outBuf.append("\n");
-        outBuf.append("\n");
-
-        System.out.print( outBuf );
+        }
     }
 
     private static class FreqBean {
@@ -130,6 +125,14 @@ public class ByteFrequencyDumper {
             counter+=freq;
         }
 
+        // Bail if nothing to say.
+        if ( maxRGB[0] == 0 && maxRGB[1] == 0 && maxRGB[2] == 0 ) {
+            return;
+        }
+
+        outBuf.append( name ).append("\n");
+        outBuf.append("--------------------").append("\n");
+
         // Reporting.
         outBuf.append("Max standard deviation is ").append(maxStdev ).append("\n");
         outBuf.append("Min standard deviation is ").append(minStdev).append("\n");
@@ -141,6 +144,11 @@ public class ByteFrequencyDumper {
         outBuf.append("Avg green:blue ratio is ").append(greenOverBlue / counter).append("\n");
         outBuf.append("Avg red:green ratio is ").append(redOverGreen / counter).append("\n");
         outBuf.append("Avg red:blue ratio is ").append(redOverBlue / counter).append("\n");
+
+        outBuf.append("\n");
+        outBuf.append("\n");
+
+        System.out.print( outBuf );
     }
 
     private double getMean( int[] values ) {
