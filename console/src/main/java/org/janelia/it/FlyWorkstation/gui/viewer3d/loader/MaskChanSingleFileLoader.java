@@ -541,6 +541,8 @@ public class MaskChanSingleFileLoader {
                      ( final1DCoord >= applicable1DStart  &&  final1DCoord < applicable1DEnd ) ) {
                     writeToMaskAcceptors(xyzCoords, translatedNum, final1DCoord);
                     writeToChannelAcceptors(channelData, xyzCoords, translatedNum, totalVoxelFactor, allChannelBytes, fixedFinalYCoord, final1DCoord);
+                    if ( DEBUG )
+                        frequencyAnalyzer.frequencyCapture( allChannelBytes );
                 }
 
                 cummulativeVoxelsReadCount++;
