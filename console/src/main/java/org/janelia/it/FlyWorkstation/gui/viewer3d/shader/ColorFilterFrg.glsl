@@ -17,5 +17,5 @@ void main()
     origColor[0] = colorMask[0] * origColor[0];
     origColor[1] = colorMask[1] * origColor[1];
     origColor[2] = colorMask[2] * origColor[2];
-    gl_FragColor = origColor;
+    gl_FragColor = srgb( origColor );
 }
