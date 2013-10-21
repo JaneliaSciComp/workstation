@@ -69,7 +69,9 @@ public class ResultPage {
 		List<Entity> allMappedEntities = ModelMgr.getModelMgr().getEntityByIds(new ArrayList<Long>(mappedEntityIds));
 		
 		for(Entity entity : allMappedEntities) {
-			mappedEntityById.put(entity.getId(), entity);
+		    if (entity!=null) {
+		        mappedEntityById.put(entity.getId(), entity);
+		    }
 		}
 
 		for(MappedId mappedId : mapping) {

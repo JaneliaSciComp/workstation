@@ -253,6 +253,7 @@ public class GeneralSearchDialog extends ModalDialog {
      */
 	protected String getNextFolderName() {
 		final EntityOutline entityOutline = SessionMgr.getSessionMgr().getActiveBrowser().getEntityOutline();
+		if (entityOutline==null) return "";
 		int maxNum = 0;
 		for(EntityData ed : entityOutline.getRootEntity().getEntityData()) {
 			Entity topLevelFolder = ed.getChildEntity();
