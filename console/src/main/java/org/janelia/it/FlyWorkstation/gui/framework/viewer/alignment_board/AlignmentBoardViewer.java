@@ -3,12 +3,13 @@ package org.janelia.it.FlyWorkstation.gui.framework.viewer.alignment_board;
 import java.awt.BorderLayout;
 import java.awt.Component;
 import java.awt.Dimension;
-import java.awt.datatransfer.DataFlavor;
-import java.awt.datatransfer.Transferable;
-import java.util.Collection;
+import java.awt.event.MouseEvent;
+import java.awt.event.MouseWheelEvent;
 import java.util.List;
 import java.util.concurrent.Callable;
 
+import javax.media.opengl.GLCapabilities;
+import javax.media.opengl.GLProfile;
 import javax.media.opengl.awt.GLJPanel;
 import javax.swing.*;
 
@@ -29,6 +30,7 @@ import org.janelia.it.FlyWorkstation.gui.framework.viewer.ViewerPane;
 import org.janelia.it.FlyWorkstation.gui.framework.viewer.alignment_board.events.AlignmentBoardItemChangeEvent;
 import org.janelia.it.FlyWorkstation.gui.framework.viewer.alignment_board.events.AlignmentBoardOpenEvent;
 import org.janelia.it.FlyWorkstation.gui.util.Icons;
+import org.janelia.it.FlyWorkstation.gui.viewer3d.BaseGLViewer;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.BaseRenderer;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.Mip3d;
 import org.janelia.it.FlyWorkstation.gui.alignment_board_viewer.ScaledMip3d;
@@ -598,7 +600,10 @@ public class AlignmentBoardViewer extends Viewer implements AlignmentBoardContro
     private GpuSampler getGpuSampler() {
         // Must find the best downsample rate.
         GpuSampler sampler = new GpuSampler( this.getBackground() );
-        GLJPanel feedbackPanel = new GLJPanel();
+        GLProfile profile = GLProfile.get(GLProfile.GL2);
+        GLCapabilities capabilities = new GLCapabilities(profile);
+        GLJPanel feedbackPanel = new GLJPanel( capabilities );
+
         feedbackPanel.setSize( new Dimension( 1, 1 ) );
         feedbackPanel.addGLEventListener( sampler );
         feedbackPanel.setToolTipText( "Reading OpenGL values..." );
