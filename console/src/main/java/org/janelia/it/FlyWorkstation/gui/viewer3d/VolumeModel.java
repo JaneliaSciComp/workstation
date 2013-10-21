@@ -21,7 +21,7 @@ public class VolumeModel {
     public static final float DEFAULT_GAMMA_ADJUSTMENT = 1.0f;
     public static final Vec3 DEFAULT_FOCUS_IN_GROUND = new Vec3(0, 0, 0);
     public static final float[] DEFAULT_COLOR_MASK = {1.0f, 1.0f, 1.0f};
-    public static final float DEFAULT_CROPOUT = 0.05f;
+    public static final float DEFAULT_CROPOUT = 0.25f;
 
     private CropCoordSet cropCoordSet = CropCoordSet.getDefaultCropCoordSet();
     private float gammaAdjustment = DEFAULT_GAMMA_ADJUSTMENT;

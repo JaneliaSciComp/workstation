@@ -18,6 +18,8 @@ public class MultiTexVolumeBrickShader extends AbstractShader {
     public static final String VERTEX_SHADER = "VolumeBrickVtx.glsl";
     public static final String FRAGMENT_SHADER = "VolumeBrickFrg.glsl";
 
+    private static final float JOGL_2_1_BIAS = 0.46f;
+
     private int previousShader = 0;
 
     private TextureMediator signalTextureMediator;
@@ -150,7 +152,7 @@ public class MultiTexVolumeBrickShader extends AbstractShader {
         if ( gammaAdjustmentLoc == -1 ) {
             throw new RuntimeException( "Failed to find gamma adjustment setting location." );
         }
-        gl.glUniform1f(gammaAdjustmentLoc, gammaAdjustment);
+        gl.glUniform1f(gammaAdjustmentLoc, gammaAdjustment * JOGL_2_1_BIAS );
     }
 
     /** Upload all cropping starts/ends to GPU. */
