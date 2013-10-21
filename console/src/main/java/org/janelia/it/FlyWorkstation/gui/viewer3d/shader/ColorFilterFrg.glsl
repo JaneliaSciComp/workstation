@@ -2,6 +2,12 @@
 uniform sampler3D volumeTexture;
 uniform vec4 colorMask;
 
+vec4 srgb( vec4 origColor )
+{
+    vec4 rtnVal = vec4(pow(origColor.r, 0.46), pow(origColor.g, 0.46), pow(origColor.b, 0.46), 1.0);
+    return rtnVal;
+}
+
 void main()
 {
     vec4 origColor = texture3D(volumeTexture, gl_TexCoord[0].xyz);
