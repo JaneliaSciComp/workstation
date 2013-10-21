@@ -34,6 +34,15 @@ public class Subvolume {
 	private int bytesPerIntensity = 1;
 	private int channelCount = 1;
 	
+    /**
+     * You probably want to run this constructor in a worker
+     * thread, because it can take a while to load its
+     * raster data over the network.
+     * 
+     * @param corner1
+     * @param corner2
+     * @param wholeImage
+     */
 	public Subvolume(
 	        ZoomedVoxelIndex corner1,
 	        ZoomedVoxelIndex corner2,
@@ -42,6 +51,16 @@ public class Subvolume {
 	    initialize(corner1, corner2, wholeImage, null);
 	}
 	
+	/**
+	 * You probably want to run this constructor in a worker
+	 * thread, because it can take a while to load its
+	 * raster data over the network.
+	 * 
+	 * @param corner1
+	 * @param corner2
+	 * @param wholeImage
+	 * @param textureCache
+	 */
     public Subvolume(
             ZoomedVoxelIndex corner1,
             ZoomedVoxelIndex corner2,

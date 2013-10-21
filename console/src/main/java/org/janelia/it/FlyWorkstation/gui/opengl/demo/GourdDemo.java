@@ -28,6 +28,9 @@ import org.janelia.it.FlyWorkstation.gui.opengl.PolygonalMesh;
 import org.janelia.it.FlyWorkstation.gui.opengl.SolidBackgroundActor;
 import org.janelia.it.FlyWorkstation.gui.opengl.stereo3d.StereoModeChooser;
 
+import com.jogamp.common.GlueGenVersion;
+import com.jogamp.opengl.JoglVersion;
+
 @SuppressWarnings("serial")
 public class GourdDemo extends JFrame
 {
@@ -48,7 +51,9 @@ public class GourdDemo extends JFrame
         }
     }
     
-    public static GLProfile glProfile = GLProfile.get(GLProfile.GL2);
+    public static GLProfile glProfile 
+            = GLProfile.get(GLProfile.GL2);
+            // = GLProfile.getDefault();
 
     public static void main(String[] args) {
         javax.swing.SwingUtilities.invokeLater(new Runnable() {
@@ -61,11 +66,15 @@ public class GourdDemo extends JFrame
     public GourdDemo() {
         setTitle("Gourd Demo");
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        
+        JoglVersion foo = JoglVersion.getInstance();
+        System.out.println(foo);
+        GlueGenVersion foo2 = GlueGenVersion.getInstance();
+        System.out.println(foo2);
 
         // Create canvas for openGL display of gourd
         GLCapabilities glCapabilities = new GLCapabilities(glProfile);
-        // GLCapabilities glCapabilities = new GLCapabilities(GLProfile.getDefault());
-        glCapabilities.setStencilBits(8); // causes crash on Mac Mountain Lion OS X 10.8.5 (with older jogl...)
+        glCapabilities.setStencilBits(8); // causes crash on Mac Mountain Lion OS X 10.8.5 (with older jogl 2.0, 2.1 is OK)
         glCapabilities.setStereo(true);
         glCapabilities.setDoubleBuffered(true);
         GLCanvas glPanel = new GLCanvas(glCapabilities);

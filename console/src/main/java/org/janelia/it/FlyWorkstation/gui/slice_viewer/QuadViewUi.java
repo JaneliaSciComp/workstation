@@ -36,7 +36,6 @@ import org.janelia.it.FlyWorkstation.gui.slice_viewer.annotation.SliceViewerTran
 import org.janelia.it.FlyWorkstation.gui.slice_viewer.skeleton.Anchor;
 import org.janelia.it.FlyWorkstation.gui.slice_viewer.skeleton.Skeleton;
 import org.janelia.it.FlyWorkstation.gui.slice_viewer.skeleton.SkeletonActor;
-import org.janelia.it.FlyWorkstation.gui.slice_viewer.skeleton.TracedPathActor;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.BoundingBox3d;
 import org.janelia.it.jacs.model.entity.Entity;
 import org.janelia.it.FlyWorkstation.signal.Signal1;
@@ -64,7 +63,6 @@ import javax.swing.event.ChangeListener;
 
 import java.awt.*;
 import java.awt.event.ActionEvent;
-import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
 import java.awt.event.MouseEvent;
 import java.io.File;

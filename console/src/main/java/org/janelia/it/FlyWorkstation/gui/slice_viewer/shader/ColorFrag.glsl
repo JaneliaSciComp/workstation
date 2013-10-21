@@ -25,5 +25,8 @@ void main()
         // out_color += i * channel_color[c]; // apply channel color
         out_color = max(out_color, i * channel_color[c]); // apply channel color
     }
-    gl_FragColor = vec4(out_color, 1.0);
+    // Final sRGB color correction, because JOGL 2.1 won't do it.
+    // vec3 srgb = pow(out_color.rgb, 0.46); // No vec pow in glsl 1.20?
+    vec3 srgb = vec3(pow(out_color.r, 0.46), pow(out_color.g, 0.46), pow(out_color.b, 0.46));
+    gl_FragColor = vec4(srgb, 1.0);
 }

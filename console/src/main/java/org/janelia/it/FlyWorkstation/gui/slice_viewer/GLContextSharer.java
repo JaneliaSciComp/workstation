@@ -1,13 +1,15 @@
 package org.janelia.it.FlyWorkstation.gui.slice_viewer;
 
 import javax.media.opengl.DefaultGLCapabilitiesChooser;
+import javax.media.opengl.GL;
+import javax.media.opengl.GL2GL3;
 import javax.media.opengl.GLAutoDrawable;
 import javax.media.opengl.GLCapabilities;
 import javax.media.opengl.GLCapabilitiesChooser;
 import javax.media.opengl.GLContext;
 import javax.media.opengl.GLDrawableFactory;
 import javax.media.opengl.GLEventListener;
-import javax.media.opengl.GLPbuffer;
+import javax.media.opengl.GLOffscreenAutoDrawable;
 import javax.media.opengl.GLProfile;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -30,7 +32,7 @@ implements GLEventListener
 
 	// Non-resizing GLPbuffer will hold shared context
 	// See http://www.java-gaming.org/index.php?topic=12781.0
-	private GLPbuffer masterContextPbuffer;
+	private GLOffscreenAutoDrawable masterContextPbuffer;
 	
 	// OpenGL version is setup via profile
 	public GLContextSharer(GLProfile profile) {
@@ -56,7 +58,7 @@ implements GLEventListener
 		// Create a new context the first time this method is called
 		if (masterContextPbuffer == null) {
             GLDrawableFactory factory = GLDrawableFactory.getFactory(profile);
-			masterContextPbuffer = factory.createGLPbuffer(
+			masterContextPbuffer = factory.createOffscreenAutoDrawable(
 					factory.getDefaultDevice(),
 					capabilities,
 					chooser,
@@ -78,8 +80,7 @@ implements GLEventListener
 	}
 
 	@Override
-	public void init(GLAutoDrawable arg0) {
-		// log.info("init");
+	public void init(GLAutoDrawable glDrawable) {
 	}
 
 	@Override

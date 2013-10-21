@@ -4,6 +4,7 @@ import java.awt.Color;
 import java.util.ArrayList;
 import java.util.List;
 import javax.media.opengl.GL2;
+// import javax.media.opengl.GL2GL3;
 import javax.media.opengl.GLAutoDrawable;
 import javax.media.opengl.GLEventListener;
 import javax.media.opengl.glu.GLU;
@@ -51,7 +52,6 @@ public abstract class BaseRenderer implements GLEventListener
     @Override
 	public void dispose(GLAutoDrawable glDrawable) 
 	{
-        final GL2 gl = glDrawable.getGL().getGL2();
 		for (GLActor actor : actors)
 			actor.dispose(glDrawable);
 	}
@@ -72,8 +72,10 @@ public abstract class BaseRenderer implements GLEventListener
     public void init(GLAutoDrawable gLDrawable)
     {
     	// System.out.println("init() called");
-        GL2 gl = gLDrawable.getGL().getGL2();
-        gl.glEnable(GL2.GL_FRAMEBUFFER_SRGB);
+        // GL2GL3 gl2gl3 = gLDrawable.getGL().getGL2GL3();
+        // Because of trouble with JOGL2.1/GLJPanel/GL_FRAMEBUFFER_SRGB, 
+        // need to correct for srgb in framebuffer, not here.
+        // gl2gl3.glEnable(GL2.GL_FRAMEBUFFER_SRGB); // srgb correct in shader...
         List<GLActor> localActors = new ArrayList<GLActor>( getActors() );
 		for (GLActor actor : localActors) {
             actor.init(gLDrawable);

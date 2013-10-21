@@ -193,6 +193,8 @@ implements GLEventListener
 	    final GL gl = glDrawable.getGL();
 	    GL2GL3 gl2gl3 = gl.getGL2GL3();
 	    // Use sRGB framebuffer for correct lighting on computer screens
+        // Why does GL_FRAMEBUFFER_SRGB work here, but not in slice viewer?
+	    // Could be GLCanvas vs GLJPanel...
 	    gl2gl3.glEnable(GL2GL3.GL_FRAMEBUFFER_SRGB);
 	    // 
 	    gl2Adapter = GL2AdapterFactory.createGL2Adapter(glDrawable);
