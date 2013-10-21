@@ -13,6 +13,7 @@ import javax.swing.JFrame;
 import javax.swing.JMenu;
 import javax.swing.JMenuBar;
 import javax.swing.JPopupMenu;
+import javax.swing.UIManager;
 
 import org.janelia.it.FlyWorkstation.geom.Vec3;
 import org.janelia.it.FlyWorkstation.gui.FullScreenMode;
@@ -31,28 +32,42 @@ import org.janelia.it.FlyWorkstation.gui.opengl.stereo3d.StereoModeChooser;
 public class GourdDemo extends JFrame
 {
 
-	static {
-		// So GLCanvas will not occlude menus
-		JPopupMenu.setDefaultLightWeightPopupEnabled(false);
-	}
-	
-	public static void main(String[] args) {
+    static {
+        // So GLCanvas will not occlude menus
+        JPopupMenu.setDefaultLightWeightPopupEnabled(false);
+        // Use top menu bar on Mac
+        if (System.getProperty("os.name").contains("Mac")) {
+            System.setProperty("apple.laf.useScreenMenuBar", "true");
+            System.setProperty("com.apple.mrj.application.apple.menu.about.name", "Gourd Demo");
+        }
+        // Use system look and feel
+        try {
+            UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
+        } catch (Exception e) {
+            System.out.println("Warning: Failed to set native look and feel.");
+        }
+    }
+    
+    public static GLProfile glProfile = GLProfile.get(GLProfile.GL2);
+
+    public static void main(String[] args) {
         javax.swing.SwingUtilities.invokeLater(new Runnable() {
             public void run() {
-            	new GourdDemo();
+                new GourdDemo();
             }
         });
-	}
+    }
 
-	public GourdDemo() {
-    	setTitle("Gourd Demo");
+    public GourdDemo() {
+        setTitle("Gourd Demo");
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 
         // Create canvas for openGL display of gourd
-        GLCapabilities glCapabilities = new GLCapabilities(GLProfile.get(GLProfile.GL2));
+        GLCapabilities glCapabilities = new GLCapabilities(glProfile);
         // GLCapabilities glCapabilities = new GLCapabilities(GLProfile.getDefault());
-        // glCapabilities.setStereo(true);
-        glCapabilities.setStencilBits(8);
+        glCapabilities.setStencilBits(8); // causes crash on Mac Mountain Lion OS X 10.8.5 (with older jogl...)
+        glCapabilities.setStereo(true);
+        glCapabilities.setDoubleBuffered(true);
         GLCanvas glPanel = new GLCanvas(glCapabilities);
         // GLJPanel glPanel = new GLJPanel(glCapabilities); // DOES NOT WORK WITH GL3!?!
         //
@@ -71,22 +86,22 @@ public class GourdDemo extends JFrame
             e.printStackTrace();
             return;
         }
-        
-		// Create camera
-		ObservableCamera3d camera = new BasicObservableCamera3d();
-		camera.setFocus(new Vec3(0, 0, 0));
-		camera.setPixelsPerSceneUnit(200);
 
-	    GLSceneComposer sceneComposer = 
-	            new GLSceneComposer(camera, glPanel);
-	    sceneComposer.addBackgroundActor(new SolidBackgroundActor(
-	            Color.gray));
-	    sceneComposer.addOpaqueActor(new LightingActor());
-	    MeshGroupActor meshGroup = new MeshGroupActor();
-	    meshGroup.addActor(new MeshActor(gourdMesh));
-	    sceneComposer.addOpaqueActor(meshGroup);
-	    // sceneComposer.addOpaqueActor(new TeapotActor());
-        
+        // Create camera
+        ObservableCamera3d camera = new BasicObservableCamera3d();
+        camera.setFocus(new Vec3(0, 0, 0));
+        camera.setPixelsPerSceneUnit(200);
+
+        GLSceneComposer sceneComposer = 
+            new GLSceneComposer(camera, glPanel);
+        sceneComposer.addBackgroundActor(new SolidBackgroundActor(
+                Color.gray));
+        sceneComposer.addOpaqueActor(new LightingActor());
+        MeshGroupActor meshGroup = new MeshGroupActor();
+        meshGroup.addActor(new MeshActor(gourdMesh));
+        sceneComposer.addOpaqueActor(meshGroup);
+        // sceneComposer.addOpaqueActor(new TeapotActor());
+
         // Enable stereo 3D selection
         StereoModeChooser stereoModeChooser = new StereoModeChooser(glPanel);
         stereoModeChooser.stereoModeChangedSignal.connect(sceneComposer.setStereoModeSlot);
@@ -96,14 +111,14 @@ public class GourdDemo extends JFrame
         menuBar.add(viewMenu);
         setJMenuBar(menuBar);        
         viewMenu.add(stereoModeChooser.createJMenuItem());	    
-	    
+
         // Apply mouse interactions: drag to rotate etc.
         // Another one-line functionality decorator!
         new TrackballInteractor(glPanel, camera);        
-		
+
         //Display the window.
         pack();
         setVisible(true);		
-	}
-	
+    }
+
 }

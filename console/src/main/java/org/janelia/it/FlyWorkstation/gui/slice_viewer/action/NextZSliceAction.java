@@ -17,7 +17,7 @@ extends SliceScanAction
 		super(image, camera, 1);
 		putValue(NAME, "Next Z Slice");
 		putValue(SMALL_ICON, Icons.getIcon("z_stack_down.png"));
-		putValue(MNEMONIC_KEY, KeyEvent.VK_PAGE_DOWN);
+		putValue(MNEMONIC_KEY, (int)KeyEvent.VK_PAGE_DOWN);
 		KeyStroke accelerator = KeyStroke.getKeyStroke(
 			KeyEvent.VK_PAGE_DOWN, 0);
 		putValue(ACCELERATOR_KEY, accelerator);

@@ -20,7 +20,7 @@ public class ZoomOutAction extends AbstractAction
 		this.camera = camera;
 		putValue(NAME, "Zoom Out");
 		putValue(SMALL_ICON, Icons.getIcon("magnify_minus.png"));
-		putValue(MNEMONIC_KEY, KeyEvent.VK_MINUS); // works with keyboard
+		putValue(MNEMONIC_KEY, (int)KeyEvent.VK_MINUS); // works with keyboard
 		// ctrl-minus on windows, cmd-minus on Mac
 		KeyStroke accelerator = KeyStroke.getKeyStroke(
 				KeyEvent.VK_MINUS,

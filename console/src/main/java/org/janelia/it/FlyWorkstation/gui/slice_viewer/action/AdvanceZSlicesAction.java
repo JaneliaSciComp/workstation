@@ -17,7 +17,7 @@ public class AdvanceZSlicesAction extends SliceScanAction {
 		super(image, camera, sliceCount);
 		putValue(NAME, "Advance " + sliceCount + " Z Slices");
 		putValue(SMALL_ICON, Icons.getIcon("z_stack_down_fast.png"));
-		putValue(MNEMONIC_KEY, KeyEvent.VK_GREATER);
+		putValue(MNEMONIC_KEY, (int)KeyEvent.VK_GREATER);
 		KeyStroke accelerator = KeyStroke.getKeyStroke(
 			KeyEvent.VK_PERIOD, 
 			KeyEvent.SHIFT_MASK);

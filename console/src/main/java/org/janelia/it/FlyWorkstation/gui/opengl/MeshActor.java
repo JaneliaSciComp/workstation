@@ -52,8 +52,8 @@ implements GL3Actor
     private PolygonalMesh mesh;
     private BoundingBox3d boundingBox;
     private DisplayMethod displayMethod 
-     	= DisplayMethod.GL2_VERTEX_BUFFER_OBJECTS; // GL2 only...
-    	// = DisplayMethod.GL2_DISPLAY_LISTS;
+    // 	= DisplayMethod.GL2_VERTEX_BUFFER_OBJECTS; // GL2 only...
+    	  = DisplayMethod.GL2_DISPLAY_LISTS;
     	// = DisplayMethod.VBO_WITH_SHADER;
     // display list render method
     private int displayList = 0;
@@ -127,6 +127,7 @@ implements GL3Actor
 
     private void initializeVbos(GL2GL3 gl2gl3) {
         GL gl = gl2gl3.getGL();
+        checkGlError(gl, "initialize vbos 130");
         // Initialize vertex buffer objects
         int[] vbos = {0,0};
         gl.glGenBuffers(2, vbos, 0);
@@ -163,6 +164,7 @@ implements GL3Actor
                 totalVertexNormalByteCount, 
                 vertices, GL.GL_STATIC_DRAW);
         gl.glBindBuffer(GL.GL_ARRAY_BUFFER, 0);
+        checkGlError(gl, "initialize vbos 167");
         // indices
         int triangleCount = 0;
         for (PolygonalMesh.Face f : mesh.getFaces())
@@ -185,10 +187,12 @@ implements GL3Actor
                 indices.put(v2);
             }
         }
+        checkGlError(gl, "initialize vbos 190");
         if (indices.position() != indexCount)
             System.err.println("arithmetic problem");
         indices.rewind();
         gl.glBindBuffer(GL.GL_ELEMENT_ARRAY_BUFFER, indexVbo);
+        checkGlError(gl, "initialize vbos 195");
         gl.glBufferData(GL.GL_ELEMENT_ARRAY_BUFFER, 
                 totalIndexByteCount, 
                 indices, GL.GL_STATIC_DRAW);
@@ -196,20 +200,26 @@ implements GL3Actor
         // Vertex array object
             
         int ix[] = {0};
+        checkGlError(gl, "initialize vbos 203");
         gl2gl3.glGenVertexArrays(1, ix, 0);
+        checkGlError(gl, "initialize vbos 205");
         vertexArrayObject = ix[0];
     }
     
     private void displayUsingVertexBufferObjects(GL2 gl2) {
         GL gl = gl2.getGL();
+        checkGlError(gl, "display mesh using vbos 205");
         GL2GL3 gl2gl3 = gl2.getGL2GL3();
         // GL gl = glDrawable.getGL();
         // GL2 gl2 = gl.getGL2();
+        checkGlError(gl, "display mesh using vbos 209");
         if (vertexNormalVbo < 1) // first time?
             initializeVbos(gl2);
+        checkGlError(gl, "display mesh using vbos 211");
         gl2gl3.glEnableClientState(GL2.GL_VERTEX_ARRAY);
         gl2gl3.glEnableClientState(GL2.GL_NORMAL_ARRAY);
 
+        checkGlError(gl, "display mesh using vbos 214");
         final int bytesPerVertexNormal = (floatsPerVertex + floatsPerNormal)*bytesPerFloat;
         gl2gl3.glBindBuffer(GL.GL_ARRAY_BUFFER, vertexNormalVbo);
         gl2.glVertexPointer(floatsPerVertex, GL.GL_FLOAT, bytesPerVertexNormal, 0);

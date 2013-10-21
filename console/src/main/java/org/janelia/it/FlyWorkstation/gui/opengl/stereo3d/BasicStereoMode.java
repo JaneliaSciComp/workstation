@@ -130,4 +130,8 @@ public class BasicStereoMode implements StereoMode {
         ga.glMatrixMode(MatrixMode.GL_MODELVIEW);
     }
 
+    @Override
+    public void dispose(GLAutoDrawable glDrawable) {
+    }
+
 }

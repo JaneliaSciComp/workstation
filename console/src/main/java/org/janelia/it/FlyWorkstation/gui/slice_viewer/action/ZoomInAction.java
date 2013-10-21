@@ -20,7 +20,7 @@ public class ZoomInAction extends AbstractAction
 		this.camera = camera;
 		putValue(NAME, "Zoom In");
 		putValue(SMALL_ICON, Icons.getIcon("magnify_plus.png"));
-		putValue(MNEMONIC_KEY, KeyEvent.VK_PLUS);
+		putValue(MNEMONIC_KEY, (int)KeyEvent.VK_PLUS);
 		// ctrl-plus on windows, cmd-plus on Mac
 		KeyStroke accelerator = KeyStroke.getKeyStroke(
 				KeyEvent.VK_EQUALS,

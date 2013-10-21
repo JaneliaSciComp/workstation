@@ -15,7 +15,7 @@ public class PreviousZSliceAction extends SliceScanAction {
 		super(image, camera, -1);
 		putValue(NAME, "Previous Z Slice");
 		putValue(SMALL_ICON, Icons.getIcon("z_stack_up.png"));
-		putValue(MNEMONIC_KEY, KeyEvent.VK_PAGE_UP);
+		putValue(MNEMONIC_KEY, (int)KeyEvent.VK_PAGE_UP);
 		KeyStroke accelerator = KeyStroke.getKeyStroke(
 			KeyEvent.VK_PAGE_UP, 0);
 		putValue(ACCELERATOR_KEY, accelerator);

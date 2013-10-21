@@ -15,7 +15,7 @@ public class GoBackZSlicesAction extends SliceScanAction {
 		super(image, camera, sliceCount);
 		putValue(NAME, "Go Back " + -sliceCount + " Z Slices");
 		putValue(SMALL_ICON, Icons.getIcon("z_stack_up_fast.png"));
-		putValue(MNEMONIC_KEY, KeyEvent.VK_LESS);
+		putValue(MNEMONIC_KEY, (int)KeyEvent.VK_LESS);
 		// Shift-comma, really!??! Qt is better than Java. Period.
 		KeyStroke accelerator = KeyStroke.getKeyStroke(
 			KeyEvent.VK_COMMA, 

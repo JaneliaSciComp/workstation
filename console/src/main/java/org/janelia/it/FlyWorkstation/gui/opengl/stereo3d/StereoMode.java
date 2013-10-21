@@ -16,4 +16,6 @@ public interface StereoMode {
     boolean isEyesSwapped();
 
     void setEyesSwapped(boolean eyesSwapped);
+
+    void dispose(GLAutoDrawable glDrawable);
 }

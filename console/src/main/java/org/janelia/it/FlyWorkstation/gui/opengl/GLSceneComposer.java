@@ -3,6 +3,7 @@ package org.janelia.it.FlyWorkstation.gui.opengl;
 import javax.media.opengl.GL;
 import javax.media.opengl.GL2GL3;
 import javax.media.opengl.GLAutoDrawable;
+import javax.media.opengl.GLCapabilitiesImmutable;
 import javax.media.opengl.GLEventListener;
 import javax.media.opengl.glu.GLU;
 
@@ -35,6 +36,7 @@ implements GLEventListener
     protected static GLU glu = new GLU();
 
     private StereoMode stereoMode = new MonoStereoMode();
+    boolean stereoModeNeedsCleanup = true; // for Mac
 
 	private static final Vec3 upInCamera = new Vec3(0,-1,0);
 	private ObservableCamera3d camera;
@@ -124,6 +126,25 @@ implements GLEventListener
             updateModelViewMatrix(actorContext);
 	        viewChanged = false;
 	    }
+	    if (stereoModeNeedsCleanup) {
+	        // On Mountain Lion, GL_BACK, GL_BACK_LEFT, and GL_BACK_RIGHT
+	        // are separate buffers, all of which display. Clear them all
+	        // between stereo mode changes.
+	        // Otherwise, unclearable ghost images remain in the background.
+	        gl.glClearColor(0,0,0,0);
+	        GL2GL3 gl2gl3 = gl.getGL2GL3();
+	        GLCapabilitiesImmutable glCaps = glDrawable.getChosenGLCapabilities();
+	        if (glCaps.getStereo())
+	        {
+                gl2gl3.glDrawBuffer(GL2GL3.GL_BACK_RIGHT);
+                gl.glClear(GL.GL_COLOR_BUFFER_BIT);
+                gl2gl3.glDrawBuffer(GL2GL3.GL_BACK_LEFT);
+                gl.glClear(GL.GL_COLOR_BUFFER_BIT);
+	        }
+            gl2gl3.glDrawBuffer(GL2GL3.GL_BACK);
+            gl.glClear(GL.GL_COLOR_BUFFER_BIT);
+	        stereoModeNeedsCleanup = false;
+	    }
 	    stereoMode.display(actorContext, this);
         checkGlError(gl, "GLSceneComposer display 1");
 	}
@@ -164,6 +185,7 @@ implements GLEventListener
         GLActorContext actorContext = new GLActorContext(glDrawable, gl2Adapter);
 	    for (GL3Actor actor : allActors)
 	        actor.dispose(actorContext);
+	    stereoMode.dispose(glDrawable);
 	}
 
 	@Override
@@ -214,6 +236,7 @@ implements GLEventListener
 		// if (this.stereoMode == mode) return; // Just swap eye might have changed, still repaint
 	    if (this.stereoMode != mode) {
 	        stereoMode = mode;
+	        stereoModeNeedsCleanup = true;
 	        mode.reshape(glComponent.getWidth(), glComponent.getHeight());
 	    }
 		viewChangedSignal.emit();

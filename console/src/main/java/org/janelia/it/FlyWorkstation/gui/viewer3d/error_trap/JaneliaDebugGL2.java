@@ -1,7 +1,9 @@
 package org.janelia.it.FlyWorkstation.gui.viewer3d.error_trap;
 
 import javax.media.opengl.DebugGL2;
+import javax.media.opengl.GL;
 import javax.media.opengl.GL2;
+import javax.media.opengl.GL2ES1;
 import javax.media.opengl.GLContext;
 import javax.media.opengl.GLException;
 
@@ -92,8 +94,8 @@ public class JaneliaDebugGL2 extends DebugGL2 {
                 case GL_INVALID_ENUM: buf.append("GL_INVALID_ENUM "); break;
                 case GL_INVALID_VALUE: buf.append("GL_INVALID_VALUE "); break;
                 case GL_INVALID_OPERATION: buf.append("GL_INVALID_OPERATION "); break;
-                case GL_STACK_OVERFLOW: buf.append("GL_STACK_OVERFLOW "); break;
-                case GL_STACK_UNDERFLOW: buf.append("GL_STACK_UNDERFLOW "); break;
+                case GL2ES1.GL_STACK_OVERFLOW: buf.append("GL_STACK_OVERFLOW "); break;
+                case GL2ES1.GL_STACK_UNDERFLOW: buf.append("GL_STACK_UNDERFLOW "); break;
                 case GL_OUT_OF_MEMORY: buf.append("GL_OUT_OF_MEMORY "); break;
                 case GL_NO_ERROR: throw new InternalError("Should not be treating GL_NO_ERROR as error");
                 default: buf.append("Unknown glGetError() return value: ");

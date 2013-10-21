@@ -83,12 +83,15 @@ implements GL3Actor
 
     public void displayQuadImmediate(GLActorContext context) { // works
     	GL gl = context.getGLAutoDrawable().getGL();
+    GLError.checkGlError(gl, "solid background QUAD_GL2 86");
     	GL2 gl2 = gl.getGL2();
     	GL2GL3 gl2gl3 = gl.getGL2GL3();
     	
     	gl2.glMatrixMode(GL2.GL_PROJECTION);
+        GLError.checkGlError(gl, "solid background QUAD_GL2 91");
     	gl2.glPushMatrix();
     	gl2.glLoadIdentity();
+    GLError.checkGlError(gl, "solid background QUAD_GL2 94");
     	gl2.glMatrixMode(GL2.GL_MODELVIEW);
     	gl2.glPushMatrix();
     	gl2.glLoadIdentity();
@@ -96,6 +99,8 @@ implements GL3Actor
     	shader.load(gl2);
     	shader.setUniform4v(gl2gl3, "color", 1, color);
     	
+    GLError.checkGlError(gl, "solid background QUAD_GL2 100");
+    
     	gl2.glDisable(GL2.GL_LIGHTING);
     	gl2.glColor4f(color[0], color[1], color[2], color[3]);
     	gl2.glBegin(GL.GL_TRIANGLE_STRIP);

@@ -33,7 +33,7 @@ implements GLActor
     private int vertexLocation = 0; // shader program uniform index
     private BoundingBox3d boundingBox = new BoundingBox3d();
     private int vertexVbo = 0;
-    private int vertexArrayObject = 0;
+    // private int vertexArrayObject = 0;
     private ByteBuffer vertexByteBuffer;
     private int pointCount = 0;
     private boolean bIsInitialized = false;
@@ -83,17 +83,19 @@ implements GLActor
 
     @Override
     public void display(GLAutoDrawable glDrawable) {
+        GL gl = glDrawable.getGL();
+        checkGlError(gl, "render traced path 87");
         if (! bIsInitialized)
             init(glDrawable);
-        GL gl = glDrawable.getGL();
         GL2GL3 gl2gl3 = gl.getGL2GL3();
-        gl2gl3.glBindVertexArray(vertexArrayObject);
+        checkGlError(gl, "render traced path 91");
+        // gl2gl3.glBindVertexArray(vertexArrayObject);
+        checkGlError(gl, "render traced path 93");
         gl.glBindBuffer(GL.GL_ARRAY_BUFFER, vertexVbo);
         gl2gl3.glEnableVertexAttribArray(vertexLocation);
         gl2gl3.glVertexAttribPointer(vertexLocation, floatsPerVertex, GL.GL_FLOAT, false, 0, 0);
         gl.glDrawArrays(GL.GL_LINE_STRIP, 0, pointCount);
         gl2gl3.glDisableVertexAttribArray(vertexLocation);
-        checkGlError(gl, "render traced path");
     }
 
     @Override
@@ -108,23 +110,31 @@ implements GLActor
 	@Override
     public void init(GLAutoDrawable glDrawable) {
         GL gl = glDrawable.getGL();
+        checkGlError(gl, "init traced path 116");
         // One-time initialization
         int[] vbos = {0};
         gl.glGenBuffers(1, vbos, 0);
         vertexVbo = vbos[0];
         checkGlError(gl, "create buffer handles");
         //
-        int ix[] = {0};
-        GL2GL3 gl2gl3 = gl.getGL2GL3();
-        gl2gl3.glGenVertexArrays(1, ix, 0);
-        vertexArrayObject = ix[0];
+        // int ix[] = {0};
+        // GL2GL3 gl2gl3 = gl.getGL2GL3();
+        checkGlError(gl, "init traced path 122");
+        // gl2gl3.glGenVertexArrays(1, ix, 0);
+        checkGlError(gl, "init traced path 124");
+        // vertexArrayObject = ix[0];
+        // gl2gl3.glBindVertexArray(vertexArrayObject);
         // vertices
         gl.glBindBuffer(GL.GL_ARRAY_BUFFER, vertexVbo);
         FloatBuffer vertices = vertexByteBuffer.asFloatBuffer();
         vertices.rewind();
+        checkGlError(gl, "init traced path 131");
         gl.glBufferData(GL.GL_ARRAY_BUFFER, 
                 vertexByteBuffer.capacity(), 
                 vertices, GL.GL_STATIC_DRAW);
+        checkGlError(gl, "init traced path 135");
+        // gl2gl3.glBindVertexArray(0);
+        checkGlError(gl, "init traced path 137");
         gl.glBindBuffer(GL.GL_ARRAY_BUFFER, 0);
 
         bIsInitialized = true;
@@ -138,10 +148,10 @@ implements GLActor
             gl.glDeleteBuffers(1, ix, 0);
             vertexVbo = 0;
             //
-            ix[0] = vertexArrayObject;
-            GL2GL3 gl2gl3 = gl.getGL2GL3();
-            gl2gl3.glDeleteVertexArrays(1, ix, 0);
-            vertexArrayObject = 0;
+            // ix[0] = vertexArrayObject;
+            // GL2GL3 gl2gl3 = gl.getGL2GL3();
+            // gl2gl3.glDeleteVertexArrays(1, ix, 0);
+            // vertexArrayObject = 0;
         }
         bIsInitialized = false;
     }

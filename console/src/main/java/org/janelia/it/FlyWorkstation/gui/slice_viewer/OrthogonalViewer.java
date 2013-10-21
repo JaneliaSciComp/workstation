@@ -456,7 +456,7 @@ implements MouseModalWidget, TileConsumer
 			super(-1, viewer);
 			putValue(NAME, "Previous "+viewer.sliceAxis.getName()+" Slice");
 			putValue(SMALL_ICON, Icons.getIcon("z_stack_up.png"));
-			putValue(MNEMONIC_KEY, KeyEvent.VK_PAGE_UP);
+			putValue(MNEMONIC_KEY, (int)KeyEvent.VK_PAGE_UP);
 			KeyStroke accelerator = KeyStroke.getKeyStroke(
 				KeyEvent.VK_PAGE_UP, 0);
 			putValue(ACCELERATOR_KEY, accelerator);
@@ -472,7 +472,7 @@ implements MouseModalWidget, TileConsumer
 			super(1, viewer);
 			putValue(NAME, "Next "+viewer.sliceAxis.getName()+" Slice");
 			putValue(SMALL_ICON, Icons.getIcon("z_stack_down.png"));
-			putValue(MNEMONIC_KEY, KeyEvent.VK_PAGE_DOWN);
+			putValue(MNEMONIC_KEY, (int)KeyEvent.VK_PAGE_DOWN);
 			KeyStroke accelerator = KeyStroke.getKeyStroke(
 				KeyEvent.VK_PAGE_DOWN, 0);
 			putValue(ACCELERATOR_KEY, accelerator);
