@@ -149,8 +149,8 @@ public class AxesActor implements GLActor
         gl.glBindBuffer( GL2.GL_ARRAY_BUFFER, lineBufferHandle );
         reportError( gl, "Display of axes-actor 1" );
 
-        float grayValue = 0.02f;
-        gl.glColor4f(0.05f, grayValue, grayValue, 1.0f);
+        float grayValue = 0.1f;
+        gl.glColor4f(grayValue * 2.0f, grayValue, grayValue, 1.0f);
         reportError( gl, "Display of axes-actor 2" );
 
         gl.glEnableClientState( GL2.GL_VERTEX_ARRAY );
