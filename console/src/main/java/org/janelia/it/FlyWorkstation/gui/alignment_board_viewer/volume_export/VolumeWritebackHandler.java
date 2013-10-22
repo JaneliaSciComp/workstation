@@ -1,5 +1,6 @@
 package org.janelia.it.FlyWorkstation.gui.alignment_board_viewer.volume_export;
 
+import org.janelia.it.FlyWorkstation.gui.alignment_board_viewer.gui_elements.AlignmentBoardControlsDialog;
 import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.FlyWorkstation.gui.framework.viewer.alignment_board.FileExportLoadWorker;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.Mip3d;
@@ -157,8 +158,14 @@ public class VolumeWritebackHandler {
     private File getUserFileChoice() {
         JFileChooser fileChooser = new JFileChooser( "Choose Export File" );
         fileChooser.setDialogTitle( "Save" );
-        fileChooser.setToolTipText( "Pick an output location for the exported file." );
-        fileChooser.showOpenDialog( null );
+        fileChooser.setToolTipText("Pick an output location for the exported file.");
+        JDialog backingComponent = null;
+        for ( Window dialog: JDialog.getWindows() ) {
+            if (AlignmentBoardControlsDialog.DIALOG_NAME.equals( dialog.getName() ) ) {
+                backingComponent = (JDialog)dialog;
+            }
+        }
+        fileChooser.showDialog( backingComponent, "Save" );
 
         // Get the file.
         return fileChooser.getSelectedFile();

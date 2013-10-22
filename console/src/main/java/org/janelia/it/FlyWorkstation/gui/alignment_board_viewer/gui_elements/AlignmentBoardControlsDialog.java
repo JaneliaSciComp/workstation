@@ -30,6 +30,7 @@ import java.util.List;
  * the Alignment Board Viewer.
  */
 public class AlignmentBoardControlsDialog extends JDialog {
+    public static final String DIALOG_NAME = "AlignmentBoard::Controls";
     public static final double UNSELECTED_DOWNSAMPLE_RATE = 0.0;
     private static final String DOWN_SAMPLE_TIP =
             "Data sent to screen may be too large for your graphics card. Therefore, they are\n" +
@@ -125,6 +126,7 @@ public class AlignmentBoardControlsDialog extends JDialog {
      *                  in here as a seed.
      */
     public AlignmentBoardControlsDialog( Component centering, VolumeModel volumeModel, AlignmentBoardSettings settings ) {
+        this.setName( DIALOG_NAME );
         this.settings = settings;
         this.setModal( false );
         this.setSize(SIZE);
