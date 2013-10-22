@@ -30,6 +30,7 @@ public class MaskSingleFileLoader {
     private static final int LONG_BYTES = Long.SIZE / 8;
 
     private static final boolean DEBUG = false;
+    public static final int SUBSTITUTE_CHANNEL_VALUE = 127;
 
     private long sx;
     private long sy;
@@ -254,7 +255,9 @@ public class MaskSingleFileLoader {
         channelMetaData.byteCount = 1;
 
         allFChannelBytes = new byte[ channelMetaData.channelCount * channelMetaData.byteCount ];
-        allFChannelBytes[ 0 ] = 127;
+        for ( int i = 0; i < allFChannelBytes.length; i+=channelMetaData.byteCount ) {
+            allFChannelBytes[ i ] = SUBSTITUTE_CHANNEL_VALUE;
+        }
 
         pushChannelMetaDataToAcceptors();
     }
@@ -431,7 +434,7 @@ public class MaskSingleFileLoader {
      * the logical start points of the ones which follow, but stacked into sheets which are in turn stacked
      * into the rect-solid.  Expected orderings are:  0=yz(x), 1=xz(y), 2=xy(z).
      *
-     * @param channelData available to "poke" into channel values for this renderable.
+     * @param channelIntensityBytes available to "poke" into channel values for this renderable.
      * @param skippedRayCount tells how many of these rays to bypass before interpreting first pair.
      * @param pairsAlongRay all these pairs define interval parts of the current ray.
      * @return total bytes read during this pairs-run.
@@ -441,7 +444,7 @@ public class MaskSingleFileLoader {
     private int addData(
             long skippedRayCount,
             long[][] pairsAlongRay,
-            final List<byte[]> channelData ) throws Exception {
+            final List<byte[]> channelIntensityBytes ) throws Exception {
 
         latestRayNumber += skippedRayCount;
         long nextRayOffset = latestRayNumber * fastestSrcVaryingMax; // No need byte-count in source coords.
@@ -480,7 +483,7 @@ public class MaskSingleFileLoader {
                 if ( applicable1DStart == null  ||
                      ( final1DCoord >= applicable1DStart  &&  final1DCoord < applicable1DEnd ) ) {
                     writeToMaskAcceptors(xyzCoords, translatedNum, final1DCoord);
-                    writeToChannelAcceptors(channelData, xyzCoords, translatedNum, totalVoxelFactor, allChannelBytes, fixedFinalYCoord, final1DCoord);
+                    writeToChannelAcceptors(channelIntensityBytes, xyzCoords, translatedNum, totalVoxelFactor, allChannelBytes, fixedFinalYCoord, final1DCoord);
                     if ( DEBUG )
                         frequencyAnalyzer.frequencyCapture( allChannelBytes );
                 }
