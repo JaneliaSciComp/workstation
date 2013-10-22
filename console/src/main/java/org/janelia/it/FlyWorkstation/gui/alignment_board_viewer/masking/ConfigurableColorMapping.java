@@ -164,15 +164,7 @@ public class ConfigurableColorMapping implements RenderMappingI {
                 rgb = setRgbFromAverageColor( renderableBean );
             }
 
-            boolean rgbValsZero = true;
-            if ( rgb != null ) {
-                for ( int i = 0; i < 3; i++ ) {
-                    if ( rgb[ i ] != 0 )
-                        rgbValsZero = false;
-                }
-            }
-
-            if ( rgb == null  ||  rgbValsZero ) {
+            if ( rgb == null ) {
                 rgb = colorWheel[ translatedNum % colorWheel.length ];
                 Entity entity = renderableBean.getRenderableEntity();
                 if ( entity != null ) {
