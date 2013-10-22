@@ -137,14 +137,13 @@ public class AlignmentBoardControlsPanel extends JPanel {
         this.setNonSerializedDownSampleRate(downsampleRate);
     }
 
-    /** Take the launch method as the place to update all controls. */
-    public void setVisible( boolean visible ) {
+    /** Update all controls. */
+    public void update( boolean visible ) {
         if ( visible ) {
             updateControlsFromSettings();
             updateCurrentSelectionFromSettings();
             updateCropOutLevelFromVolumeModel();
         }
-        super.setVisible(visible);
     }
 
     /** Control who observes.  Synchronized for thread safety. */
@@ -169,7 +168,7 @@ public class AlignmentBoardControlsPanel extends JPanel {
     }
 
     public void dispose() {
-        setVisible( false );
+        setVisible(false);
         removeAllSettingsListeners();
         if ( selectionSliderListener != null ) {
             xSlider.removeChangeListener( selectionSliderListener );

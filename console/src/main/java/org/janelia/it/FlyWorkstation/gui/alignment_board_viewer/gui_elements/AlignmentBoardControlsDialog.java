@@ -75,7 +75,7 @@ public class AlignmentBoardControlsDialog extends JDialog {
 
     public void setVisible( boolean visible ) {
         super.setVisible( visible );
-        controlsPanel.setVisible( visible );
+        controlsPanel.update( visible );
     }
 
     /**
