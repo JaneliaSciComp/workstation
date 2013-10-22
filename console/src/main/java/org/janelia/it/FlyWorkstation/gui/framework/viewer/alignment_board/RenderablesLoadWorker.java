@@ -165,7 +165,7 @@ public class RenderablesLoadWorker extends SimpleWorker implements VolumeLoader 
                 RenderableBean bean = renderableData.getBean();
 
                 // Need to add sizing data to each renderable bean prior to sorting.
-                MaskChanSingleFileLoader loader = new MaskChanSingleFileLoader( null, null, bean, null );
+                MaskSingleFileLoader loader = new MaskSingleFileLoader( null, null, bean, null );
                 if ( renderableData.getMaskPath() != null ) {
                     File infile = new File( resolver.getResolvedFilename( renderableData.getMaskPath() ) );
                     if ( infile.canRead() ) {

@@ -7,7 +7,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.InputStream;
-import java.io.RandomAccessFile;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.util.*;
@@ -22,7 +21,7 @@ import java.util.List;
  * This implementation of a mask builder takes renderables as its driving data.  It will accept the renderables,
  * along with their applicable chunks of data, to produce its texture data volume, in memory.
  */
-public class MaskChanSingleFileLoader {
+public class MaskSingleFileLoader {
 
     public static final int REQUIRED_AXIAL_LENGTH_DIVISIBLE = 64;
     public static final int UNSET_SEGMENT = -1;
@@ -104,7 +103,7 @@ public class MaskChanSingleFileLoader {
     private int cummulativeVoxelsReadCount = 0;  // evolving state.
     private long lastRayCount = 0;      // evolving state.
 
-    private Logger logger = LoggerFactory.getLogger( MaskChanSingleFileLoader.class );
+    private Logger logger = LoggerFactory.getLogger( MaskSingleFileLoader.class );
 
     private byte[] allFChannelBytes;
     private double[] channelAverages;
@@ -117,7 +116,7 @@ public class MaskChanSingleFileLoader {
      * @param channelAcceptors this care about the channel data to which mask data refers.
      * @param renderableBean all actions taken here are concerning this renderable.
      */
-    public MaskChanSingleFileLoader(
+    public MaskSingleFileLoader(
             Collection<MaskChanDataAcceptorI> maskAcceptors,
             Collection<MaskChanDataAcceptorI> channelAcceptors,
             RenderableBean renderableBean,
@@ -161,11 +160,11 @@ public class MaskChanSingleFileLoader {
      * acceptors as it is encountered.
      *
      * @param maskInputStream points to mask data of the pair.
-     * @param channelStream points to channel data of the pair.
+     * @param channelDataBean points to channel data of the pair.
      * @throws Exception by called methods.
      */
     @NotThreadSafe(why = "calls addData")
-    public void read( InputStream maskInputStream, InputStream channelStream )
+    public void read( InputStream maskInputStream, ChannelSingleFileLoader.ChannelDataBean channelDataBean )
             throws Exception {
 
         cummulativeVoxelsReadCount = 0;
@@ -177,16 +176,14 @@ public class MaskChanSingleFileLoader {
         initializeMaskStream(maskInputStream);
         validateMaskVolume();
 
-        List<byte[]> channelData = null;
-        if ( channelStream == null ) {
+        List<byte[]> channelData = channelDataBean.getChannelData();
+        if ( channelDataBean == null ) {
             logger.debug( "Creating empty channel metadata for nonexistent input stream." );
             createEmptyChannelMetaData();
         }
         else {
-            logger.debug("Reading channel data.");
-            channelData = readChannelData( channelStream );
-
-            logger.debug( "Completed reading channel data." );
+            channelMetaData = channelDataBean.getChannelMetaData();
+            pushChannelMetaDataToAcceptors();
         }
 
         if ( DEBUG ) {
@@ -238,6 +235,14 @@ public class MaskChanSingleFileLoader {
         }
     }
 
+    private void pushChannelMetaDataToAcceptors() {
+        if ( channelAcceptors != null ) {
+            for ( MaskChanDataAcceptorI acceptor: channelAcceptors ) {
+                acceptor.setChannelMetaData( channelMetaData );
+            }
+        }
+    }
+
     private void createEmptyChannelMetaData() {
         channelMetaData = new ChannelMetaData();
         channelMetaData.rawChannelCount = 3;
@@ -250,11 +255,7 @@ public class MaskChanSingleFileLoader {
         allFChannelBytes = new byte[ channelMetaData.channelCount * channelMetaData.byteCount ];
         allFChannelBytes[ 0 ] = 127;
 
-        if ( channelAcceptors != null ) {
-            for ( MaskChanDataAcceptorI acceptor: channelAcceptors ) {
-                acceptor.setChannelMetaData( channelMetaData );
-            }
-        }
+        pushChannelMetaDataToAcceptors();
     }
 
     //------------------------------------CONSISTENCY-CHECK METHODS
@@ -421,68 +422,6 @@ public class MaskChanSingleFileLoader {
             throw new IllegalArgumentException( "Dimension order of " + dimensionOrder + " unexpected." );
         }
 
-    }
-
-    /**
-     * Fetch any channel-data required for this bean.  Also, the needs of acceptors will be taken into account;
-     * there may be no need to read anything here at all.
-     *
-     * @return list of channel arrays, raw byte data.
-     * @throws Exception thrown by any called method.
-     */
-    private List<byte[]> readChannelData( InputStream channelStream ) throws Exception {
-        List<byte[]> returnValue = new ArrayList<byte[]>();
-
-        // Open the file, and move pointers down to seek-ready point.
-        long totalIntensityVoxels = readLong(channelStream);
-        if ( totalIntensityVoxels != totalVoxels ) {
-            throw new IllegalArgumentException( "Mismatch in file contents: total voxels of "
-                    + totalVoxels + " for mask, but total of " + totalIntensityVoxels + " for intensity/channel file."
-            );
-        }
-
-        channelMetaData = new ChannelMetaData();
-        channelMetaData.rawChannelCount = readByte( channelStream );
-        channelMetaData.channelCount = channelMetaData.rawChannelCount;
-        channelMetaData.redChannelInx = readByte( channelStream );
-        channelMetaData.greenChannelInx = readByte( channelStream );
-        channelMetaData.blueChannelInx = readByte( channelStream );
-        channelMetaData.byteCount = readByte( channelStream );
-        channelMetaData.renderableBean = this.renderableBean;
-
-        //  Note: any type of read requires all the mask data.  But only channel-required will necessitate
-        //  the channel data all be available.
-        if ( channelAcceptors.size() > 0 ) {
-            // NOTE: if no channels needed, the intensity stream may be ignored.
-
-            long channelTotalBytes = totalVoxels * channelMetaData.byteCount * channelMetaData.channelCount;
-            if ( channelTotalBytes > Integer.MAX_VALUE ) {
-                throw new Exception( "Excessive array size encountered.  Scaling error." );
-            }
-
-            for ( MaskChanDataAcceptorI acceptor: channelAcceptors ) {
-                acceptor.setChannelMetaData( channelMetaData );
-            }
-
-            // Pull in every channel's data.
-            for ( int i = 0; i < channelMetaData.channelCount; i++ ) {
-                byte[] nextChannelData = new byte[ totalVoxels.intValue() * channelMetaData.byteCount ];
-
-                int bytesRead = channelStream.read(nextChannelData);
-                if ( bytesRead  <  nextChannelData.length ) {
-                    throw new Exception(
-                            "Failed to read channel data for channel " + i + " read " + bytesRead + " bytes."
-                    );
-                }
-                returnValue.add( nextChannelData );
-            }
-
-        }
-
-        if ( renderableBean != null ) {
-            renderableBean.setVoxelCount( totalVoxels );
-        }
-        return returnValue;
     }
 
     /**
@@ -763,29 +702,8 @@ public class MaskChanSingleFileLoader {
         return floatBuffer.getFloat();
     }
 
-    /**
-     * Reads a single long from the input stream, in LSB order.
-     *
-     * @param raf an input stream pointing at data whose next value is a long.
-     * @return next long from the stream.
-     * @throws Exception thrown by called methods, or if insufficient data remains.
-     */
-    private long readLong( RandomAccessFile raf ) throws Exception {
-        if ( raf.read( longArray ) < LONG_BYTES ) {
-            throw new Exception( "Unexpected end of file while reading a long." );
-        }
-        // DEBUG
-        //for ( int i = 0; i < LONG_BYTESE; i++ ) {
-        //    System.out.print( longArray[ i ] + " " );
-        //}
-        //System.out.println();
-        longBuffer.rewind();
-
-        return longBuffer.getLong();
-    }
-
     /*
-      Format for mask and channel files.
+      Format for mask files.
       Mask files:
     long xsize; // space
     long ysize; // space
@@ -804,18 +722,6 @@ public class MaskChanSingleFileLoader {
       { // For each pair
         long start;
         long end; // such that end-start is length, i.e., end is exclusive
-      }
-    }
-    Channel files:
-    long totalVoxels;
-    unsigned char channels; // number of channels
-    unsigned char recommendedRedChannel;
-    unsigned char recommendedGreenChannel;
-    unsigned char recommendedBlueChannel;
-    unsigned char bytesPerChannel; // 1=8-bit, 2=16-bit
-    { // For each channel
-      { // For each voxel
-        B value;
       }
     }
     */

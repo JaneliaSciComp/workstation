@@ -69,11 +69,23 @@ public class MaskChanMultiFileLoader {
         ExecutorService executorService = Executors.newFixedThreadPool( N_THREADS );
         List<Future<Void>> followUps = new ArrayList<Future<Void>>();
 
+        ChannelSingleFileLoader channelLoader = new ChannelSingleFileLoader( bean );
+        InputStream channelInputStream = streamSource.getChannelInputStream();
+        ChannelSingleFileLoader.ChannelDataBean channelDataBean = null;
+        if ( channelInputStream != null ) {
+             channelDataBean = channelLoader.readChannelData(
+                    channelInputStream,
+                    channelAcceptors.size() > 0
+            );
+            channelInputStream.close();
+        }
+        final ChannelSingleFileLoader.ChannelDataBean finalChannelDataBean = channelDataBean;
+
         for ( int slabNo = 0; slabNo < NUM_SEGMENTS; slabNo ++ ) {
             final int finalSlabNo = slabNo;
             Callable<Void> segmentTask = new Callable<Void>() {
                 public Void call() throws Exception {
-                    MaskChanSingleFileLoader singleFileLoader = new MaskChanSingleFileLoader( maskAcceptors, channelAcceptors, bean, fileStats );
+                    MaskSingleFileLoader singleFileLoader = new MaskSingleFileLoader( maskAcceptors, channelAcceptors, bean, fileStats );
                     singleFileLoader.setApplicableSegment( finalSlabNo, NUM_SEGMENTS );
 
                     // Here, may override the pad-out to ensure resulting volume exactly matches the original space.
@@ -88,9 +100,8 @@ public class MaskChanMultiFileLoader {
                     }
 
                     InputStream maskInputStream = streamSource.getMaskInputStream();
-                    InputStream channelStream = streamSource.getChannelInputStream();
 
-                    singleFileLoader.read( maskInputStream, channelStream );
+                    singleFileLoader.read( maskInputStream, finalChannelDataBean );
 
                     // Accumulate information for final sanity check.
                     if ( isCheckForConsistency() ) {
@@ -99,9 +110,6 @@ public class MaskChanMultiFileLoader {
                         );
                     }
                     maskInputStream.close();
-                    if ( channelStream != null ) {
-                        channelStream.close();
-                    }
                     return null;
                 }
             };

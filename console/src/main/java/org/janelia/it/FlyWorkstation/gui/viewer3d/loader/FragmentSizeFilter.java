@@ -54,7 +54,7 @@ public class FragmentSizeFilter {
                 }
                 else {
                     try {
-                        MaskChanSingleFileLoader loader = new MaskChanSingleFileLoader( null, null, data.getBean(), null );
+                        MaskSingleFileLoader loader = new MaskSingleFileLoader( null, null, data.getBean(), null );
                         FileInputStream fis = new FileInputStream( infile );
                         long voxelCount = loader.getVoxelCount( fis );
 

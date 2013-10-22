@@ -9,7 +9,7 @@ import org.janelia.it.FlyWorkstation.gui.alignment_board_viewer.volume_export.Fi
 import org.janelia.it.FlyWorkstation.gui.viewer3d.loader.FragmentSizeFilter;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.loader.MaskChanDataAcceptorI;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.loader.MaskChanMultiFileLoader;
-import org.janelia.it.FlyWorkstation.gui.viewer3d.loader.MaskChanSingleFileLoader;
+import org.janelia.it.FlyWorkstation.gui.viewer3d.loader.MaskSingleFileLoader;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.resolver.FileResolver;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.resolver.TrivialFileResolver;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.texture.TextureDataI;
@@ -18,10 +18,8 @@ import org.janelia.it.FlyWorkstation.shared.workers.SimpleWorker;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.BufferedInputStream;
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.InputStream;
 import java.util.*;
 import java.util.concurrent.*;
 
@@ -98,7 +96,7 @@ public class FileExportLoadWorker extends SimpleWorker implements VolumeLoader {
             renderableBeans.add( bean );
 
             // Need to add sizing data to each renderable bean prior to sorting.
-            MaskChanSingleFileLoader loader = new MaskChanSingleFileLoader( null, null, bean, null );
+            MaskSingleFileLoader loader = new MaskSingleFileLoader( null, null, bean, null );
             if ( renderableData.getMaskPath() != null ) {
                 File infile = new File( resolver.getResolvedFilename( renderableData.getMaskPath() ) );
                 if ( infile.canRead() ) {
