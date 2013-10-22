@@ -176,12 +176,13 @@ public class MaskSingleFileLoader {
         initializeMaskStream(maskInputStream);
         validateMaskVolume();
 
-        List<byte[]> channelData = channelDataBean.getChannelData();
-        if ( channelDataBean == null ) {
+        List<byte[]> channelIntensityBytes = null;
+        if ( channelDataBean == null || channelDataBean.getChannelData() == null ) {
             logger.debug( "Creating empty channel metadata for nonexistent input stream." );
             createEmptyChannelMetaData();
         }
         else {
+            channelIntensityBytes = channelDataBean.getChannelData();
             channelMetaData = channelDataBean.getChannelMetaData();
             pushChannelMetaDataToAcceptors();
         }
@@ -207,7 +208,7 @@ public class MaskSingleFileLoader {
                 pairs[ i ][ 1 ] = readLong(maskInputStream);
             }
 
-            int nextRead = addData( skippedRayCount, pairs, channelData );
+            int nextRead = addData( skippedRayCount, pairs, channelIntensityBytes );
             if ( nextRead == 0 ) {
                 throw new Exception("Zero bytes read.");
             }

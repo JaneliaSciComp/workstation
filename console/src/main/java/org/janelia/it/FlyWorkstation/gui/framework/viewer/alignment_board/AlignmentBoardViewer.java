@@ -3,8 +3,6 @@ package org.janelia.it.FlyWorkstation.gui.framework.viewer.alignment_board;
 import java.awt.BorderLayout;
 import java.awt.Component;
 import java.awt.Dimension;
-import java.awt.event.MouseEvent;
-import java.awt.event.MouseWheelEvent;
 import java.util.List;
 import java.util.concurrent.Callable;
 
@@ -30,7 +28,6 @@ import org.janelia.it.FlyWorkstation.gui.framework.viewer.ViewerPane;
 import org.janelia.it.FlyWorkstation.gui.framework.viewer.alignment_board.events.AlignmentBoardItemChangeEvent;
 import org.janelia.it.FlyWorkstation.gui.framework.viewer.alignment_board.events.AlignmentBoardOpenEvent;
 import org.janelia.it.FlyWorkstation.gui.util.Icons;
-import org.janelia.it.FlyWorkstation.gui.viewer3d.BaseGLViewer;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.BaseRenderer;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.Mip3d;
 import org.janelia.it.FlyWorkstation.gui.alignment_board_viewer.ScaledMip3d;
@@ -72,6 +69,7 @@ public class AlignmentBoardViewer extends Viewer implements AlignmentBoardContro
     private MultiMaskTracker multiMaskTracker;
     @SuppressWarnings("unused")
     private BrainGlow brainGlow;
+    private AlignmentBoardControlsPanel settingsPanel;
     private AlignmentBoardControlsDialog settingsDialog;
     private Logger logger = LoggerFactory.getLogger(AlignmentBoardViewer.class);
 
@@ -239,7 +237,7 @@ public class AlignmentBoardViewer extends Viewer implements AlignmentBoardContro
             logger.error( "Failed to load volume to mip3d." );
         }
         else {
-            settingsDialog.setVolumeMaxima(signalTexture.getSx(), signalTexture.getSy(), signalTexture.getSz());
+            settingsPanel.setVolumeMaxima(signalTexture.getSx(), signalTexture.getSy(), signalTexture.getSz());
         }
 
     }
@@ -342,7 +340,7 @@ public class AlignmentBoardViewer extends Viewer implements AlignmentBoardContro
             catch (Exception e) {
                 SessionMgr.getSessionMgr().handleException(e);
             }
-            if ( mip3d != null && settingsDialog != null ) {
+            if ( mip3d != null && settingsPanel != null ) {
                 UserSettingSerializer userSettingSerializer = new UserSettingSerializer(
                         alignmentBoard, mip3d.getVolumeModel(), settingsData
                 );
@@ -350,7 +348,7 @@ public class AlignmentBoardViewer extends Viewer implements AlignmentBoardContro
                 userSettingSerializer.serializeSettings();
             }
             else {
-                logger.warn("Attempt at serializing while mip3d={} and settings dialog={}.", mip3d, settingsDialog);
+                logger.warn("Attempt at serializing while mip3d={} and settings dialog={}.", mip3d, settingsPanel);
             }
         }
     }
@@ -469,8 +467,8 @@ public class AlignmentBoardViewer extends Viewer implements AlignmentBoardContro
         if (loadWorker != null) {
             loadWorker.disregard();
         }
-        if ( settingsDialog != null ) {
-            settingsDialog.removeAllSettingsListeners();
+        if ( settingsPanel != null ) {
+            settingsPanel.removeAllSettingsListeners();
         }
         removeSettingsLaunchButton();
         removeAll();
@@ -638,11 +636,18 @@ public class AlignmentBoardViewer extends Viewer implements AlignmentBoardContro
         // If the mip3d is re-created, so must the settings dialog be.  It depends on the Mip3d.
         if ( settingsDialog != null ) {
             settingsDialog.dispose();
+            settingsDialog.setVisible( false );
+            settingsPanel = null;
             settingsDialog = null;
+        }
+        else if ( settingsPanel != null ) {
+            settingsPanel.dispose();
+            settingsPanel = null;
         }
         logger.info("New settings");
         settingsDialog = new AlignmentBoardControlsDialog( mip3d, mip3d.getVolumeModel(), settingsData );
-        settingsDialog.addSettingsListener(
+        settingsPanel = settingsDialog.getControlsPanel();
+        settingsPanel.addSettingsListener(
                 new AlignmentBoardControlsListener( renderMapping, this )
         );
         deserializeSettings(SessionMgr.getBrowser().getLayersPanel().getAlignmentBoardContext());
