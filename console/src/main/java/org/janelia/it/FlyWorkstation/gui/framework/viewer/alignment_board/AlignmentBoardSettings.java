@@ -14,7 +14,7 @@ import java.util.Observer;
  */
 public class AlignmentBoardSettings {
     public static final double DEFAULT_GAMMA = 1.0;
-    public static final long DEFAULT_MIN_VOX_COUNT = 250; // Unset value.
+    public static final long DEFAULT_MIN_VOX_COUNT = 1000; // Unset value.
     public static final int NO_MINIMUM_VOXEL_COUNT = -1;
 
     private double chosenDownSampleRate;

@@ -161,7 +161,7 @@ public class VolumeWritebackHandler {
         fileChooser.setToolTipText("Pick an output location for the exported file.");
         JDialog backingComponent = null;
         for ( Window dialog: JDialog.getWindows() ) {
-            if (AlignmentBoardControlsDialog.DIALOG_NAME.equals( dialog.getName() ) ) {
+            if (AlignmentBoardControlsDialog.CONTAINING_DIALOG_NAME.equals(dialog.getName()) ) {
                 backingComponent = (JDialog)dialog;
             }
         }
