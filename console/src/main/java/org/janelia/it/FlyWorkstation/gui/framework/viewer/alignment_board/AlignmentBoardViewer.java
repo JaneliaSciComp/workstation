@@ -251,7 +251,7 @@ public class AlignmentBoardViewer extends Viewer implements AlignmentBoardContro
 
         // Add this last.  "show-loading" removes it.  This way, it is shown only
         // when it becomes un-busy.
-        addSettingsLaunchButton();
+        //addSettingsLaunchButton();
         add(wrapperPanel, BorderLayout.CENTER);
         mip3d.resetView();
 
@@ -652,7 +652,7 @@ public class AlignmentBoardViewer extends Viewer implements AlignmentBoardContro
         );
         deserializeSettings(SessionMgr.getBrowser().getLayersPanel().getAlignmentBoardContext());
 
-        mip3d.addMenuAction(settingsDialog.getLaunchAction());
+        //mip3d.addMenuAction(settingsDialog.getLaunchAction());
         double cameraFocusDistance = mip3d.getVolumeModel().getCamera3d().getFocus().getZ();
         mip3d.getVolumeModel().getCamera3d().setPixelsPerSceneUnit( Math.abs( BaseRenderer.DISTANCE_TO_SCREEN_IN_PIXELS / cameraFocusDistance ) );
     }
@@ -663,17 +663,19 @@ public class AlignmentBoardViewer extends Viewer implements AlignmentBoardContro
             remove( wrapperPanel );
         }
         JPanel rtnVal = new JPanel();
-        JLayeredPane overWritePane = new JLayeredPane();
         rtnVal.setLayout(new BorderLayout());
+        JSplitPane mipAndControls = new JSplitPane(
+                JSplitPane.HORIZONTAL_SPLIT,
+                mip3d,
+                settingsPanel
+        );
+        mipAndControls.setDividerLocation( 0.5 );
+        mipAndControls.setResizeWeight( 1.0 );
+        mipAndControls.setOneTouchExpandable( true );
+        mipAndControls.setContinuousLayout( false );
+        mipAndControls.updateUI();
 
-        overWritePane.setPreferredSize( new Dimension(500,500) );
-        rtnVal.add(overWritePane);
-        overWritePane.setLayout( new BorderLayout() );
-        JLabel hello = new JLabel("Hello");
-        overWritePane.add(hello, BorderLayout.SOUTH, 1 );
-        overWritePane.moveToFront( hello );
-
-        rtnVal.add(mip3d, BorderLayout.CENTER);
+        rtnVal.add(mipAndControls, BorderLayout.CENTER);
         return rtnVal;
     }
 

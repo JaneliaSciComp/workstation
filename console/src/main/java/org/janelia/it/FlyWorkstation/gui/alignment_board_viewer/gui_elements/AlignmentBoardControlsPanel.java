@@ -35,10 +35,11 @@ import java.util.List;
 public class AlignmentBoardControlsPanel extends JPanel {
     public static final double UNSELECTED_DOWNSAMPLE_RATE = 0.0;
     private static final String DOWN_SAMPLE_TIP =
-            "Data sent to screen may be too large for your graphics card. Therefore, they are\n" +
-            "downsampled at the minimum rate found usable for your card. However, you may wish\n" +
-            "to move that rate up or down, depending on your knowledge of the advanced hardware\n" +
-            "on your system.  Higher values mean larger, blockier voxels, and less memory.";
+            "Data sent to screen may be too large for your graphics card. Therefore, \n" +
+            "they are downsampled at the minimum rate found usable for your card.\n" +
+            "However, you may wish to move that rate up or down, depending on your\n" +
+            "knowledge of the advanced hardware on your system.  Higher values mean\n" +
+            "larger, blockier voxels, and less memory.";
 
     private static final String DOWN_SAMPLE_TOOL_TIP =
             "<html>" +
@@ -59,7 +60,7 @@ public class AlignmentBoardControlsPanel extends JPanel {
     private static final String SAVE_AS_COLOR_TIFF = "Save Color TIFF";
     private static final String SAVE_AS_COLOR_TIFF_TOOLTIP_TEXT = SAVE_AS_COLOR_TIFF;
 
-    private static final int WIDTH = 600;
+    private static final int WIDTH = 450;
     private static final int HEIGHT = 640;
     private static final Dimension DOWNSAMPLE_TIP_DIM = new Dimension(WIDTH, 70);
 
@@ -645,13 +646,15 @@ public class AlignmentBoardControlsPanel extends JPanel {
         downSampleRateDropdown.setMinimumSize(DN_SAMPLE_DROPDOWN_SIZE);
         downSampleRateDropdown.setMaximumSize(DN_SAMPLE_DROPDOWN_SIZE);
         downSampleRateDropdown.setPreferredSize(DN_SAMPLE_DROPDOWN_SIZE);
-        // This sits beside the downsample dropdown.
-        GridBagConstraints downSampleGuessConstraints = new GridBagConstraints(
-                1, nextRow, 1, rowHeight, 1.0, 0.0, GridBagConstraints.NORTHWEST, GridBagConstraints.VERTICAL, insets, 0, 0
-        );
         GridBagConstraints minimumVoxelCountConstraints = new GridBagConstraints(
                 2, nextRow, 1, rowHeight, 1.0, 0.0, GridBagConstraints.NORTHWEST, GridBagConstraints.VERTICAL, insets, 0, 0
         );
+        // This sits below the downsample dropdown.
+        nextRow += rowHeight;
+        GridBagConstraints downSampleGuessConstraints = new GridBagConstraints(
+                0, nextRow, 1, rowHeight, 1.0, 0.0, GridBagConstraints.NORTHWEST, GridBagConstraints.VERTICAL, insets, 0, 0
+        );
+        nextRow += rowHeight;
 
         nextRow += rowHeight;
         GridBagConstraints signalDataConstraints = new GridBagConstraints(
@@ -711,6 +714,7 @@ public class AlignmentBoardControlsPanel extends JPanel {
         centralPanel.add( commitButton, commitBtnConstraints );
         JTextArea downSampleRateText = new JTextArea( DOWN_SAMPLE_TIP );
         downSampleRateText.setLineWrap(true);
+        downSampleRateText.setColumns( 40 );
         downSampleRateText.setColumns(DOWN_SAMPLE_TIP.length() / 2);
         downSampleRateText.setEditable(false);
         downSampleRateText.setBorder(new LineBorder(Color.black));
