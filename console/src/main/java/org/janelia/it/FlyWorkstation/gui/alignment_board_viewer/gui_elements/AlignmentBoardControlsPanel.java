@@ -166,6 +166,8 @@ public class AlignmentBoardControlsPanel extends JPanel {
         yMax = y;
         zMax = z;
         initializeSelectionRanges();
+        // May have controls whose proper settings depend on the maxima.
+        update( true );
     }
 
     public void dispose() {
