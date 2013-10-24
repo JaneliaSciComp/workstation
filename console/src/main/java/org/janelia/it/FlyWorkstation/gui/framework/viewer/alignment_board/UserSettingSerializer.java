@@ -28,13 +28,7 @@ public class UserSettingSerializer implements Serializable {
     public static final String GROUND_FOCUS_SETTING = "InGroundFocus";
     public static final String MIN_VOXELS_SETTING = "MinVoxelCutoff";
 
-    private static final int X_OFFS = 0;
-    private static final int Y_OFFS = 1;
-    private static final int Z_OFFS = 2;
     public static final int MAX_SERIALIZED_SETTINGS_STR = 65535;
-
-//    private VolumeModel volumeModel;
-//    private AlignmentBoardSettings alignmentBoardSettings;
 
     private SerializationAdapter serializationAdapter;
     private Entity alignmentBoard;
@@ -53,6 +47,12 @@ public class UserSettingSerializer implements Serializable {
         serializationAdapter = new DirectStateSerializationAdapter( volumeModel, alignmentBoardSettings );
         this.alignmentBoard = alignmentBoard;
         logger.debug("Serializer: with VolumeModel {}, with cam3D {}.", volumeModel, volumeModel.getCamera3d() );
+    }
+
+    public UserSettingSerializer(
+        SerializationAdapter serializationAdapter
+    ) {
+        this.serializationAdapter = serializationAdapter;
     }
 
     /**
@@ -177,7 +177,7 @@ public class UserSettingSerializer implements Serializable {
             if ( coordinateSets.size() >= 1 ) {
                 double[] cameraFocusArr = coordinateSets.iterator().next();
                 serializationAdapter.setFocus(
-                        cameraFocusArr[X_OFFS], cameraFocusArr[Y_OFFS], cameraFocusArr[Z_OFFS]
+                        cameraFocusArr
                 );
             }
         }
@@ -385,111 +385,6 @@ public class UserSettingSerializer implements Serializable {
         }
     }
 
-    public class DirectStateSerializationAdapter implements SerializationAdapter {
-        private VolumeModel volumeModel;
-        private AlignmentBoardSettings settings;
-        public DirectStateSerializationAdapter( VolumeModel volumeModel, AlignmentBoardSettings settings ) {
-            this.volumeModel = volumeModel;
-            this.settings = settings;
-        }
-
-
-        @Override
-        public float getGammaAdjustment() {
-            return volumeModel.getGammaAdjustment();
-        }
-
-        @Override
-        public float getCropOutLevel() {
-            return volumeModel.getCropOutLevel();
-        }
-
-        @Override
-        public long getMinimumVoxelCount() {
-            return settings.getMinimumVoxelCount();
-        }
-
-        @Override
-        public Rotation3d getRotation() {
-            return volumeModel.getCamera3d().getRotation();
-        }
-
-        @Override
-        public boolean isShowChannelData() {
-            return settings.isShowChannelData();
-        }
-
-        @Override
-        public Vec3 getFocusInGround() {
-            return volumeModel.getFocusInGround();
-        }
-
-        @Override
-        public Vec3 getFocus() {
-            return volumeModel.getCamera3d().getFocus();
-        }
-
-        @Override
-        public CropCoordSet getCropCoords() {
-            return volumeModel.getCropCoords();
-        }
-
-        @Override
-        public void setGammaAdjustment(float gamma) {
-            settings.setGammaFactor( gamma );
-            volumeModel.setGammaAdjustment( gamma );
-        }
-
-        @Override
-        public void setCropOutLevel(float level) {
-            volumeModel.setCropOutLevel( level );
-        }
-
-        @Override
-        public void setMinimumVoxelCount(long count) {
-            settings.setMinimumVoxelCount( count );
-        }
-
-        @Override
-        public void setCropCoords(CropCoordSet coordSet) {
-            // Stuff _any_one_ of the accepted coords into the current one, so that selection reflects
-            // something accurate.
-            float[] cropCoordArray = coordSet.getAcceptedCoordinates().iterator().next();
-            if ( cropCoordArray != null ) {
-                coordSet.setCurrentCoordinates( cropCoordArray );
-            }
-            volumeModel.setCropCoords( coordSet );
-        }
-
-        @Override
-        public void setShowChannelData(boolean show) {
-            settings.setShowChannelData( show );
-        }
-
-        @Override
-        public void setFocus(double x, double y, double z) {
-            volumeModel.getCamera3d().setFocus( x, y, z );
-        }
-
-        @Override
-        public void setFocusInGround(double[] cameraFocusArr) {
-            for ( int i = 0; i < 3; i++ ) {
-                volumeModel.getFocusInGround().set( i, cameraFocusArr[ i ] );
-            }
-        }
-
-        @Override
-        public void setRotation(Collection<double[]> coordSets) {
-            int i = 0;
-            for ( double[] coordinateSet: coordSets ) {
-                volumeModel.getCamera3d().getRotation().setWithCaution(
-                        i++,
-                        new UnitVec3(coordinateSet[X_OFFS], coordinateSet[Y_OFFS], coordinateSet[Z_OFFS])
-                );
-            }
-        }
-    }
-
     public static interface SerializationAdapter {
         // Serialization
         float getGammaAdjustment();                 // VolumeModel, alignmentBoardSettings as getGammaFactor()
@@ -507,60 +402,9 @@ public class UserSettingSerializer implements Serializable {
         void setMinimumVoxelCount( long count );    // VolumeModel
         void setCropCoords( CropCoordSet coordSet );// VolumeModel.setCropCoordinates(cropCoordArray), VolumeModel.setAcceptedCoordinates().
         void setShowChannelData(boolean show);      // AlignmentBoardSettings
-        void setFocus( double x, double y, double z );  // VolumeModel.getCamera3d().setFocus()
+        void setFocus( double[] focus );            // VolumeModel.getCamera3d().setFocus()
         void setFocusInGround(double[] cameraFocusArr);  // Complicated...
-        void setRotation( Collection<double[]> rotation );          // volumeModel.getCamera3d().getRotation().setWithCaution(
-
-        /*
-
-        str = settingToValue.get( SELECTION_BOUNDS_SETTING );
-        nonEmpty = nonEmpty(str);
-        if ( nonEmpty ) {
-            Collection<float[]> coordinateSets = new ArrayList<float[]>();
-            FloatParseAcceptor floatParseAcceptor = new FloatParseAcceptor( coordinateSets );
-            parseTuples(str, 6, floatParseAcceptor);
-            CropCoordSet cropCoordSet = new CropCoordSet();
-
-            float[] cropCoordArray = coordinateSets.iterator().next();
-            if ( cropCoordArray != null ) {
-                cropCoordSet.setCurrentCoordinates( cropCoordArray );
-            }
-            cropCoordSet.setAcceptedCoordinates( coordinateSets );
-            volumeModel.setCropCoords( cropCoordSet );
-
-        }
-
-
-        str = settingToValue.get( GROUND_FOCUS_SETTING );
-        nonEmpty = nonEmpty(str);
-        if ( nonEmpty ) {
-            Collection<double[]> coordinateSets = new ArrayList<double[]>();
-            DoubleParseAcceptor doubleParseAcceptor = new DoubleParseAcceptor( coordinateSets );
-            parseTuples(str, 3, doubleParseAcceptor);
-            if ( coordinateSets.size() >= 1 ) {
-                double[] cameraFocusArr = coordinateSets.iterator().next();
-                for ( int i = 0; i < 3; i++ ) {
-                    volumeModel.getFocusInGround().set( i, cameraFocusArr[ i ] );
-                }
-            }
-        }
-
-        str = settingToValue.get( CAMERA_ROTATION_SETTING );
-        nonEmpty = nonEmpty(str);
-        if ( nonEmpty ) {
-            Collection<double[]> coordinateSets = new ArrayList<double[]>();
-            DoubleParseAcceptor doubleParseAcceptor = new DoubleParseAcceptor( coordinateSets );
-            parseTuples(str, 3, doubleParseAcceptor);
-            if ( coordinateSets.size() == 3 ) {
-                int i = 0;
-                for ( double[] coordinateSet: coordinateSets ) {
-                    volumeModel.getCamera3d().getRotation().setWithCaution(
-                            i++,
-                            new UnitVec3(coordinateSet[X_OFFS], coordinateSet[Y_OFFS], coordinateSet[Z_OFFS])
-                    );
-                }
-            }
- */
-    }
+        void setRotation( Collection<double[]> rotation );  // volumeModel.getCamera3d().getRotation().setWithCaution(
+   }
 
 }
