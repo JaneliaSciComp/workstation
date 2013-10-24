@@ -275,4 +275,23 @@ public class EJBEntityFacade implements EntityFacade {
         return EJBFactory.getRemoteTiledMicroscopeBean().loadNeuron(neuronId);
     }
 
+    @Override
+    public TmAnchoredPath addAnchoredPath(Long neuronID, Long annotationID1, Long annotationID2,
+    List<List<Integer>> pointlist) throws Exception {
+        return EJBFactory.getRemoteTiledMicroscopeBean().addAnchoredPath(neuronID, annotationID1,
+                annotationID2, pointlist);
+    }
+
+    @Override
+    public void updateAnchoredPath(TmAnchoredPath anchoredPath, Long annotationID1, Long annotationID2,
+    List<List<Integer>> pointlist) throws Exception {
+        EJBFactory.getRemoteTiledMicroscopeBean().updateAnchoredPath(anchoredPath, annotationID1,
+                annotationID2, pointlist);
+    }
+
+    @Override
+    public void deleteAnchoredPath(Long pathID) throws Exception {
+        EJBFactory.getRemoteTiledMicroscopeBean().deleteAnchoredPath(pathID);
+    }
+
 }

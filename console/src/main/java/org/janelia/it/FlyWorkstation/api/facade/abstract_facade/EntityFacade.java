@@ -116,4 +116,12 @@ public interface EntityFacade {
 
     public TmNeuron loadNeuron(Long neuronId) throws Exception;
 
+    public TmAnchoredPath addAnchoredPath(Long neuronID, Long annotationID1, Long annotationID2,
+                                          List<List<Integer>> pointlist) throws Exception;
+
+    public void updateAnchoredPath(TmAnchoredPath anchoredPath, Long annotationID1, Long annotationID2,
+                List<List<Integer>> pointList) throws Exception;
+
+    public void deleteAnchoredPath(Long pathID) throws Exception;
+
 }

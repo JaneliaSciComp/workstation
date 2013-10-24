@@ -1080,5 +1080,20 @@ public class ModelMgr {
         return FacadeManager.getFacadeManager().getEntityFacade().loadNeuron(neuronId);
     }
 
+    public TmAnchoredPath addAnchoredPath(Long neuronID, Long annotationID1, Long annotationID2,
+                                          List<List<Integer>> pointlist) throws Exception {
+        return FacadeManager.getFacadeManager().getEntityFacade().addAnchoredPath(neuronID, annotationID1,
+                annotationID2, pointlist);
+    }
+
+    public void updateAnchoredPath(TmAnchoredPath anchoredPath, Long annotationID1, Long annotationID2,
+                List<List<Integer>> pointList) throws Exception {
+        FacadeManager.getFacadeManager().getEntityFacade().updateAnchoredPath(anchoredPath, annotationID1,
+                annotationID2, pointList);
+    }
+
+    public void deleteAnchoredPath(Long pathID) throws Exception {
+        FacadeManager.getFacadeManager().getEntityFacade().deleteAnchoredPath(pathID);
+    }
 
 }
