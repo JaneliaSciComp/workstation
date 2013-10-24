@@ -81,6 +81,8 @@ public class AlignmentBoardControlsPanel extends JPanel {
     private static final String CLEAR_BUTTON_TOOLTIP_TEXT = "Drop all sub-volume selections made in this session.";
     private static final String NON_SELECT_BLACKOUT = "Non-selected region blacked out";
     private static final String NON_SELECT_BLACKOUT_TOOLTIP_TEXT = NON_SELECT_BLACKOUT;
+    private static final String SAVE_COLORS_BRIGHT = "Apply Brightness to Color TIFF";
+    private static final String SAVE_COLORS_BRIGHT_TOOLTIP_TEXT = SAVE_COLORS_BRIGHT;
     private static final String ESTIMATED_BEST_RESOLUTION = "Best Guess";
     private static final String DOWN_SAMPLE_PROP_NAME = "AlignmentBoard_Downsample_Rate";
     private static final String GUESS_LABEL_FMT = "Best Guess: %s";
@@ -104,6 +106,7 @@ public class AlignmentBoardControlsPanel extends JPanel {
     private int zMax;
 
     private JCheckBox blackoutCheckbox;
+    private JCheckBox colorSaveBrightnessCheckbox;
 
     private boolean readyForOutput = false;
 
@@ -144,6 +147,7 @@ public class AlignmentBoardControlsPanel extends JPanel {
             updateControlsFromSettings();
             updateCurrentSelectionFromSettings();
             updateCropOutLevelFromVolumeModel();
+            updateColorBrightnessSaveFromVolumeModel();
         }
     }
 
@@ -304,6 +308,10 @@ public class AlignmentBoardControlsPanel extends JPanel {
         blackoutCheckbox.setSelected( isCropBlackout );
     }
 
+    private void updateColorBrightnessSaveFromVolumeModel() {
+        colorSaveBrightnessCheckbox.setSelected( volumeModel.isColorSaveBrightness() );
+    }
+
     /** As soon as the ranges are known (set), listeners, and initial ranges may be set on volume selection. */
     private void initializeSelectionRanges() {
         if ( xMax == 0 || yMax == 0 || zMax == 0 ) {
@@ -442,6 +450,16 @@ public class AlignmentBoardControlsPanel extends JPanel {
             }
         });
 
+        colorSaveBrightnessCheckbox = new JCheckBox( SAVE_COLORS_BRIGHT );
+        colorSaveBrightnessCheckbox.setToolTipText( SAVE_COLORS_BRIGHT_TOOLTIP_TEXT );
+        colorSaveBrightnessCheckbox.setSelected( VolumeModel.DEFAULT_SAVE_BRIGHTNESS );
+        colorSaveBrightnessCheckbox.addActionListener(
+            new ActionListener() {
+                public void actionPerformed( ActionEvent ae ) {
+                    volumeModel.setColorSaveBrightness( colorSaveBrightnessCheckbox.isSelected() );
+                }
+            }
+        );
         final JButton commitButton = new JButton( COMMIT_CHANGES );
         commitButton.setToolTipText( COMMIT_CHANGES_TOOLTIP_TEXT );
         commitButton.addActionListener(new ActionListener() {
@@ -475,7 +493,7 @@ public class AlignmentBoardControlsPanel extends JPanel {
                 event.setAbsoluteCoords( acceptedCords );
                 event.setCompletionListener( buttonEnableListener );
                 event.setMethod( ControlsListener.ExportMethod.binary );
-                event.setGammaFactor( settings.getGammaFactor() );
+                event.setGammaFactor( 1.0f );
                 fireSavebackEvent( event );
 
             }
@@ -498,7 +516,12 @@ public class AlignmentBoardControlsPanel extends JPanel {
                 event.setAbsoluteCoords( acceptedCords );
                 event.setCompletionListener( buttonEnableListener );
                 event.setMethod( ControlsListener.ExportMethod.color );
-                event.setGammaFactor( settings.getGammaFactor() );
+                if ( volumeModel.isColorSaveBrightness() ) {
+                    event.setGammaFactor( settings.getGammaFactor() );
+                }
+                else {
+                    event.setGammaFactor( 1.0f );
+                }
                 fireSavebackEvent( event );
             }
         });
@@ -685,6 +708,10 @@ public class AlignmentBoardControlsPanel extends JPanel {
                 0, nextRow, 3, rowHeight, 1.0, 0.0, GridBagConstraints.NORTHWEST, GridBagConstraints.VERTICAL, insets, 0, 0
         );
 
+        GridBagConstraints colorSaveBrightnessConstraints = new GridBagConstraints(
+                2, nextRow, 3, rowHeight, 1.0, 0.0, GridBagConstraints.NORTHEAST, GridBagConstraints.VERTICAL, insets, 0, 0
+        );
+
         nextRow += rowHeight;
         Insets buttonInsets = new Insets( 5, 5, 5, 5 );
         GridBagConstraints saveSearchConstraints = new GridBagConstraints(
@@ -728,6 +755,7 @@ public class AlignmentBoardControlsPanel extends JPanel {
 
         centralPanel.add( rateTextPane, downSampleTipConstraints);
         centralPanel.add( blackoutCheckbox, blackoutCheckboxConstraints );
+        centralPanel.add( colorSaveBrightnessCheckbox, colorSaveBrightnessConstraints );
         centralPanel.add( regionSelectionPanel, regionSelectionPanelConstraints );
         centralPanel.add( searchSaveButton, saveSearchConstraints );
         centralPanel.add( colorSaveButton, saveColorConstraints );

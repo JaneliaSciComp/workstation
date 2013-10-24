@@ -50,6 +50,9 @@ public class RenderablesMaskBuilder extends RenderablesVolumeBuilder implements 
     public RenderablesMaskBuilder( AlignmentBoardSettings settings, Collection<RenderableBean> renderableBeans, boolean binary ) {
         this( settings, renderableBeans );
         this.binary = binary;
+        if ( binary ) {
+            maskByteCount = 1;
+        }
     }
 
     //----------------------------------------IMPLEMENT MaskChanDataAcceptorI
