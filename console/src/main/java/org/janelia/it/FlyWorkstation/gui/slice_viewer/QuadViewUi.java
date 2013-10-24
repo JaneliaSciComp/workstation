@@ -342,8 +342,10 @@ public class QuadViewUi extends JPanel
         @Override
         public void execute(TracedPathSegment path) {
             // System.out.println("onPathTracedSlot");
+            // this line only needs to happen once, and not here:
             getSkeletonActor().setTileFormat(
             		tileServer.getLoadAdapter().getTileFormat());
+            // TODO: what happens on error?
             skeleton.addTracedSegment(path);
         }
     };
@@ -359,7 +361,7 @@ public class QuadViewUi extends JPanel
 		tileServer.loadStatusChangedSignal.connect(onLoadStatusChangedSlot);
 		
 		pathTracer.pathTracedSignal.connect(onPathTracedSlot);
-		
+
 		colorChannelWidget_3.setVisible(false);
 		colorChannelWidget_2.setVisible(false);
 		colorChannelWidget_1.setVisible(false);
@@ -377,7 +379,8 @@ public class QuadViewUi extends JPanel
         getSkeletonActor().nextParentChangedSignal.connect(annotationMgr.selectAnnotationSlot);
         skeleton.anchorMovedSignal.connect(annotationMgr.moveAnchorRequestedSlot);
         skeleton.pathTraceRequestedSignal.connect(tracePathSegmentSlot);
-        
+        skeleton.pathTraceRequestedSignal.connect(annotationPanel.tracingStartSlot);
+
         // Toggle skeleton actor with v key
         InputMap inputMap = getInputMap(JComponent.WHEN_ANCESTOR_OF_FOCUSED_COMPONENT);
         inputMap.put(KeyStroke.getKeyStroke(KeyEvent.VK_V, 0, false), "vKeyPressed");
@@ -446,6 +449,7 @@ public class QuadViewUi extends JPanel
         // annotation-related actions:
         centerNextParentAction.centerNextParentSignal.connect(centerNextParentSlot);
         annotationPanel.centerAnnotationSignal.connect(centerNextParentSlot);
+        pathTracer.pathTracedSignal.connect(annotationPanel.tracingStopSlot);
         // TODO other orthogonal viewers
         OrthogonalPanel viewPanels[] = {neViewer, swViewer, nwViewer};
         SkeletonActor sharedSkeletonActor = getSkeletonActor();

@@ -5,6 +5,10 @@ package org.janelia.it.FlyWorkstation.gui.slice_viewer.annotation;
 
 import org.janelia.it.FlyWorkstation.gui.util.Icons;
 import org.janelia.it.FlyWorkstation.signal.Signal;
+import org.janelia.it.FlyWorkstation.signal.Slot1;
+import org.janelia.it.FlyWorkstation.tracing.PathTraceRequest;
+import org.janelia.it.FlyWorkstation.tracing.TracedPathSegment;
+import org.janelia.it.jacs.model.user_data.tiledMicroscope.TmAnchoredPathEndpoints;
 
 import javax.swing.*;
 
@@ -33,6 +37,7 @@ public class AnnotationPanel extends JPanel
     // UI components
     private NeuronInfoPanel neuronInfoPanel;
     private WorkspaceInfoPanel workspaceInfoPanel;
+    private PathTracingStatusPanel pathStatusPanel;
 
     // ----- actions
     private final Action createNeuronAction = new AbstractAction() {
@@ -49,12 +54,28 @@ public class AnnotationPanel extends JPanel
             }
         };
 
-    // ----- signals
+    // ----- signals & slots
     public Signal centerAnnotationSignal = new Signal();
     private final Action centerAnnotationAction = new AbstractAction() {
         @Override
         public void actionPerformed(ActionEvent actionEvent) {
             centerAnnotationSignal.emit();
+        }
+    };
+
+    public Slot1<PathTraceRequest> tracingStartSlot = new Slot1<PathTraceRequest>() {
+        @Override
+        public void execute(PathTraceRequest request) {
+            pathStatusPanel.startTracing(new TmAnchoredPathEndpoints(request.getAnchor1Guid(),
+                    request.getAnchor2Guid()));
+        }
+    };
+
+    public Slot1<TracedPathSegment> tracingStopSlot = new Slot1<TracedPathSegment>() {
+        @Override
+        public void execute(TracedPathSegment segment) {
+            pathStatusPanel.stopTracing(new TmAnchoredPathEndpoints(segment.getRequest().getAnchor1Guid(),
+                    segment.getRequest().getAnchor2Guid()));
         }
     };
 
@@ -133,6 +154,12 @@ public class AnnotationPanel extends JPanel
         centerAnnotationButton.setIcon(anchorIcon);
         centerAnnotationButton.setHideActionText(true);
         neuriteButtonsPanel.add(centerAnnotationButton);
+
+
+        // ----- temporary tracing indicator
+        // this will eventually be shown via styling of lines in 2D view
+        pathStatusPanel = new PathTracingStatusPanel();
+        add(pathStatusPanel);
 
 
         // ----- misc
