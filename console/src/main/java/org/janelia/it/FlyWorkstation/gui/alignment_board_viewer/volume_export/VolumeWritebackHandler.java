@@ -38,6 +38,7 @@ public class VolumeWritebackHandler {
     private final CompletionListener completionListener;
     private int filterSize;
     private double gammaFactor;
+    private File writeBackFile;
 
     private final Logger logger = LoggerFactory.getLogger( VolumeWritebackHandler.class );
 
@@ -69,16 +70,16 @@ public class VolumeWritebackHandler {
             SimpleWorker mipExportWorker = new SimpleWorker() {
                 @Override
                 protected void doStuff() throws Exception {
-                    // Need to take a screen shot of the MIP3D object.
-                    // Get a buffered image of the component.
-                    java.awt.image.BufferedImage bufferedImage = new java.awt.image.BufferedImage(
-                            mip3d.getWidth(), mip3d.getHeight(), java.awt.image.BufferedImage.TYPE_INT_RGB
-                    );
-                    Graphics2D graphics = bufferedImage.createGraphics();
-                    mip3d.paint(graphics);
-
-                    File writeBackFile = getUserFileChoice();
+                    writeBackFile = getUserFileChoice();
                     if ( writeBackFile != null ) {
+                        // Need to take a screen shot of the MIP3D object.
+                        // Get a buffered image of the component.
+                        java.awt.image.BufferedImage bufferedImage = new java.awt.image.BufferedImage(
+                                mip3d.getWidth(), mip3d.getHeight(), java.awt.image.BufferedImage.TYPE_INT_RGB
+                        );
+                        Graphics2D graphics = bufferedImage.createGraphics();
+                        mip3d.paint(graphics);
+
                         // Write the tiff.
                         TiffExporter exporter = new TiffExporter();
                         exporter.export( bufferedImage, writeBackFile );
@@ -105,6 +106,8 @@ public class VolumeWritebackHandler {
 
         }
         else {
+            writeBackFile = getUserFileChoice();
+
             // Save back volume as three-D tiff.
             Map<Integer,byte[]> renderableIdVsRenderMethod = renderMapping.getMapping();
 
@@ -189,14 +192,13 @@ public class VolumeWritebackHandler {
 
         @Override
         public void loadVolume(TextureDataI texture) {
-            File chosenFile = getUserFileChoice();
-            if ( chosenFile != null ) {
+            if ( writeBackFile != null ) {
                 try {
                     TiffExporter exporter = new TiffExporter();
-                    exporter.export( texture, chosenFile );
+                    exporter.export( texture, writeBackFile );
                     exporter.close();
 
-                    writeMetaFile(chosenFile);
+                    writeMetaFile( writeBackFile );
 
                 } catch ( Exception ex ) {
                     ex.printStackTrace();
