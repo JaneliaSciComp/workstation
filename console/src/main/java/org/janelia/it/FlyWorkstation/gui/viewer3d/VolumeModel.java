@@ -22,10 +22,12 @@ public class VolumeModel {
     public static final Vec3 DEFAULT_FOCUS_IN_GROUND = new Vec3(0, 0, 0);
     public static final float[] DEFAULT_COLOR_MASK = {1.0f, 1.0f, 1.0f};
     public static final float DEFAULT_CROPOUT = 0.25f;
+    public static final boolean DEFAULT_SAVE_BRIGHTNESS = true;
 
     private CropCoordSet cropCoordSet = CropCoordSet.getDefaultCropCoordSet();
     private float gammaAdjustment = DEFAULT_GAMMA_ADJUSTMENT;
     private float cropOutLevel = DEFAULT_CROPOUT;
+    private boolean colorSaveBrightness = true;
     private Camera3d camera3d;
     private Vec3 focusInGround = DEFAULT_FOCUS_IN_GROUND;
     private float[] colorMask = DEFAULT_COLOR_MASK;
@@ -161,6 +163,14 @@ public class VolumeModel {
 
     public void setVoxelDimensions(int[] voxelDimensions) {
         this.voxelDimensions = voxelDimensions;
+    }
+
+    public boolean isColorSaveBrightness() {
+        return colorSaveBrightness;
+    }
+
+    public void setColorSaveBrightness(boolean colorSaveBrightness) {
+        this.colorSaveBrightness = colorSaveBrightness;
     }
 
     public static interface UpdateListener {
