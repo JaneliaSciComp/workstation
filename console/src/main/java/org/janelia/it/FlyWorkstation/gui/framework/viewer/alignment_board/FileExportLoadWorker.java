@@ -89,7 +89,7 @@ public class FileExportLoadWorker extends SimpleWorker implements VolumeLoader {
         Collection<MaskChanRenderableData> filteredRenderableDatas = paramBean.getRenderableDatas();
         if ( fragmentFilterSize != -1 ) {
             FragmentSizeFilter filter = new FragmentSizeFilter( fragmentFilterSize );
-            filteredRenderableDatas = filter.filter( paramBean.getRenderableDatas() );
+            filteredRenderableDatas = filter.filter( filteredRenderableDatas );
         }
         for ( MaskChanRenderableData renderableData: filteredRenderableDatas ) {
             RenderableBean bean = renderableData.getBean();
@@ -110,7 +110,7 @@ public class FileExportLoadWorker extends SimpleWorker implements VolumeLoader {
         Collections.sort( renderableBeans, Collections.reverseOrder( new RBComparator() ) );
 
         List<MaskChanRenderableData> sortedRenderableDatas = new ArrayList<MaskChanRenderableData>();
-        sortedRenderableDatas.addAll( paramBean.getRenderableDatas() );
+        sortedRenderableDatas.addAll( filteredRenderableDatas );
         Collections.sort( sortedRenderableDatas, new RDComparator( false ) );
 
         // Establish the means for extracting the volume mask.
