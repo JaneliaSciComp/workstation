@@ -34,7 +34,7 @@ public class FirstInToByteInterpreter implements ChannelInterpreterI {
             ChannelMetaData targetChannelMetaData,
             int fileMaskNum,
             byte[] channelData,
-            int targetPos
+            long targetPos
     ) {
         boolean wroteBack = false;
 

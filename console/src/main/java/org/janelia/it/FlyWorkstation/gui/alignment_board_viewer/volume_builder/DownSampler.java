@@ -199,26 +199,19 @@ public class DownSampler {
         // such neighborhood for each of these down-sampled coord sets: x,y,z
         int maxFreq = 0;
         for ( int zNbh = z; zNbh < z + sliceParameter.getZScale() && zNbh < sz; zNbh ++ ) {
-            int nbhZOffset = (int)(sy * sx * zNbh) * sliceParameter.getVoxelBytes();
+            long nbhZOffset = (sy * sx * zNbh) * sliceParameter.getVoxelBytes();
 
             for ( int yNbh = y; yNbh < y + sliceParameter.getYScale() && yNbh < sy; yNbh ++ ) {
-                int nbhYOffset = (int)(nbhZOffset + (sx * yNbh * sliceParameter.getVoxelBytes() ) );
+                long nbhYOffset = nbhZOffset + (sx * yNbh * sliceParameter.getVoxelBytes() );
 
                 for ( int xNbh = x; xNbh < x + sliceParameter.getXScale() && xNbh < sx; xNbh++ ) {
                     byte[] voxelVal = new byte[ sliceParameter.getVoxelBytes() ];
-                    int arrayCopyLoc = nbhYOffset + (xNbh * sliceParameter.getVoxelBytes());
+                    long arrayCopyLoc = nbhYOffset + (xNbh * sliceParameter.getVoxelBytes());
                     try {
                         VolumeDataI fullSizeVolume = sliceParameter.getFullSizeVolume();
                         for ( int i = 0; i < (sliceParameter.getVoxelBytes() ); i++ ) {
                             voxelVal[ i ] = fullSizeVolume.getValueAt(i + arrayCopyLoc);
                         }
-//                        System.arraycopy(
-//                                sliceParameter.getFullSizeVolume().getCurrentVolumeData(), arrayCopyLoc, voxelVal, 0, sliceParameter.getVoxelBytes()
-//                        );
-
-//                    System.arraycopy(
-//                            sliceParameter.getFullSizeVolume(), arrayCopyLoc, voxelVal, 0, sliceParameter.getVoxelBytes()
-//                    );
                     } catch ( Exception ex ) {
                         logger.error(
                                 "Exception while trying to copy to {} with max of {}.",

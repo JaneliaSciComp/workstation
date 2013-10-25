@@ -49,15 +49,12 @@ public class VeryLargeVolumeData implements VolumeDataI {
         if ( strawSliceSize > Integer.MAX_VALUE ) {
             throw new IllegalArgumentException( sizeX + " x " + sizeY + " too large to represent here." );
         }
-        int sliceSize = sizeX * sizeY * bytesPerVoxel;
-        int slicesPerSlab = (int)Math.ceil( (double) sizeZ / (double) numSlabs );
-        long strawSlabExtent = sliceSize * slicesPerSlab;
-        if ( strawSlabExtent > Integer.MAX_VALUE ) {
-            throw new IllegalArgumentException( "Slab sizes would exceed max array size." );
+        // Increase number of slabs, if the slice size is very large.
+        int slicesPerSlab = calculateSlabParameters(sizeX, sizeY, sizeZ, bytesPerVoxel, numSlabs);
+        if ( slabExtent > 100000000 ) {
+            numSlabs *= 4;
+            slicesPerSlab = calculateSlabParameters(sizeX, sizeY, sizeZ, bytesPerVoxel, numSlabs );
         }
-
-        slabExtent = sliceSize * slicesPerSlab;
-        volumeExtent = sliceSize * sizeZ;
 
         // Recalculate number of slabs, so that excess data is not allocated.
         numSlabs = (int)Math.ceil( (double)volumeExtent / (double)slabExtent );
@@ -91,6 +88,18 @@ public class VeryLargeVolumeData implements VolumeDataI {
         }
     }
 
+    private int calculateSlabParameters(int sizeX, int sizeY, int sizeZ, int bytesPerVoxel, double numSlabs) {
+        int slicesPerSlab = (int)Math.ceil( sizeZ / numSlabs);
+        int sliceSize = sizeX * sizeY * bytesPerVoxel;
+        long strawSlabExtent = sliceSize * slicesPerSlab;
+        if ( strawSlabExtent > Integer.MAX_VALUE ) {
+            throw new IllegalArgumentException( "Slab sizes would exceed max array size." );
+        }
+        slabExtent = sliceSize * slicesPerSlab;
+        volumeExtent = (long)sliceSize * (long)sizeZ;
+        return slicesPerSlab;
+    }
+
     @Override
     public boolean isVolumeAvailable() {
         return true;
@@ -105,7 +114,8 @@ public class VeryLargeVolumeData implements VolumeDataI {
     public byte getValueAt(long location) {
         int slabNo = getSlabNo( location );
         byte[] slab = slabs[ slabNo ];
-        return slab[ getLocInSlab( location ) ];
+        int locInSlab = getLocInSlab(location);
+        return slab[ locInSlab ];
     }
 
     @Override

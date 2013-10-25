@@ -53,7 +53,7 @@ public class ChannelInterpreterToByte implements ChannelInterpreterI {
             ChannelMetaData targetChannelMetaData,
             int orignalMaskNum,
             byte[] channelData,
-            int targetPos
+            long targetPos
     ) {
 
         int multiMaskId = getMaskValue(targetPos, targetChannelMetaData.channelCount, RenderablesMaskBuilder.UNIVERSAL_MASK_BYTE_COUNT);  //TODO consider passing mask-size into the interpreter or moving the constant somewhere more general.
@@ -122,11 +122,11 @@ public class ChannelInterpreterToByte implements ChannelInterpreterI {
     }
 
     /** Goes to the mask volume, finds and reconstructs the mask at position given. */
-    private int getMaskValue( int position, int targetChannelWidth, int maskByteCount ) {
+    private int getMaskValue( long position, int targetChannelWidth, int maskByteCount ) {
         // Find the appropriate slot in the mask data, and get its value.
         int volumeMask = 0;
         if ( wholeMaskVolume.isVolumeAvailable() ) {
-            int volumeLoc = (position / targetChannelWidth) * maskByteCount;
+            long volumeLoc = (position / targetChannelWidth) * maskByteCount;
             // Assumed little-endian.
             for ( int j = 0; j < maskByteCount; j++ ) {
                 // The volume mask is the one currently in use.  This could be a single or multi-mask.

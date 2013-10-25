@@ -27,7 +27,7 @@ public class ByteChannelDelegate {
             ChannelMetaData srcChannelMetaData,
             ChannelMetaData targetChannelMetaData,
             byte[] channelData,
-            int targetPos
+            long targetPos
     ) {
         int[] orderedRgbIndexes = srcChannelMetaData.getOrderedRgbIndexes();
         byte[] targetChannelBytes = new byte[ targetChannelMetaData.byteCount * targetChannelMetaData.channelCount ];
@@ -69,7 +69,7 @@ public class ByteChannelDelegate {
     public void padChannelBytes(
             ChannelMetaData srcChannelMetaData,
             ChannelMetaData targetChannelMetaData,
-            int targetPos
+            long targetPos
     ) {
         // Pad out to the end, to create the alpha byte.
         if ( targetChannelMetaData.channelCount >= ( srcChannelMetaData.channelCount + 1 ) ) {

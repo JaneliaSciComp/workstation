@@ -139,7 +139,7 @@ public class RenderablesChannelsBuilder extends RenderablesVolumeBuilder impleme
     ) throws Exception {
         init();
 
-        int targetPos = (int)( volumePosition * this.channelMetaData.channelCount * FIXED_BYTE_PER_CHANNEL );
+        long targetPos = volumePosition * this.channelMetaData.channelCount * FIXED_BYTE_PER_CHANNEL;
         channelInterpreter.interpretChannelBytes(channelMetaData, this.channelMetaData, orignalMaskNum, channelData, targetPos);
 
         return 1;

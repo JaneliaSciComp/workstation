@@ -71,7 +71,7 @@ public class RenderablesMaskBuilder extends RenderablesVolumeBuilder implements 
 
         // Assumed little-endian.
         for ( int j = 0; j < maskByteCount; j++ ) {
-            int volumeLoc = j + ((int) position * maskByteCount);
+            long volumeLoc = (long)j + (position * maskByteCount);
             if ( binary ) {
                 volumeData.setValueAt(volumeLoc, (byte) 255);
             }
