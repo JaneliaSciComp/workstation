@@ -67,6 +67,16 @@ public class DirectStateSerializationAdapter implements UserSettingSerializer.Se
     }
 
     @Override
+    public boolean isSaveColorBrightness() {
+        return volumeModel.isColorSaveBrightness();
+    }
+
+    @Override
+    public void setSaveColorBrightness(boolean b) {
+        volumeModel.setColorSaveBrightness( b );
+    }
+
+    @Override
     public void setGammaAdjustment(float gamma) {
         settings.setGammaFactor( gamma );
         volumeModel.setGammaAdjustment( gamma );
@@ -120,4 +130,5 @@ public class DirectStateSerializationAdapter implements UserSettingSerializer.Se
             );
         }
     }
+
 }

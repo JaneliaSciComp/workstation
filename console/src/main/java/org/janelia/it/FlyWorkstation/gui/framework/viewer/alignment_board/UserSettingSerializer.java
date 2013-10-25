@@ -27,6 +27,7 @@ public class UserSettingSerializer implements Serializable {
     public static final String CAMERA_FOCUS_SETTING = "CameraFocus";
     public static final String GROUND_FOCUS_SETTING = "InGroundFocus";
     public static final String MIN_VOXELS_SETTING = "MinVoxelCutoff";
+    public static final String SAVE_BRIGHTNESS_SETTING = "SaveGammaInTiff";
 
     public static final int MAX_SERIALIZED_SETTINGS_STR = 65535;
 
@@ -60,7 +61,7 @@ public class UserSettingSerializer implements Serializable {
      *
      * @see #deserializeSettings()
      */
-    synchronized void serializeSettings() {
+    public synchronized void serializeSettings() {
         try {
             String settingsString = getSettingsString();
             // This excessive length
@@ -90,7 +91,7 @@ public class UserSettingSerializer implements Serializable {
      * Restore-to-former-glory, things that the user had in place during the previous cycle.
      * @see #serializeSettings()
      */
-    synchronized void deserializeSettings() {
+    public synchronized void deserializeSettings() {
         try {
             // Read up.
             String settingString =
@@ -226,6 +227,19 @@ public class UserSettingSerializer implements Serializable {
             }
         }
 
+        str = settingToValue.get( SAVE_BRIGHTNESS_SETTING );
+        nonEmpty = nonEmpty( str );
+        if ( nonEmpty ) {
+            try {
+                serializationAdapter.setSaveColorBrightness( Boolean.parseBoolean( str ) );
+            } catch ( Exception ex ) {
+                logger.warn(
+                        "Invalid boolean setting for saving of brightness with color tiffs {}.",
+                        str
+                );
+            }
+        }
+
     }
 
     /** Quick method to test whether setting is empty. */
@@ -292,6 +306,8 @@ public class UserSettingSerializer implements Serializable {
         }
 
         builder.append( MIN_VOXELS_SETTING ).append("=").append(serializationAdapter.getMinimumVoxelCount()).append("\n");
+
+        builder.append( SAVE_BRIGHTNESS_SETTING ).append("=").append(serializationAdapter.isSaveColorBrightness()).append("\n");
 
         logger.debug("SETTINGS: {} serialized", builder);
         return builder.toString();
@@ -395,6 +411,7 @@ public class UserSettingSerializer implements Serializable {
         Vec3 getFocusInGround();                    // VolumeModel
         Vec3 getFocus();                            // VolumeModel.getCamera3d()
         CropCoordSet getCropCoords();               // VolumeModel
+        boolean isSaveColorBrightness();            // VolumeModel
 
         // Deserialization
         void setGammaAdjustment( float gamma );     // VolumeModel, alignmentBoardSettings as setGammaFactor(float)
@@ -405,6 +422,7 @@ public class UserSettingSerializer implements Serializable {
         void setFocus( double[] focus );            // VolumeModel.getCamera3d().setFocus()
         void setFocusInGround(double[] cameraFocusArr);  // Complicated...
         void setRotation( Collection<double[]> rotation );  // volumeModel.getCamera3d().getRotation().setWithCaution(
+        void setSaveColorBrightness( boolean b );   // VolumeModel
    }
 
 }

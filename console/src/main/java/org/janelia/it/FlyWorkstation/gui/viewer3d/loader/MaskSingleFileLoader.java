@@ -378,7 +378,11 @@ public class MaskSingleFileLoader {
                 if ( applicable1DEnd > total1D ) {
                     applicable1DEnd = total1D;
                 }
-                logger.trace( "Single file loader looking at positions {} to {} for bean {}, t-num {}.", new Object[] {applicable1DStart, applicable1DEnd, renderableBean.getRenderableEntity().getName(), renderableBean.getTranslatedNum() } );
+                if (logger.isTraceEnabled()) {
+                    if ( renderableBean != null ) {
+                        logger.trace( "Single file loader looking at positions {} to {} for bean {}, t-num {}.", new Object[] {applicable1DStart, applicable1DEnd, renderableBean.getRenderableEntity().getName(), renderableBean.getTranslatedNum() } );
+                    }
+                }
             }
 
             if ( maskAcceptors != null ) {
