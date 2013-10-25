@@ -9,7 +9,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.swing.*;
-import javax.swing.border.EmptyBorder;
 import javax.swing.border.LineBorder;
 import javax.swing.border.TitledBorder;
 import javax.swing.event.ChangeEvent;
@@ -517,7 +516,7 @@ public class AlignmentBoardControlsPanel extends JPanel {
                 event.setCompletionListener( buttonEnableListener );
                 event.setMethod( ControlsListener.ExportMethod.color );
                 if ( volumeModel.isColorSaveBrightness() ) {
-                    event.setGammaFactor( settings.getGammaFactor() );
+                    event.setGammaFactor( settings.getGammaFactor() * VolumeModel.STANDARDIZED_GAMMA_MULTIPLIER);
                 }
                 else {
                     event.setGammaFactor( 1.0f );
@@ -527,7 +526,7 @@ public class AlignmentBoardControlsPanel extends JPanel {
         });
 
         final JButton screenShotButton = new JButton( SAVE_SCREEN_SHOT_MIP );
-        screenShotButton.setToolTipText( SAVE_SCREEN_SHOT_TOOLTIP_TEXT );
+        screenShotButton.setToolTipText(SAVE_SCREEN_SHOT_TOOLTIP_TEXT);
         screenShotButton.addActionListener(new ActionListener() {
             CompletionListener buttonEnableListener = new CompletionListener() {
                 @Override
@@ -536,15 +535,15 @@ public class AlignmentBoardControlsPanel extends JPanel {
                 }
             };
 
-            public void actionPerformed( ActionEvent ae ) {
-                screenShotButton.setEnabled( false );
+            public void actionPerformed(ActionEvent ae) {
+                screenShotButton.setEnabled(false);
                 Collection<float[]> acceptedCords = getCombinedCropCoords();
                 SavebackEvent event = new SavebackEvent();
-                event.setAbsoluteCoords( acceptedCords );
-                event.setCompletionListener( buttonEnableListener );
-                event.setMethod( ControlsListener.ExportMethod.mip );
-                event.setGammaFactor( settings.getGammaFactor() );
-                fireSavebackEvent( event );
+                event.setAbsoluteCoords(acceptedCords);
+                event.setCompletionListener(buttonEnableListener);
+                event.setMethod(ControlsListener.ExportMethod.mip);
+                event.setGammaFactor(settings.getGammaFactor());
+                fireSavebackEvent(event);
             }
         });
 
@@ -567,9 +566,9 @@ public class AlignmentBoardControlsPanel extends JPanel {
         });
 
         JButton orButton = new JButton( OR_BUTTON_LABEL );
-        orButton.setToolTipText( OR_BUTTON_TIP );
-        orButton.addActionListener( new ActionListener() {
-            public void actionPerformed( ActionEvent ae ) {
+        orButton.setToolTipText(OR_BUTTON_TIP);
+        orButton.addActionListener(new ActionListener() {
+            public void actionPerformed(ActionEvent ae) {
                 CropCoordSet cropCoordSet = volumeModel.getCropCoords();
                 cropCoordSet.acceptCurrentCoordinates();
                 fireCropEvent();
@@ -577,15 +576,15 @@ public class AlignmentBoardControlsPanel extends JPanel {
         });
 
         JPanel accumulatorButtonsPanel = new JPanel();
-        accumulatorButtonsPanel.setLayout( new BorderLayout() );
-        accumulatorButtonsPanel.add( orButton, BorderLayout.EAST );
+        accumulatorButtonsPanel.setLayout(new BorderLayout());
+        accumulatorButtonsPanel.add(orButton, BorderLayout.EAST);
         accumulatorButtonsPanel.add( clearButton, BorderLayout.WEST );
-        regionSelectionPanel.add( accumulatorButtonsPanel );
+        regionSelectionPanel.add(accumulatorButtonsPanel);
 
         regionSelectionPanel.setToolTipText(GEO_SEARCH_TOOLTIP);
 
         brightnessSlider = new JSlider();
-        brightnessSlider.setMaximum( 1000 );
+        brightnessSlider.setMaximum(1000);
         brightnessSlider.setMinimum(0);
         brightnessSlider.setMajorTickSpacing(500);
         brightnessSlider.setMinorTickSpacing(100);
@@ -594,20 +593,20 @@ public class AlignmentBoardControlsPanel extends JPanel {
         brightnessSlider.setValue(500);  // Center it up.
         brightnessSlider.setPaintLabels(true);
         brightnessSlider.setPaintTicks(true);
-        brightnessSlider.setToolTipText( GAMMA_TOOLTIP );
+        brightnessSlider.setToolTipText(GAMMA_TOOLTIP);
         brightnessSlider.setBorder(new TitledBorder("Brightness"));
 
         downSampleRateToIndex = new HashMap<Integer,Integer>();
         downSampleRateToIndex.put( 0, 0 );
         downSampleRateToIndex.put( 1, 1 );
         downSampleRateToIndex.put( 2, 2 );
-        downSampleRateToIndex.put( 4, 3 );
-        downSampleRateToIndex.put( 8, 4 );
+        downSampleRateToIndex.put(4, 3);
+        downSampleRateToIndex.put(8, 4);
 
         downSampleRateDropdown = new JComboBox(
                 new ABSDComboBoxModel( downSampleRateToIndex )
         );
-        downSampleRateDropdown.setBorder( new TitledBorder( DOWN_SAMPLE_RATE ) );
+        downSampleRateDropdown.setBorder(new TitledBorder(DOWN_SAMPLE_RATE));
         downSampleRateDropdown.setToolTipText( DOWN_SAMPLE_TOOL_TIP );
 
         useSignalDataCheckbox = new JCheckBox( USE_SIGNAL_DATA );
@@ -626,10 +625,10 @@ public class AlignmentBoardControlsPanel extends JPanel {
         minimumVoxelCountTF.setMinimumSize(MIN_VOX_COUNT_SIZE);
         minimumVoxelCountTF.setPreferredSize(MIN_VOX_COUNT_SIZE);
         minimumVoxelCountTF.setMaximumSize(MIN_VOX_COUNT_SIZE);
-        minimumVoxelCountTF.setBorder( new TitledBorder( "Minimum Neuron Voxels" ) );
+        minimumVoxelCountTF.setBorder(new TitledBorder("Minimum Neuron Voxels"));
         minimumVoxelCountTF.setToolTipText(
                 "Integer: least number of neuron voxels before a neuron fragment is not rendered.\n" +
-                "Value of "+ AlignmentBoardSettings.NO_MINIMUM_VOXEL_COUNT+" implies no such filtering."
+                        "Value of " + AlignmentBoardSettings.NO_MINIMUM_VOXEL_COUNT + " implies no such filtering."
         );
         minimumVoxelCountTF.addMouseListener( commitEnablerMouseListener );
 
@@ -727,7 +726,7 @@ public class AlignmentBoardControlsPanel extends JPanel {
         );
 
         centralPanel.add( brightnessSlider, brightnessConstraints );
-        centralPanel.add( downSampleRateDropdown, downSampleConstraints );
+        centralPanel.add(downSampleRateDropdown, downSampleConstraints);
         downSampleGuess = new JLabel( String.format( GUESS_LABEL_FMT, "0" ) );
         Observer downsampleRateObserver = new Observer() {
             @Override
@@ -735,29 +734,29 @@ public class AlignmentBoardControlsPanel extends JPanel {
                 downSampleGuess.setText(  String.format( GUESS_LABEL_FMT, settings.getDownSampleGuessStr() ) );
             }
         };
-        settings.setDownSampleRateObserver( downsampleRateObserver );
+        settings.setDownSampleRateObserver(downsampleRateObserver);
         centralPanel.add( downSampleGuess, downSampleGuessConstraints );
         centralPanel.add( minimumVoxelCountTF, minimumVoxelCountConstraints );
 
-        centralPanel.add( useSignalDataCheckbox, signalDataConstraints );
-        centralPanel.add( commitButton, commitBtnConstraints );
+        centralPanel.add(useSignalDataCheckbox, signalDataConstraints);
+        centralPanel.add(commitButton, commitBtnConstraints);
         JTextArea downSampleRateText = new JTextArea( DOWN_SAMPLE_TIP );
         downSampleRateText.setLineWrap(true);
-        downSampleRateText.setColumns( 40 );
+        downSampleRateText.setColumns(40);
         downSampleRateText.setColumns(DOWN_SAMPLE_TIP.length() / 2);
         downSampleRateText.setEditable(false);
         downSampleRateText.setBorder(new LineBorder(Color.black));
         JScrollPane rateTextPane = new JScrollPane( downSampleRateText );
-        rateTextPane.setHorizontalScrollBarPolicy( JScrollPane.HORIZONTAL_SCROLLBAR_AS_NEEDED );
-        rateTextPane.setVerticalScrollBarPolicy( JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED );
-        rateTextPane.setSize( DOWNSAMPLE_TIP_DIM );
-        rateTextPane.setMinimumSize( DOWNSAMPLE_TIP_DIM );
+        rateTextPane.setHorizontalScrollBarPolicy(JScrollPane.HORIZONTAL_SCROLLBAR_AS_NEEDED);
+        rateTextPane.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED);
+        rateTextPane.setSize(DOWNSAMPLE_TIP_DIM);
+        rateTextPane.setMinimumSize(DOWNSAMPLE_TIP_DIM);
 
         centralPanel.add( rateTextPane, downSampleTipConstraints);
         centralPanel.add( blackoutCheckbox, blackoutCheckboxConstraints );
         centralPanel.add( colorSaveBrightnessCheckbox, colorSaveBrightnessConstraints );
         centralPanel.add( regionSelectionPanel, regionSelectionPanelConstraints );
-        centralPanel.add( searchSaveButton, saveSearchConstraints );
+        centralPanel.add(searchSaveButton, saveSearchConstraints);
         centralPanel.add( colorSaveButton, saveColorConstraints );
         centralPanel.add( screenShotButton, saveScreenShotConstraints );
         add(centralPanel, BorderLayout.CENTER);

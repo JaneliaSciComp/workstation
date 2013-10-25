@@ -23,6 +23,7 @@ public class VolumeModel {
     public static final float[] DEFAULT_COLOR_MASK = {1.0f, 1.0f, 1.0f};
     public static final float DEFAULT_CROPOUT = 0.25f;
     public static final boolean DEFAULT_SAVE_BRIGHTNESS = true;
+    public static final float STANDARDIZED_GAMMA_MULTIPLIER = 0.46f;
 
     private CropCoordSet cropCoordSet = CropCoordSet.getDefaultCropCoordSet();
     private float gammaAdjustment = DEFAULT_GAMMA_ADJUSTMENT;
