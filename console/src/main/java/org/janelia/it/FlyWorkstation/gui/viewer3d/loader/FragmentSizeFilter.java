@@ -51,16 +51,14 @@ public class FragmentSizeFilter {
             }
             else {
                 if ( filterByFileSize( resolver, maskPath ) ) {
-                    discardCount ++;
                     rtnVal.add( data );
                 }
                 else {
+                    discardCount ++;
                     logger.debug(
                             "Not keeping {}, file {}, because it has too few voxels.",
-                            new Object[]{
-                                    data.getBean().getLabelFileNum(),
-                                    data.getMaskPath()
-                            }
+                            data.getBean().getLabelFileNum(),
+                            maskPath
                     );
                 }
 
