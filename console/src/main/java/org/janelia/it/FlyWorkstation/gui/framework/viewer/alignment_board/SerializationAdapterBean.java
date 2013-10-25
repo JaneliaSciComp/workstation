@@ -21,6 +21,7 @@ public class SerializationAdapterBean implements UserSettingSerializer.Serializa
     private long minimumVoxelCount;
     private Rotation3d rotation;
     private boolean showChannelData;
+    private boolean saveColorBrightness;
     private Vec3 focus;
     private Vec3 focusInGround;
     private CropCoordSet cropCoordSet;
@@ -63,6 +64,16 @@ public class SerializationAdapterBean implements UserSettingSerializer.Serializa
     @Override
     public CropCoordSet getCropCoords() {
         return cropCoordSet;
+    }
+
+    @Override
+    public boolean isSaveColorBrightness() {
+        return saveColorBrightness;
+    }
+
+    @Override
+    public void setSaveColorBrightness(boolean b) {
+        saveColorBrightness = b;
     }
 
     @Override
