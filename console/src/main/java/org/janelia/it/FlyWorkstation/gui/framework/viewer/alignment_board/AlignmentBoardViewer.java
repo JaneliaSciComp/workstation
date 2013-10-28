@@ -1,8 +1,6 @@
 package org.janelia.it.FlyWorkstation.gui.framework.viewer.alignment_board;
 
-import java.awt.BorderLayout;
-import java.awt.Component;
-import java.awt.Dimension;
+import java.awt.*;
 import java.util.List;
 import java.util.concurrent.Callable;
 
@@ -20,6 +18,7 @@ import org.janelia.it.FlyWorkstation.gui.alignment_board_viewer.masking.MultiMas
 import org.janelia.it.FlyWorkstation.gui.alignment_board_viewer.masking.RenderMappingI;
 import org.janelia.it.FlyWorkstation.gui.alignment_board_viewer.texture.ABContextDataSource;
 import org.janelia.it.FlyWorkstation.gui.alignment_board_viewer.volume_export.VolumeWritebackHandler;
+import org.janelia.it.FlyWorkstation.gui.framework.console.Browser;
 import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.BrowserModel;
 import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionModelListener;
@@ -653,9 +652,16 @@ public class AlignmentBoardViewer extends Viewer implements AlignmentBoardContro
         deserializeSettings(SessionMgr.getBrowser().getLayersPanel().getAlignmentBoardContext());
         settingsPanel.update( true );
 
-        //mip3d.addMenuAction(settingsDialog.getLaunchAction());
         double cameraFocusDistance = mip3d.getVolumeModel().getCamera3d().getFocus().getZ();
         mip3d.getVolumeModel().getCamera3d().setPixelsPerSceneUnit( Math.abs( BaseRenderer.DISTANCE_TO_SCREEN_IN_PIXELS / cameraFocusDistance ) );
+    }
+
+    private void jostleContainingFrame() {
+        // To remind a multi-monitor window of where the tool tips should be shown.
+        Browser browser = SessionMgr.getBrowser();
+        Point location = browser.getLocation();
+        browser.setLocation( new Point( (int)location.getX()+1, (int)location.getY()+1 ) );
+        browser.setLocation( location );
     }
 
     private JPanel createWrapperPanel( Mip3d mip3d ) {
@@ -677,6 +683,7 @@ public class AlignmentBoardViewer extends Viewer implements AlignmentBoardContro
         mipAndControls.updateUI();
 
         rtnVal.add(mipAndControls, BorderLayout.CENTER);
+        jostleContainingFrame();
         return rtnVal;
     }
 

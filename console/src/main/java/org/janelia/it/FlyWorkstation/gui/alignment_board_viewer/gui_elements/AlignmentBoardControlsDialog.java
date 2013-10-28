@@ -66,7 +66,6 @@ public class AlignmentBoardControlsDialog extends JDialog {
         bottomButtonPanel.add( cancel, BorderLayout.WEST );
         bottomButtonPanel.setBorder( new EmptyBorder( insets ) );
         add(bottomButtonPanel, BorderLayout.SOUTH);
-
     }
 
     public AlignmentBoardControlsPanel getControlsPanel() {
