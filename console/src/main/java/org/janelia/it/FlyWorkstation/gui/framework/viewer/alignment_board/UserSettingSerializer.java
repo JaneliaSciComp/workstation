@@ -37,6 +37,17 @@ public class UserSettingSerializer implements Serializable {
     private Logger logger = LoggerFactory.getLogger( UserSettingSerializer.class );
 
     /**
+     * Convenience method for quickly checking if any alignment board has settings stored with it.  Could help
+     * to establish that a board is brand new.
+     *
+     * @param alignmentBoard what to look at.
+     * @return T: found string; F: no settings stored before this call.
+     */
+    public static boolean settingsExist( Entity alignmentBoard ) {
+        return getSettingsString( alignmentBoard ) != null;
+    }
+
+    /**
      * Construct with sources/sinks for all data flowing through.
      *
      * @param alignmentBoard entity about which this data exists.
@@ -93,18 +104,26 @@ public class UserSettingSerializer implements Serializable {
      */
     public synchronized void deserializeSettings() {
         try {
-            // Read up.
-            String settingString =
-                    this.alignmentBoard.getValueByAttributeName(
-                            EntityConstants.ATTRIBUTE_ALIGNMENT_BOARD_USER_SETTINGS
-                    );
-            logger.info( "Read-Up Setting string: {}deserialized, from {}", settingString, alignmentBoard.getId() );
+            String settingString = getSettingsString( this.alignmentBoard );
+            logger.info( "Read-Up Setting string: {} deserialized, from {}", settingString, alignmentBoard.getId() );
 
-            parseSettings(settingString);
+            if ( settingString != null ) {
+                parseSettings(settingString);
+            }
+
         } catch ( Exception ex ) {
             SessionMgr.getSessionMgr().handleException( ex );
         }
 
+    }
+
+    private static String getSettingsString( Entity alignmentBoard ) {
+        // Read up.
+        String settingString =
+                alignmentBoard.getValueByAttributeName(
+                        EntityConstants.ATTRIBUTE_ALIGNMENT_BOARD_USER_SETTINGS
+                );
+        return settingString;
     }
 
     void parseSettings(String settingString) {

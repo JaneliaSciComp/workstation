@@ -78,6 +78,8 @@ public class AlignmentBoardViewer extends Viewer implements AlignmentBoardContro
     private boolean renderingInProgress = false;
     private boolean outstandingRenderRequest = false;
 
+    private boolean preExistingBoard = true;
+
     private boolean boardOpen = false;
     private Double cachedDownSampleGuess = null;
     private AlignmentBoardSettings settingsData;
@@ -181,6 +183,13 @@ public class AlignmentBoardViewer extends Viewer implements AlignmentBoardContro
         logger.info( "Board Opened" );
 
         AlignmentBoardContext abContext = event.getAlignmentBoardContext();
+        try {
+            Entity alignmentBoard =  ModelMgr.getModelMgr().getEntityById(abContext.getInternalEntity().getId());
+            preExistingBoard = UserSettingSerializer.settingsExist( alignmentBoard );
+        }
+        catch (Exception e) {
+            SessionMgr.getSessionMgr().handleException(e);
+        }
         handleBoardOpened(abContext);
     }
 
@@ -260,6 +269,11 @@ public class AlignmentBoardViewer extends Viewer implements AlignmentBoardContro
 
         // Ensure pixels per scene unit properly accounted-for.
         mip3d.getVolumeModel().setCameraPixelsPerSceneUnit( BaseRenderer.DISTANCE_TO_SCREEN_IN_PIXELS, mip3d.getVolumeModel().getCameraFocusDistance() );
+        if ( !preExistingBoard) {
+            // Must do this again in case anything upset the apple cart.
+            mip3d.resetView();
+        }
+
     }
 
     @Override
@@ -525,7 +539,7 @@ public class AlignmentBoardViewer extends Viewer implements AlignmentBoardContro
                 }
                 else {
                     // No launching settings at this point.
-                    removeSettingsLaunchButton();
+                    //removeSettingsLaunchButton();
                     showLoadingIndicator();
                     createMip3d();
                     wrapperPanel = createWrapperPanel( mip3d );
@@ -627,7 +641,7 @@ public class AlignmentBoardViewer extends Viewer implements AlignmentBoardContro
         //if ( settings != null ) {
         //    settings.removeAllSettingsListeners();
         //}
-        removeSettingsLaunchButton();
+        //removeSettingsLaunchButton();
         if ( mip3d != null ) {
             mip3d.releaseMenuActions();
         }
@@ -653,7 +667,7 @@ public class AlignmentBoardViewer extends Viewer implements AlignmentBoardContro
         settingsPanel.update( true );
 
         double cameraFocusDistance = mip3d.getVolumeModel().getCamera3d().getFocus().getZ();
-        mip3d.getVolumeModel().getCamera3d().setPixelsPerSceneUnit( Math.abs( BaseRenderer.DISTANCE_TO_SCREEN_IN_PIXELS / cameraFocusDistance ) );
+        mip3d.getVolumeModel().getCamera3d().setPixelsPerSceneUnit(Math.abs(BaseRenderer.DISTANCE_TO_SCREEN_IN_PIXELS / cameraFocusDistance));
     }
 
     private void jostleContainingFrame() {
