@@ -34,18 +34,21 @@ import java.util.List;
 public class AlignmentBoardControlsPanel extends JPanel {
     public static final double UNSELECTED_DOWNSAMPLE_RATE = 0.0;
     private static final String DOWN_SAMPLE_TIP =
-            "Data sent to screen may be too large for your graphics card. Therefore, \n" +
-            "they are downsampled at the minimum rate found usable for your card.\n" +
-            "However, you may wish to move that rate up or down, depending on your\n" +
-            "knowledge of the advanced hardware on your system.  Higher values mean\n" +
-            "larger, blockier voxels, and less memory.";
+            "Data sent to screen may be too large for your graphics card.\n" +
+            "Therefore, they are downsampled at the minimum rate found\n" +
+            "usable for your card.  However, you may wish to move that\n" +
+            "rate up or down, depending on your knowledge of the advanced\n" +
+            " hardware on your system.\n" +
+            "Higher values mean larger, blockier voxels, and less memory.";
 
     private static final String DOWN_SAMPLE_TOOL_TIP =
             "<html>" +
-                    "Data sent to screen may be too large for your graphics card.<br>" +
-                    "Therefore, they are downsampled at the minimum rate found usable for your card." +
-                    "<br>However, you may wish to move that rate up or down, depending on your knowledge of the<br>" +
-                    "advanced hardware on your system.  Higher values mean larger, blockier voxels, and less memory."
+                    "Data sent to screen may be too large for your graphics<br>" +
+                    " card.  Therefore, they are downsampled at the minimum rate" +
+                    " found usable for your card.<br>However, you may wish to move " +
+                    "that rate up or down, depending on your knowledge of the<br>" +
+                    "advanced hardware on your system.  Higher values mean larger, " +
+                    "blockier voxels, and less memory."
                     + "</html>";
 
     private static final String GEO_SEARCH_TOOLTIP = "<html>" +
