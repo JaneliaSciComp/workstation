@@ -128,7 +128,15 @@ public class AlignmentBoardViewer extends Viewer implements AlignmentBoardContro
     public void loadEntity(RootedEntity rootedEntity, Callable<Void> success) {}
 
 	public RootedEntity getContextRootedEntity() {
-		return SessionMgr.getBrowser().getLayersPanel().getAlignmentBoardContext().getInternalRootedEntity();
+        LayersPanel layersPanel = SessionMgr.getBrowser().getLayersPanel();
+        if ( layersPanel == null ) {
+            return null;
+        }
+        AlignmentBoardContext alignmentBoardContext = layersPanel.getAlignmentBoardContext();
+        if ( alignmentBoardContext == null ) {
+            return null;
+        };
+        return alignmentBoardContext.getInternalRootedEntity();
 	}
 	
     @Override
