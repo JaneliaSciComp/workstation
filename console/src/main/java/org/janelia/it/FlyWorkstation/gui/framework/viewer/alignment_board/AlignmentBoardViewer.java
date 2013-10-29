@@ -302,7 +302,7 @@ public class AlignmentBoardViewer extends Viewer implements AlignmentBoardContro
                     wrapperPanel = createWrapperPanel( mip3d );
                 }
             }
-
+            multiMaskTracker.writeOutstandingDump();
         }
         else {
             removeAll();

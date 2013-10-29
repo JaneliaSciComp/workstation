@@ -23,10 +23,13 @@ public class MultiMaskTracker {
 
     private List<Integer> dumpedList;
     private Set<Integer> retiredMasks;
+    private Logger logger;
 
     private int nextMaskNum;
+    private boolean masksExhausted = false;
 
     public MultiMaskTracker() {
+        logger = LoggerFactory.getLogger( MultiMaskTracker.class );
         maskIdToBean = new HashMap<Integer, MultiMaskBean>();
         altMasksToBean = new HashMap<String, MultiMaskBean>();
         retiredMasks = new HashSet<Integer>();
@@ -43,6 +46,10 @@ public class MultiMaskTracker {
     public void clear() {
         maskIdToBean.clear();
         altMasksToBean.clear();
+        retiredMasks.clear();
+        if ( dumpedList != null )
+            dumpedList.clear();
+        masksExhausted = false;
     }
 
     /**
@@ -128,25 +135,64 @@ public class MultiMaskTracker {
             dumpedList = new ArrayList<Integer>();
         }
         if ( ! dumpedList.contains( originalMask ) ) {
-            dumpedList.add( originalMask );
-            Logger logger = LoggerFactory.getLogger( MultiMaskTracker.class );
-            StringBuilder totalDump = new StringBuilder("Dumping Mask Contents\n");
-            for ( Integer maskId: maskIdToBean.keySet() ) {
-                StringBuilder maskContents = new StringBuilder();
-                for ( Integer subMask: maskIdToBean.get( maskId ).getAltMasks() ) {
+            dumpedList.add(originalMask);
+        }
+
+    }
+
+    /** Call this at the end, to drop resources, etc. */
+    public void writeOutstandingDump() {
+        if ( dumpedList == null ) {
+            return;
+        }
+        StringBuilder totalDump = new StringBuilder("Dumping Mask Contents\n");
+        totalDump.append("Mask List: ");
+        for ( Integer maskId: dumpedList ) {
+            totalDump.append( maskId ).append(",");
+        }
+        totalDump.setLength( totalDump.length() - 1 );    // Trim trailing comma
+        totalDump.append("\n");
+        for ( Integer maskId: maskIdToBean.keySet() ) {
+            StringBuilder maskContents = new StringBuilder();
+
+            // Dump all multimasks containing any targeted submask.
+            List<Integer> altMasks = maskIdToBean.get(maskId).getAltMasks();
+            boolean toDump = false;
+            for ( Integer member: dumpedList ) {
+                if ( altMasks.contains( member ) ) {
+                    toDump = true;
+                    break;
+                }
+            }
+            if ( toDump ) {
+                for ( Integer subMask: altMasks) {
                     maskContents.append( subMask ).append( ' ' );
                 }
-                totalDump.append( "Mask " ).append( maskId ).append(" contains these submasks [" ).append( maskContents.toString().trim() ).append( "]").append("\n");
+                String maskContentStr = maskContents.toString().trim();
+                totalDump.append( "Mask " ).append( maskId ).append(" contains these submasks [" ).append( maskContentStr ).append( "]").append("\n");
             }
+        }
 
-            logger.info( totalDump.toString() );
-            totalDump.setLength( 0 );
-            totalDump.append( "Dumping Inverted Mask Contents\n" );
-            for ( String invertedKey: this.altMasksToBean.keySet() ) {
+        logger.info( totalDump.toString() );
+        totalDump.setLength( 0 );
+        totalDump.append( "Dumping Inverted Mask Contents\n" );
+        Set<String> altMasks = this.altMasksToBean.keySet();
+        for ( String invertedKey: altMasks ) {
+            boolean toDump = false;
+            String[] altMaskArr = invertedKey.split(" ");
+            List<String> altMaskList = Arrays.asList( altMaskArr );
+            for ( Integer member: dumpedList ) {
+                if ( altMaskList.contains( member.toString() ) ) {
+                    toDump = true;
+                    break;
+                }
+            }
+            if ( toDump ) {
                 totalDump.append( "Alt-Mask-Set ").append( invertedKey ).append( " refers to multimask " ).append( altMasksToBean.get( invertedKey ).getMultiMaskNum() ).append( "\n" );
             }
-            logger.info( totalDump.toString() );
         }
+        logger.info( totalDump.toString() );
+        dumpedList.clear();
 
     }
 
@@ -194,11 +240,17 @@ public class MultiMaskTracker {
         if ( nextMaskNum >= 65536 ) {
             Iterator<Integer> retiredMaskIterator = retiredMasks.iterator();
             if ( retiredMaskIterator.hasNext() ) {
-                newBean.setMultiMaskNum( retiredMasks.iterator().next() );
-                retiredMasks.remove( newBean.getMultiMaskNum() ); // Back in circulation.
+                Integer reusedMask = retiredMasks.iterator().next();
+                logger.debug("Re-using mask {}.", reusedMask);
+                newBean.setMultiMaskNum(reusedMask);
+                retiredMasks.remove(newBean.getMultiMaskNum()); // Back in circulation.
             }
             else {
-                // OUT of masks.
+                if ( ! masksExhausted ) {
+                    // OUT of masks.
+                    masksExhausted = true;
+                    logger.warn("Completely out of masks.  Even with re-use, have exhausted all 2-byte values.");
+                }
                 return -1;
             }
         }

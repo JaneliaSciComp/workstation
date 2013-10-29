@@ -6,6 +6,8 @@ import org.janelia.it.FlyWorkstation.gui.viewer3d.loader.ChannelMetaData;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.Set;
+
 
 /**
  * Created with IntelliJ IDEA.
@@ -40,7 +42,7 @@ public class ByteChannelSplitStrategy implements ChannelSplitStrategyI {
         int maskOffset = multiMaskBean.getMaskOffset( originalMask );
         byte[] rtnVal = new byte[ channelsData.length ];
         if ( maskOffset == -1 ) {
-            logger.error( MASK_MISMATCH_ERROR, multiMaskBean.getMultiMaskNum(), originalMask );
+            logger.debug( MASK_MISMATCH_ERROR, multiMaskBean.getMultiMaskNum(), originalMask );
             multiMaskTracker.dumpMaskContents( originalMask );
             return channelsData; // Bypassing.
         }

@@ -73,7 +73,7 @@ public class NBitChannelSplitStrategy implements ChannelSplitStrategyI {
         // Which priority submask are we using?
         int maskOffset = multiMaskBean.getMaskOffset(originalMask);
         if ( maskOffset < 0 ) {
-            logger.error( MASK_MISMATCH_ERROR, multiMaskBean.getMultiMaskNum(), originalMask );
+            logger.debug( MASK_MISMATCH_ERROR, multiMaskBean.getMultiMaskNum(), originalMask );
             multiMaskTracker.dumpMaskContents( originalMask );
             // Bypassing...
         }
