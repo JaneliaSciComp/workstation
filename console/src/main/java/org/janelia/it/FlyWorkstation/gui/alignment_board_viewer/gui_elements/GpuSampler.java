@@ -66,6 +66,8 @@ public class GpuSampler implements GLEventListener {
 
     @Override
     public void display(GLAutoDrawable glAutoDrawable) {
+        glAutoDrawable.getGL().glClearColor( 0.0f, 0.0f, 0.0f, 1.0f );
+        glAutoDrawable.getGL().glClear( 0 );
     }
 
     @Override

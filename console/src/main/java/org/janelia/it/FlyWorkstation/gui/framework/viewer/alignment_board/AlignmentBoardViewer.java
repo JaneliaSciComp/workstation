@@ -59,6 +59,8 @@ public class AlignmentBoardViewer extends Viewer implements AlignmentBoardContro
 
     private static final Logger log = LoggerFactory.getLogger(AlignmentBoardViewer.class);
     private static final String SETTINGS_LAUNCH_BTN_NAME = "AlignmentBoard::SettingsLaunchButton";
+    public static final String SAMPLER_PANEL_NAME = "GpuSampler";
+    private static final Dimension GPU_FEEDBACK_PANEL_SIZE = new Dimension( 1, 1 );
 
     private Mip3d mip3d;
     private RenderablesLoadWorker loadWorker;
@@ -188,7 +190,7 @@ public class AlignmentBoardViewer extends Viewer implements AlignmentBoardContro
     @SuppressWarnings("unused")
     @Subscribe
     public void handleBoardOpened(AlignmentBoardOpenEvent event) {
-        logger.info( "Board Opened" );
+        logger.info("Board Opened");
 
         AlignmentBoardContext abContext = event.getAlignmentBoardContext();
         try {
@@ -204,7 +206,7 @@ public class AlignmentBoardViewer extends Viewer implements AlignmentBoardContro
     @SuppressWarnings("unused")
     @Subscribe
     public void handleItemChanged(AlignmentBoardItemChangeEvent event) {
-        logger.debug( "Item changed" );
+        logger.debug("Item changed");
         // Check this, to prevent this being completed until the board has been first initialized.
         // Redundant events may be posted at startup.
         if ( boardOpen ) {
@@ -377,7 +379,7 @@ public class AlignmentBoardViewer extends Viewer implements AlignmentBoardContro
     /** This is synch'd because there may be a race between constructor and an externally-posted event. */
     private synchronized void handleBoardOpened(AlignmentBoardContext abContext) {
         if ( ! boardOpen ) {
-            this.getViewerPane().setTitle("Alignment Board: " + abContext.getInternalEntity().getName()+" ("+abContext.getAlignmentContext()+")");
+            this.getViewerPane().setTitle("Alignment Board: " + abContext.getInternalEntity().getName() + " (" + abContext.getAlignmentContext() + ")");
             printAlignmentBoardContext(abContext);
 
             // The true update!
@@ -563,7 +565,6 @@ public class AlignmentBoardViewer extends Viewer implements AlignmentBoardContro
                             parseDimensions( context.getAlignmentContext().getPixelResolution() )
                     );
 
-                    GpuSampler sampler = getGpuSampler();
                     multiMaskTracker.clear(); // New creation of board data implies discard old mask mappings.
 
                     // Here, should load volumes, for all the different items given.
@@ -574,6 +575,7 @@ public class AlignmentBoardViewer extends Viewer implements AlignmentBoardContro
                     loadWorker = null;
                     dataSource = new ABContextDataSource(context);
                     if ( cachedDownSampleGuess == null ) {
+                        GpuSampler sampler = getGpuSampler();
                         loadWorker = new RenderablesLoadWorker(
                                 dataSource,
                                 renderMapping,
@@ -622,12 +624,19 @@ public class AlignmentBoardViewer extends Viewer implements AlignmentBoardContro
         GLProfile profile = GLProfile.get(GLProfile.GL2);
         GLCapabilities capabilities = new GLCapabilities(profile);
         GLJPanel feedbackPanel = new GLJPanel( capabilities );
+        feedbackPanel.setName( SAMPLER_PANEL_NAME );
 
-        feedbackPanel.setSize( new Dimension( 1, 1 ) );
+        feedbackPanel.setSize( GPU_FEEDBACK_PANEL_SIZE );
+        feedbackPanel.setPreferredSize( GPU_FEEDBACK_PANEL_SIZE );
+        feedbackPanel.setMaximumSize( GPU_FEEDBACK_PANEL_SIZE );
         feedbackPanel.addGLEventListener( sampler );
         feedbackPanel.setToolTipText( "Reading OpenGL values..." );
 
-        this.add(feedbackPanel, BorderLayout.SOUTH);
+        JPanel holder = new JPanel();
+        holder.setLayout( new FlowLayout() );
+        holder.add( feedbackPanel );
+        this.add(holder, BorderLayout.SOUTH);
+
         revalidate();
         repaint();
         return sampler;
@@ -698,7 +707,7 @@ public class AlignmentBoardViewer extends Viewer implements AlignmentBoardContro
                 mip3d,
                 settingsPanel
         );
-        mipAndControls.setDividerLocation( 0.5 );
+        mipAndControls.setDividerLocation(0.5);
         mipAndControls.setResizeWeight( 1.0 );
         mipAndControls.setOneTouchExpandable( true );
         mipAndControls.setContinuousLayout( false );
@@ -722,8 +731,8 @@ public class AlignmentBoardViewer extends Viewer implements AlignmentBoardContro
             toolbar = new JToolBar( JToolBar.HORIZONTAL );
             toolbar.setLayout( new BorderLayout() );
         }
-        toolbar.add( launchSettingsButton, BorderLayout.EAST );
-        add( toolbar, BorderLayout.PAGE_START );
+        toolbar.add(launchSettingsButton, BorderLayout.EAST);
+        add(toolbar, BorderLayout.PAGE_START);
     }
 
     /** Cleanup old button, to avoid user temptation to use it, and ensure no duplication. */
