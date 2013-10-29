@@ -105,17 +105,13 @@ implements ComponentListener // so changes in viewer size/visibility can be trac
 	public Slot onVolumeInitializedSlot = new Slot() {
 		@Override
 		public void execute() {
-			if (sharedVolumeImage == null)
-				return;
+            if (sharedVolumeImage == null)
+                return;
 			// Initialize pre-fetchers
 			minResPreFetcher.setLoadAdapter(sharedVolumeImage.getLoadAdapter());
 			futurePreFetcher.setLoadAdapter(sharedVolumeImage.getLoadAdapter());
-			// remove old data
-			for (ViewTileManager vtm : viewTileManagers)
-				vtm.clear();
-			// queue disposal of textures on next display event
+            clearCache();
 			setCacheSizesAsFractionOfMaxHeap(0.15, 0.35);
-			clearCache();
 			refreshCurrentTileSet();
 		}
 	};
@@ -147,10 +143,25 @@ implements ComponentListener // so changes in viewer size/visibility can be trac
 	
 	public void clearCache() 
 	{
-		TextureCache cache = getTextureCache();
-		if (cache == null)
-			return;
-		cache.clear();
+        // Replace entire texture cache, to avoid retained textures
+        int[] textureIds = null;
+        if (textureCache != null) {
+            textureCache.clear();
+            textureIds = textureCache.popObsoleteTextureIds();
+            textureCache.textureLoadedSignal.disconnect(textureLoadedSignal);
+            textureCache.queueDrainedSignal.disconnect(updateLoadStatusSlot);
+        }
+        textureCache = new TextureCache();
+        textureCache.textureLoadedSignal.connect(textureLoadedSignal);
+        textureCache.queueDrainedSignal.connect(updateLoadStatusSlot);
+        if (textureIds != null)
+            textureCache.getHistoryCache().storeObsoleteTextureIds(textureIds); // so old texture ids can get deleted next draw
+        minResPreFetcher.setTextureCache(textureCache);
+        futurePreFetcher.setTextureCache(textureCache);
+        for (ViewTileManager vtm : viewTileManagers) {
+            vtm.clear();
+            vtm.setTextureCache(textureCache);
+        }
 		startMinResPreFetchSlot.execute(); // start loading low-res volume
 	};
 	

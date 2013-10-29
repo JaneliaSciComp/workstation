@@ -8,9 +8,12 @@ import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.nio.ShortBuffer;
 
+import javax.media.opengl.GL;
 import javax.media.opengl.GL2;
+import javax.media.opengl.GL2GL3;
 import javax.media.opengl.glu.GLU;
 
+import org.janelia.it.FlyWorkstation.gui.opengl.GLError;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -23,15 +26,15 @@ implements TextureDataI
 	private static Logger logger = LoggerFactory.getLogger(TextureData2dGL.class);
 	
 	// Direct glTexImage argument properties
-	private int target = GL2.GL_TEXTURE_2D;
+	private int target = GL2GL3.GL_TEXTURE_2D;
 	private int mipmapLevel = 0;
-	private int internalFormat = GL2.GL_RGB; // # channels/precision/srgb
+	private int internalFormat = GL2GL3.GL_RGB; // # channels/precision/srgb
 	private int width = 0; // padded to a multiple of 8
 	private int usedWidth = 0; // possibly odd original image width
 	private int height = 0;
 	private int border = 0;
-	private int format = GL2.GL_RGB; // # channels
-	private int type = GL2.GL_BYTE; // precision/byte-order
+	private int format = GL2GL3.GL_RGB; // # channels
+	private int type = GL2GL3.GL_BYTE; // precision/byte-order
 	private ByteBuffer pixels = null; // prefer direct buffer; array backed buffer works too
 
 	// Derived properties
@@ -42,25 +45,16 @@ implements TextureDataI
 	private float textureCoordX = 1.0f;
 	private boolean swapBytes = false;
 
-	private void checkGlError(GL2 gl, String message) 
-	{
-        int errorNum = gl.glGetError();
-        if (errorNum == GL2.GL_NO_ERROR)
-        		return;
-        String errorStr = glu.gluErrorString(errorNum);
-        logger.error( "OpenGL Error " + errorNum + ": " + errorStr + ": " + message );	
-	}
-	
 	@Override
-	public PyramidTexture createTexture(GL2 gl) {
+	public PyramidTexture createTexture(GL2GL3 gl) {
 		Texture2dGL texture = new Texture2dGL(width, height);
 		texture.enable(gl);
 		texture.bind(gl);
 		pixels.rewind();
 		if (swapBytes)
-			gl.glPixelStorei(GL2.GL_UNPACK_SWAP_BYTES, GL2.GL_TRUE);
+			gl.glPixelStorei(GL2GL3.GL_UNPACK_SWAP_BYTES, GL.GL_TRUE);
 		else
-			gl.glPixelStorei(GL2.GL_UNPACK_SWAP_BYTES, GL2.GL_FALSE);
+			gl.glPixelStorei(GL2GL3.GL_UNPACK_SWAP_BYTES, GL.GL_FALSE);
 		gl.glTexImage2D(
 				target,
 				mipmapLevel,
@@ -71,7 +65,7 @@ implements TextureDataI
 				format,
 				type,
 				pixels);
-		checkGlError(gl, "glTexImage2D");
+		GLError.checkGlError(gl, "glTexImage2D");
 		texture.disable(gl);
 		texture.setLinearized(linearized);
 		// Invert Y texture coordinates so GL system matches image system.
@@ -212,36 +206,36 @@ implements TextureDataI
 	public void updateTexImageParams() {
 		linearized = false;
 		if (bitDepth == 8)
-			type = GL2.GL_UNSIGNED_BYTE;
+			type = GL2GL3.GL_UNSIGNED_BYTE;
 		else if (bitDepth == 16)
-			type = GL2.GL_UNSIGNED_SHORT;
+			type = GL2GL3.GL_UNSIGNED_SHORT;
 		else
 			System.err.println("Unsupported bit depth "+bitDepth);
 		
 		switch (channelCount) {
 		case 1:
-			format = internalFormat = GL2.GL_LUMINANCE;
+			format = internalFormat = GL2GL3.GL_LUMINANCE;
 			if (bitDepth == 16)
-				internalFormat = GL2.GL_LUMINANCE16;
+				internalFormat = GL2.GL_LUMINANCE16; // TODO GL3
 			break;
 		case 2:
-			format = internalFormat = GL2.GL_LUMINANCE_ALPHA;
+			format = internalFormat = GL2GL3.GL_LUMINANCE_ALPHA;
 			if (bitDepth == 16)
-				internalFormat = GL2.GL_LUMINANCE16_ALPHA16;
+				internalFormat = GL2.GL_LUMINANCE16_ALPHA16; // TODO GL3
 			break;
 		case 3:
-			format = internalFormat = GL2.GL_RGB;
+			format = internalFormat = GL2GL3.GL_RGB;
 			if (bitDepth == 16)
-				internalFormat = GL2.GL_RGB16;
+				internalFormat = GL2GL3.GL_RGB16;
 			else if (srgb) {
-				internalFormat = GL2.GL_SRGB8;
+				internalFormat = GL2GL3.GL_SRGB8;
 				linearized = true;
 			}
 			break;
 		case 4:
-			format = internalFormat = GL2.GL_RGBA;
+			format = internalFormat = GL2GL3.GL_RGBA;
 			if (bitDepth == 16)
-				internalFormat = GL2.GL_RGBA16;
+				internalFormat = GL2GL3.GL_RGBA16;
 			break;
 		default:
 			System.err.println("Unsupported number of channels "+channelCount);

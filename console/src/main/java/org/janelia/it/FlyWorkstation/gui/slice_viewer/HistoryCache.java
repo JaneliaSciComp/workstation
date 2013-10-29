@@ -16,6 +16,7 @@ implements Map<TileIndex, TileTexture>
 	
 	// Store deleted opengl texture ids, for deferred disposal.
 	private Set<Integer> obsoleteGlTextures = new HashSet<Integer>();
+	private Set<Integer> removedOpenGLTexturesSinceClear = new HashSet<Integer>();
 	// Flag to help report when cache has filled.
 	private boolean fullReported = false;
 	// To allow lookup by index
@@ -55,6 +56,7 @@ implements Map<TileIndex, TileTexture>
 				continue;
 			obsoleteGlTextures.add(id); // remember OpenGl texture IDs for later deletion.			
 		}
+		obsoleteGlTextures.addAll(removedOpenGLTexturesSinceClear);
 		map.clear();
 		fullReported = false;
 	}
@@ -76,7 +78,7 @@ implements Map<TileIndex, TileTexture>
 			return tile;
 		int id = texture1.getTextureId();
 		if (id > 0)
-			obsoleteGlTextures.add(id);
+		    removedOpenGLTexturesSinceClear.add(id);
 		return tile;
 	}
 
@@ -152,5 +154,10 @@ implements Map<TileIndex, TileTexture>
 	public Collection<TileTexture> values() {
 		return map.values();
 	}
+
+    public void storeObsoleteTextureIds(int[] textureIds) {
+        for (int i : textureIds)
+            obsoleteGlTextures.add(i);
+    }
 
 }

@@ -1,6 +1,7 @@
 package org.janelia.it.FlyWorkstation.gui.slice_viewer;
 
-import javax.media.opengl.GL2;
+// import javax.media.opengl.GL2;
+import javax.media.opengl.GL2GL3;
 
 import com.jogamp.opengl.util.texture.TextureCoords;
 
@@ -19,17 +20,17 @@ implements PyramidTexture
 	}
 	
 	@Override
-	public void enable(GL2 gl) {
-		gl.glEnable(GL2.GL_TEXTURE_2D);
+	public void enable(GL2GL3 gl) {
+		gl.glEnable(GL2GL3.GL_TEXTURE_2D);
 	}
 
 	@Override
-	public void bind(GL2 gl) {
+	public void bind(GL2GL3 gl) {
 		checkId(gl);
-		gl.glBindTexture(GL2.GL_TEXTURE_2D, textureId);
+		gl.glBindTexture(GL2GL3.GL_TEXTURE_2D, textureId);
 	}
 	
-	private void checkId(GL2 gl) {
+	private void checkId(GL2GL3 gl) {
 		if (textureId != 0)
 			return;
 		int ids[] = {0};
@@ -43,8 +44,8 @@ implements PyramidTexture
 	}
 
 	@Override
-	public void setTexParameteri(GL2 gl, int key, int value) {
-		gl.glTexParameteri(GL2.GL_TEXTURE_2D, key, value);
+	public void setTexParameteri(GL2GL3 gl, int key, int value) {
+		gl.glTexParameteri(GL2GL3.GL_TEXTURE_2D, key, value);
 	}
 
 	public boolean isLinearized() {
@@ -71,12 +72,12 @@ implements PyramidTexture
 	}
 
 	@Override
-	public void disable(GL2 gl) {
-		gl.glDisable(GL2.GL_TEXTURE_2D);
+	public void disable(GL2GL3 gl) {
+		gl.glDisable(GL2GL3.GL_TEXTURE_2D);
 	}
 
 	@Override
-	public void destroy(GL2 gl) {
+	public void destroy(GL2GL3 gl) {
 		if (textureId == 0)
 			return;
 		int ids[] = {textureId};

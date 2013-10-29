@@ -52,9 +52,9 @@ implements GL3Actor
     private PolygonalMesh mesh;
     private BoundingBox3d boundingBox;
     private DisplayMethod displayMethod 
-    // 	= DisplayMethod.GL2_VERTEX_BUFFER_OBJECTS; // GL2 only...
-    	  = DisplayMethod.GL2_DISPLAY_LISTS;
-    	// = DisplayMethod.VBO_WITH_SHADER;
+        // 	= DisplayMethod.GL2_VERTEX_BUFFER_OBJECTS; // GL2 only...
+    	//  = DisplayMethod.GL2_DISPLAY_LISTS;
+    	 = DisplayMethod.VBO_WITH_SHADER;
     // display list render method
     private int displayList = 0;
     // vertex buffer object render method

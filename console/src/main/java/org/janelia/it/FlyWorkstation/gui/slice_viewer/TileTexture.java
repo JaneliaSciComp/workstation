@@ -32,7 +32,7 @@ public class TileTexture
 	private TileIndex index;
 	// private URL url;
 	private TextureData2dGL textureData;
-	private PyramidTexture texture;
+	private PyramidTexture texture = null;
 	private AbstractTextureLoadAdapter loadAdapter;
 	
 	// time stamps for performance measurement
@@ -89,6 +89,7 @@ public class TileTexture
 			textureData.releaseMemory();
 		textureData = null;
 		setLoadStatus(LoadStatus.UNINITIALIZED);
+		// TODO - release OpenGL texture memory
 		texture = null;
 	}
 
@@ -137,6 +138,7 @@ public class TileTexture
 			return; // not ready to init
 		if (getLoadStatus().ordinal() >= LoadStatus.GL_LOADED.ordinal())
 			return; // already initialized
+		// TODO what if there is already a texture allocated...
 		texture = textureData.createTexture(gl);
 		setLoadStatus(LoadStatus.GL_LOADED);
 		uploadTextureTime = System.nanoTime();

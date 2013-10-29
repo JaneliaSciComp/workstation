@@ -1,9 +1,9 @@
 package org.janelia.it.FlyWorkstation.gui.slice_viewer;
 
-import javax.media.opengl.GL2;
+import javax.media.opengl.GL2GL3;
 
 public interface TextureDataI {
-	public PyramidTexture createTexture(GL2 gl);
+	public PyramidTexture createTexture(GL2GL3 gl);
 
 	/* 
 	 * Whether opengl texture parameters are set to
