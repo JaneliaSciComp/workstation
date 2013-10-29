@@ -12,5 +12,7 @@ import org.janelia.it.FlyWorkstation.gui.viewer3d.loader.ChannelMetaData;
  * appropriately into the channel data.  Channel data will be modified (it is an output).
  */
 public interface ChannelSplitStrategyI {
+    String MASK_MISMATCH_ERROR = "Mismatch between masks and channels.  Seeing multimask {}, which does not contain {}.";
+
     byte[] getUpdatedValue(ChannelMetaData channelMetaDatas, int originalMask, byte[] channelsData, int multiMaskId);
 }

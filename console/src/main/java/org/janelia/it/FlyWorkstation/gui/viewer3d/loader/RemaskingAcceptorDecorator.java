@@ -75,6 +75,10 @@ public class RemaskingAcceptorDecorator extends AbstractAcceptorDecorator {
                 // Got old mask.  Need to make changes?
                 if ( oldVolumeMask != 0 ) {
                     finalMaskNumber = multiMaskTracker.getMask( maskNumber, oldVolumeMask );
+                    // Exceeded mask possibilities.  Cannot add mask data.
+                    if ( finalMaskNumber < 0 ) {
+                        return 0;
+                    }
                 }
             }
             else {

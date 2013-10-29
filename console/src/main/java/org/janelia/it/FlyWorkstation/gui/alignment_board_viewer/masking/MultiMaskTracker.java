@@ -22,12 +22,14 @@ public class MultiMaskTracker {
     private Map<String,MultiMaskBean> altMasksToBean;
 
     private List<Integer> dumpedList;
+    private Set<Integer> retiredMasks;
 
     private int nextMaskNum;
 
     public MultiMaskTracker() {
         maskIdToBean = new HashMap<Integer, MultiMaskBean>();
         altMasksToBean = new HashMap<String, MultiMaskBean>();
+        retiredMasks = new HashSet<Integer>();
     }
 
     public void setFirstMaskNum( int firstMaskNum ) {
@@ -50,6 +52,7 @@ public class MultiMaskTracker {
      * @param oldVolumeMask found to have been set earlier, at the target cell of the volume.
      * @return existing old volume mask, if the discovered mask is already one of its 'constituents'. Otherwise,
      *        some newly-created volume mask, which inherits the old mask's constituents and adds the discovered one.
+     *        CAUTION: may return -1 if too many masks were sought.
      */
     public synchronized Integer getMask(int discoveredMask, int oldVolumeMask) {
         Integer rtnVal;
@@ -69,6 +72,10 @@ public class MultiMaskTracker {
                 fullInvertedKey = oldBean.getExtendedInvertedKey( discoveredMask );
                 // Decrement number of voxels referencing the old mask, because now we reference a new one.
                 oldBean.decrementVoxelCount();
+                if ( oldBean.getVoxelCount() == 0 ) {
+                    retiredMasks.add( oldBean.getMultiMaskNum() );
+                    maskIdToBean.remove( oldBean.getMultiMaskNum() );
+                }
             }
         }
         else {
@@ -152,7 +159,7 @@ public class MultiMaskTracker {
      * @param oldVolumeMask was occupying the voxel before this renderable encountered there.
      * @param fullInvertedKey a search key covering all sub-masks involved.
      * @param altMasks list of submasks against the oldVolumeMask. (N)
-     * @return a new multi-mask covering N+1
+     * @return a new multi-mask covering N+1.
      */
     private synchronized Integer getExtendedMultiMask(
             int discoveredMask, int oldVolumeMask, String fullInvertedKey, List<Integer> altMasks
@@ -178,13 +185,27 @@ public class MultiMaskTracker {
      *
      * @param discoveredMask identifier for some new renderable that claims occupancy of current cell.
      * @param oldVolumeMask identifier for old mask.  Does not include the discovered mask in its (possible) alts.
-     * @param altMasks
-     * @return
+     * @param altMasks base list of masks covered by the multimask created here.
+     * @return mask number of new multi-mask, or -1, to indicate no more are available.
      */
     private Integer createIncrementedMultimask(int discoveredMask, int oldVolumeMask, List<Integer> altMasks) {
         Integer rtnVal;// Need a new one.  C'tor sets voxel count to 1.
         MultiMaskBean newBean = new MultiMaskBean();
-        newBean.setMultiMaskNum( nextMaskNum );
+        if ( nextMaskNum >= 65536 ) {
+            Iterator<Integer> retiredMaskIterator = retiredMasks.iterator();
+            if ( retiredMaskIterator.hasNext() ) {
+                newBean.setMultiMaskNum( retiredMasks.iterator().next() );
+                retiredMasks.remove( newBean.getMultiMaskNum() ); // Back in circulation.
+            }
+            else {
+                // OUT of masks.
+                return -1;
+            }
+        }
+        else {
+            newBean.setMultiMaskNum( nextMaskNum );
+        }
+
         // Any mask in the list referenced by the old mask, should be referenced by the newly-created mask.
         //  In addition, the newly-created mask's list must also contain the new mask that the calling
         //  process claims to belong in this slot.
@@ -202,7 +223,9 @@ public class MultiMaskTracker {
 
         maskIdToBean.put( nextMaskNum, newBean );
         altMasksToBean.put( newBean.getInvertedKey(), newBean );
-        nextMaskNum ++;
+        if ( nextMaskNum < 65536 ) {
+            nextMaskNum ++;
+        }
 
         rtnVal = newBean.getMultiMaskNum();
         return rtnVal;
