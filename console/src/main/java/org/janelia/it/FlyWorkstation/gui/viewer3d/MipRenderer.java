@@ -68,7 +68,6 @@ class MipRenderer
         }
 
         final GL2 gl = glDrawable.getGL().getGL2();
-        gl.glPushAttrib(GL2.GL_TRANSFORM_BIT);
         gl.glMatrixMode(GL2.GL_PROJECTION);
         gl.glPushMatrix();
         updateProjection(gl);
@@ -98,7 +97,6 @@ class MipRenderer
         gl.glPopMatrix();
         gl.glMatrixMode(GL2.GL_MODELVIEW);
         gl.glPopMatrix();
-        gl.glPopAttrib();
         gl.glFlush();
     }
  
