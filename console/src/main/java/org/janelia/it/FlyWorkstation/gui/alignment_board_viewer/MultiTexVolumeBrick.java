@@ -123,7 +123,6 @@ public class MultiTexVolumeBrick implements VolumeBrickI
             createSyntheticData();
         }
 
-		//gl.glPushAttrib(GL2.GL_TEXTURE_BIT | GL2.GL_ENABLE_BIT);
         gl.glEnable(GL2.GL_TEXTURE);
         if (bSignalTextureNeedsUpload) {
             uploadSignalTexture(gl);
@@ -168,8 +167,7 @@ public class MultiTexVolumeBrick implements VolumeBrickI
             }
         }
 		// tidy up
-		//gl.glPopAttrib();
-        //gl.glDisable(GL2.GL_TEXTURE);
+        gl.glDisable(GL2.GL_TEXTURE);
         reportError( gl, "mult-tex init exit" );
 		bIsInitialized = true;
 	}
@@ -204,7 +202,6 @@ public class MultiTexVolumeBrick implements VolumeBrickI
 		gl.glPushAttrib(GL2.GL_LIGHTING_BIT | GL2.GL_TEXTURE_BIT | GL2.GL_ENABLE_BIT);
 		gl.glShadeModel(GL2.GL_FLAT);
         gl.glDisable(GL2.GL_LIGHTING);
-        gl.glEnable(GL2.GL_TEXTURE_3D);
 
         reportError( gl, "display mux brick - attribs" );
 
