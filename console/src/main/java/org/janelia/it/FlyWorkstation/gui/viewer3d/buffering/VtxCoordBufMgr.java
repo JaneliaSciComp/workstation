@@ -2,6 +2,7 @@ package org.janelia.it.FlyWorkstation.gui.viewer3d.buffering;
 
 import org.janelia.it.FlyWorkstation.geom.CoordinateAxis;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.texture.TextureMediator;
+import org.janelia.it.FlyWorkstation.shared.annotations.NotThreadSafe;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -334,6 +335,7 @@ public class VtxCoordBufMgr {
     }
 
     /** Convenience method to cut down on repeated code. */
+    @NotThreadSafe(why="glBufferData uses glBindBuffer result as state, and this should never be worker-thread-called")
     private int[] enableBuffersOfType(GL2 gl, Buffer[] buffers, int type ) {
         // Make handles for subsequent use.
         int[] rtnVal = new int[ NUM_BUFFERS_PER_TYPE ];
