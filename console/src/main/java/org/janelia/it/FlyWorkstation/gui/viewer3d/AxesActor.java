@@ -169,8 +169,6 @@ public class AxesActor implements GLActor
         gl.glDisable( GL2.GL_LINE_SMOOTH );
         reportError( gl, "Display of axes-actor 6" );
 
-//        gl.glDisable(GL2.GL_DEPTH_TEST);
-
         gl.glPopAttrib();
         reportError(gl, "Axes-actor, end of display.");
 
