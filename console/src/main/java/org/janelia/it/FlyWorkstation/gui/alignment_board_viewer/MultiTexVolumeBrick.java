@@ -199,7 +199,6 @@ public class MultiTexVolumeBrick implements VolumeBrickI
 		//gl.glColor3d(1,1,0.3);
 		// displayVoxelCornerBox(gl);
 		// a stack of transparent slices looks like a volume
-		gl.glPushAttrib(GL2.GL_LIGHTING_BIT | GL2.GL_TEXTURE_BIT | GL2.GL_ENABLE_BIT);
 		gl.glShadeModel(GL2.GL_FLAT);
         gl.glDisable(GL2.GL_LIGHTING);
 
@@ -236,7 +235,6 @@ public class MultiTexVolumeBrick implements VolumeBrickI
             reportError( gl, "display mux brick - unload shader" );
         }
         gl.glDisable(GL2.GL_BLEND);
-		gl.glPopAttrib();
         reportError(gl, "Volume Brick, end of display.");
 
     }
