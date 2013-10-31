@@ -90,7 +90,7 @@ public class RGBExcludableVolumeBrick implements VolumeBrickI
         GL2 gl = glDrawable.getGL().getGL2();
         initMediators( gl );
 
-		gl.glPushAttrib(GL2.GL_TEXTURE_BIT | GL2.GL_ENABLE_BIT);
+		//gl.glPushAttrib(GL2.GL_TEXTURE_BIT | GL2.GL_ENABLE_BIT);
 
         if (bSignalTextureNeedsUpload) {
             uploadSignalTexture(gl);
@@ -120,7 +120,7 @@ public class RGBExcludableVolumeBrick implements VolumeBrickI
             }
         }
 		// tidy up
-		gl.glPopAttrib();
+		//gl.glPopAttrib();
 		bIsInitialized = true;
 	}
 
@@ -144,20 +144,18 @@ public class RGBExcludableVolumeBrick implements VolumeBrickI
 		//gl.glColor3d(1,1,0.3);
 		// displayVoxelCornerBox(gl);
 		// a stack of transparent slices looks like a volume
-		gl.glPushAttrib(GL2.GL_LIGHTING_BIT | GL2.GL_TEXTURE_BIT | GL2.GL_ENABLE_BIT);
 		gl.glShadeModel(GL2.GL_FLAT);
         gl.glDisable(GL2.GL_LIGHTING);
         gl.glEnable(GL2.GL_TEXTURE_3D);
 
         // set blending to enable transparent voxels
+        gl.glEnable(GL2.GL_BLEND);
         if (renderMethod == RenderMethod.ALPHA_BLENDING) {
-            gl.glEnable(GL2.GL_BLEND);
             gl.glBlendEquation(GL2.GL_FUNC_ADD);
             // Weight source by GL_ONE because we are using premultiplied alpha.
             gl.glBlendFunc(GL2.GL_ONE, GL2.GL_ONE_MINUS_SRC_ALPHA);
         }
         else if (renderMethod == RenderMethod.MAXIMUM_INTENSITY) {
-    	    gl.glEnable(GL2.GL_BLEND);
             gl.glBlendEquation(GL2.GL_MAX);
             gl.glBlendFunc(GL2.GL_ONE, GL2.GL_DST_ALPHA);
         }
@@ -170,7 +168,9 @@ public class RGBExcludableVolumeBrick implements VolumeBrickI
 		if (bUseShader) {
             shader.unload(gl);
         }
-		gl.glPopAttrib();
+
+        gl.glDisable( GL2.GL_TEXTURE_3D );
+        gl.glDisable( GL2.GL_BLEND );
 	}
 
 	/**
