@@ -1,11 +1,6 @@
 package org.janelia.it.FlyWorkstation.gui.viewer3d.error_trap;
 
-import javax.media.opengl.DebugGL2;
-import javax.media.opengl.GL;
-import javax.media.opengl.GL2;
-import javax.media.opengl.GL2ES1;
-import javax.media.opengl.GLContext;
-import javax.media.opengl.GLException;
+import javax.media.opengl.*;
 
 /**
  * Created with IntelliJ IDEA.
@@ -20,9 +15,10 @@ public class JaneliaDebugGL2 extends DebugGL2 {
     private GL2 downstreamGL2;
     private GLContext _context;
 
-    public JaneliaDebugGL2(GL2 downstreamGL2)
+    public JaneliaDebugGL2(GLAutoDrawable glAutoDrawable)
     {
-        super( downstreamGL2 );
+        super( glAutoDrawable.getGL().getGL2() );
+        GL2 downstreamGL2 = glAutoDrawable.getGL().getGL2();
         this.downstreamGL2 = downstreamGL2;
         this._context = downstreamGL2.getContext();
     }

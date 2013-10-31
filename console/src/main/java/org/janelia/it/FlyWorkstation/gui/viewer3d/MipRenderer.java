@@ -4,13 +4,14 @@ import org.janelia.it.FlyWorkstation.geom.Rotation3d;
 import org.janelia.it.FlyWorkstation.geom.UnitVec3;
 import org.janelia.it.FlyWorkstation.geom.Vec3;
 import org.janelia.it.FlyWorkstation.gui.camera.BasicObservableCamera3d;
+import org.janelia.it.FlyWorkstation.gui.opengl.GL2Adapter;
+import org.janelia.it.FlyWorkstation.gui.opengl.GL2AdapterFactory;
 import org.janelia.it.FlyWorkstation.gui.opengl.GLActor;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.error_trap.JaneliaDebugGL2;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.media.opengl.DebugGL2;
-import javax.media.opengl.GL2;
 import javax.media.opengl.GLAutoDrawable;
 import java.awt.*;
  
@@ -67,11 +68,12 @@ class MipRenderer
             hasBeenReset = true;
         }
 
-        final GL2 gl = glDrawable.getGL().getGL2();
-        gl.glMatrixMode(GL2.GL_PROJECTION);
+        //final GL2 gl = glDrawable.getGL().getGL2();
+        final GL2Adapter gl = GL2AdapterFactory.createGL2Adapter( glDrawable );
+        gl.glMatrixMode(GL2Adapter.MatrixMode.GL_PROJECTION);
         gl.glPushMatrix();
         updateProjection(gl);
-        gl.glMatrixMode(GL2.GL_MODELVIEW);
+        gl.glMatrixMode(GL2Adapter.MatrixMode.GL_MODELVIEW);
         gl.glPushMatrix();
         gl.glLoadIdentity();
 
@@ -85,7 +87,7 @@ class MipRenderer
                 u.x(), u.y(), u.z()); // up vector in ground
 
         if ( System.getProperty( "glComposablePipelineDebug", "f" ).toLowerCase().startsWith("t") ) {
-            DebugGL2 debugGl2 = new JaneliaDebugGL2(gl);
+            DebugGL2 debugGl2 = new JaneliaDebugGL2(glDrawable);
             glDrawable.setGL(debugGl2);
         }
 
@@ -93,11 +95,10 @@ class MipRenderer
         for (GLActor actor : localActors)
             actor.display(glDrawable);
 
-        gl.glMatrixMode(GL2.GL_PROJECTION);
+        gl.glMatrixMode(GL2Adapter.MatrixMode.GL_PROJECTION);
         gl.glPopMatrix();
-        gl.glMatrixMode(GL2.GL_MODELVIEW);
+        gl.glMatrixMode(GL2Adapter.MatrixMode.GL_MODELVIEW);
         gl.glPopMatrix();
-        gl.glFlush();
     }
  
     public double glUnitsPerPixel() {
@@ -120,11 +121,12 @@ class MipRenderer
         this.heightInPixels = height;
 
         // System.out.println("reshape() called: x = "+x+", y = "+y+", width = "+width+", height = "+height);
-        final GL2 gl = glDrawable.getGL().getGL2();
+        //final GL2 gl = glDrawable.getGL().getGL2();
+        GL2Adapter gl2Adapter = GL2AdapterFactory.createGL2Adapter( glDrawable );
  
-        updateProjection(gl);
-        gl.glMatrixMode(GL2.GL_MODELVIEW);
-        gl.glLoadIdentity();
+        updateProjection(gl2Adapter);
+        gl2Adapter.glMatrixMode(GL2Adapter.MatrixMode.GL_MODELVIEW);
+        gl2Adapter.glLoadIdentity();
 
         double previousFocusDistance = volumeModel.getCamera3d().getFocus().getZ();
         if ( previousFocusDistance == DEFAULT_CAMERA_FOCUS_DISTANCE ) {
@@ -158,20 +160,19 @@ class MipRenderer
 		volumeModel.getFocusInGround().plusEquals(getVolumeModel().getCamera3d().getRotation().times(t));
 	}
 	
-	public void updateProjection(GL2 gl) {
-        gl.glViewport(0, 0, (int)widthInPixels, (int)heightInPixels);
+	public void updateProjection(GL2Adapter gl) {
+        gl.getGL2GL3().glViewport(0, 0, (int) widthInPixels, (int) heightInPixels);
         double verticalApertureInDegrees = 180.0/Math.PI * 2.0 * Math.abs(
         		Math.atan2(heightInPixels/2.0, DISTANCE_TO_SCREEN_IN_PIXELS));
-        gl.glPushAttrib(GL2.GL_TRANSFORM_BIT);
-        gl.glMatrixMode(GL2.GL_PROJECTION);
+        gl.glMatrixMode( GL2Adapter.MatrixMode.GL_PROJECTION );
         gl.glLoadIdentity();
         final float h = (float) widthInPixels / (float) heightInPixels;
         double cameraFocusDistance = Math.abs(volumeModel.getCamera3d().getFocus().getZ());
         glu.gluPerspective(verticalApertureInDegrees,
-        		h, 
-        		0.5 * cameraFocusDistance, 
+        		h,
+        		0.5 * cameraFocusDistance,
         		2.0 * cameraFocusDistance);
-        gl.glPopAttrib();
+
 	}
 	
 	public void zoom(double zoomRatio) {
