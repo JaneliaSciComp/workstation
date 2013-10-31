@@ -1,20 +1,27 @@
-/*
- * Created by IntelliJ IDEA.
- * User: rokickik
- * Date: 6/16/11
- * Time: 9:20 AM
- */
 package org.janelia.it.FlyWorkstation.gui.dialogs;
+
+import java.awt.BorderLayout;
+import java.awt.Color;
+import java.awt.Dimension;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.awt.event.ComponentAdapter;
+import java.awt.event.ComponentEvent;
+
+import javax.swing.BorderFactory;
+import javax.swing.Box;
+import javax.swing.BoxLayout;
+import javax.swing.JButton;
+import javax.swing.JPanel;
+import javax.swing.JScrollPane;
+import javax.swing.JTextArea;
+import javax.swing.KeyStroke;
 
 import org.janelia.it.FlyWorkstation.gui.framework.actions.Action;
 import org.janelia.it.FlyWorkstation.gui.framework.keybind.KeyboardShortcut;
 import org.janelia.it.FlyWorkstation.gui.framework.keybind.ShortcutTextField;
 import org.janelia.it.FlyWorkstation.gui.framework.outline.OntologyOutline;
 import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr;
-
-import javax.swing.*;
-import java.awt.*;
-import java.awt.event.*;
 
 /**
  * A dialog for setting a key binding to an action. THe dialog should be shown with showForAction.
@@ -27,7 +34,7 @@ public class KeyBindDialog extends ModalDialog {
     private ShortcutTextField shortcutField;
     private Action actionToBind;
 
-    public KeyBindDialog(final OntologyOutline ontologyOutline) {
+    public KeyBindDialog(final OntologyOutline ontologyOutline2) {
 
         setTitle("Enter Keyboard Shortcut");
 
@@ -79,7 +86,7 @@ public class KeyBindDialog extends ModalDialog {
 
 	            KeyboardShortcut keyboardShortcut = getKeyboardShortcut();
 	            SessionMgr.getKeyBindings().setBinding(keyboardShortcut, actionToBind);
-	            SessionMgr.getKeyBindings().saveOntologyKeybinds(ontologyOutline.getCurrentOntology());
+	            SessionMgr.getKeyBindings().saveOntologyKeybinds(SessionMgr.getBrowser().getOntologyOutline().getCurrentOntology());
 	            setVisible(false);
 			}
 		});

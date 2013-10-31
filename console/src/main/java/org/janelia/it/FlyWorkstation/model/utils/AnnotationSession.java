@@ -85,7 +85,8 @@ public class AnnotationSession {
                 categories = new ArrayList<OntologyElement>();
                 List<Entity> tmps = ModelMgr.getModelMgr().getCategoriesForAnnotationSession(task.getObjectId());
                 for (Entity tmp : tmps) {
-                    categories.add(new OntologyElement(tmp, null));
+                    // TODO: THIS IS NOW BROKEN DUE TO CODE CHANGES IN ONTOLOGY ELEMENT
+//                    categories.add(new OntologyElement(tmp, null));
                 }
             }
             catch (Exception e) {

@@ -2,22 +2,19 @@ package org.janelia.it.FlyWorkstation.gui.dialogs.choose;
 
 import java.awt.event.MouseEvent;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
-import javax.swing.*;
+import javax.swing.JTree;
+import javax.swing.SwingUtilities;
 import javax.swing.tree.DefaultMutableTreeNode;
 import javax.swing.tree.TreePath;
 import javax.swing.tree.TreeSelectionModel;
 
-import org.janelia.it.FlyWorkstation.gui.framework.actions.Action;
 import org.janelia.it.FlyWorkstation.gui.framework.actions.AnnotateAction;
-import org.janelia.it.FlyWorkstation.gui.framework.actions.NavigateToNodeAction;
-import org.janelia.it.FlyWorkstation.gui.framework.outline.OntologyTree;
-import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr;
+import org.janelia.it.FlyWorkstation.gui.framework.outline.OntologyOutline;
+import org.janelia.it.jacs.model.entity.Entity;
+import org.janelia.it.jacs.model.entity.EntityData;
 import org.janelia.it.jacs.model.ontology.OntologyElement;
-import org.janelia.it.jacs.model.ontology.OntologyRoot;
 
 /**
  * An ontology term chooser that can display an ontology specified by an OntologyRoot and allows the user to select
@@ -27,16 +24,21 @@ import org.janelia.it.jacs.model.ontology.OntologyRoot;
  */
 public class OntologyElementChooser extends AbstractChooser<OntologyElement> {
 
-    private final OntologyTree ontologyTree;
+    private OntologyOutline ontologyOutline;
     private boolean canAnnotate = false;
     
-    public OntologyElementChooser(String title, OntologyRoot root) {
-    	
+    public OntologyElementChooser(String title, Entity ontologyRoot) {
     	setTitle(title);
     	
-        ontologyTree = new OntologyTree() {
+        ontologyOutline = new OntologyOutline() {
+            
+            @Override
+            public List<Entity> loadRootList() throws Exception {
+                return null;
+            }
+
             protected void nodeDoubleClicked(MouseEvent e) {
-                    DefaultMutableTreeNode node = ontologyTree.getDynamicTree().getCurrentNode();
+                    DefaultMutableTreeNode node = ontologyOutline.getDynamicTree().getCurrentNode();
                     OntologyElement element = (OntologyElement) node.getUserObject();
                     if(canAnnotate){
                         AnnotateAction action = new AnnotateAction();
@@ -49,31 +51,39 @@ public class OntologyElementChooser extends AbstractChooser<OntologyElement> {
                     }
             }
         };
-        ontologyTree.initializeTree(root);
-        setMultipleSelection(true);
-        addChooser(ontologyTree);
-        ontologyTree.getDynamicTree().expandAll(true);
-
+        
+        ontologyOutline.setLazyLoading(false);
+        ontologyOutline.setShowToolbar(false);
+        ontologyOutline.showOntologyTree(ontologyRoot);
+        
+        SwingUtilities.invokeLater(new Runnable() {
+            @Override
+            public void run() {
+                setMultipleSelection(true);
+                addChooser(ontologyOutline);
+            }
+        });
     }
 
     public void setMultipleSelection(boolean multipleSelection) {
-    	ontologyTree.getTree().getSelectionModel().setSelectionMode(
+    	JTree tree = ontologyOutline.getTree();
+    	TreeSelectionModel selectionModel = tree.getSelectionModel();
+    	selectionModel.setSelectionMode(
     			multipleSelection ? TreeSelectionModel.DISCONTIGUOUS_TREE_SELECTION : TreeSelectionModel.SINGLE_TREE_SELECTION);
     }
     
     protected List<OntologyElement> choosePressed() {
     	List<OntologyElement> chosen = new ArrayList<OntologyElement>();
-        for (TreePath path : ontologyTree.getTree().getSelectionPaths()) {
+        for (TreePath path : ontologyOutline.getTree().getSelectionPaths()) {
             DefaultMutableTreeNode node = (DefaultMutableTreeNode) path.getLastPathComponent();
-            OntologyElement element = (OntologyElement) node.getUserObject();
-            chosen.add(element);
+            chosen.add(ontologyOutline.getOntologyElement(node));
         }
 
-        DefaultMutableTreeNode node1 = ontologyTree.getDynamicTree().getCurrentNode();
-        OntologyElement element1 = (OntologyElement) node1.getUserObject();
-        if(canAnnotate){
+        DefaultMutableTreeNode currNode = ontologyOutline.getDynamicTree().getCurrentNode();
+        OntologyElement currElement = ontologyOutline.getOntologyElement(currNode);
+        if (canAnnotate){
             AnnotateAction action = new AnnotateAction();
-            action.init(element1);
+            action.init(currElement);
             action.doAction();
             OntologyElementChooser.this.setVisible(false);
         }

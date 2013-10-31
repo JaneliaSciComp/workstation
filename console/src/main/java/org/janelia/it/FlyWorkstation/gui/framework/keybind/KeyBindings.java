@@ -1,9 +1,3 @@
-/*
- * Created by IntelliJ IDEA.
- * User: rokickik
- * Date: 6/15/11
- * Time: 12:32 PM
- */
 package org.janelia.it.FlyWorkstation.gui.framework.keybind;
 
 import java.util.ArrayList;
@@ -17,7 +11,8 @@ import org.janelia.it.FlyWorkstation.gui.framework.actions.OntologyElementAction
 import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.FlyWorkstation.model.utils.OntologyKeyBind;
 import org.janelia.it.FlyWorkstation.model.utils.OntologyKeyBindings;
-import org.janelia.it.jacs.model.ontology.OntologyRoot;
+import org.janelia.it.jacs.model.entity.Entity;
+import org.janelia.it.jacs.shared.utils.EntityUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -112,7 +107,7 @@ public class KeyBindings {
      *
      * @param root
      */
-    public void loadOntologyKeybinds(OntologyRoot root, Map<Long, Action> entityActionMap) {
+    public void loadOntologyKeybinds(Entity root, Map<String, Action> entityActionMap) {
 
         log.info("Loading key bindings for ontology: "+root.getId());
 
@@ -127,13 +122,14 @@ public class KeyBindings {
 
                 try {
                     long entityId = bind.getOntologyTermId();
-                    Action action = entityActionMap.get(entityId);
-                    if (action == null) {
-                        log.warn("Ontology does not have an action for element " + entityId);
+                    
+                    for(String uniqueId : entityActionMap.keySet()) {
+                        if (uniqueId.endsWith("e_"+entityId)) {
+                            Action action = entityActionMap.get(uniqueId);
+                            ontologyBindings.put(shortcut, action);
+                        }
                     }
-                    else {
-                        ontologyBindings.put(shortcut, action);
-                    }
+                    
                 }
                 catch (Exception e) {
                 	log.error("Could not load key binding from user preference '" + bind.getKey() + "'.",e);
@@ -150,7 +146,7 @@ public class KeyBindings {
     /**
      * Save the key binding preferences for a given ontology.
      */
-    public void saveOntologyKeybinds(OntologyRoot root) {
+    public void saveOntologyKeybinds(Entity root) {
 
     	log.info("Saving key bindings for ontology "+root.getId());
 
@@ -160,7 +156,7 @@ public class KeyBindings {
                 if (entry.getValue() instanceof OntologyElementAction) {
                     KeyboardShortcut shortcut = entry.getKey();
                     OntologyElementAction action = (OntologyElementAction) entry.getValue();
-                    ontologyKeyBindings.addBinding(shortcut.toString(), action.getOntologyElement().getId());
+                    ontologyKeyBindings.addBinding(shortcut.toString(), EntityUtils.getEntityIdFromUniqueId(action.getUniqueId()));
                 }
             }
 
@@ -175,7 +171,7 @@ public class KeyBindings {
     /**
      * Remove all key binds referencing the given ontology.
      */
-    public void removeOntologyKeybinds(OntologyRoot root) {
+    public void removeOntologyKeybinds(Entity root) {
 
         try {
             ModelMgr.getModelMgr().removeOntologyKeyBindings(root.getId());

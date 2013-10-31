@@ -152,9 +152,14 @@ public class Icons {
      * @return
      */
     public static ImageIcon getIcon(Entity entity, boolean large) {
+        
+        if (entity.getEntityType()==null) {
+            return getIcon(large ? "error_large.png" : "bullet_error.png");
+        }
+        
         String type = entity.getEntityType().getName();
         
-        if (EntityConstants.TYPE_FOLDER.equals(type)) {
+        if (EntityConstants.TYPE_FOLDER.equals(type) || EntityConstants.TYPE_ONTOLOGY_ROOT.equals(type)) {
             if (large) return getIcon("folder_large.png");
             
             String typeSuffix = "";
@@ -238,7 +243,7 @@ public class Icons {
         else if (EntityConstants.TYPE_NEURON_FRAGMENT_COLLECTION.equals(type) || EntityConstants.TYPE_CURATED_NEURON_COLLECTION.equals(type)) {
             return getIcon(large ? "folder_files_large.png" : "folder_brick.png");
         }
-        else if (EntityConstants.TYPE_ONTOLOGY_ELEMENT.equals(type) || EntityConstants.TYPE_ONTOLOGY_ROOT.equals(type)) {
+        else if (EntityConstants.TYPE_ONTOLOGY_ELEMENT.equals(type)) {
             return getOntologyIcon(entity);
         }
         else if (EntityConstants.TYPE_ANNOTATION.equals(type)) {

@@ -35,7 +35,7 @@ public class RemoveAnnotationTermAction implements Action {
 	
     @Override
     public String getName() {
-    	return selectedEntities.size()>1?"Delete \""+annotationKeyName+"\" Annotation From "+selectedEntities.size()+" Entities":"Delete Annotation";
+    	return selectedEntities.size()>1?"  Remove \""+annotationKeyName+"\" Annotation From "+selectedEntities.size()+" Entities":"  Remove Annotation";
     }
 	
     @Override

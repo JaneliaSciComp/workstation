@@ -8,6 +8,8 @@ import org.janelia.it.FlyWorkstation.api.entity_model.access.ModelMgrAdapter;
 import org.janelia.it.FlyWorkstation.api.entity_model.management.ModelMgr;
 import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.FlyWorkstation.model.entity.RootedEntity;
+import org.janelia.it.jacs.model.entity.Entity;
+import org.janelia.it.jacs.shared.utils.EntityUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -20,7 +22,7 @@ public class EntityDetailsOutline extends JPanel implements Refreshable, Activat
 
     private static final Logger log = LoggerFactory.getLogger(EntityDetailsOutline.class);
     
-    private RootedEntity currRootedEntity;
+    private Entity entity;
     private EntityDetailsPanel entityDetailsPanel;
     private ModelMgrAdapter mml;
 
@@ -29,15 +31,23 @@ public class EntityDetailsOutline extends JPanel implements Refreshable, Activat
         this.entityDetailsPanel = new EntityDetailsPanel();
         this.mml = new ModelMgrAdapter() {
             @Override
-            public void entitySelected(String category, String entityId, boolean clearAll) {
+            public void entitySelected(String category, String uniqueId, boolean clearAll) {
                 if (clearAll) {
-                    SessionMgr.getBrowser().getViewerManager().showEntityInInspector(SessionMgr.getBrowser().getEntityOutline().getRootedEntity(entityId));
+                    try {
+                        Long entityId = EntityUtils.getEntityIdFromUniqueId(uniqueId);
+                        if (entityId!=null) {
+                            SessionMgr.getBrowser().getViewerManager().showEntityInInspector(ModelMgr.getModelMgr().getEntityById(entityId));
+                        }
+                    }
+                    catch (Exception e) {
+                        SessionMgr.getSessionMgr().handleException(e);
+                    }
                 }
             }
 
             @Override
             public void entityDeselected(String category, String entityId) {
-                if (currRootedEntity!=null && currRootedEntity.getId().equals(entityId)) {
+                if (entity!=null && entity.getId().equals(entityId)) {
                     SessionMgr.getBrowser().getViewerManager().showEntityInInspector(null);
                 }
             }
@@ -49,27 +59,27 @@ public class EntityDetailsOutline extends JPanel implements Refreshable, Activat
         entityDetailsPanel.showLoadingIndicator();
     }
     
-    public void loadRootedEntity(RootedEntity rootedEntity) {
-        if (rootedEntity==null) return;
-        if (currRootedEntity!=null && currRootedEntity.getId().equals(rootedEntity.getId())) {
+    public void loadEntity(Entity entity) {
+        if (entity==null) return;
+        if (this.entity!=null && this.entity.getId().equals(entity.getId())) {
             return;
         }
-        this.currRootedEntity = rootedEntity;
-        entityDetailsPanel.loadRootedEntity(rootedEntity, null);
+        this.entity = entity;
+        entityDetailsPanel.loadEntity(entity, null);
     }
     
     @Override
     public void refresh() {
-        RootedEntity toLoad = currRootedEntity;
-        currRootedEntity = null;
-        loadRootedEntity(toLoad);
+        Entity toLoad = this.entity;
+        this.entity = null;
+        loadEntity(toLoad);
     }
 
     @Override
     public void totalRefresh() {
-        ModelMgr.getModelMgr().invalidateCache(currRootedEntity.getEntity(), false);
+        ModelMgr.getModelMgr().invalidateCache(entity, false);
         try {
-            currRootedEntity.setEntity(ModelMgr.getModelMgr().getEntityById(currRootedEntity.getEntityId()));
+            this.entity = ModelMgr.getModelMgr().getEntityById(entity.getId());
         }
         catch (Exception e) {
             SessionMgr.getSessionMgr().handleException(e);

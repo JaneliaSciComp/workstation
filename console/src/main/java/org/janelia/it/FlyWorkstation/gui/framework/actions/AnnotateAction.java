@@ -8,15 +8,22 @@ import javax.swing.ProgressMonitor;
 
 import org.janelia.it.FlyWorkstation.api.entity_model.management.ModelMgr;
 import org.janelia.it.FlyWorkstation.gui.dialogs.AnnotationBuilderDialog;
+import org.janelia.it.FlyWorkstation.gui.framework.outline.OntologyOutline;
 import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.FlyWorkstation.model.entity.RootedEntity;
 import org.janelia.it.FlyWorkstation.model.utils.AnnotationSession;
 import org.janelia.it.FlyWorkstation.shared.workers.SimpleWorker;
 import org.janelia.it.jacs.model.entity.Entity;
+import org.janelia.it.jacs.model.entity.EntityData;
 import org.janelia.it.jacs.model.ontology.OntologyAnnotation;
 import org.janelia.it.jacs.model.ontology.OntologyElement;
-import org.janelia.it.jacs.model.ontology.types.*;
+import org.janelia.it.jacs.model.ontology.types.Category;
 import org.janelia.it.jacs.model.ontology.types.Enum;
+import org.janelia.it.jacs.model.ontology.types.EnumItem;
+import org.janelia.it.jacs.model.ontology.types.EnumText;
+import org.janelia.it.jacs.model.ontology.types.Interval;
+import org.janelia.it.jacs.model.ontology.types.OntologyElementType;
+import org.janelia.it.jacs.model.ontology.types.Text;
 import org.janelia.it.jacs.shared.utils.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -30,7 +37,7 @@ public class AnnotateAction extends OntologyElementAction {
 	
 	private static final Logger log = LoggerFactory.getLogger(AnnotateAction.class);
 	
-    Callable<Void> doSuccess = null;
+    private Callable<Void> doSuccess = null;
 
     public AnnotateAction() {
     }
@@ -41,7 +48,19 @@ public class AnnotateAction extends OntologyElementAction {
 
     @Override
     public void doAction() {
-        SessionMgr.getSessionMgr().getActiveBrowser().getOntologyOutline().navigateToOntologyElement(getOntologyElement());
+        
+        final OntologyOutline ontologyOutline = SessionMgr.getSessionMgr().getActiveBrowser().getOntologyOutline();
+        
+        OntologyElement element = getOntologyElement();
+        if (element==null) {
+            EntityData entityTermEd = ontologyOutline.getEntityDataByUniqueId(getUniqueId());
+            if (entityTermEd==null) {
+                throw new IllegalStateException("Cannot find entity data with unique id: "+getUniqueId());
+            }
+            element = ontologyOutline.getOntologyElement(entityTermEd);
+        }
+        
+        ontologyOutline.navigateToOntologyElement(element);
         final List<RootedEntity> selectedEntities = SessionMgr.getBrowser().getViewerManager().getActiveViewer().getSelectedEntities();
         
         if (selectedEntities.isEmpty()) {
@@ -50,8 +69,7 @@ public class AnnotateAction extends OntologyElementAction {
             return;
         }
 
-        final OntologyElement term = getOntologyElement();
-        final OntologyElementType type = term.getType();
+        final OntologyElementType type = element.getType();
 
         if (type instanceof Category || type instanceof Enum) {
             // Cannot annotate with a category or enum
@@ -63,7 +81,7 @@ public class AnnotateAction extends OntologyElementAction {
         Object value = null;
         if (type instanceof Interval) {
             value = JOptionPane.showInputDialog(SessionMgr.getSessionMgr().getActiveBrowser(), 
-            		"Value:\n", term.getName(), JOptionPane.PLAIN_MESSAGE, null, null, null);
+            		"Value:\n", element.getName(), JOptionPane.PLAIN_MESSAGE, null, null, null);
 
             if (StringUtils.isEmpty((String)value)) return;
             Double dvalue = Double.parseDouble((String)value);
@@ -79,7 +97,7 @@ public class AnnotateAction extends OntologyElementAction {
         	OntologyElement valueEnum = ((EnumText) type).getValueEnum();
         	
         	if (valueEnum==null) {
-        		Exception error = new Exception(term.getName()+" has no supporting enumeration.");
+        		Exception error = new Exception(element.getName()+" has no supporting enumeration.");
 				SessionMgr.getSessionMgr().handleException(error);
         		return;
         	}
@@ -93,7 +111,7 @@ public class AnnotateAction extends OntologyElementAction {
         	}
         	
         	value = JOptionPane.showInputDialog(SessionMgr.getSessionMgr().getActiveBrowser(), 
-            		"Value:\n", term.getName(), JOptionPane.PLAIN_MESSAGE, null, selectionValues, null);
+            		"Value:\n", element.getName(), JOptionPane.PLAIN_MESSAGE, null, selectionValues, null);
         	if (value==null) return;
         }
         else if (type instanceof Text) {
@@ -105,7 +123,7 @@ public class AnnotateAction extends OntologyElementAction {
             if (value==null || value.equals("")) return;
         }
         
-        final OntologyElement finalTerm = term;
+        final OntologyElement finalTerm = element;
         final Object finalValue = value;
         
         SimpleWorker worker = new SimpleWorker() {

@@ -255,24 +255,11 @@ public class Browser extends JFrame implements Cloneable {
         sessionOutline = new SessionOutline(this);
         // todo We should probably pass the user info to the server rather than filter the complete list on the console.
 		
-        
-        final Comparator<Entity> commonRootComparator = new Comparator<Entity>(){
-            public int compare(Entity o1, Entity o2) {
-                return ComparisonChain.start()
-                    .compareTrueFirst(ModelMgrUtils.isOwner(o1), ModelMgrUtils.isOwner(o2))
-                    .compare(o1.getOwnerKey(), o2.getOwnerKey())
-                    .compareTrueFirst(EntityUtils.isProtected(o1), EntityUtils.isProtected(o2))
-                    .compareTrueFirst(o1.getName().equals(EntityConstants.NAME_DATA_SETS), o2.getName().equals(EntityConstants.NAME_DATA_SETS))
-                    .compareTrueFirst(o1.getName().equals(EntityConstants.NAME_SHARED_DATA), o2.getName().equals(EntityConstants.NAME_SHARED_DATA))
-                    .compare(o1.getId(), o2.getId()).result();
-            }
-        };
-        
         entityOutline = new EntityOutline() {
 			@Override
 			public List<Entity> loadRootList() throws Exception {
 				List<Entity> roots = ModelMgr.getModelMgr().getCommonRootEntities();
-				Collections.sort(roots, commonRootComparator);
+				Collections.sort(roots, new EntityRootComparator());
 				return roots;
 			}
 		};
@@ -303,7 +290,14 @@ public class Browser extends JFrame implements Cloneable {
 		
         taskOutline = new TaskOutline(this);
         
-        ontologyOutline = new OntologyOutline();
+        ontologyOutline = new OntologyOutline() {
+            @Override
+            public List<Entity> loadRootList() throws Exception {
+                List<Entity> roots = ModelMgr.getModelMgr().getOntologyRootEntities();
+                Collections.sort(roots, new EntityRootComparator());
+                return roots;
+            }
+        };
         
         annotationSessionPropertyPanel = new AnnotationSessionPropertyDialog(entityOutline, ontologyOutline);
         importDialog = new ImportDialog("Import Files");
@@ -444,6 +438,7 @@ public class Browser extends JFrame implements Cloneable {
 			public void run() {
 			    entityDetailsOutline.activate();
 		        entityOutline.activate();
+//		        ontologyOutline.activate();
 		        
 			    setPerspective(Perspective.ImageBrowser);
 //

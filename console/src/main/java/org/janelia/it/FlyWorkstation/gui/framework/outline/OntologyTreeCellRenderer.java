@@ -15,6 +15,7 @@ import org.janelia.it.FlyWorkstation.gui.framework.keybind.KeymapUtil;
 import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.FlyWorkstation.gui.util.Icons;
 import org.janelia.it.jacs.model.entity.Entity;
+import org.janelia.it.jacs.model.entity.EntityData;
 import org.janelia.it.jacs.model.ontology.OntologyElement;
 import org.janelia.it.jacs.model.ontology.types.Interval;
 import org.janelia.it.jacs.model.ontology.types.OntologyElementType;
@@ -75,10 +76,12 @@ public class OntologyTreeCellRenderer extends DefaultTreeCellRenderer implements
         if ((value != null) && (value instanceof DefaultMutableTreeNode)) {
             DefaultMutableTreeNode node = (DefaultMutableTreeNode) value;
             Object userObject = node.getUserObject();
-            if (userObject instanceof OntologyElement) {
-                OntologyElement element = (OntologyElement) userObject;
-                Entity entity = element.getEntity();
-
+            if (userObject instanceof EntityData) {
+                
+                EntityData entityData = (EntityData)userObject;
+                Entity entity = entityData.getChildEntity();
+                OntologyElement element = ontologyOutline.getOntologyElement(entityData);
+                                
                 // Set the colors
 
                 if (selected) {
@@ -111,16 +114,21 @@ public class OntologyTreeCellRenderer extends DefaultTreeCellRenderer implements
                 
                 // Set everything else based on the entity properties
                 
-                titleLabel.setText(element.getEntity().getName());
+                titleLabel.setText(entity.getName());
 
-                OntologyElementType type = element.getType();
-                if (type != null) {
-                    if (type instanceof Interval) {
-                        Interval interval = (Interval) type;
-                        typeLabel.setText("" + element.getType().getName() + " (" + interval.getLowerBound() + "-" + interval.getUpperBound() + ")");
+                if (element!=null) {
+                    OntologyElementType type = element.getType();
+                    if (type != null) {
+                        if (type instanceof Interval) {
+                            Interval interval = (Interval) type;
+                            typeLabel.setText("" + element.getType().getName() + " (" + interval.getLowerBound() + "-" + interval.getUpperBound() + ")");
+                        }
+                        else {
+                            typeLabel.setText("" + element.getType().getName() + "");
+                        }
                     }
                     else {
-                        typeLabel.setText("" + element.getType().getName() + "");
+                        typeLabel.setText("[None]");
                     }
                 }
                 else {
@@ -139,9 +147,6 @@ public class OntologyTreeCellRenderer extends DefaultTreeCellRenderer implements
                         if (bind != null) {
                             keybindLabel.setText("(" + KeymapUtil.getShortcutText(bind) + ")");
                         }
-                    }
-                    else {
-                        System.out.println("Node has a null action: " + element.getName());
                     }
                 }
 

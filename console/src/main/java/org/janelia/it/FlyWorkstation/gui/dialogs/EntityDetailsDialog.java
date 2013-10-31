@@ -56,7 +56,7 @@ public class EntityDetailsDialog extends ModalDialog {
     
     public void showForRootedEntity(RootedEntity rootedEntity, String defaultTab) {
     	EntityData entityData = rootedEntity.getEntityData();
-    	showForEntity(rootedEntity.getEntity(), entityData.getEntityAttribute().getName(), defaultTab);
+    	showForEntity(rootedEntity.getEntity(), entityData.getEntityAttribute()==null?"":entityData.getEntityAttribute().getName(), defaultTab);
     }
 
     public void showForEntity(final Entity entity) {

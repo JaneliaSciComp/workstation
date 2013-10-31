@@ -1,11 +1,15 @@
 package org.janelia.it.FlyWorkstation.gui.framework.tree;
 
 import java.awt.BorderLayout;
-import java.awt.Dimension;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 
-import javax.swing.*;
+import javax.swing.JButton;
+import javax.swing.JLabel;
+import javax.swing.JOptionPane;
+import javax.swing.JPanel;
+import javax.swing.JTextField;
+import javax.swing.JToolBar;
 import javax.swing.tree.DefaultMutableTreeNode;
 
 import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr;
@@ -13,7 +17,7 @@ import org.janelia.it.FlyWorkstation.gui.util.Icons;
 
 /**
  * A toolbar which sits on top of a DynamicTree and provides generic tree-related functions such as
- * expanding/collapsing all nodes in the tree, and searching in the tree.
+ * expanding/collapsing all nodes in the tree, and refreshing the tree.
  *
  * @author <a href="mailto:rokickik@janelia.hhmi.org">Konrad Rokicki</a>
  */
@@ -29,16 +33,15 @@ public class DynamicTreeToolbar extends JPanel implements ActionListener {
     private JButton collapseAllButton;
     private JButton refreshButton;
     private JLabel spinner;
+    private JToolBar toolBar;
 
     public DynamicTreeToolbar(final DynamicTree tree) {
         super(new BorderLayout());
 
         this.tree = tree;
-        JToolBar toolBar = new JToolBar();
+        this.toolBar = new JToolBar();
         toolBar.setFloatable(false);
         toolBar.setRollover(true);
-
-        toolBar.add(Box.createRigidArea(new Dimension(1,25)));
         
         expandAllButton = new JButton(Icons.getExpandAllIcon());
         expandAllButton.setActionCommand(EXPAND_ALL);
@@ -105,4 +108,8 @@ public class DynamicTreeToolbar extends JPanel implements ActionListener {
 	public void setSpinning(boolean spin) {
         spinner.setIcon(spin ? Icons.getLoadingIcon() : null);
 	}
+
+    public JToolBar getJToolBar() {
+        return toolBar;
+    }
 }

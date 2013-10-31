@@ -1,7 +1,18 @@
 package org.janelia.it.FlyWorkstation.api.entity_model.management;
 
-import com.google.common.eventbus.AsyncEventBus;
-import com.google.common.eventbus.EventBus;
+import java.awt.Color;
+import java.awt.EventQueue;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.TreeSet;
+import java.util.concurrent.Executor;
+
+import javax.swing.SwingUtilities;
+
 import org.apache.solr.client.solrj.SolrQuery;
 import org.janelia.it.FlyWorkstation.api.entity_model.access.ModelMgrObserver;
 import org.janelia.it.FlyWorkstation.api.entity_model.fundtype.TaskFilter;
@@ -22,10 +33,13 @@ import org.janelia.it.FlyWorkstation.shared.workers.SimpleWorker;
 import org.janelia.it.jacs.compute.api.support.MappedId;
 import org.janelia.it.jacs.compute.api.support.SageTerm;
 import org.janelia.it.jacs.compute.api.support.SolrResults;
-import org.janelia.it.jacs.model.entity.*;
+import org.janelia.it.jacs.model.entity.Entity;
+import org.janelia.it.jacs.model.entity.EntityActorPermission;
+import org.janelia.it.jacs.model.entity.EntityAttribute;
+import org.janelia.it.jacs.model.entity.EntityConstants;
+import org.janelia.it.jacs.model.entity.EntityData;
+import org.janelia.it.jacs.model.entity.EntityType;
 import org.janelia.it.jacs.model.ontology.OntologyAnnotation;
-import org.janelia.it.jacs.model.ontology.OntologyElement;
-import org.janelia.it.jacs.model.ontology.OntologyRoot;
 import org.janelia.it.jacs.model.ontology.types.OntologyElementType;
 import org.janelia.it.jacs.model.tasks.Event;
 import org.janelia.it.jacs.model.tasks.Task;
@@ -36,26 +50,29 @@ import org.janelia.it.jacs.model.tasks.utility.GenericTask;
 import org.janelia.it.jacs.model.user_data.Node;
 import org.janelia.it.jacs.model.user_data.Subject;
 import org.janelia.it.jacs.model.user_data.prefs.SubjectPreference;
-import org.janelia.it.jacs.model.user_data.tiledMicroscope.*;
+import org.janelia.it.jacs.model.user_data.tiledMicroscope.TmAnchoredPath;
+import org.janelia.it.jacs.model.user_data.tiledMicroscope.TmGeoAnnotation;
+import org.janelia.it.jacs.model.user_data.tiledMicroscope.TmNeuron;
+import org.janelia.it.jacs.model.user_data.tiledMicroscope.TmNeuronDescriptor;
+import org.janelia.it.jacs.model.user_data.tiledMicroscope.TmWorkspace;
+import org.janelia.it.jacs.model.user_data.tiledMicroscope.TmWorkspaceDescriptor;
 import org.janelia.it.jacs.shared.annotation.DataDescriptor;
 import org.janelia.it.jacs.shared.annotation.DataFilter;
 import org.janelia.it.jacs.shared.annotation.FilterResult;
+import org.janelia.it.jacs.shared.utils.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.swing.*;
-import java.awt.*;
-import java.util.*;
-import java.util.List;
-import java.util.concurrent.Executor;
+import com.google.common.eventbus.AsyncEventBus;
+import com.google.common.eventbus.EventBus;
 
 public class ModelMgr {
-	
-	private static final Logger log = LoggerFactory.getLogger(ModelMgr.class);
-	
-	// TODO: externalize these properties
-	public static final String NEURON_ANNOTATOR_CLIENT_NAME = "NeuronAnnotator";
-	public static final String CATEGORY_KEYBINDS_GENERAL = "Keybind:General";
+    
+    private static final Logger log = LoggerFactory.getLogger(ModelMgr.class);
+    
+    // TODO: externalize these properties
+    public static final String NEURON_ANNOTATOR_CLIENT_NAME = "NeuronAnnotator";
+    public static final String CATEGORY_KEYBINDS_GENERAL = "Keybind:General";
     public static final String CATEGORY_KEYBINDS_ONTOLOGY = "Keybind:Ontology:";
     
     private static ModelMgr modelManager = new ModelMgr();
@@ -67,12 +84,12 @@ public class ModelMgr {
     private final EntitySelectionModel entitySelectionModel;
     private final UserColorMapping userColorMapping;
 
-    private OntologyRoot selectedOntology;
+    private Entity selectedOntology;
     private OntologyKeyBindings ontologyKeyBindings;
     private AnnotationSession annotationSession;
     private OntologyAnnotation currentSelectedOntologyAnnotation;
     
-    public OntologyRoot ERROR_ONTOLOGY = null;
+    public Entity ERROR_ONTOLOGY = null;
     
     private final List<ModelMgrObserver> modelMgrObservers = new ArrayList<ModelMgrObserver>();
     
@@ -83,22 +100,22 @@ public class ModelMgr {
     }
 
     private ModelMgr() {
-    	
-    	log.info("Initializing Model Manager");
-    	
-		this.entityModel = new EntityModel();
-		this.entitySelectionModel = new EntitySelectionModel();
-		this.userColorMapping = new UserColorMapping();
-		this.modelEventBus = new AsyncEventBus("awt", new Executor() {
-			public void execute(Runnable cmd) {
-				if (EventQueue.isDispatchThread()) {
-					cmd.run();
-				} 
-				else {
-					EventQueue.invokeLater(cmd);
-				}
-			}
-		});
+        
+        log.info("Initializing Model Manager");
+        
+        this.entityModel = new EntityModel();
+        this.entitySelectionModel = new EntitySelectionModel();
+        this.userColorMapping = new UserColorMapping();
+        this.modelEventBus = new AsyncEventBus("awt", new Executor() {
+            public void execute(Runnable cmd) {
+                if (EventQueue.isDispatchThread()) {
+                    cmd.run();
+                } 
+                else {
+                    EventQueue.invokeLater(cmd);
+                }
+            }
+        });
         
         
     } //Singleton enforcement
@@ -116,7 +133,7 @@ public class ModelMgr {
     }
 
     public List<ModelMgrObserver> getModelMgrObservers() {
-    	return new ArrayList<ModelMgrObserver>(modelMgrObservers);
+        return new ArrayList<ModelMgrObserver>(modelMgrObservers);
     }
 
     public void registerExceptionHandler(ExceptionHandler handler) {
@@ -153,8 +170,8 @@ public class ModelMgr {
     }
 
     public UserColorMapping getUserColorMapping() {
-		return userColorMapping;
-	}
+        return userColorMapping;
+    }
 
     public AnnotationSession getCurrentAnnotationSession() {
         return annotationSession;
@@ -162,11 +179,11 @@ public class ModelMgr {
 
     public void setCurrentAnnotationSession(AnnotationSession session) {
         if (annotationSession == null || session == null || !annotationSession.getId().equals(session.getId())) {
-		    this.annotationSession = session;
-		    if (annotationSession == null)
-			    notifyAnnotationSessionDeselected();
-		    else
-		    	notifyAnnotationSessionSelected(annotationSession.getId());
+            this.annotationSession = session;
+            if (annotationSession == null)
+                notifyAnnotationSessionDeselected();
+            else
+                notifyAnnotationSessionSelected(annotationSession.getId());
         }
     }
 
@@ -178,48 +195,53 @@ public class ModelMgr {
         this.currentSelectedOntologyAnnotation = currentSelectedOntologyAnnotation;
     }
 
-    public OntologyRoot getCurrentOntology() {
-        return selectedOntology;
+    public Long getCurrentOntologyId() {
+        String lastSelectedOntology = (String)SessionMgr.getSessionMgr().getModelProperty("lastSelectedOntology");
+        if (StringUtils.isEmpty(lastSelectedOntology)) return null;
+        log.info("current ontology is {}", lastSelectedOntology);
+        return Long.parseLong(lastSelectedOntology);
     }
 
-    public void setCurrentOntology(OntologyRoot ontology) {
-        if (ontology == null){
+    public Entity getCurrentOntology() {
+        // TODO: refactor this
+        return SessionMgr.getBrowser().getOntologyOutline().getCurrentOntology();
+    }
+    
+    public void setCurrentOntologyId(Long ontologyId) {
+        log.info("setting current ontology to {}", ontologyId);
+        if (ontologyId == null){
             SessionMgr.getSessionMgr().setModelProperty("lastSelectedOntology", null);
         }
         else {
-            if(selectedOntology == null || !selectedOntology.getId().equals(ontology.getId()) || !selectedOntology.isFullyLoaded()) {
-                SessionMgr.getSessionMgr().setModelProperty("lastSelectedOntology", ontology.getId().toString());
-                selectedOntology = ontology;
-                notifyOntologySelected(ontology.getId());
-            }
+            SessionMgr.getSessionMgr().setModelProperty("lastSelectedOntology", ontologyId.toString());
         }
+        notifyOntologySelected(ontologyId);
     }
 
-    public TreeSet<String> getOntologyTermSet(OntologyRoot ontologyRoot){
+    public TreeSet<String> getOntologyTermSet(Entity ontologyRoot){
         TreeSet<String> ontologyElementTreeSet = new TreeSet<String>();
-        List<OntologyElement> list = ontologyRoot.getChildren();
+        List<Entity> list = ontologyRoot.getOrderedChildren();
         list = ontologyWalker(list);
-        for(OntologyElement element:list){
-            ontologyElementTreeSet.add(element.getName());
+        for(Entity entity : list){
+            ontologyElementTreeSet.add(entity.getName());
         }
         return ontologyElementTreeSet;
     }
 
-    public List<OntologyElement> ontologyWalker(List<OntologyElement> list){
-        List<OntologyElement> finalList = new ArrayList<OntologyElement>();
+    public List<Entity> ontologyWalker(List<Entity> list){
+        List<Entity> finalList = new ArrayList<Entity>();
         finalList.addAll(list);
-        for(OntologyElement element:list){
-
-            if(null!=element.getChildren()){
-                finalList.addAll(ontologyWalker(element.getChildren()));
+        for(Entity entity:list){
+            if(null!=entity.getChildren()){
+                finalList.addAll(ontologyWalker(entity.getOrderedChildren()));
             }
         }
         return finalList;
     }
 
     private OntologyKeyBindings loadOntologyKeyBindings(long ontologyId) {
-    	String category = CATEGORY_KEYBINDS_ONTOLOGY + ontologyId;
-    	Subject subject = SessionMgr.getSessionMgr().getSubject();
+        String category = CATEGORY_KEYBINDS_ONTOLOGY + ontologyId;
+        Subject subject = SessionMgr.getSessionMgr().getSubject();
         Map<String, SubjectPreference> prefs = subject.getCategoryPreferences(category);
 
         OntologyKeyBindings ontologyKeyBindings = new OntologyKeyBindings(subject.getKey(), ontologyId);
@@ -230,31 +252,32 @@ public class ModelMgr {
         return ontologyKeyBindings;
     }
     
-	public OntologyKeyBindings getKeyBindings(long ontologyId) {
-		if (selectedOntology != null && ontologyId == selectedOntology.getId()) {
-			if (ontologyKeyBindings == null || selectedOntology.getId() != ontologyKeyBindings.getOntologyId()) {
-				ontologyKeyBindings = loadOntologyKeyBindings(ontologyId);
-			}
-			return ontologyKeyBindings;
-		}
-		return loadOntologyKeyBindings(ontologyId);
-	}
-	
+    public OntologyKeyBindings getKeyBindings(long ontologyId) {
+        if (selectedOntology != null && ontologyId == selectedOntology.getId()) {
+            if (ontologyKeyBindings == null || selectedOntology.getId() != ontologyKeyBindings.getOntologyId()) {
+                ontologyKeyBindings = loadOntologyKeyBindings(ontologyId);
+            }
+            return ontologyKeyBindings;
+        }
+        return loadOntologyKeyBindings(ontologyId);
+    }
+    
     public void saveOntologyKeyBindings(OntologyKeyBindings ontologyKeyBindings) throws Exception {
 
         String category = CATEGORY_KEYBINDS_ONTOLOGY + ontologyKeyBindings.getOntologyId();
-        Subject subject = SessionMgr.getSessionMgr().getSubject();
+        Subject subject = ModelMgr.getModelMgr().getSubject(SessionMgr.getSessionMgr().getSubject().getKey());
 
-        // Delete all keybinds first, to maintain one key per entity
+        // First delete all keybinds for this ontology
         for (String key : subject.getCategoryPreferences(category).keySet()) {
             subject.getPreferenceMap().remove(category + ":" + key);
         }
 
-    	Set<OntologyKeyBind> keybinds = ontologyKeyBindings.getKeybinds();
+        // Now re-add all the current key bindings
+        Set<OntologyKeyBind> keybinds = ontologyKeyBindings.getKeybinds();
         for (OntologyKeyBind bind : keybinds) {
             subject.setPreference(new SubjectPreference(bind.getKey(), category, bind.getOntologyTermId().toString()));
         }
-
+        
         ModelMgr.getModelMgr().saveOrUpdateSubject(subject);
         
         if (selectedOntology!=null) notifyOntologyChanged(selectedOntology.getId()); // See note in createOntologyTerm
@@ -264,228 +287,228 @@ public class ModelMgr {
         ModelMgr.getModelMgr().removePreferenceCategory(CATEGORY_KEYBINDS_ONTOLOGY + ontologyId);
     }
     
-    private void notifyOntologySelected(final Long ontologyId) {    	
+    private void notifyOntologySelected(final Long ontologyId) {        
         if (!SwingUtilities.isEventDispatchThread()) {
-    		SwingUtilities.invokeLater(new Runnable() {
-				@Override
-				public void run() {
-			        for (ModelMgrObserver listener : getModelMgrObservers()) {
-			        	listener.ontologySelected(ontologyId);
-			        }
-				}
-			});
-    	}
-    	else {
+            SwingUtilities.invokeLater(new Runnable() {
+                @Override
+                public void run() {
+                    for (ModelMgrObserver listener : getModelMgrObservers()) {
+                        listener.ontologySelected(ontologyId);
+                    }
+                }
+            });
+        }
+        else {
             for (ModelMgrObserver listener : getModelMgrObservers()) {
-            	listener.ontologySelected(ontologyId);
+                listener.ontologySelected(ontologyId);
             }
-    	}
+        }
     }
 
     public void notifyOntologyChanged(final Long entityId) {
         if (!SwingUtilities.isEventDispatchThread()) {
-    		SwingUtilities.invokeLater(new Runnable() {
-				@Override
-				public void run() {
-			        for (ModelMgrObserver listener : getModelMgrObservers()) {
-			        	listener.ontologyChanged(entityId);
-			        }
-				}
-			});
-    	}
-    	else {
+            SwingUtilities.invokeLater(new Runnable() {
+                @Override
+                public void run() {
+                    for (ModelMgrObserver listener : getModelMgrObservers()) {
+                        listener.ontologyChanged(entityId);
+                    }
+                }
+            });
+        }
+        else {
             for (ModelMgrObserver listener : getModelMgrObservers()) {
-            	listener.ontologyChanged(entityId);
+                listener.ontologyChanged(entityId);
             }
-    	}
+        }
     }
     
     void notifyEntitySelected(final String category, final String identifier, final boolean clearAll) {
-    	if (!SwingUtilities.isEventDispatchThread()) {
-    		SwingUtilities.invokeLater(new Runnable() {
-				@Override
-				public void run() {
-			    	for (ModelMgrObserver listener : getModelMgrObservers()) {
-						listener.entitySelected(category, identifier, clearAll);
-					}
-				}
-			});
-    	}
-    	else {
-        	for (ModelMgrObserver listener : getModelMgrObservers()) {
-    			listener.entitySelected(category, identifier, clearAll);
-    		}
-    	}
+        if (!SwingUtilities.isEventDispatchThread()) {
+            SwingUtilities.invokeLater(new Runnable() {
+                @Override
+                public void run() {
+                    for (ModelMgrObserver listener : getModelMgrObservers()) {
+                        listener.entitySelected(category, identifier, clearAll);
+                    }
+                }
+            });
+        }
+        else {
+            for (ModelMgrObserver listener : getModelMgrObservers()) {
+                listener.entitySelected(category, identifier, clearAll);
+            }
+        }
     }
 
     void notifyEntityDeselected(final String category, final String identifier) {
-    	if (!SwingUtilities.isEventDispatchThread()) {
-    		SwingUtilities.invokeLater(new Runnable() {
-				@Override
-				public void run() {
-			    	for (ModelMgrObserver listener : getModelMgrObservers()) {
-						listener.entityDeselected(category, identifier);
-					}
-				}
-			});
-    	}
-    	else {
-        	for (ModelMgrObserver listener : getModelMgrObservers()) {
-    			listener.entityDeselected(category, identifier);
-    		}
-    	}
+        if (!SwingUtilities.isEventDispatchThread()) {
+            SwingUtilities.invokeLater(new Runnable() {
+                @Override
+                public void run() {
+                    for (ModelMgrObserver listener : getModelMgrObservers()) {
+                        listener.entityDeselected(category, identifier);
+                    }
+                }
+            });
+        }
+        else {
+            for (ModelMgrObserver listener : getModelMgrObservers()) {
+                listener.entityDeselected(category, identifier);
+            }
+        }
     }
 
     public void notifyEntityChanged(final Long entityId) {
-    	if (!SwingUtilities.isEventDispatchThread()) {
-    		SwingUtilities.invokeLater(new Runnable() {
-				@Override
-				public void run() {
-			        for (ModelMgrObserver listener : getModelMgrObservers()) {
-			        	listener.entityChanged(entityId);
-			        }
-				}
-			});
-    	}
-    	else {
+        if (!SwingUtilities.isEventDispatchThread()) {
+            SwingUtilities.invokeLater(new Runnable() {
+                @Override
+                public void run() {
+                    for (ModelMgrObserver listener : getModelMgrObservers()) {
+                        listener.entityChanged(entityId);
+                    }
+                }
+            });
+        }
+        else {
             for (ModelMgrObserver listener : getModelMgrObservers()) {
-            	listener.entityChanged(entityId);
+                listener.entityChanged(entityId);
             }
-    	}
+        }
     }
 
     public void notifyEntityChildrenChanged(final Long entityId) {
-    	if (!SwingUtilities.isEventDispatchThread()) {
-    		SwingUtilities.invokeLater(new Runnable() {
-				@Override
-				public void run() {
-			        for (ModelMgrObserver listener : getModelMgrObservers()) {
-			        	listener.entityChildrenChanged(entityId);
-			        }
-				}
-			});
-    	}
-    	else {
+        if (!SwingUtilities.isEventDispatchThread()) {
+            SwingUtilities.invokeLater(new Runnable() {
+                @Override
+                public void run() {
+                    for (ModelMgrObserver listener : getModelMgrObservers()) {
+                        listener.entityChildrenChanged(entityId);
+                    }
+                }
+            });
+        }
+        else {
             for (ModelMgrObserver listener : getModelMgrObservers()) {
-            	listener.entityChildrenChanged(entityId);
+                listener.entityChildrenChanged(entityId);
             }
-    	}
+        }
     }
     
     public void notifyEntityRemoved(final Long entityId) {
-    	if (!SwingUtilities.isEventDispatchThread()) {
-    		SwingUtilities.invokeLater(new Runnable() {
-				@Override
-				public void run() {
-			        for (ModelMgrObserver listener : getModelMgrObservers()) {
-			        	listener.entityRemoved(entityId);
-			        }
-				}
-			});
-    	}
-    	else {
+        if (!SwingUtilities.isEventDispatchThread()) {
+            SwingUtilities.invokeLater(new Runnable() {
+                @Override
+                public void run() {
+                    for (ModelMgrObserver listener : getModelMgrObservers()) {
+                        listener.entityRemoved(entityId);
+                    }
+                }
+            });
+        }
+        else {
             for (ModelMgrObserver listener : getModelMgrObservers()) {
-            	listener.entityRemoved(entityId);
+                listener.entityRemoved(entityId);
             }
-    	}
+        }
     }
 
     public void notifyEntityDataRemoved(final Long entityDataId) {
-    	if (!SwingUtilities.isEventDispatchThread()) {
-    		SwingUtilities.invokeLater(new Runnable() {
-				@Override
-				public void run() {
-			        for (ModelMgrObserver listener : getModelMgrObservers()) {
-			        	listener.entityDataRemoved(entityDataId);
-			        }
-				}
-			});
-    	}
-    	else {
+        if (!SwingUtilities.isEventDispatchThread()) {
+            SwingUtilities.invokeLater(new Runnable() {
+                @Override
+                public void run() {
+                    for (ModelMgrObserver listener : getModelMgrObservers()) {
+                        listener.entityDataRemoved(entityDataId);
+                    }
+                }
+            });
+        }
+        else {
             for (ModelMgrObserver listener : getModelMgrObservers()) {
-            	listener.entityDataRemoved(entityDataId);
+                listener.entityDataRemoved(entityDataId);
             }
-    	}
+        }
     }
     
     public boolean notifyEntityViewRequestedInNeuronAnnotator(Long entityId) {
-    	if (SessionMgr.getSessionMgr().getExternalClientsByName(NEURON_ANNOTATOR_CLIENT_NAME).isEmpty()) {
-    		return false;
-    	}
+        if (SessionMgr.getSessionMgr().getExternalClientsByName(NEURON_ANNOTATOR_CLIENT_NAME).isEmpty()) {
+            return false;
+        }
         for (ModelMgrObserver listener : getModelMgrObservers()) {
-        	listener.entityViewRequested(entityId);
+            listener.entityViewRequested(entityId);
         }
         return true;
     }
     
     public void notifyAnnotationsChanged(final Long entityId) {
-    	if (!SwingUtilities.isEventDispatchThread()) {
-    		SwingUtilities.invokeLater(new Runnable() {
-				@Override
-				public void run() {
-			        for (ModelMgrObserver listener : getModelMgrObservers()) {
-			        	listener.annotationsChanged(entityId);
-			        }
-				}
-			});
-    	}
-    	else {
+        if (!SwingUtilities.isEventDispatchThread()) {
+            SwingUtilities.invokeLater(new Runnable() {
+                @Override
+                public void run() {
+                    for (ModelMgrObserver listener : getModelMgrObservers()) {
+                        listener.annotationsChanged(entityId);
+                    }
+                }
+            });
+        }
+        else {
             for (ModelMgrObserver listener : getModelMgrObservers()) {
-            	listener.annotationsChanged(entityId);
+                listener.annotationsChanged(entityId);
             }
-    	}
+        }
     }
 
     private void notifyAnnotationSessionSelected(final Long sessionId) {
-    	if (!SwingUtilities.isEventDispatchThread()) {
-    		SwingUtilities.invokeLater(new Runnable() {
-				@Override
-				public void run() {
-			        for (ModelMgrObserver listener : getModelMgrObservers()) {
-			        	listener.sessionSelected(sessionId);
-			        }
-				}
-			});
-    	}
-    	else {
-        	
+        if (!SwingUtilities.isEventDispatchThread()) {
+            SwingUtilities.invokeLater(new Runnable() {
+                @Override
+                public void run() {
+                    for (ModelMgrObserver listener : getModelMgrObservers()) {
+                        listener.sessionSelected(sessionId);
+                    }
+                }
+            });
+        }
+        else {
+            
             for (ModelMgrObserver listener : getModelMgrObservers()) {
-            	listener.sessionSelected(sessionId);
+                listener.sessionSelected(sessionId);
             }
-    	}
+        }
     }
 
     private void notifyAnnotationSessionDeselected() {
-    	if (!SwingUtilities.isEventDispatchThread()) {
-    		SwingUtilities.invokeLater(new Runnable() {
-				@Override
-				public void run() {
-			        for (ModelMgrObserver listener : getModelMgrObservers()) {
-			        	listener.sessionDeselected();
-			        }
-				}
-			});
-    	}
-    	else {
+        if (!SwingUtilities.isEventDispatchThread()) {
+            SwingUtilities.invokeLater(new Runnable() {
+                @Override
+                public void run() {
+                    for (ModelMgrObserver listener : getModelMgrObservers()) {
+                        listener.sessionDeselected();
+                    }
+                }
+            });
+        }
+        else {
             for (ModelMgrObserver listener : getModelMgrObservers()) {
-            	listener.sessionDeselected();
+                listener.sessionDeselected();
             }
-    	}
+        }
     }
     
     public void prepareForSystemExit() {
         FacadeManager.getFacadeManager().prepareForSystemExit();
     }
 
-	public EntitySelectionModel getEntitySelectionModel() {
-		return entitySelectionModel;
-	}
-	
-	public List<EntityType> getEntityTypes() throws Exception {
+    public EntitySelectionModel getEntitySelectionModel() {
+        return entitySelectionModel;
+    }
+    
+    public List<EntityType> getEntityTypes() throws Exception {
         return FacadeManager.getFacadeManager().getEntityFacade().getEntityTypes();
     }
 
-	public List<EntityAttribute> getEntityAttributes() throws Exception {
+    public List<EntityAttribute> getEntityAttributes() throws Exception {
         return FacadeManager.getFacadeManager().getEntityFacade().getEntityAttributes();
     }
 
@@ -522,7 +545,7 @@ public class ModelMgr {
     }
     
     public Set<Long> getParentIdsForAttribute(long childEntityId, String attributeName) throws Exception {
-    	return FacadeManager.getFacadeManager().getEntityFacade().getParentIdsForAttribute(childEntityId, attributeName);
+        return FacadeManager.getFacadeManager().getEntityFacade().getParentIdsForAttribute(childEntityId, attributeName);
     }
 
     public List<Entity> getEntitiesByTypeName(String entityTypeName) throws Exception {
@@ -534,7 +557,7 @@ public class ModelMgr {
     }
 
     public List<Entity> getDataSets() throws Exception {
-    	return entityModel.getDataSets();
+        return entityModel.getDataSets();
     }
 
     public Entity createCommonRoot(String name) throws Exception {
@@ -563,23 +586,23 @@ public class ModelMgr {
     }
     
     public void demoteCommonRootToFolder(Entity commonRoot) throws Exception {
-    	 entityModel.demoteCommonRootToFolder(commonRoot);
+         entityModel.demoteCommonRootToFolder(commonRoot);
     }
     
     public void removeEntityData(EntityData ed) throws Exception {
-    	entityModel.deleteEntityData(ed);
+        entityModel.deleteEntityData(ed);
         notifyEntityDataRemoved(ed.getId());
     }
 
     public void deleteBulkEntityData(Entity parent, Collection<EntityData> toDelete) throws Exception {
-    	entityModel.deleteBulkEntityData(parent, toDelete);
-    	for(EntityData ed : toDelete) {
-    		notifyEntityDataRemoved(ed.getId());
-    	}
+        entityModel.deleteBulkEntityData(parent, toDelete);
+        for(EntityData ed : toDelete) {
+            notifyEntityDataRemoved(ed.getId());
+        }
     }
     
     public void deleteEntityTree(Long id) throws Exception {
-    	entityModel.deleteEntityTree(entityModel.getEntityById(id));
+        entityModel.deleteEntityTree(entityModel.getEntityById(id));
         notifyEntityRemoved(id);
     }
     
@@ -589,15 +612,15 @@ public class ModelMgr {
     }
     
     public Entity createOntologyRoot(String ontologyName) throws Exception {
-        return FacadeManager.getFacadeManager().getOntologyFacade().createOntologyRoot(ontologyName);
+        return entityModel.createOntologyRoot(ontologyName);
     }
 
-    public EntityData createOntologyTerm(Long id, String label, OntologyElementType type, Integer orderIndex) throws Exception {
-    	EntityData ed = FacadeManager.getFacadeManager().getOntologyFacade().createOntologyTerm(id, label, type, orderIndex);
+    public Entity createOntologyTerm(Long id, String label, OntologyElementType type, Integer orderIndex) throws Exception {
+        Entity term = entityModel.createOntologyTerm(id, label, type, orderIndex);
         // Note: here we are assuming that the affected term is in the selected ontology, which is not necessarily true,
         // but it doesn't hurt to refresh the clients even if another ontology is being changed.
         if (selectedOntology!=null) notifyOntologyChanged(selectedOntology.getId());
-        return ed;
+        return term;
     }
 
     public Entity createOntologyAnnotation(OntologyAnnotation annotation) throws Exception {
@@ -607,10 +630,10 @@ public class ModelMgr {
     }
 
     public void removeAnnotation(Long annotationId) throws Exception {
-    	Entity annotationEntity = FacadeManager.getFacadeManager().getEntityFacade().getEntityById(annotationId);
-    	if (annotationEntity==null || annotationEntity.getId()==null) return;
-    	OntologyAnnotation annotation = new OntologyAnnotation();
-    	annotation.init(annotationEntity);
+        Entity annotationEntity = FacadeManager.getFacadeManager().getEntityFacade().getEntityById(annotationId);
+        if (annotationEntity==null || annotationEntity.getId()==null) return;
+        OntologyAnnotation annotation = new OntologyAnnotation();
+        annotation.init(annotationEntity);
         FacadeManager.getFacadeManager().getAnnotationFacade().removeAnnotation(annotationEntity.getId());
         notifyAnnotationsChanged(annotation.getTargetEntityId());
     }
@@ -619,52 +642,52 @@ public class ModelMgr {
         return FacadeManager.getFacadeManager().getOntologyFacade().getOntologyTree(rootId);
     }
 
-    public OntologyRoot getOntology(Long rootId) {
-    	if (null!= selectedOntology){
+    public Entity getOntology(Long rootId) {
+        if (null!= selectedOntology){
             if(selectedOntology.getId().equals(rootId)){
                 return selectedOntology;
             }
         }
-    	try {
-    		return new OntologyRoot(getOntologyTree(rootId));
-    	}
-    	catch (Exception e) {
-    		e.printStackTrace();
-    	}
-    	return null;
+        try {
+            return getOntologyTree(rootId);
+        }
+        catch (Exception e) {
+            e.printStackTrace();
+        }
+        return null;
     }
     
     public AnnotationSession getAnnotationSession(Long sessionId) throws Exception {
-    	if (annotationSession != null && annotationSession.getId().equals(sessionId)) {
-    		return annotationSession;
-    	}
+        if (annotationSession != null && annotationSession.getId().equals(sessionId)) {
+            return annotationSession;
+        }
         
-    	Task task = getTaskById(sessionId);
-    	if (task == null) return null;
-    	if (task instanceof AnnotationSessionTask) {
-    		AnnotationSessionTask ast = (AnnotationSessionTask)task;
-    		return new AnnotationSession(ast);
-    	}
-    	
-    	return null;
+        Task task = getTaskById(sessionId);
+        if (task == null) return null;
+        if (task instanceof AnnotationSessionTask) {
+            AnnotationSessionTask ast = (AnnotationSessionTask)task;
+            return new AnnotationSession(ast);
+        }
+        
+        return null;
     }
     
     public void invalidateCache() {
         entityModel.invalidateAllSilently();
     }
 
-	public void invalidateCache(Collection<Entity> entities, boolean recurse) {
-		entityModel.invalidate(entities, recurse);
-	}
-	
-	public void invalidate(Collection<Long> entityIds) {
-	    entityModel.invalidate(entityIds);
-	}
-	
-	public void invalidateCache(Entity entity, boolean recurse) {
-		entityModel.invalidate(entity, recurse);
-	}
-	
+    public void invalidateCache(Collection<Entity> entities, boolean recurse) {
+        entityModel.invalidate(entities, recurse);
+    }
+    
+    public void invalidate(Collection<Long> entityIds) {
+        entityModel.invalidate(entityIds);
+    }
+    
+    public void invalidateCache(Entity entity, boolean recurse) {
+        entityModel.invalidate(entity, recurse);
+    }
+    
     public List<Entity> getCommonRootEntities() throws Exception {
         return entityModel.getCommonRoots();
     }
@@ -673,7 +696,7 @@ public class ModelMgr {
         return entityModel.getCommonRootFolder(name);
     }
     
-    public Entity getEntityAndChildren(long entityId) throws Exception {    	
+    public Entity getEntityAndChildren(long entityId) throws Exception {        
         return entityModel.getEntityAndChildren(entityId);
     }
 
@@ -682,46 +705,37 @@ public class ModelMgr {
     }
 
     public Entity refreshChildren(Entity entity) throws Exception {
-    	entityModel.refreshChildren(entity);
-    	return entityModel.getEntityById(entity.getId());
+        entityModel.refreshChildren(entity);
+        return entityModel.getEntityById(entity.getId());
     }
 
     public Entity refreshEntity(Entity entity) throws Exception {
-    	return entityModel.reload(entity);
+        return entityModel.reload(entity);
     }
     
     public Entity refreshEntityAndChildren(Entity entity) throws Exception {
-    	entityModel.refreshChildren(entity);
-    	return entityModel.reload(entity);
+        entityModel.refreshChildren(entity);
+        return entityModel.reload(entity);
     }
     
     public Entity loadLazyEntity(Entity entity, boolean recurse) throws Exception {
-    	return entityModel.loadLazyEntity(entity, recurse);
+        return entityModel.loadLazyEntity(entity, recurse);
     }
 
-    public List<Entity> getPrivateOntologies() throws Exception {
-        return FacadeManager.getFacadeManager().getOntologyFacade().getPrivateOntologies();
-    }
-
-    public List<Entity> getPublicOntologies() throws Exception {
-        return FacadeManager.getFacadeManager().getOntologyFacade().getPublicOntologies();
+    public List<Entity> getOntologyRootEntities() throws Exception {
+        return entityModel.getOntologyRoots();
     }
 
     public Entity getErrorOntologyEntity() throws Exception{
         return FacadeManager.getFacadeManager().getOntologyFacade().getErrorOntology();
     }
 
-    public OntologyRoot getErrorOntology() {
-    	return ERROR_ONTOLOGY;
+    public Entity getErrorOntology() {
+        return ERROR_ONTOLOGY;
     }
     
     public Entity publishOntology(Long ontologyEntityId, String rootName) throws Exception {
         return FacadeManager.getFacadeManager().getOntologyFacade().publishOntology(ontologyEntityId, rootName);
-    }
-
-    public void removeOntologyTerm(Long termEntityId) throws Exception {
-        FacadeManager.getFacadeManager().getOntologyFacade().removeOntologyTerm(termEntityId);
-        if (selectedOntology!=null) notifyOntologyChanged(selectedOntology.getId()); // See note in createOntologyTerm
     }
 
     public Entity cloneEntityTree(Long entityId, String rootName) throws Exception {
@@ -733,16 +747,16 @@ public class ModelMgr {
     }
 
     public EntityData addEntityToParent(Entity parent, Entity entity) throws Exception {
-    	EntityData ed = entityModel.addEntityToParent(parent, entity);
-    	log.info("addEntityToParent created ed "+ed.getId()+" parent:"+ed.getParentEntity()+" child:"+ed.getChildEntity());
-    	notifyEntityChildrenChanged(parent.getId());
-    	return ed;
+        EntityData ed = entityModel.addEntityToParent(parent, entity);
+        log.info("addEntityToParent created ed "+ed.getId()+" parent:"+ed.getParentEntity()+" child:"+ed.getChildEntity());
+        notifyEntityChildrenChanged(parent.getId());
+        return ed;
     }
 
     public EntityData addEntityToParent(Entity parent, Entity entity, Integer index, String attrName) throws Exception {
-    	EntityData ed = entityModel.addEntityToParent(parent, entity, index, attrName);
-    	notifyEntityChildrenChanged(parent.getId());
-    	return ed;
+        EntityData ed = entityModel.addEntityToParent(parent, entity, index, attrName);
+        notifyEntityChildrenChanged(parent.getId());
+        return ed;
     }
 
     public long getNumDescendantsAnnotated(Long entityId) throws Exception {
@@ -766,11 +780,11 @@ public class ModelMgr {
     }
 
     public void createEntityType(String typeName) throws Exception {
-    	FacadeManager.getFacadeManager().getEntityFacade().createEntityType(typeName);
+        FacadeManager.getFacadeManager().getEntityFacade().createEntityType(typeName);
     }
     
     public void createEntityAttribute(String typeName, String attrName) throws Exception {
-    	FacadeManager.getFacadeManager().getEntityFacade().createEntityAttribute(typeName, attrName);
+        FacadeManager.getFacadeManager().getEntityFacade().createEntityAttribute(typeName, attrName);
     }
     
     public List<Entity> getEntitiesForAnnotationSession(Long annotationSessionId) throws Exception {
@@ -794,19 +808,19 @@ public class ModelMgr {
     }
     
     public Entity renameEntity(Entity entity, String newName) throws Exception {
-    	Entity newEntity = entityModel.renameEntity(entity, newName);
+        Entity newEntity = entityModel.renameEntity(entity, newName);
         if (newEntity!=null) notifyEntityChanged(newEntity.getId());
         return newEntity;
     }
 
     public Entity setAttributeAsTag(Entity entity, String attributeName) throws Exception {
-    	Entity newEntity = entityModel.setAttributeAsTag(entity, attributeName);
+        Entity newEntity = entityModel.setAttributeAsTag(entity, attributeName);
         if (newEntity!=null) notifyEntityChanged(newEntity.getId());
         return newEntity;
     }
     
     public Entity setAttributeValue(Entity entity, String attributeName, String attributeValue) throws Exception {
-    	Entity newEntity = entityModel.setAttributeValue(entity, attributeName, attributeValue);
+        Entity newEntity = entityModel.setAttributeValue(entity, attributeName, attributeValue);
         if (newEntity!=null) notifyEntityChanged(newEntity.getId());
         return newEntity;
     }
@@ -818,8 +832,8 @@ public class ModelMgr {
     }
 
     public Entity saveOrUpdateEntity(Entity entity) throws Exception {
-    	Entity newEntity = entityModel.saveEntity(entity);
-    	if (newEntity!=null) notifyEntityChanged(newEntity.getId());
+        Entity newEntity = entityModel.saveEntity(entity);
+        if (newEntity!=null) notifyEntityChanged(newEntity.getId());
         return newEntity;
     }
     
@@ -832,7 +846,7 @@ public class ModelMgr {
     }
 
     public void stopContinuousExecution(ContinuousExecutionTask task) throws Exception {
-    	if (task == null) throw new IllegalArgumentException("Task may not be null");
+        if (task == null) throw new IllegalArgumentException("Task may not be null");
         FacadeManager.getFacadeManager().getComputeFacade().stopContinuousExecution(task.getObjectId());
     }
 
@@ -907,22 +921,22 @@ public class ModelMgr {
     }
 
     public SolrResults searchSolr(SolrQuery query) throws Exception {
-    	log.info("Searching SOLR: "+query.getQuery()+" start="+query.getStart()+" rows="+query.getRows());
-    	return FacadeManager.getFacadeManager().getSolrFacade().searchSolr(query);
+        log.info("Searching SOLR: "+query.getQuery()+" start="+query.getStart()+" rows="+query.getRows());
+        return FacadeManager.getFacadeManager().getSolrFacade().searchSolr(query);
     }
     
     //todo "Flylight"? Maybe we can refctor out this explicit project knowledge?  Is there a nice, clean abstraction for this?
     public Map<String, SageTerm> getFlyLightVocabulary() throws Exception {
-    	return FacadeManager.getFacadeManager().getSolrFacade().getFlyLightVocabulary();
+        return FacadeManager.getFacadeManager().getSolrFacade().getFlyLightVocabulary();
     }
 
     public void addChildren(Long parentId, List<Long> childrenIds, String attributeName) throws Exception {
-    	entityModel.addChildren(parentId, childrenIds, attributeName);
-    	notifyEntityChildrenChanged(parentId);
+        entityModel.addChildren(parentId, childrenIds, attributeName);
+        notifyEntityChildrenChanged(parentId);
     }
     
     public Entity createDataSet(String dataSetName) throws Exception {
-    	return entityModel.createDataSet(dataSetName);
+        return entityModel.createDataSet(dataSetName);
     }
     
     public Set<EntityActorPermission> getFullPermissions(Long entityId) throws Exception {
@@ -930,18 +944,18 @@ public class ModelMgr {
     }
     
     public EntityActorPermission grantPermissions(Long entityId, String subjectKey, String permissions, boolean recursive) throws Exception {
-    	EntityActorPermission eap = FacadeManager.getFacadeManager().getEntityFacade().grantPermissions(entityId, subjectKey, permissions, recursive);
-    	entityModel.reloadById(entityId);
-    	return eap;
+        EntityActorPermission eap = FacadeManager.getFacadeManager().getEntityFacade().grantPermissions(entityId, subjectKey, permissions, recursive);
+        entityModel.reloadById(entityId);
+        return eap;
     }
 
     public void revokePermissions(Long entityId, String subjectKey, boolean recursive) throws Exception {
-    	FacadeManager.getFacadeManager().getEntityFacade().revokePermissions(entityId, subjectKey, recursive);
-    	entityModel.reloadById(entityId);
+        FacadeManager.getFacadeManager().getEntityFacade().revokePermissions(entityId, subjectKey, recursive);
+        entityModel.reloadById(entityId);
     }
     
     public List<MappedId> getProjectedResults(List<Long> entityIds, List<String> upMapping, List<String> downMapping) throws Exception {
-    	return FacadeManager.getFacadeManager().getEntityFacade().getProjectedResults(entityIds, upMapping, downMapping);
+        return FacadeManager.getFacadeManager().getEntityFacade().getProjectedResults(entityIds, upMapping, downMapping);
     }
     
     public Object[] getPatternAnnotationQuantifierMapsFromSummary() throws Exception {
@@ -995,9 +1009,9 @@ public class ModelMgr {
         }
     }
     
-	public Color getUserAnnotationColor(String username) {
-		return userColorMapping.getColor(username);
-	}
+    public Color getUserAnnotationColor(String username) {
+        return userColorMapping.getColor(username);
+    }
 
     public ThreadQueue getLoaderThreadQueue() {
         if (threadQueue==null){
@@ -1095,5 +1109,4 @@ public class ModelMgr {
     public void deleteAnchoredPath(Long pathID) throws Exception {
         FacadeManager.getFacadeManager().getEntityFacade().deleteAnchoredPath(pathID);
     }
-
 }

@@ -1,14 +1,13 @@
 package org.janelia.it.FlyWorkstation.api.facade.concrete_facade.ejb;
 
+import java.util.List;
+
 import org.janelia.it.FlyWorkstation.api.facade.abstract_facade.OntologyFacade;
 import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.jacs.model.entity.Entity;
 import org.janelia.it.jacs.model.entity.EntityData;
 import org.janelia.it.jacs.model.ontology.OntologyAnnotation;
 import org.janelia.it.jacs.model.ontology.types.OntologyElementType;
-
-import java.util.ArrayList;
-import java.util.List;
 
 /**
  * Created by IntelliJ IDEA.
@@ -17,11 +16,9 @@ import java.util.List;
  * Time: 10:48 AM
  */
 public class EJBOntologyFacade extends EJBEntityFacade implements OntologyFacade {
-    @Override
-    public List<Entity> getOntologies() {
-//        return EJBFactory.getRemoteAnnotationBean().
-        // todo fix this
-        return new ArrayList<Entity>();
+    
+    public List<Entity> getOntologyRootEntities() throws Exception {
+        return EJBFactory.getRemoteAnnotationBean().getOntologyRootEntities(SessionMgr.getSubjectKey());
     }
 
     @Override
@@ -52,16 +49,6 @@ public class EJBOntologyFacade extends EJBEntityFacade implements OntologyFacade
     }
 
     @Override
-    public List<Entity> getPrivateOntologies() throws Exception {
-        return EJBFactory.getRemoteAnnotationBean().getPrivateOntologies(SessionMgr.getSubjectKey());
-    }
-
-    @Override
-    public List<Entity> getPublicOntologies() throws Exception {
-        return EJBFactory.getRemoteAnnotationBean().getPublicOntologies();
-    }
-
-    @Override
     public Entity getErrorOntology() throws Exception{
         return EJBFactory.getRemoteAnnotationBean().getErrorOntology();
     }
@@ -69,10 +56,5 @@ public class EJBOntologyFacade extends EJBEntityFacade implements OntologyFacade
     @Override
     public Entity publishOntology(Long ontologyEntityId, String rootName) throws Exception {
         return EJBFactory.getRemoteAnnotationBean().publishOntology(SessionMgr.getSubjectKey(), ontologyEntityId, rootName);
-    }
-
-    @Override
-    public void removeOntologyTerm(Long termEntityId) throws Exception {
-        EJBFactory.getRemoteAnnotationBean().removeOntologyTerm(SessionMgr.getSubjectKey(), termEntityId);
     }
 }

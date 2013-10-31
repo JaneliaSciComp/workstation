@@ -120,7 +120,8 @@ public class EntityTreeCellRenderer extends DefaultTreeCellRenderer implements T
             
             if (entity!= null) {
                 
-                String entityTypeName = entity.getEntityType().getName();
+                String entityAttrName = ed.getEntityAttribute()==null?"":ed.getEntityAttribute().getName();
+                String entityTypeName = entity.getEntityType()==null?"":entity.getEntityType().getName();
                 
                 // Set the labels
                 titleLabel.setText(entity.getName());
@@ -130,8 +131,7 @@ public class EntityTreeCellRenderer extends DefaultTreeCellRenderer implements T
                 String dateStr = entity.getUpdatedDate()==null?"":df.format(entity.getUpdatedDate());
                 String ownerStr = ModelMgrUtils.getNameFromSubjectKey(entity.getOwnerKey());
                 
-            	if ((ed!=null && ed.getEntityAttribute()!=null && ed.getEntityAttribute().getName().equals(EntityConstants.ATTRIBUTE_RESULT) 
-            	        || entity.getEntityType().getName().equals(EntityConstants.TYPE_PIPELINE_RUN))) {
+            	if (ed!=null && (entityAttrName.equals(EntityConstants.ATTRIBUTE_RESULT) || entityTypeName.equals(EntityConstants.TYPE_PIPELINE_RUN))) {
                 	typeLabel.setText(dateStr+" "+ownerStr);
                 }
                 else {

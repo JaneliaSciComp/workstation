@@ -1,9 +1,3 @@
-/*
- * Created by IntelliJ IDEA. 
- * User: saffordt 
- * Date: 2/8/11 
- * Time: 2:09 PM
- */
 package org.janelia.it.FlyWorkstation.gui.framework.outline;
 
 import java.awt.Dimension;
@@ -15,6 +9,7 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Queue;
+import java.util.Set;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -31,6 +26,7 @@ import javax.swing.tree.DefaultMutableTreeNode;
 import javax.swing.tree.TreePath;
 
 import org.janelia.it.FlyWorkstation.api.entity_model.access.ModelMgrAdapter;
+import org.janelia.it.FlyWorkstation.api.entity_model.events.EntityChangeEvent;
 import org.janelia.it.FlyWorkstation.api.entity_model.events.EntityCreateEvent;
 import org.janelia.it.FlyWorkstation.api.entity_model.management.EntitySelectionModel;
 import org.janelia.it.FlyWorkstation.api.entity_model.management.ModelMgr;
@@ -63,10 +59,10 @@ public abstract class EntityOutline extends EntityTree implements Refreshable, A
 	
 	private static final Logger log = LoggerFactory.getLogger(EntityOutline.class);
 	
-	private Entity root;
-	private List<Entity> entityRootList;
-	private ModelMgrAdapter mml;
-	private String currUniqueId;
+	protected Entity root;
+	protected List<Entity> entityRootList;
+	protected ModelMgrAdapter mml;
+	protected String currUniqueId;
 
     public EntityOutline() {
 		super();
@@ -120,7 +116,10 @@ public abstract class EntityOutline extends EntityTree implements Refreshable, A
 		root.setName("Data");
 		
 		if (null != entityRootList && entityRootList.size() >= 1) {
-			root.setEntityType(entityRootList.get(0).getEntityType());
+            EntityType type = new EntityType();
+            type.setName("Folder");
+            type.setAttributes(new HashSet<EntityAttribute>());
+            root.setEntityType(type);
 			
 			for (Entity commonRoot : entityRootList) {
 				addTopLevelEntity(root, commonRoot);
@@ -143,13 +142,28 @@ public abstract class EntityOutline extends EntityTree implements Refreshable, A
 		}
 	}
 
-	private EntityData addTopLevelEntity(Entity rootEntity, Entity entity) {
-		EntityData ed = rootEntity.addChildEntity(entity);
+	protected EntityData addTopLevelEntity(Entity rootEntity, Entity entity) {
+	    EntityAttribute entityAttribute = new EntityAttribute();
+	    entityAttribute.setName(EntityConstants.ATTRIBUTE_ENTITY);
+		EntityData ed = new EntityData();
+		ed.setChildEntity(entity);
+		ed.setEntityAttribute(entityAttribute);
 		ed.setOrderIndex(rootEntity.getMaxOrderIndex() + 1);
 		ed.setOwnerKey(entity.getOwnerKey());
+		rootEntity.getEntityData().add(ed);
 		return ed;
 	}
 
+	protected void removeTopLevelEntity(Entity rootEntity, Entity entity) {
+        EntityData toRemove = null;
+        for(EntityData ed : root.getEntityData()) {
+            if (ed.getChildEntity().equals(entity)) {
+                toRemove = ed;
+            }
+        }
+        root.getEntityData().remove(toRemove);
+	}
+	
 	@Override
 	public void initializeTree(Entity rootEntity) {
 		super.initializeTree(rootEntity);
@@ -171,15 +185,11 @@ public abstract class EntityOutline extends EntityTree implements Refreshable, A
 		getActionMap().put("enterAction",new AbstractAction() {
 			@Override
 			public void actionPerformed(ActionEvent e) {
-				selectEntityByUniqueId(getCurrUniqueId());
+			    if (getCurrUniqueId()!=null) {
+			        selectEntityByUniqueId(getCurrUniqueId());
+			    }
 			}
 		});
-	}
-	
-	public RootedEntity getRootedEntity(String uniqueId) {
-	    EntityData ed = getEntityDataByUniqueId(uniqueId);
-	    if (ed==null) return null;
-	    return new RootedEntity(uniqueId, ed);
 	}
 	
 	/**
@@ -318,8 +328,7 @@ public abstract class EntityOutline extends EntityTree implements Refreshable, A
     public void entityCreated(EntityCreateEvent event) {
         Entity entity = event.getEntity();
         if (entity.getValueByAttributeName(EntityConstants.ATTRIBUTE_COMMON_ROOT)!=null) {
-            log.debug("New common root detected: '{}'",entity.getName());     
-            
+            log.debug("New common root detected: {}",EntityUtils.identify(entity));     
             
             int index = 0;
             for(EntityData ed : root.getOrderedEntityData()) {
@@ -346,6 +355,33 @@ public abstract class EntityOutline extends EntityTree implements Refreshable, A
             newEd.setOrderIndex(index);
             
             addNodes(getDynamicTree().getRootNode(), newEd, index);
+        }
+    }
+
+    @Subscribe 
+    public void entityChanged(EntityChangeEvent event) {
+        super.entityChanged(event);
+        Entity entity = event.getEntity();
+        
+        Set<Entity> toRemove = new HashSet<Entity>();
+        
+        for(Entity entityRoot : entityRootList) {
+            if (entityRoot.getId().equals(entity.getId())) {
+                // A common root has changed
+                if (entity.getValueByAttributeName(EntityConstants.ATTRIBUTE_COMMON_ROOT)==null) {
+                    log.debug("No longer a common root: {}", EntityUtils.identify(entity));
+                    // It is no longer a common root!
+                    toRemove.add(entityRoot);   
+                }
+            }
+        }
+        
+        for (Entity entityRoot : toRemove) {
+            log.debug("Removing entity root: {}", EntityUtils.identify(entityRoot));
+            entityRootList.remove(entityRoot);
+            removeTopLevelEntity(root, entityRoot);
+            DefaultMutableTreeNode node = getNodeByUniqueId("/e_"+entityRoot.getId());
+            removeNode(node);
         }
     }
 
@@ -408,13 +444,14 @@ public abstract class EntityOutline extends EntityTree implements Refreshable, A
 		log.debug("Starting whole tree refresh (invalidateCache={}, restoreState={})",invalidateCache,expansionState!=null);
 		
 		showLoadingIndicator();
+		ModelMgr.getModelMgr().unregisterOnEventBus(EntityOutline.this);
 		
 		SimpleWorker entityOutlineLoadingWorker = new SimpleWorker() {
 
 			private List<Entity> rootList;
 
 			protected void doStuff() throws Exception {
-				if (invalidateCache) {
+				if (invalidateCache && getRootEntity()!=null) {
 					ModelMgr.getModelMgr().invalidateCache(getRootEntity().getChildren(), true);
 				}
 				rootList = loadRootList();
@@ -422,6 +459,8 @@ public abstract class EntityOutline extends EntityTree implements Refreshable, A
 
 			protected void hadSuccess() {
 				try {
+				    ModelMgr.getModelMgr().registerOnEventBus(EntityOutline.this);
+				    
 					init(rootList);
 					currUniqueId = null;
 					refreshInProgress.set(false);
@@ -585,7 +624,7 @@ public abstract class EntityOutline extends EntityTree implements Refreshable, A
 		}
 		
 		if (node!=node2) {
-			log.error("We have a node conflict. This should never happen!");
+			log.error("We have a node conflict. This should never happen! (@{} != @{})",System.identityHashCode(node),System.identityHashCode(node2));
 		}
 		
 		DefaultMutableTreeNode parentNode = (DefaultMutableTreeNode) node.getParent();

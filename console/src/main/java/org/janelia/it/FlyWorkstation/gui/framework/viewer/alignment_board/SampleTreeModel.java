@@ -3,19 +3,13 @@ package org.janelia.it.FlyWorkstation.gui.framework.viewer.alignment_board;
 import java.util.ArrayList;
 import java.util.List;
 
-import javax.swing.event.TreeModelEvent;
 import javax.swing.event.TreeModelListener;
 import javax.swing.tree.TreeModel;
 
-import org.janelia.it.FlyWorkstation.gui.framework.viewer.alignment_board.events.AlignmentBoardItemChangeEvent.ChangeType;
-import org.janelia.it.FlyWorkstation.gui.framework.viewer.alignment_board.events.AlignmentBoardItemRemoveEvent;
-import org.janelia.it.FlyWorkstation.model.domain.EntityWrapper;
 import org.janelia.it.FlyWorkstation.model.viewer.AlignedItem;
 import org.janelia.it.FlyWorkstation.model.viewer.AlignmentBoardContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import com.google.common.eventbus.Subscribe;
 
 /**
  * A tree model for the alignment board Layers panel. 

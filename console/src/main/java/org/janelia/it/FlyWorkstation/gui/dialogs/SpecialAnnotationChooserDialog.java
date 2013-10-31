@@ -34,7 +34,7 @@ public class SpecialAnnotationChooserDialog extends JFrame{
     private static JPanel annotationPanel = new JPanel();
     private List<OntologyElement> ontologyElements = new ArrayList<OntologyElement>();
     private DefaultTableModel model;
-    JComboBox comboBox;
+    private JComboBox comboBox;
     private static SpecialAnnotationChooserDialog  dialog = new SpecialAnnotationChooserDialog();
     private TableModelListener tableModelListener=null;
 
@@ -54,8 +54,8 @@ public class SpecialAnnotationChooserDialog extends JFrame{
         final JTable table = new JTable(model);
         TableColumn comboColumn = table.getColumnModel().getColumn(1);
 
-        List<OntologyElement> list = ModelMgr.getModelMgr().getCurrentOntology().getChildren();
-        iterateAndAddRows(list, 0);
+        OntologyElement root = new OntologyElement(null, ModelMgr.getModelMgr().getCurrentOntology());
+        iterateAndAddRows(root.getChildren(), 0);
 
         comboColumn.setCellEditor(new DefaultCellEditor(comboBox));
         for(int i = 0; i < model.getRowCount(); i++){
@@ -225,7 +225,8 @@ public class SpecialAnnotationChooserDialog extends JFrame{
         }
 
 
-        for(OntologyElement element:list){
+        for(OntologyElement element : list){
+            
             if(element.getType() instanceof EnumText){
                 model.addRow(new Object[]{tabString + element.getName()});
                 OntologyElement valueEnum = ((EnumText) element.getType()).getValueEnum();

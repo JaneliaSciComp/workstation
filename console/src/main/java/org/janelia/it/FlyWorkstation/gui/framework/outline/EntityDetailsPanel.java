@@ -406,8 +406,12 @@ public class EntityDetailsPanel extends JPanel implements Accessibility, Refresh
         		if (role!=null) {
         			attributesTable.addRow(new AttributeValue("Role", role));
         		}
-        		attributesTable.addRow(new AttributeValue("Creation Date", df.format(loadedEntity.getCreationDate())));
-        		attributesTable.addRow(new AttributeValue("Updated Date", df.format(loadedEntity.getUpdatedDate())));
+        		if (loadedEntity.getCreationDate()!=null) {
+        		    attributesTable.addRow(new AttributeValue("Creation Date", df.format(loadedEntity.getCreationDate())));
+        		}
+        		if (loadedEntity.getUpdatedDate()!=null) {
+        		    attributesTable.addRow(new AttributeValue("Updated Date", df.format(loadedEntity.getUpdatedDate())));
+        		}
         		
         		Set<String> attrNames = new HashSet<String>();
         		

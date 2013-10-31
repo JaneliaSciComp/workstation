@@ -125,7 +125,7 @@ public class DynamicTree extends JPanel implements Refreshable {
         return lazyLoading;
     }
 
-    protected void setLazyLoading(boolean lazyLoading) {
+    public void setLazyLoading(boolean lazyLoading) {
         this.lazyLoading = lazyLoading;
     }
 
@@ -555,7 +555,12 @@ public class DynamicTree extends JPanel implements Refreshable {
     @Override
 	public void totalRefresh() {
     }
-    
+
+    public DynamicTreeToolbar getToolbar() {
+        return toolbar;
+    }
+
+    public void setToolbar(DynamicTreeToolbar toolbar) {
+        this.toolbar = toolbar;
+    }
 }
-
-

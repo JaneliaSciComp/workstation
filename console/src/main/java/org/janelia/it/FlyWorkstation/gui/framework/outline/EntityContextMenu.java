@@ -168,8 +168,10 @@ public class EntityContextMenu extends JPopupMenu {
     private void addBadDataButtons(JMenu errorMenu) {
 
         if (null != ModelMgr.getModelMgr().getErrorOntology()) {
-            List<OntologyElement> ontologyElements = ModelMgr.getModelMgr().getErrorOntology().getChildren();
-            for (final OntologyElement element : ontologyElements) {
+            Entity errorOntology = ModelMgr.getModelMgr().getErrorOntology();
+            for (final EntityData entityData : errorOntology.getOrderedEntityData()) {
+                if (entityData.getChildEntity()==null) continue;
+            	final OntologyElement element = new OntologyElement(entityData.getParentEntity(), entityData.getChildEntity());
                 errorMenu.add(new JMenuItem(element.getName())).addActionListener(new ActionListener() {
                     @Override
                     public void actionPerformed(ActionEvent e) {
@@ -1008,9 +1010,8 @@ public class EntityContextMenu extends JPopupMenu {
 
         for (RootedEntity rootedEntity : rootedEntityList) {
             EntityData ed = rootedEntity.getEntityData();
-            if (ed.getId() == null && !EntityUtils.isCommonRoot(ed.getChildEntity())) {
-                // Fake ED, not a common root, this must be part of an
-                // annotation session.
+            if (ed.getId() == null && !EntityUtils.isCommonRoot(ed.getChildEntity()) && !EntityUtils.isOntologyRoot(ed.getChildEntity())) {
+                // Fake ED, not a root, this must be part of an annotation session.
                 // TODO: this check could be done more robustly
                 return null;
             }

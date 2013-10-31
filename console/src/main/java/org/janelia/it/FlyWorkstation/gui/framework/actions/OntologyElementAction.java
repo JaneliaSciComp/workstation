@@ -1,9 +1,3 @@
-/*
- * Created by IntelliJ IDEA.
- * User: rokickik
- * Date: 6/22/11
- * Time: 1:35 PM
- */
 package org.janelia.it.FlyWorkstation.gui.framework.actions;
 
 import org.janelia.it.jacs.model.ontology.OntologyElement;
@@ -16,18 +10,27 @@ import org.janelia.it.jacs.model.ontology.OntologyElement;
 public abstract class OntologyElementAction implements Action {
 
     private OntologyElement element;
+    private String uniqueId;
 
     public void init(OntologyElement element) {
         this.element = element;
+    }
+    
+    public void init(String uniqueId) {
+        this.uniqueId = uniqueId;
     }
 
     public OntologyElement getOntologyElement() {
         return element;
     }
 
+    public String getUniqueId() {
+        return uniqueId;
+    }
+
     @Override
     public String getName() {
-        return element.getName();
+        return uniqueId;
     }
 
     @Override
@@ -35,15 +38,15 @@ public abstract class OntologyElementAction implements Action {
 
     @Override
     public boolean equals(Object o) {
-        if (this == o) return true;
-        if (!(o instanceof OntologyElementAction)) return false;
-        OntologyElementAction that = (OntologyElementAction) o;
-        if (!element.equals(that.element)) return false;
-        return true;
+        if (o instanceof OntologyElementAction) {
+            OntologyElementAction other = (OntologyElementAction)o;
+            return uniqueId.equals(other.getUniqueId());
+        }
+        return false;
     }
 
     @Override
     public int hashCode() {
-        return element.hashCode();
+        return uniqueId.hashCode();
     }
 }

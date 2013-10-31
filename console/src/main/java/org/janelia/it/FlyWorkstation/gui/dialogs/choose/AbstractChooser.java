@@ -15,10 +15,10 @@ import javax.swing.*;
 
 import org.janelia.it.FlyWorkstation.gui.dialogs.ModalDialog;
 
-
 /**
- * A chooser for arbitrary objects. This class follows the pattern set by JFileChooser.
- *
+ * A chooser for arbitrary objects. This class follows the pattern set by
+ * JFileChooser.
+ * 
  * @author <a href="mailto:rokickik@janelia.hhmi.org">Konrad Rokicki</a>
  */
 public abstract class AbstractChooser<T> extends ModalDialog {
@@ -26,43 +26,42 @@ public abstract class AbstractChooser<T> extends ModalDialog {
     public static final int ERROR_OPTION = -1;
     public static final int CANCEL_OPTION = 0;
     public static final int CHOOSE_OPTION = 1;
-    
+
     private int returnValue = ERROR_OPTION;
-    
+
     private final List<T> chosenElements = new ArrayList<T>();
 
     public AbstractChooser() {
         this("Choose", "Choose the selected elements");
     }
 
-    public AbstractChooser(String okButtonText,
-                           String okToolTipText) {
+    public AbstractChooser(String okButtonText, String okToolTipText) {
 
-    	super();
-    	
+        super();
+
         setPreferredSize(new Dimension(600, 800));
         setLayout(new BorderLayout());
 
         JButton okButton = new JButton(okButtonText);
         okButton.setToolTipText(okToolTipText);
         okButton.addActionListener(new ActionListener() {
-			@Override
-			public void actionPerformed(ActionEvent e) {
-				chooseSelection();
-		        returnValue = CHOOSE_OPTION;
-	            setVisible(false);
-			}
-		});
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                chooseSelection();
+                returnValue = CHOOSE_OPTION;
+                setVisible(false);
+            }
+        });
 
         JButton cancelButton = new JButton("Cancel");
         cancelButton.setToolTipText("Close without saving changes");
         cancelButton.addActionListener(new ActionListener() {
-			@Override
-			public void actionPerformed(ActionEvent e) {
-				returnValue = CANCEL_OPTION;
-	            setVisible(false);
-			}
-		});
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                returnValue = CANCEL_OPTION;
+                setVisible(false);
+            }
+        });
 
         JPanel buttonPane = new JPanel();
         buttonPane.setLayout(new BoxLayout(buttonPane, BoxLayout.LINE_AXIS));
@@ -72,7 +71,7 @@ public abstract class AbstractChooser<T> extends ModalDialog {
         buttonPane.add(Box.createRigidArea(new Dimension(10, 0)));
         buttonPane.add(cancelButton);
         add(buttonPane, BorderLayout.SOUTH);
-        
+
         addWindowListener(new WindowAdapter() {
             public void windowClosing(WindowEvent e) {
                 returnValue = CANCEL_OPTION;
@@ -85,16 +84,16 @@ public abstract class AbstractChooser<T> extends ModalDialog {
     }
 
     public int showDialog(Component parent) throws HeadlessException {
-    	packAndShow();
+        packAndShow();
         // Blocks until dialog is no longer visible, and then:
         removeAll();
         dispose();
         return returnValue;
     }
-    
+
     protected void chooseSelection() {
-    	chosenElements.clear();
-    	chosenElements.addAll(choosePressed());
+        chosenElements.clear();
+        chosenElements.addAll(choosePressed());
     }
 
     public List<T> getChosenElements() {
@@ -102,7 +101,8 @@ public abstract class AbstractChooser<T> extends ModalDialog {
     }
 
     /**
-     * Override this to provide functionality that runs when the user presses the "Choose" button.
+     * Override this to provide functionality that runs when the user presses
+     * the "Choose" button.
      */
     protected abstract List<T> choosePressed();
 

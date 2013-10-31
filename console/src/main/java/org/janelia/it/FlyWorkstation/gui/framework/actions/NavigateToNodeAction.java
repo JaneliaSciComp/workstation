@@ -1,12 +1,9 @@
-/*
- * Created by IntelliJ IDEA.
- * User: rokickik
- * Date: 6/22/11
- * Time: 1:31 PM
- */
 package org.janelia.it.FlyWorkstation.gui.framework.actions;
 
+import org.janelia.it.FlyWorkstation.gui.framework.outline.OntologyOutline;
 import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr;
+import org.janelia.it.jacs.model.entity.EntityData;
+import org.janelia.it.jacs.model.ontology.OntologyElement;
 
 /**
  * This action expands or collapses the corresponding entity node in the ontology tree.
@@ -17,6 +14,14 @@ public class NavigateToNodeAction extends OntologyElementAction {
 
     @Override
     public void doAction() {
-        SessionMgr.getSessionMgr().getActiveBrowser().getOntologyOutline().navigateToOntologyElement(getOntologyElement());
+        final OntologyOutline ontologyOutline = SessionMgr.getSessionMgr().getActiveBrowser().getOntologyOutline();
+        
+        OntologyElement element = getOntologyElement();
+        if (element==null) {
+            EntityData entityTermEd = ontologyOutline.getEntityDataByUniqueId(getUniqueId());
+            element = ontologyOutline.getOntologyElement(entityTermEd);
+        }
+        
+        ontologyOutline.navigateToOntologyElement(element);
     }
 }

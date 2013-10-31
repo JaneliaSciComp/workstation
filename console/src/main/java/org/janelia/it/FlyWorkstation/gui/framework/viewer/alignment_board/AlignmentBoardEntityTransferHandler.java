@@ -2,6 +2,7 @@ package org.janelia.it.FlyWorkstation.gui.framework.viewer.alignment_board;
 
 import org.janelia.it.FlyWorkstation.api.entity_model.management.ModelMgr;
 import org.janelia.it.FlyWorkstation.gui.framework.outline.EntityTransferHandler;
+import org.janelia.it.FlyWorkstation.gui.framework.outline.TransferableEntityList;
 import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.FlyWorkstation.model.domain.AlignmentContext;
 import org.janelia.it.FlyWorkstation.model.domain.Sample;
@@ -13,6 +14,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.swing.*;
+
 import java.awt.datatransfer.DataFlavor;
 import java.awt.datatransfer.Transferable;
 import java.util.Iterator;
@@ -42,15 +44,13 @@ public class AlignmentBoardEntityTransferHandler extends EntityTransferHandler {
         boolean rtnVal = super.canImport( support );
 
         if ( rtnVal ) {
-            DataFlavor flavor = null;
             try {
-                flavor = getNodesFlavor();
                 // Get the target entity.
                 Transferable transferable = support.getTransferable();
 
                 AlignmentBoardContext abContext = SessionMgr.getBrowser().getLayersPanel().getAlignmentBoardContext();
                 Entity abEntity = abContext.getInternalEntity();
-                List<RootedEntity> entities = (List<RootedEntity>)transferable.getTransferData( flavor );
+                List<RootedEntity> entities = (List<RootedEntity>)transferable.getTransferData(TransferableEntityList.getEntityFlavor());
                 AlignmentContext standardContext = new AlignmentContext(
                         abEntity.getValueByAttributeName( EntityConstants.ATTRIBUTE_ALIGNMENT_SPACE ),
                         abEntity.getValueByAttributeName( EntityConstants.ATTRIBUTE_OPTICAL_RESOLUTION ),

@@ -198,10 +198,10 @@ public class OWLDataLoader extends SimpleWorker {
         }
         
         OntologyElementType type = hasChildren ? new Category() : new Tag();
-        EntityData newData = saveObjects ? ModelMgr.getModelMgr().createOntologyTerm(parentEntity.getId(), label, type, orderIndex) : new EntityData();
+        Entity newTerm = saveObjects ? ModelMgr.getModelMgr().createOntologyTerm(parentEntity.getId(), label, type, orderIndex) : new Entity();
         incrementProgress();
 
-        if (out != null) out.println(label + " (" + type.getName() + " saved as " + newData.getId() + ")");
+        if (out != null) out.println(label + " (" + type.getName() + " saved as " + newTerm.getId() + ")");
 
         // TODO: below is a code snippet showing how to get all relationships.. this should be loaded in the future
 //        if (label.equals("median bundle")) {
@@ -224,7 +224,7 @@ public class OWLDataLoader extends SimpleWorker {
         for (OWLClass child : reasoner.getSubClasses(clazz, true).getFlattened()) {
             if (!child.equals(clazz)) {
                 if (reasoner.isSatisfiable(child)) {
-                    loadAsEntities(newData.getChildEntity(), child, level + 1, childOrder++);
+                    loadAsEntities(newTerm, child, level + 1, childOrder++);
                     if (isCancelled()) return;
                 }
             }

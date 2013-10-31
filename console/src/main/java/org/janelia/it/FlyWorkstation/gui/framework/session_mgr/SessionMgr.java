@@ -784,6 +784,7 @@ public class SessionMgr {
                     if (SessionMgr.getBrowser()!=null) {
                         log.info("Refreshing all views");
                         SessionMgr.getBrowser().getEntityOutline().refresh();
+                        SessionMgr.getBrowser().getOntologyOutline().refresh();
                         SessionMgr.getBrowser().getViewerManager().clearAllViewers();
                     }
                 }

@@ -7,8 +7,14 @@ import org.janelia.it.FlyWorkstation.api.entity_model.access.ModelMgrAdapter;
 import org.janelia.it.FlyWorkstation.api.entity_model.management.EntitySelectionModel;
 import org.janelia.it.FlyWorkstation.api.entity_model.management.ModelMgr;
 import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr;
-import org.janelia.it.FlyWorkstation.gui.framework.viewer.*;
+import org.janelia.it.FlyWorkstation.gui.framework.viewer.ErrorViewer;
+import org.janelia.it.FlyWorkstation.gui.framework.viewer.IconDemoPanel;
+import org.janelia.it.FlyWorkstation.gui.framework.viewer.TextFileViewer;
+import org.janelia.it.FlyWorkstation.gui.framework.viewer.Viewer;
+import org.janelia.it.FlyWorkstation.gui.framework.viewer.ViewerPane;
+import org.janelia.it.FlyWorkstation.gui.framework.viewer.ViewerSplitPanel;
 import org.janelia.it.FlyWorkstation.model.entity.RootedEntity;
+import org.janelia.it.jacs.model.entity.Entity;
 import org.janelia.it.jacs.model.entity.EntityConstants;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -181,8 +187,8 @@ public class ViewerManager {
         }
     }
     
-    public void showEntityInInspector(RootedEntity rootedEntity) {
-        SessionMgr.getBrowser().getEntityDetailsOutline().loadRootedEntity(rootedEntity);
+    public void showEntityInInspector(Entity entity) {
+        SessionMgr.getBrowser().getEntityDetailsOutline().loadEntity(entity);
     }
     
 	public void showEntityInActiveViewer(RootedEntity rootedEntity) {

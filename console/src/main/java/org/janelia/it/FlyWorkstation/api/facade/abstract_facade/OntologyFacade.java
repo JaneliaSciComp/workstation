@@ -14,7 +14,8 @@ import java.util.List;
  * Time: 4:51 PM
  */
 public interface OntologyFacade extends EntityFacade {
-    List<Entity> getOntologies();
+    
+    public List<Entity> getOntologyRootEntities() throws Exception;
 
     public Entity createOntologyAnnotation(OntologyAnnotation annotation) throws Exception;
 
@@ -26,13 +27,7 @@ public interface OntologyFacade extends EntityFacade {
 
     public Entity getOntologyTree(Long rootEntityId) throws Exception;
 
-    public List<Entity> getPrivateOntologies() throws Exception;
-
-    public List<Entity> getPublicOntologies() throws Exception;
-
     public Entity getErrorOntology() throws Exception;
 
     public Entity publishOntology(Long ontologyEntityId, String rootName) throws Exception;
-
-    public void removeOntologyTerm(Long termEntityId) throws Exception;
 }
