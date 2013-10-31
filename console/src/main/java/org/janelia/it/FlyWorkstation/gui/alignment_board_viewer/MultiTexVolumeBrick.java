@@ -123,7 +123,7 @@ public class MultiTexVolumeBrick implements VolumeBrickI
             createSyntheticData();
         }
 
-        gl.glEnable(GL2.GL_TEXTURE);
+        gl.glEnable(GL2.GL_TEXTURE_3D);
         if (bSignalTextureNeedsUpload) {
             uploadSignalTexture(gl);
             reportError( gl, "init mux brick - upload signal" );
@@ -167,7 +167,7 @@ public class MultiTexVolumeBrick implements VolumeBrickI
             }
         }
 		// tidy up
-        gl.glDisable(GL2.GL_TEXTURE);
+        gl.glDisable(GL2.GL_TEXTURE_3D);
         reportError( gl, "mult-tex init exit" );
 		bIsInitialized = true;
 	}

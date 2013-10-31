@@ -30,6 +30,7 @@ public class TextureMediator {
     private int textureOffset; // This will be 0, 1, ...
 
     private boolean isInitialized = false;
+    private boolean hasBeenUploaded = false;
 
     private TextureDataI textureData;
     private final Logger logger = LoggerFactory.getLogger( TextureMediator.class );
@@ -154,6 +155,11 @@ public class TextureMediator {
                 exGlTexImage.printStackTrace();
             }
             reportError( "glTexImage", gl );
+            gl.glBindTexture( GL2.GL_TEXTURE_3D, 0 );
+            gl.glDisable( GL2.GL_TEXTURE_3D );
+            reportError( "disable-tex", gl );
+
+            hasBeenUploaded = true;
 
             // DEBUG
             //if ( expectedRemaining < 1000000 )
@@ -235,18 +241,29 @@ public class TextureMediator {
                 exGlTexImage.printStackTrace();
             }
             reportError( "glTexImage", gl );
+
+            gl.glBindTexture( GL2.GL_TEXTURE_3D, 0 );
+            gl.glDisable( GL2.GL_TEXTURE_3D );
+            reportError( "disable-tex", gl );
+
+            hasBeenUploaded = true;
+
         }
 
     }
 
     /** Release the texture data memory from the GPU. */
     public void deleteTexture( GL2 gl ) {
-        reportError( "tex-mediator: upon entry to delete tex", gl );
-        IntBuffer textureNameBuffer = IntBuffer.allocate( 1 );
-        textureNameBuffer.put( textureName );
-        textureNameBuffer.rewind();
-        gl.glDeleteTextures( 1, textureNameBuffer );
-        reportError( "tex-mediator: delete texture", gl );
+        if ( hasBeenUploaded ) {
+            reportError( "tex-mediator: upon entry to delete tex", gl );
+            IntBuffer textureNameBuffer = IntBuffer.allocate( 1 );
+            textureNameBuffer.put( textureName );
+            textureNameBuffer.rewind();
+            textureNameBuffer.rewind();
+            gl.glDeleteTextures( 1, textureNameBuffer );
+            reportError( "tex-mediator: delete texture", gl );
+            hasBeenUploaded = false;
+        }
     }
 
     public int getTextureOffset() {
