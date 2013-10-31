@@ -120,7 +120,6 @@ public class AxesActor implements GLActor
         gl.glFrontFace(GL2.GL_CW);
         reportError( gl, "Display of axes-actor cull-face" );
 
-		gl.glPushAttrib(GL2.GL_LIGHTING_BIT | GL2.GL_ENABLE_BIT);
         reportError( gl, "Display of axes-actor lighting 1" );
 		gl.glShadeModel(GL2.GL_FLAT);
         reportError( gl, "Display of axes-actor lighting 2" );
@@ -128,15 +127,14 @@ public class AxesActor implements GLActor
         reportError( gl, "Display of axes-actor lighting 3" );
 
         // set blending to enable transparent voxels
+        gl.glEnable(GL2.GL_BLEND);
         if (renderMethod == RenderMethod.ALPHA_BLENDING) {
-            gl.glEnable(GL2.GL_BLEND);
             gl.glBlendEquation(GL2.GL_FUNC_ADD);
             // Weight source by GL_ONE because we are using premultiplied alpha.
             gl.glBlendFunc(GL2.GL_ONE, GL2.GL_ONE_MINUS_SRC_ALPHA);
             reportError( gl, "Display of axes-actor alpha" );
         }
         else if (renderMethod == RenderMethod.MAXIMUM_INTENSITY) {
-    	    gl.glEnable(GL2.GL_BLEND);
             gl.glBlendEquation(GL2.GL_MAX);
             gl.glBlendFunc(GL2.GL_ONE, GL2.GL_DST_ALPHA);
             reportError( gl, "Display of axes-actor maxintensity" );
@@ -169,7 +167,7 @@ public class AxesActor implements GLActor
         gl.glDisable( GL2.GL_LINE_SMOOTH );
         reportError( gl, "Display of axes-actor 6" );
 
-        gl.glPopAttrib();
+        gl.glDisable(GL2.GL_BLEND);
         reportError(gl, "Axes-actor, end of display.");
 
 	}

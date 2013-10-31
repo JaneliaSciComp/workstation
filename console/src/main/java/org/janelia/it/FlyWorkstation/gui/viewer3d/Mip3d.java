@@ -159,8 +159,8 @@ public class Mip3d extends BaseGLViewer implements ActionListener {
             axes.setFullAxes( true );
 
             // Enforce opaque, transparent ordering of actors.
-            this.renderer.addActor( axes );
             this.renderer.addActor( brick );
+            this.renderer.addActor( axes );
 
             return true;
         }

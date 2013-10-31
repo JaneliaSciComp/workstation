@@ -206,15 +206,14 @@ public class MultiTexVolumeBrick implements VolumeBrickI
         reportError( gl, "display mux brick - attribs" );
 
         // set blending to enable transparent voxels
+        gl.glEnable(GL2.GL_BLEND);
         if (renderMethod == RenderMethod.ALPHA_BLENDING) {
-            gl.glEnable(GL2.GL_BLEND);
             gl.glBlendEquation(GL2.GL_FUNC_ADD);
             // Weight source by GL_ONE because we are using premultiplied alpha.
             gl.glBlendFunc(GL2.GL_ONE, GL2.GL_ONE_MINUS_SRC_ALPHA);
             reportError( gl, "display mux brick - alpha" );
         }
         else if (renderMethod == RenderMethod.MAXIMUM_INTENSITY) {
-    	    gl.glEnable(GL2.GL_BLEND);
             gl.glBlendEquation(GL2.GL_MAX);
             gl.glBlendFunc(GL2.GL_ONE, GL2.GL_DST_ALPHA);
             // gl.glBlendFunc(GL2.GL_ONE_MINUS_DST_COLOR, GL2.GL_ZERO); // inverted?  http://stackoverflow.com/questions/2656905/opengl-invert-framebuffer-pixels
@@ -236,6 +235,7 @@ public class MultiTexVolumeBrick implements VolumeBrickI
             volumeBrickShader.unload(gl);
             reportError( gl, "display mux brick - unload shader" );
         }
+        gl.glDisable(GL2.GL_BLEND);
 		gl.glPopAttrib();
         reportError(gl, "Volume Brick, end of display.");
 
