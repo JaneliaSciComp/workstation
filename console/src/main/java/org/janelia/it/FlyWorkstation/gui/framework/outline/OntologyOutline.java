@@ -42,6 +42,7 @@ import javax.swing.tree.DefaultTreeModel;
 import org.janelia.it.FlyWorkstation.api.entity_model.access.ModelMgrAdapter;
 import org.janelia.it.FlyWorkstation.api.entity_model.events.EntityChangeEvent;
 import org.janelia.it.FlyWorkstation.api.entity_model.events.EntityCreateEvent;
+import org.janelia.it.FlyWorkstation.api.entity_model.events.EntityInvalidationEvent;
 import org.janelia.it.FlyWorkstation.api.entity_model.events.EntityRemoveEvent;
 import org.janelia.it.FlyWorkstation.api.entity_model.management.EntitySelectionModel;
 import org.janelia.it.FlyWorkstation.api.entity_model.management.ModelMgr;
@@ -55,13 +56,12 @@ import org.janelia.it.FlyWorkstation.gui.framework.actions.OntologyElementAction
 import org.janelia.it.FlyWorkstation.gui.framework.keybind.KeyboardShortcut;
 import org.janelia.it.FlyWorkstation.gui.framework.keybind.KeymapUtil;
 import org.janelia.it.FlyWorkstation.gui.framework.outline.ontology.OntologyContextMenu;
-import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.BrowserModel;
 import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr;
-import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionModelListener;
 import org.janelia.it.FlyWorkstation.gui.framework.tree.ExpansionState;
 import org.janelia.it.FlyWorkstation.gui.util.Icons;
 import org.janelia.it.FlyWorkstation.gui.util.JScrollPopupMenu;
 import org.janelia.it.FlyWorkstation.gui.util.MouseForwarder;
+import org.janelia.it.FlyWorkstation.model.entity.ForbiddenEntity;
 import org.janelia.it.FlyWorkstation.model.entity.RootedEntity;
 import org.janelia.it.FlyWorkstation.shared.workers.SimpleWorker;
 import org.janelia.it.jacs.model.entity.Entity;
@@ -558,6 +558,9 @@ public abstract class OntologyOutline extends EntityTree implements Refreshable,
         ontologyActionMap.put(rootedEntity.getUniqueId(), action);
 
         for (RootedEntity rootedChild : rootedEntity.getRootedChildren()) {
+            if (rootedChild.getEntity() instanceof ForbiddenEntity) {
+                continue;
+            }
             populateActionMap(rootedChild);
         }
     }
@@ -606,22 +609,44 @@ public abstract class OntologyOutline extends EntityTree implements Refreshable,
     @Subscribe 
     public void entityChanged(EntityChangeEvent event) {
         super.entityChanged(event);
+        final Entity entity = event.getEntity();
         
-        Entity entity = event.getEntity();
-        for (DefaultMutableTreeNode node : getNodesByEntityId(entity.getId())) {
-            String uniqueId = getDynamicTree().getUniqueId(node);
-            RootedEntity changedRe = getRootedEntity(uniqueId);
+        // Ensure this runs after node updates
+        SwingUtilities.invokeLater(new Runnable() {
             
-            for(EntityData ed : changedRe.getEntity().getEntityData()) {
-                Entity child = ed.getChildEntity();
-                if (child!=null) {
-                    RootedEntity childRe = changedRe.getChild(ed);
-                    populateActionMap(childRe);
+            @Override
+            public void run() {
+                for (DefaultMutableTreeNode node : getNodesByEntityId(entity.getId())) {
+                    String uniqueId = getDynamicTree().getUniqueId(node);
+                    RootedEntity changedRe = getRootedEntity(uniqueId);
+                    
+                    for(EntityData ed : changedRe.getEntity().getEntityData()) {
+                        Entity child = ed.getChildEntity();
+                        if (child!=null) {
+                            RootedEntity childRe = changedRe.getChild(ed);
+                            populateActionMap(childRe);
+                        }
+                    }
                 }
+            }
+        });
+        
+    }
+
+    @Subscribe 
+    public void entityInvalidated(EntityInvalidationEvent event) {
+        super.entityInvalidated(event);
+        
+        Collection<Entity> invalidated = event.getInvalidatedEntities();
+        for(Entity entity : invalidated) {
+            for(DefaultMutableTreeNode node : getNodesByEntityId(entity.getId())) {
+                String uniqueId = getDynamicTree().getUniqueId(node);
+                log.debug("Removing invalidate node from action map: "+uniqueId);
+                ontologyActionMap.remove(uniqueId);
             }
         }
     }
-
+    
     @Override
     public void refresh() {
         refresh(true, null);
@@ -783,5 +808,14 @@ public abstract class OntologyOutline extends EntityTree implements Refreshable,
         }
      
         return element;
+    }
+
+    public OntologyElement getRootOntologyElement() {
+        return getOntologyElement(getDynamicTree().getRootNode());
+    }
+
+    @Override
+    public String toString() {
+        return "OntologyOutline("+root+")";
     }
 }

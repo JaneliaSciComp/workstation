@@ -66,7 +66,7 @@ public abstract class EntityTransferHandler extends TransferHandler {
             for(TreePath path : paths) {
                 DefaultMutableTreeNode node = (DefaultMutableTreeNode) path.getLastPathComponent();
                 RootedEntity rootedEntity = entityTree.getRootedEntity(entityTree.getDynamicTree().getUniqueId(node));
-                log.debug("Adding entity to transferrable: (@{})",EntityUtils.identify(rootedEntity.getEntity()));
+                log.debug("Adding entity to transferrable: {}",EntityUtils.identify(rootedEntity.getEntity()));
                 entityList.add(rootedEntity);
             }
             return new TransferableEntityList(entityTree, entityList);
@@ -120,6 +120,7 @@ public abstract class EntityTransferHandler extends TransferHandler {
 			if (dropTarget instanceof EntityTree) {
 
 	            DataFlavor reFlavor = TransferableEntityList.getRootedEntityFlavor();
+	            DataFlavor etsFlavor = TransferableEntityList.getEntityTreeSourceFlavor();
 	            
 	            if (!support.isDataFlavorSupported(reFlavor)) {
 	                log.debug("Disallow transfer because {} data flavor {} supported",reFlavor.getMimeType());
@@ -142,9 +143,22 @@ public abstract class EntityTransferHandler extends TransferHandler {
 	            // Derive unique TreePaths for the source entities. It will allow us to enforce some tree-based rules.
 	            List<TreePath> sourcePaths = new ArrayList<TreePath>();        
 	            if (sourceComponent instanceof JTree) {
+
+	                EntityTree sourceEntityTree = (EntityTree)support.getTransferable().getTransferData(etsFlavor);
+	                
+	                if (sourceEntityTree!=targetEntityTree) {
+	                    log.debug("Disallow tree to tree transfer");
+	                    return false;
+	                }
+	                
 	                JTree tree = (JTree)sourceComponent;
 	                int[] selRows = tree.getSelectionRows();
-	                sourcePaths.add(tree.getPathForRow(selRows[0]));
+	                if (selRows!=null && selRows.length>0) {
+	                    TreePath path = tree.getPathForRow(selRows[0]);
+	                    if (path!=null) {
+	                        sourcePaths.add(path);
+	                    }
+	                }
 	            }
 	            else if (sourceComponent instanceof AnnotatedImageButton) {
 	                List<String> selectedEntities = new ArrayList<String>(
@@ -352,16 +366,6 @@ public abstract class EntityTransferHandler extends TransferHandler {
 			EntityData newEd = ModelMgr.getModelMgr().addEntityToParent(parentEntity, rootedEntity.getEntity(), 
 			        parentEntity.getMaxOrderIndex()==null?0:parentEntity.getMaxOrderIndex()+1, getAttribute());
 
-//	        EntityData newEd = new EntityData();
-//	        newEd.setParentEntity(parentEntity);
-//	        newEd.setChildEntity(rootedEntity.getEntity());
-//	        newEd.setOwnerKey(parentEntity.getOwnerKey());
-//	        Date createDate = new Date();
-//	        newEd.setCreationDate(createDate);
-//	        newEd.setUpdatedDate(createDate);
-//	        newEd.setEntityAttribute(parentEntity.getAttributeByName(getAttribute()));
-//	        parentEntity.getEntityData().add(newEd);
-	        			
 			if (destIndex > origSize) {
 				eds.add(newEd);
 			} 
@@ -373,21 +377,6 @@ public abstract class EntityTransferHandler extends TransferHandler {
 			    edsToRemove.add(rootedEntity.getEntityData());
 			}
 		}
-
-//        List<EntityData> edsToDelete = new ArrayList<EntityData>();
-        
-        // Remove old eds if necessary
-//        for(EntityData ed : edsToRemove) {
-//            if (ed.getParentEntity().getId().equals(parentEntity.getId())) {
-//                parentEntity.getEntityData().remove(ed);
-//                eds.remove(ed);
-//                ModelMgr.getModelMgr().removeEntityData(ed);
-//                log.debug("Removed old ED {}",ed.getId());
-//            }
-//            else {
-//                edsToDelete.add(ed);
-//            }
-//        }
         
 		log.debug("Renumbering children");
 		
@@ -442,11 +431,13 @@ public abstract class EntityTransferHandler extends TransferHandler {
         }
     }
     
-    protected Object getEntityTreeAncestor(JComponent sourceComponent) {
+    protected EntityTree getEntityTreeAncestor(JComponent sourceComponent) {
         JComponent component = sourceComponent;
-        while (!(component instanceof EntityTree)) {
+        while (true) {
+            if (component == null) break;
+            if (component instanceof EntityTree) return (EntityTree)component;
             component = (JComponent)component.getParent();
         }
-        return component;
+        return null;
     }
 }

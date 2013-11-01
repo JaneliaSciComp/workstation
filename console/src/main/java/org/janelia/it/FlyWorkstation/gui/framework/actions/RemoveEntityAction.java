@@ -15,6 +15,7 @@ import org.janelia.it.FlyWorkstation.api.entity_model.management.ModelMgrUtils;
 import org.janelia.it.FlyWorkstation.gui.framework.console.Browser;
 import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.FlyWorkstation.model.entity.RootedEntity;
+import org.janelia.it.FlyWorkstation.shared.workers.BackgroundWorker;
 import org.janelia.it.FlyWorkstation.shared.workers.IndeterminateProgressMonitor;
 import org.janelia.it.FlyWorkstation.shared.workers.SimpleWorker;
 import org.janelia.it.jacs.model.entity.Entity;
@@ -37,10 +38,12 @@ public class RemoveEntityAction implements Action {
     
 	private final List<RootedEntity> rootedEntityList;
 	private final boolean showConfirmationDialogs;
+	private final boolean runInBackground;
 	
-	public RemoveEntityAction(List<RootedEntity> rootedEntityList, boolean showConfirmationDialogs) {
+	public RemoveEntityAction(List<RootedEntity> rootedEntityList, boolean showConfirmationDialogs, boolean runInBackground) {
 		this.rootedEntityList = rootedEntityList;
 		this.showConfirmationDialogs = showConfirmationDialogs;
+		this.runInBackground = runInBackground;
 	}
 	
     @Override
@@ -213,41 +216,90 @@ public class RemoveEntityAction implements Action {
 				if (toReallyDelete.isEmpty()) {
 					return;
 				}
-				
-				SimpleWorker removeTask = new SimpleWorker() {
-					@Override
-					protected void doStuff() throws Exception {
-						for(EntityData ed : toReallyDelete) {
-							if (removeRootTag.contains(ed)) {
-							    log.debug("Demoting to common root: "+ed.getChildEntity().getName());
-								ModelMgr.getModelMgr().demoteCommonRootToFolder(ed.getChildEntity());
-							}
-							else if (removeReference.contains(ed)) {
-							    log.debug("Removing reference: "+ed.getId());
-								ModelMgr.getModelMgr().removeEntityData(ed);
-							} 
-							else if (removeTree.contains(ed)) {
-							    log.debug("Removing tree: "+ed.getChildEntity().getId());
-								ModelMgr.getModelMgr().deleteEntityTree(ed.getChildEntity().getId());
-							}
-							else {
-								throw new IllegalStateException("Unknown deletion type for EntityData.id="+ed.getId());
-							}
-						}
-					}
-
-					@Override
-					protected void hadSuccess() {
-					}
-
-					@Override
-					protected void hadError(Throwable error) {
-						SessionMgr.getSessionMgr().handleException(error);
-					}
-				};
-
-				removeTask.setProgressMonitor(new IndeterminateProgressMonitor(SessionMgr.getBrowser(), "Removing...", ""));
-				removeTask.execute();
+				        
+				if (runInBackground) {
+    	            BackgroundWorker removeTask = new BackgroundWorker() {
+    
+                        @Override
+                        public String getName() {
+                            return "Remove entities";
+                        }
+            
+    					@Override
+    					protected void doStuff() throws Exception {
+                            
+    						for(EntityData ed : toReallyDelete) {
+    							if (removeRootTag.contains(ed)) {
+    							    setStatus("Demoting "+ed.getChildEntity().getName()+" from folder");
+    							    log.debug("Demoting to common root: "+ed.getChildEntity().getName());
+    								ModelMgr.getModelMgr().demoteCommonRootToFolder(ed.getChildEntity());
+    							}
+    							else if (removeReference.contains(ed)) {
+    							    setStatus("Removing reference "+ed.getId());
+    							    log.debug("Removing reference: "+ed.getId());
+    								ModelMgr.getModelMgr().removeEntityData(ed);
+    							} 
+    							else if (removeTree.contains(ed)) {
+    							    setStatus("Removing tree "+ed.getChildEntity().getName());
+    							    log.debug("Removing tree: "+ed.getChildEntity().getId());
+    								ModelMgr.getModelMgr().deleteEntityTree(ed.getChildEntity().getId());
+    							}
+    							else {
+    								throw new IllegalStateException("Unknown deletion type for EntityData.id="+ed.getId());
+    							}
+    						}
+    					}
+    
+    					@Override
+    					protected void hadSuccess() {
+    					}
+    
+    					@Override
+    					protected void hadError(Throwable error) {
+    						SessionMgr.getSessionMgr().handleException(error);
+    					}
+    				};
+    
+    				removeTask.executeWithEvents();
+				}
+				else {
+                    SimpleWorker removeTask = new SimpleWorker() {
+    
+                        @Override
+                        protected void doStuff() throws Exception {
+                            
+                            for(EntityData ed : toReallyDelete) {
+                                if (removeRootTag.contains(ed)) {
+                                    log.debug("Demoting to common root: "+ed.getChildEntity().getName());
+                                    ModelMgr.getModelMgr().demoteCommonRootToFolder(ed.getChildEntity());
+                                }
+                                else if (removeReference.contains(ed)) {
+                                    log.debug("Removing reference: "+ed.getId());
+                                    ModelMgr.getModelMgr().removeEntityData(ed);
+                                } 
+                                else if (removeTree.contains(ed)) {
+                                    log.debug("Removing tree: "+ed.getChildEntity().getId());
+                                    ModelMgr.getModelMgr().deleteEntityTree(ed.getChildEntity().getId());
+                                }
+                                else {
+                                    throw new IllegalStateException("Unknown deletion type for EntityData.id="+ed.getId());
+                                }
+                            }
+                        }
+    
+                        @Override
+                        protected void hadSuccess() {
+                        }
+    
+                        @Override
+                        protected void hadError(Throwable error) {
+                            SessionMgr.getSessionMgr().handleException(error);
+                        }
+                    };
+    
+                    removeTask.setProgressMonitor(new IndeterminateProgressMonitor(SessionMgr.getBrowser(), "Removing...", ""));
+                    removeTask.execute();
+                }
 			}
 			
 			@Override

@@ -153,7 +153,6 @@ public class ModelMgr {
 
             @Override
             protected void hadSuccess() {
-
             }
 
             @Override

@@ -225,7 +225,7 @@ public class LayerContextMenu extends JPopupMenu {
         List<RootedEntity> rootedEntityList = new ArrayList<RootedEntity>();
         rootedEntityList.add(alignedItem.getInternalRootedEntity());
 
-        final Action action = new RemoveEntityAction(rootedEntityList, false);
+        final Action action = new RemoveEntityAction(rootedEntityList, false, false);
 
         JMenuItem deleteItem = new JMenuItem("  Remove From Alignment Board");
         deleteItem.addActionListener(new ActionListener() {

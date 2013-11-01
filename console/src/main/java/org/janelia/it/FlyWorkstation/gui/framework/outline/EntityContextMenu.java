@@ -130,6 +130,7 @@ public class EntityContextMenu extends JPopupMenu {
         add(getRenameItem());
         add(getErrorFlag());
         add(getDeleteItem());
+        add(getDeleteInBackgroundItem());
         add(getProcessingBlockItem());
         add(getVerificationMovieItem());
         
@@ -1017,7 +1018,7 @@ public class EntityContextMenu extends JPopupMenu {
             }
         }
 
-        final Action action = new RemoveEntityAction(rootedEntityList, true);
+        final Action action = new RemoveEntityAction(rootedEntityList, true, false);
 
         JMenuItem deleteItem = new JMenuItem("  " + action.getName());
         deleteItem.addActionListener(new ActionListener() {
@@ -1042,6 +1043,10 @@ public class EntityContextMenu extends JPopupMenu {
             // Can never delete protected entities
             if (EntityUtils.isProtected(entity)) {
                 canDelete = false;
+                // Unless they own the parent
+                if (parent!=null && parent.getId()!=null && ModelMgrUtils.hasWriteAccess(parent)) {
+                    canDelete = true;
+                }
             }
             if (!canDelete) deleteItem.setEnabled(false);
         }
@@ -1049,6 +1054,53 @@ public class EntityContextMenu extends JPopupMenu {
         return deleteItem;
     }
 
+    protected JMenuItem getDeleteInBackgroundItem() {
+
+        for (RootedEntity rootedEntity : rootedEntityList) {
+            EntityData ed = rootedEntity.getEntityData();
+            if (ed.getId() == null && !EntityUtils.isCommonRoot(ed.getChildEntity()) && !EntityUtils.isOntologyRoot(ed.getChildEntity())) {
+                // Fake ED, not a root, this must be part of an annotation session.
+                // TODO: this check could be done more robustly
+                return null;
+            }
+        }
+
+        final Action action = new RemoveEntityAction(rootedEntityList, true, true);
+
+        JMenuItem deleteItem = new JMenuItem("  " + action.getName()+" (Background Task)");
+        deleteItem.addActionListener(new ActionListener() {
+            public void actionPerformed(ActionEvent actionEvent) {
+                action.doAction();
+            }
+        });
+        
+        for (RootedEntity rootedEntity : rootedEntityList) {
+            Entity entity = rootedEntity.getEntity();
+            Entity parent = rootedEntity.getEntityData().getParentEntity();
+            
+            boolean canDelete = true;
+            // User can't delete if they don't have write access
+            if (!ModelMgrUtils.hasWriteAccess(entity)) {
+                canDelete = false;
+                // Unless they own the parent
+                if (parent!=null && parent.getId()!=null && ModelMgrUtils.hasWriteAccess(parent)) {
+                    canDelete = true;
+                }
+            }
+            // Can never delete protected entities
+            if (EntityUtils.isProtected(entity)) {
+                canDelete = false;
+                // Unless they own the parent
+                if (parent!=null && parent.getId()!=null && ModelMgrUtils.hasWriteAccess(parent)) {
+                    canDelete = true;
+                }
+            }
+            if (!canDelete) deleteItem.setEnabled(false);
+        }
+        
+        return deleteItem;
+    }
+    
     protected JMenuItem getMergeItem() {
 
         // If multiple items are not selected then leave

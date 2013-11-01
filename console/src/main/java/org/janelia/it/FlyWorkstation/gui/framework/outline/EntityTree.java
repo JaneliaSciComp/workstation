@@ -670,7 +670,7 @@ public class EntityTree extends JPanel implements ActivatableView {
 
         Entity entity = newEd.getChildEntity();
         String uniqueId = selectedTree.getUniqueId(newNode);
-    	log.trace(indent+"added node {} with entity: {}",System.identityHashCode(newNode),EntityUtils.identify(entity));
+    	log.trace(indent+"added entity {} as {}",EntityUtils.identify(entity),uniqueId);
     	
         // Add to maps
         uniqueIdToNodeMap.put(uniqueId, newNode);

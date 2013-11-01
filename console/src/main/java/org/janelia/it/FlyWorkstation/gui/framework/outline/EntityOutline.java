@@ -689,7 +689,10 @@ public abstract class EntityOutline extends EntityTree implements Refreshable, A
 		else {
 	        SessionMgr.getBrowser().getViewerManager().showEntityInActiveViewer(rootedEntity);
 		}
-		
-//		SessionMgr.getBrowser().getViewerManager().showEntityInInspector(rootedEntity);
 	}
+	
+    @Override
+    public String toString() {
+        return "EntityOutline("+root+")";
+    }
 }

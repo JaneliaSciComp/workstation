@@ -140,7 +140,7 @@ public class EntityWrapperIconPanel extends IconPanel {
 				if (e.getKeyCode() == KeyEvent.VK_DELETE) {
 					List<RootedEntity> selected = getSelectedEntities();
 					if (selected.isEmpty()) return;
-					final Action action = new RemoveEntityAction(selected, true);
+					final Action action = new RemoveEntityAction(selected, true, false);
 					action.doAction();
 					e.consume();
 					return;

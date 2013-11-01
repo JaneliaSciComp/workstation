@@ -22,6 +22,7 @@ public class TransferableEntityList implements Transferable {
 	
     private static final Logger log = LoggerFactory.getLogger(TransferableEntityList.class);
     
+    private static final DataFlavor entityTreeSourceFlavor = getDataFlavor(EntityTree.class);
     private static final DataFlavor rootedEntityFlavor = getDataFlavor(RootedEntity.class);
     private static final DataFlavor entityFlavor = getDataFlavor(Entity.class);
     private static final DataFlavor stringFlavor = getDataFlavor(String.class);
@@ -39,7 +40,7 @@ public class TransferableEntityList implements Transferable {
 	public TransferableEntityList(EntityTree entityTree, List<RootedEntity> rootedEntities) {
 	    this.entityTree = entityTree;
 		this.rootedEntities = rootedEntities;
-		initFlavors(rootedEntityFlavor, entityFlavor, stringFlavor);
+		initFlavors(entityTreeSourceFlavor, rootedEntityFlavor, entityFlavor, stringFlavor);
 	}
 	
 	protected void initFlavors(DataFlavor... flavors) {
@@ -69,6 +70,13 @@ public class TransferableEntityList implements Transferable {
             }
             return sb.toString();
         }
+		else if (flavor==entityTreeSourceFlavor) {
+		    // This is a hack in order to get the true source entity tree. For some reason, the TransferSupport 
+		    // does not provide the correct component, or maybe I'm going something wrong. Either way, this
+		    // hack works pretty well to prevent transfer among various incompatible entity trees for now, 
+		    // but it will need to be revisted in the future.
+		    return entityTree;
+		}
 		throw new UnsupportedFlavorException(flavor);
 	}
 
@@ -94,6 +102,10 @@ public class TransferableEntityList implements Transferable {
             log.error("Error getting data flavor for class "+clazz.getName());
             return null;
         }
+    }
+
+    public static DataFlavor getEntityTreeSourceFlavor() {
+        return entityTreeSourceFlavor;
     }
     
     public static DataFlavor getRootedEntityFlavor() {
