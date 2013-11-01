@@ -23,6 +23,9 @@ public class RGBExcludableShader extends AbstractShader {
     private int previousShader = 0;
     private float[] rgb;
 
+    private int vertexAttribLoc = -1;
+    private int texCoordAttribLoc = -1;
+
     private TextureMediator signalTextureMediator;
 
     @Override
@@ -45,6 +48,23 @@ public class RGBExcludableShader extends AbstractShader {
         gl.glUseProgram( shaderProgram );
         pushFilterUniform( gl, shaderProgram );
         setTextureUniforms( gl );
+
+        vertexAttribLoc = gl.glGetAttribLocation( shaderProgram, "vertexAttribute" );
+        texCoordAttribLoc = gl.glGetAttribLocation( shaderProgram, "texCoordAttribute" );
+    }
+
+    public int getVertexAttribLoc() {
+        if ( vertexAttribLoc == -1 ) {
+            throw new IllegalStateException("Unset value.");
+        }
+        return vertexAttribLoc;
+    }
+
+    public int getTexCoordAttribLoc() {
+        if ( texCoordAttribLoc == -1 ) {
+            throw new IllegalStateException("Unset value.");
+        }
+        return texCoordAttribLoc;
     }
 
     /**

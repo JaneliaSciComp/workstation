@@ -162,6 +162,9 @@ public class RGBExcludableVolumeBrick implements VolumeBrickI
         if (bUseShader) {
             shader.setColorMask(volumeModel.getColorMask());
             shader.load(gl);
+            int vertexAttribLoc = shader.getVertexAttribLoc();
+            int texCoordAttribLoc = shader.getTexCoordAttribLoc();
+            bufferManager.setCoordAttributeLocations( vertexAttribLoc, texCoordAttribLoc );
         }
 
         displayVolumeSlices(gl);

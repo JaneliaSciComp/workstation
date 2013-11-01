@@ -226,6 +226,10 @@ public class MultiTexVolumeBrick implements VolumeBrickI
             volumeBrickShader.setCropOutLevel( volumeModel.getCropOutLevel() );
             volumeBrickShader.setCropCoords( volumeModel.getCropCoords() );
             volumeBrickShader.load(gl);
+            int vertexAttribLoc = volumeBrickShader.getVertexAttribLoc();
+            int texCoordAttribLoc = volumeBrickShader.getTexCoordAttribLoc();
+            bufferManager.setCoordAttributeLocations( vertexAttribLoc, texCoordAttribLoc );
+
             reportError( gl, "display mux brick - flagged shader init" );
         }
 

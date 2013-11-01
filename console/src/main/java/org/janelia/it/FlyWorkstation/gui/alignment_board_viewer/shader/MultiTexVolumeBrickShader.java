@@ -24,6 +24,9 @@ public class MultiTexVolumeBrickShader extends AbstractShader {
     private TextureMediator maskTextureMediator;
     private TextureMediator colorMapTextureMediator;
 
+    private int vertexAttribLoc = -1;
+    private int texCoordAttribLoc = -1;
+
     private boolean volumeMaskApplied = false;
     private float gammaAdjustment = 1.0f;
     private float cropOutLevel = VolumeModel.DEFAULT_CROPOUT;
@@ -53,6 +56,8 @@ public class MultiTexVolumeBrickShader extends AbstractShader {
         pushCropUniforms( gl, shaderProgram );
 
         setTextureUniforms( gl );
+        vertexAttribLoc = gl.glGetAttribLocation( shaderProgram, "vertexAttribute" );
+        texCoordAttribLoc = gl.glGetAttribLocation( shaderProgram, "texCoordAttribute" );
     }
 
     /**
@@ -114,6 +119,20 @@ public class MultiTexVolumeBrickShader extends AbstractShader {
 
     public void unload(GL2 gl) {
         gl.glUseProgram(previousShader);
+    }
+
+    public int getVertexAttribLoc() {
+        if ( vertexAttribLoc == -1 ) {
+            throw new IllegalStateException("Unset value.");
+        }
+        return vertexAttribLoc;
+    }
+
+    public int getTexCoordAttribLoc() {
+        if ( texCoordAttribLoc == -1 ) {
+            throw new IllegalStateException("Unset value.");
+        }
+        return texCoordAttribLoc;
     }
 
     private void setTextureUniforms(GL2 gl) {

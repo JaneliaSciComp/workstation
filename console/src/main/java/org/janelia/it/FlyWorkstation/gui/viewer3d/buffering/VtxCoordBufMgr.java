@@ -23,8 +23,8 @@ public class VtxCoordBufMgr {
     private static final int COORDS_PER_VERTEX = 3;
     private static final int NUM_AXES = 3;
 
-    private static final int VERTEX_STREAM = 0;
-    private static final int TEX_COORD_STREAM = 1;
+    private int vertexAttributeLoc = 0;
+    private int texCoordAttributeLoc = 1;
 
     private boolean drawWithElements = true;
 
@@ -56,6 +56,11 @@ public class VtxCoordBufMgr {
 
     public void setTextureMediator( TextureMediator textureMediator ) {
         this.textureMediator = textureMediator;
+    }
+
+    public void setCoordAttributeLocations( int vertexAttributeLoc, int texCoordAttributeLoc ) {
+        this.vertexAttributeLoc = vertexAttributeLoc;
+        this.texCoordAttributeLoc = texCoordAttributeLoc;
     }
 
     /**
@@ -226,6 +231,7 @@ public class VtxCoordBufMgr {
      * @param axis an X,Y, or Z
      * @param direction inwards/outwards [-1.0, 1.0]
      */
+/*
     public void draw( GL2 gl, CoordinateAxis axis, double direction ) {
         gl.glDisable(GL2.GL_CULL_FACE);
         gl.glFrontFace(GL2.GL_CW);
@@ -271,27 +277,27 @@ public class VtxCoordBufMgr {
         gl.glDisableClientState(GL2.GL_TEXTURE_COORD_ARRAY);
         gl.glDisableClientState(GL2.GL_VERTEX_ARRAY);
     }
+*/
 
-/*
     public void draw( GL2 gl, CoordinateAxis axis, double direction ) {
         gl.glDisable(GL2.GL_CULL_FACE);
         gl.glFrontFace(GL2.GL_CW);
 
         // Point to the right vertex set.
-        logger.info("Bind Coords: vertex");
+        logger.debug("Bind Coords: vertex");
         bindCoordsBuffer(gl, axis, geometryVertexBufferHandles, direction);
 
-        // 2 floats per coord. Stride is 0, offset to first is 0.
-        gl.glEnableVertexAttribArray(VERTEX_STREAM);
-        gl.glVertexAttribPointer(VERTEX_STREAM, 2, GL2.GL_FLOAT, false, 0, 0);
+        // 3 floats per coord. Stride is 0, offset to first is 0.
+        gl.glEnableVertexAttribArray(vertexAttributeLoc);
+        gl.glVertexAttribPointer(vertexAttributeLoc, 3, GL2.GL_FLOAT, false, 0, 0);
 
         // Point to the right texture coordinate set.
-        logger.info("Bind Coords: tex coords");
+        logger.debug("Bind Coords: tex coords");
         bindCoordsBuffer(gl, axis, textureCoordBufferHandles, direction);
 
         // 3 floats per coord. Stride is 0, offset to first is 0.
-        gl.glEnableVertexAttribArray(TEX_COORD_STREAM);
-        gl.glVertexAttribPointer(TEX_COORD_STREAM, 3, GL2.GL_FLOAT, false, 0, 0);
+        gl.glEnableVertexAttribArray(texCoordAttributeLoc);
+        gl.glVertexAttribPointer(texCoordAttributeLoc, 3, GL2.GL_FLOAT, false, 0, 0);
 
         // Point to the right index coordinate set.
         //NO buffer binding for indices at this time. LLF
@@ -306,20 +312,16 @@ public class VtxCoordBufMgr {
         // Tell GPU to draw triangles (interpret every three vertices as a triangle), starting at pos 0,
         // and expect vertex-count worth of vertices to examine.
         if ( drawWithElements ) {
-            logger.info("Bind for draw");
+            logger.debug("Bind for draw");
             bindIndexBuffer( gl, axis, indexBufferHandles, direction );
-            logger.info("Draw Elements");
+            logger.debug("Draw Elements");
             gl.glDrawElements( GL2.GL_TRIANGLES, getVertexCount( axis ), GL2.GL_UNSIGNED_SHORT, 0 );
         }
         else {
             gl.glDrawArrays(GL2.GL_TRIANGLES, 0, getVertexCount(axis));
         }
 
-        gl.glDisableClientState(GL2.GL_TEXTURE_COORD_ARRAY);
-        gl.glDisableClientState(GL2.GL_VERTEX_ARRAY);
-
     }
-*/
 
     /** This is used ONLY for non-textured rendering.  Shapes only. */
     public void drawNoTex( GL2 gl, CoordinateAxis axis, double direction ) {
