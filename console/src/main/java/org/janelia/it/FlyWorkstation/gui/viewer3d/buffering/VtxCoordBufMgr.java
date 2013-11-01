@@ -23,6 +23,9 @@ public class VtxCoordBufMgr {
     private static final int COORDS_PER_VERTEX = 3;
     private static final int NUM_AXES = 3;
 
+    private static final int VERTEX_STREAM = 0;
+    private static final int TEX_COORD_STREAM = 1;
+
     private boolean drawWithElements = true;
 
     // Buffer objects for setting geometry on the GPU side.
@@ -268,6 +271,55 @@ public class VtxCoordBufMgr {
         gl.glDisableClientState(GL2.GL_TEXTURE_COORD_ARRAY);
         gl.glDisableClientState(GL2.GL_VERTEX_ARRAY);
     }
+
+/*
+    public void draw( GL2 gl, CoordinateAxis axis, double direction ) {
+        gl.glDisable(GL2.GL_CULL_FACE);
+        gl.glFrontFace(GL2.GL_CW);
+
+        // Point to the right vertex set.
+        logger.info("Bind Coords: vertex");
+        bindCoordsBuffer(gl, axis, geometryVertexBufferHandles, direction);
+
+        // 2 floats per coord. Stride is 0, offset to first is 0.
+        gl.glEnableVertexAttribArray(VERTEX_STREAM);
+        gl.glVertexAttribPointer(VERTEX_STREAM, 2, GL2.GL_FLOAT, false, 0, 0);
+
+        // Point to the right texture coordinate set.
+        logger.info("Bind Coords: tex coords");
+        bindCoordsBuffer(gl, axis, textureCoordBufferHandles, direction);
+
+        // 3 floats per coord. Stride is 0, offset to first is 0.
+        gl.glEnableVertexAttribArray(TEX_COORD_STREAM);
+        gl.glVertexAttribPointer(TEX_COORD_STREAM, 3, GL2.GL_FLOAT, false, 0, 0);
+
+        // Point to the right index coordinate set.
+        //NO buffer binding for indices at this time. LLF
+        // bindCoordsBuffer( gl, axis, indexBufferHandles, direction );
+        int err = gl.glGetError();
+        if ( err != 0 ) {
+            logger.error("GL Error {}.", err);
+        }
+
+        gl.glColor4f(1.0f, 1.0f, 1.0f, 1.0f);
+
+        // Tell GPU to draw triangles (interpret every three vertices as a triangle), starting at pos 0,
+        // and expect vertex-count worth of vertices to examine.
+        if ( drawWithElements ) {
+            logger.info("Bind for draw");
+            bindIndexBuffer( gl, axis, indexBufferHandles, direction );
+            logger.info("Draw Elements");
+            gl.glDrawElements( GL2.GL_TRIANGLES, getVertexCount( axis ), GL2.GL_UNSIGNED_SHORT, 0 );
+        }
+        else {
+            gl.glDrawArrays(GL2.GL_TRIANGLES, 0, getVertexCount(axis));
+        }
+
+        gl.glDisableClientState(GL2.GL_TEXTURE_COORD_ARRAY);
+        gl.glDisableClientState(GL2.GL_VERTEX_ARRAY);
+
+    }
+*/
 
     /** This is used ONLY for non-textured rendering.  Shapes only. */
     public void drawNoTex( GL2 gl, CoordinateAxis axis, double direction ) {
