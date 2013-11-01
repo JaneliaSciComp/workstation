@@ -136,7 +136,7 @@ vec4 volumeMask(vec4 origColor)
             // This finds the render-method byte, which is stored in the high byte of the uploaded mapping texture.
             float renderMethodByte = floor(mappedColor[ 3 ] * 255.1);
 
-            float renderMethod = 0.0f;
+            float renderMethod = 0.0;
             renderMethod = lowBitAdd( renderMethod, renderMethodByte, 1.0 );
 
             renderMethodByte = floor( renderMethodByte / 2.0 );
@@ -146,7 +146,7 @@ vec4 volumeMask(vec4 origColor)
             renderMethod = lowBitAdd( renderMethod, renderMethodByte, 4.0 );
 
             // Gather the intensity position.
-            float intensityPos = 0.0f;
+            float intensityPos = 0.0;
             renderMethodByte = floor( renderMethodByte / 2.0 );
             intensityPos = lowBitAdd( intensityPos, renderMethodByte, 1.0 );
 
@@ -157,7 +157,7 @@ vec4 volumeMask(vec4 origColor)
             intensityPos = lowBitAdd( intensityPos, renderMethodByte, 4.0 );
 
             // Gather the intensity position interpretation.
-            float posInterp = 0.0f;
+            float posInterp = 0.0;
             renderMethodByte = floor( renderMethodByte / 2.0 );
             posInterp = lowBitAdd( posInterp, renderMethodByte, 1.0 );
 
