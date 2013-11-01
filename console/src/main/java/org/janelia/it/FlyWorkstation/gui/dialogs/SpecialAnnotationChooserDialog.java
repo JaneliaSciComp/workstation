@@ -54,7 +54,8 @@ public class SpecialAnnotationChooserDialog extends JFrame{
         final JTable table = new JTable(model);
         TableColumn comboColumn = table.getColumnModel().getColumn(1);
 
-        OntologyElement root = new OntologyElement(null, ModelMgr.getModelMgr().getCurrentOntology());
+        OntologyElement root = SessionMgr.getBrowser().getOntologyOutline().getRootOntologyElement();
+
         iterateAndAddRows(root.getChildren(), 0);
 
         comboColumn.setCellEditor(new DefaultCellEditor(comboBox));
