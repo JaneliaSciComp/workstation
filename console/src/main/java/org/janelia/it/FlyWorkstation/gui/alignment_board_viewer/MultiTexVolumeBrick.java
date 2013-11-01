@@ -101,7 +101,7 @@ public class MultiTexVolumeBrick implements VolumeBrickI
     }
 
     public MultiTexVolumeBrick(VolumeModel volumeModel) {
-        bufferManager = new VtxCoordBufMgr( true );
+        bufferManager = new VtxCoordBufMgr();
         setVolumeModel( volumeModel );
     }
 

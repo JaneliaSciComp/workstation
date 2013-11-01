@@ -26,7 +26,7 @@ public class Rubics implements GLActor {
     private FloatBuffer lightPosBufF;
 
     public Rubics() {
-        bufferManager = new VtxCoordBufMgr( true );
+        bufferManager = new VtxCoordBufMgr();
         TextureMediator simplifiedMediator = new TextureMediator() {
             private Double[] volMicro = new Double[] {
                     360.0, 223.0, 110.0

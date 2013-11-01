@@ -74,7 +74,7 @@ public class RGBExcludableVolumeBrick implements VolumeBrickI
     }
 
     public RGBExcludableVolumeBrick(VolumeModel volumeModel) {
-        bufferManager = new VtxCoordBufMgr( true );
+        bufferManager = new VtxCoordBufMgr();
         setVolumeModel( volumeModel );
     }
 
