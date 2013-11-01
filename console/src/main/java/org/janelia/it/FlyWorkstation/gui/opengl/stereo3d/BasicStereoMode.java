@@ -7,6 +7,7 @@ import org.janelia.it.FlyWorkstation.gui.camera.Camera3d;
 import org.janelia.it.FlyWorkstation.gui.opengl.CameraScreenGeometry;
 import org.janelia.it.FlyWorkstation.gui.opengl.GL2Adapter;
 import org.janelia.it.FlyWorkstation.gui.opengl.GLActorContext;
+import org.janelia.it.FlyWorkstation.gui.opengl.GLError;
 import org.janelia.it.FlyWorkstation.gui.opengl.GL2Adapter.MatrixMode;
 import org.janelia.it.FlyWorkstation.gui.opengl.GLSceneComposer;
 
@@ -20,9 +21,12 @@ public class BasicStereoMode implements StereoMode {
             GLSceneComposer composer) 
     {
         GLAutoDrawable glDrawable = actorContext.getGLAutoDrawable();
+        GL gl = glDrawable.getGL();
+        GLError.checkGlError(gl, "BasicStereoMode display 24");
         updateViewport(glDrawable);
         setMonoscopicView(actorContext, composer.getCameraScreenGeometry());
         composer.displayScene(actorContext);
+        GLError.checkGlError(gl, "BasicStereoMode display 29");
     }
 
     @Override

@@ -52,8 +52,7 @@ public class GourdDemo extends JFrame
     }
     
     public static GLProfile glProfile 
-            = GLProfile.get(GLProfile.GL2);
-            // = GLProfile.getDefault();
+            = GLProfile.get(GLProfile.GL2GL3);
 
     public static void main(String[] args) {
         javax.swing.SwingUtilities.invokeLater(new Runnable() {

@@ -120,12 +120,14 @@ implements GLEventListener
 	public void display(GLAutoDrawable glDrawable) 
 	{
 	    GL gl = glDrawable.getGL();
-	    checkGlError(gl, "GLSceneComposer display 0");
+	    checkGlError(gl, "GLSceneComposer display 123");
 	    GLActorContext actorContext = new GLActorContext(glDrawable, gl2Adapter);
+        checkGlError(gl, "GLSceneComposer display 125");
 	    if (viewChanged) {
             updateModelViewMatrix(actorContext);
 	        viewChanged = false;
 	    }
+        checkGlError(gl, "GLSceneComposer display 130");
 	    if (stereoModeNeedsCleanup) {
 	        // On Mountain Lion, GL_BACK, GL_BACK_LEFT, and GL_BACK_RIGHT
 	        // are separate buffers, all of which display. Clear them all
@@ -134,19 +136,27 @@ implements GLEventListener
 	        gl.glClearColor(0,0,0,0);
 	        GL2GL3 gl2gl3 = gl.getGL2GL3();
 	        GLCapabilitiesImmutable glCaps = glDrawable.getChosenGLCapabilities();
+	        checkGlError(gl, "GLSceneComposer display 139");
 	        if (glCaps.getStereo())
 	        {
-                gl2gl3.glDrawBuffer(GL2GL3.GL_BACK_RIGHT);
-                gl.glClear(GL.GL_COLOR_BUFFER_BIT);
-                gl2gl3.glDrawBuffer(GL2GL3.GL_BACK_LEFT);
-                gl.glClear(GL.GL_COLOR_BUFFER_BIT);
+	            checkGlError(gl, "GLSceneComposer display 141");
+	            if (glCaps.getDoubleBuffered()) {
+                    gl2gl3.glDrawBuffer(GL2GL3.GL_BACK_RIGHT);
+                    gl.glClear(GL.GL_COLOR_BUFFER_BIT);
+                    gl2gl3.glDrawBuffer(GL2GL3.GL_BACK_LEFT);
+                    checkGlError(gl, "GLSceneComposer display 146");
+                    gl.glClear(GL.GL_COLOR_BUFFER_BIT);
+                    gl2gl3.glDrawBuffer(GL2GL3.GL_BACK);
+                    gl.glClear(GL.GL_COLOR_BUFFER_BIT);
+                    checkGlError(gl, "GLSceneComposer display 151");
+	            }
+                checkGlError(gl, "GLSceneComposer display 167");
 	        }
-            gl2gl3.glDrawBuffer(GL2GL3.GL_BACK);
-            gl.glClear(GL.GL_COLOR_BUFFER_BIT);
 	        stereoModeNeedsCleanup = false;
 	    }
+        checkGlError(gl, "GLSceneComposer display 171");
 	    stereoMode.display(actorContext, this);
-        checkGlError(gl, "GLSceneComposer display 1");
+        checkGlError(gl, "GLSceneComposer display 173");
 	}
 
 	public void displayBackground(GLActorContext actorContext) {
@@ -191,6 +201,7 @@ implements GLEventListener
 	@Override
 	public void init(GLAutoDrawable glDrawable) {
 	    final GL gl = glDrawable.getGL();
+        checkGlError(gl, "GLSceneComposer init 204");
 	    GL2GL3 gl2gl3 = gl.getGL2GL3();
 	    // Use sRGB framebuffer for correct lighting on computer screens
         // Why does GL_FRAMEBUFFER_SRGB work here, but not in slice viewer?
@@ -203,14 +214,18 @@ implements GLEventListener
 			gl.glEnable(GL.GL_DEPTH_TEST);
 		for (GL3Actor actor : allActors)
 		    actor.init(actorContext);
+        checkGlError(gl, "GLSceneComposer init 217");
 	}
 
 	@Override
 	public void reshape(GLAutoDrawable glDrawable, int x, int y, int width,
 			int height) 
 	{
+        final GL gl = glDrawable.getGL();
+        checkGlError(gl, "GLSceneComposer reshape 223");
 	    stereoMode.reshape(glDrawable, x, y, width, height);
 		viewChanged = true;
+        checkGlError(gl, "GLSceneComposer reshape 228");
 	}
 
 	protected void updateModelViewMatrix(GLActorContext actorContext) {
