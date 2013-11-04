@@ -32,6 +32,7 @@ class MipRenderer
     private VolumeModel volumeModel;
     private boolean resetFirstRedraw;
     private boolean hasBeenReset = false;
+    private boolean resetOnNextDisplay = false;
 
     private Logger logger;
 
@@ -55,6 +56,10 @@ class MipRenderer
     public void clear() {
 		actors.clear();
         hasBeenReset = false;
+    }
+
+    public void requestReset() {
+
     }
 
     @Override
@@ -81,8 +86,9 @@ class MipRenderer
         Vec3 f = volumeModel.getFocusInGround();    // This is what allows (follows) drag in X and Y.
         Rotation3d rotation = getVolumeModel().getCamera3d().getRotation();
         Vec3 u = rotation.times( UP_IN_CAMERA );
-        Vec3 c = f.plus(rotation.times( volumeModel.getCamera3d().getFocus()) );
-        glu.gluLookAt(c.x(), c.y(), c.z(), // camera in ground
+        double unitsPerPixel = glUnitsPerPixel();
+        Vec3 c = f.plus(rotation.times( volumeModel.getCamera3d().getFocus().times( unitsPerPixel )) );
+        gl.gluLookAt(c.x(), c.y(), c.z(), // camera in ground
                 f.x(), f.y(), f.z(), // focus in ground
                 u.x(), u.y(), u.z()); // up vector in ground
 
@@ -156,8 +162,10 @@ class MipRenderer
 
 	public void translatePixels(double dx, double dy, double dz) {
 		// trackball translate
-		Vec3 t = new Vec3(-dx, -dy, -dz).times(glUnitsPerPixel());
-		volumeModel.getFocusInGround().plusEquals(getVolumeModel().getCamera3d().getRotation().times(t));
+		Vec3 t = new Vec3(-dx, -dy, -dz);
+		volumeModel.getFocusInGround().plusEquals(
+                getVolumeModel().getCamera3d().getRotation().times(t)
+        );
 	}
 	
 	public void updateProjection(GL2Adapter gl) {
@@ -167,7 +175,8 @@ class MipRenderer
         gl.glMatrixMode( GL2Adapter.MatrixMode.GL_PROJECTION );
         gl.glLoadIdentity();
         final float h = (float) widthInPixels / (float) heightInPixels;
-        double cameraFocusDistance = Math.abs(volumeModel.getCamera3d().getFocus().getZ());
+        double depth = volumeModel.getCamera3d().getFocus().getZ();
+        double cameraFocusDistance = Math.abs( depth ) * glUnitsPerPixel();
         glu.gluPerspective(verticalApertureInDegrees,
         		h,
         		0.5 * cameraFocusDistance,
@@ -241,7 +250,7 @@ class MipRenderer
 
     private void resetCameraFocus(BoundingBox3d boundingBox) {
         double heightInMicrometers = boundingBox.getHeight();
-        if (heightInMicrometers < 0.0) { // watch for NaN!
+        if (heightInMicrometers <= 0.0) { // watch for NaN!
             logger.warn("Adjusted height to account for zero-height bounding box.");
             heightInMicrometers = 2.0; // whatever
         }
@@ -249,10 +258,8 @@ class MipRenderer
         // cameraFocusDistance = DEFAULT_CAMERA_FOCUS_DISTANCE * defaultHeightInPixels / heightInPixels;
         double finalAspectRatio = maxAspectRatio(boundingBox);
         double newFocusDistance = finalAspectRatio * 1.05 * DISTANCE_TO_SCREEN_IN_PIXELS * heightInMicrometers / heightInPixels;
-
         volumeModel.getCamera3d().setFocus( 0.0, 0.0, -newFocusDistance );
-        getVolumeModel().setCameraPixelsPerSceneUnit( DISTANCE_TO_SCREEN_IN_PIXELS, getVolumeModel().getCameraFocusDistance() );
-
+        getVolumeModel().setCameraPixelsPerSceneUnit(DISTANCE_TO_SCREEN_IN_PIXELS, getVolumeModel().getCameraFocusDistance());
     }
 
     private BoundingBox3d getBoundingBox() {

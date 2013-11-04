@@ -277,11 +277,12 @@ public class AlignmentBoardViewer extends Viewer implements AlignmentBoardContro
         AlignmentBoardContext abContext = SessionMgr.getBrowser().getLayersPanel().getAlignmentBoardContext();
         deserializeSettings(abContext);
 
-        // Ensure pixels per scene unit properly accounted-for.
-        mip3d.getVolumeModel().setCameraPixelsPerSceneUnit( BaseRenderer.DISTANCE_TO_SCREEN_IN_PIXELS, mip3d.getVolumeModel().getCameraFocusDistance() );
         if ( !preExistingBoard) {
-            // Must do this again in case anything upset the apple cart.
-            mip3d.resetView();
+            mip3d.setResetFirstRedraw( true );
+        }
+        else {
+            // Ensure pixels per scene unit properly accounted-for.
+            mip3d.getVolumeModel().setCameraPixelsPerSceneUnit( BaseRenderer.DISTANCE_TO_SCREEN_IN_PIXELS, mip3d.getVolumeModel().getCameraFocusDistance() );
         }
 
     }
