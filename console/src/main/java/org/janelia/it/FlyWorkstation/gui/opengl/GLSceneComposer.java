@@ -151,12 +151,16 @@ implements GLEventListener
                     checkGlError(gl, "GLSceneComposer display 151");
 	            }
                 checkGlError(gl, "GLSceneComposer display 167");
+    	        checkGlError(gl, "GLSceneComposer display 146");
+                gl2gl3.glDrawBuffer(GL2GL3.GL_BACK);
+    	        checkGlError(gl, "GLSceneComposer display 148");
+                gl.glClear(GL.GL_COLOR_BUFFER_BIT);
 	        }
 	        stereoModeNeedsCleanup = false;
 	    }
-        checkGlError(gl, "GLSceneComposer display 171");
+        checkGlError(gl, "GLSceneComposer display 152");
 	    stereoMode.display(actorContext, this);
-        checkGlError(gl, "GLSceneComposer display 173");
+        checkGlError(gl, "GLSceneComposer display 154");
 	}
 
 	public void displayBackground(GLActorContext actorContext) {
@@ -177,11 +181,14 @@ implements GLEventListener
     
     public void displayScene(GLActorContext actorContext) {
         GL gl = actorContext.getGLAutoDrawable().getGL();
+        GLError.checkGlError(gl, "GLSceneComposer displayScene 170");
         if (useDepth) {
             gl.glClear(GL.GL_DEPTH_BUFFER_BIT);
         }
         // Render in 4 passes
+        GLError.checkGlError(gl, "GLSceneComposer displayScene 175");
         gl.glDisable(GL.GL_DEPTH_TEST);
+        GLError.checkGlError(gl, "GLSceneComposer displayScene 177");
         displayBackground(actorContext);
         if (useDepth)
             gl.glEnable(GL.GL_DEPTH_TEST);        	
@@ -210,8 +217,10 @@ implements GLEventListener
 	    // 
 	    gl2Adapter = GL2AdapterFactory.createGL2Adapter(glDrawable);
 	    GLActorContext actorContext = new GLActorContext(glDrawable, gl2Adapter);
-		if (useDepth)
+		if (useDepth) {
 			gl.glEnable(GL.GL_DEPTH_TEST);
+			gl.glClearDepth(1.0);
+		}
 		for (GL3Actor actor : allActors)
 		    actor.init(actorContext);
         checkGlError(gl, "GLSceneComposer init 217");

@@ -35,7 +35,7 @@ implements GL3Actor
         List<GL3Actor> shaderActors = new Vector<GL3Actor>();
         GL gl = actorContext.getGLAutoDrawable().getGL();
         for (GL3Actor actor : actors) {
-        	if (gl.isGL3()) {
+        	if (! gl.isGL2()) { // Sometimes both isGL2() and isGL3() are true...
         		shaderActors.add(actor);
         		continue;
         	}

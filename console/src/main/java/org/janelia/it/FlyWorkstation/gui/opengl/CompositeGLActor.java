@@ -2,6 +2,9 @@ package org.janelia.it.FlyWorkstation.gui.opengl;
 
 import java.util.List;
 import java.util.Vector;
+
+import javax.media.opengl.GL;
+
 import org.janelia.it.FlyWorkstation.gui.viewer3d.BoundingBox3d;
 
 
@@ -24,14 +27,22 @@ implements GL3Actor
 
     @Override
     public void display(GLActorContext context) {
-        for (GL3Actor actor : actors)
+    	GL gl = context.getGLAutoDrawable().getGL();
+        for (GL3Actor actor : actors) {
+        	GLError.checkGlError(gl, "CompositeGLActor display 32");
             actor.display(context);        
+        	GLError.checkGlError(gl, "CompositeGLActor display 34");
+        }
     }
 
     @Override
     public void init(GLActorContext context) {
-        for (GL3Actor actor : actors)
+    	GL gl = context.getGLAutoDrawable().getGL();
+        for (GL3Actor actor : actors) {
+            GLError.checkGlError(gl, "CompositeGLActor init 42");
             actor.init(context);        
+            GLError.checkGlError(gl, "CompositeGLActor init 44");
+        }
     }
 
     @Override

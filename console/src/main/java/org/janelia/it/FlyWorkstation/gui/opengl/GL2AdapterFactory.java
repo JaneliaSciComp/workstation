@@ -17,7 +17,7 @@ import org.janelia.it.FlyWorkstation.geom.Vec3;
 public class GL2AdapterFactory {
     public static GL2Adapter createGL2Adapter(GLAutoDrawable glDrawable) {
         GL gl = glDrawable.getGL();
-        if (gl.isGL3())
+        if (! gl.isGL2())
             return new GL3GL2Adapter(gl.getGL3());
         if (gl.isGL2())
             return new GL2GL2Adapter(gl.getGL2());

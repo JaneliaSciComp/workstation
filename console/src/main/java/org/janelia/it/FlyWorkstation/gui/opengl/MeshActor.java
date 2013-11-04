@@ -113,11 +113,11 @@ implements GL3Actor
             // Paint
             gl2.glBegin(GL2.GL_TRIANGLE_FAN);
             if ((!smoothing) && (face.computedNormal != null))
-                gl2.glNormal3d(face.computedNormal.getX(), face.computedNormal.getY(), face.computedNormal.getZ());
+                gl2.glNormal3f((float)face.computedNormal.getX(), (float)face.computedNormal.getY(), (float)face.computedNormal.getZ());
             for (int v : face.vertexIndexes) {
                 PolygonalMesh.Vertex vertex = mesh.getVertexes().get(v-1);
                 if (smoothing && (vertex.computedNormal != null))
-                    gl2.glNormal3d(vertex.computedNormal.getX(), vertex.computedNormal.getY(), vertex.computedNormal.getZ());
+                    gl2.glNormal3f((float)vertex.computedNormal.getX(), (float)vertex.computedNormal.getY(), (float)vertex.computedNormal.getZ());
                 gl2.glVertex4d(vertex.getX(), vertex.getY(), vertex.getZ(), vertex.getW());
             }
             gl2.glEnd();
