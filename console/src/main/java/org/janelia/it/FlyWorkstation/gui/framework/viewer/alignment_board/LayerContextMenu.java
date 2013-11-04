@@ -247,10 +247,12 @@ public class LayerContextMenu extends JPopupMenu {
                     canDelete = true;
                 }
             }
+            
             // Can never delete protected entities
             if (EntityUtils.isProtected(entity)) {
                 canDelete = false;
             }
+            
             if (!canDelete) deleteItem.setEnabled(false);
         }
         

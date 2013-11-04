@@ -79,19 +79,13 @@ public class UserSettingSerializer implements Serializable {
             if ( settingsString.length() > MAX_SERIALIZED_SETTINGS_STR ) {
                 logger.warn( "Abandoning the serialized string {}.", settingsString );
                 // Write back.
-                alignmentBoard.setValueByAttributeName(
-                        EntityConstants.ATTRIBUTE_ALIGNMENT_BOARD_USER_SETTINGS, ""
-                );
+                ModelMgr.getModelMgr().setOrUpdateValue(alignmentBoard, EntityConstants.ATTRIBUTE_ALIGNMENT_BOARD_USER_SETTINGS, "");
                 settingsString = "";
             }
             logger.info( "Save-back Setting string: {}.", settingsString );
 
             // Write back.
-            alignmentBoard.setValueByAttributeName(
-                    EntityConstants.ATTRIBUTE_ALIGNMENT_BOARD_USER_SETTINGS, settingsString
-            );
-
-            ModelMgr.getModelMgr().saveOrUpdateEntity(alignmentBoard);
+            ModelMgr.getModelMgr().setOrUpdateValue(alignmentBoard, EntityConstants.ATTRIBUTE_ALIGNMENT_BOARD_USER_SETTINGS, settingsString);
         }
         catch (Exception ex) {
             SessionMgr.getSessionMgr().handleException(ex);

@@ -124,9 +124,7 @@ public class AlignedItem extends EntityWrapper {
      * @throws Exception
      */
     public void setIsVisible(boolean visible) throws Exception {
-        Entity entity = getInternalEntity();
-        entity.setValueByAttributeName(EntityConstants.ATTRIBUTE_VISIBILITY, new Boolean(visible).toString());
-        ModelMgr.getModelMgr().saveOrUpdateEntity(entity);
+        ModelMgr.getModelMgr().setOrUpdateValue(getInternalEntity(), EntityConstants.ATTRIBUTE_VISIBILITY, new Boolean(visible).toString());
     }
     
     /**
@@ -145,9 +143,7 @@ public class AlignedItem extends EntityWrapper {
      * @throws Exception
      */
     public void setColorHex(String colorHex) throws Exception {
-        Entity entity = getInternalEntity();
-        entity.setValueByAttributeName(EntityConstants.ATTRIBUTE_COLOR, colorHex);
-        ModelMgr.getModelMgr().saveOrUpdateEntity(entity);
+        ModelMgr.getModelMgr().setOrUpdateValue(getInternalEntity(), EntityConstants.ATTRIBUTE_COLOR, colorHex);
     }
 
     /**
@@ -179,8 +175,7 @@ public class AlignedItem extends EntityWrapper {
     public boolean isPassthroughRendering() {
         Entity entity = getInternalEntity();
         return RenderMappingI.PASSTHROUGH_RENDER_ATTRIBUTE.equals(
-                entity.getValueByAttributeName(EntityConstants.ATTRIBUTE_RENDER_METHOD)
-        );
+                entity.getValueByAttributeName(EntityConstants.ATTRIBUTE_RENDER_METHOD));
     }
 
     /**
@@ -190,14 +185,9 @@ public class AlignedItem extends EntityWrapper {
      * @param passthroughRendering T to override rendering as passthrough
      * @throws Exception for the setter.
      */
-    public void setPassthroughRendering( boolean passthroughRendering ) throws Exception{
-        Entity entity = getInternalEntity();
-        String value = null;
-        if ( passthroughRendering ) {
-            value = RenderMappingI.PASSTHROUGH_RENDER_ATTRIBUTE;
-        }
-        entity.setValueByAttributeName(EntityConstants.ATTRIBUTE_RENDER_METHOD, value );
-        ModelMgr.getModelMgr().saveOrUpdateEntity(entity);
+    public void setPassthroughRendering(boolean passthroughRendering) throws Exception {
+        String value = passthroughRendering ? RenderMappingI.PASSTHROUGH_RENDER_ATTRIBUTE : null;
+        ModelMgr.getModelMgr().setOrUpdateValue(getInternalEntity(), EntityConstants.ATTRIBUTE_RENDER_METHOD, value);
     }
 
 

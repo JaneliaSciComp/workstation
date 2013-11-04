@@ -53,7 +53,7 @@ public abstract class EntityTransferHandler extends TransferHandler {
     @Override
     protected Transferable createTransferable(JComponent sourceComponent) {
 
-        log.debug("EntityTransferHandler.createTransferable");
+        log.debug("createTransferable sourceComponent={}",sourceComponent);
         
         if (sourceComponent instanceof JTree) {
             
@@ -84,7 +84,7 @@ public abstract class EntityTransferHandler extends TransferHandler {
                 }
                 entityList.add(matchingEntity);
             }       
-            return new TransferableEntityList(entityList);
+            return new TransferableEntityList(sourceComponent, entityList);
         }
         else if (sourceComponent instanceof LayersPanel) {
             log.warn("No transfer handling defined from a LayersPanel");
@@ -106,21 +106,20 @@ public abstract class EntityTransferHandler extends TransferHandler {
     
 	@Override
 	public boolean canImport(TransferHandler.TransferSupport support) {
-		
+	    
 		try {
 			// Only dealing with drag and drop for now
 			if (!support.isDrop()) return false;
 			
 			support.setShowDropLocation(true);
 			
-			Component sourceComponent = support.getComponent();
 			DropLocation dropLocation = support.getDropLocation();
 			JComponent dropTarget = getDropTargetComponent();
-			
+						
 			if (dropTarget instanceof EntityTree) {
 
 	            DataFlavor reFlavor = TransferableEntityList.getRootedEntityFlavor();
-	            DataFlavor etsFlavor = TransferableEntityList.getEntityTreeSourceFlavor();
+	            DataFlavor sourceFlavor = TransferableEntityList.getSourceFlavor();
 	            
 	            if (!support.isDataFlavorSupported(reFlavor)) {
 	                log.debug("Disallow transfer because {} data flavor {} supported",reFlavor.getMimeType());
@@ -134,19 +133,19 @@ public abstract class EntityTransferHandler extends TransferHandler {
 	            TreePath targetPath = dl.getPath();
 	            DefaultMutableTreeNode targetNode = (DefaultMutableTreeNode)targetPath.getLastPathComponent();
 
-                // Can't moved to the root
-                if (targetNode.isRoot()) {
+                // Can't moved to the root unless it's visible
+                if (!targetEntityTree.getTree().isRootVisible() && targetNode.isRoot()) {
                     log.debug("Disallow transfer because target node is a root");
                     return false;
                 }
+
+                JComponent sourceComponent = (JComponent)support.getTransferable().getTransferData(sourceFlavor);
                 
 	            // Derive unique TreePaths for the source entities. It will allow us to enforce some tree-based rules.
-	            List<TreePath> sourcePaths = new ArrayList<TreePath>();        
-	            if (sourceComponent instanceof JTree) {
+	            List<TreePath> sourcePaths = new ArrayList<TreePath>();      
+                if (sourceComponent instanceof EntityTree) {
 
-	                EntityTree sourceEntityTree = (EntityTree)support.getTransferable().getTransferData(etsFlavor);
-	                
-	                if (sourceEntityTree!=targetEntityTree) {
+	                if (sourceComponent!=targetEntityTree) {
 	                    log.debug("Disallow tree to tree transfer");
 	                    return false;
 	                }
@@ -171,8 +170,11 @@ public abstract class EntityTransferHandler extends TransferHandler {
 	                    sourcePaths.add(new TreePath(node.getPath()));
 	                }               
 	            }
+	            else if (sourceComponent==null) {
+	                throw new IllegalStateException("Source component is null");
+	            }
 	            else {
-	                throw new IllegalStateException("Unknown component for transfer: "+sourceComponent.getClass().getName());
+	                throw new IllegalStateException("Illegal source component type: "+sourceComponent.getClass().getName());
 	            }
 
 	            for(TreePath sourcePath : sourcePaths) {
@@ -385,30 +387,9 @@ public abstract class EntityTransferHandler extends TransferHandler {
 		for (EntityData ed : eds) {
 			if (log.isDebugEnabled()) log.debug("  "+EntityUtils.identify(ed.getChildEntity())+" (oldIndex={},newIndex={})",ed.getOrderIndex(),index);
 			if ((ed.getOrderIndex() == null) || (ed.getOrderIndex() != index)) {
-				ed.setOrderIndex(index);
-				
-				// Remember actual entities
-				Entity parent = ed.getParentEntity();
-				Entity child = ed.getChildEntity();
-				
-				// For performance reasons, we have to replace the parent with a fake id-only entity. Otherwise, it 
-				// tries to transfer the entire object graph every time, and it gradually grinds to a halt, since the 
-				// object graph grows at some insane rate.
-				Entity fakeParentEntity = new Entity();
-				fakeParentEntity.setId(parentEntity.getId());
-				ed.setParentEntity(fakeParentEntity);
-
-				Entity fakeChildEntity = new Entity();
-				fakeChildEntity.setId(child.getId());
-				ed.setChildEntity(fakeChildEntity);
-				
 				log.debug("  will save ED {} with index={}",ed.getId(),index);
-				EntityData savedEd = ModelMgr.getModelMgr().saveOrUpdateEntityData(ed);
+				EntityData savedEd = ModelMgr.getModelMgr().updateChildIndex(ed, index);
 				log.debug("  saved ED {}",savedEd.getId());
-				
-				// Restore actual entities
-				ed.setParentEntity(parent);
-				ed.setChildEntity(child);
 			}
 			index++;
 		}

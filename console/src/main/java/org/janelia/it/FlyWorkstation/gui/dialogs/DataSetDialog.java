@@ -224,7 +224,7 @@ public class DataSetDialog extends ModalDialog implements Accessibility {
 				}
 				
 				if (!StringUtils.isEmpty(sampleNamePattern)) {
-				    ModelMgr.getModelMgr().setAttributeValue(dataSetEntity, EntityConstants.ATTRIBUTE_SAMPLE_NAME_PATTERN, sampleNamePattern);    
+				    ModelMgr.getModelMgr().setOrUpdateValue(dataSetEntity, EntityConstants.ATTRIBUTE_SAMPLE_NAME_PATTERN, sampleNamePattern);    
 				}
 				else {
                     EntityData patternEd = dataSetEntity.getEntityDataByAttributeName(EntityConstants.ATTRIBUTE_SAMPLE_NAME_PATTERN);
@@ -235,7 +235,7 @@ public class DataSetDialog extends ModalDialog implements Accessibility {
 				}
 
                 if (!StringUtils.isEmpty(sampleImageType)) {
-                    ModelMgr.getModelMgr().setAttributeValue(dataSetEntity, EntityConstants.ATTRIBUTE_SAMPLE_IMAGE_TYPE, sampleImageType);    
+                    ModelMgr.getModelMgr().setOrUpdateValue(dataSetEntity, EntityConstants.ATTRIBUTE_SAMPLE_IMAGE_TYPE, sampleImageType);    
                 }
                 else {
                     EntityData typeEd = dataSetEntity.getEntityDataByAttributeName(EntityConstants.ATTRIBUTE_SAMPLE_IMAGE_TYPE);
@@ -245,7 +245,7 @@ public class DataSetDialog extends ModalDialog implements Accessibility {
                     }
                 }
                 
-				ModelMgr.getModelMgr().setAttributeValue(dataSetEntity, EntityConstants.ATTRIBUTE_PIPELINE_PROCESS, getCheckboxValues(processCheckboxes));
+				ModelMgr.getModelMgr().setOrUpdateValue(dataSetEntity, EntityConstants.ATTRIBUTE_PIPELINE_PROCESS, getCheckboxValues(processCheckboxes));
 				
 				if (sageSyncCheckbox.isSelected()) {
 					ModelMgr.getModelMgr().setAttributeAsTag(dataSetEntity, EntityConstants.ATTRIBUTE_SAGE_SYNC);

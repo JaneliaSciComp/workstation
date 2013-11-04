@@ -61,8 +61,7 @@ public class ABTransferHandler extends TransferHandler {
                         if ( firstItem instanceof Entity) {
                             Entity draggedEntity = (Entity)firstItem;
                             if ( alignmentBoard != null ) {
-                                alignmentBoard.addChildEntity( draggedEntity );
-                                ModelMgr.getModelMgr().saveOrUpdateEntity( alignmentBoard );
+                                ModelMgr.getModelMgr().addEntityToParent(alignmentBoard, draggedEntity);
                             }
                         }
                     }

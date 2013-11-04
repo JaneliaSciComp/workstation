@@ -8,7 +8,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
-import javax.swing.tree.DefaultMutableTreeNode;
+import javax.swing.JComponent;
 
 import org.janelia.it.FlyWorkstation.model.entity.RootedEntity;
 import org.janelia.it.jacs.model.entity.Entity;
@@ -22,25 +22,20 @@ public class TransferableEntityList implements Transferable {
 	
     private static final Logger log = LoggerFactory.getLogger(TransferableEntityList.class);
     
-    private static final DataFlavor entityTreeSourceFlavor = getDataFlavor(EntityTree.class);
+    private static final DataFlavor sourceFlavor = getDataFlavor(EntityTree.class);
     private static final DataFlavor rootedEntityFlavor = getDataFlavor(RootedEntity.class);
     private static final DataFlavor entityFlavor = getDataFlavor(Entity.class);
     private static final DataFlavor stringFlavor = getDataFlavor(String.class);
     
     private final Set<DataFlavor> flavors = new HashSet<DataFlavor>();
 
-    protected EntityTree entityTree;
-    protected List<DefaultMutableTreeNode> nodes;
+    protected JComponent sourceComponent;
     protected List<RootedEntity> rootedEntities;
     
-    public TransferableEntityList(List<RootedEntity> rootedEntities) {
-        this(null, rootedEntities);
-    }
-    
-	public TransferableEntityList(EntityTree entityTree, List<RootedEntity> rootedEntities) {
-	    this.entityTree = entityTree;
+	public TransferableEntityList(JComponent sourceComponent, List<RootedEntity> rootedEntities) {
+	    this.sourceComponent = sourceComponent;
 		this.rootedEntities = rootedEntities;
-		initFlavors(entityTreeSourceFlavor, rootedEntityFlavor, entityFlavor, stringFlavor);
+		initFlavors(sourceFlavor, rootedEntityFlavor, entityFlavor, stringFlavor);
 	}
 	
 	protected void initFlavors(DataFlavor... flavors) {
@@ -70,12 +65,12 @@ public class TransferableEntityList implements Transferable {
             }
             return sb.toString();
         }
-		else if (flavor==entityTreeSourceFlavor) {
+		else if (flavor==sourceFlavor) {
 		    // This is a hack in order to get the true source entity tree. For some reason, the TransferSupport 
 		    // does not provide the correct component, or maybe I'm going something wrong. Either way, this
 		    // hack works pretty well to prevent transfer among various incompatible entity trees for now, 
 		    // but it will need to be revisted in the future.
-		    return entityTree;
+		    return sourceComponent;
 		}
 		throw new UnsupportedFlavorException(flavor);
 	}
@@ -90,8 +85,8 @@ public class TransferableEntityList implements Transferable {
 		return flavors.contains(flavor);
 	}
 	
-    public EntityTree getEntityTree() {
-        return entityTree;
+    public JComponent getSourceComponent() {
+        return sourceComponent;
     }
 
     public static DataFlavor getDataFlavor(Class clazz) {
@@ -104,8 +99,8 @@ public class TransferableEntityList implements Transferable {
         }
     }
 
-    public static DataFlavor getEntityTreeSourceFlavor() {
-        return entityTreeSourceFlavor;
+    public static DataFlavor getSourceFlavor() {
+        return sourceFlavor;
     }
     
     public static DataFlavor getRootedEntityFlavor() {

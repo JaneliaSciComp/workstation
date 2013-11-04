@@ -10,7 +10,6 @@ import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.jacs.compute.api.support.MappedId;
 import org.janelia.it.jacs.model.entity.*;
 import org.janelia.it.jacs.model.user_data.tiledMicroscope.*;
-
 import org.janelia.it.FlyWorkstation.api.facade.abstract_facade.EntityFacade;
 import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.jacs.compute.api.support.MappedId;
@@ -169,6 +168,16 @@ public class EJBEntityFacade implements EntityFacade {
     @Override
     public EntityData addEntityToParent(Entity parent, Entity entity, Integer index, String attrName) throws Exception {
         return EJBFactory.getRemoteEntityBean().addEntityToParent(SessionMgr.getSubjectKey(), parent.getId(), entity.getId(), index, attrName);
+    }
+
+    @Override
+    public EntityData updateChildIndex(EntityData entityData, Integer orderIndex) throws Exception {
+        return EJBFactory.getRemoteEntityBean().updateChildIndex(SessionMgr.getSubjectKey(), entityData, orderIndex);
+    }
+
+    @Override
+    public EntityData setOrUpdateValue(Long entityId, String attributeName, String value) throws Exception {
+        return EJBFactory.getRemoteEntityBean().setOrUpdateValue(SessionMgr.getSubjectKey(), entityId, attributeName, value);
     }
     
     @Override

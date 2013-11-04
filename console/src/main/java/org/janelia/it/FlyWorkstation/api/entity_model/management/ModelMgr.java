@@ -112,6 +112,9 @@ public class ModelMgr {
                     cmd.run();
                 } 
                 else {
+                    // TODO: this should queue the command on a queue that is aware of entity invalidation, 
+                    // and does not generate other events for an entity if an invalidation is coming. 
+                    // This will elimiante the "Instance mismatch" issues that we sometimes have.
                     EventQueue.invokeLater(cmd);
                 }
             }
@@ -817,12 +820,6 @@ public class ModelMgr {
         if (newEntity!=null) notifyEntityChanged(newEntity.getId());
         return newEntity;
     }
-    
-    public Entity setAttributeValue(Entity entity, String attributeName, String attributeValue) throws Exception {
-        Entity newEntity = entityModel.setAttributeValue(entity, attributeName, attributeValue);
-        if (newEntity!=null) notifyEntityChanged(newEntity.getId());
-        return newEntity;
-    }
 
     public Entity saveOrUpdateAnnotation(Entity annotatedEntity, Entity annotation) throws Exception {
         Entity newAnnotation = entityModel.saveEntity(annotation);
@@ -830,16 +827,18 @@ public class ModelMgr {
         return newAnnotation;
     }
 
-    public Entity saveOrUpdateEntity(Entity entity) throws Exception {
-        Entity newEntity = entityModel.saveEntity(entity);
-        if (newEntity!=null) notifyEntityChanged(newEntity.getId());
-        return newEntity;
-    }
-    
-    public EntityData saveOrUpdateEntityData(EntityData newEntityData) throws Exception {
-        return entityModel.saveEntityData(newEntityData);
+    public EntityData updateChildIndex(EntityData entityData, Integer orderIndex) throws Exception {
+        EntityData ed =  entityModel.updateChildIndex(entityData, orderIndex);
+        notifyEntityChanged(entityData.getParentEntity().getId());
+        return ed;
     }
 
+    public EntityData setOrUpdateValue(Entity entity, String attributeValue, String value) throws Exception {
+        EntityData ed = entityModel.setOrUpdateValue(entity, attributeValue, value);
+        notifyEntityChanged(entity.getId());
+        return ed;
+    }
+    
     public Task saveOrUpdateTask(Task task) throws Exception {
         return FacadeManager.getFacadeManager().getComputeFacade().saveOrUpdateTask(task);
     }

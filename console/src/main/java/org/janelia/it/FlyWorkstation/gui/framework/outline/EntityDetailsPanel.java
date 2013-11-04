@@ -223,15 +223,15 @@ public class EntityDetailsPanel extends JPanel implements Accessibility, Refresh
 	    							@Override
 	    							protected void doStuff() throws Exception {
 	    								ModelMgr.getModelMgr().revokePermissions(eap.getEntity().getId(), eap.getSubjectKey(), recursive);
+	    								if (recursive) {
+                                            ModelMgr.getModelMgr().invalidateCache(entity, true);
+                                        }
 	    							}
 	    							
 	    							@Override
 	    							protected void hadSuccess() {
 	    								Utils.setDefaultCursor(EntityDetailsPanel.this);
 	    								refresh();
-	    								if (recursive) {
-	    									ModelMgr.getModelMgr().invalidateCache(entity, true);
-	    								}
 	    							}
 	    							
 	    							@Override

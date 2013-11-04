@@ -61,10 +61,7 @@ public class ModelMgrUtils {
 	}
     
     public static EntityData addChild(Entity parent, Entity child) throws Exception {
-		EntityData newEntityData = parent.addChildEntity(child);
-		EntityData savedEntityData = ModelMgr.getModelMgr().saveOrUpdateEntityData(newEntityData);
-		newEntityData.setId(savedEntityData.getId());
-		return savedEntityData;
+		return ModelMgr.getModelMgr().addEntityToParent(parent, child);
     }
 
 	public static RootedEntity getChildFolder(RootedEntity parent, String name, boolean createIfMissing) throws Exception {
@@ -150,10 +147,9 @@ public class ModelMgrUtils {
     	int orderIndex = 0;
 		for(EntityData ed : orderedData) {
 			if (ed.getOrderIndex()==null || orderIndex!=ed.getOrderIndex()) {
-				ed.setOrderIndex(orderIndex);
+				ModelMgr.getModelMgr().updateChildIndex(ed, orderIndex);
 			}
 			orderIndex++;
 		}
-		ModelMgr.getModelMgr().saveOrUpdateEntity(entity);
     }
 }

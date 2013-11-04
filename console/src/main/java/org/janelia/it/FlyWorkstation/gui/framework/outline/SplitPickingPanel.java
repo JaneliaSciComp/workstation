@@ -810,7 +810,7 @@ public class SplitPickingPanel extends JPanel implements Refreshable {
 								}
 								
 								Entity cross = ModelMgr.getModelMgr().createEntity(EntityConstants.TYPE_SCREEN_SAMPLE_CROSS, crossName);
-								ModelMgr.getModelMgr().setAttributeValue(cross, EntityConstants.ATTRIBUTE_CROSS_LABEL, createNextCrossLabel());
+								ModelMgr.getModelMgr().setOrUpdateValue(cross, EntityConstants.ATTRIBUTE_CROSS_LABEL, createNextCrossLabel());
 								
 								List<Long> childrenIds = new ArrayList<Long>();
 								childrenIds.add(sample1.getId());
@@ -1205,10 +1205,8 @@ public class SplitPickingPanel extends JPanel implements Refreshable {
     	RootedEntity groupAdFolder = ModelMgrUtils.getChildFolder(folder, SplitPickingPanel.FOLDER_NAME_SPLIT_LINES_AD, true);
     	RootedEntity groupDbdFolder = ModelMgrUtils.getChildFolder(folder, SplitPickingPanel.FOLDER_NAME_SPLIT_LINES_DBD, true);
 
-    	groupAdFolder.getEntityData().setOrderIndex(0);
-    	groupDbdFolder.getEntityData().setOrderIndex(1);
-    	ModelMgr.getModelMgr().saveOrUpdateEntityData(groupAdFolder.getEntityData());
-    	ModelMgr.getModelMgr().saveOrUpdateEntityData(groupDbdFolder.getEntityData());
+    	ModelMgr.getModelMgr().updateChildIndex(groupAdFolder.getEntityData(), 0);
+    	ModelMgr.getModelMgr().updateChildIndex(groupDbdFolder.getEntityData(), 1);
     	ModelMgrUtils.fixOrderIndicies(folder.getEntity(),new Comparator<EntityData>() {
 			@Override
 			public int compare(EntityData o1, EntityData o2) {

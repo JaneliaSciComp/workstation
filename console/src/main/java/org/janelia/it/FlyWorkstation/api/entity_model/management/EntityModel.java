@@ -346,7 +346,7 @@ public class EntityModel {
             if (parent != null) {
                 boolean found = false;
                 for(EntityData ed : parent.getEntityData()) {
-                    if (ed.getChildEntity()!=null && ed.getChildEntity().getId().equals(canonicalEntity.getId())) {
+                    if (ed.getChildEntity()!=null && canonicalEntity.getId().equals(ed.getChildEntity().getId())) {
                         log.trace("putOrUpdate: Replacing child {} on existing parent {}", EntityUtils.identify(canonicalEntity), EntityUtils.identify(parent));
                         ed.setChildEntity(canonicalEntity);
                         found = true;
@@ -654,26 +654,6 @@ public class EntityModel {
     }
     
     /**
-     * Set the given attribute value on the specified entity, and update the cache.
-     * 
-     * @param entity
-     * @param attributeName
-     * @param attributeValue
-     * @return canonical entity instance
-     * @throws Exception
-     */
-    public Entity setAttributeValue(Entity entity, String attributeName, String attributeValue) throws Exception {
-    	checkIfCanonicalEntity(entity);
-    	Entity canonicalEntity = null;
-    	synchronized(this) {
-    		Entity newEntity = entityFacade.getEntityById(entity.getId());
-    		newEntity.setValueByAttributeName(attributeName, attributeValue);
-	    	canonicalEntity = putOrUpdate(entityFacade.saveEntity(newEntity));
-    	}
-    	return canonicalEntity;
-    }
-    
-    /**
      * Generic save. Use of this method should be avoided whenever possible. However, it can be useful for bulk 
      * changes to entity data objects. 
      * 
@@ -723,7 +703,51 @@ public class EntityModel {
 		
 		return savedEd;
 	}
-	
+
+    /**
+     * Update the index of the given relationship within its parent. 
+     * 
+     * @param entityData
+     * @return EntityData with canonical parent/child entity instances
+     * @throws Exception
+     */
+    public EntityData updateChildIndex(EntityData entityData, Integer orderIndex) throws Exception {
+        EntityData savedEd = entityFacade.updateChildIndex(entityData, orderIndex);
+        
+        Entity parent = savedEd.getParentEntity();
+        if (parent!=null) {
+            Entity canonicalParent = entityCache.getIfPresent(parent.getId());
+            if (canonicalParent != null) {
+                savedEd.setParentEntity(canonicalParent);
+                EntityUtils.replaceEntityData(canonicalParent, entityData, savedEd);
+                notifyEntityChanged(canonicalParent);   
+            }
+        }
+        
+        return savedEd;
+    }
+
+    /**
+     * Update the index of the given relationship within its parent. 
+     * 
+     * @param entityData
+     * @return EntityData with canonical parent/child entity instances
+     * @throws Exception
+     */
+    public EntityData setOrUpdateValue(Entity entity, String attributeValue, String value) throws Exception {
+        checkIfCanonicalEntity(entity);
+        EntityData savedEd = entityFacade.setOrUpdateValue(entity.getId(), attributeValue, value);
+        
+        Entity parent = savedEd.getParentEntity();
+        if (parent!=null) {
+            savedEd.setParentEntity(entity);
+            EntityUtils.replaceEntityData(entity, entity.getEntityDataByAttributeName(attributeValue), savedEd);
+            notifyEntityChanged(entity);
+        }
+        
+        return savedEd;
+    }
+    
     /**
      * Delete the given EntityData object.
      * 
