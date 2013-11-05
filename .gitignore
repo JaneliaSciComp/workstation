@@ -1,0 +1,51 @@
+
+# /
+/.classpath
+/.metadata
+/.project
+/brunsc.userlibraries
+/jacs.iws
+/.settings
+/bin
+
+# /buildprocess/
+/buildprocess/build
+
+# /buildprocess/config/
+/buildprocess/config/brunsc.properties
+
+# /common/
+/common/bin
+
+# /compute/
+/compute/build
+
+# /console/
+/console/build
+/console/target
+/console/flyworkstation.log
+/console/.classpath.save
+/console/.settings
+/console/output.mov
+/console/.classycle
+/console/*.log
+/console/foo2.tiff
+
+# /console/src/main/java/org/janelia/it/FlyWorkstation/gui/slice_viewer/
+/console/src/main/java/org/janelia/it/FlyWorkstation/gui/slice_viewer/quadview_profile
+
+# /groovy/
+/groovy/.groovy
+/groovy/.settings
+
+# /jacs/
+/jacs/build
+
+# /jacs/src/org/janelia/it/jacs/server/ie/jaxb/
+/jacs/src/org/janelia/it/jacs/server/ie/jaxb/*.java
+
+# /model/
+/model/build
+
+# /shared/
+/shared/build
