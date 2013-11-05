@@ -32,7 +32,6 @@ class MipRenderer
     private VolumeModel volumeModel;
     private boolean resetFirstRedraw;
     private boolean hasBeenReset = false;
-    private boolean resetOnNextDisplay = false;
 
     private Logger logger;
 
@@ -83,11 +82,11 @@ class MipRenderer
         gl.glLoadIdentity();
 
         glDrawable.getWidth();
-        Vec3 f = volumeModel.getFocusInGround();    // This is what allows (follows) drag in X and Y.
+        Vec3 f = volumeModel.getCamera3d().getFocus();    // This is what allows (follows) drag in X and Y.
         Rotation3d rotation = getVolumeModel().getCamera3d().getRotation();
         Vec3 u = rotation.times( UP_IN_CAMERA );
         double unitsPerPixel = glUnitsPerPixel();
-        Vec3 c = f.plus(rotation.times( volumeModel.getCamera3d().getFocus().times( unitsPerPixel )) );
+        Vec3 c = f.plus(rotation.times(volumeModel.getCameraDepth().times(unitsPerPixel)));
         gl.gluLookAt(c.x(), c.y(), c.z(), // camera in ground
                 f.x(), f.y(), f.z(), // focus in ground
                 u.x(), u.y(), u.z()); // up vector in ground
@@ -108,16 +107,16 @@ class MipRenderer
     }
  
     public double glUnitsPerPixel() {
-        return Math.abs( volumeModel.getCamera3d().getFocus().getZ() ) / DISTANCE_TO_SCREEN_IN_PIXELS;
+        return Math.abs( volumeModel.getCameraFocusDistance() ) / DISTANCE_TO_SCREEN_IN_PIXELS;
     }
 
     public void resetView()
     {
         // Adjust view to fit the actual objects present
         BoundingBox3d boundingBox = getBoundingBox();
-        volumeModel.setFocusInGround( boundingBox.getCenter() );
+        volumeModel.getCamera3d().setFocus(boundingBox.getCenter());
         getVolumeModel().getCamera3d().resetRotation();
-        resetCameraFocus(boundingBox);
+        resetCameraDepth(boundingBox);
     }
 
     @Override
@@ -134,10 +133,10 @@ class MipRenderer
         gl2Adapter.glMatrixMode(GL2Adapter.MatrixMode.GL_MODELVIEW);
         gl2Adapter.glLoadIdentity();
 
-        double previousFocusDistance = volumeModel.getCamera3d().getFocus().getZ();
+        double previousFocusDistance = volumeModel.getCameraFocusDistance();
         if ( previousFocusDistance == DEFAULT_CAMERA_FOCUS_DISTANCE ) {
             BoundingBox3d boundingBox = getBoundingBox();
-            resetCameraFocus( boundingBox );
+            resetCameraDepth(boundingBox);
         }
     }
 
@@ -163,7 +162,7 @@ class MipRenderer
 	public void translatePixels(double dx, double dy, double dz) {
 		// trackball translate
 		Vec3 t = new Vec3(-dx, -dy, -dz);
-		volumeModel.getFocusInGround().plusEquals(
+		volumeModel.getCamera3d().getFocus().plusEquals(
                 getVolumeModel().getCamera3d().getRotation().times(t)
         );
 	}
@@ -175,12 +174,12 @@ class MipRenderer
         gl.glMatrixMode( GL2Adapter.MatrixMode.GL_PROJECTION );
         gl.glLoadIdentity();
         final float h = (float) widthInPixels / (float) heightInPixels;
-        double depth = volumeModel.getCamera3d().getFocus().getZ();
-        double cameraFocusDistance = Math.abs( depth ) * glUnitsPerPixel();
+        double cameraFocusDistance = volumeModel.getCameraFocusDistance();
+        double scaledFocusDistance = Math.abs(cameraFocusDistance) * glUnitsPerPixel();
         glu.gluPerspective(verticalApertureInDegrees,
         		h,
-        		0.5 * cameraFocusDistance,
-        		2.0 * cameraFocusDistance);
+        		0.5 * scaledFocusDistance,
+        		2.0 * scaledFocusDistance);
 
 	}
 	
@@ -202,7 +201,7 @@ class MipRenderer
         }
         getVolumeModel().setCameraPixelsPerSceneUnit( DISTANCE_TO_SCREEN_IN_PIXELS, cameraFocusDistance );
 
-        volumeModel.getCamera3d().setFocus(0.0, 0.0, cameraFocusDistance);
+        volumeModel.setCameraDepth(new Vec3(0.0, 0.0, cameraFocusDistance));
 
     }
 	
@@ -248,7 +247,7 @@ class MipRenderer
 
     }
 
-    private void resetCameraFocus(BoundingBox3d boundingBox) {
+    private void resetCameraDepth(BoundingBox3d boundingBox) {
         double heightInMicrometers = boundingBox.getHeight();
         if (heightInMicrometers <= 0.0) { // watch for NaN!
             logger.warn("Adjusted height to account for zero-height bounding box.");
@@ -258,7 +257,7 @@ class MipRenderer
         // cameraFocusDistance = DEFAULT_CAMERA_FOCUS_DISTANCE * defaultHeightInPixels / heightInPixels;
         double finalAspectRatio = maxAspectRatio(boundingBox);
         double newFocusDistance = finalAspectRatio * 1.05 * DISTANCE_TO_SCREEN_IN_PIXELS * heightInMicrometers / heightInPixels;
-        volumeModel.getCamera3d().setFocus( 0.0, 0.0, -newFocusDistance );
+        volumeModel.setCameraDepth( new Vec3( 0.0, 0.0, -newFocusDistance ) );
         getVolumeModel().setCameraPixelsPerSceneUnit(DISTANCE_TO_SCREEN_IN_PIXELS, getVolumeModel().getCameraFocusDistance());
     }
 
@@ -303,7 +302,7 @@ class MipRenderer
 //            // Fit two of the whole volume on the screen
 //            // Rotate volume to match viewer orientation
 ////  Vec3 rotSize = viewer.getViewerInGround().inverse().times(volSize);
-////            Vec3 rotSize = getVolumeModel().getFocusInGround().transpose().times(volSize);
+////            Vec3 rotSize = getVolumeModel().getCameraDepth().transpose().times(volSize);
 //            Vec3 rotSize = getVolumeModel().getCamera3d().getRotation().inverse().times(volSize);
 //            double zx = 0.5 * w / Math.abs(rotSize.x());
 //            double zy = 0.5 * h / Math.abs(rotSize.y());

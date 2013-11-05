@@ -52,7 +52,7 @@ public class SerializationAdapterBean implements UserSettingSerializer.Serializa
     }
 
     @Override
-    public Vec3 getFocusInGround() {
+    public Vec3 getCameraDepth() {
         return focusInGround;
     }
 
@@ -107,7 +107,7 @@ public class SerializationAdapterBean implements UserSettingSerializer.Serializa
     }
 
     @Override
-    public void setFocusInGround(double[] cameraFocusArr) {
+    public void setCameraDepth(double[] cameraFocusArr) {
         this.focusInGround = new Vec3( cameraFocusArr[ 0 ], cameraFocusArr[ 1 ], cameraFocusArr[ 2 ] );
     }
 

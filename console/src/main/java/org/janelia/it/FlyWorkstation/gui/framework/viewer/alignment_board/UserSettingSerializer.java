@@ -24,8 +24,8 @@ public class UserSettingSerializer implements Serializable {
     private static final String CROP_OUT_LEVEL_SETTING = "CropOutLevel";
     private static final String GAMMA_SETTING = "Gamma";
     public static final String CAMERA_ROTATION_SETTING = "CameraRotation";
-    public static final String CAMERA_FOCUS_SETTING = "CameraFocus";
-    public static final String GROUND_FOCUS_SETTING = "InGroundFocus";
+    public static final String CAMERA_DEPTH = "CameraFocus";
+    public static final String FOCUS_SETTING = "InGroundFocus";
     public static final String MIN_VOXELS_SETTING = "MinVoxelCutoff";
     public static final String SAVE_BRIGHTNESS_SETTING = "SaveGammaInTiff";
 
@@ -182,7 +182,7 @@ public class UserSettingSerializer implements Serializable {
 
         }
 
-        str = settingToValue.get( CAMERA_FOCUS_SETTING );
+        str = settingToValue.get(FOCUS_SETTING);
         nonEmpty = nonEmpty(str);
         if ( nonEmpty ) {
             Collection<double[]> coordinateSets = new ArrayList<double[]>();
@@ -196,7 +196,7 @@ public class UserSettingSerializer implements Serializable {
             }
         }
 
-        str = settingToValue.get( GROUND_FOCUS_SETTING );
+        str = settingToValue.get(CAMERA_DEPTH);
         nonEmpty = nonEmpty(str);
         if ( nonEmpty ) {
             Collection<double[]> coordinateSets = new ArrayList<double[]>();
@@ -204,7 +204,7 @@ public class UserSettingSerializer implements Serializable {
             parseTuples(str, 3, doubleParseAcceptor);
             if ( coordinateSets.size() >= 1 ) {
                 double[] cameraFocusArr = coordinateSets.iterator().next();
-                serializationAdapter.setFocusInGround( cameraFocusArr );
+                serializationAdapter.setCameraDepth(cameraFocusArr);
             }
         }
 
@@ -304,17 +304,17 @@ public class UserSettingSerializer implements Serializable {
             logger.info("Null rotation in Volume Model.");
         }
 
-        Vec3 focusInGround = serializationAdapter.getFocusInGround();
+        Vec3 focusInGround = serializationAdapter.getFocus();
         if ( focusInGround != null ) {
-            builder.append(GROUND_FOCUS_SETTING).append( "=" );
+            builder.append(FOCUS_SETTING).append( "=" );
             appendVec3(builder, focusInGround );
-            builder.append( "\n" );
+            builder.append("\n");
         }
 
-        Vec3 focus = serializationAdapter.getFocus();
-        if ( focus != null ) {
-            builder.append( CAMERA_FOCUS_SETTING ).append( "=" );
-            appendVec3(builder, focus);
+        Vec3 depth = serializationAdapter.getCameraDepth();
+        if ( depth != null ) {
+            builder.append(CAMERA_DEPTH).append( "=" );
+            appendVec3(builder, depth);
             builder.append("\n");
         }
 
@@ -421,7 +421,7 @@ public class UserSettingSerializer implements Serializable {
         long getMinimumVoxelCount();                // AlignmentBoardSettings
         Rotation3d getRotation();                   // VolumeModel.getCamera3d()
         boolean isShowChannelData();                // AlignmentBoardSettings
-        Vec3 getFocusInGround();                    // VolumeModel
+        Vec3 getCameraDepth();                      // VolumeModel
         Vec3 getFocus();                            // VolumeModel.getCamera3d()
         CropCoordSet getCropCoords();               // VolumeModel
         boolean isSaveColorBrightness();            // VolumeModel
@@ -433,7 +433,7 @@ public class UserSettingSerializer implements Serializable {
         void setCropCoords( CropCoordSet coordSet );// VolumeModel.setCropCoordinates(cropCoordArray), VolumeModel.setAcceptedCoordinates().
         void setShowChannelData(boolean show);      // AlignmentBoardSettings
         void setFocus( double[] focus );            // VolumeModel.getCamera3d().setFocus()
-        void setFocusInGround(double[] cameraFocusArr);  // Complicated...
+        void setCameraDepth(double[] cameraFocusArr);  // Complicated...
         void setRotation( Collection<double[]> rotation );  // volumeModel.getCamera3d().getRotation().setWithCaution(
         void setSaveColorBrightness( boolean b );   // VolumeModel
    }

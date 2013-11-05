@@ -52,8 +52,8 @@ public class DirectStateSerializationAdapter implements UserSettingSerializer.Se
     }
 
     @Override
-    public Vec3 getFocusInGround() {
-        return volumeModel.getFocusInGround();
+    public Vec3 getCameraDepth() {
+        return volumeModel.getCameraDepth();
     }
 
     @Override
@@ -79,17 +79,17 @@ public class DirectStateSerializationAdapter implements UserSettingSerializer.Se
     @Override
     public void setGammaAdjustment(float gamma) {
         settings.setGammaFactor( gamma );
-        volumeModel.setGammaAdjustment( gamma );
+        volumeModel.setGammaAdjustment(gamma);
     }
 
     @Override
     public void setCropOutLevel(float level) {
-        volumeModel.setCropOutLevel( level );
+        volumeModel.setCropOutLevel(level);
     }
 
     @Override
     public void setMinimumVoxelCount(long count) {
-        settings.setMinimumVoxelCount( count );
+        settings.setMinimumVoxelCount(count);
     }
 
     @Override
@@ -100,24 +100,22 @@ public class DirectStateSerializationAdapter implements UserSettingSerializer.Se
         if ( cropCoordArray != null ) {
             coordSet.setCurrentCoordinates( cropCoordArray );
         }
-        volumeModel.setCropCoords( coordSet );
+        volumeModel.setCropCoords(coordSet);
     }
 
     @Override
     public void setShowChannelData(boolean show) {
-        settings.setShowChannelData( show );
+        settings.setShowChannelData(show);
     }
 
     @Override
     public void setFocus(double[] cameraFocusArr ) {
-        volumeModel.getCamera3d().setFocus( cameraFocusArr[X_OFFS], cameraFocusArr[Y_OFFS], cameraFocusArr[Z_OFFS] );
+        volumeModel.getCamera3d().setFocus(cameraFocusArr[X_OFFS], cameraFocusArr[Y_OFFS], cameraFocusArr[Z_OFFS]);
     }
 
     @Override
-    public void setFocusInGround(double[] cameraFocusArr) {
-        for ( int i = 0; i < 3; i++ ) {
-            volumeModel.getFocusInGround().set( i, cameraFocusArr[ i ] );
-        }
+    public void setCameraDepth(double[] cameraDepthArr) {
+        volumeModel.setCameraDepth( new Vec3( cameraDepthArr[0], cameraDepthArr[1], cameraDepthArr[2] ));
     }
 
     @Override

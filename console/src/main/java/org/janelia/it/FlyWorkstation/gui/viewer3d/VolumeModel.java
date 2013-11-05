@@ -28,9 +28,9 @@ public class VolumeModel {
     private CropCoordSet cropCoordSet = CropCoordSet.getDefaultCropCoordSet();
     private float gammaAdjustment = DEFAULT_GAMMA_ADJUSTMENT;
     private float cropOutLevel = DEFAULT_CROPOUT;
+    private Vec3 cameraDepth;
     private boolean colorSaveBrightness = true;
     private Camera3d camera3d;
-    private Vec3 focusInGround = DEFAULT_FOCUS_IN_GROUND;
     private float[] colorMask = DEFAULT_COLOR_MASK;
     private float[] voxelMicrometers;
     private int[] voxelDimensions;
@@ -44,7 +44,6 @@ public class VolumeModel {
         cropCoordSet = CropCoordSet.getDefaultCropCoordSet();
         gammaAdjustment = DEFAULT_GAMMA_ADJUSTMENT;
         cropOutLevel = DEFAULT_CROPOUT;
-        focusInGround = DEFAULT_FOCUS_IN_GROUND;
         colorMask = DEFAULT_COLOR_MASK;
     }
 
@@ -108,7 +107,7 @@ public class VolumeModel {
     }
 
     public synchronized void removeUpdateListener( UpdateListener listener ) {
-        listeners.remove( listener );
+        listeners.remove(listener);
     }
 
     public synchronized void removeAllListeners() {
@@ -124,10 +123,7 @@ public class VolumeModel {
 
     /** Convenience method to corral this calculation for consistent use. */
     public double getCameraFocusDistance() {
-        if ( getCamera3d() == null ) {
-            return Double.MAX_VALUE;
-        }
-        return getCamera3d().getFocus().getZ();
+        return cameraDepth.getZ();
     }
 
     /** Convenience method to corral this calculation for consistent use. */
@@ -142,12 +138,12 @@ public class VolumeModel {
         this.camera3d = camera3d;
     }
 
-    public Vec3 getFocusInGround() {
-        return focusInGround;
+    public Vec3 getCameraDepth() {
+        return cameraDepth;
     }
 
-    public void setFocusInGround(Vec3 focusInGround) {
-        this.focusInGround = focusInGround;
+    public void setCameraDepth(Vec3 cameraDepth) {
+        this.cameraDepth = cameraDepth;
     }
 
     public float[] getVoxelMicrometers() {

@@ -684,7 +684,7 @@ public class AlignmentBoardViewer extends Viewer implements AlignmentBoardContro
         deserializeSettings(SessionMgr.getBrowser().getLayersPanel().getAlignmentBoardContext());
         settingsPanel.update( true );
 
-        double cameraFocusDistance = mip3d.getVolumeModel().getCamera3d().getFocus().getZ();
+        double cameraFocusDistance = mip3d.getVolumeModel().getCameraFocusDistance();
         mip3d.getVolumeModel().getCamera3d().setPixelsPerSceneUnit(Math.abs(BaseRenderer.DISTANCE_TO_SCREEN_IN_PIXELS / cameraFocusDistance));
     }
 
