@@ -14,7 +14,6 @@ import org.janelia.it.FlyWorkstation.shared.workers.SimpleWorker;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.*;
 import java.util.*;
 import java.util.concurrent.*;
 
@@ -155,7 +154,7 @@ public class RenderablesLoadWorker extends SimpleWorker implements VolumeLoader 
             // Cut down the to-renders: use only the larger ones.
             long fragmentFilterSize = alignmentBoardSettings.getMinimumVoxelCount();
             if ( fragmentFilterSize != -1 ) {
-                FragmentSizeFilter filter = new FragmentSizeFilter( fragmentFilterSize );
+                FragmentSizeSetterAndFilter filter = new FragmentSizeSetterAndFilter( fragmentFilterSize );
                 renderableDatas = filter.filter( renderableDatas );
             }
 

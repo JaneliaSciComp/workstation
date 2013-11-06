@@ -6,7 +6,7 @@ import org.janelia.it.FlyWorkstation.gui.alignment_board_viewer.renderable.*;
 import org.janelia.it.FlyWorkstation.gui.alignment_board_viewer.volume_builder.RenderablesChannelsBuilder;
 import org.janelia.it.FlyWorkstation.gui.alignment_board_viewer.volume_builder.RenderablesMaskBuilder;
 import org.janelia.it.FlyWorkstation.gui.alignment_board_viewer.volume_export.FilteringAcceptorDecorator;
-import org.janelia.it.FlyWorkstation.gui.viewer3d.loader.FragmentSizeFilter;
+import org.janelia.it.FlyWorkstation.gui.viewer3d.loader.FragmentSizeSetterAndFilter;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.loader.MaskChanDataAcceptorI;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.loader.MaskChanMultiFileLoader;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.loader.MaskSingleFileLoader;
@@ -88,7 +88,7 @@ public class FileExportLoadWorker extends SimpleWorker implements VolumeLoader {
         long fragmentFilterSize = paramBean.getFilterSize();
         Collection<MaskChanRenderableData> filteredRenderableDatas = paramBean.getRenderableDatas();
         if ( fragmentFilterSize != -1 ) {
-            FragmentSizeFilter filter = new FragmentSizeFilter( fragmentFilterSize );
+            FragmentSizeSetterAndFilter filter = new FragmentSizeSetterAndFilter( fragmentFilterSize );
             filteredRenderableDatas = filter.filter( filteredRenderableDatas );
         }
         for ( MaskChanRenderableData renderableData: filteredRenderableDatas ) {

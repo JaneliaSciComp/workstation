@@ -19,13 +19,13 @@ import java.util.List;
  * Time: 11:58 AM
  *
  * Given a collection of renderable beans, this will eliminate from that list, all whose voxel count is less than
- * some threshold.
+ * some threshold. All beans which have passed through the filter will have their voxel counts set to the found value.
  */
-public class FragmentSizeFilter {
-    private Logger logger = LoggerFactory.getLogger(FragmentSizeFilter.class);
+public class FragmentSizeSetterAndFilter {
+    private Logger logger = LoggerFactory.getLogger(FragmentSizeSetterAndFilter.class);
     private long thresholdVoxelCount;
 
-    public FragmentSizeFilter( long thresholdVoxelCount ) {
+    public FragmentSizeSetterAndFilter(long thresholdVoxelCount) {
         this.thresholdVoxelCount = thresholdVoxelCount;
     }
 
@@ -42,24 +42,19 @@ public class FragmentSizeFilter {
         for ( MaskChanRenderableData data: rawList ) {
             // For each data, read up its voxel count.
             String maskPath = data.getMaskPath();
-            // Certain cases need not be examined.
-            if ( data.isCompartment() || maskPath == null ) {
-                logger.debug( "Passing through {}.", maskPath );
+            if ( maskPath == null ) {
+                rtnVal.add( data );
+            }
+            else if (filter(resolver, maskPath, data) ) {
                 rtnVal.add( data );
             }
             else {
-                if ( filterByFileSize( resolver, maskPath, data ) ) {
-                    rtnVal.add( data );
-                }
-                else {
-                    discardCount ++;
-                    logger.debug(
-                            "Not keeping {}, file {}, because it has too few voxels.",
-                            data.getBean().getLabelFileNum(),
-                            maskPath
-                    );
-                }
-
+                discardCount ++;
+                logger.debug(
+                        "Not keeping {}, file {}, because it has too few voxels.",
+                        data.getBean().getLabelFileNum(),
+                        maskPath
+                );
             }
 
         }
@@ -68,7 +63,7 @@ public class FragmentSizeFilter {
         return rtnVal;
     }
 
-    private boolean filterByFileSize( FileResolver resolver, String maskPath, MaskChanRenderableData data ) {
+    private boolean filter(FileResolver resolver, String maskPath, MaskChanRenderableData data) {
         File infile = new File( resolver.getResolvedFilename( maskPath ) );
         boolean rtnVal = false;
         if ( ! infile.canRead() ) {
@@ -81,7 +76,7 @@ public class FragmentSizeFilter {
                 long voxelCount = loader.getVoxelCount( fis );
 
                 // Filter-in here.
-                if ( voxelCount >= thresholdVoxelCount ) {
+                if ( data.isCompartment()  ||  voxelCount >= thresholdVoxelCount ) {
                     rtnVal = true;
                     logger.debug(
                             "Keeping {}, with {} voxels.",
