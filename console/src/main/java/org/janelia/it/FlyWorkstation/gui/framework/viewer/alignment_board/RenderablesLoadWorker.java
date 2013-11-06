@@ -159,21 +159,11 @@ public class RenderablesLoadWorker extends SimpleWorker implements VolumeLoader 
                 renderableDatas = filter.filter( renderableDatas );
             }
 
+            // Establish the "uncovered bean list".
             List<RenderableBean> renderableBeans = new ArrayList<RenderableBean>();
             int lastUsedMask = -1;
             for ( MaskChanRenderableData renderableData: renderableDatas ) {
                 RenderableBean bean = renderableData.getBean();
-
-                // Need to add sizing data to each renderable bean prior to sorting.
-                MaskSingleFileLoader loader = new MaskSingleFileLoader( null, null, bean, null );
-                if ( renderableData.getMaskPath() != null ) {
-                    File infile = new File( resolver.getResolvedFilename( renderableData.getMaskPath() ) );
-                    if ( infile.canRead() ) {
-                        FileInputStream fis = new FileInputStream( infile );
-                        long voxelCount = loader.getVoxelCount( fis );
-                        bean.setVoxelCount( voxelCount );
-                    }
-                }
                 renderableBeans.add( bean );
                 if ( bean.getTranslatedNum() > lastUsedMask ) {
                     lastUsedMask = bean.getTranslatedNum();

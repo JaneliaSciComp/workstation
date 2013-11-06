@@ -95,9 +95,9 @@ public class FileExportLoadWorker extends SimpleWorker implements VolumeLoader {
             RenderableBean bean = renderableData.getBean();
             renderableBeans.add( bean );
 
-            // Need to add sizing data to each renderable bean prior to sorting.
-            MaskSingleFileLoader loader = new MaskSingleFileLoader( null, null, bean, null );
-            if ( renderableData.getMaskPath() != null ) {
+            // Need to add sizing data to each renderable bean prior to sorting, if not yet set.
+            MaskSingleFileLoader loader = new MaskSingleFileLoader( bean );
+            if ( bean.getVoxelCount() <= 0  &&  renderableData.getMaskPath() != null ) {
                 File infile = new File( resolver.getResolvedFilename( renderableData.getMaskPath() ) );
                 if ( infile.canRead() ) {
                     FileInputStream fis = new FileInputStream( infile );

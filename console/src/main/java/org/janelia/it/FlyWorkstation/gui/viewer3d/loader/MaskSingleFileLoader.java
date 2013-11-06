@@ -111,6 +111,14 @@ public class MaskSingleFileLoader {
     private FileStats fileStats;
 
     /**
+     * Mostly-null. Only for getting voxel count into bean. Provide the bean so that the voxel sizing may be added to it.
+     * @param bean store voxel count into this.
+     */
+    public MaskSingleFileLoader( RenderableBean bean ) {
+        this(null, null, bean, null);
+    }
+
+    /**
      * Construct a file loader for all data about a single renderable, and with all targets for that data.
      *
      * @param maskAcceptors these care about mask data per se.
@@ -357,6 +365,9 @@ public class MaskSingleFileLoader {
             boundsZCoords[ 1 ] = readLong(maskInputStream);
 
             totalVoxels = readLong(maskInputStream);
+            if ( renderableBean != null ) {
+                renderableBean.setVoxelCount( totalVoxels );
+            }
             logger.debug("Total voxels={}.  Combined vol size={}.", totalVoxels, sx*sy*sz);
             axis = readByte(maskInputStream);
             logger.debug( "Got axis key of {}", axis );

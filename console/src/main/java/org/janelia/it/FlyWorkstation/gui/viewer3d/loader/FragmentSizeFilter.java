@@ -3,8 +3,6 @@ package org.janelia.it.FlyWorkstation.gui.viewer3d.loader;
 import org.janelia.it.FlyWorkstation.gui.alignment_board_viewer.renderable.MaskChanRenderableData;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.resolver.CacheFileResolver;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.resolver.FileResolver;
-import org.janelia.it.FlyWorkstation.model.domain.Masked3d;
-import org.janelia.it.FlyWorkstation.model.domain.Neuron;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -50,7 +48,7 @@ public class FragmentSizeFilter {
                 rtnVal.add( data );
             }
             else {
-                if ( filterByFileSize( resolver, maskPath ) ) {
+                if ( filterByFileSize( resolver, maskPath, data ) ) {
                     rtnVal.add( data );
                 }
                 else {
@@ -70,38 +68,7 @@ public class FragmentSizeFilter {
         return rtnVal;
     }
 
-    /**
-     * This filter method reduces the input list by the size given for this filter object.
-     *
-     * @param rawList what to check.
-     * @return what remains after size taken into account.
-     */
-    public List<Neuron> filterNeurons(Collection<Neuron> rawList) {
-        List<Neuron> rtnVal = new ArrayList<Neuron>();
-        FileResolver resolver = new CacheFileResolver();
-        for ( Neuron masked3d: rawList ) {
-            if ( filterByFileSize( resolver, masked3d.getMask3dImageFilepath() ) ) {
-                rtnVal.add( masked3d );
-            }
-        }
-        return rtnVal;
-    }
-
-    /**
-     * Filter a single neuron: tell if it is in or out.
-     * @param neuron check this.
-     * @return true=in; false=out
-     */
-    public boolean filterNeuron( Neuron neuron ) {
-        FileResolver resolver = new CacheFileResolver();
-        boolean rtnVal = false;
-        if ( filterByFileSize( resolver, neuron.getMask3dImageFilepath() ) ) {
-            rtnVal = true;
-        }
-        return rtnVal;
-    }
-
-    private boolean filterByFileSize( FileResolver resolver, String maskPath ) {
+    private boolean filterByFileSize( FileResolver resolver, String maskPath, MaskChanRenderableData data ) {
         File infile = new File( resolver.getResolvedFilename( maskPath ) );
         boolean rtnVal = false;
         if ( ! infile.canRead() ) {
@@ -109,7 +76,7 @@ public class FragmentSizeFilter {
         }
         else {
             try {
-                MaskSingleFileLoader loader = new MaskSingleFileLoader( null, null, null, null );
+                MaskSingleFileLoader loader = new MaskSingleFileLoader( data.getBean() );
                 FileInputStream fis = new FileInputStream( infile );
                 long voxelCount = loader.getVoxelCount( fis );
 
