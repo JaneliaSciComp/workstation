@@ -741,7 +741,13 @@ public class EntityModel {
         Entity parent = savedEd.getParentEntity();
         if (parent!=null) {
             savedEd.setParentEntity(entity);
-            EntityUtils.replaceEntityData(entity, entity.getEntityDataByAttributeName(attributeValue), savedEd);
+            EntityData existingEd = entity.getEntityDataByAttributeName(attributeValue);
+            if (existingEd!=null) {
+                EntityUtils.replaceEntityData(entity, existingEd, savedEd);    
+            }
+            else {
+                entity.getEntityData().add(savedEd);
+            }
             notifyEntityChanged(entity);
         }
         
