@@ -37,6 +37,7 @@
 # /groovy/
 /groovy/.groovy
 /groovy/.settings
+/groovy/bin
 
 # /jacs/
 /jacs/build
