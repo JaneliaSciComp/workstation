@@ -301,8 +301,14 @@ public class AlignmentBoardViewer extends Viewer implements AlignmentBoardContro
                 // to a cycle of updates between this viewer and the outline!
                 new Thread( new Runnable() {
                     public void run() {
+                        // Ensure all shown.
+                        LayersPanel layersPanel = SessionMgr.getSessionMgr().getActiveBrowser().getLayersPanel();
+                        layersPanel.showOutline();
                         AlignmentBoardItemChangeEvent event = new AlignmentBoardItemChangeEvent(
-                                SessionMgr.getBrowser().getLayersPanel().getAlignmentBoardContext(), null, AlignmentBoardItemChangeEvent.ChangeType.FilterLevelChange);
+                                layersPanel.getAlignmentBoardContext(),
+                                null,
+                                AlignmentBoardItemChangeEvent.ChangeType.FilterLevelChange
+                        );
                         ModelMgr.getModelMgr().postOnEventBus(event);
                     }
                 }).start();

@@ -451,7 +451,7 @@ public class LayersPanel extends JPanel implements Refreshable, ActivatableView 
         log.debug("Some entities were invalidated so we're refreshing the tree");
         refresh();
     }
-    
+
     private AlignedItem findAlignedItemByEntityId(AlignedItem alignedItem, Long entityId) {
         if (alignedItem.getId().equals(entityId)) {
             return alignedItem;

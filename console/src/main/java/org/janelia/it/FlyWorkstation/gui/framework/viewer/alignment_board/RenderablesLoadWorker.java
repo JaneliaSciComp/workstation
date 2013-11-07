@@ -167,6 +167,7 @@ public class RenderablesLoadWorker extends SimpleWorker implements VolumeLoader 
             for ( MaskChanRenderableData data: renderableDatas ) {
                 idToData.put( data.getBean(), data );
             }
+            SessionMgr.getSessionMgr().getActiveBrowser().getLayersPanel().showLoadingIndicator();
             for ( MaskChanRenderableData data: originalDatas ) {
                 MaskChanRenderableData targetData = idToData.get(data.getBean());
                 RenderableBean bean = data.getBean();
