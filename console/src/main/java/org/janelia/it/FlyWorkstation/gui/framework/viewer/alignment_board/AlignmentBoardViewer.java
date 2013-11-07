@@ -215,16 +215,18 @@ public class AlignmentBoardViewer extends Viewer implements AlignmentBoardContro
             printItemChanged(event.getAlignedItem(), event.getChangeType().toString());
             printAlignmentBoardContext(abContext);
 
-            if ( event.getChangeType().equals( AlignmentBoardItemChangeEvent.ChangeType.VisibilityChange )  ||
-                    event.getChangeType().equals( AlignmentBoardItemChangeEvent.ChangeType.ColorChange ) ) {
+            if ( AlignmentBoardItemChangeEvent.ChangeType.VisibilityChange.equals( event.getChangeType() ) ||
+                 AlignmentBoardItemChangeEvent.ChangeType.ColorChange.equals( event.getChangeType() ) ) {
 
                 // Changing the render mapping values.
                 this.updateRendering( abContext );
 
             }
-            else {
+            else if ( ! AlignmentBoardItemChangeEvent.ChangeType.FilterLevelChange.equals( event.getChangeType() ) ) {
+
                 serialize();
                 this.updateContents(abContext);
+
             }
         }
     }
@@ -487,10 +489,12 @@ public class AlignmentBoardViewer extends Viewer implements AlignmentBoardContro
     private void printItemChanged(AlignedItem alignedItem, String changeType) {
         log.debug("Alignment board item changed");
         log.debug("* Change Type: {}", changeType);
-        log.debug("* Item Alias: {}", alignedItem.getName());
-        log.debug("* Item Name: {}", alignedItem.getItemWrapper().getName());
-        log.debug("* Item Visibility: {}", alignedItem.isVisible());
-        log.debug("* Item Color: {} (hex={})", alignedItem.getColor(), alignedItem.getColorHex() );
+        if ( alignedItem != null ) {
+            log.debug("* Item Alias: {}", alignedItem.getName());
+            log.debug("* Item Name: {}", alignedItem.getItemWrapper().getName());
+            log.debug("* Item Visibility: {}", alignedItem.isVisible());
+            log.debug("* Item Color: {} (hex={})", alignedItem.getColor(), alignedItem.getColorHex() );
+        }
     }
 
     private void deleteAll() {
