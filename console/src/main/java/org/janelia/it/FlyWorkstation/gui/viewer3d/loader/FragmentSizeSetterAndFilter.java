@@ -45,7 +45,7 @@ public class FragmentSizeSetterAndFilter {
             if ( maskPath == null ) {
                 rtnVal.add( data );
             }
-            else if (filter(resolver, maskPath, data) ) {
+            else if ( filter(resolver, maskPath, data) ) {
                 rtnVal.add( data );
             }
             else {

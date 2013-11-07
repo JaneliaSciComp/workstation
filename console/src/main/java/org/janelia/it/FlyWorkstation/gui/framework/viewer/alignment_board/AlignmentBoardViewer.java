@@ -294,6 +294,12 @@ public class AlignmentBoardViewer extends Viewer implements AlignmentBoardContro
             repaint();
             if ( loadFiles ) {
                 mip3d.refresh();
+                // Post this event, nagging the outline to update itself.
+                // NOTE: better not do any refreshing in this board, if this event is encountered.  Would lead
+                // to a cycle of updates between this viewer and the outline!
+                AlignmentBoardItemChangeEvent event = new AlignmentBoardItemChangeEvent(
+                        SessionMgr.getBrowser().getLayersPanel().getAlignmentBoardContext(), null, AlignmentBoardItemChangeEvent.ChangeType.FilterLevelChange);
+                ModelMgr.getModelMgr().postOnEventBus(event);
             }
             else {
                 if ( mip3d != null ) {

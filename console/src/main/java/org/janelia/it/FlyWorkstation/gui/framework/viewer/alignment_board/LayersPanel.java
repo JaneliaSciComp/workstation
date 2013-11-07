@@ -489,21 +489,31 @@ public class LayersPanel extends JPanel implements Refreshable, ActivatableView 
     public void itemChanged(AlignmentBoardItemChangeEvent event) {
 
         if (sampleTreeModel==null) return;
-        
-        log.debug("Aligned item changed: "+event.getAlignedItem().getName());
-        
-        // Generating model events is hard (we don't know the UI indexes of what was deleted, for example), 
+
+        // Generating model events is hard (we don't know the UI indexes of what was deleted, for example),
         // so we just recreate the model here.
-        
+
         final OutlineExpansionState expansionState = new OutlineExpansionState(outline);
         expansionState.storeExpansionState();
-        
-        if (event.getChangeType()==ChangeType.Removed) {
-            alignmentBoardContext.findAndRemoveAlignedEntity(event.getAlignedItem());
-        }
 
-        OutlineModel outlineModel = DefaultOutlineModel.createOutlineModel(sampleTreeModel, new AlignedEntityRowModel(), true, "Name");
-        updateTableModel(outlineModel);
+        if (event.getChangeType()==ChangeType.FilterLevelChange) {
+            log.info("Filter level changed");
+            OutlineModel outlineModel = DefaultOutlineModel.createOutlineModel(sampleTreeModel, new AlignedEntityRowModel(), true, "Name");
+            updateTableModel(outlineModel);
+            this.getOutline().updateUI();
+
+        }
+        else {
+            log.debug("Aligned item changed: "+event.getAlignedItem().getName());
+
+            if (event.getChangeType()==ChangeType.Removed) {
+                alignmentBoardContext.findAndRemoveAlignedEntity(event.getAlignedItem());
+            }
+
+            OutlineModel outlineModel = DefaultOutlineModel.createOutlineModel(sampleTreeModel, new AlignedEntityRowModel(), true, "Name");
+            updateTableModel(outlineModel);
+
+        }
 
         expansionState.restoreExpansionState(true);
     }
@@ -592,6 +602,9 @@ public class LayersPanel extends JPanel implements Refreshable, ActivatableView 
                     label.setIcon(Icons.getIcon(entity));
                 }
             }
+            else if (value instanceof String) {
+
+            }
             else {
                 log.warn("Unrecognized value type in LayersPanel tree column: "+value.getClass().getName());
             }
@@ -611,30 +624,31 @@ public class LayersPanel extends JPanel implements Refreshable, ActivatableView 
             
             JComponent cell = (JComponent)super.getTableCellRendererComponent(
                     table, value, selected, hasFocus, row, column);
-                        
-            final AlignedItem alignedItem = (AlignedItem)value;
-            
+
             JLabel label = (JLabel)cell;
             if (label==null) return null;
 
-            if (alignedItem.isPassthroughRendering()) {
-                ColorSwatch swatch = new ColorSwatch(COLOR_SWATCH_SIZE, Color.pink, Color.black);
-                swatch.setMultiColor();
-                label.setIcon(swatch);
-                label.setText("");
-                label.setToolTipText( "Raw rendering" );
+            if ( value instanceof AlignedItem ) {
+                final AlignedItem alignedItem = (AlignedItem)value;
+                if (alignedItem.isPassthroughRendering()) {
+                    ColorSwatch swatch = new ColorSwatch(COLOR_SWATCH_SIZE, Color.pink, Color.black);
+                    swatch.setMultiColor();
+                    label.setIcon(swatch);
+                    label.setText("");
+                    label.setToolTipText( "Raw rendering" );
+                }
+                else if (alignedItem.getColor()!=null) {
+                    ColorSwatch swatch = new ColorSwatch(COLOR_SWATCH_SIZE, alignedItem.getColor(), Color.white);
+                    label.setIcon(swatch);
+                    label.setText("");
+                    label.setToolTipText( "Chosen (mono) color rendering" );
+                }
+                else {
+                    label.setText("");
+                    label.setToolTipText( "Default rendering" );
+                }
             }
-            else if (alignedItem.getColor()!=null) {
-                ColorSwatch swatch = new ColorSwatch(COLOR_SWATCH_SIZE, alignedItem.getColor(), Color.white);
-                label.setIcon(swatch);
-                label.setText("");
-                label.setToolTipText( "Chosen (mono) color rendering" );
-            }
-            else {
-                label.setText("");
-                label.setToolTipText( "Default rendering" );
-            }
-            
+
             return label;
         }
     }
@@ -667,29 +681,45 @@ public class LayersPanel extends JPanel implements Refreshable, ActivatableView 
 
         @Override
         public Object getValueFor(Object node, int column) {
-            AlignedItem alignedItem = (AlignedItem)node;
-            switch (column) {
-            case 0:
-                if (alignedItem==alignmentBoardContext) return Boolean.TRUE;
-                return alignedItem.isVisible();            
-            case 1:
-                if (alignedItem==alignmentBoardContext) return null;
-                return alignedItem;
+            if ( node instanceof AlignedItem ) {
+                AlignedItem alignedItem = (AlignedItem)node;
+                switch (column) {
+                    case 0:
+                        if (alignedItem==alignmentBoardContext) return Boolean.TRUE;
+                        return alignedItem.isVisible();
+                    case 1:
+                        if (alignedItem==alignmentBoardContext) return null;
+                        return alignedItem;
 
-            default:
-                assert false;
+                    default:
+                        assert false;
+                }
+                return null;
             }
-            return null;
+            else if ( node instanceof String  &&  column == 0 ) {
+                return Boolean.FALSE;
+            }
+            else {
+                return node;
+            }
         }
 
         @Override
         public boolean isCellEditable(Object node, int column) {
-            final AlignedItem alignedItem = (AlignedItem)node;
-            return column==0 && (alignedItem!=alignmentBoardContext);
+            if ( node instanceof  AlignedItem ) {
+                final AlignedItem alignedItem = (AlignedItem)node;
+                return column==0 && (alignedItem!=alignmentBoardContext);
+            }
+            else {
+                return false;
+            }
         }
 
         @Override
         public void setValueFor(Object node, int column, Object value) {
+            if ( ! (node instanceof AlignedItem ) ) {
+                return;
+            }
             final AlignedItem alignedItem = (AlignedItem)node;
             if (alignedItem==alignmentBoardContext) return;
             final Boolean isVisible = (Boolean)value;

@@ -6,6 +6,7 @@ import java.util.List;
 import javax.swing.event.TreeModelListener;
 import javax.swing.tree.TreeModel;
 
+import org.janelia.it.FlyWorkstation.model.domain.EntityWrapper;
 import org.janelia.it.FlyWorkstation.model.viewer.AlignedItem;
 import org.janelia.it.FlyWorkstation.model.viewer.AlignmentBoardContext;
 import org.slf4j.Logger;
@@ -19,7 +20,8 @@ import org.slf4j.LoggerFactory;
 public class SampleTreeModel implements TreeModel {
 
     private static final Logger log = LoggerFactory.getLogger(SampleTreeModel.class);
-    
+    public static final String ITEMS_OMITTED_MENU_ITEM_TEXT = " items omitted";
+
     private AlignmentBoardContext alignmentBoardContext;
     
     private List<TreeModelListener> listeners = new ArrayList<TreeModelListener>();
@@ -30,25 +32,59 @@ public class SampleTreeModel implements TreeModel {
 
     @Override
     public Object getChild(Object parent, int index) {
+        Object child = null;
         AlignedItem item = (AlignedItem)parent;
-        if (item==null) return null;
-        Object child = item.getChildren()==null?0:item.getChildren().get(index);
+        if ( item != null ) {
+            if ( item.getChildren() != null ) {
+                List<EntityWrapper> nonExcludedChildren = getNonExcludedChildren( item );
+                if ( index == nonExcludedChildren.size() ) {
+                    // Special case: the warning blurb.
+                    int count = item.getChildren().size() - nonExcludedChildren.size();
+                    child = new String( count + ITEMS_OMITTED_MENU_ITEM_TEXT );
+                }
+                else if ( index < nonExcludedChildren.size() ) {
+                    child = nonExcludedChildren.get( index );
+                }
+            }
+        }
+        if ( child == null ) {
+            return ""; // Change to empty child.
+        }
         return child;
     }
 
     @Override
     public int getChildCount(Object parent) {
-        AlignedItem item = (AlignedItem)parent;
-        if (item==null) return 0;
-        int count = item.getChildren()==null?0:item.getChildren().size();
+        int count = 0;
+        if ( parent instanceof AlignedItem ) {
+            AlignedItem item = (AlignedItem)parent;
+            if (item != null) {
+                if ( item.getChildren() != null ) {
+                    List<EntityWrapper> nonExcludedChildren = getNonExcludedChildren( item );
+                    count = nonExcludedChildren.size();
+                    // Anything actually excluded -> add one more item.
+                    if ( nonExcludedChildren.size() < item.getChildren().size() ) {
+                        count ++;
+                    }
+                }
+            }
+        }
         return count;
     }
 
     @Override
     public int getIndexOfChild(Object parent, Object child) {
         AlignedItem item = (AlignedItem)parent;
-        if (item==null) return 0;
-        int index = item.getChildren()==null?0:item.getChildren().indexOf(child);
+        int index = 0;
+        if (item != null) {
+            if ( item.getChildren() != null ) {
+                List<EntityWrapper> nonExcludedChildren = getNonExcludedChildren( item );
+                index = nonExcludedChildren.indexOf( child );
+                if ( index == -1  &&  ("" + child).endsWith( ITEMS_OMITTED_MENU_ITEM_TEXT ) ) {
+                    return nonExcludedChildren.size();
+                }
+            }
+        }
         return index;
     }
 
@@ -75,5 +111,25 @@ public class SampleTreeModel implements TreeModel {
     @Override
     public void valueForPathChanged(javax.swing.tree.TreePath path, Object newValue) {
         throw new AssertionError("This method should never be called");
+    }
+
+    private List<EntityWrapper> getNonExcludedChildren( AlignedItem item ) {
+        List<EntityWrapper> rtnVal = new ArrayList<EntityWrapper>();
+        if ( item.getChildren() != null ) {
+            for ( EntityWrapper nextChild: item.getChildren() ) {
+                if ( nextChild instanceof AlignedItem ) {
+                    AlignedItem nextItem = (AlignedItem)nextChild;
+                    if ( AlignedItem.InclusionStatus.In.equals( nextItem.getInclusionStatus() ) ) {
+                        rtnVal.add( nextChild );
+                    }
+                }
+                else {
+                    // No exclusion based on type of child.  Non-aligned items always have presence.
+                    rtnVal.add( nextChild );
+                }
+
+            }
+        }
+        return rtnVal;
     }
 }

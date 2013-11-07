@@ -10,7 +10,9 @@ import org.janelia.it.FlyWorkstation.gui.viewer3d.resolver.FileResolver;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.texture.TextureDataI;
 import org.janelia.it.FlyWorkstation.gui.alignment_board_viewer.volume_builder.RenderablesChannelsBuilder;
 import org.janelia.it.FlyWorkstation.gui.alignment_board_viewer.volume_builder.RenderablesMaskBuilder;
+import org.janelia.it.FlyWorkstation.model.viewer.AlignedItem;
 import org.janelia.it.FlyWorkstation.shared.workers.SimpleWorker;
+import org.janelia.it.jacs.model.entity.EntityConstants;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -152,10 +154,39 @@ public class RenderablesLoadWorker extends SimpleWorker implements VolumeLoader 
                 alignmentBoardSettings = adjustDownsampleRateSetting();
 
             // Cut down the to-renders: use only the larger ones.
+            Collection<MaskChanRenderableData> originalDatas = new ArrayList<MaskChanRenderableData>( renderableDatas );
             long fragmentFilterSize = alignmentBoardSettings.getMinimumVoxelCount();
             if ( fragmentFilterSize != -1 ) {
                 FragmentSizeSetterAndFilter filter = new FragmentSizeSetterAndFilter( fragmentFilterSize );
                 renderableDatas = filter.filter( renderableDatas );
+            }
+
+            // Go through the original list.  Anything not in the filtered list must be marked as excluded;
+            // anything remaining on the list is un-marked excluded.
+            Map<RenderableBean,MaskChanRenderableData> idToData = new HashMap<RenderableBean,MaskChanRenderableData>();
+            for ( MaskChanRenderableData data: renderableDatas ) {
+                idToData.put( data.getBean(), data );
+            }
+            for ( MaskChanRenderableData data: originalDatas ) {
+                MaskChanRenderableData targetData = idToData.get(data.getBean());
+                RenderableBean bean = data.getBean();
+                if ( bean != null  &&
+                     bean.getRenderableEntity() != null  &&
+                     bean.getType().equals( EntityConstants.TYPE_NEURON_FRAGMENT )
+                   ) {
+
+                    AlignedItem item = bean.getAlignedItem();
+                    if ( item != null ) {
+                        if ( targetData != null ) {
+                            // It's in the filtered list.  Mark it as such.
+                            item.setInclusionStatus(AlignedItem.InclusionStatus.In);
+                        }
+                        else {
+                            // Not in the filtered list.  Exlude it.
+                            item.setInclusionStatus(AlignedItem.InclusionStatus.ExcludedForSize);
+                        }
+                    }
+                }
             }
 
             // Establish the "uncovered bean list".

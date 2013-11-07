@@ -25,6 +25,30 @@ import org.slf4j.LoggerFactory;
 public class AlignedItem extends EntityWrapper {
 
     private static final Logger log = LoggerFactory.getLogger(AlignedItem.class);
+    public enum InclusionStatus {
+        In, ExcludedForSize;
+
+        private static final String EXCLUDED_FOR_SIZE = "Excluded for Size";
+        private static final String IN = "In";
+
+        public static InclusionStatus get( String strVal ) {
+            // Not set at all --> keep it in.
+            if ( strVal == null ) {
+                return In;
+            }
+
+            if ( strVal.equals( EXCLUDED_FOR_SIZE ) ) {
+                return ExcludedForSize;
+            }
+            else {
+                return valueOf( strVal );
+            }
+        }
+
+        public String toString() {
+            return this.equals( In ) ? IN : EXCLUDED_FOR_SIZE;
+        }
+    };
 
     private EntityWrapper itemWrapper;
     
@@ -107,9 +131,9 @@ public class AlignedItem extends EntityWrapper {
         }
         return null;
     }
-    
+
     /**
-     * Returns true if this item is visible in the alignment board. 
+     * Returns true if this item is visible in the alignment board.
      * @return
      */
     public boolean isVisible() {
@@ -190,6 +214,28 @@ public class AlignedItem extends EntityWrapper {
         ModelMgr.getModelMgr().setOrUpdateValue(getInternalEntity(), EntityConstants.ATTRIBUTE_RENDER_METHOD, value);
     }
 
+    /**
+     * Tells the filtering status.  A value of In means the entity is included by the application.  Other values
+     * imply it is not.
+     *
+     * @return how to interpret the inclusion of this.
+     */
+    public InclusionStatus getInclusionStatus() {
+        Entity entity = getInternalEntity();
+        String attVal = entity.getValueByAttributeName( EntityConstants.ATTRIBUTE_INCLUSION_STATUS );
+        return InclusionStatus.get( attVal );
+    }
+
+    /**
+     * Tells the database whether this item is included or not.
+     *
+     * @param status 'In' value means it will be treated by app; other implies not.
+     * @throws Exception thrown by called methods.
+     */
+    public void setInclusionStatus( InclusionStatus status ) throws Exception {
+        String value = status.toString();
+        ModelMgr.getModelMgr().setOrUpdateValue(getInternalEntity(), EntityConstants.ATTRIBUTE_INCLUSION_STATUS, value);
+    }
 
     /**
      * Removes an aligned entity from the board. This method must be called from a worker thread.

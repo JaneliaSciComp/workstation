@@ -1,5 +1,6 @@
 package org.janelia.it.FlyWorkstation.gui.alignment_board_viewer.renderable;
 
+import org.janelia.it.FlyWorkstation.model.viewer.AlignedItem;
 import org.janelia.it.jacs.model.entity.Entity;
 import org.janelia.it.jacs.model.entity.EntityConstants;
 
@@ -16,6 +17,7 @@ public class RenderableBean {
     private int translatedNum;
     private byte[] rgb;
     private Entity renderableEntity;
+    private AlignedItem alignedItem;
     private boolean invertedY;
     private String type;
     private Long voxelCount = 0L; // Never null.
@@ -42,6 +44,14 @@ public class RenderableBean {
 
     public void setRgb(byte[] rgb) {
         this.rgb = rgb;
+    }
+
+    public AlignedItem getAlignedItem() {
+        return alignedItem;
+    }
+
+    public void setAlignedItem( AlignedItem item ) {
+        this.alignedItem = item;
     }
 
     public Entity getRenderableEntity() {
