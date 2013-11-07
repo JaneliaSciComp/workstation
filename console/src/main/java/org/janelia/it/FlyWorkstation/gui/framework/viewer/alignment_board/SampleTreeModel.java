@@ -6,6 +6,9 @@ import java.util.List;
 import javax.swing.event.TreeModelListener;
 import javax.swing.tree.TreeModel;
 
+import org.janelia.it.FlyWorkstation.api.entity_model.management.ModelMgr;
+import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr;
+import org.janelia.it.FlyWorkstation.gui.framework.viewer.alignment_board.events.AlignmentBoardItemChangeEvent;
 import org.janelia.it.FlyWorkstation.model.domain.EntityWrapper;
 import org.janelia.it.FlyWorkstation.model.viewer.AlignedItem;
 import org.janelia.it.FlyWorkstation.model.viewer.AlignmentBoardContext;
@@ -20,7 +23,7 @@ import org.slf4j.LoggerFactory;
 public class SampleTreeModel implements TreeModel {
 
     private static final Logger log = LoggerFactory.getLogger(SampleTreeModel.class);
-    public static final String ITEMS_OMITTED_MENU_ITEM_TEXT = " items omitted";
+    public static final String ITEMS_OMITTED_MENU_ITEM_TEXT = " items below cutoff";
 
     private AlignmentBoardContext alignmentBoardContext;
     
@@ -44,6 +47,16 @@ public class SampleTreeModel implements TreeModel {
                 }
                 else if ( index < nonExcludedChildren.size() ) {
                     child = nonExcludedChildren.get( index );
+                }
+                else {
+                    // Calling tree is working from an obsolete child count.
+                    new Thread( new Runnable() {
+                        public void run() {
+                            AlignmentBoardItemChangeEvent event = new AlignmentBoardItemChangeEvent(
+                                    SessionMgr.getBrowser().getLayersPanel().getAlignmentBoardContext(), null, AlignmentBoardItemChangeEvent.ChangeType.FilterLevelChange);
+                            ModelMgr.getModelMgr().postOnEventBus(event);
+                        }
+                    }).start();
                 }
             }
         }
@@ -116,7 +129,8 @@ public class SampleTreeModel implements TreeModel {
     private List<EntityWrapper> getNonExcludedChildren( AlignedItem item ) {
         List<EntityWrapper> rtnVal = new ArrayList<EntityWrapper>();
         if ( item.getChildren() != null ) {
-            for ( EntityWrapper nextChild: item.getChildren() ) {
+            // Pushing to new connection to avoid concurrent modification.
+            for ( EntityWrapper nextChild: new ArrayList<EntityWrapper>( item.getChildren() ) ) {
                 if ( nextChild instanceof AlignedItem ) {
                     AlignedItem nextItem = (AlignedItem)nextChild;
                     if ( AlignedItem.InclusionStatus.In.equals( nextItem.getInclusionStatus() ) ) {

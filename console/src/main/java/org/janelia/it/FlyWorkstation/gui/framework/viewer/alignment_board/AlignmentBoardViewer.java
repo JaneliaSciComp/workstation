@@ -299,9 +299,13 @@ public class AlignmentBoardViewer extends Viewer implements AlignmentBoardContro
                 // Post this event, nagging the outline to update itself.
                 // NOTE: better not do any refreshing in this board, if this event is encountered.  Would lead
                 // to a cycle of updates between this viewer and the outline!
-                AlignmentBoardItemChangeEvent event = new AlignmentBoardItemChangeEvent(
-                        SessionMgr.getBrowser().getLayersPanel().getAlignmentBoardContext(), null, AlignmentBoardItemChangeEvent.ChangeType.FilterLevelChange);
-                ModelMgr.getModelMgr().postOnEventBus(event);
+                new Thread( new Runnable() {
+                    public void run() {
+                        AlignmentBoardItemChangeEvent event = new AlignmentBoardItemChangeEvent(
+                                SessionMgr.getBrowser().getLayersPanel().getAlignmentBoardContext(), null, AlignmentBoardItemChangeEvent.ChangeType.FilterLevelChange);
+                        ModelMgr.getModelMgr().postOnEventBus(event);
+                    }
+                }).start();
             }
             else {
                 if ( mip3d != null ) {
