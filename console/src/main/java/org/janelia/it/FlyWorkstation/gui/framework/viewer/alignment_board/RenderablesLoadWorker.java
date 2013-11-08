@@ -144,6 +144,14 @@ public class RenderablesLoadWorker extends SimpleWorker implements VolumeLoader 
 
         Collection<MaskChanRenderableData> renderableDatas = dataSource.getRenderableDatas();
 
+        // Cut down the to-renders: use only the larger ones.
+        Collection<MaskChanRenderableData> originalDatas = new ArrayList<MaskChanRenderableData>( renderableDatas );
+        long fragmentFilterSize = alignmentBoardSettings.getMinimumVoxelCount();
+        if ( fragmentFilterSize != -1 ) {
+            FragmentSizeSetterAndFilter filter = new FragmentSizeSetterAndFilter( fragmentFilterSize );
+            renderableDatas = filter.filter( renderableDatas );
+        }
+
         if ( loadFiles ) {
             if ( resolver == null ) {
                 //resolver = new TrivialFileResolver();  // swap comments, in testing.
@@ -152,14 +160,6 @@ public class RenderablesLoadWorker extends SimpleWorker implements VolumeLoader 
 
             if ( sampler != null )
                 alignmentBoardSettings = adjustDownsampleRateSetting();
-
-            // Cut down the to-renders: use only the larger ones.
-            Collection<MaskChanRenderableData> originalDatas = new ArrayList<MaskChanRenderableData>( renderableDatas );
-            long fragmentFilterSize = alignmentBoardSettings.getMinimumVoxelCount();
-            if ( fragmentFilterSize != -1 ) {
-                FragmentSizeSetterAndFilter filter = new FragmentSizeSetterAndFilter( fragmentFilterSize );
-                renderableDatas = filter.filter( renderableDatas );
-            }
 
             // Go through the original list.  Anything not in the filtered list must be marked as excluded;
             // anything remaining on the list is un-marked excluded.

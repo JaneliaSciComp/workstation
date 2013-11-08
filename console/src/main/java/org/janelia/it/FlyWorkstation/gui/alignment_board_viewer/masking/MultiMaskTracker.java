@@ -50,6 +50,7 @@ public class MultiMaskTracker {
         if ( dumpedList != null )
             dumpedList.clear();
         masksExhausted = false;
+        nextMaskNum = 0; // In case set-first is never called after the clear.
     }
 
     /**
