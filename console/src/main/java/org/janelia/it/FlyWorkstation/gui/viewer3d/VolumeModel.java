@@ -123,6 +123,9 @@ public class VolumeModel {
 
     /** Convenience method to corral this calculation for consistent use. */
     public double getCameraFocusDistance() {
+        if ( cameraDepth == null ) {
+            return 1.0;
+        }
         return cameraDepth.getZ();
     }
 
