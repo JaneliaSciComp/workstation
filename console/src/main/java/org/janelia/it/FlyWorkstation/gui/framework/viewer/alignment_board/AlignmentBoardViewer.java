@@ -271,7 +271,7 @@ public class AlignmentBoardViewer extends Viewer implements AlignmentBoardContro
 
         // Add this last.  "show-loading" removes it.  This way, it is shown only
         // when it becomes un-busy.
-        //addSettingsLaunchButton();
+        addSettingsLaunchButton();
         add(wrapperPanel, BorderLayout.CENTER);
         mip3d.resetView();
 
@@ -679,7 +679,7 @@ public class AlignmentBoardViewer extends Viewer implements AlignmentBoardContro
         //if ( settings != null ) {
         //    settings.removeAllSettingsListeners();
         //}
-        //removeSettingsLaunchButton();
+        removeSettingsLaunchButton();
         if ( mip3d != null ) {
             mip3d.releaseMenuActions();
         }
@@ -723,18 +723,18 @@ public class AlignmentBoardViewer extends Viewer implements AlignmentBoardContro
         }
         JPanel rtnVal = new JPanel();
         rtnVal.setLayout(new BorderLayout());
-        JSplitPane mipAndControls = new JSplitPane(
-                JSplitPane.HORIZONTAL_SPLIT,
-                mip3d,
-                settingsPanel
-        );
-        mipAndControls.setDividerLocation(0.5);
-        mipAndControls.setResizeWeight( 1.0 );
-        mipAndControls.setOneTouchExpandable( true );
-        mipAndControls.setContinuousLayout( false );
-        mipAndControls.updateUI();
+//        JSplitPane mipAndControls = new JSplitPane(
+//                JSplitPane.HORIZONTAL_SPLIT,
+//                mip3d,
+//                settingsPanel
+//        );
+//        mipAndControls.setDividerLocation(0.5);
+//        mipAndControls.setResizeWeight( 1.0 );
+//        mipAndControls.setOneTouchExpandable( true );
+//        mipAndControls.setContinuousLayout( false );
+//        mipAndControls.updateUI();
 
-        rtnVal.add(mipAndControls, BorderLayout.CENTER);
+        rtnVal.add(mip3d, BorderLayout.CENTER);
         jostleContainingFrame();
         return rtnVal;
     }
