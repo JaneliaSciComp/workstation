@@ -22,12 +22,9 @@ public class AlignmentBoardControlsDialog extends JDialog {
     public static final double UNSELECTED_DOWNSAMPLE_RATE = 0.0;
 
     private static final String DISMISS_DIALOG = "Dismiss";
-    private static final int WIDTH = 600;
-    private static final int HEIGHT = 640;
 
     private static final String LAUNCH_AS = "Controls";
     private static final String LAUNCH_DESCRIPTION = "Present a dialog allowing users to change settings.";
-    private static final Dimension SIZE = new Dimension( WIDTH, HEIGHT);
 
     private AlignmentBoardControlsPanel controlsPanel;
     private Component centering;
@@ -48,6 +45,7 @@ public class AlignmentBoardControlsDialog extends JDialog {
         this.centering = centering;
         controlsPanel = new AlignmentBoardControlsPanel( centering, volumeModel, settings );
         this.setSize( controlsPanel.getSize() );
+        this.setPreferredSize( controlsPanel.getSize() );
         this.setLayout( new BorderLayout() );
         this.add( controlsPanel, BorderLayout.CENTER );
 
@@ -112,8 +110,8 @@ public class AlignmentBoardControlsDialog extends JDialog {
         @Override
         public void actionPerformed(ActionEvent e) {
 
-            int width = (int)SIZE.getWidth();
-            int height = (int)SIZE.getHeight();
+            int width = (int)controlsPanel.getSize().getWidth();
+            int height = (int)controlsPanel.getSize().getHeight();
             int x = centering.getLocation().x + ( centering.getWidth() / 2 ) - ( width / 2 );
             int y = centering.getLocation().y + ( centering.getHeight() / 2 ) - ( height / 2 );
             AlignmentBoardControlsDialog.this.setLocation( x, y );

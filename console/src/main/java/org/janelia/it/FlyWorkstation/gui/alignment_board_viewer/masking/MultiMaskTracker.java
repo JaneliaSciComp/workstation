@@ -23,6 +23,7 @@ public class MultiMaskTracker {
 
     private List<Integer> dumpedList;
     private Set<Integer> retiredMasks;
+    private Map<Integer,String> nextRenMaskVsCombo = new HashMap<Integer,String>();
     private Logger logger;
 
     private int nextMaskNum;
@@ -50,6 +51,7 @@ public class MultiMaskTracker {
         if ( dumpedList != null )
             dumpedList.clear();
         masksExhausted = false;
+        nextRenMaskVsCombo.clear();
         nextMaskNum = 0; // In case set-first is never called after the clear.
     }
 
@@ -143,57 +145,69 @@ public class MultiMaskTracker {
 
     /** Call this at the end, to drop resources, etc. */
     public void writeOutstandingDump() {
-        if ( dumpedList == null ) {
+        if ( dumpedList == null  &&  nextRenMaskVsCombo.size() == 0 ) {
             return;
         }
         StringBuilder totalDump = new StringBuilder("Dumping Mask Contents\n");
-        totalDump.append("Mask List: ");
-        for ( Integer maskId: dumpedList ) {
-            totalDump.append( maskId ).append(",");
+        if ( nextRenMaskVsCombo.size() > 0 ) {
+            if ( dumpedList == null ) {
+                dumpedList = new ArrayList<Integer>();
+            }
+            totalDump.append("Missed Combinations List; found key vs expanded alternates:");
+            for ( Integer key: nextRenMaskVsCombo.keySet() ) {
+                totalDump.append( key ).append(": ").append( nextRenMaskVsCombo.get( key ) );
+                dumpedList.add( key );
+            }
         }
-        totalDump.setLength( totalDump.length() - 1 );    // Trim trailing comma
-        totalDump.append("\n");
-        for ( Integer maskId: maskIdToBean.keySet() ) {
-            StringBuilder maskContents = new StringBuilder();
+        if ( dumpedList != null ) {
+            totalDump.append("Mask List: ");
+            for ( Integer maskId: dumpedList ) {
+                totalDump.append( maskId ).append(",");
+            }
+            totalDump.setLength( totalDump.length() - 1 );    // Trim trailing comma
+            totalDump.append("\n");
+            for ( Integer maskId: maskIdToBean.keySet() ) {
+                StringBuilder maskContents = new StringBuilder();
 
-            // Dump all multimasks containing any targeted submask.
-            List<Integer> altMasks = maskIdToBean.get(maskId).getAltMasks();
-            boolean toDump = false;
-            for ( Integer member: dumpedList ) {
-                if ( altMasks.contains( member ) ) {
-                    toDump = true;
-                    break;
+                // Dump all multimasks containing any targeted submask.
+                List<Integer> altMasks = maskIdToBean.get(maskId).getAltMasks();
+                boolean toDump = false;
+                for ( Integer member: dumpedList ) {
+                    if ( altMasks.contains( member ) ) {
+                        toDump = true;
+                        break;
+                    }
+                }
+                if ( toDump ) {
+                    for ( Integer subMask: altMasks) {
+                        maskContents.append( subMask ).append( ' ' );
+                    }
+                    String maskContentStr = maskContents.toString().trim();
+                    totalDump.append( "Mask " ).append( maskId ).append(" contains these submasks [" ).append( maskContentStr ).append( "]").append("\n");
                 }
             }
-            if ( toDump ) {
-                for ( Integer subMask: altMasks) {
-                    maskContents.append( subMask ).append( ' ' );
-                }
-                String maskContentStr = maskContents.toString().trim();
-                totalDump.append( "Mask " ).append( maskId ).append(" contains these submasks [" ).append( maskContentStr ).append( "]").append("\n");
-            }
-        }
 
-        logger.info( totalDump.toString() );
-        totalDump.setLength( 0 );
-        totalDump.append( "Dumping Inverted Mask Contents\n" );
-        Set<String> altMasks = this.altMasksToBean.keySet();
-        for ( String invertedKey: altMasks ) {
-            boolean toDump = false;
-            String[] altMaskArr = invertedKey.split(" ");
-            List<String> altMaskList = Arrays.asList( altMaskArr );
-            for ( Integer member: dumpedList ) {
-                if ( altMaskList.contains( member.toString() ) ) {
-                    toDump = true;
-                    break;
+            logger.info( totalDump.toString() );
+            totalDump.setLength( 0 );
+            totalDump.append( "Dumping Inverted Mask Contents\n" );
+            Set<String> altMasks = this.altMasksToBean.keySet();
+            for ( String invertedKey: altMasks ) {
+                boolean toDump = false;
+                String[] altMaskArr = invertedKey.split(" ");
+                List<String> altMaskList = Arrays.asList( altMaskArr );
+                for ( Integer member: dumpedList ) {
+                    if ( altMaskList.contains( member.toString() ) ) {
+                        toDump = true;
+                        break;
+                    }
+                }
+                if ( toDump ) {
+                    totalDump.append( "Alt-Mask-Set ").append( invertedKey ).append( " refers to multimask " ).append( altMasksToBean.get( invertedKey ).getMultiMaskNum() ).append( "\n" );
                 }
             }
-            if ( toDump ) {
-                totalDump.append( "Alt-Mask-Set ").append( invertedKey ).append( " refers to multimask " ).append( altMasksToBean.get( invertedKey ).getMultiMaskNum() ).append( "\n" );
-            }
+            logger.info( totalDump.toString() );
+            dumpedList.clear();
         }
-        logger.info( totalDump.toString() );
-        dumpedList.clear();
 
     }
 
@@ -220,7 +234,9 @@ public class MultiMaskTracker {
         }
         else {
             rtnVal = createIncrementedMultimask(discoveredMask, oldVolumeMask, altMasks);
-
+            if ( rtnVal == -1 ) {
+                nextRenMaskVsCombo.put( oldVolumeMask, fullInvertedKey );
+            }
         }
         return rtnVal;
     }

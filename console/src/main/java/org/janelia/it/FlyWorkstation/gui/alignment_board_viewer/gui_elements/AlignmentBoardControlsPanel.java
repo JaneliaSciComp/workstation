@@ -62,7 +62,7 @@ public class AlignmentBoardControlsPanel extends JPanel {
     private static final String SAVE_AS_COLOR_TIFF = "Save Color TIFF";
     private static final String SAVE_AS_COLOR_TIFF_TOOLTIP_TEXT = SAVE_AS_COLOR_TIFF;
 
-    private static final int WIDTH = 450;
+    private static final int WIDTH = 640;
     private static final int HEIGHT = 640;
     private static final Dimension DOWNSAMPLE_TIP_DIM = new Dimension(WIDTH, 70);
 
