@@ -50,14 +50,14 @@ public class AlignmentBoardEntityTransferHandler extends EntityTransferHandler {
 
                 AlignmentBoardContext abContext = SessionMgr.getBrowser().getLayersPanel().getAlignmentBoardContext();
                 Entity abEntity = abContext.getInternalEntity();
-                List<RootedEntity> entities = (List<RootedEntity>)transferable.getTransferData(TransferableEntityList.getEntityFlavor());
+                List<RootedEntity> rootedEntities = (List<RootedEntity>)transferable.getTransferData(TransferableEntityList.getRootedEntityFlavor());
                 AlignmentContext standardContext = new AlignmentContext(
                         abEntity.getValueByAttributeName( EntityConstants.ATTRIBUTE_ALIGNMENT_SPACE ),
                         abEntity.getValueByAttributeName( EntityConstants.ATTRIBUTE_OPTICAL_RESOLUTION ),
                         abEntity.getValueByAttributeName( EntityConstants.ATTRIBUTE_PIXEL_RESOLUTION )
                 );
                 int acceptedCount = 0;
-                for ( RootedEntity entity: entities ) {
+                for ( RootedEntity entity: rootedEntities ) {
                     if ( abContext.isAcceptedType( entity.getType() ) ) {
                         if ( entity.getType().equals( EntityConstants.TYPE_NEURON_FRAGMENT ) ) {
                             Entity sampleEntity = ModelMgr.getModelMgr().getAncestorWithType(entity.getEntity(), EntityConstants.TYPE_SAMPLE);

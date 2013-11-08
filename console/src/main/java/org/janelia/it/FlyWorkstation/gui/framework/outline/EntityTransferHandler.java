@@ -150,10 +150,11 @@ public abstract class EntityTransferHandler extends TransferHandler {
 	                    return false;
 	                }
 	                
-	                JTree tree = (JTree)sourceComponent;
-	                int[] selRows = tree.getSelectionRows();
+	                EntityTree tree = (EntityTree)sourceComponent;
+	                JTree jtree = tree.getTree();
+	                int[] selRows = jtree.getSelectionRows();
 	                if (selRows!=null && selRows.length>0) {
-	                    TreePath path = tree.getPathForRow(selRows[0]);
+	                    TreePath path = jtree.getPathForRow(selRows[0]);
 	                    if (path!=null) {
 	                        sourcePaths.add(path);
 	                    }
@@ -274,21 +275,27 @@ public abstract class EntityTransferHandler extends TransferHandler {
 			final Transferable t = (Transferable)support.getTransferable();
 			final List<RootedEntity> rootedEntities = (List<RootedEntity>)t.getTransferData(TransferableEntityList.getRootedEntityFlavor());
 			final JComponent dropTarget = getDropTargetComponent();
+
+			DefaultMutableTreeNode parent = null;
+			int index = 0;
 			
-            // Get drop location info
-            JTree.DropLocation dl = (JTree.DropLocation) support.getDropLocation();
-            int childIndex = dl.getChildIndex();
-            TreePath targetPath = dl.getPath();
-            final DefaultMutableTreeNode parent = (DefaultMutableTreeNode) targetPath.getLastPathComponent();
-            
-            // Get drop index
-            int index = childIndex; // DropMode.INSERT
-            if (childIndex == -1) { // DropMode.ON
-                EntityData parentEd = (EntityData)parent.getUserObject();
-                Entity parentEntity = parentEd.getChildEntity();
-                index = parentEntity.getChildren().size();
+            if (dropTarget instanceof EntityTree) {
+                // Get drop location info
+                JTree.DropLocation dl = (JTree.DropLocation) support.getDropLocation();
+                int childIndex = dl.getChildIndex();
+                TreePath targetPath = dl.getPath();
+                parent = (DefaultMutableTreeNode) targetPath.getLastPathComponent();
+                
+                // Get drop index
+                index = childIndex; // DropMode.INSERT
+                if (childIndex == -1) { // DropMode.ON
+                    EntityData parentEd = (EntityData)parent.getUserObject();
+                    Entity parentEntity = parentEd.getChildEntity();
+                    index = parentEntity.getChildren().size();
+                }
             }
             
+            final DefaultMutableTreeNode finalParent = parent;
             final int finalIndex = index;
                     
             SimpleWorker worker = new SimpleWorker() {
@@ -297,7 +304,7 @@ public abstract class EntityTransferHandler extends TransferHandler {
                     // Actually perform the transfer
                     if (dropTarget instanceof EntityTree) {
                         EntityTree targetEntityTree = (EntityTree)dropTarget;
-                        addEntities(targetEntityTree, parent, rootedEntities, finalIndex, support.getDropAction()==MOVE);
+                        addEntities(targetEntityTree, finalParent, rootedEntities, finalIndex, support.getDropAction()==MOVE);
                     }
                     else if ((dropTarget instanceof LayersPanel) || (dropTarget instanceof AlignmentBoardViewer)) {
                         addEntitiesToAlignmentBoard(SessionMgr.getBrowser().getLayersPanel().getAlignmentBoardContext(), rootedEntities);
