@@ -666,10 +666,15 @@ LLF: the hookup for the 3d snapshot.
 		splitPane_1.setResizeWeight(1.00);
 		splitPane.setLeftComponent(splitPane_1);
 
+        // this contains the viewer panel plus the z scroll bar
+        JPanel viewerPlusPanel = new JPanel();
+        viewerPlusPanel.setLayout(new BoxLayout(viewerPlusPanel, BoxLayout.X_AXIS));
+		splitPane_1.setLeftComponent(viewerPlusPanel);
+
 		JPanel viewerPanel = new JPanel();
-		splitPane_1.setLeftComponent(viewerPanel);
+        viewerPlusPanel.add(viewerPanel);
 		viewerPanel.setLayout(new GridBagLayout());
-		
+
 		// Stupid WindowBuilder won't accept reuse of GridBagConstraints object;
 		// ...so the usual Java "create another class"...
 		class QuadrantConstraints extends GridBagConstraints {
@@ -759,7 +764,7 @@ LLF: the hookup for the 3d snapshot.
 		
 		JPanel panel_1 = new JPanel();
 		panel_1.setBorder(new EtchedBorder(EtchedBorder.LOWERED, null, null));
-		controlsPanel.add(panel_1);
+		viewerPlusPanel.add(panel_1);
 		panel_1.setLayout(new BoxLayout(panel_1, BoxLayout.Y_AXIS));
 		
 		ToolButton zoomInButton = new ToolButton(zoomInAction);
