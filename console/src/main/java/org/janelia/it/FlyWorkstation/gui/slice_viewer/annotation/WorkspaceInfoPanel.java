@@ -137,7 +137,7 @@ public class WorkspaceInfoPanel extends JPanel
         if (foundNeuron != null) {
             int index = neuronListModel.indexOf(foundNeuron);
             neuronListModel.setElementAt(neuron, index);
-            neuronListBox.setSelectedValue(foundNeuron, true);
+            neuronListBox.setSelectedValue(neuron, true);
         }
     }
 
