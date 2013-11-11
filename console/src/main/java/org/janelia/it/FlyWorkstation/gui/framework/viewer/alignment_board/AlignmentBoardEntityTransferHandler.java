@@ -29,7 +29,7 @@ import java.util.List;
  * Overriding the transfer handler, to enforce drag-prohibit earlier.
  */
 public class AlignmentBoardEntityTransferHandler extends EntityTransferHandler {
-    private static final int MAX_FRAGMENT_CAPACITY = 200;
+    private static final int MAX_FRAGMENT_CAPACITY = 20000;
     private static final String CAPACITY_EXCEEDED_FMT =
             "Alignment board %s already contains %d fragments.  Your addition of %d would exceed the maximum of %d.";
 
@@ -46,6 +46,7 @@ public class AlignmentBoardEntityTransferHandler extends EntityTransferHandler {
     @Override
     public boolean canImport(TransferHandler.TransferSupport support) {
         boolean rtnVal = super.canImport( support );
+        logger.debug("Enter can-import...");
 
         if ( rtnVal ) {
             try {
@@ -118,6 +119,7 @@ public class AlignmentBoardEntityTransferHandler extends EntityTransferHandler {
                 logger.error( "failed to check if can import DnD item(s).");
             }
         }
+        logger.debug("Exit can-import: {}.", rtnVal);
         return rtnVal;
     }
 
@@ -144,6 +146,7 @@ public class AlignmentBoardEntityTransferHandler extends EntityTransferHandler {
     }
 
     private int getRemainingFragmentCapacity(Entity abEntity) {
+        logger.debug("Getting remaining capacity...");
         int fragmentCount = 0;
         int sampleCount = 0;
         // Some entities would make it onto the board.  Let's get the remaining capacity of that board.
@@ -164,15 +167,15 @@ public class AlignmentBoardEntityTransferHandler extends EntityTransferHandler {
         Sample wrapper = new Sample( entity );
         List< AlignmentContext> contexts = wrapper.getAvailableAlignmentContexts();
         Iterator<AlignmentContext> contextIterator = contexts.iterator();
-        while ( ! foundMatch  ) {
-            if ( contextIterator.hasNext() ) {
-                AlignmentContext nextContext = contextIterator.next();
-                if ( standardContext.equals( nextContext ) ) {
-                    foundMatch = true;
-                }
+
+        while ( contextIterator.hasNext() && (! foundMatch) ) {
+            AlignmentContext nextContext = contextIterator.next();
+            if ( standardContext.equals( nextContext ) ) {
+                foundMatch = true;
             }
 
         }
+
         rtnVal = foundMatch;
         return rtnVal;
     }

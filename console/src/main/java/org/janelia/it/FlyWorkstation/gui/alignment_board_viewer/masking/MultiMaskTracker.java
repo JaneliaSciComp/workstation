@@ -17,13 +17,14 @@ import java.util.*;
 public class MultiMaskTracker {
 
     public static final int MAX_MASK_DEPTH = 8;
+    public static final String MSK_KEY_SEP = "=";
 
     private Map<Integer,MultiMaskBean> maskIdToBean;
     private Map<String,MultiMaskBean> altMasksToBean;
 
     private List<Integer> dumpedList;
     private Set<Integer> retiredMasks;
-    private Map<Integer,String> nextRenMaskVsCombo = new HashMap<Integer,String>();
+    private Map<String,String> unexpandableVsPrevCombo = new HashMap<String,String>();
     private Logger logger;
 
     private int nextMaskNum;
@@ -51,7 +52,7 @@ public class MultiMaskTracker {
         if ( dumpedList != null )
             dumpedList.clear();
         masksExhausted = false;
-        nextRenMaskVsCombo.clear();
+        unexpandableVsPrevCombo.clear();
         nextMaskNum = 0; // In case set-first is never called after the clear.
     }
 
@@ -145,18 +146,20 @@ public class MultiMaskTracker {
 
     /** Call this at the end, to drop resources, etc. */
     public void writeOutstandingDump() {
-        if ( dumpedList == null  &&  nextRenMaskVsCombo.size() == 0 ) {
+        if ( dumpedList == null  &&  unexpandableVsPrevCombo.size() == 0 ) {
             return;
         }
         StringBuilder totalDump = new StringBuilder("Dumping Mask Contents\n");
-        if ( nextRenMaskVsCombo.size() > 0 ) {
+        if ( unexpandableVsPrevCombo.size() > 0 ) {
             if ( dumpedList == null ) {
                 dumpedList = new ArrayList<Integer>();
             }
             totalDump.append("Missed Combinations List; found key vs expanded alternates:");
-            for ( Integer key: nextRenMaskVsCombo.keySet() ) {
-                totalDump.append( key ).append(": ").append( nextRenMaskVsCombo.get( key ) );
-                dumpedList.add( key );
+            for ( String key: unexpandableVsPrevCombo.keySet() ) {
+                totalDump.append(key);
+                String value = unexpandableVsPrevCombo.get( key );
+                String[] parts = value.split( MSK_KEY_SEP );
+                dumpedList.add( Integer.parseInt( parts[ 0 ] ) );
             }
         }
         if ( dumpedList != null ) {
@@ -235,7 +238,8 @@ public class MultiMaskTracker {
         else {
             rtnVal = createIncrementedMultimask(discoveredMask, oldVolumeMask, altMasks);
             if ( rtnVal == -1 ) {
-                nextRenMaskVsCombo.put( oldVolumeMask, fullInvertedKey );
+                unexpandableVsPrevCombo.put(fullInvertedKey, discoveredMask + MSK_KEY_SEP + fullInvertedKey);
+
             }
         }
         return rtnVal;
