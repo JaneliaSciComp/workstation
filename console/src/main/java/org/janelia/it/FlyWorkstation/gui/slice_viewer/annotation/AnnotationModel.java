@@ -505,6 +505,13 @@ that need to respond to changing data.
             throw new Exception("anchored path annotations are in different neurons");
         }
 
+        // if a path between those endpoints exists, remove it first:
+        if (neuron1.getAnchoredPathMap().containsKey(endpoints)) {
+            // test:
+            System.out.println("endpoints exist in map");
+            removeAnchoredPath(neuron1.getAnchoredPathMap().get(endpoints));
+        }
+
         // transform point list and persist
         TmAnchoredPath path = modelMgr.addAnchoredPath(neuron1.getId(), endpoints.getAnnotationID1(),
                 endpoints.getAnnotationID2(), points);
