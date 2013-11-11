@@ -15,7 +15,6 @@ import org.slf4j.LoggerFactory;
 
 import javax.swing.*;
 
-import java.awt.datatransfer.DataFlavor;
 import java.awt.datatransfer.Transferable;
 import java.util.Iterator;
 import java.util.List;
@@ -29,6 +28,10 @@ import java.util.List;
  * Overriding the transfer handler, to enforce drag-prohibit earlier.
  */
 public class AlignmentBoardEntityTransferHandler extends EntityTransferHandler {
+    private static final int MAX_FRAGMENT_CAPACITY = 200;
+    private static final String CAPACITY_EXCEEDED_FMT =
+            "Alignment board %s already contains %d fragments.  Your addition of %d would exceed the maximum of %d.";
+
     private AlignmentBoardViewer viewer;
     private Logger logger;
     public AlignmentBoardEntityTransferHandler( AlignmentBoardViewer viewer ) {
@@ -48,6 +51,7 @@ public class AlignmentBoardEntityTransferHandler extends EntityTransferHandler {
                 // Get the target entity.
                 Transferable transferable = support.getTransferable();
 
+                // Need check for alignment context compatibility.
                 AlignmentBoardContext abContext = SessionMgr.getBrowser().getLayersPanel().getAlignmentBoardContext();
                 Entity abEntity = abContext.getInternalEntity();
                 List<RootedEntity> rootedEntities = (List<RootedEntity>)transferable.getTransferData(TransferableEntityList.getRootedEntityFlavor());
@@ -56,27 +60,53 @@ public class AlignmentBoardEntityTransferHandler extends EntityTransferHandler {
                         abEntity.getValueByAttributeName( EntityConstants.ATTRIBUTE_OPTICAL_RESOLUTION ),
                         abEntity.getValueByAttributeName( EntityConstants.ATTRIBUTE_PIXEL_RESOLUTION )
                 );
+
+                boolean typeIsFragment;
+                boolean typeIsSample;
+
+                Entity sampleEntity;
+
                 int acceptedCount = 0;
+                int fragmentCount = 0;
+
+                // Flip assumptions: turn this back on if something matches.
+                rtnVal = false;
+
                 for ( RootedEntity entity: rootedEntities ) {
                     if ( abContext.isAcceptedType( entity.getType() ) ) {
-                        if ( entity.getType().equals( EntityConstants.TYPE_NEURON_FRAGMENT ) ) {
-                            Entity sampleEntity = ModelMgr.getModelMgr().getAncestorWithType(entity.getEntity(), EntityConstants.TYPE_SAMPLE);
-                            if (sampleEntity==null) {
+                        typeIsFragment = entity.getType().equals(EntityConstants.TYPE_NEURON_FRAGMENT);
+                        typeIsSample = entity.getType().equals(EntityConstants.TYPE_SAMPLE);
+                        if ( typeIsFragment ) {
+                            sampleEntity = ModelMgr.getModelMgr().getAncestorWithType(entity.getEntity(), EntityConstants.TYPE_SAMPLE);
+                            if ( sampleEntity == null ) {
                                 rtnVal = false;
                             }
                             else {
-                                rtnVal = isSampleCompatible( standardContext, new RootedEntity( sampleEntity ) );
+                                boolean compatible = isSampleCompatible( standardContext, new RootedEntity( sampleEntity ) );
+                                if ( compatible ) {
+                                    fragmentCount++;
+                                    rtnVal = true;
+                                }
                             }
                         }
-                        else if ( entity.getType().equals( EntityConstants.TYPE_SAMPLE ) ) {
-                            rtnVal = isSampleCompatible(standardContext, entity);
+                        else if ( typeIsSample ) {
+                            boolean compatible = isSampleCompatible(standardContext, entity);
+                            if ( compatible ) {
+                                fragmentCount += entity.getEntity().getChildren().size();
+                                rtnVal = true;
+                            }
                         }
                         acceptedCount ++;
                     }
                 }
-                // Case: none of the entities were even testable to be rejected a different way.
+                // Case: none of the entities were even testable to be rejected a different way. May be redundant.
                 if ( acceptedCount == 0 ) {
                     rtnVal = false;
+                }
+                else {
+                    // NOTE: if cap test (FW-2012) becomes ill-advised, it can be removed by commenting/removing
+                    // only the call below.
+                    rtnVal = checkAvailableCapacity(rtnVal, abEntity, fragmentCount);
                 }
 
             } catch ( Exception ex ) {
@@ -86,6 +116,41 @@ public class AlignmentBoardEntityTransferHandler extends EntityTransferHandler {
             }
         }
         return rtnVal;
+    }
+
+    private boolean checkAvailableCapacity(boolean rtnVal, Entity abEntity, int fragmentCount) {
+        int remainingCapacity = getRemainingFragmentCapacity( abEntity );
+
+        // Next, let's see whether the additions would put it over the top.
+        if ( remainingCapacity < fragmentCount ) {
+            // disallow.
+            JOptionPane.showMessageDialog(
+                    SessionMgr.getBrowser(),
+                    String.format(
+                            CAPACITY_EXCEEDED_FMT, abEntity.getName(),
+                            (MAX_FRAGMENT_CAPACITY - remainingCapacity),
+                            fragmentCount,
+                            MAX_FRAGMENT_CAPACITY
+                    )
+            );
+            rtnVal = false;
+        }
+
+        logger.info( "Remaining capacity is {}.  Adding {}.", remainingCapacity, fragmentCount );
+        return rtnVal;
+    }
+
+    private int getRemainingFragmentCapacity(Entity abEntity) {
+        int fragmentCount = 0;
+        // Some entities would make it onto the board.  Let's get the remaining capacity of that board.
+        for ( Entity container: abEntity.getChildren() ) {
+            // Looking at sample contents, only; ignore the compartment sets.
+            if ( ! container.getName().startsWith( EntityConstants.TYPE_COMPARTMENT_SET ) ) {
+                fragmentCount += container.getChildren().size();
+            }
+        }
+
+        return MAX_FRAGMENT_CAPACITY - fragmentCount;
     }
 
     private boolean isSampleCompatible(AlignmentContext standardContext, RootedEntity entity) throws Exception {
