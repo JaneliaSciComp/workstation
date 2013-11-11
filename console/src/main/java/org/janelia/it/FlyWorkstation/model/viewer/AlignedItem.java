@@ -197,9 +197,15 @@ public class AlignedItem extends EntityWrapper {
     }
 
     public boolean isPassthroughRendering() {
-        Entity entity = getInternalEntity();
-        return RenderMappingI.PASSTHROUGH_RENDER_ATTRIBUTE.equals(
-                entity.getValueByAttributeName(EntityConstants.ATTRIBUTE_RENDER_METHOD));
+        try {
+            Entity entity = getInternalEntity();
+            return RenderMappingI.PASSTHROUGH_RENDER_ATTRIBUTE.equals(
+                    entity.getValueByAttributeName(EntityConstants.ATTRIBUTE_RENDER_METHOD));
+        } catch ( Exception ex ) {
+            System.out.println( "Get Pass-through value from: " + Thread.currentThread().getName() );
+            ex.printStackTrace();
+            return false;
+        }
     }
 
     /**
@@ -222,8 +228,14 @@ public class AlignedItem extends EntityWrapper {
      */
     public InclusionStatus getInclusionStatus() {
         Entity entity = getInternalEntity();
-        String attVal = entity.getValueByAttributeName( EntityConstants.ATTRIBUTE_INCLUSION_STATUS );
-        return InclusionStatus.get( attVal );
+        try {
+            String attVal = entity.getValueByAttributeName( EntityConstants.ATTRIBUTE_INCLUSION_STATUS );
+            return InclusionStatus.get( attVal );
+        } catch ( Exception ex ) {
+            System.out.println( "Get Inclusion State from: " + Thread.currentThread().getName() );
+            ex.printStackTrace();
+            return InclusionStatus.In;
+        }
     }
 
     /**

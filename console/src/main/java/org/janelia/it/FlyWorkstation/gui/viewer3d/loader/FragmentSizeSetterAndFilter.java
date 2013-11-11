@@ -58,7 +58,7 @@ public class FragmentSizeSetterAndFilter {
             }
 
         }
-        logger.info( "Discarded {} renderables.", discardCount );
+        logger.debug( "Discarded {} renderables.", discardCount );
 
         return rtnVal;
     }

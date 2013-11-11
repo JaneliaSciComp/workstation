@@ -5,6 +5,7 @@ import org.janelia.it.FlyWorkstation.gui.framework.outline.EntityTransferHandler
 import org.janelia.it.FlyWorkstation.gui.framework.outline.TransferableEntityList;
 import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.FlyWorkstation.model.domain.AlignmentContext;
+import org.janelia.it.FlyWorkstation.model.domain.EntityWrapperFactory;
 import org.janelia.it.FlyWorkstation.model.domain.Sample;
 import org.janelia.it.FlyWorkstation.model.entity.RootedEntity;
 import org.janelia.it.FlyWorkstation.model.viewer.AlignmentBoardContext;
@@ -72,12 +73,12 @@ public class AlignmentBoardEntityTransferHandler extends EntityTransferHandler {
                 // Flip assumptions: turn this back on if something matches.
                 rtnVal = false;
 
-                for ( RootedEntity entity: rootedEntities ) {
-                    if ( abContext.isAcceptedType( entity.getType() ) ) {
-                        typeIsFragment = entity.getType().equals(EntityConstants.TYPE_NEURON_FRAGMENT);
-                        typeIsSample = entity.getType().equals(EntityConstants.TYPE_SAMPLE);
+                for ( RootedEntity rootedEntity: rootedEntities ) {
+                    if ( abContext.isAcceptedType(rootedEntity.getType()) ) {
+                        typeIsFragment = rootedEntity.getType().equals(EntityConstants.TYPE_NEURON_FRAGMENT);
+                        typeIsSample = rootedEntity.getType().equals(EntityConstants.TYPE_SAMPLE);
                         if ( typeIsFragment ) {
-                            sampleEntity = ModelMgr.getModelMgr().getAncestorWithType(entity.getEntity(), EntityConstants.TYPE_SAMPLE);
+                            sampleEntity = ModelMgr.getModelMgr().getAncestorWithType(rootedEntity.getEntity(), EntityConstants.TYPE_SAMPLE);
                             if ( sampleEntity == null ) {
                                 rtnVal = false;
                             }
@@ -90,9 +91,11 @@ public class AlignmentBoardEntityTransferHandler extends EntityTransferHandler {
                             }
                         }
                         else if ( typeIsSample ) {
-                            boolean compatible = isSampleCompatible(standardContext, entity);
+                            boolean compatible = isSampleCompatible(standardContext, rootedEntity);
                             if ( compatible ) {
-                                fragmentCount += entity.getEntity().getChildren().size();
+                                Sample sample = (Sample) EntityWrapperFactory.wrap(rootedEntity);
+                                sample.loadContextualizedChildren( standardContext );
+                                fragmentCount += (sample.getChildren().size());
                                 rtnVal = true;
                             }
                         }
@@ -136,21 +139,23 @@ public class AlignmentBoardEntityTransferHandler extends EntityTransferHandler {
             rtnVal = false;
         }
 
-        logger.info( "Remaining capacity is {}.  Adding {}.", remainingCapacity, fragmentCount );
+        logger.debug( "Remaining capacity is {}.  Adding {}.", remainingCapacity, fragmentCount );
         return rtnVal;
     }
 
     private int getRemainingFragmentCapacity(Entity abEntity) {
         int fragmentCount = 0;
+        int sampleCount = 0;
         // Some entities would make it onto the board.  Let's get the remaining capacity of that board.
         for ( Entity container: abEntity.getChildren() ) {
             // Looking at sample contents, only; ignore the compartment sets.
             if ( ! container.getName().startsWith( EntityConstants.TYPE_COMPARTMENT_SET ) ) {
                 fragmentCount += container.getChildren().size();
+                sampleCount ++;
             }
         }
 
-        return MAX_FRAGMENT_CAPACITY - fragmentCount;
+        return MAX_FRAGMENT_CAPACITY - fragmentCount + sampleCount; // Do not let sample count detract.
     }
 
     private boolean isSampleCompatible(AlignmentContext standardContext, RootedEntity entity) throws Exception {
