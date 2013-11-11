@@ -5,11 +5,16 @@ import org.janelia.it.FlyWorkstation.geom.Vec3;
 import org.janelia.it.FlyWorkstation.gui.slice_viewer.SliceViewer;
 import org.janelia.it.FlyWorkstation.gui.slice_viewer.skeleton.Anchor;
 import org.janelia.it.FlyWorkstation.gui.slice_viewer.skeleton.Skeleton;
+import org.janelia.it.FlyWorkstation.octree.ZoomLevel;
+import org.janelia.it.FlyWorkstation.octree.ZoomedVoxelIndex;
 import org.janelia.it.FlyWorkstation.signal.Signal;
 import org.janelia.it.FlyWorkstation.signal.Signal1;
 import org.janelia.it.FlyWorkstation.signal.Slot1;
+import org.janelia.it.FlyWorkstation.tracing.AnchoredVoxelPath;
+import org.janelia.it.FlyWorkstation.tracing.PathTraceRequest;
 import org.janelia.it.jacs.model.user_data.tiledMicroscope.*;
 
+import java.util.ArrayList;
 import java.util.List;
 
 
@@ -77,6 +82,20 @@ public class SliceViewerTranslator {
         }
     };
 
+    public Slot1<TmAnchoredPath> addAnchoredPathSlot = new Slot1<TmAnchoredPath>() {
+        @Override
+        public void execute(TmAnchoredPath path) {
+            addAnchoredPath(path);
+        }
+    };
+
+    public Slot1<TmAnchoredPath> removeAnchoredPathSlot = new Slot1<TmAnchoredPath>() {
+        @Override
+        public void execute(TmAnchoredPath path) {
+            removeAnchoredPath(path);
+        }
+    };
+
     public Slot1<Vec3> cameraPanToSlot = new Slot1<Vec3>() {
         @Override
         public void execute(Vec3 location) {
@@ -94,6 +113,8 @@ public class SliceViewerTranslator {
     public Signal clearSkeletonSignal = new Signal();
     public Signal clearNextParentSignal = new Signal();
 
+    public Signal1<AnchoredVoxelPath> anchoredPathAddedSignal = new Signal1<AnchoredVoxelPath>();
+    public Signal1<AnchoredVoxelPath> anchoredPathRemovedSignal = new Signal1<AnchoredVoxelPath>();
 
     public SliceViewerTranslator(AnnotationModel annModel, SliceViewer sliceViewer) {
         this.annModel = annModel;
@@ -110,15 +131,22 @@ public class SliceViewerTranslator {
         clearSkeletonSignal.connect(skeleton.clearSlot);
 
         clearNextParentSignal.connect(sliceViewer.getSkeletonActor().clearNextParentSlot);
+
+        anchoredPathAddedSignal.connect(skeleton.addAnchoredPathSlot);
+        anchoredPathRemovedSignal.connect(skeleton.removeAnchoredPathSlot);
     }
 
     private void setupSignals() {
         annModel.workspaceLoadedSignal.connect(loadWorkspaceSlot);
         annModel.neuronSelectedSignal.connect(selectNeuronSlot);
+
         annModel.annotationAddedSignal.connect(addAnnotationSlot);
         annModel.annotationsDeletedSignal.connect(deleteAnnotationsSlot);
         annModel.annotationReparentedSignal.connect(reparentAnnotationSlot);
         annModel.annotationNotMovedSignal.connect(unmoveAnnotationSlot);
+
+        annModel.anchoredPathAddedSignal.connect(addAnchoredPathSlot);
+        annModel.anchoredPathRemovedSignal.connect(removeAnchoredPathSlot);
     }
 
     /**
@@ -176,6 +204,14 @@ public class SliceViewerTranslator {
         anchorMovedSignal.emit(annotation);
     }
 
+    public void addAnchoredPath(TmAnchoredPath path) {
+        anchoredPathAddedSignal.emit(TAP2AVP(path));
+    }
+
+    public void removeAnchoredPath(TmAnchoredPath path) {
+        anchoredPathRemovedSignal.emit(TAP2AVP(path));
+    }
+
     /**
      * called by the model when it loads a new workspace
      */
@@ -196,5 +232,54 @@ public class SliceViewerTranslator {
                 }
             }
         }
+
+        // draw anchored paths, too
+        // could fold into above loop at some point
+        for (TmNeuron neuron: workspace.getNeuronList()) {
+            for (TmAnchoredPath path: neuron.getAnchoredPathMap().values()) {
+                addAnchoredPath(path);
+            }
+        }
+    }
+
+    /**
+     * convert between path formats
+     *
+     * @param path = TmAnchoredPath
+     * @return corresponding AnchoredVoxelPath
+     */
+    private AnchoredVoxelPath TAP2AVP(TmAnchoredPath path) {
+        // prepare the data:
+        TmAnchoredPathEndpoints endpoints = path.getEndpoints();
+        final PathTraceRequest.SegmentIndex inputSegmentIndex = new PathTraceRequest.SegmentIndex(endpoints.getAnnotationID1(),
+                endpoints.getAnnotationID2());
+
+        final ArrayList<ZoomedVoxelIndex> inputPath = new ArrayList<ZoomedVoxelIndex>();
+        for (List<Integer> point: path.getPointList()) {
+            inputPath.add(new ZoomedVoxelIndex(new ZoomLevel(0), point.get(0), point.get(1), point.get(2)));
+        }
+
+        // do a quick implementation of the interface:
+        AnchoredVoxelPath voxelPath = new AnchoredVoxelPath() {
+            PathTraceRequest.SegmentIndex segmentIndex;
+            List<ZoomedVoxelIndex> path;
+
+            {
+                this.segmentIndex = inputSegmentIndex;
+                this.path = inputPath;
+            }
+
+            @Override
+            public PathTraceRequest.SegmentIndex getSegmentIndex() {
+                return segmentIndex;
+            }
+
+            @Override
+            public List<ZoomedVoxelIndex> getPath() {
+                return path;
+            }
+        };
+
+        return voxelPath;
     }
 }

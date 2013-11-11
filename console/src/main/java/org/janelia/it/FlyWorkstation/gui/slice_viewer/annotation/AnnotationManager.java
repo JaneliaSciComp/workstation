@@ -7,13 +7,17 @@ import org.janelia.it.FlyWorkstation.gui.slice_viewer.skeleton.Skeleton;
 
 import org.janelia.it.FlyWorkstation.api.entity_model.management.ModelMgr;
 
+import org.janelia.it.FlyWorkstation.octree.ZoomedVoxelIndex;
 import org.janelia.it.FlyWorkstation.shared.workers.SimpleWorker;
 import org.janelia.it.FlyWorkstation.signal.Slot1;
+import org.janelia.it.FlyWorkstation.tracing.AnchoredVoxelPath;
 import org.janelia.it.jacs.model.entity.Entity;
 import org.janelia.it.jacs.model.entity.EntityConstants;
 import org.janelia.it.jacs.model.user_data.tiledMicroscope.*;
 
 import javax.swing.*;
+import java.util.ArrayList;
+import java.util.List;
 
 
 public class AnnotationManager
@@ -83,6 +87,34 @@ elements of what's been done; that's handled by signals emitted from AnnotationM
         }
     };
 
+    public Slot1<AnchoredVoxelPath> addPathRequestedSlot = new Slot1<AnchoredVoxelPath>() {
+        @Override
+        public void execute(AnchoredVoxelPath voxelPath) {
+            if (voxelPath != null) {
+                TmAnchoredPathEndpoints endpoints = new TmAnchoredPathEndpoints(
+                        voxelPath.getSegmentIndex().getAnchor1Guid(),
+                        voxelPath.getSegmentIndex().getAnchor2Guid());
+                List<List<Integer>> pointList = new ArrayList<List<Integer>>();
+                for (ZoomedVoxelIndex zvi: voxelPath.getPath()) {
+                    if (zvi.getZoomLevel().getZoomOutFactor() != 1) {
+                        // compromise between me and CB: I don't want zoom levels in db, so 
+                        //  if I get one that's not unzoomed, I don't have to handle it
+                        JOptionPane.showMessageDialog(null,
+                            "Unexpected zoom level found; path not displayed.",
+                            "Unexpected zoom!",
+                            JOptionPane.ERROR_MESSAGE);
+                        return;
+                    }
+                    List<Integer> tempList = new ArrayList<Integer>();
+                    tempList.add(zvi.getX());
+                    tempList.add(zvi.getY());
+                    tempList.add(zvi.getZ());
+                    pointList.add(tempList);
+                }
+                addAnchoredPath(endpoints, pointList);
+            }
+        }
+    };
 
     public AnnotationManager(AnnotationModel annotationModel) {
         this.annotationModel = annotationModel;
@@ -335,6 +367,38 @@ elements of what's been done; that's handled by signals emitted from AnnotationM
             }
         };
         splitter.execute();
+    }
+
+    /**
+     * add an anchored path; not much to check, as the UI needs to check it even before
+     * the request gets here
+     */
+    public void addAnchoredPath(final TmAnchoredPathEndpoints endpoints, final List<List<Integer>> points) {
+        if (annotationModel.getCurrentWorkspace() == null) {
+            // dialog?
+            return;
+        }
+
+        SimpleWorker adder = new SimpleWorker() {
+            @Override
+            protected void doStuff() throws Exception {
+                annotationModel.addAnchoredPath(endpoints, points);
+            }
+
+            @Override
+            protected void hadSuccess() {
+                // nothing here; model sends its own signals
+            }
+
+            @Override
+            protected void hadError(Throwable error) {
+                JOptionPane.showMessageDialog(null,
+                        "Could not add anchored path!",
+                        "Error",
+                        JOptionPane.ERROR_MESSAGE);
+            }
+        };
+        adder.execute();
     }
 
     /**

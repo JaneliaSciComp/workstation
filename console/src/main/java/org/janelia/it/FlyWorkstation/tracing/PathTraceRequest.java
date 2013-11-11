@@ -92,6 +92,14 @@ public class PathTraceRequest {
 			return true;
 		}
 
+        public long getAnchor1Guid() {
+            return smallerGuid;
+        }
+
+        public long getAnchor2Guid() {
+            return largerGuid;
+        }
+
     }
 
     public long getAnchor1Guid() {

@@ -534,9 +534,14 @@ implements GLActor
 		skeletonActorChangedSignal.emit();
 	}
 	
-
 	public void setTileFormat(TileFormat tileFormat) {
 		this.tileFormat = tileFormat;
+
+        // propagate to all traced path actors, too:
+        for (TracedPathActor path : tracedSegments.values()) {
+            path.setTileFormat(tileFormat);
+        }
+
 	}
 	
 	private TileFormat getTileFormat() {
@@ -664,7 +669,6 @@ implements GLActor
 		gl.glDeleteBuffers(4, ix2, 0);
 		for (TracedPathActor path : tracedSegments.values())
 			path.dispose(glDrawable);
-		System.out.println("Clearing tracedSegments");
 		tracedSegments.clear();
     	// log.info("tracedSegments.size() [629] = "+tracedSegments.size());
 	}

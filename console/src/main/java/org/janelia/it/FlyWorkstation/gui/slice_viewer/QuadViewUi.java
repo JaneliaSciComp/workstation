@@ -37,6 +37,7 @@ import org.janelia.it.FlyWorkstation.gui.slice_viewer.skeleton.Anchor;
 import org.janelia.it.FlyWorkstation.gui.slice_viewer.skeleton.Skeleton;
 import org.janelia.it.FlyWorkstation.gui.slice_viewer.skeleton.SkeletonActor;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.BoundingBox3d;
+import org.janelia.it.FlyWorkstation.tracing.AnchoredVoxelPath;
 import org.janelia.it.jacs.model.entity.Entity;
 import org.janelia.it.FlyWorkstation.signal.Signal1;
 import org.janelia.it.FlyWorkstation.signal.Slot;
@@ -213,7 +214,9 @@ public class QuadViewUi extends JPanel
 		    new Signal1<MouseMode.Mode>();
 	    public Signal1<WheelMode.Mode> wheelModeChangedSignal = 
 	        new Signal1<WheelMode.Mode>();
-	
+
+    public Signal1<AnchoredVoxelPath> addAnchoredPathRequestSignal = new Signal1<AnchoredVoxelPath>();
+
 	private Slot1<MouseMode.Mode> onMouseModeChangedSlot = new Slot1<MouseMode.Mode>() {
 		@Override
 		public void execute(Mode mode) {
@@ -345,8 +348,10 @@ public class QuadViewUi extends JPanel
             // this line only needs to happen once, and not here:
             getSkeletonActor().setTileFormat(
             		tileServer.getLoadAdapter().getTileFormat());
-            // TODO: what happens on error?
-            skeleton.addTracedSegment(path);
+
+            // TODO: what happens on error?  presumably you never get here?
+
+            addAnchoredPathRequestSignal.emit(path);
         }
     };
     
@@ -380,6 +385,7 @@ public class QuadViewUi extends JPanel
         skeleton.anchorMovedSignal.connect(annotationMgr.moveAnchorRequestedSlot);
         skeleton.pathTraceRequestedSignal.connect(tracePathSegmentSlot);
         skeleton.pathTraceRequestedSignal.connect(annotationPanel.tracingStartSlot);
+        addAnchoredPathRequestSignal.connect(annotationMgr.addPathRequestedSlot);
 
         // Toggle skeleton actor with v key
         InputMap inputMap = getInputMap(JComponent.WHEN_ANCESTOR_OF_FOCUSED_COMPONENT);
@@ -1244,6 +1250,10 @@ LLF: the hookup for the 3d snapshot.
 			recentFileList.add(url);
 			imageColorModel.reset(volumeImage);
 			resetViewAction.actionPerformed(null);
+
+            getSkeletonActor().setTileFormat(
+                    tileServer.getLoadAdapter().getTileFormat());
+
 		}
     };
     

@@ -145,7 +145,21 @@ public class Skeleton {
 			anchor.setLocation(new Vec3(tga.getX(), tga.getY(), tga.getZ()));
 		}
 	};
-	
+
+    public Slot1<AnchoredVoxelPath> addAnchoredPathSlot = new Slot1<AnchoredVoxelPath>() {
+        @Override
+        public void execute(AnchoredVoxelPath path) {
+            addTracedSegment(path);
+        }
+    };
+
+    public Slot1<AnchoredVoxelPath> removeAnchoredPathSlot = new Slot1<AnchoredVoxelPath>() {
+        @Override
+        public void execute(AnchoredVoxelPath path) {
+            removeTracedSegment(path);
+        }
+    };
+
 	public Skeleton() {
 		// Don't make this connection when using workstation database
 		// addAnchorRequestedSignal.connect(addShortCircuitAnchorSlot);
@@ -302,6 +316,12 @@ public class Skeleton {
 		// log.info("tracedSegments.size() [300] = "+tracedSegments.size());
 		skeletonChangedSignal.emit();
 	}
+
+    public void removeTracedSegment(AnchoredVoxelPath path) {
+        SegmentIndex ix = path.getSegmentIndex();
+        tracedSegments.remove(ix);
+        skeletonChangedSignal.emit();
+    }
 
 	public Collection<AnchoredVoxelPath> getTracedSegments() {
 		// log.info("tracedSegments.size() [305] = "+tracedSegments.size());

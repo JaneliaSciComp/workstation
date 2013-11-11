@@ -57,6 +57,9 @@ that need to respond to changing data.
     public Signal1<TmGeoAnnotation> annotationReparentedSignal = new Signal1<TmGeoAnnotation>();
     public Signal1<TmGeoAnnotation> annotationNotMovedSignal = new Signal1<TmGeoAnnotation>();
 
+    public Signal1<TmAnchoredPath> anchoredPathAddedSignal = new Signal1<TmAnchoredPath>();
+    public Signal1<TmAnchoredPath> anchoredPathRemovedSignal = new Signal1<TmAnchoredPath>();
+
     // ----- slots
     public Slot1<TmNeuron> neuronClickedSlot = new Slot1<TmNeuron>() {
         @Override
@@ -275,12 +278,22 @@ that need to respond to changing data.
             throw e;
         }
 
+        // find each connecting annotation; if there's a traced path to it,
+        //  remove it:
+        TmNeuron neuron = getNeuronFromAnnotation(annotationID);
+        TmGeoAnnotation parent = annotation.getParent();
+        if (parent != null) {
+            removeAnchoredPath(annotation, parent);
+        }
+        for (TmGeoAnnotation neighbor: annotation.getChildren()) {
+            removeAnchoredPath(annotation, neighbor);
+        }
+
         updateCurrentWorkspace();
         updateCurrentNeuron();
 
         // this triggers the updates in, eg, the neurite list
         if (getCurrentNeuron() != null) {
-            TmNeuron neuron = getNeuronFromAnnotation(annotationID);
             if (neuron.getId().equals(getCurrentNeuron().getId())) {
                 neuronSelectedSignal.emit(neuron);
             }
@@ -320,13 +333,18 @@ that need to respond to changing data.
         if (link.getChildren().size() == 1) {
             child = link.getChildren().get(0);
             modelMgr.reparentGeometricAnnotation(child, parent.getId(), neuron);
+
+            // if segment to child had a trace, remove it
+            removeAnchoredPath(link, child);
         }
         // delete the deleted annotation that is to be deleted:
         modelMgr.deleteGeometricAnnotation(link.getId());
 
+        // if segment to parent had a trace, remove it
+        removeAnchoredPath(link, parent);
+
         updateCurrentWorkspace();
         updateCurrentNeuron();
-
 
         // notifications
 
@@ -369,10 +387,25 @@ that need to respond to changing data.
         // in DAO, delete method is pretty simplistic; it doesn't update parents; however,
         //  as we're deleting the whole tree, that doesn't matter for us
         // delete in child-first order
+
+        // grab the parent of the root before the root disappears:
+        TmGeoAnnotation rootParent = rootAnnotation.getParent();
+
         List<TmGeoAnnotation> deleteList = rootAnnotation.getSubTreeList();
         for (TmGeoAnnotation annotation: deleteList) {
+            // for each annotation, delete any paths traced to its children;
+            //  do before the deletion!
+            for (TmGeoAnnotation child: annotation.getChildren()) {
+                removeAnchoredPath(annotation, child);
+            }
+
             modelMgr.deleteGeometricAnnotation(annotation.getId());
         }
+        // for the root annotation, also delete any traced paths to the parent, if it exists
+        if (rootParent != null) {
+            removeAnchoredPath(rootAnnotation, rootParent);
+        }
+
 
         updateCurrentWorkspace();
         updateCurrentNeuron();
@@ -446,6 +479,10 @@ that need to respond to changing data.
         modelMgr.reparentGeometricAnnotation(annotation1, newAnnotation.getId(), neuron);
         neuron = modelMgr.loadNeuron(neuron.getId());
 
+        // if that segment had a trace, remove it
+        removeAnchoredPath(annotation1, annotation2);
+
+
         // updates and signals:
         updateCurrentWorkspace();
         if (neuron.getId().equals(getCurrentNeuron().getId())){
@@ -456,5 +493,58 @@ that need to respond to changing data.
 
         annotation1 = neuron.getGeoAnnotationMap().get(annotation1.getId());
         annotationReparentedSignal.emit(annotation1);
+    }
+
+    public void addAnchoredPath(TmAnchoredPathEndpoints endpoints, List<List<Integer>> points) throws Exception{
+
+        // check we can find both endpoints in same neuron
+        //  don't need to check that they are neighboring; UI gesture already enforces it
+        TmNeuron neuron1 = getNeuronFromAnnotation(endpoints.getAnnotationID1());
+        TmNeuron neuron2 = getNeuronFromAnnotation(endpoints.getAnnotationID2());
+        if (!neuron1.getId().equals(neuron2.getId())) {
+            throw new Exception("anchored path annotations are in different neurons");
+        }
+
+        // transform point list and persist
+        TmAnchoredPath path = modelMgr.addAnchoredPath(neuron1.getId(), endpoints.getAnnotationID1(),
+                endpoints.getAnnotationID2(), points);
+
+
+        // updates
+        updateCurrentWorkspace();
+        if (neuron1.getId().equals(currentNeuron.getId())) {
+            updateCurrentNeuron();
+        }
+
+        // send notification
+        anchoredPathAddedSignal.emit(path);
+
+    }
+
+    /**
+     * remove an anchored path between two annotations, if one exists;
+     * should only be called within AnnotationModel, and it does not
+     * update neurons or do any other cleanup
+     */
+    private void removeAnchoredPath(TmAnchoredPath path) throws  Exception {
+        modelMgr.deleteAnchoredPath(path.getId());
+        anchoredPathRemovedSignal.emit(path);
+    }
+
+    /**
+     * remove an anchored path between two annotations, if one exists;
+     * should only be called within AnnotationModel, and it does not
+     * update neurons or do any other cleanup
+     */
+    private void removeAnchoredPath(TmGeoAnnotation annotation1, TmGeoAnnotation annotation2)
+        throws Exception {
+        // we assume second annotation is in same neuron; if it's not, there's no path
+        //  to remove anyway
+        TmNeuron neuron1 = getNeuronFromAnnotation(annotation1.getId());
+        TmAnchoredPathEndpoints endpoints = new TmAnchoredPathEndpoints(annotation1.getId(),
+                annotation2.getId());
+        if (neuron1.getAnchoredPathMap().containsKey(endpoints)) {
+            removeAnchoredPath(neuron1.getAnchoredPathMap().get(endpoints));
+        }
     }
 }

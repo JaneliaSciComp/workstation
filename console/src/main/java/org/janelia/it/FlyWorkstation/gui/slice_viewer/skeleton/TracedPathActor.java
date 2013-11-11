@@ -40,14 +40,28 @@ implements GLActor
 	private SegmentIndex segmentIndex;
 	// For determining if traced path is still appropriate
 	AnchoredVoxelPath segment;
+    private TileFormat tileFormat;
+    // can't always calculate vertices right away, so track if we have:
+    private boolean verticesReady = false;
 
-    public TracedPathActor(AnchoredVoxelPath segment, TileFormat tileFormat) 
+    public TracedPathActor(AnchoredVoxelPath segment, TileFormat tileFormat)
     {
     	this.segment = segment;
+        this.tileFormat = tileFormat;
+
     	// TODO guid
     	//
         pointCount = segment.getPath().size();
-        // Store vertices
+
+        if (tileFormat != null) {
+            storeVertices();
+            verticesReady = true;
+        }
+
+        this.segmentIndex = segment.getSegmentIndex();
+    }
+
+    private void storeVertices() {
         long totalVertexByteCount = floatsPerVertex * bytesPerFloat * pointCount;
         vertexByteBuffer = ByteBuffer.allocateDirect(
                 (int)totalVertexByteCount);
@@ -59,8 +73,8 @@ implements GLActor
             MicrometerXyz umXyz = tileFormat.micrometerXyzForVoxelXyz(vx, CoordinateAxis.Z);
             Vec3 v = new Vec3(
                     // Translate from upper left front corner of voxel to center of voxel
-                    umXyz.getX() + 0.5 * tileFormat.getVoxelMicrometers()[0], 
-                    umXyz.getY() + 0.5 * tileFormat.getVoxelMicrometers()[1], 
+                    umXyz.getX() + 0.5 * tileFormat.getVoxelMicrometers()[0],
+                    umXyz.getY() + 0.5 * tileFormat.getVoxelMicrometers()[1],
                     umXyz.getZ() - 0.5 * tileFormat.getVoxelMicrometers()[2]); // Minus? Really? TODO
             boundingBox.include(v);
             vertices.put((float)v.getX());
@@ -70,7 +84,7 @@ implements GLActor
                 vertices.put(1.0f);
         }
         vertices.rewind();
-        this.segmentIndex = segment.getSegmentIndex();
+
     }
 
     private void checkGlError(GL gl, String message) {
@@ -83,6 +97,16 @@ implements GLActor
 
     @Override
     public void display(GLAutoDrawable glDrawable) {
+        // check that vertices are ready
+        if (!verticesReady) {
+            if (tileFormat != null) {
+                storeVertices();
+                verticesReady = true;
+            } else {
+                return;
+            }
+        }
+
         GL gl = glDrawable.getGL();
         checkGlError(gl, "render traced path 87");
         if (! bIsInitialized)
@@ -159,5 +183,14 @@ implements GLActor
 	public SegmentIndex getSegmentIndex() {
 		return segmentIndex;
 	}
+
+    public TileFormat getTileFormat() {
+        return tileFormat;
+    }
+
+    public void setTileFormat(TileFormat tileFormat) {
+        this.tileFormat = tileFormat;
+    }
+
 
 }
