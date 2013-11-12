@@ -18,7 +18,6 @@
 /compute/build
 
 # /console/
-/console/src/main/java/console.properties
 /console/build
 /console/target
 /console/flyworkstation.log
