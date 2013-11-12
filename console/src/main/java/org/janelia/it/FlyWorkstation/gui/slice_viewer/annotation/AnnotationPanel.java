@@ -14,8 +14,7 @@ import javax.swing.*;
 
 import java.awt.*;
 import java.awt.event.ActionEvent;
-
-
+import java.awt.event.ActionListener;
 
 
 /**
@@ -123,6 +122,16 @@ public class AnnotationPanel extends JPanel
         workspaceInfoPanel = new WorkspaceInfoPanel();
         add(workspaceInfoPanel);
 
+
+        // tool pop-up menu (triggered by button, below)
+        final JPopupMenu neuronToolMenu = new JPopupMenu();
+        neuronToolMenu.add(new JMenuItem(new AbstractAction("Rename") {
+            public void actionPerformed(ActionEvent e) {
+                annotationMgr.renameNeuron();
+            }
+        }));
+
+
         // buttons for acting on neurons (which are in the list immediately above):
         JPanel neuronButtonsPanel = new JPanel();
         neuronButtonsPanel.setLayout(new BoxLayout(neuronButtonsPanel, BoxLayout.LINE_AXIS));
@@ -133,6 +142,22 @@ public class AnnotationPanel extends JPanel
         createNeuronAction.putValue(Action.NAME, "+");
         createNeuronAction.putValue(Action.SHORT_DESCRIPTION, "Create a new neuron");
         createNeuronButtonPlus.setAction(createNeuronAction);
+
+        // this button pops up the tool menu
+        final JButton neuronToolButton = new JButton();
+        String gearIconFilename = "cog.png";
+        ImageIcon gearIcon = Icons.getIcon(gearIconFilename);
+        neuronToolButton.setIcon(gearIcon);
+        neuronToolButton.setHideActionText(true);
+        neuronToolButton.setMinimumSize(neuronButtonsPanel.getPreferredSize());
+        neuronButtonsPanel.add(neuronToolButton);
+        neuronToolButton.addActionListener(new ActionListener() {
+            public void actionPerformed(ActionEvent ev) {
+                neuronToolMenu.show(neuronToolButton,
+                    neuronToolButton.getBounds().x - neuronToolButton.getBounds().width,
+                    neuronToolButton.getBounds().y + neuronToolButton.getBounds().height);
+            }
+        });
 
 
         // ----- neuron information; show name, whatever attributes, list of neurites

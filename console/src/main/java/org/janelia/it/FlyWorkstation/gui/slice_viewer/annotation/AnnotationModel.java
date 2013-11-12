@@ -181,6 +181,25 @@ that need to respond to changing data.
     }
 
     /**
+     * rename the given neuron
+     */
+    public void renameCurrentNeuron(String name) throws Exception {
+        // rename
+        Long currentNeuronID = getCurrentNeuron().getId();
+        Entity neuronEntity = modelMgr.getEntityById(currentNeuronID);
+        modelMgr.renameEntity(neuronEntity, name);
+
+        // update & notify
+        updateCurrentWorkspace();
+        workspaceLoadedSignal.emit(getCurrentWorkspace());
+
+        TmNeuron neuron = modelMgr.loadNeuron(currentNeuronID);
+        setCurrentNeuron(neuron);
+        neuronSelectedSignal.emit(getCurrentNeuron());
+
+    }
+
+    /**
      * @param parentEntity = parent folder in hierarchy
      * @param brainSampleID = tiled microscope sample ID
      * @param name = name of new workspace

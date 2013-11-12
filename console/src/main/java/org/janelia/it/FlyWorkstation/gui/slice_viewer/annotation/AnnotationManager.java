@@ -18,6 +18,8 @@ import org.janelia.it.jacs.model.user_data.tiledMicroscope.*;
 import javax.swing.*;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 
 public class AnnotationManager
@@ -410,23 +412,8 @@ elements of what's been done; that's handled by signals emitted from AnnotationM
             return;
         }
 
-        // ask user for name; you *can* rename on the sidebar, but that will 
-        //  trigger a need to reload the slice viewer, so don't make the user go 
-        //  through that
-        final String neuronName = (String)JOptionPane.showInputDialog(
-            null,
-            "Neuron name:",
-            "Create neuron",
-            JOptionPane.PLAIN_MESSAGE,
-            null,                           // icon
-            null,                           // choice list; absent = freeform
-            "new neuron");
-        if (neuronName == null || neuronName.length() == 0) {
-            return;
-        }
-
-        // validate neuron name?  are there any rules for entity names?
-
+        // use a standard neuron name; the user can rename later
+        final String neuronName = getNeuronName(annotationModel.getCurrentWorkspace());
 
         // create it:
         SimpleWorker creator = new SimpleWorker() {
@@ -450,6 +437,88 @@ elements of what's been done; that's handled by signals emitted from AnnotationM
         };
         creator.execute();
     }
+
+    /**
+     * rename the currently selected neuron
+     */
+    public void renameNeuron() {
+        final TmNeuron neuron = annotationModel.getCurrentNeuron();
+        if (neuron == null) {
+            JOptionPane.showMessageDialog(null,
+                    "No selected neuron!",
+                    "No neuron!",
+                    JOptionPane.ERROR_MESSAGE);
+            return;
+        }
+
+        final String neuronName = (String)JOptionPane.showInputDialog(
+                null,
+                "Neuron name:",
+                "Rename neuron",
+                JOptionPane.PLAIN_MESSAGE,
+                null,                           // icon
+                null,                           // choice list; absent = freeform
+                neuron.getName());
+        if (neuronName == null || neuronName.length() == 0) {
+            return;
+        }
+
+        // validate neuron name?  are there any rules for entity names?
+
+        SimpleWorker renamer = new SimpleWorker() {
+            @Override
+            protected void doStuff() throws Exception {
+                annotationModel.renameCurrentNeuron(neuronName);
+            }
+
+            @Override
+            protected void hadSuccess() {
+                // nothing here, annModel emits its own signals
+            }
+
+            @Override
+            protected void hadError(Throwable error) {
+                JOptionPane.showMessageDialog(null,
+                        "Could not rename neuron!",
+                        "Error",
+                        JOptionPane.ERROR_MESSAGE);
+            }
+        };
+        renamer.execute();
+
+    }
+
+    /**
+     * given a workspace, return a new generic neuron name (probably something
+     * like "New neuron 12", where the integer is based on whatever similarly
+     * named neurons exist already)
+     */
+    private String getNeuronName(TmWorkspace workspace) {
+        // go through existing neuron names; try to parse against
+        //  standard template; create list of integers found
+        ArrayList<Long> intList = new ArrayList<Long>();
+        Pattern pattern = Pattern.compile("New neuron ([0-9]+)");
+        for (TmNeuron neuron: workspace.getNeuronList()) {
+            Matcher matcher = pattern.matcher(neuron.getName());
+            if (matcher.matches()) {
+                intList.add(Long.parseLong(matcher.group(1)));
+            }
+        }
+
+        // construct new name from standard template; use largest integer
+        //  found + 1; starting with max = 0 has the effect of always starting
+        //  at at least 1, if anyone has named their neurons with negative numbers
+        Long maximum = 0L;
+        if (intList.size() > 0) {
+            for (Long l: intList) {
+                if (l > maximum) {
+                    maximum = l;
+                }
+            }
+        }
+        return String.format("New neuron %d", maximum + 1);
+    }
+
 
     /**
      * given an annotation ID, select (make current) the neuron it belongs to
@@ -510,6 +579,7 @@ elements of what's been done; that's handled by signals emitted from AnnotationM
                 null,                           // icon
                 null,                           // choice list; absent = freeform
                 "new workspace");
+        // this is all the validation we have right now...
         if ((workspaceName == null) || (workspaceName.length() == 0)) {
             workspaceName = "new workspace";
         }
