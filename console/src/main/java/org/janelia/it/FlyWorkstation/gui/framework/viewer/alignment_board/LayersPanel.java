@@ -75,6 +75,8 @@ public class LayersPanel extends JPanel implements Refreshable, ActivatableView 
     private static final int COLUMN_WIDTH_COLOR = 32;
     private static final int COLUMN_WIDTH_TREE_NEGATIVE = 80;
     private static final int COLOR_SWATCH_SIZE = 12;
+    private static final int COLOR_SWATCH_COLNUM = 1;
+    private static final int VIZCHECK_COLNUM = 0;
 
     private final JPanel treesPanel;
     private Outline outline;
@@ -146,6 +148,9 @@ public class LayersPanel extends JPanel implements Refreshable, ActivatableView 
                     showPopupMenu(e);
                     return;
                 }
+                else {
+                    selectColorIfCorrectColumn();
+                }
                 if (path!=null) {
                     // This masking is to make sure that the right button is being double clicked, not left and then right or right and then left
                     if (e.getClickCount() == 2 && e.getButton() == MouseEvent.BUTTON1 && (e.getModifiersEx() | InputEvent.BUTTON3_MASK) == InputEvent.BUTTON3_MASK) {
@@ -168,10 +173,25 @@ public class LayersPanel extends JPanel implements Refreshable, ActivatableView 
                     showPopupMenu(e);
                     return;
                 }
-                if (path!=null) {
-                    nodePressed(e);
+                else {
+                    if (path!=null) {
+                        nodePressed(e);
+                    }
+                    selectColorIfCorrectColumn();
                 }
             }
+
+            private void selectColorIfCorrectColumn() {
+                // Need see if this is appropriate column.
+                // outline.getSelectedColumn()  does not work: clicking and selecting are different things.
+                int colIndex = outline.getSelectedColumn();
+                if ( colIndex == COLOR_SWATCH_COLNUM ) {
+                    AlignedItem ai = getAlignedItemFromOutlineSelection();
+                    if ( ai != null )
+                        chooseColor( ai );
+                }
+            }
+
         });
         
         setTransferHandler(new EntityTransferHandler() {
@@ -230,12 +250,15 @@ public class LayersPanel extends JPanel implements Refreshable, ActivatableView 
      */
     protected void showPopupMenuImpl(final MouseEvent e) {
 
-        Object object = outline.getOutlineModel().getValueAt(outline.getSelectedRow(), 0); 
-        if (object==null) return;
-        if (!(object instanceof AlignedItem)) return;
-        
-        AlignedItem alignedItem = (AlignedItem)object;
-        
+//        Object object = outline.getOutlineModel().getValueAt(outline.getSelectedRow(), 0);
+//        if (object==null) return;
+//        if (!(object instanceof AlignedItem)) return;
+//
+        AlignedItem alignedItem = getAlignedItemFromOutlineSelection();
+        if ( alignedItem == null ) {
+            return;
+        }
+
         // Create context menu
         final LayerContextMenu popupMenu = new LayerContextMenu(alignmentBoardContext, alignedItem);
         popupMenu.addMenuItems();
@@ -269,6 +292,15 @@ public class LayersPanel extends JPanel implements Refreshable, ActivatableView 
     }
     
     private AtomicBoolean loadInProgress = new AtomicBoolean(false);
+
+    private AlignedItem getAlignedItemFromOutlineSelection() {
+        Object object = outline.getOutlineModel().getValueAt(outline.getSelectedRow(), 0);
+        if (object==null) return null;
+        if (!(object instanceof AlignedItem)) return null;
+
+        AlignedItem alignedItem = (AlignedItem)object;
+        return alignedItem;
+    }
 
     private void loadAlignmentBoard(final long alignmentBoardId, final OutlineExpansionState expansionState, final Callable<Void> success) {
         
@@ -423,8 +455,8 @@ public class LayersPanel extends JPanel implements Refreshable, ActivatableView 
         TableColumn colorColumn = columns[2];
         
         // Swap the columns to put the tree last
-        columns[0] = visColumn;
-        columns[1] = colorColumn;
+        columns[VIZCHECK_COLNUM] = visColumn;
+        columns[COLOR_SWATCH_COLNUM] = colorColumn;
         columns[2] = treeColumn;
 
         for(int i=0; i<columns.length; i++) {
@@ -441,8 +473,8 @@ public class LayersPanel extends JPanel implements Refreshable, ActivatableView 
         if (outline==null) return;
         TableColumnModel columnModel = outline.getColumnModel();
         if (columnModel.getColumnCount()<3) return;
-        columnModel.getColumn(0).setPreferredWidth(COLUMN_WIDTH_VISIBILITY);
-        columnModel.getColumn(1).setPreferredWidth(COLUMN_WIDTH_COLOR);
+        columnModel.getColumn(VIZCHECK_COLNUM).setPreferredWidth(COLUMN_WIDTH_VISIBILITY);
+        columnModel.getColumn(COLOR_SWATCH_COLNUM).setPreferredWidth(COLUMN_WIDTH_COLOR);
         columnModel.getColumn(2).setPreferredWidth(getWidth()-COLUMN_WIDTH_TREE_NEGATIVE);
     }
     
@@ -659,9 +691,9 @@ public class LayersPanel extends JPanel implements Refreshable, ActivatableView 
         @Override
         public Class getColumnClass(int column) {
             switch (column) {
-            case 0:
+            case VIZCHECK_COLNUM:
                 return Boolean.class;
-            case 1:
+            case COLOR_SWATCH_COLNUM:
                 return AlignedItem.class;
             default:
                 assert false;
@@ -684,10 +716,10 @@ public class LayersPanel extends JPanel implements Refreshable, ActivatableView 
             if ( node instanceof AlignedItem ) {
                 AlignedItem alignedItem = (AlignedItem)node;
                 switch (column) {
-                    case 0:
+                    case VIZCHECK_COLNUM:
                         if (alignedItem==alignmentBoardContext) return Boolean.TRUE;
                         return alignedItem.isVisible();
-                    case 1:
+                    case COLOR_SWATCH_COLNUM:
                         if (alignedItem==alignmentBoardContext) return null;
                         return alignedItem;
 
@@ -708,7 +740,7 @@ public class LayersPanel extends JPanel implements Refreshable, ActivatableView 
         public boolean isCellEditable(Object node, int column) {
             if ( node instanceof  AlignedItem ) {
                 final AlignedItem alignedItem = (AlignedItem)node;
-                return column==0 && (alignedItem!=alignmentBoardContext);
+                return column==VIZCHECK_COLNUM && (alignedItem!=alignmentBoardContext);
             }
             else {
                 return false;
