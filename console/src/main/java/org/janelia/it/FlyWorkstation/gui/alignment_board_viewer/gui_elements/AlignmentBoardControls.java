@@ -30,7 +30,7 @@ import java.util.List;
  * This will have the responsibility of presenting the user with choices for modifying data and behavior about
  * the Alignment Board Viewer.
  */
-public class AlignmentBoardControls extends JPanel {
+public class AlignmentBoardControls {
     public static final double UNSELECTED_DOWNSAMPLE_RATE = 0.0;
 
     private static final String DOWN_SAMPLE_TOOL_TIP =
@@ -54,7 +54,6 @@ public class AlignmentBoardControls extends JPanel {
     private static final String SAVE_AS_COLOR_TIFF = "Save Color TIFF";
     private static final String SAVE_AS_COLOR_TIFF_TOOLTIP_TEXT = SAVE_AS_COLOR_TIFF;
 
-    private static final Dimension SIZE = new Dimension( WIDTH, HEIGHT);
     private static final String GAMMA_TOOLTIP = "Adjust the gamma level, or brightness.";
     private static final Dimension DN_SAMPLE_DROPDOWN_SIZE = new Dimension(180, 50);
     private static final Dimension MIN_VOX_COUNT_SIZE = new Dimension(180, 50);
@@ -117,13 +116,11 @@ public class AlignmentBoardControls extends JPanel {
     private final Logger logger = LoggerFactory.getLogger( AlignmentBoardControls.class );
 
     /**
-     * @param centering this dialog will be centered over the "centering" component.  Push externally-created settings
+     * @param centering this controls will be centered over the "centering" component.  Push externally-created settings
      *                  in here as a seed.
      */
     public AlignmentBoardControls(Component centering, VolumeModel volumeModel, AlignmentBoardSettings settings) {
-        this.setName(AlignmentBoardControlsDialog.CONTAINING_DIALOG_NAME);
         this.settings = settings;
-        this.setSize(SIZE);
         this.centering = centering;
         this.listeners = new ArrayList<ControlsListener>();
         this.volumeModel = volumeModel;
@@ -174,7 +171,6 @@ public class AlignmentBoardControls extends JPanel {
     }
 
     public void dispose() {
-        setVisible(false);
         removeAllSettingsListeners();
         if ( selectionSliderListener != null ) {
             xSlider.removeChangeListener( selectionSliderListener );
@@ -185,7 +181,6 @@ public class AlignmentBoardControls extends JPanel {
         volumeModel = null;
         centering = null;
         settings = null;
-        removeAll();
     }
 
     //--------------------------------------------HELPERS
@@ -233,7 +228,7 @@ public class AlignmentBoardControls extends JPanel {
     private long getMinimumVoxelCount() {
         if ( ! readyForOutput )
             return settings.getMinimumVoxelCount();
-        minimumVoxelCountTF.setForeground(this.getForeground());
+        minimumVoxelCountTF.setForeground(centering.getForeground());
         String selectedValue = minimumVoxelCountTF.getText().trim();
         long rtnVal = AlignmentBoardSettings.DEFAULT_MIN_VOX_COUNT;
         try {
@@ -430,8 +425,6 @@ public class AlignmentBoardControls extends JPanel {
     }
 
     private void createGui() {
-        setLayout( new BorderLayout() );
-
         xSlider = new RangeSlider();
         ySlider = new RangeSlider();
         zSlider = new RangeSlider();
@@ -840,24 +833,24 @@ public class AlignmentBoardControls extends JPanel {
     /** This listener updates the current display with latest slider tweaks. */
     public static class SliderChangeListener implements ChangeListener {
         private final RangeSlider[] sliders;
-        private final AlignmentBoardControls dialog;
+        private final AlignmentBoardControls controls;
         private final VolumeModel volumeModel;
 
         public SliderChangeListener(
                 RangeSlider[] rangeSliders,
                 VolumeModel volumeModel,
-                AlignmentBoardControls dialog
+                AlignmentBoardControls controls
         ) {
             this.sliders = rangeSliders;
             this.volumeModel = volumeModel;
-            this.dialog = dialog;
+            this.controls = controls;
         }
 
         public void stateChanged(ChangeEvent e) {
             float[] cropCoords = new CoordCropper3D().getNormalizedCropCoords(sliders);
             CropCoordSet cropCoordSet = volumeModel.getCropCoords();
             cropCoordSet.setCurrentCoordinates( cropCoords );
-            dialog.fireCropEvent();
+            controls.fireCropEvent();
         }
 
     }

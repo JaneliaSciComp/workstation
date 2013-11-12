@@ -38,10 +38,10 @@ public class AlignmentBoardControlsPanel extends JPanel {
      * @param centering this dialog will be centered over the "centering" component.  Push externally-created settings
      *                  in here as a seed.
      */
-    public AlignmentBoardControlsPanel(Component centering, VolumeModel volumeModel, AlignmentBoardSettings settings) {
+    public AlignmentBoardControlsPanel(Component centering, VolumeModel volumeModel, AlignmentBoardSettings settings, AlignmentBoardControls controls ) {
         this.setName(AlignmentBoardControlsDialog.CONTAINING_DIALOG_NAME);
         this.setSize(SIZE);
-        this.controls = new AlignmentBoardControls( centering, volumeModel, settings );
+        this.controls = controls;
 
         positionGui();
     }
@@ -161,18 +161,18 @@ public class AlignmentBoardControlsPanel extends JPanel {
         );
 
         nextRow += rowHeight;
-        Insets buttonInsets = new Insets( 5, 5, 5, 5 );
-        GridBagConstraints saveSearchConstraints = new GridBagConstraints(
-                0, nextRow, 1, rowHeight, 1.0, 0.0, GridBagConstraints.NORTHWEST, GridBagConstraints.VERTICAL, buttonInsets, 0, 0
-        );
-
-        GridBagConstraints saveColorConstraints = new GridBagConstraints(
-                1, nextRow, 1, rowHeight, 1.0, 0.0, GridBagConstraints.NORTHEAST, GridBagConstraints.VERTICAL, buttonInsets, 0, 0
-        );
-
-        GridBagConstraints saveScreenShotConstraints = new GridBagConstraints(
-                2, nextRow, 1, rowHeight, 1.0, 0.0, GridBagConstraints.NORTHEAST, GridBagConstraints.VERTICAL, buttonInsets, 0, 0
-        );
+//        Insets buttonInsets = new Insets( 5, 5, 5, 5 );
+//        GridBagConstraints saveSearchConstraints = new GridBagConstraints(
+//                0, nextRow, 1, rowHeight, 1.0, 0.0, GridBagConstraints.NORTHWEST, GridBagConstraints.VERTICAL, buttonInsets, 0, 0
+//        );
+//
+//        GridBagConstraints saveColorConstraints = new GridBagConstraints(
+//                1, nextRow, 1, rowHeight, 1.0, 0.0, GridBagConstraints.NORTHEAST, GridBagConstraints.VERTICAL, buttonInsets, 0, 0
+//        );
+//
+//        GridBagConstraints saveScreenShotConstraints = new GridBagConstraints(
+//                2, nextRow, 1, rowHeight, 1.0, 0.0, GridBagConstraints.NORTHEAST, GridBagConstraints.VERTICAL, buttonInsets, 0, 0
+//        );
 
         centralPanel.add( controls.getBrightnessSlider(), brightnessConstraints );
         centralPanel.add( controls.getDownSampleRateDropdown(), downSampleConstraints);
@@ -186,9 +186,9 @@ public class AlignmentBoardControlsPanel extends JPanel {
         centralPanel.add( controls.getColorSaveBrightnessCheckbox(), colorSaveBrightnessConstraints );
 
         centralPanel.add( regionSelectionPanel, regionSelectionPanelConstraints );
-        centralPanel.add( controls.getSearchSaveButton(), saveSearchConstraints);
-        centralPanel.add( controls.getColorSaveButton(), saveColorConstraints );
-        centralPanel.add( controls.getScreenShotButton(), saveScreenShotConstraints );
+//        centralPanel.add( controls.getSearchSaveButton(), saveSearchConstraints);
+//        centralPanel.add( controls.getColorSaveButton(), saveColorConstraints );
+//        centralPanel.add( controls.getScreenShotButton(), saveScreenShotConstraints );
         add(centralPanel, BorderLayout.CENTER);
     }
 

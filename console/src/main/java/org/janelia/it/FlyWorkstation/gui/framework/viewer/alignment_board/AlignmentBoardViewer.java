@@ -1,6 +1,7 @@
 package org.janelia.it.FlyWorkstation.gui.framework.viewer.alignment_board;
 
 import java.awt.*;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.Callable;
 
@@ -59,6 +60,9 @@ public class AlignmentBoardViewer extends Viewer implements AlignmentBoardContro
 
     private static final Logger log = LoggerFactory.getLogger(AlignmentBoardViewer.class);
     private static final String SETTINGS_LAUNCH_BTN_NAME = "AlignmentBoard::SettingsLaunchButton";
+    private static final String COLOR_SAVE_BTN_NAME = "AlignmentBoard::ColorSaveButton";
+    private static final String SEARCH_SAVE_BTN_NAME = "AlignmentBoard::SearchSaveButton";
+    private static final String SCREEN_SHOT_BTN_NAME = "AlignmentBoard::ScreenShotButton";
     public static final String SAMPLER_PANEL_NAME = "GpuSampler";
     private static final Dimension GPU_FEEDBACK_PANEL_SIZE = new Dimension( 1, 1 );
 
@@ -72,6 +76,7 @@ public class AlignmentBoardViewer extends Viewer implements AlignmentBoardContro
     private BrainGlow brainGlow;
     private AlignmentBoardControlsPanel settingsPanel;
     private AlignmentBoardControlsDialog settingsDialog;
+    private AlignmentBoardControls controls;
     private Logger logger = LoggerFactory.getLogger(AlignmentBoardViewer.class);
 
     private boolean loadingInProgress = false;
@@ -696,7 +701,8 @@ public class AlignmentBoardViewer extends Viewer implements AlignmentBoardContro
             settingsPanel = null;
         }
         logger.info("New settings");
-        settingsDialog = new AlignmentBoardControlsDialog( mip3d, mip3d.getVolumeModel(), settingsData );
+        controls = new AlignmentBoardControls( mip3d, mip3d.getVolumeModel(), settingsData );
+        settingsDialog = new AlignmentBoardControlsDialog( mip3d, mip3d.getVolumeModel(), settingsData, controls );
         settingsPanel = settingsDialog.getControlsPanel();
         settingsPanel.addSettingsListener(
                 new AlignmentBoardControlsListener( renderMapping, this )
@@ -742,33 +748,57 @@ public class AlignmentBoardViewer extends Viewer implements AlignmentBoardContro
 
     /** This must be called to add the button on re-entry to this widget. */
     private void setupToolbar() {
+logger.info("Setting up toolbar.");
         JButton launchSettingsButton = new JButton();
-        launchSettingsButton.setFocusable(false);
-        launchSettingsButton.setRequestFocusEnabled(false);
-        launchSettingsButton.setSelected(false);
         launchSettingsButton.setAction(settingsDialog.getLaunchAction());
-        launchSettingsButton.setName(SETTINGS_LAUNCH_BTN_NAME);
 
         if ( toolbar == null ) {
             toolbar = new JToolBar( JToolBar.HORIZONTAL );
-            toolbar.setLayout( new BorderLayout() );
         }
-        toolbar.add(launchSettingsButton, BorderLayout.EAST);
+
+        // Now add buttons for saving files.
+        toolbar.add(controls.getColorSaveButton());
+        configureButton(controls.getColorSaveButton(), COLOR_SAVE_BTN_NAME);
+        toolbar.add(controls.getSearchSaveButton());
+        configureButton(controls.getSearchSaveButton(), SEARCH_SAVE_BTN_NAME);
+        toolbar.add(controls.getScreenShotButton());
+        configureButton(controls.getScreenShotButton(), SCREEN_SHOT_BTN_NAME);
+
+        toolbar.add(launchSettingsButton);
+        configureButton(launchSettingsButton, SETTINGS_LAUNCH_BTN_NAME);
+
         add(toolbar, BorderLayout.PAGE_START);
+
+    }
+
+    private void configureButton(JButton toolbarButton, String name) {
+        toolbarButton.setFocusable(false);
+        toolbarButton.setRequestFocusEnabled(false);
+        toolbarButton.setSelected(false);
+        toolbarButton.setName(name);
     }
 
     /** Cleanup old button, to avoid user temptation to use it, and ensure no duplication. */
     private void tearDownToolbar() {
         if ( toolbar != null ) {
-            Component toRemove = null;
+logger.info("Tearing down toolbar.");
+            List<Component> toRemove = new ArrayList<Component>();
             for ( Component comp: toolbar.getComponents() ) {
                 if ( SETTINGS_LAUNCH_BTN_NAME.equals(comp.getName()) ) {
-                    toRemove = comp;
-                    break;
+                    toRemove.add( comp );
+                }
+                else if ( COLOR_SAVE_BTN_NAME.equals(comp.getName()) ) {
+                    toRemove.add( comp );
+                }
+                else if ( SEARCH_SAVE_BTN_NAME.equals(comp.getName() ) ) {
+                    toRemove.add( comp );
+                }
+                else if ( SCREEN_SHOT_BTN_NAME.equals(comp.getName() ) ) {
+                    toRemove.add( comp );
                 }
             }
-            if ( toRemove != null ) {
-                toolbar.remove( toRemove );
+            for ( Component comp: toRemove ) {
+                toolbar.remove( comp );
             }
 
             remove( toolbar );
