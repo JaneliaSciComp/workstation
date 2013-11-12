@@ -11,9 +11,6 @@
 # /buildprocess/
 /buildprocess/build
 
-# /buildprocess/config/
-/buildprocess/config/brunsc.properties
-
 # /common/
 /common/bin
 
@@ -21,15 +18,13 @@
 /compute/build
 
 # /console/
+/console/src/main/java/console.properties
 /console/build
 /console/target
 /console/flyworkstation.log
-/console/.classpath.save
 /console/.settings
-/console/output.mov
 /console/.classycle
 /console/*.log
-/console/foo2.tiff
 
 # /console/src/main/java/org/janelia/it/FlyWorkstation/gui/slice_viewer/
 /console/src/main/java/org/janelia/it/FlyWorkstation/gui/slice_viewer/quadview_profile
