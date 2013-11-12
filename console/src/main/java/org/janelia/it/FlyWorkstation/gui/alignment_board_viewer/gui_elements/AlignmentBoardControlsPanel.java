@@ -33,13 +33,6 @@ import java.util.List;
  */
 public class AlignmentBoardControlsPanel extends JPanel {
     public static final double UNSELECTED_DOWNSAMPLE_RATE = 0.0;
-    private static final String DOWN_SAMPLE_TIP =
-            "Data sent to screen may be too large for your graphics card.\n" +
-            "Therefore, they are downsampled at the minimum rate found\n" +
-            "usable for your card.  However, you may wish to move that\n" +
-            "rate up or down, depending on your knowledge of the advanced\n" +
-            " hardware on your system.\n" +
-            "Higher values mean larger, blockier voxels, and less memory.";
 
     private static final String DOWN_SAMPLE_TOOL_TIP =
             "<html>" +
@@ -683,7 +676,6 @@ public class AlignmentBoardControlsPanel extends JPanel {
         );
         nextRow += rowHeight;
 
-        nextRow += rowHeight;
         GridBagConstraints signalDataConstraints = new GridBagConstraints(
                 1, nextRow, 2, rowHeight, 0.0, 0.0, GridBagConstraints.NORTHWEST, GridBagConstraints.VERTICAL, insets, 0, 0
         );
@@ -691,12 +683,6 @@ public class AlignmentBoardControlsPanel extends JPanel {
         rowHeight = 2;
         GridBagConstraints commitBtnConstraints = new GridBagConstraints(
                 0, nextRow, 2, rowHeight, 1.0, 1.0, GridBagConstraints.NORTHWEST, GridBagConstraints.NONE, insets, 0, 0
-        );
-
-        nextRow += rowHeight;
-        rowHeight = 3;
-        GridBagConstraints downSampleTipConstraints = new GridBagConstraints(
-                0, nextRow, 4, rowHeight, 1.0, 1.0, GridBagConstraints.NORTHWEST, GridBagConstraints.NONE, insets, 0, 0
         );
 
         nextRow += rowHeight;
@@ -743,19 +729,7 @@ public class AlignmentBoardControlsPanel extends JPanel {
 
         centralPanel.add(useSignalDataCheckbox, signalDataConstraints);
         centralPanel.add(commitButton, commitBtnConstraints);
-        JTextArea downSampleRateText = new JTextArea( DOWN_SAMPLE_TIP );
-        downSampleRateText.setLineWrap(true);
-        downSampleRateText.setColumns(40);
-        downSampleRateText.setColumns(DOWN_SAMPLE_TIP.length() / 2);
-        downSampleRateText.setEditable(false);
-        downSampleRateText.setBorder(new LineBorder(Color.black));
-        JScrollPane rateTextPane = new JScrollPane( downSampleRateText );
-        rateTextPane.setHorizontalScrollBarPolicy(JScrollPane.HORIZONTAL_SCROLLBAR_AS_NEEDED);
-        rateTextPane.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED);
-        rateTextPane.setSize(DOWNSAMPLE_TIP_DIM);
-        rateTextPane.setMinimumSize(DOWNSAMPLE_TIP_DIM);
 
-        centralPanel.add( rateTextPane, downSampleTipConstraints);
         centralPanel.add( blackoutCheckbox, blackoutCheckboxConstraints );
         centralPanel.add( colorSaveBrightnessCheckbox, colorSaveBrightnessConstraints );
         centralPanel.add( regionSelectionPanel, regionSelectionPanelConstraints );
