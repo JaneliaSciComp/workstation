@@ -32,6 +32,12 @@ public class WorkspaceInfoPanel extends JPanel
     private JList neuronListBox;
     private DefaultListModel neuronListModel;
 
+    // to add new sort order: add to enum here, add menu in AnnotationPanel.java,
+    //  and implement the sort in sortNeuronList below
+    // default set in AnnotationPanel as well
+    public enum NeuronSortOrder {ALPHABETICAL, CREATIONDATE};
+    private NeuronSortOrder neuronSortOrder;
+
     // ----- slots
     public Slot1<TmWorkspace> workspaceLoadedSlot = new Slot1<TmWorkspace>() {
         @Override
@@ -142,6 +148,28 @@ public class WorkspaceInfoPanel extends JPanel
     }
 
     /**
+     * called when the sort order is changed in the UI
+     */
+    public void sortOrderChanged(NeuronSortOrder sortOrder) {
+        if (sortOrder == neuronSortOrder) {
+            return;
+        }
+        this.neuronSortOrder = sortOrder;
+        if (neuronListModel.size() > 0) {
+            // this can't be the best way to do this...
+            Vector<TmNeuron> neuronVector = new Vector<TmNeuron>(neuronListModel.size());
+            for (int i=0; i<neuronListModel.size(); i++) {
+                neuronVector.add((TmNeuron) neuronListModel.getElementAt(i));
+            }
+            sortNeuronList(neuronVector);
+            neuronListModel.clear();
+            for (TmNeuron tmNeuron: neuronVector) {
+                neuronListModel.addElement(tmNeuron);
+           }
+        }
+    }
+
+    /**
      * populate the UI with info from the input workspace
      */
     public void loadWorkspace(TmWorkspace workspace) {
@@ -150,16 +178,32 @@ public class WorkspaceInfoPanel extends JPanel
         if (workspace != null) {
             // repopulate neuron list
             Vector<TmNeuron> neuronVector = new Vector<TmNeuron>(workspace.getNeuronList());
-            Collections.sort(neuronVector, new Comparator<TmNeuron>() {
-                @Override
-                public int compare(TmNeuron tmNeuron, TmNeuron tmNeuron2) {
-                    return tmNeuron.getName().compareTo(tmNeuron2.getName());
-                }
-            });
+            sortNeuronList(neuronVector);
             neuronListModel.clear();
             for (TmNeuron tmNeuron: neuronVector) {
                 neuronListModel.addElement(tmNeuron);
             }
+        }
+    }
+
+    private void sortNeuronList(Vector<TmNeuron> neuronVector) {
+        switch(neuronSortOrder) {
+            case ALPHABETICAL:
+                Collections.sort(neuronVector, new Comparator<TmNeuron>() {
+                    @Override
+                    public int compare(TmNeuron tmNeuron, TmNeuron tmNeuron2) {
+                        return tmNeuron.getName().compareToIgnoreCase(tmNeuron2.getName());
+                    }
+                });
+                break;
+            case CREATIONDATE:
+                Collections.sort(neuronVector, new Comparator<TmNeuron>() {
+                    @Override
+                    public int compare(TmNeuron tmNeuron, TmNeuron tmNeuron2) {
+                        return tmNeuron.getCreationDate().compareTo(tmNeuron2.getCreationDate());
+                    }
+                });
+                break;
         }
     }
 

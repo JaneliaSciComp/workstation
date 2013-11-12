@@ -130,7 +130,30 @@ public class AnnotationPanel extends JPanel
                 annotationMgr.renameNeuron();
             }
         }));
+        // sort submenu
+        JMenu sortSubmenu = new JMenu("Sort");
+        JRadioButtonMenuItem alphaSortButton = new JRadioButtonMenuItem(new AbstractAction("Alphabetical") {
+            @Override
+            public void actionPerformed(ActionEvent actionEvent) {
+                workspaceInfoPanel.sortOrderChanged(WorkspaceInfoPanel.NeuronSortOrder.ALPHABETICAL);
+            }
+            });
+        sortSubmenu.add(alphaSortButton);
+        JRadioButtonMenuItem creationSortButton = new JRadioButtonMenuItem(new AbstractAction("Creation date") {
+            @Override
+            public void actionPerformed(ActionEvent actionEvent) {
+                workspaceInfoPanel.sortOrderChanged(WorkspaceInfoPanel.NeuronSortOrder.CREATIONDATE);
+            }
+        });
+        sortSubmenu.add(creationSortButton);
+        ButtonGroup neuronSortGroup = new ButtonGroup();
+        neuronSortGroup.add(alphaSortButton);
+        neuronSortGroup.add(creationSortButton);
+        neuronToolMenu.add(sortSubmenu);
 
+        // initial sort order:
+        creationSortButton.setSelected(true);
+        workspaceInfoPanel.sortOrderChanged(WorkspaceInfoPanel.NeuronSortOrder.CREATIONDATE);
 
         // buttons for acting on neurons (which are in the list immediately above):
         JPanel neuronButtonsPanel = new JPanel();
@@ -154,10 +177,12 @@ public class AnnotationPanel extends JPanel
         neuronToolButton.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent ev) {
                 neuronToolMenu.show(neuronToolButton,
-                    neuronToolButton.getBounds().x - neuronToolButton.getBounds().width,
-                    neuronToolButton.getBounds().y + neuronToolButton.getBounds().height);
+                        neuronToolButton.getBounds().x - neuronToolButton.getBounds().width,
+                        neuronToolButton.getBounds().y + neuronToolButton.getBounds().height);
             }
         });
+
+
 
 
         // ----- neuron information; show name, whatever attributes, list of neurites
