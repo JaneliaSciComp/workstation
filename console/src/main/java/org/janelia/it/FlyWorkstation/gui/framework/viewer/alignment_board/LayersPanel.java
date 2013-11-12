@@ -249,11 +249,6 @@ public class LayersPanel extends JPanel implements Refreshable, ActivatableView 
      * @param e
      */
     protected void showPopupMenuImpl(final MouseEvent e) {
-
-//        Object object = outline.getOutlineModel().getValueAt(outline.getSelectedRow(), 0);
-//        if (object==null) return;
-//        if (!(object instanceof AlignedItem)) return;
-//
         AlignedItem alignedItem = getAlignedItemFromOutlineSelection();
         if ( alignedItem == null ) {
             return;
