@@ -1185,19 +1185,6 @@ public class EntityModel {
     }
     
     /**
-     * Clone and return the given entity tree.
-     * 
-     * @param entityId
-     * @param rootName
-     * @return
-     * @throws Exception
-     */
-    public Entity cloneEntityTree(Long entityId, String rootName) throws Exception {
-    	Entity clone = entityFacade.cloneEntityTree(entityId, rootName);
-    	return putOrUpdate(clone, true);
-    }
-    
-    /**
      * Create a new data set with the given name, for the current user.
      * 
      * @param dataSetName
