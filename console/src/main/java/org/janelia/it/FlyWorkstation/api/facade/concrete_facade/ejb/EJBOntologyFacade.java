@@ -52,9 +52,4 @@ public class EJBOntologyFacade extends EJBEntityFacade implements OntologyFacade
     public Entity getErrorOntology() throws Exception{
         return EJBFactory.getRemoteAnnotationBean().getErrorOntology();
     }
-
-    @Override
-    public Entity publishOntology(Long ontologyEntityId, String rootName) throws Exception {
-        return EJBFactory.getRemoteAnnotationBean().publishOntology(SessionMgr.getSubjectKey(), ontologyEntityId, rootName);
-    }
 }

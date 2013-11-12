@@ -736,14 +736,6 @@ public class ModelMgr {
         return ERROR_ONTOLOGY;
     }
     
-    public Entity publishOntology(Long ontologyEntityId, String rootName) throws Exception {
-        return FacadeManager.getFacadeManager().getOntologyFacade().publishOntology(ontologyEntityId, rootName);
-    }
-
-    public Entity cloneEntityTree(Long entityId, String rootName) throws Exception {
-        return entityModel.cloneEntityTree(entityId, rootName);
-    }
-
     public Entity createEntity(String entityTypeName, String entityName) throws Exception {
         return entityModel.createEntity(entityTypeName, entityName);
     }

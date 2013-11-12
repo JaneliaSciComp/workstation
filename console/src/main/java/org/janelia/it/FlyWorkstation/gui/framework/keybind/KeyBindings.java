@@ -148,6 +148,8 @@ public class KeyBindings {
      */
     public void saveOntologyKeybinds(Entity root) {
 
+        if (root==null) return;
+        
     	log.info("Saving key bindings for ontology "+root.getId());
 
         OntologyKeyBindings ontologyKeyBindings = new OntologyKeyBindings(SessionMgr.getSubjectKey(), root.getId());

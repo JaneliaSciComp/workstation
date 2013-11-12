@@ -168,8 +168,9 @@ public class EntityContextMenu extends JPopupMenu {
 
     private void addBadDataButtons(JMenu errorMenu) {
 
-        if (null != ModelMgr.getModelMgr().getErrorOntology()) {
-            Entity errorOntology = ModelMgr.getModelMgr().getErrorOntology();
+        Entity errorOntology = ModelMgr.getModelMgr().getErrorOntology();
+        
+        if (errorOntology!=null && EntityUtils.isInitialized(errorOntology)) {
             for (final EntityData entityData : errorOntology.getOrderedEntityData()) {
                 if (entityData.getChildEntity()==null) continue;
             	final OntologyElement element = new OntologyElement(entityData.getParentEntity(), entityData.getChildEntity());

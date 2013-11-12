@@ -28,6 +28,4 @@ public interface OntologyFacade extends EntityFacade {
     public Entity getOntologyTree(Long rootEntityId) throws Exception;
 
     public Entity getErrorOntology() throws Exception;
-
-    public Entity publishOntology(Long ontologyEntityId, String rootName) throws Exception;
 }
