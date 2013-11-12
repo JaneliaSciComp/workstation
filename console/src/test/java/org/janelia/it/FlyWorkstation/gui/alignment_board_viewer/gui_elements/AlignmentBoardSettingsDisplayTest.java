@@ -1,5 +1,6 @@
 package org.janelia.it.FlyWorkstation.gui.alignment_board_viewer.gui_elements;
 
+import org.janelia.it.FlyWorkstation.gui.framework.viewer.alignment_board.AlignmentBoardSettings;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.VolumeModel;
 import org.janelia.it.FlyWorkstation.gui.alignment_board_viewer.volume_export.CropCoordSet;
 
@@ -21,7 +22,7 @@ public class AlignmentBoardSettingsDisplayTest {
         VolumeModel volumeModel = new VolumeModel();
         volumeModel.setCropCoords( new CropCoordSet() );
         AlignmentBoardControlsDialog testDialog = new AlignmentBoardControlsDialog(
-                new JFrame(), volumeModel
+                new JFrame(), volumeModel, new AlignmentBoardSettings()
         );
         testDialog.addWindowListener( new WindowAdapter() {
             @Override
