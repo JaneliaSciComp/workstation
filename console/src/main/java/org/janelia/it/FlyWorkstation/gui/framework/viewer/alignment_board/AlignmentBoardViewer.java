@@ -111,7 +111,7 @@ public class AlignmentBoardViewer extends Viewer implements AlignmentBoardContro
     @Override
     public void clear() {
         logger.info("Clearing the a-board.");
-        removeSettingsLaunchButton();
+        tearDownToolbar();
     }
 
     @Override
@@ -271,7 +271,7 @@ public class AlignmentBoardViewer extends Viewer implements AlignmentBoardContro
 
         // Add this last.  "show-loading" removes it.  This way, it is shown only
         // when it becomes un-busy.
-        addSettingsLaunchButton();
+        setupToolbar();
         add(wrapperPanel, BorderLayout.CENTER);
         mip3d.resetView();
 
@@ -514,7 +514,7 @@ public class AlignmentBoardViewer extends Viewer implements AlignmentBoardContro
         if ( settingsPanel != null ) {
             settingsPanel.removeAllSettingsListeners();
         }
-        removeSettingsLaunchButton();
+        tearDownToolbar();
         removeAll();
         boardOpen = false;
         mip3d = null;
@@ -570,7 +570,7 @@ public class AlignmentBoardViewer extends Viewer implements AlignmentBoardContro
                 }
                 else {
                     // No launching settings at this point.
-                    //removeSettingsLaunchButton();
+                    //tearDownToolbar();
                     showLoadingIndicator();
                     createMip3d();
                     wrapperPanel = createWrapperPanel( mip3d );
@@ -679,7 +679,7 @@ public class AlignmentBoardViewer extends Viewer implements AlignmentBoardContro
         //if ( settings != null ) {
         //    settings.removeAllSettingsListeners();
         //}
-        removeSettingsLaunchButton();
+        tearDownToolbar();
         if ( mip3d != null ) {
             mip3d.releaseMenuActions();
         }
@@ -741,7 +741,7 @@ public class AlignmentBoardViewer extends Viewer implements AlignmentBoardContro
     }
 
     /** This must be called to add the button on re-entry to this widget. */
-    private void addSettingsLaunchButton() {
+    private void setupToolbar() {
         JButton launchSettingsButton = new JButton();
         launchSettingsButton.setFocusable(false);
         launchSettingsButton.setRequestFocusEnabled(false);
@@ -758,7 +758,7 @@ public class AlignmentBoardViewer extends Viewer implements AlignmentBoardContro
     }
 
     /** Cleanup old button, to avoid user temptation to use it, and ensure no duplication. */
-    private void removeSettingsLaunchButton() {
+    private void tearDownToolbar() {
         if ( toolbar != null ) {
             Component toRemove = null;
             for ( Component comp: toolbar.getComponents() ) {
