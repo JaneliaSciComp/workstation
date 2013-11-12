@@ -648,7 +648,7 @@ public abstract class EntityOutline extends EntityTree implements Refreshable, A
 	            SessionMgr.getBrowser().getViewerManager().showLoadingIndicatorInActiveViewer();
 	        }
 			
-	        SessionMgr.getBrowser().getViewerManager().showLoadingIndicatorInInspector();   
+	        //SessionMgr.getBrowser().getViewerManager().showLoadingIndicatorInInspector();   
 	        
 			// Load the children before displaying them
         	getDynamicTree().expandNodeWithLazyChildren(node, new Callable<Void>() {

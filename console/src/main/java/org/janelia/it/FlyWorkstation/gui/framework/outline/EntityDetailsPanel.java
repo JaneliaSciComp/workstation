@@ -6,12 +6,28 @@ import java.awt.event.ActionListener;
 import java.awt.event.MouseEvent;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
 
-import javax.swing.*;
+import javax.swing.BorderFactory;
+import javax.swing.Box;
+import javax.swing.BoxLayout;
+import javax.swing.JButton;
+import javax.swing.JLabel;
+import javax.swing.JMenuItem;
+import javax.swing.JOptionPane;
+import javax.swing.JPanel;
+import javax.swing.JPopupMenu;
+import javax.swing.JTabbedPane;
+import javax.swing.JTable;
+import javax.swing.ListSelectionModel;
+import javax.swing.SwingConstants;
 
 import org.apache.solr.client.solrj.SolrQuery;
-import org.janelia.it.FlyWorkstation.api.entity_model.access.ModelMgrAdapter;
 import org.janelia.it.FlyWorkstation.api.entity_model.management.ModelMgr;
 import org.janelia.it.FlyWorkstation.api.entity_model.management.ModelMgrUtils;
 import org.janelia.it.FlyWorkstation.gui.dialogs.EntityActorPermissionDialog;
@@ -84,7 +100,6 @@ public class EntityDetailsPanel extends JPanel implements Accessibility, Refresh
     
     private EntityActorPermissionDialog eapDialog;
     
-    private ModelMgrAdapter modelMgrAdapter;
     private List<Subject> subjects;
     private Entity entity;
     private String role;
@@ -105,14 +120,6 @@ public class EntityDetailsPanel extends JPanel implements Accessibility, Refresh
         tabNames.add(TAB_NAME_ATTRIBUTES);
         tabNames.add(TAB_NAME_PERMISSIONS);
         tabNames.add(TAB_NAME_ANNOTATIONS);
-        
-        modelMgrAdapter = new ModelMgrAdapter() {
-			@Override
-			public void annotationsChanged(final long entityId) {
-				if (entityId != entity.getId()) return; 
-				loadAnnotations();
-			}
-		};
 		
 		// Child dialogs
 		
@@ -351,21 +358,16 @@ public class EntityDetailsPanel extends JPanel implements Accessibility, Refresh
     	
 		loadSubjects();
         loadAttributes(entity.getId());
-
-        // Register this dialog as a model observer
-        ModelMgr.getModelMgr().addModelMgrObserver(modelMgrAdapter);
         
         // Select the default tab
         if (defaultTab!=null) {
             tabbedPane.setSelectedIndex(tabNames.indexOf(defaultTab));
         }
-        
-        // Dialog is closing, clean up observer
-        ModelMgr.getModelMgr().removeModelMgrObserver(modelMgrAdapter);
     }
     
     private void loadAttributes(final long entityId) {
 
+        log.debug("Loading attributes for {}",entity.getId());
         showAttributesLoadingIndicator();
         
     	final SearchConfiguration searchConfig = SessionMgr.getBrowser().getGeneralSearchConfig();
@@ -379,10 +381,12 @@ public class EntityDetailsPanel extends JPanel implements Accessibility, Refresh
 			@Override
 			protected void doStuff() throws Exception {
 				this.loadedEntity = ModelMgr.getModelMgr().getEntityById(entityId);
+				log.debug("Loading entity {}",entity.getId());
 				try {
 		            SolrQuery query = new SolrQuery("id:"+entityId);
 		            SolrResults results = ModelMgr.getModelMgr().searchSolr(query);
 		            this.doc = results.getEntityDocuments().isEmpty() ? null : results.getEntityDocuments().iterator().next();
+		            log.debug("Loading entity document {}",entity.getId());
 				}
 				catch (Exception e) {
 					log.error("Error loading Solr attributes",e);
@@ -396,7 +400,9 @@ public class EntityDetailsPanel extends JPanel implements Accessibility, Refresh
 				setEntity(loadedEntity);
 				loadAnnotations();
 		        loadPermissions();
-				
+
+                log.debug("Showing attributes");
+                
 		        // Update the attribute table
 		        attributesTable.removeAllRows();
 		        
@@ -469,6 +475,8 @@ public class EntityDetailsPanel extends JPanel implements Accessibility, Refresh
 
     private void loadSubjects() {
 
+        log.debug("Loading subjects for {}",entity.getId());
+        
         SimpleWorker worker = new SimpleWorker() {
 
         	List<Subject> subjects;
@@ -485,9 +493,10 @@ public class EntityDetailsPanel extends JPanel implements Accessibility, Refresh
 			}
 			
 			@Override
-			protected void hadSuccess() {	
+			protected void hadSuccess() {
 				setSubjects(subjects);
                 addPermissionButton.setEnabled(ModelMgrUtils.isOwner(entity));
+                log.debug("Setting permission button state to {}",addPermissionButton.isEnabled());
 			}
 			
 			@Override
@@ -500,6 +509,8 @@ public class EntityDetailsPanel extends JPanel implements Accessibility, Refresh
     
     private void loadPermissions() {
 
+        log.debug("Loading permissions for {}",entity.getId());
+        
         showPermissionsLoadingIndicator();
         
         SimpleWorker permissionsLoadingWorker = new SimpleWorker() {
@@ -519,6 +530,9 @@ public class EntityDetailsPanel extends JPanel implements Accessibility, Refresh
 			
 			@Override
 			protected void hadSuccess() {
+
+                log.debug("Showing permissions");
+                
 				permissionsTable.removeAllRows();
 				permissionsTable.addRow(new EntityActorPermission(entity, entity.getOwnerKey(), OWNER_PERMISSION));
 				for(EntityActorPermission eap : eaps) {
@@ -541,8 +555,10 @@ public class EntityDetailsPanel extends JPanel implements Accessibility, Refresh
     }
     
     
-    private void loadAnnotations() {
+    public void loadAnnotations() {
 
+        log.debug("Loading annotations for {}",entity.getId());
+        
     	showAnnotationsLoadingIndicator();
     	
     	annotationsView.setAnnotations(null);
@@ -563,6 +579,9 @@ public class EntityDetailsPanel extends JPanel implements Accessibility, Refresh
 			
 			@Override
 			protected void hadSuccess() {
+
+                log.debug("Showing annotations");
+                
 				annotationsView.setAnnotations(annotations);
 				annotationsPanel.removeAll();
 				annotationsPanel.add((JPanel)annotationsView, BorderLayout.CENTER);
