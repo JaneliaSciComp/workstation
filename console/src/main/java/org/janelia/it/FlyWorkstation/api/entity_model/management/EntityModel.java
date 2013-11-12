@@ -712,19 +712,18 @@ public class EntityModel {
      * @throws Exception
      */
     public EntityData updateChildIndex(EntityData entityData, Integer orderIndex) throws Exception {
-        EntityData savedEd = entityFacade.updateChildIndex(entityData, orderIndex);
+        entityFacade.updateChildIndex(entityData, orderIndex);
         
-        Entity parent = savedEd.getParentEntity();
+        Entity parent = entityData.getParentEntity();
         if (parent!=null) {
             Entity canonicalParent = entityCache.getIfPresent(parent.getId());
             if (canonicalParent != null) {
-                savedEd.setParentEntity(canonicalParent);
-                EntityUtils.replaceEntityData(canonicalParent, entityData, savedEd);
+                entityData.setOrderIndex(orderIndex);
                 notifyEntityChanged(canonicalParent);   
             }
         }
         
-        return savedEd;
+        return entityData;
     }
 
     /**
@@ -738,19 +737,15 @@ public class EntityModel {
         checkIfCanonicalEntity(entity);
         EntityData savedEd = entityFacade.setOrUpdateValue(entity.getId(), attributeValue, value);
         
-        Entity parent = savedEd.getParentEntity();
-        if (parent!=null) {
-            savedEd.setParentEntity(entity);
-            EntityData existingEd = entity.getEntityDataByAttributeName(attributeValue);
-            if (existingEd!=null) {
-                EntityUtils.replaceEntityData(entity, existingEd, savedEd);    
-            }
-            else {
-                entity.getEntityData().add(savedEd);
-            }
+        EntityData existingEd = entity.getEntityDataByAttributeName(attributeValue);
+        if (existingEd!=null) {
+            existingEd.setValue(value);
             notifyEntityChanged(entity);
         }
-        
+        else {
+            invalidate(entity, false);
+        }
+    
         return savedEd;
     }
     
