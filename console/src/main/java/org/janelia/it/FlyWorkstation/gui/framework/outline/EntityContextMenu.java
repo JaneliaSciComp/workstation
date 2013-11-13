@@ -57,6 +57,7 @@ import org.janelia.it.FlyWorkstation.ws.ExternalClient;
 import org.janelia.it.jacs.model.entity.Entity;
 import org.janelia.it.jacs.model.entity.EntityConstants;
 import org.janelia.it.jacs.model.entity.EntityData;
+import org.janelia.it.jacs.model.entity.cv.Objective;
 import org.janelia.it.jacs.model.ontology.OntologyAnnotation;
 import org.janelia.it.jacs.model.ontology.OntologyElement;
 import org.janelia.it.jacs.model.tasks.Task;
@@ -747,14 +748,34 @@ public class EntityContextMenu extends JPopupMenu {
                     
                     @Override
                     protected void doStuff() throws Exception {
-                        EntityVistationBuilder.create(new ModelMgrEntityLoader()).startAt(sample)
+                        ModelMgr.getModelMgr().loadLazyEntity(sample, false);
+                        Entity alignedSample = null;
+                        for(Entity child : sample.getChildren()) {
+                            if (child.getEntityType().getName().equals(EntityConstants.TYPE_SAMPLE) 
+                                    && child.getValueByAttributeName(EntityConstants.ATTRIBUTE_OBJECTIVE)!=null) {
+                                alignedSample = child;
+                            }
+                        }
+                        
+                        if (alignedSample==null) {
+                            alignedSample = sample;
+                        }
+                        
+                        final ModelMgrEntityLoader loader = new ModelMgrEntityLoader();
+                        EntityVistationBuilder.create(loader).startAt(alignedSample)
                                 .childrenOfType(EntityConstants.TYPE_PIPELINE_RUN)
                                 .childrenOfType(EntityConstants.TYPE_ALIGNMENT_RESULT)
                                 .childrenOfType(EntityConstants.TYPE_SUPPORTING_DATA)
-                                .childOfName("VerifyMovie.mp4")
                                 .run(new EntityVisitor() {
-                            public void visit(Entity movieEntity) throws Exception {
-                            	movie = movieEntity;
+                            public void visit(Entity supportingData) throws Exception {
+                                loader.populateChildren(supportingData);
+                                for(Entity child : supportingData.getChildren()) {
+                                    if (child.getName().equals("VerifyMovie.mp4") 
+                                            || child.getName().equals("AlignVerify.mp4")) {
+                                        movie = child;
+                                        break;   
+                                    }
+                                }
                             }
                         });
                     }
