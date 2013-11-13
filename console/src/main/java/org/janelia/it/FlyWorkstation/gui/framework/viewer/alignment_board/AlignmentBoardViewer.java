@@ -748,7 +748,7 @@ public class AlignmentBoardViewer extends Viewer implements AlignmentBoardContro
 
     /** This must be called to add the button on re-entry to this widget. */
     private void setupToolbar() {
-logger.info("Setting up toolbar.");
+        tearDownToolbar(); // Calling this just in case it was left dangling.
         JButton launchSettingsButton = new JButton();
         launchSettingsButton.setAction(settingsDialog.getLaunchAction());
 
@@ -757,15 +757,16 @@ logger.info("Setting up toolbar.");
         }
 
         // Now add buttons for saving files.
-        toolbar.add(controls.getColorSaveButton());
         configureButton(controls.getColorSaveButton(), COLOR_SAVE_BTN_NAME);
-        toolbar.add(controls.getSearchSaveButton());
         configureButton(controls.getSearchSaveButton(), SEARCH_SAVE_BTN_NAME);
-        toolbar.add(controls.getScreenShotButton());
         configureButton(controls.getScreenShotButton(), SCREEN_SHOT_BTN_NAME);
+        configureButton(launchSettingsButton, SETTINGS_LAUNCH_BTN_NAME);
+
+        toolbar.add(controls.getColorSaveButton());
+        toolbar.add(controls.getSearchSaveButton());
+        toolbar.add(controls.getScreenShotButton());
 
         toolbar.add(launchSettingsButton);
-        configureButton(launchSettingsButton, SETTINGS_LAUNCH_BTN_NAME);
 
         add(toolbar, BorderLayout.PAGE_START);
 
@@ -781,26 +782,7 @@ logger.info("Setting up toolbar.");
     /** Cleanup old button, to avoid user temptation to use it, and ensure no duplication. */
     private void tearDownToolbar() {
         if ( toolbar != null ) {
-logger.info("Tearing down toolbar.");
-            List<Component> toRemove = new ArrayList<Component>();
-            for ( Component comp: toolbar.getComponents() ) {
-                if ( SETTINGS_LAUNCH_BTN_NAME.equals(comp.getName()) ) {
-                    toRemove.add( comp );
-                }
-                else if ( COLOR_SAVE_BTN_NAME.equals(comp.getName()) ) {
-                    toRemove.add( comp );
-                }
-                else if ( SEARCH_SAVE_BTN_NAME.equals(comp.getName() ) ) {
-                    toRemove.add( comp );
-                }
-                else if ( SCREEN_SHOT_BTN_NAME.equals(comp.getName() ) ) {
-                    toRemove.add( comp );
-                }
-            }
-            for ( Component comp: toRemove ) {
-                toolbar.remove( comp );
-            }
-
+            toolbar.removeAll();
             remove( toolbar );
             toolbar = null;
         }
