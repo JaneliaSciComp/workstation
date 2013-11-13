@@ -234,11 +234,12 @@ public class EntityModel {
 	/**
 	 * Clear the entire cache without raising any events. This is basically only useful for changing logins.  
 	 */
-	public void invalidateAllSilently() {
+	public void invalidateAll() {
 	    entityCache.invalidateAll();
 	    commonRootCache.clear();
 	    ontologyRootCache.clear();
 	    parentMap.clear();
+        ModelMgr.getModelMgr().postOnEventBus(new EntityInvalidationEvent());
 	}
 
     /**
@@ -284,28 +285,6 @@ public class EntityModel {
     private void invalidate(Collection<Entity> entities, Map<Long,Entity> visited, boolean recurse) {
         log.debug("Invalidating {} entities (recurse={})",entities.size(),recurse);    
         for(Entity entity : entities) {
-//            // Invalidate parents too, because they hold references to invalid children now
-//            if (entity==null) continue;
-//            Collection<Long> parentIds = parentMap.get(entity.getId());
-//            if (parentIds!=null && !parentIds.isEmpty()) {
-//                log.trace("Parents of {} = {}",entity.getId(),parentIds);
-//                for(Long parentId : parentIds) {
-//                    if (parentId.equals(entity.getId())) continue; // In case of self loops
-//                    Entity parent = entityCache.getIfPresent(parentId);
-//                    if (parent!=null) {
-//                        if (!visited.containsKey(parent.getId())) {
-//                            log.debug("Invalidating parent: {}",EntityUtils.identify(parent));    
-//                            invalidate(parent, visited, false);
-//                            // Now invalidate its parents, and so forth
-//                            List<Entity> l = new ArrayList<Entity>();
-//                            l.add(parent);
-//                            invalidate(l, visited, false);
-//                        }
-//                    }
-//                }
-//            }
-//            // Invalidate the entity AFTER invalidating its parents 
-//            // (otherwise the parentMap may not contain the information we need)
             invalidate(entity, visited, recurse);
         }
     }

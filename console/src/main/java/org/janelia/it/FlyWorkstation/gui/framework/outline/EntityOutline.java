@@ -28,6 +28,7 @@ import javax.swing.tree.TreePath;
 import org.janelia.it.FlyWorkstation.api.entity_model.access.ModelMgrAdapter;
 import org.janelia.it.FlyWorkstation.api.entity_model.events.EntityChangeEvent;
 import org.janelia.it.FlyWorkstation.api.entity_model.events.EntityCreateEvent;
+import org.janelia.it.FlyWorkstation.api.entity_model.events.EntityInvalidationEvent;
 import org.janelia.it.FlyWorkstation.api.entity_model.management.EntitySelectionModel;
 import org.janelia.it.FlyWorkstation.api.entity_model.management.ModelMgr;
 import org.janelia.it.FlyWorkstation.api.entity_model.management.ModelMgrUtils;
@@ -324,6 +325,18 @@ public abstract class EntityOutline extends EntityTree implements Refreshable, A
 	protected void nodeDoubleClicked(MouseEvent e) {
 	}
 
+    @Override
+    public void entityInvalidated(EntityInvalidationEvent event) {
+        if (event.isTotalInvalidation()) {
+            if (!refreshInProgress.get()) {
+                refresh(false, true, null);
+            }
+        }
+        else {
+            super.entityInvalidated(event);    
+        }
+    }
+
     @Subscribe 
     public void entityCreated(EntityCreateEvent event) {
         Entity entity = event.getEntity();
@@ -452,7 +465,7 @@ public abstract class EntityOutline extends EntityTree implements Refreshable, A
 
 			protected void doStuff() throws Exception {
 				if (invalidateCache && getRootEntity()!=null) {
-					ModelMgr.getModelMgr().invalidateCache(getRootEntity().getChildren(), true);
+					ModelMgr.getModelMgr().invalidateCache();
 				}
 				rootList = loadRootList();
 			}

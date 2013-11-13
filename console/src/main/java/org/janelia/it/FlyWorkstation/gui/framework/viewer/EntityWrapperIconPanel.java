@@ -597,21 +597,28 @@ public class EntityWrapperIconPanel extends IconPanel {
 		
 		if (contextRootedEntity==null) return;
 		boolean affected = false;
-		for (Entity entity : event.getInvalidatedEntities()) {
-			if (contextRootedEntity.getEntity()!=null && contextRootedEntity.getEntityId().equals(entity.getId())) {
-				affected = true;
-				break;
-			}
-			else {
-				for(final RootedEntity rootedEntity : new ArrayList<RootedEntity>(pageRootedEntities)) {
-					if (rootedEntity.getEntityId().equals(entity.getId())) {
-						affected = true;
-						break;
-					}
-				}	
-				if (affected) break;
-			}
-		}
+		
+        if (event.isTotalInvalidation()) {
+            affected = true;
+        }
+        else {
+    		for (Entity entity : event.getInvalidatedEntities()) {
+    			if (contextRootedEntity.getEntity()!=null && contextRootedEntity.getEntityId().equals(entity.getId())) {
+    				affected = true;
+    				break;
+    			}
+    			else {
+    				for(final RootedEntity rootedEntity : new ArrayList<RootedEntity>(pageRootedEntities)) {
+    					if (rootedEntity.getEntityId().equals(entity.getId())) {
+    						affected = true;
+    						break;
+    					}
+    				}	
+    				if (affected) break;
+    			}
+    		}
+        }
+        
 		if (affected) {
 			log.debug("({}) Some entities were invalidated so we're refreshing the viewer", getSelectionCategory());	
 			refresh(false, null);

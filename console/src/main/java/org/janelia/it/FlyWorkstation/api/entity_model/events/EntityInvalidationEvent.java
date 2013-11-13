@@ -12,12 +12,20 @@ import org.janelia.it.jacs.model.entity.Entity;
 public class EntityInvalidationEvent {
 	
 	private Collection<Entity> entities;
-	
+
+    public EntityInvalidationEvent() {
+        this.entities = null;
+    }
+    
 	public EntityInvalidationEvent(Collection<Entity> entities) {
 		this.entities = entities;
 	}
 
 	public Collection<Entity> getInvalidatedEntities() {
 		return entities;
+	}
+	
+	public boolean isTotalInvalidation() {
+	    return entities == null;
 	}
 }

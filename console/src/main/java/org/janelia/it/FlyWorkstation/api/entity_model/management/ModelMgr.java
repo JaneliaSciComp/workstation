@@ -675,7 +675,7 @@ public class ModelMgr {
     }
     
     public void invalidateCache() {
-        entityModel.invalidateAllSilently();
+        entityModel.invalidateAll();
     }
 
     public void invalidateCache(Collection<Entity> entities, boolean recurse) {

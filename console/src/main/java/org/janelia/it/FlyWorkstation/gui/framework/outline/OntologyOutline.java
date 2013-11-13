@@ -605,7 +605,6 @@ public abstract class OntologyOutline extends EntityTree implements Refreshable,
         }   
     }
     
-
     @Subscribe 
     public void entityChanged(EntityChangeEvent event) {
         super.entityChanged(event);
@@ -632,18 +631,26 @@ public abstract class OntologyOutline extends EntityTree implements Refreshable,
         });
         
     }
-
+    
     @Subscribe 
     public void entityInvalidated(EntityInvalidationEvent event) {
-        super.entityInvalidated(event);
-        
-        Collection<Entity> invalidated = event.getInvalidatedEntities();
-        for(Entity entity : invalidated) {
-            for(DefaultMutableTreeNode node : getNodesByEntityId(entity.getId())) {
-                String uniqueId = getDynamicTree().getUniqueId(node);
-                log.debug("Removing invalidate node from action map: "+uniqueId);
-                ontologyActionMap.remove(uniqueId);
+        if (event.isTotalInvalidation()) {
+            if (!refreshInProgress.get()) {
+                log.debug("Removing all nodes from action map");
+                ontologyActionMap.clear();
+                refresh(false, true, null);
             }
+        }
+        else {
+            super.entityInvalidated(event);  
+            Collection<Entity> invalidated = event.getInvalidatedEntities();
+            for(Entity entity : invalidated) {
+                for(DefaultMutableTreeNode node : getNodesByEntityId(entity.getId())) {
+                    String uniqueId = getDynamicTree().getUniqueId(node);
+                    log.debug("Removing invalidate node from action map: "+uniqueId);
+                    ontologyActionMap.remove(uniqueId);
+                }
+            }  
         }
     }
     
@@ -714,7 +721,7 @@ public abstract class OntologyOutline extends EntityTree implements Refreshable,
 
             protected void doStuff() throws Exception {
                 if (invalidateCache && getRootEntity()!=null) {
-                    ModelMgr.getModelMgr().invalidateCache(getRootEntity(), true);
+                    ModelMgr.getModelMgr().invalidateCache();
                 }
                 rootList = loadRootList();
             }

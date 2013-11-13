@@ -177,6 +177,12 @@ public class EntityTree extends JPanel implements ActivatableView {
     @Subscribe 
     public void entityInvalidated(EntityInvalidationEvent event) {
         if (rootEntityData==null) return;
+        
+        if (event.isTotalInvalidation()) {
+            // TODO: handle this correctly. for now we can delegate to the outlines
+            throw new IllegalStateException("EntityTree should never get total invalidations");
+        }   
+        
         final Collection<DefaultMutableTreeNode> nodes = new HashSet<DefaultMutableTreeNode>();
         
         Collection<Entity> invalidated = event.getInvalidatedEntities();
