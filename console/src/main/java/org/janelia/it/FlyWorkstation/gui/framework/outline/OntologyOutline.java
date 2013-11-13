@@ -635,11 +635,7 @@ public abstract class OntologyOutline extends EntityTree implements Refreshable,
     @Subscribe 
     public void entityInvalidated(EntityInvalidationEvent event) {
         if (event.isTotalInvalidation()) {
-            if (!refreshInProgress.get()) {
-                log.debug("Removing all nodes from action map");
-                ontologyActionMap.clear();
-                refresh(false, true, null);
-            }
+            refresh(false, true, null);
         }
         else {
             super.entityInvalidated(event);  
@@ -711,7 +707,7 @@ public abstract class OntologyOutline extends EntityTree implements Refreshable,
         }
         
         log.debug("Starting whole tree refresh (invalidateCache={}, restoreState={})",invalidateCache,expansionState!=null);
-        
+
         showLoadingIndicator();
         ModelMgr.getModelMgr().unregisterOnEventBus(OntologyOutline.this);
         

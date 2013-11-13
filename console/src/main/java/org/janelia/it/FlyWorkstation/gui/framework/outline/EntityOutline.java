@@ -328,9 +328,7 @@ public abstract class EntityOutline extends EntityTree implements Refreshable, A
     @Override
     public void entityInvalidated(EntityInvalidationEvent event) {
         if (event.isTotalInvalidation()) {
-            if (!refreshInProgress.get()) {
-                refresh(false, true, null);
-            }
+            refresh(false, true, null);
         }
         else {
             super.entityInvalidated(event);    
