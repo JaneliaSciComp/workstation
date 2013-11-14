@@ -27,6 +27,7 @@ public class UserSettingSerializer implements Serializable {
     public static final String CAMERA_DEPTH = "CameraFocus";
     public static final String FOCUS_SETTING = "InGroundFocus";
     public static final String MIN_VOXELS_SETTING = "MinVoxelCutoff";
+    public static final String MAX_NEURON_SETTING = "MaxNeuronsCutoff";
     public static final String SAVE_BRIGHTNESS_SETTING = "SaveGammaInTiff";
 
     public static final int MAX_SERIALIZED_SETTINGS_STR = 65535;
@@ -226,19 +227,19 @@ public class UserSettingSerializer implements Serializable {
             }
         }
 
-        str = settingToValue.get( MIN_VOXELS_SETTING );
-        nonEmpty = nonEmpty( str );
-        if ( nonEmpty ) {
-            try {
-                Long minVoxCountCuttoff = Long.parseLong( str );
-                serializationAdapter.setMinimumVoxelCount(minVoxCountCuttoff);
-            } catch ( Exception ex ) {
-                logger.warn(
-                        "Invalid min voxel count cuttoff of {} stored.  Ignoring value.",
-                        str
-                );
+        extractNeuronConstraint(MIN_VOXELS_SETTING, settingToValue, new ConstraintSetter() {
+            @Override
+            public void setConstraint( long value ) {
+                serializationAdapter.setMinimumVoxelCount(value);
             }
-        }
+        });
+
+        extractNeuronConstraint(MAX_NEURON_SETTING, settingToValue, new ConstraintSetter() {
+            @Override
+            public void setConstraint( long value ) {
+                serializationAdapter.setMaximumNeuronCount(value);
+            }
+        });
 
         str = settingToValue.get( SAVE_BRIGHTNESS_SETTING );
         nonEmpty = nonEmpty( str );
@@ -253,6 +254,26 @@ public class UserSettingSerializer implements Serializable {
             }
         }
 
+    }
+
+    /** Sets a neuron-cutoff constraint.  Here for purpose of non-redundancy. */
+    private void extractNeuronConstraint(
+            String settingString, Map<String, String> settingToValue, ConstraintSetter setter
+    ) {
+        boolean nonEmpty;
+        String str = settingToValue.get( settingString );
+        nonEmpty = nonEmpty( str );
+        if ( nonEmpty ) {
+            try {
+                Long constraint = Long.parseLong( str );
+                setter.setConstraint(constraint);
+            } catch ( Exception ex ) {
+                logger.warn(
+                        "Invalid min voxel count cuttoff of {} stored.  Ignoring value.",
+                        str
+                );
+            }
+        }
     }
 
     /** Quick method to test whether setting is empty. */
@@ -319,6 +340,8 @@ public class UserSettingSerializer implements Serializable {
         }
 
         builder.append( MIN_VOXELS_SETTING ).append("=").append(serializationAdapter.getMinimumVoxelCount()).append("\n");
+
+        builder.append( MAX_NEURON_SETTING ).append("=").append(serializationAdapter.getMaximumNeuronCount()).append("\n");
 
         builder.append( SAVE_BRIGHTNESS_SETTING ).append("=").append(serializationAdapter.isSaveColorBrightness()).append("\n");
 
@@ -414,11 +437,17 @@ public class UserSettingSerializer implements Serializable {
         }
     }
 
+    /** Convenience interface to leverage a single method with lots of commonality for two settings. */
+    static interface ConstraintSetter {
+        public void setConstraint( long value );
+    }
+
     public static interface SerializationAdapter {
         // Serialization
         float getGammaAdjustment();                 // VolumeModel, alignmentBoardSettings as getGammaFactor()
         float getCropOutLevel();                    // VolumeModel
         long getMinimumVoxelCount();                // AlignmentBoardSettings
+        long getMaximumNeuronCount();               // AlignmentBoardSettings
         Rotation3d getRotation();                   // VolumeModel.getCamera3d()
         boolean isShowChannelData();                // AlignmentBoardSettings
         Vec3 getCameraDepth();                      // VolumeModel
@@ -430,6 +459,7 @@ public class UserSettingSerializer implements Serializable {
         void setGammaAdjustment( float gamma );     // VolumeModel, alignmentBoardSettings as setGammaFactor(float)
         void setCropOutLevel(float level);          // VolumeModel
         void setMinimumVoxelCount( long count );    // VolumeModel
+        void setMaximumNeuronCount( long count );   // VolumeModel
         void setCropCoords( CropCoordSet coordSet );// VolumeModel.setCropCoordinates(cropCoordArray), VolumeModel.setAcceptedCoordinates().
         void setShowChannelData(boolean show);      // AlignmentBoardSettings
         void setFocus( double[] focus );            // VolumeModel.getCamera3d().setFocus()

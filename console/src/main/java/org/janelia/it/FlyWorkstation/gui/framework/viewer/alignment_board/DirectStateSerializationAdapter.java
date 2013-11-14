@@ -42,6 +42,11 @@ public class DirectStateSerializationAdapter implements UserSettingSerializer.Se
     }
 
     @Override
+    public long getMaximumNeuronCount() {
+        return settings.getMaximumNeuronCount();
+    }
+
+    @Override
     public Rotation3d getRotation() {
         return volumeModel.getCamera3d().getRotation();
     }
@@ -90,6 +95,11 @@ public class DirectStateSerializationAdapter implements UserSettingSerializer.Se
     @Override
     public void setMinimumVoxelCount(long count) {
         settings.setMinimumVoxelCount(count);
+    }
+
+    @Override
+    public void setMaximumNeuronCount(long count) {
+        settings.setMaximumNeuronCount(count);
     }
 
     @Override

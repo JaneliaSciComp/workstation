@@ -19,6 +19,7 @@ public class SerializationAdapterBean implements UserSettingSerializer.Serializa
     private float gamma;
     private float cropOutLevel;
     private long minimumVoxelCount;
+    private long maximumNeuronCount;
     private Rotation3d rotation;
     private boolean showChannelData;
     private boolean saveColorBrightness;
@@ -122,5 +123,13 @@ public class SerializationAdapterBean implements UserSettingSerializer.Serializa
                     new UnitVec3(coordinateSet[0], coordinateSet[1], coordinateSet[2])
             );
         }
+    }
+
+    public long getMaximumNeuronCount() {
+        return maximumNeuronCount;
+    }
+
+    public void setMaximumNeuronCount(long maximumNeuronCount) {
+        this.maximumNeuronCount = maximumNeuronCount;
     }
 }

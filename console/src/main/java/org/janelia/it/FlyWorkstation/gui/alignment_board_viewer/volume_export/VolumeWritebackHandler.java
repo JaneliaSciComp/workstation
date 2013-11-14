@@ -37,6 +37,7 @@ public class VolumeWritebackHandler {
     private final Mip3d mip3d;
     private final CompletionListener completionListener;
     private int filterSize;
+    private int maxNeurons;
     private double gammaFactor;
     private File writeBackFile;
 
@@ -48,7 +49,8 @@ public class VolumeWritebackHandler {
             CompletionListener completionListener,
             Mip3d mip3d,
             double gammaFactor,
-            int filterSize
+            int filterSize,
+            int maxNeurons
     ) {
 
         this.cropCoords = cropCoords;
@@ -56,6 +58,7 @@ public class VolumeWritebackHandler {
         this.completionListener = completionListener;
         this.mip3d = mip3d;
         this.filterSize = filterSize;
+        this.maxNeurons = maxNeurons;
         this.gammaFactor = gammaFactor;
     }
 
@@ -133,6 +136,7 @@ public class VolumeWritebackHandler {
             paramBean.setCropCoords(cropCoords);
             paramBean.setRenderableDatas(searchDatas);
             paramBean.setFilterSize(filterSize);
+            paramBean.setMaxNeuronCount(maxNeurons);
             paramBean.setGammaFactor(gammaFactor);
 
             FileExportLoadWorker fileExportLoadWorker = new FileExportLoadWorker( paramBean );

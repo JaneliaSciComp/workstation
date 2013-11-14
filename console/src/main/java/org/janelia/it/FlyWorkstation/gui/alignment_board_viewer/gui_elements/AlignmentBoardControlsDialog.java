@@ -43,7 +43,7 @@ public class AlignmentBoardControlsDialog extends JDialog {
     public AlignmentBoardControlsDialog( Component centering, VolumeModel volumeModel, AlignmentBoardSettings settings, AlignmentBoardControls controls ) {
         this.setName(CONTAINING_DIALOG_NAME);
         this.centering = centering;
-        controlsPanel = new AlignmentBoardControlsPanel( centering, volumeModel, settings, controls );
+        controlsPanel = new AlignmentBoardControlsPanel( controls );
         this.setSize( controlsPanel.getSize() );
         this.setPreferredSize( controlsPanel.getSize() );
         this.setLayout( new BorderLayout() );

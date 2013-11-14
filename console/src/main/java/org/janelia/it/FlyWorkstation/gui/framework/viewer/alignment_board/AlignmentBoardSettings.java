@@ -14,15 +14,17 @@ import java.util.Observer;
  */
 public class AlignmentBoardSettings {
     public static final double DEFAULT_GAMMA = 1.0;
-    public static final long DEFAULT_MIN_VOX_COUNT = 1000; // Unset value.
-    public static final int NO_MINIMUM_VOXEL_COUNT = -1;
+    public static final long DEFAULT_NEURON_SIZE_CONSTRAINT = 1000;
+    public static final long DEFAULT_MAX_NEURON_COUNT_CONSTRAINT = 100;
+    public static final int NO_NEURON_SIZE_CONSTRAINT = -1;
 
     private double chosenDownSampleRate;
     private double gammaFactor =  DEFAULT_GAMMA;
     private boolean showChannelData = true;
     private double downSampleGuess;
     private Observer sampleRateObserver;
-    private long minimumVoxelCount = DEFAULT_MIN_VOX_COUNT;
+    private long minimumVoxelCount = DEFAULT_NEURON_SIZE_CONSTRAINT;
+    private long maximumNeuronCount = DEFAULT_MAX_NEURON_COUNT_CONSTRAINT;
 
     private Date creationStamp;
     public String toString() {
@@ -113,5 +115,13 @@ public class AlignmentBoardSettings {
 
     public void setMinimumVoxelCount(long minimumVoxelCount) {
         this.minimumVoxelCount = minimumVoxelCount;
+    }
+
+    public long getMaximumNeuronCount() {
+        return maximumNeuronCount;
+    }
+
+    public void setMaximumNeuronCount(long maximumNeuronCount) {
+        this.maximumNeuronCount = maximumNeuronCount;
     }
 }

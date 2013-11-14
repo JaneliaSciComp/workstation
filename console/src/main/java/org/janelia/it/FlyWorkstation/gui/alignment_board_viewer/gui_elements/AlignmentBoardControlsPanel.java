@@ -37,7 +37,7 @@ public class AlignmentBoardControlsPanel extends JPanel {
      * @param centering this dialog will be centered over the "centering" component.  Push externally-created settings
      *                  in here as a seed.
      */
-    public AlignmentBoardControlsPanel(Component centering, VolumeModel volumeModel, AlignmentBoardSettings settings, AlignmentBoardControls controls ) {
+    public AlignmentBoardControlsPanel(AlignmentBoardControls controls ) {
         this.setName(AlignmentBoardControlsDialog.CONTAINING_DIALOG_NAME);
         this.setSize(SIZE);
         this.controls = controls;
@@ -125,16 +125,21 @@ public class AlignmentBoardControlsPanel extends JPanel {
         controls.getDownSampleRateDropdown().setMinimumSize(DN_SAMPLE_DROPDOWN_SIZE);
         controls.getDownSampleRateDropdown().setMaximumSize(DN_SAMPLE_DROPDOWN_SIZE);
         controls.getDownSampleRateDropdown().setPreferredSize(DN_SAMPLE_DROPDOWN_SIZE);
-        GridBagConstraints minimumVoxelCountConstraints = new GridBagConstraints(
+        // This sits beside the downsample dropdown.
+        GridBagConstraints downSampleGuessConstraints = new GridBagConstraints(
                 2, nextRow, 1, rowHeight, 1.0, 0.0, GridBagConstraints.NORTHWEST, GridBagConstraints.VERTICAL, insets, 0, 0
         );
-        // This sits below the downsample dropdown.
+
         nextRow += rowHeight;
-        GridBagConstraints downSampleGuessConstraints = new GridBagConstraints(
+        GridBagConstraints minimumVoxelCountConstraints = new GridBagConstraints(
                 0, nextRow, 1, rowHeight, 1.0, 0.0, GridBagConstraints.NORTHWEST, GridBagConstraints.VERTICAL, insets, 0, 0
         );
-        nextRow += rowHeight;
 
+        GridBagConstraints maxNeuronCountConstraints = new GridBagConstraints(
+                2, nextRow, 1, rowHeight, 1.0, 0.0, GridBagConstraints.NORTHWEST, GridBagConstraints.VERTICAL, insets, 0, 0
+        );
+
+        nextRow += rowHeight;
         GridBagConstraints signalDataConstraints = new GridBagConstraints(
                 1, nextRow, 2, rowHeight, 0.0, 0.0, GridBagConstraints.NORTHWEST, GridBagConstraints.VERTICAL, insets, 0, 0
         );
@@ -150,17 +155,6 @@ public class AlignmentBoardControlsPanel extends JPanel {
                 0, nextRow, 3, rowHeight, 1.0, 0.0, GridBagConstraints.NORTH, GridBagConstraints.BOTH, insets, 0, 0
         );
 
-//        nextRow += rowHeight;
-//        GridBagConstraints blackoutCheckboxConstraints = new GridBagConstraints(
-//                0, nextRow, 3, rowHeight, 1.0, 0.0, GridBagConstraints.NORTHWEST, GridBagConstraints.VERTICAL, insets, 0, 0
-//        );
-//
-//        GridBagConstraints colorSaveBrightnessConstraints = new GridBagConstraints(
-//                2, nextRow, 3, rowHeight, 1.0, 0.0, GridBagConstraints.NORTHEAST, GridBagConstraints.VERTICAL, insets, 0, 0
-//        );
-//
-//        nextRow += rowHeight;
-
 //        Insets buttonInsets = new Insets( 5, 5, 5, 5 );
 //        GridBagConstraints saveSearchConstraints = new GridBagConstraints(
 //                0, nextRow, 1, rowHeight, 1.0, 0.0, GridBagConstraints.NORTHWEST, GridBagConstraints.VERTICAL, buttonInsets, 0, 0
@@ -175,15 +169,13 @@ public class AlignmentBoardControlsPanel extends JPanel {
 //        );
 
         centralPanel.add( controls.getBrightnessSlider(), brightnessConstraints );
-        centralPanel.add( controls.getDownSampleRateDropdown(), downSampleConstraints);
+        centralPanel.add( controls.getDownSampleRateDropdown(), downSampleConstraints );
         centralPanel.add( controls.getDownSampleGuess(), downSampleGuessConstraints );
         centralPanel.add( controls.getMinimumVoxelCountTF(), minimumVoxelCountConstraints );
+        centralPanel.add( controls.getMaxNeuronCountTF(), maxNeuronCountConstraints );
 
-        centralPanel.add( controls.getUseSignalDataCheckbox(), signalDataConstraints);
-        centralPanel.add( controls.getCommitButton(), commitBtnConstraints);
-
-//        centralPanel.add( controls.getBlackout(), blackoutCheckboxConstraints );
-//        centralPanel.add( controls.getColorSaveBrightness(), colorSaveBrightnessConstraints );
+        centralPanel.add( controls.getUseSignalDataCheckbox(), signalDataConstraints );
+        centralPanel.add( controls.getCommitButton(), commitBtnConstraints );
 
         centralPanel.add( regionSelectionPanel, regionSelectionPanelConstraints );
 //        centralPanel.add( controls.getSearchSave(), saveSearchConstraints);

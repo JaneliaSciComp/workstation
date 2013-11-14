@@ -706,7 +706,7 @@ public class AlignmentBoardViewer extends Viewer implements AlignmentBoardContro
         controls = new AlignmentBoardControls( mip3d, mip3d.getVolumeModel(), settingsData );
         //settingsDialog = new AlignmentBoardControlsDialog( mip3d, mip3d.getVolumeModel(), settingsData, controls );
         //settingsPanel = settingsDialog.getControlsPanel();
-        settingsPanel = new AlignmentBoardControlsPanel( this, mip3d.getVolumeModel(), settingsData, controls );
+        settingsPanel = new AlignmentBoardControlsPanel( controls );
         settingsPanel.addSettingsListener(
                 new AlignmentBoardControlsListener( renderMapping, this )
         );
@@ -907,7 +907,8 @@ public class AlignmentBoardViewer extends Viewer implements AlignmentBoardContro
                     event.getCompletionListener(),
                     viewer.mip3d,
                     event.getGammaFactor(),
-                    (int)settingsData.getMinimumVoxelCount()
+                    (int)settingsData.getMinimumVoxelCount(),
+                    (int)settingsData.getMaximumNeuronCount()
             );
             writebackHandler.writeBackVolumeSelection(event.getMethod());
         }

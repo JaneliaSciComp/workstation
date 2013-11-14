@@ -86,9 +86,12 @@ public class FileExportLoadWorker extends SimpleWorker implements VolumeLoader {
 
         // Cut down the to-renders: use only the larger ones.
         long fragmentFilterSize = paramBean.getFilterSize();
+        long maxNeuronCount = paramBean.getMaxNeuronCount();
         Collection<MaskChanRenderableData> filteredRenderableDatas = paramBean.getRenderableDatas();
-        if ( fragmentFilterSize != -1 ) {
-            FragmentSizeSetterAndFilter filter = new FragmentSizeSetterAndFilter( fragmentFilterSize );
+        if ( fragmentFilterSize != AlignmentBoardSettings.NO_NEURON_SIZE_CONSTRAINT  ||
+             maxNeuronCount !=  AlignmentBoardSettings.NO_NEURON_SIZE_CONSTRAINT ) {
+
+            FragmentSizeSetterAndFilter filter = new FragmentSizeSetterAndFilter( fragmentFilterSize, maxNeuronCount );
             filteredRenderableDatas = filter.filter( filteredRenderableDatas );
         }
         for ( MaskChanRenderableData renderableData: filteredRenderableDatas ) {
@@ -274,7 +277,8 @@ public class FileExportLoadWorker extends SimpleWorker implements VolumeLoader {
         private Collection<float[]> cropCoords;
         private Callback callback;
         private ControlsListener.ExportMethod method;
-        private int filterSize;
+        private long filterSize;
+        private long maxNeuronCount;
         private double gammaFactor;
 
         public Collection<MaskChanRenderableData> getRenderableDatas() {
@@ -315,12 +319,20 @@ public class FileExportLoadWorker extends SimpleWorker implements VolumeLoader {
             this.method = method;
         }
 
-        public int getFilterSize() {
+        public long getFilterSize() {
             return filterSize;
         }
 
-        public void setFilterSize(int filterSize) {
+        public void setFilterSize(long filterSize) {
             this.filterSize = filterSize;
+        }
+
+        public long getMaxNeuronCount() {
+            return maxNeuronCount;
+        }
+
+        public void setMaxNeuronCount(long maxNeuronCount) {
+            this.maxNeuronCount = maxNeuronCount;
         }
 
         public double getGammaFactor() {

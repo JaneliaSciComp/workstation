@@ -147,8 +147,10 @@ public class RenderablesLoadWorker extends SimpleWorker implements VolumeLoader 
         // Cut down the to-renders: use only the larger ones.
         Collection<MaskChanRenderableData> originalDatas = new ArrayList<MaskChanRenderableData>( renderableDatas );
         long fragmentFilterSize = alignmentBoardSettings.getMinimumVoxelCount();
-        if ( fragmentFilterSize != -1 ) {
-            FragmentSizeSetterAndFilter filter = new FragmentSizeSetterAndFilter( fragmentFilterSize );
+        long fragmentCutoffCount = alignmentBoardSettings.getMaximumNeuronCount();
+        if ( fragmentFilterSize != AlignmentBoardSettings.NO_NEURON_SIZE_CONSTRAINT  ||
+             fragmentCutoffCount != AlignmentBoardSettings.NO_NEURON_SIZE_CONSTRAINT ) {
+            FragmentSizeSetterAndFilter filter = new FragmentSizeSetterAndFilter( fragmentFilterSize, fragmentCutoffCount );
             renderableDatas = filter.filter( renderableDatas );
         }
 

@@ -56,7 +56,7 @@ public class AlignmentBoardControls {
     private static final String SAVE_AS_COLOR_TIFF_TOOLTIP_TEXT = SAVE_AS_COLOR_TIFF;
 
     private static final String GAMMA_TOOLTIP = "Adjust the gamma level, or brightness.";
-    private static final Dimension MIN_VOX_COUNT_SIZE = new Dimension(150, 50);
+    private static final Dimension NEURON_LIMIT_TF_SIZE = new Dimension(150, 50);
     private static final String COMMIT_CHANGES = "Commit Changes";
     private static final String COMMIT_CHANGES_TOOLTIP_TEXT = COMMIT_CHANGES;
     private static final String SAVE_SCREEN_SHOT_MIP = "Screen Shot/MIP";
@@ -77,7 +77,8 @@ public class AlignmentBoardControls {
     private static final String ESTIMATED_BEST_RESOLUTION = "Best Guess";
     private static final String DOWN_SAMPLE_PROP_NAME = "AlignmentBoard_Downsample_Rate";
     private static final String GUESS_LABEL_FMT = "Best Guess: %s";
-    private static final String MINIMUM_VOXEL_COUNT = "  " + AlignmentBoardSettings.DEFAULT_MIN_VOX_COUNT;
+    private static final String MINIMUM_VOXEL_COUNT = "  " + AlignmentBoardSettings.DEFAULT_NEURON_SIZE_CONSTRAINT;
+    private static final String MAXIMUM_NEURON_COUNT = " " + AlignmentBoardSettings.DEFAULT_MAX_NEURON_COUNT_CONSTRAINT;
 
     private Component centering;
     private JSlider brightnessSlider;
@@ -85,6 +86,7 @@ public class AlignmentBoardControls {
     private JComboBox downSampleRateDropdown;
     private JLabel downSampleGuess;
     private JTextField minimumVoxelCountTF;
+    private JTextField maxNeuronCountTF;
 
     private JButton searchSave;
     private JButton colorSave;
@@ -228,21 +230,34 @@ public class AlignmentBoardControls {
     }
 
     private long getMinimumVoxelCount() {
+        long minimumVoxelCount = settings.getMinimumVoxelCount();
+        if ( ! readyForOutput ) {
+            return minimumVoxelCount;
+        }
+        return getNeuronConstraint( minimumVoxelCountTF, AlignmentBoardSettings.DEFAULT_NEURON_SIZE_CONSTRAINT );
+    }
+
+    private long getMaxNeuronCount() {
         if ( ! readyForOutput )
-            return settings.getMinimumVoxelCount();
-        minimumVoxelCountTF.setForeground(centering.getForeground());
-        String selectedValue = minimumVoxelCountTF.getText().trim();
-        long rtnVal = AlignmentBoardSettings.DEFAULT_MIN_VOX_COUNT;
+            return settings.getMaximumNeuronCount();
+        return getNeuronConstraint( maxNeuronCountTF, AlignmentBoardSettings.DEFAULT_MAX_NEURON_COUNT_CONSTRAINT );
+    }
+
+    private long getNeuronConstraint( JTextField constraintTextField, long defaultValue ) {
+        constraintTextField.setForeground(centering.getForeground());
+        String selectedValue = constraintTextField.getText().trim();
+        long rtnVal = defaultValue;
         try {
             // Except out if the input value is non-numeric, out of range or less than 1.
             rtnVal = Long.parseLong( selectedValue );
-            if ( rtnVal < AlignmentBoardSettings.NO_MINIMUM_VOXEL_COUNT ) {
+            if ( rtnVal < AlignmentBoardSettings.NO_NEURON_SIZE_CONSTRAINT) {
                 throw new RuntimeException();
             }
         } catch ( Exception ex ) {
-            SessionMgr.getSessionMgr().handleException( new RuntimeException("Failed to parse minimum voxel count value " + selectedValue + " to integer value.") );
-            minimumVoxelCountTF.setForeground( Color.red );
+            SessionMgr.getSessionMgr().handleException( new RuntimeException("Failed to parse count " + selectedValue + " to integer value.") );
+            constraintTextField.setForeground( Color.red );
         }
+
         return rtnVal;
     }
 
@@ -259,6 +274,9 @@ public class AlignmentBoardControls {
 
         long minimumVoxelCount = settings.getMinimumVoxelCount();
         minimumVoxelCountTF.setText( "" + minimumVoxelCount);
+
+        long maximumNeuronCount = settings.getMaximumNeuronCount();
+        maxNeuronCountTF.setText( "" + maximumNeuronCount );
     }
 
     /** Call this when sufficient info is avail to get the sliders positions initialized off crop-coords. */
@@ -291,6 +309,83 @@ public class AlignmentBoardControls {
             zSlider.setValue(Math.round(denormalizedCoords[4]));
             zSlider.setUpperValue(Math.round(denormalizedCoords[5]));
         }
+    }
+
+    // Getters to expose controls for external use in layout.
+    public boolean isReadyForOutput() {
+        return readyForOutput;
+    }
+
+    public void setReadyForOutput(boolean readyForOutput) {
+        this.readyForOutput = readyForOutput;
+    }
+
+    public JSlider getBrightnessSlider() {
+        return brightnessSlider;
+    }
+
+    public JCheckBox getUseSignalDataCheckbox() {
+        return useSignalDataCheckbox;
+    }
+
+    public JComboBox getDownSampleRateDropdown() {
+        return downSampleRateDropdown;
+    }
+
+    public JLabel getDownSampleGuess() {
+        return downSampleGuess;
+    }
+
+    public JTextField getMinimumVoxelCountTF() {
+        return minimumVoxelCountTF;
+    }
+
+    public JTextField getMaxNeuronCountTF() {
+        return maxNeuronCountTF;
+    }
+
+    public AbstractButton getSearchSave() {
+        return searchSave;
+    }
+
+    public AbstractButton getColorSave() {
+        return colorSave;
+    }
+
+    public AbstractButton getScreenShot() {
+        return screenShot;
+    }
+
+    public JButton getCommitButton() {
+        return commitButton;
+    }
+
+    public JButton getOrButton() {
+        return orButton;
+    }
+
+    public JButton getClearButton() {
+        return clearButton;
+    }
+
+    public RangeSlider getxSlider() {
+        return xSlider;
+    }
+
+    public RangeSlider getySlider() {
+        return ySlider;
+    }
+
+    public RangeSlider getzSlider() {
+        return zSlider;
+    }
+
+    public AbstractButton getBlackout() {
+        return blackout;
+    }
+
+    public AbstractButton getColorSaveBrightness() {
+        return colorSaveBrightness;
     }
 
     private void updateCropOutLevelFromVolumeModel() {
@@ -368,20 +463,26 @@ public class AlignmentBoardControls {
 
         boolean newUseSignal = isUseSignalData();
         if ( newUseSignal != settings.isShowChannelData() ) {
-            settings.setShowChannelData( newUseSignal );
+            settings.setShowChannelData(newUseSignal);
             deltaSettings = true;
         }
 
         double newDownSampleRate = getDownsampleRate();
         if ( newDownSampleRate != settings.getChosenDownSampleRate() ) {
             settings.setChosenDownSampleRate(newDownSampleRate);
-            serializeDownsampleRate( newDownSampleRate );
+            serializeDownsampleRate(newDownSampleRate);
             deltaSettings = true;
         }
 
         long minimumVoxelCount = getMinimumVoxelCount();
         if ( minimumVoxelCount != settings.getMinimumVoxelCount() ) {
-            settings.setMinimumVoxelCount( minimumVoxelCount );
+            settings.setMinimumVoxelCount(minimumVoxelCount);
+            deltaSettings = true;
+        }
+
+        long maxNeuronCount = getMaxNeuronCount();
+        if ( maxNeuronCount != settings.getMaximumNeuronCount() ) {
+            settings.setMaximumNeuronCount(maxNeuronCount);
             deltaSettings = true;
         }
 
@@ -604,15 +705,26 @@ public class AlignmentBoardControls {
         };
 
         minimumVoxelCountTF = new JTextField(MINIMUM_VOXEL_COUNT);
-        minimumVoxelCountTF.setMinimumSize(MIN_VOX_COUNT_SIZE);
-        minimumVoxelCountTF.setPreferredSize(MIN_VOX_COUNT_SIZE);
-        minimumVoxelCountTF.setMaximumSize(MIN_VOX_COUNT_SIZE);
+        minimumVoxelCountTF.setMinimumSize(NEURON_LIMIT_TF_SIZE);
+        minimumVoxelCountTF.setPreferredSize(NEURON_LIMIT_TF_SIZE);
+        minimumVoxelCountTF.setMaximumSize(NEURON_LIMIT_TF_SIZE);
         minimumVoxelCountTF.setBorder(new TitledBorder("Min Neuron Size"));
         minimumVoxelCountTF.setToolTipText(
                 "Integer: least number of neuron voxels before a neuron fragment is not rendered.\n" +
-                        "Value of " + AlignmentBoardSettings.NO_MINIMUM_VOXEL_COUNT + " implies no such filtering."
+                        "Value of " + AlignmentBoardSettings.NO_NEURON_SIZE_CONSTRAINT + " implies no such filtering."
         );
         minimumVoxelCountTF.addMouseListener( commitEnablerMouseListener );
+
+        maxNeuronCountTF = new JTextField(MAXIMUM_NEURON_COUNT);
+        maxNeuronCountTF.setMinimumSize(NEURON_LIMIT_TF_SIZE);
+        maxNeuronCountTF.setMaximumSize(NEURON_LIMIT_TF_SIZE);
+        maxNeuronCountTF.setPreferredSize(NEURON_LIMIT_TF_SIZE);
+        maxNeuronCountTF.setBorder(new TitledBorder("Max Neuron Count"));
+        maxNeuronCountTF.setToolTipText(
+                "Integer: max number of neurons allowed to be rendered.\n" +
+                        "Value of " + AlignmentBoardSettings.NO_NEURON_SIZE_CONSTRAINT + " implies no such filtering."
+        );
+        maxNeuronCountTF.addMouseListener( commitEnablerMouseListener );
 
         brightnessSlider.addMouseListener( commitEnablerMouseListener );
         downSampleRateDropdown.addMouseListener( commitEnablerMouseListener );
@@ -703,79 +815,6 @@ public class AlignmentBoardControls {
         return partialVolumeConstraints ?
                 cropper.getCropCoords( xSlider, ySlider, zSlider, downSampleRate ) :
                 null;
-    }
-
-    // Getters to expose controls for external use in layout.
-    public boolean isReadyForOutput() {
-        return readyForOutput;
-    }
-
-    public void setReadyForOutput(boolean readyForOutput) {
-        this.readyForOutput = readyForOutput;
-    }
-
-    public JSlider getBrightnessSlider() {
-        return brightnessSlider;
-    }
-
-    public JCheckBox getUseSignalDataCheckbox() {
-        return useSignalDataCheckbox;
-    }
-
-    public JComboBox getDownSampleRateDropdown() {
-        return downSampleRateDropdown;
-    }
-
-    public JLabel getDownSampleGuess() {
-        return downSampleGuess;
-    }
-
-    public JTextField getMinimumVoxelCountTF() {
-        return minimumVoxelCountTF;
-    }
-
-    public AbstractButton getSearchSave() {
-        return searchSave;
-    }
-
-    public AbstractButton getColorSave() {
-        return colorSave;
-    }
-
-    public AbstractButton getScreenShot() {
-        return screenShot;
-    }
-
-    public JButton getCommitButton() {
-        return commitButton;
-    }
-
-    public JButton getOrButton() {
-        return orButton;
-    }
-
-    public JButton getClearButton() {
-        return clearButton;
-    }
-
-    public RangeSlider getxSlider() {
-        return xSlider;
-    }
-
-    public RangeSlider getySlider() {
-        return ySlider;
-    }
-
-    public RangeSlider getzSlider() {
-        return zSlider;
-    }
-
-    public AbstractButton getBlackout() {
-        return blackout;
-    }
-
-    public AbstractButton getColorSaveBrightness() {
-        return colorSaveBrightness;
     }
 
     //-------------------------------------------------INNER CLASSES/INTERFACES
