@@ -577,12 +577,24 @@ public class SessionMgr {
         try {
         	if (lookAndFeelClassName.contains("BlackEye")) {
         		isDarkLook = true;
-            	UIManager.setLookAndFeel(new de.javasoft.plaf.synthetica.SyntheticaBlackEyeLookAndFeel() {
-					@Override
-					protected void loadCustomXML() throws ParseException {
-						loadXMLConfig("/SyntheticaBlackEyeLookAndFeel.xml");
-					}
-            	});	
+
+                try {
+                        
+                	UIManager.setLookAndFeel(new de.javasoft.plaf.synthetica.SyntheticaBlackEyeLookAndFeel() {
+    					@Override
+    					protected void loadCustomXML() throws ParseException {
+    						loadXMLConfig("/SyntheticaBlackEyeLookAndFeel.xml");
+    					}
+                	});	
+                }
+                catch (IllegalComponentStateException ex) {
+                    if ("The frame is decorated".equals(ex.getMessage())) {
+                        log.warn("Ignoring the seemingly harmless exception that Synthetica throws because of Java 7");
+                    }
+                    else {
+                        handleException(ex);
+                    }
+                }
         	}
         	else {
         		UIManager.setLookAndFeel(lookAndFeelClassName);	
