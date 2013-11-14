@@ -179,8 +179,12 @@ public class EntityTree extends JPanel implements ActivatableView {
         if (rootEntityData==null) return;
         
         if (event.isTotalInvalidation()) {
-            // TODO: handle this correctly. for now we can delegate to the outlines
-            throw new IllegalStateException("EntityTree should never get total invalidations");
+            selectedTree = null;
+            rootEntityData = null;
+            entityDataIdToNodeMap.clear();
+            entityIdToNodeMap.clear();
+            uniqueIdToNodeMap.clear();
+            return;
         }   
         
         final Collection<DefaultMutableTreeNode> nodes = new HashSet<DefaultMutableTreeNode>();
@@ -246,7 +250,7 @@ public class EntityTree extends JPanel implements ActivatableView {
 		for(final DefaultMutableTreeNode node : new HashSet<DefaultMutableTreeNode>(nodes)) {
 			Entity treeEntity = getEntity(node);
 			if (entity!=treeEntity) {
-				log.warn("EntityOutline: Instance mismatch: "+entity.getName()+
+				log.warn("entityChanged: Instance mismatch: "+entity.getName()+
 	    				" (cached="+System.identityHashCode(entity)+") vs (this="+System.identityHashCode(treeEntity)+")");
 				getEntityData(node).setChildEntity(entity);
 			}
@@ -289,7 +293,7 @@ public class EntityTree extends JPanel implements ActivatableView {
             Entity treeEntity = getEntity(node);
             log.trace("treeEntity {}, has {} children ",treeEntity.getName(),treeEntity.getChildren().size());
             if (entity!=treeEntity) {
-                log.warn("EntityOutline: Instance mismatch: "+entity.getName()+
+                log.warn("entityChildrenLoaded: Instance mismatch: "+entity.getName()+
                         " (cached="+System.identityHashCode(entity)+") vs (this="+System.identityHashCode(treeEntity)+")");
                 getEntityData(node).setChildEntity(entity);
             }

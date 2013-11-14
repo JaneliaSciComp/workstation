@@ -88,7 +88,7 @@ public abstract class OntologyOutline extends EntityTree implements Refreshable,
 
 	private static final Logger log = LoggerFactory.getLogger(OntologyOutline.class);
 
-	protected List<Entity> entityRootList;
+	protected List<Entity> entityRootList; 
 	protected Entity root;
     private String currUniqueId;
 	
@@ -265,18 +265,11 @@ public abstract class OntologyOutline extends EntityTree implements Refreshable,
         
         SimpleWorker worker = new SimpleWorker() {
             
-            Entity tree = null;
+            Entity tree = nextRoot;
             
             @Override
             protected void doStuff() throws Exception {
-                if (nextRoot==null) {
-                    tree = ModelMgr.getModelMgr().getEntityTree(rootId);
-                }
-                else {
-                    ModelMgr.getModelMgr().loadLazyEntity(nextRoot, true);
-                    tree = nextRoot;
-                }
-                
+                ModelMgr.getModelMgr().loadLazyEntity(nextRoot, true);
             }
             
             @Override
@@ -634,11 +627,11 @@ public abstract class OntologyOutline extends EntityTree implements Refreshable,
     
     @Subscribe 
     public void entityInvalidated(EntityInvalidationEvent event) {
+        super.entityInvalidated(event);  
         if (event.isTotalInvalidation()) {
             refresh(false, true, null);
         }
-        else {
-            super.entityInvalidated(event);  
+        else {  
             Collection<Entity> invalidated = event.getInvalidatedEntities();
             for(Entity entity : invalidated) {
                 for(DefaultMutableTreeNode node : getNodesByEntityId(entity.getId())) {
