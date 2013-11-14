@@ -82,7 +82,7 @@ public class WebDavClient {
         final Credentials savedCredentials =
                 clientState.getCredentials(AuthScope.ANY);
         if (savedCredentials == null) {
-            LOG.warn("<init>: no credentials saved for WebDAV requests");
+            LOG.debug("<init>: no credentials saved for WebDAV requests");
         }
 
         InetAddress address;
