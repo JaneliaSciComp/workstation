@@ -200,12 +200,11 @@ public class ModelMgr {
     public Long getCurrentOntologyId() {
         String lastSelectedOntology = (String)SessionMgr.getSessionMgr().getModelProperty("lastSelectedOntology");
         if (StringUtils.isEmpty(lastSelectedOntology)) return null;
-        log.info("current ontology is {}", lastSelectedOntology);
+        log.debug("Current ontology is {}", lastSelectedOntology);
         return Long.parseLong(lastSelectedOntology);
     }
 
     public Entity getCurrentOntology() {
-        // TODO: refactor this
         return SessionMgr.getBrowser().getOntologyOutline().getCurrentOntology();
     }
     

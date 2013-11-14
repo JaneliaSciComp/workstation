@@ -996,7 +996,7 @@ public class EntityModel {
     public List<Entity> getCommonRoots() throws Exception {
     	synchronized (this) {
     		if (commonRootCache.isEmpty()) {
-    		    log.info("Getting common roots");
+    		    log.debug("Getting common roots");
         	    for(Entity commonRoot : entityFacade.getCommonRootEntities()) {
         	        Entity cachedRoot = putOrUpdate(commonRoot, true);
         	        commonRootCache.put(cachedRoot.getId(), cachedRoot);
@@ -1015,7 +1015,7 @@ public class EntityModel {
     public List<Entity> getOntologyRoots() throws Exception {
         synchronized (this) {
             if (ontologyRootCache.isEmpty()) {
-                log.info("Getting ontology roots");
+                log.debug("Getting ontology roots");
                 for(Entity ontologyRoot : ontologyFacade.getOntologyRootEntities()) {
                     Entity cachedRoot = putOrUpdate(ontologyRoot, true);
                     ontologyRootCache.put(cachedRoot.getId(), cachedRoot);
