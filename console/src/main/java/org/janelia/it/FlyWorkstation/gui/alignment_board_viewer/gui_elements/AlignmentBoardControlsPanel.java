@@ -7,7 +7,6 @@ import org.slf4j.LoggerFactory;
 
 import javax.swing.*;
 import java.awt.*;
-import java.util.*;
 
 /**
  * Created with IntelliJ IDEA.
@@ -29,7 +28,7 @@ public class AlignmentBoardControlsPanel extends JPanel {
     private static final int HEIGHT = 640;
 
     private static final Dimension SIZE = new Dimension( WIDTH, HEIGHT);
-    private static final Dimension DN_SAMPLE_DROPDOWN_SIZE = new Dimension(180, 50);
+    private static final Dimension DN_SAMPLE_DROPDOWN_SIZE = new Dimension(120, 50);
     private AlignmentBoardControls controls;
 
     private final Logger logger = LoggerFactory.getLogger( AlignmentBoardControlsPanel.class );
@@ -55,7 +54,7 @@ public class AlignmentBoardControlsPanel extends JPanel {
 
     /** Control who observes.  Synchronized for thread safety. */
     public synchronized void addSettingsListener( ControlsListener listener ) {
-        controls.addSettingsListener( listener );
+        controls.addSettingsListener(listener);
     }
 
     public synchronized void removeAllSettingsListeners() {
@@ -63,7 +62,7 @@ public class AlignmentBoardControlsPanel extends JPanel {
     }
 
     public void setVolumeMaxima( int x, int y, int z ) {
-        controls.setVolumeMaxima( x, y, z );
+        controls.setVolumeMaxima(x, y, z);
     }
 
     public void dispose() {
@@ -151,16 +150,17 @@ public class AlignmentBoardControlsPanel extends JPanel {
                 0, nextRow, 3, rowHeight, 1.0, 0.0, GridBagConstraints.NORTH, GridBagConstraints.BOTH, insets, 0, 0
         );
 
-        nextRow += rowHeight;
-        GridBagConstraints blackoutCheckboxConstraints = new GridBagConstraints(
-                0, nextRow, 3, rowHeight, 1.0, 0.0, GridBagConstraints.NORTHWEST, GridBagConstraints.VERTICAL, insets, 0, 0
-        );
+//        nextRow += rowHeight;
+//        GridBagConstraints blackoutCheckboxConstraints = new GridBagConstraints(
+//                0, nextRow, 3, rowHeight, 1.0, 0.0, GridBagConstraints.NORTHWEST, GridBagConstraints.VERTICAL, insets, 0, 0
+//        );
+//
+//        GridBagConstraints colorSaveBrightnessConstraints = new GridBagConstraints(
+//                2, nextRow, 3, rowHeight, 1.0, 0.0, GridBagConstraints.NORTHEAST, GridBagConstraints.VERTICAL, insets, 0, 0
+//        );
+//
+//        nextRow += rowHeight;
 
-        GridBagConstraints colorSaveBrightnessConstraints = new GridBagConstraints(
-                2, nextRow, 3, rowHeight, 1.0, 0.0, GridBagConstraints.NORTHEAST, GridBagConstraints.VERTICAL, insets, 0, 0
-        );
-
-        nextRow += rowHeight;
 //        Insets buttonInsets = new Insets( 5, 5, 5, 5 );
 //        GridBagConstraints saveSearchConstraints = new GridBagConstraints(
 //                0, nextRow, 1, rowHeight, 1.0, 0.0, GridBagConstraints.NORTHWEST, GridBagConstraints.VERTICAL, buttonInsets, 0, 0
@@ -182,13 +182,13 @@ public class AlignmentBoardControlsPanel extends JPanel {
         centralPanel.add( controls.getUseSignalDataCheckbox(), signalDataConstraints);
         centralPanel.add( controls.getCommitButton(), commitBtnConstraints);
 
-        centralPanel.add( controls.getBlackoutCheckbox(), blackoutCheckboxConstraints );
-        centralPanel.add( controls.getColorSaveBrightnessCheckbox(), colorSaveBrightnessConstraints );
+//        centralPanel.add( controls.getBlackout(), blackoutCheckboxConstraints );
+//        centralPanel.add( controls.getColorSaveBrightness(), colorSaveBrightnessConstraints );
 
         centralPanel.add( regionSelectionPanel, regionSelectionPanelConstraints );
-//        centralPanel.add( controls.getSearchSaveButton(), saveSearchConstraints);
-//        centralPanel.add( controls.getColorSaveButton(), saveColorConstraints );
-//        centralPanel.add( controls.getScreenShotButton(), saveScreenShotConstraints );
+//        centralPanel.add( controls.getSearchSave(), saveSearchConstraints);
+//        centralPanel.add( controls.getColorSave(), saveColorConstraints );
+//        centralPanel.add( controls.getScreenShot(), saveScreenShotConstraints );
         add(centralPanel, BorderLayout.CENTER);
     }
 

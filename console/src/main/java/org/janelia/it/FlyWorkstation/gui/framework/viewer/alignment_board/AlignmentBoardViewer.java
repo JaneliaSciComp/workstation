@@ -1,7 +1,6 @@
 package org.janelia.it.FlyWorkstation.gui.framework.viewer.alignment_board;
 
 import java.awt.*;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.Callable;
 
@@ -688,6 +687,8 @@ public class AlignmentBoardViewer extends Viewer implements AlignmentBoardContro
         if ( mip3d != null ) {
             mip3d.releaseMenuActions();
         }
+        LayersPanel layersPanel = SessionMgr.getBrowser().getLayersPanel();
+
         mip3d = new ScaledMip3d();
         // If the mip3d is re-created, so must the settings dialog be.  It depends on the Mip3d.
         if ( settingsDialog != null ) {
@@ -697,18 +698,22 @@ public class AlignmentBoardViewer extends Viewer implements AlignmentBoardContro
             settingsDialog = null;
         }
         else if ( settingsPanel != null ) {
+            layersPanel.remove( settingsPanel );
             settingsPanel.dispose();
             settingsPanel = null;
         }
         logger.info("New settings");
         controls = new AlignmentBoardControls( mip3d, mip3d.getVolumeModel(), settingsData );
-        settingsDialog = new AlignmentBoardControlsDialog( mip3d, mip3d.getVolumeModel(), settingsData, controls );
-        settingsPanel = settingsDialog.getControlsPanel();
+        //settingsDialog = new AlignmentBoardControlsDialog( mip3d, mip3d.getVolumeModel(), settingsData, controls );
+        //settingsPanel = settingsDialog.getControlsPanel();
+        settingsPanel = new AlignmentBoardControlsPanel( this, mip3d.getVolumeModel(), settingsData, controls );
         settingsPanel.addSettingsListener(
                 new AlignmentBoardControlsListener( renderMapping, this )
         );
+        layersPanel.add( settingsPanel, BorderLayout.SOUTH );
+
         deserializeSettings(SessionMgr.getBrowser().getLayersPanel().getAlignmentBoardContext());
-        mip3d.addMenuAction( settingsDialog.getLaunchAction() );
+        //mip3d.addMenuAction( settingsDialog.getLaunchAction() );
         settingsPanel.update( true );
 
         double cameraFocusDistance = mip3d.getVolumeModel().getCameraFocusDistance();
@@ -749,30 +754,33 @@ public class AlignmentBoardViewer extends Viewer implements AlignmentBoardContro
     /** This must be called to add the button on re-entry to this widget. */
     private void setupToolbar() {
         tearDownToolbar(); // Calling this just in case it was left dangling.
-        JButton launchSettingsButton = new JButton();
-        launchSettingsButton.setAction(settingsDialog.getLaunchAction());
+        //JButton launchSettingsButton = new JButton();
+        //launchSettingsButton.setAction(settingsDialog.getLaunchAction());
 
         if ( toolbar == null ) {
             toolbar = new JToolBar( JToolBar.HORIZONTAL );
         }
 
         // Now add buttons for saving files.
-        configureButton(controls.getColorSaveButton(), COLOR_SAVE_BTN_NAME);
-        configureButton(controls.getSearchSaveButton(), SEARCH_SAVE_BTN_NAME);
-        configureButton(controls.getScreenShotButton(), SCREEN_SHOT_BTN_NAME);
-        configureButton(launchSettingsButton, SETTINGS_LAUNCH_BTN_NAME);
+        configureButton(controls.getColorSave(), COLOR_SAVE_BTN_NAME);
+        configureButton(controls.getSearchSave(), SEARCH_SAVE_BTN_NAME);
+        configureButton(controls.getScreenShot(), SCREEN_SHOT_BTN_NAME);
+        //configureButton(launchSettingsButton, SETTINGS_LAUNCH_BTN_NAME);
 
-        toolbar.add(controls.getColorSaveButton());
-        toolbar.add(controls.getSearchSaveButton());
-        toolbar.add(controls.getScreenShotButton());
+        toolbar.add(controls.getColorSave());
+        toolbar.add(controls.getSearchSave());
+        toolbar.add(controls.getScreenShot());
 
-        toolbar.add(launchSettingsButton);
+        toolbar.add(controls.getBlackout());
+        toolbar.add(controls.getColorSaveBrightness());
+
+        //toolbar.add(launchSettingsButton);
 
         add(toolbar, BorderLayout.PAGE_START);
 
     }
 
-    private void configureButton(JButton toolbarButton, String name) {
+    private void configureButton(AbstractButton toolbarButton, String name) {
         toolbarButton.setFocusable(false);
         toolbarButton.setRequestFocusEnabled(false);
         toolbarButton.setSelected(false);

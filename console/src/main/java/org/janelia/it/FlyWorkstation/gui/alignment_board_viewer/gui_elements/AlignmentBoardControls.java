@@ -4,6 +4,7 @@ import org.janelia.it.FlyWorkstation.gui.alignment_board_viewer.volume_export.Co
 import org.janelia.it.FlyWorkstation.gui.alignment_board_viewer.volume_export.CropCoordSet;
 import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.FlyWorkstation.gui.framework.viewer.alignment_board.AlignmentBoardSettings;
+import org.janelia.it.FlyWorkstation.gui.util.Icons;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.VolumeModel;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -55,13 +56,12 @@ public class AlignmentBoardControls {
     private static final String SAVE_AS_COLOR_TIFF_TOOLTIP_TEXT = SAVE_AS_COLOR_TIFF;
 
     private static final String GAMMA_TOOLTIP = "Adjust the gamma level, or brightness.";
-    private static final Dimension DN_SAMPLE_DROPDOWN_SIZE = new Dimension(180, 50);
-    private static final Dimension MIN_VOX_COUNT_SIZE = new Dimension(180, 50);
+    private static final Dimension MIN_VOX_COUNT_SIZE = new Dimension(150, 50);
     private static final String COMMIT_CHANGES = "Commit Changes";
     private static final String COMMIT_CHANGES_TOOLTIP_TEXT = COMMIT_CHANGES;
     private static final String SAVE_SCREEN_SHOT_MIP = "Screen Shot/MIP";
     private static final String SAVE_SCREEN_SHOT_TOOLTIP_TEXT = SAVE_SCREEN_SHOT_MIP;
-    private static final String DOWN_SAMPLE_RATE = "Down Sample Rate";
+    private static final String DOWN_SAMPLE_RATE = "Down Sample";
     private static final String USE_SIGNAL_DATA = "Use Signal Data";
     private static final String OR_BUTTON_TIP = "<html>Combine <font color='red'>this</font> selection region<br>" +
             "with previous selection region(s)<br></html>";
@@ -69,6 +69,8 @@ public class AlignmentBoardControls {
     private static final String CLEAR_BUTTON_LABEL = "Clear Selection";
     private static final String CLEAR_BUTTON_TOOLTIP_TEXT = "Drop all sub-volume selections made in this session.";
     private static final String NON_SELECT_BLACKOUT = "Non-selected region blacked out";
+    private static final String NON_SELECT_BLACKOUT_ICON = "non_selected_black.png";
+    private static final String NON_SELECT_DIM_ICON = "non_selected_dim.png";
     private static final String NON_SELECT_BLACKOUT_TOOLTIP_TEXT = NON_SELECT_BLACKOUT;
     private static final String SAVE_COLORS_BRIGHT = "Apply Brightness to Color TIFF";
     private static final String SAVE_COLORS_BRIGHT_TOOLTIP_TEXT = SAVE_COLORS_BRIGHT;
@@ -84,9 +86,9 @@ public class AlignmentBoardControls {
     private JLabel downSampleGuess;
     private JTextField minimumVoxelCountTF;
 
-    private JButton searchSaveButton;
-    private JButton colorSaveButton;
-    private JButton screenShotButton;
+    private JButton searchSave;
+    private JButton colorSave;
+    private JButton screenShot;
 
     private JButton commitButton;
 
@@ -103,8 +105,8 @@ public class AlignmentBoardControls {
     private int yMax;
     private int zMax;
 
-    private JCheckBox blackoutCheckbox;
-    private JCheckBox colorSaveBrightnessCheckbox;
+    private JToggleButton blackout;
+    private AbstractButton colorSaveBrightness;
 
     private boolean readyForOutput = false;
 
@@ -299,11 +301,11 @@ public class AlignmentBoardControls {
         if ( cropOutLevel != VolumeModel.DEFAULT_CROPOUT ) {
             isCropBlackout = true;
         }
-        blackoutCheckbox.setSelected( isCropBlackout );
+        blackout.setSelected(isCropBlackout);
     }
 
     private void updateColorBrightnessSaveFromVolumeModel() {
-        colorSaveBrightnessCheckbox.setSelected( volumeModel.isColorSaveBrightness() );
+        colorSaveBrightness.setSelected(volumeModel.isColorSaveBrightness());
     }
 
     /** As soon as the ranges are known (set), listeners, and initial ranges may be set on volume selection. */
@@ -433,24 +435,26 @@ public class AlignmentBoardControls {
         ySlider.setBorder( new TitledBorder( "Selection Y Bounds" ) );
         zSlider.setBorder( new TitledBorder( "Selection Z Bounds" ) );
 
-        blackoutCheckbox = new JCheckBox( NON_SELECT_BLACKOUT );
-        blackoutCheckbox.setToolTipText( NON_SELECT_BLACKOUT_TOOLTIP_TEXT );
-        blackoutCheckbox.setSelected( false );
-        blackoutCheckbox.addActionListener( new ActionListener() {
-            public void actionPerformed( ActionEvent ae ) {
-                fireBlackOutCrop( blackoutCheckbox.isSelected() );
+        blackout = new StateDrivenIconToggleButton( Icons.getIcon( NON_SELECT_BLACKOUT_ICON ), Icons.getIcon( NON_SELECT_DIM_ICON ) );
+        blackout.setToolTipText(NON_SELECT_BLACKOUT_TOOLTIP_TEXT);
+        blackout.setSelected(false);
+        blackout.setFocusable(false);
+        blackout.addActionListener(new ActionListener() {
+            public void actionPerformed(ActionEvent ae) {
+                fireBlackOutCrop(blackout.isSelected());
             }
         });
 
-        colorSaveBrightnessCheckbox = new JCheckBox( SAVE_COLORS_BRIGHT );
-        colorSaveBrightnessCheckbox.setToolTipText( SAVE_COLORS_BRIGHT_TOOLTIP_TEXT );
-        colorSaveBrightnessCheckbox.setSelected( VolumeModel.DEFAULT_SAVE_BRIGHTNESS );
-        colorSaveBrightnessCheckbox.addActionListener(
-            new ActionListener() {
-                public void actionPerformed( ActionEvent ae ) {
-                    volumeModel.setColorSaveBrightness( colorSaveBrightnessCheckbox.isSelected() );
+        colorSaveBrightness = new StateDrivenIconToggleButton( Icons.getIcon( "bright_color_save.png" ), Icons.getIcon( "dim_color_save.png" ) );
+        colorSaveBrightness.setFocusable( false );
+        colorSaveBrightness.setToolTipText( SAVE_COLORS_BRIGHT_TOOLTIP_TEXT );
+        colorSaveBrightness.setSelected(VolumeModel.DEFAULT_SAVE_BRIGHTNESS);
+        colorSaveBrightness.addActionListener(
+                new ActionListener() {
+                    public void actionPerformed(ActionEvent ae) {
+                        volumeModel.setColorSaveBrightness(colorSaveBrightness.isSelected());
+                    }
                 }
-            }
         );
         commitButton = new JButton( COMMIT_CHANGES );
         commitButton.setToolTipText( COMMIT_CHANGES_TOOLTIP_TEXT );
@@ -463,73 +467,72 @@ public class AlignmentBoardControls {
         });
         commitButton.setEnabled( false );
 
-        searchSaveButton = new JButton( SAVE_AS_SEARCH_TIFF );
-        searchSaveButton.setToolTipText( SAVE_AS_SEARCH_TIFF_TOOLTIP_TEXT );
-        searchSaveButton.addActionListener(new ActionListener() {
+        searchSave = new JButton( Icons.getIcon( "masked_drive_go.png" ) );
+        searchSave.setToolTipText( SAVE_AS_SEARCH_TIFF_TOOLTIP_TEXT );
+        searchSave.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent ae) {
                 logger.info(
                         "Selection covers (X): " + xSlider.getValue() + ".." + xSlider.getUpperValue() +
                                 " and (Y): " + ySlider.getValue() + ".." + ySlider.getUpperValue() +
                                 " and (Z): " + zSlider.getValue() + ".." + zSlider.getUpperValue()
                 );
-                setButtonBusy(searchSaveButton);
+                setButtonBusy(searchSave);
                 CompletionListener buttonEnableListener = new CompletionListener() {
                     @Override
                     public void complete() {
-                        setButtonRelaxed(searchSaveButton, SAVE_AS_SEARCH_TIFF_TOOLTIP_TEXT);
+                        setButtonRelaxed(searchSave, SAVE_AS_SEARCH_TIFF_TOOLTIP_TEXT);
                     }
                 };
 
-                Collection<float[]> acceptedCords = getCombinedCropCoords( 1.0 );
+                Collection<float[]> acceptedCords = getCombinedCropCoords(1.0);
                 SavebackEvent event = new SavebackEvent();
-                event.setAbsoluteCoords( acceptedCords );
-                event.setCompletionListener( buttonEnableListener );
-                event.setMethod( ControlsListener.ExportMethod.binary );
-                event.setGammaFactor( 1.0f );
-                fireSavebackEvent( event );
+                event.setAbsoluteCoords(acceptedCords);
+                event.setCompletionListener(buttonEnableListener);
+                event.setMethod(ControlsListener.ExportMethod.binary);
+                event.setGammaFactor(1.0f);
+                fireSavebackEvent(event);
 
             }
         });
 
-        colorSaveButton = new JButton( SAVE_AS_COLOR_TIFF );
-        colorSaveButton.setToolTipText( SAVE_AS_COLOR_TIFF_TOOLTIP_TEXT );
-        colorSaveButton.addActionListener(new ActionListener() {
+        colorSave = new JButton( Icons.getIcon( "color_drive_go.png" ) );
+        colorSave.setToolTipText( SAVE_AS_COLOR_TIFF_TOOLTIP_TEXT );
+        colorSave.addActionListener(new ActionListener() {
             CompletionListener buttonEnableListener = new CompletionListener() {
                 @Override
                 public void complete() {
-                    setButtonRelaxed(colorSaveButton, SAVE_AS_COLOR_TIFF_TOOLTIP_TEXT);
+                    setButtonRelaxed(colorSave, SAVE_AS_COLOR_TIFF_TOOLTIP_TEXT);
                 }
             };
 
             public void actionPerformed(ActionEvent ae) {
-                setButtonBusy(colorSaveButton);
-                Collection<float[]> acceptedCords = getCombinedCropCoords( 1.0 );
+                setButtonBusy(colorSave);
+                Collection<float[]> acceptedCords = getCombinedCropCoords(1.0);
                 SavebackEvent event = new SavebackEvent();
-                event.setAbsoluteCoords( acceptedCords );
-                event.setCompletionListener( buttonEnableListener );
-                event.setMethod( ControlsListener.ExportMethod.color );
-                if ( volumeModel.isColorSaveBrightness() ) {
-                    event.setGammaFactor( settings.getGammaFactor() * VolumeModel.STANDARDIZED_GAMMA_MULTIPLIER);
+                event.setAbsoluteCoords(acceptedCords);
+                event.setCompletionListener(buttonEnableListener);
+                event.setMethod(ControlsListener.ExportMethod.color);
+                if (volumeModel.isColorSaveBrightness()) {
+                    event.setGammaFactor(settings.getGammaFactor() * VolumeModel.STANDARDIZED_GAMMA_MULTIPLIER);
+                } else {
+                    event.setGammaFactor(1.0f);
                 }
-                else {
-                    event.setGammaFactor( 1.0f );
-                }
-                fireSavebackEvent( event );
+                fireSavebackEvent(event);
             }
         });
 
-        screenShotButton = new JButton( SAVE_SCREEN_SHOT_MIP );
-        screenShotButton.setToolTipText(SAVE_SCREEN_SHOT_TOOLTIP_TEXT);
-        screenShotButton.addActionListener(new ActionListener() {
+        screenShot = new JButton( Icons.getIcon( "drive_go.png" ) );
+        screenShot.setToolTipText(SAVE_SCREEN_SHOT_TOOLTIP_TEXT);
+        screenShot.addActionListener(new ActionListener() {
             CompletionListener buttonEnableListener = new CompletionListener() {
                 @Override
                 public void complete() {
-                    screenShotButton.setEnabled(true);
+                    screenShot.setEnabled(true);
                 }
             };
 
             public void actionPerformed(ActionEvent ae) {
-                screenShotButton.setEnabled(false);
+                screenShot.setEnabled(false);
                 Collection<float[]> acceptedCords = getCombinedCropCoords();
                 SavebackEvent event = new SavebackEvent();
                 event.setAbsoluteCoords(acceptedCords);
@@ -567,7 +570,7 @@ public class AlignmentBoardControls {
         brightnessSlider.setMinimum(0);
         brightnessSlider.setMajorTickSpacing(500);
         brightnessSlider.setMinorTickSpacing(100);
-        brightnessSlider.setLabelTable(brightnessSlider.createStandardLabels(100));
+        brightnessSlider.setLabelTable(brightnessSlider.createStandardLabels(500));
         brightnessSlider.setOrientation(JSlider.HORIZONTAL);
         brightnessSlider.setValue(500);  // Center it up.
         brightnessSlider.setPaintLabels(true);
@@ -604,7 +607,7 @@ public class AlignmentBoardControls {
         minimumVoxelCountTF.setMinimumSize(MIN_VOX_COUNT_SIZE);
         minimumVoxelCountTF.setPreferredSize(MIN_VOX_COUNT_SIZE);
         minimumVoxelCountTF.setMaximumSize(MIN_VOX_COUNT_SIZE);
-        minimumVoxelCountTF.setBorder(new TitledBorder("Minimum Neuron Voxels"));
+        minimumVoxelCountTF.setBorder(new TitledBorder("Min Neuron Size"));
         minimumVoxelCountTF.setToolTipText(
                 "Integer: least number of neuron voxels before a neuron fragment is not rendered.\n" +
                         "Value of " + AlignmentBoardSettings.NO_MINIMUM_VOXEL_COUNT + " implies no such filtering."
@@ -731,16 +734,16 @@ public class AlignmentBoardControls {
         return minimumVoxelCountTF;
     }
 
-    public JButton getSearchSaveButton() {
-        return searchSaveButton;
+    public AbstractButton getSearchSave() {
+        return searchSave;
     }
 
-    public JButton getColorSaveButton() {
-        return colorSaveButton;
+    public AbstractButton getColorSave() {
+        return colorSave;
     }
 
-    public JButton getScreenShotButton() {
-        return screenShotButton;
+    public AbstractButton getScreenShot() {
+        return screenShot;
     }
 
     public JButton getCommitButton() {
@@ -767,15 +770,33 @@ public class AlignmentBoardControls {
         return zSlider;
     }
 
-    public JCheckBox getBlackoutCheckbox() {
-        return blackoutCheckbox;
+    public AbstractButton getBlackout() {
+        return blackout;
     }
 
-    public JCheckBox getColorSaveBrightnessCheckbox() {
-        return colorSaveBrightnessCheckbox;
+    public AbstractButton getColorSaveBrightness() {
+        return colorSaveBrightness;
     }
 
     //-------------------------------------------------INNER CLASSES/INTERFACES
+
+    class StateDrivenIconToggleButton extends JToggleButton {
+        private Icon setIcon;
+        private Icon unsetIcon;
+        public StateDrivenIconToggleButton( Icon setIcon, Icon unsetIcon ) {
+            this.setIcon = setIcon;
+            this.unsetIcon = unsetIcon;
+        }
+
+        public Icon getIcon() {
+            if ( this.isSelected() ) {
+                return setIcon;
+            }
+            else {
+                return unsetIcon;
+            }
+        }
+    }
 
     /** Simple list-and-map-driven combo box model. */
     class ABSDComboBoxModel implements ComboBoxModel {
