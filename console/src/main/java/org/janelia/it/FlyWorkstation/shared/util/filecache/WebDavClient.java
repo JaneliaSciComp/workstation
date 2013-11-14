@@ -73,7 +73,7 @@ public class WebDavClient {
         MultiThreadedHttpConnectionManager mgr = new MultiThreadedHttpConnectionManager();
         HttpConnectionManagerParams managerParams = mgr.getParams();
         managerParams.setDefaultMaxConnectionsPerHost(maxConnectionsPerHost); // default is 2
-        managerParams.setMaxTotalConnections(maxTotalConnections);            //��default is 20
+        managerParams.setMaxTotalConnections(maxTotalConnections);            // default is 20
         this.httpClient = new HttpClient(mgr);
         
         setCredentialsUsingAuthenticator();
