@@ -76,6 +76,28 @@ public class AlignmentBoardControlsPanel extends JPanel {
         controls.setReadyForOutput( isReady );
     }
 
+    /**
+     * Gray out or un-gray all child components, as the acto fo disable/enable.
+     *
+     * @param enabled on or off
+     */
+    public void setEnabled( boolean enabled ) {
+        super.setEnabled( enabled );
+
+        controls.getMinimumVoxelCountTF().setEnabled( enabled );
+        controls.getMaxNeuronCountTF().setEnabled( enabled );
+
+        controls.getxSlider().setEnabled( enabled );
+        controls.getySlider().setEnabled( enabled );
+        controls.getzSlider().setEnabled( enabled );
+        controls.getBrightnessSlider().setEnabled( enabled );
+
+        controls.getClearButton().setEnabled( enabled );
+        controls.getOrButton().setEnabled( enabled );
+        controls.getDownSampleRateDropdown().setEnabled( enabled );
+        controls.getUseSignalDataCheckbox().setEnabled( enabled );
+    }
+
     //--------------------------------------------HELPERS
     private void positionGui() {
         setLayout( new BorderLayout() );

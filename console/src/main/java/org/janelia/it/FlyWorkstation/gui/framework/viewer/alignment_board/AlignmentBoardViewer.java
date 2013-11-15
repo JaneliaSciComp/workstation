@@ -291,6 +291,9 @@ public class AlignmentBoardViewer extends Viewer implements AlignmentBoardContro
             mip3d.getVolumeModel().setCameraPixelsPerSceneUnit( BaseRenderer.DISTANCE_TO_SCREEN_IN_PIXELS, mip3d.getVolumeModel().getCameraFocusDistance() );
         }
 
+        if ( settingsPanel != null ) {
+            settingsPanel.setEnabled( true );
+        }
     }
 
     @Override
@@ -710,6 +713,7 @@ public class AlignmentBoardViewer extends Viewer implements AlignmentBoardContro
         settingsPanel.addSettingsListener(
                 new AlignmentBoardControlsListener( renderMapping, this )
         );
+        settingsPanel.setEnabled( false );
         layersPanel.add( settingsPanel, BorderLayout.SOUTH );
 
         deserializeSettings(SessionMgr.getBrowser().getLayersPanel().getAlignmentBoardContext());
@@ -735,16 +739,6 @@ public class AlignmentBoardViewer extends Viewer implements AlignmentBoardContro
         }
         JPanel rtnVal = new JPanel();
         rtnVal.setLayout(new BorderLayout());
-//        JSplitPane mipAndControls = new JSplitPane(
-//                JSplitPane.HORIZONTAL_SPLIT,
-//                mip3d,
-//                settingsPanel
-//        );
-//        mipAndControls.setDividerLocation(0.5);
-//        mipAndControls.setResizeWeight( 1.0 );
-//        mipAndControls.setOneTouchExpandable( true );
-//        mipAndControls.setContinuousLayout( false );
-//        mipAndControls.updateUI();
 
         rtnVal.add(mip3d, BorderLayout.CENTER);
         jostleContainingFrame();
