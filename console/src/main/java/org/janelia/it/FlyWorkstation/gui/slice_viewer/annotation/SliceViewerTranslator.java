@@ -96,6 +96,13 @@ public class SliceViewerTranslator {
         }
     };
 
+    public Slot1<TmGeoAnnotation> annotationClickedSlot = new Slot1<TmGeoAnnotation>() {
+        @Override
+        public void execute(TmGeoAnnotation annotation) {
+            setNextParentSignal.emit(annotation.getId());
+        }
+    };
+
     public Slot1<Vec3> cameraPanToSlot = new Slot1<Vec3>() {
         @Override
         public void execute(Vec3 location) {
@@ -111,7 +118,7 @@ public class SliceViewerTranslator {
     public Signal1<TmGeoAnnotation> anchorReparentedSignal = new Signal1<TmGeoAnnotation>();
     public Signal1<TmGeoAnnotation> anchorMovedSignal = new Signal1<TmGeoAnnotation>();
     public Signal clearSkeletonSignal = new Signal();
-    public Signal clearNextParentSignal = new Signal();
+    public Signal1<Long> setNextParentSignal = new Signal1<Long>();
 
     public Signal1<AnchoredVoxelPath> anchoredPathAddedSignal = new Signal1<AnchoredVoxelPath>();
     public Signal1<AnchoredVoxelPath> anchoredPathRemovedSignal = new Signal1<AnchoredVoxelPath>();
@@ -130,7 +137,7 @@ public class SliceViewerTranslator {
         anchorMovedSignal.connect(skeleton.moveAnchorSlot);
         clearSkeletonSignal.connect(skeleton.clearSlot);
 
-        clearNextParentSignal.connect(sliceViewer.getSkeletonActor().clearNextParentSlot);
+        setNextParentSignal.connect(sliceViewer.getSkeletonActor().setNextParentSlot);
 
         anchoredPathAddedSignal.connect(skeleton.addAnchoredPathSlot);
         anchoredPathRemovedSignal.connect(skeleton.removeAnchoredPathSlot);
@@ -166,14 +173,28 @@ public class SliceViewerTranslator {
             return;
         }
 
-        // clear the selected parent annotation marker if it's not in the
-        //  selected neuron
+        // if there's a selected annotation in the neuron already, don't change it:
         Anchor anchor = sliceViewer.getSkeletonActor().getNextParent();
-        if (anchor != null && !neuron.getGeoAnnotationMap().containsKey(anchor.getGuid())) {
-            clearNextParentSignal.emit();
+        if (anchor != null && neuron.getGeoAnnotationMap().containsKey(anchor.getGuid())) {
+            return;
         }
 
-        // may eventually visually style selected neuron here
+        // if neuron has no annotations, clear old one anyway
+        if (neuron.getGeoAnnotationMap().size() == 0) {
+            setNextParentSignal.emit(null);
+            return;
+        }
+
+        // find some annotation in selected neuron and select it, too
+        // let's select the first endpoint we find:
+        TmGeoAnnotation firstRoot = neuron.getRootAnnotations().get(0);
+        for (TmGeoAnnotation link: firstRoot.getSubTreeList()) {
+            if (link.getChildren().size() == 0) {
+                setNextParentSignal.emit(link.getId());
+                return;
+            }
+        }
+
     }
 
     /**
