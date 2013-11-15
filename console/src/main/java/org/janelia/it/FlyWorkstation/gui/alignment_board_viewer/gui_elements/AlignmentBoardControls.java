@@ -276,9 +276,6 @@ public class AlignmentBoardControls {
 
         long maximumNeuronCount = settings.getMaximumNeuronCount();
         maxNeuronCountTF.setText( "" + maximumNeuronCount );
-logger.error("Setting minVoxCt {}", minimumVoxelCount );
-if ( minimumVoxelCount == 1000 )
-new Exception("Tsk Tsk").printStackTrace();
     }
 
     /** Call this when sufficient info is avail to get the sliders positions initialized off crop-coords. */

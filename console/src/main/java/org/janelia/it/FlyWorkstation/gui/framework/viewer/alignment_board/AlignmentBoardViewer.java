@@ -710,15 +710,15 @@ public class AlignmentBoardViewer extends Viewer implements AlignmentBoardContro
         //settingsDialog = new AlignmentBoardControlsDialog( mip3d, mip3d.getVolumeModel(), settingsData, controls );
         //settingsPanel = settingsDialog.getControlsPanel();
         settingsPanel = new AlignmentBoardControlsPanel( controls );
-        settingsPanel.addSettingsListener(
-                new AlignmentBoardControlsListener( renderMapping, this )
-        );
         settingsPanel.setEnabled( false );
         layersPanel.add( settingsPanel, BorderLayout.SOUTH );
 
         deserializeSettings(SessionMgr.getBrowser().getLayersPanel().getAlignmentBoardContext());
         //mip3d.addMenuAction( settingsDialog.getLaunchAction() );
         settingsPanel.update( true );
+        settingsPanel.addSettingsListener(
+                new AlignmentBoardControlsListener( renderMapping, this )
+        );
 
         double cameraFocusDistance = mip3d.getVolumeModel().getCameraFocusDistance();
         mip3d.getVolumeModel().getCamera3d().setPixelsPerSceneUnit(Math.abs(BaseRenderer.DISTANCE_TO_SCREEN_IN_PIXELS / cameraFocusDistance));
