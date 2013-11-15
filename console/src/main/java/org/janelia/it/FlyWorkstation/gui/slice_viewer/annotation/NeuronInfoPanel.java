@@ -43,6 +43,8 @@ public class NeuronInfoPanel extends JPanel
 
     // ----- signals
     public Signal1<Vec3> cameraPanToSignal = new Signal1<Vec3>();
+    public Signal1<TmGeoAnnotation> annotationClickedSignal = new Signal1<TmGeoAnnotation>();
+
 
     public NeuronInfoPanel() {
         setupUI();
@@ -90,8 +92,9 @@ public class NeuronInfoPanel extends JPanel
             public void mousePressed(MouseEvent event) {
                 TreePath path = neuriteTree.getPathForLocation(event.getX(), event.getY());
                 if (path != null) {
-                    // double-click
-                    if (event.getClickCount() == 2) {
+                    if (event.getClickCount() == 1) {
+                        onAnnotationSingleClicked(path);
+                    } else if (event.getClickCount() == 2) {
                         onAnnotationDoubleClicked(path);
                     }
                 }
@@ -178,6 +181,12 @@ public class NeuronInfoPanel extends JPanel
         }
     }
 
+    private TmGeoAnnotation getAnnotationAtPath(TreePath path) {
+        // is this idiomatic? the double casting kind of makes me feel ill
+        String label = (String) ((DefaultMutableTreeNode) path.getLastPathComponent()).getUserObject();
+        return labelToAnnotationMap.get(label);
+    }
+
     private String getNodeType(TmGeoAnnotation annotation) {
         if (annotation.getParent() == null) {
             return "root";
@@ -195,7 +204,6 @@ public class NeuronInfoPanel extends JPanel
 
     private String getTreeString(TmGeoAnnotation annotation) {
         return getNodeType(annotation) + ": " + annotation.toString();
-        // return "node at " + annotation.toString();
     }
 
     public void loadNeuron(TmNeuron neuron) {
@@ -215,16 +223,16 @@ public class NeuronInfoPanel extends JPanel
         }
     }
 
+    private void onAnnotationSingleClicked(TreePath path) {
+        // select annotation at path
+        annotationClickedSignal.emit(getAnnotationAtPath(path));
+    }
+
     private void onAnnotationDoubleClicked(TreePath path) {
         // go to annotation at path
-        // is this idiomatic? the double casting kind of makes me feel ill
-        String label = (String) ((DefaultMutableTreeNode) path.getLastPathComponent()).getUserObject();
-        TmGeoAnnotation a= labelToAnnotationMap.get(label);
+        TmGeoAnnotation annotation = getAnnotationAtPath(path);
 
         // emit signal
-        cameraPanToSignal.emit(new Vec3(a.getX(), a.getY(), a.getZ()));
-
-        // test: just print
-        // System.out.println("annotation clicked: " + a);
+        cameraPanToSignal.emit(new Vec3(annotation.getX(), annotation.getY(), annotation.getZ()));
     }
 }

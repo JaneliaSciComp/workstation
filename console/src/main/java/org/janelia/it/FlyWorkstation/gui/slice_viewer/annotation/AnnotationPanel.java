@@ -108,6 +108,7 @@ public class AnnotationPanel extends JPanel
 
         // us to graphics UI
         neuronInfoPanel.cameraPanToSignal.connect(sliceViewerTranslator.cameraPanToSlot);
+        neuronInfoPanel.annotationClickedSignal.connect(sliceViewerTranslator.annotationClickedSlot);
         workspaceInfoPanel.cameraPanToSignal.connect(sliceViewerTranslator.cameraPanToSlot);
 
     }

@@ -40,6 +40,7 @@ import org.janelia.it.FlyWorkstation.octree.ZoomedVoxelIndex;
 import org.janelia.it.FlyWorkstation.signal.Signal;
 import org.janelia.it.FlyWorkstation.signal.Signal1;
 import org.janelia.it.FlyWorkstation.signal.Slot;
+import org.janelia.it.FlyWorkstation.signal.Slot1;
 import org.janelia.it.FlyWorkstation.tracing.AnchoredVoxelPath;
 import org.janelia.it.FlyWorkstation.tracing.PathTraceRequest.SegmentIndex;
 import org.slf4j.Logger;
@@ -112,12 +113,13 @@ implements GLActor
 		public void execute() {updateAnchors();}
 	};
 
-    public Slot clearNextParentSlot = new Slot() {
+    public Slot1<Long> setNextParentSlot = new Slot1<Long>() {
         @Override
-        public void execute() {
-            setNextParent(null);
+        public void execute(Long annotationID) {
+            setNextParentByID(annotationID);
         }
     };
+
 	private TileFormat tileFormat;
 
 	public SkeletonActor() {
@@ -683,7 +685,21 @@ implements GLActor
 	public Anchor getNextParent() {
 		return nextParent;
 	}
-	
+
+    public boolean setNextParentByID(Long annotationID) {
+        // find the anchor corresponding to this annotation ID and pass along
+        Anchor foundAnchor = null;
+        for (Anchor testAnchor: getSkeleton().getAnchors()) {
+            if (testAnchor.getGuid().equals(annotationID)) {
+                foundAnchor = testAnchor;
+                break;
+            }
+        }
+
+        // it's OK if we set a null (it's a deselect)
+        return setNextParent(foundAnchor);
+    }
+
 	public boolean setNextParent(Anchor parent) {
 		if (parent == nextParent)
 			return false;
