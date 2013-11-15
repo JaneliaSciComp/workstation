@@ -15,10 +15,7 @@ import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 import javax.swing.event.ListDataListener;
 import java.awt.*;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
-import java.awt.event.MouseAdapter;
-import java.awt.event.MouseEvent;
+import java.awt.event.*;
 import java.util.*;
 import java.util.List;
 
@@ -216,7 +213,7 @@ public class AlignmentBoardControls {
             return settings.getGammaFactor();
         int value = brightnessSlider.getValue();
         double rtnVal = (((double)value/100.0) - 10.0) / -5.0;
-        logger.debug( "Returning gamma factor of {} for {}.", rtnVal, value );
+        logger.debug("Returning gamma factor of {} for {}.", rtnVal, value);
         return rtnVal;
     }
 
@@ -279,6 +276,9 @@ public class AlignmentBoardControls {
 
         long maximumNeuronCount = settings.getMaximumNeuronCount();
         maxNeuronCountTF.setText( "" + maximumNeuronCount );
+logger.error("Setting minVoxCt {}", minimumVoxelCount );
+if ( minimumVoxelCount == 1000 )
+new Exception("Tsk Tsk").printStackTrace();
     }
 
     /** Call this when sufficient info is avail to get the sliders positions initialized off crop-coords. */
@@ -490,7 +490,7 @@ public class AlignmentBoardControls {
 
         for ( ControlsListener listener: listeners ) {
             if ( deltaBrightness ) {
-                logger.debug("Setting brightness to {}.", settings.getGammaFactor() );
+                logger.debug("Setting brightness to {}.", settings.getGammaFactor());
                 listener.setBrightness( settings.getGammaFactor() );
             }
             if ( deltaSettings ) {
@@ -563,8 +563,7 @@ public class AlignmentBoardControls {
         commitButton.setToolTipText( COMMIT_CHANGES_TOOLTIP_TEXT );
         commitButton.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent ae) {
-                readyForOutput = true;
-                fireSettingsEvent();
+                doSettingsEvent();
                 commitButton.setEnabled( false );
             }
         });
@@ -680,20 +679,13 @@ public class AlignmentBoardControls {
         brightnessSlider.setPaintTicks(true);
         brightnessSlider.setToolTipText(GAMMA_TOOLTIP);
         brightnessSlider.setBorder(new TitledBorder("Brightness"));
-        brightnessSlider.addChangeListener( new ChangeListener() {
-            @Override
-            public void stateChanged(ChangeEvent e) {
-                readyForOutput = true;
-                fireSettingsEvent();
-            }
-        });
 
         downSampleRateToIndex = new HashMap<Integer,Integer>();
         downSampleRateToIndex.put( 0, 0 );
         downSampleRateToIndex.put( 1, 1 );
         downSampleRateToIndex.put( 2, 2 );
-        downSampleRateToIndex.put(4, 3);
-        downSampleRateToIndex.put(8, 4);
+        downSampleRateToIndex.put( 4, 3 );
+        downSampleRateToIndex.put( 8, 4 );
 
         downSampleRateDropdown = new JComboBox(
                 new ABSDComboBoxModel( downSampleRateToIndex )
@@ -735,13 +727,43 @@ public class AlignmentBoardControls {
         );
         maxNeuronCountTF.addMouseListener( commitEnablerMouseListener );
 
-        //brightnessSlider.addMouseListener( commitEnablerMouseListener );
-        downSampleRateDropdown.addMouseListener( commitEnablerMouseListener );
+        // Special Note: must avoid using "state change", as external methods can change the
+        // "selected" state of this checkbox, inadvertently triggering the event, and firing off
+        // the expensive (and with state-change, endlessly-looping) settings event.
+        MouseAdapter fireSettingsMouseListener = new MouseAdapter() {
+            @Override
+            public void mouseReleased(MouseEvent e) {
+                doSettingsEvent();
+            }
+        };
+        ActionListener fireSettingsActionListener = new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                doSettingsEvent();
+            }
+        };
+        downSampleRateDropdown.addMouseListener( fireSettingsMouseListener );
         for ( Component c: downSampleRateDropdown.getComponents() ) {
             // NOTE: must add the listener to all subcomponents of the combo box, or response is unreliable.
-            c.addMouseListener( commitEnablerMouseListener );
+            if ( c instanceof AbstractButton ) {
+                ((AbstractButton)c).addActionListener(fireSettingsActionListener);
+            }
         }
-        useSignalDataCheckbox.addMouseListener(commitEnablerMouseListener);
+        downSampleRateDropdown.addItemListener( new ItemListener() {
+            @Override
+            public void itemStateChanged(ItemEvent e) {
+                doSettingsEvent();
+            }
+        });
+
+        useSignalDataCheckbox.addMouseListener(fireSettingsMouseListener);
+
+        brightnessSlider.addChangeListener( new ChangeListener() {
+            @Override
+            public void stateChanged(ChangeEvent e) {
+                doSettingsEvent();
+            }
+        });
 
         downSampleGuess = new JLabel( String.format( GUESS_LABEL_FMT, "0" ) );
         Observer downsampleRateObserver = new Observer() {
@@ -752,6 +774,11 @@ public class AlignmentBoardControls {
         };
         settings.setDownSampleRateObserver(downsampleRateObserver);
 
+    }
+
+    private void doSettingsEvent() {
+        readyForOutput = true;
+        fireSettingsEvent();
     }
 
     private void setButtonRelaxed(JButton saveButton, String tooltipText ) {
