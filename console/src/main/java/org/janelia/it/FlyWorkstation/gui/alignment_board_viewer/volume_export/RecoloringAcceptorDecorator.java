@@ -33,35 +33,37 @@ public class RecoloringAcceptorDecorator  extends AbstractAcceptorDecorator {
     public int addChannelData(Integer originalMask, byte[] channelData, long position, long x, long y, long z, ChannelMetaData channelMetaData) throws Exception {
         int returnVal = 0;
         if ( channelMetaData.renderableBean != null   &&   channelMetaData.renderableBean.getRgb()[ 3 ] != RenderMappingI.PASS_THROUGH_RENDERING ) {
+            int[] rgbIndexes = channelMetaData.getOrderedRgbIndexes();
             if ( channelMetaData.channelCount == 3  ||  channelMetaData.channelCount == 4 ) {
-                int maxIntensity = getGammaAdjusted(getMaxIntensity(channelData, channelMetaData));
                 // Iterate over all the channels of information.
-                int[] rgbIndexes = channelMetaData.getOrderedRgbIndexes();
                 int usedCount = channelMetaData.channelCount < 4 ? channelMetaData.channelCount : 3;
-                channelData = getGammaAdjusted( channelData, channelMetaData );
-                if ( channelMetaData.renderableBean.getRgb()[ 3 ] == RenderMappingI.COMPARTMENT_RENDERING ) {
-                    for ( int i = 0; i < usedCount; i++ ) {
-                        // NOTE: expect channel count to be 3 or less.  The 4th channel is unused, here.
-                        substituteChannelData(channelData, channelMetaData, maxIntensity, rgbIndexes[i], i);
-                    }
+                int maxIntensity = getMaxIntensity(channelData, channelMetaData);
+                for ( int i = 0; i < usedCount; i++ ) {
+                    // NOTE: expect channel count to be 3 or less.  The 4th channel is unused, here.
+                    substituteChannelData(channelData, channelMetaData, maxIntensity, rgbIndexes[i], i);
                 }
 
+                if ( gammaFactor >= 0.0f ) {
+                    channelData = applyGuiFaithfulAdjustments(channelData, channelMetaData);
+                }
                 returnVal = wrappedAcceptor.addChannelData( originalMask, channelData, position, x, y, z, channelMetaData );
             }
             else if ( channelMetaData.channelCount == 1  ||  channelMetaData.channelCount == 2 ) {
                 ChannelMetaData substitutedChannelMetaData = getSubstitutedMetaData(channelMetaData);
 
                 // In this case, would like to expand the number of channels and fill them with the user-given values.
-                int maxIntensity = getGammaAdjusted(getMaxIntensity(channelData, channelMetaData));
-                //channelData = getGammaAdjusted( channelData, channelMetaData );
                 byte[] assumedChannelData = new byte[ channelMetaData.byteCount * 3 ];
-                if ( channelMetaData.renderableBean.getRgb()[ 3 ] == RenderMappingI.COMPARTMENT_RENDERING ) {
-                    for ( int i = 0; i < 3; i++ ) {
-                        // NOTE: expect channel count to be 3 or less.  The 4th channel is unused, here.
-                        substituteChannelData(assumedChannelData, substitutedChannelMetaData, maxIntensity, i, i);
-                    }
+                // Copy in the original channels.
+                System.arraycopy( channelData, 0, assumedChannelData, 0, channelMetaData.byteCount * channelMetaData.channelCount );
+                int maxIntensity = getMaxIntensity(channelData, channelMetaData);
+                for ( int i = 0; i < 3; i++ ) {
+                    // NOTE: expect channel count to be 3 or less.  The 4th channel is unused, here.
+                    substituteChannelData(assumedChannelData, substitutedChannelMetaData, maxIntensity, i, i);
                 }
 
+                if ( gammaFactor >= 0.0f ) {
+                    assumedChannelData = applyGuiFaithfulAdjustments( assumedChannelData, substitutedChannelMetaData );
+                }
                 returnVal = wrappedAcceptor.addChannelData( originalMask, assumedChannelData, position, x, y, z, substitutedChannelMetaData );
             }
             else {
@@ -71,6 +73,15 @@ public class RecoloringAcceptorDecorator  extends AbstractAcceptorDecorator {
             }
         }
         return returnVal;
+    }
+
+    private byte[] applyGuiFaithfulAdjustments(byte[] channelData, ChannelMetaData channelMetaData) {
+        channelData = getGammaAdjusted( channelData, channelMetaData );
+
+        if ( channelMetaData.renderableBean.getRgb()[ 3 ] == RenderMappingI.COMPARTMENT_RENDERING ) {
+            attenuateChannelData( channelData, channelMetaData );
+        }
+        return channelData;
     }
 
     @Override
@@ -121,12 +132,31 @@ public class RecoloringAcceptorDecorator  extends AbstractAcceptorDecorator {
             for ( int j = 0; j < channelMetaData.byteCount; j++ ) {
                 // Assumes big-endian.
                 int nextPart = (channelIntensity >> ( 8 * ( channelMetaData.byteCount - j - 1 ) ) ) & 0xff;
-                int channelOffs = channelMetaData.channelCount - i - 1;
+                int channelOffs = i;
                 rtnVal[ channelOffs * channelMetaData.byteCount + j ] = (byte)nextPart;
             }
 
         }
         return rtnVal;
+    }
+
+    private void attenuateChannelData( byte[] channelData, ChannelMetaData channelMetaData ) {
+        for ( int i = 0; i < channelMetaData.channelCount; i++ ) {
+            int channelIntensity = 0;
+            for ( int j = 0; j < channelMetaData.byteCount; j++ ) {
+                // Assumes big-endian.
+                channelIntensity += channelData[ i * channelMetaData.byteCount + j ] << ( 8 * ( channelMetaData.byteCount - j - 1 ) );
+            }
+
+            // Dim it down.
+            channelIntensity *= 0.4;
+            for ( int j = 0; j < channelMetaData.byteCount; j++ ) {
+                // Assumes big-endian.
+                int nextPart = (channelIntensity >> ( 8 * ( channelMetaData.byteCount - j - 1 ) ) ) & 0xff;
+                channelData[ i * channelMetaData.byteCount + j ] = (byte)nextPart;
+            }
+
+        }
     }
 
     /** Channel data for some objects (at t-o-w, compartments) includes only a single byte, but this lets us use more powerful coloring systems. */
@@ -144,6 +174,11 @@ public class RecoloringAcceptorDecorator  extends AbstractAcceptorDecorator {
         return substitutedChannelMetaData;
     }
 
+    /**
+     * This substitution is to plug in a user, or other-assigned coloring to the voxel value represented by
+     * "channel data", and give it proper variation by multiplying it by the maximum intensity of the underlying
+     * data found at this voxel.
+     */
     private void substituteChannelData(byte[] channelData, ChannelMetaData channelMetaData, int maxIntensity, int rgbIndex, int i) {
         byte channelAssignment = channelMetaData.renderableBean.getRgb()[ 2 - rgbIndex ];
         int channelValue = (int) ((channelAssignment < 0 ? (256 + channelAssignment) : channelAssignment) * (maxIntensity/256.0f));

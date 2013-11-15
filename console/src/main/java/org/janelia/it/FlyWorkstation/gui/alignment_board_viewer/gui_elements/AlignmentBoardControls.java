@@ -80,6 +80,8 @@ public class AlignmentBoardControls {
     private static final String MINIMUM_VOXEL_COUNT = "  " + AlignmentBoardSettings.DEFAULT_NEURON_SIZE_CONSTRAINT;
     private static final String MAXIMUM_NEURON_COUNT = " " + AlignmentBoardSettings.DEFAULT_MAX_NEURON_COUNT_CONSTRAINT;
 
+    private static final float APPLY_NO_GAMMA = -1.0f;
+
     private Component centering;
     private JSlider brightnessSlider;
     private JCheckBox useSignalDataCheckbox;
@@ -590,7 +592,7 @@ public class AlignmentBoardControls {
                 event.setAbsoluteCoords(acceptedCords);
                 event.setCompletionListener(buttonEnableListener);
                 event.setMethod(ControlsListener.ExportMethod.binary);
-                event.setGammaFactor(1.0f);
+                event.setGammaFactor( APPLY_NO_GAMMA );
                 fireSavebackEvent(event);
 
             }
@@ -616,7 +618,7 @@ public class AlignmentBoardControls {
                 if (volumeModel.isColorSaveBrightness()) {
                     event.setGammaFactor(settings.getGammaFactor() * VolumeModel.STANDARDIZED_GAMMA_MULTIPLIER);
                 } else {
-                    event.setGammaFactor(1.0f);
+                    event.setGammaFactor( APPLY_NO_GAMMA );
                 }
                 fireSavebackEvent(event);
             }
