@@ -1,7 +1,5 @@
 package org.janelia.it.FlyWorkstation.gui.alignment_board_viewer.gui_elements;
 
-import org.janelia.it.FlyWorkstation.gui.framework.viewer.alignment_board.AlignmentBoardSettings;
-import org.janelia.it.FlyWorkstation.gui.viewer3d.VolumeModel;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

@@ -216,7 +216,7 @@ public class AlignmentBoardControls {
             return settings.getGammaFactor();
         int value = brightnessSlider.getValue();
         double rtnVal = (((double)value/100.0) - 10.0) / -5.0;
-        logger.info( "Returning gamma factor of {} for {}.", rtnVal, value );
+        logger.debug( "Returning gamma factor of {} for {}.", rtnVal, value );
         return rtnVal;
     }
 
@@ -490,7 +490,7 @@ public class AlignmentBoardControls {
 
         for ( ControlsListener listener: listeners ) {
             if ( deltaBrightness ) {
-                logger.info("Setting brightness to {}.", settings.getGammaFactor() );
+                logger.debug("Setting brightness to {}.", settings.getGammaFactor() );
                 listener.setBrightness( settings.getGammaFactor() );
             }
             if ( deltaSettings ) {
@@ -680,6 +680,13 @@ public class AlignmentBoardControls {
         brightnessSlider.setPaintTicks(true);
         brightnessSlider.setToolTipText(GAMMA_TOOLTIP);
         brightnessSlider.setBorder(new TitledBorder("Brightness"));
+        brightnessSlider.addChangeListener( new ChangeListener() {
+            @Override
+            public void stateChanged(ChangeEvent e) {
+                readyForOutput = true;
+                fireSettingsEvent();
+            }
+        });
 
         downSampleRateToIndex = new HashMap<Integer,Integer>();
         downSampleRateToIndex.put( 0, 0 );
@@ -728,7 +735,7 @@ public class AlignmentBoardControls {
         );
         maxNeuronCountTF.addMouseListener( commitEnablerMouseListener );
 
-        brightnessSlider.addMouseListener( commitEnablerMouseListener );
+        //brightnessSlider.addMouseListener( commitEnablerMouseListener );
         downSampleRateDropdown.addMouseListener( commitEnablerMouseListener );
         for ( Component c: downSampleRateDropdown.getComponents() ) {
             // NOTE: must add the listener to all subcomponents of the combo box, or response is unreliable.
