@@ -184,12 +184,16 @@ public class AlignmentBoardContext extends AlignedItem {
                 }
 
                 parentAlignedItem = ModelMgr.getModelMgr().addAlignedItem(this, parent);
-                parentAlignedItem.loadContextualizedChildren(getAlignmentContext());
+                if ( parentAlignedItem.getChildren() == null ) {
+                    parentAlignedItem.loadContextualizedChildren(getAlignmentContext());
+                }
 
                 for (Compartment child : parent.getCompartmentSet()) {
                     log.debug("Adding compartment {}.", child.getName());
                     AlignedItem alignedItem = ModelMgr.getModelMgr().addAlignedItem(parentAlignedItem, child);
-                    alignedItem.loadContextualizedChildren(getAlignmentContext());
+                    if ( alignedItem.getChildren() == null ) {
+                        alignedItem.loadContextualizedChildren(getAlignmentContext());
+                    }
                     alignedItem.setIsVisible(true);
                 }
 

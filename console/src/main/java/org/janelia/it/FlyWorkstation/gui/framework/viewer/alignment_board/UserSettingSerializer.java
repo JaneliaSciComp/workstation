@@ -7,6 +7,7 @@ import org.janelia.it.FlyWorkstation.geom.Vec3;
 import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.VolumeModel;
 import org.janelia.it.FlyWorkstation.gui.alignment_board_viewer.volume_export.CropCoordSet;
+import org.janelia.it.FlyWorkstation.shared.workers.SimpleWorker;
 import org.janelia.it.jacs.model.entity.Entity;
 import org.janelia.it.jacs.model.entity.EntityConstants;
 import org.slf4j.Logger;
@@ -75,18 +76,37 @@ public class UserSettingSerializer implements Serializable {
      */
     public synchronized void serializeSettings() {
         try {
-            String settingsString = getSettingsString();
-            // This excessive length
-            if ( settingsString.length() > MAX_SERIALIZED_SETTINGS_STR ) {
-                logger.warn( "Abandoning the serialized string {}.", settingsString );
-                // Write back.
-                ModelMgr.getModelMgr().setOrUpdateValue(alignmentBoard, EntityConstants.ATTRIBUTE_ALIGNMENT_BOARD_USER_SETTINGS, "");
-                settingsString = "";
-            }
-            logger.info( "Save-back Setting string: {}.", settingsString );
-
             // Write back.
-            ModelMgr.getModelMgr().setOrUpdateValue(alignmentBoard, EntityConstants.ATTRIBUTE_ALIGNMENT_BOARD_USER_SETTINGS, settingsString);
+            SimpleWorker serializeWorker = new SimpleWorker() {
+                @Override
+                protected void doStuff() throws Exception {
+                    String settingsString = getSettingsString();
+                    // This excessive length
+                    if ( settingsString.length() > MAX_SERIALIZED_SETTINGS_STR ) {
+                        logger.warn( "Abandoning the serialized string {}.", settingsString );
+                        // Write back.
+                        ModelMgr.getModelMgr().setOrUpdateValue(alignmentBoard, EntityConstants.ATTRIBUTE_ALIGNMENT_BOARD_USER_SETTINGS, "");
+                        settingsString = "";
+                    }
+                    logger.info( "Save-back Setting string: {}.", settingsString );
+
+                    ModelMgr.getModelMgr().setOrUpdateValue(alignmentBoard, EntityConstants.ATTRIBUTE_ALIGNMENT_BOARD_USER_SETTINGS, settingsString);
+                }
+
+                @Override
+                protected void hadSuccess() {
+                }
+
+                @Override
+                protected void hadError(Throwable error) {
+                    logger.error( error.toString() );
+                    error.printStackTrace();
+                    SessionMgr.getSessionMgr().handleException( error );
+                }
+            };
+
+            serializeWorker.execute();
+
         }
         catch (Exception ex) {
             SessionMgr.getSessionMgr().handleException(ex);
