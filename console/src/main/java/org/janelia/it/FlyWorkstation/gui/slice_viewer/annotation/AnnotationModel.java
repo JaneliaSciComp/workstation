@@ -526,8 +526,6 @@ that need to respond to changing data.
 
         // if a path between those endpoints exists, remove it first:
         if (neuron1.getAnchoredPathMap().containsKey(endpoints)) {
-            // test:
-            System.out.println("endpoints exist in map");
             removeAnchoredPath(neuron1.getAnchoredPathMap().get(endpoints));
         }
 
