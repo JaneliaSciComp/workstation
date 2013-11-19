@@ -46,6 +46,13 @@ public class AnnotationPanel extends JPanel
             }
         };
 
+    private final Action deleteNeuronAction = new AbstractAction() {
+        @Override
+        public void actionPerformed(ActionEvent actionEvent) {
+            annotationMgr.deleteCurrentNeuron();
+        }
+    };
+
     private final Action createWorkspaceAction = new AbstractAction() {
         @Override
         public void actionPerformed(ActionEvent e) {
@@ -166,6 +173,12 @@ public class AnnotationPanel extends JPanel
         createNeuronAction.putValue(Action.NAME, "+");
         createNeuronAction.putValue(Action.SHORT_DESCRIPTION, "Create a new neuron");
         createNeuronButtonPlus.setAction(createNeuronAction);
+
+        JButton deleteNeuronButton = new JButton("–");
+        neuronButtonsPanel.add(deleteNeuronButton);
+        deleteNeuronAction.putValue(Action.NAME, "–");
+        deleteNeuronAction.putValue(Action.SHORT_DESCRIPTION, "Delete current neuron");
+        deleteNeuronButton.setAction(deleteNeuronAction);
 
         // this button pops up the tool menu
         final JButton neuronToolButton = new JButton();

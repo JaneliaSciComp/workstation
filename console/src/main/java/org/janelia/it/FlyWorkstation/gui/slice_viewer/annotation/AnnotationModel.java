@@ -58,7 +58,7 @@ that need to respond to changing data.
     public Signal1<TmGeoAnnotation> annotationNotMovedSignal = new Signal1<TmGeoAnnotation>();
 
     public Signal1<TmAnchoredPath> anchoredPathAddedSignal = new Signal1<TmAnchoredPath>();
-    public Signal1<TmAnchoredPath> anchoredPathRemovedSignal = new Signal1<TmAnchoredPath>();
+    public Signal1<List<TmAnchoredPath>> anchoredPathsRemovedSignal = new Signal1<List<TmAnchoredPath>>();
 
     // ----- slots
     public Slot1<TmNeuron> neuronClickedSlot = new Slot1<TmNeuron>() {
@@ -197,6 +197,31 @@ that need to respond to changing data.
         setCurrentNeuron(neuron);
         neuronSelectedSignal.emit(getCurrentNeuron());
 
+    }
+
+    public void deleteCurrentNeuron() throws Exception {
+        if (getCurrentNeuron() == null) {
+            return;
+        }
+
+        // keep a copy so we know what visuals to remove:
+        TmNeuron deletedNeuron = getCurrentNeuron();
+
+        // delete
+        modelMgr.deleteEntityTree(getCurrentNeuron().getId());
+
+        // delete anchor signals
+        ArrayList<TmGeoAnnotation> tempAnnotationList = new ArrayList<TmGeoAnnotation>(deletedNeuron.getGeoAnnotationMap().values());
+        annotationsDeletedSignal.emit(tempAnnotationList);
+
+        // delete path signals
+        ArrayList<TmAnchoredPath> tempPathList = new ArrayList<TmAnchoredPath>(deletedNeuron.getAnchoredPathMap().values());
+        anchoredPathsRemovedSignal.emit(tempPathList);
+
+        updateCurrentWorkspace();
+        workspaceLoadedSignal.emit(getCurrentWorkspace());
+
+        setCurrentNeuron(null);
     }
 
     /**
@@ -552,7 +577,11 @@ that need to respond to changing data.
      */
     private void removeAnchoredPath(TmAnchoredPath path) throws  Exception {
         modelMgr.deleteAnchoredPath(path.getId());
-        anchoredPathRemovedSignal.emit(path);
+
+        ArrayList<TmAnchoredPath> pathList = new ArrayList<TmAnchoredPath>();
+        pathList.add(path);
+
+        anchoredPathsRemovedSignal.emit(pathList);
     }
 
     /**

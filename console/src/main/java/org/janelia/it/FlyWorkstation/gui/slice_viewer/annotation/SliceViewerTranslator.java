@@ -89,10 +89,10 @@ public class SliceViewerTranslator {
         }
     };
 
-    public Slot1<TmAnchoredPath> removeAnchoredPathSlot = new Slot1<TmAnchoredPath>() {
+    public Slot1<List<TmAnchoredPath>> removeAnchoredPathsSlot = new Slot1<List<TmAnchoredPath>>() {
         @Override
-        public void execute(TmAnchoredPath path) {
-            removeAnchoredPath(path);
+        public void execute(List<TmAnchoredPath> pathList) {
+            removeAnchoredPaths(pathList);
         }
     };
 
@@ -153,7 +153,7 @@ public class SliceViewerTranslator {
         annModel.annotationNotMovedSignal.connect(unmoveAnnotationSlot);
 
         annModel.anchoredPathAddedSignal.connect(addAnchoredPathSlot);
-        annModel.anchoredPathRemovedSignal.connect(removeAnchoredPathSlot);
+        annModel.anchoredPathsRemovedSignal.connect(removeAnchoredPathsSlot);
     }
 
     /**
@@ -229,8 +229,10 @@ public class SliceViewerTranslator {
         anchoredPathAddedSignal.emit(TAP2AVP(path));
     }
 
-    public void removeAnchoredPath(TmAnchoredPath path) {
+    public void removeAnchoredPaths(List<TmAnchoredPath> pathList) {
+        for (TmAnchoredPath path: pathList) {
         anchoredPathRemovedSignal.emit(TAP2AVP(path));
+        }
     }
 
     /**

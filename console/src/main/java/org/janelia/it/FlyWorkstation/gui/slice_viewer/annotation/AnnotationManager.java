@@ -438,6 +438,32 @@ elements of what's been done; that's handled by signals emitted from AnnotationM
         creator.execute();
     }
 
+    public void deleteCurrentNeuron() {
+
+        // nothing to validate before proceeding
+        SimpleWorker deleter = new SimpleWorker() {
+            @Override
+            protected void doStuff() throws Exception {
+                annotationModel.deleteCurrentNeuron();
+            }
+
+            @Override
+            protected void hadSuccess() {
+                // nothing here; model sends its own signals
+            }
+
+            @Override
+            protected void hadError(Throwable error) {
+                JOptionPane.showMessageDialog(null,
+                        "Could not delete current neuron!",
+                        "Error",
+                        JOptionPane.ERROR_MESSAGE);
+            }
+        };
+        deleter.execute();
+
+    }
+
     /**
      * rename the currently selected neuron
      */
