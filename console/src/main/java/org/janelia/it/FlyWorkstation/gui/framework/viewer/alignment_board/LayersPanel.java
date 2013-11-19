@@ -488,8 +488,11 @@ public class LayersPanel extends JPanel implements Refreshable, ActivatableView 
             return;
         }
 
-        log.debug("Some entities were invalidated, let's check if we care...");
+        log.trace("Some entities were invalidated, let's check if we care...");
         if (alignmentBoardContext==null) return;
+
+        final OutlineExpansionState expansionState = new OutlineExpansionState(outline);
+        expansionState.storeExpansionState();
         
         final Collection<AlignedItem> invalidItems = new HashSet<AlignedItem>();
         
@@ -518,6 +521,8 @@ public class LayersPanel extends JPanel implements Refreshable, ActivatableView 
         }
         
         recreateModel();
+        
+        expansionState.restoreExpansionState(true);
     }
     
     @Subscribe 
