@@ -968,7 +968,7 @@ public class ModelMgr {
             modelEventBus.register(object);
         }
         catch (IllegalArgumentException e) {
-            log.error("Cannot register object on event bus",e);
+            log.warn("Cannot register object on event bus: "+e.getMessage());
         }
     }
     
@@ -977,7 +977,7 @@ public class ModelMgr {
             modelEventBus.unregister(object);
         }
         catch (IllegalArgumentException e) {
-            log.error("Cannot unregister object on event bus",e);
+            log.warn("Cannot unregister object on event bus: "+e.getMessage());
         }
     }
 
@@ -986,7 +986,7 @@ public class ModelMgr {
             modelEventBus.post(object);
         }
         catch (IllegalArgumentException e) {
-            log.error("Cannot post event on event bus",e);
+            log.warn("Cannot post event on event bus: "+e.getMessage());
         }
     }
     
