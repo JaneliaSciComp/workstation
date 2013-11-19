@@ -19,6 +19,7 @@ import org.janelia.it.FlyWorkstation.gui.framework.keybind.KeymapUtil;
 import org.janelia.it.FlyWorkstation.gui.framework.outline.Annotations;
 import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.FlyWorkstation.model.entity.RootedEntity;
+import org.janelia.it.FlyWorkstation.shared.util.ConcurrentUtils;
 import org.janelia.it.FlyWorkstation.shared.util.SystemInfo;
 import org.janelia.it.FlyWorkstation.shared.workers.SimpleWorker;
 import org.janelia.it.jacs.model.entity.Entity;
@@ -288,14 +289,7 @@ public class ScreenEvaluationDialog extends ModalDialog implements Accessibility
 			@Override
 			protected void hadSuccess() {
 				setCurrFolderDirty(false);
-				if (success!=null) {
-					try {
-						success.call();
-					}
-					catch (Exception e) {
-						hadError(e);
-					}
-				}
+                ConcurrentUtils.invokeAndHandleExceptions(success);
 			}
 			
 			@Override

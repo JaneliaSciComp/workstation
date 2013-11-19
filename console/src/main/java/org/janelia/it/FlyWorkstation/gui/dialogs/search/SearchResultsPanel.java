@@ -29,6 +29,7 @@ import org.janelia.it.FlyWorkstation.gui.framework.table.DynamicRow;
 import org.janelia.it.FlyWorkstation.gui.framework.table.DynamicTable;
 import org.janelia.it.FlyWorkstation.gui.util.Icons;
 import org.janelia.it.FlyWorkstation.gui.util.panels.ScrollablePanel;
+import org.janelia.it.FlyWorkstation.shared.util.ConcurrentUtils;
 import org.janelia.it.FlyWorkstation.shared.workers.SimpleWorker;
 import org.janelia.it.jacs.compute.api.support.EntityDocument;
 import org.janelia.it.jacs.compute.api.support.SolrQueryBuilder;
@@ -438,7 +439,7 @@ public abstract class SearchResultsPanel extends JPanel implements SearchConfigu
 					populateFacets(resultPage);
 		        	populateResultView(resultPage);
 			    	if (showLoading) resultsTable.showTable();
-		    		if (success!=null) success.call();
+	                ConcurrentUtils.invoke(success);
 		    	}
 		    	catch (Exception e) {
 		    		SessionMgr.getSessionMgr().handleException(e);

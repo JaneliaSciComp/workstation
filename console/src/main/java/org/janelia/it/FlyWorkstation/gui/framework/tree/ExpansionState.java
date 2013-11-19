@@ -10,6 +10,7 @@ import javax.swing.tree.DefaultMutableTreeNode;
 import javax.swing.tree.TreePath;
 
 import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr;
+import org.janelia.it.FlyWorkstation.shared.util.ConcurrentUtils;
 import org.janelia.it.FlyWorkstation.shared.util.Utils;
 import org.janelia.it.jacs.shared.utils.EntityUtils;
 import org.slf4j.Logger;
@@ -126,7 +127,7 @@ public class ExpansionState {
     private void callSuccessFunction(Callable<Void> success) {
 		if (hasStartedAllWorkers() && workers.isEmpty() && !hasCalledSuccess()) {
 			try {
-				success.call();	
+			    ConcurrentUtils.invoke(success);
 				setCalledSuccess(true);
 			}
 			catch (Exception e) {

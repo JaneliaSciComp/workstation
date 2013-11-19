@@ -118,11 +118,14 @@ public abstract class EntityWrapper {
         children.remove(child);
     }
 
+    public void updateEntity(Entity entity) {
+        rootedEntity.setEntity(entity);
+        this.entity = entity;
+    }
+    
     @Override
     public String toString() {
         return "EntityWrapper [id=" + getId() + ", name=" + getName() + ", type=" + getType()
                 + ", role=" + getRole() + ", owner=" + getOwnerKey() + "]";
     }
-    
-    
 }

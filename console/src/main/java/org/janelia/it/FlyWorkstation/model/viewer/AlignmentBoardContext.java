@@ -14,6 +14,7 @@ import org.janelia.it.FlyWorkstation.model.domain.*;
 import org.janelia.it.FlyWorkstation.model.entity.RootedEntity;
 import org.janelia.it.jacs.model.entity.Entity;
 import org.janelia.it.jacs.model.entity.EntityConstants;
+import org.janelia.it.jacs.shared.utils.EntityUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -43,8 +44,11 @@ public class AlignmentBoardContext extends AlignedItem {
         
         for(RootedEntity child : rootedEntity.getChildrenForAttribute(EntityConstants.ATTRIBUTE_ITEM)) {
             log.debug("Adding child item: {} (id={})",child.getName(),child.getId());
-            AlignedItem item = new AlignedItem(child);
-            addChild(item);
+            AlignedItem alignedItem = new AlignedItem(child);
+            addChild(alignedItem);
+            if (EntityUtils.areLoaded(child.getEntity().getEntityData())) {
+                alignedItem.loadContextualizedChildren(alignmentContext);
+            }
         }
     }
 
@@ -144,66 +148,60 @@ public class AlignmentBoardContext extends AlignedItem {
      */
     public void addNewAlignedEntity(EntityWrapper wrapper) throws Exception {
 
+        log.debug("Adding new aligned entity: {}", wrapper.getName());
+        
         final Collection<AlignmentBoardEvent> events = new ArrayList<AlignmentBoardEvent>();
         
         if (wrapper instanceof Sample) {
-            Sample parent = (Sample)wrapper;
-            AlignedItem parentAlignedItem = getAlignedItemWithEntityId(parent.getId());
+            Sample sample = (Sample)wrapper;
+            AlignedItem sampleAlignedItem = getAlignedItemWithEntityId(sample.getId());
 
-            if (parentAlignedItem==null) {
-                if (parent.getChildren()==null) {
-                    parent.loadContextualizedChildren(getAlignmentContext());
+            if (sampleAlignedItem==null) {
+                if (sample.getChildren()==null) {
+                    sample.loadContextualizedChildren(getAlignmentContext());
                 }
                 
-                parentAlignedItem = ModelMgr.getModelMgr().addAlignedItem(this, parent);
-                parentAlignedItem.loadContextualizedChildren(getAlignmentContext());
+                sampleAlignedItem = ModelMgr.getModelMgr().addAlignedItem(this, sample, true);
+                sampleAlignedItem.loadContextualizedChildren(getAlignmentContext());
                 
-                for (EntityWrapper child : parent.getChildren()) {
-                    AlignedItem childItem = ModelMgr.getModelMgr().addAlignedItem(parentAlignedItem, child);
+                for (EntityWrapper neuron : sample.getNeuronSet()) {
+                    log.debug("Adding neuron: {}", neuron.getName());
+                    AlignedItem childItem = ModelMgr.getModelMgr().addAlignedItem(sampleAlignedItem, neuron, true);
                     childItem.loadContextualizedChildren(getAlignmentContext());
-                    childItem.setIsVisible(true);
                 }
-
-                events.add(new AlignmentBoardItemChangeEvent(this, parentAlignedItem, ChangeType.Added));
+                
+                events.add(new AlignmentBoardItemChangeEvent(this, sampleAlignedItem, ChangeType.Added));
             }
             else {
-                events.add(new AlignmentBoardItemChangeEvent(this, parentAlignedItem, ChangeType.VisibilityChange));
+                events.add(new AlignmentBoardItemChangeEvent(this, sampleAlignedItem, ChangeType.VisibilityChange));
             }
-            
-            parentAlignedItem.setIsVisible(true);
         }
         else if (wrapper instanceof Neuron) {
             events.addAll(handleChildWrapper(wrapper));
         }
         else if (wrapper instanceof CompartmentSet) {
-            CompartmentSet parent = (CompartmentSet) wrapper;
-            AlignedItem parentAlignedItem = getAlignedItemWithEntityId(parent.getId());
-            if ( parentAlignedItem == null ) {
-                if (parent.getChildren()==null) {
-                    parent.loadContextualizedChildren(getAlignmentContext());
+            CompartmentSet compartmentSet = (CompartmentSet) wrapper;
+            AlignedItem compartmentSetAlignedItem = getAlignedItemWithEntityId(compartmentSet.getId());
+            
+            if (compartmentSetAlignedItem == null) {
+                if (compartmentSet.getChildren() == null) {
+                    compartmentSet.loadContextualizedChildren(getAlignmentContext());
                 }
 
-                parentAlignedItem = ModelMgr.getModelMgr().addAlignedItem(this, parent);
-                if ( parentAlignedItem.getChildren() == null ) {
-                    parentAlignedItem.loadContextualizedChildren(getAlignmentContext());
+                compartmentSetAlignedItem = ModelMgr.getModelMgr().addAlignedItem(this, compartmentSet, true);
+                compartmentSetAlignedItem.loadContextualizedChildren(getAlignmentContext());
+                
+                for (Compartment child : compartmentSet.getCompartmentSet()) {
+                    log.debug("Adding compartment: {}", child.getName());
+                    AlignedItem alignedItem = ModelMgr.getModelMgr().addAlignedItem(compartmentSetAlignedItem, child, true);
+                    alignedItem.loadContextualizedChildren(getAlignmentContext());
                 }
-
-                for (Compartment child : parent.getCompartmentSet()) {
-                    log.debug("Adding compartment {}.", child.getName());
-                    AlignedItem alignedItem = ModelMgr.getModelMgr().addAlignedItem(parentAlignedItem, child);
-                    if ( alignedItem.getChildren() == null ) {
-                        alignedItem.loadContextualizedChildren(getAlignmentContext());
-                    }
-                    alignedItem.setIsVisible(true);
-                }
-
-                events.add(new AlignmentBoardItemChangeEvent(this, parentAlignedItem, ChangeType.Added));
+                
+                events.add(new AlignmentBoardItemChangeEvent(this, compartmentSetAlignedItem, ChangeType.Added));
             }
             else {
-                events.add(new AlignmentBoardItemChangeEvent(this, parentAlignedItem, ChangeType.VisibilityChange));
+                events.add(new AlignmentBoardItemChangeEvent(this, compartmentSetAlignedItem, ChangeType.VisibilityChange));
             }
-
-            parentAlignedItem.setIsVisible( true );
 
         }
         else if (wrapper instanceof Compartment) {
@@ -228,7 +226,7 @@ public class AlignmentBoardContext extends AlignedItem {
 
         AlignedItem parentAlignedItem = getAlignedItemWithEntityId(parent.getId());
         if (parentAlignedItem==null) {
-            parentAlignedItem = ModelMgr.getModelMgr().addAlignedItem(this, parent);
+            parentAlignedItem = ModelMgr.getModelMgr().addAlignedItem(this, parent, true);
             parentAlignedItem.loadContextualizedChildren(getAlignmentContext());
             log.debug("No parent found for {}.", parent.getName());
         }
@@ -236,19 +234,16 @@ public class AlignmentBoardContext extends AlignedItem {
             log.debug("Found parent item for {}, of {}.", parent.getName(), parentAlignedItem.getName() );
         }
 
-        parentAlignedItem.setIsVisible(true);
-
         AlignedItem childAlignedItem = parentAlignedItem.getAlignedItemWithEntityId(child.getId());
         if (childAlignedItem == null) {
-            childAlignedItem = ModelMgr.getModelMgr().addAlignedItem(parentAlignedItem, child);
+            childAlignedItem = ModelMgr.getModelMgr().addAlignedItem(parentAlignedItem, child, true);
             childAlignedItem.loadContextualizedChildren(getAlignmentContext());
             events.add(new AlignmentBoardItemChangeEvent(this, childAlignedItem, ChangeType.Added));
         }
         else {
+            childAlignedItem.setIsVisible(true);
             events.add(new AlignmentBoardItemChangeEvent(this, childAlignedItem, ChangeType.VisibilityChange));
         }
-
-        childAlignedItem.setIsVisible(true);
         
         return events;
     }

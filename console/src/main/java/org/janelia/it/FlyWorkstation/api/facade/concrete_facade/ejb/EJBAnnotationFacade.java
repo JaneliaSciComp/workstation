@@ -9,6 +9,7 @@ import org.janelia.it.FlyWorkstation.api.facade.abstract_facade.AnnotationFacade
 import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.jacs.model.entity.Entity;
 import org.janelia.it.jacs.model.entity.EntityActorPermission;
+import org.janelia.it.jacs.model.entity.EntityData;
 import org.janelia.it.jacs.shared.annotation.DataDescriptor;
 import org.janelia.it.jacs.shared.annotation.DataFilter;
 import org.janelia.it.jacs.shared.annotation.FilterResult;
@@ -120,5 +121,10 @@ public class EJBAnnotationFacade extends EJBEntityFacade implements AnnotationFa
     @Override
     public Entity createAlignmentBoard(String alignmentBoardName, String alignmentSpace, String opticalRes, String pixelRes) throws Exception {
         return EJBFactory.getRemoteAnnotationBean().createAlignmentBoard(SessionMgr.getSubjectKey(), alignmentBoardName, alignmentSpace, opticalRes, pixelRes);
+    }
+
+    @Override
+    public EntityData addAlignedItem(Entity parentEntity, Entity child, String alignedItemName, boolean visible) throws Exception {
+        return EJBFactory.getRemoteAnnotationBean().addAlignedItem(parentEntity, child, alignedItemName, visible);
     }
 }

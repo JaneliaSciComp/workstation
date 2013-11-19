@@ -175,7 +175,7 @@ public class EntityModel {
                 if (parent != null) {
                     for(EntityData ed : parent.getEntityData()) {
                         if (ed.getChildEntity()!=null && ed.getChildEntity().getId().equals(canonicalEntity.getId())) {
-                            log.trace("putOrUpdate: Replacing child {} on existing parent {}",EntityUtils.identify(canonicalEntity), EntityUtils.identify(parent));
+                            //log.trace("putOrUpdate: Replacing child {} on existing parent {}",EntityUtils.identify(canonicalEntity), EntityUtils.identify(parent));
                             ed.setChildEntity(canonicalEntity);
                         }
                     }
@@ -188,7 +188,7 @@ public class EntityModel {
 					Entity child = entityCache.getIfPresent(ed.getChildEntity().getId());
 					if (child!=null) {
 						ed.setChildEntity(child);
-						log.trace("putOrUpdate: Storing parent {} for child {}",EntityUtils.identify(canonicalEntity), EntityUtils.identify(child));
+						//log.trace("putOrUpdate: Storing parent {} for child {}",EntityUtils.identify(canonicalEntity), EntityUtils.identify(child));
 						parentMap.put(child.getId(), canonicalEntity.getId());
 					}
 				}
@@ -1083,6 +1083,33 @@ public class EntityModel {
             }
             
             return abRootedEntity.getChild(childEd);
+        }
+    }
+
+    /**
+     * Create a new Alignment board and cache it.
+     *
+     * @param boardName Name of the Alignment Board
+     * @return canonical entity instance
+     * @throws Exception
+     */
+    public RootedEntity addAlignedItem(Entity parent, Entity entity, String alignedItemName, boolean visible) throws Exception {
+
+        checkIfCanonicalEntity(parent);
+        checkIfCanonicalEntity(entity);
+        
+        synchronized(this) {
+            EntityData alignedItemEntityEd = annotationFacade.addAlignedItem(parent, entity, alignedItemName, visible);
+            Entity newAlignedEntity = alignedItemEntityEd.getChildEntity();
+            putOrUpdate(newAlignedEntity);
+
+            alignedItemEntityEd.setParentEntity(parent); // replace with a canonical entity
+            parent.getEntityData().add(alignedItemEntityEd); 
+            log.debug("Added aligned item (id={}) to parent (id={})",entity.getId(),parent.getId());
+            notifyEntityChanged(parent);
+            
+            RootedEntity abRootedEntity = new RootedEntity(getEntityById(parent.getId()));
+            return abRootedEntity.getChildById(newAlignedEntity.getId());
         }
     }
     

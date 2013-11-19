@@ -7,6 +7,7 @@ import org.janelia.it.FlyWorkstation.api.entity_model.events.WorkerChangedEvent;
 import org.janelia.it.FlyWorkstation.api.entity_model.events.WorkerEndedEvent;
 import org.janelia.it.FlyWorkstation.api.entity_model.events.WorkerStartedEvent;
 import org.janelia.it.FlyWorkstation.api.entity_model.management.ModelMgr;
+import org.janelia.it.FlyWorkstation.shared.util.ConcurrentUtils;
 
 /**
  * A worker thread which can be monitored in the background.
@@ -65,14 +66,11 @@ public abstract class BackgroundWorker extends SimpleWorker {
     }
 
     public void runSuccessCallback() {
-        Callable<Void> success = getSuccessCallback();
-        if (success!=null) {
-            try {
-                success.call();
-            }
-            catch (Exception e) {
-                hadError(e);
-            }
+        try {
+            ConcurrentUtils.invoke(getSuccessCallback());
+        }
+        catch (Exception e) {
+            hadError(e);
         }
     }
     

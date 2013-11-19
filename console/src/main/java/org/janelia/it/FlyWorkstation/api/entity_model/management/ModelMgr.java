@@ -569,19 +569,11 @@ public class ModelMgr {
         return entityModel.createAlignmentBoard(alignmentBoardName, alignmentSpace, opticalRes, pixelRes);
     }
 
-    public AlignedItem addAlignedItem(AlignedItem parent, EntityWrapper wrapper) throws Exception {
-
-        // Create and add a new aligned item context entity
+    public AlignedItem addAlignedItem(AlignedItem parent, EntityWrapper wrapper, boolean visible) throws Exception {
         Entity parentEntity = parent.getInternalEntity();
-                
-        Entity alignedItemEntity = createEntity(EntityConstants.TYPE_ALIGNED_ITEM, wrapper.getName());
-        EntityData alignedItemEd = addEntityToParent(parentEntity, alignedItemEntity, parentEntity.getMaxOrderIndex()+1, EntityConstants.ATTRIBUTE_ITEM);
-        
-        // Add the actual entity to the aligned item
-        addEntityToParent(alignedItemEntity, wrapper.getInternalEntity(), alignedItemEntity.getMaxOrderIndex()+1, EntityConstants.ATTRIBUTE_ENTITY);
-        
-        // Add and return the aligned item
-        AlignedItem newItem = new AlignedItem(parent.getInternalRootedEntity().getChild(alignedItemEd));
+        RootedEntity rootedEntity = entityModel.addAlignedItem(parentEntity, wrapper.getInternalEntity(), wrapper.getName(), visible);
+        AlignedItem newItem = new AlignedItem(rootedEntity);
+        newItem.setParent(newItem);
         parent.addChild(newItem);
         return newItem;
     }

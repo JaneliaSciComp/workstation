@@ -1,6 +1,7 @@
 package org.janelia.it.FlyWorkstation.gui.framework.viewer;
 
 import com.google.common.eventbus.Subscribe;
+
 import org.janelia.it.FlyWorkstation.api.entity_model.access.ModelMgrAdapter;
 import org.janelia.it.FlyWorkstation.api.entity_model.access.ModelMgrObserver;
 import org.janelia.it.FlyWorkstation.api.entity_model.events.EntityChangeEvent;
@@ -23,6 +24,7 @@ import org.janelia.it.FlyWorkstation.gui.util.panels.ViewerSettingsPanel;
 import org.janelia.it.FlyWorkstation.model.entity.ForbiddenEntity;
 import org.janelia.it.FlyWorkstation.model.entity.RootedEntity;
 import org.janelia.it.FlyWorkstation.model.utils.AnnotationSession;
+import org.janelia.it.FlyWorkstation.shared.util.ConcurrentUtils;
 import org.janelia.it.FlyWorkstation.shared.util.SystemInfo;
 import org.janelia.it.FlyWorkstation.shared.util.Utils;
 import org.janelia.it.FlyWorkstation.shared.workers.SimpleWorker;
@@ -36,6 +38,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.swing.*;
+
 import java.awt.*;
 import java.awt.event.*;
 import java.util.*;
@@ -1061,14 +1064,7 @@ public class IconDemoPanel extends IconPanel {
 				entityLoadInProgress.set(false);
 				
 				// Finally, we're done, we can call the success callback
-				if (success != null) {
-					try {
-						success.call();
-					} 
-					catch (Exception e) {
-						SessionMgr.getSessionMgr().handleException(e);
-					}
-				}
+                ConcurrentUtils.invokeAndHandleExceptions(success);
 			}
 		});
 	}

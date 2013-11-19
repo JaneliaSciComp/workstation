@@ -5,6 +5,7 @@ import java.util.Map;
 import java.util.Set;
 
 import org.janelia.it.jacs.model.entity.Entity;
+import org.janelia.it.jacs.model.entity.EntityData;
 import org.janelia.it.jacs.shared.annotation.DataDescriptor;
 import org.janelia.it.jacs.shared.annotation.DataFilter;
 import org.janelia.it.jacs.shared.annotation.FilterResult;
@@ -54,4 +55,6 @@ public interface AnnotationFacade {
 	public List<Entity> getDataSets() throws Exception;
 	
 	public Entity createAlignmentBoard(String alignmentBoardName, String alignmentSpace, String opticalRes, String pixelRes) throws Exception;
+	
+	public EntityData addAlignedItem(Entity parentEntity, Entity child, String alignedItemName, boolean visible) throws Exception;
 }

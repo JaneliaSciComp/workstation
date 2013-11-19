@@ -16,6 +16,7 @@ import org.janelia.it.FlyWorkstation.gui.framework.outline.EntitySelectionHistor
 import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.FlyWorkstation.gui.util.Icons;
 import org.janelia.it.FlyWorkstation.model.entity.RootedEntity;
+import org.janelia.it.FlyWorkstation.shared.util.ConcurrentUtils;
 import org.janelia.it.FlyWorkstation.shared.workers.SimpleWorker;
 import org.janelia.it.jacs.model.entity.Entity;
 import org.janelia.it.jacs.model.entity.EntityData;
@@ -185,14 +186,7 @@ public class ViewerPane extends JPanel {
 		
 		if (contextRootedEntity!=null && rootedEntity.getId().equals(contextRootedEntity.getId())) {
 		    log.debug("Entity is already loaded: "+contextRootedEntity.getId());
-			if (success!=null) {
-				try {
-					success.call();	
-				}
-				catch (Exception e) {
-					SessionMgr.getSessionMgr().handleException(e);
-				}
-			}
+            ConcurrentUtils.invokeAndHandleExceptions(success);
 			return;
 		}
 		

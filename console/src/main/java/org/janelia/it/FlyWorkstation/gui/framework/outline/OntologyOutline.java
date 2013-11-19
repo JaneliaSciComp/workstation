@@ -63,6 +63,7 @@ import org.janelia.it.FlyWorkstation.gui.util.JScrollPopupMenu;
 import org.janelia.it.FlyWorkstation.gui.util.MouseForwarder;
 import org.janelia.it.FlyWorkstation.model.entity.ForbiddenEntity;
 import org.janelia.it.FlyWorkstation.model.entity.RootedEntity;
+import org.janelia.it.FlyWorkstation.shared.util.ConcurrentUtils;
 import org.janelia.it.FlyWorkstation.shared.workers.SimpleWorker;
 import org.janelia.it.jacs.model.entity.Entity;
 import org.janelia.it.jacs.model.entity.EntityConstants;
@@ -188,11 +189,12 @@ public abstract class OntologyOutline extends EntityTree implements Refreshable,
      * Called after loadRootList is finished.
      * @param entityRootList the shallow loaded list of ontology roots
      */
-    public void init(List<Entity> entityRootList) {
+    public void init(List<Entity> entityRootList, Callable<Void> success) {
         
         if (entityRootList==null) {
             log.error("No ontology roots found");
             initializeTree(null);
+            ConcurrentUtils.invokeAndHandleExceptions(success);
             return;
         }
         
@@ -210,10 +212,11 @@ public abstract class OntologyOutline extends EntityTree implements Refreshable,
         }
         
         if (selectedEntityRoot!=null) {
-            loadOntology(selectedEntityRoot.getId(), null);
+            loadOntology(selectedEntityRoot.getId(), success);
         }
         else {
             initializeTree(null);
+            ConcurrentUtils.invokeAndHandleExceptions(success);
         }
     }
     
@@ -281,14 +284,7 @@ public abstract class OntologyOutline extends EntityTree implements Refreshable,
                         SwingUtilities.invokeLater(new Runnable() {
                             @Override
                             public void run() {
-                                if (success!=null) {
-                                    try {
-                                        success.call();
-                                    }
-                                    catch (Exception e) {
-                                        SessionMgr.getSessionMgr().handleException(e); 
-                                    }
-                                }
+                                ConcurrentUtils.invokeAndHandleExceptions(success);
                             }
                         });
                     }
@@ -483,6 +479,7 @@ public abstract class OntologyOutline extends EntityTree implements Refreshable,
      * @return
      */
     public Action getActionForNode(DefaultMutableTreeNode node) {
+        if (ontologyActionMap==null || selectedTree==null) return null;
         return ontologyActionMap.get(selectedTree.getUniqueId(node));
     }
     
@@ -719,20 +716,27 @@ public abstract class OntologyOutline extends EntityTree implements Refreshable,
                 try {
                     ModelMgr.getModelMgr().registerOnEventBus(OntologyOutline.this);
                     
-                    init(rootList);
-                    refreshInProgress.set(false);
-                    
-                    if (expansionState!=null) {
-                        expansionState.restoreExpansionState(getDynamicTree(), true, new Callable<Void>() {
-                            @Override
-                            public Void call() throws Exception {
-                                showTree();
-                                executeCallBacks();
-                                log.debug("Tree refresh complete");
-                                return null;
+                    init(rootList, new Callable<Void>() {
+                        @Override
+                        public Void call() throws Exception {
+
+                            refreshInProgress.set(false);
+                            
+                            if (expansionState!=null && getDynamicTree()!=null && getRootEntity()!=null) {
+                                expansionState.restoreExpansionState(getDynamicTree(), true, new Callable<Void>() {
+                                    @Override
+                                    public Void call() throws Exception {
+                                        showTree();
+                                        executeCallBacks();
+                                        log.debug("Tree refresh complete");
+                                        return null;
+                                    }
+                                });
                             }
-                        });
-                    }
+                            
+                            return null;
+                        }
+                    });
                 }
                 catch (Exception e) {
                     hadError(e);

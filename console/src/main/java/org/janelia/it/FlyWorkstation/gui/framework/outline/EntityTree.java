@@ -37,6 +37,7 @@ import org.janelia.it.FlyWorkstation.gui.framework.tree.LazyTreeNodeLoader;
 import org.janelia.it.FlyWorkstation.gui.util.Icons;
 import org.janelia.it.FlyWorkstation.model.entity.ForbiddenEntity;
 import org.janelia.it.FlyWorkstation.model.entity.RootedEntity;
+import org.janelia.it.FlyWorkstation.shared.util.ConcurrentUtils;
 import org.janelia.it.FlyWorkstation.shared.util.Utils;
 import org.janelia.it.FlyWorkstation.shared.workers.FakeProgressWorker;
 import org.janelia.it.FlyWorkstation.shared.workers.SimpleWorker;
@@ -137,7 +138,7 @@ public class EntityTree extends JPanel implements ActivatableView {
                     if (null != selectedTree) {
                         ToolTipManager.sharedInstance().registerComponent(selectedTree);
                     }
-                    if (success!=null) success.call();
+                    ConcurrentUtils.invokeAndHandleExceptions(success);
                 }
                 catch (Exception e) {
                     hadError(e);
@@ -390,14 +391,7 @@ public class EntityTree extends JPanel implements ActivatableView {
 						public void run() {
 		        			getDynamicTree().recreateChildNodes(node);
 		                    log.debug("expandNodeWithLazyChildren completed, from cache: {}",getEntity(node).getName());  
-		                    if (success!=null) {
-		                    	try {
-		                    		success.call();
-		                    	}
-		                    	catch (Exception e) {
-		                    		SessionMgr.getSessionMgr().handleException(e);
-		                    	}
-		                    }
+		                    ConcurrentUtils.invokeAndHandleExceptions(success);
 						}
 					});
             		return;
@@ -406,14 +400,7 @@ public class EntityTree extends JPanel implements ActivatableView {
                 SimpleWorker loadingWorker = new LazyTreeNodeLoader(selectedTree, node) {
                     protected void doneLoading() {
                     	log.debug("expandNodeWithLazyChildren completed, from database: {}",getEntity(node).getName());	
-	                    if (success!=null) {
-	                    	try {
-	                    		success.call();
-	                    	}
-	                    	catch (Exception e) {
-	                    		SessionMgr.getSessionMgr().handleException(e);
-	                    	}
-	                    }
+                    	ConcurrentUtils.invokeAndHandleExceptions(success);
                     }
                 };
 

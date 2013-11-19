@@ -13,6 +13,7 @@ import org.janelia.it.FlyWorkstation.model.entity.RootedEntity;
 import org.janelia.it.jacs.model.entity.Entity;
 import org.janelia.it.jacs.model.entity.EntityConstants;
 import org.janelia.it.jacs.model.entity.EntityData;
+import org.janelia.it.jacs.shared.utils.EntityUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -76,7 +77,11 @@ public class AlignedItem extends EntityWrapper {
         }
         
         for(RootedEntity child : rootedEntity.getChildrenForAttribute(EntityConstants.ATTRIBUTE_ITEM)) {
-            addChild(new AlignedItem(child));
+            AlignedItem alignedItem = new AlignedItem(child);
+            addChild(alignedItem);
+            if (EntityUtils.areLoaded(child.getEntity().getEntityData())) {
+                alignedItem.loadContextualizedChildren(alignmentContext);
+            }
         }
     }
     

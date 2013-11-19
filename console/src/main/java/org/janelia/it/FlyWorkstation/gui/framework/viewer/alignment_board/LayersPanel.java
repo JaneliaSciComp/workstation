@@ -8,6 +8,8 @@ import java.awt.event.ComponentEvent;
 import java.awt.event.InputEvent;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
+import java.util.Collection;
+import java.util.HashSet;
 import java.util.List;
 import java.util.concurrent.Callable;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -33,6 +35,7 @@ import org.janelia.it.FlyWorkstation.gui.framework.outline.ActivatableView;
 import org.janelia.it.FlyWorkstation.gui.framework.outline.EntityTransferHandler;
 import org.janelia.it.FlyWorkstation.gui.framework.outline.Refreshable;
 import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr;
+import org.janelia.it.FlyWorkstation.gui.framework.viewer.alignment_board.events.AlignmentBoardCloseEvent;
 import org.janelia.it.FlyWorkstation.gui.framework.viewer.alignment_board.events.AlignmentBoardItemChangeEvent;
 import org.janelia.it.FlyWorkstation.gui.framework.viewer.alignment_board.events.AlignmentBoardItemChangeEvent.ChangeType;
 import org.janelia.it.FlyWorkstation.gui.framework.viewer.alignment_board.events.AlignmentBoardItemRemoveEvent;
@@ -45,6 +48,7 @@ import org.janelia.it.FlyWorkstation.model.domain.EntityWrapper;
 import org.janelia.it.FlyWorkstation.model.entity.RootedEntity;
 import org.janelia.it.FlyWorkstation.model.viewer.AlignedItem;
 import org.janelia.it.FlyWorkstation.model.viewer.AlignmentBoardContext;
+import org.janelia.it.FlyWorkstation.shared.util.ConcurrentUtils;
 import org.janelia.it.FlyWorkstation.shared.workers.SimpleWorker;
 import org.janelia.it.jacs.model.entity.Entity;
 import org.janelia.it.jacs.model.entity.EntityConstants;
@@ -325,11 +329,11 @@ public class LayersPanel extends JPanel implements Refreshable, ActivatableView 
                     throw new IllegalStateException("Alignment board does not exist");
                 }
                 this.abContext = new AlignmentBoardContext(abRootedEntity);
-                log.trace("loading ancestors for alignment board: {}", abContext);
+                log.debug("Loading ancestors for alignment board: {}", abContext);
                 loadAncestors(abContext);
                 loadCompartmentSet(abContext);
             }
-            
+
             private void loadAncestors(EntityWrapper wrapper) throws Exception {
                 log.trace("loadAncestors: {}",wrapper);
                 if ( wrapper == null || abContext == null ) {
@@ -370,20 +374,17 @@ public class LayersPanel extends JPanel implements Refreshable, ActivatableView 
                                     compartmentSetEntity.getValueByAttributeName( EntityConstants.ATTRIBUTE_PIXEL_RESOLUTION )
                             );
 
-                            if ( targetSpace.equals( compartmentSetSpace ) ) {
-                                CompartmentSet compartmentSet = new CompartmentSet( new RootedEntity( compartmentSetEntity ) );
-                                compartmentSet.loadContextualizedChildren( context.getAlignmentContext() );
+                            if (targetSpace.equals(compartmentSetSpace)) {
+                                CompartmentSet compartmentSet = new CompartmentSet(new RootedEntity(compartmentSetEntity));
+                                compartmentSet.loadContextualizedChildren(context.getAlignmentContext());
                                 if (!compartmentSet.getChildren().isEmpty()) {
-                                    abContext.addNewAlignedEntity( compartmentSet );
+                                    abContext.addNewAlignedEntity(compartmentSet);
                                     return;
                                 }
                             }
-
                         }
-                        
                     }
                 }
-
             }
 
             @Override
@@ -393,22 +394,15 @@ public class LayersPanel extends JPanel implements Refreshable, ActivatableView 
                 log.debug("loadAlignmentBoard was a success, updating the outline now");
 
                 sampleTreeModel = new SampleTreeModel(alignmentBoardContext);
-                OutlineModel outlineModel = DefaultOutlineModel.createOutlineModel(sampleTreeModel, new AlignedEntityRowModel(), true, "Name");
-                updateTableModel(outlineModel);
+                
+                recreateModel();
                 
                 if (expansionState!=null) expansionState.restoreExpansionState(true);
                 
                 loadInProgress.set(false);
                 showOutline();
                 
-                if (success!=null) {
-                    try {
-                        success.call();    
-                    }
-                    catch (Exception e) {
-                        hadError(e);
-                    }
-                }
+                ConcurrentUtils.invokeAndHandleExceptions(success);
             }
 
             @Override
@@ -472,12 +466,6 @@ public class LayersPanel extends JPanel implements Refreshable, ActivatableView 
         columnModel.getColumn(COLOR_SWATCH_COLNUM).setPreferredWidth(COLUMN_WIDTH_COLOR);
         columnModel.getColumn(2).setPreferredWidth(getWidth()-COLUMN_WIDTH_TREE_NEGATIVE);
     }
-    
-    @Subscribe 
-    public void entityInvalidated(EntityInvalidationEvent event) {
-        log.debug("Some entities were invalidated so we're refreshing the tree");
-        refresh();
-    }
 
     private AlignedItem findAlignedItemByEntityId(AlignedItem alignedItem, Long entityId) {
         if (alignedItem.getId().equals(entityId)) {
@@ -493,7 +481,55 @@ public class LayersPanel extends JPanel implements Refreshable, ActivatableView 
     }
     
     @Subscribe 
+    public void entityInvalidated(EntityInvalidationEvent event) {
+        if (event.isTotalInvalidation()) {
+            log.debug("Total invalidation, so we're refreshing the tree");
+            refresh();
+            return;
+        }
+
+        log.debug("Some entities were invalidated, let's check if we care...");
+        if (alignmentBoardContext==null) return;
+        
+        final Collection<AlignedItem> invalidItems = new HashSet<AlignedItem>();
+        
+        Collection<Entity> invalidated = event.getInvalidatedEntities();
+        
+        for(Entity entity : invalidated) {
+            AlignedItem invalidItem = findAlignedItemByEntityId(alignmentBoardContext, entity.getId());
+            if (invalidItem!=null) {
+                invalidItems.add(invalidItem);
+            }
+        }
+
+        log.debug("Found {} aligned items with invalidated entities",invalidItems.size());
+        
+        if (invalidItems.isEmpty()) return;
+        
+        for(AlignedItem invalidItem : invalidItems) {
+            try {
+                log.debug("Updating entity {} on aligned item",invalidItem.getId());
+                invalidItem.updateEntity(ModelMgr.getModelMgr().getEntityById(invalidItem.getId()));
+                invalidItem.loadContextualizedChildren(alignmentBoardContext.getAlignmentContext());
+            }
+            catch (Exception e) {
+                log.error("Error updating entity {} on aligned item",invalidItem.getId());
+            }
+        }
+        
+        recreateModel();
+    }
+    
+    @Subscribe 
     public void entityRemoved(EntityRemoveEvent event) {
+        
+        if (alignmentBoardContext.getId().equals(event.getEntity().getId())) {
+            // Alignment board was removed
+            AlignmentBoardCloseEvent closeEvent = new AlignmentBoardCloseEvent(alignmentBoardContext);
+            ModelMgr.getModelMgr().postOnEventBus(closeEvent);
+            return;
+        }
+        
         log.debug("Some entities were removed, let's check if we care...");
         final AlignedItem removedItem = findAlignedItemByEntityId(alignmentBoardContext, event.getEntity().getId());
         if (removedItem!=null) {
@@ -511,11 +547,19 @@ public class LayersPanel extends JPanel implements Refreshable, ActivatableView 
             ModelMgr.getModelMgr().postOnEventBus(abEvent);
         }
     }
+
+    @Subscribe 
+    public void alignmentBoardClosed(AlignmentBoardCloseEvent event) {
+        this.alignmentBoardContext = null;
+        this.outline = null;
+        this.sampleTreeModel = null;
+        showNothing();
+    }
     
     @Subscribe 
     public void itemChanged(AlignmentBoardItemChangeEvent event) {
 
-        if (sampleTreeModel==null) return;
+        if (sampleTreeModel==null || alignmentBoardContext==null || event.getAlignedItem()==null) return;
 
         // Generating model events is hard (we don't know the UI indexes of what was deleted, for example),
         // so we just recreate the model here.
@@ -523,26 +567,41 @@ public class LayersPanel extends JPanel implements Refreshable, ActivatableView 
         final OutlineExpansionState expansionState = new OutlineExpansionState(outline);
         expansionState.storeExpansionState();
 
-        if (event.getChangeType()==ChangeType.FilterLevelChange) {
-            log.info("Filter level changed");
-            OutlineModel outlineModel = DefaultOutlineModel.createOutlineModel(sampleTreeModel, new AlignedEntityRowModel(), true, "Name");
-            updateTableModel(outlineModel);
-            this.getOutline().updateUI();
-
-        }
-        else {
-            log.debug("Aligned item changed: "+event.getAlignedItem().getName());
-
-            if (event.getChangeType()==ChangeType.Removed) {
-                alignmentBoardContext.findAndRemoveAlignedEntity(event.getAlignedItem());
+        ChangeType change = event.getChangeType();
+        log.debug("Aligned item changed {} with change type {}", event.getAlignedItem().getName(), change);
+        
+        if (change==ChangeType.Added) {
+            try {
+                // Recreate the contextualized wrappers
+                EntityWrapper parent = event.getAlignedItem().getParent();
+                if (parent==null) {
+                    log.error("Aligned item has null parent: "+event.getAlignedItem().getName());
+                }
+                else {
+                    parent.loadContextualizedChildren(alignmentBoardContext.getAlignmentContext());    
+                }
             }
-
+            catch (Exception e) {
+                SessionMgr.getSessionMgr().handleException(e);
+            }
+        }
+        else if (change==ChangeType.Removed) {
+            // Remove the wrappers
+            alignmentBoardContext.findAndRemoveAlignedEntity(event.getAlignedItem());
+        }
+        
+        recreateModel();
+        
+        expansionState.restoreExpansionState(true);
+    }
+    
+    private void recreateModel() {
+        if (sampleTreeModel!=null) {
+            log.debug("Recreating outline model and updating UI");
             OutlineModel outlineModel = DefaultOutlineModel.createOutlineModel(sampleTreeModel, new AlignedEntityRowModel(), true, "Name");
             updateTableModel(outlineModel);
-
+            getOutline().updateUI();
         }
-
-        expansionState.restoreExpansionState(true);
     }
     
     @Override
@@ -620,8 +679,8 @@ public class LayersPanel extends JPanel implements Refreshable, ActivatableView 
                 EntityWrapper wrapper = alignedItem.getItemWrapper();
                 
                 if (wrapper==null) {
-                    label.setText(alignmentBoardContext.getName());
-                    label.setIcon(Icons.getIcon(alignmentBoardContext.getInternalEntity()));
+                    label.setText("Item wrapper is null");
+                    label.setIcon(null);
                 }
                 else {
                     Entity entity = wrapper.getInternalEntity();
@@ -680,7 +739,6 @@ public class LayersPanel extends JPanel implements Refreshable, ActivatableView 
         }
     }
     
-    
     private class AlignedEntityRowModel implements RowModel {
 
         @Override
@@ -708,34 +766,37 @@ public class LayersPanel extends JPanel implements Refreshable, ActivatableView 
 
         @Override
         public Object getValueFor(Object node, int column) {
-            if ( node instanceof AlignedItem ) {
-                AlignedItem alignedItem = (AlignedItem)node;
+            if (node instanceof AlignedItem) {
+                AlignedItem alignedItem = (AlignedItem) node;
                 switch (column) {
-                    case VIZCHECK_COLNUM:
-                        if (alignedItem==alignmentBoardContext) return Boolean.TRUE;
-                        return alignedItem.isVisible();
-                    case COLOR_SWATCH_COLNUM:
-                        if (alignedItem==alignmentBoardContext) return null;
-                        return alignedItem;
-
-                    default:
-                        assert false;
+                case VIZCHECK_COLNUM:
+                    if (alignedItem == alignmentBoardContext) return Boolean.TRUE;
+                    return alignedItem.isVisible();
+                case COLOR_SWATCH_COLNUM:
+                    if (alignedItem == alignmentBoardContext) return null;
+                    return alignedItem;
+                default:
+                    assert false;
                 }
-                return null;
             }
-            else if ( node instanceof String  &&  column == 0 ) {
-                return Boolean.FALSE;
+            else if (node instanceof String) {
+                switch (column) {
+                case VIZCHECK_COLNUM:
+                    return Boolean.FALSE;
+                case COLOR_SWATCH_COLNUM:
+                    return null;
+                default:
+                    assert false;
+                }
             }
-            else {
-                return node;
-            }
+            return null;
         }
 
         @Override
         public boolean isCellEditable(Object node, int column) {
-            if ( node instanceof  AlignedItem ) {
-                final AlignedItem alignedItem = (AlignedItem)node;
-                return column==VIZCHECK_COLNUM && (alignedItem!=alignmentBoardContext);
+            if (node instanceof AlignedItem) {
+                final AlignedItem alignedItem = (AlignedItem) node;
+                return column == VIZCHECK_COLNUM && (alignedItem != alignmentBoardContext);
             }
             else {
                 return false;
@@ -744,7 +805,7 @@ public class LayersPanel extends JPanel implements Refreshable, ActivatableView 
 
         @Override
         public void setValueFor(Object node, int column, Object value) {
-            if ( ! (node instanceof AlignedItem ) ) {
+            if (!(node instanceof AlignedItem)) {
                 return;
             }
             final AlignedItem alignedItem = (AlignedItem)node;

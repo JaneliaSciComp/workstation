@@ -142,6 +142,7 @@ public class RenderablesLoadWorker extends SimpleWorker implements VolumeLoader 
     @Override
     protected void doStuff() throws Exception {
 
+        if (dataSource==null) return;
         Collection<MaskChanRenderableData> renderableDatas = dataSource.getRenderableDatas();
 
         // Cut down the to-renders: use only the larger ones.

@@ -31,6 +31,7 @@ public class SampleTreeModel implements TreeModel {
     
     public SampleTreeModel(AlignmentBoardContext alignmentBoardContext) {
         this.alignmentBoardContext = alignmentBoardContext;
+        log.debug("Creating SampleTreeModel for alignment board context id={}",alignmentBoardContext.getId());
     }
 
     @Override
@@ -60,6 +61,8 @@ public class SampleTreeModel implements TreeModel {
                 }
             }
         }
+        log.debug(index+"th child of {} is {}",parent, child);
+        
         if ( child == null ) {
             return ""; // Change to empty child.
         }
@@ -82,6 +85,7 @@ public class SampleTreeModel implements TreeModel {
                 }
             }
         }
+        log.debug("{} has {} children", parent, count);
         return count;
     }
 
@@ -98,6 +102,7 @@ public class SampleTreeModel implements TreeModel {
                 }
             }
         }
+        log.debug("{} is {}th child of "+parent, child, index);
         return index;
     }
 

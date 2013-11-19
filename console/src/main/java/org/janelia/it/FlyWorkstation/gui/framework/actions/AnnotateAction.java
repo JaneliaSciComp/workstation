@@ -12,6 +12,7 @@ import org.janelia.it.FlyWorkstation.gui.framework.outline.OntologyOutline;
 import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.FlyWorkstation.model.entity.RootedEntity;
 import org.janelia.it.FlyWorkstation.model.utils.AnnotationSession;
+import org.janelia.it.FlyWorkstation.shared.util.ConcurrentUtils;
 import org.janelia.it.FlyWorkstation.shared.workers.SimpleWorker;
 import org.janelia.it.jacs.model.entity.Entity;
 import org.janelia.it.jacs.model.entity.EntityData;
@@ -140,14 +141,7 @@ public class AnnotateAction extends OntologyElementAction {
 
 			@Override
 			protected void hadSuccess() {
-				if (doSuccess != null) {
-                    try {
-                        doSuccess.call();
-                    }
-                    catch (Exception e) {
-                        e.printStackTrace();
-                    }
-                }
+			    ConcurrentUtils.invokeAndHandleExceptions(doSuccess);
 			}
 
 			@Override

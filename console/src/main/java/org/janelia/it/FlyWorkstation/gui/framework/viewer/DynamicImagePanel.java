@@ -13,6 +13,7 @@ import loci.formats.FormatException;
 
 import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.FlyWorkstation.gui.util.Icons;
+import org.janelia.it.FlyWorkstation.shared.util.ConcurrentUtils;
 import org.janelia.it.FlyWorkstation.shared.util.Utils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -184,15 +185,9 @@ public abstract class DynamicImagePanel extends JPanel {
 				            imageLabel.setIcon(new ImageIcon(getNewScaledImage()));    
 //				            syncToViewerState();
 //					        invalidate();
-					        
-					        try {
-					            if (success!=null) success.call();
-	                            
-					        }
-					        catch (Exception e) {
-					            SessionMgr.getSessionMgr().handleException(e);
-					        }
-					        
+
+			                ConcurrentUtils.invokeAndHandleExceptions(success);
+			                
 					        loadWorker = null;
 					    }
 

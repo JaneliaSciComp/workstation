@@ -28,6 +28,7 @@ import org.janelia.it.FlyWorkstation.gui.framework.viewer.IconDemoPanel;
 import org.janelia.it.FlyWorkstation.gui.util.Icons;
 import org.janelia.it.FlyWorkstation.model.entity.RootedEntity;
 import org.janelia.it.FlyWorkstation.model.utils.AnnotationSession;
+import org.janelia.it.FlyWorkstation.shared.util.ConcurrentUtils;
 import org.janelia.it.FlyWorkstation.shared.workers.SimpleWorker;
 import org.janelia.it.jacs.model.entity.Entity;
 import org.janelia.it.jacs.model.entity.EntityData;
@@ -147,7 +148,7 @@ public class SessionOutline extends JPanel implements Refreshable, ActivatableVi
             protected void hadSuccess() {
                 try {
                     initializeTable(tasks);
-                    if (success!=null) success.call();
+                    ConcurrentUtils.invokeAndHandleExceptions(success);
                 }
                 catch (Exception e) {
                     hadError(e);

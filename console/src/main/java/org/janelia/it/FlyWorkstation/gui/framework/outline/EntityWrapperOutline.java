@@ -27,6 +27,7 @@ import org.janelia.it.FlyWorkstation.model.domain.AlignmentContextFactory;
 import org.janelia.it.FlyWorkstation.model.domain.EntityWrapper;
 import org.janelia.it.FlyWorkstation.model.entity.RootedEntity;
 import org.janelia.it.FlyWorkstation.model.utils.ModelUtils;
+import org.janelia.it.FlyWorkstation.shared.util.ConcurrentUtils;
 import org.janelia.it.FlyWorkstation.shared.workers.SimpleWorker;
 import org.janelia.it.jacs.model.entity.Entity;
 import org.janelia.it.jacs.model.entity.EntityConstants;
@@ -415,7 +416,7 @@ public abstract class EntityWrapperOutline extends EntityWrapperTree implements 
 							@Override
 							public Void call() throws Exception {
 								showTree();
-								if (success!=null) success.call();
+								ConcurrentUtils.invokeAndHandleExceptions(success);
 								log.debug("Tree refresh complete");
 								return null;
 							}

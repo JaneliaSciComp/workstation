@@ -22,6 +22,7 @@ import org.janelia.it.FlyWorkstation.model.domain.EntityWrapper;
 import org.janelia.it.FlyWorkstation.model.domain.Neuron;
 import org.janelia.it.FlyWorkstation.model.entity.ForbiddenEntity;
 import org.janelia.it.FlyWorkstation.model.entity.RootedEntity;
+import org.janelia.it.FlyWorkstation.shared.util.ConcurrentUtils;
 import org.janelia.it.FlyWorkstation.shared.workers.SimpleWorker;
 import org.janelia.it.jacs.model.entity.Entity;
 import org.janelia.it.jacs.model.entity.EntityAttribute;
@@ -139,14 +140,7 @@ public class EntityWrapperTree extends JPanel implements ActivatableView {
                         log.debug("expandNodeWithLazyChildren completed, from database: {}",getEntity(node).getName()); 
                         getDynamicTree().recreateChildNodes(node);
                         SwingUtilities.updateComponentTreeUI(EntityWrapperTree.this);
-                        if (success!=null) {
-                            try {
-                                success.call();
-                            }
-                            catch (Exception e) {
-                                SessionMgr.getSessionMgr().handleException(e);
-                            }
-                        }
+                        ConcurrentUtils.invokeAndHandleExceptions(success);
                     }
                 };
 
