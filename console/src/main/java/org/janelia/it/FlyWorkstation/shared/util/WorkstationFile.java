@@ -43,7 +43,7 @@ public class WorkstationFile {
     public void get(boolean headOnly) throws Exception {
         
         File standardFile = new File(standardPath);
-        if (standardFile.canRead()) {
+        if (!SessionMgr.getSessionMgr().isFileCacheAvailable() && standardFile.canRead()) {
             // File is either local or mounted
             this.effectiveURL = standardFile.toURI().toURL();
             getFile(standardFile);
