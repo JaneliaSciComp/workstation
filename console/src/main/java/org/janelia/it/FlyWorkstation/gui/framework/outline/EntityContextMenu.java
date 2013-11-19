@@ -1310,7 +1310,8 @@ public class EntityContextMenu extends JPopupMenu {
                             @Override
                             protected void hadSuccess() {
                                 try {
-                                    final String localFilePrefix = sample.getName()+"_ID"+default3dImage.getId()+"_";
+                                    String idStr = default3dImage==null?"":"_ID"+default3dImage.getId().toString();
+                                    final String localFilePrefix = sample.getName()+idStr+"_";
                                     
                                     log.debug("Checking {} for files that start with {} and end with "+extension,targetDir,localFilePrefix);
                                     
