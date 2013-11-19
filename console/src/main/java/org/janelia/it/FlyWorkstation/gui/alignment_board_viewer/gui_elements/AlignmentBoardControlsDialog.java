@@ -33,14 +33,14 @@ public class AlignmentBoardControlsDialog extends JDialog {
      * @param centering this dialog will be centered over the "centering" component.
      */
     public AlignmentBoardControlsDialog( Component centering, VolumeModel volumeModel, AlignmentBoardSettings settings ) {
-        this(centering, volumeModel, settings, new AlignmentBoardControls( centering, volumeModel, settings ));
+        this(centering, new AlignmentBoardControls( centering, volumeModel, settings ));
     }
 
     /**
      * @param centering this dialog will be centered over the "centering" component.  Push externally-created settings
      *                  in here as a seed.
      */
-    public AlignmentBoardControlsDialog( Component centering, VolumeModel volumeModel, AlignmentBoardSettings settings, AlignmentBoardControls controls ) {
+    public AlignmentBoardControlsDialog( Component centering, AlignmentBoardControls controls ) {
         this.setName(CONTAINING_DIALOG_NAME);
         this.centering = centering;
         controlsPanel = new AlignmentBoardControlsPanel( controls );

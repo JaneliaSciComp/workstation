@@ -62,6 +62,7 @@ public class AlignmentBoardViewer extends Viewer implements AlignmentBoardContro
     private static final String COLOR_SAVE_BTN_NAME = "AlignmentBoard::ColorSaveButton";
     private static final String SEARCH_SAVE_BTN_NAME = "AlignmentBoard::SearchSaveButton";
     private static final String SCREEN_SHOT_BTN_NAME = "AlignmentBoard::ScreenShotButton";
+    private static final String SETTINGS_PANEL_NAME = "AlignmentBoard::SettingsPanel";
     public static final String SAMPLER_PANEL_NAME = "GpuSampler";
     private static final Dimension GPU_FEEDBACK_PANEL_SIZE = new Dimension( 1, 1 );
 
@@ -227,7 +228,7 @@ public class AlignmentBoardViewer extends Viewer implements AlignmentBoardContro
 
             }
             else if ( ! AlignmentBoardItemChangeEvent.ChangeType.FilterLevelChange.equals( event.getChangeType() ) ) {
-
+                logger.info("Filter level changed");
                 serialize();
                 this.updateContents(abContext);
 
@@ -693,6 +694,17 @@ public class AlignmentBoardViewer extends Viewer implements AlignmentBoardContro
         LayersPanel layersPanel = SessionMgr.getBrowser().getLayersPanel();
 
         mip3d = new ScaledMip3d();
+
+        // May have to delve into the Layers Panel to find the settings panel.
+        if ( settingsPanel == null ) {
+            for ( Component c: layersPanel.getComponents() ) {
+                if ( SETTINGS_PANEL_NAME.equals( c.getName() ) ) {
+                    settingsPanel = (AlignmentBoardControlsPanel)c;
+                    break;
+                }
+            }
+        }
+
         // If the mip3d is re-created, so must the settings dialog be.  It depends on the Mip3d.
         if ( settingsDialog != null ) {
             settingsDialog.dispose();
@@ -710,6 +722,7 @@ public class AlignmentBoardViewer extends Viewer implements AlignmentBoardContro
         //settingsDialog = new AlignmentBoardControlsDialog( mip3d, mip3d.getVolumeModel(), settingsData, controls );
         //settingsPanel = settingsDialog.getControlsPanel();
         settingsPanel = new AlignmentBoardControlsPanel( controls );
+        settingsPanel.setName( SETTINGS_PANEL_NAME );
         settingsPanel.setEnabled( false );
         layersPanel.add( settingsPanel, BorderLayout.SOUTH );
 

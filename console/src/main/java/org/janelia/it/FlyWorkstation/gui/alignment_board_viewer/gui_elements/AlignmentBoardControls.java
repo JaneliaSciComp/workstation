@@ -54,7 +54,7 @@ public class AlignmentBoardControls {
 
     private static final String GAMMA_TOOLTIP = "Adjust the gamma level, or brightness.";
     private static final Dimension NEURON_LIMIT_TF_SIZE = new Dimension(150, 50);
-    private static final String COMMIT_CHANGES = "Commit Changes";
+    private static final String COMMIT_CHANGES = "Apply";
     private static final String COMMIT_CHANGES_TOOLTIP_TEXT = COMMIT_CHANGES;
     private static final String SAVE_SCREEN_SHOT_MIP = "Screen Shot/MIP";
     private static final String SAVE_SCREEN_SHOT_TOOLTIP_TEXT = SAVE_SCREEN_SHOT_MIP;

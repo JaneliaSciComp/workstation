@@ -151,42 +151,28 @@ public class AlignmentBoardControlsPanel extends JPanel {
         );
 
         nextRow += rowHeight;
+        GridBagConstraints signalDataConstraints = new GridBagConstraints(
+                0, nextRow, 2, rowHeight, 0.0, 0.0, GridBagConstraints.NORTHWEST, GridBagConstraints.VERTICAL, insets, 0, 0
+        );
+
+        nextRow += rowHeight;
+        rowHeight = 1;
         GridBagConstraints minimumVoxelCountConstraints = new GridBagConstraints(
                 0, nextRow, 1, rowHeight, 1.0, 0.0, GridBagConstraints.NORTHWEST, GridBagConstraints.VERTICAL, insets, 0, 0
         );
 
         GridBagConstraints maxNeuronCountConstraints = new GridBagConstraints(
-                2, nextRow, 1, rowHeight, 1.0, 0.0, GridBagConstraints.NORTHWEST, GridBagConstraints.VERTICAL, insets, 0, 0
+                1, nextRow, 1, rowHeight, 1.0, 0.0, GridBagConstraints.NORTHWEST, GridBagConstraints.VERTICAL, insets, 0, 0
         );
 
-        nextRow += rowHeight;
-        GridBagConstraints signalDataConstraints = new GridBagConstraints(
-                1, nextRow, 2, rowHeight, 0.0, 0.0, GridBagConstraints.NORTHWEST, GridBagConstraints.VERTICAL, insets, 0, 0
-        );
-
-        rowHeight = 2;
         GridBagConstraints commitBtnConstraints = new GridBagConstraints(
-                0, nextRow, 2, rowHeight, 1.0, 1.0, GridBagConstraints.NORTHWEST, GridBagConstraints.NONE, insets, 0, 0
+                2, nextRow, 2, rowHeight, 1.0, 0.0, GridBagConstraints.SOUTHWEST, GridBagConstraints.NONE, insets, 0, 0
         );
 
         nextRow += rowHeight;
-        rowHeight = 1;
         GridBagConstraints regionSelectionPanelConstraints = new GridBagConstraints(
                 0, nextRow, 3, rowHeight, 1.0, 0.0, GridBagConstraints.NORTH, GridBagConstraints.BOTH, insets, 0, 0
         );
-
-//        Insets buttonInsets = new Insets( 5, 5, 5, 5 );
-//        GridBagConstraints saveSearchConstraints = new GridBagConstraints(
-//                0, nextRow, 1, rowHeight, 1.0, 0.0, GridBagConstraints.NORTHWEST, GridBagConstraints.VERTICAL, buttonInsets, 0, 0
-//        );
-//
-//        GridBagConstraints saveColorConstraints = new GridBagConstraints(
-//                1, nextRow, 1, rowHeight, 1.0, 0.0, GridBagConstraints.NORTHEAST, GridBagConstraints.VERTICAL, buttonInsets, 0, 0
-//        );
-//
-//        GridBagConstraints saveScreenShotConstraints = new GridBagConstraints(
-//                2, nextRow, 1, rowHeight, 1.0, 0.0, GridBagConstraints.NORTHEAST, GridBagConstraints.VERTICAL, buttonInsets, 0, 0
-//        );
 
         centralPanel.add( controls.getBrightnessSlider(), brightnessConstraints );
         centralPanel.add( controls.getDownSampleRateDropdown(), downSampleConstraints );
@@ -198,9 +184,6 @@ public class AlignmentBoardControlsPanel extends JPanel {
         centralPanel.add( controls.getCommitButton(), commitBtnConstraints );
 
         centralPanel.add( regionSelectionPanel, regionSelectionPanelConstraints );
-//        centralPanel.add( controls.getSearchSave(), saveSearchConstraints);
-//        centralPanel.add( controls.getColorSave(), saveColorConstraints );
-//        centralPanel.add( controls.getScreenShot(), saveScreenShotConstraints );
         add(centralPanel, BorderLayout.CENTER);
     }
 
