@@ -156,6 +156,10 @@ public class RenderablesLoadWorker extends SimpleWorker implements VolumeLoader 
         }
 
         if ( loadFiles ) {
+            if ( getProgressMonitor() != null ) {
+                getProgressMonitor().setNote("Setting up...");
+            }
+
             if ( resolver == null ) {
                 //resolver = new TrivialFileResolver();  // swap comments, in testing.
                 resolver = new CacheFileResolver();
@@ -248,6 +252,9 @@ public class RenderablesLoadWorker extends SimpleWorker implements VolumeLoader 
             neuronFragmentLoader.setAcceptors(acceptors);
             compartmentLoader.setAcceptors( acceptors );
 
+            if ( getProgressMonitor() != null ) {
+                getProgressMonitor().setNote( "Preparing display" );
+            }
             logger.info("Timing multi-thread data load for signal.");
             multiThreadedDataLoad(renderableDatas, true);
             logger.info("End timing signal load");
@@ -287,11 +294,11 @@ public class RenderablesLoadWorker extends SimpleWorker implements VolumeLoader 
         else {
             logger.debug( "In load thread, after getting bean list." );
 
-            logger.debug("Starting multithreaded file load.");
-            fileLoad(metaDatas);
+            logger.info("Starting multithreaded file load.");
+            fileLoad(metaDatas, buildTexture);
 
             if ( buildTexture ) {
-                logger.debug("Starting multithreaded texture build.");
+                logger.info("Starting multithreaded texture build.");
                 multiThreadedTextureBuild();
             }
 
@@ -307,6 +314,10 @@ public class RenderablesLoadWorker extends SimpleWorker implements VolumeLoader 
         // Multi-threading, part two.  Here, the renderable textures are created out of inputs.
         final CyclicBarrier buildBarrier = new CyclicBarrier( 3 );
         try {
+            if ( getProgressMonitor() != null ) {
+                getProgressMonitor().setNote( "Assembling final data" );
+            }
+
             // These two texture-build steps will proceed in parallel.
             TexBuildRunnable signalBuilderRunnable = new TexBuildRunnable( signalTextureBuilder, buildBarrier );
             TexBuildRunnable maskBuilderRunnable = new TexBuildRunnable( maskTextureBuilder, buildBarrier );
@@ -319,6 +330,17 @@ public class RenderablesLoadWorker extends SimpleWorker implements VolumeLoader 
             if ( buildBarrier.isBroken() ) {
                 throw new Exception( "Tex build failed." );
             }
+
+            if ( getProgressMonitor() != null ) {
+                double downSampleRate = alignmentBoardSettings.getAcceptedDownsampleRate();
+                if ( downSampleRate > 1.0 ) {
+                    getProgressMonitor().setNote( "Downsampling / " + alignmentBoardSettings.getAcceptedDownsampleRate() );
+                }
+                else {
+                    getProgressMonitor().setNote( "Pushing final data" );
+                }
+            }
+
 
             TextureDataI signalTexture = signalBuilderRunnable.getTextureData();
             TextureDataI maskTexture = maskBuilderRunnable.getTextureData();
@@ -341,13 +363,22 @@ public class RenderablesLoadWorker extends SimpleWorker implements VolumeLoader 
         }
     }
 
-    private void fileLoad( Collection<MaskChanRenderableData> metaDatas ) {
+    private void fileLoad( Collection<MaskChanRenderableData> metaDatas, boolean buildTexture ) {
         List<MaskChanRenderableData> sortedMetaDatas = new ArrayList<MaskChanRenderableData>();
         sortedMetaDatas.addAll( metaDatas );
         Collections.sort( sortedMetaDatas, new RDComparator( false ) );
+        int i = 0;
+        String msgPrefix = buildTexture ? "Building " : "Examining ";
         for ( MaskChanRenderableData metaData: sortedMetaDatas ) {
             logger.debug( "Scheduling mask path {} for load as {}.", metaData.getMaskPath(), metaData.getBean().getTranslatedNum() );
             LoadRunnable runnable = new LoadRunnable( metaData, this, null );
+
+            // Here, can modify the progress bar.
+            if ( getProgressMonitor() != null ) {
+                i++;
+                getProgressMonitor().setNote(msgPrefix + i + " of " + sortedMetaDatas.size() + " items.");
+            }
+
             runnable.run();
         }
 
