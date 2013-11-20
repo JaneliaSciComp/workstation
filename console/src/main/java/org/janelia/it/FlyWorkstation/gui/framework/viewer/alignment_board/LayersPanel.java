@@ -488,7 +488,7 @@ public class LayersPanel extends JPanel implements Refreshable, ActivatableView 
             return;
         }
 
-        log.trace("Some entities were invalidated, let's check if we care...");
+        log.debug("Some entities were invalidated, let's check if we care...");
         if (alignmentBoardContext==null) return;
 
         final OutlineExpansionState expansionState = new OutlineExpansionState(outline);
@@ -511,7 +511,7 @@ public class LayersPanel extends JPanel implements Refreshable, ActivatableView 
         
         for(AlignedItem invalidItem : invalidItems) {
             try {
-                log.debug("Updating entity {} on aligned item",invalidItem.getId());
+                log.debug("Updating invalidated entity {} on aligned item",invalidItem.getId());
                 invalidItem.updateEntity(ModelMgr.getModelMgr().getEntityById(invalidItem.getId()));
                 invalidItem.loadContextualizedChildren(alignmentBoardContext.getAlignmentContext());
             }
@@ -523,34 +523,6 @@ public class LayersPanel extends JPanel implements Refreshable, ActivatableView 
         recreateModel();
         
         expansionState.restoreExpansionState(true);
-    }
-    
-    @Subscribe 
-    public void entityRemoved(EntityRemoveEvent event) {
-        
-        if (alignmentBoardContext.getId().equals(event.getEntity().getId())) {
-            // Alignment board was removed
-            AlignmentBoardCloseEvent closeEvent = new AlignmentBoardCloseEvent(alignmentBoardContext);
-            ModelMgr.getModelMgr().postOnEventBus(closeEvent);
-            return;
-        }
-        
-        log.debug("Some entities were removed, let's check if we care...");
-        final AlignedItem removedItem = findAlignedItemByEntityId(alignmentBoardContext, event.getEntity().getId());
-        if (removedItem!=null) {
-            
-            EntityData myEd = null;
-            for(EntityData ed : event.getParentEds()) {
-                if (ed.getParentEntity().getId().equals(removedItem.getParent().getId())) {
-                    myEd = ed;
-                }
-            }
-            
-            log.debug("The removed entity was an aligned item, firing alignment board event...");
-            final AlignmentBoardItemChangeEvent abEvent = new AlignmentBoardItemRemoveEvent(
-                    alignmentBoardContext, removedItem, myEd==null?null:myEd.getOrderIndex());
-            ModelMgr.getModelMgr().postOnEventBus(abEvent);
-        }
     }
 
     @Subscribe 
@@ -564,16 +536,20 @@ public class LayersPanel extends JPanel implements Refreshable, ActivatableView 
     @Subscribe 
     public void itemChanged(AlignmentBoardItemChangeEvent event) {
 
-        if (sampleTreeModel==null || alignmentBoardContext==null || event.getAlignedItem()==null) return;
+        if (sampleTreeModel==null || alignmentBoardContext==null) return;
 
-        // Generating model events is hard (we don't know the UI indexes of what was deleted, for example),
-        // so we just recreate the model here.
+        ChangeType change = event.getChangeType();
+        
 
         final OutlineExpansionState expansionState = new OutlineExpansionState(outline);
         expansionState.storeExpansionState();
 
-        ChangeType change = event.getChangeType();
-        log.debug("Aligned item changed {} with change type {}", event.getAlignedItem().getName(), change);
+        if (event.getAlignedItem()!=null) {
+            log.debug("Aligned item changed {} with change type {}", event.getAlignedItem().getName(), change);
+        }
+        else {
+            log.debug("All aligned items changed with change type {}", change);
+        }
         
         if (change==ChangeType.Added) {
             try {
@@ -590,11 +566,16 @@ public class LayersPanel extends JPanel implements Refreshable, ActivatableView 
                 SessionMgr.getSessionMgr().handleException(e);
             }
         }
-        else if (change==ChangeType.Removed) {
-            // Remove the wrappers
-            alignmentBoardContext.findAndRemoveAlignedEntity(event.getAlignedItem());
+        else {
+            // No need to do anything for other changes, they've all been handled through other means
         }
-        
+//        else if (change==ChangeType.Removed) {
+//            // Remove the wrappers if necessary 
+//            alignmentBoardContext.findAndRemoveAlignedEntity(event.getAlignedItem());
+//        }
+
+        // Generating model events is hard (we don't know the UI indexes of what was deleted, for example),
+        // so we just recreate the model here.
         recreateModel();
         
         expansionState.restoreExpansionState(true);

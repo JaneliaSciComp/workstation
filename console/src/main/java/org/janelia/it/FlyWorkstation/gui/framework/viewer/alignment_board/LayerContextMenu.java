@@ -7,6 +7,7 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.Callable;
 
 import javax.swing.JMenu;
 import javax.swing.JMenuItem;
@@ -22,11 +23,13 @@ import org.janelia.it.FlyWorkstation.gui.framework.console.Browser;
 import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.FlyWorkstation.gui.framework.viewer.alignment_board.events.AlignmentBoardItemChangeEvent;
 import org.janelia.it.FlyWorkstation.gui.framework.viewer.alignment_board.events.AlignmentBoardItemChangeEvent.ChangeType;
+import org.janelia.it.FlyWorkstation.gui.framework.viewer.alignment_board.events.AlignmentBoardItemRemoveEvent;
 import org.janelia.it.FlyWorkstation.model.entity.RootedEntity;
 import org.janelia.it.FlyWorkstation.model.viewer.AlignedItem;
 import org.janelia.it.FlyWorkstation.model.viewer.AlignmentBoardContext;
 import org.janelia.it.FlyWorkstation.shared.workers.SimpleWorker;
 import org.janelia.it.jacs.model.entity.Entity;
+import org.janelia.it.jacs.model.entity.EntityData;
 import org.janelia.it.jacs.shared.utils.EntityUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -225,7 +228,17 @@ public class LayerContextMenu extends JPopupMenu {
         List<RootedEntity> rootedEntityList = new ArrayList<RootedEntity>();
         rootedEntityList.add(alignedItem.getInternalRootedEntity());
 
-        final Action action = new RemoveEntityAction(rootedEntityList, false, false);
+        final Action action = new RemoveEntityAction(rootedEntityList, false, false, new Callable<Void>() {
+            @Override
+            public Void call() throws Exception {
+                EntityData myEd = alignedItem.getInternalRootedEntity().getEntityData();
+                log.debug("The removed entity was an aligned item, firing alignment board event...");
+                final AlignmentBoardItemRemoveEvent abEvent = new AlignmentBoardItemRemoveEvent(
+                        alignmentBoardContext, alignedItem, myEd==null?null:myEd.getOrderIndex());
+                ModelMgr.getModelMgr().postOnEventBus(abEvent);
+                return null;
+            }
+        });
 
         JMenuItem deleteItem = new JMenuItem("  Remove From Alignment Board");
         deleteItem.addActionListener(new ActionListener() {

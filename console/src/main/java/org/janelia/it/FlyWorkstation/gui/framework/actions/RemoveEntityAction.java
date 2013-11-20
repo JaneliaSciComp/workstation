@@ -7,6 +7,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.Callable;
 
 import javax.swing.JOptionPane;
 
@@ -15,6 +16,7 @@ import org.janelia.it.FlyWorkstation.api.entity_model.management.ModelMgrUtils;
 import org.janelia.it.FlyWorkstation.gui.framework.console.Browser;
 import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.FlyWorkstation.model.entity.RootedEntity;
+import org.janelia.it.FlyWorkstation.shared.util.ConcurrentUtils;
 import org.janelia.it.FlyWorkstation.shared.workers.BackgroundWorker;
 import org.janelia.it.FlyWorkstation.shared.workers.IndeterminateProgressMonitor;
 import org.janelia.it.FlyWorkstation.shared.workers.SimpleWorker;
@@ -39,11 +41,17 @@ public class RemoveEntityAction implements Action {
 	private final List<RootedEntity> rootedEntityList;
 	private final boolean showConfirmationDialogs;
 	private final boolean runInBackground;
+	private final Callable<Void> success;
 	
 	public RemoveEntityAction(List<RootedEntity> rootedEntityList, boolean showConfirmationDialogs, boolean runInBackground) {
+	    this(rootedEntityList, showConfirmationDialogs, runInBackground, null);
+	}
+	
+	public RemoveEntityAction(List<RootedEntity> rootedEntityList, boolean showConfirmationDialogs, boolean runInBackground, Callable<Void> success) {
 		this.rootedEntityList = rootedEntityList;
 		this.showConfirmationDialogs = showConfirmationDialogs;
 		this.runInBackground = runInBackground;
+		this.success = success;
 	}
 	
     @Override
@@ -252,6 +260,7 @@ public class RemoveEntityAction implements Action {
     
     					@Override
     					protected void hadSuccess() {
+    					    ConcurrentUtils.invokeAndHandleExceptions(success);
     					}
     
     					@Override
@@ -289,6 +298,7 @@ public class RemoveEntityAction implements Action {
     
                         @Override
                         protected void hadSuccess() {
+                            ConcurrentUtils.invokeAndHandleExceptions(success);
                         }
     
                         @Override
@@ -309,8 +319,6 @@ public class RemoveEntityAction implements Action {
 			
 		};
 		verifyTask.setProgressMonitor(new IndeterminateProgressMonitor(SessionMgr.getBrowser(), "Verifying...", ""));
-		verifyTask.execute();
-    	
-    	
+		verifyTask.execute();	
     }
 }
