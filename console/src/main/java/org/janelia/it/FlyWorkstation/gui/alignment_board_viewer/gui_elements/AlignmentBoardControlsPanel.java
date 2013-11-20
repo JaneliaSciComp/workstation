@@ -94,6 +94,7 @@ public class AlignmentBoardControlsPanel extends JPanel {
         controls.getOrButton().setEnabled( enabled );
         controls.getDownSampleRateDropdown().setEnabled( enabled );
         controls.getUseSignalDataCheckbox().setEnabled( enabled );
+        setReadyForOutput( enabled );
     }
 
     //--------------------------------------------HELPERS

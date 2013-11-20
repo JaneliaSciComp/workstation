@@ -188,7 +188,7 @@ public class AlignmentBoardControls {
 
     //--------------------------------------------HELPERS
     private boolean isUseSignalData() {
-        if ( ! readyForOutput ) {
+        if ( ! isReadyForOutput() ) {
             return this.settings.isShowChannelData();
         }
         else {
@@ -209,7 +209,7 @@ public class AlignmentBoardControls {
      * @see #updateControlsFromSettings()
      */
     private double getGammaFactor() {
-        if ( ! readyForOutput )
+        if ( ! isReadyForOutput() )
             return settings.getGammaFactor();
         int value = brightnessSlider.getValue();
         double rtnVal = (((double)value/100.0) - 10.0) / -5.0;
@@ -219,7 +219,7 @@ public class AlignmentBoardControls {
 
     /** These getters may be called after successful launch. */
     private double getDownsampleRate() {
-        if ( ! readyForOutput )
+        if ( ! isReadyForOutput() )
             return settings.getChosenDownSampleRate();
         String selectedValue = downSampleRateDropdown.getItemAt( downSampleRateDropdown.getSelectedIndex() ).toString();
         if ( Character.isDigit( selectedValue.charAt( 0 ) ) )
@@ -230,14 +230,14 @@ public class AlignmentBoardControls {
 
     private long getMinimumVoxelCount() {
         long minimumVoxelCount = settings.getMinimumVoxelCount();
-        if ( ! readyForOutput ) {
+        if ( ! isReadyForOutput() ) {
             return minimumVoxelCount;
         }
         return getNeuronConstraint( minimumVoxelCountTF, AlignmentBoardSettings.DEFAULT_NEURON_SIZE_CONSTRAINT );
     }
 
     private long getMaxNeuronCount() {
-        if ( ! readyForOutput )
+        if ( ! isReadyForOutput() )
             return settings.getMaximumNeuronCount();
         return getNeuronConstraint( maxNeuronCountTF, AlignmentBoardSettings.DEFAULT_MAX_NEURON_COUNT_CONSTRAINT );
     }
@@ -730,13 +730,13 @@ public class AlignmentBoardControls {
         MouseAdapter fireSettingsMouseListener = new MouseAdapter() {
             @Override
             public void mouseReleased(MouseEvent e) {
-                doSettingsEvent();
+                fireSettingsEvent();
             }
         };
         ActionListener fireSettingsActionListener = new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                doSettingsEvent();
+                fireSettingsEvent();
             }
         };
         downSampleRateDropdown.addMouseListener( fireSettingsMouseListener );
@@ -749,21 +749,21 @@ public class AlignmentBoardControls {
         downSampleRateDropdown.addItemListener( new ItemListener() {
             @Override
             public void itemStateChanged(ItemEvent e) {
-                doSettingsEvent();
+                fireSettingsEvent();
             }
         });
 
         useSignalDataCheckbox.addChangeListener( new ChangeListener() {
             @Override
             public void stateChanged(ChangeEvent e) {
-                doSettingsEvent();
+                fireSettingsEvent();
             }
         });
 
         brightnessSlider.addChangeListener( new ChangeListener() {
             @Override
             public void stateChanged(ChangeEvent e) {
-                doSettingsEvent();
+                fireSettingsEvent();
             }
         });
 
@@ -779,7 +779,7 @@ public class AlignmentBoardControls {
     }
 
     private void doSettingsEvent() {
-        readyForOutput = true;
+        setReadyForOutput( true );
         fireSettingsEvent();
     }
 

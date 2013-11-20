@@ -70,42 +70,25 @@ public class UserSettingSerializer implements Serializable {
     }
 
     /**
-     * Save back things that user will wish to see restored to former glory after cycling console.
+     * Save back things that user will wish to see restored to former glory after cycling console.  This must
+     * be run in a worker thread.
      *
      * @see #deserializeSettings()
      */
     public synchronized void serializeSettings() {
         try {
+            String settingsString = getSettingsString();
+            // This excessive length
+            if ( settingsString.length() > MAX_SERIALIZED_SETTINGS_STR ) {
+                logger.warn( "Abandoning the serialized string {}.", settingsString );
+                // Write back.
+                ModelMgr.getModelMgr().setOrUpdateValue(alignmentBoard, EntityConstants.ATTRIBUTE_ALIGNMENT_BOARD_USER_SETTINGS, "");
+                settingsString = "";
+            }
+            logger.info( "Save-back Setting string: {}.", settingsString );
+
             // Write back.
-            SimpleWorker serializeWorker = new SimpleWorker() {
-                @Override
-                protected void doStuff() throws Exception {
-                    String settingsString = getSettingsString();
-                    // This excessive length
-                    if ( settingsString.length() > MAX_SERIALIZED_SETTINGS_STR ) {
-                        logger.warn( "Abandoning the serialized string {}.", settingsString );
-                        // Write back.
-                        ModelMgr.getModelMgr().setOrUpdateValue(alignmentBoard, EntityConstants.ATTRIBUTE_ALIGNMENT_BOARD_USER_SETTINGS, "");
-                        settingsString = "";
-                    }
-                    logger.info( "Save-back Setting string: {}.", settingsString );
-
-                    ModelMgr.getModelMgr().setOrUpdateValue(alignmentBoard, EntityConstants.ATTRIBUTE_ALIGNMENT_BOARD_USER_SETTINGS, settingsString);
-                }
-
-                @Override
-                protected void hadSuccess() {
-                }
-
-                @Override
-                protected void hadError(Throwable error) {
-                    logger.error( error.toString() );
-                    error.printStackTrace();
-                    SessionMgr.getSessionMgr().handleException( error );
-                }
-            };
-
-            serializeWorker.execute();
+            ModelMgr.getModelMgr().setOrUpdateValue(alignmentBoard, EntityConstants.ATTRIBUTE_ALIGNMENT_BOARD_USER_SETTINGS, settingsString);
 
         }
         catch (Exception ex) {
