@@ -41,6 +41,7 @@ import org.janelia.it.FlyWorkstation.model.viewer.MaskedVolume.ArtifactType;
 import org.janelia.it.FlyWorkstation.model.viewer.MaskedVolume.Channels;
 import org.janelia.it.FlyWorkstation.model.viewer.MaskedVolume.Size;
 import org.janelia.it.FlyWorkstation.shared.workers.IndeterminateProgressMonitor;
+import org.janelia.it.FlyWorkstation.shared.workers.SimpleWorker;
 import org.janelia.it.jacs.model.entity.Entity;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -215,7 +216,7 @@ public class AlignmentBoardViewer extends Viewer implements AlignmentBoardContro
         // Check this, to prevent this being completed until the board has been first initialized.
         // Redundant events may be posted at startup.
         if ( boardOpen ) {
-            AlignmentBoardContext abContext = event.getAlignmentBoardContext();
+            final AlignmentBoardContext abContext = event.getAlignmentBoardContext();
 
             printItemChanged(event.getAlignedItem(), event.getChangeType().toString());
             printAlignmentBoardContext(abContext);
@@ -229,9 +230,23 @@ public class AlignmentBoardViewer extends Viewer implements AlignmentBoardContro
             }
             else if ( ! AlignmentBoardItemChangeEvent.ChangeType.FilterLevelChange.equals( event.getChangeType() ) ) {
                 logger.info( "Change type {}.", event.getChangeType() );
-                serialize();
-                this.updateContents(abContext);
+                SimpleWorker updateContentsWorker = new SimpleWorker() {
+                    @Override
+                    protected void doStuff() throws Exception {
+                        serialize();
+                    }
 
+                    @Override
+                    protected void hadSuccess() {
+                        updateContents(abContext);
+                    }
+
+                    @Override
+                    protected void hadError(Throwable error) {
+                        SessionMgr.getSessionMgr().handleException( error );
+                    }
+                };
+                updateContentsWorker.execute();
             }
         }
     }
