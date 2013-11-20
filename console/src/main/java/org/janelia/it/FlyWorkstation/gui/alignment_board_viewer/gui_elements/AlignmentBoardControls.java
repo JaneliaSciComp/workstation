@@ -753,7 +753,12 @@ public class AlignmentBoardControls {
             }
         });
 
-        useSignalDataCheckbox.addMouseListener(fireSettingsMouseListener);
+        useSignalDataCheckbox.addChangeListener( new ChangeListener() {
+            @Override
+            public void stateChanged(ChangeEvent e) {
+                doSettingsEvent();
+            }
+        });
 
         brightnessSlider.addChangeListener( new ChangeListener() {
             @Override
