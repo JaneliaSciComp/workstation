@@ -3,9 +3,11 @@ package org.janelia.it.FlyWorkstation.gui.viewer3d.loader;
 import org.janelia.it.FlyWorkstation.gui.alignment_board_viewer.renderable.MaskChanRenderableData;
 import org.janelia.it.FlyWorkstation.gui.alignment_board_viewer.renderable.RDComparator;
 import org.janelia.it.FlyWorkstation.gui.alignment_board_viewer.renderable.RenderableBean;
+import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.resolver.CacheFileResolver;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.resolver.FileResolver;
 import org.janelia.it.FlyWorkstation.model.domain.EntityWrapper;
+import org.janelia.it.FlyWorkstation.model.viewer.AlignedItem;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -116,19 +118,25 @@ public class FragmentSizeSetterAndFilter {
                 // Filter for first-N neurons cutoff.
                 if ( renDataBeanItemParentIdToChildCount != null ) {
                     rtnVal = false;
-                    if ( bean.getAlignedItem() != null ) {
-                        EntityWrapper parent = bean.getAlignedItem().getParent();
-                        if ( parent != null ) {
-                            long parentId = parent.getId();
+                    if ( bean.getRenderableEntity() != null ) {
+                        AlignedItem alignedItem = SessionMgr.getSessionMgr().getActiveBrowser().getLayersPanel()
+                                .getAlignmentBoardContext().getAlignedItemWithEntityId(
+                                        bean.getAlignedItemId()
+                                );
+                        if ( alignedItem != null ) {
+                            EntityWrapper parent = alignedItem.getParent();
+                            if ( parent != null ) {
+                                long parentId = parent.getId();
 
-                            Long countForParent = renDataBeanItemParentIdToChildCount.get( parentId );
-                            if ( countForParent == null ) {
-                                countForParent = 0L;
-                            }
-                            if ( countForParent < thresholdNeuronCount ) {
-                                rtnVal = true;
-                                countForParent ++;
-                                renDataBeanItemParentIdToChildCount.put( parentId, countForParent );
+                                Long countForParent = renDataBeanItemParentIdToChildCount.get( parentId );
+                                if ( countForParent == null ) {
+                                    countForParent = 0L;
+                                }
+                                if ( countForParent < thresholdNeuronCount ) {
+                                    rtnVal = true;
+                                    countForParent ++;
+                                    renDataBeanItemParentIdToChildCount.put( parentId, countForParent );
+                                }
                             }
                         }
                     }

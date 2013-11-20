@@ -133,6 +133,17 @@ public class AlignedItem extends EntityWrapper {
             if (item.getItemWrapper().getId().equals(entityId)) {
                 return item;
             }
+            else {
+                // Step in one more level.
+                for ( EntityWrapper childWrapper: item.getChildren() ) {
+                    if ( childWrapper instanceof AlignedItem ) {
+                        AlignedItem childItem = (AlignedItem)childWrapper;
+                        if ( childItem.getId().equals(entityId)) {
+                            return childItem;
+                        }
+                    }
+                }
+            }
         }
         return null;
     }

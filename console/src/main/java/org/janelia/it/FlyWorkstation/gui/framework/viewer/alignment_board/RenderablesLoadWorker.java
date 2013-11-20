@@ -183,15 +183,20 @@ public class RenderablesLoadWorker extends SimpleWorker implements VolumeLoader 
                      bean.getType().equals( EntityConstants.TYPE_NEURON_FRAGMENT )
                    ) {
 
-                    AlignedItem item = bean.getAlignedItem();
+                    AlignedItem item = SessionMgr.getSessionMgr().getActiveBrowser().getLayersPanel().getAlignmentBoardContext().getAlignedItemWithEntityId(bean.getAlignedItemId());
                     if ( item != null ) {
-                        if ( targetData != null ) {
-                            // It's in the filtered list.  Mark it as such.
-                            item.setInclusionStatus(AlignedItem.InclusionStatus.In);
-                        }
-                        else {
-                            // Not in the filtered list.  Exlude it.
-                            item.setInclusionStatus(AlignedItem.InclusionStatus.ExcludedForSize);
+                        try {
+                            if ( targetData != null ) {
+                                // It's in the filtered list.  Mark it as such.
+                                item.setInclusionStatus(AlignedItem.InclusionStatus.In);
+                            }
+                            else {
+                                // Not in the filtered list.  Exlude it.
+                                item.setInclusionStatus(AlignedItem.InclusionStatus.ExcludedForSize);
+                            }
+                        } catch ( Exception ex ) {
+                            ex.printStackTrace();
+                            logger.error("Failing to set inclusion status for entity id=" + bean.getRenderableEntity().getId() );
                         }
                     }
                 }
