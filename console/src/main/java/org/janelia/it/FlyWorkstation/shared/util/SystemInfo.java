@@ -18,12 +18,17 @@ package org.janelia.it.FlyWorkstation.shared.util;
 import java.io.File;
 
 import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr;
+import org.janelia.it.FlyWorkstation.gui.framework.viewer.alignment_board.LayersPanel;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Adapted from IDEA code base.
  */
 public class SystemInfo {
-	
+
+    private static final Logger log = LoggerFactory.getLogger(SystemInfo.class);
+    
     public static final String OS_NAME = System.getProperty("os.name").toLowerCase();
     public static final String OS_VERSION = System.getProperty("os.version").toLowerCase();
     public static final String OS_ARCH = System.getProperty("os.arch");
@@ -140,5 +145,31 @@ public class SystemInfo {
             downloadsDirFile = new File(downloadsDir);
         }
         return downloadsDirFile;
+    }
+    
+    private static com.sun.management.OperatingSystemMXBean getOSMXBean() {
+        java.lang.management.OperatingSystemMXBean mxbean = java.lang.management.ManagementFactory.getOperatingSystemMXBean();
+        com.sun.management.OperatingSystemMXBean sunmxbean = (com.sun.management.OperatingSystemMXBean) mxbean;
+        return sunmxbean;
+    }
+    
+    public static Long getTotalSystemMemory() {
+        try {
+            return getOSMXBean().getTotalPhysicalMemorySize();
+        }
+        catch (Throwable e) {
+            log.error("Could not retrieve total system memory",e);
+            return null;
+        }
+    }
+    
+    public static Long getFreeSystemMemory() {
+        try {
+            return getOSMXBean().getFreePhysicalMemorySize();
+        }
+        catch (Throwable e) {
+            log.error("Could not retrieve total system memory",e);
+            return null;
+        }
     }
 }
