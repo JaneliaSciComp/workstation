@@ -545,9 +545,31 @@ that need to respond to changing data.
         //  don't need to check that they are neighboring; UI gesture already enforces it
         TmNeuron neuron1 = getNeuronFromAnnotation(endpoints.getAnnotationID1());
         TmNeuron neuron2 = getNeuronFromAnnotation(endpoints.getAnnotationID2());
+        if (neuron1 == null || neuron2 == null) {
+            // something's been deleted
+            return;
+        }
         if (!neuron1.getId().equals(neuron2.getId())) {
             throw new Exception("anchored path annotations are in different neurons");
         }
+
+
+        // now verify that endpoints for path are still where they were when path
+        //  was being drawn (ie, make sure user didn't move the endpoints in the meantime)
+        // check that the first and last points in the list match the current locations of the
+        //  annotations, in some order (despite stated convention, I have not found the point
+        //  list to be in consistant order vis a vis the ordering of the annotation IDs)
+
+        TmGeoAnnotation ann1 = neuron1.getGeoAnnotationMap().get(endpoints.getAnnotationID1());
+        TmGeoAnnotation ann2 = neuron2.getGeoAnnotationMap().get(endpoints.getAnnotationID2());
+
+        boolean order1 = annotationAtPoint(ann1, points.get(0)) && annotationAtPoint(ann2, points.get(points.size() - 1));
+        boolean order2 = annotationAtPoint(ann2, points.get(0)) && annotationAtPoint(ann1, points.get(points.size() - 1));
+        if (!order1 && !order2) {
+            // something's been moved
+            return;
+        }
+
 
         // if a path between those endpoints exists, remove it first:
         if (neuron1.getAnchoredPathMap().containsKey(endpoints)) {
@@ -568,6 +590,16 @@ that need to respond to changing data.
         // send notification
         anchoredPathAddedSignal.emit(path);
 
+    }
+
+    /**
+     * used in addAnchoredPath; is the annotation's location, truncated to integer, the
+     * same as the list of integers?
+     */
+    private boolean annotationAtPoint(TmGeoAnnotation annotation, List<Integer> pointList) {
+        return annotation.getX().intValue() == pointList.get(0) &&
+                annotation.getY().intValue() == pointList.get(1) &&
+                annotation.getZ().intValue() == pointList.get(2);
     }
 
     /**
