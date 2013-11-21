@@ -455,6 +455,10 @@ public class AlignmentBoardControls {
         double newGamma = getGammaFactor();
         boolean deltaBrightness = false;
         boolean deltaSettings = false;
+        // Possibly: NPE happens because of an intermediate state when user has a stale reference.
+        if ( settings == null ) {
+            return;
+        }
         if ( newGamma != settings.getGammaFactor() ) {
             settings.setGammaFactor( newGamma );
             deltaBrightness = true;
