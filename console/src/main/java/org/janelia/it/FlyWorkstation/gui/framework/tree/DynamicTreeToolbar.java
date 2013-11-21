@@ -73,7 +73,7 @@ public class DynamicTreeToolbar extends JPanel implements ActionListener {
         	DefaultMutableTreeNode node = tree.getCurrentNode();
         	if (node==null) node = tree.getRootNode();
         	if (tree.isLazyLoading() && node==tree.getRootNode()) {
-                int deleteConfirmation = JOptionPane.showConfirmDialog(SessionMgr.getSessionMgr().getActiveBrowser(), 
+                int deleteConfirmation = JOptionPane.showConfirmDialog(SessionMgr.getBrowser(), 
                 		"Expanding the entire tree may take a long time. Are you sure you want to do this?", 
                 		"Expand All", JOptionPane.YES_NO_OPTION);
                 if (deleteConfirmation != 0) {

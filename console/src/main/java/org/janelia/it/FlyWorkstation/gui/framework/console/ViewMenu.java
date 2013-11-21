@@ -43,23 +43,6 @@ public class ViewMenu extends JMenu {
         ontologyMenuItem.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_E, SystemInfo.isMac?Event.META_MASK:Event.CTRL_MASK));
         add(ontologyMenuItem);
         
-
-//        JMenuItem perspectivesMenu = new JMenu("Open Perspective");
-//        
-//        for(final Perspective perspective : Perspective.values()) {
-//
-//            JMenuItem perspectiveMenuItem = new JMenuItem(perspective.getName());
-//            perspectiveMenuItem.addActionListener(new ActionListener() {
-//                public void actionPerformed(ActionEvent e) {
-//                    browser.setPerspective(perspective);
-//                }
-//            });
-//            perspectivesMenu.add(perspectiveMenuItem);
-//        }
-//        
-//        add(perspectivesMenu);
-
-        
         final JCheckBoxMenuItem linkViewersMenuItem = new JCheckBoxMenuItem("Link Left/Right Viewers", true);
         linkViewersMenuItem.setSelected(browser.isViewersLinked());
         linkViewersMenuItem.addActionListener(new ActionListener() {
@@ -69,7 +52,6 @@ public class ViewMenu extends JMenu {
         });
         // Disabled this option until the entity selection model is revamped to support it
 //        add(linkViewersMenuItem);
-        
         
         JMenuItem resetWindow = new JMenuItem("Reset Window");
         resetWindow.addActionListener(new ActionListener() {

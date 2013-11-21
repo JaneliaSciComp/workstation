@@ -201,7 +201,7 @@ public class SessionOutline extends JPanel implements Refreshable, ActivatableVi
                     JMenuItem editMenuItem = new JMenuItem("  Edit");
                     editMenuItem.addActionListener(new ActionListener() {
                         public void actionPerformed(ActionEvent actionEvent) {
-                            SessionMgr.getSessionMgr().getActiveBrowser().getAnnotationSessionPropertyDialog().showForSession(session);
+                            SessionMgr.getBrowser().getAnnotationSessionPropertyDialog().showForSession(session);
                         }
                     });
                     popupMenu.add(editMenuItem);

@@ -101,10 +101,6 @@ public abstract class OntologyOutline extends EntityTree implements Refreshable,
     private final Map<String, Action> ontologyActionMap = new HashMap<String, Action>();
 
     public OntologyOutline() {
-        super();
-        
-        setMinimumSize(new Dimension(400, 400));
-        setMaximumSize(new Dimension(500, 1300));
        
         // Create input listeners which will be added to the DynamicTree later
         keyListener = new KeyAdapter() {

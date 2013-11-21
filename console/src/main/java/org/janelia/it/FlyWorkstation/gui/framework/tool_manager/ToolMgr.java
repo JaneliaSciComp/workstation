@@ -294,7 +294,7 @@ public class ToolMgr extends PreferenceManager {
             @Override
             public void call(File file) throws Exception {
                 if (file==null) {
-                    JOptionPane.showMessageDialog(SessionMgr.getSessionMgr().getActiveBrowser(),
+                    JOptionPane.showMessageDialog(SessionMgr.getBrowser(),
                             "Could not open file path", "Error", JOptionPane.ERROR_MESSAGE);
                 }
                 else {

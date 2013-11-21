@@ -1,6 +1,7 @@
 package org.janelia.it.FlyWorkstation.gui.framework.outline;
 
 import java.awt.BorderLayout;
+import java.awt.Dimension;
 
 import javax.swing.JPanel;
 
@@ -27,6 +28,8 @@ public class EntityDetailsOutline extends JPanel implements Refreshable, Activat
 
     public EntityDetailsOutline() {
         setLayout(new BorderLayout());
+        setMinimumSize(new Dimension(0, 0));
+        
         this.entityDetailsPanel = new EntityDetailsPanel();
         this.mml = new ModelMgrAdapter() {
             @Override
@@ -97,7 +100,5 @@ public class EntityDetailsOutline extends JPanel implements Refreshable, Activat
     public void deactivate() {
         log.info("Deactivating");
         ModelMgr.getModelMgr().removeModelMgrObserver(mml);
-    }
-
-    
+    }    
 }

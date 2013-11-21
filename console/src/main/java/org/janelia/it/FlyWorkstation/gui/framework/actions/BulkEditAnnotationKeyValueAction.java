@@ -107,7 +107,7 @@ public class BulkEditAnnotationKeyValueAction implements Action {
                     }
                 };
 
-                worker.setProgressMonitor(new ProgressMonitor(SessionMgr.getSessionMgr().getActiveBrowser(), "Editing Annotations", "", 0, 100));
+                worker.setProgressMonitor(new ProgressMonitor(SessionMgr.getBrowser(), "Editing Annotations", "", 0, 100));
                 worker.execute();
         	}
         }

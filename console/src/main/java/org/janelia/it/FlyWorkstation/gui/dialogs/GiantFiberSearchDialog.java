@@ -984,7 +984,7 @@ public class GiantFiberSearchDialog extends ModalDialog {
 
             @Override
             protected void hadSuccess() {
-                final EntityOutline entityOutline = SessionMgr.getSessionMgr().getActiveBrowser().getEntityOutline();
+                final EntityOutline entityOutline = SessionMgr.getBrowser().getEntityOutline();
                 entityOutline.totalRefresh(true, new Callable<Void>() {
                     @Override
                     public Void call() throws Exception {

@@ -119,7 +119,7 @@ public class FragmentSizeSetterAndFilter {
                 if ( renDataBeanItemParentIdToChildCount != null ) {
                     rtnVal = false;
                     if ( bean.getRenderableEntity() != null ) {
-                        AlignedItem alignedItem = SessionMgr.getSessionMgr().getActiveBrowser().getLayersPanel()
+                        AlignedItem alignedItem = SessionMgr.getBrowser().getLayersPanel()
                                 .getAlignmentBoardContext().getAlignedItemWithEntityId(
                                         bean.getAlignedItemId()
                                 );

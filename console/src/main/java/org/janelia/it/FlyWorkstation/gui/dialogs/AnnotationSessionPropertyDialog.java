@@ -292,7 +292,7 @@ public class AnnotationSessionPropertyDialog extends ModalDialog {
             task = (AnnotationSessionTask) ModelMgr.getModelMgr().saveOrUpdateTask(task);
             System.out.println("Saved annotation session with taskId=" + task.getObjectId());
 
-            Browser browser = SessionMgr.getSessionMgr().getActiveBrowser();
+            Browser browser = SessionMgr.getBrowser();
 //            browser.getOutlookBar().setVisibleBarByName(Browser.BAR_SESSIONS);
             final SessionOutline sessionOutline = browser.getAnnotationSessionOutline();
             sessionOutline.loadAnnotationSessions(new Callable<Void>() {

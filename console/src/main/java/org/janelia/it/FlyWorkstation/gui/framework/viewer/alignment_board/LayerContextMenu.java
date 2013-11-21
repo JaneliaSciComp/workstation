@@ -43,7 +43,7 @@ public class LayerContextMenu extends JPopupMenu {
 
     private static final Logger log = LoggerFactory.getLogger(LayerContextMenu.class);
 
-    protected static final Browser browser = SessionMgr.getSessionMgr().getActiveBrowser();
+    protected static final Browser browser = SessionMgr.getBrowser();
 
     protected final AlignmentBoardContext alignmentBoardContext;
     protected final AlignedItem alignedItem;

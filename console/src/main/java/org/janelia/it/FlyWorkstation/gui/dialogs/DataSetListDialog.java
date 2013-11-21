@@ -227,7 +227,7 @@ public class DataSetListDialog extends ModalDialog implements Accessibility, Ref
 
     	loadDataSets();
 
-		Browser browser = SessionMgr.getSessionMgr().getActiveBrowser();
+		Browser browser = SessionMgr.getBrowser();
 		setPreferredSize(new Dimension((int)(browser.getWidth()*0.4),(int)(browser.getHeight()*0.4)));
 		
         // Show dialog and wait

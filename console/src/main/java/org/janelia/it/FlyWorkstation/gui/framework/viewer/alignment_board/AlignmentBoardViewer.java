@@ -326,7 +326,7 @@ public class AlignmentBoardViewer extends Viewer implements AlignmentBoardContro
                 new Thread( new Runnable() {
                     public void run() {
                         // Ensure all shown.
-                        LayersPanel layersPanel = SessionMgr.getSessionMgr().getActiveBrowser().getLayersPanel();
+                        LayersPanel layersPanel = SessionMgr.getBrowser().getLayersPanel();
                         layersPanel.showOutline();
                         AlignmentBoardItemChangeEvent event = new AlignmentBoardItemChangeEvent(
                                 layersPanel.getAlignmentBoardContext(),

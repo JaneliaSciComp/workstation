@@ -204,7 +204,7 @@ public class DataSetDialog extends ModalDialog implements Accessibility {
 
         final String sampleNamePattern = sampleNamePatternInput.getText();
         if (!sampleNamePattern.contains(SLIDE_CODE_PATTERN)) {
-            JOptionPane.showMessageDialog(SessionMgr.getSessionMgr().getActiveBrowser(),
+            JOptionPane.showMessageDialog(SessionMgr.getBrowser(),
                     "Sample name pattern must contain the unique identifier \""+SLIDE_CODE_PATTERN+"\"", "Invalid Sample Name Pattern", JOptionPane.ERROR_MESSAGE);
             return;
         }

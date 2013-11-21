@@ -54,8 +54,9 @@ public class ViewerSplitPanel extends JPanel implements ViewerContainer {
 		this.mainSplitPane = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, false);
 		mainSplitPane.setOneTouchExpandable(false);
 		mainSplitPane.setBorder(BorderFactory.createEmptyBorder());
+		mainSplitPane.setDividerSize(10);
 		
-		Dimension minimumSize = new Dimension(20, 0);
+		Dimension minimumSize = new Dimension(0, 0);
 		mainViewerPane.setMinimumSize(minimumSize);
 		secViewerPane.setMinimumSize(minimumSize);
 		

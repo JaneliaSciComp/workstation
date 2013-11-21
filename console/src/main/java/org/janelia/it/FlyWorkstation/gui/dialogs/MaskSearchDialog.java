@@ -275,7 +275,7 @@ public class MaskSearchDialog extends ModalDialog {
             @Override
             protected void hadSuccess() {
                 Utils.setDefaultCursor(MaskSearchDialog.this);
-//                Browser browser = SessionMgr.getSessionMgr().getActiveBrowser();
+//                Browser browser = SessionMgr.getBrowser();
 //                browser.setPerspective(Perspective.TaskMonitoring);
                 setVisible(false);
             }
@@ -340,7 +340,7 @@ public class MaskSearchDialog extends ModalDialog {
                             ArrayList<Entity> tmpFolder = (ArrayList<Entity>)ModelMgr.getModelMgr().getEntitiesByName(folderField.getText().trim());
                             if (null!=tmpFolder && tmpFolder.size()>0 && null!=tmpFolder.get(0).getId()) {
                                 final Entity tmpFolderEntity = ModelMgr.getModelMgr().getEntityById(tmpFolder.get(0).getId());
-                                final EntityOutline entityOutline = SessionMgr.getSessionMgr().getActiveBrowser().getEntityOutline();
+                                final EntityOutline entityOutline = SessionMgr.getBrowser().getEntityOutline();
                                 entityOutline.totalRefresh(true, new Callable<Void>() {
                                     @Override
                                     public Void call() throws Exception {

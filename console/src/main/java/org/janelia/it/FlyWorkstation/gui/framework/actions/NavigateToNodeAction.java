@@ -14,7 +14,7 @@ public class NavigateToNodeAction extends OntologyElementAction {
 
     @Override
     public void doAction() {
-        final OntologyOutline ontologyOutline = SessionMgr.getSessionMgr().getActiveBrowser().getOntologyOutline();
+        final OntologyOutline ontologyOutline = SessionMgr.getBrowser().getOntologyOutline();
         
         OntologyElement element = getOntologyElement();
         if (element==null) {

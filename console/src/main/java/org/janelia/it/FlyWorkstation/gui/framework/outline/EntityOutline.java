@@ -66,8 +66,9 @@ public abstract class EntityOutline extends EntityTree implements Refreshable, A
 	protected String currUniqueId;
 
     public EntityOutline() {
-		super();
-		this.setMinimumSize(new Dimension(400, 400));
+		
+        setMinimumSize(new Dimension(0, 0));
+        
 		showLoadingIndicator();
 		this.mml = new ModelMgrAdapter() {
             @Override

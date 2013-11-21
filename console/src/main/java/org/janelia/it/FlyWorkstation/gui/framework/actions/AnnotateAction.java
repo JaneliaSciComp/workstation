@@ -50,7 +50,7 @@ public class AnnotateAction extends OntologyElementAction {
     @Override
     public void doAction() {
         
-        final OntologyOutline ontologyOutline = SessionMgr.getSessionMgr().getActiveBrowser().getOntologyOutline();
+        final OntologyOutline ontologyOutline = SessionMgr.getBrowser().getOntologyOutline();
         
         OntologyElement element = getOntologyElement();
         if (element==null) {
@@ -81,14 +81,14 @@ public class AnnotateAction extends OntologyElementAction {
 
         Object value = null;
         if (type instanceof Interval) {
-            value = JOptionPane.showInputDialog(SessionMgr.getSessionMgr().getActiveBrowser(), 
+            value = JOptionPane.showInputDialog(SessionMgr.getBrowser(), 
             		"Value:\n", element.getName(), JOptionPane.PLAIN_MESSAGE, null, null, null);
 
             if (StringUtils.isEmpty((String)value)) return;
             Double dvalue = Double.parseDouble((String)value);
             Interval interval = (Interval) type;
             if (dvalue < interval.getLowerBound().doubleValue() || dvalue > interval.getUpperBound().doubleValue()) {
-                JOptionPane.showMessageDialog(SessionMgr.getSessionMgr().getActiveBrowser(), 
+                JOptionPane.showMessageDialog(SessionMgr.getBrowser(), 
                 		"Input out of range [" + interval.getLowerBound() + "," + interval.getUpperBound() + "]");
                 return;
             }
@@ -111,7 +111,7 @@ public class AnnotateAction extends OntologyElementAction {
         		selectionValues[i++] = child;
         	}
         	
-        	value = JOptionPane.showInputDialog(SessionMgr.getSessionMgr().getActiveBrowser(), 
+        	value = JOptionPane.showInputDialog(SessionMgr.getBrowser(), 
             		"Value:\n", element.getName(), JOptionPane.PLAIN_MESSAGE, null, selectionValues, null);
         	if (value==null) return;
         }
@@ -119,7 +119,7 @@ public class AnnotateAction extends OntologyElementAction {
             AnnotationBuilderDialog dialog = new AnnotationBuilderDialog();
             dialog.setVisible(true);
             value = dialog.getAnnotationValue();
-//            value = JOptionPane.showInputDialog(SessionMgr.getSessionMgr().getActiveBrowser(),
+//            value = JOptionPane.showInputDialog(SessionMgr.getBrowser(),
 //            		"Value:\n", term.getName(), JOptionPane.PLAIN_MESSAGE, null, null, null);
             if (value==null || value.equals("")) return;
         }
@@ -151,7 +151,7 @@ public class AnnotateAction extends OntologyElementAction {
         	
         };
 
-        worker.setProgressMonitor(new ProgressMonitor(SessionMgr.getSessionMgr().getActiveBrowser(), "Adding annotations", "", 0, 100));
+        worker.setProgressMonitor(new ProgressMonitor(SessionMgr.getBrowser(), "Adding annotations", "", 0, 100));
         worker.execute();
     }
     

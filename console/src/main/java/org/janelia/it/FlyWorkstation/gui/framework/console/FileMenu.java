@@ -283,7 +283,7 @@ public class FileMenu extends JMenu {
     }
 
     private void menuFileImport_actionPerformed(){
-        SessionMgr.getSessionMgr().getActiveBrowser().getImportDialog().showDialog(null);
+        SessionMgr.getBrowser().getImportDialog().showDialog(null);
     }
 
     private void fileExit_actionPerformed() {

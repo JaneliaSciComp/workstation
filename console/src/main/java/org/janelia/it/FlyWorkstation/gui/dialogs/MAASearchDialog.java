@@ -407,7 +407,7 @@ public class MAASearchDialog extends ModalDialog implements Accessibility, Actio
 
 			@Override
 			protected void hadSuccess() {
-				final EntityOutline entityOutline = SessionMgr.getSessionMgr().getActiveBrowser().getEntityOutline();
+				final EntityOutline entityOutline = SessionMgr.getBrowser().getEntityOutline();
 				entityOutline.totalRefresh(true, new Callable<Void>() {
 					@Override
 					public Void call() throws Exception {

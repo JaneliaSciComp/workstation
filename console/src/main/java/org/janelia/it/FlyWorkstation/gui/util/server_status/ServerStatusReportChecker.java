@@ -94,7 +94,7 @@ public class ServerStatusReportChecker implements Runnable {
                 return;
             }
 
-            JFrame mainFrame = SessionMgr.getSessionMgr().getActiveBrowser();
+            JFrame mainFrame = SessionMgr.getBrowser();
             JOptionPane optionPane = new JOptionPane();
             optionPane.showMessageDialog(mainFrame, message, "New Server Status Message", JOptionPane.INFORMATION_MESSAGE);
             lastReport = message;

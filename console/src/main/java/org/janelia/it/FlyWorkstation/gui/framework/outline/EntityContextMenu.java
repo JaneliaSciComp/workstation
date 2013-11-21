@@ -81,7 +81,7 @@ public class EntityContextMenu extends JPopupMenu {
 
     private static final Logger log = LoggerFactory.getLogger(EntityContextMenu.class);
 
-    protected static final Browser browser = SessionMgr.getSessionMgr().getActiveBrowser();
+    protected static final Browser browser = SessionMgr.getBrowser();
 
     // Download directories
     private static final File downloadDir = new File(SystemInfo.getDownloadsDir(), "Workstation Images");
@@ -607,7 +607,7 @@ public class EntityContextMenu extends JPopupMenu {
                     ModelMgr.getModelMgr().renameEntity(rootedEntity.getEntity(), newName);
                 } catch (Exception ex) {
                     ex.printStackTrace();
-                    JOptionPane.showMessageDialog(SessionMgr.getSessionMgr().getActiveBrowser(),
+                    JOptionPane.showMessageDialog(SessionMgr.getBrowser(),
                             "Error renaming entity", "Error", JOptionPane.ERROR_MESSAGE);
                 }
 
@@ -1818,7 +1818,7 @@ public class EntityContextMenu extends JPopupMenu {
         searchHereMenuItem.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent actionEvent) {
                 try {
-                    SessionMgr.getSessionMgr().getActiveBrowser().getGeneralSearchDialog()
+                    SessionMgr.getBrowser().getGeneralSearchDialog()
                             .showDialog(rootedEntity.getEntity());
                 } catch (Exception e) {
                     SessionMgr.getSessionMgr().handleException(e);

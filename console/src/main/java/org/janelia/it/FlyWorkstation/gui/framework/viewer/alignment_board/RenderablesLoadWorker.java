@@ -174,7 +174,7 @@ public class RenderablesLoadWorker extends SimpleWorker implements VolumeLoader 
             for ( MaskChanRenderableData data: renderableDatas ) {
                 idToData.put( data.getBean(), data );
             }
-            SessionMgr.getSessionMgr().getActiveBrowser().getLayersPanel().showLoadingIndicator();
+            SessionMgr.getBrowser().getLayersPanel().showLoadingIndicator();
             for ( MaskChanRenderableData data: originalDatas ) {
                 MaskChanRenderableData targetData = idToData.get(data.getBean());
                 RenderableBean bean = data.getBean();
@@ -183,7 +183,7 @@ public class RenderablesLoadWorker extends SimpleWorker implements VolumeLoader 
                      bean.getType().equals( EntityConstants.TYPE_NEURON_FRAGMENT )
                    ) {
 
-                    AlignedItem item = SessionMgr.getSessionMgr().getActiveBrowser().getLayersPanel().getAlignmentBoardContext().getAlignedItemWithEntityId(bean.getAlignedItemId());
+                    AlignedItem item = SessionMgr.getBrowser().getLayersPanel().getAlignmentBoardContext().getAlignedItemWithEntityId(bean.getAlignedItemId());
                     if ( item != null ) {
                         try {
                             if ( targetData != null ) {

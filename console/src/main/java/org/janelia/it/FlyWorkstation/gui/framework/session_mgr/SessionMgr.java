@@ -42,11 +42,11 @@ import java.util.List;
 
 public class SessionMgr {
 
+    private static final Logger log = LoggerFactory.getLogger(SessionMgr.class);
+    
     public static final int MIN_FILE_CACHE_GIGABYTE_CAPACITY = 50;
     public static final int MAX_FILE_CACHE_GIGABYTE_CAPACITY = 1000;
 
-    private static final Logger log = LoggerFactory.getLogger(SessionMgr.class);
-    
     public static String DISPLAY_FREE_MEMORY_METER_PROPERTY = "SessionMgr.DisplayFreeMemoryProperty";
     public static String UNLOAD_IMAGES_PROPERTY = "SessionMgr.UnloadImagesProperty";
     public static String DISPLAY_SUB_EDITOR_PROPERTY = "SessionMgr.DisplaySubEditorProperty";
@@ -60,14 +60,11 @@ public class SessionMgr {
     public static String FILE_CACHE_GIGABYTE_CAPACITY_PROPERTY = "console.localCache.gigabyteCapacity";
     public static String RUN_AS_USER = "RunAs";
     public static String DOWNLOADS_DIR = "DownloadsDir";
-    
     public static String DISPLAY_LOOK_AND_FEEL = "SessionMgr.JavaLookAndFeel";
-
     public static String DISPLAY_RENDERER_2D = "SessionMgr.Renderer2D";
     
     public static boolean isDarkLook = false;
     
-    //  private static String PROPERTY_CREATION_RULES="SessionMgr.PropertyCreationRules";
     private static ModelMgr modelManager = ModelMgr.getModelMgr();
     private static SessionMgr sessionManager = new SessionMgr();
     private SessionModel sessionModel = SessionModel.getSessionModel();
@@ -75,14 +72,13 @@ public class SessionMgr {
     private String browserTitle;
     private ImageIcon browserImageIcon;
     private Component splashPanel;
-    //private String releaseVersion="$date$";
     private ExternalListener externalHttpListener;
     private EmbeddedAxisServer axisServer;
     private EmbeddedWebServer webServer;
     private File settingsFile;
     private String prefsDir = System.getProperty("user.home") + ConsoleProperties.getString("Console.Home.Path");
     private String prefsFile = prefsDir + ".JW_Settings";
-    private Map browserModelsToBrowser = new HashMap();
+    private Map<BrowserModel,Browser> browserModelsToBrowser = new HashMap<BrowserModel,Browser>();
     private WindowListener myBrowserWindowListener = new MyBrowserListener();
     private Browser activeBrowser;
     private String appName, appVersion;
@@ -159,13 +155,6 @@ public class SessionMgr {
     
         log.info("Using 2d renderer: {}",getModelProperty(SessionMgr.DISPLAY_RENDERER_2D));
         
-//      if (getModelProperty(PROPERTY_CREATION_RULES)!=null) {
-//        Set rules= (Set)getModelProperty(PROPERTY_CREATION_RULES);
-//          for (Object rule : rules) {
-//              PropertyMgr.getPropertyMgr().addPropertyCreationRule((PropertyCreationRule) rule);
-//          }
-//      }
-
         String[] li = {"Licensee=HHMI", "LicenseRegistrationNumber=122030", "Product=Synthetica", "LicenseType=Single Application License", "ExpireDate=--.--.----", "MaxVersion=2.999.999"};
         UIManager.put("Synthetica.license.info", li);
         UIManager.put("Synthetica.license.key", "1839F3DB-00416A48-64C9E2C5-F9E25A71-A885FFC0");
@@ -210,18 +199,8 @@ public class SessionMgr {
         if (null!=tmpCache) {
             PropertyConfigurator.getProperties().setProperty(FILE_CACHE_GIGABYTE_CAPACITY_PROPERTY, tmpCache.toString());
         }
-        // TODO: Bundle FIJI with Workstation
-    } //Singleton enforcement
 
-	private String getSafeModelProperty(String targetKey) {
-        Object testValue = getModelProperty(targetKey);
-        if (null==testValue || !(testValue instanceof String)) {
-            return "";
-        }
-        else {
-            return (String)testValue;
-        }
-    }
+    } //Singleton enforcement
 
     private void readSettingsFile() {
         JFrame mainFrame = new JFrame();
@@ -315,16 +294,13 @@ public class SessionMgr {
         return sessionModel.getModelPropertyKeys();
     }
 
-
     public String getNewBrowserTitle() {
         return browserTitle;
-
     }
 
     public void registerPreferenceInterface(Object interfaceKey, Class interfaceClass) throws Exception {
         PrefController.getPrefController().registerPreferenceInterface(interfaceKey, interfaceClass);
     }
-
 
     public void removePreferenceInterface(Object interfaceKey) throws Exception {
         PrefController.getPrefController().deregisterPreferenceInterface(interfaceKey);
@@ -472,29 +448,6 @@ public class SessionMgr {
         }
     }
 
-    /**
-     * Register an editor for a model type
-     *
-     */
-//  public void registerEditorForType(Class type, Class editor, String editorName, boolean defaultEditorForType) throws Exception {
-//    Browser.registerEditorForType(type,editor,editorName,defaultEditorForType);
-//  }
-
-
-    /**
-     * Register the editor for this type, but only under the specified protocol
-     */
-//  public void registerEditorForType(Class type, Class editor, String editorName, String protocol, boolean defaultEditorForType) throws Exception {
-//    if (FacadeManager.isProtocolRegistered(protocol))  Browser.registerEditorForType(type,editor,editorName,defaultEditorForType);
-//  }
-//
-//  public void registerSubEditorForMainEditor(Class mainEditor, Class subEditor, String protocol) throws Exception {
-//    if (FacadeManager.isProtocolRegistered(protocol))  registerSubEditorForMainEditor(mainEditor, subEditor);
-//  }
-//
-//  public void registerSubEditorForMainEditor(Class mainEditor, Class subEditor) throws Exception {
-//    Browser.registerSubEditorForMainEditor(mainEditor,subEditor);
-//  }
     public void handleException(Throwable throwable) {
         modelManager.handleException(throwable);
     }
@@ -600,13 +553,12 @@ public class SessionMgr {
         		UIManager.setLookAndFeel(lookAndFeelClassName);	
         	}
             
-            Set browserModels = browserModelsToBrowser.keySet();
-            Object obj;
-            for (Object browserModel : browserModels) {
-                obj = browserModelsToBrowser.get(browserModel);
-                if (obj != null) {
-                    SwingUtilities.updateComponentTreeUI((JFrame) obj);
-                    ((JFrame) obj).repaint();
+            Set<BrowserModel> browserModels = browserModelsToBrowser.keySet();
+            for (BrowserModel browserModel : browserModels) {
+                Browser browser = browserModelsToBrowser.get(browserModel);
+                if (browser != null) {
+                    SwingUtilities.updateComponentTreeUI((JFrame) browser);
+                    ((JFrame) browser).repaint();
                 }
             }
             setModelProperty(DISPLAY_LOOK_AND_FEEL, lookAndFeelClassName);
@@ -697,46 +649,10 @@ public class SessionMgr {
         return webServer;
     }
 
-	public void resetSession() {
-        Set keys = browserModelsToBrowser.keySet();
-        List browserList = new ArrayList(keys.size());
-        for (Object key : keys) {
-            browserList.add(key);
-        }
-        Browser[] browsers = (Browser[]) browserList.toArray(new Browser[0]);
-        for (Browser browser : browsers) {
-            browser.closeAllViews();
-            browser.getBrowserModel().reset();
-        }
-        FacadeManager.resetFacadeManager();
-    }
-
     public Browser getBrowserFor(BrowserModel model) {
         return (Browser) browserModelsToBrowser.get(model);
     }
 
-    //  public void addPropertyCreationRule(PropertyCreationRule rule) {
-//    PropertyMgr.getPropertyMgr().addPropertyCreationRule(rule);
-//    Set rules=(Set)getModelProperty(PROPERTY_CREATION_RULES);
-//    if (rules==null) rules = new HashSet();
-//    rules.add(rule);
-//    setModelProperty(PROPERTY_CREATION_RULES,rules);
-//  }
-//
-//  public Set getPropertyCreationRules() {
-//    return PropertyMgr.getPropertyMgr().getPropertyCreationRules();
-//  }
-//
-//  public void removePropertyCreationRule(String ruleName){
-//    PropertyMgr.getPropertyMgr().removePropertyCreationRule(ruleName);
-//    Set rules=(Set)getModelProperty(PROPERTY_CREATION_RULES);
-//    PropertyCreationRule rule;
-//    for (Iterator it=rules.iterator();it.hasNext();){
-//      rule=(PropertyCreationRule)it.next();
-//      if (rule.getName().equals(ruleName)) it.remove();
-//    }
-//  }
-//
     public void saveUserSettings() {
         writeSettings();
     }
@@ -755,7 +671,6 @@ public class SessionMgr {
             handleException(ioEx);
         }
     }
-
 
     public boolean loginSubject() {
         try {

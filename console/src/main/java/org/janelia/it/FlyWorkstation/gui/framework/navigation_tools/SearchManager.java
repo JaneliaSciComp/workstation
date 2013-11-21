@@ -88,7 +88,7 @@ public class SearchManager {
 
   private SearchManager() {
     try  {
-      browser = SessionMgr.getSessionMgr().getActiveBrowser();
+      browser = SessionMgr.getBrowser();
       userDialog = new JDialog(browser,"Search Known Features", false);
       userDialog.addWindowListener(myWindowListener);
       browser.getBrowserModel().addBrowserModelListener(browserModelListener);

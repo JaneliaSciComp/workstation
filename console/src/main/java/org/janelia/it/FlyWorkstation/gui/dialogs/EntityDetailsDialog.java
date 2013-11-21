@@ -85,7 +85,7 @@ public class EntityDetailsDialog extends ModalDialog {
         
         entityDetailsPanel.loadEntity(entity, role, defaultTab);
         setTitle("Entity Details: "+entity.getName());
-        Browser browser = SessionMgr.getSessionMgr().getActiveBrowser();
+        Browser browser = SessionMgr.getBrowser();
         setPreferredSize(new Dimension((int)(browser.getWidth()*0.5),(int)(browser.getHeight()*0.8)));
         // Show dialog and wait
         packAndShow();

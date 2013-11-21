@@ -237,7 +237,7 @@ public class RunNeuronSeparationDialog extends ModalDialog {
 			@Override
 			protected void hadSuccess() {
 		    	Utils.setDefaultCursor(RunNeuronSeparationDialog.this);
-	            Browser browser = SessionMgr.getSessionMgr().getActiveBrowser();
+	            Browser browser = SessionMgr.getBrowser();
                 browser.setPerspective(Perspective.TaskMonitoring);
 				setVisible(false);
 			}

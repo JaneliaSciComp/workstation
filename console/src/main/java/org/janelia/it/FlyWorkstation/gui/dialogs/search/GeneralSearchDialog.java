@@ -149,7 +149,7 @@ public class GeneralSearchDialog extends ModalDialog {
 			folderNameField.setText(getNextFolderName());	
 		}
 
-		Browser browser = SessionMgr.getSessionMgr().getActiveBrowser();
+		Browser browser = SessionMgr.getBrowser();
 		setPreferredSize(new Dimension((int)(browser.getWidth()*0.8),(int)(browser.getHeight()*0.8)));
 
     	paramsPanel.getInputField().requestFocus();
@@ -252,7 +252,7 @@ public class GeneralSearchDialog extends ModalDialog {
      * @return
      */
 	protected String getNextFolderName() {
-		final EntityOutline entityOutline = SessionMgr.getSessionMgr().getActiveBrowser().getEntityOutline();
+		final EntityOutline entityOutline = SessionMgr.getBrowser().getEntityOutline();
 		if (entityOutline==null) return "";
 		int maxNum = 0;
 		for(EntityData ed : entityOutline.getRootEntity().getEntityData()) {

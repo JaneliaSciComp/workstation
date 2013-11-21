@@ -37,7 +37,7 @@ public class AnnotationTagCloudPanel extends TagCloudPanel<OntologyAnnotation> i
 	
     private void deleteTag(final OntologyAnnotation tag) {
     	
-        Utils.setWaitingCursor(SessionMgr.getSessionMgr().getActiveBrowser());
+        Utils.setWaitingCursor(SessionMgr.getBrowser());
 
         SimpleWorker worker = new SimpleWorker() {
 
@@ -48,13 +48,13 @@ public class AnnotationTagCloudPanel extends TagCloudPanel<OntologyAnnotation> i
 
             @Override
             protected void hadSuccess() {
-                Utils.setDefaultCursor(SessionMgr.getSessionMgr().getActiveBrowser());
+                Utils.setDefaultCursor(SessionMgr.getBrowser());
             }
 
             @Override
             protected void hadError(Throwable error) {
                 error.printStackTrace();
-                Utils.setDefaultCursor(SessionMgr.getSessionMgr().getActiveBrowser());
+                Utils.setDefaultCursor(SessionMgr.getBrowser());
                 JOptionPane.showMessageDialog(AnnotationTagCloudPanel.this, "Error deleting annotation", "Error", JOptionPane.ERROR_MESSAGE);
             }
         };

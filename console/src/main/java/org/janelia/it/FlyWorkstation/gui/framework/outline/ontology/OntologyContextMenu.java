@@ -34,7 +34,7 @@ import org.janelia.it.jacs.model.ontology.types.Text;
  */
 public class OntologyContextMenu extends EntityContextMenu {
 
-    protected static final Browser browser = SessionMgr.getSessionMgr().getActiveBrowser();
+    protected static final Browser browser = SessionMgr.getBrowser();
 
     // Current selection
     protected final OntologyElement ontologyElement;

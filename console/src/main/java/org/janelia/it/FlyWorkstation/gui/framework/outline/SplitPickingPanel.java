@@ -165,7 +165,7 @@ public class SplitPickingPanel extends JPanel implements Refreshable {
 					
 					@Override
 					protected void hadSuccess() {
-						PatternSearchDialog dialog = SessionMgr.getSessionMgr().getActiveBrowser().getPatternSearchDialog();
+						PatternSearchDialog dialog = SessionMgr.getBrowser().getPatternSearchDialog();
 						List<Long> sampleIds  = dialog.showDialog(true);
 						createLocalGrouping(sampleIds, dialog.getSaveFolderName());
 					}
@@ -200,7 +200,7 @@ public class SplitPickingPanel extends JPanel implements Refreshable {
 					
 					@Override
 					protected void hadSuccess() {
-						MAASearchDialog dialog = SessionMgr.getSessionMgr().getActiveBrowser().getMAASearchDialog();
+						MAASearchDialog dialog = SessionMgr.getBrowser().getMAASearchDialog();
 						List<Long> sampleIds = dialog.showDialog(true);
 						createLocalGrouping(sampleIds, dialog.getSaveFolderName());
 					}
@@ -495,7 +495,7 @@ public class SplitPickingPanel extends JPanel implements Refreshable {
 	@Override
 	public void refresh() {
 		
-		MAASearchDialog maaSearchDialog = SessionMgr.getSessionMgr().getActiveBrowser().getMAASearchDialog();
+		MAASearchDialog maaSearchDialog = SessionMgr.getBrowser().getMAASearchDialog();
 		maaSearchButton.setVisible(maaSearchDialog!=null && maaSearchDialog.isAccessible());
 		
 		final IconDemoPanel mainViewer = (IconDemoPanel)SessionMgr.getBrowser().getViewerManager().getMainViewer(IconDemoPanel.class);
@@ -870,7 +870,7 @@ public class SplitPickingPanel extends JPanel implements Refreshable {
 					}
 				};
 				
-				worker2.setProgressMonitor(new ProgressMonitor(SessionMgr.getSessionMgr().getActiveBrowser(), "Submitting jobs to the compute cluster...", "", 0, 100));
+				worker2.setProgressMonitor(new ProgressMonitor(SessionMgr.getBrowser(), "Submitting jobs to the compute cluster...", "", 0, 100));
 				worker2.execute();
 			}
 			

@@ -2,13 +2,19 @@ package org.janelia.it.FlyWorkstation.gui.framework.outline;
 
 import java.awt.BorderLayout;
 import java.awt.Component;
+import java.awt.Dimension;
 import java.awt.GridLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.util.HashMap;
 import java.util.Map;
 
-import javax.swing.*;
+import javax.swing.BorderFactory;
+import javax.swing.BoxLayout;
+import javax.swing.ButtonGroup;
+import javax.swing.Icon;
+import javax.swing.JPanel;
+import javax.swing.JToggleButton;
 
 import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.FlyWorkstation.gui.util.CompoundIcon;
@@ -36,6 +42,7 @@ public class VerticalPanelPicker extends JPanel {
 	
 	public VerticalPanelPicker() {
 		setLayout(new BorderLayout());
+		setMinimumSize(new Dimension(0, 0));
 		
 		buttonGroup = new ButtonGroup();
 		
