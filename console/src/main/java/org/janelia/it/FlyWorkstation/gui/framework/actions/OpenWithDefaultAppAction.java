@@ -1,11 +1,11 @@
 package org.janelia.it.FlyWorkstation.gui.framework.actions;
 
-import java.awt.Desktop;
 import java.io.File;
 
 import javax.swing.JOptionPane;
 
 import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr;
+import org.janelia.it.FlyWorkstation.gui.util.DesktopApi;
 import org.janelia.it.FlyWorkstation.shared.util.FileCallable;
 import org.janelia.it.FlyWorkstation.shared.util.SystemInfo;
 import org.janelia.it.FlyWorkstation.shared.util.Utils;
@@ -13,7 +13,8 @@ import org.janelia.it.jacs.model.entity.Entity;
 import org.janelia.it.jacs.shared.utils.EntityUtils;
 
 /**
- * Given an entity with a File Path, reveal the path in Finder.
+ * Given an entity with a File Path, open the file with the default application associated with that file type
+ * by the operating system.
  * 
  * @author <a href="mailto:rokickik@janelia.hhmi.org">Konrad Rokicki</a>
  */
@@ -56,7 +57,10 @@ public class OpenWithDefaultAppAction implements Action {
                                 "Could not open file path", "Error", JOptionPane.ERROR_MESSAGE);
                     }
                     else {
-                        Desktop.getDesktop().open(file);
+                    	if (!DesktopApi.open(file)) {
+                            JOptionPane.showMessageDialog(SessionMgr.getSessionMgr().getActiveBrowser(),
+                                    "Error opening file path", "Error", JOptionPane.ERROR_MESSAGE);
+                    	}
                     }
                 }
             });

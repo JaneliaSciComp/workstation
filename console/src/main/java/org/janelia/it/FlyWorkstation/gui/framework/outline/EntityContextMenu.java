@@ -45,6 +45,7 @@ import org.janelia.it.FlyWorkstation.gui.framework.console.Perspective;
 import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.FlyWorkstation.gui.framework.tool_manager.ToolMgr;
 import org.janelia.it.FlyWorkstation.gui.framework.viewer.Hud;
+import org.janelia.it.FlyWorkstation.gui.util.DesktopApi;
 import org.janelia.it.FlyWorkstation.gui.util.JScrollMenu;
 import org.janelia.it.FlyWorkstation.model.entity.RootedEntity;
 import org.janelia.it.FlyWorkstation.model.utils.AnnotationSession;
@@ -1328,7 +1329,7 @@ public class EntityContextMenu extends JPopupMenu {
                                                 "Files already exist. Open existing folder, or run the download anyway?", "Files already exist", JOptionPane.YES_NO_OPTION,
                                                 JOptionPane.QUESTION_MESSAGE, null, options, options[0]);
                                         if (n==0) {
-                                            OpenInFinderAction.revealFile(targetDir);
+                                            DesktopApi.browse(targetDir);
                                             return;
                                         }
                                     }
@@ -1418,7 +1419,7 @@ public class EntityContextMenu extends JPopupMenu {
                                             return new Callable<Void>() {
                                                 @Override
                                                 public Void call() throws Exception {
-                                                    OpenInFinderAction.revealFile(targetDir);
+                                                	DesktopApi.browse(targetDir);
                                                     return null;
                                                 }
                                             };
