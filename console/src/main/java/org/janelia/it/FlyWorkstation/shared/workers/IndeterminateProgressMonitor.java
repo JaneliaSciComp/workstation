@@ -45,8 +45,15 @@ public class IndeterminateProgressMonitor extends ProgressMonitor implements Acc
         this.max = 100;
         this.message = message;
         this.note = note;
+        this.noteLabel = new JLabel();
+        if ( printableNote() ) {
+            noteLabel.setText( note );
+        }
     }
 
+    private boolean printableNote() {
+        return note != null || note.trim().length() > 0;
+    }
 
     private class ProgressOptionPane extends JOptionPane
     {
@@ -187,7 +194,7 @@ public class IndeterminateProgressMonitor extends ProgressMonitor implements Acc
             myBar.setIndeterminate(true);
             if (note != null) noteLabel = new JLabel(note);
             pane = new ProgressOptionPane(new Object[] {message,
-                                                        null,
+                                                        printableNote() ? noteLabel : null,
                                                         myBar});
             dialog = pane.createDialog(parentComponent, "Processing");
             dialog.show();
