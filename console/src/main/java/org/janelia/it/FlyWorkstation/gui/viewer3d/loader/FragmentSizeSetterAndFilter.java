@@ -62,11 +62,13 @@ public class FragmentSizeSetterAndFilter {
                 else {
                     try {
                         RenderableBean bean = data.getBean();
-                        MaskSingleFileLoader loader = new MaskSingleFileLoader(bean);
-                        FileInputStream fis = new FileInputStream( infile );
-                        long voxelCount = loader.getVoxelCount( fis );
-                        fis.close();
-                        bean.setVoxelCount( voxelCount );
+                        if ( bean.getVoxelCount() == 0L ) {
+                            MaskSingleFileLoader loader = new MaskSingleFileLoader(bean);
+                            FileInputStream fis = new FileInputStream( infile );
+                            long voxelCount = loader.getVoxelCount( fis );
+                            fis.close();
+                            bean.setVoxelCount( voxelCount );
+                        }
 
                     } catch ( Exception ex ) {
                         logger.error("Caught an exception while attempting to retrieve voxel count for {}.", maskPath );

@@ -105,6 +105,7 @@ public class FileExportLoadWorker extends SimpleWorker implements VolumeLoader {
                 if ( infile.canRead() ) {
                     FileInputStream fis = new FileInputStream( infile );
                     long voxelCount = loader.getVoxelCount( fis );
+                    fis.close();
                     bean.setVoxelCount(voxelCount);
                 }
             }
