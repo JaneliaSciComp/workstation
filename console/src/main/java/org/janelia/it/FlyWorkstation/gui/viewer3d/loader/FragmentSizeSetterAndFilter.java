@@ -65,6 +65,7 @@ public class FragmentSizeSetterAndFilter {
                         MaskSingleFileLoader loader = new MaskSingleFileLoader(bean);
                         FileInputStream fis = new FileInputStream( infile );
                         long voxelCount = loader.getVoxelCount( fis );
+                        fis.close();
                         bean.setVoxelCount( voxelCount );
 
                     } catch ( Exception ex ) {
