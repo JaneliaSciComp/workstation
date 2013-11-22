@@ -163,6 +163,8 @@ public class Sample extends AlignedEntityWrapper implements Viewable2d, Viewable
         }
         
         if (reference!=null && reference.getMask3dImageFilepath()!=null) {
+            log.debug("Got reference mask: {}",reference.getMask3dImageFilepath());
+            log.debug("Got reference chan: {}",reference.getChan3dImageFilepath());
         	addChild(reference);
         }
         
