@@ -149,20 +149,31 @@ public class MultiMaskTracker {
         if ( dumpedList == null  &&  unexpandableVsPrevCombo.size() == 0 ) {
             return;
         }
+        boolean printDump = false;
         StringBuilder totalDump = new StringBuilder("Dumping Mask Contents\n");
         if ( unexpandableVsPrevCombo.size() > 0 ) {
-            if ( dumpedList == null ) {
-                dumpedList = new ArrayList<Integer>();
-            }
+            printDump = true;
             totalDump.append("Missed Combinations List; found key vs expanded alternates:");
+            totalDump.append("\nDiscarded\tOldCombo\tVoxelCt\n");
             for ( String key: unexpandableVsPrevCombo.keySet() ) {
-                totalDump.append(key);
                 String value = unexpandableVsPrevCombo.get( key );
-                String[] parts = value.split( MSK_KEY_SEP );
-                dumpedList.add( Integer.parseInt( parts[ 0 ] ) );
+                int oldExpansionPoint = value.indexOf( MSK_KEY_SEP );
+                if ( oldExpansionPoint != -1 ) {
+                    String discardedMask = value.substring( 0, oldExpansionPoint );
+                    totalDump.append( discardedMask ).append( "\t" ).append( key );
+                    MultiMaskBean discardedBean = maskIdToBean.get(discardedMask);
+                    if ( discardedBean != null ) {
+                        totalDump.append( "\t" ).append(discardedBean.getVoxelCount());
+                    }
+                    else {
+                        totalDump.append("\t").append("Unknown Single");
+                    }
+                    totalDump.append("\n");
+                }
             }
         }
         if ( dumpedList != null ) {
+            printDump = true;
             totalDump.append("Mask List: ");
             for ( Integer maskId: dumpedList ) {
                 totalDump.append( maskId ).append(",");
@@ -208,8 +219,10 @@ public class MultiMaskTracker {
                     totalDump.append( "Alt-Mask-Set ").append( invertedKey ).append( " refers to multimask " ).append( altMasksToBean.get( invertedKey ).getMultiMaskNum() ).append( "\n" );
                 }
             }
-            logger.info( totalDump.toString() );
             dumpedList.clear();
+        }
+        if ( printDump ) {
+            logger.info( totalDump.toString() );
         }
 
     }
