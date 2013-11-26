@@ -153,7 +153,7 @@ public class MultiMaskTracker {
         StringBuilder totalDump = new StringBuilder("Dumping Mask Contents\n");
         if ( unexpandableVsPrevCombo.size() > 0 ) {
             printDump = true;
-            totalDump.append("Missed Combinations List; found key vs expanded alternates:");
+            totalDump.append("Missed Combinations List; found key vs expanded alternates:").append("\n");
             totalDump.append("\nDiscarded\tOldCombo\tVoxelCt\n");
             for ( String key: unexpandableVsPrevCombo.keySet() ) {
                 String value = unexpandableVsPrevCombo.get( key );
@@ -171,6 +171,7 @@ public class MultiMaskTracker {
                     totalDump.append("\n");
                 }
             }
+            totalDump.append("\n");
         }
         if ( dumpedList != null ) {
             printDump = true;
