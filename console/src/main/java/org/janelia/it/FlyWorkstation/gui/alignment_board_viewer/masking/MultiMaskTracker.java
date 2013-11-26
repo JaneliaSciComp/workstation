@@ -16,8 +16,9 @@ import java.util.*;
  */
 public class MultiMaskTracker {
 
-    public static final int MAX_MASK_DEPTH = 8;
     public static final String MSK_KEY_SEP = "=";
+    public static final int MAX_MASK_DEPTH = 8;
+    public static final int MAX_MASK_NUM = 65536;
 
     private Map<Integer,MultiMaskBean> maskIdToBean;
     private Map<String,MultiMaskBean> altMasksToBean;
@@ -272,7 +273,7 @@ public class MultiMaskTracker {
     private Integer createIncrementedMultimask(int discoveredMask, int oldVolumeMask, List<Integer> altMasks) {
         Integer rtnVal;// Need a new one.  C'tor sets voxel count to 1.
         MultiMaskBean newBean = new MultiMaskBean();
-        if ( nextMaskNum >= 65536 ) {
+        if ( nextMaskNum >= MAX_MASK_NUM) {
             Iterator<Integer> retiredMaskIterator = retiredMasks.iterator();
             if ( retiredMaskIterator.hasNext() ) {
                 Integer reusedMask = retiredMasks.iterator().next();
@@ -310,7 +311,7 @@ public class MultiMaskTracker {
 
         maskIdToBean.put( nextMaskNum, newBean );
         altMasksToBean.put( newBean.getInvertedKey(), newBean );
-        if ( nextMaskNum < 65536 ) {
+        if ( nextMaskNum < MAX_MASK_NUM ) {
             nextMaskNum ++;
         }
 
