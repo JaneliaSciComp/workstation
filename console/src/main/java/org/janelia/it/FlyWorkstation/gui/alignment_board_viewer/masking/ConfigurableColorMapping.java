@@ -28,6 +28,7 @@ public class ConfigurableColorMapping implements RenderMappingI {
     private Collection<RenderableBean> renderableBeans;
     private MultiMaskTracker multiMaskTracker;
     private FileStats fileStats;
+    private int maxDepthExceededCount = 0;
     private Logger logger = LoggerFactory.getLogger(ConfigurableColorMapping.class);
 
     public ConfigurableColorMapping() {}
@@ -122,17 +123,21 @@ public class ConfigurableColorMapping implements RenderMappingI {
                     }
                     else {
                         rgb[ 3 ] = RenderMappingI.NON_RENDERING;
+                        maxDepthExceededCount ++;
 
                         // Here, nothing to add to the mapping.  Max depth exceeded.
-                        logger.warn(
-                                "Exceeded max depth for multimask rendering. Depth is {}, of max {}.",
-                                maskOffset, MultiMaskTracker.MAX_MASK_DEPTH
-                        );
                     }
                     maskMappings.put( multiMask, rgb );
 
                 }
             }
+            if ( maxDepthExceededCount > 0 ) {
+                logger.warn(
+                        "Max depth {} for multimask rendering exceeded {} times.",
+                        MultiMaskTracker.MAX_MASK_DEPTH, maxDepthExceededCount
+                );
+            }
+
         }
     }
 

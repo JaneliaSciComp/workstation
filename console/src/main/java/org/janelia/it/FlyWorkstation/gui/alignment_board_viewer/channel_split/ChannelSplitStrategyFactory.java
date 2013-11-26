@@ -42,11 +42,12 @@ public class ChannelSplitStrategyFactory {
         else {
             if ( trivialStrategy == null ) {
                 trivialStrategy = new ChannelSplitStrategyI() {
-                    // This trivial strategy simply preserves the bit value at the maximum depth allowed.
+                    // This trivial strategy simply preserves the bit value at the maximum depth allowed by
+                    // returning an all-zeros byte array.
                     // Lazy-init in case this depth is never reached.
                     @Override
                     public byte[] getUpdatedValue(ChannelMetaData channelMetaDatas, int originalMask, byte[] channelsData, int multiMaskId) {
-                        return channelsData;
+                        return  new byte[ channelsData.length ];
                     }
                 };
             }
