@@ -141,14 +141,14 @@ public class AlignmentBoardControlsPanel extends JPanel {
 
         nextRow += rowHeight;
         GridBagConstraints downSampleConstraints = new GridBagConstraints(
-                0, nextRow, 3, rowHeight, 1.0, 0.0, GridBagConstraints.NORTHWEST, GridBagConstraints.VERTICAL, insets, 0, 0
+                0, nextRow, 2, rowHeight, 1.0, 0.0, GridBagConstraints.NORTHWEST, GridBagConstraints.VERTICAL, insets, 0, 0
         );
         controls.getDownSampleRateDropdown().setMinimumSize(DN_SAMPLE_DROPDOWN_SIZE);
         controls.getDownSampleRateDropdown().setMaximumSize(DN_SAMPLE_DROPDOWN_SIZE);
         controls.getDownSampleRateDropdown().setPreferredSize(DN_SAMPLE_DROPDOWN_SIZE);
         // This sits beside the downsample dropdown.
         GridBagConstraints downSampleGuessConstraints = new GridBagConstraints(
-                2, nextRow, 1, rowHeight, 1.0, 0.0, GridBagConstraints.NORTHWEST, GridBagConstraints.VERTICAL, insets, 0, 0
+                1, nextRow, 2, rowHeight, 1.0, 0.0, GridBagConstraints.NORTHWEST, GridBagConstraints.VERTICAL, insets, 0, 0
         );
 
         nextRow += rowHeight;
@@ -172,7 +172,7 @@ public class AlignmentBoardControlsPanel extends JPanel {
 
         nextRow += rowHeight;
         GridBagConstraints regionSelectionPanelConstraints = new GridBagConstraints(
-                0, nextRow, 3, rowHeight, 1.0, 0.0, GridBagConstraints.NORTH, GridBagConstraints.BOTH, insets, 0, 0
+                0, nextRow, 4, rowHeight, 1.0, 0.0, GridBagConstraints.NORTH, GridBagConstraints.BOTH, insets, 0, 0
         );
 
         centralPanel.add( controls.getBrightnessSlider(), brightnessConstraints );

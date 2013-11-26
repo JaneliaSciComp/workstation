@@ -531,13 +531,18 @@ public class AlignmentBoardControls {
     }
 
     private void createGui() {
+        Font oldFont = this.centering.getFont();
+        Font newFont = new Font( oldFont.getName(), Font.PLAIN, 12 );
+        //Font newFont = oldFont.deriveFont( 9 );
+
         xSlider = new RangeSlider();
         ySlider = new RangeSlider();
         zSlider = new RangeSlider();
 
-        xSlider.setBorder( new TitledBorder( "Selection X Bounds" ) );
-        ySlider.setBorder( new TitledBorder( "Selection Y Bounds" ) );
-        zSlider.setBorder( new TitledBorder( "Selection Z Bounds" ) );
+        //        this(null, title, LEADING, DEFAULT_POSITION, null, null);
+        xSlider.setBorder( makeFontedBorder("Selection X Bounds", newFont));
+        ySlider.setBorder( makeFontedBorder( "Selection Y Bounds", newFont ) );
+        zSlider.setBorder( makeFontedBorder( "Selection Z Bounds", newFont ) );
 
         blackout = new StateDrivenIconToggleButton( Icons.getIcon( NON_SELECT_BLACKOUT_ICON ), Icons.getIcon( NON_SELECT_DIM_ICON ) );
         blackout.setToolTipText(NON_SELECT_BLACKOUT_TOOLTIP_TEXT);
@@ -679,7 +684,7 @@ public class AlignmentBoardControls {
         brightnessSlider.setPaintLabels(true);
         brightnessSlider.setPaintTicks(true);
         brightnessSlider.setToolTipText(GAMMA_TOOLTIP);
-        brightnessSlider.setBorder(new TitledBorder("Brightness"));
+        brightnessSlider.setBorder(makeFontedBorder("Brightness", newFont));
 
         downSampleRateToIndex = new HashMap<Integer,Integer>();
         downSampleRateToIndex.put( 0, 0 );
@@ -691,7 +696,7 @@ public class AlignmentBoardControls {
         downSampleRateDropdown = new JComboBox(
                 new ABSDComboBoxModel( downSampleRateToIndex )
         );
-        downSampleRateDropdown.setBorder(new TitledBorder(DOWN_SAMPLE_RATE));
+        downSampleRateDropdown.setBorder(makeFontedBorder(DOWN_SAMPLE_RATE, newFont));
         downSampleRateDropdown.setToolTipText( DOWN_SAMPLE_TOOL_TIP );
 
         useSignalDataCheckbox = new JCheckBox( USE_SIGNAL_DATA );
@@ -710,7 +715,7 @@ public class AlignmentBoardControls {
         minimumVoxelCountTF.setMinimumSize(NEURON_LIMIT_TF_SIZE);
         minimumVoxelCountTF.setPreferredSize(NEURON_LIMIT_TF_SIZE);
         minimumVoxelCountTF.setMaximumSize(NEURON_LIMIT_TF_SIZE);
-        minimumVoxelCountTF.setBorder(new TitledBorder("Min Neuron Size"));
+        minimumVoxelCountTF.setBorder(makeFontedBorder("Min Neuron Size", newFont));
         minimumVoxelCountTF.setToolTipText(
                 "Integer: least number of neuron voxels before a neuron fragment is not rendered.\n" +
                         "Value of " + AlignmentBoardSettings.NO_NEURON_SIZE_CONSTRAINT + " implies no such filtering."
@@ -721,7 +726,7 @@ public class AlignmentBoardControls {
         maxNeuronCountTF.setMinimumSize(NEURON_LIMIT_TF_SIZE);
         maxNeuronCountTF.setMaximumSize(NEURON_LIMIT_TF_SIZE);
         maxNeuronCountTF.setPreferredSize(NEURON_LIMIT_TF_SIZE);
-        maxNeuronCountTF.setBorder(new TitledBorder("Max Neuron Count"));
+        maxNeuronCountTF.setBorder(makeFontedBorder("Max Neuron Count", newFont));
         maxNeuronCountTF.setToolTipText(
                 "Integer: max number of neurons allowed to be rendered.\n" +
                         "Value of " + AlignmentBoardSettings.NO_NEURON_SIZE_CONSTRAINT + " implies no such filtering."
@@ -780,6 +785,20 @@ public class AlignmentBoardControls {
         };
         settings.setDownSampleRateObserver(downsampleRateObserver);
 
+        this.getDownSampleRateDropdown().setFont( newFont );
+        this.getDownSampleGuess().setFont( newFont );
+        this.getCommitButton().setFont( newFont );
+        this.getMaxNeuronCountTF().setFont( newFont );
+        this.getMinimumVoxelCountTF().setFont( newFont );
+        this.getClearButton().setFont( newFont );
+        this.getOrButton().setFont(newFont);
+        this.getBrightnessSlider().setFont(newFont);
+        this.getUseSignalDataCheckbox().setFont(newFont);
+
+    }
+
+    private TitledBorder makeFontedBorder(String title, Font newFont) {
+        return new TitledBorder( null, title, TitledBorder.LEADING, TitledBorder.DEFAULT_POSITION, newFont, null );
     }
 
     private void doSettingsEvent() {

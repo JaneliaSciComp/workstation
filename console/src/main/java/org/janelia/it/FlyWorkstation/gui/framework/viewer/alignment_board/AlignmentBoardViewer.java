@@ -390,7 +390,7 @@ public class AlignmentBoardViewer extends Viewer implements AlignmentBoardContro
             setOutstandingRenderRequest(false);
             AlignmentBoardContext abContext = SessionMgr.getBrowser().getLayersPanel().getAlignmentBoardContext();
             setRendering( false );
-            updateRendering( abContext );
+            updateRendering(abContext);
         }
         else {
             setRendering(false);
@@ -401,19 +401,31 @@ public class AlignmentBoardViewer extends Viewer implements AlignmentBoardContro
     private void serialize() {
         AlignmentBoardContext context = SessionMgr.getBrowser().getLayersPanel().getAlignmentBoardContext();
         if ( context != null ) {
-            Entity alignmentBoard = null;
-            try {
-                alignmentBoard =  ModelMgr.getModelMgr().getEntityById(context.getInternalEntity().getId());
-            }
-            catch (Exception e) {
-                SessionMgr.getSessionMgr().handleException(e);
-            }
             if ( mip3d != null && settingsPanel != null ) {
-                UserSettingSerializer userSettingSerializer = new UserSettingSerializer(
-                        alignmentBoard, mip3d.getVolumeModel(), settingsData
-                );
+                SimpleWorker serializeWorker = new SimpleWorker() {
+                    @Override
+                    protected void doStuff() throws Exception {
+                        AlignmentBoardContext context =
+                                SessionMgr.getBrowser().getLayersPanel().getAlignmentBoardContext();
+                        Entity alignmentBoard =  ModelMgr.getModelMgr().getEntityById(context.getInternalEntity().getId());
 
-                userSettingSerializer.serializeSettings();
+                        UserSettingSerializer userSettingSerializer = new UserSettingSerializer(
+                                alignmentBoard, mip3d.getVolumeModel(), settingsData
+                        );
+                        userSettingSerializer.serializeSettings();
+                    }
+
+                    @Override
+                    protected void hadSuccess() {
+                        // Nothing more. exiting
+                    }
+
+                    @Override
+                    protected void hadError(Throwable error) {
+                        SessionMgr.getSessionMgr().handleException( error );
+                    }
+                };
+                serializeWorker.execute();
             }
             else {
                 logger.warn("Attempt at serializing while mip3d={} and settings dialog={}.", mip3d, settingsPanel);
