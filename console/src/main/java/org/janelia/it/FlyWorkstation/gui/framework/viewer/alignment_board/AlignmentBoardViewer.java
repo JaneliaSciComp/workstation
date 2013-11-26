@@ -398,7 +398,7 @@ public class AlignmentBoardViewer extends Viewer implements AlignmentBoardContro
     }
 
     //---------------------------------------HELPERS
-    private void serialize() {
+    private void serializeInWorker() {
         AlignmentBoardContext context = SessionMgr.getBrowser().getLayersPanel().getAlignmentBoardContext();
         if ( context != null ) {
             if ( mip3d != null && settingsPanel != null ) {
@@ -426,6 +426,27 @@ public class AlignmentBoardViewer extends Viewer implements AlignmentBoardContro
                     }
                 };
                 serializeWorker.execute();
+            }
+            else {
+                logger.warn("Attempt at serializing while mip3d={} and settings dialog={}.", mip3d, settingsPanel);
+            }
+        }
+    }
+
+    private void serialize() {
+        AlignmentBoardContext context = SessionMgr.getBrowser().getLayersPanel().getAlignmentBoardContext();
+        if ( context != null ) {
+            if ( mip3d != null && settingsPanel != null ) {
+                try {
+                        Entity alignmentBoard =  ModelMgr.getModelMgr().getEntityById(context.getInternalEntity().getId());
+
+                        UserSettingSerializer userSettingSerializer = new UserSettingSerializer(
+                                alignmentBoard, mip3d.getVolumeModel(), settingsData
+                        );
+                        userSettingSerializer.serializeSettings();
+                } catch ( Throwable error ) {
+                    SessionMgr.getSessionMgr().handleException( error );
+                }
             }
             else {
                 logger.warn("Attempt at serializing while mip3d={} and settings dialog={}.", mip3d, settingsPanel);
@@ -1001,7 +1022,7 @@ public class AlignmentBoardViewer extends Viewer implements AlignmentBoardContro
 
         @Override
         public void sessionWillExit() {
-            serialize();
+            serializeInWorker();
         }
 
         @Override
