@@ -152,15 +152,17 @@ public class Mip3d extends BaseGLViewer implements ActionListener {
             }
             brick.setTextureData( signalTexture );
 
-            AxesActor axes = new AxesActor();
-            BoundingBox3d brickBox = brick.getBoundingBox3d();
-            axes.setAxisLengths( brickBox.getWidth(), brickBox.getHeight(), brickBox.getDepth() );
-            axes.setAxisLengthDivisor( axisLengthDivisor );
-            axes.setFullAxes( true );
-
             // Enforce opaque, transparent ordering of actors.
             this.renderer.addActor( brick );
-            this.renderer.addActor( axes );
+
+            if ( System.getProperty("os.name").toLowerCase().contains( "mac" ) ) {
+                AxesActor axes = new AxesActor();
+                BoundingBox3d brickBox = brick.getBoundingBox3d();
+                axes.setAxisLengths( brickBox.getWidth(), brickBox.getHeight(), brickBox.getDepth() );
+                axes.setAxisLengthDivisor( axisLengthDivisor );
+                axes.setFullAxes( true );
+                this.renderer.addActor( axes );
+            }
 
             return true;
         }
