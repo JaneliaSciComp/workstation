@@ -49,7 +49,17 @@ public class ConfigurableColorMapping implements RenderMappingI {
 
     @Override
     public Map<Integer,byte[]> getMapping() {
-        return makeMaskMappings();
+        Map<Integer, byte[]> masMap = makeMaskMappings();
+        if ( maxDepthExceededCount > 0 ) {
+            logger.warn(
+                    "Exceeded max depth for multimask rendering {} times.  Max is {}.",
+                    maxDepthExceededCount,
+                    MultiMaskTracker.MAX_MASK_DEPTH
+            );
+
+        }
+        maxDepthExceededCount = 0; // Clear for re-use.
+        return masMap;
     }
 
     /**
@@ -130,12 +140,6 @@ public class ConfigurableColorMapping implements RenderMappingI {
                     maskMappings.put( multiMask, rgb );
 
                 }
-            }
-            if ( maxDepthExceededCount > 0 ) {
-                logger.warn(
-                        "Max depth {} for multimask rendering exceeded {} times.",
-                        MultiMaskTracker.MAX_MASK_DEPTH, maxDepthExceededCount
-                );
             }
 
         }
