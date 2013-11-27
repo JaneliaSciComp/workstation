@@ -26,6 +26,7 @@ public class MultiMaskTracker {
     private List<Integer> dumpedList;
     private Set<Integer> retiredMasks;
     private Map<String,String> unexpandableVsPrevCombo = new HashMap<String,String>();
+    private int maxDepthExceededCount = 0;
     private Logger logger;
 
     private int nextMaskNum;
@@ -47,6 +48,11 @@ public class MultiMaskTracker {
      * @see #getMask()
      */
     public void clear() {
+        // Report old state problems.  No other opportunity unless make special call.
+        if ( maxDepthExceededCount > 0 ) {
+            logger.warn( "Exceeded the max mask depth of {}, {} times.", MAX_MASK_DEPTH, maxDepthExceededCount );
+        }
+
         maskIdToBean.clear();
         altMasksToBean.clear();
         retiredMasks.clear();
@@ -54,6 +60,7 @@ public class MultiMaskTracker {
             dumpedList.clear();
         masksExhausted = false;
         unexpandableVsPrevCombo.clear();
+        maxDepthExceededCount = 0;
         nextMaskNum = 0; // In case set-first is never called after the clear.
     }
 
@@ -75,7 +82,11 @@ public class MultiMaskTracker {
         List<Integer> altMasks = null;
         if ( oldBean != null ) {
             altMasks = oldBean.getAltMasks();
-            if ( altMasks.contains( discoveredMask ) ) {
+            if ( altMasks.size() >= MAX_MASK_DEPTH ) {
+                maxDepthExceededCount ++;
+                return oldVolumeMask;
+            }
+            else if ( altMasks.contains( discoveredMask ) ) {
                 fullInvertedKey = oldBean.getInvertedKey();
                 System.out.println("Unlikely scenario: found multimask " + oldVolumeMask + ", which also contains newly-adding submask " + discoveredMask);
             }

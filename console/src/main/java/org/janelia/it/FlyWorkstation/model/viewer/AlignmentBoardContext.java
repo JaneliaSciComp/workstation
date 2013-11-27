@@ -165,12 +165,12 @@ public class AlignmentBoardContext extends AlignedItem {
                 sampleAlignedItem.loadContextualizedChildren(getAlignmentContext());
                 VolumeImage reference = sample.getReference();
                 if ( reference != null ) {
-                    log.debug("Adding reference: {}", reference.getName());
+                    log.info("Adding reference: {}", reference.getName());
+log.error("Omitting ALL references: this code must not go to production!  Instead, should make right-click-menu to add reference separately.");
 
-                    AlignedItem childItem = ModelMgr.getModelMgr().addAlignedItem(sampleAlignedItem, reference, true);
-                    childItem.loadContextualizedChildren(getAlignmentContext());
+//                    AlignedItem childItem = ModelMgr.getModelMgr().addAlignedItem(sampleAlignedItem, reference, true);
+//                    childItem.loadContextualizedChildren(getAlignmentContext());
                 }
-                
                 for (EntityWrapper neuron : sample.getNeuronSet()) {
                     log.debug("Adding neuron: {}", neuron.getName());
                     AlignedItem childItem = ModelMgr.getModelMgr().addAlignedItem(sampleAlignedItem, neuron, true);

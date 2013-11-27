@@ -52,7 +52,7 @@ public class ConfigurableColorMapping implements RenderMappingI {
         Map<Integer, byte[]> masMap = makeMaskMappings();
         if ( maxDepthExceededCount > 0 ) {
             logger.warn(
-                    "Exceeded max depth for multimask rendering {} times.  Max is {}.",
+                    "Exceeded max depth for multimask rendering {} times.  Max depth is {}.",
                     maxDepthExceededCount,
                     MultiMaskTracker.MAX_MASK_DEPTH
             );
