@@ -47,6 +47,7 @@ import org.janelia.it.FlyWorkstation.api.entity_model.events.EntityRemoveEvent;
 import org.janelia.it.FlyWorkstation.api.entity_model.management.EntitySelectionModel;
 import org.janelia.it.FlyWorkstation.api.entity_model.management.ModelMgr;
 import org.janelia.it.FlyWorkstation.gui.dialogs.AnnotationDetailsDialog;
+import org.janelia.it.FlyWorkstation.gui.dialogs.EntityDetailsDialog;
 import org.janelia.it.FlyWorkstation.gui.dialogs.KeyBindDialog;
 import org.janelia.it.FlyWorkstation.gui.framework.actions.Action;
 import org.janelia.it.FlyWorkstation.gui.framework.actions.AnnotateAction;
@@ -752,8 +753,7 @@ public abstract class OntologyOutline extends EntityTree implements Refreshable,
     }
     
 	public static void viewAnnotationDetails(OntologyAnnotation tag) {
-		AnnotationDetailsDialog annotationDetailsDialog = new AnnotationDetailsDialog();
-		annotationDetailsDialog.showForAnnotation(tag);
+        new EntityDetailsDialog().showForRootedEntity(new RootedEntity(tag.getEntity()));
 	}
 
     public Entity getCurrentOntology() {

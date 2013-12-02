@@ -19,6 +19,8 @@ import org.janelia.it.jacs.model.ontology.OntologyAnnotation;
  * A dialog for viewing details about an ontological annotation.
  *
  * @author <a href="mailto:rokickik@janelia.hhmi.org">Konrad Rokicki</a>
+ * 
+ * @deprecated Annotations are no longer treated differently from other entities, so the EntityDetailsPanel can be used instead
  */
 public class AnnotationDetailsDialog extends ModalDialog {
 

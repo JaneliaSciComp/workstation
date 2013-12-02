@@ -26,9 +26,7 @@ public class TagCloudPanel<T> extends JPanel {
 	private static final int DEFAULT_MAX_TAG_LENGTH = 200;
 	private static final int DEFAULT_MAX_NUM_TAGS = 30;
 	
-    private static final Border paddingBorder = BorderFactory.createEmptyBorder(5, 5, 5, 5);
-    private static final Border lineBorder = BorderFactory.createLineBorder(Color.black, 1);
-    private static final Border border = BorderFactory.createCompoundBorder(lineBorder, paddingBorder);
+    private static final Border PADDING_BORDER = BorderFactory.createEmptyBorder(5, 5, 5, 5);
 
     private List<T> tags = new ArrayList<T>();
     
@@ -65,10 +63,18 @@ public class TagCloudPanel<T> extends JPanel {
 //    public Map<T, JLabel> getTagLabels() {
 //        return tagLabels;
 //    }
+    
+    protected Border getLineBorder(T tag) {
+        return BorderFactory.createLineBorder(Color.black, 1);
+    }
+    
+    protected Border getBorder(T tag) {
+        return BorderFactory.createCompoundBorder(getLineBorder(tag), PADDING_BORDER);
+    }
 
     protected JLabel createTagLabel(T tag) {
         JLabel tagLabel = new JLabel(tag.toString());
-        tagLabel.setBorder(border);
+        tagLabel.setBorder(getBorder(tag));
         tagLabel.setFont(new Font("Sans Serif", Font.BOLD, 12));
         tagLabel.setOpaque(true);
         tagLabel.setBackground(Color.white);
@@ -76,9 +82,10 @@ public class TagCloudPanel<T> extends JPanel {
         return tagLabel;
     }
 
+
     protected JLabel createMoreLabel(int num) {
         JLabel tagLabel = new JLabel(num+ " more...");
-        tagLabel.setBorder(border);
+        tagLabel.setBorder(getBorder(null));
         tagLabel.setFont(new Font("Sans Serif", Font.BOLD, 12));
         tagLabel.setOpaque(true);
 //        tagLabel.setForeground(Color.black);

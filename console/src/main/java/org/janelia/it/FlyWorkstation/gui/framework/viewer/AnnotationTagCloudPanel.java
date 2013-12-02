@@ -2,11 +2,13 @@ package org.janelia.it.FlyWorkstation.gui.framework.viewer;
 
 import org.janelia.it.FlyWorkstation.api.entity_model.management.ModelMgr;
 import org.janelia.it.FlyWorkstation.gui.dialogs.AnnotationBuilderDialog;
+import org.janelia.it.FlyWorkstation.gui.dialogs.EntityDetailsDialog;
 import org.janelia.it.FlyWorkstation.gui.framework.actions.BulkEditAnnotationKeyValueAction;
 import org.janelia.it.FlyWorkstation.gui.framework.actions.RemoveAnnotationKeyValueAction;
 import org.janelia.it.FlyWorkstation.gui.framework.actions.RemoveAnnotationTermAction;
 import org.janelia.it.FlyWorkstation.gui.framework.outline.OntologyOutline;
 import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr;
+import org.janelia.it.FlyWorkstation.gui.util.Icons;
 import org.janelia.it.FlyWorkstation.model.entity.RootedEntity;
 import org.janelia.it.FlyWorkstation.model.utils.AnnotationSession;
 import org.janelia.it.FlyWorkstation.shared.util.Utils;
@@ -19,6 +21,7 @@ import org.slf4j.LoggerFactory;
 
 import javax.swing.*;
 import javax.swing.border.Border;
+
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -193,14 +196,21 @@ public class AnnotationTagCloudPanel extends TagCloudPanel<OntologyAnnotation> i
         popupMenu.show(e.getComponent(), e.getX(), e.getY());
         e.consume();
     }
-
     
 	@Override
 	protected JLabel createTagLabel(OntologyAnnotation tag) {
 		JLabel label = super.createTagLabel(tag);
 		
 		label.setBackground(ModelMgr.getModelMgr().getUserColorMapping().getColor(tag.getOwner()));
-		
+
+        if (tag.isComputation()) {
+            label.setToolTipText("This annotation was computationally inferred");
+            label.setIcon(Icons.getIcon("computer.png"));
+        }
+        else {
+            label.setToolTipText("This annotation was made by "+tag.getOwner());
+        }
+        
 		AnnotationSession currentSession = ModelMgr.getModelMgr().getCurrentAnnotationSession();
 		if (currentSession != null) {
 			if (tag.getSessionId() != null && tag.getSessionId().equals(currentSession.getId())) {
