@@ -318,6 +318,7 @@ public class RenderablesLoadWorker extends SimpleWorker implements VolumeLoader 
     private void multiThreadedTextureBuild() {
         // Multi-threading, part two.  Here, the renderable textures are created out of inputs.
         final CyclicBarrier buildBarrier = new CyclicBarrier( 3 );
+        boolean successful = true;
         try {
             if ( getProgressMonitor() != null ) {
                 getProgressMonitor().setNote( "Assembling final data" );
@@ -333,6 +334,7 @@ public class RenderablesLoadWorker extends SimpleWorker implements VolumeLoader 
             buildBarrier.await();
 
             if ( buildBarrier.isBroken() ) {
+                getProgressMonitor().close();
                 throw new Exception( "Tex build failed." );
             }
 
@@ -353,17 +355,24 @@ public class RenderablesLoadWorker extends SimpleWorker implements VolumeLoader 
             controlCallback.loadVolume(signalTexture, maskTexture);
 
         } catch ( BrokenBarrierException bbe ) {
+            successful = false;
             logger.error( "Barrier await failed during texture build.", bbe );
             bbe.printStackTrace();
         } catch ( InterruptedException ie ) {
+            successful = false;
             logger.error( "Thread interrupted during texture build.", ie );
             ie.printStackTrace();
         } catch ( Exception ex ) {
+            successful = false;
             logger.error( "Exception during texture build.", ex );
             ex.printStackTrace();
         } finally {
-            if ( ! buildBarrier.isBroken() ) {
-                buildBarrier.reset(); // Signal to others: failed.
+            if ( buildBarrier.isBroken()  ||  !successful ) {
+                getProgressMonitor().close();
+                throw new RuntimeException("Failed to push data to Alignment Board.");
+            }
+            else {
+                buildBarrier.reset(); // Signal to others: stop.
             }
         }
     }
