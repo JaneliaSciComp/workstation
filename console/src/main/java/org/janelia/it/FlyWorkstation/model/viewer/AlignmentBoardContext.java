@@ -95,29 +95,18 @@ public class AlignmentBoardContext extends AlignedItem {
         else if (EntityConstants.TYPE_NEURON_FRAGMENT.equals(type)) {
             Entity sampleEntity = ModelMgr.getModelMgr().getAncestorWithType(rootedEntity.getEntity(), EntityConstants.TYPE_SAMPLE);
             Sample sample = (Sample)EntityWrapperFactory.wrap(new RootedEntity(sampleEntity));
-            
-            Entity separationEntity = ModelMgr.getModelMgr().getAncestorWithType(rootedEntity.getEntity(), EntityConstants.TYPE_NEURON_SEPARATOR_PIPELINE_RESULT);
-            if (separationEntity==null) {
-                throw new IllegalStateException("Neuron is not part of a neuron separation result");
-            }
-            
+
+            Entity separationEntity = getPipelineAncestor(rootedEntity);
             Entity alignmentEntity = ModelMgr.getModelMgr().getAncestorWithType(separationEntity, EntityConstants.TYPE_ALIGNMENT_RESULT);
             if (alignmentEntity==null) {
                 JOptionPane.showMessageDialog(SessionMgr.getBrowser(), "Neuron is not aligned", "Error", JOptionPane.ERROR_MESSAGE);
                 return;
             }
-            
-            String alignmentSpaceName = alignmentEntity.getValueByAttributeName(EntityConstants.TYPE_ALIGNMENT_SPACE);
-            String opticalResolution = separationEntity.getValueByAttributeName(EntityConstants.ATTRIBUTE_OPTICAL_RESOLUTION);
-            String pixelResolution = separationEntity.getValueByAttributeName(EntityConstants.ATTRIBUTE_PIXEL_RESOLUTION);
-            if (!verifyCompatability(rootedEntity.getName(), alignmentSpaceName, opticalResolution, pixelResolution)) {
+
+            if ( ! isCompatibleAlignmentSpace(rootedEntity, separationEntity, alignmentEntity) ) {
                 return;
             }
-            
-            if (context==null) {
-                this.context = new AlignmentContext(alignmentSpaceName, opticalResolution, pixelResolution);
-            }
-            
+
             sample.loadContextualizedChildren(context);
             
             for(Neuron neuron : sample.getNeuronSet()) {
@@ -130,6 +119,28 @@ public class AlignmentBoardContext extends AlignedItem {
             JOptionPane.showMessageDialog(SessionMgr.getBrowser(),
                     "Could not find neuron in the aligned neuron separation", "Error", JOptionPane.ERROR_MESSAGE);
         }
+        else if (EntityConstants.TYPE_IMAGE_3D.equals(type)  &&  rootedEntity.getName().startsWith( "Reference" )) {
+            Entity sampleEntity = ModelMgr.getModelMgr().getAncestorWithType(rootedEntity.getEntity(), EntityConstants.TYPE_SAMPLE);
+            Sample sample = (Sample)EntityWrapperFactory.wrap(new RootedEntity(sampleEntity));
+
+            Entity separationEntity = getPipelineAncestor(rootedEntity);
+            Entity alignmentEntity = ModelMgr.getModelMgr().getAncestorWithType(separationEntity, EntityConstants.TYPE_ALIGNMENT_RESULT);
+            if (alignmentEntity==null) {
+                JOptionPane.showMessageDialog(SessionMgr.getBrowser(), "Neuron is not aligned", "Error", JOptionPane.ERROR_MESSAGE);
+                return;
+            }
+
+            if ( ! isCompatibleAlignmentSpace(rootedEntity, separationEntity, alignmentEntity) ) {
+                return;
+            }
+
+            sample.loadContextualizedChildren(context);
+            VolumeImage volumeImage = sample.getReference();
+            if ( volumeImage != null ) {
+                addNewAlignedEntity( volumeImage );
+            }
+
+        }
         else {
             throw new Exception("This entity cannot be viewed in the alignment board.");
         }
@@ -137,7 +148,8 @@ public class AlignmentBoardContext extends AlignedItem {
 
     public boolean isAcceptedType( String type ) {
         return EntityConstants.TYPE_NEURON_FRAGMENT.equals( type ) ||
-               EntityConstants.TYPE_SAMPLE.equals( type );
+               EntityConstants.TYPE_SAMPLE.equals( type ) ||
+               EntityConstants.TYPE_IMAGE_3D.equals( type );
     }
     
     /**
@@ -148,7 +160,7 @@ public class AlignmentBoardContext extends AlignedItem {
      */
     public void addNewAlignedEntity(EntityWrapper wrapper) throws Exception {
 
-        log.debug("Adding new aligned entity: {}", wrapper.getName());
+        log.info("Adding new aligned entity: {}", wrapper.getName());
         
         final Collection<AlignmentBoardEvent> events = new ArrayList<AlignmentBoardEvent>();
         
@@ -180,6 +192,10 @@ public class AlignmentBoardContext extends AlignedItem {
             else {
                 events.add(new AlignmentBoardItemChangeEvent(this, sampleAlignedItem, ChangeType.VisibilityChange));
             }
+        }
+        else if (wrapper instanceof VolumeImage ) {
+            log.info("Adding reference: {}", wrapper.getName());
+            events.addAll(handleChildWrapper(wrapper));
         }
         else if (wrapper instanceof Neuron) {
             events.addAll(handleChildWrapper(wrapper));
@@ -251,6 +267,28 @@ public class AlignmentBoardContext extends AlignedItem {
         }
         
         return events;
+    }
+
+    private boolean isCompatibleAlignmentSpace(RootedEntity rootedEntity, Entity separationEntity, Entity alignmentEntity) {
+        String alignmentSpaceName = alignmentEntity.getValueByAttributeName(EntityConstants.TYPE_ALIGNMENT_SPACE);
+        String opticalResolution = separationEntity.getValueByAttributeName(EntityConstants.ATTRIBUTE_OPTICAL_RESOLUTION);
+        String pixelResolution = separationEntity.getValueByAttributeName(EntityConstants.ATTRIBUTE_PIXEL_RESOLUTION);
+        if (!verifyCompatability(rootedEntity.getName(), alignmentSpaceName, opticalResolution, pixelResolution)) {
+            return false;
+        }
+
+        if (context==null) {
+            this.context = new AlignmentContext(alignmentSpaceName, opticalResolution, pixelResolution);
+        }
+        return true;
+    }
+
+    private Entity getPipelineAncestor(RootedEntity rootedEntity) throws Exception {
+        Entity separationEntity = ModelMgr.getModelMgr().getAncestorWithType(rootedEntity.getEntity(), EntityConstants.TYPE_NEURON_SEPARATOR_PIPELINE_RESULT);
+        if (separationEntity==null) {
+            throw new IllegalStateException("Neuron is not part of a neuron separation result");
+        }
+        return separationEntity;
     }
 
 }

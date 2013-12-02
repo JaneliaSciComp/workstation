@@ -65,6 +65,7 @@ public class AlignmentBoardEntityTransferHandler extends EntityTransferHandler {
 
                 boolean typeIsFragment;
                 boolean typeIsSample;
+                boolean typeIsRef;
 
                 Entity sampleEntity;
 
@@ -78,7 +79,8 @@ public class AlignmentBoardEntityTransferHandler extends EntityTransferHandler {
                     if ( abContext.isAcceptedType(rootedEntity.getType()) ) {
                         typeIsFragment = rootedEntity.getType().equals(EntityConstants.TYPE_NEURON_FRAGMENT);
                         typeIsSample = rootedEntity.getType().equals(EntityConstants.TYPE_SAMPLE);
-                        if ( typeIsFragment ) {
+                        typeIsRef = rootedEntity.getType().equals(EntityConstants.TYPE_IMAGE_3D) && rootedEntity.getName().startsWith("Reference");
+                        if ( typeIsFragment  ||  typeIsRef ) {
                             sampleEntity = ModelMgr.getModelMgr().getAncestorWithType(rootedEntity.getEntity(), EntityConstants.TYPE_SAMPLE);
                             if ( sampleEntity == null ) {
                                 rtnVal = false;
