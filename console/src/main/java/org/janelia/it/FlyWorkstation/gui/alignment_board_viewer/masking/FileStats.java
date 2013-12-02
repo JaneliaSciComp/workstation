@@ -13,6 +13,9 @@ import java.util.Map;
  */
 public class FileStats {
     private Map<Long,double[]> channelAverageMap;
+    private int maxDepthExceededCount = 0;
+    private boolean masksExhausted = false;
+
     public FileStats() {
         channelAverageMap = new HashMap<Long,double[]>();
     }
@@ -35,5 +38,21 @@ public class FileStats {
 
     public synchronized void clear() {
         channelAverageMap.clear();
+    }
+
+    public int getMaxDepthExceededCount() {
+        return maxDepthExceededCount;
+    }
+
+    public void setMaxDepthExceededCount( int maxDepthExceededCount ) {
+        this.maxDepthExceededCount = maxDepthExceededCount;
+    }
+
+    public boolean isMasksExhausted() {
+        return masksExhausted;
+    }
+
+    public void setMasksExhausted(boolean masksExhausted) {
+        this.masksExhausted = masksExhausted;
     }
 }

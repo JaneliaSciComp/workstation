@@ -27,6 +27,7 @@ public class MultiMaskTracker {
     private Set<Integer> retiredMasks;
     private Map<String,String> unexpandableVsPrevCombo = new HashMap<String,String>();
     private int maxDepthExceededCount = 0;
+    private FileStats fileStats;
     private Logger logger;
 
     private int nextMaskNum;
@@ -41,6 +42,14 @@ public class MultiMaskTracker {
 
     public void setFirstMaskNum( int firstMaskNum ) {
         this.nextMaskNum = firstMaskNum;
+    }
+
+    public FileStats getFileStats() {
+        return fileStats;
+    }
+
+    public void setFileStats(FileStats fileStats) {
+        this.fileStats = fileStats;
     }
 
     /**
@@ -296,6 +305,9 @@ public class MultiMaskTracker {
                 if ( ! masksExhausted ) {
                     // OUT of masks.
                     masksExhausted = true;
+                    if ( fileStats != null ) {
+                        fileStats.setMasksExhausted( true );
+                    }
                     logger.warn("Completely out of masks.  Even with re-use, have exhausted all 2-byte values.");
                 }
                 return -1;

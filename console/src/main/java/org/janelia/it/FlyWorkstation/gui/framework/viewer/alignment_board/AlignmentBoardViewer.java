@@ -66,6 +66,8 @@ public class AlignmentBoardViewer extends Viewer implements AlignmentBoardContro
     private static final String SETTINGS_PANEL_NAME = "AlignmentBoard::SettingsPanel";
     public static final String SAMPLER_PANEL_NAME = "GpuSampler";
     private static final Dimension GPU_FEEDBACK_PANEL_SIZE = new Dimension( 1, 1 );
+    public static final String TOO_MANY_ITEMS_MSG = "Large number of items in alignment board are causing degradation of image.\n" +
+            "To improve the image, please remove some reference channels or samples.";
 
     private Mip3d mip3d;
     private RenderablesLoadWorker loadWorker;
@@ -103,6 +105,7 @@ public class AlignmentBoardViewer extends Viewer implements AlignmentBoardContro
         settingsData = new AlignmentBoardSettings();
         multiMaskTracker = new MultiMaskTracker();
         fileStats = new FileStats();
+        multiMaskTracker.setFileStats( fileStats );
         renderMapping = new ConfigurableColorMapping( multiMaskTracker, fileStats );
         setLayout(new BorderLayout());
         ModelMgr.getModelMgr().registerOnEventBus(this);
@@ -336,6 +339,9 @@ public class AlignmentBoardViewer extends Viewer implements AlignmentBoardContro
                         ModelMgr.getModelMgr().postOnEventBus(event);
                     }
                 }).start();
+
+                // Notify of any limits exceeded.
+                checkLimits();
             }
             else {
                 if ( mip3d != null ) {
@@ -450,6 +456,29 @@ public class AlignmentBoardViewer extends Viewer implements AlignmentBoardContro
             }
             else {
                 logger.warn("Attempt at serializing while mip3d={} and settings dialog={}.", mip3d, settingsPanel);
+            }
+        }
+    }
+
+    /**
+     * After load completion, can check whether any late-detectable limits were exceeded.
+     */
+    private void checkLimits() {
+        if ( fileStats != null ) {
+            StringBuilder errorStack = new StringBuilder();
+            if ( fileStats.isMasksExhausted() ) {
+                errorStack.append(
+                        TOO_MANY_ITEMS_MSG +
+                                "\nYou may also set the max neuron count lower, or the min neuron size higher to " +
+                                "exclude items from display."
+                );
+            }
+            else if ( fileStats.getMaxDepthExceededCount() > 0 ) {
+                errorStack.append( TOO_MANY_ITEMS_MSG );
+            }
+
+            if ( errorStack.length() > 0 ) {
+                JOptionPane.showMessageDialog(SessionMgr.getBrowser(), errorStack.toString());
             }
         }
     }
