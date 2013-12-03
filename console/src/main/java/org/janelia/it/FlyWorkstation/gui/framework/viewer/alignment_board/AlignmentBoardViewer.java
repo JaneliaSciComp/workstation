@@ -278,7 +278,9 @@ public class AlignmentBoardViewer extends Viewer implements AlignmentBoardContro
                 renderMapping,
                 settingsData.getAcceptedDownsampleRate() )
             ) {
-            logger.error( "Failed to load volume to mip3d." );
+            String msg = "Failed to load volume to mip3d.";
+            logger.error(msg);
+            throw new RuntimeException( msg );
         }
         else {
             settingsPanel.setVolumeMaxima(signalTexture.getSx(), signalTexture.getSy(), signalTexture.getSz());
