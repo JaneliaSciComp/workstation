@@ -36,7 +36,7 @@ public class IndeterminateProgressMonitor extends ProgressMonitor implements Acc
                             Object message,
                             String note) {
     	// only extend ProgressMonitor so that we can pass this to methods which expect a ProgressMonitor
-    	super(parentComponent, message, note, 0, 100); 
+    	super(parentComponent, message, note, 0, 100);
         this.parentComponent = parentComponent;
 
         cancelOption = new Object[1];
@@ -52,7 +52,11 @@ public class IndeterminateProgressMonitor extends ProgressMonitor implements Acc
     }
 
     private boolean printableNote() {
-        return note != null || note.trim().length() > 0;
+        return printable( note );
+    }
+
+    private static boolean printable( String st ) {
+        return st != null || st.trim().length() > 0;
     }
 
     private class ProgressOptionPane extends JOptionPane
@@ -192,7 +196,7 @@ public class IndeterminateProgressMonitor extends ProgressMonitor implements Acc
         else {
             myBar = new JProgressBar();
             myBar.setIndeterminate(true);
-            if (note != null) noteLabel = new JLabel(note);
+            if (note != null) noteLabel.setText(note);
             pane = new ProgressOptionPane(new Object[] {message,
                                                         printableNote() ? noteLabel : null,
                                                         myBar});
@@ -354,12 +358,12 @@ public class IndeterminateProgressMonitor extends ProgressMonitor implements Acc
 
 	    // add a listener for progress bar ChangeEvents
 	    if (myBar != null) {
-		myBar.addChangeListener(this);
+		    myBar.addChangeListener(this);
 	    }
 
 	    // add a listener for note label PropertyChangeEvents
 	    if (noteLabel != null) {
-		noteLabel.addPropertyChangeListener(this);
+		    noteLabel.addPropertyChangeListener(this);
 	    }
 	}
 

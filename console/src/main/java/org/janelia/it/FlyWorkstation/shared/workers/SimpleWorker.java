@@ -131,8 +131,10 @@ public abstract class SimpleWorker extends SwingWorker<Void, Void> implements Pr
         if ("progress".equals(e.getPropertyName())) {
             int progress = (Integer) e.getNewValue();
             progressMonitor.setProgress(progress);
+            /*
             String message = String.format("Completed %d%%", progress);
             progressMonitor.setNote(message);
+            */
             if (progressMonitor.isCanceled()) {
                 cancel(true);
             }

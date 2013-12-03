@@ -214,7 +214,14 @@ public class RenderablesChannelsBuilder extends RenderablesVolumeBuilder impleme
     @Override
     public TextureDataI buildTextureData() {
         if ( needsChannelInit ) {
-            throw new RuntimeException( "Internal Error: attempting to produce final data, when no data has been added." );
+            String msg = "Internal Error: attempting to produce final data, when no data has been added.";
+            if ( this.channelMetaData == null ) {
+                msg += " No channel meta data.";
+            }
+            if ( this.channelInterpreter == null ) {
+                msg += " No channel data ever added.";
+            }
+            throw new RuntimeException(msg);
         }
 
         if ( channelInterpreter != null )

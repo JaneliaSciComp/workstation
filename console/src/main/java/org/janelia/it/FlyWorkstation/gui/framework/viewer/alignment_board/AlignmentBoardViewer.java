@@ -270,6 +270,7 @@ public class AlignmentBoardViewer extends Viewer implements AlignmentBoardContro
     @Override
     public void loadVolume( TextureDataI signalTexture, TextureDataI maskTexture ) {
 
+        logger.info("Setting Mip3d Volume.");
         MultiTexVolumeBrickFactory volumeBrickFactory = new MultiTexVolumeBrickFactory();
         if ( ! mip3d.setVolume(
                 signalTexture,
@@ -283,6 +284,7 @@ public class AlignmentBoardViewer extends Viewer implements AlignmentBoardContro
             throw new RuntimeException( msg );
         }
         else {
+            logger.info("Setting volume maxima on settings.");
             settingsPanel.setVolumeMaxima(signalTexture.getSx(), signalTexture.getSy(), signalTexture.getSz());
         }
 
