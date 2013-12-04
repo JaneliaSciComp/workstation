@@ -109,6 +109,11 @@ public class TestMaskChan3DViz {
             mip3d.clear();
         }
 
+        public void close() {
+            mip3d.clear();
+            System.exit( 0 );
+        }
+
         @Override
         public void loadVolume(TextureDataI signalTexture, TextureDataI maskTexture) {
             mip3d.getVolumeModel().setGammaAdjustment( (float)AlignmentBoardSettings.DEFAULT_GAMMA );
