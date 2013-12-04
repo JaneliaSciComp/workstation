@@ -201,7 +201,7 @@ public class VtxCoordBufMgr {
     }
 
     /**
-     * To use uploaded vertex and coordinate data, it must first be uploaded, and enabled.  Its role must
+     * To use vertex and coordinate data, it must first be uploaded, and enabled.  Its role must
      * be designated, and pointers need to be saved.
      *
      * @param gl for graphic-oriented operations.
@@ -310,7 +310,7 @@ public class VtxCoordBufMgr {
     }
 
     /** Convenience method to cut down on repeated code. */
-    @NotThreadSafe(why="glBufferData uses glBindBuffer result as state, and this should never be worker-thread-called")
+    @NotThreadSafe(why="glBufferData uses glBindBuffer result as state, and should only be called from GL thread")
     private int[] enableBuffersOfType(GL2 gl, Buffer[] buffers, int type ) {
         // Make handles for subsequent use.
         int[] rtnVal = new int[ NUM_BUFFERS_PER_TYPE ];

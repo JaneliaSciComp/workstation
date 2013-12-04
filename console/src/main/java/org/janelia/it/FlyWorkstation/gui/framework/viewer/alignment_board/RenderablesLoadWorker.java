@@ -16,6 +16,8 @@ import org.janelia.it.jacs.model.entity.EntityConstants;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.swing.*;
+import java.beans.PropertyChangeEvent;
 import java.util.*;
 import java.util.concurrent.*;
 
@@ -63,6 +65,18 @@ public class RenderablesLoadWorker extends SimpleWorker implements VolumeLoader 
         this.alignmentBoardSettings = settings;
         this.controlCallback = controlCallback;
         this.multiMaskTracker = multiMaskTracker;
+    }
+
+    @Override
+    public void propertyChange( PropertyChangeEvent e ) {
+        if (progressMonitor==null) return;
+        if ("progress".equals(e.getPropertyName())) {
+            int progress = (Integer) e.getNewValue();
+            progressMonitor.setProgress(progress);
+            if (progressMonitor.isCanceled()) {
+                super.cancel( true );
+            }
+        }
     }
 
     /**
@@ -156,8 +170,8 @@ public class RenderablesLoadWorker extends SimpleWorker implements VolumeLoader 
         }
 
         if ( loadFiles ) {
-            if ( getProgressMonitor() != null ) {
-                getProgressMonitor().setNote("Setting up...");
+            if ( ! checkpoint( "Setting up..." ) ) {
+                return;
             }
 
             if ( resolver == null ) {
@@ -176,6 +190,10 @@ public class RenderablesLoadWorker extends SimpleWorker implements VolumeLoader 
             }
             SessionMgr.getBrowser().getLayersPanel().showLoadingIndicator();
             for ( MaskChanRenderableData data: originalDatas ) {
+                if ( ! checkpoint( "Filtering checkboxes." ) ) {
+                    return;
+                }
+
                 MaskChanRenderableData targetData = idToData.get(data.getBean());
                 RenderableBean bean = data.getBean();
                 if ( bean != null  &&
@@ -219,6 +237,10 @@ public class RenderablesLoadWorker extends SimpleWorker implements VolumeLoader 
 
             renderMapping.setRenderables( renderableBeans );
 
+            if ( ! checkpoint( "Loading voxel data." ) ) {
+                return;
+            }
+
             // Establish the means for extracting the volume mask.
             maskTextureBuilder = new RenderablesMaskBuilder( alignmentBoardSettings, renderableBeans );
 
@@ -250,23 +272,22 @@ public class RenderablesLoadWorker extends SimpleWorker implements VolumeLoader 
             logger.info("Timing multi-thread data load for multi-mask-assbembly.");
             multiThreadedDataLoad(renderableDatas, false);
             logger.info("End timing multi-mask-assembly");
-
-            // RE-run the scan.  This time only the signal-texture-builder will accept the data.
             acceptors.clear();
-            acceptors.add( signalTextureBuilder );
-            neuronFragmentLoader.setAcceptors(acceptors);
-            compartmentLoader.setAcceptors( acceptors );
 
-            if ( getProgressMonitor() != null ) {
-                getProgressMonitor().setNote( "Preparing display" );
+            if ( checkpoint( "Preparing display" ) ) {
+                // RE-run the scan.  This time only the signal-texture-builder will accept the data.
+                acceptors.add( signalTextureBuilder );
+                neuronFragmentLoader.setAcceptors(acceptors);
+                compartmentLoader.setAcceptors( acceptors );
+
+                logger.info("Timing multi-thread data load for signal.");
+                multiThreadedDataLoad(renderableDatas, true);
+                logger.info("End timing signal load");
+
             }
-            logger.info("Timing multi-thread data load for signal.");
-            multiThreadedDataLoad(renderableDatas, true);
-            logger.info("End timing signal load");
 
             compartmentLoader.close();
             neuronFragmentLoader.close();
-
         }
         else {
             renderChange(renderableDatas);
@@ -301,15 +322,17 @@ public class RenderablesLoadWorker extends SimpleWorker implements VolumeLoader 
 
             logger.info("Starting multithreaded file load.");
             fileLoad(metaDatas, buildTexture);
-
             if ( buildTexture ) {
-                logger.info("Starting multithreaded texture build.");
-                multiThreadedTextureBuild();
+                if ( ! getProgressMonitor().isCanceled() ) {
+                    logger.info("Starting multithreaded texture build.");
+                    multiThreadedTextureBuild();
+                }
             }
 
         }
 
-        controlCallback.displayReady();
+        if ( ! getProgressMonitor().isCanceled() )
+            controlCallback.displayReady();
     }
 
     /**
@@ -320,9 +343,8 @@ public class RenderablesLoadWorker extends SimpleWorker implements VolumeLoader 
         final CyclicBarrier buildBarrier = new CyclicBarrier( 3 );
         boolean successful = true;
         try {
-            if ( getProgressMonitor() != null ) {
-                getProgressMonitor().setNote( "Assembling final data" );
-            }
+            if (! checkpoint( "Assembling final data" ) )
+                return;
 
             // These two texture-build steps will proceed in parallel.
             TexBuildRunnable signalBuilderRunnable = new TexBuildRunnable( signalTextureBuilder, buildBarrier );
@@ -340,11 +362,15 @@ public class RenderablesLoadWorker extends SimpleWorker implements VolumeLoader 
 
             if ( getProgressMonitor() != null ) {
                 double downSampleRate = alignmentBoardSettings.getAcceptedDownsampleRate();
+                boolean continueFlag = true;
                 if ( downSampleRate > 1.0 ) {
-                    getProgressMonitor().setNote( "Downsampling / " + alignmentBoardSettings.getAcceptedDownsampleRate() );
+                    continueFlag = checkpoint("Downsampling / " + alignmentBoardSettings.getAcceptedDownsampleRate());
                 }
                 else {
-                    getProgressMonitor().setNote( "Pushing final data" );
+                    continueFlag = checkpoint("Pushing final data");
+                }
+                if ( ! continueFlag ) {
+                    return;
                 }
             }
 
@@ -390,12 +416,36 @@ public class RenderablesLoadWorker extends SimpleWorker implements VolumeLoader 
             // Here, can modify the progress bar.
             if ( getProgressMonitor() != null ) {
                 i++;
-                getProgressMonitor().setNote(msgPrefix + i + " of " + sortedMetaDatas.size() + " items.");
+                if ( ! checkpoint(msgPrefix + i + " of " + sortedMetaDatas.size() + " items.") ) {
+                    return;  // Jump out if canceled at checkpoint.
+                }
             }
 
             runnable.run();
         }
 
+    }
+
+    private boolean previouslyClosed = false;   // Flag to ensure absence of progress monitor does not thwart cancel.
+    private boolean checkpoint( String checkPointNote ) {
+        boolean rtnVal = true;
+        ProgressMonitor pm = getProgressMonitor();
+        if ( pm != null  ||  previouslyClosed ) {
+            if ( previouslyClosed  ||  pm.isCanceled() ) {
+                previouslyClosed = true;
+                this.cancel( true );
+                SessionMgr.getBrowser().getLayersPanel().showNothing();
+                controlCallback.clearDisplay();
+                controlCallback.close();
+                rtnVal = false;
+                logger.warn("Bailed at checkpoint {}.", checkPointNote);
+                pm.close();
+            }
+            else {
+                pm.setNote( checkPointNote );
+            }
+        }
+        return rtnVal;
     }
 
     /**

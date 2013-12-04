@@ -15,6 +15,8 @@ public interface AlignmentBoardControllable {
 
     void clearDisplay();
 
+    void close();
+
     /**
      * Callback from loader threads to control loading information.
      *

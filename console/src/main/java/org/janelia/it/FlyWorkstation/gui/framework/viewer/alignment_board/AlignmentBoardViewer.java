@@ -66,7 +66,7 @@ public class AlignmentBoardViewer extends Viewer implements AlignmentBoardContro
     private static final String SETTINGS_PANEL_NAME = "AlignmentBoard::SettingsPanel";
     public static final String SAMPLER_PANEL_NAME = "GpuSampler";
     private static final Dimension GPU_FEEDBACK_PANEL_SIZE = new Dimension( 1, 1 );
-    public static final String TOO_MANY_ITEMS_MSG = "Large number of items in alignment board are causing degradation of image.\n" +
+    public static final String TOO_MANY_ITEMS_MSG = "The large number of items in the alignment board is causing image degradation.\n" +
             "To improve the image, please remove some reference channels or samples.";
 
     private Mip3d mip3d;
@@ -713,6 +713,7 @@ public class AlignmentBoardViewer extends Viewer implements AlignmentBoardContro
                                     SessionMgr.getBrowser(), "Updating alignment board...", context.getName()
                             );
                     loadWorker.setProgressMonitor( monitor );
+                    monitor.addPropertyChangeListener( loadWorker );
                     fileStats.clear();
                     loadWorker.setFileStats( fileStats );
                     loadWorker.execute();
