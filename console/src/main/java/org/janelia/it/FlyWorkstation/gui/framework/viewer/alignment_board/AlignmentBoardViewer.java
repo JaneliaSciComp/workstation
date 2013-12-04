@@ -713,7 +713,6 @@ public class AlignmentBoardViewer extends Viewer implements AlignmentBoardContro
                                     SessionMgr.getBrowser(), "Updating alignment board...", context.getName()
                             );
                     loadWorker.setProgressMonitor( monitor );
-                    monitor.addPropertyChangeListener( loadWorker );
                     fileStats.clear();
                     loadWorker.setFileStats( fileStats );
                     loadWorker.execute();

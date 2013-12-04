@@ -5,7 +5,6 @@ import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
-import java.util.ArrayList;
 import java.util.Locale;
 
 import javax.accessibility.*;
@@ -32,7 +31,6 @@ public class IndeterminateProgressMonitor extends ProgressMonitor implements Acc
     private Object          message;
     private int             min;
     private int             max;
-    private java.util.Collection<PropertyChangeListener> listeners;
 
     public IndeterminateProgressMonitor(Component parentComponent,
                             Object message,
@@ -50,28 +48,6 @@ public class IndeterminateProgressMonitor extends ProgressMonitor implements Acc
         this.noteLabel = new JLabel();
         if ( printableNote() ) {
             noteLabel.setText( note );
-        }
-    }
-
-    /** Queue up listeners for the dialog, or add them directly if dialog is available. */
-    public void addPropertyChangeListener( PropertyChangeListener listener ) {
-        if ( dialog != null ) {
-            dialog.addPropertyChangeListener( listener );
-        }
-        else {
-            if ( listeners == null ) {
-                listeners = new ArrayList<PropertyChangeListener>();
-            }
-            listeners.add( listener );
-        }
-    }
-
-    public void removePropertyChangeListener( PropertyChangeListener listener ) {
-        if ( dialog != null ) {
-            dialog.removePropertyChangeListener( listener );
-        }
-        if ( listeners != null ) {
-            listeners.remove( listener );
         }
     }
 
@@ -176,12 +152,6 @@ public class IndeterminateProgressMonitor extends ProgressMonitor implements Acc
                     }
                 }
             });
-
-            // Add any listeners that have been queued for this purpose.
-            for ( PropertyChangeListener listener: listeners ) {
-                dialog.addPropertyChangeListener( listener );
-            }
-            listeners.clear();
 
             return dialog;
         }
