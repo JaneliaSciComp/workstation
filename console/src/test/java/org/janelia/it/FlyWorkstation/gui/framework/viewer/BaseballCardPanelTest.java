@@ -1,6 +1,12 @@
 package org.janelia.it.FlyWorkstation.gui.framework.viewer;
 
+import org.janelia.it.FlyWorkstation.api.facade.concrete_facade.ejb.EJBFacadeManager;
+import org.janelia.it.FlyWorkstation.api.facade.facade_mgr.FacadeManager;
+import org.janelia.it.FlyWorkstation.gui.framework.pref_controller.PrefController;
+import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr;
+import org.janelia.it.FlyWorkstation.gui.util.panels.DataSourceSettingsPanel;
 import org.janelia.it.FlyWorkstation.model.entity.RootedEntity;
+import org.janelia.it.FlyWorkstation.shared.util.ConsoleProperties;
 import org.janelia.it.jacs.model.entity.*;
 
 import javax.swing.*;
@@ -38,9 +44,37 @@ public class BaseballCardPanelTest extends JFrame {
         this.setSize(WIDTH, HEIGHT);
         this.setLocation( 0, 0 );
 
-        panel = new BaseballCardPanel( false );
+        panel = new BaseballCardPanel( false, WIDTH );
         this.add( panel, BorderLayout.CENTER );
+        panel.setPreferredSize( this.getSize() );
         this.setDefaultCloseOperation( JFrame.EXIT_ON_CLOSE );
+
+        // Need to mock the browser environment.
+        // Prime the tool-specific properties before the Session is invoked
+        ConsoleProperties.load();
+
+        // Protocol Registration - Adding more than one type should automatically switch over to the Aggregate Facade
+        FacadeManager.registerFacade(FacadeManager.getEJBProtocolString(), EJBFacadeManager.class, "JACS EJB Facade Manager");
+
+        // Assuming that the user has entered the login/password information, now validate
+        String username = (String)SessionMgr.getSessionMgr().getModelProperty(SessionMgr.USER_NAME);
+        String email = (String)SessionMgr.getSessionMgr().getModelProperty(SessionMgr.USER_EMAIL);
+
+        if (username==null || email==null) {
+            Object[] options = {"Enter Login", "Exit Program"};
+            final int answer = JOptionPane.showOptionDialog(null, "Please enter your login and email information.", "Information Required",
+                    JOptionPane.OK_CANCEL_OPTION, JOptionPane.QUESTION_MESSAGE, null, options, options[0]);
+            if (answer == 0) {
+                PrefController.getPrefController().getPrefInterface(DataSourceSettingsPanel.class, null);
+            }
+            else {
+                SessionMgr.getSessionMgr().systemExit();
+            }
+        }
+
+        SessionMgr.getSessionMgr().loginSubject();
+        SessionMgr.getSessionMgr().newBrowser();
+
     }
 
     private void initCardPanel() {
@@ -48,13 +82,58 @@ public class BaseballCardPanelTest extends JFrame {
         EntityType type = new EntityType();
         type.setName( EntityConstants.TYPE_NEURON_FRAGMENT );
         Collection<RootedEntity> rEntities = new ArrayList<RootedEntity>();
-        for ( long i = 0; i < 50; i++ ) {
+        Long[] guids = {
+                1870583260875063394L,
+                1930003161519489192L,
+                1874576934948569186L,
+                1870583260875063394L,
+                1870583260875063394L,
+                1870583260875063394L,
+                1870583260875063394L,
+                1870583260875063394L,
+                1870583260875063394L,
+                1870583260875063394L,
+                1870583260875063394L,
+                1870583260875063394L,
+                1870583260875063394L,
+                1870583260875063394L,
+                1870583260875063394L,
+                1870583260875063394L,
+                1870583260875063394L,
+                1870583260875063394L,
+                1870583260875063394L,
+                1870583260875063394L,
+                1870583260875063394L,
+                1870583260875063394L,
+                1870583260875063394L,
+                1870583260875063394L,
+                1870583260875063394L,
+                1870583260875063394L,
+                1870583260875063394L,
+                1870583260875063394L,
+                1870583260875063394L,
+                1870583260875063394L,
+                1870583260875063394L,
+                1870583260875063394L,
+                1870583260875063394L,
+                1870583260875063394L,
+                1870583260875063394L,
+                1870583260875063394L,
+                1870583260875063394L,
+                1870583260875063394L,
+                1870583260875063394L,
+        };
+//        for ( long i = 0; i < 50; i++ ) {
+        int i = 0;
+        for ( Long guid: guids ) {
             EntityData entityData = getEntityData( "aName", "fosterl", "Something");
             Set<EntityData> dataSet = new HashSet<EntityData>();
             dataSet.add( entityData );
-            Entity entity = new Entity( new Long(60000 + i), "Neuron " + i, "fosterl", null, type, new Date(), new Date(), dataSet );
+            Entity entity = new Entity( guid, "Neuron " + i, "fosterl", null, type, new Date(), new Date(), dataSet );
             RootedEntity re = new RootedEntity( entity );
             rEntities.add( re );
+
+            i++;
         }
         panel.setRootedEntities( rEntities );
     }
