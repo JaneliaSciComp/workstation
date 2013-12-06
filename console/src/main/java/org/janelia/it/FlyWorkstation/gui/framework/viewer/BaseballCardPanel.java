@@ -137,7 +137,7 @@ public class BaseballCardPanel extends JPanel {
             else {
                 rtnVal = null;
             }
-            value = rtnVal;
+            this.value = rtnVal;
             return rtnVal;
         }
 
@@ -152,35 +152,18 @@ public class BaseballCardPanel extends JPanel {
         }
 
         @Override
-        public boolean shouldSelectCell(EventObject anEvent)
-        {
-//            if (sentencePanel != null)
-//            {
-                if (anEvent instanceof MouseEvent)
-                {
-                    MouseEvent me = (MouseEvent) anEvent;
-                    int id = me.getID();
-                    int x = me.getX();
-                    int y = me.getY();
-                    Component source = (Component)me.getSource();
-/*if (id == MouseEvent.MOUSE_PRESSED || id == MouseEvent.MOUSE_DRAGGED)
-{
-Component dispatchComponent = SwingUtilities.getDeepestComponentAt(source, x, y);
-MouseEvent e2 = new MouseEvent(dispatchComponent, MouseEvent.MOUSE_RELEASED,
-        me.getWhen() + 100000, me.getModifiers(), x, y, me.getClickCount(),
-        me.isPopupTrigger());
-dispatchComponent.dispatchEvent(e2);
-MouseEvent e2 = new MouseEvent(dispatchComponent, MouseEvent.MOUSE_CLICKED,
-        new Date().getTime() + 100000,
-        me.getModifiers(), x, y, 1, me.isPopupTrigger());
-dispatchComponent.dispatchEvent(e2);
-}*/
-                    Component dispatchComponent = SwingUtilities.getDeepestComponentAt(source, x, y);
-                    MouseEvent e2 = new MouseEvent(dispatchComponent, id,
-                            me.getWhen() + 100000, me.getModifiers(), x, y, me.getClickCount(),
-                            me.isPopupTrigger());
-                    dispatchComponent.dispatchEvent(e2);
-//                }
+        public boolean shouldSelectCell(EventObject anEvent) {
+            if (anEvent instanceof MouseEvent) {
+                MouseEvent me = (MouseEvent) anEvent;
+                int id = me.getID();
+                int x = me.getX();
+                int y = me.getY();
+                Component source = (Component)me.getSource();
+                Component dispatchComponent = SwingUtilities.getDeepestComponentAt(source, x, y);
+                MouseEvent e2 = new MouseEvent(dispatchComponent, id,
+                        me.getWhen() + 100000, me.getModifiers(), x, y, me.getClickCount(),
+                        me.isPopupTrigger());
+                dispatchComponent.dispatchEvent(e2);
             }
             return false;
         }
