@@ -4,6 +4,7 @@ import org.janelia.it.FlyWorkstation.api.facade.concrete_facade.ejb.EJBFacadeMan
 import org.janelia.it.FlyWorkstation.api.facade.facade_mgr.FacadeManager;
 import org.janelia.it.FlyWorkstation.gui.framework.pref_controller.PrefController;
 import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr;
+import org.janelia.it.FlyWorkstation.gui.framework.viewer.baseball_card.BaseballCard;
 import org.janelia.it.FlyWorkstation.gui.util.panels.DataSourceSettingsPanel;
 import org.janelia.it.FlyWorkstation.model.entity.RootedEntity;
 import org.janelia.it.FlyWorkstation.shared.util.ConsoleProperties;
@@ -11,6 +12,8 @@ import org.janelia.it.jacs.model.entity.*;
 
 import javax.swing.*;
 import java.awt.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 import java.util.*;
 
 /**
@@ -44,7 +47,7 @@ public class BaseballCardPanelTest extends JFrame {
         this.setSize(WIDTH, HEIGHT);
         this.setLocation( 0, 0 );
 
-        panel = new BaseballCardPanel( false, WIDTH );
+        panel = new BaseballCardPanel( true, WIDTH );
         this.add( panel, BorderLayout.CENTER );
         panel.setPreferredSize( this.getSize() );
         this.setDefaultCloseOperation( JFrame.EXIT_ON_CLOSE );
@@ -74,6 +77,18 @@ public class BaseballCardPanelTest extends JFrame {
 
         SessionMgr.getSessionMgr().loginSubject();
         SessionMgr.getSessionMgr().newBrowser();
+
+        JButton checkDump = new JButton( "List Selection" );
+        checkDump.addActionListener( new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                for ( BaseballCard card: panel.getSelectedCards() ) {
+                    System.out.println("Entity is " + card.getEntity().getId() + "/" + card.getEntity().getName() );
+                }
+            }
+        });
+
+        this.add( checkDump, BorderLayout.SOUTH );
 
     }
 
