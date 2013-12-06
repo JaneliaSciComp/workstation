@@ -1,18 +1,21 @@
 package org.janelia.it.FlyWorkstation.gui.framework.viewer;
 
+import org.apache.log4j.Logger;
 import org.janelia.it.FlyWorkstation.gui.framework.outline.EntityDetailsPanel;
 import org.janelia.it.FlyWorkstation.gui.framework.viewer.baseball_card.BaseballCard;
 import org.janelia.it.FlyWorkstation.model.entity.RootedEntity;
 
 import javax.swing.*;
+import javax.swing.event.CellEditorListener;
 import javax.swing.table.AbstractTableModel;
 import javax.swing.table.DefaultTableCellRenderer;
-import javax.swing.table.DefaultTableColumnModel;
-import javax.swing.table.TableColumnModel;
+import javax.swing.table.TableCellEditor;
 import java.awt.*;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
+import java.awt.event.ComponentAdapter;
+import java.awt.event.ComponentEvent;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
+import java.util.*;
 import java.util.List;
 
 /**
@@ -26,16 +29,17 @@ import java.util.List;
  */
 public class BaseballCardPanel extends JPanel {
     private List<BaseballCard> cards;
-    private JTable baseballCardTable;
     private BaseballCardTableModel baseballCardModel;
     private boolean includeSelectorCheckbox;
+    private int preferredWidth;
 
-    public BaseballCardPanel() {
-        this( false );
+    public BaseballCardPanel( int preferredWidth ) {
+        this(false, preferredWidth);
     }
 
-    public BaseballCardPanel( boolean includeSelectorCheckbox ) {
+    public BaseballCardPanel( boolean includeSelectorCheckbox, int preferredWidth ) {
         this.includeSelectorCheckbox = includeSelectorCheckbox;
+        this.preferredWidth = preferredWidth;
         establishGui();
     }
 
@@ -44,15 +48,61 @@ public class BaseballCardPanel extends JPanel {
         for ( RootedEntity rootedEntity: rootedEntities ) {
             cards.add( new BaseballCard( rootedEntity.getEntity() ) );
         }
-        baseballCardModel.setCards( cards );
+        baseballCardModel.setCards(cards);
     }
 
     private void establishGui() {
         baseballCardModel = new BaseballCardTableModel( includeSelectorCheckbox );
-        JTable baseBallCardTable = new JTable( baseballCardModel );
-        baseBallCardTable.setDefaultRenderer( Object.class, new ComponentSelfRenderer() );
-        this.setLayout( new BorderLayout() );
-        add(baseBallCardTable, BorderLayout.CENTER);
+        final JTable baseBallCardTable = new JTable( baseballCardModel );
+        baseBallCardTable.getColumnModel().getColumn( baseballCardModel.getImageColNo() ).setPreferredWidth( BaseballCard.IMAGE_WIDTH );
+        baseBallCardTable.getColumnModel().getColumn( baseballCardModel.getDetailsColNo() ).setPreferredWidth(preferredWidth - BaseballCard.IMAGE_WIDTH);
+        JScrollPane cardScroller = new JScrollPane( baseBallCardTable );
+        cardScroller.setHorizontalScrollBarPolicy(ScrollPaneConstants.HORIZONTAL_SCROLLBAR_AS_NEEDED);
+        cardScroller.setVerticalScrollBarPolicy(ScrollPaneConstants.VERTICAL_SCROLLBAR_AS_NEEDED);
+
+        baseBallCardTable.setAutoResizeMode(JTable.AUTO_RESIZE_OFF);
+        baseBallCardTable.setTableHeader(null);
+        baseBallCardTable.setDefaultRenderer(Object.class, new ComponentSelfRenderer());
+        baseBallCardTable.setCellSelectionEnabled( true );
+
+        baseBallCardTable.setDefaultEditor(EntityDetailsPanel.class, new ComponentSelfEditor());
+        baseBallCardTable.setDefaultEditor(DynamicImagePanel.class, new ComponentSelfEditor());
+        baseBallCardTable.setDefaultEditor( AbstractButton.class, new ComponentSelfEditor() );
+
+        baseBallCardTable.addMouseListener( new MouseAdapter() {
+            @Override
+            public void mouseClicked(MouseEvent event) {
+                int row = baseBallCardTable.rowAtPoint(event.getPoint());
+                int col = baseBallCardTable.columnAtPoint(event.getPoint());
+
+                Component dispatchComponent = SwingUtilities.getDeepestComponentAt(event.getComponent(), event.getX(), event.getY());
+                if ( dispatchComponent != baseBallCardTable ) {
+                    MouseEvent recursionStoppingEvent = new MouseEvent( dispatchComponent, MouseEvent.MOUSE_CLICKED,
+                            new Date().getTime() + 100000,
+                            event.getModifiers(), event.getX(), event.getY(), 1, event.isPopupTrigger() );
+                    dispatchComponent.dispatchEvent( recursionStoppingEvent );
+                }
+                Object value = baseballCardModel.getValueAt( row, col );
+                if ( value instanceof Component ) {
+                    ((Component) value).requestFocus();
+                    ((Component) value).dispatchEvent( event );
+                }
+                super.mouseClicked(event);
+            }
+        });
+
+        this.setLayout(new BorderLayout());
+        add(cardScroller, BorderLayout.CENTER);
+        addComponentListener(new ComponentAdapter() {
+            @Override
+            public void componentResized(ComponentEvent e) {
+                baseBallCardTable.getColumnModel().getColumn(baseballCardModel.getDetailsColNo()).setPreferredWidth(e.getComponent().getWidth() - BaseballCard.IMAGE_WIDTH);
+            }
+        });
+        if ( includeSelectorCheckbox ) {
+            baseBallCardTable.getColumnModel().getColumn( baseballCardModel.getCheckboxColNo() ).setPreferredWidth(50);
+        }
+        baseBallCardTable.setRowHeight( BaseballCard.IMAGE_HEIGHT );
     }
 
     private static class ComponentSelfRenderer extends DefaultTableCellRenderer {
@@ -70,24 +120,87 @@ public class BaseballCardPanel extends JPanel {
         }
     }
 
-//    private static class BaseballCardColumnModel extends DefaultTableColumnModel {
-//        public enum ColumnType {
-//            Checkbox, Image, Details
-//        };
-//
-//        private ColumnType colType;
-//
-//        public BaseballCardColumnModel( ColumnType colType ) {
-//            this.colType = colType;
-//        }
-//
-//        @Override
-//        public Component getTableCellRendererComponent() {
-//            Component rtnVal = null;
-//
-//            return rtnVal;
-//        }
-//    }
+    private static class ComponentSelfEditor implements TableCellEditor {
+        private Component value;
+
+        public ComponentSelfEditor() {
+            super();
+        }
+
+        public Component getTableCellEditorComponent(JTable table, Object value,
+                                              boolean isSelected,
+                                              int row, int column) {
+            Component rtnVal;
+            if ( value instanceof Component ) {
+                rtnVal = (Component)value;
+            }
+            else {
+                rtnVal = null;
+            }
+            value = rtnVal;
+            return rtnVal;
+        }
+
+        @Override
+        public Object getCellEditorValue() {
+            return value;
+        }
+
+        @Override
+        public boolean isCellEditable(EventObject anEvent) {
+            return true;
+        }
+
+        @Override
+        public boolean shouldSelectCell(EventObject anEvent)
+        {
+//            if (sentencePanel != null)
+//            {
+                if (anEvent instanceof MouseEvent)
+                {
+                    MouseEvent me = (MouseEvent) anEvent;
+                    int id = me.getID();
+                    int x = me.getX();
+                    int y = me.getY();
+                    Component source = (Component)me.getSource();
+/*if (id == MouseEvent.MOUSE_PRESSED || id == MouseEvent.MOUSE_DRAGGED)
+{
+Component dispatchComponent = SwingUtilities.getDeepestComponentAt(source, x, y);
+MouseEvent e2 = new MouseEvent(dispatchComponent, MouseEvent.MOUSE_RELEASED,
+        me.getWhen() + 100000, me.getModifiers(), x, y, me.getClickCount(),
+        me.isPopupTrigger());
+dispatchComponent.dispatchEvent(e2);
+MouseEvent e2 = new MouseEvent(dispatchComponent, MouseEvent.MOUSE_CLICKED,
+        new Date().getTime() + 100000,
+        me.getModifiers(), x, y, 1, me.isPopupTrigger());
+dispatchComponent.dispatchEvent(e2);
+}*/
+                    Component dispatchComponent = SwingUtilities.getDeepestComponentAt(source, x, y);
+                    MouseEvent e2 = new MouseEvent(dispatchComponent, id,
+                            me.getWhen() + 100000, me.getModifiers(), x, y, me.getClickCount(),
+                            me.isPopupTrigger());
+                    dispatchComponent.dispatchEvent(e2);
+//                }
+            }
+            return false;
+        }
+        @Override
+        public boolean stopCellEditing() {
+            return false;
+        }
+
+        @Override
+        public void cancelCellEditing() {
+        }
+
+        @Override
+        public void addCellEditorListener(CellEditorListener l) {
+        }
+
+        @Override
+        public void removeCellEditorListener(CellEditorListener l) {
+        }
+    }
 
     /**
      * This table model leverages the list of cards to populate the table.
@@ -118,7 +231,7 @@ public class BaseballCardPanel extends JPanel {
             columnClasses.add( DynamicImagePanel.class );
 
             columns.add( detailsColNo = nextCol++ );
-            columnClasses.add( EntityDetailsPanel.class );
+            columnClasses.add(EntityDetailsPanel.class);
         }
 
         public void setCards( List<BaseballCard> cards ) {
@@ -144,6 +257,10 @@ public class BaseballCardPanel extends JPanel {
                         rtnVal.add( cbdata.getCard() );
                     }
                 }
+            }
+            else {
+                Logger.getLogger( BaseballCardPanel.class )
+                        .warn( "Attempted to get selected cards, when no checkboxes are present." );
             }
             return rtnVal;
         }
@@ -174,11 +291,11 @@ public class BaseballCardPanel extends JPanel {
         }
 
         /**
-         * No editable cells.
+         * Editable cells?
          */
         @Override
         public boolean isCellEditable(int rowIndex, int columnIndex) {
-            return false;
+            return true;
         }
 
         @Override
@@ -203,6 +320,17 @@ public class BaseballCardPanel extends JPanel {
         public void setValueAt(Object aValue, int rowIndex, int columnIndex) {
         }
 
+        public int getImageColNo() {
+            return imageColNo;
+        }
+
+        public int getDetailsColNo() {
+            return detailsColNo;
+        }
+
+        public int getCheckboxColNo() {
+            return checkboxColNo;
+        }
     }
 
     private static class CheckboxWithData extends JCheckBox {
@@ -215,4 +343,31 @@ public class BaseballCardPanel extends JPanel {
         public BaseballCard getCard() { return card; }
 
     }
+
+    /*
+
+    public void setImageSize(int width, int height) {
+        super.setImageSize(width, height);
+        dynamicImagePanel.rescaleImage(width);
+        dynamicImagePanel.setPreferredSize(new Dimension(width, height));
+    }
+
+    public void setViewable(boolean viewable) {
+        super.setViewable(viewable);
+        dynamicImagePanel.setViewable(viewable, new Callable<Void>() {
+            @Override
+            public Void call() throws Exception {
+                // Register our image height
+                if (dynamicImagePanel.getMaxSizeImage()!=null && dynamicImagePanel.getImage()!=null) {
+                    double w = dynamicImagePanel.getImage().getIconWidth();
+                    double h = dynamicImagePanel.getImage().getIconHeight();
+                    registerAspectRatio(w, h);
+                }
+                return null;
+            }
+
+        });
+    }
+
+     */
 }

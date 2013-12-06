@@ -10,7 +10,9 @@ import org.janelia.it.jacs.shared.utils.EntityUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.awt.*;
 import java.io.File;
+import java.util.concurrent.Callable;
 
 /**
  * Created with IntelliJ IDEA.
@@ -21,17 +23,16 @@ import java.io.File;
  * Holds info representing an entity for baseball card display.
  */
 public class BaseballCard {
-    private static final File DEFAULT_IMAGE_FILE = new File("images/cart_medium.png"); // Get Stacy's black watermark.
+    // images/Aligned63xScale_signal.png"
+    private static final File DEFAULT_IMAGE_FILE = new File("/archive/scicomp/jacsData/filestore/nerna/Alignment/819/554/1874649241884819554/align/Aligned63xScale_signal.png"); // Get Stacy's black watermark.
+    public static final int IMAGE_WIDTH = 200;
+    public static final int IMAGE_HEIGHT = 200;
     private Entity entity;
     private EntityDetailsPanel entityDetailsPanel;
     private DynamicImagePanel dynamicImagePanel;
-    private DynamicImagePanel defaultDynamicImagePanel;
     private Logger logger = LoggerFactory.getLogger( BaseballCard.class );
 
     public BaseballCard() {
-        entityDetailsPanel = new EntityDetailsPanel();
-        defaultDynamicImagePanel = getDynamicImagePanel( DEFAULT_IMAGE_FILE );
-        dynamicImagePanel = defaultDynamicImagePanel;
     }
 
     public BaseballCard( Entity entity ) {
@@ -40,18 +41,22 @@ public class BaseballCard {
     }
 
     public void loadEntity( Entity entity ) {
+        if (entityDetailsPanel == null) {
+            entityDetailsPanel = new EntityDetailsPanel();
+        }
+        entityDetailsPanel.loadEntity( entity );
         this.entity = entity;
         String imagePath = EntityUtils.getImageFilePath(entity, EntityConstants.ATTRIBUTE_DEFAULT_2D_IMAGE);
-
-        if ( imagePath != null ) {
+        File imageFile = null;
+        if ( imagePath == null ) {
             logger.info("No image path for {}:{}" , entity.getName(), entity.getId());
-            final File imageFile = SessionMgr.getCachedFile(imagePath, false);
-            dynamicImagePanel = getDynamicImagePanel(imageFile);
+            imageFile = DEFAULT_IMAGE_FILE;
         }
         else {
-            dynamicImagePanel = defaultDynamicImagePanel;
+            imageFile = SessionMgr.getCachedFile(imagePath, false);
         }
 
+        dynamicImagePanel = getDynamicImagePanel(imageFile);
     }
 
     public Entity getEntity() {
@@ -67,12 +72,30 @@ public class BaseballCard {
     }
 
     private DynamicImagePanel getDynamicImagePanel(final File imageFile) {
-        return new DynamicImagePanel(
+        final DynamicImagePanel rtnVal = new DynamicImagePanel(
                 imageFile.getAbsolutePath(), ImagesPanel.MAX_IMAGE_WIDTH
         ) {
             protected void syncToViewerState() {
             }
         };
+
+        rtnVal.rescaleImage( IMAGE_WIDTH );
+        rtnVal.setPreferredSize(new Dimension( IMAGE_WIDTH, IMAGE_HEIGHT ));
+
+        rtnVal.setViewable( true, new Callable<Void>() {
+            @Override
+            public Void call() throws Exception {
+                // Register our image height
+                if (rtnVal.getMaxSizeImage()!=null && dynamicImagePanel.getImage()!=null) {
+                    double w = rtnVal.getImage().getIconWidth();
+                    double h = rtnVal.getImage().getIconHeight();
+                    dynamicImagePanel.setDisplaySize( (int)h );
+                }
+                return null;
+            }
+
+        });
+        return rtnVal;
     }
 
 }
