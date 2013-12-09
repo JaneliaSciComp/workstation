@@ -91,6 +91,8 @@ public class AlignmentBoardViewer extends Viewer implements AlignmentBoardContro
     private boolean preExistingBoard = true;
 
     private boolean boardOpen = false;
+    private boolean connectEditEvents = true;
+
     private Double cachedDownSampleGuess = null;
     private AlignmentBoardSettings settingsData;
     private ShutdownListener shutdownListener;
@@ -217,13 +219,18 @@ public class AlignmentBoardViewer extends Viewer implements AlignmentBoardContro
     @Subscribe
     public void handleItemChanged(AlignmentBoardItemChangeEvent event) {
         logger.debug("Item changed");
+        if ( ! connectEditEvents ) {
+            logger.info("Ignoring board open, because connection has been bypassed.");
+            return;
+        }
+
         // Check this, to prevent this being completed until the board has been first initialized.
         // Redundant events may be posted at startup.
         if ( boardOpen ) {
             final AlignmentBoardContext abContext = event.getAlignmentBoardContext();
 
             printItemChanged(event.getAlignedItem(), event.getChangeType().toString());
-            printAlignmentBoardContext(abContext);
+            printAlignmentBoardContext( abContext );
 
             if ( AlignmentBoardItemChangeEvent.ChangeType.VisibilityChange.equals( event.getChangeType() ) ||
                  AlignmentBoardItemChangeEvent.ChangeType.ColorChange.equals( event.getChangeType() ) ) {
@@ -340,7 +347,7 @@ public class AlignmentBoardViewer extends Viewer implements AlignmentBoardContro
                                 null,
                                 AlignmentBoardItemChangeEvent.ChangeType.FilterLevelChange
                         );
-                        ModelMgr.getModelMgr().postOnEventBus(event);
+                        ModelMgr.getModelMgr().postOnEventBus( event );
                     }
                 }).start();
 
@@ -870,6 +877,7 @@ public class AlignmentBoardViewer extends Viewer implements AlignmentBoardContro
 
         toolbar.add(controls.getBlackout());
         toolbar.add(controls.getColorSaveBrightness());
+        toolbar.add(controls.getConnectEvents()); // NOTE: can omit this control, here.
 
         //toolbar.add(launchSettingsButton);
 
@@ -1013,6 +1021,11 @@ public class AlignmentBoardViewer extends Viewer implements AlignmentBoardContro
         @Override
         public void setCropBlackout( boolean blackout ) {
             viewer.mip3d.setCropOutLevel(blackout ? 0.0f : VolumeModel.DEFAULT_CROPOUT);
+        }
+
+        @Override
+        public void setConnectEditEvents( boolean connectEditEvents ) {
+            viewer.connectEditEvents = connectEditEvents;
         }
     }
 

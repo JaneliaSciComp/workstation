@@ -21,6 +21,7 @@ public class AlignmentBoardSettings {
     private double chosenDownSampleRate;
     private double gammaFactor =  DEFAULT_GAMMA;
     private boolean showChannelData = true;
+    private boolean eventConnected = true;
     private double downSampleGuess;
     private Observer sampleRateObserver;
     private long minimumVoxelCount = DEFAULT_NEURON_SIZE_CONSTRAINT;
@@ -123,5 +124,13 @@ public class AlignmentBoardSettings {
 
     public void setMaximumNeuronCount(long maximumNeuronCount) {
         this.maximumNeuronCount = maximumNeuronCount;
+    }
+
+    public boolean isEventConnected() {
+        return eventConnected;
+    }
+
+    public void setEventConnected(boolean eventConnected) {
+        this.eventConnected = eventConnected;
     }
 }
