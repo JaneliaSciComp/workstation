@@ -47,6 +47,10 @@ public class AlignmentBoardControls {
             "to search other specimens and present the resulting overlappoing volume." +
             "</html>";
 
+    private static final String CONNECT_EVENTS_TOOLTIP_TEXT =
+            "<html>Control whether add/delete makes the alignment board rebuild.<br>" +
+            "If this is off, the board will not reflect changes in the Layers Panel.</html>";
+
     private static final String SAVE_AS_SEARCH_TIFF = "Save Search Mask";
     private static final String SAVE_AS_SEARCH_TIFF_TOOLTIP_TEXT = SAVE_AS_SEARCH_TIFF;
     private static final String SAVE_AS_COLOR_TIFF = "Save Color TIFF";
@@ -90,6 +94,7 @@ public class AlignmentBoardControls {
     private JButton searchSave;
     private JButton colorSave;
     private JButton screenShot;
+    private AbstractButton connectEvents;
 
     private JButton commitButton;
 
@@ -276,6 +281,9 @@ public class AlignmentBoardControls {
 
         long maximumNeuronCount = settings.getMaximumNeuronCount();
         maxNeuronCountTF.setText( "" + maximumNeuronCount );
+
+        boolean eventConnected = settings.isEventConnected();
+        connectEvents.setSelected( eventConnected );
     }
 
     /** Call this when sufficient info is avail to get the sliders positions initialized off crop-coords. */
@@ -353,6 +361,10 @@ public class AlignmentBoardControls {
 
     public AbstractButton getScreenShot() {
         return screenShot;
+    }
+
+    public AbstractButton getConnectEvents() {
+        return connectEvents;
     }
 
     public JButton getCommitButton() {
@@ -530,6 +542,13 @@ public class AlignmentBoardControls {
         }
     }
 
+    private synchronized void fireEventConnectToggle() {
+        boolean connectState = settings.isEventConnected();
+        for ( ControlsListener listener: listeners ) {
+            listener.setConnectEditEvents( connectState );
+        }
+    }
+
     private void createGui() {
         Font oldFont = this.centering.getFont();
         Font newFont = new Font( oldFont.getName(), Font.PLAIN, 12 );
@@ -660,6 +679,18 @@ public class AlignmentBoardControls {
                 cropCoordSet.setCurrentCoordinates(getCurrentCropCoords( getDownsampleRate() ));
                 cropCoordSet.getAcceptedCoordinates().clear();
                 fireForceCropEvent();
+            }
+        });
+
+        connectEvents = new StateDrivenIconToggleButton( Icons.getIcon( "connect-icon.png" ), null );
+        connectEvents.setToolTipText(CONNECT_EVENTS_TOOLTIP_TEXT);
+        connectEvents.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                // Here: toggle the current state of event listening.
+                boolean connectState = settings.isEventConnected();
+                settings.setEventConnected( ! connectState );
+                fireEventConnectToggle();
             }
         });
 
@@ -803,7 +834,8 @@ public class AlignmentBoardControls {
         this.getMaxNeuronCountTF().setFont( newFont );
         this.getMinimumVoxelCountTF().setFont( newFont );
         this.getClearButton().setFont( newFont );
-        this.getOrButton().setFont(newFont);
+        this.getOrButton().setFont( newFont );
+        this.getConnectEvents().setFont( newFont );
         this.getBrightnessSlider().setFont(newFont);
         this.getUseSignalDataCheckbox().setFont(newFont);
 
