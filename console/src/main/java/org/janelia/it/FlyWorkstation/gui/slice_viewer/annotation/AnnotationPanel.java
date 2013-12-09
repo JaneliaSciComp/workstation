@@ -174,9 +174,9 @@ public class AnnotationPanel extends JPanel
         createNeuronAction.putValue(Action.SHORT_DESCRIPTION, "Create a new neuron");
         createNeuronButtonPlus.setAction(createNeuronAction);
 
-        JButton deleteNeuronButton = new JButton("–");
+        JButton deleteNeuronButton = new JButton("-");
         neuronButtonsPanel.add(deleteNeuronButton);
-        deleteNeuronAction.putValue(Action.NAME, "–");
+        deleteNeuronAction.putValue(Action.NAME, "-");
         deleteNeuronAction.putValue(Action.SHORT_DESCRIPTION, "Delete current neuron");
         deleteNeuronButton.setAction(deleteNeuronAction);
 
