@@ -711,6 +711,16 @@ public class AlignmentBoardControls {
             }
         };
 
+        KeyListener newlineFireKeyListener = new KeyAdapter() {
+            @Override
+            public void keyReleased(KeyEvent e) {
+                super.keyReleased(e);
+                if ( e.getKeyCode() == KeyEvent.VK_ENTER ) {
+                    doSettingsEvent();
+                }
+            }
+        };
+
         minimumVoxelCountTF = new JTextField(MINIMUM_VOXEL_COUNT);
         minimumVoxelCountTF.setMinimumSize(NEURON_LIMIT_TF_SIZE);
         minimumVoxelCountTF.setPreferredSize(NEURON_LIMIT_TF_SIZE);
@@ -721,6 +731,7 @@ public class AlignmentBoardControls {
                         "Value of " + AlignmentBoardSettings.NO_NEURON_SIZE_CONSTRAINT + " implies no such filtering."
         );
         minimumVoxelCountTF.addMouseListener( commitEnablerMouseListener );
+        minimumVoxelCountTF.addKeyListener( newlineFireKeyListener );
 
         maxNeuronCountTF = new JTextField(MAXIMUM_NEURON_COUNT);
         maxNeuronCountTF.setMinimumSize(NEURON_LIMIT_TF_SIZE);
@@ -732,6 +743,7 @@ public class AlignmentBoardControls {
                         "Value of " + AlignmentBoardSettings.NO_NEURON_SIZE_CONSTRAINT + " implies no such filtering."
         );
         maxNeuronCountTF.addMouseListener( commitEnablerMouseListener );
+        maxNeuronCountTF.addKeyListener( newlineFireKeyListener );
 
         // Special Note: must avoid using "state change", as external methods can change the
         // "selected" state of this checkbox, inadvertently triggering the event, and firing off
