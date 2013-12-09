@@ -76,7 +76,7 @@ public class GLMatrix {
     /**
      * Multiply this matrix with the specified matrix
      * @param m Points to 16 consecutive values that are used as the elements 
-     * of a 4 × 4 column-major matrix.   
+     * of a 4 x 4 column-major matrix.   
      */
     void glMultMatrixf(float[] m) {
         float result[] = {
