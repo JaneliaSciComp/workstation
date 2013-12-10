@@ -132,18 +132,54 @@ public class AnnotationPanel extends JPanel
         workspaceInfoPanel = new WorkspaceInfoPanel();
         add(workspaceInfoPanel);
 
+        // buttons for doing workspace things
+        JPanel workspaceButtonsPanel = new JPanel();
+        workspaceButtonsPanel.setLayout(new BoxLayout(workspaceButtonsPanel, BoxLayout.LINE_AXIS));
+        add(workspaceButtonsPanel);
+
+        JButton createWorkspaceButtonPlus = new JButton("+");
+        workspaceButtonsPanel.add(createWorkspaceButtonPlus);
+        createWorkspaceAction.putValue(Action.NAME, "+");
+        createWorkspaceAction.putValue(Action.SHORT_DESCRIPTION, "Create a new workspace");
+        createWorkspaceButtonPlus.setAction(createWorkspaceAction);
+
+        // workspace tool pop-up menu (triggered by button, below)
+        final JPopupMenu workspaceToolMenu = new JPopupMenu();
+        workspaceToolMenu.add(new JMenuItem(new AbstractAction("Test") {
+            public void actionPerformed(ActionEvent e) {
+                System.out.println("test workspace tool action");
+            }
+        }));
+        
+        // workspace tool menu button
+        final JButton workspaceToolButton = new JButton();
+        String gearIconFilename = "cog.png";
+        ImageIcon gearIcon = Icons.getIcon(gearIconFilename);
+        workspaceToolButton.setIcon(gearIcon);
+        workspaceToolButton.setHideActionText(true);
+        workspaceToolButton.setMinimumSize(workspaceButtonsPanel.getPreferredSize());
+        workspaceButtonsPanel.add(workspaceToolButton);
+        workspaceToolButton.addActionListener(new ActionListener() {
+            public void actionPerformed(ActionEvent ev) {
+                workspaceToolMenu.show(workspaceToolButton,
+                        workspaceToolButton.getBounds().x - workspaceToolButton.getBounds().width,
+                        workspaceToolButton.getBounds().y + workspaceToolButton.getBounds().height);
+            }
+        });
+
+
         // list of neurons in workspace
         workspaceNeuronList = new WorkspaceNeuronList();
         add(workspaceNeuronList);
 
-        // tool pop-up menu (triggered by button, below)
+        // neuron tool pop-up menu (triggered by button, below)
         final JPopupMenu neuronToolMenu = new JPopupMenu();
         neuronToolMenu.add(new JMenuItem(new AbstractAction("Rename") {
             public void actionPerformed(ActionEvent e) {
                 annotationMgr.renameNeuron();
             }
         }));
-        // sort submenu
+        // neuron sort submenu
         JMenu sortSubmenu = new JMenu("Sort");
         JRadioButtonMenuItem alphaSortButton = new JRadioButtonMenuItem(new AbstractAction("Alphabetical") {
             @Override
@@ -187,8 +223,9 @@ public class AnnotationPanel extends JPanel
 
         // this button pops up the tool menu
         final JButton neuronToolButton = new JButton();
-        String gearIconFilename = "cog.png";
-        ImageIcon gearIcon = Icons.getIcon(gearIconFilename);
+        // we load the gear icon above
+        // String gearIconFilename = "cog.png";
+        // ImageIcon gearIcon = Icons.getIcon(gearIconFilename);
         neuronToolButton.setIcon(gearIcon);
         neuronToolButton.setHideActionText(true);
         neuronToolButton.setMinimumSize(neuronButtonsPanel.getPreferredSize());
@@ -229,19 +266,6 @@ public class AnnotationPanel extends JPanel
         // this will eventually be shown via styling of lines in 2D view
         pathStatusPanel = new PathTracingStatusPanel();
         add(pathStatusPanel);
-
-
-        // ----- misc
-        // at some point, we'll have our own sliceviewer menu; until then, attach those actions
-        //  to buttons in plain view
-        add(Box.createRigidArea(new Dimension(0, 20)));
-        add(new JLabel("Commands"));
-
-        JButton createWorkspaceButton = new JButton("Create workspace");
-        createWorkspaceAction.putValue(Action.NAME, "Create workspace");
-        createWorkspaceAction.putValue(Action.SHORT_DESCRIPTION, "Create a new workspace");
-        createWorkspaceButton.setAction(createWorkspaceAction);        
-        add(createWorkspaceButton);
 
 
         // the bilge...
