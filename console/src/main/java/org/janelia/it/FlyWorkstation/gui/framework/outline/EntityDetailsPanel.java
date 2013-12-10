@@ -56,6 +56,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.common.collect.ComparisonChain;
+import com.google.common.collect.Ordering;
 
 /**
  * A panel for displaying details about the currently selected entity.
@@ -624,6 +625,16 @@ public class EntityDetailsPanel extends JPanel implements Accessibility, Refresh
 				filtered.add(subject);
 			}
 		}
+        Collections.sort(filtered, new Comparator<Subject>() {
+            @Override
+            public int compare(Subject o1, Subject o2) {
+                ComparisonChain chain = ComparisonChain.start()
+                        .compare(o1.getClass().getName(), o2.getClass().getName(), Ordering.natural())
+                        .compare(o1.getFullName(), o2.getFullName(), Ordering.natural().nullsLast())
+                        .compare(o1.getName(), o2.getName(), Ordering.natural().nullsFirst());
+                return chain.result();
+            }
+        });
 		return filtered;
 	}
 	
