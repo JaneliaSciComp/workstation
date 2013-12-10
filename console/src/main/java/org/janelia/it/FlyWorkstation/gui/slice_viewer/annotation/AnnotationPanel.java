@@ -36,6 +36,7 @@ public class AnnotationPanel extends JPanel
     // UI components
     private NeuronInfoPanel neuronInfoPanel;
     private WorkspaceInfoPanel workspaceInfoPanel;
+    private WorkspaceNeuronList workspaceNeuronList;
     private PathTracingStatusPanel pathStatusPanel;
 
     // ----- actions
@@ -106,17 +107,18 @@ public class AnnotationPanel extends JPanel
     private void setupSignals() {
         // outgoing from the model:
         annotationModel.neuronSelectedSignal.connect(neuronInfoPanel.neuronSelectedSlot);
-        annotationModel.neuronSelectedSignal.connect(workspaceInfoPanel.neuronSelectedSlot);
+        annotationModel.neuronSelectedSignal.connect(workspaceNeuronList.neuronSelectedSlot);
 
         annotationModel.workspaceLoadedSignal.connect(workspaceInfoPanel.workspaceLoadedSlot);
+        annotationModel.workspaceLoadedSignal.connect(workspaceNeuronList.workspaceLoadedSlot);
 
         // us to model:
-        workspaceInfoPanel.neuronClickedSignal.connect(annotationModel.neuronClickedSlot);
+        workspaceNeuronList.neuronClickedSignal.connect(annotationModel.neuronClickedSlot);
 
         // us to graphics UI
         neuronInfoPanel.cameraPanToSignal.connect(sliceViewerTranslator.cameraPanToSlot);
         neuronInfoPanel.annotationClickedSignal.connect(sliceViewerTranslator.annotationClickedSlot);
-        workspaceInfoPanel.cameraPanToSignal.connect(sliceViewerTranslator.cameraPanToSlot);
+        workspaceNeuronList.cameraPanToSignal.connect(sliceViewerTranslator.cameraPanToSlot);
 
     }
 
@@ -126,10 +128,13 @@ public class AnnotationPanel extends JPanel
         // add a little breathing space at the top of the panel
         add(Box.createRigidArea(new Dimension(0, 20)));
 
-        // ----- workspace information; show name, whatever attributes, list of neurons
+        // ----- workspace information; show name, whatever attributes
         workspaceInfoPanel = new WorkspaceInfoPanel();
         add(workspaceInfoPanel);
 
+        // list of neurons in workspace
+        workspaceNeuronList = new WorkspaceNeuronList();
+        add(workspaceNeuronList);
 
         // tool pop-up menu (triggered by button, below)
         final JPopupMenu neuronToolMenu = new JPopupMenu();
@@ -143,14 +148,14 @@ public class AnnotationPanel extends JPanel
         JRadioButtonMenuItem alphaSortButton = new JRadioButtonMenuItem(new AbstractAction("Alphabetical") {
             @Override
             public void actionPerformed(ActionEvent actionEvent) {
-                workspaceInfoPanel.sortOrderChanged(WorkspaceInfoPanel.NeuronSortOrder.ALPHABETICAL);
+                workspaceNeuronList.sortOrderChanged(WorkspaceNeuronList.NeuronSortOrder.ALPHABETICAL);
             }
             });
         sortSubmenu.add(alphaSortButton);
         JRadioButtonMenuItem creationSortButton = new JRadioButtonMenuItem(new AbstractAction("Creation date") {
             @Override
             public void actionPerformed(ActionEvent actionEvent) {
-                workspaceInfoPanel.sortOrderChanged(WorkspaceInfoPanel.NeuronSortOrder.CREATIONDATE);
+                workspaceNeuronList.sortOrderChanged(WorkspaceNeuronList.NeuronSortOrder.CREATIONDATE);
             }
         });
         sortSubmenu.add(creationSortButton);
@@ -161,7 +166,7 @@ public class AnnotationPanel extends JPanel
 
         // initial sort order:
         creationSortButton.setSelected(true);
-        workspaceInfoPanel.sortOrderChanged(WorkspaceInfoPanel.NeuronSortOrder.CREATIONDATE);
+        workspaceNeuronList.sortOrderChanged(WorkspaceNeuronList.NeuronSortOrder.CREATIONDATE);
 
         // buttons for acting on neurons (which are in the list immediately above):
         JPanel neuronButtonsPanel = new JPanel();
