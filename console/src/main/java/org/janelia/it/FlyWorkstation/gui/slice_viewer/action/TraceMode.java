@@ -357,6 +357,9 @@ implements MouseMode, KeyListener
 	                            }
 	                        }));
                         }
+                        /*
+                        // this is not something we support right now; it'll draw right, but
+                        //  we don't have a way to connect neurites yet
                         // Connect to current parent
                         if (parent != null) 
                         {
@@ -369,6 +372,7 @@ implements MouseMode, KeyListener
 	                            }));                     
                         	}
                         }
+                        */
                         // Delete
                         result.add(new JMenuItem(new AbstractAction("Delete subtree rooted at this anchor") {
                             @Override
