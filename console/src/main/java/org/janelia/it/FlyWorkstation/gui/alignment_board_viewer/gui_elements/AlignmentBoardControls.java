@@ -682,7 +682,7 @@ public class AlignmentBoardControls {
             }
         });
 
-        connectEvents = new StateDrivenIconToggleButton( Icons.getIcon( "connect-icon.png" ), null );
+        connectEvents = new StateDrivenIconToggleButton( Icons.getIcon( "link.png" ), Icons.getIcon( "link_break.png" ) );
         connectEvents.setToolTipText(CONNECT_EVENTS_TOOLTIP_TEXT);
         connectEvents.addActionListener(new ActionListener() {
             @Override
