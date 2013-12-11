@@ -1,5 +1,6 @@
 package org.janelia.it.FlyWorkstation.gui.slice_viewer.skeleton;
 
+import java.awt.Color;
 import java.awt.Graphics2D;
 import java.awt.Image;
 import java.awt.image.BufferedImage;
@@ -98,7 +99,8 @@ implements GLActor
     
     private Map<SegmentIndex, TracedPathActor> tracedSegments = 
     		new ConcurrentHashMap<SegmentIndex, TracedPathActor>();
-    
+
+    // note: this initial color is now overridden by other components
     private float neuronColor[] = {0.8f,1.0f,0.3f};
     private final float blackColor[] = {0,0,0};
     // private TracedPathShader tracedShader = new TracedPathShader();
@@ -117,6 +119,17 @@ implements GLActor
         @Override
         public void execute(Long annotationID) {
             setNextParentByID(annotationID);
+        }
+    };
+
+    public Slot1<Color> changeGlobalColorSlot = new Slot1<Color>() {
+        @Override
+        public void execute(Color color) {
+            neuronColor[0] = color.getRed() / 255.0f;
+            neuronColor[1] = color.getGreen() / 255.0f;
+            neuronColor[2] = color.getBlue() / 255.0f;
+            // skeletonActorChangedSignal.emit();
+            updateAnchorsSlot.execute();
         }
     };
 

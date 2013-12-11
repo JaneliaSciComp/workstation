@@ -145,12 +145,13 @@ public class AnnotationPanel extends JPanel
 
         // workspace tool pop-up menu (triggered by button, below)
         final JPopupMenu workspaceToolMenu = new JPopupMenu();
-        workspaceToolMenu.add(new JMenuItem(new AbstractAction("Test") {
-            public void actionPerformed(ActionEvent e) {
-                System.out.println("test workspace tool action");
-            }
-        }));
-        
+
+        ChooseAnnotationColorAction changeGlobalAnnotationColorAction = new ChooseAnnotationColorAction();
+        changeGlobalAnnotationColorAction.putValue(Action.NAME, "Set global annotation color...");
+        changeGlobalAnnotationColorAction.putValue(Action.SHORT_DESCRIPTION,
+                "Change global color of annotations");
+        workspaceToolMenu.add(new JMenuItem(changeGlobalAnnotationColorAction));
+
         // workspace tool menu button
         final JButton workspaceToolButton = new JButton();
         String gearIconFilename = "cog.png";
@@ -271,7 +272,53 @@ public class AnnotationPanel extends JPanel
         // the bilge...
         add(Box.createVerticalGlue());
     }
+
+    class ChooseAnnotationColorAction extends AbstractAction {
+        // adapted from ChannelColorAction in ColorChannelWidget
+
+        JDialog colorDialog;
+        JColorChooser colorChooser;
+        private Color currentColor;
+
+        public ChooseAnnotationColorAction() {
+
+            ActionListener okListener = new ActionListener() {
+                @Override
+                public void actionPerformed(ActionEvent actionEvent) {
+                    annotationMgr.setGlobalAnnotationColor(colorChooser.getColor());
+                }
+            };
+            ActionListener cancelListener = new ActionListener() {
+                @Override
+                public void actionPerformed(ActionEvent actionEvent) {
+                    // unused right now
+                }
+            };
+
+            // arbitrary initial color
+            colorChooser = new JColorChooser(Color.RED);
+
+            colorDialog = JColorChooser.createDialog(AnnotationPanel.this,
+                    "Set global annotation color",
+                    false,
+                    colorChooser,
+                    okListener,
+                    cancelListener);
+            colorDialog.setVisible(false);
+        }
+
+        @Override
+        public void actionPerformed(ActionEvent e) {
+            if (annotationModel.getCurrentWorkspace() == null) {
+                return;
+            }
+
+            // I'd like to grab the current color as the initial color,
+            //  but annotation panel has no way to get it at this time
+            colorChooser.setColor(AnnotationsConstants.DEFAULT_ANNOTATION_COLOR_GLOBAL);
+            colorDialog.setVisible(true);
+        }
+    }
+
 }
-
-
 

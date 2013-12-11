@@ -15,6 +15,7 @@ import org.janelia.it.FlyWorkstation.api.entity_model.management.ModelMgr;
 import org.janelia.it.jacs.model.entity.Entity;
 import org.janelia.it.jacs.model.user_data.tiledMicroscope.*;
 
+import java.awt.*;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -59,6 +60,8 @@ that need to respond to changing data.
 
     public Signal1<TmAnchoredPath> anchoredPathAddedSignal = new Signal1<TmAnchoredPath>();
     public Signal1<List<TmAnchoredPath>> anchoredPathsRemovedSignal = new Signal1<List<TmAnchoredPath>>();
+
+    public Signal1<Color> globalAnnotationColorChangedSignal = new Signal1<Color>();
 
     // ----- slots
     public Slot1<TmNeuron> neuronClickedSlot = new Slot1<TmNeuron>() {
@@ -107,6 +110,18 @@ that need to respond to changing data.
         setCurrentNeuron(null);
         neuronSelectedSignal.emit(null);
 
+    }
+
+    // preferences stuff
+    public void setPreference(String key, String value) {
+        if (currentWorkspace != null) {
+            try {
+                modelMgr.createOrUpdateWorkspacePreference(currentWorkspace.getId(),
+                        key, value);
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
     }
 
     // current neuron methods
@@ -632,4 +647,14 @@ that need to respond to changing data.
             removeAnchoredPath(neuron1.getAnchoredPathMap().get(endpoints));
         }
     }
+
+    public void setGlobalAnnotationColor(Color color) {
+        setPreference(AnnotationsConstants.PREF_ANNOTATION_COLOR_GLOBAL,
+            String.format("%d:%d:%d:%d", color.getRed(), color.getGreen(),
+                color.getBlue(), color.getAlpha()));
+
+        // persisted, so go ahead and change it
+        globalAnnotationColorChangedSignal.emit(color);
+    }
+
 }

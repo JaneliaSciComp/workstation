@@ -14,6 +14,7 @@ import org.janelia.it.FlyWorkstation.tracing.AnchoredVoxelPath;
 import org.janelia.it.FlyWorkstation.tracing.PathTraceRequest;
 import org.janelia.it.jacs.model.user_data.tiledMicroscope.*;
 
+import java.awt.*;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -110,6 +111,14 @@ public class SliceViewerTranslator {
         }
     };
 
+    public Slot1<Color> globalAnnotationColorChangedSlot = new Slot1<Color>() {
+        @Override
+        public void execute(Color color) {
+            // just pass through right now
+            changeGlobalColorSignal.emit(color);
+        }
+    };
+
     // ----- signals
     public Signal1<Vec3> cameraPanToSignal = new Signal1<Vec3>();
 
@@ -122,6 +131,8 @@ public class SliceViewerTranslator {
 
     public Signal1<AnchoredVoxelPath> anchoredPathAddedSignal = new Signal1<AnchoredVoxelPath>();
     public Signal1<AnchoredVoxelPath> anchoredPathRemovedSignal = new Signal1<AnchoredVoxelPath>();
+
+    public Signal1<Color> changeGlobalColorSignal = new Signal1<Color>();
 
     public SliceViewerTranslator(AnnotationModel annModel, SliceViewer sliceViewer) {
         this.annModel = annModel;
@@ -141,6 +152,8 @@ public class SliceViewerTranslator {
 
         anchoredPathAddedSignal.connect(skeleton.addAnchoredPathSlot);
         anchoredPathRemovedSignal.connect(skeleton.removeAnchoredPathSlot);
+
+        changeGlobalColorSignal.connect(sliceViewer.getSkeletonActor().changeGlobalColorSlot);
     }
 
     private void setupSignals() {
@@ -154,6 +167,8 @@ public class SliceViewerTranslator {
 
         annModel.anchoredPathAddedSignal.connect(addAnchoredPathSlot);
         annModel.anchoredPathsRemovedSignal.connect(removeAnchoredPathsSlot);
+
+        annModel.globalAnnotationColorChangedSignal.connect(globalAnnotationColorChangedSlot);
     }
 
     /**
@@ -246,6 +261,17 @@ public class SliceViewerTranslator {
         // clear existing
         clearSkeletonSignal.emit();
 
+        // retrieve global color if present; if not, revert to default
+        String globalColorString = workspace.getPreferences().getProperty(AnnotationsConstants.PREF_ANNOTATION_COLOR_GLOBAL);
+        Color newColor;
+        if (globalColorString != null) {
+            newColor = prefColorToColor(globalColorString);
+        } else {
+            newColor = AnnotationsConstants.DEFAULT_ANNOTATION_COLOR_GLOBAL;
+        }
+        changeGlobalColorSignal.emit(newColor);
+
+
         // note that we must add annotations in parent-child sequence
         //  so lines get drawn correctly
         for (TmNeuron neuron: workspace.getNeuronList()) {
@@ -305,4 +331,15 @@ public class SliceViewerTranslator {
 
         return voxelPath;
     }
+
+    private Color prefColorToColor(String colorString) {
+        // form R:G:B:A to proper Color
+        String items[] = colorString.split(":");
+
+        return new Color(Integer.parseInt(items[0]),
+            Integer.parseInt(items[1]),
+            Integer.parseInt(items[2]),
+            Integer.parseInt(items[3]));
+    }
+
 }

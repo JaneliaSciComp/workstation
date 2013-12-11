@@ -16,6 +16,7 @@ import org.janelia.it.jacs.model.entity.EntityConstants;
 import org.janelia.it.jacs.model.user_data.tiledMicroscope.*;
 
 import javax.swing.*;
+import java.awt.*;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.regex.Matcher;
@@ -639,5 +640,27 @@ elements of what's been done; that's handled by signals emitted from AnnotationM
         };
         creator.execute();
     }
+
+    public void setGlobalAnnotationColor(final Color color) {
+
+        SimpleWorker setter = new SimpleWorker() {
+            @Override
+            protected void doStuff() throws Exception {
+                annotationModel.setGlobalAnnotationColor(color);
+            }
+
+            @Override
+            protected void hadSuccess() {
+                // nothing; signals will be sent
+            }
+
+            @Override
+            protected void hadError(Throwable error) {
+                SessionMgr.getSessionMgr().handleException(error);
+            }
+        };
+        setter.execute();
+    }
+
 }
 
