@@ -51,32 +51,7 @@ public class BaseballCardPanelTest extends JFrame {
         this.add( panel, BorderLayout.CENTER );
         panel.setPreferredSize( this.getSize() );
         this.setDefaultCloseOperation( JFrame.EXIT_ON_CLOSE );
-
-        // Need to mock the browser environment.
-        // Prime the tool-specific properties before the Session is invoked
-        ConsoleProperties.load();
-
-        // Protocol Registration - Adding more than one type should automatically switch over to the Aggregate Facade
-        FacadeManager.registerFacade(FacadeManager.getEJBProtocolString(), EJBFacadeManager.class, "JACS EJB Facade Manager");
-
-        // Assuming that the user has entered the login/password information, now validate
-        String username = (String)SessionMgr.getSessionMgr().getModelProperty(SessionMgr.USER_NAME);
-        String email = (String)SessionMgr.getSessionMgr().getModelProperty(SessionMgr.USER_EMAIL);
-
-        if (username==null || email==null) {
-            Object[] options = {"Enter Login", "Exit Program"};
-            final int answer = JOptionPane.showOptionDialog(null, "Please enter your login and email information.", "Information Required",
-                    JOptionPane.OK_CANCEL_OPTION, JOptionPane.QUESTION_MESSAGE, null, options, options[0]);
-            if (answer == 0) {
-                PrefController.getPrefController().getPrefInterface(DataSourceSettingsPanel.class, null);
-            }
-            else {
-                SessionMgr.getSessionMgr().systemExit();
-            }
-        }
-
-        SessionMgr.getSessionMgr().loginSubject();
-        SessionMgr.getSessionMgr().newBrowser();
+        new WorkstationEnvironment().invoke();
 
         JButton checkDump = new JButton( "List Selection" );
         checkDump.addActionListener( new ActionListener() {
@@ -171,4 +146,33 @@ public class BaseballCardPanelTest extends JFrame {
         return new EntityAttribute(null, name, null, null, null);
     }
 
+    private class WorkstationEnvironment {
+        public void invoke() {
+            // Need to mock the browser environment.
+            // Prime the tool-specific properties before the Session is invoked
+            ConsoleProperties.load();
+
+            // Protocol Registration - Adding more than one type should automatically switch over to the Aggregate Facade
+            FacadeManager.registerFacade(FacadeManager.getEJBProtocolString(), EJBFacadeManager.class, "JACS EJB Facade Manager");
+
+            // Assuming that the user has entered the login/password information, now validate
+            String username = (String) SessionMgr.getSessionMgr().getModelProperty(SessionMgr.USER_NAME);
+            String email = (String)SessionMgr.getSessionMgr().getModelProperty(SessionMgr.USER_EMAIL);
+
+            if (username==null || email==null) {
+                Object[] options = {"Enter Login", "Exit Program"};
+                final int answer = JOptionPane.showOptionDialog(null, "Please enter your login and email information.", "Information Required",
+                        JOptionPane.OK_CANCEL_OPTION, JOptionPane.QUESTION_MESSAGE, null, options, options[0]);
+                if (answer == 0) {
+                    PrefController.getPrefController().getPrefInterface(DataSourceSettingsPanel.class, null);
+                }
+                else {
+                    SessionMgr.getSessionMgr().systemExit();
+                }
+            }
+
+            SessionMgr.getSessionMgr().loginSubject();
+            SessionMgr.getSessionMgr().newBrowser();
+        }
+    }
 }
