@@ -146,10 +146,9 @@ public class ModelMgrUtils {
 		
     	int orderIndex = 0;
 		for(EntityData ed : orderedData) {
-			if (ed.getOrderIndex()==null || orderIndex!=ed.getOrderIndex()) {
-				ModelMgr.getModelMgr().updateChildIndex(ed, orderIndex);
-			}
-			orderIndex++;
+		    ed.setOrderIndex(orderIndex++);
 		}
+		
+		ModelMgr.getModelMgr().saveOrUpdateEntity(entity);
     }
 }
