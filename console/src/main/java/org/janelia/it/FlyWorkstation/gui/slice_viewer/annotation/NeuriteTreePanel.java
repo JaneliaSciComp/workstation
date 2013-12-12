@@ -5,6 +5,8 @@ import java.awt.*;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
 
 import javax.swing.*;
@@ -148,7 +150,9 @@ public class NeuriteTreePanel extends JPanel
         labelToAnnotationMap.clear();
 
         if (neuron != null) {
-            for (TmGeoAnnotation root: neuron.getRootAnnotations()) {
+            List<TmGeoAnnotation> rootList = neuron.getRootAnnotations();
+            sortGeoAnnotationList(rootList);
+            for (TmGeoAnnotation root: rootList) {
                 // first node is the parent node of the neuron, which is the first child
                 //  of the invisible root:
                 String label = getTreeString(root);
@@ -170,7 +174,9 @@ public class NeuriteTreePanel extends JPanel
 
     private void populateNeuriteTreeNodeTagged(TmGeoAnnotation parentAnnotation, DefaultMutableTreeNode rootNode) {
         // recurse through nodes; note that everything is a child of the rootNode!
-        for (TmGeoAnnotation childAnnotation: parentAnnotation.getChildren()) {
+        List<TmGeoAnnotation> childList = parentAnnotation.getChildren();
+        sortGeoAnnotationList(childList);
+        for (TmGeoAnnotation childAnnotation: childList) {
             if (!getNodeType(childAnnotation).equals("node")) {
                 String label = getTreeString(childAnnotation);
                 DefaultMutableTreeNode childNode = new DefaultMutableTreeNode(label);
@@ -234,5 +240,14 @@ public class NeuriteTreePanel extends JPanel
 
         // emit signal
         cameraPanToSignal.emit(new Vec3(annotation.getX(), annotation.getY(), annotation.getZ()));
+    }
+
+    private void sortGeoAnnotationList(List<TmGeoAnnotation> annotationList) {
+        Collections.sort(annotationList, new Comparator<TmGeoAnnotation>() {
+            @Override
+            public int compare(TmGeoAnnotation annotation, TmGeoAnnotation annotation2) {
+                return annotation.getId().compareTo(annotation2.getId());
+            }
+        });
     }
 }
