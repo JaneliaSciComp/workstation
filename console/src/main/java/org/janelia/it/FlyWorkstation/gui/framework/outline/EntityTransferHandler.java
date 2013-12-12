@@ -395,11 +395,12 @@ public abstract class EntityTransferHandler extends TransferHandler {
 			if (log.isDebugEnabled()) log.debug("  "+EntityUtils.identify(ed.getChildEntity())+" (oldIndex={},newIndex={})",ed.getOrderIndex(),index);
 			if ((ed.getOrderIndex() == null) || (ed.getOrderIndex() != index)) {
 				log.debug("  will save ED {} with index={}",ed.getId(),index);
-				EntityData savedEd = ModelMgr.getModelMgr().updateChildIndex(ed, index);
-				log.debug("  saved ED {}",savedEd.getId());
+				ed.setOrderIndex(index);
 			}
 			index++;
 		}
+		
+		ModelMgr.getModelMgr().saveOrUpdateEntity(parentEntity);
 		
 		// Remove old eds if necessary
 		for(EntityData ed : edsToRemove) {

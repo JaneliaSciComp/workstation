@@ -776,6 +776,12 @@ public class ModelMgr {
         return newEntity;
     }
 
+    public Entity saveOrUpdateEntity(Entity entity) throws Exception {
+        Entity newEntity = entityModel.saveEntity(entity);
+        if(newEntity!=null) notifyEntityChanged(entity.getId());
+        return newEntity;
+    }
+    
     public Entity saveOrUpdateAnnotation(Entity annotatedEntity, Entity annotation) throws Exception {
         Entity newAnnotation = entityModel.saveEntity(annotation);
         if(newAnnotation!=null) notifyAnnotationsChanged(annotatedEntity.getId());
