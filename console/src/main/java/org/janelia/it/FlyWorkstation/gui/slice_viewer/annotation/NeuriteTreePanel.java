@@ -24,7 +24,7 @@ import com.google.common.collect.HashBiMap;
  *
  * djo, 6/13
  */
-public class NeuronInfoPanel extends JPanel 
+public class NeuriteTreePanel extends JPanel
 {
     private JLabel neuronNameLabel;
 
@@ -46,7 +46,7 @@ public class NeuronInfoPanel extends JPanel
     public Signal1<TmGeoAnnotation> annotationClickedSignal = new Signal1<TmGeoAnnotation>();
 
 
-    public NeuronInfoPanel() {
+    public NeuriteTreePanel() {
         setupUI();
     }
 

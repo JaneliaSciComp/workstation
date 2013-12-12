@@ -34,7 +34,7 @@ public class AnnotationPanel extends JPanel
 
 
     // UI components
-    private NeuronInfoPanel neuronInfoPanel;
+    private NeuriteTreePanel neuriteTreePanel;
     private WorkspaceInfoPanel workspaceInfoPanel;
     private WorkspaceNeuronList workspaceNeuronList;
     private PathTracingStatusPanel pathStatusPanel;
@@ -106,7 +106,7 @@ public class AnnotationPanel extends JPanel
 
     private void setupSignals() {
         // outgoing from the model:
-        annotationModel.neuronSelectedSignal.connect(neuronInfoPanel.neuronSelectedSlot);
+        annotationModel.neuronSelectedSignal.connect(neuriteTreePanel.neuronSelectedSlot);
         annotationModel.neuronSelectedSignal.connect(workspaceNeuronList.neuronSelectedSlot);
 
         annotationModel.workspaceLoadedSignal.connect(workspaceInfoPanel.workspaceLoadedSlot);
@@ -116,8 +116,8 @@ public class AnnotationPanel extends JPanel
         workspaceNeuronList.neuronClickedSignal.connect(annotationModel.neuronClickedSlot);
 
         // us to graphics UI
-        neuronInfoPanel.cameraPanToSignal.connect(sliceViewerTranslator.cameraPanToSlot);
-        neuronInfoPanel.annotationClickedSignal.connect(sliceViewerTranslator.annotationClickedSlot);
+        neuriteTreePanel.cameraPanToSignal.connect(sliceViewerTranslator.cameraPanToSlot);
+        neuriteTreePanel.annotationClickedSignal.connect(sliceViewerTranslator.annotationClickedSlot);
         workspaceNeuronList.cameraPanToSignal.connect(sliceViewerTranslator.cameraPanToSlot);
 
     }
@@ -244,8 +244,8 @@ public class AnnotationPanel extends JPanel
 
         // ----- neuron information; show name, whatever attributes, list of neurites
         add(Box.createRigidArea(new Dimension(0, 20)));
-        neuronInfoPanel = new NeuronInfoPanel();
-        add(neuronInfoPanel);
+        neuriteTreePanel = new NeuriteTreePanel();
+        add(neuriteTreePanel);
 
         // buttons for acting on annotations or neurites (which are in the list immediately above):
         JPanel neuriteButtonsPanel = new JPanel();
