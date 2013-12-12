@@ -1,17 +1,31 @@
 package org.janelia.it.FlyWorkstation.gui.framework.viewer.alignment_board;
 
-import java.awt.*;
+import java.awt.BorderLayout;
+import java.awt.Component;
+import java.awt.Dimension;
+import java.awt.FlowLayout;
+import java.awt.Point;
 import java.util.List;
 import java.util.concurrent.Callable;
 
 import javax.media.opengl.GLCapabilities;
 import javax.media.opengl.GLProfile;
 import javax.media.opengl.awt.GLJPanel;
-import javax.swing.*;
+import javax.swing.AbstractButton;
+import javax.swing.JLabel;
+import javax.swing.JOptionPane;
+import javax.swing.JPanel;
+import javax.swing.JToolBar;
 
 import org.janelia.it.FlyWorkstation.api.entity_model.management.ModelMgr;
 import org.janelia.it.FlyWorkstation.gui.alignment_board_viewer.MultiTexVolumeBrickFactory;
-import org.janelia.it.FlyWorkstation.gui.alignment_board_viewer.gui_elements.*;
+import org.janelia.it.FlyWorkstation.gui.alignment_board_viewer.ScaledMip3d;
+import org.janelia.it.FlyWorkstation.gui.alignment_board_viewer.gui_elements.AlignmentBoardControls;
+import org.janelia.it.FlyWorkstation.gui.alignment_board_viewer.gui_elements.AlignmentBoardControlsDialog;
+import org.janelia.it.FlyWorkstation.gui.alignment_board_viewer.gui_elements.AlignmentBoardControlsPanel;
+import org.janelia.it.FlyWorkstation.gui.alignment_board_viewer.gui_elements.ControlsListener;
+import org.janelia.it.FlyWorkstation.gui.alignment_board_viewer.gui_elements.GpuSampler;
+import org.janelia.it.FlyWorkstation.gui.alignment_board_viewer.gui_elements.SavebackEvent;
 import org.janelia.it.FlyWorkstation.gui.alignment_board_viewer.masking.ConfigurableColorMapping;
 import org.janelia.it.FlyWorkstation.gui.alignment_board_viewer.masking.FileStats;
 import org.janelia.it.FlyWorkstation.gui.alignment_board_viewer.masking.MultiMaskTracker;
@@ -29,10 +43,13 @@ import org.janelia.it.FlyWorkstation.gui.framework.viewer.alignment_board.events
 import org.janelia.it.FlyWorkstation.gui.util.Icons;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.BaseRenderer;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.Mip3d;
-import org.janelia.it.FlyWorkstation.gui.alignment_board_viewer.ScaledMip3d;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.VolumeModel;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.texture.TextureDataI;
-import org.janelia.it.FlyWorkstation.model.domain.*;
+import org.janelia.it.FlyWorkstation.model.domain.CompartmentSet;
+import org.janelia.it.FlyWorkstation.model.domain.EntityWrapper;
+import org.janelia.it.FlyWorkstation.model.domain.Neuron;
+import org.janelia.it.FlyWorkstation.model.domain.Sample;
+import org.janelia.it.FlyWorkstation.model.domain.VolumeImage;
 import org.janelia.it.FlyWorkstation.model.entity.RootedEntity;
 import org.janelia.it.FlyWorkstation.model.viewer.AlignedItem;
 import org.janelia.it.FlyWorkstation.model.viewer.AlignmentBoardContext;
@@ -40,7 +57,7 @@ import org.janelia.it.FlyWorkstation.model.viewer.MaskedVolume;
 import org.janelia.it.FlyWorkstation.model.viewer.MaskedVolume.ArtifactType;
 import org.janelia.it.FlyWorkstation.model.viewer.MaskedVolume.Channels;
 import org.janelia.it.FlyWorkstation.model.viewer.MaskedVolume.Size;
-import org.janelia.it.FlyWorkstation.shared.workers.IndeterminateProgressMonitor;
+import org.janelia.it.FlyWorkstation.shared.workers.IndeterminateNoteProgressMonitor;
 import org.janelia.it.FlyWorkstation.shared.workers.SimpleWorker;
 import org.janelia.it.jacs.model.entity.Entity;
 import org.slf4j.Logger;
@@ -715,8 +732,8 @@ public class AlignmentBoardViewer extends Viewer implements AlignmentBoardContro
                         );
                     }
 
-                    IndeterminateProgressMonitor monitor =
-                            new IndeterminateProgressMonitor(
+                    IndeterminateNoteProgressMonitor monitor =
+                            new IndeterminateNoteProgressMonitor(
                                     SessionMgr.getBrowser(), "Updating alignment board...", context.getName()
                             );
                     loadWorker.setProgressMonitor( monitor );

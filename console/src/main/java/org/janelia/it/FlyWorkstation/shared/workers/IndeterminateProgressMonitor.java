@@ -21,22 +21,22 @@ import javax.swing.text.AttributeSet;
  */
 public class IndeterminateProgressMonitor extends ProgressMonitor implements Accessible
 {
-    private JDialog         dialog;
-    private JOptionPane     pane;
-    private JProgressBar    myBar;
-    private JLabel          noteLabel;
-    private Component       parentComponent;
-    private String          note;
-    private Object[]        cancelOption = null;
-    private Object          message;
-    private int             min;
-    private int             max;
+    protected JDialog         dialog;
+    protected JOptionPane     pane;
+    protected JProgressBar    myBar;
+    protected JLabel          noteLabel;
+    protected Component       parentComponent;
+    protected String          note;
+    protected Object[]        cancelOption = null;
+    protected Object          message;
+    protected int             min;
+    protected int             max;
 
     public IndeterminateProgressMonitor(Component parentComponent,
                             Object message,
                             String note) {
     	// only extend ProgressMonitor so that we can pass this to methods which expect a ProgressMonitor
-    	super(parentComponent, message, note, 0, 100);
+    	super(parentComponent, message, note, 0, 100); 
         this.parentComponent = parentComponent;
 
         cancelOption = new Object[1];
@@ -45,21 +45,10 @@ public class IndeterminateProgressMonitor extends ProgressMonitor implements Acc
         this.max = 100;
         this.message = message;
         this.note = note;
-        this.noteLabel = new JLabel();
-        if ( printableNote() ) {
-            noteLabel.setText( note );
-        }
     }
 
-    private boolean printableNote() {
-        return printable( note );
-    }
 
-    private static boolean printable( String st ) {
-        return st != null || st.trim().length() > 0;
-    }
-
-    private class ProgressOptionPane extends JOptionPane
+    protected class ProgressOptionPane extends JOptionPane
     {
         ProgressOptionPane(Object messageList) {
             super(messageList,
@@ -196,9 +185,9 @@ public class IndeterminateProgressMonitor extends ProgressMonitor implements Acc
         else {
             myBar = new JProgressBar();
             myBar.setIndeterminate(true);
-            if (note != null) noteLabel.setText(note);
+            if (note != null) noteLabel = new JLabel(note);
             pane = new ProgressOptionPane(new Object[] {message,
-                                                        printableNote() ? noteLabel : null,
+                                                        null,
                                                         myBar});
             dialog = pane.createDialog(parentComponent, "Processing");
             dialog.show();
@@ -358,12 +347,12 @@ public class IndeterminateProgressMonitor extends ProgressMonitor implements Acc
 
 	    // add a listener for progress bar ChangeEvents
 	    if (myBar != null) {
-		    myBar.addChangeListener(this);
+		myBar.addChangeListener(this);
 	    }
 
 	    // add a listener for note label PropertyChangeEvents
 	    if (noteLabel != null) {
-		    noteLabel.addPropertyChangeListener(this);
+		noteLabel.addPropertyChangeListener(this);
 	    }
 	}
 
