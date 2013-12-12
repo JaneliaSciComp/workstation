@@ -142,7 +142,7 @@ public class EntityModel {
 	 * @return canonical entity instance
 	 */
 	private Entity putOrUpdate(Entity entity) {
-		if (entity==null || !EntityUtils.isInitialized(entity) || entity.getEntityType()==null) {
+		if (entity==null || !EntityUtils.isInitialized(entity) || entity.getEntityTypeName()==null) {
 			// This is an uninitialized entity, which cannot go into the cache
 		    log.trace("putOrUpdate: entity is null or uninitialized");
 			return null;
@@ -192,6 +192,20 @@ public class EntityModel {
 						parentMap.put(child.getId(), canonicalEntity.getId());
 					}
 				}
+			}
+			
+			// Sanity check
+			if (EntityUtils.areLoaded(entity.getEntityData())) {
+			    int c = 0;
+			    for(EntityData ed : entity.getEntityData()) {
+			        if (ed.getChildEntity()!=null) {
+			            c++;
+			        }
+			    }
+			    if (entity.getNumChildren()!=null && entity.getNumChildren()!=c) {
+			        log.warn("Denormalized numChildren ("+entity.getNumChildren()+
+			                ") does not match actual number of children ("+c+") for entity "+entity.getId());
+			    }
 			}
 			
 			return canonicalEntity;
@@ -850,6 +864,7 @@ public class EntityModel {
     	synchronized(this) {
 	    	ed = entityFacade.addEntityToParent(parent, entity, index, attrName);
 	    	ed.setChildEntity(entity); // replace with a canonical entities
+	    	putOrUpdate(ed.getParentEntity()); // update child count
 	    	ed.setParentEntity(parent);
 	    	parent.getEntityData().add(ed);
             log.debug("Added entity (id={}) to parent (id={})",entity.getId(),parent.getId());

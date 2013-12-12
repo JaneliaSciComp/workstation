@@ -198,7 +198,7 @@ public class OWLDataLoader extends SimpleWorker {
         }
         
         OntologyElementType type = hasChildren ? new Category() : new Tag();
-        Entity newTerm = saveObjects ? ModelMgr.getModelMgr().createOntologyTerm(parentEntity.getId(), label, type, orderIndex) : new Entity();
+        Entity newTerm = saveObjects ? ModelMgr.getModelMgr().createOntologyTerm(root.getId(), parentEntity.getId(), label, type, orderIndex) : new Entity();
         incrementProgress();
 
         if (out != null) out.println(label + " (" + type.getName() + " saved as " + newTerm.getId() + ")");

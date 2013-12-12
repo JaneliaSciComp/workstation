@@ -68,9 +68,9 @@ public class SliceViewViewer extends Viewer {
 
         // intial rooted entity should be a brain sample or a workspace; the QuadViewUI wants
         //  the intial entity, but we need the sample either way to be able to open it:
-        if (initialEntity.getEntityType().getName().equals(EntityConstants.TYPE_3D_TILE_MICROSCOPE_SAMPLE)) {
+        if (initialEntity.getEntityTypeName().equals(EntityConstants.TYPE_3D_TILE_MICROSCOPE_SAMPLE)) {
             sliceSample = initialEntity;
-        } else if (initialEntity.getEntityType().getName().equals(EntityConstants.TYPE_TILE_MICROSCOPE_WORKSPACE)) {
+        } else if (initialEntity.getEntityTypeName().equals(EntityConstants.TYPE_TILE_MICROSCOPE_WORKSPACE)) {
             String sampleID = initialEntity.getValueByAttributeName(EntityConstants.ATTRIBUTE_WORKSPACE_SAMPLE_IDS);
             try {
                 sliceSample = ModelMgr.getModelMgr().getEntityById(sampleID);
@@ -82,7 +82,7 @@ public class SliceViewViewer extends Viewer {
         refresh();
 
         // be sure we've successfully gotten the sample before loading it!
-        if (sliceSample.getEntityType().getName().equals(EntityConstants.TYPE_3D_TILE_MICROSCOPE_SAMPLE)) {
+        if (sliceSample.getEntityTypeName().equals(EntityConstants.TYPE_3D_TILE_MICROSCOPE_SAMPLE)) {
             try {
                 viewUI.loadFile(sliceSample.getValueByAttributeName(EntityConstants.ATTRIBUTE_FILE_PATH));
             }

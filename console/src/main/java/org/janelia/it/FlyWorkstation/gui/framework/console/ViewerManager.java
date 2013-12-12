@@ -205,7 +205,7 @@ public class ViewerManager {
 	
 	private Class getViewerClass(RootedEntity rootedEntity) {
 		Class viewerClass = IconDemoPanel.class;
-		String type = rootedEntity.getEntity().getEntityType().getName();
+		String type = rootedEntity.getEntity().getEntityTypeName();
 		
 		if (EntityConstants.TYPE_ERROR.equals(type)) {
 			viewerClass = ErrorViewer.class;

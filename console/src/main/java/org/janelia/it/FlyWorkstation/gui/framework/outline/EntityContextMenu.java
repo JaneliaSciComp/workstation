@@ -201,7 +201,7 @@ public class EntityContextMenu extends JPopupMenu {
                                         StringBuilder sBuf = new StringBuilder();
                                         sBuf.append("Name: ").append(rootedEntity.getEntity().getName()).append("\n");
                                         sBuf.append("Type: ")
-                                                .append(rootedEntity.getEntity().getEntityType().getName())
+                                                .append(rootedEntity.getEntity().getEntityTypeName())
                                                 .append("\n");
                                         sBuf.append("ID: ").append(rootedEntity.getEntity().getId().toString())
                                                 .append("\n");
@@ -286,7 +286,7 @@ public class EntityContextMenu extends JPopupMenu {
         JMenuItem toggleHudMI = null;
         if (rootedEntity != null && rootedEntity.getEntity() != null) {
             Entity entity = rootedEntity.getEntity();
-            if (!entity.getEntityType().getName().equals(EntityConstants.TYPE_FOLDER)) {
+            if (!entity.getEntityTypeName().equals(EntityConstants.TYPE_FOLDER)) {
                 toggleHudMI = new JMenuItem("  Show in Lightbox");
                 toggleHudMI.addActionListener(new ActionListener() {
                     @Override
@@ -416,7 +416,7 @@ public class EntityContextMenu extends JPopupMenu {
         JMenuItem alignBrdVwItem = null;
         if (rootedEntity != null && rootedEntity.getEntityData() != null) {
             Entity entity = rootedEntity.getEntity();
-            if (entity!=null && entity.getEntityType().getName().equals(EntityConstants.TYPE_ALIGNMENT_BOARD)) {
+            if (entity!=null && entity.getEntityTypeName().equals(EntityConstants.TYPE_ALIGNMENT_BOARD)) {
                 alignBrdVwItem = new JMenuItem("  Open In Alignment Board Viewer");
                 alignBrdVwItem.addActionListener(new ActionListener() {
                     @Override
@@ -438,7 +438,7 @@ public class EntityContextMenu extends JPopupMenu {
         
         if (rootedEntity != null && rootedEntity.getEntityData() != null) {
             Entity entity = rootedEntity.getEntity();
-            if (entity!=null && (entity.getEntityType().getName().equals(EntityConstants.TYPE_SAMPLE))) {
+            if (entity!=null && (entity.getEntityTypeName().equals(EntityConstants.TYPE_SAMPLE))) {
                 Action action = new CreateAlignmentBoardAction("  Open In New Alignment Board Viewer",rootedEntity);
                 alignmentBoardItem = getActionItem(action);
             }
@@ -451,8 +451,8 @@ public class EntityContextMenu extends JPopupMenu {
         JMenuItem sliceVwItem = null;
         if (rootedEntity != null && rootedEntity.getEntityData() != null) {
             Entity entity = rootedEntity.getEntity();
-            if (entity.getEntityType().getName().equals(EntityConstants.TYPE_3D_TILE_MICROSCOPE_SAMPLE) || 
-                entity.getEntityType().getName().equals(EntityConstants.TYPE_TILE_MICROSCOPE_WORKSPACE)) {
+            if (entity.getEntityTypeName().equals(EntityConstants.TYPE_3D_TILE_MICROSCOPE_SAMPLE) || 
+                entity.getEntityTypeName().equals(EntityConstants.TYPE_TILE_MICROSCOPE_WORKSPACE)) {
                 sliceVwItem = new JMenuItem("  Open Slice Viewer");
                 sliceVwItem.addActionListener(new ActionListener() {
                     @Override
@@ -516,7 +516,7 @@ public class EntityContextMenu extends JPopupMenu {
         
         JMenu relatedMenu = new JMenu("  Go To Related");
         Entity entity = rootedEntity.getEntity();
-        String type = entity.getEntityType().getName();
+        String type = entity.getEntityTypeName();
         if (type.equals(EntityConstants.TYPE_NEURON_FRAGMENT) || type.equals(EntityConstants.TYPE_LSM_STACK)
                 || type.equals(EntityConstants.TYPE_NEURON_SEPARATOR_PIPELINE_RESULT)
                 || type.equals(EntityConstants.TYPE_CURATED_NEURON)
@@ -525,7 +525,7 @@ public class EntityContextMenu extends JPopupMenu {
                                 EntityConstants.TYPE_NEURON_SEPARATOR_PIPELINE_RESULT));
             add(relatedMenu, getAncestorEntityItem(entity, EntityConstants.TYPE_SAMPLE, EntityConstants.TYPE_SAMPLE));
         }
-        else if (entity.getEntityType().getName().equals(EntityConstants.TYPE_FLY_LINE)) {
+        else if (entity.getEntityTypeName().equals(EntityConstants.TYPE_FLY_LINE)) {
             add(relatedMenu, getChildEntityItem(entity, EntityConstants.ATTRIBUTE_REPRESENTATIVE_SAMPLE));
             add(relatedMenu, getChildEntityItem(entity, EntityConstants.ATTRIBUTE_ORIGINAL_FLYLINE));
             add(relatedMenu, getChildEntityItem(entity, EntityConstants.ATTRIBUTE_BALANCED_FLYLINE));
@@ -636,7 +636,7 @@ public class EntityContextMenu extends JPopupMenu {
     // rootedEntity.getEntity().getName();
     // StringBuilder sBuf = new StringBuilder();
     // sBuf.append("Name: ").append(rootedEntity.getEntity().getName()).append("\n");
-    // sBuf.append("Type: ").append(rootedEntity.getEntity().getEntityType().getName()).append("\n");
+    // sBuf.append("Type: ").append(rootedEntity.getEntity().getEntityTypeName()).append("\n");
     // sBuf.append("ID: ").append(rootedEntity.getEntity().getId().toString()).append("\n\n");
     // MailHelper helper = new MailHelper();
     // helper.sendEmail((String)
@@ -671,7 +671,7 @@ public class EntityContextMenu extends JPopupMenu {
 
         final Entity sample = rootedEntity.getEntity();
 
-        if (!sample.getEntityType().getName().equals(EntityConstants.TYPE_SAMPLE)) {
+        if (!sample.getEntityTypeName().equals(EntityConstants.TYPE_SAMPLE)) {
             return null;
         }
         
@@ -735,7 +735,7 @@ public class EntityContextMenu extends JPopupMenu {
         
         final Entity sample = rootedEntity.getEntity();
 
-        if (!sample.getEntityType().getName().equals(EntityConstants.TYPE_SAMPLE)) {
+        if (!sample.getEntityTypeName().equals(EntityConstants.TYPE_SAMPLE)) {
             return null;
         }
         
@@ -752,7 +752,7 @@ public class EntityContextMenu extends JPopupMenu {
                         ModelMgr.getModelMgr().loadLazyEntity(sample, false);
                         Entity alignedSample = null;
                         for(Entity child : sample.getChildren()) {
-                            if (child.getEntityType().getName().equals(EntityConstants.TYPE_SAMPLE) 
+                            if (child.getEntityTypeName().equals(EntityConstants.TYPE_SAMPLE) 
                                     && child.getValueByAttributeName(EntityConstants.ATTRIBUTE_OBJECTIVE)!=null) {
                                 alignedSample = child;
                             }
@@ -1098,7 +1098,7 @@ public class EntityContextMenu extends JPopupMenu {
         for (RootedEntity rootedEntity : rootedEntityList) {
             // Add all parent ids to a collection
             if (null != rootedEntity.getEntityData().getParentEntity()
-                    && EntityConstants.TYPE_NEURON_FRAGMENT.equals(rootedEntity.getEntity().getEntityType().getName())) {
+                    && EntityConstants.TYPE_NEURON_FRAGMENT.equals(rootedEntity.getEntity().getEntityTypeName())) {
                 parentIds.add(rootedEntity.getEntityData().getParentEntity().getId());
             }
             // if one of the selected entities has no parent or isn't owner by
@@ -1193,15 +1193,15 @@ public class EntityContextMenu extends JPopupMenu {
 
         final Entity targetEntity = rootedEntity.getEntity();
 
-        if (!targetEntity.getEntityType().getName().equals(EntityConstants.TYPE_ALIGNED_BRAIN_STACK)
-                && !targetEntity.getEntityType().getName().equals(EntityConstants.TYPE_IMAGE_3D)) {
+        if (!targetEntity.getEntityTypeName().equals(EntityConstants.TYPE_ALIGNED_BRAIN_STACK)
+                && !targetEntity.getEntityTypeName().equals(EntityConstants.TYPE_IMAGE_3D)) {
             return null;
         }
 
         String parentId = Utils.getParentIdFromUniqueId(rootedEntity.getUniqueId());
         final Entity folder = browser.getEntityOutline().getEntityByUniqueId(parentId);
 
-        if (!folder.getEntityType().getName().equals(EntityConstants.TYPE_FOLDER)) {
+        if (!folder.getEntityTypeName().equals(EntityConstants.TYPE_FOLDER)) {
             return null;
         }
 
@@ -1299,7 +1299,7 @@ public class EntityContextMenu extends JPopupMenu {
                             protected void doStuff() throws Exception {
                                 Entity targetLoaded = ModelMgr.getModelMgr().loadLazyEntity(entity, false);
                                 this.default3dImage = targetLoaded.getChildByAttributeName(EntityConstants.ATTRIBUTE_DEFAULT_3D_IMAGE);
-                                if (entity.getEntityType().getName().equals(EntityConstants.TYPE_SAMPLE)) {
+                                if (entity.getEntityTypeName().equals(EntityConstants.TYPE_SAMPLE)) {
                                     this.sample = entity;
                                 }
                                 else {
@@ -1592,7 +1592,7 @@ public class EntityContextMenu extends JPopupMenu {
     protected JMenuItem getNeuronAnnotatorItem() {
         if (multiple)
             return null;
-        final String entityType = rootedEntity.getEntity().getEntityType().getName();
+        final String entityType = rootedEntity.getEntity().getEntityTypeName();
         if (entityType.equals(EntityConstants.TYPE_NEURON_SEPARATOR_PIPELINE_RESULT)
                 || entityType.equals(EntityConstants.TYPE_NEURON_FRAGMENT)) {
             JMenuItem vaa3dMenuItem = new JMenuItem("  View In Neuron Annotator");
@@ -1718,7 +1718,7 @@ public class EntityContextMenu extends JPopupMenu {
     protected JMenuItem getImportItem() {
         if (multiple) return null;
         
-        String entityTypeName = rootedEntity.getEntity().getEntityType().getName();
+        String entityTypeName = rootedEntity.getEntity().getEntityTypeName();
         if (EntityConstants.TYPE_FOLDER.equals(entityTypeName) || EntityConstants.TYPE_SAMPLE.equals(entityTypeName)) {
             JMenuItem newAttachmentItem = new JMenuItem("  Import File(s) Here");
             newAttachmentItem.addActionListener(new ActionListener() {
@@ -1739,7 +1739,7 @@ public class EntityContextMenu extends JPopupMenu {
     protected JMenuItem getNewFolderItem() {
         if (multiple) return null;
         
-        if (EntityConstants.TYPE_FOLDER.equals(rootedEntity.getEntity().getEntityType().getName())) {
+        if (EntityConstants.TYPE_FOLDER.equals(rootedEntity.getEntity().getEntityTypeName())) {
             JMenuItem newFolderItem = new JMenuItem("  Create New Folder");
             newFolderItem.addActionListener(new ActionListener() {
                 public void actionPerformed(ActionEvent actionEvent) {

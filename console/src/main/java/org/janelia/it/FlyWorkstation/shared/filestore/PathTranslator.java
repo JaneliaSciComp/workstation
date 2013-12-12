@@ -74,7 +74,7 @@ public class PathTranslator {
     public static Entity translatePathsToCurrentPlatform(Entity entity) {
 
         for (EntityData entityData : entity.getEntityData()) {
-            if (entityData.getEntityAttribute().getName().equals(EntityConstants.ATTRIBUTE_FILE_PATH)) {
+            if (entityData.getEntityAttrName().equals(EntityConstants.ATTRIBUTE_FILE_PATH)) {
                 entityData.setValue(convertPath(entityData.getValue()));
             }
             else {
@@ -95,7 +95,7 @@ public class PathTranslator {
     public static Entity translatePathsToProxy(Entity entity) {
 
         for (EntityData entityData : entity.getEntityData()) {
-            if (entityData.getEntityAttribute().getName().equals(EntityConstants.ATTRIBUTE_FILE_PATH)) {
+            if (entityData.getEntityAttrName().equals(EntityConstants.ATTRIBUTE_FILE_PATH)) {
                 String path = entityData.getValue();
                 try {
                     String url = FileProxyService.getProxiedFileUrl(path).toString();

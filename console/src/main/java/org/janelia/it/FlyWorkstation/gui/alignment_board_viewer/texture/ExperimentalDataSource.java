@@ -62,10 +62,7 @@ public class ExperimentalDataSource implements RenderableDataSourceI {
         Entity sampleInnerEntity = new Entity();
         sampleInnerEntity.setId( 444444L );
         sampleInnerEntity.setName( "Experimental Containing Sample");
-        EntityType type = new EntityType();
-        type.setName( EntityConstants.TYPE_SAMPLE );
-        type.setId( 333333L );
-        sampleInnerEntity.setEntityType( type );
+        sampleInnerEntity.setEntityTypeName( EntityConstants.TYPE_SAMPLE );
         RootedEntity sampleRootedEntity = new RootedEntity( sampleInnerEntity );
         EntityWrapper dummySampleItemEntity = new Sample( sampleRootedEntity );
         currentCompartmentSet = null;
@@ -228,11 +225,7 @@ public class ExperimentalDataSource implements RenderableDataSourceI {
         renderableEntity.setId(111111L);
         renderableEntity.setName("Experimental Reference Channel");
 
-        EntityType type = new EntityType();
-        type.setName(EntityConstants.TYPE_NEURON_FRAGMENT );
-        type.setId( 222222L );
-
-        renderableEntity.setEntityType(type);
+        renderableEntity.setEntityTypeName(EntityConstants.TYPE_NEURON_FRAGMENT);
         renderableBean.setRenderableEntity( renderableEntity );
 
         // Trying fragment at first.

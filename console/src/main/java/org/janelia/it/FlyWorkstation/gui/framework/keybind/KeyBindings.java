@@ -114,10 +114,11 @@ public class KeyBindings {
         ontologyBindings.clear();
 
         try {
-        	OntologyKeyBindings ontologyKeyBindings = ModelMgr.getModelMgr().getKeyBindings(root.getId());
+        	OntologyKeyBindings ontologyKeyBindings = ModelMgr.getModelMgr().loadOntologyKeyBindings(root.getId());
         	Set<OntologyKeyBind> keybinds = ontologyKeyBindings.getKeybinds();
         	
         	for (OntologyKeyBind bind : keybinds) {
+                log.info("Found bind: "+bind.getKey()+" "+bind.getOntologyTermId());
                 KeyboardShortcut shortcut = KeyboardShortcut.fromString(bind.getKey());
 
                 try {

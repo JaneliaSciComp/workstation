@@ -153,7 +153,7 @@ public class ConsoleDataServiceImpl {
 	}
 	
 	public OntologyKeyBindings getKeybindings(long ontologyId) {
-		return ModelMgr.getModelMgr().getKeyBindings(ontologyId);
+		return ModelMgr.getModelMgr().loadOntologyKeyBindings(ontologyId);
 	}
 	
     public Entity getEntityById(long entityId) throws Exception {
@@ -167,10 +167,6 @@ public class ConsoleDataServiceImpl {
 	public Entity getEntityTree(long entityId) throws Exception {
         return translatePaths(FacadeManager.getFacadeManager().getEntityFacade().getEntityTree(entityId));
     }
-
-//    public List<EntityType> getEntityTypes() {
-//        return ModelMgr.getModelMgr().getEntityTypes();
-//    }
 
     public Entity[] getParentEntityArray(long childEntityId) throws Exception {
     	List<Entity> list = ModelMgr.getModelMgr().getParentEntities(childEntityId);

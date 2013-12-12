@@ -99,7 +99,7 @@ public class ModelMgrUtils {
     	
     	boolean found = false;
         List<Entity> items = new ArrayList<Entity>();
-        if (typeName==null || typeName.equals(entity.getEntityType().getName())) {
+        if (typeName==null || typeName.equals(entity.getEntityTypeName())) {
             items.add(entity);
             found = true;
         }

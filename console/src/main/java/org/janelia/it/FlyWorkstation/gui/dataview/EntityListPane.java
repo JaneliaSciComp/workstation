@@ -195,7 +195,7 @@ public abstract class EntityListPane extends JPanel implements SearchConfigurati
 
             @Override
             protected void doStuff() throws Exception {
-                titleLabel.setText("Entity: " + entity.getEntityType().getName() + " (" + entity.getName() + ")");
+                titleLabel.setText("Entity: " + entity.getEntityTypeName() + " (" + entity.getName() + ")");
                 List<Entity> entities = new ArrayList<Entity>();
                 entities.add(entity);
                 setEntities(entities);
@@ -272,7 +272,7 @@ public abstract class EntityListPane extends JPanel implements SearchConfigurati
 			value = entity.getName();
 		}
 		else if ("entity_type".equals(field)) {
-			value = entity.getEntityType().getName();
+			value = entity.getEntityTypeName();
 		}
 		else if ("username".equals(field)) {
 			value = entity.getOwnerKey();

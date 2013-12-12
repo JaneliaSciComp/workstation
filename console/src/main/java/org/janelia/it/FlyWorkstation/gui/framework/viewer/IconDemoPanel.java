@@ -438,7 +438,7 @@ public class IconDemoPanel extends IconPanel {
 					}
 				});
 
-				if (!contextRootedEntity.getEntity().getEntityType().getName().equals(EntityConstants.TYPE_FOLDER)
+				if (!contextRootedEntity.getEntity().getEntityTypeName().equals(EntityConstants.TYPE_FOLDER)
 						|| !contextRootedEntity.getEntity().getOwnerKey().equals(SessionMgr.getSubjectKey())) {
 					newFolderItem.setEnabled(false);
 				}
@@ -1326,7 +1326,7 @@ public class IconDemoPanel extends IconPanel {
 			
 			for(EntityData ed : rootedEntity.getEntity().getEntityData()) {
 				if (EntityUtils.hasImageRole(ed)) {
-					imageRoles.add(ed.getEntityAttribute().getName());
+					imageRoles.add(ed.getEntityAttrName());
 				}
 			}
 		}

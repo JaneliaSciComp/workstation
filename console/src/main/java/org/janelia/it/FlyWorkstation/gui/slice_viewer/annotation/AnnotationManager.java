@@ -133,11 +133,11 @@ elements of what's been done; that's handled by signals emitted from AnnotationM
      */
     public void setInitialEntity(final Entity initialEntity) {
         this.initialEntity = initialEntity;
-        if (initialEntity.getEntityType().getName().equals(EntityConstants.TYPE_3D_TILE_MICROSCOPE_SAMPLE)) {
+        if (initialEntity.getEntityTypeName().equals(EntityConstants.TYPE_3D_TILE_MICROSCOPE_SAMPLE)) {
             // if it's a bare sample, we don't have anything to do
         }
 
-        else if (initialEntity.getEntityType().getName().equals(EntityConstants.TYPE_TILE_MICROSCOPE_WORKSPACE)) {
+        else if (initialEntity.getEntityTypeName().equals(EntityConstants.TYPE_TILE_MICROSCOPE_WORKSPACE)) {
             SimpleWorker loader = new SimpleWorker() {
                 @Override
                 protected void doStuff() throws Exception {
@@ -574,9 +574,9 @@ elements of what's been done; that's handled by signals emitted from AnnotationM
 
         // check that the entity *is* a workspace or brain sample, and get the sample ID:
         Long sampleID;
-        if (initialEntity.getEntityType().getName().equals(EntityConstants.TYPE_3D_TILE_MICROSCOPE_SAMPLE)) {
+        if (initialEntity.getEntityTypeName().equals(EntityConstants.TYPE_3D_TILE_MICROSCOPE_SAMPLE)) {
             sampleID = initialEntity.getId();
-        } else if (initialEntity.getEntityType().getName().equals(EntityConstants.TYPE_TILE_MICROSCOPE_WORKSPACE)) {
+        } else if (initialEntity.getEntityTypeName().equals(EntityConstants.TYPE_TILE_MICROSCOPE_WORKSPACE)) {
             sampleID = annotationModel.getCurrentWorkspace().getSampleID();
         } else {
             JOptionPane.showMessageDialog(null,

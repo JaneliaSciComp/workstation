@@ -76,7 +76,7 @@ public class Neo4jBatchExporter {
 		
 //		System.out.println("  Processing "+entity.getName());
 		
-		String type = entity.getEntityType().getName();
+		String type = entity.getEntityTypeName();
 		Color nodeColor = getNodeColor(entity);
 		int count = entity.getEntityData().size();
 		int size = (int)Math.round(Math.log(count) + 1);
@@ -96,7 +96,7 @@ public class Neo4jBatchExporter {
 		Map<Long,Integer> edgeCounts = new HashMap<Long,Integer>();
 		
 		for(EntityData ed : entity.getEntityData()) {
-			String attr = ed.getEntityAttribute().getName();
+			String attr = ed.getEntityAttrName();
 			if (EntityConstants.ATTRIBUTE_DEFAULT_2D_IMAGE.equals(attr) || 
 					EntityConstants.ATTRIBUTE_REFERENCE_MIP_IMAGE.equals(attr)|| 
 					EntityConstants.ATTRIBUTE_SIGNAL_MIP_IMAGE.equals(attr)) {
@@ -122,7 +122,7 @@ public class Neo4jBatchExporter {
 				Entity child = entityBean.getEntityById(null, ed.getChildEntity().getId());
 				Color edgeColor = darkGrey;
 				int weight = 1 + edgeCounts.get(child.getId());
-				edgesStream.print(getEdgeCSV(ed.getId().toString(), ed.getEntityAttribute().getName(), 
+				edgesStream.print(getEdgeCSV(ed.getId().toString(), ed.getEntityAttrName(), 
 						entity.getId().toString(), child.getId().toString(), edgeColor, weight, "solid"));
 				printEntityTreeToBuffers(child);
 			}
@@ -171,7 +171,7 @@ public class Neo4jBatchExporter {
 	}
 
 	private Color getNodeColor(Entity entity) {
-		String type = entity.getEntityType().getName();
+		String type = entity.getEntityTypeName();
 		Color nodeColor = lightGrey;
 		if (EntityConstants.TYPE_SAMPLE.equals(type) || EntityConstants.TYPE_SCREEN_SAMPLE.equals(type)) {
 			nodeColor = blue;

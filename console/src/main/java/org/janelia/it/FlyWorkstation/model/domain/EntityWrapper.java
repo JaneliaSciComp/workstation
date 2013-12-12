@@ -4,7 +4,6 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
-import org.janelia.it.FlyWorkstation.api.entity_model.management.ModelMgr;
 import org.janelia.it.FlyWorkstation.model.entity.RootedEntity;
 import org.janelia.it.jacs.model.entity.Entity;
 
@@ -21,7 +20,6 @@ public abstract class EntityWrapper {
     
     private List<EntityWrapper> children;
     private EntityWrapper parent;
-    private List<Annotation> annotations;
     
     public EntityWrapper(RootedEntity rootedEntity) {
         this.rootedEntity = rootedEntity;
@@ -49,15 +47,13 @@ public abstract class EntityWrapper {
     }
 
     public String getType() {
-        if (entity.getEntityType()==null) return null;
-        return entity.getEntityType().getName();
+        return entity.getEntityTypeName();
     }
     
     public String getRole() {
         if (rootedEntity==null) return null;
         if (rootedEntity.getEntityData()==null) return null;
-        if (rootedEntity.getEntityData().getEntityAttribute()==null) return null;
-        return rootedEntity.getEntityData().getEntityAttribute().getName();
+        return rootedEntity.getEntityData().getEntityAttrName();
     }
     
     public String getOwnerKey() {
@@ -82,14 +78,6 @@ public abstract class EntityWrapper {
 
     public List<EntityWrapper> getChildren() {
         return children;
-    }
-    
-    public List<Annotation> retrieveAnnotations() throws Exception {
-        if (annotations==null) {
-            ModelMgr.getModelMgr().getAnnotationsForEntity(entity.getId());
-            // TODO: populate them
-        }
-        return annotations;
     }
     
     protected void initChildren() {

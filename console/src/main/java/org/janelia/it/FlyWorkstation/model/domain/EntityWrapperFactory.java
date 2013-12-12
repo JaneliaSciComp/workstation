@@ -13,7 +13,7 @@ import org.janelia.it.jacs.model.entity.EntityConstants;
 public class EntityWrapperFactory {
 
     public static EntityWrapper wrap(RootedEntity rootedEntity) {
-        String type = rootedEntity.getEntity().getEntityType().getName();
+        String type = rootedEntity.getEntity().getEntityTypeName();
         if (EntityConstants.TYPE_FOLDER.equals(type)) {
             return new Folder(rootedEntity);
         }

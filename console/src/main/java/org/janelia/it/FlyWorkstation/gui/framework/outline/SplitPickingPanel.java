@@ -335,7 +335,7 @@ public class SplitPickingPanel extends JPanel implements Refreshable {
 					log.warn("entitySelected: cannot find entity with id="+rootedEntityId);
 					return;
 				}
-				if (!rootedEntity.getEntity().getEntityType().getName().equals(EntityConstants.TYPE_SCREEN_SAMPLE_CROSS)) {
+				if (!rootedEntity.getEntity().getEntityTypeName().equals(EntityConstants.TYPE_SCREEN_SAMPLE_CROSS)) {
 					return;
 				}
 				
@@ -690,7 +690,7 @@ public class SplitPickingPanel extends JPanel implements Refreshable {
 			for(String mainSelectionId : mainSelectionIds) {
 				if (rootedEntity.getId().equals(mainSelectionId)) {
 					Entity sample = rootedEntity.getEntity();
-					if (!sample.getEntityType().getName().equals(EntityConstants.TYPE_SCREEN_SAMPLE) && !sample.getEntityType().getName().equals(EntityConstants.TYPE_FLY_LINE)) {
+					if (!sample.getEntityTypeName().equals(EntityConstants.TYPE_SCREEN_SAMPLE) && !sample.getEntityTypeName().equals(EntityConstants.TYPE_FLY_LINE)) {
 						JOptionPane.showMessageDialog(SessionMgr.getBrowser(), "Not a Screen Sample or Fly Line: "+sample.getName(), "Error", JOptionPane.ERROR_MESSAGE);
 						return;
 					}
@@ -705,7 +705,7 @@ public class SplitPickingPanel extends JPanel implements Refreshable {
 			for(String secSelectionId : secSelectionIds) {
 				if (rootedEntity.getId().equals(secSelectionId)) {
 					Entity sample = rootedEntity.getEntity();
-					if (!sample.getEntityType().getName().equals(EntityConstants.TYPE_SCREEN_SAMPLE) && !sample.getEntityType().getName().equals(EntityConstants.TYPE_FLY_LINE)) {
+					if (!sample.getEntityTypeName().equals(EntityConstants.TYPE_SCREEN_SAMPLE) && !sample.getEntityTypeName().equals(EntityConstants.TYPE_FLY_LINE)) {
 						JOptionPane.showMessageDialog(SessionMgr.getBrowser(), "Not a Screen Sample or Fly Line: "+sample.getName(), "Error", JOptionPane.ERROR_MESSAGE);
 						return;
 					}
@@ -817,7 +817,7 @@ public class SplitPickingPanel extends JPanel implements Refreshable {
 								childrenIds.add(sample2.getId());
 								ModelMgr.getModelMgr().addChildren(cross.getId(), childrenIds, EntityConstants.ATTRIBUTE_ENTITY);
 								
-								if (sample1.getEntityType().getName().equals(EntityConstants.TYPE_FLY_LINE)) {
+								if (sample1.getEntityTypeName().equals(EntityConstants.TYPE_FLY_LINE)) {
 									Entity rep = sample1.getChildByAttributeName(EntityConstants.ATTRIBUTE_REPRESENTATIVE_SAMPLE);
 									sampleIds1.add(rep.getId());
 								}
@@ -825,7 +825,7 @@ public class SplitPickingPanel extends JPanel implements Refreshable {
 									sampleIds1.add(sample1.getId());	
 								}
 								
-								if (sample2.getEntityType().getName().equals(EntityConstants.TYPE_FLY_LINE)) {
+								if (sample2.getEntityTypeName().equals(EntityConstants.TYPE_FLY_LINE)) {
 									Entity rep = sample2.getChildByAttributeName(EntityConstants.ATTRIBUTE_REPRESENTATIVE_SAMPLE);
 									sampleIds2.add(rep.getId());
 								}
@@ -1029,7 +1029,7 @@ public class SplitPickingPanel extends JPanel implements Refreshable {
 		if (selected!=null && selected.size()==1) {
 			Entity crossEntity = selected.get(0).getEntity();
 			for(EntityData childEd : crossEntity.getOrderedEntityData()) {
-				if (!childEd.getEntityAttribute().getName().equals(EntityConstants.ATTRIBUTE_ENTITY)) continue;
+				if (!childEd.getEntityAttrName().equals(EntityConstants.ATTRIBUTE_ENTITY)) continue;
 				if (entity1 == null) {
 					entity1 = childEd.getChildEntity();
 				}
@@ -1305,10 +1305,10 @@ public class SplitPickingPanel extends JPanel implements Refreshable {
 					Entity flylineAd = null;
 					Entity flylineDbd = null;
 					
-					if (crossEntity.getEntityType().getName().equals(EntityConstants.TYPE_SCREEN_SAMPLE_CROSS)) {
+					if (crossEntity.getEntityTypeName().equals(EntityConstants.TYPE_SCREEN_SAMPLE_CROSS)) {
 
 						for (Entity child : crossEntity.getChildren()) {
-							if (child.getEntityType().getName().equals(EntityConstants.TYPE_FLY_LINE)) {
+							if (child.getEntityTypeName().equals(EntityConstants.TYPE_FLY_LINE)) {
 								String splitPart = child.getValueByAttributeName(EntityConstants.ATTRIBUTE_SPLIT_PART);
 								if ("AD".equals(splitPart)) {
 									flylineAd = child;

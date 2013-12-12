@@ -135,7 +135,7 @@ public class Hud extends ModalDialog {
             dirtyEntityFor3D = false;
         }
         else {
-            logger.info( "HUD: entity type is {}", entity.getEntityType().getName() );
+            logger.info( "HUD: entity type is {}", entity.getEntityTypeName() );
             boolean imageEstablished = false;
             try {
                 imageEstablished = establishImage();
@@ -158,7 +158,7 @@ public class Hud extends ModalDialog {
             }
             else {
                 JOptionPane.showMessageDialog( SessionMgr.getBrowser(), "Sorry, no image to display." );
-                logger.info( "No image established for {}:{}", entity.getName(), entity.getEntityType() );
+                logger.info( "No image established for {}:{}", entity.getName(), entity.getEntityTypeName() );
             }
         }
         mip3d.repaint();

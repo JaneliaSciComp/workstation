@@ -120,8 +120,8 @@ public class EntityTreeCellRenderer extends DefaultTreeCellRenderer implements T
             
             if (entity!= null) {
                 
-                String entityAttrName = ed.getEntityAttribute()==null?"":ed.getEntityAttribute().getName();
-                String entityTypeName = entity.getEntityType()==null?"":entity.getEntityType().getName();
+                String entityAttrName = ed.getEntityAttrName()==null?"":ed.getEntityAttrName();
+                String entityTypeName = entity.getEntityTypeName()==null?"":entity.getEntityTypeName();
                 
                 // Set the labels
                 titleLabel.setText(entity.getName());

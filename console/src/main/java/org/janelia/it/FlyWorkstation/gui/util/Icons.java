@@ -135,7 +135,7 @@ public class Icons {
      * @return
      */
     public static BufferedImage getLargeIconAsBufferedImage(Entity entity) {
-        String type = entity.getEntityType().getName();
+        String type = entity.getEntityTypeName();
     	if (imageCache.containsKey(type)) {
     		return imageCache.get(type);
     	}
@@ -153,11 +153,11 @@ public class Icons {
      */
     public static ImageIcon getIcon(Entity entity, boolean large) {
         
-        if (entity.getEntityType()==null) {
+        if (entity.getEntityTypeName()==null) {
             return getIcon(large ? "error_large.png" : "bullet_error.png");
         }
         
-        String type = entity.getEntityType().getName();
+        String type = entity.getEntityTypeName();
         
         if (EntityConstants.TYPE_FOLDER.equals(type) || EntityConstants.TYPE_ONTOLOGY_ROOT.equals(type)) {
             if (large) return getIcon("folder_large.png");

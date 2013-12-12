@@ -64,14 +64,12 @@ public class RootedEntity {
     }
 
     public String getType() {
-        if (getEntity().getEntityType()==null) return null;
-        return getEntity().getEntityType().getName();
+        return getEntity().getEntityTypeName();
     }
     
     public String getRole() {
         if (getEntityData()==null) return null;
-        if (getEntityData().getEntityAttribute()==null) return null;
-        return getEntityData().getEntityAttribute().getName();
+        return getEntityData().getEntityAttrName();
     }
     
     public String getOwnerKey() {
@@ -104,7 +102,7 @@ public class RootedEntity {
         for (EntityData entityData : getEntity().getOrderedEntityData()) {
             Entity child = entityData.getChildEntity();
             if (child != null) {
-                if (typeName==null || typeName.equals(child.getEntityType().getName())) {
+                if (typeName==null || typeName.equals(child.getEntityTypeName())) {
                     items.add(getChild(entityData));
                 }
             }
@@ -124,7 +122,7 @@ public class RootedEntity {
     public List<RootedEntity> getChildrenForAttribute(String attrName) {
         List<RootedEntity> items = new ArrayList<RootedEntity>();
         for (EntityData entityData : getEntity().getOrderedEntityData()) {
-            if (attrName==null || attrName.equals(entityData.getEntityAttribute().getName())) {
+            if (attrName==null || attrName.equals(entityData.getEntityAttrName())) {
                 Entity child = entityData.getChildEntity();
                 if (child != null) {
                     items.add(getChild(entityData));
@@ -149,7 +147,7 @@ public class RootedEntity {
     	for(EntityData ed : eds) {
     		Entity child = ed.getChildEntity();
     		if (child!=null) {
-	    		if (!child.getEntityType().getName().equals(entityTypeName)) continue;
+	    		if (!child.getEntityTypeName().equals(entityTypeName)) continue;
 	    		return getChild(ed);
     		}
     	}
@@ -159,7 +157,7 @@ public class RootedEntity {
     public EntityData getEntityDataByAttributeName(String attributeName) {
         Set<EntityData> matchingData = new HashSet<EntityData>();
         for (EntityData ed : getEntity().getEntityData()) {
-            if (ed.getEntityAttribute().getName().matches(attributeName)) {
+            if (ed.getEntityAttrName().matches(attributeName)) {
                 matchingData.add(ed);
             }
         }

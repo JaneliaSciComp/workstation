@@ -221,7 +221,7 @@ public class SearchConfiguration {
 			value = entity.getName();
 		}
 		else if ("entity_type".equals(fieldName)) {
-			value = entity.getEntityType().getName();
+			value = entity.getEntityTypeName();
 		}
 		else if ("username".equals(fieldName)) {
 			value = ModelMgrUtils.getNameFromSubjectKey(entity.getOwnerKey());

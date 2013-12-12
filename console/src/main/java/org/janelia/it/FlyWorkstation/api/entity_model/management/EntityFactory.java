@@ -23,7 +23,7 @@ public class EntityFactory {
             throw new IllegalStateException(" You must get the EntityFactory from the ModelMgr!! ");
     }
 
-    public Entity create(Long id, String name, EntityType type, String ownerKey, Entity parent) {
+    public Entity create(Long id, String name, String type, String ownerKey, Entity parent) {
         Date date = new Date();
         Entity newEntity = null;
         Entity entityParent = null;
@@ -35,7 +35,7 @@ public class EntityFactory {
             if (EntityConstants.TYPE_IMAGE_3D.equals(type)) {
             }
             else {
-                newEntity = new Entity(id, name, ownerKey, null, type, date, date, new HashSet<EntityData>());
+                newEntity = new Entity(id, name, ownerKey, type, date, date, new HashSet<EntityData>());
             }
         }
         catch (Exception fcEx) {

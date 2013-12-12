@@ -341,7 +341,7 @@ public class EntityDetailsPanel extends JPanel implements Accessibility, Refresh
             return;
         }
     	EntityData entityData = rootedEntity.getEntityData();
-    	loadEntity(rootedEntity.getEntity(), entityData.getEntityAttribute().getName(), defaultTab);
+    	loadEntity(rootedEntity.getEntity(), entityData.getEntityAttrName(), defaultTab);
     }
 
     public void loadEntity(final Entity entity) {
@@ -409,7 +409,8 @@ public class EntityDetailsPanel extends JPanel implements Accessibility, Refresh
 		        
 		        attributesTable.addRow(new AttributeValue("GUID", ""+loadedEntity.getId()));
         		attributesTable.addRow(new AttributeValue("Name", loadedEntity.getName()));
-        		attributesTable.addRow(new AttributeValue("Type", loadedEntity.getEntityType().getName()));
+        		attributesTable.addRow(new AttributeValue("Type", loadedEntity.getEntityTypeName()));
+                attributesTable.addRow(new AttributeValue("Num Children", ""+loadedEntity.getNumChildren()));
         		if (role!=null) {
         			attributesTable.addRow(new AttributeValue("Role", role));
         		}
@@ -426,13 +427,13 @@ public class EntityDetailsPanel extends JPanel implements Accessibility, Refresh
                 Collections.sort(entityDatas, new Comparator<EntityData>() {
                     @Override
                     public int compare(EntityData o1, EntityData o2) {
-                        return o1.getEntityAttribute().getName().compareTo(o2.getEntityAttribute().getName());
+                        return o1.getEntityAttrName().compareTo(o2.getEntityAttrName());
                     }
                 });
                 
 		        for (EntityData entityData : entityDatas) {
 		        	if (entityData.getChildEntity()==null) {
-		        	    String attrName = entityData.getEntityAttribute().getName();
+		        	    String attrName = entityData.getEntityAttrName();
 		        		AttributeValue attrValue = new AttributeValue(attrName, entityData.getValue());
 		        		attrNames.add(attrName);
 		        		attributesTable.addRow(attrValue);

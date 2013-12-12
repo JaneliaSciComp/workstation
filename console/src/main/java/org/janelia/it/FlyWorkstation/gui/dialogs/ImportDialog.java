@@ -208,7 +208,7 @@ public class ImportDialog extends ModalDialog {
         } else {
             
 
-            String rootEntityType = rootedEntity.getEntity().getEntityType().getName();
+            String rootEntityType = rootedEntity.getEntity().getEntityTypeName();
             if (EntityConstants.TYPE_SAMPLE.equals(rootEntityType)) {                
                 folderField.setEnabled(false);
                 folderName = rootedEntity.getName()+"/"+DEFAULT_FOLDER_NAME;

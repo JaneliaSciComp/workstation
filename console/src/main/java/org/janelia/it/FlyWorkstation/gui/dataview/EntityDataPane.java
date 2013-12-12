@@ -233,7 +233,7 @@ public class EntityDataPane extends JPanel {
         // Build the data in column order
         for (EntityData entityData : datas) {
             Vector<String> rowData = new Vector<String>();
-            rowData.add((entityData.getEntityAttribute() == null) ? "" : entityData.getEntityAttribute().getName());
+            rowData.add((entityData.getEntityAttrName() == null) ? "" : entityData.getEntityAttrName());
             rowData.add(entityData.getId().toString());
             rowData.add((entityData.getOwnerKey() == null) ? "" : entityData.getOwnerKey());
             rowData.add((entityData.getUpdatedDate() == null) ? "" : entityData.getUpdatedDate().toString());

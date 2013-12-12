@@ -248,18 +248,6 @@ public class BookmarkInfo extends InfoObject {
         searchValue = EntityConstants.TYPE_SAMPLE;
     }
 
-
-    /**
-     * Helper method that checks if a property needed to name a bookmark exists.
-     */
-    private boolean propertyExists(String propertyName, Entity lastSelection) {
-        if (lastSelection.getAttributeByName(propertyName)!=null &&
-                lastSelection.getAttributeByName(propertyName).getName()!=null &&
-                !lastSelection.getAttributeByName(propertyName).getName().equals("")) return true;
-        else return false;
-    }
-
-
     public NavigationPath getNavigationPath() /*throws InvalidPropertyFormat*/ {
         NavigationPath[] paths = new NavigationPath[0];
 //        if (getGenomeVersion()==null) return null;

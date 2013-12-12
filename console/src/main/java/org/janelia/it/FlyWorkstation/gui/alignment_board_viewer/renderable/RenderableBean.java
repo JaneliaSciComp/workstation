@@ -52,7 +52,7 @@ public class RenderableBean {
 
     public void setRenderableEntity(Entity entity) {
         this.renderableEntity = entity;
-        String typeName = entity.getEntityType().getName();
+        String typeName = entity.getEntityTypeName();
         if ( this.type == null ) {
             this.type = typeName;
         }

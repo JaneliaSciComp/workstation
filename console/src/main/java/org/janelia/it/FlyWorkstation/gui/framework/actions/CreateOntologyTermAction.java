@@ -106,7 +106,7 @@ public class CreateOntologyTermAction implements Action {
             
             @Override
             protected void doStuff() throws Exception {
-                ModelMgr.getModelMgr().createOntologyTerm(element.getId(), termName, childType, null);
+                ModelMgr.getModelMgr().createOntologyTerm(ontologyRoot.getId(), element.getId(), termName, childType, null);
             }
             
             @Override

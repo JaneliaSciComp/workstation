@@ -35,22 +35,12 @@ public class ForbiddenEntity extends Entity {
 	}
 
 	@Override
-	public EntityStatus getEntityStatus() {
+	public String getEntityTypeName() {
 		throw new AccessControlException("Access denied to entity "+entity.getId());
 	}
 
 	@Override
-	public void setEntityStatus(EntityStatus entityStatus) {
-		throw new AccessControlException("Access denied to entity "+entity.getId());
-	}
-
-	@Override
-	public EntityType getEntityType() {
-		throw new AccessControlException("Access denied to entity "+entity.getId());
-	}
-
-	@Override
-	public void setEntityType(EntityType entityType) {
+	public void setEntityTypeName(String entityTypeName) {
 		throw new AccessControlException("Access denied to entity "+entity.getId());
 	}
 
@@ -111,11 +101,6 @@ public class ForbiddenEntity extends Entity {
 
 	@Override
 	public void setEntityActorPermissions(Set<EntityActorPermission> entityActorPermissions) {
-		throw new AccessControlException("Access denied to entity "+entity.getId());
-	}
-
-	@Override
-	public EntityAttribute getAttributeByName(String name) {
 		throw new AccessControlException("Access denied to entity "+entity.getId());
 	}
 

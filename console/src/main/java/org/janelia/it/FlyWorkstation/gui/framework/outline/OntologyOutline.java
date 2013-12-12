@@ -1,6 +1,5 @@
 package org.janelia.it.FlyWorkstation.gui.framework.outline;
 
-import java.awt.Dimension;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.ComponentAdapter;
@@ -46,7 +45,6 @@ import org.janelia.it.FlyWorkstation.api.entity_model.events.EntityInvalidationE
 import org.janelia.it.FlyWorkstation.api.entity_model.events.EntityRemoveEvent;
 import org.janelia.it.FlyWorkstation.api.entity_model.management.EntitySelectionModel;
 import org.janelia.it.FlyWorkstation.api.entity_model.management.ModelMgr;
-import org.janelia.it.FlyWorkstation.gui.dialogs.AnnotationDetailsDialog;
 import org.janelia.it.FlyWorkstation.gui.dialogs.EntityDetailsDialog;
 import org.janelia.it.FlyWorkstation.gui.dialogs.KeyBindDialog;
 import org.janelia.it.FlyWorkstation.gui.framework.actions.Action;
@@ -556,7 +554,7 @@ public abstract class OntologyOutline extends EntityTree implements Refreshable,
     public void entityCreated(EntityCreateEvent event) {
         
         Entity entity = event.getEntity();
-        if (entity.getEntityType().getName().equals(EntityConstants.TYPE_ONTOLOGY_ROOT)) {
+        if (entity.getEntityTypeName().equals(EntityConstants.TYPE_ONTOLOGY_ROOT)) {
             log.debug("New ontology root detected: '{}'",entity.getName());
             
             if (entityRootList!=null) {
@@ -571,7 +569,7 @@ public abstract class OntologyOutline extends EntityTree implements Refreshable,
         super.entityRemoved(event);
         
         Entity entity = event.getEntity();
-        if (entity.getEntityType().getName().equals(EntityConstants.TYPE_ONTOLOGY_ROOT)) {
+        if (entity.getEntityTypeName().equals(EntityConstants.TYPE_ONTOLOGY_ROOT)) {
             log.debug("Ontology was deleted: '{}'",entity.getName());
 
             if (entityRootList!=null) {

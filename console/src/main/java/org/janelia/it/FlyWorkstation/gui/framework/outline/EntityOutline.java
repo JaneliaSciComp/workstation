@@ -109,19 +109,12 @@ public abstract class EntityOutline extends EntityTree implements Refreshable, A
 		
         this.entityRootList = entityRootList;
         
-		EntityType rootType = new EntityType();
-		rootType.setName("");
-		rootType.setAttributes(new HashSet<EntityAttribute>());
-		
 		this.root = new Entity();
-		root.setEntityType(rootType);
+		root.setEntityTypeName("");
 		root.setName("Data");
 		
 		if (null != entityRootList && entityRootList.size() >= 1) {
-            EntityType type = new EntityType();
-            type.setName("Folder");
-            type.setAttributes(new HashSet<EntityAttribute>());
-            root.setEntityType(type);
+            root.setEntityTypeName(EntityConstants.TYPE_FOLDER);
 			
 			for (Entity commonRoot : entityRootList) {
 				addTopLevelEntity(root, commonRoot);
@@ -130,12 +123,8 @@ public abstract class EntityOutline extends EntityTree implements Refreshable, A
 			initializeTree(root);
 		} 
 		else {
-			EntityType type = new EntityType();
-			type.setName("");
-			type.setAttributes(new HashSet<EntityAttribute>());
-			
 			Entity noDataEntity = new Entity();
-			noDataEntity.setEntityType(type);
+			noDataEntity.setEntityTypeName("");
 			noDataEntity.setName("No data");
 
 			addTopLevelEntity(root, noDataEntity);
@@ -145,11 +134,9 @@ public abstract class EntityOutline extends EntityTree implements Refreshable, A
 	}
 
 	protected EntityData addTopLevelEntity(Entity rootEntity, Entity entity) {
-	    EntityAttribute entityAttribute = new EntityAttribute();
-	    entityAttribute.setName(EntityConstants.ATTRIBUTE_ENTITY);
 		EntityData ed = new EntityData();
 		ed.setChildEntity(entity);
-		ed.setEntityAttribute(entityAttribute);
+		ed.setEntityAttrName(EntityConstants.ATTRIBUTE_ENTITY);
 		ed.setOrderIndex(rootEntity.getMaxOrderIndex() + 1);
 		ed.setOwnerKey(entity.getOwnerKey());
 		rootEntity.getEntityData().add(ed);
@@ -285,7 +272,7 @@ public abstract class EntityOutline extends EntityTree implements Refreshable, A
 		// Create context menu
 		final EntityOutlineContextMenu popupMenu = new EntityOutlineContextMenu(node, selectedTree.getUniqueId(node));
 			
-		if ("".equals(getRootEntity().getEntityType().getName())) return;
+		if ("".equals(getRootEntity().getEntityTypeName())) return;
 		
 		if (node != null) {
 			final Entity entity = getEntity(node);

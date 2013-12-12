@@ -84,8 +84,8 @@ public class ModelMgr {
     private final EntitySelectionModel entitySelectionModel;
     private final UserColorMapping userColorMapping;
 
-    private Entity selectedOntology;
-    private OntologyKeyBindings ontologyKeyBindings;
+//    private Entity selectedOntology;
+//    private OntologyKeyBindings ontologyKeyBindings;
     private AnnotationSession annotationSession;
     private OntologyAnnotation currentSelectedOntologyAnnotation;
     
@@ -147,11 +147,11 @@ public class ModelMgr {
         FacadeManager.deregisterExceptionHandler(handler);
     }
 
-    public void initErrorOntology(){
+    public void initErrorOntology() {
         SimpleWorker worker = new SimpleWorker() {
             @Override
             protected void doStuff() throws Exception {
-                ERROR_ONTOLOGY = getOntology(getErrorOntologyEntity().getId());
+                ERROR_ONTOLOGY = FacadeManager.getFacadeManager().getOntologyFacade().getErrorOntology();
             }
 
             @Override
@@ -240,27 +240,18 @@ public class ModelMgr {
         return finalList;
     }
 
-    private OntologyKeyBindings loadOntologyKeyBindings(long ontologyId) {
+    public OntologyKeyBindings loadOntologyKeyBindings(long ontologyId) {
         String category = CATEGORY_KEYBINDS_ONTOLOGY + ontologyId;
         Subject subject = SessionMgr.getSessionMgr().getSubject();
         Map<String, SubjectPreference> prefs = subject.getCategoryPreferences(category);
 
         OntologyKeyBindings ontologyKeyBindings = new OntologyKeyBindings(subject.getKey(), ontologyId);
         for (SubjectPreference pref : prefs.values()) {
+            log.info("Found binding "+pref.getName()+" for ontology "+ontologyId);
             ontologyKeyBindings.addBinding(pref.getName(), Long.parseLong(pref.getValue()));
         }
         
         return ontologyKeyBindings;
-    }
-    
-    public OntologyKeyBindings getKeyBindings(long ontologyId) {
-        if (selectedOntology != null && ontologyId == selectedOntology.getId()) {
-            if (ontologyKeyBindings == null || selectedOntology.getId() != ontologyKeyBindings.getOntologyId()) {
-                ontologyKeyBindings = loadOntologyKeyBindings(ontologyId);
-            }
-            return ontologyKeyBindings;
-        }
-        return loadOntologyKeyBindings(ontologyId);
     }
     
     public void saveOntologyKeyBindings(OntologyKeyBindings ontologyKeyBindings) throws Exception {
@@ -279,9 +270,9 @@ public class ModelMgr {
             subject.setPreference(new SubjectPreference(bind.getKey(), category, bind.getOntologyTermId().toString()));
         }
         
-        ModelMgr.getModelMgr().saveOrUpdateSubject(subject);
-        
-        if (selectedOntology!=null) notifyOntologyChanged(selectedOntology.getId()); // See note in createOntologyTerm
+        Subject newSubject = ModelMgr.getModelMgr().saveOrUpdateSubject(subject);
+        SessionMgr.getSessionMgr().setSubject(newSubject);
+        notifyOntologyChanged(ontologyKeyBindings.getOntologyId());
     }
 
     public void removeOntologyKeyBindings(long ontologyId) throws Exception {
@@ -608,11 +599,11 @@ public class ModelMgr {
         return entityModel.createOntologyRoot(ontologyName);
     }
 
-    public Entity createOntologyTerm(Long id, String label, OntologyElementType type, Integer orderIndex) throws Exception {
-        Entity term = entityModel.createOntologyTerm(id, label, type, orderIndex);
+    public Entity createOntologyTerm(Long ontologyRootId, Long parentId, String label, OntologyElementType type, Integer orderIndex) throws Exception {
+        Entity term = entityModel.createOntologyTerm(parentId, label, type, orderIndex);
         // Note: here we are assuming that the affected term is in the selected ontology, which is not necessarily true,
         // but it doesn't hurt to refresh the clients even if another ontology is being changed.
-        if (selectedOntology!=null) notifyOntologyChanged(selectedOntology.getId());
+        if (ontologyRootId!=null) notifyOntologyChanged(ontologyRootId);
         return term;
     }
 
@@ -633,21 +624,6 @@ public class ModelMgr {
     
     public Entity getOntologyTree(Long rootId) throws Exception {
         return FacadeManager.getFacadeManager().getOntologyFacade().getOntologyTree(rootId);
-    }
-
-    public Entity getOntology(Long rootId) {
-        if (null!= selectedOntology){
-            if(selectedOntology.getId().equals(rootId)){
-                return selectedOntology;
-            }
-        }
-        try {
-            return getOntologyTree(rootId);
-        }
-        catch (Exception e) {
-            e.printStackTrace();
-        }
-        return null;
     }
     
     public AnnotationSession getAnnotationSession(Long sessionId) throws Exception {
@@ -717,10 +693,6 @@ public class ModelMgr {
 
     public List<Entity> getOntologyRootEntities() throws Exception {
         return entityModel.getOntologyRoots();
-    }
-
-    public Entity getErrorOntologyEntity() throws Exception{
-        return FacadeManager.getFacadeManager().getOntologyFacade().getErrorOntology();
     }
 
     public Entity getErrorOntology() {
