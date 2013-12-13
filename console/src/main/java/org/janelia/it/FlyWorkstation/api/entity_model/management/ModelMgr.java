@@ -247,7 +247,6 @@ public class ModelMgr {
 
         OntologyKeyBindings ontologyKeyBindings = new OntologyKeyBindings(subject.getKey(), ontologyId);
         for (SubjectPreference pref : prefs.values()) {
-            log.info("Found binding "+pref.getName()+" for ontology "+ontologyId);
             ontologyKeyBindings.addBinding(pref.getName(), Long.parseLong(pref.getValue()));
         }
         
