@@ -2,6 +2,7 @@ package org.janelia.it.FlyWorkstation.gui.alignment_board_viewer.gui_elements;
 
 import org.janelia.it.FlyWorkstation.gui.alignment_board_viewer.volume_export.CoordCropper3D;
 import org.janelia.it.FlyWorkstation.gui.alignment_board_viewer.volume_export.CropCoordSet;
+import org.janelia.it.FlyWorkstation.gui.dialogs.search.alignment_board.ABTargetedSearchDialog;
 import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.FlyWorkstation.gui.framework.viewer.alignment_board.AlignmentBoardSettings;
 import org.janelia.it.FlyWorkstation.gui.util.Icons;
@@ -94,6 +95,7 @@ public class AlignmentBoardControls {
     private JButton searchSave;
     private JButton colorSave;
     private JButton screenShot;
+    private JButton search;
     private AbstractButton connectEvents;
 
     private JButton commitButton;
@@ -363,6 +365,10 @@ public class AlignmentBoardControls {
         return screenShot;
     }
 
+    public AbstractButton getSearch() {
+        return search;
+    }
+
     public AbstractButton getConnectEvents() {
         return connectEvents;
     }
@@ -625,7 +631,7 @@ public class AlignmentBoardControls {
         colorSave = new JButton( Icons.getIcon( "color_drive_go.png" ) );
         colorSave.setToolTipText( SAVE_AS_COLOR_TIFF_TOOLTIP_TEXT );
         colorSave.addActionListener(new ActionListener() {
-            CompletionListener buttonEnableListener = new CompletionListener() {
+            private CompletionListener buttonEnableListener = new CompletionListener() {
                 @Override
                 public void complete() {
                     setButtonRelaxed(colorSave, SAVE_AS_COLOR_TIFF_TOOLTIP_TEXT);
@@ -651,7 +657,7 @@ public class AlignmentBoardControls {
         screenShot = new JButton( Icons.getIcon( "drive_go.png" ) );
         screenShot.setToolTipText(SAVE_SCREEN_SHOT_TOOLTIP_TEXT);
         screenShot.addActionListener(new ActionListener() {
-            CompletionListener buttonEnableListener = new CompletionListener() {
+            private CompletionListener buttonEnableListener = new CompletionListener() {
                 @Override
                 public void complete() {
                     screenShot.setEnabled(true);
@@ -667,6 +673,18 @@ public class AlignmentBoardControls {
                 event.setMethod(ControlsListener.ExportMethod.mip);
                 event.setGammaFactor(settings.getGammaFactor());
                 fireSavebackEvent(event);
+            }
+        });
+
+        search = new JButton( Icons.getIcon( "find.png" ) );
+        search.setToolTipText("Search into Alignment Board");
+        // NOTE: for now, not disabling the button.  Launched dialog is modal, and will prevent other launch.
+        search.addActionListener(new ActionListener() {
+            public void actionPerformed( ActionEvent ae ) {
+                ABTargetedSearchDialog dialog = new ABTargetedSearchDialog(
+                        SessionMgr.getBrowser().getLayersPanel().getAlignmentBoardContext()
+                );
+                dialog.showDialog();
             }
         });
 

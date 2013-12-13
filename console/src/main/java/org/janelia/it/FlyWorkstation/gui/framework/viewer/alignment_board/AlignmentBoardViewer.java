@@ -344,6 +344,13 @@ public class AlignmentBoardViewer extends Viewer implements AlignmentBoardContro
         }
     }
 
+    /**
+     * Note: this is happening in the AWT Event Thread.  Callback indicating end of the load, so data can be pushed.
+     *
+     * @param successful Error or not?
+     * @param loadFiles Files were loaded = T, display level mod, only = F
+     * @param error any exception thrown during op, or null.
+     */
     @Override
     public void loadCompletion( boolean successful, boolean loadFiles, Throwable error ) {
         if ( successful ) {
@@ -354,11 +361,15 @@ public class AlignmentBoardViewer extends Viewer implements AlignmentBoardContro
                 // Post this event, nagging the outline to update itself.
                 // NOTE: better not do any refreshing in this board, if this event is encountered.  Would lead
                 // to a cycle of updates between this viewer and the outline!
+                final LayersPanel layersPanel = SessionMgr.getBrowser().getLayersPanel();
+                layersPanel.showOutline();   // On the event thread!
+
+                // Notify of any limits exceeded.
+                checkLimits();
+
                 new Thread( new Runnable() {
                     public void run() {
                         // Ensure all shown.
-                        LayersPanel layersPanel = SessionMgr.getBrowser().getLayersPanel();
-                        layersPanel.showOutline();
                         AlignmentBoardItemChangeEvent event = new AlignmentBoardItemChangeEvent(
                                 layersPanel.getAlignmentBoardContext(),
                                 null,
@@ -367,9 +378,6 @@ public class AlignmentBoardViewer extends Viewer implements AlignmentBoardContro
                         ModelMgr.getModelMgr().postOnEventBus( event );
                     }
                 }).start();
-
-                // Notify of any limits exceeded.
-                checkLimits();
             }
             else {
                 if ( mip3d != null ) {
@@ -506,7 +514,9 @@ public class AlignmentBoardViewer extends Viewer implements AlignmentBoardContro
             }
 
             if ( errorStack.length() > 0 ) {
+                logger.info("Launching message dialog");
                 JOptionPane.showMessageDialog(SessionMgr.getBrowser(), errorStack.toString());
+                logger.info("Message dialog complete.");
             }
         }
     }
@@ -891,6 +901,7 @@ public class AlignmentBoardViewer extends Viewer implements AlignmentBoardContro
         toolbar.add(controls.getColorSave());
         toolbar.add(controls.getSearchSave());
         toolbar.add(controls.getScreenShot());
+//Do not check in        toolbar.add(controls.getSearch());
 
         toolbar.add(controls.getBlackout());
         toolbar.add(controls.getColorSaveBrightness());

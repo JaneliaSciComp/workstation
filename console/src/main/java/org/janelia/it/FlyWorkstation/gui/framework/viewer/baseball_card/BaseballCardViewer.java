@@ -60,11 +60,17 @@ public class BaseballCardViewer extends Viewer {
         repaint();
     }
 
+    //------------------------------------------------IMPLEMENTS Viewer
     @Override
-    public void loadEntity(RootedEntity rootedEntity) {}
+    public void loadEntity(RootedEntity rootedEntity) {
+        loadEntity(rootedEntity, null);
+    }
+
 
     @Override
-    public void loadEntity(RootedEntity rootedEntity, Callable<Void> success) {}
+    public void loadEntity(RootedEntity rootedEntity, Callable<Void> success) {
+
+    }
 
     @Override
     public List<RootedEntity> getRootedEntities() {
