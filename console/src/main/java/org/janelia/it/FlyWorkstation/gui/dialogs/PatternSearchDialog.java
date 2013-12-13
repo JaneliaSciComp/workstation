@@ -90,6 +90,7 @@ public class PatternSearchDialog extends ModalDialog {
     
     private RootedEntity saveFolder;
 	private boolean returnInsteadOfSaving = false;
+	private boolean saveClicked = false;
 
     private class MinMaxSelectionRow extends JPanel implements ActionListener {
         String abbreviation;
@@ -403,11 +404,13 @@ public class PatternSearchDialog extends ModalDialog {
 		packAndShow();
 		try {
 			List<Long> results = new ArrayList<Long>();
-			if (filterResult!=null) {
-				List<Long> allResults = filterResult.getSampleList();
-				if (allResults!=null) {
-					results.addAll(new LinkedHashSet<Long>(allResults));
-				}
+			if (saveClicked) {
+    			if (filterResult!=null) {
+    				List<Long> allResults = filterResult.getSampleList();
+    				if (allResults!=null) {
+    					results.addAll(new LinkedHashSet<Long>(allResults));
+    				}
+    			}
 			}
 			return results;
 		}
@@ -689,6 +692,7 @@ public class PatternSearchDialog extends ModalDialog {
     protected synchronized void saveResults() {
 
 		if (returnInsteadOfSaving) {
+		    this.saveClicked = true;
             setVisible(false);
 			return;
 		}
