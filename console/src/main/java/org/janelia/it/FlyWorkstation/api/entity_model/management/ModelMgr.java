@@ -1,18 +1,7 @@
 package org.janelia.it.FlyWorkstation.api.entity_model.management;
 
-import java.awt.Color;
-import java.awt.EventQueue;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.TreeSet;
-import java.util.concurrent.Executor;
-
-import javax.swing.SwingUtilities;
-
+import com.google.common.eventbus.AsyncEventBus;
+import com.google.common.eventbus.EventBus;
 import org.apache.solr.client.solrj.SolrQuery;
 import org.janelia.it.FlyWorkstation.api.entity_model.access.ModelMgrObserver;
 import org.janelia.it.FlyWorkstation.api.entity_model.fundtype.TaskFilter;
@@ -33,12 +22,7 @@ import org.janelia.it.FlyWorkstation.shared.workers.SimpleWorker;
 import org.janelia.it.jacs.compute.api.support.MappedId;
 import org.janelia.it.jacs.compute.api.support.SageTerm;
 import org.janelia.it.jacs.compute.api.support.SolrResults;
-import org.janelia.it.jacs.model.entity.Entity;
-import org.janelia.it.jacs.model.entity.EntityActorPermission;
-import org.janelia.it.jacs.model.entity.EntityAttribute;
-import org.janelia.it.jacs.model.entity.EntityConstants;
-import org.janelia.it.jacs.model.entity.EntityData;
-import org.janelia.it.jacs.model.entity.EntityType;
+import org.janelia.it.jacs.model.entity.*;
 import org.janelia.it.jacs.model.ontology.OntologyAnnotation;
 import org.janelia.it.jacs.model.ontology.types.OntologyElementType;
 import org.janelia.it.jacs.model.tasks.Event;
@@ -50,12 +34,7 @@ import org.janelia.it.jacs.model.tasks.utility.GenericTask;
 import org.janelia.it.jacs.model.user_data.Node;
 import org.janelia.it.jacs.model.user_data.Subject;
 import org.janelia.it.jacs.model.user_data.prefs.SubjectPreference;
-import org.janelia.it.jacs.model.user_data.tiledMicroscope.TmAnchoredPath;
-import org.janelia.it.jacs.model.user_data.tiledMicroscope.TmGeoAnnotation;
-import org.janelia.it.jacs.model.user_data.tiledMicroscope.TmNeuron;
-import org.janelia.it.jacs.model.user_data.tiledMicroscope.TmNeuronDescriptor;
-import org.janelia.it.jacs.model.user_data.tiledMicroscope.TmWorkspace;
-import org.janelia.it.jacs.model.user_data.tiledMicroscope.TmWorkspaceDescriptor;
+import org.janelia.it.jacs.model.user_data.tiledMicroscope.*;
 import org.janelia.it.jacs.shared.annotation.DataDescriptor;
 import org.janelia.it.jacs.shared.annotation.DataFilter;
 import org.janelia.it.jacs.shared.annotation.FilterResult;
@@ -63,8 +42,11 @@ import org.janelia.it.jacs.shared.utils.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.eventbus.AsyncEventBus;
-import com.google.common.eventbus.EventBus;
+import javax.swing.*;
+import java.awt.*;
+import java.util.*;
+import java.util.List;
+import java.util.concurrent.Executor;
 
 public class ModelMgr {
     
@@ -999,6 +981,10 @@ public class ModelMgr {
 
     public TmNeuron createTiledMicroscopeNeuron(Long workspaceId, String name) throws Exception {
         return FacadeManager.getFacadeManager().getEntityFacade().createTiledMicroscopeNeuron(workspaceId, name);
+    }
+
+    public TmSample createTiledMicroscopeSample(Long sampleId, String name) throws Exception {
+        return FacadeManager.getFacadeManager().getEntityFacade().createTiledMicroscopeSample(sampleId, name);
     }
 
     public TmGeoAnnotation addGeometricAnnotation(Long neuronId, Long parentAnnotationId, int index,

@@ -1,7 +1,6 @@
 
 package org.janelia.it.FlyWorkstation.gui.alignment_board_viewer.volume_builder;
 
-import org.janelia.it.FlyWorkstation.gui.alignment_board_viewer.MultiTexVolumeBrick;
 import org.janelia.it.FlyWorkstation.gui.alignment_board_viewer.MultiTexVolumeBrickFactory;
 import org.janelia.it.FlyWorkstation.gui.alignment_board_viewer.masking.ConfigurableColorMapping;
 import org.janelia.it.FlyWorkstation.gui.alignment_board_viewer.masking.RenderMappingI;
@@ -13,7 +12,6 @@ import org.janelia.it.FlyWorkstation.gui.viewer3d.resolver.FileResolver;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.resolver.TrivialFileResolver;
 import org.janelia.it.jacs.model.entity.Entity;
 import org.janelia.it.jacs.model.entity.EntityConstants;
-import org.janelia.it.jacs.model.entity.EntityType;
 
 import javax.swing.*;
 import java.awt.*;
@@ -143,9 +141,7 @@ public class TestMaskedMip3d {
 
                         Entity mockE = new Entity();
                         mockE.setId( MOCK_UID );
-                        EntityType mockEType = new EntityType();
-                        mockEType.setName( EntityConstants.TYPE_NEURON_FRAGMENT );
-                        mockE.setEntityType( mockEType );
+                        mockE.setEntityTypeName(EntityConstants.TYPE_NEURON_FRAGMENT);
                         mockE.setName("Entity: " + MOCK_UID);
 
                         RenderableBean renderableBean = new RenderableBean();

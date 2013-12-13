@@ -1,29 +1,15 @@
 package org.janelia.it.FlyWorkstation.api.facade.concrete_facade.ejb;
 
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
-
 import org.janelia.it.FlyWorkstation.api.facade.abstract_facade.EntityFacade;
 import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.jacs.compute.api.support.MappedId;
 import org.janelia.it.jacs.model.entity.*;
 import org.janelia.it.jacs.model.user_data.tiledMicroscope.*;
-import org.janelia.it.FlyWorkstation.api.facade.abstract_facade.EntityFacade;
-import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr;
-import org.janelia.it.jacs.compute.api.support.MappedId;
-import org.janelia.it.jacs.model.entity.Entity;
-import org.janelia.it.jacs.model.entity.EntityActorPermission;
-import org.janelia.it.jacs.model.entity.EntityAttribute;
-import org.janelia.it.jacs.model.entity.EntityData;
-import org.janelia.it.jacs.model.entity.EntityType;
-import org.janelia.it.jacs.model.user_data.tiledMicroscope.TmAnchoredPath;
-import org.janelia.it.jacs.model.user_data.tiledMicroscope.TmGeoAnnotation;
-import org.janelia.it.jacs.model.user_data.tiledMicroscope.TmNeuron;
-import org.janelia.it.jacs.model.user_data.tiledMicroscope.TmNeuronDescriptor;
-import org.janelia.it.jacs.model.user_data.tiledMicroscope.TmWorkspace;
-import org.janelia.it.jacs.model.user_data.tiledMicroscope.TmWorkspaceDescriptor;
+
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
 
 /**
  * Created by IntelliJ IDEA.
@@ -229,6 +215,11 @@ public class EJBEntityFacade implements EntityFacade {
     @Override
     public TmNeuron createTiledMicroscopeNeuron(Long workspaceId, String name) throws Exception {
         return EJBFactory.getRemoteTiledMicroscopeBean().createTiledMicroscopeNeuron(workspaceId, name);
+    }
+
+    @Override
+    public TmSample createTiledMicroscopeSample(Long sampleId, String name) throws Exception {
+        return EJBFactory.getRemoteTiledMicroscopeBean().createTiledMicroscopeSample(sampleId, name);
     }
 
     @Override

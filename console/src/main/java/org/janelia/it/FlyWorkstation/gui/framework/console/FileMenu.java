@@ -43,6 +43,7 @@ public class FileMenu extends JMenu {
     JMenuItem menuFilePrint;
     JMenuItem menuNewSketch;
     JMenuItem menuNewAlignmentBoard;
+    JMenuItem menuNewTiledMicroscopeSample;
     JMenuItem menuListOpen;
     JMenuItem setLoginMI;
     JMenuItem menuFileImport;
@@ -101,6 +102,15 @@ public class FileMenu extends JMenu {
             }
         });
         menuNewItem.add(menuNewAlignmentBoard);
+
+        menuNewTiledMicroscopeSample = new JMenuItem("Tiled Microscope Sample");
+        menuNewTiledMicroscopeSample.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent actionEvent) {
+                menuNewTiledMicroscopeSample_actionPerformed();
+            }
+        });
+        menuNewItem.add(menuNewTiledMicroscopeSample);
         // LLF: uncommenting New.../Alignment Board, but omitting brain sketch from the menu, as it has empty action.
         //menuNewItem.add(menuNewSketch);
 
@@ -321,6 +331,11 @@ public class FileMenu extends JMenu {
     }
 
     private void menuNewAlignmentBoard_actionPerformed() {
+        CreateAlignmentBoardAction action = new CreateAlignmentBoardAction( "Create Alignment Board" );
+        action.doAction();
+    }
+
+    private void menuNewTiledMicroscopeSample_actionPerformed() {
         CreateAlignmentBoardAction action = new CreateAlignmentBoardAction( "Create Alignment Board" );
         action.doAction();
     }

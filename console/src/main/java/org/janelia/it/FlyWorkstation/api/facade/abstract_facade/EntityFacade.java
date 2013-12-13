@@ -91,6 +91,8 @@ public interface EntityFacade {
 
     public TmNeuron createTiledMicroscopeNeuron(Long workspaceId, String name) throws Exception;
 
+    public TmSample createTiledMicroscopeSample(Long sampleId, String name) throws Exception;
+
     public TmGeoAnnotation addGeometricAnnotation(Long neuronId, Long parentAnnotationId, int index,
                                                   double x, double y, double z, String comment) throws Exception;
 
