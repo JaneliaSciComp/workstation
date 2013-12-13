@@ -118,7 +118,6 @@ public class KeyBindings {
         	Set<OntologyKeyBind> keybinds = ontologyKeyBindings.getKeybinds();
         	
         	for (OntologyKeyBind bind : keybinds) {
-                log.info("Found bind: "+bind.getKey()+" "+bind.getOntologyTermId());
                 KeyboardShortcut shortcut = KeyboardShortcut.fromString(bind.getKey());
 
                 try {
