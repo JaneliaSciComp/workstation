@@ -82,7 +82,7 @@ public class VerticalPanelPicker extends JPanel {
 	    if (name.equals(selectedPanel)) return;
 	    this.selectedPanel = name;
 	    
-	    log.info("showPanel: {}",name);
+	    log.debug("showPanel: {}",name);
 	    
         JPanel panel = panelMap.get(name);
         if (panel==null) throw new IllegalArgumentException("No such panel: "+name);
