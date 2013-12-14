@@ -222,9 +222,9 @@ public class ModelMgr {
         return finalList;
     }
 
-    public OntologyKeyBindings loadOntologyKeyBindings(long ontologyId) {
+    public OntologyKeyBindings loadOntologyKeyBindings(long ontologyId) throws Exception {
         String category = CATEGORY_KEYBINDS_ONTOLOGY + ontologyId;
-        Subject subject = SessionMgr.getSessionMgr().getSubject();
+        Subject subject = ModelMgr.getModelMgr().getSubject(SessionMgr.getSessionMgr().getSubject().getKey());
         Map<String, SubjectPreference> prefs = subject.getCategoryPreferences(category);
 
         OntologyKeyBindings ontologyKeyBindings = new OntologyKeyBindings(subject.getKey(), ontologyId);

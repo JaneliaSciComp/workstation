@@ -60,13 +60,13 @@ import org.janelia.it.FlyWorkstation.gui.framework.tree.ExpansionState;
 import org.janelia.it.FlyWorkstation.gui.util.Icons;
 import org.janelia.it.FlyWorkstation.gui.util.JScrollPopupMenu;
 import org.janelia.it.FlyWorkstation.gui.util.MouseForwarder;
-import org.janelia.it.FlyWorkstation.model.entity.ForbiddenEntity;
 import org.janelia.it.FlyWorkstation.model.entity.RootedEntity;
 import org.janelia.it.FlyWorkstation.shared.util.ConcurrentUtils;
 import org.janelia.it.FlyWorkstation.shared.workers.SimpleWorker;
 import org.janelia.it.jacs.model.entity.Entity;
 import org.janelia.it.jacs.model.entity.EntityConstants;
 import org.janelia.it.jacs.model.entity.EntityData;
+import org.janelia.it.jacs.model.entity.ForbiddenEntity;
 import org.janelia.it.jacs.model.ontology.OntologyAnnotation;
 import org.janelia.it.jacs.model.ontology.OntologyElement;
 import org.janelia.it.jacs.model.ontology.types.Category;
@@ -267,7 +267,7 @@ public abstract class OntologyOutline extends EntityTree implements Refreshable,
             
             @Override
             protected void doStuff() throws Exception {
-                ModelMgr.getModelMgr().loadLazyEntity(nextRoot, true);
+                tree = ModelMgr.getModelMgr().getEntityTree(nextRoot.getId());
             }
             
             @Override

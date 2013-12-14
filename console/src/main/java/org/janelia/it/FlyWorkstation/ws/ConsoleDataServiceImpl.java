@@ -152,7 +152,7 @@ public class ConsoleDataServiceImpl {
 		return ModelMgr.getModelMgr().getAnnotationSession(sessionId);
 	}
 	
-	public OntologyKeyBindings getKeybindings(long ontologyId) {
+	public OntologyKeyBindings getKeybindings(long ontologyId) throws Exception {
 		return ModelMgr.getModelMgr().loadOntologyKeyBindings(ontologyId);
 	}
 	

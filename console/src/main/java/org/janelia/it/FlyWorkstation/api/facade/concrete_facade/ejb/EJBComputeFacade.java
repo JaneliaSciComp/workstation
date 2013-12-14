@@ -74,12 +74,12 @@ public class EJBComputeFacade implements ComputeFacade {
 
     @Override
     public Subject getSubject() throws Exception {
-        return EJBFactory.getRemoteComputeBean().getSubjectByNameOrKey(SessionMgr.getSubjectKey());
+        return EJBFactory.getRemoteComputeBean().getSubjectWithPreferences(SessionMgr.getSubjectKey());
     }
 
     @Override
     public Subject getSubject(String nameOrKey) throws Exception {
-        return EJBFactory.getRemoteComputeBean().getSubjectByNameOrKey(nameOrKey);
+        return EJBFactory.getRemoteComputeBean().getSubjectWithPreferences(nameOrKey);
     }
     
     @Override
