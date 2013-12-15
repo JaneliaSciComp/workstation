@@ -164,8 +164,7 @@ public class ABTargetedSearchDialog extends ModalDialog {
     }
 
     private BaseballCardPanel initResultsGui() {
-        BaseballCardPanel bbc = new BaseballCardPanel( false, DIALOG_WIDTH );
-        return bbc;
+        return new BaseballCardPanel( false, DIALOG_WIDTH );
     }
 
     private static class QueryLaunchAction extends AbstractAction {
@@ -209,6 +208,10 @@ public class ABTargetedSearchDialog extends ModalDialog {
         @Override
         protected void doStuff() throws Exception {
             SolrQueryBuilder queryBuilder = new SolrQueryBuilder();
+            for ( String subjectKey : SessionMgr.getSubjectKeys() ) {
+                queryBuilder.addOwnerKey(subjectKey);
+            }
+
             queryBuilder.setSearchString( query );
             if ( searchRootId != null ) {
                 queryBuilder.setRootId( searchRootId );
