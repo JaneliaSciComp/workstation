@@ -20,7 +20,14 @@ import javax.swing.JScrollPane;
 import javax.swing.JTree;
 import javax.swing.event.TreeExpansionEvent;
 import javax.swing.event.TreeWillExpandListener;
-import javax.swing.tree.*;
+import javax.swing.text.Position;
+import javax.swing.tree.DefaultMutableTreeNode;
+import javax.swing.tree.DefaultTreeModel;
+import javax.swing.tree.ExpandVetoException;
+import javax.swing.tree.TreeCellRenderer;
+import javax.swing.tree.TreeNode;
+import javax.swing.tree.TreePath;
+import javax.swing.tree.TreeSelectionModel;
 
 import org.janelia.it.FlyWorkstation.gui.framework.outline.Refreshable;
 import org.slf4j.Logger;
@@ -302,6 +309,15 @@ public class DynamicTree extends JPanel implements Refreshable {
     }
 
     /**
+     * Get the cell renderer on the underlying JTree.
+     *
+     * @param cellRenderer
+     */
+    public TreeCellRenderer getCellRenderer() {
+        return tree.getCellRenderer();
+    }
+    
+    /**
      * Returns the underlying JTree.
      *
      * @return
@@ -522,6 +538,23 @@ public class DynamicTree extends JPanel implements Refreshable {
 
     public void navigateToNodeWithUniqueId(String uniqueId) {
     	throw new UnsupportedOperationException();
+    }
+
+    /**
+     * Select the node containing the given search string. If bias is null then we search forward starting with the
+     * current node. If the current node contains the searchString then we don't move. If the bias is Forward then we
+     * start searching in the node after the selected one. If bias is Backward then we look backwards from the node
+     * before the selected one.
+     *
+     * @param searchString
+     * @param bias
+     */
+    public void navigateToNodeStartingWith(String searchString, Position.Bias bias, boolean skipStartingNode) {
+
+        TreePath selectionPath = tree.getSelectionPath();
+        DefaultMutableTreeNode startingNode = (selectionPath == null) ? null : (DefaultMutableTreeNode) selectionPath.getLastPathComponent();
+        DynamicTreeFind searcher = new DynamicTreeFind(this, searchString, startingNode, bias, skipStartingNode);
+        navigateToNode(searcher.find());
     }
     
     /**

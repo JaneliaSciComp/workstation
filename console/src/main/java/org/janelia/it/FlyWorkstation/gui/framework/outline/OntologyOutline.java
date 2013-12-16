@@ -1,5 +1,6 @@
 package org.janelia.it.FlyWorkstation.gui.framework.outline;
 
+import java.awt.BorderLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.ComponentAdapter;
@@ -219,9 +220,11 @@ public abstract class OntologyOutline extends EntityTree implements Refreshable,
     public void initializeTree(Entity rootEntity) {
         super.initializeTree(rootEntity);
         
-        if (selectedTree.getToolbar()!=null) {
-            decorateToolbar(selectedTree.getToolbar().getJToolBar());
-        }
+        getDynamicTree().add(getToolbar(), BorderLayout.PAGE_END);
+        
+//        if (selectedTree.getToolbar()!=null) {
+//            decorateToolbar(selectedTree.getToolbar().getJToolBar());
+//        }
 
         getInputMap(JComponent.WHEN_ANCESTOR_OF_FOCUSED_COMPONENT).put(KeyStroke.getKeyStroke(KeyEvent.VK_ENTER,0,true),"enterAction");
         getActionMap().put("enterAction",new AbstractAction() {
@@ -350,11 +353,23 @@ public abstract class OntologyOutline extends EntityTree implements Refreshable,
         });
     }
     
+    protected JToolBar getToolbar() {
+
+        JToolBar toolBar = new JToolBar();
+        toolBar.setFloatable(false);
+        toolBar.setRollover(true);
+        
+        decorateToolbar(toolBar);
+        
+        return toolBar;
+        
+    }
     protected void decorateToolbar(JToolBar jToolBar) {
 
         if (entityRootList!=null) {
-            final JButton ontologyButton = new JButton("Switch ontology...");
-            ontologyButton.setIcon(Icons.getIcon("page_copy.png"));
+            final JButton ontologyButton = new JButton("Open ontology...");
+            ontologyButton.setIcon(Icons.getIcon("open_action.png"));
+            ontologyButton.setToolTipText("Open ontology");
             ontologyButton.setFocusable(false);
             ontologyButton.addActionListener(new ActionListener() {
                 @Override
@@ -399,9 +414,12 @@ public abstract class OntologyOutline extends EntityTree implements Refreshable,
         }
         
         final JToggleButton keyBindButton = new JToggleButton("Set Shortcuts");
+        keyBindButton.setIcon(Icons.getIcon("keyboard_add.png"));
+        keyBindButton.setToolTipText("Enter key binding mode");
         keyBindButton.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent actionEvent) {
                 if (keyBindButton.isSelected()) {
+                    keyBindButton.setToolTipText("Exit key binding mode");
                     recordingKeyBinds = true;
                     // Transfer focus to a node in the tree in preparation for key presses
                     selectedTree.getTree().grabFocus();
@@ -410,6 +428,7 @@ public abstract class OntologyOutline extends EntityTree implements Refreshable,
                     }
                 }
                 else {
+                    keyBindButton.setToolTipText("Enter key binding mode");
                     recordingKeyBinds = false;
                     SessionMgr.getKeyBindings().saveOntologyKeybinds(getCurrentOntology());
                 }
