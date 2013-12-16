@@ -5,6 +5,9 @@ import org.janelia.it.FlyWorkstation.api.entity_model.management.ModelMgr;
 import org.janelia.it.FlyWorkstation.gui.dialogs.ModalDialog;
 import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.FlyWorkstation.gui.framework.viewer.BaseballCardPanel;
+import org.janelia.it.FlyWorkstation.gui.framework.viewer.RootedEntityReceiver;
+import org.janelia.it.FlyWorkstation.model.domain.AlignmentContext;
+import org.janelia.it.FlyWorkstation.model.domain.Sample;
 import org.janelia.it.FlyWorkstation.model.entity.RootedEntity;
 import org.janelia.it.FlyWorkstation.model.viewer.AlignmentBoardContext;
 import org.janelia.it.FlyWorkstation.shared.workers.SimpleWorker;
@@ -12,16 +15,13 @@ import org.janelia.it.jacs.compute.api.support.SolrQueryBuilder;
 import org.janelia.it.jacs.compute.api.support.SolrResults;
 import org.janelia.it.jacs.model.entity.Entity;
 import org.janelia.it.jacs.model.entity.EntityConstants;
-import org.janelia.it.jacs.model.entity.EntityData;
 
 import javax.swing.*;
 import javax.swing.border.TitledBorder;
 import java.awt.*;
 import java.awt.event.ActionEvent;
-import java.util.ArrayList;
+import java.util.*;
 import java.util.List;
-import java.util.Set;
-import java.util.Vector;
 
 /**
  * Created with IntelliJ IDEA.
@@ -88,7 +88,7 @@ public class ABTargetedSearchDialog extends ModalDialog {
     //------------------------------------------------GUI elements for the search inputs.
     private void initGeneralGui() {
         setLayout( new BorderLayout() );
-        setPreferredSize( new Dimension( DIALOG_WIDTH, DIALOG_HEIGHT ) );
+        setPreferredSize(new Dimension(DIALOG_WIDTH, DIALOG_HEIGHT));
     }
 
     private void layoutGeneralGui( JPanel queryPanel, JPanel resultsPanel ) {
@@ -113,7 +113,7 @@ public class ABTargetedSearchDialog extends ModalDialog {
         ButtonGroup entityTypeGroup = new ButtonGroup();
         sampleRB = new JRadioButton(SAMPLE_BUTTON_TXT);
         sampleRB.setActionCommand( SAMPLE_BUTTON_TXT );
-        entityTypeGroup.add( sampleRB );
+        entityTypeGroup.add(sampleRB);
         neuronFragmentRB = new JRadioButton(NF_BUTTON_TXT);
         neuronFragmentRB.setActionCommand( NF_BUTTON_TXT );
         entityTypeGroup.add( neuronFragmentRB );
@@ -125,24 +125,20 @@ public class ABTargetedSearchDialog extends ModalDialog {
         typeChoicePanel.add( neuronFragmentRB, BorderLayout.EAST );
         typeChoicePanel.setBorder( new TitledBorder( "Type" ) );
 
-        queryButton = new JButton( new QueryLaunchAction( "Search", queryTermComBox, baseballCardPanel, entityTypeGroup, searchRoot == null ? null : searchRoot.getId() ) );
+        queryButton = new JButton(
+            new QueryLaunchAction(
+                "Search",
+                queryTermComBox,
+                baseballCardPanel,
+                entityTypeGroup,
+                context,
+                searchRoot == null ? null : searchRoot.getId()
+            )
+        );
 
         JPanel queryPanel = new JPanel();
         queryPanel.setLayout( new GridBagLayout() );
 
-        /*
-         * @param gridx     The initial gridx value.
-         * @param gridy     The initial gridy value.
-         * @param gridwidth The initial gridwidth value.
-         * @param gridheight        The initial gridheight value.
-         * @param weightx   The initial weightx value.
-         * @param weighty   The initial weighty value.
-         * @param anchor    The initial anchor value.
-         * @param fill      The initial fill value.
-         * @param insets    The initial insets value.
-         * @param ipadx     The initial ipadx value.
-         * @param ipady     The initial ipady value.
-         */
         Insets insets = new Insets( 1, 1, 1, 1 );
         GridBagConstraints qtermConstraints = new GridBagConstraints(
                 0, 0, 4, 1, 2.0, 1.0, GridBagConstraints.NORTHWEST, GridBagConstraints.BOTH, insets, 0, 0
@@ -172,38 +168,47 @@ public class ABTargetedSearchDialog extends ModalDialog {
         private JComboBox queryTermBox;
         private ButtonGroup group;
         private Long searchRootId;
+        private AlignmentBoardContext context;
+
         public QueryLaunchAction(
-                String actionName, JComboBox queryTermBox, BaseballCardPanel baseballCardPanel, ButtonGroup group, Long searchRootId
+                String actionName,
+                JComboBox queryTermBox,
+                BaseballCardPanel baseballCardPanel,
+                ButtonGroup group,
+                AlignmentBoardContext context,
+                Long searchRootId
         ) {
             super( actionName );
             this.baseballCardPanel = baseballCardPanel;
             this.queryTermBox = queryTermBox;
             this.group = group;
             this.searchRootId = searchRootId;
+            this.context = context;
         }
 
         @Override
         public void actionPerformed(ActionEvent e) {
             String selected = (String)queryTermBox.getSelectedItem();
             if ( selected != null ) {
-                SimpleWorker worker = new SearchWorker(
-                        selected, baseballCardPanel, group, searchRootId
-                );
+                SearchWorker.SearchWorkerParam param = new SearchWorker.SearchWorkerParam();
+                param.setReceiver( baseballCardPanel );
+                param.setContext( context.getAlignmentContext() );
+                param.setSearchTypeKey(group.getSelection().getActionCommand());
+                param.setQuery( selected );
+                param.setSearchRootId( searchRootId );
+                SimpleWorker worker = new SearchWorker( param );
                 worker.execute();
             }
         }
     }
 
     private static class SearchWorker extends SimpleWorker {
-        private String query;
-        private BaseballCardPanel bbc;
-        private ButtonGroup group;
-        private Long searchRootId;
-        public SearchWorker( String query, BaseballCardPanel bbc, ButtonGroup group, Long searchRootId ) {
-            this.query = query;
-            this.bbc = bbc;
-            this.group = group;
-            this.searchRootId = searchRootId;
+
+        private SearchWorkerParam param;
+        private List<RootedEntity> rootedResults;
+
+        public SearchWorker( SearchWorkerParam param ) {
+            this.param = param;
         }
         @Override
         protected void doStuff() throws Exception {
@@ -212,20 +217,19 @@ public class ABTargetedSearchDialog extends ModalDialog {
                 queryBuilder.addOwnerKey(subjectKey);
             }
 
-            queryBuilder.setSearchString( query );
-            if ( searchRootId != null ) {
-                queryBuilder.setRootId( searchRootId );
+            queryBuilder.setSearchString( param.getQuery() );
+            if ( param.getSearchRootId() != null ) {
+                queryBuilder.setRootId( param.getSearchRootId() );
             }
+// todo use facets to filter vs only desired types
 //            queryBuilder.setFilters();
-// TODO establish the type-specific filters; walk up/down tree; find appropriate rooted entities; populate baseball cards.
             SolrQuery query = queryBuilder.getQuery();
             query.setRows( 50 );
             query.setStart( 0 );
 
             SolrResults results = ModelMgr.getModelMgr().searchSolr(query);
             List<Entity> resultList = results.getResultList();
-            String targetFilterType = group.getSelection().getActionCommand();
-// Q: what types come back?
+            String targetFilterType = param.getSearchTypeKey();
             String targetEntityTypeName = EntityConstants.TYPE_NEURON_FRAGMENT;
             if ( targetFilterType.equals( SAMPLE_BUTTON_TXT ) ) {
                 targetEntityTypeName = EntityConstants.TYPE_SAMPLE;
@@ -237,27 +241,132 @@ public class ABTargetedSearchDialog extends ModalDialog {
                 }
             }
 
-            // Next, walk each entity's tree looking for proper info.
-            if ( targetEntityTypeName.equals( EntityConstants.TYPE_NEURON_FRAGMENT ) ) {
-                for ( Entity entity: filteredList ) {
-                    // Now, to "prowl" the trees of the result list, to find out what can be added, here.
-                    Set<EntityData> ed = entity.getEntityData();
-                }
-            }
-
-            List<RootedEntity> rootedResults = new ArrayList<RootedEntity>();
-
-            bbc.setRootedEntities( rootedResults );
+            rootedResults = getCompatibleRootedEntities( filteredList, targetFilterType );
         }
 
         @Override
         protected void hadSuccess() {
             // Accept results and populate.
+            param.getReceiver().setRootedEntities( rootedResults );
         }
 
         @Override
         protected void hadError(Throwable error) {
             SessionMgr.getSessionMgr().handleException( error );
+        }
+
+        /**
+         * Finds only the results that can be added to the context provided.  Also, moves up the hierarchy
+         * from raw entities to their rooted entities.
+         *
+         * @param entities from possibly many alingment contexts
+         * @return those from specific context.
+         */
+        private List<RootedEntity> getCompatibleRootedEntities( Collection<Entity> entities, String targetEntityTypeName ) {
+            List<RootedEntity> rtnVal = new ArrayList<RootedEntity>();
+
+            // Next, walk each entity's tree looking for proper info.
+            if ( targetEntityTypeName.equals( EntityConstants.TYPE_NEURON_FRAGMENT ) ) {
+                for ( Entity entity: entities ) {
+                    try {
+                        // Now, to "prowl" the trees of the result list, to find out what can be added, here.
+                        Entity sampleEntity = ModelMgr.getModelMgr().getAncestorWithType(entity, EntityConstants.TYPE_SAMPLE);
+                        if ( sampleEntity != null ) {
+                            RootedEntity rootedEntity = new RootedEntity( sampleEntity );
+                            boolean compatible = isSampleCompatible( param.getContext(), rootedEntity );
+                            if ( compatible ) {
+                                rtnVal.add( rootedEntity );
+                            }
+                        }
+                    } catch ( Exception ex ) {
+                        ex.printStackTrace();
+                        SessionMgr.getSessionMgr().handleException( ex );
+                    }
+
+                }
+            }
+            else if ( targetEntityTypeName.equals( EntityConstants.TYPE_SAMPLE ) ) {
+                for ( Entity entity: entities ) {
+                    try {
+                        RootedEntity rootedEntity = new RootedEntity(entity);
+                        if ( isSampleCompatible( param.getContext(), rootedEntity) ) {
+                            rtnVal.add( rootedEntity );
+                        }
+                    } catch ( Exception ex ) {
+                        ex.printStackTrace();
+                        SessionMgr.getSessionMgr().handleException( ex );
+                    }
+                }
+            }
+
+            return rtnVal;
+        }
+
+        private boolean isSampleCompatible(AlignmentContext standardContext, RootedEntity entity) throws Exception {
+            boolean rtnVal;
+            boolean foundMatch = false;
+            Sample wrapper = new Sample( entity );
+            List< AlignmentContext> contexts = wrapper.getAvailableAlignmentContexts();
+            Iterator<AlignmentContext> contextIterator = contexts.iterator();
+
+            while ( contextIterator.hasNext() && (! foundMatch) ) {
+                AlignmentContext nextContext = contextIterator.next();
+                if ( standardContext.equals( nextContext ) ) {
+                    foundMatch = true;
+                }
+
+            }
+
+            rtnVal = foundMatch;
+            return rtnVal;
+        }
+
+        public static class SearchWorkerParam {
+            private String query;
+            private RootedEntityReceiver receiver;
+            private Long searchRootId;
+            private AlignmentContext context;
+            private String searchTypeKey;
+
+            public String getQuery() {
+                return query;
+            }
+
+            public void setQuery(String query) {
+                this.query = query;
+            }
+
+            public RootedEntityReceiver getReceiver() {
+                return receiver;
+            }
+
+            public void setReceiver(RootedEntityReceiver receiver) {
+                this.receiver = receiver;
+            }
+
+            public Long getSearchRootId() {
+                return searchRootId;
+            }
+
+            public void setSearchRootId(Long searchRootId) {
+                this.searchRootId = searchRootId;
+            }
+
+            public AlignmentContext getContext() {
+                return context;
+            }
+
+            public void setContext(AlignmentContext context) {
+                this.context = context;
+            }
+
+            public String getSearchTypeKey() {
+                return searchTypeKey;
+            }
+
+            public void setSearchTypeKey(String searchTypeKey) {
+                this.searchTypeKey = searchTypeKey;
+            }
         }
     }
 }

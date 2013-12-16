@@ -17,9 +17,9 @@ import java.util.List;
  * Presents information about an Entity as a Baseball-card like configuration.  On the left side will be the default
  * 2D image (if it exists), and on right part, will be tag/value table of information.  Makes an internal JTable.
  */
-public class BaseballCardPanel extends JPanel {
+public class BaseballCardPanel extends JPanel implements RootedEntityReceiver {
     private List<BaseballCard> cards;
-    private boolean includeSelectorCheckbox;
+    private boolean selectable;
     private int preferredWidth;
     private List<CheckboxWithData> checkboxes;
 
@@ -27,8 +27,8 @@ public class BaseballCardPanel extends JPanel {
         this(false, preferredWidth);
     }
 
-    public BaseballCardPanel( boolean includeSelectorCheckbox, int preferredWidth ) {
-        this.includeSelectorCheckbox = includeSelectorCheckbox;
+    public BaseballCardPanel( boolean selectable, int preferredWidth ) {
+        this.selectable = selectable;
         this.preferredWidth = preferredWidth;
     }
 
@@ -38,6 +38,8 @@ public class BaseballCardPanel extends JPanel {
             cards.add( new BaseballCard( rootedEntity.getEntity() ) );
         }
         establishGui();
+        invalidate();
+        repaint();
     }
 
     private void establishGui() {
@@ -49,7 +51,7 @@ public class BaseballCardPanel extends JPanel {
         Insets flushInsets = new Insets(0,0,0,0);
         Insets borderInsets = new Insets(1,1,1,1);
         GridBagConstraints checkBoxConstraints = null;
-        if ( includeSelectorCheckbox ) {
+        if (selectable) {
             checkBoxConstraints = new GridBagConstraints(
                     nextCol, 0,
                     1, gridHeight,
@@ -90,7 +92,7 @@ public class BaseballCardPanel extends JPanel {
         );
         for ( int i = 0; i < cards.size(); i++ ) {
             BaseballCard card = cards.get( i );
-            if ( includeSelectorCheckbox ) {
+            if (selectable) {
                 checkBoxConstraints.gridy = i * gridHeight;
                 CheckboxWithData checkboxWithData = new CheckboxWithData( card );
                 innerPanel.add( checkboxWithData, checkBoxConstraints );
