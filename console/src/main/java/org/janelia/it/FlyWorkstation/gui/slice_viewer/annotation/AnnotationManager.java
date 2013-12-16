@@ -440,28 +440,38 @@ elements of what's been done; that's handled by signals emitted from AnnotationM
     }
 
     public void deleteCurrentNeuron() {
+        TmNeuron neuron = annotationModel.getCurrentNeuron();
+        if (neuron == null) {
+            return;
+        }
 
-        // nothing to validate before proceeding
-        SimpleWorker deleter = new SimpleWorker() {
-            @Override
-            protected void doStuff() throws Exception {
-                annotationModel.deleteCurrentNeuron();
-            }
+        int nAnnotations = neuron.getGeoAnnotationMap().size();
+        int ans =  JOptionPane.showConfirmDialog(null,
+                String.format("%s has %d nodes; delete?", neuron.getName(), nAnnotations),
+                "Delete neuron?",
+                JOptionPane.OK_CANCEL_OPTION);
+        if (ans == JOptionPane.OK_OPTION) {
+            SimpleWorker deleter = new SimpleWorker() {
+                @Override
+                protected void doStuff() throws Exception {
+                    annotationModel.deleteCurrentNeuron();
+                }
 
-            @Override
-            protected void hadSuccess() {
-                // nothing here; model sends its own signals
-            }
+                @Override
+                protected void hadSuccess() {
+                    // nothing here; model sends its own signals
+                }
 
-            @Override
-            protected void hadError(Throwable error) {
-                JOptionPane.showMessageDialog(null,
-                        "Could not delete current neuron!",
-                        "Error",
-                        JOptionPane.ERROR_MESSAGE);
-            }
-        };
-        deleter.execute();
+                @Override
+                protected void hadError(Throwable error) {
+                    JOptionPane.showMessageDialog(null,
+                            "Could not delete current neuron!",
+                            "Error",
+                            JOptionPane.ERROR_MESSAGE);
+                }
+            };
+            deleter.execute();
+        }
 
     }
 
