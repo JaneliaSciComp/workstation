@@ -182,7 +182,7 @@ public class AlignmentBoardControlsPanel extends JPanel {
         centralPanel.add( controls.getMaxNeuronCountTF(), maxNeuronCountConstraints );
 
         centralPanel.add( controls.getUseSignalDataCheckbox(), signalDataConstraints );
-        centralPanel.add( controls.getCommitButton(), commitBtnConstraints );
+        //centralPanel.add( controls.getCommitButton(), commitBtnConstraints );
 
         centralPanel.add( regionSelectionPanel, regionSelectionPanelConstraints );
         add(centralPanel, BorderLayout.CENTER);
