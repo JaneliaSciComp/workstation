@@ -354,7 +354,7 @@ that need to respond to changing data.
         // this triggers the updates in, eg, the neurite list
         if (getCurrentNeuron() != null) {
             if (neuron.getId().equals(getCurrentNeuron().getId())) {
-                neuronSelectedSignal.emit(neuron);
+                neuronSelectedSignal.emit(getCurrentNeuron());
             }
         }
 
