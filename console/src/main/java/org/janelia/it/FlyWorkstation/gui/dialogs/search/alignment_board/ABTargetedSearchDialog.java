@@ -6,6 +6,7 @@ import org.janelia.it.FlyWorkstation.gui.dialogs.ModalDialog;
 import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.FlyWorkstation.gui.framework.viewer.BaseballCardPanel;
 import org.janelia.it.FlyWorkstation.gui.framework.viewer.RootedEntityReceiver;
+import org.janelia.it.FlyWorkstation.gui.util.Icons;
 import org.janelia.it.FlyWorkstation.model.domain.AlignmentContext;
 import org.janelia.it.FlyWorkstation.model.domain.Sample;
 import org.janelia.it.FlyWorkstation.model.entity.RootedEntity;
@@ -190,6 +191,8 @@ public class ABTargetedSearchDialog extends ModalDialog {
         public void actionPerformed(ActionEvent e) {
             String selected = (String)queryTermBox.getSelectedItem();
             if ( selected != null ) {
+                // set the thing busy.
+                showLoadingIndicator();
                 SearchWorker.SearchWorkerParam param = new SearchWorker.SearchWorkerParam();
                 param.setReceiver( baseballCardPanel );
                 param.setContext( context.getAlignmentContext() );
@@ -200,6 +203,10 @@ public class ABTargetedSearchDialog extends ModalDialog {
                 worker.execute();
             }
         }
+        private void showLoadingIndicator() {
+            baseballCardPanel.showLoadingIndicator();
+        }
+
     }
 
     private static class SearchWorker extends SimpleWorker {
