@@ -39,12 +39,14 @@ public class BaseballCardPanel extends JPanel implements RootedEntityReceiver {
             cards.add( new BaseballCard( rootedEntity.getEntity() ) );
         }
         establishGui();
+        validate();
         invalidate();
         repaint();
     }
 
     public void showLoadingIndicator() {
         removeAll();
+        setLayout( new BorderLayout() );
         add(new JLabel(Icons.getLoadingIcon()), BorderLayout.CENTER);
         validate();
         invalidate();
@@ -52,6 +54,7 @@ public class BaseballCardPanel extends JPanel implements RootedEntityReceiver {
     }
 
     private void establishGui() {
+        removeAll();
         JPanel innerPanel = new JPanel();
         JScrollPane cardScroller = new JScrollPane( innerPanel );
         innerPanel.setLayout( new GridBagLayout() );
