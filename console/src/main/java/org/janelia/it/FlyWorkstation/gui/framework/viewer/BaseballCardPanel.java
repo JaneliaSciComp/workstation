@@ -1,6 +1,7 @@
 package org.janelia.it.FlyWorkstation.gui.framework.viewer;
 
 import org.janelia.it.FlyWorkstation.gui.framework.viewer.baseball_card.BaseballCard;
+import org.janelia.it.FlyWorkstation.gui.util.Icons;
 import org.janelia.it.FlyWorkstation.model.entity.RootedEntity;
 
 import javax.swing.*;
@@ -38,6 +39,14 @@ public class BaseballCardPanel extends JPanel implements RootedEntityReceiver {
             cards.add( new BaseballCard( rootedEntity.getEntity() ) );
         }
         establishGui();
+        invalidate();
+        repaint();
+    }
+
+    public void showLoadingIndicator() {
+        removeAll();
+        add(new JLabel(Icons.getLoadingIcon()), BorderLayout.CENTER);
+        validate();
         invalidate();
         repaint();
     }
