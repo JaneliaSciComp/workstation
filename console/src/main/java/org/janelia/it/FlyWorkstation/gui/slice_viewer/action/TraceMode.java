@@ -232,8 +232,12 @@ implements MouseMode, KeyListener
 					Vec3 location = worldFromPixel(finalPos);
 					Vec3 oldLoc = dragAnchor.getLocation();
 					Vec3 dLoc = location.minus(oldLoc);
-					// Don't change slice direction value (change only screen X,Y)
-					Vec3 viewPlane = viewerInGround.inverse().times(new Vec3(1,1,0));
+					// relaxed restriction on move; used to disallow movement in z to
+                    //  prevent changing plane of annotations dragged while not actually
+                    //  on their plane (since they are visible and draggable in nearby
+                    //  planes)
+					// Vec3 viewPlane = viewerInGround.inverse().times(new Vec3(1,1,0));
+					Vec3 viewPlane = viewerInGround.inverse().times(new Vec3(1,1,1));
 					for (int i = 0; i < 3; ++i) {
 						dLoc.set(i, dLoc.get(i) * viewPlane.get(i));
 					}
