@@ -3,11 +3,12 @@ package org.janelia.it.FlyWorkstation.gui.dialogs.search.alignment_board;
 import org.apache.solr.client.solrj.SolrQuery;
 import org.janelia.it.FlyWorkstation.api.entity_model.management.ModelMgr;
 import org.janelia.it.FlyWorkstation.gui.dialogs.ModalDialog;
+import org.janelia.it.FlyWorkstation.gui.dialogs.search.SearchConfiguration;
+import org.janelia.it.FlyWorkstation.gui.dialogs.search.SearchParametersPanel;
 import org.janelia.it.FlyWorkstation.gui.framework.console.Browser;
 import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.FlyWorkstation.gui.framework.viewer.BaseballCardPanel;
 import org.janelia.it.FlyWorkstation.gui.framework.viewer.RootedEntityReceiver;
-import org.janelia.it.FlyWorkstation.gui.util.Icons;
 import org.janelia.it.FlyWorkstation.model.domain.AlignmentContext;
 import org.janelia.it.FlyWorkstation.model.domain.Sample;
 import org.janelia.it.FlyWorkstation.model.entity.RootedEntity;
@@ -17,13 +18,10 @@ import org.janelia.it.jacs.compute.api.support.SolrQueryBuilder;
 import org.janelia.it.jacs.compute.api.support.SolrResults;
 import org.janelia.it.jacs.model.entity.Entity;
 import org.janelia.it.jacs.model.entity.EntityConstants;
-import org.janelia.it.jacs.shared.utils.StringUtils;
 
 import javax.swing.*;
-import javax.swing.border.TitledBorder;
 import java.awt.*;
 import java.awt.event.ActionEvent;
-import java.awt.event.KeyEvent;
 import java.util.*;
 import java.util.List;
 
@@ -43,10 +41,11 @@ public class ABTargetedSearchDialog extends ModalDialog {
     private Entity searchRoot;
     private JRadioButton sampleRB;
     private JRadioButton neuronFragmentRB;
+    private SearchParametersPanel searchParamsPanel;
 
     // Input controls
-    private JComboBox queryTermComBox; // Not parameterized in Java6, where ant compile happens!
-    private JButton queryButton;
+//    private JComboBox queryTermComBox; // Not parameterized in Java6, where ant compile happens!
+//    private JButton queryButton;
     private BaseballCardPanel baseballCardPanel;
 
     private int dialogWidth;
@@ -94,66 +93,24 @@ public class ABTargetedSearchDialog extends ModalDialog {
 
     /** Simple parameter GUI. */
     private JPanel initParamGui() {
-        List<String> searchHistory = (List<String>) SessionMgr.getSessionMgr().getModelProperty(Browser.SEARCH_HISTORY);
-        if ( searchHistory == null ) {
-            queryTermComBox = new JComboBox();
-            queryTermComBox.setToolTipText("Enter query.");
-        }
-        else {
-            queryTermComBox = new JComboBox( new Vector<String>( searchHistory ) );
-            queryTermComBox.setToolTipText("Enter query or select existing query.");
-        }
-        queryTermComBox.setPreferredSize( new Dimension( 200, 40 ) );
-        queryTermComBox.setBorder( new TitledBorder( "Query" ) );
-        queryTermComBox.setEditable( true );
-
-        ButtonGroup entityTypeGroup = new ButtonGroup();
-        sampleRB = new JRadioButton(SAMPLE_BUTTON_TXT);
-        sampleRB.setActionCommand( SAMPLE_BUTTON_TXT );
-        entityTypeGroup.add(sampleRB);
-        neuronFragmentRB = new JRadioButton(NF_BUTTON_TXT);
-        neuronFragmentRB.setActionCommand( NF_BUTTON_TXT );
-        entityTypeGroup.add( neuronFragmentRB );
-        sampleRB.setSelected( true );
-
-        JPanel typeChoicePanel = new JPanel();
-        typeChoicePanel.setLayout( new BorderLayout() );
-        typeChoicePanel.add( sampleRB, BorderLayout.WEST );
-        typeChoicePanel.add( neuronFragmentRB, BorderLayout.EAST );
-        typeChoicePanel.setBorder( new TitledBorder( "Type" ) );
-
-        queryButton = new JButton(
+        searchParamsPanel = new SearchParametersPanel();
+        SearchConfiguration searchConfig = new SearchConfiguration();
+        searchConfig.load();
+        searchConfig.addConfigurationChangeListener(searchParamsPanel);
+        searchParamsPanel.init(searchConfig);
+        searchParamsPanel.getSearchButton().addActionListener(
             new QueryLaunchAction(
+                searchParamsPanel,
                 "Search",
-                queryTermComBox,
                 baseballCardPanel,
-                entityTypeGroup,
                 context,
                 searchRoot == null ? null : searchRoot.getId()
             )
         );
+        List<String> searchHistory = (List<String>) SessionMgr.getSessionMgr().getModelProperty(Browser.SEARCH_HISTORY);
+        searchParamsPanel.setSearchHistory( searchHistory );
+        return searchParamsPanel;
 
-        JPanel queryPanel = new JPanel();
-        queryPanel.setLayout( new GridBagLayout() );
-
-        Insets insets = new Insets( 1, 1, 1, 1 );
-        GridBagConstraints qtermConstraints = new GridBagConstraints(
-                0, 0, 4, 1, 2.0, 1.0, GridBagConstraints.NORTHWEST, GridBagConstraints.BOTH, insets, 0, 0
-        );
-
-        GridBagConstraints typeChoiceConstraints = new GridBagConstraints(
-                0, 1, 1, 1, 1.0, 1.0, GridBagConstraints.NORTHWEST, GridBagConstraints.NONE, insets, 0, 0
-        );
-
-        GridBagConstraints launcherConstraints = new GridBagConstraints(
-                0, 2, 1, 1, 1.0, 1.0, GridBagConstraints.NORTHWEST, GridBagConstraints.NONE, insets, 0, 0
-        );
-
-        queryPanel.add( queryTermComBox, qtermConstraints );
-        queryPanel.add( typeChoicePanel, typeChoiceConstraints );
-        queryPanel.add( queryButton, launcherConstraints );
-
-        return queryPanel;
     }
 
     private BaseballCardPanel initResultsGui() {
@@ -162,42 +119,34 @@ public class ABTargetedSearchDialog extends ModalDialog {
 
     private static class QueryLaunchAction extends AbstractAction {
         private BaseballCardPanel baseballCardPanel;
-        private JComboBox queryTermBox;
-        private ButtonGroup group;
         private Long searchRootId;
         private AlignmentBoardContext context;
+        private SearchParametersPanel queryBuilderSource;
 
         public QueryLaunchAction(
+                SearchParametersPanel queryBuilderSource,
                 String actionName,
-                JComboBox queryTermBox,
                 BaseballCardPanel baseballCardPanel,
-                ButtonGroup group,
                 AlignmentBoardContext context,
                 Long searchRootId
         ) {
             super( actionName );
+            this.queryBuilderSource = queryBuilderSource;
             this.baseballCardPanel = baseballCardPanel;
-            this.queryTermBox = queryTermBox;
-            this.group = group;
             this.searchRootId = searchRootId;
             this.context = context;
         }
 
         @Override
         public void actionPerformed(ActionEvent e) {
-            String selected = (String)queryTermBox.getSelectedItem();
-            if ( selected != null ) {
-                // set the thing busy.
-                showLoadingIndicator();
-                SearchWorker.SearchWorkerParam param = new SearchWorker.SearchWorkerParam();
-                param.setReceiver( baseballCardPanel );
-                param.setContext( context.getAlignmentContext() );
-                param.setSearchTypeKey(group.getSelection().getActionCommand());
-                param.setQuery( selected );
-                param.setSearchRootId( searchRootId );
-                SimpleWorker worker = new SearchWorker( param );
-                worker.execute();
-            }
+            // set the thing busy.
+            showLoadingIndicator();
+            SearchWorker.SearchWorkerParam param = new SearchWorker.SearchWorkerParam();
+            param.setReceiver(baseballCardPanel);
+            param.setContext(context.getAlignmentContext());
+            param.setSearchRootId( searchRootId );
+            SimpleWorker worker = new SearchWorker( param, queryBuilderSource.getQueryBuilder() );
+            worker.execute();
         }
         private void showLoadingIndicator() {
             baseballCardPanel.showLoadingIndicator();
@@ -209,42 +158,34 @@ public class ABTargetedSearchDialog extends ModalDialog {
 
         private SearchWorkerParam param;
         private List<RootedEntity> rootedResults;
+        private SolrQueryBuilder queryBuilder;
 
-        public SearchWorker( SearchWorkerParam param ) {
+        public SearchWorker( SearchWorkerParam param, SolrQueryBuilder queryBuilder ) {
             this.param = param;
+            this.queryBuilder = queryBuilder;
         }
         @Override
         protected void doStuff() throws Exception {
-            SolrQueryBuilder queryBuilder = new SolrQueryBuilder();
-            for ( String subjectKey : SessionMgr.getSubjectKeys() ) {
-                queryBuilder.addOwnerKey(subjectKey);
-            }
-
-            queryBuilder.setSearchString( param.getQuery() );
             if ( param.getSearchRootId() != null ) {
                 queryBuilder.setRootId( param.getSearchRootId() );
             }
 // todo use facets to filter vs only desired types
-//            queryBuilder.setFilters();
+//            queryBuilderSource.setFacets();
             SolrQuery query = queryBuilder.getQuery();
             query.setRows( 50 );
             query.setStart( 0 );
 
             SolrResults results = ModelMgr.getModelMgr().searchSolr(query);
             List<Entity> resultList = results.getResultList();
-            String targetFilterType = param.getSearchTypeKey();
-            String targetEntityTypeName = EntityConstants.TYPE_NEURON_FRAGMENT;
-            if ( targetFilterType.equals( SAMPLE_BUTTON_TXT ) ) {
-                targetEntityTypeName = EntityConstants.TYPE_SAMPLE;
-            }
             List<Entity> filteredList = new ArrayList<Entity>();
             for ( Entity result: resultList ) {
-                if ( result.getEntityTypeName().equals( targetEntityTypeName ) ) {
+                if ( EntityConstants.TYPE_SAMPLE.equals( result.getEntityTypeName() )   ||
+                     EntityConstants.TYPE_NEURON_FRAGMENT.equals( result.getEntityTypeName() ) ) {
                     filteredList.add( result );
                 }
             }
 
-            rootedResults = getCompatibleRootedEntities( filteredList, targetFilterType );
+            rootedResults = getCompatibleRootedEntities( filteredList );
         }
 
         @Override
@@ -265,40 +206,30 @@ public class ABTargetedSearchDialog extends ModalDialog {
          * @param entities from possibly many alingment contexts
          * @return those from specific context.
          */
-        private List<RootedEntity> getCompatibleRootedEntities( Collection<Entity> entities, String targetEntityTypeName ) {
+        private List<RootedEntity> getCompatibleRootedEntities( Collection<Entity> entities ) {
             List<RootedEntity> rtnVal = new ArrayList<RootedEntity>();
 
             // Next, walk each entity's tree looking for proper info.
-            if ( targetEntityTypeName.equals( EntityConstants.TYPE_NEURON_FRAGMENT ) ) {
-                for ( Entity entity: entities ) {
-                    try {
-                        // Now, to "prowl" the trees of the result list, to find out what can be added, here.
+            for ( Entity entity: entities ) {
+                try {
+                    // Now, to "prowl" the trees of the result list, to find out what can be added, here.
+                    RootedEntity rootedEntity = new RootedEntity( entity );
+                    if ( isSampleCompatible( param.getContext(), rootedEntity) ) {
+                        rtnVal.add( rootedEntity );
+                    }
+                    else {
                         Entity sampleEntity = ModelMgr.getModelMgr().getAncestorWithType(entity, EntityConstants.TYPE_SAMPLE);
                         if ( sampleEntity != null ) {
-                            RootedEntity rootedEntity = new RootedEntity( sampleEntity );
+                            rootedEntity = new RootedEntity( sampleEntity );
                             boolean compatible = isSampleCompatible( param.getContext(), rootedEntity );
                             if ( compatible ) {
                                 rtnVal.add( rootedEntity );
                             }
                         }
-                    } catch ( Exception ex ) {
-                        ex.printStackTrace();
-                        SessionMgr.getSessionMgr().handleException( ex );
                     }
-
-                }
-            }
-            else if ( targetEntityTypeName.equals( EntityConstants.TYPE_SAMPLE ) ) {
-                for ( Entity entity: entities ) {
-                    try {
-                        RootedEntity rootedEntity = new RootedEntity(entity);
-                        if ( isSampleCompatible( param.getContext(), rootedEntity) ) {
-                            rtnVal.add( rootedEntity );
-                        }
-                    } catch ( Exception ex ) {
-                        ex.printStackTrace();
-                        SessionMgr.getSessionMgr().handleException( ex );
-                    }
+                } catch ( Exception ex ) {
+                    ex.printStackTrace();
+                    SessionMgr.getSessionMgr().handleException( ex );
                 }
             }
 
@@ -329,7 +260,6 @@ public class ABTargetedSearchDialog extends ModalDialog {
             private RootedEntityReceiver receiver;
             private Long searchRootId;
             private AlignmentContext context;
-            private String searchTypeKey;
 
             public String getQuery() {
                 return query;
@@ -363,13 +293,6 @@ public class ABTargetedSearchDialog extends ModalDialog {
                 this.context = context;
             }
 
-            public String getSearchTypeKey() {
-                return searchTypeKey;
-            }
-
-            public void setSearchTypeKey(String searchTypeKey) {
-                this.searchTypeKey = searchTypeKey;
-            }
         }
     }
 }
