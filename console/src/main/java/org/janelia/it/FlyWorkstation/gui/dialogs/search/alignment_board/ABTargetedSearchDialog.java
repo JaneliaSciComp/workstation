@@ -17,11 +17,13 @@ import org.janelia.it.jacs.compute.api.support.SolrQueryBuilder;
 import org.janelia.it.jacs.compute.api.support.SolrResults;
 import org.janelia.it.jacs.model.entity.Entity;
 import org.janelia.it.jacs.model.entity.EntityConstants;
+import org.janelia.it.jacs.shared.utils.StringUtils;
 
 import javax.swing.*;
 import javax.swing.border.TitledBorder;
 import java.awt.*;
 import java.awt.event.ActionEvent;
+import java.awt.event.KeyEvent;
 import java.util.*;
 import java.util.List;
 
@@ -34,8 +36,6 @@ import java.util.List;
  * This specialized search dialog's output will be targeted at the alignment board.
  */
 public class ABTargetedSearchDialog extends ModalDialog {
-    private static final int DIALOG_WIDTH = 800;
-    private static final int DIALOG_HEIGHT = 800;
     public static final String SAMPLE_BUTTON_TXT = "Sample";
     public static final String NF_BUTTON_TXT = "Neuron Fragment";
 
@@ -48,6 +48,8 @@ public class ABTargetedSearchDialog extends ModalDialog {
     private JComboBox queryTermComBox; // Not parameterized in Java6, where ant compile happens!
     private JButton queryButton;
     private BaseballCardPanel baseballCardPanel;
+
+    private int dialogWidth;
 
     /**
      * Must always launch this with an alignment board context, even though this is modal.  Wish to make certain
@@ -79,8 +81,10 @@ public class ABTargetedSearchDialog extends ModalDialog {
 
     //------------------------------------------------GUI elements for the search inputs.
     private void initGeneralGui() {
+        Browser browser = SessionMgr.getBrowser();
         setLayout( new BorderLayout() );
-        setPreferredSize(new Dimension(DIALOG_WIDTH, DIALOG_HEIGHT));
+        setPreferredSize(new Dimension((int)(browser.getWidth()*0.8),(int)(browser.getHeight()*0.8)));
+        dialogWidth = getPreferredSize().width;
     }
 
     private void layoutGeneralGui( JPanel queryPanel, JPanel resultsPanel ) {
@@ -153,7 +157,7 @@ public class ABTargetedSearchDialog extends ModalDialog {
     }
 
     private BaseballCardPanel initResultsGui() {
-        return new BaseballCardPanel( false, DIALOG_WIDTH );
+        return new BaseballCardPanel( false, dialogWidth );
     }
 
     private static class QueryLaunchAction extends AbstractAction {
