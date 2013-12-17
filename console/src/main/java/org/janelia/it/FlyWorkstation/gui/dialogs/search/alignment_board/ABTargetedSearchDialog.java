@@ -34,13 +34,9 @@ import java.util.List;
  * This specialized search dialog's output will be targeted at the alignment board.
  */
 public class ABTargetedSearchDialog extends ModalDialog {
-    public static final String SAMPLE_BUTTON_TXT = "Sample";
-    public static final String NF_BUTTON_TXT = "Neuron Fragment";
 
     private AlignmentBoardContext context;
     private Entity searchRoot;
-    private JRadioButton sampleRB;
-    private JRadioButton neuronFragmentRB;
     private SearchParametersPanel searchParamsPanel;
 
     // Input controls
@@ -213,19 +209,17 @@ public class ABTargetedSearchDialog extends ModalDialog {
             for ( Entity entity: entities ) {
                 try {
                     // Now, to "prowl" the trees of the result list, to find out what can be added, here.
-                    RootedEntity rootedEntity = new RootedEntity( entity );
-                    if ( isSampleCompatible( param.getContext(), rootedEntity) ) {
-                        rtnVal.add( rootedEntity );
+                    RootedEntity rootedEntity = null;
+                    if ( entity.getEntityTypeName().equals( EntityConstants.TYPE_SAMPLE ) ) {
+                        rootedEntity = new RootedEntity( entity );
                     }
                     else {
                         Entity sampleEntity = ModelMgr.getModelMgr().getAncestorWithType(entity, EntityConstants.TYPE_SAMPLE);
-                        if ( sampleEntity != null ) {
-                            rootedEntity = new RootedEntity( sampleEntity );
-                            boolean compatible = isSampleCompatible( param.getContext(), rootedEntity );
-                            if ( compatible ) {
-                                rtnVal.add( rootedEntity );
-                            }
-                        }
+                        rootedEntity = new RootedEntity( sampleEntity );
+                    }
+
+                    if ( isSampleCompatible( param.getContext(), rootedEntity) ) {
+                        rtnVal.add( rootedEntity );
                     }
                 } catch ( Exception ex ) {
                     ex.printStackTrace();
