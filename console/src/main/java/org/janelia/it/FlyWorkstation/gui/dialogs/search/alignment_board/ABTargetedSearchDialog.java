@@ -38,10 +38,6 @@ public class ABTargetedSearchDialog extends ModalDialog {
     private AlignmentBoardContext context;
     private Entity searchRoot;
     private SearchParametersPanel searchParamsPanel;
-
-    // Input controls
-//    private JComboBox queryTermComBox; // Not parameterized in Java6, where ant compile happens!
-//    private JButton queryButton;
     private BaseballCardPanel baseballCardPanel;
 
     private int dialogWidth;
