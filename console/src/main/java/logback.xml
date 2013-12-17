@@ -35,7 +35,7 @@
   <logger name="org.janelia.it.FlyWorkstation.gui.framework.viewer.ImagesPanel" level="INFO"/>
   <logger name="org.janelia.it.FlyWorkstation.gui.framework.viewer.IconDemoPanel" level="INFO"/>
   
-  <logger name="org.janelia.it.FlyWorkstation.gui.framework.viewer.alignment_board" level="WARN"/>
+  <logger name="org.janelia.it.FlyWorkstation.gui.framework.viewer.alignment_board" level="INFO"/>
   <logger name="org.janelia.it.FlyWorkstation.gui.framework.viewer.alignment_board.LayersPanel" level="INFO"/>
   <logger name="org.janelia.it.FlyWorkstation.gui.framework.viewer.alignment_board.OutlineExpansionState" level="INFO"/>
   <logger name="org.janelia.it.FlyWorkstation.gui.framework.viewer.alignment_board.AlignmentBoardViewer" level="INFO"/>
