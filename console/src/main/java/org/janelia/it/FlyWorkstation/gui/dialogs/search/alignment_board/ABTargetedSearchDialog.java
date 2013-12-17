@@ -3,6 +3,7 @@ package org.janelia.it.FlyWorkstation.gui.dialogs.search.alignment_board;
 import org.apache.solr.client.solrj.SolrQuery;
 import org.janelia.it.FlyWorkstation.api.entity_model.management.ModelMgr;
 import org.janelia.it.FlyWorkstation.gui.dialogs.ModalDialog;
+import org.janelia.it.FlyWorkstation.gui.framework.console.Browser;
 import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.FlyWorkstation.gui.framework.viewer.BaseballCardPanel;
 import org.janelia.it.FlyWorkstation.gui.framework.viewer.RootedEntityReceiver;
@@ -40,7 +41,6 @@ public class ABTargetedSearchDialog extends ModalDialog {
 
     private AlignmentBoardContext context;
     private Entity searchRoot;
-    private List<String> searchHistory;
     private JRadioButton sampleRB;
     private JRadioButton neuronFragmentRB;
 
@@ -64,7 +64,7 @@ public class ABTargetedSearchDialog extends ModalDialog {
         initGeneralGui();
         baseballCardPanel = initResultsGui();
         JPanel queryPanel = initParamGui();
-        layoutGeneralGui( queryPanel, baseballCardPanel );
+        layoutGeneralGui(queryPanel, baseballCardPanel);
     }
 
     /** Launch with/without search-here starting point. */
@@ -75,15 +75,6 @@ public class ABTargetedSearchDialog extends ModalDialog {
 
     public void showDialog() {
         this.showDialog(null);
-    }
-
-    /** Optional search history, may be set prior to showing dialog */
-    public void setSearchHistory(List<String> searchHistory) {
-        this.searchHistory = searchHistory;
-    }
-
-    public List<String> getSearchHistory() {
-        return searchHistory;
     }
 
     //------------------------------------------------GUI elements for the search inputs.
@@ -99,6 +90,7 @@ public class ABTargetedSearchDialog extends ModalDialog {
 
     /** Simple parameter GUI. */
     private JPanel initParamGui() {
+        List<String> searchHistory = (List<String>) SessionMgr.getSessionMgr().getModelProperty(Browser.SEARCH_HISTORY);
         if ( searchHistory == null ) {
             queryTermComBox = new JComboBox();
             queryTermComBox.setToolTipText("Enter query.");
