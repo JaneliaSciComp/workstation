@@ -55,7 +55,7 @@ public class Browser extends JFrame implements Cloneable {
     private static final Logger log = LoggerFactory.getLogger(Browser.class);
     
     private static String BROWSER_POSITION = "BROWSER_POSITION_ON_SCREEN";
-	private static String SEARCH_HISTORY = "SEARCH_HISTORY";
+	public static String SEARCH_HISTORY = "SEARCH_HISTORY";
 	private static String VIEWERS_LINKED = "Browser.ViewersLinked";
 	
     // Used by printing mechanism to ensure capacity.
