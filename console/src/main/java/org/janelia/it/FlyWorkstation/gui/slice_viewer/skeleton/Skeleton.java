@@ -125,6 +125,9 @@ public class Skeleton {
     ///// SPLIT
     public Signal1<Anchor> splitAnchorRequestedSignal = new Signal1<Anchor>();
 
+    ///// reroot
+    public Signal1<Anchor> rerootNeuriteRequestedSignal = new Signal1<Anchor>();
+
 	///// CLEAR
 	public Slot clearSlot = new Slot() {
 		@Override
@@ -224,6 +227,10 @@ public class Skeleton {
 
     public void splitAnchorRequest(Anchor anchor) {
         splitAnchorRequestedSignal.emit(anchor);
+    }
+
+    public void rerootNeuriteRequest(Anchor anchor) {
+        rerootNeuriteRequestedSignal.emit(anchor);
     }
 
 	public boolean delete(Anchor anchor) {

@@ -74,6 +74,13 @@ elements of what's been done; that's handled by signals emitted from AnnotationM
         }
     };
 
+    public Slot1<Anchor> rerootNeuriteRequestedSlot = new Slot1<Anchor>() {
+        @Override
+        public void execute(Anchor anchor) {
+            rerootNeurite(anchor.getGuid());
+        }
+    };
+
     public Slot1<Anchor> moveAnchorRequestedSlot = new Slot1<Anchor>() {
         @Override
         public void execute(Anchor anchor) {
@@ -370,6 +377,33 @@ elements of what's been done; that's handled by signals emitted from AnnotationM
             }
         };
         splitter.execute();
+    }
+
+    public void rerootNeurite(final Long newRootAnnotationID) {
+        if (annotationModel.getCurrentWorkspace() == null) {
+            return;
+        }
+
+        SimpleWorker rerooter = new SimpleWorker() {
+            @Override
+            protected void doStuff() throws Exception {
+                annotationModel.rerootNeurite(newRootAnnotationID);
+            }
+
+            @Override
+            protected void hadSuccess() {
+                // nothing here, model emits signals
+            }
+
+            @Override
+            protected void hadError(Throwable error) {
+                JOptionPane.showMessageDialog(null,
+                        "Could not reroot neurite!",
+                        "Error",
+                        JOptionPane.ERROR_MESSAGE);
+            }
+        };
+        rerooter.execute();
     }
 
     /**

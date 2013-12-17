@@ -402,6 +402,12 @@ implements MouseMode, KeyListener
                                 skeleton.splitAnchorRequest(getHoverAnchor());
                             }
                         }));
+                        result.add(new JMenuItem(new AbstractAction("Set anchor as root") {
+                            @Override
+                            public void actionPerformed(ActionEvent actionEvent) {
+                                skeleton.rerootNeuriteRequest(getHoverAnchor());
+                            }
+                        }));
                     }
                     if (parent != null) {
                     	if (parent != hover) {

@@ -117,19 +117,26 @@ public class NeuriteTreePanel extends JPanel
             return;
         }
 
-        System.out.println("loaded neuron " + neuron.getName());
+        System.out.println(String.format("loaded neuron %s with ID %d", neuron.getName(), neuron.getId()));
         List<TmGeoAnnotation> roots = neuron.getRootAnnotations();
         if (roots.size() == 0) {
             System.out.println("neuron has no root annotation");
         } else {
             for (TmGeoAnnotation r: roots) {
-                int nChildren = r.getChildren().size();
-                System.out.println(String.format("root annotation at %.1f, %.1f, %.1f has %d children",
-                        r.getX(), r.getY(), r.getZ(), nChildren));
-                if (nChildren > 0) {
-                    for (TmGeoAnnotation child: r.getChildren()) {
-                        System.out.println("child at " + child.getX() + ", " + child.getY() + ", " + child.getZ());
+                System.out.println(String.format("root annotation %d at %.1f, %.1f, %.1f",
+                        r.getId(), r.getX(), r.getY(), r.getZ()));
+
+                for (TmGeoAnnotation a: r.getSubTreeList()) {
+                    TmGeoAnnotation parent = a.getParent();
+                    Long parentID;
+                    if (parent == null) {
+                        parentID = neuron.getId();
+                    } else {
+                        parentID = parent.getId();
                     }
+                    System.out.println(String.format("annotation %d with parent %d at %.1f, %.1f, %.1f",
+                            a.getId(), parentID, a.getX(), a.getY(), a.getZ()));
+
                 }
             }
         }        

@@ -554,6 +554,27 @@ that need to respond to changing data.
         annotationReparentedSignal.emit(annotation1);
     }
 
+    /**
+     * reroot a neurite at the input annotation; it becomes the top level parent, and
+     * other annotations' relations are adjusted to compensate
+     *
+     * @param newRootID = ID of new root annotation for neurite
+     * @throws Exception
+     */
+    public void rerootNeurite(Long newRootID) throws Exception {
+        // do it in the DAO layer
+        TmGeoAnnotation newRoot = getGeoAnnotationFromID(newRootID);
+        TmNeuron neuron = getNeuronFromAnnotation(newRoot.getId());
+        modelMgr.rerootNeurite(neuron, newRoot);
+
+        // notify, etc.; don't need to redraw anything, but the neurite list etc. need to be reloaded
+        updateCurrentWorkspace();
+        if (neuron.getId().equals(getCurrentNeuron().getId())){
+            updateCurrentNeuron();
+            neuronSelectedSignal.emit(getCurrentNeuron());
+        }
+    }
+
     public void addAnchoredPath(TmAnchoredPathEndpoints endpoints, List<List<Integer>> points) throws Exception{
 
         // check we can find both endpoints in same neuron
