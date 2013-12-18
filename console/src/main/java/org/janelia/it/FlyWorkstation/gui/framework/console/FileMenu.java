@@ -110,7 +110,7 @@ public class FileMenu extends JMenu {
                 menuNewTiledMicroscopeSample_actionPerformed();
             }
         });
-        menuNewItem.add(menuNewTiledMicroscopeSample);
+//        menuNewItem.add(menuNewTiledMicroscopeSample);
         // LLF: uncommenting New.../Alignment Board, but omitting brain sketch from the menu, as it has empty action.
         //menuNewItem.add(menuNewSketch);
 
