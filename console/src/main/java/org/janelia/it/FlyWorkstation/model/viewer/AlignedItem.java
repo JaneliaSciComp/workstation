@@ -218,7 +218,7 @@ public class AlignedItem extends EntityWrapper {
             return RenderMappingI.PASSTHROUGH_RENDER_ATTRIBUTE.equals(
                     entity.getValueByAttributeName(EntityConstants.ATTRIBUTE_RENDER_METHOD));
         } catch ( Exception ex ) {
-            System.out.println( "Get Pass-through value from: " + Thread.currentThread().getName() );
+            log.error( "Get Pass-through value from: " + Thread.currentThread().getName() );
             ex.printStackTrace();
             return false;
         }
@@ -248,7 +248,7 @@ public class AlignedItem extends EntityWrapper {
             String attVal = entity.getValueByAttributeName( EntityConstants.ATTRIBUTE_INCLUSION_STATUS );
             return InclusionStatus.get( attVal );
         } catch ( Exception ex ) {
-            System.out.println( "Get Inclusion State from: " + Thread.currentThread().getName() );
+            log.error( "Get Inclusion State from: " + Thread.currentThread().getName() );
             ex.printStackTrace();
             return InclusionStatus.In;
         }
