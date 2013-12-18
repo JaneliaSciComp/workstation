@@ -125,7 +125,8 @@ public abstract class SearchPane extends JPanel {
 		tabbedPane = new JTabbedPane();
 		tabbedPane.addTab("Hibernate Search", hibernateTab);
 		tabbedPane.addTab("Solr Search", solrTab);
-		tabbedPane.addTab("Groovy Search", groovyTab);
+	    // TODO: complete Groovy implementation and unhide this
+		//tabbedPane.addTab("Groovy Search", groovyTab);
 		tabbedPane.addChangeListener(new ChangeListener() {
 			@Override
 			public void stateChanged(ChangeEvent e) {
