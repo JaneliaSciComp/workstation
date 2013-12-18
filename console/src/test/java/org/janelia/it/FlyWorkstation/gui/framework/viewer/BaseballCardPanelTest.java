@@ -15,6 +15,7 @@ import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.util.*;
+import java.util.List;
 
 /**
  * Created with IntelliJ IDEA.
@@ -47,7 +48,7 @@ public class BaseballCardPanelTest extends JFrame {
         this.setSize(WIDTH, HEIGHT);
         this.setLocation( 0, 0 );
 
-        panel = new BaseballCardPanel( true, WIDTH );
+        panel = new BaseballCardPanel( true, WIDTH, 10 );
         this.add( panel, BorderLayout.CENTER );
         panel.setPreferredSize( this.getSize() );
         this.setDefaultCloseOperation( JFrame.EXIT_ON_CLOSE );
@@ -69,7 +70,7 @@ public class BaseballCardPanelTest extends JFrame {
 
     private void initCardPanel() {
         // Adding mock data to the panel.
-        Collection<RootedEntity> rEntities = new ArrayList<RootedEntity>();
+        List<RootedEntity> rEntities = new ArrayList<RootedEntity>();
         Long[] guids = {
                 1870583260875063394L,
                 1930003161519489192L,
