@@ -2,7 +2,7 @@ package org.janelia.it.FlyWorkstation.gui.framework.viewer;
 
 import org.janelia.it.FlyWorkstation.model.entity.RootedEntity;
 
-import java.util.Collection;
+import java.util.List;
 
 /**
  * Created with IntelliJ IDEA.
@@ -14,5 +14,5 @@ import java.util.Collection;
  * client of this interface.
  */
 public interface RootedEntityReceiver {
-    void setRootedEntities( Collection<RootedEntity> rootedEntities );
+    void setRootedEntities( List<RootedEntity> rootedEntities );
 }

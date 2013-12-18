@@ -17,8 +17,6 @@ import javax.swing.*;
 import java.awt.BorderLayout;
 import java.awt.GridLayout;
 import java.awt.Dimension;
-import java.awt.GridBagConstraints;
-import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.Callable;
@@ -49,6 +47,15 @@ public class BaseballCard {
     public BaseballCard( Entity entity ) {
         this();
         loadEntity( entity );
+    }
+
+    public String toString() {
+        if ( entity == null ) {
+            return null;
+        }
+        else {
+            return entity.getName();
+        }
     }
 
     public void loadEntity( final Entity entity ) {
@@ -136,17 +143,5 @@ public class BaseballCard {
         });
         return rtnVal;
     }
-
-//    private class DynamicValueTable extends DynamicTable {
-//        private Entity entity;
-//        public DynamicValueTable( Entity entity ) {
-//            this.entity = entity;
-//        }
-//
-//        @Override
-//        public Object getValue(Object userObject, DynamicColumn column) {
-//            return null;
-//        }
-//    }
 
 }

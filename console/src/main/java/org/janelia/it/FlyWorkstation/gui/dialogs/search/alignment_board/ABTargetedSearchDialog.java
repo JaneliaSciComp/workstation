@@ -35,6 +35,8 @@ import java.util.List;
  */
 public class ABTargetedSearchDialog extends ModalDialog {
 
+    private static final int DEFAULT_ROWS_PER_PAGE = 10;
+
     private AlignmentBoardContext context;
     private Entity searchRoot;
     private SearchParametersPanel searchParamsPanel;
@@ -90,8 +92,16 @@ public class ABTargetedSearchDialog extends ModalDialog {
         searchConfig.load();
         searchConfig.addConfigurationChangeListener(searchParamsPanel);
         searchParamsPanel.init(searchConfig);
+        SearchErrorHandler errorHandler = new SearchErrorHandler() {
+            @Override
+            public void handleError(Throwable th) {
+                ABTargetedSearchDialog.this.setVisible(false);
+                SessionMgr.getSessionMgr().handleException( th );
+            }
+        };
         searchParamsPanel.getSearchButton().addActionListener(
             new QueryLaunchAction(
+                errorHandler,
                 searchParamsPanel,
                 "Search",
                 baseballCardPanel,
@@ -106,7 +116,7 @@ public class ABTargetedSearchDialog extends ModalDialog {
     }
 
     private BaseballCardPanel initResultsGui() {
-        return new BaseballCardPanel( false, dialogWidth );
+        return new BaseballCardPanel( false, dialogWidth, DEFAULT_ROWS_PER_PAGE );
     }
 
     private static class QueryLaunchAction extends AbstractAction {
@@ -114,8 +124,10 @@ public class ABTargetedSearchDialog extends ModalDialog {
         private Long searchRootId;
         private AlignmentBoardContext context;
         private SearchParametersPanel queryBuilderSource;
+        private SearchErrorHandler errorHandler;
 
         public QueryLaunchAction(
+                SearchErrorHandler errorHandler,
                 SearchParametersPanel queryBuilderSource,
                 String actionName,
                 BaseballCardPanel baseballCardPanel,
@@ -127,6 +139,7 @@ public class ABTargetedSearchDialog extends ModalDialog {
             this.baseballCardPanel = baseballCardPanel;
             this.searchRootId = searchRootId;
             this.context = context;
+            this.errorHandler = errorHandler;
         }
 
         @Override
@@ -136,7 +149,8 @@ public class ABTargetedSearchDialog extends ModalDialog {
             SearchWorker.SearchWorkerParam param = new SearchWorker.SearchWorkerParam();
             param.setReceiver(baseballCardPanel);
             param.setContext(context.getAlignmentContext());
-            param.setSearchRootId( searchRootId );
+            param.setSearchRootId(searchRootId);
+            param.setErrorHandler(errorHandler);
             SimpleWorker worker = new SearchWorker( param, queryBuilderSource.getQueryBuilder() );
             worker.execute();
         }
@@ -144,6 +158,10 @@ public class ABTargetedSearchDialog extends ModalDialog {
             baseballCardPanel.showLoadingIndicator();
         }
 
+    }
+
+    static interface SearchErrorHandler {
+        void handleError( Throwable th );
     }
 
     private static class SearchWorker extends SimpleWorker {
@@ -164,8 +182,8 @@ public class ABTargetedSearchDialog extends ModalDialog {
 // todo use facets to filter vs only desired types
 //            queryBuilderSource.setFacets();
             SolrQuery query = queryBuilder.getQuery();
-            query.setRows( 50 );
             query.setStart( 0 );
+            query.setRows( Integer.MAX_VALUE );
 
             SolrResults results = ModelMgr.getModelMgr().searchSolr(query);
             List<Entity> resultList = results.getResultList();
@@ -188,6 +206,7 @@ public class ABTargetedSearchDialog extends ModalDialog {
 
         @Override
         protected void hadError(Throwable error) {
+            param.getErrorHandler().handleError( error );
             SessionMgr.getSessionMgr().handleException( error );
         }
 
@@ -219,7 +238,7 @@ public class ABTargetedSearchDialog extends ModalDialog {
                     }
                 } catch ( Exception ex ) {
                     ex.printStackTrace();
-                    SessionMgr.getSessionMgr().handleException( ex );
+                    throw new RuntimeException( ex );
                 }
             }
 
@@ -250,6 +269,8 @@ public class ABTargetedSearchDialog extends ModalDialog {
             private RootedEntityReceiver receiver;
             private Long searchRootId;
             private AlignmentContext context;
+            private SearchErrorHandler errorHandler;
+            private int startingRow;
 
             public String getQuery() {
                 return query;
@@ -283,6 +304,21 @@ public class ABTargetedSearchDialog extends ModalDialog {
                 this.context = context;
             }
 
+            public void setErrorHandler( SearchErrorHandler errorHandler ) {
+                this.errorHandler = errorHandler;
+            }
+
+            public SearchErrorHandler getErrorHandler() {
+                return errorHandler;
+            }
+
+            public int getStartingRow() {
+                return startingRow;
+            }
+
+            public void setStartingRow(int startingRow) {
+                this.startingRow = startingRow;
+            }
         }
     }
 }
