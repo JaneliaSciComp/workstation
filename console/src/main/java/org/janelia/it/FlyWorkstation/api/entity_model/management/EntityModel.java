@@ -151,6 +151,7 @@ public class EntityModel {
 		    log.warn("putOrUpdate: entity permissions are uninitialized");
 			return null;
 		}
+		
 		synchronized (this) {
 			Entity canonicalEntity = entityCache.getIfPresent(entity.getId());
 			if (canonicalEntity!=null) {
@@ -169,6 +170,11 @@ public class EntityModel {
 				entityCache.put(entity.getId(), entity);
 			}
 
+			// Ensure all EntityDatas have their parent set correctly
+	        for(EntityData ed : canonicalEntity.getEntityData()) {
+	            ed.setParentEntity(canonicalEntity);
+	        }
+	        
             // Replace existing parents' children
             for(Long parentId : parentMap.get(canonicalEntity.getId())) {
                 Entity parent = entityCache.getIfPresent(parentId);
