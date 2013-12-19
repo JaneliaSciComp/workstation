@@ -12,6 +12,10 @@ import javax.swing.*;
 import javax.swing.table.AbstractTableModel;
 import javax.swing.table.DefaultTableCellRenderer;
 import java.awt.*;
+import java.awt.event.ComponentAdapter;
+import java.awt.event.ComponentEvent;
+import java.awt.event.ContainerAdapter;
+import java.awt.event.ContainerEvent;
 import java.util.*;
 import java.util.List;
 import java.util.concurrent.Callable;
@@ -69,7 +73,6 @@ public class BaseballCardPanel extends JPanel implements RootedEntityReceiver {
             cardTable.addRow( card );
         }
         cardTable.updateTableModel();
-        // Causes -1 OOB ((AbstractTableModel)cardTable.getTable().getModel()).fireTableDataChanged();
         updateMoreButtons();
         requestRedraw();
     }
@@ -82,7 +85,6 @@ public class BaseballCardPanel extends JPanel implements RootedEntityReceiver {
             cardTable.addRow( card );
         }
         cardTable.updateTableModel();
-        // Causes -1 OOB ((AbstractTableModel)cardTable.getTable().getModel()).fireTableDataChanged();
         updateMoreButtons();
         requestRedraw();
     }
@@ -139,10 +141,11 @@ public class BaseballCardPanel extends JPanel implements RootedEntityReceiver {
                 }
             }
         };
-        cardTable.getTable().setDefaultRenderer( Object.class, new ComponentSelfRenderer() );
+        cardTable.getTable().setDefaultRenderer( Object.class, new ComponentSelfRenderer(this) );
         cardTable.getTable().setRowHeight(BaseballCard.IMAGE_HEIGHT);
         cardTable.addColumn(IMAGE_COLUMN_HEADER);
         cardTable.addColumn(DETAILS_COLUMN_HEADER);
+        cardTable.getTable().setRowSelectionAllowed( selectable );
 
         Dimension detailsSize = new Dimension(
                 preferredWidth - BaseballCard.IMAGE_WIDTH, BaseballCard.IMAGE_HEIGHT
@@ -199,6 +202,13 @@ public class BaseballCardPanel extends JPanel implements RootedEntityReceiver {
     }
 
     private static class ComponentSelfRenderer extends DefaultTableCellRenderer {
+
+        private BaseballCardPanel bbc;
+
+        public ComponentSelfRenderer( BaseballCardPanel bbc ) {
+            this.bbc = bbc;
+        }
+
         @Override
         public Component getTableCellRendererComponent(JTable table, Object value,
                                                        boolean isSelected, boolean hasFocus, int row, int column) {
@@ -209,7 +219,25 @@ public class BaseballCardPanel extends JPanel implements RootedEntityReceiver {
             else {
                 rtnVal = null;
             }
+
+            // Note: need to have this feedback to redraw, since this renderer is not called again
+            // once things change in the contained component.
+            if ( value instanceof Container ) {
+                Container container = (Container)value;
+                container.addContainerListener(new ContainerAdapter() {
+                    @Override
+                    public void componentAdded(ContainerEvent e) {
+                        super.componentAdded(e);
+                        requestPanelRedraw();
+                    }
+                });
+            }
+
             return rtnVal;
+        }
+         private void requestPanelRedraw() {
+            bbc.validate();
+            bbc.repaint();
         }
     }
 

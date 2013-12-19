@@ -78,8 +78,9 @@ public class ABTargetedSearchDialog extends ModalDialog {
     private void initGeneralGui() {
         Browser browser = SessionMgr.getBrowser();
         setLayout( new BorderLayout() );
-        setPreferredSize(new Dimension((int)(browser.getWidth()*0.8),(int)(browser.getHeight()*0.8)));
-        dialogWidth = getPreferredSize().width;
+        Dimension preferredSize = new Dimension((int) (browser.getWidth() * 0.8), (int) (browser.getHeight() * 0.8));
+        setPreferredSize( preferredSize );
+        dialogWidth = preferredSize.width;
     }
 
     private void layoutGeneralGui( JPanel queryPanel, JPanel resultsPanel ) {

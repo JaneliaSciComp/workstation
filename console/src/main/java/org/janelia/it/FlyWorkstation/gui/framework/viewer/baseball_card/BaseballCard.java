@@ -14,6 +14,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.swing.*;
+import javax.swing.border.BevelBorder;
+import javax.swing.border.LineBorder;
 import java.awt.*;
 import java.util.ArrayList;
 import java.util.List;
@@ -38,7 +40,8 @@ public class BaseballCard {
     private Logger logger = LoggerFactory.getLogger( BaseballCard.class );
 
     public BaseballCard() {
-        textDetailsPanel = new JPanel();
+        textDetailsPanel = new ToolTipRelayPanel();
+        ToolTipManager.sharedInstance().registerComponent( textDetailsPanel );
         textDetailsPanel.setLayout( new BorderLayout( ) );
     }
 
@@ -77,15 +80,20 @@ public class BaseballCard {
             @Override
             protected void hadSuccess() {
                 // Want to get the annotations, and the entity name.
-                int rows = 1 + annotations.size(); // First is for the entity name.
                 textDetailsPanel.setLayout(new BorderLayout());
-                JLabel entityNameLabel = makeLabelWithTip( entity.getName(), "Entity" );
-                textDetailsPanel.add(entityNameLabel, BorderLayout.NORTH );
+                JLabel entityNameLabel = makeLabelWithTip( entity.getName(), "Entity: " + entity.getId(), true );
+                textDetailsPanel.add( entityNameLabel, BorderLayout.NORTH );
 
-                JPanel annotationPanel = new JPanel();
+                JPanel annotationPanel = new ToolTipRelayPanel();
                 annotationPanel.setLayout( new FlowLayout() );
                 for ( OntologyAnnotation annotation: annotations ) {
-                    annotationPanel.add( makeLabelWithTip( annotation.getValueString(), annotation.getKeyString() ));
+                    annotationPanel.add(
+                            makeLabelWithTip(
+                                    annotation.getValueString(),
+                                    annotation.getKeyString() + ": " + annotation.getValueString(),
+                                    false
+                            )
+                    );
                 }
                 textDetailsPanel.add( annotationPanel, BorderLayout.CENTER );
 
@@ -118,9 +126,10 @@ public class BaseballCard {
         return dynamicImagePanel;
     }
 
-    private JLabel makeLabelWithTip( String labelVal, String toolTipText ) {
+    private JLabel makeLabelWithTip( String labelVal, String toolTipText, boolean raised ) {
         JLabel rtnVal = new JLabel( labelVal );
         rtnVal.setToolTipText( toolTipText );
+        rtnVal.setBorder( new BevelBorder( raised ? BevelBorder.RAISED : BevelBorder.LOWERED ) );
         return rtnVal;
     }
 
@@ -135,20 +144,70 @@ public class BaseballCard {
         rtnVal.rescaleImage( IMAGE_WIDTH );
         rtnVal.setPreferredSize(new Dimension( IMAGE_WIDTH, IMAGE_HEIGHT ));
 
-        rtnVal.setViewable( true, new Callable<Void>() {
+        rtnVal.setViewable(true, new Callable<Void>() {
             @Override
             public Void call() throws Exception {
                 // Register our image height
-                if (rtnVal.getMaxSizeImage()!=null && dynamicImagePanel.getImage()!=null) {
+                if (rtnVal.getMaxSizeImage() != null && dynamicImagePanel.getImage() != null) {
                     double w = rtnVal.getImage().getIconWidth();
                     double h = rtnVal.getImage().getIconHeight();
-                    dynamicImagePanel.setDisplaySize( (int)h );
+                    dynamicImagePanel.setDisplaySize((int) h);
                 }
                 return null;
             }
 
         });
+        rtnVal.setToolTipText( entity.getName() );
         return rtnVal;
     }
 
+    private class ToolTipRelayPanel extends JPanel {
+        @Override
+        public String getToolTipText() {
+            StringBuilder tooltip = new StringBuilder();
+            tooltip.append("<html><ul>");
+            for ( int i = 0; i < getComponentCount(); i++ ) {
+                Component c = getComponent( i );
+                if ( c instanceof JLabel ) {
+                    JLabel label = (JLabel)c;
+                    String toolTipText = label.getToolTipText();
+                    if ( toolTipText != null  &&  toolTipText.trim().length() > 0 ) {
+                        tooltip.append("<li><b>")
+                                .append(toolTipText)
+                                .append("</b></li>");
+                        logger.info("Appended " + toolTipText);
+                    }
+                }
+            }
+            tooltip.append("</ul></html>");
+            return tooltip.toString();
+        }
+
+//        public String getLocationSpecificToolTipText() {
+//            // Establish position of mouse-in-hover.
+//            Point mousePoint = MouseInfo.getPointerInfo().getLocation();
+//
+//            // Establish which contained/child component is there.
+////            Component c = this.getComponentAt( mousePoint );
+////            if ( c != null  &&  c instanceof JComponent ) {
+////                // Deliver tool tip from child.
+////                return ((JComponent)c).getToolTipText();
+////            }
+//
+//            for ( int i = 0; i < getComponentCount(); i++ ) {
+//                Component c = getComponent( i );
+//                Rectangle rect = new Rectangle(
+//                        c.getLocation().x + this.getLocationOnScreen().x, c.getLocation().y + this.getLocationOnScreen().y,
+//                        c.getWidth(), c.getHeight()
+//                );
+//                if ( rect.contains( mousePoint ) ) {
+//                    if ( c instanceof JComponent ) {
+//                        // Deliver tool tip from child.
+//                        return ((JComponent)c).getToolTipText();
+//                    }
+//                }
+//            }
+//            return entity.getName();
+//        }
+    }
 }
