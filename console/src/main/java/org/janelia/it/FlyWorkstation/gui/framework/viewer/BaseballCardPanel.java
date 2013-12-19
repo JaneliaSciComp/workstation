@@ -9,6 +9,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.swing.*;
+import javax.swing.table.AbstractTableModel;
 import javax.swing.table.DefaultTableCellRenderer;
 import java.awt.*;
 import java.util.*;
@@ -33,6 +34,7 @@ public class BaseballCardPanel extends JPanel implements RootedEntityReceiver {
     private int rowsPerPage;
     private int nextEntityNum;
     private List<CheckboxWithData> checkboxes;
+    private DynamicTable cardTable;
     private List<RootedEntity> rootedEntities;
 
     private Logger logger = LoggerFactory.getLogger( BaseballCardPanel.class );
@@ -62,8 +64,12 @@ public class BaseballCardPanel extends JPanel implements RootedEntityReceiver {
         int endOfPage = nextEntityNum + rowsPerPage;
         for ( ; nextEntityNum < endOfPage  &&  nextEntityNum < rootedEntities.size(); nextEntityNum++ ) {
             RootedEntity rootedEntity = rootedEntities.get( nextEntityNum );
-            cards.add(new BaseballCard(rootedEntity.getEntity()));
+            BaseballCard card = new BaseballCard(rootedEntity.getEntity());
+            cards.add( card );
+            cardTable.addRow( card );
         }
+        cardTable.updateTableModel();
+        // Causes -1 OOB ((AbstractTableModel)cardTable.getTable().getModel()).fireTableDataChanged();
         updateMoreButtons();
         requestRedraw();
     }
@@ -71,8 +77,12 @@ public class BaseballCardPanel extends JPanel implements RootedEntityReceiver {
     public void showAll() {
         for ( ; nextEntityNum < rootedEntities.size(); nextEntityNum++ ) {
             RootedEntity rootedEntity = rootedEntities.get( nextEntityNum );
-            cards.add( new BaseballCard( rootedEntity.getEntity() ) );
+            BaseballCard card = new BaseballCard(rootedEntity.getEntity());
+            cards.add( card );
+            cardTable.addRow( card );
         }
+        cardTable.updateTableModel();
+        // Causes -1 OOB ((AbstractTableModel)cardTable.getTable().getModel()).fireTableDataChanged();
         updateMoreButtons();
         requestRedraw();
     }
@@ -96,10 +106,9 @@ public class BaseballCardPanel extends JPanel implements RootedEntityReceiver {
     }
 
     private void establishGui() {
-        nextEntityNum = 0;
         removeAll();
 
-        DynamicTable cardTable = new DynamicTable( true, true ) {
+        cardTable = new DynamicTable( true, true ) {
             @Override
             public Object getValue(Object userObject, DynamicColumn column) {
                 BaseballCard card = (BaseballCard)userObject;
@@ -125,6 +134,7 @@ public class BaseballCardPanel extends JPanel implements RootedEntityReceiver {
                     showAnotherPage();
                     success.call();
                 } catch ( Exception ex ) {
+                    ex.printStackTrace();
                     logger.error( ex.getMessage() );
                 }
             }
@@ -134,44 +144,6 @@ public class BaseballCardPanel extends JPanel implements RootedEntityReceiver {
         cardTable.addColumn(IMAGE_COLUMN_HEADER);
         cardTable.addColumn(DETAILS_COLUMN_HEADER);
 
-        int nextCol = 0;
-        int gridHeight = 3;
-        Insets flushInsets = new Insets(0,0,0,0);
-        Insets borderInsets = new Insets(1,1,1,1);
-        GridBagConstraints checkBoxConstraints = null;
-        if (selectable) {
-            checkBoxConstraints = new GridBagConstraints(
-                    nextCol, 0,
-                    1, gridHeight,
-                    0.0, 1.0,
-                    GridBagConstraints.WEST,
-                    GridBagConstraints.NONE,
-                    flushInsets,
-                    0,0
-            );
-            nextCol ++;
-            checkboxes = new ArrayList<CheckboxWithData>();
-        }
-        GridBagConstraints imageConstraints = new GridBagConstraints(
-                nextCol, 0,
-                2, gridHeight,
-                0.0, 1.0,
-                GridBagConstraints.NORTHWEST,
-                GridBagConstraints.NONE,
-                borderInsets,
-                0,0
-        );
-        nextCol += 2;
-        GridBagConstraints detailsConstraints = new GridBagConstraints(
-                nextCol, 0,
-                4, gridHeight,
-                10.0, 1.0,
-                GridBagConstraints.NORTHWEST,
-                GridBagConstraints.HORIZONTAL,
-                flushInsets,
-                0,0
-        );
-
         Dimension detailsSize = new Dimension(
                 preferredWidth - BaseballCard.IMAGE_WIDTH, BaseballCard.IMAGE_HEIGHT
         );
@@ -180,19 +152,7 @@ public class BaseballCardPanel extends JPanel implements RootedEntityReceiver {
         );
         for ( int i = 0; i < cards.size(); i++ ) {
             BaseballCard card = cards.get( i );
-            if (selectable) {
-                checkBoxConstraints.gridy = i * gridHeight;
-                CheckboxWithData checkboxWithData = new CheckboxWithData( card );
-                checkboxes.add( checkboxWithData );
-            }
-
-            imageConstraints.gridy = i * gridHeight;
-            card.getDynamicImagePanel().setPreferredSize(imageSize);
-
-            detailsConstraints.gridy = i * gridHeight;
-            card.getEntityDetailsPanel().setPreferredSize(detailsSize);
-
-            cardTable.addRow( card );
+            addCardToTable(detailsSize, imageSize, card);
         }
 
         cardTable.setMoreResults( rootedEntities.size() > rowsPerPage );
@@ -200,8 +160,15 @@ public class BaseballCardPanel extends JPanel implements RootedEntityReceiver {
         this.setLayout(new BorderLayout());
         this.add(cardTable, BorderLayout.CENTER);
         cardTable.updateTableModel();
-        validate();
-        repaint();
+
+        requestRedraw();
+    }
+
+    private void addCardToTable( Dimension detailsSize, Dimension imageSize, BaseballCard card) {
+        card.getDynamicImagePanel().setPreferredSize(imageSize);
+        card.getEntityDetailsPanel().setPreferredSize(detailsSize);
+
+        cardTable.addRow( card );
     }
 
     private void updateMoreButtons() {

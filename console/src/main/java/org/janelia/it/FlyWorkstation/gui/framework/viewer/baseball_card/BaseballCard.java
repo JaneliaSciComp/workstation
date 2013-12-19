@@ -14,9 +14,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.swing.*;
-import java.awt.BorderLayout;
-import java.awt.GridLayout;
-import java.awt.Dimension;
+import java.awt.*;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.Callable;
@@ -80,14 +78,17 @@ public class BaseballCard {
             protected void hadSuccess() {
                 // Want to get the annotations, and the entity name.
                 int rows = 1 + annotations.size(); // First is for the entity name.
-                textDetailsPanel.setLayout( new GridLayout( rows, 2 ) );
-                textDetailsPanel.add( new JLabel("Entity") );
-                textDetailsPanel.add( new JLabel( entity.getName() ) );
+                textDetailsPanel.setLayout(new BorderLayout());
+                JLabel entityNameLabel = makeLabelWithTip( entity.getName(), "Entity" );
+                textDetailsPanel.add(entityNameLabel, BorderLayout.NORTH );
 
+                JPanel annotationPanel = new JPanel();
+                annotationPanel.setLayout( new FlowLayout() );
                 for ( OntologyAnnotation annotation: annotations ) {
-                    textDetailsPanel.add( new JLabel( annotation.getKeyString() ) );
-                    textDetailsPanel.add( new JLabel( annotation.getValueString() ) );
+                    annotationPanel.add( makeLabelWithTip( annotation.getValueString(), annotation.getKeyString() ));
                 }
+                textDetailsPanel.add( annotationPanel, BorderLayout.CENTER );
+
             }
 
             @Override
@@ -115,6 +116,12 @@ public class BaseballCard {
 
     public DynamicImagePanel getDynamicImagePanel() {
         return dynamicImagePanel;
+    }
+
+    private JLabel makeLabelWithTip( String labelVal, String toolTipText ) {
+        JLabel rtnVal = new JLabel( labelVal );
+        rtnVal.setToolTipText( toolTipText );
+        return rtnVal;
     }
 
     private DynamicImagePanel getDynamicImagePanel(String imageFilePath) {

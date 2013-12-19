@@ -18,6 +18,8 @@ import org.janelia.it.jacs.compute.api.support.SolrQueryBuilder;
 import org.janelia.it.jacs.compute.api.support.SolrResults;
 import org.janelia.it.jacs.model.entity.Entity;
 import org.janelia.it.jacs.model.entity.EntityConstants;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.swing.*;
 import java.awt.*;
@@ -151,6 +153,7 @@ public class ABTargetedSearchDialog extends ModalDialog {
             param.setContext(context.getAlignmentContext());
             param.setSearchRootId(searchRootId);
             param.setErrorHandler(errorHandler);
+            param.setStartingRow( 0 );
             SimpleWorker worker = new SearchWorker( param, queryBuilderSource.getQueryBuilder() );
             worker.execute();
         }
@@ -166,6 +169,7 @@ public class ABTargetedSearchDialog extends ModalDialog {
 
     private static class SearchWorker extends SimpleWorker {
 
+        private Logger logger = LoggerFactory.getLogger(ABTargetedSearchDialog.class);
         private SearchWorkerParam param;
         private List<RootedEntity> rootedResults;
         private SolrQueryBuilder queryBuilder;
@@ -179,11 +183,17 @@ public class ABTargetedSearchDialog extends ModalDialog {
             if ( param.getSearchRootId() != null ) {
                 queryBuilder.setRootId( param.getSearchRootId() );
             }
-// todo use facets to filter vs only desired types
-//            queryBuilderSource.setFacets();
+
+            Map<String,Set<String>> filters = new HashMap<String,Set<String>>();
+            Set<String> filterValues = new HashSet<String>();
+            filterValues.add( EntityConstants.TYPE_SAMPLE );
+            filterValues.add( EntityConstants.TYPE_NEURON_FRAGMENT );
+            filters.put( "entity_type", filterValues );
+
+            queryBuilder.setFilters( filters );
             SolrQuery query = queryBuilder.getQuery();
-            query.setStart( 0 );
-            query.setRows( Integer.MAX_VALUE );
+            query.setStart( param.getStartingRow() );
+            query.setRows( 200 ); //MAX_VALUE
 
             SolrResults results = ModelMgr.getModelMgr().searchSolr(query);
             List<Entity> resultList = results.getResultList();
@@ -218,6 +228,7 @@ public class ABTargetedSearchDialog extends ModalDialog {
          * @return those from specific context.
          */
         private List<RootedEntity> getCompatibleRootedEntities( Collection<Entity> entities ) {
+            logger.info("Found {} raw entities.", entities.size());
             List<RootedEntity> rtnVal = new ArrayList<RootedEntity>();
 
             // Next, walk each entity's tree looking for proper info.
@@ -242,6 +253,7 @@ public class ABTargetedSearchDialog extends ModalDialog {
                 }
             }
 
+            logger.info("Filtered to {} entities.", rtnVal.size());
             return rtnVal;
         }
 
