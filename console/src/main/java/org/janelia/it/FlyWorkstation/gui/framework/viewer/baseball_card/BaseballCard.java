@@ -175,7 +175,6 @@ public class BaseballCard {
                         tooltip.append("<li><b>")
                                 .append(toolTipText)
                                 .append("</b></li>");
-                        logger.info("Appended " + toolTipText);
                     }
                 }
             }

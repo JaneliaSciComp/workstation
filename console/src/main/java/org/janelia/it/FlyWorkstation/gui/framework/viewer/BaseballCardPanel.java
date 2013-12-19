@@ -9,13 +9,12 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.swing.*;
+import javax.swing.event.ListSelectionEvent;
+import javax.swing.event.ListSelectionListener;
 import javax.swing.table.AbstractTableModel;
 import javax.swing.table.DefaultTableCellRenderer;
 import java.awt.*;
-import java.awt.event.ComponentAdapter;
-import java.awt.event.ComponentEvent;
-import java.awt.event.ContainerAdapter;
-import java.awt.event.ContainerEvent;
+import java.awt.event.*;
 import java.util.*;
 import java.util.List;
 import java.util.concurrent.Callable;
@@ -37,7 +36,6 @@ public class BaseballCardPanel extends JPanel implements RootedEntityReceiver {
     private int preferredWidth;
     private int rowsPerPage;
     private int nextEntityNum;
-    private List<CheckboxWithData> checkboxes;
     private DynamicTable cardTable;
     private List<RootedEntity> rootedEntities;
 
@@ -99,9 +97,10 @@ public class BaseballCardPanel extends JPanel implements RootedEntityReceiver {
     /** Everything checked can be returned from here. */
     public List<BaseballCard> getSelectedCards() {
         List<BaseballCard> returnList = new ArrayList<BaseballCard>();
-        for ( CheckboxWithData data: checkboxes ) {
-            if ( data.isSelected() ) {
-                returnList.add( data.getCard() );
+        List<Object> selectedObjects = cardTable.getSelectedObjects();
+        for ( Object o: selectedObjects ) {
+            if (o instanceof BaseballCard) {
+                returnList.add( (BaseballCard) o );
             }
         }
         return returnList;
@@ -146,6 +145,7 @@ public class BaseballCardPanel extends JPanel implements RootedEntityReceiver {
         cardTable.addColumn(IMAGE_COLUMN_HEADER);
         cardTable.addColumn(DETAILS_COLUMN_HEADER);
         cardTable.getTable().setRowSelectionAllowed( selectable );
+        cardTable.getTable().setSelectionMode( ListSelectionModel.MULTIPLE_INTERVAL_SELECTION );
 
         Dimension detailsSize = new Dimension(
                 preferredWidth - BaseballCard.IMAGE_WIDTH, BaseballCard.IMAGE_HEIGHT
@@ -163,6 +163,34 @@ public class BaseballCardPanel extends JPanel implements RootedEntityReceiver {
         this.setLayout(new BorderLayout());
         this.add(cardTable, BorderLayout.CENTER);
         cardTable.updateTableModel();
+
+        JButton addToBoardBtn = new JButton("Add to Alignment Board");
+        addToBoardBtn.addActionListener( new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                List<Object> selected = cardTable.getSelectedObjects();
+                for ( Object o: selected ) {
+                    System.out.println( o.toString() );
+                }
+            }
+        });
+
+        cardTable.getTable().getSelectionModel().addListSelectionListener( new ListSelectionListener() {
+            @Override
+            public void valueChanged(ListSelectionEvent e) {
+                for ( BaseballCard card: cards ) {
+                    card.getEntityDetailsPanel().setBackground( cardTable.getBackground() );
+                    card.getEntityDetailsPanel().setForeground( cardTable.getForeground() );
+                }
+                List<BaseballCard> selection = getSelectedCards();
+                for ( BaseballCard selected: selection ) {
+                    selected.getEntityDetailsPanel().setBackground( cardTable.getTable().getSelectionBackground() );
+                    selected.getEntityDetailsPanel().setForeground( cardTable.getTable().getSelectionForeground() );
+                }
+            }
+        });
+
+        this.add( addToBoardBtn, BorderLayout.SOUTH ); // Needs prettifying...
 
         requestRedraw();
     }

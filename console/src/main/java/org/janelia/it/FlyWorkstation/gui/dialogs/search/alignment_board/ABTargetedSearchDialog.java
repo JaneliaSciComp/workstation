@@ -119,7 +119,7 @@ public class ABTargetedSearchDialog extends ModalDialog {
     }
 
     private BaseballCardPanel initResultsGui() {
-        return new BaseballCardPanel( false, dialogWidth, DEFAULT_ROWS_PER_PAGE );
+        return new BaseballCardPanel( true, dialogWidth, DEFAULT_ROWS_PER_PAGE );
     }
 
     private static class QueryLaunchAction extends AbstractAction {
