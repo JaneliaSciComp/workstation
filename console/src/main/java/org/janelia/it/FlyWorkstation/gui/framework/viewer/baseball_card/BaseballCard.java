@@ -151,6 +151,7 @@ public class BaseballCard {
 
     private JLabel makeLabelWithTip( String labelVal, String toolTipText, boolean raised ) {
         JLabel rtnVal = new JLabel( labelVal );
+        rtnVal.setOpaque( true );
         rtnVal.setToolTipText( toolTipText );
         rtnVal.setBorder( new BevelBorder( raised ? BevelBorder.RAISED : BevelBorder.LOWERED ) );
         return rtnVal;
@@ -161,6 +162,10 @@ public class BaseballCard {
                 imageFilePath, ImagesPanel.MAX_IMAGE_WIDTH
         ) {
             protected void syncToViewerState() {
+            }
+
+            public String toString() {
+                return getToolTipText();
             }
         };
 
@@ -185,6 +190,10 @@ public class BaseballCard {
     }
 
     private class ToolTipRelayPanel extends JPanel {
+        public ToolTipRelayPanel() {
+            setOpaque( true );
+        }
+
         @Override
         public String getToolTipText() {
             StringBuilder tooltip = new StringBuilder();
@@ -194,9 +203,47 @@ public class BaseballCard {
             return tooltip.toString();
         }
 
-        private void getToolTipText( StringBuilder tooltip, JPanel startingComponent ) {
-            for ( int i = 0; i < startingComponent.getComponentCount(); i++ ) {
-                Component c = startingComponent.getComponent( i );
+        @Override
+        public void setBackground( Color color ) {
+            List<JComponent> tree = new ArrayList<JComponent>();
+            getAffectedDescendants(tree, this);
+            for ( JComponent c: tree ) {
+                c.setBackground( color );
+            }
+        }
+
+        @Override
+        public void setForeground( Color color ) {
+            List<JComponent> tree = new ArrayList<JComponent>();
+            getAffectedDescendants( tree, this );
+            for ( JComponent c: tree ) {
+                c.setForeground(color);
+            }
+        }
+
+        @Override
+        public String toString() {
+            String rtnVal = null;
+            for ( int i = 0; i < getComponentCount(); i++ ) {
+                Component c = getComponent(i);
+                if ( c instanceof JLabel ) {
+                    rtnVal = ((JLabel)c).getText();
+                }
+            }
+            return rtnVal;
+        }
+
+        private void getAffectedDescendants( List<JComponent> components, JComponent j ) {
+            for ( Component c: j.getComponents() ) {
+                if ( c instanceof JComponent ) {
+                    JComponent jc = (JComponent) c;
+                    components.add(jc);
+                    getAffectedDescendants( components, jc );
+                }
+            }
+        }
+         private void getToolTipText( StringBuilder tooltip, JPanel startingComponent ) {
+            for ( Component c: getComponents() ) {
                 if ( c instanceof JLabel) {
                     JLabel label = (JLabel)c;
                     String toolTipText = label.getToolTipText();

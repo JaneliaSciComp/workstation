@@ -106,6 +106,10 @@ public class BaseballCardPanel extends JPanel implements RootedEntityReceiver {
         return returnList;
     }
 
+    public List<Object> getSelectedObjects() {
+        return cardTable.getSelectedObjects();
+    }
+
     private void establishGui() {
         removeAll();
 
@@ -164,37 +168,20 @@ public class BaseballCardPanel extends JPanel implements RootedEntityReceiver {
         this.add(cardTable, BorderLayout.CENTER);
         cardTable.updateTableModel();
 
-        JButton addToBoardBtn = new JButton("Add to Alignment Board");
-        addToBoardBtn.addActionListener( new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                List<Object> selected = cardTable.getSelectedObjects();
-                for ( Object o: selected ) {
-                    System.out.println( o.toString() );
-                }
-            }
-        });
-
-        cardTable.getTable().getSelectionModel().addListSelectionListener( new ListSelectionListener() {
+        cardTable.getTable().getSelectionModel().addListSelectionListener(new ListSelectionListener() {
             @Override
             public void valueChanged(ListSelectionEvent e) {
-                for ( BaseballCard card: cards ) {
-                    card.getEntityDetailsPanel().setBackground( cardTable.getBackground() );
-                    card.getEntityDetailsPanel().setForeground( cardTable.getForeground() );
+                for (BaseballCard card : cards) {
+                    card.getEntityDetailsPanel().setBackground(cardTable.getBackground());
+                    card.getEntityDetailsPanel().setForeground(cardTable.getForeground());
                 }
                 List<BaseballCard> selection = getSelectedCards();
-                for ( BaseballCard selected: selection ) {
-                    selected.getEntityDetailsPanel().setBackground( cardTable.getTable().getSelectionBackground() );
-                    selected.getEntityDetailsPanel().setForeground( cardTable.getTable().getSelectionForeground() );
+                for (BaseballCard selected : selection) {
+                    selected.getEntityDetailsPanel().setBackground(cardTable.getTable().getSelectionBackground());
+                    selected.getEntityDetailsPanel().setForeground(cardTable.getTable().getSelectionForeground());
                 }
             }
         });
-
-        // Layout the add-to-board button.
-        JPanel buttonPanel = new JPanel();
-        buttonPanel.setLayout( new BorderLayout() );
-        buttonPanel.add( addToBoardBtn, BorderLayout.WEST );
-        this.add( buttonPanel, BorderLayout.SOUTH );
 
         requestRedraw();
     }

@@ -9,6 +9,7 @@ import org.janelia.it.FlyWorkstation.gui.framework.console.Browser;
 import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.FlyWorkstation.gui.framework.viewer.BaseballCardPanel;
 import org.janelia.it.FlyWorkstation.gui.framework.viewer.RootedEntityReceiver;
+import org.janelia.it.FlyWorkstation.gui.framework.viewer.baseball_card.BaseballCard;
 import org.janelia.it.FlyWorkstation.model.domain.AlignmentContext;
 import org.janelia.it.FlyWorkstation.model.domain.Sample;
 import org.janelia.it.FlyWorkstation.model.entity.RootedEntity;
@@ -25,6 +26,7 @@ import org.slf4j.LoggerFactory;
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 import java.util.*;
 import java.util.List;
 
@@ -63,7 +65,8 @@ public class ABTargetedSearchDialog extends ModalDialog {
         initGeneralGui();
         baseballCardPanel = initResultsGui();
         JPanel queryPanel = initParamGui();
-        layoutGeneralGui(queryPanel, baseballCardPanel);
+        JPanel disposePanel = initDisposeGui();
+        layoutGeneralGui(queryPanel, baseballCardPanel, disposePanel);
     }
 
     /** Launch with/without search-here starting point. */
@@ -85,9 +88,10 @@ public class ABTargetedSearchDialog extends ModalDialog {
         dialogWidth = preferredSize.width;
     }
 
-    private void layoutGeneralGui( JPanel queryPanel, JPanel resultsPanel ) {
+    private void layoutGeneralGui( JPanel queryPanel, JPanel resultsPanel, JPanel disposePanel ) {
         add( queryPanel, BorderLayout.NORTH );
         add( resultsPanel, BorderLayout.CENTER );
+        add( disposePanel, BorderLayout.SOUTH );
     }
 
     /** Simple parameter GUI. */
@@ -114,10 +118,44 @@ public class ABTargetedSearchDialog extends ModalDialog {
                 searchRoot == null ? null : searchRoot.getId()
             )
         );
+
         // todo avoid dependency on general search dialog for this.
         List<String> searchHistory = (List<String>) SessionMgr.getBrowser().getGeneralSearchDialog().getSearchHistory();
         searchParamsPanel.setSearchHistory( searchHistory );
         return searchParamsPanel;
+
+    }
+
+    private JPanel initDisposeGui() {
+        JButton addToBoardBtn = new JButton("Add to Alignment Board");
+        addToBoardBtn.addActionListener( new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                List<BaseballCard> selected = baseballCardPanel.getSelectedCards();
+                // Let's add these to the alignment board.
+
+                for ( Object o: selected ) {
+                    System.out.println( o.toString() );
+                }
+
+                setVisible( false );
+            }
+        });
+
+        JButton closeButton = new JButton("Close");
+        closeButton.addActionListener( new AbstractAction() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                setVisible( false );
+            }
+        });
+
+        // Layout the add-to-board button.
+        JPanel buttonPanel = new JPanel();
+        buttonPanel.setLayout( new BorderLayout() );
+        buttonPanel.add(addToBoardBtn, BorderLayout.WEST);
+        buttonPanel.add( closeButton, BorderLayout.EAST );
+        return buttonPanel;
 
     }
 
@@ -251,18 +289,37 @@ public class ABTargetedSearchDialog extends ModalDialog {
             for ( Entity entity: entities ) {
                 try {
                     // Now, to "prowl" the trees of the result list, to find out what can be added, here.
-                    RootedEntity rootedEntity = null;
                     if ( entity.getEntityTypeName().equals( EntityConstants.TYPE_SAMPLE ) ) {
+                        RootedEntity rootedEntity = null;
                         rootedEntity = new RootedEntity( entity );
+                        if ( isSampleCompatible( param.getContext(), rootedEntity) ) {
+                            rtnVal.add( rootedEntity );
+                        }
                     }
                     else {
+                        // Find ancestor to figure out if it is compatible.
                         Entity sampleEntity = ModelMgr.getModelMgr().getAncestorWithType(entity, EntityConstants.TYPE_SAMPLE);
-                        rootedEntity = new RootedEntity( sampleEntity );
+                        RootedEntity sampleRootedEntity = new RootedEntity( sampleEntity );
+
+                        if ( isSampleCompatible( param.getContext(), sampleRootedEntity) ) {
+
+                            // Establish whether this is or is not a fragment that has been aligned.
+                            Entity pipelineResult = ModelMgr.getModelMgr().getAncestorWithType(entity, EntityConstants.TYPE_NEURON_SEPARATOR_PIPELINE_RESULT);
+                            boolean properFragment = ( pipelineResult != null );
+
+                            // Try to verify this is a proper neuron fragment.
+                            if ( properFragment ) {
+                                rtnVal.add( new RootedEntity( entity ) );
+                            }
+                            else {
+                                logger.info("No pipeline result found for neuron {}.", entity.getId() + ":" + entity.getName());
+                                rtnVal.add( sampleRootedEntity );
+                            }
+
+                        }
+
                     }
 
-                    if ( isSampleCompatible( param.getContext(), rootedEntity) ) {
-                        rtnVal.add( rootedEntity );
-                    }
                 } catch ( Exception ex ) {
                     ex.printStackTrace();
                     throw new RuntimeException( ex );
