@@ -86,7 +86,7 @@ public class BaseballCard {
                 textDetailsPanel.add( entityNameLabel, BorderLayout.NORTH );
 
                 JPanel annotationPanel = new ToolTipRelayPanel();
-                annotationPanel.setLayout( new FlowLayout() );
+                annotationPanel.setLayout( new FlowLayout( FlowLayout.LEADING) );
                 for ( OntologyAnnotation annotation: annotations ) {
                     annotationPanel.add(
                             makeLabelWithTip(

@@ -18,6 +18,7 @@ import org.janelia.it.jacs.compute.api.support.SolrQueryBuilder;
 import org.janelia.it.jacs.compute.api.support.SolrResults;
 import org.janelia.it.jacs.model.entity.Entity;
 import org.janelia.it.jacs.model.entity.EntityConstants;
+import org.janelia.it.jacs.shared.utils.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -38,6 +39,7 @@ import java.util.List;
 public class ABTargetedSearchDialog extends ModalDialog {
 
     private static final int DEFAULT_ROWS_PER_PAGE = 10;
+    private static final int MAX_ROWS = 200;
 
     private AlignmentBoardContext context;
     private Entity searchRoot;
@@ -112,7 +114,8 @@ public class ABTargetedSearchDialog extends ModalDialog {
                 searchRoot == null ? null : searchRoot.getId()
             )
         );
-        List<String> searchHistory = (List<String>) SessionMgr.getSessionMgr().getModelProperty(Browser.SEARCH_HISTORY);
+        // todo avoid dependency on general search dialog for this.
+        List<String> searchHistory = (List<String>) SessionMgr.getBrowser().getGeneralSearchDialog().getSearchHistory();
         searchParamsPanel.setSearchHistory( searchHistory );
         return searchParamsPanel;
 
@@ -194,7 +197,7 @@ public class ABTargetedSearchDialog extends ModalDialog {
             queryBuilder.setFilters( filters );
             SolrQuery query = queryBuilder.getQuery();
             query.setStart( param.getStartingRow() );
-            query.setRows( 200 ); //MAX_VALUE
+            query.setRows( MAX_ROWS );
 
             SolrResults results = ModelMgr.getModelMgr().searchSolr(query);
             List<Entity> resultList = results.getResultList();
@@ -209,10 +212,17 @@ public class ABTargetedSearchDialog extends ModalDialog {
             rootedResults = getCompatibleRootedEntities( filteredList );
 
             // Update search history.
-            List<String> searchHistory = (List<String>) SessionMgr.getSessionMgr().getModelProperty(Browser.SEARCH_HISTORY);
-            searchHistory.add( param.getQuery() );
-            SessionMgr.getSessionMgr().setModelProperty(Browser.SEARCH_HISTORY, searchHistory);
-        }
+            String queryStr = queryBuilder.getSearchString();
+            if ( !StringUtils.isEmpty( queryStr ) ) {
+                List<String> searchHistory = (List<String>) SessionMgr.getSessionMgr().getModelProperty(Browser.SEARCH_HISTORY);
+                if ( ! searchHistory.contains( queryStr ) ) {
+                    searchHistory.add( queryStr );
+                    // To preserve history, must push it into the general search dialog.
+                    // todo avoid dependency on general search dialog for this.
+                    SessionMgr.getBrowser().getGeneralSearchDialog().setSearchHistory(searchHistory);
+                }
+            }
+         }
 
         @Override
         protected void hadSuccess() {
@@ -283,20 +293,11 @@ public class ABTargetedSearchDialog extends ModalDialog {
         }
 
         public static class SearchWorkerParam {
-            private String query;
             private RootedEntityReceiver receiver;
             private Long searchRootId;
             private AlignmentContext context;
             private SearchErrorHandler errorHandler;
             private int startingRow;
-
-            public String getQuery() {
-                return query;
-            }
-
-            public void setQuery(String query) {
-                this.query = query;
-            }
 
             public RootedEntityReceiver getReceiver() {
                 return receiver;
