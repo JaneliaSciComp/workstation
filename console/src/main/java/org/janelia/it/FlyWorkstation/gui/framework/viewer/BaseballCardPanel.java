@@ -190,7 +190,11 @@ public class BaseballCardPanel extends JPanel implements RootedEntityReceiver {
             }
         });
 
-        this.add( addToBoardBtn, BorderLayout.SOUTH ); // Needs prettifying...
+        // Layout the add-to-board button.
+        JPanel buttonPanel = new JPanel();
+        buttonPanel.setLayout( new BorderLayout() );
+        buttonPanel.add( addToBoardBtn, BorderLayout.WEST );
+        this.add( buttonPanel, BorderLayout.SOUTH );
 
         requestRedraw();
     }
@@ -216,17 +220,6 @@ public class BaseballCardPanel extends JPanel implements RootedEntityReceiver {
         validate();
         invalidate();
         repaint();
-    }
-
-    private static class CheckboxWithData extends JCheckBox {
-        private BaseballCard card;
-        public CheckboxWithData( BaseballCard card ) {
-            super();
-            this.card = card;
-        }
-
-        public BaseballCard getCard() { return card; }
-
     }
 
     private static class ComponentSelfRenderer extends DefaultTableCellRenderer {

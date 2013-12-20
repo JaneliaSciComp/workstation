@@ -10,6 +10,7 @@ import org.janelia.it.jacs.model.entity.Entity;
 import org.janelia.it.jacs.model.entity.EntityConstants;
 import org.janelia.it.jacs.model.ontology.OntologyAnnotation;
 import org.janelia.it.jacs.shared.utils.EntityUtils;
+import org.janelia.it.jacs.shared.utils.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -89,8 +90,8 @@ public class BaseballCard {
                 for ( OntologyAnnotation annotation: annotations ) {
                     annotationPanel.add(
                             makeLabelWithTip(
-                                    annotation.getValueString(),
-                                    annotation.getKeyString() + ": " + annotation.getValueString(),
+                                    getLabelText( annotation.getKeyString(), annotation.getValueString() ),
+                                    getTooltipText( annotation.getKeyString(), annotation.getValueString() ),
                                     false
                             )
                     );
@@ -104,7 +105,29 @@ public class BaseballCard {
                 logger.error("Problem loading annotations");
                 error.printStackTrace();
             }
+
+            /** Need to ensure that some meaningful value appears on label. Many annotations have key, no value. */
+            private String getLabelText( String key, String value ) {
+                String labelText = value;
+                if ( StringUtils.isEmpty(labelText) ) {
+                    labelText = key;
+                }
+                return labelText;
+            }
+
+            /** Ensure tool tip does not contain dangling colons. */
+            private String getTooltipText( String keyString, String valueString ) {
+                String toolTipText;
+                if ( StringUtils.isEmpty(valueString) ) {
+                    toolTipText = keyString;
+                }
+                else {
+                    toolTipText = keyString + ": " + valueString;
+                }
+                return toolTipText;
+            }
         };
+
         annotationsLoadingWorker.execute();
 
         String imagePath = EntityUtils.getImageFilePath(entity, EntityConstants.ATTRIBUTE_DEFAULT_2D_IMAGE);
@@ -166,9 +189,15 @@ public class BaseballCard {
         public String getToolTipText() {
             StringBuilder tooltip = new StringBuilder();
             tooltip.append("<html><ul>");
-            for ( int i = 0; i < getComponentCount(); i++ ) {
-                Component c = getComponent( i );
-                if ( c instanceof JLabel ) {
+            getToolTipText(tooltip, this);
+            tooltip.append("</ul></html>");
+            return tooltip.toString();
+        }
+
+        private void getToolTipText( StringBuilder tooltip, JPanel startingComponent ) {
+            for ( int i = 0; i < startingComponent.getComponentCount(); i++ ) {
+                Component c = startingComponent.getComponent( i );
+                if ( c instanceof JLabel) {
                     JLabel label = (JLabel)c;
                     String toolTipText = label.getToolTipText();
                     if ( toolTipText != null  &&  toolTipText.trim().length() > 0 ) {
@@ -177,9 +206,10 @@ public class BaseballCard {
                                 .append("</b></li>");
                     }
                 }
+                else if ( c instanceof JPanel  &&  (c != startingComponent) ) {
+                    getToolTipText( tooltip, (JPanel)c );
+                }
             }
-            tooltip.append("</ul></html>");
-            return tooltip.toString();
         }
 
 //        public String getLocationSpecificToolTipText() {

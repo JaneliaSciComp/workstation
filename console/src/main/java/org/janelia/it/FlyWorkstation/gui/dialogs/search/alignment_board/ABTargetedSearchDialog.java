@@ -207,6 +207,11 @@ public class ABTargetedSearchDialog extends ModalDialog {
             }
 
             rootedResults = getCompatibleRootedEntities( filteredList );
+
+            // Update search history.
+            List<String> searchHistory = (List<String>) SessionMgr.getSessionMgr().getModelProperty(Browser.SEARCH_HISTORY);
+            searchHistory.add( param.getQuery() );
+            SessionMgr.getSessionMgr().setModelProperty(Browser.SEARCH_HISTORY, searchHistory);
         }
 
         @Override
