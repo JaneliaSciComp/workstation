@@ -1,8 +1,6 @@
 package org.janelia.it.FlyWorkstation.gui.framework.viewer.baseball_card;
 
 import org.janelia.it.FlyWorkstation.api.entity_model.management.ModelMgr;
-import org.janelia.it.FlyWorkstation.gui.framework.table.DynamicColumn;
-import org.janelia.it.FlyWorkstation.gui.framework.table.DynamicTable;
 import org.janelia.it.FlyWorkstation.gui.framework.viewer.DynamicImagePanel;
 import org.janelia.it.FlyWorkstation.gui.framework.viewer.ImagesPanel;
 import org.janelia.it.FlyWorkstation.shared.workers.SimpleWorker;
@@ -14,11 +12,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.swing.*;
-import java.awt.BorderLayout;
-import java.awt.GridLayout;
-import java.awt.Dimension;
-import java.awt.GridBagConstraints;
-import java.io.File;
+import java.awt.*;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.Callable;
@@ -33,7 +27,7 @@ import java.util.concurrent.Callable;
  */
 public class BaseballCard {
     // images/Aligned63xScale_signal.png"
-    private static final String DEFAULT_IMAGE_PATH = "/archive/scicomp/jacsData/filestore/nerna/Alignment/819/554/1874649241884819554/align/Aligned63xScale_signal.png"; // Get Stacy's black watermark.
+    private static final String DEFAULT_IMAGE_PATH = "/nobackup/jacs/jacsData/filestore/nerna/Alignment/819/554/1874649241884819554/align/Aligned63xScale_signal.png"; // Get Stacy's black watermark.
     public static final int IMAGE_WIDTH = 100;
     public static final int IMAGE_HEIGHT = 100;
     private Entity entity;
