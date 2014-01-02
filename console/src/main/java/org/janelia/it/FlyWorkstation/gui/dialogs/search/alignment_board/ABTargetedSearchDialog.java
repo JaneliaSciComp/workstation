@@ -47,6 +47,7 @@ public class ABTargetedSearchDialog extends ModalDialog {
     private Entity searchRoot;
     private SearchParametersPanel searchParamsPanel;
     private BaseballCardPanel baseballCardPanel;
+    private Logger logger = LoggerFactory.getLogger( ABTargetedSearchDialog.class );
 
     private int dialogWidth;
 
@@ -133,9 +134,18 @@ public class ABTargetedSearchDialog extends ModalDialog {
             public void actionPerformed(ActionEvent e) {
                 List<BaseballCard> selected = baseballCardPanel.getSelectedCards();
                 // Let's add these to the alignment board.
-
-                for ( Object o: selected ) {
-                    System.out.println( o.toString() );
+                AlignmentBoardContext context = SessionMgr.getBrowser().getLayersPanel().getAlignmentBoardContext();
+                for ( BaseballCard bbc: selected ) {
+                    logger.info("Adding entity {}.", bbc.toString());
+                    try {
+                        context.addRootedEntity( new RootedEntity( bbc.getEntity() ) );
+                    } catch ( Exception ex ) {
+                        logger.error(
+                                "Failed to add entity {} to alignment board context {}.",
+                                bbc.getEntity(),
+                                context.getName()
+                        );
+                    }
                 }
 
                 setVisible( false );
