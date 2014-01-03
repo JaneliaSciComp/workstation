@@ -161,6 +161,7 @@ public class LayersPanel extends JPanel implements Refreshable, ActivatableView 
                         nodeClicked(e);
                     }
                 }
+                outline.clearSelection();  // Avoid confusing, left-over selection for subsequent menu-clicks.
             }
 
             public void mousePressed(MouseEvent e) {
@@ -180,6 +181,7 @@ public class LayersPanel extends JPanel implements Refreshable, ActivatableView 
                     }
                     selectColorIfCorrectColumn();
                 }
+                outline.clearSelection();  // Avoid confusing, left-over selection for subsequent menu-clicks.
             }
 
             private void selectColorIfCorrectColumn() {
