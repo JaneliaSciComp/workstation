@@ -244,7 +244,8 @@ public class BaseballCard {
                 if ( c instanceof JLabel) {
                     JLabel label = (JLabel)c;
                     String toolTipText = label.getToolTipText();
-                    if ( toolTipText != null  &&  toolTipText.trim().length() > 0 ) {
+                    if ( toolTipText != null  &&  toolTipText.trim().length() > 0  &&
+                         (! tooltip.toString().contains( toolTipText )) ) {
                         tooltip.append("<li><b>")
                                 .append(toolTipText)
                                 .append("</b></li>");
