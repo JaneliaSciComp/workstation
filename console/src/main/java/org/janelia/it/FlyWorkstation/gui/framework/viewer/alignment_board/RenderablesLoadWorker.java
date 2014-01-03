@@ -170,6 +170,9 @@ public class RenderablesLoadWorker extends SimpleWorker implements VolumeLoader 
         }
 
         if ( loadFiles ) {
+            // Handoff latest info from load, for fallbacks in coloring.
+            SessionMgr.getBrowser().getLayersPanel().setFileStats( fileStats );
+
             if ( ! checkpoint( "Setting up..." ) ) {
                 return;
             }

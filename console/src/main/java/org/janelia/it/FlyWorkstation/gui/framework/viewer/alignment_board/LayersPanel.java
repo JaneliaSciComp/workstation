@@ -30,6 +30,7 @@ import javax.swing.tree.TreePath;
 
 import org.janelia.it.FlyWorkstation.api.entity_model.events.EntityInvalidationEvent;
 import org.janelia.it.FlyWorkstation.api.entity_model.management.ModelMgr;
+import org.janelia.it.FlyWorkstation.gui.alignment_board_viewer.masking.FileStats;
 import org.janelia.it.FlyWorkstation.gui.framework.outline.ActivatableView;
 import org.janelia.it.FlyWorkstation.gui.framework.outline.EntityTransferHandler;
 import org.janelia.it.FlyWorkstation.gui.framework.outline.Refreshable;
@@ -43,6 +44,7 @@ import org.janelia.it.FlyWorkstation.gui.util.Icons;
 import org.janelia.it.FlyWorkstation.model.domain.AlignmentContext;
 import org.janelia.it.FlyWorkstation.model.domain.CompartmentSet;
 import org.janelia.it.FlyWorkstation.model.domain.EntityWrapper;
+import org.janelia.it.FlyWorkstation.model.domain.Neuron;
 import org.janelia.it.FlyWorkstation.model.entity.RootedEntity;
 import org.janelia.it.FlyWorkstation.model.viewer.AlignedItem;
 import org.janelia.it.FlyWorkstation.model.viewer.AlignmentBoardContext;
@@ -82,6 +84,7 @@ public class LayersPanel extends JPanel implements Refreshable, ActivatableView 
     private final JPanel treesPanel;
     private Outline outline;
     private SampleTreeModel sampleTreeModel;
+    private FileStats fileStats;
     
     private AlignmentBoardContext alignmentBoardContext;
     private SimpleWorker worker;
@@ -641,7 +644,11 @@ public class LayersPanel extends JPanel implements Refreshable, ActivatableView 
         };
         worker.execute();
     }
-    
+
+    public void setFileStats(FileStats fileStats) {
+        this.fileStats = fileStats;
+    }
+
     private class OutlineTreeCellRenderer extends DefaultOutlineCellRenderer {
         
         public OutlineTreeCellRenderer() {
@@ -715,6 +722,14 @@ public class LayersPanel extends JPanel implements Refreshable, ActivatableView 
                     label.setToolTipText( "Chosen (mono) color rendering" );
                 }
                 else {
+                    if ( fileStats != null ) {
+                        double[] colorRGB = fileStats.getChannelAverages(alignedItem.getId());
+                        if ( colorRGB != null ) {
+                            Color color = new Color( (int)(256.0 * colorRGB[ 0 ]), (int)(256.0 * colorRGB[ 1 ]), (int)(256.0 * colorRGB[ 2 ]) );
+                            ColorSwatch swatch = new ColorSwatch(COLOR_SWATCH_SIZE, color, Color.white);
+                            label.setIcon( swatch );
+                        }
+                    }
                     label.setText("");
                     label.setToolTipText( "Default rendering" );
                 }

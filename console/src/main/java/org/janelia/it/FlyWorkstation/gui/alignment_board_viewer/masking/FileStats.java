@@ -55,4 +55,6 @@ public class FileStats {
     public void setMasksExhausted(boolean masksExhausted) {
         this.masksExhausted = masksExhausted;
     }
+
+    public int getItemCount() { return channelAverageMap.size(); }
 }
