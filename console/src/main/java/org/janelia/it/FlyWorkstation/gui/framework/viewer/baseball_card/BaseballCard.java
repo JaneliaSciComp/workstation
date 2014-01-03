@@ -239,8 +239,8 @@ public class BaseballCard {
                 }
             }
         }
-         private void getToolTipText( StringBuilder tooltip, JPanel startingComponent ) {
-            for ( Component c: getComponents() ) {
+        private void getToolTipText( StringBuilder tooltip, JPanel startingComponent ) {
+            for ( Component c: startingComponent.getComponents() ) {
                 if ( c instanceof JLabel) {
                     JLabel label = (JLabel)c;
                     String toolTipText = label.getToolTipText();
@@ -252,7 +252,7 @@ public class BaseballCard {
                     }
                 }
                 else if ( c instanceof JPanel  &&  (c != startingComponent) ) {
-                    getToolTipText( tooltip, (JPanel)c );
+                    getToolTipText(tooltip, (JPanel) c);
                 }
             }
         }
