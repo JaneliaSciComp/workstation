@@ -30,9 +30,9 @@ public class ByteChannelSplitStrategy implements ChannelSplitStrategyI {
      *
      * @param channelMetaData for num channels, bytes-per-channel, etc.
      * @param originalMask found in some "visiting input file".  It is original to the raw mask/chan file.
-     * @param channelsData found in the nascent channels-data volume.
+     * @param channelsData found in the "visiting input file".
      * @param multiMaskId should have the original mask in its list of sub-masks.
-     * @return the modified bytes of channel, or intensity data, now multiplexed with intensity byte assoc w/ orig mask.
+     * @return OR-able block of bytes.  Only relevant byte (from maskOffset) will be set.  All others zero.
      */
     @Override
     public byte[] getUpdatedValue(ChannelMetaData channelMetaData, int originalMask, byte[] channelsData, int multiMaskId) {
