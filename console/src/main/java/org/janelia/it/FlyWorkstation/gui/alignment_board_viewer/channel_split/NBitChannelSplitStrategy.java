@@ -22,7 +22,7 @@ public class NBitChannelSplitStrategy implements ChannelSplitStrategyI {
 
     public NBitChannelSplitStrategy(MultiMaskTracker multiMaskTracker, int bitWidth) {
         assert bitWidth < 8 : "Bit width " + bitWidth+" should be < 8, or this strategy is inappropriate.";
-        assert bitWidth == 2 || bitWidth == 8 : "Bit width " + bitWidth+" should be a power of 2.";
+        assert bitWidth == 2 || bitWidth == 4 : "Bit width " + bitWidth+" should be a power of 2.";
 
         this.multiMaskTracker = multiMaskTracker;
         this.outputValWidth = bitWidth;
