@@ -1,12 +1,11 @@
 package org.janelia.it.FlyWorkstation.gui.slice_viewer.generator;
 
-import static org.junit.Assert.*;
+import org.junit.Test;
 
 import java.util.Arrays;
 import java.util.List;
 import java.util.Vector;
-
-import org.junit.Test;
+import static org.junit.Assert.*;
 
 public class TestInterleavedIterator {
 
