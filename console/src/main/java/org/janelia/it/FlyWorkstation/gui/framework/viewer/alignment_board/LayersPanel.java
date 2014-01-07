@@ -41,6 +41,7 @@ import org.janelia.it.FlyWorkstation.gui.framework.viewer.alignment_board.events
 import org.janelia.it.FlyWorkstation.gui.framework.viewer.alignment_board.events.AlignmentBoardOpenEvent;
 import org.janelia.it.FlyWorkstation.gui.util.ColorSwatch;
 import org.janelia.it.FlyWorkstation.gui.util.Icons;
+import org.janelia.it.FlyWorkstation.gui.viewer3d.VolumeModel;
 import org.janelia.it.FlyWorkstation.model.domain.AlignmentContext;
 import org.janelia.it.FlyWorkstation.model.domain.CompartmentSet;
 import org.janelia.it.FlyWorkstation.model.domain.EntityWrapper;
@@ -725,7 +726,11 @@ public class LayersPanel extends JPanel implements Refreshable, ActivatableView 
                     if ( fileStats != null ) {
                         double[] colorRGB = fileStats.getChannelAverages(alignedItem.getId());
                         if ( colorRGB != null ) {
-                            Color color = new Color( (int)(256.0 * colorRGB[ 0 ]), (int)(256.0 * colorRGB[ 1 ]), (int)(256.0 * colorRGB[ 2 ]) );
+                            Color color = new Color(
+                                    (int)(256.0 * Math.pow( colorRGB[ 0 ], VolumeModel.STANDARDIZED_GAMMA_MULTIPLIER ) ),
+                                    (int)(256.0 * Math.pow( colorRGB[ 1 ], VolumeModel.STANDARDIZED_GAMMA_MULTIPLIER ) ),
+                                    (int)(256.0 * Math.pow( colorRGB[ 2 ], VolumeModel.STANDARDIZED_GAMMA_MULTIPLIER ) )
+                            );
                             ColorSwatch swatch = new ColorSwatch(COLOR_SWATCH_SIZE, color, Color.white);
                             label.setIcon( swatch );
                         }
