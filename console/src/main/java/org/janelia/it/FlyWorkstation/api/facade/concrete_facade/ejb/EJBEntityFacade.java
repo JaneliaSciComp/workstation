@@ -103,7 +103,9 @@ public class EJBEntityFacade implements EntityFacade {
     
     @Override
     public Set<Entity> getChildEntities(Long parentEntityId) throws Exception {
-        return EJBFactory.getRemoteEntityBean().getChildEntities(SessionMgr.getSubjectKey(), parentEntityId);
+        // If user is in the admin group, allow them to load anyone's entities
+        String user = SessionMgr.getSubjectKeys().contains("group:admin") ? null : SessionMgr.getSubjectKey();
+        return EJBFactory.getRemoteEntityBean().getChildEntities(user, parentEntityId);
     }
 
     @Override
