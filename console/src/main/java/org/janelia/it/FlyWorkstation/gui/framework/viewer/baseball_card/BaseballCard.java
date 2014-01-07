@@ -84,20 +84,30 @@ public class BaseballCard {
             protected void hadSuccess() {
                 // Want to get the annotations, and the entity name.
                 textDetailsPanel.setLayout(new BorderLayout());
+                JPanel entityNamePanel = new JPanel();
+                entityNamePanel.setLayout( new FlowLayout( FlowLayout.LEADING ) );
                 JLabel entityNameLabel = makeLabelWithTip( entity.getName(), "Entity: " + entity.getId(), true );
-                textDetailsPanel.add( entityNameLabel, BorderLayout.NORTH );
+                entityNamePanel.add( new JLabel( "Name" ) );
+                entityNamePanel.add( entityNameLabel );
+                textDetailsPanel.add( entityNamePanel, BorderLayout.NORTH );
 
                 JPanel annotationPanel = new ToolTipRelayPanel();
                 annotationPanel.setLayout( new FlowLayout( FlowLayout.LEADING) );
-                for ( OntologyAnnotation annotation: annotations ) {
-                    annotationPanel.add(
-                            makeLabelWithTip(
-                                    getLabelText( annotation.getKeyString(), annotation.getValueString() ),
-                                    getTooltipText( annotation.getKeyString(), annotation.getValueString() ),
-                                    false
-                            )
-                    );
+                JLabel subheaderLabel = new JLabel("Annotations");
+                subheaderLabel.setFont( subheaderLabel.getFont().deriveFont( subheaderLabel.getFont().getSize() + 1 ));
+                annotationPanel.add( subheaderLabel );
+                if ( annotations != null && annotations.size() > 0 ) {
+                    for ( OntologyAnnotation annotation: annotations ) {
+                        annotationPanel.add(
+                                makeLabelWithTip(
+                                        getLabelText( annotation.getKeyString(), annotation.getValueString() ),
+                                        getTooltipText( annotation.getKeyString(), annotation.getValueString() ),
+                                        false
+                                )
+                        );
+                    }
                 }
+
                 textDetailsPanel.add( annotationPanel, BorderLayout.CENTER );
 
             }
