@@ -9,6 +9,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.swing.*;
+import javax.swing.border.LineBorder;
 import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
 import javax.swing.table.AbstractTableModel;
@@ -151,8 +152,10 @@ public class BaseballCardPanel extends JPanel implements RootedEntityReceiver {
         cardTable.getTable().setRowSelectionAllowed( selectable );
         cardTable.getTable().setSelectionMode( ListSelectionModel.MULTIPLE_INTERVAL_SELECTION );
 
+        int borderedWidth = BaseballCard.IMAGE_WIDTH + 2;
+        int borderedHeight = BaseballCard.IMAGE_HEIGHT + 2;
         Dimension detailsSize = new Dimension(
-                preferredWidth - BaseballCard.IMAGE_WIDTH, BaseballCard.IMAGE_HEIGHT
+                preferredWidth - borderedWidth, borderedHeight
         );
         Dimension imageSize = new Dimension(
                 BaseballCard.IMAGE_WIDTH, BaseballCard.IMAGE_HEIGHT
@@ -171,19 +174,56 @@ public class BaseballCardPanel extends JPanel implements RootedEntityReceiver {
         cardTable.getTable().getSelectionModel().addListSelectionListener(new ListSelectionListener() {
             @Override
             public void valueChanged(ListSelectionEvent e) {
-                for (BaseballCard card : cards) {
-                    card.getEntityDetailsPanel().setBackground(cardTable.getBackground());
-                    card.getEntityDetailsPanel().setForeground(cardTable.getForeground());
-                }
-                List<BaseballCard> selection = getSelectedCards();
-                for (BaseballCard selected : selection) {
-                    selected.getEntityDetailsPanel().setBackground(cardTable.getTable().getSelectionBackground());
-                    selected.getEntityDetailsPanel().setForeground(cardTable.getTable().getSelectionForeground());
-                }
+                updateSelectionAppearance();
             }
         });
 
         requestRedraw();
+    }
+
+    /** Clear the GUI representation of the selection, and replace it with whatever is selected at call time. */
+    private void updateSelectionAppearance__asFontColor() {
+        for (BaseballCard card : cards) {
+            card.getEntityDetailsPanel().setBackground(cardTable.getBackground());
+            card.getEntityDetailsPanel().setForeground(cardTable.getForeground());
+        }
+        List<BaseballCard> selection = getSelectedCards();
+        for (BaseballCard selected : selection) {
+            selected.getEntityDetailsPanel().setBackground(cardTable.getTable().getSelectionBackground());
+            selected.getEntityDetailsPanel().setForeground(cardTable.getTable().getSelectionForeground());
+        }
+    }
+
+    private void updateSelectionAppearance__viaBorder() {
+        Color selectionColor = cardTable.getTable().getSelectionBackground();
+        Color unselectedColor = cardTable.getBackground();
+
+        for (BaseballCard card : cards) {
+            card.getEntityDetailsPanel().setBorder( null );
+            card.getDynamicImagePanel().setBorder( null );
+        }
+
+        List<BaseballCard> selection = getSelectedCards();
+        for (BaseballCard selected : selection) {
+            selected.getDynamicImagePanel().setBorder( new LineBorder( selectionColor ) );
+            selected.getEntityDetailsPanel().setBorder( new LineBorder( selectionColor ) );
+        }
+    }
+
+    private void updateSelectionAppearance() {
+        Color unselectedBackground = (Color)UIManager.get( "Panel.background" );
+        Color selectionBackground = ( unselectedBackground.equals( Color.white ) ) ?
+                unselectedBackground.darker() :
+                unselectedBackground.brighter();
+
+        for (BaseballCard card : cards) {
+            card.setBackground( unselectedBackground );
+        }
+
+        List<BaseballCard> selection = getSelectedCards();
+        for (BaseballCard selected : selection) {
+            selected.setBackground( selectionBackground );
+        }
     }
 
     private void addCardToTable( Dimension detailsSize, Dimension imageSize, BaseballCard card) {

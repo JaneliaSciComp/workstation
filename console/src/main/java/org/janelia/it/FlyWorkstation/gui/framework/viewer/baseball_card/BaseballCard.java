@@ -41,11 +41,16 @@ public class BaseballCard {
         textDetailsPanel = new ToolTipRelayPanel();
         ToolTipManager.sharedInstance().registerComponent( textDetailsPanel );
         textDetailsPanel.setLayout( new BorderLayout( ) );
+        textDetailsPanel.setOpaque( true );
     }
 
     public BaseballCard( Entity entity ) {
         this();
         loadEntity( entity );
+    }
+
+    public void setBackground( Color color ) {
+        textDetailsPanel.setBackground( color );
     }
 
     public String toString() {
@@ -207,6 +212,7 @@ public class BaseballCard {
             for ( JComponent c: tree ) {
                 c.setBackground( color );
             }
+            super.setBackground( color );
         }
 
         @Override
