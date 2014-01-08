@@ -29,12 +29,30 @@ public class MultiMaskTrackerTest {
         tracker.getMask(4, 55);
 
         tracker.getMask(2, 6);
-        tracker.getMask(3, 56);
-        tracker.getMask(4, 57);
+        tracker.getMask(3, 57);
+        tracker.getMask(5, 59);
         // This should make a highest-priority mask.
         for ( int i = 0; i < 50; i++ ) {
             tracker.getMask(4, 7);
         }
+
+        tracker.getMask(6, 60);
+        tracker.getMask(7, 61);
+        tracker.getMask(7, 55);
+        tracker.getMask(7, 62);
+        tracker.getMask(8, 62);
+
+        tracker.getMask(11,12); // Getting 66 as of last debug step-through.
+        tracker.getMask(13,66);
+        tracker.getMask(14,67);
+        tracker.getMask(15,68); // Should have exactly 5.
+
+        tracker.getMask(1,17);
+        tracker.getMask(2,70);
+        tracker.getMask(3,71);
+        tracker.getMask(4,72);
+        tracker.getMask(5,73);  // Should have exactly 6.
+
         return tracker;
     }
 
