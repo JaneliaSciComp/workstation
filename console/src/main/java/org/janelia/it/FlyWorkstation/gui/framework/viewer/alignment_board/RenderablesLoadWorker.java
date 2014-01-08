@@ -185,43 +185,10 @@ public class RenderablesLoadWorker extends SimpleWorker implements VolumeLoader 
             if ( sampler != null )
                 alignmentBoardSettings = adjustDownsampleRateSetting();
 
-            // Go through the original list.  Anything not in the filtered list must be marked as excluded;
-            // anything remaining on the list is un-marked excluded.
-            Map<RenderableBean,MaskChanRenderableData> idToData = new HashMap<RenderableBean,MaskChanRenderableData>();
-            for ( MaskChanRenderableData data: renderableDatas ) {
-                idToData.put( data.getBean(), data );
-            }
-            SessionMgr.getBrowser().getLayersPanel().showLoadingIndicator();
-            for ( MaskChanRenderableData data: originalDatas ) {
-                if ( ! checkpoint( "Filtering checkboxes." ) ) {
-                    return;
-                }
+            boolean isCheckPointedAfterFilter = filter(renderableDatas, originalDatas);
+            if ( isCheckPointedAfterFilter )
+                return;
 
-                MaskChanRenderableData targetData = idToData.get(data.getBean());
-                RenderableBean bean = data.getBean();
-                if ( bean != null  &&
-                     bean.getRenderableEntity() != null  &&
-                     bean.getType().equals( EntityConstants.TYPE_NEURON_FRAGMENT )
-                   ) {
-
-                    AlignedItem item = SessionMgr.getBrowser().getLayersPanel().getAlignmentBoardContext().getAlignedItemWithEntityId(bean.getAlignedItemId());
-                    if ( item != null ) {
-                        try {
-                            if ( targetData != null ) {
-                                // It's in the filtered list.  Mark it as such.
-                                item.setInclusionStatus(AlignedItem.InclusionStatus.In);
-                            }
-                            else {
-                                // Not in the filtered list.  Exlude it.
-                                item.setInclusionStatus(AlignedItem.InclusionStatus.ExcludedForSize);
-                            }
-                        } catch ( Exception ex ) {
-                            ex.printStackTrace();
-                            logger.error("Failing to set inclusion status for entity id=" + bean.getRenderableEntity().getId() );
-                        }
-                    }
-                }
-            }
 
             // Establish the "uncovered bean list".
             List<RenderableBean> renderableBeans = new ArrayList<RenderableBean>();
@@ -244,50 +211,8 @@ public class RenderablesLoadWorker extends SimpleWorker implements VolumeLoader 
                 return;
             }
 
-            // Establish the means for extracting the volume mask.
-            maskTextureBuilder = new RenderablesMaskBuilder( alignmentBoardSettings, renderableBeans );
-
-            // Establish the means for extracting the signal data.
-            signalTextureBuilder = new RenderablesChannelsBuilder(
-                    alignmentBoardSettings, multiMaskTracker, maskTextureBuilder, renderableBeans
-            );
-
-            // Unfortunately, the wrapped thing knows what wraps it, but at least by a different interface.
-            RemaskingAcceptorDecorator remaskingAcceptorDecorator = new RemaskingAcceptorDecorator(
-                    maskTextureBuilder,
-                    multiMaskTracker,
-                    maskTextureBuilder,
-                    RenderablesMaskBuilder.UNIVERSAL_MASK_BYTE_COUNT,
-                    false    // NOT binary / search writeback.  That happens only for the file writeback code.
-            );
-
-            ArrayList<MaskChanDataAcceptorI> acceptors = new ArrayList<MaskChanDataAcceptorI>();
-            acceptors.add(remaskingAcceptorDecorator);
-
-            // Setup the loader to traverse all this data on demand. Only the mask-tex-builder accepts data.
-            neuronFragmentLoader = new MaskChanMultiFileLoader();
-            neuronFragmentLoader.setAcceptors(acceptors);
-            neuronFragmentLoader.setFileStats( fileStats );
-
-            compartmentLoader = new MaskChanMultiFileLoader();
-            compartmentLoader.setAcceptors( acceptors );
-
-            logger.info("Timing multi-thread data load for multi-mask-assbembly.");
-            multiThreadedDataLoad(renderableDatas, false);
-            logger.info("End timing multi-mask-assembly");
-            acceptors.clear();
-
-            if ( checkpoint( "Preparing display" ) ) {
-                // RE-run the scan.  This time only the signal-texture-builder will accept the data.
-                acceptors.add( signalTextureBuilder );
-                neuronFragmentLoader.setAcceptors(acceptors);
-                compartmentLoader.setAcceptors( acceptors );
-
-                logger.info("Timing multi-thread data load for signal.");
-                multiThreadedDataLoad(renderableDatas, true);
-                logger.info("End timing signal load");
-
-            }
+            buildMaskVolume(renderableDatas, renderableBeans);
+            buildSignalVolume(renderableDatas, renderableBeans);
 
             compartmentLoader.close();
             neuronFragmentLoader.close();
@@ -297,6 +222,101 @@ public class RenderablesLoadWorker extends SimpleWorker implements VolumeLoader 
         }
 
         logger.debug("Ending load thread.");
+    }
+
+    private boolean filter(Collection<MaskChanRenderableData> renderableDatas, Collection<MaskChanRenderableData> originalDatas) {
+        // Go through the original list.  Anything not in the filtered list must be marked as excluded;
+        // anything remaining on the list is un-marked excluded.
+        Map<RenderableBean,MaskChanRenderableData> idToData = new HashMap<RenderableBean,MaskChanRenderableData>();
+        for ( MaskChanRenderableData data: renderableDatas ) {
+            idToData.put( data.getBean(), data );
+        }
+        SessionMgr.getBrowser().getLayersPanel().showLoadingIndicator();
+        for ( MaskChanRenderableData data: originalDatas ) {
+            if ( ! checkpoint( "Filtering checkboxes." ) ) {
+                return true;
+            }
+
+            MaskChanRenderableData targetData = idToData.get(data.getBean());
+            RenderableBean bean = data.getBean();
+            if ( bean != null  &&
+                 bean.getRenderableEntity() != null  &&
+                 bean.getType().equals( EntityConstants.TYPE_NEURON_FRAGMENT )
+               ) {
+
+                AlignedItem item = SessionMgr.getBrowser().getLayersPanel().getAlignmentBoardContext().getAlignedItemWithEntityId(bean.getAlignedItemId());
+                if ( item != null ) {
+                    try {
+                        if ( targetData != null ) {
+                            // It's in the filtered list.  Mark it as such.
+                            item.setInclusionStatus(AlignedItem.InclusionStatus.In);
+                        }
+                        else {
+                            // Not in the filtered list.  Exlude it.
+                            item.setInclusionStatus(AlignedItem.InclusionStatus.ExcludedForSize);
+                        }
+                    } catch ( Exception ex ) {
+                        ex.printStackTrace();
+                        logger.error("Failing to set inclusion status for entity id=" + bean.getRenderableEntity().getId() );
+                    }
+                }
+            }
+        }
+        return false;
+    }
+
+    private void buildSignalVolume(
+            Collection<MaskChanRenderableData> renderableDatas, List<RenderableBean> renderableBeans
+    ) {
+        // Establish the means for extracting the signal data.
+        signalTextureBuilder = new RenderablesChannelsBuilder(
+                alignmentBoardSettings, multiMaskTracker, maskTextureBuilder, renderableBeans
+        );
+
+        if ( checkpoint( "Preparing display" ) ) {
+            ArrayList<MaskChanDataAcceptorI> signalDataAcceptors = new ArrayList<MaskChanDataAcceptorI>();
+            // RE-run the scan.  This time only the signal-texture-builder will accept the data.
+            signalDataAcceptors.add(signalTextureBuilder);
+            neuronFragmentLoader.setAcceptors(signalDataAcceptors);
+            compartmentLoader.setAcceptors( signalDataAcceptors );
+
+            logger.info("Timing multi-thread data load for signal.");
+            multiThreadedDataLoad(renderableDatas, true);
+            logger.info("End timing signal load");
+
+        }
+    }
+
+    private void buildMaskVolume(
+            Collection<MaskChanRenderableData> renderableDatas, List<RenderableBean> renderableBeans
+    ) {
+        // Establish the means for extracting the volume mask.
+        maskTextureBuilder = new RenderablesMaskBuilder( alignmentBoardSettings, renderableBeans );
+
+        // Unfortunately, the wrapped thing knows what wraps it, but at least by a different interface.
+        RemaskingAcceptorDecorator remaskingAcceptorDecorator = new RemaskingAcceptorDecorator(
+                maskTextureBuilder,
+                multiMaskTracker,
+                maskTextureBuilder,
+                RenderablesMaskBuilder.UNIVERSAL_MASK_BYTE_COUNT,
+                false    // NOT binary / search writeback.  That happens only for the file writeback code.
+        );
+
+        ArrayList<MaskChanDataAcceptorI> maskDataAcceptors = new ArrayList<MaskChanDataAcceptorI>();
+        maskDataAcceptors.add(remaskingAcceptorDecorator);
+
+        // Setup the loader to traverse all this data on demand. Only the mask-tex-builder accepts data.
+        neuronFragmentLoader = new MaskChanMultiFileLoader();
+        neuronFragmentLoader.setAcceptors(maskDataAcceptors);
+        neuronFragmentLoader.setFileStats(fileStats);
+
+        compartmentLoader = new MaskChanMultiFileLoader();
+        compartmentLoader.setAcceptors(maskDataAcceptors);
+
+        logger.info("Timing multi-thread data load for multi-mask-assbembly.");
+        multiThreadedDataLoad(renderableDatas, false);
+        logger.info("End timing multi-mask-assembly");
+        maskDataAcceptors.clear();
     }
 
     @Override
