@@ -1,5 +1,18 @@
 package org.janelia.it.FlyWorkstation.gui.dialogs.search;
 
+import java.text.DateFormat;
+import java.text.DecimalFormat;
+import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+
 import org.apache.solr.common.SolrDocument;
 import org.janelia.it.FlyWorkstation.api.entity_model.management.ModelMgr;
 import org.janelia.it.FlyWorkstation.api.entity_model.management.ModelMgrUtils;
@@ -13,11 +26,8 @@ import org.janelia.it.jacs.compute.api.support.SolrUtils;
 import org.janelia.it.jacs.model.entity.Entity;
 import org.janelia.it.jacs.model.entity.EntityAttribute;
 import org.janelia.it.jacs.shared.utils.StringUtils;
-
-import java.text.DateFormat;
-import java.text.DecimalFormat;
-import java.text.SimpleDateFormat;
-import java.util.*;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * The configuration of search attributes available for query and display.
@@ -26,6 +36,8 @@ import java.util.*;
  */
 public class SearchConfiguration {
 
+    private static final Logger log = LoggerFactory.getLogger(SearchConfiguration.class);
+    
 	/** Format for displaying dates */
 	protected static final DateFormat df = new SimpleDateFormat("yyyy/MM/dd HH:mm");
 
@@ -250,7 +262,17 @@ public class SearchConfiguration {
 			}
 		}
 		else {
-			throw new IllegalStateException("Unknown field '"+fieldName+"'");
+		    // SOLR document is not available. This is probably a projected value.
+//            if ("annotations".equals(fieldName) || "score".equals(fieldName)) {
+//                return "";
+//            }
+            
+            String attributeName = SolrUtils.getAttributeNameFromSolrFieldName(fieldName);
+            value = entity.getValueByAttributeName(attributeName);
+            
+            if (value==null) {
+                log.error("Unknown field '"+fieldName+"'");
+            }
 		}
 
 		return getFormattedFieldValue(value, fieldName);

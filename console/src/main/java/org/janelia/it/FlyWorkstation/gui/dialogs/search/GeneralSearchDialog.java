@@ -99,8 +99,8 @@ public class GeneralSearchDialog extends ModalDialog {
         buttonPane.setLayout(new BoxLayout(buttonPane, BoxLayout.LINE_AXIS));
         buttonPane.setBorder(BorderFactory.createEmptyBorder(0, 10, 10, 10));
         
-        exportButton = new JButton("Export to File");
-        exportButton.setToolTipText("Save the results");
+        exportButton = new JButton("Export All Results To File");
+        exportButton.setToolTipText("Export all the results to a tab-delimited file");
         exportButton.setEnabled(false);
         exportButton.addActionListener(new ActionListener() {
 			@Override
@@ -112,7 +112,7 @@ public class GeneralSearchDialog extends ModalDialog {
 
         buttonPane.add(Box.createHorizontalGlue());        
         
-		JLabel folderNameLabel = new JLabel("Save selected objects in folder: ");
+		JLabel folderNameLabel = new JLabel("Save selected objects to folder: ");
 		buttonPane.add(folderNameLabel);
 		
         folderNameField = new JTextField(10);
@@ -120,8 +120,8 @@ public class GeneralSearchDialog extends ModalDialog {
         folderNameField.setMaximumSize(new Dimension(400,20));
         buttonPane.add(folderNameField);
         
-        JButton okButton = new JButton("Save");
-        okButton.setToolTipText("Save the results");
+        JButton okButton = new JButton("Save Selected");
+        okButton.setToolTipText("Save the selected rows to a folder");
         okButton.addActionListener(new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent e) {

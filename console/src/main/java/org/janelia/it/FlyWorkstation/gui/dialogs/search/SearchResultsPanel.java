@@ -283,13 +283,14 @@ public abstract class SearchResultsPanel extends JPanel implements SearchConfigu
 			DynamicColumn column = resultsTable.addColumn(attr.getName(), attr.getLabel(), !attr.getName().equals("id"), false, true, attr.isSortable());
 			columnByName.put(attr.getName(), column);
 			if (attr.getDataStore()==DataStore.ENTITY) {
-				projectionTable.addColumn(attr.getName(), attr.getLabel(), !attr.getName().equals("id"), false, true, false);	
+			    projectionTable.addColumn(attr.getName(), attr.getLabel(), !attr.getName().equals("id"), false, true, false);
 			}
     	}
     	
     	for(SearchAttribute attr : attributeGroups.get(AttrGroup.EXT)) {
     		DynamicColumn column = resultsTable.addColumn(attr.getName(), attr.getLabel(), false, false, true, attr.isSortable());
     		columnByName.put(attr.getName(), column);
+    		projectionTable.addColumn(attr.getName(), attr.getLabel(), false, false, true, false);
     	}
 
 		for(SearchAttribute attr : attributeGroups.get(AttrGroup.SAGE)) {
@@ -759,18 +760,23 @@ public abstract class SearchResultsPanel extends JPanel implements SearchConfigu
 			attrsPanel.add(attrGroupPanel);
 
 			for(final SearchAttribute attr : searchConfig.getAttributeGroups().get(currGroup)) {
-				final DynamicColumn column = resultsTable.getColumn(attr.getName());
+			    
+				final DynamicColumn column1 = resultsTable.getColumn(attr.getName());
+                final DynamicColumn column2 = projectionTable.getColumn(attr.getName());
+                
 				final JCheckBox checkBox = new JCheckBox(new AbstractAction(attr.getLabel()) {
 					public void actionPerformed(ActionEvent e) {
 						JCheckBox cb = (JCheckBox) e.getSource();
-						column.setVisible(cb.isSelected());
+						column1.setVisible(cb.isSelected());
+						column2.setVisible(cb.isSelected());
 						performSearch(false, false, false);
 					}
 				});
+                
 				checkBox.setToolTipText(attr.getDescription());
-				checkBox.setSelected(column.isVisible());
+				checkBox.setSelected(column1.isVisible());
 				checkBox.setFont(checkboxFont);
-				attrCheckboxes.put(column, checkBox);
+				attrCheckboxes.put(column1, checkBox);
 				attrGroupPanel.add(checkBox);
 			}
 		}
