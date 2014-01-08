@@ -133,6 +133,7 @@ public class EntityContextMenu extends JPopupMenu {
         add(getErrorFlag());
         add(getDeleteItem());
         add(getDeleteInBackgroundItem());
+        add(getForceRerunItem());
         add(getProcessingBlockItem());
         add(getVerificationMovieItem());
         
@@ -726,7 +727,59 @@ public class EntityContextMenu extends JPopupMenu {
         return blockItem;
     }
 
+    protected JMenuItem getForceRerunItem() {
 
+        // All selected entities must be Samples
+        for(RootedEntity rootedEntity : rootedEntityList) {
+            if (!rootedEntity.getEntity().getEntityTypeName().equals(EntityConstants.TYPE_SAMPLE)) {
+                return null;
+            }
+        }
+        
+        JMenuItem markItem = new JMenuItem("  Mark Sample for Reprocessing");
+        markItem.addActionListener(new ActionListener() {
+            public void actionPerformed(ActionEvent actionEvent) {
+
+                int result = JOptionPane.showConfirmDialog(browser, "Are you sure you want this sample to be reprocessed "
+                        + "during the next scheduled refresh?",  "Mark for Reprocessing", JOptionPane.OK_CANCEL_OPTION);
+                
+                if (result != 0) return;
+
+                SimpleWorker worker = new SimpleWorker() {
+                    
+                    @Override
+                    protected void doStuff() throws Exception {
+                        
+                        for(RootedEntity rootedEntity : rootedEntityList) {
+                            ModelMgr.getModelMgr().setOrUpdateValue(rootedEntity.getEntity(), EntityConstants.ATTRIBUTE_STATUS, EntityConstants.VALUE_MARKED);
+                        }
+                    }
+                    
+                    @Override
+                    protected void hadSuccess() {   
+                    }
+                    
+                    @Override
+                    protected void hadError(Throwable error) {
+                        SessionMgr.getSessionMgr().handleException(error);
+                    }
+                };
+                
+                worker.execute();
+            }
+        });
+
+        for(RootedEntity rootedEntity : rootedEntityList) {
+            Entity sample = rootedEntity.getEntity();
+            if (!ModelMgrUtils.hasWriteAccess(sample) || EntityUtils.isProtected(sample)) {
+                markItem.setEnabled(false);
+                break;
+            }
+        }
+
+        return markItem;
+    }
+    
     private JMenuItem getVerificationMovieItem() {
         if (multiple) return null;
 

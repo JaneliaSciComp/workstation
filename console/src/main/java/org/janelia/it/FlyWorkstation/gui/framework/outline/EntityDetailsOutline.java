@@ -6,12 +6,16 @@ import java.awt.Dimension;
 import javax.swing.JPanel;
 
 import org.janelia.it.FlyWorkstation.api.entity_model.access.ModelMgrAdapter;
+import org.janelia.it.FlyWorkstation.api.entity_model.events.EntityChangeEvent;
+import org.janelia.it.FlyWorkstation.api.entity_model.events.EntityInvalidationEvent;
 import org.janelia.it.FlyWorkstation.api.entity_model.management.ModelMgr;
 import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.jacs.model.entity.Entity;
 import org.janelia.it.jacs.shared.utils.EntityUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import com.google.common.eventbus.Subscribe;
 
 /**
  * Wraps the EntityDetailsPanel in a way to make it respond to global selection events. 
@@ -92,6 +96,7 @@ public class EntityDetailsOutline extends JPanel implements Refreshable, Activat
     @Override
     public void activate() {
         log.info("Activating");
+        ModelMgr.getModelMgr().registerOnEventBus(this);
         ModelMgr.getModelMgr().addModelMgrObserver(mml);
         refresh();
     }
@@ -99,6 +104,15 @@ public class EntityDetailsOutline extends JPanel implements Refreshable, Activat
     @Override
     public void deactivate() {
         log.info("Deactivating");
+        ModelMgr.getModelMgr().unregisterOnEventBus(this);
         ModelMgr.getModelMgr().removeModelMgrObserver(mml);
     }    
+    
+
+    @Subscribe 
+    public void entityChanged(EntityChangeEvent event) {
+        if (event.getEntity().getId().equals(this.entity.getId())) {
+            refresh();
+        }
+    }
 }

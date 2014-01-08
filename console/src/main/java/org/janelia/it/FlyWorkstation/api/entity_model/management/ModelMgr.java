@@ -775,8 +775,8 @@ public class ModelMgr {
         return ed;
     }
 
-    public EntityData setOrUpdateValue(Entity entity, String attributeValue, String value) throws Exception {
-        EntityData ed = entityModel.setOrUpdateValue(entity, attributeValue, value);
+    public EntityData setOrUpdateValue(Entity entity, String attributeName, String value) throws Exception {
+        EntityData ed = entityModel.setOrUpdateValue(entity, attributeName, value);
         notifyEntityChanged(entity.getId());
         return ed;
     }

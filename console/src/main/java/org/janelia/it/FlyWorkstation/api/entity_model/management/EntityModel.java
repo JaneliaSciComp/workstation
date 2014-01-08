@@ -726,17 +726,17 @@ public class EntityModel {
     }
 
     /**
-     * Update the index of the given relationship within its parent. 
+     * Update the value of the given attribute on the specified entity. 
      * 
      * @param entityData
      * @return EntityData with canonical parent/child entity instances
      * @throws Exception
      */
-    public EntityData setOrUpdateValue(Entity entity, String attributeValue, String value) throws Exception {
+    public EntityData setOrUpdateValue(Entity entity, String attributeName, String value) throws Exception {
         checkIfCanonicalEntity(entity);
-        EntityData savedEd = entityFacade.setOrUpdateValue(entity.getId(), attributeValue, value);
+        EntityData savedEd = entityFacade.setOrUpdateValue(entity.getId(), attributeName, value);
         
-        EntityData existingEd = entity.getEntityDataByAttributeName(attributeValue);
+        EntityData existingEd = entity.getEntityDataByAttributeName(attributeName);
         if (existingEd!=null) {
             existingEd.setValue(value);
             notifyEntityChanged(entity);
