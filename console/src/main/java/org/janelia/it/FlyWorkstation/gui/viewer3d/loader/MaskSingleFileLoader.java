@@ -80,7 +80,9 @@ public class MaskSingleFileLoader {
     private long targetSliceSize;
 
     private Collection<MaskChanDataAcceptorI> maskAcceptors;
+    private MaskChanDataAcceptorI loneMaskAcceptor;
     private Collection<MaskChanDataAcceptorI> channelAcceptors;
+    private MaskChanDataAcceptorI loneChannelAcceptor;
     private RenderableBean renderableBean;
 
     private ByteFrequencyDumper frequencyAnalyzer;
@@ -133,6 +135,21 @@ public class MaskSingleFileLoader {
     ) {
         this.maskAcceptors = maskAcceptors;
         this.channelAcceptors = channelAcceptors;
+
+        if ( maskAcceptors != null  &&  maskAcceptors.size() == 1 ) {
+            loneMaskAcceptor = maskAcceptors.iterator().next();
+        }
+        else {
+            this.maskAcceptors = Collections.EMPTY_LIST;
+        }
+
+        if ( channelAcceptors != null  &&  channelAcceptors.size() == 1 ) {
+            loneChannelAcceptor = channelAcceptors.iterator().next();
+        }
+        else {
+            this.channelAcceptors = Collections.EMPTY_LIST;
+        }
+
         this.renderableBean = renderableBean;
         this.fileStats = fileStats;
     }
@@ -396,12 +413,19 @@ public class MaskSingleFileLoader {
                 }
             }
 
-            if ( maskAcceptors != null ) {
+            if ( loneMaskAcceptor != null ) {
+                loneMaskAcceptor.setSpaceSize( sx, sy, sz, volumeVoxels[0], volumeVoxels[1], volumeVoxels[2], coordCoverage );
+            }
+            else {
                 for ( MaskChanDataAcceptorI acceptor: maskAcceptors ) {
                     acceptor.setSpaceSize( sx, sy, sz, volumeVoxels[0], volumeVoxels[1], volumeVoxels[2], coordCoverage );
                 }
             }
-            if ( channelAcceptors != null ) {
+
+            if ( loneChannelAcceptor != null ) {
+                loneChannelAcceptor.setSpaceSize( sx, sy, sz, volumeVoxels[0], volumeVoxels[1], volumeVoxels[2], coordCoverage );
+            }
+            else {
                 for ( MaskChanDataAcceptorI acceptor: channelAcceptors ) {
                     acceptor.setSpaceSize( sx, sy, sz, volumeVoxels[0], volumeVoxels[1], volumeVoxels[2], coordCoverage );
                 }
@@ -521,9 +545,13 @@ public class MaskSingleFileLoader {
     }
 
     private void writeToMaskAcceptors(long[] xyzCoords, int translatedNum, long finalYCoord, long final1DCoord) throws Exception {
-
-        for ( MaskChanDataAcceptorI acceptor: maskAcceptors ) {
-            acceptor.addMaskData( translatedNum, final1DCoord, xyzCoords[ 0 ], finalYCoord, xyzCoords[ 2 ] );
+        if ( loneMaskAcceptor != null ) {
+            loneMaskAcceptor.addMaskData( translatedNum, final1DCoord, xyzCoords[ 0 ], finalYCoord, xyzCoords[ 2 ] );
+        }
+        else {
+            for ( MaskChanDataAcceptorI acceptor: maskAcceptors ) {
+                acceptor.addMaskData( translatedNum, final1DCoord, xyzCoords[ 0 ], finalYCoord, xyzCoords[ 2 ] );
+            }
         }
     }
 
@@ -560,12 +588,21 @@ public class MaskSingleFileLoader {
                     }
                 }
             }
-            for ( MaskChanDataAcceptorI acceptor: channelAcceptors ) {
-                acceptor.addChannelData(
+            if ( loneChannelAcceptor != null ) {
+                loneChannelAcceptor.addChannelData(
                         translatedNum,
                         allChannelBytes, final1DCoord, xyzCoords[ 0 ], finalYCoord, xyzCoords[ 2 ],
                         channelMetaData
                 );
+            }
+            else {
+                for ( MaskChanDataAcceptorI acceptor: channelAcceptors ) {
+                    acceptor.addChannelData(
+                            translatedNum,
+                            allChannelBytes, final1DCoord, xyzCoords[ 0 ], finalYCoord, xyzCoords[ 2 ],
+                            channelMetaData
+                    );
+                }
             }
 
         }
