@@ -19,6 +19,7 @@ public class MultiMaskTracker {
     public static final String MSK_KEY_SEP = "=";
     public static final int MAX_MASK_DEPTH = 8;
     public static final int MAX_MASK_NUM = 65536;
+    public static final String KEY_PART_SEP = " ";
 
     private Map<Integer,MultiMaskBean> maskIdToBean;
     private Map<String,MultiMaskBean> altMasksToBean;
@@ -35,9 +36,10 @@ public class MultiMaskTracker {
 
     public MultiMaskTracker() {
         logger = LoggerFactory.getLogger( MultiMaskTracker.class );
-        maskIdToBean = new HashMap<Integer, MultiMaskBean>();
-        altMasksToBean = new HashMap<String, MultiMaskBean>();
-        retiredMasks = new HashSet<Integer>();
+        // Pre-setting sizings on maps to avoid repeated extensions.  We have two-byte masks, hence a ceiling.
+        maskIdToBean = new HashMap<Integer, MultiMaskBean>( 65536 );
+        altMasksToBean = new HashMap<String, MultiMaskBean>( 65536 );
+        retiredMasks = new HashSet<Integer>( 8192 );
     }
 
     public void setFirstMaskNum( int firstMaskNum ) {
@@ -91,20 +93,19 @@ public class MultiMaskTracker {
         List<Integer> altMasks = null;
         if ( oldBean != null ) {
             altMasks = oldBean.getAltMasks();
+            assert (! altMasks.contains(discoveredMask)) :
+                    "Unlikely scenario: found multimask " + oldVolumeMask +
+                    ", which also contains newly-adding submask " + discoveredMask;
             if ( altMasks.size() >= MAX_MASK_DEPTH ) {
                 maxDepthExceededCount ++;
                 return oldVolumeMask;
             }
-            else if ( altMasks.contains( discoveredMask ) ) {
-                fullInvertedKey = oldBean.getInvertedKey();
-                System.out.println("Unlikely scenario: found multimask " + oldVolumeMask + ", which also contains newly-adding submask " + discoveredMask);
-            }
             else {
                 // Generate a key for finding any existing combo of old + new.
-                fullInvertedKey = oldBean.getExtendedInvertedKey( discoveredMask );
+                fullInvertedKey = oldBean.getExtendedInvertedKey( discoveredMask );               //NO 9s
                 // Decrement number of voxels referencing the old mask, because now we reference a new one.
                 oldBean.decrementVoxelCount();
-                if ( oldBean.getVoxelCount() == 0 ) {
+                if ( oldBean.getVoxelCount() == 0 ) {                                             //NO elim in "for-timing"
                     retiredMasks.add( oldBean.getMultiMaskNum() );
                     maskIdToBean.remove( oldBean.getMultiMaskNum() );
                 }
@@ -113,28 +114,16 @@ public class MultiMaskTracker {
         else {
             // Whatever mask had been set in the volume was NOT a multi-mask. But a multi-mask convering the
             // combo of new+old may exist. Key will find that.
-            if ( discoveredMask < oldVolumeMask ) {
-                fullInvertedKey = new StringBuilder()
-                        .append( discoveredMask )
-                        .append(' ')
-                        .append( oldVolumeMask )
-                        .append( ' ' )
-                        .toString();
-                        //String.format( DUAL_MASK_HEX_FORMAT, discoveredMask, oldVolumeMask );
+            if ( discoveredMask < oldVolumeMask ) {                                              //NO 2s
+                fullInvertedKey = discoveredMask + KEY_PART_SEP + oldVolumeMask + KEY_PART_SEP;
             }
             else {
-                fullInvertedKey = new StringBuilder()
-                        .append( oldVolumeMask )
-                        .append(' ')
-                        .append(discoveredMask)
-                        .append( ' ' )
-                        .toString();
-                        //String.format( DUAL_MASK_HEX_FORMAT, oldVolumeMask, discoveredMask );
+                fullInvertedKey = oldVolumeMask + KEY_PART_SEP + discoveredMask + KEY_PART_SEP;
             }
         }
 
         // Need to see if there is a bean covering old alt masks plus this new one.
-        rtnVal = getExtendedMultiMask(discoveredMask, oldVolumeMask, fullInvertedKey, altMasks);
+        rtnVal = getExtendedMultiMask(discoveredMask, oldVolumeMask, fullInvertedKey, altMasks); //NO 10s
         return rtnVal;
     }
 

@@ -159,7 +159,7 @@ public class RenderablesLoadWorker extends SimpleWorker implements VolumeLoader 
         if (dataSource==null) return;
         Collection<MaskChanRenderableData> renderableDatas = dataSource.getRenderableDatas();
 
-        // Cut down the to-renders: use only the larger ones.
+        // Cut down the to-renders: (at time-of-writing) use only the larger ones.
         Collection<MaskChanRenderableData> originalDatas = new ArrayList<MaskChanRenderableData>( renderableDatas );
         long fragmentFilterSize = alignmentBoardSettings.getMinimumVoxelCount();
         long fragmentCutoffCount = alignmentBoardSettings.getMaximumNeuronCount();
@@ -185,21 +185,12 @@ public class RenderablesLoadWorker extends SimpleWorker implements VolumeLoader 
             if ( sampler != null )
                 alignmentBoardSettings = adjustDownsampleRateSetting();
 
-            boolean isCheckPointedAfterFilter = filter(renderableDatas, originalDatas);
-            if ( isCheckPointedAfterFilter )
+            boolean passedCheckPointAfterFilter = filterCheckboxes(renderableDatas, originalDatas);
+            if ( ! passedCheckPointAfterFilter )
                 return;
 
-
-            // Establish the "uncovered bean list".
             List<RenderableBean> renderableBeans = new ArrayList<RenderableBean>();
-            int lastUsedMask = -1;
-            for ( MaskChanRenderableData renderableData: renderableDatas ) {
-                RenderableBean bean = renderableData.getBean();
-                renderableBeans.add( bean );
-                if ( bean.getTranslatedNum() > lastUsedMask ) {
-                    lastUsedMask = bean.getTranslatedNum();
-                }
-            }
+            int lastUsedMask = extractRenderableBeansFromRenderableDatas( renderableDatas, renderableBeans );
             if ( lastUsedMask > -1 ) {
                 multiMaskTracker.setFirstMaskNum( lastUsedMask + 1 ); // Add one to move past all allocated masks.
             }
@@ -210,6 +201,11 @@ public class RenderablesLoadWorker extends SimpleWorker implements VolumeLoader 
             if ( ! checkpoint( "Loading voxel data." ) ) {
                 return;
             }
+
+            neuronFragmentLoader = new MaskChanMultiFileLoader();
+            compartmentLoader = new MaskChanMultiFileLoader();
+
+            //buildNothing(renderableDatas, renderableBeans);
 
             buildMaskVolume(renderableDatas, renderableBeans);
             buildSignalVolume(renderableDatas, renderableBeans);
@@ -232,6 +228,56 @@ public class RenderablesLoadWorker extends SimpleWorker implements VolumeLoader 
     @Override
     protected void hadError(Throwable error) {
         controlCallback.loadCompletion(false, loadFiles, error);
+    }
+
+    private void buildNothing(Collection<MaskChanRenderableData> renderableDatas, List<RenderableBean> renderableBeans) {
+        if ( checkpoint( "Dummy Load for Timing" ) ) {
+            ArrayList<MaskChanDataAcceptorI> dummyAcceptors = new ArrayList<MaskChanDataAcceptorI>();
+            // RE-run the scan.  This time only the signal-texture-builder will accept the data.
+            dummyAcceptors.add(new MaskChanDataAcceptorI() {
+                @Override
+                public int addChannelData(Integer orignalMaskNum, byte[] channelData, long position, long x, long y, long z, ChannelMetaData channelMetaData) throws Exception {
+                    throw new Exception("Cannot accept this data.");
+                }
+
+                @Override
+                public int addMaskData(Integer maskNumber, long position, long x, long y, long z) throws Exception {
+                    return 1;
+                }
+
+                @Override
+                public void setSpaceSize(long x, long y, long z, long paddedX, long paddedY, long paddedZ, float[] coordCoverage) {
+                    // Do nothing.
+                }
+
+                @Override
+                public Acceptable getAcceptableInputs() {
+                    return Acceptable.mask;
+                }
+
+                @Override
+                public int getChannelCount() {
+                    return 0;
+                }
+
+                @Override
+                public void setChannelMetaData(ChannelMetaData metaData) {
+                    // Do nothing.
+                }
+
+                @Override
+                public void endData(Logger logger) {
+                    // Do nothing.
+                }
+            });
+            neuronFragmentLoader.setAcceptors(dummyAcceptors);
+            compartmentLoader.setAcceptors( dummyAcceptors );
+
+            logger.info("Timing multi-thread data load dry-run.");
+            multiThreadedDataLoad(renderableDatas, false);
+            logger.info("End timing dry-run load.");
+
+        }
     }
 
     /**
@@ -332,13 +378,16 @@ public class RenderablesLoadWorker extends SimpleWorker implements VolumeLoader 
     }
 
     /**
-     * Produce a list of the renderables to actually be used after filtering, and in sorted order.
+     * Eliminate checkboxes from the Layers Panel, for things that will never be rendered because they have been
+     * filtered.
      *
      * @param renderableDatas product of this operation
      * @param originalDatas raw list.
-     * @return true if the user canceled prior to this operation.  False otherwise.
+     * @return true if the checkpoints were passed, prior-to/during this operation.  False otherwise.
      */
-    private boolean filter(Collection<MaskChanRenderableData> renderableDatas, Collection<MaskChanRenderableData> originalDatas) {
+    private boolean filterCheckboxes(
+            Collection<MaskChanRenderableData> renderableDatas, Collection<MaskChanRenderableData> originalDatas
+    ) {
         // Go through the original list.  Anything not in the filtered list must be marked as excluded;
         // anything remaining on the list is un-marked excluded.
         Map<RenderableBean,MaskChanRenderableData> idToData = new HashMap<RenderableBean,MaskChanRenderableData>();
@@ -348,7 +397,7 @@ public class RenderablesLoadWorker extends SimpleWorker implements VolumeLoader 
         SessionMgr.getBrowser().getLayersPanel().showLoadingIndicator();
         for ( MaskChanRenderableData data: originalDatas ) {
             if ( ! checkpoint( "Filtering checkboxes." ) ) {
-                return true;
+                return false;
             }
 
             MaskChanRenderableData targetData = idToData.get(data.getBean());
@@ -376,7 +425,7 @@ public class RenderablesLoadWorker extends SimpleWorker implements VolumeLoader 
                 }
             }
         }
-        return false;
+        return true;
     }
 
     /**
@@ -434,11 +483,9 @@ public class RenderablesLoadWorker extends SimpleWorker implements VolumeLoader 
         maskDataAcceptors.add(remaskingAcceptorDecorator);
 
         // Setup the loader to traverse all this data on demand. Only the mask-tex-builder accepts data.
-        neuronFragmentLoader = new MaskChanMultiFileLoader();
         neuronFragmentLoader.setAcceptors(maskDataAcceptors);
         neuronFragmentLoader.setFileStats(fileStats);
 
-        compartmentLoader = new MaskChanMultiFileLoader();
         compartmentLoader.setAcceptors(maskDataAcceptors);
 
         logger.info("Timing multi-thread data load for multi-mask-assbembly.");
@@ -468,6 +515,25 @@ public class RenderablesLoadWorker extends SimpleWorker implements VolumeLoader 
             runnable.run();
         }
 
+    }
+
+    /**
+     *  Establish the "uncovered bean list".
+     *
+     *  @param renderableDatas contain renderable beans plus file paths.
+     *  @param renderableBeans just the beans.  This colleciton will be populated as an OUTPUT of this method.
+     *  @return the highest mask number found in any renderable bean.
+     */
+    private int extractRenderableBeansFromRenderableDatas(Collection<MaskChanRenderableData> renderableDatas, List<RenderableBean> renderableBeans) {
+        int lastUsedMask = -1;
+        for ( MaskChanRenderableData renderableData: renderableDatas ) {
+            RenderableBean bean = renderableData.getBean();
+            renderableBeans.add( bean );
+            if ( bean.getTranslatedNum() > lastUsedMask ) {
+                lastUsedMask = bean.getTranslatedNum();
+            }
+        }
+        return lastUsedMask;
     }
 
     private boolean previouslyClosed = false;   // Flag to ensure absence of progress monitor does not thwart cancel.
