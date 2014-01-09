@@ -114,12 +114,14 @@ public class MultiMaskTracker {
         else {
             // Whatever mask had been set in the volume was NOT a multi-mask. But a multi-mask convering the
             // combo of new+old may exist. Key will find that.
-            if ( discoveredMask < oldVolumeMask ) {
-                fullInvertedKey = new MultiMaskKey( new int[] { discoveredMask, oldVolumeMask } );
-            }
-            else {
-                fullInvertedKey = new MultiMaskKey( new int[] { oldVolumeMask, discoveredMask } );
-            }
+            fullInvertedKey = new MultiMaskKey( new int[] { oldVolumeMask, discoveredMask } );
+
+//            if ( discoveredMask < oldVolumeMask ) {
+//                fullInvertedKey = new MultiMaskKey( new int[] { discoveredMask, oldVolumeMask } );
+//            }
+//            else {
+//                fullInvertedKey = new MultiMaskKey( new int[] { oldVolumeMask, discoveredMask } );
+//            }
         }
 
         // Need to see if there is a bean covering old alt masks plus this new one.
@@ -340,15 +342,15 @@ public class MultiMaskTracker {
         private int voxelCount = 1; // On construction, this instance variable will indicate that 1 voxel is masked.
 
         public MultiMaskKey getInvertedKey() {
-            List<Integer> sortedAltMasks = sortAltMasks();
-            MultiMaskKey rtnVal = new MultiMaskKey( sortedAltMasks );
+//            List<Integer> sortedAltMasks = sortAltMasks();
+            MultiMaskKey rtnVal = new MultiMaskKey( altMasks );
             return rtnVal;
         }
 
         public MultiMaskKey getExtendedInvertedKey( Integer newAltMask ) {
             List<Integer> sortedAltMasks = new ArrayList<Integer>( altMasks );
             sortedAltMasks.add( newAltMask );
-            Collections.sort( sortedAltMasks );
+//            Collections.sort( sortedAltMasks );
 
             MultiMaskKey rtnVal = new MultiMaskKey( sortedAltMasks );
             return rtnVal;
@@ -395,7 +397,7 @@ public class MultiMaskTracker {
         private List<Integer> sortAltMasks() {
             List<Integer> sortedAltMasks = new ArrayList<Integer>();
             sortedAltMasks.addAll( altMasks );
-            Collections.sort(sortedAltMasks);
+//            Collections.sort(sortedAltMasks);
             return sortedAltMasks;
         }
 
