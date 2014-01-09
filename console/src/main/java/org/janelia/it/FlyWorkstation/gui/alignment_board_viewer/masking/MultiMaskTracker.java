@@ -115,13 +115,6 @@ public class MultiMaskTracker {
             // Whatever mask had been set in the volume was NOT a multi-mask. But a multi-mask convering the
             // combo of new+old may exist. Key will find that.
             fullInvertedKey = new MultiMaskKey( new int[] { oldVolumeMask, discoveredMask } );
-
-//            if ( discoveredMask < oldVolumeMask ) {
-//                fullInvertedKey = new MultiMaskKey( new int[] { discoveredMask, oldVolumeMask } );
-//            }
-//            else {
-//                fullInvertedKey = new MultiMaskKey( new int[] { oldVolumeMask, discoveredMask } );
-//            }
         }
 
         // Need to see if there is a bean covering old alt masks plus this new one.
