@@ -22,7 +22,7 @@ public class MultiMaskTracker {
     public static final String KEY_PART_SEP = " ";
 
     private Map<Integer,MultiMaskBean> maskIdToBean;
-    private Map<String,MultiMaskBean> altMasksToBean;
+    private Map<MultiMaskKey,MultiMaskBean> altMasksToBean;
 
     private List<Integer> dumpedList;
     private Set<Integer> retiredMasks;
@@ -38,7 +38,7 @@ public class MultiMaskTracker {
         logger = LoggerFactory.getLogger( MultiMaskTracker.class );
         // Pre-setting sizings on maps to avoid repeated extensions.  We have two-byte masks, hence a ceiling.
         maskIdToBean = new HashMap<Integer, MultiMaskBean>( 65536 );
-        altMasksToBean = new HashMap<String, MultiMaskBean>( 65536 );
+        altMasksToBean = new HashMap<MultiMaskKey, MultiMaskBean>( 65536 );
         retiredMasks = new HashSet<Integer>( 8192 );
     }
 
@@ -89,7 +89,7 @@ public class MultiMaskTracker {
 
         // Check if this exists in the current bean list.
         MultiMaskBean oldBean = maskIdToBean.get( oldVolumeMask );
-        String fullInvertedKey;
+        MultiMaskKey fullInvertedKey;
         List<Integer> altMasks = null;
         if ( oldBean != null ) {
             altMasks = oldBean.getAltMasks();
@@ -102,10 +102,10 @@ public class MultiMaskTracker {
             }
             else {
                 // Generate a key for finding any existing combo of old + new.
-                fullInvertedKey = oldBean.getExtendedInvertedKey( discoveredMask );               //NO 9s
+                fullInvertedKey = oldBean.getExtendedInvertedKey( discoveredMask );
                 // Decrement number of voxels referencing the old mask, because now we reference a new one.
                 oldBean.decrementVoxelCount();
-                if ( oldBean.getVoxelCount() == 0 ) {                                             //NO elim in "for-timing"
+                if ( oldBean.getVoxelCount() == 0 ) {
                     retiredMasks.add( oldBean.getMultiMaskNum() );
                     maskIdToBean.remove( oldBean.getMultiMaskNum() );
                 }
@@ -114,16 +114,16 @@ public class MultiMaskTracker {
         else {
             // Whatever mask had been set in the volume was NOT a multi-mask. But a multi-mask convering the
             // combo of new+old may exist. Key will find that.
-            if ( discoveredMask < oldVolumeMask ) {                                              //NO 2s
-                fullInvertedKey = discoveredMask + KEY_PART_SEP + oldVolumeMask + KEY_PART_SEP;
+            if ( discoveredMask < oldVolumeMask ) {
+                fullInvertedKey = new MultiMaskKey( new int[] { discoveredMask, oldVolumeMask } );
             }
             else {
-                fullInvertedKey = oldVolumeMask + KEY_PART_SEP + discoveredMask + KEY_PART_SEP;
+                fullInvertedKey = new MultiMaskKey( new int[] { oldVolumeMask, discoveredMask } );
             }
         }
 
         // Need to see if there is a bean covering old alt masks plus this new one.
-        rtnVal = getExtendedMultiMask(discoveredMask, oldVolumeMask, fullInvertedKey, altMasks); //NO 10s
+        rtnVal = getExtendedMultiMask(discoveredMask, oldVolumeMask, fullInvertedKey, altMasks);
         return rtnVal;
     }
 
@@ -215,10 +215,10 @@ public class MultiMaskTracker {
             logger.info( totalDump.toString() );
             totalDump.setLength( 0 );
             totalDump.append( "Dumping Inverted Mask Contents\n" );
-            Set<String> altMasks = this.altMasksToBean.keySet();
-            for ( String invertedKey: altMasks ) {
+            Set<MultiMaskKey> altMasks = this.altMasksToBean.keySet();
+            for ( MultiMaskKey invertedKey: altMasks ) {
                 boolean toDump = false;
-                String[] altMaskArr = invertedKey.split(" ");
+                String[] altMaskArr = invertedKey.toString().split(" ");
                 List<String> altMaskList = Arrays.asList( altMaskArr );
                 for ( Integer member: dumpedList ) {
                     if ( altMaskList.contains( member.toString() ) ) {
@@ -250,7 +250,7 @@ public class MultiMaskTracker {
      * @return a new multi-mask covering N+1.
      */
     private synchronized Integer getExtendedMultiMask(
-            int discoveredMask, int oldVolumeMask, String fullInvertedKey, List<Integer> altMasks
+            int discoveredMask, int oldVolumeMask, MultiMaskKey fullInvertedKey, List<Integer> altMasks
     ) {
         Integer rtnVal;
         MultiMaskBean extendedMultiMaskBean = altMasksToBean.get( fullInvertedKey );
@@ -262,7 +262,8 @@ public class MultiMaskTracker {
         else {
             rtnVal = createIncrementedMultimask(discoveredMask, oldVolumeMask, altMasks);
             if ( rtnVal == -1 ) {
-                unexpandableVsPrevCombo.put(fullInvertedKey, discoveredMask + MSK_KEY_SEP + fullInvertedKey);
+
+                unexpandableVsPrevCombo.put(fullInvertedKey.toString(), discoveredMask + MSK_KEY_SEP + fullInvertedKey);
 
             }
         }
@@ -338,27 +339,19 @@ public class MultiMaskTracker {
         private List<Integer> altMasks = new ArrayList<Integer>();
         private int voxelCount = 1; // On construction, this instance variable will indicate that 1 voxel is masked.
 
-        public String getInvertedKey() {
+        public MultiMaskKey getInvertedKey() {
             List<Integer> sortedAltMasks = sortAltMasks();
-            StringBuilder rtnVal = new StringBuilder();
-            for ( Integer altMask: sortedAltMasks ) {
-                // String hexKey = String.format(MASK_HEX_FORMAT, altMask );
-                rtnVal.append( altMask ).append( ' ' );
-            }
-            return rtnVal.toString();
+            MultiMaskKey rtnVal = new MultiMaskKey( sortedAltMasks );
+            return rtnVal;
         }
 
-        public String getExtendedInvertedKey( Integer newAltMask ) {
+        public MultiMaskKey getExtendedInvertedKey( Integer newAltMask ) {
             List<Integer> sortedAltMasks = new ArrayList<Integer>( altMasks );
             sortedAltMasks.add( newAltMask );
             Collections.sort( sortedAltMasks );
 
-            StringBuilder rtnVal = new StringBuilder();
-            for ( Integer altMask: sortedAltMasks ) {
-                //String nextKey = String.format(MASK_HEX_FORMAT, altMask );
-                rtnVal.append( altMask ).append( ' ' );
-            }
-            return rtnVal.toString();
+            MultiMaskKey rtnVal = new MultiMaskKey( sortedAltMasks );
+            return rtnVal;
         }
 
         public Integer getMultiMaskNum() {
@@ -406,5 +399,52 @@ public class MultiMaskTracker {
             return sortedAltMasks;
         }
 
+    }
+
+    /**
+     * Use this for deciding if a key built up from a newly "approaching" mask, plus the old masks
+     * represented by the previous combination found at that slot, equals an existing combination.
+     */
+    private static class MultiMaskKey {
+        private int[] constituentMasks;
+        public MultiMaskKey( List<Integer> constituentMasks ) {
+            this.constituentMasks = new int[ constituentMasks.size() ];
+            for ( int i = 0; i < constituentMasks.size(); i++ ) {
+                this.constituentMasks[ i ] = constituentMasks.get( i );
+            }
+        }
+
+        public MultiMaskKey( int[] constituentMasks ) {
+            this.constituentMasks = constituentMasks;
+        }
+
+        public int[] getConstituentMasks() {
+            return constituentMasks;
+        }
+
+        @Override
+        public boolean equals( Object other ) {
+            if ( other != null && other instanceof MultiMaskKey ) {
+                MultiMaskKey otherKey = (MultiMaskKey)other;
+                return Arrays.equals( constituentMasks, otherKey.getConstituentMasks() );
+            }
+            else {
+                return false;
+            }
+        }
+
+        @Override
+        public int hashCode() {
+            return Arrays.hashCode( constituentMasks );
+        }
+
+        @Override
+        public String toString() {
+            StringBuilder rtnVal = new StringBuilder();
+            for ( Integer mask: constituentMasks ) {
+                rtnVal.append( mask ).append( ' ' );
+            }
+            return rtnVal.toString();
+        }
     }
 }

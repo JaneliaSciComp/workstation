@@ -4,9 +4,6 @@ import org.janelia.it.FlyWorkstation.gui.alignment_board_viewer.masking.MultiMas
 import org.janelia.it.FlyWorkstation.gui.viewer3d.masking.VolumeDataI;
 import org.janelia.it.FlyWorkstation.shared.annotations.NotThreadSafe;
 
-import java.nio.ByteBuffer;
-import java.nio.ByteOrder;
-
 /**
  * Created with IntelliJ IDEA.
  * User: fosterl
@@ -71,7 +68,7 @@ public class RemaskingAcceptorDecorator extends AbstractAcceptorDecorator {
                 for ( long j = 0; j < maskByteCount; j++ ) {
                     long volumeLoc = j + maskStartPos;
                     // Here enforced: need to take previous mask into account.
-                    int nextMaskByte = maskVolumeData.getValueAt(volumeLoc);           // NO 1.8s
+                    int nextMaskByte = maskVolumeData.getValueAt(volumeLoc);
                     if ( nextMaskByte < 0 ) {
                         nextMaskByte += 256;
                     }
@@ -91,7 +88,7 @@ public class RemaskingAcceptorDecorator extends AbstractAcceptorDecorator {
                 throw new RuntimeException("No volume data available.  Cannot add mask data.");
             }
         }
-        return wrappedAcceptor.addMaskData( finalMaskNumber, position, x, y, z );     // NO 1.5s
+        return wrappedAcceptor.addMaskData( finalMaskNumber, position, x, y, z );
 
     }
 }
