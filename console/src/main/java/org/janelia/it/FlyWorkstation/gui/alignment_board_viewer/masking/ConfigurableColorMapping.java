@@ -95,7 +95,7 @@ public class ConfigurableColorMapping implements RenderMappingI {
                 MultiMaskTracker.MultiMaskBean bean = multiMaskMap.get( multiMask );
                 int leastPos = Integer.MAX_VALUE;
                 Integer chosenAltMask = null;
-                for ( Integer nextAltMask: bean.getAltMasks() ) {
+                for ( int nextAltMask: bean.getAltMasks() ) {
                     byte[] rgb = maskMappings.get( nextAltMask );
                     if ( rgb != null  &&  rgb[ 3 ] != RenderMappingI.NON_RENDERING ) {
                         int pos = orderedMasks.indexOf( nextAltMask );
@@ -127,7 +127,7 @@ public class ConfigurableColorMapping implements RenderMappingI {
                         int intensityOffsetInterp;
 
                         // Using the number of alternates to signal to shader how to treat the mask offset number.
-                        if ( bean.getAltMasks().size() <= 4 ) {
+                        if ( bean.getAltMaskCount() <= 4 ) {
                             intensityOffsetInterp = BYTE_INTENSITY_INTERP;
                         }
                         else {

@@ -93,7 +93,7 @@ public class MultiMaskTracker {
         List<Integer> altMasks = null;
         if ( oldBean != null ) {
             altMasks = oldBean.getAltMasks();
-            assert (! altMasks.contains(discoveredMask)) :
+            assert (! altMasks.contains( discoveredMask )) :
                     "Unlikely scenario: found multimask " + oldVolumeMask +
                     ", which also contains newly-adding submask " + discoveredMask;
             if ( altMasks.size() >= MAX_MASK_DEPTH ) {
@@ -135,7 +135,7 @@ public class MultiMaskTracker {
     /** Assumed that if the mask id is not in the mapping, must be a single-mask.  Otherwise rtn #-of-sub-masks. */
     public int getMaskExpansionCount( Integer maskId ) {
         MultiMaskBean maskBean = maskIdToBean.get( maskId );
-        return maskBean == null ? 1 : maskBean.getAltMasks().size();
+        return maskBean == null ? 1 : maskBean.getAltMaskCount();
     }
 
     /** This is the "panic button" to press when things are going wrong, to help debug the problem. */
@@ -335,17 +335,15 @@ public class MultiMaskTracker {
         private int voxelCount = 1; // On construction, this instance variable will indicate that 1 voxel is masked.
 
         public MultiMaskKey getInvertedKey() {
-//            List<Integer> sortedAltMasks = sortAltMasks();
             MultiMaskKey rtnVal = new MultiMaskKey( altMasks );
             return rtnVal;
         }
 
         public MultiMaskKey getExtendedInvertedKey( Integer newAltMask ) {
-            List<Integer> sortedAltMasks = new ArrayList<Integer>( altMasks );
-            sortedAltMasks.add( newAltMask );
-//            Collections.sort( sortedAltMasks );
+            List<Integer> extendedAltMasks = new ArrayList<Integer>( altMasks );
+            extendedAltMasks.add( newAltMask );
 
-            MultiMaskKey rtnVal = new MultiMaskKey( sortedAltMasks );
+            MultiMaskKey rtnVal = new MultiMaskKey( extendedAltMasks );
             return rtnVal;
         }
 
@@ -359,6 +357,14 @@ public class MultiMaskTracker {
 
         public List<Integer> getAltMasks() {
             return altMasks;
+        }
+
+        public int getAltMaskCount() {
+            return altMasks.size();
+        }
+
+        public boolean contains( Integer mask ) {
+            return altMasks.contains( mask );
         }
 
         public void addAltMask( Integer altMask ) {
@@ -385,13 +391,6 @@ public class MultiMaskTracker {
         /** Returns which priority among all sub-masks, this one is. */
         public int getMaskOffset( Integer maskNum ) {
             return this.getAltMasks().indexOf( maskNum );
-        }
-
-        private List<Integer> sortAltMasks() {
-            List<Integer> sortedAltMasks = new ArrayList<Integer>();
-            sortedAltMasks.addAll( altMasks );
-//            Collections.sort(sortedAltMasks);
-            return sortedAltMasks;
         }
 
     }
