@@ -65,7 +65,10 @@ public class LayerContextMenu extends JPopupMenu {
         setNextAddRequiresSeparator(true);
         add(getChooseColorItem());
         add(getDropColorItem());
-        add(getRawRenderToggle());
+        // This is a special debug item. It may also not be working as intended. LLF, 1/10/2014
+        if ( SessionMgr.getUsername().equals( "fosterl" ) ) {
+            add(getRawRenderToggle());
+        }
         add(getRenameItem());
         add(getDeleteItem());
     }
