@@ -725,6 +725,10 @@ public class LayersPanel extends JPanel implements Refreshable, ActivatableView 
                 else {
                     if ( fileStats != null  &&  ( !alignedItem.getItemWrapper().getType().toLowerCase().contains("compartment") ) ) {
                         double[] colorRGB = fileStats.getChannelAverages(alignedItem.getId());
+                        if ( colorRGB == null ) {
+                            // Happens with reference channels.
+                            colorRGB = fileStats.getChannelAverages( alignedItem.getItemWrapper().getId() );
+                        }
                         if ( colorRGB != null ) {
                             Color color = new Color(
                                     (int)(256.0 * Math.pow( colorRGB[ 0 ], VolumeModel.STANDARDIZED_GAMMA_MULTIPLIER ) ),
