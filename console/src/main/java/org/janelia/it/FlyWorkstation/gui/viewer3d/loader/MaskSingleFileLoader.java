@@ -255,6 +255,12 @@ public class MaskSingleFileLoader {
 
             fileStats.recordChannelAverages( renderableBean.getRenderableEntity().getId(), channelAverages );
         }
+        else if ( channelAcceptors.size() > 0 ) {
+            logger.warn(
+                    "No color averages recorded.  Renderable bean: entity={}.  Filestats={}.",
+                    renderableBean.getRenderableEntity(), fileStats + " " + channelAcceptors.size()
+            );
+        }
 
         logger.debug( "Read complete." );
         if ( DEBUG ) {

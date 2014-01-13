@@ -487,6 +487,7 @@ public class RenderablesLoadWorker extends SimpleWorker implements VolumeLoader 
         neuronFragmentLoader.setFileStats(fileStats);
 
         compartmentLoader.setAcceptors(maskDataAcceptors);
+        compartmentLoader.setFileStats(fileStats);
 
         logger.info("Timing multi-thread data load for multi-mask-assbembly.");
         multiThreadedDataLoad(renderableDatas, false);

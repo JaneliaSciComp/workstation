@@ -88,9 +88,11 @@ float computeIntensity( vec4 inputColor, float pos, float posInterp )
             byteUsed *= 256.0;
             if ( byteInxFloor == byteInx )
             {   // Bottom nibble.
+//                float topNibble = floor( byteUsed / 16.0 );
+//                rtnVal = byteUsed - (topNibble * 16);
                 for (int i = 0; i < 4; i++)
                 {
-                    rtnVal += lowBitAdd( rtnVal, byteUsed, pow( 2.0, float( i ) ) );
+                    rtnVal = lowBitAdd( rtnVal, byteUsed, pow( 2.0, float( i ) ) );
                     // Must now pop the bottom bit off the "byte used" byte.
                     byteUsed = floor( byteUsed / 2.0 );
                 }

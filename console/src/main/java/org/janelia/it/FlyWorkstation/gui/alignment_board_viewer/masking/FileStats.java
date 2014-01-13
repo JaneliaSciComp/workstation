@@ -33,7 +33,17 @@ public class FileStats {
 
     /** Return the averages for all channels associated with this identifier. */
     public synchronized double[] getChannelAverages( Long id ) {
-        return channelAverageMap.get( id );
+        double[] averages = channelAverageMap.get( id );
+        double[] rtnVal = averages;
+        if ( averages != null ) {
+            rtnVal = new double[ 3 ];
+            for ( int i = 0; i < 3; i++ ) {
+                if ( averages.length > i ) {
+                    rtnVal[ i ] = averages[ i ];
+                }
+            }
+        }
+        return rtnVal;
     }
 
     public synchronized void clear() {

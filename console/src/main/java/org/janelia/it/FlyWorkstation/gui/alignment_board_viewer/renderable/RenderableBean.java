@@ -67,6 +67,11 @@ public class RenderableBean {
         }
     }
 
+    @Override
+    public String toString() {
+        return renderableEntity.getName() + "::" + renderableEntity.getId();
+    }
+
     /** Establish equality based on contained entity. */
     @Override
     public boolean equals( Object o ) {
