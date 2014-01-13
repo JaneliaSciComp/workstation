@@ -11,6 +11,7 @@ import org.janelia.it.FlyWorkstation.gui.framework.viewer.BaseballCardPanel;
 import org.janelia.it.FlyWorkstation.gui.framework.viewer.RootedEntityReceiver;
 import org.janelia.it.FlyWorkstation.gui.framework.viewer.baseball_card.BaseballCard;
 import org.janelia.it.FlyWorkstation.model.domain.AlignmentContext;
+import org.janelia.it.FlyWorkstation.model.domain.EntityWrapperFactory;
 import org.janelia.it.FlyWorkstation.model.domain.Sample;
 import org.janelia.it.FlyWorkstation.model.entity.RootedEntity;
 import org.janelia.it.FlyWorkstation.model.viewer.AlignmentBoardContext;
@@ -301,7 +302,15 @@ public class ABTargetedSearchDialog extends ModalDialog {
                     // Now, to "prowl" the trees of the result list, to find out what can be added, here.
                     if ( entity.getEntityTypeName().equals( EntityConstants.TYPE_SAMPLE ) ) {
                         RootedEntity rootedEntity = null;
-                        rootedEntity = new RootedEntity( entity );
+                        Entity childEntity = entity.getChildren().iterator().next();
+                        rootedEntity =
+                                new RootedEntity( ModelMgr.getModelMgr().getAncestorWithType( childEntity, EntityConstants.TYPE_SAMPLE ) );
+
+                        if ( rootedEntity == null ) {
+                            logger.warn( "Did not find child/parent.  Instead wrapping with new rooted entity.");
+                            rootedEntity = new RootedEntity( entity );
+                        }
+
                         if ( isSampleCompatible( param.getContext(), rootedEntity) ) {
                             rtnVal.add( rootedEntity );
                         }
@@ -343,7 +352,7 @@ public class ABTargetedSearchDialog extends ModalDialog {
         private boolean isSampleCompatible(AlignmentContext standardContext, RootedEntity entity) throws Exception {
             boolean rtnVal;
             boolean foundMatch = false;
-            Sample wrapper = new Sample( entity );
+            Sample wrapper = (Sample) EntityWrapperFactory.wrap(entity);
             List< AlignmentContext> contexts = wrapper.getAvailableAlignmentContexts();
             Iterator<AlignmentContext> contextIterator = contexts.iterator();
 
