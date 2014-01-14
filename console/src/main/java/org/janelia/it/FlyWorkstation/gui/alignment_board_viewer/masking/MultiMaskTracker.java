@@ -59,10 +59,7 @@ public class MultiMaskTracker {
      * @see #getMask()
      */
     public void clear() {
-        // Report old state problems.  No other opportunity unless make special call.
-        if ( maxDepthExceededCount > 0 ) {
-            logger.warn( "Exceeded the max mask depth of {}, {} times.", MAX_MASK_DEPTH, maxDepthExceededCount );
-        }
+        checkDepthExceeded();
 
         maskIdToBean.clear();
         altMasksToBean.clear();
@@ -73,6 +70,16 @@ public class MultiMaskTracker {
         unexpandableVsPrevCombo.clear();
         maxDepthExceededCount = 0;
         nextMaskNum = 0; // In case set-first is never called after the clear.
+    }
+
+    /**
+     * Check this to see if the max depth of any voxel has been exceeded.
+     */
+    public void checkDepthExceeded() {
+        // Report old state problems.  No other opportunity unless make special call.
+        if ( maxDepthExceededCount > 0 ) {
+            logger.warn( "Exceeded the max mask depth of {}, {} times.", MAX_MASK_DEPTH, maxDepthExceededCount );
+        }
     }
 
     /**
