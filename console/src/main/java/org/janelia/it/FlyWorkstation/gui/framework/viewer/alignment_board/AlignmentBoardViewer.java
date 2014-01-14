@@ -312,6 +312,7 @@ public class AlignmentBoardViewer extends Viewer implements AlignmentBoardContro
             settingsPanel.setVolumeMaxima(signalTexture.getSx(), signalTexture.getSy(), signalTexture.getSz());
         }
 
+        multiMaskTracker.checkDepthExceeded();
     }
 
     @Override
