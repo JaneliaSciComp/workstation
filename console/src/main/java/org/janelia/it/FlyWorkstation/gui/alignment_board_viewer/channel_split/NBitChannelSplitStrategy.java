@@ -78,7 +78,7 @@ public class NBitChannelSplitStrategy implements ChannelSplitStrategyI {
             // Bypassing...
         }
         else {
-            int bitOffset = totalAccessibleBits - (maskOffset+1) * effectiveBitWidth;
+            int bitOffset = maskOffset * effectiveBitWidth;
             int byteStartPos = bitOffset / 8;
             int intraByteStartPos = (effectiveBitWidth * maskOffset) % 8;
             rtnVal[ byteStartPos ] = (byte)((bitWidthMaskingValue & compressedValue) << intraByteStartPos);
