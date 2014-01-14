@@ -17,7 +17,7 @@ import org.slf4j.LoggerFactory;
  */
 public class VeryLargeVolumeData implements VolumeDataI {
 
-    public static final int DEFAULT_NUM_SLABS = 64;
+    public static final int DEFAULT_NUM_SLABS = 256;
     private int slabExtent = 0;
     private long volumeExtent = 0L;
     private Logger logger = LoggerFactory.getLogger( VeryLargeVolumeData.class );
