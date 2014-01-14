@@ -115,6 +115,7 @@ public class MultiMaskTracker {
                 if ( oldBean.getVoxelCount() == 0 ) {
                     retiredMasks.add( oldBean.getMultiMaskNum() );
                     maskIdToBean.remove( oldBean.getMultiMaskNum() );
+                    altMasksToBean.remove( oldBean.getInvertedKey() );
                 }
             }
         }
