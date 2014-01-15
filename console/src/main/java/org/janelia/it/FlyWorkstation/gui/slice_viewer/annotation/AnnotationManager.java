@@ -11,6 +11,8 @@ import org.janelia.it.FlyWorkstation.octree.ZoomedVoxelIndex;
 import org.janelia.it.FlyWorkstation.shared.workers.SimpleWorker;
 import org.janelia.it.FlyWorkstation.signal.Slot1;
 import org.janelia.it.FlyWorkstation.tracing.AnchoredVoxelPath;
+import org.janelia.it.FlyWorkstation.tracing.PathTraceToParentRequest;
+import org.janelia.it.FlyWorkstation.tracing.PathTraceToParentWorker;
 import org.janelia.it.jacs.model.entity.Entity;
 import org.janelia.it.jacs.model.entity.EntityConstants;
 import org.janelia.it.jacs.model.user_data.tiledMicroscope.*;
@@ -94,6 +96,13 @@ elements of what's been done; that's handled by signals emitted from AnnotationM
             if (anchor != null) {
                 selectNeuronFromAnnotation(anchor.getGuid());
             }
+        }
+    };
+
+    public Slot1<PathTraceToParentRequest> tracePathRequestedSlot = new Slot1<PathTraceToParentRequest>() {
+        @Override
+        public void execute(PathTraceToParentRequest request) {
+            tracePathToParent(request);
         }
     };
 
@@ -706,5 +715,28 @@ elements of what's been done; that's handled by signals emitted from AnnotationM
         setter.execute();
     }
 
+    private void tracePathToParent(PathTraceToParentRequest request) {
+        TmGeoAnnotation annotation = annotationModel.getGeoAnnotationFromID(request.getAnchorGuid1());
+        if (annotation.getParent() == null)  {
+            // no parent, no tracing
+            return;
+        }
+
+        TmGeoAnnotation parent = annotation.getParent();
+        request.setAnchorGuid2(parent.getId());
+        request.setXyz1(new Vec3(annotation.getX(), annotation.getY(), annotation.getZ()));
+        request.setXyz2(new Vec3(parent.getX(), parent.getY(), parent.getZ()));
+
+        // tracing:
+        PathTraceToParentWorker worker = new PathTraceToParentWorker(request);
+        worker.pathTracedSignal.connect(addPathRequestedSlot);
+        worker.execute();
+
+        // we'd really prefer to see this worker's status in the Progress Monitor, but as of
+        //  Jan. 2014, that monitor's window repositions itself and comes to front on every
+        //  new task, so it's far too intrusive to be used for our purpose; see FW-2191
+        // worker.executeWithEvents();
+
+    }
 }
 

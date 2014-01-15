@@ -43,7 +43,7 @@ import org.janelia.it.FlyWorkstation.signal.Signal1;
 import org.janelia.it.FlyWorkstation.signal.Slot;
 import org.janelia.it.FlyWorkstation.signal.Slot1;
 import org.janelia.it.FlyWorkstation.tracing.AnchoredVoxelPath;
-import org.janelia.it.FlyWorkstation.tracing.PathTraceRequest.SegmentIndex;
+import org.janelia.it.FlyWorkstation.tracing.SegmentIndex;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

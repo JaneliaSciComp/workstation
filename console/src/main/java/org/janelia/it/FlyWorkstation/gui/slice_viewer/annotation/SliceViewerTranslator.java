@@ -11,7 +11,7 @@ import org.janelia.it.FlyWorkstation.signal.Signal;
 import org.janelia.it.FlyWorkstation.signal.Signal1;
 import org.janelia.it.FlyWorkstation.signal.Slot1;
 import org.janelia.it.FlyWorkstation.tracing.AnchoredVoxelPath;
-import org.janelia.it.FlyWorkstation.tracing.PathTraceRequest;
+import org.janelia.it.FlyWorkstation.tracing.SegmentIndex;
 import org.janelia.it.jacs.model.user_data.tiledMicroscope.*;
 
 import java.awt.*;
@@ -300,7 +300,7 @@ public class SliceViewerTranslator {
     private AnchoredVoxelPath TAP2AVP(TmAnchoredPath path) {
         // prepare the data:
         TmAnchoredPathEndpoints endpoints = path.getEndpoints();
-        final PathTraceRequest.SegmentIndex inputSegmentIndex = new PathTraceRequest.SegmentIndex(endpoints.getAnnotationID1(),
+        final SegmentIndex inputSegmentIndex = new SegmentIndex(endpoints.getAnnotationID1(),
                 endpoints.getAnnotationID2());
 
         final ArrayList<ZoomedVoxelIndex> inputPath = new ArrayList<ZoomedVoxelIndex>();
@@ -310,7 +310,7 @@ public class SliceViewerTranslator {
 
         // do a quick implementation of the interface:
         AnchoredVoxelPath voxelPath = new AnchoredVoxelPath() {
-            PathTraceRequest.SegmentIndex segmentIndex;
+            SegmentIndex segmentIndex;
             List<ZoomedVoxelIndex> path;
 
             {
@@ -319,7 +319,7 @@ public class SliceViewerTranslator {
             }
 
             @Override
-            public PathTraceRequest.SegmentIndex getSegmentIndex() {
+            public SegmentIndex getSegmentIndex() {
                 return segmentIndex;
             }
 

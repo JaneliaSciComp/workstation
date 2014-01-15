@@ -343,7 +343,7 @@ implements MouseMode, KeyListener
                         // Trace connection to parent
                         final boolean showTraceMenu = true; // just for initial debugging?
                         if (showTraceMenu && (hover.getNeighbors().size() > 0)) {
-                            result.add(new JMenuItem(new AbstractAction("Trace connection to this anchor (TESTING)") {
+                            result.add(new JMenuItem(new AbstractAction("Trace path to parent") {
                                 @Override
                                 public void actionPerformed(ActionEvent e) {
                                     Anchor h = getHoverAnchor();

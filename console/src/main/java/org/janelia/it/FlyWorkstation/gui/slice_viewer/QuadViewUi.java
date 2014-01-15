@@ -37,14 +37,11 @@ import org.janelia.it.FlyWorkstation.gui.slice_viewer.skeleton.Anchor;
 import org.janelia.it.FlyWorkstation.gui.slice_viewer.skeleton.Skeleton;
 import org.janelia.it.FlyWorkstation.gui.slice_viewer.skeleton.SkeletonActor;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.BoundingBox3d;
-import org.janelia.it.FlyWorkstation.tracing.AnchoredVoxelPath;
+import org.janelia.it.FlyWorkstation.tracing.*;
 import org.janelia.it.jacs.model.entity.Entity;
 import org.janelia.it.FlyWorkstation.signal.Signal1;
 import org.janelia.it.FlyWorkstation.signal.Slot;
 import org.janelia.it.FlyWorkstation.signal.Slot1;
-import org.janelia.it.FlyWorkstation.tracing.PathTraceRequest;
-import org.janelia.it.FlyWorkstation.tracing.PathTracer;
-import org.janelia.it.FlyWorkstation.tracing.TracedPathSegment;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -179,8 +176,6 @@ public class QuadViewUi extends JPanel
 	private final SliceScanAction goBackZSlicesAction = new GoBackZSlicesAction(volumeImage, camera, -10);
 	// annotation-related
     private final CenterNextParentAction centerNextParentAction = new CenterNextParentAction();
-    //
-    private PathTracer pathTracer = new PathTracer(5);
 
 	private final Action clearCacheAction = new AbstractAction() {
 		private static final long serialVersionUID = 1L;
@@ -210,6 +205,8 @@ public class QuadViewUi extends JPanel
 	        new Signal1<WheelMode.Mode>();
 
     public Signal1<AnchoredVoxelPath> addAnchoredPathRequestSignal = new Signal1<AnchoredVoxelPath>();
+
+    public Signal1<PathTraceToParentRequest> tracePathRequestedSignal = new Signal1<PathTraceToParentRequest>();
 
 	private Slot1<MouseMode.Mode> onMouseModeChangedSlot = new Slot1<MouseMode.Mode>() {
 		@Override
@@ -327,25 +324,21 @@ public class QuadViewUi extends JPanel
         }
     };
 	
-    public Slot1<PathTraceRequest> tracePathSegmentSlot = new Slot1<PathTraceRequest>() {
+    public Slot1<Anchor> tracePathSegmentSlot = new Slot1<Anchor>() {
         @Override
-        public void execute(PathTraceRequest request) {
-            pathTracer.tracePathAsynchronous(tileServer.getTextureCache(), volumeImage, request);
-            // System.out.println("tracePathSegmentSlot");
-        }
-    };
-    
-    public Slot1<TracedPathSegment> onPathTracedSlot = new Slot1<TracedPathSegment>() {
-        @Override
-        public void execute(TracedPathSegment path) {
-            // System.out.println("onPathTracedSlot");
-            // this line only needs to happen once, and not here:
+        public void execute(Anchor anchor) {
+            // this needs to happen before you draw anchored paths; should
+            //  go somewhere else so it only happens once, but not clear where;
+            //  not clear we have a trigger for when the image is loaded enough for
+            //  this info to be available (it loads asynchronously)
             getSkeletonActor().setTileFormat(
-            		tileServer.getLoadAdapter().getTileFormat());
+                    tileServer.getLoadAdapter().getTileFormat());
 
-            // TODO: what happens on error?  presumably you never get here?
-
-            addAnchoredPathRequestSignal.emit(path);
+            // construct new request; add image data to anchor and pass it on
+            PathTraceToParentRequest request = new PathTraceToParentRequest(anchor.getGuid());
+            request.setImageVolme(volumeImage);
+            request.setTextureCache(tileServer.getTextureCache());
+            tracePathRequestedSignal.emit(request);
         }
     };
     
@@ -359,8 +352,6 @@ public class QuadViewUi extends JPanel
 		camera.getViewChangedSignal().connect(tileServer.refreshCurrentTileSetSlot);
 		tileServer.loadStatusChangedSignal.connect(onLoadStatusChangedSlot);
 		
-		pathTracer.pathTracedSignal.connect(onPathTracedSlot);
-
 		colorChannelWidget_3.setVisible(false);
 		colorChannelWidget_2.setVisible(false);
 		colorChannelWidget_1.setVisible(false);
@@ -372,6 +363,7 @@ public class QuadViewUi extends JPanel
 
         // connect up text UI and model with graphic UI(s):
         skeleton.addAnchorRequestedSignal.connect(annotationMgr.addAnchorRequestedSlot);
+        tracePathRequestedSignal.connect(annotationMgr.tracePathRequestedSlot);
         skeleton.subtreeDeleteRequestedSignal.connect(annotationMgr.deleteSubtreeRequestedSlot);
         skeleton.linkDeleteRequestedSignal.connect(annotationMgr.deleteLinkRequestedSlot);
         skeleton.splitAnchorRequestedSignal.connect(annotationMgr.splitAnchorRequestedSlot);
@@ -379,7 +371,6 @@ public class QuadViewUi extends JPanel
         getSkeletonActor().nextParentChangedSignal.connect(annotationMgr.selectAnnotationSlot);
         skeleton.anchorMovedSignal.connect(annotationMgr.moveAnchorRequestedSlot);
         skeleton.pathTraceRequestedSignal.connect(tracePathSegmentSlot);
-        skeleton.pathTraceRequestedSignal.connect(annotationPanel.tracingStartSlot);
         addAnchoredPathRequestSignal.connect(annotationMgr.addPathRequestedSlot);
 
         // Toggle skeleton actor with v key
@@ -450,7 +441,6 @@ public class QuadViewUi extends JPanel
         // annotation-related actions:
         centerNextParentAction.centerNextParentSignal.connect(centerNextParentSlot);
         annotationPanel.centerAnnotationSignal.connect(centerNextParentSlot);
-        pathTracer.pathTracedSignal.connect(annotationPanel.tracingStopSlot);
         // TODO other orthogonal viewers
         OrthogonalPanel viewPanels[] = {neViewer, swViewer, nwViewer};
         SkeletonActor sharedSkeletonActor = getSkeletonActor();

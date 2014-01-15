@@ -37,7 +37,6 @@ public class AnnotationPanel extends JPanel
     private NeuriteTreePanel neuriteTreePanel;
     private WorkspaceInfoPanel workspaceInfoPanel;
     private WorkspaceNeuronList workspaceNeuronList;
-    private PathTracingStatusPanel pathStatusPanel;
 
     // ----- actions
     private final Action createNeuronAction = new AbstractAction() {
@@ -67,22 +66,6 @@ public class AnnotationPanel extends JPanel
         @Override
         public void actionPerformed(ActionEvent actionEvent) {
             centerAnnotationSignal.emit();
-        }
-    };
-
-    public Slot1<PathTraceRequest> tracingStartSlot = new Slot1<PathTraceRequest>() {
-        @Override
-        public void execute(PathTraceRequest request) {
-            pathStatusPanel.startTracing(new TmAnchoredPathEndpoints(request.getAnchor1Guid(),
-                    request.getAnchor2Guid()));
-        }
-    };
-
-    public Slot1<TracedPathSegment> tracingStopSlot = new Slot1<TracedPathSegment>() {
-        @Override
-        public void execute(TracedPathSegment segment) {
-            pathStatusPanel.stopTracing(new TmAnchoredPathEndpoints(segment.getRequest().getAnchor1Guid(),
-                    segment.getRequest().getAnchor2Guid()));
         }
     };
 
@@ -262,11 +245,6 @@ public class AnnotationPanel extends JPanel
         centerAnnotationButton.setHideActionText(true);
         neuriteButtonsPanel.add(centerAnnotationButton);
 
-
-        // ----- temporary tracing indicator
-        // this will eventually be shown via styling of lines in 2D view
-        pathStatusPanel = new PathTracingStatusPanel();
-        add(pathStatusPanel);
 
 
         // the bilge...

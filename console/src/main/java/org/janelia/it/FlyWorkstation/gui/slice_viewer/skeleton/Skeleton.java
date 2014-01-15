@@ -10,9 +10,7 @@ import org.janelia.it.FlyWorkstation.signal.Signal1;
 import org.janelia.it.FlyWorkstation.signal.Slot;
 import org.janelia.it.FlyWorkstation.signal.Slot1;
 import org.janelia.it.FlyWorkstation.tracing.AnchoredVoxelPath;
-import org.janelia.it.FlyWorkstation.tracing.PathTraceRequest;
-import org.janelia.it.FlyWorkstation.tracing.PathTraceRequest.SegmentIndex;
-// import org.janelia.it.FlyWorkstation.tracing.TracedPathSegment;
+import org.janelia.it.FlyWorkstation.tracing.SegmentIndex;
 import org.janelia.it.jacs.model.user_data.tiledMicroscope.TmGeoAnnotation;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -57,7 +55,7 @@ public class Skeleton {
 	private HistoryStack<Anchor> anchorHistory = new HistoryStack<Anchor>();
 
 	public Signal skeletonChangedSignal = new Signal();
-	public Signal1<PathTraceRequest> pathTraceRequestedSignal = new Signal1<PathTraceRequest>();
+	public Signal1<Anchor> pathTraceRequestedSignal = new Signal1<Anchor>();
 
 	// API for synchronizing with back end database
 	// after discussion with Don Olbris July 8, 2013
@@ -302,18 +300,17 @@ public class Skeleton {
 		return anchorHistory;
 	}
 
+    /**
+     * request trace path to parent
+     */
     public void traceAnchorConnection(Anchor anchor) {
         if (anchor == null)
             return;
         if (anchor.getNeighbors().size() < 1)
-            return; // Nothing to connect to
-        Vec3 xyz1 = anchor.getLocation();
-        // Assume the first neighbor is the parent? // TODO
-        Anchor neighbor = anchor.getNeighbors().iterator().next();
-        Vec3 xyz2 = neighbor.getLocation();
-        PathTraceRequest pathTraceRequest = 
-                new PathTraceRequest(xyz1, xyz2, anchor.getGuid(), neighbor.getGuid());
-        pathTraceRequestedSignal.emit(pathTraceRequest);
+            // no parent
+            return;
+
+        pathTraceRequestedSignal.emit(anchor);
     }
 
 	public void addTracedSegment(AnchoredVoxelPath path) 

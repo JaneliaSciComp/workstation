@@ -18,7 +18,7 @@ import org.janelia.it.FlyWorkstation.gui.slice_viewer.TileFormat.VoxelXyz;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.BoundingBox3d;
 import org.janelia.it.FlyWorkstation.octree.ZoomedVoxelIndex;
 import org.janelia.it.FlyWorkstation.tracing.AnchoredVoxelPath;
-import org.janelia.it.FlyWorkstation.tracing.PathTraceRequest.SegmentIndex;
+import org.janelia.it.FlyWorkstation.tracing.SegmentIndex;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
