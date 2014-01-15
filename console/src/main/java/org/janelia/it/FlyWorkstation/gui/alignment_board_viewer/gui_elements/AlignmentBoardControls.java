@@ -107,6 +107,8 @@ public class AlignmentBoardControls {
     private RangeSlider ySlider;
     private RangeSlider zSlider;
 
+    private ABTargetedSearchDialog searchDialog;
+
     private ChangeListener selectionSliderListener;
 
     private int xMax;
@@ -681,10 +683,12 @@ public class AlignmentBoardControls {
         // NOTE: for now, not disabling the button.  Launched dialog is modal, and will prevent other launch.
         search.addActionListener(new ActionListener() {
             public void actionPerformed( ActionEvent ae ) {
-                ABTargetedSearchDialog dialog = new ABTargetedSearchDialog(
-                        SessionMgr.getBrowser().getLayersPanel().getAlignmentBoardContext()
-                );
-                dialog.showDialog();
+                if ( searchDialog == null ) {
+                    searchDialog = new ABTargetedSearchDialog(
+                            SessionMgr.getBrowser().getLayersPanel().getAlignmentBoardContext()
+                    );
+                }
+                searchDialog.showDialog();
             }
         });
 
