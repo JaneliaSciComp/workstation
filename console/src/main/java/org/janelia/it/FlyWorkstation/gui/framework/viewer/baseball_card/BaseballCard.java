@@ -53,6 +53,7 @@ public class BaseballCard {
         textDetailsPanel.setBackground( color );
     }
 
+    @Override
     public String toString() {
         if ( entity == null ) {
             return null;
