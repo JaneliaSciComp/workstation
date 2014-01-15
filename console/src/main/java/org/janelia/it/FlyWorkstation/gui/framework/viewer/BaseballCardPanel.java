@@ -9,10 +9,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.swing.*;
-import javax.swing.border.LineBorder;
 import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
-import javax.swing.table.AbstractTableModel;
 import javax.swing.table.DefaultTableCellRenderer;
 import java.awt.*;
 import java.awt.event.*;
@@ -144,11 +142,16 @@ public class BaseballCardPanel extends JPanel implements RootedEntityReceiver {
                     logger.error( ex.getMessage() );
                 }
             }
+
         };
-        cardTable.getTable().setDefaultRenderer( Object.class, new ComponentSelfRenderer(this) );
+        ComponentSelfRenderer componentSelfRenderer = new ComponentSelfRenderer(this);
         cardTable.getTable().setRowHeight(BaseballCard.IMAGE_HEIGHT);
-        cardTable.addColumn(IMAGE_COLUMN_HEADER);
-        cardTable.addColumn(DETAILS_COLUMN_HEADER);
+
+        DynamicColumn imageColumn =  cardTable.addColumn(IMAGE_COLUMN_HEADER);
+        cardTable.setColumnRenderer( imageColumn, componentSelfRenderer );
+        DynamicColumn detailsColumn = cardTable.addColumn(DETAILS_COLUMN_HEADER);
+        cardTable.setColumnRenderer( detailsColumn, componentSelfRenderer );
+
         cardTable.getTable().setRowSelectionAllowed( selectable );
         cardTable.getTable().setSelectionMode( ListSelectionModel.MULTIPLE_INTERVAL_SELECTION );
 
@@ -182,34 +185,6 @@ public class BaseballCardPanel extends JPanel implements RootedEntityReceiver {
     }
 
     /** Clear the GUI representation of the selection, and replace it with whatever is selected at call time. */
-    private void updateSelectionAppearance__asFontColor() {
-        for (BaseballCard card : cards) {
-            card.getEntityDetailsPanel().setBackground(cardTable.getBackground());
-            card.getEntityDetailsPanel().setForeground(cardTable.getForeground());
-        }
-        List<BaseballCard> selection = getSelectedCards();
-        for (BaseballCard selected : selection) {
-            selected.getEntityDetailsPanel().setBackground(cardTable.getTable().getSelectionBackground());
-            selected.getEntityDetailsPanel().setForeground(cardTable.getTable().getSelectionForeground());
-        }
-    }
-
-    private void updateSelectionAppearance__viaBorder() {
-        Color selectionColor = cardTable.getTable().getSelectionBackground();
-        Color unselectedColor = cardTable.getBackground();
-
-        for (BaseballCard card : cards) {
-            card.getEntityDetailsPanel().setBorder( null );
-            card.getDynamicImagePanel().setBorder( null );
-        }
-
-        List<BaseballCard> selection = getSelectedCards();
-        for (BaseballCard selected : selection) {
-            selected.getDynamicImagePanel().setBorder( new LineBorder( selectionColor ) );
-            selected.getEntityDetailsPanel().setBorder( new LineBorder( selectionColor ) );
-        }
-    }
-
     private void updateSelectionAppearance() {
         Color unselectedBackground = (Color)UIManager.get( "Panel.background" );
         Color selectionBackground = ( unselectedBackground.equals( Color.white ) ) ?
@@ -283,7 +258,7 @@ public class BaseballCardPanel extends JPanel implements RootedEntityReceiver {
 
             return rtnVal;
         }
-         private void requestPanelRedraw() {
+        private void requestPanelRedraw() {
             bbc.validate();
             bbc.repaint();
         }
