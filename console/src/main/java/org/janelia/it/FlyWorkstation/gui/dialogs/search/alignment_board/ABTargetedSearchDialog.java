@@ -139,23 +139,41 @@ public class ABTargetedSearchDialog extends ModalDialog {
         addToBoardBtn.addActionListener( new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                List<BaseballCard> selected = baseballCardPanel.getSelectedCards();
-                // Let's add these to the alignment board.
-                AlignmentBoardContext context = SessionMgr.getBrowser().getLayersPanel().getAlignmentBoardContext();
-                for ( BaseballCard bbc: selected ) {
-                    logger.info("Adding entity {}.", bbc.toString());
-                    try {
-                        context.addRootedEntity( new RootedEntity( bbc.getEntity() ) );
-                    } catch ( Exception ex ) {
-                        logger.error(
-                                "Failed to add entity {} to alignment board context {}.",
-                                bbc.getEntity(),
-                                context.getName()
-                        );
-                    }
-                }
-
                 setVisible( false );
+
+                SimpleWorker addToBoardWorker = new SimpleWorker() {
+                    @Override
+                    protected void doStuff() throws Exception {
+                        List<BaseballCard> selected = baseballCardPanel.getSelectedCards();
+                        // Let's add these to the alignment board.
+                        AlignmentBoardContext context = SessionMgr.getBrowser().getLayersPanel().getAlignmentBoardContext();
+                        for ( BaseballCard bbc: selected ) {
+                            logger.info("Adding entity {}.", bbc.toString());
+                            try {
+                                context.addRootedEntity( new RootedEntity( bbc.getEntity() ) );
+                            } catch ( Exception ex ) {
+                                logger.error(
+                                        "Failed to add entity {} to alignment board context {}.",
+                                        bbc.getEntity(),
+                                        context.getName()
+                                );
+                            }
+                        }
+                    }
+
+                    @Override
+                    protected void hadSuccess() {
+                        // Need to nada.
+                    }
+
+                    @Override
+                    protected void hadError(Throwable error) {
+                        throw new RuntimeException( error );
+                    }
+                };
+
+                addToBoardWorker.execute();
+
             }
         });
 
