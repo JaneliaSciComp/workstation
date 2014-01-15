@@ -28,6 +28,7 @@ import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.KeyEvent;
 import java.util.*;
 import java.util.List;
 
@@ -110,16 +111,21 @@ public class ABTargetedSearchDialog extends ModalDialog {
                 SessionMgr.getSessionMgr().handleException( th );
             }
         };
-        searchParamsPanel.getSearchButton().addActionListener(
-            new QueryLaunchAction(
+        QueryLaunchAction searchAction = new QueryLaunchAction(
                 errorHandler,
                 searchParamsPanel,
                 "Search",
                 baseballCardPanel,
                 context,
                 searchRoot == null ? null : searchRoot.getId()
-            )
         );
+        searchParamsPanel.getSearchButton().addActionListener(
+                searchAction
+        );
+
+        searchParamsPanel.getInputMap(JComponent.WHEN_ANCESTOR_OF_FOCUSED_COMPONENT).put(KeyStroke.getKeyStroke(KeyEvent.VK_ENTER,0,true),"enterAction");
+        searchParamsPanel.getActionMap().put("enterAction", searchAction);
+
 
         // todo avoid dependency on general search dialog for this.
         List<String> searchHistory = (List<String>) SessionMgr.getBrowser().getGeneralSearchDialog().getSearchHistory();
