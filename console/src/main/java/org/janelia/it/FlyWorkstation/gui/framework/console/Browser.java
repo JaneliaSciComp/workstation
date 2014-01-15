@@ -576,8 +576,7 @@ public class Browser extends JFrame implements Cloneable {
         case AlignmentBoard:
             selectRightPanel(OUTLINE_LAYERS);
             viewerManager.clearAllViewers();
-            viewerManager.getViewerContainer().setSecViewerVisible(true);
-            viewerManager.ensureViewerClass(viewerManager.getSecViewerPane(), AlignmentBoardViewer.class);
+            viewerManager.ensureViewerClass(viewerManager.getMainViewerPane(), AlignmentBoardViewer.class);
             break;
         case SplitPicker:
             selectRightPanel(OUTLINE_SPLIT_PICKER);
