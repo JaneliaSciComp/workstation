@@ -42,6 +42,7 @@ import java.util.List;
  */
 public class ABTargetedSearchDialog extends ModalDialog {
 
+    private static final String SEARCH_HISTORY_MDL_PROP = "ABTargetedSearchDialog_SEARCH_HISTORY";
     private static final int DEFAULT_ROWS_PER_PAGE = 10;
     private static final int MAX_ROWS = 200;
 
@@ -128,7 +129,10 @@ public class ABTargetedSearchDialog extends ModalDialog {
 
 
         // todo avoid dependency on general search dialog for this.
-        List<String> searchHistory = (List<String>) SessionMgr.getBrowser().getGeneralSearchDialog().getSearchHistory();
+        List<String> searchHistory = (List<String>) SessionMgr.getSessionMgr().getModelProperty( SEARCH_HISTORY_MDL_PROP );
+        if ( searchHistory == null ) {
+            searchHistory = new ArrayList<String>();
+        }
         searchParamsPanel.setSearchHistory( searchHistory );
         return searchParamsPanel;
 
@@ -287,12 +291,15 @@ public class ABTargetedSearchDialog extends ModalDialog {
             // Update search history.
             String queryStr = queryBuilder.getSearchString();
             if ( !StringUtils.isEmpty( queryStr ) ) {
-                List<String> searchHistory = (List<String>) SessionMgr.getSessionMgr().getModelProperty(Browser.SEARCH_HISTORY);
+                List<String> searchHistory = (List<String>)
+                        SessionMgr.getSessionMgr().getModelProperty(SEARCH_HISTORY_MDL_PROP);
+                if ( searchHistory == null ) {
+                    searchHistory = new ArrayList<String>();
+                }
                 if ( ! searchHistory.contains( queryStr ) ) {
                     searchHistory.add( queryStr );
-                    // To preserve history, must push it into the general search dialog.
-                    // todo avoid dependency on general search dialog for this.
-                    SessionMgr.getBrowser().getGeneralSearchDialog().setSearchHistory(searchHistory);
+                    // To preserve history, must push it into the model.
+                    SessionMgr.getSessionMgr().setModelProperty( SEARCH_HISTORY_MDL_PROP, searchHistory );
                 }
             }
          }
