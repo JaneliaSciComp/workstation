@@ -44,7 +44,8 @@ public class ABTargetedSearchDialog extends ModalDialog {
 
     private static final String SEARCH_HISTORY_MDL_PROP = "ABTargetedSearchDialog_SEARCH_HISTORY";
     private static final int DEFAULT_ROWS_PER_PAGE = 10;
-    private static final int MAX_ROWS = 200;
+    private static final int MAX_RESULT_ROWS = 200;
+    private static final int MAX_QUERY_ROWS = 3500; //20000;
 
     private AlignmentBoardContext context;
     private Entity searchRoot;
@@ -275,19 +276,11 @@ public class ABTargetedSearchDialog extends ModalDialog {
             queryBuilder.setFilters( filters );
             SolrQuery query = queryBuilder.getQuery();
             query.setStart( param.getStartingRow() );
-            query.setRows( MAX_ROWS );
+            query.setRows( MAX_QUERY_ROWS );
 
             SolrResults results = ModelMgr.getModelMgr().searchSolr(query);
             List<Entity> resultList = results.getResultList();
-            List<Entity> filteredList = new ArrayList<Entity>();
-            for ( Entity result: resultList ) {
-                if ( EntityConstants.TYPE_SAMPLE.equals( result.getEntityTypeName() )   ||
-                     EntityConstants.TYPE_NEURON_FRAGMENT.equals( result.getEntityTypeName() ) ) {
-                    filteredList.add( result );
-                }
-            }
-
-            rootedResults = getCompatibleRootedEntities( filteredList );
+            rootedResults = getCompatibleRootedEntities( resultList );
 
             resultsMetaData = new BaseballCardPanel.SolrResultsMetaData();
             resultsMetaData.setNumHits( rootedResults.size() );
@@ -343,6 +336,7 @@ public class ABTargetedSearchDialog extends ModalDialog {
             List<RootedEntity> rtnVal = new ArrayList<RootedEntity>();
 
             // Next, walk each entity's tree looking for proper info.
+            MAX_OUT:
             for ( Entity entity: entities ) {
                 try {
                     // Now, to "prowl" the trees of the result list, to find out what can be added, here.
@@ -388,6 +382,10 @@ public class ABTargetedSearchDialog extends ModalDialog {
                 } catch ( Exception ex ) {
                     ex.printStackTrace();
                     throw new RuntimeException( ex );
+                }
+
+                if ( rtnVal.size() >= MAX_RESULT_ROWS) {
+                    break MAX_OUT;
                 }
             }
 
