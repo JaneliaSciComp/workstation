@@ -574,8 +574,9 @@ public class Browser extends JFrame implements Cloneable {
         log.info("Setting perspective: {}",perspective);
         switch (perspective) {
         case AlignmentBoard:
-            // TODO LLF: here, I tried to place the alignment board viewer as the main view.  Unfortunately,
-            // TODO whenever an outline member was selected, it went away, and was replaced by an Icon Demo Panel.
+            // LLF: here, I tried to place the alignment board viewer as the main view.  Unfortunately,
+            // whenever an outline member was selected, it went away, and was replaced by an Icon Demo Panel.
+            //   Instead, opted to hide the main viewer, and allow it to continue receiving its select events.
             selectRightPanel(OUTLINE_LAYERS);
             viewerManager.clearAllViewers();
             viewerManager.getViewerContainer().setSecViewerVisible(true);
