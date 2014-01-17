@@ -225,6 +225,8 @@ public class AlignmentBoardViewer extends Viewer implements AlignmentBoardContro
         try {
             Entity alignmentBoard =  ModelMgr.getModelMgr().getEntityById(abContext.getInternalEntity().getId());
             preExistingBoard = UserSettingSerializer.settingsExist( alignmentBoard );
+            // Wish to hide the main viewer.
+            SessionMgr.getBrowser().getViewerManager().getViewerContainer().getMainSplitPane().setDividerLocation( 0 );
         }
         catch (Exception e) {
             SessionMgr.getSessionMgr().handleException(e);
