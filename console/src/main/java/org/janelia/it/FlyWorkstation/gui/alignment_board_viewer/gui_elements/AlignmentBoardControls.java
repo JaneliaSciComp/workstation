@@ -262,7 +262,7 @@ public class AlignmentBoardControls {
                 throw new RuntimeException();
             }
         } catch ( Exception ex ) {
-            SessionMgr.getSessionMgr().handleException( new RuntimeException("Failed to parse count " + selectedValue + " to integer value.") );
+            JOptionPane.showMessageDialog( SessionMgr.getBrowser(), "Failed to parse count " + selectedValue + " to integer value.");
             constraintTextField.setForeground( Color.red );
         }
 
