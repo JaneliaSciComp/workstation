@@ -14,5 +14,5 @@ import java.util.List;
  * client of this interface.
  */
 public interface RootedEntityReceiver {
-    void setRootedEntities( List<RootedEntity> rootedEntities );
+    void setRootedEntities( List<RootedEntity> rootedEntities, long elapsedTime, int resultCount, String query );
 }
