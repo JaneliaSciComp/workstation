@@ -253,6 +253,7 @@ public class ABTargetedSearchDialog extends ModalDialog {
         private Logger logger = LoggerFactory.getLogger(ABTargetedSearchDialog.class);
         private SearchWorkerParam param;
         private List<RootedEntity> rootedResults;
+        private BaseballCardPanel.SolrResultsMetaData resultsMetaData;
         private SolrQueryBuilder queryBuilder;
 
         public SearchWorker( SearchWorkerParam param, SolrQueryBuilder queryBuilder ) {
@@ -288,9 +289,17 @@ public class ABTargetedSearchDialog extends ModalDialog {
 
             rootedResults = getCompatibleRootedEntities( filteredList );
 
+            resultsMetaData = new BaseballCardPanel.SolrResultsMetaData();
+            resultsMetaData.setNumHits( rootedResults.size() );
+            resultsMetaData.setSearchDuration(
+                    results.getResponse().getElapsedTime()
+            );
+
             // Update search history.
             String queryStr = queryBuilder.getSearchString();
+
             if ( !StringUtils.isEmpty( queryStr ) ) {
+                resultsMetaData.setQueryStr( queryStr );
                 List<String> searchHistory = (List<String>)
                         SessionMgr.getSessionMgr().getModelProperty(SEARCH_HISTORY_MDL_PROP);
                 if ( searchHistory == null ) {
@@ -307,7 +316,13 @@ public class ABTargetedSearchDialog extends ModalDialog {
         @Override
         protected void hadSuccess() {
             // Accept results and populate.
-            param.getReceiver().setRootedEntities( rootedResults );
+            RootedEntityReceiver receiver = param.getReceiver();
+            receiver.setRootedEntities(
+                    rootedResults,
+                    resultsMetaData.getSearchDuration(),
+                    resultsMetaData.getNumHits(),
+                    resultsMetaData.getQueryStr()
+            );
         }
 
         @Override
@@ -446,5 +461,6 @@ public class ABTargetedSearchDialog extends ModalDialog {
                 this.startingRow = startingRow;
             }
         }
+
     }
 }
