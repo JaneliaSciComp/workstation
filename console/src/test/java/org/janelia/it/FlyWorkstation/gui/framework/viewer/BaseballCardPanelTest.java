@@ -124,7 +124,8 @@ public class BaseballCardPanelTest extends JFrame {
 
             i++;
         }
-        panel.setRootedEntities( rEntities );
+        //long elapsedTime, int resultCount, String queryString
+        panel.setRootedEntities( rEntities, 2000, guids.length, "Something" );
     }
 
     private EntityData getEntityData(String name,
