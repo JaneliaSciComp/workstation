@@ -442,6 +442,10 @@ public class AlignmentBoardViewer extends Viewer implements AlignmentBoardContro
         }
     }
 
+    public AlignmentBoardControls getControls() {
+        return controls;
+    }
+
     //---------------------------------------HELPERS
     private void serializeInWorker() {
         AlignmentBoardContext context = SessionMgr.getBrowser().getLayersPanel().getAlignmentBoardContext();
@@ -1059,6 +1063,13 @@ public class AlignmentBoardViewer extends Viewer implements AlignmentBoardContro
         public void setConnectEditEvents( boolean connectEditEvents ) {
             viewer.connectEditEvents = connectEditEvents;
         }
+
+        @Override
+        public void forceRebuild() {
+            AlignmentBoardContext ctx = SessionMgr.getBrowser().getLayersPanel().getAlignmentBoardContext();
+            viewer.updateContents( ctx );
+        }
+
     }
 
     /** An experiment in animating the view.  If ever used, should be moved elsewhere. */

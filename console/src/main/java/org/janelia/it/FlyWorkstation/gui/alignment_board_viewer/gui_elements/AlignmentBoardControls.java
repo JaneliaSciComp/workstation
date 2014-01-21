@@ -7,6 +7,7 @@ import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.FlyWorkstation.gui.framework.viewer.alignment_board.AlignmentBoardSettings;
 import org.janelia.it.FlyWorkstation.gui.util.Icons;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.VolumeModel;
+import org.janelia.it.FlyWorkstation.model.viewer.AlignmentBoardContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -557,6 +558,12 @@ public class AlignmentBoardControls {
         }
     }
 
+    private synchronized void fireRebuild() {
+        for ( ControlsListener listener: listeners ) {
+            listener.forceRebuild();
+        }
+    }
+
     private void createGui() {
         Font oldFont = this.centering.getFont();
         Font newFont = new Font( oldFont.getName(), Font.PLAIN, 12 );
@@ -709,10 +716,50 @@ public class AlignmentBoardControls {
         connectEvents.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                // Here: toggle the current state of event listening.
-                boolean connectState = settings.isEventConnected();
-                settings.setEventConnected( ! connectState );
-                fireEventConnectToggle();
+                if ( connectEvents.isSelected() ) {
+                    int confirmation = JOptionPane.showConfirmDialog( SessionMgr.getBrowser(),
+                            "<html>This will cause Drag-and-Drop, deletion, or color/hide changes to be reflected in your alignment board,<br>" +
+                                    "and will incur the usual delays in rebuilding the alignment board after such changes.<br>" +
+                                    "Do you wish to rebuild the board now to reflect recent changes?</html>"
+                    );
+                    if ( confirmation == JOptionPane.YES_OPTION ) {
+                        boolean connectState = settings.isEventConnected();
+                        settings.setEventConnected( ! connectState );
+                        fireEventConnectToggle();
+                        // Must now fire the catch-up event.
+                        fireRebuild();
+                    }
+                    else if ( confirmation == JOptionPane.NO_OPTION ) {
+                        boolean connectState = settings.isEventConnected();
+                        settings.setEventConnected( ! connectState );
+                        fireEventConnectToggle();
+                    }
+                    else {
+                        // must restore button to old toggle state.
+                        getConnectEvents().setSelected( false );
+                    }
+                }
+                else {
+                    // Here: toggle the current state of event listening.
+                    int confirmation = JOptionPane.showConfirmDialog( SessionMgr.getBrowser(),
+                            "<html>This will stop any Drag-and-Drop, deletion, or color/hide changes from appearing in the alignment board<br>" +
+                                    "until you turn the link back on.  If you reopen the alignment board or restart the workstation,<br>" +
+                                    "the link setting will automatically be turned back on. Please use this with caution.<br>" +
+                                    "Would you like to continue?</html>",
+                            "Temporarily Turn off Alignment Board Rebuilds",
+                            JOptionPane.OK_CANCEL_OPTION
+                    );
+                    if ( confirmation == JOptionPane.OK_OPTION ) {
+                        boolean connectState = settings.isEventConnected();
+                        settings.setEventConnected( ! connectState );
+                        fireEventConnectToggle();
+                    }
+                    else {
+                        // must restore button to old toggle state.
+                        getConnectEvents().setSelected( true );
+                    }
+                }
+
             }
         });
 

@@ -18,6 +18,7 @@ public interface ControlsListener {
     void exportSelection( SavebackEvent savebackEvent );
     void setCropBlackout( boolean blackout );
     void setConnectEditEvents( boolean connectEditEvents );
+    void forceRebuild();
 }
 
 
