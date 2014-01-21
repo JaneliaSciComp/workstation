@@ -679,7 +679,7 @@ public class AlignmentBoardControls {
         });
 
         search = new JButton( Icons.getIcon( "find.png" ) );
-        search.setToolTipText("Search into Alignment Board");
+        search.setToolTipText("Search results may be placed in current Alignment Board");
         // NOTE: for now, not disabling the button.  Launched dialog is modal, and will prevent other launch.
         search.addActionListener(new ActionListener() {
             public void actionPerformed( ActionEvent ae ) {
