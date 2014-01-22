@@ -442,10 +442,6 @@ public class AlignmentBoardViewer extends Viewer implements AlignmentBoardContro
         }
     }
 
-    public AlignmentBoardControls getControls() {
-        return controls;
-    }
-
     //---------------------------------------HELPERS
     private void serializeInWorker() {
         AlignmentBoardContext context = SessionMgr.getBrowser().getLayersPanel().getAlignmentBoardContext();
@@ -908,7 +904,7 @@ public class AlignmentBoardViewer extends Viewer implements AlignmentBoardContro
         toolbar.add(controls.getColorSave());
         toolbar.add(controls.getSearchSave());
         toolbar.add(controls.getScreenShot());
-//Do not check in
+
         toolbar.add(controls.getSearch());
 
         toolbar.add(controls.getBlackout());
