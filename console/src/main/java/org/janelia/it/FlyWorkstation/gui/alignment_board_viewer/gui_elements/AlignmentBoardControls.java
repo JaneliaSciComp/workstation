@@ -687,6 +687,7 @@ public class AlignmentBoardControls {
         search = new JButton( Icons.getIcon( "find.png" ) );
         search.setText("Add to Board");
         search.setToolTipText("Add data to current Alignment Board");
+        search.setText("Add Data to Board");
         // NOTE: for now, not disabling the button.  Launched dialog is modal, and will prevent other launch.
         search.addActionListener(new ActionListener() {
             public void actionPerformed( ActionEvent ae ) {
