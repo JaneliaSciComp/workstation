@@ -7,7 +7,6 @@ import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.FlyWorkstation.gui.framework.viewer.alignment_board.AlignmentBoardSettings;
 import org.janelia.it.FlyWorkstation.gui.util.Icons;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.VolumeModel;
-import org.janelia.it.FlyWorkstation.model.viewer.AlignmentBoardContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -686,6 +685,7 @@ public class AlignmentBoardControls {
         });
 
         search = new JButton( Icons.getIcon( "find.png" ) );
+        search.setText("Add to Board");
         search.setToolTipText("Add data to current Alignment Board");
         // NOTE: for now, not disabling the button.  Launched dialog is modal, and will prevent other launch.
         search.addActionListener(new ActionListener() {
