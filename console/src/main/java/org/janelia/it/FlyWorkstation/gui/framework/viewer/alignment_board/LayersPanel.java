@@ -45,7 +45,6 @@ import org.janelia.it.FlyWorkstation.gui.viewer3d.VolumeModel;
 import org.janelia.it.FlyWorkstation.model.domain.AlignmentContext;
 import org.janelia.it.FlyWorkstation.model.domain.CompartmentSet;
 import org.janelia.it.FlyWorkstation.model.domain.EntityWrapper;
-import org.janelia.it.FlyWorkstation.model.domain.Neuron;
 import org.janelia.it.FlyWorkstation.model.entity.RootedEntity;
 import org.janelia.it.FlyWorkstation.model.viewer.AlignedItem;
 import org.janelia.it.FlyWorkstation.model.viewer.AlignmentBoardContext;
