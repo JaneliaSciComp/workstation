@@ -111,8 +111,10 @@ public class EntityDetailsOutline extends JPanel implements Refreshable, Activat
 
     @Subscribe 
     public void entityChanged(EntityChangeEvent event) {
-        if (event.getEntity().getId().equals(this.entity.getId())) {
-            refresh();
+        if ( this.entity != null ) {
+            if (event.getEntity().getId().equals(this.entity.getId())) {
+                refresh();
+            }
         }
     }
 }
