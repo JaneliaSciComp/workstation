@@ -39,8 +39,8 @@ public class BaseballCard {
 
     public BaseballCard() {
         textDetailsPanel = new ToolTipRelayPanel();
-        ToolTipManager.sharedInstance().registerComponent( textDetailsPanel );
-        textDetailsPanel.setLayout( new BorderLayout( ) );
+        ToolTipManager.sharedInstance().registerComponent(textDetailsPanel);
+        textDetailsPanel.setLayout(new BorderLayout());
         textDetailsPanel.setOpaque( true );
     }
 
@@ -87,7 +87,17 @@ public class BaseballCard {
                 textDetailsPanel.setLayout(new BorderLayout());
                 JPanel entityNamePanel = new JPanel();
                 entityNamePanel.setLayout( new FlowLayout( FlowLayout.LEADING ) );
-                JLabel entityNameLabel = makeLabelWithTip( entity.getName(), "Entity: " + entity.getId(), true );
+
+                String entityNameDesignation = entity.getName();
+                if ( entity.getEntityTypeName().equals( EntityConstants.TYPE_NEURON_FRAGMENT ) ) {
+                    try {
+                        Entity entityParent = ModelMgr.getModelMgr().getAncestorWithType(entity, EntityConstants.TYPE_SAMPLE);
+                        entityNameDesignation = entityParent.getName() + " / " + entityNameDesignation;
+                    } catch ( Exception ex ) {
+                        logger.error( "Exception when fetching parent sample of fragment " + entityNameDesignation );
+                    }
+                }
+                JLabel entityNameLabel = makeLabelWithTip(entityNameDesignation, "Entity: " + entity.getId(), true );
                 entityNamePanel.add( new JLabel( "Name" ) );
                 entityNamePanel.add( entityNameLabel );
                 textDetailsPanel.add( entityNamePanel, BorderLayout.NORTH );
@@ -110,6 +120,7 @@ public class BaseballCard {
                 }
 
                 textDetailsPanel.add( annotationPanel, BorderLayout.CENTER );
+                textDetailsPanel.revalidate();
 
             }
 
@@ -204,7 +215,7 @@ public class BaseballCard {
 
     private class ToolTipRelayPanel extends JPanel {
         public ToolTipRelayPanel() {
-            setOpaque( true );
+            setOpaque(true);
         }
 
         @Override
@@ -274,31 +285,5 @@ public class BaseballCard {
             }
         }
 
-//        public String getLocationSpecificToolTipText() {
-//            // Establish position of mouse-in-hover.
-//            Point mousePoint = MouseInfo.getPointerInfo().getLocation();
-//
-//            // Establish which contained/child component is there.
-////            Component c = this.getComponentAt( mousePoint );
-////            if ( c != null  &&  c instanceof JComponent ) {
-////                // Deliver tool tip from child.
-////                return ((JComponent)c).getToolTipText();
-////            }
-//
-//            for ( int i = 0; i < getComponentCount(); i++ ) {
-//                Component c = getComponent( i );
-//                Rectangle rect = new Rectangle(
-//                        c.getLocation().x + this.getLocationOnScreen().x, c.getLocation().y + this.getLocationOnScreen().y,
-//                        c.getWidth(), c.getHeight()
-//                );
-//                if ( rect.contains( mousePoint ) ) {
-//                    if ( c instanceof JComponent ) {
-//                        // Deliver tool tip from child.
-//                        return ((JComponent)c).getToolTipText();
-//                    }
-//                }
-//            }
-//            return entity.getName();
-//        }
     }
 }

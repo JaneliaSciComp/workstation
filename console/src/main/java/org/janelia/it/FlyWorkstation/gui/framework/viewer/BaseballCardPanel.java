@@ -166,13 +166,11 @@ public class BaseballCardPanel extends JPanel implements RootedEntityReceiver {
         DynamicColumn detailsColumn = cardTable.addColumn(DETAILS_COLUMN_HEADER);
         cardTable.setColumnRenderer( detailsColumn, componentSelfRenderer );
 
-        cardTable.getTable().setRowSelectionAllowed( selectable );
-        cardTable.getTable().setSelectionMode( ListSelectionModel.MULTIPLE_INTERVAL_SELECTION );
+        cardTable.getTable().setRowSelectionAllowed(selectable);
+        cardTable.getTable().setSelectionMode(ListSelectionModel.MULTIPLE_INTERVAL_SELECTION);
 
-        int borderedWidth = BaseballCard.IMAGE_WIDTH + 2;
-        int borderedHeight = BaseballCard.IMAGE_HEIGHT + 2;
         Dimension detailsSize = new Dimension(
-                preferredWidth - borderedWidth, borderedHeight
+                preferredWidth - BaseballCard.IMAGE_WIDTH - 50, BaseballCard.IMAGE_HEIGHT
         );
         Dimension imageSize = new Dimension(
                 BaseballCard.IMAGE_WIDTH, BaseballCard.IMAGE_HEIGHT
@@ -181,7 +179,7 @@ public class BaseballCardPanel extends JPanel implements RootedEntityReceiver {
             BaseballCard card = cards.get( i );
             addCardToTable(detailsSize, imageSize, card);
         }
-
+        cardTable.setMaxColWidth( Math.max( detailsSize.width, imageSize.width ) );
         cardTable.setMoreResults( rootedEntities.size() > rowsPerPage );
 
         this.setLayout(new BorderLayout());
@@ -193,7 +191,7 @@ public class BaseballCardPanel extends JPanel implements RootedEntityReceiver {
             public void valueChanged(ListSelectionEvent e) {
                 updateSelectionAppearance();
             }
-        });
+        });         cardTable.autoResizeColWidth();
 
         statusLabel = new JLabel();
         updateStatus();
@@ -232,7 +230,7 @@ public class BaseballCardPanel extends JPanel implements RootedEntityReceiver {
         card.getDynamicImagePanel().setPreferredSize(imageSize);
         card.getEntityDetailsPanel().setPreferredSize(detailsSize);
 
-        cardTable.addRow( card );
+        cardTable.addRow(card);
     }
 
     private void updateMoreButtonsAndStatus() {
