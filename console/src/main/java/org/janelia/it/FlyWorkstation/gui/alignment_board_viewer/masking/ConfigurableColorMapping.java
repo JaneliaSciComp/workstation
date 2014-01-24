@@ -3,12 +3,10 @@ package org.janelia.it.FlyWorkstation.gui.alignment_board_viewer.masking;
 import org.janelia.it.FlyWorkstation.gui.alignment_board_viewer.renderable.InvertingComparator;
 import org.janelia.it.FlyWorkstation.gui.alignment_board_viewer.renderable.RBComparator;
 import org.janelia.it.FlyWorkstation.gui.alignment_board_viewer.renderable.RenderableBean;
-import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.jacs.model.entity.Entity;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.swing.*;
 import java.util.*;
 
 /**
