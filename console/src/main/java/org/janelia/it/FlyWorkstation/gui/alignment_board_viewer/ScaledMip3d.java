@@ -1,7 +1,8 @@
 package org.janelia.it.FlyWorkstation.gui.alignment_board_viewer;
 
 import org.janelia.it.FlyWorkstation.gui.alignment_board_viewer.gui_elements.ScaleFitter;
-import org.janelia.it.FlyWorkstation.gui.viewer3d.Mip3d;import java.awt.*;
+import org.janelia.it.FlyWorkstation.gui.viewer3d.Mip3d;
+import java.awt.*;
 
 /**
  * Created with IntelliJ IDEA.
