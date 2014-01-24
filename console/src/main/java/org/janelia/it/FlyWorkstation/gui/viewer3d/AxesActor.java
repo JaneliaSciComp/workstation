@@ -140,8 +140,8 @@ public class AxesActor implements GLActor
             reportError( gl, "Display of axes-actor maxintensity" );
         }
 
-        gl.glEnable( GL2.GL_LINE_SMOOTH );
-        gl.glHint( GL2.GL_LINE_SMOOTH_HINT, GL2.GL_NICEST );
+        gl.glEnable( GL2.GL_LINE_SMOOTH );                     // May not be in v2
+        gl.glHint( GL2.GL_LINE_SMOOTH_HINT, GL2.GL_NICEST );   // May not be in v2
 
         // Draw the little lines.
         gl.glBindBuffer( GL2.GL_ARRAY_BUFFER, lineBufferHandle );
@@ -151,9 +151,12 @@ public class AxesActor implements GLActor
         gl.glColor4f(grayValue * 2.0f, grayValue, grayValue, 1.0f);
         reportError( gl, "Display of axes-actor 2" );
 
-        gl.glEnableClientState( GL2.GL_VERTEX_ARRAY );
+        gl.glEnableClientState( GL2.GL_VERTEX_ARRAY );  // Prob: not in v2.
         reportError( gl, "Display of axes-actor 3" );
 
+        // 3 floats per coord. Stride is 0, offset to first is 0.
+        //gl.glEnableVertexAttribArray(vertexAttributeLoc);
+        //gl.glVertexAttribPointer(vertexAttributeLoc, 3, GL2.GL_FLOAT, false, 0, 0);
         gl.glVertexPointer(3, GL2.GL_FLOAT, 0, 0);
         reportError( gl, "Display of axes-actor 4" );
 
@@ -163,8 +166,8 @@ public class AxesActor implements GLActor
         gl.glDrawElements( GL2.GL_LINES, lineBufferVertexCount, GL2.GL_UNSIGNED_INT, 0 );
         reportError( gl, "Display of axes-actor 5" );
 
-        gl.glDisableClientState( GL2.GL_VERTEX_ARRAY );
-        gl.glDisable( GL2.GL_LINE_SMOOTH );
+        gl.glDisableClientState( GL2.GL_VERTEX_ARRAY );   // Prob: not in v2
+        gl.glDisable( GL2.GL_LINE_SMOOTH );               // May not be in v2
         reportError( gl, "Display of axes-actor 6" );
 
         gl.glDisable(GL2.GL_BLEND);
