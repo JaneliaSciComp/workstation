@@ -1,6 +1,5 @@
 package org.janelia.it.FlyWorkstation.gui.alignment_board_viewer.renderable;
 
-import org.janelia.it.FlyWorkstation.model.viewer.AlignedItem;
 import org.janelia.it.jacs.model.entity.Entity;
 import org.janelia.it.jacs.model.entity.EntityConstants;
 
