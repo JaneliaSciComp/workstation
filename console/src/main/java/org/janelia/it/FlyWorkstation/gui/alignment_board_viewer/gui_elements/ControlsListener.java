@@ -1,7 +1,5 @@
 package org.janelia.it.FlyWorkstation.gui.alignment_board_viewer.gui_elements;
 
-import java.util.Collection;
-
 /**
  * Created with IntelliJ IDEA.
  * User: fosterl
