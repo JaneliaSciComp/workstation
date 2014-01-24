@@ -816,16 +816,6 @@ public class AlignmentBoardViewer extends Viewer implements AlignmentBoardContro
 
         mip3d = new ScaledMip3d();
 
-        // May have to delve into the Layers Panel to find the settings panel.
-        if ( settingsPanel == null ) {
-            for ( Component c: layersPanel.getComponents() ) {
-                if ( SETTINGS_PANEL_NAME.equals( c.getName() ) ) {
-                    settingsPanel = (AlignmentBoardControlsPanel)c;
-                    break;
-                }
-            }
-        }
-
         // If the mip3d is re-created, so must the settings dialog be.  It depends on the Mip3d.
         removeSettingsPanel(layersPanel);
         logger.info("New settings");
@@ -851,6 +841,15 @@ public class AlignmentBoardViewer extends Viewer implements AlignmentBoardContro
     }
 
     private void removeSettingsPanel(LayersPanel layersPanel) {
+        // May have to delve into the Layers Panel to find the settings panel.
+        if ( settingsPanel == null ) {
+            for ( Component c: layersPanel.getComponents() ) {
+                if ( SETTINGS_PANEL_NAME.equals( c.getName() ) ) {
+                    settingsPanel = (AlignmentBoardControlsPanel)c;
+                    break;
+                }
+            }
+        }
         if ( settingsDialog != null ) {
             settingsDialog.dispose();
             settingsDialog.setVisible( false );
