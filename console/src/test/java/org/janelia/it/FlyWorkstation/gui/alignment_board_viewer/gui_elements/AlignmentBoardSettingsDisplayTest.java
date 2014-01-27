@@ -37,6 +37,11 @@ public class AlignmentBoardSettingsDisplayTest {
                 super.windowClosing( e );
                 System.exit( 0 );
             }
+
+            @Override
+            public void windowClosed(WindowEvent e) {
+                System.exit( 0 );
+            }
         });
         testDialog.setVisible( true );
     }
