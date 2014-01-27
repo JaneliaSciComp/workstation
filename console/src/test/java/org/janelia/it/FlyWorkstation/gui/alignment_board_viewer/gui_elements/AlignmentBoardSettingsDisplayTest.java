@@ -1,8 +1,11 @@
 package org.janelia.it.FlyWorkstation.gui.alignment_board_viewer.gui_elements;
 
+import org.janelia.it.FlyWorkstation.gui.WorkstationEnvironment;
 import org.janelia.it.FlyWorkstation.gui.framework.viewer.alignment_board.AlignmentBoardSettings;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.VolumeModel;
 import org.janelia.it.FlyWorkstation.gui.alignment_board_viewer.volume_export.CropCoordSet;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.swing.*;
 import java.awt.event.WindowAdapter;
@@ -18,7 +21,11 @@ import java.awt.event.WindowEvent;
  * action listeners, etc.
  */
 public class AlignmentBoardSettingsDisplayTest {
+    private static Logger logger = LoggerFactory.getLogger( AlignmentBoardSettingsDisplayTest.class );
     public static void main(String[] args) {
+        logger.info( "Run this to see how the Alignment Board Settings panel looks, and play with controls." );
+        // Setup mock WS environment for this test.
+        new WorkstationEnvironment().invoke();
         VolumeModel volumeModel = new VolumeModel();
         volumeModel.setCropCoords( new CropCoordSet() );
         AlignmentBoardControlsDialog testDialog = new AlignmentBoardControlsDialog(
