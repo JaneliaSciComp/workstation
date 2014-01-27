@@ -53,7 +53,7 @@ public class UserSettingSerializerStringTest {
         Assert.assertEquals( "CropOutLevel Differs", volumeModel.getCropOutLevel(), returnedVolumeModel.getCropOutLevel() );
         Assert.assertEquals( "Gamma Adjustment Differs", volumeModel.getGammaAdjustment(), returnedVolumeModel.getGammaAdjustment() );
 
-        System.out.println("Crop Out Level = " + volumeModel.getCropOutLevel() + ", gamma adjustment = " + volumeModel.getGammaAdjustment() );
+        // DEBUG System.out.println("Crop Out Level = " + volumeModel.getCropOutLevel() + ", gamma adjustment = " + volumeModel.getGammaAdjustment() );
         float[] returnedCoordArr = returnedVolumeModel.getCropCoords().getAcceptedCoordinates().iterator().next();
         for ( int i = 0; i < returnedCoordArr.length; i++ ) {
             Assert.assertEquals( "Coordinate " + i + " differs", returnedCoordArr[ i ], cropCoordArr[ i ] );
