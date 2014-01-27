@@ -4,6 +4,7 @@ import org.janelia.it.FlyWorkstation.gui.alignment_board_viewer.masking.MultiMas
 import org.janelia.it.FlyWorkstation.gui.alignment_board_viewer.masking.MultiMaskTrackerTest;
 import org.janelia.it.FlyWorkstation.gui.alignment_board_viewer.renderable.RenderableBean;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.loader.ChannelMetaData;
+import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -17,7 +18,8 @@ import java.util.Set;
  * Date: 9/10/13
  * Time: 11:14 AM
  *
- * Testing the channel split mechanism, for a set number of bits, less than 8.
+ * This tests if the N-Bit splitting strategy for breaking up four bytes of channel data (intensity data) into smaller,
+ * resolution-compressed, chunks of N bits.  'N' is given as parameter, and at time of writing is always 4.
  */
 public class NBitChannelSplitStrategyTest {
 
@@ -30,8 +32,6 @@ public class NBitChannelSplitStrategyTest {
 
     @Test
     public void splitTwoByteChannels() throws Exception {
-        System.out.println("Split 2-byte channels.");
-
         // Will keep only this one meta-data, but keep switching its renderable bean.
         ChannelMetaData channelMetaData = new ChannelMetaData();
         channelMetaData.byteCount = 2;
@@ -59,7 +59,8 @@ public class NBitChannelSplitStrategyTest {
         channelsData[ 5 ] = (byte)0;
         int multiMaskId = 57;
         byte[] finalChannelsData = channelSplitter.getUpdatedValue(channelMetaData, 1, channelsData, multiMaskId);
-        dumpAttempt(1, channelsData, finalChannelsData, multiMaskId);
+        Assert.assertTrue( finalChannelsData[ 1 ] == -1 );
+        //dumpAttempt(1, channelsData, finalChannelsData, multiMaskId);
 
         channelsData = new byte[ channelMetaData.channelCount * channelMetaData.byteCount ];
         channelsData[ 0 ] = (byte)6;
@@ -69,7 +70,8 @@ public class NBitChannelSplitStrategyTest {
         channelsData[ 4 ] = (byte)4;
         channelsData[ 5 ] = (byte)4;
         finalChannelsData = channelSplitter.getUpdatedValue(channelMetaData, 2, channelsData, multiMaskId);
-        dumpAttempt(2, channelsData, finalChannelsData, multiMaskId);
+        Assert.assertTrue( finalChannelsData[ 0 ] == 10 );
+        //dumpAttempt(2, channelsData, finalChannelsData, multiMaskId);
 
         channelsData = new byte[ channelMetaData.channelCount * channelMetaData.byteCount ];
         channelsData[ 0 ] = (byte)0;
@@ -79,14 +81,14 @@ public class NBitChannelSplitStrategyTest {
         channelsData[ 4 ] = (byte)121;
         channelsData[ 5 ] = (byte)0;
         finalChannelsData = channelSplitter.getUpdatedValue(channelMetaData, 4, channelsData, multiMaskId);
-        dumpAttempt(4, channelsData, finalChannelsData, multiMaskId);
-        System.out.println();
+        //dumpAttempt(4, channelsData, finalChannelsData, multiMaskId);
+        //System.out.println();
+        Assert.assertTrue(finalChannelsData[2] == 8);
     }
 
     @Test
     public void splitOneByteChannels() throws Exception {
-        System.out.println();
-        System.out.println("Split 1-byte channels.");
+        //System.out.println("Split 1-byte channels.");
         ChannelMetaData channelMetaData = makeOneByteChannelMetaData();
         Set<RenderableBean> renderables = getMockRenderableBeans();
 
@@ -104,7 +106,8 @@ public class NBitChannelSplitStrategyTest {
         int multiMaskId = 57;
         int origMask = 1;
         byte[] finalChannelsData = channelSplitter.getUpdatedValue(channelMetaData, origMask, channelsData, multiMaskId);
-        dumpAttempt(origMask, channelsData, finalChannelsData, multiMaskId);
+        Assert.assertTrue( finalChannelsData[ 0 ] == -16 );   // High nibble of 1st byte.  2nd Priority.
+        //dumpAttempt(origMask, channelsData, finalChannelsData, multiMaskId);
 
         channelsData = new byte[ channelMetaData.channelCount * channelMetaData.byteCount ];
         channelsData[ 0 ] = (byte)6;
@@ -113,7 +116,8 @@ public class NBitChannelSplitStrategyTest {
         channelsData[ 3 ] = (byte)9;
         origMask = 2;
         finalChannelsData = channelSplitter.getUpdatedValue(channelMetaData, origMask, channelsData, multiMaskId);
-        dumpAttempt(origMask, channelsData, finalChannelsData, multiMaskId);
+        Assert.assertTrue( finalChannelsData[ 0 ] == 1 );     // Low nibble of 1st byte.  1st Priority.
+        //dumpAttempt(origMask, channelsData, finalChannelsData, multiMaskId);
 
         channelsData = new byte[ channelMetaData.channelCount * channelMetaData.byteCount ];
         channelsData[ 0 ] = (byte)0;
@@ -122,15 +126,13 @@ public class NBitChannelSplitStrategyTest {
         channelsData[ 3 ] = (byte)7;
         origMask = 4;
         finalChannelsData = channelSplitter.getUpdatedValue(channelMetaData, origMask, channelsData, multiMaskId);
-        dumpAttempt(origMask, channelsData, finalChannelsData, multiMaskId);
-
-        System.out.println();
+        Assert.assertTrue( finalChannelsData[ 1 ] == 2 );    // Low nibble of 2nd byte.  3rd Priority.
     }
 
     @Test
     public void splitDepthOfFive() {
-        System.out.println();
-        System.out.println("-=====================Testing Split Depth of 5");
+        //System.out.println();
+        //System.out.println("-=====================Testing Split Depth of 5");
         // Here, setup with the normal boilerplate.
         ChannelMetaData channelMetaData = makeOneByteChannelMetaData();
         NBitChannelSplitStrategy channelSplitter = new NBitChannelSplitStrategy(tracker, 4);
@@ -154,22 +156,30 @@ public class NBitChannelSplitStrategyTest {
         channelsData[ 2 ] = (byte)7;
         channelsData[ 3 ] = (byte)3;
 
+        // NOTE: we expect only one byte in an array of otherwise-zeros, to be non-zero.  This byte
+        // will have a four-bit value that will occupy either the high or low order nibble, but not both.
         int multiMaskId = 69;
-        addSplitData(channelMetaData, channelSplitter, channelsData, 12, multiMaskId);
+        byte[] finalOrableData = null;
+        finalOrableData = addSplitData(channelMetaData, channelSplitter, channelsData, 12, multiMaskId, 0, 15 );
+        Assert.assertArrayEquals( new byte[] {15,0,0,0}, finalOrableData );
         channelsData[ 1 ] = 2;
-        addSplitData(channelMetaData, channelSplitter, channelsData, 11, multiMaskId);
+        finalOrableData = addSplitData(channelMetaData, channelSplitter, channelsData, 11, multiMaskId, 0, -128 );
+        Assert.assertArrayEquals( new byte[] {-128,0,0,0}, finalOrableData );
         channelsData[ 0 ] = 17;
         channelsData[ 3 ] = 27;
-        addSplitData(channelMetaData, channelSplitter, channelsData, 13, multiMaskId);
-        addSplitData(channelMetaData, channelSplitter, channelsData, 14, multiMaskId);
-        addSplitData(channelMetaData, channelSplitter, channelsData, 15, multiMaskId);
-        System.out.println();
+        finalOrableData = addSplitData(channelMetaData, channelSplitter, channelsData, 13, multiMaskId, 1, 2 );
+        Assert.assertArrayEquals( new byte[] {0,2,0,0}, finalOrableData );
+        finalOrableData = addSplitData(channelMetaData, channelSplitter, channelsData, 14, multiMaskId, 1, 32 );
+        Assert.assertArrayEquals( new byte[] {0,32,0,0}, finalOrableData );
+        finalOrableData = addSplitData(channelMetaData, channelSplitter, channelsData, 15, multiMaskId, 0, 0 );
+        Assert.assertArrayEquals( new byte[] {0,0,0,0}, finalOrableData );
     }
 
-    private void addSplitData(ChannelMetaData channelMetaData, NBitChannelSplitStrategy channelSplitter, byte[] channelsData, int origMask, int multiMaskId) {
+    private byte[] addSplitData(ChannelMetaData channelMetaData, NBitChannelSplitStrategy channelSplitter, byte[] channelsData, int origMask, int multiMaskId, int affectedByte, int expectedValue ) {
         byte[] orableChannelPart;
         orableChannelPart = channelSplitter.getUpdatedValue( channelMetaData, origMask, channelsData, multiMaskId );
-        dumpAttempt(origMask, channelsData, orableChannelPart, multiMaskId);
+        Assert.assertTrue( orableChannelPart[ affectedByte ] == expectedValue );
+        return orableChannelPart;
     }
 
     private Set<RenderableBean> getMockRenderableBeans() {
@@ -205,6 +215,8 @@ public class NBitChannelSplitStrategyTest {
         return channelMetaData;
     }
 
+    /** These may be used for debug purposes.  Otherwise, they are unused. */
+    @SuppressWarnings("unused")
     private void dumpAttempt(int origMask, byte[] channelsData, byte[] orableChannelsData, int multiMaskId) {
         System.out.println("For channel split for incoming mask of "+origMask+" against multimask "+multiMaskId);
         System.out.print("input=");
@@ -218,6 +230,7 @@ public class NBitChannelSplitStrategyTest {
         System.out.println();
     }
 
+    @SuppressWarnings("unused")
     private void dumpResult( byte[] result ) {
         for ( int i = 0; i < result.length; i++ ) {
             System.out.print( String.format( "%02x", result[ i ] ) );
