@@ -9,6 +9,8 @@ import org.janelia.it.FlyWorkstation.gui.util.panels.DataSourceSettingsPanel;
 import org.janelia.it.FlyWorkstation.model.entity.RootedEntity;
 import org.janelia.it.FlyWorkstation.shared.util.ConsoleProperties;
 import org.janelia.it.jacs.model.entity.*;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.swing.*;
 import java.awt.*;
@@ -31,6 +33,7 @@ public class BaseballCardPanelTest extends JFrame {
     public static final int WIDTH = 800;
 
     private BaseballCardPanel panel;
+    private Logger logger = LoggerFactory.getLogger( BaseballCardPanelTest.class );
 
     public static final void main( String[] args ) throws Exception {
         BaseballCardPanelTest test = new BaseballCardPanelTest();
@@ -39,6 +42,13 @@ public class BaseballCardPanelTest extends JFrame {
 
     public BaseballCardPanelTest() throws Exception {
         super("Test Baseball Card Display");
+        logger.info(
+                "The purpose of this test is to show what the baseball card panel looks like, and see its display\n" +
+                "  When this test runs, expect to see a popup window containing one page worth of mock \n" +
+                "  Neuron Fragments, as if it had been searched. You may then hit the load buttons for more or all.\n" +
+                "  Finally, select things (using typical java-type multi-select/multiple groups). \n" +
+                "  There should be a button for spitting out what you have selected, as log-issues.\n"
+        );
         initGui();
         initCardPanel();
     }
@@ -59,7 +69,7 @@ public class BaseballCardPanelTest extends JFrame {
             @Override
             public void actionPerformed(ActionEvent e) {
                 for ( BaseballCard card: panel.getSelectedCards() ) {
-                    System.out.println("Entity is " + card.getEntity().getId() + "/" + card.getEntity().getName() );
+                    logger.info("Entity is " + card.getEntity().getId() + "/" + card.getEntity().getName() );
                 }
             }
         });
@@ -112,7 +122,6 @@ public class BaseballCardPanelTest extends JFrame {
                 1870583260875063394L,
                 1870583260875063394L,
         };
-//        for ( long i = 0; i < 50; i++ ) {
         int i = 0;
         for ( Long guid: guids ) {
             EntityData entityData = getEntityData( "aName", "fosterl", "Something");
