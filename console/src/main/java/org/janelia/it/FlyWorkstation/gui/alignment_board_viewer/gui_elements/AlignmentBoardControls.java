@@ -565,6 +565,9 @@ public class AlignmentBoardControls {
 
     private void createGui() {
         Font oldFont = this.centering.getFont();
+        if ( oldFont == null ) {
+            oldFont = new JLabel().getFont();
+        }
         Font newFont = new Font( oldFont.getName(), Font.PLAIN, 12 );
         //Font newFont = oldFont.deriveFont( 9 );
 
