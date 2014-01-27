@@ -92,7 +92,12 @@ public class BaseballCard {
                 if ( entity.getEntityTypeName().equals( EntityConstants.TYPE_NEURON_FRAGMENT ) ) {
                     try {
                         Entity entityParent = ModelMgr.getModelMgr().getAncestorWithType(entity, EntityConstants.TYPE_SAMPLE);
-                        entityNameDesignation = entityParent.getName() + " / " + entityNameDesignation;
+                        if ( entityParent == null ) {
+                            entityNameDesignation = "Mock-Parent / " + entityNameDesignation;
+                        }
+                        else {
+                            entityNameDesignation = entityParent.getName() + " / " + entityNameDesignation;
+                        }
                     } catch ( Exception ex ) {
                         logger.error( "Exception when fetching parent sample of fragment " + entityNameDesignation );
                     }
