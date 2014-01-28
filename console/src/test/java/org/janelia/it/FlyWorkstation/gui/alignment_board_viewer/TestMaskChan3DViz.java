@@ -1,6 +1,8 @@
 
 package org.janelia.it.FlyWorkstation.gui.alignment_board_viewer;
 
+import org.janelia.it.FlyWorkstation.geom.Vec3;
+import org.janelia.it.FlyWorkstation.gui.WorkstationEnvironment;
 import org.janelia.it.FlyWorkstation.gui.alignment_board_viewer.masking.MultiMaskTracker;
 import org.janelia.it.FlyWorkstation.gui.framework.viewer.alignment_board.AlignmentBoardControllable;
 import org.janelia.it.FlyWorkstation.gui.framework.viewer.alignment_board.AlignmentBoardSettings;
@@ -10,8 +12,6 @@ import org.janelia.it.FlyWorkstation.gui.alignment_board_viewer.masking.Configur
 import org.janelia.it.FlyWorkstation.gui.alignment_board_viewer.masking.RenderMappingI;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.Mip3d;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.VolumeBrickFactory;
-import org.janelia.it.FlyWorkstation.gui.viewer3d.VolumeBrickI;
-import org.janelia.it.FlyWorkstation.gui.viewer3d.VolumeModel;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.resolver.TrivialFileResolver;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.texture.TextureDataI;
 import org.slf4j.Logger;
@@ -49,6 +49,7 @@ public class TestMaskChan3DViz {
                 }
 
                 try {
+                    new WorkstationEnvironment().invoke();
 
                     // Setup a testing color-wheel mapping.
                     JFrame frame = new JFrame("Test MipWidget for Masking");
@@ -75,7 +76,7 @@ public class TestMaskChan3DViz {
                             settings,
                             new MultiMaskTracker()
                     );
-                    loadWorker.setResolver( new TrivialFileResolver() );
+                    //loadWorker.setResolver( new TrivialFileResolver() );
                     loadWorker.execute();
 
                     //Display the window.
@@ -117,6 +118,7 @@ public class TestMaskChan3DViz {
         @Override
         public void loadVolume(TextureDataI signalTexture, TextureDataI maskTexture) {
             mip3d.getVolumeModel().setGammaAdjustment( (float)AlignmentBoardSettings.DEFAULT_GAMMA );
+            mip3d.getVolumeModel().setCameraDepth( new Vec3( 0.0, 0.0, 0.0 ) );
             VolumeBrickFactory volumeBrickFactory = new MultiTexVolumeBrickFactory();
             if ( ! mip3d.setVolume(
                     signalTexture, maskTexture, volumeBrickFactory, renderMapping, 1.0
