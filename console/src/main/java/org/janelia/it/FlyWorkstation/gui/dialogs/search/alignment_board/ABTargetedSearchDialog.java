@@ -10,6 +10,7 @@ import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.FlyWorkstation.gui.framework.viewer.BaseballCardPanel;
 import org.janelia.it.FlyWorkstation.gui.framework.viewer.RootedEntityReceiver;
 import org.janelia.it.FlyWorkstation.gui.framework.viewer.baseball_card.BaseballCard;
+import org.janelia.it.FlyWorkstation.gui.framework.viewer.search.SolrResultsMetaData;
 import org.janelia.it.FlyWorkstation.model.domain.AlignmentContext;
 import org.janelia.it.FlyWorkstation.model.domain.EntityWrapperFactory;
 import org.janelia.it.FlyWorkstation.model.domain.Sample;
@@ -254,7 +255,7 @@ public class ABTargetedSearchDialog extends ModalDialog {
         private Logger logger = LoggerFactory.getLogger(ABTargetedSearchDialog.class);
         private SearchWorkerParam param;
         private List<RootedEntity> rootedResults;
-        private BaseballCardPanel.SolrResultsMetaData resultsMetaData;
+        private SolrResultsMetaData resultsMetaData;
         private SolrQueryBuilder queryBuilder;
 
         public SearchWorker( SearchWorkerParam param, SolrQueryBuilder queryBuilder ) {
@@ -282,8 +283,9 @@ public class ABTargetedSearchDialog extends ModalDialog {
             List<Entity> resultList = results.getResultList();
             rootedResults = getCompatibleRootedEntities( resultList );
 
-            resultsMetaData = new BaseballCardPanel.SolrResultsMetaData();
+            resultsMetaData = new SolrResultsMetaData();
             resultsMetaData.setNumHits( rootedResults.size() );
+            resultsMetaData.setRawNumHits( resultList.size() );
             resultsMetaData.setSearchDuration(
                     results.getResponse().getElapsedTime()
             );
@@ -312,9 +314,7 @@ public class ABTargetedSearchDialog extends ModalDialog {
             RootedEntityReceiver receiver = param.getReceiver();
             receiver.setRootedEntities(
                     rootedResults,
-                    resultsMetaData.getSearchDuration(),
-                    resultsMetaData.getNumHits(),
-                    resultsMetaData.getQueryStr()
+                    resultsMetaData
             );
         }
 
