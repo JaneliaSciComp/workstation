@@ -273,9 +273,9 @@ public class RenderablesLoadWorker extends SimpleWorker implements VolumeLoader 
             neuronFragmentLoader.setAcceptors(dummyAcceptors);
             compartmentLoader.setAcceptors( dummyAcceptors );
 
-            logger.info("Timing multi-thread data load dry-run.");
+            logger.debug("Timing multi-thread data load dry-run.");
             multiThreadedDataLoad(renderableDatas, false);
-            logger.info("End timing dry-run load.");
+            logger.debug("End timing dry-run load.");
 
         }
     }
@@ -294,11 +294,11 @@ public class RenderablesLoadWorker extends SimpleWorker implements VolumeLoader 
         else {
             logger.debug( "In load thread, after getting bean list." );
 
-            logger.info("Starting multithreaded file load.");
+            logger.debug("Starting multithreaded file load.");
             fileLoad(metaDatas, buildTexture);
             if ( buildTexture ) {
                 if ( ! getProgressMonitor().isCanceled() ) {
-                    logger.info("Starting multithreaded texture build.");
+                    logger.debug("Starting multithreaded texture build.");
                     multiThreadedTextureBuild();
                 }
             }
@@ -450,9 +450,9 @@ public class RenderablesLoadWorker extends SimpleWorker implements VolumeLoader 
             neuronFragmentLoader.setAcceptors(signalDataAcceptors);
             compartmentLoader.setAcceptors( signalDataAcceptors );
 
-            logger.info("Timing multi-thread data load for signal.");
+            logger.debug("Timing multi-thread data load for signal.");
             multiThreadedDataLoad(renderableDatas, true);
-            logger.info("End timing signal load");
+            logger.debug("End timing signal load");
 
         }
     }
@@ -489,9 +489,9 @@ public class RenderablesLoadWorker extends SimpleWorker implements VolumeLoader 
         compartmentLoader.setAcceptors(maskDataAcceptors);
         compartmentLoader.setFileStats(fileStats);
 
-        logger.info("Timing multi-thread data load for multi-mask-assbembly.");
+        logger.debug("Timing multi-thread data load for multi-mask-assbembly.");
         multiThreadedDataLoad(renderableDatas, false);
-        logger.info("End timing multi-mask-assembly");
+        logger.debug("End timing multi-mask-assembly");
         maskDataAcceptors.clear();
     }
 
@@ -568,7 +568,7 @@ public class RenderablesLoadWorker extends SimpleWorker implements VolumeLoader 
      */
     private AlignmentBoardSettings adjustDownsampleRateSetting() throws Exception {
 
-        logger.info("Adjusting downsample rate from {}.", Thread.currentThread().getName());
+        logger.debug("Adjusting downsample rate from {}.", Thread.currentThread().getName());
         try {
             GpuSampler.GpuInfo gpuInfo = sampler.getGpuInfo();
 
