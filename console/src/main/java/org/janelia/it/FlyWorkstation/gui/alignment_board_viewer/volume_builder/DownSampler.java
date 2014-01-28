@@ -84,7 +84,7 @@ public class DownSampler {
         int outSy = (int)Math.ceil((double) sy / yScale);
         int outSz = (int)Math.ceil((double) sz / zScale);
 
-        logger.info( "Downsampling to " + outSx + " by " + outSy + " by " + outSz + " for x,y,z sizes="
+        logger.debug( "Downsampling to " + outSx + " by " + outSy + " by " + outSz + " for x,y,z sizes="
                 + sx + "," + sy + "," + sz );
 
         // Here, sample the neighborhoods (or _output_ voxels).
@@ -133,7 +133,7 @@ public class DownSampler {
         DownsampledTextureData rtnVal = new DownsampledTextureData(
                 downsampledVolume, outSx, outSy, outSz
         );
-        logger.info("Downsampling complete.");
+        logger.debug("Downsampling complete.");
 
         return rtnVal;
     }
@@ -142,10 +142,10 @@ public class DownSampler {
     private void awaitThreadpoolCompletion(ExecutorService threadPool) {
         try {
             // Now that the pools is laden, we call the milder shutdown, which lets us wait for completion of all.
-            logger.info("Awaiting shutdown.");
+            logger.debug("Awaiting shutdown.");
             threadPool.shutdown();
             threadPool.awaitTermination( 10, TimeUnit.MINUTES );
-            logger.info("Thread pool termination complete.");
+            logger.debug("Thread pool termination complete.");
         } catch ( InterruptedException ie ) {
             ie.printStackTrace();
             SessionMgr.getSessionMgr().handleException( ie );
