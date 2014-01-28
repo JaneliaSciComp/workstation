@@ -16,8 +16,10 @@ implements Iterator<E>, Iterable<E>
 	private boolean useFirst = true;
 	
 	public InterleavedIterator(Iterable<E> first, Iterable<E> second) {
-		this.first = first.iterator();
-		this.second = second.iterator();
+	    if (first != null)
+	        this.first = first.iterator();
+	    if (second != null)
+	        this.second = second.iterator();
 	}
 
 	@Override
