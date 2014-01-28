@@ -3,6 +3,7 @@ package org.janelia.it.FlyWorkstation.gui.framework.viewer;
 import org.janelia.it.FlyWorkstation.gui.framework.table.DynamicColumn;
 import org.janelia.it.FlyWorkstation.gui.framework.table.DynamicTable;
 import org.janelia.it.FlyWorkstation.gui.framework.viewer.baseball_card.BaseballCard;
+import org.janelia.it.FlyWorkstation.gui.framework.viewer.search.SolrResultsMetaData;
 import org.janelia.it.FlyWorkstation.gui.util.Icons;
 import org.janelia.it.FlyWorkstation.model.entity.RootedEntity;
 import org.slf4j.Logger;
@@ -31,7 +32,7 @@ public class BaseballCardPanel extends JPanel implements RootedEntityReceiver {
     public static final String IMAGE_COLUMN_HEADER = "Image";
     public static final String DETAILS_COLUMN_HEADER = "Details";
 
-    private static final String STATUS_TEXT_FMT = "%d results found for '%s', %d results loaded.";
+    private static final String STATUS_TEXT_FMT = "%d results retained of %d found for '%s', %d results loaded.";
     private static final String STATUS_TOOLTIP_FMT = "Query took %d milliseconds";
 
     private List<BaseballCard> cards;
@@ -42,9 +43,7 @@ public class BaseballCardPanel extends JPanel implements RootedEntityReceiver {
     private DynamicTable cardTable;
     private List<RootedEntity> rootedEntities;
     private JLabel statusLabel;
-    private int resultCount;
-    private long elapsedTime;
-    private String queryString;
+    private SolrResultsMetaData solrResultsMetaData;
 
     private Logger logger = LoggerFactory.getLogger( BaseballCardPanel.class );
 
@@ -60,12 +59,10 @@ public class BaseballCardPanel extends JPanel implements RootedEntityReceiver {
 
     @Override
     public void setRootedEntities(
-            List<RootedEntity> rootedEntities, long elapsedTime, int resultCount, String queryString
+            List<RootedEntity> rootedEntities, SolrResultsMetaData solrResultsMetaData
     ) {
         this.rootedEntities = rootedEntities;
-        this.elapsedTime = elapsedTime;
-        this.resultCount = resultCount;
-        this.queryString = queryString;
+        this.solrResultsMetaData = solrResultsMetaData;
         cards = new ArrayList<BaseballCard>();
         for ( nextEntityNum = 0; nextEntityNum < rowsPerPage  &&  nextEntityNum < rootedEntities.size(); nextEntityNum ++ ) {
             RootedEntity rootedEntity = rootedEntities.get( nextEntityNum );
@@ -202,10 +199,16 @@ public class BaseballCardPanel extends JPanel implements RootedEntityReceiver {
 
     private void updateStatus() {
         statusLabel.setText(
-                String.format( STATUS_TEXT_FMT, resultCount, queryString, cardTable.getRows().size() )
+                String.format(
+                        STATUS_TEXT_FMT,
+                        solrResultsMetaData.getNumHits(),
+                        solrResultsMetaData.getRawNumHits(),
+                        solrResultsMetaData.getQueryStr(),
+                        cardTable.getRows().size()
+                )
         );
         statusLabel.setToolTipText(
-                String.format( STATUS_TOOLTIP_FMT, elapsedTime )
+                String.format( STATUS_TOOLTIP_FMT, solrResultsMetaData.getSearchDuration() )
         );
     }
 
@@ -248,36 +251,6 @@ public class BaseballCardPanel extends JPanel implements RootedEntityReceiver {
         validate();
         invalidate();
         repaint();
-    }
-
-    public static class SolrResultsMetaData {
-        private long searchDuration;
-        private int numHits;
-        private String queryStr;
-
-        public long getSearchDuration() {
-            return searchDuration;
-        }
-
-        public void setSearchDuration(long searchDuration) {
-            this.searchDuration = searchDuration;
-        }
-
-        public int getNumHits() {
-            return numHits;
-        }
-
-        public void setNumHits(int numHits) {
-            this.numHits = numHits;
-        }
-
-        public String getQueryStr() {
-            return queryStr;
-        }
-
-        public void setQueryStr(String queryStr) {
-            this.queryStr = queryStr;
-        }
     }
 
     private static class ComponentSelfRenderer extends DefaultTableCellRenderer {

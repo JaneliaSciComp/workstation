@@ -1,5 +1,6 @@
 package org.janelia.it.FlyWorkstation.gui.framework.viewer;
 
+import org.janelia.it.FlyWorkstation.gui.framework.viewer.search.SolrResultsMetaData;
 import org.janelia.it.FlyWorkstation.model.entity.RootedEntity;
 
 import java.util.List;
@@ -14,5 +15,5 @@ import java.util.List;
  * client of this interface.
  */
 public interface RootedEntityReceiver {
-    void setRootedEntities( List<RootedEntity> rootedEntities, long elapsedTime, int resultCount, String query );
+    void setRootedEntities( List<RootedEntity> rootedEntities, SolrResultsMetaData solrResultsMetaData );
 }
