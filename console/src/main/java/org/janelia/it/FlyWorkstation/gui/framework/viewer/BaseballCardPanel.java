@@ -6,6 +6,7 @@ import org.janelia.it.FlyWorkstation.gui.framework.viewer.baseball_card.Baseball
 import org.janelia.it.FlyWorkstation.gui.framework.viewer.search.SolrResultsMetaData;
 import org.janelia.it.FlyWorkstation.gui.util.Icons;
 import org.janelia.it.FlyWorkstation.model.entity.RootedEntity;
+import org.janelia.it.jacs.model.entity.Entity;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -41,20 +42,26 @@ public class BaseballCardPanel extends JPanel implements RootedEntityReceiver {
     private int rowsPerPage;
     private int nextEntityNum;
     private DynamicTable cardTable;
+    private ControlCallback controlCallback;
     private List<RootedEntity> rootedEntities;
     private JLabel statusLabel;
     private SolrResultsMetaData solrResultsMetaData;
 
     private Logger logger = LoggerFactory.getLogger( BaseballCardPanel.class );
 
+    public BaseballCardPanel( boolean selectable, int preferredWidth, int rowsPerPage, ControlCallback callback ) {
+        this.selectable = selectable;
+        this.preferredWidth = preferredWidth;
+        this.rowsPerPage = rowsPerPage;
+        this.controlCallback = callback;
+    }
+
     public BaseballCardPanel( int preferredWidth, int rowsPerPage ) {
         this(false, preferredWidth, rowsPerPage);
     }
 
     public BaseballCardPanel( boolean selectable, int preferredWidth, int rowsPerPage ) {
-        this.selectable = selectable;
-        this.preferredWidth = preferredWidth;
-        this.rowsPerPage = rowsPerPage;
+        this( selectable, preferredWidth, rowsPerPage, null );
     }
 
     @Override
@@ -154,6 +161,50 @@ public class BaseballCardPanel extends JPanel implements RootedEntityReceiver {
                 }
             }
 
+            @Override
+            protected JPopupMenu createPopupMenu(MouseEvent e) {
+
+                JTable target = (JTable) e.getSource();
+                if (target.getSelectedRow() <0 || target.getSelectedColumn()<0) return null;
+
+                final JPopupMenu popupMenu = new JPopupMenu();
+                popupMenu.setLightWeightPopupEnabled(true);
+
+                ListSelectionModel lsm = getTable().getSelectionModel();
+
+                if (lsm.getMinSelectionIndex() == lsm.getMaxSelectionIndex()) {
+
+                    final BaseballCard value = cards.get(target.getSelectedRow());
+
+                    JMenuItem titleMenuItem = new JMenuItem(value.getEntity().getName());
+                    titleMenuItem.setEnabled(false);
+                    popupMenu.add(titleMenuItem);
+
+                    // Items which are  only available when selecting a single cell
+                    JMenuItem copyMenuItem = new JMenuItem("  Show in Lightbox");
+                    copyMenuItem.addActionListener(new ActionListener() {
+                        @Override
+                        public void actionPerformed(ActionEvent e) {
+                            // Signal caller we are taking the screen.
+                            controlCallback.callerRequiresFocus();
+                            // Show in HUD/Light Box
+                            Entity entity = value.getEntity();
+                            Hud.getSingletonInstance().setEntityAndToggleDialog(entity);
+                        }
+                    });
+                    popupMenu.add(copyMenuItem);
+                }
+                else {
+                    JMenuItem titleMenuItem = new JMenuItem("(Multiple Items Selected)");
+                    titleMenuItem.setEnabled(false);
+                    popupMenu.add(titleMenuItem);
+                }
+
+                return popupMenu;
+            }
+
+
+
         };
         ComponentSelfRenderer componentSelfRenderer = new ComponentSelfRenderer(this);
         cardTable.getTable().setRowHeight(BaseballCard.IMAGE_HEIGHT);
@@ -251,6 +302,13 @@ public class BaseballCardPanel extends JPanel implements RootedEntityReceiver {
         validate();
         invalidate();
         repaint();
+    }
+
+    /**
+     * Implement this to allow this panel to manipulate some external caller.
+     */
+    public static interface ControlCallback {
+        void callerRequiresFocus();
     }
 
     private static class ComponentSelfRenderer extends DefaultTableCellRenderer {

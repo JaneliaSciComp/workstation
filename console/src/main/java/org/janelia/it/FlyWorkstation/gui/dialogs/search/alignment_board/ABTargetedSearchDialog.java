@@ -201,7 +201,26 @@ public class ABTargetedSearchDialog extends ModalDialog {
     }
 
     private BaseballCardPanel initResultsGui() {
-        return new BaseballCardPanel( true, dialogWidth, DEFAULT_ROWS_PER_PAGE );
+        BaseballCardPanel.ControlCallback controlCallback = new BaseballCardPanel.ControlCallback() {
+            @Override
+            public void callerRequiresFocus() {
+                ABTargetedSearchDialog.this.setVisible( false );
+            }
+        };
+        return new BaseballCardPanel( true, dialogWidth, DEFAULT_ROWS_PER_PAGE, controlCallback );
+    }
+
+    /**
+     * Allow subordinates to tell this thing where to go--without having knowledge of their superior.
+     */
+    public class ControlsCallback {
+        private ABTargetedSearchDialog dialog;
+        public ControlsCallback( ABTargetedSearchDialog dialog ) {
+            this.dialog = dialog;
+        }
+        public void dismiss() {
+            dialog.setVisible( false );
+        }
     }
 
     private static class QueryLaunchAction extends AbstractAction {
