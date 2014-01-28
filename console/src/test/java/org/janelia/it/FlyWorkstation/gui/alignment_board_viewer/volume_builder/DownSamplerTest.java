@@ -3,6 +3,8 @@ package org.janelia.it.FlyWorkstation.gui.alignment_board_viewer.volume_builder;
 import junit.framework.Assert;
 import org.junit.Test;
 
+import java.util.HashMap;
+
 /**
  * Created with IntelliJ IDEA.
  * User: fosterl
@@ -10,8 +12,85 @@ import org.junit.Test;
  * Time: 11:26 PM
  *
  * Test for the renderables-builder base class facility methods.
+ *
+ * Maintenance Note: if the down sampler is ever intentionally changed, such that the output below is supposed
+ * to change from what it is at time of writing, simply verify that the "Report Not as Expected:" contents
+ * are correct for the new design.  Then, for each test, log-scrape that output and insert it into the appropriate
+ * constant definition.  Afterwards, when the test is re-run, the reports should again match.
  */
 public class DownSamplerTest {
+
+    private static final String REPORT_2_B =
+            "TEST: 2-bytes per voxel/tube\n\n" +
+            "0,0,0,0,0,0,0,0,\n" +
+            "0,1,0,1,0,1,0,0,\n" +
+            "0,1,0,1,0,0,0,0,\n" +
+            "0,0,0,0,0,0,0,0,\n" +
+            "0,0,0,0,0,0,0,0,\n" +
+            "0,1,0,1,0,1,0,0,\n" +
+            "0,1,0,1,0,0,0,0,\n" +
+            "0,0,0,0,0,0,0,0,\n" +
+            "0,0,0,0,0,0,0,0,\n" +
+            "0,1,0,1,0,0,0,0,\n" +
+            "0,1,0,1,0,0,0,0,\n" +
+            "0,0,0,0,0,0,0,0,\n" +
+            "0,0,0,0,0,0,0,0,\n" +
+            "0,0,0,0,0,0,0,0,\n" +
+            "0,0,0,0,0,0,0,0,\n" +
+            "0,0,0,0,0,0,0,0,\n" +
+            "Length total=128\n" +
+            "Dimensions are 4 x 4 x 4\n";
+
+    private static final String REPORT_1_TUBE =
+            "TEST: 1-byte-per-voxel/tube\n" +
+            "\n" +
+            "0,0,0,0,0,0,0,0,\n" +
+            "0,1,1,1,1,1,0,0,\n" +
+            "0,1,1,0,0,0,0,0,\n" +
+            "0,0,0,0,0,0,0,0,\n" +
+            "0,0,0,0,0,0,0,0,\n" +
+            "0,1,1,1,1,1,0,0,\n" +
+            "0,1,1,0,0,0,0,0,\n" +
+            "0,0,0,0,0,0,0,0,\n" +
+            "0,0,0,0,0,0,0,0,\n" +
+            "0,1,1,0,0,0,0,0,\n" +
+            "0,1,1,0,0,0,0,0,\n" +
+            "0,0,0,0,0,0,0,0,\n" +
+            "0,0,0,0,0,0,0,0,\n" +
+            "0,0,0,0,0,0,0,0,\n" +
+            "0,0,0,0,0,0,0,0,\n" +
+            "0,0,0,0,0,0,0,0,\n" +
+            "Length total=128\n" +
+            "Dimensions are 8 x 4 x 4\n";
+
+    private static final String REPORT_1_CIRCLE =
+            "TEST: 1-byte-per-voxel/circle\n" +
+            "\n" +
+            "0,0,0,0,0,0,0,0,\n" +
+            "0,0,1,1,1,0,0,0,\n" +
+            "0,1,1,0,1,1,0,0,\n" +
+            "0,0,0,0,0,0,0,0,\n" +
+            "0,0,0,0,0,0,0,0,\n" +
+            "0,0,1,1,1,0,0,0,\n" +
+            "0,1,1,0,1,1,0,0,\n" +
+            "0,0,0,0,0,0,0,0,\n" +
+            "0,0,0,0,0,0,0,0,\n" +
+            "0,0,1,1,1,0,0,0,\n" +
+            "0,1,1,0,1,1,0,0,\n" +
+            "0,0,0,0,0,0,0,0,\n" +
+            "0,0,0,0,0,0,0,0,\n" +
+            "0,0,0,0,0,0,0,0,\n" +
+            "0,0,0,0,0,0,0,0,\n" +
+            "0,0,0,0,0,0,0,0,\n" +
+            "Length total=128\n" +
+            "Dimensions are 8 x 4 x 4\n";
+
+    private static final HashMap<String,String> testNameVsOutput = new HashMap<String,String>();
+    static {
+        testNameVsOutput.put( "2-bytes per voxel/tube",  REPORT_2_B );
+        testNameVsOutput.put( "1-byte-per-voxel/tube",   REPORT_1_TUBE );
+        testNameVsOutput.put( "1-byte-per-voxel/circle", REPORT_1_CIRCLE );
+    }
 
     private static final byte[] RAW_VOLUME = new byte[] {
             0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
@@ -257,7 +336,8 @@ public class DownSamplerTest {
             String testName, byte[] volume, int sx, int sy, int sz, double scaleAll, int voxelBytes )
             throws Exception {
 
-        System.out.println("TEST: " + testName );
+        StringBuilder builder = new StringBuilder();
+        builder.append("TEST: " + testName ).append('\n');
         double xScale = scaleAll;
         double yScale = scaleAll;
         double zScale = scaleAll;
@@ -268,13 +348,17 @@ public class DownSamplerTest {
         Assert.assertNotSame( "Zero-length volume.", data.getVolume().length(), 0 );
         for (int i = 0; i < data.getVolume().length(); i++ ) {
             if ( i % (data.getSx() * voxelBytes) == 0 ) {
-                System.out.println();
+                builder.append("\n");
             }
-            System.out.print( data.getVolume().getValueAt(i)  + ",");
+            builder.append(data.getVolume().getValueAt(i) + ",");
         }
-        System.out.println();
-        System.out.println( "Length total=" + data.getVolume().length() );
-        System.out.println( "Dimensions are " + data.getSx() + " x " + data.getSy() + " x " + data.getSz() );
+        builder.append('\n');
+        builder.append( "Length total=" + data.getVolume().length() ).append('\n');
+        builder.append( "Dimensions are " + data.getSx() + " x " + data.getSy() + " x " + data.getSz() ).append('\n');
+
+        Assert.assertEquals(
+                "Report Not as Expected: \n" + builder.toString(), testNameVsOutput.get( testName ), builder.toString()
+        );
     }
 
 }
