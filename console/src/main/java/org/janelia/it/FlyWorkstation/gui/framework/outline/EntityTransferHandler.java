@@ -1,12 +1,12 @@
 package org.janelia.it.FlyWorkstation.gui.framework.outline;
 
-import java.awt.Component;
 import java.awt.datatransfer.DataFlavor;
 import java.awt.datatransfer.Transferable;
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.Enumeration;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import javax.swing.JComponent;
 import javax.swing.JTree;
@@ -28,14 +28,11 @@ import org.janelia.it.FlyWorkstation.shared.util.Utils;
 import org.janelia.it.FlyWorkstation.shared.workers.IndeterminateProgressMonitor;
 import org.janelia.it.FlyWorkstation.shared.workers.SimpleWorker;
 import org.janelia.it.jacs.model.entity.Entity;
-import org.janelia.it.jacs.model.entity.EntityAttribute;
 import org.janelia.it.jacs.model.entity.EntityConstants;
 import org.janelia.it.jacs.model.entity.EntityData;
 import org.janelia.it.jacs.shared.utils.EntityUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import sun.security.action.GetLongAction;
 
 /**
  * Support for dragging entities and dropping them onto the EntityOutline.
@@ -387,20 +384,32 @@ public abstract class EntityTransferHandler extends TransferHandler {
 			}
 		}
         
+		Map<Long,EntityData> realEdMap = new HashMap<Long,EntityData>();
+		for(EntityData ed : parentEntity.getEntityData()) {
+		    if (ed.getChildEntity()!=null) {
+		        realEdMap.put(ed.getId(), ed);
+		    }
+		}
+		
+		List<EntityData> realEdsList = new ArrayList<EntityData>();
+		for(EntityData ed : eds) {
+		    realEdsList.add(realEdMap.get(ed.getId()));
+		}
+		
 		log.debug("Renumbering children");
 		
 		// Renumber the children, re-add the new ones, and update the tree
 		int index = 0;
-		for (EntityData ed : eds) {
+		for (EntityData ed : realEdsList) {
 			if (log.isDebugEnabled()) log.debug("  "+EntityUtils.identify(ed.getChildEntity())+" (oldIndex={},newIndex={})",ed.getOrderIndex(),index);
 			if ((ed.getOrderIndex() == null) || (ed.getOrderIndex() != index)) {
-				log.debug("  will save ED {} with index={}",ed.getId(),index);
+				log.debug("  will save ED {} with index={}",EntityUtils.identify(ed),index);
 				ed.setOrderIndex(index);
 			}
 			index++;
 		}
-		
-		ModelMgr.getModelMgr().saveOrUpdateEntity(parentEntity);
+        
+		ModelMgr.getModelMgr().updateChildIndexes(parentEntity);
 		
 		// Remove old eds if necessary
 		for(EntityData ed : edsToRemove) {

@@ -159,6 +159,11 @@ public class EJBEntityFacade implements EntityFacade {
     }
 
     @Override
+    public Entity updateChildIndexes(Entity entity) throws Exception {
+        return EJBFactory.getRemoteEntityBean().saveOrUpdateEntityDatas(SessionMgr.getSubjectKey(), entity);
+    }
+    
+    @Override
     public EntityData setOrUpdateValue(Long entityId, String attributeName, String value) throws Exception {
         return EJBFactory.getRemoteEntityBean().setOrUpdateValue(SessionMgr.getSubjectKey(), entityId, attributeName, value);
     }

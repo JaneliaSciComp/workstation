@@ -65,6 +65,8 @@ public interface EntityFacade {
     
     public EntityData updateChildIndex(EntityData entityData, Integer orderIndex) throws Exception;
     
+    public Entity updateChildIndexes(Entity entity) throws Exception;
+    
     public EntityData setOrUpdateValue(Long entityId, String attributeName, String value) throws Exception;
     
     public void removeEntityData(EntityData ed) throws Exception;

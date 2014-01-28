@@ -726,6 +726,20 @@ public class EntityModel {
     }
 
     /**
+     * Update the index of the given relationship within its parent. 
+     * 
+     * @param entityData
+     * @return EntityData with canonical parent/child entity instances
+     * @throws Exception
+     */
+    public Entity updateChildIndexes(Entity entity) throws Exception {
+        checkIfCanonicalEntity(entity);
+        entityFacade.updateChildIndexes(entity);
+        notifyEntityChanged(entity);
+        return entity;
+    }
+    
+    /**
      * Update the value of the given attribute on the specified entity. 
      * 
      * @param entityData

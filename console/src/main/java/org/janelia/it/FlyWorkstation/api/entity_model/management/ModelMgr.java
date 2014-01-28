@@ -775,6 +775,12 @@ public class ModelMgr {
         return ed;
     }
 
+    public Entity updateChildIndexes(Entity entity) throws Exception {
+        Entity savedEntity = entityModel.updateChildIndexes(entity);
+        notifyEntityChanged(entity.getId());
+        return savedEntity;
+    }
+    
     public EntityData setOrUpdateValue(Entity entity, String attributeName, String value) throws Exception {
         EntityData ed = entityModel.setOrUpdateValue(entity, attributeName, value);
         notifyEntityChanged(entity.getId());
