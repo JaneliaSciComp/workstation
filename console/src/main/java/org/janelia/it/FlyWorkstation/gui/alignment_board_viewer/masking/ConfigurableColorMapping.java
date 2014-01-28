@@ -246,7 +246,7 @@ public class ConfigurableColorMapping implements RenderMappingI {
     private byte[] setRgbFromAverageColor(RenderableBean bean) {
         byte[] rtnVal = null;
         // Taking average voxels into account.
-        if ( bean.getRenderableEntity() != null ) {
+        if ( bean.getRenderableEntity() != null  &&  fileStats != null ) {
             double[] colorAverages = fileStats.getChannelAverages( bean.getRenderableEntity().getId() );
             if ( colorAverages != null ) {
                 rtnVal = new byte[ 4 ];

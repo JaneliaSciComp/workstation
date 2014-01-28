@@ -297,7 +297,7 @@ public class RenderablesLoadWorker extends SimpleWorker implements VolumeLoader 
             logger.debug("Starting multithreaded file load.");
             fileLoad(metaDatas, buildTexture);
             if ( buildTexture ) {
-                if ( ! getProgressMonitor().isCanceled() ) {
+                if ( ( getProgressMonitor() == null )  ||  (! getProgressMonitor().isCanceled() ) ) {
                     logger.debug("Starting multithreaded texture build.");
                     multiThreadedTextureBuild();
                 }
@@ -305,7 +305,7 @@ public class RenderablesLoadWorker extends SimpleWorker implements VolumeLoader 
 
         }
 
-        if ( ! getProgressMonitor().isCanceled() )
+        if ( ( getProgressMonitor() == null )  ||  (! getProgressMonitor().isCanceled() ) )
             controlCallback.displayReady();
     }
 

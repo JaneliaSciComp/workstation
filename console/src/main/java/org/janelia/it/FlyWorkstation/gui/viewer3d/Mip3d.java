@@ -197,14 +197,14 @@ public class Mip3d extends BaseGLViewer implements ActionListener {
             volumeModel.setGammaAdjustment(gamma);
             VolumeBrickI brick = null;
             if ( maskBuilder != null ) {
-                volumeLoader.populateVolumeAcceptor(brick);
                 TextureDataI combinedTextureData = maskBuilder.getCombinedTextureData();
 
                 RenderMapTextureBean renderMapTextureData = new RenderMapTextureBean();
                 renderMapTextureData.setMapping( renderMapping );
+                brick = vbFactory.getVolumeBrick( volumeModel, combinedTextureData, renderMapTextureData );
+                volumeLoader.populateVolumeAcceptor(brick);
                 renderMapTextureData.setVolumeModel( volumeModel );
 
-                brick = vbFactory.getVolumeBrick( volumeModel, combinedTextureData, renderMapTextureData );
             }
             else {
                 brick = vbFactory.getVolumeBrick( volumeModel );
