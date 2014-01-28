@@ -20,6 +20,7 @@ import java.io.InputStream;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 
 /**
@@ -33,10 +34,8 @@ import java.util.Collection;
 public class MaskReadTest {
 
     ///Users/fosterl/Documents/alignment_board/Mask_Chan
-    private static final String TEST_FILE_NAME = "prefix_1.mask";
-    private static final String LOCAL_FILE_PATH = "/Users/fosterl/Documents/alignment_board/Mask_Chan/prefix_1.mask";
-
-    private InputStream testStream;
+    private static final String TEST_FILE_NAME = "compartment_34.mask";
+    private static final String LOCAL_FILE_PATH = "/Volumes/jacsData/MaskResources/Compartment/maskChannelFormatWithTemplate/compartment_34.mask";
 
     private Logger logger = LoggerFactory.getLogger( MaskReadTest.class );
 
@@ -50,15 +49,10 @@ public class MaskReadTest {
 
     @Before
     public void setUp() throws  Exception {
-        testStream = this.getClass().getResourceAsStream( TEST_FILE_NAME );
-        if ( testStream == null ) {
-            testStream = new FileInputStream( LOCAL_FILE_PATH );
-        }
     }
 
     @After
     public void tearDown() throws Exception {
-        testStream.close();
     }
 
     @Test
@@ -69,18 +63,21 @@ public class MaskReadTest {
         settings.setGammaFactor(AlignmentBoardSettings.DEFAULT_GAMMA);
         settings.setChosenDownSampleRate(AlignmentBoardControlsDialog.UNSELECTED_DOWNSAMPLE_RATE);
         settings.setDownSampleGuess( 2.0f );
-        RenderablesMaskBuilder renderablesMaskBuilder = new RenderablesMaskBuilder( settings, null );
+        RenderableBean bean = new RenderableBean();
+        RenderablesMaskBuilder renderablesMaskBuilder = new RenderablesMaskBuilder( settings, Arrays.asList(bean) );
         Collection<MaskChanDataAcceptorI> acceptors = new ArrayList<MaskChanDataAcceptorI>();
         acceptors.add( renderablesMaskBuilder );
 
         MaskChanMultiFileLoader loader = new MaskChanMultiFileLoader();
         loader.setAcceptors(acceptors);
-        RenderableBean bean = new RenderableBean();
-        //loader.setRenderableBeans(Arrays.asList( bean ) );
 
         MaskChanStreamSourceI streamSource = new MaskChanStreamSourceI() {
             @Override
             public InputStream getMaskInputStream() throws IOException {
+                InputStream testStream = this.getClass().getResourceAsStream( TEST_FILE_NAME );
+                if ( testStream == null ) {
+                    testStream = new FileInputStream( LOCAL_FILE_PATH );
+                }
                 return new BufferedInputStream( testStream );
             }
 
