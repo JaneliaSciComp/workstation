@@ -6,6 +6,7 @@ import org.janelia.it.FlyWorkstation.gui.WorkstationEnvironment;
 import org.janelia.it.FlyWorkstation.gui.framework.pref_controller.PrefController;
 import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.FlyWorkstation.gui.framework.viewer.baseball_card.BaseballCard;
+import org.janelia.it.FlyWorkstation.gui.framework.viewer.search.SolrResultsMetaData;
 import org.janelia.it.FlyWorkstation.gui.util.panels.DataSourceSettingsPanel;
 import org.janelia.it.FlyWorkstation.model.entity.RootedEntity;
 import org.janelia.it.FlyWorkstation.shared.util.ConsoleProperties;
@@ -135,7 +136,12 @@ public class BaseballCardPanelTest extends JFrame {
             i++;
         }
         //long elapsedTime, int resultCount, String queryString
-        panel.setRootedEntities( rEntities, 2000, guids.length, "Something" );
+        SolrResultsMetaData srmd = new SolrResultsMetaData();
+        srmd.setRawNumHits( 2000 );
+        srmd.setNumHits( guids.length );
+        srmd.setQueryStr( "Something" );
+        srmd.setSearchDuration( 1000 );
+        panel.setRootedEntities( rEntities, srmd );
     }
 
     private EntityData getEntityData(String name,
