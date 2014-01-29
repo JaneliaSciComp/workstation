@@ -5,10 +5,6 @@ package org.janelia.it.FlyWorkstation.gui.slice_viewer.annotation;
 
 import org.janelia.it.FlyWorkstation.gui.util.Icons;
 import org.janelia.it.FlyWorkstation.signal.Signal;
-import org.janelia.it.FlyWorkstation.signal.Slot1;
-import org.janelia.it.FlyWorkstation.tracing.PathTraceRequest;
-import org.janelia.it.FlyWorkstation.tracing.TracedPathSegment;
-import org.janelia.it.jacs.model.user_data.tiledMicroscope.TmAnchoredPathEndpoints;
 
 import javax.swing.*;
 
@@ -77,6 +73,10 @@ public class AnnotationPanel extends JPanel
 
         setupUI();
         setupSignals();
+
+        // testing; add a border so I can visualize size vs. alignment problems:
+        // showOutline(this);
+
     }
 
     @Override
@@ -106,19 +106,32 @@ public class AnnotationPanel extends JPanel
     }
 
     private void setupUI() {
-        setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
-
-        // add a little breathing space at the top of the panel
-        add(Box.createRigidArea(new Dimension(0, 20)));
+        setLayout(new GridBagLayout());
 
         // ----- workspace information; show name, whatever attributes
         workspaceInfoPanel = new WorkspaceInfoPanel();
-        add(workspaceInfoPanel);
+        GridBagConstraints cTop = new GridBagConstraints();
+        cTop.gridx = 0;
+        cTop.gridy = 0;
+        cTop.anchor = GridBagConstraints.PAGE_START;
+        cTop.fill = GridBagConstraints.HORIZONTAL;
+        cTop.insets = new Insets(10, 0, 0, 0);
+        cTop.weighty = 0.0;
+        add(workspaceInfoPanel, cTop);
+
+        // I want the rest of the components to stack vertically;
+        //  components should fill or align left as appropriate
+        GridBagConstraints cVert = new GridBagConstraints();
+        cVert.gridx = 0;
+        cVert.gridy = GridBagConstraints.RELATIVE;
+        cVert.anchor = GridBagConstraints.PAGE_START;
+        cVert.fill = GridBagConstraints.HORIZONTAL;
+        cVert.weighty = 0.0;
 
         // buttons for doing workspace things
         JPanel workspaceButtonsPanel = new JPanel();
         workspaceButtonsPanel.setLayout(new BoxLayout(workspaceButtonsPanel, BoxLayout.LINE_AXIS));
-        add(workspaceButtonsPanel);
+        add(workspaceButtonsPanel, cVert);
 
         JButton createWorkspaceButtonPlus = new JButton("+");
         workspaceButtonsPanel.add(createWorkspaceButtonPlus);
@@ -154,7 +167,7 @@ public class AnnotationPanel extends JPanel
 
         // list of neurons in workspace
         workspaceNeuronList = new WorkspaceNeuronList();
-        add(workspaceNeuronList);
+        add(workspaceNeuronList, cVert);
 
         // neuron tool pop-up menu (triggered by button, below)
         final JPopupMenu neuronToolMenu = new JPopupMenu();
@@ -191,7 +204,7 @@ public class AnnotationPanel extends JPanel
         // buttons for acting on neurons (which are in the list immediately above):
         JPanel neuronButtonsPanel = new JPanel();
         neuronButtonsPanel.setLayout(new BoxLayout(neuronButtonsPanel, BoxLayout.LINE_AXIS));
-        add(neuronButtonsPanel);
+        add(neuronButtonsPanel, cVert);
 
         JButton createNeuronButtonPlus = new JButton("+");
         neuronButtonsPanel.add(createNeuronButtonPlus);
@@ -226,14 +239,14 @@ public class AnnotationPanel extends JPanel
 
 
         // ----- neuron information; show name, whatever attributes, list of neurites
-        add(Box.createRigidArea(new Dimension(0, 20)));
+        add(Box.createRigidArea(new Dimension(0, 20)), cVert);
         neuriteTreePanel = new NeuriteTreePanel();
-        add(neuriteTreePanel);
+        add(neuriteTreePanel, cVert);
 
         // buttons for acting on annotations or neurites (which are in the list immediately above):
         JPanel neuriteButtonsPanel = new JPanel();
         neuriteButtonsPanel.setLayout(new BoxLayout(neuriteButtonsPanel, BoxLayout.LINE_AXIS));
-        add(neuriteButtonsPanel);
+        add(neuriteButtonsPanel, cVert);
 
         JButton centerAnnotationButton = new JButton("Center");
         centerAnnotationAction.putValue(Action.NAME, "Center");
@@ -248,7 +261,25 @@ public class AnnotationPanel extends JPanel
 
 
         // the bilge...
-        add(Box.createVerticalGlue());
+        GridBagConstraints cBottom = new GridBagConstraints();
+        cBottom.gridx = 0;
+        cBottom.gridy = GridBagConstraints.RELATIVE;
+        cBottom.anchor = GridBagConstraints.PAGE_START;
+        cBottom.fill = GridBagConstraints.BOTH;
+        cBottom.weighty = 1.0;
+        add(Box.createVerticalGlue(), cBottom);
+    }
+
+    /**
+     * add a visible border (default green) to a panel to help debug alignment/packing problems
+     */
+    private void showOutline(JPanel panel) {
+        showOutline(panel, Color.green);
+
+    }
+
+    private void showOutline(JPanel panel, Color color) {
+        panel.setBorder(BorderFactory.createCompoundBorder(BorderFactory.createLineBorder(color), getBorder()));
     }
 
     class ChooseAnnotationColorAction extends AbstractAction {

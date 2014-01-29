@@ -39,7 +39,7 @@ public class WorkspaceInfoPanel extends JPanel
         setLayout(new BoxLayout(this, BoxLayout.PAGE_AXIS));
     
         // workspace information; show name, whatever attributes
-        add(new JLabel("Workspace", JLabel.CENTER));
+        add(new JLabel("Workspace", JLabel.LEADING));
         add(Box.createRigidArea(new Dimension(0, 10)));
 
         workspaceNameLabel = new JLabel("", JLabel.LEADING);

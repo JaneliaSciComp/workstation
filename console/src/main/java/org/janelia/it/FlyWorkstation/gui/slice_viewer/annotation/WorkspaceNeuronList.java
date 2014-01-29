@@ -56,12 +56,18 @@ public class WorkspaceNeuronList extends JPanel {
     }
 
     private void setupUI() {
-
-        setLayout(new BoxLayout(this, BoxLayout.PAGE_AXIS));
+        setLayout(new GridBagLayout());
 
         // list of neurons
-        add(Box.createRigidArea(new Dimension(0, 10)));
-        add(new JLabel("Neurons", JLabel.CENTER));
+        GridBagConstraints c = new GridBagConstraints();
+        c.gridx = 0;
+        c.gridy = 0;
+        c.weightx = 1.0;
+        c.anchor = GridBagConstraints.PAGE_START;
+        c.fill = GridBagConstraints.HORIZONTAL;
+        c.insets = new Insets(10, 0, 0, 0);
+        add(new JLabel("Neurons", JLabel.LEADING), c);
+
         neuronListModel = new DefaultListModel();
         neuronListBox = new JList(neuronListModel);
         JScrollPane neuronScrollPane = new JScrollPane(neuronListBox);
@@ -99,7 +105,12 @@ public class WorkspaceNeuronList extends JPanel {
                 }
         );
 
-        add(neuronScrollPane);
+        GridBagConstraints c2 = new GridBagConstraints();
+        c2.gridx = 0;
+        c2.gridy = GridBagConstraints.RELATIVE;
+        c2.anchor = GridBagConstraints.PAGE_START;
+        c2.fill = GridBagConstraints.HORIZONTAL;
+        add(neuronScrollPane, c2);
 
         loadWorkspace(null);
 

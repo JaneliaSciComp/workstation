@@ -28,8 +28,6 @@ import com.google.common.collect.HashBiMap;
  */
 public class NeuriteTreePanel extends JPanel
 {
-    private JLabel neuronNameLabel;
-
     private JTree neuriteTree;
     private DefaultTreeModel neuriteModel;
     private DefaultMutableTreeNode neuronRootNode;
@@ -53,13 +51,11 @@ public class NeuriteTreePanel extends JPanel
     }
 
     private void setupUI() {
-        setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
+        setLayout(new GridBagLayout());
     
-        // neuron information; show name, whatever attributes
-        // hide until we have something to show besides the name (which is
-        //  visible in the list above)!
+        // neuron information; show name, whatever attributes here,
+        //  but for now, we don't have anything
 
-        neuronNameLabel = new JLabel("");
 
         // neurite tree
         setupNeuriteTreeNavigator();
@@ -70,8 +66,14 @@ public class NeuriteTreePanel extends JPanel
     }
 
     private void setupNeuriteTreeNavigator() {
-        add(Box.createRigidArea(new Dimension(0, 10)));
-        add(new JLabel("Neurites", JLabel.CENTER));
+        GridBagConstraints c = new GridBagConstraints();
+        c.gridx = 0;
+        c.gridy = 0;
+        c.anchor = GridBagConstraints.PAGE_START;
+        c.fill = GridBagConstraints.HORIZONTAL;
+        c.insets = new Insets(10, 0, 0, 0);
+        c.weightx = 1.0;
+        add(new JLabel("Neurites", JLabel.LEADING), c);
 
         // create test tree and style it; no icons, please
         neuronRootNode = new DefaultMutableTreeNode("invisible root node");
@@ -108,7 +110,13 @@ public class NeuriteTreePanel extends JPanel
         JScrollPane treePane = new JScrollPane(neuriteTree);
         // if the tree knows how much to show, it'll tell the JScrollPane:
         neuriteTree.setVisibleRowCount(10);
-        add(treePane);
+
+        GridBagConstraints c2 = new GridBagConstraints();
+        c2.gridx = 0;
+        c2.gridy = GridBagConstraints.RELATIVE;
+        c2.anchor = GridBagConstraints.PAGE_START;
+        c2.fill = GridBagConstraints.HORIZONTAL;
+        add(treePane, c2);
     }
 
     public void printNeuronInfo(TmNeuron neuron) {
@@ -220,20 +228,10 @@ public class NeuriteTreePanel extends JPanel
     }
 
     public void loadNeuron(TmNeuron neuron) {
-        updateNeuronLabel(neuron);
-
         loadNeuriteTreeTagged(neuron);
 
         // testing
         // printNeuronInfo(neuron);
-    }
-
-    public void updateNeuronLabel(TmNeuron neuron) {
-        if (neuron == null) {
-            neuronNameLabel.setText("(no neuron)");
-        } else {
-            neuronNameLabel.setText(neuron.getName());
-        }
     }
 
     private void onAnnotationSingleClicked(TreePath path) {
