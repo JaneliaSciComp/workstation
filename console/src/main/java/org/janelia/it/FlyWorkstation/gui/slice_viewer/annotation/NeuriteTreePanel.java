@@ -79,6 +79,10 @@ public class NeuriteTreePanel extends JPanel
         neuronRootNode = new DefaultMutableTreeNode("invisible root node");
         neuriteModel = new DefaultTreeModel(neuronRootNode);
         neuriteTree = new JTree(neuriteModel);
+        // this is enough to keep the scroll panel wide enough so it doesn't
+        //  need to add scroll bars once the tree is populated
+        neuriteTree.setMinimumSize(new Dimension(200, 10));
+
         labelToAnnotationMap = HashBiMap.create();
 
         neuriteTree.setRootVisible(false);
