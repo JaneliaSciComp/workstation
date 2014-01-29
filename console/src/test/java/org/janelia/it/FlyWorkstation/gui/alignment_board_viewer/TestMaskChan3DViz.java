@@ -80,7 +80,7 @@ public class TestMaskChan3DViz {
 
                     //Display the window.
                     //args.frame.pack();
-                    //frame.setSize( frame.getContentPane().getPreferredSize() );
+                    frame.setSize( 800, 800 );
                     frame.setVisible(true);
 
                 }
@@ -100,6 +100,7 @@ public class TestMaskChan3DViz {
 
         public TestControlCallback( Mip3d mip3d, RenderMappingI renderMapping, Container container ) {
             this.mip3d = mip3d;
+            this.mip3d.resetView();
             this.renderMapping = renderMapping;
             this.container = container;
         }
