@@ -37,6 +37,10 @@ public class RBComparatorTest {
         Collections.sort( beanList, new InvertingComparator( comparator ) );
 
         // Here's the tough part: checking that the order is as expected.
+        checkCollationConformation(beanList);
+    }
+
+    public void checkCollationConformation(List<RenderableBean> beanList) {
         Phase phase = Phase.NF;
         Phase previousPhase = Phase.NF;
         long minVoxelCount = Long.MAX_VALUE;
@@ -75,7 +79,7 @@ public class RBComparatorTest {
                 previousPhase = phase;
             }
 
-            logger.debug( "Bean " + bean.getRenderableEntity().getName() + " " + bean.getType() + " size=" + bean.getVoxelCount() + ", type=" + bean.getType() );
+            logger.debug("Bean " + bean.getRenderableEntity().getName() + " " + bean.getType() + " size=" + bean.getVoxelCount() + ", type=" + bean.getType());
             Assert.assertTrue(
                     "Rule of sort by descending voxel count violated. " + bean.getVoxelCount() + " v " + minVoxelCount,
                     bean.getVoxelCount() <= minVoxelCount
