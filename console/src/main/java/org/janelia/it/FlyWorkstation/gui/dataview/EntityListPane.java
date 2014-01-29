@@ -193,11 +193,14 @@ public abstract class EntityListPane extends JPanel implements SearchConfigurati
         
         loadTask = new SimpleWorker() {
 
+            Entity fullEntity;
+            
             @Override
             protected void doStuff() throws Exception {
+                fullEntity = ModelMgr.getModelMgr().getEntityById(entity.getId());
                 titleLabel.setText("Entity: " + entity.getEntityTypeName() + " (" + entity.getName() + ")");
                 List<Entity> entities = new ArrayList<Entity>();
-                entities.add(entity);
+                entities.add(fullEntity);
                 setEntities(entities);
             }
 
@@ -206,7 +209,7 @@ public abstract class EntityListPane extends JPanel implements SearchConfigurati
             	updateTableModel();
                 resultsTable.showTable();
                 resultsTable.getTable().getSelectionModel().setSelectionInterval(0, 0);
-                entitySelected(entity);
+                entitySelected(fullEntity);
             }
 
             @Override
