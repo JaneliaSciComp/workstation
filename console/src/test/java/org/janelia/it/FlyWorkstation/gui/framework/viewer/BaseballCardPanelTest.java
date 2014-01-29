@@ -1,15 +1,9 @@
 package org.janelia.it.FlyWorkstation.gui.framework.viewer;
 
-import org.janelia.it.FlyWorkstation.api.facade.concrete_facade.ejb.EJBFacadeManager;
-import org.janelia.it.FlyWorkstation.api.facade.facade_mgr.FacadeManager;
 import org.janelia.it.FlyWorkstation.gui.WorkstationEnvironment;
-import org.janelia.it.FlyWorkstation.gui.framework.pref_controller.PrefController;
-import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.FlyWorkstation.gui.framework.viewer.baseball_card.BaseballCard;
 import org.janelia.it.FlyWorkstation.gui.framework.viewer.search.SolrResultsMetaData;
-import org.janelia.it.FlyWorkstation.gui.util.panels.DataSourceSettingsPanel;
 import org.janelia.it.FlyWorkstation.model.entity.RootedEntity;
-import org.janelia.it.FlyWorkstation.shared.util.ConsoleProperties;
 import org.janelia.it.jacs.model.entity.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
