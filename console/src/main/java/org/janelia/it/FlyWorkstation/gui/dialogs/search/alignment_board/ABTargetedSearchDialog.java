@@ -383,6 +383,9 @@ public class ABTargetedSearchDialog extends ModalDialog {
 
                             // Establish whether this is or is not a fragment that has been aligned.
                             Entity pipelineResult = ModelMgr.getModelMgr().getAncestorWithType(entity, EntityConstants.TYPE_NEURON_SEPARATOR_PIPELINE_RESULT);
+                            Entity alignmentEntity = ModelMgr.getModelMgr().getAncestorWithType(pipelineResult, EntityConstants.TYPE_ALIGNMENT_RESULT);
+                            // Here: add the tests from Alignment Board Context to see if it is OK
+
                             boolean properFragment = ( pipelineResult != null );
 
                             // Try to verify this is a proper neuron fragment.
