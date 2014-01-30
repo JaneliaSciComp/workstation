@@ -1,21 +1,16 @@
 package org.janelia.it.FlyWorkstation.gui.dialogs.search.alignment_board;
 
-import org.hibernate.cfg.annotations.QueryBinder;
 import org.janelia.it.FlyWorkstation.gui.dialogs.ModalDialog;
 import org.janelia.it.FlyWorkstation.gui.dialogs.search.SearchConfiguration;
 import org.janelia.it.FlyWorkstation.gui.dialogs.search.SearchParametersPanel;
 import org.janelia.it.FlyWorkstation.gui.framework.console.Browser;
 import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.FlyWorkstation.gui.framework.viewer.BaseballCardPanel;
-import org.janelia.it.FlyWorkstation.gui.framework.viewer.RootedEntityReceiver;
 import org.janelia.it.FlyWorkstation.gui.framework.viewer.baseball_card.BaseballCard;
-import org.janelia.it.FlyWorkstation.gui.framework.viewer.search.SolrResultsMetaData;
 import org.janelia.it.FlyWorkstation.model.entity.RootedEntity;
 import org.janelia.it.FlyWorkstation.model.viewer.AlignmentBoardContext;
 import org.janelia.it.FlyWorkstation.shared.workers.SimpleWorker;
-import org.janelia.it.jacs.compute.api.support.SolrQueryBuilder;
 import org.janelia.it.jacs.model.entity.Entity;
-import org.janelia.it.jacs.model.entity.EntityConstants;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -238,43 +233,6 @@ public class ABTargetedSearchDialog extends ModalDialog {
             param.setStartingRow( 0 );
             SimpleWorker worker = new SearchWorker( param, queryBuilderSource.getQueryBuilder(), context );
             worker.execute();
-
-/*
-            SearchWorker.SearchWorkerParam neuronSepQryParam = new SearchWorker.SearchWorkerParam();
-            RootedEntityReceiver rootedEntityReceiver = new RootedEntityReceiver() {
-                @Override
-                public void setRootedEntities(
-                        final List<RootedEntity> rootedNeuronSepEntities,
-                        SolrResultsMetaData solrResultsMetaData
-                ) {
-                    // Can use the returned entities to winnow the second search.
-                    param.setReceiver( new RootedEntityReceiver() {
-                        public void setRootedEntities( List<RootedEntity> entities, SolrResultsMetaData metadata ) {
-                            // Will use the neuron sep entities to filter THESE entities.
-                            baseballCardPanel.setRootedEntities( entities, metadata );
-                        }
-                    });
-                }
-            };
-
-            // This is the "all-in-space" search.
-            neuronSepQryParam.setContext(context.getAlignmentContext());
-            neuronSepQryParam.setErrorHandler(errorHandler);
-            neuronSepQryParam.setStartingRow( 0 );
-            SolrQueryBuilder neuronSepQryBuilder = queryBuilderSource.getQueryBuilder();
-            String alignSpaceName = context.getAlignmentContext().getAlignmentSpaceName();
-            String oRes = context.getAlignmentContext().getOpticalResolution();
-            String pRes = context.getAlignmentContext().getPixelResolution();
-            neuronSepQryBuilder.setSearchString(oRes + " " + pRes);
-            Map<String,Set<String>> searchFilters = new HashMap<String,Set<String>>();
-            Set<String> typeAlternates = new HashSet<String>();
-            typeAlternates.add(EntityConstants.TYPE_NEURON_SEPARATOR_PIPELINE_RESULT);
-            searchFilters.put("entity_type", typeAlternates);
-            neuronSepQryBuilder.setFilters(searchFilters);
-            SearchWorker neuronSepQryWorker = new SearchWorker(neuronSepQryParam, neuronSepQryBuilder, context);
-            neuronSepQryWorker.setMaxQueryRows( 0 );
-            neuronSepQryWorker.execute();
-*/
 
         }
         private void showLoadingIndicator() {
