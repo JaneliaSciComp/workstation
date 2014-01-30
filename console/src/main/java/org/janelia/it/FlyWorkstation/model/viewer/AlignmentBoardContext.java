@@ -56,21 +56,24 @@ public class AlignmentBoardContext extends AlignedItem {
         return context;
     }
 
-    private boolean verifyCompatability(String itemName, String alignmentSpaceName, String opticalResolution, String pixelResolution) {
+    private boolean verifyCompatability(String itemName, String alignmentSpaceName, String opticalResolution, String pixelResolution, boolean immediateReport) {
         if (context==null) return true;
         
         if (!context.getAlignmentSpaceName().equals(alignmentSpaceName)) {
-            JOptionPane.showMessageDialog(SessionMgr.getBrowser(),
+            if ( immediateReport )
+                JOptionPane.showMessageDialog(SessionMgr.getBrowser(),
                     "Neuron is not aligned to a compatible alignment space ("+context.getAlignmentSpaceName()+"!="+alignmentSpaceName+")", "Error", JOptionPane.ERROR_MESSAGE);
             return false;
         }
         else if (!context.getOpticalResolution().equals(opticalResolution)) {
-            JOptionPane.showMessageDialog(SessionMgr.getBrowser(),
+            if ( immediateReport )
+                JOptionPane.showMessageDialog(SessionMgr.getBrowser(),
                     "Neuron is not aligned to a compatible optical resolution ("+context.getOpticalResolution()+"!="+opticalResolution+")", "Error", JOptionPane.ERROR_MESSAGE);
             return false;
         }
         else if (!context.getPixelResolution().equals(pixelResolution)) {
-            JOptionPane.showMessageDialog(SessionMgr.getBrowser(),
+            if ( immediateReport )
+                JOptionPane.showMessageDialog(SessionMgr.getBrowser(),
                     "Neuron is not aligned to a compatible pixel resolution ("+context.getPixelResolution()+"!="+pixelResolution+")", "Error", JOptionPane.ERROR_MESSAGE);
             return false;
         }
@@ -151,7 +154,30 @@ public class AlignmentBoardContext extends AlignedItem {
                EntityConstants.TYPE_SAMPLE.equals( type ) ||
                EntityConstants.TYPE_IMAGE_3D.equals( type );
     }
-    
+
+    /**
+     * This may be called to figure out if something should be passed over here at all.
+     *
+     * @param rootedEntity possible add candidate.
+     * @param separationEntity neuron sep ancestor.
+     * @param alignmentEntity alignment space ancestor.
+     * @param immediateReport pop a dialog if false, to tell user why.
+     * @return true if ok.
+     */
+    public boolean isCompatibleAlignmentSpace(RootedEntity rootedEntity, Entity separationEntity, Entity alignmentEntity, boolean immediateReport) {
+        String alignmentSpaceName = alignmentEntity.getValueByAttributeName(EntityConstants.TYPE_ALIGNMENT_SPACE);
+        String opticalResolution = separationEntity.getValueByAttributeName(EntityConstants.ATTRIBUTE_OPTICAL_RESOLUTION);
+        String pixelResolution = separationEntity.getValueByAttributeName(EntityConstants.ATTRIBUTE_PIXEL_RESOLUTION);
+        if (!verifyCompatability(rootedEntity.getName(), alignmentSpaceName, opticalResolution, pixelResolution, immediateReport)) {
+            return false;
+        }
+
+        if (context==null) {
+            this.context = new AlignmentContext(alignmentSpaceName, opticalResolution, pixelResolution);
+        }
+        return true;
+    }
+
     /**
      * Add a new aligned entity to the board. This method must be called from a worker thread.
      * 
@@ -270,17 +296,7 @@ public class AlignmentBoardContext extends AlignedItem {
     }
 
     private boolean isCompatibleAlignmentSpace(RootedEntity rootedEntity, Entity separationEntity, Entity alignmentEntity) {
-        String alignmentSpaceName = alignmentEntity.getValueByAttributeName(EntityConstants.TYPE_ALIGNMENT_SPACE);
-        String opticalResolution = separationEntity.getValueByAttributeName(EntityConstants.ATTRIBUTE_OPTICAL_RESOLUTION);
-        String pixelResolution = separationEntity.getValueByAttributeName(EntityConstants.ATTRIBUTE_PIXEL_RESOLUTION);
-        if (!verifyCompatability(rootedEntity.getName(), alignmentSpaceName, opticalResolution, pixelResolution)) {
-            return false;
-        }
-
-        if (context==null) {
-            this.context = new AlignmentContext(alignmentSpaceName, opticalResolution, pixelResolution);
-        }
-        return true;
+        return isCompatibleAlignmentSpace(rootedEntity, separationEntity, alignmentEntity, true);
     }
 
     private Entity getPipelineAncestor(RootedEntity rootedEntity) throws Exception {

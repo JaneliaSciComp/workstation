@@ -130,7 +130,6 @@ public class ABTargetedSearchDialog extends ModalDialog {
         searchParamsPanel.getActionMap().put("enterAction", searchAction);
 
 
-        // todo avoid dependency on general search dialog for this.
         List<String> searchHistory = (List<String>) SessionMgr.getSessionMgr().getModelProperty( SEARCH_HISTORY_MDL_PROP );
         if ( searchHistory == null ) {
             searchHistory = new ArrayList<String>();
@@ -210,19 +209,6 @@ public class ABTargetedSearchDialog extends ModalDialog {
         return new BaseballCardPanel( true, dialogWidth, DEFAULT_ROWS_PER_PAGE, controlCallback );
     }
 
-    /**
-     * Allow subordinates to tell this thing where to go--without having knowledge of their superior.
-     */
-    public class ControlsCallback {
-        private ABTargetedSearchDialog dialog;
-        public ControlsCallback( ABTargetedSearchDialog dialog ) {
-            this.dialog = dialog;
-        }
-        public void dismiss() {
-            dialog.setVisible( false );
-        }
-    }
-
     private static class QueryLaunchAction extends AbstractAction {
         private BaseballCardPanel baseballCardPanel;
         private Long searchRootId;
@@ -256,7 +242,7 @@ public class ABTargetedSearchDialog extends ModalDialog {
             param.setSearchRootId(searchRootId);
             param.setErrorHandler(errorHandler);
             param.setStartingRow( 0 );
-            SimpleWorker worker = new SearchWorker( param, queryBuilderSource.getQueryBuilder() );
+            SimpleWorker worker = new SearchWorker( param, queryBuilderSource.getQueryBuilder(), context );
             worker.execute();
         }
         private void showLoadingIndicator() {
@@ -276,10 +262,12 @@ public class ABTargetedSearchDialog extends ModalDialog {
         private List<RootedEntity> rootedResults;
         private SolrResultsMetaData resultsMetaData;
         private SolrQueryBuilder queryBuilder;
+        private AlignmentBoardContext context;
 
-        public SearchWorker( SearchWorkerParam param, SolrQueryBuilder queryBuilder ) {
+        public SearchWorker( SearchWorkerParam param, SolrQueryBuilder queryBuilder, AlignmentBoardContext context ) {
             this.param = param;
             this.queryBuilder = queryBuilder;
+            this.context = context;
         }
         @Override
         protected void doStuff() throws Exception {
@@ -298,7 +286,7 @@ public class ABTargetedSearchDialog extends ModalDialog {
             query.setStart( param.getStartingRow() );
             query.setRows( MAX_QUERY_ROWS );
 
-            SolrResults results = ModelMgr.getModelMgr().searchSolr(query);
+            SolrResults results = ModelMgr.getModelMgr().searchSolr( query );
             List<Entity> resultList = results.getResultList();
             rootedResults = getCompatibleRootedEntities( resultList );
 
@@ -340,7 +328,7 @@ public class ABTargetedSearchDialog extends ModalDialog {
         @Override
         protected void hadError(Throwable error) {
             param.getErrorHandler().handleError( error );
-            SessionMgr.getSessionMgr().handleException( error );
+            SessionMgr.getSessionMgr().handleException(error);
         }
 
         /**
@@ -354,6 +342,8 @@ public class ABTargetedSearchDialog extends ModalDialog {
             logger.info("Found {} raw entities.", entities.size());
             List<RootedEntity> rtnVal = new ArrayList<RootedEntity>();
 
+            int nonCompatibleNeuronCount = 0;
+            int nonCompatibleSampleCount = 0;
             // Next, walk each entity's tree looking for proper info.
             MAX_OUT:
             for ( Entity entity: entities ) {
@@ -373,30 +363,17 @@ public class ABTargetedSearchDialog extends ModalDialog {
                         if ( isSampleCompatible( param.getContext(), rootedEntity) ) {
                             rtnVal.add( rootedEntity );
                         }
+                        else {
+                            nonCompatibleSampleCount ++;
+                        }
                     }
                     else {
                         // Find ancestor to figure out if it is compatible.
-                        Entity sampleEntity = ModelMgr.getModelMgr().getAncestorWithType(entity, EntityConstants.TYPE_SAMPLE);
-                        RootedEntity sampleRootedEntity = new RootedEntity( sampleEntity );
-
-                        if ( isSampleCompatible( param.getContext(), sampleRootedEntity) ) {
-
-                            // Establish whether this is or is not a fragment that has been aligned.
-                            Entity pipelineResult = ModelMgr.getModelMgr().getAncestorWithType(entity, EntityConstants.TYPE_NEURON_SEPARATOR_PIPELINE_RESULT);
-                            Entity alignmentEntity = ModelMgr.getModelMgr().getAncestorWithType(pipelineResult, EntityConstants.TYPE_ALIGNMENT_RESULT);
-                            // Here: add the tests from Alignment Board Context to see if it is OK
-
-                            boolean properFragment = ( pipelineResult != null );
-
-                            // Try to verify this is a proper neuron fragment.
-                            if ( properFragment ) {
-                                rtnVal.add( new RootedEntity( entity ) );
-                            }
-                            else {
-                                logger.info("No pipeline result found for neuron {}.", entity.getId() + ":" + entity.getName());
-                                rtnVal.add( sampleRootedEntity );
-                            }
-
+                        if ( isNeuronCompatible(entity) ) {
+                            rtnVal.add( new RootedEntity( entity ) );
+                        }
+                        else {
+                            nonCompatibleNeuronCount ++;
                         }
 
                     }
@@ -406,12 +383,18 @@ public class ABTargetedSearchDialog extends ModalDialog {
                     throw new RuntimeException( ex );
                 }
 
-                if ( rtnVal.size() >= MAX_RESULT_ROWS) {
+                if ( rtnVal.size() >= MAX_RESULT_ROWS ) {
+                    logger.info("Hit maximum of {}.", MAX_RESULT_ROWS);
                     break MAX_OUT;
                 }
             }
 
-            logger.info("Filtered to {} entities.", rtnVal.size());
+            logger.info( "Filtered to {} entities.", rtnVal.size() );
+            logger.info(
+                    "Non-compatible neurons: {}, non-compatible samples: {}.",
+                    nonCompatibleNeuronCount,
+                    nonCompatibleSampleCount
+            );
             return rtnVal;
         }
 
@@ -432,6 +415,19 @@ public class ABTargetedSearchDialog extends ModalDialog {
 
             rtnVal = foundMatch;
             return rtnVal;
+        }
+
+        private boolean isNeuronCompatible(Entity entity) throws Exception {
+
+            Entity separationEntity = ModelMgr.getModelMgr().getAncestorWithType( entity, EntityConstants.TYPE_NEURON_SEPARATOR_PIPELINE_RESULT );
+            if ( separationEntity == null ) {
+                return false;
+            }
+            Entity alignmentEntity = ModelMgr.getModelMgr().getAncestorWithType( separationEntity, EntityConstants.TYPE_ALIGNMENT_RESULT );
+            if ( alignmentEntity == null ) {
+                return false;
+            }
+            return context.isCompatibleAlignmentSpace( new RootedEntity( entity ), separationEntity, alignmentEntity, false );
         }
 
         public static class SearchWorkerParam {
