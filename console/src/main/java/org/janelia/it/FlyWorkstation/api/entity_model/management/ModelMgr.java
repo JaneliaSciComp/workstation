@@ -903,7 +903,11 @@ public class ModelMgr {
     public List<MappedId> getProjectedResults(List<Long> entityIds, List<String> upMapping, List<String> downMapping) throws Exception {
         return FacadeManager.getFacadeManager().getEntityFacade().getProjectedResults(entityIds, upMapping, downMapping);
     }
-    
+
+    public List<Long> getEntityIdsInAlignmentSpace(String opticalRes, String pixelRes, List<Long> guids) throws Exception {
+        return FacadeManager.getFacadeManager().getAnnotationFacade().getEntityIdsInAlignmentSpace( opticalRes, pixelRes, guids);
+    }
+
     public Object[] getPatternAnnotationQuantifierMapsFromSummary() throws Exception {
         return FacadeManager.getFacadeManager().getAnnotationFacade().getPatternAnnotationQuantifierMapsFromSummary();
     }

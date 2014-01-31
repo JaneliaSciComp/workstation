@@ -120,9 +120,17 @@ public class SearchWorker extends SimpleWorker {
      * @param entities from possibly many alingment contexts
      * @return those from specific context.
      */
-    private List<RootedEntity> getCompatibleRootedEntities( Collection<Entity> entities ) {
+    private List<RootedEntity> getCompatibleRootedEntities( Collection<Entity> entities ) throws Exception {
         logger.info("Found {} raw entities.", entities.size());
         List<RootedEntity> rtnVal = new ArrayList<RootedEntity>();
+
+        List<Long> guids = new ArrayList<Long>();
+        for ( Entity entity: entities ) {
+            guids.add( entity.getId() );
+        }
+        String opticalRes = context.getAlignmentContext().getOpticalResolution();
+        String pixelRes = context.getAlignmentContext().getPixelResolution();
+        List<Long> compatibleList = ModelMgr.getModelMgr().getEntityIdsInAlignmentSpace(opticalRes, pixelRes, guids);
 
         int nonCompatibleNeuronCount = 0;
         int nonCompatibleSampleCount = 0;
@@ -151,7 +159,7 @@ public class SearchWorker extends SimpleWorker {
                 }
                 else {
                     // Find ancestor to figure out if it is compatible.
-                    if ( isNeuronCompatible(entity) ) {
+                    if ( isNeuronCompatible(entity, compatibleList) ) {
                         rtnVal.add( new RootedEntity( entity ) );
                     }
                     else {
@@ -199,17 +207,8 @@ public class SearchWorker extends SimpleWorker {
         return rtnVal;
     }
 
-    private boolean isNeuronCompatible(Entity entity) throws Exception {
-
-        Entity separationEntity = ModelMgr.getModelMgr().getAncestorWithType( entity, EntityConstants.TYPE_NEURON_SEPARATOR_PIPELINE_RESULT );
-        if ( separationEntity == null ) {
-            return false;
-        }
-        Entity alignmentEntity = ModelMgr.getModelMgr().getAncestorWithType( separationEntity, EntityConstants.TYPE_ALIGNMENT_RESULT );
-        if ( alignmentEntity == null ) {
-            return false;
-        }
-        return context.isCompatibleAlignmentSpace( new RootedEntity( entity ), separationEntity, alignmentEntity, false );
+    private boolean isNeuronCompatible(Entity entity, List<Long> compatibleList) throws Exception {
+        return ( compatibleList.contains( entity.getId() ) );
     }
 
     public static class SearchWorkerParam {
