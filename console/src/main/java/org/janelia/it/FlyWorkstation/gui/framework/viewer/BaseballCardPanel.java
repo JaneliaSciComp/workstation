@@ -33,7 +33,7 @@ public class BaseballCardPanel extends JPanel implements RootedEntityReceiver {
     public static final String IMAGE_COLUMN_HEADER = "Image";
     public static final String DETAILS_COLUMN_HEADER = "Details";
 
-    private static final String STATUS_TEXT_FMT = "%d results retained of %d found for '%s', %d results loaded.";
+    private static final String STATUS_TEXT_FMT = "%d results found for '%s' in this alignment context, %d results loaded.";
     private static final String STATUS_TOOLTIP_FMT = "Query took %d milliseconds";
 
     private List<BaseballCard> cards;
@@ -253,7 +253,6 @@ public class BaseballCardPanel extends JPanel implements RootedEntityReceiver {
                 String.format(
                         STATUS_TEXT_FMT,
                         solrResultsMetaData.getNumHits(),
-                        solrResultsMetaData.getRawNumHits(),
                         solrResultsMetaData.getQueryStr(),
                         cardTable.getRows().size()
                 )
