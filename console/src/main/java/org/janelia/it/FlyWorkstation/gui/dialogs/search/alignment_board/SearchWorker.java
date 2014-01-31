@@ -134,6 +134,8 @@ public class SearchWorker extends SimpleWorker {
 
         int nonCompatibleNeuronCount = 0;
         int nonCompatibleSampleCount = 0;
+        int incorrectTypeCount = 0;
+        Set<String> incorrectTypes = new HashSet<String>();
         // Next, walk each entity's tree looking for proper info.
         MAX_OUT:
         for ( Entity entity: entities ) {
@@ -157,7 +159,7 @@ public class SearchWorker extends SimpleWorker {
                         nonCompatibleSampleCount ++;
                     }
                 }
-                else {
+                else if ( entity.getEntityTypeName().equals( EntityConstants.TYPE_NEURON_FRAGMENT ) ) {
                     // Find ancestor to figure out if it is compatible.
                     if ( isNeuronCompatible(entity, compatibleList) ) {
                         rtnVal.add( new RootedEntity( entity ) );
@@ -166,6 +168,10 @@ public class SearchWorker extends SimpleWorker {
                         nonCompatibleNeuronCount ++;
                     }
 
+                }
+                else {
+                    incorrectTypes.add( entity.getEntityTypeName() );
+                    incorrectTypeCount ++;
                 }
 
             } catch ( Exception ex ) {
@@ -185,6 +191,11 @@ public class SearchWorker extends SimpleWorker {
                 nonCompatibleNeuronCount,
                 nonCompatibleSampleCount
         );
+        StringBuilder incorrectTypeBuf = new StringBuilder();
+        for ( String type: incorrectTypes ) {
+            incorrectTypeBuf.append( type ).append( " " );
+        }
+        logger.info( "Found {} instances of these non-filtered types /{}/.", incorrectTypeCount, incorrectTypeBuf );
         return rtnVal;
     }
 
