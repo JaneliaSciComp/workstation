@@ -25,6 +25,8 @@ public class AnnotationModel
 
 if I had a hammer, you bet I'd be hammering in the morning
 
+in the evening...not so much
+
 this class is responsible for handling requests from the AnnotationManager.  those
 requests are ready-to-execute; the AnnotationManager has taken care of validation.
 the requests may map one-to-one onto atomic operations in the TiledMicroscopeDAO,
