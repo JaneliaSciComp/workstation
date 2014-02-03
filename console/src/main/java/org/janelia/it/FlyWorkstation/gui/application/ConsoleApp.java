@@ -26,7 +26,7 @@ import java.awt.*;
  * User: saffordt
  * Date: 2/8/11
  * Time: 12:10 PM
- * This is the main workstation class for the console client. 
+ * This is the main class for the workstation client. 
  */
 public class ConsoleApp {
 	
