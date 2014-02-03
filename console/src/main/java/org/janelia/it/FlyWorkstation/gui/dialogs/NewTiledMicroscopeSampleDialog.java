@@ -1,27 +1,19 @@
 package org.janelia.it.FlyWorkstation.gui.dialogs;
 
 import org.janelia.it.FlyWorkstation.gui.framework.actions.CreateTiledMicroscopeSampleAction;
-import org.janelia.it.FlyWorkstation.shared.util.text_component.StandardTextField;
+import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr;
+import org.jdesktop.swingx.VerticalLayout;
 
 import javax.swing.*;
-import javax.swing.border.Border;
-import javax.swing.border.EtchedBorder;
-import javax.swing.border.TitledBorder;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 
 public class NewTiledMicroscopeSampleDialog extends JDialog {
-  Border border1;
-  JLabel nameLabel = new JLabel();
-  JLabel pathToRenderLabel = new JLabel();
-  JPanel samplePanel = new JPanel();
-  Border border2;
-  TitledBorder titledBorder2;
   JButton okButton = new JButton();
   JButton cancelButton = new JButton();
-  StandardTextField nameTextField = new StandardTextField();
-  StandardTextField pathToRenderFolderTextField = new StandardTextField();
+  JTextField nameTextField = new JTextField(40);
+  JTextField pathToRenderFolderTextField = new JTextField(40);
   private JFrame parentFrame;
 
   public NewTiledMicroscopeSampleDialog(JFrame owner, String title, boolean modal) {
@@ -34,7 +26,10 @@ public class NewTiledMicroscopeSampleDialog extends JDialog {
       e.printStackTrace();
     }
     setUpValues();
-    this.setVisible(true);
+    SwingUtilities.updateComponentTreeUI(this);
+    pack();
+    setLocationRelativeTo(SessionMgr.getBrowser());
+    setVisible(true);
   }
 
 
@@ -45,43 +40,60 @@ public class NewTiledMicroscopeSampleDialog extends JDialog {
 
 
   private void jbInit() throws Exception {
-    border2 = new EtchedBorder(EtchedBorder.RAISED,Color.white,new Color(134, 134, 134));
-    titledBorder2 = new TitledBorder(border2,"Add Sample");
-    nameLabel.setText("Sample Name:");
-    nameLabel.setBounds(new Rectangle(19, 28, 94, 27));
-    border1 = new EtchedBorder(EtchedBorder.RAISED,Color.white,new Color(134, 134, 134));
-    this.getContentPane().setLayout(null);
-    pathToRenderLabel.setBounds(new Rectangle(19, 65, 94, 27));
-    pathToRenderLabel.setText("Path to Render Data Folder:");
+      setTitle("Add Tiled Microscope Sample");
+      setSize(400, 150);
 
-    samplePanel.setBorder(titledBorder2);
-    samplePanel.setBounds(new Rectangle(6, 5, 324, 316));
-    samplePanel.setLayout(null);
-    okButton.setText("OK");
-    okButton.setBounds(new Rectangle(42, 329, 99, 31));
-    okButton.addActionListener(new ActionListener() {
-        public void actionPerformed(ActionEvent e) {
-            new CreateTiledMicroscopeSampleAction(nameTextField.getText(), pathToRenderFolderTextField.getText()).doAction();
-            NewTiledMicroscopeSampleDialog.this.dispose();
-        }
-    });
-    cancelButton.setBounds(new Rectangle(185, 329, 99, 31));
-    cancelButton.setText("Cancel");
-    cancelButton.addActionListener(new ActionListener() {
-        public void actionPerformed(ActionEvent e) {
-            NewTiledMicroscopeSampleDialog.this.dispose();
-        }
-    });
-    nameTextField.setEditable(false);
-    nameTextField.setBounds(new Rectangle(118, 28, 191, 27));
-    pathToRenderFolderTextField.setEditable(false);
-    pathToRenderFolderTextField.setBounds(new Rectangle(118, 65, 191, 27));
-    this.getContentPane().add(samplePanel, null);
-    samplePanel.add(nameTextField, null);
-    samplePanel.add(pathToRenderFolderTextField, null);
-    this.getContentPane().add(okButton, null);
-    this.getContentPane().add(cancelButton, null);
-    this.setSize(345, 397);
-    this.setLocationRelativeTo(parentFrame);
+      JPanel mainPanel = new JPanel();
+      mainPanel.setLayout(new VerticalLayout(5));
+
+      JPanel attrPanel = new JPanel();
+      attrPanel.setLayout(new GridBagLayout());
+
+      JLabel sampleNameLabel = new JLabel("Sample Name:");
+      sampleNameLabel.setLabelFor(nameTextField);
+      GridBagConstraints c = new GridBagConstraints();
+      c.ipadx = 5;
+      c.gridx = 0; c.gridy = 0;
+      attrPanel.add(sampleNameLabel, c);
+      c.gridx = 1;
+      nameTextField.setText("Sample Name Here");
+      attrPanel.add(nameTextField, c);
+
+      // Figure out the user path preference
+      c.gridx = 0; c.gridy = 1;
+      JLabel pathLabel = new JLabel("Path To Render Folder:");
+      attrPanel.add(pathLabel, c);
+      c.gridx = 1;
+      pathToRenderFolderTextField.setText("");
+      attrPanel.add(pathToRenderFolderTextField, c);
+
+      mainPanel.add(attrPanel);
+      add(mainPanel, BorderLayout.CENTER);
+
+      JButton okButton = new JButton("Add Sample");
+      okButton.addActionListener(new ActionListener() {
+          public void actionPerformed(ActionEvent e) {
+              new CreateTiledMicroscopeSampleAction(nameTextField.getText(), pathToRenderFolderTextField.getText()).doAction();
+              NewTiledMicroscopeSampleDialog.this.dispose();
+          }
+      });
+
+      JButton cancelButton = new JButton("Cancel");
+      cancelButton.setToolTipText("Cancel and close this dialog");
+      cancelButton.addActionListener(new ActionListener() {
+          @Override
+          public void actionPerformed(ActionEvent e) {
+              setVisible(false);
+          }
+      });
+
+      JPanel buttonPane = new JPanel();
+      buttonPane.setLayout(new BoxLayout(buttonPane, BoxLayout.LINE_AXIS));
+      buttonPane.setBorder(BorderFactory.createEmptyBorder(0, 10, 10, 10));
+      buttonPane.add(Box.createHorizontalGlue());
+      buttonPane.add(okButton);
+      buttonPane.add(cancelButton);
+
+      add(buttonPane, BorderLayout.SOUTH);
   }
 }

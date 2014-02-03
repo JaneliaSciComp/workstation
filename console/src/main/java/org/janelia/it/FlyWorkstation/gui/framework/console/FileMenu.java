@@ -336,7 +336,7 @@ public class FileMenu extends JMenu {
     }
 
     private void menuNewTiledMicroscopeSample_actionPerformed() {
-        new NewTiledMicroscopeSampleDialog(browser, "Add Tiled Microscope Sample", true).setVisible(true);
+        new NewTiledMicroscopeSampleDialog(browser, "Add Tiled Microscope Sample", true);
     }
 
     private void viewDetails_actionPerformed(ActionEvent e, String protocol, Object dataSource) throws Exception {

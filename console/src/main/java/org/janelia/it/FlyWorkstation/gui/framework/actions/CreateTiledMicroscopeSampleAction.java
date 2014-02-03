@@ -6,7 +6,6 @@ import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.FlyWorkstation.shared.workers.IndeterminateProgressMonitor;
 import org.janelia.it.FlyWorkstation.shared.workers.SimpleWorker;
 import org.janelia.it.jacs.model.user_data.tiledMicroscope.TmSample;
-import org.janelia.it.jacs.shared.utils.StringUtils;
 
 import javax.swing.*;
 
@@ -40,12 +39,6 @@ public class CreateTiledMicroscopeSampleAction implements Action {
             
             @Override
             protected void hadSuccess() {
-
-                // Pick the location of the new sample
-                final String boardName = (String) JOptionPane.showInputDialog(browser, "Path to the sample:\n",
-                        "Add New Tiled Microscope Sample", JOptionPane.PLAIN_MESSAGE, null, null, null);
-                if (StringUtils.isEmpty(boardName)) return;
-
 
                 SimpleWorker worker = new SimpleWorker() {
                     
