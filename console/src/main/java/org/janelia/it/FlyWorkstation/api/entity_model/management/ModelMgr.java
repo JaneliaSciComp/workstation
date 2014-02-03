@@ -993,8 +993,8 @@ public class ModelMgr {
         return FacadeManager.getFacadeManager().getEntityFacade().createTiledMicroscopeNeuron(workspaceId, name);
     }
 
-    public TmSample createTiledMicroscopeSample(Long sampleId, String name) throws Exception {
-        return FacadeManager.getFacadeManager().getEntityFacade().createTiledMicroscopeSample(sampleId, name);
+    public TmSample createTiledMicroscopeSample(String user, String sampleName, String pathToRenderFolder) throws Exception {
+        return FacadeManager.getFacadeManager().getEntityFacade().createTiledMicroscopeSample(user, sampleName, pathToRenderFolder);
     }
 
     public TmGeoAnnotation addGeometricAnnotation(Long neuronId, Long parentAnnotationId, int index,

@@ -2,10 +2,7 @@ package org.janelia.it.FlyWorkstation.gui.framework.actions;
 
 import org.janelia.it.FlyWorkstation.api.entity_model.management.ModelMgr;
 import org.janelia.it.FlyWorkstation.gui.framework.console.Browser;
-import org.janelia.it.FlyWorkstation.gui.framework.console.Perspective;
-import org.janelia.it.FlyWorkstation.gui.framework.outline.EntityOutline;
 import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr;
-import org.janelia.it.FlyWorkstation.model.entity.RootedEntity;
 import org.janelia.it.FlyWorkstation.shared.workers.IndeterminateProgressMonitor;
 import org.janelia.it.FlyWorkstation.shared.workers.SimpleWorker;
 import org.janelia.it.jacs.model.user_data.tiledMicroscope.TmSample;
@@ -19,16 +16,11 @@ import javax.swing.*;
  */
 public class CreateTiledMicroscopeSampleAction implements Action {
 
-    private String name;
-    private RootedEntity sampleRootedEntity;
+    private String name, pathToRenderFolder;
 
-    public CreateTiledMicroscopeSampleAction(String name) {
+    public CreateTiledMicroscopeSampleAction(String name, String pathToRenderFolder) {
         this.name = name;
-    }
-
-    public CreateTiledMicroscopeSampleAction(String name, RootedEntity sampleRootedEntity) {
-        this.name = name;
-        this.sampleRootedEntity = sampleRootedEntity;
+        this.pathToRenderFolder = pathToRenderFolder;
     }
 
     public String getName() {
@@ -49,45 +41,41 @@ public class CreateTiledMicroscopeSampleAction implements Action {
             @Override
             protected void hadSuccess() {
 
-//                if (sample!=null && contexts.isEmpty()) {
-//                    JOptionPane.showMessageDialog(browser,
-//                            "Sample is not aligned to a compatible alignment space", "Error", JOptionPane.ERROR_MESSAGE);
-//                    return;
-//                }
-
-
-
-                // Pick a name for the new board
-                final String boardName = (String) JOptionPane.showInputDialog(browser, "Board Name:\n",
-                        "Create Alignment Board", JOptionPane.PLAIN_MESSAGE, null, null, null);
+                // Pick the location of the new sample
+                final String boardName = (String) JOptionPane.showInputDialog(browser, "Path to the sample:\n",
+                        "Add New Tiled Microscope Sample", JOptionPane.PLAIN_MESSAGE, null, null, null);
                 if (StringUtils.isEmpty(boardName)) return;
 
 
                 SimpleWorker worker = new SimpleWorker() {
                     
                     private TmSample newSample;
-                    
+
                     @Override
                     protected void doStuff() throws Exception {
-                        newSample = ModelMgr.getModelMgr().createTiledMicroscopeSample(null, name);
-                        if (newSample!=null) {
-                            // Add the new sample to the Alignment Boards area.
-//                            alignmentBoardContext.addNewAlignedEntity(sample);
-                        }
+                        newSample = ModelMgr.getModelMgr().createTiledMicroscopeSample(SessionMgr.getUsername(), name, pathToRenderFolder);
                     }
                     
                     @Override
                     protected void hadSuccess() {
                         // Update Tree UI
-                        final EntityOutline entityOutline = browser.getEntityOutline();
-                        SwingUtilities.invokeLater(new Runnable() {
-                            @Override
-                            public void run() {
-                                entityOutline.selectEntityByUniqueId(newSample.getId().toString());
-                                SessionMgr.getBrowser().setPerspective(Perspective.SliceViewer);
-                                SessionMgr.getBrowser().getLayersPanel().openAlignmentBoard(newSample.getId());
-                            }
-                        });
+//                        final EntityOutline entityOutline = browser.getEntityOutline();
+//                        SwingUtilities.invokeLater(new Runnable() {
+//                            @Override
+//                            public void run() {
+//                                entityOutline.selectEntityByUniqueId(newSample.getId().toString());
+//                                SessionMgr.getBrowser().setPerspective(Perspective.SliceViewer);
+//                                SessionMgr.getBrowser().getLayersPanel().openAlignmentBoard(newSample.getId());
+//                            }
+//                        });
+                        if (null!=newSample) {
+                            JOptionPane.showMessageDialog(browser, "Sample " + newSample.getName() + " added successfully.",
+                                    "Add New Tiled Microscope Sample", JOptionPane.PLAIN_MESSAGE, null);
+                        }
+                        else {
+                            JOptionPane.showMessageDialog(browser, "Error adding sample " + name + ". Please contact support.",
+                                    "Failed to Add Tiled Microscope Sample", JOptionPane.ERROR_MESSAGE, null);
+                        }
                     }
                     
                     @Override
