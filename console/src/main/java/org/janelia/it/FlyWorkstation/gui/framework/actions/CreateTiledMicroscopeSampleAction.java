@@ -64,6 +64,7 @@ public class CreateTiledMicroscopeSampleAction implements Action {
                         if (null!=newSample) {
                             JOptionPane.showMessageDialog(browser, "Sample " + newSample.getName() + " added successfully.",
                                     "Add New Tiled Microscope Sample", JOptionPane.PLAIN_MESSAGE, null);
+                            SessionMgr.getSessionMgr().getActiveBrowser().getEntityOutline().refresh();
                         }
                         else {
                             JOptionPane.showMessageDialog(browser, "Error adding sample " + name + ". Please contact support.",

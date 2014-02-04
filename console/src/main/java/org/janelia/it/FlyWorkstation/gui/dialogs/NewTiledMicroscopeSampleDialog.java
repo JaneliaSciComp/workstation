@@ -10,15 +10,11 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 
 public class NewTiledMicroscopeSampleDialog extends JDialog {
-  JButton okButton = new JButton();
-  JButton cancelButton = new JButton();
   JTextField nameTextField = new JTextField(40);
   JTextField pathToRenderFolderTextField = new JTextField(40);
-  private JFrame parentFrame;
 
   public NewTiledMicroscopeSampleDialog(JFrame owner, String title, boolean modal) {
     super(owner, title, modal);
-    this.parentFrame = owner;
     try {
       jbInit();
     }
