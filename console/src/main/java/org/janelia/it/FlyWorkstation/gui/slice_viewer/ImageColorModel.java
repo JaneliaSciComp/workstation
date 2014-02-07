@@ -1,8 +1,12 @@
 package org.janelia.it.FlyWorkstation.gui.slice_viewer;
 
 import java.awt.Color;
+import java.util.Arrays;
 import java.util.Vector;
+
+import com.google.common.base.Joiner;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.interfaces.VolumeImage3d;
+import org.janelia.it.FlyWorkstation.raster.IntensityFormat;
 import org.janelia.it.FlyWorkstation.signal.Signal;
 import org.janelia.it.FlyWorkstation.signal.Slot1;
 
@@ -37,6 +41,64 @@ public class ImageColorModel
 	{
 		reset(volumeImage);
 	}
+
+    /**
+     * return a string that represents the user-adjustable state of
+     * the model for storage in preferences
+     */
+    public String asString() {
+        // format: nchannels, then three locks, then one string for each channel:
+        StringBuilder builder = new StringBuilder();
+        builder.append(getChannelCount());
+        builder.append(":");
+        builder.append(isBlackSynchronized());
+        builder.append(":");
+        builder.append(isGammaSynchronized());
+        builder.append(":");
+        builder.append(isWhiteSynchronized());
+
+        for (ChannelColorModel ch: channels) {
+            builder.append(":");
+            builder.append(ch.asString());
+        }
+
+        return builder.toString();
+    }
+
+    /**
+     * parse and apply a string of the form returned by asString()
+     */
+    public void fromString(String modelString) {
+        // this is going to be ugly; I supposed I could/should use
+        //  a different delimiter for each channel info, but it seems
+        //  inelegant and impure to multiply delimiters
+
+        String [] items = modelString.split(":");
+        // should be 4 + 8 * nchannels items at this point
+
+        if (getChannelCount() != Integer.parseInt(items[0])) {
+            // must be same number of channels!
+            return;
+        }
+
+        // in principle I could pass the post-split array,
+        //  but I like having both fromString() methods look the same;
+        //  so I reconstitute the delimited string and pass it down
+        for (int i=0; i<getChannelCount(); i++) {
+            // thankfully we have Guava, or this would be ugly;
+            //  I can't believe Java doesn't have a string joiner in
+            //  the standard lib!
+            Joiner joiner = Joiner.on(":");
+            String s = joiner.join(Arrays.copyOfRange(items, 4 + 8 * i, 4 + 8 * i + 7));
+            channels.get(i).fromString(s);
+        }
+
+        // do syncs:
+        setBlackSynchronized(Boolean.parseBoolean(items[1]));
+        setGammaSynchronized(Boolean.parseBoolean(items[2]));
+        setWhiteSynchronized(Boolean.parseBoolean(items[3]));
+
+    }
 
 	private void addChannel(Color color, int bitDepth) {
 		int c = channels.size();
