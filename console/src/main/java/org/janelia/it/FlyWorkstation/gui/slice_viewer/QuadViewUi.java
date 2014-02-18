@@ -145,7 +145,7 @@ public class QuadViewUi extends JPanel
 	// annotation things
     private AnnotationPanel annotationPanel;
 	private AnnotationModel annotationModel = new AnnotationModel();
-	private AnnotationManager annotationMgr = new AnnotationManager(annotationModel);
+	private AnnotationManager annotationMgr = new AnnotationManager(annotationModel, this);
     private SliceViewerTranslator sliceViewerTranslator = new SliceViewerTranslator(annotationModel, sliceViewer);
 
 	// Actions
@@ -341,6 +341,13 @@ public class QuadViewUi extends JPanel
             tracePathRequestedSignal.emit(request);
         }
     };
+
+    public Slot1<String> loadColorModelSlot = new Slot1<String>() {
+        @Override
+        public void execute(String modelString) {
+            imageColorModel.fromString(modelString);
+        }
+    };
     
 	/**
 	 * Create the frame.
@@ -395,6 +402,7 @@ public class QuadViewUi extends JPanel
 
         sliceViewerTranslator.connectSkeletonSignals(skeleton);
         sliceViewerTranslator.cameraPanToSignal.connect(setCameraFocusSlot);
+        sliceViewerTranslator.loadColorModelSignal.connect(loadColorModelSlot);
 
 
 		// must come after setupUi() (etc), since it triggers UI changes:
@@ -1233,7 +1241,15 @@ LLF: the hookup for the 3d snapshot.
             return false;
     	}
     }
-    
+
+    public String imageColorModelAsString() {
+        return imageColorModel.asString();
+    }
+
+    public void imageColorModelFromString(String modelString) {
+        imageColorModel.fromString(modelString);
+    }
+
     public Slot1<URL> onVolumeLoadedSlot = new Slot1<URL>() {
 		@Override
 		public void execute(URL url) {

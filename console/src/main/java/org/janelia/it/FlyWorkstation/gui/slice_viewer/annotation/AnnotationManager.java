@@ -2,6 +2,7 @@ package org.janelia.it.FlyWorkstation.gui.slice_viewer.annotation;
 
 import org.janelia.it.FlyWorkstation.geom.Vec3;
 import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr;
+import org.janelia.it.FlyWorkstation.gui.slice_viewer.QuadViewUi;
 import org.janelia.it.FlyWorkstation.gui.slice_viewer.skeleton.Anchor;
 import org.janelia.it.FlyWorkstation.gui.slice_viewer.skeleton.Skeleton;
 
@@ -43,7 +44,10 @@ elements of what's been done; that's handled by signals emitted from AnnotationM
 
     // annotation model object
     private AnnotationModel annotationModel;
-    
+
+    // quad view ui object
+    private QuadViewUi quadViewUi;
+
     private Entity initialEntity;
 
     // ----- slots
@@ -135,8 +139,9 @@ elements of what's been done; that's handled by signals emitted from AnnotationM
         }
     };
 
-    public AnnotationManager(AnnotationModel annotationModel) {
+    public AnnotationManager(AnnotationModel annotationModel, QuadViewUi quadViewUi) {
         this.annotationModel = annotationModel;
+        this.quadViewUi = quadViewUi;
         modelMgr = ModelMgr.getModelMgr();
     }
 
@@ -713,6 +718,28 @@ elements of what's been done; that's handled by signals emitted from AnnotationM
             }
         };
         setter.execute();
+    }
+
+    public void saveColorModel() {
+
+        SimpleWorker saver = new SimpleWorker() {
+            @Override
+            protected void doStuff() throws Exception {
+                annotationModel.setPreference(AnnotationsConstants.PREF_COLOR_MODEL, quadViewUi.imageColorModelAsString());
+            }
+
+            @Override
+            protected void hadSuccess() {
+                // nothing here
+            }
+
+            @Override
+            protected void hadError(Throwable error) {
+                SessionMgr.getSessionMgr().handleException(error);
+            }
+        };
+        saver.execute();
+
     }
 
     private void tracePathToParent(PathTraceToParentRequest request) {

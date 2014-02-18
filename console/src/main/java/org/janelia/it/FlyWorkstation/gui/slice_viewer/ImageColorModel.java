@@ -87,9 +87,9 @@ public class ImageColorModel
         for (int i=0; i<getChannelCount(); i++) {
             // thankfully we have Guava, or this would be ugly;
             //  I can't believe Java doesn't have a string joiner in
-            //  the standard lib!
+            //  the standard lib!  or array slices!
             Joiner joiner = Joiner.on(":");
-            String s = joiner.join(Arrays.copyOfRange(items, 4 + 8 * i, 4 + 8 * i + 7));
+            String s = joiner.join(Arrays.copyOfRange(items, 4 + 8 * i, 4 + 8 * i + 8));
             channels.get(i).fromString(s);
         }
 

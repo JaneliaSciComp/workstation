@@ -148,6 +148,13 @@ public class AnnotationPanel extends JPanel
                 "Change global color of annotations");
         workspaceToolMenu.add(new JMenuItem(changeGlobalAnnotationColorAction));
 
+        workspaceToolMenu.add(new JMenuItem(new AbstractAction("Save color model") {
+            @Override
+            public void actionPerformed(ActionEvent actionEvent) {
+                annotationMgr.saveColorModel();
+            }
+        }));
+
         // workspace tool menu button
         final JButton workspaceToolButton = new JButton();
         String gearIconFilename = "cog.png";

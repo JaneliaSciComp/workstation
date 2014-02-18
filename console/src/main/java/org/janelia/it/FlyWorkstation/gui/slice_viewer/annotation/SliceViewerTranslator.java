@@ -133,6 +133,7 @@ public class SliceViewerTranslator {
     public Signal1<AnchoredVoxelPath> anchoredPathRemovedSignal = new Signal1<AnchoredVoxelPath>();
 
     public Signal1<Color> changeGlobalColorSignal = new Signal1<Color>();
+    public Signal1<String> loadColorModelSignal = new Signal1<String>();
 
     public SliceViewerTranslator(AnnotationModel annModel, SliceViewer sliceViewer) {
         this.annModel = annModel;
@@ -271,6 +272,11 @@ public class SliceViewerTranslator {
         }
         changeGlobalColorSignal.emit(newColor);
 
+        // check for saved image color model
+        String colorModelString = workspace.getPreferences().getProperty(AnnotationsConstants.PREF_COLOR_MODEL);
+        if (colorModelString != null) {
+            loadColorModelSignal.emit(colorModelString);
+        }
 
         // note that we must add annotations in parent-child sequence
         //  so lines get drawn correctly
