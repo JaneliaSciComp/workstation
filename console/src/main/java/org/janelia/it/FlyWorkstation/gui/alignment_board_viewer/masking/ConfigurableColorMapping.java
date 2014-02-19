@@ -19,6 +19,17 @@ import java.util.*;
  */
 public class ConfigurableColorMapping implements RenderMappingI {
 
+    public static final byte[][] COLOR_WHEEL = {
+            { (byte)0x00, (byte)0xff, (byte)0x00, (byte)0xff },          //G
+            { (byte)0x00, (byte)0x00, (byte)0xff, (byte)0xff },          //B
+            { (byte)0xff, (byte)0x00, (byte)0x00, (byte)0xff },          //R
+            { (byte)0x00, (byte)0xff, (byte)0xff, (byte)0xff },          //G+B
+            { (byte)0xff, (byte)0x00, (byte)0xff, (byte)0xff },          //R+B
+            { (byte)0xff, (byte)0xff, (byte)0x00, (byte)0xff },          //R+G
+            { (byte)0x8f, (byte)0x00, (byte)0x00, (byte)0xff },          //Dk R
+            { (byte)0x00, (byte)0x8f, (byte)0x00, (byte)0xff },          //Dk G
+    };
+
     private static final int RENDER_METHOD_BITS = 3;
     private static final int POSITION_BITS = 3;
     private static final int BYTE_INTENSITY_INTERP = 1 << POSITION_BITS + RENDER_METHOD_BITS;
@@ -153,16 +164,6 @@ public class ConfigurableColorMapping implements RenderMappingI {
      * @param maskMappings the output mapping between the mask and its render method/color.
      */
     private void mapSingleMasks( Map<Integer, byte[]> maskMappings ) {
-        byte[][] colorWheel = {
-                { (byte)0x00, (byte)0xff, (byte)0x00, (byte)0xff },          //G
-                { (byte)0x00, (byte)0x00, (byte)0xff, (byte)0xff },          //B
-                { (byte)0xff, (byte)0x00, (byte)0x00, (byte)0xff },          //R
-                { (byte)0x00, (byte)0xff, (byte)0xff, (byte)0xff },          //G+B
-                { (byte)0xff, (byte)0x00, (byte)0xff, (byte)0xff },          //R+B
-                { (byte)0xff, (byte)0xff, (byte)0x00, (byte)0xff },          //R+G
-                { (byte)0x8f, (byte)0x00, (byte)0x00, (byte)0xff },          //Dk R
-                { (byte)0x00, (byte)0x8f, (byte)0x00, (byte)0xff },          //Dk G
-        };
 
         // Each renderable bean is represented by a single mask and color.
         for ( RenderableBean renderableBean : renderableBeans ) {
@@ -187,7 +188,7 @@ public class ConfigurableColorMapping implements RenderMappingI {
             }
 
             if ( rgb == null  ||  rgbValsZero ) {
-                rgb = colorWheel[ translatedNum % colorWheel.length ];
+                rgb = COLOR_WHEEL[ translatedNum % COLOR_WHEEL.length ];
                 Entity entity = renderableBean.getRenderableEntity();
                 if ( entity != null ) {
                     rgb[ 3 ] = RenderMappingI.FRAGMENT_RENDERING;

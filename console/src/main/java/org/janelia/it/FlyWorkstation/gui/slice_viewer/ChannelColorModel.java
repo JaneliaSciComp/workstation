@@ -2,6 +2,7 @@ package org.janelia.it.FlyWorkstation.gui.slice_viewer;
 
 import java.awt.Color;
 
+import org.janelia.it.FlyWorkstation.gui.animate.DoubleInterpolator;
 import org.janelia.it.FlyWorkstation.signal.Signal1;
 
 public class ChannelColorModel 
@@ -30,7 +31,59 @@ public class ChannelColorModel
 		gamma = 1.0;
 		whiteLevel = dataMax = (int)(Math.pow(2.0, bitDepth) - 0.9);
 	}
-	
+
+    /**
+     * return a string containing the interesting parts of the color model
+     * for persisting and later reloading
+     */
+    public String asString() {
+        StringBuilder builder = new StringBuilder();
+
+        builder.append(getBlackLevel());
+        builder.append(":");
+        builder.append(getGamma());
+        builder.append(":");
+        builder.append(getWhiteLevel());
+        builder.append(":");
+
+        builder.append(color.getRed());
+        builder.append(":");
+        builder.append(color.getBlue());
+        builder.append(":");
+        builder.append(color.getGreen());
+        builder.append(":");
+        builder.append(color.getAlpha());
+        builder.append(":");
+
+        builder.append(isVisible());
+
+        return builder.toString();
+    }
+
+    /**
+     * parse a string in the format returned by toString() and
+     * apply the values to the channel color model
+     */
+    public void fromString(String modelString) {
+        String [] items = modelString.split(":");
+
+        // should be 8 items, not that we're checking
+        setBlackLevel(Integer.parseInt(items[0]));
+        setGamma(Double.parseDouble(items[1]));
+        setWhiteLevel(Integer.parseInt(items[2]));
+
+        Color savedColor = new Color(
+            Integer.parseInt(items[3]),
+            Integer.parseInt(items[4]),
+            Integer.parseInt(items[5]),
+            Integer.parseInt(items[6])
+            );
+        setColor(savedColor);
+
+        setVisible(Boolean.parseBoolean(items[7]));
+
+    }
+
 	public int getBitDepth() {
 		return bitDepth;
 	}

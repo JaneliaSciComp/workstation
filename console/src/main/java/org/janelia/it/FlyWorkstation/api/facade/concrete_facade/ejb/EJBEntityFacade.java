@@ -225,8 +225,8 @@ public class EJBEntityFacade implements EntityFacade {
     }
 
     @Override
-    public TmSample createTiledMicroscopeSample(Long sampleId, String name) throws Exception {
-        return EJBFactory.getRemoteTiledMicroscopeBean().createTiledMicroscopeSample(sampleId, name);
+    public TmSample createTiledMicroscopeSample(String user, String sampleName, String pathToRenderFolder) throws Exception {
+        return EJBFactory.getRemoteTiledMicroscopeBean().createTiledMicroscopeSample(user, sampleName, pathToRenderFolder);
     }
 
     @Override

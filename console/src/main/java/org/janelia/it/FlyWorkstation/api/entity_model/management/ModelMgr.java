@@ -903,7 +903,11 @@ public class ModelMgr {
     public List<MappedId> getProjectedResults(List<Long> entityIds, List<String> upMapping, List<String> downMapping) throws Exception {
         return FacadeManager.getFacadeManager().getEntityFacade().getProjectedResults(entityIds, upMapping, downMapping);
     }
-    
+
+    public List<Long> getEntityIdsInAlignmentSpace(String opticalRes, String pixelRes, List<Long> guids) throws Exception {
+        return FacadeManager.getFacadeManager().getAnnotationFacade().getEntityIdsInAlignmentSpace( opticalRes, pixelRes, guids);
+    }
+
     public Object[] getPatternAnnotationQuantifierMapsFromSummary() throws Exception {
         return FacadeManager.getFacadeManager().getAnnotationFacade().getPatternAnnotationQuantifierMapsFromSummary();
     }
@@ -989,8 +993,10 @@ public class ModelMgr {
         return FacadeManager.getFacadeManager().getEntityFacade().createTiledMicroscopeNeuron(workspaceId, name);
     }
 
-    public TmSample createTiledMicroscopeSample(Long sampleId, String name) throws Exception {
-        return FacadeManager.getFacadeManager().getEntityFacade().createTiledMicroscopeSample(sampleId, name);
+    public TmSample createTiledMicroscopeSample(String user, String sampleName, String pathToRenderFolder) throws Exception {
+        TmSample sample = FacadeManager.getFacadeManager().getEntityFacade().createTiledMicroscopeSample(user, sampleName, pathToRenderFolder);
+        notifyEntityChanged(sample.getId());
+        return sample;
     }
 
     public TmGeoAnnotation addGeometricAnnotation(Long neuronId, Long parentAnnotationId, int index,

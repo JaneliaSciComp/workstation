@@ -5,6 +5,7 @@ import org.janelia.it.FlyWorkstation.api.facade.facade_mgr.DataSourceSelector;
 import org.janelia.it.FlyWorkstation.api.facade.facade_mgr.FacadeManager;
 import org.janelia.it.FlyWorkstation.api.facade.facade_mgr.FacadeManagerBase;
 import org.janelia.it.FlyWorkstation.gui.dialogs.EntityDetailsDialog;
+import org.janelia.it.FlyWorkstation.gui.dialogs.NewTiledMicroscopeSampleDialog;
 import org.janelia.it.FlyWorkstation.gui.framework.actions.CreateAlignmentBoardAction;
 import org.janelia.it.FlyWorkstation.gui.framework.pref_controller.PrefController;
 import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.BrowserModel;
@@ -35,7 +36,6 @@ import java.util.StringTokenizer;
  * Time: 1:16 PM
  */
 public class FileMenu extends JMenu {
-    private static String fileSep = File.separator;
     private static final String EXPORT_IMPORT_LOCATION = "PreferenceExportImportLocation";
     Browser browser;
     JMenuItem menuOpenDataSource;
@@ -110,7 +110,7 @@ public class FileMenu extends JMenu {
                 menuNewTiledMicroscopeSample_actionPerformed();
             }
         });
-//        menuNewItem.add(menuNewTiledMicroscopeSample);
+        menuNewItem.add(menuNewTiledMicroscopeSample);
         // LLF: uncommenting New.../Alignment Board, but omitting brain sketch from the menu, as it has empty action.
         //menuNewItem.add(menuNewSketch);
 
@@ -336,8 +336,7 @@ public class FileMenu extends JMenu {
     }
 
     private void menuNewTiledMicroscopeSample_actionPerformed() {
-        CreateAlignmentBoardAction action = new CreateAlignmentBoardAction( "Create Alignment Board" );
-        action.doAction();
+        new NewTiledMicroscopeSampleDialog(browser, "Add Tiled Microscope Sample", true);
     }
 
     private void viewDetails_actionPerformed(ActionEvent e, String protocol, Object dataSource) throws Exception {

@@ -32,6 +32,8 @@ public interface AnnotationFacade {
 
     public List<Entity> getCategoriesForAnnotationSession(Long annotationSessionId) throws Exception;
 
+    public List<Long> getEntityIdsInAlignmentSpace(String opticalRes, String pixelRes, List<Long> guids) throws Exception;
+
     public Set<Long> getCompletedEntityIds(Long annotationSessionId) throws Exception;
     
     public void removeAnnotation(Long annotationId) throws Exception;

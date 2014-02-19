@@ -108,6 +108,10 @@ implements GLEventListener
         opaqueActors.addActor(actor);
     }
 
+    public void addTransparentActor(GL3Actor actor) {
+        transparentActors.addActor(actor);
+    }
+
     private void checkGlError(GL gl, String message) {
         int errorNumber = gl.glGetError();
         if (errorNumber <= 0)

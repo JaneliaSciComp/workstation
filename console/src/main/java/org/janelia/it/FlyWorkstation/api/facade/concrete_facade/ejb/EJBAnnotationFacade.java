@@ -63,6 +63,11 @@ public class EJBAnnotationFacade extends EJBEntityFacade implements AnnotationFa
     }
 
     @Override
+    public List<Long> getEntityIdsInAlignmentSpace(String opticalRes, String pixelRes, List<Long> guids) throws Exception {
+        return EJBFactory.getRemoteAnnotationBean().getEntityIdsInAlignmentSpace( opticalRes, pixelRes, guids );
+    }
+
+    @Override
     public Set<Long> getCompletedEntityIds(Long annotationSessionId) throws Exception {
         return EJBFactory.getRemoteAnnotationBean().getCompletedEntityIds(annotationSessionId);
     }
