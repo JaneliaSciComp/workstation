@@ -1,0 +1,349 @@
+2014-02-19 13:09:56,203 [AWT-EventQueue-0] INFO [org.janelia.it.FlyWorkstation.gui.application.ConsoleApp] Java version: 1.7.0_51
+2014-02-19 13:09:56,214 [AWT-EventQueue-0] WARN [org.janelia.it.FlyWorkstation.gui.application.ConsoleApp] No splash screen image configured
+2014-02-19 13:09:56,252 [AWT-EventQueue-0] INFO [org.janelia.it.FlyWorkstation.api.entity_model.management.ModelMgr] Initializing Model Manager
+2014-02-19 13:09:56,376 [AWT-EventQueue-0] INFO [org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr] Initializing Session Manager
+2014-02-19 13:09:56,377 [AWT-EventQueue-0] INFO [org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr] Renamed settings directory and files.
+2014-02-19 13:09:56,439 [AWT-EventQueue-0] INFO [org.janelia.it.FlyWorkstation.api.facade.concrete_facade.ejb.EJBFactory] Using interactive server: jnp://jacs:1199
+2014-02-19 13:09:56,439 [AWT-EventQueue-0] INFO [org.janelia.it.FlyWorkstation.api.facade.concrete_facade.ejb.EJBFactory] Using pipeline server: jnp://jacs-data:1199
+2014-02-19 13:09:56,442 [AWT-EventQueue-0] INFO [org.janelia.it.FlyWorkstation.shared.filestore.PathTranslator] Using JACS data path: /Volumes/jacsData
+2014-02-19 13:09:56,671 [AWT-EventQueue-0] INFO [org.janelia.it.FlyWorkstation.shared.util.filecache.LocalFileCache] <init>: exit
+2014-02-19 13:09:56,671 [local-file-cache-load-thread] INFO [org.janelia.it.FlyWorkstation.shared.util.filecache.LocalFileCache] loadCacheFromFilesystem: starting load
+2014-02-19 13:09:56,671 [AWT-EventQueue-0] INFO [org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr] Using 2d renderer: IMAGE_IO
+2014-02-19 13:09:57,440 [AWT-EventQueue-0] WARN [org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr] Ignoring the seemingly harmless exception that Synthetica throws because of Java 7
+2014-02-19 13:09:57,759 [AWT-EventQueue-0] INFO [org.eclipse.jetty.server.Server] jetty-8.y.z-SNAPSHOT
+2014-02-19 13:09:57,822 [AWT-EventQueue-0] INFO [org.eclipse.jetty.server.AbstractConnector] Started SelectChannelConnector@0.0.0.0:40001
+2014-02-19 13:09:59,323 [AWT-EventQueue-0] INFO [org.janelia.it.FlyWorkstation.shared.util.filecache.WebDavClient] setCredentials: entry, userName=fosterl
+2014-02-19 13:09:59,323 [AWT-EventQueue-0] INFO [org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr] Authenticated as user:fosterl
+2014-02-19 13:09:59,403 [AWT-EventQueue-0] INFO [org.janelia.it.FlyWorkstation.gui.application.ConsoleApp] Successfully logged in user fosterl
+2014-02-19 13:10:02,278 [AWT-EventQueue-0] INFO [org.janelia.it.FlyWorkstation.gui.dialogs.GiantFiberSearchDialog] Begin loading
+2014-02-19 13:10:02,376 [AWT-EventQueue-0] INFO [org.janelia.it.FlyWorkstation.gui.dialogs.MAASearchDialog] Begin loading
+2014-02-19 13:10:03,378 [AWT-EventQueue-0] INFO [org.janelia.it.FlyWorkstation.gui.framework.tool_manager.ToolMgr] Base root executable path: file:/Users/fosterl/NetBeansProjects/LLF_NetBeans_02102014/janelia-workstation/ConsoleApplication/build/cluster/modules/ext/workstation.jar!/
+2014-02-19 13:10:03,809 [AWT-EventQueue-0] INFO [org.janelia.it.FlyWorkstation.gui.framework.outline.EntityDetailsOutline] Activating
+2014-02-19 13:10:03,849 [AWT-EventQueue-0] INFO [org.janelia.it.FlyWorkstation.gui.framework.outline.EntityOutline] Activating
+2014-02-19 13:10:04,176 [AWT-EventQueue-0] INFO [org.janelia.it.FlyWorkstation.gui.framework.console.Browser] Setting perspective: ImageBrowser
+2014-02-19 13:10:04,615 [AWT-EventQueue-0] INFO [org.janelia.it.FlyWorkstation.gui.dialogs.MAASearchDialog] Completed loading, 0 counts, dialog is ready
+2014-02-19 13:10:06,763 [AWT-EventQueue-0] INFO [org.janelia.it.FlyWorkstation.gui.dialogs.GiantFiberSearchDialog] Completed loading, dialog ready.
+2014-02-19 13:10:13,533 [SwingWorker-pool-3-thread-2] INFO [org.janelia.it.FlyWorkstation.api.entity_model.management.ModelMgr] Searching SOLR: id:1910890996414021721 start=null rows=null
+2014-02-19 13:10:16,014 [AWT-EventQueue-0] INFO [org.janelia.it.FlyWorkstation.gui.framework.console.Browser] Setting perspective: AlignmentBoard
+2014-02-19 13:10:16,067 [AWT-EventQueue-0] INFO [org.janelia.it.FlyWorkstation.gui.framework.viewer.alignment_board.LayersPanel] Activating
+2014-02-19 13:10:16,146 [AWT-EventQueue-0] INFO [org.janelia.it.FlyWorkstation.gui.framework.viewer.alignment_board.AlignmentBoardViewer] C'tor
+2014-02-19 13:10:20,476 [AWT-EventQueue-0] INFO [org.janelia.it.FlyWorkstation.gui.framework.viewer.alignment_board.AlignmentBoardViewer] Board Opened
+2014-02-19 13:10:20,486 [AWT-EventQueue-0] WARN [org.janelia.it.FlyWorkstation.gui.framework.viewer.alignment_board.AlignmentBoardViewer] Update-board called.
+2014-02-19 13:10:20,493 [AWT-EventQueue-0] INFO [org.janelia.it.FlyWorkstation.gui.framework.viewer.alignment_board.AlignmentBoardViewer] New settings
+2014-02-19 13:10:20,625 [AWT-EventQueue-0] INFO [org.janelia.it.FlyWorkstation.gui.framework.viewer.alignment_board.UserSettingSerializer] Read-Up Setting string: Gamma=0.804000
+CropOutLevel=0.000000
+UseSignal=true
+CameraRotation=[-0.024987,0.120823,-0.992360][-0.221779,0.967263,0.123352][0.974777,0.223167,0.002628]
+InGroundFocus=[0.000000,0.000000,0.000000]
+CameraFocus=[0.000000,0.000000,-1864.643555]
+MinVoxelCutoff=-1
+MaxNeuronsCutoff=100
+SaveGammaInTiff=true
+ deserialized, from 1910890996414021721
+2014-02-19 13:10:20,864 [AWT-EventQueue-0] WARN [org.janelia.it.FlyWorkstation.gui.alignment_board_viewer.gui_elements.GpuSampler] Neither NVidea nor Radeon video memory calls succeeded 1280/0.
+2014-02-19 13:10:20,864 [AWT-EventQueue-0] INFO [org.janelia.it.FlyWorkstation.gui.alignment_board_viewer.gui_elements.GpuSampler] Free texture memory 0.
+2014-02-19 13:10:21,206 [local-file-cache-load-thread] INFO [org.janelia.it.FlyWorkstation.shared.util.filecache.LocalFileLoader] no unregistered files found in local cache
+2014-02-19 13:10:22,092 [SwingWorker-pool-3-thread-10] INFO [org.janelia.it.FlyWorkstation.gui.framework.viewer.alignment_board.RenderablesLoadWorker] GPU vendor NVIDIA Corporation, renderer NVIDIA GeForce GTX 680 OpenGL Engine version 2.1 NVIDIA-8.16.74 310.40.00.10f02
+2014-02-19 13:10:22,265 [local-file-cache-load-thread] INFO [org.janelia.it.FlyWorkstation.shared.util.filecache.LocalFileCache] loadCacheFromFilesystem: loaded 11293 files into LocalFileCache{rootDirectory=/Users/fosterl/.JaneliaWorkstationSuite/Console/.jacs-file-cache, kilobyteCapacity=52428800}, 4% full (2267603/52428800 kilobytes)
+2014-02-19 13:10:26,365 [SwingWorker-pool-3-thread-10] INFO [org.janelia.it.FlyWorkstation.gui.framework.viewer.alignment_board.RenderablesLoadWorker] User has preferred card.
+2014-02-19 13:10:33,314 [pool-12-thread-1] ERROR [org.janelia.it.FlyWorkstation.gui.viewer3d.loader.MaskSingleFileLoader] With bounds 203:259, skipped ray count of 455 exceeds bounding box, and dimension order 2.  2nd-varying max is 512, coord is 1.
+2014-02-19 13:10:33,314 [pool-12-thread-2] ERROR [org.janelia.it.FlyWorkstation.gui.viewer3d.loader.MaskSingleFileLoader] With bounds 203:259, skipped ray count of 455 exceeds bounding box, and dimension order 2.  2nd-varying max is 512, coord is 1.
+2014-02-19 13:10:33,314 [pool-12-thread-3] ERROR [org.janelia.it.FlyWorkstation.gui.viewer3d.loader.MaskSingleFileLoader] With bounds 203:259, skipped ray count of 455 exceeds bounding box, and dimension order 2.  2nd-varying max is 512, coord is 1.
+2014-02-19 13:10:33,314 [pool-12-thread-4] ERROR [org.janelia.it.FlyWorkstation.gui.viewer3d.loader.MaskSingleFileLoader] With bounds 203:259, skipped ray count of 455 exceeds bounding box, and dimension order 2.  2nd-varying max is 512, coord is 1.
+2014-02-19 13:10:33,314 [pool-12-thread-5] ERROR [org.janelia.it.FlyWorkstation.gui.viewer3d.loader.MaskSingleFileLoader] With bounds 203:259, skipped ray count of 455 exceeds bounding box, and dimension order 2.  2nd-varying max is 512, coord is 1.
+2014-02-19 13:10:33,315 [pool-12-thread-7] ERROR [org.janelia.it.FlyWorkstation.gui.viewer3d.loader.MaskSingleFileLoader] With bounds 203:259, skipped ray count of 455 exceeds bounding box, and dimension order 2.  2nd-varying max is 512, coord is 1.
+2014-02-19 13:10:33,315 [pool-12-thread-6] ERROR [org.janelia.it.FlyWorkstation.gui.viewer3d.loader.MaskSingleFileLoader] With bounds 203:259, skipped ray count of 455 exceeds bounding box, and dimension order 2.  2nd-varying max is 512, coord is 1.
+2014-02-19 13:10:33,315 [pool-12-thread-8] ERROR [org.janelia.it.FlyWorkstation.gui.viewer3d.loader.MaskSingleFileLoader] With bounds 203:259, skipped ray count of 455 exceeds bounding box, and dimension order 2.  2nd-varying max is 512, coord is 1.
+2014-02-19 13:10:33,315 [pool-12-thread-9] ERROR [org.janelia.it.FlyWorkstation.gui.viewer3d.loader.MaskSingleFileLoader] With bounds 203:259, skipped ray count of 455 exceeds bounding box, and dimension order 2.  2nd-varying max is 512, coord is 1.
+2014-02-19 13:10:33,316 [pool-12-thread-10] ERROR [org.janelia.it.FlyWorkstation.gui.viewer3d.loader.MaskSingleFileLoader] With bounds 203:259, skipped ray count of 455 exceeds bounding box, and dimension order 2.  2nd-varying max is 512, coord is 1.
+2014-02-19 13:10:33,317 [pool-12-thread-12] ERROR [org.janelia.it.FlyWorkstation.gui.viewer3d.loader.MaskSingleFileLoader] With bounds 203:259, skipped ray count of 455 exceeds bounding box, and dimension order 2.  2nd-varying max is 512, coord is 1.
+2014-02-19 13:10:33,317 [pool-12-thread-11] ERROR [org.janelia.it.FlyWorkstation.gui.viewer3d.loader.MaskSingleFileLoader] With bounds 203:259, skipped ray count of 455 exceeds bounding box, and dimension order 2.  2nd-varying max is 512, coord is 1.
+2014-02-19 13:10:33,317 [pool-12-thread-13] ERROR [org.janelia.it.FlyWorkstation.gui.viewer3d.loader.MaskSingleFileLoader] With bounds 203:259, skipped ray count of 455 exceeds bounding box, and dimension order 2.  2nd-varying max is 512, coord is 1.
+2014-02-19 13:10:33,318 [pool-12-thread-15] ERROR [org.janelia.it.FlyWorkstation.gui.viewer3d.loader.MaskSingleFileLoader] With bounds 203:259, skipped ray count of 455 exceeds bounding box, and dimension order 2.  2nd-varying max is 512, coord is 1.
+2014-02-19 13:10:33,318 [pool-12-thread-14] ERROR [org.janelia.it.FlyWorkstation.gui.viewer3d.loader.MaskSingleFileLoader] With bounds 203:259, skipped ray count of 455 exceeds bounding box, and dimension order 2.  2nd-varying max is 512, coord is 1.
+2014-02-19 13:10:33,319 [pool-12-thread-16] ERROR [org.janelia.it.FlyWorkstation.gui.viewer3d.loader.MaskSingleFileLoader] With bounds 203:259, skipped ray count of 455 exceeds bounding box, and dimension order 2.  2nd-varying max is 512, coord is 1.
+2014-02-19 13:10:33,340 [pool-14-thread-1] ERROR [org.janelia.it.FlyWorkstation.gui.viewer3d.loader.MaskSingleFileLoader] With bounds 163:217, skipped ray count of 163 exceeds bounding box, and dimension order 1.  2nd-varying max is 218, coord is 2.
+2014-02-19 13:10:33,341 [pool-14-thread-4] ERROR [org.janelia.it.FlyWorkstation.gui.viewer3d.loader.MaskSingleFileLoader] With bounds 163:217, skipped ray count of 163 exceeds bounding box, and dimension order 1.  2nd-varying max is 218, coord is 2.
+2014-02-19 13:10:33,341 [pool-14-thread-2] ERROR [org.janelia.it.FlyWorkstation.gui.viewer3d.loader.MaskSingleFileLoader] With bounds 163:217, skipped ray count of 163 exceeds bounding box, and dimension order 1.  2nd-varying max is 218, coord is 2.
+2014-02-19 13:10:33,341 [pool-14-thread-3] ERROR [org.janelia.it.FlyWorkstation.gui.viewer3d.loader.MaskSingleFileLoader] With bounds 163:217, skipped ray count of 163 exceeds bounding box, and dimension order 1.  2nd-varying max is 218, coord is 2.
+2014-02-19 13:10:33,343 [pool-14-thread-8] ERROR [org.janelia.it.FlyWorkstation.gui.viewer3d.loader.MaskSingleFileLoader] With bounds 163:217, skipped ray count of 163 exceeds bounding box, and dimension order 1.  2nd-varying max is 218, coord is 2.
+2014-02-19 13:10:33,344 [pool-14-thread-9] ERROR [org.janelia.it.FlyWorkstation.gui.viewer3d.loader.MaskSingleFileLoader] With bounds 163:217, skipped ray count of 163 exceeds bounding box, and dimension order 1.  2nd-varying max is 218, coord is 2.
+2014-02-19 13:10:33,344 [pool-14-thread-5] ERROR [org.janelia.it.FlyWorkstation.gui.viewer3d.loader.MaskSingleFileLoader] With bounds 163:217, skipped ray count of 163 exceeds bounding box, and dimension order 1.  2nd-varying max is 218, coord is 2.
+2014-02-19 13:10:33,344 [pool-14-thread-10] ERROR [org.janelia.it.FlyWorkstation.gui.viewer3d.loader.MaskSingleFileLoader] With bounds 163:217, skipped ray count of 163 exceeds bounding box, and dimension order 1.  2nd-varying max is 218, coord is 2.
+2014-02-19 13:10:33,344 [pool-14-thread-6] ERROR [org.janelia.it.FlyWorkstation.gui.viewer3d.loader.MaskSingleFileLoader] With bounds 163:217, skipped ray count of 163 exceeds bounding box, and dimension order 1.  2nd-varying max is 218, coord is 2.
+2014-02-19 13:10:33,344 [pool-14-thread-7] ERROR [org.janelia.it.FlyWorkstation.gui.viewer3d.loader.MaskSingleFileLoader] With bounds 163:217, skipped ray count of 163 exceeds bounding box, and dimension order 1.  2nd-varying max is 218, coord is 2.
+2014-02-19 13:10:33,345 [pool-14-thread-13] ERROR [org.janelia.it.FlyWorkstation.gui.viewer3d.loader.MaskSingleFileLoader] With bounds 163:217, skipped ray count of 163 exceeds bounding box, and dimension order 1.  2nd-varying max is 218, coord is 2.
+2014-02-19 13:10:33,345 [pool-14-thread-11] ERROR [org.janelia.it.FlyWorkstation.gui.viewer3d.loader.MaskSingleFileLoader] With bounds 163:217, skipped ray count of 163 exceeds bounding box, and dimension order 1.  2nd-varying max is 218, coord is 2.
+2014-02-19 13:10:33,345 [pool-14-thread-12] ERROR [org.janelia.it.FlyWorkstation.gui.viewer3d.loader.MaskSingleFileLoader] With bounds 163:217, skipped ray count of 163 exceeds bounding box, and dimension order 1.  2nd-varying max is 218, coord is 2.
+2014-02-19 13:10:33,346 [pool-14-thread-14] ERROR [org.janelia.it.FlyWorkstation.gui.viewer3d.loader.MaskSingleFileLoader] With bounds 163:217, skipped ray count of 163 exceeds bounding box, and dimension order 1.  2nd-varying max is 218, coord is 2.
+2014-02-19 13:10:33,346 [pool-14-thread-15] ERROR [org.janelia.it.FlyWorkstation.gui.viewer3d.loader.MaskSingleFileLoader] With bounds 163:217, skipped ray count of 163 exceeds bounding box, and dimension order 1.  2nd-varying max is 218, coord is 2.
+2014-02-19 13:10:33,346 [pool-14-thread-16] ERROR [org.janelia.it.FlyWorkstation.gui.viewer3d.loader.MaskSingleFileLoader] With bounds 163:217, skipped ray count of 163 exceeds bounding box, and dimension order 1.  2nd-varying max is 218, coord is 2.
+2014-02-19 13:10:44,400 [pool-160-thread-3] ERROR [org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr] Failed to retrieve /groups/scicomp/jacsData/MaskResources/Compartment/maskChannelFormatWithTemplate/compartment_54.mask from local cache
+org.janelia.it.FlyWorkstation.shared.util.filecache.FileNotCacheableException: local cache file missing for http://jacs-webdav.int.janelia.org/WebDAV/groups/scicomp/jacsData/MaskResources/Compartment/maskChannelFormatWithTemplate/compartment_54.mask
+	at org.janelia.it.FlyWorkstation.shared.util.filecache.LocalFileCache.getFile(LocalFileCache.java:290) ~[workstation.jar!/:na]
+	at org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr.getCachedFile(SessionMgr.java:874) ~[workstation.jar!/:na]
+	at org.janelia.it.FlyWorkstation.gui.viewer3d.resolver.CacheFileResolver.getResolvedFilename(CacheFileResolver.java:24) [workstation.jar!/:na]
+	at org.janelia.it.FlyWorkstation.gui.framework.viewer.alignment_board.MaskChanStreamSource.getMaskInputStream(MaskChanStreamSource.java:70) [workstation.jar!/:na]
+	at org.janelia.it.FlyWorkstation.gui.viewer3d.loader.MaskChanMultiFileLoader$1.call(MaskChanMultiFileLoader.java:102) [workstation.jar!/:na]
+	at org.janelia.it.FlyWorkstation.gui.viewer3d.loader.MaskChanMultiFileLoader$1.call(MaskChanMultiFileLoader.java:86) [workstation.jar!/:na]
+	at java.util.concurrent.FutureTask.run(FutureTask.java:262) [na:1.7.0_51]
+	at java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1145) [na:1.7.0_51]
+	at java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:615) [na:1.7.0_51]
+	at java.lang.Thread.run(Thread.java:744) [na:1.7.0_51]
+2014-02-19 13:10:44,400 [pool-160-thread-2] ERROR [org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr] Failed to retrieve /groups/scicomp/jacsData/MaskResources/Compartment/maskChannelFormatWithTemplate/compartment_54.mask from local cache
+org.janelia.it.FlyWorkstation.shared.util.filecache.FileNotCacheableException: local cache file missing for http://jacs-webdav.int.janelia.org/WebDAV/groups/scicomp/jacsData/MaskResources/Compartment/maskChannelFormatWithTemplate/compartment_54.mask
+	at org.janelia.it.FlyWorkstation.shared.util.filecache.LocalFileCache.getFile(LocalFileCache.java:290) ~[workstation.jar!/:na]
+	at org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr.getCachedFile(SessionMgr.java:874) ~[workstation.jar!/:na]
+	at org.janelia.it.FlyWorkstation.gui.viewer3d.resolver.CacheFileResolver.getResolvedFilename(CacheFileResolver.java:24) [workstation.jar!/:na]
+	at org.janelia.it.FlyWorkstation.gui.framework.viewer.alignment_board.MaskChanStreamSource.getMaskInputStream(MaskChanStreamSource.java:70) [workstation.jar!/:na]
+	at org.janelia.it.FlyWorkstation.gui.viewer3d.loader.MaskChanMultiFileLoader$1.call(MaskChanMultiFileLoader.java:102) [workstation.jar!/:na]
+	at org.janelia.it.FlyWorkstation.gui.viewer3d.loader.MaskChanMultiFileLoader$1.call(MaskChanMultiFileLoader.java:86) [workstation.jar!/:na]
+	at java.util.concurrent.FutureTask.run(FutureTask.java:262) [na:1.7.0_51]
+	at java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1145) [na:1.7.0_51]
+	at java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:615) [na:1.7.0_51]
+	at java.lang.Thread.run(Thread.java:744) [na:1.7.0_51]
+2014-02-19 13:10:44,400 [pool-160-thread-1] ERROR [org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr] Failed to retrieve /groups/scicomp/jacsData/MaskResources/Compartment/maskChannelFormatWithTemplate/compartment_54.mask from local cache
+org.janelia.it.FlyWorkstation.shared.util.filecache.FileNotCacheableException: local cache file missing for http://jacs-webdav.int.janelia.org/WebDAV/groups/scicomp/jacsData/MaskResources/Compartment/maskChannelFormatWithTemplate/compartment_54.mask
+	at org.janelia.it.FlyWorkstation.shared.util.filecache.LocalFileCache.getFile(LocalFileCache.java:290) ~[workstation.jar!/:na]
+	at org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr.getCachedFile(SessionMgr.java:874) ~[workstation.jar!/:na]
+	at org.janelia.it.FlyWorkstation.gui.viewer3d.resolver.CacheFileResolver.getResolvedFilename(CacheFileResolver.java:24) [workstation.jar!/:na]
+	at org.janelia.it.FlyWorkstation.gui.framework.viewer.alignment_board.MaskChanStreamSource.getMaskInputStream(MaskChanStreamSource.java:70) [workstation.jar!/:na]
+	at org.janelia.it.FlyWorkstation.gui.viewer3d.loader.MaskChanMultiFileLoader$1.call(MaskChanMultiFileLoader.java:102) [workstation.jar!/:na]
+	at org.janelia.it.FlyWorkstation.gui.viewer3d.loader.MaskChanMultiFileLoader$1.call(MaskChanMultiFileLoader.java:86) [workstation.jar!/:na]
+	at java.util.concurrent.FutureTask.run(FutureTask.java:262) [na:1.7.0_51]
+	at java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1145) [na:1.7.0_51]
+	at java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:615) [na:1.7.0_51]
+	at java.lang.Thread.run(Thread.java:744) [na:1.7.0_51]
+2014-02-19 13:14:09,100 [SwingWorker-pool-3-thread-3] INFO [org.janelia.it.FlyWorkstation.api.entity_model.management.ModelMgr] Searching SOLR: id:1937346964458831961 start=null rows=null
+2014-02-19 13:16:37,210 [AWT-EventQueue-0] INFO [org.janelia.it.FlyWorkstation.gui.framework.viewer.Hud] HUD: entity type is Aligned Item
+2014-02-19 13:16:37,210 [AWT-EventQueue-0] INFO [org.janelia.it.FlyWorkstation.gui.framework.viewer.Hud] No image path for Compartment Set Unified 20x Alignment Space 0.62x0.62x0.62 1024x512x218:1937346976383238233
+2014-02-19 13:16:39,017 [AWT-EventQueue-0] INFO [org.janelia.it.FlyWorkstation.gui.framework.viewer.Hud] No image established for Compartment Set Unified 20x Alignment Space 0.62x0.62x0.62 1024x512x218:Aligned Item
+2014-02-19 13:16:52,930 [AWT-EventQueue-0] INFO [org.janelia.it.FlyWorkstation.gui.framework.viewer.Hud] HUD: entity type is Sample
+2014-02-19 13:16:52,930 [AWT-EventQueue-0] INFO [org.janelia.it.FlyWorkstation.gui.framework.viewer.Hud] In HUD: must load image.
+2014-02-19 13:16:58,384 [AWT-EventQueue-0] WARN [org.janelia.it.FlyWorkstation.gui.viewer3d.texture.TextureMediator] Invalid remainder vs texture data dimensions.  Sx=312 Sy=336 Sz=248 storageFmtReq=4 pixelByteCount=4;  total remaining is 103993344 /Users/fosterl/.JaneliaWorkstationSuite/Console/.jacs-file-cache/active/WebDAV/nobackup/jacs/jacsData/filestore/nerna/Separation/336/226/1874700954268336226/separate/fastLoad/ConsolidatedSignal2_25.mp4;  expected remaining is 311980032
+2014-02-19 13:16:58,705 [AWT-EventQueue-0] INFO [org.janelia.it.FlyWorkstation.gui.viewer3d.buffering.VtxCoordBufMgr] Allocating buffers
+2014-02-19 13:17:07,926 [SwingWorker-pool-3-thread-10] INFO [org.janelia.it.FlyWorkstation.api.entity_model.management.ModelMgr] Searching SOLR: id:1947824984755798105 start=null rows=null
+2014-02-19 13:17:11,078 [AWT-EventQueue-0] INFO [org.janelia.it.FlyWorkstation.gui.framework.console.Browser] Setting perspective: AlignmentBoard
+2014-02-19 13:17:11,080 [AWT-EventQueue-0] INFO [org.janelia.it.FlyWorkstation.gui.framework.viewer.alignment_board.AlignmentBoardViewer] Closing
+2014-02-19 13:17:11,131 [AWT-EventQueue-0] WARN [org.janelia.it.FlyWorkstation.gui.framework.viewer.alignment_board.AlignmentBoardViewer] Attempt at serializing while mip3d=AWT-GLJPanel[ drawableType null, chosenCaps null] and settings dialog=null.
+2014-02-19 13:17:11,132 [AWT-EventQueue-0] INFO [org.janelia.it.FlyWorkstation.gui.framework.viewer.alignment_board.AlignmentBoardViewer] C'tor
+2014-02-19 13:17:12,459 [AWT-EventQueue-0] INFO [org.janelia.it.FlyWorkstation.gui.framework.viewer.alignment_board.AlignmentBoardViewer] Board Opened
+2014-02-19 13:17:12,459 [AWT-EventQueue-0] WARN [org.janelia.it.FlyWorkstation.gui.framework.viewer.alignment_board.AlignmentBoardViewer] Update-board called.
+2014-02-19 13:17:12,460 [AWT-EventQueue-0] INFO [org.janelia.it.FlyWorkstation.gui.framework.viewer.alignment_board.AlignmentBoardViewer] New settings
+2014-02-19 13:17:12,476 [AWT-EventQueue-0] INFO [org.janelia.it.FlyWorkstation.gui.framework.viewer.alignment_board.UserSettingSerializer] Read-Up Setting string: Gamma=0.828000
+CropOutLevel=0.000000
+UseSignal=true
+SelectionBounds=[0.702148,1.000000,0.777344,1.000000,0.000000,1.000000][0.711914,1.000000,0.509766,0.658203,0.000000,1.000000]
+CameraRotation=[0.997960,-0.013000,-0.062508][0.014698,0.999533,0.026791][0.062130,-0.027656,0.997685]
+InGroundFocus=[0.000000,0.000000,0.000000]
+CameraFocus=[0.000000,0.000000,-2350.096436]
+MinVoxelCutoff=1000
+MaxNeuronsCutoff=4
+SaveGammaInTiff=true
+ deserialized, from 1947824984755798105
+2014-02-19 13:17:12,566 [AWT-EventQueue-0] WARN [org.janelia.it.FlyWorkstation.gui.alignment_board_viewer.gui_elements.GpuSampler] Neither NVidea nor Radeon video memory calls succeeded 1280/0.
+2014-02-19 13:17:12,566 [AWT-EventQueue-0] INFO [org.janelia.it.FlyWorkstation.gui.alignment_board_viewer.gui_elements.GpuSampler] Free texture memory 0.
+2014-02-19 13:17:12,670 [SwingWorker-pool-3-thread-7] INFO [org.janelia.it.FlyWorkstation.gui.framework.viewer.alignment_board.RenderablesLoadWorker] GPU vendor NVIDIA Corporation, renderer NVIDIA GeForce GTX 680 OpenGL Engine version 2.1 NVIDIA-8.16.74 310.40.00.10f02
+2014-02-19 13:17:12,860 [SwingWorker-pool-3-thread-7] INFO [org.janelia.it.FlyWorkstation.gui.framework.viewer.alignment_board.RenderablesLoadWorker] User has preferred card.
+2014-02-19 13:17:25,106 [SwingWorker-pool-3-thread-7] WARN [org.janelia.it.FlyWorkstation.gui.viewer3d.MipRenderer] Adjusted height to account for zero-height bounding box.
+2014-02-19 13:17:25,107 [SwingWorker-pool-3-thread-7] WARN [org.janelia.it.FlyWorkstation.gui.camera.BasicCamera3d] Camera zoom NaN
+2014-02-19 13:17:25,107 [SwingWorker-pool-3-thread-7] INFO [org.janelia.it.FlyWorkstation.gui.framework.viewer.alignment_board.UserSettingSerializer] Read-Up Setting string: Gamma=0.828000
+CropOutLevel=0.000000
+UseSignal=true
+SelectionBounds=[0.702148,1.000000,0.777344,1.000000,0.000000,1.000000][0.711914,1.000000,0.509766,0.658203,0.000000,1.000000]
+CameraRotation=[0.997960,-0.013000,-0.062508][0.014698,0.999533,0.026791][0.062130,-0.027656,0.997685]
+InGroundFocus=[0.000000,0.000000,0.000000]
+CameraFocus=[0.000000,0.000000,-2350.096436]
+MinVoxelCutoff=1000
+MaxNeuronsCutoff=4
+SaveGammaInTiff=true
+ deserialized, from 1947824984755798105
+2014-02-19 13:17:33,894 [Thread-65] INFO [org.janelia.it.FlyWorkstation.gui.framework.viewer.alignment_board.TexBuildRunnable] About to build texture data.
+2014-02-19 13:17:33,894 [Thread-66] INFO [org.janelia.it.FlyWorkstation.gui.framework.viewer.alignment_board.TexBuildRunnable] About to build texture data.
+2014-02-19 13:17:33,894 [Thread-65] INFO [org.janelia.it.FlyWorkstation.gui.alignment_board_viewer.volume_builder.ChannelInterpreterToByte] Maximum value found during channel interpretation was 255.
+2014-02-19 13:17:33,894 [Thread-66] INFO [org.janelia.it.FlyWorkstation.gui.framework.viewer.alignment_board.TexBuildRunnable] Awaiting barrier.
+2014-02-19 13:17:33,894 [Thread-65] INFO [org.janelia.it.FlyWorkstation.gui.framework.viewer.alignment_board.TexBuildRunnable] Awaiting barrier.
+2014-02-19 13:17:33,895 [SwingWorker-pool-3-thread-7] INFO [org.janelia.it.FlyWorkstation.gui.framework.viewer.alignment_board.AlignmentBoardViewer] Setting Mip3d Volume.
+2014-02-19 13:17:33,911 [SwingWorker-pool-3-thread-7] INFO [org.janelia.it.FlyWorkstation.gui.framework.viewer.alignment_board.AlignmentBoardViewer] Setting volume maxima on settings.
+2014-02-19 13:17:33,911 [SwingWorker-pool-3-thread-7] INFO [org.janelia.it.FlyWorkstation.gui.alignment_board_viewer.gui_elements.AlignmentBoardControls] Volume maxima provided 1024, 512, 256
+2014-02-19 13:17:33,918 [SwingWorker-pool-3-thread-7] INFO [org.janelia.it.FlyWorkstation.gui.framework.viewer.alignment_board.UserSettingSerializer] Read-Up Setting string: Gamma=0.828000
+CropOutLevel=0.000000
+UseSignal=true
+SelectionBounds=[0.702148,1.000000,0.777344,1.000000,0.000000,1.000000][0.711914,1.000000,0.509766,0.658203,0.000000,1.000000]
+CameraRotation=[0.997960,-0.013000,-0.062508][0.014698,0.999533,0.026791][0.062130,-0.027656,0.997685]
+InGroundFocus=[0.000000,0.000000,0.000000]
+CameraFocus=[0.000000,0.000000,-2350.096436]
+MinVoxelCutoff=1000
+MaxNeuronsCutoff=4
+SaveGammaInTiff=true
+ deserialized, from 1947824984755798105
+2014-02-19 13:17:36,042 [AWT-EventQueue-0] INFO [org.janelia.it.FlyWorkstation.gui.viewer3d.buffering.VtxCoordBufMgr] Allocating buffers
+2014-02-19 13:18:04,497 [SwingWorker-pool-3-thread-6] INFO [org.janelia.it.FlyWorkstation.api.entity_model.management.ModelMgr] Searching SOLR: +(subjects:"fosterl" OR subjects:"admin" OR subjects:"flylight" OR subjects:"leetlab") +doc_type:ENTITY -entity_type:Ontology* AND ((Neuron Fragment 1) OR fosterl_annotations:(Neuron Fragment 1) OR fosterl_annotations_exact:(Neuron Fragment 1) OR admin_annotations:(Neuron Fragment 1) OR admin_annotations_exact:(Neuron Fragment 1) OR flylight_annotations:(Neuron Fragment 1) OR flylight_annotations_exact:(Neuron Fragment 1) OR leetlab_annotations:(Neuron Fragment 1) OR leetlab_annotations_exact:(Neuron Fragment 1)) start=0 rows=3500
+2014-02-19 13:18:15,962 [SwingWorker-pool-3-thread-6] INFO [org.janelia.it.FlyWorkstation.gui.dialogs.search.alignment_board.ABTargetedSearchDialog] Found 3500 raw entities.
+2014-02-19 13:20:54,264 [SwingWorker-pool-3-thread-6] INFO [org.janelia.it.FlyWorkstation.gui.dialogs.search.alignment_board.ABTargetedSearchDialog] Hit maximum of 200.
+2014-02-19 13:20:54,265 [SwingWorker-pool-3-thread-6] INFO [org.janelia.it.FlyWorkstation.gui.dialogs.search.alignment_board.ABTargetedSearchDialog] Filtered to 200 entities.
+2014-02-19 13:20:54,265 [SwingWorker-pool-3-thread-6] INFO [org.janelia.it.FlyWorkstation.gui.dialogs.search.alignment_board.ABTargetedSearchDialog] Non-compatible neurons: 2149, non-compatible samples: 2.
+2014-02-19 13:26:30,318 [SwingWorker-pool-3-thread-4] INFO [org.janelia.it.FlyWorkstation.gui.dialogs.search.alignment_board.ABTargetedSearchDialog] Adding entity Neuron Fragment 1.
+2014-02-19 13:26:30,816 [SwingWorker-pool-3-thread-4] INFO [org.janelia.it.FlyWorkstation.model.viewer.AlignmentBoardContext] Adding new aligned entity: Neuron Fragment 1
+2014-02-19 13:26:31,431 [SwingWorker-pool-3-thread-7] INFO [org.janelia.it.FlyWorkstation.api.entity_model.management.ModelMgr] Searching SOLR: id:1947824984755798105 start=null rows=null
+2014-02-19 13:26:31,699 [SwingWorker-pool-3-thread-4] INFO [org.janelia.it.FlyWorkstation.gui.dialogs.search.alignment_board.ABTargetedSearchDialog] Adding entity Neuron Fragment 1.
+2014-02-19 13:26:31,750 [AWT-EventQueue-0] WARN [org.janelia.it.FlyWorkstation.api.entity_model.management.EntityModel] Denormalized numChildren (1) does not match actual number of children (2) for entity 1976080860935356505
+2014-02-19 13:26:31,773 [AWT-EventQueue-0] INFO [org.janelia.it.FlyWorkstation.gui.framework.viewer.alignment_board.AlignmentBoardViewer] Change type Added.
+2014-02-19 13:26:31,779 [SwingWorker-pool-3-thread-2] INFO [org.janelia.it.FlyWorkstation.gui.framework.viewer.alignment_board.UserSettingSerializer] Save-back Setting string: Gamma=1.098000
+CropOutLevel=0.000000
+UseSignal=true
+SelectionBounds=[0.711914,1.000000,0.509766,0.658203,0.000000,1.000000][0.702148,1.000000,0.777344,1.000000,0.000000,1.000000]
+CameraRotation=[0.908751,0.050523,-0.414269][-0.019690,0.996730,0.078367][0.416873,-0.063060,0.906775]
+InGroundFocus=[0.000000,0.000000,0.000000]
+CameraFocus=[0.000000,0.000000,-2350.096436]
+MinVoxelCutoff=1000
+MaxNeuronsCutoff=4
+SaveGammaInTiff=true
+.
+2014-02-19 13:26:31,868 [SwingWorker-pool-3-thread-3] INFO [org.janelia.it.FlyWorkstation.api.entity_model.management.ModelMgr] Searching SOLR: id:1947824984755798105 start=null rows=null
+2014-02-19 13:26:31,935 [AWT-EventQueue-0] WARN [org.janelia.it.FlyWorkstation.gui.framework.viewer.alignment_board.AlignmentBoardViewer] Update-board called.
+2014-02-19 13:26:31,945 [AWT-EventQueue-0] INFO [org.janelia.it.FlyWorkstation.gui.framework.viewer.alignment_board.AlignmentBoardViewer] New settings
+2014-02-19 13:26:31,959 [AWT-EventQueue-0] INFO [org.janelia.it.FlyWorkstation.gui.framework.viewer.alignment_board.UserSettingSerializer] Read-Up Setting string: Gamma=1.098000
+CropOutLevel=0.000000
+UseSignal=true
+SelectionBounds=[0.711914,1.000000,0.509766,0.658203,0.000000,1.000000][0.702148,1.000000,0.777344,1.000000,0.000000,1.000000]
+CameraRotation=[0.908751,0.050523,-0.414269][-0.019690,0.996730,0.078367][0.416873,-0.063060,0.906775]
+InGroundFocus=[0.000000,0.000000,0.000000]
+CameraFocus=[0.000000,0.000000,-2350.096436]
+MinVoxelCutoff=1000
+MaxNeuronsCutoff=4
+SaveGammaInTiff=true
+ deserialized, from 1947824984755798105
+2014-02-19 13:26:32,024 [AWT-EventQueue-0] WARN [org.janelia.it.FlyWorkstation.gui.alignment_board_viewer.gui_elements.GpuSampler] Neither NVidea nor Radeon video memory calls succeeded 1280/0.
+2014-02-19 13:26:32,024 [AWT-EventQueue-0] INFO [org.janelia.it.FlyWorkstation.gui.alignment_board_viewer.gui_elements.GpuSampler] Free texture memory 0.
+2014-02-19 13:26:32,063 [SwingWorker-pool-3-thread-6] INFO [org.janelia.it.FlyWorkstation.gui.framework.viewer.alignment_board.RenderablesLoadWorker] GPU vendor NVIDIA Corporation, renderer NVIDIA GeForce GTX 680 OpenGL Engine version 2.1 NVIDIA-8.16.74 310.40.00.10f02
+2014-02-19 13:26:32,140 [SwingWorker-pool-3-thread-4] INFO [org.janelia.it.FlyWorkstation.model.viewer.AlignmentBoardContext] Adding new aligned entity: Neuron Fragment 1
+2014-02-19 13:26:32,296 [SwingWorker-pool-3-thread-6] INFO [org.janelia.it.FlyWorkstation.gui.framework.viewer.alignment_board.RenderablesLoadWorker] User has preferred card.
+2014-02-19 13:26:32,743 [SwingWorker-pool-3-thread-9] INFO [org.janelia.it.FlyWorkstation.api.entity_model.management.ModelMgr] Searching SOLR: id:1947824984755798105 start=null rows=null
+2014-02-19 13:26:32,917 [AWT-EventQueue-0] WARN [org.janelia.it.FlyWorkstation.api.entity_model.management.EntityModel] Denormalized numChildren (1) does not match actual number of children (2) for entity 1976080866916434009
+2014-02-19 13:26:32,953 [AWT-EventQueue-0] INFO [org.janelia.it.FlyWorkstation.gui.framework.viewer.alignment_board.AlignmentBoardViewer] Change type Added.
+2014-02-19 13:26:32,959 [SwingWorker-pool-3-thread-8] INFO [org.janelia.it.FlyWorkstation.gui.framework.viewer.alignment_board.UserSettingSerializer] Save-back Setting string: Gamma=1.098000
+CropOutLevel=0.000000
+UseSignal=true
+SelectionBounds=[0.702148,1.000000,0.777344,1.000000,0.000000,1.000000][0.711914,1.000000,0.509766,0.658203,0.000000,1.000000]
+CameraRotation=[0.908751,0.050523,-0.414269][-0.019690,0.996730,0.078367][0.416873,-0.063060,0.906775]
+InGroundFocus=[0.000000,0.000000,0.000000]
+CameraFocus=[0.000000,0.000000,-2350.096436]
+MinVoxelCutoff=1000
+MaxNeuronsCutoff=4
+SaveGammaInTiff=true
+.
+2014-02-19 13:26:33,038 [AWT-EventQueue-0] WARN [org.janelia.it.FlyWorkstation.gui.framework.viewer.alignment_board.AlignmentBoardViewer] Update-board called.
+2014-02-19 13:26:33,045 [SwingWorker-pool-3-thread-10] INFO [org.janelia.it.FlyWorkstation.api.entity_model.management.ModelMgr] Searching SOLR: id:1947824984755798105 start=null rows=null
+2014-02-19 13:26:43,505 [SwingWorker-pool-3-thread-6] WARN [org.janelia.it.FlyWorkstation.gui.viewer3d.MipRenderer] Adjusted height to account for zero-height bounding box.
+2014-02-19 13:26:43,505 [SwingWorker-pool-3-thread-6] WARN [org.janelia.it.FlyWorkstation.gui.camera.BasicCamera3d] Camera zoom NaN
+2014-02-19 13:26:43,505 [SwingWorker-pool-3-thread-6] INFO [org.janelia.it.FlyWorkstation.gui.framework.viewer.alignment_board.UserSettingSerializer] Read-Up Setting string: Gamma=1.098000
+CropOutLevel=0.000000
+UseSignal=true
+SelectionBounds=[0.702148,1.000000,0.777344,1.000000,0.000000,1.000000][0.711914,1.000000,0.509766,0.658203,0.000000,1.000000]
+CameraRotation=[0.908751,0.050523,-0.414269][-0.019690,0.996730,0.078367][0.416873,-0.063060,0.906775]
+InGroundFocus=[0.000000,0.000000,0.000000]
+CameraFocus=[0.000000,0.000000,-2350.096436]
+MinVoxelCutoff=1000
+MaxNeuronsCutoff=4
+SaveGammaInTiff=true
+ deserialized, from 1947824984755798105
+2014-02-19 13:26:49,116 [Thread-93] INFO [org.janelia.it.FlyWorkstation.gui.framework.viewer.alignment_board.TexBuildRunnable] About to build texture data.
+2014-02-19 13:26:49,116 [Thread-94] INFO [org.janelia.it.FlyWorkstation.gui.framework.viewer.alignment_board.TexBuildRunnable] About to build texture data.
+2014-02-19 13:26:49,116 [Thread-93] INFO [org.janelia.it.FlyWorkstation.gui.alignment_board_viewer.volume_builder.ChannelInterpreterToByte] Maximum value found during channel interpretation was 255.
+2014-02-19 13:26:49,116 [Thread-94] INFO [org.janelia.it.FlyWorkstation.gui.framework.viewer.alignment_board.TexBuildRunnable] Awaiting barrier.
+2014-02-19 13:26:49,116 [Thread-93] INFO [org.janelia.it.FlyWorkstation.gui.framework.viewer.alignment_board.TexBuildRunnable] Awaiting barrier.
+2014-02-19 13:26:49,116 [SwingWorker-pool-3-thread-6] INFO [org.janelia.it.FlyWorkstation.gui.framework.viewer.alignment_board.AlignmentBoardViewer] Setting Mip3d Volume.
+2014-02-19 13:26:49,117 [SwingWorker-pool-3-thread-6] INFO [org.janelia.it.FlyWorkstation.gui.framework.viewer.alignment_board.AlignmentBoardViewer] Setting volume maxima on settings.
+2014-02-19 13:26:49,117 [SwingWorker-pool-3-thread-6] INFO [org.janelia.it.FlyWorkstation.gui.alignment_board_viewer.gui_elements.AlignmentBoardControls] Volume maxima provided 1024, 512, 256
+2014-02-19 13:26:49,122 [SwingWorker-pool-3-thread-6] INFO [org.janelia.it.FlyWorkstation.gui.framework.viewer.alignment_board.UserSettingSerializer] Read-Up Setting string: Gamma=1.098000
+CropOutLevel=0.000000
+UseSignal=true
+SelectionBounds=[0.702148,1.000000,0.777344,1.000000,0.000000,1.000000][0.711914,1.000000,0.509766,0.658203,0.000000,1.000000]
+CameraRotation=[0.908751,0.050523,-0.414269][-0.019690,0.996730,0.078367][0.416873,-0.063060,0.906775]
+InGroundFocus=[0.000000,0.000000,0.000000]
+CameraFocus=[0.000000,0.000000,-2350.096436]
+MinVoxelCutoff=1000
+MaxNeuronsCutoff=4
+SaveGammaInTiff=true
+ deserialized, from 1947824984755798105
+2014-02-19 13:26:49,161 [AWT-EventQueue-0] WARN [org.janelia.it.FlyWorkstation.gui.framework.viewer.alignment_board.AlignmentBoardViewer] Update-board called.
+2014-02-19 13:26:49,166 [AWT-EventQueue-0] INFO [org.janelia.it.FlyWorkstation.gui.framework.viewer.alignment_board.AlignmentBoardViewer] New settings
+2014-02-19 13:26:49,189 [AWT-EventQueue-0] INFO [org.janelia.it.FlyWorkstation.gui.framework.viewer.alignment_board.UserSettingSerializer] Read-Up Setting string: Gamma=1.098000
+CropOutLevel=0.000000
+UseSignal=true
+SelectionBounds=[0.702148,1.000000,0.777344,1.000000,0.000000,1.000000][0.711914,1.000000,0.509766,0.658203,0.000000,1.000000]
+CameraRotation=[0.908751,0.050523,-0.414269][-0.019690,0.996730,0.078367][0.416873,-0.063060,0.906775]
+InGroundFocus=[0.000000,0.000000,0.000000]
+CameraFocus=[0.000000,0.000000,-2350.096436]
+MinVoxelCutoff=1000
+MaxNeuronsCutoff=4
+SaveGammaInTiff=true
+ deserialized, from 1947824984755798105
+2014-02-19 13:26:49,309 [AWT-EventQueue-0] WARN [org.janelia.it.FlyWorkstation.gui.alignment_board_viewer.gui_elements.GpuSampler] Neither NVidea nor Radeon video memory calls succeeded 1280/0.
+2014-02-19 13:26:49,310 [AWT-EventQueue-0] INFO [org.janelia.it.FlyWorkstation.gui.alignment_board_viewer.gui_elements.GpuSampler] Free texture memory 0.
+2014-02-19 13:26:49,411 [SwingWorker-pool-3-thread-4] INFO [org.janelia.it.FlyWorkstation.gui.framework.viewer.alignment_board.RenderablesLoadWorker] GPU vendor NVIDIA Corporation, renderer NVIDIA GeForce GTX 680 OpenGL Engine version 2.1 NVIDIA-8.16.74 310.40.00.10f02
+2014-02-19 13:26:49,587 [SwingWorker-pool-3-thread-4] INFO [org.janelia.it.FlyWorkstation.gui.framework.viewer.alignment_board.RenderablesLoadWorker] User has preferred card.
+2014-02-19 13:27:08,202 [SwingWorker-pool-3-thread-4] WARN [org.janelia.it.FlyWorkstation.gui.viewer3d.MipRenderer] Adjusted height to account for zero-height bounding box.
+2014-02-19 13:27:08,202 [SwingWorker-pool-3-thread-4] WARN [org.janelia.it.FlyWorkstation.gui.camera.BasicCamera3d] Camera zoom NaN
+2014-02-19 13:27:08,202 [SwingWorker-pool-3-thread-4] INFO [org.janelia.it.FlyWorkstation.gui.framework.viewer.alignment_board.UserSettingSerializer] Read-Up Setting string: Gamma=1.098000
+CropOutLevel=0.000000
+UseSignal=true
+SelectionBounds=[0.702148,1.000000,0.777344,1.000000,0.000000,1.000000][0.711914,1.000000,0.509766,0.658203,0.000000,1.000000]
+CameraRotation=[0.908751,0.050523,-0.414269][-0.019690,0.996730,0.078367][0.416873,-0.063060,0.906775]
+InGroundFocus=[0.000000,0.000000,0.000000]
+CameraFocus=[0.000000,0.000000,-2350.096436]
+MinVoxelCutoff=1000
+MaxNeuronsCutoff=4
+SaveGammaInTiff=true
+ deserialized, from 1947824984755798105
+2014-02-19 13:27:14,540 [Thread-102] INFO [org.janelia.it.FlyWorkstation.gui.framework.viewer.alignment_board.TexBuildRunnable] About to build texture data.
+2014-02-19 13:27:14,540 [Thread-103] INFO [org.janelia.it.FlyWorkstation.gui.framework.viewer.alignment_board.TexBuildRunnable] About to build texture data.
+2014-02-19 13:27:14,541 [Thread-102] INFO [org.janelia.it.FlyWorkstation.gui.alignment_board_viewer.volume_builder.ChannelInterpreterToByte] Maximum value found during channel interpretation was 255.
+2014-02-19 13:27:14,541 [Thread-103] INFO [org.janelia.it.FlyWorkstation.gui.framework.viewer.alignment_board.TexBuildRunnable] Awaiting barrier.
+2014-02-19 13:27:14,541 [Thread-102] INFO [org.janelia.it.FlyWorkstation.gui.framework.viewer.alignment_board.TexBuildRunnable] Awaiting barrier.
+2014-02-19 13:27:14,541 [SwingWorker-pool-3-thread-4] INFO [org.janelia.it.FlyWorkstation.gui.framework.viewer.alignment_board.AlignmentBoardViewer] Setting Mip3d Volume.
+2014-02-19 13:27:14,541 [SwingWorker-pool-3-thread-4] INFO [org.janelia.it.FlyWorkstation.gui.framework.viewer.alignment_board.AlignmentBoardViewer] Setting volume maxima on settings.
+2014-02-19 13:27:14,541 [SwingWorker-pool-3-thread-4] INFO [org.janelia.it.FlyWorkstation.gui.alignment_board_viewer.gui_elements.AlignmentBoardControls] Volume maxima provided 1024, 512, 256
+2014-02-19 13:27:14,546 [SwingWorker-pool-3-thread-4] INFO [org.janelia.it.FlyWorkstation.gui.framework.viewer.alignment_board.UserSettingSerializer] Read-Up Setting string: Gamma=1.098000
+CropOutLevel=0.000000
+UseSignal=true
+SelectionBounds=[0.702148,1.000000,0.777344,1.000000,0.000000,1.000000][0.711914,1.000000,0.509766,0.658203,0.000000,1.000000]
+CameraRotation=[0.908751,0.050523,-0.414269][-0.019690,0.996730,0.078367][0.416873,-0.063060,0.906775]
+InGroundFocus=[0.000000,0.000000,0.000000]
+CameraFocus=[0.000000,0.000000,-2350.096436]
+MinVoxelCutoff=1000
+MaxNeuronsCutoff=4
+SaveGammaInTiff=true
+ deserialized, from 1947824984755798105
+2014-02-19 13:27:15,159 [AWT-EventQueue-0] INFO [org.janelia.it.FlyWorkstation.gui.viewer3d.buffering.VtxCoordBufMgr] Allocating buffers
+2014-02-19 13:50:25,034 [SwingWorker-pool-3-thread-5] INFO [org.janelia.it.FlyWorkstation.gui.framework.viewer.alignment_board.UserSettingSerializer] Save-back Setting string: Gamma=1.098000
+CropOutLevel=0.000000
+UseSignal=true
+CameraRotation=[-0.507110,-0.684778,-0.523373][-0.406637,0.725503,-0.555241][0.759926,-0.068745,-0.646365]
+InGroundFocus=[0.000000,0.000000,0.000000]
+CameraFocus=[0.000000,0.000000,-1962.537109]
+MinVoxelCutoff=1000
+MaxNeuronsCutoff=4
+SaveGammaInTiff=true
+.
+2014-02-19 13:50:25,035 [AWT-EventQueue-0] INFO [org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr] Saving user settings to /Users/fosterl/.JaneliaWorkstationSuite/Console/.JW_Settings
+2014-02-19 13:50:25,423 [AWT-EventQueue-0] INFO [org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr] Logged out with: user:fosterl
+2014-02-19 13:50:25,424 [AWT-EventQueue-0] INFO [org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr] Memory in use at exit: 1606.3223 MB
+2014-02-19 13:50:25,428 [AWT-EventQueue-0] INFO [org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr] Window is closing...
+2014-02-19 13:50:25,429 [AWT-EventQueue-0] INFO [org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr] Saving user settings to /Users/fosterl/.JaneliaWorkstationSuite/Console/.JW_Settings
+2014-02-19 13:50:25,447 [SwingWorker-pool-3-thread-10] INFO [org.janelia.it.FlyWorkstation.api.entity_model.management.ModelMgr] Searching SOLR: id:1947824984755798105 start=null rows=null
+2014-02-19 13:50:25,452 [SwingWorker-pool-3-thread-10] ERROR [org.janelia.it.FlyWorkstation.gui.framework.outline.EntityDetailsPanel] Error loading Solr attributes
+org.janelia.it.FlyWorkstation.api.stub.data.SystemError: Not logged in
+	at org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr.getSubjectKey(SessionMgr.java:825) ~[workstation.jar!/:na]
+	at org.janelia.it.FlyWorkstation.api.facade.concrete_facade.ejb.EJBSolrFacade.searchSolr(EJBSolrFacade.java:19) ~[workstation.jar!/:na]
+	at org.janelia.it.FlyWorkstation.api.entity_model.management.ModelMgr.searchSolr(ModelMgr.java:871) ~[workstation.jar!/:na]
+	at org.janelia.it.FlyWorkstation.gui.framework.outline.EntityDetailsPanel$4.doStuff(EntityDetailsPanel.java:388) ~[workstation.jar!/:na]
+	at org.janelia.it.FlyWorkstation.shared.workers.SimpleWorker.doInBackground(SimpleWorker.java:33) [workstation.jar!/:na]
+	at org.janelia.it.FlyWorkstation.shared.workers.SimpleWorker.doInBackground(SimpleWorker.java:17) [workstation.jar!/:na]
+	at javax.swing.SwingWorker$1.call(SwingWorker.java:296) [na:1.7.0_51]
+	at java.util.concurrent.FutureTask.run(FutureTask.java:262) [na:1.7.0_51]
+	at javax.swing.SwingWorker.run(SwingWorker.java:335) [na:1.7.0_51]
+	at java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1145) [na:1.7.0_51]
+	at java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:615) [na:1.7.0_51]
+	at java.lang.Thread.run(Thread.java:744) [na:1.7.0_51]

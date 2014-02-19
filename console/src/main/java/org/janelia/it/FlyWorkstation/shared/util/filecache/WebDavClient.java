@@ -205,29 +205,38 @@ public class WebDavClient {
      */
     public void setCredentialsUsingAuthenticator() {
 
-        final PasswordAuthentication defaultAuthentication =
-                Authenticator.requestPasswordAuthentication(
-                        null,
-                        null,
-                        -1,
-                        null,
-                        null,
-                        null);
+        try {
+            final PasswordAuthentication defaultAuthentication
+                    = Authenticator.requestPasswordAuthentication(
+                            null,
+                            null,
+                            -1,
+                            null,
+                            null,
+                            null);
 
-        if (defaultAuthentication != null) {
+            if (defaultAuthentication != null) {
 
-            final String userName = defaultAuthentication.getUserName();
-            final char[] password = defaultAuthentication.getPassword();
+                final String userName = defaultAuthentication.getUserName();
+                final char[] password = defaultAuthentication.getPassword();
 
-            if ((userName != null) && (password != null)) {
+                if ((userName != null) && (password != null)) {
 
-                final UsernamePasswordCredentials credentials =
-                        new UsernamePasswordCredentials(userName,
-                                                        String.valueOf(password));
-                setCredentials(credentials);
+                    final UsernamePasswordCredentials credentials
+                            = new UsernamePasswordCredentials(userName,
+                                    String.valueOf(password));
+                    setCredentials(credentials);
+                }
             }
+        } catch (NullPointerException npe) {
+            if (npe.getCause() instanceof ExceptionInInitializerError) {
+                LOG.info(PREMATURE_LOGIN_ATTEMPT);
+            }
+        } catch (ExceptionInInitializerError eiie) {
+            LOG.info(PREMATURE_LOGIN_ATTEMPT);
         }
     }
+    public static final String PREMATURE_LOGIN_ATTEMPT = "Attempted to use incompatible login method.  Using NetBeans?";
 
     /**
      * Finds information about the specified file.

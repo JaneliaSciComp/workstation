@@ -54,7 +54,7 @@ public class ConsoleApp {
 		});
     }
 
-    private static void newBrowser() {
+    public static void newBrowser() {
         
         final SplashScreen splash = SplashScreen.getSplashScreen();
         if (splash == null) {
