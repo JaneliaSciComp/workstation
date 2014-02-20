@@ -1,0 +1,27 @@
+2014-02-18 15:27:26,073 [main] INFO [org.janelia.it.FlyWorkstation.gui.application.ConsoleApp] Java version: 1.7.0_51
+2014-02-18 15:27:26,235 [AWT-EventQueue-0] WARN [org.janelia.it.FlyWorkstation.gui.application.ConsoleApp] No splash screen image configured
+2014-02-18 15:27:26,266 [AWT-EventQueue-0] INFO [org.janelia.it.FlyWorkstation.api.entity_model.management.ModelMgr] Initializing Model Manager
+2014-02-18 15:27:26,355 [AWT-EventQueue-0] INFO [org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr] Initializing Session Manager
+2014-02-18 15:27:26,357 [AWT-EventQueue-0] INFO [org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr] Renamed settings directory and files.
+2014-02-18 15:27:27,200 [AWT-EventQueue-0] INFO [org.janelia.it.FlyWorkstation.api.facade.concrete_facade.ejb.EJBFactory] Using interactive server: jnp://jacs:1199
+2014-02-18 15:27:27,200 [AWT-EventQueue-0] INFO [org.janelia.it.FlyWorkstation.api.facade.concrete_facade.ejb.EJBFactory] Using pipeline server: jnp://jacs-data:1199
+2014-02-18 15:27:27,202 [AWT-EventQueue-0] INFO [org.janelia.it.FlyWorkstation.shared.filestore.PathTranslator] Using JACS data path: /Volumes/jacsData
+2014-02-18 15:27:27,339 [AWT-EventQueue-0] INFO [org.janelia.it.FlyWorkstation.shared.util.filecache.LocalFileCache] <init>: exit
+2014-02-18 15:27:27,339 [local-file-cache-load-thread] INFO [org.janelia.it.FlyWorkstation.shared.util.filecache.LocalFileCache] loadCacheFromFilesystem: starting load
+2014-02-18 15:27:27,339 [AWT-EventQueue-0] INFO [org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr] Using 2d renderer: IMAGE_IO
+2014-02-18 15:27:27,914 [AWT-EventQueue-0] WARN [org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr] Ignoring the seemingly harmless exception that Synthetica throws because of Java 7
+2014-02-18 15:27:28,127 [AWT-EventQueue-0] INFO [org.eclipse.jetty.server.Server] jetty-8.1.8.v20121106
+2014-02-18 15:27:28,178 [AWT-EventQueue-0] INFO [org.eclipse.jetty.server.AbstractConnector] Started SelectChannelConnector@0.0.0.0:40001
+2014-02-18 15:27:29,243 [AWT-EventQueue-0] INFO [org.janelia.it.FlyWorkstation.shared.util.filecache.WebDavClient] setCredentials: entry, userName=fosterl
+2014-02-18 15:27:29,243 [AWT-EventQueue-0] INFO [org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr] Authenticated as user:fosterl
+2014-02-18 15:27:29,258 [AWT-EventQueue-0] INFO [org.janelia.it.FlyWorkstation.gui.application.ConsoleApp] Successfully logged in user fosterl
+2014-02-18 15:27:31,262 [AWT-EventQueue-0] INFO [org.janelia.it.FlyWorkstation.gui.dialogs.GiantFiberSearchDialog] Begin loading
+2014-02-18 15:27:31,346 [AWT-EventQueue-0] INFO [org.janelia.it.FlyWorkstation.gui.dialogs.MAASearchDialog] Begin loading
+2014-02-18 15:27:31,776 [AWT-EventQueue-0] INFO [org.janelia.it.FlyWorkstation.gui.framework.tool_manager.ToolMgr] Base root executable path: /Users/fosterl/NetBeansProjects/LLF_NetBeans_02102014/janelia-workstation/console/build/classes/
+2014-02-18 15:27:32,114 [AWT-EventQueue-0] INFO [org.janelia.it.FlyWorkstation.gui.framework.outline.EntityDetailsOutline] Activating
+2014-02-18 15:27:32,150 [AWT-EventQueue-0] INFO [org.janelia.it.FlyWorkstation.gui.framework.outline.EntityOutline] Activating
+2014-02-18 15:27:32,241 [AWT-EventQueue-0] INFO [org.janelia.it.FlyWorkstation.gui.framework.console.Browser] Setting perspective: ImageBrowser
+2014-02-18 15:27:32,918 [AWT-EventQueue-0] INFO [org.janelia.it.FlyWorkstation.gui.dialogs.MAASearchDialog] Completed loading, 0 counts, dialog is ready
+2014-02-18 15:27:37,520 [AWT-EventQueue-0] INFO [org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr] Saving user settings to /Users/fosterl/.JaneliaWorkstationSuite/Console/.JW_Settings
+2014-02-18 15:27:37,570 [AWT-EventQueue-0] INFO [org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr] Logged out with: user:fosterl
+2014-02-18 15:27:37,570 [AWT-EventQueue-0] INFO [org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr] Memory in use at exit: 179.54283 MB
