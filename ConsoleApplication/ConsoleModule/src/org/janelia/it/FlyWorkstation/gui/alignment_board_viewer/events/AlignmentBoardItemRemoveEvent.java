@@ -1,4 +1,4 @@
-package org.janelia.it.FlyWorkstation.gui.framework.viewer.alignment_board.events;
+package org.janelia.it.FlyWorkstation.gui.alignment_board_viewer.events;
 
 import org.janelia.it.FlyWorkstation.model.viewer.AlignedItem;
 import org.janelia.it.FlyWorkstation.model.viewer.AlignmentBoardContext;

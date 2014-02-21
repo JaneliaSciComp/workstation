@@ -1,5 +1,7 @@
-package org.janelia.it.FlyWorkstation.gui.framework.viewer.alignment_board;
+package org.janelia.it.FlyWorkstation.gui.alignment_board_viewer;
 
+import org.janelia.it.FlyWorkstation.gui.alignment_board_viewer.AlignmentBoardSettings;
+import org.janelia.it.FlyWorkstation.gui.alignment_board_viewer.AlignmentBoardControllable;
 import org.janelia.it.FlyWorkstation.gui.alignment_board_viewer.renderable.*;
 import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.FlyWorkstation.gui.alignment_board_viewer.gui_elements.GpuSampler;

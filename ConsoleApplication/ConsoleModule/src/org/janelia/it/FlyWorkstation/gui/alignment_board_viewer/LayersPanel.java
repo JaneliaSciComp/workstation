@@ -1,5 +1,6 @@
-package org.janelia.it.FlyWorkstation.gui.framework.viewer.alignment_board;
+package org.janelia.it.FlyWorkstation.gui.alignment_board_viewer;
 
+import org.janelia.it.FlyWorkstation.gui.alignment_board_viewer.OutlineExpansionState;
 import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Component;
@@ -35,10 +36,10 @@ import org.janelia.it.FlyWorkstation.gui.framework.outline.ActivatableView;
 import org.janelia.it.FlyWorkstation.gui.framework.outline.EntityTransferHandler;
 import org.janelia.it.FlyWorkstation.gui.framework.outline.Refreshable;
 import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr;
-import org.janelia.it.FlyWorkstation.gui.framework.viewer.alignment_board.events.AlignmentBoardCloseEvent;
-import org.janelia.it.FlyWorkstation.gui.framework.viewer.alignment_board.events.AlignmentBoardItemChangeEvent;
-import org.janelia.it.FlyWorkstation.gui.framework.viewer.alignment_board.events.AlignmentBoardItemChangeEvent.ChangeType;
-import org.janelia.it.FlyWorkstation.gui.framework.viewer.alignment_board.events.AlignmentBoardOpenEvent;
+import org.janelia.it.FlyWorkstation.gui.alignment_board_viewer.events.AlignmentBoardCloseEvent;
+import org.janelia.it.FlyWorkstation.gui.alignment_board_viewer.events.AlignmentBoardItemChangeEvent;
+import org.janelia.it.FlyWorkstation.gui.alignment_board_viewer.events.AlignmentBoardItemChangeEvent.ChangeType;
+import org.janelia.it.FlyWorkstation.gui.alignment_board_viewer.events.AlignmentBoardOpenEvent;
 import org.janelia.it.FlyWorkstation.gui.util.ColorSwatch;
 import org.janelia.it.FlyWorkstation.gui.util.Icons;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.VolumeModel;

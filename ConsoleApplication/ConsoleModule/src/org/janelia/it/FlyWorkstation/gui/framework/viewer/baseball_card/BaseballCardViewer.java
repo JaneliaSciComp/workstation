@@ -4,7 +4,7 @@ import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.FlyWorkstation.gui.framework.viewer.BaseballCardPanel;
 import org.janelia.it.FlyWorkstation.gui.framework.viewer.Viewer;
 import org.janelia.it.FlyWorkstation.gui.framework.viewer.ViewerPane;
-import org.janelia.it.FlyWorkstation.gui.framework.viewer.alignment_board.LayersPanel;
+import org.janelia.it.FlyWorkstation.gui.alignment_board_viewer.LayersPanel;
 import org.janelia.it.FlyWorkstation.gui.util.Icons;
 import org.janelia.it.FlyWorkstation.model.entity.RootedEntity;
 import org.janelia.it.FlyWorkstation.model.viewer.AlignmentBoardContext;

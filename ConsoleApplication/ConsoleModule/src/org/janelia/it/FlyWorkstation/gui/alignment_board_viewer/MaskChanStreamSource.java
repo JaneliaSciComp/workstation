@@ -1,4 +1,4 @@
-package org.janelia.it.FlyWorkstation.gui.framework.viewer.alignment_board;
+package org.janelia.it.FlyWorkstation.gui.alignment_board_viewer;
 
 /**
  * Created with IntelliJ IDEA.

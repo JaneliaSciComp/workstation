@@ -1,4 +1,4 @@
-package org.janelia.it.FlyWorkstation.gui.framework.viewer.alignment_board;
+package org.janelia.it.FlyWorkstation.gui.alignment_board_viewer;
 
 import org.janelia.it.FlyWorkstation.api.entity_model.management.ModelMgr;
 import org.janelia.it.FlyWorkstation.geom.Rotation3d;
@@ -114,16 +114,75 @@ public class UserSettingSerializer implements Serializable {
 
     }
 
-    private static String getSettingsString( Entity alignmentBoard ) {
-        // Read up.
-        String settingString =
-                alignmentBoard.getValueByAttributeName(
-                        EntityConstants.ATTRIBUTE_ALIGNMENT_BOARD_USER_SETTINGS
-                );
-        return settingString;
+    public String getSettingsString() {
+        // Locate all the settings to be saved.
+
+        // Save back all of interest.
+        StringBuilder builder = new StringBuilder();
+        builder.append(String.format(GAMMA_SETTING + "=%f", serializationAdapter.getGammaAdjustment()));
+        builder.append("\n");
+        builder.append(String.format(CROP_OUT_LEVEL_SETTING + "=%f", serializationAdapter.getCropOutLevel()));
+        builder.append("\n");
+        builder.append(USE_SIGNAL_SETTING).append("=");
+        builder.append(serializationAdapter.isShowChannelData());
+        builder.append("\n");
+
+        CropCoordSet cropCoordSet = serializationAdapter.getCropCoords();
+        if (! cropCoordSet.isEmpty() ) {
+            builder.append( SELECTION_BOUNDS_SETTING ).append( "=" );
+            for (float[] nextCoordSet : cropCoordSet.getAcceptedCoordinates()) {
+                appendFloatArray(builder, nextCoordSet);
+            }
+            // May add on any current (un-ORed) coordinates.
+            if ( cropCoordSet.getCurrentCoordinates() != null ) {
+                StringBuilder currBuf = new StringBuilder();
+                String currCoordStr = currBuf.toString();
+                if ( ! builder.toString().contains(currCoordStr) ) {
+                    appendFloatArray( currBuf, cropCoordSet.getCurrentCoordinates() );
+                    builder.append( currCoordStr );
+                }
+            }
+            builder.append("\n");
+        }
+
+        Rotation3d rotation = serializationAdapter.getRotation();
+        if ( rotation != null ) {
+            builder.append( CAMERA_ROTATION_SETTING ).append( "=" );
+            for ( int i = 0; i < 3; i++ ) {
+                UnitVec3 nextVec = rotation.get(i);
+                appendVec3(builder, nextVec);
+            }
+            builder.append( "\n" );
+        }
+        else {
+            logger.info("Null rotation in Volume Model.");
+        }
+
+        Vec3 focusInGround = serializationAdapter.getFocus();
+        if ( focusInGround != null ) {
+            builder.append(FOCUS_SETTING).append( "=" );
+            appendVec3(builder, focusInGround );
+            builder.append("\n");
+        }
+
+        Vec3 depth = serializationAdapter.getCameraDepth();
+        if ( depth != null ) {
+            builder.append(CAMERA_DEPTH).append( "=" );
+            appendVec3(builder, depth);
+            builder.append("\n");
+        }
+
+        builder.append( MIN_VOXELS_SETTING ).append("=").append(serializationAdapter.getMinimumVoxelCount()).append("\n");
+
+        builder.append( MAX_NEURON_SETTING ).append("=").append(serializationAdapter.getMaximumNeuronCount()).append("\n");
+
+        builder.append( SAVE_BRIGHTNESS_SETTING ).append("=").append(serializationAdapter.isSaveColorBrightness()).append("\n");
+
+        logger.debug("SETTINGS: {} serialized", builder);
+        return builder.toString();
     }
 
-    void parseSettings(String settingString) {
+    public void parseSettings(String settingString) {
         if ( settingString == null ) {
             logger.info(
                     "No serialized values for board {}/{}.",
@@ -258,6 +317,15 @@ public class UserSettingSerializer implements Serializable {
 
     }
 
+    private static String getSettingsString( Entity alignmentBoard ) {
+        // Read up.
+        String settingString =
+                alignmentBoard.getValueByAttributeName(
+                        EntityConstants.ATTRIBUTE_ALIGNMENT_BOARD_USER_SETTINGS
+                );
+        return settingString;
+    }
+
     /** Sets a neuron-cutoff constraint.  Here for purpose of non-redundancy. */
     private void extractNeuronConstraint(
             String settingString, Map<String, String> settingToValue, ConstraintSetter setter
@@ -281,74 +349,6 @@ public class UserSettingSerializer implements Serializable {
     /** Quick method to test whether setting is empty. */
     private boolean nonEmpty(String str) {
         return str != null && str.trim().length() > 0;
-    }
-
-    String getSettingsString() {
-        // Locate all the settings to be saved.
-
-        // Save back all of interest.
-        StringBuilder builder = new StringBuilder();
-        builder.append(String.format(GAMMA_SETTING + "=%f", serializationAdapter.getGammaAdjustment()));
-        builder.append("\n");
-        builder.append(String.format(CROP_OUT_LEVEL_SETTING + "=%f", serializationAdapter.getCropOutLevel()));
-        builder.append("\n");
-        builder.append(USE_SIGNAL_SETTING).append("=");
-        builder.append(serializationAdapter.isShowChannelData());
-        builder.append("\n");
-
-        CropCoordSet cropCoordSet = serializationAdapter.getCropCoords();
-        if (! cropCoordSet.isEmpty() ) {
-            builder.append( SELECTION_BOUNDS_SETTING ).append( "=" );
-            for (float[] nextCoordSet : cropCoordSet.getAcceptedCoordinates()) {
-                appendFloatArray(builder, nextCoordSet);
-            }
-            // May add on any current (un-ORed) coordinates.
-            if ( cropCoordSet.getCurrentCoordinates() != null ) {
-                StringBuilder currBuf = new StringBuilder();
-                String currCoordStr = currBuf.toString();
-                if ( ! builder.toString().contains(currCoordStr) ) {
-                    appendFloatArray( currBuf, cropCoordSet.getCurrentCoordinates() );
-                    builder.append( currCoordStr );
-                }
-            }
-            builder.append("\n");
-        }
-
-        Rotation3d rotation = serializationAdapter.getRotation();
-        if ( rotation != null ) {
-            builder.append( CAMERA_ROTATION_SETTING ).append( "=" );
-            for ( int i = 0; i < 3; i++ ) {
-                UnitVec3 nextVec = rotation.get(i);
-                appendVec3(builder, nextVec);
-            }
-            builder.append( "\n" );
-        }
-        else {
-            logger.info("Null rotation in Volume Model.");
-        }
-
-        Vec3 focusInGround = serializationAdapter.getFocus();
-        if ( focusInGround != null ) {
-            builder.append(FOCUS_SETTING).append( "=" );
-            appendVec3(builder, focusInGround );
-            builder.append("\n");
-        }
-
-        Vec3 depth = serializationAdapter.getCameraDepth();
-        if ( depth != null ) {
-            builder.append(CAMERA_DEPTH).append( "=" );
-            appendVec3(builder, depth);
-            builder.append("\n");
-        }
-
-        builder.append( MIN_VOXELS_SETTING ).append("=").append(serializationAdapter.getMinimumVoxelCount()).append("\n");
-
-        builder.append( MAX_NEURON_SETTING ).append("=").append(serializationAdapter.getMaximumNeuronCount()).append("\n");
-
-        builder.append( SAVE_BRIGHTNESS_SETTING ).append("=").append(serializationAdapter.isSaveColorBrightness()).append("\n");
-
-        logger.debug("SETTINGS: {} serialized", builder);
-        return builder.toString();
     }
 
     private void appendVec3(StringBuilder builder, Vec3 nextVec) {

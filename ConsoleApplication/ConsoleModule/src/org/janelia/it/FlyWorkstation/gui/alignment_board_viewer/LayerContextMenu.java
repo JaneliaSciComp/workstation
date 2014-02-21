@@ -1,4 +1,4 @@
-package org.janelia.it.FlyWorkstation.gui.framework.viewer.alignment_board;
+package org.janelia.it.FlyWorkstation.gui.alignment_board_viewer;
 
 import java.awt.Toolkit;
 import java.awt.datatransfer.StringSelection;
@@ -21,9 +21,9 @@ import org.janelia.it.FlyWorkstation.gui.framework.actions.Action;
 import org.janelia.it.FlyWorkstation.gui.framework.actions.RemoveEntityAction;
 import org.janelia.it.FlyWorkstation.gui.framework.console.Browser;
 import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr;
-import org.janelia.it.FlyWorkstation.gui.framework.viewer.alignment_board.events.AlignmentBoardItemChangeEvent;
-import org.janelia.it.FlyWorkstation.gui.framework.viewer.alignment_board.events.AlignmentBoardItemChangeEvent.ChangeType;
-import org.janelia.it.FlyWorkstation.gui.framework.viewer.alignment_board.events.AlignmentBoardItemRemoveEvent;
+import org.janelia.it.FlyWorkstation.gui.alignment_board_viewer.events.AlignmentBoardItemChangeEvent;
+import org.janelia.it.FlyWorkstation.gui.alignment_board_viewer.events.AlignmentBoardItemChangeEvent.ChangeType;
+import org.janelia.it.FlyWorkstation.gui.alignment_board_viewer.events.AlignmentBoardItemRemoveEvent;
 import org.janelia.it.FlyWorkstation.model.entity.RootedEntity;
 import org.janelia.it.FlyWorkstation.model.viewer.AlignedItem;
 import org.janelia.it.FlyWorkstation.model.viewer.AlignmentBoardContext;

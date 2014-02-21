@@ -1,4 +1,4 @@
-package org.janelia.it.FlyWorkstation.gui.framework.viewer.alignment_board;
+package org.janelia.it.FlyWorkstation.gui.alignment_board_viewer;
 
 import org.janelia.it.FlyWorkstation.gui.alignment_board_viewer.masking.TextureBuilderI;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.texture.TextureDataI;

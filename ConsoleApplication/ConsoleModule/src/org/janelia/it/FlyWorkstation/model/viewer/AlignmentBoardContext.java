@@ -7,9 +7,9 @@ import javax.swing.JOptionPane;
 
 import org.janelia.it.FlyWorkstation.api.entity_model.management.ModelMgr;
 import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr;
-import org.janelia.it.FlyWorkstation.gui.framework.viewer.alignment_board.events.AlignmentBoardEvent;
-import org.janelia.it.FlyWorkstation.gui.framework.viewer.alignment_board.events.AlignmentBoardItemChangeEvent;
-import org.janelia.it.FlyWorkstation.gui.framework.viewer.alignment_board.events.AlignmentBoardItemChangeEvent.ChangeType;
+import org.janelia.it.FlyWorkstation.gui.alignment_board_viewer.events.AlignmentBoardEvent;
+import org.janelia.it.FlyWorkstation.gui.alignment_board_viewer.events.AlignmentBoardItemChangeEvent;
+import org.janelia.it.FlyWorkstation.gui.alignment_board_viewer.events.AlignmentBoardItemChangeEvent.ChangeType;
 import org.janelia.it.FlyWorkstation.model.domain.*;
 import org.janelia.it.FlyWorkstation.model.entity.RootedEntity;
 import org.janelia.it.jacs.model.entity.Entity;

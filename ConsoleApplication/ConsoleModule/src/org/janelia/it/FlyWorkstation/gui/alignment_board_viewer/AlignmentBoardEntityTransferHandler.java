@@ -1,4 +1,4 @@
-package org.janelia.it.FlyWorkstation.gui.framework.viewer.alignment_board;
+package org.janelia.it.FlyWorkstation.gui.alignment_board_viewer;
 
 import org.janelia.it.FlyWorkstation.api.entity_model.management.ModelMgr;
 import org.janelia.it.FlyWorkstation.gui.framework.outline.EntityTransferHandler;
@@ -33,15 +33,15 @@ public class AlignmentBoardEntityTransferHandler extends EntityTransferHandler {
     private static final String CAPACITY_EXCEEDED_FMT =
             "Alignment board %s already contains %d fragments.  Your addition of %d would exceed the maximum of %d.";
 
-    private AlignmentBoardViewer viewer;
+    private JComponent dropTarget;
     private Logger logger;
-    public AlignmentBoardEntityTransferHandler( AlignmentBoardViewer viewer ) {
-        this.viewer = viewer;
+    public AlignmentBoardEntityTransferHandler( JComponent viewer ) {
+        this.dropTarget = viewer;
         logger = LoggerFactory.getLogger( AlignmentBoardEntityTransferHandler.class );
     }
     @Override
     public JComponent getDropTargetComponent() {
-        return viewer;
+        return dropTarget;
     }
     @Override
     public boolean canImport(TransferHandler.TransferSupport support) {

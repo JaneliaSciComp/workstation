@@ -21,7 +21,7 @@ import org.janelia.it.FlyWorkstation.gui.framework.viewer.AnnotatedImageButton;
 import org.janelia.it.FlyWorkstation.gui.framework.viewer.IconPanel;
 import org.janelia.it.FlyWorkstation.gui.framework.viewer.Viewer;
 import org.janelia.it.FlyWorkstation.gui.framework.viewer.alignment_board.AlignmentBoardViewer;
-import org.janelia.it.FlyWorkstation.gui.framework.viewer.alignment_board.LayersPanel;
+import org.janelia.it.FlyWorkstation.gui.alignment_board_viewer.LayersPanel;
 import org.janelia.it.FlyWorkstation.model.entity.RootedEntity;
 import org.janelia.it.FlyWorkstation.model.viewer.AlignmentBoardContext;
 import org.janelia.it.FlyWorkstation.shared.util.Utils;

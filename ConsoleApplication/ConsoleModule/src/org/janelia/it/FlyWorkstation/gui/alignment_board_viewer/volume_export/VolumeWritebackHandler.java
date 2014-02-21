@@ -2,7 +2,7 @@ package org.janelia.it.FlyWorkstation.gui.alignment_board_viewer.volume_export;
 
 import org.janelia.it.FlyWorkstation.gui.alignment_board_viewer.gui_elements.AlignmentBoardControlsDialog;
 import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr;
-import org.janelia.it.FlyWorkstation.gui.framework.viewer.alignment_board.FileExportLoadWorker;
+import org.janelia.it.FlyWorkstation.gui.alignment_board_viewer.FileExportLoadWorker;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.Mip3d;
 import org.janelia.it.FlyWorkstation.gui.alignment_board_viewer.gui_elements.CompletionListener;
 import org.janelia.it.FlyWorkstation.gui.alignment_board_viewer.gui_elements.ControlsListener;

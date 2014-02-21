@@ -1,6 +1,6 @@
 package org.janelia.it.FlyWorkstation.gui.alignment_board_viewer.volume_builder;
 
-import org.janelia.it.FlyWorkstation.gui.framework.viewer.alignment_board.AlignmentBoardSettings;
+import org.janelia.it.FlyWorkstation.gui.alignment_board_viewer.AlignmentBoardSettings;
 import org.janelia.it.FlyWorkstation.gui.alignment_board_viewer.MultiTexVolumeBrick;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.VolumeDataAcceptor;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.loader.ChannelMetaData;

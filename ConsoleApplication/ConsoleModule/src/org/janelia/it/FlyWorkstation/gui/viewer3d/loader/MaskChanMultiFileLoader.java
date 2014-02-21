@@ -3,7 +3,7 @@ package org.janelia.it.FlyWorkstation.gui.viewer3d.loader;
 import org.janelia.it.FlyWorkstation.gui.alignment_board_viewer.masking.FileStats;
 import org.janelia.it.FlyWorkstation.gui.alignment_board_viewer.masking.VolumeConsistencyChecker;
 import org.janelia.it.FlyWorkstation.gui.alignment_board_viewer.renderable.RenderableBean;
-import org.janelia.it.FlyWorkstation.gui.framework.viewer.alignment_board.MaskChanStreamSourceI;
+import org.janelia.it.FlyWorkstation.gui.alignment_board_viewer.MaskChanStreamSourceI;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

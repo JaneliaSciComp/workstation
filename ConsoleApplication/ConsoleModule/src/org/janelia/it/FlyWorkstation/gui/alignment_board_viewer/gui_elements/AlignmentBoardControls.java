@@ -4,7 +4,7 @@ import org.janelia.it.FlyWorkstation.gui.alignment_board_viewer.volume_export.Co
 import org.janelia.it.FlyWorkstation.gui.alignment_board_viewer.volume_export.CropCoordSet;
 import org.janelia.it.FlyWorkstation.gui.dialogs.search.alignment_board.ABTargetedSearchDialog;
 import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr;
-import org.janelia.it.FlyWorkstation.gui.framework.viewer.alignment_board.AlignmentBoardSettings;
+import org.janelia.it.FlyWorkstation.gui.alignment_board_viewer.AlignmentBoardSettings;
 import org.janelia.it.FlyWorkstation.gui.util.Icons;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.VolumeModel;
 import org.slf4j.Logger;
