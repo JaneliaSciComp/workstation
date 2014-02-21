@@ -422,6 +422,15 @@ public class EntityContextMenu extends JPopupMenu {
                 alignBrdVwItem.addActionListener(new ActionListener() {
                     @Override
                     public void actionPerformed(ActionEvent e) {
+//                        try {
+//                            TopComponent win = WindowManager.getDefault().findTopComponent("AlignmentBoardTopComponent");
+//                            win.open();
+//                            win.requestActive();
+//                        } catch ( Exception ex ) {
+//                            ModelMgr.getModelMgr().handleException( ex );
+//                        }
+
+                        
                         browser.setPerspective(Perspective.AlignmentBoard);
                         browser.getLayersPanel().openAlignmentBoard(rootedEntity.getEntityId());
                     }
