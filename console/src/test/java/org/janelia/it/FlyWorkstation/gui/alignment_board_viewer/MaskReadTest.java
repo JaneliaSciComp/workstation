@@ -35,7 +35,7 @@ public class MaskReadTest {
 
     ///Users/fosterl/Documents/alignment_board/Mask_Chan
     private static final String TEST_FILE_NAME = "compartment_34.mask";
-    private static final String LOCAL_FILE_PATH = "/Volumes/jacsData/MaskResources/Compartment/maskChannelFormatWithTemplate/compartment_34.mask";
+    private static final String LOCAL_FILE_PATH = "/Volumes/jacsData/filestore/MaskResources/Compartment/maskChannelFormatWithTemplate/compartment_34.mask";
 
     private Logger logger = LoggerFactory.getLogger( MaskReadTest.class );
 

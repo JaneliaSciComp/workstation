@@ -37,8 +37,8 @@ public class TestMip3d {
                     //      String fn = "/Volumes/flylight/flip/confocalStacks/20120929/FLFL_20121001154228067_25581.lsm";
                     //      String fn = "/Users/fosterl/Documents/LSM_3D/FLFL_20121001154228067_25581.lsm";
                     //String fn = "/Volumes/flylight/RJ/For Les Foster/B01_T01_20121023_PMB1_MB057B_20X_R1_L01.lsm";
-                    //                    String fn = "/Volumes/jacsData/MaskResources/GiantFiber/guide/EPA_R.v3dpbd";
-                    //String fn = "/Volumes/jacsData/MaskResources/GiantFiber/guide/LAL_L.v3dpbd";
+                    //                    String fn = "/Volumes/jacsData/filestore/MaskResources/GiantFiber/guide/EPA_R.v3dpbd";
+                    //String fn = "/Volumes/jacsData/filestore/MaskResources/GiantFiber/guide/LAL_L.v3dpbd";
                     //String fn = "/Volumes/jacsData/filestore/system/Separation/296/418/1778029752666296418/separate/fastload/Reference2_50.mp4";
                     String fileBase = "/Users/fosterl/Documents/alignment_board/samples/";
                     //String fn = fileBase + "1735579170638921826/ConsolidatedSignal2_25.mp4";
@@ -46,7 +46,7 @@ public class TestMip3d {
                     //String fn = "/Volumes/jacsData/filestore/system/Separation/294/370/1742138165818294370/separate/fastLoad/ConsolidatedSignal2_25.mp4";
 
                     // Compartment masks.
-                    String guideBase = "/Volumes/jacsData/MaskResources/Compartment/guide/";
+                    String guideBase = "/Volumes/jacsData/filestore/MaskResources/Compartment/guide/";
                     //String fn = guideBase + "LOP_R.v3dpbd";
                     //String fn = guideBase + "Mask.v3dpbd";
                     //String fn = guideBase + "../maskIndex.v3dpbd";
@@ -65,7 +65,7 @@ public class TestMip3d {
                     //String fn = "/Volumes/jacsData/filestore/asoy/Separation/309/922/1822667866399309922/separate/ConsolidatedSignal.v3dpbd";
                     String fn = "/Volumes/mousebrainmicro/render/2013-03-25-Liver/default.0.tif";
 
-                    // All black.  String fn = "/Volumes/jacsData/MaskResources/Compartment/maskRGB.v3dpbd";
+                    // All black.  String fn = "/Volumes/jacsData/filestore/MaskResources/Compartment/maskRGB.v3dpbd";
 
                     if ( args.length > 0 ) {
                         fn = args[ 0 ];

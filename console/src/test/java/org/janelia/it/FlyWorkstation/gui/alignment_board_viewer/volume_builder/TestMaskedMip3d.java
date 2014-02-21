@@ -96,7 +96,7 @@ public class TestMaskedMip3d {
                     //String mf = fileBase + "1778036012035866722/ConsolidatedLabel.v3dpbd";
                     //String mf = fileBase + "1696292257579143266/ConsolidatedLabel.v3dpbd";
                     //String volumeFile2 = fileBase + ""; //Unknown as yet.  Doing without...
-                    String guideBase = "/Volumes/jacsData/MaskResources/Compartment/guide/";
+                    String guideBase = "/Volumes/jacsData/filestore/MaskResources/Compartment/guide/";
                     String separationBase = "/Volumes/jacsData/filestore/system/Separation/";
 
                     File fnFile = new File( fn );
