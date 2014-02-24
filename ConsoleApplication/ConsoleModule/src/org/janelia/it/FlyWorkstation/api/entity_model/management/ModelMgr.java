@@ -81,31 +81,34 @@ public class ModelMgr {
         ModelMgr.getModelMgr().registerExceptionHandler(new PrintStackTraceHandler());
     }
 
-    private ModelMgr() {
-        
+    private ModelMgr() {        
         log.info("Initializing Model Manager");
-        
-        this.entityModel = new EntityModel();
-        this.entitySelectionModel = new EntitySelectionModel();
-        this.userColorMapping = new UserColorMapping();
-        this.modelEventBus = new AsyncEventBus("awt", new Executor() {
-            public void execute(Runnable cmd) {
-                if (EventQueue.isDispatchThread()) {
-                    cmd.run();
-                } 
-                else {
+        // Sync block may/may not be necessary. Problem may just be intermittent.
+        //   Saw NPE on use of modelEventBus, during attempt to register against it.
+        synchronized (ModelMgr.class) {
+            log.info("ModelMgr c'tor from  " + Thread.currentThread().getClass().getClassLoader() + "/" + Thread.currentThread().getContextClassLoader() +  " in thread " + Thread.currentThread());
+
+            this.entityModel = new EntityModel();
+            this.entitySelectionModel = new EntitySelectionModel();
+            this.userColorMapping = new UserColorMapping();
+            this.modelEventBus = new AsyncEventBus("awt", new Executor() {
+                public void execute(Runnable cmd) {
+                    if (EventQueue.isDispatchThread()) {
+                        cmd.run();
+                    } else {
                     // TODO: this should queue the command on a queue that is aware of entity invalidation, 
-                    // and does not generate other events for an entity if an invalidation is coming. 
-                    // This will elimiante the "Instance mismatch" issues that we sometimes have.
-                    EventQueue.invokeLater(cmd);
+                        // and does not generate other events for an entity if an invalidation is coming. 
+                        // This will elimiante the "Instance mismatch" issues that we sometimes have.
+                        EventQueue.invokeLater(cmd);
+                    }
                 }
-            }
-        });
-        
-        
+            });
+
+        }
+        log.info("Successfully initialized");
     } //Singleton enforcement
 
-    public static ModelMgr getModelMgr() {
+    public static synchronized ModelMgr getModelMgr() {
         return modelManager;
     }
 
@@ -934,7 +937,9 @@ public class ModelMgr {
 
     public void registerOnEventBus(Object object) {
         try {
-            modelEventBus.register(object);
+            synchronized( ModelMgr.class ) {
+                modelEventBus.register(object);
+            }
         }
         catch (IllegalArgumentException e) {
             log.warn("Cannot register object on event bus: "+e.getMessage());
@@ -943,7 +948,9 @@ public class ModelMgr {
     
     public void unregisterOnEventBus(Object object) {
         try {
-            modelEventBus.unregister(object);
+            synchronized( ModelMgr.class ) {
+                modelEventBus.unregister(object);
+            }
         }
         catch (IllegalArgumentException e) {
             log.warn("Cannot unregister object on event bus: "+e.getMessage());
@@ -952,7 +959,10 @@ public class ModelMgr {
 
     public void postOnEventBus(Object object) {
         try {
-            modelEventBus.post(object);
+            log.info("Post on event bus from " + Thread.currentThread().getClass().getClassLoader() + "/"+ Thread.currentThread().getContextClassLoader()+ " in thread " + Thread.currentThread());
+            synchronized( ModelMgr.class ) {
+                modelEventBus.post(object);
+            }
         }
         catch (IllegalArgumentException e) {
             log.warn("Cannot post event on event bus: "+e.getMessage());
