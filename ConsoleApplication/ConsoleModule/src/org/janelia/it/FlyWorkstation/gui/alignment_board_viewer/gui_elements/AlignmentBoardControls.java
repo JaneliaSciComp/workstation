@@ -121,7 +121,7 @@ public class AlignmentBoardControls {
     private boolean readyForOutput = false;
 
     private Map<Integer,Integer> downSampleRateToIndex;
-    private final Collection<ControlsListener> listeners;
+    private final Collection<ControlsListener> listeners = new ArrayList<ControlsListener>();
     private VolumeModel volumeModel;
     private AlignmentBoardSettings settings;
 
@@ -132,21 +132,7 @@ public class AlignmentBoardControls {
      *                  in here as a seed.
      */
     public AlignmentBoardControls(Component centering, VolumeModel volumeModel, AlignmentBoardSettings settings) {
-        this.settings = settings;
-        this.centering = centering;
-        this.listeners = new ArrayList<ControlsListener>();
-        this.volumeModel = volumeModel;
-        createGui();
-        Double downsampleRate = AlignmentBoardControls.UNSELECTED_DOWNSAMPLE_RATE;
-        try {
-            downsampleRate = (Double)SessionMgr.getSessionMgr().getModelProperty(DOWN_SAMPLE_PROP_NAME);
-            if ( downsampleRate == null ) {
-                downsampleRate = AlignmentBoardControls.UNSELECTED_DOWNSAMPLE_RATE;
-            }
-        } catch ( Throwable ex ) {
-            logger.warn( "Failed to fetch downsample rate setting." );
-        }
-        this.setNonSerializedDownSampleRate(downsampleRate);
+        initForCtor(settings, centering, volumeModel);
     }
 
     /** Update all controls. */
@@ -189,6 +175,7 @@ public class AlignmentBoardControls {
             ySlider.removeChangeListener( selectionSliderListener );
             zSlider.removeChangeListener( selectionSliderListener );
         }
+        selectionSliderListener = null;
         xSlider = ySlider = zSlider = null;
         volumeModel = null;
         centering = null;
@@ -196,6 +183,23 @@ public class AlignmentBoardControls {
     }
 
     //--------------------------------------------HELPERS
+    private void initForCtor(AlignmentBoardSettings settings, Component centering, VolumeModel volumeModel) {
+        this.settings = settings;
+        this.centering = centering;
+        this.volumeModel = volumeModel;
+        createGui();
+        Double downsampleRate = AlignmentBoardControls.UNSELECTED_DOWNSAMPLE_RATE;
+        try {
+            downsampleRate = (Double)SessionMgr.getSessionMgr().getModelProperty(DOWN_SAMPLE_PROP_NAME);
+            if ( downsampleRate == null ) {
+                downsampleRate = AlignmentBoardControls.UNSELECTED_DOWNSAMPLE_RATE;
+            }
+        } catch ( Throwable ex ) {
+            logger.warn( "Failed to fetch downsample rate setting." );
+        }
+        this.setNonSerializedDownSampleRate(downsampleRate);
+    }
+    
     private boolean isUseSignalData() {
         if ( ! isReadyForOutput() ) {
             return this.settings.isShowChannelData();

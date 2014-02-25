@@ -70,6 +70,8 @@ import org.janelia.it.jacs.shared.utils.MailHelper;
 import org.janelia.it.jacs.shared.utils.StringUtils;
 import org.janelia.it.jacs.shared.utils.entity.EntityVisitor;
 import org.janelia.it.jacs.shared.utils.entity.EntityVistationBuilder;
+import org.openide.windows.TopComponent;
+import org.openide.windows.WindowManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -422,17 +424,25 @@ public class EntityContextMenu extends JPopupMenu {
                 alignBrdVwItem.addActionListener(new ActionListener() {
                     @Override
                     public void actionPerformed(ActionEvent e) {
-//                        try {
-//                            TopComponent win = WindowManager.getDefault().findTopComponent("AlignmentBoardTopComponent");
-//                            win.open();
-//                            win.requestActive();
-//                        } catch ( Exception ex ) {
-//                            ModelMgr.getModelMgr().handleException( ex );
-//                        }
+                        try {
+                            TopComponent win = WindowManager.getDefault().findTopComponent("AlignmentBoardControlsTopComponent");
+                            win.open();
+                            
+                            win = WindowManager.getDefault().findTopComponent("AlignmentBoardTopComponent");
+                            win.open();
+                            win.requestActive();
 
-                        
-                        browser.setPerspective(Perspective.AlignmentBoard);
-                        browser.getLayersPanel().openAlignmentBoard(rootedEntity.getEntityId());
+                            win = WindowManager.getDefault().findTopComponent("LayersPanelTopComponent");
+                            win.open();
+                            
+                            browser.getLayersPanel().openAlignmentBoard(rootedEntity.getEntityId());
+                        } catch ( Exception ex ) {
+                            ModelMgr.getModelMgr().handleException( ex );
+                        }
+
+//                        
+//                        browser.setPerspective(Perspective.AlignmentBoard);
+//                        browser.getLayersPanel().openAlignmentBoard(rootedEntity.getEntityId());
                     }
                 });
             }

@@ -5,8 +5,12 @@
  */
 package org.janelia.it.FlyWorkstation.gui.alignment_board_viewer.top_component;
 
+import com.google.common.eventbus.Subscribe;
 import java.awt.BorderLayout;
+import org.janelia.it.FlyWorkstation.api.entity_model.management.ModelMgr;
 import org.janelia.it.FlyWorkstation.gui.alignment_board_viewer.AlignmentBoardPanel;
+import org.janelia.it.FlyWorkstation.gui.alignment_board_viewer.events.AlignmentBoardItemChangeEvent;
+import org.janelia.it.FlyWorkstation.gui.alignment_board_viewer.events.AlignmentBoardOpenEvent;
 import org.netbeans.api.settings.ConvertAsProperties;
 import org.openide.awt.ActionID;
 import org.openide.awt.ActionReference;
@@ -26,8 +30,8 @@ import org.openide.util.NbBundle.Messages;
         persistenceType = TopComponent.PERSISTENCE_ALWAYS
 )
 @TopComponent.Registration(mode = "editor", openAtStartup = false)
-@ActionID(category = "Window", id = "org.janelia.it.FlyWorkstation.gui.alignment_board_viewer.top_component.AlignmentBoardTopComponent")
-@ActionReference(path = "Menu/Window" /*, position = 333 */)
+//@ActionID(category = "Window", id = "org.janelia.it.FlyWorkstation.gui.alignment_board_viewer.top_component.AlignmentBoardTopComponent")
+//@ActionReference(path = "Menu/Window" /*, position = 333 */)
 @TopComponent.OpenActionRegistration(
         displayName = "#CTL_AlignmentBoardAction",
         preferredID = "AlignmentBoardTopComponent"
@@ -39,17 +43,33 @@ import org.openide.util.NbBundle.Messages;
 })
 public final class AlignmentBoardTopComponent extends TopComponent {
 
+    private AlignmentBoardPanel alignmentBoardPanel;
+            
     public AlignmentBoardTopComponent() {
         initComponents();
+        alignmentBoardPanel = new AlignmentBoardPanel();
+        ModelMgr.getModelMgr().registerOnEventBus(this);
         setName(Bundle.CTL_AlignmentBoardTopComponent());
         setToolTipText(Bundle.HINT_AlignmentBoardTopComponent());
+    }
 
+    @SuppressWarnings("unused")
+    @Subscribe
+    public void handleBoardOpened(AlignmentBoardOpenEvent event) {
+        alignmentBoardPanel.handleBoardOpened(event);
+    }
+
+    @SuppressWarnings("unused")
+    @Subscribe
+    public void handleItemChanged(AlignmentBoardItemChangeEvent event) {
+        alignmentBoardPanel.handleItemChanged(event);
     }
 
     private void initMyComponents() {
-        AlignmentBoardPanel abPanel = new AlignmentBoardPanel();
-        jPanel1.setLayout( new BorderLayout() );
-        jPanel1.add( abPanel, BorderLayout.CENTER );
+
+        contentPanel.setLayout( new BorderLayout() );
+        contentPanel.add( alignmentBoardPanel, BorderLayout.CENTER );
+
     }
     
     /**
@@ -60,47 +80,43 @@ public final class AlignmentBoardTopComponent extends TopComponent {
     // <editor-fold defaultstate="collapsed" desc="Generated Code">//GEN-BEGIN:initComponents
     private void initComponents() {
 
-        jPanel1 = new javax.swing.JPanel();
+        contentPanel = new javax.swing.JPanel();
 
-        javax.swing.GroupLayout jPanel1Layout = new javax.swing.GroupLayout(jPanel1);
-        jPanel1.setLayout(jPanel1Layout);
-        jPanel1Layout.setHorizontalGroup(
-            jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGap(0, 808, Short.MAX_VALUE)
+        javax.swing.GroupLayout contentPanelLayout = new javax.swing.GroupLayout(contentPanel);
+        contentPanel.setLayout(contentPanelLayout);
+        contentPanelLayout.setHorizontalGroup(
+            contentPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGap(0, 814, Short.MAX_VALUE)
         );
-        jPanel1Layout.setVerticalGroup(
-            jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGap(0, 852, Short.MAX_VALUE)
+        contentPanelLayout.setVerticalGroup(
+            contentPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGap(0, 864, Short.MAX_VALUE)
         );
 
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(this);
         this.setLayout(layout);
         layout.setHorizontalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(layout.createSequentialGroup()
-                .addContainerGap()
-                .addComponent(jPanel1, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+            .addComponent(contentPanel, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
         );
         layout.setVerticalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(layout.createSequentialGroup()
-                .addContainerGap()
-                .addComponent(jPanel1, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                .addContainerGap())
+            .addComponent(contentPanel, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
         );
     }// </editor-fold>//GEN-END:initComponents
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
-    private javax.swing.JPanel jPanel1;
+    private javax.swing.JPanel contentPanel;
     // End of variables declaration//GEN-END:variables
     @Override
     public void componentOpened() {
-        // TODO add custom code on component opening
+        initMyComponents();
     }
 
     @Override
     public void componentClosed() {
-        // TODO add custom code on component closing
+        ModelMgr.getModelMgr().unregisterOnEventBus(this);
+        alignmentBoardPanel.close();
     }
 
     void writeProperties(java.util.Properties p) {

@@ -276,11 +276,12 @@ public class LayersPanel extends JPanel implements Refreshable, ActivatableView 
     }
     
     public void openAlignmentBoard(long alignmentBoardId) {
-        log.debug("openAlignmentBoard: {}",alignmentBoardId);
+        log.info("openAlignmentBoard: {}",alignmentBoardId);
         loadAlignmentBoard(alignmentBoardId, null, new Callable<Void>() {
             @Override
             public Void call() throws Exception {
                 AlignmentBoardOpenEvent event = new AlignmentBoardOpenEvent(alignmentBoardContext);
+                log.info("Posting AB-Open");
                 ModelMgr.getModelMgr().postOnEventBus(event);
                 return null;
             }
@@ -607,7 +608,10 @@ public class LayersPanel extends JPanel implements Refreshable, ActivatableView 
     
     private void refresh(final boolean restoreState, final boolean invalidateCache, final Callable<Void> success) {
         // TODO: respect cache invalidation parameter
-        if (alignmentBoardContext==null) return;
+        if (alignmentBoardContext==null) {
+            log.warn("No alignment board context ready for layers panel.");
+            return;
+        }
         if (restoreState) {
             final OutlineExpansionState expansionState = new OutlineExpansionState(outline);
             expansionState.storeExpansionState();

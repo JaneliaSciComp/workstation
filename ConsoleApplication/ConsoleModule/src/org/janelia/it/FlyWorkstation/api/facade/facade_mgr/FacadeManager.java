@@ -142,7 +142,8 @@ public class FacadeManager {
         return (String) concreteFacadesProtocols.get(facadeClass);
     }
 
-    static public FacadeManagerBase getFacadeManager() {
+    /** Added synch keyword because had seen NPE during runs from NetBeans IDE. */
+    static synchronized public FacadeManagerBase getFacadeManager() {
     	return getFacadeManager(getProtocol());
     }
 
