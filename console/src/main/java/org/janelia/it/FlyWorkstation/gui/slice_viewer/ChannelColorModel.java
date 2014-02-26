@@ -46,13 +46,13 @@ public class ChannelColorModel
         builder.append(getWhiteLevel());
         builder.append(":");
 
-        builder.append(color.getRed());
+        builder.append(getColor().getRed());
         builder.append(":");
-        builder.append(color.getBlue());
+        builder.append(getColor().getGreen());
         builder.append(":");
-        builder.append(color.getGreen());
+        builder.append(getColor().getBlue());
         builder.append(":");
-        builder.append(color.getAlpha());
+        builder.append(getColor().getAlpha());
         builder.append(":");
 
         builder.append(isVisible());
