@@ -98,6 +98,7 @@ public class ColorChannelWidget extends JPanel
 		public VisibilityButton() {
 			super(new ChannelVisibilityAction(channelIndex));
 			setIcon(Icons.getIcon("closed_eye.png"));
+            setRolloverIcon(Icons.getIcon("closed_eye.png"));
 			setSelectedIcon(Icons.getIcon("eye.png"));
 			setRolloverSelectedIcon(Icons.getIcon("eye.png"));
 			setSelected(true);
