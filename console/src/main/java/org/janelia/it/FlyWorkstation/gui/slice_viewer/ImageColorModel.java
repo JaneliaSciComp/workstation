@@ -153,7 +153,10 @@ public class ImageColorModel
 	}
 
 	public void setBlackSynchronized(boolean blackSynchronized) {
-		this.blackSynchronized = blackSynchronized;
+        if (blackSynchronized != this.blackSynchronized) {
+		    this.blackSynchronized = blackSynchronized;
+            colorModelChangedSignal.emit();
+        }
 	}
 
 	public boolean isGammaSynchronized() {
@@ -161,7 +164,10 @@ public class ImageColorModel
 	}
 
 	public void setGammaSynchronized(boolean gammaSynchronized) {
-		this.gammaSynchronized = gammaSynchronized;
+        if (gammaSynchronized != this.gammaSynchronized) {
+		    this.gammaSynchronized = gammaSynchronized;
+            colorModelChangedSignal.emit();
+        }
 	}
 
 	public boolean isWhiteSynchronized() {
@@ -169,7 +175,10 @@ public class ImageColorModel
 	}
 
 	public void setWhiteSynchronized(boolean whiteSynchronized) {
-		this.whiteSynchronized = whiteSynchronized;
+        if (whiteSynchronized != this.whiteSynchronized) {
+		    this.whiteSynchronized = whiteSynchronized;
+            colorModelChangedSignal.emit();
+        }
 	}
 
 	public Signal getColorModelChangedSignal() {

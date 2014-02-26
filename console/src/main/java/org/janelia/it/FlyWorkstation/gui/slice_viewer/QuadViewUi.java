@@ -137,6 +137,10 @@ public class QuadViewUi extends JPanel
 		colorChannelWidget_2, 
 		colorChannelWidget_3
 	};
+    private JToggleButton lockBlackButton;
+    private JToggleButton lockGrayButton;
+    private JToggleButton lockWhiteButton;
+
 	private JLabel statusLabel = new JLabel("status area");
 	private LoadStatusLabel loadStatusLabel = new LoadStatusLabel();
 	
@@ -348,7 +352,16 @@ public class QuadViewUi extends JPanel
             imageColorModel.fromString(modelString);
         }
     };
-    
+
+    public Slot colorModelUpdatedSlot = new Slot() {
+        @Override
+        public void execute() {
+            lockBlackButton.setSelected(imageColorModel.isBlackSynchronized());
+            lockGrayButton.setSelected(imageColorModel.isGammaSynchronized());
+            lockWhiteButton.setSelected(imageColorModel.isWhiteSynchronized());
+        }
+    };
+
 	/**
 	 * Create the frame.
 	 */
@@ -478,6 +491,8 @@ LLF: the hookup for the 3d snapshot.
             v.setTileServer(tileServer);
             v.getViewer().getSliceActor().setImageColorModel(imageColorModel);
             imageColorModel.getColorModelChangedSignal().connect(v.getViewer().repaintSlot);
+            imageColorModel.getColorModelChangedSignal().connect(colorModelUpdatedSlot);
+
             final boolean bShowTileOutlines = false; // Debugging aid
             if (bShowTileOutlines) {
             	v.getViewer().addActor(new TileOutlineActor(v.getViewTileManager())); // for debugging
@@ -576,7 +591,7 @@ LLF: the hookup for the 3d snapshot.
 		
 		colorLockPanel.add(Box.createHorizontalStrut(30));
 		
-		JToggleButton lockBlackButton = new JToggleButton("");
+		lockBlackButton = new JToggleButton("");
 		lockBlackButton.setToolTipText("Synchronize channel black levels");
 		lockBlackButton.setMargin(new Insets(0, 0, 0, 0));
 		lockBlackButton.setRolloverIcon(new ImageIcon(QuadViewUi.class.getResource("/images/lock_unlock.png")));
@@ -598,7 +613,7 @@ LLF: the hookup for the 3d snapshot.
 		
 		colorLockPanel.add(Box.createHorizontalGlue());
 
-		JToggleButton lockGrayButton = new JToggleButton("");
+		lockGrayButton = new JToggleButton("");
 		lockGrayButton.setToolTipText("Synchronize channel gray levels");
 		lockGrayButton.setMargin(new Insets(0, 0, 0, 0));
 		lockGrayButton.setRolloverIcon(new ImageIcon(QuadViewUi.class.getResource("/images/lock_unlock.png")));
@@ -620,7 +635,7 @@ LLF: the hookup for the 3d snapshot.
 		
 		colorLockPanel.add(Box.createHorizontalGlue());
 
-		JToggleButton lockWhiteButton = new JToggleButton("");
+		lockWhiteButton = new JToggleButton("");
 		lockWhiteButton.setToolTipText("Synchronize channel white levels");
 		lockWhiteButton.setMargin(new Insets(0, 0, 0, 0));
 		lockWhiteButton.setRolloverIcon(new ImageIcon(QuadViewUi.class.getResource("/images/lock_unlock.png")));
