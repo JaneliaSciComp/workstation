@@ -7,8 +7,9 @@ import org.janelia.it.jacs.model.entity.Entity;
  * 
  * @author fosterl
  */
-public interface EntityAcceptor {
+public interface EntityAcceptor extends Compatible<Entity> {
     String getActionLabel();
+    @Override
     boolean isCompatible( Entity e );
     void acceptEntity( Entity e );
 }

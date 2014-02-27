@@ -50,6 +50,7 @@ import org.janelia.it.FlyWorkstation.gui.util.DesktopApi;
 import org.janelia.it.FlyWorkstation.gui.util.JScrollMenu;
 import org.janelia.it.FlyWorkstation.model.entity.RootedEntity;
 import org.janelia.it.FlyWorkstation.model.utils.AnnotationSession;
+import org.janelia.it.FlyWorkstation.nb_action.Compatible;
 import org.janelia.it.FlyWorkstation.nb_action.ContextSuitable;
 import org.janelia.it.FlyWorkstation.nb_action.EntityAcceptor;
 import org.janelia.it.FlyWorkstation.nb_action.EntityWrapperCreator;
@@ -436,42 +437,30 @@ public class EntityContextMenu extends JPopupMenu {
             final Entity entity = rootedEntity.getEntity();
             if (entity!=null) {
 
-                Collection<? extends EntityAcceptor> entityAcceptors = Lookups.forPath(PERSPECTIVE_CHANGE_LOOKUP_PATH).lookupAll( EntityAcceptor.class );
-                for (EntityAcceptor nextAcceptor : entityAcceptors) {
-                    if ( nextAcceptor.isCompatible( entity ) ) {
-                        EntityAcceptor entityAcceptor = nextAcceptor;
-                        alignBrdVwItem = new JMenuItem( entityAcceptor.getActionLabel() );
-                        alignBrdVwItem.addActionListener( new ActionListener() {
-                            @Override
-                            public void actionPerformed(ActionEvent e) {
-                                try {
-                                    // Pickup the sought value.
-                                    Collection<? extends EntityAcceptor> entityAcceptors;
-                                    EntityAcceptor entityAcceptor = null;
-                                    entityAcceptors = Lookups.forPath(PERSPECTIVE_CHANGE_LOOKUP_PATH).lookupAll(EntityAcceptor.class);
-                                    for (EntityAcceptor nextAcceptor : entityAcceptors) {
-                                        if (nextAcceptor.isCompatible(entity)) {
-                                            entityAcceptor = nextAcceptor;
-                                            break;
-                                        }
-                                    }
-                                    if (entityAcceptor == null) {
-                                        log.warn("No service provider for this entity.");
-                                    }
-                                    if (entityAcceptor != null) {
-                                        entityAcceptor.acceptEntity(entity);
-                                    }
-                                } catch (Exception ex) {
-                                    ModelMgr.getModelMgr().handleException(ex);
+                EntityAcceptor entityAcceptor
+                        = findHandler(entity, EntityAcceptor.class, PERSPECTIVE_CHANGE_LOOKUP_PATH);
+                if (entityAcceptor != null) {
+                    alignBrdVwItem = new JMenuItem(entityAcceptor.getActionLabel());
+                    alignBrdVwItem.addActionListener(new ActionListener() {
+                        @Override
+                        public void actionPerformed(ActionEvent e) {
+                            try {
+                                // Pickup the sought value.
+                                EntityAcceptor entityAcceptor
+                                        = findHandler(entity, EntityAcceptor.class, PERSPECTIVE_CHANGE_LOOKUP_PATH);
+                                if (entityAcceptor == null) {
+                                    log.warn("No service provider for this entity.");
+                                } else {
+                                    entityAcceptor.acceptEntity(entity);
                                 }
-
+                            } catch (Exception ex) {
+                                ModelMgr.getModelMgr().handleException(ex);
                             }
-                        });
-                        
-                        break; // Keep the first (lowest-numbered) value.
-                    }
+
+                        }
+                    });
+
                 }
-                
             }
         }
 
@@ -484,43 +473,29 @@ public class EntityContextMenu extends JPopupMenu {
         JMenuItem wrapEntityItem = null;
         
         if (rootedEntity != null && rootedEntity.getEntityData() != null) {
-            Collection<? extends EntityWrapperCreator> entityWrapperCreators =
-                    Lookups.forPath(EntityWrapperCreator.LOOKUP_PATH)
-                            .lookupAll(EntityWrapperCreator.class);
-            
-            for (EntityWrapperCreator nextCreator : entityWrapperCreators) {
-                if (nextCreator.isCompatible(rootedEntity)) {
-                    EntityWrapperCreator wrapperCreator = nextCreator;
-                    wrapEntityItem = new JMenuItem(wrapperCreator.getActionLabel());
-                    wrapEntityItem.addActionListener(new ActionListener() {
-                        @Override
-                        public void actionPerformed(ActionEvent e) {
-                            try {
-                                // Pickup the sought value.
-                                Collection<? extends EntityWrapperCreator> wrapperCreators;
-                                EntityWrapperCreator wrapperCreator = null;
-                                wrapperCreators = Lookups.forPath(EntityWrapperCreator.LOOKUP_PATH).lookupAll(EntityWrapperCreator.class);
-                                for (EntityWrapperCreator next : wrapperCreators) {
-                                    if (next.isCompatible(rootedEntity)) {
-                                        wrapperCreator = next;
-                                        break;
-                                    }
-                                }
-                                if (wrapperCreator == null) {
-                                    log.warn("No service provider for this entity.");
-                                }
-                                else {
-                                    wrapperCreator.wrapEntity(rootedEntity);
-                                }
-                            } catch (Exception ex) {
-                                ModelMgr.getModelMgr().handleException(ex);
+            EntityWrapperCreator wrapperCreator
+                    = findHandler(rootedEntity, EntityWrapperCreator.class, EntityWrapperCreator.LOOKUP_PATH);
+
+            if (wrapperCreator != null) {
+                wrapEntityItem = new JMenuItem(wrapperCreator.getActionLabel());
+                wrapEntityItem.addActionListener(new ActionListener() {
+                    @Override
+                    public void actionPerformed(ActionEvent e) {
+                        try {
+                            EntityWrapperCreator wrapperCreator
+                                    = findHandler(rootedEntity, EntityWrapperCreator.class, EntityWrapperCreator.LOOKUP_PATH);
+                            if (wrapperCreator == null) {
+                                log.warn("No service provider for this entity.");
+                            } else {
+                                wrapperCreator.wrapEntity(rootedEntity);
                             }
-
+                        } catch (Exception ex) {
+                            ModelMgr.getModelMgr().handleException(ex);
                         }
-                    });
 
-                    break; // Keep the first (lowest-numbered) value.
-                }
+                    }
+                });
+
             }
 
         }
@@ -548,16 +523,28 @@ public class EntityContextMenu extends JPopupMenu {
         return sliceVwItem;
     }
 
-//    /** Implement lookup listener by preserving the value provided. */
-//    @Override
-//    public void resultChanged(LookupEvent le) {
-//        // set the entity acceptor.
-//        Collection<? extends EntityAcceptor> allEvents = result.allInstances();
-//        if ( ! allEvents.isEmpty() ) {
-//            EntityAcceptor acceptor = allEvents.iterator().next();
-//            next = acceptor;
-//        }
-//    }
+    /**
+     * Do a generic lookup, for things that can deal with found values on
+     * the outline.
+     * 
+     * @param criterion this is used to judge compatibility of found items.
+     * @param clazz tells what type of thing to find.
+     * @param path tells the path identifier for searching compatible items.
+     * @return a compatible handler for the criterion object.
+     */
+    private <T extends Compatible,S> T findHandler(S criterion, Class clazz, String path) {
+        Collection<T> candidates
+                = Lookups.forPath(path).lookupAll(clazz);
+
+        T rtnVal = null;
+        for (T nextAcceptor : candidates) {
+            if (nextAcceptor.isCompatible(criterion)) {
+                rtnVal = nextAcceptor;
+                break;
+            }
+        }
+        return rtnVal;
+    }
 
     private class EntityDataPath {
         private List<EntityData> path;
