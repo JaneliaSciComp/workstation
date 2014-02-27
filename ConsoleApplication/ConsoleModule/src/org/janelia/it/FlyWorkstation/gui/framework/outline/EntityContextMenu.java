@@ -37,7 +37,6 @@ import org.janelia.it.FlyWorkstation.gui.dialogs.SpecialAnnotationChooserDialog;
 import org.janelia.it.FlyWorkstation.gui.dialogs.TaskDetailsDialog;
 import org.janelia.it.FlyWorkstation.gui.framework.actions.Action;
 import org.janelia.it.FlyWorkstation.gui.framework.actions.AnnotateAction;
-import org.janelia.it.FlyWorkstation.gui.framework.actions.CreateAlignmentBoardAction;
 import org.janelia.it.FlyWorkstation.gui.framework.actions.OpenInFinderAction;
 import org.janelia.it.FlyWorkstation.gui.framework.actions.OpenWithDefaultAppAction;
 import org.janelia.it.FlyWorkstation.gui.framework.actions.RemoveEntityAction;
@@ -51,7 +50,6 @@ import org.janelia.it.FlyWorkstation.gui.util.JScrollMenu;
 import org.janelia.it.FlyWorkstation.model.entity.RootedEntity;
 import org.janelia.it.FlyWorkstation.model.utils.AnnotationSession;
 import org.janelia.it.FlyWorkstation.nb_action.Compatible;
-import org.janelia.it.FlyWorkstation.nb_action.ContextSuitable;
 import org.janelia.it.FlyWorkstation.nb_action.EntityAcceptor;
 import org.janelia.it.FlyWorkstation.nb_action.EntityWrapperCreator;
 import org.janelia.it.FlyWorkstation.shared.util.ConsoleProperties;
@@ -63,10 +61,8 @@ import org.janelia.it.FlyWorkstation.ws.ExternalClient;
 import org.janelia.it.jacs.model.entity.Entity;
 import org.janelia.it.jacs.model.entity.EntityConstants;
 import org.janelia.it.jacs.model.entity.EntityData;
-import org.janelia.it.jacs.model.entity.cv.Objective;
 import org.janelia.it.jacs.model.ontology.OntologyAnnotation;
 import org.janelia.it.jacs.model.ontology.OntologyElement;
-import org.janelia.it.jacs.model.tasks.Event;
 import org.janelia.it.jacs.model.tasks.Task;
 import org.janelia.it.jacs.model.tasks.TaskMessage;
 import org.janelia.it.jacs.model.tasks.TaskParameter;
@@ -76,16 +72,7 @@ import org.janelia.it.jacs.shared.utils.MailHelper;
 import org.janelia.it.jacs.shared.utils.StringUtils;
 import org.janelia.it.jacs.shared.utils.entity.EntityVisitor;
 import org.janelia.it.jacs.shared.utils.entity.EntityVistationBuilder;
-import org.openide.nodes.AbstractNode;
-import org.openide.nodes.Children;
-import org.openide.util.Lookup;
-import org.openide.util.LookupEvent;
-import org.openide.util.LookupListener;
-import org.openide.util.Utilities;
-import org.openide.util.lookup.AbstractLookup;
-import org.openide.util.lookup.InstanceContent;
 import org.openide.util.lookup.Lookups;
-import org.openide.windows.WindowManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -95,8 +82,6 @@ import org.slf4j.LoggerFactory;
  * @author <a href="mailto:rokickik@janelia.hhmi.org">Konrad Rokicki</a>
  */
 public class EntityContextMenu extends JPopupMenu {
-    
-    public static final String PERSPECTIVE_CHANGE_LOOKUP_PATH = "EntityPerspective/EntityAcceptor/Nodes";
 
     private static final Logger log = LoggerFactory.getLogger(EntityContextMenu.class);
 
@@ -438,7 +423,7 @@ public class EntityContextMenu extends JPopupMenu {
             if (entity!=null) {
 
                 EntityAcceptor entityAcceptor
-                        = findHandler(entity, EntityAcceptor.class, PERSPECTIVE_CHANGE_LOOKUP_PATH);
+                        = findHandler(entity, EntityAcceptor.class, EntityAcceptor.PERSPECTIVE_CHANGE_LOOKUP_PATH);
                 if (entityAcceptor != null) {
                     alignBrdVwItem = new JMenuItem(entityAcceptor.getActionLabel());
                     alignBrdVwItem.addActionListener(new ActionListener() {
@@ -447,7 +432,7 @@ public class EntityContextMenu extends JPopupMenu {
                             try {
                                 // Pickup the sought value.
                                 EntityAcceptor entityAcceptor
-                                        = findHandler(entity, EntityAcceptor.class, PERSPECTIVE_CHANGE_LOOKUP_PATH);
+                                        = findHandler(entity, EntityAcceptor.class, EntityAcceptor.PERSPECTIVE_CHANGE_LOOKUP_PATH);
                                 if (entityAcceptor == null) {
                                     log.warn("No service provider for this entity.");
                                 } else {

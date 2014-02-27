@@ -7,7 +7,6 @@
 package org.janelia.it.FlyWorkstation.gui.alignment_board;
 
 import org.janelia.it.FlyWorkstation.gui.alignment_board.ab_mgr.AlignmentBoardMgr;
-import org.janelia.it.FlyWorkstation.gui.framework.outline.EntityContextMenu;
 import org.janelia.it.FlyWorkstation.nb_action.EntityAcceptor;
 import org.janelia.it.jacs.model.entity.Entity;
 import org.janelia.it.jacs.model.entity.EntityConstants;
@@ -20,7 +19,7 @@ import org.openide.windows.WindowManager;
  * 
  * @author fosterl
  */
-@ServiceProvider(service = EntityAcceptor.class, path=EntityContextMenu.PERSPECTIVE_CHANGE_LOOKUP_PATH)
+@ServiceProvider(service = EntityAcceptor.class, path=EntityAcceptor.PERSPECTIVE_CHANGE_LOOKUP_PATH)
 public class Launcher implements EntityAcceptor  {
     
     public Launcher() {

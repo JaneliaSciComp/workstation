@@ -8,6 +8,7 @@ import org.janelia.it.jacs.model.entity.Entity;
  * @author fosterl
  */
 public interface EntityAcceptor extends Compatible<Entity> {
+    public static final String PERSPECTIVE_CHANGE_LOOKUP_PATH = "EntityPerspective/EntityAcceptor/Nodes";
     String getActionLabel();
     @Override
     boolean isCompatible( Entity e );
