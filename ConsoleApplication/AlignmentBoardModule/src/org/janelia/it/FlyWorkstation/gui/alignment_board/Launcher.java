@@ -20,7 +20,7 @@ import org.openide.windows.WindowManager;
  * 
  * @author fosterl
  */
-@ServiceProvider(service=EntityAcceptor.class,path=EntityContextMenu.PERSPECTIVE_CHANGE_LOOKUP_PATH)
+@ServiceProvider(service = EntityAcceptor.class, path=EntityContextMenu.PERSPECTIVE_CHANGE_LOOKUP_PATH)
 public class Launcher implements EntityAcceptor  {
     
     public Launcher() {

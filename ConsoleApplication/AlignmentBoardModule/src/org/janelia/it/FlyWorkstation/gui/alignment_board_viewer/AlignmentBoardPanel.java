@@ -51,6 +51,7 @@ import org.janelia.it.FlyWorkstation.gui.viewer3d.events.AlignmentBoardItemChang
 import org.janelia.it.FlyWorkstation.gui.viewer3d.events.AlignmentBoardOpenEvent;
 import org.janelia.it.FlyWorkstation.gui.alignment_board_viewer.AlignmentBoardCtrlPnlSvc;
 import org.janelia.it.FlyWorkstation.gui.alignment_board_viewer.top_component.AlignmentBoardControlsTopComponent;
+import org.janelia.it.FlyWorkstation.nb_action.EntityAcceptor;
 import org.openide.util.lookup.InstanceContent;
 import org.openide.util.lookup.ServiceProvider;
 import org.openide.windows.WindowManager;
@@ -106,6 +107,7 @@ public class AlignmentBoardPanel extends JPanel implements AlignmentBoardControl
     private JToolBar toolbar;
     private ABContextDataSource dataSource;
     private FileStats fileStats;
+    private EntityAcceptor acceptor;
     
     private InstanceContent content = new InstanceContent();
 

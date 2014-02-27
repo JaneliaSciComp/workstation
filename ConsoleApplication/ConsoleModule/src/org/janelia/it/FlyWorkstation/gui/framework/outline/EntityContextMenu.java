@@ -445,7 +445,6 @@ public class EntityContextMenu extends JPopupMenu {
                             public void actionPerformed(ActionEvent e) {
                                 try {
                                     // Pickup the sought value.
-                                    Lookup defaultLookup = Lookup.getDefault();
                                     Collection<? extends EntityAcceptor> entityAcceptors;
                                     EntityAcceptor entityAcceptor = null;
                                     entityAcceptors = Lookups.forPath(PERSPECTIVE_CHANGE_LOOKUP_PATH).lookupAll(EntityAcceptor.class);

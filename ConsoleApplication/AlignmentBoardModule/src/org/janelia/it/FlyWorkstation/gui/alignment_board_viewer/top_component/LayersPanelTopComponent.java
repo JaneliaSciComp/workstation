@@ -8,12 +8,11 @@ package org.janelia.it.FlyWorkstation.gui.alignment_board_viewer.top_component;
 import java.awt.BorderLayout;
 import org.janelia.it.FlyWorkstation.gui.alignment_board.ab_mgr.AlignmentBoardMgr;
 import org.janelia.it.FlyWorkstation.gui.alignment_board_viewer.LayersPanel;
-import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr;
 import org.netbeans.api.settings.ConvertAsProperties;
-import org.openide.awt.ActionID;
-import org.openide.awt.ActionReference;
 import org.openide.windows.TopComponent;
 import org.openide.util.NbBundle.Messages;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Top component which displays something.
@@ -41,6 +40,7 @@ import org.openide.util.NbBundle.Messages;
 })
 public final class LayersPanelTopComponent extends TopComponent {
 
+    private Logger logger = LoggerFactory.getLogger( LayersPanelTopComponent.class );
     public LayersPanelTopComponent() {
         initComponents();
         setName(Bundle.CTL_LayersPanelTopComponent());
@@ -90,10 +90,14 @@ public final class LayersPanelTopComponent extends TopComponent {
     // End of variables declaration//GEN-END:variables
     @Override
     public void componentOpened() {
-        jPanel1.setLayout( new BorderLayout() );
         final LayersPanel layersPanel = AlignmentBoardMgr.getInstance().getLayersPanel();
-        jPanel1.add( layersPanel, BorderLayout.CENTER );
-        layersPanel.activate();
+        jPanel1.setLayout(new BorderLayout());
+        jPanel1.add(layersPanel, BorderLayout.CENTER);
+        try {
+            layersPanel.activate();
+        } catch ( Throwable th ) {
+            logger.warn("Failed ot activate layers panel.  Not opening component.");
+        }
     }
 
     @Override

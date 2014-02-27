@@ -12,7 +12,6 @@ import org.janelia.it.FlyWorkstation.gui.alignment_board.Launcher;
 import org.janelia.it.FlyWorkstation.gui.alignment_board_viewer.AlignmentBoardPanel;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.events.AlignmentBoardItemChangeEvent;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.events.AlignmentBoardOpenEvent;
-import org.janelia.it.FlyWorkstation.nb_action.EntityAcceptor;
 import org.netbeans.api.settings.ConvertAsProperties;
 import org.openide.windows.TopComponent;
 import org.openide.util.NbBundle.Messages;
