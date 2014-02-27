@@ -1,5 +1,11 @@
 package org.janelia.it.FlyWorkstation.gui.viewer3d;
 
+import org.janelia.it.FlyWorkstation.gui.viewer3d.loader.MpegFileLoader;
+import org.janelia.it.FlyWorkstation.gui.viewer3d.loader.LsmFileLoader;
+import org.janelia.it.FlyWorkstation.gui.viewer3d.loader.TifFileLoader;
+import org.janelia.it.FlyWorkstation.gui.viewer3d.loader.TextureDataBuilder;
+import org.janelia.it.FlyWorkstation.gui.viewer3d.loader.V3dSignalFileLoader;
+import org.janelia.it.FlyWorkstation.gui.viewer3d.loader.V3dMaskFileLoader;
 import org.apache.commons.io.FilenameUtils;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.VolumeDataAcceptor.TextureColorSpace;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.loader.*;

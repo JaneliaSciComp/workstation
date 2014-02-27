@@ -1,6 +1,6 @@
 package org.janelia.it.FlyWorkstation.gui.viewer3d.loader;
 
-import org.janelia.it.FlyWorkstation.gui.alignment_board_viewer.volume_builder.VolumeDataBean;
+import org.janelia.it.FlyWorkstation.gui.viewer3d.volume_builder.VolumeDataBean;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.stream.V3dRawImageStream;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.texture.MaskTextureDataBean;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.texture.TextureDataI;
@@ -14,6 +14,9 @@ import java.io.InputStream;
 import java.util.Set;
 import java.util.TreeSet;
 import java.util.zip.DataFormatException;
+import org.janelia.it.FlyWorkstation.gui.viewer3d.loader.TextureDataBuilder;
+import org.janelia.it.FlyWorkstation.gui.viewer3d.loader.V3dByteReader;
+import org.janelia.it.FlyWorkstation.gui.viewer3d.loader.VolumeFileLoaderI;
 
 /**
  * Created with IntelliJ IDEA.

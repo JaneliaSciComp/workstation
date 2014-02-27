@@ -1,7 +1,6 @@
 package org.janelia.it.FlyWorkstation.gui.viewer3d;
 
 import org.janelia.it.FlyWorkstation.geom.Vec3;
-import org.janelia.it.FlyWorkstation.gui.alignment_board_viewer.volume_export.CropCoordSet;
 import org.janelia.it.FlyWorkstation.gui.camera.BasicCamera3d;
 import org.janelia.it.FlyWorkstation.gui.camera.Camera3d;
 

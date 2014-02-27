@@ -37,7 +37,7 @@ import org.janelia.it.FlyWorkstation.gui.framework.actions.CreateAlignmentBoardA
 import org.janelia.it.FlyWorkstation.gui.framework.console.ViewerManager;
 import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.FlyWorkstation.gui.framework.tree.ExpansionState;
-import org.janelia.it.FlyWorkstation.gui.framework.viewer.alignment_board.AlignmentBoardViewer;
+//import org.janelia.it.FlyWorkstation.gui.framework.viewer.alignment_board.AlignmentBoardViewer;
 import org.janelia.it.FlyWorkstation.model.entity.RootedEntity;
 import org.janelia.it.FlyWorkstation.shared.workers.SimpleWorker;
 import org.janelia.it.jacs.model.entity.Entity;
@@ -199,7 +199,7 @@ public abstract class EntityOutline extends EntityTree implements Refreshable, A
             add(getRootItem());
             add(getNewRootFolderItem());
             add(getNewAlignmentBoardItem());
-            add(getOpenAlignmentBoardItem());
+            add(getOpenForContextItem());
         }
 
 		protected JMenuItem getRootItem() {
@@ -638,12 +638,12 @@ public abstract class EntityOutline extends EntityTree implements Refreshable, A
 		if (!getDynamicTree().childrenAreLoaded(node)) {
 		    
 		    ViewerManager viewerManager = SessionMgr.getBrowser().getViewerManager();
-	        if ((viewerManager.getActiveViewerPane()==viewerManager.getSecViewerPane() && viewerManager.getActiveViewer() instanceof AlignmentBoardViewer) || viewerManager.isViewersLinked()) {
-	            SessionMgr.getBrowser().getViewerManager().showLoadingIndicatorInMainViewer();
-	        }
-	        else {
+//	        if ((viewerManager.getActiveViewerPane()==viewerManager.getSecViewerPane() && viewerManager.getActiveViewer() instanceof AlignmentBoardViewer) || viewerManager.isViewersLinked()) {
+//	            SessionMgr.getBrowser().getViewerManager().showLoadingIndicatorInMainViewer();
+//	        }
+//	        else {
 	            SessionMgr.getBrowser().getViewerManager().showLoadingIndicatorInActiveViewer();
-	        }
+//	        }
 			
 	        //SessionMgr.getBrowser().getViewerManager().showLoadingIndicatorInInspector();   
 	        
@@ -680,12 +680,12 @@ public abstract class EntityOutline extends EntityTree implements Refreshable, A
 		log.debug("showEntityInActiveViewer: "+rootedEntity.getName());
 		
 		ViewerManager viewerManager = SessionMgr.getBrowser().getViewerManager();
-		if ((viewerManager.getActiveViewerPane()==viewerManager.getSecViewerPane() && viewerManager.getActiveViewer() instanceof AlignmentBoardViewer) || viewerManager.isViewersLinked()) {
-	        SessionMgr.getBrowser().getViewerManager().showEntityInMainViewer(rootedEntity);
-		}
-		else {
+//		if ((viewerManager.getActiveViewerPane()==viewerManager.getSecViewerPane() && viewerManager.getActiveViewer() instanceof AlignmentBoardViewer) || viewerManager.isViewersLinked()) {
+//	        SessionMgr.getBrowser().getViewerManager().showEntityInMainViewer(rootedEntity);
+//		}
+//		else {
 	        SessionMgr.getBrowser().getViewerManager().showEntityInActiveViewer(rootedEntity);
-		}
+//		}
 	}
 	
     @Override

@@ -1,7 +1,7 @@
 package org.janelia.it.FlyWorkstation.gui.viewer3d.texture;
 
 import org.janelia.it.FlyWorkstation.gui.viewer3d.masking.VolumeDataI;
-import org.janelia.it.FlyWorkstation.gui.alignment_board_viewer.renderable.RenderableBean;
+import org.janelia.it.FlyWorkstation.gui.viewer3d.renderable.RenderableBean;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.VolumeDataAcceptor;
 
 import java.nio.ByteOrder;

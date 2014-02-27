@@ -8,12 +8,17 @@ package org.janelia.it.FlyWorkstation.gui.alignment_board_viewer.top_component;
 import com.google.common.eventbus.Subscribe;
 import java.awt.BorderLayout;
 import org.janelia.it.FlyWorkstation.api.entity_model.management.ModelMgr;
+import org.janelia.it.FlyWorkstation.gui.alignment_board.Launcher;
 import org.janelia.it.FlyWorkstation.gui.alignment_board_viewer.AlignmentBoardPanel;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.events.AlignmentBoardItemChangeEvent;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.events.AlignmentBoardOpenEvent;
+import org.janelia.it.FlyWorkstation.nb_action.EntityAcceptor;
 import org.netbeans.api.settings.ConvertAsProperties;
 import org.openide.windows.TopComponent;
 import org.openide.util.NbBundle.Messages;
+import org.openide.util.lookup.Lookups;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Top component which displays something.
@@ -27,7 +32,7 @@ import org.openide.util.NbBundle.Messages;
         //iconBase="SET/PATH/TO/ICON/HERE", 
         persistenceType = TopComponent.PERSISTENCE_ALWAYS
 )
-@TopComponent.Registration(mode = "editor", openAtStartup = false)
+@TopComponent.Registration(mode = "editor", openAtStartup = true)
 //@ActionID(category = "Window", id = "org.janelia.it.FlyWorkstation.gui.alignment_board_viewer.top_component.AlignmentBoardTopComponent")
 //@ActionReference(path = "Menu/Window" /*, position = 333 */)
 @TopComponent.OpenActionRegistration(
@@ -42,6 +47,7 @@ import org.openide.util.NbBundle.Messages;
 public final class AlignmentBoardTopComponent extends TopComponent {
 
     private AlignmentBoardPanel alignmentBoardPanel;
+    private Logger logger = LoggerFactory.getLogger( AlignmentBoardTopComponent.class );
             
     public AlignmentBoardTopComponent() {
         initComponents();
@@ -49,6 +55,7 @@ public final class AlignmentBoardTopComponent extends TopComponent {
         ModelMgr.getModelMgr().registerOnEventBus(this);
         setName(Bundle.CTL_AlignmentBoardTopComponent());
         setToolTipText(Bundle.HINT_AlignmentBoardTopComponent());
+        establishEntityAcceptor();
     }
 
     @SuppressWarnings("unused")
@@ -63,6 +70,13 @@ public final class AlignmentBoardTopComponent extends TopComponent {
         alignmentBoardPanel.handleItemChanged(event);
     }
 
+    //------------------------------------------HELPERS
+    private void establishEntityAcceptor() {
+        Launcher launcher = new Launcher();
+        this.associateLookup( Lookups.singleton( launcher ) );
+        logger.info("Established acceptor");
+    }
+    
     private void initMyComponents() {
 
         contentPanel.setLayout( new BorderLayout() );

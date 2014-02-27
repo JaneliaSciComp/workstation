@@ -11,6 +11,7 @@ import java.awt.event.KeyEvent;
 import java.io.File;
 import java.io.FilenameFilter;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashSet;
@@ -49,6 +50,8 @@ import org.janelia.it.FlyWorkstation.gui.util.DesktopApi;
 import org.janelia.it.FlyWorkstation.gui.util.JScrollMenu;
 import org.janelia.it.FlyWorkstation.model.entity.RootedEntity;
 import org.janelia.it.FlyWorkstation.model.utils.AnnotationSession;
+import org.janelia.it.FlyWorkstation.nb_action.ContextSuitable;
+import org.janelia.it.FlyWorkstation.nb_action.EntityAcceptor;
 import org.janelia.it.FlyWorkstation.shared.util.ConsoleProperties;
 import org.janelia.it.FlyWorkstation.shared.util.SystemInfo;
 import org.janelia.it.FlyWorkstation.shared.util.Utils;
@@ -61,6 +64,7 @@ import org.janelia.it.jacs.model.entity.EntityData;
 import org.janelia.it.jacs.model.entity.cv.Objective;
 import org.janelia.it.jacs.model.ontology.OntologyAnnotation;
 import org.janelia.it.jacs.model.ontology.OntologyElement;
+import org.janelia.it.jacs.model.tasks.Event;
 import org.janelia.it.jacs.model.tasks.Task;
 import org.janelia.it.jacs.model.tasks.TaskMessage;
 import org.janelia.it.jacs.model.tasks.TaskParameter;
@@ -70,7 +74,15 @@ import org.janelia.it.jacs.shared.utils.MailHelper;
 import org.janelia.it.jacs.shared.utils.StringUtils;
 import org.janelia.it.jacs.shared.utils.entity.EntityVisitor;
 import org.janelia.it.jacs.shared.utils.entity.EntityVistationBuilder;
-import org.openide.windows.TopComponent;
+import org.openide.nodes.AbstractNode;
+import org.openide.nodes.Children;
+import org.openide.util.Lookup;
+import org.openide.util.LookupEvent;
+import org.openide.util.LookupListener;
+import org.openide.util.Utilities;
+import org.openide.util.lookup.AbstractLookup;
+import org.openide.util.lookup.InstanceContent;
+import org.openide.util.lookup.Lookups;
 import org.openide.windows.WindowManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -81,6 +93,8 @@ import org.slf4j.LoggerFactory;
  * @author <a href="mailto:rokickik@janelia.hhmi.org">Konrad Rokicki</a>
  */
 public class EntityContextMenu extends JPopupMenu {
+    
+    public static final String PERSPECTIVE_CHANGE_LOOKUP_PATH = "EntityPerspective/EntityAcceptor/Nodes";
 
     private static final Logger log = LoggerFactory.getLogger(EntityContextMenu.class);
 
@@ -97,7 +111,7 @@ public class EntityContextMenu extends JPopupMenu {
     protected final List<RootedEntity> rootedEntityList;
     protected final RootedEntity rootedEntity;
     protected final boolean multiple;
-
+        
     // Internal state
     protected boolean nextAddRequiresSeparator = false;
 
@@ -117,7 +131,7 @@ public class EntityContextMenu extends JPopupMenu {
         this.multiple = false;
         checkNotNull(rootedEntity, "Rooted entity cannot be null");
     }
-
+    
     public void addMenuItems() {
         add(getTitleItem());
         add(getCopyNameToClipboardItem());
@@ -161,7 +175,7 @@ public class EntityContextMenu extends JPopupMenu {
 
         setNextAddRequiresSeparator(true);
         add(getHudMenuItem());
-        add(getOpenAlignmentBoardItem());
+        add(getOpenForContextItem());
         add(getOpenInNewAlignmentBoardItem());
         add(getOpenSliceViewerItem());
 
@@ -415,36 +429,49 @@ public class EntityContextMenu extends JPopupMenu {
     }
 
     /** Makes the item for showing the entity in its own viewer iff the entity type is correct. */
-    public JMenuItem getOpenAlignmentBoardItem() {
+    public JMenuItem getOpenForContextItem() {
         JMenuItem alignBrdVwItem = null;
         if (rootedEntity != null && rootedEntity.getEntityData() != null) {
-            Entity entity = rootedEntity.getEntity();
-            if (entity!=null && entity.getEntityTypeName().equals(EntityConstants.TYPE_ALIGNMENT_BOARD)) {
-                alignBrdVwItem = new JMenuItem("  Open In Alignment Board Viewer");
-                alignBrdVwItem.addActionListener(new ActionListener() {
-                    @Override
-                    public void actionPerformed(ActionEvent e) {
-                        try {
-                            TopComponent win = WindowManager.getDefault().findTopComponent("AlignmentBoardControlsTopComponent");
-                            win.open();
-                            
-                            win = WindowManager.getDefault().findTopComponent("AlignmentBoardTopComponent");
-                            win.open();
-                            win.requestActive();
+            final Entity entity = rootedEntity.getEntity();
+            if (entity!=null) {
 
-                            win = WindowManager.getDefault().findTopComponent("LayersPanelTopComponent");
-                            win.open();
-                            
-                            browser.getLayersPanel().openAlignmentBoard(rootedEntity.getEntityId());
-                        } catch ( Exception ex ) {
-                            ModelMgr.getModelMgr().handleException( ex );
-                        }
+                Collection<? extends EntityAcceptor> entityAcceptors = Lookups.forPath(PERSPECTIVE_CHANGE_LOOKUP_PATH).lookupAll( EntityAcceptor.class );
+                for (EntityAcceptor nextAcceptor : entityAcceptors) {
+                    if ( nextAcceptor.isCompatible( entity ) ) {
+                        EntityAcceptor entityAcceptor = nextAcceptor;
+                        alignBrdVwItem = new JMenuItem( entityAcceptor.getActionLabel() );
+                        alignBrdVwItem.addActionListener( new ActionListener() {
+                            @Override
+                            public void actionPerformed(ActionEvent e) {
+                                try {
+                                    // Pickup the sought value.
+                                    Lookup defaultLookup = Lookup.getDefault();
+                                    Collection<? extends EntityAcceptor> entityAcceptors;
+                                    EntityAcceptor entityAcceptor = null;
+                                    entityAcceptors = Lookups.forPath(PERSPECTIVE_CHANGE_LOOKUP_PATH).lookupAll(EntityAcceptor.class);
+                                    for (EntityAcceptor nextAcceptor : entityAcceptors) {
+                                        if (nextAcceptor.isCompatible(entity)) {
+                                            entityAcceptor = nextAcceptor;
+                                            break;
+                                        }
+                                    }
+                                    if (entityAcceptor == null) {
+                                        log.warn("No service provider for opening alignment board.");
+                                    }
+                                    if (entityAcceptor != null) {
+                                        entityAcceptor.acceptEntity(entity);
+                                    }
+                                } catch (Exception ex) {
+                                    ModelMgr.getModelMgr().handleException(ex);
+                                }
 
-//                        
-//                        browser.setPerspective(Perspective.AlignmentBoard);
-//                        browser.getLayersPanel().openAlignmentBoard(rootedEntity.getEntityId());
+                            }
+                        });
+                        
+                        break; // Keep the first (lowest-numbered) acceptor.
                     }
-                });
+                }
+                
             }
         }
 
@@ -486,6 +513,17 @@ public class EntityContextMenu extends JPopupMenu {
 
         return sliceVwItem;
     }
+
+//    /** Implement lookup listener by preserving the value provided. */
+//    @Override
+//    public void resultChanged(LookupEvent le) {
+//        // set the entity acceptor.
+//        Collection<? extends EntityAcceptor> allEvents = result.allInstances();
+//        if ( ! allEvents.isEmpty() ) {
+//            EntityAcceptor acceptor = allEvents.iterator().next();
+//            entityAcceptor = acceptor;
+//        }
+//    }
 
     private class EntityDataPath {
         private List<EntityData> path;

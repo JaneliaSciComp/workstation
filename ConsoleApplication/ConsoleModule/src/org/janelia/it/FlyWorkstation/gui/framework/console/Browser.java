@@ -28,8 +28,6 @@ import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionModelListener;
 import org.janelia.it.FlyWorkstation.gui.framework.viewer.IconDemoPanel;
 import org.janelia.it.FlyWorkstation.gui.framework.viewer.ImageCache;
-import org.janelia.it.FlyWorkstation.gui.framework.viewer.alignment_board.AlignmentBoardViewer;
-import org.janelia.it.FlyWorkstation.gui.alignment_board_viewer.LayersPanel;
 import org.janelia.it.FlyWorkstation.gui.util.Icons;
 import org.janelia.it.FlyWorkstation.gui.slice_viewer.SliceViewViewer;
 import org.janelia.it.FlyWorkstation.shared.util.FreeMemoryWatcher;
@@ -95,7 +93,6 @@ public class Browser extends JFrame implements Cloneable {
 
     private VerticalPanelPicker rightPanel;
     private OntologyOutline ontologyOutline;
-    private LayersPanel layersPanel;
     private SplitPickingPanel splitPickingPanel;
         
     private AnnotationSessionPropertyDialog annotationSessionPropertyPanel;
@@ -238,12 +235,10 @@ public class Browser extends JFrame implements Cloneable {
             setLocation(consolePosition.getBrowserLocation());
         }
         
-        layersPanel = new LayersPanel();
         splitPickingPanel = new SplitPickingPanel();
         
         rightPanel = new VerticalPanelPicker();
         rightPanel.addPanel(OUTLINE_ONTOLOGY, Icons.getIcon("page.png"), "Displays an ontology for annotation", ontologyOutline);
-        rightPanel.addPanel(OUTLINE_LAYERS, Icons.getIcon("palette.png"), "Adjust alignment board layers", layersPanel);
         rightPanel.addPanel(OUTLINE_SPLIT_PICKER, Icons.getIcon("page_copy.png"), "Allows for simulation of flyline crosses", splitPickingPanel);
         
         
@@ -490,14 +485,6 @@ public class Browser extends JFrame implements Cloneable {
         rightPanel.showPanel(panelName);
     }
     
-    public LayersPanel getLayersPanel() {
-        return layersPanel;
-    }
-
-    public void setLayersPanel(LayersPanel layersPanel) {
-        this.layersPanel = layersPanel;
-    }
-
     public SplitPickingPanel getSplitPickingPanel() {
         return splitPickingPanel;
     }
@@ -573,15 +560,6 @@ public class Browser extends JFrame implements Cloneable {
     public void setPerspective(Perspective perspective) {
         log.info("Setting perspective: {}",perspective);
         switch (perspective) {
-        case AlignmentBoard:
-            // LLF: here, I tried to place the alignment board viewer as the main view.  Unfortunately,
-            // whenever an outline member was selected, it went away, and was replaced by an Icon Demo Panel.
-            //   Instead, opted to hide the main viewer, and allow it to continue receiving its select events.
-            selectRightPanel(OUTLINE_LAYERS);
-            viewerManager.clearAllViewers();
-            viewerManager.getViewerContainer().setSecViewerVisible(true);
-            viewerManager.ensureViewerClass(viewerManager.getSecViewerPane(), AlignmentBoardViewer.class);
-            break;
         case SplitPicker:
             selectRightPanel(OUTLINE_SPLIT_PICKER);
             viewerManager.clearAllViewers();

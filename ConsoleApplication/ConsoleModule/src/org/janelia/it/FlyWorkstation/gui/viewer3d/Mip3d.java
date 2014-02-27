@@ -1,8 +1,8 @@
 package org.janelia.it.FlyWorkstation.gui.viewer3d;
 
 import org.janelia.it.FlyWorkstation.gui.opengl.GLActor;
-import org.janelia.it.FlyWorkstation.gui.alignment_board_viewer.masking.MaskBuilderI;
-import org.janelia.it.FlyWorkstation.gui.alignment_board_viewer.masking.RenderMappingI;
+import org.janelia.it.FlyWorkstation.gui.viewer3d.masking.MaskBuilderI;
+import org.janelia.it.FlyWorkstation.gui.viewer3d.masking.RenderMappingI;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.resolver.FileResolver;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.texture.RenderMapTextureBean;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.texture.TextureDataI;

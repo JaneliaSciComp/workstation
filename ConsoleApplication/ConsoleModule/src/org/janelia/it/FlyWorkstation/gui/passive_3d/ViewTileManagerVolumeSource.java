@@ -3,7 +3,6 @@ package org.janelia.it.FlyWorkstation.gui.passive_3d;
 import org.janelia.it.FlyWorkstation.geom.CoordinateAxis;
 import org.janelia.it.FlyWorkstation.geom.Rotation3d;
 import org.janelia.it.FlyWorkstation.geom.Vec3;
-import org.janelia.it.FlyWorkstation.gui.alignment_board_viewer.volume_builder.VolumeDataBean;
 import org.janelia.it.FlyWorkstation.gui.camera.BasicObservableCamera3d;
 import org.janelia.it.FlyWorkstation.gui.camera.Camera3d;
 import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr;

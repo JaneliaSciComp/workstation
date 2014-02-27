@@ -32,6 +32,14 @@
                     </run-dependency>
                 </dependency>
                 <dependency>
+                    <code-name-base>org.openide.nodes</code-name-base>
+                    <build-prerequisite/>
+                    <compile-dependency/>
+                    <run-dependency>
+                        <specification-version>7.36.1</specification-version>
+                    </run-dependency>
+                </dependency>
+                <dependency>
                     <code-name-base>org.openide.util</code-name-base>
                     <build-prerequisite/>
                     <compile-dependency/>
@@ -79,15 +87,6 @@
                 <package>org.janelia.it.FlyWorkstation.api.stub.data</package>
                 <package>org.janelia.it.FlyWorkstation.geom</package>
                 <package>org.janelia.it.FlyWorkstation.gui</package>
-                <package>org.janelia.it.FlyWorkstation.gui.alignment_board_viewer</package>
-                <package>org.janelia.it.FlyWorkstation.gui.alignment_board_viewer.channel_split</package>
-                <package>org.janelia.it.FlyWorkstation.gui.alignment_board_viewer.gui_elements</package>
-                <package>org.janelia.it.FlyWorkstation.gui.alignment_board_viewer.masking</package>
-                <package>org.janelia.it.FlyWorkstation.gui.alignment_board_viewer.renderable</package>
-                <package>org.janelia.it.FlyWorkstation.gui.alignment_board_viewer.shader</package>
-                <package>org.janelia.it.FlyWorkstation.gui.alignment_board_viewer.texture</package>
-                <package>org.janelia.it.FlyWorkstation.gui.alignment_board_viewer.volume_builder</package>
-                <package>org.janelia.it.FlyWorkstation.gui.alignment_board_viewer.volume_export</package>
                 <package>org.janelia.it.FlyWorkstation.gui.animate</package>
                 <package>org.janelia.it.FlyWorkstation.gui.application</package>
                 <package>org.janelia.it.FlyWorkstation.gui.application.video</package>
@@ -96,7 +95,6 @@
                 <package>org.janelia.it.FlyWorkstation.gui.dialogs</package>
                 <package>org.janelia.it.FlyWorkstation.gui.dialogs.choose</package>
                 <package>org.janelia.it.FlyWorkstation.gui.dialogs.search</package>
-                <package>org.janelia.it.FlyWorkstation.gui.dialogs.search.alignment_board</package>
                 <package>org.janelia.it.FlyWorkstation.gui.framework.access</package>
                 <package>org.janelia.it.FlyWorkstation.gui.framework.actions</package>
                 <package>org.janelia.it.FlyWorkstation.gui.framework.bookmark</package>
@@ -117,8 +115,6 @@
                 <package>org.janelia.it.FlyWorkstation.gui.framework.tool_manager</package>
                 <package>org.janelia.it.FlyWorkstation.gui.framework.tree</package>
                 <package>org.janelia.it.FlyWorkstation.gui.framework.viewer</package>
-                <package>org.janelia.it.FlyWorkstation.gui.framework.viewer.alignment_board</package>
-                <package>org.janelia.it.FlyWorkstation.gui.framework.viewer.alignment_board.events</package>
                 <package>org.janelia.it.FlyWorkstation.gui.framework.viewer.baseball_card</package>
                 <package>org.janelia.it.FlyWorkstation.gui.framework.viewer.search</package>
                 <package>org.janelia.it.FlyWorkstation.gui.ontology</package>
@@ -142,12 +138,13 @@
                 <package>org.janelia.it.FlyWorkstation.gui.util.swing_models</package>
                 <package>org.janelia.it.FlyWorkstation.gui.viewer3d</package>
                 <package>org.janelia.it.FlyWorkstation.gui.viewer3d.buffering</package>
-                <package>org.janelia.it.FlyWorkstation.gui.viewer3d.channel_split</package>
                 <package>org.janelia.it.FlyWorkstation.gui.viewer3d.error_trap</package>
+                <package>org.janelia.it.FlyWorkstation.gui.viewer3d.events</package>
                 <package>org.janelia.it.FlyWorkstation.gui.viewer3d.interfaces</package>
                 <package>org.janelia.it.FlyWorkstation.gui.viewer3d.learning</package>
                 <package>org.janelia.it.FlyWorkstation.gui.viewer3d.loader</package>
                 <package>org.janelia.it.FlyWorkstation.gui.viewer3d.masking</package>
+                <package>org.janelia.it.FlyWorkstation.gui.viewer3d.renderable</package>
                 <package>org.janelia.it.FlyWorkstation.gui.viewer3d.resolver</package>
                 <package>org.janelia.it.FlyWorkstation.gui.viewer3d.scaled_image</package>
                 <package>org.janelia.it.FlyWorkstation.gui.viewer3d.shader</package>

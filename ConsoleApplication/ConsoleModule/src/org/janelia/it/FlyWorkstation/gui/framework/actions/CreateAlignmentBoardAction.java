@@ -7,7 +7,6 @@ import javax.swing.SwingUtilities;
 
 import org.janelia.it.FlyWorkstation.api.entity_model.management.ModelMgr;
 import org.janelia.it.FlyWorkstation.gui.framework.console.Browser;
-import org.janelia.it.FlyWorkstation.gui.framework.console.Perspective;
 import org.janelia.it.FlyWorkstation.gui.framework.outline.EntityOutline;
 import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.FlyWorkstation.gui.util.Icons;
@@ -110,8 +109,10 @@ public class CreateAlignmentBoardAction implements Action {
                             @Override
                             public void run() {
                                 entityOutline.selectEntityByUniqueId(newBoard.getUniqueId());
-                                SessionMgr.getBrowser().setPerspective(Perspective.AlignmentBoard);
-                                SessionMgr.getBrowser().getLayersPanel().openAlignmentBoard(newBoard.getEntityId());
+                                //TODO need to launch up the alignment board.
+//                                
+//                                SessionMgr.getBrowser().setPerspective(Perspective.AlignmentBoard);
+//                                SessionMgr.getBrowser().getLayersPanel().openAlignmentBoard(newBoard.getEntityId());
                             }
                         });
                     }

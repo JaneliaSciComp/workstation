@@ -1,13 +1,10 @@
 package org.janelia.it.FlyWorkstation.gui.framework.viewer.baseball_card;
 
-import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.FlyWorkstation.gui.framework.viewer.BaseballCardPanel;
 import org.janelia.it.FlyWorkstation.gui.framework.viewer.Viewer;
 import org.janelia.it.FlyWorkstation.gui.framework.viewer.ViewerPane;
-import org.janelia.it.FlyWorkstation.gui.alignment_board_viewer.LayersPanel;
 import org.janelia.it.FlyWorkstation.gui.util.Icons;
 import org.janelia.it.FlyWorkstation.model.entity.RootedEntity;
-import org.janelia.it.FlyWorkstation.model.viewer.AlignmentBoardContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -33,17 +30,16 @@ public class BaseballCardViewer extends Viewer {
         super( pane );
     }
 
+    /**
+     * This "viewer" may yet never see the light of day.  It is built for the
+     * old standard of viewer creation/display, which is being refactored.  This
+     * viewer was never used.
+     * 
+     * @return entity around which this viewer is operating.
+     */
     @Override
     public RootedEntity getContextRootedEntity() {
-        LayersPanel layersPanel = SessionMgr.getBrowser().getLayersPanel();
-        if ( layersPanel == null ) {
-            return null;
-        }
-        AlignmentBoardContext alignmentBoardContext = layersPanel.getAlignmentBoardContext();
-        if ( alignmentBoardContext == null ) {
-            return null;
-        };
-        return alignmentBoardContext.getInternalRootedEntity();
+        return null;
     }
 
     @Override

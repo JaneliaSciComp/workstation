@@ -8,6 +8,8 @@ import org.janelia.it.FlyWorkstation.gui.viewer3d.texture.TextureDataI;
 
 import java.awt.image.BufferedImage;
 import java.io.IOException;
+import org.janelia.it.FlyWorkstation.gui.viewer3d.loader.TextureDataBuilder;
+import org.janelia.it.FlyWorkstation.gui.viewer3d.loader.VolumeFileLoaderI;
 
 /**
  * Created with IntelliJ IDEA.

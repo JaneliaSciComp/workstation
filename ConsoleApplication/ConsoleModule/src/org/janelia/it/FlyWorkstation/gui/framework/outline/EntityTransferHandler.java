@@ -20,8 +20,8 @@ import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.FlyWorkstation.gui.framework.viewer.AnnotatedImageButton;
 import org.janelia.it.FlyWorkstation.gui.framework.viewer.IconPanel;
 import org.janelia.it.FlyWorkstation.gui.framework.viewer.Viewer;
-import org.janelia.it.FlyWorkstation.gui.framework.viewer.alignment_board.AlignmentBoardViewer;
-import org.janelia.it.FlyWorkstation.gui.alignment_board_viewer.LayersPanel;
+//import org.janelia.it.FlyWorkstation.gui.framework.viewer.alignment_board.AlignmentBoardViewer;
+//import org.janelia.it.FlyWorkstation.gui.alignment_board_viewer.LayersPanel;
 import org.janelia.it.FlyWorkstation.model.entity.RootedEntity;
 import org.janelia.it.FlyWorkstation.model.viewer.AlignmentBoardContext;
 import org.janelia.it.FlyWorkstation.shared.util.Utils;
@@ -83,10 +83,10 @@ public abstract class EntityTransferHandler extends TransferHandler {
             }       
             return new TransferableEntityList(sourceComponent, entityList);
         }
-        else if (sourceComponent instanceof LayersPanel) {
-            log.warn("No transfer handling defined from a LayersPanel");
-            return null;
-        }
+//        else if (sourceComponent instanceof LayersPanel) {
+//            log.warn("No transfer handling defined from a LayersPanel");
+//            return null;
+//        }
         else {
             throw new IllegalStateException("Unsupported component type for transfer: "+sourceComponent.getClass().getName());
         }
@@ -212,14 +212,15 @@ public abstract class EntityTransferHandler extends TransferHandler {
 	            return true;
 			    
 			}
-			else if ((dropTarget instanceof LayersPanel) || (dropTarget instanceof AlignmentBoardViewer)) {
-                // Drag to the alignment board
-
-	            Transferable transferable = support.getTransferable();
-	            List<RootedEntity> entities = (List<RootedEntity>)transferable.getTransferData(TransferableEntityList.getRootedEntityFlavor());
-	            	            
-	            return true;
-            }
+            //TODO find way to complete this transfer.
+//			else if ((dropTarget instanceof LayersPanel) || (dropTarget instanceof AlignmentBoardViewer)) {
+//                // Drag to the alignment board
+//
+//	            Transferable transferable = support.getTransferable();
+//	            List<RootedEntity> entities = (List<RootedEntity>)transferable.getTransferData(TransferableEntityList.getRootedEntityFlavor());
+//	            	            
+//	            return true;
+//            }
 		}
 		catch (Exception e) {
 			SessionMgr.getSessionMgr().handleException(e);
@@ -303,9 +304,10 @@ public abstract class EntityTransferHandler extends TransferHandler {
                         EntityTree targetEntityTree = (EntityTree)dropTarget;
                         addEntities(targetEntityTree, finalParent, rootedEntities, finalIndex, support.getDropAction()==MOVE);
                     }
-                    else if ((dropTarget instanceof LayersPanel) || (dropTarget instanceof AlignmentBoardViewer)) {
-                        addEntitiesToAlignmentBoard(SessionMgr.getBrowser().getLayersPanel().getAlignmentBoardContext(), rootedEntities);
-                    }
+//TODO find a way to transfer these entities.
+//                    else if ((dropTarget instanceof LayersPanel) || (dropTarget instanceof AlignmentBoardViewer)) {
+//                        addEntitiesToAlignmentBoard(SessionMgr.getBrowser().getLayersPanel().getAlignmentBoardContext(), rootedEntities);
+//                    }
                 }
                 
                 @Override
