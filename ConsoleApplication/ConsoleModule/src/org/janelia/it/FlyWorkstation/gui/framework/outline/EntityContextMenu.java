@@ -52,6 +52,7 @@ import org.janelia.it.FlyWorkstation.model.entity.RootedEntity;
 import org.janelia.it.FlyWorkstation.model.utils.AnnotationSession;
 import org.janelia.it.FlyWorkstation.nb_action.ContextSuitable;
 import org.janelia.it.FlyWorkstation.nb_action.EntityAcceptor;
+import org.janelia.it.FlyWorkstation.nb_action.EntityWrapperCreator;
 import org.janelia.it.FlyWorkstation.shared.util.ConsoleProperties;
 import org.janelia.it.FlyWorkstation.shared.util.SystemInfo;
 import org.janelia.it.FlyWorkstation.shared.util.Utils;
@@ -176,7 +177,7 @@ public class EntityContextMenu extends JPopupMenu {
         setNextAddRequiresSeparator(true);
         add(getHudMenuItem());
         add(getOpenForContextItem());
-        add(getOpenInNewAlignmentBoardItem());
+        add(getWrapEntityItem());
         add(getOpenSliceViewerItem());
 
         if ((SessionMgr.getSubjectKey().equals("user:simpsonj") || SessionMgr.getSubjectKey()
@@ -455,7 +456,7 @@ public class EntityContextMenu extends JPopupMenu {
                                         }
                                     }
                                     if (entityAcceptor == null) {
-                                        log.warn("No service provider for opening alignment board.");
+                                        log.warn("No service provider for this entity.");
                                     }
                                     if (entityAcceptor != null) {
                                         entityAcceptor.acceptEntity(entity);
@@ -467,7 +468,7 @@ public class EntityContextMenu extends JPopupMenu {
                             }
                         });
                         
-                        break; // Keep the first (lowest-numbered) acceptor.
+                        break; // Keep the first (lowest-numbered) value.
                     }
                 }
                 
@@ -477,20 +478,54 @@ public class EntityContextMenu extends JPopupMenu {
         return alignBrdVwItem;
     }
 
-    public JMenuItem getOpenInNewAlignmentBoardItem() {
+    public JMenuItem getWrapEntityItem() {
         if (multiple) return null;
         
-        JMenuItem alignmentBoardItem = null;
+        JMenuItem wrapEntityItem = null;
         
         if (rootedEntity != null && rootedEntity.getEntityData() != null) {
-            Entity entity = rootedEntity.getEntity();
-            if (entity!=null && (entity.getEntityTypeName().equals(EntityConstants.TYPE_SAMPLE))) {
-                Action action = new CreateAlignmentBoardAction("  Open In New Alignment Board Viewer",rootedEntity);
-                alignmentBoardItem = getActionItem(action);
+            Collection<? extends EntityWrapperCreator> entityWrapperCreators =
+                    Lookups.forPath(EntityWrapperCreator.LOOKUP_PATH)
+                            .lookupAll(EntityWrapperCreator.class);
+            
+            for (EntityWrapperCreator nextCreator : entityWrapperCreators) {
+                if (nextCreator.isCompatible(rootedEntity)) {
+                    EntityWrapperCreator wrapperCreator = nextCreator;
+                    wrapEntityItem = new JMenuItem(wrapperCreator.getActionLabel());
+                    wrapEntityItem.addActionListener(new ActionListener() {
+                        @Override
+                        public void actionPerformed(ActionEvent e) {
+                            try {
+                                // Pickup the sought value.
+                                Collection<? extends EntityWrapperCreator> wrapperCreators;
+                                EntityWrapperCreator wrapperCreator = null;
+                                wrapperCreators = Lookups.forPath(EntityWrapperCreator.LOOKUP_PATH).lookupAll(EntityWrapperCreator.class);
+                                for (EntityWrapperCreator next : wrapperCreators) {
+                                    if (next.isCompatible(rootedEntity)) {
+                                        wrapperCreator = next;
+                                        break;
+                                    }
+                                }
+                                if (wrapperCreator == null) {
+                                    log.warn("No service provider for this entity.");
+                                }
+                                else {
+                                    wrapperCreator.wrapEntity(rootedEntity);
+                                }
+                            } catch (Exception ex) {
+                                ModelMgr.getModelMgr().handleException(ex);
+                            }
+
+                        }
+                    });
+
+                    break; // Keep the first (lowest-numbered) value.
+                }
             }
+
         }
 
-        return alignmentBoardItem;
+        return wrapEntityItem;
     }
        
     public JMenuItem getOpenSliceViewerItem() {
@@ -520,7 +555,7 @@ public class EntityContextMenu extends JPopupMenu {
 //        Collection<? extends EntityAcceptor> allEvents = result.allInstances();
 //        if ( ! allEvents.isEmpty() ) {
 //            EntityAcceptor acceptor = allEvents.iterator().next();
-//            entityAcceptor = acceptor;
+//            next = acceptor;
 //        }
 //    }
 

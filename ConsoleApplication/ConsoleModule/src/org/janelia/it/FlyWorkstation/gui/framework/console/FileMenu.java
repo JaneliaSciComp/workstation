@@ -94,15 +94,6 @@ public class FileMenu extends JMenu {
                 menuNewSketch_actionPerformed();
             }
         });
-        menuNewAlignmentBoard = new JMenuItem("Alignment Board");
-        menuNewAlignmentBoard.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent actionEvent) {
-                menuNewAlignmentBoard_actionPerformed();
-            }
-        });
-        menuNewItem.add(menuNewAlignmentBoard);
-
         menuNewTiledMicroscopeSample = new JMenuItem("Tiled Microscope Sample");
         menuNewTiledMicroscopeSample.addActionListener(new ActionListener() {
             @Override
@@ -328,11 +319,6 @@ public class FileMenu extends JMenu {
 
     private void menuNewSketch_actionPerformed() {
 
-    }
-
-    private void menuNewAlignmentBoard_actionPerformed() {
-        CreateAlignmentBoardAction action = new CreateAlignmentBoardAction( "Create Alignment Board" );
-        action.doAction();
     }
 
     private void menuNewTiledMicroscopeSample_actionPerformed() {

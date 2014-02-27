@@ -1,11 +1,10 @@
-package org.janelia.it.FlyWorkstation.gui.framework.actions;
+package org.janelia.it.FlyWorkstation.gui.alignment_board_viewer.creation;
 
 import java.util.List;
-
 import javax.swing.JOptionPane;
 import javax.swing.SwingUtilities;
-
 import org.janelia.it.FlyWorkstation.api.entity_model.management.ModelMgr;
+import org.janelia.it.FlyWorkstation.gui.alignment_board.Launcher;
 import org.janelia.it.FlyWorkstation.gui.framework.console.Browser;
 import org.janelia.it.FlyWorkstation.gui.framework.outline.EntityOutline;
 import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr;
@@ -16,36 +15,23 @@ import org.janelia.it.FlyWorkstation.model.domain.EntityWrapperFactory;
 import org.janelia.it.FlyWorkstation.model.domain.Sample;
 import org.janelia.it.FlyWorkstation.model.entity.RootedEntity;
 import org.janelia.it.FlyWorkstation.model.viewer.AlignmentBoardContext;
+import org.janelia.it.FlyWorkstation.nb_action.EntityWrapperCreator;
 import org.janelia.it.FlyWorkstation.shared.workers.IndeterminateProgressMonitor;
 import org.janelia.it.FlyWorkstation.shared.workers.SimpleWorker;
+import org.janelia.it.jacs.model.entity.EntityConstants;
 import org.janelia.it.jacs.shared.utils.StringUtils;
+import org.openide.util.lookup.ServiceProvider;
 
 /**
- * Create any "new alignment board" items (buttons, menu items, etc.) based upon this.
+ * Use this with or without a known sample, to create a new Alignment Board.
  * 
  * @author fosterl
- * @author <a href="mailto:rokickik@janelia.hhmi.org">Konrad Rokicki</a>
  */
-public class CreateAlignmentBoardAction implements Action {
-    
-    private String name;
+@ServiceProvider(service=EntityWrapperCreator.class,path=EntityWrapperCreator.LOOKUP_PATH)
+public class AlignmentBoardCreator implements EntityWrapperCreator {
     private RootedEntity sampleRootedEntity;
     
-    public CreateAlignmentBoardAction(String name) {
-        this.name = name;
-    }
-    
-    public CreateAlignmentBoardAction(String name, RootedEntity sampleRootedEntity) {
-        this.name = name;
-        this.sampleRootedEntity = sampleRootedEntity;
-    }
-
-    public String getName() {
-        return name;
-    }
-    
-    @Override
-    public void doAction() {
+    public void execute() {
 
         final Browser browser = SessionMgr.getBrowser();
 
@@ -56,8 +42,8 @@ public class CreateAlignmentBoardAction implements Action {
             
             @Override
             protected void doStuff() throws Exception {
-                if (sampleRootedEntity!=null) {
-                    this.sample = (Sample)EntityWrapperFactory.wrap(sampleRootedEntity);
+                if (getSampleRootedEntity()!=null) {
+                    this.sample = (Sample)EntityWrapperFactory.wrap(getSampleRootedEntity());
                     this.contexts = sample.getAvailableAlignmentContexts();
                 }
                 else {
@@ -109,10 +95,8 @@ public class CreateAlignmentBoardAction implements Action {
                             @Override
                             public void run() {
                                 entityOutline.selectEntityByUniqueId(newBoard.getUniqueId());
-                                //TODO need to launch up the alignment board.                                
-//                                
-//                                SessionMgr.getBrowser().setPerspective(Perspective.AlignmentBoard);
-//                                SessionMgr.getBrowser().getLayersPanel().openAlignmentBoard(newBoard.getEntityId());
+                                Launcher launcher = new Launcher();
+                                launcher.launch(newBoard.getEntityId());
                             }
                         });
                     }
@@ -134,4 +118,37 @@ public class CreateAlignmentBoardAction implements Action {
         worker.setProgressMonitor(new IndeterminateProgressMonitor(browser, "Finding alignments...", ""));
         worker.execute();
     }
+
+    /**
+     * @return the sampleRootedEntity
+     */
+    public RootedEntity getSampleRootedEntity() {
+        return sampleRootedEntity;
+    }
+
+    /**
+     * @param sampleRootedEntity the sampleRootedEntity to set
+     */
+    public void setSampleRootedEntity(RootedEntity sampleRootedEntity) {
+        this.sampleRootedEntity = sampleRootedEntity;
+    }
+
+    @Override
+    public void wrapEntity(RootedEntity e) {
+        this.sampleRootedEntity = (RootedEntity)e;
+        execute();
+    }
+
+    @Override
+    public boolean isCompatible(RootedEntity e) {
+        final String entityTypeName = e.getEntity().getEntityTypeName();
+        return entityTypeName.equals( EntityConstants.TYPE_SAMPLE )   ||
+               entityTypeName.equals( EntityConstants.TYPE_NEURON_FRAGMENT );
+    }
+
+    @Override
+    public String getActionLabel() {
+        return "  Open In New Alignment Board Viewer";
+    }
+
 }
