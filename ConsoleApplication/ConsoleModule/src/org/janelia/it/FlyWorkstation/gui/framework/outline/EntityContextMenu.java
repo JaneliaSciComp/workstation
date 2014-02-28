@@ -52,6 +52,7 @@ import org.janelia.it.FlyWorkstation.model.utils.AnnotationSession;
 import org.janelia.it.FlyWorkstation.nb_action.Compatible;
 import org.janelia.it.FlyWorkstation.nb_action.EntityAcceptor;
 import org.janelia.it.FlyWorkstation.nb_action.EntityWrapperCreator;
+import org.janelia.it.FlyWorkstation.nb_action.ServiceAcceptorHelper;
 import org.janelia.it.FlyWorkstation.shared.util.ConsoleProperties;
 import org.janelia.it.FlyWorkstation.shared.util.SystemInfo;
 import org.janelia.it.FlyWorkstation.shared.util.Utils;
@@ -422,8 +423,13 @@ public class EntityContextMenu extends JPopupMenu {
             final Entity entity = rootedEntity.getEntity();
             if (entity!=null) {
 
+                final ServiceAcceptorHelper helper = new ServiceAcceptorHelper();
                 EntityAcceptor entityAcceptor
-                        = findHandler(entity, EntityAcceptor.class, EntityAcceptor.PERSPECTIVE_CHANGE_LOOKUP_PATH);
+                        = helper.findHandler(
+                                entity, 
+                                EntityAcceptor.class,
+                                EntityAcceptor.PERSPECTIVE_CHANGE_LOOKUP_PATH
+                        );
                 if (entityAcceptor != null) {
                     alignBrdVwItem = new JMenuItem(entityAcceptor.getActionLabel());
                     alignBrdVwItem.addActionListener(new ActionListener() {
@@ -432,7 +438,11 @@ public class EntityContextMenu extends JPopupMenu {
                             try {
                                 // Pickup the sought value.
                                 EntityAcceptor entityAcceptor
-                                        = findHandler(entity, EntityAcceptor.class, EntityAcceptor.PERSPECTIVE_CHANGE_LOOKUP_PATH);
+                                        = helper.findHandler(
+                                                entity,
+                                                EntityAcceptor.class,
+                                                EntityAcceptor.PERSPECTIVE_CHANGE_LOOKUP_PATH
+                                        );
                                 if (entityAcceptor == null) {
                                     log.warn("No service provider for this entity.");
                                 } else {
@@ -458,8 +468,9 @@ public class EntityContextMenu extends JPopupMenu {
         JMenuItem wrapEntityItem = null;
         
         if (rootedEntity != null && rootedEntity.getEntityData() != null) {
+            final ServiceAcceptorHelper helper = new ServiceAcceptorHelper();
             EntityWrapperCreator wrapperCreator
-                    = findHandler(rootedEntity, EntityWrapperCreator.class, EntityWrapperCreator.LOOKUP_PATH);
+                    = helper.findHandler(rootedEntity, EntityWrapperCreator.class, EntityWrapperCreator.LOOKUP_PATH);
 
             if (wrapperCreator != null) {
                 wrapEntityItem = new JMenuItem(wrapperCreator.getActionLabel());
@@ -468,7 +479,7 @@ public class EntityContextMenu extends JPopupMenu {
                     public void actionPerformed(ActionEvent e) {
                         try {
                             EntityWrapperCreator wrapperCreator
-                                    = findHandler(rootedEntity, EntityWrapperCreator.class, EntityWrapperCreator.LOOKUP_PATH);
+                                    = helper.findHandler(rootedEntity, EntityWrapperCreator.class, EntityWrapperCreator.LOOKUP_PATH);
                             if (wrapperCreator == null) {
                                 log.warn("No service provider for this entity.");
                             } else {
@@ -506,29 +517,6 @@ public class EntityContextMenu extends JPopupMenu {
         }
 
         return sliceVwItem;
-    }
-
-    /**
-     * Do a generic lookup, for things that can deal with found values on
-     * the outline.
-     * 
-     * @param criterion this is used to judge compatibility of found items.
-     * @param clazz tells what type of thing to find.
-     * @param path tells the path identifier for searching compatible items.
-     * @return a compatible handler for the criterion object.
-     */
-    private <T extends Compatible,S> T findHandler(S criterion, Class clazz, String path) {
-        Collection<T> candidates
-                = Lookups.forPath(path).lookupAll(clazz);
-
-        T rtnVal = null;
-        for (T nextAcceptor : candidates) {
-            if (nextAcceptor.isCompatible(criterion)) {
-                rtnVal = nextAcceptor;
-                break;
-            }
-        }
-        return rtnVal;
     }
 
     private class EntityDataPath {

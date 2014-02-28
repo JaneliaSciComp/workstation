@@ -24,6 +24,8 @@ import org.janelia.it.FlyWorkstation.gui.framework.viewer.Viewer;
 //import org.janelia.it.FlyWorkstation.gui.alignment_board_viewer.LayersPanel;
 import org.janelia.it.FlyWorkstation.model.entity.RootedEntity;
 import org.janelia.it.FlyWorkstation.model.viewer.AlignmentBoardContext;
+import org.janelia.it.FlyWorkstation.nb_action.DropAcceptor;
+import org.janelia.it.FlyWorkstation.nb_action.ServiceAcceptorHelper;
 import org.janelia.it.FlyWorkstation.shared.util.Utils;
 import org.janelia.it.FlyWorkstation.shared.workers.IndeterminateProgressMonitor;
 import org.janelia.it.FlyWorkstation.shared.workers.SimpleWorker;
@@ -176,13 +178,6 @@ public abstract class EntityTransferHandler extends TransferHandler {
 	            }
 
 	            for(TreePath sourcePath : sourcePaths) {
-
-	                // Can't move to a descendant
-	                if (sourcePath.isDescendant(targetPath)) {
-	                    log.debug("Disallow transfer because source node descendant of target");
-	                    return false;
-	                }
-                    
 	                // Can't move the root
 	                DefaultMutableTreeNode sourceNode = (DefaultMutableTreeNode)sourcePath.getLastPathComponent();
 	                if (sourceNode.isRoot()) {
@@ -200,6 +195,14 @@ public abstract class EntityTransferHandler extends TransferHandler {
 	                    log.debug("Disallow transfer to the same location");
 	                    return false;
 	                }
+
+                    // Can't move to a descendant
+	                if (sourcePath.isDescendant(targetPath)) {
+                        // Need to dump source and target.
+	                    log.debug("Disallow transfer because source node {} descendant of target {}", sourcePath, targetPath);
+	                    return false;
+	                }
+                    
 	            }
 	            
 	            // Enforce some Entity-specific rules
@@ -304,10 +307,14 @@ public abstract class EntityTransferHandler extends TransferHandler {
                         EntityTree targetEntityTree = (EntityTree)dropTarget;
                         addEntities(targetEntityTree, finalParent, rootedEntities, finalIndex, support.getDropAction()==MOVE);
                     }
-//TODO find a way to transfer these entities.
-//                    else if ((dropTarget instanceof LayersPanel) || (dropTarget instanceof AlignmentBoardViewer)) {
-//                        addEntitiesToAlignmentBoard(SessionMgr.getBrowser().getLayersPanel().getAlignmentBoardContext(), rootedEntities);
-//                    }
+                    else {
+                        // Find drop acceptors, and figure out which are compatible.
+                        ServiceAcceptorHelper saHelper = new ServiceAcceptorHelper();
+                        DropAcceptor target = saHelper.findHandler(dropTarget, DropAcceptor.class, DropAcceptor.LOOKUP_PATH);
+                        if ( target != null ) {
+                            target.drop( rootedEntities );
+                        }
+                    }
                 }
                 
                 @Override
@@ -419,17 +426,6 @@ public abstract class EntityTransferHandler extends TransferHandler {
             log.debug("Deleted old ED {}",ed.getId());
 		}
 	}
-    
-    /**
-     * Add the given entities to the specified alignment board, if possible.
-     * @param alignmentBoardContext
-     * @param entitiesToAdd
-     */
-    protected void addEntitiesToAlignmentBoard(AlignmentBoardContext alignmentBoardContext, List<RootedEntity> entitiesToAdd) throws Exception {
-        for(RootedEntity rootedEntity : entitiesToAdd) {
-            alignmentBoardContext.addRootedEntity(rootedEntity);
-        }
-    }
     
     protected EntityTree getEntityTreeAncestor(JComponent sourceComponent) {
         JComponent component = sourceComponent;

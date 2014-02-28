@@ -46,7 +46,7 @@ public class AlignmentBoardEntityTransferHandler extends EntityTransferHandler {
     }
     @Override
     public boolean canImport(TransferHandler.TransferSupport support) {
-        boolean rtnVal = super.canImport( support );
+        boolean rtnVal = true;//super.canImport( support );
         logger.debug("Enter can-import...");
 
         if ( rtnVal ) {
