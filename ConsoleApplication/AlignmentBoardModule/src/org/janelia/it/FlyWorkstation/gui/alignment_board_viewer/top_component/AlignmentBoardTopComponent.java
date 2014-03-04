@@ -51,7 +51,6 @@ public final class AlignmentBoardTopComponent extends TopComponent {
     public AlignmentBoardTopComponent() {
         initComponents();
         alignmentBoardPanel = new AlignmentBoardPanel();
-        ModelMgr.getModelMgr().registerOnEventBus(this);
         setName(Bundle.CTL_AlignmentBoardTopComponent());
         setToolTipText(Bundle.HINT_AlignmentBoardTopComponent());
         establishEntityAcceptor();
@@ -121,6 +120,7 @@ public final class AlignmentBoardTopComponent extends TopComponent {
     // End of variables declaration//GEN-END:variables
     @Override
     public void componentOpened() {
+        ModelMgr.getModelMgr().registerOnEventBus(this);
         initMyComponents();
     }
 

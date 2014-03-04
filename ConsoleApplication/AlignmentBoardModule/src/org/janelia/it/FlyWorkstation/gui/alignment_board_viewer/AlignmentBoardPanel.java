@@ -182,6 +182,8 @@ public class AlignmentBoardPanel extends JPanel implements AlignmentBoardControl
     public void handleBoardOpened(AlignmentBoardOpenEvent event) {
         logger.info("Board Opened");
 
+        boardOpen = false;
+        
         AlignmentBoardContext abContext = event.getAlignmentBoardContext();
         try {
             Entity alignmentBoard =  ModelMgr.getModelMgr().getEntityById(abContext.getInternalEntity().getId());
