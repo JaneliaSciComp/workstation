@@ -4,6 +4,8 @@ import java.util.Collection;
 import org.openide.util.lookup.Lookups;
 
 /**
+ * Delegate class to facilitate dealing with finding compatible acceptors
+ * for various tasks.  Convenience class that cuts down on redundant code.
  * 
  * @author fosterl
  */
