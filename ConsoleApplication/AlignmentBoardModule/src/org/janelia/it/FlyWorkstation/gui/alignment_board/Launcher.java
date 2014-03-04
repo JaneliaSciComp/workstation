@@ -27,13 +27,22 @@ public class Launcher implements EntityAcceptor  {
 
     public void launch( long entityId ) {
         TopComponent win = WindowManager.getDefault().findTopComponent("AlignmentBoardControlsTopComponent");
+        if ( win.isOpened() ) {
+            win.close();
+        }
         win.open();
 
         win = WindowManager.getDefault().findTopComponent("AlignmentBoardTopComponent");
+        if ( win.isOpened() ) {
+            win.close();
+        }
         win.open();
         win.requestActive();
 
         win = WindowManager.getDefault().findTopComponent("LayersPanelTopComponent");
+        if ( win.isOpened() ) {
+            win.close();
+        }
         win.open();
         
         AlignmentBoardMgr.getInstance().getLayersPanel().openAlignmentBoard( entityId );
