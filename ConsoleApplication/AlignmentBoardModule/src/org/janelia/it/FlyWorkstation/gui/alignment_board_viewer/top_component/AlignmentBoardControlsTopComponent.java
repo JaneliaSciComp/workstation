@@ -6,18 +6,10 @@
 package org.janelia.it.FlyWorkstation.gui.alignment_board_viewer.top_component;
 
 import java.awt.BorderLayout;
-import java.util.Collection;
-import org.janelia.it.FlyWorkstation.gui.alignment_board_viewer.AlignmentBoardCtrlPnlSvc;
 import org.janelia.it.FlyWorkstation.gui.alignment_board_viewer.gui_elements.AlignmentBoardControlsPanel;
 import org.netbeans.api.settings.ConvertAsProperties;
-import org.openide.awt.ActionID;
-import org.openide.awt.ActionReference;
-import org.openide.util.Lookup;
-import org.openide.util.LookupEvent;
-import org.openide.util.LookupListener;
 import org.openide.windows.TopComponent;
 import org.openide.util.NbBundle.Messages;
-import org.openide.util.Utilities;
 
 /**
  * Top component which displays something.
