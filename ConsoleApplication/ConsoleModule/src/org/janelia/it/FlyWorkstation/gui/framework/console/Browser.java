@@ -251,7 +251,8 @@ public class Browser extends JFrame implements Cloneable {
         centerRightHorizontalSplitPane.setDividerLocation(consolePosition.getHorizontalRightDividerLocation());
         centerRightHorizontalSplitPane.setBorder(BorderFactory.createEmptyBorder());
 
-        leftVerticalSplitPane = new JSplitPane(JSplitPane.VERTICAL_SPLIT, false, entityOutline, entityDetailsOutline);
+        //TODO: resolve the split pane, or remove it entirely.
+        leftVerticalSplitPane = new JSplitPane(JSplitPane.VERTICAL_SPLIT, false, new JPanel(), entityDetailsOutline);
         leftVerticalSplitPane.setMinimumSize(new Dimension(0, 0));
         leftVerticalSplitPane.setDividerSize(10);
         leftVerticalSplitPane.setOneTouchExpandable(true);
