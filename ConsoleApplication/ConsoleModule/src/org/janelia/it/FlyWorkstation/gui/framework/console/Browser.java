@@ -252,12 +252,12 @@ public class Browser extends JFrame implements Cloneable {
         centerRightHorizontalSplitPane.setBorder(BorderFactory.createEmptyBorder());
 
         //TODO: resolve the split pane, or remove it entirely.
-        leftVerticalSplitPane = new JSplitPane(JSplitPane.VERTICAL_SPLIT, false, new JPanel(), entityDetailsOutline);
-        leftVerticalSplitPane.setMinimumSize(new Dimension(0, 0));
-        leftVerticalSplitPane.setDividerSize(10);
-        leftVerticalSplitPane.setOneTouchExpandable(true);
-        leftVerticalSplitPane.setDividerLocation(consolePosition.getVerticalDividerLocation());
-        leftVerticalSplitPane.setBorder(BorderFactory.createEmptyBorder());
+//        leftVerticalSplitPane = new JSplitPane(JSplitPane.VERTICAL_SPLIT, false, new JPanel(), entityDetailsOutline);
+//        leftVerticalSplitPane.setMinimumSize(new Dimension(0, 0));
+//        leftVerticalSplitPane.setDividerSize(10);
+//        leftVerticalSplitPane.setOneTouchExpandable(true);
+//        leftVerticalSplitPane.setDividerLocation(consolePosition.getVerticalDividerLocation());
+//        leftVerticalSplitPane.setBorder(BorderFactory.createEmptyBorder());
         
         centerLeftHorizontalSplitPane = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, false, leftVerticalSplitPane, centerRightHorizontalSplitPane);
         centerLeftHorizontalSplitPane.setMinimumSize(new Dimension(0, 0));
@@ -277,7 +277,7 @@ public class Browser extends JFrame implements Cloneable {
         // Collect the final components
         mainPanel.setLayout(layout);
         allPanelsView.setLayout(new BorderLayout());
-        allPanelsView.add(centerLeftHorizontalSplitPane, BorderLayout.CENTER);
+        //allPanelsView.add(centerLeftHorizontalSplitPane, BorderLayout.CENTER);
         getContentPane().add(statusBar, BorderLayout.SOUTH);
         mainPanel.add(allPanelsView, "Regular");
         collapsedOutlineView.setLayout(new BorderLayout());
@@ -294,6 +294,10 @@ public class Browser extends JFrame implements Cloneable {
 			    setPerspective(Perspective.ImageBrowser);
 			}
         });
+    }
+    
+    public JComponent getMainComponent() {
+        return centerLeftHorizontalSplitPane;
     }
 
     /**
@@ -378,7 +382,7 @@ public class Browser extends JFrame implements Cloneable {
         Browser newBrowser = new Browser(topLeft.x + 25, topLeft.y + 25, size, newBrowserModel);
         newBrowser.setTitle(getTitle());
         newBrowser.setBrowserImageIcon(browserImageIcon);
-        newBrowser.setVisible(true);
+        //newBrowser.setVisible(true);
 
         return newBrowser;
     }

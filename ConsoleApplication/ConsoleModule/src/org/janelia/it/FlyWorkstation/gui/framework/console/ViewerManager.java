@@ -220,7 +220,7 @@ public class ViewerManager {
 	public ViewerSplitPanel getViewerContainer() {
 		return viewerContainer;
 	}
-
+    
 	public boolean isViewersLinked() {
 	    return viewersLinked;
 	}
