@@ -137,6 +137,7 @@ public class QuadViewUi extends JPanel
 		colorChannelWidget_2, 
 		colorChannelWidget_3
 	};
+    private ColorModelLoadStatus colorModelLoadStatus;
     private JToggleButton lockBlackButton;
     private JToggleButton lockGrayButton;
     private JToggleButton lockWhiteButton;
@@ -349,7 +350,8 @@ public class QuadViewUi extends JPanel
     public Slot1<String> loadColorModelSlot = new Slot1<String>() {
         @Override
         public void execute(String modelString) {
-            imageColorModel.fromString(modelString);
+            colorModelLoadStatus.setColorModelString(modelString);
+            maybeLoadColorModel();
         }
     };
 
@@ -1239,6 +1241,9 @@ LLF: the hookup for the 3d snapshot.
         URL url = tmpFile.toURI().toURL();
         sliceViewer.setUrl( url );
 
+        // used to track whether both volume and workspace are loaded
+        colorModelLoadStatus = new ColorModelLoadStatus();
+
         return loadURL(url);
     }
     
@@ -1255,6 +1260,16 @@ LLF: the hookup for the 3d snapshot.
                     JOptionPane.ERROR_MESSAGE);
             return false;
     	}
+    }
+
+    /**
+     * load the color model if it's available and ready; called from the two
+     * places where that might become true
+     */
+    private void maybeLoadColorModel() {
+        if (colorModelLoadStatus.isReady()) {
+            imageColorModelFromString(colorModelLoadStatus.getColorModelString());
+        }
     }
 
     public String imageColorModelAsString() {
@@ -1275,6 +1290,8 @@ LLF: the hookup for the 3d snapshot.
             getSkeletonActor().setTileFormat(
                     tileServer.getLoadAdapter().getTileFormat());
 
+            colorModelLoadStatus.setVolumeLoaded(true);
+            maybeLoadColorModel();
 		}
     };
     
@@ -1307,5 +1324,36 @@ LLF: the hookup for the 3d snapshot.
     		else
     			setIcon(emptyIcon);
     	}
+    };
+
+    /**
+     * loading the color model from a workspace has a timing problem; both
+     * the workspace and volume must be finished loading, but that can
+     * happen in either order (it's asynchronous); this class is used
+     * to track that
+     */
+    static class ColorModelLoadStatus {
+        private boolean volumeLoaded = false;
+        private String colorModelString = null;
+
+        public boolean isReady () {
+            return isVolumeLoaded() && colorModelString != null;
+        }
+
+        public boolean isVolumeLoaded() {
+            return volumeLoaded;
+        }
+
+        public void setVolumeLoaded(boolean volumeLoaded) {
+            this.volumeLoaded = volumeLoaded;
+        }
+
+        public String getColorModelString() {
+            return colorModelString;
+        }
+
+        public void setColorModelString(String colorModelString) {
+            this.colorModelString = colorModelString;
+        }
     };
 }
