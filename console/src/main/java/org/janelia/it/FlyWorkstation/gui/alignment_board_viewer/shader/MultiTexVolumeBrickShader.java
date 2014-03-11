@@ -27,6 +27,9 @@ public class MultiTexVolumeBrickShader extends AbstractShader {
     private int vertexAttribLoc = -1;
     private int texCoordAttribLoc = -1;
 
+    private  float[] modelView;
+    private float[] projection;
+
     private boolean volumeMaskApplied = false;
     private float gammaAdjustment = 1.0f;
     private float cropOutLevel = VolumeModel.DEFAULT_CROPOUT;
@@ -54,6 +57,7 @@ public class MultiTexVolumeBrickShader extends AbstractShader {
         pushMaskUniform( gl, shaderProgram );
         pushGammaUniform( gl, shaderProgram );
         pushCropUniforms( gl, shaderProgram );
+        pushMVP( gl, shaderProgram );
 
         setTextureUniforms( gl );
         vertexAttribLoc = gl.glGetAttribLocation( shaderProgram, "vertexAttribute" );
@@ -135,6 +139,22 @@ public class MultiTexVolumeBrickShader extends AbstractShader {
         return texCoordAttribLoc;
     }
 
+    public float[] getModelView() {
+        return modelView;
+    }
+
+    public void setModelView(float[] modelView) {
+        this.modelView = modelView;
+    }
+
+    public float[] getProjection() {
+        return projection;
+    }
+
+    public void setProjection(float[] projection) {
+        this.projection = projection;
+    }
+
     private void setTextureUniforms(GL2 gl) {
         setTextureUniform(gl, "signalTexture", signalTextureMediator);
         //  This did not work.  GL.GL_TEXTURE0 ); //textureIds[ 0 ] );
@@ -162,6 +182,20 @@ public class MultiTexVolumeBrickShader extends AbstractShader {
         }
         gl.glUniform1i( hasMaskLoc, volumeMaskApplied ? 1 : 0 );
 
+    }
+
+    private void pushMVP( GL2 gl, int shaderProgram ) {
+        int modelViewLoc = gl.glGetUniformLocation(shaderProgram, "modelView" );
+        int projectionLoc = gl.glGetUniformLocation(shaderProgram, "projection" );
+        if ( modelViewLoc == -1 ) {
+            throw new RuntimeException( "Failed to find modelView location." );
+        }
+        if ( projectionLoc == -1 ) {
+            throw new RuntimeException( "Failed to find projection location." );
+        }
+
+        gl.glUniformMatrix4fv( modelViewLoc, 1, false, modelView, 0 );
+        gl.glUniformMatrix4fv( projectionLoc, 1, false, projection, 0 );
     }
 
     private void pushGammaUniform( GL2 gl, int shaderProgram ) {

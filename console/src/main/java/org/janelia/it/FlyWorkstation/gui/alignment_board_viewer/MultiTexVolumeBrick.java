@@ -12,6 +12,7 @@ import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.*;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.buffering.VtxCoordBufMgr;
 import org.janelia.it.FlyWorkstation.gui.alignment_board_viewer.shader.MultiTexVolumeBrickShader;
+import org.janelia.it.FlyWorkstation.gui.viewer3d.matrix_support.ViewMatrixSupport;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.texture.TextureDataI;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.texture.TextureMediator;
 import org.slf4j.Logger;
@@ -222,9 +223,12 @@ public class MultiTexVolumeBrick implements VolumeBrickI
             if ( maskTextureMediator != null ) {
                 volumeBrickShader.setVolumeMaskApplied();
             }
-            volumeBrickShader.setGammaAdjustment( volumeModel.getGammaAdjustment() );
-            volumeBrickShader.setCropOutLevel( volumeModel.getCropOutLevel() );
-            volumeBrickShader.setCropCoords( volumeModel.getCropCoords() );
+            volumeBrickShader.setGammaAdjustment(volumeModel.getGammaAdjustment());
+            volumeBrickShader.setCropOutLevel(volumeModel.getCropOutLevel());
+            volumeBrickShader.setCropCoords(volumeModel.getCropCoords());
+            volumeBrickShader.setModelView( volumeModel.getModelViewMatrix() );
+            volumeBrickShader.setProjection( volumeModel.getPerspectiveMatrix() );
+
             volumeBrickShader.load(gl);
             int vertexAttribLoc = volumeBrickShader.getVertexAttribLoc();
             int texCoordAttribLoc = volumeBrickShader.getTexCoordAttribLoc();

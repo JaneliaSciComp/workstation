@@ -10,7 +10,8 @@ import org.janelia.it.FlyWorkstation.geom.Vec3;
 public class ViewMatrixSupport {
 
     /**
-     * Creates a perspective matrix. This is used for projection purposes.
+     * Creates a perspective matrix. This is used for projection purposes. See
+     * http://stackoverflow.com/questions/18404890/how-to-build-perspective-projection-matrix-no-api
      *
      * @param fieldOfViewY degrees in Y direction, for view
      * @param aspectRatio ratio width v height
@@ -20,16 +21,42 @@ public class ViewMatrixSupport {
      */
     public float[] getPerspectiveMatrix( double fieldOfViewY, double aspectRatio, double zNear, double zFar ) {
         float[] perspectiveMatrix = new float[ 16 ];
-        double f = Math.atan( fieldOfViewY / 2.0 );
         double zDepth = zNear - zFar;
 
-        perspectiveMatrix[ 0 ] = (float)(f / aspectRatio);
-        perspectiveMatrix[ 5 ] = (float)f;
-        perspectiveMatrix[ 10 ] = (float)((zNear + zFar) / zDepth);
-        perspectiveMatrix[ 11 ] = (float)((2.0 * zFar * zNear) / zDepth);
-        perspectiveMatrix[ 14 ] = -1.0f;
+        // This is near / top.
+        float uh = (float) (1.0 / (Math.tan( 0.5f * fieldOfViewY)));
+        float oneOverDepth = (float)(1.0 / zDepth);
+
+        // Negative 1/tag(1/2 fov) -> right handed.  Positive -> left handed.
+        perspectiveMatrix[ 0 ] = (float)( uh / aspectRatio );  // near / right.
+        perspectiveMatrix[ 5 ] =  uh;                           // near / top.
+        perspectiveMatrix[ 10 ] = (float)zFar * oneOverDepth;
+        perspectiveMatrix[ 11 ] = -1.0f;
+        perspectiveMatrix[ 14 ] = (float)((-zFar * zNear) * oneOverDepth);
         return perspectiveMatrix;
     }
+
+    /**
+     * Creates a perspective matrix. This is used for projection purposes.
+     *
+     * @param fieldOfViewY degrees in Y direction, for view
+     * @param aspectRatio ratio width v height
+     * @param zNear scope of depth: how close to the eye
+     * @param zFar scope of depth: how far from the eye
+     * @return a perspective matrix to satisfy these parameters.
+     */
+//    public float[] getPerspectiveMatrix( double fieldOfViewY, double aspectRatio, double zNear, double zFar ) {
+//        float[] perspectiveMatrix = new float[ 16 ];
+//        double f = Math.atan( fieldOfViewY / 2.0 );
+//        double zDepth = zNear - zFar;
+//
+//        perspectiveMatrix[ 0 ] = (float)(f / aspectRatio);
+//        perspectiveMatrix[ 5 ] = (float)f;
+//        perspectiveMatrix[ 10 ] = -1.0f;
+//        perspectiveMatrix[ 11 ] = (float)((2.0 * zFar * zNear) / zDepth);
+//        perspectiveMatrix[ 14 ] = (float)((zNear + zFar) / zDepth);
+//        return perspectiveMatrix;
+//    }
 
     public float[] getIdentityMatrix() {
         float[] identity = new float[] {
@@ -50,6 +77,11 @@ public class ViewMatrixSupport {
      * @return matrix suitable for the viewing transformation.
      */
     public float[] getViewingTransform(Vec3 eye, Vec3 center, Vec3 up) {
+        // Temporary values: forcing vectors to one place for sake of testing.
+//        eye = new Vec3( 2, 0, 0 );
+//        center = new Vec3( 0, 0, 0 );
+//        up = new Vec3( 0, 1, 0 );
+
         //gl.gluLookAt(c.x(), c.y(), c.z(), // camera in ground
         //        f.x(), f.y(), f.z(), // focus in ground
         //        u.x(), u.y(), u.z()); // up vector in ground
@@ -83,10 +115,16 @@ public class ViewMatrixSupport {
         };
         double[] u = cross( normalizedS, f, 3 );
         float[] viewingTransform = new float[] {
-                (float)s[ 0 ], (float)s[ 1 ], (float)s[ 2 ], 0.0f,
-                (float)u[ 0 ], (float)u[ 1 ], (float)u[ 2 ], 0.0f,
-                (float)-f[ 0 ],(float)-f[ 1 ],(float)-f[ 2 ],0.0f,
-                0.0f,          0.0f,          0.0f,          1.0f,
+                (float)s[ 0 ], (float)u[ 0 ], (float)-f[ 0 ], 0.0f,
+                (float)s[ 1 ], (float)u[ 1 ], (float)-f[ 1 ], 0.0f,
+                (float)s[ 2 ], (float)u[ 2 ], (float)-f[ 2 ], 0.0f,
+                 0.0f,          0.0f,          0.0f,          1.0f,
+// Transpose of matrix above.
+//
+//                (float)s[ 0 ], (float)s[ 1 ], (float)s[ 2 ], 0.0f,
+//                (float)u[ 0 ], (float)u[ 1 ], (float)u[ 2 ], 0.0f,
+//                (float)-f[ 0 ],(float)-f[ 1 ],(float)-f[ 2 ],0.0f,
+//                0.0f,          0.0f,          0.0f,          1.0f,
         };
 
         return viewingTransform;

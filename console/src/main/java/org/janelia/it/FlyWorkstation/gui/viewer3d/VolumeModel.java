@@ -35,6 +35,9 @@ public class VolumeModel {
     private float[] voxelMicrometers;
     private int[] voxelDimensions;
 
+    private float[] perspectiveMatrix;
+    private float[] modelViewMatrix;
+
     private Collection<UpdateListener> listeners = new ArrayList<UpdateListener>();
 
     /** This may be useful for situations like the HUD, which retains a reference to
@@ -171,6 +174,22 @@ public class VolumeModel {
 
     public void setColorSaveBrightness(boolean colorSaveBrightness) {
         this.colorSaveBrightness = colorSaveBrightness;
+    }
+
+    public float[] getPerspectiveMatrix() {
+        return perspectiveMatrix;
+    }
+
+    public void setPerspectiveMatrix(float[] perspectiveMatrix) {
+        this.perspectiveMatrix = perspectiveMatrix;
+    }
+
+    public float[] getModelViewMatrix() {
+        return modelViewMatrix;
+    }
+
+    public void setModelViewMatrix(float[] modelViewMatrix) {
+        this.modelViewMatrix = modelViewMatrix;
     }
 
     public static interface UpdateListener {

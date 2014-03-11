@@ -8,6 +8,7 @@ import org.janelia.it.FlyWorkstation.gui.opengl.GL2Adapter;
 import org.janelia.it.FlyWorkstation.gui.opengl.GL2AdapterFactory;
 import org.janelia.it.FlyWorkstation.gui.opengl.GLActor;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.error_trap.JaneliaDebugGL2;
+import org.janelia.it.FlyWorkstation.gui.viewer3d.matrix_support.ViewMatrixSupport;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -74,12 +75,12 @@ class MipRenderer
 
         //final GL2 gl = glDrawable.getGL().getGL2();
         final GL2Adapter gl = GL2AdapterFactory.createGL2Adapter( glDrawable );
-        gl.glMatrixMode(GL2Adapter.MatrixMode.GL_PROJECTION);
-        gl.glPushMatrix();
+        //gl.glMatrixMode(GL2Adapter.MatrixMode.GL_PROJECTION);
+        //gl.glPushMatrix();
         updateProjection(gl);
-        gl.glMatrixMode(GL2Adapter.MatrixMode.GL_MODELVIEW);
-        gl.glPushMatrix();
-        gl.glLoadIdentity();
+        //gl.glMatrixMode(GL2Adapter.MatrixMode.GL_MODELVIEW);
+        //gl.glPushMatrix();
+        //gl.glLoadIdentity();
 
         glDrawable.getWidth();
         Vec3 f = volumeModel.getCamera3d().getFocus();    // This is what allows (follows) drag in X and Y.
@@ -87,9 +88,12 @@ class MipRenderer
         Vec3 u = rotation.times( UP_IN_CAMERA );
         double unitsPerPixel = glUnitsPerPixel();
         Vec3 c = f.plus(rotation.times(volumeModel.getCameraDepth().times(unitsPerPixel)));
-        gl.gluLookAt(c.x(), c.y(), c.z(), // camera in ground
-                f.x(), f.y(), f.z(), // focus in ground
-                u.x(), u.y(), u.z()); // up vector in ground
+        float[] viewingTransform = //new ViewMatrixSupport().getIdentityMatrix();
+                new ViewMatrixSupport().getViewingTransform(c, f, u);
+        volumeModel.setModelViewMatrix( viewingTransform );
+        new ViewMatrixSupport().dumpMatrices(
+                getVolumeModel().getModelViewMatrix(), getVolumeModel().getPerspectiveMatrix()
+        );
 
         if ( System.getProperty( "glComposablePipelineDebug", "f" ).toLowerCase().startsWith("t") ) {
             DebugGL2 debugGl2 = new JaneliaDebugGL2(glDrawable);
@@ -100,10 +104,10 @@ class MipRenderer
         for (GLActor actor : localActors)
             actor.display(glDrawable);
 
-        gl.glMatrixMode(GL2Adapter.MatrixMode.GL_PROJECTION);
-        gl.glPopMatrix();
-        gl.glMatrixMode(GL2Adapter.MatrixMode.GL_MODELVIEW);
-        gl.glPopMatrix();
+        //gl.glMatrixMode(GL2Adapter.MatrixMode.GL_PROJECTION);
+        //gl.glPopMatrix();
+        //gl.glMatrixMode(GL2Adapter.MatrixMode.GL_MODELVIEW);
+        //gl.glPopMatrix();
     }
  
     public double glUnitsPerPixel() {
@@ -171,15 +175,22 @@ class MipRenderer
         gl.getGL2GL3().glViewport(0, 0, (int) widthInPixels, (int) heightInPixels);
         double verticalApertureInDegrees = 180.0/Math.PI * 2.0 * Math.abs(
         		Math.atan2(heightInPixels/2.0, DISTANCE_TO_SCREEN_IN_PIXELS));
-        gl.glMatrixMode( GL2Adapter.MatrixMode.GL_PROJECTION );
-        gl.glLoadIdentity();
+        //gl.glMatrixMode( GL2Adapter.MatrixMode.GL_PROJECTION );
+        //gl.glLoadIdentity();
         final float h = (float) widthInPixels / (float) heightInPixels;
         double cameraFocusDistance = volumeModel.getCameraFocusDistance();
         double scaledFocusDistance = Math.abs(cameraFocusDistance) * glUnitsPerPixel();
-        glu.gluPerspective(verticalApertureInDegrees,
-        		h,
-        		0.5 * scaledFocusDistance,
-        		2.0 * scaledFocusDistance);
+
+        float[] perspective = new ViewMatrixSupport().getPerspectiveMatrix(
+                verticalApertureInDegrees, h, 0.5 * scaledFocusDistance, 2.0 * scaledFocusDistance
+        );
+
+        volumeModel.setPerspectiveMatrix( perspective );
+
+//        glu.gluPerspective(verticalApertureInDegrees,
+//        		h,
+//        		0.5 * scaledFocusDistance,
+//        		2.0 * scaledFocusDistance);
 
 	}
 	
