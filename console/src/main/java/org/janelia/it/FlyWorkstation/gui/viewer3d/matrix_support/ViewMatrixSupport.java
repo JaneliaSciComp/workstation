@@ -10,6 +10,42 @@ import org.janelia.it.FlyWorkstation.geom.Vec3;
 public class ViewMatrixSupport {
 
     /**
+     * Establish a frustum with the corner coords implied. Using this requires knowing the outer parameters
+     * of the container first.
+     *
+     * @param left
+     * @param right
+     * @param bottom
+     * @param top
+     * @param near
+     * @param far
+     * @return
+     */
+    public float[] frustum( float left, float right, float bottom, float top, float near, float far ) {
+        float width = 1.0f / (right - left);
+        float height = 1.0f / (top - bottom);
+        float depth = 1.0f / (near - far);
+        float x = 2.0f * ( near * width);
+        float y = 2.0f * ( near * height );
+        float A = 2.0f * ((right + left) * width);
+        float B = (top + bottom) * height;
+        float C = (far + near) * depth;
+        float D = 2.0f * (far * near * depth);
+
+        float[] m = new float[ 16 ];
+        m[ 0 ] = x;
+        m[ 5 ] = y;
+        m[ 8 ] = A;
+        m[ 9 ] = B;
+        m[ 10 ] = C;
+        m[ 11 ] = -1.0f;
+        m[ 14 ] = D;
+
+        return m;
+
+    }
+
+    /**
      * Creates a perspective matrix. This is used for projection purposes. See
      * http://stackoverflow.com/questions/18404890/how-to-build-perspective-projection-matrix-no-api
      *
@@ -21,18 +57,18 @@ public class ViewMatrixSupport {
      */
     public float[] getPerspectiveMatrix( double fieldOfViewY, double aspectRatio, double zNear, double zFar ) {
         float[] perspectiveMatrix = new float[ 16 ];
-        double zDepth = zNear - zFar;
+        double zDepth = zNear - zFar;                   // This produces a negative number!
 
         // This is near / top.
         float uh = (float) (1.0 / (Math.tan( 0.5f * fieldOfViewY)));
-        float oneOverDepth = (float)(1.0 / zDepth);
+        float oneOverDepth = (float)(1.0 / zDepth);     // ...negative number.
 
         // Negative 1/tag(1/2 fov) -> right handed.  Positive -> left handed.
         perspectiveMatrix[ 0 ] = -(float)( uh / aspectRatio );  // near / right.
-        perspectiveMatrix[ 5 ] =  uh;                           // near / top.
+        perspectiveMatrix[ 5 ] =  -uh;                           // near / top.
         perspectiveMatrix[ 10 ] = (float)zFar * oneOverDepth;
-        perspectiveMatrix[ 11 ] = 1.0f;
-        perspectiveMatrix[ 14 ] = (float)((-zFar * zNear) * oneOverDepth);
+        perspectiveMatrix[ 11 ] = -1.0f;
+        perspectiveMatrix[ 14 ] = (float)((zFar * zNear) * oneOverDepth);  // This produces a negative number!
         return perspectiveMatrix;
     }
 
@@ -76,7 +112,7 @@ public class ViewMatrixSupport {
      * @param u Up-in-Ground
      * @return matrix suitable for the viewing transformation.
      */
-    public float[] getViewingTransform(Vec3 eye, Vec3 center, Vec3 up) {
+    public float[] getLookAt(Vec3 eye, Vec3 center, Vec3 up) {
         // Temporary values: forcing vectors to one place for sake of testing.
 //        eye = new Vec3( 2, 0, 0 );
 //        center = new Vec3( 0, 0, 0 );

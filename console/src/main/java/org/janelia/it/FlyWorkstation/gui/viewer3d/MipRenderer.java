@@ -88,11 +88,11 @@ class MipRenderer
         Vec3 c = f.plus(rotation.times(volumeModel.getCameraDepth().times(unitsPerPixel)));
 
         float[] viewingTransform = //new ViewMatrixSupport().getIdentityMatrix();
-                new ViewMatrixSupport().getViewingTransform(c, f, u);
+                new ViewMatrixSupport().getLookAt(c, f, u);
         volumeModel.setModelViewMatrix( viewingTransform );
-        new ViewMatrixSupport().dumpMatrices(
-                getVolumeModel().getModelViewMatrix(), getVolumeModel().getPerspectiveMatrix()
-        );
+        //new ViewMatrixSupport().dumpMatrices(
+        //        getVolumeModel().getModelViewMatrix(), getVolumeModel().getPerspectiveMatrix()
+        //);
 
         if ( System.getProperty( "glComposablePipelineDebug", "f" ).toLowerCase().startsWith("t") ) {
             DebugGL2 debugGl2 = new JaneliaDebugGL2(glDrawable);
@@ -171,7 +171,8 @@ class MipRenderer
         double scaledFocusDistance = Math.abs(cameraFocusDistance) * glUnitsPerPixel();
 
         float[] perspective = new ViewMatrixSupport().getPerspectiveMatrix(
-                verticalApertureInDegrees, h, 0.5 * scaledFocusDistance, 2.0 * scaledFocusDistance
+                verticalApertureInDegrees, h, 0.01, 10000.0
+//                0.5 * scaledFocusDistance, 2.0 * scaledFocusDistance
         );
 
         volumeModel.setPerspectiveMatrix( perspective );
