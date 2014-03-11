@@ -75,19 +75,18 @@ class MipRenderer
 
         //final GL2 gl = glDrawable.getGL().getGL2();
         final GL2Adapter gl = GL2AdapterFactory.createGL2Adapter( glDrawable );
-        //gl.glMatrixMode(GL2Adapter.MatrixMode.GL_PROJECTION);
-        //gl.glPushMatrix();
         updateProjection(gl);
-        //gl.glMatrixMode(GL2Adapter.MatrixMode.GL_MODELVIEW);
-        //gl.glPushMatrix();
-        //gl.glLoadIdentity();
 
+        // f is "focus", like "center".
+        // u is "up"
+        // c is "camera", like "eye".
         glDrawable.getWidth();
         Vec3 f = volumeModel.getCamera3d().getFocus();    // This is what allows (follows) drag in X and Y.
         Rotation3d rotation = getVolumeModel().getCamera3d().getRotation();
         Vec3 u = rotation.times( UP_IN_CAMERA );
         double unitsPerPixel = glUnitsPerPixel();
         Vec3 c = f.plus(rotation.times(volumeModel.getCameraDepth().times(unitsPerPixel)));
+
         float[] viewingTransform = //new ViewMatrixSupport().getIdentityMatrix();
                 new ViewMatrixSupport().getViewingTransform(c, f, u);
         volumeModel.setModelViewMatrix( viewingTransform );
@@ -104,10 +103,6 @@ class MipRenderer
         for (GLActor actor : localActors)
             actor.display(glDrawable);
 
-        //gl.glMatrixMode(GL2Adapter.MatrixMode.GL_PROJECTION);
-        //gl.glPopMatrix();
-        //gl.glMatrixMode(GL2Adapter.MatrixMode.GL_MODELVIEW);
-        //gl.glPopMatrix();
     }
  
     public double glUnitsPerPixel() {
@@ -129,8 +124,6 @@ class MipRenderer
         this.widthInPixels = width;
         this.heightInPixels = height;
 
-        // System.out.println("reshape() called: x = "+x+", y = "+y+", width = "+width+", height = "+height);
-        //final GL2 gl = glDrawable.getGL().getGL2();
         GL2Adapter gl2Adapter = GL2AdapterFactory.createGL2Adapter( glDrawable );
  
         updateProjection(gl2Adapter);
@@ -153,14 +146,12 @@ class MipRenderer
 		double windowSize = Math.sqrt(
 				widthInPixels*widthInPixels 
 				+ heightInPixels*heightInPixels);
+
 		// Drag across the entire window to rotate all the way around
 		double rotationAngle = 2.0 * Math.PI * dragDistance/windowSize;
-		// System.out.println(rotationAxis.toString() + rotationAngle);
 		Rotation3d rotation = new Rotation3d().setFromAngleAboutUnitVector(
 				rotationAngle, rotationAxis);
-		// System.out.println(rotation);
         getVolumeModel().getCamera3d().setRotation( getVolumeModel().getCamera3d().getRotation().times( rotation.transpose() ) );
-		// System.out.println(R_ground_camera);
 	}
 
 	public void translatePixels(double dx, double dy, double dz) {
@@ -175,8 +166,6 @@ class MipRenderer
         gl.getGL2GL3().glViewport(0, 0, (int) widthInPixels, (int) heightInPixels);
         double verticalApertureInDegrees = 180.0/Math.PI * 2.0 * Math.abs(
         		Math.atan2(heightInPixels/2.0, DISTANCE_TO_SCREEN_IN_PIXELS));
-        //gl.glMatrixMode( GL2Adapter.MatrixMode.GL_PROJECTION );
-        //gl.glLoadIdentity();
         final float h = (float) widthInPixels / (float) heightInPixels;
         double cameraFocusDistance = volumeModel.getCameraFocusDistance();
         double scaledFocusDistance = Math.abs(cameraFocusDistance) * glUnitsPerPixel();
@@ -186,11 +175,6 @@ class MipRenderer
         );
 
         volumeModel.setPerspectiveMatrix( perspective );
-
-//        glu.gluPerspective(verticalApertureInDegrees,
-//        		h,
-//        		0.5 * scaledFocusDistance,
-//        		2.0 * scaledFocusDistance);
 
 	}
 	

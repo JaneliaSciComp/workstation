@@ -28,10 +28,10 @@ public class ViewMatrixSupport {
         float oneOverDepth = (float)(1.0 / zDepth);
 
         // Negative 1/tag(1/2 fov) -> right handed.  Positive -> left handed.
-        perspectiveMatrix[ 0 ] = (float)( uh / aspectRatio );  // near / right.
+        perspectiveMatrix[ 0 ] = -(float)( uh / aspectRatio );  // near / right.
         perspectiveMatrix[ 5 ] =  uh;                           // near / top.
         perspectiveMatrix[ 10 ] = (float)zFar * oneOverDepth;
-        perspectiveMatrix[ 11 ] = -1.0f;
+        perspectiveMatrix[ 11 ] = 1.0f;
         perspectiveMatrix[ 14 ] = (float)((-zFar * zNear) * oneOverDepth);
         return perspectiveMatrix;
     }
@@ -127,6 +127,8 @@ public class ViewMatrixSupport {
 //                0.0f,          0.0f,          0.0f,          1.0f,
         };
 
+        // And next need to translate backward from eye coordinates.
+        translateM( viewingTransform, 0, (float)-eye.getX(), (float)-eye.getY(), (float)-eye.getZ() );
         return viewingTransform;
     }
 
@@ -138,6 +140,15 @@ public class ViewMatrixSupport {
     public void dumpMatrices( float[] modelView, float[] perspective ) {
         dumpMatrix( modelView, "Model-View" );
         dumpMatrix( perspective, "Perspective" );
+    }
+
+    private void translateM(
+        float[] m, int mOffset,
+        float x, float y, float z) {
+        for (int i=0 ; i<4 ; i++) {
+            int mi = mOffset + i;
+            m[12 + mi] += m[mi] * x + m[4 + mi] * y + m[8 + mi] * z;
+        }
     }
 
     private void dumpMatrix( float[] matrix, String label ) {
