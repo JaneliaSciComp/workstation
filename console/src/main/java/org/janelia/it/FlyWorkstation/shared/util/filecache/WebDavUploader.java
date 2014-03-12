@@ -254,6 +254,6 @@ public class WebDavUploader {
 
     private static final Logger LOG = LoggerFactory.getLogger(WebDavUploader.class);
 
-    private static final String JACS_ROOT_UPLOAD_PATH = "/groups/scicomp/jacsData/upload";
+    private static final String JACS_ROOT_UPLOAD_PATH = "/nobackup/jacs/jacsData/filestore/upload";
 
 }
