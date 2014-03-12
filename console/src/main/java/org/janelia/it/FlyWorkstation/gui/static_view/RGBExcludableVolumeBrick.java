@@ -124,6 +124,12 @@ public class RGBExcludableVolumeBrick implements VolumeBrickI
 		bIsInitialized = true;
 	}
 
+    private void updateProjection(GL2 gl) {
+        int projectionUniformLoc = shader.getProjectionUniformLoc();
+        float[] projection = volumeModel.getPerspectiveMatrix();
+        gl.glUniformMatrix4fv( projectionUniformLoc, 1, false, projection, 0 );
+    }
+
     @Override
 	public void display(GLAutoDrawable glDrawable) {
         // Avoid carrying out operations if there is no data.
@@ -165,6 +171,10 @@ public class RGBExcludableVolumeBrick implements VolumeBrickI
             int vertexAttribLoc = shader.getVertexAttribLoc();
             int texCoordAttribLoc = shader.getTexCoordAttribLoc();
             bufferManager.setCoordAttributeLocations( vertexAttribLoc, texCoordAttribLoc );
+
+            updateProjection(gl);
+            int modelViewUniformLoc = shader.getModelViewUniformLoc();
+            gl.glUniformMatrix4fv( modelViewUniformLoc, 1, false, volumeModel.getModelViewMatrix(), 0 );
         }
 
         displayVolumeSlices(gl);

@@ -25,6 +25,8 @@ public class RGBExcludableShader extends AbstractShader {
 
     private int vertexAttribLoc = -1;
     private int texCoordAttribLoc = -1;
+    private int projectionUniformLoc = -1;
+    private int modelViewUniformLoc = -1;
 
     private TextureMediator signalTextureMediator;
 
@@ -51,6 +53,8 @@ public class RGBExcludableShader extends AbstractShader {
 
         vertexAttribLoc = gl.glGetAttribLocation( shaderProgram, "vertexAttribute" );
         texCoordAttribLoc = gl.glGetAttribLocation( shaderProgram, "texCoordAttribute" );
+        projectionUniformLoc = gl.glGetUniformLocation( shaderProgram, "projection" );
+        modelViewUniformLoc = gl.glGetUniformLocation( shaderProgram, "modelView" );
     }
 
     public int getVertexAttribLoc() {
@@ -65,6 +69,20 @@ public class RGBExcludableShader extends AbstractShader {
             throw new IllegalStateException("Unset value.");
         }
         return texCoordAttribLoc;
+    }
+
+    public int getProjectionUniformLoc() {
+        if ( projectionUniformLoc == -1 ) {
+            throw new IllegalStateException("Unset value.");
+        }
+        return projectionUniformLoc;
+    }
+
+    public int getModelViewUniformLoc() {
+        if ( modelViewUniformLoc == -1 ) {
+            throw new IllegalStateException("Unset value.");
+        }
+        return modelViewUniformLoc;
     }
 
     /**
