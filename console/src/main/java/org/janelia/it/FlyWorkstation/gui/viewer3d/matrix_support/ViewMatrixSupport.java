@@ -49,23 +49,25 @@ public class ViewMatrixSupport {
      * Creates a perspective matrix. This is used for projection purposes. See
      * http://stackoverflow.com/questions/18404890/how-to-build-perspective-projection-matrix-no-api
      *
-     * @param fieldOfViewY degrees in Y direction, for view
+     * @param fieldOfViewYDegrees degrees in Y direction, for view
      * @param aspectRatio ratio width v height
      * @param zNear scope of depth: how close to the eye
      * @param zFar scope of depth: how far from the eye
      * @return a perspective matrix to satisfy these parameters.
      */
-    public float[] getPerspectiveMatrix( double fieldOfViewY, double aspectRatio, double zNear, double zFar ) {
+    public float[] getPerspectiveMatrix( double fieldOfViewYDegrees, double aspectRatio, double zNear, double zFar ) {
         float[] perspectiveMatrix = new float[ 16 ];
         double zDepth = zNear - zFar;                   // This produces a negative number!
 
+        double fieldOfViewYRad = radFromDegree( fieldOfViewYDegrees );
+
         // This is near / top.
-        float uh = (float) (1.0 / (Math.tan( 0.5f * fieldOfViewY)));
+        // Negative 1/tan(1/2 fov) -> right handed.  Positive -> left handed.
+        float uh = (float) (1.0 / (Math.tan( 0.5f * fieldOfViewYRad )));
         float oneOverDepth = (float)(1.0 / zDepth);     // ...negative number.
 
-        // Negative 1/tag(1/2 fov) -> right handed.  Positive -> left handed.
-        perspectiveMatrix[ 0 ] = -(float)( uh / aspectRatio );  // near / right.
-        perspectiveMatrix[ 5 ] =  -uh;                           // near / top.
+        perspectiveMatrix[ 0 ] = (float)( uh / aspectRatio );  // near / right.
+        perspectiveMatrix[ 5 ] =  uh;                           // near / top.
         perspectiveMatrix[ 10 ] = (float)zFar * oneOverDepth;
         perspectiveMatrix[ 11 ] = -1.0f;
         perspectiveMatrix[ 14 ] = (float)((zFar * zNear) * oneOverDepth);  // This produces a negative number!
@@ -227,5 +229,9 @@ public class ViewMatrixSupport {
                 vector.getY() * vector.getY() +
                 vector.getZ() * vector.getZ()
         );
+    }
+
+    private double radFromDegree( double degree ) {
+        return Math.PI * degree / 360.0;
     }
 }
