@@ -232,6 +232,6 @@ public class ViewMatrixSupport {
     }
 
     private double radFromDegree( double degree ) {
-        return Math.PI * degree / 360.0;
+        return Math.PI * degree / 180.0;
     }
 }
