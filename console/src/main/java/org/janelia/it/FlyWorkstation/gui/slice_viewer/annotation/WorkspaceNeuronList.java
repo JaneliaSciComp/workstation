@@ -170,11 +170,11 @@ public class WorkspaceNeuronList extends JPanel {
      * populate the UI with info from the input workspace
      */
     public void loadWorkspace(TmWorkspace workspace) {
+        neuronListModel.clear();
         if (workspace != null) {
             // repopulate neuron list
             Vector<TmNeuron> neuronVector = new Vector<TmNeuron>(workspace.getNeuronList());
             sortNeuronList(neuronVector);
-            neuronListModel.clear();
             for (TmNeuron tmNeuron: neuronVector) {
                 neuronListModel.addElement(tmNeuron);
             }

@@ -37,6 +37,7 @@ import org.janelia.it.FlyWorkstation.gui.slice_viewer.skeleton.Anchor;
 import org.janelia.it.FlyWorkstation.gui.slice_viewer.skeleton.Skeleton;
 import org.janelia.it.FlyWorkstation.gui.slice_viewer.skeleton.SkeletonActor;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.BoundingBox3d;
+import org.janelia.it.FlyWorkstation.signal.Signal;
 import org.janelia.it.FlyWorkstation.tracing.*;
 import org.janelia.it.jacs.model.entity.Entity;
 import org.janelia.it.FlyWorkstation.signal.Signal1;
@@ -154,7 +155,7 @@ public class QuadViewUi extends JPanel
     private SliceViewerTranslator sliceViewerTranslator = new SliceViewerTranslator(annotationModel, sliceViewer);
 
 	// Actions
-	private final Action openFolderAction = new OpenFolderAction(volumeImage, sliceViewer);
+	private final Action openFolderAction = new OpenFolderAction(sliceViewer, this);
 	private RecentFileList recentFileList = new RecentFileList(new JMenu("Open Recent"));
 	private final Action resetViewAction = new ResetViewAction(allSliceViewers, volumeImage);
 	private final Action resetColorsAction = new ResetColorsAction(imageColorModel);
@@ -213,6 +214,8 @@ public class QuadViewUi extends JPanel
 
     public Signal1<PathTraceToParentRequest> tracePathRequestedSignal = new Signal1<PathTraceToParentRequest>();
 
+    public Signal closeWorkspaceRequestSignal = new Signal();
+
 	private Slot1<MouseMode.Mode> onMouseModeChangedSlot = new Slot1<MouseMode.Mode>() {
 		@Override
 		public void execute(Mode mode) {
@@ -228,7 +231,7 @@ public class QuadViewUi extends JPanel
 	private Slot1<URL> loadUrlSlot = new Slot1<URL>() {
 		@Override
 		public void execute(URL url) {
-			loadURL(url);
+			loadRender(url);
 		}
 	};
 	    
@@ -386,6 +389,7 @@ public class QuadViewUi extends JPanel
         // connect up text UI and model with graphic UI(s):
         skeleton.addAnchorRequestedSignal.connect(annotationMgr.addAnchorRequestedSlot);
         tracePathRequestedSignal.connect(annotationMgr.tracePathRequestedSlot);
+        closeWorkspaceRequestSignal.connect(annotationMgr.closeWorkspaceRequestedSlot);
         skeleton.subtreeDeleteRequestedSignal.connect(annotationMgr.deleteSubtreeRequestedSlot);
         skeleton.linkDeleteRequestedSignal.connect(annotationMgr.deleteLinkRequestedSlot);
         skeleton.splitAnchorRequestedSignal.connect(annotationMgr.splitAnchorRequestedSlot);
@@ -1241,15 +1245,26 @@ LLF: the hookup for the 3d snapshot.
         URL url = tmpFile.toURI().toURL();
         sliceViewer.setUrl( url );
 
-        // used to track whether both volume and workspace are loaded
-        colorModelLoadStatus = new ColorModelLoadStatus();
-
         return loadURL(url);
     }
-    
+
+    /**
+     * this is called only via right-click File > Open folder menu
+     */
+    public boolean loadRender(URL url) {
+        // need to close/clear workspace and sample here:
+        closeWorkspaceRequestSignal.emit();
+
+        // then just go ahead and load the file
+        return loadURL(url);
+    }
+
     public boolean loadURL(URL url) {
     	// Check if url exists first...
     	try {
+            // used to track whether both volume and workspace are loaded
+            colorModelLoadStatus = new ColorModelLoadStatus();
+
     		url.openStream();
         	return volumeImage.loadURL(url);
     	} catch (IOException exc) {
