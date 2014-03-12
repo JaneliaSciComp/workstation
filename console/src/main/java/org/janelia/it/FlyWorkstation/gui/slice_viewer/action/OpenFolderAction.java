@@ -10,6 +10,7 @@ import javax.swing.JComponent;
 import javax.swing.JFileChooser;
 import javax.swing.JOptionPane;
 
+import org.janelia.it.FlyWorkstation.gui.slice_viewer.QuadViewUi;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.interfaces.VolumeImage3d;
 
 public class OpenFolderAction extends AbstractAction 
@@ -17,11 +18,12 @@ public class OpenFolderAction extends AbstractAction
 	private static final long serialVersionUID = 1L;
 	private JComponent parent;
 	private VolumeImage3d image;
+    private QuadViewUi quadViewUi;
 	private JFileChooser fileChooser = new JFileChooser();
 	
-	public OpenFolderAction(VolumeImage3d image, JComponent parent) {
-		this.image = image;
+	public OpenFolderAction(JComponent parent, QuadViewUi quadViewUi) {
 		this.parent = parent;
+        this.quadViewUi = quadViewUi;
 		fileChooser.setDialogTitle("Choose quadtree folder");
 		fileChooser.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
 		fileChooser.setAcceptAllFileFilterUsed(false);
@@ -40,9 +42,9 @@ public class OpenFolderAction extends AbstractAction
 		URL url;
 		try {
 			url = file.toURI().toURL();
-			if (image.loadURL(url)) {
-				return; // it worked!
-			}
+            if (quadViewUi.loadRender(url)) {
+                return;
+            }
 		} catch (MalformedURLException e) {}
 		// If we get this far, there was an error
 		JOptionPane.showMessageDialog(parent,

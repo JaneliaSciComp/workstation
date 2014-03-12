@@ -10,6 +10,7 @@ import org.janelia.it.FlyWorkstation.api.entity_model.management.ModelMgr;
 
 import org.janelia.it.FlyWorkstation.octree.ZoomedVoxelIndex;
 import org.janelia.it.FlyWorkstation.shared.workers.SimpleWorker;
+import org.janelia.it.FlyWorkstation.signal.Slot;
 import org.janelia.it.FlyWorkstation.signal.Slot1;
 import org.janelia.it.FlyWorkstation.tracing.AnchoredVoxelPath;
 import org.janelia.it.FlyWorkstation.tracing.PathTraceToParentRequest;
@@ -136,6 +137,29 @@ elements of what's been done; that's handled by signals emitted from AnnotationM
                 }
                 addAnchoredPath(endpoints, pointList);
             }
+        }
+    };
+
+    public Slot closeWorkspaceRequestedSlot = new Slot() {
+        @Override
+        public void execute() {
+            SimpleWorker closer = new SimpleWorker() {
+                @Override
+                protected void doStuff() throws Exception {
+                    annotationModel.loadWorkspace(null);
+                }
+
+                @Override
+                protected void hadSuccess() {
+                    // sends its own signals
+                }
+
+                @Override
+                protected void hadError(Throwable error) {
+                    SessionMgr.getSessionMgr().handleException(error);
+                }
+            };
+            closer.execute();
         }
     };
 
