@@ -143,23 +143,7 @@ elements of what's been done; that's handled by signals emitted from AnnotationM
     public Slot closeWorkspaceRequestedSlot = new Slot() {
         @Override
         public void execute() {
-            SimpleWorker closer = new SimpleWorker() {
-                @Override
-                protected void doStuff() throws Exception {
-                    annotationModel.loadWorkspace(null);
-                }
-
-                @Override
-                protected void hadSuccess() {
-                    // sends its own signals
-                }
-
-                @Override
-                protected void hadError(Throwable error) {
-                    SessionMgr.getSessionMgr().handleException(error);
-                }
-            };
-            closer.execute();
+            setInitialEntity(null);
         }
     };
 
@@ -178,11 +162,31 @@ elements of what's been done; that's handled by signals emitted from AnnotationM
      */
     public void setInitialEntity(final Entity initialEntity) {
         this.initialEntity = initialEntity;
-        if (initialEntity.getEntityTypeName().equals(EntityConstants.TYPE_3D_TILE_MICROSCOPE_SAMPLE)) {
-            // if it's a bare sample, we don't have anything to do
-        }
 
-        else if (initialEntity.getEntityTypeName().equals(EntityConstants.TYPE_TILE_MICROSCOPE_WORKSPACE)) {
+        if (initialEntity == null) {
+            // this is a request to clear the workspace
+            SimpleWorker closer = new SimpleWorker() {
+                @Override
+                protected void doStuff() throws Exception {
+                    annotationModel.loadWorkspace(null);
+                }
+
+                @Override
+                protected void hadSuccess() {
+                    // sends its own signals
+                }
+
+                @Override
+                protected void hadError(Throwable error) {
+                    SessionMgr.getSessionMgr().handleException(error);
+                }
+            };
+            closer.execute();
+
+        } else if (initialEntity.getEntityTypeName().equals(EntityConstants.TYPE_3D_TILE_MICROSCOPE_SAMPLE)) {
+            // if it's a bare sample, we don't have anything to do
+
+        } else if (initialEntity.getEntityTypeName().equals(EntityConstants.TYPE_TILE_MICROSCOPE_WORKSPACE)) {
             SimpleWorker loader = new SimpleWorker() {
                 @Override
                 protected void doStuff() throws Exception {
@@ -648,7 +652,7 @@ elements of what's been done; that's handled by signals emitted from AnnotationM
         // if no sample loaded, error
         if (initialEntity == null) {
             JOptionPane.showMessageDialog(null,
-                    "You must load a brain sample before creating a workspace!",
+                    "You must load a brain sample entity before creating a workspace!",
                     "No brain sample!",
                     JOptionPane.ERROR_MESSAGE);
             return;
