@@ -1,8 +1,5 @@
 package org.janelia.it.FlyWorkstation.shared.filestore;
 
-import java.io.File;
-import java.net.MalformedURLException;
-
 import org.hibernate.Hibernate;
 import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionModel;
@@ -15,6 +12,9 @@ import org.janelia.it.jacs.model.entity.EntityData;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.File;
+import java.net.MalformedURLException;
+
 /**
  * Translate between paths to various mounted file resources.
  *
@@ -25,7 +25,8 @@ public class PathTranslator {
 	private static final Logger log = LoggerFactory.getLogger(PathTranslator.class);
 	
     public static final String JACS_DATA_PATH_MAC       = ConsoleProperties.getString("remote.defaultMacPath");
-    public static final String JACS_DATA_PATH_NFS     = ConsoleProperties.getString("remote.defaultLinuxPath");
+    public static final String JACS_DATA_PATH_NFS       = ConsoleProperties.getString("remote.defaultLinuxDataPath");
+    public static final String JACS_DEPLOYMENT_PATH_NFS = ConsoleProperties.getString("remote.defaultLinuxDeploymentPath");
     public static final String JACS_DATA_PATH_WINDOWS   = ConsoleProperties.getString("remote.defaultWindowsPath");
     public static final String JACS_DATA_MOUNT_MAC      = ConsoleProperties.getString("remote.remoteMacMount");
     public static final String JACS_DATA_MOUNT_WINDOWS  = ConsoleProperties.getString("remote.remoteWindowsMount");

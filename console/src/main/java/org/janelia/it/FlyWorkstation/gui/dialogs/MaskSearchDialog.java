@@ -103,7 +103,7 @@ public class MaskSearchDialog extends ModalDialog {
             pathText=((String)SessionMgr.getSessionMgr().getModelProperty(PREF_MASK_SEARCH_SERVICE_INPUT_DIR));
         }
         else {
-            pathText = ConsoleProperties.getString("remote.defaultLinuxPath");
+            pathText = ConsoleProperties.getString("remote.defaultLinuxDataPath");
         }
         pathTextField = new JTextField(40);
         pathTextField.setText(pathText);
