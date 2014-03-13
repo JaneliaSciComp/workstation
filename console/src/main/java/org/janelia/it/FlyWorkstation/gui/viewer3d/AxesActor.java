@@ -3,13 +3,12 @@ package org.janelia.it.FlyWorkstation.gui.viewer3d;
 import org.janelia.it.FlyWorkstation.geom.Vec3;
 import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.FlyWorkstation.gui.opengl.GLActor;
+import org.janelia.it.FlyWorkstation.gui.viewer3d.shader.AbstractShader;
+import org.janelia.it.FlyWorkstation.gui.viewer3d.shader.AxesShader;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.media.opengl.GL2;
-import javax.media.opengl.GLAutoDrawable;
-import javax.media.opengl.GLCapabilities;
-import javax.media.opengl.GLProfile;
+import javax.media.opengl.*;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.nio.FloatBuffer;
@@ -21,8 +20,10 @@ import java.nio.IntBuffer;
  * @author fosterl
  *
  */
-public class AxesActor implements GLActor
-{
+public class AxesActor implements GLActor {
+    private static final String MODEL_VIEW_UNIFORM_NAME = "modelView";
+    private static final String PROJECTION_UNIFORM_NAME = "projection";
+
     private static final double DEFAULT_AXIS_LEN = 1000.0;
     public static final float TICK_SIZE = 15.0f;
     public static final float SCENE_UNITS_BETWEEN_TICKS = 100.0f;
@@ -46,6 +47,10 @@ public class AxesActor implements GLActor
     private int inxBufferHandle;
 
     private int lineBufferVertexCount = 0;
+    private int vertexAttributeLoc = -1;
+    private AxesShader shader;
+    private IntBuffer tempBuffer = IntBuffer.allocate(1);
+    private VolumeModel volumeModel;
 
     private static Logger logger = LoggerFactory.getLogger( AxesActor.class );
 
@@ -83,6 +88,10 @@ public class AxesActor implements GLActor
         }
     }
 
+    public void setVolumeModel( VolumeModel volumeModel ) {
+        this.volumeModel = volumeModel;
+    }
+
     public boolean isFullAxes() {
         return bFullAxes;
     }
@@ -94,11 +103,12 @@ public class AxesActor implements GLActor
     //---------------------------------------IMPLEMEMNTS GLActor
     @Override
 	public void init(GLAutoDrawable glDrawable) {
-        GL2 gl = glDrawable.getGL().getGL2();
+        GL2GL3 gl = glDrawable.getGL().getGL2GL3();
 
         if (bBuffersNeedUpload) {
             try {
                 // Uploading buffers sufficient to draw the axes, ticks, etc.
+                initializeShaderValues(gl);
                 buildBuffers(gl);
 
                 bBuffersNeedUpload = false;
@@ -113,62 +123,53 @@ public class AxesActor implements GLActor
 
     @Override
 	public void display(GLAutoDrawable glDrawable) {
-        GL2 gl = glDrawable.getGL().getGL2();
+        GL2GL3 gl = glDrawable.getGL().getGL2GL3();
         reportError( gl, "Display of axes-actor upon entry" );
 
-        gl.glDisable(GL2.GL_CULL_FACE);
-        gl.glFrontFace(GL2.GL_CW);
+        gl.glDisable(GL2GL3.GL_CULL_FACE);
+        gl.glFrontFace(GL2GL3.GL_CW);
         reportError( gl, "Display of axes-actor cull-face" );
 
-        reportError( gl, "Display of axes-actor lighting 1" );
-		gl.glShadeModel(GL2.GL_FLAT);
-        reportError( gl, "Display of axes-actor lighting 2" );
-        gl.glDisable(GL2.GL_LIGHTING);
-        reportError( gl, "Display of axes-actor lighting 3" );
-
         // set blending to enable transparent voxels
-        gl.glEnable(GL2.GL_BLEND);
+        gl.glEnable(GL2GL3.GL_BLEND);
         if (renderMethod == RenderMethod.ALPHA_BLENDING) {
-            gl.glBlendEquation(GL2.GL_FUNC_ADD);
+            gl.glBlendEquation(GL2GL3.GL_FUNC_ADD);
             // Weight source by GL_ONE because we are using premultiplied alpha.
-            gl.glBlendFunc(GL2.GL_ONE, GL2.GL_ONE_MINUS_SRC_ALPHA);
+            gl.glBlendFunc(GL2GL3.GL_ONE, GL2GL3.GL_ONE_MINUS_SRC_ALPHA);
             reportError( gl, "Display of axes-actor alpha" );
         }
         else if (renderMethod == RenderMethod.MAXIMUM_INTENSITY) {
-            gl.glBlendEquation(GL2.GL_MAX);
-            gl.glBlendFunc(GL2.GL_ONE, GL2.GL_DST_ALPHA);
+            gl.glBlendEquation(GL2GL3.GL_MAX);
+            gl.glBlendFunc(GL2GL3.GL_ONE, GL2GL3.GL_DST_ALPHA);
             reportError( gl, "Display of axes-actor maxintensity" );
         }
 
-        gl.glEnable( GL2.GL_LINE_SMOOTH );                     // May not be in v2
-        gl.glHint( GL2.GL_LINE_SMOOTH_HINT, GL2.GL_NICEST );   // May not be in v2
-
         // Draw the little lines.
-        gl.glBindBuffer( GL2.GL_ARRAY_BUFFER, lineBufferHandle );
+        tempBuffer.rewind();
+        gl.glGetIntegerv(GL2.GL_CURRENT_PROGRAM, tempBuffer);
+        int oldProgram = tempBuffer.get();
+
+        gl.glUseProgram( shader.getShaderProgram() );
+        gl.glBindBuffer(GL2GL3.GL_ARRAY_BUFFER, lineBufferHandle);
         reportError( gl, "Display of axes-actor 1" );
 
-        float grayValue = 0.15f;
-        gl.glColor4f(grayValue * 2.0f, grayValue, grayValue, 1.0f);
-        reportError( gl, "Display of axes-actor 2" );
-
-        gl.glEnableClientState( GL2.GL_VERTEX_ARRAY );  // Prob: not in v2.
-        reportError( gl, "Display of axes-actor 3" );
+        shader.setUniformMatrix4v( gl, PROJECTION_UNIFORM_NAME, false, volumeModel.getPerspectiveMatrix() );
+        shader.setUniformMatrix4v( gl, MODEL_VIEW_UNIFORM_NAME, false, volumeModel.getModelViewMatrix() );
 
         // 3 floats per coord. Stride is 0, offset to first is 0.
-        //gl.glEnableVertexAttribArray(vertexAttributeLoc);
-        //gl.glVertexAttribPointer(vertexAttributeLoc, 3, GL2.GL_FLOAT, false, 0, 0);
-        gl.glVertexPointer(3, GL2.GL_FLOAT, 0, 0);
-        reportError( gl, "Display of axes-actor 4" );
+        gl.glEnableVertexAttribArray(vertexAttributeLoc);
+        gl.glVertexAttribPointer(vertexAttributeLoc, 3, GL2.GL_FLOAT, false, 0, 0);
+        reportError( gl, "Display of axes-actor 2" );
 
         gl.glBindBuffer( GL2.GL_ELEMENT_ARRAY_BUFFER, inxBufferHandle );
-        reportError(gl, "Display of axes-actor 4a.");
+        reportError(gl, "Display of axes-actor 3.");
+
+        setColoring( gl );
 
         gl.glDrawElements( GL2.GL_LINES, lineBufferVertexCount, GL2.GL_UNSIGNED_INT, 0 );
-        reportError( gl, "Display of axes-actor 5" );
+        reportError( gl, "Display of axes-actor 4" );
 
-        gl.glDisableClientState( GL2.GL_VERTEX_ARRAY );   // Prob: not in v2
-        gl.glDisable( GL2.GL_LINE_SMOOTH );               // May not be in v2
-        reportError( gl, "Display of axes-actor 6" );
+        gl.glUseProgram( oldProgram );
 
         gl.glDisable(GL2.GL_BLEND);
         reportError(gl, "Axes-actor, end of display.");
@@ -206,7 +207,37 @@ public class AxesActor implements GLActor
     public void refresh() {
     }
 
-    private void buildBuffers(GL2 gl) {
+    private void initializeShaderValues(GL2GL3 gl) {
+        try {
+            shader = new AxesShader();
+            shader.load( gl.getGL2() );
+
+            vertexAttributeLoc = gl.glGetAttribLocation(shader.getShaderProgram(), AxesShader.VERTEX_ATTRIBUTE_NAME);
+            reportError( gl, "Obtaining the in-shader locations." );
+            setColoring(gl);
+
+
+        } catch ( AbstractShader.ShaderCreationException sce ) {
+            sce.printStackTrace();
+            throw new RuntimeException( sce );
+        }
+
+    }
+
+    private void setColoring(GL2GL3 gl) {
+        // Must upload the color value for display, at init time.
+        float grayValue = 0.15f;
+        boolean wasSet = shader.setUniform4v(gl, AxesShader.COLOR_UNIFORM_NAME, 1, new float[]{
+                grayValue * 2.0f, grayValue, grayValue, 1.0f
+        });
+        if ( ! wasSet ) {
+            logger.error("Failed to set the " + AxesShader.COLOR_UNIFORM_NAME + " to desired value.");
+        }
+
+        reportError( gl, "Set coloring." );
+    }
+
+    private void buildBuffers(GL2GL3 gl) {
         BoundingBox3d boundingBox = getBoundingBox3d();
         int nextVertexOffset = 0;
         Geometry axisGeometry = getAxisGeometry(boundingBox, nextVertexOffset);
@@ -303,24 +334,24 @@ public class AxesActor implements GLActor
         inxBufferHandle = handleArr[ 0 ];
 
         // Bind data to the handle, and upload it to the GPU.
-        gl.glBindBuffer(GL2.GL_ARRAY_BUFFER, lineBufferHandle);
+        gl.glBindBuffer(GL2GL3.GL_ARRAY_BUFFER, lineBufferHandle);
         reportError( gl, "Bind buffer" );
         gl.glBufferData(
-                GL2.GL_ARRAY_BUFFER,
+                GL2GL3.GL_ARRAY_BUFFER,
                 (long) (lineBuffer.capacity() * (Float.SIZE / 8)),
                 lineBuffer,
-                GL2.GL_STATIC_DRAW
+                GL2GL3.GL_STATIC_DRAW
         );
         reportError( gl, "Buffer Data" );
 
-        gl.glBindBuffer(GL2.GL_ELEMENT_ARRAY_BUFFER, inxBufferHandle );
+        gl.glBindBuffer(GL2GL3.GL_ELEMENT_ARRAY_BUFFER, inxBufferHandle );
         reportError(gl, "Bind Inx Buf");
 
         gl.glBufferData(
-                GL2.GL_ELEMENT_ARRAY_BUFFER,
+                GL2GL3.GL_ELEMENT_ARRAY_BUFFER,
                 (long)(inxBuf.capacity() * (Integer.SIZE / 8)),
                 inxBuf,
-                GL2.GL_STATIC_DRAW
+                GL2GL3.GL_STATIC_DRAW
         );
     }
 
@@ -407,7 +438,7 @@ public class AxesActor implements GLActor
         return (float)boundingBox.getDepth() / 8.0f;
     }
 
-    private void reportError(GL2 gl, String source) {
+    private void reportError(GL gl, String source) {
         int errNum = gl.glGetError();
         if ( errNum > 0 ) {
             logger.warn(

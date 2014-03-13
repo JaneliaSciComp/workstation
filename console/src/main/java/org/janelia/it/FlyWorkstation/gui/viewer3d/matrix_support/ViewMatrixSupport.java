@@ -19,6 +19,7 @@ public class ViewMatrixSupport {
      * @param top
      * @param near
      * @param far
+     * @deprecated until actually tested.
      * @return
      */
     public float[] frustum( float left, float right, float bottom, float top, float near, float far ) {
@@ -74,28 +75,6 @@ public class ViewMatrixSupport {
         return perspectiveMatrix;
     }
 
-    /**
-     * Creates a perspective matrix. This is used for projection purposes.
-     *
-     * @param fieldOfViewY degrees in Y direction, for view
-     * @param aspectRatio ratio width v height
-     * @param zNear scope of depth: how close to the eye
-     * @param zFar scope of depth: how far from the eye
-     * @return a perspective matrix to satisfy these parameters.
-     */
-//    public float[] getPerspectiveMatrix( double fieldOfViewY, double aspectRatio, double zNear, double zFar ) {
-//        float[] perspectiveMatrix = new float[ 16 ];
-//        double f = Math.atan( fieldOfViewY / 2.0 );
-//        double zDepth = zNear - zFar;
-//
-//        perspectiveMatrix[ 0 ] = (float)(f / aspectRatio);
-//        perspectiveMatrix[ 5 ] = (float)f;
-//        perspectiveMatrix[ 10 ] = -1.0f;
-//        perspectiveMatrix[ 11 ] = (float)((2.0 * zFar * zNear) / zDepth);
-//        perspectiveMatrix[ 14 ] = (float)((zNear + zFar) / zDepth);
-//        return perspectiveMatrix;
-//    }
-
     public float[] getIdentityMatrix() {
         float[] identity = new float[] {
                 1.0f, 0.0f, 0.0f, 0.0f,
@@ -115,11 +94,7 @@ public class ViewMatrixSupport {
      * @return matrix suitable for the viewing transformation.
      */
     public float[] getLookAt(Vec3 eye, Vec3 center, Vec3 up) {
-        // Temporary values: forcing vectors to one place for sake of testing.
-//        eye = new Vec3( 2, 0, 0 );
-//        center = new Vec3( 0, 0, 0 );
-//        up = new Vec3( 0, 1, 0 );
-
+        // This is the 'prototype' from the old fixed-function pipeline arena.
         //gl.gluLookAt(c.x(), c.y(), c.z(), // camera in ground
         //        f.x(), f.y(), f.z(), // focus in ground
         //        u.x(), u.y(), u.z()); // up vector in ground
@@ -157,12 +132,6 @@ public class ViewMatrixSupport {
                 (float)s[ 1 ], (float)u[ 1 ], (float)-f[ 1 ], 0.0f,
                 (float)s[ 2 ], (float)u[ 2 ], (float)-f[ 2 ], 0.0f,
                  0.0f,          0.0f,          0.0f,          1.0f,
-// Transpose of matrix above.
-//
-//                (float)s[ 0 ], (float)s[ 1 ], (float)s[ 2 ], 0.0f,
-//                (float)u[ 0 ], (float)u[ 1 ], (float)u[ 2 ], 0.0f,
-//                (float)-f[ 0 ],(float)-f[ 1 ],(float)-f[ 2 ],0.0f,
-//                0.0f,          0.0f,          0.0f,          1.0f,
         };
 
         // And next need to translate backward from eye coordinates.

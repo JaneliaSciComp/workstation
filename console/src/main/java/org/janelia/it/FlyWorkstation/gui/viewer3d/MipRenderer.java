@@ -91,9 +91,9 @@ class MipRenderer
         float[] viewingTransform = //new ViewMatrixSupport().getIdentityMatrix();
                 new ViewMatrixSupport().getLookAt(c, f, u);
         volumeModel.setModelViewMatrix( viewingTransform );
-        new ViewMatrixSupport().dumpMatrices(
-                getVolumeModel().getModelViewMatrix(), getVolumeModel().getPerspectiveMatrix()
-        );
+        //new ViewMatrixSupport().dumpMatrices(
+        //        getVolumeModel().getModelViewMatrix(), getVolumeModel().getPerspectiveMatrix()
+        //);
 
         if ( System.getProperty( "glComposablePipelineDebug", "f" ).toLowerCase().startsWith("t") ) {
             DebugGL2 debugGl2 = new JaneliaDebugGL2(glDrawable);

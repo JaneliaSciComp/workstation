@@ -10,14 +10,14 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.media.opengl.GL2;
+import javax.media.opengl.GL2GL3;
 import java.io.BufferedReader;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.nio.ByteBuffer;
 import java.nio.IntBuffer;
 
-public abstract class AbstractShader
-{
+public abstract class AbstractShader {
     private int vertexShader = 0;
     private int fragmentShader = 0;
     private int shaderProgram = 0;
@@ -27,7 +27,7 @@ public abstract class AbstractShader
     /**  All abstract methods.  Implement these for the specifics. */
     public abstract String getVertexShader();
     public abstract String getFragmentShader();
-    public abstract void load(GL2 gl);
+    public abstract void load(GL2 gl) throws ShaderCreationException;
     public abstract void unload(GL2 gl);
 
     private Logger logger = LoggerFactory.getLogger( AbstractShader.class );
@@ -138,6 +138,62 @@ public abstract class AbstractShader
         public ShaderCreationException( String message, Throwable ex ) {
             super( message, ex );
         }
+    }
+
+    public boolean setUniform(GL2GL3 gl, String varName, float value) {
+        int uniformLoc = gl.glGetUniformLocation( getShaderProgram(), varName );
+        if ( uniformLoc < 0 )
+            return false;
+        gl.glUniform1f( uniformLoc, value );
+        return true;
+    }
+
+    public boolean setUniform(GL2GL3 gl, String varName, int value) {
+        int uniformLoc = gl.glGetUniformLocation( getShaderProgram(), varName );
+        if ( uniformLoc < 0 )
+            return false;
+        gl.glUniform1i( uniformLoc, value );
+        return true;
+    }
+
+    public boolean setUniform2fv(GL2GL3 gl, String varName, int vecCount, float[] data) {
+        int uniformLoc = gl.glGetUniformLocation( getShaderProgram(), varName );
+        if ( uniformLoc < 0 )
+            return false;
+        gl.glUniform2fv( uniformLoc, vecCount, data, 0);
+        return true;
+    }
+
+    public boolean setUniform3v(GL2GL3 gl, String varName, int vecCount, float[] data) {
+        int uniformLoc = gl.glGetUniformLocation( getShaderProgram(), varName );
+        if ( uniformLoc < 0 )
+            return false;
+        gl.glUniform3fv( uniformLoc, vecCount, data, 0);
+        return true;
+    }
+
+    public boolean setUniform4v(GL2GL3 gl, String varName, int vecCount, float[] data) {
+        int uniformLoc = gl.glGetUniformLocation( getShaderProgram(), varName );
+        if ( uniformLoc < 0 )
+            return false;
+        gl.glUniform4fv( uniformLoc, vecCount, data, 0);
+        return true;
+    }
+
+    public boolean setUniformMatrix2fv(GL2GL3 gl, String varName, boolean transpose, float[] data) {
+        int uniformLoc = gl.glGetUniformLocation( getShaderProgram(), varName );
+        if ( uniformLoc < 0 )
+            return false;
+        gl.glUniformMatrix2fv( uniformLoc, 1, transpose, data, 0);
+        return true;
+    }
+
+    public boolean setUniformMatrix4v(GL2GL3 gl, String varName, boolean transpose, float[] data) {
+        int uniformLoc = gl.glGetUniformLocation( getShaderProgram(), varName );
+        if ( uniformLoc < 0 )
+            return false;
+        gl.glUniformMatrix4fv( uniformLoc, 1, transpose, data, 0 );
+        return true;
     }
 
 }
