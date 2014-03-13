@@ -38,7 +38,7 @@ import org.slf4j.LoggerFactory;
 @Messages({
     "CTL_OntologyAction=Ontology",
     "CTL_OntologyTopComponent=Ontology Window",
-    "HINT_OntologyTopComponent=This is a Ontology window"
+    "HINT_OntologyTopComponent=Browse, edit and create ontologies"
 })
 public final class OntologyTopComponent extends TopComponent {
 

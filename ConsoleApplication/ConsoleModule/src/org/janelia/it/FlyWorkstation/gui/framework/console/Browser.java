@@ -41,6 +41,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.common.collect.ComparisonChain;
+import org.openide.windows.TopComponent;
+import org.openide.windows.WindowManager;
 
 /**
  * Created by IntelliJ IDEA.
@@ -563,12 +565,14 @@ public class Browser extends JFrame implements Cloneable {
             viewerManager.ensureViewerClass(viewerManager.getMainViewerPane(), IconDemoPanel.class);
             break;
         case AnnotationSession:
-            //selectRightPanel(OUTLINE_ONTOLOGY);
+            TopComponent asWin = WindowManager.getDefault().findTopComponent("OntologyTopComponent");
+            asWin.open();        
             viewerManager.clearAllViewers();
             viewerManager.ensureViewerClass(viewerManager.getMainViewerPane(), IconDemoPanel.class);
             break;
         case TaskMonitoring:
-            //selectRightPanel(OUTLINE_ONTOLOGY);
+            TopComponent tmWin = WindowManager.getDefault().findTopComponent("OntologyTopComponent");
+            tmWin.open();        
             viewerManager.clearAllViewers();
             break;
         case SliceViewer:
@@ -577,7 +581,8 @@ public class Browser extends JFrame implements Cloneable {
             break;
         case ImageBrowser:
         default:
-            //selectRightPanel(OUTLINE_ONTOLOGY);
+            TopComponent win = WindowManager.getDefault().findTopComponent("OntologyTopComponent");
+            win.open();        
             viewerManager.clearAllViewers();
             viewerManager.ensureViewerClass(viewerManager.getMainViewerPane(), IconDemoPanel.class);
         }
