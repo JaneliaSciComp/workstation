@@ -3,7 +3,7 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package org.janelia.it.FlyWorkstation.gui.dialogs.nb;
+package org.janelia.it.FlyWorkstation.gui.top_component;
 
 import java.awt.BorderLayout;
 import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr;

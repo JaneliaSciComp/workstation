@@ -3,60 +3,51 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package org.janelia.it.FlyWorkstation.gui.dialogs.nb;
+package org.janelia.it.FlyWorkstation.gui.top_component;
 
 import java.awt.BorderLayout;
-import org.janelia.it.FlyWorkstation.gui.framework.console.ViewerManager;
+import org.janelia.it.FlyWorkstation.gui.framework.outline.OntologyOutline;
 import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr;
-import org.janelia.it.FlyWorkstation.gui.framework.viewer.IconDemoPanel;
 import org.netbeans.api.settings.ConvertAsProperties;
 import org.openide.awt.ActionID;
 import org.openide.awt.ActionReference;
 import org.openide.windows.TopComponent;
 import org.openide.util.NbBundle.Messages;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Top component which displays something.
  */
 @ConvertAsProperties(
-        dtd = "-//org.janelia.it.FlyWorkstation.gui.dialogs.nb//IconPanel//EN",
+        dtd = "-//org.janelia.it.FlyWorkstation.gui.top_component//Ontology//EN",
         autostore = false
 )
 @TopComponent.Description(
-        preferredID = TimeSharedTopComponent.TC_NAME,
+        preferredID = "OntologyTopComponent",
         //iconBase="SET/PATH/TO/ICON/HERE", 
         persistenceType = TopComponent.PERSISTENCE_ALWAYS
 )
-@TopComponent.Registration(mode = "editor", openAtStartup = true)
-@ActionID(category = "Window", id = "org.janelia.it.FlyWorkstation.gui.dialogs.nb.IconPanelTopComponent")
+@TopComponent.Registration(mode = "properties", openAtStartup = true)
+@ActionID(category = "Window", id = "org.janelia.it.FlyWorkstation.gui.top_component.OntologyTopComponent")
 @ActionReference(path = "Menu/Window" /*, position = 333 */)
 @TopComponent.OpenActionRegistration(
-        displayName = "#CTL_IconPanelAction",
-        preferredID = TimeSharedTopComponent.TC_NAME
+        displayName = "#CTL_OntologyAction",
+        preferredID = "OntologyTopComponent"
 )
 @Messages({
-    "CTL_IconPanelAction=IconPanel",
-    "CTL_IconPanelTopComponent=IconPanel Window",
-    "HINT_IconPanelTopComponent=This is a IconPanel window"
+    "CTL_OntologyAction=Ontology",
+    "CTL_OntologyTopComponent=Ontology Window",
+    "HINT_OntologyTopComponent=This is a Ontology window"
 })
-public final class TimeSharedTopComponent extends TopComponent {
-    public static final String TC_NAME = "IconPanelTopComponent";
+public final class OntologyTopComponent extends TopComponent {
 
-    public TimeSharedTopComponent() {
+    private Logger logger = LoggerFactory.getLogger( OntologyTopComponent.class );
+    public OntologyTopComponent() {
         initComponents();
-        setName(Bundle.CTL_IconPanelTopComponent());
-        setToolTipText(Bundle.HINT_IconPanelTopComponent());
-        putClientProperty(TopComponent.PROP_CLOSING_DISABLED, Boolean.TRUE);
-        putClientProperty(TopComponent.PROP_DRAGGING_DISABLED, Boolean.TRUE);
-        putClientProperty(TopComponent.PROP_UNDOCKING_DISABLED, Boolean.TRUE);
+        setName(Bundle.CTL_OntologyTopComponent());
+        setToolTipText(Bundle.HINT_OntologyTopComponent());
         jPanel1.setLayout( new BorderLayout() );
-        //ViewerManager vmgr = SessionMgr.getBrowser().getViewerManager();
-        //        new IconDemoPanel( vmgr.getMainViewerPane() ),
-        jPanel1.add( 
-                SessionMgr.getBrowser().getMainComponent(),
-                BorderLayout.CENTER
-        );
-
     }
 
     /**
@@ -84,11 +75,11 @@ public final class TimeSharedTopComponent extends TopComponent {
         this.setLayout(layout);
         layout.setHorizontalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addComponent(jPanel1, javax.swing.GroupLayout.Alignment.TRAILING, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+            .addComponent(jPanel1, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
         );
         layout.setVerticalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addComponent(jPanel1, javax.swing.GroupLayout.Alignment.TRAILING, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+            .addComponent(jPanel1, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
         );
     }// </editor-fold>//GEN-END:initComponents
 
@@ -97,7 +88,16 @@ public final class TimeSharedTopComponent extends TopComponent {
     // End of variables declaration//GEN-END:variables
     @Override
     public void componentOpened() {
-        // TODO add custom code on component opening
+        final OntologyOutline ontologyOutline =
+                SessionMgr.getBrowser().getOntologyOutline();
+        if ( ontologyOutline == null ) {
+            logger.error("Null ontology outline.");
+        }
+        else {
+            ontologyOutline.activate();
+        }
+        jPanel1.add( ontologyOutline, BorderLayout.CENTER );
+
     }
 
     @Override

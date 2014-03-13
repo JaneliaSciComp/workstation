@@ -3,62 +3,57 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package org.janelia.it.FlyWorkstation.gui.dialogs.nb;
+package org.janelia.it.FlyWorkstation.gui.top_component;
 
 import java.awt.BorderLayout;
-import org.janelia.it.FlyWorkstation.gui.framework.outline.EntityOutline;
 import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr;
 import org.netbeans.api.settings.ConvertAsProperties;
 import org.openide.awt.ActionID;
 import org.openide.awt.ActionReference;
-import org.openide.explorer.ExplorerManager;
 import org.openide.windows.TopComponent;
 import org.openide.util.NbBundle.Messages;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /**
  * Top component which displays something.
  */
 @ConvertAsProperties(
-        dtd = "-//org.janelia.it.FlyWorkstation.gui.dialogs.nb//EntityExplorer//EN",
+        dtd = "-//org.janelia.it.FlyWorkstation.gui.dialogs.nb//IconPanel//EN",
         autostore = false
 )
 @TopComponent.Description(
-        preferredID = "EntityExplorerTopComponent",
+        preferredID = TimeSharedTopComponent.TC_NAME,
         //iconBase="SET/PATH/TO/ICON/HERE", 
         persistenceType = TopComponent.PERSISTENCE_ALWAYS
 )
-@TopComponent.Registration(mode = "explorer", openAtStartup = true)
-@ActionID(category = "Window", id = "org.janelia.it.FlyWorkstation.gui.dialogs.nb.EntityExplorerTopComponent")
+@TopComponent.Registration(mode = "editor", openAtStartup = true)
+@ActionID(category = "Window", id = "org.janelia.it.FlyWorkstation.gui.dialogs.nb.IconPanelTopComponent")
 @ActionReference(path = "Menu/Window" /*, position = 333 */)
 @TopComponent.OpenActionRegistration(
-        displayName = "#CTL_EntityExplorerAction",
-        preferredID = "EntityExplorerTopComponent"
+        displayName = "#CTL_IconPanelAction",
+        preferredID = TimeSharedTopComponent.TC_NAME
 )
 @Messages({
-    "CTL_EntityExplorerAction=EntityExplorer",
-    "CTL_EntityExplorerTopComponent=EntityExplorer Window",
-    "HINT_EntityExplorerTopComponent=This is a EntityExplorer window"
+    "CTL_IconPanelAction=IconPanel",
+    "CTL_IconPanelTopComponent=IconPanel Window",
+    "HINT_IconPanelTopComponent=This is a IconPanel window"
 })
-public final class EntityExplorerTopComponent extends TopComponent implements ExplorerManager.Provider {
+public final class TimeSharedTopComponent extends TopComponent {
+    public static final String TC_NAME = "IconPanelTopComponent";
 
-    private Logger logger = LoggerFactory.getLogger( EntityExplorerTopComponent.class );
-    private ExplorerManager mgr = new ExplorerManager();
-    
-    public EntityExplorerTopComponent() {
+    public TimeSharedTopComponent() {
         initComponents();
-        setName(Bundle.CTL_EntityExplorerTopComponent());
-        setToolTipText(Bundle.HINT_EntityExplorerTopComponent());
-        putClientProperty(TopComponent.PROP_CLOSING_DISABLED, Boolean.TRUE);   
-        
-        final EntityOutline entityOutline = SessionMgr.getBrowser().getEntityOutline();
-        if (entityOutline != null) {
-            jPanel1.setLayout(new BorderLayout());
-            jPanel1.add(entityOutline);
-        } else {
-            logger.error("No entity outline located.");
-        }
+        setName(Bundle.CTL_IconPanelTopComponent());
+        setToolTipText(Bundle.HINT_IconPanelTopComponent());
+        putClientProperty(TopComponent.PROP_CLOSING_DISABLED, Boolean.TRUE);
+        putClientProperty(TopComponent.PROP_DRAGGING_DISABLED, Boolean.TRUE);
+        putClientProperty(TopComponent.PROP_UNDOCKING_DISABLED, Boolean.TRUE);
+        jPanel1.setLayout( new BorderLayout() );
+        //ViewerManager vmgr = SessionMgr.getBrowser().getViewerManager();
+        //        new IconDemoPanel( vmgr.getMainViewerPane() ),
+        jPanel1.add( 
+                SessionMgr.getBrowser().getMainComponent(),
+                BorderLayout.CENTER
+        );
 
     }
 
@@ -76,22 +71,22 @@ public final class EntityExplorerTopComponent extends TopComponent implements Ex
         jPanel1.setLayout(jPanel1Layout);
         jPanel1Layout.setHorizontalGroup(
             jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGap(0, 595, Short.MAX_VALUE)
+            .addGap(0, 400, Short.MAX_VALUE)
         );
         jPanel1Layout.setVerticalGroup(
             jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGap(0, 489, Short.MAX_VALUE)
+            .addGap(0, 300, Short.MAX_VALUE)
         );
 
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(this);
         this.setLayout(layout);
         layout.setHorizontalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addComponent(jPanel1, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+            .addComponent(jPanel1, javax.swing.GroupLayout.Alignment.TRAILING, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
         );
         layout.setVerticalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addComponent(jPanel1, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+            .addComponent(jPanel1, javax.swing.GroupLayout.Alignment.TRAILING, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
         );
     }// </editor-fold>//GEN-END:initComponents
 
@@ -100,6 +95,7 @@ public final class EntityExplorerTopComponent extends TopComponent implements Ex
     // End of variables declaration//GEN-END:variables
     @Override
     public void componentOpened() {
+        // TODO add custom code on component opening
     }
 
     @Override
@@ -117,10 +113,5 @@ public final class EntityExplorerTopComponent extends TopComponent implements Ex
     void readProperties(java.util.Properties p) {
         String version = p.getProperty("version");
         // TODO read your settings according to their version
-    }
-
-    @Override
-    public ExplorerManager getExplorerManager() {
-        return mgr;
     }
 }

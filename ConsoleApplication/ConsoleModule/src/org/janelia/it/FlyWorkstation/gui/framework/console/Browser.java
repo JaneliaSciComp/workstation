@@ -238,7 +238,7 @@ public class Browser extends JFrame implements Cloneable {
         splitPickingPanel = new SplitPickingPanel();
         
         rightPanel = new VerticalPanelPicker();
-        rightPanel.addPanel(OUTLINE_ONTOLOGY, Icons.getIcon("page.png"), "Displays an ontology for annotation", ontologyOutline);
+        //rightPanel.addPanel(OUTLINE_ONTOLOGY, Icons.getIcon("page.png"), "Displays an ontology for annotation", ontologyOutline);
         rightPanel.addPanel(OUTLINE_SPLIT_PICKER, Icons.getIcon("page_copy.png"), "Allows for simulation of flyline crosses", splitPickingPanel);
         
         
@@ -251,14 +251,6 @@ public class Browser extends JFrame implements Cloneable {
         centerRightHorizontalSplitPane.setDividerLocation(consolePosition.getHorizontalRightDividerLocation());
         centerRightHorizontalSplitPane.setBorder(BorderFactory.createEmptyBorder());
 
-        //TODO: resolve the split pane, or remove it entirely.
-//        leftVerticalSplitPane = new JSplitPane(JSplitPane.VERTICAL_SPLIT, false, new JPanel(), entityDetailsOutline);
-//        leftVerticalSplitPane.setMinimumSize(new Dimension(0, 0));
-//        leftVerticalSplitPane.setDividerSize(10);
-//        leftVerticalSplitPane.setOneTouchExpandable(true);
-//        leftVerticalSplitPane.setDividerLocation(consolePosition.getVerticalDividerLocation());
-//        leftVerticalSplitPane.setBorder(BorderFactory.createEmptyBorder());
-        
         centerLeftHorizontalSplitPane = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, false, leftVerticalSplitPane, centerRightHorizontalSplitPane);
         centerLeftHorizontalSplitPane.setMinimumSize(new Dimension(0, 0));
         centerLeftHorizontalSplitPane.setDividerSize(10);
@@ -571,12 +563,12 @@ public class Browser extends JFrame implements Cloneable {
             viewerManager.ensureViewerClass(viewerManager.getMainViewerPane(), IconDemoPanel.class);
             break;
         case AnnotationSession:
-            selectRightPanel(OUTLINE_ONTOLOGY);
+            //selectRightPanel(OUTLINE_ONTOLOGY);
             viewerManager.clearAllViewers();
             viewerManager.ensureViewerClass(viewerManager.getMainViewerPane(), IconDemoPanel.class);
             break;
         case TaskMonitoring:
-            selectRightPanel(OUTLINE_ONTOLOGY);
+            //selectRightPanel(OUTLINE_ONTOLOGY);
             viewerManager.clearAllViewers();
             break;
         case SliceViewer:
@@ -585,7 +577,7 @@ public class Browser extends JFrame implements Cloneable {
             break;
         case ImageBrowser:
         default:
-            selectRightPanel(OUTLINE_ONTOLOGY);
+            //selectRightPanel(OUTLINE_ONTOLOGY);
             viewerManager.clearAllViewers();
             viewerManager.ensureViewerClass(viewerManager.getMainViewerPane(), IconDemoPanel.class);
         }
