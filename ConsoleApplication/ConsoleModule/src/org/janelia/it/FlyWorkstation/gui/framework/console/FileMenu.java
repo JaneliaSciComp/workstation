@@ -37,16 +37,15 @@ import java.util.StringTokenizer;
 public class FileMenu extends JMenu {
     private static final String EXPORT_IMPORT_LOCATION = "PreferenceExportImportLocation";
     Browser browser;
-    JMenuItem menuOpenDataSource;
-    JMenuItem menuFileExit;
-    JMenuItem menuFilePrint;
+//    JMenuItem menuOpenDataSource;
+//    JMenuItem menuFileExit;
+//    JMenuItem menuFilePrint;
     JMenuItem menuNewSketch;
     JMenuItem menuNewAlignmentBoard;
     JMenuItem menuNewTiledMicroscopeSample;
     JMenuItem menuListOpen;
-    JMenuItem setLoginMI;
+//    JMenuItem setLoginMI;
     JMenuItem menuFileImport;
-    JMenuItem menuViewDetails;
     private JMenu menuNewItem;
 //    private JMenuItem menuPrefExport;
 //    private JMenuItem menuPrefImport;
@@ -54,7 +53,7 @@ public class FileMenu extends JMenu {
     ArrayList<JMenuItem> addedMenus = new ArrayList<JMenuItem>();
     //    private boolean workSpaceHasBeenSaved = false;
 //    private boolean isworkspaceDirty = false;
-    private JDialog openDataSourceDialog = new JDialog();
+//    private JDialog openDataSourceDialog = new JDialog();
 //    private MyWorkSpaceObserver workSpaceObserver;
 //    GenomeVersion workspaceGenomeVersion;
 //    private AxisObserver myAxisObserver = new MyAxisObserver();
@@ -70,20 +69,20 @@ public class FileMenu extends JMenu {
         browser.getBrowserModel().setModelProperty("LOGIN", SessionMgr.getSessionMgr().getModelProperty("LOGIN"));
         browser.getBrowserModel().setModelProperty("PASSWORD", SessionMgr.getSessionMgr().getModelProperty("PASSWORD"));
 
-        menuOpenDataSource = new JMenuItem("Open Data Source", 'D');
-        menuOpenDataSource.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_D, InputEvent.CTRL_MASK, false));
-        menuOpenDataSource.addActionListener(new ActionListener() {
-            public void actionPerformed(ActionEvent e) {
-                fileOpen_actionPerformed(e, FacadeManager.getEJBProtocolString(), null);
-            }
-        });
+//        menuOpenDataSource = new JMenuItem("Open Data Source", 'D');
+//        menuOpenDataSource.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_D, InputEvent.CTRL_MASK, false));
+//        menuOpenDataSource.addActionListener(new ActionListener() {
+//            public void actionPerformed(ActionEvent e) {
+//                fileOpen_actionPerformed(e, FacadeManager.getEJBProtocolString(), null);
+//            }
+//        });
 
-        setLoginMI = new JMenuItem("Set Login", 'o');
-        setLoginMI.addActionListener(new ActionListener() {
-            public void actionPerformed(ActionEvent e) {
-                setLogin();
-            }
-        });
+//        setLoginMI = new JMenuItem("Set Login", 'o');
+//        setLoginMI.addActionListener(new ActionListener() {
+//            public void actionPerformed(ActionEvent e) {
+//                setLogin();
+//            }
+//        });
 
         menuNewItem = new JMenu("New...");
         menuNewSketch = new JMenuItem("Brain Sketch");
@@ -111,39 +110,39 @@ public class FileMenu extends JMenu {
             }
         });
 
-        menuFileImport = new JMenuItem("Import Files", 'I');
-        menuFileImport.addActionListener(new ActionListener() {
-            public void actionPerformed(ActionEvent e) {
-                menuFileImport_actionPerformed();
-            }
-        });
+//        menuFileImport = new JMenuItem("Import Files", 'I');
+//        menuFileImport.addActionListener(new ActionListener() {
+//            public void actionPerformed(ActionEvent e) {
+//                menuFileImport_actionPerformed();
+//            }
+//        });
 
-        menuFilePrint = new JMenuItem("Print Screen", 'P');
-        menuFilePrint.addActionListener(new ActionListener() {
-            public void actionPerformed(ActionEvent e) {
-                filePrint_actionPerformed();
-            }
-        });
-
-        menuViewDetails = new JMenuItem("View Details");
-        menuViewDetails.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_I, java.awt.Event.META_MASK));
-        menuViewDetails.addActionListener(new ActionListener() {
-            public void actionPerformed(ActionEvent e) {
-                try {
-                    viewDetails_actionPerformed(e, FacadeManager.getEJBProtocolString(), null);
-                }
-                catch (Exception e1) {
-                    SessionMgr.getSessionMgr().handleException(e1);
-                }
-            }
-        });
-
-        menuFileExit = new JMenuItem("Exit", 'x');
-        menuFileExit.addActionListener(new ActionListener() {
-            public void actionPerformed(ActionEvent e) {
-                fileExit_actionPerformed();
-            }
-        });
+//        menuFilePrint = new JMenuItem("Print Screen", 'P');
+//        menuFilePrint.addActionListener(new ActionListener() {
+//            public void actionPerformed(ActionEvent e) {
+//                filePrint_actionPerformed();
+//            }
+//        });
+//
+//        menuViewDetails = new JMenuItem("View Details");
+//        menuViewDetails.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_I, java.awt.Event.META_MASK));
+//        menuViewDetails.addActionListener(new ActionListener() {
+//            public void actionPerformed(ActionEvent e) {
+//                try {
+//                    viewDetails_actionPerformed(e, FacadeManager.getEJBProtocolString(), null);
+//                }
+//                catch (Exception e1) {
+//                    SessionMgr.getSessionMgr().handleException(e1);
+//                }
+//            }
+//        });
+//
+//        menuFileExit = new JMenuItem("Exit", 'x');
+//        menuFileExit.addActionListener(new ActionListener() {
+//            public void actionPerformed(ActionEvent e) {
+//                fileExit_actionPerformed();
+//            }
+//        });
 
 //        menuPrefExport = new JMenuItem("Export Preference File...", 'x');
 //        menuPrefExport.addActionListener(new ActionListener() {
@@ -262,37 +261,37 @@ public class FileMenu extends JMenu {
     private void addMenuItems() {
         removeAll();
         add(menuNewItem);
-        add(menuFileImport);
+//        add(menuFileImport);
         add(new JSeparator());
 //        add(menuListOpen);
 //        add(menuFileImport);
-        add(setLoginMI);
-        add(menuFilePrint);
+//        add(setLoginMI);
+//        add(menuFilePrint);
         if (addedMenus.size() > 0) add(new JSeparator());
         for (JMenuItem addedMenu : addedMenus) {
             add(addedMenu);
         }
-        add(new JSeparator());
-        add(menuViewDetails);
-        add(new JSeparator());
-        add(menuFileExit);
+//        add(new JSeparator());
+//        add(menuViewDetails);
+//        add(new JSeparator());
+//        add(menuFileExit);
     }
 
-    private void setLogin() {
-        PrefController.getPrefController().getPrefInterface(DataSourceSettingsPanel.class, browser);
-    }
+//    private void setLogin() {
+//        PrefController.getPrefController().getPrefInterface(DataSourceSettingsPanel.class, browser);
+//    }
 
-    private void menuFileImport_actionPerformed(){
-        SessionMgr.getBrowser().getImportDialog().showDialog(null);
-    }
+//    private void menuFileImport_actionPerformed(){
+//        SessionMgr.getBrowser().getImportDialog().showDialog(null);
+//    }
+//
+//    private void fileExit_actionPerformed() {
+//        SessionMgr.getSessionMgr().systemExit();
+//    }
 
-    private void fileExit_actionPerformed() {
-        SessionMgr.getSessionMgr().systemExit();
-    }
-
-    private void filePrint_actionPerformed() {
-        browser.printBrowser();
-    }
+//    private void filePrint_actionPerformed() {
+//        browser.printBrowser();
+//    }
 
     //File | Open action performed
 
@@ -324,14 +323,14 @@ public class FileMenu extends JMenu {
         new NewTiledMicroscopeSampleDialog(browser, "Add Tiled Microscope Sample", true);
     }
 
-    private void viewDetails_actionPerformed(ActionEvent e, String protocol, Object dataSource) throws Exception {
-        java.util.List<String> tmpSelections = ModelMgr.getModelMgr().getEntitySelectionModel().getLatestGlobalSelection();
-        if (null!=tmpSelections && tmpSelections.size()==1) {
-            Entity tmpSelectedEntity = ModelMgr.getModelMgr().getEntityById(Utils.getEntityIdFromUniqueId(tmpSelections.get(0)));
-            if (null!=tmpSelectedEntity) {new EntityDetailsDialog().showForEntity(tmpSelectedEntity);}
-        }
-    }
-
+//    private void viewDetails_actionPerformed(ActionEvent e, String protocol, Object dataSource) throws Exception {
+//        java.util.List<String> tmpSelections = ModelMgr.getModelMgr().getEntitySelectionModel().getLatestGlobalSelection();
+//        if (null!=tmpSelections && tmpSelections.size()==1) {
+//            Entity tmpSelectedEntity = ModelMgr.getModelMgr().getEntityById(Utils.getEntityIdFromUniqueId(tmpSelections.get(0)));
+//            if (null!=tmpSelectedEntity) {new EntityDetailsDialog().showForEntity(tmpSelectedEntity);}
+//        }
+//    }
+//
 
     private void menuListOpen_actionPerformed() {
         /**
@@ -360,7 +359,7 @@ public class FileMenu extends JMenu {
         if (finalDataSources.size() == 0) {
             finalDataSources.add("No Sources Opened.");
         }
-        openDataSourceDialog = new JDialog(browser, "Open Data Sources", true);
+        final JDialog openDataSourceDialog = new JDialog(browser, "Open Data Sources", true);
         openDataSourceDialog.setSize(400, 190);
         openDataSourceDialog.setResizable(false);
         JPanel mainPanel = new JPanel();

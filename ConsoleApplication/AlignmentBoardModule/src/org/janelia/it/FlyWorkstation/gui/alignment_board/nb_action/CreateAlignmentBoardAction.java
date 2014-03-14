@@ -15,14 +15,14 @@ import org.janelia.it.FlyWorkstation.gui.alignment_board_viewer.creation.Alignme
  * @author fosterl
  */
 @ActionID(
-        category = "File",
+        category = "File/New",
         id = "org.janelia.it.FlyWorkstation.gui.alignment_board.action.CreateAlignmentBoardAction"
 )
 @ActionRegistration(
         displayName = "#CTL_CreateAlignmentBoardAction"
 )
-@ActionReference(path = "Menu/File", position = 1200)
-@Messages("CTL_CreateAlignmentBoardAction=  New Alignment Board")
+@ActionReference(path = "Menu/File/New", position = 1200)
+@Messages("CTL_CreateAlignmentBoardAction=New Alignment Board")
 public final class CreateAlignmentBoardAction implements ActionListener {
 
     @Override
