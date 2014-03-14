@@ -4,7 +4,6 @@ import org.janelia.it.FlyWorkstation.api.entity_model.access.observer.ModifyMana
 import org.janelia.it.FlyWorkstation.api.entity_model.management.ModifyMgr;
 import org.janelia.it.FlyWorkstation.gui.framework.pref_controller.PrefController;
 import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr;
-import org.janelia.it.jacs.shared.file_chooser.FileChooser;
 
 import javax.swing.*;
 import javax.swing.text.DefaultEditorKit;
@@ -21,6 +20,7 @@ import java.io.FileWriter;
  * This class provides a EditMenu specific to the FlyGraph application.
  * <p/>
  * Initially written by: Peter Davies
+ * @Deprecated most items are not on the menu. Others moved to NetBeans menu.
  */
 public class EditMenu extends JMenu {
     private JMenuItem menuUnDo;
@@ -29,10 +29,6 @@ public class EditMenu extends JMenu {
     private JMenuItem menuCopy;
     private JMenuItem menuPaste;
     private JMenuItem menuPrefSystem;
-    //    private JMenuItem menuPrefSubView;
-//    private JMenuItem menuPrefMainView;
-    private JMenuItem menuPrefExport;
-    private JMenuItem menuPrefImport;
     private JMenuItem menuPrefViewer;
     private JMenu menuSetPreferences;
     private static String fileSep = File.separator;
@@ -79,48 +75,20 @@ public class EditMenu extends JMenu {
         cutAction.putValue(Action.NAME, "Cut");
         menuCut = new JMenuItem(cutAction);
         menuCut.setAccelerator(KeyStroke.getKeyStroke(java.awt.event.KeyEvent.VK_X, java.awt.Event.META_MASK));
-//        add(menuCut);
 
         copyAction = new MyCopyAction();
         copyAction.putValue(Action.NAME, "Copy");
         menuCopy = new JMenuItem(copyAction);
         menuCopy.setAccelerator(KeyStroke.getKeyStroke(java.awt.event.KeyEvent.VK_C, java.awt.Event.META_MASK));
-//        add(menuCopy);
-
-
 
         pasteAction = new MyPasteAction();
         pasteAction.putValue(Action.NAME, "Paste");
         menuPaste = new JMenuItem(pasteAction);
         menuPaste.setAccelerator(KeyStroke.getKeyStroke(java.awt.event.KeyEvent.VK_V, java.awt.Event.META_MASK));
-//        add(menuPaste);
 
         menuSetPreferences = new JMenu("Preferences");
         menuSetPreferences.setMnemonic('P');
         add(menuSetPreferences);
-
-//        menuPrefMainView = new JMenuItem("Genomic Axis Annotation View...", 'M');
-//        menuPrefMainView.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_F1,
-//                                                               InputEvent.CTRL_MASK,
-//                                                               false));
-//        menuPrefMainView.addActionListener(new ActionListener() {
-//            public void actionPerformed(ActionEvent e) {
-//                establishPrefController(
-//                        PrefController.GENOMIC_AXIS_ANNOTATION_VIEW_EDITOR);
-//            }
-//        });
-//        menuSetPreferences.add(menuPrefMainView);
-//
-//        menuPrefSubView = new JMenuItem("SubViews...", 'V');
-//        menuPrefSubView.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_F2,
-//                                                              InputEvent.CTRL_MASK,
-//                                                              false));
-//        menuPrefSubView.addActionListener(new ActionListener() {
-//            public void actionPerformed(ActionEvent e) {
-//                establishPrefController(PrefController.SUB_VIEW_EDITOR);
-//            }
-//        });
-//        menuSetPreferences.add(menuPrefSubView);
 
         menuPrefSystem = new JMenuItem("System...", 'S');
         menuPrefSystem.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_F3, InputEvent.CTRL_MASK, false));
@@ -131,64 +99,6 @@ public class EditMenu extends JMenu {
         });
         menuSetPreferences.add(menuPrefSystem);
 
-        menuPrefExport = new JMenuItem("Export Preference File...", 'x');
-        menuPrefExport.addActionListener(new ActionListener() {
-            public void actionPerformed(ActionEvent e) {
-                try {
-                    String targetDir = userHomeDir;
-
-                    if (SessionMgr.getSessionMgr().getModelProperty(EXPORT_IMPORT_LOCATION) != null) {
-                        targetDir = (String) SessionMgr.getSessionMgr().getModelProperty(EXPORT_IMPORT_LOCATION);
-                    }
-
-                    FileChooser tmpExportChooser = new FileChooser(userHomeDir);
-                    tmpExportChooser.setDialogTitle("Select File To Export");
-
-                    int ans = tmpExportChooser.showDialog(EditMenu.this.browser, "OK");
-
-                    if (ans == FileChooser.CANCEL_OPTION) {
-                        return;
-                    }
-
-                    File targetToExport = tmpExportChooser.getSelectedFile();
-
-                    if (targetToExport == null) {
-                        return;
-                    }
-
-                    FileChooser tmpDestChooser = new FileChooser(targetDir);
-                    tmpDestChooser.setDialogTitle("Select File Destination");
-                    tmpDestChooser.setFileSelectionMode(FileChooser.DIRECTORIES_ONLY);
-                    ans = tmpDestChooser.showDialog(EditMenu.this.browser, "OK");
-
-                    if (ans == FileChooser.CANCEL_OPTION) {
-                        return;
-                    }
-
-                    // Copy file to targetDir here.
-                    String destDir = tmpDestChooser.getSelectedFile().getAbsolutePath();
-
-                    if ((destDir == null) || destDir.equals("")) {
-                        return;
-                    }
-
-                    File newFile = new File(destDir + fileSep + targetToExport.getName());
-                    copyFile(targetToExport, newFile);
-
-                    /**
-                     * Save preference if the user has changed export/import directory.
-                     * Assuming that exports and imports occur in from the same directory.
-                     */
-                    if ((destDir != null) && !destDir.equals(targetDir)) {
-                        SessionMgr.getSessionMgr().setModelProperty(EXPORT_IMPORT_LOCATION, destDir);
-                    }
-                }
-                catch (Exception ex) {
-                    SessionMgr.getSessionMgr().handleException(ex);
-                }
-            }
-        });
-//        menuSetPreferences.add(menuPrefExport);
         menuPrefViewer = new JMenuItem("Viewer", 'V');
         menuPrefViewer.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
@@ -197,53 +107,6 @@ public class EditMenu extends JMenu {
         });
         menuSetPreferences.add(menuPrefViewer);
 
-        menuPrefImport = new JMenuItem("Import Preference File...", 'I');
-        menuPrefImport.addActionListener(new ActionListener() {
-            public void actionPerformed(ActionEvent e) {
-                try {
-                    String targetDir = userHomeDir;
-
-                    if (SessionMgr.getSessionMgr().getModelProperty(EXPORT_IMPORT_LOCATION) != null) {
-                        targetDir = (String) SessionMgr.getSessionMgr().getModelProperty(EXPORT_IMPORT_LOCATION);
-                    }
-
-                    FileChooser tmpImportChooser = new FileChooser(targetDir);
-                    tmpImportChooser.setDialogTitle("Select File To Import");
-
-                    int ans = tmpImportChooser.showDialog(EditMenu.this.browser, "OK");
-
-                    if (ans == FileChooser.CANCEL_OPTION) {
-                        return;
-                    }
-
-                    File targetToImport = tmpImportChooser.getSelectedFile();
-
-                    if (targetToImport == null) {
-                        return;
-                    }
-
-                    String destDir = userHomeDir + fileSep;
-                    File newFile = new File(destDir + targetToImport.getName());
-                    copyFile(targetToImport, newFile);
-
-                    /**
-                     * Save preference if the user has changed export/import directory.
-                     * Assuming that exports and imports occur in from the same directory.
-                     */
-                    String newDir = tmpImportChooser.getCurrentDirectory().getAbsolutePath();
-
-                    if ((newDir != null) && !newDir.equals(targetDir)) {
-                        SessionMgr.getSessionMgr().setModelProperty(EXPORT_IMPORT_LOCATION, newDir);
-                    }
-                }
-                catch (Exception ex) {
-                    SessionMgr.getSessionMgr().handleException(ex);
-                }
-            }
-        });
-//        menuSetPreferences.add(menuPrefImport);
-
-//        ModifyManager.getModifyMgr().addObserver(new CommandObserver());
     }
 
     public void setPopupMenuVisible(boolean b) {

@@ -12,6 +12,7 @@ import java.awt.event.ActionListener;
  * User: saffordt
  * Date: 2/8/11
  * Time: 3:47 PM
+ * @Deprecated all functions moved to the NetBeans menu bar.
  */
 public class SearchMenu extends JMenu {
 

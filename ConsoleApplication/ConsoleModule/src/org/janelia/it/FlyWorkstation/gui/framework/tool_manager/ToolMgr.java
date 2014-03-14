@@ -1,6 +1,6 @@
 package org.janelia.it.FlyWorkstation.gui.framework.tool_manager;
 
-import org.janelia.it.FlyWorkstation.gui.framework.console.ToolsMenu;
+import org.janelia.it.FlyWorkstation.gui.framework.console.ToolsMenuModifier;
 import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.BrowserModel;
 import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionModelListener;
@@ -41,7 +41,7 @@ public class ToolMgr extends PreferenceManager {
     public static final String TOOL_NA      = "Vaa3d - Neuron Annotator";
 
     public static final String MODE_3D      = "3D View";
-    public static String rootExecutablePath = ToolsMenu.class.getProtectionDomain().getCodeSource().getLocation().getPath();
+    public static String rootExecutablePath = ToolsMenuModifier.class.getProtectionDomain().getCodeSource().getLocation().getPath();
 
     private static TreeMap<String, ToolInfo> toolTreeMap = new TreeMap<String, ToolInfo>();
     private static ToolMgr toolMgr;

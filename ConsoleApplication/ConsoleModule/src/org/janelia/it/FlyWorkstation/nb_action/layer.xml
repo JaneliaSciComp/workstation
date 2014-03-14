@@ -1,3 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE filesystem PUBLIC "-//NetBeans//DTD Filesystem 1.2//EN" "http://www.netbeans.org/dtds/filesystem-1_2.dtd">
-<filesystem/>
+<filesystem>
+    <folder name="Actions">
+        <folder name="Window">
+            <file name="org-janelia-it-FlyWorkstation-nb_action-LaunchAppAction.instance_hidden"/>
+        </folder>
+    </folder>
+</filesystem>

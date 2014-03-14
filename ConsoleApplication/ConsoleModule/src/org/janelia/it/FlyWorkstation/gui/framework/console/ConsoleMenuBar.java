@@ -17,11 +17,8 @@ public class ConsoleMenuBar extends JMenuBar {
     protected Browser console; // protected so that when subclasses, the subclasses menus can have access to it.
     protected WorkerProgressMeter meter;
 
-    protected EditMenu editMenu;
     protected BookmarkMenu bookmarkMenu;
-    protected JMenu toolsMenu;
     protected JMenu servicesMenu;
-    protected JMenu searchMenu;
     protected JMenu ontologyMenu;
     protected JMenu helpMenu;
     protected JMenu viewMenu;
@@ -37,11 +34,7 @@ public class ConsoleMenuBar extends JMenuBar {
     }
 
     private void constructMenus() {
-        new CredentialSynchronizer().synchronize(console);
-        editMenu = new EditMenu(console);
         bookmarkMenu = new BookmarkMenu(console);
-        toolsMenu = new ToolsMenu(console);
-        searchMenu = new SearchMenu(console);
         servicesMenu = new ServicesMenu(console);
         ontologyMenu = new OntologyMenu(console);
         helpMenu = new HelpMenu(console);
@@ -49,10 +42,7 @@ public class ConsoleMenuBar extends JMenuBar {
     }
     
     private void addMenus() {
-        add(editMenu);
-        add(searchMenu);
         // add(bookmarkMenu);
-        add(toolsMenu);
         add(servicesMenu);
         add(viewMenu);
         // add(ontologyMenu);

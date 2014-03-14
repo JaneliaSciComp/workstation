@@ -181,7 +181,7 @@ public class ConsoleApp {
             if (splash!=null) splash.close();
             
             browser.setVisible(true);
-            browser.toFront();
+            //browser.toFront();
         }
         catch (Exception ex) {
             SessionMgr.getSessionMgr().handleException(ex);

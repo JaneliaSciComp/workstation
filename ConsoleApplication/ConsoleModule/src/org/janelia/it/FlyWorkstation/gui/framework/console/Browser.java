@@ -41,8 +41,13 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.common.collect.ComparisonChain;
+import java.awt.event.WindowAdapter;
+import java.awt.event.WindowListener;
+import org.janelia.it.FlyWorkstation.shared.workers.SimpleWorker;
 import org.openide.windows.TopComponent;
 import org.openide.windows.WindowManager;
+import org.openide.windows.WindowSystemEvent;
+import org.openide.windows.WindowSystemListener;
 
 /**
  * Created by IntelliJ IDEA.
@@ -92,6 +97,7 @@ public class Browser extends JFrame implements Cloneable {
     private EntityOutline entityOutline;
     private EntityDetailsOutline entityDetailsOutline;
     private TaskOutline taskOutline;
+    private ToolsMenuModifier toolsMenuModifier;
 
     private VerticalPanelPicker rightPanel;
     private OntologyOutline ontologyOutline;
@@ -260,6 +266,8 @@ public class Browser extends JFrame implements Cloneable {
         centerLeftHorizontalSplitPane.setDividerLocation(consolePosition.getHorizontalLeftDividerLocation());
         centerLeftHorizontalSplitPane.setBorder(BorderFactory.createEmptyBorder());
 
+        supportMenuProcessing();
+
         if (menuBarClass == null) {
             menuBar = new ConsoleMenuBar(this);
         }
@@ -289,7 +297,7 @@ public class Browser extends JFrame implements Cloneable {
 			}
         });
     }
-    
+
     public JComponent getMainComponent() {
         return centerLeftHorizontalSplitPane;
     }
@@ -407,6 +415,18 @@ public class Browser extends JFrame implements Cloneable {
         return arbitraryMaskSearchDialog;
     }
 
+    private void supportMenuProcessing() {
+        toolsMenuModifier = new ToolsMenuModifier();
+        WindowManager.getDefault().invokeWhenUIReady( new Runnable() {
+            @Override
+            public void run() {
+                toolsMenuModifier.rebuildMenu();
+            }
+        });
+
+        new CredentialSynchronizer().synchronize(this);
+    }
+    
     private class BrowserModelObserver extends BrowserModelListenerAdapter {
         
         @Override
