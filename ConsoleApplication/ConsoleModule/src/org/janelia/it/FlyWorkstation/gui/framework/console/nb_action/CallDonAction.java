@@ -19,7 +19,7 @@ import org.openide.util.NbBundle.Messages;
 @ActionRegistration(
         displayName = "#CTL_CallDonAction"
 )
-@ActionReference(path = "Menu/Help", position = 1000)
+@ActionReference(path = "Menu/Help", position = 1100)
 @Messages("CTL_CallDonAction=Call Don         - x4656")
 public final class CallDonAction implements ActionListener {
     @Override
