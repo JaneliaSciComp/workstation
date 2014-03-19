@@ -102,7 +102,7 @@ public class WorkerProgressMeter extends JDialog {
     }
 
     private WorkerProgressMeter() {
-        this(SessionMgr.getBrowser(), "Progress Monitor", false);
+        this(SessionMgr.getMainFrame(), "Progress Monitor", false);
 
         // Exported UI element for use in the top level menu
         menuLabel = new JLabel(staticIcon);
@@ -115,11 +115,11 @@ public class WorkerProgressMeter extends JDialog {
     }
     
     protected void resetPosition() {
-        Point bp = SessionMgr.getBrowser().getLocation();
-        Dimension bs = SessionMgr.getBrowser().getSize();
+        Point bp = SessionMgr.getMainFrame().getLocation();
+        Dimension bs = SessionMgr.getMainFrame().getSize();
         Point tp = menuLabel.getLocation();
         // Fudge the title bar height, since it's probably he same as the menu height
-        int titleBarHeight = SessionMgr.getBrowser().getJMenuBar().getSize().height;  
+        int titleBarHeight = SessionMgr.getMainFrame().getJMenuBar().getSize().height;  
         setLocation(new Point(bp.x + bs.width - getWidth(), bp.y + titleBarHeight + tp.y));
     }
 

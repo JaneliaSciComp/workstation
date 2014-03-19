@@ -168,7 +168,7 @@ public class AnnotationTablePanel extends JPanel implements AnnotationView {
 
     private void deleteAnnotation(final OntologyAnnotation toDelete) {
     	
-        Utils.setWaitingCursor(SessionMgr.getBrowser());
+        Utils.setWaitingCursor(SessionMgr.getMainFrame());
 
         SimpleWorker worker = new SimpleWorker() {
 
@@ -179,13 +179,13 @@ public class AnnotationTablePanel extends JPanel implements AnnotationView {
 
             @Override
             protected void hadSuccess() {
-                Utils.setDefaultCursor(SessionMgr.getBrowser());
+                Utils.setDefaultCursor(SessionMgr.getMainFrame());
             }
 
             @Override
             protected void hadError(Throwable error) {
                 error.printStackTrace();
-                Utils.setDefaultCursor(SessionMgr.getBrowser());
+                Utils.setDefaultCursor(SessionMgr.getMainFrame());
                 JOptionPane.showMessageDialog(AnnotationTablePanel.this, "Error deleting annotation", "Error", JOptionPane.ERROR_MESSAGE);
             }
         };
@@ -195,7 +195,7 @@ public class AnnotationTablePanel extends JPanel implements AnnotationView {
     
     private void deleteAnnotations(final List<OntologyAnnotation> toDeleteList) {
     	
-        Utils.setWaitingCursor(SessionMgr.getBrowser());
+        Utils.setWaitingCursor(SessionMgr.getMainFrame());
 
         SimpleWorker worker = new SimpleWorker() {
 
@@ -208,13 +208,13 @@ public class AnnotationTablePanel extends JPanel implements AnnotationView {
 
             @Override
             protected void hadSuccess() {
-                Utils.setDefaultCursor(SessionMgr.getBrowser());
+                Utils.setDefaultCursor(SessionMgr.getMainFrame());
             }
 
             @Override
             protected void hadError(Throwable error) {
                 error.printStackTrace();
-                Utils.setDefaultCursor(SessionMgr.getBrowser());
+                Utils.setDefaultCursor(SessionMgr.getMainFrame());
                 JOptionPane.showMessageDialog(AnnotationTablePanel.this, "Error deleting annotations", "Error", JOptionPane.ERROR_MESSAGE);
             }
         };

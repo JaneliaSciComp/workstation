@@ -167,7 +167,7 @@ public class AutoNavigator {
                    try {
                     EventQueue.invokeLater(new Runnable() {
                         public void run() {
-                            JOptionPane.showMessageDialog(browser, "Navigation Complete!", "Information", JOptionPane.INFORMATION_MESSAGE);
+                            JOptionPane.showMessageDialog(SessionMgr.getMainFrame(), "Navigation Complete!", "Information", JOptionPane.INFORMATION_MESSAGE);
                         }});
                     }
                     catch (Exception ex) {

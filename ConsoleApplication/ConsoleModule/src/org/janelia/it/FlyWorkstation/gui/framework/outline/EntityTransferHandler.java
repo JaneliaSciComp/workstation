@@ -326,7 +326,7 @@ public abstract class EntityTransferHandler extends TransferHandler {
                     SessionMgr.getSessionMgr().handleException(error);
                 }
             };
-            worker.setProgressMonitor(new IndeterminateProgressMonitor(SessionMgr.getBrowser(), "Adding entities...", ""));
+            worker.setProgressMonitor(new IndeterminateProgressMonitor(SessionMgr.getMainFrame(), "Adding entities...", ""));
             worker.execute();
 		}
 		catch (Exception e) {

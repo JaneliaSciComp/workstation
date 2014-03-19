@@ -487,7 +487,7 @@ public class EntityTree extends JPanel implements ActivatableView {
                     }
                 };
                 
-                loadingWorker.setProgressMonitor(new ProgressMonitor(SessionMgr.getBrowser(), "Loading tree...", "", 0, 100));
+                loadingWorker.setProgressMonitor(new ProgressMonitor(SessionMgr.getMainFrame(), "Loading tree...", "", 0, 100));
                 loadingWorker.execute();
             }
 

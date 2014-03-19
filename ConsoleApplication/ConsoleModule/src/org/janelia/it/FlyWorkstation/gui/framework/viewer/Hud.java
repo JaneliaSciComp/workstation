@@ -157,7 +157,7 @@ public class Hud extends ModalDialog {
                 }
             }
             else {
-                JOptionPane.showMessageDialog( SessionMgr.getBrowser(), "Sorry, no image to display." );
+                JOptionPane.showMessageDialog( SessionMgr.getMainFrame(), "Sorry, no image to display." );
                 logger.info( "No image established for {}:{}", entity.getName(), entity.getEntityTypeName() );
             }
         }

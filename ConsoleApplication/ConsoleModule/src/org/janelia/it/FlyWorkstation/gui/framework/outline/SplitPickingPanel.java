@@ -152,7 +152,7 @@ public class SplitPickingPanel extends JPanel implements Refreshable {
 			@Override
 			public void actionPerformed(ActionEvent e) {
 				if (workingFolder==null) {
-					JOptionPane.showMessageDialog(SessionMgr.getBrowser(), "Please choose a working folder first", "Error", JOptionPane.ERROR_MESSAGE);
+					JOptionPane.showMessageDialog(SessionMgr.getMainFrame(), "Please choose a working folder first", "Error", JOptionPane.ERROR_MESSAGE);
 					return;
 				}
 				
@@ -187,7 +187,7 @@ public class SplitPickingPanel extends JPanel implements Refreshable {
 			@Override
 			public void actionPerformed(ActionEvent e) {
 				if (workingFolder==null) {
-					JOptionPane.showMessageDialog(SessionMgr.getBrowser(), "Please choose a working folder first", "Error", JOptionPane.ERROR_MESSAGE);
+					JOptionPane.showMessageDialog(SessionMgr.getMainFrame(), "Please choose a working folder first", "Error", JOptionPane.ERROR_MESSAGE);
 					return;
 				}
 				
@@ -230,11 +230,11 @@ public class SplitPickingPanel extends JPanel implements Refreshable {
 			@Override
 			public void actionPerformed(ActionEvent e) {
 				if (workingFolder==null) {
-					JOptionPane.showMessageDialog(SessionMgr.getBrowser(), "Please choose a result folder first", "Error", JOptionPane.ERROR_MESSAGE);
+					JOptionPane.showMessageDialog(SessionMgr.getMainFrame(), "Please choose a result folder first", "Error", JOptionPane.ERROR_MESSAGE);
 					return;
 				}
 				if (crossPrefix==null) {
-					JOptionPane.showMessageDialog(SessionMgr.getBrowser(), "Please choose a cross prefix first", "Error", JOptionPane.ERROR_MESSAGE);
+					JOptionPane.showMessageDialog(SessionMgr.getMainFrame(), "Please choose a cross prefix first", "Error", JOptionPane.ERROR_MESSAGE);
 					return;
 				}
 				createCrosses();
@@ -281,11 +281,11 @@ public class SplitPickingPanel extends JPanel implements Refreshable {
 			@Override
 			public void actionPerformed(ActionEvent e) {
 				if (workingFolder==null) {
-					JOptionPane.showMessageDialog(SessionMgr.getBrowser(), "Please choose a result folder first", "Error", JOptionPane.ERROR_MESSAGE);
+					JOptionPane.showMessageDialog(SessionMgr.getMainFrame(), "Please choose a result folder first", "Error", JOptionPane.ERROR_MESSAGE);
 					return;
 				}
 				if (crossFolder==null) {
-					JOptionPane.showMessageDialog(SessionMgr.getBrowser(), "Please compute some crosses first", "Error", JOptionPane.ERROR_MESSAGE);
+					JOptionPane.showMessageDialog(SessionMgr.getMainFrame(), "Please compute some crosses first", "Error", JOptionPane.ERROR_MESSAGE);
 					return;
 				}
 
@@ -591,7 +591,7 @@ public class SplitPickingPanel extends JPanel implements Refreshable {
 	private void showPrefixEditingDialog() {
 
 		// Add button clicked
-		final String prefix = (String) JOptionPane.showInputDialog(SessionMgr.getBrowser(), 
+		final String prefix = (String) JOptionPane.showInputDialog(SessionMgr.getMainFrame(), 
 				"Cross Prefix (a unique identifier will be appended to this to create each cross label):\n",
 				"Set your cross prefix", JOptionPane.PLAIN_MESSAGE, null, null, crossPrefix);
 		if ((prefix == null) || (prefix.length() <= 0)) {
@@ -666,7 +666,7 @@ public class SplitPickingPanel extends JPanel implements Refreshable {
 			}
 		};
 
-		IndeterminateProgressMonitor pm = new IndeterminateProgressMonitor(SessionMgr.getBrowser(), "Organizing results", "");
+		IndeterminateProgressMonitor pm = new IndeterminateProgressMonitor(SessionMgr.getMainFrame(), "Organizing results", "");
 		pm.setMillisToDecideToPopup(0);
 		pm.setMillisToPopup(0);
 		groupingWorker.setProgressMonitor(pm);
@@ -691,7 +691,7 @@ public class SplitPickingPanel extends JPanel implements Refreshable {
 				if (rootedEntity.getId().equals(mainSelectionId)) {
 					Entity sample = rootedEntity.getEntity();
 					if (!sample.getEntityTypeName().equals(EntityConstants.TYPE_SCREEN_SAMPLE) && !sample.getEntityTypeName().equals(EntityConstants.TYPE_FLY_LINE)) {
-						JOptionPane.showMessageDialog(SessionMgr.getBrowser(), "Not a Screen Sample or Fly Line: "+sample.getName(), "Error", JOptionPane.ERROR_MESSAGE);
+						JOptionPane.showMessageDialog(SessionMgr.getMainFrame(), "Not a Screen Sample or Fly Line: "+sample.getName(), "Error", JOptionPane.ERROR_MESSAGE);
 						return;
 					}
 					log.info("Adding sample1 "+sample.getName());
@@ -706,7 +706,7 @@ public class SplitPickingPanel extends JPanel implements Refreshable {
 				if (rootedEntity.getId().equals(secSelectionId)) {
 					Entity sample = rootedEntity.getEntity();
 					if (!sample.getEntityTypeName().equals(EntityConstants.TYPE_SCREEN_SAMPLE) && !sample.getEntityTypeName().equals(EntityConstants.TYPE_FLY_LINE)) {
-						JOptionPane.showMessageDialog(SessionMgr.getBrowser(), "Not a Screen Sample or Fly Line: "+sample.getName(), "Error", JOptionPane.ERROR_MESSAGE);
+						JOptionPane.showMessageDialog(SessionMgr.getMainFrame(), "Not a Screen Sample or Fly Line: "+sample.getName(), "Error", JOptionPane.ERROR_MESSAGE);
 						return;
 					}
 					log.info("Adding sample2 "+sample.getName());
@@ -717,12 +717,12 @@ public class SplitPickingPanel extends JPanel implements Refreshable {
 		
 		final int numCrosses = samples1.size() * samples2.size();
 		if (numCrosses > MAX_TOTAL_CROSSES) {
-			JOptionPane.showMessageDialog(SessionMgr.getBrowser(), "Cannot run "+numCrosses+" crosses (limited to "+MAX_TOTAL_CROSSES+" max)", "Error", JOptionPane.ERROR_MESSAGE);
+			JOptionPane.showMessageDialog(SessionMgr.getMainFrame(), "Cannot run "+numCrosses+" crosses (limited to "+MAX_TOTAL_CROSSES+" max)", "Error", JOptionPane.ERROR_MESSAGE);
 			return;
 		}
 		else if (numCrosses > MAX_FREE_CROSSES) {
 			Object[] options = {"Yes", "Cancel"};
-			int deleteConfirmation = JOptionPane.showOptionDialog(SessionMgr.getBrowser(),
+			int deleteConfirmation = JOptionPane.showOptionDialog(SessionMgr.getMainFrame(),
 					"Are you sure you want to compute "+numCrosses+" crosses?", "Compute Crosses",
 					JOptionPane.YES_NO_OPTION, JOptionPane.QUESTION_MESSAGE, null, options, options[1]);
 			if (deleteConfirmation != 0) {
@@ -730,7 +730,7 @@ public class SplitPickingPanel extends JPanel implements Refreshable {
 			}
 		}
 		else if (numCrosses == 0) {
-			JOptionPane.showMessageDialog(SessionMgr.getBrowser(), "Please select at least one Screen Sample or Fly Line in each viewer", "Error", JOptionPane.ERROR_MESSAGE);
+			JOptionPane.showMessageDialog(SessionMgr.getMainFrame(), "Please select at least one Screen Sample or Fly Line in each viewer", "Error", JOptionPane.ERROR_MESSAGE);
 			return;
 		}
 
@@ -770,7 +770,7 @@ public class SplitPickingPanel extends JPanel implements Refreshable {
 					String message = numCrosses==1 ? 
 							"You have already simulated this cross before. Recompute it?" : 
 							"You have already simulated "+numExisting+" out of these "+numCrosses+" crosses. Recompute them?";
-					int deleteConfirmation = JOptionPane.showOptionDialog(SessionMgr.getBrowser(), message, "Recompute?",
+					int deleteConfirmation = JOptionPane.showOptionDialog(SessionMgr.getMainFrame(), message, "Recompute?",
 							JOptionPane.YES_NO_OPTION, JOptionPane.QUESTION_MESSAGE, null, options, options[1]);
 					if (deleteConfirmation == 0) {
 						existingCrosses.clear();
@@ -870,7 +870,7 @@ public class SplitPickingPanel extends JPanel implements Refreshable {
 					}
 				};
 				
-				worker2.setProgressMonitor(new ProgressMonitor(SessionMgr.getBrowser(), "Submitting jobs to the compute cluster...", "", 0, 100));
+				worker2.setProgressMonitor(new ProgressMonitor(SessionMgr.getMainFrame(), "Submitting jobs to the compute cluster...", "", 0, 100));
 				worker2.execute();
 			}
 			
@@ -1165,7 +1165,7 @@ public class SplitPickingPanel extends JPanel implements Refreshable {
 			public void actionPerformed(ActionEvent actionEvent) {
 
 				// Add button clicked
-				final String folderName = (String) JOptionPane.showInputDialog(SessionMgr.getBrowser(), "Folder Name:\n",
+				final String folderName = (String) JOptionPane.showInputDialog(SessionMgr.getMainFrame(), "Folder Name:\n",
 						"Create working folder", JOptionPane.PLAIN_MESSAGE, null, null, null);
 				if ((folderName == null) || (folderName.length() <= 0)) {
 					return;
@@ -1263,7 +1263,7 @@ public class SplitPickingPanel extends JPanel implements Refreshable {
 			}
 		});
 
-        if (chooser.showDialog(SessionMgr.getBrowser(), "OK") == FileChooser.CANCEL_OPTION) {
+        if (chooser.showDialog(SessionMgr.getMainFrame(), "OK") == FileChooser.CANCEL_OPTION) {
             return;
         }
 
@@ -1380,7 +1380,7 @@ public class SplitPickingPanel extends JPanel implements Refreshable {
 			
 			@Override
 			protected void hadSuccess() {
-				int rv = JOptionPane.showConfirmDialog(SessionMgr.getBrowser(), "Data was successfully exported to "+destFile+". Open file in default viewer?", 
+				int rv = JOptionPane.showConfirmDialog(SessionMgr.getMainFrame(), "Data was successfully exported to "+destFile+". Open file in default viewer?", 
 						"Export successful", JOptionPane.YES_NO_OPTION, JOptionPane.INFORMATION_MESSAGE);
 				if (rv==JOptionPane.YES_OPTION) {
 					OpenWithDefaultAppAction openAction = new OpenWithDefaultAppAction(destFile);
@@ -1394,7 +1394,7 @@ public class SplitPickingPanel extends JPanel implements Refreshable {
 			}
 		};
 
-    	worker.setProgressMonitor(new ProgressMonitor(SessionMgr.getBrowser(), "Exporting data", "", 0, 100));
+    	worker.setProgressMonitor(new ProgressMonitor(SessionMgr.getMainFrame(), "Exporting data", "", 0, 100));
 		worker.execute();
     }
 

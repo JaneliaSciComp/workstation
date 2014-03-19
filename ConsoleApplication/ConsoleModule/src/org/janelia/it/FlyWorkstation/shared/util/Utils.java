@@ -562,7 +562,7 @@ public class Utils {
                 SessionMgr.getSessionMgr().handleException(error);
             }
         };
-        worker.setProgressMonitor(new IndeterminateProgressMonitor(SessionMgr.getBrowser(), "Retrieving file...", ""));
+        worker.setProgressMonitor(new IndeterminateProgressMonitor(SessionMgr.getMainFrame(), "Retrieving file...", ""));
         worker.execute();
     }
     
@@ -588,7 +588,7 @@ public class Utils {
                 @Override
                 public void call(File file) throws Exception {
                     if (file==null) {
-                        JOptionPane.showMessageDialog(SessionMgr.getBrowser(),
+                        JOptionPane.showMessageDialog(SessionMgr.getMainFrame(),
                                 "Could not open file path", "Error", JOptionPane.ERROR_MESSAGE);
                     }
                     else {

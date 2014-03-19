@@ -63,6 +63,7 @@ public class SearchManager {
 
   private ControlledVocabulary searchTypeControlledVocabulary;
   private Browser browser;
+  private JFrame mainFrame;
 //  private GenomeVersion currentGenomeVersion;
   private static final String lineSep=System.getProperty("line.separator");
   private String searchType = "";
@@ -88,8 +89,9 @@ public class SearchManager {
 
   private SearchManager() {
     try  {
+      mainFrame = SessionMgr.getMainFrame();
       browser = SessionMgr.getBrowser();
-      userDialog = new JDialog(browser,"Search Known Features", false);
+      userDialog = new JDialog(mainFrame,"Search Known Features", false);
       userDialog.addWindowListener(myWindowListener);
       browser.getBrowserModel().addBrowserModelListener(browserModelListener);
       SessionMgr.getSessionMgr().addSessionModelListener(sessionModelListener);
@@ -141,7 +143,7 @@ public class SearchManager {
 
   public void launchSearch(String searchType, String searchString) {
     if (searchType==null) {
-      JOptionPane.showMessageDialog(browser, "Requested search type does not exist.", "Search Error",
+      JOptionPane.showMessageDialog(mainFrame, "Requested search type does not exist.", "Search Error",
         JOptionPane.WARNING_MESSAGE);
       return;
     }

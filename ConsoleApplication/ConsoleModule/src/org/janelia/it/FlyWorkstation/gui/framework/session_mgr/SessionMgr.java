@@ -38,6 +38,7 @@ import java.net.URL;
 import java.text.ParseException;
 import java.util.*;
 import java.util.List;
+import org.openide.windows.WindowManager;
 
 
 public class SessionMgr {
@@ -591,6 +592,16 @@ public class SessionMgr {
         return getSessionMgr().getActiveBrowser();
     }
     
+    /**
+     * Call this if all you need is a parent frame.  Browser will no longer
+     * extend JFrame.
+     * 
+     * @return the main framework window.
+     */
+    public static JFrame getMainFrame() {
+        return (JFrame)WindowManager.getDefault().getMainWindow();
+    }
+    
     public void startExternalHttpListener(int port) {
         if (externalHttpListener == null) externalHttpListener = new ExternalListener(port);
     }
@@ -692,7 +703,7 @@ public class SessionMgr {
                 loggedInSubject = StringUtils.isEmpty(runAsUser) ? authenticatedSubject : ModelMgr.getModelMgr().getSubject(runAsUser);
                 
                 if (loggedInSubject==null) {
-                    JOptionPane.showMessageDialog(SessionMgr.getBrowser(), "Cannot run as non-existent subject "+runAsUser, "Error", JOptionPane.ERROR_MESSAGE);
+                    JOptionPane.showMessageDialog(SessionMgr.getMainFrame(), "Cannot run as non-existent subject "+runAsUser, "Error", JOptionPane.ERROR_MESSAGE);
                     loggedInSubject = authenticatedSubject;
                 }
 

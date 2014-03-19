@@ -415,7 +415,7 @@ public class UserNotificationExceptionHandler implements ExceptionHandler {
     }
 
     private JFrame getParentFrame() {
-        return SessionMgr.getBrowser();
+        return SessionMgr.getMainFrame();
     }
 
 }

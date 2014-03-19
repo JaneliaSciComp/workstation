@@ -660,7 +660,7 @@ public class EntityContextMenu extends JPopupMenu {
                     ModelMgr.getModelMgr().renameEntity(rootedEntity.getEntity(), newName);
                 } catch (Exception ex) {
                     ex.printStackTrace();
-                    JOptionPane.showMessageDialog(SessionMgr.getBrowser(),
+                    JOptionPane.showMessageDialog(SessionMgr.getMainFrame(),
                             "Error renaming entity", "Error", JOptionPane.ERROR_MESSAGE);
                 }
 

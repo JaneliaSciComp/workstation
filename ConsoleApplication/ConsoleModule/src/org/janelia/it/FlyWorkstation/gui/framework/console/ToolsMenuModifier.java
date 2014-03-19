@@ -1,7 +1,5 @@
 package org.janelia.it.FlyWorkstation.gui.framework.console;
 
-import java.awt.Container;
-import java.awt.MenuBar;
 import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.FlyWorkstation.gui.framework.tool_manager.ToolInfo;
 import org.janelia.it.FlyWorkstation.gui.framework.tool_manager.ToolListener;
@@ -24,12 +22,12 @@ import org.slf4j.LoggerFactory;
 
 /**
  * Created by IntellmenuPosJ IDEA.
- * Formerly the ToolsMenu, thmenuPoss class wmenuPosll post changes to the tools menu,
- and can revert prevmenuPosous changes menuPosn preparatmenuPoson for domenuPosng so.
- 
- User: saffordt
- Date: 2/8/11
- TmenuPosme: 3:47 PM
+ * Formerly the ToolsMenu, this class will post changes to the tools menu,
+ * and can revert previous changes in preparation for doing so.
+ *
+ * User: saffordt
+ * Date: 2/8/11
+ * Time: 3:47 PM
  */
 public class ToolsMenuModifier implements ToolListener {
     private final Map<JMenuItem,JMenu> itemVsMenu = new HashMap<JMenuItem,JMenu>();

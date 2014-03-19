@@ -61,19 +61,19 @@ public class AlignmentBoardContext extends AlignedItem {
         
         if (!context.getAlignmentSpaceName().equals(alignmentSpaceName)) {
             if ( immediateReport )
-                JOptionPane.showMessageDialog(SessionMgr.getBrowser(),
+                JOptionPane.showMessageDialog(SessionMgr.getMainFrame(),
                     "Neuron is not aligned to a compatible alignment space ("+context.getAlignmentSpaceName()+"!="+alignmentSpaceName+")", "Error", JOptionPane.ERROR_MESSAGE);
             return false;
         }
         else if (!context.getOpticalResolution().equals(opticalResolution)) {
             if ( immediateReport )
-                JOptionPane.showMessageDialog(SessionMgr.getBrowser(),
+                JOptionPane.showMessageDialog(SessionMgr.getMainFrame(),
                     "Neuron is not aligned to a compatible optical resolution ("+context.getOpticalResolution()+"!="+opticalResolution+")", "Error", JOptionPane.ERROR_MESSAGE);
             return false;
         }
         else if (!context.getPixelResolution().equals(pixelResolution)) {
             if ( immediateReport )
-                JOptionPane.showMessageDialog(SessionMgr.getBrowser(),
+                JOptionPane.showMessageDialog(SessionMgr.getMainFrame(),
                     "Neuron is not aligned to a compatible pixel resolution ("+context.getPixelResolution()+"!="+pixelResolution+")", "Error", JOptionPane.ERROR_MESSAGE);
             return false;
         }
@@ -102,7 +102,7 @@ public class AlignmentBoardContext extends AlignedItem {
             Entity separationEntity = getPipelineAncestor(rootedEntity);
             Entity alignmentEntity = ModelMgr.getModelMgr().getAncestorWithType(separationEntity, EntityConstants.TYPE_ALIGNMENT_RESULT);
             if (alignmentEntity==null) {
-                JOptionPane.showMessageDialog(SessionMgr.getBrowser(), "Neuron is not aligned", "Error", JOptionPane.ERROR_MESSAGE);
+                JOptionPane.showMessageDialog(SessionMgr.getMainFrame(), "Neuron is not aligned", "Error", JOptionPane.ERROR_MESSAGE);
                 return;
             }
 
@@ -119,7 +119,7 @@ public class AlignmentBoardContext extends AlignedItem {
                 }
             }
 
-            JOptionPane.showMessageDialog(SessionMgr.getBrowser(),
+            JOptionPane.showMessageDialog(SessionMgr.getMainFrame(),
                     "Could not find neuron in the aligned neuron separation", "Error", JOptionPane.ERROR_MESSAGE);
         }
         else if (EntityConstants.TYPE_IMAGE_3D.equals(type)  &&  rootedEntity.getName().startsWith( "Reference" )) {
@@ -129,7 +129,7 @@ public class AlignmentBoardContext extends AlignedItem {
             Entity separationEntity = getPipelineAncestor(rootedEntity);
             Entity alignmentEntity = ModelMgr.getModelMgr().getAncestorWithType(separationEntity, EntityConstants.TYPE_ALIGNMENT_RESULT);
             if (alignmentEntity==null) {
-                JOptionPane.showMessageDialog(SessionMgr.getBrowser(), "Neuron is not aligned", "Error", JOptionPane.ERROR_MESSAGE);
+                JOptionPane.showMessageDialog(SessionMgr.getMainFrame(), "Neuron is not aligned", "Error", JOptionPane.ERROR_MESSAGE);
                 return;
             }
 

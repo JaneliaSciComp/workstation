@@ -216,7 +216,7 @@ public abstract class EntityOutline extends EntityTree implements Refreshable, A
 				public void actionPerformed(ActionEvent actionEvent) {
 
 					// Add button clicked
-					final String folderName = (String) JOptionPane.showInputDialog(browser, "Folder Name:\n",
+					final String folderName = (String) JOptionPane.showInputDialog(SessionMgr.getMainFrame(), "Folder Name:\n",
 							"Create top-level folder", JOptionPane.PLAIN_MESSAGE, null, null, null);
 					if ((folderName == null) || (folderName.length() <= 0)) {
 						return;
@@ -578,7 +578,7 @@ public abstract class EntityOutline extends EntityTree implements Refreshable, A
 			}
 			else if (screenEvaluationDialog.isAskAfterNavigation()) {
 				Object[] options = {"Yes", "No", "Organize now"};
-				int c = JOptionPane.showOptionDialog(SessionMgr.getBrowser(),
+				int c = JOptionPane.showOptionDialog(SessionMgr.getMainFrame(),
 						"Are you sure you want to navigate away from this folder without organizing it?", "Navigate",
 						JOptionPane.YES_NO_OPTION, JOptionPane.WARNING_MESSAGE, null, options, options[2]);
 				if (c == 1) {
