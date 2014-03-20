@@ -347,9 +347,14 @@ public class GiantFiberSearchDialog extends ModalDialog {
 
                 URL maskSummaryFile = SessionMgr.getURL(maskSummaryPath);
                 URL maskNameIndexFile = SessionMgr.getURL(maskNameIndexPath);
-                maskManager.loadMaskCompartmentList(maskNameIndexFile);
-                maskManager.loadMaskSummaryFile(maskSummaryFile);
-                compartmentAbbreviationList = maskManager.getCompartmentListInstance();
+                try {
+                    maskManager.loadMaskCompartmentList(maskNameIndexFile);
+                    maskManager.loadMaskSummaryFile(maskSummaryFile);
+                    compartmentAbbreviationList = maskManager.getCompartmentListInstance();
+                } catch ( Exception ex ) {
+                    JOptionPane.showMessageDialog( SessionMgr.getMainFrame(), "Failed to load Giant Fiber Compartments");
+                    ex.printStackTrace();
+                }
             }
 
             @Override

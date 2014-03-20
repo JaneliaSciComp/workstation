@@ -6,4 +6,7 @@
             <file name="org-janelia-it-FlyWorkstation-nb_action-LaunchAppAction.instance_hidden"/>
         </folder>
     </folder>
+    <folder name="Menu">
+        <folder name="Services"/>
+    </folder>
 </filesystem>

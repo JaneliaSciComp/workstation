@@ -65,7 +65,8 @@ public class SessionMgr {
     public static String DISPLAY_RENDERER_2D = "SessionMgr.Renderer2D";
     
     public static boolean isDarkLook = false;
-    
+
+    private static JFrame mainFrame;    
     private static ModelMgr modelManager = ModelMgr.getModelMgr();
     private static SessionMgr sessionManager = new SessionMgr();
     private SessionModel sessionModel = SessionModel.getSessionModel();
@@ -591,15 +592,26 @@ public class SessionMgr {
     public static Browser getBrowser() {
         return getSessionMgr().getActiveBrowser();
     }
-    
+        
     /**
      * Call this if all you need is a parent frame.  Browser will no longer
      * extend JFrame.
      * 
      * @return the main framework window.
      */
-    public static JFrame getMainFrame() {
-        return (JFrame)WindowManager.getDefault().getMainWindow();
+    public static JFrame getMainFrame() { 
+        if (mainFrame == null) {
+            try {
+                SwingUtilities.invokeAndWait(new Runnable() {
+                    public void run() {
+                        mainFrame = (JFrame) WindowManager.getDefault().getMainWindow();
+                    }
+                });
+            } catch (Exception ex) {
+                SessionMgr.getSessionMgr().handleException(ex);
+            }
+        }
+        return mainFrame;
     }
     
     public void startExternalHttpListener(int port) {

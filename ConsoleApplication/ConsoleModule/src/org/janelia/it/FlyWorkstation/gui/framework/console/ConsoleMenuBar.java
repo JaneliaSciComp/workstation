@@ -35,19 +35,19 @@ public class ConsoleMenuBar extends JMenuBar {
 
     private void constructMenus() {
         bookmarkMenu = new BookmarkMenu(console);
-        servicesMenu = new ServicesMenu(console);
+        //servicesMenu = new ServicesMenu(console);
         ontologyMenu = new OntologyMenu(console);
-        helpMenu = new HelpMenu(console);
+        //helpMenu = new HelpMenu(console);
         viewMenu = new ViewMenu(console);
     }
     
     private void addMenus() {
         // add(bookmarkMenu);
-        add(servicesMenu);
+        //add(servicesMenu);
         add(viewMenu);
         // add(ontologyMenu);
-        add(helpMenu);
-        add(menuGlue);
+        //add(helpMenu);
+        //add(menuGlue);
         add(WorkerProgressMeter.getProgressMeter().getMenuLabel());
     }
 }

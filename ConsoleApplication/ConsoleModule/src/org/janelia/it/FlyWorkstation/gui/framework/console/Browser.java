@@ -415,15 +415,16 @@ public class Browser extends JFrame implements Cloneable {
         return arbitraryMaskSearchDialog;
     }
 
-    private void supportMenuProcessing() {
+    public void supportMenuProcessing() {
         toolsMenuModifier = new ToolsMenuModifier();
-        WindowManager.getDefault().invokeWhenUIReady( new Runnable() {
-            @Override
-            public void run() {
-                toolsMenuModifier.rebuildMenu();
-            }
-        });
-
+        toolsMenuModifier.rebuildMenu();
+//        WindowManager.getDefault().invokeWhenUIReady( new Runnable() {
+//            @Override
+//            public void run() {
+//                toolsMenuModifier.rebuildMenu();
+//            }
+//        });
+//
         new CredentialSynchronizer().synchronize(this);
     }
     

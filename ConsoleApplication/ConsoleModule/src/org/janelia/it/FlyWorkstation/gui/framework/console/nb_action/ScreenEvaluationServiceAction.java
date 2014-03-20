@@ -12,15 +12,15 @@ import org.openide.awt.ActionReference;
 import org.openide.awt.ActionRegistration;
 import org.openide.util.NbBundle.Messages;
 
-@ActionID(
-        category = "Services",
-        id = "org.janelia.it.FlyWorkstation.gui.framework.console.nb_action.ScreenEvaluationServiceAction"
-)
-@ActionRegistration(
-        displayName = "#CTL_ScreenEvaluationServiceAction"
-)
-@ActionReference(path = "Menu/Services", position = 1100)
-@Messages("CTL_ScreenEvaluationServiceAction=Screen Evaluation")
+//@ActionID(
+//        category = "Services",
+//        id = "org.janelia.it.FlyWorkstation.gui.framework.console.nb_action.ScreenEvaluationServiceAction"
+//)
+//@ActionRegistration(
+//        displayName = "#CTL_ScreenEvaluationServiceAction"
+//)
+//@ActionReference(path = "Menu/Services", position = 1100)
+//@Messages("CTL_ScreenEvaluationServiceAction=Screen Evaluation")
 public final class ScreenEvaluationServiceAction implements ActionListener {
 
     @Override

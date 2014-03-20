@@ -84,7 +84,7 @@ public class ToolsMenuModifier implements ToolListener {
      * @param item what to add
      * @return same as added
      */
-    private void add( final List<JMenuItem>items, final JMenu menu ) {
+    private void add( final List<JMenuItem>items, final JMenu menu, final JMenuBar menuBar ) {
         SimpleWorker worker = new SimpleWorker() {
 
             @Override
@@ -94,14 +94,14 @@ public class ToolsMenuModifier implements ToolListener {
             @Override
             protected void hadSuccess() {
                 int pos = 0;
+                menuBar.remove(menu);
                 for (JMenuItem item : items) {
                     menu.insert(item, pos++);
-                    logger.info("Adding item " + item.getName() + " to menu " + menu.getName());
+                    logger.info("Adding item " + item.getActionCommand() + " to menu " + menu.getName());
                     itemVsMenu.put(item, menu);
                 }
-                
-                menu.invalidate();
-                menu.repaint();
+                int menuInx = menuBar.getComponentIndex( menu );
+                menuBar.add( menu, menuInx );
             }
 
             @Override
@@ -124,35 +124,39 @@ public class ToolsMenuModifier implements ToolListener {
     }
     
     private void addMenuItems() {
-        JMenu toolsMenu = null;
         JFrame frame = (JFrame) WindowManager.getDefault().getMainWindow();
         JMenuBar menuBar = frame.getJMenuBar();
         if (menuBar != null) {
+            JMenu toolsMenu = null;
             for (int i = 0; i < menuBar.getMenuCount() && toolsMenu == null; i++) {
                 JMenu menu = menuBar.getMenu(i);
-                if (menu.getName().equalsIgnoreCase("tools")) {
+                if (menu.getText().trim().equalsIgnoreCase("tools")) {
                     toolsMenu = menu;
+                    System.err.println(menu.getText() + " ----the tools menu");
+                    Set keySet = ToolMgr.getTools().keySet();
+                    List<JMenuItem> newItems = createMenuItems(keySet);
+                    add(newItems, toolsMenu, menuBar);
+
                 }
             }
+
         } else {
             final String msg = "Failed to find menu bar from main frame.";
             //JOptionPane.showMessageDialog(null, msg);
             logger.warn( msg );
         }
 
-        if (toolsMenu != null) {
-            Set keySet = ToolMgr.getTools().keySet();
-            int menuPos = 0;
-            List<JMenuItem> newItems = new ArrayList<JMenuItem>();
-            for (final Object o : keySet) {
-                JMenuItem tmpMenuItem = null;
-                ToolInfo tmpTool = ToolMgr.getTool((String) o);
-                try {
-                    tmpMenuItem = new JMenuItem(tmpTool.getName(),
-                            Utils.getClasspathImage(tmpTool.getIconPath()));
-                } catch (FileNotFoundException e) {
-                    e.printStackTrace();
-                }
+    }
+
+    private List<JMenuItem> createMenuItems(Set keySet) {
+        List<JMenuItem> newItems = new ArrayList<JMenuItem>();
+        for (final Object o : keySet) {
+            JMenuItem tmpMenuItem = null;
+            ToolInfo tmpTool = ToolMgr.getTool((String) o);
+            try {
+                tmpMenuItem = new JMenuItem(tmpTool.getName(),
+                        Utils.getClasspathImage(tmpTool.getIconPath()));
+                newItems.add(tmpMenuItem);
                 tmpMenuItem.addActionListener(new ActionListener() {
                     @Override
                     public void actionPerformed(ActionEvent e) {
@@ -162,24 +166,19 @@ public class ToolsMenuModifier implements ToolListener {
                             JOptionPane.showMessageDialog(
                                     SessionMgr.getBrowser(),
                                     "Could not launch this tool. "
-                                    + "Please choose the appropriate file path from the Tools->Configure Tools area",
+                                            + "Please choose the appropriate file path from the Tools->Configure Tools area",
                                     "ToolInfo Launch ERROR",
                                     JOptionPane.ERROR_MESSAGE
                             );
                         }
                     }
                 });
-
+                
+            } catch (FileNotFoundException e) {
+                e.printStackTrace();
             }
-                        
-            add(newItems, toolsMenu);
         }
-        else {
-            String msg = "Failed to find tools menu in menu bar.";
-            JOptionPane.showMessageDialog( null, msg );
-            logger.warn( msg );
-        }
-
+        return newItems;
     }
 
     /** Worker class to modify the tools menu in AWT thread. */
