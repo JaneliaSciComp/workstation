@@ -327,6 +327,20 @@ elements of what's been done; that's handled by signals emitted from AnnotationM
             // dialog?
             return;
         } else {
+
+            // if more than a handful of nodes, ask the user if they are sure (we have
+            //  no undo right now!)
+            int nAnnotations = annotationModel.getGeoAnnotationFromID(annotationID).getSubTreeList().size();
+            if (nAnnotations >= 5) {
+                int ans =  JOptionPane.showConfirmDialog(null,
+                        String.format("Selected subtree has %d children; delete?", nAnnotations),
+                        "Delete subtree?",
+                        JOptionPane.OK_CANCEL_OPTION);
+                if (ans != JOptionPane.OK_OPTION) {
+                    return;
+                }
+            }
+
             SimpleWorker deleter = new SimpleWorker() {
                 @Override
                 protected void doStuff() throws Exception {

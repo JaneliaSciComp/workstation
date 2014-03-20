@@ -33,6 +33,9 @@ public class NeuriteTreePanel extends JPanel
     private DefaultMutableTreeNode neuronRootNode;
     private HashBiMap<String, TmGeoAnnotation> labelToAnnotationMap;
 
+    private int width;
+    private static final int height = 250;
+
     // ----- slots
     public Slot1<TmNeuron> neuronSelectedSlot = new Slot1<TmNeuron>() {
         @Override
@@ -46,8 +49,19 @@ public class NeuriteTreePanel extends JPanel
     public Signal1<TmGeoAnnotation> annotationClickedSignal = new Signal1<TmGeoAnnotation>();
 
 
-    public NeuriteTreePanel() {
+    public NeuriteTreePanel(int width) {
+        this.width = width;
         setupUI();
+    }
+
+    @Override
+    public Dimension getMinimumSize() {
+        return new Dimension(width, height);
+    }
+
+    @Override
+    public Dimension getPreferredSize() {
+        return new Dimension(width, height);
     }
 
     private void setupUI() {
@@ -73,15 +87,13 @@ public class NeuriteTreePanel extends JPanel
         c.fill = GridBagConstraints.HORIZONTAL;
         c.insets = new Insets(10, 0, 0, 0);
         c.weightx = 1.0;
+        c.weighty = 0.0;
         add(new JLabel("Neurites", JLabel.LEADING), c);
 
         // create test tree and style it; no icons, please
         neuronRootNode = new DefaultMutableTreeNode("invisible root node");
         neuriteModel = new DefaultTreeModel(neuronRootNode);
         neuriteTree = new JTree(neuriteModel);
-        // this is enough to keep the scroll panel wide enough so it doesn't
-        //  need to add scroll bars once the tree is populated
-        neuriteTree.setMinimumSize(new Dimension(200, 10));
 
         labelToAnnotationMap = HashBiMap.create();
 
@@ -119,7 +131,8 @@ public class NeuriteTreePanel extends JPanel
         c2.gridx = 0;
         c2.gridy = GridBagConstraints.RELATIVE;
         c2.anchor = GridBagConstraints.PAGE_START;
-        c2.fill = GridBagConstraints.HORIZONTAL;
+        c2.fill = GridBagConstraints.BOTH;
+        c2.weighty = 1.0;
         add(treePane, c2);
     }
 
