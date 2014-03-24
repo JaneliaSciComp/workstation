@@ -38,7 +38,7 @@ import java.util.Map;
  *
  * [Pattern Guide]    -- broken at the moment.
  * /Volumes/jacsData/filestore/system/Separation/974/754/1757362152491974754/separate/fastLoad/ConsolidatedSignal2_25.mp4
- * /Volumes/jacsData/MaskResources/Compartment/guide/LOP_R.v3dpbd
+ * /Volumes/jacsData/filestore/MaskResources/Compartment/guide/LOP_R.v3dpbd
  *   -- these are alternates to LOP_R.
  * WED_L.v3dpbd
  * WED_R.v3dpbd

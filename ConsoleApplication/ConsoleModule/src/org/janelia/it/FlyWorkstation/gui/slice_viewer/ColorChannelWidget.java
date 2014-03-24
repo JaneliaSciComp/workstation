@@ -42,16 +42,19 @@ public class ColorChannelWidget extends JPanel
 		add(slider);
 		add(colorButton);
 		updateColor();
+        updateVisibility();
 		imageColorModel.getColorModelInitializedSignal().connect(new Slot() {
 			@Override
 			public void execute() {
 				updateColor();
+                updateVisibility();
 			}
 		});
 		imageColorModel.getColorModelChangedSignal().connect(new Slot() {
 			@Override
 			public void execute() {
 				updateColor();
+                updateVisibility();
 			}
 		});
 	}
@@ -79,6 +82,15 @@ public class ColorChannelWidget extends JPanel
 		ChannelColorModel ccm = imageColorModel.getChannel(channelIndex);
 		setWhiteColor(ccm.getColor());
 	}
+
+    public void updateVisibility() {
+        if (imageColorModel == null)
+            return;
+        if (imageColorModel.getChannelCount() <= channelIndex)
+            return;
+        ChannelColorModel ccm = imageColorModel.getChannel(channelIndex);
+        visibilityButton.setSelected(ccm.isVisible());
+    }
 	
 	class VisibilityButton extends ToolModeButton 
 	{
@@ -86,6 +98,7 @@ public class ColorChannelWidget extends JPanel
 		public VisibilityButton() {
 			super(new ChannelVisibilityAction(channelIndex));
 			setIcon(Icons.getIcon("closed_eye.png"));
+            setRolloverIcon(Icons.getIcon("closed_eye.png"));
 			setSelectedIcon(Icons.getIcon("eye.png"));
 			setRolloverSelectedIcon(Icons.getIcon("eye.png"));
 			setSelected(true);

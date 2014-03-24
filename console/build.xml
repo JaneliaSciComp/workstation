@@ -94,7 +94,6 @@
             <fileset dir="${build.classes.dir}"/>
             <fileset dir="${model.module}/build/classes"/>
             <fileset dir="${shared.module}/build/classes"/>
-            <fileset dir="${basedir}/src/main/resources"/>
         </jar>
         	
     </target>
