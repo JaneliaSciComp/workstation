@@ -52,6 +52,11 @@ elements of what's been done; that's handled by signals emitted from AnnotationM
 
     private Entity initialEntity;
 
+    // ----- constants
+    // AUTOMATIC_TRACING_TIMEOUT for automatic tracing in seconds
+    private static final double AUTOMATIC_TRACING_TIMEOUT = 10.0;
+
+
     // ----- slots
 
     public Slot1<URL> onVolumeLoadedSlot = new Slot1<URL>() {
@@ -811,7 +816,7 @@ elements of what's been done; that's handled by signals emitted from AnnotationM
         request.setXyz2(new Vec3(parent.getX(), parent.getY(), parent.getZ()));
 
         // tracing:
-        PathTraceToParentWorker worker = new PathTraceToParentWorker(request);
+        PathTraceToParentWorker worker = new PathTraceToParentWorker(request, AUTOMATIC_TRACING_TIMEOUT);
         worker.pathTracedSignal.connect(addPathRequestedSlot);
         worker.execute();
 
