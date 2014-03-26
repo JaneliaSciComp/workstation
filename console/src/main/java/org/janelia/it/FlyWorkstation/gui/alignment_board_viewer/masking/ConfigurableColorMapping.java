@@ -4,6 +4,7 @@ import org.janelia.it.FlyWorkstation.gui.alignment_board_viewer.renderable.Inver
 import org.janelia.it.FlyWorkstation.gui.alignment_board_viewer.renderable.RBComparator;
 import org.janelia.it.FlyWorkstation.gui.alignment_board_viewer.renderable.RenderableBean;
 import org.janelia.it.jacs.model.entity.Entity;
+import org.janelia.it.jacs.model.entity.EntityConstants;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -30,6 +31,9 @@ public class ConfigurableColorMapping implements RenderMappingI {
             { (byte)0x00, (byte)0x8f, (byte)0x00, (byte)0xff },          //Dk G
     };
 
+    private static final byte[] TRANSPARENT_RENDER = {
+            (byte)0x20, (byte)0x20, (byte)0x20, RenderMappingI.COMPARTMENT_RENDERING
+    };
     private static final int RENDER_METHOD_BITS = 3;
     private static final int POSITION_BITS = 3;
     private static final int BYTE_INTENSITY_INTERP = 1 << POSITION_BITS + RENDER_METHOD_BITS;
@@ -188,14 +192,22 @@ public class ConfigurableColorMapping implements RenderMappingI {
             }
 
             if ( rgb == null  ||  rgbValsZero ) {
-                rgb = COLOR_WHEEL[ translatedNum % COLOR_WHEEL.length ];
                 Entity entity = renderableBean.getRenderableEntity();
+                rgb = rgbCopy( COLOR_WHEEL[ translatedNum % COLOR_WHEEL.length ] );
                 if ( entity != null ) {
-                    rgb[ 3 ] = RenderMappingI.FRAGMENT_RENDERING;
+                    if ( rgbValsZero ) {
+                        // Special case: user has turned down colors to minimum, on purpose.
+                        rgb = rgbCopy( TRANSPARENT_RENDER );
+                        renderableBean.setRgb( rgb );
+                    }
+                    else {
+                        rgb[ 3 ] = RenderMappingI.FRAGMENT_RENDERING;
+                    }
                 }
                 else {
                     rgb[ 3 ] = RenderMappingI.PASS_THROUGH_RENDERING;
                 }
+                renderableBean.setRgb( rgb );
             }
             else {
                 // No-op if non-shader rendering.  Do not add this to the mapping at all.
@@ -214,6 +226,13 @@ public class ConfigurableColorMapping implements RenderMappingI {
             }
             maskMappings.put( translatedNum, rgb );
         }
+    }
+
+    /** Use this copy for assigning "standard" values, to avoid them being overwritten for ALL users afterwards. */
+    private byte[] rgbCopy( byte[] original ) {
+        byte[] rtnVal = new byte[ original.length ];
+        System.arraycopy( original, 0, rtnVal, 0, original.length );
+        return rtnVal;
     }
 
     private List<Integer> prioritizeMasks() {
@@ -254,7 +273,12 @@ public class ConfigurableColorMapping implements RenderMappingI {
                 for ( int i = 0; i < colorAverages.length; i++ ) {
                     rtnVal[ i ] = (byte)(256.0 * colorAverages[ i ]);
                 }
-                rtnVal[ 3 ] = RenderMappingI.FRAGMENT_RENDERING;
+                if ( bean.getType().equals( EntityConstants.TYPE_NEURON_FRAGMENT ) ) {
+                    rtnVal[ 3 ] = RenderMappingI.FRAGMENT_RENDERING;
+                }
+                else {
+                    rtnVal[ 3 ] = RenderMappingI.COMPARTMENT_RENDERING;
+                }
             }
         }
         return rtnVal;
