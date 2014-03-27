@@ -143,6 +143,7 @@ public class RenderablesLoadWorker extends SimpleWorker implements VolumeLoader 
         // Feed data to the acceptors.
         if ( maskChanRenderableData.isCompartment() ) {
             compartmentLoader.read(maskChanRenderableData.getBean(), streamSource);
+            System.out.println("Path= " + maskChanRenderableData.getChannelPath() );
         }
         else {
             neuronFragmentLoader.read(maskChanRenderableData.getBean(), streamSource);

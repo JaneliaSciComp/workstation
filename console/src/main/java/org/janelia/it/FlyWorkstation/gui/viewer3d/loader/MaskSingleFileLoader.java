@@ -527,10 +527,15 @@ public class MaskSingleFileLoader {
                 final long final1DCoord = yOffset + xyzCoords[ 0 ];
                 if ( applicable1DStart == null  ||
                      ( final1DCoord >= applicable1DStart  &&  final1DCoord < applicable1DEnd ) ) {
-                    writeToMaskAcceptors(xyzCoords, translatedNum, finalYCoord, final1DCoord);
-                    writeToChannelAcceptors(channelIntensityBytes, xyzCoords, translatedNum, totalVoxelFactor, allChannelBytes, fixedFinalYCoord, final1DCoord);
-                    if ( DEBUG )
-                        frequencyAnalyzer.frequencyCapture( allChannelBytes );
+                    try {
+                        writeToMaskAcceptors(xyzCoords, translatedNum, finalYCoord, final1DCoord);
+                        writeToChannelAcceptors(channelIntensityBytes, xyzCoords, translatedNum, totalVoxelFactor, allChannelBytes, fixedFinalYCoord, final1DCoord);
+                        if ( DEBUG )
+                            frequencyAnalyzer.frequencyCapture( allChannelBytes );
+                    } catch ( IllegalStateException ise ) {
+                        logger.error("Exception at " + final1DCoord + " in segment " + segment );
+                        throw ise;
+                    }
                 }
 
                 cummulativeVoxelsReadCount++;

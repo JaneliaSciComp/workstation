@@ -8,6 +8,7 @@ import org.janelia.it.FlyWorkstation.gui.framework.viewer.alignment_board.Alignm
 import org.janelia.it.FlyWorkstation.gui.framework.viewer.alignment_board.MaskChanStreamSourceI;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.loader.MaskChanDataAcceptorI;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.loader.MaskChanMultiFileLoader;
+import static org.janelia.it.FlyWorkstation.gui.TestingConstants.*;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -28,14 +29,6 @@ import java.util.Arrays;
  * This test will check the efficacy of the renderables mask builder.
  */
 public class ChannelReadTest {
-
-    private static final String MASK_CHAN_LOC = "/Volumes/jacsData/filestore/MaskResources/Compartment/maskChannelFormatWithTemplate/";
-
-    private static final String MASK_FILE_NAME = "compartment_57.mask";
-    private static final String LOCAL_MASK_FILE_PATH = MASK_CHAN_LOC + MASK_FILE_NAME;
-
-    private static final String CHAN_FILE_NAME = "compartment_57.chan";
-    private static final String LOCAL_CHAN_FILE_PATH = MASK_CHAN_LOC + CHAN_FILE_NAME;
 
     private Logger logger = LoggerFactory.getLogger( ChannelReadTest.class );
 
