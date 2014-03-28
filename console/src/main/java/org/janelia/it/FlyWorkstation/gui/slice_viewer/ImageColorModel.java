@@ -76,10 +76,19 @@ public class ImageColorModel
         String [] items = modelString.split(":");
         // should be 4 + 8 * nchannels items at this point
 
+        // debug:
+        // System.out.println("color model string in: " + modelString);
+
         if (getChannelCount() != Integer.parseInt(items[0])) {
             // must be same number of channels!
             return;
         }
+
+        // do syncs first, so later sets don't get unset if they
+        //  shouldn't be
+        setBlackSynchronized(Boolean.parseBoolean(items[1]));
+        setGammaSynchronized(Boolean.parseBoolean(items[2]));
+        setWhiteSynchronized(Boolean.parseBoolean(items[3]));
 
         // in principle I could pass the post-split array,
         //  but I like having both fromString() methods look the same;
@@ -93,10 +102,8 @@ public class ImageColorModel
             channels.get(i).fromString(s);
         }
 
-        // do syncs:
-        setBlackSynchronized(Boolean.parseBoolean(items[1]));
-        setGammaSynchronized(Boolean.parseBoolean(items[2]));
-        setWhiteSynchronized(Boolean.parseBoolean(items[3]));
+        // debug:
+        // System.out.println("color model string as set: " + asString());
 
     }
 

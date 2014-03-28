@@ -255,44 +255,42 @@ public class SliceViewerTranslator {
      * called by the model when it loads a new workspace
      */
     public void workspaceLoaded(TmWorkspace workspace) {
-        if (workspace == null) {
-            return;
-        }
-
         // clear existing
         clearSkeletonSignal.emit();
 
-        // retrieve global color if present; if not, revert to default
-        String globalColorString = workspace.getPreferences().getProperty(AnnotationsConstants.PREF_ANNOTATION_COLOR_GLOBAL);
-        Color newColor;
-        if (globalColorString != null) {
-            newColor = prefColorToColor(globalColorString);
-        } else {
-            newColor = AnnotationsConstants.DEFAULT_ANNOTATION_COLOR_GLOBAL;
-        }
-        changeGlobalColorSignal.emit(newColor);
+        if (workspace != null) {
+            // retrieve global color if present; if not, revert to default
+            String globalColorString = workspace.getPreferences().getProperty(AnnotationsConstants.PREF_ANNOTATION_COLOR_GLOBAL);
+            Color newColor;
+            if (globalColorString != null) {
+                newColor = prefColorToColor(globalColorString);
+            } else {
+                newColor = AnnotationsConstants.DEFAULT_ANNOTATION_COLOR_GLOBAL;
+            }
+            changeGlobalColorSignal.emit(newColor);
 
-        // check for saved image color model
-        String colorModelString = workspace.getPreferences().getProperty(AnnotationsConstants.PREF_COLOR_MODEL);
-        if (colorModelString != null) {
-            loadColorModelSignal.emit(colorModelString);
-        }
+            // check for saved image color model
+            String colorModelString = workspace.getPreferences().getProperty(AnnotationsConstants.PREF_COLOR_MODEL);
+            if (colorModelString != null) {
+                loadColorModelSignal.emit(colorModelString);
+            }
 
-        // note that we must add annotations in parent-child sequence
-        //  so lines get drawn correctly
-        for (TmNeuron neuron: workspace.getNeuronList()) {
-            for (TmGeoAnnotation root: neuron.getRootAnnotations()) {
-                for (TmGeoAnnotation ann: root.getSubTreeList()) {
-                    anchorAddedSignal.emit(ann);
+            // note that we must add annotations in parent-child sequence
+            //  so lines get drawn correctly
+            for (TmNeuron neuron: workspace.getNeuronList()) {
+                for (TmGeoAnnotation root: neuron.getRootAnnotations()) {
+                    for (TmGeoAnnotation ann: root.getSubTreeList()) {
+                        anchorAddedSignal.emit(ann);
+                    }
                 }
             }
-        }
 
-        // draw anchored paths, too
-        // could fold into above loop at some point
-        for (TmNeuron neuron: workspace.getNeuronList()) {
-            for (TmAnchoredPath path: neuron.getAnchoredPathMap().values()) {
-                addAnchoredPath(path);
+            // draw anchored paths, too
+            // could fold into above loop at some point
+            for (TmNeuron neuron: workspace.getNeuronList()) {
+                for (TmAnchoredPath path: neuron.getAnchoredPathMap().values()) {
+                    addAnchoredPath(path);
+                }
             }
         }
     }

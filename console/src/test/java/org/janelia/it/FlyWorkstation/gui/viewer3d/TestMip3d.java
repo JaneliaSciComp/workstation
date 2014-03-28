@@ -51,7 +51,7 @@ public class TestMip3d {
                     //String fn = guideBase + "Mask.v3dpbd";
                     //String fn = guideBase + "../maskIndex.v3dpbd";
 
-                    //String fn = "/Users/fosterl/.FlyWorkstationSuite/Console/.jacs-file-cache/active/WebDAV/groups/scicomp/jacsData/filestore/leetlab/Separation/956/258/1834565641604956258/separate/fastLoad/ConsolidatedSignal2_25.mp4";
+                    //String fn = "/Users/fosterl/.FlyWorkstationSuite/Console/.jacs-file-cache/active/WebDAV/nobackup/jacs/jacsData/filestore/leetlab/Separation/956/258/1834565641604956258/separate/fastLoad/ConsolidatedSignal2_25.mp4";
 
                     //String fn = "/Users/fosterl/mean_brain_295_ref_local_with_compartment_edges.tif";
                     //String fn = "/Users/fosterl/test1_256.tif";
