@@ -34,6 +34,9 @@ public class AnnotationPanel extends JPanel
     private WorkspaceInfoPanel workspaceInfoPanel;
     private WorkspaceNeuronList workspaceNeuronList;
 
+    // other UI stuff
+    private static final int width = 250;
+
     // ----- actions
     private final Action createNeuronAction = new AbstractAction() {
         @Override
@@ -81,10 +84,7 @@ public class AnnotationPanel extends JPanel
 
     @Override
     public Dimension getPreferredSize() {
-        // since we create components without data, they tend to start too narrow
-        //  for what they will eventually need, and that causes the split pane not
-        //  to size right; so, give it a hint   
-        return new Dimension(200, 0);
+        return new Dimension(width, 0);
     }
 
     private void setupSignals() {
@@ -148,14 +148,12 @@ public class AnnotationPanel extends JPanel
                 "Change global color of annotations");
         workspaceToolMenu.add(new JMenuItem(changeGlobalAnnotationColorAction));
 
-        /* disable for current release
         workspaceToolMenu.add(new JMenuItem(new AbstractAction("Save color model") {
             @Override
             public void actionPerformed(ActionEvent actionEvent) {
                 annotationMgr.saveColorModel();
             }
         }));
-        */
 
         // workspace tool menu button
         final JButton workspaceToolButton = new JButton();
@@ -175,7 +173,7 @@ public class AnnotationPanel extends JPanel
 
 
         // list of neurons in workspace
-        workspaceNeuronList = new WorkspaceNeuronList();
+        workspaceNeuronList = new WorkspaceNeuronList(width);
         add(workspaceNeuronList, cVert);
 
         // neuron tool pop-up menu (triggered by button, below)
@@ -249,7 +247,7 @@ public class AnnotationPanel extends JPanel
 
         // ----- neuron information; show name, whatever attributes, list of neurites
         add(Box.createRigidArea(new Dimension(0, 20)), cVert);
-        neuriteTreePanel = new NeuriteTreePanel();
+        neuriteTreePanel = new NeuriteTreePanel(width);
         add(neuriteTreePanel, cVert);
 
         // buttons for acting on annotations or neurites (which are in the list immediately above):

@@ -37,6 +37,7 @@ import org.janelia.it.FlyWorkstation.gui.slice_viewer.skeleton.Anchor;
 import org.janelia.it.FlyWorkstation.gui.slice_viewer.skeleton.Skeleton;
 import org.janelia.it.FlyWorkstation.gui.slice_viewer.skeleton.SkeletonActor;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.BoundingBox3d;
+import org.janelia.it.FlyWorkstation.signal.Signal;
 import org.janelia.it.FlyWorkstation.tracing.*;
 import org.janelia.it.jacs.model.entity.Entity;
 import org.janelia.it.FlyWorkstation.signal.Signal1;
@@ -137,6 +138,7 @@ public class QuadViewUi extends JPanel
 		colorChannelWidget_2, 
 		colorChannelWidget_3
 	};
+    private ColorModelLoadStatus colorModelLoadStatus;
     private JToggleButton lockBlackButton;
     private JToggleButton lockGrayButton;
     private JToggleButton lockWhiteButton;
@@ -153,7 +155,7 @@ public class QuadViewUi extends JPanel
     private SliceViewerTranslator sliceViewerTranslator = new SliceViewerTranslator(annotationModel, sliceViewer);
 
 	// Actions
-	private final Action openFolderAction = new OpenFolderAction(volumeImage, sliceViewer);
+	private final Action openFolderAction = new OpenFolderAction(sliceViewer, this);
 	private RecentFileList recentFileList = new RecentFileList(new JMenu("Open Recent"));
 	private final Action resetViewAction = new ResetViewAction(allSliceViewers, volumeImage);
 	private final Action resetColorsAction = new ResetColorsAction(imageColorModel);
@@ -212,6 +214,8 @@ public class QuadViewUi extends JPanel
 
     public Signal1<PathTraceToParentRequest> tracePathRequestedSignal = new Signal1<PathTraceToParentRequest>();
 
+    public Signal closeWorkspaceRequestSignal = new Signal();
+
 	private Slot1<MouseMode.Mode> onMouseModeChangedSlot = new Slot1<MouseMode.Mode>() {
 		@Override
 		public void execute(Mode mode) {
@@ -227,7 +231,7 @@ public class QuadViewUi extends JPanel
 	private Slot1<URL> loadUrlSlot = new Slot1<URL>() {
 		@Override
 		public void execute(URL url) {
-			loadURL(url);
+			loadRender(url);
 		}
 	};
 	    
@@ -349,7 +353,8 @@ public class QuadViewUi extends JPanel
     public Slot1<String> loadColorModelSlot = new Slot1<String>() {
         @Override
         public void execute(String modelString) {
-            imageColorModel.fromString(modelString);
+            colorModelLoadStatus.setColorModelString(modelString);
+            maybeLoadColorModel();
         }
     };
 
@@ -384,6 +389,7 @@ public class QuadViewUi extends JPanel
         // connect up text UI and model with graphic UI(s):
         skeleton.addAnchorRequestedSignal.connect(annotationMgr.addAnchorRequestedSlot);
         tracePathRequestedSignal.connect(annotationMgr.tracePathRequestedSlot);
+        closeWorkspaceRequestSignal.connect(annotationMgr.closeWorkspaceRequestedSlot);
         skeleton.subtreeDeleteRequestedSignal.connect(annotationMgr.deleteSubtreeRequestedSlot);
         skeleton.linkDeleteRequestedSignal.connect(annotationMgr.deleteLinkRequestedSlot);
         skeleton.splitAnchorRequestedSignal.connect(annotationMgr.splitAnchorRequestedSlot);
@@ -1241,10 +1247,24 @@ LLF: the hookup for the 3d snapshot.
 
         return loadURL(url);
     }
-    
+
+    /**
+     * this is called only via right-click File > Open folder menu
+     */
+    public boolean loadRender(URL url) {
+        // need to close/clear workspace and sample here:
+        closeWorkspaceRequestSignal.emit();
+
+        // then just go ahead and load the file
+        return loadURL(url);
+    }
+
     public boolean loadURL(URL url) {
     	// Check if url exists first...
     	try {
+            // used to track whether both volume and workspace are loaded
+            colorModelLoadStatus = new ColorModelLoadStatus();
+
     		url.openStream();
         	return volumeImage.loadURL(url);
     	} catch (IOException exc) {
@@ -1255,6 +1275,16 @@ LLF: the hookup for the 3d snapshot.
                     JOptionPane.ERROR_MESSAGE);
             return false;
     	}
+    }
+
+    /**
+     * load the color model if it's available and ready; called from the two
+     * places where that might become true
+     */
+    private void maybeLoadColorModel() {
+        if (colorModelLoadStatus.isReady()) {
+            imageColorModelFromString(colorModelLoadStatus.getColorModelString());
+        }
     }
 
     public String imageColorModelAsString() {
@@ -1275,6 +1305,8 @@ LLF: the hookup for the 3d snapshot.
             getSkeletonActor().setTileFormat(
                     tileServer.getLoadAdapter().getTileFormat());
 
+            colorModelLoadStatus.setVolumeLoaded(true);
+            maybeLoadColorModel();
 		}
     };
     
@@ -1307,5 +1339,36 @@ LLF: the hookup for the 3d snapshot.
     		else
     			setIcon(emptyIcon);
     	}
+    };
+
+    /**
+     * loading the color model from a workspace has a timing problem; both
+     * the workspace and volume must be finished loading, but that can
+     * happen in either order (it's asynchronous); this class is used
+     * to track that
+     */
+    static class ColorModelLoadStatus {
+        private boolean volumeLoaded = false;
+        private String colorModelString = null;
+
+        public boolean isReady () {
+            return isVolumeLoaded() && colorModelString != null;
+        }
+
+        public boolean isVolumeLoaded() {
+            return volumeLoaded;
+        }
+
+        public void setVolumeLoaded(boolean volumeLoaded) {
+            this.volumeLoaded = volumeLoaded;
+        }
+
+        public String getColorModelString() {
+            return colorModelString;
+        }
+
+        public void setColorModelString(String colorModelString) {
+            this.colorModelString = colorModelString;
+        }
     };
 }

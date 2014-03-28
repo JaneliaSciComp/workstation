@@ -1,15 +1,5 @@
 package org.janelia.it.FlyWorkstation.gui.application;
 
-import java.awt.*;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
-import java.beans.PropertyChangeEvent;
-import java.beans.PropertyChangeListener;
-import java.io.File;
-import java.net.URL;
-
-import javax.swing.*;
-
 import org.janelia.it.FlyWorkstation.api.facade.concrete_facade.ejb.EJBFacadeManager;
 import org.janelia.it.FlyWorkstation.api.facade.concrete_facade.ejb.EJBFactory;
 import org.janelia.it.FlyWorkstation.api.facade.facade_mgr.FacadeManager;
@@ -33,6 +23,15 @@ import org.janelia.it.jacs.shared.utils.IOUtils;
 import org.janelia.it.jacs.shared.utils.SystemCall;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import javax.swing.*;
+import java.awt.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.beans.PropertyChangeEvent;
+import java.beans.PropertyChangeListener;
+import java.io.File;
+import java.net.URL;
 
 /**
  * Check version against the JACS server and update the entire Workstation if needed.
@@ -183,7 +182,7 @@ public class AutoUpdater extends JFrame implements PropertyChangeListener {
             
             String releaseNotes = null;
             try {
-                URL releaseNotesURL = SessionMgr.getURL(PathTranslator.JACS_DATA_PATH_NFS + "/JaneliaWorkstation/"+ newBuildDir +"/releaseNotes.txt");
+                URL releaseNotesURL = SessionMgr.getURL(PathTranslator.JACS_DEPLOYMENT_PATH_NFS + "/JaneliaWorkstation/"+ newBuildDir +"/releaseNotes.txt");
                 releaseNotes = IOUtils.readInputStream(releaseNotesURL.openStream());
             }
             catch (Exception e) {
@@ -331,7 +330,7 @@ public class AutoUpdater extends JFrame implements PropertyChangeListener {
 	            if (SystemInfo.isMac) {
 	                log.info("Configuring for Mac...");
 	                newBuildDir = "JaneliaWorkstation_"+serverVersion;
-                    remoteFile = PathTranslator.JACS_DATA_PATH_NFS+"/JaneliaWorkstation/"+ newBuildDir +".tgz";
+                    remoteFile = PathTranslator.JACS_DEPLOYMENT_PATH_NFS+"/JaneliaWorkstation/"+ newBuildDir +".tgz";
 	                downloadFile = new File(downloadsDir, newBuildDir +".tgz");
 	                extractedDir = new File(downloadsDir, newBuildDir);
 	                packageDir = new File(extractedDir, "JaneliaWorkstation.app");
@@ -339,7 +338,7 @@ public class AutoUpdater extends JFrame implements PropertyChangeListener {
 	            else if (SystemInfo.isLinux) {
 	                log.info("Configuring for Linux...");
 	                newBuildDir = "JaneliaWorkstation_linux_"+serverVersion;
-                    remoteFile = PathTranslator.JACS_DATA_PATH_NFS+"/JaneliaWorkstation/"+ newBuildDir +".tgz";
+                    remoteFile = PathTranslator.JACS_DEPLOYMENT_PATH_NFS+"/JaneliaWorkstation/"+ newBuildDir +".tgz";
 	                downloadFile = new File(downloadsDir, newBuildDir +".tgz");
 	                extractedDir = new File(downloadsDir, newBuildDir);
 	                packageDir = extractedDir;
@@ -347,7 +346,7 @@ public class AutoUpdater extends JFrame implements PropertyChangeListener {
 	            else if (SystemInfo.isWindows) {
 	                log.info("Configuring for Windows...");
 	                newBuildDir = "JaneliaWorkstation_windows_"+serverVersion;
-                    remoteFile = PathTranslator.JACS_DATA_PATH_NFS+"/JaneliaWorkstation/"+ newBuildDir +".zip";
+                    remoteFile = PathTranslator.JACS_DEPLOYMENT_PATH_NFS+"/JaneliaWorkstation/"+ newBuildDir +".zip";
 	                downloadFile = new File(downloadsDir, newBuildDir +".zip");
 	                extractedDir = new File(downloadsDir, newBuildDir);
 	                packageDir = extractedDir;

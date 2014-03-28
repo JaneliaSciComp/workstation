@@ -1,15 +1,5 @@
 package org.janelia.it.FlyWorkstation.shared.util.filecache;
 
-import java.io.*;
-import java.net.*;
-import java.net.URI;
-import java.text.SimpleDateFormat;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.List;
-
-import javax.servlet.http.HttpServletResponse;
-
 import org.apache.commons.httpclient.*;
 import org.apache.commons.httpclient.auth.AuthScope;
 import org.apache.commons.httpclient.methods.GetMethod;
@@ -27,6 +17,15 @@ import org.apache.jackrabbit.webdav.property.DavPropertyName;
 import org.apache.jackrabbit.webdav.property.DavPropertyNameSet;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import javax.servlet.http.HttpServletResponse;
+import java.io.*;
+import java.net.*;
+import java.net.URI;
+import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.List;
 
 /**
  * {@link HttpClient} wrapper for submitting WebDAV requests.
@@ -148,7 +147,7 @@ public class WebDavClient {
 
     /**
      * @param  rootUploadPath  root path for all uploads
-     *                         (e.g. '/groups/scicomp/jacsData/upload').
+     *                         (e.g. '/nobackup/jacs/jacsData/filestore/upload').
      *
      * @return a "very-likely" unique path under the specified root upload path.
      */

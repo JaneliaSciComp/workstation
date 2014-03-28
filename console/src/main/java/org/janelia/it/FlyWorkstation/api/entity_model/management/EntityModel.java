@@ -1,28 +1,18 @@
 package org.janelia.it.FlyWorkstation.api.entity_model.management;
 
-import static com.google.common.base.Preconditions.checkArgument;
-
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-
-import javax.swing.SwingUtilities;
-
-import org.janelia.it.FlyWorkstation.api.entity_model.events.EntityChangeEvent;
-import org.janelia.it.FlyWorkstation.api.entity_model.events.EntityChildrenLoadedEvent;
-import org.janelia.it.FlyWorkstation.api.entity_model.events.EntityCreateEvent;
-import org.janelia.it.FlyWorkstation.api.entity_model.events.EntityInvalidationEvent;
-import org.janelia.it.FlyWorkstation.api.entity_model.events.EntityRemoveEvent;
+import com.google.common.cache.Cache;
+import com.google.common.cache.CacheBuilder;
+import com.google.common.cache.RemovalListener;
+import com.google.common.cache.RemovalNotification;
+import com.google.common.collect.HashMultimap;
+import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.Multimap;
+import org.janelia.it.FlyWorkstation.api.entity_model.events.*;
 import org.janelia.it.FlyWorkstation.api.facade.abstract_facade.AnnotationFacade;
 import org.janelia.it.FlyWorkstation.api.facade.abstract_facade.EntityFacade;
 import org.janelia.it.FlyWorkstation.api.facade.abstract_facade.OntologyFacade;
 import org.janelia.it.FlyWorkstation.api.facade.facade_mgr.FacadeManager;
+import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.FlyWorkstation.model.entity.RootedEntity;
 import org.janelia.it.jacs.model.entity.Entity;
 import org.janelia.it.jacs.model.entity.EntityConstants;
@@ -33,13 +23,10 @@ import org.janelia.it.jacs.shared.utils.EntityUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.cache.Cache;
-import com.google.common.cache.CacheBuilder;
-import com.google.common.cache.RemovalListener;
-import com.google.common.cache.RemovalNotification;
-import com.google.common.collect.HashMultimap;
-import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.Multimap;
+import javax.swing.*;
+import java.util.*;
+
+import static com.google.common.base.Preconditions.checkArgument;
 
 /**
  * Implements a unified Entity model for client-side operations. All changes to the model should go through
@@ -227,13 +214,19 @@ public class EntityModel {
 	 */
 	private Entity putOrUpdate(Entity entity, boolean recurse) {
 		if (recurse) {
-			for(EntityData ed : entity.getEntityData()) {
-				if (ed.getChildEntity()!=null && EntityUtils.isInitialized(ed.getChildEntity())) {
-					Entity child = putOrUpdate(ed.getChildEntity(), true);
-					ed.setChildEntity(child);
-				}
-			}
-		}
+            try {
+                for(EntityData ed : entity.getEntityData()) {
+                    if (ed.getChildEntity()!=null && EntityUtils.isInitialized(ed.getChildEntity())) {
+                        Entity child = putOrUpdate(ed.getChildEntity(), true);
+                        ed.setChildEntity(child);
+                    }
+                }
+            }
+            catch (Throwable e) {
+                log.error("Error trying to walk entity " + entity.getName() + ",id=" + entity.getId());
+                SessionMgr.getSessionMgr().handleException(e);
+            }
+        }
         return putOrUpdate(entity);
 	}
 	

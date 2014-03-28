@@ -12,8 +12,8 @@ import java.util.List;
  * Created by fosterl on 1/29/14.
  */
 public class RDComparatorTest {
-    private static final String CHANNEL_PATH = "/groups/scicomp/jacsData/filestore/MaskResources/Compartment/maskChannelFormatWithTemplate/compartment_57.chan";
-    private static final String MASK_PATH = "/groups/scicomp/jacsData/filestore/MaskResources/Compartment/maskChannelFormatWithTemplate/compartment_57.mask";
+    private static final String CHANNEL_PATH = "/nobackup/jacs/jacsData/filestore/MaskResources/Compartment/maskChannelFormatWithTemplate/compartment_57.chan";
+    private static final String MASK_PATH = "/nobackup/jacs/jacsData/filestore/MaskResources/Compartment/maskChannelFormatWithTemplate/compartment_57.mask";
 
     @Test
     public void testCompare() throws Exception {
