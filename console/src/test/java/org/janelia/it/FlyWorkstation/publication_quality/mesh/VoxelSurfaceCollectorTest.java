@@ -66,7 +66,7 @@ public class VoxelSurfaceCollectorTest {
         Map<Long,Map<Long,Map<Long,VoxelInfoBean>>> voxelMap = voxelSurfaceCollector.getVoxelMap();
 
         Assert.assertNotNull( "Null voxel map", voxelMap );
-        Assert.assertNotSame("Empty voxel map", 0, voxelMap.size());
+        Assert.assertNotSame( "Empty voxel map", 0, voxelMap.size() );
         Assert.assertNotSame( "Single voxel in map", 1, voxelMap.size() );
 
         int exposedVoxelCount = -1;

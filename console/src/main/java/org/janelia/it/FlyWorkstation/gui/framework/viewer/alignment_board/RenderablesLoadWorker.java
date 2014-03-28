@@ -11,6 +11,9 @@ import org.janelia.it.FlyWorkstation.gui.viewer3d.texture.TextureDataI;
 import org.janelia.it.FlyWorkstation.gui.alignment_board_viewer.volume_builder.RenderablesChannelsBuilder;
 import org.janelia.it.FlyWorkstation.gui.alignment_board_viewer.volume_builder.RenderablesMaskBuilder;
 import org.janelia.it.FlyWorkstation.model.viewer.AlignedItem;
+import org.janelia.it.FlyWorkstation.publication_quality.mesh.SurfaceOnlyAcceptorDecorator;
+import org.janelia.it.FlyWorkstation.publication_quality.mesh.VoxelSurfaceCollector;
+import org.janelia.it.FlyWorkstation.publication_quality.mesh.VoxelSurfaceCollectorFactory;
 import org.janelia.it.FlyWorkstation.shared.workers.SimpleWorker;
 import org.janelia.it.jacs.model.entity.EntityConstants;
 import org.slf4j.Logger;
@@ -31,6 +34,7 @@ import java.util.concurrent.*;
  */
 public class RenderablesLoadWorker extends SimpleWorker implements VolumeLoader {
 
+    private static final boolean HOLLOW_RENDERING = false;
     private static final int LEAST_FULLSIZE_MEM = 1500000; // Ex: 1,565,620
     private Boolean loadFiles = true;
 
@@ -143,7 +147,6 @@ public class RenderablesLoadWorker extends SimpleWorker implements VolumeLoader 
         // Feed data to the acceptors.
         if ( maskChanRenderableData.isCompartment() ) {
             compartmentLoader.read(maskChanRenderableData.getBean(), streamSource);
-            System.out.println("Path= " + maskChanRenderableData.getChannelPath() );
         }
         else {
             neuronFragmentLoader.read(maskChanRenderableData.getBean(), streamSource);
@@ -229,56 +232,6 @@ public class RenderablesLoadWorker extends SimpleWorker implements VolumeLoader 
     @Override
     protected void hadError(Throwable error) {
         controlCallback.loadCompletion(false, loadFiles, error);
-    }
-
-    private void buildNothing(Collection<MaskChanRenderableData> renderableDatas, List<RenderableBean> renderableBeans) {
-        if ( checkpoint( "Dummy Load for Timing" ) ) {
-            ArrayList<MaskChanDataAcceptorI> dummyAcceptors = new ArrayList<MaskChanDataAcceptorI>();
-            // RE-run the scan.  This time only the signal-texture-builder will accept the data.
-            dummyAcceptors.add(new MaskChanDataAcceptorI() {
-                @Override
-                public int addChannelData(Integer orignalMaskNum, byte[] channelData, long position, long x, long y, long z, ChannelMetaData channelMetaData) throws Exception {
-                    throw new Exception("Cannot accept this data.");
-                }
-
-                @Override
-                public int addMaskData(Integer maskNumber, long position, long x, long y, long z) throws Exception {
-                    return 1;
-                }
-
-                @Override
-                public void setSpaceSize(long x, long y, long z, long paddedX, long paddedY, long paddedZ, float[] coordCoverage) {
-                    // Do nothing.
-                }
-
-                @Override
-                public Acceptable getAcceptableInputs() {
-                    return Acceptable.mask;
-                }
-
-                @Override
-                public int getChannelCount() {
-                    return 0;
-                }
-
-                @Override
-                public void setChannelMetaData(ChannelMetaData metaData) {
-                    // Do nothing.
-                }
-
-                @Override
-                public void endData(Logger logger) {
-                    // Do nothing.
-                }
-            });
-            neuronFragmentLoader.setAcceptors(dummyAcceptors);
-            compartmentLoader.setAcceptors( dummyAcceptors );
-
-            logger.debug("Timing multi-thread data load dry-run.");
-            multiThreadedDataLoad(renderableDatas, false);
-            logger.debug("End timing dry-run load.");
-
-        }
     }
 
     /**
@@ -429,6 +382,8 @@ public class RenderablesLoadWorker extends SimpleWorker implements VolumeLoader 
         return true;
     }
 
+    private Map<Integer,VoxelSurfaceCollector> collectorMap;
+
     /**
      * Builds out the signal volume from the files referred to by renderables.  Sets up common code for the
      * "signal" mode.
@@ -446,8 +401,17 @@ public class RenderablesLoadWorker extends SimpleWorker implements VolumeLoader 
 
         if ( checkpoint( "Preparing display" ) ) {
             ArrayList<MaskChanDataAcceptorI> signalDataAcceptors = new ArrayList<MaskChanDataAcceptorI>();
-            // RE-run the scan.  This time only the signal-texture-builder will accept the data.
-            signalDataAcceptors.add(signalTextureBuilder);
+            if ( HOLLOW_RENDERING ) {
+                ensureCollectorMap(renderableDatas);
+                // RE-run the scan.  This time only the signal-texture-builder will accept the data.
+                SurfaceOnlyAcceptorDecorator soDecorator =
+                        new SurfaceOnlyAcceptorDecorator( signalTextureBuilder, collectorMap );
+
+                signalDataAcceptors.add(soDecorator);
+            }
+            else {
+                signalDataAcceptors.add(signalTextureBuilder);
+            }
             neuronFragmentLoader.setAcceptors(signalDataAcceptors);
             compartmentLoader.setAcceptors( signalDataAcceptors );
 
@@ -481,7 +445,16 @@ public class RenderablesLoadWorker extends SimpleWorker implements VolumeLoader 
         );
 
         ArrayList<MaskChanDataAcceptorI> maskDataAcceptors = new ArrayList<MaskChanDataAcceptorI>();
-        maskDataAcceptors.add(remaskingAcceptorDecorator);
+        if ( HOLLOW_RENDERING ) {
+            ensureCollectorMap(renderableDatas);
+            SurfaceOnlyAcceptorDecorator soDecorator =
+                    new SurfaceOnlyAcceptorDecorator( remaskingAcceptorDecorator, collectorMap );
+
+            maskDataAcceptors.add( soDecorator );
+        }
+        else {
+            maskDataAcceptors.add( remaskingAcceptorDecorator );
+        }
 
         // Setup the loader to traverse all this data on demand. Only the mask-tex-builder accepts data.
         neuronFragmentLoader.setAcceptors(maskDataAcceptors);
@@ -494,6 +467,21 @@ public class RenderablesLoadWorker extends SimpleWorker implements VolumeLoader 
         multiThreadedDataLoad(renderableDatas, false);
         logger.debug("End timing multi-mask-assembly");
         maskDataAcceptors.clear();
+    }
+
+    private synchronized void ensureCollectorMap(Collection<MaskChanRenderableData> renderableDatas) {
+        if ( collectorMap == null ) {
+            collectorMap = new HashMap<Integer,VoxelSurfaceCollector>();
+            VoxelSurfaceCollectorFactory voxelSurfaceCollectorFactory = new VoxelSurfaceCollectorFactory( resolver, alignmentBoardSettings );
+            for ( MaskChanRenderableData renderableData: renderableDatas ) {
+                try {
+                    VoxelSurfaceCollector collector = voxelSurfaceCollectorFactory.getSurfaceCollector(renderableData);
+                    collectorMap.put( renderableData.getBean().getTranslatedNum(), collector );
+                } catch ( Exception ex ) {
+                    throw new RuntimeException( ex );
+                }
+            }
+        }
     }
 
     private void fileLoad( Collection<MaskChanRenderableData> metaDatas, boolean buildTexture ) {

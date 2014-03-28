@@ -1,7 +1,10 @@
 package org.janelia.it.FlyWorkstation.publication_quality.mesh;
 
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
+
 import org.janelia.it.FlyWorkstation.gui.viewer3d.loader.ChannelMetaData;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.loader.MaskChanDataAcceptorI;
 import org.slf4j.Logger;
@@ -21,7 +24,7 @@ public class VoxelSurfaceCollector implements MaskChanDataAcceptorI {
     @Override
     public synchronized int addMaskData(Integer maskNumber, long position, long x, long y, long z) throws Exception {
         // Store this into the map for later use.
-        //getVoxelBeanHelper(x, y, z, true);
+        getVoxelBeanHelper(x, y, z, true);
         return 1;
     }
 
@@ -33,11 +36,11 @@ public class VoxelSurfaceCollector implements MaskChanDataAcceptorI {
         }
         channelCount = channelMetaData.channelCount;
 
-        float[] colorData = new float[ channelData.length ];
-        for ( int i = 0; i < channelData.length; i++ ) {
-            colorData[ i ] = (float)( 256.0 / (float)channelData[ i ] );
-        }
-        bean.setAttribute( "color", colorData, channelData.length );
+//        float[] colorData = new float[ channelData.length ];
+//        for ( int i = 0; i < channelData.length; i++ ) {
+//            colorData[ i ] = (float)( 256.0 / (float)channelData[ i ] );
+//        }
+//        bean.setAttribute( "color", colorData, channelData.length );
         return 1;
     }
 
@@ -63,7 +66,22 @@ public class VoxelSurfaceCollector implements MaskChanDataAcceptorI {
 
     @Override
     public void endData(Logger logger) {
-        // Do nothing.
+        // Need browse submaps, exploring neighborhoods.
+        for ( Map<Long,Map<Long,VoxelInfoBean>> yMaps: xMap.values() ) {
+            for ( Map<Long,VoxelInfoBean> zMap: yMaps.values() ) {
+                for ( VoxelInfoBean bean: zMap.values() ) {
+                    long[][] neighborhood = bean.getNeighborhood();
+                    int neighborPos = 0;
+                    for ( long[] neighbor: neighborhood ) {
+                        VoxelInfoBean neighborBean = getVoxelBean( neighbor[ 0 ], neighbor[ 1 ], neighbor[ 2 ] );
+                        if ( neighborBean == null ) {
+                            bean.setExposedFace(neighborPos);
+                        }
+                        neighborPos ++;
+                    }
+                }
+            }
+        }
     }
 
     /** Returns the data collected thus far. */

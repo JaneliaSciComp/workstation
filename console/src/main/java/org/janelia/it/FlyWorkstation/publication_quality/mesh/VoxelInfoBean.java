@@ -23,6 +23,8 @@ public class VoxelInfoBean {
     private Map<String,float[]> attributeMap = new HashMap<String,float[]>();
     private boolean[] exposedFaces = new boolean[ 6 ];
 
+    private boolean exposed;
+
     /** This key is by 3D coordinate. */
     public VoxelInfoKey getKey() {
         return key;
@@ -65,6 +67,7 @@ public class VoxelInfoBean {
 
     public void setExposedFace( int faceOffset ) {
         exposedFaces[ faceOffset ] = true;
+        exposed = true;
     }
 
     /**
@@ -131,4 +134,11 @@ public class VoxelInfoBean {
         }
     }
 
+    public boolean isExposed() {
+        return exposed;
+    }
+
+    public void setExposed(boolean isExposed) {
+        this.exposed = isExposed;
+    }
 }
