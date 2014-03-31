@@ -548,15 +548,6 @@ public class SessionMgr {
         		UIManager.setLookAndFeel(lookAndFeelClassName);	
         	}
             
-            // NO-FRAME Set<BrowserModel> browserModels = browserModelsToBrowser.keySet();
-            // NO-FRAME for (BrowserModel browserModel : browserModels) {
-            // NO-FRAME     Browser browser = browserModelsToBrowser.get(browserModel);
-                // NO-FRAME if (browser != null) {
-                // NO-FRAME     SwingUtilities.updateComponentTreeUI((JFrame) browser);
-                // NO-FRAME     ((JFrame) browser).repaint();
-                // NO-FRAME }
-            // NO-FRAME }
-            
             // Set LnF on the main frame.
             SwingUtilities.updateComponentTreeUI(SessionMgr.getMainFrame());
             setModelProperty(DISPLAY_LOOK_AND_FEEL, lookAndFeelClassName);
