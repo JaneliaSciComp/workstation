@@ -451,10 +451,14 @@ public class Browser implements Cloneable {
             // NO-Frame position.setBrowserLocation(Browser.this.getLocation());
             position.setHorizontalLeftDividerLocation(centerLeftHorizontalSplitPane.getDividerLocation());
             position.setHorizontalRightDividerLocation(centerRightHorizontalSplitPane.getDividerLocation());
-            position.setVerticalDividerLocation(leftVerticalSplitPane.getDividerLocation());
+            if ( leftVerticalSplitPane != null ) {
+                position.setVerticalDividerLocation(leftVerticalSplitPane.getDividerLocation());
+            }
             
             SessionMgr.getSessionMgr().setModelProperty(BROWSER_POSITION, position);
-            SessionMgr.getSessionMgr().setModelProperty(SEARCH_HISTORY, generalSearchDialog.getSearchHistory());
+            if ( generalSearchDialog != null )  {
+                SessionMgr.getSessionMgr().setModelProperty(SEARCH_HISTORY, generalSearchDialog.getSearchHistory());
+            }                
             
             // NO-Frame dispose();
         }

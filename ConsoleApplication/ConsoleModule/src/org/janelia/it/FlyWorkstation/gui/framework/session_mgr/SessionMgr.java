@@ -497,7 +497,8 @@ public class SessionMgr {
         log.info("Memory in use at exit: " + (Runtime.getRuntime().totalMemory() - Runtime.getRuntime().freeMemory()) / 1000000f + " MB");
         
         modelManager.prepareForSystemExit();
-        System.exit(errorlevel);
+        // System-exit is now handled by NetBeans framework.
+        //  System.exit(errorlevel);
     }
 
     public void addSessionModelListener(SessionModelListener sessionModelListener) {

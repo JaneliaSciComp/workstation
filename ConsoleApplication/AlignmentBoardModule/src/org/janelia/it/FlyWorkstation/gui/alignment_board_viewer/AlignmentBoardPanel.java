@@ -155,7 +155,6 @@ public class AlignmentBoardPanel extends JPanel implements AlignmentBoardControl
     public void close() {
         logger.info( "Closing" );
         // Cleanup this listener to avoid mem leaks.
-        SessionMgr.getSessionMgr().removeSessionModelListener( shutdownListener );
         LayersPanel layersPanel = AlignmentBoardMgr.getInstance().getLayersPanel();
         removeSettingsPanel( layersPanel );
         serialize();
