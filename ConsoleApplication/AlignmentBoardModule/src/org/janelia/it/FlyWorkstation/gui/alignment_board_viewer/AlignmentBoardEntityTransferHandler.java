@@ -133,7 +133,7 @@ public class AlignmentBoardEntityTransferHandler extends EntityTransferHandler {
         if ( remainingCapacity < fragmentCount ) {
             // disallow.
             JOptionPane.showMessageDialog(
-                    SessionMgr.getBrowser(),
+                    SessionMgr.getMainFrame(),
                     String.format(
                             CAPACITY_EXCEEDED_FMT, abEntity.getName(),
                             (MAX_FRAGMENT_CAPACITY - remainingCapacity),

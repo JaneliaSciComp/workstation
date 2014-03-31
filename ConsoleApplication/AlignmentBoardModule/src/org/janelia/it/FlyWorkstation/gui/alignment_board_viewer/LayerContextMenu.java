@@ -44,8 +44,6 @@ public class LayerContextMenu extends JPopupMenu {
 
     private static final Logger log = LoggerFactory.getLogger(LayerContextMenu.class);
 
-    protected static final Browser browser = SessionMgr.getBrowser();
-
     protected final AlignmentBoardContext alignmentBoardContext;
     protected final AlignedItem alignedItem;
 
@@ -193,7 +191,7 @@ public class LayerContextMenu extends JPopupMenu {
         renameItem.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent actionEvent) {
 
-                final String newName = (String) JOptionPane.showInputDialog(browser, "Alias:\n", "Set Alias For "
+                final String newName = (String) JOptionPane.showInputDialog(SessionMgr.getMainFrame(), "Alias:\n", "Set Alias For "
                         + alignedItem.getItemWrapper().getName()+" in this Alignment Board", JOptionPane.PLAIN_MESSAGE, 
                         null, null, alignedItem.getName());
                 if ((newName == null) || (newName.length() <= 0)) {

@@ -1,5 +1,6 @@
 package org.janelia.it.FlyWorkstation.gui.alignment_board_viewer.creation;
 
+import java.awt.Component;
 import java.util.List;
 import javax.swing.JOptionPane;
 import javax.swing.SwingUtilities;
@@ -33,6 +34,7 @@ public class AlignmentBoardCreator implements EntityWrapperCreator {
     
     public void execute() {
 
+        final Component mainFrame = SessionMgr.getMainFrame();
         final Browser browser = SessionMgr.getBrowser();
 
         SimpleWorker worker = new SimpleWorker() {
@@ -55,7 +57,7 @@ public class AlignmentBoardCreator implements EntityWrapperCreator {
             protected void hadSuccess() {
                 
                 if (sample!=null && contexts.isEmpty()) {
-                    JOptionPane.showMessageDialog(browser,
+                    JOptionPane.showMessageDialog(mainFrame,
                             "Sample is not aligned to a compatible alignment space", "Error", JOptionPane.ERROR_MESSAGE);
                     return;
                 }
@@ -63,13 +65,13 @@ public class AlignmentBoardCreator implements EntityWrapperCreator {
                 // Pick an alignment context for the new board
                 AlignmentContext values[] = new AlignmentContext[contexts.size()];
                 contexts.toArray(values);
-                final AlignmentContext alignmentContext = (AlignmentContext)JOptionPane.showInputDialog(browser, "Choose an alignment space for this alignment board", 
+                final AlignmentContext alignmentContext = (AlignmentContext)JOptionPane.showInputDialog(mainFrame, "Choose an alignment space for this alignment board", 
                         "Choose alignment space", JOptionPane.QUESTION_MESSAGE, Icons.getIcon("folder_graphite_palette.png"), 
                         values, values[0]);
                 if (alignmentContext==null) return;
                 
                 // Pick a name for the new board
-                final String boardName = (String) JOptionPane.showInputDialog(browser, "Board Name:\n",
+                final String boardName = (String) JOptionPane.showInputDialog(mainFrame, "Board Name:\n",
                         "Create Alignment Board", JOptionPane.PLAIN_MESSAGE, null, null, null);
                 if (StringUtils.isEmpty(boardName)) return;
                 
@@ -106,7 +108,7 @@ public class AlignmentBoardCreator implements EntityWrapperCreator {
                         SessionMgr.getSessionMgr().handleException(error);
                     }
                 };
-                worker.setProgressMonitor(new IndeterminateProgressMonitor(browser, "Preparing alignment board...", ""));
+                worker.setProgressMonitor(new IndeterminateProgressMonitor(mainFrame, "Preparing alignment board...", ""));
                 worker.execute();
             }
             
@@ -115,7 +117,7 @@ public class AlignmentBoardCreator implements EntityWrapperCreator {
                 SessionMgr.getSessionMgr().handleException(error);
             }
         };
-        worker.setProgressMonitor(new IndeterminateProgressMonitor(browser, "Finding alignments...", ""));
+        worker.setProgressMonitor(new IndeterminateProgressMonitor(mainFrame, "Finding alignments...", ""));
         worker.execute();
     }
 

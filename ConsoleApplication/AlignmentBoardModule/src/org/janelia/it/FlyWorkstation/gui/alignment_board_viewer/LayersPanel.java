@@ -625,7 +625,7 @@ public class LayersPanel extends JPanel implements Refreshable, ActivatableView 
     public void chooseColor(final AlignedItem alignedItem) {
 
         Color currColor = alignedItem.getColor();
-        final Color newColor = JColorChooser.showDialog(SessionMgr.getBrowser(), "Choose color", currColor);
+        final Color newColor = JColorChooser.showDialog(SessionMgr.getMainFrame(), "Choose color", currColor);
         if (newColor==null) return;
         
         SimpleWorker worker = new SimpleWorker() {

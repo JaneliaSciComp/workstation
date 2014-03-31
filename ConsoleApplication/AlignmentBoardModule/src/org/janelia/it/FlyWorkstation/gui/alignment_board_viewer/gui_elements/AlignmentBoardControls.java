@@ -267,7 +267,7 @@ public class AlignmentBoardControls {
                 throw new RuntimeException();
             }
         } catch ( Exception ex ) {
-            JOptionPane.showMessageDialog( SessionMgr.getBrowser(), "Failed to parse count " + selectedValue + " to integer value.");
+            JOptionPane.showMessageDialog( SessionMgr.getMainFrame(), "Failed to parse count " + selectedValue + " to integer value.");
             constraintTextField.setForeground( Color.red );
         }
 
@@ -726,7 +726,7 @@ public class AlignmentBoardControls {
             @Override
             public void actionPerformed(ActionEvent e) {
                 if ( connectEvents.isSelected() ) {
-                    int confirmation = JOptionPane.showConfirmDialog( SessionMgr.getBrowser(),
+                    int confirmation = JOptionPane.showConfirmDialog( SessionMgr.getMainFrame(),
                             "<html>This will cause Drag-and-Drop, deletion, or color/hide changes to be reflected in your alignment board,<br>" +
                                     "and will incur the usual delays in rebuilding the alignment board after such changes.<br>" +
                                     "Do you wish to rebuild the board now to reflect recent changes?</html>"
@@ -750,7 +750,7 @@ public class AlignmentBoardControls {
                 }
                 else {
                     // Here: toggle the current state of event listening.
-                    int confirmation = JOptionPane.showConfirmDialog( SessionMgr.getBrowser(),
+                    int confirmation = JOptionPane.showConfirmDialog( SessionMgr.getMainFrame(),
                             "<html>This will stop any Drag-and-Drop, deletion, or color/hide changes from appearing in the alignment board<br>" +
                                     "until you turn the link back on.  If you reopen the alignment board or restart the workstation,<br>" +
                                     "the link setting will automatically be turned back on. Please use this with caution.<br>" +

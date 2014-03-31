@@ -482,7 +482,7 @@ public class AlignmentBoardPanel extends JPanel implements AlignmentBoardControl
 
             if ( errorStack.length() > 0 ) {
                 logger.info("Launching message dialog");
-                JOptionPane.showMessageDialog(SessionMgr.getBrowser(), errorStack.toString());
+                JOptionPane.showMessageDialog(SessionMgr.getMainFrame(), errorStack.toString());
                 logger.info("Message dialog complete.");
             }
         }
@@ -608,7 +608,7 @@ public class AlignmentBoardPanel extends JPanel implements AlignmentBoardControl
 
                     IndeterminateNoteProgressMonitor monitor =
                             new IndeterminateNoteProgressMonitor(
-                                    SessionMgr.getBrowser(), "Updating alignment board...", context.getName()
+                                    SessionMgr.getMainFrame(), "Updating alignment board...", context.getName()
                             );
                     loadWorker.setProgressMonitor( monitor );
                     fileStats.clear();
@@ -725,10 +725,10 @@ public class AlignmentBoardPanel extends JPanel implements AlignmentBoardControl
 
     private void jostleContainingFrame() {
         // To remind a multi-monitor window of where the tool tips should be shown.
-        Browser browser = SessionMgr.getBrowser();
-        Point location = browser.getLocation();
-        browser.setLocation( new Point( (int)location.getX()+1, (int)location.getY()+1 ) );
-        browser.setLocation( location );
+        Component container = SessionMgr.getMainFrame();
+        Point location = container.getLocation();
+        container.setLocation( new Point( (int)location.getX()+1, (int)location.getY()+1 ) );
+        container.setLocation( location );
     }
 
     private JPanel createWrapperPanel( Mip3d mip3d ) {

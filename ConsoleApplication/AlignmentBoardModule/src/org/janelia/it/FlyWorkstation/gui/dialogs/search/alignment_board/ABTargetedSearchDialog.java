@@ -74,9 +74,9 @@ public class ABTargetedSearchDialog extends ModalDialog {
 
     //------------------------------------------------GUI elements for the search inputs.
     private void initGeneralGui() {
-        Browser browser = SessionMgr.getBrowser();
+        Component mainFrame = SessionMgr.getMainFrame();
         setLayout( new BorderLayout() );
-        Dimension preferredSize = new Dimension((int) (browser.getWidth() * 0.5), (int) (browser.getHeight() * 0.8));
+        Dimension preferredSize = new Dimension((int) (mainFrame.getWidth() * 0.5), (int) (mainFrame.getHeight() * 0.8));
         setPreferredSize( preferredSize );
         dialogWidth = preferredSize.width;
     }
