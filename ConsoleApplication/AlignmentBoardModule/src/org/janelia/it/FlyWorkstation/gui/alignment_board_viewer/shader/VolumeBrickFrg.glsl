@@ -193,11 +193,6 @@ vec4 volumeMask(vec4 origColor)
 
                 // Special case: a translucent compartment.  Here, make a translucent gray appearance.
                 // For gray mappings, fill in solid gray for anything empty, but otherwise just use original.
-                if ( mappedIntensity < 0.05 )
-                {
-                    mappedColor = vec4( 3.0, 3.0, 3.0, 1.0 ); // Need to "overpower" the gamma correction with >1 val
-                }
-
                 for (int i = 0; i < 3; i++)
                 {
                     rtnVal[i] = mappedColor[ i ] * 0.1 * intensity;

@@ -720,7 +720,7 @@ public class LayersPanel extends JPanel implements Refreshable, ActivatableView 
                     label.setToolTipText( "Raw rendering" );
                 }
                 else if (alignedItem.getColor()!=null) {
-                    ColorSwatch swatch = new ColorSwatch(COLOR_SWATCH_SIZE, alignedItem.getColor(), Color.white);
+                    ColorSwatch swatch = new ColorSwatch(COLOR_SWATCH_SIZE, getGammaCorrectedSwatchColor(alignedItem.getColor()), Color.white);
                     label.setIcon(swatch);
                     label.setText("");
                     label.setToolTipText( "Chosen (mono) color rendering" );
@@ -733,11 +733,7 @@ public class LayersPanel extends JPanel implements Refreshable, ActivatableView 
                             colorRGB = fileStats.getChannelAverages( alignedItem.getItemWrapper().getId() );
                         }
                         if ( colorRGB != null ) {
-                            Color color = new Color(
-                                    (int)(256.0 * Math.pow( colorRGB[ 0 ], VolumeModel.STANDARDIZED_GAMMA_MULTIPLIER ) ),
-                                    (int)(256.0 * Math.pow( colorRGB[ 1 ], VolumeModel.STANDARDIZED_GAMMA_MULTIPLIER ) ),
-                                    (int)(256.0 * Math.pow( colorRGB[ 2 ], VolumeModel.STANDARDIZED_GAMMA_MULTIPLIER ) )
-                            );
+                            Color color = getGammaCorrectedSwatchColor(colorRGB);
                             ColorSwatch swatch = new ColorSwatch(COLOR_SWATCH_SIZE, color, Color.white);
                             label.setIcon( swatch );
                         }
@@ -748,6 +744,22 @@ public class LayersPanel extends JPanel implements Refreshable, ActivatableView 
             }
 
             return label;
+        }
+
+        private Color getGammaCorrectedSwatchColor(Color color) {
+            double[] colorRGB = new double[ 3 ];
+            colorRGB[ 0 ] = color.getRed() / 256.0;
+            colorRGB[ 1 ] = color.getGreen() / 256.0;
+            colorRGB[ 2 ] = color.getBlue() / 256.0;
+            return getGammaCorrectedSwatchColor( colorRGB );
+        }
+
+        private Color getGammaCorrectedSwatchColor(double[] colorRGB) {
+            return new Color(
+                                            (int)(256.0 * Math.pow( colorRGB[ 0 ], VolumeModel.STANDARDIZED_GAMMA_MULTIPLIER ) ),
+                                            (int)(256.0 * Math.pow( colorRGB[ 1 ], VolumeModel.STANDARDIZED_GAMMA_MULTIPLIER ) ),
+                                            (int)(256.0 * Math.pow( colorRGB[ 2 ], VolumeModel.STANDARDIZED_GAMMA_MULTIPLIER ) )
+                                    );
         }
     }
     
