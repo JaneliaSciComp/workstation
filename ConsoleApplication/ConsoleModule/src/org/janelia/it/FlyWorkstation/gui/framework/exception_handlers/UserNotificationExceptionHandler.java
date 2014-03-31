@@ -176,7 +176,7 @@ public class UserNotificationExceptionHandler implements ExceptionHandler {
     private void sendEmail(Throwable exception) {
         try {
 
-            MailDialogueBox mailDialogueBox = new MailDialogueBox(SessionMgr.getBrowser(),
+            MailDialogueBox mailDialogueBox = new MailDialogueBox(SessionMgr.getMainFrame(),
                     (String) SessionMgr.getSessionMgr().getModelProperty(SessionMgr.USER_EMAIL),
                     "Workstation Exception Report",
                     "Problem Description:");

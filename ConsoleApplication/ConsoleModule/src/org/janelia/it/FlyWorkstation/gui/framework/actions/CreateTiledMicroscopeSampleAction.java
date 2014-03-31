@@ -1,5 +1,6 @@
 package org.janelia.it.FlyWorkstation.gui.framework.actions;
 
+import java.awt.Component;
 import org.janelia.it.FlyWorkstation.api.entity_model.management.ModelMgr;
 import org.janelia.it.FlyWorkstation.gui.framework.console.Browser;
 import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr;
@@ -29,7 +30,7 @@ public class CreateTiledMicroscopeSampleAction implements Action {
     @Override
     public void doAction() {
 
-        final Browser browser = SessionMgr.getBrowser();
+        final Component mainFrame = SessionMgr.getMainFrame();
 
         SimpleWorker worker = new SimpleWorker() {
 
@@ -62,12 +63,12 @@ public class CreateTiledMicroscopeSampleAction implements Action {
 //                            }
 //                        });
                         if (null!=newSample) {
-                            JOptionPane.showMessageDialog(browser, "Sample " + newSample.getName() + " added successfully.",
+                            JOptionPane.showMessageDialog(mainFrame, "Sample " + newSample.getName() + " added successfully.",
                                     "Add New Tiled Microscope Sample", JOptionPane.PLAIN_MESSAGE, null);
                             SessionMgr.getSessionMgr().getActiveBrowser().getEntityOutline().refresh();
                         }
                         else {
-                            JOptionPane.showMessageDialog(browser, "Error adding sample " + name + ". Please contact support.",
+                            JOptionPane.showMessageDialog(mainFrame, "Error adding sample " + name + ". Please contact support.",
                                     "Failed to Add Tiled Microscope Sample", JOptionPane.ERROR_MESSAGE, null);
                         }
                     }
@@ -77,7 +78,7 @@ public class CreateTiledMicroscopeSampleAction implements Action {
                         SessionMgr.getSessionMgr().handleException(error);
                     }
                 };
-                worker.setProgressMonitor(new IndeterminateProgressMonitor(browser, "Preparing Slice Viewer...", ""));
+                worker.setProgressMonitor(new IndeterminateProgressMonitor(mainFrame, "Preparing Slice Viewer...", ""));
                 worker.execute();
             }
             

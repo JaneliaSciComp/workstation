@@ -164,7 +164,7 @@ public class ToolsMenuModifier implements ToolListener {
                             ToolMgr.runTool((String) o);
                         } catch (Exception e1) {
                             JOptionPane.showMessageDialog(
-                                    SessionMgr.getBrowser(),
+                                    SessionMgr.getMainFrame(),
                                     "Could not launch this tool. "
                                             + "Please choose the appropriate file path from the Tools->Configure Tools area",
                                     "ToolInfo Launch ERROR",

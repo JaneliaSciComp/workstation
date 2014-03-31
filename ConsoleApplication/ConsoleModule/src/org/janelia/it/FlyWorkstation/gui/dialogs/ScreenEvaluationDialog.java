@@ -59,15 +59,11 @@ public class ScreenEvaluationDialog extends ModalDialog implements Accessibility
 	private KeyStroke moveChangedKeystroke = KeyStroke.getKeyStroke(java.awt.event.KeyEvent.VK_R, SystemInfo.isMac?java.awt.Event.META_MASK:java.awt.Event.CTRL_MASK);
 	private KeyStroke moveAllKeystroke = KeyStroke.getKeyStroke(java.awt.event.KeyEvent.VK_R, (SystemInfo.isMac?java.awt.Event.META_MASK:java.awt.Event.CTRL_MASK)|java.awt.Event.SHIFT_MASK);
 	
-	private Browser browser;
-	
 	private boolean isCurrFolderDirty = false;
 	private Set<Long> dirtyEntities = new HashSet<Long>();
 	
-	public ScreenEvaluationDialog(Browser browser) {
+	public ScreenEvaluationDialog() {
 
-		this.browser = browser;
-		
 		if (!isAccessible()) return;
 
 		setModalityType(ModalityType.MODELESS);
@@ -204,11 +200,11 @@ public class ScreenEvaluationDialog extends ModalDialog implements Accessibility
 	
 	private void addListeners() {
 	
-    	InputMap inputMap = browser.getRootPane().getInputMap(JComponent.WHEN_ANCESTOR_OF_FOCUSED_COMPONENT);
+    	InputMap inputMap = SessionMgr.getMainFrame().getRootPane().getInputMap(JComponent.WHEN_ANCESTOR_OF_FOCUSED_COMPONENT);
     	inputMap.put(moveChangedKeystroke,"moveChangedAction");
     	inputMap.put(moveAllKeystroke,"moveAllAction");
     	
-    	ActionMap actionMap = browser.getRootPane().getActionMap();
+    	ActionMap actionMap = SessionMgr.getMainFrame().getRootPane().getActionMap();
     	actionMap.put("moveChangedAction",new AbstractAction("moveChangedAction") {
 			@Override
 			public void actionPerformed(ActionEvent e) {
@@ -298,7 +294,7 @@ public class ScreenEvaluationDialog extends ModalDialog implements Accessibility
 			}
 		};
 
-		worker.setProgressMonitor(new ProgressMonitor(SessionMgr.getBrowser(), "Organizing...", "", 0, 100));
+		worker.setProgressMonitor(new ProgressMonitor(SessionMgr.getMainFrame(), "Organizing...", "", 0, 100));
 		worker.execute();
 	}
 	

@@ -38,6 +38,7 @@ import java.net.URL;
 import java.text.ParseException;
 import java.util.*;
 import java.util.List;
+import javax.swing.UIManager.LookAndFeelInfo;
 import org.openide.windows.WindowManager;
 
 
@@ -157,38 +158,35 @@ public class SessionMgr {
     
         log.info("Using 2d renderer: {}",getModelProperty(SessionMgr.DISPLAY_RENDERER_2D));
         
-        String[] li = {"Licensee=HHMI", "LicenseRegistrationNumber=122030", "Product=Synthetica", "LicenseType=Single Application License", "ExpireDate=--.--.----", "MaxVersion=2.999.999"};
-        UIManager.put("Synthetica.license.info", li);
-        UIManager.put("Synthetica.license.key", "1839F3DB-00416A48-64C9E2C5-F9E25A71-A885FFC0");
-        
-        UIManager.installLookAndFeel("Synthetica AluOxide Look and Feel", "de.javasoft.plaf.synthetica.SyntheticaAluOxideLookAndFeel");
-        UIManager.installLookAndFeel("Synthetica BlackEye Look and Feel", "de.javasoft.plaf.synthetica.SyntheticaBlackEyeLookAndFeel");
-        UIManager.installLookAndFeel("Synthetica BlackMoon Look and Feel", "de.javasoft.plaf.synthetica.SyntheticaBlackMoonLookAndFeel");
-        UIManager.installLookAndFeel("Synthetica BlackStar Look and Feel", "de.javasoft.plaf.synthetica.SyntheticaBlackStarLookAndFeel");
-        UIManager.installLookAndFeel("Synthetica BlueIce Look and Feel", "de.javasoft.plaf.synthetica.SyntheticaBlueIceLookAndFeel");
-        UIManager.installLookAndFeel("Synthetica BlueLight Look and Feel", "de.javasoft.plaf.synthetica.SyntheticaBlueLightLookAndFeel");
-        UIManager.installLookAndFeel("Synthetica BlueMoon Look and Feel", "de.javasoft.plaf.synthetica.SyntheticaBlueMoonLookAndFeel");
-        UIManager.installLookAndFeel("Synthetica BlueSteel Look and Feel", "de.javasoft.plaf.synthetica.SyntheticaBlueSteelLookAndFeel");
-        UIManager.installLookAndFeel("Synthetica Classy Look and Feel", "de.javasoft.plaf.synthetica.SyntheticaClassyLookAndFeel");
-        UIManager.installLookAndFeel("Synthetica GreenDream Look and Feel", "de.javasoft.plaf.synthetica.SyntheticaGreenDreamLookAndFeel");
-        UIManager.installLookAndFeel("Synthetica MauveMetallic Look and Feel", "de.javasoft.plaf.synthetica.SyntheticaMauveMetallicLookAndFeel");
-        UIManager.installLookAndFeel("Synthetica OrangeMetallic Look and Feel", "de.javasoft.plaf.synthetica.SyntheticaOrangeMetallicLookAndFeel");
-        UIManager.installLookAndFeel("Synthetica SilverMoon Look and Feel", "de.javasoft.plaf.synthetica.SyntheticaSilverMoonLookAndFeel");
-        UIManager.installLookAndFeel("Synthetica Simple2D Look and Feel", "de.javasoft.plaf.synthetica.SyntheticaSimple2DLookAndFeel");
-        UIManager.installLookAndFeel("Synthetica SkyMetallic Look and Feel", "de.javasoft.plaf.synthetica.SyntheticaSkyMetallicLookAndFeel");
-        UIManager.installLookAndFeel("Synthetica WhiteVision Look and Feel", "de.javasoft.plaf.synthetica.SyntheticaWhiteVisionLookAndFeel");
-        
+        // Look for user's model-property-designated look-and-feel.
+        //  If it is found, and it is installed (not defunct/obsolete) use it.
+        // If not, force user's setting to one that is installed (current one).
+        LookAndFeelInfo[] installedInfos = UIManager.getInstalledLookAndFeels();
         String lafName = (String) getModelProperty(DISPLAY_LOOK_AND_FEEL);
+        LookAndFeel currentLaf = UIManager.getLookAndFeel();
+        LookAndFeelInfo currentLafInfo = null;
         if (lafName != null) {
             try {
-            	setLookAndFeel(lafName);
+                boolean installed = false;
+                for (LookAndFeelInfo lafInfo : installedInfos) {
+                    if (lafInfo.getClassName().equals(lafName)) {                        
+                        installed = true;
+                    }
+                    if ( lafInfo.getName().equals( currentLaf.getName() ) ) {
+                        currentLafInfo = lafInfo;
+                    }
+                }
+                if ( installed ) {
+                    //setLookAndFeel(lafName);
+                }
+                else if ( currentLafInfo != null ) {
+                    //setLookAndFeel(currentLafInfo.getName());
+                    //setModelProperty(DISPLAY_LOOK_AND_FEEL, currentLafInfo.getClassName());
+                }
             }
             catch (Exception ex) {
                 handleException(ex);
             }
-        }
-        else {
-            setLookAndFeel("de.javasoft.plaf.synthetica.SyntheticaBlackEyeLookAndFeel");
         }
         
         String tempLogin = (String) getModelProperty(USER_NAME);
@@ -456,10 +454,6 @@ public class SessionMgr {
 
     public Browser newBrowser() {
         Browser browser = new Browser(browserSize, sessionModel.addBrowserModel());
-        browser.addWindowListener(myBrowserWindowListener);
-        if (browserTitle != null) {
-            browser.setTitle(browserTitle);
-        }
         if (browserImageIcon != null) {
             browser.setBrowserImageIcon(browserImageIcon);
         }
@@ -485,9 +479,7 @@ public class SessionMgr {
 
     public void cloneBrowser(Browser browser) {
         Browser newBrowser = (Browser) browser.clone();
-        newBrowser.addWindowListener(myBrowserWindowListener);
         sessionModel.addBrowserModel(newBrowser.getBrowserModel());
-        newBrowser.setVisible(true);
         browserModelsToBrowser.put(newBrowser.getBrowserModel(), newBrowser);
     }
 
@@ -555,14 +547,17 @@ public class SessionMgr {
         		UIManager.setLookAndFeel(lookAndFeelClassName);	
         	}
             
-            Set<BrowserModel> browserModels = browserModelsToBrowser.keySet();
-            for (BrowserModel browserModel : browserModels) {
-                Browser browser = browserModelsToBrowser.get(browserModel);
-                if (browser != null) {
-                    SwingUtilities.updateComponentTreeUI((JFrame) browser);
-                    ((JFrame) browser).repaint();
-                }
-            }
+            // NO-FRAME Set<BrowserModel> browserModels = browserModelsToBrowser.keySet();
+            // NO-FRAME for (BrowserModel browserModel : browserModels) {
+            // NO-FRAME     Browser browser = browserModelsToBrowser.get(browserModel);
+                // NO-FRAME if (browser != null) {
+                // NO-FRAME     SwingUtilities.updateComponentTreeUI((JFrame) browser);
+                // NO-FRAME     ((JFrame) browser).repaint();
+                // NO-FRAME }
+            // NO-FRAME }
+            
+            // Set LnF on the main frame.
+            SwingUtilities.updateComponentTreeUI(SessionMgr.getMainFrame());
             setModelProperty(DISPLAY_LOOK_AND_FEEL, lookAndFeelClassName);
         }
         catch (Exception ex) {
@@ -793,7 +788,7 @@ public class SessionMgr {
         }
 
         public void windowActivated(WindowEvent e) {
-            activeBrowser = (Browser) e.getWindow();
+            // NO-FRAME activeBrowser = (Browser) e.getWindow();
         }
     }
 

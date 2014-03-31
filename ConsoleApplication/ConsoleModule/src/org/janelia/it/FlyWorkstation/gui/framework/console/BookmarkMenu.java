@@ -5,6 +5,7 @@ import org.janelia.it.FlyWorkstation.gui.framework.bookmark.BookmarkListener;
 import org.janelia.it.FlyWorkstation.gui.framework.bookmark.BookmarkMgr;
 import org.janelia.it.FlyWorkstation.gui.framework.bookmark.BookmarkTableDialog;
 import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.BrowserModelListenerAdapter;
+import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.jacs.model.entity.Entity;
 
 import javax.swing.*;
@@ -41,7 +42,7 @@ public class BookmarkMenu extends JMenu implements BookmarkListener {
     bookmarkMI.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_B, InputEvent.CTRL_MASK, false));
     bookmarkMI.addActionListener(new ActionListener()  {
       public void actionPerformed(ActionEvent e) {
-         new BookmarkTableDialog(browser, BookmarkMgr.getBookmarkMgr().getBookmarks());
+         new BookmarkTableDialog(SessionMgr.getMainFrame(), BookmarkMgr.getBookmarkMgr().getBookmarks());
       }
     });
     createMenu();

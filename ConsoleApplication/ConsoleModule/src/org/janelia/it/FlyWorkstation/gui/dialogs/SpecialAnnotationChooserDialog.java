@@ -162,7 +162,7 @@ public class SpecialAnnotationChooserDialog extends JFrame{
                     }
                 };
 
-                worker.setProgressMonitor(new ProgressMonitor(SessionMgr.getBrowser(), "Adding annotations", "", 0, 100));
+                worker.setProgressMonitor(new ProgressMonitor(SessionMgr.getMainFrame(), "Adding annotations", "", 0, 100));
                 worker.execute();
             }
         });

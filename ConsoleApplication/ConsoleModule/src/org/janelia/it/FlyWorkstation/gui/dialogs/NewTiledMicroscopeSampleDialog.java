@@ -24,7 +24,7 @@ public class NewTiledMicroscopeSampleDialog extends JDialog {
     setUpValues();
     SwingUtilities.updateComponentTreeUI(this);
     pack();
-    setLocationRelativeTo(SessionMgr.getBrowser());
+    setLocationRelativeTo(SessionMgr.getMainFrame());
     setVisible(true);
   }
 

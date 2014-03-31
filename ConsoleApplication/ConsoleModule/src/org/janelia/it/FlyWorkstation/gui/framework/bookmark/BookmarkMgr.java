@@ -75,7 +75,7 @@ public class BookmarkMgr extends PreferenceManager {
 
   public void addBookmark(BookmarkInfo bookmark) {
       if (null==bookmark.getId() || 0==bookmark.getId()) {
-        JOptionPane.showMessageDialog(SessionMgr.getBrowser(),
+        JOptionPane.showMessageDialog(SessionMgr.getMainFrame(),
           "Bookmarking local entities is not allowed.",
           "Unable To Create Bookmark",JOptionPane.ERROR_MESSAGE);
         return;
@@ -133,18 +133,18 @@ public class BookmarkMgr extends PreferenceManager {
        navPath=bookmark.getNavigationPath();
      }
      catch (/*InvalidPropertyFormat ipfEx*/Exception ipfEx) {
-        JOptionPane.showMessageDialog(SessionMgr.getBrowser(),
+        JOptionPane.showMessageDialog(SessionMgr.getMainFrame(),
           ipfEx.getMessage(),"Information",JOptionPane.INFORMATION_MESSAGE);
         return;
      }
      if (navPath==null) {
         if (null==bookmark.getId()||0==bookmark.getId())
-            JOptionPane.showMessageDialog(SessionMgr.getBrowser(),
+            JOptionPane.showMessageDialog(SessionMgr.getMainFrame(),
               "This bookmark for "+bookmark.getId()+
               " is for a local entity.\nNavigation is not allowed.",
               "Unable To Navigate",JOptionPane.ERROR_MESSAGE);
         else
-            JOptionPane.showMessageDialog(SessionMgr.getBrowser(),
+            JOptionPane.showMessageDialog(SessionMgr.getMainFrame(),
               "This bookmark cannot be found.\nPerhaps the data source is no longer available.",
               "Unable To Navigate",JOptionPane.ERROR_MESSAGE);
         return;

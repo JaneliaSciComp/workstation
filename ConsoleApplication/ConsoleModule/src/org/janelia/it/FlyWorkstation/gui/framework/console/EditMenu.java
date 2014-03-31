@@ -34,15 +34,13 @@ public class EditMenu extends JMenu {
     private static String fileSep = File.separator;
     private static final String EXPORT_IMPORT_LOCATION = "PreferenceExportImportLocation";
     private String userHomeDir;
-    private final Browser browser;
     private Action copyAction;
     private Action cutAction;
     private Action pasteAction;
-
-    public EditMenu(Browser browser) {
+    
+    public EditMenu() {
         userHomeDir = SessionMgr.getSessionMgr().getApplicationOutputDirectory();
         setText("Edit");
-        this.browser = browser;
         this.setMnemonic('E');
         menuUnDo = new JMenuItem("Undo", 'U');
         menuUnDo.setHorizontalTextPosition(SwingConstants.RIGHT);
@@ -117,8 +115,8 @@ public class EditMenu extends JMenu {
     }
 
     private void establishPrefController(String prefLevel) {
-        browser.repaint();
-        PrefController.getPrefController().getPrefInterface(prefLevel, browser);
+        SessionMgr.getMainFrame().repaint();
+        PrefController.getPrefController().getPrefInterface(prefLevel, SessionMgr.getMainFrame());
     }
 
     /**

@@ -23,7 +23,7 @@ import org.openide.windows.WindowManager;
 @ActionRegistration(
         displayName = "#CTL_ToolConfigurationAction"
 )
-@ActionReference(path = "Menu/Tools", position = 700, separatorBefore = 650)
+@ActionReference(path = "Menu/Tools", position = 1200, separatorBefore = 1150)
 @Messages("CTL_ToolConfigurationAction=Configure Tools")
 public final class ToolConfigurationAction implements ActionListener {
 

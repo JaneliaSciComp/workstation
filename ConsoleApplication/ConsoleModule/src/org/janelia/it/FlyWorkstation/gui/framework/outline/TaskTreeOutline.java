@@ -3,10 +3,12 @@
  * User: saffordt
  * Date: 2/8/11
  * Time: 2:09 PM
+ * @deprecated disused
  */
 package org.janelia.it.FlyWorkstation.gui.framework.outline;
 
 import java.awt.BorderLayout;
+import java.awt.Component;
 import java.awt.Toolkit;
 import java.awt.datatransfer.StringSelection;
 import java.awt.datatransfer.Transferable;
@@ -42,7 +44,7 @@ public class TaskTreeOutline extends JPanel implements ActivatableView {
     
     private List<Task> tasks = new ArrayList<Task>();
     private Task selectedTask;
-    private Browser consoleFrame;
+    private Component consoleFrame;
     protected final JPanel treesPanel;
     private DynamicTree dynamicTree;
     private SimpleWorker loadingWorker;
@@ -67,7 +69,7 @@ public class TaskTreeOutline extends JPanel implements ActivatableView {
 //		}
 //    };
     
-    public TaskTreeOutline(Browser consoleFrame) {
+    public TaskTreeOutline(Component consoleFrame) {
         super(new BorderLayout());
 
         this.consoleFrame = consoleFrame;

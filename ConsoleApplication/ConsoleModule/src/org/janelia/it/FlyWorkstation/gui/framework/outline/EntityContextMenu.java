@@ -74,6 +74,7 @@ public class EntityContextMenu extends JPopupMenu {
     private static final Logger log = LoggerFactory.getLogger(EntityContextMenu.class);
 
     protected static final Browser browser = SessionMgr.getBrowser();
+    protected static final Component mainFrame = SessionMgr.getMainFrame();
 
     // Download directories
     private static final File downloadDir = new File(SystemInfo.getDownloadsDir(), "Workstation Images");
@@ -295,7 +296,7 @@ public class EntityContextMenu extends JPopupMenu {
 
     private void gotoEntity(final Entity entity, final String ancestorType) {
 
-        Utils.setWaitingCursor(browser);
+        Utils.setWaitingCursor(SessionMgr.getMainFrame());
 
         SimpleWorker worker = new SimpleWorker() {
 
@@ -338,12 +339,12 @@ public class EntityContextMenu extends JPopupMenu {
             @Override
             protected void hadSuccess() {
                 browser.getEntityOutline().selectEntityByUniqueId(uniqueId);
-                Utils.setDefaultCursor(browser);
+                Utils.setDefaultCursor(mainFrame);
             }
 
             @Override
             protected void hadError(Throwable error) {
-                Utils.setDefaultCursor(browser);
+                Utils.setDefaultCursor(mainFrame);
                 SessionMgr.getSessionMgr().handleException(error);
             }
         };
@@ -636,7 +637,7 @@ public class EntityContextMenu extends JPopupMenu {
         renameItem.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent actionEvent) {
 
-                String newName = (String) JOptionPane.showInputDialog(browser, "Name:\n", "Rename "
+                String newName = (String) JOptionPane.showInputDialog(mainFrame, "Name:\n", "Rename "
                         + rootedEntity.getEntity().getName(), JOptionPane.PLAIN_MESSAGE, null, null, rootedEntity
                         .getEntity().getName());
                 if ((newName == null) || (newName.length() <= 0)) {
@@ -718,7 +719,7 @@ public class EntityContextMenu extends JPopupMenu {
         blockItem.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent actionEvent) {
 
-                int result = JOptionPane.showConfirmDialog(browser, "Are you sure you want to purge " 
+                int result = JOptionPane.showConfirmDialog(mainFrame, "Are you sure you want to purge " 
                         + rootedEntity.getEntity().getName()+" by deleting all large files associated with it, " +
                 		"and block all of its future processing?",  "Purge And Block Processing", JOptionPane.OK_CANCEL_OPTION);
                 
@@ -778,7 +779,7 @@ public class EntityContextMenu extends JPopupMenu {
         markItem.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent actionEvent) {
 
-                int result = JOptionPane.showConfirmDialog(browser, "Are you sure you want this sample to be reprocessed "
+                int result = JOptionPane.showConfirmDialog(mainFrame, "Are you sure you want this sample to be reprocessed "
                         + "during the next scheduled refresh?",  "Mark for Reprocessing", JOptionPane.OK_CANCEL_OPTION);
                 
                 if (result != 0) return;
@@ -876,7 +877,7 @@ public class EntityContextMenu extends JPopupMenu {
                     protected void hadSuccess() {
 
                         if (movie == null) {
-                            JOptionPane.showMessageDialog(browser, "Could not locate verification movie",
+                            JOptionPane.showMessageDialog(mainFrame, "Could not locate verification movie",
                                     "Not Found", JOptionPane.ERROR_MESSAGE);
                             return;
                         }
@@ -884,7 +885,7 @@ public class EntityContextMenu extends JPopupMenu {
                         String filepath = EntityUtils.getAnyFilePath(movie);
                         
                         if (StringUtils.isEmpty(filepath)) {
-                            JOptionPane.showMessageDialog(browser, "Verification movie has no path",
+                            JOptionPane.showMessageDialog(mainFrame, "Verification movie has no path",
                                     "Not Found", JOptionPane.ERROR_MESSAGE);
                             return;
                         }
@@ -994,7 +995,7 @@ public class EntityContextMenu extends JPopupMenu {
             public void actionPerformed(ActionEvent actionEvent) {
 
                 // Add button clicked
-                final String folderName = (String) JOptionPane.showInputDialog(browser, "Folder Name:\n",
+                final String folderName = (String) JOptionPane.showInputDialog(mainFrame, "Folder Name:\n",
                         "Create Split Picking Folder", JOptionPane.PLAIN_MESSAGE, null, null, null);
                 if ((folderName == null) || (folderName.length() <= 0)) {
                     return;
@@ -1044,7 +1045,7 @@ public class EntityContextMenu extends JPopupMenu {
             public void actionPerformed(ActionEvent actionEvent) {
 
                 // Add button clicked
-                final String folderName = (String) JOptionPane.showInputDialog(browser, "Folder Name:\n",
+                final String folderName = (String) JOptionPane.showInputDialog(mainFrame, "Folder Name:\n",
                         "Create top-level folder", JOptionPane.PLAIN_MESSAGE, null, null, null);
                 if ((folderName == null) || (folderName.length() <= 0)) {
                     return;
@@ -1416,7 +1417,7 @@ public class EntityContextMenu extends JPopupMenu {
 
                                     if (files!=null && files.length>0) {
                                         Object[] options = { "Open folder", "Run anyway" };
-                                        int n = JOptionPane.showOptionDialog(browser, 
+                                        int n = JOptionPane.showOptionDialog(mainFrame, 
                                                 "Files already exist. Open existing folder, or run the download anyway?", "Files already exist", JOptionPane.YES_NO_OPTION,
                                                 JOptionPane.QUESTION_MESSAGE, null, options, options[0]);
                                         if (n==0) {
@@ -1669,7 +1670,7 @@ public class EntityContextMenu extends JPopupMenu {
                     try {
                         ToolMgr.openFile(ToolMgr.TOOL_FIJI, path, null);
                     } catch (Exception e) {
-                        JOptionPane.showMessageDialog(browser, "Could not launch this tool. "
+                        JOptionPane.showMessageDialog(mainFrame, "Could not launch this tool. "
                                 + "Please choose the appropriate file path from the Tools->Configure Tools area",
                                 "Tool Launch ERROR", JOptionPane.ERROR_MESSAGE);
                     }
@@ -1724,7 +1725,7 @@ public class EntityContextMenu extends JPopupMenu {
 
                             if (SessionMgr.getSessionMgr()
                                     .getExternalClientsByName(ModelMgr.NEURON_ANNOTATOR_CLIENT_NAME).isEmpty()) {
-                                JOptionPane.showMessageDialog(browser,
+                                JOptionPane.showMessageDialog(mainFrame,
                                         "Could not get Neuron Annotator to launch and connect. "
                                                 + "Please contact support.", "Launch ERROR", JOptionPane.ERROR_MESSAGE);
                                 return;
@@ -1773,7 +1774,7 @@ public class EntityContextMenu extends JPopupMenu {
                     try {
                         ToolMgr.openFile(ToolMgr.TOOL_VAA3D, path, null);
                     } catch (Exception e) {
-                        JOptionPane.showMessageDialog(browser, "Could not launch this tool. "
+                        JOptionPane.showMessageDialog(mainFrame, "Could not launch this tool. "
                                 + "Please choose the appropriate file path from the Tools->Configure Tools area",
                                 "ToolInfo Launch ERROR", JOptionPane.ERROR_MESSAGE);
                     }
@@ -1795,7 +1796,7 @@ public class EntityContextMenu extends JPopupMenu {
                     try {
                         ToolMgr.openFile(ToolMgr.TOOL_VAA3D, path, ToolMgr.MODE_3D);
                     } catch (Exception e) {
-                        JOptionPane.showMessageDialog(browser, "Could not launch this tool. "
+                        JOptionPane.showMessageDialog(mainFrame, "Could not launch this tool. "
                                 + "Please choose the appropriate file path from the Tools->Configure Tools area",
                                 "ToolInfo Launch ERROR", JOptionPane.ERROR_MESSAGE);
                     }
@@ -1836,7 +1837,7 @@ public class EntityContextMenu extends JPopupMenu {
                 public void actionPerformed(ActionEvent actionEvent) {
 
                     // Add button clicked
-                    String folderName = (String) JOptionPane.showInputDialog(browser, "Folder Name:\n",
+                    String folderName = (String) JOptionPane.showInputDialog(mainFrame, "Folder Name:\n",
                             "Create folder under " + rootedEntity.getEntity().getName(), JOptionPane.PLAIN_MESSAGE,
                             null, null, null);
                     if ((folderName == null) || (folderName.length() <= 0)) {
@@ -1937,7 +1938,7 @@ public class EntityContextMenu extends JPopupMenu {
             @Override
             public void actionPerformed(ActionEvent e) {
                 if (null == ModelMgr.getModelMgr().getCurrentOntology()) {
-                    JOptionPane.showMessageDialog(browser,
+                    JOptionPane.showMessageDialog(mainFrame,
                             "Please select an ontology in the ontology window.", "Null Ontology Warning",
                             JOptionPane.WARNING_MESSAGE);
                 } else {

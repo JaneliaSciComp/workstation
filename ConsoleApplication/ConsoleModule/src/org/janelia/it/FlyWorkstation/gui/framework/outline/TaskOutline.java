@@ -48,7 +48,7 @@ public class TaskOutline extends JPanel implements Refreshable, ActivatableView 
     private static final String COLUMN_NAME = "Name";
     private static final String COLUMN_STATUS = "Status";
     
-    private Browser consoleFrame;
+    private Component consoleFrame;
     private JButton refreshButton;
     private JToggleButton hideCompletedButton;
     private final JPanel tablePanel;
@@ -83,7 +83,7 @@ public class TaskOutline extends JPanel implements Refreshable, ActivatableView 
 		}
     };
     
-    public TaskOutline(Browser consoleFrame) {
+    public TaskOutline(Component consoleFrame) {
         super(new BorderLayout());
 
         this.consoleFrame = consoleFrame;

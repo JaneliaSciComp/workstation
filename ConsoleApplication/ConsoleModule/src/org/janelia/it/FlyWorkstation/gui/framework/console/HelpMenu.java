@@ -12,6 +12,7 @@ import java.awt.event.ActionListener;
  * User: saffordt
  * Date: 2/8/11
  * Time: 3:47 PM
+ * @deprecated moved to NetBeans main frame.
  */
 public class HelpMenu extends JMenu {
 
@@ -21,7 +22,7 @@ public class HelpMenu extends JMenu {
     public HelpMenu(Browser console) {
         super("Help");
         this.setMnemonic('H');
-        parentFrame = console;
+        parentFrame = SessionMgr.getMainFrame();
         add(new JMenuItem("Call Christopher - x4662"));
         add(new JMenuItem("Call Don    - x4656"));
         add(new JMenuItem("Call Eric   - x4655"));

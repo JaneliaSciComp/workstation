@@ -1,6 +1,7 @@
 package org.janelia.it.FlyWorkstation.gui.dialogs;
 
 import java.awt.BorderLayout;
+import java.awt.Component;
 import java.awt.Dimension;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -227,8 +228,8 @@ public class DataSetListDialog extends ModalDialog implements Accessibility, Ref
 
     	loadDataSets();
 
-		Browser browser = SessionMgr.getBrowser();
-		setPreferredSize(new Dimension((int)(browser.getWidth()*0.4),(int)(browser.getHeight()*0.4)));
+		Component mainFrame = SessionMgr.getMainFrame();
+		setPreferredSize(new Dimension((int)(mainFrame.getWidth()*0.4),(int)(mainFrame.getHeight()*0.4)));
 		
         // Show dialog and wait
         packAndShow();

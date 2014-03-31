@@ -1,23 +1,14 @@
 package org.janelia.it.FlyWorkstation.gui.framework.console;
 
 import java.awt.*;
-import java.awt.event.WindowEvent;
 import java.awt.print.PageFormat;
 import java.awt.print.PrinterJob;
-import java.io.File;
-import java.io.FilenameFilter;
-import java.util.ArrayList;
 import java.util.Collections;
-import java.util.Comparator;
 import java.util.List;
 
 import javax.swing.*;
 
-import org.janelia.it.FlyWorkstation.api.entity_model.access.TaskRequestStatusObserverAdapter;
-import org.janelia.it.FlyWorkstation.api.entity_model.fundtype.TaskRequestState;
-import org.janelia.it.FlyWorkstation.api.entity_model.fundtype.TaskRequestStatus;
 import org.janelia.it.FlyWorkstation.api.entity_model.management.ModelMgr;
-import org.janelia.it.FlyWorkstation.api.entity_model.management.ModelMgrUtils;
 import org.janelia.it.FlyWorkstation.gui.dialogs.*;
 import org.janelia.it.FlyWorkstation.gui.dialogs.search.GeneralSearchDialog;
 import org.janelia.it.FlyWorkstation.gui.dialogs.search.SearchConfiguration;
@@ -35,19 +26,11 @@ import org.janelia.it.FlyWorkstation.shared.util.PrintableComponent;
 import org.janelia.it.FlyWorkstation.shared.util.PrintableImage;
 import org.janelia.it.FlyWorkstation.shared.util.SystemInfo;
 import org.janelia.it.jacs.model.entity.Entity;
-import org.janelia.it.jacs.model.entity.EntityConstants;
-import org.janelia.it.jacs.shared.utils.EntityUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.collect.ComparisonChain;
-import java.awt.event.WindowAdapter;
-import java.awt.event.WindowListener;
-import org.janelia.it.FlyWorkstation.shared.workers.SimpleWorker;
 import org.openide.windows.TopComponent;
 import org.openide.windows.WindowManager;
-import org.openide.windows.WindowSystemEvent;
-import org.openide.windows.WindowSystemListener;
 
 /**
  * Created by IntelliJ IDEA.
@@ -55,7 +38,7 @@ import org.openide.windows.WindowSystemListener;
  * Date: 2/8/11
  * Time: 12:29 PM
  */
-public class Browser extends JFrame implements Cloneable {
+public class Browser implements Cloneable {
     
     private static final Logger log = LoggerFactory.getLogger(Browser.class);
     
@@ -115,6 +98,7 @@ public class Browser extends JFrame implements Cloneable {
     private DataSetListDialog dataSetListDialog;
     private StatusBar statusBar = new StatusBar();
     private ImageIcon browserImageIcon;
+    private Image iconImage;
     private PageFormat pageFormat;
     private MaskSearchDialog arbitraryMaskSearchDialog;
 
@@ -123,7 +107,7 @@ public class Browser extends JFrame implements Cloneable {
      * Center Window, use passed realEstatePercent (0-1.0, where 1.0 is 100% of the screen)
      */
     public Browser(float realEstatePercent, BrowserModel browserModel) {
-        enableEvents(AWTEvent.WINDOW_EVENT_MASK);
+        // NO-Frame enableEvents(AWTEvent.WINDOW_EVENT_MASK);
         
         try {
             jbInit(browserModel);
@@ -137,13 +121,13 @@ public class Browser extends JFrame implements Cloneable {
      * Use given coordinates of the top left point and passed realEstatePercent (0-1.0).
      * THis constructor is used only by the clone method
      */
-    public Browser(int topLeftX, int topLeftY, Dimension size, BrowserModel browserModel) {
-        enableEvents(AWTEvent.WINDOW_EVENT_MASK);
+    public Browser(/* // NO-Frame int topLeftX, int topLeftY, Dimension size, */ BrowserModel browserModel) {
+        // NO-Frame enableEvents(AWTEvent.WINDOW_EVENT_MASK);
 
         try {
             jbInit(browserModel);
-            setLocation(topLeftX, topLeftY);
-            setSize(size);
+            // NO-Frame setLocation(topLeftX, topLeftY);
+            // NO-Frame setSize(size);
         }
         catch (Exception e) {
             SessionMgr.getSessionMgr().handleException(e);
@@ -183,14 +167,14 @@ public class Browser extends JFrame implements Cloneable {
         else {
             useFreeMemoryViewer(false);
         }
-        getContentPane().setLayout(borderLayout);
-        setTitle("");
+        // NO-Frame getContentPane().setLayout(borderLayout);
+        // NO-Frame setTitle("");
 
         this.browserModel = browserModel;
         browserModel.addBrowserModelListener(new BrowserModelObserver());
         SessionMgr.getSessionMgr().addSessionModelListener(modelListener);        
         
-        sessionOutline = new SessionOutline(this);
+        sessionOutline = new SessionOutline(SessionMgr.getMainFrame());
 		
         entityOutline = new EntityOutline() {
 			@Override
@@ -203,7 +187,7 @@ public class Browser extends JFrame implements Cloneable {
 		
 		entityDetailsOutline = new EntityDetailsOutline();
 		
-        taskOutline = new TaskOutline(this);
+        taskOutline = new TaskOutline(SessionMgr.getMainFrame());
         
         ontologyOutline = new OntologyOutline() {
             @Override
@@ -228,7 +212,7 @@ public class Browser extends JFrame implements Cloneable {
         patternSearchDialog = new PatternSearchDialog();
         giantFiberSearchDialog = new GiantFiberSearchDialog();
         arbitraryMaskSearchDialog = new MaskSearchDialog();
-        screenEvaluationDialog = new ScreenEvaluationDialog(this);
+        screenEvaluationDialog = new ScreenEvaluationDialog();
         maaSearchDialog = new MAASearchDialog(this);
         dataSetListDialog = new DataSetListDialog();
         
@@ -238,10 +222,10 @@ public class Browser extends JFrame implements Cloneable {
         if (null == consolePosition) {
             consolePosition = resetBrowserPosition();
         }        
-        else {
-            setSize(consolePosition.getBrowserSize());
-            setLocation(consolePosition.getBrowserLocation());
-        }
+        // NO-Frame else {
+        // NO-Frame     setSize(consolePosition.getBrowserSize());
+        // NO-Frame     setLocation(consolePosition.getBrowserLocation());
+        // NO-Frame }
         
         splitPickingPanel = new SplitPickingPanel();
         
@@ -268,6 +252,7 @@ public class Browser extends JFrame implements Cloneable {
 
         supportMenuProcessing();
 
+        /*
         if (menuBarClass == null) {
             menuBar = new ConsoleMenuBar(this);
         }
@@ -275,16 +260,17 @@ public class Browser extends JFrame implements Cloneable {
             menuBar = (JMenuBar) menuBarClass.getConstructor(new Class[]{this.getClass()}).newInstance(new Object[]{this});
         }
         setJMenuBar(menuBar);
+        */
         
         // Collect the final components
         mainPanel.setLayout(layout);
         allPanelsView.setLayout(new BorderLayout());
         //allPanelsView.add(centerLeftHorizontalSplitPane, BorderLayout.CENTER);
-        getContentPane().add(statusBar, BorderLayout.SOUTH);
+        // NO-Frame getContentPane().add(statusBar, BorderLayout.SOUTH);
         mainPanel.add(allPanelsView, "Regular");
         collapsedOutlineView.setLayout(new BorderLayout());
         mainPanel.add(collapsedOutlineView, "Collapsed FileOutline");
-        getContentPane().add(mainPanel, BorderLayout.CENTER);
+        // NO-Frame getContentPane().add(mainPanel, BorderLayout.CENTER);
 
         // Run this later so that the Browser has finished initializing by the time it runs
         SwingUtilities.invokeLater(new Runnable() {
@@ -307,13 +293,13 @@ public class Browser extends JFrame implements Cloneable {
      */
     public void printBrowser() {
         // For now, use whole thing.
-        Component component = this;
+        JFrame frame = SessionMgr.getMainFrame();
 
         // Ensure sufficient resources.
-        long requiredSize = (long) (RGB_TYPE_BYTES_PER_PIXEL * component.getWidth() * component.getHeight()) + (long) PRINT_OVERHEAD_SIZE;
+        long requiredSize = (long) (RGB_TYPE_BYTES_PER_PIXEL * frame.getWidth() * frame.getHeight()) + (long) PRINT_OVERHEAD_SIZE;
 
         if (requiredSize > FreeMemoryWatcher.getFreeMemoryWatcher().getFreeMemory()) {
-            JOptionPane.showMessageDialog(this, MEMORY_EXCEEDED_PRT_SCR_MSG, MEMORY_EXCEEDED_ADVISORY, JOptionPane.ERROR_MESSAGE);
+            JOptionPane.showMessageDialog(frame, MEMORY_EXCEEDED_PRT_SCR_MSG, MEMORY_EXCEEDED_ADVISORY, JOptionPane.ERROR_MESSAGE);
 
             return;
         } // Memory capacity WOULD be exceeded.
@@ -327,12 +313,12 @@ public class Browser extends JFrame implements Cloneable {
         } // Must create a page format.
 
         if (printJob.printDialog()) {
-            // Get a buffered image of the component.
-            java.awt.image.BufferedImage bufferedImage = new java.awt.image.BufferedImage(component.getWidth(), component.getHeight(), java.awt.image.BufferedImage.TYPE_INT_RGB);
+            // Get a buffered image of the frame.
+            java.awt.image.BufferedImage bufferedImage = new java.awt.image.BufferedImage(frame.getWidth(), frame.getHeight(), java.awt.image.BufferedImage.TYPE_INT_RGB);
             Graphics2D graphics = bufferedImage.createGraphics();
-            component.paint(graphics);
+            frame.paint(graphics);
 
-            // Wrap buffered image in a component, and print that.
+            // Wrap buffered image in a frame, and print that.
             PrintableImage printableImage = new PrintableImage(bufferedImage);
             printJob.setPrintable(printableImage, pageFormat);
 
@@ -357,7 +343,7 @@ public class Browser extends JFrame implements Cloneable {
             pageFormat.setOrientation(PageFormat.LANDSCAPE);
         }
 
-        Component comp = this;
+        Component comp = SessionMgr.getMainFrame();
 
         if (printJob.printDialog()) {
             printJob.setPrintable(new PrintableComponent(comp), pageFormat);
@@ -378,15 +364,23 @@ public class Browser extends JFrame implements Cloneable {
     }
 
     public Object clone() {
-        java.awt.Point topLeft = this.getLocation();
-        Dimension size = this.getSize();
+        // NO-Frame java.awt.Point topLeft = this.getLocation();
+        // NO-Frame Dimension size = this.getSize();
         BrowserModel newBrowserModel = (BrowserModel) this.browserModel.clone();
-        Browser newBrowser = new Browser(topLeft.x + 25, topLeft.y + 25, size, newBrowserModel);
-        newBrowser.setTitle(getTitle());
+        Browser newBrowser = new Browser(newBrowserModel);
+        // NO-Frame newBrowser.setTitle(getTitle());
         newBrowser.setBrowserImageIcon(browserImageIcon);
         //newBrowser.setVisible(true);
 
         return newBrowser;
+    }
+    
+    public void setIconImage( Image image ) {
+        this.iconImage = image;
+    }
+    
+    public Image getIconImage() {
+        return iconImage;
     }
 
     public void setBrowserImageIcon(ImageIcon _browserImageIcon) {
@@ -398,14 +392,15 @@ public class Browser extends JFrame implements Cloneable {
 
     /**
      * Overriden so we can exit on System Close
-     */
+     * // NO-Frame 
     protected void processWindowEvent(WindowEvent e) {
-        super.processWindowEvent(e);
+        // NO-Frame super.processWindowEvent(e);
 
         if (e.getID() == WindowEvent.WINDOW_CLOSING) {
             SessionMgr.getSessionMgr().removeBrowser(this);
         }
     }
+    */
 
     private void useFreeMemoryViewer(boolean use) {
         statusBar.useFreeMemoryViewer(false);
@@ -442,7 +437,7 @@ public class Browser extends JFrame implements Cloneable {
         
         @Override
         public void browserClosing() {
-            setVisible(false);
+            // NO-Frame setVisible(false);
             SessionMgr.getSessionMgr().removeSessionModelListener(modelListener);
             
             BrowserPosition position = (BrowserPosition) SessionMgr.getSessionMgr().getModelProperty(BROWSER_POSITION);
@@ -452,8 +447,8 @@ public class Browser extends JFrame implements Cloneable {
             }
 
             position.setScreenSize(Toolkit.getDefaultToolkit().getScreenSize());
-            position.setBrowserSize(Browser.this.getSize());
-            position.setBrowserLocation(Browser.this.getLocation());
+            // NO-Frame position.setBrowserSize(Browser.this.getSize());
+            // NO-Frame position.setBrowserLocation(Browser.this.getLocation());
             position.setHorizontalLeftDividerLocation(centerLeftHorizontalSplitPane.getDividerLocation());
             position.setHorizontalRightDividerLocation(centerRightHorizontalSplitPane.getDividerLocation());
             position.setVerticalDividerLocation(leftVerticalSplitPane.getDividerLocation());
@@ -461,7 +456,7 @@ public class Browser extends JFrame implements Cloneable {
             SessionMgr.getSessionMgr().setModelProperty(BROWSER_POSITION, position);
             SessionMgr.getSessionMgr().setModelProperty(SEARCH_HISTORY, generalSearchDialog.getSearchHistory());
             
-            dispose();
+            // NO-Frame dispose();
         }
     }
 
@@ -562,7 +557,7 @@ public class Browser extends JFrame implements Cloneable {
 	}
 
     public void toggleViewComponentState(String viewComponentKey) {
-        // TODO The layout needs to be much nicer.  See IntelliJ layouts, with perhaps the component menu name still visible
+        // TODO The layout needs to be much nicer.  See IntelliJ layouts, with perhaps the frame menu name still visible
         if (VIEW_OUTLINES.equals(viewComponentKey)) {
             centerLeftHorizontalSplitPane.getLeftComponent().setVisible(!centerLeftHorizontalSplitPane.getLeftComponent().isVisible());
             centerLeftHorizontalSplitPane.setDividerLocation(centerLeftHorizontalSplitPane.getLastDividerLocation());
@@ -630,8 +625,8 @@ public class Browser extends JFrame implements Cloneable {
         
         SessionMgr.getSessionMgr().setModelProperty(BROWSER_POSITION, position);
 
-        setSize(position.getBrowserSize());
-        setLocation(position.getBrowserLocation());
+        // NO-Frame setSize(position.getBrowserSize());
+        // NO-Frame setLocation(position.getBrowserLocation());
         
         return position;
     }

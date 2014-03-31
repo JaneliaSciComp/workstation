@@ -175,12 +175,12 @@ public class ConsoleApp {
             // Init data 
             modelMgr.initErrorOntology();
             modelMgr.addModelMgrObserver(sessionMgr.getAxisServer());
-            
-            Browser browser = sessionMgr.newBrowser();
-            
+                        
             if (splash!=null) splash.close();
             
-            browser.setVisible(true);
+            Component mainFrame = SessionMgr.getMainFrame();
+            sessionMgr.newBrowser();
+            mainFrame.setVisible(true);
             //browser.toFront();
         }
         catch (Exception ex) {

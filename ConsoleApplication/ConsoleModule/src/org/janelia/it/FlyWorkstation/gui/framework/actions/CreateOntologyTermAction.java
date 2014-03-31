@@ -48,7 +48,7 @@ public class CreateOntologyTermAction implements Action {
         final Entity ontologyRoot = ontologyOutline.getCurrentOntology();
         
         if (ontologyRoot == null) {
-            JOptionPane.showMessageDialog(SessionMgr.getBrowser(), "No ontology selected.");
+            JOptionPane.showMessageDialog(SessionMgr.getMainFrame(), "No ontology selected.");
         }
 
         final DefaultMutableTreeNode treeNode = ontologyOutline.getDynamicTree().getCurrentNode();
@@ -56,7 +56,7 @@ public class CreateOntologyTermAction implements Action {
         final OntologyElementType childType = OntologyElementType.createTypeByName(className);
 
         // Add button clicked
-        final String termName = (String) JOptionPane.showInputDialog(SessionMgr.getBrowser(), "Ontology Term:\n", "Adding to " + 
+        final String termName = (String) JOptionPane.showInputDialog(SessionMgr.getMainFrame(), "Ontology Term:\n", "Adding to " + 
                 ontologyOutline.getOntologyElement(treeNode).getName(), JOptionPane.PLAIN_MESSAGE, null, null, null);
 
         if ((termName == null) || (termName.length() <= 0)) {
@@ -65,9 +65,9 @@ public class CreateOntologyTermAction implements Action {
 
         if (childType instanceof Interval) {
 
-            String lowerBoundStr = (String) JOptionPane.showInputDialog(SessionMgr.getBrowser(), "Lower bound:\n", 
+            String lowerBoundStr = (String) JOptionPane.showInputDialog(SessionMgr.getMainFrame(), "Lower bound:\n", 
                     "Adding an interval", JOptionPane.PLAIN_MESSAGE, null, null, null);
-            String upperBoundStr = (String) JOptionPane.showInputDialog(SessionMgr.getBrowser(), "Upper bound:\n", 
+            String upperBoundStr = (String) JOptionPane.showInputDialog(SessionMgr.getMainFrame(), "Upper bound:\n", 
                     "Adding an interval", JOptionPane.PLAIN_MESSAGE, null, null, null);
 
             try {
@@ -83,7 +83,7 @@ public class CreateOntologyTermAction implements Action {
             final OntologyElementChooser ontologyChooser = new OntologyElementChooser("Choose an enumeration", ontologyRoot);
 
             ontologyChooser.setMultipleSelection(false);
-            int returnVal = ontologyChooser.showDialog(SessionMgr.getBrowser());
+            int returnVal = ontologyChooser.showDialog(SessionMgr.getMainFrame());
             if (returnVal != OntologyElementChooser.CHOOSE_OPTION) return;
             
             List<OntologyElement> chosenElements = ontologyChooser.getChosenElements();
@@ -91,7 +91,7 @@ public class CreateOntologyTermAction implements Action {
             
             OntologyElement chosenEnum = chosenElements.get(0);
             if (!(chosenEnum.getType() instanceof Enum)) {
-                JOptionPane.showMessageDialog(SessionMgr.getBrowser(), "You must choosen an enumeration", "Error", JOptionPane.ERROR_MESSAGE);
+                JOptionPane.showMessageDialog(SessionMgr.getMainFrame(), "You must choosen an enumeration", "Error", JOptionPane.ERROR_MESSAGE);
             }
 
             try {
@@ -116,7 +116,7 @@ public class CreateOntologyTermAction implements Action {
             @Override
             protected void hadError(Throwable error) {
                 error.printStackTrace();
-                JOptionPane.showMessageDialog(SessionMgr.getBrowser(), "Error creating ontology term", "Error", JOptionPane.ERROR_MESSAGE);
+                JOptionPane.showMessageDialog(SessionMgr.getMainFrame(), "Error creating ontology term", "Error", JOptionPane.ERROR_MESSAGE);
             }
         };
         

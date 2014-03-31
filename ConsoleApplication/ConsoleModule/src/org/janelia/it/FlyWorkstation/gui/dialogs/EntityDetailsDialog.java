@@ -1,6 +1,7 @@
 package org.janelia.it.FlyWorkstation.gui.dialogs;
 
 import java.awt.BorderLayout;
+import java.awt.Component;
 import java.awt.Dimension;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -85,8 +86,8 @@ public class EntityDetailsDialog extends ModalDialog {
         
         entityDetailsPanel.loadEntity(entity, role, defaultTab);
         setTitle("Entity Details: "+entity.getName());
-        Browser browser = SessionMgr.getBrowser();
-        setPreferredSize(new Dimension((int)(browser.getWidth()*0.5),(int)(browser.getHeight()*0.8)));
+        Component mainFrame = SessionMgr.getMainFrame();
+        setPreferredSize(new Dimension((int)(mainFrame.getWidth()*0.5),(int)(mainFrame.getHeight()*0.8)));
         // Show dialog and wait
         packAndShow();
         

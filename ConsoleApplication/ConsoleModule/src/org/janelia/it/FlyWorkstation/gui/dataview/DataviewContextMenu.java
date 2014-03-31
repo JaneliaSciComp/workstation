@@ -4,6 +4,7 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.util.ArrayList;
 import java.util.List;
+import javax.swing.JFrame;
 
 import javax.swing.JMenuItem;
 import javax.swing.JOptionPane;
@@ -33,7 +34,7 @@ public class DataviewContextMenu extends AbstractContextMenu<Entity> {
 
     private static final Logger log = LoggerFactory.getLogger(DataviewContextMenu.class);
     
-	protected static final Browser browser = SessionMgr.getBrowser();
+	protected static final JFrame mainFrame = SessionMgr.getMainFrame();
 
 	public DataviewContextMenu(List<Entity> selectedEntities, String label) {
 		super(selectedEntities, label);
@@ -76,7 +77,7 @@ public class DataviewContextMenu extends AbstractContextMenu<Entity> {
         renameItem.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent actionEvent) {
 
-                String newName = (String) JOptionPane.showInputDialog(browser, "Name:\n", "Rename "+entity.getName(), JOptionPane.PLAIN_MESSAGE, null, null, entity.getName());
+                String newName = (String) JOptionPane.showInputDialog(mainFrame, "Name:\n", "Rename "+entity.getName(), JOptionPane.PLAIN_MESSAGE, null, null, entity.getName());
                 if ((newName == null) || (newName.length() <= 0)) {
                     return;
                 }
@@ -256,7 +257,7 @@ public class DataviewContextMenu extends AbstractContextMenu<Entity> {
 	}
 
 	private int confirm(String message) {
-		return JOptionPane.showConfirmDialog(browser, message, "Are you sure?", JOptionPane.YES_NO_OPTION);
+		return JOptionPane.showConfirmDialog(mainFrame, message, "Are you sure?", JOptionPane.YES_NO_OPTION);
 	}
 
 }

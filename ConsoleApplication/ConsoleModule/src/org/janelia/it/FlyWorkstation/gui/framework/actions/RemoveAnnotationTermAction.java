@@ -42,7 +42,7 @@ public class RemoveAnnotationTermAction implements Action {
     public void doAction() {
 
     	if (selectedEntities.size()>1) {
-            int deleteConfirmation = JOptionPane.showConfirmDialog(SessionMgr.getBrowser(), "Are you sure you want to delete this annotation from all selected entities?", "Delete Annotations", JOptionPane.YES_NO_OPTION);
+            int deleteConfirmation = JOptionPane.showConfirmDialog(SessionMgr.getMainFrame(), "Are you sure you want to delete this annotation from all selected entities?", "Delete Annotations", JOptionPane.YES_NO_OPTION);
             if (deleteConfirmation != 0) {
                 return;
             }
@@ -90,7 +90,7 @@ public class RemoveAnnotationTermAction implements Action {
                     }
                 };
 
-                worker.setProgressMonitor(new ProgressMonitor(SessionMgr.getBrowser(), "Deleting Annotations", "", 0, 100));
+                worker.setProgressMonitor(new ProgressMonitor(SessionMgr.getMainFrame(), "Deleting Annotations", "", 0, 100));
                 worker.execute();
         	}
         }

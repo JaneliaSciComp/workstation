@@ -1,6 +1,7 @@
 package org.janelia.it.FlyWorkstation.gui.dialogs.search;
 
 import java.awt.BorderLayout;
+import java.awt.Component;
 import java.awt.Dimension;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -149,7 +150,7 @@ public class GeneralSearchDialog extends ModalDialog {
 			folderNameField.setText(getNextFolderName());	
 		}
 
-		Browser browser = SessionMgr.getBrowser();
+		Component browser = SessionMgr.getMainFrame();
 		setPreferredSize(new Dimension((int)(browser.getWidth()*0.8),(int)(browser.getHeight()*0.8)));
 
     	paramsPanel.getInputField().requestFocus();

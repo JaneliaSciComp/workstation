@@ -6,6 +6,7 @@
 package org.janelia.it.FlyWorkstation.gui.top_component;
 
 import java.awt.BorderLayout;
+import org.janelia.it.FlyWorkstation.gui.framework.console.Browser;
 import org.janelia.it.FlyWorkstation.gui.framework.outline.EntityOutline;
 import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr;
 import org.netbeans.api.settings.ConvertAsProperties;
@@ -51,13 +52,19 @@ public final class EntityExplorerTopComponent extends TopComponent implements Ex
         setName(Bundle.CTL_EntityExplorerTopComponent());
         setToolTipText(Bundle.HINT_EntityExplorerTopComponent());
         putClientProperty(TopComponent.PROP_CLOSING_DISABLED, Boolean.TRUE);   
-        
-        final EntityOutline entityOutline = SessionMgr.getBrowser().getEntityOutline();
-        if (entityOutline != null) {
-            jPanel1.setLayout(new BorderLayout());
-            jPanel1.add(entityOutline);
-        } else {
-            logger.error("No entity outline located.");
+
+        final Browser browser = SessionMgr.getBrowser();
+        if (browser != null) {
+            final EntityOutline entityOutline = browser.getEntityOutline();
+            if (entityOutline != null) {
+                jPanel1.setLayout(new BorderLayout());
+                jPanel1.add(entityOutline);
+            } else {
+                logger.error("No entity outline located.");
+            }
+        }
+        else {
+            SessionMgr.getSessionMgr().handleException( new RuntimeException("Failed to obtain browser object for component.") );
         }
 
     }

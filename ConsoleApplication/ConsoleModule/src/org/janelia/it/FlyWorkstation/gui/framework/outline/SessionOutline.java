@@ -7,6 +7,7 @@
 package org.janelia.it.FlyWorkstation.gui.framework.outline;
 
 import java.awt.BorderLayout;
+import java.awt.Component;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.MouseEvent;
@@ -47,13 +48,13 @@ public class SessionOutline extends JPanel implements Refreshable, ActivatableVi
 
     private List<AnnotationSession> sessions = new ArrayList<AnnotationSession>();
     private AnnotationSession currSession;
-    private Browser consoleFrame;
+    private Component consoleFrame;
     protected final JPanel tablePanel;
     private DynamicTable dynamicTable;
     private SimpleWorker loadingWorker;
     private ModelMgrAdapter mml;
     	
-    public SessionOutline(Browser consoleFrame) {
+    public SessionOutline(Component consoleFrame) {
         super(new BorderLayout());
 
         this.consoleFrame = consoleFrame;

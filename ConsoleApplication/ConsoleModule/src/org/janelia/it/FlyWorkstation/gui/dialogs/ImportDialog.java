@@ -153,7 +153,7 @@ public class ImportDialog extends ModalDialog {
                     handleOkPress();
                 } catch (Exception e1) {
                     log.error("import dialog failure", e1);
-                    JOptionPane.showMessageDialog(SessionMgr.getBrowser(),
+                    JOptionPane.showMessageDialog(SessionMgr.getMainFrame(),
                                                   e1.getMessage(),
                                                   "Error",
                                                   JOptionPane.ERROR_MESSAGE);

@@ -34,20 +34,20 @@ public class ConsoleMenuBar extends JMenuBar {
     }
 
     private void constructMenus() {
-        bookmarkMenu = new BookmarkMenu(console);
+        //bookmarkMenu = new BookmarkMenu(console);
         //servicesMenu = new ServicesMenu(console);
-        ontologyMenu = new OntologyMenu(console);
+        //ontologyMenu = new OntologyMenu(console);
         //helpMenu = new HelpMenu(console);
-        viewMenu = new ViewMenu(console);
+        //viewMenu = new ViewMenu(console);
     }
     
     private void addMenus() {
         // add(bookmarkMenu);
         //add(servicesMenu);
-        add(viewMenu);
+        //add(viewMenu);
         // add(ontologyMenu);
         //add(helpMenu);
         //add(menuGlue);
-        add(WorkerProgressMeter.getProgressMeter().getMenuLabel());
+        //add(WorkerProgressMeter.getProgressMeter().getMenuLabel());
     }
 }

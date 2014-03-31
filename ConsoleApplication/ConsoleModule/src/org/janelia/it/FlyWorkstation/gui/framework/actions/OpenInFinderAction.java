@@ -60,12 +60,13 @@ public class OpenInFinderAction implements Action {
                 @Override
                 public void call(File file) throws Exception {
                     if (file==null) {
-                        JOptionPane.showMessageDialog(SessionMgr.getBrowser(),
+                        JOptionPane.showMessageDialog(SessionMgr.getMainFrame(),
                                 "Could not open file path", "Error", JOptionPane.ERROR_MESSAGE);
                     }
                     else {
                     	if (!DesktopApi.browse(file)) {
-                            JOptionPane.showMessageDialog(SessionMgr.getSessionMgr().getActiveBrowser(),
+                            // NO-FRAME SessionMgr.getSessionMgr().getActiveBrowser(),
+                            JOptionPane.showMessageDialog(SessionMgr.getMainFrame(),
                                     "Error opening file path", "Error", JOptionPane.ERROR_MESSAGE);
                     	}
                     }

@@ -33,7 +33,7 @@ public class ModalDialog extends JDialog {
 	protected void packAndShow() {
         SwingUtilities.updateComponentTreeUI(this);
         pack();
-        setLocationRelativeTo(SessionMgr.getBrowser());
+        setLocationRelativeTo(SessionMgr.getMainFrame());
         setVisible(true);
 	}
 	

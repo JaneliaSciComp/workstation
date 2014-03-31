@@ -267,7 +267,7 @@ public class ApplicationSettingsPanel extends JPanel implements PrefEditor {
         try {
             String newLaf = buttonToLafMap.get(buttonLookAndFeelGroup.getSelection());
             if (!newLaf.equals(sessionMgr.getModelProperty(SessionMgr.DISPLAY_LOOK_AND_FEEL))) {
-                JOptionPane.showMessageDialog(SessionMgr.getBrowser(),
+                JOptionPane.showMessageDialog(SessionMgr.getMainFrame(),
                         "You will need to restart the application to completely update the look and feel.",
                         "Restart recommended", JOptionPane.INFORMATION_MESSAGE);
                 sessionMgr.setModelProperty(SessionMgr.DISPLAY_LOOK_AND_FEEL, newLaf);

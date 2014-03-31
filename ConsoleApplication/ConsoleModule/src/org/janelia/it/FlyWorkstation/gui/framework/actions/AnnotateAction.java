@@ -81,14 +81,14 @@ public class AnnotateAction extends OntologyElementAction {
 
         Object value = null;
         if (type instanceof Interval) {
-            value = JOptionPane.showInputDialog(SessionMgr.getBrowser(), 
+            value = JOptionPane.showInputDialog(SessionMgr.getMainFrame(), 
             		"Value:\n", element.getName(), JOptionPane.PLAIN_MESSAGE, null, null, null);
 
             if (StringUtils.isEmpty((String)value)) return;
             Double dvalue = Double.parseDouble((String)value);
             Interval interval = (Interval) type;
             if (dvalue < interval.getLowerBound().doubleValue() || dvalue > interval.getUpperBound().doubleValue()) {
-                JOptionPane.showMessageDialog(SessionMgr.getBrowser(), 
+                JOptionPane.showMessageDialog(SessionMgr.getMainFrame(), 
                 		"Input out of range [" + interval.getLowerBound() + "," + interval.getUpperBound() + "]");
                 return;
             }
@@ -111,7 +111,7 @@ public class AnnotateAction extends OntologyElementAction {
         		selectionValues[i++] = child;
         	}
         	
-        	value = JOptionPane.showInputDialog(SessionMgr.getBrowser(), 
+        	value = JOptionPane.showInputDialog(SessionMgr.getMainFrame(), 
             		"Value:\n", element.getName(), JOptionPane.PLAIN_MESSAGE, null, selectionValues, null);
         	if (value==null) return;
         }
@@ -151,7 +151,7 @@ public class AnnotateAction extends OntologyElementAction {
         	
         };
 
-        worker.setProgressMonitor(new ProgressMonitor(SessionMgr.getBrowser(), "Adding annotations", "", 0, 100));
+        worker.setProgressMonitor(new ProgressMonitor(SessionMgr.getMainFrame(), "Adding annotations", "", 0, 100));
         worker.execute();
     }
     

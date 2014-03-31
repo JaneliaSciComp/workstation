@@ -1,5 +1,6 @@
 package org.janelia.it.FlyWorkstation.gui.framework.actions;
 
+import java.awt.Component;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -62,6 +63,7 @@ public class RemoveEntityAction implements Action {
     @Override
     public void doAction() {
         final Browser browser = SessionMgr.getBrowser();
+        final Component mainFrame = SessionMgr.getMainFrame();
         
 		final Set<EntityData> toDelete = new HashSet<EntityData>();
 		for(RootedEntity rootedEntity : rootedEntityList) {
@@ -156,19 +158,19 @@ public class RemoveEntityAction implements Action {
 					Entity child = ed.getChildEntity();
 					if (removeRootTag.contains(ed)) {
 					    if (!ModelMgrUtils.hasWriteAccess(child)) {
-							JOptionPane.showMessageDialog(browser, "No permission to remove "+child.getName(), "Error", JOptionPane.ERROR_MESSAGE);
+							JOptionPane.showMessageDialog(mainFrame, "No permission to remove "+child.getName(), "Error", JOptionPane.ERROR_MESSAGE);
 							toReallyDelete.remove(ed);
 						}
 					}
 					else if (removeReference.contains(ed)) {
 					    if (!ModelMgrUtils.hasWriteAccess(ed.getParentEntity())) {
-							JOptionPane.showMessageDialog(browser, "No permission to remove "+child.getName(), "Error", JOptionPane.ERROR_MESSAGE);
+							JOptionPane.showMessageDialog(mainFrame, "No permission to remove "+child.getName(), "Error", JOptionPane.ERROR_MESSAGE);
 							toReallyDelete.remove(ed);
 						}
 					}
 					else if (removeTree.contains(ed)) {
 					    if (!ModelMgrUtils.hasWriteAccess(child)) {
-							JOptionPane.showMessageDialog(browser, "No permission to delete "+child.getName(), "Error", JOptionPane.ERROR_MESSAGE);
+							JOptionPane.showMessageDialog(mainFrame, "No permission to delete "+child.getName(), "Error", JOptionPane.ERROR_MESSAGE);
 							toReallyDelete.remove(ed);
 						}
 						else if (!confirmedAll) {
@@ -189,7 +191,7 @@ public class RemoveEntityAction implements Action {
 						    
 							if (toDelete.size() > 1) {
 								Object[] options = {"Yes", "Yes to All", "No", "Cancel"};	
-								int r = JOptionPane.showOptionDialog(browser, message.toString(), "Delete",
+								int r = JOptionPane.showOptionDialog(mainFrame, message.toString(), "Delete",
 										JOptionPane.YES_NO_OPTION, JOptionPane.WARNING_MESSAGE, null, options, options[1]);
 								switch (r) {
 								case 0:
@@ -206,7 +208,7 @@ public class RemoveEntityAction implements Action {
 							}
 							else {
 								Object[] options = {"Yes", "No", "Cancel"};
-								int r = JOptionPane.showOptionDialog(browser, message.toString(), "Delete",
+								int r = JOptionPane.showOptionDialog(mainFrame, message.toString(), "Delete",
 										JOptionPane.YES_NO_OPTION, JOptionPane.WARNING_MESSAGE, null, options, options[1]);
 								switch (r) {
 								case 0:
@@ -307,7 +309,7 @@ public class RemoveEntityAction implements Action {
                         }
                     };
     
-                    removeTask.setProgressMonitor(new IndeterminateProgressMonitor(SessionMgr.getBrowser(), "Removing...", ""));
+                    removeTask.setProgressMonitor(new IndeterminateProgressMonitor(SessionMgr.getMainFrame(), "Removing...", ""));
                     removeTask.execute();
                 }
 			}
@@ -318,7 +320,7 @@ public class RemoveEntityAction implements Action {
 			}
 			
 		};
-		verifyTask.setProgressMonitor(new IndeterminateProgressMonitor(SessionMgr.getBrowser(), "Verifying...", ""));
+		verifyTask.setProgressMonitor(new IndeterminateProgressMonitor(SessionMgr.getMainFrame(), "Verifying...", ""));
 		verifyTask.execute();	
     }
 }
