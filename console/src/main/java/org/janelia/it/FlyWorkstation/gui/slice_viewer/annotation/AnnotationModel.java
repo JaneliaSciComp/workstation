@@ -7,6 +7,7 @@ import org.janelia.it.FlyWorkstation.geom.Vec3;
 import org.janelia.it.FlyWorkstation.geom.ParametrizedLine;
 import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr;
 
+import org.janelia.it.FlyWorkstation.gui.slice_viewer.skeleton.Anchor;
 import org.janelia.it.FlyWorkstation.signal.Signal1;
 import org.janelia.it.FlyWorkstation.signal.Slot1;
 
@@ -61,6 +62,8 @@ that need to respond to changing data.
 
     public Signal1<TmAnchoredPath> anchoredPathAddedSignal = new Signal1<TmAnchoredPath>();
     public Signal1<List<TmAnchoredPath>> anchoredPathsRemovedSignal = new Signal1<List<TmAnchoredPath>>();
+
+    public Signal1<Long> pathTraceRequestedSignal = new Signal1<Long>();
 
     public Signal1<Color> globalAnnotationColorChangedSignal = new Signal1<Color>();
 
@@ -304,6 +307,10 @@ that need to respond to changing data.
         TmNeuron neuron = getNeuronFromAnnotation(parentAnn.getId());
         TmGeoAnnotation annotation = modelMgr.addGeometricAnnotation(neuron.getId(),
             parentAnn.getId(), 0, xyz.x(), xyz.y(), xyz.z(), "");
+
+        if (automatedTracingEnabled()) {
+            pathTraceRequestedSignal.emit(annotation.getId());
+        }
 
         updateCurrentWorkspace();
         if (neuron.getId().equals(getCurrentNeuron().getId())) {
@@ -679,4 +686,12 @@ that need to respond to changing data.
         globalAnnotationColorChangedSignal.emit(color);
     }
 
+    private boolean automatedTracingEnabled() {
+        String automaticTracingPref = getCurrentWorkspace().getPreferences().getProperty(AnnotationsConstants.PREF_AUTOMATIC_TRACING);
+        if (automaticTracingPref != null) {
+            return Boolean.parseBoolean(automaticTracingPref);
+        } else {
+            return false;
+        }
+    }
 }

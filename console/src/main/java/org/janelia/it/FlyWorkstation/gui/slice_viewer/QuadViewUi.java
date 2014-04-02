@@ -331,9 +331,9 @@ public class QuadViewUi extends JPanel
         }
     };
 	
-    public Slot1<Anchor> tracePathSegmentSlot = new Slot1<Anchor>() {
+    public Slot1<Long> tracePathSegmentSlot = new Slot1<Long>() {
         @Override
-        public void execute(Anchor anchor) {
+        public void execute(Long annotationID) {
             // this needs to happen before you draw anchored paths; should
             //  go somewhere else so it only happens once, but not clear where;
             //  not clear we have a trigger for when the image is loaded enough for
@@ -342,7 +342,7 @@ public class QuadViewUi extends JPanel
                     tileServer.getLoadAdapter().getTileFormat());
 
             // construct new request; add image data to anchor and pass it on
-            PathTraceToParentRequest request = new PathTraceToParentRequest(anchor.getGuid());
+            PathTraceToParentRequest request = new PathTraceToParentRequest(annotationID);
             request.setImageVolme(volumeImage);
             request.setTextureCache(tileServer.getTextureCache());
             tracePathRequestedSignal.emit(request);
@@ -396,6 +396,7 @@ public class QuadViewUi extends JPanel
         getSkeletonActor().nextParentChangedSignal.connect(annotationMgr.selectAnnotationSlot);
         skeleton.anchorMovedSignal.connect(annotationMgr.moveAnchorRequestedSlot);
         skeleton.pathTraceRequestedSignal.connect(tracePathSegmentSlot);
+        annotationModel.pathTraceRequestedSignal.connect(tracePathSegmentSlot);
         addAnchoredPathRequestSignal.connect(annotationMgr.addPathRequestedSlot);
 
         // Toggle skeleton actor with v key

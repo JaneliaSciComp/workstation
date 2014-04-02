@@ -782,11 +782,32 @@ elements of what's been done; that's handled by signals emitted from AnnotationM
     }
 
     public void saveColorModel() {
-
         SimpleWorker saver = new SimpleWorker() {
             @Override
             protected void doStuff() throws Exception {
                 annotationModel.setPreference(AnnotationsConstants.PREF_COLOR_MODEL, quadViewUi.imageColorModelAsString());
+            }
+
+            @Override
+            protected void hadSuccess() {
+                // nothing here
+            }
+
+            @Override
+            protected void hadError(Throwable error) {
+                SessionMgr.getSessionMgr().handleException(error);
+            }
+        };
+        saver.execute();
+
+    }
+
+    public void setAutomaticTracing(final boolean state) {
+        SimpleWorker saver = new SimpleWorker() {
+            @Override
+            protected void doStuff() throws Exception {
+                annotationModel.setPreference(AnnotationsConstants.PREF_AUTOMATIC_TRACING,
+                        String.valueOf(state));
             }
 
             @Override
