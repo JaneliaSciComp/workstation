@@ -1,32 +1,52 @@
-2014-02-19 14:58:42,689 [AWT-EventQueue-0] INFO [org.janelia.it.FlyWorkstation.gui.application.ConsoleApp] Java version: 1.7.0_51
-2014-02-19 14:58:42,700 [AWT-EventQueue-0] WARN [org.janelia.it.FlyWorkstation.gui.application.ConsoleApp] No splash screen image configured
-2014-02-19 14:58:42,736 [AWT-EventQueue-0] INFO [org.janelia.it.FlyWorkstation.api.entity_model.management.ModelMgr] Initializing Model Manager
-2014-02-19 14:58:42,863 [AWT-EventQueue-0] INFO [org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr] Initializing Session Manager
-2014-02-19 14:58:42,865 [AWT-EventQueue-0] INFO [org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr] Renamed settings directory and files.
-2014-02-19 14:58:42,924 [AWT-EventQueue-0] INFO [org.janelia.it.FlyWorkstation.api.facade.concrete_facade.ejb.EJBFactory] Using interactive server: jnp://jacs:1199
-2014-02-19 14:58:42,925 [AWT-EventQueue-0] INFO [org.janelia.it.FlyWorkstation.api.facade.concrete_facade.ejb.EJBFactory] Using pipeline server: jnp://jacs-data:1199
-2014-02-19 14:58:42,927 [AWT-EventQueue-0] INFO [org.janelia.it.FlyWorkstation.shared.filestore.PathTranslator] Using JACS data path: /Volumes/jacsData
-2014-02-19 14:58:43,143 [AWT-EventQueue-0] INFO [org.janelia.it.FlyWorkstation.shared.util.filecache.LocalFileCache] <init>: exit
-2014-02-19 14:58:43,143 [local-file-cache-load-thread] INFO [org.janelia.it.FlyWorkstation.shared.util.filecache.LocalFileCache] loadCacheFromFilesystem: starting load
-2014-02-19 14:58:43,144 [AWT-EventQueue-0] INFO [org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr] Using 2d renderer: IMAGE_IO
-2014-02-19 14:58:43,947 [AWT-EventQueue-0] WARN [org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr] Ignoring the seemingly harmless exception that Synthetica throws because of Java 7
-2014-02-19 14:58:44,275 [AWT-EventQueue-0] INFO [org.eclipse.jetty.server.Server] jetty-8.y.z-SNAPSHOT
-2014-02-19 14:58:44,338 [AWT-EventQueue-0] INFO [org.eclipse.jetty.server.AbstractConnector] Started SelectChannelConnector@0.0.0.0:40001
-2014-02-19 14:58:45,921 [AWT-EventQueue-0] INFO [org.janelia.it.FlyWorkstation.shared.util.filecache.WebDavClient] setCredentials: entry, userName=fosterl
-2014-02-19 14:58:45,921 [AWT-EventQueue-0] INFO [org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr] Authenticated as user:fosterl
-2014-02-19 14:58:45,938 [AWT-EventQueue-0] INFO [org.janelia.it.FlyWorkstation.gui.application.ConsoleApp] Successfully logged in user fosterl
-2014-02-19 14:58:49,056 [AWT-EventQueue-0] INFO [org.janelia.it.FlyWorkstation.gui.dialogs.GiantFiberSearchDialog] Begin loading
-2014-02-19 14:58:49,162 [AWT-EventQueue-0] INFO [org.janelia.it.FlyWorkstation.gui.dialogs.MAASearchDialog] Begin loading
-2014-02-19 14:58:49,701 [local-file-cache-load-thread] INFO [org.janelia.it.FlyWorkstation.shared.util.filecache.LocalFileLoader] no unregistered files found in local cache
-2014-02-19 14:58:49,863 [AWT-EventQueue-0] INFO [org.janelia.it.FlyWorkstation.gui.framework.tool_manager.ToolMgr] Base root executable path: file:/Users/fosterl/NetBeansProjects/LLF_NetBeans_02102014/janelia-workstation/ConsoleApplication/build/cluster/modules/ext/workstation.jar!/
-2014-02-19 14:58:50,399 [AWT-EventQueue-0] INFO [org.janelia.it.FlyWorkstation.gui.framework.outline.EntityDetailsOutline] Activating
-2014-02-19 14:58:50,437 [AWT-EventQueue-0] INFO [org.janelia.it.FlyWorkstation.gui.framework.outline.EntityOutline] Activating
-2014-02-19 14:58:50,544 [AWT-EventQueue-0] INFO [org.janelia.it.FlyWorkstation.gui.framework.console.Browser] Setting perspective: ImageBrowser
-2014-02-19 14:58:50,896 [local-file-cache-load-thread] INFO [org.janelia.it.FlyWorkstation.shared.util.filecache.LocalFileCache] loadCacheFromFilesystem: loaded 11295 files into LocalFileCache{rootDirectory=/Users/fosterl/.JaneliaWorkstationSuite/Console/.jacs-file-cache, kilobyteCapacity=52428800}, 4% full (2267653/52428800 kilobytes)
-2014-02-19 14:58:51,548 [AWT-EventQueue-0] INFO [org.janelia.it.FlyWorkstation.gui.dialogs.MAASearchDialog] Completed loading, 0 counts, dialog is ready
-2014-02-19 14:58:52,906 [AWT-EventQueue-0] INFO [org.janelia.it.FlyWorkstation.gui.dialogs.GiantFiberSearchDialog] Completed loading, dialog ready.
-2014-02-19 15:02:32,024 [AWT-EventQueue-0] INFO [org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr] Saving user settings to /Users/fosterl/.JaneliaWorkstationSuite/Console/.JW_Settings
-2014-02-19 15:02:32,155 [AWT-EventQueue-0] INFO [org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr] Logged out with: user:fosterl
-2014-02-19 15:02:32,156 [AWT-EventQueue-0] INFO [org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr] Memory in use at exit: 2132.0647 MB
-2014-02-19 15:02:32,161 [AWT-EventQueue-0] INFO [org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr] Window is closing...
-2014-02-19 15:02:32,163 [AWT-EventQueue-0] INFO [org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr] Saving user settings to /Users/fosterl/.JaneliaWorkstationSuite/Console/.JW_Settings
+2014-04-01 15:36:04,861 [On Start/Stop] INFO [org.janelia.it.FlyWorkstation.gui.application.ConsoleApp] Java version: 1.7.0_51
+2014-04-01 15:36:04,867 [On Start/Stop] WARN [org.janelia.it.FlyWorkstation.gui.application.ConsoleApp] No splash screen image configured
+2014-04-01 15:36:04,886 [On Start/Stop] INFO [org.janelia.it.FlyWorkstation.api.entity_model.management.ModelMgr] Initializing Model Manager
+2014-04-01 15:36:04,886 [On Start/Stop] INFO [org.janelia.it.FlyWorkstation.api.entity_model.management.ModelMgr] ModelMgr c'tor from  sun.misc.Launcher$AppClassLoader@7194f467/SystemClassLoader[52 modules] in thread Thread[On Start/Stop,1,system]
+2014-04-01 15:36:04,970 [On Start/Stop] INFO [org.janelia.it.FlyWorkstation.api.entity_model.management.ModelMgr] Successfully initialized
+2014-04-01 15:36:04,973 [On Start/Stop] INFO [org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr] Initializing Session Manager
+2014-04-01 15:36:04,974 [On Start/Stop] INFO [org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr] Renamed settings directory and files.
+2014-04-01 15:36:05,036 [On Start/Stop] INFO [org.janelia.it.FlyWorkstation.api.facade.concrete_facade.ejb.EJBFactory] Using interactive server: jnp://jacs:1199
+2014-04-01 15:36:05,036 [On Start/Stop] INFO [org.janelia.it.FlyWorkstation.api.facade.concrete_facade.ejb.EJBFactory] Using pipeline server: jnp://jacs-data:1199
+2014-04-01 15:36:05,037 [On Start/Stop] INFO [org.janelia.it.FlyWorkstation.shared.filestore.PathTranslator] Using JACS data path: /Volumes/jacsData
+2014-04-01 15:36:05,186 [On Start/Stop] INFO [org.janelia.it.FlyWorkstation.shared.util.filecache.LocalFileCache] <init>: exit
+2014-04-01 15:36:05,187 [local-file-cache-load-thread] INFO [org.janelia.it.FlyWorkstation.shared.util.filecache.LocalFileCache] loadCacheFromFilesystem: starting load
+2014-04-01 15:36:05,187 [On Start/Stop] INFO [org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr] Using 2d renderer: IMAGE_IO
+2014-04-01 15:36:05,377 [On Start/Stop] INFO [org.eclipse.jetty.server.Server] jetty-8.y.z-SNAPSHOT
+2014-04-01 15:36:05,424 [On Start/Stop] INFO [org.eclipse.jetty.server.AbstractConnector] Started SelectChannelConnector@0.0.0.0:40001
+2014-04-01 15:36:06,015 [On Start/Stop] INFO [org.janelia.it.FlyWorkstation.shared.util.filecache.WebDavClient] setCredentials: entry, userName=fosterl
+2014-04-01 15:36:06,016 [On Start/Stop] INFO [org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr] Authenticated as user:fosterl
+2014-04-01 15:36:06,030 [On Start/Stop] INFO [org.janelia.it.FlyWorkstation.gui.application.ConsoleApp] Successfully logged in user fosterl
+2014-04-01 15:36:06,198 [local-file-cache-load-thread] INFO [org.janelia.it.FlyWorkstation.shared.util.filecache.LocalFileLoader] no unregistered files found in local cache
+2014-04-01 15:36:06,490 [local-file-cache-load-thread] INFO [org.janelia.it.FlyWorkstation.shared.util.filecache.LocalFileCache] loadCacheFromFilesystem: loaded 1910 files into LocalFileCache{rootDirectory=/Users/fosterl/.JaneliaWorkstationSuite/Console/.jacs-file-cache, kilobyteCapacity=52428800}, 1% full (546381/52428800 kilobytes)
+2014-04-01 15:36:07,534 [On Start/Stop] INFO [org.janelia.it.FlyWorkstation.gui.dialogs.GiantFiberSearchDialog] Begin loading
+2014-04-01 15:36:07,557 [On Start/Stop] INFO [org.janelia.it.FlyWorkstation.gui.dialogs.MAASearchDialog] Begin loading
+2014-04-01 15:36:07,776 [On Start/Stop] INFO [org.janelia.it.FlyWorkstation.gui.framework.tool_manager.ToolMgr] Base root executable path: file:/Users/fosterl/NetBeansProjects/alignment_board_LLF/janelia-workstation/ConsoleApplication/build/cluster/modules/org-janelia-it-FlyWorkstation-nb_action.jar!/
+2014-04-01 15:36:07,778 [AWT-EventQueue-0] INFO [org.janelia.it.FlyWorkstation.gui.framework.outline.EntityDetailsOutline] Activating
+2014-04-01 15:36:07,823 [AWT-EventQueue-0] INFO [org.janelia.it.FlyWorkstation.gui.framework.outline.EntityOutline] Activating
+2014-04-01 15:36:07,955 [AWT-EventQueue-0] INFO [org.janelia.it.FlyWorkstation.gui.framework.console.Browser] Setting perspective: ImageBrowser
+2014-04-01 15:36:08,116 [AWT-EventQueue-0] WARN [org.janelia.it.FlyWorkstation.gui.framework.console.ToolsMenuModifier] Failed to find menu bar from main frame.
+2014-04-01 15:36:08,735 [AWT-EventQueue-0] INFO [org.janelia.it.FlyWorkstation.gui.dialogs.MAASearchDialog] Completed loading, 0 counts, dialog is ready
+2014-04-01 15:36:09,933 [AWT-EventQueue-0] INFO [org.janelia.it.FlyWorkstation.gui.alignment_board_viewer.LayersPanel] Activating
+2014-04-01 15:36:10,025 [AWT-EventQueue-0] WARN [org.janelia.it.FlyWorkstation.gui.alignment_board_viewer.LayersPanel] No alignment board context ready for layers panel.
+2014-04-01 15:36:10,352 [AWT-EventQueue-0] INFO [org.janelia.it.FlyWorkstation.gui.alignment_board_viewer.AlignmentBoardPanel] C'tor
+2014-04-01 15:36:10,357 [AWT-EventQueue-0] INFO [org.janelia.it.FlyWorkstation.gui.alignment_board_viewer.top_component.AlignmentBoardTopComponent] Established acceptor
+2014-04-01 15:36:10,539 [AWT-EventQueue-0] INFO [org.janelia.it.FlyWorkstation.gui.framework.console.ToolsMenuModifier] Adding item Fiji.app to menu Tools
+2014-04-01 15:36:10,539 [AWT-EventQueue-0] INFO [org.janelia.it.FlyWorkstation.gui.framework.console.ToolsMenuModifier] Adding item Vaa3d to menu Tools
+2014-04-01 15:36:10,539 [AWT-EventQueue-0] INFO [org.janelia.it.FlyWorkstation.gui.framework.console.ToolsMenuModifier] Adding item Vaa3d - Neuron Annotator to menu Tools
+2014-04-01 15:36:10,840 [AWT-EventQueue-0] INFO [org.janelia.it.FlyWorkstation.gui.dialogs.GiantFiberSearchDialog] Completed loading, dialog ready.
+2014-04-01 15:36:37,218 [SwingWorker-pool-3-thread-5] INFO [org.janelia.it.FlyWorkstation.api.entity_model.management.ModelMgr] Searching SOLR: id:1844136510199169113 start=null rows=null
+2014-04-01 15:36:37,251 [SwingWorker-pool-3-thread-10] INFO [org.janelia.it.FlyWorkstation.api.entity_model.management.ModelMgr] Post on event bus from null/SystemClassLoader[52 modules] in thread Thread[SwingWorker-pool-3-thread-10,5,system]
+2014-04-01 15:36:43,734 [SwingWorker-pool-3-thread-4] INFO [org.janelia.it.FlyWorkstation.api.entity_model.management.ModelMgr] Searching SOLR: id:1759865988867686498 start=null rows=null
+2014-04-01 15:36:48,147 [AWT-EventQueue-0] INFO [org.janelia.it.FlyWorkstation.gui.framework.viewer.Hud] HUD: entity type is Sample
+2014-04-01 15:36:48,187 [SwingWorker-pool-3-thread-5] INFO [org.janelia.it.FlyWorkstation.api.entity_model.management.ModelMgr] Post on event bus from null/SystemClassLoader[52 modules] in thread Thread[SwingWorker-pool-3-thread-5,5,system]
+2014-04-01 15:36:48,187 [SwingWorker-pool-3-thread-9] INFO [org.janelia.it.FlyWorkstation.api.entity_model.management.ModelMgr] Post on event bus from null/SystemClassLoader[52 modules] in thread Thread[SwingWorker-pool-3-thread-9,5,system]
+2014-04-01 15:36:48,202 [SwingWorker-pool-3-thread-6] INFO [org.janelia.it.FlyWorkstation.api.entity_model.management.ModelMgr] Post on event bus from null/SystemClassLoader[52 modules] in thread Thread[SwingWorker-pool-3-thread-6,5,system]
+2014-04-01 15:36:48,203 [SwingWorker-pool-3-thread-4] INFO [org.janelia.it.FlyWorkstation.api.entity_model.management.ModelMgr] Post on event bus from null/SystemClassLoader[52 modules] in thread Thread[SwingWorker-pool-3-thread-4,5,system]
+2014-04-01 15:36:48,217 [SwingWorker-pool-3-thread-4] INFO [org.janelia.it.FlyWorkstation.api.entity_model.management.ModelMgr] Post on event bus from null/SystemClassLoader[52 modules] in thread Thread[SwingWorker-pool-3-thread-4,5,system]
+2014-04-01 15:36:48,217 [SwingWorker-pool-3-thread-2] INFO [org.janelia.it.FlyWorkstation.api.entity_model.management.ModelMgr] Post on event bus from null/SystemClassLoader[52 modules] in thread Thread[SwingWorker-pool-3-thread-2,5,system]
+2014-04-01 15:36:48,245 [SwingWorker-pool-3-thread-2] INFO [org.janelia.it.FlyWorkstation.api.entity_model.management.ModelMgr] Post on event bus from null/SystemClassLoader[52 modules] in thread Thread[SwingWorker-pool-3-thread-2,5,system]
+2014-04-01 15:36:55,326 [AWT-EventQueue-0] WARN [org.janelia.it.FlyWorkstation.gui.viewer3d.texture.TextureMediator] Invalid remainder vs texture data dimensions.  Sx=576 Sy=352 Sz=128 storageFmtReq=4 pixelByteCount=4;  total remaining is 103809024 /Users/fosterl/.JaneliaWorkstationSuite/Console/.jacs-file-cache/active/WebDAV/nobackup/jacs/jacsData/filestore/asoy/Separation/036/322/1823621319674036322/separate/fastLoad/ConsolidatedSignal2_25.mp4;  expected remaining is 311427072
+2014-04-01 15:36:55,388 [AWT-EventQueue-0] INFO [org.janelia.it.FlyWorkstation.gui.viewer3d.buffering.VtxCoordBufMgr] Allocating buffers
+2014-04-01 15:37:44,738 [On Start/Stop] INFO [org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr] Saving user settings to /Users/fosterl/.JaneliaWorkstationSuite/Console/.JW_Settings
+2014-04-01 15:37:44,749 [On Start/Stop] INFO [org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr] Logged out with: user:fosterl
+2014-04-01 15:37:44,750 [On Start/Stop] INFO [org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr] Memory in use at exit: 1198.4894 MB

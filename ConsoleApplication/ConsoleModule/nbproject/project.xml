@@ -123,6 +123,7 @@
                 <package>org.janelia.it.FlyWorkstation.gui.framework.actions</package>
                 <package>org.janelia.it.FlyWorkstation.gui.framework.bookmark</package>
                 <package>org.janelia.it.FlyWorkstation.gui.framework.console</package>
+                <package>org.janelia.it.FlyWorkstation.gui.framework.console.nb_action</package>
                 <package>org.janelia.it.FlyWorkstation.gui.framework.context_menu</package>
                 <package>org.janelia.it.FlyWorkstation.gui.framework.exception_handlers</package>
                 <package>org.janelia.it.FlyWorkstation.gui.framework.external_listener</package>
@@ -156,6 +157,7 @@
                 <package>org.janelia.it.FlyWorkstation.gui.slice_viewer.skeleton</package>
                 <package>org.janelia.it.FlyWorkstation.gui.static_view</package>
                 <package>org.janelia.it.FlyWorkstation.gui.static_view.shader</package>
+                <package>org.janelia.it.FlyWorkstation.gui.top_component</package>
                 <package>org.janelia.it.FlyWorkstation.gui.util</package>
                 <package>org.janelia.it.FlyWorkstation.gui.util.panels</package>
                 <package>org.janelia.it.FlyWorkstation.gui.util.server_status</package>
@@ -175,6 +177,7 @@
                 <package>org.janelia.it.FlyWorkstation.gui.viewer3d.stream</package>
                 <package>org.janelia.it.FlyWorkstation.gui.viewer3d.texture</package>
                 <package>org.janelia.it.FlyWorkstation.gui.viewer3d.volume_builder</package>
+                <package>org.janelia.it.FlyWorkstation.lifecycle</package>
                 <package>org.janelia.it.FlyWorkstation.model.domain</package>
                 <package>org.janelia.it.FlyWorkstation.model.entity</package>
                 <package>org.janelia.it.FlyWorkstation.model.utils</package>

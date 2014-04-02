@@ -45,7 +45,7 @@ public final class LayersPanelTopComponent extends TopComponent {
         initComponents();
         setName(Bundle.CTL_LayersPanelTopComponent());
         setToolTipText(Bundle.HINT_LayersPanelTopComponent());
-        putClientProperty(TopComponent.PROP_DRAGGING_DISABLED, Boolean.TRUE);
+        putClientProperty(TopComponent.PROP_DRAGGING_DISABLED, Boolean.FALSE);
         putClientProperty(TopComponent.PROP_MAXIMIZATION_DISABLED, Boolean.TRUE);
         putClientProperty(TopComponent.PROP_UNDOCKING_DISABLED, Boolean.TRUE);
 

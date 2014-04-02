@@ -1642,134 +1642,17 @@
                 <package>org.hibernate.validator.event</package>
                 <package>org.hibernate.validator.interpolator</package>
                 <package>org.janelia.it.jacs.compute.access</package>
-                <package>org.janelia.it.jacs.compute.access.large</package>
-                <package>org.janelia.it.jacs.compute.access.mongodb</package>
-                <package>org.janelia.it.jacs.compute.access.neo4j</package>
-                <package>org.janelia.it.jacs.compute.access.neo4j.rest</package>
-                <package>org.janelia.it.jacs.compute.access.search</package>
-                <package>org.janelia.it.jacs.compute.access.solr</package>
-                <package>org.janelia.it.jacs.compute.access.util</package>
                 <package>org.janelia.it.jacs.compute.api</package>
                 <package>org.janelia.it.jacs.compute.api.support</package>
                 <package>org.janelia.it.jacs.compute.drmaa</package>
-                <package>org.janelia.it.jacs.compute.engine.data</package>
-                <package>org.janelia.it.jacs.compute.engine.def</package>
                 <package>org.janelia.it.jacs.compute.engine.launcher</package>
-                <package>org.janelia.it.jacs.compute.engine.launcher.ejb</package>
                 <package>org.janelia.it.jacs.compute.engine.service</package>
-                <package>org.janelia.it.jacs.compute.engine.util</package>
                 <package>org.janelia.it.jacs.compute.gcdml</package>
-                <package>org.janelia.it.jacs.compute.interceptor</package>
-                <package>org.janelia.it.jacs.compute.jtc</package>
-                <package>org.janelia.it.jacs.compute.launcher.ahp16s</package>
-                <package>org.janelia.it.jacs.compute.launcher.annotation</package>
-                <package>org.janelia.it.jacs.compute.launcher.archive</package>
-                <package>org.janelia.it.jacs.compute.launcher.barcodeDesigner</package>
-                <package>org.janelia.it.jacs.compute.launcher.blast</package>
-                <package>org.janelia.it.jacs.compute.launcher.console</package>
-                <package>org.janelia.it.jacs.compute.launcher.eukAnnotation</package>
-                <package>org.janelia.it.jacs.compute.launcher.fileDiscovery</package>
-                <package>org.janelia.it.jacs.compute.launcher.fly</package>
-                <package>org.janelia.it.jacs.compute.launcher.frvblast</package>
-                <package>org.janelia.it.jacs.compute.launcher.geci</package>
-                <package>org.janelia.it.jacs.compute.launcher.genomeProject</package>
-                <package>org.janelia.it.jacs.compute.launcher.hmmer</package>
-                <package>org.janelia.it.jacs.compute.launcher.hmmer3</package>
-                <package>org.janelia.it.jacs.compute.launcher.indexing</package>
-                <package>org.janelia.it.jacs.compute.launcher.inspect</package>
-                <package>org.janelia.it.jacs.compute.launcher.metageno</package>
-                <package>org.janelia.it.jacs.compute.launcher.pangenome</package>
-                <package>org.janelia.it.jacs.compute.launcher.pipelines</package>
-                <package>org.janelia.it.jacs.compute.launcher.profileComparison</package>
-                <package>org.janelia.it.jacs.compute.launcher.prokAnnotation</package>
-                <package>org.janelia.it.jacs.compute.launcher.psiBlast</package>
-                <package>org.janelia.it.jacs.compute.launcher.recruitment</package>
-                <package>org.janelia.it.jacs.compute.launcher.rnaSeq</package>
-                <package>org.janelia.it.jacs.compute.launcher.rpsBlast</package>
-                <package>org.janelia.it.jacs.compute.launcher.scheduler</package>
-                <package>org.janelia.it.jacs.compute.launcher.sift</package>
-                <package>org.janelia.it.jacs.compute.launcher.system</package>
-                <package>org.janelia.it.jacs.compute.launcher.tic</package>
-                <package>org.janelia.it.jacs.compute.launcher.timeLogic</package>
-                <package>org.janelia.it.jacs.compute.launcher.tools</package>
-                <package>org.janelia.it.jacs.compute.mbean</package>
-                <package>org.janelia.it.jacs.compute.mservice</package>
-                <package>org.janelia.it.jacs.compute.mservice.action</package>
-                <package>org.janelia.it.jacs.compute.mservice.trigger</package>
-                <package>org.janelia.it.jacs.compute.service.align</package>
-                <package>org.janelia.it.jacs.compute.service.annotation</package>
-                <package>org.janelia.it.jacs.compute.service.ap16s</package>
-                <package>org.janelia.it.jacs.compute.service.barcodeDesign</package>
-                <package>org.janelia.it.jacs.compute.service.blast</package>
-                <package>org.janelia.it.jacs.compute.service.blast.createDB</package>
-                <package>org.janelia.it.jacs.compute.service.blast.createtask</package>
-                <package>org.janelia.it.jacs.compute.service.blast.fastasplit</package>
-                <package>org.janelia.it.jacs.compute.service.blast.merge</package>
-                <package>org.janelia.it.jacs.compute.service.blast.persist.query</package>
-                <package>org.janelia.it.jacs.compute.service.blast.persist.results.finall</package>
-                <package>org.janelia.it.jacs.compute.service.blast.persist.results.initial</package>
-                <package>org.janelia.it.jacs.compute.service.blast.submit</package>
-                <package>org.janelia.it.jacs.compute.service.colorSeparator</package>
-                <package>org.janelia.it.jacs.compute.service.common</package>
-                <package>org.janelia.it.jacs.compute.service.common.file</package>
                 <package>org.janelia.it.jacs.compute.service.common.grid.submit</package>
                 <package>org.janelia.it.jacs.compute.service.common.grid.submit.sge</package>
-                <package>org.janelia.it.jacs.compute.service.common.grid.submit.teragrid</package>
-                <package>org.janelia.it.jacs.compute.service.common.zip</package>
-                <package>org.janelia.it.jacs.compute.service.entity</package>
-                <package>org.janelia.it.jacs.compute.service.entity.sample</package>
-                <package>org.janelia.it.jacs.compute.service.eukAnnotation</package>
-                <package>org.janelia.it.jacs.compute.service.export</package>
-                <package>org.janelia.it.jacs.compute.service.export.model</package>
-                <package>org.janelia.it.jacs.compute.service.export.processor</package>
-                <package>org.janelia.it.jacs.compute.service.export.util</package>
-                <package>org.janelia.it.jacs.compute.service.export.writers</package>
-                <package>org.janelia.it.jacs.compute.service.fileDiscovery</package>
-                <package>org.janelia.it.jacs.compute.service.fly</package>
-                <package>org.janelia.it.jacs.compute.service.geci</package>
-                <package>org.janelia.it.jacs.compute.service.genomeProject</package>
-                <package>org.janelia.it.jacs.compute.service.hmmer</package>
-                <package>org.janelia.it.jacs.compute.service.hmmer3</package>
-                <package>org.janelia.it.jacs.compute.service.image</package>
-                <package>org.janelia.it.jacs.compute.service.inspect</package>
-                <package>org.janelia.it.jacs.compute.service.maskSearch</package>
-                <package>org.janelia.it.jacs.compute.service.metageno</package>
-                <package>org.janelia.it.jacs.compute.service.metageno.anno</package>
-                <package>org.janelia.it.jacs.compute.service.metageno.orf</package>
-                <package>org.janelia.it.jacs.compute.service.mongodb</package>
-                <package>org.janelia.it.jacs.compute.service.neo4j</package>
-                <package>org.janelia.it.jacs.compute.service.neuronSeparator</package>
-                <package>org.janelia.it.jacs.compute.service.profileComparison</package>
-                <package>org.janelia.it.jacs.compute.service.prokAnnotation</package>
-                <package>org.janelia.it.jacs.compute.service.psiBlast</package>
-                <package>org.janelia.it.jacs.compute.service.recruitment</package>
-                <package>org.janelia.it.jacs.compute.service.reversePsiBlast</package>
-                <package>org.janelia.it.jacs.compute.service.rnaSeq</package>
-                <package>org.janelia.it.jacs.compute.service.screen</package>
-                <package>org.janelia.it.jacs.compute.service.search</package>
-                <package>org.janelia.it.jacs.compute.service.sift</package>
-                <package>org.janelia.it.jacs.compute.service.solr</package>
-                <package>org.janelia.it.jacs.compute.service.tic</package>
-                <package>org.janelia.it.jacs.compute.service.timeLogic</package>
-                <package>org.janelia.it.jacs.compute.service.tools</package>
-                <package>org.janelia.it.jacs.compute.service.utility</package>
-                <package>org.janelia.it.jacs.compute.service.vaa3d</package>
-                <package>org.janelia.it.jacs.compute.util</package>
-                <package>org.janelia.it.jacs.compute.web</package>
-                <package>org.janelia.it.jacs.compute.ws</package>
-                <package>org.janelia.it.jacs.compute.wsrest</package>
                 <package>org.janelia.it.jacs.model</package>
                 <package>org.janelia.it.jacs.model.collections</package>
                 <package>org.janelia.it.jacs.model.common</package>
-                <package>org.janelia.it.jacs.model.domain.impl.entity</package>
-                <package>org.janelia.it.jacs.model.domain.impl.entity.common</package>
-                <package>org.janelia.it.jacs.model.domain.impl.entity.imaging</package>
-                <package>org.janelia.it.jacs.model.domain.impl.entity.metamodel</package>
-                <package>org.janelia.it.jacs.model.domain.impl.metamodel</package>
-                <package>org.janelia.it.jacs.model.domain.interfaces</package>
-                <package>org.janelia.it.jacs.model.domain.interfaces.common</package>
-                <package>org.janelia.it.jacs.model.domain.interfaces.imaging</package>
-                <package>org.janelia.it.jacs.model.domain.interfaces.metamodel</package>
                 <package>org.janelia.it.jacs.model.download</package>
                 <package>org.janelia.it.jacs.model.entity</package>
                 <package>org.janelia.it.jacs.model.entity.cv</package>
@@ -2933,10 +2816,6 @@
             <class-path-extension>
                 <runtime-relative-path>ext/regexp-1.2.jar</runtime-relative-path>
                 <binary-origin>release/modules/ext/regexp-1.2.jar</binary-origin>
-            </class-path-extension>
-            <class-path-extension>
-                <runtime-relative-path>ext/compute.jar</runtime-relative-path>
-                <binary-origin>release/modules/ext/compute.jar</binary-origin>
             </class-path-extension>
             <class-path-extension>
                 <runtime-relative-path>ext/compute-client.jar</runtime-relative-path>

@@ -161,7 +161,11 @@ public class SessionMgr {
         // Look for user's model-property-designated look-and-feel.
         //  If it is found, and it is installed (not defunct/obsolete) use it.
         // If not, force user's setting to one that is installed (current one).
-        LookAndFeelInfo[] installedInfos = UIManager.getInstalledLookAndFeels();
+        //
+        // Experimental, and requires license issue settlement.
+        //UIManager.installLookAndFeel("JTattoo Smart", "com.jtattoo.plaf.smart.SmartLookAndFeel");
+
+        LookAndFeelInfo[] installedInfos = UIManager.getInstalledLookAndFeels();        
         String lafName = (String) getModelProperty(DISPLAY_LOOK_AND_FEEL);
         LookAndFeel currentLaf = UIManager.getLookAndFeel();
         LookAndFeelInfo currentLafInfo = null;
@@ -177,11 +181,11 @@ public class SessionMgr {
                     }
                 }
                 if ( installed ) {
-                    //setLookAndFeel(lafName);
+                    setLookAndFeel(lafName);
                 }
                 else if ( currentLafInfo != null ) {
-                    //setLookAndFeel(currentLafInfo.getName());
-                    //setModelProperty(DISPLAY_LOOK_AND_FEEL, currentLafInfo.getClassName());
+                    setLookAndFeel(currentLafInfo.getName());
+                    setModelProperty(DISPLAY_LOOK_AND_FEEL, currentLafInfo.getClassName());
                 }
             }
             catch (Exception ex) {
@@ -522,7 +526,7 @@ public class SessionMgr {
     }
 
     public void setLookAndFeel(String lookAndFeelClassName) {
-        try {
+        try {     
         	if (lookAndFeelClassName.contains("BlackEye")) {
         		isDarkLook = true;
 
@@ -544,12 +548,45 @@ public class SessionMgr {
                     }
                 }
         	}
-        	else {
+            else if (lookAndFeelClassName.toLowerCase().contains("jtattoo")) {
+                // setup the look and feel properties
+                Properties props = new Properties();
+
+                //props.put("logoString", "my company");
+                //props.put("licenseKey", "INSERT YOUR LICENSE KEY HERE");
+//                String controlColor = "218 254 230";
+//                String buttonColor = "218 230 254"; 
+//                String foreGround = "180 240 197";
+//                String backGround = "0 0 0";
+//                props.put("selectionBackgroundColor", backGround);
+//                props.put("menuSelectionBackgroundColor", backGround);
+//
+//                props.put("controlColor", controlColor);
+//                props.put("controlColorLight", controlColor);
+//                props.put("controlColorDark", backGround);
+//
+//                props.put("buttonColor", buttonColor);
+//                props.put("buttonColorLight", "255 255 255");
+//                props.put("buttonColorDark", "244 242 232");
+//
+//                props.put("rolloverColor", controlColor);
+//                props.put("rolloverColorLight", controlColor);
+//                props.put("rolloverColorDark", backGround);
+//
+//                props.put("windowTitleForegroundColor", foreGround);
+//                props.put("windowTitleBackgroundColor", backGround);
+//                props.put("windowTitleColorLight", controlColor);
+//                props.put("windowTitleColorDark", backGround);
+//                props.put("windowBorderColor", controlColor);
+//                com.jtattoo.plaf.smart.SmartLookAndFeel.setCurrentTheme(props);
+        		UIManager.setLookAndFeel(lookAndFeelClassName);	
+            } 
+            else {                
         		UIManager.setLookAndFeel(lookAndFeelClassName);	
         	}
-            
-            // Set LnF on the main frame.
-            SwingUtilities.updateComponentTreeUI(SessionMgr.getMainFrame());
+
+            // The main frame is not presented until after this time.
+            //  No need to update its LaF.
             setModelProperty(DISPLAY_LOOK_AND_FEEL, lookAndFeelClassName);
         }
         catch (Exception ex) {
