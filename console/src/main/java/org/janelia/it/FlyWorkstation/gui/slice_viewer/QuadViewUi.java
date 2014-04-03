@@ -138,7 +138,6 @@ public class QuadViewUi extends JPanel
 		colorChannelWidget_2, 
 		colorChannelWidget_3
 	};
-    private ColorModelLoadStatus colorModelLoadStatus;
     private JToggleButton lockBlackButton;
     private JToggleButton lockGrayButton;
     private JToggleButton lockWhiteButton;
@@ -353,8 +352,7 @@ public class QuadViewUi extends JPanel
     public Slot1<String> loadColorModelSlot = new Slot1<String>() {
         @Override
         public void execute(String modelString) {
-            colorModelLoadStatus.setColorModelString(modelString);
-            maybeLoadColorModel();
+            imageColorModelFromString(modelString);
         }
     };
 
@@ -373,6 +371,7 @@ public class QuadViewUi extends JPanel
 	public QuadViewUi(JFrame parentFrame, Entity initialEntity, boolean overrideFrameMenuBar)
 	{
 		volumeImage.volumeInitializedSignal.connect(onVolumeLoadedSlot);
+        volumeImage.volumeInitializedSignal.connect(annotationMgr.onVolumeLoadedSlot);
 		sliceViewer.setImageColorModel(imageColorModel);
 		camera.getViewChangedSignal().connect(tileServer.refreshCurrentTileSetSlot);
 		tileServer.loadStatusChangedSignal.connect(onLoadStatusChangedSlot);
@@ -1262,9 +1261,6 @@ LLF: the hookup for the 3d snapshot.
     public boolean loadURL(URL url) {
     	// Check if url exists first...
     	try {
-            // used to track whether both volume and workspace are loaded
-            colorModelLoadStatus = new ColorModelLoadStatus();
-
     		url.openStream();
         	return volumeImage.loadURL(url);
     	} catch (IOException exc) {
@@ -1275,16 +1271,6 @@ LLF: the hookup for the 3d snapshot.
                     JOptionPane.ERROR_MESSAGE);
             return false;
     	}
-    }
-
-    /**
-     * load the color model if it's available and ready; called from the two
-     * places where that might become true
-     */
-    private void maybeLoadColorModel() {
-        if (colorModelLoadStatus.isReady()) {
-            imageColorModelFromString(colorModelLoadStatus.getColorModelString());
-        }
     }
 
     public String imageColorModelAsString() {
@@ -1305,8 +1291,6 @@ LLF: the hookup for the 3d snapshot.
             getSkeletonActor().setTileFormat(
                     tileServer.getLoadAdapter().getTileFormat());
 
-            colorModelLoadStatus.setVolumeLoaded(true);
-            maybeLoadColorModel();
 		}
     };
     
@@ -1341,34 +1325,4 @@ LLF: the hookup for the 3d snapshot.
     	}
     };
 
-    /**
-     * loading the color model from a workspace has a timing problem; both
-     * the workspace and volume must be finished loading, but that can
-     * happen in either order (it's asynchronous); this class is used
-     * to track that
-     */
-    static class ColorModelLoadStatus {
-        private boolean volumeLoaded = false;
-        private String colorModelString = null;
-
-        public boolean isReady () {
-            return isVolumeLoaded() && colorModelString != null;
-        }
-
-        public boolean isVolumeLoaded() {
-            return volumeLoaded;
-        }
-
-        public void setVolumeLoaded(boolean volumeLoaded) {
-            this.volumeLoaded = volumeLoaded;
-        }
-
-        public String getColorModelString() {
-            return colorModelString;
-        }
-
-        public void setColorModelString(String colorModelString) {
-            this.colorModelString = colorModelString;
-        }
-    };
 }

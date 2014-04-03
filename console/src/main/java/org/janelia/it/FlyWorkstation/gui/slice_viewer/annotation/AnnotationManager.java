@@ -21,6 +21,7 @@ import org.janelia.it.jacs.model.user_data.tiledMicroscope.*;
 
 import javax.swing.*;
 import java.awt.*;
+import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.regex.Matcher;
@@ -52,6 +53,13 @@ elements of what's been done; that's handled by signals emitted from AnnotationM
     private Entity initialEntity;
 
     // ----- slots
+
+    public Slot1<URL> onVolumeLoadedSlot = new Slot1<URL>() {
+        @Override
+        public void execute(URL url) {
+            onVolumeLoaded();
+        }
+    };
 
     public Slot1<Skeleton.AnchorSeed> addAnchorRequestedSlot = new Slot1<Skeleton.AnchorSeed>() {
         @Override
@@ -162,6 +170,13 @@ elements of what's been done; that's handled by signals emitted from AnnotationM
      */
     public void setInitialEntity(final Entity initialEntity) {
         this.initialEntity = initialEntity;
+    }
+
+    /**
+     * called when volume is *finished* loading (so as to avoid race conditions);
+     * relies on initial entity being properly set already
+     */
+    public void onVolumeLoaded() {
 
         if (initialEntity == null) {
             // this is a request to clear the workspace
@@ -213,7 +228,6 @@ elements of what's been done; that's handled by signals emitted from AnnotationM
         //  it may be better to make it a different method
 
     }
-    
 
     // ----- methods called from UI
     // these methods are called by actions from the 2d view; should be not
