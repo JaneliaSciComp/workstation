@@ -11,17 +11,17 @@ import java.util.Map;
 public class VoxelInfoBean {
 
     // These constants establish face-order.
-    private static final int TOP_FACE = 0;
-    private static final int LEFT_FACE = 1;
-    private static final int FRONT_FACE = 2;
-    private static final int BOTTOM_FACE = 3;
-    private static final int BACK_FACE = 4;
-    private static final int RIGHT_FACE = 5;
+    public static final int TOP_FACE = 0;
+    public static final int LEFT_FACE = 1;
+    public static final int FRONT_FACE = 2;
+    public static final int BOTTOM_FACE = 3;
+    public static final int BACK_FACE = 4;
+    public static final int RIGHT_FACE = 5;
 
-    private Map<String,Integer> attributeNameVsCount = new HashMap<String,Integer>();
     private VoxelInfoKey key;
-    private Map<String,float[]> attributeMap = new HashMap<String,float[]>();
     private boolean[] exposedFaces = new boolean[ 6 ];
+    private int exposedFaceCount = 0;
+
 
     private boolean exposed;
 
@@ -34,40 +34,10 @@ public class VoxelInfoBean {
         this.key = key;
     }
 
-    /**
-     * Attributes are meant to become vertex attributes: float arrays describing a vertex.
-     *
-     * @return full mapping.
-     */
-    public Map<String, float[]> getAttributeMap() {
-        return attributeMap;
-    }
-
-    /**
-     * Pass back the very attribute named, only.
-     *
-     * @param attributeName which to lob.
-     * @return array as set previously.
-     */
-    public float[] getAttribute( String attributeName ) {
-        return attributeMap.get( attributeName );
-    }
-
-    /**
-     * Set one attribute. Attributes may be 2D (as in tex coords) or 3D (as in vertex positions).
-     *
-     * @param attributeName called this at GPU time.
-     * @param attributeCount count of items in array.
-     * @param attribute array of the values.
-     */
-    public void setAttribute(String attributeName, float[] attribute, int attributeCount) {
-        checkAttributeSanity(attributeName, attributeCount);
-        attributeMap.put( attributeName, attribute );
-    }
-
     public void setExposedFace( int faceOffset ) {
         exposedFaces[ faceOffset ] = true;
         exposed = true;
+        exposedFaceCount ++;
     }
 
     /**
@@ -117,28 +87,29 @@ public class VoxelInfoBean {
         return rtnVal;
     }
 
-    //------------------------------------HELPERS
-    private void checkAttributeSanity(String attributeName, int attributeCount) {
-        Integer previousCount = attributeNameVsCount.get( attributeName );
-        if ( previousCount == null ) {
-            attributeNameVsCount.put( attributeName, attributeCount );
-        }
-        else {
-            if ( attributeCount != previousCount ) {
-                String msg = String.format(
-                        "Cannot mix array sizes for attributes.  Previously set to %d but now seeing %d for %s.",
-                        previousCount, attributeCount, attributeName
-                );
-                throw new IllegalArgumentException( msg );
-            }
-        }
+    public boolean[] getExposedFaces() {
+        return exposedFaces;
+//        long[][] neighborhood = getNeighborhood();
+//        long[][] rtnVal = new long[ exposedFaceCount ][3];
+//        int outputPos = 0;
+//        for ( int i = 0; i < exposedFaces.length; i++ ) {
+//            if ( exposedFaces[i] ) {
+//                rtnVal[ outputPos ][ 0 ] = neighborhood[ i ][ 0 ];
+//                rtnVal[ outputPos ][ 1 ] = neighborhood[ i ][ 1 ];
+//                rtnVal[ outputPos ][ 2 ] = neighborhood[ i ][ 2 ];
+//            }
+//        }
+//
+//        return rtnVal;
+
     }
 
     public boolean isExposed() {
         return exposed;
     }
 
-    public void setExposed(boolean isExposed) {
-        this.exposed = isExposed;
+    public int getExposedFaceCount() {
+        return exposedFaceCount;
     }
+
 }
