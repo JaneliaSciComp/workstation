@@ -360,6 +360,15 @@ that need to respond to changing data.
         updateCurrentWorkspace();
         updateCurrentNeuron();
 
+        // must come after workspace and neuron are updated:
+        if (automatedTracingEnabled()) {
+            // trace to parent, and each child to this parent:
+            pathTraceRequestedSignal.emit(annotation.getId());
+            for (TmGeoAnnotation child: annotation.getChildren()) {
+                pathTraceRequestedSignal.emit(child.getId());
+            }
+        }
+
         // this triggers the updates in, eg, the neurite list
         if (getCurrentNeuron() != null) {
             if (neuron.getId().equals(getCurrentNeuron().getId())) {
@@ -413,6 +422,11 @@ that need to respond to changing data.
 
         updateCurrentWorkspace();
         updateCurrentNeuron();
+
+        // if we're tracing, retrace if there's a new connection
+        if (automatedTracingEnabled() && child != null) {
+            pathTraceRequestedSignal.emit(child.getId());
+        }
 
         // notifications
 
@@ -555,6 +569,12 @@ that need to respond to changing data.
         updateCurrentWorkspace();
         if (neuron.getId().equals(getCurrentNeuron().getId())){
             updateCurrentNeuron();
+        }
+
+        // retrace
+        if (automatedTracingEnabled()) {
+            pathTraceRequestedSignal.emit(newAnnotation.getId());
+            pathTraceRequestedSignal.emit(annotation1.getId());
         }
 
         annotationAddedSignal.emit(newAnnotation);
