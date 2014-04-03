@@ -308,13 +308,14 @@ that need to respond to changing data.
         TmGeoAnnotation annotation = modelMgr.addGeometricAnnotation(neuron.getId(),
             parentAnn.getId(), 0, xyz.x(), xyz.y(), xyz.z(), "");
 
-        if (automatedTracingEnabled()) {
-            pathTraceRequestedSignal.emit(annotation.getId());
-        }
-
         updateCurrentWorkspace();
         if (neuron.getId().equals(getCurrentNeuron().getId())) {
             updateCurrentNeuron();
+        }
+
+        // must come after workspace and neuron are updated:
+        if (automatedTracingEnabled()) {
+            pathTraceRequestedSignal.emit(annotation.getId());
         }
 
         neuronSelectedSignal.emit(getCurrentNeuron());
