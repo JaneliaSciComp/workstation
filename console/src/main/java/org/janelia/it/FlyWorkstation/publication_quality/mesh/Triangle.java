@@ -16,6 +16,10 @@ public class Triangle {
         vertices.add( bean );
     }
 
+    public List<VertexInfoBean> getVertices() {
+        return vertices;
+    }
+
     public VertexFactory.NormalDirection getNormalVector() {
         return normalVector;
     }

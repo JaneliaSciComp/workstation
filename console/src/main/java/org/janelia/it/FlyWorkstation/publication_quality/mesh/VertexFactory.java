@@ -1,5 +1,9 @@
 package org.janelia.it.FlyWorkstation.publication_quality.mesh;
 
+import java.nio.ByteBuffer;
+import java.nio.ByteOrder;
+import java.nio.FloatBuffer;
+import java.nio.IntBuffer;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -8,7 +12,7 @@ import java.util.HashMap;
 /**
  * This factory can have a number of voxel beans pumped through it over time, after which it can provide a
  * full set of vertices and a full set of triangles, which have reference to each other, and which can represent
- * a mesh enclosing all the original voxels.  Once instance of this class should produce the "geometry"
+ * a mesh enclosing all the original voxels.  One instance of this class should produce the "geometry"
  * for one contiguous surface.  Do not re-use instance for multiple renderables (such as neuron fragments).
  *
  * Created by fosterl on 4/2/14.
@@ -63,6 +67,7 @@ public class VertexFactory {
 
     // This is for state enforcement: do not wish to allow partial-fetch of product.
     private boolean getterCalled = false;
+    private int currentVertexNumber = 0;
 
     /**
      * Make vertices and triangles for all exposed sides of the voxel represented by the bean. Feed data here.
@@ -186,38 +191,45 @@ public class VertexFactory {
             bean.setKey( key );
             vertices.add( bean );
             vertexMap.put( key, bean );
+
+            // Provide the offset, for use in making triangle indices.
+            bean.setVtxBufOffset( currentVertexNumber++ );
         }
         return bean;
     }
 
+    // Where subtraction of 1/2 is carried out below, it is converted to
+    // subract one and add 1/2 so that identicial operations are carried out against
+    // all "floating-point-domain" numbers.  This so that key values will be identical
+    // for cases where 1/2 is added or 1/2 is subtracted from voxel positions.
     private double[] bottomBackRight(VoxelInfoKey key) {
         double[] vertex = new double[ 3 ];
         vertex[ X ] = key.getPosition()[ X ] + 0.5;
-        vertex[ Y ] = key.getPosition()[ Y ] - 0.5;
+        vertex[ Y ] = (key.getPosition()[ Y ] - 1L) + 0.5;
         vertex[ Z ] = key.getPosition()[ Z ] - 0.5;
         return vertex;
     }
 
     private double[] bottomBackLeft(VoxelInfoKey key) {
         double[] vertex = new double[ 3 ];
-        vertex[ X ] = key.getPosition()[ X ] - 0.5;
-        vertex[ Y ] = key.getPosition()[ Y ] - 0.5;
-        vertex[ Z ] = key.getPosition()[ Z ] - 0.5;
+        vertex[ X ] = (key.getPosition()[ X ] - 1L) + 0.5;
+        vertex[ Y ] = (key.getPosition()[ Y ] - 1L) + 0.5;
+        vertex[ Z ] = (key.getPosition()[ Z ] - 1L) + 0.5;
         return vertex;
     }
 
     private double[] topBackLeft(VoxelInfoKey key) {
         double[] vertex = new double[ 3 ];
-        vertex[ X ] = key.getPosition()[ X ] - 0.5;
+        vertex[ X ] = (key.getPosition()[ X ] - 1L) + 0.5;
         vertex[ Y ] = key.getPosition()[ Y ] + 0.5;
-        vertex[ Z ] = key.getPosition()[ Z ] - 0.5;
+        vertex[ Z ] = (key.getPosition()[ Z ] - 1L) + 0.5;
         return vertex;
     }
 
     private double[] bottomFrontLeft(VoxelInfoKey key) {
         double[] vertex = new double[ 3 ];
-        vertex[ X ] = key.getPosition()[ X ] - 0.5;
-        vertex[ Y ] = key.getPosition()[ Y ] - 0.5;
+        vertex[ X ] = (key.getPosition()[ X ] - 1L) + 0.5;
+        vertex[ Y ] = (key.getPosition()[ Y ] - 1L) + 0.5;
         vertex[ Z ] = key.getPosition()[ Z ] + 0.5;
         return vertex;
     }
@@ -225,7 +237,7 @@ public class VertexFactory {
     private double[] bottomFrontRight(VoxelInfoKey key) {
         double[] vertex = new double[ 3 ];
         vertex[ X ] = key.getPosition()[ X ] + 0.5;
-        vertex[ Y ] = key.getPosition()[ Y ] - 0.5;
+        vertex[ Y ] = (key.getPosition()[ Y ] - 1L) + 0.5;
         vertex[ Z ] = key.getPosition()[ Z ] + 0.5;
         return vertex;
     }
@@ -234,7 +246,7 @@ public class VertexFactory {
         double[] vertex = new double[ 3 ];
         vertex[ X ] = key.getPosition()[ X ] + 0.5;
         vertex[ Y ] = key.getPosition()[ Y ] + 0.5;
-        vertex[ Z ] = key.getPosition()[ Z ] - 0.5;
+        vertex[ Z ] = (key.getPosition()[ Z ] - 1L) + 0.5;
         return vertex;
     }
 
@@ -248,7 +260,7 @@ public class VertexFactory {
 
     private double[] topFrontLeft(VoxelInfoKey key) {
         double[] vertex = new double[ 3 ];
-        vertex[ X ] = key.getPosition()[ X ] - 0.5;
+        vertex[ X ] = (key.getPosition()[ X ] - 1L) + 0.5;
         vertex[ Y ] = key.getPosition()[ Y ] + 0.5;
         vertex[ Z ] = key.getPosition()[ Z ] + 0.5;
         return vertex;

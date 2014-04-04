@@ -11,11 +11,31 @@ import java.util.*;
  * Created by fosterl on 4/3/14.
  */
 public class VertexInfoBean {
+    private float[] coordinates;
+    public float[] getCoordinates() {
+        if ( coordinates == null ) {
+            coordinates = new float[3];
+            for ( int i = 0; i < 3; i++ ) {
+                coordinates[ i ] = (float)key.getPosition()[ i ];
+            }
+        }
+        return coordinates;
+    }
+
+    public int getVtxBufOffset() {
+        return vtxBufOffset;
+    }
+
+    public void setVtxBufOffset(int vtxBufOffset) {
+        this.vtxBufOffset = vtxBufOffset;
+    }
+
     public enum KnownAttributes {
         normal, color
     }
 
     private VertexInfoKey key;
+    private int vtxBufOffset;
 
     private Map<String,float[]> attributeMap = new HashMap<String,float[]>();
     private Map<String,Integer> attributeNameVsCount = new HashMap<String,Integer>();

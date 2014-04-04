@@ -13,6 +13,10 @@ import org.slf4j.LoggerFactory;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.ByteBuffer;
+import java.nio.ByteOrder;
+import java.nio.FloatBuffer;
+import java.nio.IntBuffer;
 import java.util.*;
 
 /**
@@ -25,11 +29,25 @@ public class VtxAttribMgr {
     private Logger logger = LoggerFactory.getLogger(VtxAttribMgr.class);
 
     private List<MaskChanRenderableData> beanList;
+    private Map<Long,RenderBuffersBean> renderIdToBuffers;
+
+    /**
+     * Provide a list of mask/chan renderables.  Note that only the mask file, channel file, and a unique id
+     * are used from the items on this list.  They could be represented differently with relatively minimal
+     * code changes below.
+     *
+     * @param beanList describes a unqiue id and Mask/Channel files.
+     */
     public VtxAttribMgr( List<MaskChanRenderableData> beanList ) {
         this.beanList = beanList;
     }
 
+    /**
+     * This builds up the map of buffers.
+     * @throws Exception
+     */
     public void execute() throws Exception {
+        renderIdToBuffers = new HashMap<Long,RenderBuffersBean>();
         for ( MaskChanRenderableData bean: beanList ) {
             VoxelSurfaceCollector collector = getVoxelSurfaceCollector( bean.getMaskPath(), bean.getChannelPath() );
             Map<Long,Map<Long,Map<Long,VoxelInfoBean>>> voxelMap = collector.getVoxelMap();
@@ -70,7 +88,65 @@ public class VtxAttribMgr {
                     }
                 }
             }
+
+            // Build buffers out of all this, and save them against bean's unique ID.
+            RenderBuffersBean buffersBean = new RenderBuffersBean();
+            buffersBean.setAttributesBuffer( getVertexAttributes( vtxFactory ) );
+            buffersBean.setIndexBuffer( getIndices( vtxFactory ) );
+
+            renderIdToBuffers.put( bean.getBean().getAlignedItemId(), buffersBean );
         }
+    }
+
+    /**
+     * Create buffers suitable for an upload to GPU.
+     */
+    private IntBuffer getIndices( VertexFactory factory ) {
+        // Iterate over triangles to get the index buffer.
+        List<Triangle> triangleList = factory.getTriangleList();
+
+        ByteBuffer byteBuffer = ByteBuffer.allocate( triangleList.size() * 3 * (Integer.SIZE / 8) );
+        byteBuffer.order( ByteOrder.nativeOrder() );
+        IntBuffer indexBuffer = byteBuffer.asIntBuffer();
+        indexBuffer.rewind();
+        for ( Triangle triangle: triangleList ) {
+            List<VertexInfoBean> triangleVertices = triangle.getVertices();
+            indexBuffer.put( triangleVertices.get(0).getVtxBufOffset() );
+            indexBuffer.put( triangleVertices.get(1).getVtxBufOffset() );
+            indexBuffer.put( triangleVertices.get(2).getVtxBufOffset() );
+        }
+        indexBuffer.rewind();
+
+        return indexBuffer;
+    }
+
+    public FloatBuffer getVertexAttributes( VertexFactory factory ) {
+        List<VertexInfoBean> vertices = factory.getVertices();
+
+        // Iterate over the vertices to get vertex attributes.  The order of vertices in that collection should
+        // match the numbers used in making the indices above.
+        //   Need three floats for each vertex followed by three floats for each normal.
+        ByteBuffer byteBuffer = ByteBuffer.allocate( 2 * (vertices.size() * 3 * ( Float.SIZE / 8 ) ) );
+        byteBuffer.order(ByteOrder.nativeOrder());
+        FloatBuffer vertexAttribBuffer = byteBuffer.asFloatBuffer();
+        vertexAttribBuffer.rewind();
+        List<String> vertexAttributeOrderList = null;
+        for ( VertexInfoBean bean: vertices ) {
+
+            vertexAttribBuffer.put( bean.getCoordinates() );
+            // Add all other vertex attributes. Should be same keys in all vertices.
+            Map<String,float[]> attributes = bean.getAttributeMap();
+            if ( vertexAttributeOrderList == null ) {
+                vertexAttributeOrderList = new ArrayList<String>();
+                vertexAttributeOrderList.addAll( attributes.keySet() );
+            }
+            for ( String attName: vertexAttributeOrderList ) {
+                vertexAttribBuffer.put( bean.getAttribute( attName ) );
+            }
+        }
+        vertexAttribBuffer.rewind();
+
+        return vertexAttribBuffer;
     }
 
     private Set<VoxelInfoBean> getExposedVoxelSet(Map<Long, Map<Long, Map<Long, VoxelInfoBean>>> voxelMap, VoxelSurfaceCollector voxelSurfaceCollector ) {
@@ -143,6 +219,27 @@ public class VtxAttribMgr {
         };
         loader.read(bean, streamSource);
         return voxelAcceptor;
+    }
+
+    public static class RenderBuffersBean {
+        private IntBuffer indexBuffer;
+        private FloatBuffer attributesBuffer;
+
+        public IntBuffer getIndexBuffer() {
+            return indexBuffer;
+        }
+
+        public void setIndexBuffer(IntBuffer indexBuffer) {
+            this.indexBuffer = indexBuffer;
+        }
+
+        public FloatBuffer getAttributesBuffer() {
+            return attributesBuffer;
+        }
+
+        public void setAttributesBuffer(FloatBuffer attributesBuffer) {
+            this.attributesBuffer = attributesBuffer;
+        }
     }
 
 }
