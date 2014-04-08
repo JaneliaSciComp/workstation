@@ -14,6 +14,8 @@ import org.janelia.it.FlyWorkstation.octree.ZoomedVoxelIndex;
 import org.janelia.it.FlyWorkstation.raster.VoxelIndex;
 
 import com.google.common.collect.Lists;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Maybe implement my own version of AStar.
@@ -56,15 +58,18 @@ public class AStar {
     private double voxelSizeY = 1.0;
     private double voxelSizeZ = 1.0;
     Map<VoxelIndex, Node> allNodes = new HashMap<VoxelIndex, Node>();
-    
+
+    private static final Logger log = LoggerFactory.getLogger(AStar.class);
+
     public AStar(Subvolume volume) {
         this.volume = volume;
         computeIntensityStats();
     }
     
     public List<ZoomedVoxelIndex> trace(
-            ZoomedVoxelIndex start0, 
-            ZoomedVoxelIndex goal0) 
+            ZoomedVoxelIndex start0,
+            ZoomedVoxelIndex goal0,
+            double timout)
     {
         Node start = getNode(new VoxelIndex(
                 start0.getX() - volume.getOrigin().getX(), 
@@ -88,7 +93,8 @@ public class AStar {
         //
         start.gScore = 0.0;
         start.fScore = start.gScore + heuristicCostEstimate(start.index, goal.index);
-        
+
+        long startTime = System.currentTimeMillis();
         long checkedVoxelCount = 0;
         while (openSet.size() > 0) {
             // Get node with lowest fScore in openSet
@@ -103,15 +109,31 @@ public class AStar {
                 if (n.fScore < current.fScore)
                     current = n;
             }
-            if (current.equals(goal))
+            if (current.equals(goal)) {
+                if (debug) {
+                    System.out.println("Examined "+checkedVoxelCount+" voxels");
+                }
                 return reconstructPath(start, goal, start0.getZoomLevel());
+            }
             // Remove current from openSet
             openSet.remove(current);
             closedSet.add(current);
             checkedVoxelCount += 1;
             if (debug && checkedVoxelCount % 10000 == 0)
                 System.out.println("Examined "+checkedVoxelCount+" voxels");
-            for (VoxelIndex neighborIndex : getNeighbors(current.index)) 
+            // check timeout; quick tests suggest about 5k/sec, so this ought to
+            //  be more than sensitive enough
+            if (checkedVoxelCount % 1000 == 0) {
+                if (System.currentTimeMillis() - startTime > timout * 1000) {
+                    if (debug) {
+                        System.out.println("A-star tracing timed out");
+                        System.out.println("Examined "+checkedVoxelCount+" voxels");
+                    }
+                    log.warn("A-star tracing timed out, " + checkedVoxelCount + " voxels examined");
+                    return null;
+                }
+            }
+            for (VoxelIndex neighborIndex : getNeighbors(current.index))
             {
                 Node neighbor = getNode(neighborIndex);
                 double tentativeGScore = current.gScore

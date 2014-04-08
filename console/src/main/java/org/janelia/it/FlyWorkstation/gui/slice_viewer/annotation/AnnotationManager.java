@@ -21,6 +21,7 @@ import org.janelia.it.jacs.model.user_data.tiledMicroscope.*;
 
 import javax.swing.*;
 import java.awt.*;
+import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.regex.Matcher;
@@ -51,7 +52,19 @@ elements of what's been done; that's handled by signals emitted from AnnotationM
 
     private Entity initialEntity;
 
+    // ----- constants
+    // AUTOMATIC_TRACING_TIMEOUT for automatic tracing in seconds
+    private static final double AUTOMATIC_TRACING_TIMEOUT = 10.0;
+
+
     // ----- slots
+
+    public Slot1<URL> onVolumeLoadedSlot = new Slot1<URL>() {
+        @Override
+        public void execute(URL url) {
+            onVolumeLoaded();
+        }
+    };
 
     public Slot1<Skeleton.AnchorSeed> addAnchorRequestedSlot = new Slot1<Skeleton.AnchorSeed>() {
         @Override
@@ -162,6 +175,13 @@ elements of what's been done; that's handled by signals emitted from AnnotationM
      */
     public void setInitialEntity(final Entity initialEntity) {
         this.initialEntity = initialEntity;
+    }
+
+    /**
+     * called when volume is *finished* loading (so as to avoid race conditions);
+     * relies on initial entity being properly set already
+     */
+    public void onVolumeLoaded() {
 
         if (initialEntity == null) {
             // this is a request to clear the workspace
@@ -213,7 +233,6 @@ elements of what's been done; that's handled by signals emitted from AnnotationM
         //  it may be better to make it a different method
 
     }
-    
 
     // ----- methods called from UI
     // these methods are called by actions from the 2d view; should be not
@@ -327,6 +346,20 @@ elements of what's been done; that's handled by signals emitted from AnnotationM
             // dialog?
             return;
         } else {
+
+            // if more than a handful of nodes, ask the user if they are sure (we have
+            //  no undo right now!)
+            int nAnnotations = annotationModel.getGeoAnnotationFromID(annotationID).getSubTreeList().size();
+            if (nAnnotations >= 5) {
+                int ans =  JOptionPane.showConfirmDialog(null,
+                        String.format("Selected subtree has %d children; delete?", nAnnotations),
+                        "Delete subtree?",
+                        JOptionPane.OK_CANCEL_OPTION);
+                if (ans != JOptionPane.OK_OPTION) {
+                    return;
+                }
+            }
+
             SimpleWorker deleter = new SimpleWorker() {
                 @Override
                 protected void doStuff() throws Exception {
@@ -749,11 +782,32 @@ elements of what's been done; that's handled by signals emitted from AnnotationM
     }
 
     public void saveColorModel() {
-
         SimpleWorker saver = new SimpleWorker() {
             @Override
             protected void doStuff() throws Exception {
                 annotationModel.setPreference(AnnotationsConstants.PREF_COLOR_MODEL, quadViewUi.imageColorModelAsString());
+            }
+
+            @Override
+            protected void hadSuccess() {
+                // nothing here
+            }
+
+            @Override
+            protected void hadError(Throwable error) {
+                SessionMgr.getSessionMgr().handleException(error);
+            }
+        };
+        saver.execute();
+
+    }
+
+    public void setAutomaticTracing(final boolean state) {
+        SimpleWorker saver = new SimpleWorker() {
+            @Override
+            protected void doStuff() throws Exception {
+                annotationModel.setPreference(AnnotationsConstants.PREF_AUTOMATIC_TRACING,
+                        String.valueOf(state));
             }
 
             @Override
@@ -783,7 +837,7 @@ elements of what's been done; that's handled by signals emitted from AnnotationM
         request.setXyz2(new Vec3(parent.getX(), parent.getY(), parent.getZ()));
 
         // tracing:
-        PathTraceToParentWorker worker = new PathTraceToParentWorker(request);
+        PathTraceToParentWorker worker = new PathTraceToParentWorker(request, AUTOMATIC_TRACING_TIMEOUT);
         worker.pathTracedSignal.connect(addPathRequestedSlot);
         worker.execute();
 

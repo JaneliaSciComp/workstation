@@ -5,12 +5,16 @@ package org.janelia.it.FlyWorkstation.gui.slice_viewer.annotation;
 
 import org.janelia.it.FlyWorkstation.gui.util.Icons;
 import org.janelia.it.FlyWorkstation.signal.Signal;
+import org.janelia.it.FlyWorkstation.signal.Slot1;
+import org.janelia.it.jacs.model.user_data.tiledMicroscope.TmWorkspace;
 
 import javax.swing.*;
 
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.ItemEvent;
+import java.awt.event.ItemListener;
 
 
 /**
@@ -33,6 +37,12 @@ public class AnnotationPanel extends JPanel
     private NeuriteTreePanel neuriteTreePanel;
     private WorkspaceInfoPanel workspaceInfoPanel;
     private WorkspaceNeuronList workspaceNeuronList;
+    private JCheckBoxMenuItem automaticTracingMenuItem;
+
+    // other UI stuff
+    private static final int width = 250;
+
+    private static final boolean defaultAutomaticTracing = false;
 
     // ----- actions
     private final Action createNeuronAction = new AbstractAction() {
@@ -65,6 +75,16 @@ public class AnnotationPanel extends JPanel
         }
     };
 
+    public Slot1<TmWorkspace> workspaceLoadedSlot = new Slot1<TmWorkspace>() {
+        @Override
+        public void execute(TmWorkspace workspace) {
+            String automaticTracingPref = workspace.getPreferences().getProperty(AnnotationsConstants.PREF_AUTOMATIC_TRACING);
+            if (automaticTracingPref != null) {
+                automaticTracingMenuItem.setSelected(Boolean.parseBoolean(automaticTracingPref));
+            }
+        }
+    };
+
     public AnnotationPanel(AnnotationManager annotationMgr, AnnotationModel annotationModel,
         SliceViewerTranslator sliceViewerTranslator) {
         this.annotationMgr = annotationMgr;
@@ -81,10 +101,7 @@ public class AnnotationPanel extends JPanel
 
     @Override
     public Dimension getPreferredSize() {
-        // since we create components without data, they tend to start too narrow
-        //  for what they will eventually need, and that causes the split pane not
-        //  to size right; so, give it a hint   
-        return new Dimension(200, 0);
+        return new Dimension(width, 0);
     }
 
     private void setupSignals() {
@@ -92,6 +109,7 @@ public class AnnotationPanel extends JPanel
         annotationModel.neuronSelectedSignal.connect(neuriteTreePanel.neuronSelectedSlot);
         annotationModel.neuronSelectedSignal.connect(workspaceNeuronList.neuronSelectedSlot);
 
+        annotationModel.workspaceLoadedSignal.connect(workspaceLoadedSlot);
         annotationModel.workspaceLoadedSignal.connect(workspaceInfoPanel.workspaceLoadedSlot);
         annotationModel.workspaceLoadedSignal.connect(workspaceNeuronList.workspaceLoadedSlot);
 
@@ -142,6 +160,16 @@ public class AnnotationPanel extends JPanel
         // workspace tool pop-up menu (triggered by button, below)
         final JPopupMenu workspaceToolMenu = new JPopupMenu();
 
+        automaticTracingMenuItem = new JCheckBoxMenuItem("Automatic tracing");
+        automaticTracingMenuItem.setSelected(defaultAutomaticTracing);
+        automaticTracingMenuItem.addItemListener(new ItemListener() {
+            @Override
+            public void itemStateChanged(ItemEvent itemEvent) {
+                annotationMgr.setAutomaticTracing(itemEvent.getStateChange() == ItemEvent.SELECTED);
+            }
+        });
+        workspaceToolMenu.add(automaticTracingMenuItem);
+
         ChooseAnnotationColorAction changeGlobalAnnotationColorAction = new ChooseAnnotationColorAction();
         changeGlobalAnnotationColorAction.putValue(Action.NAME, "Set global annotation color...");
         changeGlobalAnnotationColorAction.putValue(Action.SHORT_DESCRIPTION,
@@ -173,7 +201,7 @@ public class AnnotationPanel extends JPanel
 
 
         // list of neurons in workspace
-        workspaceNeuronList = new WorkspaceNeuronList();
+        workspaceNeuronList = new WorkspaceNeuronList(width);
         add(workspaceNeuronList, cVert);
 
         // neuron tool pop-up menu (triggered by button, below)
@@ -243,11 +271,9 @@ public class AnnotationPanel extends JPanel
         });
 
 
-
-
         // ----- neuron information; show name, whatever attributes, list of neurites
         add(Box.createRigidArea(new Dimension(0, 20)), cVert);
-        neuriteTreePanel = new NeuriteTreePanel();
+        neuriteTreePanel = new NeuriteTreePanel(width);
         add(neuriteTreePanel, cVert);
 
         // buttons for acting on annotations or neurites (which are in the list immediately above):

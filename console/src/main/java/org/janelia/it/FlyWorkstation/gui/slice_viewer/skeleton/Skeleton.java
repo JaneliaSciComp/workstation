@@ -55,7 +55,7 @@ public class Skeleton {
 	private HistoryStack<Anchor> anchorHistory = new HistoryStack<Anchor>();
 
 	public Signal skeletonChangedSignal = new Signal();
-	public Signal1<Anchor> pathTraceRequestedSignal = new Signal1<Anchor>();
+	public Signal1<Long> pathTraceRequestedSignal = new Signal1<Long>();
 
 	// API for synchronizing with back end database
 	// after discussion with Don Olbris July 8, 2013
@@ -310,7 +310,7 @@ public class Skeleton {
             // no parent
             return;
 
-        pathTraceRequestedSignal.emit(anchor);
+        pathTraceRequestedSignal.emit(anchor.getGuid());
     }
 
 	public void addTracedSegment(AnchoredVoxelPath path) 

@@ -21,6 +21,9 @@ public class AnnotationsConstants {
     public static final String PREF_COLOR_MODEL = "preference-colormodel";
 
 
+    // trace paths automatically?
+    public static final String PREF_AUTOMATIC_TRACING = "tracing-automatic-enabled";
+
     // ---------- annotation appearance ----------
     // this color is pale yellow-green (Christopher's original color)
     public static final Color DEFAULT_ANNOTATION_COLOR_GLOBAL = new Color(0.8f, 1.0f, 0.3f);

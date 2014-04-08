@@ -27,6 +27,9 @@ public class WorkspaceNeuronList extends JPanel {
     private JList neuronListBox;
     private DefaultListModel neuronListModel;
 
+    private int width;
+    private static final int height = 250;
+
     // to add new sort order: add to enum here, add menu in AnnotationPanel.java,
     //  and implement the sort in sortNeuronList below
     // default set in AnnotationPanel as well
@@ -51,8 +54,19 @@ public class WorkspaceNeuronList extends JPanel {
     public Signal1<TmNeuron> neuronClickedSignal = new Signal1<TmNeuron>();
     public Signal1<Vec3> cameraPanToSignal = new Signal1<Vec3>();
 
-    public WorkspaceNeuronList() {
+    public WorkspaceNeuronList(int width) {
+        this.width = width;
         setupUI();
+    }
+
+    @Override
+    public Dimension getMinimumSize() {
+        return new Dimension(width, height);
+    }
+
+    @Override
+    public Dimension getPreferredSize() {
+        return new Dimension(width, height);
     }
 
     private void setupUI() {
@@ -63,6 +77,7 @@ public class WorkspaceNeuronList extends JPanel {
         c.gridx = 0;
         c.gridy = 0;
         c.weightx = 1.0;
+        c.weighty = 0.0;
         c.anchor = GridBagConstraints.PAGE_START;
         c.fill = GridBagConstraints.HORIZONTAL;
         c.insets = new Insets(10, 0, 0, 0);
@@ -108,8 +123,9 @@ public class WorkspaceNeuronList extends JPanel {
         GridBagConstraints c2 = new GridBagConstraints();
         c2.gridx = 0;
         c2.gridy = GridBagConstraints.RELATIVE;
+        c2.weighty = 1.0;
         c2.anchor = GridBagConstraints.PAGE_START;
-        c2.fill = GridBagConstraints.HORIZONTAL;
+        c2.fill = GridBagConstraints.BOTH;
         add(neuronScrollPane, c2);
 
         loadWorkspace(null);

@@ -45,7 +45,7 @@ public class TestAStar {
         AStar astar = new AStar(subvolume);
         System.out.println("Finished initializing A*.");
         System.out.println("Tracing path...");
-        List<ZoomedVoxelIndex> path = astar.trace(v1, v2);
+        List<ZoomedVoxelIndex> path = astar.trace(v1, v2, 1000.0);
         /*
                 new VoxelIndex(start_x, start_y, start_z),
                 new VoxelIndex(goal_x, goal_y, goal_z));
