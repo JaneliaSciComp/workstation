@@ -959,7 +959,9 @@ public class ModelMgr {
 
     public void postOnEventBus(Object object) {
         try {
-            log.info("Post on event bus from " + Thread.currentThread().getClass().getClassLoader() + "/"+ Thread.currentThread().getContextClassLoader()+ " in thread " + Thread.currentThread());
+            if ( log.isDebugEnabled() ) {
+                log.debug("Post on event bus from " + Thread.currentThread().getClass().getClassLoader() + "/"+ Thread.currentThread().getContextClassLoader()+ " in thread " + Thread.currentThread());
+            }
             synchronized( ModelMgr.class ) {
                 modelEventBus.post(object);
             }
