@@ -3,7 +3,6 @@ package org.janelia.it.FlyWorkstation.gui.alignment_board.loader;
 import org.janelia.it.FlyWorkstation.gui.alignment_board_viewer.renderable.MaskChanRenderableData;
 import org.janelia.it.FlyWorkstation.gui.alignment_board_viewer.renderable.RDComparator;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.renderable.RenderableBean;
-import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.resolver.CacheFileResolver;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.resolver.FileResolver;
 import org.janelia.it.FlyWorkstation.model.domain.EntityWrapper;

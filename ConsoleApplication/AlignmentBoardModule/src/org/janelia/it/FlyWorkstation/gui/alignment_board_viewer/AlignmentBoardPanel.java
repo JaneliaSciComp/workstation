@@ -33,7 +33,6 @@ import org.janelia.it.FlyWorkstation.gui.alignment_board_viewer.masking.MultiMas
 import org.janelia.it.FlyWorkstation.gui.viewer3d.masking.RenderMappingI;
 import org.janelia.it.FlyWorkstation.gui.alignment_board_viewer.texture.ABContextDataSource;
 import org.janelia.it.FlyWorkstation.gui.alignment_board_viewer.volume_export.VolumeWritebackHandler;
-import org.janelia.it.FlyWorkstation.gui.framework.console.Browser;
 import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.BrowserModel;
 import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionModelListener;

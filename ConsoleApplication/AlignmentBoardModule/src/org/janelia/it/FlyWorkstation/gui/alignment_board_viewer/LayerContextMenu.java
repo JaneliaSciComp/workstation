@@ -20,7 +20,6 @@ import org.janelia.it.FlyWorkstation.gui.alignment_board.ab_mgr.AlignmentBoardMg
 import org.janelia.it.FlyWorkstation.gui.dialogs.EntityDetailsDialog;
 import org.janelia.it.FlyWorkstation.gui.framework.actions.Action;
 import org.janelia.it.FlyWorkstation.gui.framework.actions.RemoveEntityAction;
-import org.janelia.it.FlyWorkstation.gui.framework.console.Browser;
 import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.events.AlignmentBoardItemChangeEvent;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.events.AlignmentBoardItemChangeEvent.ChangeType;

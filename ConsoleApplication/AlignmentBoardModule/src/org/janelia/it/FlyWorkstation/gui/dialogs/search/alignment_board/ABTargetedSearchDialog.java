@@ -3,7 +3,6 @@ package org.janelia.it.FlyWorkstation.gui.dialogs.search.alignment_board;
 import org.janelia.it.FlyWorkstation.gui.dialogs.ModalDialog;
 import org.janelia.it.FlyWorkstation.gui.dialogs.search.SearchConfiguration;
 import org.janelia.it.FlyWorkstation.gui.dialogs.search.SearchParametersPanel;
-import org.janelia.it.FlyWorkstation.gui.framework.console.Browser;
 import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.FlyWorkstation.gui.framework.viewer.BaseballCardPanel;
 import org.janelia.it.FlyWorkstation.gui.framework.viewer.baseball_card.BaseballCard;

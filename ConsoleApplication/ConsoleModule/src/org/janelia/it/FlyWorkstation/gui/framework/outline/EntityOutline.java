@@ -33,11 +33,9 @@ import org.janelia.it.FlyWorkstation.api.entity_model.management.EntitySelection
 import org.janelia.it.FlyWorkstation.api.entity_model.management.ModelMgr;
 import org.janelia.it.FlyWorkstation.api.entity_model.management.ModelMgrUtils;
 import org.janelia.it.FlyWorkstation.gui.dialogs.ScreenEvaluationDialog;
-import org.janelia.it.FlyWorkstation.gui.framework.actions.CreateAlignmentBoardAction;
 import org.janelia.it.FlyWorkstation.gui.framework.console.ViewerManager;
 import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.FlyWorkstation.gui.framework.tree.ExpansionState;
-//import org.janelia.it.FlyWorkstation.gui.framework.viewer.alignment_board.AlignmentBoardViewer;
 import org.janelia.it.FlyWorkstation.model.entity.RootedEntity;
 import org.janelia.it.FlyWorkstation.shared.workers.SimpleWorker;
 import org.janelia.it.jacs.model.entity.Entity;
@@ -50,6 +48,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.common.eventbus.Subscribe;
+import org.janelia.it.FlyWorkstation.nb_action.EntityWrapperCreator;
+import org.janelia.it.FlyWorkstation.nb_action.ServiceAcceptorHelper;
 
 /**
  * The entity tree which lives in the right-hand "Data" panel and drives the viewers. 
@@ -198,7 +198,7 @@ public abstract class EntityOutline extends EntityTree implements Refreshable, A
         public void addRootMenuItems() {
             add(getRootItem());
             add(getNewRootFolderItem());
-            add(getNewAlignmentBoardItem());
+            add(getWrapperCreatorItem());
             add(getOpenForContextItem());
         }
 
@@ -250,14 +250,12 @@ public abstract class EntityOutline extends EntityTree implements Refreshable, A
 			return newFolderItem;
 		}
 
-        public JMenuItem getNewAlignmentBoardItem() {
+        public JMenuItem getWrapperCreatorItem() {                        
             if (multiple) return null;
-            final CreateAlignmentBoardAction action = new CreateAlignmentBoardAction("  Create New Alignment Board");
-            JMenuItem newFolderItem = getActionItem(action);
-            return newFolderItem;
+            return new WrapperCreatorItemFactory().makeEntityWrapperCreatorItem( null );
         }
     }
-
+    
 	/**
 	 * Override this method to show a popup menu when the user right clicks a
 	 * node in the tree.

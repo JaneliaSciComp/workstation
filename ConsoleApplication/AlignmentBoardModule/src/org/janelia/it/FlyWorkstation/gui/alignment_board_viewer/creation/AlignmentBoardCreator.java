@@ -143,14 +143,28 @@ public class AlignmentBoardCreator implements EntityWrapperCreator {
 
     @Override
     public boolean isCompatible(RootedEntity e) {
-        final String entityTypeName = e.getEntity().getEntityTypeName();
-        return entityTypeName.equals( EntityConstants.TYPE_SAMPLE )   ||
-               entityTypeName.equals( EntityConstants.TYPE_NEURON_FRAGMENT );
+        setSampleRootedEntity(e);
+        if ( e == null ) {
+System.out.println("Just nulled-out the rooted entity to ABCreator");
+            return true;
+        }
+        else {
+System.out.println("Just UN-Nulled rooted entity in ABCreator");            
+            // Caching the test entity, for use in action label.
+            final String entityTypeName = e.getEntity().getEntityTypeName();
+            return entityTypeName.equals( EntityConstants.TYPE_SAMPLE )   ||
+                   entityTypeName.equals( EntityConstants.TYPE_NEURON_FRAGMENT );
+        }
     }
 
     @Override
     public String getActionLabel() {
-        return "  Open In New Alignment Board Viewer";
+        if ( sampleRootedEntity == null ) {
+            return "  Create New Alignment Board";
+        }
+        else {
+            return "  Open In New Alignment Board";
+        }
     }
 
 }

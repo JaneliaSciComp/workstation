@@ -452,39 +452,41 @@ public class EntityContextMenu extends JPopupMenu {
 
     public JMenuItem getWrapEntityItem() {
         if (multiple) return null;
-        
-        JMenuItem wrapEntityItem = null;
-        
-        if (rootedEntity != null && rootedEntity.getEntityData() != null) {
-            final ServiceAcceptorHelper helper = new ServiceAcceptorHelper();
-            EntityWrapperCreator wrapperCreator
-                    = helper.findHandler(rootedEntity, EntityWrapperCreator.class, EntityWrapperCreator.LOOKUP_PATH);
+        return new WrapperCreatorItemFactory().makeEntityWrapperCreatorItem( rootedEntity );
 
-            if (wrapperCreator != null) {
-                wrapEntityItem = new JMenuItem(wrapperCreator.getActionLabel());
-                wrapEntityItem.addActionListener(new ActionListener() {
-                    @Override
-                    public void actionPerformed(ActionEvent e) {
-                        try {
-                            EntityWrapperCreator wrapperCreator
-                                    = helper.findHandler(rootedEntity, EntityWrapperCreator.class, EntityWrapperCreator.LOOKUP_PATH);
-                            if (wrapperCreator == null) {
-                                log.warn("No service provider for this entity.");
-                            } else {
-                                wrapperCreator.wrapEntity(rootedEntity);
-                            }
-                        } catch (Exception ex) {
-                            ModelMgr.getModelMgr().handleException(ex);
-                        }
-
-                    }
-                });
-
-            }
-
-        }
-
-        return wrapEntityItem;
+//        
+//        JMenuItem wrapEntityItem = null;
+//        
+//        if (rootedEntity != null && rootedEntity.getEntityData() != null) {
+//            final ServiceAcceptorHelper helper = new ServiceAcceptorHelper();
+//            EntityWrapperCreator wrapperCreator
+//                    = helper.findHandler(rootedEntity, EntityWrapperCreator.class, EntityWrapperCreator.LOOKUP_PATH);
+//
+//            if (wrapperCreator != null) {
+//                wrapEntityItem = new JMenuItem(wrapperCreator.getActionLabel());
+//                wrapEntityItem.addActionListener(new ActionListener() {
+//                    @Override
+//                    public void actionPerformed(ActionEvent e) {
+//                        try {
+//                            EntityWrapperCreator wrapperCreator
+//                                    = helper.findHandler(rootedEntity, EntityWrapperCreator.class, EntityWrapperCreator.LOOKUP_PATH);
+//                            if (wrapperCreator == null) {
+//                                log.warn("No service provider for this entity.");
+//                            } else {
+//                                wrapperCreator.wrapEntity(rootedEntity);
+//                            }
+//                        } catch (Exception ex) {
+//                            ModelMgr.getModelMgr().handleException(ex);
+//                        }
+//
+//                    }
+//                });
+//
+//            }
+//
+//        }
+//
+//        return wrapEntityItem;
     }
        
     public JMenuItem getOpenSliceViewerItem() {
