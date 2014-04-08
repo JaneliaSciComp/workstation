@@ -22,11 +22,19 @@ public class PathTraceToParentWorker extends BackgroundWorker {
 
     private PathTraceToParentRequest request;
 
+    // timeout in seconds
+    private double timeout = 10.0;
+
     // public Signal1<TracedPathSegment> pathTracedSignal = new Signal1<TracedPathSegment>();
     public Signal1<AnchoredVoxelPath> pathTracedSignal = new Signal1<AnchoredVoxelPath>();
 
     public PathTraceToParentWorker(PathTraceToParentRequest request) {
         this.request = request;
+    }
+
+    public PathTraceToParentWorker(PathTraceToParentRequest request, double timeout) {
+        this(request);
+        this.timeout = timeout;
     }
 
     public String getName() {
@@ -71,22 +79,28 @@ public class PathTraceToParentWorker extends BackgroundWorker {
         AStar astar = new AStar(subvolume);
 
         setStatus("Tracing");
-        List<ZoomedVoxelIndex> path = astar.trace(zv1, zv2); // This is the slow part
-        List<Integer> intensities = new Vector<Integer>();
-        for (ZoomedVoxelIndex p : path) {
-            int intensity = subvolume.getIntensityGlobal(p, 0);
-            intensities.add(intensity);
+        List<ZoomedVoxelIndex> path = astar.trace(zv1, zv2, timeout); // This is the slow part
+        if (path == null) {
+            // probably timed out; I don't see any other way it could fail
+            // we don't do anything if we fail (would be nice to visually indicated it)
+            setStatus("Timed out");
+        } else {
+            List<Integer> intensities = new Vector<Integer>();
+            for (ZoomedVoxelIndex p : path) {
+                int intensity = subvolume.getIntensityGlobal(p, 0);
+                intensities.add(intensity);
+            }
+
+            setStatus("Finishing");
+
+            // launder the request down to a more generic request
+            PathTraceRequest simpleRequest = new PathTraceRequest(request.getXyz1(),
+                    request.getXyz2(), request.getAnchorGuid1(), request.getAnchorGuid2());
+            TracedPathSegment result = new TracedPathSegment(simpleRequest, path, intensities);
+            pathTracedSignal.emit(result);
+
+            setStatus("Done");
         }
-
-        setStatus("Finishing");
-
-        // launder the request down to a more generic request
-        PathTraceRequest simpleRequest = new PathTraceRequest(request.getXyz1(),
-                request.getXyz2(), request.getAnchorGuid1(), request.getAnchorGuid2());
-        TracedPathSegment result = new TracedPathSegment(simpleRequest, path, intensities);
-        pathTracedSignal.emit(result);
-
-        setStatus("Done");
     }
 
 }

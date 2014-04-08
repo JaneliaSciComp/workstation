@@ -5,6 +5,7 @@ import org.janelia.it.FlyWorkstation.api.entity_model.management.ModelMgr;
 import org.janelia.it.FlyWorkstation.api.entity_model.management.ModelMgrEntityLoader;
 import org.janelia.it.FlyWorkstation.api.entity_model.management.ModelMgrUtils;
 import org.janelia.it.FlyWorkstation.gui.dialogs.EntityDetailsDialog;
+import org.janelia.it.FlyWorkstation.gui.dialogs.SetSortCriteriaDialog;
 import org.janelia.it.FlyWorkstation.gui.dialogs.SpecialAnnotationChooserDialog;
 import org.janelia.it.FlyWorkstation.gui.dialogs.TaskDetailsDialog;
 import org.janelia.it.FlyWorkstation.gui.framework.actions.Action;
@@ -47,6 +48,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.swing.*;
+
 import java.awt.*;
 import java.awt.datatransfer.StringSelection;
 import java.awt.datatransfer.Transferable;
@@ -145,6 +147,7 @@ public class EntityContextMenu extends JPopupMenu {
         setNextAddRequiresSeparator(true);
         add(getMergeItem());
         add(getSortBySimilarityItem());
+        add(getSetSortCriteriaItem());
         add(getDownloadMenu());
         add(getImportItem());
 //        add(getCreateSessionItem());
@@ -1323,6 +1326,35 @@ public class EntityContextMenu extends JPopupMenu {
         return sortItem;
     }
 
+    protected JMenuItem getSetSortCriteriaItem() {
+
+        if (multiple) {
+            return null;
+        }
+
+        final Entity targetEntity = rootedEntity.getEntity();
+        if (!targetEntity.getEntityTypeName().equals(EntityConstants.TYPE_FOLDER)) {
+            return null;
+        }
+        
+        JMenuItem sortItem = new JMenuItem("  Set Sorting Criteria");
+
+        sortItem.addActionListener(new ActionListener() {
+            public void actionPerformed(ActionEvent actionEvent) {
+                try {
+                    SetSortCriteriaDialog dialog = new SetSortCriteriaDialog();
+                    dialog.showForEntity(targetEntity);
+                } 
+                catch (Exception e) {
+                    SessionMgr.getSessionMgr().handleException(e);
+                }
+            }
+        });
+
+        sortItem.setEnabled(ModelMgrUtils.hasWriteAccess(targetEntity));
+        return sortItem;
+    }
+    
     protected JMenuItem getDownloadMenu() {
 
         List<Entity> entitiesWithFilepaths = new ArrayList<Entity>();

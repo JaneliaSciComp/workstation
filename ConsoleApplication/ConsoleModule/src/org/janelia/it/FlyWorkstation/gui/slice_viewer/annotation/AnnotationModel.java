@@ -7,6 +7,7 @@ import org.janelia.it.FlyWorkstation.geom.Vec3;
 import org.janelia.it.FlyWorkstation.geom.ParametrizedLine;
 import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr;
 
+import org.janelia.it.FlyWorkstation.gui.slice_viewer.skeleton.Anchor;
 import org.janelia.it.FlyWorkstation.signal.Signal1;
 import org.janelia.it.FlyWorkstation.signal.Slot1;
 
@@ -61,6 +62,8 @@ that need to respond to changing data.
 
     public Signal1<TmAnchoredPath> anchoredPathAddedSignal = new Signal1<TmAnchoredPath>();
     public Signal1<List<TmAnchoredPath>> anchoredPathsRemovedSignal = new Signal1<List<TmAnchoredPath>>();
+
+    public Signal1<Long> pathTraceRequestedSignal = new Signal1<Long>();
 
     public Signal1<Color> globalAnnotationColorChangedSignal = new Signal1<Color>();
 
@@ -310,6 +313,11 @@ that need to respond to changing data.
             updateCurrentNeuron();
         }
 
+        // must come after workspace and neuron are updated:
+        if (automatedTracingEnabled()) {
+            pathTraceRequestedSignal.emit(annotation.getId());
+        }
+
         neuronSelectedSignal.emit(getCurrentNeuron());
         annotationAddedSignal.emit(annotation);
     }
@@ -351,6 +359,15 @@ that need to respond to changing data.
 
         updateCurrentWorkspace();
         updateCurrentNeuron();
+
+        // must come after workspace and neuron are updated:
+        if (automatedTracingEnabled()) {
+            // trace to parent, and each child to this parent:
+            pathTraceRequestedSignal.emit(annotation.getId());
+            for (TmGeoAnnotation child: annotation.getChildren()) {
+                pathTraceRequestedSignal.emit(child.getId());
+            }
+        }
 
         // this triggers the updates in, eg, the neurite list
         if (getCurrentNeuron() != null) {
@@ -405,6 +422,11 @@ that need to respond to changing data.
 
         updateCurrentWorkspace();
         updateCurrentNeuron();
+
+        // if we're tracing, retrace if there's a new connection
+        if (automatedTracingEnabled() && child != null) {
+            pathTraceRequestedSignal.emit(child.getId());
+        }
 
         // notifications
 
@@ -549,6 +571,12 @@ that need to respond to changing data.
             updateCurrentNeuron();
         }
 
+        // retrace
+        if (automatedTracingEnabled()) {
+            pathTraceRequestedSignal.emit(newAnnotation.getId());
+            pathTraceRequestedSignal.emit(annotation1.getId());
+        }
+
         annotationAddedSignal.emit(newAnnotation);
 
         annotation1 = neuron.getGeoAnnotationMap().get(annotation1.getId());
@@ -679,4 +707,12 @@ that need to respond to changing data.
         globalAnnotationColorChangedSignal.emit(color);
     }
 
+    private boolean automatedTracingEnabled() {
+        String automaticTracingPref = getCurrentWorkspace().getPreferences().getProperty(AnnotationsConstants.PREF_AUTOMATIC_TRACING);
+        if (automaticTracingPref != null) {
+            return Boolean.parseBoolean(automaticTracingPref);
+        } else {
+            return false;
+        }
+    }
 }
