@@ -900,7 +900,7 @@ public class IconDemoPanel extends IconPanel {
 
 		log.debug("loadEntity {} (@{})",entity.getName(),System.identityHashCode(entity));
 		
-		List<EntityData> eds = entity.getOrderedEntityData();
+		List<EntityData> eds = EntityUtils.getSortedEntityDatas(entity);
 		List<EntityData> children = new ArrayList<EntityData>();
 		for(EntityData ed : eds) {
 			Entity child = ed.getChildEntity();
