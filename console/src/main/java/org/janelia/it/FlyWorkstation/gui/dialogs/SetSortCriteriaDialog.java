@@ -42,14 +42,14 @@ public class SetSortCriteriaDialog extends ModalDialog implements Accessibility 
     /** An attribute must be present on this percentage of child entities in order to be considered a sortable field */
     private static final float PERCENT_PRESENT = 0.8f;
     
-    private static final String[] fields = {EntityConstants.VALUE_SC_GUID, EntityConstants.VALUE_SC_NAME, EntityConstants.VALUE_SC_DATE_CREATED, EntityConstants.VALUE_SC_DATE_UPDATED};
+    private static final String[] intrinsicFields = {EntityConstants.VALUE_SC_GUID, EntityConstants.VALUE_SC_NAME, EntityConstants.VALUE_SC_DATE_CREATED, EntityConstants.VALUE_SC_DATE_UPDATED};
     private static final String DEFAULT_SORT_VALUE = "Choose field...";
     
     private JPanel attrPanel;
-    private JComboBox<String> sortingFieldCombobox;
-    private JComboBox<String> sortingOrderCombobox;
-    private DefaultComboBoxModel<String> sortingFieldModel;
-    private DefaultComboBoxModel<String> sortingOrderModel;
+    private JComboBox sortingFieldCombobox;
+    private JComboBox sortingOrderCombobox;
+    private DefaultComboBoxModel sortingFieldModel;
+    private DefaultComboBoxModel sortingOrderModel;
     private Entity entity;
     
     public SetSortCriteriaDialog() {
@@ -59,21 +59,21 @@ public class SetSortCriteriaDialog extends ModalDialog implements Accessibility 
         attrPanel = new JPanel(new MigLayout("wrap 2, ins 20"));
         add(attrPanel, BorderLayout.CENTER);
 
-        sortingFieldCombobox = new JComboBox<String>();
+        sortingFieldCombobox = new JComboBox();
         sortingFieldCombobox.setEditable(true);
         sortingFieldCombobox.setToolTipText("Choose sorting field");
 
-        sortingFieldModel = (DefaultComboBoxModel<String>)sortingFieldCombobox.getModel();
+        sortingFieldModel = (DefaultComboBoxModel)sortingFieldCombobox.getModel();
         sortingFieldModel.addElement(DEFAULT_SORT_VALUE);
-        for(String field : fields) {
+        for(String field : intrinsicFields) {
             sortingFieldModel.addElement(field);
         }
 
-        sortingOrderCombobox = new JComboBox<String>();
+        sortingOrderCombobox = new JComboBox();
         sortingOrderCombobox.setEditable(false);
         sortingOrderCombobox.setToolTipText("Choose sort order");
 
-        sortingOrderModel = (DefaultComboBoxModel<String>)sortingOrderCombobox.getModel();
+        sortingOrderModel = (DefaultComboBoxModel)sortingOrderCombobox.getModel();
         sortingOrderModel.addElement(EntityConstants.VALUE_SC_SORT_ORDER_ASC);
         sortingOrderModel.addElement(EntityConstants.VALUE_SC_SORT_ORDER_DESC);
         sortingOrderModel.setSelectedItem(EntityConstants.VALUE_SC_SORT_ORDER_ASC);
