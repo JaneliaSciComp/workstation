@@ -21,7 +21,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * Created by IntellmenuPosJ IDEA.
+ * Created by IntelliJ IDEA.
  * Formerly the ToolsMenu, this class will post changes to the tools menu,
  * and can revert previous changes in preparation for doing so.
  *
@@ -132,7 +132,6 @@ public class ToolsMenuModifier implements ToolListener {
                 JMenu menu = menuBar.getMenu(i);
                 if (menu.getText().trim().equalsIgnoreCase("tools")) {
                     toolsMenu = menu;
-                    System.err.println(menu.getText() + " ----the tools menu");
                     Set keySet = ToolMgr.getTools().keySet();
                     List<JMenuItem> newItems = createMenuItems(keySet);
                     add(newItems, toolsMenu, menuBar);

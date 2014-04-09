@@ -69,7 +69,7 @@ import com.google.common.eventbus.Subscribe;
  * 
  * @author <a href="mailto:rokickik@janelia.hhmi.org">Konrad Rokicki</a>
  */
-public class LayersPanel extends JPanel implements Refreshable, ActivatableView {
+public class LayersPanel extends JPanel implements Refreshable {
 
     private static final Logger log = LoggerFactory.getLogger(LayersPanel.class);
 
@@ -97,14 +97,12 @@ public class LayersPanel extends JPanel implements Refreshable, ActivatableView 
         showNothing();
     }
 
-    @Override
     public void activate() {
         log.info("Activating");
         ModelMgr.getModelMgr().registerOnEventBus(this);
         refresh();
     }
 
-    @Override
     public void deactivate() {
         log.info("Deactivating");
         ModelMgr.getModelMgr().unregisterOnEventBus(this);

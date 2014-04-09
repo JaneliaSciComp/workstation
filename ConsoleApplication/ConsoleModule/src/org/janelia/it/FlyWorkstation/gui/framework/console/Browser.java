@@ -3,8 +3,10 @@ package org.janelia.it.FlyWorkstation.gui.framework.console;
 import java.awt.*;
 import java.awt.print.PageFormat;
 import java.awt.print.PrinterJob;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
+import java.util.Set;
 
 import javax.swing.*;
 
@@ -17,6 +19,7 @@ import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.BrowserModel;
 import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.BrowserModelListenerAdapter;
 import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionModelListener;
+import org.janelia.it.FlyWorkstation.gui.framework.tool_manager.ToolMgr;
 import org.janelia.it.FlyWorkstation.gui.framework.viewer.IconDemoPanel;
 import org.janelia.it.FlyWorkstation.gui.framework.viewer.ImageCache;
 import org.janelia.it.FlyWorkstation.gui.util.Icons;
@@ -26,6 +29,10 @@ import org.janelia.it.FlyWorkstation.shared.util.PrintableComponent;
 import org.janelia.it.FlyWorkstation.shared.util.PrintableImage;
 import org.janelia.it.FlyWorkstation.shared.util.SystemInfo;
 import org.janelia.it.jacs.model.entity.Entity;
+import org.openide.util.Lookup;
+import org.openide.util.Lookup.Result;
+import org.openide.util.Lookup.Template;
+import org.openide.util.lookup.Lookups;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -250,18 +257,6 @@ public class Browser implements Cloneable {
         centerLeftHorizontalSplitPane.setDividerLocation(consolePosition.getHorizontalLeftDividerLocation());
         centerLeftHorizontalSplitPane.setBorder(BorderFactory.createEmptyBorder());
 
-        supportMenuProcessing();
-
-        /*
-        if (menuBarClass == null) {
-            menuBar = new ConsoleMenuBar(this);
-        }
-        else {
-            menuBar = (JMenuBar) menuBarClass.getConstructor(new Class[]{this.getClass()}).newInstance(new Object[]{this});
-        }
-        setJMenuBar(menuBar);
-        */
-        
         // Collect the final components
         mainPanel.setLayout(layout);
         allPanelsView.setLayout(new BorderLayout());
@@ -413,13 +408,6 @@ public class Browser implements Cloneable {
     public void supportMenuProcessing() {
         toolsMenuModifier = new ToolsMenuModifier();
         toolsMenuModifier.rebuildMenu();
-//        WindowManager.getDefault().invokeWhenUIReady( new Runnable() {
-//            @Override
-//            public void run() {
-//                toolsMenuModifier.rebuildMenu();
-//            }
-//        });
-//
         new CredentialSynchronizer().synchronize(this);
     }
     

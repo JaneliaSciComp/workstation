@@ -143,141 +143,7 @@
                 <package>com.google.gson.internal.bind</package>
                 <package>com.google.gson.reflect</package>
                 <package>com.google.gson.stream</package>
-                <package>com.google.gwt.activity.shared</package>
-                <package>com.google.gwt.animation.client</package>
-                <package>com.google.gwt.autobean.client.impl</package>
-                <package>com.google.gwt.autobean.server</package>
-                <package>com.google.gwt.autobean.server.impl</package>
-                <package>com.google.gwt.autobean.shared</package>
-                <package>com.google.gwt.autobean.shared.impl</package>
-                <package>com.google.gwt.benchmarks.client</package>
-                <package>com.google.gwt.benchmarks.client.impl</package>
-                <package>com.google.gwt.canvas.client</package>
-                <package>com.google.gwt.canvas.dom.client</package>
-                <package>com.google.gwt.cell.client</package>
-                <package>com.google.gwt.core.client</package>
-                <package>com.google.gwt.core.client.impl</package>
-                <package>com.google.gwt.core.client.prefetch</package>
-                <package>com.google.gwt.core.client.testing</package>
-                <package>com.google.gwt.debug.client</package>
-                <package>com.google.gwt.dev.asm</package>
-                <package>com.google.gwt.dev.asm.commons</package>
-                <package>com.google.gwt.dev.asm.signature</package>
-                <package>com.google.gwt.dev.asm.tree</package>
-                <package>com.google.gwt.dev.asm.util</package>
-                <package>com.google.gwt.dev.util</package>
-                <package>com.google.gwt.dom.client</package>
-                <package>com.google.gwt.editor.client</package>
-                <package>com.google.gwt.editor.client.adapters</package>
-                <package>com.google.gwt.editor.client.impl</package>
-                <package>com.google.gwt.editor.client.testing</package>
-                <package>com.google.gwt.editor.ui.client</package>
-                <package>com.google.gwt.editor.ui.client.adapters</package>
-                <package>com.google.gwt.event.dom.client</package>
-                <package>com.google.gwt.event.logical.shared</package>
-                <package>com.google.gwt.event.shared</package>
-                <package>com.google.gwt.event.shared.testing</package>
-                <package>com.google.gwt.http.client</package>
-                <package>com.google.gwt.i18n.client</package>
-                <package>com.google.gwt.i18n.client.constants</package>
-                <package>com.google.gwt.i18n.client.impl</package>
-                <package>com.google.gwt.i18n.client.impl.cldr</package>
-                <package>com.google.gwt.i18n.client.impl.plurals</package>
-                <package>com.google.gwt.i18n.linker</package>
-                <package>com.google.gwt.i18n.server</package>
-                <package>com.google.gwt.i18n.server.impl</package>
-                <package>com.google.gwt.i18n.server.keygen</package>
-                <package>com.google.gwt.i18n.server.testing</package>
-                <package>com.google.gwt.i18n.shared</package>
-                <package>com.google.gwt.jsonp.client</package>
-                <package>com.google.gwt.junit.client</package>
-                <package>com.google.gwt.junit.client.impl</package>
-                <package>com.google.gwt.junit.linker</package>
-                <package>com.google.gwt.layout.client</package>
-                <package>com.google.gwt.logging.client</package>
-                <package>com.google.gwt.logging.impl</package>
-                <package>com.google.gwt.logging.server</package>
-                <package>com.google.gwt.logging.shared</package>
-                <package>com.google.gwt.media.client</package>
-                <package>com.google.gwt.media.dom.client</package>
-                <package>com.google.gwt.place.impl</package>
-                <package>com.google.gwt.place.shared</package>
-                <package>com.google.gwt.precompress.linker</package>
-                <package>com.google.gwt.regexp.shared</package>
-                <package>com.google.gwt.requestfactory.client</package>
-                <package>com.google.gwt.requestfactory.client.impl</package>
-                <package>com.google.gwt.requestfactory.client.testing</package>
-                <package>com.google.gwt.requestfactory.server</package>
-                <package>com.google.gwt.requestfactory.server.impl</package>
-                <package>com.google.gwt.requestfactory.server.testing</package>
-                <package>com.google.gwt.requestfactory.shared</package>
-                <package>com.google.gwt.requestfactory.shared.impl</package>
-                <package>com.google.gwt.requestfactory.shared.impl.posers</package>
-                <package>com.google.gwt.requestfactory.shared.messages</package>
-                <package>com.google.gwt.requestfactory.ui.client</package>
-                <package>com.google.gwt.resources.client</package>
-                <package>com.google.gwt.resources.client.impl</package>
-                <package>com.google.gwt.resources.css</package>
-                <package>com.google.gwt.resources.css.ast</package>
-                <package>com.google.gwt.resources.ext</package>
-                <package>com.google.gwt.resources.rg</package>
-                <package>com.google.gwt.rpc.client</package>
-                <package>com.google.gwt.rpc.client.ast</package>
-                <package>com.google.gwt.rpc.client.impl</package>
-                <package>com.google.gwt.rpc.linker</package>
-                <package>com.google.gwt.rpc.server</package>
-                <package>com.google.gwt.safecss.shared</package>
-                <package>com.google.gwt.safehtml.client</package>
-                <package>com.google.gwt.safehtml.shared</package>
-                <package>com.google.gwt.storage.client</package>
-                <package>com.google.gwt.text.client</package>
-                <package>com.google.gwt.text.shared</package>
-                <package>com.google.gwt.text.shared.testing</package>
-                <package>com.google.gwt.touch.client</package>
-                <package>com.google.gwt.uibinder.attributeparsers</package>
-                <package>com.google.gwt.uibinder.client</package>
-                <package>com.google.gwt.uibinder.elementparsers</package>
-                <package>com.google.gwt.user.cellview.client</package>
-                <package>com.google.gwt.user.client</package>
-                <package>com.google.gwt.user.client.impl</package>
                 <package>com.google.gwt.user.client.rpc</package>
-                <package>com.google.gwt.user.client.rpc.core.java.lang</package>
-                <package>com.google.gwt.user.client.rpc.core.java.math</package>
-                <package>com.google.gwt.user.client.rpc.core.java.sql</package>
-                <package>com.google.gwt.user.client.rpc.core.java.util</package>
-                <package>com.google.gwt.user.client.rpc.core.java.util.logging</package>
-                <package>com.google.gwt.user.client.rpc.impl</package>
-                <package>com.google.gwt.user.client.ui</package>
-                <package>com.google.gwt.user.client.ui.impl</package>
-                <package>com.google.gwt.user.datepicker.client</package>
-                <package>com.google.gwt.user.linker.rpc</package>
-                <package>com.google.gwt.user.server</package>
-                <package>com.google.gwt.user.server.rpc</package>
-                <package>com.google.gwt.user.server.rpc.impl</package>
-                <package>com.google.gwt.util.regexfilter</package>
-                <package>com.google.gwt.view.client</package>
-                <package>com.google.gwt.xhr.client</package>
-                <package>com.google.gwt.xml.client</package>
-                <package>com.google.gwt.xml.client.impl</package>
-                <package>com.google.web.bindery.autobean.gwt.client.impl</package>
-                <package>com.google.web.bindery.autobean.shared</package>
-                <package>com.google.web.bindery.autobean.shared.impl</package>
-                <package>com.google.web.bindery.autobean.vm</package>
-                <package>com.google.web.bindery.autobean.vm.impl</package>
-                <package>com.google.web.bindery.event.shared</package>
-                <package>com.google.web.bindery.event.shared.testing</package>
-                <package>com.google.web.bindery.requestfactory.gwt.client</package>
-                <package>com.google.web.bindery.requestfactory.gwt.client.impl</package>
-                <package>com.google.web.bindery.requestfactory.gwt.client.testing</package>
-                <package>com.google.web.bindery.requestfactory.gwt.ui.client</package>
-                <package>com.google.web.bindery.requestfactory.server</package>
-                <package>com.google.web.bindery.requestfactory.server.impl</package>
-                <package>com.google.web.bindery.requestfactory.server.testing</package>
-                <package>com.google.web.bindery.requestfactory.shared</package>
-                <package>com.google.web.bindery.requestfactory.shared.impl</package>
-                <package>com.google.web.bindery.requestfactory.shared.impl.posers</package>
-                <package>com.google.web.bindery.requestfactory.shared.messages</package>
-                <package>com.google.web.bindery.requestfactory.vm</package>
                 <package>com.ibm.wsdl</package>
                 <package>com.ibm.wsdl.extensions</package>
                 <package>com.ibm.wsdl.extensions.http</package>
@@ -360,7 +226,6 @@
                 <package>com.sun.codemodel.util</package>
                 <package>com.sun.codemodel.writer</package>
                 <package>com.sun.dtdparser</package>
-                <package>com.sun.grid.drmaa</package>
                 <package>com.sun.istack</package>
                 <package>com.sun.istack.localization</package>
                 <package>com.sun.istack.tools</package>
@@ -671,7 +536,6 @@
                 <package>javax.sql</package>
                 <package>javax.transaction</package>
                 <package>javax.transaction.xa</package>
-                <package>javax.validation</package>
                 <package>javax.vecmath</package>
                 <package>javax.wsdl</package>
                 <package>javax.wsdl.extensions</package>
@@ -897,8 +761,6 @@
                 <package>ome.xml.model.enums.handlers</package>
                 <package>ome.xml.model.primitives</package>
                 <package>ome.xml.r2003fc.ome</package>
-                <package>org.aopalliance.aop</package>
-                <package>org.aopalliance.intercept</package>
                 <package>org.apache.axiom.attachments</package>
                 <package>org.apache.axiom.attachments.impl</package>
                 <package>org.apache.axiom.attachments.lifecycle</package>
@@ -1533,7 +1395,6 @@
                 <package>org.eclipse.jetty.util.ssl</package>
                 <package>org.eclipse.jetty.util.statistic</package>
                 <package>org.eclipse.jetty.util.thread</package>
-                <package>org.ggf.drmaa</package>
                 <package>org.hibernate</package>
                 <package>org.hibernate.action</package>
                 <package>org.hibernate.annotationfactory</package>
@@ -1644,12 +1505,9 @@
                 <package>org.janelia.it.jacs.compute.access</package>
                 <package>org.janelia.it.jacs.compute.api</package>
                 <package>org.janelia.it.jacs.compute.api.support</package>
-                <package>org.janelia.it.jacs.compute.drmaa</package>
                 <package>org.janelia.it.jacs.compute.engine.launcher</package>
                 <package>org.janelia.it.jacs.compute.engine.service</package>
                 <package>org.janelia.it.jacs.compute.gcdml</package>
-                <package>org.janelia.it.jacs.compute.service.common.grid.submit</package>
-                <package>org.janelia.it.jacs.compute.service.common.grid.submit.sge</package>
                 <package>org.janelia.it.jacs.model</package>
                 <package>org.janelia.it.jacs.model.collections</package>
                 <package>org.janelia.it.jacs.model.common</package>
@@ -1660,6 +1518,7 @@
                 <package>org.janelia.it.jacs.model.graph.annotations</package>
                 <package>org.janelia.it.jacs.model.graph.entity</package>
                 <package>org.janelia.it.jacs.model.graph.entity.support</package>
+                <package>org.janelia.it.jacs.model.graph.support</package>
                 <package>org.janelia.it.jacs.model.lsm</package>
                 <package>org.janelia.it.jacs.model.metadata</package>
                 <package>org.janelia.it.jacs.model.ontology</package>
@@ -2224,140 +2083,6 @@
                 <package>org.slf4j.helpers</package>
                 <package>org.slf4j.impl</package>
                 <package>org.slf4j.spi</package>
-                <package>org.springframework.aop</package>
-                <package>org.springframework.aop.framework</package>
-                <package>org.springframework.aop.framework.adapter</package>
-                <package>org.springframework.aop.framework.autoproxy</package>
-                <package>org.springframework.aop.framework.autoproxy.metadata</package>
-                <package>org.springframework.aop.framework.autoproxy.target</package>
-                <package>org.springframework.aop.interceptor</package>
-                <package>org.springframework.aop.support</package>
-                <package>org.springframework.aop.target</package>
-                <package>org.springframework.beans</package>
-                <package>org.springframework.beans.factory</package>
-                <package>org.springframework.beans.factory.access</package>
-                <package>org.springframework.beans.factory.config</package>
-                <package>org.springframework.beans.factory.support</package>
-                <package>org.springframework.beans.factory.xml</package>
-                <package>org.springframework.beans.propertyeditors</package>
-                <package>org.springframework.beans.support</package>
-                <package>org.springframework.cache.ehcache</package>
-                <package>org.springframework.context</package>
-                <package>org.springframework.context.access</package>
-                <package>org.springframework.context.event</package>
-                <package>org.springframework.context.i18n</package>
-                <package>org.springframework.context.support</package>
-                <package>org.springframework.core</package>
-                <package>org.springframework.core.enums</package>
-                <package>org.springframework.core.io</package>
-                <package>org.springframework.core.io.support</package>
-                <package>org.springframework.core.style</package>
-                <package>org.springframework.dao</package>
-                <package>org.springframework.dao.support</package>
-                <package>org.springframework.ejb.access</package>
-                <package>org.springframework.ejb.support</package>
-                <package>org.springframework.jca.cci</package>
-                <package>org.springframework.jca.cci.connection</package>
-                <package>org.springframework.jca.cci.core</package>
-                <package>org.springframework.jca.cci.core.support</package>
-                <package>org.springframework.jca.cci.object</package>
-                <package>org.springframework.jca.support</package>
-                <package>org.springframework.jdbc</package>
-                <package>org.springframework.jdbc.core</package>
-                <package>org.springframework.jdbc.core.support</package>
-                <package>org.springframework.jdbc.datasource</package>
-                <package>org.springframework.jdbc.object</package>
-                <package>org.springframework.jdbc.support</package>
-                <package>org.springframework.jdbc.support.incrementer</package>
-                <package>org.springframework.jdbc.support.lob</package>
-                <package>org.springframework.jdbc.support.nativejdbc</package>
-                <package>org.springframework.jdbc.support.rowset</package>
-                <package>org.springframework.jms</package>
-                <package>org.springframework.jms.connection</package>
-                <package>org.springframework.jms.core</package>
-                <package>org.springframework.jms.core.support</package>
-                <package>org.springframework.jms.support</package>
-                <package>org.springframework.jms.support.converter</package>
-                <package>org.springframework.jms.support.destination</package>
-                <package>org.springframework.jmx</package>
-                <package>org.springframework.jmx.access</package>
-                <package>org.springframework.jmx.export</package>
-                <package>org.springframework.jmx.export.annotation</package>
-                <package>org.springframework.jmx.export.assembler</package>
-                <package>org.springframework.jmx.export.metadata</package>
-                <package>org.springframework.jmx.export.naming</package>
-                <package>org.springframework.jmx.support</package>
-                <package>org.springframework.jndi</package>
-                <package>org.springframework.mail</package>
-                <package>org.springframework.mail.cos</package>
-                <package>org.springframework.mail.javamail</package>
-                <package>org.springframework.metadata</package>
-                <package>org.springframework.metadata.commons</package>
-                <package>org.springframework.orm</package>
-                <package>org.springframework.orm.hibernate</package>
-                <package>org.springframework.orm.hibernate.support</package>
-                <package>org.springframework.orm.hibernate3</package>
-                <package>org.springframework.orm.hibernate3.annotation</package>
-                <package>org.springframework.orm.hibernate3.support</package>
-                <package>org.springframework.orm.ibatis</package>
-                <package>org.springframework.orm.ibatis.support</package>
-                <package>org.springframework.orm.jdo</package>
-                <package>org.springframework.orm.jdo.support</package>
-                <package>org.springframework.orm.ojb</package>
-                <package>org.springframework.orm.ojb.support</package>
-                <package>org.springframework.orm.toplink</package>
-                <package>org.springframework.orm.toplink.support</package>
-                <package>org.springframework.remoting</package>
-                <package>org.springframework.remoting.caucho</package>
-                <package>org.springframework.remoting.httpinvoker</package>
-                <package>org.springframework.remoting.jaxrpc</package>
-                <package>org.springframework.remoting.rmi</package>
-                <package>org.springframework.remoting.support</package>
-                <package>org.springframework.scheduling.quartz</package>
-                <package>org.springframework.scheduling.support</package>
-                <package>org.springframework.scheduling.timer</package>
-                <package>org.springframework.transaction</package>
-                <package>org.springframework.transaction.annotation</package>
-                <package>org.springframework.transaction.interceptor</package>
-                <package>org.springframework.transaction.jta</package>
-                <package>org.springframework.transaction.support</package>
-                <package>org.springframework.ui.context</package>
-                <package>org.springframework.ui.context.support</package>
-                <package>org.springframework.ui.freemarker</package>
-                <package>org.springframework.ui.jasperreports</package>
-                <package>org.springframework.ui.velocity</package>
-                <package>org.springframework.util</package>
-                <package>org.springframework.util.comparator</package>
-                <package>org.springframework.util.xml</package>
-                <package>org.springframework.validation</package>
-                <package>org.springframework.web.bind</package>
-                <package>org.springframework.web.context</package>
-                <package>org.springframework.web.context.support</package>
-                <package>org.springframework.web.filter</package>
-                <package>org.springframework.web.jsf</package>
-                <package>org.springframework.web.multipart</package>
-                <package>org.springframework.web.multipart.commons</package>
-                <package>org.springframework.web.multipart.cos</package>
-                <package>org.springframework.web.multipart.support</package>
-                <package>org.springframework.web.servlet</package>
-                <package>org.springframework.web.servlet.handler</package>
-                <package>org.springframework.web.servlet.handler.metadata</package>
-                <package>org.springframework.web.servlet.i18n</package>
-                <package>org.springframework.web.servlet.mvc</package>
-                <package>org.springframework.web.servlet.mvc.multiaction</package>
-                <package>org.springframework.web.servlet.mvc.throwaway</package>
-                <package>org.springframework.web.servlet.support</package>
-                <package>org.springframework.web.servlet.tags</package>
-                <package>org.springframework.web.servlet.theme</package>
-                <package>org.springframework.web.servlet.view</package>
-                <package>org.springframework.web.servlet.view.document</package>
-                <package>org.springframework.web.servlet.view.freemarker</package>
-                <package>org.springframework.web.servlet.view.jasperreports</package>
-                <package>org.springframework.web.servlet.view.tiles</package>
-                <package>org.springframework.web.servlet.view.velocity</package>
-                <package>org.springframework.web.servlet.view.xslt</package>
-                <package>org.springframework.web.struts</package>
-                <package>org.springframework.web.util</package>
                 <package>org.w3c.dom</package>
                 <package>org.w3c.dom.html</package>
                 <package>org.xerial.snappy</package>
@@ -2426,10 +2151,6 @@
                 <binary-origin>release/modules/ext/jibx-bind-1.2.1.jar</binary-origin>
             </class-path-extension>
             <class-path-extension>
-                <runtime-relative-path>ext/compute-test.jar</runtime-relative-path>
-                <binary-origin>release/modules/ext/compute-test.jar</binary-origin>
-            </class-path-extension>
-            <class-path-extension>
                 <runtime-relative-path>ext/gluegen-rt-natives-macosx-universal.jar</runtime-relative-path>
                 <binary-origin>release/modules/ext/gluegen-rt-natives-macosx-universal.jar</binary-origin>
             </class-path-extension>
@@ -2480,6 +2201,10 @@
             <class-path-extension>
                 <runtime-relative-path>ext/gson-2.2.2.jar</runtime-relative-path>
                 <binary-origin>release/modules/ext/gson-2.2.2.jar</binary-origin>
+            </class-path-extension>
+            <class-path-extension>
+                <runtime-relative-path>ext/jacs-grid.jar</runtime-relative-path>
+                <binary-origin>release/modules/ext/jacs-grid.jar</binary-origin>
             </class-path-extension>
             <class-path-extension>
                 <runtime-relative-path>ext/axis2-clustering-1.5.5.jar</runtime-relative-path>
@@ -2606,12 +2331,12 @@
                 <binary-origin>release/modules/ext/syntheticaAluOxide.jar</binary-origin>
             </class-path-extension>
             <class-path-extension>
-                <runtime-relative-path>ext/commons-logging-1.1.1.jar</runtime-relative-path>
-                <binary-origin>release/modules/ext/commons-logging-1.1.1.jar</binary-origin>
-            </class-path-extension>
-            <class-path-extension>
                 <runtime-relative-path>ext/geronimo-ws-metadata_2.0_spec-1.1.2.jar</runtime-relative-path>
                 <binary-origin>release/modules/ext/geronimo-ws-metadata_2.0_spec-1.1.2.jar</binary-origin>
+            </class-path-extension>
+            <class-path-extension>
+                <runtime-relative-path>ext/commons-logging-1.1.1.jar</runtime-relative-path>
+                <binary-origin>release/modules/ext/commons-logging-1.1.1.jar</binary-origin>
             </class-path-extension>
             <class-path-extension>
                 <runtime-relative-path>ext/ome-xml.jar</runtime-relative-path>
@@ -2920,10 +2645,6 @@
             <class-path-extension>
                 <runtime-relative-path>ext/loci-common.jar</runtime-relative-path>
                 <binary-origin>release/modules/ext/loci-common.jar</binary-origin>
-            </class-path-extension>
-            <class-path-extension>
-                <runtime-relative-path>ext/compute-drmaa.jar</runtime-relative-path>
-                <binary-origin>release/modules/ext/compute-drmaa.jar</binary-origin>
             </class-path-extension>
             <class-path-extension>
                 <runtime-relative-path>ext/slf4j-api-1.7.5.jar</runtime-relative-path>
