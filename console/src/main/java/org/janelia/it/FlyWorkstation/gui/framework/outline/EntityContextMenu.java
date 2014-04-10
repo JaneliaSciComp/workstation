@@ -122,7 +122,7 @@ public class EntityContextMenu extends JPopupMenu {
         add(getErrorFlag());
         add(getDeleteItem());
         add(getDeleteInBackgroundItem());
-        add(getForceRerunItem());
+        add(getMarkForReprocessingItem());
         add(getProcessingBlockItem());
         add(getVerificationMovieItem());
         
@@ -631,13 +631,15 @@ public class EntityContextMenu extends JPopupMenu {
             }
         }
         
+        if (samples.isEmpty()) return null;
+        
         final String samplesText = multiple?samples.size()+" Samples":"Sample";
         
         JMenuItem blockItem = new JMenuItem("  Purge And Block "+samplesText+" (Background Task)");
         blockItem.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent actionEvent) {
 
-                int result = JOptionPane.showConfirmDialog(browser, "Are you sure you want to purge "+samples.size()+" samples "+
+                int result = JOptionPane.showConfirmDialog(browser, "Are you sure you want to purge "+samples.size()+" sample(s) "+
                         "by deleting all large files associated with them, and block all future processing?",  
                 		"Purge And Block Processing", JOptionPane.OK_CANCEL_OPTION);
                 
@@ -692,7 +694,7 @@ public class EntityContextMenu extends JPopupMenu {
         return blockItem;
     }
 
-    protected JMenuItem getForceRerunItem() {
+    protected JMenuItem getMarkForReprocessingItem() {
 
         final List<Entity> samples = new ArrayList<Entity>();
         for (RootedEntity rootedEntity : rootedEntityList) {
@@ -701,6 +703,8 @@ public class EntityContextMenu extends JPopupMenu {
                 samples.add(sample);
             }
         }
+        
+        if (samples.isEmpty()) return null;
 
         final String samplesText = multiple?samples.size()+" Samples":"Sample";
         
@@ -708,7 +712,7 @@ public class EntityContextMenu extends JPopupMenu {
         markItem.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent actionEvent) {
 
-                int result = JOptionPane.showConfirmDialog(browser, "Are you sure you want this sample to be reprocessed "
+                int result = JOptionPane.showConfirmDialog(browser, "Are you sure you want these "+samples.size()+" sample(s) to be reprocessed "
                         + "during the next scheduled refresh?",  "Mark for Reprocessing", JOptionPane.OK_CANCEL_OPTION);
                 
                 if (result != 0) return;

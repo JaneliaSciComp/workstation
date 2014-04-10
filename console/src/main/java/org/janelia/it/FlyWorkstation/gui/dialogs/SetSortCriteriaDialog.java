@@ -18,7 +18,6 @@ import javax.swing.JComboBox;
 import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
-import javax.swing.SwingUtilities;
 
 import net.miginfocom.swing.MigLayout;
 
@@ -61,7 +60,7 @@ public class SetSortCriteriaDialog extends ModalDialog implements Accessibility 
         add(attrPanel, BorderLayout.CENTER);
 
         sortingFieldCombobox = new JComboBox();
-        sortingFieldCombobox.setEditable(true);
+        sortingFieldCombobox.setEditable(false);
         sortingFieldCombobox.setToolTipText("Choose sorting field");
 
         sortingFieldModel = (DefaultComboBoxModel)sortingFieldCombobox.getModel();
