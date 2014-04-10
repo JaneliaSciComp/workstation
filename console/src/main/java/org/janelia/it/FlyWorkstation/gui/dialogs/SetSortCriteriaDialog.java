@@ -18,6 +18,7 @@ import javax.swing.JComboBox;
 import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
+import javax.swing.SwingUtilities;
 
 import net.miginfocom.swing.MigLayout;
 
@@ -196,7 +197,6 @@ public class SetSortCriteriaDialog extends ModalDialog implements Accessibility 
 			@Override
 			protected void hadSuccess() {
                 Utils.setDefaultCursor(SessionMgr.getBrowser());
-			    SessionMgr.getBrowser().getEntityOutline().refresh(true, true, null);
 			}
 			
 			@Override

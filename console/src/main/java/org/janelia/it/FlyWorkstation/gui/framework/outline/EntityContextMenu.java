@@ -111,6 +111,7 @@ public class EntityContextMenu extends JPopupMenu {
         add(getPasteAnnotationItem());
         add(getDetailsItem());
         add(getPermissionItem());
+        add(getSetSortCriteriaItem());
         add(getGotoRelatedItem());
 
         setNextAddRequiresSeparator(true);
@@ -139,9 +140,8 @@ public class EntityContextMenu extends JPopupMenu {
         add(getSearchHereItem());
 
         setNextAddRequiresSeparator(true);
-        add(getMergeItem());
         add(getSortBySimilarityItem());
-        add(getSetSortCriteriaItem());
+        add(getMergeItem());
         add(getDownloadMenu());
         add(getImportItem());
 //        add(getCreateSessionItem());
