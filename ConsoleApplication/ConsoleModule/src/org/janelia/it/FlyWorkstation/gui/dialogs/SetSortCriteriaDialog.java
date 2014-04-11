@@ -60,7 +60,7 @@ public class SetSortCriteriaDialog extends ModalDialog implements Accessibility 
         add(attrPanel, BorderLayout.CENTER);
 
         sortingFieldCombobox = new JComboBox();
-        sortingFieldCombobox.setEditable(true);
+        sortingFieldCombobox.setEditable(false);
         sortingFieldCombobox.setToolTipText("Choose sorting field");
 
         sortingFieldModel = (DefaultComboBoxModel)sortingFieldCombobox.getModel();
