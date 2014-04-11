@@ -967,7 +967,7 @@ public class AlignmentBoardPanel extends JPanel implements AlignmentBoardControl
             serializeInWorker();
         }
 
-        @Override
+        //@Override
         public void modelPropertyChanged(Object key, Object oldValue, Object newValue) {
         }
 
