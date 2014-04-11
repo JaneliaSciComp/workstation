@@ -5,7 +5,17 @@
 <project name="ConsoleApplication" basedir=".">
     <description>Builds the module suite ConsoleApplication.</description>
     <import file="nbproject/build-impl.xml"/>
-    
+
+    <!-- Override to change Mac application icon. -->
+    <target name="build-mac" depends="suite.build-mac" description="Build Mac OS X Application">
+        <property name="nbdist-contents.dir" value="${dist.dir}/${app.name}.app/Contents"/>
+        <property name="nbdist-resources.dir" value="${nbdist-contents.dir}/Resources"/>
+
+        <!-- Replace the icns file. -->
+        <delete file="${nbdist-resources.dir}/${app.name}.icns"/>
+        <copy tofile="${nbdist-resources.dir}/${app.name}.icns" file="${app.name}.icns" />
+    </target>
+
     <!-- This will cause the build/launcher/etc/APPNAME.conf to get proper runtime parameters. -->
     <target name="build-launchers" depends="suite.build-launchers">
         <replace file="build/launcher/etc/${app.name}.conf">
