@@ -1592,23 +1592,13 @@
                 <package>org.janelia.it.jacs.model.user_data.zlatic</package>
                 <package>org.janelia.it.jacs.model.util</package>
                 <package>org.janelia.it.jacs.model.vo</package>
-                <package>org.janelia.it.jacs.shared.annotation</package>
                 <package>org.janelia.it.jacs.shared.blast</package>
                 <package>org.janelia.it.jacs.shared.blast.blastxmlparser</package>
                 <package>org.janelia.it.jacs.shared.blast.blastxmlparser.jaxb</package>
-                <package>org.janelia.it.jacs.shared.export</package>
-                <package>org.janelia.it.jacs.shared.fasta</package>
-                <package>org.janelia.it.jacs.shared.file_chooser</package>
-                <package>org.janelia.it.jacs.shared.genomics</package>
-                <package>org.janelia.it.jacs.shared.hibernate</package>
                 <package>org.janelia.it.jacs.shared.lucene</package>
                 <package>org.janelia.it.jacs.shared.lucene.data_retrievers</package>
                 <package>org.janelia.it.jacs.shared.lucene.searchers</package>
-                <package>org.janelia.it.jacs.shared.node</package>
-                <package>org.janelia.it.jacs.shared.perf</package>
                 <package>org.janelia.it.jacs.shared.processors.recruitment</package>
-                <package>org.janelia.it.jacs.shared.screen</package>
-                <package>org.janelia.it.jacs.shared.tasks</package>
                 <package>org.janelia.it.jacs.shared.utils</package>
                 <package>org.janelia.it.jacs.shared.utils.entity</package>
                 <package>org.janelia.it.jacs.shared.utils.genbank</package>
@@ -2699,12 +2689,12 @@
                 <binary-origin>release/modules/ext/xml-resolver-1.2.jar</binary-origin>
             </class-path-extension>
             <class-path-extension>
-                <runtime-relative-path>ext/juli-6.0.16.jar</runtime-relative-path>
-                <binary-origin>release/modules/ext/juli-6.0.16.jar</binary-origin>
-            </class-path-extension>
-            <class-path-extension>
                 <runtime-relative-path>ext/jacs-shared.jar</runtime-relative-path>
                 <binary-origin>release/modules/ext/jacs-shared.jar</binary-origin>
+            </class-path-extension>
+            <class-path-extension>
+                <runtime-relative-path>ext/juli-6.0.16.jar</runtime-relative-path>
+                <binary-origin>release/modules/ext/juli-6.0.16.jar</binary-origin>
             </class-path-extension>
             <class-path-extension>
                 <runtime-relative-path>ext/gluegen-rt.jar</runtime-relative-path>

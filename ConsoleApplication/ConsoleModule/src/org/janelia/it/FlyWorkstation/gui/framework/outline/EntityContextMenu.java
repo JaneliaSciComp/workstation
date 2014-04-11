@@ -694,15 +694,9 @@ public class EntityContextMenu extends JPopupMenu {
         blockItem.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent actionEvent) {
 
-<<<<<<< HEAD:ConsoleApplication/ConsoleModule/src/org/janelia/it/FlyWorkstation/gui/framework/outline/EntityContextMenu.java
-                int result = JOptionPane.showConfirmDialog(mainFrame, "Are you sure you want to purge " 
-                        + rootedEntity.getEntity().getName()+" by deleting all large files associated with it, " +
-                		"and block all of its future processing?",  "Purge And Block Processing", JOptionPane.OK_CANCEL_OPTION);
-=======
-                int result = JOptionPane.showConfirmDialog(browser, "Are you sure you want to purge "+samples.size()+" sample(s) "+
+                int result = JOptionPane.showConfirmDialog(SessionMgr.getMainFrame(), "Are you sure you want to purge "+samples.size()+" sample(s) "+
                         "by deleting all large files associated with them, and block all future processing?",  
                 		"Purge And Block Processing", JOptionPane.OK_CANCEL_OPTION);
->>>>>>> master:console/src/main/java/org/janelia/it/FlyWorkstation/gui/framework/outline/EntityContextMenu.java
                 
                 if (result != 0) return;
 
@@ -773,11 +767,7 @@ public class EntityContextMenu extends JPopupMenu {
         markItem.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent actionEvent) {
 
-<<<<<<< HEAD:ConsoleApplication/ConsoleModule/src/org/janelia/it/FlyWorkstation/gui/framework/outline/EntityContextMenu.java
-                int result = JOptionPane.showConfirmDialog(mainFrame, "Are you sure you want this sample to be reprocessed "
-=======
-                int result = JOptionPane.showConfirmDialog(browser, "Are you sure you want these "+samples.size()+" sample(s) to be reprocessed "
->>>>>>> master:console/src/main/java/org/janelia/it/FlyWorkstation/gui/framework/outline/EntityContextMenu.java
+                int result = JOptionPane.showConfirmDialog(SessionMgr.getMainFrame(), "Are you sure you want these "+samples.size()+" sample(s) to be reprocessed "
                         + "during the next scheduled refresh?",  "Mark for Reprocessing", JOptionPane.OK_CANCEL_OPTION);
                 
                 if (result != 0) return;
