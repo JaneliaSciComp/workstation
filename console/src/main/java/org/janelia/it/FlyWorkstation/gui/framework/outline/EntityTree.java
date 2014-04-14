@@ -419,7 +419,7 @@ public class EntityTree extends JPanel implements ActivatableView {
                 Entity entity = getEntity(node);
                 log.debug("recreateChildNodes for node (@{}) with entity: {}",System.identityHashCode(node),EntityUtils.identify(entity));
                 
-                ArrayList<EntityData> edList = new ArrayList<EntityData>(entity.getOrderedEntityData());
+                List<EntityData> edList = EntityUtils.getSortedEntityDatas(entity);
 
             	List<DefaultMutableTreeNode> childNodes = new ArrayList<DefaultMutableTreeNode>();
                 for (int i = 0; i < node.getChildCount(); i++) {
