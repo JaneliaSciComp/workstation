@@ -1,16 +1,21 @@
 package org.janelia.it.FlyWorkstation.gui.util;
 
-import org.janelia.it.FlyWorkstation.api.entity_model.management.ModelMgrUtils;
-import org.janelia.it.FlyWorkstation.shared.util.Utils;
-import org.janelia.it.jacs.model.entity.Entity;
-import org.janelia.it.jacs.model.entity.EntityConstants;
-import org.janelia.it.jacs.shared.utils.EntityUtils;
-
-import javax.swing.*;
 import java.awt.image.BufferedImage;
 import java.io.FileNotFoundException;
 import java.util.HashMap;
 import java.util.Map;
+
+import javax.swing.Icon;
+import javax.swing.ImageIcon;
+
+import org.janelia.it.FlyWorkstation.api.entity_model.management.ModelMgrUtils;
+import org.janelia.it.FlyWorkstation.gui.framework.outline.EntityContextMenu;
+import org.janelia.it.FlyWorkstation.shared.util.Utils;
+import org.janelia.it.jacs.model.entity.Entity;
+import org.janelia.it.jacs.model.entity.EntityConstants;
+import org.janelia.it.jacs.shared.utils.EntityUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Retrieve icons in the classpath by filename. 
@@ -19,6 +24,8 @@ import java.util.Map;
  */
 public class Icons {
 
+    private static final Logger log = LoggerFactory.getLogger(Icons.class);
+    
     private static Icon missingIcon = new MissingIcon();
 
     public static Map<String,ImageIcon> cache = new HashMap<String,ImageIcon>();
@@ -190,6 +197,9 @@ public class Icons {
         else if (EntityConstants.TYPE_SAMPLE.equals(type)
                 || EntityConstants.TYPE_SCREEN_SAMPLE.equals(type)
                 || EntityConstants.TYPE_3D_TILE_MICROSCOPE_SAMPLE.equals(type)) {
+            if (!large && EntityConstants.VALUE_BLOCKED.equals(entity.getValueByAttributeName(EntityConstants.ATTRIBUTE_STATUS))) {
+                return getIcon("block.png");
+            }
             return getIcon(large ? "folder_files_large.png" : "beaker.png");
         }
         else if (EntityConstants.TYPE_SCREEN_SAMPLE_CROSS.equals(type)) {

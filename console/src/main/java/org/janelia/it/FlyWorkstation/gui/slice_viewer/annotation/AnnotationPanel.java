@@ -78,9 +78,11 @@ public class AnnotationPanel extends JPanel
     public Slot1<TmWorkspace> workspaceLoadedSlot = new Slot1<TmWorkspace>() {
         @Override
         public void execute(TmWorkspace workspace) {
-            String automaticTracingPref = workspace.getPreferences().getProperty(AnnotationsConstants.PREF_AUTOMATIC_TRACING);
-            if (automaticTracingPref != null) {
-                automaticTracingMenuItem.setSelected(Boolean.parseBoolean(automaticTracingPref));
+            if (workspace != null) {
+                String automaticTracingPref = workspace.getPreferences().getProperty(AnnotationsConstants.PREF_AUTOMATIC_TRACING);
+                if (automaticTracingPref != null) {
+                    automaticTracingMenuItem.setSelected(Boolean.parseBoolean(automaticTracingPref));
+                }
             }
         }
     };

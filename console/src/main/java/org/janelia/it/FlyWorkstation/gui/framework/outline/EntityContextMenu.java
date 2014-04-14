@@ -5,6 +5,7 @@ import org.janelia.it.FlyWorkstation.api.entity_model.management.ModelMgr;
 import org.janelia.it.FlyWorkstation.api.entity_model.management.ModelMgrEntityLoader;
 import org.janelia.it.FlyWorkstation.api.entity_model.management.ModelMgrUtils;
 import org.janelia.it.FlyWorkstation.gui.dialogs.EntityDetailsDialog;
+import org.janelia.it.FlyWorkstation.gui.dialogs.SetSortCriteriaDialog;
 import org.janelia.it.FlyWorkstation.gui.dialogs.SpecialAnnotationChooserDialog;
 import org.janelia.it.FlyWorkstation.gui.dialogs.TaskDetailsDialog;
 import org.janelia.it.FlyWorkstation.gui.framework.actions.Action;
@@ -42,6 +43,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.swing.*;
+
 import java.awt.*;
 import java.awt.datatransfer.StringSelection;
 import java.awt.datatransfer.Transferable;
@@ -109,6 +111,7 @@ public class EntityContextMenu extends JPopupMenu {
         add(getPasteAnnotationItem());
         add(getDetailsItem());
         add(getPermissionItem());
+        add(getSetSortCriteriaItem());
         add(getGotoRelatedItem());
 
         setNextAddRequiresSeparator(true);
@@ -119,7 +122,7 @@ public class EntityContextMenu extends JPopupMenu {
         add(getErrorFlag());
         add(getDeleteItem());
         add(getDeleteInBackgroundItem());
-        add(getForceRerunItem());
+        add(getMarkForReprocessingItem());
         add(getProcessingBlockItem());
         add(getVerificationMovieItem());
         
@@ -137,8 +140,8 @@ public class EntityContextMenu extends JPopupMenu {
         add(getSearchHereItem());
 
         setNextAddRequiresSeparator(true);
-        add(getMergeItem());
         add(getSortBySimilarityItem());
+        add(getMergeItem());
         add(getDownloadMenu());
         add(getImportItem());
 //        add(getCreateSessionItem());
@@ -618,64 +621,40 @@ public class EntityContextMenu extends JPopupMenu {
         return errorMenu;
     }
 
-    // private void bugReport_actionPerformed(){
-    // String tempsubject = "Flagged Data: " +
-    // rootedEntity.getEntity().getName();
-    // StringBuilder sBuf = new StringBuilder();
-    // sBuf.append("Name: ").append(rootedEntity.getEntity().getName()).append("\n");
-    // sBuf.append("Type: ").append(rootedEntity.getEntity().getEntityTypeName()).append("\n");
-    // sBuf.append("ID: ").append(rootedEntity.getEntity().getId().toString()).append("\n\n");
-    // MailHelper helper = new MailHelper();
-    // helper.sendEmail((String)
-    // SessionMgr.getSessionMgr().getModelProperty(SessionMgr.USER_EMAIL),
-    // ConsoleProperties.getString("console.HelpEmail"),
-    // tempsubject, sBuf.toString());
-    //
-    // Entity tmpErrorOntology = null;
-    //
-    // try {
-    // tmpErrorOntology = ModelMgr.getModelMgr().getErrorOntology();
-    // }
-    //
-    // catch (Exception e) {
-    // e.printStackTrace();
-    // }
-    // if (null!=tmpErrorOntology){
-    // OntologyElementChooser flagType = new
-    // OntologyElementChooser("Please choose a bad data flag from the list",
-    // ModelMgr.getModelMgr().getOntology(tmpErrorOntology.getId()));
-    // flagType.setSize(400,400);
-    // flagType.setIconImage(browser.getIconImage());
-    // flagType.setCanAnnotate(true);
-    // flagType.showDialog(browser);
-    //
-    // }
-    //
-    // }
-
     protected JMenuItem getProcessingBlockItem() {
-        if (multiple) return null;
 
-        final Entity sample = rootedEntity.getEntity();
-
-        if (!sample.getEntityTypeName().equals(EntityConstants.TYPE_SAMPLE)) {
-            return null;
+        final List<Entity> samples = new ArrayList<Entity>();
+        for (RootedEntity rootedEntity : rootedEntityList) {
+            Entity sample = rootedEntity.getEntity();
+            if (sample.getEntityTypeName().equals(EntityConstants.TYPE_SAMPLE)) {
+                samples.add(sample);
+            }
         }
         
-        JMenuItem blockItem = new JMenuItem("  Purge And Block Processing (Background Task)");
+        if (samples.isEmpty()) return null;
+        
+        final String samplesText = multiple?samples.size()+" Samples":"Sample";
+        
+        JMenuItem blockItem = new JMenuItem("  Purge And Block "+samplesText+" (Background Task)");
         blockItem.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent actionEvent) {
 
-                int result = JOptionPane.showConfirmDialog(browser, "Are you sure you want to purge " 
-                        + rootedEntity.getEntity().getName()+" by deleting all large files associated with it, " +
-                		"and block all of its future processing?",  "Purge And Block Processing", JOptionPane.OK_CANCEL_OPTION);
+                int result = JOptionPane.showConfirmDialog(browser, "Are you sure you want to purge "+samples.size()+" sample(s) "+
+                        "by deleting all large files associated with them, and block all future processing?",  
+                		"Purge And Block Processing", JOptionPane.OK_CANCEL_OPTION);
                 
                 if (result != 0) return;
 
                 Task task = null;
                 try {
+                    StringBuilder sampleIdBuf = new StringBuilder();
+                    for(Entity sample : samples) {
+                        if (sampleIdBuf.length()>0) sampleIdBuf.append(",");
+                        sampleIdBuf.append(sample.getId());
+                    }
+                    
                     HashSet<TaskParameter> taskParameters = new HashSet<TaskParameter>();
-                    taskParameters.add(new TaskParameter("sample entity id", sample.getId().toString(), null));
+                    taskParameters.add(new TaskParameter("sample entity id", sampleIdBuf.toString(), null));
                     task = ModelMgr.getModelMgr().submitJob("ConsolePurgeAndBlockSample", "Purge And Block Sample", taskParameters);
                 }
                 catch (Exception e) {
@@ -687,14 +666,16 @@ public class EntityContextMenu extends JPopupMenu {
 
                     @Override
                     public String getName() {
-                        return "Purging and blocking "+sample.getName();
+                        return "Purging and blocking "+samples.size()+" samples";
                     }
 
                     @Override
                     protected void doStuff() throws Exception {
                         setStatus("Executing");
                         super.doStuff();
-                        ModelMgr.getModelMgr().invalidateCache(sample, true);
+                        for(Entity sample : samples) {
+                            ModelMgr.getModelMgr().invalidateCache(sample, true);
+                        }
                     }
                 };
 
@@ -702,31 +683,36 @@ public class EntityContextMenu extends JPopupMenu {
             }
         });
 
-        if (sample.getEntityDataByAttributeName(EntityConstants.ATTRIBUTE_PROCESSING_BLOCK)!=null) {
-            blockItem.setEnabled(false);
-        }
-        
-        if (!ModelMgrUtils.hasWriteAccess(sample) || EntityUtils.isProtected(sample)) {
-            blockItem.setEnabled(false);
-        }
-
-        return blockItem;
-    }
-
-    protected JMenuItem getForceRerunItem() {
-
-        // All selected entities must be Samples
         for(RootedEntity rootedEntity : rootedEntityList) {
-            if (!rootedEntity.getEntity().getEntityTypeName().equals(EntityConstants.TYPE_SAMPLE)) {
-                return null;
+            Entity sample = rootedEntity.getEntity();
+            if (!ModelMgrUtils.hasWriteAccess(sample) || EntityUtils.isProtected(sample)) {
+                blockItem.setEnabled(false);
+                break;
             }
         }
         
-        JMenuItem markItem = new JMenuItem("  Mark Sample for Reprocessing");
+        return blockItem;
+    }
+
+    protected JMenuItem getMarkForReprocessingItem() {
+
+        final List<Entity> samples = new ArrayList<Entity>();
+        for (RootedEntity rootedEntity : rootedEntityList) {
+            Entity sample = rootedEntity.getEntity();
+            if (sample.getEntityTypeName().equals(EntityConstants.TYPE_SAMPLE)) {
+                samples.add(sample);
+            }
+        }
+        
+        if (samples.isEmpty()) return null;
+
+        final String samplesText = multiple?samples.size()+" Samples":"Sample";
+        
+        JMenuItem markItem = new JMenuItem("  Mark "+samplesText+" for Reprocessing");
         markItem.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent actionEvent) {
 
-                int result = JOptionPane.showConfirmDialog(browser, "Are you sure you want this sample to be reprocessed "
+                int result = JOptionPane.showConfirmDialog(browser, "Are you sure you want these "+samples.size()+" sample(s) to be reprocessed "
                         + "during the next scheduled refresh?",  "Mark for Reprocessing", JOptionPane.OK_CANCEL_OPTION);
                 
                 if (result != 0) return;
@@ -735,9 +721,8 @@ public class EntityContextMenu extends JPopupMenu {
                     
                     @Override
                     protected void doStuff() throws Exception {
-                        
-                        for(RootedEntity rootedEntity : rootedEntityList) {
-                            ModelMgr.getModelMgr().setOrUpdateValue(rootedEntity.getEntity(), EntityConstants.ATTRIBUTE_STATUS, EntityConstants.VALUE_MARKED);
+                        for(final Entity sample : samples) {
+                            ModelMgr.getModelMgr().setOrUpdateValue(sample, EntityConstants.ATTRIBUTE_STATUS, EntityConstants.VALUE_MARKED);
                         }
                     }
                     
@@ -851,7 +836,7 @@ public class EntityContextMenu extends JPopupMenu {
             }
         });
 
-        if (sample.getEntityDataByAttributeName(EntityConstants.ATTRIBUTE_PROCESSING_BLOCK)!=null) {
+        if (EntityConstants.VALUE_BLOCKED.equals(sample.getValueByAttributeName(EntityConstants.ATTRIBUTE_STATUS))) {
             movieItem.setEnabled(false);
         }
         
@@ -1268,6 +1253,35 @@ public class EntityContextMenu extends JPopupMenu {
         return sortItem;
     }
 
+    protected JMenuItem getSetSortCriteriaItem() {
+
+        if (multiple) {
+            return null;
+        }
+
+        final Entity targetEntity = rootedEntity.getEntity();
+        if (!targetEntity.getEntityTypeName().equals(EntityConstants.TYPE_FOLDER)) {
+            return null;
+        }
+        
+        JMenuItem sortItem = new JMenuItem("  Set Sorting Criteria");
+
+        sortItem.addActionListener(new ActionListener() {
+            public void actionPerformed(ActionEvent actionEvent) {
+                try {
+                    SetSortCriteriaDialog dialog = new SetSortCriteriaDialog();
+                    dialog.showForEntity(targetEntity);
+                } 
+                catch (Exception e) {
+                    SessionMgr.getSessionMgr().handleException(e);
+                }
+            }
+        });
+
+        sortItem.setEnabled(ModelMgrUtils.hasWriteAccess(targetEntity));
+        return sortItem;
+    }
+    
     protected JMenuItem getDownloadMenu() {
 
         List<Entity> entitiesWithFilepaths = new ArrayList<Entity>();

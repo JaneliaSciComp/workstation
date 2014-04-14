@@ -78,6 +78,8 @@ import org.janelia.it.jacs.shared.utils.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.google.common.collect.HashMultimap;
+import com.google.common.collect.Multimap;
 import com.google.common.eventbus.Subscribe;
 
 /**
@@ -104,10 +106,12 @@ public class IconDemoPanel extends IconPanel {
 	// Status bar
 	protected JPanel statusBar;
 	protected JLabel statusLabel;
+	protected JPanel selectionButtonContainer;
 	protected JButton prevPageButton;
 	protected JButton nextPageButton;
     protected JButton endPageButton;
     protected JButton startPageButton;
+    protected JButton selectAllButton;
     protected JLabel pagingStatusLabel;
 	
 	// Hud dialog
@@ -116,13 +120,13 @@ public class IconDemoPanel extends IconPanel {
 	// These members deal with the context and entities within it
 	protected RootedEntity contextRootedEntity;
 	protected List<RootedEntity> allRootedEntities;
+    protected Multimap<String,RootedEntity> allRootedEntitiesByPathId = HashMultimap.<String,RootedEntity>create();
+    protected Multimap<Long,RootedEntity> allRootedEntitiesByEntityId = HashMultimap.<Long,RootedEntity>create();
 	protected int numPages;
 	
 	// These members deal with entities on the current page only
 	protected int currPage;
 	protected List<RootedEntity> pageRootedEntities;
-	protected Map<String,RootedEntity> pageRootedEntityMap;
-	protected Map<Long,Entity> entityMap;
 	protected final Annotations annotations = new Annotations();
 	protected final List<String> allUsers = new ArrayList<String>();
 	protected final Set<String> hiddenUsers = new HashSet<String>();
@@ -158,6 +162,9 @@ public class IconDemoPanel extends IconPanel {
 				if (e.getKeyCode() == KeyEvent.VK_A && ((SystemInfo.isMac && e.isMetaDown()) || (e.isControlDown()))) {
 					for (RootedEntity rootedEntity : pageRootedEntities) { 
 						ModelMgr.getModelMgr().getEntitySelectionModel().selectEntity(getSelectionCategory(), rootedEntity.getId(), false);
+					}
+					if (pageRootedEntities.size()<allRootedEntities.size()) {
+					    selectionButtonContainer.setVisible(true);
 					}
 					return;
 				}
@@ -265,7 +272,13 @@ public class IconDemoPanel extends IconPanel {
 		List<String> selectionIds = ModelMgr.getModelMgr().getEntitySelectionModel().getSelectedEntitiesIds(getSelectionCategory());
 		List<RootedEntity> rootedEntityList = new ArrayList<RootedEntity>();
 		for (String entityId : selectionIds) {
-			rootedEntityList.add(getRootedEntityById(entityId));
+		    RootedEntity re = getRootedEntityById(entityId);
+		    if (re==null) {
+		        log.warn("Could not locate selected entity with id {}",entityId);
+		    }
+		    else {
+		        rootedEntityList.add(re);    
+		    }
 		}
 		JPopupMenu popupMenu = new EntityContextMenu(rootedEntityList);
 		((EntityContextMenu)popupMenu).addMenuItems();
@@ -289,6 +302,8 @@ public class IconDemoPanel extends IconPanel {
 		final String category = getSelectionCategory();
 		final RootedEntity rootedEntity = button.getRootedEntity();
 		final String rootedEntityId = rootedEntity.getId();
+		
+		selectionButtonContainer.setVisible(false);
 		
 		if (multiSelect) {
 			// With the meta key we toggle items in the current
@@ -419,9 +434,25 @@ public class IconDemoPanel extends IconPanel {
             }
         });
 
+        selectAllButton = new JButton("Select All");
+        selectAllButton.setToolTipText("Select all items on all pages");
+        selectAllButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                selectAll();
+            }
+        });
+        
         statusLabel = new JLabel("");
 		pagingStatusLabel = new JLabel("");
 		
+		selectionButtonContainer = new JPanel();
+        selectionButtonContainer.setLayout(new BoxLayout(selectionButtonContainer, BoxLayout.LINE_AXIS));
+        
+		selectionButtonContainer.add(selectAllButton);
+		selectionButtonContainer.add(Box.createRigidArea(new Dimension(10,20)));
+		selectionButtonContainer.setVisible(false);
+        
 		statusBar = new JPanel();
 		statusBar.setLayout(new BoxLayout(statusBar, BoxLayout.LINE_AXIS));
 		statusBar.setBorder(BorderFactory.createCompoundBorder(BorderFactory.createMatteBorder(1, 0, 0, 0, (Color)UIManager.get("windowBorder")), BorderFactory.createEmptyBorder(0, 5, 2, 5)));
@@ -429,6 +460,7 @@ public class IconDemoPanel extends IconPanel {
 		statusBar.add(Box.createRigidArea(new Dimension(10,20)));
         statusBar.add(statusLabel);
         statusBar.add(Box.createRigidArea(new Dimension(10,20)));
+        statusBar.add(selectionButtonContainer);
         statusBar.add(new JSeparator(JSeparator.VERTICAL));
         statusBar.add(Box.createHorizontalGlue());
         statusBar.add(pagingStatusLabel);
@@ -878,6 +910,13 @@ public class IconDemoPanel extends IconPanel {
         loadImageEntities(numPages-1, null);
     }
 
+    private synchronized void selectAll() {
+        for (RootedEntity rootedEntity : allRootedEntities) { 
+            ModelMgr.getModelMgr().getEntitySelectionModel().selectEntity(getSelectionCategory(), rootedEntity.getId(), false);
+        }
+        selectionButtonContainer.setVisible(false);
+    }
+    
     @Override
 	public void showLoadingIndicator() {
 		removeAll();
@@ -900,7 +939,7 @@ public class IconDemoPanel extends IconPanel {
 
 		log.debug("loadEntity {} (@{})",entity.getName(),System.identityHashCode(entity));
 		
-		List<EntityData> eds = entity.getOrderedEntityData();
+		List<EntityData> eds = EntityUtils.getSortedEntityDatas(entity);
 		List<EntityData> children = new ArrayList<EntityData>();
 		for(EntityData ed : eds) {
 			Entity child = ed.getChildEntity();
@@ -934,7 +973,14 @@ public class IconDemoPanel extends IconPanel {
 
 	private synchronized void loadImageEntities(final List<RootedEntity> lazyRootedEntities, final Callable<Void> success) {
 
-		allRootedEntities = lazyRootedEntities;
+	    this.allRootedEntitiesByEntityId.clear();
+	    this.allRootedEntitiesByPathId.clear();
+		this.allRootedEntities = lazyRootedEntities;
+		for(RootedEntity re : allRootedEntities) {
+		    allRootedEntitiesByEntityId.put(re.getEntityId(), re);
+		    allRootedEntitiesByPathId.put(re.getId(), re);
+		}
+		
 		this.numPages = (int)Math.ceil((double)allRootedEntities.size() / (double)PAGE_SIZE);
 		loadImageEntities(0, success);
 	}
@@ -1108,9 +1154,9 @@ public class IconDemoPanel extends IconPanel {
 		if (index < 0) return;
 		
 		pageRootedEntities.remove(rootedEntity);
-		pageRootedEntityMap.remove(rootedEntity.getId());
-		entityMap.remove(rootedEntity.getEntityId());
 		allRootedEntities.remove(rootedEntity);
+        allRootedEntitiesByEntityId.removeAll(rootedEntity.getEntityId());
+        allRootedEntitiesByPathId.removeAll(rootedEntity.getId());
 		
 		this.numPages = (int)Math.ceil((double)allRootedEntities.size() / (double)PAGE_SIZE);
 		updatePagingStatus();
@@ -1294,8 +1340,6 @@ public class IconDemoPanel extends IconPanel {
 		
 		this.contextRootedEntity = null;
 		this.pageRootedEntities = null;
-		this.pageRootedEntityMap = null;
-		this.entityMap = null;
 		
 		getViewerPane().setTitle(" ");
 		removeAll();
@@ -1349,15 +1393,9 @@ public class IconDemoPanel extends IconPanel {
 
 	private synchronized void setRootedEntities(List<RootedEntity> rootedEntities) {
 		this.pageRootedEntities = rootedEntities;
-		this.pageRootedEntityMap = new HashMap<String,RootedEntity>();
-		this.entityMap = new HashMap<Long,Entity>();
 		
 		Set<String> imageRoles = new HashSet<String>();
 		for(RootedEntity rootedEntity : rootedEntities) {
-			
-			pageRootedEntityMap.put(rootedEntity.getId(), rootedEntity);
-			entityMap.put(rootedEntity.getEntity().getId(), rootedEntity.getEntity());
-			
 			for(EntityData ed : rootedEntity.getEntity().getEntityData()) {
 				if (EntityUtils.hasImageRole(ed)) {
 					imageRoles.add(ed.getEntityAttrName());
@@ -1414,36 +1452,26 @@ public class IconDemoPanel extends IconPanel {
 
 	private List<RootedEntity> getRootedEntitiesById(String id) {
 		List<RootedEntity> res = new ArrayList<RootedEntity>();
-		if (pageRootedEntityMap==null) return res;
-		RootedEntity re = pageRootedEntityMap.get(id);
-		if (re!=null) {
-			res.add(re);
-		}
-		else {
-			for(RootedEntity rootedEntity : pageRootedEntities) {
-				if (rootedEntity.getEntity().getId().toString().equals(id)) {
-					res.add(rootedEntity);	
-				}
-			}	
+		// Assume these are path ids
+		res.addAll(allRootedEntitiesByPathId.get(id));
+		if (res.isEmpty()) {
+		    // Maybe we were given entity GUIDs
+    		try {
+    		    Long entityId = Long.parseLong(id);
+    		    res.addAll(allRootedEntitiesByEntityId.get(entityId));    
+    		}
+    		catch (NumberFormatException e) {
+    		    // Expected
+    		}
 		}
 		return res;
 	}
 	
 	@Override
 	public RootedEntity getRootedEntityById(String id) {
-		if (pageRootedEntityMap==null) return null;
-		RootedEntity re = pageRootedEntityMap.get(id);
-		if (re!=null) {
-			return re;
-		}
-		else {
-			for(RootedEntity rootedEntity : pageRootedEntities) {
-				if (rootedEntity.getEntity().getId().toString().equals(id)) {
-					return rootedEntity;	
-				}
-			}	
-		}
-		return null;
+	    List<RootedEntity> res = getRootedEntitiesById(id);
+	    if (res==null || res.isEmpty()) return null;
+	    return res.get(0);
 	}
 	
     public boolean areTitlesVisible() {
