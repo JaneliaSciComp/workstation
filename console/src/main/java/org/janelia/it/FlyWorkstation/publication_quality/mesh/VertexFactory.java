@@ -1,9 +1,5 @@
 package org.janelia.it.FlyWorkstation.publication_quality.mesh;
 
-import java.nio.ByteBuffer;
-import java.nio.ByteOrder;
-import java.nio.FloatBuffer;
-import java.nio.IntBuffer;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;

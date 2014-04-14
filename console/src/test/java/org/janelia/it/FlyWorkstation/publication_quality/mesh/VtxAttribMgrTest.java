@@ -1,6 +1,7 @@
 package org.janelia.it.FlyWorkstation.publication_quality.mesh;
 
 import org.janelia.it.FlyWorkstation.gui.alignment_board_viewer.renderable.MaskChanRenderableData;
+import org.janelia.it.FlyWorkstation.gui.alignment_board_viewer.renderable.RenderableBean;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
@@ -66,6 +67,11 @@ public class VtxAttribMgrTest {
     public void execute() throws Exception {
         List<MaskChanRenderableData> beanList = new ArrayList<MaskChanRenderableData>();
         MaskChanRenderableData renderableData = new MaskChanRenderableData();
+        RenderableBean renderableBean = new RenderableBean();
+        renderableBean.setLabelFileNum( 5 );
+        renderableBean.setTranslatedNum( 50 );
+        renderableData.setBean( renderableBean );
+
         renderableData.setMaskPath( LOCAL_MASK_FILE_PATH );
         renderableData.setChannelPath( LOCAL_CHAN_FILE_PATH );
         beanList.add( renderableData );

@@ -46,7 +46,7 @@ public class VtxAttribMgr {
 
     /**
      * This is the big command step.  It scans all the renderables into factories which can crank out the
-     * vertices and triangles representing them.
+     * vertices and triangles representing them.  Return value here is useful for unit testing.
      *
      * @return list of factories--one per renderable bean.
      * @throws Exception for called methods.
@@ -121,7 +121,10 @@ public class VtxAttribMgr {
     }
 
     /**
-     * Create buffers suitable for an upload to GPU.
+     * Create index buffer suitable for an upload to GPU.
+     *
+     * @param factory from which to pull these data.
+     * @return as-needed buffer.
      */
     private IntBuffer getIndices( VertexFactory factory ) {
         // Iterate over triangles to get the index buffer.
@@ -142,7 +145,13 @@ public class VtxAttribMgr {
         return indexBuffer;
     }
 
-    public FloatBuffer getVertexAttributes( VertexFactory factory ) {
+    /**
+     * Create vertex-attrib buffer suitable for upload to GPU.
+     *
+     * @param factory from which to pull these data.
+     * @return as-needed buffer.
+     */
+    private FloatBuffer getVertexAttributes( VertexFactory factory ) {
         List<VertexInfoBean> vertices = factory.getVertices();
 
         // Iterate over the vertices to get vertex attributes.  The order of vertices in that collection should
@@ -168,19 +177,6 @@ public class VtxAttribMgr {
         }
 
         return vertexAttribBuffer;
-    }
-
-    /**
-     * Return the vertex factories created in the execute step.
-     * ORDER DEPENDENCY: call this only after having called execute()
-     *
-     * @return list of factories or null if this is called at the wrong time.
-     */
-    public List<TriangleSource> getVertexFactories() {
-        if ( vertexFactories == null ) {
-            throw new IllegalStateException("Please call execute() to generate factories first!");
-        }
-        return vertexFactories;
     }
 
     private Set<VoxelInfoBean> getExposedVoxelSet(Map<Long, Map<Long, Map<Long, VoxelInfoBean>>> voxelMap, VoxelSurfaceCollector voxelSurfaceCollector ) {
