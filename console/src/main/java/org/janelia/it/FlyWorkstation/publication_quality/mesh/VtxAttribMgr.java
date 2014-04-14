@@ -25,19 +25,39 @@ public class VtxAttribMgr {
     private Logger logger = LoggerFactory.getLogger(VtxAttribMgr.class);
 
     private List<MaskChanRenderableData> beanList;
+    private List<TriangleSource> vertexFactories;
+
     public VtxAttribMgr( List<MaskChanRenderableData> beanList ) {
         this.beanList = beanList;
     }
 
-    public void execute() throws Exception {
+    /**
+     * This is the big command step.  It scans all the renderables into factories which can crank out the
+     * vertices and triangles representing them.
+     *
+     * @return list of factories--one per renderable bean.
+     * @throws Exception for called methods.
+     */
+    public List<TriangleSource> execute() throws Exception {
+        vertexFactories = new ArrayList<TriangleSource>();
         for ( MaskChanRenderableData bean: beanList ) {
             VoxelSurfaceCollector collector = getVoxelSurfaceCollector( bean.getMaskPath(), bean.getChannelPath() );
             Map<Long,Map<Long,Map<Long,VoxelInfoBean>>> voxelMap = collector.getVoxelMap();
             Set<VoxelInfoBean> exposedBeans = getExposedVoxelSet( voxelMap, collector );
             VertexFactory vtxFactory = new VertexFactory();
+            vertexFactories.add(vtxFactory);
             for ( VoxelInfoBean exposedBean: exposedBeans ) {
                 vtxFactory.addEnclosure( exposedBean );
             }
+
+            long totalVoxelCountForRenderable = 0L;
+            for ( Map<Long,Map<Long,VoxelInfoBean>> mapA: voxelMap.values() ) {
+                for ( Map<Long,VoxelInfoBean> mapB: mapA.values() ) {
+                    totalVoxelCountForRenderable += mapB.size();
+                }
+            }
+            long totalVoxelCountForSurface = exposedBeans.size();
+            vtxFactory.setVolumeSurfaceRatio(totalVoxelCountForRenderable, totalVoxelCountForSurface);
 
             // Now have a full complement of triangles and vertices.  For this renderable, can traverse the
             // vertices, making a "composite normal" based on the normals of all entangling triangles.
@@ -68,9 +88,28 @@ public class VtxAttribMgr {
                     for ( int i = 0; i < 3; i++ ) {
                         attribArray[ i ] = (float)(normalArray[ i ] / magnitude);
                     }
+                    vertexInfoBean.setAttribute(
+                            VertexInfoBean.KnownAttributes.normal.toString(),
+                            attribArray,
+                            3
+                    );
                 }
             }
         }
+        return vertexFactories;
+    }
+
+    /**
+     * Return the vertex factories created in the execute step.
+     * ORDER DEPENDENCY: call this only after having called execute()
+     *
+     * @return list of factories or null if this is called at the wrong time.
+     */
+    public List<TriangleSource> getVertexFactories() {
+        if ( vertexFactories == null ) {
+            throw new IllegalStateException("Please call execute() to generate factories first!");
+        }
+        return vertexFactories;
     }
 
     private Set<VoxelInfoBean> getExposedVoxelSet(Map<Long, Map<Long, Map<Long, VoxelInfoBean>>> voxelMap, VoxelSurfaceCollector voxelSurfaceCollector ) {

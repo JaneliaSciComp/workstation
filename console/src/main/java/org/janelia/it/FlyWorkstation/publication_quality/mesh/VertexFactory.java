@@ -13,7 +13,7 @@ import java.util.HashMap;
  *
  * Created by fosterl on 4/2/14.
  */
-public class VertexFactory {
+public class VertexFactory implements TriangleSource {
     private static final int X = 0;
     private static final int Y = 1;
     private static final int Z = 2;
@@ -60,6 +60,9 @@ public class VertexFactory {
     private Map<VertexInfoKey, VertexInfoBean> vertexMap = new HashMap<VertexInfoKey, VertexInfoBean>();
     private List<VertexInfoBean> vertices = new ArrayList<VertexInfoBean>();
     private List<Triangle> triangleList = new ArrayList<Triangle>();
+
+    private long totalVolumeVoxels;
+    private long totalSurfaceVoxels;
 
     // This is for state enforcement: do not wish to allow partial-fetch of product.
     private boolean getterCalled = false;
@@ -153,6 +156,18 @@ public class VertexFactory {
         }
     }
 
+    /** Establish some statistical numbers. */
+    public void setVolumeSurfaceRatio(long totalVoxels, long surfaceVoxels) {
+        totalVolumeVoxels = totalVoxels;
+        totalSurfaceVoxels = surfaceVoxels;
+    }
+
+    /** Return the computed ratio for statistical purposes. */
+    public double getSurfaceToVolumeRatio() {
+        return (double)totalSurfaceVoxels / (double)totalVolumeVoxels;
+    }
+
+    //-----------------------------------------------------IMPLEMENT TriangleSource
     /**
      * Gets the full list of vertices.
      *
@@ -173,6 +188,7 @@ public class VertexFactory {
         return triangleList;
     }
 
+    //-----------------------------------------------------HELPERS
     /**
      * If this is a new vertex, add it to our map and collection.
      * @param vertexCoords basis of a key.

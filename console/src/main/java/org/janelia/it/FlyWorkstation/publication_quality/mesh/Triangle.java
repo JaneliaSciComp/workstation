@@ -23,4 +23,5 @@ public class Triangle {
     public void setNormalVector(VertexFactory.NormalDirection normalVector) {
         this.normalVector = normalVector;
     }
+    public List<VertexInfoBean> getVertices() { return vertices; }
 }

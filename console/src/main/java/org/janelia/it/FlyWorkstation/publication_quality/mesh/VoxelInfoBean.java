@@ -112,4 +112,13 @@ public class VoxelInfoBean {
         return exposedFaceCount;
     }
 
+    public int hashCode() { return key.hashCode(); }
+    public boolean equals( Object o ) {
+        if ( o == null   ||  ! ( o instanceof  VoxelInfoBean ) ) {
+            return false;
+        }
+        else {
+            return ((VoxelInfoBean) o).getKey().equals( key );
+        }
+    }
 }
