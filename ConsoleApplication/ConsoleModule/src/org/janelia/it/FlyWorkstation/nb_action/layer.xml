@@ -9,4 +9,5 @@
     <folder name="Menu">
         <folder name="Services"/>
     </folder>
+    <file name="Toolbars_hidden"/>
 </filesystem>
