@@ -55,7 +55,7 @@ public class VtxAttribMgr {
         vertexFactories = new ArrayList<TriangleSource>();
         renderIdToBuffers = new HashMap<Long,RenderBuffersBean>();
         for ( MaskChanRenderableData bean: beanList ) {
-            VoxelSurfaceCollector collector = getVoxelSurfaceCollector( bean.getMaskPath(), bean.getChannelPath() );
+            VoxelSurfaceCollector collector = getVoxelSurfaceCollector( bean.getMaskPath(), bean.getChannelPath(), bean.getBean() );
             Map<Long,Map<Long,Map<Long,VoxelInfoBean>>> voxelMap = collector.getVoxelMap();
             Set<VoxelInfoBean> exposedBeans = getExposedVoxelSet( voxelMap, collector );
             VertexFactory vtxFactory = new VertexFactory();
@@ -120,6 +120,17 @@ public class VtxAttribMgr {
         return vertexFactories;
     }
 
+    public Map<Long,RenderBuffersBean> getRenderIdToBuffers() { return renderIdToBuffers; }
+
+    /**
+     * Call this after all use of this manager's data.  It will be in a useless state afterwards.
+     */
+    public void close() {
+        renderIdToBuffers.clear();
+        beanList.clear();
+        vertexFactories.clear();
+    }
+
     /**
      * Create index buffer suitable for an upload to GPU.
      *
@@ -130,7 +141,7 @@ public class VtxAttribMgr {
         // Iterate over triangles to get the index buffer.
         List<Triangle> triangleList = factory.getTriangleList();
 
-        ByteBuffer byteBuffer = ByteBuffer.allocate( triangleList.size() * 3 * (Integer.SIZE / 8) );
+        ByteBuffer byteBuffer = ByteBuffer.allocateDirect( triangleList.size() * 3 * (Integer.SIZE / 8) );
         byteBuffer.order( ByteOrder.nativeOrder() );
         IntBuffer indexBuffer = byteBuffer.asIntBuffer();
         indexBuffer.rewind();
@@ -157,7 +168,7 @@ public class VtxAttribMgr {
         // Iterate over the vertices to get vertex attributes.  The order of vertices in that collection should
         // match the numbers used in making the indices above.
         //   Need three floats for each vertex followed by three floats for each normal.
-        ByteBuffer byteBuffer = ByteBuffer.allocate( 2 * (vertices.size() * 3 * ( Float.SIZE / 8 ) ) );
+        ByteBuffer byteBuffer = ByteBuffer.allocateDirect( 2 * (vertices.size() * 3 * ( Float.SIZE / Byte.SIZE ) ) );
         byteBuffer.order(ByteOrder.nativeOrder());
         FloatBuffer vertexAttribBuffer = byteBuffer.asFloatBuffer();
         vertexAttribBuffer.rewind();
@@ -207,11 +218,8 @@ public class VtxAttribMgr {
     }
 
     private VoxelSurfaceCollector getVoxelSurfaceCollector(
-            final String maskFileName, final String chanFileName ) throws Exception {
+            final String maskFileName, final String chanFileName, RenderableBean renderableBean ) throws Exception {
         // Time-of-writing: only thing bean is used for is its tanslated number.
-        RenderableBean bean = new RenderableBean();
-        bean.setTranslatedNum( 1 );
-
         MaskChanMultiFileLoader loader = new MaskChanMultiFileLoader();
 
         AlignmentBoardSettings settings = new AlignmentBoardSettings();
@@ -247,7 +255,7 @@ public class VtxAttribMgr {
                 return testChannelStream;
             }
         };
-        loader.read(bean, streamSource);
+        loader.read(renderableBean, streamSource);
         return voxelAcceptor;
     }
 

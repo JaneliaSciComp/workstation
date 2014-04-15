@@ -26,8 +26,8 @@ public class MaskSingleFileLoader {
     public static final int REQUIRED_AXIAL_LENGTH_DIVISIBLE = 64;
     public static final int UNSET_SEGMENT = -1;
 
-    private static final int FLOAT_BYTES = Float.SIZE / 8;
-    private static final int LONG_BYTES = Long.SIZE / 8;
+    private static final int FLOAT_BYTES = Float.SIZE / Byte.SIZE;
+    private static final int LONG_BYTES = Long.SIZE / Byte.SIZE;
 
     private static final boolean DEBUG = false;
     public static final int SUBSTITUTE_CHANNEL_VALUE = 127;

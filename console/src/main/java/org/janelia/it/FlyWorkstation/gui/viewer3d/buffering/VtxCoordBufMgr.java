@@ -86,17 +86,17 @@ public class VtxCoordBufMgr {
                 //  this may not be true.  Wrapping an array did not provide a backing array on my system.
                 //  Further, the use of a byte-buffer is required because of the different endian-ness between
                 //  Java and the native system.
-                ByteBuffer texByteBuffer = ByteBuffer.allocateDirect(numCoords * Float.SIZE / 8);
+                ByteBuffer texByteBuffer = ByteBuffer.allocateDirect(numCoords * Float.SIZE / Byte.SIZE);
                 texByteBuffer.order( ByteOrder.nativeOrder() );
                 texCoordBuf[ i ] = texByteBuffer.asFloatBuffer();
 
-                ByteBuffer geoByteBuffer = ByteBuffer.allocateDirect(numCoords * Float.SIZE / 8);
+                ByteBuffer geoByteBuffer = ByteBuffer.allocateDirect(numCoords * Float.SIZE / Byte.SIZE);
                 geoByteBuffer.order(ByteOrder.nativeOrder());
                 geometryCoordBuf[ i ] = geoByteBuffer.asFloatBuffer();
 
                 // One index per vertex.  Not one per coord.  No need for x,y,z.
                 if ( drawWithElements ) {
-                    ByteBuffer inxByteBuffer = ByteBuffer.allocateDirect(numVertices * Short.SIZE / 8);
+                    ByteBuffer inxByteBuffer = ByteBuffer.allocateDirect(numVertices * Short.SIZE / Byte.SIZE);
                     inxByteBuffer.order(ByteOrder.nativeOrder());
                     indexBuf[ i ] = inxByteBuffer.asShortBuffer();
                 }

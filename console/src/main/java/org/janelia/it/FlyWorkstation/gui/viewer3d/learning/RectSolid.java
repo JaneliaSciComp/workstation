@@ -234,7 +234,7 @@ public class RectSolid implements GLActor {
         // Imagine multiple "bind" and "buffer-data" calls in parallel threads...disaster!
         gl.glBufferData(
                 GL2.GL_ARRAY_BUFFER,
-                (long)(buffer.capacity() * (Float.SIZE/8)),
+                (long)(buffer.capacity() * (Float.SIZE/Byte.SIZE)),
                 buffer,
                 GL2.GL_STATIC_DRAW
         );

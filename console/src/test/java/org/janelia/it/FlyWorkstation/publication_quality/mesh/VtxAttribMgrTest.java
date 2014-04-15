@@ -65,16 +65,7 @@ public class VtxAttribMgrTest {
 
     @Test
     public void execute() throws Exception {
-        List<MaskChanRenderableData> beanList = new ArrayList<MaskChanRenderableData>();
-        MaskChanRenderableData renderableData = new MaskChanRenderableData();
-        RenderableBean renderableBean = new RenderableBean();
-        renderableBean.setLabelFileNum( 5 );
-        renderableBean.setTranslatedNum( 50 );
-        renderableData.setBean( renderableBean );
-
-        renderableData.setMaskPath( LOCAL_MASK_FILE_PATH );
-        renderableData.setChannelPath( LOCAL_CHAN_FILE_PATH );
-        beanList.add( renderableData );
+        List<MaskChanRenderableData> beanList = MeshRenderTestFacilities.getMaskChanRenderableDatas();
         VtxAttribMgr mgr = new VtxAttribMgr( beanList );
         List<TriangleSource> sources = mgr.execute();
 
@@ -119,4 +110,5 @@ public class VtxAttribMgrTest {
         System.out.println(statReportBuilder.toString());
         Assert.assertTrue( outputBuilder.toString(), outputBuilder.toString().equals( TEST_STRING ) );
     }
+
 }

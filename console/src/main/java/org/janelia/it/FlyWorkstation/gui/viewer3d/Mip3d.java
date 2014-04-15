@@ -27,8 +27,7 @@ public class Mip3d extends BaseGLViewer implements ActionListener {
 		ZOOM
 	}
 	
-	public Mip3d()
-    {
+	public Mip3d() {
 		addGLEventListener(renderer);
         setPreferredSize( new Dimension( 400, 400 ) );
 
@@ -81,6 +80,18 @@ public class Mip3d extends BaseGLViewer implements ActionListener {
     public double getAxisLengthDivisor() {
         return axisLengthDivisor;
     }
+
+    /**
+     * Add an actor to the encapsulated renderer.
+     *
+     * @param actor what to add.
+     */
+    public void addActor( GLActor actor ) {
+        // Should first (from caller) getVolumeModel to remove listeners and reset to defaults.
+        addActorToRenderer( actor );
+    }
+
+    //TODO consider refactoring all these volume-load/set methods in favor of simply handing in the finished GLActor
 
     /**
      * Load a simple signal volume.
