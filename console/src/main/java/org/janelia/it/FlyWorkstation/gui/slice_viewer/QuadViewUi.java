@@ -1203,10 +1203,18 @@ LLF: the hookup for the 3d snapshot.
         // Hard code temporary path translation for Nathan
         boolean fileMissing = ! tmpFile.exists();
         if (fileMissing) {
-	        String osName = System.getProperty("os.name").toLowerCase();
 	        String mbmPrefix = "/groups/mousebrainmicro/mousebrainmicro/";
-	        boolean isLinuxMouseBrainPath = pathToFile.startsWith(mbmPrefix);
+	        String mbmPrefix2 = "/nobackup/mousebrainmicro/";
+            String linuxPrefix = null;
+            // if we get a third prefix, make this a loop
+            if (pathToFile.startsWith(mbmPrefix)) {
+                linuxPrefix = mbmPrefix;
+            } else if (pathToFile.startsWith(mbmPrefix2)) {
+                linuxPrefix = mbmPrefix2;
+            }
+
 	    	List<String> prefixesToTry = new Vector<String>();
+	        String osName = System.getProperty("os.name").toLowerCase();
 	    	if (osName.contains("win")) {
 	        	prefixesToTry.add("M:/"); // On my Windows computer
 	        	prefixesToTry.add("X:/"); // On Nathan's computer    		
@@ -1218,11 +1226,12 @@ LLF: the hookup for the 3d snapshot.
 	    	}
 	    	if (osName.contains("os x")) {
 	    		prefixesToTry.add("/Volumes/mousebrainmicro/");
+	    		prefixesToTry.add("/Volumes/nobackup/mousebrainmicro/");
 	    	}
 	        if ( (prefixesToTry.size() > 0)
-	        		&& isLinuxMouseBrainPath ) 
+	        		&& linuxPrefix != null)
 	        {
-	        	String fileSuffix = pathToFile.replace(mbmPrefix, "");
+	        	String fileSuffix = pathToFile.replace(linuxPrefix, "");
 	        	for (String prefix : prefixesToTry) {
 	        		File testFile = new File(prefix + fileSuffix);
 	        		if (testFile.exists()) {
