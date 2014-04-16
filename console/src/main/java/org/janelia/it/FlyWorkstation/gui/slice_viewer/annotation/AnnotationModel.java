@@ -604,6 +604,30 @@ that need to respond to changing data.
         }
     }
 
+    /**
+     * split a neurite at the input node; the node is detached from its parent, and it and
+     * its children become a new neurite in the same neuron
+     *
+     * @param newRootID = ID of root of new neurite
+     * @throws Exception
+     */
+    public void splitNeurite(Long newRootID) throws Exception {
+        TmGeoAnnotation newRoot = getGeoAnnotationFromID(newRootID);
+        TmGeoAnnotation newRootParent = newRoot.getParent();
+        removeAnchoredPath(newRoot, newRootParent);
+        TmNeuron neuron = getNeuronFromAnnotation(newRoot.getId());
+        modelMgr.splitNeurite(neuron, newRoot);
+
+        // update and notify
+        updateCurrentWorkspace();
+        updateCurrentNeuron();
+
+        // the anchor at the split is essentially reparented to none
+        annotationReparentedSignal.emit(getCurrentNeuron().getGeoAnnotationMap().get(newRootID));
+        neuronSelectedSignal.emit(getCurrentNeuron());
+
+    }
+
     public void addAnchoredPath(TmAnchoredPathEndpoints endpoints, List<List<Integer>> points) throws Exception{
 
         // check we can find both endpoints in same neuron
@@ -688,6 +712,10 @@ that need to respond to changing data.
      */
     private void removeAnchoredPath(TmGeoAnnotation annotation1, TmGeoAnnotation annotation2)
         throws Exception {
+        if (annotation1 == null || annotation2 == null) {
+            return;
+        }
+
         // we assume second annotation is in same neuron; if it's not, there's no path
         //  to remove anyway
         TmNeuron neuron1 = getNeuronFromAnnotation(annotation1.getId());

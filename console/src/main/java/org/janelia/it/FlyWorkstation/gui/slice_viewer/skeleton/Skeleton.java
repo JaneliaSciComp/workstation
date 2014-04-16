@@ -107,7 +107,10 @@ public class Skeleton {
             for (TmGeoAnnotation child: annotation.getChildren()) {
                 annotationNeighbors.add(child.getId());
             }
-            annotationNeighbors.add(annotation.getParent().getId());
+            // might be reparented to have no parent:
+            if (annotation.getParent() != null) {
+                annotationNeighbors.add(annotation.getParent().getId());
+            }
 
             updateNeighbors(anchor, annotationNeighbors);
         }
@@ -120,11 +123,14 @@ public class Skeleton {
     public Signal1<Anchor> anchorReparentedSignal = new Signal1<Anchor>();
     public Signal1<Anchor> anchorNeighborsUpdatedSignal = new Signal1<Anchor>();
 
-    ///// SPLIT
+    ///// split anchor
     public Signal1<Anchor> splitAnchorRequestedSignal = new Signal1<Anchor>();
 
     ///// reroot
     public Signal1<Anchor> rerootNeuriteRequestedSignal = new Signal1<Anchor>();
+
+    ///// split neurite
+    public Signal1<Anchor> splitNeuriteRequestedSignal = new Signal1<Anchor>();
 
 	///// CLEAR
 	public Slot clearSlot = new Slot() {
@@ -229,6 +235,10 @@ public class Skeleton {
 
     public void rerootNeuriteRequest(Anchor anchor) {
         rerootNeuriteRequestedSignal.emit(anchor);
+    }
+
+    public void splitNeuriteRequest(Anchor anchor) {
+        splitNeuriteRequestedSignal.emit(anchor);
     }
 
 	public boolean delete(Anchor anchor) {
