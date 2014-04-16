@@ -35,7 +35,7 @@ import org.slf4j.LoggerFactory;
 )
 @Messages({
     "CTL_LayersPanelAction=LayersPanel",
-    "CTL_LayersPanelTopComponent=LayersPanel Window",
+    "CTL_LayersPanelTopComponent=Layers Panel",
     "HINT_LayersPanelTopComponent=Change Entity Content and Appearance in Alignment Board"
 })
 public final class LayersPanelTopComponent extends TopComponent {

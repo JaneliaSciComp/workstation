@@ -34,8 +34,8 @@ import org.openide.util.NbBundle.Messages;
 )
 @Messages({
     "CTL_IconPanelAction=IconPanel",
-    "CTL_IconPanelTopComponent=IconPanel Window",
-    "HINT_IconPanelTopComponent=This is a IconPanel window"
+    "CTL_IconPanelTopComponent=Icon Demo Panel",
+    "HINT_IconPanelTopComponent=Entities are represented here as graphical icons."
 })
 public final class TimeSharedTopComponent extends TopComponent {
     public static final String TC_NAME = "IconPanelTopComponent";

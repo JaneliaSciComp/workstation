@@ -32,7 +32,7 @@ import org.openide.util.NbBundle.Messages;
 )
 @Messages({
     "CTL_AlignmentBoardControlsAction=AlignmentBoardControls",
-    "CTL_AlignmentBoardControlsTopComponent=AlignmentBoardControls Window",
+    "CTL_AlignmentBoardControlsTopComponent=Alignment Board Controls",
     "HINT_AlignmentBoardControlsTopComponent=Modify Alignment Board Characteristics"
 })
 public final class AlignmentBoardControlsTopComponent extends TopComponent {

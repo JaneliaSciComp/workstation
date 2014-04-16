@@ -40,7 +40,7 @@ import org.slf4j.LoggerFactory;
 )
 @Messages({
     "CTL_AlignmentBoardAction=AlignmentBoard",
-    "CTL_AlignmentBoardTopComponent=Alignment Board Window",
+    "CTL_AlignmentBoardTopComponent=Alignment Board",
     "HINT_AlignmentBoardTopComponent=Shows how neurons align to each other in a common space."
 })
 public final class AlignmentBoardTopComponent extends TopComponent {

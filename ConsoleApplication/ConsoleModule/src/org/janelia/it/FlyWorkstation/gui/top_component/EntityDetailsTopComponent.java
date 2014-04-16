@@ -34,7 +34,7 @@ import org.openide.util.NbBundle.Messages;
 )
 @Messages({
     "CTL_EntityDetailsAction=EntityDetails",
-    "CTL_EntityDetailsTopComponent=EntityDetails Window",
+    "CTL_EntityDetailsTopComponent=Entity Details",
     "HINT_EntityDetailsTopComponent=This is a EntityDetails window"
 })
 public final class EntityDetailsTopComponent extends TopComponent {
