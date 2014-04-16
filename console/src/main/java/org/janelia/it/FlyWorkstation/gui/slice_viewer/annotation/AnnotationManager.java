@@ -101,6 +101,13 @@ elements of what's been done; that's handled by signals emitted from AnnotationM
         }
     };
 
+    public Slot1<Anchor> splitNeuriteRequestedSlot = new Slot1<Anchor>() {
+        @Override
+        public void execute(Anchor anchor) {
+            splitNeurite(anchor.getGuid());
+        }
+    };
+
     public Slot1<Anchor> moveAnchorRequestedSlot = new Slot1<Anchor>() {
         @Override
         public void execute(Anchor anchor) {
@@ -479,6 +486,45 @@ elements of what's been done; that's handled by signals emitted from AnnotationM
             }
         };
         rerooter.execute();
+    }
+
+    public void splitNeurite(final Long newRootAnnotationID) {
+        if (annotationModel.getCurrentWorkspace() == null) {
+            return;
+        }
+
+        // if it's already the root, can't split
+        final TmGeoAnnotation annotation = annotationModel.getGeoAnnotationFromID(newRootAnnotationID);
+        if (annotation.getParent() == null) {
+            JOptionPane.showMessageDialog(null,
+                    "Cannot split neurite at its root annotation!",
+                    "Error",
+                    JOptionPane.ERROR_MESSAGE
+            );
+            return;
+        }
+
+        SimpleWorker splitter = new SimpleWorker() {
+            @Override
+            protected void doStuff() throws Exception {
+                annotationModel.splitNeurite(annotation.getId());
+            }
+
+            @Override
+            protected void hadSuccess() {
+                // nothing here, model emits signals
+            }
+
+            @Override
+            protected void hadError(Throwable error) {
+                JOptionPane.showMessageDialog(null,
+                        "Could not split neurite!",
+                        "Error",
+                        JOptionPane.ERROR_MESSAGE);
+            }
+        };
+        splitter.execute();
+
     }
 
     /**
