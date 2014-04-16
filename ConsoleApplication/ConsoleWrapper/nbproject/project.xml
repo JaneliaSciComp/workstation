@@ -257,55 +257,6 @@
                 <package>com.sun.media.jai.tilecodec</package>
                 <package>com.sun.media.jai.util</package>
                 <package>com.sun.media.jai.widget</package>
-                <package>com.sun.msv.datatype</package>
-                <package>com.sun.msv.datatype.xsd</package>
-                <package>com.sun.msv.datatype.xsd.datetime</package>
-                <package>com.sun.msv.datatype.xsd.ngimpl</package>
-                <package>com.sun.msv.datatype.xsd.regex</package>
-                <package>com.sun.msv.driver.textui</package>
-                <package>com.sun.msv.grammar</package>
-                <package>com.sun.msv.grammar.dtd</package>
-                <package>com.sun.msv.grammar.relax</package>
-                <package>com.sun.msv.grammar.relaxng</package>
-                <package>com.sun.msv.grammar.relaxng.datatype</package>
-                <package>com.sun.msv.grammar.trex</package>
-                <package>com.sun.msv.grammar.trex.typed</package>
-                <package>com.sun.msv.grammar.util</package>
-                <package>com.sun.msv.grammar.xmlschema</package>
-                <package>com.sun.msv.reader</package>
-                <package>com.sun.msv.reader.datatype</package>
-                <package>com.sun.msv.reader.datatype.xsd</package>
-                <package>com.sun.msv.reader.dtd</package>
-                <package>com.sun.msv.reader.relax</package>
-                <package>com.sun.msv.reader.relax.core</package>
-                <package>com.sun.msv.reader.relax.core.checker</package>
-                <package>com.sun.msv.reader.trex</package>
-                <package>com.sun.msv.reader.trex.classic</package>
-                <package>com.sun.msv.reader.trex.ng</package>
-                <package>com.sun.msv.reader.trex.ng.comp</package>
-                <package>com.sun.msv.reader.trex.typed</package>
-                <package>com.sun.msv.reader.util</package>
-                <package>com.sun.msv.reader.xmlschema</package>
-                <package>com.sun.msv.relaxns.grammar</package>
-                <package>com.sun.msv.relaxns.grammar.relax</package>
-                <package>com.sun.msv.relaxns.grammar.trex</package>
-                <package>com.sun.msv.relaxns.reader</package>
-                <package>com.sun.msv.relaxns.reader.relax</package>
-                <package>com.sun.msv.relaxns.reader.trex</package>
-                <package>com.sun.msv.relaxns.verifier</package>
-                <package>com.sun.msv.scanner.dtd</package>
-                <package>com.sun.msv.util</package>
-                <package>com.sun.msv.util.xml</package>
-                <package>com.sun.msv.verifier</package>
-                <package>com.sun.msv.verifier.identity</package>
-                <package>com.sun.msv.verifier.jarv</package>
-                <package>com.sun.msv.verifier.jaxp</package>
-                <package>com.sun.msv.verifier.psvi</package>
-                <package>com.sun.msv.verifier.regexp</package>
-                <package>com.sun.msv.verifier.regexp.xmlschema</package>
-                <package>com.sun.msv.verifier.util</package>
-                <package>com.sun.msv.writer</package>
-                <package>com.sun.msv.writer.relaxng</package>
                 <package>com.sun.org.apache.xml.internal.resolver</package>
                 <package>com.sun.org.apache.xml.internal.resolver.helpers</package>
                 <package>com.sun.org.apache.xml.internal.resolver.readers</package>
@@ -350,7 +301,6 @@
                 <package>com.sun.xml.bind.api</package>
                 <package>com.sun.xml.bind.api.impl</package>
                 <package>com.sun.xml.bind.marshaller</package>
-                <package>com.sun.xml.bind.serializer</package>
                 <package>com.sun.xml.bind.unmarshaller</package>
                 <package>com.sun.xml.bind.util</package>
                 <package>com.sun.xml.bind.v2</package>
@@ -370,8 +320,6 @@
                 <package>com.sun.xml.bind.v2.schemagen.episode</package>
                 <package>com.sun.xml.bind.v2.schemagen.xmlschema</package>
                 <package>com.sun.xml.bind.v2.util</package>
-                <package>com.sun.xml.bind.validator</package>
-                <package>com.sun.xml.bind.xmlschema</package>
                 <package>com.sun.xml.dtdparser</package>
                 <package>com.sun.xml.messaging.saaj</package>
                 <package>com.sun.xml.messaging.saaj.client.p2p</package>
@@ -389,7 +337,6 @@
                 <package>com.sun.xml.txw2</package>
                 <package>com.sun.xml.txw2.annotation</package>
                 <package>com.sun.xml.txw2.output</package>
-                <package>com.sun.xml.util</package>
                 <package>com.sun.xml.xsom</package>
                 <package>com.sun.xml.xsom.impl</package>
                 <package>com.sun.xml.xsom.impl.parser</package>
@@ -689,10 +636,6 @@
                 <package>jogamp.opengl.windows.wgl</package>
                 <package>jogamp.opengl.windows.wgl.awt</package>
                 <package>jogamp.opengl.x11.glx</package>
-                <package>jp.gr.xml.relax.dom</package>
-                <package>jp.gr.xml.relax.sax</package>
-                <package>jp.gr.xml.relax.swift</package>
-                <package>jp.gr.xml.relax.xml</package>
                 <package>landmarks</package>
                 <package>leica</package>
                 <package>loci.common</package>
@@ -1144,18 +1087,6 @@
                 <package>org.apache.log4j.spi</package>
                 <package>org.apache.log4j.varia</package>
                 <package>org.apache.log4j.xml</package>
-                <package>org.apache.lucene</package>
-                <package>org.apache.lucene.analysis</package>
-                <package>org.apache.lucene.analysis.standard</package>
-                <package>org.apache.lucene.document</package>
-                <package>org.apache.lucene.index</package>
-                <package>org.apache.lucene.queryParser</package>
-                <package>org.apache.lucene.search</package>
-                <package>org.apache.lucene.search.function</package>
-                <package>org.apache.lucene.search.payloads</package>
-                <package>org.apache.lucene.search.spans</package>
-                <package>org.apache.lucene.store</package>
-                <package>org.apache.lucene.util</package>
                 <package>org.apache.neethi</package>
                 <package>org.apache.neethi.builders</package>
                 <package>org.apache.neethi.builders.xml</package>
@@ -1571,123 +1502,6 @@
                 <package>org.hibernate.validator</package>
                 <package>org.hibernate.validator.event</package>
                 <package>org.hibernate.validator.interpolator</package>
-                <package>org.iso_relax.catalog</package>
-                <package>org.iso_relax.dispatcher</package>
-                <package>org.iso_relax.dispatcher.impl</package>
-                <package>org.iso_relax.jaxp</package>
-                <package>org.iso_relax.verifier</package>
-                <package>org.iso_relax.verifier.impl</package>
-                <package>org.janelia.it.jacs.compute.access</package>
-                <package>org.janelia.it.jacs.compute.api</package>
-                <package>org.janelia.it.jacs.compute.api.support</package>
-                <package>org.janelia.it.jacs.compute.engine.launcher</package>
-                <package>org.janelia.it.jacs.compute.engine.service</package>
-                <package>org.janelia.it.jacs.compute.gcdml</package>
-                <package>org.janelia.it.jacs.model</package>
-                <package>org.janelia.it.jacs.model.collections</package>
-                <package>org.janelia.it.jacs.model.common</package>
-                <package>org.janelia.it.jacs.model.download</package>
-                <package>org.janelia.it.jacs.model.entity</package>
-                <package>org.janelia.it.jacs.model.entity.cv</package>
-                <package>org.janelia.it.jacs.model.genomics</package>
-                <package>org.janelia.it.jacs.model.graph.annotations</package>
-                <package>org.janelia.it.jacs.model.graph.entity</package>
-                <package>org.janelia.it.jacs.model.graph.entity.support</package>
-                <package>org.janelia.it.jacs.model.graph.support</package>
-                <package>org.janelia.it.jacs.model.lsm</package>
-                <package>org.janelia.it.jacs.model.metadata</package>
-                <package>org.janelia.it.jacs.model.ontology</package>
-                <package>org.janelia.it.jacs.model.ontology.types</package>
-                <package>org.janelia.it.jacs.model.prokPipeline</package>
-                <package>org.janelia.it.jacs.model.sage</package>
-                <package>org.janelia.it.jacs.model.search</package>
-                <package>org.janelia.it.jacs.model.status</package>
-                <package>org.janelia.it.jacs.model.tasks</package>
-                <package>org.janelia.it.jacs.model.tasks.annotation</package>
-                <package>org.janelia.it.jacs.model.tasks.ap16s</package>
-                <package>org.janelia.it.jacs.model.tasks.barcodeDesigner</package>
-                <package>org.janelia.it.jacs.model.tasks.blast</package>
-                <package>org.janelia.it.jacs.model.tasks.colorSeparator</package>
-                <package>org.janelia.it.jacs.model.tasks.eukAnnotation</package>
-                <package>org.janelia.it.jacs.model.tasks.export</package>
-                <package>org.janelia.it.jacs.model.tasks.fileDiscovery</package>
-                <package>org.janelia.it.jacs.model.tasks.fly</package>
-                <package>org.janelia.it.jacs.model.tasks.geci</package>
-                <package>org.janelia.it.jacs.model.tasks.genomeProject</package>
-                <package>org.janelia.it.jacs.model.tasks.hmmer</package>
-                <package>org.janelia.it.jacs.model.tasks.hmmer3</package>
-                <package>org.janelia.it.jacs.model.tasks.inspect</package>
-                <package>org.janelia.it.jacs.model.tasks.maskSearch</package>
-                <package>org.janelia.it.jacs.model.tasks.metageno</package>
-                <package>org.janelia.it.jacs.model.tasks.neuron</package>
-                <package>org.janelia.it.jacs.model.tasks.neuronSeparator</package>
-                <package>org.janelia.it.jacs.model.tasks.pangenome</package>
-                <package>org.janelia.it.jacs.model.tasks.profileComparison</package>
-                <package>org.janelia.it.jacs.model.tasks.prokAnnotation</package>
-                <package>org.janelia.it.jacs.model.tasks.psiBlast</package>
-                <package>org.janelia.it.jacs.model.tasks.recruitment</package>
-                <package>org.janelia.it.jacs.model.tasks.rnaSeq</package>
-                <package>org.janelia.it.jacs.model.tasks.search</package>
-                <package>org.janelia.it.jacs.model.tasks.sift</package>
-                <package>org.janelia.it.jacs.model.tasks.tic</package>
-                <package>org.janelia.it.jacs.model.tasks.tools</package>
-                <package>org.janelia.it.jacs.model.tasks.utility</package>
-                <package>org.janelia.it.jacs.model.tasks.zlatic</package>
-                <package>org.janelia.it.jacs.model.user_data</package>
-                <package>org.janelia.it.jacs.model.user_data.ap16s</package>
-                <package>org.janelia.it.jacs.model.user_data.barcodeDesign</package>
-                <package>org.janelia.it.jacs.model.user_data.blast</package>
-                <package>org.janelia.it.jacs.model.user_data.colorSeparator</package>
-                <package>org.janelia.it.jacs.model.user_data.entity</package>
-                <package>org.janelia.it.jacs.model.user_data.eukAnnotation</package>
-                <package>org.janelia.it.jacs.model.user_data.export</package>
-                <package>org.janelia.it.jacs.model.user_data.geci</package>
-                <package>org.janelia.it.jacs.model.user_data.genome</package>
-                <package>org.janelia.it.jacs.model.user_data.hmmer</package>
-                <package>org.janelia.it.jacs.model.user_data.hmmer3</package>
-                <package>org.janelia.it.jacs.model.user_data.inspect</package>
-                <package>org.janelia.it.jacs.model.user_data.maskSearch</package>
-                <package>org.janelia.it.jacs.model.user_data.metageno</package>
-                <package>org.janelia.it.jacs.model.user_data.neuron</package>
-                <package>org.janelia.it.jacs.model.user_data.neuronSeparator</package>
-                <package>org.janelia.it.jacs.model.user_data.pangenome</package>
-                <package>org.janelia.it.jacs.model.user_data.pasa</package>
-                <package>org.janelia.it.jacs.model.user_data.prefs</package>
-                <package>org.janelia.it.jacs.model.user_data.profileComparison</package>
-                <package>org.janelia.it.jacs.model.user_data.prokAnnotation</package>
-                <package>org.janelia.it.jacs.model.user_data.psiBlast</package>
-                <package>org.janelia.it.jacs.model.user_data.recruitment</package>
-                <package>org.janelia.it.jacs.model.user_data.reversePsiBlast</package>
-                <package>org.janelia.it.jacs.model.user_data.rnaSeq</package>
-                <package>org.janelia.it.jacs.model.user_data.search</package>
-                <package>org.janelia.it.jacs.model.user_data.sift</package>
-                <package>org.janelia.it.jacs.model.user_data.tic</package>
-                <package>org.janelia.it.jacs.model.user_data.tiledMicroscope</package>
-                <package>org.janelia.it.jacs.model.user_data.tools</package>
-                <package>org.janelia.it.jacs.model.user_data.zlatic</package>
-                <package>org.janelia.it.jacs.model.util</package>
-                <package>org.janelia.it.jacs.model.vo</package>
-                <package>org.janelia.it.jacs.shared.annotation</package>
-                <package>org.janelia.it.jacs.shared.blast</package>
-                <package>org.janelia.it.jacs.shared.blast.blastxmlparser</package>
-                <package>org.janelia.it.jacs.shared.blast.blastxmlparser.jaxb</package>
-                <package>org.janelia.it.jacs.shared.export</package>
-                <package>org.janelia.it.jacs.shared.fasta</package>
-                <package>org.janelia.it.jacs.shared.file_chooser</package>
-                <package>org.janelia.it.jacs.shared.genomics</package>
-                <package>org.janelia.it.jacs.shared.hibernate</package>
-                <package>org.janelia.it.jacs.shared.lucene</package>
-                <package>org.janelia.it.jacs.shared.lucene.data_retrievers</package>
-                <package>org.janelia.it.jacs.shared.lucene.searchers</package>
-                <package>org.janelia.it.jacs.shared.node</package>
-                <package>org.janelia.it.jacs.shared.perf</package>
-                <package>org.janelia.it.jacs.shared.processors.recruitment</package>
-                <package>org.janelia.it.jacs.shared.screen</package>
-                <package>org.janelia.it.jacs.shared.tasks</package>
-                <package>org.janelia.it.jacs.shared.utils</package>
-                <package>org.janelia.it.jacs.shared.utils.entity</package>
-                <package>org.janelia.it.jacs.shared.utils.genbank</package>
-                <package>org.janelia.it.jacs.shared.utils.zeiss</package>
                 <package>org.jaxen</package>
                 <package>org.jaxen.dom</package>
                 <package>org.jaxen.dom4j</package>
@@ -2242,10 +2056,6 @@
                 <binary-origin>release/modules/ext/jogl-all-natives-windows-i586.jar</binary-origin>
             </class-path-extension>
             <class-path-extension>
-                <runtime-relative-path>ext/jacs-model.jar</runtime-relative-path>
-                <binary-origin>release/modules/ext/jacs-model.jar</binary-origin>
-            </class-path-extension>
-            <class-path-extension>
                 <runtime-relative-path>ext/syntheticaClassy.jar</runtime-relative-path>
                 <binary-origin>release/modules/ext/syntheticaClassy.jar</binary-origin>
             </class-path-extension>
@@ -2262,12 +2072,12 @@
                 <binary-origin>release/modules/ext/wstx-asl-3.2.9.jar</binary-origin>
             </class-path-extension>
             <class-path-extension>
-                <runtime-relative-path>ext/syntheticaBlackStar.jar</runtime-relative-path>
-                <binary-origin>release/modules/ext/syntheticaBlackStar.jar</binary-origin>
-            </class-path-extension>
-            <class-path-extension>
                 <runtime-relative-path>ext/jdatepicker-1.3.2.jar</runtime-relative-path>
                 <binary-origin>release/modules/ext/jdatepicker-1.3.2.jar</binary-origin>
+            </class-path-extension>
+            <class-path-extension>
+                <runtime-relative-path>ext/syntheticaBlackStar.jar</runtime-relative-path>
+                <binary-origin>release/modules/ext/syntheticaBlackStar.jar</binary-origin>
             </class-path-extension>
             <class-path-extension>
                 <runtime-relative-path>ext/axis2-mtompolicy-1.5.5.jar</runtime-relative-path>
@@ -2276,10 +2086,6 @@
             <class-path-extension>
                 <runtime-relative-path>ext/gson-2.2.2.jar</runtime-relative-path>
                 <binary-origin>release/modules/ext/gson-2.2.2.jar</binary-origin>
-            </class-path-extension>
-            <class-path-extension>
-                <runtime-relative-path>ext/jacs-grid.jar</runtime-relative-path>
-                <binary-origin>release/modules/ext/jacs-grid.jar</binary-origin>
             </class-path-extension>
             <class-path-extension>
                 <runtime-relative-path>ext/axis2-clustering-1.5.5.jar</runtime-relative-path>
@@ -2406,12 +2212,12 @@
                 <binary-origin>release/modules/ext/syntheticaAluOxide.jar</binary-origin>
             </class-path-extension>
             <class-path-extension>
-                <runtime-relative-path>ext/geronimo-ws-metadata_2.0_spec-1.1.2.jar</runtime-relative-path>
-                <binary-origin>release/modules/ext/geronimo-ws-metadata_2.0_spec-1.1.2.jar</binary-origin>
-            </class-path-extension>
-            <class-path-extension>
                 <runtime-relative-path>ext/commons-logging-1.1.1.jar</runtime-relative-path>
                 <binary-origin>release/modules/ext/commons-logging-1.1.1.jar</binary-origin>
+            </class-path-extension>
+            <class-path-extension>
+                <runtime-relative-path>ext/geronimo-ws-metadata_2.0_spec-1.1.2.jar</runtime-relative-path>
+                <binary-origin>release/modules/ext/geronimo-ws-metadata_2.0_spec-1.1.2.jar</binary-origin>
             </class-path-extension>
             <class-path-extension>
                 <runtime-relative-path>ext/ome-xml.jar</runtime-relative-path>
@@ -2602,12 +2408,12 @@
                 <binary-origin>release/modules/ext/syntheticaSilverMoon.jar</binary-origin>
             </class-path-extension>
             <class-path-extension>
-                <runtime-relative-path>ext/xercesImpl-2.8.1.jar</runtime-relative-path>
-                <binary-origin>release/modules/ext/xercesImpl-2.8.1.jar</binary-origin>
-            </class-path-extension>
-            <class-path-extension>
                 <runtime-relative-path>ext/syntheticaBlueLight.jar</runtime-relative-path>
                 <binary-origin>release/modules/ext/syntheticaBlueLight.jar</binary-origin>
+            </class-path-extension>
+            <class-path-extension>
+                <runtime-relative-path>ext/xercesImpl-2.8.1.jar</runtime-relative-path>
+                <binary-origin>release/modules/ext/xercesImpl-2.8.1.jar</binary-origin>
             </class-path-extension>
             <class-path-extension>
                 <runtime-relative-path>ext/pal-optimization.jar</runtime-relative-path>
@@ -2616,10 +2422,6 @@
             <class-path-extension>
                 <runtime-relative-path>ext/regexp-1.2.jar</runtime-relative-path>
                 <binary-origin>release/modules/ext/regexp-1.2.jar</binary-origin>
-            </class-path-extension>
-            <class-path-extension>
-                <runtime-relative-path>ext/compute-client.jar</runtime-relative-path>
-                <binary-origin>release/modules/ext/compute-client.jar</binary-origin>
             </class-path-extension>
             <class-path-extension>
                 <runtime-relative-path>ext/saaj-impl-1.3.2.jar</runtime-relative-path>
@@ -2772,10 +2574,6 @@
             <class-path-extension>
                 <runtime-relative-path>ext/xml-resolver-1.2.jar</runtime-relative-path>
                 <binary-origin>release/modules/ext/xml-resolver-1.2.jar</binary-origin>
-            </class-path-extension>
-            <class-path-extension>
-                <runtime-relative-path>ext/jacs-shared.jar</runtime-relative-path>
-                <binary-origin>release/modules/ext/jacs-shared.jar</binary-origin>
             </class-path-extension>
             <class-path-extension>
                 <runtime-relative-path>ext/juli-6.0.16.jar</runtime-relative-path>

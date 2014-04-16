@@ -1,0 +1,5 @@
+Manifest-Version: 1.0
+OpenIDE-Module: org.janalia.it.jacs.shared
+OpenIDE-Module-Localizing-Bundle: org/janalia/it/jacs/shared/Bundle.properties
+OpenIDE-Module-Specification-Version: 1.0
+
