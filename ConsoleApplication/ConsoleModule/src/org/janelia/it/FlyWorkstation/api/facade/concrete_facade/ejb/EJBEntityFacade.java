@@ -247,6 +247,11 @@ public class EJBEntityFacade implements EntityFacade {
     }
 
     @Override
+    public void splitNeurite(TmNeuron neuron, TmGeoAnnotation newRoot) throws Exception {
+        EJBFactory.getRemoteTiledMicroscopeBean().splitNeurite(neuron, newRoot);
+    }
+
+    @Override
     public void updateGeometricAnnotation(TmGeoAnnotation geoAnnotation,
                                           int index, double x, double y, double z, String comment) throws Exception {
         EJBFactory.getRemoteTiledMicroscopeBean().updateGeometricAnnotation(geoAnnotation, index, x, y, z, comment);

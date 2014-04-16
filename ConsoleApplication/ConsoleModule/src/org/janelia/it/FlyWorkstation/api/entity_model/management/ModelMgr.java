@@ -1025,6 +1025,10 @@ public class ModelMgr {
         FacadeManager.getFacadeManager().getEntityFacade().rerootNeurite(neuron, newRoot);
     }
 
+    public void splitNeurite(TmNeuron neuron, TmGeoAnnotation newRoot) throws Exception {
+        FacadeManager.getFacadeManager().getEntityFacade().splitNeurite(neuron, newRoot);
+    }
+
     public void updateGeometricAnnotation(TmGeoAnnotation geoAnnotation,
                                           int index, double x, double y, double z, String comment) throws Exception {
         FacadeManager.getFacadeManager().getEntityFacade().updateGeometricAnnotation(geoAnnotation, index, x, y, z, comment);
