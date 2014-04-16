@@ -393,6 +393,7 @@ public class QuadViewUi extends JPanel
         skeleton.linkDeleteRequestedSignal.connect(annotationMgr.deleteLinkRequestedSlot);
         skeleton.splitAnchorRequestedSignal.connect(annotationMgr.splitAnchorRequestedSlot);
         skeleton.rerootNeuriteRequestedSignal.connect(annotationMgr.rerootNeuriteRequestedSlot);
+        skeleton.splitNeuriteRequestedSignal.connect(annotationMgr.splitNeuriteRequestedSlot);
         getSkeletonActor().nextParentChangedSignal.connect(annotationMgr.selectAnnotationSlot);
         skeleton.anchorMovedSignal.connect(annotationMgr.moveAnchorRequestedSlot);
         skeleton.pathTraceRequestedSignal.connect(tracePathSegmentSlot);
