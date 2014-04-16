@@ -257,6 +257,55 @@
                 <package>com.sun.media.jai.tilecodec</package>
                 <package>com.sun.media.jai.util</package>
                 <package>com.sun.media.jai.widget</package>
+                <package>com.sun.msv.datatype</package>
+                <package>com.sun.msv.datatype.xsd</package>
+                <package>com.sun.msv.datatype.xsd.datetime</package>
+                <package>com.sun.msv.datatype.xsd.ngimpl</package>
+                <package>com.sun.msv.datatype.xsd.regex</package>
+                <package>com.sun.msv.driver.textui</package>
+                <package>com.sun.msv.grammar</package>
+                <package>com.sun.msv.grammar.dtd</package>
+                <package>com.sun.msv.grammar.relax</package>
+                <package>com.sun.msv.grammar.relaxng</package>
+                <package>com.sun.msv.grammar.relaxng.datatype</package>
+                <package>com.sun.msv.grammar.trex</package>
+                <package>com.sun.msv.grammar.trex.typed</package>
+                <package>com.sun.msv.grammar.util</package>
+                <package>com.sun.msv.grammar.xmlschema</package>
+                <package>com.sun.msv.reader</package>
+                <package>com.sun.msv.reader.datatype</package>
+                <package>com.sun.msv.reader.datatype.xsd</package>
+                <package>com.sun.msv.reader.dtd</package>
+                <package>com.sun.msv.reader.relax</package>
+                <package>com.sun.msv.reader.relax.core</package>
+                <package>com.sun.msv.reader.relax.core.checker</package>
+                <package>com.sun.msv.reader.trex</package>
+                <package>com.sun.msv.reader.trex.classic</package>
+                <package>com.sun.msv.reader.trex.ng</package>
+                <package>com.sun.msv.reader.trex.ng.comp</package>
+                <package>com.sun.msv.reader.trex.typed</package>
+                <package>com.sun.msv.reader.util</package>
+                <package>com.sun.msv.reader.xmlschema</package>
+                <package>com.sun.msv.relaxns.grammar</package>
+                <package>com.sun.msv.relaxns.grammar.relax</package>
+                <package>com.sun.msv.relaxns.grammar.trex</package>
+                <package>com.sun.msv.relaxns.reader</package>
+                <package>com.sun.msv.relaxns.reader.relax</package>
+                <package>com.sun.msv.relaxns.reader.trex</package>
+                <package>com.sun.msv.relaxns.verifier</package>
+                <package>com.sun.msv.scanner.dtd</package>
+                <package>com.sun.msv.util</package>
+                <package>com.sun.msv.util.xml</package>
+                <package>com.sun.msv.verifier</package>
+                <package>com.sun.msv.verifier.identity</package>
+                <package>com.sun.msv.verifier.jarv</package>
+                <package>com.sun.msv.verifier.jaxp</package>
+                <package>com.sun.msv.verifier.psvi</package>
+                <package>com.sun.msv.verifier.regexp</package>
+                <package>com.sun.msv.verifier.regexp.xmlschema</package>
+                <package>com.sun.msv.verifier.util</package>
+                <package>com.sun.msv.writer</package>
+                <package>com.sun.msv.writer.relaxng</package>
                 <package>com.sun.org.apache.xml.internal.resolver</package>
                 <package>com.sun.org.apache.xml.internal.resolver.helpers</package>
                 <package>com.sun.org.apache.xml.internal.resolver.readers</package>
@@ -301,6 +350,7 @@
                 <package>com.sun.xml.bind.api</package>
                 <package>com.sun.xml.bind.api.impl</package>
                 <package>com.sun.xml.bind.marshaller</package>
+                <package>com.sun.xml.bind.serializer</package>
                 <package>com.sun.xml.bind.unmarshaller</package>
                 <package>com.sun.xml.bind.util</package>
                 <package>com.sun.xml.bind.v2</package>
@@ -320,6 +370,8 @@
                 <package>com.sun.xml.bind.v2.schemagen.episode</package>
                 <package>com.sun.xml.bind.v2.schemagen.xmlschema</package>
                 <package>com.sun.xml.bind.v2.util</package>
+                <package>com.sun.xml.bind.validator</package>
+                <package>com.sun.xml.bind.xmlschema</package>
                 <package>com.sun.xml.dtdparser</package>
                 <package>com.sun.xml.messaging.saaj</package>
                 <package>com.sun.xml.messaging.saaj.client.p2p</package>
@@ -337,6 +389,7 @@
                 <package>com.sun.xml.txw2</package>
                 <package>com.sun.xml.txw2.annotation</package>
                 <package>com.sun.xml.txw2.output</package>
+                <package>com.sun.xml.util</package>
                 <package>com.sun.xml.xsom</package>
                 <package>com.sun.xml.xsom.impl</package>
                 <package>com.sun.xml.xsom.impl.parser</package>
@@ -636,6 +689,10 @@
                 <package>jogamp.opengl.windows.wgl</package>
                 <package>jogamp.opengl.windows.wgl.awt</package>
                 <package>jogamp.opengl.x11.glx</package>
+                <package>jp.gr.xml.relax.dom</package>
+                <package>jp.gr.xml.relax.sax</package>
+                <package>jp.gr.xml.relax.swift</package>
+                <package>jp.gr.xml.relax.xml</package>
                 <package>landmarks</package>
                 <package>leica</package>
                 <package>loci.common</package>
@@ -1087,6 +1144,18 @@
                 <package>org.apache.log4j.spi</package>
                 <package>org.apache.log4j.varia</package>
                 <package>org.apache.log4j.xml</package>
+                <package>org.apache.lucene</package>
+                <package>org.apache.lucene.analysis</package>
+                <package>org.apache.lucene.analysis.standard</package>
+                <package>org.apache.lucene.document</package>
+                <package>org.apache.lucene.index</package>
+                <package>org.apache.lucene.queryParser</package>
+                <package>org.apache.lucene.search</package>
+                <package>org.apache.lucene.search.function</package>
+                <package>org.apache.lucene.search.payloads</package>
+                <package>org.apache.lucene.search.spans</package>
+                <package>org.apache.lucene.store</package>
+                <package>org.apache.lucene.util</package>
                 <package>org.apache.neethi</package>
                 <package>org.apache.neethi.builders</package>
                 <package>org.apache.neethi.builders.xml</package>
@@ -1502,6 +1571,12 @@
                 <package>org.hibernate.validator</package>
                 <package>org.hibernate.validator.event</package>
                 <package>org.hibernate.validator.interpolator</package>
+                <package>org.iso_relax.catalog</package>
+                <package>org.iso_relax.dispatcher</package>
+                <package>org.iso_relax.dispatcher.impl</package>
+                <package>org.iso_relax.jaxp</package>
+                <package>org.iso_relax.verifier</package>
+                <package>org.iso_relax.verifier.impl</package>
                 <package>org.janelia.it.jacs.compute.access</package>
                 <package>org.janelia.it.jacs.compute.api</package>
                 <package>org.janelia.it.jacs.compute.api.support</package>
@@ -1592,13 +1667,23 @@
                 <package>org.janelia.it.jacs.model.user_data.zlatic</package>
                 <package>org.janelia.it.jacs.model.util</package>
                 <package>org.janelia.it.jacs.model.vo</package>
+                <package>org.janelia.it.jacs.shared.annotation</package>
                 <package>org.janelia.it.jacs.shared.blast</package>
                 <package>org.janelia.it.jacs.shared.blast.blastxmlparser</package>
                 <package>org.janelia.it.jacs.shared.blast.blastxmlparser.jaxb</package>
+                <package>org.janelia.it.jacs.shared.export</package>
+                <package>org.janelia.it.jacs.shared.fasta</package>
+                <package>org.janelia.it.jacs.shared.file_chooser</package>
+                <package>org.janelia.it.jacs.shared.genomics</package>
+                <package>org.janelia.it.jacs.shared.hibernate</package>
                 <package>org.janelia.it.jacs.shared.lucene</package>
                 <package>org.janelia.it.jacs.shared.lucene.data_retrievers</package>
                 <package>org.janelia.it.jacs.shared.lucene.searchers</package>
+                <package>org.janelia.it.jacs.shared.node</package>
+                <package>org.janelia.it.jacs.shared.perf</package>
                 <package>org.janelia.it.jacs.shared.processors.recruitment</package>
+                <package>org.janelia.it.jacs.shared.screen</package>
+                <package>org.janelia.it.jacs.shared.tasks</package>
                 <package>org.janelia.it.jacs.shared.utils</package>
                 <package>org.janelia.it.jacs.shared.utils.entity</package>
                 <package>org.janelia.it.jacs.shared.utils.genbank</package>
