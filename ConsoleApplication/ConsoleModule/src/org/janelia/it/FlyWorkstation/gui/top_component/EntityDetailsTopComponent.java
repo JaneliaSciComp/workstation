@@ -25,7 +25,7 @@ import org.openide.util.NbBundle.Messages;
         //iconBase="SET/PATH/TO/ICON/HERE", 
         persistenceType = TopComponent.PERSISTENCE_ALWAYS
 )
-@TopComponent.Registration(mode = "explorer", openAtStartup = true)
+@TopComponent.Registration(mode = "appExplorerBtm", openAtStartup = true)
 @ActionID(category = "Window", id = "org.janelia.it.FlyWorkstation.gui.dialogs.nb.EntityDetailsTopComponent")
 @ActionReference(path = "Menu/Window" /*, position = 333 */)
 @TopComponent.OpenActionRegistration(

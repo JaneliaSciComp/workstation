@@ -20,34 +20,36 @@ import org.slf4j.LoggerFactory;
  * Top component which displays something.
  */
 @ConvertAsProperties(
-        dtd = "-//org.janelia.it.FlyWorkstation.gui.top_component//Ontology//EN",
+        dtd = "-//org.janelia.it.FlyWorkstation.gui.top_component//OntologyViewer//EN",
         autostore = false
 )
 @TopComponent.Description(
-        preferredID = "OntologyTopComponent",
+        preferredID = OntologyOutline.ONTOLOGY_COMPONENT_NAME,
         //iconBase="SET/PATH/TO/ICON/HERE", 
         persistenceType = TopComponent.PERSISTENCE_ALWAYS
 )
 @TopComponent.Registration(mode = "properties", openAtStartup = true)
-@ActionID(category = "Window", id = "org.janelia.it.FlyWorkstation.gui.top_component.OntologyTopComponent")
+@ActionID(category = "Window", id = "org.janelia.it.FlyWorkstation.gui.top_component.OntologyViewerTopComponent")
 @ActionReference(path = "Menu/Window" /*, position = 333 */)
 @TopComponent.OpenActionRegistration(
-        displayName = "#CTL_OntologyAction",
-        preferredID = "OntologyTopComponent"
+        displayName = "#CTL_OntologyViewerAction",
+        preferredID = OntologyOutline.ONTOLOGY_COMPONENT_NAME
 )
 @Messages({
-    "CTL_OntologyAction=Ontology",
-    "CTL_OntologyTopComponent=Ontology Editor",
-    "HINT_OntologyTopComponent=Browse, edit and create ontologies"
+    "CTL_OntologyViewerAction=OntologyViewer",
+    "CTL_OntologyViewerTopComponent=Ontology Editor",
+    "HINT_OntologyViewerTopComponent=Browse, edit and create ontologies"
 })
-public final class OntologyTopComponent extends TopComponent {
+public final class OntologyViewerTopComponent extends TopComponent {
 
-    private Logger logger = LoggerFactory.getLogger( OntologyTopComponent.class );
-    public OntologyTopComponent() {
+    private Logger logger = LoggerFactory.getLogger( OntologyViewerTopComponent.class );
+    public OntologyViewerTopComponent() {
         initComponents();
-        setName(Bundle.CTL_OntologyTopComponent());
-        setToolTipText(Bundle.HINT_OntologyTopComponent());
-        jPanel1.setLayout( new BorderLayout() );
+        setName(Bundle.CTL_OntologyViewerTopComponent());
+        setToolTipText(Bundle.HINT_OntologyViewerTopComponent());
+        putClientProperty(TopComponent.PROP_KEEP_PREFERRED_SIZE_WHEN_SLIDED_IN, Boolean.TRUE);
+        putClientProperty(TopComponent.PROP_CLOSING_DISABLED, Boolean.TRUE);
+
     }
 
     /**
@@ -96,9 +98,11 @@ public final class OntologyTopComponent extends TopComponent {
         else {
             ontologyOutline.activate();
         }
+        jPanel1.setLayout( new BorderLayout() );
         jPanel1.add( ontologyOutline, BorderLayout.CENTER );
 
     }
+
 
     @Override
     public void componentClosed() {

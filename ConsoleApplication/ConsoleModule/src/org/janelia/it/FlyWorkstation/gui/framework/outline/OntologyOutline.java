@@ -86,7 +86,7 @@ import com.google.common.eventbus.Subscribe;
  * @author <a href="mailto:rokickik@janelia.hhmi.org">Konrad Rokicki</a>
  */
 public abstract class OntologyOutline extends EntityTree implements Refreshable, ActivatableView {
-
+    public static final String ONTOLOGY_COMPONENT_NAME = "OntologyViewerTopComponent";    
 	private static final Logger log = LoggerFactory.getLogger(OntologyOutline.class);
 
 	protected List<Entity> entityRootList; 

@@ -23,7 +23,7 @@ import org.openide.util.NbBundle.Messages;
         //iconBase="SET/PATH/TO/ICON/HERE", 
         persistenceType = TopComponent.PERSISTENCE_ALWAYS
 )
-@TopComponent.Registration(mode = "properties", openAtStartup = false)
+@TopComponent.Registration(mode = "appPropertiesBtm", openAtStartup = false)
 //@ActionID(category = "Window", id = "org.janelia.it.FlyWorkstation.gui.alignment_board_viewer.top_component.AlignmentBoardControlsTopComponent")
 //@ActionReference(path = "Menu/Window" /*, position = 333 */)
 @TopComponent.OpenActionRegistration(
@@ -33,7 +33,7 @@ import org.openide.util.NbBundle.Messages;
 @Messages({
     "CTL_AlignmentBoardControlsAction=AlignmentBoardControls",
     "CTL_AlignmentBoardControlsTopComponent=Alignment Board Controls",
-    "HINT_AlignmentBoardControlsTopComponent=Modify Alignment Board Characteristics"
+    "HINT_AlignmentBoardControlsTopComponent=Modify alignment board characteristics"
 })
 public final class AlignmentBoardControlsTopComponent extends TopComponent {
 

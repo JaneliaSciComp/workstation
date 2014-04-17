@@ -26,7 +26,7 @@ import org.slf4j.LoggerFactory;
         //iconBase="SET/PATH/TO/ICON/HERE", 
         persistenceType = TopComponent.PERSISTENCE_ALWAYS
 )
-@TopComponent.Registration(mode = "properties", openAtStartup = true)
+@TopComponent.Registration(mode = "properties", openAtStartup = false, position = 20)
 //@ActionID(category = "Window", id = "org.janelia.it.FlyWorkstation.gui.alignment_board_viewer.top_component.LayersPanelTopComponent")
 //@ActionReference(path = "Menu/Window" /*, position = 333 */)
 @TopComponent.OpenActionRegistration(

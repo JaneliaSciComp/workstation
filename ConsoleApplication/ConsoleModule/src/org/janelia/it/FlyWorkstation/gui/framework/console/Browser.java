@@ -24,6 +24,7 @@ import org.janelia.it.FlyWorkstation.gui.framework.viewer.IconDemoPanel;
 import org.janelia.it.FlyWorkstation.gui.framework.viewer.ImageCache;
 import org.janelia.it.FlyWorkstation.gui.util.Icons;
 import org.janelia.it.FlyWorkstation.gui.slice_viewer.SliceViewViewer;
+import org.janelia.it.FlyWorkstation.gui.top_component.OntologyViewerTopComponent;
 import org.janelia.it.FlyWorkstation.shared.util.FreeMemoryWatcher;
 import org.janelia.it.FlyWorkstation.shared.util.PrintableComponent;
 import org.janelia.it.FlyWorkstation.shared.util.PrintableImage;
@@ -33,6 +34,7 @@ import org.openide.util.Lookup;
 import org.openide.util.Lookup.Result;
 import org.openide.util.Lookup.Template;
 import org.openide.util.lookup.Lookups;
+import org.openide.windows.Mode;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -573,26 +575,23 @@ public class Browser implements Cloneable {
             viewerManager.ensureViewerClass(viewerManager.getMainViewerPane(), IconDemoPanel.class);
             break;
         case AnnotationSession:
-            TopComponent asWin = WindowManager.getDefault().findTopComponent("OntologyTopComponent");
-            asWin.open();        
+            openOntologyComponent();
             viewerManager.clearAllViewers();
             viewerManager.ensureViewerClass(viewerManager.getMainViewerPane(), IconDemoPanel.class);
-            break;
-        case TaskMonitoring:
-            TopComponent tmWin = WindowManager.getDefault().findTopComponent("OntologyTopComponent");
-            tmWin.open();        
-            viewerManager.clearAllViewers();
-            break;
+        break;
+            case TaskMonitoring:
+                openOntologyComponent();
+                viewerManager.clearAllViewers();
+                break;
         case SliceViewer:
             viewerManager.clearAllViewers();
             viewerManager.ensureViewerClass(viewerManager.getMainViewerPane(), SliceViewViewer.class);
             break;
         case ImageBrowser:
         default:
-            TopComponent win = WindowManager.getDefault().findTopComponent("OntologyTopComponent");
-            win.open();        
+            openOntologyComponent();
             viewerManager.clearAllViewers();
-            viewerManager.ensureViewerClass(viewerManager.getMainViewerPane(), IconDemoPanel.class);
+            viewerManager.ensureViewerClass(viewerManager.getMainViewerPane(), IconDemoPanel.class);            
         }
     }
 
@@ -631,4 +630,15 @@ public class Browser implements Cloneable {
         viewerManager.setIsViewersLinked(isViewersLinked);
         SessionMgr.getSessionMgr().setModelProperty(VIEWERS_LINKED, isViewersLinked);
     }
+
+    private void openOntologyComponent() {
+        TopComponent win = WindowManager.getDefault().findTopComponent(OntologyOutline.ONTOLOGY_COMPONENT_NAME);
+        if (! win.isOpened() ) {
+            Mode propertiesMode = WindowManager.getDefault().findMode("properties");
+            if ( propertiesMode != null ) {
+                propertiesMode.dockInto( win );
+            }
+        }
+    }
+
 }

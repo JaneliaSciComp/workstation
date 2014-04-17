@@ -9,5 +9,11 @@
     <folder name="Menu">
         <folder name="Services"/>
     </folder>
+    <folder name="Windows2">
+        <folder name="Modes">
+            <file name="appExplorerBtm.wsmode" url="Modes/appExplorerBtm.wsmode"/>
+            <file name="appPropertiesBtm.wsmode" url="Modes/appPropertiesBtm.wsmode"/>
+        </folder>
+    </folder>
     <file name="Toolbars_hidden"/>
 </filesystem>
