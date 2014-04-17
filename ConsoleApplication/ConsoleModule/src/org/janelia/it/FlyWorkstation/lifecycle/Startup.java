@@ -1,7 +1,6 @@
 package org.janelia.it.FlyWorkstation.lifecycle;
 
 import org.janelia.it.FlyWorkstation.gui.application.ConsoleApp;
-import org.janelia.it.FlyWorkstation.shared.util.ConsoleProperties;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.openide.modules.OnStart;
