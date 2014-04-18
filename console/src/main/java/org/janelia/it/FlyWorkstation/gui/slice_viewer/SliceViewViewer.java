@@ -77,6 +77,14 @@ public class SliceViewViewer extends Viewer {
             } catch (Exception e) {
                 e.printStackTrace();
             }
+            if (sliceSample == null) {
+                JOptionPane.showMessageDialog(this.getParent(),
+                        "Could not find sample entity for this workspace!",
+                        "Could not open workspace",
+                        JOptionPane.ERROR_MESSAGE);
+                return;
+            }
+
         }
         
         refresh();
