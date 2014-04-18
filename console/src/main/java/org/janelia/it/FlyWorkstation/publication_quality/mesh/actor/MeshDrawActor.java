@@ -151,7 +151,7 @@ public class MeshDrawActor implements GLActor {
         gl.glBlendEquation(GL2GL3.GL_FUNC_ADD);
         // Weight source by GL_ONE because we are using premultiplied alpha.
         gl.glBlendFunc(GL2GL3.GL_ONE, GL2GL3.GL_ONE_MINUS_SRC_ALPHA);
-        reportError( gl, "Display of axes-actor alpha" );
+        reportError( gl, "Display of mesh-actor alpha" );
 //        }
 //        else if (renderMethod == RenderMethod.MAXIMUM_INTENSITY) {
 //            gl.glBlendEquation(GL2GL3.GL_MAX);
@@ -175,12 +175,16 @@ public class MeshDrawActor implements GLActor {
         // TODO : make it possible to establish an arbitrary group of vertex attributes programmatically.
         // 3 floats per coord. Stride is 1 normal (3 floats=3 coords), offset to first is 0.
         gl.glEnableVertexAttribArray(vertexAttributeLoc);
-        gl.glVertexAttribPointer(vertexAttributeLoc, 3, GL2.GL_FLOAT, false, 3 * BYTES_PER_FLOAT, 0);
+
+        int stride = 6 * BYTES_PER_FLOAT;
+        int storagePerVertex = 3 * BYTES_PER_FLOAT;
+
+        gl.glVertexAttribPointer(vertexAttributeLoc, 3, GL2.GL_FLOAT, false, stride, 0);
         reportError( gl, "Display of mesh-draw-actor 2" );
 
         // 3 floats per normal. Stride is 1 vertex loc (3 floats=3 coords), offset to first is 1 vertex worth.
         gl.glEnableVertexAttribArray(normalAttributeLoc);
-        gl.glVertexAttribPointer(normalAttributeLoc, 3, GL2.GL_FLOAT, false, 3 * BYTES_PER_FLOAT, 3 * BYTES_PER_FLOAT);
+        gl.glVertexAttribPointer(normalAttributeLoc, 3, GL2.GL_FLOAT, false, stride, storagePerVertex);
         reportError( gl, "Display of mesh-draw-actor 2a" );
 
         gl.glBindBuffer( GL2.GL_ELEMENT_ARRAY_BUFFER, inxBufferHandle );
@@ -188,6 +192,7 @@ public class MeshDrawActor implements GLActor {
 
         setColoring( gl );
 
+        // One triangle every three indices.  But count corresponds to the number of vertices.
         gl.glDrawElements( GL2.GL_TRIANGLES, indexCount, GL2.GL_UNSIGNED_INT, 0 );
         reportError( gl, "Display of mesh-draw-actor 4" );
 
@@ -375,13 +380,11 @@ public class MeshDrawActor implements GLActor {
         try {
             shader = new MeshDrawShader();
             shader.init( gl.getGL2() );
-            //shader.load( gl.getGL2() );
 
             vertexAttributeLoc = gl.glGetAttribLocation(shader.getShaderProgram(), MeshDrawShader.VERTEX_ATTRIBUTE_NAME);
             reportError( gl, "Obtaining the in-shader locations-1." );
             normalAttributeLoc = gl.glGetAttribLocation(shader.getShaderProgram(), MeshDrawShader.NORMAL_ATTRIBUTE_NAME);
-            reportError( gl, "Obtaining the in-shader locations-2." );
-            setColoring(gl);
+            reportError(gl, "Obtaining the in-shader locations-2.");
 
 
         } catch ( AbstractShader.ShaderCreationException sce ) {
@@ -446,8 +449,9 @@ public class MeshDrawActor implements GLActor {
         reportError( gl, "Buffer Data" );
 
         IntBuffer inxBuf = buffersBean.getIndexBuffer();
+        inxBuf.rewind();
         indexCount = inxBuf.capacity();
-        gl.glBindBuffer( GL2GL3.GL_ELEMENT_ARRAY_BUFFER, inxBufferHandle );
+        gl.glBindBuffer(GL2GL3.GL_ELEMENT_ARRAY_BUFFER, inxBufferHandle);
         reportError(gl, "Bind Inx Buf");
 
         gl.glBufferData(

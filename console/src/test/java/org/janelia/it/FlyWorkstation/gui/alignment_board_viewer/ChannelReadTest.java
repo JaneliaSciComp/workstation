@@ -60,9 +60,9 @@ public class ChannelReadTest {
         MaskChanStreamSourceI streamSource = new MaskChanStreamSourceI() {
             @Override
             public InputStream getMaskInputStream() throws IOException {
-                InputStream testMaskStream = this.getClass().getResourceAsStream( MASK_FILE_NAME );
+                InputStream testMaskStream = this.getClass().getResourceAsStream(COMPARTMENT_MASK_FILE_NAME);
                 if ( testMaskStream == null ) {
-                    testMaskStream = new FileInputStream( LOCAL_MASK_FILE_PATH );
+                    testMaskStream = new FileInputStream(LOCAL_COMPARTMENT_MASK_FILE_PATH);
                     logger.warn("Resorting to hardcoded mask path.");
                 }
 
@@ -72,9 +72,9 @@ public class ChannelReadTest {
 
             @Override
             public InputStream getChannelInputStream() throws IOException {
-                InputStream testChannelStream = this.getClass().getResourceAsStream( CHAN_FILE_NAME );
+                InputStream testChannelStream = this.getClass().getResourceAsStream(COMPARTMENT_CHAN_FILE_NAME);
                 if ( testChannelStream == null ) {
-                    testChannelStream = new FileInputStream( LOCAL_CHAN_FILE_PATH );
+                    testChannelStream = new FileInputStream(LOCAL_COMPARTMENT_CHAN_FILE_PATH);
                     logger.warn("Resorting to hardcoded channel path.");
                 }
 

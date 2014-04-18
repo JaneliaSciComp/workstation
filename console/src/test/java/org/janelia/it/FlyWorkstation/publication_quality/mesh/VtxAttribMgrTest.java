@@ -1,13 +1,11 @@
 package org.janelia.it.FlyWorkstation.publication_quality.mesh;
 
 import org.janelia.it.FlyWorkstation.gui.alignment_board_viewer.renderable.MaskChanRenderableData;
-import org.janelia.it.FlyWorkstation.gui.alignment_board_viewer.renderable.RenderableBean;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 
-import java.util.ArrayList;
 import java.util.List;
 import static org.janelia.it.FlyWorkstation.gui.TestingConstants.*;
 
@@ -65,7 +63,7 @@ public class VtxAttribMgrTest {
 
     @Test
     public void execute() throws Exception {
-        List<MaskChanRenderableData> beanList = MeshRenderTestFacilities.getMaskChanRenderableDatas();
+        List<MaskChanRenderableData> beanList = MeshRenderTestFacilities.getCompartmentMaskChanRenderableDatas();
         VtxAttribMgr mgr = new VtxAttribMgr( beanList );
         List<TriangleSource> sources = mgr.execute();
 
@@ -74,7 +72,7 @@ public class VtxAttribMgrTest {
         int triNum = 0;
         for (TriangleSource source: sources ) {
             VertexFactory vtxFac = (VertexFactory)source;
-            statReportBuilder.append(LOCAL_CHAN_FILE_PATH)
+            statReportBuilder.append(LOCAL_COMPARTMENT_CHAN_FILE_PATH)
                     .append(" surface/volume voxel count=")
                     .append( vtxFac.getSurfaceToVolumeRatio() )
                     .append( "\n" );

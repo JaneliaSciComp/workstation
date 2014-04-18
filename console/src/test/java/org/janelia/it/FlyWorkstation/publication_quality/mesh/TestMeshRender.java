@@ -42,7 +42,7 @@ public class TestMeshRender {
         @Override
         protected void doStuff() throws Exception {
             logger.info("Doing atttribute creation in thread {}", Thread.currentThread().getName());
-            attribMgr = new VtxAttribMgr( MeshRenderTestFacilities.getMaskChanRenderableDatas() );
+            attribMgr = new VtxAttribMgr( MeshRenderTestFacilities.getNeuronMaskChanRenderableDatas() );
             attribMgr.execute();
 
         }
@@ -55,7 +55,7 @@ public class TestMeshRender {
             configurator.setVolumeModel( mipWidget.getVolumeModel() );
 
             configurator.setVertexAttribMgr( attribMgr );
-            configurator.setRenderableId( MeshRenderTestFacilities.RENDERABLE_ID );
+            configurator.setRenderableId( MeshRenderTestFacilities.NEURON_RENDERABLE_ID);
             MeshDrawActor actor = new MeshDrawActor( configurator );
             mipWidget.clear();
             mipWidget.addActor( actor );
