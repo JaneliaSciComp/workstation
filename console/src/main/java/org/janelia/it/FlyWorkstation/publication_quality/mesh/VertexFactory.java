@@ -51,11 +51,11 @@ public class VertexFactory implements TriangleSource {
     }
 
     private static final float[] TOP_FACE_NORMAL_VECT = new float[]{0, 1, 0};
-    private static final float[] FRONT_FACE_NORMAL_VECT = new float[]{0, 0, 1};
     private static final float[] BOTTOM_FACE_NORMAL_VECT = new float[]{0, -1, 0};
+    private static final float[] FRONT_FACE_NORMAL_VECT = new float[]{0, 0, 1};
+    private static final float[] RIGHT_FACE_NORMAL_VECT = new float[]{-1, 0, 0};
     private static final float[] LEFT_FACE_NORMAL_VECT = new float[]{-1, 0, 0};
-    private static final float[] RIGHT_FACE_NORMAL_VECT = new float[]{1, 0, 0};
-    private static final float[] BACK_FACE_NORMAL_VECT = new float[]{0, 0, -1};
+    private static final float[] BACK_FACE_NORMAL_VECT = new float[]{0, 0, 1};
 
     private Map<VertexInfoKey, VertexInfoBean> vertexMap = new HashMap<VertexInfoKey, VertexInfoBean>();
     private List<VertexInfoBean> vertices = new ArrayList<VertexInfoBean>();
@@ -97,10 +97,10 @@ public class VertexFactory implements TriangleSource {
                         normalVector = NormalDirection.TOP_FACE_NORMAL;
                         break;
                     case VoxelInfoBean.FRONT_FACE :
-                        vertices[ 0 ] = addVertex( topFrontLeft( key ) );
-                        vertices[ 1 ] = addVertex( bottomFrontLeft( key ) );
-                        vertices[ 2 ] = addVertex( bottomFrontRight( key ) );
-                        vertices[ 3 ] = addVertex( topFrontRight( key ) );
+                        vertices[ 0 ] = addVertex( topFrontRight( key ) );
+                        vertices[ 1 ] = addVertex( topFrontLeft( key ) );
+                        vertices[ 2 ] = addVertex( bottomFrontLeft( key ) );
+                        vertices[ 3 ] = addVertex( bottomFrontRight( key ) );
                         normalVector = NormalDirection.FRONT_FACE_NORMAL;
                         break;
                     case VoxelInfoBean.BOTTOM_FACE :
@@ -125,10 +125,10 @@ public class VertexFactory implements TriangleSource {
                         normalVector = NormalDirection.RIGHT_FACE_NORMAL;
                         break;
                     case VoxelInfoBean.BACK_FACE :
-                        vertices[ 0 ] = addVertex( bottomBackLeft( key ) );
-                        vertices[ 1 ] = addVertex( bottomBackRight(key) );
-                        vertices[ 2 ] = addVertex( bottomFrontRight(key) );
-                        vertices[ 3 ] = addVertex( bottomFrontLeft(key) );
+                        vertices[ 0 ] = addVertex( bottomBackRight( key ) );
+                        vertices[ 1 ] = addVertex( bottomBackLeft(key) );
+                        vertices[ 2 ] = addVertex( topBackLeft(key) );
+                        vertices[ 3 ] = addVertex( topBackRight(key) );
                         normalVector = NormalDirection.BACK_FACE_NORMAL;
                         break;
                 }

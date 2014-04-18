@@ -30,7 +30,7 @@ public class TestMeshRender {
 
     private static class PresWorker extends SimpleWorker {
         private Mip3d mipWidget;
-        private VtxAttribMgr attribMgr;
+        private VertexAttributeManagerI attribMgr;
 
         public PresWorker() {
             mipWidget = new Mip3d();
@@ -42,7 +42,8 @@ public class TestMeshRender {
         @Override
         protected void doStuff() throws Exception {
             logger.info("Doing atttribute creation in thread {}", Thread.currentThread().getName());
-            attribMgr = new VtxAttribMgr( MeshRenderTestFacilities.getNeuronMaskChanRenderableDatas() );
+            attribMgr = //new FewVoxelVtxAttribMgr( MeshRenderTestFacilities.NEURON_RENDERABLE_ID );
+                    new VtxAttribMgr( MeshRenderTestFacilities.getNeuronMaskChanRenderableDatas() );
             attribMgr.execute();
 
         }
@@ -54,7 +55,7 @@ public class TestMeshRender {
             configurator.setAxisLengths( new double[] {1024, 512, 218} );
             configurator.setVolumeModel( mipWidget.getVolumeModel() );
 
-            configurator.setVertexAttribMgr( attribMgr );
+            configurator.setVertexAttributeManager(attribMgr);
             configurator.setRenderableId( MeshRenderTestFacilities.NEURON_RENDERABLE_ID);
             MeshDrawActor actor = new MeshDrawActor( configurator );
             mipWidget.clear();

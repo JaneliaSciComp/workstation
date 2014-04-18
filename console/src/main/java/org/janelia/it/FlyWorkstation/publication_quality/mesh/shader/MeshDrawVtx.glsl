@@ -21,7 +21,6 @@ void main(void)
     {
         diffuseCoefficient = abs( diffuseCoefficient );
     }
-
-    diffuseLightMag = vec4(1.0, 1.0, 1.0, 1.0) * diffuseCoefficient;
+    diffuseLightMag = vec4(1.0, 1.0, 1.0, 1.0) * 1.3 * diffuseCoefficient;
     gl_Position = projection * modelView * vertexAttribute;
 }

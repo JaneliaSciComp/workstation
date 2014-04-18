@@ -6,7 +6,8 @@ import org.janelia.it.FlyWorkstation.gui.opengl.GLActor;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.BoundingBox3d;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.VolumeModel;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.shader.AbstractShader;
-import org.janelia.it.FlyWorkstation.publication_quality.mesh.VtxAttribMgr;
+import org.janelia.it.FlyWorkstation.publication_quality.mesh.RenderBuffersBean;
+import org.janelia.it.FlyWorkstation.publication_quality.mesh.VertexAttributeManagerI;
 import org.janelia.it.FlyWorkstation.publication_quality.mesh.shader.MeshDrawShader;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -75,7 +76,7 @@ public class MeshDrawActor implements GLActor {
     public static class MeshDrawActorConfigurator {
         private VolumeModel volumeModel;
         private Long renderableId = -1L;
-        private VtxAttribMgr vtxAttribMgr;
+        private VertexAttributeManagerI vtxAttribMgr;
         private double[] axisLengths;
 
         public void setAxisLengths( double[] axisLengths ) {
@@ -90,7 +91,7 @@ public class MeshDrawActor implements GLActor {
             this.renderableId = renderableId;
         }
 
-        public void setVertexAttribMgr( VtxAttribMgr vertexAttribMgr ) {
+        public void setVertexAttributeManager(VertexAttributeManagerI vertexAttribMgr) {
             this.vtxAttribMgr = vertexAttribMgr;
         }
 
@@ -104,7 +105,7 @@ public class MeshDrawActor implements GLActor {
             return renderableId;
         }
 
-        public VtxAttribMgr getVtxAttribMgr() {
+        public VertexAttributeManagerI getVertexAttributeManager() {
             assert vtxAttribMgr != null : "Attrib mgr not initialized.";
             return vtxAttribMgr;
         }
@@ -140,17 +141,20 @@ public class MeshDrawActor implements GLActor {
     @Override
     public void display(GLAutoDrawable glDrawable) {
         GL2GL3 gl = glDrawable.getGL().getGL2GL3();
-        reportError( gl, "Display of mesh-draw-actor upon entry" );
-
-        gl.glDisable(GL2GL3.GL_CULL_FACE);
-        gl.glFrontFace(GL2GL3.GL_CW);
+        reportError(gl, "Display of mesh-draw-actor upon entry");
+        gl.glEnable(GL2GL3.GL_DEPTH_TEST);
+        gl.glDepthFunc(GL2GL3.GL_ALWAYS);
+        gl.glEnable(GL2GL3.GL_CULL_FACE);
+        gl.glCullFace(GL2GL3.GL_BACK);
+        gl.glFrontFace(GL2GL3.GL_CCW);
         reportError( gl, "Display of mesh-draw-actor cull-face" );
 
+// TESTING: NO MORE TRANSPARENCY.
         // set blending to enable transparent voxels
-        gl.glEnable(GL2GL3.GL_BLEND);
-        gl.glBlendEquation(GL2GL3.GL_FUNC_ADD);
-        // Weight source by GL_ONE because we are using premultiplied alpha.
-        gl.glBlendFunc(GL2GL3.GL_ONE, GL2GL3.GL_ONE_MINUS_SRC_ALPHA);
+//        gl.glEnable(GL2GL3.GL_BLEND);
+//        gl.glBlendEquation(GL2GL3.GL_FUNC_ADD);
+//        // Weight source by GL_ONE because we are using premultiplied alpha.
+//        gl.glBlendFunc(GL2GL3.GL_ONE, GL2GL3.GL_ONE_MINUS_SRC_ALPHA);
         reportError( gl, "Display of mesh-actor alpha" );
 //        }
 //        else if (renderMethod == RenderMethod.MAXIMUM_INTENSITY) {
@@ -409,9 +413,9 @@ public class MeshDrawActor implements GLActor {
 
     private void setColoring(GL2GL3 gl) {
         // Must upload the color value for display, at init time.
-        float grayValue = 0.15f;
+        //TODO get a meaningful coloring.
         boolean wasSet = shader.setUniform4v(gl, MeshDrawShader.COLOR_UNIFORM_NAME, 1, new float[]{
-                grayValue * 2.0f, grayValue, grayValue, 1.0f
+                1.0f, 0.5f, 0.25f, 1.0f
         });
         if ( ! wasSet ) {
             logger.error("Failed to set the " + MeshDrawShader.COLOR_UNIFORM_NAME + " to desired value.");
@@ -433,8 +437,8 @@ public class MeshDrawActor implements GLActor {
         // Bind data to the handle, and upload it to the GPU.
         gl.glBindBuffer(GL2GL3.GL_ARRAY_BUFFER, vtxAttribBufferHandle);
         reportError( gl, "Bind buffer" );
-        VtxAttribMgr.RenderBuffersBean buffersBean =
-                configurator.getVtxAttribMgr()
+        RenderBuffersBean buffersBean =
+                configurator.getVertexAttributeManager()
                         .getRenderIdToBuffers()
                         .get(configurator.getRenderableId());
         FloatBuffer attribBuffer = buffersBean.getAttributesBuffer();
@@ -461,7 +465,7 @@ public class MeshDrawActor implements GLActor {
                 GL2GL3.GL_STATIC_DRAW
         );
 
-        configurator.getVtxAttribMgr().close();
+        configurator.getVertexAttributeManager().close();
     }
 
     private void reportError(GL gl, String source) {
