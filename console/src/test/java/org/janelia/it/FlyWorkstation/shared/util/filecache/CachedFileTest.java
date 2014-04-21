@@ -1,8 +1,10 @@
 package org.janelia.it.FlyWorkstation.shared.util.filecache;
 
-import junit.framework.Test;
-import junit.framework.TestCase;
-import junit.framework.TestSuite;
+import org.janelia.it.jacs.model.TestCategories;
+import org.junit.After;
+import org.junit.Before;
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -14,12 +16,15 @@ import java.text.SimpleDateFormat;
 import java.util.Arrays;
 import java.util.Date;
 
+import static org.junit.Assert.*;
+
 /**
  * Tests the {@link CachedFile} class.
  *
  * @author Eric Trautman
  */
-public class CachedFileTest extends TestCase {
+@Category(TestCategories.FastTests.class)
+public class CachedFileTest {
 
     private static int fileCount = 0;
 
@@ -29,16 +34,8 @@ public class CachedFileTest extends TestCase {
     private File testRemoteDirectory;
     private File testRemoteFile;
 
-    public CachedFileTest(String testName) {
-        super(testName);
-    }
-
-    public static Test suite() {
-        return new TestSuite(CachedFileTest.class);
-    }
-
-    @Override
-    protected void setUp() throws Exception {
+    @Before
+    public void setUp() throws Exception {
         LOG.info("setUp: entry ----------------------------------------");
         final File parentDirectory = (new File(".")).getCanonicalFile();
         final String rootName = "test-cache-" + buildTimestampName();
@@ -50,8 +47,8 @@ public class CachedFileTest extends TestCase {
         LOG.info("setUp: exit ----------------------------------------");
     }
 
-    @Override
-    protected void tearDown() throws Exception {
+    @After
+    public void tearDown() throws Exception {
         LOG.info("tearDown: entry --------------------------------------");
         deleteFile(testCacheActiveDirectory);
         deleteFile(testCacheTempDirectory);
@@ -61,6 +58,7 @@ public class CachedFileTest extends TestCase {
         LOG.info("tearDown: exit --------------------------------------");
     }
 
+    @Test
     public void testLoadAndDelete() throws Exception {
 
         final MockWebDavClient mockWebDavClient = new MockWebDavClient();
@@ -74,10 +72,8 @@ public class CachedFileTest extends TestCase {
         RemoteFileLoader.loadRemoteFile(webDavFile, tempFile, activeFile, mockWebDavClient);
 
         File localFile = cachedFile.getLocalFile();
-        assertNotNull("local file is missing",
-                      localFile);
-        assertEquals("remote and local file lengths differ",
-                     testRemoteFile.length(), localFile.length());
+        assertNotNull("local file is missing", localFile);
+        assertEquals("remote and local file lengths differ", testRemoteFile.length(), localFile.length());
 
         File metaFile = cachedFile.getMetaFile();
         assertNotNull("meta file is missing",

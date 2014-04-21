@@ -1,9 +1,10 @@
 package org.janelia.it.FlyWorkstation.shared.util.filecache;
 
-import junit.framework.Assert;
-import junit.framework.Test;
-import junit.framework.TestCase;
-import junit.framework.TestSuite;
+import org.janelia.it.jacs.model.TestCategories;
+import org.junit.After;
+import org.junit.Before;
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -13,12 +14,15 @@ import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
 
+import static org.junit.Assert.*;
+
 /**
  * Tests the {@link LocalFileCache} class.
  *
  * @author Eric Trautman
  */
-public class LocalFileCacheTest extends TestCase {
+@Category(TestCategories.FastTests.class)
+public class LocalFileCacheTest {
 
     private MockWebDavClient mockClient;
     private List<File> testRemoteFiles;
@@ -31,16 +35,8 @@ public class LocalFileCacheTest extends TestCase {
 
     private LocalFileCache cache;
 
-    public LocalFileCacheTest(String testName) {
-        super(testName);
-    }
-
-    public static Test suite() {
-        return new TestSuite(LocalFileCacheTest.class);
-    }
-
-    @Override
-    protected void setUp() throws Exception {
+    @Before
+    public void setUp() throws Exception {
         LOG.info("setUp: entry ----------------------------------------");
         final String ts = CachedFileTest.buildTimestampName();
         final File cacheRootParentDirectory = new File("test-cache-" + ts);
@@ -102,8 +98,8 @@ public class LocalFileCacheTest extends TestCase {
         LOG.info("setUp: exit ----------------------------------------");
     }
 
-    @Override
-    protected void tearDown() throws Exception {
+    @After
+    public void tearDown() throws Exception {
 
         LOG.info("tearDown: entry --------------------------------------");
 
@@ -136,6 +132,7 @@ public class LocalFileCacheTest extends TestCase {
         LOG.info("tearDown: exit --------------------------------------");
     }
 
+    @Test
     public void testRetrieveFile() throws Exception {
 
         final long singleFileBytes = singleFileKilobytes * 1024;
@@ -220,31 +217,28 @@ public class LocalFileCacheTest extends TestCase {
         }
     }
 
+    @Test
     public void testGetEffectiveUrl() throws Exception {
         File remoteFile = testRemoteFiles.get(0);
-        Assert.assertEquals("should not be any cached files before first call",
-                            0, cache.getNumberOfFiles());
+        assertEquals("should not be any cached files before first call", 0, cache.getNumberOfFiles());
         final URL remoteUrl = remoteFile.toURI().toURL();
         URL effectiveUrl = cache.getEffectiveUrl(remoteUrl);
         final long numberOfFiles = cache.getNumberOfFiles();
 
-        Assert.assertEquals("remote and effective URLs should be the same after first call",
-                            remoteUrl, effectiveUrl);
-        Assert.assertEquals("should not be any cached files immediately after first call",
-                0, numberOfFiles);
+        assertEquals("remote and effective URLs should be the same after first call", remoteUrl, effectiveUrl);
+        assertEquals("should not be any cached files immediately after first call", 0, numberOfFiles);
 
         // give async load a chance to complete
         Thread.sleep(500);
 
         effectiveUrl = cache.getEffectiveUrl(remoteUrl);
 
-        Assert.assertEquals("the requested file should be cached after a short wait",
-                            1, cache.getNumberOfFiles());
+        assertEquals("the requested file should be cached after a short wait", 1, cache.getNumberOfFiles());
 
-        Assert.assertFalse("remote and effective URLs should differ after file is cached",
-                remoteUrl.equals(effectiveUrl));
+        assertFalse("remote and effective URLs should differ after file is cached", remoteUrl.equals(effectiveUrl));
     }
 
+    @Test
     public void testGetImmediateDirectory() throws Exception {
         // double capacity to ensure that limit is based upon immediate check
         cache.setKilobyteCapacity(cache.getKilobyteCapacity() * 2);
@@ -252,15 +246,14 @@ public class LocalFileCacheTest extends TestCase {
         final URL remoteDirectoryUrl = remoteTestDirectory.toURI().toURL();
         File localDirectory  = cache.getDirectory(remoteDirectoryUrl, false, false);
 
-        Assert.assertTrue("local directory for " + remoteDirectoryUrl + " does not exist",
-                          localDirectory.exists());
+        assertTrue("local directory for " + remoteDirectoryUrl + " does not exist", localDirectory.exists());
 
         final long numberOfFiles = cache.getNumberOfFiles();
 
-        Assert.assertEquals("cache contains incorrect number of files",
-                            immediateFileCount, numberOfFiles);
+        assertEquals("cache contains incorrect number of files", immediateFileCount, numberOfFiles);
     }
 
+    @Test
     public void testGetAllDirectory() throws Exception {
         // double capacity so that all files can be cached
         cache.setKilobyteCapacity(cache.getKilobyteCapacity() * 2);
@@ -268,15 +261,14 @@ public class LocalFileCacheTest extends TestCase {
         final URL remoteDirectoryUrl = remoteTestDirectory.toURI().toURL();
         File localDirectory  = cache.getDirectory(remoteDirectoryUrl, true, false);
 
-        Assert.assertTrue("local directory for " + remoteDirectoryUrl + " does not exist",
-                localDirectory.exists());
+        assertTrue("local directory for " + remoteDirectoryUrl + " does not exist", localDirectory.exists());
 
         final long numberOfFiles = cache.getNumberOfFiles();
 
-        Assert.assertEquals("cache contains incorrect number of files",
-                            testRemoteFiles.size(), numberOfFiles);
+        assertEquals("cache contains incorrect number of files", testRemoteFiles.size(), numberOfFiles);
     }
 
+    @Test
     public void testCleanUpInconsistentData() throws Exception {
 
         // ---------------------------------------
@@ -292,33 +284,30 @@ public class LocalFileCacheTest extends TestCase {
         final File cachedFileWithCorruptedMeta =
                 cache.getFile(thirdNonNestedRemoteFile.toURI().toURL());
 
-        Assert.assertEquals("should be three cached files at start",
-                            3, cache.getNumberOfFiles());
+        assertEquals("should be three cached files at start", 3, cache.getNumberOfFiles());
 
         final File parentDirectory = cachedFileWithoutMeta.getParentFile();
 
         File deletedMetaFile = new File(parentDirectory,
                                         CachedFile.getMetaFileName(cachedFileWithoutMeta));
         if (! deletedMetaFile.delete()) {
-            Assert.fail("failed to remove cachedFileWithoutMeta meta file " +
+            fail("failed to remove cachedFileWithoutMeta meta file " +
                         deletedMetaFile.getAbsolutePath());
         }
 
         final File orphanedMetaFile = new File(parentDirectory,
                                                CachedFile.getMetaFileName(deletedCachedFile));
         if (! deletedCachedFile.delete()) {
-            Assert.fail("failed to remove cached file " + deletedCachedFile.getAbsolutePath());
+            fail("failed to remove cached file " + deletedCachedFile.getAbsolutePath());
         }
-        Assert.assertTrue("meta file " + orphanedMetaFile.getAbsolutePath() +
-                          " is missing before starting test",
-                          orphanedMetaFile.exists());
+        assertTrue("meta file " + orphanedMetaFile.getAbsolutePath() + " is missing before starting test",
+                   orphanedMetaFile.exists());
 
         File corruptMetaWithCacheFile =
                 new File(parentDirectory,
                          CachedFile.getMetaFileName(cachedFileWithCorruptedMeta));
-        Assert.assertTrue("meta file " + corruptMetaWithCacheFile.getAbsolutePath() +
-                          " is missing",
-                          corruptMetaWithCacheFile.exists());
+        assertTrue("meta file " + corruptMetaWithCacheFile.getAbsolutePath() + " is missing",
+                   corruptMetaWithCacheFile.exists());
 
         FileWriter writer = new FileWriter(corruptMetaWithCacheFile);
         writer.write("Power tends to corrupt,");
@@ -348,26 +337,22 @@ public class LocalFileCacheTest extends TestCase {
         // ---------------------------------------
         // verify results ...
 
-        Assert.assertFalse("meta file " + deletedMetaFile.getAbsolutePath() +
-                          " should NOT have been restored for orphaned cache file",
-                          deletedMetaFile.exists());
+        assertFalse("meta file " + deletedMetaFile.getAbsolutePath() +
+                    " should NOT have been restored for orphaned cache file",
+                    deletedMetaFile.exists());
 
-        Assert.assertFalse("valid but orphaned meta file " + orphanedMetaFile.getAbsolutePath() +
-                           " was not removed",
-                           orphanedMetaFile.exists());
+        assertFalse("valid but orphaned meta file " + orphanedMetaFile.getAbsolutePath() + " was not removed",
+                    orphanedMetaFile.exists());
 
-        Assert.assertFalse("corrupted meta file " + corruptMetaWithCacheFile.getAbsolutePath() +
-                          " should have been removed",
-                          corruptMetaWithCacheFile.exists());
+        assertFalse("corrupted meta file " + corruptMetaWithCacheFile.getAbsolutePath() + " should have been removed",
+                    corruptMetaWithCacheFile.exists());
 
-        Assert.assertFalse("corrupted and orphaned meta file " +
-                           corruptMetaWithoutCacheFile.getAbsolutePath() +
-                          " was not removed",
-                           corruptMetaWithoutCacheFile.exists());
+        assertFalse("corrupted and orphaned meta file " + corruptMetaWithoutCacheFile.getAbsolutePath() +
+                    " was not removed",
+                    corruptMetaWithoutCacheFile.exists());
 
-        Assert.assertFalse("file without meta data " + fileToRemove.getAbsolutePath() +
-                           " should have been removed",
-                          fileToRemove.exists());
+        assertFalse("file without meta data " + fileToRemove.getAbsolutePath() + " should have been removed",
+                    fileToRemove.exists());
     }
 
     private static final Logger LOG = LoggerFactory.getLogger(LocalFileCacheTest.class);
