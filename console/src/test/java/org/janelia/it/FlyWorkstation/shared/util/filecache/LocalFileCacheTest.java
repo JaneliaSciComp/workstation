@@ -21,7 +21,6 @@ import static org.junit.Assert.*;
  *
  * @author Eric Trautman
  */
-@Category(TestCategories.FastTests.class)
 public class LocalFileCacheTest {
 
     private MockWebDavClient mockClient;
@@ -133,6 +132,7 @@ public class LocalFileCacheTest {
     }
 
     @Test
+    @Category(TestCategories.SlowTests.class)
     public void testRetrieveFile() throws Exception {
 
         final long singleFileBytes = singleFileKilobytes * 1024;
@@ -161,7 +161,7 @@ public class LocalFileCacheTest {
                      singleFileBytes, localFile.length());
 
         // give removal a chance to complete
-        Thread.sleep(500);
+        Thread.sleep(1000);
 
         assertEquals("invalid number of files in cache after max capacity reached",
                      maxNumberOfCachedFiles, cache.getNumberOfFiles());
@@ -175,7 +175,7 @@ public class LocalFileCacheTest {
         cache.setKilobyteCapacity(cache.getKilobyteCapacity() - singleFileKilobytes);
 
         // give removal a chance to complete
-        Thread.sleep(500);
+        Thread.sleep(1000);
 
         assertEquals("invalid number of files in cache after reducing capacity",
                      (maxNumberOfCachedFiles - 1), cache.getNumberOfFiles());
@@ -189,7 +189,7 @@ public class LocalFileCacheTest {
         cache.clear();
 
         // give removal a chance to complete
-        Thread.sleep(500);
+        Thread.sleep(1000);
 
         assertEquals("invalid number of files in cache after clear",
                      0, cache.getNumberOfFiles());
@@ -218,6 +218,7 @@ public class LocalFileCacheTest {
     }
 
     @Test
+    @Category(TestCategories.SlowTests.class)
     public void testGetEffectiveUrl() throws Exception {
         File remoteFile = testRemoteFiles.get(0);
         assertEquals("should not be any cached files before first call", 0, cache.getNumberOfFiles());
@@ -229,7 +230,7 @@ public class LocalFileCacheTest {
         assertEquals("should not be any cached files immediately after first call", 0, numberOfFiles);
 
         // give async load a chance to complete
-        Thread.sleep(500);
+        Thread.sleep(1000);
 
         effectiveUrl = cache.getEffectiveUrl(remoteUrl);
 
@@ -239,6 +240,7 @@ public class LocalFileCacheTest {
     }
 
     @Test
+    @Category(TestCategories.FastTests.class)
     public void testGetImmediateDirectory() throws Exception {
         // double capacity to ensure that limit is based upon immediate check
         cache.setKilobyteCapacity(cache.getKilobyteCapacity() * 2);
@@ -254,6 +256,7 @@ public class LocalFileCacheTest {
     }
 
     @Test
+    @Category(TestCategories.FastTests.class)
     public void testGetAllDirectory() throws Exception {
         // double capacity so that all files can be cached
         cache.setKilobyteCapacity(cache.getKilobyteCapacity() * 2);
@@ -269,6 +272,7 @@ public class LocalFileCacheTest {
     }
 
     @Test
+    @Category(TestCategories.FastTests.class)
     public void testCleanUpInconsistentData() throws Exception {
 
         // ---------------------------------------
