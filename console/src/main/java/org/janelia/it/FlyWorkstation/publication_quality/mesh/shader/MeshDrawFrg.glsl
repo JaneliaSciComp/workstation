@@ -6,4 +6,5 @@ varying vec4 diffuseLightMag;
 void main()
 {
     gl_FragColor = (color * diffuseLightMag);
+    gl_FragColor.w = 1.0; // Force alpha to 1.
 }

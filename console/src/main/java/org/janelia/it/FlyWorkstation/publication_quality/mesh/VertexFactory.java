@@ -53,9 +53,9 @@ public class VertexFactory implements TriangleSource {
     private static final float[] TOP_FACE_NORMAL_VECT = new float[]{0, 1, 0};
     private static final float[] BOTTOM_FACE_NORMAL_VECT = new float[]{0, -1, 0};
     private static final float[] FRONT_FACE_NORMAL_VECT = new float[]{0, 0, 1};
-    private static final float[] RIGHT_FACE_NORMAL_VECT = new float[]{-1, 0, 0};
+    private static final float[] RIGHT_FACE_NORMAL_VECT = new float[]{1, 0, 0};
     private static final float[] LEFT_FACE_NORMAL_VECT = new float[]{-1, 0, 0};
-    private static final float[] BACK_FACE_NORMAL_VECT = new float[]{0, 0, 1};
+    private static final float[] BACK_FACE_NORMAL_VECT = new float[]{0, 0, -1};
 
     private Map<VertexInfoKey, VertexInfoBean> vertexMap = new HashMap<VertexInfoKey, VertexInfoBean>();
     private List<VertexInfoBean> vertices = new ArrayList<VertexInfoBean>();

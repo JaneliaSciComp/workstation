@@ -171,10 +171,14 @@ class MipRenderer
         double cameraFocusDistance = volumeModel.getCameraFocusDistance();
         double scaledFocusDistance = Math.abs(cameraFocusDistance) * glUnitsPerPixel();
 
-        float[] perspective = new ViewMatrixSupport().getPerspectiveMatrix(
+        ViewMatrixSupport viewMatrixSupport = new ViewMatrixSupport();
+        float[] perspective = viewMatrixSupport.getPerspectiveMatrix(
                 verticalApertureInDegrees, h,
                 0.5 * scaledFocusDistance, 2.0 * scaledFocusDistance
         );
+        float xComponent = (float)volumeModel.getCamera3d().getFocus().getX();
+        float yComponent = (float)volumeModel.getCamera3d().getFocus().getY();
+//        viewMatrixSupport.translateM( perspective, 0, -xComponent, yComponent, 0.0f );
 
         volumeModel.setPerspectiveMatrix( perspective );
 

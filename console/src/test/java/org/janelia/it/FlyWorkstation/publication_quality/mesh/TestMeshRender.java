@@ -1,15 +1,18 @@
 package org.janelia.it.FlyWorkstation.publication_quality.mesh;
 
+import org.janelia.it.FlyWorkstation.geom.Rotation3d;
 import org.janelia.it.FlyWorkstation.geom.Vec3;
 import org.janelia.it.FlyWorkstation.gui.WorkstationEnvironment;
 import org.janelia.it.FlyWorkstation.gui.framework.viewer.alignment_board.AlignmentBoardSettings;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.Mip3d;
+import org.janelia.it.FlyWorkstation.gui.viewer3d.matrix_support.ViewMatrixSupport;
 import org.janelia.it.FlyWorkstation.publication_quality.mesh.actor.MeshDrawActor;
 import org.janelia.it.FlyWorkstation.shared.workers.SimpleWorker;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.swing.*;
+import java.awt.event.ActionEvent;
 
 /**
  * Testing class - a regression test vehicle, for looking at mesh rendering over existing volumes.
@@ -34,6 +37,30 @@ public class TestMeshRender {
 
         public PresWorker() {
             mipWidget = new Mip3d();
+            Action dumpAction = new AbstractAction("Dump"){
+
+                @Override
+                public void actionPerformed(ActionEvent e) {
+                    Rotation3d rotation = mipWidget.getVolumeModel().getCamera3d().getRotation();
+                    System.out.println("Rotation = " + rotation);
+                    float[] mvm = mipWidget.getVolumeModel().getModelViewMatrix();
+                    float[] pm = mipWidget.getVolumeModel().getPerspectiveMatrix();
+                    ViewMatrixSupport vms = new ViewMatrixSupport();
+                    vms.dumpMatrices( mvm, pm );
+                }
+
+//                private void dump( String label, float[] values ) {
+//                    System.out.println("Dumping " + label);
+//                    for ( int i = 0; i < values.length; i+=4 ) {
+//                        for ( int j = 0; j < 4; j++ ) {
+//                            System.out.print( values[ i + j ]);
+//                            System.out.print( "," );
+//                        }
+//                        System.out.println();
+//                    }
+//                }
+            };
+            mipWidget.addMenuAction(dumpAction);
             mipWidget.getVolumeModel().setGammaAdjustment( (float) AlignmentBoardSettings.DEFAULT_GAMMA );
             mipWidget.getVolumeModel().setCameraDepth( new Vec3( 0.0, 0.0, 0.0 ) );
 
@@ -42,8 +69,8 @@ public class TestMeshRender {
         @Override
         protected void doStuff() throws Exception {
             logger.info("Doing atttribute creation in thread {}", Thread.currentThread().getName());
-            attribMgr = //new FewVoxelVtxAttribMgr( MeshRenderTestFacilities.NEURON_RENDERABLE_ID );
-                    new VtxAttribMgr( MeshRenderTestFacilities.getNeuronMaskChanRenderableDatas() );
+            attribMgr = new FewVoxelVtxAttribMgr( MeshRenderTestFacilities.NEURON_RENDERABLE_ID );
+                    //new VtxAttribMgr( MeshRenderTestFacilities.getNeuronMaskChanRenderableDatas() );
             attribMgr.execute();
 
         }

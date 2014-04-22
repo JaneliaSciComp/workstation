@@ -26,25 +26,57 @@ public class FewVoxelVtxAttribMgr implements VertexAttributeManagerI {
         vertexFactories = new ArrayList<TriangleSource>();
         renderIdToBuffers = new HashMap<Long,RenderBuffersBean>();
 
+        int startingX = 0;
+        int startingY = 0;
+        int startingZ = 0;
+
         VertexFactory factory = new VertexFactory();
 
+        //NOTE: the definitions below appear very similar.  However, they differ in the important aspect,
+        // that the exposed face list tells which are out-facing.  Attempting to call functions and add
+        // single voxels will be compounded by this.
         VoxelInfoBean voxelInfoBean = new VoxelInfoBean();
-        VoxelInfoKey key = new VoxelInfoKey(10,10,10);
-        voxelInfoBean.setKey(key);
-        voxelInfoBean.setExposedFace(VoxelInfoBean.BACK_FACE);
-        voxelInfoBean.setExposedFace(VoxelInfoBean.FRONT_FACE);
-        voxelInfoBean.setExposedFace(VoxelInfoBean.BOTTOM_FACE);
-        voxelInfoBean.setExposedFace(VoxelInfoBean.LEFT_FACE);
-        voxelInfoBean.setExposedFace( VoxelInfoBean.RIGHT_FACE );
+        VoxelInfoKey key = new VoxelInfoKey(startingX,startingY,startingZ);
+//        voxelInfoBean.setKey(key);
+//        voxelInfoBean.setExposedFace(VoxelInfoBean.BACK_FACE);
+//        voxelInfoBean.setExposedFace(VoxelInfoBean.FRONT_FACE);
+//        voxelInfoBean.setExposedFace(VoxelInfoBean.BOTTOM_FACE);
+//        voxelInfoBean.setExposedFace(VoxelInfoBean.LEFT_FACE);
+//        voxelInfoBean.setExposedFace( VoxelInfoBean.RIGHT_FACE );
+//
+//        factory.addEnclosure(voxelInfoBean);
+//
+//        voxelInfoBean = new VoxelInfoBean();
+//        key = new VoxelInfoKey(startingX,startingY+1,startingZ);
+//        voxelInfoBean.setExposedFace(VoxelInfoBean.BACK_FACE);
+//        voxelInfoBean.setExposedFace(VoxelInfoBean.FRONT_FACE);
+//        voxelInfoBean.setExposedFace(VoxelInfoBean.LEFT_FACE);
+//        voxelInfoBean.setExposedFace( VoxelInfoBean.RIGHT_FACE );
+//        voxelInfoBean.setExposedFace(VoxelInfoBean.TOP_FACE);
+//        voxelInfoBean.setKey(key);
+//
+//        factory.addEnclosure(voxelInfoBean);
+//
+//        voxelInfoBean = new VoxelInfoBean();
+//        key = new VoxelInfoKey(startingX+1,startingY+1,startingZ+1);
+//        voxelInfoBean.setExposedFace(VoxelInfoBean.BACK_FACE);
+//        voxelInfoBean.setExposedFace(VoxelInfoBean.FRONT_FACE);
+//        voxelInfoBean.setExposedFace(VoxelInfoBean.TOP_FACE);
+//        voxelInfoBean.setExposedFace(VoxelInfoBean.LEFT_FACE);
+//        voxelInfoBean.setExposedFace(VoxelInfoBean.BOTTOM_FACE);
+//        voxelInfoBean.setExposedFace( VoxelInfoBean.RIGHT_FACE );
+//        voxelInfoBean.setKey(key);
+//
+//        factory.addEnclosure(voxelInfoBean);
 
-        factory.addEnclosure(voxelInfoBean);
-
+        // Isolated
         voxelInfoBean = new VoxelInfoBean();
-        key = new VoxelInfoKey(10,11,10);
+        key = new VoxelInfoKey(startingX,startingY,startingZ+5);
         voxelInfoBean.setExposedFace(VoxelInfoBean.BACK_FACE);
         voxelInfoBean.setExposedFace(VoxelInfoBean.FRONT_FACE);
         voxelInfoBean.setExposedFace(VoxelInfoBean.TOP_FACE);
         voxelInfoBean.setExposedFace(VoxelInfoBean.LEFT_FACE);
+        voxelInfoBean.setExposedFace(VoxelInfoBean.BOTTOM_FACE);
         voxelInfoBean.setExposedFace( VoxelInfoBean.RIGHT_FACE );
         voxelInfoBean.setKey(key);
 
