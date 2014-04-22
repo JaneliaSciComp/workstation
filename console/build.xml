@@ -1,8 +1,14 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
 <project name="console" default="build-run-jar">
 
-    <!-- need to set this here to override standard location (parallel to src) -->
+    <!--
+         Need to set these properties here (before buildprocess import)
+         to override standard locations since console module was setup
+         with Maven style directory structure (different from all other modules).
+    -->
+    <property name="src.dir" value="${basedir}/src/main/java"/>
     <property name="test.src.dir" value="${basedir}/src/test/java"/>
+    <property name="test.resources.dir" value="${basedir}/src/test/resources"/>
 
     <!-- Import all the generic module targets -->
     <import file="../buildprocess/build-module.xml"/>
@@ -11,7 +17,7 @@
 
     	<property name="build.jar" value="${build.jars.dir}/workstation.jar"/>
     	<property name="build.jar.lib.dir" value="${build.jars.dir}/workstation_lib"/>
-    	
+
 		<path id="compile.classpath">
 	        <fileset dir="${model.module}/build/jars" includes="jacs-model.jar" />
 	        <fileset dir="${shared.module}/build/jars" includes="jacs-shared.jar" />
@@ -42,7 +48,9 @@
             <path refid="compile.classpath"/>
         </path>
 
-        <path id="test.run.classpath.additional">
+        <!-- additional classes needed to compile and/or run tests -->
+        <path id="test.classpath.additional">
+            <pathelement path="${model.module}/build/test/classes"/> <!-- shared test classes -->
         </path>
 
     </target>
@@ -51,14 +59,14 @@
 
         <delete dir="${build.classes.dir}" />
     	<mkdir dir="${build.classes.dir}"/>
-        <javac srcdir="${src.dir}/main/java" destdir="${build.classes.dir}"
+        <javac srcdir="${src.dir}" destdir="${build.classes.dir}"
                debug="${compile.debug}" optimize="${compile.optimize}" deprecation="${compile.deprecation}">
             <classpath refid="compile.classpath"/>
             <include name="**/*.java"/>
         </javac>
 
 		<copy todir="${build.classes.dir}">
-		    <fileset dir="${src.dir}/main/java" excludes="**/*.java"/>
+		    <fileset dir="${src.dir}" excludes="**/*.java"/>
 		</copy>
 			
 	</target>

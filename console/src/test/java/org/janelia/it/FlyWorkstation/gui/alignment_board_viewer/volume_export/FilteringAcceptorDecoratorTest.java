@@ -1,18 +1,24 @@
 package org.janelia.it.FlyWorkstation.gui.alignment_board_viewer.volume_export;
 
-import junit.framework.Assert;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.loader.ChannelMetaData;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.loader.MaskChanDataAcceptorI;
+import org.janelia.it.jacs.model.TestCategories;
 import org.junit.Before;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
+import static org.junit.Assert.*;
+
 /**
- * Created by fosterl on 1/29/14.
+ * Tests the {@link FilteringAcceptorDecorator} class.
+ *
+ * @author Les Foster
  */
+@Category(TestCategories.FastTests.class)
 public class FilteringAcceptorDecoratorTest {
 
     private MaskChanDataAcceptorI wrappedAcceptor;
@@ -68,7 +74,7 @@ public class FilteringAcceptorDecoratorTest {
         );
 
         for ( int i = 0; i < 3; i++ ) {
-            Assert.assertEquals( originalCoords[i], xyz[i] );
+            assertEquals( originalCoords[i], xyz[i] );
         }
 
         originalCoords = new long[] { 5, 10, 15 };
@@ -77,7 +83,7 @@ public class FilteringAcceptorDecoratorTest {
         );
 
         for ( int i = 0; i < 3; i++ ) {
-            Assert.assertEquals( originalCoords[i], xyz[i] );
+            assertEquals( originalCoords[i], xyz[i] );
         }
 
     }
@@ -94,14 +100,14 @@ public class FilteringAcceptorDecoratorTest {
                     nonZeroCount ++;
                 }
             }
-            Assert.assertEquals(
+            assertEquals(
                     "Exactly one non-zero axes should exist.  " +
                             coords[0] + ", " + coords[1] + ", " + coords[2]
                     , nonZeroCount, 1
             );
 
             for ( int i = 0; i < 3; i++ ) {
-                Assert.assertEquals(
+                assertEquals(
                         "Only coord-multiples of 20 should be returned. See coord " + i + " at " + coords[i],
                         coords[i] % 20, 0
                 );
@@ -145,8 +151,7 @@ public class FilteringAcceptorDecoratorTest {
         long yPart = nonXPart % MockAcceptor.Y_EXTENT;
         coords[ 1 ] = yPart;
 
-        long nonXYPart = (nonXPart - yPart) / MockAcceptor.Y_EXTENT;
-        long zPart = nonXYPart;
+        long zPart = (nonXPart - yPart) / MockAcceptor.Y_EXTENT;
         coords[ 2 ] = zPart;
         return coords;
     }
