@@ -5,6 +5,7 @@ import org.janelia.it.FlyWorkstation.gui.alignment_board_viewer.ChannelReadTest;
 import org.janelia.it.FlyWorkstation.gui.alignment_board_viewer.MaskReadTest;
 import org.janelia.it.FlyWorkstation.gui.alignment_board_viewer.channel_split.NBitChannelSplitStrategyTest;
 import org.janelia.it.FlyWorkstation.gui.alignment_board_viewer.gui_elements.GpuSamplerTest;
+import org.janelia.it.FlyWorkstation.gui.alignment_board_viewer.masking.ConfigurableColorMappingTest;
 import org.janelia.it.FlyWorkstation.gui.alignment_board_viewer.masking.MultiMaskTrackerTest;
 import org.janelia.it.FlyWorkstation.gui.alignment_board_viewer.renderable.RBComparatorTest;
 import org.janelia.it.FlyWorkstation.gui.alignment_board_viewer.renderable.RDComparatorTest;
@@ -28,7 +29,7 @@ import org.junit.runners.Suite;
 @Suite.SuiteClasses({
         CachedFileTest.class,
         ChannelReadTest.class,
-//        ConfigurableColorMappingTest.class,
+        ConfigurableColorMappingTest.class,
         DownSamplerTest.class,
         FilteringAcceptorDecoratorTest.class,
         GpuSamplerTest.class,
