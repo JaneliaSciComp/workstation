@@ -143,26 +143,12 @@ public class MeshDrawActor implements GLActor {
     public void display(GLAutoDrawable glDrawable) {
         GL2GL3 gl = glDrawable.getGL().getGL2GL3();
         reportError(gl, "Display of mesh-draw-actor upon entry");
-        gl.glEnable(GL2GL3.GL_DEPTH_TEST);
-        gl.glDepthFunc(GL2GL3.GL_ALWAYS);
-        gl.glEnable(GL2GL3.GL_CULL_FACE);
-        gl.glCullFace(GL2GL3.GL_BACK);
-        gl.glFrontFace(GL2GL3.GL_CCW);
-        reportError( gl, "Display of mesh-draw-actor cull-face" );
 
-// TESTING: NO MORE TRANSPARENCY.
-        // set blending to enable transparent voxels
-//        gl.glEnable(GL2GL3.GL_BLEND);
-//        gl.glBlendEquation(GL2GL3.GL_FUNC_ADD);
-//        // Weight source by GL_ONE because we are using premultiplied alpha.
-//        gl.glBlendFunc(GL2GL3.GL_ONE, GL2GL3.GL_ONE_MINUS_SRC_ALPHA);
-        reportError( gl, "Display of mesh-actor alpha" );
-//        }
-//        else if (renderMethod == RenderMethod.MAXIMUM_INTENSITY) {
-//            gl.glBlendEquation(GL2GL3.GL_MAX);
-//            gl.glBlendFunc(GL2GL3.GL_ONE, GL2GL3.GL_DST_ALPHA);
-//            reportError( gl, "Display of axes-actor maxintensity" );
-//        }
+        gl.glClear(GL2GL3.GL_COLOR_BUFFER_BIT | GL2GL3.GL_DEPTH_BUFFER_BIT);
+        gl.glEnable(GL2GL3.GL_DEPTH_TEST);
+        gl.glDepthFunc(GL2GL3.GL_LESS);
+
+        reportError( gl, "Display of mesh-draw-actor render characteristics" );
 
         // Draw the little triangles.
         tempBuffer.rewind();
@@ -204,7 +190,6 @@ public class MeshDrawActor implements GLActor {
 
         gl.glUseProgram( oldProgram );
 
-        gl.glDisable(GL2.GL_BLEND);
         reportError(gl, "mesh-draw-actor, end of display.");
 
     }

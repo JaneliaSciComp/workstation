@@ -70,7 +70,7 @@ public class VoxelInfoBean {
 
         rtnVal[ FRONT_FACE ][ 0 ] = x;
         rtnVal[ FRONT_FACE ][ 1 ] = y;
-        rtnVal[ FRONT_FACE ][ 2 ] = z - 1;
+        rtnVal[ FRONT_FACE ][ 2 ] = z + 1;
 
         rtnVal[ BOTTOM_FACE ][ 0 ] = x;
         rtnVal[ BOTTOM_FACE ][ 1 ] = y - 1;
@@ -78,7 +78,7 @@ public class VoxelInfoBean {
 
         rtnVal[ BACK_FACE ][ 0 ] = x;
         rtnVal[ BACK_FACE ][ 1 ] = y;
-        rtnVal[ BACK_FACE ][ 2 ] = z + 1;
+        rtnVal[ BACK_FACE ][ 2 ] = z - 1;
 
         rtnVal[ RIGHT_FACE ][ 0 ] = x + 1;
         rtnVal[ RIGHT_FACE ][ 1 ] = y;

@@ -31,56 +31,8 @@ public class FewVoxelVtxAttribMgr implements VertexAttributeManagerI {
         int startingZ = 0;
 
         VertexFactory factory = new VertexFactory();
-
-        //NOTE: the definitions below appear very similar.  However, they differ in the important aspect,
-        // that the exposed face list tells which are out-facing.  Attempting to call functions and add
-        // single voxels will be compounded by this.
-        VoxelInfoBean voxelInfoBean = new VoxelInfoBean();
-        VoxelInfoKey key = new VoxelInfoKey(startingX,startingY,startingZ);
-//        voxelInfoBean.setKey(key);
-//        voxelInfoBean.setExposedFace(VoxelInfoBean.BACK_FACE);
-//        voxelInfoBean.setExposedFace(VoxelInfoBean.FRONT_FACE);
-//        voxelInfoBean.setExposedFace(VoxelInfoBean.BOTTOM_FACE);
-//        voxelInfoBean.setExposedFace(VoxelInfoBean.LEFT_FACE);
-//        voxelInfoBean.setExposedFace( VoxelInfoBean.RIGHT_FACE );
-//
-//        factory.addEnclosure(voxelInfoBean);
-//
-//        voxelInfoBean = new VoxelInfoBean();
-//        key = new VoxelInfoKey(startingX,startingY+1,startingZ);
-//        voxelInfoBean.setExposedFace(VoxelInfoBean.BACK_FACE);
-//        voxelInfoBean.setExposedFace(VoxelInfoBean.FRONT_FACE);
-//        voxelInfoBean.setExposedFace(VoxelInfoBean.LEFT_FACE);
-//        voxelInfoBean.setExposedFace( VoxelInfoBean.RIGHT_FACE );
-//        voxelInfoBean.setExposedFace(VoxelInfoBean.TOP_FACE);
-//        voxelInfoBean.setKey(key);
-//
-//        factory.addEnclosure(voxelInfoBean);
-//
-//        voxelInfoBean = new VoxelInfoBean();
-//        key = new VoxelInfoKey(startingX+1,startingY+1,startingZ+1);
-//        voxelInfoBean.setExposedFace(VoxelInfoBean.BACK_FACE);
-//        voxelInfoBean.setExposedFace(VoxelInfoBean.FRONT_FACE);
-//        voxelInfoBean.setExposedFace(VoxelInfoBean.TOP_FACE);
-//        voxelInfoBean.setExposedFace(VoxelInfoBean.LEFT_FACE);
-//        voxelInfoBean.setExposedFace(VoxelInfoBean.BOTTOM_FACE);
-//        voxelInfoBean.setExposedFace( VoxelInfoBean.RIGHT_FACE );
-//        voxelInfoBean.setKey(key);
-//
-//        factory.addEnclosure(voxelInfoBean);
-
-        // Isolated
-        voxelInfoBean = new VoxelInfoBean();
-        key = new VoxelInfoKey(startingX,startingY,startingZ+5);
-        voxelInfoBean.setExposedFace(VoxelInfoBean.BACK_FACE);
-        voxelInfoBean.setExposedFace(VoxelInfoBean.FRONT_FACE);
-        voxelInfoBean.setExposedFace(VoxelInfoBean.TOP_FACE);
-        voxelInfoBean.setExposedFace(VoxelInfoBean.LEFT_FACE);
-        voxelInfoBean.setExposedFace(VoxelInfoBean.BOTTOM_FACE);
-        voxelInfoBean.setExposedFace( VoxelInfoBean.RIGHT_FACE );
-        voxelInfoBean.setKey(key);
-
-        factory.addEnclosure(voxelInfoBean);
+        establishStackedScenario(startingX, startingY, startingZ, factory);
+        //establishSmallScenario(startingX, startingY, startingZ, factory);
 
         // Now have a full complement of triangles and vertices.  For this renderable, can traverse the
         // vertices, making a "composite normal" based on the normals of all entangling triangles.
@@ -107,6 +59,151 @@ public class FewVoxelVtxAttribMgr implements VertexAttributeManagerI {
     public void close() {
         renderIdToBuffers.clear();
         vertexFactories.clear();
+    }
+
+    private void establishStackedScenario(int startingX, int startingY, int startingZ, VertexFactory factory) {
+        //NOTE: the definitions below appear very similar.  However, they differ in the important aspect,
+        // that the exposed face list tells which are out-facing.  Attempting to call functions and add
+        // single voxels will be compounded by this.
+
+        // Making a zig-zag pattern on level Z=0.
+        VoxelInfoBean voxelInfoBean;
+        VoxelInfoKey key;
+
+        voxelInfoBean = new VoxelInfoBean();
+        key = new VoxelInfoKey(startingX,startingY,startingZ);
+        voxelInfoBean.setKey(key);
+        voxelInfoBean.setExposedFace(VoxelInfoBean.BACK_FACE);
+        voxelInfoBean.setExposedFace(VoxelInfoBean.FRONT_FACE);
+        voxelInfoBean.setExposedFace(VoxelInfoBean.BOTTOM_FACE);
+        voxelInfoBean.setExposedFace(VoxelInfoBean.TOP_FACE);
+        voxelInfoBean.setExposedFace(VoxelInfoBean.LEFT_FACE);
+        voxelInfoBean.setExposedFace( VoxelInfoBean.RIGHT_FACE );
+        factory.addEnclosure(voxelInfoBean);
+
+        key = new VoxelInfoKey(startingX+1, startingY+1, startingZ);
+        voxelInfoBean = new VoxelInfoBean();
+        voxelInfoBean.setKey( key );
+        voxelInfoBean.setExposedFace(VoxelInfoBean.BACK_FACE);
+        voxelInfoBean.setExposedFace(VoxelInfoBean.FRONT_FACE);
+        voxelInfoBean.setExposedFace(VoxelInfoBean.BOTTOM_FACE);
+        voxelInfoBean.setExposedFace(VoxelInfoBean.TOP_FACE);
+        voxelInfoBean.setExposedFace(VoxelInfoBean.LEFT_FACE);
+        voxelInfoBean.setExposedFace( VoxelInfoBean.RIGHT_FACE );
+        factory.addEnclosure(voxelInfoBean);
+
+        key = new VoxelInfoKey(startingX+2, startingY+2, startingZ);
+        voxelInfoBean = new VoxelInfoBean();
+        voxelInfoBean.setKey( key );
+        voxelInfoBean.setExposedFace(VoxelInfoBean.BACK_FACE);
+        voxelInfoBean.setExposedFace(VoxelInfoBean.FRONT_FACE);
+        voxelInfoBean.setExposedFace(VoxelInfoBean.BOTTOM_FACE);
+        voxelInfoBean.setExposedFace(VoxelInfoBean.TOP_FACE);
+        voxelInfoBean.setExposedFace(VoxelInfoBean.LEFT_FACE);
+        voxelInfoBean.setExposedFace( VoxelInfoBean.RIGHT_FACE );
+        factory.addEnclosure(voxelInfoBean);
+
+        // Making zig-zag at next z-level.
+        voxelInfoBean = new VoxelInfoBean();
+        key = new VoxelInfoKey(startingX+1,startingY,startingZ+1);
+        voxelInfoBean.setKey(key);
+        voxelInfoBean.setExposedFace(VoxelInfoBean.BACK_FACE);
+        voxelInfoBean.setExposedFace(VoxelInfoBean.FRONT_FACE);
+        voxelInfoBean.setExposedFace(VoxelInfoBean.BOTTOM_FACE);
+        voxelInfoBean.setExposedFace(VoxelInfoBean.TOP_FACE);
+        voxelInfoBean.setExposedFace(VoxelInfoBean.LEFT_FACE);
+        voxelInfoBean.setExposedFace( VoxelInfoBean.RIGHT_FACE );
+        factory.addEnclosure(voxelInfoBean);
+
+        key = new VoxelInfoKey(startingX+2, startingY+1, startingZ+1);
+        voxelInfoBean = new VoxelInfoBean();
+        voxelInfoBean.setKey( key );
+        voxelInfoBean.setExposedFace(VoxelInfoBean.BACK_FACE);
+        voxelInfoBean.setExposedFace(VoxelInfoBean.FRONT_FACE);
+        voxelInfoBean.setExposedFace(VoxelInfoBean.BOTTOM_FACE);
+        voxelInfoBean.setExposedFace(VoxelInfoBean.TOP_FACE);
+        voxelInfoBean.setExposedFace(VoxelInfoBean.LEFT_FACE);
+        voxelInfoBean.setExposedFace( VoxelInfoBean.RIGHT_FACE );
+        factory.addEnclosure(voxelInfoBean);
+
+        key = new VoxelInfoKey(startingX+3, startingY+2, startingZ+1);
+        voxelInfoBean = new VoxelInfoBean();
+        voxelInfoBean.setKey( key );
+        voxelInfoBean.setExposedFace(VoxelInfoBean.BACK_FACE);
+        voxelInfoBean.setExposedFace(VoxelInfoBean.FRONT_FACE);
+        voxelInfoBean.setExposedFace(VoxelInfoBean.BOTTOM_FACE);
+        voxelInfoBean.setExposedFace(VoxelInfoBean.TOP_FACE);
+        voxelInfoBean.setExposedFace(VoxelInfoBean.LEFT_FACE);
+        voxelInfoBean.setExposedFace( VoxelInfoBean.RIGHT_FACE );
+        factory.addEnclosure(voxelInfoBean);
+
+        key = new VoxelInfoKey(startingX+4, startingY+3, startingZ+1);
+        voxelInfoBean = new VoxelInfoBean();
+        voxelInfoBean.setKey( key );
+        voxelInfoBean.setExposedFace(VoxelInfoBean.BACK_FACE);
+        voxelInfoBean.setExposedFace(VoxelInfoBean.FRONT_FACE);
+        voxelInfoBean.setExposedFace(VoxelInfoBean.BOTTOM_FACE);
+        voxelInfoBean.setExposedFace(VoxelInfoBean.TOP_FACE);
+        voxelInfoBean.setExposedFace(VoxelInfoBean.LEFT_FACE);
+        voxelInfoBean.setExposedFace( VoxelInfoBean.RIGHT_FACE );
+        factory.addEnclosure(voxelInfoBean);
+
+    }
+
+    /**
+     * Makes a stacked pair of boxes, joined on one line-corner to another box, and with another box in empty space
+     * unattached to those three.
+     */
+    private void establishSmallScenario(int startingX, int startingY, int startingZ, VertexFactory factory) {
+        //NOTE: the definitions below appear very similar.  However, they differ in the important aspect,
+        // that the exposed face list tells which are out-facing.  Attempting to call functions and add
+        // single voxels will be compounded by this.
+        VoxelInfoBean voxelInfoBean = new VoxelInfoBean();
+        VoxelInfoKey key = new VoxelInfoKey(startingX,startingY,startingZ);
+        voxelInfoBean.setKey(key);
+        voxelInfoBean.setExposedFace(VoxelInfoBean.BACK_FACE);
+        voxelInfoBean.setExposedFace(VoxelInfoBean.FRONT_FACE);
+        voxelInfoBean.setExposedFace(VoxelInfoBean.BOTTOM_FACE);
+        voxelInfoBean.setExposedFace(VoxelInfoBean.LEFT_FACE);
+        voxelInfoBean.setExposedFace( VoxelInfoBean.RIGHT_FACE );
+
+        factory.addEnclosure(voxelInfoBean);
+
+        voxelInfoBean = new VoxelInfoBean();
+        key = new VoxelInfoKey(startingX,startingY+1,startingZ);
+        voxelInfoBean.setExposedFace(VoxelInfoBean.BACK_FACE);
+        voxelInfoBean.setExposedFace(VoxelInfoBean.FRONT_FACE);
+        voxelInfoBean.setExposedFace(VoxelInfoBean.LEFT_FACE);
+        voxelInfoBean.setExposedFace( VoxelInfoBean.RIGHT_FACE );
+        voxelInfoBean.setExposedFace(VoxelInfoBean.TOP_FACE);
+        voxelInfoBean.setKey(key);
+
+        factory.addEnclosure(voxelInfoBean);
+
+        voxelInfoBean = new VoxelInfoBean();
+        key = new VoxelInfoKey(startingX+1,startingY+1,startingZ+1);
+        voxelInfoBean.setExposedFace(VoxelInfoBean.BACK_FACE);
+        voxelInfoBean.setExposedFace(VoxelInfoBean.FRONT_FACE);
+        voxelInfoBean.setExposedFace(VoxelInfoBean.TOP_FACE);
+        voxelInfoBean.setExposedFace(VoxelInfoBean.LEFT_FACE);
+        voxelInfoBean.setExposedFace(VoxelInfoBean.BOTTOM_FACE);
+        voxelInfoBean.setExposedFace( VoxelInfoBean.RIGHT_FACE );
+        voxelInfoBean.setKey(key);
+
+        factory.addEnclosure(voxelInfoBean);
+
+        // Isolated
+        voxelInfoBean = new VoxelInfoBean();
+        key = new VoxelInfoKey(startingX,startingY,startingZ+5);
+        voxelInfoBean.setExposedFace(VoxelInfoBean.BACK_FACE);
+        voxelInfoBean.setExposedFace(VoxelInfoBean.FRONT_FACE);
+        voxelInfoBean.setExposedFace(VoxelInfoBean.TOP_FACE);
+        voxelInfoBean.setExposedFace(VoxelInfoBean.LEFT_FACE);
+        voxelInfoBean.setExposedFace(VoxelInfoBean.BOTTOM_FACE);
+        voxelInfoBean.setExposedFace( VoxelInfoBean.RIGHT_FACE );
+        voxelInfoBean.setKey(key);
+
+        factory.addEnclosure(voxelInfoBean);
     }
 
 }

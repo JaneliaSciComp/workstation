@@ -21,8 +21,11 @@ import java.awt.event.ActionEvent;
  */
 public class TestMeshRender {
     private static Logger logger = LoggerFactory.getLogger(TestMeshRender.class);
+
+    private static long renderId;
+
     public static void main( final String[] args ) throws Exception {
-        // Prepare th eenvironment.  Now we can work like the workstation.
+        // Prepare the environment.  Now we can work like the workstation.
         WorkstationEnvironment we = new WorkstationEnvironment();
         we.invoke();
         // Fire a thread to build data for presentation, and show that.
@@ -49,16 +52,6 @@ public class TestMeshRender {
                     vms.dumpMatrices( mvm, pm );
                 }
 
-//                private void dump( String label, float[] values ) {
-//                    System.out.println("Dumping " + label);
-//                    for ( int i = 0; i < values.length; i+=4 ) {
-//                        for ( int j = 0; j < 4; j++ ) {
-//                            System.out.print( values[ i + j ]);
-//                            System.out.print( "," );
-//                        }
-//                        System.out.println();
-//                    }
-//                }
             };
             mipWidget.addMenuAction(dumpAction);
             mipWidget.getVolumeModel().setGammaAdjustment( (float) AlignmentBoardSettings.DEFAULT_GAMMA );
@@ -69,8 +62,12 @@ public class TestMeshRender {
         @Override
         protected void doStuff() throws Exception {
             logger.info("Doing atttribute creation in thread {}", Thread.currentThread().getName());
-            attribMgr = new FewVoxelVtxAttribMgr( MeshRenderTestFacilities.NEURON_RENDERABLE_ID );
-                    //new VtxAttribMgr( MeshRenderTestFacilities.getNeuronMaskChanRenderableDatas() );
+            renderId = MeshRenderTestFacilities.NEURON_RENDERABLE_ID;
+            //renderId = MeshRenderTestFacilities.COMPARTMENT_RENDERABLE_ID;
+            attribMgr =
+                    //new VtxAttribMgr( MeshRenderTestFacilities.getCompartmentMaskChanRenderableDatas() );
+                    new VtxAttribMgr( MeshRenderTestFacilities.getNeuronMaskChanRenderableDatas() );
+                    //new FewVoxelVtxAttribMgr( renderId );
             attribMgr.execute();
 
         }
@@ -83,7 +80,8 @@ public class TestMeshRender {
             configurator.setVolumeModel( mipWidget.getVolumeModel() );
 
             configurator.setVertexAttributeManager(attribMgr);
-            configurator.setRenderableId( MeshRenderTestFacilities.NEURON_RENDERABLE_ID);
+            //configurator.setRenderableId( MeshRenderTestFacilities.COMPARTMENT_RENDERABLE_ID);
+            configurator.setRenderableId( renderId );
             MeshDrawActor actor = new MeshDrawActor( configurator );
             mipWidget.clear();
             mipWidget.addActor( actor );
