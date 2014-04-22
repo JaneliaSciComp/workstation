@@ -1,16 +1,16 @@
 package org.janelia.it.FlyWorkstation.gui.alignment_board_viewer.volume_builder;
 
-import org.janelia.it.FlyWorkstation.gui.framework.viewer.alignment_board.AlignmentBoardSettings;
 import org.janelia.it.FlyWorkstation.gui.alignment_board_viewer.MultiTexVolumeBrick;
+import org.janelia.it.FlyWorkstation.gui.alignment_board_viewer.masking.MultiMaskTracker;
+import org.janelia.it.FlyWorkstation.gui.alignment_board_viewer.masking.TextureBuilderI;
+import org.janelia.it.FlyWorkstation.gui.alignment_board_viewer.renderable.RenderableBean;
+import org.janelia.it.FlyWorkstation.gui.framework.viewer.alignment_board.AlignmentBoardSettings;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.VolumeDataAcceptor;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.loader.ChannelMetaData;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.loader.VolumeLoaderI;
-import org.janelia.it.FlyWorkstation.gui.alignment_board_viewer.masking.*;
-import org.janelia.it.FlyWorkstation.gui.alignment_board_viewer.renderable.RenderableBean;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.masking.VolumeDataI;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.texture.TextureDataBean;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.texture.TextureDataI;
-import org.janelia.it.FlyWorkstation.gui.viewer3d.volume_builder.VolumeDataChunk;
 import org.janelia.it.FlyWorkstation.shared.annotations.NotThreadSafe;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -18,7 +18,6 @@ import org.slf4j.LoggerFactory;
 import javax.media.opengl.GL2;
 import java.nio.ByteOrder;
 import java.util.Collection;
-import java.util.TreeMap;
 
 /**
  * Created with IntelliJ IDEA.
@@ -68,37 +67,6 @@ public class RenderablesChannelsBuilder extends RenderablesVolumeBuilder impleme
         channelMetaData.redChannelInx = 0;
         channelMetaData.greenChannelInx = 1;
         channelMetaData.blueChannelInx = 2;
-    }
-
-    // DEBUG/TEST
-    public void test() {
-        int volumeDataZeroCount = 0;
-        java.util.TreeMap<Byte,Integer> frequencies = new TreeMap<Byte,Integer>();
-        for (VolumeDataChunk chunk: channelVolumeData.getVolumeChunks() ) {
-            for ( Byte aByte: chunk.getData() ) {
-                if ( aByte == (byte)0 ) {
-                    volumeDataZeroCount ++;
-                }
-                else {
-                    Integer count = frequencies.get( aByte );
-                    if ( count == null ) {
-                        frequencies.put( aByte, 1 );
-                    }
-                    else {
-                        frequencies.put( aByte, ++count );
-                    }
-                }
-            }
-        }
-
-        for ( Byte key: frequencies.keySet() ) {
-            logger.info("Encountered " + frequencies.get( key ) + " occurrences of " + key );
-        }
-
-        logger.info(
-                "Found zeros in " + volumeDataZeroCount + " / " + channelVolumeData.length() + ", or " +
-                ((double)volumeDataZeroCount/(double) channelVolumeData.length() * 100.0) + "%."
-        );
     }
 
     //----------------------------------------IMPLEMENT MaskChanDataAcceptorI
@@ -312,6 +280,12 @@ public class RenderablesChannelsBuilder extends RenderablesVolumeBuilder impleme
     }
 
     //-------------------------END:-----------IMPLEMENT MaskChanDataAcceptorI
+
+    // for testing
+    public VolumeDataI getChannelVolumeData() {
+        return channelVolumeData;
+    }
+
 
     //----------------------------------------HELPER METHODS
     /** Call this prior to any update-data operations. */

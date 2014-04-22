@@ -7,11 +7,14 @@ import java.net.MalformedURLException;
 
 import org.janelia.it.FlyWorkstation.gui.slice_viewer.SharedVolumeImage;
 import org.janelia.it.FlyWorkstation.gui.slice_viewer.Subvolume;
+import org.janelia.it.jacs.model.TestCategories;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
 public class TestExtractSubvolume {
 
     @Test
+    @Category(TestCategories.PrototypeTests.class) // mark this as prototype until octree folder can be properly setup
     public void testExtractUpperRightBackValue() {
         // I see a neurite going from one of these points to another in data set AAV 4/25/2013
         ZoomLevel zoomLevel = new ZoomLevel(0);

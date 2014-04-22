@@ -4,7 +4,9 @@ import org.janelia.it.FlyWorkstation.gui.WorkstationEnvironment;
 import org.janelia.it.FlyWorkstation.gui.framework.viewer.baseball_card.BaseballCard;
 import org.janelia.it.FlyWorkstation.gui.framework.viewer.search.SolrResultsMetaData;
 import org.janelia.it.FlyWorkstation.model.entity.RootedEntity;
+import org.janelia.it.jacs.model.TestCategories;
 import org.janelia.it.jacs.model.entity.*;
+import org.junit.experimental.categories.Category;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -23,6 +25,7 @@ import java.util.List;
  *
  * Short cut test of baseball card panel.  Application throws up a frame to look at.
  */
+@Category(TestCategories.InteractiveTests.class)
 public class BaseballCardPanelTest extends JFrame {
 
     public static final int HEIGHT = 800;
@@ -31,7 +34,7 @@ public class BaseballCardPanelTest extends JFrame {
     private BaseballCardPanel panel;
     private Logger logger = LoggerFactory.getLogger( BaseballCardPanelTest.class );
 
-    public static final void main( String[] args ) throws Exception {
+    public static void main( String[] args ) throws Exception {
         BaseballCardPanelTest test = new BaseballCardPanelTest();
         test.setVisible( true );
     }
@@ -57,7 +60,7 @@ public class BaseballCardPanelTest extends JFrame {
         panel = new BaseballCardPanel( true, WIDTH, 10 );
         this.add(panel, BorderLayout.CENTER);
         panel.setPreferredSize(this.getSize());
-        this.setDefaultCloseOperation( JFrame.EXIT_ON_CLOSE );
+        this.setDefaultCloseOperation( WindowConstants.EXIT_ON_CLOSE );
         new WorkstationEnvironment().invoke();
 
         JButton checkDump = new JButton( "List Selection" );
@@ -150,10 +153,6 @@ public class BaseballCardPanelTest extends JFrame {
                 null,
                 null,
                 null);
-    }
-
-    private EntityAttribute getEntityAttribute(String name) {
-        return new EntityAttribute(null, name, null, null, null);
     }
 
 }

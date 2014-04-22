@@ -1,20 +1,19 @@
 package org.janelia.it.FlyWorkstation.gui.alignment_board_viewer;
 
-import org.janelia.it.FlyWorkstation.gui.framework.viewer.alignment_board.AlignmentBoardSettings;
 import org.janelia.it.FlyWorkstation.gui.alignment_board_viewer.gui_elements.AlignmentBoardControlsDialog;
+import org.janelia.it.FlyWorkstation.gui.alignment_board_viewer.renderable.RenderableBean;
+import org.janelia.it.FlyWorkstation.gui.alignment_board_viewer.volume_builder.RenderablesMaskBuilder;
+import org.janelia.it.FlyWorkstation.gui.framework.viewer.alignment_board.AlignmentBoardSettings;
 import org.janelia.it.FlyWorkstation.gui.framework.viewer.alignment_board.MaskChanStreamSourceI;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.loader.MaskChanDataAcceptorI;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.loader.MaskChanMultiFileLoader;
-import org.janelia.it.FlyWorkstation.gui.alignment_board_viewer.volume_builder.RenderablesMaskBuilder;
-import org.janelia.it.FlyWorkstation.gui.alignment_board_viewer.renderable.RenderableBean;
-import org.junit.After;
-import org.junit.Before;
+import org.janelia.it.jacs.model.TestCategories;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.BufferedInputStream;
-import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.ByteBuffer;
@@ -22,6 +21,8 @@ import java.nio.ByteOrder;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+
+import static org.junit.Assert.*;
 
 /**
  * Created with IntelliJ IDEA.
@@ -33,9 +34,8 @@ import java.util.Collection;
  */
 public class MaskReadTest {
 
-    ///Users/fosterl/Documents/alignment_board/Mask_Chan
-    private static final String TEST_FILE_NAME = "compartment_34.mask";
-    private static final String LOCAL_FILE_PATH = "/Volumes/jacsData/filestore/MaskResources/Compartment/maskChannelFormatWithTemplate/compartment_34.mask";
+    // copied to test/resources from /nobackup/jacs/jacsData/filestore/MaskResources/Compartment/maskChannelFormatWithTemplate/compartment_34.mask
+    private static final String TEST_FILE_NAME = "/MaskResources/Compartment/maskChannelFormatWithTemplate/compartment_34.mask";
 
     private Logger logger = LoggerFactory.getLogger( MaskReadTest.class );
 
@@ -47,15 +47,8 @@ public class MaskReadTest {
         longBuffer.order(ByteOrder.LITTLE_ENDIAN);
     }
 
-    @Before
-    public void setUp() throws  Exception {
-    }
-
-    @After
-    public void tearDown() throws Exception {
-    }
-
     @Test
+    @Category(TestCategories.FastTests.class)
     public void testReadChannelData() throws Exception {
         logger.info( "Reading channel data." );
         AlignmentBoardSettings settings = new AlignmentBoardSettings();
@@ -75,9 +68,7 @@ public class MaskReadTest {
             @Override
             public InputStream getMaskInputStream() throws IOException {
                 InputStream testStream = this.getClass().getResourceAsStream( TEST_FILE_NAME );
-                if ( testStream == null ) {
-                    testStream = new FileInputStream( LOCAL_FILE_PATH );
-                }
+                assertNotNull("cannot find " + TEST_FILE_NAME + " for input stream", testStream);
                 return new BufferedInputStream( testStream );
             }
 
@@ -87,8 +78,8 @@ public class MaskReadTest {
             }
         };
 
-        loader.read( bean, streamSource );
-        logger.info( "Completed read-channel data." );
+        loader.read(bean, streamSource);
+        assertEquals("invalid voxel count loaded", new Long(15156), bean.getVoxelCount());
     }
 
 }

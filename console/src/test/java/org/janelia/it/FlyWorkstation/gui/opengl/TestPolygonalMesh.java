@@ -1,17 +1,20 @@
 package org.janelia.it.FlyWorkstation.gui.opengl;
 
-import static org.junit.Assert.*;
+import org.janelia.it.jacs.model.TestCategories;
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
 import java.io.IOException;
 import java.io.InputStream;
 
-import org.junit.Test;
+import static org.junit.Assert.*;
 
+@Category(TestCategories.FastTests.class)
 public class TestPolygonalMesh {
 
     @Test
-    public void testLoadGourdObjFile() {
-        String objName = "gourd.obj";
+    public void testLoadGourdObjFile() throws Exception {
+        String objName = "/org/janelia/it/FlyWorkstation/gui/opengl/demo/gourd.obj";
         InputStream gourdStream = this.getClass().getResourceAsStream(objName);
         if (gourdStream == null)
             fail("Failed to open OBJ file resource "+objName);
@@ -21,7 +24,7 @@ public class TestPolygonalMesh {
         try {
             testMesh.loadFromObjFile(gourdStream);
         } catch (IOException e) {
-            fail("Error reading obj file "+e.getStackTrace());
+            throw new RuntimeException("failed to read " + objName, e);
         }
         // Total number of vertices
         assertEquals(testMesh.getVertexes().size(), 326);

@@ -1,8 +1,11 @@
 package org.janelia.it.FlyWorkstation.gui.alignment_board_viewer.masking;
 
-import org.junit.Assert;
+import org.janelia.it.jacs.model.TestCategories;
 import org.junit.Before;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
+
+import static org.junit.Assert.*;
 
 /**
  * Created with IntelliJ IDEA.
@@ -16,6 +19,7 @@ import org.junit.Test;
  * Rationale: this is a very important, and easily-broken facility which is directly involved in image quality.  Hence
  * it is being shaken down thoroughly, here.
  */
+@Category(TestCategories.FastTests.class)
 public class MultiMaskTrackerTest {
     private MultiMaskTracker tracker;
 
@@ -92,32 +96,26 @@ public class MultiMaskTrackerTest {
         tracker.getMask(1, 2);
         tracker.getMask(1, 2);
         Integer maskValue = tracker.getMask(1, 2);
-        Assert.assertTrue("Mask value " + maskValue + " Not equal to expected 55", maskValue == 55);
+        assertEquals("invalid mask value for (1,2)", new Integer(55), maskValue);
         tracker.getMask(3, 55);
         tracker.getMask(4, 55);
         tracker.getMask(4, 55);
         maskValue = tracker.getMask(4, 55);
-        Assert.assertTrue( "Mask value " + maskValue + " Not equal to expected 57", maskValue == 57 );
+        assertEquals("invalid mask value for (4,55)", new Integer(57), maskValue);
 
         maskValue = tracker.getMask(2, 6);
-        Assert.assertTrue( "Mask value " + maskValue + " Not equal to expected 58", maskValue == 58 );
+        assertEquals("invalid mask value for (2,6)", new Integer(58), maskValue);
         tracker.getMask(3, 57);
         tracker.getMask(5, 59);
         // This should make a highest-priority mask.
         for ( int i = 0; i < 50; i++ ) {
             maskValue = tracker.getMask(4, 7);
         }
-        Assert.assertTrue( "Mask value " + maskValue + " Not equal to expected 61.", maskValue == 61 );
+        assertEquals("invalid mask value for (4,7)", new Integer(61), maskValue);
         int maskExpansionCount = tracker.getMaskExpansionCount( maskValue );
-        Assert.assertTrue(
-                "Mask Value 61 does not have expected count of 2.  Instead it has " + maskExpansionCount,
-                maskExpansionCount == 2
-        );
+        assertEquals("invalid mask expansion count for mask value " + maskValue, 2, maskExpansionCount);
         MultiMaskTracker.MultiMaskBean mmBean = tracker.getMultiMaskBean( maskValue );
-        Assert.assertTrue(
-                "Mask value " + maskValue + " should have voxel count of 50.  Instead it has " + mmBean.getVoxelCount(),
-                mmBean.getVoxelCount() == 50
-        );
+        assertEquals("invalid voxel count for mask value " + maskValue, 50, mmBean.getVoxelCount());
 
         tracker.getMask(6, 60);
         tracker.getMask(7, 62);
@@ -128,22 +126,17 @@ public class MultiMaskTrackerTest {
         tracker.getMask(11,12); // Getting 66 as of last debug step-through.
         tracker.getMask(13,67);
         tracker.getMask(14,68);
-        maskValue = tracker.getMask(15,68); // Should have exactly 5.
-        mmBean = tracker.getMultiMaskBean(maskValue);
-        Assert.assertTrue(
-                "Mask value " + maskValue + " should have a submask count of 2.  Instead it has " + maskExpansionCount,
-                maskExpansionCount == 2
-        );
+        maskValue = tracker.getMask(15, 68); // Should have exactly 5.
+        maskExpansionCount = tracker.getMaskExpansionCount(maskValue);
+        assertEquals("invalid mask expansion count for mask value " + maskValue, 2, maskExpansionCount);
 
         tracker.getMask(1,17);
         tracker.getMask(2,71);
         tracker.getMask(3,72);
         tracker.getMask(4,73);
-        maskValue = tracker.getMask(5,74);  // Should have exactly 6.
-        Assert.assertTrue(
-                "Mask value " + maskValue + " should have a submask count of 6.",
-                tracker.getMaskExpansionCount( maskValue ) == 6
-        );
+        maskValue = tracker.getMask(5, 74);  // Should have exactly 6.
+        maskExpansionCount = tracker.getMaskExpansionCount(maskValue);
+        assertEquals("invalid mask expansion count for mask value " + maskValue, 6, maskExpansionCount);
 
         return tracker;
     }
@@ -158,18 +151,18 @@ public class MultiMaskTrackerTest {
         StringBuilder outputBuilder = new StringBuilder();
         for ( Integer multiMask: tracker.getMultiMaskBeans().keySet() ) {
             MultiMaskTracker.MultiMaskBean bean = tracker.getMultiMaskBeans().get( multiMask );
-            outputBuilder.append("Looking at multimask " + multiMask).append(".\n");
+            outputBuilder.append("Looking at multimask ").append(multiMask).append(".\n");
             for ( Integer subMask: bean.getAltMasks() ) {
                 outputBuilder.append(subMask).append(".\n");
             }
-            outputBuilder.append("Mask expansion is " + tracker.getMaskExpansionCount(multiMask)).append(".\n");
-            outputBuilder.append("Voxel count is " + tracker.getMultiMaskBeans().get(multiMask).getVoxelCount()).append(".\n");
+            outputBuilder.append("Mask expansion is ").append(tracker.getMaskExpansionCount(multiMask)).append(".\n");
+            outputBuilder.append("Voxel count is ").append(tracker.getMultiMaskBeans().get(multiMask).getVoxelCount()).append(".\n");
         }
 
-        Assert.assertTrue(
+        assertTrue(
                 "Expected output of /" + EXPECTED_STRING_OUTPUT + "/." +
-                " Instead received /" + outputBuilder.toString() + "/.",
-                outputBuilder.toString().equals( EXPECTED_STRING_OUTPUT )
+                        " Instead received /" + outputBuilder.toString() + "/.",
+                outputBuilder.toString().equals(EXPECTED_STRING_OUTPUT)
         );
     }
 
