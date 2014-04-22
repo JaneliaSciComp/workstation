@@ -1,11 +1,12 @@
 package org.janelia.it.FlyWorkstation.gui.alignment_board_viewer.masking;
 
-import junit.framework.Assert;
 import org.janelia.it.FlyWorkstation.gui.alignment_board_viewer.renderable.RenderableBean;
+import org.janelia.it.jacs.model.TestCategories;
 import org.janelia.it.jacs.model.entity.Entity;
 import org.janelia.it.jacs.model.entity.EntityConstants;
 
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -13,12 +14,15 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Map;
 
+import static org.junit.Assert.*;
+
 /**
  * This checks that the values seeded in the mapping give expected results.  It checks that values in future runs
  * of this test match those yielded at time of writing.
  *
  * Created by fosterl on 1/31/14.
  */
+@Category(TestCategories.FastTests.class)
 public class ConfigurableColorMappingTest {
 
     public static final int TRANSLATED_NUM_FOR_COLOR_WHEEL_A = 2;
@@ -140,7 +144,7 @@ public class ConfigurableColorMappingTest {
 
     private void checkMatch(byte[] rgbColorWheelA, byte[] colorWheelEntryA) {
         for ( int i = 0; i < 3; i++ ) {
-            Assert.assertEquals("Color expected to match.", rgbColorWheelA[i], colorWheelEntryA[i]);
+            assertEquals("color mismatch for index " + i, rgbColorWheelA[i], colorWheelEntryA[i]);
         }
     }
 
