@@ -1,5 +1,6 @@
 package org.janelia.it.FlyWorkstation.gui.alignment_board_viewer.masking;
 
+import junit.framework.Assert;
 import org.janelia.it.FlyWorkstation.gui.alignment_board_viewer.renderable.RenderableBean;
 import org.janelia.it.jacs.model.TestCategories;
 import org.janelia.it.jacs.model.entity.Entity;
@@ -110,10 +111,13 @@ public class ConfigurableColorMappingTest {
         Map<Integer,byte[]> mapping = colorMapping.getMapping();
 
         // Check auto-generated stuff.
-        byte[] rgbColorWheelA = mapping.get( TRANSLATED_NUM_FOR_COLOR_WHEEL_A );
-        byte[] colorWheelEntryA = ConfigurableColorMapping.COLOR_WHEEL[ TRANSLATED_NUM_FOR_COLOR_WHEEL_A ];
-        checkMatch(rgbColorWheelA, colorWheelEntryA);
 
+        // Here, the all-null / fall-through causes the color for this entity to be set to compartment rendering.
+        // If RGB was null prior to getting the mapping, and there is an entity set in the bean, we'll see compartment rendering.
+        byte[] rgbColorWheelA = mapping.get( TRANSLATED_NUM_FOR_COLOR_WHEEL_A );
+        assertEquals("Not compartment rendering", rgbColorWheelA[3], RenderMappingI.COMPARTMENT_RENDERING);
+
+        // No entity in this case: getting a translated color.
         byte[] rgbColorWheelB = mapping.get( TRANSLATED_NUM_FOR_COLOR_WHEEL_B );
         byte[] colorWheelEntryB = ConfigurableColorMapping.COLOR_WHEEL[ TRANSLATED_NUM_FOR_COLOR_WHEEL_B ];
         checkMatch(rgbColorWheelB, colorWheelEntryB);
