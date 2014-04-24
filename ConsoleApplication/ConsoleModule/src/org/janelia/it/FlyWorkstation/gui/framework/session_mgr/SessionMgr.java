@@ -559,10 +559,6 @@ public class SessionMgr {
                 	UIManager.setLookAndFeel(new de.javasoft.plaf.synthetica.SyntheticaBlackEyeLookAndFeel() {
     					@Override
     					protected void loadCustomXML() throws ParseException {
-                                            String cp = System.getProperty("java.class.path"); 
-                                            String pwd = System.getProperty("user.dir");
-                                            Object streamO = 
-                                                    this.getClass().getResourceAsStream("/SyntheticaBlackEyeLookAndFeel.xml");
                                             loadXMLConfig("/SyntheticaBlackEyeLookAndFeel.xml");
     					}
                 	});	
