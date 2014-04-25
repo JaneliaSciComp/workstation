@@ -4,9 +4,11 @@ import org.janelia.it.FlyWorkstation.gui.alignment_board_viewer.masking.MultiMas
 import org.janelia.it.FlyWorkstation.gui.alignment_board_viewer.masking.MultiMaskTrackerTest;
 import org.janelia.it.FlyWorkstation.gui.alignment_board_viewer.renderable.RenderableBean;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.loader.ChannelMetaData;
+import org.janelia.it.jacs.model.TestCategories;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
 import java.util.HashSet;
 import java.util.Random;
@@ -21,6 +23,7 @@ import java.util.Set;
  * This tests if the N-Bit splitting strategy for breaking up four bytes of channel data (intensity data) into smaller,
  * resolution-compressed, chunks of N bits.  'N' is given as parameter, and at time of writing is always 4.
  */
+@Category(TestCategories.FastTests.class)
 public class NBitChannelSplitStrategyTest {
 
     private MultiMaskTracker tracker;
@@ -48,7 +51,7 @@ public class NBitChannelSplitStrategyTest {
         NBitChannelSplitStrategy channelSplitter = new NBitChannelSplitStrategy(tracker, 4);
         channelMetaData.renderableBean = renderables.iterator().next();
         // Channels-data is little endian.  Plugging in values with that assumption.
-        byte[] channelsData = null;
+        byte[] channelsData;
 
         channelsData = new byte[ channelMetaData.channelCount * channelMetaData.byteCount ];
         channelsData[ 0 ] = (byte)115;
@@ -96,7 +99,7 @@ public class NBitChannelSplitStrategyTest {
         NBitChannelSplitStrategy channelSplitter = new NBitChannelSplitStrategy(tracker, 4);
         channelMetaData.renderableBean = renderables.iterator().next();
         // Channels-data is little endian.  Plugging in values with that assumption.
-        byte[] channelsData = null;
+        byte[] channelsData;
 
         channelsData = new byte[ channelMetaData.channelCount * channelMetaData.byteCount ];
         channelsData[ 0 ] = (byte)115;
@@ -140,7 +143,7 @@ public class NBitChannelSplitStrategyTest {
         channelMetaData.renderableBean = renderables.iterator().next();
 
         // Next, mock out the test scenario.
-        byte[] channelsData = null;
+        byte[] channelsData;
 
         /*  This dump is output from the MultiMaskTrackerTest.  Using it to drive _this_ test.
         Looking at multimask 69
@@ -159,7 +162,7 @@ public class NBitChannelSplitStrategyTest {
         // NOTE: we expect only one byte in an array of otherwise-zeros, to be non-zero.  This byte
         // will have a four-bit value that will occupy either the high or low order nibble, but not both.
         int multiMaskId = 69;
-        byte[] finalOrableData = null;
+        byte[] finalOrableData;
         finalOrableData = addSplitData(channelMetaData, channelSplitter, channelsData, 12, multiMaskId, 0, 15 );
         Assert.assertArrayEquals( new byte[] {15,0,0,0}, finalOrableData );
         channelsData[ 1 ] = 2;
@@ -232,12 +235,12 @@ public class NBitChannelSplitStrategyTest {
 
     @SuppressWarnings("unused")
     private void dumpResult( byte[] result ) {
-        for ( int i = 0; i < result.length; i++ ) {
-            System.out.print( String.format( "%02x", result[ i ] ) );
+        for (byte aResult : result) {
+            System.out.print(String.format("%02x", aResult));
         }
         System.out.println();
-        for ( int i = 0; i < result.length; i++ ) {
-            System.out.print( String.format( "%d ", result[ i ] ) );
+        for (byte aResult : result) {
+            System.out.print(String.format("%d ", aResult));
         }
         System.out.println();
 

@@ -1,9 +1,12 @@
 package org.janelia.it.FlyWorkstation.gui.alignment_board_viewer.volume_builder;
 
-import junit.framework.Assert;
+import org.janelia.it.jacs.model.TestCategories;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
 import java.util.HashMap;
+
+import static org.junit.Assert.*;
 
 /**
  * Created with IntelliJ IDEA.
@@ -18,6 +21,7 @@ import java.util.HashMap;
  * are correct for the new design.  Then, for each test, log-scrape that output and insert it into the appropriate
  * constant definition.  Afterwards, when the test is re-run, the reports should again match.
  */
+@Category(TestCategories.FastTests.class)
 public class DownSamplerTest {
 
     private static final String REPORT_2_B =
@@ -332,12 +336,13 @@ public class DownSamplerTest {
         doDownSample( "1-byte-per-voxel/circle", CIRCLE_VOLUME, 16, 8, 8, 2.0, 1 );
     }
 
-    public void doDownSample(
+    @SuppressWarnings("UnnecessaryLocalVariable")
+    private void doDownSample(
             String testName, byte[] volume, int sx, int sy, int sz, double scaleAll, int voxelBytes )
             throws Exception {
 
         StringBuilder builder = new StringBuilder();
-        builder.append("TEST: " + testName ).append('\n');
+        builder.append("TEST: ").append(testName).append('\n');
         double xScale = scaleAll;
         double yScale = scaleAll;
         double zScale = scaleAll;
@@ -345,19 +350,19 @@ public class DownSamplerTest {
         DownSampler downSampler = new DownSampler( sx, sy, sz );
         DownSampler.DownsampledTextureData data =
                 downSampler.getDownSampledVolume( new VolumeDataBean( volume, sx, sy, sz ), voxelBytes, xScale, yScale, zScale );
-        Assert.assertNotSame( "Zero-length volume.", data.getVolume().length(), 0 );
+        assertNotSame("Zero-length volume.", data.getVolume().length(), 0);
         for (int i = 0; i < data.getVolume().length(); i++ ) {
             if ( i % (data.getSx() * voxelBytes) == 0 ) {
                 builder.append("\n");
             }
-            builder.append(data.getVolume().getValueAt(i) + ",");
+            builder.append(data.getVolume().getValueAt(i)).append(",");
         }
         builder.append('\n');
-        builder.append( "Length total=" + data.getVolume().length() ).append('\n');
-        builder.append( "Dimensions are " + data.getSx() + " x " + data.getSy() + " x " + data.getSz() ).append('\n');
+        builder.append("Length total=").append(data.getVolume().length() ).append('\n');
+        builder.append("Dimensions are ").append(data.getSx()).append(" x ").append(data.getSy()).append(" x ").append(data.getSz()).append('\n');
 
-        Assert.assertEquals(
-                "Report Not as Expected: \n" + builder.toString(), testNameVsOutput.get( testName ), builder.toString()
+        assertEquals(
+                "Report Not as Expected: \n" + builder.toString(), testNameVsOutput.get(testName), builder.toString()
         );
     }
 

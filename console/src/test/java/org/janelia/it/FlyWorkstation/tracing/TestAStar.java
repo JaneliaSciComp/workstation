@@ -9,11 +9,14 @@ import org.janelia.it.FlyWorkstation.gui.slice_viewer.SharedVolumeImage;
 import org.janelia.it.FlyWorkstation.gui.slice_viewer.Subvolume;
 import org.janelia.it.FlyWorkstation.octree.ZoomLevel;
 import org.janelia.it.FlyWorkstation.octree.ZoomedVoxelIndex;
+import org.janelia.it.jacs.model.TestCategories;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
 public class TestAStar {
 
     @Test
+    @Category(TestCategories.PrototypeTests.class) // mark this as prototype until octree folder can be properly setup
     public void testTracePath() {
         // Use the same example chunk from TestExtractSubvolume.java
         ZoomLevel zoomLevel = new ZoomLevel(0);

@@ -5,7 +5,9 @@ import static org.junit.Assert.*;
 
 import org.janelia.it.FlyWorkstation.geom.CoordinateAxis;
 import org.janelia.it.FlyWorkstation.geom.Vec3;
+import org.janelia.it.jacs.model.TestCategories;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
 public class TestTileFormat {
 
@@ -49,7 +51,8 @@ public class TestTileFormat {
 	}
 	
 	@Test
-	public void testTileIndexForXyz() {
+    @Category(TestCategories.FastTests.class)
+    public void testTileIndexForXyz() {
 		TileFormat tileFormat = createAavFormat();
 		
 		// Test simple upper left front corner tile
@@ -81,6 +84,7 @@ public class TestTileFormat {
 	}
 
 	@Test
+    @Category(TestCategories.FastTests.class)
 	public void testCornersForTileIndex() {
 		TileFormat tileFormat = createAavFormat();
 
@@ -112,11 +116,6 @@ public class TestTileFormat {
 		assertEquals(0.5, corners[1].getZ(), epsilon);
 		assertEquals(0.5, corners[2].getZ(), epsilon);
 		assertEquals(0.5, corners[3].getZ(), epsilon);
-	}
-
-	@Test
-	public void testZoomLevelForCameraZoom() {
-		// fail("Not yet implemented");
 	}
 
 }
