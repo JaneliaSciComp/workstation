@@ -17,10 +17,6 @@ void main(void)
 
     vec4 lightSource = normalize( vec4( 0, 0.0, 100.0, 0 ) - normVar );  // Behind "zNear".
     float diffuseCoefficient = max( 0.0, dot( normVar,lightSource ) );
-    //if ( diffuseCoefficient < 0.0 )
-    //{
-    //    diffuseCoefficient = abs( diffuseCoefficient );
-    //}
     diffuseLightMag = vec4(1.0, 1.0, 1.0, 1.0) * 1.3 * diffuseCoefficient;
     gl_Position = projection * modelView * vertexAttribute;
 }
