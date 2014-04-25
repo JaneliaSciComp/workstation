@@ -1,8 +1,10 @@
 package org.janelia.it.FlyWorkstation.gui.alignment_board_viewer.renderable;
 
+import org.janelia.it.jacs.model.TestCategories;
 import org.janelia.it.jacs.model.entity.EntityConstants;
 import org.junit.Test;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.renderable.RenderableBean;
+import org.junit.experimental.categories.Category;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -12,9 +14,10 @@ import java.util.List;
  * Check that the sort follows its required collating sequence.
  * Created by fosterl on 1/29/14.
  */
+@Category(TestCategories.FastTests.class)
 public class RDComparatorTest {
-    private static final String CHANNEL_PATH = "/nobackup/jacs/jacsData/filestore/MaskResources/Compartment/maskChannelFormatWithTemplate/compartment_57.chan";
-    private static final String MASK_PATH = "/nobackup/jacs/jacsData/filestore/MaskResources/Compartment/maskChannelFormatWithTemplate/compartment_57.mask";
+    private static final String CHANNEL_PATH = "/MaskResources/Compartment/maskChannelFormatWithTemplate/compartment_57.chan";
+    private static final String MASK_PATH = "/MaskResources/Compartment/maskChannelFormatWithTemplate/compartment_57.mask";
 
     @Test
     public void testCompare() throws Exception {

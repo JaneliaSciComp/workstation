@@ -10,6 +10,8 @@ import org.janelia.it.FlyWorkstation.gui.viewer3d.masking.RenderMappingI;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.Mip3d;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.VolumeBrickFactory;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.texture.TextureDataI;
+import org.janelia.it.jacs.model.TestCategories;
+import org.junit.experimental.categories.Category;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -23,6 +25,7 @@ import java.awt.*;
  *
  * @author fosterl
  */
+@Category(TestCategories.InteractiveTests.class)
 public class TestMaskChan3DViz {
 
     private static final Dimension FRAME_SIZE = new Dimension(100, 10);

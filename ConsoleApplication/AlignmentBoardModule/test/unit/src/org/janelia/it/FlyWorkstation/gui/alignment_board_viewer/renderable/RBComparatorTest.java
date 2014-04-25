@@ -1,19 +1,25 @@
 package org.janelia.it.FlyWorkstation.gui.alignment_board_viewer.renderable;
 
+import org.janelia.it.jacs.model.TestCategories;
 import org.janelia.it.jacs.model.entity.EntityConstants;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.renderable.RenderableBean;
 
-import org.junit.Assert;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.Collections;
 import java.util.List;
 
+import static org.junit.Assert.*;
+
 /**
- * Created by fosterl on 1/29/14.
+ * Tests the {@link RBComparator} class.
+ *
+ * @author Les Foster
  */
+@Category(TestCategories.FastTests.class)
 public class RBComparatorTest {
     private static enum Phase {
         NF(0), REFERENCE(1), COMPARTMENT(2), SAMPLE(3), COMPARTMENT_COLLECTION(4);
@@ -47,15 +53,15 @@ public class RBComparatorTest {
         Phase previousPhase = Phase.NF;
         long minVoxelCount = Long.MAX_VALUE;
         for ( RenderableBean bean: beanList ) {
-            Assert.assertFalse(
+            assertFalse(
                     "Should not encounter Neuron Fragments at this phase.",
                     phase.getRank() > Phase.NF.getRank() && bean.getType().equals(EntityConstants.TYPE_NEURON_FRAGMENT)
             );
-            Assert.assertFalse(
+            assertFalse(
                     "Should not encounter Neuron Fragments at this phase.",
                     phase.getRank() > Phase.REFERENCE.getRank() && bean.getType().equals("Reference")
             );
-            Assert.assertFalse(
+            assertFalse(
                     "Should not encounter Compartments at this phase.",
                     phase.getRank() > Phase.COMPARTMENT.getRank() && bean.getType().equals(EntityConstants.TYPE_COMPARTMENT)
             );
@@ -70,7 +76,7 @@ public class RBComparatorTest {
                 phase = Phase.NF;
             }
             else if ( bean.getType().equals( EntityConstants.TYPE_COMPARTMENT ) ) {
-                phase = phase.COMPARTMENT;
+                phase = Phase.COMPARTMENT;
             }
             else if ( bean.getType().equals( EntityConstants.TYPE_COMPARTMENT_SET ) ) {
                 phase = Phase.COMPARTMENT_COLLECTION;
@@ -82,7 +88,7 @@ public class RBComparatorTest {
             }
 
             logger.debug("Bean " + bean.getRenderableEntity().getName() + " " + bean.getType() + " size=" + bean.getVoxelCount() + ", type=" + bean.getType());
-            Assert.assertTrue(
+            assertTrue(
                     "Rule of sort by descending voxel count violated. " + bean.getVoxelCount() + " v " + minVoxelCount,
                     bean.getVoxelCount() <= minVoxelCount
             );

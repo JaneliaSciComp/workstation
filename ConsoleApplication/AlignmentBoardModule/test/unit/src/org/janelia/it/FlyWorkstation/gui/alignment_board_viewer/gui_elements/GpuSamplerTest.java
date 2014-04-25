@@ -1,7 +1,9 @@
 package org.janelia.it.FlyWorkstation.gui.alignment_board_viewer.gui_elements;
 
+import org.janelia.it.jacs.model.TestCategories;
 import org.junit.Assert;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -16,6 +18,7 @@ import java.util.concurrent.Future;
  *
  * Test how well the sampler detects GPUs.
  */
+@Category(TestCategories.FastTests.class)
 public class GpuSamplerTest {
     @Test
     public void isItStandard() {
