@@ -27,6 +27,7 @@ public class AlignmentBoardControlsPanel extends JPanel {
 
     private static final Dimension SIZE = new Dimension( WIDTH, HEIGHT);
     private static final Dimension DN_SAMPLE_DROPDOWN_SIZE = new Dimension(120, 50);
+    private static final Dimension DN_SAMPLE_MAX_DROPDOWN_SIZE = new Dimension(240, 50);
     private AlignmentBoardControls controls;
 
     private final Logger logger = LoggerFactory.getLogger( AlignmentBoardControlsPanel.class );
@@ -144,11 +145,11 @@ public class AlignmentBoardControlsPanel extends JPanel {
                 0, nextRow, 2, rowHeight, 1.0, 0.0, GridBagConstraints.NORTHWEST, GridBagConstraints.VERTICAL, insets, 0, 0
         );
         controls.getDownSampleRateDropdown().setMinimumSize(DN_SAMPLE_DROPDOWN_SIZE);
-        controls.getDownSampleRateDropdown().setMaximumSize(DN_SAMPLE_DROPDOWN_SIZE);
-        controls.getDownSampleRateDropdown().setPreferredSize(DN_SAMPLE_DROPDOWN_SIZE);
+        controls.getDownSampleRateDropdown().setMaximumSize(DN_SAMPLE_MAX_DROPDOWN_SIZE);
+        controls.getDownSampleRateDropdown().setPreferredSize(DN_SAMPLE_MAX_DROPDOWN_SIZE);
         // This sits beside the downsample dropdown.
         GridBagConstraints downSampleGuessConstraints = new GridBagConstraints(
-                1, nextRow, 2, rowHeight, 1.0, 0.0, GridBagConstraints.NORTHWEST, GridBagConstraints.VERTICAL, insets, 0, 0
+                2, nextRow, 2, rowHeight, 1.0, 0.0, GridBagConstraints.NORTHWEST, GridBagConstraints.VERTICAL, insets, 0, 0
         );
 
         nextRow += rowHeight;

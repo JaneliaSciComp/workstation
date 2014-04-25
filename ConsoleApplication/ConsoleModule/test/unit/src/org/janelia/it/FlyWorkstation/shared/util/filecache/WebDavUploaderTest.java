@@ -1,9 +1,10 @@
 package org.janelia.it.FlyWorkstation.shared.util.filecache;
 
-import junit.framework.Assert;
-import junit.framework.Test;
-import junit.framework.TestCase;
-import junit.framework.TestSuite;
+import org.janelia.it.jacs.model.TestCategories;
+import org.junit.After;
+import org.junit.Before;
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -11,12 +12,14 @@ import java.io.File;
 import java.net.URL;
 import java.util.*;
 
+import static org.junit.Assert.*;
+
 /**
  * Tests the {@link WebDavUploader} class.
  *
  * @author Eric Trautman
  */
-public class WebDavUploaderTest extends TestCase {
+public class WebDavUploaderTest {
 
     private WebDavClient client;
     private WebDavUploader uploader;
@@ -24,16 +27,8 @@ public class WebDavUploaderTest extends TestCase {
     private File testNestedDirectory;
     private List<File> testFiles;
 
-    public WebDavUploaderTest(String testName) {
-        super(testName);
-    }
-
-    public static Test suite() {
-        return new TestSuite(WebDavUploaderTest.class);
-    }
-
-    @Override
-    protected void setUp() throws Exception {
+    @Before
+    public void setUp() throws Exception {
         client = new WebDavClient(WebDavClient.JACS_WEBDAV_BASE_URL, 100, 100);
         client.setCredentials(WebDavClientTest.WEBDAV_TEST_USER_CREDENTIALS);
         uploader = new WebDavUploader(client, WebDavClientTest.JACS_WEBDAV_TEST_WRITE_ROOT_PATH);
@@ -61,8 +56,8 @@ public class WebDavUploaderTest extends TestCase {
         testFiles.add(CachedFileTest.createFile(testNestedDirectory, 1));
     }
 
-    @Override
-    protected void tearDown() throws Exception {
+    @After
+    public void tearDown() throws Exception {
 
         LOG.info("tearDown: entry --------------------------------------");
 
@@ -76,21 +71,27 @@ public class WebDavUploaderTest extends TestCase {
         LOG.info("tearDown: exit --------------------------------------");
     }
 
+    @Test
+    @Category(TestCategories.SlowIntegrationTests.class)
     public void testUploadFile() throws Exception {
 
         String remotePath = uploader.uploadFile(testFiles.get(0));
-        Assert.assertNotNull("null path returned for file upload", remotePath);
+        assertNotNull("null path returned for file upload", remotePath);
 
         URL url = client.getWebDavUrl(remotePath);
 
         WebDavFile webDavFile = client.findFile(url);
-        Assert.assertNotNull("uploaded file " + url + " missing from server", webDavFile);
+        assertNotNull("uploaded file " + url + " missing from server", webDavFile);
     }
 
+    @Test
+    @Category(TestCategories.FastTests.class)
     public void testDerivePathsForUnix() throws Exception {
         commonTestDerivePaths("/a/b/c/root", true);
     }
 
+    @Test
+    @Category(TestCategories.FastTests.class)
     public void testDerivePathsForWindows() throws Exception {
         commonTestDerivePaths("C:\\a\\b\\c\\root", false);
     }
@@ -146,33 +147,37 @@ public class WebDavUploaderTest extends TestCase {
                              orderedDirectoryPaths,
                              remotePathToFileMap);
 
-        Assert.assertEquals("incorrect remote path map size, map=" + remotePathToFileMap,
-                            localFilePaths.size(),
-                            remotePathToFileMap.size());
+        assertEquals("incorrect remote path map size, map=" + remotePathToFileMap,
+                localFilePaths.size(),
+                remotePathToFileMap.size());
 
         int index = 0;
         String expectedPath;
         for (String remotePath : remotePathToFileMap.keySet()) {
             expectedPath = remoteRoot + relativePaths.get(index);
             expectedPath = expectedPath.replace('\\', '/');
-            Assert.assertEquals("incorrect file path derived", expectedPath, remotePath);
+            assertEquals("incorrect file path derived", expectedPath, remotePath);
             index++;
         }
 
-        Assert.assertEquals("incorrect directory list size, list=" + orderedDirectoryPaths,
-                            expectedOrderedDirPaths.length,
-                            orderedDirectoryPaths.size());
+        assertEquals("incorrect directory list size, list=" + orderedDirectoryPaths,
+                expectedOrderedDirPaths.length,
+                orderedDirectoryPaths.size());
 
         for (int i = 0; i < expectedOrderedDirPaths.length; i++) {
-            Assert.assertEquals("incorrect dir path " + i + " derived",
-                                expectedOrderedDirPaths[i], orderedDirectoryPaths.get(i));
+            assertEquals("incorrect dir path " + i + " derived",
+                    expectedOrderedDirPaths[i], orderedDirectoryPaths.get(i));
         }
     }
 
+    @Test
+    @Category(TestCategories.SlowIntegrationTests.class)
     public void testUploadFilesWithoutRelativePath() throws Exception {
         commonTestUploadFiles(null, 1);
     }
 
+    @Test
+    @Category(TestCategories.SlowIntegrationTests.class)
     public void testUploadFilesWithRelativePath() throws Exception {
         commonTestUploadFiles(testRootParentDirectory, 2);
     }
@@ -180,14 +185,13 @@ public class WebDavUploaderTest extends TestCase {
     private void commonTestUploadFiles(File localRootDirectory,
                                        int expectedDistinctParentPaths) throws Exception {
         String remotePath = uploader.uploadFiles(testFiles, localRootDirectory);
-        Assert.assertNotNull("null path returned for upload", remotePath);
+        assertNotNull("null path returned for upload", remotePath);
 
         URL url = client.getWebDavUrl(remotePath);
 
         List<WebDavFile> list = client.findAllInternalFiles(url);
 
-        Assert.assertEquals("invalid number of files created under " + url,
-                            testFiles.size(), list.size());
+        assertEquals("invalid number of files created under " + url, testFiles.size(), list.size());
 
         Set<String> parentPathSet = new HashSet<String>();
         File file;
@@ -196,8 +200,8 @@ public class WebDavUploaderTest extends TestCase {
             parentPathSet.add(file.getParent());
         }
 
-        Assert.assertEquals("invalid number of distinct parent paths created " + parentPathSet,
-                            expectedDistinctParentPaths, parentPathSet.size());
+        assertEquals("invalid number of distinct parent paths created " + parentPathSet,
+                expectedDistinctParentPaths, parentPathSet.size());
     }
 
     private static final Logger LOG = LoggerFactory.getLogger(WebDavUploaderTest.class);

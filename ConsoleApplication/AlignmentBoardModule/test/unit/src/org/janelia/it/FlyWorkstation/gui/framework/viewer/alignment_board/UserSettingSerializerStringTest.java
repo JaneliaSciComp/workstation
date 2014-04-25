@@ -1,15 +1,16 @@
 package org.janelia.it.FlyWorkstation.gui.framework.viewer.alignment_board;
 
-import junit.framework.Assert;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.VolumeModel;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.CropCoordSet;
-import org.junit.After;
-import org.junit.Before;
+import org.janelia.it.jacs.model.TestCategories;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
 import java.util.Collections;
 import org.janelia.it.FlyWorkstation.gui.alignment_board_viewer.AlignmentBoardSettings;
 import org.janelia.it.FlyWorkstation.gui.alignment_board_viewer.UserSettingSerializer;
+
+import static org.junit.Assert.*;
 
 /**
  * Created with IntelliJ IDEA. User: fosterl Date: 6/6/13 Time: 9:16 AM
@@ -18,16 +19,10 @@ import org.janelia.it.FlyWorkstation.gui.alignment_board_viewer.UserSettingSeria
  */
 public class UserSettingSerializerStringTest {
 
-    @Before
-    public void init() {
-    }
-
-    @After
-    public void close() {
-
-    }
+    final double doubleDelta = 0.1;
 
     @Test
+    @Category(TestCategories.FastTests.class)
     public void testRoundTripParse() {
         VolumeModel volumeModel = new VolumeModel();
         volumeModel.setCropOutLevel(0.5f);
@@ -49,13 +44,13 @@ public class UserSettingSerializerStringTest {
 
         outputSerializer.parseSettings(settingsString);
 
-        Assert.assertEquals("CropOutLevel Differs", volumeModel.getCropOutLevel(), returnedVolumeModel.getCropOutLevel());
-        Assert.assertEquals("Gamma Adjustment Differs", volumeModel.getGammaAdjustment(), returnedVolumeModel.getGammaAdjustment());
+        assertEquals("CropOutLevel Differs", volumeModel.getCropOutLevel(), returnedVolumeModel.getCropOutLevel(), doubleDelta);
+        assertEquals("Gamma Adjustment Differs", volumeModel.getGammaAdjustment(), returnedVolumeModel.getGammaAdjustment(), doubleDelta);
 
         // DEBUG System.out.println("Crop Out Level = " + volumeModel.getCropOutLevel() + ", gamma adjustment = " + volumeModel.getGammaAdjustment() );
         float[] returnedCoordArr = returnedVolumeModel.getCropCoords().getAcceptedCoordinates().iterator().next();
-        for (int i = 0; i < returnedCoordArr.length; i++) {
-            Assert.assertEquals("Coordinate " + i + " differs", returnedCoordArr[ i], cropCoordArr[ i]);
+        for ( int i = 0; i < returnedCoordArr.length; i++ ) {
+            assertEquals("Coordinate " + i + " differs", returnedCoordArr[i], cropCoordArr[i], doubleDelta);
         }
     }
 

@@ -4,6 +4,9 @@ import org.janelia.it.FlyWorkstation.gui.WorkstationEnvironment;
 import org.janelia.it.FlyWorkstation.gui.alignment_board_viewer.AlignmentBoardSettings;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.VolumeModel;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.CropCoordSet;
+
+import org.janelia.it.jacs.model.TestCategories;
+import org.junit.experimental.categories.Category;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -20,6 +23,7 @@ import java.awt.event.WindowEvent;
  * Simple main-run program to show how the AB settings dialog looks.  No functional tests performed against
  * action listeners, etc.
  */
+@Category(TestCategories.InteractiveTests.class)
 public class AlignmentBoardSettingsDisplayTest {
     private static Logger logger = LoggerFactory.getLogger( AlignmentBoardSettingsDisplayTest.class );
     public static void main(String[] args) {

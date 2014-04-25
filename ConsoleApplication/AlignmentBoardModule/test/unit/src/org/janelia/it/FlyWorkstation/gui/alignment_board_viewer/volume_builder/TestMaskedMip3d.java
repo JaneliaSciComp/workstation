@@ -10,8 +10,10 @@ import org.janelia.it.FlyWorkstation.gui.viewer3d.Mip3d;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.VolumeLoader;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.resolver.FileResolver;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.resolver.TrivialFileResolver;
+import org.janelia.it.jacs.model.TestCategories;
 import org.janelia.it.jacs.model.entity.Entity;
 import org.janelia.it.jacs.model.entity.EntityConstants;
+import org.junit.experimental.categories.Category;
 
 import javax.swing.*;
 import java.awt.*;
@@ -50,6 +52,7 @@ import java.util.Map;
  * /Volumes/jacsData/filestore/system/Separation/974/754/1757362152491974754/separate/ConsolidatedLabel.v3dpbd
  * @author brunsc
  */
+@Category(TestCategories.InteractiveTests.class)
 public class TestMaskedMip3d {
 
     private static final long MOCK_UID = 777L;
@@ -96,15 +99,15 @@ public class TestMaskedMip3d {
                     //String mf = fileBase + "1778036012035866722/ConsolidatedLabel.v3dpbd";
                     //String mf = fileBase + "1696292257579143266/ConsolidatedLabel.v3dpbd";
                     //String volumeFile2 = fileBase + ""; //Unknown as yet.  Doing without...
-                    String guideBase = "/Volumes/jacsData/filestore/MaskResources/Compartment/guide/";
-                    String separationBase = "/Volumes/jacsData/filestore/system/Separation/";
+//                    String guideBase = "/Volumes/jacsData/filestore/MaskResources/Compartment/guide/";
+//                    String separationBase = "/Volumes/jacsData/filestore/system/Separation/";
 
                     File fnFile = new File( fn );
                     if (! fnFile.canRead() ) {
                         throw new IllegalArgumentException( "Cannot open signal file " + fn );
                     }
 
-                    Map<Integer,byte[]> finalMapping = null;
+//                    Map<Integer,byte[]> finalMapping = null;
                     VolumeMaskBuilder vmb = null;
                     ConfigurableColorMapping colorMapping = null;
 

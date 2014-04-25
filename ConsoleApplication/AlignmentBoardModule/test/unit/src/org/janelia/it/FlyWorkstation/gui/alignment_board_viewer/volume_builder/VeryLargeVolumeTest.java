@@ -1,10 +1,11 @@
 package org.janelia.it.FlyWorkstation.gui.alignment_board_viewer.volume_builder;
 
 import org.janelia.it.FlyWorkstation.gui.viewer3d.masking.VolumeDataI;
-import org.junit.After;
-import org.junit.Assert;
-import org.junit.Before;
+import org.janelia.it.jacs.model.TestCategories;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
+
+import static org.junit.Assert.*;
 
 /**
  * Created with IntelliJ IDEA.
@@ -15,13 +16,10 @@ import org.junit.Test;
  * Test volume partitioning.  Test for exceptions resulting from invalid calculations, check for proper segmentation
  * of the data.
  */
+@Category(TestCategories.FastTests.class)
 public class VeryLargeVolumeTest {
     private VolumeDataI volumeData;
     private byte[] dataBytes;
-
-    @Before
-    public void setup() {
-    }
 
     private void init( int slabCount ) {
         volumeData = new VeryLargeVolumeData(5,5,5, 2, slabCount);
@@ -30,9 +28,6 @@ public class VeryLargeVolumeTest {
         String allData = testValue + testValue + testValue + testValue + testValue;
         dataBytes = allData.getBytes();
     }
-
-    @After
-    public void tearDown() {}
 
     @Test
     public void justOneSlab() throws Exception {
@@ -47,7 +42,7 @@ public class VeryLargeVolumeTest {
         for ( int i = 0; i < volumeData.length(); i++ ) {
             byte nextByte = volumeData.getValueAt( i );
             if ( nextByte != dataBytes[ i ] ) {
-                Assert.fail("Data byte at " + i + " does not agree with source.");
+                fail("Data byte at " + i + " does not agree with source.");
             }
         }
 
@@ -66,11 +61,12 @@ public class VeryLargeVolumeTest {
         for ( int i = 0; i < volumeData.length(); i++ ) {
             if ( i == 175 ) {
                 // This is a marker for BP during test, in debugger.
+                @SuppressWarnings("UnusedDeclaration")
                 int j = 6;
             }
             byte nextByte = volumeData.getValueAt( i );
             if ( nextByte != dataBytes[ i ] ) {
-                Assert.fail("Data byte at " + i + " does not agree with source.");
+                fail("Data byte at " + i + " does not agree with source.");
             }
         }
 
