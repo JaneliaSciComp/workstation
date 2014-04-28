@@ -12,10 +12,10 @@ public class MeshDrawShader extends AbstractShader {
     public static final String COLOR_UNIFORM_NAME = "color";
     public static final String VERTEX_ATTRIBUTE_NAME = "vertexAttribute";
     public static final String NORMAL_ATTRIBUTE_NAME = "normalAttribute";
-//    public static final String VERTEX_SHADER =   "MeshDrawSpecularVtx.glsl";
-//    public static final String FRAGMENT_SHADER = "MeshDrawSpecularFrg.glsl";
-    public static final String VERTEX_SHADER =   "MeshDrawVtx.glsl";
-    public static final String FRAGMENT_SHADER = "MeshDrawFrg.glsl";
+    public static final String VERTEX_SHADER =   "MeshDrawSpecularVtx.glsl";
+    public static final String FRAGMENT_SHADER = "MeshDrawSpecularFrg.glsl";
+//    public static final String VERTEX_SHADER =   "MeshDrawVtx.glsl";
+//    public static final String FRAGMENT_SHADER = "MeshDrawFrg.glsl";
 
     @Override
     public String getVertexShader() {

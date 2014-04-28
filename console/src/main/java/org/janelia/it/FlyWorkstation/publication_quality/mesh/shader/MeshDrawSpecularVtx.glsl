@@ -17,7 +17,8 @@ void main(void)
     vec4 homogeniousCoordPos = projection * modelView * vertexAttribute;
     normVar = normalize( normalMatrix * normalAttribute );
 
-    vec4 lightSource = normalize( vec4( 0, 0.0, 100.0, 0 ) - normVar );  // Behind "zNear".
+    vec4 lightPosition = vec4( 0, 0.0, 1000.0, 0 );
+    vec4 lightSource = normalize( lightPosition - normVar );  // Behind "zNear".
 
     // From diffuse lighting.
     float diffuseCoefficient = max( 0.0, dot( normVar,lightSource ) );
@@ -25,12 +26,14 @@ void main(void)
 
     // Calculate the specular component.
     // Using unnormalized version of eye-normal.
-    vec4 reflection = normalize(reflect(-lightSource, normVar));
     if ( diffuseCoefficient > 0 )
     {
-        float spec = max(0.0, dot(normVar,reflection));
-        spec = pow(spec, 128.0);
-        specularLightMag = vec4(spec,spec,spec,1.0);
+        vec4 toLight = lightPosition - homogeniousCoordPos;
+        vec4 toV = -normalize(vec4(homogeniousCoordPos.xyz, 0));
+        toLight = normalize(toLight);
+        vec4 halfVector = normalize(toV + toLight);
+
+        specularLightMag = vec4(1.0,1.0,1.0,0.0) * pow(max(0.0, -dot(halfVector, normVar)), 64.0);
     }
     gl_Position = homogeniousCoordPos;
 }
