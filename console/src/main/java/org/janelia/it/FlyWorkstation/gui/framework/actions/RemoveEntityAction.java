@@ -74,7 +74,6 @@ public class RemoveEntityAction implements Action {
 			private Set<EntityData> removeReference = new HashSet<EntityData>();
 			private Set<EntityData> removeRootTag = new HashSet<EntityData>();
             private Map<EntityData,String> sharedNameMap = new HashMap<EntityData,String>();
-            private Set<Long> invalidIdSet = new HashSet<Long>();
 				
 			@Override
 			protected void doStuff() throws Exception {
@@ -84,14 +83,10 @@ public class RemoveEntityAction implements Action {
 	                
 					List<EntityData> parentEds = ModelMgr.getModelMgr().getParentEntityDatas(child.getId());
 
-					// To be technically correct, this should check for any eds owned by members of the owner group, if
-					// the entity is owned by a group. However, groups can't login, so presumably this deletion 
-					// action will never be run on a group-owned entity.
-			        Set<EntityData> ownedEds = new HashSet<EntityData>();
+			        Set<EntityData> accessibleEds = new HashSet<EntityData>();
 			        for(EntityData parentEd : parentEds) {
-			            invalidIdSet.add(parentEd.getParentEntity().getId());
-			            if (ModelMgrUtils.isOwner(parentEd.getParentEntity())) {
-			                ownedEds.add(parentEd);
+			            if (ModelMgrUtils.hasReadAccess(parentEd.getParentEntity())) {
+			                accessibleEds.add(parentEd);
 			            }
 			        }
 					
@@ -100,8 +95,8 @@ public class RemoveEntityAction implements Action {
 
 	                    if (child.getEntityDataByAttributeName(EntityConstants.ATTRIBUTE_COMMON_ROOT)!=null) {
 	                        // Common root
-	                        if (ownedEds.isEmpty()) {
-	                            // No owned references to this root, so delete the entire tree. If there are non-owned 
+	                        if (accessibleEds.isEmpty()) {
+	                            // No accessible references to this root, so delete the entire tree. If there are non-accessible 
 	                            // references, the user will be warned about them before the tree is deleted.
 	                            removeTree.add(ed);
 	                        }
@@ -117,7 +112,7 @@ public class RemoveEntityAction implements Action {
 	                        }
 	                    }
 	                    else {
-	                        if (ownedEds.size() > 1) {
+	                        if (accessibleEds.size() > 1) {
 	                            // Just remove the reference
 	                            removeReference.add(ed);
 	                        }
