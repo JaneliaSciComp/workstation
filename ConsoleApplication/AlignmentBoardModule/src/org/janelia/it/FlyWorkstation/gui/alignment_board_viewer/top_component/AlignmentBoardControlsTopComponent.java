@@ -23,7 +23,7 @@ import org.openide.util.NbBundle.Messages;
         //iconBase="SET/PATH/TO/ICON/HERE", 
         persistenceType = TopComponent.PERSISTENCE_ALWAYS
 )
-@TopComponent.Registration(mode = "appPropertiesBtm", openAtStartup = false)
+@TopComponent.Registration(mode = "appPropertiesBtm", openAtStartup = true)
 //@ActionID(category = "Window", id = "org.janelia.it.FlyWorkstation.gui.alignment_board_viewer.top_component.AlignmentBoardControlsTopComponent")
 //@ActionReference(path = "Menu/Window" /*, position = 333 */)
 @TopComponent.OpenActionRegistration(
@@ -43,7 +43,7 @@ public final class AlignmentBoardControlsTopComponent extends TopComponent {
         initComponents();
         setName(Bundle.CTL_AlignmentBoardControlsTopComponent());
         setToolTipText(Bundle.HINT_AlignmentBoardControlsTopComponent());
-        putClientProperty(TopComponent.PROP_CLOSING_DISABLED, Boolean.TRUE);
+        putClientProperty(TopComponent.PROP_CLOSING_DISABLED, Boolean.FALSE);   // Allow user ot close this.  It will make the board "uncontrollable" however.
         putClientProperty(TopComponent.PROP_DRAGGING_DISABLED, Boolean.FALSE);
         putClientProperty(TopComponent.PROP_MAXIMIZATION_DISABLED, Boolean.TRUE);
         putClientProperty(TopComponent.PROP_UNDOCKING_DISABLED, Boolean.TRUE);

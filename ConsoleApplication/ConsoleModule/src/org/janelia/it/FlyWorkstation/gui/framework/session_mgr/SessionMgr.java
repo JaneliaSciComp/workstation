@@ -649,12 +649,18 @@ public class SessionMgr {
      */
     public static JFrame getMainFrame() { 
         if (mainFrame == null) {
-            try {
-                SwingUtilities.invokeAndWait(new Runnable() {
+            try {                
+                Runnable runnable = new Runnable() {
                     public void run() {
                         mainFrame = (JFrame) WindowManager.getDefault().getMainWindow();
                     }
-                });
+                };
+                if ( SwingUtilities.isEventDispatchThread() ) {
+                    runnable.run();
+                }
+                else {
+                    SwingUtilities.invokeAndWait( runnable );
+                }
             } catch (Exception ex) {
                 SessionMgr.getSessionMgr().handleException(ex);
             }

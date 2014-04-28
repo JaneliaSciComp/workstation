@@ -6,12 +6,14 @@
 
 package org.janelia.it.FlyWorkstation.gui.alignment_board;
 
+import javax.swing.JOptionPane;
 import org.janelia.it.FlyWorkstation.gui.alignment_board.ab_mgr.AlignmentBoardMgr;
 import org.janelia.it.FlyWorkstation.nb_action.EntityAcceptor;
 import org.janelia.it.jacs.model.entity.Entity;
 import org.janelia.it.jacs.model.entity.EntityConstants;
 import org.openide.util.lookup.ServiceProvider;
 import org.openide.windows.TopComponent;
+import org.openide.windows.TopComponentGroup;
 import org.openide.windows.WindowManager;
 
 /**
@@ -26,26 +28,36 @@ public class Launcher implements EntityAcceptor  {
     }
 
     public void launch( long entityId ) {
-        TopComponent win = WindowManager.getDefault().findTopComponent("AlignmentBoardControlsTopComponent");
-        if ( win.isOpened() ) {
-            win.close();
-        }
-        win.open();
+        TopComponentGroup group = 
+                WindowManager.getDefault().findTopComponentGroup(
+                        "alignment_board_plugin"
+                );
+        if ( group != null ) {
+            // This should open all members of the group.
+            group.open();
 
-        win = WindowManager.getDefault().findTopComponent("AlignmentBoardTopComponent");
-        if ( win.isOpened() ) {
-            win.close();
-        }
-        win.open();
-        win.requestActive();
+            // Cause the two smaller windows to be forefront in their "modes."
+            TopComponent win = WindowManager.getDefault().findTopComponent("AlignmentBoardControlsTopComponent");
+            if (win.isOpened()) {
+                win.requestActive();
+            }
 
-        win = WindowManager.getDefault().findTopComponent("LayersPanelTopComponent");
-        if ( win.isOpened() ) {
-            win.close();
+            win = WindowManager.getDefault().findTopComponent("LayersPanelTopComponent");
+            if (win.isOpened()) {
+                win.requestActive();
+            }
+
+            // Make the editor one active.
+            win = WindowManager.getDefault().findTopComponent("AlignmentBoardTopComponent");
+            if (win.isOpened()) {
+                win.requestActive();
+            }
+
+            AlignmentBoardMgr.getInstance().getLayersPanel().openAlignmentBoard( entityId );
         }
-        win.open();
-        
-        AlignmentBoardMgr.getInstance().getLayersPanel().openAlignmentBoard( entityId );
+        else {
+            JOptionPane.showMessageDialog(WindowManager.getDefault().getMainWindow(), "Failed to open window group for plugin.");
+        }
 
     }
 

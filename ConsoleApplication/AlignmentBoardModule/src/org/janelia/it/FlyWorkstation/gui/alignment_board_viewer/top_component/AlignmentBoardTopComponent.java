@@ -7,6 +7,7 @@ package org.janelia.it.FlyWorkstation.gui.alignment_board_viewer.top_component;
 
 import com.google.common.eventbus.Subscribe;
 import java.awt.BorderLayout;
+import javax.swing.SwingUtilities;
 import org.janelia.it.FlyWorkstation.api.entity_model.management.ModelMgr;
 import org.janelia.it.FlyWorkstation.gui.alignment_board.Launcher;
 import org.janelia.it.FlyWorkstation.gui.alignment_board_viewer.AlignmentBoardPanel;
@@ -16,6 +17,8 @@ import org.netbeans.api.settings.ConvertAsProperties;
 import org.openide.windows.TopComponent;
 import org.openide.util.NbBundle.Messages;
 import org.openide.util.lookup.Lookups;
+import org.openide.windows.TopComponentGroup;
+import org.openide.windows.WindowManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -126,8 +129,29 @@ public final class AlignmentBoardTopComponent extends TopComponent {
 
     @Override
     public void componentClosed() {
-        ModelMgr.getModelMgr().unregisterOnEventBus(this);
+        ModelMgr.getModelMgr().unregisterOnEventBus(this);        
         alignmentBoardPanel.close();
+        Runnable runnable = new Runnable() {
+            public void run() {
+                TopComponentGroup tcg = WindowManager.getDefault().findTopComponentGroup(
+                        "alignment_board_plugin"
+                );
+                if (tcg != null) {
+                    tcg.close();
+                }
+            }
+        };
+        if ( SwingUtilities.isEventDispatchThread() ) {
+            runnable.run();
+        }
+        else {
+            try {
+                SwingUtilities.invokeAndWait( runnable );
+            } catch ( Exception ex ) {
+                logger.error(ex.getMessage());
+                ex.printStackTrace();
+            }
+        }
     }
 
     void writeProperties(java.util.Properties p) {
