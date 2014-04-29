@@ -147,15 +147,6 @@ public class Browser implements Cloneable {
     	return imageCache;
     }
 
-    static public void setMenuBarClass(Class aMenuBarClass) {
-        menuBarClass = aMenuBarClass;
-    }
-
-    // TODO Remove access to the menu bar
-    public JMenuBar getJMenuBar() {
-        return menuBar;
-    }
-
     private void jbInit(BrowserModel browserModel) throws Exception {
 
         viewerManager = new ViewerManager();
@@ -409,7 +400,7 @@ public class Browser implements Cloneable {
 
     public void supportMenuProcessing() {
         toolsMenuModifier = new ToolsMenuModifier();
-        toolsMenuModifier.rebuildMenu();
+        toolsMenuModifier.rebuildMenu();        
         new CredentialSynchronizer().synchronize(this);
     }
     

@@ -30,6 +30,8 @@ import com.google.common.eventbus.Subscribe;
  */
 public class WorkerProgressMeter extends JDialog {
     
+    public static final Dimension PREFERRED_DIMENSION = new Dimension(800, 600);
+
     private static final Logger log = LoggerFactory.getLogger(WorkerProgressMeter.class);
     
     private static final int LABEL_COLUMN_WIDTH = 400;
@@ -40,6 +42,7 @@ public class WorkerProgressMeter extends JDialog {
     
     private static WorkerProgressMeter progressMeter;
     
+    private JPanel wholeMeterPanel = new JPanel();
     private JPanel mainPanel = new JPanel();
     private JButton clearButton;
     private JButton okButton;
@@ -54,9 +57,11 @@ public class WorkerProgressMeter extends JDialog {
 
     private WorkerProgressMeter(Frame frame, String title, boolean modal) {
         super(frame, title, modal);
-        
-        setPreferredSize(new Dimension(800, 600));
 
+        wholeMeterPanel.setPreferredSize(PREFERRED_DIMENSION);
+        wholeMeterPanel.setLayout(new BorderLayout());
+        setPreferredSize(PREFERRED_DIMENSION);
+        
         JPanel scrollLayer = new JPanel();
         scrollLayer.setLayout(new BorderLayout());
         scrollLayer.add(mainPanel, BorderLayout.CENTER);
@@ -68,7 +73,7 @@ public class WorkerProgressMeter extends JDialog {
         scrollPane.setHorizontalScrollBarPolicy(ScrollPaneConstants.HORIZONTAL_SCROLLBAR_NEVER);
         
         setLayout(new BorderLayout());
-        add(scrollPane, BorderLayout.CENTER);
+        wholeMeterPanel.add(scrollPane, BorderLayout.CENTER);
 
         this.clearButton = new JButton("Clear Completed");
         clearButton.setToolTipText("Remove all finished operations");
@@ -96,10 +101,12 @@ public class WorkerProgressMeter extends JDialog {
         buttonPane.add(clearButton);
         buttonPane.add(okButton);
         
-        add(buttonPane, BorderLayout.SOUTH);
-        
+        wholeMeterPanel.add(buttonPane, BorderLayout.SOUTH);
+        add(wholeMeterPanel);
         pack();
     }
+    
+    public JPanel getMeterPanel() { return wholeMeterPanel; }
 
     private WorkerProgressMeter() {
         this(SessionMgr.getMainFrame(), "Progress Monitor", false);

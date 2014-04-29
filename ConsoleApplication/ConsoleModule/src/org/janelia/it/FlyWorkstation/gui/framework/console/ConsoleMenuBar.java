@@ -18,10 +18,10 @@ public class ConsoleMenuBar extends JMenuBar {
     protected WorkerProgressMeter meter;
 
     protected BookmarkMenu bookmarkMenu;
-    protected JMenu servicesMenu;
-    protected JMenu ontologyMenu;
-    protected JMenu helpMenu;
-    protected JMenu viewMenu;
+    //protected JMenu servicesMenu;
+    //protected JMenu ontologyMenu;
+    //protected JMenu helpMenu;
+    //protected JMenu viewMenu;
     protected Component menuGlue = Box.createHorizontalGlue();
 
     public ConsoleMenuBar(Browser console) {
@@ -47,7 +47,7 @@ public class ConsoleMenuBar extends JMenuBar {
         //add(viewMenu);
         // add(ontologyMenu);
         //add(helpMenu);
-        //add(menuGlue);
-        //add(WorkerProgressMeter.getProgressMeter().getMenuLabel());
+        add(menuGlue);
+        add(WorkerProgressMeter.getProgressMeter().getMenuLabel());
     }
 }

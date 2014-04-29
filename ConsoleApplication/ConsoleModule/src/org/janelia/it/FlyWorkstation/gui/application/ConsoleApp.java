@@ -77,7 +77,6 @@ public class ConsoleApp {
             sessionMgr.setApplicationVersion(ConsoleProperties.getString("console.versionNumber"));
             sessionMgr.setNewBrowserImageIcon(Utils.getClasspathImage("workstation_128_icon.png"));
             sessionMgr.setNewBrowserSize(.8f);
-            sessionMgr.setNewBrowserMenuBar(ConsoleMenuBar.class);
             sessionMgr.startExternalHttpListener(30000);
             sessionMgr.startAxisServer(ConsoleProperties.getString("console.WebServiceURL"));
             sessionMgr.startWebServer(ConsoleProperties.getInt("console.WebServer.port"));

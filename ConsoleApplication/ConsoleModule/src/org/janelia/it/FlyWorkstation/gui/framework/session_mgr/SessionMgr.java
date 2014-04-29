@@ -342,10 +342,6 @@ public class SessionMgr {
         browserSize = screenPercent;
     }
 
-    public void setNewBrowserMenuBar(Class menuBarClass) {
-        Browser.setMenuBarClass(menuBarClass);
-    }
-
     public void setNewBrowserTitle(String title) {
         browserTitle = title;
     }
