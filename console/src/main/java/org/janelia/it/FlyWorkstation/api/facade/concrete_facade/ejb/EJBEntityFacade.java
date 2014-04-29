@@ -84,6 +84,15 @@ public class EJBEntityFacade implements EntityFacade {
     }
     
     @Override
+    public List<EntityData> getAllParentEntityDatas(Long childEntityId) throws Exception {
+        List<EntityData> list = new ArrayList<EntityData>();
+        Set<EntityData> set = EJBFactory.getRemoteEntityBean().getParentEntityDatas(null, childEntityId);
+        if (set==null) return list;
+        list.addAll(set);
+        return list;
+    }
+    
+    @Override
     public Set<Long> getParentIdsForAttribute(long childEntityId, String attributeName) throws Exception {
     	Set<Long> set = new HashSet<Long>();
     	Set<Long> results = EJBFactory.getRemoteEntityBean().getParentIdsForAttribute(SessionMgr.getSubjectKey(), childEntityId, attributeName);

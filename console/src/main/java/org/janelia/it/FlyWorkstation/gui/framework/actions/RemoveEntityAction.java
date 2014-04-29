@@ -25,6 +25,7 @@ import org.janelia.it.jacs.model.entity.EntityActorPermission;
 import org.janelia.it.jacs.model.entity.EntityConstants;
 import org.janelia.it.jacs.model.entity.EntityData;
 import org.janelia.it.jacs.model.tasks.Task;
+import org.janelia.it.jacs.shared.utils.EntityUtils;
 import org.janelia.it.jacs.shared.utils.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -81,12 +82,18 @@ public class RemoveEntityAction implements Action {
 				for(EntityData ed : toDelete) {
 					Entity child = ed.getChildEntity();
 	                
-					List<EntityData> parentEds = ModelMgr.getModelMgr().getParentEntityDatas(child.getId());
-
-			        Set<EntityData> accessibleEds = new HashSet<EntityData>();
+					List<EntityData> parentEds = ModelMgr.getModelMgr().getAllParentEntityDatas(child.getId());
+			        Set<EntityData> respectedEds = new HashSet<EntityData>();
 			        for(EntityData parentEd : parentEds) {
-			            if (ModelMgrUtils.hasReadAccess(parentEd.getParentEntity())) {
-			                accessibleEds.add(parentEd);
+			            if (!ModelMgrUtils.isOwner(child)) {
+			                // If we don't own the current entity, then all references to it are respected
+			                respectedEds.add(parentEd);
+			            }
+			            else {
+			                // If we own the current entity, then we only care about our own references
+			                if (ModelMgrUtils.isOwner(ed.getParentEntity())) {
+			                    respectedEds.add(parentEd);
+			                }
 			            }
 			        }
 					
@@ -95,7 +102,7 @@ public class RemoveEntityAction implements Action {
 
 	                    if (child.getEntityDataByAttributeName(EntityConstants.ATTRIBUTE_COMMON_ROOT)!=null) {
 	                        // Common root
-	                        if (accessibleEds.isEmpty()) {
+	                        if (respectedEds.isEmpty()) {
 	                            // No accessible references to this root, so delete the entire tree. If there are non-accessible 
 	                            // references, the user will be warned about them before the tree is deleted.
 	                            removeTree.add(ed);
@@ -112,7 +119,7 @@ public class RemoveEntityAction implements Action {
 	                        }
 	                    }
 	                    else {
-	                        if (accessibleEds.size() > 1) {
+	                        if (respectedEds.size() > 1) {
 	                            // Just remove the reference
 	                            removeReference.add(ed);
 	                        }
@@ -136,8 +143,6 @@ public class RemoveEntityAction implements Action {
 			        else {
 			            removeReference.add(ed);
 			        }
-					
-					
 				}
 			}
 			

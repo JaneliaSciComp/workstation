@@ -516,6 +516,10 @@ public class ModelMgr {
     public List<EntityData> getParentEntityDatas(Long childEntityId) throws Exception {
         return entityModel.getParentEntityDatas(childEntityId);
     }
+
+    public List<EntityData> getAllParentEntityDatas(Long childEntityId) throws Exception {
+        return entityModel.getAllParentEntityDatas(childEntityId);
+    }
     
     public Set<Long> getParentIdsForAttribute(long childEntityId, String attributeName) throws Exception {
         return FacadeManager.getFacadeManager().getEntityFacade().getParentIdsForAttribute(childEntityId, attributeName);
