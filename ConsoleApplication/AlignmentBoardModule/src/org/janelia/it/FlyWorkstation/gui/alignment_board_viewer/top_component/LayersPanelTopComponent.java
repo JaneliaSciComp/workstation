@@ -9,6 +9,8 @@ import java.awt.BorderLayout;
 import org.janelia.it.FlyWorkstation.gui.alignment_board.ab_mgr.AlignmentBoardMgr;
 import org.janelia.it.FlyWorkstation.gui.alignment_board_viewer.LayersPanel;
 import org.netbeans.api.settings.ConvertAsProperties;
+import org.openide.awt.ActionID;
+import org.openide.awt.ActionReference;
 import org.openide.windows.TopComponent;
 import org.openide.util.NbBundle.Messages;
 import org.slf4j.Logger;
@@ -27,8 +29,8 @@ import org.slf4j.LoggerFactory;
         persistenceType = TopComponent.PERSISTENCE_ALWAYS
 )
 @TopComponent.Registration(mode = "properties", openAtStartup = true)
-//@ActionID(category = "Window", id = "org.janelia.it.FlyWorkstation.gui.alignment_board_viewer.top_component.LayersPanelTopComponent")
-//@ActionReference(path = "Menu/Window" /*, position = 333 */)
+@ActionID(category = "Window", id = "org.janelia.it.FlyWorkstation.gui.alignment_board_viewer.top_component.LayersPanelTopComponent")
+@ActionReference(path = "Menu/Window" /*, position = 333 */)
 @TopComponent.OpenActionRegistration(
         displayName = "#CTL_LayersPanelAction",
         preferredID = "LayersPanelTopComponent"
@@ -45,6 +47,7 @@ public final class LayersPanelTopComponent extends TopComponent {
         initComponents();
         setName(Bundle.CTL_LayersPanelTopComponent());
         setToolTipText(Bundle.HINT_LayersPanelTopComponent());
+        putClientProperty(TopComponent.PROP_CLOSING_DISABLED, Boolean.FALSE);
         putClientProperty(TopComponent.PROP_DRAGGING_DISABLED, Boolean.FALSE);
         putClientProperty(TopComponent.PROP_MAXIMIZATION_DISABLED, Boolean.TRUE);
         putClientProperty(TopComponent.PROP_UNDOCKING_DISABLED, Boolean.TRUE);

@@ -14,6 +14,8 @@ import org.janelia.it.FlyWorkstation.gui.alignment_board_viewer.AlignmentBoardPa
 import org.janelia.it.FlyWorkstation.gui.viewer3d.events.AlignmentBoardItemChangeEvent;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.events.AlignmentBoardOpenEvent;
 import org.netbeans.api.settings.ConvertAsProperties;
+import org.openide.awt.ActionID;
+import org.openide.awt.ActionReference;
 import org.openide.windows.TopComponent;
 import org.openide.util.NbBundle.Messages;
 import org.openide.util.lookup.Lookups;
@@ -35,8 +37,8 @@ import org.slf4j.LoggerFactory;
         persistenceType = TopComponent.PERSISTENCE_ALWAYS
 )
 @TopComponent.Registration(mode = "editor", openAtStartup = true)
-//@ActionID(category = "Window", id = "org.janelia.it.FlyWorkstation.gui.alignment_board_viewer.top_component.AlignmentBoardTopComponent")
-//@ActionReference(path = "Menu/Window" /*, position = 333 */)
+@ActionID(category = "Window", id = "org.janelia.it.FlyWorkstation.gui.alignment_board_viewer.top_component.AlignmentBoardTopComponent")
+@ActionReference(path = "Menu/Window" /*, position = 333 */)
 @TopComponent.OpenActionRegistration(
         displayName = "#CTL_AlignmentBoardAction",
         preferredID = "AlignmentBoardTopComponent"
@@ -55,6 +57,7 @@ public final class AlignmentBoardTopComponent extends TopComponent {
         initComponents();
         alignmentBoardPanel = new AlignmentBoardPanel();
         setName(Bundle.CTL_AlignmentBoardTopComponent());
+        putClientProperty(TopComponent.PROP_CLOSING_DISABLED, Boolean.FALSE);
         setToolTipText(Bundle.HINT_AlignmentBoardTopComponent());
         establishEntityAcceptor();
     }
