@@ -24,8 +24,7 @@ import org.openide.windows.WindowManager;
         displayName = "#CTL_NewTiledMicroscopeSampleAction"
 )
 @ActionReferences({
-    @ActionReference(path = "Menu/File/New", position = 1400),
-    @ActionReference(path = "Shortcuts", name = "UNDEFINED")
+    @ActionReference(path = "Menu/File/New", position = 1400)
 })
 @Messages("CTL_NewTiledMicroscopeSampleAction=Add Tiled Microscope Sample")
 public final class NewTiledMicroscopeSampleAction implements ActionListener {

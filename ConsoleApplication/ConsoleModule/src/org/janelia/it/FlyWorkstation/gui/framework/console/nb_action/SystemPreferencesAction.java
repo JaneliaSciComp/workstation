@@ -23,7 +23,7 @@ import org.openide.util.NbBundle.Messages;
 )
 @ActionReferences({
     @ActionReference(path = "Menu/Edit/Preferences", position = 100),
-    @ActionReference(path = "Shortcuts", name = "C-S")
+    @ActionReference(path = "Shortcuts", name = "M-F3")
 })
 @Messages("CTL_SystemPreferencesAction=System...")
 public final class SystemPreferencesAction implements ActionListener {
