@@ -31,6 +31,7 @@ import java.awt.event.ActionListener;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 import java.io.File;
+import java.io.IOException;
 import java.net.URL;
 
 /**
@@ -238,7 +239,7 @@ public class AutoUpdater extends JFrame implements PropertyChangeListener {
             mainPane.add(attrPanel, BorderLayout.CENTER);
             
             final JButton okButton = new JButton("Update");
-            okButton.setToolTipText("Update and launch the FlyWorkstation");
+            okButton.setToolTipText("Update and launch the Janelia Workstation");
             okButton.addActionListener(new ActionListener() {
     			@Override
     			public void actionPerformed(ActionEvent e) {
@@ -248,7 +249,7 @@ public class AutoUpdater extends JFrame implements PropertyChangeListener {
     		});
             
             JButton cancelButton = new JButton("Cancel");
-            cancelButton.setToolTipText("Cancel update and launch the FlyWorkstation");
+            cancelButton.setToolTipText("Cancel update and launch the Janelia Workstation");
             cancelButton.addActionListener(new ActionListener() {
     			@Override
     			public void actionPerformed(ActionEvent e) {
@@ -337,6 +338,12 @@ public class AutoUpdater extends JFrame implements PropertyChangeListener {
 	            }
 	            else if (SystemInfo.isLinux) {
 	                log.info("Configuring for Linux...");
+                    try {
+                        FileUtil.ensureDirExists(downloadsDir.getAbsolutePath());
+                    }
+                    catch (IOException e) {
+                        log.error("Tried to ensure dir ("+downloadsDir.getAbsolutePath()+")exists in the AutoUpdater and the check bombed.  Swallowing...");
+                    }
 	                newBuildDir = "JaneliaWorkstation_linux_"+serverVersion;
                     remoteFile = PathTranslator.JACS_DEPLOYMENT_PATH_NFS+"/JaneliaWorkstation/"+ newBuildDir +".tgz";
 	                downloadFile = new File(downloadsDir, newBuildDir +".tgz");
@@ -410,7 +417,7 @@ public class AutoUpdater extends JFrame implements PropertyChangeListener {
                     
                     log.info("Update is ready");
                     
-					mainLabel.setText("Update complete. Launching the FlyWorkstation...");
+					mainLabel.setText("Update complete. Launching the Janelia Workstation...");
 					mainPane.revalidate();
 					mainPane.repaint();
 					Thread.sleep(1000);	
