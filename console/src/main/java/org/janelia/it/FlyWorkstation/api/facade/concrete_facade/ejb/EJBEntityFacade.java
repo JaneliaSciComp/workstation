@@ -143,12 +143,12 @@ public class EJBEntityFacade implements EntityFacade {
 
     @Override
     public void deleteEntityTree(Long entityId) throws Exception {
-        EJBFactory.getRemoteEntityBean().deleteEntityTree(SessionMgr.getSubjectKey(), entityId);
+        EJBFactory.getRemoteEntityBean().deleteEntityTreeById(SessionMgr.getSubjectKey(), entityId);
     }
     
     @Override
     public void deleteEntityTree(Long entityId, boolean unlinkMultipleParents) throws Exception {
-	    EJBFactory.getRemoteEntityBean().deleteEntityTree(SessionMgr.getSubjectKey(), entityId, unlinkMultipleParents);
+	    EJBFactory.getRemoteEntityBean().deleteEntityTreeById(SessionMgr.getSubjectKey(), entityId, unlinkMultipleParents);
     }
     
     @Override
