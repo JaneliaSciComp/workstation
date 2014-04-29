@@ -7,7 +7,6 @@ package org.janelia.it.FlyWorkstation.gui.framework.console.nb_action;
 
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr;
 import org.openide.awt.ActionID;
 import org.openide.awt.ActionReference;
 import org.openide.awt.ActionReferences;
@@ -30,6 +29,6 @@ public final class GlobalSOLrSearchAction implements ActionListener {
 
     @Override
     public void actionPerformed(ActionEvent e) {
-    	SessionMgr.getBrowser().getGeneralSearchDialog().showDialog();
+    	new SearchActionDelegate().generalSearch();
     }
 }

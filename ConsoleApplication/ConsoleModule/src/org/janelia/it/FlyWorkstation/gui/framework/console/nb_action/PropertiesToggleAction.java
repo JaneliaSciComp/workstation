@@ -8,7 +8,6 @@ package org.janelia.it.FlyWorkstation.gui.framework.console.nb_action;
 import java.awt.event.ActionEvent;
 import org.openide.awt.ActionID;
 import org.openide.awt.ActionReference;
-import org.openide.awt.ActionReferences;
 import org.openide.awt.ActionRegistration;
 import org.openide.util.HelpCtx;
 import org.openide.util.NbBundle.Messages;
@@ -16,32 +15,30 @@ import org.openide.util.actions.BooleanStateAction;
 
 @ActionID(
         category = "View",
-        id = "org.janelia.it.FlyWorkstation.gui.framework.console.nb_action.DataPanelToggleAction"
+        id = "org.janelia.it.FlyWorkstation.gui.framework.console.nb_action.PropertiesToggleAction"
 )
 @ActionRegistration(
-        displayName = "#CTL_DataPanelToggleAction"
+        displayName = "#CTL_PropertiesToggleAction"
 )
-@ActionReferences({
-    @ActionReference(path = "Menu/View", position = 0),
-    @ActionReference(path = "Shortcuts", name = "M-D")
-})
-@Messages("CTL_DataPanelToggleAction=Data Panel")
-public final class DataPanelToggleAction extends BooleanStateAction {
-    public static final String DATA_PANEL_SHOWN = "DataPanelShown";
+@ActionReference(path = "Menu/View", position = 50)
+@Messages("CTL_PropertiesToggleAction=Properties Panel")
+public final class PropertiesToggleAction extends BooleanStateAction {
 
-    public DataPanelToggleAction() {
+    private static final String PROPERTIES_PANEL_SHOWN = "Properties";
+    public PropertiesToggleAction() {
         setBooleanState( true );
     }
     
     @Override
     public void actionPerformed(ActionEvent e) {
-        setBooleanState( !getBooleanState() );
-        new ViewActionDelegate().toggleDataPanel( getBooleanState() );
+        setBooleanState( ! getBooleanState() );
+        ViewActionDelegate viewActionDelegate = new ViewActionDelegate();
+        viewActionDelegate.toggleOntology( getBooleanState() );
     }
 
     @Override
     public String getName() {
-        return DATA_PANEL_SHOWN;
+        return PROPERTIES_PANEL_SHOWN;
     }
 
     @Override
