@@ -21,8 +21,7 @@ import org.openide.util.NbBundle.Messages;
         displayName = "#CTL_PatternAnnotationSearchAction"
 )
 @ActionReferences({
-    @ActionReference(path = "Menu/Search", position = 1100),
-    @ActionReference(path = "Shortcuts", name = "C-F")
+    @ActionReference(path = "Menu/Search", position = 1100)
 })
 @Messages("CTL_PatternAnnotationSearchAction=Pattern Annotation Search")
 public final class PatternAnnotationSearchAction implements ActionListener {
