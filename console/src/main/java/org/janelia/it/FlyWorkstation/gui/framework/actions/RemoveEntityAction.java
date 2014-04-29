@@ -83,16 +83,19 @@ public class RemoveEntityAction implements Action {
 					Entity child = ed.getChildEntity();
 	                
 					List<EntityData> parentEds = ModelMgr.getModelMgr().getAllParentEntityDatas(child.getId());
-			        Set<EntityData> respectedEds = new HashSet<EntityData>();
+			        Map<Long,EntityData> respectedEds = new HashMap<Long,EntityData>();
+			        // The current reference should always be considered
+                    respectedEds.put(ed.getId(),ed);
+                    
 			        for(EntityData parentEd : parentEds) {
 			            if (!ModelMgrUtils.isOwner(child)) {
 			                // If we don't own the current entity, then all references to it are respected
-			                respectedEds.add(parentEd);
+			                respectedEds.put(parentEd.getId(),parentEd);
 			            }
 			            else {
 			                // If we own the current entity, then we only care about our own references
-			                if (ModelMgrUtils.isOwner(ed.getParentEntity())) {
-			                    respectedEds.add(parentEd);
+			                if (ModelMgrUtils.isOwner(parentEd.getParentEntity())) {
+	                            respectedEds.put(parentEd.getId(),parentEd);
 			                }
 			            }
 			        }
@@ -102,8 +105,8 @@ public class RemoveEntityAction implements Action {
 
 	                    if (child.getEntityDataByAttributeName(EntityConstants.ATTRIBUTE_COMMON_ROOT)!=null) {
 	                        // Common root
-	                        if (respectedEds.isEmpty()) {
-	                            // No accessible references to this root, so delete the entire tree. If there are non-accessible 
+	                        if (respectedEds.size()==1) {
+	                            // No accessible references to this root aside from the one we're deleting, so delete the entire tree. If there are non-accessible 
 	                            // references, the user will be warned about them before the tree is deleted.
 	                            removeTree.add(ed);
 	                        }
@@ -132,12 +135,19 @@ public class RemoveEntityAction implements Action {
 	                    if (removeTree.contains(ed)) {
 	                        // When removing a tree, we need to check if its shared, and ask the user if they want to really delete a shared object.
 	                        List<String> sharedNames = new ArrayList<String>();
+	                        List<String> sharedKeys = new ArrayList<String>();
 	                        Set<EntityActorPermission> permissions = ModelMgr.getModelMgr().getFullPermissions(child.getId());
 	                        for(EntityActorPermission permission : permissions) {
 	                            sharedNames.add(permission.getSubjectName());
+	                            sharedKeys.add(permission.getSubjectKey());
 	                        }
-	                        Collections.sort(sharedNames);
-	                        sharedNameMap.put(ed, Task.csvStringFromCollection(sharedNames));
+                            if (sharedKeys.size()==1 && sharedKeys.get(0).equals(SessionMgr.getSubjectKey())) {
+                                log.trace("Entity {} is shared with the current user ({}) only",child.getId(),SessionMgr.getSubjectKey());
+                            }
+                            else {
+                                Collections.sort(sharedNames);
+                                sharedNameMap.put(ed, Task.csvStringFromCollection(sharedNames));   
+                            }
 	                    }
 			        }
 			        else {
