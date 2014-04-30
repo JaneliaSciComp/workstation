@@ -4,7 +4,6 @@ import org.janelia.it.FlyWorkstation.gui.WorkstationEnvironment;
 import org.janelia.it.FlyWorkstation.gui.alignment_board_viewer.AlignmentBoardSettings;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.VolumeModel;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.CropCoordSet;
-
 import org.janelia.it.jacs.model.TestCategories;
 import org.junit.experimental.categories.Category;
 import org.slf4j.Logger;

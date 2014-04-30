@@ -1,10 +1,10 @@
 package org.janelia.it.FlyWorkstation.shared.util;
 
-import java.io.File;
-
 import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import java.io.File;
 
 /**
  * Adapted from IDEA code base.
@@ -117,7 +117,7 @@ public class SystemInfo {
                 downloadsDirFile = new File(System.getProperty("user.home"),"Downloads/");
             }
             else if (SystemInfo.isLinux) {
-                downloadsDirFile = new File("/tmp/");
+                downloadsDirFile = new File("/tmp/"+SessionMgr.getUsername()+"/");
             }
             else if (SystemInfo.isWindows) {
                 downloadsDirFile = new File(System.getProperty("user.home"),"Downloads/");

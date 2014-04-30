@@ -26,6 +26,7 @@ import org.janelia.it.jacs.model.entity.EntityActorPermission;
 import org.janelia.it.jacs.model.entity.EntityConstants;
 import org.janelia.it.jacs.model.entity.EntityData;
 import org.janelia.it.jacs.model.tasks.Task;
+import org.janelia.it.jacs.shared.utils.EntityUtils;
 import org.janelia.it.jacs.shared.utils.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -76,7 +77,6 @@ public class RemoveEntityAction implements Action {
 			private Set<EntityData> removeReference = new HashSet<EntityData>();
 			private Set<EntityData> removeRootTag = new HashSet<EntityData>();
             private Map<EntityData,String> sharedNameMap = new HashMap<EntityData,String>();
-            private Set<Long> invalidIdSet = new HashSet<Long>();
 				
 			@Override
 			protected void doStuff() throws Exception {
@@ -84,16 +84,21 @@ public class RemoveEntityAction implements Action {
 				for(EntityData ed : toDelete) {
 					Entity child = ed.getChildEntity();
 	                
-					List<EntityData> parentEds = ModelMgr.getModelMgr().getParentEntityDatas(child.getId());
-
-					// To be technically correct, this should check for any eds owned by members of the owner group, if
-					// the entity is owned by a group. However, groups can't login, so presumably this deletion 
-					// action will never be run on a group-owned entity.
-			        Set<EntityData> ownedEds = new HashSet<EntityData>();
+					List<EntityData> parentEds = ModelMgr.getModelMgr().getAllParentEntityDatas(child.getId());
+			        Map<Long,EntityData> respectedEds = new HashMap<Long,EntityData>();
+			        // The current reference should always be considered
+                    respectedEds.put(ed.getId(),ed);
+                    
 			        for(EntityData parentEd : parentEds) {
-			            invalidIdSet.add(parentEd.getParentEntity().getId());
-			            if (ModelMgrUtils.isOwner(parentEd.getParentEntity())) {
-			                ownedEds.add(parentEd);
+			            if (!ModelMgrUtils.isOwner(child)) {
+			                // If we don't own the current entity, then all references to it are respected
+			                respectedEds.put(parentEd.getId(),parentEd);
+			            }
+			            else {
+			                // If we own the current entity, then we only care about our own references
+			                if (ModelMgrUtils.isOwner(parentEd.getParentEntity())) {
+	                            respectedEds.put(parentEd.getId(),parentEd);
+			                }
 			            }
 			        }
 					
@@ -102,8 +107,8 @@ public class RemoveEntityAction implements Action {
 
 	                    if (child.getEntityDataByAttributeName(EntityConstants.ATTRIBUTE_COMMON_ROOT)!=null) {
 	                        // Common root
-	                        if (ownedEds.isEmpty()) {
-	                            // No owned references to this root, so delete the entire tree. If there are non-owned 
+	                        if (respectedEds.size()==1) {
+	                            // No accessible references to this root aside from the one we're deleting, so delete the entire tree. If there are non-accessible 
 	                            // references, the user will be warned about them before the tree is deleted.
 	                            removeTree.add(ed);
 	                        }
@@ -119,7 +124,7 @@ public class RemoveEntityAction implements Action {
 	                        }
 	                    }
 	                    else {
-	                        if (ownedEds.size() > 1) {
+	                        if (respectedEds.size() > 1) {
 	                            // Just remove the reference
 	                            removeReference.add(ed);
 	                        }
@@ -132,19 +137,24 @@ public class RemoveEntityAction implements Action {
 	                    if (removeTree.contains(ed)) {
 	                        // When removing a tree, we need to check if its shared, and ask the user if they want to really delete a shared object.
 	                        List<String> sharedNames = new ArrayList<String>();
+	                        List<String> sharedKeys = new ArrayList<String>();
 	                        Set<EntityActorPermission> permissions = ModelMgr.getModelMgr().getFullPermissions(child.getId());
 	                        for(EntityActorPermission permission : permissions) {
 	                            sharedNames.add(permission.getSubjectName());
+	                            sharedKeys.add(permission.getSubjectKey());
 	                        }
-	                        Collections.sort(sharedNames);
-	                        sharedNameMap.put(ed, Task.csvStringFromCollection(sharedNames));
+                            if (sharedKeys.size()==1 && sharedKeys.get(0).equals(SessionMgr.getSubjectKey())) {
+                                log.trace("Entity {} is shared with the current user ({}) only",child.getId(),SessionMgr.getSubjectKey());
+                            }
+                            else {
+                                Collections.sort(sharedNames);
+                                sharedNameMap.put(ed, Task.csvStringFromCollection(sharedNames));   
+                            }
 	                    }
 			        }
 			        else {
 			            removeReference.add(ed);
 			        }
-					
-					
 				}
 			}
 			

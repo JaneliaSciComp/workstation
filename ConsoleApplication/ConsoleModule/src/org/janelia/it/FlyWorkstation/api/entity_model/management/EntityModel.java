@@ -1180,6 +1180,23 @@ public class EntityModel {
         }
         return entities;
     }
+    
+    /**
+     * Returns all of the entity datas providing links to the parents of the given entity.
+     * @param childEntityId
+     * @return
+     */
+    public List<EntityData> getAllParentEntityDatas(Long childEntityId) throws Exception {
+        List<EntityData> entities = new ArrayList<EntityData>();
+        for(EntityData parentEd : entityFacade.getAllParentEntityDatas(childEntityId)) {
+            Entity child = parentEd.getChildEntity();
+            if (child != null) {
+                parentEd.setChildEntity(getEntityById(child.getId()));
+            }
+            entities.add(parentEd);
+        }
+        return entities;
+    }
 
     /**
      * Returns all of the entities of a given type. Be very careful calling this method, since certain types have 
