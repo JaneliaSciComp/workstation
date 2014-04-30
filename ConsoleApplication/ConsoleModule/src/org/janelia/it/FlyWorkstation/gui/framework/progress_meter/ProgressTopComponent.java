@@ -30,7 +30,7 @@ import org.openide.util.NbBundle.Messages;
         iconBase = "images/cog_small_anim.gif",
         persistenceType = TopComponent.PERSISTENCE_ALWAYS
 )
-@TopComponent.Registration(mode = "rightSlidingSide", openAtStartup = true)
+@TopComponent.Registration(mode = "rightSlidingSide", openAtStartup = true, position=100)
 //@ActionID(category = "Window", id = "org.janelia.it.FlyWorkstation.gui.framework.progress_meter.ProgressTopComponent")
 //@ActionReference(path = "Menu/Window" /*, position = 333 */)
 @TopComponent.OpenActionRegistration(

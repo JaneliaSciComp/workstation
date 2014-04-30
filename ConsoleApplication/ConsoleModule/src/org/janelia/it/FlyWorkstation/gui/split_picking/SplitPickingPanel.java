@@ -1,4 +1,4 @@
-package org.janelia.it.FlyWorkstation.gui.framework.outline;
+package org.janelia.it.FlyWorkstation.gui.split_picking;
 
 import com.google.common.collect.ComparisonChain;
 import com.google.common.collect.Ordering;
@@ -38,6 +38,7 @@ import java.io.FileWriter;
 import java.util.*;
 import java.util.List;
 import java.util.concurrent.Callable;
+import org.janelia.it.FlyWorkstation.gui.framework.outline.Refreshable;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 

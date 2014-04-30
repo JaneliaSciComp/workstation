@@ -68,7 +68,6 @@ public class Browser implements Cloneable {
     private static int RGB_TYPE_BYTES_PER_PIXEL = 4;
     private static int PRINT_OVERHEAD_SIZE = 1000000;
     
-    private static Class menuBarClass;
     private JSplitPane centerLeftHorizontalSplitPane;
     private JSplitPane centerRightHorizontalSplitPane;
     private JSplitPane leftVerticalSplitPane;
@@ -79,12 +78,9 @@ public class Browser implements Cloneable {
     private ViewerManager viewerManager;
     private final ImageCache imageCache = new ImageCache();
     private CardLayout layout = new CardLayout();
-    private JMenuBar menuBar;
     private SessionModelListener modelListener = new MySessionModelListener();
 
-    private float realEstatePercent = .2f;
     private BrowserModel browserModel;
-    private BorderLayout borderLayout = new BorderLayout();
     private SessionOutline sessionOutline;
     private EntityOutline entityOutline;
     private EntityDetailsOutline entityDetailsOutline;
@@ -93,7 +89,6 @@ public class Browser implements Cloneable {
 
     private VerticalPanelPicker rightPanel;
     private OntologyOutline ontologyOutline;
-    private SplitPickingPanel splitPickingPanel;
         
     private AnnotationSessionPropertyDialog annotationSessionPropertyPanel;
     private ImportDialog importDialog;
@@ -116,8 +111,6 @@ public class Browser implements Cloneable {
      * Center Window, use passed realEstatePercent (0-1.0, where 1.0 is 100% of the screen)
      */
     public Browser(float realEstatePercent, BrowserModel browserModel) {
-        // NO-Frame enableEvents(AWTEvent.WINDOW_EVENT_MASK);
-        
         try {
             jbInit(browserModel);
         }
@@ -130,13 +123,9 @@ public class Browser implements Cloneable {
      * Use given coordinates of the top left point and passed realEstatePercent (0-1.0).
      * THis constructor is used only by the clone method
      */
-    public Browser(/* // NO-Frame int topLeftX, int topLeftY, Dimension size, */ BrowserModel browserModel) {
-        // NO-Frame enableEvents(AWTEvent.WINDOW_EVENT_MASK);
-
+    public Browser(BrowserModel browserModel) {
         try {
             jbInit(browserModel);
-            // NO-Frame setLocation(topLeftX, topLeftY);
-            // NO-Frame setSize(size);
         }
         catch (Exception e) {
             SessionMgr.getSessionMgr().handleException(e);
@@ -151,11 +140,6 @@ public class Browser implements Cloneable {
 
         viewerManager = new ViewerManager();
         
-//        Boolean isViewersLinked = (Boolean)SessionMgr.getSessionMgr().getModelProperty(VIEWERS_LINKED);
-//        if (isViewersLinked==null) {
-//            isViewersLinked = false;
-//            SessionMgr.getSessionMgr().setModelProperty(VIEWERS_LINKED, isViewersLinked);
-//        }
         boolean isViewersLinked = false;
         SessionMgr.getSessionMgr().setModelProperty(VIEWERS_LINKED, isViewersLinked);
         viewerManager.setIsViewersLinked(isViewersLinked);
@@ -218,25 +202,13 @@ public class Browser implements Cloneable {
         
         ontologyOutline.setPreferredSize(new Dimension());
           
+        // @todo remove the cruft of extraneous vertical split panels, left and right.
         BrowserPosition consolePosition = (BrowserPosition) SessionMgr.getSessionMgr().getModelProperty(BROWSER_POSITION);
         if (null == consolePosition) {
             consolePosition = resetBrowserPosition();
         }        
-        // NO-Frame else {
-        // NO-Frame     setSize(consolePosition.getBrowserSize());
-        // NO-Frame     setLocation(consolePosition.getBrowserLocation());
-        // NO-Frame }
         
-        splitPickingPanel = new SplitPickingPanel();
-        
-        rightPanel = new VerticalPanelPicker();
-        //rightPanel.addPanel(OUTLINE_ONTOLOGY, Icons.getIcon("page.png"), "Displays an ontology for annotation", ontologyOutline);
-        rightPanel.addPanel(OUTLINE_SPLIT_PICKER, Icons.getIcon("page_copy.png"), "Allows for simulation of flyline crosses", splitPickingPanel);
-        
-        
-        Component rightComponent = rightPanel;
-
-        centerRightHorizontalSplitPane = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, false, viewerManager.getViewerContainer(), rightComponent);
+        centerRightHorizontalSplitPane = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, false, viewerManager.getViewerContainer(), null);
         centerRightHorizontalSplitPane.setMinimumSize(new Dimension(0, 0));
         centerRightHorizontalSplitPane.setDividerSize(10);
         centerRightHorizontalSplitPane.setOneTouchExpandable(true);
@@ -485,14 +457,6 @@ public class Browser implements Cloneable {
         rightPanel.showPanel(panelName);
     }
     
-    public SplitPickingPanel getSplitPickingPanel() {
-        return splitPickingPanel;
-    }
-
-    public void setSplitPickingPanel(SplitPickingPanel splitPickingPanel) {
-        this.splitPickingPanel = splitPickingPanel;
-    }
-
     public SessionOutline getAnnotationSessionOutline() {
         return sessionOutline;
     }
