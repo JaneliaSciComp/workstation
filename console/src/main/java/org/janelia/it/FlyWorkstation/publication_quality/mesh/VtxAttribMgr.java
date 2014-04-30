@@ -1,6 +1,5 @@
 package org.janelia.it.FlyWorkstation.publication_quality.mesh;
 
-import org.janelia.it.FlyWorkstation.gui.alignment_board_viewer.gui_elements.AlignmentBoardControlsDialog;
 import org.janelia.it.FlyWorkstation.gui.alignment_board_viewer.renderable.MaskChanRenderableData;
 import org.janelia.it.FlyWorkstation.gui.alignment_board_viewer.renderable.RenderableBean;
 import org.janelia.it.FlyWorkstation.gui.framework.viewer.alignment_board.AlignmentBoardSettings;
@@ -83,7 +82,15 @@ public class VtxAttribMgr implements VertexAttributeManagerI {
      * @return renderable's database id vs JOGL/NIO buffers.
      */
     public Map<Long,RenderBuffersBean> getRenderIdToBuffers() {
-        if ( renderIdToBuffers == null ) {
+        // Lazy-load-friendly.
+        if ( vertexFactories == null ) {
+            try {
+                execute();
+            } catch ( Exception ex ) {
+                throw new RuntimeException( ex );
+            }
+        }
+        if ( renderIdToBuffers.size() == 0 ) {
             for ( MaskChanRenderableData bean: beanList ) {
                 long alignedItemId = bean.getBean().getAlignedItemId();
                 VertexFactory vtxFactory = renderIdToVertexFactory.get( alignedItemId );
@@ -109,6 +116,10 @@ public class VtxAttribMgr implements VertexAttributeManagerI {
      * @throws Exception for any called methods.
      */
     public void exportVertices( File outputLocation, String filenamePrefix ) throws Exception {
+        // Lazy-load-friendly.
+        if ( vertexFactories == null ) {
+            execute();
+        }
         String fileSuffix = ".obj";
         if ( ! outputLocation.canWrite() ) {
             throw new IllegalArgumentException("Cannot write to " + outputLocation);
@@ -122,10 +133,6 @@ public class VtxAttribMgr implements VertexAttributeManagerI {
 
             VertexFactory factory = renderIdToVertexFactory.get( key );
 
-//            // Must convert the normals from face-enum constants, to float values.
-//            NormalCompositor compositor = new NormalCompositor();
-//            compositor.createGouraudNormals( factory );
-//
             // Going over vertices twice: once for the geometry values, and once for the normals.
             List<VertexInfoBean> vertices = factory.getVertices();
             for ( VertexInfoBean bean: vertices ) {
@@ -159,7 +166,7 @@ public class VtxAttribMgr implements VertexAttributeManagerI {
                 objWriter.print("f");
                 for ( VertexInfoBean triangleVertex: triangleVertices ) {
                     objWriter.print(" ");
-                    int offset = triangleVertex.getVtxBufOffset();
+                    int offset = triangleVertex.getVtxBufOffset() + 1;
                     objWriter.print(offset);
                 }
                 objWriter.println();
@@ -213,7 +220,7 @@ public class VtxAttribMgr implements VertexAttributeManagerI {
         AlignmentBoardSettings settings = new AlignmentBoardSettings();
         settings.setShowChannelData( true );
         settings.setGammaFactor( AlignmentBoardSettings.DEFAULT_GAMMA );
-        settings.setChosenDownSampleRate(AlignmentBoardControlsDialog.UNSELECTED_DOWNSAMPLE_RATE);
+        settings.setChosenDownSampleRate(AlignmentBoardSettings.UNSELECTED_DOWNSAMPLE_RATE);
 
         VoxelSurfaceCollector voxelAcceptor = new VoxelSurfaceCollector();
 

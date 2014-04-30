@@ -7,7 +7,6 @@ import org.janelia.it.FlyWorkstation.gui.alignment_board_viewer.masking.MultiMas
 import org.janelia.it.FlyWorkstation.gui.framework.viewer.alignment_board.AlignmentBoardControllable;
 import org.janelia.it.FlyWorkstation.gui.framework.viewer.alignment_board.AlignmentBoardSettings;
 import org.janelia.it.FlyWorkstation.gui.framework.viewer.alignment_board.RenderablesLoadWorker;
-import org.janelia.it.FlyWorkstation.gui.alignment_board_viewer.gui_elements.AlignmentBoardControlsDialog;
 import org.janelia.it.FlyWorkstation.gui.alignment_board_viewer.masking.ConfigurableColorMapping;
 import org.janelia.it.FlyWorkstation.gui.alignment_board_viewer.masking.RenderMappingI;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.Mip3d;
@@ -68,7 +67,7 @@ public class TestMaskChan3DViz {
                     AlignmentBoardSettings settings = new AlignmentBoardSettings();
                     settings.setShowChannelData( true );
                     settings.setGammaFactor( AlignmentBoardSettings.DEFAULT_GAMMA );
-                    settings.setChosenDownSampleRate(AlignmentBoardControlsDialog.UNSELECTED_DOWNSAMPLE_RATE);
+                    settings.setChosenDownSampleRate(AlignmentBoardSettings.UNSELECTED_DOWNSAMPLE_RATE);
 
                     RenderMappingI renderMapping = new ConfigurableColorMapping();
                     RenderablesLoadWorker loadWorker = new RenderablesLoadWorker(

@@ -1,8 +1,5 @@
 package org.janelia.it.FlyWorkstation.publication_quality.mesh;
 
-import java.util.HashMap;
-import java.util.Map;
-
 /**
  * Bag-o-data about a voxel.  Includes the key for finding it in a collection.
  *

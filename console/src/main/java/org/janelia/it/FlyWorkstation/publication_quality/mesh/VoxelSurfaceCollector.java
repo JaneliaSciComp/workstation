@@ -1,9 +1,7 @@
 package org.janelia.it.FlyWorkstation.publication_quality.mesh;
 
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Map;
-import java.util.Set;
 
 import org.janelia.it.FlyWorkstation.gui.viewer3d.loader.ChannelMetaData;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.loader.MaskChanDataAcceptorI;
@@ -36,11 +34,6 @@ public class VoxelSurfaceCollector implements MaskChanDataAcceptorI {
         }
         channelCount = channelMetaData.channelCount;
 
-//        float[] colorData = new float[ channelData.length ];
-//        for ( int i = 0; i < channelData.length; i++ ) {
-//            colorData[ i ] = (float)( 256.0 / (float)channelData[ i ] );
-//        }
-//        bean.setAttribute( "color", colorData, channelData.length );
         return 1;
     }
 

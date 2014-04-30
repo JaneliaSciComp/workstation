@@ -2,9 +2,6 @@ package org.janelia.it.FlyWorkstation.gui.viewer3d;
 
 import org.janelia.it.FlyWorkstation.gui.viewer3d.texture.TextureDataI;
 
-import java.nio.ByteOrder;
-import java.nio.IntBuffer;
-
 /**
  * Created with IntelliJ IDEA.
  * User: fosterl

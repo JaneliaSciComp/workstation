@@ -1,6 +1,5 @@
 package org.janelia.it.FlyWorkstation.publication_quality.mesh;
 
-import org.janelia.it.FlyWorkstation.gui.alignment_board_viewer.gui_elements.AlignmentBoardControlsDialog;
 import org.janelia.it.FlyWorkstation.gui.alignment_board_viewer.renderable.RenderableBean;
 import org.janelia.it.FlyWorkstation.gui.framework.viewer.alignment_board.AlignmentBoardSettings;
 import org.janelia.it.FlyWorkstation.gui.framework.viewer.alignment_board.MaskChanStreamSourceI;
@@ -124,7 +123,7 @@ public class VoxelSurfaceCollectorTest {
         AlignmentBoardSettings settings = new AlignmentBoardSettings();
         settings.setShowChannelData( true );
         settings.setGammaFactor( AlignmentBoardSettings.DEFAULT_GAMMA );
-        settings.setChosenDownSampleRate(AlignmentBoardControlsDialog.UNSELECTED_DOWNSAMPLE_RATE);
+        settings.setChosenDownSampleRate(AlignmentBoardSettings.UNSELECTED_DOWNSAMPLE_RATE);
 
         VoxelSurfaceCollector voxelAcceptor = new VoxelSurfaceCollector();
 

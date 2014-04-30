@@ -1,6 +1,5 @@
 package org.janelia.it.FlyWorkstation.gui.alignment_board_viewer;
 
-import org.janelia.it.FlyWorkstation.gui.alignment_board_viewer.gui_elements.AlignmentBoardControlsDialog;
 import org.janelia.it.FlyWorkstation.gui.alignment_board_viewer.masking.MultiMaskTracker;
 import org.janelia.it.FlyWorkstation.gui.alignment_board_viewer.renderable.RenderableBean;
 import org.janelia.it.FlyWorkstation.gui.alignment_board_viewer.volume_builder.RenderablesChannelsBuilder;
@@ -50,7 +49,7 @@ public class ChannelReadTest {
         AlignmentBoardSettings settings = new AlignmentBoardSettings();
         settings.setShowChannelData( true );
         settings.setGammaFactor( AlignmentBoardSettings.DEFAULT_GAMMA );
-        settings.setChosenDownSampleRate(AlignmentBoardControlsDialog.UNSELECTED_DOWNSAMPLE_RATE);
+        settings.setChosenDownSampleRate(AlignmentBoardSettings.UNSELECTED_DOWNSAMPLE_RATE);
         RenderablesChannelsBuilder builder = new RenderablesChannelsBuilder( settings, new MultiMaskTracker(), null, null );
         loader.setAcceptors( Arrays.<MaskChanDataAcceptorI>asList( builder ) );
 

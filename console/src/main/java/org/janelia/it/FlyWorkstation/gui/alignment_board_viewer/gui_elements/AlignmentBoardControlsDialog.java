@@ -19,7 +19,6 @@ import java.awt.event.*;
  */
 public class AlignmentBoardControlsDialog extends JDialog {
     public static final String CONTAINING_DIALOG_NAME = "AlignmentBoard::Controls";
-    public static final double UNSELECTED_DOWNSAMPLE_RATE = 0.0;
 
     private static final String DISMISS_DIALOG = "Dismiss";
 

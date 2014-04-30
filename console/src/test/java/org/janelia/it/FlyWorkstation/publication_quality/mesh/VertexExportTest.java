@@ -13,11 +13,7 @@ public class VertexExportTest {
         String prefix = "VertexExportTestData";
         VtxAttribMgr attribMgr;
         attribMgr = new VtxAttribMgr( MeshRenderTestFacilities.getCompartmentMaskChanRenderableDatas() );
-        List<TriangleSource> sources = attribMgr.execute();
-//        for ( TriangleSource source: sources ) {
-//            source.getVertices();
-//            source.getTriangleList();
-//        }
+        attribMgr.execute();
         attribMgr.exportVertices( outputLoc, prefix );
         attribMgr.close();
 

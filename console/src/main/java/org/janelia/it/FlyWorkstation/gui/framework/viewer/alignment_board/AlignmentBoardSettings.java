@@ -17,6 +17,7 @@ public class AlignmentBoardSettings {
     public static final long DEFAULT_NEURON_SIZE_CONSTRAINT = 1000;
     public static final long DEFAULT_MAX_NEURON_COUNT_CONSTRAINT = 100;
     public static final int NO_NEURON_SIZE_CONSTRAINT = -1;
+    public static final double UNSELECTED_DOWNSAMPLE_RATE = 0.0;
 
     private double chosenDownSampleRate;
     private double gammaFactor =  DEFAULT_GAMMA;
