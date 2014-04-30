@@ -61,6 +61,15 @@ public class VertexInfoBean {
     }
 
     /**
+     * Certain attributes will be well-known. Any that are may be fetched via the known-attributes enum.
+     * @param attribute to fetch
+     * @return array of its values.
+     */
+    public float[] getKnownAttribute( KnownAttributes attribute ) {
+        return attributeMap.get( attribute.toString() );
+    }
+
+    /**
      * Set one attribute. Attributes may be 2D (as in tex coords) or 3D (as in vertex positions).
      *
      * @param attributeName called this at GPU time.

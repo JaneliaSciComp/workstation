@@ -10,9 +10,7 @@ import org.janelia.it.FlyWorkstation.gui.viewer3d.loader.MaskChanMultiFileLoader
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.FileInputStream;
-import java.io.IOException;
-import java.io.InputStream;
+import java.io.*;
 import java.util.*;
 
 /**
@@ -28,6 +26,7 @@ public class VtxAttribMgr implements VertexAttributeManagerI {
     private List<TriangleSource> vertexFactories;
 
     private Map<Long,RenderBuffersBean> renderIdToBuffers;
+    private Map<Long,VertexFactory> renderIdToVertexFactory;
 
     /**
      * Provide a list of mask/chan renderables.  Note that only the mask file, channel file, and a unique id
@@ -50,6 +49,7 @@ public class VtxAttribMgr implements VertexAttributeManagerI {
     public List<TriangleSource> execute() throws Exception {
         vertexFactories = new ArrayList<TriangleSource>();
         renderIdToBuffers = new HashMap<Long,RenderBuffersBean>();
+        renderIdToVertexFactory = new HashMap<Long,VertexFactory>();
         NormalCompositor normalCompositor = new NormalCompositor();
         for ( MaskChanRenderableData bean: beanList ) {
             VoxelSurfaceCollector collector = getVoxelSurfaceCollector( bean.getMaskPath(), bean.getChannelPath(), bean.getBean() );
@@ -73,19 +73,101 @@ public class VtxAttribMgr implements VertexAttributeManagerI {
             // Now have a full complement of triangles and vertices.  For this renderable, can traverse the
             // vertices, making a "composite normal" based on the normals of all entangling triangles.
             normalCompositor.createGouraudNormals(vtxFactory);
-
-            // Build buffers out of all this, and save them against bean's unique ID.
-            BufferPackager packager = new BufferPackager();
-            RenderBuffersBean buffersBean = new RenderBuffersBean();
-            buffersBean.setAttributesBuffer( packager.getVertexAttributes(vtxFactory) );
-            buffersBean.setIndexBuffer( packager.getIndices(vtxFactory) );
-
-            renderIdToBuffers.put( bean.getBean().getAlignedItemId(), buffersBean );
+            renderIdToVertexFactory.put( bean.getBean().getAlignedItemId(), vtxFactory );
         }
         return vertexFactories;
     }
 
-    public Map<Long,RenderBuffersBean> getRenderIdToBuffers() { return renderIdToBuffers; }
+    /**
+     * This method uses this vertex attribute manager to make buffers suitable for use in JOGL.
+     * @return renderable's database id vs JOGL/NIO buffers.
+     */
+    public Map<Long,RenderBuffersBean> getRenderIdToBuffers() {
+        if ( renderIdToBuffers == null ) {
+            for ( MaskChanRenderableData bean: beanList ) {
+                long alignedItemId = bean.getBean().getAlignedItemId();
+                VertexFactory vtxFactory = renderIdToVertexFactory.get( alignedItemId );
+
+                // Build buffers out of all this, and save them against bean's unique ID.
+                BufferPackager packager = new BufferPackager();
+                RenderBuffersBean buffersBean = new RenderBuffersBean();
+                buffersBean.setAttributesBuffer( packager.getVertexAttributes(vtxFactory) );
+                buffersBean.setIndexBuffer( packager.getIndices(vtxFactory) );
+
+                renderIdToBuffers.put( alignedItemId, buffersBean );
+            }
+        }
+        return renderIdToBuffers;
+    }
+
+    /**
+     * This method uses this vertex attribute manager to export the collected data to an output format.  Sort
+     * of a serialization.
+     *
+     * @param outputLocation where to write output file(s).
+     * @param filenamePrefix prefix of file name.
+     * @throws Exception for any called methods.
+     */
+    public void exportVertices( File outputLocation, String filenamePrefix ) throws Exception {
+        String fileSuffix = ".obj";
+        if ( ! outputLocation.canWrite() ) {
+            throw new IllegalArgumentException("Cannot write to " + outputLocation);
+        }
+
+        // Iterate against all the ids in the collection.
+        for ( Long key: renderIdToVertexFactory.keySet() ) {
+            //NOTE: this may change later.  May need different file name suffixes. OR the prefix may cover it sufficiently.
+            File outputFile = new File( outputLocation, filenamePrefix + "_" + key + fileSuffix );
+            PrintWriter objWriter = new PrintWriter( new FileWriter( outputFile ) );
+
+            VertexFactory factory = renderIdToVertexFactory.get( key );
+
+//            // Must convert the normals from face-enum constants, to float values.
+//            NormalCompositor compositor = new NormalCompositor();
+//            compositor.createGouraudNormals( factory );
+//
+            // Going over vertices twice: once for the geometry values, and once for the normals.
+            List<VertexInfoBean> vertices = factory.getVertices();
+            for ( VertexInfoBean bean: vertices ) {
+                double[] coords = bean.getKey().getPosition();
+                objWriter.print("v");
+                for ( double coord: coords ) {
+                    objWriter.print(" ");
+                    objWriter.print(coord);
+                }
+                objWriter.println();
+            }
+
+            for ( VertexInfoBean bean: vertices ) {
+                float[] normal = bean.getKnownAttribute( VertexInfoBean.KnownAttributes.normal );
+                if ( normal != null ) {
+                    objWriter.print("vn");
+                    for ( float normalElement: normal ) {
+                        objWriter.print(" ");
+                        objWriter.print(normalElement);
+                    }
+                    objWriter.println();
+                }
+                else {
+                    logger.warn( "No normals defined for " + bean.getKey() );
+                }
+            }
+
+            List<Triangle> triangles = factory.getTriangleList();
+            for ( Triangle triangle: triangles ) {
+                List<VertexInfoBean> triangleVertices = triangle.getVertices();
+                objWriter.print("f");
+                for ( VertexInfoBean triangleVertex: triangleVertices ) {
+                    objWriter.print(" ");
+                    int offset = triangleVertex.getVtxBufOffset();
+                    objWriter.print(offset);
+                }
+                objWriter.println();
+            }
+
+            objWriter.close();
+        }
+    }
 
     /**
      * Call this after all use of this manager's data.  It will be in a useless state afterwards.

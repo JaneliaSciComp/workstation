@@ -25,6 +25,14 @@ public class VertexInfoKey {
         return rtnVal;
     }
 
+    public String toString() {
+        StringBuilder rtnBldr = new StringBuilder();
+        for ( double posElement: position ) {
+            rtnBldr.append(" ").append( posElement );
+        }
+        return rtnBldr.toString().trim();
+    }
+
     public int hashCode() {
         return Arrays.hashCode( position );
     }
