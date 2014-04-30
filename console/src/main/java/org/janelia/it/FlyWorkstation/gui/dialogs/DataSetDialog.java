@@ -6,8 +6,21 @@ import java.awt.Font;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 
-import javax.swing.*;
+import javax.swing.BorderFactory;
+import javax.swing.Box;
+import javax.swing.BoxLayout;
+import javax.swing.JButton;
+import javax.swing.JCheckBox;
+import javax.swing.JComboBox;
+import javax.swing.JLabel;
+import javax.swing.JOptionPane;
+import javax.swing.JPanel;
+import javax.swing.JScrollPane;
+import javax.swing.JSeparator;
+import javax.swing.JTextField;
+import javax.swing.SwingConstants;
 import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
 
@@ -49,7 +62,7 @@ public class DataSetDialog extends ModalDialog implements Accessibility {
     private JLabel sampleImageLabel;
     private JComboBox sampleImageInput;
     private JCheckBox sageSyncCheckbox;
-    private HashMap<String,JCheckBox> processCheckboxes = new HashMap<String,JCheckBox>();
+    private HashMap<String,JCheckBox> processCheckboxes = new LinkedHashMap<String,JCheckBox>();
     
     private Entity dataSetEntity;
    

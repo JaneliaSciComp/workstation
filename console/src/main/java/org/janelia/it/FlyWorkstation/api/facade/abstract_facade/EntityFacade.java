@@ -38,6 +38,8 @@ public interface EntityFacade {
     public Set<Entity> getChildEntities(Long parentEntityId) throws Exception;
 
     public List<EntityData> getParentEntityDatas(Long childEntityId) throws Exception;
+
+    public List<EntityData> getAllParentEntityDatas(Long childEntityId) throws Exception;
     
     public Set<Long> getParentIdsForAttribute(long childEntityId, String attributeName) throws Exception;
     

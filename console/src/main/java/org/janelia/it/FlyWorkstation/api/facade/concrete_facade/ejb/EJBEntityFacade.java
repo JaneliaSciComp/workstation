@@ -84,6 +84,15 @@ public class EJBEntityFacade implements EntityFacade {
     }
     
     @Override
+    public List<EntityData> getAllParentEntityDatas(Long childEntityId) throws Exception {
+        List<EntityData> list = new ArrayList<EntityData>();
+        Set<EntityData> set = EJBFactory.getRemoteEntityBean().getParentEntityDatas(null, childEntityId);
+        if (set==null) return list;
+        list.addAll(set);
+        return list;
+    }
+    
+    @Override
     public Set<Long> getParentIdsForAttribute(long childEntityId, String attributeName) throws Exception {
     	Set<Long> set = new HashSet<Long>();
     	Set<Long> results = EJBFactory.getRemoteEntityBean().getParentIdsForAttribute(SessionMgr.getSubjectKey(), childEntityId, attributeName);
@@ -103,8 +112,7 @@ public class EJBEntityFacade implements EntityFacade {
     
     @Override
     public Set<Entity> getChildEntities(Long parentEntityId) throws Exception {
-        // If user is in the admin group, allow them to load anyone's entities
-        String user = SessionMgr.getSubjectKeys().contains("group:admin") ? null : SessionMgr.getSubjectKey();
+        String user = SessionMgr.getSubjectKey();
         return EJBFactory.getRemoteEntityBean().getChildEntities(user, parentEntityId);
     }
 
@@ -135,12 +143,12 @@ public class EJBEntityFacade implements EntityFacade {
 
     @Override
     public void deleteEntityTree(Long entityId) throws Exception {
-        EJBFactory.getRemoteEntityBean().deleteEntityTree(SessionMgr.getSubjectKey(), entityId);
+        EJBFactory.getRemoteEntityBean().deleteEntityTreeById(SessionMgr.getSubjectKey(), entityId);
     }
     
     @Override
     public void deleteEntityTree(Long entityId, boolean unlinkMultipleParents) throws Exception {
-	    EJBFactory.getRemoteEntityBean().deleteEntityTree(SessionMgr.getSubjectKey(), entityId, unlinkMultipleParents);
+	    EJBFactory.getRemoteEntityBean().deleteEntityTreeById(SessionMgr.getSubjectKey(), entityId, unlinkMultipleParents);
     }
     
     @Override
