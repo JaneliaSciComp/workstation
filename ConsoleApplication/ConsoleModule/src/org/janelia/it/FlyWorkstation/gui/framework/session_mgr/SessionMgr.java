@@ -501,13 +501,6 @@ public class SessionMgr {
   }
 */
 
-    public void cloneBrowser(Browser browser) {
-        Browser newBrowser = (Browser) browser.clone();
-        sessionModel.addBrowserModel(newBrowser.getBrowserModel());
-        browserModelsToBrowser.put(newBrowser.getBrowserModel(), newBrowser);
-    }
-
-
     public void systemExit() {
         systemExit(0);
     }

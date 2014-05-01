@@ -19,18 +19,12 @@ import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionModelListener;
 import org.janelia.it.FlyWorkstation.gui.framework.viewer.IconDemoPanel;
 import org.janelia.it.FlyWorkstation.gui.framework.viewer.ImageCache;
-import org.janelia.it.FlyWorkstation.gui.util.Icons;
 import org.janelia.it.FlyWorkstation.gui.slice_viewer.SliceViewViewer;
-import org.janelia.it.FlyWorkstation.gui.top_component.OntologyViewerTopComponent;
 import org.janelia.it.FlyWorkstation.shared.util.FreeMemoryWatcher;
 import org.janelia.it.FlyWorkstation.shared.util.PrintableComponent;
 import org.janelia.it.FlyWorkstation.shared.util.PrintableImage;
 import org.janelia.it.FlyWorkstation.shared.util.SystemInfo;
 import org.janelia.it.jacs.model.entity.Entity;
-import org.openide.util.Lookup;
-import org.openide.util.Lookup.Result;
-import org.openide.util.Lookup.Template;
-import org.openide.util.lookup.Lookups;
 import org.openide.windows.Mode;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -64,10 +58,6 @@ public class Browser implements Cloneable {
     private static String MEMORY_EXCEEDED_ADVISORY = "Low Memory";
     private static int RGB_TYPE_BYTES_PER_PIXEL = 4;
     private static int PRINT_OVERHEAD_SIZE = 1000000;
-    
-    private JSplitPane centerLeftHorizontalSplitPane;
-    private JSplitPane centerRightHorizontalSplitPane;
-    private JSplitPane leftVerticalSplitPane;
     
     private JPanel allPanelsView = new JPanel();
     private JPanel collapsedOutlineView = new JPanel();
@@ -148,8 +138,6 @@ public class Browser implements Cloneable {
         else {
             useFreeMemoryViewer(false);
         }
-        // NO-Frame getContentPane().setLayout(borderLayout);
-        // NO-Frame setTitle("");
 
         this.browserModel = browserModel;
         browserModel.addBrowserModelListener(new BrowserModelObserver());
@@ -199,35 +187,17 @@ public class Browser implements Cloneable {
         
         ontologyOutline.setPreferredSize(new Dimension());
           
-        // @todo remove the cruft of extraneous vertical split panels, left and right.
         BrowserPosition consolePosition = (BrowserPosition) SessionMgr.getSessionMgr().getModelProperty(BROWSER_POSITION);
         if (null == consolePosition) {
             consolePosition = resetBrowserPosition();
         }        
         
-        centerRightHorizontalSplitPane = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, false, viewerManager.getViewerContainer(), null);
-        centerRightHorizontalSplitPane.setMinimumSize(new Dimension(0, 0));
-        centerRightHorizontalSplitPane.setDividerSize(10);
-        centerRightHorizontalSplitPane.setOneTouchExpandable(true);
-        centerRightHorizontalSplitPane.setDividerLocation(consolePosition.getHorizontalRightDividerLocation());
-        centerRightHorizontalSplitPane.setBorder(BorderFactory.createEmptyBorder());
-
-        centerLeftHorizontalSplitPane = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, false, leftVerticalSplitPane, centerRightHorizontalSplitPane);
-        centerLeftHorizontalSplitPane.setMinimumSize(new Dimension(0, 0));
-        centerLeftHorizontalSplitPane.setDividerSize(10);
-        centerLeftHorizontalSplitPane.setOneTouchExpandable(true);
-        centerLeftHorizontalSplitPane.setDividerLocation(consolePosition.getHorizontalLeftDividerLocation());
-        centerLeftHorizontalSplitPane.setBorder(BorderFactory.createEmptyBorder());
-
         // Collect the final components
         mainPanel.setLayout(layout);
         allPanelsView.setLayout(new BorderLayout());
-        //allPanelsView.add(centerLeftHorizontalSplitPane, BorderLayout.CENTER);
-        // NO-Frame getContentPane().add(statusBar, BorderLayout.SOUTH);
         mainPanel.add(allPanelsView, "Regular");
         collapsedOutlineView.setLayout(new BorderLayout());
         mainPanel.add(collapsedOutlineView, "Collapsed FileOutline");
-        // NO-Frame getContentPane().add(mainPanel, BorderLayout.CENTER);
 
         // Run this later so that the Browser has finished initializing by the time it runs
         SwingUtilities.invokeLater(new Runnable() {
@@ -242,7 +212,7 @@ public class Browser implements Cloneable {
     }
 
     public JComponent getMainComponent() {
-        return centerLeftHorizontalSplitPane;
+        return viewerManager.getViewerContainer();
     }
 
     /**
@@ -320,18 +290,6 @@ public class Browser implements Cloneable {
         return browserModel;
     }
 
-    public Object clone() {
-        // NO-Frame java.awt.Point topLeft = this.getLocation();
-        // NO-Frame Dimension size = this.getSize();
-        BrowserModel newBrowserModel = (BrowserModel) this.browserModel.clone();
-        Browser newBrowser = new Browser(newBrowserModel);
-        // NO-Frame newBrowser.setTitle(getTitle());
-        newBrowser.setBrowserImageIcon(browserImageIcon);
-        //newBrowser.setVisible(true);
-
-        return newBrowser;
-    }
-    
     public void setIconImage( Image image ) {
         this.iconImage = image;
     }
@@ -346,18 +304,6 @@ public class Browser implements Cloneable {
             this.setIconImage(browserImageIcon.getImage());
         }
     }
-
-    /**
-     * Overriden so we can exit on System Close
-     * // NO-Frame 
-    protected void processWindowEvent(WindowEvent e) {
-        // NO-Frame super.processWindowEvent(e);
-
-        if (e.getID() == WindowEvent.WINDOW_CLOSING) {
-            SessionMgr.getSessionMgr().removeBrowser(this);
-        }
-    }
-    */
 
     private void useFreeMemoryViewer(boolean use) {
         statusBar.useFreeMemoryViewer(false);
@@ -387,7 +333,6 @@ public class Browser implements Cloneable {
         
         @Override
         public void browserClosing() {
-            // NO-Frame setVisible(false);
             SessionMgr.getSessionMgr().removeSessionModelListener(modelListener);
             
             BrowserPosition position = (BrowserPosition) SessionMgr.getSessionMgr().getModelProperty(BROWSER_POSITION);
@@ -396,21 +341,12 @@ public class Browser implements Cloneable {
                 position = new BrowserPosition();
             }
 
-            position.setScreenSize(Toolkit.getDefaultToolkit().getScreenSize());
-            // NO-Frame position.setBrowserSize(Browser.this.getSize());
-            // NO-Frame position.setBrowserLocation(Browser.this.getLocation());
-            position.setHorizontalLeftDividerLocation(centerLeftHorizontalSplitPane.getDividerLocation());
-            position.setHorizontalRightDividerLocation(centerRightHorizontalSplitPane.getDividerLocation());
-            if ( leftVerticalSplitPane != null ) {
-                position.setVerticalDividerLocation(leftVerticalSplitPane.getDividerLocation());
-            }
             
             SessionMgr.getSessionMgr().setModelProperty(BROWSER_POSITION, position);
             if ( generalSearchDialog != null )  {
                 SessionMgr.getSessionMgr().setModelProperty(SEARCH_HISTORY, generalSearchDialog.getSearchHistory());
             }                
             
-            // NO-Frame dispose();
         }
     }
 
@@ -502,39 +438,13 @@ public class Browser implements Cloneable {
 		return generalSearchDialog;
 	}
 
-    public void toggleViewComponentState(String viewComponentKey) {
-        // TODO The layout needs to be much nicer.  See IntelliJ layouts, with perhaps the frame menu name still visible
-        if (VIEW_OUTLINES.equals(viewComponentKey)) {
-            centerLeftHorizontalSplitPane.getLeftComponent().setVisible(!centerLeftHorizontalSplitPane.getLeftComponent().isVisible());
-            centerLeftHorizontalSplitPane.setDividerLocation(centerLeftHorizontalSplitPane.getLastDividerLocation());
-        }
-        else if (VIEW_ONTOLOGY.equals(viewComponentKey)) {
-            centerRightHorizontalSplitPane.getRightComponent().setVisible(!centerRightHorizontalSplitPane.getRightComponent().isVisible());
-            centerRightHorizontalSplitPane.setDividerLocation(centerRightHorizontalSplitPane.getLastDividerLocation());
-        }
-    }
-
-    public JSplitPane getCenterRightHorizontalSplitPane() {
-		return centerRightHorizontalSplitPane;
-	}
-    
     public void setPerspective(Perspective perspective) {
         log.info("Setting perspective: {}",perspective);
         switch (perspective) {
-        case SplitPicker:
-            selectRightPanel(OUTLINE_SPLIT_PICKER);
-            viewerManager.clearAllViewers();
-            viewerManager.ensureViewerClass(viewerManager.getMainViewerPane(), IconDemoPanel.class);
-            break;
-        case AnnotationSession:
+        case TaskMonitoring:
             openOntologyComponent();
             viewerManager.clearAllViewers();
-            viewerManager.ensureViewerClass(viewerManager.getMainViewerPane(), IconDemoPanel.class);
-        break;
-            case TaskMonitoring:
-                openOntologyComponent();
-                viewerManager.clearAllViewers();
-                break;
+            break;
         case SliceViewer:
             viewerManager.clearAllViewers();
             viewerManager.ensureViewerClass(viewerManager.getMainViewerPane(), SliceViewViewer.class);
@@ -568,9 +478,6 @@ public class Browser implements Cloneable {
         
         SessionMgr.getSessionMgr().setModelProperty(BROWSER_POSITION, position);
 
-        // NO-Frame setSize(position.getBrowserSize());
-        // NO-Frame setLocation(position.getBrowserLocation());
-        
         return position;
     }
 
