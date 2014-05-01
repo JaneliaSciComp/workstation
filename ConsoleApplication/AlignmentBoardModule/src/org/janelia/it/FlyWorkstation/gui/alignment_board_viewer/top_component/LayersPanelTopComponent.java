@@ -36,9 +36,9 @@ import org.slf4j.LoggerFactory;
         preferredID = "LayersPanelTopComponent"
 )
 @Messages({
-    "CTL_LayersPanelAction=LayersPanel",
+    "CTL_LayersPanelAction=Layers Panel",
     "CTL_LayersPanelTopComponent=Layers Panel",
-    "HINT_LayersPanelTopComponent=Change Entity Content and Appearance in Alignment Board"
+    "HINT_LayersPanelTopComponent=Adjust Alignment Board layers"
 })
 public final class LayersPanelTopComponent extends TopComponent {
 

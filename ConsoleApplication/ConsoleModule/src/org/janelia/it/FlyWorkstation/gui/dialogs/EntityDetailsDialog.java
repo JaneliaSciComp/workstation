@@ -85,7 +85,7 @@ public class EntityDetailsDialog extends ModalDialog {
         ModelMgr.getModelMgr().addModelMgrObserver(modelMgrAdapter);
         
         entityDetailsPanel.loadEntity(entity, role, defaultTab);
-        setTitle("Entity Details: "+entity.getName());
+        setTitle("Details: "+entity.getName());
         Component mainFrame = SessionMgr.getMainFrame();
         setPreferredSize(new Dimension((int)(mainFrame.getWidth()*0.5),(int)(mainFrame.getHeight()*0.8)));
         // Show dialog and wait

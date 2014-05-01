@@ -44,9 +44,9 @@ import org.slf4j.LoggerFactory;
         preferredID = "AlignmentBoardTopComponent"
 )
 @Messages({
-    "CTL_AlignmentBoardAction=AlignmentBoard",
+    "CTL_AlignmentBoardAction=Alignment Board",
     "CTL_AlignmentBoardTopComponent=Alignment Board",
-    "HINT_AlignmentBoardTopComponent=Shows how neurons align to each other in a common space."
+    "HINT_AlignmentBoardTopComponent=Shows how neurons align to each other in a common space"
 })
 public final class AlignmentBoardTopComponent extends TopComponent {
 
