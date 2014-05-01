@@ -25,6 +25,8 @@
                 <package>org.janelia.it.jacs.model</package>
                 <package>org.janelia.it.jacs.model.collections</package>
                 <package>org.janelia.it.jacs.model.common</package>
+                <package>org.janelia.it.jacs.model.domain</package>
+                <package>org.janelia.it.jacs.model.domain.ontology</package>
                 <package>org.janelia.it.jacs.model.download</package>
                 <package>org.janelia.it.jacs.model.entity</package>
                 <package>org.janelia.it.jacs.model.entity.cv</package>
