@@ -201,12 +201,12 @@ public class PatternSearchDialog extends ModalDialog {
             if (minText==null || minText.getText()==null || minText.getText().trim().length()==0) {
                 model.min=0.0;
             } else {
-                model.min=new Double(minText.getText());
+                model.min=getValueSafely(minText.getText());
             }
             if (maxText==null || maxText.getText()==null || maxText.getText().trim().length()==0) {
                 model.max=0.0;
             } else {
-                model.max=new Double(maxText.getText());
+                model.max=getValueSafely(maxText.getText());
             }
             if (intensityButton.isSelected()) {
                 model.type=INTENSITY_TYPE;
@@ -431,6 +431,28 @@ public class PatternSearchDialog extends ModalDialog {
         setCurrentFilterModel(filterSetMap.get(initialFilterName));
         setupFilterTable();
     }
+    
+    /** Convenience method to avoid exceptions when user mis-enters values. */
+    private Double getValueSafely(String text) {
+        Double rtnVal = 0.0;
+        try {
+            rtnVal = new Double(text);
+        } catch (NumberFormatException nfe) {
+            rtnVal = 0.0;
+        }
+        return rtnVal;
+    }
+
+    private Double getValueSafely(Object obj) {
+        Double rtnVal = 0.0;
+        try {
+            String text = obj.toString();
+            rtnVal = new Double(text);
+        } catch (Exception nfe) {
+            rtnVal = 0.0;
+        }
+        return rtnVal;
+    }
 
     private void setupFilterTable() throws Exception {
         tableModel = new DefaultTableModel(filterTableColumnNames, filterTableColumnNames.length) {
@@ -491,7 +513,7 @@ public class PatternSearchDialog extends ModalDialog {
                 MinMaxSelectionRow compartmentRow=minMaxRowMap.get(rowKey);
                 MinMaxModel state=compartmentRow.getModelState();
                 if (col==FT_INDEX_MIN) {
-                    Double newValue=new Double(value.toString());
+                    Double newValue=getValueSafely(value);
                     if (newValue<0.0) {
                         newValue=0.0;
                     }
@@ -504,7 +526,7 @@ public class PatternSearchDialog extends ModalDialog {
                         updateRowImpactOnCounts(row);
                     } catch (Exception ex) {}
                 } else if (col==FT_INDEX_MAX) {
-                    Double newValue=new Double(value.toString());
+                    Double newValue=getValueSafely(value);
                     if (newValue>100.0) {
                         newValue=100.0;
                     }
@@ -537,7 +559,7 @@ public class PatternSearchDialog extends ModalDialog {
                 }
                 fireTableCellUpdated(row, col);
             }
-
+            
         };
         filterTable.setModel(tableModel);
         TableColumn typeColumn = filterTable.getColumnModel().getColumn(FT_INDEX_FILTERTYPE);

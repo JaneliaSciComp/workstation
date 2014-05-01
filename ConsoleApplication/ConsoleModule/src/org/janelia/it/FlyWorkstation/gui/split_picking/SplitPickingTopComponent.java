@@ -38,9 +38,11 @@ import org.openide.util.NbBundle.Messages;
 })
 public final class SplitPickingTopComponent extends TopComponent {
 
+    private SplitPickingPanel splitPickingPanel;
+    
     public SplitPickingTopComponent() {
         initComponents();
-        SplitPickingPanel splitPickingPanel = new SplitPickingPanel();
+        splitPickingPanel = new SplitPickingPanel();
         jPanel1.add( splitPickingPanel, BorderLayout.CENTER );
         setName(Bundle.CTL_SplitPickingTopComponent());
         setToolTipText(Bundle.HINT_SplitPickingTopComponent());
@@ -76,7 +78,7 @@ public final class SplitPickingTopComponent extends TopComponent {
     // End of variables declaration//GEN-END:variables
     @Override
     public void componentOpened() {
-        // TODO add custom code on component opening
+        splitPickingPanel.refresh();
     }
 
     @Override
