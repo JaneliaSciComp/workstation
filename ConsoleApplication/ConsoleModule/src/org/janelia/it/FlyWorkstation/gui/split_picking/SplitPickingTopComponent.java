@@ -20,7 +20,7 @@ import org.openide.util.NbBundle.Messages;
         autostore = false
 )
 @TopComponent.Description(
-        preferredID = "SplitPickingTopComponent",
+        preferredID = SplitPickingTopComponent.PREFERRED_ID,
         //iconBase="SET/PATH/TO/ICON/HERE", 
         persistenceType = TopComponent.PERSISTENCE_ALWAYS
 )
@@ -37,6 +37,7 @@ import org.openide.util.NbBundle.Messages;
     "HINT_SplitPickingTopComponent=Choosing from two lines to combine"
 })
 public final class SplitPickingTopComponent extends TopComponent {
+    public static final String PREFERRED_ID = "SplitPickingTopComponent";
 
     private SplitPickingPanel splitPickingPanel;
     

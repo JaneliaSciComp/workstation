@@ -25,7 +25,7 @@ import org.openide.util.NbBundle.Messages;
         autostore = false
 )
 @TopComponent.Description(
-        preferredID = SplitPickingLanesTopComponent.SPLIT_PICKING_LANES_TOP_COMPONENT_ID,
+        preferredID = SplitPickingLanesTopComponent.PREFERRED_ID,
         //iconBase="SET/PATH/TO/ICON/HERE", 
         persistenceType = TopComponent.PERSISTENCE_ALWAYS
 )
@@ -42,7 +42,7 @@ import org.openide.util.NbBundle.Messages;
     "HINT_SplitPickingLanesTopComponent=Choose one image from each lane"
 })
 public final class SplitPickingLanesTopComponent extends TopComponent {
-    public static final String SPLIT_PICKING_LANES_TOP_COMPONENT_ID = "SplitPickingLanesTopComponent";
+    public static final String PREFERRED_ID = "SplitPickingLanesTopComponent";
 
     private ViewerManager viewerManager;
     

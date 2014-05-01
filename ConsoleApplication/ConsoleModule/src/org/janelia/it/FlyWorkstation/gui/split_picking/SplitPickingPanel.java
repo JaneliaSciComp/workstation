@@ -560,7 +560,8 @@ public class SplitPickingPanel extends JPanel implements Refreshable {
                                     int padding = 100;
                                     mainViewer.getToolbar().getImageSizeSlider().setValue((int)((double)fullWidth/2-padding));
                                     secViewer.getToolbar().getImageSizeSlider().setValue((int)((double)fullWidth/2-padding));
-                                    crossesViewer.getToolbar().getImageSizeSlider().setValue(crossesViewer.getWidth()-padding);     
+                                    crossesViewer.getToolbar().getImageSizeSlider().setValue(crossesViewer.getWidth()-padding);
+
                                 }
                             });
                         }   
@@ -573,7 +574,7 @@ public class SplitPickingPanel extends JPanel implements Refreshable {
 				SessionMgr.getSessionMgr().handleException(error);
 			}
 		};
-		refreshWorker.execute();
+		refreshWorker.execute();        
 	}
 
 	@Override
@@ -1434,24 +1435,36 @@ public class SplitPickingPanel extends JPanel implements Refreshable {
     }
 	
     private PatternSearchDialog getPatternSearchDialog() {
+        // Push the split picking lanes into user's face, then
+        // start the pattern search.  That way, once user has
+        // searched, split picking lanes show.  Then do same
+        // for main wizard panel to stack the focus order.
+        TopComponent tc = getLanesTopComponent();
+        tc.requestActive();
+        tc = getTopComponent( SplitPickingTopComponent.PREFERRED_ID );
+        tc.requestActive();
+        
         return SessionMgr.getBrowser().getPatternSearchDialog();
     }
 
     private SplitPickingLanesTopComponent getLanesTopComponent() {
         SplitPickingLanesTopComponent rtnVal = null;
-        TopComponent tc =
-                WindowManager.getDefault().findTopComponent(
-                        SplitPickingLanesTopComponent.SPLIT_PICKING_LANES_TOP_COMPONENT_ID
-                );
+        TopComponent tc = getTopComponent(
+                SplitPickingLanesTopComponent.PREFERRED_ID
+        );
         if ( tc instanceof SplitPickingLanesTopComponent ) {
             if ( ! tc.isOpened() ) {
                 tc.open();
             }
-            tc.requestActive();
             SplitPickingLanesTopComponent lanes = (SplitPickingLanesTopComponent) tc;
             rtnVal = lanes;
         }
+        
         return rtnVal;
+    }
+    
+    private TopComponent getTopComponent( String preferredId ) {
+        return WindowManager.getDefault().findTopComponent( preferredId );
     }
 
 	private void expandEntityOutline(final String uniqueId) {
