@@ -6,6 +6,11 @@
 package org.janelia.it.FlyWorkstation.gui.split_picking;
 
 import java.awt.BorderLayout;
+import java.util.concurrent.Callable;
+import org.janelia.it.FlyWorkstation.gui.framework.console.ViewerManager;
+import org.janelia.it.FlyWorkstation.gui.framework.viewer.IconDemoPanel;
+import org.janelia.it.FlyWorkstation.gui.framework.viewer.ViewerSplitPanel;
+import org.janelia.it.FlyWorkstation.model.entity.RootedEntity;
 import org.netbeans.api.settings.ConvertAsProperties;
 import org.openide.awt.ActionID;
 import org.openide.awt.ActionReference;
@@ -16,39 +21,67 @@ import org.openide.util.NbBundle.Messages;
  * Top component which displays something.
  */
 @ConvertAsProperties(
-        dtd = "-//org.janelia.it.FlyWorkstation.gui.split_picking//SplitPicking//EN",
+        dtd = "-//org.janelia.it.FlyWorkstation.gui.split_picking//SplitPickingLanes//EN",
         autostore = false
 )
 @TopComponent.Description(
-        preferredID = "SplitPickingTopComponent",
+        preferredID = SplitPickingLanesTopComponent.SPLIT_PICKING_LANES_TOP_COMPONENT_ID,
         //iconBase="SET/PATH/TO/ICON/HERE", 
         persistenceType = TopComponent.PERSISTENCE_ALWAYS
 )
-@TopComponent.Registration(mode = "rightSlidingSide", openAtStartup = true, position=400)
-@ActionID(category = "Window", id = "org.janelia.it.FlyWorkstation.gui.split_picking.SplitPickingTopComponent")
+@TopComponent.Registration(mode = "editor", openAtStartup = false)
+@ActionID(category = "Window", id = "org.janelia.it.FlyWorkstation.gui.split_picking.SplitPickingLanesTopComponent")
 @ActionReference(path = "Menu/Window" /*, position = 333 */)
 @TopComponent.OpenActionRegistration(
-        displayName = "#CTL_SplitPickingAction",
-        preferredID = "SplitPickingTopComponent"
+        displayName = "#CTL_SplitPickingLanesAction",
+        preferredID = "SplitPickingLanesTopComponent"
 )
 @Messages({
-    "CTL_SplitPickingAction=SplitPicking",
-    "CTL_SplitPickingTopComponent=Split Picking Tool",
-    "HINT_SplitPickingTopComponent=Choosing from two lines to combine"
+    "CTL_SplitPickingLanesAction=SplitPickingLanes",
+    "CTL_SplitPickingLanesTopComponent=Split Picking Lanes",
+    "HINT_SplitPickingLanesTopComponent=Choose one image from each lane"
 })
-public final class SplitPickingTopComponent extends TopComponent {
+public final class SplitPickingLanesTopComponent extends TopComponent {
+    public static final String SPLIT_PICKING_LANES_TOP_COMPONENT_ID = "SplitPickingLanesTopComponent";
 
-    private SplitPickingPanel splitPickingPanel;
+    private ViewerManager viewerManager;
     
-    public SplitPickingTopComponent() {
+    public SplitPickingLanesTopComponent() {
         initComponents();
-        splitPickingPanel = new SplitPickingPanel();
-        jPanel1.add( splitPickingPanel, BorderLayout.CENTER );
-        setName(Bundle.CTL_SplitPickingTopComponent());
-        setToolTipText(Bundle.HINT_SplitPickingTopComponent());
-
+        setName(Bundle.CTL_SplitPickingLanesTopComponent());
+        setToolTipText(Bundle.HINT_SplitPickingLanesTopComponent());
+        viewerManager = new ViewerManager();
+        jPanel1.add( viewerManager.getViewerContainer(), BorderLayout.CENTER );
     }
-
+    
+    public IconDemoPanel getMainPanel() {
+        return (IconDemoPanel)viewerManager.getMainViewer(IconDemoPanel.class);
+    }
+    
+    public IconDemoPanel getSecondaryPanel() {
+        return (IconDemoPanel)viewerManager.getSecViewer(IconDemoPanel.class);
+    }
+    
+    public void showEntityInMainViewer( RootedEntity entity ) {
+        viewerManager.showEntityInMainViewer( entity );
+    }
+    
+    public void showEntityInSecViewer( RootedEntity entity ) {
+        viewerManager.showEntityInSecViewer( entity );
+    }
+    
+    public void showEntityInMainViewer( RootedEntity entity, Callable callable ) {
+        viewerManager.showEntityInMainViewer( entity, callable );
+    }
+    
+    public void showEntityInSecViewer( RootedEntity entity, Callable callable ) {
+        viewerManager.showEntityInSecViewer( entity, callable );
+    }
+    
+    public ViewerSplitPanel getViewerSplitPanel() {
+        return viewerManager.getViewerContainer();
+    }
+    
     /**
      * This method is called from within the constructor to initialize the form.
      * WARNING: Do NOT modify this code. The content of this method is always
@@ -78,7 +111,7 @@ public final class SplitPickingTopComponent extends TopComponent {
     // End of variables declaration//GEN-END:variables
     @Override
     public void componentOpened() {
-        splitPickingPanel.refresh();
+        // TODO add custom code on component opening
     }
 
     @Override

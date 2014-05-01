@@ -21,8 +21,6 @@ import org.janelia.it.jacs.model.entity.EntityData;
 import org.janelia.it.jacs.model.tasks.Event;
 import org.janelia.it.jacs.model.tasks.Task;
 import org.janelia.it.jacs.model.tasks.TaskParameter;
-import org.janelia.it.jacs.model.tasks.utility.GenericTask;
-import org.janelia.it.jacs.model.user_data.Node;
 import org.janelia.it.jacs.shared.file_chooser.FileChooser;
 import org.janelia.it.jacs.shared.utils.EntityUtils;
 import org.slf4j.Logger;
@@ -41,6 +39,8 @@ import java.util.concurrent.Callable;
 import org.janelia.it.FlyWorkstation.gui.framework.outline.Refreshable;
 
 import static com.google.common.base.Preconditions.checkNotNull;
+import org.openide.windows.TopComponent;
+import org.openide.windows.WindowManager;
 
 /**
  * A panel that may be inserted into the right-most view pane and serves as a workflow driver for the GAL4 split line 
@@ -166,7 +166,7 @@ public class SplitPickingPanel extends JPanel implements Refreshable {
 					
 					@Override
 					protected void hadSuccess() {
-						PatternSearchDialog dialog = SessionMgr.getBrowser().getPatternSearchDialog();
+						PatternSearchDialog dialog = getPatternSearchDialog();
 						List<Long> sampleIds  = dialog.showDialog(true);
 						createLocalGrouping(sampleIds, dialog.getSaveFolderName());
 					}
@@ -201,7 +201,7 @@ public class SplitPickingPanel extends JPanel implements Refreshable {
 					
 					@Override
 					protected void hadSuccess() {
-						MAASearchDialog dialog = SessionMgr.getBrowser().getMAASearchDialog();
+						MAASearchDialog dialog = getMAASearchDialog();
 						List<Long> sampleIds = dialog.showDialog(true);
 						createLocalGrouping(sampleIds, dialog.getSaveFolderName());
 					}
@@ -270,9 +270,7 @@ public class SplitPickingPanel extends JPanel implements Refreshable {
 //		param2Panel.setPreferredSize(new Dimension(0, STEP_PANEL_HEIGHT));
 //		param2Panel.setAlignmentX(Component.LEFT_ALIGNMENT);
 //		mainPanel.add(param2Panel);
-		
-
-		
+				
 		JPanel exportPanel = new JPanel();
 		exportPanel.setLayout(new BoxLayout(exportPanel, BoxLayout.LINE_AXIS));
 		JLabel exportLabel = new JLabel("5. Export results to file: ");
@@ -364,7 +362,7 @@ public class SplitPickingPanel extends JPanel implements Refreshable {
 		ModelMgr.getModelMgr().registerOnEventBus(this);
 		loadExistingCrossSimulations();
 	}
-	
+
 	private void loadExistingCrossSimulations() {
 
 		SimpleWorker worker = new SimpleWorker() {
@@ -496,11 +494,11 @@ public class SplitPickingPanel extends JPanel implements Refreshable {
 	@Override
 	public void refresh() {
 		
-		MAASearchDialog maaSearchDialog = SessionMgr.getBrowser().getMAASearchDialog();
+		MAASearchDialog maaSearchDialog = getMAASearchDialog();
 		maaSearchButton.setVisible(maaSearchDialog!=null && maaSearchDialog.isAccessible());
 		
-		final IconDemoPanel mainViewer = (IconDemoPanel)SessionMgr.getBrowser().getViewerManager().getMainViewer(IconDemoPanel.class);
-		final IconDemoPanel secViewer = (IconDemoPanel)SessionMgr.getBrowser().getViewerManager().getSecViewer(IconDemoPanel.class); 
+		final IconDemoPanel mainViewer = getMainViewer();
+		final IconDemoPanel secViewer = getSecondaryViewer(); 
 		
 		SimpleWorker refreshWorker = new SimpleWorker() {
 			
@@ -555,10 +553,10 @@ public class SplitPickingPanel extends JPanel implements Refreshable {
                                 @Override
                                 public void run() {
                                     // Resize viewers
-                                    SessionMgr.getBrowser().getCenterRightHorizontalSplitPane().setDividerLocation(0.66);
-                                    SessionMgr.getBrowser().getViewerManager().getViewerContainer().getMainSplitPane().setDividerLocation(0.5);
+                                    //getRightSplitPane().setDividerLocation(0.66);
+                                    getMainSplitPane().setDividerLocation(0.5);
                                     // Resize images to 1 per row       
-                                    int fullWidth = SessionMgr.getBrowser().getViewerManager().getViewerContainer().getWidth();
+                                    int fullWidth = getViewerContainer().getWidth();
                                     int padding = 100;
                                     mainViewer.getToolbar().getImageSizeSlider().setValue((int)((double)fullWidth/2-padding));
                                     secViewer.getToolbar().getImageSizeSlider().setValue((int)((double)fullWidth/2-padding));
@@ -657,8 +655,8 @@ public class SplitPickingPanel extends JPanel implements Refreshable {
 			@Override
 			protected void hadSuccess() {
 				SessionMgr.getBrowser().getEntityOutline().expandByUniqueId(saveFolder.getUniqueId());
-				SessionMgr.getBrowser().getViewerManager().showEntityInMainViewer(localGroupAdFolder);
-				SessionMgr.getBrowser().getViewerManager().showEntityInSecViewer(localGroupDbdFolder);
+				showEntityInMainViewer(localGroupAdFolder);
+				showEntityInSecViewer(localGroupDbdFolder);
 			}
 			
 			@Override
@@ -682,11 +680,8 @@ public class SplitPickingPanel extends JPanel implements Refreshable {
 		
 		final List<Entity> samples1 = new ArrayList<Entity>();
 		final List<Entity> samples2 = new ArrayList<Entity>();
-
-		// We iterate through all the entities in each viewer because we want to preserve the viewer order, 
-		// which the entity selection model does not do.
 		
-		Viewer mainViewer = SessionMgr.getBrowser().getViewerManager().getViewerForCategory(EntitySelectionModel.CATEGORY_MAIN_VIEW);
+		Viewer mainViewer = getMainViewer();
 		for(RootedEntity rootedEntity : mainViewer.getRootedEntities()) {
 			for(String mainSelectionId : mainSelectionIds) {
 				if (rootedEntity.getId().equals(mainSelectionId)) {
@@ -701,7 +696,7 @@ public class SplitPickingPanel extends JPanel implements Refreshable {
 			}
 		}
 		
-		Viewer secViewer = SessionMgr.getBrowser().getViewerManager().getViewerForCategory(EntitySelectionModel.CATEGORY_SEC_VIEW);
+		Viewer secViewer = getSecondaryViewer();
 		for(RootedEntity rootedEntity : secViewer.getRootedEntities()) {
 			for(String secSelectionId : secSelectionIds) {
 				if (rootedEntity.getId().equals(secSelectionId)) {
@@ -999,8 +994,8 @@ public class SplitPickingPanel extends JPanel implements Refreshable {
 	private void updateViewers() {
 
 		if (splitPickingFolder==null || workingFolder==null || searchResultsFolder==null) {
-			IconDemoPanel mainViewer = (IconDemoPanel)SessionMgr.getBrowser().getViewerManager().getMainViewer(IconDemoPanel.class);
-			IconDemoPanel secViewer = (IconDemoPanel)SessionMgr.getBrowser().getViewerManager().getSecViewer(IconDemoPanel.class);
+			IconDemoPanel mainViewer = getMainViewer();
+			IconDemoPanel secViewer = getSecondaryViewer();
 			mainViewer.clear();
 			if (secViewer!=null) {
 				secViewer.clear();
@@ -1088,12 +1083,12 @@ public class SplitPickingPanel extends JPanel implements Refreshable {
 			
 			@Override
 			protected void hadSuccess() {
-				final IconDemoPanel mainViewer = (IconDemoPanel)SessionMgr.getBrowser().getViewerManager().getMainViewer(IconDemoPanel.class);
-				final IconDemoPanel secViewer = (IconDemoPanel)SessionMgr.getBrowser().getViewerManager().getSecViewer(IconDemoPanel.class);
+				final IconDemoPanel mainViewer = getMainViewer();
+				final IconDemoPanel secViewer = getSecondaryViewer();
 				
 				if (adFolder!=null) {
 					log.info("Got AD folder: {}",adFolder.getUniqueId());
-					SessionMgr.getBrowser().getViewerManager().showEntityInMainViewer(adFolder, new Callable<Void>() {
+					showEntityInMainViewer(adFolder, new Callable<Void>() {
 						@Override
 						public Void call() throws Exception {
 							if (sourceEntity1!=null) {
@@ -1110,7 +1105,7 @@ public class SplitPickingPanel extends JPanel implements Refreshable {
 				
 				if (dbdFolder!=null) {
 					log.info("Got DBD folder: {}",dbdFolder.getUniqueId());
-					SessionMgr.getBrowser().getViewerManager().showEntityInSecViewer(dbdFolder, new Callable<Void>() {
+					showEntityInSecViewer(dbdFolder, new Callable<Void>() {
 						@Override
 						public Void call() throws Exception {
 							if (sourceEntity2!=null) {
@@ -1397,6 +1392,66 @@ public class SplitPickingPanel extends JPanel implements Refreshable {
 
     	worker.setProgressMonitor(new ProgressMonitor(SessionMgr.getMainFrame(), "Exporting data", "", 0, 100));
 		worker.execute();
+    }
+
+    //---------------------------------Viewer Interactions
+    private void showEntityInMainViewer( RootedEntity entity ) {
+        getLanesTopComponent().showEntityInMainViewer(entity);
+    }
+    
+    private void showEntityInMainViewer( RootedEntity entity, Callable callable ) {
+        getLanesTopComponent().showEntityInMainViewer(entity, callable);
+    }
+    
+    private void showEntityInSecViewer( RootedEntity entity, Callable callable ) {
+        getLanesTopComponent().showEntityInSecViewer(entity, callable);
+    }
+    
+    private void showEntityInSecViewer( RootedEntity entity ) {
+        getLanesTopComponent().showEntityInSecViewer(entity);
+    }
+    
+    private IconDemoPanel getSecondaryViewer() {
+        SplitPickingLanesTopComponent lanes = getLanesTopComponent();
+        return lanes.getSecondaryPanel();
+    }
+
+    private IconDemoPanel getMainViewer() {
+        SplitPickingLanesTopComponent lanes = getLanesTopComponent();
+        return lanes.getMainPanel();
+    }
+
+    private ViewerSplitPanel getViewerContainer() {
+        return getLanesTopComponent().getViewerSplitPanel();
+    }
+
+    private JSplitPane getMainSplitPane() {
+        return getViewerContainer().getMainSplitPane();
+    }
+
+    private MAASearchDialog getMAASearchDialog() {
+        return SessionMgr.getBrowser().getMAASearchDialog();
+    }
+	
+    private PatternSearchDialog getPatternSearchDialog() {
+        return SessionMgr.getBrowser().getPatternSearchDialog();
+    }
+
+    private SplitPickingLanesTopComponent getLanesTopComponent() {
+        SplitPickingLanesTopComponent rtnVal = null;
+        TopComponent tc =
+                WindowManager.getDefault().findTopComponent(
+                        SplitPickingLanesTopComponent.SPLIT_PICKING_LANES_TOP_COMPONENT_ID
+                );
+        if ( tc instanceof SplitPickingLanesTopComponent ) {
+            if ( ! tc.isOpened() ) {
+                tc.open();
+            }
+            tc.requestActive();
+            SplitPickingLanesTopComponent lanes = (SplitPickingLanesTopComponent) tc;
+            rtnVal = lanes;
+        }
+        return rtnVal;
     }
 
 	private void expandEntityOutline(final String uniqueId) {
