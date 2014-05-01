@@ -38,9 +38,9 @@ import org.slf4j.LoggerFactory;
         preferredID = "EntityExplorerTopComponent"
 )
 @Messages({
-    "CTL_EntityExplorerAction=EntityExplorer",
-    "CTL_EntityExplorerTopComponent=Entity Explorer",
-    "HINT_EntityExplorerTopComponent=Browse the entity tree."
+    "CTL_EntityExplorerAction=Data Explorer",
+    "CTL_EntityExplorerTopComponent=Data Explorer",
+    "HINT_EntityExplorerTopComponent=Browse the data"
 })
 public final class EntityExplorerTopComponent extends TopComponent implements ExplorerManager.Provider {
 

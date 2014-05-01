@@ -21,7 +21,7 @@ import org.openide.util.NbBundle.Messages;
         autostore = false
 )
 @TopComponent.Description(
-        preferredID = TimeSharedTopComponent.TC_NAME,
+        preferredID = IconPanelTopComponent.TC_NAME,
         //iconBase="SET/PATH/TO/ICON/HERE", 
         persistenceType = TopComponent.PERSISTENCE_ALWAYS
 )
@@ -30,17 +30,17 @@ import org.openide.util.NbBundle.Messages;
 @ActionReference(path = "Menu/Window" /*, position = 333 */)
 @TopComponent.OpenActionRegistration(
         displayName = "#CTL_IconPanelAction",
-        preferredID = TimeSharedTopComponent.TC_NAME
+        preferredID = IconPanelTopComponent.TC_NAME
 )
 @Messages({
-    "CTL_IconPanelAction=IconPanel",
-    "CTL_IconPanelTopComponent=Icon Demo Panel",
-    "HINT_IconPanelTopComponent=Entities are represented here as graphical icons."
+    "CTL_IconPanelAction=Data Array",
+    "CTL_IconPanelTopComponent=Data Array",
+    "HINT_IconPanelTopComponent=Data shown as an array of graphical icons"
 })
-public final class TimeSharedTopComponent extends TopComponent {
+public final class IconPanelTopComponent extends TopComponent {
     public static final String TC_NAME = "IconPanelTopComponent";
 
-    public TimeSharedTopComponent() {
+    public IconPanelTopComponent() {
         initComponents();
         setName(Bundle.CTL_IconPanelTopComponent());
         setToolTipText(Bundle.HINT_IconPanelTopComponent());

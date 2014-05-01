@@ -33,7 +33,7 @@ import org.openide.util.NbBundle.Messages;
         preferredID = "AlignmentBoardControlsTopComponent"
 )
 @Messages({
-    "CTL_AlignmentBoardControlsAction=AlignmentBoardControls",
+    "CTL_AlignmentBoardControlsAction=Alignment Board Controls",
     "CTL_AlignmentBoardControlsTopComponent=Alignment Board Controls",
     "HINT_AlignmentBoardControlsTopComponent=Modify alignment board characteristics"
 })

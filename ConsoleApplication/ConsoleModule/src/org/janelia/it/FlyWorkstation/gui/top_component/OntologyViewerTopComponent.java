@@ -36,7 +36,7 @@ import org.slf4j.LoggerFactory;
         preferredID = OntologyOutline.ONTOLOGY_COMPONENT_NAME
 )
 @Messages({
-    "CTL_OntologyViewerAction=OntologyViewer",
+    "CTL_OntologyViewerAction=Ontology Editor",
     "CTL_OntologyViewerTopComponent=Ontology Editor",
     "HINT_OntologyViewerTopComponent=Browse, edit and create ontologies"
 })
