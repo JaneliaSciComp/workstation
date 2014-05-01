@@ -47,10 +47,16 @@ public class Launcher implements EntityAcceptor  {
                 win.requestActive();
             }
 
-            // Make the editor one active.
+            // Make the editor one active.  This one is not allowed to be
+            // arbitrarily left closed at user whim.
             win = WindowManager.getDefault().findTopComponent("AlignmentBoardTopComponent");
-            if (win.isOpened()) {
-                win.requestActive();
+            if ( win != null ) {
+                if ( ! win.isOpened() ) {
+                    win.open();
+                }
+                if (win.isOpened()) {
+                    win.requestActive();
+                }
             }
 
             AlignmentBoardMgr.getInstance().getLayersPanel().openAlignmentBoard( entityId );

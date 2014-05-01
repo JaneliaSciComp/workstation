@@ -278,7 +278,7 @@ public class LayersPanel extends JPanel implements Refreshable {
             @Override
             public Void call() throws Exception {
                 AlignmentBoardOpenEvent event = new AlignmentBoardOpenEvent(alignmentBoardContext);
-                log.info("Posting AB-Open");
+                log.info("Posting AB-Open");                
                 ModelMgr.getModelMgr().postOnEventBus(event);
                 return null;
             }
