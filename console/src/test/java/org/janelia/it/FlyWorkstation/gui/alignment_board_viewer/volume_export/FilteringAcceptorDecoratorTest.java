@@ -1,7 +1,7 @@
 package org.janelia.it.FlyWorkstation.gui.alignment_board_viewer.volume_export;
 
-import org.janelia.it.FlyWorkstation.gui.viewer3d.loader.ChannelMetaData;
-import org.janelia.it.FlyWorkstation.gui.viewer3d.loader.MaskChanDataAcceptorI;
+import org.janelia.it.jacs.compute.access.loader.ChannelMetaData;
+import org.janelia.it.jacs.compute.access.loader.MaskChanDataAcceptorI;
 import org.janelia.it.jacs.model.TestCategories;
 import org.junit.Before;
 import org.junit.Test;

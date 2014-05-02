@@ -2,8 +2,8 @@ package org.janelia.it.FlyWorkstation.gui.alignment_board_viewer.channel_split;
 
 import org.janelia.it.FlyWorkstation.gui.alignment_board_viewer.masking.MultiMaskTracker;
 import org.janelia.it.FlyWorkstation.gui.alignment_board_viewer.masking.MultiMaskTrackerTest;
-import org.janelia.it.FlyWorkstation.gui.alignment_board_viewer.renderable.RenderableBean;
-import org.janelia.it.FlyWorkstation.gui.viewer3d.loader.ChannelMetaData;
+import org.janelia.it.jacs.compute.access.loader.renderable.RenderableBean;
+import org.janelia.it.jacs.compute.access.loader.ChannelMetaData;
 import org.janelia.it.jacs.model.TestCategories;
 import org.junit.Assert;
 import org.junit.Before;

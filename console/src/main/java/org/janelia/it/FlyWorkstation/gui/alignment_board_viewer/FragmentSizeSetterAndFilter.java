@@ -1,15 +1,15 @@
-package org.janelia.it.FlyWorkstation.gui.viewer3d.loader;
+package org.janelia.it.FlyWorkstation.gui.alignment_board_viewer;
 
-import org.janelia.it.FlyWorkstation.gui.alignment_board_viewer.renderable.MaskChanRenderableData;
-import org.janelia.it.FlyWorkstation.gui.alignment_board_viewer.renderable.RDComparator;
-import org.janelia.it.FlyWorkstation.gui.alignment_board_viewer.renderable.RenderableBean;
 import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.resolver.CacheFileResolver;
-import org.janelia.it.FlyWorkstation.gui.viewer3d.resolver.FileResolver;
 import org.janelia.it.FlyWorkstation.model.domain.EntityWrapper;
 import org.janelia.it.FlyWorkstation.model.viewer.AlignedItem;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.apache.log4j.Logger;
+import org.janelia.it.jacs.shared.loader.MaskSingleFileLoader;
+import org.janelia.it.jacs.shared.loader.file_resolver.FileResolver;
+import org.janelia.it.jacs.shared.loader.renderable.MaskChanRenderableData;
+import org.janelia.it.jacs.shared.loader.renderable.RDComparator;
+import org.janelia.it.jacs.shared.loader.renderable.RenderableBean;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -25,7 +25,7 @@ import java.util.*;
  * some threshold. All beans which have passed through the filter will have their voxel counts set to the found value.
  */
 public class FragmentSizeSetterAndFilter {
-    private Logger logger = LoggerFactory.getLogger(FragmentSizeSetterAndFilter.class);
+    private Logger logger = Logger.getLogger(FragmentSizeSetterAndFilter.class);
     private long thresholdVoxelCount;
     private long thresholdNeuronCount;
 
@@ -57,7 +57,7 @@ public class FragmentSizeSetterAndFilter {
             if ( maskPath != null ) {
                 File infile = new File( resolver.getResolvedFilename( maskPath ) );
                 if ( ! infile.canRead() ) {
-                    logger.warn("Mask file {} cannot be read.", infile);
+                    logger.warn("Mask file " + infile + " cannot be read.");
                 }
                 else {
                     try {
@@ -71,7 +71,7 @@ public class FragmentSizeSetterAndFilter {
                         }
 
                     } catch ( Exception ex ) {
-                        logger.error("Caught an exception while attempting to retrieve voxel count for {}.", maskPath );
+                        logger.error("Caught an exception while attempting to retrieve voxel count for "+maskPath+".");
                         ex.printStackTrace();
                     }
 
@@ -92,15 +92,15 @@ public class FragmentSizeSetterAndFilter {
             }
             else {
                 discardCount ++;
-                logger.debug(
-                        "Not keeping {}, entity {}, because it has too few voxels.",
-                        data.getBean().getLabelFileNum(),
-                        data.getBean().getRenderableEntity()
-                );
+                if ( logger.isDebugEnabled() ) {
+                    logger.debug(
+                            "Not keeping "+data.getBean().getLabelFileNum()+", entity "+data.getBean().getRenderableEntity()+", because it has too few voxels."
+                    );
+                }
             }
 
         }
-        logger.debug( "Discarded {} renderables.", discardCount );
+        logger.debug( "Discarded "+discardCount+" renderables." );
 
         return rtnVal;
     }
@@ -145,10 +145,9 @@ public class FragmentSizeSetterAndFilter {
                     }
                 }
 
-                if ( rtnVal ) {
+                if ( rtnVal  &&  logger.isDebugEnabled() ) {
                     logger.debug(
-                            "Keeping {}, with {} voxels.",
-                            data.getBean().getRenderableEntity(), voxelCount
+                            "Keeping "+data.getBean().getRenderableEntity()+", with "+voxelCount+" voxels."
                     );
                 }
             }

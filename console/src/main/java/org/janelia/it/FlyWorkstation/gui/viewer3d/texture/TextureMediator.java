@@ -1,7 +1,8 @@
 package org.janelia.it.FlyWorkstation.gui.viewer3d.texture;
 
-import org.janelia.it.FlyWorkstation.gui.viewer3d.VolumeDataAcceptor;
-import org.janelia.it.FlyWorkstation.gui.viewer3d.volume_builder.VolumeDataChunk;
+import org.janelia.it.jacs.shared.loader.texture.TextureDataI;
+import org.janelia.it.jacs.shared.loader.volume.VolumeDataAcceptor;
+import org.janelia.it.jacs.shared.loader.volume_builder.VolumeDataChunk;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -304,7 +305,7 @@ public class TextureMediator {
 
     public void setupTexture( GL2 gl ) {
         logger.debug( "Texture Data for {} has interp of {}.", textureData.getFilename(),
-                getConstantName( textureData.getInterpolationMethod() ) );
+                textureData.getInterpolationMethod() );
 
         if ( ! isInitialized ) {
             logger.error("Attempting to setup texture before mediator has been initialized.");
@@ -314,9 +315,9 @@ public class TextureMediator {
         reportError( "setupTexture glActiveTexture", gl );
         gl.glBindTexture( GL2.GL_TEXTURE_3D, textureName );
         reportError( "setupTexture glBindTexture", gl );
-        gl.glTexParameteri(GL2.GL_TEXTURE_3D, GL2.GL_TEXTURE_MIN_FILTER, textureData.getInterpolationMethod() );
+        gl.glTexParameteri(GL2.GL_TEXTURE_3D, GL2.GL_TEXTURE_MIN_FILTER, convertInterpolationMethod(textureData.getInterpolationMethod()) );
         reportError( "setupTexture glTexParam MIN FILTER", gl );
-        gl.glTexParameteri(GL2.GL_TEXTURE_3D, GL2.GL_TEXTURE_MAG_FILTER, textureData.getInterpolationMethod() );
+        gl.glTexParameteri(GL2.GL_TEXTURE_3D, GL2.GL_TEXTURE_MAG_FILTER, convertInterpolationMethod(textureData.getInterpolationMethod()) );
         reportError( "setupTexture glTexParam MAG_FILTER", gl );
         gl.glTexParameteri(GL2.GL_TEXTURE_3D, GL2.GL_TEXTURE_WRAP_R, GL2.GL_CLAMP_TO_BORDER);
         reportError( "setupTexture glTexParam TEX-WRAP-R", gl );
@@ -325,6 +326,18 @@ public class TextureMediator {
         gl.glTexParameteri(GL2.GL_TEXTURE_3D, GL2.GL_TEXTURE_WRAP_T, GL2.GL_CLAMP_TO_BORDER);
         reportError( "setupTexture glTexParam TEX-WRAP-T", gl );
 
+    }
+
+    public int convertInterpolationMethod( TextureDataI.InterpolationMethod method ) {
+        if ( method == TextureDataI.InterpolationMethod.LINEAR ) {
+            return GL2.GL_LINEAR;
+        }
+        else if ( method == TextureDataI.InterpolationMethod.NEAREST ) {
+            return GL2.GL_NEAREST;
+        }
+        else {
+            return 0;
+        }
     }
 
     /**
@@ -392,8 +405,10 @@ public class TextureMediator {
 
     private int getVoxelComponentType() {
         int rtnVal = GL2.GL_UNSIGNED_INT_8_8_8_8_REV;
-        if ( textureData.getExplicitVoxelComponentType() != TextureDataI.UNSET_VALUE ) {
-            rtnVal = textureData.getExplicitVoxelComponentType();
+        if ( textureData.getExplicitVoxelComponentType() != TextureDataI.VoxelComponentType.UNSET_VALUE ) {
+            rtnVal = OpenGLConstantsConverter.getInstance().convertFromVoxelComponentType(
+                    textureData.getExplicitVoxelComponentType()
+            );
         }
         else {
             // This: tested vs 1-byte mask.
@@ -432,11 +447,13 @@ public class TextureMediator {
 
     private int getInternalFormat() {
         int internalFormat = GL2.GL_RGBA;
-        if ( textureData.getExplicitInternalFormat() != TextureDataI.UNSET_VALUE ) {
-            internalFormat = textureData.getExplicitInternalFormat();
+        if ( textureData.getExplicitInternalFormat() != TextureDataI.InternalFormat.UNSET_VALUE ) {
+            internalFormat = OpenGLConstantsConverter.getInstance().convertFromInternalFormat(
+                    textureData.getExplicitInternalFormat()
+            );
         }
         else {
-            if (textureData.getColorSpace() == VolumeDataAcceptor.TextureColorSpace.COLOR_SPACE_SRGB)
+            if (textureData.getColorSpace() == org.janelia.it.jacs.shared.loader.volume.VolumeDataAcceptor.TextureColorSpace.COLOR_SPACE_SRGB)
                 internalFormat = GL2.GL_SRGB8_ALPHA8;
 
             // This: tested against a mask file.
@@ -459,8 +476,10 @@ public class TextureMediator {
 
     private int getVoxelComponentOrder() {
         int rtnVal = GL2.GL_BGRA;
-        if ( textureData.getExplicitVoxelComponentOrder() != TextureDataI.UNSET_VALUE ) {
-            rtnVal = textureData.getExplicitVoxelComponentOrder();
+        if ( textureData.getExplicitVoxelComponentOrder() != TextureDataI.VoxelComponentOrder.UNSET_VALUE ) {
+            rtnVal = OpenGLConstantsConverter.getInstance().convertFromVoxelComponentOrder(
+                    textureData.getExplicitVoxelComponentOrder()
+            );
         }
         else {
             if ( textureData.getChannelCount() == 1 ) {

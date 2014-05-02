@@ -7,8 +7,8 @@ import org.janelia.it.FlyWorkstation.gui.alignment_board_viewer.channel_split.NB
 import org.janelia.it.FlyWorkstation.gui.alignment_board_viewer.gui_elements.GpuSamplerTest;
 import org.janelia.it.FlyWorkstation.gui.alignment_board_viewer.masking.ConfigurableColorMappingTest;
 import org.janelia.it.FlyWorkstation.gui.alignment_board_viewer.masking.MultiMaskTrackerTest;
-import org.janelia.it.FlyWorkstation.gui.alignment_board_viewer.renderable.RBComparatorTest;
-import org.janelia.it.FlyWorkstation.gui.alignment_board_viewer.renderable.RDComparatorTest;
+import org.janelia.it.jacs.compute.access.loader.renderable.RBComparatorTest;
+import org.janelia.it.jacs.compute.access.loader.renderable.RDComparatorTest;
 import org.janelia.it.FlyWorkstation.gui.alignment_board_viewer.volume_builder.DownSamplerTest;
 import org.janelia.it.FlyWorkstation.gui.alignment_board_viewer.volume_builder.VeryLargeVolumeTest;
 import org.janelia.it.FlyWorkstation.gui.alignment_board_viewer.volume_export.FilteringAcceptorDecoratorTest;

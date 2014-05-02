@@ -1,6 +1,6 @@
 package org.janelia.it.FlyWorkstation.gui.alignment_board_viewer.channel_split;
 
-import org.janelia.it.FlyWorkstation.gui.viewer3d.loader.ChannelMetaData;
+import org.janelia.it.jacs.compute.access.loader.ChannelMetaData;
 
 /**
  * Created with IntelliJ IDEA.

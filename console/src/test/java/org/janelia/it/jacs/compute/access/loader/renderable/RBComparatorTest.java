@@ -1,4 +1,4 @@
-package org.janelia.it.FlyWorkstation.gui.alignment_board_viewer.renderable;
+package org.janelia.it.jacs.compute.access.loader.renderable;
 
 import org.janelia.it.jacs.model.TestCategories;
 import org.janelia.it.jacs.model.entity.EntityConstants;

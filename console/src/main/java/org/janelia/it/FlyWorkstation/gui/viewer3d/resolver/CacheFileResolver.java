@@ -1,6 +1,7 @@
 package org.janelia.it.FlyWorkstation.gui.viewer3d.resolver;
 
 import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr;
+import org.janelia.it.jacs.shared.loader.file_resolver.FileResolver;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

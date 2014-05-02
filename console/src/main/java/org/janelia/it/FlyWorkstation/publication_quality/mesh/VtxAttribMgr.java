@@ -1,11 +1,10 @@
 package org.janelia.it.FlyWorkstation.publication_quality.mesh;
 
-import org.janelia.it.FlyWorkstation.gui.alignment_board_viewer.renderable.MaskChanRenderableData;
-import org.janelia.it.FlyWorkstation.gui.alignment_board_viewer.renderable.RenderableBean;
-import org.janelia.it.FlyWorkstation.gui.framework.viewer.alignment_board.AlignmentBoardSettings;
+import org.janelia.it.jacs.compute.access.loader.renderable.MaskChanRenderableData;
+import org.janelia.it.jacs.compute.access.loader.renderable.RenderableBean;
 import org.janelia.it.FlyWorkstation.gui.framework.viewer.alignment_board.MaskChanStreamSourceI;
-import org.janelia.it.FlyWorkstation.gui.viewer3d.loader.MaskChanDataAcceptorI;
-import org.janelia.it.FlyWorkstation.gui.viewer3d.loader.MaskChanMultiFileLoader;
+import org.janelia.it.jacs.compute.access.loader.MaskChanDataAcceptorI;
+import org.janelia.it.jacs.compute.access.loader.MaskChanMultiFileLoader;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -216,12 +215,6 @@ public class VtxAttribMgr implements VertexAttributeManagerI {
             final String maskFileName, final String chanFileName, RenderableBean renderableBean ) throws Exception {
         // Time-of-writing: only thing bean is used for is its tanslated number.
         MaskChanMultiFileLoader loader = new MaskChanMultiFileLoader();
-
-        AlignmentBoardSettings settings = new AlignmentBoardSettings();
-        settings.setShowChannelData( true );
-        settings.setGammaFactor( AlignmentBoardSettings.DEFAULT_GAMMA );
-        settings.setChosenDownSampleRate(AlignmentBoardSettings.UNSELECTED_DOWNSAMPLE_RATE);
-
         VoxelSurfaceCollector voxelAcceptor = new VoxelSurfaceCollector();
 
         loader.setAcceptors( Arrays.<MaskChanDataAcceptorI>asList(voxelAcceptor) );

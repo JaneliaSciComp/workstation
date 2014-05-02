@@ -1,14 +1,14 @@
 package org.janelia.it.FlyWorkstation.gui.viewer3d.texture;
 
-import org.janelia.it.FlyWorkstation.gui.viewer3d.masking.VolumeDataI;
-import org.janelia.it.FlyWorkstation.gui.alignment_board_viewer.volume_builder.VolumeDataBean;
 import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.VolumeModel;
 import org.janelia.it.FlyWorkstation.gui.alignment_board_viewer.masking.RenderMappingI;
-import org.janelia.it.FlyWorkstation.gui.alignment_board_viewer.renderable.RenderableBean;
-import org.janelia.it.FlyWorkstation.gui.viewer3d.VolumeDataAcceptor;
+import org.janelia.it.jacs.shared.loader.renderable.RenderableBean;
+import org.janelia.it.jacs.shared.loader.texture.TextureDataI;
+import org.janelia.it.jacs.shared.loader.volume.VolumeDataAcceptor;
+import org.janelia.it.jacs.shared.loader.volume.VolumeDataBean;
+import org.janelia.it.jacs.shared.loader.volume.VolumeDataI;
 
-import javax.media.opengl.GL2;
 import java.nio.ByteOrder;
 import java.util.Collection;
 import java.util.Map;
@@ -40,11 +40,11 @@ public class RenderMapTextureBean implements TextureDataI {
 
     //private byte[] mapData;
     private boolean inverted = false; // Default probably carries the day.
-    private Integer voxelComponentFormat = GL2.GL_UNSIGNED_INT_8_8_8_8_REV;
+    private VoxelComponentType voxelComponentType = VoxelComponentType.UNSIGNED_INT_8_8_8_8_REV;
     private Collection<RenderableBean> renderables;
 
-    private int interpolationMethod = GL2.GL_NEAREST;
-    private int voxelComponentOrder = GL2.GL_RGBA;
+    private InterpolationMethod interpolationMethod = InterpolationMethod.NEAREST;
+    private VoxelComponentOrder voxelComponentOrder = VoxelComponentOrder.RGBA;
 
     /**
      * This model's members are set from client code and used here, to avoid excessive parameter passing.
@@ -256,13 +256,13 @@ public class RenderMapTextureBean implements TextureDataI {
     }
 
     @Override
-    public Integer getExplicitVoxelComponentType() {
-        return voxelComponentFormat;
+    public VoxelComponentType getExplicitVoxelComponentType() {
+        return voxelComponentType;
     }
 
     @Override
-    public void setExplicitVoxelComponentType(int format) {
-        this.voxelComponentFormat = format;
+    public void setExplicitVoxelComponentType(VoxelComponentType type) {
+        this.voxelComponentType = type;
     }
 
     @Override
@@ -276,32 +276,32 @@ public class RenderMapTextureBean implements TextureDataI {
     }
 
     @Override
-    public int getInterpolationMethod() {
+    public InterpolationMethod getInterpolationMethod() {
         return interpolationMethod;
     }
 
     @Override
-    public void setInterpolationMethod(int interpolationMethod) {
+    public void setInterpolationMethod(InterpolationMethod interpolationMethod) {
         this.interpolationMethod = interpolationMethod;
     }
 
     @Override
-    public Integer getExplicitInternalFormat() {
-        return GL2.GL_RGBA;//TextureDataI.UNSET_VALUE;
+    public InternalFormat getExplicitInternalFormat() {
+        return InternalFormat.RGBA;//TextureDataI.UNSET_VALUE;
     }
 
     @Override
-    public void setExplicitInternalFormat( Integer format ) {
+    public void setExplicitInternalFormat( InternalFormat format ) {
         throw new IllegalStateException( "If this is being called, this class is being used with wrong intent." );
     }
 
     @Override
-    public Integer getExplicitVoxelComponentOrder() {
+    public VoxelComponentOrder getExplicitVoxelComponentOrder() {
         return voxelComponentOrder;
     }
 
     @Override
-    public void setExplicitVoxelComponentOrder(Integer voxelComponentOrder) {
+    public void setExplicitVoxelComponentOrder(VoxelComponentOrder voxelComponentOrder) {
         this.voxelComponentOrder = voxelComponentOrder;
     }
 

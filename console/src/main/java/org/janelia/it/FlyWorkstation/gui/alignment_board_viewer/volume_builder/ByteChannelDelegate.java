@@ -1,6 +1,6 @@
 package org.janelia.it.FlyWorkstation.gui.alignment_board_viewer.volume_builder;
 
-import org.janelia.it.FlyWorkstation.gui.viewer3d.loader.ChannelMetaData;
+import org.janelia.it.jacs.compute.access.loader.ChannelMetaData;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.masking.VolumeDataI;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

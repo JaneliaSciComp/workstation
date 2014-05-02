@@ -1,11 +1,10 @@
 package org.janelia.it.FlyWorkstation.publication_quality.mesh;
 
-import org.janelia.it.FlyWorkstation.gui.alignment_board_viewer.renderable.MaskChanRenderableData;
-import org.janelia.it.FlyWorkstation.gui.alignment_board_viewer.renderable.RenderableBean;
-import org.janelia.it.FlyWorkstation.gui.framework.viewer.alignment_board.AlignmentBoardSettings;
+import org.janelia.it.jacs.compute.access.loader.renderable.MaskChanRenderableData;
+import org.janelia.it.jacs.compute.access.loader.renderable.RenderableBean;
 import org.janelia.it.FlyWorkstation.gui.framework.viewer.alignment_board.MaskChanStreamSource;
-import org.janelia.it.FlyWorkstation.gui.viewer3d.loader.MaskChanDataAcceptorI;
-import org.janelia.it.FlyWorkstation.gui.viewer3d.loader.MaskChanMultiFileLoader;
+import org.janelia.it.jacs.compute.access.loader.MaskChanDataAcceptorI;
+import org.janelia.it.jacs.compute.access.loader.MaskChanMultiFileLoader;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.resolver.FileResolver;
 
 import java.util.Arrays;
@@ -17,27 +16,22 @@ import java.util.Arrays;
  */
 public class VoxelSurfaceCollectorFactory {
     private FileResolver resolver;
-    private AlignmentBoardSettings alignmentBoardSettings;
+    private boolean includeChannelData;
 
-    public VoxelSurfaceCollectorFactory( FileResolver resolver, AlignmentBoardSettings alignmentBoardSettings ) {
+    public VoxelSurfaceCollectorFactory( FileResolver resolver, boolean includeChannelData ) {
         this.resolver = resolver;
-        this.alignmentBoardSettings = alignmentBoardSettings;
+        this.includeChannelData = includeChannelData;
     }
 
     public VoxelSurfaceCollector getSurfaceCollector( final MaskChanRenderableData renderableData ) throws Exception {
         RenderableBean renderableBean = renderableData.getBean();
         MaskChanMultiFileLoader loader = new MaskChanMultiFileLoader();
 
-        AlignmentBoardSettings settings = new AlignmentBoardSettings();
-        settings.setShowChannelData( false );
-        settings.setGammaFactor( AlignmentBoardSettings.DEFAULT_GAMMA );
-        settings.setChosenDownSampleRate(AlignmentBoardSettings.UNSELECTED_DOWNSAMPLE_RATE);
-
         VoxelSurfaceCollector surfaceCollector = new VoxelSurfaceCollector();
         loader.setAcceptors( Arrays.<MaskChanDataAcceptorI>asList(surfaceCollector) );
 
         MaskChanStreamSource streamSource = new MaskChanStreamSource(
-                renderableData, resolver, alignmentBoardSettings.isShowChannelData()
+                renderableData, resolver, includeChannelData
         );
 
         loader.read(renderableBean, streamSource);

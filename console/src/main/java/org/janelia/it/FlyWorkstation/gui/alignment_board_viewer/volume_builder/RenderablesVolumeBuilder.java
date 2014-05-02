@@ -1,9 +1,7 @@
 package org.janelia.it.FlyWorkstation.gui.alignment_board_viewer.volume_builder;
 
-import org.janelia.it.FlyWorkstation.gui.viewer3d.loader.MaskChanDataAcceptorI;
+import org.janelia.it.jacs.compute.access.loader.MaskChanDataAcceptorI;
 import org.janelia.it.FlyWorkstation.gui.alignment_board_viewer.masking.VolumeConsistencyChecker;
-import org.slf4j.Logger;
-
 
 /**
  * Created with IntelliJ IDEA.
@@ -48,8 +46,8 @@ public abstract class RenderablesVolumeBuilder implements MaskChanDataAcceptorI 
     }
 
     @Override
-    public void endData( Logger logger ) {
-        checker.report( true, logger );
+    public void endData() {
+        checker.report( true );
     }
 
     //-------------------------END:-----------IMPLEMENT MaskChanDataAcceptorI

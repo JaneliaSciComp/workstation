@@ -1,9 +1,9 @@
 package org.janelia.it.FlyWorkstation.gui.alignment_board_viewer.texture;
 
 import org.janelia.it.FlyWorkstation.gui.alignment_board_viewer.masking.RenderMappingI;
-import org.janelia.it.FlyWorkstation.gui.alignment_board_viewer.renderable.MaskChanRenderableData;
-import org.janelia.it.FlyWorkstation.gui.alignment_board_viewer.renderable.RenderableBean;
-import org.janelia.it.FlyWorkstation.gui.alignment_board_viewer.renderable.RenderableDataSourceI;
+import org.janelia.it.jacs.compute.access.loader.renderable.MaskChanRenderableData;
+import org.janelia.it.jacs.compute.access.loader.renderable.RenderableBean;
+import org.janelia.it.jacs.compute.access.loader.renderable.RenderableDataSourceI;
 import org.janelia.it.FlyWorkstation.model.domain.*;
 import org.janelia.it.FlyWorkstation.model.viewer.AlignedItem;
 import org.janelia.it.FlyWorkstation.model.viewer.AlignmentBoardContext;

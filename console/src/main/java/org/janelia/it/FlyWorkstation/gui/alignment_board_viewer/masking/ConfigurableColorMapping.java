@@ -1,8 +1,8 @@
 package org.janelia.it.FlyWorkstation.gui.alignment_board_viewer.masking;
 
-import org.janelia.it.FlyWorkstation.gui.alignment_board_viewer.renderable.InvertingComparator;
-import org.janelia.it.FlyWorkstation.gui.alignment_board_viewer.renderable.RBComparator;
-import org.janelia.it.FlyWorkstation.gui.alignment_board_viewer.renderable.RenderableBean;
+import org.janelia.it.jacs.compute.access.loader.renderable.InvertingComparator;
+import org.janelia.it.jacs.compute.access.loader.renderable.RBComparator;
+import org.janelia.it.jacs.compute.access.loader.renderable.RenderableBean;
 import org.janelia.it.jacs.model.entity.Entity;
 import org.janelia.it.jacs.model.entity.EntityConstants;
 import org.slf4j.Logger;

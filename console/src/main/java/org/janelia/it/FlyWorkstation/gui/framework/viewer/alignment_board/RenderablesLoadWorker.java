@@ -1,9 +1,9 @@
 package org.janelia.it.FlyWorkstation.gui.framework.viewer.alignment_board;
 
-import org.janelia.it.FlyWorkstation.gui.alignment_board_viewer.renderable.*;
+import org.janelia.it.jacs.compute.access.loader.renderable.*;
 import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.FlyWorkstation.gui.alignment_board_viewer.gui_elements.GpuSampler;
-import org.janelia.it.FlyWorkstation.gui.viewer3d.loader.*;
+import org.janelia.it.jacs.compute.access.loader.*;
 import org.janelia.it.FlyWorkstation.gui.alignment_board_viewer.masking.*;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.resolver.CacheFileResolver;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.resolver.FileResolver;
@@ -472,7 +472,7 @@ public class RenderablesLoadWorker extends SimpleWorker implements VolumeLoader 
     private synchronized void ensureCollectorMap(Collection<MaskChanRenderableData> renderableDatas) {
         if ( collectorMap == null ) {
             collectorMap = new HashMap<Integer,VoxelSurfaceCollector>();
-            VoxelSurfaceCollectorFactory voxelSurfaceCollectorFactory = new VoxelSurfaceCollectorFactory( resolver, alignmentBoardSettings );
+            VoxelSurfaceCollectorFactory voxelSurfaceCollectorFactory = new VoxelSurfaceCollectorFactory( resolver, alignmentBoardSettings.isShowChannelData() );
             for ( MaskChanRenderableData renderableData: renderableDatas ) {
                 try {
                     VoxelSurfaceCollector collector = voxelSurfaceCollectorFactory.getSurfaceCollector(renderableData);

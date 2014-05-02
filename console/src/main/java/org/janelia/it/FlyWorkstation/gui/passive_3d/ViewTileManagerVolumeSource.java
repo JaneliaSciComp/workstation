@@ -3,14 +3,14 @@ package org.janelia.it.FlyWorkstation.gui.passive_3d;
 import org.janelia.it.FlyWorkstation.geom.CoordinateAxis;
 import org.janelia.it.FlyWorkstation.geom.Rotation3d;
 import org.janelia.it.FlyWorkstation.geom.Vec3;
-import org.janelia.it.FlyWorkstation.gui.alignment_board_viewer.volume_builder.VolumeDataBean;
 import org.janelia.it.FlyWorkstation.gui.camera.BasicObservableCamera3d;
 import org.janelia.it.FlyWorkstation.gui.camera.Camera3d;
 import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.interfaces.Viewport;
 import org.janelia.it.FlyWorkstation.gui.slice_viewer.*;
-import org.janelia.it.FlyWorkstation.gui.viewer3d.texture.TextureDataBean;
-import org.janelia.it.FlyWorkstation.gui.viewer3d.texture.TextureDataI;
+import org.janelia.it.FlyWorkstation.gui.viewer3d.texture.OpenGLConstantsConverter;
+import org.janelia.it.jacs.shared.loader.texture.TextureDataBean;
+import org.janelia.it.jacs.shared.loader.volume.VolumeDataBean;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -91,7 +91,7 @@ public class ViewTileManagerVolumeSource implements VolumeSource {
         iterationCamera.setPixelsPerSceneUnit(camera.getPixelsPerSceneUnit());
         iterationCamera.setRotation(camera.getRotation());
 
-        TextureDataI textureDataFor3D = null;
+        TextureDataBean textureDataFor3D = null;
         TileFormat tileFormat = dataAdapter.getTileFormat();
 
         logger.info("Absolute start/end Y are {}..{}.", absoluteReqVolStartY, absoluteReqVolEndY );
@@ -177,8 +177,12 @@ public class ViewTileManagerVolumeSource implements VolumeSource {
         );
         textureDataFor3D.setVoxelMicrometers(new Double[]{1.0, 1.0, 1.0});
         textureDataFor3D.setChannelCount(stdChannelCount);
-        textureDataFor3D.setExplicitInternalFormat(stdInternalFormat);
-        textureDataFor3D.setExplicitVoxelComponentType(stdType);
+        textureDataFor3D.setExplicitInternalFormat(
+                OpenGLConstantsConverter.getInstance().backConvertToInternalFormat( stdInternalFormat )
+        );
+        textureDataFor3D.setExplicitVoxelComponentType(
+                OpenGLConstantsConverter.getInstance().backConvertToVoxelType( stdType )
+        );
         textureDataFor3D.setPixelByteCount(stdByteCount);
 
         sliceRecorder.close(); //***TEMP***

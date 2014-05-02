@@ -3,8 +3,8 @@ package org.janelia.it.FlyWorkstation.publication_quality.mesh;
 import java.util.HashMap;
 import java.util.Map;
 
-import org.janelia.it.FlyWorkstation.gui.viewer3d.loader.ChannelMetaData;
-import org.janelia.it.FlyWorkstation.gui.viewer3d.loader.MaskChanDataAcceptorI;
+import org.janelia.it.jacs.compute.access.loader.ChannelMetaData;
+import org.janelia.it.jacs.compute.access.loader.MaskChanDataAcceptorI;
 import org.slf4j.Logger;
 
 /**

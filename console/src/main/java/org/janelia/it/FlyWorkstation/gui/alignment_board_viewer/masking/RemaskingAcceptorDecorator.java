@@ -1,8 +1,11 @@
-package org.janelia.it.FlyWorkstation.gui.viewer3d.loader;
+package org.janelia.it.FlyWorkstation.gui.alignment_board_viewer.masking;
 
 import org.janelia.it.FlyWorkstation.gui.alignment_board_viewer.masking.MultiMaskTracker;
-import org.janelia.it.FlyWorkstation.gui.viewer3d.masking.VolumeDataI;
-import org.janelia.it.FlyWorkstation.shared.annotations.NotThreadSafe;
+import org.janelia.it.jacs.shared.annotation.NotThreadSafe;
+import org.janelia.it.jacs.shared.loader.AbstractAcceptorDecorator;
+import org.janelia.it.jacs.shared.loader.ChannelMetaData;
+import org.janelia.it.jacs.shared.loader.MaskChanDataAcceptorI;
+import org.janelia.it.jacs.shared.loader.volume.VolumeDataI;
 
 /**
  * Created with IntelliJ IDEA.

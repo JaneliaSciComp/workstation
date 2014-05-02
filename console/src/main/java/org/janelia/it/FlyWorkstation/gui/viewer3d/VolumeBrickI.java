@@ -1,6 +1,7 @@
 package org.janelia.it.FlyWorkstation.gui.viewer3d;
 
 import org.janelia.it.FlyWorkstation.gui.opengl.GLActor;
+import org.janelia.it.jacs.shared.loader.volume.VolumeDataAcceptor;
 
 /**
  * Created with IntelliJ IDEA.
