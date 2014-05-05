@@ -6,9 +6,10 @@ package org.janelia.it.FlyWorkstation.gui.viewer3d;
 
 import org.janelia.it.FlyWorkstation.gui.static_view.RGBExcludableVolumeBrick;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.resolver.TrivialFileResolver;
-import org.janelia.it.FlyWorkstation.gui.viewer3d.texture.TextureDataI;
+import org.janelia.it.jacs.shared.loader.texture.TextureDataI;
 
 import javax.swing.*;
+import java.io.File;
 
 /**
  * @author brunsc
@@ -38,12 +39,12 @@ public class TestMip3d {
                     //      String fn = "/Users/fosterl/Documents/LSM_3D/FLFL_20121001154228067_25581.lsm";
                     //String fn = "/Volumes/flylight/RJ/For Les Foster/B01_T01_20121023_PMB1_MB057B_20X_R1_L01.lsm";
                     //                    String fn = "/Volumes/jacsData/filestore/MaskResources/GiantFiber/guide/EPA_R.v3dpbd";
-                    //String fn = "/Volumes/jacsData/filestore/MaskResources/GiantFiber/guide/LAL_L.v3dpbd";
-                    //String fn = "/Volumes/jacsData/filestore/system/Separation/296/418/1778029752666296418/separate/fastload/Reference2_50.mp4";
+                    //String fn = "/Volumes/nobackup/jacs/jacsData/filestore/MaskResources/GiantFiber/guide/LAL_L.v3dpbd";
+                    //String fn = "/Volumes/nobackup/jacs/jacsData/filestore/system/Separation/296/418/1778029752666296418/separate/fastload/Reference2_50.mp4";
                     String fileBase = "/Users/fosterl/Documents/alignment_board/samples/";
                     //String fn = fileBase + "1735579170638921826/ConsolidatedSignal2_25.mp4";
-                    //String fn = "/Volumes/jacsData/filestore/system/Separation/951/842/1742124964321951842/separate/ConsolidatedLabel.v3dpbd";
-                    //String fn = "/Volumes/jacsData/filestore/system/Separation/294/370/1742138165818294370/separate/fastLoad/ConsolidatedSignal2_25.mp4";
+                    //String fn = "/Volumes/nobackup/jacs/jacsData/filestore/system/Separation/951/842/1742124964321951842/separate/ConsolidatedLabel.v3dpbd";
+                    //String fn = "/Volumes/nobackup/jacs/jacsData/filestore/system/Separation/294/370/1742138165818294370/separate/fastLoad/ConsolidatedSignal2_25.mp4";
 
                     // Compartment masks.
                     String guideBase = "/Volumes/jacsData/filestore/MaskResources/Compartment/guide/";
@@ -56,14 +57,12 @@ public class TestMip3d {
                     //String fn = "/Users/fosterl/mean_brain_295_ref_local_with_compartment_edges.tif";
                     //String fn = "/Users/fosterl/test1_256.tif";
 
-                    //String fn = "/Volumes/jacsData/filestore/system/Separation/296/418/1778029752666296418/separate/ConsolidatedLabel.v3dpbd";
-                    //String fn = "/Volumes/jacsData/filestore/system/Separation/143/266/1696292257579143266/separate/ConsolidatedLabel.v3dpbd";
-                    //String fn = "/Volumes/jacsData/filestore/system/Separation/921/826/1735579170638921826/separate/ConsolidatedSignal.v3dpbd";
-                    //String fn = "/Volumes/jacsData/filestore/asoy/Separation/206/690/1823963551044206690/separate/ConsolidatedSignal.v3dpbd";   // 1672 x 1024 x 360
-                    //String fn = "/Volumes/jacsData/filestore/asoy/Separation/998/562/1823854828887998562/separate/ConsolidatedSignal.v3dpbd";
-                    //String fn = "/Volumes/jacsData/filestore/asoy/Separation/475/490/1823622563356475490/separate/ConsolidatedSignal.v3dpbd";
-                    //String fn = "/Volumes/jacsData/filestore/asoy/Separation/309/922/1822667866399309922/separate/ConsolidatedSignal.v3dpbd";
-                    String fn = "/Volumes/mousebrainmicro/render/2013-03-25-Liver/default.0.tif";
+                    String fn = "/Volumes/nobackup/jacs/jacsData/filestore/system/Separation/143/266/1696292257579143266/separate/ConsolidatedLabel.v3dpbd";
+                    //String fn = "/Volumes/nobackup/jacs/jacsData/filestore/system/Separation/921/826/1735579170638921826/separate/ConsolidatedSignal.v3dpbd";
+                    //String fn = "/Volumes/nobackup/jacs/jacsData/filestore/asoy/Separation/206/690/1823963551044206690/separate/ConsolidatedSignal.v3dpbd";   // 1672 x 1024 x 360
+                    //String fn = "/Volumes/nobackup/jacs/jacsData/filestore/asoy/Separation/998/562/1823854828887998562/separate/ConsolidatedSignal.v3dpbd";
+                    //String fn = "/Volumes/nobackup/jacs/jacsData/filestore/asoy/Separation/475/490/1823622563356475490/separate/ConsolidatedSignal.v3dpbd";
+                    //String fn = "/Volumes/nobackup/jacs/mousebrainmicro/render/2013-03-25-Liver/default.0.tif";
 
                     // All black.  String fn = "/Volumes/jacsData/filestore/MaskResources/Compartment/maskRGB.v3dpbd";
 
@@ -82,6 +81,11 @@ public class TestMip3d {
                             return null;
                         }
                     };
+
+                    if ( ! new File( fn ).canRead() ) {
+                        throw new IllegalArgumentException("Please use a different file, " + fn + " is not available.");
+                    }
+
                     if ( ! mipWidget.loadVolume(fn, factory, new TrivialFileResolver() ) )
                         System.out.println("Volume load failed.");
                 	// mipWidget.loadVolume("/Users/brunsc/projects/fast_load/test_dir2/fastLoad/ConsolidatedSignal2_25.v3dpbd", new TrivialFileResolver());

@@ -1,12 +1,13 @@
 package org.janelia.it.FlyWorkstation.gui.alignment_board_viewer.masking;
 
-import org.janelia.it.jacs.compute.access.loader.renderable.RenderableBean;
-import org.janelia.it.FlyWorkstation.gui.alignment_board_viewer.volume_builder.VolumeDataBean;
-import org.janelia.it.FlyWorkstation.gui.viewer3d.masking.VolumeDataI;
-import org.janelia.it.FlyWorkstation.gui.viewer3d.texture.MaskTextureDataBean;
-import org.janelia.it.FlyWorkstation.gui.viewer3d.VolumeDataAcceptor;
-import org.janelia.it.FlyWorkstation.gui.viewer3d.texture.TextureDataI;
-import org.janelia.it.FlyWorkstation.gui.viewer3d.volume_builder.VolumeDataChunk;
+import org.janelia.it.jacs.shared.loader.renderable.RenderableBean;
+import org.janelia.it.jacs.shared.loader.texture.MaskTextureDataBean;
+import org.janelia.it.jacs.shared.loader.texture.TextureDataI;
+import org.janelia.it.jacs.shared.loader.volume.MaskBuilderI;
+import org.janelia.it.jacs.shared.loader.volume.VolumeDataAcceptor;
+import org.janelia.it.jacs.shared.loader.volume.VolumeDataBean;
+import org.janelia.it.jacs.shared.loader.volume.VolumeDataI;
+import org.janelia.it.jacs.shared.loader.volume_builder.VolumeDataChunk;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

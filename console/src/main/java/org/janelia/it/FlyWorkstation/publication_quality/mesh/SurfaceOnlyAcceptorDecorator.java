@@ -1,8 +1,8 @@
 package org.janelia.it.FlyWorkstation.publication_quality.mesh;
 
-import org.janelia.it.jacs.compute.access.loader.AbstractAcceptorDecorator;
-import org.janelia.it.jacs.compute.access.loader.ChannelMetaData;
-import org.janelia.it.jacs.compute.access.loader.MaskChanDataAcceptorI;
+import org.janelia.it.jacs.shared.loader.AbstractAcceptorDecorator;
+import org.janelia.it.jacs.shared.loader.ChannelMetaData;
+import org.janelia.it.jacs.shared.loader.MaskChanDataAcceptorI;
 
 import java.util.Map;
 

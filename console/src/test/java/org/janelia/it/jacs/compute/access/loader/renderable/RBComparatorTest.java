@@ -2,6 +2,9 @@ package org.janelia.it.jacs.compute.access.loader.renderable;
 
 import org.janelia.it.jacs.model.TestCategories;
 import org.janelia.it.jacs.model.entity.EntityConstants;
+import org.janelia.it.jacs.shared.loader.renderable.InvertingComparator;
+import org.janelia.it.jacs.shared.loader.renderable.RBComparator;
+import org.janelia.it.jacs.shared.loader.renderable.RenderableBean;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.slf4j.Logger;

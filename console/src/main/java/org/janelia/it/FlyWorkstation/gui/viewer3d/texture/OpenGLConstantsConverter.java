@@ -187,6 +187,7 @@ public class OpenGLConstantsConverter {
                 internalFormatCode.put( TextureDataI.InternalFormat.COMPRESSED_RGBA_S3TC_DXT1_EXT, GL2.GL_COMPRESSED_RGBA_S3TC_DXT1_EXT);
                 internalFormatCode.put( TextureDataI.InternalFormat.COMPRESSED_RGBA_S3TC_DXT3_EXT, GL2.GL_COMPRESSED_RGBA_S3TC_DXT3_EXT);
                 internalFormatCode.put( TextureDataI.InternalFormat.COMPRESSED_RGBA_S3TC_DXT5_EXT, GL2.GL_COMPRESSED_RGBA_S3TC_DXT5_EXT);
+                internalFormatCode.put( TextureDataI.InternalFormat.LUMINANCE16, GL2.GL_LUMINANCE16 );
                 internalFormatCode.put( TextureDataI.InternalFormat.UNSET_VALUE, TextureDataI.UNSET_VALUE);
             }
         }
@@ -225,26 +226,26 @@ public class OpenGLConstantsConverter {
                     return;
 
                 voxelComponentTypeCode = new HashMap<TextureDataI.VoxelComponentType,Integer>();
-                voxelComponentTypeCode.put( TextureDataI.VoxelComponentType.UNSIGNED_BYTE, GL2.GL_UNSIGNED_BYTE);
-                voxelComponentTypeCode.put( TextureDataI.VoxelComponentType.BYTE, GL2.GL_BYTE);
-                voxelComponentTypeCode.put( TextureDataI.VoxelComponentType.UNSIGNED_SHORT, GL2.GL_UNSIGNED_SHORT);
-                voxelComponentTypeCode.put( TextureDataI.VoxelComponentType.SHORT, GL2.GL_SHORT);
-                voxelComponentTypeCode.put( TextureDataI.VoxelComponentType.UNSIGNED_INT, GL2.GL_UNSIGNED_INT);
-                voxelComponentTypeCode.put( TextureDataI.VoxelComponentType.INT, GL2.GL_INT);
-                voxelComponentTypeCode.put( TextureDataI.VoxelComponentType.FLOAT, GL2.GL_FLOAT);
-                voxelComponentTypeCode.put( TextureDataI.VoxelComponentType.UNSIGNED_BYTE_3_3_2, GL2.GL_UNSIGNED_BYTE_3_3_2);
-                voxelComponentTypeCode.put( TextureDataI.VoxelComponentType.UNSIGNED_BYTE_2_3_3_REV, GL2.GL_UNSIGNED_BYTE_2_3_3_REV);
-                voxelComponentTypeCode.put( TextureDataI.VoxelComponentType.UNSIGNED_SHORT_5_6_5, GL2.GL_UNSIGNED_SHORT_5_6_5);
-                voxelComponentTypeCode.put( TextureDataI.VoxelComponentType.UNSIGNED_SHORT_5_6_5_REV, GL2.GL_UNSIGNED_SHORT_5_6_5_REV);
-                voxelComponentTypeCode.put( TextureDataI.VoxelComponentType.UNSIGNED_SHORT_4_4_4_4, GL2.GL_UNSIGNED_SHORT_4_4_4_4);
-                voxelComponentTypeCode.put( TextureDataI.VoxelComponentType.UNSIGNED_SHORT_4_4_4_4_REV, GL2.GL_UNSIGNED_SHORT_4_4_4_4_REV);
-                voxelComponentTypeCode.put( TextureDataI.VoxelComponentType.UNSIGNED_SHORT_5_5_5_1, GL2.GL_UNSIGNED_SHORT_5_5_5_1);
-                voxelComponentTypeCode.put( TextureDataI.VoxelComponentType.UNSIGNED_SHORT_1_5_5_5_REV, GL2.GL_UNSIGNED_SHORT_1_5_5_5_REV);
-                voxelComponentTypeCode.put( TextureDataI.VoxelComponentType.UNSIGNED_INT_8_8_8_8, GL2.GL_UNSIGNED_INT_8_8_8_8);
-                voxelComponentTypeCode.put( TextureDataI.VoxelComponentType.UNSIGNED_INT_8_8_8_8_REV, GL2.GL_UNSIGNED_INT_8_8_8_8_REV);
-                voxelComponentTypeCode.put( TextureDataI.VoxelComponentType.UNSIGNED_INT_10_10_10_2, GL2.GL_UNSIGNED_INT_10_10_10_2);
-                voxelComponentTypeCode.put( TextureDataI.VoxelComponentType.UNSIGNED_INT_2_10_10_10_REV, GL2.GL_UNSIGNED_INT_2_10_10_10_REV);
-                voxelComponentTypeCode.put( TextureDataI.VoxelComponentType.UNSET_VALUE, TextureDataI.UNSET_VALUE);
+                voxelComponentTypeCode.put( TextureDataI.VoxelComponentType.UNSIGNED_BYTE, GL2.GL_UNSIGNED_BYTE );
+                voxelComponentTypeCode.put( TextureDataI.VoxelComponentType.BYTE, GL2.GL_BYTE );
+                voxelComponentTypeCode.put( TextureDataI.VoxelComponentType.UNSIGNED_SHORT, GL2.GL_UNSIGNED_SHORT );
+                voxelComponentTypeCode.put( TextureDataI.VoxelComponentType.SHORT, GL2.GL_SHORT );
+                voxelComponentTypeCode.put( TextureDataI.VoxelComponentType.UNSIGNED_INT, GL2.GL_UNSIGNED_INT );
+                voxelComponentTypeCode.put( TextureDataI.VoxelComponentType.INT, GL2.GL_INT );
+                voxelComponentTypeCode.put( TextureDataI.VoxelComponentType.FLOAT, GL2.GL_FLOAT );
+                voxelComponentTypeCode.put( TextureDataI.VoxelComponentType.UNSIGNED_BYTE_3_3_2, GL2.GL_UNSIGNED_BYTE_3_3_2 );
+                voxelComponentTypeCode.put( TextureDataI.VoxelComponentType.UNSIGNED_BYTE_2_3_3_REV, GL2.GL_UNSIGNED_BYTE_2_3_3_REV );
+                voxelComponentTypeCode.put( TextureDataI.VoxelComponentType.UNSIGNED_SHORT_5_6_5, GL2.GL_UNSIGNED_SHORT_5_6_5 );
+                voxelComponentTypeCode.put( TextureDataI.VoxelComponentType.UNSIGNED_SHORT_5_6_5_REV, GL2.GL_UNSIGNED_SHORT_5_6_5_REV );
+                voxelComponentTypeCode.put( TextureDataI.VoxelComponentType.UNSIGNED_SHORT_4_4_4_4, GL2.GL_UNSIGNED_SHORT_4_4_4_4 );
+                voxelComponentTypeCode.put( TextureDataI.VoxelComponentType.UNSIGNED_SHORT_4_4_4_4_REV, GL2.GL_UNSIGNED_SHORT_4_4_4_4_REV );
+                voxelComponentTypeCode.put( TextureDataI.VoxelComponentType.UNSIGNED_SHORT_5_5_5_1, GL2.GL_UNSIGNED_SHORT_5_5_5_1 );
+                voxelComponentTypeCode.put( TextureDataI.VoxelComponentType.UNSIGNED_SHORT_1_5_5_5_REV, GL2.GL_UNSIGNED_SHORT_1_5_5_5_REV );
+                voxelComponentTypeCode.put( TextureDataI.VoxelComponentType.UNSIGNED_INT_8_8_8_8, GL2.GL_UNSIGNED_INT_8_8_8_8 );
+                voxelComponentTypeCode.put( TextureDataI.VoxelComponentType.UNSIGNED_INT_8_8_8_8_REV, GL2.GL_UNSIGNED_INT_8_8_8_8_REV );
+                voxelComponentTypeCode.put( TextureDataI.VoxelComponentType.UNSIGNED_INT_10_10_10_2, GL2.GL_UNSIGNED_INT_10_10_10_2 );
+                voxelComponentTypeCode.put( TextureDataI.VoxelComponentType.UNSIGNED_INT_2_10_10_10_REV, GL2.GL_UNSIGNED_INT_2_10_10_10_REV );
+                voxelComponentTypeCode.put( TextureDataI.VoxelComponentType.UNSET_VALUE, TextureDataI.UNSET_VALUE );
             }
         }
 
@@ -258,13 +259,13 @@ public class OpenGLConstantsConverter {
                     return;
 
                 voxelComponentOrderCode  = new HashMap<TextureDataI.VoxelComponentOrder, Integer>();
-                voxelComponentOrderCode.put( TextureDataI.VoxelComponentOrder.RED, GL2.GL_RED);
-                voxelComponentOrderCode.put( TextureDataI.VoxelComponentOrder.RG, GL2.GL_RG);
-                voxelComponentOrderCode.put( TextureDataI.VoxelComponentOrder.RGB, GL2.GL_RGB);
-                voxelComponentOrderCode.put( TextureDataI.VoxelComponentOrder.BGR, GL2.GL_BGR);
-                voxelComponentOrderCode.put( TextureDataI.VoxelComponentOrder.RGBA, GL2.GL_RGBA);
-                voxelComponentOrderCode.put( TextureDataI.VoxelComponentOrder.BGRA, GL2.GL_BGRA);
-                voxelComponentOrderCode.put( TextureDataI.VoxelComponentOrder.UNSET_VALUE, TextureDataI.UNSET_VALUE);
+                voxelComponentOrderCode.put( TextureDataI.VoxelComponentOrder.RED, GL2.GL_RED );
+                voxelComponentOrderCode.put( TextureDataI.VoxelComponentOrder.RG, GL2.GL_RG );
+                voxelComponentOrderCode.put( TextureDataI.VoxelComponentOrder.RGB, GL2.GL_RGB );
+                voxelComponentOrderCode.put( TextureDataI.VoxelComponentOrder.BGR, GL2.GL_BGR );
+                voxelComponentOrderCode.put( TextureDataI.VoxelComponentOrder.RGBA, GL2.GL_RGBA );
+                voxelComponentOrderCode.put( TextureDataI.VoxelComponentOrder.BGRA, GL2.GL_BGRA );
+                voxelComponentOrderCode.put( TextureDataI.VoxelComponentOrder.UNSET_VALUE, TextureDataI.UNSET_VALUE );
             }
         }
     }

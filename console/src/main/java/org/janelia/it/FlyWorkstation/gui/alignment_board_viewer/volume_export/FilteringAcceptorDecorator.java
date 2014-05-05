@@ -1,8 +1,8 @@
 package org.janelia.it.FlyWorkstation.gui.alignment_board_viewer.volume_export;
 
-import org.janelia.it.jacs.compute.access.loader.AbstractAcceptorDecorator;
-import org.janelia.it.jacs.compute.access.loader.ChannelMetaData;
-import org.janelia.it.jacs.compute.access.loader.MaskChanDataAcceptorI;
+import org.janelia.it.jacs.shared.loader.AbstractAcceptorDecorator;
+import org.janelia.it.jacs.shared.loader.ChannelMetaData;
+import org.janelia.it.jacs.shared.loader.MaskChanDataAcceptorI;
 
 import java.util.Collection;
 
@@ -24,7 +24,7 @@ public class FilteringAcceptorDecorator extends AbstractAcceptorDecorator {
 
     @Override
     public int addChannelData(Integer orignalMaskNum, byte[] channelData, long position, long x, long y, long z, ChannelMetaData channelMetaData) throws Exception {
-        if ( wrappedAcceptor.getAcceptableInputs() != Acceptable.mask ) {
+        if ( wrappedAcceptor.getAcceptableInputs() != MaskChanDataAcceptorI.Acceptable.mask ) {
             for ( float[] cropCoords: cropCoordsCollection ) {
                 if ( inCrop( x, y, z, cropCoords ) ) {
                     return wrappedAcceptor.addChannelData( orignalMaskNum, channelData, position, x, y, z, channelMetaData);

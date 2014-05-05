@@ -1,7 +1,7 @@
 package org.janelia.it.FlyWorkstation.publication_quality.mesh;
 
-import org.janelia.it.jacs.compute.access.loader.renderable.MaskChanRenderableData;
-import org.janelia.it.jacs.compute.access.loader.renderable.RenderableBean;
+import org.janelia.it.jacs.shared.loader.renderable.MaskChanRenderableData;
+import org.janelia.it.jacs.shared.loader.renderable.RenderableBean;
 
 import java.util.ArrayList;
 import java.util.List;

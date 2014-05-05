@@ -1,13 +1,10 @@
 package org.janelia.it.FlyWorkstation.gui.framework.viewer.alignment_board;
 
-import org.janelia.it.jacs.compute.access.loader.renderable.*;
+import org.janelia.it.FlyWorkstation.gui.alignment_board_viewer.FragmentSizeSetterAndFilter;
 import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.FlyWorkstation.gui.alignment_board_viewer.gui_elements.GpuSampler;
-import org.janelia.it.jacs.compute.access.loader.*;
 import org.janelia.it.FlyWorkstation.gui.alignment_board_viewer.masking.*;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.resolver.CacheFileResolver;
-import org.janelia.it.FlyWorkstation.gui.viewer3d.resolver.FileResolver;
-import org.janelia.it.FlyWorkstation.gui.viewer3d.texture.TextureDataI;
 import org.janelia.it.FlyWorkstation.gui.alignment_board_viewer.volume_builder.RenderablesChannelsBuilder;
 import org.janelia.it.FlyWorkstation.gui.alignment_board_viewer.volume_builder.RenderablesMaskBuilder;
 import org.janelia.it.FlyWorkstation.model.viewer.AlignedItem;
@@ -16,6 +13,12 @@ import org.janelia.it.FlyWorkstation.publication_quality.mesh.VoxelSurfaceCollec
 import org.janelia.it.FlyWorkstation.publication_quality.mesh.VoxelSurfaceCollectorFactory;
 import org.janelia.it.FlyWorkstation.shared.workers.SimpleWorker;
 import org.janelia.it.jacs.model.entity.EntityConstants;
+import org.janelia.it.jacs.shared.loader.FileStats;
+import org.janelia.it.jacs.shared.loader.MaskChanDataAcceptorI;
+import org.janelia.it.jacs.shared.loader.MaskChanMultiFileLoader;
+import org.janelia.it.jacs.shared.loader.file_resolver.FileResolver;
+import org.janelia.it.jacs.shared.loader.renderable.*;
+import org.janelia.it.jacs.shared.loader.texture.TextureDataI;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -32,7 +35,7 @@ import java.util.concurrent.*;
  *
  * Loads renderable-oriented data into the Alignment Board and MIP3d.
  */
-public class RenderablesLoadWorker extends SimpleWorker implements VolumeLoader {
+public class RenderablesLoadWorker extends SimpleWorker implements RenderableDataLoader {
 
     private static final boolean HOLLOW_RENDERING = false;
     private static final int LEAST_FULLSIZE_MEM = 1500000; // Ex: 1,565,620
@@ -107,22 +110,18 @@ public class RenderablesLoadWorker extends SimpleWorker implements VolumeLoader 
         this.loadFiles = loadFiles;
     }
 
-    public FileStats getFileStats() {
-        return fileStats;
-    }
-
     public void setFileStats(FileStats fileStats) {
         this.fileStats = fileStats;
     }
 
-    //------------------------------------------IMPLEMENTS VolumeLoader
+    //------------------------------------------IMPLEMENTS RenderableDataLoader
     /**
      * Loads one renderable's data into the volume under construction.
      *
      * @param maskChanRenderableData renderable data to be applied to volume.
      * @throws Exception from called methods.
      */
-    public void loadVolume( MaskChanRenderableData maskChanRenderableData ) throws Exception {
+    public void loadRenderableData( MaskChanRenderableData maskChanRenderableData ) throws Exception {
         logger.debug(
                 "In load thread, STARTING load of renderable {}.",
                 maskChanRenderableData.getBean().getTranslatedNum()

@@ -2,7 +2,7 @@ package org.janelia.it.FlyWorkstation.gui.alignment_board_viewer.channel_split;
 
 import org.janelia.it.FlyWorkstation.gui.alignment_board_viewer.masking.MultiMaskTracker;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.channel_split.ChannelSplitStrategyI;
-import org.janelia.it.jacs.compute.access.loader.ChannelMetaData;
+import org.janelia.it.jacs.shared.loader.ChannelMetaData;
 
 /**
  * Created with IntelliJ IDEA.
@@ -45,7 +45,6 @@ public class ChannelSplitStrategyFactory {
                     // This trivial strategy simply preserves the bit value at the maximum depth allowed by
                     // returning an all-zeros byte array.
                     // Lazy-init in case this depth is never reached.
-                    @Override
                     public byte[] getUpdatedValue(ChannelMetaData channelMetaDatas, int originalMask, byte[] channelsData, int multiMaskId) {
                         return  new byte[ channelsData.length ];
                     }

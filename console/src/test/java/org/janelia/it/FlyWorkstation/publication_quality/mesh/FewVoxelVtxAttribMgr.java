@@ -11,6 +11,7 @@ import java.util.Map;
  *
  * Created by fosterl on 4/18/14.
  */
+@SuppressWarnings("unused")
 public class FewVoxelVtxAttribMgr implements VertexAttributeManagerI {
     private List<TriangleSource> vertexFactories;
 

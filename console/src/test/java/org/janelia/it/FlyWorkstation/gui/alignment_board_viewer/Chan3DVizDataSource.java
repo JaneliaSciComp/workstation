@@ -1,9 +1,9 @@
 package org.janelia.it.FlyWorkstation.gui.alignment_board_viewer;
 
 import org.janelia.it.FlyWorkstation.gui.alignment_board_viewer.masking.RenderMappingI;
-import org.janelia.it.jacs.compute.access.loader.renderable.MaskChanRenderableData;
-import org.janelia.it.jacs.compute.access.loader.renderable.RenderableBean;
-import org.janelia.it.jacs.compute.access.loader.renderable.RenderableDataSourceI;
+import org.janelia.it.jacs.shared.loader.renderable.MaskChanRenderableData;
+import org.janelia.it.jacs.shared.loader.renderable.RenderableBean;
+import org.janelia.it.jacs.shared.loader.renderable.RenderableDataSourceI;
 
 import java.util.ArrayList;
 import java.util.Collection;

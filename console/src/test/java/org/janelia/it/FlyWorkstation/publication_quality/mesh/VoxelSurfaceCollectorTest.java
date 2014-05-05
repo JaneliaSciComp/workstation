@@ -1,11 +1,12 @@
 package org.janelia.it.FlyWorkstation.publication_quality.mesh;
 
-import org.janelia.it.jacs.compute.access.loader.renderable.RenderableBean;
 import org.janelia.it.FlyWorkstation.gui.framework.viewer.alignment_board.AlignmentBoardSettings;
-import org.janelia.it.FlyWorkstation.gui.framework.viewer.alignment_board.MaskChanStreamSourceI;
-import org.janelia.it.jacs.compute.access.loader.MaskChanDataAcceptorI;
-import org.janelia.it.jacs.compute.access.loader.MaskChanMultiFileLoader;
 import static org.janelia.it.FlyWorkstation.gui.TestingConstants.*;
+
+import org.janelia.it.jacs.shared.loader.MaskChanDataAcceptorI;
+import org.janelia.it.jacs.shared.loader.MaskChanMultiFileLoader;
+import org.janelia.it.jacs.shared.loader.MaskChanStreamSourceI;
+import org.janelia.it.jacs.shared.loader.renderable.RenderableBean;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.After;

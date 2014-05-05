@@ -1,5 +1,7 @@
 package org.janelia.it.FlyWorkstation.gui.viewer3d.resolver;
 
+import org.janelia.it.jacs.shared.loader.file_resolver.FileResolver;
+
 /**
  * Created with IntelliJ IDEA.
  * User: fosterl

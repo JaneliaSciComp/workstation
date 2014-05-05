@@ -14,7 +14,7 @@ import org.janelia.it.FlyWorkstation.gui.viewer3d.VolumeBrickFactory;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.VolumeBrickI;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.VolumeModel;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.resolver.CacheFileResolver;
-import org.janelia.it.FlyWorkstation.gui.viewer3d.texture.TextureDataI;
+import org.janelia.it.jacs.shared.loader.texture.TextureDataI;
 
 import javax.swing.*;
 

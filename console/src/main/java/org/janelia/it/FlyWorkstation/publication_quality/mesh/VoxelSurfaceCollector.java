@@ -3,8 +3,8 @@ package org.janelia.it.FlyWorkstation.publication_quality.mesh;
 import java.util.HashMap;
 import java.util.Map;
 
-import org.janelia.it.jacs.compute.access.loader.ChannelMetaData;
-import org.janelia.it.jacs.compute.access.loader.MaskChanDataAcceptorI;
+import org.janelia.it.jacs.shared.loader.ChannelMetaData;
+import org.janelia.it.jacs.shared.loader.MaskChanDataAcceptorI;
 import org.slf4j.Logger;
 
 /**
@@ -58,7 +58,7 @@ public class VoxelSurfaceCollector implements MaskChanDataAcceptorI {
     }
 
     @Override
-    public void endData(Logger logger) {
+    public void endData() {
         // Need browse submaps, exploring neighborhoods.
         for ( Map<Long,Map<Long,VoxelInfoBean>> yMaps: xMap.values() ) {
             for ( Map<Long,VoxelInfoBean> zMap: yMaps.values() ) {

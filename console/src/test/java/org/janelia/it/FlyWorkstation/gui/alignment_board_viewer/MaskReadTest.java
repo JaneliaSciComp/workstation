@@ -1,12 +1,12 @@
 package org.janelia.it.FlyWorkstation.gui.alignment_board_viewer;
 
-import org.janelia.it.jacs.compute.access.loader.renderable.RenderableBean;
 import org.janelia.it.FlyWorkstation.gui.alignment_board_viewer.volume_builder.RenderablesMaskBuilder;
 import org.janelia.it.FlyWorkstation.gui.framework.viewer.alignment_board.AlignmentBoardSettings;
-import org.janelia.it.FlyWorkstation.gui.framework.viewer.alignment_board.MaskChanStreamSourceI;
-import org.janelia.it.jacs.compute.access.loader.MaskChanDataAcceptorI;
-import org.janelia.it.jacs.compute.access.loader.MaskChanMultiFileLoader;
 import org.janelia.it.jacs.model.TestCategories;
+import org.janelia.it.jacs.shared.loader.MaskChanDataAcceptorI;
+import org.janelia.it.jacs.shared.loader.MaskChanMultiFileLoader;
+import org.janelia.it.jacs.shared.loader.MaskChanStreamSourceI;
+import org.janelia.it.jacs.shared.loader.renderable.RenderableBean;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.slf4j.Logger;

@@ -106,7 +106,7 @@ public class EntityFilenameFetcher {
         log.debug( "For entity {}, got file {}", entity.getId(), imageFilePath );
 
         if ( imageFilePath != null ) {
-            // TODO: LocalFileCache - get Les to verify that the converted path is not needed here once VolumeLoader is updated to use SessionMgr.getFile
+            // TODO: LocalFileCache - get Les to verify that the converted path is not needed here once RenderableDataLoader is updated to use SessionMgr.getFile
 //            imageFilePath = PathTranslator.convertPath(imageFilePath);
             log.debug( "The 3D image is at " + imageFilePath);
         }

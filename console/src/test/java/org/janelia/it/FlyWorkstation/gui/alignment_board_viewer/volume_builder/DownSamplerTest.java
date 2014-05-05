@@ -1,6 +1,7 @@
 package org.janelia.it.FlyWorkstation.gui.alignment_board_viewer.volume_builder;
 
 import org.janelia.it.jacs.model.TestCategories;
+import org.janelia.it.jacs.shared.loader.volume.VolumeDataBean;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 

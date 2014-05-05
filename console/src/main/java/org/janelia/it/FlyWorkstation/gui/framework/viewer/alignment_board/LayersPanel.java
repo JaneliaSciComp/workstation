@@ -30,7 +30,6 @@ import javax.swing.tree.TreePath;
 
 import org.janelia.it.FlyWorkstation.api.entity_model.events.EntityInvalidationEvent;
 import org.janelia.it.FlyWorkstation.api.entity_model.management.ModelMgr;
-import org.janelia.it.FlyWorkstation.gui.alignment_board_viewer.masking.FileStats;
 import org.janelia.it.FlyWorkstation.gui.framework.outline.ActivatableView;
 import org.janelia.it.FlyWorkstation.gui.framework.outline.EntityTransferHandler;
 import org.janelia.it.FlyWorkstation.gui.framework.outline.Refreshable;
@@ -52,6 +51,7 @@ import org.janelia.it.FlyWorkstation.shared.util.ConcurrentUtils;
 import org.janelia.it.FlyWorkstation.shared.workers.SimpleWorker;
 import org.janelia.it.jacs.model.entity.Entity;
 import org.janelia.it.jacs.model.entity.EntityConstants;
+import org.janelia.it.jacs.shared.loader.FileStats;
 import org.netbeans.swing.outline.DefaultOutlineCellRenderer;
 import org.netbeans.swing.outline.DefaultOutlineModel;
 import org.netbeans.swing.outline.Outline;

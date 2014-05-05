@@ -1,8 +1,8 @@
 package org.janelia.it.FlyWorkstation.gui.alignment_board_viewer.volume_builder;
 
-import org.janelia.it.FlyWorkstation.gui.viewer3d.masking.VolumeDataI;
 import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.FlyWorkstation.shared.workers.SimpleWorker;
+import org.janelia.it.jacs.shared.loader.volume.VolumeDataI;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

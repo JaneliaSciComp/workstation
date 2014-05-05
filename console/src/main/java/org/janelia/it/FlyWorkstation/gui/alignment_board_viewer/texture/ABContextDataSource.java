@@ -1,14 +1,14 @@
 package org.janelia.it.FlyWorkstation.gui.alignment_board_viewer.texture;
 
 import org.janelia.it.FlyWorkstation.gui.alignment_board_viewer.masking.RenderMappingI;
-import org.janelia.it.jacs.compute.access.loader.renderable.MaskChanRenderableData;
-import org.janelia.it.jacs.compute.access.loader.renderable.RenderableBean;
-import org.janelia.it.jacs.compute.access.loader.renderable.RenderableDataSourceI;
 import org.janelia.it.FlyWorkstation.model.domain.*;
 import org.janelia.it.FlyWorkstation.model.viewer.AlignedItem;
 import org.janelia.it.FlyWorkstation.model.viewer.AlignmentBoardContext;
 import org.janelia.it.jacs.model.entity.Entity;
 import org.janelia.it.jacs.model.entity.EntityConstants;
+import org.janelia.it.jacs.shared.loader.renderable.MaskChanRenderableData;
+import org.janelia.it.jacs.shared.loader.renderable.RenderableBean;
+import org.janelia.it.jacs.shared.loader.renderable.RenderableDataSourceI;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

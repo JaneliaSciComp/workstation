@@ -1,20 +1,23 @@
 package org.janelia.it.FlyWorkstation.gui.framework.viewer.alignment_board;
 
+import org.janelia.it.FlyWorkstation.gui.alignment_board_viewer.FragmentSizeSetterAndFilter;
 import org.janelia.it.FlyWorkstation.gui.alignment_board_viewer.gui_elements.ControlsListener;
 import org.janelia.it.FlyWorkstation.gui.alignment_board_viewer.masking.TextureBuilderI;
-import org.janelia.it.jacs.compute.access.loader.renderable.*;
 import org.janelia.it.FlyWorkstation.gui.alignment_board_viewer.volume_builder.RenderablesChannelsBuilder;
 import org.janelia.it.FlyWorkstation.gui.alignment_board_viewer.volume_builder.RenderablesMaskBuilder;
 import org.janelia.it.FlyWorkstation.gui.alignment_board_viewer.volume_export.FilteringAcceptorDecorator;
-import org.janelia.it.jacs.compute.access.loader.FragmentSizeSetterAndFilter;
-import org.janelia.it.jacs.compute.access.loader.MaskChanDataAcceptorI;
-import org.janelia.it.jacs.compute.access.loader.MaskChanMultiFileLoader;
-import org.janelia.it.jacs.compute.access.loader.MaskSingleFileLoader;
-import org.janelia.it.FlyWorkstation.gui.viewer3d.resolver.FileResolver;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.resolver.TrivialFileResolver;
-import org.janelia.it.FlyWorkstation.gui.viewer3d.texture.TextureDataI;
 import org.janelia.it.FlyWorkstation.gui.alignment_board_viewer.volume_export.RecoloringAcceptorDecorator;
 import org.janelia.it.FlyWorkstation.shared.workers.SimpleWorker;
+import org.janelia.it.jacs.shared.loader.MaskChanDataAcceptorI;
+import org.janelia.it.jacs.shared.loader.MaskChanMultiFileLoader;
+import org.janelia.it.jacs.shared.loader.MaskSingleFileLoader;
+import org.janelia.it.jacs.shared.loader.file_resolver.FileResolver;
+import org.janelia.it.jacs.shared.loader.renderable.MaskChanRenderableData;
+import org.janelia.it.jacs.shared.loader.renderable.RBComparator;
+import org.janelia.it.jacs.shared.loader.renderable.RDComparator;
+import org.janelia.it.jacs.shared.loader.renderable.RenderableBean;
+import org.janelia.it.jacs.shared.loader.texture.TextureDataI;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -31,7 +34,7 @@ import java.util.concurrent.*;
  *
  * Sends "loaded" data back to an output file.
  */
-public class FileExportLoadWorker extends SimpleWorker implements VolumeLoader {
+public class FileExportLoadWorker extends SimpleWorker implements RenderableDataLoader {
 
     public static final int ONLY_ONE_THREAD = 1;  // No thread safety, so constraining to 1-at-a-time.
     private MaskChanMultiFileLoader loader;
@@ -53,7 +56,7 @@ public class FileExportLoadWorker extends SimpleWorker implements VolumeLoader {
     }
 
     @Override
-    public void loadVolume( MaskChanRenderableData maskChanRenderableData ) throws Exception {
+    public void loadRenderableData( MaskChanRenderableData maskChanRenderableData ) throws Exception {
         logger.debug(
                 "In load thread, STARTING load of renderable {}.",
                 maskChanRenderableData.getBean().getTranslatedNum()

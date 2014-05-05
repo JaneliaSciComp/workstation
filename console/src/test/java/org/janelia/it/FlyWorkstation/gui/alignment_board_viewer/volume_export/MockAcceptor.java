@@ -1,7 +1,7 @@
 package org.janelia.it.FlyWorkstation.gui.alignment_board_viewer.volume_export;
 
-import org.janelia.it.jacs.compute.access.loader.ChannelMetaData;
-import org.janelia.it.jacs.compute.access.loader.MaskChanDataAcceptorI;
+import org.janelia.it.jacs.shared.loader.ChannelMetaData;
+import org.janelia.it.jacs.shared.loader.MaskChanDataAcceptorI;
 import org.slf4j.Logger;
 
 import java.util.ArrayList;
@@ -54,7 +54,7 @@ public class MockAcceptor implements MaskChanDataAcceptorI {
     }
 
     @Override
-    public void endData(Logger logger) {
+    public void endData() {
 
     }
 

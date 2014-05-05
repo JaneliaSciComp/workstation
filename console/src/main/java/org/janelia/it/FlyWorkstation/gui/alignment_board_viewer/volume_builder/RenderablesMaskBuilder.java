@@ -1,21 +1,21 @@
 package org.janelia.it.FlyWorkstation.gui.alignment_board_viewer.volume_builder;
 
-import org.janelia.it.FlyWorkstation.gui.viewer3d.masking.VolumeDataI;
 import org.janelia.it.FlyWorkstation.gui.framework.viewer.alignment_board.AlignmentBoardSettings;
-import org.janelia.it.FlyWorkstation.gui.viewer3d.VolumeDataAcceptor;
-import org.janelia.it.jacs.compute.access.loader.ChannelMetaData;
-import org.janelia.it.FlyWorkstation.gui.alignment_board_viewer.masking.MaskBuilderI;
 import org.janelia.it.FlyWorkstation.gui.alignment_board_viewer.masking.TextureBuilderI;
-import org.janelia.it.jacs.compute.access.loader.renderable.RenderableBean;
 
 import javax.media.opengl.GL2;
 import java.nio.ByteOrder;
 import java.util.Collection;
 
-import org.janelia.it.FlyWorkstation.gui.viewer3d.texture.TextureDataBean;
-import org.janelia.it.FlyWorkstation.gui.viewer3d.texture.TextureDataI;
-import org.janelia.it.FlyWorkstation.gui.viewer3d.volume_builder.VolumeDataChunk;
-import org.janelia.it.FlyWorkstation.shared.annotations.NotThreadSafe;
+import org.janelia.it.jacs.shared.annotation.NotThreadSafe;
+import org.janelia.it.jacs.shared.loader.ChannelMetaData;
+import org.janelia.it.jacs.shared.loader.renderable.RenderableBean;
+import org.janelia.it.jacs.shared.loader.texture.TextureDataBean;
+import org.janelia.it.jacs.shared.loader.texture.TextureDataI;
+import org.janelia.it.jacs.shared.loader.volume.MaskBuilderI;
+import org.janelia.it.jacs.shared.loader.volume.VolumeDataAcceptor;
+import org.janelia.it.jacs.shared.loader.volume.VolumeDataI;
+import org.janelia.it.jacs.shared.loader.volume_builder.VolumeDataChunk;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 /**
@@ -162,23 +162,21 @@ public class RenderablesMaskBuilder extends RenderablesVolumeBuilder implements 
 
         textureData.setInverted( false );
         textureData.setChannelCount( getChannelCount() );
-        // See also VolumeLoader.resolveColorSpace()
         textureData.setColorSpace(this.getTextureColorSpace());
         textureData.setByteOrder(this.getPixelByteOrder());
         textureData.setFilename("Mask of All Renderables");
-        textureData.setInterpolationMethod(GL2.GL_NEAREST);
+        textureData.setInterpolationMethod(TextureDataI.InterpolationMethod.NEAREST);
         textureData.setRenderables(renderableBeans);
         textureData.setCoordCoverage(coordCoverage);
         textureData.setPixelByteCount(maskByteCount);
-        textureData.setExplicitVoxelComponentType( GL2.GL_UNSIGNED_SHORT );
-        textureData.setExplicitInternalFormat( GL2.GL_LUMINANCE16 );
+        textureData.setExplicitVoxelComponentType(TextureDataI.VoxelComponentType.UNSIGNED_SHORT);
+        textureData.setExplicitInternalFormat( TextureDataI.InternalFormat.LUMINANCE16 );
 
         return textureData;
     }
 
     @Override
     public VolumeDataAcceptor.TextureColorSpace getTextureColorSpace() {
-        // See also VolumeLoader.resolveColorSpace()
         return VolumeDataAcceptor.TextureColorSpace.COLOR_SPACE_LINEAR;
     }
 

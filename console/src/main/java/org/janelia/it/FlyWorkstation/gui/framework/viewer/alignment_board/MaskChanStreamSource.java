@@ -10,8 +10,9 @@ package org.janelia.it.FlyWorkstation.gui.framework.viewer.alignment_board;
  * streams may be re-created for the same renderable as many times as needed.
  */
 
-import org.janelia.it.jacs.compute.access.loader.renderable.MaskChanRenderableData;
-import org.janelia.it.FlyWorkstation.gui.viewer3d.resolver.FileResolver;
+import org.janelia.it.jacs.shared.loader.MaskChanStreamSourceI;
+import org.janelia.it.jacs.shared.loader.file_resolver.FileResolver;
+import org.janelia.it.jacs.shared.loader.renderable.MaskChanRenderableData;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

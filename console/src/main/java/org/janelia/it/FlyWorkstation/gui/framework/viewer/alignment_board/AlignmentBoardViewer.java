@@ -27,7 +27,6 @@ import org.janelia.it.FlyWorkstation.gui.alignment_board_viewer.gui_elements.Con
 import org.janelia.it.FlyWorkstation.gui.alignment_board_viewer.gui_elements.GpuSampler;
 import org.janelia.it.FlyWorkstation.gui.alignment_board_viewer.gui_elements.SavebackEvent;
 import org.janelia.it.FlyWorkstation.gui.alignment_board_viewer.masking.ConfigurableColorMapping;
-import org.janelia.it.FlyWorkstation.gui.alignment_board_viewer.masking.FileStats;
 import org.janelia.it.FlyWorkstation.gui.alignment_board_viewer.masking.MultiMaskTracker;
 import org.janelia.it.FlyWorkstation.gui.alignment_board_viewer.masking.RenderMappingI;
 import org.janelia.it.FlyWorkstation.gui.alignment_board_viewer.texture.ABContextDataSource;
@@ -44,7 +43,6 @@ import org.janelia.it.FlyWorkstation.gui.util.Icons;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.BaseRenderer;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.Mip3d;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.VolumeModel;
-import org.janelia.it.FlyWorkstation.gui.viewer3d.texture.TextureDataI;
 import org.janelia.it.FlyWorkstation.model.domain.CompartmentSet;
 import org.janelia.it.FlyWorkstation.model.domain.EntityWrapper;
 import org.janelia.it.FlyWorkstation.model.domain.Neuron;
@@ -60,6 +58,8 @@ import org.janelia.it.FlyWorkstation.model.viewer.MaskedVolume.Size;
 import org.janelia.it.FlyWorkstation.shared.workers.IndeterminateNoteProgressMonitor;
 import org.janelia.it.FlyWorkstation.shared.workers.SimpleWorker;
 import org.janelia.it.jacs.model.entity.Entity;
+import org.janelia.it.jacs.shared.loader.FileStats;
+import org.janelia.it.jacs.shared.loader.texture.TextureDataI;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

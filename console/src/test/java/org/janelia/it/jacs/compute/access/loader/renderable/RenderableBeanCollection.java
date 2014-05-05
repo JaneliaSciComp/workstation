@@ -2,6 +2,7 @@ package org.janelia.it.jacs.compute.access.loader.renderable;
 
 import org.janelia.it.jacs.model.entity.Entity;
 import org.janelia.it.jacs.model.entity.EntityConstants;
+import org.janelia.it.jacs.shared.loader.renderable.RenderableBean;
 
 import java.util.ArrayList;
 import java.util.Date;

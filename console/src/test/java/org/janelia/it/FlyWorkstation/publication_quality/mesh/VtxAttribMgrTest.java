@@ -1,6 +1,6 @@
 package org.janelia.it.FlyWorkstation.publication_quality.mesh;
 
-import org.janelia.it.jacs.compute.access.loader.renderable.MaskChanRenderableData;
+import org.janelia.it.jacs.shared.loader.renderable.MaskChanRenderableData;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;

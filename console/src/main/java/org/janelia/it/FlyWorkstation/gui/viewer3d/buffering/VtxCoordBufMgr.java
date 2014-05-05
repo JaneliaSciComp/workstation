@@ -2,7 +2,7 @@ package org.janelia.it.FlyWorkstation.gui.viewer3d.buffering;
 
 import org.janelia.it.FlyWorkstation.geom.CoordinateAxis;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.texture.TextureMediator;
-import org.janelia.it.FlyWorkstation.shared.annotations.NotThreadSafe;
+import org.janelia.it.jacs.shared.annotation.NotThreadSafe;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

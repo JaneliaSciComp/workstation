@@ -1,7 +1,7 @@
 package org.janelia.it.FlyWorkstation.gui.alignment_board_viewer.masking;
 
-import org.janelia.it.jacs.compute.access.loader.MaskChanDataAcceptorI;
-import org.janelia.it.FlyWorkstation.gui.viewer3d.texture.TextureDataI;
+import org.janelia.it.jacs.shared.loader.MaskChanDataAcceptorI;
+import org.janelia.it.jacs.shared.loader.texture.TextureDataI;
 
 /**
  * Created with IntelliJ IDEA.

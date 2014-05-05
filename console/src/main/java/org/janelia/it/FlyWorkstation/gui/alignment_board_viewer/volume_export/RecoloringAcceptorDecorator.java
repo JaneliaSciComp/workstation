@@ -1,9 +1,9 @@
 package org.janelia.it.FlyWorkstation.gui.alignment_board_viewer.volume_export;
 
-import org.janelia.it.jacs.compute.access.loader.AbstractAcceptorDecorator;
-import org.janelia.it.jacs.compute.access.loader.ChannelMetaData;
-import org.janelia.it.jacs.compute.access.loader.MaskChanDataAcceptorI;
 import org.janelia.it.FlyWorkstation.gui.alignment_board_viewer.masking.RenderMappingI;
+import org.janelia.it.jacs.shared.loader.AbstractAcceptorDecorator;
+import org.janelia.it.jacs.shared.loader.ChannelMetaData;
+import org.janelia.it.jacs.shared.loader.MaskChanDataAcceptorI;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

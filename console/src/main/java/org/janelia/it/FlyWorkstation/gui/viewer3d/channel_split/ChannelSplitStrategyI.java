@@ -1,6 +1,6 @@
 package org.janelia.it.FlyWorkstation.gui.viewer3d.channel_split;
 
-import org.janelia.it.jacs.compute.access.loader.ChannelMetaData;
+import org.janelia.it.jacs.shared.loader.ChannelMetaData;
 
 /**
  * Created with IntelliJ IDEA.

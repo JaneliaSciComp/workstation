@@ -1,7 +1,7 @@
 package org.janelia.it.FlyWorkstation.gui.alignment_board_viewer.volume_builder;
 
-import org.janelia.it.jacs.compute.access.loader.MaskChanDataAcceptorI;
-import org.janelia.it.FlyWorkstation.gui.alignment_board_viewer.masking.VolumeConsistencyChecker;
+import org.janelia.it.jacs.shared.loader.MaskChanDataAcceptorI;
+import org.janelia.it.jacs.shared.loader.volume_builder.VolumeConsistencyChecker;
 
 /**
  * Created with IntelliJ IDEA.

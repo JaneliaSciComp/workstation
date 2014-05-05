@@ -41,9 +41,7 @@ public class ViewTileManagerVolumeSource implements VolumeSource {
     public static final int BRICK_HEIGHT = 512;
     public static final int BRICK_DEPTH = 512;
     private Camera3d camera;
-    private Viewport viewport;
     private CoordinateAxis sliceAxis;
-    private Rotation3d viewerInGround;
     private URL dataUrl;
     private byte[] dataVolume;
 
@@ -67,8 +65,6 @@ public class ViewTileManagerVolumeSource implements VolumeSource {
                                        Rotation3d viewerInGround,
                                        URL dataUrl) throws Exception {
         this.camera = camera;
-        this.viewport = viewport;
-        this.viewerInGround = viewerInGround;
         this.sliceAxis = sliceAxis;
         this.dataUrl = dataUrl;
 

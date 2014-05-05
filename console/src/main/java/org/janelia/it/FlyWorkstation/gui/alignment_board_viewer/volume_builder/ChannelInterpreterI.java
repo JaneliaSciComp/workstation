@@ -1,6 +1,6 @@
 package org.janelia.it.FlyWorkstation.gui.alignment_board_viewer.volume_builder;
 
-import org.janelia.it.jacs.compute.access.loader.ChannelMetaData;
+import org.janelia.it.jacs.shared.loader.ChannelMetaData;
 
 /**
  * Created with IntelliJ IDEA.

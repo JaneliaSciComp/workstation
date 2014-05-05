@@ -1,6 +1,6 @@
 package org.janelia.it.FlyWorkstation.gui.alignment_board_viewer.masking;
 
-import org.janelia.it.jacs.compute.access.loader.renderable.RenderableBean;
+import org.janelia.it.jacs.shared.loader.renderable.RenderableBean;
 
 import java.util.Collection;
 import java.util.Map;

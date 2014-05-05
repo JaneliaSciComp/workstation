@@ -11,8 +11,8 @@ import org.janelia.it.FlyWorkstation.gui.alignment_board_viewer.masking.Configur
 import org.janelia.it.FlyWorkstation.gui.alignment_board_viewer.masking.RenderMappingI;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.Mip3d;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.VolumeBrickFactory;
-import org.janelia.it.FlyWorkstation.gui.viewer3d.texture.TextureDataI;
 import org.janelia.it.jacs.model.TestCategories;
+import org.janelia.it.jacs.shared.loader.texture.TextureDataI;
 import org.junit.experimental.categories.Category;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

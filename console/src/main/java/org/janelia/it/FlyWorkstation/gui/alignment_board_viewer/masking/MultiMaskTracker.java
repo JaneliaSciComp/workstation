@@ -1,5 +1,6 @@
 package org.janelia.it.FlyWorkstation.gui.alignment_board_viewer.masking;
 
+import org.janelia.it.jacs.shared.loader.FileStats;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

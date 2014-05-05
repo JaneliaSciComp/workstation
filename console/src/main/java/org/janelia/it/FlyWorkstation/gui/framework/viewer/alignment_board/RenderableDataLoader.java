@@ -1,6 +1,6 @@
 package org.janelia.it.FlyWorkstation.gui.framework.viewer.alignment_board;
 
-import org.janelia.it.jacs.compute.access.loader.renderable.MaskChanRenderableData;
+import org.janelia.it.jacs.shared.loader.renderable.MaskChanRenderableData;
 
 /**
  * Created with IntelliJ IDEA.
@@ -10,6 +10,6 @@ import org.janelia.it.jacs.compute.access.loader.renderable.MaskChanRenderableDa
  *
  * Call this to load the volume.
  */
-public interface VolumeLoader {
-    void loadVolume( MaskChanRenderableData metaData ) throws Exception;
+public interface RenderableDataLoader {
+    void loadRenderableData( MaskChanRenderableData metaData ) throws Exception;
 }

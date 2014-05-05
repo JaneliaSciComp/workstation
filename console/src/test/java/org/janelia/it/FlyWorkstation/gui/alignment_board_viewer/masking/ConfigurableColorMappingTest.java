@@ -1,10 +1,11 @@
 package org.janelia.it.FlyWorkstation.gui.alignment_board_viewer.masking;
 
-import org.janelia.it.jacs.compute.access.loader.renderable.RenderableBean;
 import org.janelia.it.jacs.model.TestCategories;
 import org.janelia.it.jacs.model.entity.Entity;
 import org.janelia.it.jacs.model.entity.EntityConstants;
 
+import org.janelia.it.jacs.shared.loader.FileStats;
+import org.janelia.it.jacs.shared.loader.renderable.RenderableBean;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.slf4j.Logger;

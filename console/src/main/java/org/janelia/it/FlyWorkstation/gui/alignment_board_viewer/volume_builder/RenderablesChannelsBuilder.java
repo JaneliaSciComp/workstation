@@ -3,15 +3,15 @@ package org.janelia.it.FlyWorkstation.gui.alignment_board_viewer.volume_builder;
 import org.janelia.it.FlyWorkstation.gui.alignment_board_viewer.MultiTexVolumeBrick;
 import org.janelia.it.FlyWorkstation.gui.alignment_board_viewer.masking.MultiMaskTracker;
 import org.janelia.it.FlyWorkstation.gui.alignment_board_viewer.masking.TextureBuilderI;
-import org.janelia.it.jacs.compute.access.loader.renderable.RenderableBean;
 import org.janelia.it.FlyWorkstation.gui.framework.viewer.alignment_board.AlignmentBoardSettings;
-import org.janelia.it.FlyWorkstation.gui.viewer3d.VolumeDataAcceptor;
-import org.janelia.it.jacs.compute.access.loader.ChannelMetaData;
-import org.janelia.it.jacs.compute.access.loader.VolumeLoaderI;
-import org.janelia.it.FlyWorkstation.gui.viewer3d.masking.VolumeDataI;
-import org.janelia.it.FlyWorkstation.gui.viewer3d.texture.TextureDataBean;
-import org.janelia.it.FlyWorkstation.gui.viewer3d.texture.TextureDataI;
-import org.janelia.it.FlyWorkstation.shared.annotations.NotThreadSafe;
+import org.janelia.it.jacs.shared.annotation.NotThreadSafe;
+import org.janelia.it.jacs.shared.loader.ChannelMetaData;
+import org.janelia.it.jacs.shared.loader.VolumeLoaderI;
+import org.janelia.it.jacs.shared.loader.renderable.RenderableBean;
+import org.janelia.it.jacs.shared.loader.texture.TextureDataBean;
+import org.janelia.it.jacs.shared.loader.texture.TextureDataI;
+import org.janelia.it.jacs.shared.loader.volume.VolumeDataAcceptor;
+import org.janelia.it.jacs.shared.loader.volume.VolumeDataI;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -234,7 +234,7 @@ public class RenderablesChannelsBuilder extends RenderablesVolumeBuilder impleme
         // NOTE: use of GL_LINEAR is usually preferred when sending intensity data.  However, with the modifications
         // that the shader is making at the "fragment" level (which seem to occur after this interpolation), ghost
         // effects appear around shader-modified voxels.
-        textureData.setInterpolationMethod( GL2.GL_NEAREST );
+        textureData.setInterpolationMethod( TextureDataI.InterpolationMethod.NEAREST );
 
         // This set of inputs works against uploaded MP4 files.  T.o.Writing: YCD
         /*
@@ -244,11 +244,11 @@ public class RenderablesChannelsBuilder extends RenderablesVolumeBuilder impleme
          */
 
         if ( bytesPerChannel == 1 )
-            textureData.setExplicitVoxelComponentType( GL2.GL_BYTE ); //GL2.GL_UNSIGNED_INT_8_8_8_8 );
+            textureData.setExplicitVoxelComponentType(TextureDataI.VoxelComponentType.BYTE ); //GL2.GL_UNSIGNED_INT_8_8_8_8 );
         else if ( bytesPerChannel == 2 )
-            textureData.setExplicitVoxelComponentType( GL2.GL_UNSIGNED_SHORT );
-        textureData.setExplicitVoxelComponentOrder( GL2.GL_RGBA );
-        textureData.setExplicitInternalFormat( GL2.GL_RGBA );
+            textureData.setExplicitVoxelComponentType(TextureDataI.VoxelComponentType.UNSIGNED_SHORT );
+        textureData.setExplicitVoxelComponentOrder(TextureDataI.VoxelComponentOrder.RGBA );
+        textureData.setExplicitInternalFormat(TextureDataI.InternalFormat.RGBA );
 
         textureData.setRenderables( renderableBeans );
 
