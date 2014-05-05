@@ -1,5 +1,8 @@
 package org.janelia.it.FlyWorkstation.publication_quality.mesh;
 
+import org.janelia.it.jacs.shared.loader.mesh.*;
+
+import java.io.File;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -12,8 +15,10 @@ import java.util.Map;
  * Created by fosterl on 4/18/14.
  */
 @SuppressWarnings("unused")
-public class FewVoxelVtxAttribMgr implements VertexAttributeManagerI {
-    private List<TriangleSource> vertexFactories;
+public class FewVoxelVtxAttribMgr implements VertexAttributeManagerI, VertexExporterI {
+    public enum Scenario { minimal, small, whole }
+    private List<TriangleSource> triangleSources;
+    private Scenario scenario = Scenario.small;
 
     private Map<Long,RenderBuffersBean> renderIdToBuffers;
     private Long id;
@@ -22,9 +27,14 @@ public class FewVoxelVtxAttribMgr implements VertexAttributeManagerI {
         this.id = id;
     }
 
+    public FewVoxelVtxAttribMgr( Long id, Scenario scenario ) {
+        this.id = id;
+        this.scenario = scenario;
+    }
+
     @Override
     public List<TriangleSource> execute() throws Exception {
-        vertexFactories = new ArrayList<TriangleSource>();
+        triangleSources = new ArrayList<TriangleSource>();
         renderIdToBuffers = new HashMap<Long,RenderBuffersBean>();
 
         int startingX = 0;
@@ -32,15 +42,24 @@ public class FewVoxelVtxAttribMgr implements VertexAttributeManagerI {
         int startingZ = 0;
 
         VertexFactory factory = new VertexFactory();
-        establishStackedScenario(startingX, startingY, startingZ, factory);
-        //establishSmallScenario(startingX, startingY, startingZ, factory);
+        switch (scenario) {
+            case whole:
+                establishStackedScenario(startingX, startingY, startingZ, factory);
+                break;
+            case small:
+                establishSmallScenario(startingX, startingY, startingZ, factory);
+                break;
+            case minimal:
+                establishSimplestScenario(startingX, startingY, startingZ, factory);
+                break;
+        }
 
         // Now have a full complement of triangles and vertices.  For this renderable, can traverse the
         // vertices, making a "composite normal" based on the normals of all entangling triangles.
         NormalCompositor normalCompositor = new NormalCompositor();
         normalCompositor.createGouraudNormals(factory);
 
-        vertexFactories.add( factory );
+        triangleSources.add(factory);
         BufferPackager packager = new BufferPackager();
         RenderBuffersBean rbb = new RenderBuffersBean();
         rbb.setAttributesBuffer( packager.getVertexAttributes(factory) );
@@ -48,7 +67,15 @@ public class FewVoxelVtxAttribMgr implements VertexAttributeManagerI {
 
         renderIdToBuffers.put( id, rbb );
 
-        return vertexFactories;
+        return triangleSources;
+    }
+
+    @Override
+    public void exportVertices(File outputLocation, String filenamePrefix) throws Exception {
+        OBJWriter objWriter = new OBJWriter();
+        for ( TriangleSource triangleSource: triangleSources) {
+            objWriter.writeVertexFile( outputLocation, filenamePrefix, OBJWriter.FILE_SUFFIX, id, triangleSource );
+        }
     }
 
     @Override
@@ -59,7 +86,7 @@ public class FewVoxelVtxAttribMgr implements VertexAttributeManagerI {
     @Override
     public void close() {
         renderIdToBuffers.clear();
-        vertexFactories.clear();
+        triangleSources.clear();
     }
 
     private void establishStackedScenario(int startingX, int startingY, int startingZ, VertexFactory factory) {
@@ -203,6 +230,27 @@ public class FewVoxelVtxAttribMgr implements VertexAttributeManagerI {
         voxelInfoBean.setExposedFace(VoxelInfoBean.BOTTOM_FACE);
         voxelInfoBean.setExposedFace( VoxelInfoBean.RIGHT_FACE );
         voxelInfoBean.setKey(key);
+
+        factory.addEnclosure(voxelInfoBean);
+    }
+
+    /**
+     * Makes a stacked pair of boxes, joined on one line-corner to another box, and with another box in empty space
+     * unattached to those three.
+     */
+    private void establishSimplestScenario(int startingX, int startingY, int startingZ, VertexFactory factory) {
+        //NOTE: the definitions below appear very similar.  However, they differ in the important aspect,
+        // that the exposed face list tells which are out-facing.  Attempting to call functions and add
+        // single voxels will be compounded by this.
+        VoxelInfoBean voxelInfoBean = new VoxelInfoBean();
+        VoxelInfoKey key = new VoxelInfoKey(startingX,startingY,startingZ);
+        voxelInfoBean.setKey(key);
+        voxelInfoBean.setExposedFace(VoxelInfoBean.BACK_FACE);
+        voxelInfoBean.setExposedFace(VoxelInfoBean.FRONT_FACE);
+        voxelInfoBean.setExposedFace(VoxelInfoBean.TOP_FACE);
+        voxelInfoBean.setExposedFace(VoxelInfoBean.LEFT_FACE);
+        voxelInfoBean.setExposedFace(VoxelInfoBean.BOTTOM_FACE);
+        voxelInfoBean.setExposedFace(VoxelInfoBean.RIGHT_FACE);
 
         factory.addEnclosure(voxelInfoBean);
     }

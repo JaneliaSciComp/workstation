@@ -3,14 +3,18 @@ package org.janelia.it.FlyWorkstation.publication_quality.mesh;
 import org.janelia.it.FlyWorkstation.gui.framework.viewer.alignment_board.AlignmentBoardSettings;
 import static org.janelia.it.FlyWorkstation.gui.TestingConstants.*;
 
+import org.janelia.it.jacs.model.TestCategories;
 import org.janelia.it.jacs.shared.loader.MaskChanDataAcceptorI;
 import org.janelia.it.jacs.shared.loader.MaskChanMultiFileLoader;
 import org.janelia.it.jacs.shared.loader.MaskChanStreamSourceI;
+import org.janelia.it.jacs.shared.loader.mesh.VoxelInfoBean;
+import org.janelia.it.jacs.shared.loader.mesh.VoxelSurfaceCollector;
 import org.janelia.it.jacs.shared.loader.renderable.RenderableBean;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.After;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -24,6 +28,7 @@ import java.util.*;
  *
  * Created by fosterl on 3/24/14.
  */
+@Category(TestCategories.FastTests.class)
 public class VoxelSurfaceCollectorTest {
 
     private Logger logger = LoggerFactory.getLogger( VoxelSurfaceCollectorTest.class );

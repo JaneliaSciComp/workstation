@@ -7,6 +7,9 @@ import org.janelia.it.FlyWorkstation.gui.alignment_board_viewer.channel_split.NB
 import org.janelia.it.FlyWorkstation.gui.alignment_board_viewer.gui_elements.GpuSamplerTest;
 import org.janelia.it.FlyWorkstation.gui.alignment_board_viewer.masking.ConfigurableColorMappingTest;
 import org.janelia.it.FlyWorkstation.gui.alignment_board_viewer.masking.MultiMaskTrackerTest;
+import org.janelia.it.FlyWorkstation.publication_quality.mesh.FewVoxelVtxAttribMgr;
+import org.janelia.it.FlyWorkstation.publication_quality.mesh.VoxelSurfaceCollectorTest;
+import org.janelia.it.FlyWorkstation.publication_quality.mesh.VtxAttribMgrTest;
 import org.janelia.it.jacs.compute.access.loader.renderable.RBComparatorTest;
 import org.janelia.it.jacs.compute.access.loader.renderable.RDComparatorTest;
 import org.janelia.it.FlyWorkstation.gui.alignment_board_viewer.volume_builder.DownSamplerTest;
@@ -43,6 +46,9 @@ import org.junit.runners.Suite;
         TestTileFormat.class,
         UserSettingSerializerStringTest.class,
         VeryLargeVolumeTest.class,
+        FewVoxelVtxAttribMgr.class,
+        VoxelSurfaceCollectorTest.class,
+        VtxAttribMgrTest.class,
         WebDavClientTest.class,
         WebDavUploaderTest.class
 })

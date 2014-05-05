@@ -8,6 +8,10 @@ import org.janelia.it.FlyWorkstation.gui.viewer3d.Mip3d;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.matrix_support.ViewMatrixSupport;
 import org.janelia.it.FlyWorkstation.publication_quality.mesh.actor.MeshDrawActor;
 import org.janelia.it.FlyWorkstation.shared.workers.SimpleWorker;
+import org.janelia.it.jacs.model.TestCategories;
+import org.janelia.it.jacs.shared.loader.mesh.VertexAttributeManagerI;
+import org.janelia.it.jacs.shared.loader.mesh.VtxAttribMgr;
+import org.junit.experimental.categories.Category;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -19,6 +23,7 @@ import java.awt.event.ActionEvent;
  *
  * Created by fosterl on 4/14/14.
  */
+@Category(TestCategories.InteractiveTests.class)
 public class TestMeshRender {
     private static Logger logger = LoggerFactory.getLogger(TestMeshRender.class);
 

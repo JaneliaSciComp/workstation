@@ -6,7 +6,9 @@ package org.janelia.it.FlyWorkstation.gui.viewer3d;
 
 import org.janelia.it.FlyWorkstation.gui.static_view.RGBExcludableVolumeBrick;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.resolver.TrivialFileResolver;
+import org.janelia.it.jacs.model.TestCategories;
 import org.janelia.it.jacs.shared.loader.texture.TextureDataI;
+import org.junit.experimental.categories.Category;
 
 import javax.swing.*;
 import java.io.File;
@@ -15,6 +17,7 @@ import java.io.File;
  * @author brunsc
  *
  */
+@Category(TestCategories.InteractiveTests.class)
 public class TestMip3d {
 
 	/**
