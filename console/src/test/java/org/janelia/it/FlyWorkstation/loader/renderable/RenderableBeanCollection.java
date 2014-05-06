@@ -1,4 +1,4 @@
-package org.janelia.it.jacs.compute.access.loader.renderable;
+package org.janelia.it.FlyWorkstation.loader.renderable;
 
 import org.janelia.it.jacs.model.entity.Entity;
 import org.janelia.it.jacs.model.entity.EntityConstants;

@@ -9,6 +9,7 @@ import org.janelia.it.FlyWorkstation.gui.alignment_board_viewer.volume_builder.R
 import org.janelia.it.FlyWorkstation.gui.alignment_board_viewer.volume_builder.RenderablesMaskBuilder;
 import org.janelia.it.FlyWorkstation.model.viewer.AlignedItem;
 import org.janelia.it.jacs.shared.loader.MaskChanStreamSource;
+import org.janelia.it.jacs.shared.loader.masking.RenderMappingI;
 import org.janelia.it.jacs.shared.loader.mesh.SurfaceOnlyAcceptorDecorator;
 import org.janelia.it.jacs.shared.loader.mesh.VoxelSurfaceCollector;
 import org.janelia.it.jacs.shared.loader.mesh.VoxelSurfaceCollectorFactory;

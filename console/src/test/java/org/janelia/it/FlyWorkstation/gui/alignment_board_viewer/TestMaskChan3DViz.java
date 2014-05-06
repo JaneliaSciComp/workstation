@@ -8,10 +8,11 @@ import org.janelia.it.FlyWorkstation.gui.framework.viewer.alignment_board.Alignm
 import org.janelia.it.FlyWorkstation.gui.framework.viewer.alignment_board.AlignmentBoardSettings;
 import org.janelia.it.FlyWorkstation.gui.framework.viewer.alignment_board.RenderablesLoadWorker;
 import org.janelia.it.FlyWorkstation.gui.alignment_board_viewer.masking.ConfigurableColorMapping;
-import org.janelia.it.FlyWorkstation.gui.alignment_board_viewer.masking.RenderMappingI;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.Mip3d;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.VolumeBrickFactory;
 import org.janelia.it.jacs.model.TestCategories;
+import org.janelia.it.jacs.shared.loader.Chan3DVizDataSource;
+import org.janelia.it.jacs.shared.loader.masking.RenderMappingI;
 import org.janelia.it.jacs.shared.loader.texture.TextureDataI;
 import org.junit.experimental.categories.Category;
 import org.slf4j.Logger;

@@ -5,6 +5,7 @@ import org.janelia.it.jacs.model.entity.Entity;
 import org.janelia.it.jacs.model.entity.EntityConstants;
 
 import org.janelia.it.jacs.shared.loader.FileStats;
+import org.janelia.it.jacs.shared.loader.masking.RenderMappingI;
 import org.janelia.it.jacs.shared.loader.renderable.RenderableBean;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;

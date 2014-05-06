@@ -3,7 +3,6 @@ package org.janelia.it.FlyWorkstation.gui.alignment_board_viewer.volume_builder;
 
 import org.janelia.it.FlyWorkstation.gui.alignment_board_viewer.MultiTexVolumeBrickFactory;
 import org.janelia.it.FlyWorkstation.gui.alignment_board_viewer.masking.ConfigurableColorMapping;
-import org.janelia.it.FlyWorkstation.gui.alignment_board_viewer.masking.RenderMappingI;
 import org.janelia.it.FlyWorkstation.gui.alignment_board_viewer.masking.VolumeMaskBuilder;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.Mip3d;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.resolver.TrivialFileResolver;
@@ -12,6 +11,7 @@ import org.janelia.it.jacs.model.entity.Entity;
 import org.janelia.it.jacs.model.entity.EntityConstants;
 import org.janelia.it.jacs.shared.loader.VolumeLoader;
 import org.janelia.it.jacs.shared.loader.file_resolver.FileResolver;
+import org.janelia.it.jacs.shared.loader.masking.RenderMappingI;
 import org.janelia.it.jacs.shared.loader.renderable.RenderableBean;
 import org.junit.experimental.categories.Category;
 

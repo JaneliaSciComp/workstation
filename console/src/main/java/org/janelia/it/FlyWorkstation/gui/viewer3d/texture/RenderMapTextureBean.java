@@ -2,7 +2,7 @@ package org.janelia.it.FlyWorkstation.gui.viewer3d.texture;
 
 import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.VolumeModel;
-import org.janelia.it.FlyWorkstation.gui.alignment_board_viewer.masking.RenderMappingI;
+import org.janelia.it.jacs.shared.loader.masking.RenderMappingI;
 import org.janelia.it.jacs.shared.loader.renderable.RenderableBean;
 import org.janelia.it.jacs.shared.loader.texture.TextureDataI;
 import org.janelia.it.jacs.shared.loader.volume.VolumeDataAcceptor;

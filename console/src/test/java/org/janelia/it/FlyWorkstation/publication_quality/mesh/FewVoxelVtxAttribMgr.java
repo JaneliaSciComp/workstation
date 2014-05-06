@@ -1,6 +1,7 @@
 package org.janelia.it.FlyWorkstation.publication_quality.mesh;
 
 import org.janelia.it.jacs.shared.loader.mesh.*;
+import org.janelia.it.jacs.shared.loader.wavefront_obj.OBJWriter;
 
 import java.io.File;
 import java.util.ArrayList;

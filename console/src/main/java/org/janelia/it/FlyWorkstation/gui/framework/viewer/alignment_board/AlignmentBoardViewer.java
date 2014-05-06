@@ -28,7 +28,6 @@ import org.janelia.it.FlyWorkstation.gui.alignment_board_viewer.gui_elements.Gpu
 import org.janelia.it.FlyWorkstation.gui.alignment_board_viewer.gui_elements.SavebackEvent;
 import org.janelia.it.FlyWorkstation.gui.alignment_board_viewer.masking.ConfigurableColorMapping;
 import org.janelia.it.FlyWorkstation.gui.alignment_board_viewer.masking.MultiMaskTracker;
-import org.janelia.it.FlyWorkstation.gui.alignment_board_viewer.masking.RenderMappingI;
 import org.janelia.it.FlyWorkstation.gui.alignment_board_viewer.texture.ABContextDataSource;
 import org.janelia.it.FlyWorkstation.gui.alignment_board_viewer.volume_export.VolumeWritebackHandler;
 import org.janelia.it.FlyWorkstation.gui.framework.console.Browser;
@@ -59,6 +58,7 @@ import org.janelia.it.FlyWorkstation.shared.workers.IndeterminateNoteProgressMon
 import org.janelia.it.FlyWorkstation.shared.workers.SimpleWorker;
 import org.janelia.it.jacs.model.entity.Entity;
 import org.janelia.it.jacs.shared.loader.FileStats;
+import org.janelia.it.jacs.shared.loader.masking.RenderMappingI;
 import org.janelia.it.jacs.shared.loader.texture.TextureDataI;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

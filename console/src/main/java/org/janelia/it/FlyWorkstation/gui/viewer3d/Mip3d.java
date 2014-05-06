@@ -1,10 +1,10 @@
 package org.janelia.it.FlyWorkstation.gui.viewer3d;
 
 import org.janelia.it.FlyWorkstation.gui.opengl.GLActor;
-import org.janelia.it.FlyWorkstation.gui.alignment_board_viewer.masking.RenderMappingI;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.texture.RenderMapTextureBean;
 import org.janelia.it.jacs.shared.loader.VolumeLoader;
 import org.janelia.it.jacs.shared.loader.file_resolver.FileResolver;
+import org.janelia.it.jacs.shared.loader.masking.RenderMappingI;
 import org.janelia.it.jacs.shared.loader.texture.TextureDataI;
 import org.janelia.it.jacs.shared.loader.volume.MaskBuilderI;
 

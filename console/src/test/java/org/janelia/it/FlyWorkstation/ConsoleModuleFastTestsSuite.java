@@ -10,8 +10,8 @@ import org.janelia.it.FlyWorkstation.gui.alignment_board_viewer.masking.MultiMas
 import org.janelia.it.FlyWorkstation.publication_quality.mesh.FewVoxelVtxAttribMgr;
 import org.janelia.it.FlyWorkstation.publication_quality.mesh.VoxelSurfaceCollectorTest;
 import org.janelia.it.FlyWorkstation.publication_quality.mesh.VtxAttribMgrTest;
-import org.janelia.it.jacs.compute.access.loader.renderable.RBComparatorTest;
-import org.janelia.it.jacs.compute.access.loader.renderable.RDComparatorTest;
+import org.janelia.it.FlyWorkstation.loader.renderable.RBComparatorTest;
+import org.janelia.it.FlyWorkstation.loader.renderable.RDComparatorTest;
 import org.janelia.it.FlyWorkstation.gui.alignment_board_viewer.volume_builder.DownSamplerTest;
 import org.janelia.it.FlyWorkstation.gui.alignment_board_viewer.volume_builder.VeryLargeVolumeTest;
 import org.janelia.it.FlyWorkstation.gui.alignment_board_viewer.volume_export.FilteringAcceptorDecoratorTest;

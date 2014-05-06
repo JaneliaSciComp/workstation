@@ -3,6 +3,7 @@ package org.janelia.it.FlyWorkstation.gui.alignment_board_viewer.masking;
 import org.janelia.it.jacs.model.entity.Entity;
 import org.janelia.it.jacs.model.entity.EntityConstants;
 import org.janelia.it.jacs.shared.loader.FileStats;
+import org.janelia.it.jacs.shared.loader.masking.RenderMappingI;
 import org.janelia.it.jacs.shared.loader.renderable.InvertingComparator;
 import org.janelia.it.jacs.shared.loader.renderable.RBComparator;
 import org.janelia.it.jacs.shared.loader.renderable.RenderableBean;
