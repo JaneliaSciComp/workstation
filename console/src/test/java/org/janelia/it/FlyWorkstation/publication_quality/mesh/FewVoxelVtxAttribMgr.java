@@ -75,7 +75,7 @@ public class FewVoxelVtxAttribMgr implements VertexAttributeManagerI, VertexExpo
     public void exportVertices(File outputLocation, String filenamePrefix) throws Exception {
         OBJWriter objWriter = new OBJWriter();
         for ( TriangleSource triangleSource: triangleSources) {
-            objWriter.writeVertexFile( outputLocation, filenamePrefix, OBJWriter.FILE_SUFFIX, id, triangleSource );
+            objWriter.writeVertices(outputLocation, filenamePrefix, OBJWriter.FILE_SUFFIX, id, triangleSource);
         }
     }
 
