@@ -18,7 +18,7 @@ void main(void)
     normVar = normalize( normalMatrix * normalAttribute );
 
     vec4 lightPosition = vec4( 0, 0.0, 100.0, 0 );
-    vec4 lightSource = normalize( lightPosition - normVar );  // Behind "zNear".
+    vec4 lightSource = normalize( lightPosition );  // Behind "zNear".
 
     // From diffuse lighting.
     float diffuseCoefficient = max( 0.0, dot( normVar,lightSource ) );
