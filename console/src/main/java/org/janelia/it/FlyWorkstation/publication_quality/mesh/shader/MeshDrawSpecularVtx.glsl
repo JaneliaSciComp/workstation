@@ -17,7 +17,7 @@ void main(void)
     vec4 homogeniousCoordPos = projection * modelView * vertexAttribute;
     normVar = normalize( normalMatrix * normalAttribute );
 
-    vec4 lightPosition = vec4( 0, 0.0, 1000.0, 0 );
+    vec4 lightPosition = vec4( 0, 0.0, 100.0, 0 );
     vec4 lightSource = normalize( lightPosition - normVar );  // Behind "zNear".
 
     // From diffuse lighting.
