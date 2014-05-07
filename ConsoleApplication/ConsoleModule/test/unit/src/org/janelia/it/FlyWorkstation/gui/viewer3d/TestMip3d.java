@@ -63,7 +63,9 @@ public class TestMip3d {
                     //String fn = "/Volumes/jacsData/filestore/asoy/Separation/998/562/1823854828887998562/separate/ConsolidatedSignal.v3dpbd";
                     //String fn = "/Volumes/jacsData/filestore/asoy/Separation/475/490/1823622563356475490/separate/ConsolidatedSignal.v3dpbd";
                     //String fn = "/Volumes/jacsData/filestore/asoy/Separation/309/922/1822667866399309922/separate/ConsolidatedSignal.v3dpbd";
-                    String fn = "/Volumes/mousebrainmicro/render/2013-03-25-Liver/default.0.tif";
+                    //String fn = "/Volumes/mousebrainmicro/render/2013-03-25-Liver/default.0.tif";
+                    String fn = "/Volumes/nobackup/jacs/jacsData/filestore/system/Separation/143/266/1696292257579143266/separate/ConsolidatedLabel.v3dpbd";
+
 
                     // All black.  String fn = "/Volumes/jacsData/filestore/MaskResources/Compartment/maskRGB.v3dpbd";
 
