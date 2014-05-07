@@ -25,7 +25,7 @@
         <property name="lib.dir" value="${basedir}/lib"/>
         <property name="src.dir" value="${basedir}/src"/>
         <property name="conf.dir" value="${basedir}/conf"/>
-        <property name="common.dir" value="${basedir}/../common"/>
+        <property name="common.dir" value="${basedir}/../../../common"/>
 
         <!-- unit test stuff -->
         <property name="build.test.classes.dir" value="${build.dir}/test/classes"/>
