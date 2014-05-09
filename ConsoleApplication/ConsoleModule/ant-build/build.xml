@@ -14,7 +14,7 @@
     <import file="../../../buildprocess/build-module.xml"/>
 	
     <target name="set-common-properties" >
-
+        <property name="build.jars.dir" value="build/jars"/>
         <property name="build.jar" value="${build.jars.dir}/workstation.jar"/>
         <property name="build.jar.lib.dir" value="${build.jars.dir}/workstation_lib"/>
 
