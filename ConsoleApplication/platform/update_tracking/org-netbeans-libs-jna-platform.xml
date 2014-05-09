@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?><module codename="org.netbeans.libs.jna.platform/1">
+    <module_version install_time="1381501690128" last="true" origin="installer" specification_version="1.1.1">
+        <file crc="2225677004" name="config/Modules/org-netbeans-libs-jna-platform.xml"/>
+        <file crc="3857359608" name="modules/ext/platform-3.4.0.jar"/>
+        <file crc="3250871532" name="modules/locale/org-netbeans-libs-jna-platform_ja.jar"/>
+        <file crc="4040006419" name="modules/locale/org-netbeans-libs-jna-platform_pt_BR.jar"/>
+        <file crc="1384483430" name="modules/locale/org-netbeans-libs-jna-platform_ru.jar"/>
+        <file crc="4235823541" name="modules/locale/org-netbeans-libs-jna-platform_zh_CN.jar"/>
+        <file crc="4117405461" name="modules/org-netbeans-libs-jna-platform.jar"/>
+    </module_version>
+</module>

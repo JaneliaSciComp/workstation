@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?><module codename="org.netbeans.modules.javahelp/1">
+    <module_version install_time="1381502553916" last="true" origin="installer" specification_version="2.34.1">
+        <file crc="3126457443" name="config/Modules/org-netbeans-modules-javahelp.xml"/>
+        <file crc="3125108413" name="modules/ext/jhall-2.0_05.jar"/>
+        <file crc="1847371828" name="modules/locale/org-netbeans-modules-javahelp_ja.jar"/>
+        <file crc="2121705442" name="modules/locale/org-netbeans-modules-javahelp_pt_BR.jar"/>
+        <file crc="3491833330" name="modules/locale/org-netbeans-modules-javahelp_ru.jar"/>
+        <file crc="3218533434" name="modules/locale/org-netbeans-modules-javahelp_zh_CN.jar"/>
+        <file crc="854228197" name="modules/org-netbeans-modules-javahelp.jar"/>
+    </module_version>
+</module>

@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<module codename="org.netbeans.modules.options.keymap">
+    <module_version install_time="1381503059707" last="false" origin="installer" specification_version="1.28.1">
+        <file crc="2363851279" name="config/Modules/org-netbeans-modules-options-keymap.xml"/>
+        <file crc="1442159524" name="modules/locale/org-netbeans-modules-options-keymap_ja.jar"/>
+        <file crc="1341587599" name="modules/locale/org-netbeans-modules-options-keymap_pt_BR.jar"/>
+        <file crc="834172204" name="modules/locale/org-netbeans-modules-options-keymap_ru.jar"/>
+        <file crc="31098858" name="modules/locale/org-netbeans-modules-options-keymap_zh_CN.jar"/>
+        <file crc="3331109221" name="modules/org-netbeans-modules-options-keymap.jar"/>
+    </module_version>
+    <module_version install_time="1390498195996" last="true" origin="NetBeans Distribution" specification_version="1.28.2">
+        <file crc="2363851279" name="config/Modules/org-netbeans-modules-options-keymap.xml"/>
+        <file crc="2579881988" name="modules/locale/org-netbeans-modules-options-keymap_ja.jar"/>
+        <file crc="613798508" name="modules/locale/org-netbeans-modules-options-keymap_pt_BR.jar"/>
+        <file crc="59435688" name="modules/locale/org-netbeans-modules-options-keymap_ru.jar"/>
+        <file crc="178970109" name="modules/locale/org-netbeans-modules-options-keymap_zh_CN.jar"/>
+        <file crc="2714496816" name="modules/org-netbeans-modules-options-keymap.jar"/>
+    </module_version>
+</module>
