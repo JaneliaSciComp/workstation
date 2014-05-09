@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+This is necessary so that the environments required by Janelia's build system
+and those of the NetBeans system can be properly negotiated.  This is a sort
+of adapter.
+-->
+<project name="run-console-build" default="build">
+  <target name="build">
+<!--    <echoproperties/>-->
+    <property name="antexec" value="${ant.home}/bin/ant" />
+    <!-- NOTE: failonerror is possible, here, but it hides the error text. -->
+    <exec executable="${antexec}" outputproperty="antout">
+      <arg value="-Dnbplatform.default.netbeans.dest.dir=${basedir}"/>
+      <arg value="-Dnbplatform.default.harness.dir=${basedir}/harness" />
+      <arg value="-f"/>
+      <arg value="build.xml"/>
+      <arg value="build"/>
+    </exec>
+    <echo message="Ant Build: ${antout}"/>
+    <condition property="subbuildsuccess">
+      <contains string="${antout}" substring="BUILD SUCCESSFUL" casesensitive="true" />
+    </condition>
+    <fail unless="${subbuildsuccess}" message="Unsuccessful"/>
+  </target>
+</project>
