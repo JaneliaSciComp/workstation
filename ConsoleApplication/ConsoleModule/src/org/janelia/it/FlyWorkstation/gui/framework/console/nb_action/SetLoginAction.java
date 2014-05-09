@@ -26,7 +26,7 @@ import org.openide.windows.WindowManager;
 )
 @ActionReferences({
     @ActionReference(path = "Menu/File", position = 1450, separatorBefore = 1425),
-    @ActionReference(path = "Shortcuts", name = "o")
+    @ActionReference(path = "Shortcuts", name = "A-o")
 })
 @Messages("CTL_SetLoginAction=Set Login")
 public final class SetLoginAction implements ActionListener {

@@ -23,7 +23,7 @@ import org.openide.util.NbBundle.Messages;
 )
 @ActionReferences({
     @ActionReference(path = "Menu/File", position = 1437, separatorAfter = 1443),
-    @ActionReference(path = "Shortcuts", name = "I")
+    @ActionReference(path = "Shortcuts", name = "A-I")
 })
 @Messages("CTL_ImportAction=Import Files")
 public final class ImportAction implements ActionListener {

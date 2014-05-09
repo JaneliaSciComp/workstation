@@ -24,7 +24,7 @@ import org.openide.util.NbBundle.Messages;
 )
 @ActionReferences({
     @ActionReference(path = "Menu/File", position = 1550, separatorBefore = 1525),
-    @ActionReference(path = "Shortcuts", name = "p")
+    @ActionReference(path = "Shortcuts", name = "A-p")
 })
 @Messages("CTL_PrintScreenAction=Print Screen")
 public final class PrintScreenAction implements ActionListener {
