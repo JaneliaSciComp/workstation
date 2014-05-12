@@ -7,7 +7,6 @@
             <folder name="alignment_board_plugin">
                 <file name="AlignmentBoardTopComponent.wstcgrp" url="Groups/alignment_board_plugin/AlignmentBoardTopComponent.wstcgrp"/>
                 <file name="AlignmentBoardControlsTopComponent.wstcgrp" url="Groups/alignment_board_plugin/AlignmentBoardControlsTopComponent.wstcgrp"/>
-                <file name="LayersPanelTopComponent.wstcgrp" url="Groups/alignment_board_plugin/LayersPanelTopComponent.wstcgrp"/>
             </folder>
         </folder>
     </folder>

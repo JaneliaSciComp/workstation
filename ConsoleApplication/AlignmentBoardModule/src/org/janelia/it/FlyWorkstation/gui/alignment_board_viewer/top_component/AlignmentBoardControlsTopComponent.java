@@ -6,12 +6,18 @@
 package org.janelia.it.FlyWorkstation.gui.alignment_board_viewer.top_component;
 
 import java.awt.BorderLayout;
+import javax.swing.JLabel;
+import javax.swing.JSplitPane;
+import org.janelia.it.FlyWorkstation.gui.alignment_board.ab_mgr.AlignmentBoardMgr;
+import org.janelia.it.FlyWorkstation.gui.alignment_board_viewer.LayersPanel;
 import org.janelia.it.FlyWorkstation.gui.alignment_board_viewer.gui_elements.AlignmentBoardControlsPanel;
 import org.netbeans.api.settings.ConvertAsProperties;
 import org.openide.awt.ActionID;
 import org.openide.awt.ActionReference;
 import org.openide.windows.TopComponent;
 import org.openide.util.NbBundle.Messages;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Top component which displays something.
@@ -25,7 +31,7 @@ import org.openide.util.NbBundle.Messages;
         //iconBase="SET/PATH/TO/ICON/HERE", 
         persistenceType = TopComponent.PERSISTENCE_ALWAYS
 )
-@TopComponent.Registration(mode = "appPropertiesBtm", openAtStartup = true)
+@TopComponent.Registration(mode = "properties", openAtStartup = true)
 @ActionID(category = "Window", id = "org.janelia.it.FlyWorkstation.gui.alignment_board_viewer.top_component.AlignmentBoardControlsTopComponent")
 @ActionReference(path = "Menu/Window" /*, position = 333 */)
 @TopComponent.OpenActionRegistration(
@@ -39,10 +45,19 @@ import org.openide.util.NbBundle.Messages;
 })
 public final class AlignmentBoardControlsTopComponent extends TopComponent {
 
+    private Logger logger = LoggerFactory.getLogger( AlignmentBoardControlsTopComponent.class );
     private AlignmentBoardControlsPanel cPanel;
-    
+    private JSplitPane splitPane;
+            
     public AlignmentBoardControlsTopComponent() {
         initComponents();
+        jPanel1.setLayout(new BorderLayout());
+        splitPane = new JSplitPane(JSplitPane.VERTICAL_SPLIT);
+        splitPane.setOrientation(JSplitPane.VERTICAL_SPLIT);
+        splitPane.setTopComponent( new JLabel( "" ));
+        splitPane.setBottomComponent( new JLabel( "" ));
+        jPanel1.add( splitPane, BorderLayout.CENTER );
+
         setName(Bundle.CTL_AlignmentBoardControlsTopComponent());
         setToolTipText(Bundle.HINT_AlignmentBoardControlsTopComponent());
         putClientProperty(TopComponent.PROP_CLOSING_DISABLED, Boolean.FALSE);
@@ -67,7 +82,7 @@ public final class AlignmentBoardControlsTopComponent extends TopComponent {
         jPanel1.setLayout(jPanel1Layout);
         jPanel1Layout.setHorizontalGroup(
             jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGap(0, 925, Short.MAX_VALUE)
+            .addGap(0, 884, Short.MAX_VALUE)
         );
         jPanel1Layout.setVerticalGroup(
             jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
@@ -79,12 +94,12 @@ public final class AlignmentBoardControlsTopComponent extends TopComponent {
         layout.setHorizontalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(layout.createSequentialGroup()
-                .addContainerGap()
-                .addComponent(jPanel1, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+                .addComponent(jPanel1, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addGap(0, 47, Short.MAX_VALUE))
         );
         layout.setVerticalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addComponent(jPanel1, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+            .addComponent(jPanel1, javax.swing.GroupLayout.Alignment.TRAILING, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
         );
     }// </editor-fold>//GEN-END:initComponents
 
@@ -93,18 +108,27 @@ public final class AlignmentBoardControlsTopComponent extends TopComponent {
     // End of variables declaration//GEN-END:variables
     @Override
     public void componentOpened() {
+        final LayersPanel layersPanel = AlignmentBoardMgr.getInstance().getLayersPanel();
+        try {
+            layersPanel.activate();
+            splitPane.setTopComponent( layersPanel );
+        } catch ( Throwable th ) {
+            logger.warn("Failed ot activate layers panel.  Not opening component.");
+        }
     }
 
     @Override
     public void componentClosed() {
+        splitPane.setTopComponent( null );
+        splitPane.setBottomComponent( null );
+        AlignmentBoardMgr.getInstance().getLayersPanel().deactivate();
         if ( cPanel != null )
             cPanel.dispose();
     }
     
     public void setControls( AlignmentBoardControlsPanel cPanel ) {
         this.cPanel = cPanel;
-        jPanel1.setLayout( new BorderLayout() );
-        jPanel1.add( cPanel, BorderLayout.CENTER );
+        splitPane.setBottomComponent(cPanel);
     }
 
     void writeProperties(java.util.Properties p) {
