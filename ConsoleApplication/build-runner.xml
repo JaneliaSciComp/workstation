@@ -5,7 +5,6 @@ and those of the NetBeans system can be properly negotiated.  This is a sort
 of adapter.
 -->
 <project name="run-console-build" default="build">
-    <loadproperties description="user props" srcfile="../buildprocess/config/${user.name}.properties"/>
     <property name="antexec" value="${ant.home}/bin/ant" />
     <available file="${antexec}" property="antexec.present"/>
 
@@ -37,6 +36,7 @@ of adapter.
     <target name="no-antexec" unless="${antexec.present}">
         <echo message="failing for lack of ant executable"/>
         <echoproperties/>
+        <echo message="If you encounter this failure in IntelliJ, get an apache-ant installation on your box.  Then set the property 'antexec' to point to its path, using IntelliJ's 'Ant Build' tree, and right clicking jacs-all/build-all/Properties."/>
         <fail description="no-executable"
               message="No executable is available for running other ant files from within ant."/>
     </target>
