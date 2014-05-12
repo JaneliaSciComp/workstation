@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?><module codename="org.netbeans.core.netigso">
+    <module_version install_time="1381502281569" last="true" origin="installer" specification_version="1.23.1">
+        <file crc="3723901005" name="config/Modules/org-netbeans-core-netigso.xml"/>
+        <file crc="3496578415" name="modules/locale/org-netbeans-core-netigso_ja.jar"/>
+        <file crc="2909177302" name="modules/locale/org-netbeans-core-netigso_pt_BR.jar"/>
+        <file crc="1103878684" name="modules/locale/org-netbeans-core-netigso_ru.jar"/>
+        <file crc="1806604352" name="modules/locale/org-netbeans-core-netigso_zh_CN.jar"/>
+        <file crc="585786076" name="modules/org-netbeans-core-netigso.jar"/>
+    </module_version>
+</module>

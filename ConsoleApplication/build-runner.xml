@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+This is necessary so that the environments required by Janelia's build system
+and those of the NetBeans system can be properly negotiated.  This is a sort
+of adapter.
+-->
+<project name="run-console-build" default="build">
+    <property name="antexec" value="${ant.home}/bin/ant" />
+    <available file="${antexec}" property="antexec.present"/>
+
+    <macrodef name="exec-target" description="Carry Out Target via Exec">
+        <attribute name="target"/>
+        <sequential>
+            <!-- NOTE: failonerror is possible, here, but it hides the error text. -->
+            <exec executable="${antexec}" outputproperty="antout">
+                <arg value="-Dnbplatform.default.netbeans.dest.dir=${basedir}"/>
+                <arg value="-Dnbplatform.default.harness.dir=${basedir}/harness" />
+                <arg value="-f"/>
+                <arg value="build.xml"/>
+                <arg value="@{target}"/>
+            </exec>
+            <echo message="Ant Build: ${antout}"/>
+            <condition property="subbuildsuccess">
+                <contains string="${antout}" substring="BUILD SUCCESSFUL" casesensitive="true" />
+            </condition>
+            <fail unless="${subbuildsuccess}" message="Unsuccessful"/>
+        </sequential>
+    </macrodef>
+
+    <target name="use-file" if="${antexec.present}">
+        <!-- do something requiring that file... -->
+        <echo message="using exec"/>
+        <exec-target target="build"/>
+    </target>
+
+    <target name="no-antexec" unless="${antexec.present}">
+        <echo message="failing for lack of ant executable"/>
+        <echoproperties/>
+        <echo message="If you encounter this failure in IntelliJ, get an apache-ant installation on your box.  Then set the property 'antexec' to point to its path, using IntelliJ's 'Ant Build' tree, and right clicking jacs-all/build-all/Properties."/>
+        <fail description="no-executable"
+              message="No executable is available for running other ant files from within ant."/>
+    </target>
+
+    <target name="build" depends="use-file,no-antexec">
+        <echoproperties/>
+
+    </target>
+
+    <target name="clean">
+        <exec-target target="clean"/>
+    </target>
+
+    <target name="deploy">
+        <exec-target target="deploy"/>
+    </target>
+</project>

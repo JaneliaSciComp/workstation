@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE filesystem PUBLIC "-//NetBeans//DTD Filesystem 1.2//EN" "http://www.netbeans.org/dtds/filesystem-1_2.dtd">
+<filesystem>
+    <folder name="Windows2">
+        <folder name="Groups">
+            <file name="alignment_board_plugin.wsgrp" url="Groups/alignment_board_plugin.wsgrp"/>
+            <folder name="alignment_board_plugin">
+                <file name="AlignmentBoardTopComponent.wstcgrp" url="Groups/alignment_board_plugin/AlignmentBoardTopComponent.wstcgrp"/>
+                <file name="AlignmentBoardControlsTopComponent.wstcgrp" url="Groups/alignment_board_plugin/AlignmentBoardControlsTopComponent.wstcgrp"/>
+                <file name="LayersPanelTopComponent.wstcgrp" url="Groups/alignment_board_plugin/LayersPanelTopComponent.wstcgrp"/>
+            </folder>
+        </folder>
+    </folder>
+</filesystem>
