@@ -853,15 +853,11 @@ public class LayersPanel extends JPanel implements Refreshable {
                         if (parentWrapper instanceof AlignedItem && !(parentWrapper instanceof AlignmentBoardContext)) {
                             parent = (AlignedItem)parentWrapper;
                             affectedEntities.add( parent.getInternalEntity() );
-//                            if (isVisible) {
-//                                parent.setIsVisible(isVisible);    
-//                            }
                         }
                     }
                     
                     for(AlignedItem child : alignedItem.getAlignedItems()) {
                         affectedEntities.add( child.getInternalEntity() );
-//                        child.setIsVisible(isVisible);
                     }
                     ModelMgr.getModelMgr().setOrUpdateValues( affectedEntities, EntityConstants.ATTRIBUTE_VISIBILITY, Boolean.toString(isVisible) );
                 }

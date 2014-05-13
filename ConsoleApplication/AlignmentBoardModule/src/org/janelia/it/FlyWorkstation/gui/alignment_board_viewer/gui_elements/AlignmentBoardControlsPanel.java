@@ -22,14 +22,13 @@ public class AlignmentBoardControlsPanel extends JPanel {
             "to search other specimens and present the resulting overlappoing volume." +
             "</html>";
 
-    private static final int WIDTH = 640;
-    private static final int HEIGHT = 640;
-
-    private static final Dimension SIZE = new Dimension( WIDTH, HEIGHT);
     private static final Dimension DN_SAMPLE_DROPDOWN_SIZE = new Dimension(120, 50);
     private static final Dimension DN_SAMPLE_MAX_DROPDOWN_SIZE = new Dimension(240, 50);
-    private AlignmentBoardControls controls;
+    private static final int PREFERRED_HEIGHT = 600;
+    private static final int MIN_WIDTH = 440;
+    private static final Dimension SIZE = new Dimension( MIN_WIDTH, PREFERRED_HEIGHT );
 
+    private AlignmentBoardControls controls;
     private final Logger logger = LoggerFactory.getLogger( AlignmentBoardControlsPanel.class );
 
     /**
@@ -76,7 +75,7 @@ public class AlignmentBoardControlsPanel extends JPanel {
     }
 
     /**
-     * Gray out or un-gray all child components, as the acto fo disable/enable.
+     * Gray out or un-gray all child components, as the disable/enable.
      *
      * @param enabled on or off
      */
