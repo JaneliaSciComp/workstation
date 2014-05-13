@@ -10,3 +10,8 @@
 /compute/nbproject/private/
 /ConsoleApplication/harness/nbi/stub/ext/engine/nbproject/private/
 flyworkstation.log
+/ConsoleApplication/build/
+/ConsoleApplication/ConsoleWrapper/build/
+/ConsoleApplication/SharedModelComputeWrapper/build/
+/ConsoleApplication/ConsoleModule/build/
+/ConsoleApplication/AlignmentBoardModule/build/
