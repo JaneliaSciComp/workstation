@@ -7,6 +7,7 @@ import org.janelia.it.jacs.model.entity.*;
 import org.janelia.it.jacs.model.user_data.tiledMicroscope.*;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -174,6 +175,10 @@ public class EJBEntityFacade implements EntityFacade {
     @Override
     public EntityData setOrUpdateValue(Long entityId, String attributeName, String value) throws Exception {
         return EJBFactory.getRemoteEntityBean().setOrUpdateValue(SessionMgr.getSubjectKey(), entityId, attributeName, value);
+    }
+    
+    public Collection<EntityData> setOrUpdateValues(Collection<Long> entityIds, String attributeName, String value) throws Exception {
+        return EJBFactory.getRemoteEntityBean().setOrUpdateValues(SessionMgr.getSubjectKey(), entityIds, attributeName, value);
     }
     
     @Override

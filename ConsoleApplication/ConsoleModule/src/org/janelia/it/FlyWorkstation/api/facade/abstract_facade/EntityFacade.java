@@ -1,5 +1,6 @@
 package org.janelia.it.FlyWorkstation.api.facade.abstract_facade;
 
+import java.util.Collection;
 import org.janelia.it.jacs.compute.api.support.MappedId;
 import org.janelia.it.jacs.model.entity.*;
 import org.janelia.it.jacs.model.user_data.tiledMicroscope.*;
@@ -70,6 +71,8 @@ public interface EntityFacade {
     public Entity updateChildIndexes(Entity entity) throws Exception;
     
     public EntityData setOrUpdateValue(Long entityId, String attributeName, String value) throws Exception;
+    
+    public Collection<EntityData> setOrUpdateValues(Collection<Long> entityIds, String attributeName, String value) throws Exception;
     
     public void removeEntityData(EntityData ed) throws Exception;
 

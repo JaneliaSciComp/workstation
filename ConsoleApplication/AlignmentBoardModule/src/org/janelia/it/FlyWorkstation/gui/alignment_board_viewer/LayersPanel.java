@@ -61,6 +61,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.common.eventbus.Subscribe;
+import java.util.ArrayList;
 
 /**
  * The Layers Panel acts as a controller for the Alignment Board. It opens an Alignment Board Context and generates
@@ -145,22 +146,14 @@ public class LayersPanel extends JPanel implements Refreshable {
             public void mouseReleased(MouseEvent e) {
                 TreePath path = outline.getClosestPathForLocation(e.getX(), e.getY());
                 if (e.isPopupTrigger()) {
-                    int rowIndex = outline.convertRowIndexToView(outline.getLayoutCache().getRowForPath(path));
-                    outline.getSelectionModel().setSelectionInterval(rowIndex,rowIndex);
-                    showPopupMenu(e);
+                    handlePopup(path, e);
                     return;
                 }
                 else {
                     selectColorIfCorrectColumn();
                 }
                 if (path!=null) {
-                    // This masking is to make sure that the right button is being double clicked, not left and then right or right and then left
-                    if (e.getClickCount() == 2 && e.getButton() == MouseEvent.BUTTON1 && (e.getModifiersEx() | InputEvent.BUTTON3_MASK) == InputEvent.BUTTON3_MASK) {
-                        nodeDoubleClicked(e);
-                    }
-                    else if (e.getClickCount() == 1 && e.getButton() == MouseEvent.BUTTON1) {
-                        nodeClicked(e);
-                    }
+                    dispatchForClickType(e);
                 }
                 outline.clearSelection();  // Avoid confusing, left-over selection for subsequent menu-clicks.
             }
@@ -171,10 +164,7 @@ public class LayersPanel extends JPanel implements Refreshable {
                 TreePath path = outline.getClosestPathForLocation(e.getX(), e.getY());
 
                 if (e.isPopupTrigger()) {
-                    int rowIndex = outline.convertRowIndexToView(outline.getLayoutCache().getRowForPath(path));
-                    outline.getSelectionModel().setSelectionInterval(rowIndex,rowIndex);
-                    showPopupMenu(e);
-                    return;
+                    handlePopup(path, e);
                 }
                 else {
                     if (path!=null) {
@@ -193,6 +183,22 @@ public class LayersPanel extends JPanel implements Refreshable {
                     AlignedItem ai = getAlignedItemFromOutlineSelection();
                     if ( ai != null )
                         chooseColor( ai );
+                }
+            }
+
+            private void handlePopup(TreePath path, MouseEvent e) {
+                int rowIndex = outline.convertRowIndexToView(outline.getLayoutCache().getRowForPath(path));
+                outline.getSelectionModel().setSelectionInterval(rowIndex,rowIndex);
+                showPopupMenu(e);
+                return;
+            }
+
+            private void dispatchForClickType(MouseEvent e) {
+                // This masking is to make sure that the right button is being double clicked, not left and then right or right and then left
+                if (e.getClickCount() == 2 && e.getButton() == MouseEvent.BUTTON1 && (e.getModifiersEx() | InputEvent.BUTTON3_MASK) == InputEvent.BUTTON3_MASK) {
+                    nodeDoubleClicked(e);
+                } else if (e.getClickCount() == 1 && e.getButton() == MouseEvent.BUTTON1) {
+                    nodeClicked(e);
                 }
             }
 
@@ -437,7 +443,7 @@ public class LayersPanel extends JPanel implements Refreshable {
         }
         
         for(int i=0; i<columns.length; i++) {
-          columnModel.removeColumn(columns[i]);
+            columnModel.removeColumn(columns[i]);
         }
         
         TableColumn treeColumn = columns[0];
@@ -840,39 +846,40 @@ public class LayersPanel extends JPanel implements Refreshable {
                 @Override
                 protected void doStuff() throws Exception {
                     alignedItem.setIsVisible(isVisible);
-                    
+
+                    Collection<Entity> affectedEntities = new ArrayList<Entity>();
                     EntityWrapper parentWrapper = alignedItem.getParent();
                     if (parentWrapper!=null) {
                         if (parentWrapper instanceof AlignedItem && !(parentWrapper instanceof AlignmentBoardContext)) {
                             parent = (AlignedItem)parentWrapper;
-                            if (isVisible) {
-                                parent.setIsVisible(isVisible);    
-                            }
+                            affectedEntities.add( parent.getInternalEntity() );
+//                            if (isVisible) {
+//                                parent.setIsVisible(isVisible);    
+//                            }
                         }
                     }
                     
                     for(AlignedItem child : alignedItem.getAlignedItems()) {
-                        child.setIsVisible(isVisible);
+                        affectedEntities.add( child.getInternalEntity() );
+//                        child.setIsVisible(isVisible);
                     }
+                    ModelMgr.getModelMgr().setOrUpdateValues( affectedEntities, EntityConstants.ATTRIBUTE_VISIBILITY, Boolean.toString(isVisible) );
                 }
                 
                 @Override
                 protected void hadSuccess() {
                     outline.revalidate();
                     outline.repaint();
+                    AlignmentBoardItemChangeEvent event;
                     if (parent!=null && isVisible) {
-                        AlignmentBoardItemChangeEvent parentEvent = new AlignmentBoardItemChangeEvent(
+                         event = new AlignmentBoardItemChangeEvent(
                                 alignmentBoardContext, parent, ChangeType.VisibilityChange);
-                        ModelMgr.getModelMgr().postOnEventBus(parentEvent);
                     }
-                    AlignmentBoardItemChangeEvent event = new AlignmentBoardItemChangeEvent(
-                            alignmentBoardContext, alignedItem, ChangeType.VisibilityChange);
+                    else {
+                        event = new AlignmentBoardItemChangeEvent(
+                                alignmentBoardContext, alignedItem, ChangeType.VisibilityChange);
+                    }
                     ModelMgr.getModelMgr().postOnEventBus(event);
-                    for(AlignedItem child : alignedItem.getAlignedItems()) {
-                        AlignmentBoardItemChangeEvent childEvent = new AlignmentBoardItemChangeEvent(
-                                alignmentBoardContext, child, ChangeType.VisibilityChange);
-                        ModelMgr.getModelMgr().postOnEventBus(childEvent);    
-                    }
                 }
                 
                 @Override
