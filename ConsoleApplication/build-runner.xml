@@ -43,7 +43,59 @@ of adapter.
 
     <target name="build" depends="use-file,no-antexec">
         <echoproperties/>
+    </target>
 
+    <target name="build-installers" description="Build installers that one might hand a user">
+        <!--
+           This is the full command line used to build installers, from my NetBeans installation, at time of
+           writing (May 14,2014).
+
+             ant -f "/Applications/NetBeans/NetBeans 7.4.app/Contents/Resources/NetBeans/harness/nbi/stub/template.xml"
+             "-Dnbi.stub.location=/Applications/NetBeans/NetBeans 7.4.app/Contents/Resources/NetBeans/harness/nbi/stub"
+             "-Dnbi.engine.jar=/Applications/NetBeans/NetBeans 7.4.app/Contents/Resources/NetBeans/harness/modules/ext/nbi-engine.jar"
+             "-Dnbi.stub.common.location=/Applications/NetBeans/NetBeans 7.4.app/Contents/Resources/NetBeans/harness/nbi/.common"
+             -Dsuite.nbi.product.uid=janeliaworkstation
+             -Dnbi.icon.file=/Users/fosterl/NetBeansProjects/alignment_board_LLF/janelia-workstation/ConsoleApplication/branding/core/core.jar/org/netbeans/core/startup/frame48.gif
+             -Dsuite.location=/Users/fosterl/NetBeansProjects/alignment_board_LLF/janelia-workstation/ConsoleApplication
+             "-Dgenerate.installer.for.platforms=windows linux macosx"
+             "-Dnbi.ant.tasks.jar=/Applications/NetBeans/NetBeans 7.4.app/Contents/Resources/NetBeans/harness/modules/ext/nbi-ant-tasks.jar"
+             -Dgenerator-jdk-location-forward-slashes=/Library/Java/JavaVirtualMachines/jdk1.7.0_51.jdk/Contents/Home
+             "-Dnbi.dock.icon.file=/Applications/NetBeans/NetBeans 7.4.app/Contents/Resources/NetBeans/harness/etc/applicationIcon.icns"
+             -Dpack200.enabled=false "-Dnbi.registries.management.jar=/Applications/NetBeans/NetBeans 7.4.app/Contents/Resources/NetBeans/harness/modules/ext/nbi-registries-management.jar"
+              build
+        -->
+        <exec executable="${antexec}" outputproperty="antout">
+            <!-- First arg is used explicitly in NetBeans, but found unneeded and difficult to set, here. -->
+            <!--<arg value="-Dgenerator-jdk-location-forward-slashes=/Library/Java/JavaVirtualMachines/jdk1.7.0_51.jdk/Contents/Home "-->
+            <arg value="-Dnbplatform.default.netbeans.dest.dir=${basedir}"/>
+            <arg value="-Dnbplatform.default.harness.dir=${basedir}/harness" />
+            <arg value="-Dgenerate.installer.for.platforms=windows linux macosx"/>
+            <arg value="-Dsuite.nbi.product.uid=janeliaworkstation"/>
+            <arg value="-Dsuite.location=${basedir}"/>
+            <arg value="-Dpack200.enabled=false"/>
+            <arg value="-Dnbi.stub.location=${basedir}/harness/nbi/stub"/>
+            <arg value="-Dnbi.engine.jar=${basedir}/harness/modules/ext/nbi-engine.jar"/>
+            <arg value="-Dnbi.stub.common.location=${basedir}/harness/nbi/.common"/>
+            <arg value="-Dnbi.icon.file=${basedir}/branding/core/core.jar/org/netbeans/core/startup/frame48.gif"/>
+            <arg value="-Dnbi.ant.tasks.jar=${basedir}/harness/modules/ext/nbi-ant-tasks.jar"/>
+            <arg value="-Dnbi.dock.icon.file=${basedir}/harness/etc/applicationIcon.icns"/>
+            <arg value="-Dnbi.registries.management.jar=${basedir}/harness/modules/ext/nbi-registries-management.jar" />
+            <arg value="-f"/>
+            <arg value="${basedir}/harness/nbi/stub/template.xml"/>
+            <arg value="build"/>
+        </exec>
+        <echo message="Ant Build: ${antout}"/>
+        <condition property="subbuildsuccess">
+            <contains string="${antout}" substring="BUILD SUCCESSFUL" casesensitive="true" />
+        </condition>
+        <fail unless="${subbuildsuccess}" message="Unsuccessful"/>
+    </target>
+    <target name="build-mac" description="Builds a full mac app with canonical directory structure">
+        <exec-target target="build-mac"/>
+    </target>
+
+    <target name="build-zip" description="Builds a Zip File with Windows exe's">
+        <exec-target target="build-zip"/>
     </target>
 
     <target name="clean">
