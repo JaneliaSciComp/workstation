@@ -65,8 +65,8 @@ import java.util.ArrayList;
 
 /**
  * The Layers Panel acts as a controller for the Alignment Board. It opens an Alignment Board Context and generates
- * events that the Alignment Board can listen to in order to know when the user adds items to the alignment board,
- * toggles their visibility, or sets other attributes such as color.
+ events that the Alignment Board can listen to in order to know when the user adds multiSelectionItems to the alignment board,
+ toggles their visibility, or sets other attributes such as color.
  * 
  * @author <a href="mailto:rokickik@janelia.hhmi.org">Konrad Rokicki</a>
  */
@@ -132,6 +132,33 @@ public class LayersPanel extends JPanel implements Refreshable {
         repaint();
     }
     
+    public Outline getOutline() {
+        return outline;
+    }
+
+    public AlignmentBoardContext getAlignmentBoardContext() {
+        return alignmentBoardContext;
+    }
+    
+    public void openAlignmentBoard(long alignmentBoardId) {
+        log.info("openAlignmentBoard: {}",alignmentBoardId);
+        loadAlignmentBoard(alignmentBoardId, null, new Callable<Void>() {
+            @Override
+            public Void call() throws Exception {
+                AlignmentBoardOpenEvent event = new AlignmentBoardOpenEvent(alignmentBoardContext);
+                log.info("Posting AB-Open");                
+                ModelMgr.getModelMgr().postOnEventBus(event);
+                return null;
+            }
+        });
+    }
+
+    public void closeAlignmentBoard() {
+        log.debug("closeAlignmentBoard");
+        this.alignmentBoardContext = null;
+        showNothing();
+    }
+    
     private void init() {
 
         outline = new Outline();
@@ -140,56 +167,59 @@ public class LayersPanel extends JPanel implements Refreshable {
         outline.setColumnHidingAllowed(false);
         outline.setTableHeader(null);
         outline.setRootVisible(false);
-        outline.getSelectionModel().setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+        outline.getSelectionModel().setSelectionMode(ListSelectionModel.MULTIPLE_INTERVAL_SELECTION);
         
         outline.addMouseListener(new MouseAdapter() {
             public void mouseReleased(MouseEvent e) {
                 TreePath path = outline.getClosestPathForLocation(e.getX(), e.getY());
+                AlignedItem ai = getAlignedItemAtEventPos( e );
                 if (e.isPopupTrigger()) {
-                    handlePopup(path, e);
+                    handlePopup(e, ai);
                     return;
                 }
                 else {
-                    selectColorIfCorrectColumn();
+                    if ( selectColorIfCorrectColumn(ai) ) {
+                        return;
+                    }
                 }
                 if (path!=null) {
                     dispatchForClickType(e);
                 }
-                outline.clearSelection();  // Avoid confusing, left-over selection for subsequent menu-clicks.
             }
 
             public void mousePressed(MouseEvent e) {
                 // We have to also listen for mousePressed because OSX generates the popup trigger here
                 // instead of mouseReleased like any sane OS.
                 TreePath path = outline.getClosestPathForLocation(e.getX(), e.getY());
+                AlignedItem ai = getAlignedItemForPath(path);
 
                 if (e.isPopupTrigger()) {
-                    handlePopup(path, e);
+                    handlePopup(e, ai);
                 }
                 else {
                     if (path!=null) {
                         nodePressed(e);
                     }
-                    selectColorIfCorrectColumn();
+                    if ( ai != null ) {
+                        selectColorIfCorrectColumn(ai);
+                    }
                 }
-                outline.clearSelection();  // Avoid confusing, left-over selection for subsequent menu-clicks.
             }
 
-            private void selectColorIfCorrectColumn() {
+            /** Will 'act'/return true if the click was the color col. */
+            private boolean selectColorIfCorrectColumn(AlignedItem ai) {
                 // Need see if this is appropriate column.
                 // outline.getSelectedColumn()  does not work: clicking and selecting are different things.
                 int colIndex = outline.getSelectedColumn();
                 if ( colIndex == COLOR_SWATCH_COLNUM ) {
-                    AlignedItem ai = getAlignedItemFromOutlineSelection();
-                    if ( ai != null )
-                        chooseColor( ai );
+                    chooseColor( ai );
+                    return true;
                 }
+                return false;
             }
 
-            private void handlePopup(TreePath path, MouseEvent e) {
-                int rowIndex = outline.convertRowIndexToView(outline.getLayoutCache().getRowForPath(path));
-                outline.getSelectionModel().setSelectionInterval(rowIndex,rowIndex);
-                showPopupMenu(e);
+            private void handlePopup(MouseEvent e, AlignedItem ai) {
+                showPopupMenu(e, ai);
                 return;
             }
 
@@ -218,14 +248,26 @@ public class LayersPanel extends JPanel implements Refreshable {
             }
         });
     }
+    
+    private AlignedItem getAlignedItemAtEventPos( MouseEvent e ) {
+        TreePath path = outline.getClosestPathForLocation(e.getX(), e.getY());
+        AlignedItem ai = getAlignedItemForPath(path);
+        return ai;
+    }
+
+    private AlignedItem getAlignedItemForPath(TreePath path) {
+        int rowIndex = outline.convertRowIndexToView(outline.getLayoutCache().getRowForPath(path));
+        AlignedItem ai = getAlignedItemFromRow(rowIndex);
+        return ai;
+    }
 
     /**
-     * Override this method to show a popup menu when the user right clicks a node.
+     * Show a popup menu when the user right clicks a node, and has item.
      *
      * @param e
      */
-    protected void showPopupMenu(MouseEvent e) {
-        showPopupMenuImpl(e);
+    private void showPopupMenu(MouseEvent e, AlignedItem alignedItem) {
+        showPopupMenuImpl(e, alignedItem);
     }
 
     /**
@@ -258,49 +300,31 @@ public class LayersPanel extends JPanel implements Refreshable {
      * 
      * @param e
      */
-    protected void showPopupMenuImpl(final MouseEvent e) {
-        AlignedItem alignedItem = getAlignedItemFromOutlineSelection();
+    private void showPopupMenuImpl(final MouseEvent e, AlignedItem alignedItem) {
         if ( alignedItem == null ) {
             return;
         }
 
         // Create context menu
-        final LayerContextMenu popupMenu = new LayerContextMenu(alignmentBoardContext, alignedItem);
+        // Need to find aligned multiSelectionItems for the current (multi) selection.
+        int[] rows = outline.getSelectedRows();
+        List<AlignedItem> multiSelectionItems = new ArrayList<AlignedItem>();
+        for ( int row: rows ) {
+            AlignedItem nextItem = getAlignedItemFromRow( row );
+            if ( nextItem != null ) {
+                multiSelectionItems.add( nextItem );
+            }
+        }
+        
+        final LayerContextMenu popupMenu = new LayerContextMenu(alignmentBoardContext, alignedItem, multiSelectionItems);
         popupMenu.addMenuItems();
         popupMenu.show(outline, e.getX(), e.getY());
     }
     
-    public Outline getOutline() {
-        return outline;
-    }
-
-    public AlignmentBoardContext getAlignmentBoardContext() {
-        return alignmentBoardContext;
-    }
-    
-    public void openAlignmentBoard(long alignmentBoardId) {
-        log.info("openAlignmentBoard: {}",alignmentBoardId);
-        loadAlignmentBoard(alignmentBoardId, null, new Callable<Void>() {
-            @Override
-            public Void call() throws Exception {
-                AlignmentBoardOpenEvent event = new AlignmentBoardOpenEvent(alignmentBoardContext);
-                log.info("Posting AB-Open");                
-                ModelMgr.getModelMgr().postOnEventBus(event);
-                return null;
-            }
-        });
-    }
-
-    public void closeAlignmentBoard() {
-        log.debug("closeAlignmentBoard");
-        this.alignmentBoardContext = null;
-        showNothing();
-    }
-    
     private AtomicBoolean loadInProgress = new AtomicBoolean(false);
 
-    private AlignedItem getAlignedItemFromOutlineSelection() {
-        Object object = outline.getOutlineModel().getValueAt(outline.getSelectedRow(), 0);
+    private AlignedItem getAlignedItemFromRow(int row) {
+        Object object = outline.getOutlineModel().getValueAt(row, 0);
         if (object==null) return null;
         if (!(object instanceof AlignedItem)) return null;
 

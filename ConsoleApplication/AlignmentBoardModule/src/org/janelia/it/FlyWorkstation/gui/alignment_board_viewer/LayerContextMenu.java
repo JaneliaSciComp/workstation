@@ -45,13 +45,15 @@ public class LayerContextMenu extends JPopupMenu {
 
     protected final AlignmentBoardContext alignmentBoardContext;
     protected final AlignedItem alignedItem;
+    protected final List<AlignedItem> multiSelectionItems;
 
     // Internal state
     protected boolean nextAddRequiresSeparator = false;
 
-    public LayerContextMenu(AlignmentBoardContext alignmentBoardContext, AlignedItem alignedItem) {
+    public LayerContextMenu(AlignmentBoardContext alignmentBoardContext, AlignedItem alignedItem, List<AlignedItem> multiSelectionItems) {
         this.alignmentBoardContext = alignmentBoardContext;
         this.alignedItem = alignedItem;
+        this.multiSelectionItems = multiSelectionItems;
     }
 
     public void addMenuItems() {
@@ -68,7 +70,38 @@ public class LayerContextMenu extends JPopupMenu {
             add(getRawRenderToggle());
         }
         add(getRenameItem());
-        add(getDeleteItem());
+        add(getDeleteUnderClickItem());
+        add(getDeleteMultiSelectionItem());
+    }
+
+    @Override
+    public JMenuItem add(JMenuItem menuItem) {
+
+        if (menuItem == null)
+            return null;
+
+        if ((menuItem instanceof JMenu)) {
+            JMenu menu = (JMenu) menuItem;
+            if (menu.getItemCount() == 0)
+                return null;
+        }
+
+        if (nextAddRequiresSeparator) {
+            addSeparator();
+            nextAddRequiresSeparator = false;
+        }
+
+        return super.add(menuItem);
+    }
+
+    public JMenuItem add(JMenu menu, JMenuItem menuItem) {
+        if (menu == null || menuItem == null)
+            return null;
+        return menu.add(menuItem);
+    }
+
+    public void setNextAddRequiresSeparator(boolean nextAddRequiresSeparator) {
+        this.nextAddRequiresSeparator = nextAddRequiresSeparator;
     }
 
     protected JMenuItem getTitleItem() {
@@ -224,24 +257,50 @@ public class LayerContextMenu extends JPopupMenu {
         return renameItem;
     }
 
-    protected JMenuItem getDeleteItem() {
+    protected JMenuItem getDeleteUnderClickItem() {
 
         List<RootedEntity> rootedEntityList = new ArrayList<RootedEntity>();
         rootedEntityList.add(alignedItem.getInternalRootedEntity());
+        String name = alignedItem.getName();
+        if ( name.length() > 15 ) {
+            name = name.substring( 0, 6 ) + "..." + name.substring( name.length() - 6 );
+        }
+        String text = String.format("  Remove the '%s' from Alignment Board", name);
+        return getDeleteListItem(rootedEntityList, text);
+    }
 
+    private JMenuItem getDeleteMultiSelectionItem() {
+        List<RootedEntity> rootedEntityList = new ArrayList<RootedEntity>();
+        for ( AlignedItem item: multiSelectionItems ) {
+            rootedEntityList.add(item.getInternalRootedEntity());
+        }
+        String text = String.format("  Remove %d items from Alignment Board", multiSelectionItems.size() );
+        return getDeleteListItem(rootedEntityList, text);
+    }
+    
+    private JMenuItem getDeleteListItem(final List<RootedEntity> rootedEntityList, String text) {
         final Action action = new RemoveEntityAction(rootedEntityList, false, false, new Callable<Void>() {
             @Override
             public Void call() throws Exception {
-                EntityData myEd = alignedItem.getInternalRootedEntity().getEntityData();
-                log.debug("The removed entity was an aligned item, firing alignment board event...");
-                final AlignmentBoardItemRemoveEvent abEvent = new AlignmentBoardItemRemoveEvent(
-                        alignmentBoardContext, alignedItem, myEd==null?null:myEd.getOrderIndex());
+                AlignmentBoardItemRemoveEvent abEvent;
+                if ( rootedEntityList.size() == 1 ) {
+                    RootedEntity nextRootedEntity = rootedEntityList.get( 0 );
+                    EntityData myEd = nextRootedEntity.getEntityData();
+                    log.debug("The removed entity was an aligned item, firing alignment board event...");
+                    abEvent = new AlignmentBoardItemRemoveEvent(
+                            alignmentBoardContext, new AlignedItem(nextRootedEntity), myEd == null ? null : myEd.getOrderIndex());
+                }
+                else {
+                    abEvent = new AlignmentBoardItemRemoveEvent(
+                            alignmentBoardContext, null, null
+                    );
+                }
                 ModelMgr.getModelMgr().postOnEventBus(abEvent);
                 return null;
             }
         });
 
-        JMenuItem deleteItem = new JMenuItem("  Remove From Alignment Board");
+        JMenuItem deleteItem = new JMenuItem(text);
         deleteItem.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent actionEvent) {
                 action.doAction();
@@ -273,33 +332,4 @@ public class LayerContextMenu extends JPopupMenu {
         return deleteItem;
     }
 
-    @Override
-    public JMenuItem add(JMenuItem menuItem) {
-
-        if (menuItem == null)
-            return null;
-
-        if ((menuItem instanceof JMenu)) {
-            JMenu menu = (JMenu) menuItem;
-            if (menu.getItemCount() == 0)
-                return null;
-        }
-
-        if (nextAddRequiresSeparator) {
-            addSeparator();
-            nextAddRequiresSeparator = false;
-        }
-
-        return super.add(menuItem);
-    }
-
-    public JMenuItem add(JMenu menu, JMenuItem menuItem) {
-        if (menu == null || menuItem == null)
-            return null;
-        return menu.add(menuItem);
-    }
-
-    public void setNextAddRequiresSeparator(boolean nextAddRequiresSeparator) {
-        this.nextAddRequiresSeparator = nextAddRequiresSeparator;
-    }
 }
