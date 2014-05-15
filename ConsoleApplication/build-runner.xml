@@ -98,8 +98,27 @@ of adapter.
         <exec-target target="build-zip"/>
     </target>
 
+    <target name="release" description="Prepares for Run by Copying Files to Cluster">
+        <exec-target target="release"/>
+    </target>
+
     <target name="clean">
         <exec-target target="clean"/>
+    </target>
+
+    <target name="run">
+        <echoproperties/>
+        <!-- ant -f C:\\current_projects\\master\\janelia-workstation\\ConsoleApplication run -->
+        <exec executable="${antexec}" outputproperty="antout">
+            <arg value="-f"/>
+            <arg value="build.xml"/>
+            <arg value="run"/>
+        </exec>
+        <echo message="Ant Run: ${antout}"/>
+        <condition property="subbuildsuccess">
+            <contains string="${antout}" substring="BUILD SUCCESSFUL" casesensitive="true" />
+        </condition>
+        <fail unless="${subbuildsuccess}" message="Unsuccessful"/>
     </target>
 
     <target name="deploy">
