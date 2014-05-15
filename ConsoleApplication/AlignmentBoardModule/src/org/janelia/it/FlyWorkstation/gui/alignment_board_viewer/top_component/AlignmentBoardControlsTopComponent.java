@@ -112,6 +112,8 @@ public final class AlignmentBoardControlsTopComponent extends TopComponent {
         try {
             layersPanel.activate();
             splitPane.setTopComponent( layersPanel );
+            this.validate();
+            this.repaint();
         } catch ( Throwable th ) {
             logger.warn("Failed ot activate layers panel.  Not opening component.");
         }
@@ -129,6 +131,8 @@ public final class AlignmentBoardControlsTopComponent extends TopComponent {
     public void setControls( AlignmentBoardControlsPanel cPanel ) {
         this.cPanel = cPanel;
         splitPane.setBottomComponent(cPanel);
+        this.validate();
+        this.repaint();
     }
 
     void writeProperties(java.util.Properties p) {

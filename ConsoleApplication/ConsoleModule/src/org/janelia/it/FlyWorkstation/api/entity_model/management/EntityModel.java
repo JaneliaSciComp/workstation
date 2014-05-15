@@ -733,9 +733,8 @@ public class EntityModel {
     }
     
     /**
-     * Update the value of the given attribute on the specified entity. 
+     * Update the value of the given attribute on the specified entity.
      * 
-     * @param entityData
      * @return EntityData with canonical parent/child entity instances
      * @throws Exception
      */
@@ -753,6 +752,37 @@ public class EntityModel {
         }
     
         return savedEd;
+    }
+    
+    /**
+     * Update the value of the given attribute on the specified entities. 
+     * 
+     * @return collection EntityData with canonical parent/child entities instances
+     * @throws Exception
+     */
+    public Collection<EntityData> setOrUpdateValues(Collection<Entity> entities, String attributeName, String value) throws Exception {
+        // Convert to ids.  Check sanity.
+        Collection<Long> entityIds = new ArrayList<Long>();
+        for ( Entity entity: entities ) {
+            checkIfCanonicalEntity(entity);
+            entityIds.add( entity.getId() );
+        }
+        
+        Collection<EntityData> savedEds = entityFacade.setOrUpdateValues(entityIds, attributeName, value);
+
+        // Carry out entity notifications.  Set value in cache.
+        // Works against original entity list.
+        for ( Entity entity: entities ) {
+            EntityData existingEd = entity.getEntityDataByAttributeName(attributeName);
+            if ( existingEd != null ) {
+                notifyEntityChanged( entity );
+                existingEd.setValue(value);
+            }
+            else {
+                invalidate(entity, false);
+            }
+        }
+        return savedEds;
     }
     
     /**

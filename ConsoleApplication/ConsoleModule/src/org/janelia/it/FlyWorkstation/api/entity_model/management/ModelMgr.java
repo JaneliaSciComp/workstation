@@ -794,6 +794,14 @@ public class ModelMgr {
         return ed;
     }
     
+    public Collection<EntityData> setOrUpdateValues(Collection<Entity> entities, String attributeName, String value) throws Exception {        
+        Collection<EntityData> eds = entityModel.setOrUpdateValues(entities, attributeName, value);
+        for ( Entity entity: entities ) {
+            notifyEntityChanged(entity.getId());
+        }
+        return eds;
+    }
+    
     public Task saveOrUpdateTask(Task task) throws Exception {
         return FacadeManager.getFacadeManager().getComputeFacade().saveOrUpdateTask(task);
     }

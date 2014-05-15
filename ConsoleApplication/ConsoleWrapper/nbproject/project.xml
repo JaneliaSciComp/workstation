@@ -2584,6 +2584,10 @@
                 <binary-origin>release/modules/ext/gluegen-rt.jar</binary-origin>
             </class-path-extension>
             <class-path-extension>
+                <runtime-relative-path>ext/JTattoo-1.6.10.jar</runtime-relative-path>
+                <binary-origin>release/modules/ext/JTattoo-1.6.10.jar</binary-origin>
+            </class-path-extension>
+            <class-path-extension>
                 <runtime-relative-path>ext/axis2-xmlbeans-1.5.5.jar</runtime-relative-path>
                 <binary-origin>release/modules/ext/axis2-xmlbeans-1.5.5.jar</binary-origin>
             </class-path-extension>
