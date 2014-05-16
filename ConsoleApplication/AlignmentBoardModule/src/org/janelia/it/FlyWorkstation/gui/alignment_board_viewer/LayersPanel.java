@@ -600,10 +600,6 @@ public class LayersPanel extends JPanel implements Refreshable {
         else {
             // No need to do anything for other changes, they've all been handled through other means
         }
-//        else if (change==ChangeType.Removed) {
-//            // Remove the wrappers if necessary 
-//            alignmentBoardContext.findAndRemoveAlignedEntity(event.getAlignedItem());
-//        }
 
         // Generating model events is hard (we don't know the UI indexes of what was deleted, for example),
         // so we just recreate the model here.
@@ -855,6 +851,13 @@ public class LayersPanel extends JPanel implements Refreshable {
             }
         }
 
+        /**
+         * The value "set" here is the checbox selected state.
+         * 
+         * @param node model for this checkbox.
+         * @param column column number for the checkbox.
+         * @param value T or F here.
+         */
         @Override
         public void setValueFor(Object node, int column, Object value) {
             if (!(node instanceof AlignedItem)) {
@@ -872,18 +875,44 @@ public class LayersPanel extends JPanel implements Refreshable {
                     alignedItem.setIsVisible(isVisible);
 
                     Collection<Entity> affectedEntities = new ArrayList<Entity>();
-                    EntityWrapper parentWrapper = alignedItem.getParent();
-                    if (parentWrapper!=null) {
-                        if (parentWrapper instanceof AlignedItem && !(parentWrapper instanceof AlignmentBoardContext)) {
-                            parent = (AlignedItem)parentWrapper;
-                            affectedEntities.add( parent.getInternalEntity() );
-                        }
-                    }
-                    
+
                     for(AlignedItem child : alignedItem.getAlignedItems()) {
                         affectedEntities.add( child.getInternalEntity() );
                     }
-                    ModelMgr.getModelMgr().setOrUpdateValues( affectedEntities, EntityConstants.ATTRIBUTE_VISIBILITY, Boolean.toString(isVisible) );
+
+                    EntityWrapper parentWrapper = alignedItem.getParent();
+                    if (parentWrapper!=null) {                        
+                        if (parentWrapper instanceof AlignedItem && !(parentWrapper instanceof AlignmentBoardContext)) {
+                            parent = (AlignedItem)parentWrapper;
+                            if ( ! isVisible ) {
+                                // Check children of this parent: any of them
+                                // on?
+                                boolean childVisible = false;
+                                for (AlignedItem child : parent.getAlignedItems()) {
+                                    if (child.isVisible()) {
+                                        childVisible = true;
+                                        break;
+                                    }
+                                }
+                                if ( ! childVisible ) {
+                                    affectedEntities.add(parent.getInternalEntity());
+                                }
+                            }
+                            else if ( ! parent.isVisible() ) {
+                                // May have to read uncached visibility flag.
+                                // But could non-incur whole writeback cost.
+                                affectedEntities.add(parent.getInternalEntity());
+                            }
+                        }
+                    }
+
+                    if ( affectedEntities.size() > 0 ) {
+                        ModelMgr.getModelMgr().setOrUpdateValues( 
+                                affectedEntities, 
+                                EntityConstants.ATTRIBUTE_VISIBILITY,
+                                Boolean.toString(isVisible) 
+                        );
+                    }
                 }
                 
                 @Override
