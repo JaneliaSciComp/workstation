@@ -285,11 +285,13 @@ implements MouseModalWidget, TileConsumer
 
 	@Override
 	public void mousePressed(MouseEvent event) {
+        System.out.println("slice viewer: mouse pressed");
 		mouseMode.mousePressed(event);
 	}
 
 	@Override
 	public void mouseReleased(MouseEvent event) {
+        System.out.println("slice viewer: mouse released");
 		mouseMode.mouseReleased(event);
 	}
 

@@ -7,7 +7,6 @@ import org.janelia.it.FlyWorkstation.geom.Vec3;
 import org.janelia.it.FlyWorkstation.geom.ParametrizedLine;
 import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr;
 
-import org.janelia.it.FlyWorkstation.gui.slice_viewer.skeleton.Anchor;
 import org.janelia.it.FlyWorkstation.signal.Signal1;
 import org.janelia.it.FlyWorkstation.signal.Slot1;
 
@@ -158,7 +157,7 @@ that need to respond to changing data.
             return null;
         }
 
-        TmNeuron foundNeuron = getNeuronFromAnnotation(annotationID);
+        TmNeuron foundNeuron = getNeuronFromAnnotationID(annotationID);
         if (foundNeuron != null) {
             return foundNeuron.getGeoAnnotationMap().get(annotationID);
         } else {
@@ -169,7 +168,7 @@ that need to respond to changing data.
     /**
      * given the ID of an annotation, return the neuron that contains it (or null) 
      */
-    public TmNeuron getNeuronFromAnnotation(Long annotationID) {
+    public TmNeuron getNeuronFromAnnotationID(Long annotationID) {
         if (getCurrentWorkspace() == null) {
             return null;
         }
@@ -182,6 +181,60 @@ that need to respond to changing data.
             }
         }
         return foundNeuron;
+    }
+
+    /**
+     * given an annotation, find its ultimate parent, which is the root of
+     * its neurite
+     */
+    public TmGeoAnnotation getNeuriteRootAnnotation(TmGeoAnnotation annotation) {
+        if (annotation == null) {
+            return annotation;
+        }
+        TmGeoAnnotation current = annotation;
+        TmGeoAnnotation parent = annotation.getParent();
+        while (parent !=null) {
+            current = parent;
+            parent = current.getParent();
+        }
+        return current;
+    }
+
+    /**
+     * find the annotation closest to the input location, exluding
+     * the given annotation (input null to include all annotations)
+     */
+    public TmGeoAnnotation getClosestAnnotation(Vec3 location, TmGeoAnnotation excludedAnnotation) {
+
+        double x = location.getX();
+        double y = location.getY();
+        double z = location.getZ();
+
+        TmGeoAnnotation closest = null;
+        // I hate magic numbers as much as the next programmer, but surely this
+        //  is big enough, right?
+        double closestSquaredDist = 1.0e99;
+
+        double dx, dy, dz, dist;
+
+        for (TmNeuron neuron: getCurrentWorkspace().getNeuronList()) {
+            for (TmGeoAnnotation root: neuron.getRootAnnotations()) {
+                for (TmGeoAnnotation ann: root.getSubTreeList()) {
+                    if (excludedAnnotation.getId().equals(ann.getId())) {
+                        continue;
+                    }
+                    dx = ann.getX() - x;
+                    dy = ann.getY() - y;
+                    dz = ann.getZ() - z;
+                    dist = dx * dx + dy * dy + dz * dz;
+                    if (dist < closestSquaredDist) {
+                        closestSquaredDist = dist;
+                        closest = ann;
+                    }
+                }
+            }
+        }
+        return closest;
     }
 
     /**
@@ -304,7 +357,7 @@ that need to respond to changing data.
             return;
         }
 
-        TmNeuron neuron = getNeuronFromAnnotation(parentAnn.getId());
+        TmNeuron neuron = getNeuronFromAnnotationID(parentAnn.getId());
         TmGeoAnnotation annotation = modelMgr.addGeometricAnnotation(neuron.getId(),
             parentAnn.getId(), 0, xyz.x(), xyz.y(), xyz.z(), "");
 
@@ -348,7 +401,7 @@ that need to respond to changing data.
 
         // find each connecting annotation; if there's a traced path to it,
         //  remove it:
-        TmNeuron neuron = getNeuronFromAnnotation(annotationID);
+        TmNeuron neuron = getNeuronFromAnnotationID(annotationID);
         TmGeoAnnotation parent = annotation.getParent();
         if (parent != null) {
             removeAnchoredPath(annotation, parent);
@@ -379,6 +432,66 @@ that need to respond to changing data.
     }
 
     /**
+     * merge the neurite that has source Annotation into the neurite containing
+     * targetAnnotation
+     */
+    public void mergeNeurite(Long sourceAnnotationID, Long targetAnnotationID) throws Exception {
+
+        TmGeoAnnotation sourceAnnotation = getGeoAnnotationFromID(sourceAnnotationID);
+        TmNeuron sourceNeuron = getNeuronFromAnnotationID(sourceAnnotationID);
+
+        // reroot source neurite to source ann
+        modelMgr.rerootNeurite(sourceNeuron, sourceAnnotation);
+
+        // reload the things we just changed:
+        updateCurrentWorkspace();
+        sourceAnnotation = getGeoAnnotationFromID(sourceAnnotationID);
+        sourceNeuron = getNeuronFromAnnotationID(sourceAnnotationID);
+
+        // if source neurite not in same neuron as dest neruite: move it
+        TmNeuron targetNeuron = getNeuronFromAnnotationID(targetAnnotationID);
+        if (!sourceNeuron.getId().equals(targetNeuron.getId())) {
+            modelMgr.moveNeurite(sourceAnnotation, targetNeuron);
+        }
+
+        // refresh domain objects that we've changed and will use again:
+        updateCurrentWorkspace();
+        sourceAnnotation = getGeoAnnotationFromID(sourceAnnotationID);
+        targetNeuron = getNeuronFromAnnotationID(targetAnnotationID);
+
+
+        // reparent all source annotation's children to dest ann; remove
+        //  traced paths while we're here
+        for (TmGeoAnnotation child: sourceAnnotation.getChildren()) {
+            modelMgr.reparentGeometricAnnotation(child, targetAnnotationID, targetNeuron);
+            removeAnchoredPath(child, sourceAnnotation);
+        }
+
+        // finally, delete source ann
+        modelMgr.deleteGeometricAnnotation(sourceAnnotationID);
+
+        // update objects *again*, last time:
+        updateCurrentWorkspace();
+        setCurrentNeuron(targetNeuron);
+
+        // get fresh target annotation, and redraw its children; trigger
+        //  traced paths
+        TmGeoAnnotation targetAnnotation = getGeoAnnotationFromID(targetAnnotationID);
+        for (TmGeoAnnotation child: targetAnnotation.getChildren()) {
+            annotationReparentedSignal.emit(child);
+            if (automatedTracingEnabled()) {
+                pathTraceRequestedSignal.emit(child.getId());
+            }
+        }
+
+        // undraw deleted annotation
+        List<TmGeoAnnotation> deleteList = new ArrayList<TmGeoAnnotation>();
+        deleteList.add(sourceAnnotation);
+        annotationsDeletedSignal.emit(deleteList);
+
+    }
+
+    /**
      * this method deletes a link, which is defined as an annotation with
      * one parent and no more than one child (not a root, not a branch point)
      *
@@ -397,7 +510,7 @@ that need to respond to changing data.
 
         // check we can find it
         // again, not clear if this should be an exception or not?
-        TmNeuron neuron = getNeuronFromAnnotation(link.getId());
+        TmNeuron neuron = getNeuronFromAnnotationID(link.getId());
         if (neuron == null) {
             // should this be an error?  it's a sign that the annotation has already
             //  been deleted, or something else that shouldn't happen
@@ -440,7 +553,7 @@ that need to respond to changing data.
         if (child != null) {
             // at this point, the child object is stale (still has its old parent);
             // grab it again from the neuron
-            neuron = getNeuronFromAnnotation(child.getId());
+            neuron = getNeuronFromAnnotationID(child.getId());
             child = neuron.getGeoAnnotationMap().get(child.getId());
             annotationReparentedSignal.emit(child);
         }
@@ -458,7 +571,7 @@ that need to respond to changing data.
             return;
         }
 
-        TmNeuron neuron = getNeuronFromAnnotation(rootAnnotation.getId());
+        TmNeuron neuron = getNeuronFromAnnotationID(rootAnnotation.getId());
         if (neuron == null) {
             // should this be an error?  it's a sign that the annotation has already
             //  been deleted, or something else that shouldn't happen
@@ -509,7 +622,7 @@ that need to respond to changing data.
             return;
         }
 
-        TmNeuron neuron = getNeuronFromAnnotation(annotation.getId());
+        TmNeuron neuron = getNeuronFromAnnotationID(annotation.getId());
 
         // ann1 is the child of ann2 in both cases; if reverse, place the new point
         //  near ann2 instead of ann1
@@ -593,7 +706,7 @@ that need to respond to changing data.
     public void rerootNeurite(Long newRootID) throws Exception {
         // do it in the DAO layer
         TmGeoAnnotation newRoot = getGeoAnnotationFromID(newRootID);
-        TmNeuron neuron = getNeuronFromAnnotation(newRoot.getId());
+        TmNeuron neuron = getNeuronFromAnnotationID(newRoot.getId());
         modelMgr.rerootNeurite(neuron, newRoot);
 
         // notify, etc.; don't need to redraw anything, but the neurite list etc. need to be reloaded
@@ -615,7 +728,7 @@ that need to respond to changing data.
         TmGeoAnnotation newRoot = getGeoAnnotationFromID(newRootID);
         TmGeoAnnotation newRootParent = newRoot.getParent();
         removeAnchoredPath(newRoot, newRootParent);
-        TmNeuron neuron = getNeuronFromAnnotation(newRoot.getId());
+        TmNeuron neuron = getNeuronFromAnnotationID(newRoot.getId());
         modelMgr.splitNeurite(neuron, newRoot);
 
         // update and notify
@@ -632,8 +745,8 @@ that need to respond to changing data.
 
         // check we can find both endpoints in same neuron
         //  don't need to check that they are neighboring; UI gesture already enforces it
-        TmNeuron neuron1 = getNeuronFromAnnotation(endpoints.getAnnotationID1());
-        TmNeuron neuron2 = getNeuronFromAnnotation(endpoints.getAnnotationID2());
+        TmNeuron neuron1 = getNeuronFromAnnotationID(endpoints.getAnnotationID1());
+        TmNeuron neuron2 = getNeuronFromAnnotationID(endpoints.getAnnotationID2());
         if (neuron1 == null || neuron2 == null) {
             // something's been deleted
             return;
@@ -718,7 +831,7 @@ that need to respond to changing data.
 
         // we assume second annotation is in same neuron; if it's not, there's no path
         //  to remove anyway
-        TmNeuron neuron1 = getNeuronFromAnnotation(annotation1.getId());
+        TmNeuron neuron1 = getNeuronFromAnnotationID(annotation1.getId());
         TmAnchoredPathEndpoints endpoints = new TmAnchoredPathEndpoints(annotation1.getId(),
                 annotation2.getId());
         if (neuron1.getAnchoredPathMap().containsKey(endpoints)) {

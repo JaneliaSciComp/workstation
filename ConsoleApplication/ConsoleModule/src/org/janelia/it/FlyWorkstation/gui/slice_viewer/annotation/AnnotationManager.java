@@ -56,6 +56,10 @@ elements of what's been done; that's handled by signals emitted from AnnotationM
     // AUTOMATIC_TRACING_TIMEOUT for automatic tracing in seconds
     private static final double AUTOMATIC_TRACING_TIMEOUT = 10.0;
 
+    // when dragging to merge, how close in pixels (squared) to trigger
+    //  a merge instead of a move
+    private static final double DRAG_MERGE_THRESHOLD_SQUARED = 8000.0;
+
 
     // ----- slots
 
@@ -111,6 +115,23 @@ elements of what's been done; that's handled by signals emitted from AnnotationM
     public Slot1<Anchor> moveAnchorRequestedSlot = new Slot1<Anchor>() {
         @Override
         public void execute(Anchor anchor) {
+            // if the destination of the move is close enough to another anchor,
+            //  we interpret it as a merge request instead
+            TmGeoAnnotation closest = annotationModel.getClosestAnnotation(anchor.getLocation(),
+                    annotationModel.getGeoAnnotationFromID(anchor.getGuid()));
+            if (closest != null) {
+                double dx = closest.getX() - anchor.getLocation().getX();
+                double dy = closest.getY() - anchor.getLocation().getY();
+                double dz = closest.getZ() - anchor.getLocation().getZ();
+                if (dx * dx + dy * dy + dz * dz < DRAG_MERGE_THRESHOLD_SQUARED) {
+                    System.out.println("merging " + anchor.getGuid() + " to " + anchor.getLocation());
+                    mergeNeurite(anchor.getGuid(), closest.getId());
+                    return;
+                }
+            }
+
+            // no merge, so move
+            System.out.println("moving " + anchor.getGuid() + " to " + anchor.getLocation());
             moveAnnotation(anchor.getGuid(), anchor.getLocation());
         }
     };
@@ -413,6 +434,63 @@ elements of what's been done; that's handled by signals emitted from AnnotationM
             };
             mover.execute();
         }
+    }
+
+    /**
+     * merge the two neurites to which the two annotations belong
+     *
+     * @param sourceAnnotationID
+     * @param targetAnnotationID
+     */
+    public void mergeNeurite(final Long sourceAnnotationID, final Long targetAnnotationID) {
+
+        TmGeoAnnotation sourceAnnotation = annotationModel.getGeoAnnotationFromID(sourceAnnotationID);
+        TmGeoAnnotation targetAnnotation = annotationModel.getGeoAnnotationFromID(targetAnnotationID);
+        System.out.println("merge requested, " + sourceAnnotationID + " to " + targetAnnotationID);
+
+        // same neurite = cycle = NO!
+        if (annotationModel.getNeuriteRootAnnotation(sourceAnnotation).getId().equals(
+                annotationModel.getNeuriteRootAnnotation(targetAnnotation).getId())) {
+            JOptionPane.showMessageDialog(null,
+                    "You can't merge a neurite with itself!",
+                    "Can't merge!!",
+                    JOptionPane.ERROR_MESSAGE);
+            annotationModel.annotationNotMovedSignal.emit(sourceAnnotation);
+            return;
+        }
+
+        // are you sure dialog; especially if different neurons?
+        int ans =  JOptionPane.showConfirmDialog(null,
+                // could put in annotation coords, neuron names?
+                // String.format("%s has %d nodes; delete?"),
+                "Merge neurites?",
+                "Merge neurites?",
+                JOptionPane.OK_CANCEL_OPTION);
+        if (ans != JOptionPane.OK_OPTION) {
+            annotationModel.annotationNotMovedSignal.emit(sourceAnnotation);
+            return;
+        }
+
+
+        // then call ann model
+        SimpleWorker merger = new SimpleWorker() {
+            @Override
+            protected void doStuff() throws Exception {
+                annotationModel.mergeNeurite(sourceAnnotationID, targetAnnotationID);
+            }
+
+            @Override
+            protected void hadSuccess() {
+                // sends its own signals
+            }
+
+            @Override
+            protected void hadError(Throwable error) {
+                SessionMgr.getSessionMgr().handleException(error);
+            }
+        };
+        merger.execute();
+
     }
 
     /**
@@ -720,7 +798,7 @@ elements of what's been done; that's handled by signals emitted from AnnotationM
             return;
         }
 
-        TmNeuron neuron = annotationModel.getNeuronFromAnnotation(annotationID);
+        TmNeuron neuron = annotationModel.getNeuronFromAnnotationID(annotationID);
         annotationModel.setCurrentNeuron(neuron);
     }
 
