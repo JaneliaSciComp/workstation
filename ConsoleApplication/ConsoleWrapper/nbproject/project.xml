@@ -5,7 +5,48 @@
         <data xmlns="http://www.netbeans.org/ns/nb-module-project/3">
             <code-name-base>org.janelia.it.FlyWorkstation</code-name-base>
             <suite-component/>
-            <module-dependencies/>
+            <module-dependencies>
+                <dependency>
+                    <code-name-base>org.netbeans.swing.plaf</code-name-base>
+                    <build-prerequisite/>
+                    <compile-dependency/>
+                    <run-dependency>
+                        <specification-version>1.34.1</specification-version>
+                    </run-dependency>
+                </dependency>
+                <dependency>
+                    <code-name-base>org.netbeans.swing.tabcontrol</code-name-base>
+                    <build-prerequisite/>
+                    <compile-dependency/>
+                    <run-dependency>
+                        <specification-version>1.46.1</specification-version>
+                    </run-dependency>
+                </dependency>
+                <dependency>
+                    <code-name-base>org.openide.awt</code-name-base>
+                    <build-prerequisite/>
+                    <compile-dependency/>
+                    <run-dependency>
+                        <specification-version>7.59.1</specification-version>
+                    </run-dependency>
+                </dependency>
+                <dependency>
+                    <code-name-base>org.openide.nodes</code-name-base>
+                    <build-prerequisite/>
+                    <compile-dependency/>
+                    <run-dependency>
+                        <specification-version>7.36.1</specification-version>
+                    </run-dependency>
+                </dependency>
+                <dependency>
+                    <code-name-base>org.openide.windows</code-name-base>
+                    <build-prerequisite/>
+                    <compile-dependency/>
+                    <run-dependency>
+                        <specification-version>6.65.1</specification-version>
+                    </run-dependency>
+                </dependency>
+            </module-dependencies>
             <public-packages>
                 <package>EDU.oswego.cs.dl.util.concurrent</package>
                 <package>EDU.oswego.cs.dl.util.concurrent.misc</package>
@@ -210,6 +251,20 @@
                 <package>com.jogamp.opengl.util.texture.awt</package>
                 <package>com.jogamp.opengl.util.texture.spi</package>
                 <package>com.jogamp.opengl.util.texture.spi.awt</package>
+                <package>com.jtattoo.plaf</package>
+                <package>com.jtattoo.plaf.acryl</package>
+                <package>com.jtattoo.plaf.aero</package>
+                <package>com.jtattoo.plaf.aluminium</package>
+                <package>com.jtattoo.plaf.bernstein</package>
+                <package>com.jtattoo.plaf.fast</package>
+                <package>com.jtattoo.plaf.graphite</package>
+                <package>com.jtattoo.plaf.hifi</package>
+                <package>com.jtattoo.plaf.luna</package>
+                <package>com.jtattoo.plaf.mcwin</package>
+                <package>com.jtattoo.plaf.mint</package>
+                <package>com.jtattoo.plaf.noire</package>
+                <package>com.jtattoo.plaf.smart</package>
+                <package>com.jtattoo.plaf.texture</package>
                 <package>com.kenai.jaffl</package>
                 <package>com.kenai.jaffl.annotations</package>
                 <package>com.kenai.jaffl.byref</package>
@@ -380,14 +435,49 @@
                 <package>de.javasoft.io</package>
                 <package>de.javasoft.plaf.synthetica</package>
                 <package>de.javasoft.plaf.synthetica.aluoxide</package>
+                <package>de.javasoft.plaf.synthetica.aluoxide.xml</package>
                 <package>de.javasoft.plaf.synthetica.blackeye</package>
+                <package>de.javasoft.plaf.synthetica.blackeye.xml</package>
+                <package>de.javasoft.plaf.synthetica.blackmoon.xml</package>
+                <package>de.javasoft.plaf.synthetica.blackstar.xml</package>
+                <package>de.javasoft.plaf.synthetica.blueice.xml</package>
                 <package>de.javasoft.plaf.synthetica.bluelight</package>
+                <package>de.javasoft.plaf.synthetica.bluelight.xml</package>
+                <package>de.javasoft.plaf.synthetica.bluemoon.xml</package>
+                <package>de.javasoft.plaf.synthetica.bluesteel.xml</package>
                 <package>de.javasoft.plaf.synthetica.classy</package>
+                <package>de.javasoft.plaf.synthetica.classy.xml</package>
                 <package>de.javasoft.plaf.synthetica.filechooser</package>
+                <package>de.javasoft.plaf.synthetica.flexdock</package>
+                <package>de.javasoft.plaf.synthetica.greendream.xml</package>
+                <package>de.javasoft.plaf.synthetica.mauvemetallic.xml</package>
+                <package>de.javasoft.plaf.synthetica.orangemetallic.xml</package>
                 <package>de.javasoft.plaf.synthetica.painter</package>
+                <package>de.javasoft.plaf.synthetica.silvermoon.xml</package>
                 <package>de.javasoft.plaf.synthetica.simple2D</package>
                 <package>de.javasoft.plaf.synthetica.simple2D.iconPainter</package>
+                <package>de.javasoft.plaf.synthetica.simple2D.xml</package>
+                <package>de.javasoft.plaf.synthetica.skymetallic.xml</package>
+                <package>de.javasoft.plaf.synthetica.standard.xml</package>
                 <package>de.javasoft.plaf.synthetica.styles</package>
+                <package>de.javasoft.plaf.synthetica.whitevision.xml</package>
+                <package>de.javasoft.swing</package>
+                <package>de.javasoft.swing.jycombobox</package>
+                <package>de.javasoft.swing.plaf</package>
+                <package>de.javasoft.swing.plaf.addons</package>
+                <package>de.javasoft.swing.plaf.basic</package>
+                <package>de.javasoft.swing.plaf.datecombobox</package>
+                <package>de.javasoft.swing.plaf.jycombobox</package>
+                <package>de.javasoft.swing.plaf.jysearchfield</package>
+                <package>de.javasoft.swing.plaf.jytabbedpane</package>
+                <package>de.javasoft.swing.plaf.synthetica</package>
+                <package>de.javasoft.swing.table</package>
+                <package>de.javasoft.synthetica.addons</package>
+                <package>de.javasoft.synthetica.addons.flexdock</package>
+                <package>de.javasoft.synthetica.addons.flexdock.dockbar</package>
+                <package>de.javasoft.synthetica.addons.systemmonitor</package>
+                <package>de.javasoft.synthetica.addons.table</package>
+                <package>de.javasoft.synthetica.netbeans</package>
                 <package>de.javasoft.util</package>
                 <package>de.javasoft.util.java2d</package>
                 <package>de.uulm.ecs.ai.owlapi.krssparser</package>
@@ -2184,12 +2274,12 @@
                 <binary-origin>release/modules/ext/asm.jar</binary-origin>
             </class-path-extension>
             <class-path-extension>
-                <runtime-relative-path>ext/swingx-all-1.6.3.jar</runtime-relative-path>
-                <binary-origin>release/modules/ext/swingx-all-1.6.3.jar</binary-origin>
-            </class-path-extension>
-            <class-path-extension>
                 <runtime-relative-path>ext/jogl-all-natives-linux-i586.jar</runtime-relative-path>
                 <binary-origin>release/modules/ext/jogl-all-natives-linux-i586.jar</binary-origin>
+            </class-path-extension>
+            <class-path-extension>
+                <runtime-relative-path>ext/de-javasoft-synthetica-netbeans.jar</runtime-relative-path>
+                <binary-origin>release/modules/ext/de-javasoft-synthetica-netbeans.jar</binary-origin>
             </class-path-extension>
             <class-path-extension>
                 <runtime-relative-path>ext/jython.jar</runtime-relative-path>
@@ -2204,20 +2294,20 @@
                 <binary-origin>release/modules/ext/jetty-continuation-8.1.8.v20121106.jar</binary-origin>
             </class-path-extension>
             <class-path-extension>
-                <runtime-relative-path>ext/syntheticaBlueMoon.jar</runtime-relative-path>
-                <binary-origin>release/modules/ext/syntheticaBlueMoon.jar</binary-origin>
-            </class-path-extension>
-            <class-path-extension>
                 <runtime-relative-path>ext/syntheticaAluOxide.jar</runtime-relative-path>
                 <binary-origin>release/modules/ext/syntheticaAluOxide.jar</binary-origin>
             </class-path-extension>
             <class-path-extension>
-                <runtime-relative-path>ext/commons-logging-1.1.1.jar</runtime-relative-path>
-                <binary-origin>release/modules/ext/commons-logging-1.1.1.jar</binary-origin>
+                <runtime-relative-path>ext/syntheticaBlueMoon.jar</runtime-relative-path>
+                <binary-origin>release/modules/ext/syntheticaBlueMoon.jar</binary-origin>
             </class-path-extension>
             <class-path-extension>
                 <runtime-relative-path>ext/geronimo-ws-metadata_2.0_spec-1.1.2.jar</runtime-relative-path>
                 <binary-origin>release/modules/ext/geronimo-ws-metadata_2.0_spec-1.1.2.jar</binary-origin>
+            </class-path-extension>
+            <class-path-extension>
+                <runtime-relative-path>ext/commons-logging-1.1.1.jar</runtime-relative-path>
+                <binary-origin>release/modules/ext/commons-logging-1.1.1.jar</binary-origin>
             </class-path-extension>
             <class-path-extension>
                 <runtime-relative-path>ext/ome-xml.jar</runtime-relative-path>
@@ -2348,6 +2438,10 @@
                 <binary-origin>release/modules/ext/snappy-java-1.0.5-M3.jar</binary-origin>
             </class-path-extension>
             <class-path-extension>
+                <runtime-relative-path>ext/syntheticaAddonsWithThemes.jar</runtime-relative-path>
+                <binary-origin>release/modules/ext/syntheticaAddonsWithThemes.jar</binary-origin>
+            </class-path-extension>
+            <class-path-extension>
                 <runtime-relative-path>ext/axis2-spring-1.5.5.jar</runtime-relative-path>
                 <binary-origin>release/modules/ext/axis2-spring-1.5.5.jar</binary-origin>
             </class-path-extension>
@@ -2408,12 +2502,12 @@
                 <binary-origin>release/modules/ext/syntheticaSilverMoon.jar</binary-origin>
             </class-path-extension>
             <class-path-extension>
-                <runtime-relative-path>ext/syntheticaBlueLight.jar</runtime-relative-path>
-                <binary-origin>release/modules/ext/syntheticaBlueLight.jar</binary-origin>
-            </class-path-extension>
-            <class-path-extension>
                 <runtime-relative-path>ext/xercesImpl-2.8.1.jar</runtime-relative-path>
                 <binary-origin>release/modules/ext/xercesImpl-2.8.1.jar</binary-origin>
+            </class-path-extension>
+            <class-path-extension>
+                <runtime-relative-path>ext/syntheticaBlueLight.jar</runtime-relative-path>
+                <binary-origin>release/modules/ext/syntheticaBlueLight.jar</binary-origin>
             </class-path-extension>
             <class-path-extension>
                 <runtime-relative-path>ext/pal-optimization.jar</runtime-relative-path>
@@ -2440,6 +2534,10 @@
                 <binary-origin>release/modules/ext/gluegen-rt-natives-windows-amd64.jar</binary-origin>
             </class-path-extension>
             <class-path-extension>
+                <runtime-relative-path>ext/jywidgets.jar</runtime-relative-path>
+                <binary-origin>release/modules/ext/jywidgets.jar</binary-origin>
+            </class-path-extension>
+            <class-path-extension>
                 <runtime-relative-path>ext/org-netbeans-swing-outline.jar</runtime-relative-path>
                 <binary-origin>release/modules/ext/org-netbeans-swing-outline.jar</binary-origin>
             </class-path-extension>
@@ -2462,6 +2560,10 @@
             <class-path-extension>
                 <runtime-relative-path>ext/groovy-all-1.8.6.jar</runtime-relative-path>
                 <binary-origin>release/modules/ext/groovy-all-1.8.6.jar</binary-origin>
+            </class-path-extension>
+            <class-path-extension>
+                <runtime-relative-path>ext/swingx-1.6.5.jar</runtime-relative-path>
+                <binary-origin>release/modules/ext/swingx-1.6.5.jar</binary-origin>
             </class-path-extension>
             <class-path-extension>
                 <runtime-relative-path>ext/mex-1.5.5-impl.jar</runtime-relative-path>

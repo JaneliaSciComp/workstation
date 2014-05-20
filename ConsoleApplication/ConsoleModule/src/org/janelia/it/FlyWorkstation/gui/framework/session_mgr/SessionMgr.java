@@ -1,5 +1,6 @@
 package org.janelia.it.FlyWorkstation.gui.framework.session_mgr;
 
+import de.javasoft.plaf.synthetica.SyntheticaLookAndFeel;
 import org.janelia.it.FlyWorkstation.api.entity_model.management.ModelMgr;
 import org.janelia.it.FlyWorkstation.api.facade.concrete_facade.ejb.EJBFactory;
 import org.janelia.it.FlyWorkstation.api.facade.facade_mgr.FacadeManager;
@@ -95,6 +96,8 @@ public class SessionMgr {
     private SessionMgr() {
     	log.info("Initializing Session Manager");
     	
+        System.setProperty("winsys.stretching_view_tabs", "true");
+        
         settingsFile = new File(prefsFile);
         try {
             // @todo Remove this Dec 2013  :-)
@@ -167,11 +170,16 @@ public class SessionMgr {
         UIManager.installLookAndFeel("JTattoo HiFi", "com.jtattoo.plaf.hifi.HiFiLookAndFeel");
         UIManager.installLookAndFeel("JTattoo Noire", "com.jtattoo.plaf.noire.NoireLookAndFeel");
 
-        // Ensure the synthetical choices are all available.
-        String[] li = {"Licensee=HHMI", "LicenseRegistrationNumber=122030", "Product=Synthetica", "LicenseType=Single Application License", "ExpireDate=--.--.----", "MaxVersion=2.999.999"};
+        // Synthetica Licenses
+        String[] li = {"Licensee=HHMI", "LicenseRegistrationNumber=122030", "Product=Synthetica", "LicenseType=Single Application License", "ExpireDate=--.--.----", "MaxVersion=2.20.999"};
         UIManager.put("Synthetica.license.info", li);
-        UIManager.put("Synthetica.license.key", "1839F3DB-00416A48-64C9E2C5-F9E25A71-A885FFC0");
+        UIManager.put("Synthetica.license.key", "9A519ECE-5BB55629-B2E1233E-9E3E72DB-19992C5D");
+
+        String[] li2 = {"Licensee=HHMI", "LicenseRegistrationNumber=142016", "Product=SyntheticaAddons", "LicenseType=Single Application License", "ExpireDate=--.--.----", "MaxVersion=1.10.999"};
+        UIManager.put("SyntheticaAddons.license.info", li2);
+        UIManager.put("SyntheticaAddons.license.key", "43BF31CE-59317732-9D0D5584-654D216F-7806C681");
         
+        // Ensure the synthetical choices are all available.
         UIManager.installLookAndFeel("Synthetica AluOxide Look and Feel", "de.javasoft.plaf.synthetica.SyntheticaAluOxideLookAndFeel");
         UIManager.installLookAndFeel("Synthetica BlackEye Look and Feel", "de.javasoft.plaf.synthetica.SyntheticaBlackEyeLookAndFeel");
         UIManager.installLookAndFeel("Synthetica BlackMoon Look and Feel", "de.javasoft.plaf.synthetica.SyntheticaBlackMoonLookAndFeel");
@@ -187,7 +195,8 @@ public class SessionMgr {
         UIManager.installLookAndFeel("Synthetica SilverMoon Look and Feel", "de.javasoft.plaf.synthetica.SyntheticaSilverMoonLookAndFeel");
         UIManager.installLookAndFeel("Synthetica Simple2D Look and Feel", "de.javasoft.plaf.synthetica.SyntheticaSimple2DLookAndFeel");
         UIManager.installLookAndFeel("Synthetica SkyMetallic Look and Feel", "de.javasoft.plaf.synthetica.SyntheticaSkyMetallicLookAndFeel");
-        UIManager.installLookAndFeel("Synthetica WhiteVision Look and Feel", "de.javasoft.plaf.synthetica.SyntheticaWhiteVisionLookAndFeel");        LookAndFeelInfo[] installedInfos = UIManager.getInstalledLookAndFeels();        
+        UIManager.installLookAndFeel("Synthetica WhiteVision Look and Feel", "de.javasoft.plaf.synthetica.SyntheticaWhiteVisionLookAndFeel");
+        LookAndFeelInfo[] installedInfos = UIManager.getInstalledLookAndFeels();        
 
         String lafName = (String) getModelProperty(DISPLAY_LOOK_AND_FEEL);
         LookAndFeel currentLaf = UIManager.getLookAndFeel();
@@ -541,28 +550,21 @@ public class SessionMgr {
     }
 
     public void setLookAndFeel(String lookAndFeelClassName) {
-        try {     
-        	if (lookAndFeelClassName.contains("BlackEye")) {
-        		isDarkLook = true;
-
+        try {
+            if (lookAndFeelClassName.contains("BlackEye")) {
+                isDarkLook = true;
                 try {
-                        
-                	UIManager.setLookAndFeel(new de.javasoft.plaf.synthetica.SyntheticaBlackEyeLookAndFeel() {
-    					@Override
-    					protected void loadCustomXML() throws ParseException {
-                                            loadXMLConfig("/SyntheticaBlackEyeLookAndFeel.xml");
-    					}
-                	});	
+                    UIManager.setLookAndFeel(new de.javasoft.plaf.synthetica.SyntheticaBlackEyeLookAndFeel() {
+                        @Override
+                        protected void loadCustomXML() throws ParseException {
+                            loadXMLConfig("/SyntheticaBlackEyeLookAndFeel.xml");
+                        }
+                    });	
                 }
                 catch (IllegalComponentStateException ex) {
-                    if ("The frame is decorated".equals(ex.getMessage())) {
-                        log.warn("Ignoring the seemingly harmless exception that Synthetica throws because of Java 7");
-                    }
-                    else {
-                        handleException(ex);
-                    }
+                    handleException(ex);
                 }
-        	}
+            }
             else if (lookAndFeelClassName.toLowerCase().contains("jtattoo")) {
                 // setup the look and feel properties
                 Properties props = new Properties();
