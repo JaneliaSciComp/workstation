@@ -46,7 +46,7 @@ public class GpuSampler implements GLEventListener {
     public GpuSampler( Color camoColor ) {
         this.camoColor = camoColor;
     }
-
+    
     @Override
     public void init(GLAutoDrawable glAutoDrawable) {
         GL2 gl2 = glAutoDrawable.getGL().getGL2();
@@ -90,7 +90,7 @@ public class GpuSampler implements GLEventListener {
         }
 
         return rtnVal;
-    }
+    }    
 
     public static GpuInfo parseGpuID( String idString ) {
         GpuInfo id = new GpuInfo();
