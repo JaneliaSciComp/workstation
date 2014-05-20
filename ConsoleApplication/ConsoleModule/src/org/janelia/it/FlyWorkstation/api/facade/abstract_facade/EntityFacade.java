@@ -110,6 +110,8 @@ public interface EntityFacade {
 
     public void splitNeurite(TmNeuron neuron, TmGeoAnnotation newRoot) throws Exception;
 
+    public void moveNeurite(TmGeoAnnotation annotation, TmNeuron newNeuron) throws Exception;
+
     public void updateGeometricAnnotation(TmGeoAnnotation geoAnnotation,
                                           int index, double x, double y, double z, String comment) throws Exception;
 

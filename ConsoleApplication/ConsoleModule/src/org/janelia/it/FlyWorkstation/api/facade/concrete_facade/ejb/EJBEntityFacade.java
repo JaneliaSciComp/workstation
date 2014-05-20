@@ -265,6 +265,11 @@ public class EJBEntityFacade implements EntityFacade {
     }
 
     @Override
+    public void moveNeurite(TmGeoAnnotation annotation, TmNeuron newNeuron) throws Exception {
+        EJBFactory.getRemoteTiledMicroscopeBean().moveNeurite(annotation, newNeuron);
+    }
+
+    @Override
     public void updateGeometricAnnotation(TmGeoAnnotation geoAnnotation,
                                           int index, double x, double y, double z, String comment) throws Exception {
         EJBFactory.getRemoteTiledMicroscopeBean().updateGeometricAnnotation(geoAnnotation, index, x, y, z, comment);
