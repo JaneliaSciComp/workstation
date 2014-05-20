@@ -49,6 +49,8 @@ import org.janelia.it.jacs.model.entity.Entity;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.events.AlignmentBoardItemChangeEvent;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.events.AlignmentBoardOpenEvent;
 import org.janelia.it.FlyWorkstation.gui.alignment_board_viewer.top_component.AlignmentBoardControlsTopComponent;
+import org.janelia.it.FlyWorkstation.gui.util.WindowLocator;
+import org.janelia.it.FlyWorkstation.model.domain.AlignmentContext;
 import org.openide.util.lookup.InstanceContent;
 import org.openide.util.lookup.ServiceProvider;
 import org.openide.windows.WindowManager;
@@ -570,9 +572,8 @@ public class AlignmentBoardPanel extends JPanel implements AlignmentBoardControl
                     volumeModel.setVoxelMicrometers(
                             parseResolution( context.getAlignmentContext().getOpticalResolution() )
                     );
-                    volumeModel.setVoxelDimensions(
-                            parseDimensions( context.getAlignmentContext().getPixelResolution() )
-                    );
+                    int[] axialLengths = parseDimensions( context.getAlignmentContext().getPixelResolution() );
+                    volumeModel.setVoxelDimensions( axialLengths );
 
                     multiMaskTracker.clear(); // New creation of board data implies discard old mask mappings.
 
@@ -584,7 +585,7 @@ public class AlignmentBoardPanel extends JPanel implements AlignmentBoardControl
                     loadWorker = null;
                     dataSource = new ABContextDataSource(context);
                     if ( cachedDownSampleGuess == null ) {
-                        GpuSampler sampler = getGpuSampler();
+                        GpuSampler sampler = getGpuSampler(context.getAlignmentContext());
                         loadWorker = new RenderablesLoadWorker(
                                 dataSource,
                                 renderMapping,
@@ -593,6 +594,7 @@ public class AlignmentBoardPanel extends JPanel implements AlignmentBoardControl
                                 multiMaskTracker,
                                 sampler
                         );
+                        loadWorker.setAxialLengths(axialLengths);
                     }
                     else {
                         loadWorker = new RenderablesLoadWorker(
@@ -627,7 +629,9 @@ public class AlignmentBoardPanel extends JPanel implements AlignmentBoardControl
 
     }
 
-    private GpuSampler getGpuSampler() {
+    private GpuSampler getGpuSampler(AlignmentContext alignmentContext) {
+        float[] opticalResolution = parseResolution(alignmentContext.getOpticalResolution());
+
         // Must find the best downsample rate.
         GpuSampler sampler = new GpuSampler( this.getBackground() );
         GLProfile profile = GLProfile.get(GLProfile.GL2);
@@ -703,7 +707,7 @@ public class AlignmentBoardPanel extends JPanel implements AlignmentBoardControl
         // be reconsidered, as well as listening, such that the settings can
         // be dealt with in a Framework-friendly fashion.
         AlignmentBoardControlsTopComponent ctrlTc = 
-                (AlignmentBoardControlsTopComponent)WindowManager.getDefault().findTopComponent("AlignmentBoardControlsTopComponent");
+                (AlignmentBoardControlsTopComponent)WindowLocator.getByName("AlignmentBoardControlsTopComponent");
         ctrlTc.setControls( settingsPanel );
     }
 
