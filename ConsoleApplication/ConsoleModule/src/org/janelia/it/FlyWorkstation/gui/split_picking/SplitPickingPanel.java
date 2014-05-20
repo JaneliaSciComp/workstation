@@ -39,6 +39,7 @@ import java.util.concurrent.Callable;
 import org.janelia.it.FlyWorkstation.gui.framework.outline.Refreshable;
 
 import static com.google.common.base.Preconditions.checkNotNull;
+import org.janelia.it.FlyWorkstation.gui.util.WindowLocator;
 import org.openide.windows.TopComponent;
 import org.openide.windows.WindowManager;
 
@@ -1464,7 +1465,7 @@ public class SplitPickingPanel extends JPanel implements Refreshable {
     }
     
     private TopComponent getTopComponent( String preferredId ) {
-        return WindowManager.getDefault().findTopComponent( preferredId );
+        return WindowLocator.getByName( preferredId );
     }
 
 	private void expandEntityOutline(final String uniqueId) {
