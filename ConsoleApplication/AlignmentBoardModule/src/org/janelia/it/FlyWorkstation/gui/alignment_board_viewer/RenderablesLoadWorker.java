@@ -10,7 +10,6 @@ import org.janelia.it.FlyWorkstation.gui.viewer3d.masking.RenderMappingI;
 import org.janelia.it.FlyWorkstation.gui.alignment_board_viewer.renderable.*;
 import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.FlyWorkstation.gui.alignment_board_viewer.gui_elements.GpuSampler;
-import org.janelia.it.FlyWorkstation.gui.viewer3d.loader.*;
 import org.janelia.it.FlyWorkstation.gui.alignment_board_viewer.masking.*;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.resolver.CacheFileResolver;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.resolver.FileResolver;
@@ -40,6 +39,7 @@ import org.janelia.it.FlyWorkstation.gui.alignment_board.ab_mgr.AlignmentBoardMg
 public class RenderablesLoadWorker extends SimpleWorker implements VolumeLoader {
 
     private static final int LEAST_FULLSIZE_MEM = 1500000; // Ex: 1,565,620
+    private static final long MAX_CUBIC_VOLUME_FOR_STD_BOARD = 1712 * 1370 * 492;
     private Boolean loadFiles = true;
 
     private MaskChanMultiFileLoader compartmentLoader;
@@ -55,6 +55,7 @@ public class RenderablesLoadWorker extends SimpleWorker implements VolumeLoader 
 
     private AlignmentBoardControllable controlCallback;
     private GpuSampler sampler;
+    private int[] axialLengths;
 
     private FileResolver resolver;
 
@@ -117,6 +118,20 @@ public class RenderablesLoadWorker extends SimpleWorker implements VolumeLoader 
 
     public void setFileStats(FileStats fileStats) {
         this.fileStats = fileStats;
+    }
+
+    /**
+     * @return the axialLengths
+     */
+    public int[] getAxialLengths() {
+        return axialLengths;
+    }
+
+    /**
+     * @param axialLengths the lengths of axes to set
+     */
+    public void setAxialLengths(int[] axialLengths) {
+        this.axialLengths = axialLengths;
     }
 
     //------------------------------------------IMPLEMENTS VolumeLoader
@@ -530,7 +545,7 @@ public class RenderablesLoadWorker extends SimpleWorker implements VolumeLoader 
      *  Establish the "uncovered bean list".
      *
      *  @param renderableDatas contain renderable beans plus file paths.
-     *  @param renderableBeans just the beans.  This colleciton will be populated as an OUTPUT of this method.
+     *  @param renderableBeans just the beans.  This collection will be populated as an OUTPUT of this method.
      *  @return the highest mask number found in any renderable bean.
      */
     private int extractRenderableBeansFromRenderableDatas(Collection<MaskChanRenderableData> renderableDatas, List<RenderableBean> renderableBeans) {
@@ -586,20 +601,29 @@ public class RenderablesLoadWorker extends SimpleWorker implements VolumeLoader 
                         "GPU vendor {}, renderer {} version " + gpuInfo.getVersion(), gpuInfo.getVender(), gpuInfo.getRenderer()
                 );
 
+                // Need to consider size of volume. Max found to _render_
+                // with "standard" memory is known.
+                long cubicVoxels = 0L;
+                for ( int i = 0; i < axialLengths.length; i++ ) {
+                    cubicVoxels += axialLengths[ i ];
+                }
+                boolean belowMaxKnownCompatible = 
+                        MAX_CUBIC_VOLUME_FOR_STD_BOARD >= cubicVoxels;
+                
                 // 1.5Gb in Kb increments
                 logger.debug( "ABV seeing free memory estimate of {}.", gpuInfo.getFreeTexMem() );
                 logger.debug( "ABV seeing highest supported version of {}.", gpuInfo.getHighestGlslVersion() );
 
-                if ( gpuInfo.getFreeTexMem() > LEAST_FULLSIZE_MEM ) {
+                if ( gpuInfo.getFreeTexMem() > LEAST_FULLSIZE_MEM  && belowMaxKnownCompatible ) {
                     alignmentBoardSettings.setDownSampleGuess(1.0);
                 }
-                else if ( GpuSampler.isDeptStandardGpu( gpuInfo.getRenderer() ) ) {
+                else if ( GpuSampler.isDeptStandardGpu( gpuInfo.getRenderer() )  &&  belowMaxKnownCompatible ) {
                     alignmentBoardSettings.setDownSampleGuess(1.0);
                 }
                 else {
                     Future<Boolean> isDeptPreferred = sampler.isDepartmentStandardGraphicsMac();
                     try {
-                        if ( isDeptPreferred.get() ) {
+                        if ( isDeptPreferred.get()  &&  belowMaxKnownCompatible ) {
                             logger.info("User has preferred card.");
                             alignmentBoardSettings.setDownSampleGuess(1.0);
                         }
