@@ -112,8 +112,6 @@ public interface EntityFacade {
 
     public void moveNeurite(TmGeoAnnotation annotation, TmNeuron newNeuron) throws Exception;
 
-    public void mergeNeurite(TmGeoAnnotation sourceAnnotation, TmGeoAnnotation targetAnnotation) throws Exception;
-
     public void updateGeometricAnnotation(TmGeoAnnotation geoAnnotation,
                                           int index, double x, double y, double z, String comment) throws Exception;
 

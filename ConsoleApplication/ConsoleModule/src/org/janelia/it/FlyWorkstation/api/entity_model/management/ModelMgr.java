@@ -1045,10 +1045,6 @@ public class ModelMgr {
         FacadeManager.getFacadeManager().getEntityFacade().moveNeurite(annotation, newNeuron);
     }
 
-    public void mergeNeurite(TmGeoAnnotation sourceAnnotation, TmGeoAnnotation targetAnnotation) throws Exception {
-        FacadeManager.getFacadeManager().getEntityFacade().mergeNeurite(sourceAnnotation, targetAnnotation);
-    }
-
     public void updateGeometricAnnotation(TmGeoAnnotation geoAnnotation,
                                           int index, double x, double y, double z, String comment) throws Exception {
         FacadeManager.getFacadeManager().getEntityFacade().updateGeometricAnnotation(geoAnnotation, index, x, y, z, comment);

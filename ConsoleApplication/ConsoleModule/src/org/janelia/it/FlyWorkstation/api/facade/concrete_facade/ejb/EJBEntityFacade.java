@@ -270,11 +270,6 @@ public class EJBEntityFacade implements EntityFacade {
     }
 
     @Override
-    public void mergeNeurite(TmGeoAnnotation sourceAnnotation, TmGeoAnnotation targetAnnotation) throws Exception {
-        EJBFactory.getRemoteTiledMicroscopeBean().mergeNeurite(sourceAnnotation, targetAnnotation);
-    }
-
-    @Override
     public void updateGeometricAnnotation(TmGeoAnnotation geoAnnotation,
                                           int index, double x, double y, double z, String comment) throws Exception {
         EJBFactory.getRemoteTiledMicroscopeBean().updateGeometricAnnotation(geoAnnotation, index, x, y, z, comment);
