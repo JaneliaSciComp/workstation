@@ -41,7 +41,6 @@ import org.janelia.it.FlyWorkstation.gui.framework.outline.Refreshable;
 import static com.google.common.base.Preconditions.checkNotNull;
 import org.janelia.it.FlyWorkstation.gui.util.WindowLocator;
 import org.openide.windows.TopComponent;
-import org.openide.windows.WindowManager;
 
 /**
  * A panel that may be inserted into the right-most view pane and serves as a workflow driver for the GAL4 split line 

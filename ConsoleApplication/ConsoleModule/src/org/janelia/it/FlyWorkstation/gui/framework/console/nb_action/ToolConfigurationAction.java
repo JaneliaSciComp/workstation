@@ -10,11 +10,11 @@ import java.awt.event.ActionListener;
 import javax.swing.JFrame;
 import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.FlyWorkstation.gui.framework.tool_manager.ToolConfigurationDialog;
+import org.janelia.it.FlyWorkstation.gui.util.WindowLocator;
 import org.openide.awt.ActionID;
 import org.openide.awt.ActionReference;
 import org.openide.awt.ActionRegistration;
 import org.openide.util.NbBundle.Messages;
-import org.openide.windows.WindowManager;
 
 @ActionID(
         category = "Tools",
@@ -30,7 +30,7 @@ public final class ToolConfigurationAction implements ActionListener {
     @Override
     public void actionPerformed(ActionEvent e) {
         try {
-            JFrame parent = (JFrame) WindowManager.getDefault().getMainWindow();
+            JFrame parent = WindowLocator.getMainFrame();
             new ToolConfigurationDialog(parent);
         } catch ( Exception bse ) {
             SessionMgr.getSessionMgr().handleException( bse );

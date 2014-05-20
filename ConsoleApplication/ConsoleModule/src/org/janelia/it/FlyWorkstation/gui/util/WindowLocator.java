@@ -27,7 +27,7 @@ public class WindowLocator {
      * 
      * @return the main framework window.
      */
-    public static JFrame getMainFrame() { 
+    public static JFrame getMainFrame() {        
         if (mainFrame == null) {
             try {                
                 Runnable runnable = new Runnable() {

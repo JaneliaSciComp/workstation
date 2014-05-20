@@ -20,6 +20,7 @@ import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionModelListe
 import org.janelia.it.FlyWorkstation.gui.framework.viewer.IconDemoPanel;
 import org.janelia.it.FlyWorkstation.gui.framework.viewer.ImageCache;
 import org.janelia.it.FlyWorkstation.gui.slice_viewer.SliceViewViewer;
+import org.janelia.it.FlyWorkstation.gui.util.WindowLocator;
 import org.janelia.it.FlyWorkstation.shared.util.FreeMemoryWatcher;
 import org.janelia.it.FlyWorkstation.shared.util.PrintableComponent;
 import org.janelia.it.FlyWorkstation.shared.util.PrintableImage;
@@ -490,8 +491,8 @@ public class Browser implements Cloneable {
         SessionMgr.getSessionMgr().setModelProperty(VIEWERS_LINKED, isViewersLinked);
     }
 
-    private void openOntologyComponent() {
-        TopComponent win = WindowManager.getDefault().findTopComponent(OntologyOutline.ONTOLOGY_COMPONENT_NAME);
+    private void openOntologyComponent() {        
+        TopComponent win = WindowLocator.getByName(OntologyOutline.ONTOLOGY_COMPONENT_NAME);
         if (! win.isOpened() ) {
             Mode propertiesMode = WindowManager.getDefault().findMode("properties");
             if ( propertiesMode != null ) {

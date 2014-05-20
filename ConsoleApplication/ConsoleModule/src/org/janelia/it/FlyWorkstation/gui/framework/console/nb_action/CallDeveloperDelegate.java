@@ -9,7 +9,7 @@ package org.janelia.it.FlyWorkstation.gui.framework.console.nb_action;
 import javax.swing.JFrame;
 import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.FlyWorkstation.gui.util.MailDialogueBox;
-import org.openide.windows.WindowManager;
+import org.janelia.it.FlyWorkstation.gui.util.WindowLocator;
 
 /**
  *
@@ -17,7 +17,7 @@ import org.openide.windows.WindowManager;
  */
 public class CallDeveloperDelegate {
     public void actOnCallDeveloper() {
-        JFrame parentFrame = (JFrame)WindowManager.getDefault().getMainWindow();
+        JFrame parentFrame = (JFrame)WindowLocator.getMainFrame();
         MailDialogueBox popup = new MailDialogueBox(parentFrame,
                 (String)SessionMgr.getSessionMgr().getModelProperty(SessionMgr.USER_EMAIL),
                 "Bug report");

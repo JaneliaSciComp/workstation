@@ -40,7 +40,7 @@ import java.text.ParseException;
 import java.util.*;
 import java.util.List;
 import javax.swing.UIManager.LookAndFeelInfo;
-import org.openide.windows.WindowManager;
+import org.janelia.it.FlyWorkstation.gui.util.WindowLocator;
 
 
 public class SessionMgr {
@@ -645,7 +645,7 @@ public class SessionMgr {
             try {                
                 Runnable runnable = new Runnable() {
                     public void run() {
-                        mainFrame = (JFrame) WindowManager.getDefault().getMainWindow();
+                        mainFrame = WindowLocator.getMainFrame();
                     }
                 };
                 if ( SwingUtilities.isEventDispatchThread() ) {

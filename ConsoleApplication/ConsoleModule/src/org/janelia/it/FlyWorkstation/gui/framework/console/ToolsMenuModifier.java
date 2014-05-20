@@ -15,6 +15,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import org.janelia.it.FlyWorkstation.gui.util.WindowLocator;
 import org.janelia.it.FlyWorkstation.shared.workers.SimpleWorker;
 import org.openide.windows.WindowManager;
 import org.slf4j.Logger;
@@ -124,7 +125,7 @@ public class ToolsMenuModifier implements ToolListener {
     }
     
     private void addMenuItems() {
-        JFrame frame = (JFrame) WindowManager.getDefault().getMainWindow();
+        JFrame frame = (JFrame) WindowLocator.getMainFrame();
         JMenuBar menuBar = frame.getJMenuBar();
         if (menuBar != null) {
             JMenu toolsMenu = null;
