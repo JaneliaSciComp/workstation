@@ -96,6 +96,8 @@ public class SessionMgr {
     private SessionMgr() {
     	log.info("Initializing Session Manager");
     	
+        System.setProperty("winsys.stretching_view_tabs", "true");
+        
         settingsFile = new File(prefsFile);
         try {
             // @todo Remove this Dec 2013  :-)
