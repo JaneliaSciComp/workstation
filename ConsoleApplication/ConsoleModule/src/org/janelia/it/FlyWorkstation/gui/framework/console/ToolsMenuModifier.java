@@ -17,7 +17,6 @@ import java.util.Map;
 import java.util.Set;
 import org.janelia.it.FlyWorkstation.gui.util.WindowLocator;
 import org.janelia.it.FlyWorkstation.shared.workers.SimpleWorker;
-import org.openide.windows.WindowManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

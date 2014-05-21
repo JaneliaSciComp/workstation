@@ -28,9 +28,9 @@ public class SelectionTreePanel<T> extends JPanel implements ActionListener {
     private JLabel countLabel;
     private DynamicTree tree;
     private JPanel treePanel;
-    
+
     public SelectionTreePanel(String title) {
-    	this(title, true);
+        this(title, true);
     }
 
     public SelectionTreePanel(String title, boolean allowAdding) {
@@ -54,10 +54,10 @@ public class SelectionTreePanel<T> extends JPanel implements ActionListener {
         buttonPane.add(Box.createHorizontalGlue());
 
         if (allowAdding) {
-	        JButton addButton = new JButton("Add");
-	        addButton.setActionCommand(ADD_COMMAND);
-	        addButton.addActionListener(this);
-	        buttonPane.add(addButton);
+            JButton addButton = new JButton("Add");
+            addButton.setActionCommand(ADD_COMMAND);
+            addButton.addActionListener(this);
+            buttonPane.add(addButton);
         }
 
         JButton removeButton = new JButton("Remove");
@@ -69,17 +69,17 @@ public class SelectionTreePanel<T> extends JPanel implements ActionListener {
     }
 
     public void showLoadingIndicator() {
-    	treePanel.removeAll();
-    	treePanel.add(new JLabel(Icons.getLoadingIcon()));
+        treePanel.removeAll();
+        treePanel.add(new JLabel(Icons.getLoadingIcon()));
         SwingUtilities.updateComponentTreeUI(this);
     }
 
     public void showTree() {
-    	treePanel.removeAll();
+        treePanel.removeAll();
         treePanel.add(tree);
         SwingUtilities.updateComponentTreeUI(this);
     }
-    
+
     private void updateCount() {
         DefaultMutableTreeNode node = getDynamicTree().getRootNode();
         countLabel.setText(node.getChildCount() + " objects");
@@ -122,7 +122,7 @@ public class SelectionTreePanel<T> extends JPanel implements ActionListener {
         List<T> items = new ArrayList<T>();
         DefaultMutableTreeNode rootNode = getDynamicTree().getRootNode();
 
-        for (Enumeration e = rootNode.children(); e.hasMoreElements(); ) {
+        for (Enumeration e = rootNode.children(); e.hasMoreElements();) {
             DefaultMutableTreeNode childNode = (DefaultMutableTreeNode) e.nextElement();
             items.add((T) childNode.getUserObject());
         }
@@ -139,7 +139,7 @@ public class SelectionTreePanel<T> extends JPanel implements ActionListener {
     public boolean containsItem(T obj) {
 
         DefaultMutableTreeNode rootNode = getDynamicTree().getRootNode();
-        for (Enumeration e = rootNode.children(); e.hasMoreElements(); ) {
+        for (Enumeration e = rootNode.children(); e.hasMoreElements();) {
             DefaultMutableTreeNode childNode = (DefaultMutableTreeNode) e.nextElement();
             if (childNode.getUserObject().equals(obj)) {
                 return true;
@@ -170,7 +170,9 @@ public class SelectionTreePanel<T> extends JPanel implements ActionListener {
             try {
                 Utils.setWaitingCursor(SelectionTreePanel.this);
                 TreePath[] paths = tree.getTree().getSelectionPaths();
-                if (paths == null) return;
+                if (paths == null) {
+                    return;
+                }
                 for (TreePath path : paths) {
                     DefaultMutableTreeNode node = (DefaultMutableTreeNode) path.getLastPathComponent();
                     tree.removeNode(node);

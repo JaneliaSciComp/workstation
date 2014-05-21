@@ -9,19 +9,18 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * Base class for icon panels. 
- * 
+ * Base class for icon panels.
+ *
  * @author <a href="mailto:rokickik@janelia.hhmi.org">Konrad Rokicki</a>
  */
 public abstract class IconPanel extends Viewer {
 
     private static final Logger log = LoggerFactory.getLogger(IconPanel.class);
-    
+
     private String currImageRole = EntityConstants.ATTRIBUTE_DEFAULT_2D_IMAGE;
-    
+
     protected ImagesPanel imagesPanel;
-    
-    
+
     protected IconPanel(ViewerPane viewerPane) {
         super(viewerPane);
     }
@@ -33,7 +32,7 @@ public abstract class IconPanel extends Viewer {
     public String getCurrImageRole() {
         return currImageRole;
     }
-    
+
     public void setCurrImageRole(String currImageRole) {
         this.currImageRole = currImageRole;
     }
@@ -45,53 +44,65 @@ public abstract class IconPanel extends Viewer {
     public boolean areTagsVisible() {
         return true;
     }
-    
+
     /**
      * Clear the view.
      */
+    @Override
     public abstract void clear();
-    
+
     /**
-     * Clear the view and display a loading indicator. 
+     * Clear the view and display a loading indicator.
      */
+    @Override
     public abstract void showLoadingIndicator();
-    
+
     /**
-     * Display the given RootedEntity in the viewer. 
+     * Display the given RootedEntity in the viewer.
+     *
      * @param rootedEntity
      */
+    @Override
     public abstract void loadEntity(RootedEntity rootedEntity);
-    
+
     /**
      * Display the given RootedEntity in the viewer, and then call the callback.
+     *
      * @param rootedEntity
      * @param success
      */
+    @Override
     public abstract void loadEntity(RootedEntity rootedEntity, final Callable<Void> success);
-    
+
     /**
      * Returns all RootedEntity objects loaded in the viewer.
+     *
      * @return
      */
+    @Override
     public abstract List<RootedEntity> getRootedEntities();
-    
-    
+
     /**
      * Returns all RootedEntity objected which are currently selected in the viewer.
+     *
      * @return
      */
+    @Override
     public abstract List<RootedEntity> getSelectedEntities();
-    
+
     /**
      * Returns the RootedEntity with the given uniqueId, assuming that its currently loaded in the viewer.
+     *
      * @param uniqueId
      * @return
      */
+    @Override
     public abstract RootedEntity getRootedEntityById(String uniqueId);
 
     /**
-     * Called when the viewer is about to close forever. This is an opportunity to clean up any listeners or 
-     * open resources. 
+     * Called when the viewer is about to close forever. This is an opportunity to clean up any listeners or
+     * open resources.
      */
+    @Override
     public abstract void close();
 }

@@ -86,55 +86,56 @@ import com.google.common.eventbus.Subscribe;
  * @author <a href="mailto:rokickik@janelia.hhmi.org">Konrad Rokicki</a>
  */
 public abstract class OntologyOutline extends EntityTree implements Refreshable, ActivatableView {
-    public static final String ONTOLOGY_COMPONENT_NAME = "OntologyViewerTopComponent";    
-	private static final Logger log = LoggerFactory.getLogger(OntologyOutline.class);
 
-	protected List<Entity> entityRootList; 
-	protected Entity root;
+    public static final String ONTOLOGY_COMPONENT_NAME = "OntologyViewerTopComponent";
+    private static final Logger log = LoggerFactory.getLogger(OntologyOutline.class);
+
+    protected List<Entity> entityRootList;
+    protected Entity root;
     private String currUniqueId;
-	
+
     private final KeyListener keyListener;
     private final KeyBindDialog keyBindDialog;
-    
+
     private boolean recordingKeyBinds = false;
 
     private final Map<String, Action> ontologyActionMap = new HashMap<String, Action>();
 
     public OntologyOutline() {
-       
+
         // Create input listeners which will be added to the DynamicTree later
         keyListener = new KeyAdapter() {
             @Override
             public void keyPressed(KeyEvent e) {
                 if (e.getID() == KeyEvent.KEY_PRESSED) {
-                    if (KeymapUtil.isModifier(e)) return;
+                    if (KeymapUtil.isModifier(e)) {
+                        return;
+                    }
                     KeyboardShortcut shortcut = KeyboardShortcut.createShortcut(e);
 
                     if (recordingKeyBinds) {
-                    	Action action = getActionForNode(selectedTree.getCurrentNode());
-                    	
-                    	if (action==null) {
-                    	    throw new IllegalStateException("No action for current node");
-                    	}
-                    	
-                    	if (e.getKeyCode()==KeyEvent.VK_BACK_SPACE) {
-                    		// Clear the key binding
-                    		SessionMgr.getKeyBindings().setBinding(null, action);
-                    	}
-                    	else {
+                        Action action = getActionForNode(selectedTree.getCurrentNode());
+
+                        if (action == null) {
+                            throw new IllegalStateException("No action for current node");
+                        }
+
+                        if (e.getKeyCode() == KeyEvent.VK_BACK_SPACE) {
+                            // Clear the key binding
+                            SessionMgr.getKeyBindings().setBinding(null, action);
+                        }
+                        else {
                             // Set the key binding
-                    		SessionMgr.getKeyBindings().setBinding(shortcut, action);
-                    	}
+                            SessionMgr.getKeyBindings().setBinding(shortcut, action);
+                        }
 
                         // Refresh the entire tree (another key bind may have been overridden)
                         // TODO: this is very slow on large trees...
-
                         JTree tree = selectedTree.getTree();
                         DefaultTreeModel treeModel = (DefaultTreeModel) tree.getModel();
                         selectedTree.refreshDescendants((DefaultMutableTreeNode) treeModel.getRoot());
 
                         // Move to the next row
-
                         selectedTree.navigateToNextRow();
                     }
                     else {
@@ -145,7 +146,6 @@ public abstract class OntologyOutline extends EntityTree implements Refreshable,
         };
 
         // Prepare the key binding dialog box
-
         this.keyBindDialog = new KeyBindDialog(this);
         keyBindDialog.pack();
 
@@ -159,55 +159,55 @@ public abstract class OntologyOutline extends EntityTree implements Refreshable,
         });
 
         // Listen for changes to the model
-        
         ModelMgr.getModelMgr().addModelMgrObserver(new ModelMgrAdapter() {
-			@Override
-			public void ontologySelected(long rootId) {
-				try {
-        			loadOntology(rootId, null);	
-				}
-				catch (Exception e) {
-				    SessionMgr.getSessionMgr().handleException(e);
-				}
-			}
+            @Override
+            public void ontologySelected(long rootId) {
+                try {
+                    loadOntology(rootId, null);
+                }
+                catch (Exception e) {
+                    SessionMgr.getSessionMgr().handleException(e);
+                }
+            }
         });
     }
 
     /**
      * Override this method to load the root list. This method will be called in
      * a worker thread.
-     * 
+     *
      * @return
      */
     public abstract List<Entity> loadRootList() throws Exception;
-    
+
     /**
      * Called after loadRootList is finished.
+     *
      * @param entityRootList the shallow loaded list of ontology roots
      */
     public void init(List<Entity> entityRootList, Callable<Void> success) {
-        
-        if (entityRootList==null) {
+
+        if (entityRootList == null) {
             log.error("No ontology roots found");
             initializeTree(null);
             ConcurrentUtils.invokeAndHandleExceptions(success);
             return;
         }
-        
+
         log.debug("Init outline with {} ontology roots", entityRootList.size());
-        
+
         Long selectedId = ModelMgr.getModelMgr().getCurrentOntologyId();
         Entity selectedEntityRoot = null;
-        
+
         this.entityRootList = new ArrayList<Entity>();
-        for(Entity entityRoot : entityRootList) {
+        for (Entity entityRoot : entityRootList) {
             if (entityRoot.getId().equals(selectedId)) {
                 selectedEntityRoot = entityRoot;
             }
             this.entityRootList.add(entityRoot);
         }
-        
-        if (selectedEntityRoot!=null) {
+
+        if (selectedEntityRoot != null) {
             loadOntology(selectedEntityRoot.getId(), success);
         }
         else {
@@ -215,64 +215,63 @@ public abstract class OntologyOutline extends EntityTree implements Refreshable,
             ConcurrentUtils.invokeAndHandleExceptions(success);
         }
     }
-    
+
     @Override
     public void initializeTree(Entity rootEntity) {
         super.initializeTree(rootEntity);
-        
+
         getDynamicTree().add(getToolbar(), BorderLayout.PAGE_END);
-        
+
 //        if (selectedTree.getToolbar()!=null) {
 //            decorateToolbar(selectedTree.getToolbar().getJToolBar());
 //        }
-
-        getInputMap(JComponent.WHEN_ANCESTOR_OF_FOCUSED_COMPONENT).put(KeyStroke.getKeyStroke(KeyEvent.VK_ENTER,0,true),"enterAction");
-        getActionMap().put("enterAction",new AbstractAction() {
+        getInputMap(JComponent.WHEN_ANCESTOR_OF_FOCUSED_COMPONENT).put(KeyStroke.getKeyStroke(KeyEvent.VK_ENTER, 0, true), "enterAction");
+        getActionMap().put("enterAction", new AbstractAction() {
             @Override
             public void actionPerformed(ActionEvent e) {
                 // TODO: apply annotation?
             }
         });
     }
-    
+
     /**
      * Load a single ontology into the outline.
+     *
      * @param rootEntity
      */
     public void loadOntology(final Long rootId, final Callable<Void> success) {
-        
+
         showLoadingIndicator();
-        
+
         Entity selectedEntityRoot = null;
-        if (entityRootList!=null) {
-            for(Entity entityRoot : entityRootList) {
+        if (entityRootList != null) {
+            for (Entity entityRoot : entityRootList) {
                 if (entityRoot.getId().equals(rootId)) {
                     selectedEntityRoot = entityRoot;
                 }
             }
-            
+
             if (selectedEntityRoot == null) {
                 log.error("Ontology {} was not found in the ontology root list", rootId);
                 initializeTree(null);
                 return;
             }
         }
-        
-        log.debug("Loading ontology {}",rootId);
-        
-        
+
+        log.debug("Loading ontology {}", rootId);
+
         this.root = null;
         final Entity nextRoot = selectedEntityRoot;
-        
+
         SimpleWorker worker = new SimpleWorker() {
-            
+
             Entity tree = nextRoot;
-            
+
             @Override
             protected void doStuff() throws Exception {
                 tree = ModelMgr.getModelMgr().getEntityTree(nextRoot.getId());
             }
-            
+
             @Override
             protected void hadSuccess() {
                 SwingUtilities.invokeLater(new Runnable() {
@@ -288,49 +287,49 @@ public abstract class OntologyOutline extends EntityTree implements Refreshable,
                     }
                 });
             }
-            
+
             @Override
             protected void hadError(Throwable error) {
-                SessionMgr.getSessionMgr().handleException(error); 
+                SessionMgr.getSessionMgr().handleException(error);
                 initializeTree(null);
             }
         };
-        
+
         worker.execute();
     }
 
-
     /**
      * Load a single ontology into the outline.
+     *
      * @param rootEntity
      */
     public void showOntologyTree(final Entity ontologyTree) {
 
         this.root = ontologyTree;
         log.debug("Loaded ontology {}", root.getName());
-        
+
         EntityData rootEd = new EntityData();
         rootEd.setChildEntity(root);
-        
+
         initializeTree(root);
-        
+
         // We've already loaded the entire tree
         selectedTree.setLazyLoading(false);
-        
+
         // Build a lookup table of the action for each node
         ontologyActionMap.clear();
         populateActionMap(new RootedEntity(root));
 
         // Replace the cell renderer with one that knows about the outline so that it can retrieve key binds
         selectedTree.setCellRenderer(new OntologyTreeCellRenderer(OntologyOutline.this));
-        
+
         JTree tree = getTree();
-        
+
         // Replace the default key listener on the tree
         KeyListener defaultKeyListener = tree.getKeyListeners()[0];
         tree.removeKeyListener(defaultKeyListener);
         tree.addKeyListener(keyListener);
-        
+
         tree.setRootVisible(true);
         tree.setDragEnabled(true);
         tree.setDropMode(DropMode.ON_OR_INSERT);
@@ -340,10 +339,10 @@ public abstract class OntologyOutline extends EntityTree implements Refreshable,
                 return OntologyOutline.this;
             }
         });
-        
+
         // Load key bind preferences and bind keys to actions
         SessionMgr.getKeyBindings().loadOntologyKeybinds(root, ontologyActionMap);
-                        
+
         SwingUtilities.invokeLater(new Runnable() {
             @Override
             public void run() {
@@ -352,21 +351,22 @@ public abstract class OntologyOutline extends EntityTree implements Refreshable,
             }
         });
     }
-    
+
     protected JToolBar getToolbar() {
 
         JToolBar toolBar = new JToolBar();
         toolBar.setFloatable(false);
         toolBar.setRollover(true);
-        
+
         decorateToolbar(toolBar);
-        
+
         return toolBar;
-        
+
     }
+
     protected void decorateToolbar(JToolBar jToolBar) {
 
-        if (entityRootList!=null) {
+        if (entityRootList != null) {
             final JButton ontologyButton = new JButton("Open ontology...");
             ontologyButton.setIcon(Icons.getIcon("open_action.png"));
             ontologyButton.setToolTipText("Open ontology");
@@ -374,17 +374,17 @@ public abstract class OntologyOutline extends EntityTree implements Refreshable,
             ontologyButton.addActionListener(new ActionListener() {
                 @Override
                 public void actionPerformed(ActionEvent e) {
-    
+
                     final JScrollPopupMenu ontologyListMenu = new JScrollPopupMenu();
                     ontologyListMenu.setMaximumVisibleRows(20);
-                    
+
                     for (final Entity entityRoot : entityRootList) {
                         String owner = entityRoot.getOwnerKey();
                         if (owner.contains(":")) {
-                            owner = owner.substring(owner.indexOf(':')+1);
+                            owner = owner.substring(owner.indexOf(':') + 1);
                         }
-                        
-                        JMenuItem roleMenuItem = new JCheckBoxMenuItem(entityRoot.getName()+" ("+owner+")", root!=null && entityRoot.getId().equals(root.getId()));
+
+                        JMenuItem roleMenuItem = new JCheckBoxMenuItem(entityRoot.getName() + " (" + owner + ")", root != null && entityRoot.getId().equals(root.getId()));
                         roleMenuItem.setIcon(Icons.getIcon(entityRoot));
                         roleMenuItem.addActionListener(new ActionListener() {
                             public void actionPerformed(ActionEvent e) {
@@ -393,9 +393,9 @@ public abstract class OntologyOutline extends EntityTree implements Refreshable,
                         });
                         ontologyListMenu.add(roleMenuItem);
                     }
-                    
+
                     ontologyListMenu.add(new JSeparator());
-                    
+
                     JMenuItem addMenuItem = new JMenuItem("Create New Ontology...");
                     addMenuItem.setIcon(Icons.getIcon("folder_add.png"));
                     addMenuItem.addActionListener(new ActionListener() {
@@ -405,14 +405,14 @@ public abstract class OntologyOutline extends EntityTree implements Refreshable,
                         }
                     });
                     ontologyListMenu.add(addMenuItem);
-                    
+
                     ontologyListMenu.show(ontologyButton, 0, ontologyButton.getHeight());
                 }
             });
             ontologyButton.addMouseListener(new MouseForwarder(jToolBar, "ImageRoleButton->JToolBar"));
             jToolBar.add(ontologyButton);
         }
-        
+
         final JToggleButton keyBindButton = new JToggleButton("Set Shortcuts");
         keyBindButton.setIcon(Icons.getIcon("keyboard_add.png"));
         keyBindButton.setToolTipText("Enter key binding mode");
@@ -459,13 +459,14 @@ public abstract class OntologyOutline extends EntityTree implements Refreshable,
             return getActionItem(action);
         }
     }
-    
+
     /**
      * Override this method to show a popup menu when the user right clicks a
      * node in the tree.
-     * 
+     *
      * @param e
      */
+    @Override
     protected void showPopupMenu(final MouseEvent e) {
 
         // Clicked on what node?
@@ -473,19 +474,21 @@ public abstract class OntologyOutline extends EntityTree implements Refreshable,
 
         // Create context menu
         final OntologyOutlineContextMenu popupMenu = new OntologyOutlineContextMenu(node, selectedTree.getUniqueId(node));
-        
+
         if (node != null) {
             final Entity entity = getEntity(node);
-            if (entity == null) return;
+            if (entity == null) {
+                return;
+            }
             popupMenu.addMenuItems();
-        } 
-        else {          
+        }
+        else {
             popupMenu.addRootMenuItems();
         }
 
         popupMenu.show(selectedTree.getTree(), e.getX(), e.getY());
     }
-    
+
     /**
      * Get the associated action for the given node.
      *
@@ -493,49 +496,52 @@ public abstract class OntologyOutline extends EntityTree implements Refreshable,
      * @return
      */
     public Action getActionForNode(DefaultMutableTreeNode node) {
-        if (ontologyActionMap==null || selectedTree==null) return null;
+        if (ontologyActionMap == null || selectedTree == null) {
+            return null;
+        }
         return ontologyActionMap.get(selectedTree.getUniqueId(node));
     }
-    
+
     /**
      * Override this method to do something when the user left clicks a node.
-     * 
+     *
      * @param e
      */
     protected void nodeClicked(MouseEvent e) {
         selectNode(selectedTree.getCurrentNode());
     }
-    
+
     /**
      * Override this method to do something when the user double clicks a node.
      *
      * @param e
      */
+    @Override
     protected void nodeDoubleClicked(MouseEvent e) {
         Action action = getActionForNode(getDynamicTree().getCurrentNode());
         if (action != null && !(action instanceof NavigateToNodeAction)) {
             action.doAction();
         }
     }
-    
+
     private synchronized void selectNode(final DefaultMutableTreeNode node) {
-        
+
         if (node == null) {
             currUniqueId = null;
             return;
         }
-        
+
         String uniqueId = getDynamicTree().getUniqueId(node);
         if (uniqueId.equals(currUniqueId)) {
             return;
         }
-    
+
         this.currUniqueId = uniqueId;
-        
-        log.debug("Selecting node {}",uniqueId);
-        ModelMgr.getModelMgr().getEntitySelectionModel().selectEntity(EntitySelectionModel.CATEGORY_ONTOLOGY, uniqueId+"", true);
+
+        log.debug("Selecting node {}", uniqueId);
+        ModelMgr.getModelMgr().getEntitySelectionModel().selectEntity(EntitySelectionModel.CATEGORY_ONTOLOGY, uniqueId + "", true);
     }
-    
+
     /**
      * Register a corresponding Action for the given element, based on its term type. Recurses through the
      * element's children if there are any.
@@ -543,10 +549,10 @@ public abstract class OntologyOutline extends EntityTree implements Refreshable,
      * @param element
      */
     private void populateActionMap(RootedEntity rootedEntity) {
-    	
+
         // Define an action for this node
         OntologyElement element = new OntologyElement(rootedEntity.getEntityData().getParentEntity(), rootedEntity.getEntity());
-        
+
         OntologyElementType type = element.getType();
         OntologyElementAction action = null;
         if (type instanceof Category || type instanceof Enum) {
@@ -555,9 +561,9 @@ public abstract class OntologyOutline extends EntityTree implements Refreshable,
         else {
             action = new AnnotateAction();
         }
-        
+
         log.trace("Associating element {} with path {}", element.getId(), rootedEntity.getUniqueId());
-        
+
         action.init(rootedEntity.getUniqueId());
         ontologyActionMap.put(rootedEntity.getUniqueId(), action);
 
@@ -569,63 +575,65 @@ public abstract class OntologyOutline extends EntityTree implements Refreshable,
         }
     }
 
-    @Subscribe 
+    @Subscribe
     public void entityCreated(EntityCreateEvent event) {
-        
+
         Entity entity = event.getEntity();
         if (entity.getEntityTypeName().equals(EntityConstants.TYPE_ONTOLOGY_ROOT)) {
-            log.debug("New ontology root detected: '{}'",entity.getName());
-            
-            if (entityRootList!=null) {
+            log.debug("New ontology root detected: '{}'", entity.getName());
+
+            if (entityRootList != null) {
                 entityRootList.add(entity);
                 Collections.sort(entityRootList, new EntityRootComparator());
-            }   
+            }
         }
     }
 
-    @Subscribe 
+    @Subscribe
+    @Override
     public void entityRemoved(EntityRemoveEvent event) {
         super.entityRemoved(event);
-        
+
         Entity entity = event.getEntity();
         if (entity.getEntityTypeName().equals(EntityConstants.TYPE_ONTOLOGY_ROOT)) {
-            log.debug("Ontology was deleted: '{}'",entity.getName());
+            log.debug("Ontology was deleted: '{}'", entity.getName());
 
-            if (entityRootList!=null) {
+            if (entityRootList != null) {
                 Set<Entity> toRemove = new HashSet<Entity>();
-                for(Entity entityRoot : entityRootList) {
+                for (Entity entityRoot : entityRootList) {
                     if (entityRoot.getId().equals(entity.getId())) {
                         // An ontology root was changed
-                        toRemove.add(entityRoot);   
+                        toRemove.add(entityRoot);
                     }
                 }
-                
+
                 for (Entity entityRoot : toRemove) {
                     log.debug("Removing ontology root: {}", EntityUtils.identify(entityRoot));
                     entityRootList.remove(entityRoot);
                     initializeTree(null);
                 }
             }
-        }   
+        }
     }
-    
-    @Subscribe 
+
+    @Subscribe
+    @Override
     public void entityChanged(EntityChangeEvent event) {
         super.entityChanged(event);
         final Entity entity = event.getEntity();
-        
+
         // Ensure this runs after node updates
         SwingUtilities.invokeLater(new Runnable() {
-            
+
             @Override
             public void run() {
                 for (DefaultMutableTreeNode node : getNodesByEntityId(entity.getId())) {
                     String uniqueId = getDynamicTree().getUniqueId(node);
                     RootedEntity changedRe = getRootedEntity(uniqueId);
-                    
-                    for(EntityData ed : changedRe.getEntity().getEntityData()) {
+
+                    for (EntityData ed : changedRe.getEntity().getEntityData()) {
                         Entity child = ed.getChildEntity();
-                        if (child!=null) {
+                        if (child != null) {
                             RootedEntity childRe = changedRe.getChild(ed);
                             populateActionMap(childRe);
                         }
@@ -633,27 +641,28 @@ public abstract class OntologyOutline extends EntityTree implements Refreshable,
                 }
             }
         });
-        
+
     }
-    
-    @Subscribe 
+
+    @Subscribe
+    @Override
     public void entityInvalidated(EntityInvalidationEvent event) {
-        super.entityInvalidated(event);  
+        super.entityInvalidated(event);
         if (event.isTotalInvalidation()) {
             refresh(false, true, null);
         }
-        else {  
+        else {
             Collection<Entity> invalidated = event.getInvalidatedEntities();
-            for(Entity entity : invalidated) {
-                for(DefaultMutableTreeNode node : getNodesByEntityId(entity.getId())) {
+            for (Entity entity : invalidated) {
+                for (DefaultMutableTreeNode node : getNodesByEntityId(entity.getId())) {
                     String uniqueId = getDynamicTree().getUniqueId(node);
-                    log.debug("Removing invalidate node from action map: "+uniqueId);
+                    log.debug("Removing invalidate node from action map: " + uniqueId);
                     ontologyActionMap.remove(uniqueId);
                 }
-            }  
+            }
         }
     }
-    
+
     @Override
     public void refresh() {
         refresh(true, null);
@@ -663,15 +672,15 @@ public abstract class OntologyOutline extends EntityTree implements Refreshable,
     public void totalRefresh() {
         totalRefresh(true, null);
     }
-    
+
     public void refresh(final boolean restoreState, final Callable<Void> success) {
         refresh(false, restoreState, success);
     }
-    
+
     public void totalRefresh(final boolean restoreState, final Callable<Void> success) {
         refresh(true, restoreState, success);
     }
-    
+
     public void refresh(final boolean invalidateCache, final boolean restoreState, final Callable<Void> success) {
         if (restoreState) {
             final ExpansionState expansionState = new ExpansionState();
@@ -682,61 +691,65 @@ public abstract class OntologyOutline extends EntityTree implements Refreshable,
             refresh(invalidateCache, null, success);
         }
     }
-    
+
     private AtomicBoolean refreshInProgress = new AtomicBoolean(false);
     private Queue<Callable<Void>> callbacks = new ConcurrentLinkedQueue<Callable<Void>>();
-    
+
     private synchronized void executeCallBacks() {
-        synchronized(this) {
-            for(Iterator<Callable<Void>> iterator = callbacks.iterator(); iterator.hasNext(); ) {
+        synchronized (this) {
+            for (Iterator<Callable<Void>> iterator = callbacks.iterator(); iterator.hasNext();) {
                 try {
                     iterator.next().call();
                 }
                 catch (Exception e) {
-                    log.error("Error executing callback",e);
+                    log.error("Error executing callback", e);
                 }
                 iterator.remove();
             }
         }
     }
-    
+
     public void refresh(final boolean invalidateCache, final ExpansionState expansionState, final Callable<Void> success) {
-        
+
         synchronized (this) {
-            if (success!=null) callbacks.add(success);
+            if (success != null) {
+                callbacks.add(success);
+            }
             if (refreshInProgress.getAndSet(true)) {
                 log.debug("Skipping refresh, since there is one already in progress");
                 return;
             }
         }
-        
-        log.debug("Starting whole tree refresh (invalidateCache={}, restoreState={})",invalidateCache,expansionState!=null);
+
+        log.debug("Starting whole tree refresh (invalidateCache={}, restoreState={})", invalidateCache, expansionState != null);
 
         showLoadingIndicator();
         ModelMgr.getModelMgr().unregisterOnEventBus(OntologyOutline.this);
-        
+
         SimpleWorker entityOutlineLoadingWorker = new SimpleWorker() {
 
             private List<Entity> rootList;
 
+            @Override
             protected void doStuff() throws Exception {
-                if (invalidateCache && getRootEntity()!=null) {
+                if (invalidateCache && getRootEntity() != null) {
                     ModelMgr.getModelMgr().invalidateCache();
                 }
                 rootList = loadRootList();
             }
 
+            @Override
             protected void hadSuccess() {
                 try {
                     ModelMgr.getModelMgr().registerOnEventBus(OntologyOutline.this);
-                    
+
                     init(rootList, new Callable<Void>() {
                         @Override
                         public Void call() throws Exception {
 
                             refreshInProgress.set(false);
-                            
-                            if (expansionState!=null && getDynamicTree()!=null && getRootEntity()!=null) {
+
+                            if (expansionState != null && getDynamicTree() != null && getRootEntity() != null) {
                                 expansionState.restoreExpansionState(getDynamicTree(), true, new Callable<Void>() {
                                     @Override
                                     public Void call() throws Exception {
@@ -747,7 +760,7 @@ public abstract class OntologyOutline extends EntityTree implements Refreshable,
                                     }
                                 });
                             }
-                            
+
                             return null;
                         }
                     });
@@ -757,9 +770,10 @@ public abstract class OntologyOutline extends EntityTree implements Refreshable,
                 }
             }
 
+            @Override
             protected void hadError(Throwable error) {
                 refreshInProgress.set(false);
-                log.error("Ontology refresh encountered error",error);
+                log.error("Ontology refresh encountered error", error);
                 JOptionPane.showMessageDialog(OntologyOutline.this, "Error loading ontology outline", "Ontology Load Error",
                         JOptionPane.ERROR_MESSAGE);
                 initializeTree(null);
@@ -768,10 +782,10 @@ public abstract class OntologyOutline extends EntityTree implements Refreshable,
 
         entityOutlineLoadingWorker.execute();
     }
-    
-	public static void viewAnnotationDetails(OntologyAnnotation tag) {
+
+    public static void viewAnnotationDetails(OntologyAnnotation tag) {
         new EntityDetailsDialog().showForRootedEntity(new RootedEntity(tag.getEntity()));
-	}
+    }
 
     public Entity getCurrentOntology() {
         return root;
@@ -785,12 +799,15 @@ public abstract class OntologyOutline extends EntityTree implements Refreshable,
                 Action action = getActionForNode(treeNode);
                 keyBindDialog.showForAction(action);
             }
-        }   
+        }
     }
-    
+
+    @Override
     public RootedEntity getRootedEntity(String uniqueId) {
         EntityData ed = getEntityDataByUniqueId(uniqueId);
-        if (ed==null) return null;
+        if (ed == null) {
+            return null;
+        }
         return new RootedEntity(uniqueId, ed);
     }
 
@@ -800,26 +817,28 @@ public abstract class OntologyOutline extends EntityTree implements Refreshable,
             selectedTree.navigateToNode(nodes.iterator().next());
         }
     }
-    
+
     public OntologyElement getOntologyElement(DefaultMutableTreeNode node) {
-        if (node==null) return null;
+        if (node == null) {
+            return null;
+        }
         return getOntologyElement(getEntityData(node));
     }
-    
+
     public OntologyElement getOntologyElement(EntityData entityData) {
-        
+
         OntologyElement element = new OntologyElement(entityData.getParentEntity(), entityData.getChildEntity());
         if (element.getType() instanceof EnumText) {
-            EnumText enumText = (EnumText)element.getType();
+            EnumText enumText = (EnumText) element.getType();
             EntityData enumEd = entityData.getChildEntity().getEntityDataByAttributeName(EntityConstants.ATTRIBUTE_ONTOLOGY_TERM_TYPE_ENUMTEXT_ENUMID);
-            if (enumEd.getChildEntity()!=null) {
-                enumText.init(getOntologyElement(enumEd));    
+            if (enumEd.getChildEntity() != null) {
+                enumText.init(getOntologyElement(enumEd));
             }
             else {
                 log.warn("EnumText has no Enum Id child: {}", enumEd.getId());
-            } 
+            }
         }
-     
+
         return element;
     }
 
@@ -829,6 +848,6 @@ public abstract class OntologyOutline extends EntityTree implements Refreshable,
 
     @Override
     public String toString() {
-        return "OntologyOutline("+root+")";
+        return "OntologyOutline(" + root + ")";
     }
 }

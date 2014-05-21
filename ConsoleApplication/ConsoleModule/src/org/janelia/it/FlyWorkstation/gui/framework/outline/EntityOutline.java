@@ -39,42 +39,40 @@ import org.janelia.it.FlyWorkstation.gui.framework.tree.ExpansionState;
 import org.janelia.it.FlyWorkstation.model.entity.RootedEntity;
 import org.janelia.it.FlyWorkstation.shared.workers.SimpleWorker;
 import org.janelia.it.jacs.model.entity.Entity;
-import org.janelia.it.jacs.model.entity.EntityAttribute;
 import org.janelia.it.jacs.model.entity.EntityConstants;
 import org.janelia.it.jacs.model.entity.EntityData;
-import org.janelia.it.jacs.model.entity.EntityType;
 import org.janelia.it.jacs.shared.utils.EntityUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.common.eventbus.Subscribe;
-import org.janelia.it.FlyWorkstation.nb_action.EntityWrapperCreator;
-import org.janelia.it.FlyWorkstation.nb_action.ServiceAcceptorHelper;
 
 /**
- * The entity tree which lives in the right-hand "Data" panel and drives the viewers. 
- * 
+ * The entity tree which lives in the right-hand "Data" panel and drives the viewers.
+ *
  * @author <a href="mailto:rokickik@janelia.hhmi.org">Konrad Rokicki</a>
  */
 public abstract class EntityOutline extends EntityTree implements Refreshable, ActivatableView {
-	
-	private static final Logger log = LoggerFactory.getLogger(EntityOutline.class);
-	
-	protected Entity root;
-	protected List<Entity> entityRootList;
-	protected ModelMgrAdapter mml;
-	protected String currUniqueId;
+
+    private static final Logger log = LoggerFactory.getLogger(EntityOutline.class);
+
+    protected Entity root;
+    protected List<Entity> entityRootList;
+    protected ModelMgrAdapter mml;
+    protected String currUniqueId;
 
     public EntityOutline() {
-		
+
         setMinimumSize(new Dimension(0, 0));
-        
-		showLoadingIndicator();
-		this.mml = new ModelMgrAdapter() {
+
+        showLoadingIndicator();
+        this.mml = new ModelMgrAdapter() {
             @Override
             public void entitySelected(String category, String entityId, boolean clearAll) {
                 // If we already know the entity is selected, do nothing
-                if (null!=currUniqueId && currUniqueId.equals(entityId)) return;
+                if (null != currUniqueId && currUniqueId.equals(entityId)) {
+                    return;
+                }
                 // else process the change in selection
                 if (EntitySelectionModel.CATEGORY_OUTLINE.equals(category)) {
                     selectEntityByUniqueId(entityId);
@@ -88,11 +86,11 @@ public abstract class EntityOutline extends EntityTree implements Refreshable, A
                 }
             }
         };
-	}
-    
-	@Override
+    }
+
+    @Override
     public void activate() {
-	    log.info("Activating");
+        log.info("Activating");
         super.activate();
         ModelMgr.getModelMgr().addModelMgrObserver(mml);
         refresh();
@@ -106,94 +104,94 @@ public abstract class EntityOutline extends EntityTree implements Refreshable, A
     }
 
     public void init(List<Entity> entityRootList) {
-		
+
         this.entityRootList = entityRootList;
-        
-		this.root = new Entity();
-		root.setEntityTypeName("");
-		root.setName("Data");
-		
-		if (null != entityRootList && entityRootList.size() >= 1) {
+
+        this.root = new Entity();
+        root.setEntityTypeName("");
+        root.setName("Data");
+
+        if (null != entityRootList && entityRootList.size() >= 1) {
             root.setEntityTypeName(EntityConstants.TYPE_FOLDER);
-			
-			for (Entity commonRoot : entityRootList) {
-				addTopLevelEntity(root, commonRoot);
-			}
 
-			initializeTree(root);
-		} 
-		else {
-			Entity noDataEntity = new Entity();
-			noDataEntity.setEntityTypeName("");
-			noDataEntity.setName("No data");
+            for (Entity commonRoot : entityRootList) {
+                addTopLevelEntity(root, commonRoot);
+            }
 
-			addTopLevelEntity(root, noDataEntity);
-			
-			initializeTree(root);
-		}
-	}
+            initializeTree(root);
+        }
+        else {
+            Entity noDataEntity = new Entity();
+            noDataEntity.setEntityTypeName("");
+            noDataEntity.setName("No data");
 
-	protected EntityData addTopLevelEntity(Entity rootEntity, Entity entity) {
-		EntityData ed = new EntityData();
-		ed.setChildEntity(entity);
-		ed.setEntityAttrName(EntityConstants.ATTRIBUTE_ENTITY);
-		ed.setOrderIndex(rootEntity.getMaxOrderIndex() + 1);
-		ed.setOwnerKey(entity.getOwnerKey());
-		rootEntity.getEntityData().add(ed);
-		return ed;
-	}
+            addTopLevelEntity(root, noDataEntity);
 
-	protected void removeTopLevelEntity(Entity rootEntity, Entity entity) {
+            initializeTree(root);
+        }
+    }
+
+    protected EntityData addTopLevelEntity(Entity rootEntity, Entity entity) {
+        EntityData ed = new EntityData();
+        ed.setChildEntity(entity);
+        ed.setEntityAttrName(EntityConstants.ATTRIBUTE_ENTITY);
+        ed.setOrderIndex(rootEntity.getMaxOrderIndex() + 1);
+        ed.setOwnerKey(entity.getOwnerKey());
+        rootEntity.getEntityData().add(ed);
+        return ed;
+    }
+
+    protected void removeTopLevelEntity(Entity rootEntity, Entity entity) {
         EntityData toRemove = null;
-        for(EntityData ed : root.getEntityData()) {
+        for (EntityData ed : root.getEntityData()) {
             if (ed.getChildEntity().equals(entity)) {
                 toRemove = ed;
             }
         }
         root.getEntityData().remove(toRemove);
-	}
-	
-	@Override
-	public void initializeTree(Entity rootEntity) {
-		super.initializeTree(rootEntity);
-		
-		selectedTree.expand(selectedTree.getRootNode(), true);
-		
-		JTree tree = getTree();
-		tree.setRootVisible(false);
-		tree.setDragEnabled(true);
-		tree.setDropMode(DropMode.ON_OR_INSERT);
-		tree.setTransferHandler(new EntityTransferHandler() {
-			@Override
-			public JComponent getDropTargetComponent() {
-				return EntityOutline.this;
-			}
-		});
+    }
 
-		getInputMap(JComponent.WHEN_ANCESTOR_OF_FOCUSED_COMPONENT).put(KeyStroke.getKeyStroke(KeyEvent.VK_ENTER,0,true),"enterAction");
-		getActionMap().put("enterAction",new AbstractAction() {
-			@Override
-			public void actionPerformed(ActionEvent e) {
-			    if (getCurrUniqueId()!=null) {
-			        selectEntityByUniqueId(getCurrUniqueId());
-			    }
-			}
-		});
-	}
-	
-	/**
-	 * Override this method to load the root list. This method will be called in
-	 * a worker thread.
-	 * 
-	 * @return
-	 */
-	public abstract List<Entity> loadRootList() throws Exception;
+    @Override
+    public void initializeTree(Entity rootEntity) {
+        super.initializeTree(rootEntity);
+
+        selectedTree.expand(selectedTree.getRootNode(), true);
+
+        JTree tree = getTree();
+        tree.setRootVisible(false);
+        tree.setDragEnabled(true);
+        tree.setDropMode(DropMode.ON_OR_INSERT);
+        tree.setTransferHandler(new EntityTransferHandler() {
+            @Override
+            public JComponent getDropTargetComponent() {
+                return EntityOutline.this;
+            }
+        });
+
+        getInputMap(JComponent.WHEN_ANCESTOR_OF_FOCUSED_COMPONENT).put(KeyStroke.getKeyStroke(KeyEvent.VK_ENTER, 0, true), "enterAction");
+        getActionMap().put("enterAction", new AbstractAction() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                if (getCurrUniqueId() != null) {
+                    selectEntityByUniqueId(getCurrUniqueId());
+                }
+            }
+        });
+    }
+
+    /**
+     * Override this method to load the root list. This method will be called in
+     * a worker thread.
+     *
+     * @return
+     */
+    public abstract List<Entity> loadRootList() throws Exception;
 
     private class EntityOutlineContextMenu extends EntityContextMenu {
 
-		public EntityOutlineContextMenu(DefaultMutableTreeNode node, String uniqueId) {
-			super(new RootedEntity(uniqueId, getEntityData(node)));
-		}
+        public EntityOutlineContextMenu(DefaultMutableTreeNode node, String uniqueId) {
+            super(new RootedEntity(uniqueId, getEntityData(node)));
+        }
 
         public void addRootMenuItems() {
             add(getRootItem());
@@ -202,114 +200,129 @@ public abstract class EntityOutline extends EntityTree implements Refreshable, A
             add(getOpenForContextItem());
         }
 
-		protected JMenuItem getRootItem() {
-	        JMenuItem titleMenuItem = new JMenuItem("Data");
-	        titleMenuItem.setEnabled(false);
-	        return titleMenuItem;
-		}
+        protected JMenuItem getRootItem() {
+            JMenuItem titleMenuItem = new JMenuItem("Data");
+            titleMenuItem.setEnabled(false);
+            return titleMenuItem;
+        }
 
-		private JMenuItem getNewRootFolderItem() {
-			if (multiple) return null;
-			
-			JMenuItem newFolderItem = new JMenuItem("  Create New Top-Level Folder");
-			newFolderItem.addActionListener(new ActionListener() {
-				public void actionPerformed(ActionEvent actionEvent) {
+        private JMenuItem getNewRootFolderItem() {
+            if (multiple) {
+                return null;
+            }
 
-					// Add button clicked
-					final String folderName = (String) JOptionPane.showInputDialog(SessionMgr.getMainFrame(), "Folder Name:\n",
-							"Create top-level folder", JOptionPane.PLAIN_MESSAGE, null, null, null);
-					if ((folderName == null) || (folderName.length() <= 0)) {
-						return;
-					}
+            JMenuItem newFolderItem = new JMenuItem("  Create New Top-Level Folder");
+            newFolderItem.addActionListener(new ActionListener() {
+                public void actionPerformed(ActionEvent actionEvent) {
 
-					SimpleWorker worker = new SimpleWorker() {
-						private Entity newFolder;
-						@Override
-						protected void doStuff() throws Exception {
-							// Update database
-							newFolder = ModelMgr.getModelMgr().createCommonRoot(folderName);
-						}
-						@Override
-						protected void hadSuccess() {
-						    SwingUtilities.invokeLater(new Runnable() {
+                    // Add button clicked
+                    final String folderName = (String) JOptionPane.showInputDialog(SessionMgr.getMainFrame(), "Folder Name:\n",
+                            "Create top-level folder", JOptionPane.PLAIN_MESSAGE, null, null, null);
+                    if ((folderName == null) || (folderName.length() <= 0)) {
+                        return;
+                    }
+
+                    SimpleWorker worker = new SimpleWorker() {
+                        private Entity newFolder;
+
+                        @Override
+                        protected void doStuff() throws Exception {
+                            // Update database
+                            newFolder = ModelMgr.getModelMgr().createCommonRoot(folderName);
+                        }
+
+                        @Override
+                        protected void hadSuccess() {
+                            SwingUtilities.invokeLater(new Runnable() {
                                 @Override
                                 public void run() {
-                                    selectEntityByUniqueId("/e_"+newFolder.getId());
+                                    selectEntityByUniqueId("/e_" + newFolder.getId());
                                 }
                             });
-						}
-						@Override
-						protected void hadError(Throwable error) {
-							SessionMgr.getSessionMgr().handleException(error);
-						}
-					};
-					worker.execute();
-				}
-			});
+                        }
 
-			return newFolderItem;
-		}
+                        @Override
+                        protected void hadError(Throwable error) {
+                            SessionMgr.getSessionMgr().handleException(error);
+                        }
+                    };
+                    worker.execute();
+                }
+            });
 
-        public JMenuItem getWrapperCreatorItem() {                        
-            if (multiple) return null;
-            return new WrapperCreatorItemFactory().makeEntityWrapperCreatorItem( null );
+            return newFolderItem;
+        }
+
+        public JMenuItem getWrapperCreatorItem() {
+            if (multiple) {
+                return null;
+            }
+            return new WrapperCreatorItemFactory().makeEntityWrapperCreatorItem(null);
         }
     }
-    
-	/**
-	 * Override this method to show a popup menu when the user right clicks a
-	 * node in the tree.
-	 * 
-	 * @param e
-	 */
-	protected void showPopupMenu(final MouseEvent e) {
 
-		// Clicked on what node?
-		final DefaultMutableTreeNode node = selectedTree.getCurrentNode();
+    /**
+     * Override this method to show a popup menu when the user right clicks a
+     * node in the tree.
+     *
+     * @param e
+     */
+    @Override
+    protected void showPopupMenu(final MouseEvent e) {
 
-		// Create context menu
-		final EntityOutlineContextMenu popupMenu = new EntityOutlineContextMenu(node, selectedTree.getUniqueId(node));
-			
-		if ("".equals(getRootEntity().getEntityTypeName())) return;
-		
-		if (node != null) {
-			final Entity entity = getEntity(node);
-			if (entity == null) return;
-			popupMenu.addMenuItems();
-		} 
-		else {			
-			popupMenu.addRootMenuItems();
-		}
+        // Clicked on what node?
+        final DefaultMutableTreeNode node = selectedTree.getCurrentNode();
 
-		popupMenu.show(selectedTree.getTree(), e.getX(), e.getY());
-	}
+        // Create context menu
+        final EntityOutlineContextMenu popupMenu = new EntityOutlineContextMenu(node, selectedTree.getUniqueId(node));
 
-	/**
-	 * Override this method to do something when the user left clicks a node.
-	 * 
-	 * @param e
-	 */
-	protected void nodeClicked(MouseEvent e) {
-		this.currUniqueId = null;
-		selectNode(selectedTree.getCurrentNode());
-	}
+        if ("".equals(getRootEntity().getEntityTypeName())) {
+            return;
+        }
 
-	/**
-	 * Override this method to do something when the user presses down on a
-	 * node.
-	 * 
-	 * @param e
-	 */
-	protected void nodePressed(MouseEvent e) {
-	}
+        if (node != null) {
+            final Entity entity = getEntity(node);
+            if (entity == null) {
+                return;
+            }
+            popupMenu.addMenuItems();
+        }
+        else {
+            popupMenu.addRootMenuItems();
+        }
 
-	/**
-	 * Override this method to do something when the user double clicks a node.
-	 * 
-	 * @param e
-	 */
-	protected void nodeDoubleClicked(MouseEvent e) {
-	}
+        popupMenu.show(selectedTree.getTree(), e.getX(), e.getY());
+    }
+
+    /**
+     * Override this method to do something when the user left clicks a node.
+     *
+     * @param e
+     */
+    @Override
+    protected void nodeClicked(MouseEvent e) {
+        this.currUniqueId = null;
+        selectNode(selectedTree.getCurrentNode());
+    }
+
+    /**
+     * Override this method to do something when the user presses down on a
+     * node.
+     *
+     * @param e
+     */
+    @Override
+    protected void nodePressed(MouseEvent e) {
+    }
+
+    /**
+     * Override this method to do something when the user double clicks a node.
+     *
+     * @param e
+     */
+    @Override
+    protected void nodeDoubleClicked(MouseEvent e) {
+    }
 
     @Override
     public void entityInvalidated(EntityInvalidationEvent event) {
@@ -319,85 +332,86 @@ public abstract class EntityOutline extends EntityTree implements Refreshable, A
         }
     }
 
-    @Subscribe 
+    @Subscribe
     public void entityCreated(EntityCreateEvent event) {
         Entity entity = event.getEntity();
-        if (entity.getValueByAttributeName(EntityConstants.ATTRIBUTE_COMMON_ROOT)!=null) {
-            log.debug("New common root detected: {}",EntityUtils.identify(entity));     
-            
+        if (entity.getValueByAttributeName(EntityConstants.ATTRIBUTE_COMMON_ROOT) != null) {
+            log.debug("New common root detected: {}", EntityUtils.identify(entity));
+
             int index = 0;
-            for(EntityData ed : root.getOrderedEntityData()) {
+            for (EntityData ed : root.getOrderedEntityData()) {
                 if (!ModelMgrUtils.isOwner(ed.getChildEntity())) {
                     break;
                 }
                 index++;
             }
-            
-            log.trace("Will insert at "+index);
+
+            log.trace("Will insert at " + index);
             entityRootList.add(index, entity);
-            
+
             int i = 0;
-            for(EntityData ed : root.getOrderedEntityData()) {
-                log.trace("i="+i+" orderIndex="+ed.getOrderIndex()+" "+ed.getChildEntity().getName());
-                if (i>=index) {
-                    log.trace("  Incrementing to "+(i+1));
-                    ed.setOrderIndex(i+1);
+            for (EntityData ed : root.getOrderedEntityData()) {
+                log.trace("i=" + i + " orderIndex=" + ed.getOrderIndex() + " " + ed.getChildEntity().getName());
+                if (i >= index) {
+                    log.trace("  Incrementing to " + (i + 1));
+                    ed.setOrderIndex(i + 1);
                 }
                 i++;
             }
-            
+
             EntityData newEd = addTopLevelEntity(root, entity);
             newEd.setOrderIndex(index);
-            
+
             addNodes(getDynamicTree().getRootNode(), newEd, index);
         }
     }
 
-    @Subscribe 
+    @Subscribe
+    @Override
     public void entityChanged(EntityChangeEvent event) {
         super.entityChanged(event);
         Entity entity = event.getEntity();
-        
+
         Set<Entity> toRemove = new HashSet<Entity>();
-        
-        for(Entity entityRoot : entityRootList) {
+
+        for (Entity entityRoot : entityRootList) {
             if (entityRoot.getId().equals(entity.getId())) {
                 // A common root has changed
-                if (entity.getValueByAttributeName(EntityConstants.ATTRIBUTE_COMMON_ROOT)==null) {
+                if (entity.getValueByAttributeName(EntityConstants.ATTRIBUTE_COMMON_ROOT) == null) {
                     log.debug("No longer a common root: {}", EntityUtils.identify(entity));
                     // It is no longer a common root!
-                    toRemove.add(entityRoot);   
+                    toRemove.add(entityRoot);
                 }
             }
         }
-        
+
         for (Entity entityRoot : toRemove) {
             log.debug("Removing entity root: {}", EntityUtils.identify(entityRoot));
             entityRootList.remove(entityRoot);
             removeTopLevelEntity(root, entityRoot);
-            DefaultMutableTreeNode node = getNodeByUniqueId("/e_"+entityRoot.getId());
+            DefaultMutableTreeNode node = getNodeByUniqueId("/e_" + entityRoot.getId());
             removeNode(node);
         }
     }
 
-	@Override
-	public void refresh() {
-		refresh(true, null);
-	}
+    @Override
+    public void refresh() {
+        refresh(true, null);
+    }
 
-	@Override
-	public void totalRefresh() {
-		totalRefresh(true, null);
-	}
-	
+    @Override
+    public void totalRefresh() {
+        totalRefresh(true, null);
+    }
+
     public void refresh(final boolean restoreState, final Callable<Void> success) {
         refresh(false, restoreState, success);
     }
-    
+
     public void totalRefresh(final boolean restoreState, final Callable<Void> success) {
         refresh(true, restoreState, success);
     }
-    
+
     public void refresh(final boolean invalidateCache, final boolean restoreState, final Callable<Void> success) {
         if (restoreState) {
             final ExpansionState expansionState = new ExpansionState();
@@ -408,286 +422,291 @@ public abstract class EntityOutline extends EntityTree implements Refreshable, A
             refresh(invalidateCache, null, success);
         }
     }
-	
-	private AtomicBoolean refreshInProgress = new AtomicBoolean(false);
-	private Queue<Callable<Void>> callbacks = new ConcurrentLinkedQueue<Callable<Void>>();
-	
-	private synchronized void executeCallBacks() {
-	    synchronized(this) {
-    	    for(Iterator<Callable<Void>> iterator = callbacks.iterator(); iterator.hasNext(); ) {
-    	        try {
-    	            iterator.next().call();
-    	        }
-    	        catch (Exception e) {
-    	            log.error("Error executing callback",e);
-    	        }
-    	        iterator.remove();
-    	    }
-	    }
-	}
-	
-	public void refresh(final boolean invalidateCache, final ExpansionState expansionState, final Callable<Void> success) {
-		
-	    synchronized (this) {
-    	    if (success!=null) callbacks.add(success);
-    		if (refreshInProgress.getAndSet(true)) {
-    			log.debug("Skipping refresh, since there is one already in progress");
-    			return;
-    		}
-	    }
-		
-		log.debug("Starting whole tree refresh (invalidateCache={}, restoreState={})",invalidateCache,expansionState!=null);
-		
-		showLoadingIndicator();
-		ModelMgr.getModelMgr().unregisterOnEventBus(EntityOutline.this);
-		
-		SimpleWorker entityOutlineLoadingWorker = new SimpleWorker() {
 
-			private List<Entity> rootList;
+    private AtomicBoolean refreshInProgress = new AtomicBoolean(false);
+    private Queue<Callable<Void>> callbacks = new ConcurrentLinkedQueue<Callable<Void>>();
 
-			protected void doStuff() throws Exception {
-				if (invalidateCache && getRootEntity()!=null) {
-					ModelMgr.getModelMgr().invalidateCache();
-				}
-				rootList = loadRootList();
-			}
+    private void executeCallBacks() {
+        synchronized (this) {
+            for (Iterator<Callable<Void>> iterator = callbacks.iterator(); iterator.hasNext();) {
+                try {
+                    iterator.next().call();
+                }
+                catch (Exception e) {
+                    log.error("Error executing callback", e);
+                }
+                iterator.remove();
+            }
+        }
+    }
 
-			protected void hadSuccess() {
-				try {
-				    ModelMgr.getModelMgr().registerOnEventBus(EntityOutline.this);
-				    
-					init(rootList);
-					currUniqueId = null;
-					refreshInProgress.set(false);
-					
-					if (expansionState!=null) {
-						expansionState.restoreExpansionState(getDynamicTree(), true, new Callable<Void>() {
-							@Override
-							public Void call() throws Exception {
-								showTree();
-								executeCallBacks();
-								log.debug("Tree refresh complete");
-								return null;
-							}
-						});
-					}
-				}
-				catch (Exception e) {
-					hadError(e);
-				}
-			}
+    public void refresh(final boolean invalidateCache, final ExpansionState expansionState, final Callable<Void> success) {
 
-			protected void hadError(Throwable error) {
-				refreshInProgress.set(false);
-				log.error("Tree refresh encountered error",error);
-				JOptionPane.showMessageDialog(EntityOutline.this, "Error loading data outline", "Data Load Error",
-						JOptionPane.ERROR_MESSAGE);
-				init(null);
-			}
-		};
+        synchronized (this) {
+            if (success != null) {
+                callbacks.add(success);
+            }
+            if (refreshInProgress.getAndSet(true)) {
+                log.debug("Skipping refresh, since there is one already in progress");
+                return;
+            }
+        }
 
-		entityOutlineLoadingWorker.execute();
-	}
-	
-	public void expandByUniqueId(final String uniqueId) {
-		DefaultMutableTreeNode node = getNodeByUniqueId(uniqueId);
-		if (node!=null) {
-			getDynamicTree().expand(node, true);
-			return;
-		}
+        log.debug("Starting whole tree refresh (invalidateCache={}, restoreState={})", invalidateCache, expansionState != null);
 
-		// Let's try to lazy load the ancestors of this node
-		List<String> path = EntityUtils.getPathFromUniqueId(uniqueId);
-		for (String ancestorId : path) {
-			DefaultMutableTreeNode ancestor = getNodeByUniqueId(ancestorId);
-			if (ancestor==null) {
-				// Give up, can't find the entity with this uniqueId
-				log.warn("expandByUniqueId cannot locate "+uniqueId);
-				return;
-			}
-			if (!getDynamicTree().childrenAreLoaded(ancestor)) {
-				// Load the children before displaying them
-				getDynamicTree().expandNodeWithLazyChildren(ancestor, new Callable<Void>() {
-					@Override
-					public Void call() throws Exception {
-						expandByUniqueId(uniqueId);
-						return null;
-					}
-					
-				});
-				return;
-			}
-		}
-	}
-	
-	public void selectEntityByUniqueId(final String uniqueId) {
-		DefaultMutableTreeNode node = getNodeByUniqueId(uniqueId);
-		if (node!=null) {
-			selectNode(node);
-			return;
-		}
+        showLoadingIndicator();
+        ModelMgr.getModelMgr().unregisterOnEventBus(EntityOutline.this);
 
-		// Let's try to lazy load the ancestors of this node
-		List<String> path = EntityUtils.getPathFromUniqueId(uniqueId);
-		for (String ancestorId : path) {
-			DefaultMutableTreeNode ancestor = getNodeByUniqueId(ancestorId);
-			if (ancestor==null) {
-				// Give up, can't find the entity with this uniqueId
-				log.warn("selectEntityByUniqueId cannot locate "+uniqueId);
-				return;
-			}
-			if (!getDynamicTree().childrenAreLoaded(ancestor)) {
-				// Load the children before displaying them
-				getDynamicTree().expandNodeWithLazyChildren(ancestor, new Callable<Void>() {
-					@Override
-					public Void call() throws Exception {
-						selectEntityByUniqueId(uniqueId);
-						return null;
-					}
+        SimpleWorker entityOutlineLoadingWorker = new SimpleWorker() {
 
-				});
-				return;
-			}
-		}
-	}
+            private List<Entity> rootList;
 
-	public void highlightEntityByUniqueId(final String uniqueId) {
-		DefaultMutableTreeNode node = getNodeByUniqueId(uniqueId);
-		if (node!=null) {
-			getDynamicTree().navigateToNode(node);
-		}
-	}
-    
-	private synchronized void selectNode(final DefaultMutableTreeNode node) {
+            protected void doStuff() throws Exception {
+                if (invalidateCache && getRootEntity() != null) {
+                    ModelMgr.getModelMgr().invalidateCache();
+                }
+                rootList = loadRootList();
+            }
 
-		// TODO: this should be encapsulated away from here somehow
-		ScreenEvaluationDialog screenEvaluationDialog = SessionMgr.getBrowser().getScreenEvaluationDialog();
-		if (screenEvaluationDialog.isCurrFolderDirty()) {
-			screenEvaluationDialog.setCurrFolderDirty(false);
-			if (screenEvaluationDialog.isAutoMoveAfterNavigation()) {
-				screenEvaluationDialog.organizeEntitiesInCurrentFolder(true, new Callable<Void>() {
-					@Override
-					public Void call() throws Exception {
-						selectNode(node);
-						return null;
-					}
-				});
-				return;
-			}
-			else if (screenEvaluationDialog.isAskAfterNavigation()) {
-				Object[] options = {"Yes", "No", "Organize now"};
-				int c = JOptionPane.showOptionDialog(SessionMgr.getMainFrame(),
-						"Are you sure you want to navigate away from this folder without organizing it?", "Navigate",
-						JOptionPane.YES_NO_OPTION, JOptionPane.WARNING_MESSAGE, null, options, options[2]);
-				if (c == 1) {
-					return;
-				}
-				else if (c == 2) {
-					screenEvaluationDialog.organizeEntitiesInCurrentFolder(true, new Callable<Void>() {
-						@Override
-						public Void call() throws Exception {
-							selectNode(node);
-							return null;
-						}
-					});
-					return;
-				}
-			}
-		}
-		
-		if (node == null) {
-			currUniqueId = null;
-			return;
-		}
-		
-		String uniqueId = getDynamicTree().getUniqueId(node);
-		if (!uniqueId.equals(currUniqueId)) {
-			this.currUniqueId = uniqueId;
-			ModelMgr.getModelMgr().getEntitySelectionModel().selectEntity(EntitySelectionModel.CATEGORY_OUTLINE, uniqueId+"", true);
-		}
-		else {
-			return;
-		}
+            protected void hadSuccess() {
+                try {
+                    ModelMgr.getModelMgr().registerOnEventBus(EntityOutline.this);
 
-		log.debug("Selecting node {}",uniqueId);
-		
-		DefaultMutableTreeNode node2 = getNodeByUniqueId(uniqueId);
-		
-		if (node2==null) {
-			log.warn("selectNode cannot locate "+uniqueId);
-			return;
-		}
-		
-		if (node!=node2) {
-			log.error("We have a node conflict. This should never happen! (@{} != @{})",System.identityHashCode(node),System.identityHashCode(node2));
-		}
-		
-		DefaultMutableTreeNode parentNode = (DefaultMutableTreeNode) node.getParent();
-		if (parentNode != null && !getTree().isExpanded(new TreePath(parentNode.getPath()))) {
-			getDynamicTree().expand(parentNode, true);
-		}
+                    init(rootList);
+                    currUniqueId = null;
+                    refreshInProgress.set(false);
 
-		getDynamicTree().navigateToNode(node);
+                    if (expansionState != null) {
+                        expansionState.restoreExpansionState(getDynamicTree(), true, new Callable<Void>() {
+                            @Override
+                            public Void call() throws Exception {
+                                showTree();
+                                executeCallBacks();
+                                log.debug("Tree refresh complete");
+                                return null;
+                            }
+                        });
+                    }
+                }
+                catch (Exception e) {
+                    hadError(e);
+                }
+            }
 
-		final String finalCurrUniqueId = currUniqueId;
-		
-		// TODO: should decouple this somehow
-		
-		if (!getDynamicTree().childrenAreLoaded(node)) {
-		    
-		    ViewerManager viewerManager = SessionMgr.getBrowser().getViewerManager();
+            protected void hadError(Throwable error) {
+                refreshInProgress.set(false);
+                log.error("Tree refresh encountered error", error);
+                JOptionPane.showMessageDialog(EntityOutline.this, "Error loading data outline", "Data Load Error",
+                        JOptionPane.ERROR_MESSAGE);
+                init(null);
+            }
+        };
+
+        entityOutlineLoadingWorker.execute();
+    }
+
+    public void expandByUniqueId(final String uniqueId) {
+        DefaultMutableTreeNode node = getNodeByUniqueId(uniqueId);
+        if (node != null) {
+            getDynamicTree().expand(node, true);
+            return;
+        }
+
+        // Let's try to lazy load the ancestors of this node
+        List<String> path = EntityUtils.getPathFromUniqueId(uniqueId);
+        for (String ancestorId : path) {
+            DefaultMutableTreeNode ancestor = getNodeByUniqueId(ancestorId);
+            if (ancestor == null) {
+                // Give up, can't find the entity with this uniqueId
+                log.warn("expandByUniqueId cannot locate " + uniqueId);
+                return;
+            }
+            if (!getDynamicTree().childrenAreLoaded(ancestor)) {
+                // Load the children before displaying them
+                getDynamicTree().expandNodeWithLazyChildren(ancestor, new Callable<Void>() {
+                    @Override
+                    public Void call() throws Exception {
+                        expandByUniqueId(uniqueId);
+                        return null;
+                    }
+
+                });
+                return;
+            }
+        }
+    }
+
+    @Override
+    public void selectEntityByUniqueId(final String uniqueId) {
+        DefaultMutableTreeNode node = getNodeByUniqueId(uniqueId);
+        if (node != null) {
+            selectNode(node);
+            return;
+        }
+
+        // Let's try to lazy load the ancestors of this node
+        List<String> path = EntityUtils.getPathFromUniqueId(uniqueId);
+        for (String ancestorId : path) {
+            DefaultMutableTreeNode ancestor = getNodeByUniqueId(ancestorId);
+            if (ancestor == null) {
+                // Give up, can't find the entity with this uniqueId
+                log.warn("selectEntityByUniqueId cannot locate " + uniqueId);
+                return;
+            }
+            if (!getDynamicTree().childrenAreLoaded(ancestor)) {
+                // Load the children before displaying them
+                getDynamicTree().expandNodeWithLazyChildren(ancestor, new Callable<Void>() {
+                    @Override
+                    public Void call() throws Exception {
+                        selectEntityByUniqueId(uniqueId);
+                        return null;
+                    }
+
+                });
+                return;
+            }
+        }
+    }
+
+    public void highlightEntityByUniqueId(final String uniqueId) {
+        DefaultMutableTreeNode node = getNodeByUniqueId(uniqueId);
+        if (node != null) {
+            getDynamicTree().navigateToNode(node);
+        }
+    }
+
+    private synchronized void selectNode(final DefaultMutableTreeNode node) {
+
+        // TODO: this should be encapsulated away from here somehow
+        ScreenEvaluationDialog screenEvaluationDialog = SessionMgr.getBrowser().getScreenEvaluationDialog();
+        if (screenEvaluationDialog.isCurrFolderDirty()) {
+            screenEvaluationDialog.setCurrFolderDirty(false);
+            if (screenEvaluationDialog.isAutoMoveAfterNavigation()) {
+                screenEvaluationDialog.organizeEntitiesInCurrentFolder(true, new Callable<Void>() {
+                    @Override
+                    public Void call() throws Exception {
+                        selectNode(node);
+                        return null;
+                    }
+                });
+                return;
+            }
+            else if (screenEvaluationDialog.isAskAfterNavigation()) {
+                Object[] options = {"Yes", "No", "Organize now"};
+                int c = JOptionPane.showOptionDialog(SessionMgr.getMainFrame(),
+                        "Are you sure you want to navigate away from this folder without organizing it?", "Navigate",
+                        JOptionPane.YES_NO_OPTION, JOptionPane.WARNING_MESSAGE, null, options, options[2]);
+                if (c == 1) {
+                    return;
+                }
+                else if (c == 2) {
+                    screenEvaluationDialog.organizeEntitiesInCurrentFolder(true, new Callable<Void>() {
+                        @Override
+                        public Void call() throws Exception {
+                            selectNode(node);
+                            return null;
+                        }
+                    });
+                    return;
+                }
+            }
+        }
+
+        if (node == null) {
+            currUniqueId = null;
+            return;
+        }
+
+        String uniqueId = getDynamicTree().getUniqueId(node);
+        if (!uniqueId.equals(currUniqueId)) {
+            this.currUniqueId = uniqueId;
+            ModelMgr.getModelMgr().getEntitySelectionModel().selectEntity(EntitySelectionModel.CATEGORY_OUTLINE, uniqueId + "", true);
+        }
+        else {
+            return;
+        }
+
+        log.debug("Selecting node {}", uniqueId);
+
+        DefaultMutableTreeNode node2 = getNodeByUniqueId(uniqueId);
+
+        if (node2 == null) {
+            log.warn("selectNode cannot locate " + uniqueId);
+            return;
+        }
+
+        if (node != node2) {
+            log.error("We have a node conflict. This should never happen! (@{} != @{})", System.identityHashCode(node), System.identityHashCode(node2));
+        }
+
+        DefaultMutableTreeNode parentNode = (DefaultMutableTreeNode) node.getParent();
+        if (parentNode != null && !getTree().isExpanded(new TreePath(parentNode.getPath()))) {
+            getDynamicTree().expand(parentNode, true);
+        }
+
+        getDynamicTree().navigateToNode(node);
+
+        final String finalCurrUniqueId = currUniqueId;
+
+        // TODO: should decouple this somehow
+        if (!getDynamicTree().childrenAreLoaded(node)) {
+
+            ViewerManager viewerManager = SessionMgr.getBrowser().getViewerManager();
 //	        if ((viewerManager.getActiveViewerPane()==viewerManager.getSecViewerPane() && viewerManager.getActiveViewer() instanceof AlignmentBoardViewer) || viewerManager.isViewersLinked()) {
 //	            SessionMgr.getBrowser().getViewerManager().showLoadingIndicatorInMainViewer();
 //	        }
 //	        else {
-	            SessionMgr.getBrowser().getViewerManager().showLoadingIndicatorInActiveViewer();
+            SessionMgr.getBrowser().getViewerManager().showLoadingIndicatorInActiveViewer();
 //	        }
-			
-	        //SessionMgr.getBrowser().getViewerManager().showLoadingIndicatorInInspector();   
-	        
-			// Load the children before displaying them
-        	getDynamicTree().expandNodeWithLazyChildren(node, new Callable<Void>() {
-				@Override
-				public Void call() throws Exception {
-				    log.debug("Got lazy nodes, loading entity in viewer");
-					loadEntityInViewers(finalCurrUniqueId);
-					return null;
-				}
-				
-			});
-		} 
-		else {
-			loadEntityInViewers(finalCurrUniqueId);
-		}
-	}
-	
-	private void loadEntityInViewers(String uniqueId) {
-		
-	    log.debug("loadEntityInViewers: "+uniqueId);
-		if (uniqueId==null) return;
 
-		DefaultMutableTreeNode node = getNodeByUniqueId(uniqueId);
-		if (node==null) return;
-		
-		// This method would never be called on a node whose children are lazy
-		if (!getDynamicTree().childrenAreLoaded(node)) {
-			throw new IllegalStateException("Cannot display entity whose children are not loaded");
-		}
-		
-		RootedEntity rootedEntity = new RootedEntity(uniqueId, getEntityData(node));
-		log.debug("showEntityInActiveViewer: "+rootedEntity.getName());
-		
-		ViewerManager viewerManager = SessionMgr.getBrowser().getViewerManager();
+            //SessionMgr.getBrowser().getViewerManager().showLoadingIndicatorInInspector();   
+            // Load the children before displaying them
+            getDynamicTree().expandNodeWithLazyChildren(node, new Callable<Void>() {
+                @Override
+                public Void call() throws Exception {
+                    log.debug("Got lazy nodes, loading entity in viewer");
+                    loadEntityInViewers(finalCurrUniqueId);
+                    return null;
+                }
+
+            });
+        }
+        else {
+            loadEntityInViewers(finalCurrUniqueId);
+        }
+    }
+
+    private void loadEntityInViewers(String uniqueId) {
+
+        log.debug("loadEntityInViewers: " + uniqueId);
+        if (uniqueId == null) {
+            return;
+        }
+
+        DefaultMutableTreeNode node = getNodeByUniqueId(uniqueId);
+        if (node == null) {
+            return;
+        }
+
+        // This method would never be called on a node whose children are lazy
+        if (!getDynamicTree().childrenAreLoaded(node)) {
+            throw new IllegalStateException("Cannot display entity whose children are not loaded");
+        }
+
+        RootedEntity rootedEntity = new RootedEntity(uniqueId, getEntityData(node));
+        log.debug("showEntityInActiveViewer: " + rootedEntity.getName());
+
+        ViewerManager viewerManager = SessionMgr.getBrowser().getViewerManager();
 //		if ((viewerManager.getActiveViewerPane()==viewerManager.getSecViewerPane() && viewerManager.getActiveViewer() instanceof AlignmentBoardViewer) || viewerManager.isViewersLinked()) {
 //	        SessionMgr.getBrowser().getViewerManager().showEntityInMainViewer(rootedEntity);
 //		}
 //		else {
-	        SessionMgr.getBrowser().getViewerManager().showEntityInActiveViewer(rootedEntity);
+        SessionMgr.getBrowser().getViewerManager().showEntityInActiveViewer(rootedEntity);
 //		}
-	}
-	
+    }
+
     @Override
     public String toString() {
-        return "EntityOutline("+root+")";
+        return "EntityOutline(" + root + ")";
     }
 }
