@@ -106,6 +106,10 @@
                 </test-type>
             </test-dependencies>
             <public-packages/>
+            <class-path-extension>
+                <runtime-relative-path>ext/junit-4.11.jar</runtime-relative-path>
+                <binary-origin>release/modules/ext/junit-4.11.jar</binary-origin>
+            </class-path-extension>
         </data>
     </configuration>
 </project>

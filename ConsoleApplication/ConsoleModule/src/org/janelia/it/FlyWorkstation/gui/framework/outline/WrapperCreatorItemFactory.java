@@ -22,7 +22,8 @@ import org.slf4j.LoggerFactory;
  * @author fosterl
  */
 public class WrapperCreatorItemFactory {
-    private Logger log = LoggerFactory.getLogger( WrapperCreatorItemFactory.class );    
+    
+    private static final Logger log = LoggerFactory.getLogger( WrapperCreatorItemFactory.class );    
 
     /**
      * This allows an abstraction layer between making the action, and the thing

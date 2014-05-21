@@ -27,6 +27,7 @@ import org.janelia.it.jacs.model.ontology.types.OntologyElementType;
  * @author <a href="mailto:rokickik@janelia.hhmi.org">Konrad Rokicki</a>
  */
 public class OntologyTreeCellRenderer extends DefaultTreeCellRenderer implements TreeCellRenderer {
+
     private static final Color typeLabelColor = new Color(149, 125, 71);
     private static final Color keybindLabelColor = new Color(128, 128, 128);
 
@@ -51,7 +52,7 @@ public class OntologyTreeCellRenderer extends DefaultTreeCellRenderer implements
 
         cellPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
         cellPanel.setOpaque(false);
-        
+
         titleLabel = new JLabel(" ");
         titleLabel.setOpaque(true);
         titleLabel.setBorder(BorderFactory.createEmptyBorder(2, 2, 2, 0));
@@ -71,30 +72,29 @@ public class OntologyTreeCellRenderer extends DefaultTreeCellRenderer implements
         backgroundNonSelectionColor = defaultRenderer.getBackgroundNonSelectionColor();
     }
 
+    @Override
     public Component getTreeCellRendererComponent(JTree tree, Object value, boolean selected, boolean expanded, boolean leaf, int row, boolean hasFocus) {
         Component returnValue = null;
         if ((value != null) && (value instanceof DefaultMutableTreeNode)) {
             DefaultMutableTreeNode node = (DefaultMutableTreeNode) value;
             Object userObject = node.getUserObject();
             if (userObject instanceof EntityData) {
-                
-                EntityData entityData = (EntityData)userObject;
+
+                EntityData entityData = (EntityData) userObject;
                 Entity entity = entityData.getChildEntity();
                 OntologyElement element = ontologyOutline.getOntologyElement(entityData);
-                                
-                // Set the colors
 
+                // Set the colors
                 if (selected) {
-                	titleLabel.setForeground(foregroundSelectionColor);
-                	titleLabel.setBackground(backgroundSelectionColor);
+                    titleLabel.setForeground(foregroundSelectionColor);
+                    titleLabel.setBackground(backgroundSelectionColor);
                 }
                 else {
-                	titleLabel.setForeground(foregroundNonSelectionColor);
-                	titleLabel.setBackground(backgroundNonSelectionColor);
+                    titleLabel.setForeground(foregroundNonSelectionColor);
+                    titleLabel.setBackground(backgroundNonSelectionColor);
                 }
 
                 // Support drag and drop 
-                
                 JTree.DropLocation dropLocation = tree.getDropLocation();
                 if (dropLocation != null
                         && dropLocation.getChildIndex() == -1
@@ -102,21 +102,27 @@ public class OntologyTreeCellRenderer extends DefaultTreeCellRenderer implements
                     titleLabel.setForeground(foregroundSelectionColor);
                     titleLabel.setBackground(backgroundSelectionColor);
                 }
-                
+
                 // Set the icon
-                
                 cellPanel.setEnabled(tree.isEnabled());
-                if (leaf) titleLabel.setIcon(getLeafIcon());
-                else if (expanded) titleLabel.setIcon(getOpenIcon());
-                else titleLabel.setIcon(getClosedIcon());
+                if (leaf) {
+                    titleLabel.setIcon(getLeafIcon());
+                }
+                else if (expanded) {
+                    titleLabel.setIcon(getOpenIcon());
+                }
+                else {
+                    titleLabel.setIcon(getClosedIcon());
+                }
                 ImageIcon ontologyIcon = Icons.getOntologyIcon(entity);
-                if (ontologyIcon != null) titleLabel.setIcon(ontologyIcon);
-                
+                if (ontologyIcon != null) {
+                    titleLabel.setIcon(ontologyIcon);
+                }
+
                 // Set everything else based on the entity properties
-                
                 titleLabel.setText(entity.getName());
 
-                if (element!=null) {
+                if (element != null) {
                     OntologyElementType type = element.getType();
                     if (type != null) {
                         if (type instanceof Interval) {
@@ -135,9 +141,7 @@ public class OntologyTreeCellRenderer extends DefaultTreeCellRenderer implements
                     typeLabel.setText("[Unknown]");
                 }
 
-
                 // Set the key bind hint
-
                 keybindLabel.setText(" ");
 
                 if (ontologyOutline != null) {
