@@ -5,12 +5,12 @@ import java.awt.Component;
 import java.awt.Dimension;
 import java.awt.FlowLayout;
 import java.awt.Point;
-import java.util.Collections;
 
 import javax.media.opengl.GLCapabilities;
 import javax.media.opengl.GLProfile;
 import javax.media.opengl.awt.GLJPanel;
 import javax.swing.AbstractButton;
+import javax.swing.Box;
 import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
@@ -53,7 +53,6 @@ import org.janelia.it.FlyWorkstation.gui.util.WindowLocator;
 import org.janelia.it.FlyWorkstation.model.domain.AlignmentContext;
 import org.openide.util.lookup.InstanceContent;
 import org.openide.util.lookup.ServiceProvider;
-import org.openide.windows.WindowManager;
 
 /**
  * Created with IntelliJ IDEA.
@@ -771,6 +770,10 @@ public class AlignmentBoardPanel extends JPanel implements AlignmentBoardControl
         toolbar.add(controls.getBlackout());
         toolbar.add(controls.getColorSaveBrightness());
         toolbar.add(controls.getConnectEvents()); // NOTE: can omit this control, here.
+        JLabel boardLabel = new JLabel("Viewing: " + getContextRootedEntity().getName());
+        boardLabel.setMinimumSize(new Dimension(0, 0));
+        toolbar.add(Box.createHorizontalGlue());
+        toolbar.add(boardLabel);
 
         //toolbar.add(launchSettingsButton);
 
