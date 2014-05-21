@@ -40,26 +40,26 @@ import org.openide.windows.WindowManager;
  * Time: 12:29 PM
  */
 public class Browser implements Cloneable {
-    
+
     private static final Logger log = LoggerFactory.getLogger(Browser.class);
-    
+
     private static String BROWSER_POSITION = "BROWSER_POSITION_ON_SCREEN";
-	public static String SEARCH_HISTORY = "SEARCH_HISTORY";
-	private static String VIEWERS_LINKED = "Browser.ViewersLinked";
-	
+    public static String SEARCH_HISTORY = "SEARCH_HISTORY";
+    private static String VIEWERS_LINKED = "Browser.ViewersLinked";
+
     // Used by printing mechanism to ensure capacity.
     public static final String VIEW_OUTLINES = "Outlines Section";
     public static final String VIEW_ONTOLOGY = "Ontology Section";
-    
+
     public static final String OUTLINE_ONTOLOGY = "Ontology";
     public static final String OUTLINE_LAYERS = "Layers";
     public static final String OUTLINE_SPLIT_PICKER = "Split Picking Tool";
-    
+
     private static String MEMORY_EXCEEDED_PRT_SCR_MSG = "Insufficient memory to print screen";
     private static String MEMORY_EXCEEDED_ADVISORY = "Low Memory";
     private static int RGB_TYPE_BYTES_PER_PIXEL = 4;
     private static int PRINT_OVERHEAD_SIZE = 1000000;
-    
+
     private JPanel allPanelsView = new JPanel();
     private JPanel collapsedOutlineView = new JPanel();
     private JPanel mainPanel = new JPanel();
@@ -72,12 +72,11 @@ public class Browser implements Cloneable {
     private SessionOutline sessionOutline;
     private EntityOutline entityOutline;
     private EntityDetailsOutline entityDetailsOutline;
-    private TaskOutline taskOutline;
     private ToolsMenuModifier toolsMenuModifier;
 
     private VerticalPanelPicker rightPanel;
     private OntologyOutline ontologyOutline;
-        
+
     private AnnotationSessionPropertyDialog annotationSessionPropertyPanel;
     private ImportDialog importDialog;
     private RunNeuronSeparationDialog runNeuronSeparationDialog;
@@ -93,7 +92,6 @@ public class Browser implements Cloneable {
     private Image iconImage;
     private PageFormat pageFormat;
     private MaskSearchDialog arbitraryMaskSearchDialog;
-
 
     /**
      * Center Window, use passed realEstatePercent (0-1.0, where 1.0 is 100% of the screen)
@@ -119,22 +117,22 @@ public class Browser implements Cloneable {
             SessionMgr.getSessionMgr().handleException(e);
         }
     }
-    
+
     public ImageCache getImageCache() {
-    	return imageCache;
+        return imageCache;
     }
 
     private void jbInit(BrowserModel browserModel) throws Exception {
 
         viewerManager = new ViewerManager();
-        
+
         boolean isViewersLinked = false;
         SessionMgr.getSessionMgr().setModelProperty(VIEWERS_LINKED, isViewersLinked);
         viewerManager.setIsViewersLinked(isViewersLinked);
-        
+
         Object useFreeProperty = SessionMgr.getSessionMgr().getModelProperty(SessionMgr.DISPLAY_FREE_MEMORY_METER_PROPERTY);
-        if (null!=useFreeProperty && useFreeProperty instanceof Boolean) {
-            useFreeMemoryViewer((Boolean)useFreeProperty);
+        if (null != useFreeProperty && useFreeProperty instanceof Boolean) {
+            useFreeMemoryViewer((Boolean) useFreeProperty);
         }
         else {
             useFreeMemoryViewer(false);
@@ -142,23 +140,21 @@ public class Browser implements Cloneable {
 
         this.browserModel = browserModel;
         browserModel.addBrowserModelListener(new BrowserModelObserver());
-        SessionMgr.getSessionMgr().addSessionModelListener(modelListener);        
-        
+        SessionMgr.getSessionMgr().addSessionModelListener(modelListener);
+
         sessionOutline = new SessionOutline(SessionMgr.getMainFrame());
-		
+
         entityOutline = new EntityOutline() {
-			@Override
-			public List<Entity> loadRootList() throws Exception {
-				List<Entity> roots = ModelMgr.getModelMgr().getCommonRootEntities();
-				Collections.sort(roots, new EntityRootComparator());
-				return roots;
-			}
-		};
-		
-		entityDetailsOutline = new EntityDetailsOutline();
-		
-        taskOutline = new TaskOutline(SessionMgr.getMainFrame());
-        
+            @Override
+            public List<Entity> loadRootList() throws Exception {
+                List<Entity> roots = ModelMgr.getModelMgr().getCommonRootEntities();
+                Collections.sort(roots, new EntityRootComparator());
+                return roots;
+            }
+        };
+
+        entityDetailsOutline = new EntityDetailsOutline();
+
         ontologyOutline = new OntologyOutline() {
             @Override
             public List<Entity> loadRootList() throws Exception {
@@ -167,7 +163,7 @@ public class Browser implements Cloneable {
                 return roots;
             }
         };
-        
+
         annotationSessionPropertyPanel = new AnnotationSessionPropertyDialog(entityOutline, ontologyOutline);
         importDialog = new ImportDialog("Import Files");
         runNeuronSeparationDialog = new RunNeuronSeparationDialog();
@@ -185,14 +181,14 @@ public class Browser implements Cloneable {
         screenEvaluationDialog = new ScreenEvaluationDialog();
         maaSearchDialog = new MAASearchDialog(this);
         dataSetListDialog = new DataSetListDialog();
-        
+
         ontologyOutline.setPreferredSize(new Dimension());
-          
+
         BrowserPosition consolePosition = (BrowserPosition) SessionMgr.getSessionMgr().getModelProperty(BROWSER_POSITION);
         if (null == consolePosition) {
             consolePosition = resetBrowserPosition();
-        }        
-        
+        }
+
         // Collect the final components
         mainPanel.setLayout(layout);
         allPanelsView.setLayout(new BorderLayout());
@@ -202,13 +198,13 @@ public class Browser implements Cloneable {
 
         // Run this later so that the Browser has finished initializing by the time it runs
         SwingUtilities.invokeLater(new Runnable() {
-			@Override
-			public void run() {
-			    entityDetailsOutline.activate();
-		        entityOutline.activate();
-		        // Ontology outline is activated by setting the perspective:
-			    setPerspective(Perspective.ImageBrowser);
-			}
+            @Override
+            public void run() {
+                entityDetailsOutline.activate();
+                entityOutline.activate();
+                // Ontology outline is activated by setting the perspective:
+                setPerspective(Perspective.ImageBrowser);
+            }
         });
     }
 
@@ -291,10 +287,10 @@ public class Browser implements Cloneable {
         return browserModel;
     }
 
-    public void setIconImage( Image image ) {
+    public void setIconImage(Image image) {
         this.iconImage = image;
     }
-    
+
     public Image getIconImage() {
         return iconImage;
     }
@@ -316,12 +312,12 @@ public class Browser implements Cloneable {
 
     public void supportMenuProcessing() {
         toolsMenuModifier = new ToolsMenuModifier();
-        toolsMenuModifier.rebuildMenu();        
+        toolsMenuModifier.rebuildMenu();
         new CredentialSynchronizer().synchronize(this);
     }
-    
+
     private class BrowserModelObserver extends BrowserModelListenerAdapter {
-        
+
         @Override
         public void browserCurrentSelectionChanged(Entity newSelection) {
             if (newSelection != null) {
@@ -331,27 +327,27 @@ public class Browser implements Cloneable {
                 statusBar.setDescription("");
             }
         }
-        
+
         @Override
         public void browserClosing() {
             SessionMgr.getSessionMgr().removeSessionModelListener(modelListener);
-            
+
             BrowserPosition position = (BrowserPosition) SessionMgr.getSessionMgr().getModelProperty(BROWSER_POSITION);
 
             if (position == null) {
                 position = new BrowserPosition();
             }
 
-            
             SessionMgr.getSessionMgr().setModelProperty(BROWSER_POSITION, position);
-            if ( generalSearchDialog != null )  {
+            if (generalSearchDialog != null) {
                 SessionMgr.getSessionMgr().setModelProperty(SEARCH_HISTORY, generalSearchDialog.getSearchHistory());
-            }                
-            
+            }
+
         }
     }
 
     class MySessionModelListener implements SessionModelListener {
+
         public void browserAdded(BrowserModel browserModel) {
         }
 
@@ -365,20 +361,20 @@ public class Browser implements Cloneable {
             if (key.equals(SessionMgr.DISPLAY_FREE_MEMORY_METER_PROPERTY)) {
                 useFreeMemoryViewer(((Boolean) newValue).booleanValue());
             }
-            log.debug("Model change detected for "+key+", saving user settings");
+            log.debug("Model change detected for " + key + ", saving user settings");
             SessionMgr.getSessionMgr().saveUserSettings();
         }
-        
+
     }
 
     public ViewerManager getViewerManager() {
-		return viewerManager;
-	}
+        return viewerManager;
+    }
 
     public EntityOutline getEntityOutline() {
         return entityOutline;
     }
-    
+
     public EntityDetailsOutline getEntityDetailsOutline() {
         return entityDetailsOutline;
     }
@@ -390,24 +386,20 @@ public class Browser implements Cloneable {
     public void selectRightPanel(String panelName) {
         rightPanel.showPanel(panelName);
     }
-    
+
     public SessionOutline getAnnotationSessionOutline() {
         return sessionOutline;
     }
 
-    public TaskOutline getTaskOutline() {
-		return taskOutline;
-	}
-
-	public AnnotationSessionPropertyDialog getAnnotationSessionPropertyDialog() {
+    public AnnotationSessionPropertyDialog getAnnotationSessionPropertyDialog() {
         return annotationSessionPropertyPanel;
     }
 
     public RunNeuronSeparationDialog getRunNeuronSeparationDialog() {
-		return runNeuronSeparationDialog;
-	}
+        return runNeuronSeparationDialog;
+    }
 
-    public ImportDialog getImportDialog(){
+    public ImportDialog getImportDialog() {
         return importDialog;
     }
 
@@ -418,48 +410,48 @@ public class Browser implements Cloneable {
     public GiantFiberSearchDialog getGiantFiberSearchDialog() {
         return giantFiberSearchDialog;
     }
-    
+
     public ScreenEvaluationDialog getScreenEvaluationDialog() {
-		return screenEvaluationDialog;
-	}
+        return screenEvaluationDialog;
+    }
 
     public MAASearchDialog getMAASearchDialog() {
-    	return maaSearchDialog;
+        return maaSearchDialog;
     }
-    
-    public DataSetListDialog getDataSetListDialog() {
-		return dataSetListDialog;
-	}
-    
-	public SearchConfiguration getGeneralSearchConfig() {
-		return generalSearchConfig;
-	}
 
-	public GeneralSearchDialog getGeneralSearchDialog() {
-		return generalSearchDialog;
-	}
+    public DataSetListDialog getDataSetListDialog() {
+        return dataSetListDialog;
+    }
+
+    public SearchConfiguration getGeneralSearchConfig() {
+        return generalSearchConfig;
+    }
+
+    public GeneralSearchDialog getGeneralSearchDialog() {
+        return generalSearchDialog;
+    }
 
     public void setPerspective(Perspective perspective) {
-        log.info("Setting perspective: {}",perspective);
+        log.info("Setting perspective: {}", perspective);
         switch (perspective) {
-        case TaskMonitoring:
-            openOntologyComponent();
-            viewerManager.clearAllViewers();
-            break;
-        case SliceViewer:
-            viewerManager.clearAllViewers();
-            viewerManager.ensureViewerClass(viewerManager.getMainViewerPane(), SliceViewViewer.class);
-            break;
-        case ImageBrowser:
-        default:
-            openOntologyComponent();
-            viewerManager.clearAllViewers();
-            viewerManager.ensureViewerClass(viewerManager.getMainViewerPane(), IconDemoPanel.class);            
+            case TaskMonitoring:
+                openOntologyComponent();
+                viewerManager.clearAllViewers();
+                break;
+            case SliceViewer:
+                viewerManager.clearAllViewers();
+                viewerManager.ensureViewerClass(viewerManager.getMainViewerPane(), SliceViewViewer.class);
+                break;
+            case ImageBrowser:
+            default:
+                openOntologyComponent();
+                viewerManager.clearAllViewers();
+                viewerManager.ensureViewerClass(viewerManager.getMainViewerPane(), IconDemoPanel.class);
         }
     }
 
     public BrowserPosition resetBrowserPosition() {
-        
+
         BrowserPosition position = new BrowserPosition();
         position.setHorizontalLeftDividerLocation(400);
         position.setHorizontalRightDividerLocation(1100);
@@ -467,16 +459,16 @@ public class Browser implements Cloneable {
 
         int offsetY = 0;
         String lafName = (String) SessionMgr.getSessionMgr().getModelProperty(SessionMgr.DISPLAY_LOOK_AND_FEEL);
-        if (SystemInfo.isMac && lafName!=null && lafName.contains("synthetica")) {
-            offsetY=20;
+        if (SystemInfo.isMac && lafName != null && lafName.contains("synthetica")) {
+            offsetY = 20;
         }
-        
+
         position.setBrowserLocation(new Point(0, offsetY));
-        
+
         Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize();
         position.setScreenSize(screenSize);
-        position.setBrowserSize(new Dimension(screenSize.width, screenSize.height-offsetY));
-        
+        position.setBrowserSize(new Dimension(screenSize.width, screenSize.height - offsetY));
+
         SessionMgr.getSessionMgr().setModelProperty(BROWSER_POSITION, position);
 
         return position;
@@ -485,18 +477,18 @@ public class Browser implements Cloneable {
     public boolean isViewersLinked() {
         return viewerManager.isViewersLinked();
     }
-    
+
     public void setIsViewersLinked(boolean isViewersLinked) {
         viewerManager.setIsViewersLinked(isViewersLinked);
         SessionMgr.getSessionMgr().setModelProperty(VIEWERS_LINKED, isViewersLinked);
     }
 
-    private void openOntologyComponent() {        
+    private void openOntologyComponent() {
         TopComponent win = WindowLocator.getByName(OntologyOutline.ONTOLOGY_COMPONENT_NAME);
-        if (! win.isOpened() ) {
+        if (!win.isOpened()) {
             Mode propertiesMode = WindowManager.getDefault().findMode("properties");
-            if ( propertiesMode != null ) {
-                propertiesMode.dockInto( win );
+            if (propertiesMode != null) {
+                propertiesMode.dockInto(win);
             }
         }
     }

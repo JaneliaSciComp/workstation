@@ -26,6 +26,7 @@ import org.janelia.it.jacs.model.entity.EntityData;
  * @author <a href="mailto:rokickik@janelia.hhmi.org">Konrad Rokicki</a>
  */
 public class EntityTreeCellRenderer extends DefaultTreeCellRenderer implements TreeCellRenderer {
+
     protected static final Color typeLabelColor = new Color(149, 125, 71);
     protected static final Color metaLabelColor = new Color(128, 128, 128);
     protected static final Color highlightColor = new Color(205, 157, 250);
@@ -45,7 +46,7 @@ public class EntityTreeCellRenderer extends DefaultTreeCellRenderer implements T
 
         cellPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
         cellPanel.setOpaque(false);
-        
+
         titleLabel = new JLabel(" ");
         titleLabel.setOpaque(true);
         titleLabel.setBorder(BorderFactory.createEmptyBorder(2, 2, 2, 0));
@@ -64,24 +65,23 @@ public class EntityTreeCellRenderer extends DefaultTreeCellRenderer implements T
         backgroundSelectionColor = defaultRenderer.getBackgroundSelectionColor();
         backgroundNonSelectionColor = defaultRenderer.getBackgroundNonSelectionColor();
     }
-    
+
+    @Override
     public Component getTreeCellRendererComponent(JTree tree, Object value, boolean selected, boolean expanded, boolean leaf, int row, boolean hasFocus) {
         Component returnValue = null;
         if ((value != null) || (value instanceof DefaultMutableTreeNode)) {
 
             // Set the colors
-
             if (selected) {
-            	titleLabel.setForeground(foregroundSelectionColor);
-            	titleLabel.setBackground(backgroundSelectionColor);
+                titleLabel.setForeground(foregroundSelectionColor);
+                titleLabel.setBackground(backgroundSelectionColor);
             }
             else {
-            	titleLabel.setForeground(foregroundNonSelectionColor);
-            	titleLabel.setBackground(backgroundNonSelectionColor);
+                titleLabel.setForeground(foregroundNonSelectionColor);
+                titleLabel.setBackground(backgroundNonSelectionColor);
             }
 
             // Support drag and drop 
-            
             JTree.DropLocation dropLocation = tree.getDropLocation();
             if (dropLocation != null
                     && dropLocation.getChildIndex() == -1
@@ -91,14 +91,18 @@ public class EntityTreeCellRenderer extends DefaultTreeCellRenderer implements T
             }
 
             // Set the default icon
-
             cellPanel.setEnabled(tree.isEnabled());
-            if (leaf) titleLabel.setIcon(getLeafIcon());
-            else if (expanded) titleLabel.setIcon(getOpenIcon());
-            else titleLabel.setIcon(getClosedIcon());
+            if (leaf) {
+                titleLabel.setIcon(getLeafIcon());
+            }
+            else if (expanded) {
+                titleLabel.setIcon(getOpenIcon());
+            }
+            else {
+                titleLabel.setIcon(getClosedIcon());
+            }
 
             // Set everything else based on the entity properties
-
             DefaultMutableTreeNode node = (DefaultMutableTreeNode) value;
             Object userObject = node.getUserObject();
 
@@ -106,50 +110,50 @@ public class EntityTreeCellRenderer extends DefaultTreeCellRenderer implements T
             typeLabel.setText("");
             titleLabel.setIcon(null);
             metaLabel.setText("");
-            
+
             EntityData ed = null;
             Entity entity = null;
-            
+
             if (userObject instanceof EntityData) {
-            	ed = (EntityData)userObject;
-                entity = (Entity)ed.getChildEntity();
+                ed = (EntityData) userObject;
+                entity = (Entity) ed.getChildEntity();
             }
             else if (userObject instanceof Entity) {
-            	entity = (Entity)userObject;
+                entity = (Entity) userObject;
             }
-            
-            if (entity!= null) {
-                
-                String entityAttrName = ed.getEntityAttrName()==null?"":ed.getEntityAttrName();
-                String entityTypeName = entity.getEntityTypeName()==null?"":entity.getEntityTypeName();
-                
+
+            if (entity != null) {
+
+                String entityAttrName = ed.getEntityAttrName() == null ? "" : ed.getEntityAttrName();
+                String entityTypeName = entity.getEntityTypeName() == null ? "" : entity.getEntityTypeName();
+
                 // Set the labels
                 titleLabel.setText(entity.getName());
                 titleLabel.setIcon(Icons.getIcon(entity));
                 titleLabel.setToolTipText(entityTypeName);
 
-                String dateStr = entity.getUpdatedDate()==null?"":df.format(entity.getUpdatedDate());
+                String dateStr = entity.getUpdatedDate() == null ? "" : df.format(entity.getUpdatedDate());
                 String ownerStr = ModelMgrUtils.getNameFromSubjectKey(entity.getOwnerKey());
-                
-            	if (ed!=null && (entityAttrName.equals(EntityConstants.ATTRIBUTE_RESULT) || entityTypeName.equals(EntityConstants.TYPE_PIPELINE_RUN))) {
-                	typeLabel.setText(dateStr+" "+ownerStr);
+
+                if (ed != null && (entityAttrName.equals(EntityConstants.ATTRIBUTE_RESULT) || entityTypeName.equals(EntityConstants.TYPE_PIPELINE_RUN))) {
+                    typeLabel.setText(dateStr + " " + ownerStr);
                 }
                 else {
-                	typeLabel.setText(ownerStr);
+                    typeLabel.setText(ownerStr);
                 }
-                
+
                 if (entityTypeName.equals(EntityConstants.TYPE_NEURON_FRAGMENT_COLLECTION)) {
-                	metaLabel.setText("("+entity.getEntityData().size()+" fragments)");
+                    metaLabel.setText("(" + entity.getEntityData().size() + " fragments)");
                 }
 
                 if (entityTypeName.equals(EntityConstants.TYPE_CURATED_NEURON_COLLECTION)) {
-                    metaLabel.setText("("+entity.getEntityData().size()+" items)");
+                    metaLabel.setText("(" + entity.getEntityData().size() + " items)");
                 }
 
                 if (isHighlighted(entity)) {
                     titleLabel.setBackground(highlightColor);
                 }
-                
+
             }
 
             returnValue = cellPanel;
@@ -161,6 +165,6 @@ public class EntityTreeCellRenderer extends DefaultTreeCellRenderer implements T
     }
 
     protected boolean isHighlighted(Entity entity) {
-    	return false;
+        return false;
     }
 }

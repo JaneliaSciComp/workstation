@@ -20,9 +20,7 @@ import org.janelia.it.FlyWorkstation.gui.util.DesktopApi;
 import org.janelia.it.FlyWorkstation.gui.util.JScrollMenu;
 import org.janelia.it.FlyWorkstation.model.entity.RootedEntity;
 import org.janelia.it.FlyWorkstation.model.utils.AnnotationSession;
-import org.janelia.it.FlyWorkstation.nb_action.Compatible;
 import org.janelia.it.FlyWorkstation.nb_action.EntityAcceptor;
-import org.janelia.it.FlyWorkstation.nb_action.EntityWrapperCreator;
 import org.janelia.it.FlyWorkstation.nb_action.ServiceAcceptorHelper;
 import org.janelia.it.FlyWorkstation.shared.util.ConsoleProperties;
 import org.janelia.it.FlyWorkstation.shared.util.SystemInfo;
@@ -44,7 +42,6 @@ import org.janelia.it.jacs.shared.utils.MailHelper;
 import org.janelia.it.jacs.shared.utils.StringUtils;
 import org.janelia.it.jacs.shared.utils.entity.EntityVisitor;
 import org.janelia.it.jacs.shared.utils.entity.EntityVistationBuilder;
-import org.openide.util.lookup.Lookups;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

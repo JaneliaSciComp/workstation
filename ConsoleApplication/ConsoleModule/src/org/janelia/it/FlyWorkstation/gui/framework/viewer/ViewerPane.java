@@ -26,39 +26,40 @@ import org.slf4j.LoggerFactory;
 
 /**
  * A wrapper around a Viewer that provides a title bar, a close button, and entity navigation history.
- * 
+ *
  * @author <a href="mailto:rokickik@janelia.hhmi.org">Konrad Rokicki</a>
  */
 public class ViewerPane extends JPanel {
 
     private static final Logger log = LoggerFactory.getLogger(ViewerPane.class);
+
+    private static final Font titleLabelFont = new Font("Sans Serif", Font.PLAIN, 12);
+
+    private final ViewerContainer viewerContainer;
+    private final EntitySelectionHistory entitySelectionHistory;
+    private final String selectionCategory;
+    private final JLabel titleLabel;
+    private final JPanel mainTitlePane;
     
-	private static final Font titleLabelFont = new Font("Sans Serif", Font.PLAIN, 12);
-	
-	private ViewerContainer viewerContainer;
-	private EntitySelectionHistory entitySelectionHistory;
-	private String selectionCategory;
-	private JLabel titleLabel;
-	private Viewer viewer;
-    private JPanel mainTitlePane;
+    private Viewer viewer;
 
-	protected RootedEntity contextRootedEntity;
-	protected List<RootedEntity> rootedAncestors;
-	protected SimpleWorker ancestorLoadingWorker;
-	
-	public ViewerPane(ViewerContainer viewerContainer, String selectionCategory, boolean showHideButton) {
-		
-		setLayout(new BorderLayout());
+    protected RootedEntity contextRootedEntity;
+    protected List<RootedEntity> rootedAncestors;
+    protected SimpleWorker ancestorLoadingWorker;
 
-		this.viewerContainer = viewerContainer;
-		this.selectionCategory = selectionCategory;
-		this.entitySelectionHistory = new EntitySelectionHistory();
-		
+    public ViewerPane(ViewerContainer viewerContainer, String selectionCategory, boolean showHideButton) {
+
+        setLayout(new BorderLayout());
+
+        this.viewerContainer = viewerContainer;
+        this.selectionCategory = selectionCategory;
+        this.entitySelectionHistory = new EntitySelectionHistory();
+
         titleLabel = new JLabel(" ");
         titleLabel.setBorder(BorderFactory.createEmptyBorder(1, 5, 3, 0));
         titleLabel.setFont(titleLabelFont);
         titleLabel.setHorizontalAlignment(SwingConstants.LEFT);
-        
+
         mainTitlePane = new JPanel(new GridBagLayout());
         GridBagConstraints c = new GridBagConstraints();
 
@@ -68,51 +69,51 @@ public class ViewerPane extends JPanel {
         c.fill = GridBagConstraints.HORIZONTAL;
         c.anchor = GridBagConstraints.LINE_START;
         c.weightx = 1;
-        
-        mainTitlePane.add(titleLabel, c);
-        
-		if (showHideButton) {
-	        JButton hideButton = new JButton(Icons.getIcon("close_red.png"));
-	        hideButton.setPreferredSize(new Dimension(16, 16));
-	        hideButton.setBorderPainted(false);
-	        hideButton.setToolTipText("Close this viewer");
-	        hideButton.addActionListener(new ActionListener() {
-				@Override
-				public void actionPerformed(ActionEvent e) {
-					closeButtonPressed();
-				}
-			});
 
-	        c.gridx = 1;
-	        c.gridy = 0;
-	        c.insets = new Insets(0, 0, 0, 0);
-	        c.fill = GridBagConstraints.NONE;
-	        c.anchor = GridBagConstraints.LINE_END;
-	        c.weightx = 0;
-	        hideButton.setBorder(BorderFactory.createLineBorder(Color.red));
-	        mainTitlePane.add(hideButton, c);
-		}
-		
+        mainTitlePane.add(titleLabel, c);
+
+        if (showHideButton) {
+            JButton hideButton = new JButton(Icons.getIcon("close_red.png"));
+            hideButton.setPreferredSize(new Dimension(16, 16));
+            hideButton.setBorderPainted(false);
+            hideButton.setToolTipText("Close this viewer");
+            hideButton.addActionListener(new ActionListener() {
+                @Override
+                public void actionPerformed(ActionEvent e) {
+                    closeButtonPressed();
+                }
+            });
+
+            c.gridx = 1;
+            c.gridy = 0;
+            c.insets = new Insets(0, 0, 0, 0);
+            c.fill = GridBagConstraints.NONE;
+            c.anchor = GridBagConstraints.LINE_END;
+            c.weightx = 0;
+            hideButton.setBorder(BorderFactory.createLineBorder(Color.red));
+            mainTitlePane.add(hideButton, c);
+        }
+
         add(mainTitlePane, BorderLayout.NORTH);
-	}
-	
-	protected void closeButtonPressed() {
-		throw new UnsupportedOperationException("This method has not been implemented for this ViewerPane instance");
-	}
+    }
+
+    protected void closeButtonPressed() {
+        throw new UnsupportedOperationException("This method has not been implemented for this ViewerPane instance");
+    }
 
     public void clearViewer() {
-        if (this.viewer!=null) {
-            log.debug("Clearing viewer {}",selectionCategory);
+        if (this.viewer != null) {
+            log.debug("Clearing viewer {}", selectionCategory);
             this.viewer.clear();
             revalidate();
             repaint();
         }
         this.contextRootedEntity = null;
     }
-    
+
     public void closeViewer() {
-        if (this.viewer!=null) {
-            log.debug("Closing viewer {}",this.viewer);
+        if (this.viewer != null) {
+            log.debug("Closing viewer {}", this.viewer);
             this.viewer.close();
             remove(this.viewer);
             revalidate();
@@ -121,22 +122,22 @@ public class ViewerPane extends JPanel {
         this.viewer = null;
         this.contextRootedEntity = null;
     }
-    
+
     public void setViewer(Viewer viewer) {
-        log.debug("Setting viewer for viewer pane {}",selectionCategory);
+        log.debug("Setting viewer for viewer pane {}", selectionCategory);
         closeViewer();
         this.viewer = viewer;
-        if (viewer!=null) {
-            log.debug("Adding viewer {}",this.viewer);
+        if (viewer != null) {
+            log.debug("Adding viewer {}", this.viewer);
             add(viewer, BorderLayout.CENTER);
         }
         revalidate();
         repaint();
     }
-	
-	public Viewer getViewer() {
-		return viewer;
-	}
+
+    public Viewer getViewer() {
+        return viewer;
+    }
 
     /**
      * Exposes main title pane for adding things to that real-estate.
@@ -147,113 +148,123 @@ public class ViewerPane extends JPanel {
         return mainTitlePane;
     }
 
-	/**
-	 * Returns the selection category of this viewer in the EntitySelectionModel.
-	 * @return EntitySelectionModel.CATEGORY_*
-	 */
-	public String getSelectionCategory() {
-		return selectionCategory;
-	}
+    /**
+     * Returns the selection category of this viewer in the EntitySelectionModel.
+     *
+     * @return EntitySelectionModel.CATEGORY_*
+     */
+    public String getSelectionCategory() {
+        return selectionCategory;
+    }
 
-	public EntitySelectionHistory getEntitySelectionHistory() {
-		return entitySelectionHistory;
-	}
-	
-	public void setTitle(String title) {
-		titleLabel.setText(title);
-	}
+    public EntitySelectionHistory getEntitySelectionHistory() {
+        return entitySelectionHistory;
+    }
 
-	public void setAsActive() {
-		if (viewerContainer!=null) viewerContainer.setActiveViewerPane(this);
-	}
-	
-	public boolean isActive() {
-		return this.equals(viewerContainer.getActiveViewerPane());
-	}
+    public void setTitle(String title) {
+        titleLabel.setText(title);
+    }
 
-	public ViewerContainer getViewerContainer() {
-		return viewerContainer;
-	}
+    public void setAsActive() {
+        if (viewerContainer != null) {
+            viewerContainer.setActiveViewerPane(this);
+        }
+    }
 
-	public void loadEntity(RootedEntity rootedEntity) {
-		loadEntity(rootedEntity, null);
-	}
-	
-	public synchronized void loadEntity(RootedEntity rootedEntity, final Callable<Void> success) {
+    public boolean isActive() {
+        return this.equals(viewerContainer.getActiveViewerPane());
+    }
 
-		if (rootedEntity==null) return;
-		log.debug("loadEntity: "+rootedEntity.getId());
-		
-		if (contextRootedEntity!=null && rootedEntity.getId().equals(contextRootedEntity.getId())) {
-		    log.debug("Entity is already loaded: "+contextRootedEntity.getId());
+    public ViewerContainer getViewerContainer() {
+        return viewerContainer;
+    }
+
+    public void loadEntity(RootedEntity rootedEntity) {
+        loadEntity(rootedEntity, null);
+    }
+
+    public synchronized void loadEntity(RootedEntity rootedEntity, final Callable<Void> success) {
+
+        if (rootedEntity == null) {
+            return;
+        }
+        log.debug("loadEntity: " + rootedEntity.getId());
+
+        if (contextRootedEntity != null && rootedEntity.getId().equals(contextRootedEntity.getId())) {
+            log.debug("Entity is already loaded: " + contextRootedEntity.getId());
             ConcurrentUtils.invokeAndHandleExceptions(success);
-			return;
-		}
-		
-		this.contextRootedEntity = rootedEntity;
-		
-		Entity entity = contextRootedEntity.getEntity();
+            return;
+        }
 
-		getEntitySelectionHistory().pushHistory(contextRootedEntity.getUniqueId());
-		setTitle(entity.getName());
+        this.contextRootedEntity = rootedEntity;
 
-		if (ancestorLoadingWorker != null && !ancestorLoadingWorker.isDone()) {
-			ancestorLoadingWorker.disregard();
-		}
+        Entity entity = contextRootedEntity.getEntity();
 
-		ancestorLoadingWorker = new SimpleWorker() {
+        getEntitySelectionHistory().pushHistory(contextRootedEntity.getUniqueId());
+        setTitle(entity.getName());
 
-			private List<RootedEntity> ancestors = new ArrayList<RootedEntity>();
-				
-			protected void doStuff() throws Exception {
-				List<String> uniqueIds = EntityUtils.getPathFromUniqueId(contextRootedEntity.getUniqueId());
-				List<Long> entityIds = new ArrayList<Long>();
-				for(String uniqueId : uniqueIds) {
-				    Long entityId = EntityUtils.getEntityIdFromUniqueId(uniqueId);
-					entityIds.add(entityId);
-				}
-				Map<Long,Entity>entityMap = EntityUtils.getEntityMap(ModelMgr.getModelMgr().getEntityByIds(entityIds));
+        if (ancestorLoadingWorker != null && !ancestorLoadingWorker.isDone()) {
+            ancestorLoadingWorker.disregard();
+        }
 
-				for(String uniqueId : uniqueIds) {
-					Long entityId = EntityUtils.getEntityIdFromUniqueId(uniqueId);
-					Entity entity = entityMap.get(entityId);
-					if (entity!=null) {
-						EntityData entityData = new EntityData();
-						entityData.setChildEntity(entity);
-						ancestors.add(new RootedEntity(uniqueId, entityData));
-					}
-				}
-				
-				Collections.reverse(ancestors);
-			}
+        ancestorLoadingWorker = new SimpleWorker() {
 
-			protected void hadSuccess() {
-				setRootedAncestors(ancestors);
-				ancestorLoadingWorker = null;
-			}
+            private List<RootedEntity> ancestors = new ArrayList<RootedEntity>();
 
-			protected void hadError(Throwable error) {
-				SessionMgr.getSessionMgr().handleException(error);
-				
-			}
-		};
-		ancestorLoadingWorker.execute();
-		
-		viewer.loadEntity(rootedEntity, success);
-	}
+            @Override
+            protected void doStuff() throws Exception {
+                List<String> uniqueIds = EntityUtils.getPathFromUniqueId(contextRootedEntity.getUniqueId());
+                List<Long> entityIds = new ArrayList<Long>();
+                for (String uniqueId : uniqueIds) {
+                    Long entityId = EntityUtils.getEntityIdFromUniqueId(uniqueId);
+                    entityIds.add(entityId);
+                }
+                Map<Long, Entity> entityMap = EntityUtils.getEntityMap(ModelMgr.getModelMgr().getEntityByIds(entityIds));
 
-	private synchronized void setRootedAncestors(List<RootedEntity> rootedAncestors) {
-		this.rootedAncestors = rootedAncestors;
-		StringBuffer buf = new StringBuffer();
-		for(int i=rootedAncestors.size()-1; i>=0; i--) {
-			RootedEntity ancestor = rootedAncestors.get(i);
-			if (buf.length()>0) buf.append(" : ");
-			buf.append(ancestor.getEntity().getName());
-		}
-		setTitle(buf.toString());
-	}
+                for (String uniqueId : uniqueIds) {
+                    Long entityId = EntityUtils.getEntityIdFromUniqueId(uniqueId);
+                    Entity entity = entityMap.get(entityId);
+                    if (entity != null) {
+                        EntityData entityData = new EntityData();
+                        entityData.setChildEntity(entity);
+                        ancestors.add(new RootedEntity(uniqueId, entityData));
+                    }
+                }
 
-	public List<RootedEntity> getRootedAncestors() {
-		return rootedAncestors;
-	}
+                Collections.reverse(ancestors);
+            }
+
+            @Override
+            protected void hadSuccess() {
+                setRootedAncestors(ancestors);
+                ancestorLoadingWorker = null;
+            }
+
+            @Override
+            protected void hadError(Throwable error) {
+                SessionMgr.getSessionMgr().handleException(error);
+
+            }
+        };
+        ancestorLoadingWorker.execute();
+
+        viewer.loadEntity(rootedEntity, success);
+    }
+
+    private synchronized void setRootedAncestors(List<RootedEntity> rootedAncestors) {
+        this.rootedAncestors = rootedAncestors;
+        StringBuilder buf = new StringBuilder();
+        for (int i = rootedAncestors.size() - 1; i >= 0; i--) {
+            RootedEntity ancestor = rootedAncestors.get(i);
+            if (buf.length() > 0) {
+                buf.append(" : ");
+            }
+            buf.append(ancestor.getEntity().getName());
+        }
+        setTitle(buf.toString());
+    }
+
+    public List<RootedEntity> getRootedAncestors() {
+        return rootedAncestors;
+    }
 }
