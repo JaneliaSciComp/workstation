@@ -33,8 +33,8 @@ import org.openide.util.NbBundle.Messages;
         preferredID = IconPanelTopComponent.TC_NAME
 )
 @Messages({
-    "CTL_IconPanelAction=Data Array",
-    "CTL_IconPanelTopComponent=Data Array",
+    "CTL_IconPanelAction=Browser",
+    "CTL_IconPanelTopComponent=Browser",
     "HINT_IconPanelTopComponent=Data shown as an array of graphical icons"
 })
 public final class IconPanelTopComponent extends TopComponent {
