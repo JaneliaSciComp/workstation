@@ -213,21 +213,25 @@ public class EntityModel {
 	 * @return canonical entity instance
 	 */
 	private Entity putOrUpdate(Entity entity, boolean recurse) {
-		if (recurse) {
-            try {
-                for(EntityData ed : entity.getEntityData()) {
-                    if (ed.getChildEntity()!=null && EntityUtils.isInitialized(ed.getChildEntity())) {
-                        Entity child = putOrUpdate(ed.getChildEntity(), true);
-                        ed.setChildEntity(child);
+            if (entity instanceof ForbiddenEntity) {
+                log.debug("Forbidden entity in tree: "+entity.getId());
+                return entity;
+            }
+            if (recurse) {
+                try {
+                    for(EntityData ed : entity.getEntityData()) {
+                        if (ed.getChildEntity()!=null && EntityUtils.isInitialized(ed.getChildEntity())) {
+                            Entity child = putOrUpdate(ed.getChildEntity(), true);
+                            ed.setChildEntity(child);
+                        }
                     }
                 }
+                catch (Throwable e) {
+                    log.error("Error trying to walk entity " + entity.getId());
+                    SessionMgr.getSessionMgr().handleException(e);
+                }
             }
-            catch (Throwable e) {
-                log.error("Error trying to walk entity " + entity.getName() + ",id=" + entity.getId());
-                SessionMgr.getSessionMgr().handleException(e);
-            }
-        }
-        return putOrUpdate(entity);
+            return putOrUpdate(entity);
 	}
 	
 	/**
