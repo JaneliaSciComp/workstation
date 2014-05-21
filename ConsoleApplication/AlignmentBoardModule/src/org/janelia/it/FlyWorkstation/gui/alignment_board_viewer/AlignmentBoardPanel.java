@@ -755,6 +755,12 @@ public class AlignmentBoardPanel extends JPanel implements AlignmentBoardControl
             toolbar = new JToolBar( JToolBar.HORIZONTAL );
         }
 
+        JLabel boardLabel = new JLabel("Board: " + getContextRootedEntity().getName());
+        boardLabel.setMinimumSize(new Dimension(0, 0));
+        toolbar.add(boardLabel);
+
+        toolbar.add(Box.createHorizontalGlue());
+
         // Now add buttons for saving files.
         configureButton(controls.getColorSave(), COLOR_SAVE_BTN_NAME);
         configureButton(controls.getSearchSave(), SEARCH_SAVE_BTN_NAME);
@@ -770,11 +776,6 @@ public class AlignmentBoardPanel extends JPanel implements AlignmentBoardControl
         toolbar.add(controls.getBlackout());
         toolbar.add(controls.getColorSaveBrightness());
         toolbar.add(controls.getConnectEvents()); // NOTE: can omit this control, here.
-        JLabel boardLabel = new JLabel("Viewing: " + getContextRootedEntity().getName());
-        boardLabel.setMinimumSize(new Dimension(0, 0));
-        toolbar.add(Box.createHorizontalGlue());
-        toolbar.add(boardLabel);
-
         //toolbar.add(launchSettingsButton);
 
         add(toolbar, BorderLayout.PAGE_START);
