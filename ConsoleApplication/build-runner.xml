@@ -8,8 +8,11 @@ of adapter.
     <property name="antexec" value="${ant.home}/bin/ant" />
     <available file="${antexec}" property="antexec.present"/>
 
-    <target name="build-using-ant-target" description="Build">
-        <ant antfile="build.xml" target="build"/>
+    <target name="build" description="Build using ant target">
+        <ant antfile="build.xml" target="build">
+            <property name="nbplatform.default.netbeans.dest.dir" value="${basedir}" />
+            <property name="nbplatform.default.harness.dir" value="${basedir}/harness" />
+        </ant>
     </target>
 
     <target name="clean" description="Clean">
@@ -47,6 +50,7 @@ of adapter.
         </sequential>
     </macrodef>
 
+    <!--
     <target name="no-antexec" unless="${antexec.present}">
         <echo message="failing for lack of ant executable"/>
         <echoproperties/>
@@ -56,7 +60,6 @@ of adapter.
     </target>
 
     <target name="use-file" if="${antexec.present}">
-        <!-- do something requiring that file... -->
         <echo message="using exec"/>
         <exec-target target="build"/>
     </target>
@@ -64,6 +67,7 @@ of adapter.
     <target name="build" depends="use-file,no-antexec">
         <echoproperties/>
     </target>
+    -->
 
     <!-- This attempt fails, because underneath it all, another ant -f is being invoked. -->
     <target name="build-installers-anttask" description="Build installers for all platforms">
