@@ -121,6 +121,11 @@ of adapter.
         <fail unless="${subbuildsuccess}" message="Unsuccessful"/>
     </target>
 
+    <target name="prepare-for-run">
+        <!-- Touching this file prevents the blank-window phenomenon. -->
+        <touch file="build/cluster/.lastModified"/>
+    </target>
+
     <target name="deploy">
         <exec-target target="deploy"/>
     </target>
