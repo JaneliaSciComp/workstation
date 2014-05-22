@@ -1,0 +1,143 @@
+package org.janelia.it.workstation.gui.viewer3d.learning;
+
+import javax.media.opengl.GL2;
+import javax.media.opengl.GLAutoDrawable;
+
+import java.nio.*;
+
+public class Rubics implements org.janelia.it.workstation.gui.opengl.GLActor {
+
+    // This helps to track whether the class has been re-loaded by Android or not.
+    private static int __class_instance = 0;
+    {
+        __class_instance++;
+    }
+
+    private org.janelia.it.workstation.gui.viewer3d.buffering.VtxCoordBufMgr bufferManager;
+    private FloatBuffer matSpecBufF;
+    private FloatBuffer matShinBufF;
+    private FloatBuffer lightPosBufF;
+
+    public Rubics() {
+        bufferManager = new org.janelia.it.workstation.gui.viewer3d.buffering.VtxCoordBufMgr();
+        org.janelia.it.workstation.gui.viewer3d.texture.TextureMediator simplifiedMediator = new org.janelia.it.workstation.gui.viewer3d.texture.TextureMediator() {
+            private Double[] volMicro = new Double[] {
+                    360.0, 223.0, 110.0
+            };
+            private Double[] voxMicro = new Double[] {
+                    1.0, 1.0, 1.0
+            };
+            public Double[] getVolumeMicrometers() {
+                return volMicro;
+            }
+
+            public Double[] getVoxelMicrometers() {
+                return voxMicro;
+            }
+            public float[] textureCoordFromVoxelCoord(float[] voxelCoord) {
+                float[] tc = {voxelCoord[0], voxelCoord[1], voxelCoord[2]}; // micrometers, origin at center
+                int[] voxels = new int[]{ volMicro[0].intValue(), volMicro[1].intValue(), volMicro[2].intValue() };
+                for (int i =0; i < 3; ++i) {
+                    // Move origin to upper left corner
+                    tc[i] += volMicro[i] / 2.0; // micrometers, origin at corner
+                    // Rescale from micrometers to voxels
+                    tc[i] /= voxMicro[i]; // voxels, origin at corner
+                    // Rescale from voxels to texture units (range 0-1)
+                    tc[i] /= voxels[i]; // texture units
+                }
+
+                return tc;
+            }
+
+        };
+        bufferManager.setTextureMediator( simplifiedMediator );
+
+        float mat_specular[] = { 1.0f, 1.0f, 1.0f, 1.0f };
+        ByteBuffer matSpecBuf = ByteBuffer.allocateDirect( 4 * 4 );
+        matSpecBuf.order(ByteOrder.nativeOrder());
+        matSpecBufF = matSpecBuf.asFloatBuffer();
+        matSpecBufF.put( mat_specular );
+        matSpecBufF.position( 0 );
+
+        float mat_shininess[] = { 50.0f };
+        ByteBuffer matShinBuf = ByteBuffer.allocateDirect( 1* 4 );
+        matShinBuf.order(ByteOrder.nativeOrder());
+        matShinBufF = matShinBuf.asFloatBuffer();
+        matShinBufF.put( mat_shininess );
+        matShinBufF.position( 0 );
+
+        float light_position[] = { 1.0f, 1.0f, -1.0f, 0.0f };
+        ByteBuffer lightPosBuf = ByteBuffer.allocateDirect( 4 * 4 );
+        lightPosBuf.order( ByteOrder.nativeOrder() );
+        lightPosBufF = lightPosBuf.asFloatBuffer();
+        lightPosBufF.put( light_position );
+        lightPosBufF.position( 0 );
+
+    }
+
+    public void draw( GLAutoDrawable glDrawable ) throws Exception {
+        GL2 gl = glDrawable.getGL().getGL2();
+//        new RectSolid().draw( gl );
+        errorCheck( gl, "Before rubics draw...");
+        appearance( gl );
+        bufferManager.drawNoTex( gl, org.janelia.it.workstation.geom.CoordinateAxis.Z, 1.0 );
+        errorCheck(gl, "After all rubics Drawing");
+    }
+
+    //---------------------------------------IMPLEMENTS GLActor
+    @Override
+    public void display(GLAutoDrawable glDrawable) {
+        try {
+            draw( glDrawable );
+        } catch ( Exception ex ) {
+            ex.printStackTrace();
+        }
+
+    }
+
+    @Override
+    public org.janelia.it.workstation.gui.viewer3d.BoundingBox3d getBoundingBox3d() {
+        org.janelia.it.workstation.gui.viewer3d.BoundingBox3d result = new org.janelia.it.workstation.gui.viewer3d.BoundingBox3d();
+        org.janelia.it.workstation.geom.Vec3 half = new org.janelia.it.workstation.geom.Vec3(0,0,0);
+        for (int i = 0; i < 3; ++i)
+            half.set( i, 0.5 * 1024 );
+        result.include(half.minus());
+        result.include(half);
+        return result;
+    }
+
+    @Override
+    public void init(GLAutoDrawable glDrawable) {
+        // Here, buffer-uploads are carried out.  This static data will reside in the shader until app completion.
+        try {
+            bufferManager.buildBuffers();
+            GL2 gl = glDrawable.getGL().getGL2();
+            bufferManager.enableBuffers(gl);
+        } catch ( Exception ex ) {
+            ex.printStackTrace();
+        }
+    }
+
+    @Override
+    public void dispose(GLAutoDrawable glDrawable) {
+        bufferManager.dropBuffers();
+    }
+
+    private void appearance( GL2 gl ) {
+
+        gl.glMaterialfv(GL2.GL_FRONT, GL2.GL_SPECULAR, matSpecBufF);
+        gl.glMaterialfv(GL2.GL_FRONT, GL2.GL_SHININESS, matSpecBufF);
+        gl.glLightfv(GL2.GL_LIGHT0, GL2.GL_POSITION, lightPosBufF);
+        errorCheck(gl, "Appearance");
+
+    }
+
+    private void errorCheck( GL2 gl, String tag ) {
+        int err = gl.glGetError();
+        if ( err != 0 ) {
+            throw new RuntimeException( tag + " returned " + err );
+        }
+
+    }
+
+}

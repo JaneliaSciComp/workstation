@@ -15,13 +15,13 @@
     </appender>
 
     <!-- default levels defined here -->
-    <logger name="org.janelia.it.FlyWorkstation" level="INFO"/>
-    <logger name="org.janelia.it.FlyWorkstation.gui" level="INFO"/>
-    <logger name="org.janelia.it.FlyWorkstation.api" level="INFO"/>
+    <logger name="org.janelia.it.workstation" level="INFO"/>
+    <logger name="org.janelia.it.workstation.gui" level="INFO"/>
+    <logger name="org.janelia.it.workstation.api" level="INFO"/>
     <logger name="loci" level="WARN"/>
 
     <!-- special cases for testing defined here -->
-    <logger name="org.janelia.it.FlyWorkstation.shared.util.filecache" level="DEBUG"/>
+    <logger name="org.janelia.it.workstation.shared.util.filecache" level="DEBUG"/>
 
     <root level="INFO">
         <appender-ref ref="STDOUT" />

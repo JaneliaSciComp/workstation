@@ -1,0 +1,211 @@
+package org.janelia.it.workstation.shared.util.filecache;
+
+import org.janelia.it.jacs.model.TestCategories;
+import org.junit.After;
+import org.junit.Before;
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import java.io.File;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.net.URI;
+import java.text.SimpleDateFormat;
+import java.util.Arrays;
+import java.util.Date;
+
+import static org.junit.Assert.*;
+
+/**
+ * Tests the {@link org.janelia.it.workstation.shared.util.filecache.CachedFile} class.
+ *
+ * @author Eric Trautman
+ */
+@Category(TestCategories.FastTests.class)
+public class CachedFileTest {
+
+    private static int fileCount = 0;
+
+    private File testCacheRootDirectory;
+    private File testCacheTempDirectory;
+    private File testCacheActiveDirectory;
+    private File testRemoteDirectory;
+    private File testRemoteFile;
+
+    @Before
+    public void setUp() throws Exception {
+        LOG.info("setUp: entry ----------------------------------------");
+        final File parentDirectory = (new File(".")).getCanonicalFile();
+        final String rootName = "test-cache-" + buildTimestampName();
+        testCacheRootDirectory = createDirectory(parentDirectory, rootName);
+        testCacheTempDirectory = createDirectory(testCacheRootDirectory, "temp");
+        testCacheActiveDirectory = createDirectory(testCacheRootDirectory, "active");
+        testRemoteDirectory = createDirectory(parentDirectory, rootName + "-remote");
+        testRemoteFile = createFile(testRemoteDirectory, 1);
+        LOG.info("setUp: exit ----------------------------------------");
+    }
+
+    @After
+    public void tearDown() throws Exception {
+        LOG.info("tearDown: entry --------------------------------------");
+        deleteFile(testCacheActiveDirectory);
+        deleteFile(testCacheTempDirectory);
+        deleteFile(testCacheRootDirectory);
+        deleteFile(testRemoteFile);
+        deleteFile(testRemoteDirectory);
+        LOG.info("tearDown: exit --------------------------------------");
+    }
+
+    @Test
+    public void testLoadAndDelete() throws Exception {
+
+        final MockWebDavClient mockWebDavClient = new MockWebDavClient();
+
+        org.janelia.it.workstation.shared.util.filecache.WebDavFile webDavFile = new org.janelia.it.workstation.shared.util.filecache.WebDavFile(null, testRemoteFile);
+        String urlPath = webDavFile.getUrl().getPath();
+        File activeFile = new File(testCacheActiveDirectory, urlPath);
+        File tempFile = new File(testCacheTempDirectory, "test-temp-file");
+
+        org.janelia.it.workstation.shared.util.filecache.CachedFile cachedFile = new org.janelia.it.workstation.shared.util.filecache.CachedFile(webDavFile, activeFile);
+        org.janelia.it.workstation.shared.util.filecache.RemoteFileLoader.loadRemoteFile(webDavFile, tempFile, activeFile, mockWebDavClient);
+
+        File localFile = cachedFile.getLocalFile();
+        assertNotNull("local file is missing", localFile);
+        assertEquals("remote and local file lengths differ", testRemoteFile.length(), localFile.length());
+
+        File metaFile = cachedFile.getMetaFile();
+        assertNotNull("meta file is missing",
+                      metaFile);
+
+        org.janelia.it.workstation.shared.util.filecache.CachedFile reloadedCachedFile = CachedFile.loadPreviouslyCachedFile(metaFile);
+        assertEquals("reloaded URL value differs",
+                     cachedFile.getUrl(), reloadedCachedFile.getUrl());
+
+        File beforeFile = cachedFile.getLocalFile();
+        File afterFile = reloadedCachedFile.getLocalFile();
+        URI beforeURI = beforeFile.toURI();
+        URI afterURI = afterFile.toURI();
+        assertEquals("reloaded local file URL value differs",
+                     beforeURI.toURL(),
+                     afterURI.toURL());
+
+        validateDirectoryFileCount("after load", testCacheActiveDirectory, 1);
+        validateDirectoryFileCount("after load", testCacheTempDirectory, 0);
+
+        cachedFile.remove(testCacheActiveDirectory);
+
+        validateDirectoryFileCount("after remove", testCacheActiveDirectory, 0);
+
+        webDavFile = new org.janelia.it.workstation.shared.util.filecache.WebDavFile(null, testRemoteDirectory);
+        urlPath = webDavFile.getUrl().getPath();
+        activeFile = new File(testCacheActiveDirectory, urlPath);
+        tempFile = new File(testCacheTempDirectory, "test-temp-dir");
+        try {
+            RemoteFileLoader.loadRemoteFile(webDavFile, tempFile, activeFile, mockWebDavClient);
+            fail("attempt to load directory should have caused exception");
+        } catch (IllegalArgumentException e) {
+            LOG.debug("attempt to load directory correctly caused exception", e);
+        }
+
+    }
+
+    private File createDirectory(File parent,
+                                 String name) throws IllegalStateException {
+        File directory = new File(parent, name);
+        if (! directory.mkdir()) {
+            throw new IllegalStateException("failed to create " + directory.getAbsolutePath());
+        }
+        LOG.info("created " + directory.getAbsolutePath());
+        return directory;
+    }
+
+    private void validateDirectoryFileCount(String context,
+                                            File directory,
+                                            int expectedCount) {
+        File[] subDirectories = directory.listFiles();
+        if (subDirectories == null) {
+            fail(directory.getAbsolutePath() + " does not exist");
+        } else {
+            assertEquals(context + ", invalid number of sub directories in " +
+                         directory.getAbsolutePath() +  ", found: " +
+                         Arrays.asList(subDirectories),
+                         expectedCount, subDirectories.length);
+        }
+    }
+
+    /**
+     * Utility to create a uniquely named test file with the specified length.
+     *
+     * @param  numberOfKilobytes  size of file in kilobytes.
+     *
+     * @return new file of specified size.
+     *
+     * @throws IOException
+     *   if the file cannot be created.
+     */
+    public static File createFile(File parentDirectory,
+                                  long numberOfKilobytes) throws IOException {
+        final long numberOfBytes = numberOfKilobytes * 1024;
+        final String name = "test-" + buildTimestampName() + ".txt";
+        File file = new File(parentDirectory, name);
+
+        final int lineLength = name.length() + 1;
+        FileWriter out = null;
+        try {
+            out = new FileWriter(file);
+            long i = lineLength;
+            for (; i < numberOfBytes; i += lineLength) {
+                out.write(name);
+                out.write('\n');
+            }
+            long remainder = numberOfBytes % lineLength;
+            for (i = 1; i < remainder; i++) {
+                out.write('.');
+            }
+            if (remainder > 0) {
+                out.write('\n');
+            }
+        } finally {
+            if (out != null) {
+                out.close();
+            }
+        }
+
+        LOG.info("createFile: created " + numberOfKilobytes +
+                 "Kb file " + file.getAbsolutePath());
+
+        return file;
+    }
+
+    /**
+     * Utility to delete the specified file.
+     *
+     * @param  file  file to delete.
+     */
+    public static void deleteFile(File file) {
+        if (file.exists()) {
+            if (file.delete()) {
+                LOG.info("deleteFile: deleted " + file.getAbsolutePath());
+            } else {
+                LOG.info("deleteFile: failed to delete " + file.getAbsolutePath());
+            }
+        }
+    }
+
+    /**
+     * @return a new timestamp directory name based on the current time.
+     */
+    public synchronized static String buildTimestampName() {
+        fileCount++;
+        return TIMESTAMP_FORMAT.format(new Date()) + "-" + fileCount;
+    }
+
+    private static final Logger LOG = LoggerFactory.getLogger(CachedFileTest.class);
+
+    private static final String TIMESTAMP_PATTERN =
+            "yyyyMMdd-HHmmssSSS";
+    private static final SimpleDateFormat TIMESTAMP_FORMAT =
+            new SimpleDateFormat(TIMESTAMP_PATTERN);
+}

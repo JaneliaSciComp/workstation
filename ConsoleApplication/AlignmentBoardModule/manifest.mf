@@ -1,7 +1,7 @@
 Manifest-Version: 1.0
-OpenIDE-Module: org.janelia.it.FlyWorkstation.gui.alignment_board
-OpenIDE-Module-Layer: org/janelia/it/FlyWorkstation/gui/alignment_board/layer.xml
-OpenIDE-Module-Localizing-Bundle: org/janelia/it/FlyWorkstation/gui/alignment_board/Bundle.properties
+OpenIDE-Module: org.janelia.it.workstation.gui.alignment_board
+OpenIDE-Module-Layer: org/janelia/it/workstation/gui/alignment_board/layer.xml
+OpenIDE-Module-Localizing-Bundle: org/janelia/it/workstation/gui/alignment_board/Bundle.properties
 OpenIDE-Module-Specification-Version: 1.0
 OpenIDE-Module-Long-Description: Adding this allows you to open an alignment board
 OpenIDE-Module-Short-Description: Use this module to visually align neuron fragments and other items within an alignment space.  Items can be dragged in\

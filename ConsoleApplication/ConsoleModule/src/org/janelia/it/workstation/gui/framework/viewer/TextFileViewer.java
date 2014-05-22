@@ -1,0 +1,26 @@
+package org.janelia.it.workstation.gui.framework.viewer;
+
+import java.net.URL;
+
+import org.apache.commons.io.IOUtils;
+import org.janelia.it.workstation.model.entity.RootedEntity;
+import org.janelia.it.jacs.model.entity.EntityConstants;
+
+/**
+ * This viewer displays text file entities.
+ *
+ * @author <a href="mailto:rokickik@janelia.hhmi.org">Konrad Rokicki</a>
+ */
+public class TextFileViewer extends TextViewer {
+
+    public TextFileViewer(org.janelia.it.workstation.gui.framework.viewer.ViewerPane viewerPane) {
+        super(viewerPane);
+    }
+
+    @Override
+    public String getText(RootedEntity rootedEntity) throws Exception {
+        String filepath = rootedEntity.getEntity().getValueByAttributeName(EntityConstants.ATTRIBUTE_FILE_PATH);
+        URL fileURL = org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr.getURL(filepath);
+        return IOUtils.toString(fileURL.openStream(), "UTF-8");
+    }
+}

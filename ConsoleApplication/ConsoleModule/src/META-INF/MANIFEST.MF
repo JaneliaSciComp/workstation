@@ -1,4 +1,4 @@
 Manifest-Version: 1.0
-Main-Class: org.janelia.it.FlyWorkstation.gui.application.ConsoleApp
+Main-Class: org.janelia.it.workstation.gui.application.ConsoleApp
 Class-Path: compute-client.jar jacs-model.jar jacs-shared.jar
 
