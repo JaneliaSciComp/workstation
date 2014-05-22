@@ -3,7 +3,7 @@
     <type>org.netbeans.modules.apisupport.project</type>
     <configuration>
         <data xmlns="http://www.netbeans.org/ns/nb-module-project/3">
-            <code-name-base>org.janelia.it.FlyWorkstation.gui.alignment_board</code-name-base>
+            <code-name-base>org.janelia.it.workstation.gui.alignment_board</code-name-base>
             <suite-component/>
             <module-dependencies>
                 <dependency>
@@ -15,7 +15,7 @@
                     </run-dependency>
                 </dependency>
                 <dependency>
-                    <code-name-base>org.janelia.it.FlyWorkstation</code-name-base>
+                    <code-name-base>org.janelia.it.workstation</code-name-base>
                     <build-prerequisite/>
                     <compile-dependency/>
                     <run-dependency>
@@ -23,7 +23,7 @@
                     </run-dependency>
                 </dependency>
                 <dependency>
-                    <code-name-base>org.janelia.it.FlyWorkstation.nb_action</code-name-base>
+                    <code-name-base>org.janelia.it.workstation.nb_action</code-name-base>
                     <build-prerequisite/>
                     <compile-dependency/>
                     <run-dependency>

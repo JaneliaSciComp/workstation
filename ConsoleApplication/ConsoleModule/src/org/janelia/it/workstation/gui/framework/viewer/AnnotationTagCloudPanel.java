@@ -1,0 +1,252 @@
+package org.janelia.it.workstation.gui.framework.viewer;
+
+import org.janelia.it.workstation.gui.dialogs.AnnotationBuilderDialog;
+import org.janelia.it.workstation.gui.framework.actions.BulkEditAnnotationKeyValueAction;
+import org.janelia.it.workstation.gui.framework.actions.RemoveAnnotationKeyValueAction;
+import org.janelia.it.workstation.gui.framework.actions.RemoveAnnotationTermAction;
+import org.janelia.it.workstation.gui.framework.outline.OntologyOutline;
+import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
+import org.janelia.it.workstation.gui.util.Icons;
+import org.janelia.it.workstation.model.entity.RootedEntity;
+import org.janelia.it.workstation.shared.util.Utils;
+import org.janelia.it.workstation.shared.workers.SimpleWorker;
+import org.janelia.it.jacs.model.entity.Entity;
+import org.janelia.it.jacs.model.entity.EntityConstants;
+import org.janelia.it.jacs.model.ontology.OntologyAnnotation;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import javax.swing.*;
+import javax.swing.border.Border;
+
+import java.awt.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.awt.event.MouseEvent;
+import java.util.ArrayList;
+import java.util.List;
+
+/**
+ * A tag cloud of Entity-based annotations which support context menu operations such as deletion.
+ *
+ * @author <a href="mailto:rokickik@janelia.hhmi.org">Konrad Rokicki</a>
+ */
+public class AnnotationTagCloudPanel extends TagCloudPanel<OntologyAnnotation> implements org.janelia.it.workstation.gui.framework.viewer.AnnotationView {
+	
+	private static final Logger log = LoggerFactory.getLogger(AnnotationTagCloudPanel.class);
+	
+    private void deleteTag(final OntologyAnnotation tag) {
+    	
+        Utils.setWaitingCursor(SessionMgr.getMainFrame());
+
+        SimpleWorker worker = new SimpleWorker() {
+
+            @Override
+            protected void doStuff() throws Exception {
+            	org.janelia.it.workstation.api.entity_model.management.ModelMgr.getModelMgr().removeAnnotation(tag.getId());
+            }
+
+            @Override
+            protected void hadSuccess() {
+                Utils.setDefaultCursor(SessionMgr.getMainFrame());
+            }
+
+            @Override
+            protected void hadError(Throwable error) {
+                error.printStackTrace();
+                Utils.setDefaultCursor(SessionMgr.getMainFrame());
+                JOptionPane.showMessageDialog(AnnotationTagCloudPanel.this, "Error deleting annotation", "Error", JOptionPane.ERROR_MESSAGE);
+            }
+        };
+
+        worker.execute();
+    }
+
+    @Override
+    protected void showPopupMenu(final MouseEvent e, final OntologyAnnotation tag) {
+    	
+    	org.janelia.it.workstation.gui.framework.viewer.Viewer viewer = SessionMgr.getBrowser().getViewerManager().getActiveViewer();
+		List<String> selectionIds = org.janelia.it.workstation.api.entity_model.management.ModelMgr.getModelMgr().getEntitySelectionModel().getSelectedEntitiesIds(viewer.getSelectionCategory());
+		List<RootedEntity> rootedEntityList = new ArrayList<RootedEntity>();
+		for (String entityId : selectionIds) {
+			rootedEntityList.add(viewer.getRootedEntityById(entityId));
+		}
+		
+		
+        JPopupMenu popupMenu = new JPopupMenu();
+        popupMenu.setLightWeightPopupEnabled(true);
+        
+        if (rootedEntityList.size()>1) {
+            JMenuItem titleItem = new JMenuItem("(Multiple Selected)");
+            titleItem.setEnabled(false);
+            popupMenu.add(titleItem);
+            
+        	if (SessionMgr.getSubjectKey().equals(tag.getOwner())) {
+        		final RemoveAnnotationTermAction termAction = new RemoveAnnotationTermAction(tag.getKeyEntityId(), tag.getKeyString());
+                JMenuItem deleteByTermItem = new JMenuItem("  "+termAction.getName());
+                deleteByTermItem.addActionListener(new ActionListener() {
+                    public void actionPerformed(ActionEvent actionEvent) {
+                        termAction.doAction();
+                    }
+                });
+                popupMenu.add(deleteByTermItem);
+
+                try {
+                    String tmpOntKeyId = tag.getEntity().getValueByAttributeName(EntityConstants.ATTRIBUTE_ANNOTATION_ONTOLOGY_KEY_ENTITY_ID);
+                    Entity tmpOntologyTerm = org.janelia.it.workstation.api.entity_model.management.ModelMgr.getModelMgr().getEntityById(tmpOntKeyId);
+                    if (null!=tmpOntologyTerm) {
+                        String tmpOntologyTermType = tmpOntologyTerm.getValueByAttributeName(EntityConstants.ATTRIBUTE_ONTOLOGY_TERM_TYPE);
+                        if (EntityConstants.VALUE_ONTOLOGY_TERM_TYPE_ENUM.equals(tmpOntologyTermType) ||
+                                EntityConstants.VALUE_ONTOLOGY_TERM_TYPE_ENUM_TEXT.equals(tmpOntologyTermType)||
+                                EntityConstants.VALUE_ONTOLOGY_TERM_TYPE_INTERVAL.equals(tmpOntologyTermType)||
+                                EntityConstants.VALUE_ONTOLOGY_TERM_TYPE_TEXT.equals(tmpOntologyTermType)) {
+                            final BulkEditAnnotationKeyValueAction bulkEditAction = new BulkEditAnnotationKeyValueAction(tag);
+                            JMenuItem editByValueItem = new JMenuItem("  "+bulkEditAction.getName());
+                            editByValueItem.addActionListener(new ActionListener() {
+                                public void actionPerformed(ActionEvent actionEvent) {
+                                    bulkEditAction.doAction();
+                                }
+                            });
+                            popupMenu.add(editByValueItem);
+                            final RemoveAnnotationKeyValueAction valueAction = new RemoveAnnotationKeyValueAction(tag);
+                            JMenuItem deleteByValueItem = new JMenuItem("  "+valueAction.getName());
+                            deleteByValueItem.addActionListener(new ActionListener() {
+                                public void actionPerformed(ActionEvent actionEvent) {
+                                    valueAction.doAction();
+                                }
+                            });
+                            popupMenu.add(deleteByValueItem);
+                        }
+                    }
+                    else {
+                        log.warn("Cannot create menu item because ontology term no longer exists.");
+                    }
+                }
+                catch (Exception e1) {
+                    SessionMgr.getSessionMgr().handleException(e1);
+                }
+            }
+            
+        }
+        else {
+            JMenuItem titleItem = new JMenuItem(tag.getEntity().getName());
+            titleItem.setEnabled(false);
+            popupMenu.add(titleItem);
+            
+        	if (SessionMgr.getSubjectKey().equals(tag.getOwner())) {
+                JMenuItem deleteItem = new JMenuItem("  Delete Annotation");
+                deleteItem.addActionListener(new ActionListener() {
+                    public void actionPerformed(ActionEvent actionEvent) {
+                        deleteTag(tag);
+                    }
+                });
+                popupMenu.add(deleteItem);
+        	}
+
+            if (null!=tag.getValueString()){
+                JMenuItem editItem = new JMenuItem("  Edit Annotation");
+                editItem.addActionListener(new ActionListener() {
+                    @Override
+                    public void actionPerformed(ActionEvent e) {
+                        AnnotationBuilderDialog dialog = new AnnotationBuilderDialog();
+                        dialog.setAnnotationValue(tag.getValueString());
+                        dialog.setVisible(true);
+                        String value = dialog.getAnnotationValue();
+                        if (null==value) { value=""; }
+                        tag.setValueString(value);
+                        tag.getEntity().setValueByAttributeName(EntityConstants.ATTRIBUTE_ANNOTATION_ONTOLOGY_VALUE_TERM, value);
+                        String tmpName = tag.getEntity().getName();
+                        String namePrefix = tmpName.substring(0,tmpName.indexOf("=")+2);
+                        tag.getEntity().setName(namePrefix+value);
+                        try {
+                            Entity tmpAnnotatedEntity = org.janelia.it.workstation.api.entity_model.management.ModelMgr.getModelMgr().getEntityById(tag.getTargetEntityId());
+                            org.janelia.it.workstation.api.entity_model.management.ModelMgr.getModelMgr().saveOrUpdateAnnotation(tmpAnnotatedEntity, tag.getEntity());
+                        }
+                        catch (Exception e1) {
+                            e1.printStackTrace();
+                            SessionMgr.getSessionMgr().handleException(e1);
+                        }
+                    }
+                });
+                popupMenu.add(editItem);
+            }
+
+            JMenuItem copyItem = new JMenuItem("  Copy Annotation");
+            copyItem.addActionListener(new ActionListener() {
+                @Override
+                public void actionPerformed(ActionEvent actionEvent) {
+                    org.janelia.it.workstation.api.entity_model.management.ModelMgr.getModelMgr().setCurrentSelectedOntologyAnnotation(tag);
+                }
+            });
+            popupMenu.add(copyItem);
+
+            JMenuItem detailsItem = new JMenuItem("  View Details");
+            detailsItem.addActionListener(new ActionListener() {
+                public void actionPerformed(ActionEvent actionEvent) {
+                	OntologyOutline.viewAnnotationDetails(tag);
+                }
+            });
+            popupMenu.add(detailsItem);
+        }
+        
+
+        popupMenu.show(e.getComponent(), e.getX(), e.getY());
+        e.consume();
+    }
+    
+	@Override
+	protected JLabel createTagLabel(OntologyAnnotation tag) {
+		JLabel label = super.createTagLabel(tag);
+		
+		label.setBackground(org.janelia.it.workstation.api.entity_model.management.ModelMgr.getModelMgr().getUserColorMapping().getColor(tag.getOwner()));
+
+        if (tag.isComputation()) {
+            label.setToolTipText("This annotation was computationally inferred");
+            label.setIcon(Icons.getIcon("computer.png"));
+        }
+        else {
+            label.setToolTipText("This annotation was made by "+tag.getOwner());
+        }
+        
+		org.janelia.it.workstation.model.utils.AnnotationSession currentSession = org.janelia.it.workstation.api.entity_model.management.ModelMgr.getModelMgr().getCurrentAnnotationSession();
+		if (currentSession != null) {
+			if (tag.getSessionId() != null && tag.getSessionId().equals(currentSession.getId())) {
+				// This annotation is in the current session, so display it normally.	
+			}
+			else {
+				// Dim the annotations from other sessions.
+				Color dimFgColor = label.getBackground().darker();
+			    Border paddingBorder = BorderFactory.createEmptyBorder(5, 5, 5, 5);
+			    Border lineBorder = BorderFactory.createLineBorder(dimFgColor, 1);
+			    Border border = BorderFactory.createCompoundBorder(lineBorder, paddingBorder);
+				label.setBorder(border);
+				label.setForeground(dimFgColor);
+			}
+		}
+		else {
+			// We're not even in a session, just display everything normally.
+		}
+		
+		return label;
+	}
+
+	@Override
+    public List<OntologyAnnotation> getAnnotations() {
+        return getTags();
+    }
+
+	@Override
+    public void setAnnotations(List<OntologyAnnotation> annotations) {
+        setTags(annotations);
+    }
+
+	@Override
+    public void removeAnnotation(OntologyAnnotation annotation) {
+        removeTag(annotation);
+    }
+
+	@Override
+    public void addAnnotation(OntologyAnnotation annotation) {
+        addTag(annotation);
+    }
+}

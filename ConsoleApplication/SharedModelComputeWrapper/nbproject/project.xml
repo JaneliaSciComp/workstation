@@ -7,7 +7,7 @@
             <suite-component/>
             <module-dependencies>
                 <dependency>
-                    <code-name-base>org.janelia.it.FlyWorkstation</code-name-base>
+                    <code-name-base>org.janelia.it.workstation</code-name-base>
                     <build-prerequisite/>
                     <compile-dependency/>
                     <run-dependency>

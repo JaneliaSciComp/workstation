@@ -10,7 +10,7 @@
     </encoder>
   </appender>
 
-  <logger name="org.janelia.it.FlyWorkstation" level="INFO"/>
+  <logger name="org.janelia.it.workstation" level="INFO"/>
   <logger name="loci" level="WARN"/>
   
   <!-- Strictly speaking, the level attribute is not necessary since -->

@@ -3,7 +3,7 @@
 <configuration>
 
   <appender name="FILE" class="ch.qos.logback.core.FileAppender">
-    <file>flyworkstation.log</file>
+    <file>workstation.log</file>
     <append>false</append>
     <encoder>
       <pattern>%date [%thread] %level [%logger] %msg%n</pattern>
@@ -18,40 +18,40 @@
     </encoder>
   </appender>
 
-  <logger name="org.janelia.it.FlyWorkstation" level="INFO"/>
+  <logger name="org.janelia.it.workstation" level="INFO"/>
   
-  <logger name="org.janelia.it.FlyWorkstation.api" level="INFO"/>
-  <logger name="org.janelia.it.FlyWorkstation.api.entity_model.management.EntityModel" level="INFO"/>
+  <logger name="org.janelia.it.workstation.api" level="INFO"/>
+  <logger name="org.janelia.it.workstation.api.entity_model.management.EntityModel" level="INFO"/>
   
-  <logger name="org.janelia.it.FlyWorkstation.model" level="INFO"/>
+  <logger name="org.janelia.it.workstation.model" level="INFO"/>
   
-  <logger name="org.janelia.it.FlyWorkstation.gui" level="INFO"/>
-  <logger name="org.janelia.it.FlyWorkstation.gui.framework.outline" level="INFO"/>
+  <logger name="org.janelia.it.workstation.gui" level="INFO"/>
+  <logger name="org.janelia.it.workstation.gui.framework.outline" level="INFO"/>
   
-  <logger name="org.janelia.it.FlyWorkstation.gui.framework.tree.ExpansionState" level="INFO"/>
+  <logger name="org.janelia.it.workstation.gui.framework.tree.ExpansionState" level="INFO"/>
   
-  <logger name="org.janelia.it.FlyWorkstation.gui.framework.viewer" level="INFO"/>
-  <logger name="org.janelia.it.FlyWorkstation.gui.framework.viewer.DynamicImagePanel" level="INFO"/>
-  <logger name="org.janelia.it.FlyWorkstation.gui.framework.viewer.ImagesPanel" level="INFO"/>
-  <logger name="org.janelia.it.FlyWorkstation.gui.framework.viewer.IconDemoPanel" level="INFO"/>
+  <logger name="org.janelia.it.workstation.gui.framework.viewer" level="INFO"/>
+  <logger name="org.janelia.it.workstation.gui.framework.viewer.DynamicImagePanel" level="INFO"/>
+  <logger name="org.janelia.it.workstation.gui.framework.viewer.ImagesPanel" level="INFO"/>
+  <logger name="org.janelia.it.workstation.gui.framework.viewer.IconDemoPanel" level="INFO"/>
   
-  <logger name="org.janelia.it.FlyWorkstation.gui.framework.viewer.alignment_board" level="INFO"/>
-  <logger name="org.janelia.it.FlyWorkstation.gui.framework.viewer.alignment_board.LayersPanel" level="INFO"/>
-  <logger name="org.janelia.it.FlyWorkstation.gui.framework.viewer.alignment_board.OutlineExpansionState" level="INFO"/>
-  <logger name="org.janelia.it.FlyWorkstation.gui.framework.viewer.alignment_board.AlignmentBoardViewer" level="INFO"/>
+  <logger name="org.janelia.it.workstation.gui.framework.viewer.alignment_board" level="INFO"/>
+  <logger name="org.janelia.it.workstation.gui.framework.viewer.alignment_board.LayersPanel" level="INFO"/>
+  <logger name="org.janelia.it.workstation.gui.framework.viewer.alignment_board.OutlineExpansionState" level="INFO"/>
+  <logger name="org.janelia.it.workstation.gui.framework.viewer.alignment_board.AlignmentBoardViewer" level="INFO"/>
   
-  <logger name="org.janelia.it.FlyWorkstation.shared.util" level="INFO"/>
+  <logger name="org.janelia.it.workstation.shared.util" level="INFO"/>
   
   <logger name="org.janelia.it.jacs.shared.utils" level="INFO"/>
   
   <logger name="loci" level="WARN"/>
   
   <!--  perf4j loggers must be set to DEBUG to log performance benchmarks-->
-  <logger name="org.janelia.it.FlyWorkstation.shared.util.Utils" level="INFO"/>
-  <logger name="org.janelia.it.FlyWorkstation.gui.framework.viewer.LoadImageWorker" level="INFO"/>
+  <logger name="org.janelia.it.workstation.shared.util.Utils" level="INFO"/>
+  <logger name="org.janelia.it.workstation.gui.framework.viewer.LoadImageWorker" level="INFO"/>
   
   <!--
-  <logger name="org.janelia.it.FlyWorkstation.shared.util.filecache" level="DEBUG"/>
+  <logger name="org.janelia.it.workstation.shared.util.filecache" level="DEBUG"/>
   -->
   
   <!-- Strictly speaking, the level attribute is not necessary since -->
