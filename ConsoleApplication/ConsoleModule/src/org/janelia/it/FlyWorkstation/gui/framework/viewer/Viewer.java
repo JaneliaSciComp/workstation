@@ -6,6 +6,7 @@ import java.util.List;
 import java.util.concurrent.Callable;
 
 import javax.swing.JPanel;
+import org.janelia.it.FlyWorkstation.gui.framework.outline.EntityViewerState;
 
 import org.janelia.it.FlyWorkstation.gui.framework.outline.Refreshable;
 import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr;
@@ -64,16 +65,11 @@ public abstract class Viewer extends JPanel implements Refreshable {
 
     /**
      * Display the given RootedEntity in the viewer.
-     *
-     * @param rootedEntity
      */
     public abstract void loadEntity(RootedEntity rootedEntity);
 
     /**
      * Display the given RootedEntity in the viewer, and then call the callback.
-     *
-     * @param rootedEntity
-     * @param success
      */
     public abstract void loadEntity(RootedEntity rootedEntity, final Callable<Void> success);
 
@@ -93,9 +89,6 @@ public abstract class Viewer extends JPanel implements Refreshable {
 
     /**
      * Returns the RootedEntity with the given uniqueId, assuming that its currently loaded in the viewer.
-     *
-     * @param uniqueId
-     * @return
      */
     public abstract RootedEntity getRootedEntityById(String uniqueId);
 
@@ -104,5 +97,15 @@ public abstract class Viewer extends JPanel implements Refreshable {
      * open resources.
      */
     public abstract void close();
+    
+    /**
+     * Called when the viewer pane is about to navigate to a new entity.
+     */
+    public abstract EntityViewerState saveViewerState();
+    
+    /**
+     * Called when the state is being restored by a navigation action.
+     */
+    public abstract void restoreViewerState(EntityViewerState state);
 
 }

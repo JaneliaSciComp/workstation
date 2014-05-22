@@ -18,8 +18,11 @@ import java.awt.*;
 import java.net.MalformedURLException;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.concurrent.Callable;
+import org.janelia.it.FlyWorkstation.gui.framework.outline.EntityViewerState;
 
 /**
  * Created with IntelliJ IDEA.
@@ -200,5 +203,24 @@ public class SliceViewViewer extends Viewer {
                 viewer.refresh();
             }
         }
+    }
+    
+    @Override
+    public EntityViewerState saveViewerState() {
+        Set<String> selectedIds = new HashSet<String>(ModelMgr.getModelMgr().getEntitySelectionModel().getSelectedEntitiesIds(getSelectionCategory()));
+        return new EntityViewerState(getClass(), slcRootedEntity, selectedIds);
+    }
+    
+    @Override
+    public void restoreViewerState(final EntityViewerState state) {
+        loadEntity(state.getContextRootedEntity(), new Callable<Void>() {
+            @Override
+            public Void call() throws Exception {
+                // TODO: reselect the entities from state.getSelectedIds()
+                return null;
+            }
+        }
+        );
+        
     }
 }

@@ -6,6 +6,8 @@ import java.util.concurrent.Callable;
 import org.janelia.it.FlyWorkstation.api.entity_model.access.ModelMgrAdapter;
 import org.janelia.it.FlyWorkstation.api.entity_model.management.EntitySelectionModel;
 import org.janelia.it.FlyWorkstation.api.entity_model.management.ModelMgr;
+import org.janelia.it.FlyWorkstation.gui.framework.outline.EntitySelectionHistory;
+import org.janelia.it.FlyWorkstation.gui.framework.outline.EntityViewerState;
 import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.FlyWorkstation.gui.framework.viewer.IconDemoPanel;
 import org.janelia.it.FlyWorkstation.gui.framework.viewer.TextFileViewer;
@@ -150,6 +152,14 @@ public class ViewerManager {
     }
 
     public void showEntityInViewerPane(RootedEntity rootedEntity, ViewerPane viewerPane, Callable<Void> callable) {
+        
+        RootedEntity currContextRE = viewerPane.getViewer().getContextRootedEntity();
+        if (currContextRE!=null && currContextRE.getId().equals(rootedEntity.getId())) {
+            log.trace("Viewer has already loaded entity: "+rootedEntity.getName());
+            return;
+        }
+        
+        saveViewerState();
         Class<?> viewerClass = getViewerClass(rootedEntity);
         ensureViewerClass(viewerPane, viewerClass);
         viewerContainer.setActiveViewerPane(viewerPane);
@@ -234,5 +244,21 @@ public class ViewerManager {
 
     public void setIsViewersLinked(boolean isLinked) {
         this.viewersLinked = isLinked;
+    }
+    
+    /**
+     * Called when the viewer pane is about to navigate to a new entity.
+     */
+    public void saveViewerState() {
+        EntitySelectionHistory history = getActiveViewerPane().getEntitySelectionHistory();
+        history.pushHistory(getActiveViewer().saveViewerState());
+    }
+    
+    /**
+     * Called when the state is being restored by a navigation action.
+     */
+    public void restoreViewerState(EntityViewerState state) {
+        ensureViewerClass(getActiveViewerPane(), state.getViewerClass());
+        getActiveViewer().restoreViewerState(state);
     }
 }
