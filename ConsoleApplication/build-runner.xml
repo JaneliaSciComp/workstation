@@ -16,7 +16,10 @@ of adapter.
     </target>
 
     <target name="clean" description="Clean">
-        <ant antfile="build.xml" target="clean"/>
+        <ant antfile="build.xml" target="clean">
+            <property name="nbplatform.default.netbeans.dest.dir" value="${basedir}" />
+            <property name="nbplatform.default.harness.dir" value="${basedir}/harness" />
+        </ant>
         <echo message="Expected: 4 errors involving absense of directory 'ConsoleApplication/build/cluster', which was to be deleted anyway."/>
         <!--<exec-target target="clean"/>-->
     </target>
