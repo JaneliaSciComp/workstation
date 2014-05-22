@@ -5,10 +5,10 @@
     <content url="file://$MODULE_DIR$">
       <sourceFolder url="file://$MODULE_DIR$/src" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/AlignmentBoardModule/src" isTestSource="false" />
-      <sourceFolder url="file://$MODULE_DIR$/AlignmentBoardModule/test" isTestSource="true" />
       <sourceFolder url="file://$MODULE_DIR$/branding" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/ConsoleModule/src" isTestSource="false" />
-      <sourceFolder url="file://$MODULE_DIR$/ConsoleModule/test" isTestSource="true" />
+      <sourceFolder url="file://$MODULE_DIR$/AlignmentBoardModule/test/unit/src" isTestSource="true" />
+      <sourceFolder url="file://$MODULE_DIR$/ConsoleModule/test/unit/src" isTestSource="true" />
     </content>
     <orderEntry type="inheritedJdk" />
     <orderEntry type="sourceFolder" forTests="false" />

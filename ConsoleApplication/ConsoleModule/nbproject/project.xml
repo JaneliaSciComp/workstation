@@ -209,6 +209,7 @@
                 <package>org.janelia.it.FlyWorkstation.nb_action</package>
                 <package>org.janelia.it.FlyWorkstation.octree</package>
                 <package>org.janelia.it.FlyWorkstation.raster</package>
+                <package>org.janelia.it.FlyWorkstation.run_config</package>
                 <package>org.janelia.it.FlyWorkstation.shared.annotations</package>
                 <package>org.janelia.it.FlyWorkstation.shared.exception_handlers</package>
                 <package>org.janelia.it.FlyWorkstation.shared.filestore</package>
