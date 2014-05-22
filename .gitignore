@@ -1,3 +1,5 @@
 flyworkstation.log
 build
 private
+jacs/src/org/janelia/it/jacs/server/ie/jaxb
+shared/src/org/janelia/it/jacs/shared/blast/blastxmlparser/jaxb

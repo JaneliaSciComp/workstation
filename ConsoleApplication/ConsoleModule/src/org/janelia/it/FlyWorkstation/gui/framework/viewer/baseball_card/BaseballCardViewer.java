@@ -10,8 +10,12 @@ import org.slf4j.LoggerFactory;
 
 import javax.swing.*;
 import java.awt.*;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.concurrent.Callable;
+import org.janelia.it.FlyWorkstation.api.entity_model.management.ModelMgr;
+import org.janelia.it.FlyWorkstation.gui.framework.outline.EntityViewerState;
 
 /**
  * Created with IntelliJ IDEA.
@@ -109,5 +113,13 @@ public class BaseballCardViewer extends Viewer {
         return loadingInProgress;
     }
 
-
+    @Override
+    public EntityViewerState saveViewerState() {
+        throw new UnsupportedOperationException();
+    }
+    
+    @Override
+    public void restoreViewerState(final EntityViewerState state) {
+        throw new UnsupportedOperationException();
+    }
 }

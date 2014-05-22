@@ -79,6 +79,7 @@ import org.slf4j.LoggerFactory;
 import com.google.common.collect.HashMultimap;
 import com.google.common.collect.Multimap;
 import com.google.common.eventbus.Subscribe;
+import org.janelia.it.FlyWorkstation.gui.framework.outline.EntityViewerState;
 
 /**
  * This viewer shows images in a grid. It is modeled after OS X Finder. It wraps an ImagesPanel and provides a lot of
@@ -740,24 +741,12 @@ public class IconDemoPanel extends IconPanel {
 
             @Override
             protected void goBack() {
-                final EntitySelectionHistory history = getViewerPane().getEntitySelectionHistory();
-                SwingUtilities.invokeLater(new Runnable() {
-                    @Override
-                    public void run() {
-                        history.goBack();
-                    }
-                });
+                getViewerPane().getEntitySelectionHistory().goBack(saveViewerState());
             }
 
             @Override
             protected void goForward() {
-                final EntitySelectionHistory history = getViewerPane().getEntitySelectionHistory();
-                SwingUtilities.invokeLater(new Runnable() {
-                    @Override
-                    public void run() {
-                        history.goForward();
-                    }
-                });
+                getViewerPane().getEntitySelectionHistory().goForward();
             }
 
             @Override
@@ -793,6 +782,7 @@ public class IconDemoPanel extends IconPanel {
                 for (final RootedEntity ancestor : rootedAncestors) {
                     JMenuItem pathMenuItem = new JMenuItem(ancestor.getEntity().getName(), Icons.getIcon(ancestor.getEntity()));
                     pathMenuItem.addActionListener(new ActionListener() {
+                        @Override
                         public void actionPerformed(ActionEvent e) {
                             ModelMgr.getModelMgr().getEntitySelectionModel().selectEntity(EntitySelectionModel.CATEGORY_OUTLINE, ancestor.getUniqueId(), true);
                         }
@@ -808,7 +798,7 @@ public class IconDemoPanel extends IconPanel {
                 final JPopupMenu userListMenu = new JPopupMenu();
                 UserColorMapping userColors = ModelMgr.getModelMgr().getUserColorMapping();
 
-				// Save the list of users so that when the function actually runs, the
+                // Save the list of users so that when the function actually runs, the
                 // users it affects are the same users that were displayed
                 final List<String> savedUsers = new ArrayList<String>(allUsers);
 
@@ -1180,7 +1170,7 @@ public class IconDemoPanel extends IconPanel {
         imagesPanel.setTitleVisbility(iconDemoToolbar.areTitlesVisible());
         imagesPanel.setInvertedColors(invertImages);
 
-		// Since the images are not loaded yet, this will just resize the empty
+        // Since the images are not loaded yet, this will just resize the empty
         // buttons so that we can calculate the grid correctly
         imagesPanel.resizeTables(imagesPanel.getCurrTableHeight());
         imagesPanel.setMaxImageWidth(imagesPanel.getMaxImageWidth());
@@ -1466,6 +1456,7 @@ public class IconDemoPanel extends IconPanel {
         return pageRootedEntities.get(i + 1);
     }
 
+    @Override
     public synchronized List<RootedEntity> getRootedEntities() {
         return pageRootedEntities;
     }
@@ -1570,5 +1561,65 @@ public class IconDemoPanel extends IconPanel {
     @Override
     public boolean areTagsVisible() {
         return getToolbar().areTagsVisible();
+    }
+
+    @Override
+    public EntityViewerState saveViewerState() {
+        // We could get this from the EntitySelectionModel, but sometimes that 
+        // doesn't have the latest select the user is currently making.
+        Set<String> selectedIds = new HashSet<String>();
+        for(AnnotatedImageButton button : imagesPanel.getSelectedButtons()) {
+            selectedIds.add(button.getRootedEntity().getId());
+        }
+        return new EntityViewerState(getClass(), contextRootedEntity, selectedIds);
+    }
+
+    @Override
+    public void restoreViewerState(final EntityViewerState state) {
+        // It's critical to call loadEntity in the ViewerPane not the local one.
+        // The ViewerPane version does extra stuff to get the ancestors button
+        // and breadcrumbs to show correctly.
+        getViewerPane().loadEntity(state.getContextRootedEntity(), new Callable<Void>() {
+            @Override
+            public Void call() throws Exception {
+                // Go to the right page
+                int i = 0;
+                int firstIdIndex = 0;
+                for (RootedEntity rootedEntity : allRootedEntities) {
+                    if (state.getSelectedIds().contains(rootedEntity.getId())) {
+                        firstIdIndex = i;
+                        break;
+                    }
+                    i++;
+                }
+
+                Callable<Void> makeSelections = new Callable<Void>() {
+                    @Override
+                    public Void call() throws Exception {
+                        for (String selectedId : state.getSelectedIds()) {
+                            ModelMgr.getModelMgr().getEntitySelectionModel().selectEntity(getSelectionCategory(), selectedId, false);
+                        }
+                        // Wait for all selections to finish before we scroll
+                        SwingUtilities.invokeLater(new Runnable() {
+                            @Override
+                            public void run() {
+                                imagesPanel.scrollSelectedEntitiesToCenter();
+                            }
+                        });
+                        return null;
+                    }
+                };
+
+                int page = (int) Math.floor((double) firstIdIndex / (double) PAGE_SIZE);
+                if (page != currPage) {
+                    loadImageEntities(page, makeSelections);
+                }
+                else {
+                    makeSelections.call();
+                }
+
+                return null;
+            }
+        });
     }
 }

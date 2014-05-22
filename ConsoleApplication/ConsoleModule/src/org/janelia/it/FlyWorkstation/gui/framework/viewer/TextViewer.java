@@ -4,7 +4,9 @@ import java.awt.BorderLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.concurrent.Callable;
 
 import javax.swing.*;
@@ -12,6 +14,7 @@ import javax.swing.*;
 import org.janelia.it.FlyWorkstation.api.entity_model.management.EntitySelectionModel;
 import org.janelia.it.FlyWorkstation.api.entity_model.management.ModelMgr;
 import org.janelia.it.FlyWorkstation.gui.framework.outline.EntitySelectionHistory;
+import org.janelia.it.FlyWorkstation.gui.framework.outline.EntityViewerState;
 import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.BrowserModel;
 import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionModelListener;
@@ -88,7 +91,7 @@ public abstract class TextViewer extends Viewer {
                 SwingUtilities.invokeLater(new Runnable() {
                     @Override
                     public void run() {
-                        history.goBack();
+                        history.goBack(saveViewerState());
                     }
                 });
             }
@@ -287,5 +290,17 @@ public abstract class TextViewer extends Viewer {
     @Override
     public RootedEntity getContextRootedEntity() {
         return contextRootedEntity;
+    }
+    
+    @Override
+    public EntityViewerState saveViewerState() {
+        Set<String> selectedIds = new HashSet<String>();
+        return new EntityViewerState(getClass(), contextRootedEntity, selectedIds);
+    }
+    
+    @Override
+    public void restoreViewerState(final EntityViewerState state) {
+        loadEntity(state.getContextRootedEntity());
+        
     }
 }

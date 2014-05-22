@@ -2,9 +2,12 @@ package org.janelia.it.FlyWorkstation.gui.framework.outline;
 
 import java.util.ArrayList;
 import java.util.List;
-
 import org.janelia.it.FlyWorkstation.api.entity_model.management.EntitySelectionModel;
 import org.janelia.it.FlyWorkstation.api.entity_model.management.ModelMgr;
+
+import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Manages the history of what entities are selected by the user and allows back/forward navigation.
@@ -13,7 +16,9 @@ import org.janelia.it.FlyWorkstation.api.entity_model.management.ModelMgr;
  */
 public class EntitySelectionHistory {
 
-    private List<String> history = new ArrayList<String>();
+    private static final Logger log = LoggerFactory.getLogger(EntitySelectionHistory.class);
+    
+    private List<EntityViewerState> history = new ArrayList<EntityViewerState>();
     private int historyPosition = -1;
 
     public EntitySelectionHistory() {
@@ -27,35 +32,77 @@ public class EntitySelectionHistory {
         return historyPosition < history.size() - 1;
     }
 
-    public synchronized void goBack() {
+    public synchronized void goBack(EntityViewerState state) {
+        pushHistory(state, false);
         if (historyPosition > 0) {
             historyPosition--;
-            String uniqueIdToView = history.get(historyPosition);
-            ModelMgr.getModelMgr().getEntitySelectionModel().selectEntity(EntitySelectionModel.CATEGORY_OUTLINE, uniqueIdToView, true);
+            EntityViewerState currState = history.get(historyPosition);
+            try {
+                SessionMgr.getBrowser().getViewerManager().restoreViewerState(currState);
+            }
+            catch (Exception e) {
+                SessionMgr.getSessionMgr().handleException(e);
+            }
+            ModelMgr.getModelMgr().getEntitySelectionModel().selectEntity(EntitySelectionModel.CATEGORY_OUTLINE, currState.getContextRootedEntity().getId(), true);
         }
+        logCurrHistory();
     }
 
     public synchronized void goForward() {
         if (historyPosition < history.size() - 1) {
             historyPosition++;
-            String uniqueIdToView = history.get(historyPosition);
-            ModelMgr.getModelMgr().getEntitySelectionModel().selectEntity(EntitySelectionModel.CATEGORY_OUTLINE, uniqueIdToView, true);
+            EntityViewerState currState = history.get(historyPosition);
+            try {
+                SessionMgr.getBrowser().getViewerManager().restoreViewerState(currState);
+            }
+            catch (Exception e) {
+                SessionMgr.getSessionMgr().handleException(e);
+            }
+            ModelMgr.getModelMgr().getEntitySelectionModel().selectEntity(EntitySelectionModel.CATEGORY_OUTLINE, currState.getContextRootedEntity().getId(), true);
         }
+        logCurrHistory();
     }
 
-    public synchronized void pushHistory(String uniqueId) {
+    public synchronized void pushHistory(EntityViewerState state) {
+        pushHistory(state, true);
+    }
+    
+    private void pushHistory(EntityViewerState state, boolean clearForward) {
+        if (state.getContextRootedEntity()==null) {
+            return;
+        }
+        
+        log.trace("Pushing {} ({} selected)",state.getContextRootedEntity().getName(),state.getSelectedIds().size());
+                    
+        if (clearForward) {
+            // Clear out history in the future direction
+            history = history.subList(0, historyPosition + 1);
+        }
+        
         if (!history.isEmpty()) {
-            if (uniqueId.equals(history.get(historyPosition))) {
-                // already got this
+            EntityViewerState currState = history.get(historyPosition);
+            if (state.getContextRootedEntity().getId().equals(currState.getContextRootedEntity().getId())) {
+                log.trace("Already got it, update the selections");
+                // Already got this, let's update the selections
+                currState.getSelectedIds().clear();
+                currState.getSelectedIds().addAll(state.getSelectedIds());
                 return;
             }
         }
-
-        // Clear out history in the future direction
-        history = history.subList(0, historyPosition + 1);
         // Add the new entity to the end of the list
-        history.add(uniqueId);
+        history.add(state);
         historyPosition = history.size() - 1;
+        logCurrHistory();
     }
 
+    private void logCurrHistory() {
+        if (!log.isTraceEnabled()) return;
+        log.trace("History: ");
+        int i = 0 ;
+        for(EntityViewerState state2 : history) {
+            log.trace("  "+i+" "+state2.getContextRootedEntity().getName()+" "+(historyPosition==i?"<-CURR":""));
+            i++;
+        }
+        log.trace("------------------------");
+    }
 }

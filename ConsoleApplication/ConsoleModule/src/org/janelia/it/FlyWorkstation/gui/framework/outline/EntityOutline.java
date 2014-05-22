@@ -69,11 +69,6 @@ public abstract class EntityOutline extends EntityTree implements Refreshable, A
         this.mml = new ModelMgrAdapter() {
             @Override
             public void entitySelected(String category, String entityId, boolean clearAll) {
-                // If we already know the entity is selected, do nothing
-                if (null != currUniqueId && currUniqueId.equals(entityId)) {
-                    return;
-                }
-                // else process the change in selection
                 if (EntitySelectionModel.CATEGORY_OUTLINE.equals(category)) {
                     selectEntityByUniqueId(entityId);
                 }
@@ -648,18 +643,8 @@ public abstract class EntityOutline extends EntityTree implements Refreshable, A
 
         final String finalCurrUniqueId = currUniqueId;
 
-        // TODO: should decouple this somehow
         if (!getDynamicTree().childrenAreLoaded(node)) {
-
-            ViewerManager viewerManager = SessionMgr.getBrowser().getViewerManager();
-//	        if ((viewerManager.getActiveViewerPane()==viewerManager.getSecViewerPane() && viewerManager.getActiveViewer() instanceof AlignmentBoardViewer) || viewerManager.isViewersLinked()) {
-//	            SessionMgr.getBrowser().getViewerManager().showLoadingIndicatorInMainViewer();
-//	        }
-//	        else {
             SessionMgr.getBrowser().getViewerManager().showLoadingIndicatorInActiveViewer();
-//	        }
-
-            //SessionMgr.getBrowser().getViewerManager().showLoadingIndicatorInInspector();   
             // Load the children before displaying them
             getDynamicTree().expandNodeWithLazyChildren(node, new Callable<Void>() {
                 @Override
@@ -668,7 +653,6 @@ public abstract class EntityOutline extends EntityTree implements Refreshable, A
                     loadEntityInViewers(finalCurrUniqueId);
                     return null;
                 }
-
             });
         }
         else {
@@ -695,14 +679,7 @@ public abstract class EntityOutline extends EntityTree implements Refreshable, A
 
         RootedEntity rootedEntity = new RootedEntity(uniqueId, getEntityData(node));
         log.debug("showEntityInActiveViewer: " + rootedEntity.getName());
-
-        ViewerManager viewerManager = SessionMgr.getBrowser().getViewerManager();
-//		if ((viewerManager.getActiveViewerPane()==viewerManager.getSecViewerPane() && viewerManager.getActiveViewer() instanceof AlignmentBoardViewer) || viewerManager.isViewersLinked()) {
-//	        SessionMgr.getBrowser().getViewerManager().showEntityInMainViewer(rootedEntity);
-//		}
-//		else {
         SessionMgr.getBrowser().getViewerManager().showEntityInActiveViewer(rootedEntity);
-//		}
     }
 
     @Override

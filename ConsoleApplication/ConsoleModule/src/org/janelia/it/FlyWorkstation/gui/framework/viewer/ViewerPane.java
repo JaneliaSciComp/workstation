@@ -199,8 +199,6 @@ public class ViewerPane extends JPanel {
         this.contextRootedEntity = rootedEntity;
 
         Entity entity = contextRootedEntity.getEntity();
-
-        getEntitySelectionHistory().pushHistory(contextRootedEntity.getUniqueId());
         setTitle(entity.getName());
 
         if (ancestorLoadingWorker != null && !ancestorLoadingWorker.isDone()) {
