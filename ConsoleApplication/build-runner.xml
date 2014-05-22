@@ -8,6 +8,26 @@ of adapter.
     <property name="antexec" value="${ant.home}/bin/ant" />
     <available file="${antexec}" property="antexec.present"/>
 
+    <target name="build" description="Build">
+        <ant antfile="build.xml" target="build"/>
+    </target>
+
+    <target name="clean" description="Clean">
+        <ant antfile="build.xml" target="clean"/>
+        <echo message="Expected: 4 errors involving absense of directory 'ConsoleApplication/build/cluster', which was to be deleted anyway."/>
+        <!--<exec-target target="clean"/>-->
+    </target>
+
+    <target name="run" description="Launch application">
+        <ant antfile="build.xml" target="run"/>
+    </target>
+
+    <target name="debug" description="Debug application">
+        <ant antfile="build.xml" target="run">
+            <property name="run.args.extra" value="-J-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=5005"/>
+        </ant>
+    </target>
+
     <macrodef name="exec-target" description="Carry Out Target via Exec">
         <attribute name="target"/>
         <sequential>
@@ -27,25 +47,43 @@ of adapter.
         </sequential>
     </macrodef>
 
-    <target name="use-file" if="${antexec.present}">
-        <!-- do something requiring that file... -->
-        <echo message="using exec"/>
-        <exec-target target="build"/>
+    <!--<target name="no-antexec" unless="${antexec.present}">-->
+        <!--<echo message="failing for lack of ant executable"/>-->
+        <!--<echoproperties/>-->
+        <!--<echo message="If you encounter this failure in IntelliJ, get an apache-ant installation on your box.  Then set the property 'antexec' to point to its path, using IntelliJ's 'Ant Build' tree, and right clicking jacs-all/build-all/Properties."/>-->
+        <!--<fail description="no-executable"-->
+              <!--message="No executable is available for running other ant files from within ant."/>-->
+    <!--</target>-->
+
+    <!--<target name="use-file" if="${antexec.present}">-->
+        <!--&lt;!&ndash; do something requiring that file... &ndash;&gt;-->
+        <!--<echo message="using exec"/>-->
+        <!--<exec-target target="build"/>-->
+    <!--</target>-->
+
+    <!--<target name="build" depends="use-file,no-antexec">-->
+        <!--<echoproperties/>-->
+    <!--</target>-->
+
+    <!-- This attempt fails, because underneath it all, another ant -f is being invoked. -->
+    <target name="build-installers-anttask" description="Build installers for all platforms">
+        <ant antfile="${basedir}/harness/nbi/stub/template.xml" target="build">
+            <property name="nbi.stub.location" value="${basedir}/harness/nbi/stub"/>
+            <property name="nbi.engine.jar" value="${basedir}/harness/modules/ext/nbi-engine.jar"/>
+            <property name="suite.nbi.product.uid" value="janeliaworkstation"/>
+            <property name="nbi.icon.file" value="branding/core/core.jar/org/netbeans/core/startup/frame48.gif"/>
+            <property name="suite.location" value="${basedir}"/>
+            <property name="generate.installer.for.platforms" value="windows linux macosx"/>
+            <property name="nbi.ant.tasks.jar" value="${basedir}/harness/modules/ext/nbi-ant-tasks.jar"/>
+            <property name="generator-jdk-location-forward-slashes" value="${java.home}/.."/><!-- This is likely to work ONLY for Mac OS X -->
+            <property name="nbi.dock.icon.file" value="${basedir}/harness/etc/applicationIcon.icns"/>
+            <property name="nbi.stub.common.location" value="${basedir}/harness/nbi/.common"/>
+            <property name="nbi.registries.management.jar" value="${basedir}/harness/modules/ext/nbi-registries-management.jar"/>
+            <property name="pack200.enabled" value="false"/>
+        </ant>
     </target>
 
-    <target name="no-antexec" unless="${antexec.present}">
-        <echo message="failing for lack of ant executable"/>
-        <echoproperties/>
-        <echo message="If you encounter this failure in IntelliJ, get an apache-ant installation on your box.  Then set the property 'antexec' to point to its path, using IntelliJ's 'Ant Build' tree, and right clicking jacs-all/build-all/Properties."/>
-        <fail description="no-executable"
-              message="No executable is available for running other ant files from within ant."/>
-    </target>
-
-    <target name="build" depends="use-file,no-antexec">
-        <echoproperties/>
-    </target>
-
-    <target name="build-installers" description="Build installers that one might hand a user">
+    <target name="build-installers" description="Build installers: first define antexec">
         <!--
            This is the full command line used to build installers, from my NetBeans installation, at time of
            writing (May 14,2014).
@@ -90,23 +128,24 @@ of adapter.
         </condition>
         <fail unless="${subbuildsuccess}" message="Unsuccessful"/>
     </target>
-    <target name="build-mac" description="Builds a full mac app with canonical directory structure">
+
+    <target name="build-mac" description="Builds a full mac app with canonical directory structure: first define antexec">
+        <!-- This fails, because of files not found. -->
+        <!--<ant antfile="build.xml" target="build-mac">-->
+            <!--<property name="nbplatform.default.netbeans.dest.dir" value="${basedir}"/>-->
+            <!--<property name="nbplatform.default.harness.dir" value="${basedir}/harness" />-->
+        <!--</ant>-->
         <exec-target target="build-mac"/>
     </target>
 
-    <target name="build-zip" description="Builds a Zip File with Windows exe's">
+    <target name="build-zip" description="Builds a Zip File with Windows exe's: first define antexec">
+        <!-- This attempt fails because of files not found. -->
+        <!--<ant antfile="build.xml" target="build-zip"/>-->
         <exec-target target="build-zip"/>
     </target>
 
-    <target name="release" description="Prepares for Run by Copying Files to Cluster">
-        <exec-target target="release"/>
-    </target>
-
-    <target name="clean">
-        <exec-target target="clean"/>
-    </target>
-
-    <target name="run">
+    <!-- @deprecated.  This requires antexec pre-def -->
+    <target name="run-old">
         <echoproperties/>
         <!-- ant -f C:\\current_projects\\master\\janelia-workstation\\ConsoleApplication run -->
         <exec executable="${antexec}" outputproperty="antout">
@@ -121,12 +160,12 @@ of adapter.
         <fail unless="${subbuildsuccess}" message="Unsuccessful"/>
     </target>
 
-    <target name="prepare-for-run">
+    <target name="prepare-for-run" description="established for IntelliJ run config">
         <!-- Touching this file prevents the blank-window phenomenon. -->
         <touch file="build/cluster/.lastModified"/>
     </target>
 
-    <target name="deploy">
+    <target name="deploy" description="Invoke NetBeans deploy task: first define antexec">
         <exec-target target="deploy"/>
     </target>
 </project>
