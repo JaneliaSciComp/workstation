@@ -157,10 +157,6 @@ public class SessionMgr {
         //  If it is found, and it is installed (not defunct/obsolete) use it.
         // If not, force user's setting to one that is installed (current one).
         //
-        // Experimental, and requires license issue settlement.
-        UIManager.installLookAndFeel("JTattoo Smart", "com.jtattoo.plaf.smart.SmartLookAndFeel");
-        UIManager.installLookAndFeel("JTattoo HiFi", "com.jtattoo.plaf.hifi.HiFiLookAndFeel");
-        UIManager.installLookAndFeel("JTattoo Noire", "com.jtattoo.plaf.noire.NoireLookAndFeel");
 
         // Synthetica Licenses
         String[] li = {"Licensee=HHMI", "LicenseRegistrationNumber=122030", "Product=Synthetica", "LicenseType=Single Application License", "ExpireDate=--.--.----", "MaxVersion=2.20.999"};
