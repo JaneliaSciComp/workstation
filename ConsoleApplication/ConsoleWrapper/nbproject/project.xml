@@ -251,20 +251,6 @@
                 <package>com.jogamp.opengl.util.texture.awt</package>
                 <package>com.jogamp.opengl.util.texture.spi</package>
                 <package>com.jogamp.opengl.util.texture.spi.awt</package>
-                <package>com.jtattoo.plaf</package>
-                <package>com.jtattoo.plaf.acryl</package>
-                <package>com.jtattoo.plaf.aero</package>
-                <package>com.jtattoo.plaf.aluminium</package>
-                <package>com.jtattoo.plaf.bernstein</package>
-                <package>com.jtattoo.plaf.fast</package>
-                <package>com.jtattoo.plaf.graphite</package>
-                <package>com.jtattoo.plaf.hifi</package>
-                <package>com.jtattoo.plaf.luna</package>
-                <package>com.jtattoo.plaf.mcwin</package>
-                <package>com.jtattoo.plaf.mint</package>
-                <package>com.jtattoo.plaf.noire</package>
-                <package>com.jtattoo.plaf.smart</package>
-                <package>com.jtattoo.plaf.texture</package>
                 <package>com.kenai.jaffl</package>
                 <package>com.kenai.jaffl.annotations</package>
                 <package>com.kenai.jaffl.byref</package>
@@ -2684,10 +2670,6 @@
             <class-path-extension>
                 <runtime-relative-path>ext/gluegen-rt.jar</runtime-relative-path>
                 <binary-origin>release/modules/ext/gluegen-rt.jar</binary-origin>
-            </class-path-extension>
-            <class-path-extension>
-                <runtime-relative-path>ext/JTattoo-1.6.10.jar</runtime-relative-path>
-                <binary-origin>release/modules/ext/JTattoo-1.6.10.jar</binary-origin>
             </class-path-extension>
             <class-path-extension>
                 <runtime-relative-path>ext/axis2-xmlbeans-1.5.5.jar</runtime-relative-path>
