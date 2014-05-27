@@ -6,12 +6,16 @@ of adapter.
 -->
 <project name="run-console-build" default="build">
 
-    <target name="build" description="Build using ant target">
+    <target name="build" description="Build using ant target" depends="prop-copy">
         <echoproperties/>
         <ant antfile="build.xml" target="build">
             <property name="nbplatform.default.netbeans.dest.dir" value="${basedir}" />
             <property name="nbplatform.default.harness.dir" value="${basedir}/harness" />
         </ant>
+    </target>
+
+    <target name="prop-copy" description="Get latest versions of properties files from the non-NetBeans Projects.">
+        <copy file="${basedir}/../shared/conf/jacs.properties" todir="${basedir}/SharedModelComputeWrapper/src" />
     </target>
 
     <target name="clean" description="Clean">
@@ -52,8 +56,8 @@ of adapter.
         </sequential>
     </macrodef>
 
-    <!-- This attempt fails, because underneath it all, another ant -f is being invoked. -->
-    <target name="build-installers-anttask" description="Build installers for all platforms">
+    <!-- This attempt fails, because underneath it all, another ant -f is being invoked.
+    <target name="build-installers-anttask" description="Build installers for all platforms.">
         <ant antfile="${basedir}/harness/nbi/stub/template.xml" target="build">
             <property name="nbi.stub.location" value="${basedir}/harness/nbi/stub"/>
             <property name="nbi.engine.jar" value="${basedir}/harness/modules/ext/nbi-engine.jar"/>
@@ -62,13 +66,14 @@ of adapter.
             <property name="suite.location" value="${basedir}"/>
             <property name="generate.installer.for.platforms" value="windows linux macosx"/>
             <property name="nbi.ant.tasks.jar" value="${basedir}/harness/modules/ext/nbi-ant-tasks.jar"/>
-            <property name="generator-jdk-location-forward-slashes" value="${java.home}/.."/><!-- This is likely to work ONLY for Mac OS X -->
+            <property name="generator-jdk-location-forward-slashes" value="${java.home}/.."/><
             <property name="nbi.dock.icon.file" value="${basedir}/harness/etc/applicationIcon.icns"/>
             <property name="nbi.stub.common.location" value="${basedir}/harness/nbi/.common"/>
             <property name="nbi.registries.management.jar" value="${basedir}/harness/modules/ext/nbi-registries-management.jar"/>
             <property name="pack200.enabled" value="false"/>
         </ant>
     </target>
+    -->
 
     <target name="build-installers" description="Build installers: first define antexec">
         <!--
@@ -89,6 +94,7 @@ of adapter.
              -Dpack200.enabled=false "-Dnbi.registries.management.jar=/Applications/NetBeans/NetBeans 7.4.app/Contents/Resources/NetBeans/harness/modules/ext/nbi-registries-management.jar"
               build
         -->
+        <echo message="This target still requires presetting antexec."/>
         <exec executable="${antexec}" outputproperty="antout">
             <!-- First arg is used explicitly in NetBeans, but found unneeded and difficult to set, here. -->
             <!--<arg value="-Dgenerator-jdk-location-forward-slashes=/Library/Java/JavaVirtualMachines/jdk1.7.0_51.jdk/Contents/Home "-->
@@ -122,34 +128,15 @@ of adapter.
             <!--<property name="nbplatform.default.netbeans.dest.dir" value="${basedir}"/>-->
             <!--<property name="nbplatform.default.harness.dir" value="${basedir}/harness" />-->
         <!--</ant>-->
+        <echo message="This target still requires presetting antexec."/>
         <exec-target target="build-mac"/>
     </target>
 
     <target name="build-zip" description="Builds a Zip File with Windows exe's: first define antexec">
         <!-- This attempt fails because of files not found. -->
         <!--<ant antfile="build.xml" target="build-zip"/>-->
+        <echo message="This target still requires presetting antexec."/>
         <exec-target target="build-zip"/>
-    </target>
-
-    <!-- @deprecated.  This requires antexec pre-def -->
-    <target name="run-old">
-        <echoproperties/>
-        <!-- ant -f C:\\current_projects\\master\\janelia-workstation\\ConsoleApplication run -->
-        <exec executable="${antexec}" outputproperty="antout">
-            <arg value="-f"/>
-            <arg value="build.xml"/>
-            <arg value="run"/>
-        </exec>
-        <echo message="Ant Run: ${antout}"/>
-        <condition property="subbuildsuccess">
-            <contains string="${antout}" substring="BUILD SUCCESSFUL" casesensitive="true" />
-        </condition>
-        <fail unless="${subbuildsuccess}" message="Unsuccessful"/>
-    </target>
-
-    <target name="prepare-for-run" description="established for IntelliJ run config">
-        <!-- Touching this file prevents the blank-window phenomenon. -->
-        <touch file="build/cluster/.lastModified"/>
     </target>
 
     <target name="deploy" description="Invoke NetBeans deploy task: first define antexec">
