@@ -1,0 +1,100 @@
+2014-05-23 15:09:57,325 [main] INFO [org.janelia.it.workstation.lifecycle.Startup] Java version: 1.7.0_51
+2014-05-23 15:09:57,332 [On Start/Stop] INFO [org.janelia.it.workstation.gui.application.ConsoleApp] Java version: 1.7.0_51
+2014-05-23 15:09:57,334 [On Start/Stop] WARN [org.janelia.it.workstation.gui.application.ConsoleApp] No splash screen image configured
+2014-05-23 15:09:57,361 [On Start/Stop] INFO [org.janelia.it.workstation.api.entity_model.management.ModelMgr] Initializing Model Manager
+2014-05-23 15:09:57,361 [On Start/Stop] INFO [org.janelia.it.workstation.api.entity_model.management.ModelMgr] ModelMgr c'tor from  sun.misc.Launcher$AppClassLoader@7194f467/SystemClassLoader[53 modules] in thread Thread[On Start/Stop,1,system]
+2014-05-23 15:09:57,524 [On Start/Stop] INFO [org.janelia.it.workstation.api.entity_model.management.ModelMgr] Successfully initialized
+2014-05-23 15:09:57,527 [On Start/Stop] INFO [org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr] Initializing Session Manager
+2014-05-23 15:09:57,528 [On Start/Stop] INFO [org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr] Renamed settings directory and files.
+2014-05-23 15:09:57,594 [On Start/Stop] INFO [org.janelia.it.workstation.api.facade.concrete_facade.ejb.EJBFactory] Using interactive server: jnp://jacs:1199
+2014-05-23 15:09:57,594 [On Start/Stop] INFO [org.janelia.it.workstation.api.facade.concrete_facade.ejb.EJBFactory] Using pipeline server: jnp://jacs-data:1199
+2014-05-23 15:09:57,595 [On Start/Stop] INFO [org.janelia.it.workstation.shared.filestore.PathTranslator] Using JACS data path: /Volumes/jacsData
+2014-05-23 15:09:57,751 [On Start/Stop] INFO [org.janelia.it.workstation.shared.util.filecache.LocalFileCache] <init>: exit
+2014-05-23 15:09:57,751 [local-file-cache-load-thread] INFO [org.janelia.it.workstation.shared.util.filecache.LocalFileCache] loadCacheFromFilesystem: starting load
+2014-05-23 15:09:57,751 [On Start/Stop] INFO [org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr] Using 2d renderer: IMAGE_IO
+2014-05-23 15:09:58,773 [On Start/Stop] INFO [org.eclipse.jetty.server.Server] jetty-8.y.z-SNAPSHOT
+2014-05-23 15:09:58,826 [On Start/Stop] INFO [org.eclipse.jetty.server.AbstractConnector] Started SelectChannelConnector@0.0.0.0:40001
+2014-05-23 15:09:58,980 [local-file-cache-load-thread] INFO [org.janelia.it.workstation.shared.util.filecache.LocalFileLoader] no unregistered files found in local cache
+2014-05-23 15:09:59,548 [local-file-cache-load-thread] INFO [org.janelia.it.workstation.shared.util.filecache.LocalFileCache] loadCacheFromFilesystem: loaded 3296 files into LocalFileCache{rootDirectory=/Users/fosterl/.JaneliaWorkstationSuite/Console/.jacs-file-cache, kilobyteCapacity=52428800}, 1% full (913938/52428800 kilobytes)
+2014-05-23 15:09:59,582 [On Start/Stop] INFO [org.janelia.it.workstation.shared.util.filecache.WebDavClient] setCredentials: entry, userName=fosterl
+2014-05-23 15:09:59,583 [On Start/Stop] INFO [org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr] Authenticated as user:fosterl
+2014-05-23 15:09:59,594 [On Start/Stop] INFO [org.janelia.it.workstation.gui.application.ConsoleApp] Successfully logged in user fosterl
+2014-05-23 15:10:01,555 [On Start/Stop] INFO [org.janelia.it.workstation.gui.dialogs.GiantFiberSearchDialog] Begin loading
+2014-05-23 15:10:01,652 [On Start/Stop] INFO [org.janelia.it.workstation.gui.dialogs.MAASearchDialog] Begin loading
+2014-05-23 15:10:01,777 [AWT-EventQueue-0] INFO [org.janelia.it.workstation.gui.framework.outline.EntityDetailsOutline] Activating
+2014-05-23 15:10:01,834 [AWT-EventQueue-0] INFO [org.janelia.it.workstation.gui.framework.outline.EntityOutline] Activating
+2014-05-23 15:10:01,975 [AWT-EventQueue-0] INFO [org.janelia.it.workstation.gui.framework.console.Browser] Setting perspective: ImageBrowser
+2014-05-23 15:10:02,276 [AWT-EventQueue-0] INFO [org.janelia.it.workstation.gui.alignment_board_viewer.AlignmentBoardPanel] C'tor
+2014-05-23 15:10:02,286 [AWT-EventQueue-0] INFO [org.janelia.it.workstation.gui.alignment_board_viewer.top_component.AlignmentBoardTopComponent] Established acceptor
+2014-05-23 15:10:04,427 [AWT-EventQueue-0] INFO [org.janelia.it.workstation.gui.dialogs.MAASearchDialog] Completed loading, 0 counts, dialog is ready
+2014-05-23 15:10:04,449 [AWT-EventQueue-0] INFO [org.janelia.it.workstation.gui.framework.tool_manager.ToolMgr] Base root executable path: file:/Users/fosterl/gitfiles/master/janelia-workstation/ConsoleApplication/build/cluster/modules/org-janelia-it-workstation-nb_action.jar!/
+2014-05-23 15:10:04,826 [AWT-EventQueue-0] INFO [org.janelia.it.workstation.gui.alignment_board_viewer.LayersPanel] Activating
+2014-05-23 15:10:04,891 [AWT-EventQueue-0] WARN [org.janelia.it.workstation.gui.alignment_board_viewer.LayersPanel] No alignment board context ready for layers panel.
+2014-05-23 15:10:04,936 [AWT-EventQueue-0] INFO [org.janelia.it.workstation.gui.framework.console.ToolsMenuModifier] Adding item Fiji.app to menu Tools
+2014-05-23 15:10:04,937 [AWT-EventQueue-0] INFO [org.janelia.it.workstation.gui.framework.console.ToolsMenuModifier] Adding item Vaa3d to menu Tools
+2014-05-23 15:10:04,937 [AWT-EventQueue-0] INFO [org.janelia.it.workstation.gui.framework.console.ToolsMenuModifier] Adding item Vaa3d - Neuron Annotator to menu Tools
+2014-05-23 15:10:04,939 [AWT-EventQueue-0] INFO [org.janelia.it.workstation.gui.dialogs.GiantFiberSearchDialog] Completed loading, dialog ready.
+2014-05-23 15:10:13,851 [AWT-EventQueue-0] INFO [org.janelia.it.workstation.gui.alignment_board_viewer.LayersPanel] openAlignmentBoard: 1943885805730660441
+2014-05-23 15:10:21,990 [AWT-EventQueue-0] INFO [org.janelia.it.workstation.gui.alignment_board_viewer.LayersPanel] Posting AB-Open
+2014-05-23 15:10:21,990 [AWT-EventQueue-0] INFO [org.janelia.it.workstation.gui.alignment_board_viewer.AlignmentBoardPanel] Board Opened
+2014-05-23 15:10:21,992 [AWT-EventQueue-0] WARN [org.janelia.it.workstation.gui.alignment_board_viewer.AlignmentBoardPanel] Update-board called.
+2014-05-23 15:10:21,994 [AWT-EventQueue-0] INFO [org.janelia.it.workstation.gui.alignment_board_viewer.AlignmentBoardPanel] New settings
+2014-05-23 15:10:22,033 [AWT-EventQueue-0] INFO [org.janelia.it.workstation.gui.alignment_board_viewer.UserSettingSerializer] Read-Up Setting string: Gamma=0.834000
+CropOutLevel=0.250000
+UseSignal=true
+CameraRotation=[0.675450,0.369807,-0.637974][-0.247586,0.928669,0.276179][0.694599,-0.028592,0.718829]
+InGroundFocus=[155.890152,64.333435,130.044052]
+CameraFocus=[0.000000,0.000000,-1788.685791]
+MinVoxelCutoff=1000
+MaxNeuronsCutoff=100
+SaveGammaInTiff=true
+ deserialized, from 1943885805730660441
+2014-05-23 15:10:22,292 [AWT-EventQueue-0] WARN [org.janelia.it.workstation.gui.alignment_board_viewer.gui_elements.GpuSampler] Neither NVidea nor Radeon video memory calls succeeded 1280/0.
+2014-05-23 15:10:22,292 [AWT-EventQueue-0] INFO [org.janelia.it.workstation.gui.alignment_board_viewer.gui_elements.GpuSampler] Free texture memory 0.
+2014-05-23 15:10:23,591 [SwingWorker-pool-3-thread-9] INFO [org.janelia.it.workstation.gui.alignment_board_viewer.RenderablesLoadWorker] GPU vendor NVIDIA Corporation, renderer NVIDIA GeForce GTX 680 OpenGL Engine version 2.1 NVIDIA-8.16.77 310.40.00.20f04
+2014-05-23 15:10:27,965 [SwingWorker-pool-3-thread-9] INFO [org.janelia.it.workstation.gui.alignment_board_viewer.RenderablesLoadWorker] User has preferred card.
+2014-05-23 15:11:13,090 [SwingWorker-pool-3-thread-9] WARN [org.janelia.it.workstation.gui.viewer3d.MipRenderer] Adjusted height to account for zero-height bounding box.
+2014-05-23 15:11:13,090 [SwingWorker-pool-3-thread-9] WARN [org.janelia.it.workstation.gui.camera.BasicCamera3d] Camera zoom NaN
+2014-05-23 15:11:13,090 [SwingWorker-pool-3-thread-9] INFO [org.janelia.it.workstation.gui.alignment_board_viewer.UserSettingSerializer] Read-Up Setting string: Gamma=0.834000
+CropOutLevel=0.250000
+UseSignal=true
+CameraRotation=[0.675450,0.369807,-0.637974][-0.247586,0.928669,0.276179][0.694599,-0.028592,0.718829]
+InGroundFocus=[155.890152,64.333435,130.044052]
+CameraFocus=[0.000000,0.000000,-1788.685791]
+MinVoxelCutoff=1000
+MaxNeuronsCutoff=100
+SaveGammaInTiff=true
+ deserialized, from 1943885805730660441
+2014-05-23 15:11:28,239 [Thread-42] INFO [org.janelia.it.workstation.gui.alignment_board_viewer.TexBuildRunnable] About to build texture data.
+2014-05-23 15:11:28,239 [Thread-43] INFO [org.janelia.it.workstation.gui.alignment_board_viewer.TexBuildRunnable] About to build texture data.
+2014-05-23 15:11:28,240 [Thread-42] INFO [org.janelia.it.workstation.gui.alignment_board_viewer.volume_builder.ChannelInterpreterToByte] Maximum value found during channel interpretation was 255.
+2014-05-23 15:11:28,241 [Thread-43] INFO [org.janelia.it.workstation.gui.alignment_board_viewer.TexBuildRunnable] Awaiting barrier.
+2014-05-23 15:11:28,241 [Thread-42] INFO [org.janelia.it.workstation.gui.alignment_board_viewer.TexBuildRunnable] Awaiting barrier.
+2014-05-23 15:11:28,241 [SwingWorker-pool-3-thread-9] INFO [org.janelia.it.workstation.gui.alignment_board_viewer.AlignmentBoardPanel] Setting Mip3d Volume.
+2014-05-23 15:11:28,251 [SwingWorker-pool-3-thread-9] INFO [org.janelia.it.workstation.gui.alignment_board_viewer.AlignmentBoardPanel] Setting volume maxima on settings.
+2014-05-23 15:11:28,251 [SwingWorker-pool-3-thread-9] INFO [org.janelia.it.workstation.gui.alignment_board_viewer.gui_elements.AlignmentBoardControls] Volume maxima provided 1024, 512, 256
+2014-05-23 15:11:28,257 [SwingWorker-pool-3-thread-9] WARN [org.janelia.it.workstation.gui.alignment_board_viewer.masking.MultiMaskTracker] Exceeded the max mask depth of 8, 25368 times.
+2014-05-23 15:11:28,263 [SwingWorker-pool-3-thread-9] INFO [org.janelia.it.workstation.gui.alignment_board_viewer.UserSettingSerializer] Read-Up Setting string: Gamma=0.834000
+CropOutLevel=0.250000
+UseSignal=true
+CameraRotation=[0.675450,0.369807,-0.637974][-0.247586,0.928669,0.276179][0.694599,-0.028592,0.718829]
+InGroundFocus=[155.890152,64.333435,130.044052]
+CameraFocus=[0.000000,0.000000,-1788.685791]
+MinVoxelCutoff=1000
+MaxNeuronsCutoff=100
+SaveGammaInTiff=true
+ deserialized, from 1943885805730660441
+2014-05-23 15:11:30,760 [AWT-EventQueue-0] INFO [org.janelia.it.workstation.gui.viewer3d.buffering.VtxCoordBufMgr] Allocating buffers
+2014-05-23 15:14:22,790 [On Start/Stop] INFO [org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr] Saving user settings to /Users/fosterl/.JaneliaWorkstationSuite/Console/.JW_Settings
+2014-05-23 15:14:22,793 [SwingWorker-pool-3-thread-7] INFO [org.janelia.it.workstation.gui.alignment_board_viewer.UserSettingSerializer] Save-back Setting string: Gamma=0.834000
+CropOutLevel=0.250000
+UseSignal=true
+CameraRotation=[0.973531,-0.065045,-0.219106][0.114243,0.968787,0.220000][0.197956,-0.239208,0.950575]
+InGroundFocus=[278.865967,62.247421,146.584625]
+CameraFocus=[0.000000,0.000000,-1813.654907]
+MinVoxelCutoff=1000
+MaxNeuronsCutoff=100
+SaveGammaInTiff=true
+.
+2014-05-23 15:14:22,821 [On Start/Stop] INFO [org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr] Logged out with: user:fosterl
+2014-05-23 15:14:22,822 [On Start/Stop] INFO [org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr] Memory in use at exit: 2014.4674 MB
