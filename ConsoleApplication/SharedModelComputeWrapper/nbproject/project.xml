@@ -132,15 +132,15 @@
             </public-packages>
             <class-path-extension>
                 <runtime-relative-path>ext/jacs-shared.jar</runtime-relative-path>
-                <binary-origin>release/modules/ext/jacs-shared.jar</binary-origin>
+                <binary-origin>../../shared/build/jars/jacs-shared.jar</binary-origin>
             </class-path-extension>
             <class-path-extension>
                 <runtime-relative-path>ext/compute-client.jar</runtime-relative-path>
-                <binary-origin>release/modules/ext/compute-client.jar</binary-origin>
+                <binary-origin>../../compute/build/jars/compute-client.jar</binary-origin>
             </class-path-extension>
             <class-path-extension>
                 <runtime-relative-path>ext/jacs-model.jar</runtime-relative-path>
-                <binary-origin>release/modules/ext/jacs-model.jar</binary-origin>
+                <binary-origin>../../model/build/jars/jacs-model.jar</binary-origin>
             </class-path-extension>
         </data>
     </configuration>
