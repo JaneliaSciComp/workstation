@@ -18,17 +18,6 @@ of adapter.
         <copy file="${basedir}/../shared/conf/jacs.properties" todir="${basedir}/SharedModelComputeWrapper/src" />
     </target>
 
-    <target name="smc-lib-copy" description="Get latest versions of the internally-maintained shared libraries.">
-        <property name="extension-release-dir" value="${basedir}/SharedModelComputeWrapper/release/modules/ext"/>
-        <property name="model-shared" value="${basedir}/../model/build/jars/jacs-model.jar"/>
-        <property name="jacs-shared" value="${basedir}/../shared/build/jars/jacs-shared.jar"/>
-        <property name="compute-client" value="${basedir}/../compute/build/jars/compute-client.jar"/>
-
-        <copy file="${jacs-shared}"    todir="${extension-release-dir}"/>
-        <copy file="${model-shared}"   todir="${extension-release-dir}"/>
-        <copy file="${compute-client}" todir="${extension-release-dir}"/>
-    </target>
-
     <target name="clean" description="Clean">
         <ant antfile="build.xml" target="clean">
             <property name="nbplatform.default.netbeans.dest.dir" value="${basedir}" />
