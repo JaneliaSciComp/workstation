@@ -2232,10 +2232,6 @@
                 <binary-origin>release/modules/ext/jibx-run-1.2.1.jar</binary-origin>
             </class-path-extension>
             <class-path-extension>
-                <runtime-relative-path>ext/commons-codec-1.3.jar</runtime-relative-path>
-                <binary-origin>release/modules/ext/commons-codec-1.3.jar</binary-origin>
-            </class-path-extension>
-            <class-path-extension>
                 <runtime-relative-path>ext/lz4-1.1.1-sources.jar</runtime-relative-path>
                 <binary-origin>release/modules/ext/lz4-1.1.1-sources.jar</binary-origin>
             </class-path-extension>
@@ -2296,12 +2292,12 @@
                 <binary-origin>release/modules/ext/commons-logging-1.1.1.jar</binary-origin>
             </class-path-extension>
             <class-path-extension>
-                <runtime-relative-path>ext/ome-xml.jar</runtime-relative-path>
-                <binary-origin>release/modules/ext/ome-xml.jar</binary-origin>
-            </class-path-extension>
-            <class-path-extension>
                 <runtime-relative-path>ext/jogl-all-natives-linux-amd64.jar</runtime-relative-path>
                 <binary-origin>release/modules/ext/jogl-all-natives-linux-amd64.jar</binary-origin>
+            </class-path-extension>
+            <class-path-extension>
+                <runtime-relative-path>ext/ome-xml.jar</runtime-relative-path>
+                <binary-origin>release/modules/ext/ome-xml.jar</binary-origin>
             </class-path-extension>
             <class-path-extension>
                 <runtime-relative-path>ext/jaxb-api-2.1.jar</runtime-relative-path>
@@ -2386,10 +2382,6 @@
             <class-path-extension>
                 <runtime-relative-path>ext/woden-impl-dom-1.0M8.jar</runtime-relative-path>
                 <binary-origin>release/modules/ext/woden-impl-dom-1.0M8.jar</binary-origin>
-            </class-path-extension>
-            <class-path-extension>
-                <runtime-relative-path>ext/antlr-2.7.6.jar</runtime-relative-path>
-                <binary-origin>release/modules/ext/antlr-2.7.6.jar</binary-origin>
             </class-path-extension>
             <class-path-extension>
                 <runtime-relative-path>ext/vlcj-1.3.0-b1.jar</runtime-relative-path>
@@ -2488,12 +2480,12 @@
                 <binary-origin>release/modules/ext/syntheticaSilverMoon.jar</binary-origin>
             </class-path-extension>
             <class-path-extension>
-                <runtime-relative-path>ext/xercesImpl-2.8.1.jar</runtime-relative-path>
-                <binary-origin>release/modules/ext/xercesImpl-2.8.1.jar</binary-origin>
-            </class-path-extension>
-            <class-path-extension>
                 <runtime-relative-path>ext/syntheticaBlueLight.jar</runtime-relative-path>
                 <binary-origin>release/modules/ext/syntheticaBlueLight.jar</binary-origin>
+            </class-path-extension>
+            <class-path-extension>
+                <runtime-relative-path>ext/xercesImpl-2.8.1.jar</runtime-relative-path>
+                <binary-origin>release/modules/ext/xercesImpl-2.8.1.jar</binary-origin>
             </class-path-extension>
             <class-path-extension>
                 <runtime-relative-path>ext/pal-optimization.jar</runtime-relative-path>
