@@ -6,7 +6,7 @@ of adapter.
 -->
 <project name="run-console-build" default="build">
 
-    <target name="build" description="Build using ant target" depends="prop-copy">
+    <target name="build" description="Build using ant target" depends="prop-copy,internal-jar-copy">
         <echoproperties/>
         <ant antfile="build.xml" target="build">
             <property name="nbplatform.default.netbeans.dest.dir" value="${basedir}" />
@@ -16,6 +16,14 @@ of adapter.
 
     <target name="prop-copy" description="Get latest versions of properties files from the non-NetBeans Projects.">
         <copy file="${basedir}/../shared/conf/jacs.properties" todir="${basedir}/SharedModelComputeWrapper/src" />
+    </target>
+
+    <target name="internal-jar-copy" description="Get latest versions of internally-developed project jars.">
+        <property name="internal-jar-release" value="${basedir}/SharedModelComputeWrapper/release/modules/ext"/>
+        <mkdir dir="${internal-jar-release}"/>
+        <copy file="${basedir}/../shared/build/jars/jacs-shared.jar" todir="${internal-jar-release}" />
+        <copy file="${basedir}/../model/build/jars/jacs-model.jar" todir="${internal-jar-release}" />
+        <copy file="${basedir}/../compute/build/jars/compute-client.jar" todir="${internal-jar-release}" />
     </target>
 
     <target name="clean" description="Clean">
