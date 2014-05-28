@@ -3,7 +3,6 @@ package org.janelia.it.workstation.gui.framework.session_mgr;
 import org.janelia.it.workstation.api.facade.facade_mgr.FacadeManager;
 import org.janelia.it.workstation.api.facade.roles.ExceptionHandler;
 import org.janelia.it.workstation.api.stub.data.SystemError;
-import org.janelia.it.workstation.gui.dataview.DataviewApp;
 import org.janelia.it.workstation.gui.framework.external_listener.ExternalListener;
 import org.janelia.it.workstation.gui.framework.keybind.KeyBindings;
 import org.janelia.it.workstation.gui.framework.pref_controller.PrefController;
@@ -34,11 +33,10 @@ import java.util.*;
 import java.util.List;
 import javax.swing.UIManager.LookAndFeelInfo;
 
-
 public class SessionMgr {
 
     private static final Logger log = LoggerFactory.getLogger(SessionMgr.class);
-    
+
     public static final int MIN_FILE_CACHE_GIGABYTE_CAPACITY = 50;
     public static final int MAX_FILE_CACHE_GIGABYTE_CAPACITY = 1000;
 
@@ -57,10 +55,12 @@ public class SessionMgr {
     public static String DOWNLOADS_DIR = "DownloadsDir";
     public static String DISPLAY_LOOK_AND_FEEL = "SessionMgr.JavaLookAndFeel";
     public static String DISPLAY_RENDERER_2D = "SessionMgr.Renderer2D";
-    
-    public static boolean isDarkLook = false;
 
-    private static JFrame mainFrame;    
+    public static boolean isDarkLook = false;
+    // TODO: This is a quick hack to get the data viewer to work in the new NetBeans eco-system. This needs to be replaced with group:admin controls. 
+    public static boolean rootAccess = false;
+
+    private static JFrame mainFrame;
     private static org.janelia.it.workstation.api.entity_model.management.ModelMgr modelManager = org.janelia.it.workstation.api.entity_model.management.ModelMgr.getModelMgr();
     private static SessionMgr sessionManager = new SessionMgr();
     private org.janelia.it.workstation.gui.framework.session_mgr.SessionModel sessionModel = org.janelia.it.workstation.gui.framework.session_mgr.SessionModel.getSessionModel();
@@ -84,12 +84,12 @@ public class SessionMgr {
     private Long currentSessionId;
     private org.janelia.it.workstation.shared.util.filecache.WebDavClient webDavClient;
     private LocalFileCache localFileCache;
-    
+
     private SessionMgr() {
-    	log.info("Initializing Session Manager");
-    	
+        log.info("Initializing Session Manager");
+
         System.setProperty("winsys.stretching_view_tabs", "true");
-        
+
         settingsFile = new File(prefsFile);
         try {
             // @todo Remove this Dec 2013  :-)
@@ -106,31 +106,29 @@ public class SessionMgr {
         }
         catch (IOException ioEx) {
             if (!new File(prefsDir).mkdirs()) {
-                log.error("Could not create prefs dir at "+prefsDir);
+                log.error("Could not create prefs dir at " + prefsDir);
             }
             try {
                 settingsFile.createNewFile();  //only creates if does not exist
             }
             catch (IOException e) {
-                log.error("Cannot create settings file at: "+settingsFile, e);
+                log.error("Cannot create settings file at: " + settingsFile, e);
             }
         }
 
         readSettingsFile();
         org.janelia.it.workstation.api.facade.concrete_facade.ejb.EJBFactory.initFromModelProperties(sessionModel);
         PathTranslator.initFromModelProperties(sessionModel);
-                
+
         // -----------------------------------------------
         // initialize WebDAV and local cache components
-
         webDavClient = new org.janelia.it.workstation.shared.util.filecache.WebDavClient(
                 ConsoleProperties.getString("console.webDavClient.baseUrl",
-                                            org.janelia.it.workstation.shared.util.filecache.WebDavClient.JACS_WEBDAV_BASE_URL),
+                        org.janelia.it.workstation.shared.util.filecache.WebDavClient.JACS_WEBDAV_BASE_URL),
                 ConsoleProperties.getInt("console.webDavClient.maxConnectionsPerHost", 100),
                 ConsoleProperties.getInt("console.webDavClient.maxTotalConnections", 100));
 
-        setFileCacheGigabyteCapacity((Integer)
-                getModelProperty(SessionMgr.FILE_CACHE_GIGABYTE_CAPACITY_PROPERTY));
+        setFileCacheGigabyteCapacity((Integer) getModelProperty(SessionMgr.FILE_CACHE_GIGABYTE_CAPACITY_PROPERTY));
         setFileCacheDisabled(Boolean.parseBoolean(String.valueOf(
                 getModelProperty(SessionMgr.FILE_CACHE_DISABLED_PROPERTY))));
 
@@ -138,26 +136,25 @@ public class SessionMgr {
         if (getModelProperty(DISPLAY_FREE_MEMORY_METER_PROPERTY) == null) {
             setModelProperty(DISPLAY_FREE_MEMORY_METER_PROPERTY, true);
         }
-        
+
         if (getModelProperty(UNLOAD_IMAGES_PROPERTY) == null) {
             setModelProperty(UNLOAD_IMAGES_PROPERTY, false);
         }
-        
-        if (getModelProperty(DISPLAY_SUB_EDITOR_PROPERTY) == null) { 
-        	setModelProperty(DISPLAY_SUB_EDITOR_PROPERTY, true); 
+
+        if (getModelProperty(DISPLAY_SUB_EDITOR_PROPERTY) == null) {
+            setModelProperty(DISPLAY_SUB_EDITOR_PROPERTY, true);
         }
 
         if (getModelProperty(SessionMgr.DISPLAY_RENDERER_2D) == null) {
             setModelProperty(SessionMgr.DISPLAY_RENDERER_2D, org.janelia.it.workstation.shared.util.RendererType2D.IMAGE_IO.toString());
-        } 
-    
-        log.info("Using 2d renderer: {}",getModelProperty(SessionMgr.DISPLAY_RENDERER_2D));
-        
+        }
+
+        log.info("Using 2d renderer: {}", getModelProperty(SessionMgr.DISPLAY_RENDERER_2D));
+
         // Look for user's model-property-designated look-and-feel.
         //  If it is found, and it is installed (not defunct/obsolete) use it.
         // If not, force user's setting to one that is installed (current one).
         //
-
         // Synthetica Licenses
         String[] li = {"Licensee=HHMI", "LicenseRegistrationNumber=122030", "Product=Synthetica", "LicenseType=Single Application License", "ExpireDate=--.--.----", "MaxVersion=2.20.999"};
         UIManager.put("Synthetica.license.info", li);
@@ -166,7 +163,7 @@ public class SessionMgr {
         String[] li2 = {"Licensee=HHMI", "LicenseRegistrationNumber=142016", "Product=SyntheticaAddons", "LicenseType=Single Application License", "ExpireDate=--.--.----", "MaxVersion=1.10.999"};
         UIManager.put("SyntheticaAddons.license.info", li2);
         UIManager.put("SyntheticaAddons.license.key", "43BF31CE-59317732-9D0D5584-654D216F-7806C681");
-        
+
         // Ensure the synthetical choices are all available.
         UIManager.installLookAndFeel("Synthetica AluOxide Look and Feel", "de.javasoft.plaf.synthetica.SyntheticaAluOxideLookAndFeel");
         UIManager.installLookAndFeel("Synthetica BlackEye Look and Feel", "de.javasoft.plaf.synthetica.SyntheticaBlackEyeLookAndFeel");
@@ -184,7 +181,7 @@ public class SessionMgr {
         UIManager.installLookAndFeel("Synthetica Simple2D Look and Feel", "de.javasoft.plaf.synthetica.SyntheticaSimple2DLookAndFeel");
         UIManager.installLookAndFeel("Synthetica SkyMetallic Look and Feel", "de.javasoft.plaf.synthetica.SyntheticaSkyMetallicLookAndFeel");
         UIManager.installLookAndFeel("Synthetica WhiteVision Look and Feel", "de.javasoft.plaf.synthetica.SyntheticaWhiteVisionLookAndFeel");
-        LookAndFeelInfo[] installedInfos = UIManager.getInstalledLookAndFeels();        
+        LookAndFeelInfo[] installedInfos = UIManager.getInstalledLookAndFeels();
 
         String lafName = (String) getModelProperty(DISPLAY_LOOK_AND_FEEL);
         LookAndFeel currentLaf = UIManager.getLookAndFeel();
@@ -193,17 +190,17 @@ public class SessionMgr {
             try {
                 boolean installed = false;
                 for (LookAndFeelInfo lafInfo : installedInfos) {
-                    if (lafInfo.getClassName().equals(lafName)) {                        
+                    if (lafInfo.getClassName().equals(lafName)) {
                         installed = true;
                     }
-                    if ( lafInfo.getName().equals( currentLaf.getName() ) ) {
+                    if (lafInfo.getName().equals(currentLaf.getName())) {
                         currentLafInfo = lafInfo;
                     }
                 }
-                if ( installed ) {
+                if (installed) {
                     setLookAndFeel(lafName);
                 }
-                else if ( currentLafInfo != null ) {
+                else if (currentLafInfo != null) {
                     setLookAndFeel(currentLafInfo.getName());
                     setModelProperty(DISPLAY_LOOK_AND_FEEL, currentLafInfo.getClassName());
                 }
@@ -215,7 +212,7 @@ public class SessionMgr {
         else {
             setLookAndFeel("de.javasoft.plaf.synthetica.SyntheticaBlackEyeLookAndFeel");
         }
-        
+
         String tempLogin = (String) getModelProperty(USER_NAME);
         String tempPassword = (String) getModelProperty(USER_PASSWORD);
         if (tempLogin != null && tempPassword != null) {
@@ -223,7 +220,7 @@ public class SessionMgr {
             PropertyConfigurator.getProperties().setProperty(USER_PASSWORD, tempPassword);
         }
         Integer tmpCache = (Integer) getModelProperty(FILE_CACHE_GIGABYTE_CAPACITY_PROPERTY);
-        if (null!=tmpCache) {
+        if (null != tmpCache) {
             PropertyConfigurator.getProperties().setProperty(FILE_CACHE_GIGABYTE_CAPACITY_PROPERTY, tmpCache.toString());
         }
 
@@ -274,10 +271,10 @@ public class SessionMgr {
     }
 
     public org.janelia.it.workstation.gui.framework.session_mgr.SessionModel getSessionModel() {
-		return sessionModel;
-	}
+        return sessionModel;
+    }
 
-	public Object setModelProperty(Object key, Object value) {
+    public Object setModelProperty(Object key, Object value) {
         return sessionModel.setModelProperty(key, value);
     }
 
@@ -289,7 +286,7 @@ public class SessionMgr {
         return sessionModel.getExternalClients();
     }
 
-    public List<org.janelia.it.workstation.ws.ExternalClient> getExternalClientsByName(String clientName){
+    public List<org.janelia.it.workstation.ws.ExternalClient> getExternalClientsByName(String clientName) {
         return sessionModel.getExternalClientsByName(clientName);
     }
 
@@ -297,14 +294,14 @@ public class SessionMgr {
         return sessionModel.getExternalClientByPort(targetPort);
     }
 
-    public void removeExternalClientByPort(int targetPort){
+    public void removeExternalClientByPort(int targetPort) {
         sessionModel.removeExternalClientByPort(targetPort);
     }
 
-    public void sendMessageToExternalClients(String operationName, Map<String,Object> parameters) {
-    	sessionModel.sendMessageToExternalClients(operationName, parameters);
+    public void sendMessageToExternalClients(String operationName, Map<String, Object> parameters) {
+        sessionModel.sendMessageToExternalClients(operationName, parameters);
     }
-    
+
     public static KeyBindings getKeyBindings() {
         return org.janelia.it.workstation.gui.framework.session_mgr.SessionModel.getKeyBindings();
     }
@@ -313,7 +310,7 @@ public class SessionMgr {
         return sessionModel.getModelProperty(key);
     }
 
-    public void removeModelProperty(Object key){
+    public void removeModelProperty(Object key) {
         sessionModel.removeModelProperty(key);
     }
 
@@ -383,8 +380,8 @@ public class SessionMgr {
      * Enables or disables the local file cache and
      * saves the setting as a session preference.
      *
-     * @param  isDisabled  if true, cache will be disabled;
-     *                     otherwise cache will be enabled.
+     * @param isDisabled if true, cache will be disabled;
+     * otherwise cache will be enabled.
      */
     public void setFileCacheDisabled(boolean isDisabled) {
 
@@ -393,18 +390,20 @@ public class SessionMgr {
         if (isDisabled) {
             log.warn("disabling local cache");
             localFileCache = null;
-        } else {
+        }
+        else {
             try {
-                final String localCacheRoot =
-                        ConsoleProperties.getString("console.localCache.rootDirectory",
-                                                    prefsDir);
+                final String localCacheRoot
+                        = ConsoleProperties.getString("console.localCache.rootDirectory",
+                                prefsDir);
                 final long kilobyteCapacity = getFileCacheGigabyteCapacity() * 1024 * 1024;
 
                 localFileCache = new LocalFileCache(new File(localCacheRoot),
-                                                    kilobyteCapacity,
-                                                    webDavClient,
-                                                    null);
-            } catch (Exception e) {
+                        kilobyteCapacity,
+                        webDavClient,
+                        null);
+            }
+            catch (Exception e) {
                 localFileCache = null;
                 log.error("disabling local cache after initialization failure", e);
             }
@@ -428,19 +427,20 @@ public class SessionMgr {
     /**
      * Sets the local file cache capacity and saves the setting as a session preference.
      *
-     * @param  gigabyteCapacity  cache capacity in gigabytes.
+     * @param gigabyteCapacity cache capacity in gigabytes.
      */
     public void setFileCacheGigabyteCapacity(Integer gigabyteCapacity) {
 
-        if ((gigabyteCapacity == null) ||
-            (gigabyteCapacity < MIN_FILE_CACHE_GIGABYTE_CAPACITY)) {
+        if ((gigabyteCapacity == null)
+                || (gigabyteCapacity < MIN_FILE_CACHE_GIGABYTE_CAPACITY)) {
             gigabyteCapacity = MIN_FILE_CACHE_GIGABYTE_CAPACITY;
-        } else if (gigabyteCapacity > MAX_FILE_CACHE_GIGABYTE_CAPACITY) {
+        }
+        else if (gigabyteCapacity > MAX_FILE_CACHE_GIGABYTE_CAPACITY) {
             gigabyteCapacity = MAX_FILE_CACHE_GIGABYTE_CAPACITY;
         }
 
         setModelProperty(SessionMgr.FILE_CACHE_GIGABYTE_CAPACITY_PROPERTY,
-                         gigabyteCapacity);
+                gigabyteCapacity);
 
         if (isFileCacheAvailable()) {
             final long kilobyteCapacity = gigabyteCapacity * 1024 * 1024;
@@ -494,11 +494,11 @@ public class SessionMgr {
         this.setModelProperty("FreeMemoryViewer", use);
 //      freeMemoryWatcher=use;
     }
-/*
-  public boolean isUsingMemoryWatcher() {
+    /*
+     public boolean isUsingMemoryWatcher() {
      return freeMemoryWatcher;
-  }
-*/
+     }
+     */
 
     public void systemExit() {
         systemExit(0);
@@ -508,10 +508,10 @@ public class SessionMgr {
         sessionModel.systemWillExit();
         writeSettings(); // Saves user preferences.
         sessionModel.removeAllBrowserModels();
-        
+
         logoutUser();
         log.info("Memory in use at exit: " + (Runtime.getRuntime().totalMemory() - Runtime.getRuntime().freeMemory()) / 1000000f + " MB");
-        
+
         modelManager.prepareForSystemExit();
         // System-exit is now handled by NetBeans framework.
         //  System.exit(errorlevel);
@@ -547,7 +547,7 @@ public class SessionMgr {
                         protected void loadCustomXML() throws ParseException {
                             loadXMLConfig("/SyntheticaBlackEyeLookAndFeel.xml");
                         }
-                    });	
+                    });
                 }
                 catch (IllegalComponentStateException ex) {
                     handleException(ex);
@@ -584,11 +584,11 @@ public class SessionMgr {
 //                props.put("windowTitleColorDark", backGround);
 //                props.put("windowBorderColor", controlColor);
 //                com.jtattoo.plaf.smart.SmartLookAndFeel.setCurrentTheme(props);
-        		UIManager.setLookAndFeel(lookAndFeelClassName);	
-            } 
-            else {                
-        		UIManager.setLookAndFeel(lookAndFeelClassName);	
-        	}
+                UIManager.setLookAndFeel(lookAndFeelClassName);
+            }
+            else {
+                UIManager.setLookAndFeel(lookAndFeelClassName);
+            }
 
             // The main frame is not presented until after this time.
             //  No need to update its LaF.
@@ -600,17 +600,17 @@ public class SessionMgr {
     }
 
     public boolean isUnloadImages() {
-        Boolean unloadImagesBool = (Boolean)SessionMgr.getSessionMgr().getModelProperty(SessionMgr.UNLOAD_IMAGES_PROPERTY);
-        if (unloadImagesBool!=null && unloadImagesBool) {
+        Boolean unloadImagesBool = (Boolean) SessionMgr.getSessionMgr().getModelProperty(SessionMgr.UNLOAD_IMAGES_PROPERTY);
+        if (unloadImagesBool != null && unloadImagesBool) {
             return true;
         }
         return false;
     }
-    
+
     public boolean isDarkLook() {
-    	return isDarkLook;
+        return isDarkLook;
     }
-    
+
     /**
      * Use getBrowser, it's shorter and static.
      */
@@ -621,36 +621,39 @@ public class SessionMgr {
     public static org.janelia.it.workstation.gui.framework.console.Browser getBrowser() {
         return getSessionMgr().getActiveBrowser();
     }
-        
+
     /**
-     * Call this if all you need is a parent frame.  Browser will no longer
+     * Call this if all you need is a parent frame. Browser will no longer
      * extend JFrame.
-     * 
+     *
      * @return the main framework window.
      */
-    public static JFrame getMainFrame() { 
+    public static JFrame getMainFrame() {
         if (mainFrame == null) {
-            try {                
+            try {
                 Runnable runnable = new Runnable() {
                     public void run() {
                         mainFrame = WindowLocator.getMainFrame();
                     }
                 };
-                if ( SwingUtilities.isEventDispatchThread() ) {
+                if (SwingUtilities.isEventDispatchThread()) {
                     runnable.run();
                 }
                 else {
-                    SwingUtilities.invokeAndWait( runnable );
+                    SwingUtilities.invokeAndWait(runnable);
                 }
-            } catch (Exception ex) {
+            }
+            catch (Exception ex) {
                 SessionMgr.getSessionMgr().handleException(ex);
             }
         }
         return mainFrame;
     }
-    
+
     public void startExternalHttpListener(int port) {
-        if (externalHttpListener == null) externalHttpListener = new ExternalListener(port);
+        if (externalHttpListener == null) {
+            externalHttpListener = new ExternalListener(port);
+        }
     }
 
     public void stopExternalHttpListener() {
@@ -661,13 +664,15 @@ public class SessionMgr {
     }
 
     public void startAxisServer(String url) {
-    	try {
-	        if (axisServer == null) axisServer = new EmbeddedAxisServer(url);
-	        axisServer.start();
-    	}
-    	catch (Exception e) {
+        try {
+            if (axisServer == null) {
+                axisServer = new EmbeddedAxisServer(url);
+            }
+            axisServer.start();
+        }
+        catch (Exception e) {
             SessionMgr.getSessionMgr().handleException(e);
-    	}
+        }
     }
 
     public void stopAxisServer() {
@@ -676,14 +681,16 @@ public class SessionMgr {
             axisServer = null;
         }
     }
-    
+
     public EmbeddedAxisServer getAxisServer() {
-		return axisServer;
-	}
+        return axisServer;
+    }
 
     public void startWebServer(int port) {
         try {
-            if (webServer == null) webServer = new org.janelia.it.workstation.web.EmbeddedWebServer(port);
+            if (webServer == null) {
+                webServer = new org.janelia.it.workstation.web.EmbeddedWebServer(port);
+            }
             webServer.start();
         }
         catch (Exception e) {
@@ -702,7 +709,7 @@ public class SessionMgr {
             }
         }
     }
-    
+
     public org.janelia.it.workstation.web.EmbeddedWebServer getWebServer() {
         return webServer;
     }
@@ -723,7 +730,7 @@ public class SessionMgr {
             ostream.writeObject(sessionModel.getModelProperties());
             ostream.flush();
             ostream.close();
-        	log.info("Saving user settings to "+settingsFile.getAbsolutePath());
+            log.info("Saving user settings to " + settingsFile.getAbsolutePath());
         }
         catch (IOException ioEx) {
             handleException(ioEx);
@@ -733,40 +740,40 @@ public class SessionMgr {
     public boolean loginSubject() {
         try {
             boolean relogin = false;
-            
-        	if (isLoggedIn()) {
-        		logoutUser();
-        		log.info("RELOGIN");    
-        		relogin = true;
-        	}
+
+            if (isLoggedIn()) {
+                logoutUser();
+                log.info("RELOGIN");
+                relogin = true;
+            }
 
             // Login and start the session
             Subject tmpSubjectSubject = FacadeManager.getFacadeManager().getComputeFacade().loginSubject();
-            authenticatedSubject =  tmpSubjectSubject;
-            if (null!=authenticatedSubject) { 
-                isLoggedIn = true; 
-                
-                String runAsUser = (String)SessionMgr.getSessionMgr().getModelProperty(SessionMgr.RUN_AS_USER);
+            authenticatedSubject = tmpSubjectSubject;
+            if (null != authenticatedSubject) {
+                isLoggedIn = true;
+
+                String runAsUser = (String) SessionMgr.getSessionMgr().getModelProperty(SessionMgr.RUN_AS_USER);
                 loggedInSubject = StringUtils.isEmpty(runAsUser) ? authenticatedSubject : org.janelia.it.workstation.api.entity_model.management.ModelMgr.getModelMgr().getSubject(runAsUser);
-                
-                if (loggedInSubject==null) {
-                    JOptionPane.showMessageDialog(SessionMgr.getMainFrame(), "Cannot run as non-existent subject "+runAsUser, "Error", JOptionPane.ERROR_MESSAGE);
+
+                if (loggedInSubject == null) {
+                    JOptionPane.showMessageDialog(SessionMgr.getMainFrame(), "Cannot run as non-existent subject " + runAsUser, "Error", JOptionPane.ERROR_MESSAGE);
                     loggedInSubject = authenticatedSubject;
                 }
 
                 if (!authenticatedSubject.getId().equals(loggedInSubject.getId())) {
-                    log.info("Authenticated as {} (Running as {})",authenticatedSubject.getKey(),loggedInSubject.getId());
+                    log.info("Authenticated as {} (Running as {})", authenticatedSubject.getKey(), loggedInSubject.getId());
                 }
                 else {
-                    log.info("Authenticated as {}",authenticatedSubject.getKey());    
+                    log.info("Authenticated as {}", authenticatedSubject.getKey());
                 }
 
                 FacadeManager.getFacadeManager().getComputeFacade().beginSession();
 
                 if (relogin) {
-                    log.info("Clearing all caches");    
+                    log.info("Clearing all caches");
                     org.janelia.it.workstation.api.entity_model.management.ModelMgr.getModelMgr().invalidateCache();
-                    if (SessionMgr.getBrowser()!=null) {
+                    if (SessionMgr.getBrowser() != null) {
                         log.info("Refreshing all views");
                         SessionMgr.getBrowser().getEntityOutline().refresh();
                         SessionMgr.getBrowser().getOntologyOutline().refresh();
@@ -779,25 +786,25 @@ public class SessionMgr {
         }
         catch (Exception e) {
             log.error("loginUser: exception caught", e);
-        	isLoggedIn = false;
-        	log.error("Error logging in",e);
+            isLoggedIn = false;
+            log.error("Error logging in", e);
             throw new SystemError("Cannot authenticate login. The server may be down. Please try again later.");
         }
     }
-    
+
     public void logoutUser() {
-    	try {
-    	    if (loggedInSubject!=null) {
+        try {
+            if (loggedInSubject != null) {
                 FacadeManager.getFacadeManager().getComputeFacade().endSession();
-                log.info("Logged out with: {}",loggedInSubject.getKey());
-    	    }
-    		isLoggedIn = false;
-        	loggedInSubject = null;
+                log.info("Logged out with: {}", loggedInSubject.getKey());
+            }
+            isLoggedIn = false;
+            loggedInSubject = null;
             authenticatedSubject = null;
-    	}
-    	catch (Exception e) {
-    	    log.error("Error logging out",e);
-    	}
+        }
+        catch (Exception e) {
+            log.error("Error logging out", e);
+        }
     }
 
     public boolean isLoggedIn() {
@@ -821,9 +828,10 @@ public class SessionMgr {
     }
 
     class MyBrowserListener extends WindowAdapter {
+
         public void windowClosed(WindowEvent e) {
             log.info("Window is closing...");
-        	e.getWindow().removeWindowListener(this);
+            e.getWindow().removeWindowListener(this);
             SessionMgr.getSessionMgr().saveUserSettings();
         }
 
@@ -835,7 +843,7 @@ public class SessionMgr {
     public static boolean authenticatedSubjectIsInGroup(String groupName) {
         Subject subject = SessionMgr.getSessionMgr().getAuthenticatedSubject();
         if (subject instanceof User) {
-            return isUserInGroup((User)subject, groupName);
+            return isUserInGroup((User) subject, groupName);
         }
         else {
             return false;
@@ -843,18 +851,20 @@ public class SessionMgr {
     }
 
     public static boolean currentUserIsInGroup(String groupName) {
-    	Subject subject = SessionMgr.getSessionMgr().getSubject();
-    	if (subject instanceof User) {
-    	    return isUserInGroup((User)subject, groupName);
-    	}
-    	else {
-    	    return false;
-    	}
+        Subject subject = SessionMgr.getSessionMgr().getSubject();
+        if (subject instanceof User) {
+            return isUserInGroup((User) subject, groupName);
+        }
+        else {
+            return false;
+        }
     }
 
-	private static boolean isUserInGroup(User targetUser, String targetGroup) {
-        if (null==targetUser) return false;
-        for(SubjectRelationship relation : targetUser.getGroupRelationships()) {
+    private static boolean isUserInGroup(User targetUser, String targetGroup) {
+        if (null == targetUser) {
+            return false;
+        }
+        for (SubjectRelationship relation : targetUser.getGroupRelationships()) {
             if (relation.getGroup().getName().equals(targetGroup)) {
                 return true;
             }
@@ -863,32 +873,36 @@ public class SessionMgr {
     }
 
     public static List<String> getSubjectKeys() {
-		List<String> subjectKeys = new ArrayList<String>();
-    	Subject subject = SessionMgr.getSessionMgr().getSubject();
-    	if (subject != null) {
-        	subjectKeys.add(subject.getKey());
-        	if (subject instanceof User) {
-            	for(SubjectRelationship relation : ((User)subject).getGroupRelationships()) {
-            		subjectKeys.add(relation.getGroup().getKey());
-            	}
-        	}
-    	}
-    	return subjectKeys;
-	}
-    
+        List<String> subjectKeys = new ArrayList<String>();
+        Subject subject = SessionMgr.getSessionMgr().getSubject();
+        if (subject != null) {
+            subjectKeys.add(subject.getKey());
+            if (subject instanceof User) {
+                for (SubjectRelationship relation : ((User) subject).getGroupRelationships()) {
+                    subjectKeys.add(relation.getGroup().getKey());
+                }
+            }
+        }
+        return subjectKeys;
+    }
+
     public static String getSubjectKey() {
         Subject subject = getSessionMgr().getSubject();
-        if (subject==null) {
-            if (DataviewApp.getMainFrame()!=null) return null;
+        if (subject == null) {
+            if (rootAccess) {
+                return null;
+            }
             throw new SystemError("Not logged in");
         }
         return subject.getKey();
     }
-    
+
     public static String getUsername() {
         Subject subject = getSessionMgr().getSubject();
-        if (subject==null) {
-            if (DataviewApp.getMainFrame()!=null) return null;
+        if (subject == null) {
+            if (rootAccess) {
+                return null;
+            }
             throw new SystemError("Not logged in");
         }
         return subject.getName();
@@ -896,8 +910,10 @@ public class SessionMgr {
 
     public static String getUserEmail() {
         Subject subject = getSessionMgr().getSubject();
-        if (subject==null) {
-            if (DataviewApp.getMainFrame()!=null) return null;
+        if (subject == null) {
+            if (rootAccess) {
+                return null;
+            }
             throw new SystemError("Not logged in");
         }
         return subject.getEmail();
@@ -908,18 +924,18 @@ public class SessionMgr {
      * the requested system file (as needed) and return the cached file.
      * If local caching is disabled, null is returned.
      *
-     * @param  standardPath  the standard system path for the file.
+     * @param standardPath the standard system path for the file.
      *
-     * @param  forceRefresh  indicates if any existing cached file
-     *                       should be forcibly refreshed before
-     *                       being returned.  In most cases, this
-     *                       should be set to false.
+     * @param forceRefresh indicates if any existing cached file
+     * should be forcibly refreshed before
+     * being returned. In most cases, this
+     * should be set to false.
      *
      * @return an accessible file for the specified path or
-     *         null if caching is disabled or the file cannot be cached.
+     * null if caching is disabled or the file cannot be cached.
      */
     public static File getCachedFile(String standardPath,
-                                     boolean forceRefresh) {
+            boolean forceRefresh) {
 
         final SessionMgr mgr = SessionMgr.getSessionMgr();
 
@@ -930,19 +946,22 @@ public class SessionMgr {
             try {
                 final URL url = client.getWebDavUrl(standardPath);
                 file = cache.getFile(url, forceRefresh);
-            } catch (Exception e) {
+            }
+            catch (Exception e) {
                 log.error("Failed to retrieve " + standardPath + " from local cache", e);
             }
-        } else {
+        }
+        else {
             log.error("Local file cache is not available");
         }
 
         return file;
     }
-    
+
     /**
      * Get the URL for a standard path. It may be a local URL, if the file has been cached, or a remote
-     * URL on the WebDAV server. It might even be a mounted location, if WebDAV is disabled. 
+     * URL on the WebDAV server. It might even be a mounted location, if WebDAV is disabled.
+     *
      * @param standardPath a standard system path
      * @return an accessible URL for the specified path
      */
