@@ -1,6 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <classpath>
 	<classpathentry kind="src" path="AlignmentBoardModule/src"/>
+	<classpathentry kind="src" path="ConsoleModule/build/classes-generated"/>
+	<classpathentry kind="src" path="AlignmentBoardModule/build/classes-generated"/>
 	<classpathentry kind="src" path="AlignmentBoardModule/test/unit/src"/>
 	<classpathentry kind="src" path="ConsoleModule/src"/>
 	<classpathentry kind="src" path="ConsoleModule/test/unit/src"/>
@@ -10,7 +12,7 @@
 	<classpathentry combineaccessrules="false" kind="src" path="/shared"/>
 	<classpathentry kind="lib" path="/compute/build/jars/compute-client.jar"/>
 	<classpathentry kind="con" path="org.eclipse.jdt.USER_LIBRARY/ConsoleWrapper"/>
-	<classpathentry kind="con" path="org.eclipse.jdt.USER_LIBRARY/NetBeans"/>
 	<classpathentry kind="con" path="org.eclipse.jdt.USER_LIBRARY/JUnit"/>
+	<classpathentry kind="con" path="org.eclipse.jdt.USER_LIBRARY/NetBeansRCP"/>
 	<classpathentry kind="output" path="ConsoleModule/build/classes"/>
 </classpath>
