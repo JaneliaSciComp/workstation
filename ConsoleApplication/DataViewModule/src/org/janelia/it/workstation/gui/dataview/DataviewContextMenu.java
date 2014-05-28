@@ -153,7 +153,7 @@ public class DataviewContextMenu extends AbstractContextMenu<Entity> {
         	}
         }
         
-        Utils.setWaitingCursor(DataviewApp.getMainFrame());
+        Utils.setWaitingCursor(SessionMgr.getBrowser().getMainComponent());
         
         SimpleWorker deleteTask = new SimpleWorker() {
 
@@ -212,7 +212,7 @@ public class DataviewContextMenu extends AbstractContextMenu<Entity> {
 
 	                @Override
 	                protected void hadSuccess() {
-	                	Utils.setDefaultCursor(DataviewApp.getMainFrame());
+	                	Utils.setDefaultCursor(SessionMgr.getBrowser().getMainComponent());
 	                }
 
 	                @Override

@@ -24,14 +24,14 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * A panel for displaying entity data objects. 
- * 
+ * A panel for displaying entity data objects.
+ *
  * @author <a href="mailto:rokickik@janelia.hhmi.org">Konrad Rokicki</a>
  */
 public class EntityDataPane extends JPanel {
 
     private static final Logger log = LoggerFactory.getLogger(EntityDataPane.class);
-    
+
     private final List<String> staticColumns = new ArrayList<String>();
     private final String title;
     private boolean showParent;
@@ -46,7 +46,6 @@ public class EntityDataPane extends JPanel {
 
     private SimpleWorker loadTask;
 
-
     public EntityDataPane(String title, boolean showParent, boolean showChild) {
 
         this.title = title;
@@ -58,8 +57,12 @@ public class EntityDataPane extends JPanel {
         staticColumns.add("User");
         staticColumns.add("Updated Date");
         staticColumns.add("Order");
-        if (showParent) staticColumns.add("Parent");
-        if (showChild) staticColumns.add("Child");
+        if (showParent) {
+            staticColumns.add("Parent");
+        }
+        if (showChild) {
+            staticColumns.add("Child");
+        }
         staticColumns.add("Value");
 
         table = new JTable();
@@ -69,37 +72,42 @@ public class EntityDataPane extends JPanel {
         table.setRowSelectionAllowed(true);
 
         table.addMouseListener(new org.janelia.it.workstation.gui.util.MouseHandler() {
-			@Override
-			protected void popupTriggered(MouseEvent e) {
-				if (datas==null) return;
+            @Override
+            protected void popupTriggered(MouseEvent e) {
+                if (datas == null) {
+                    return;
+                }
                 table.setColumnSelectionAllowed(true);
                 int row = table.rowAtPoint(e.getPoint());
                 int col = table.columnAtPoint(e.getPoint());
                 table.getSelectionModel().setSelectionInterval(row, row);
                 table.getColumnModel().getSelectionModel().setSelectionInterval(col, col);
-				showPopupMenu(e);
-			}
+                showPopupMenu(e);
+            }
 
-			@Override
-			protected void doubleLeftClicked(MouseEvent e) {
-				if (datas==null) return;
+            @Override
+            protected void doubleLeftClicked(MouseEvent e) {
+                if (datas == null) {
+                    return;
+                }
                 table.setColumnSelectionAllowed(false);
                 int row = table.getSelectedRow();
                 if (row >= datas.size()) {
-                    log.error("No such row: {}",row);
+                    log.error("No such row: {}", row);
                     return;
                 }
                 doubleClick(datas.get(row));
-			}
+            }
 
-			@Override
-			protected void singleLeftClicked(MouseEvent e) {
-				if (datas==null) return;
+            @Override
+            protected void singleLeftClicked(MouseEvent e) {
+                if (datas == null) {
+                    return;
+                }
                 table.setColumnSelectionAllowed(false);
                 table.getColumnModel().getSelectionModel().setSelectionInterval(0, table.getColumnCount());
-			}
-			
-			
+            }
+
         });
 
         scrollPane = new JScrollPane();
@@ -116,23 +124,23 @@ public class EntityDataPane extends JPanel {
 
         JTable target = (JTable) e.getSource();
         final String value = target.getValueAt(target.getSelectedRow(), target.getSelectedColumn()).toString();
-    	
+
         final JPopupMenu popupMenu = new JPopupMenu();
         popupMenu.setLightWeightPopupEnabled(true);
 
         JMenuItem copyMenuItem = new JMenuItem("Copy To Clipboard");
         copyMenuItem.addActionListener(new ActionListener() {
-			@Override
-			public void actionPerformed(ActionEvent e) {
-	            Transferable t = new StringSelection(value);
-	            Toolkit.getDefaultToolkit().getSystemClipboard().setContents(t, null);
-			}
-		});
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                Transferable t = new StringSelection(value);
+                Toolkit.getDefaultToolkit().getSystemClipboard().setContents(t, null);
+            }
+        });
         popupMenu.add(copyMenuItem);
 
         popupMenu.show((JComponent) e.getSource(), e.getX(), e.getY());
     }
-    
+
     /**
      * Override this method to provide double click behavior.
      *
@@ -142,15 +150,15 @@ public class EntityDataPane extends JPanel {
     }
 
     public void showLoading() {
-	    remove(scrollPane);
-	    remove(loadingView);
-	    add(loadingView, BorderLayout.CENTER);
-	    updateUI();
+        remove(scrollPane);
+        remove(loadingView);
+        add(loadingView, BorderLayout.CENTER);
+        updateUI();
     }
 
     public void showEmpty() {
         titleLabel.setText(title);
-	    remove(loadingView);
+        remove(loadingView);
         remove(scrollPane);
         updateUI();
     }
@@ -174,15 +182,17 @@ public class EntityDataPane extends JPanel {
                 for (EntityData data : datas) {
                     Entity child = data.getChildEntity();
                     if (child != null && !EntityUtils.isInitialized(child)) {
-                    	System.out.println("Fetching child "+child.getId());
+                        System.out.println("Fetching child " + child.getId());
                         data.setChildEntity(org.janelia.it.workstation.api.entity_model.management.ModelMgr.getModelMgr().getEntityById(child.getId()));
                     }
                     Entity parent = data.getParentEntity();
                     if (parent != null && !EntityUtils.isInitialized(parent)) {
-                    	System.out.println("Fetching parent "+parent.getId());
+                        System.out.println("Fetching parent " + parent.getId());
                         data.setParentEntity(org.janelia.it.workstation.api.entity_model.management.ModelMgr.getModelMgr().getEntityById(parent.getId()));
                     }
-                    if (isCancelled()) return;
+                    if (isCancelled()) {
+                        return;
+                    }
                 }
 
                 tableModel = updateTableModel(datas);
@@ -211,7 +221,6 @@ public class EntityDataPane extends JPanel {
 
         loadTask.execute();
     }
-
 
     /**
      * Synchronous method for updating the JTable model. Should be called from the EDT.

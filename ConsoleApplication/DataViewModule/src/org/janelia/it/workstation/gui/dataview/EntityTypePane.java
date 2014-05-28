@@ -19,10 +19,11 @@ import org.janelia.it.jacs.compute.api.support.SolrUtils;
 import org.janelia.it.jacs.model.entity.EntityAttribute;
 import org.janelia.it.jacs.model.entity.EntityType;
 import org.janelia.it.jacs.shared.utils.StringUtils;
+import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
 
 /**
  * The left-hand panel which lists the Entity types and their attributes.
- * 
+ *
  * @author <a href="mailto:rokickik@janelia.hhmi.org">Konrad Rokicki</a>
  */
 public class EntityTypePane extends JScrollPane {
@@ -31,23 +32,24 @@ public class EntityTypePane extends JScrollPane {
     private final JTree tree;
     private final SearchPane searchPane;
     private final SearchResultsPanel searchResultsPanel;
-    
+
     public EntityTypePane(EntityPane entityPane) {
-        
+
         this.searchPane = entityPane.getSearchPane();
         this.searchResultsPanel = entityPane.getSearchResultsPanel();
-        
+
         tree = new JTree(new DefaultMutableTreeNode("Loading..."));
         setViewportView(tree);
 
         tree.addMouseListener(new MouseHandler() {
-			@Override
-			protected void popupTriggered(MouseEvent e) {
+            @Override
+            protected void popupTriggered(MouseEvent e) {
                 tree.setSelectionRow(tree.getRowForLocation(e.getX(), e.getY()));
-				showPopupMenu(e);
-			}
-			@Override
-			protected void singleLeftClicked(MouseEvent e) {
+                showPopupMenu(e);
+            }
+
+            @Override
+            protected void singleLeftClicked(MouseEvent e) {
                 TreePath path = tree.getClosestPathForLocation(e.getX(), e.getY());
                 DefaultMutableTreeNode node = (DefaultMutableTreeNode) path.getLastPathComponent();
                 if (node.getUserObject() instanceof EntityType) {
@@ -59,10 +61,10 @@ public class EntityTypePane extends JScrollPane {
 //                    DataviewApp.getMainFrame().getEntityPane().showEntities((EntityType) parent.getUserObject());
 //                    tree.setSelectionPath(path.getParentPath());
                 }
-			}
+            }
         });
     }
-    
+
     private void showPopupMenu(MouseEvent e) {
 
         TreePath path = tree.getClosestPathForLocation(e.getX(), e.getY());
@@ -75,44 +77,48 @@ public class EntityTypePane extends JScrollPane {
 
             JMenuItem addTypeMenuItem = new JMenuItem("Add Entity Type");
             addTypeMenuItem.addActionListener(new ActionListener() {
-    			@Override
-    			public void actionPerformed(ActionEvent e) {
-    	            String typeName = (String) JOptionPane.showInputDialog(org.janelia.it.workstation.gui.dataview.DataviewApp.getMainFrame(), "Name:\n", "Add Entity Type", JOptionPane.PLAIN_MESSAGE, null, null, null);
-    	            if (StringUtils.isEmpty(typeName)) return;
-    	            
-    	            try {
-    	            	org.janelia.it.workstation.api.entity_model.management.ModelMgr.getModelMgr().createEntityType(typeName);
-    	            	refresh();
-    	            }
-    				catch (Exception x) {
-    					x.printStackTrace();
-                        JOptionPane.showMessageDialog(org.janelia.it.workstation.gui.dataview.DataviewApp.getMainFrame(), "Error adding type "+x.getMessage());
-    				}
-    			}
-    		});
+                @Override
+                public void actionPerformed(ActionEvent e) {
+                    String typeName = (String) JOptionPane.showInputDialog(SessionMgr.getBrowser().getMainComponent(), "Name:\n", "Add Entity Type", JOptionPane.PLAIN_MESSAGE, null, null, null);
+                    if (StringUtils.isEmpty(typeName)) {
+                        return;
+                    }
+
+                    try {
+                        org.janelia.it.workstation.api.entity_model.management.ModelMgr.getModelMgr().createEntityType(typeName);
+                        refresh();
+                    }
+                    catch (Exception x) {
+                        x.printStackTrace();
+                        JOptionPane.showMessageDialog(SessionMgr.getBrowser().getMainComponent(), "Error adding type " + x.getMessage());
+                    }
+                }
+            });
             popupMenu.add(addTypeMenuItem);
         }
         else if (node.getUserObject() instanceof EntityType) {
 
-        	final EntityType entityType = (EntityType)node.getUserObject();
-        	
+            final EntityType entityType = (EntityType) node.getUserObject();
+
             JMenuItem addAttrMenuItem = new JMenuItem("Add Attribute");
             addAttrMenuItem.addActionListener(new ActionListener() {
-    			@Override
-    			public void actionPerformed(ActionEvent e) {
-    	            String attrName = (String) JOptionPane.showInputDialog(org.janelia.it.workstation.gui.dataview.DataviewApp.getMainFrame(), "Name:\n", "Add Entity Attribute", JOptionPane.PLAIN_MESSAGE, null, null, null);
-    	            if (StringUtils.isEmpty(attrName)) return;
-    	            
-    	            try {
-    	            	org.janelia.it.workstation.api.entity_model.management.ModelMgr.getModelMgr().createEntityAttribute(entityType.getName(), attrName);
-    	            	refresh();
-    	            }
-    				catch (Exception x) {
-    					x.printStackTrace();
-                        JOptionPane.showMessageDialog(org.janelia.it.workstation.gui.dataview.DataviewApp.getMainFrame(), "Error adding attribute "+x.getMessage());
-    				}
-    			}
-    		});
+                @Override
+                public void actionPerformed(ActionEvent e) {
+                    String attrName = (String) JOptionPane.showInputDialog(SessionMgr.getBrowser().getMainComponent(), "Name:\n", "Add Entity Attribute", JOptionPane.PLAIN_MESSAGE, null, null, null);
+                    if (StringUtils.isEmpty(attrName)) {
+                        return;
+                    }
+
+                    try {
+                        org.janelia.it.workstation.api.entity_model.management.ModelMgr.getModelMgr().createEntityAttribute(entityType.getName(), attrName);
+                        refresh();
+                    }
+                    catch (Exception x) {
+                        x.printStackTrace();
+                        JOptionPane.showMessageDialog(SessionMgr.getBrowser().getMainComponent(), "Error adding attribute " + x.getMessage());
+                    }
+                }
+            });
             popupMenu.add(addAttrMenuItem);
 
             JMenuItem searchItem = new JMenuItem("Search for this type");
@@ -120,33 +126,33 @@ public class EntityTypePane extends JScrollPane {
                 @Override
                 public void actionPerformed(ActionEvent e) {
                     searchPane.setTabIndex(1);
-                    searchPane.getSolrPanel().setSearchString("+entity_type:\""+entityType.getName()+"\"");
+                    searchPane.getSolrPanel().setSearchString("+entity_type:\"" + entityType.getName() + "\"");
                     searchPane.performSolrSearch(true);
                 }
             });
             popupMenu.add(searchItem);
         }
         else if (node.getUserObject() instanceof EntityAttribute) {
-            
-            final EntityAttribute entityAttr = (EntityAttribute)node.getUserObject();
-            
+
+            final EntityAttribute entityAttr = (EntityAttribute) node.getUserObject();
+
             JMenuItem searchItem = new JMenuItem("Search for this attribute");
             searchItem.addActionListener(new ActionListener() {
                 @Override
                 public void actionPerformed(ActionEvent e) {
                     searchPane.setTabIndex(1);
                     String attrName = SolrUtils.getDynamicFieldName(entityAttr.getName());
-                    searchPane.getSolrPanel().setSearchString("+"+attrName+":*");
+                    searchPane.getSolrPanel().setSearchString("+" + attrName + ":*");
                     searchResultsPanel.setColumnVisibility(attrName, true);
                     searchPane.performSolrSearch(true);
                 }
             });
             popupMenu.add(searchItem);
         }
-        
+
         popupMenu.show((JComponent) e.getSource(), e.getX(), e.getY());
     }
-    
+
     public void refresh() {
 
         loadTask = new SimpleWorker() {
@@ -155,11 +161,11 @@ public class EntityTypePane extends JScrollPane {
 
             @Override
             protected void doStuff() throws Exception {
-            	
-            	List<EntityType> entityTypes = org.janelia.it.workstation.api.entity_model.management.ModelMgr.getModelMgr().getEntityTypes();
+
+                List<EntityType> entityTypes = org.janelia.it.workstation.api.entity_model.management.ModelMgr.getModelMgr().getEntityTypes();
                 TreeMap<String, EntityType> sortedCollection = new TreeMap<String, EntityType>();
                 for (EntityType entityType : entityTypes) {
-                    sortedCollection.put(entityType.getName(),entityType);
+                    sortedCollection.put(entityType.getName(), entityType);
                 }
 
                 DefaultMutableTreeNode root = new DefaultMutableTreeNode("EntityType");

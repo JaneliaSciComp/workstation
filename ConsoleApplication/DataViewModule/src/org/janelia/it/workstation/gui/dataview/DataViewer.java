@@ -1,9 +1,3 @@
-/*
- * Created by IntelliJ IDEA.
- * User: rokickik
- * Date: 6/23/11
- * Time: 9:18 AM
- */
 package org.janelia.it.workstation.gui.dataview;
 
 import java.awt.*;
@@ -14,11 +8,11 @@ import org.janelia.it.workstation.gui.dialogs.search.SearchConfiguration;
 import org.janelia.it.jacs.model.entity.EntityData;
 
 /**
- * The main frame for the dataviewer assembles all the subcomponents.
+ * The main frame for the data viewer assembles all the subcomponents.
  *
  * @author <a href="mailto:rokickik@janelia.hhmi.org">Konrad Rokicki</a>
  */
-public class DataviewFrame extends JFrame {
+public class DataViewer extends JPanel {
 
     private static final double realEstatePercent = 1.0;
 
@@ -30,7 +24,7 @@ public class DataviewFrame extends JFrame {
     private org.janelia.it.workstation.gui.dataview.EntityDataPane entityChildrenPane;
     private JPanel progressPanel;
 
-    public DataviewFrame() {
+    public DataViewer() {
 
         Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize();
         setPreferredSize(new Dimension((int) (screenSize.width * realEstatePercent), (int) (screenSize.height * realEstatePercent) - 50));
@@ -47,8 +41,7 @@ public class DataviewFrame extends JFrame {
 
         setLayout(new BorderLayout());
 
-        setJMenuBar(new DataviewMenuBar(this));
-
+//        setJMenuBar(new DataviewMenuBar(this));
         initUI();
         initData();
     }
@@ -61,7 +54,7 @@ public class DataviewFrame extends JFrame {
             @Override
             protected void doubleClick(EntityData entityData) {
                 if (entityData.getParentEntity() != null) {
-                	entityPane.showEntity(entityData.getParentEntity());
+                    entityPane.showEntity(entityData.getParentEntity());
                 }
             }
         };
@@ -70,41 +63,43 @@ public class DataviewFrame extends JFrame {
             @Override
             protected void doubleClick(EntityData entityData) {
                 if (entityData.getChildEntity() != null) {
-                	entityPane.showEntity(entityData.getChildEntity());
+                    entityPane.showEntity(entityData.getChildEntity());
                 }
             }
         };
 
-    	searchPane = new org.janelia.it.workstation.gui.dataview.SearchPane(searchConfig) {
-    		@Override
-    		public void performHibernateSearch(String searchString) {
-    			if (searchString.matches("\\d{19}")) {
-    				entityPane.performSearchById(new Long(searchString));
-    			}
-    			else {
-    				entityPane.performSearchByName(searchString);	
-    			}
-    		}
-    		@Override
-    		public void performSolrSearch(boolean clear) {
-    			entityPane.performSearch(clear);
-    		}
-    		@Override
-    		public void performGroovySearch(String code) {
-    			entityPane.runGroovyCode(code);
-    		}
-    	};
+        searchPane = new org.janelia.it.workstation.gui.dataview.SearchPane(searchConfig) {
+            @Override
+            public void performHibernateSearch(String searchString) {
+                if (searchString.matches("\\d{19}")) {
+                    entityPane.performSearchById(new Long(searchString));
+                }
+                else {
+                    entityPane.performSearchByName(searchString);
+                }
+            }
+
+            @Override
+            public void performSolrSearch(boolean clear) {
+                entityPane.performSearch(clear);
+            }
+
+            @Override
+            public void performGroovySearch(String code) {
+                entityPane.runGroovyCode(code);
+            }
+        };
 
         entityPane = new EntityPane(searchConfig, searchPane, entityParentsPane, entityChildrenPane);
         entityTypePane = new org.janelia.it.workstation.gui.dataview.EntityTypePane(entityPane);
 
-        double frameHeight = (double) DataviewFrame.this.getPreferredSize().height - 30;
-        double frameWidth = (double) DataviewFrame.this.getPreferredSize().width - 30;
+        double frameHeight = (double) DataViewer.this.getPreferredSize().height - 30;
+        double frameWidth = (double) DataViewer.this.getPreferredSize().width - 30;
 
         JSplitPane splitPaneVerticalInner = new JSplitPane(JSplitPane.VERTICAL_SPLIT, true, entityParentsPane, entityPane);
         splitPaneVerticalInner.setDividerLocation((int) (frameHeight * 0.15));
         splitPaneVerticalInner.setResizeWeight(0.5);
-        
+
         JSplitPane splitPaneVerticalOuter = new JSplitPane(JSplitPane.VERTICAL_SPLIT, true, splitPaneVerticalInner, entityChildrenPane);
         splitPaneVerticalOuter.setDividerLocation((int) (frameHeight * 0.5));
         splitPaneVerticalOuter.setResizeWeight(0.5);
@@ -112,14 +107,14 @@ public class DataviewFrame extends JFrame {
         JSplitPane splitPaneHorizontal = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, true, entityTypePane, splitPaneVerticalOuter);
         splitPaneHorizontal.setDividerLocation((int) (frameWidth * 0.15));
         splitPaneHorizontal.setResizeWeight(0.2);
-          
-        getContentPane().add(searchPane, BorderLayout.NORTH);
-        getContentPane().add(splitPaneHorizontal, BorderLayout.CENTER);
+
+        add(searchPane, BorderLayout.NORTH);
+        add(splitPaneHorizontal, BorderLayout.CENTER);
     }
 
     private void initData() {
-    	searchConfig.load();
-    	entityTypePane.refresh();
+        searchConfig.load();
+        entityTypePane.refresh();
     }
 
     public EntityPane getEntityPane() {
@@ -149,6 +144,5 @@ public class DataviewFrame extends JFrame {
     public JPanel getProgressPanel() {
         return progressPanel;
     }
-    
-    
+
 }

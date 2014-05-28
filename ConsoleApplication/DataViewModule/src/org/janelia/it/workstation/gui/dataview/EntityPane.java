@@ -16,86 +16,88 @@ import org.janelia.it.jacs.model.entity.EntityData;
 import org.janelia.it.jacs.model.entity.EntityType;
 
 /**
- * A panel for displaying either lists of entities or Solr search results. 
- * 
+ * A panel for displaying either lists of entities or Solr search results.
+ *
  * @author <a href="mailto:rokickik@janelia.hhmi.org">Konrad Rokicki</a>
  */
 public class EntityPane extends JPanel {
 
     private final org.janelia.it.workstation.gui.dataview.EntityListPane entityListPane;
     private final SearchResultsPanel searchResultsPanel;
-    
+
     private final org.janelia.it.workstation.gui.dataview.SearchPane searchPanel;
     private final EntityDataPane entityParentsPane;
     private final EntityDataPane entityChildrenPane;
-    
+
     public enum ResultViewType {
-    	ENTITY,
-    	SOLR
+        ENTITY,
+        SOLR
     }
     private ResultViewType currentView;
-    
-    public EntityPane(final SearchConfiguration searchConfig, final org.janelia.it.workstation.gui.dataview.SearchPane searchPanel,
-    		final EntityDataPane entityParentsPane, final EntityDataPane entityChildrenPane) {
 
-    	setLayout(new BorderLayout());
-    	
-    	this.searchPanel = searchPanel;
+    public EntityPane(final SearchConfiguration searchConfig, final org.janelia.it.workstation.gui.dataview.SearchPane searchPanel,
+            final EntityDataPane entityParentsPane, final EntityDataPane entityChildrenPane) {
+
+        setLayout(new BorderLayout());
+
+        this.searchPanel = searchPanel;
         this.entityParentsPane = entityParentsPane;
         this.entityChildrenPane = entityChildrenPane;
 
         this.entityListPane = new org.janelia.it.workstation.gui.dataview.EntityListPane() {
-        	@Override
-        	public void entitySelected(Entity entity) {
-        		populateEntityDataPanes(entity);
-        	}
-        	@Override
-        	protected JPopupMenu getPopupMenu(List<Entity> selectedEntites, String label) {
-        		return EntityPane.this.getPopupMenu(selectedEntites, label);
-        	}
+            @Override
+            public void entitySelected(Entity entity) {
+                populateEntityDataPanes(entity);
+            }
+
+            @Override
+            protected JPopupMenu getPopupMenu(List<Entity> selectedEntites, String label) {
+                return EntityPane.this.getPopupMenu(selectedEntites, label);
+            }
         };
-        
+
         this.searchResultsPanel = new SearchResultsPanel(searchPanel.getSolrPanel()) {
-        	@Override
-        	public void entitySelected(Entity entity) {
-        		populateEntityDataPanes(entity);
-        	}
-        	@Override
-        	protected JPopupMenu getPopupMenu(List<Entity> selectedEntites, String label) {
-        		return EntityPane.this.getPopupMenu(selectedEntites, label);
-        	}
+            @Override
+            public void entitySelected(Entity entity) {
+                populateEntityDataPanes(entity);
+            }
+
+            @Override
+            protected JPopupMenu getPopupMenu(List<Entity> selectedEntites, String label) {
+                return EntityPane.this.getPopupMenu(selectedEntites, label);
+            }
         };
 
         searchConfig.addConfigurationChangeListener(entityListPane);
         searchConfig.addConfigurationChangeListener(searchResultsPanel);
-        
+
         setActiveView(ResultViewType.ENTITY);
     }
-    
+
     public void setActiveView(ResultViewType type) {
-    	if (currentView!=type) {
-    		removeAll();
-    	}
-    	this.currentView = type;
-    	switch (currentView) {
-    	case ENTITY:
-    		add(entityListPane, BorderLayout.CENTER);
-    		break;
-    	case SOLR:
-    		add(searchResultsPanel, BorderLayout.CENTER);
-    		break;
-    	}
-    	revalidate();
-    	repaint();
+        if (currentView != type) {
+            removeAll();
+        }
+        this.currentView = type;
+        switch (currentView) {
+            case ENTITY:
+                add(entityListPane, BorderLayout.CENTER);
+                break;
+            case SOLR:
+                add(searchResultsPanel, BorderLayout.CENTER);
+                break;
+        }
+        revalidate();
+        repaint();
     }
 
     public void populateEntityDataPanes(final Entity entity) {
 
         System.out.println("Populate data panes with " + entity);
-        
+
         entityParentsPane.showLoading();
         entityChildrenPane.showLoading();
-        
+
         SimpleWorker parentLoadTask = new SimpleWorker() {
 
             List<EntityData> eds;
@@ -107,7 +109,7 @@ public class EntityPane extends JPanel {
 
             @Override
             protected void hadSuccess() {
-            	entityParentsPane.showEntityData(eds);
+                entityParentsPane.showEntityData(eds);
             }
 
             @Override
@@ -115,19 +117,19 @@ public class EntityPane extends JPanel {
                 error.printStackTrace();
             }
         };
-        
+
         SimpleWorker childLoadTask = new SimpleWorker() {
 
-        	private Entity fullEntity;
-        	
+            private Entity fullEntity;
+
             @Override
             protected void doStuff() throws Exception {
-            	fullEntity = ModelMgr.getModelMgr().loadLazyEntity(entity, false);
+                fullEntity = ModelMgr.getModelMgr().loadLazyEntity(entity, false);
             }
 
             @Override
             protected void hadSuccess() {
-            	entityChildrenPane.showEntityData(fullEntity.getOrderedEntityData());
+                entityChildrenPane.showEntityData(fullEntity.getOrderedEntityData());
             }
 
             @Override
@@ -135,18 +137,17 @@ public class EntityPane extends JPanel {
                 error.printStackTrace();
             }
         };
-        
+
         parentLoadTask.execute();
         childLoadTask.execute();
     }
-    
+
     public void clearEntityDataPanes() {
         entityParentsPane.showEmpty();
         entityChildrenPane.showEmpty();
     }
 
-
-	public void performSearchById(final Long entityId) {
+    public void performSearchById(final Long entityId) {
 
         SimpleWorker searchWorker = new SimpleWorker() {
 
@@ -167,10 +168,10 @@ public class EntityPane extends JPanel {
         };
 
         searchWorker.execute();
-	}
+    }
 
-	public void performSearchByName(final String entityName) {
-		
+    public void performSearchByName(final String entityName) {
+
         SimpleWorker searchWorker = new SimpleWorker() {
 
             private List<Entity> entities;
@@ -190,37 +191,37 @@ public class EntityPane extends JPanel {
         };
 
         searchWorker.execute();
-	}
-	
-    public void performSearch(boolean clear) {
-    	clearEntityDataPanes();
-    	setActiveView(ResultViewType.SOLR);
-    	searchResultsPanel.performSearch(clear, clear, true);
-    }
-    
-    public void showEntity(final Entity entity) {
-    	clearEntityDataPanes();
-    	setActiveView(ResultViewType.ENTITY);
-    	entityListPane.showEntity(entity);
-    }
-    
-    public void showEntities(final EntityType entityType) {
-    	clearEntityDataPanes();
-    	setActiveView(ResultViewType.ENTITY);
-    	entityListPane.showEntities(entityType);
-    }
-    
-    public void showEntities(final List<Entity> entities) {
-    	clearEntityDataPanes();
-    	setActiveView(ResultViewType.ENTITY);
-    	entityListPane.showEntities(entities);
     }
 
-	public void runGroovyCode(String code) {
-    	clearEntityDataPanes();
-    	setActiveView(ResultViewType.ENTITY);
-    	
-    	try {
+    public void performSearch(boolean clear) {
+        clearEntityDataPanes();
+        setActiveView(ResultViewType.SOLR);
+        searchResultsPanel.performSearch(clear, clear, true);
+    }
+
+    public void showEntity(final Entity entity) {
+        clearEntityDataPanes();
+        setActiveView(ResultViewType.ENTITY);
+        entityListPane.showEntity(entity);
+    }
+
+    public void showEntities(final EntityType entityType) {
+        clearEntityDataPanes();
+        setActiveView(ResultViewType.ENTITY);
+        entityListPane.showEntities(entityType);
+    }
+
+    public void showEntities(final List<Entity> entities) {
+        clearEntityDataPanes();
+        setActiveView(ResultViewType.ENTITY);
+        entityListPane.showEntities(entities);
+    }
+
+    public void runGroovyCode(String code) {
+        clearEntityDataPanes();
+        setActiveView(ResultViewType.ENTITY);
+
+        try {
 //
 //        	String[] roots = new String[] { "../groovy/src" };
 //        	GroovyScriptEngine gse = new GroovyScriptEngine(roots);
@@ -229,26 +230,25 @@ public class EntityPane extends JPanel {
 //        	binding.setVariable("m", ModelMgr.getModelMgr());
 //        	gse.run("hello.groovy", binding);
 //        	System.out.println(binding.getVariable("output"));
-    	}
-    	catch (Exception e) {
-    		e.printStackTrace();
-    	}
-    	
-    	
-    	// TODO: implement
+        }
+        catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        // TODO: implement
 //    	entityListPane.showEntities(entities);
-	}
+    }
 
     public org.janelia.it.workstation.gui.dataview.SearchPane getSearchPane() {
         return searchPanel;
     }
-    
-	public SearchResultsPanel getSearchResultsPanel() {
+
+    public SearchResultsPanel getSearchResultsPanel() {
         return searchResultsPanel;
     }
 
     protected org.janelia.it.workstation.gui.dataview.DataviewContextMenu getPopupMenu(List<Entity> selectedEntities, String label) {
-		// Create context menu
-		return new org.janelia.it.workstation.gui.dataview.DataviewContextMenu(selectedEntities, label);
-	}
+        // Create context menu
+        return new org.janelia.it.workstation.gui.dataview.DataviewContextMenu(selectedEntities, label);
+    }
 }

@@ -5,13 +5,13 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 
 /**
- * The menu bar for the dataviewer.
+ * The menu bar for the data viewer.
  *
  * @author <a href="mailto:rokickik@janelia.hhmi.org">Konrad Rokicki</a>
  */
 public class DataviewMenuBar extends JMenuBar {
 
-    protected DataviewMenuBar(final DataviewFrame dataview) {
+    protected DataviewMenuBar(final DataViewer dataview) {
 
         BoxLayout layout = new BoxLayout(this, BoxLayout.X_AXIS);
         setLayout(layout);
