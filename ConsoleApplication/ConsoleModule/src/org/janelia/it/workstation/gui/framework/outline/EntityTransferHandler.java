@@ -3,6 +3,7 @@ package org.janelia.it.workstation.gui.framework.outline;
 import java.awt.datatransfer.DataFlavor;
 import java.awt.datatransfer.Transferable;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.List;
@@ -314,9 +315,9 @@ public abstract class EntityTransferHandler extends TransferHandler {
                     else {
                         // Find drop acceptors, and figure out which are compatible.
                         ServiceAcceptorHelper saHelper = new ServiceAcceptorHelper();
-                        DropAcceptor target = saHelper.findHandler(dropTarget, DropAcceptor.class, DropAcceptor.LOOKUP_PATH);
-                        if (target != null) {
-                            target.drop(rootedEntities);
+                        Collection<DropAcceptor> targets = saHelper.findHandler(dropTarget, DropAcceptor.class, DropAcceptor.LOOKUP_PATH);
+                        for ( DropAcceptor acceptor: targets ) {
+                            acceptor.drop(rootedEntities);
                         }
                     }
                 }
