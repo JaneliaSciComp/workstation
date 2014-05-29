@@ -87,7 +87,7 @@ implements org.janelia.it.workstation.gui.opengl.GLActor
     }
 
     @Override
-    public void display(GLAutoDrawable glDrawable) {
+    public synchronized void display(GLAutoDrawable glDrawable) {
         // check that vertices are ready
         if (!verticesReady) {
             if (tileFormat != null) {
