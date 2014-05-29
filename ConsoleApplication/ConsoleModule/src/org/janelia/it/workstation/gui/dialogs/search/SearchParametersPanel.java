@@ -12,7 +12,7 @@ import javax.swing.border.EtchedBorder;
 
 import org.janelia.it.workstation.gui.dialogs.search.SearchAttribute.DataType;
 import org.janelia.it.jacs.compute.api.support.SolrQueryBuilder;
-import org.janelia.it.jacs.compute.api.support.SolrUtils;
+import org.janelia.it.jacs.shared.solr.SolrUtils;
 import org.janelia.it.jacs.model.entity.Entity;
 
 /**

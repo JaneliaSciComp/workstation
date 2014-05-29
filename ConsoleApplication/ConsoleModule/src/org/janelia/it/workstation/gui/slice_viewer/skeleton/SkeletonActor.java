@@ -134,7 +134,7 @@ implements GLActor
 		// log.info("New SkeletonActor");
 	}
 	
-	private void displayLines(GLAutoDrawable glDrawable) {
+	private synchronized void displayLines(GLAutoDrawable glDrawable) {
 		// Line segments using vertex buffer objects
 		if (lineIndices == null)
 			return;
