@@ -8,7 +8,6 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.Callable;
 
 import javax.swing.BorderFactory;
 import javax.swing.Box;
@@ -211,8 +210,6 @@ public class SetSortCriteriaDialog extends ModalDialog implements Accessibility 
             protected void hadSuccess() {
                 Utils.setDefaultCursor(SessionMgr.getMainFrame());
                 ModelMgr.getModelMgr().postOnEventBus(new EntityChangeEvent(entity));
-                //SessionMgr.getBrowser().getViewerManager().getActiveViewer().refresh();
-                //SessionMgr.getBrowser().getEntityOutline().refresh(false, true, null);
             }
 
             @Override
