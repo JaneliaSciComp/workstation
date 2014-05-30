@@ -133,7 +133,7 @@ public class EntityContextMenu extends JPopupMenu {
 
         setNextAddRequiresSeparator(true);
         add(getHudMenuItem());
-        for ( JMenuItem item: getOpenForContextItems() ) {
+        for ( JComponent item: getOpenForContextItems() ) {
             add(item);
         }
         add(getWrapEntityItem());
@@ -389,8 +389,8 @@ public class EntityContextMenu extends JPopupMenu {
     }
 
     /** Makes the item for showing the entity in its own viewer iff the entity type is correct. */
-    public Collection<JMenuItem> getOpenForContextItems() {
-        Collection<JMenuItem> items = new ArrayList<JMenuItem>();
+    public Collection<JComponent> getOpenForContextItems() {
+        TreeMap<Integer,JComponent> orderedMap = new TreeMap<Integer,JComponent>();
         if (rootedEntity != null && rootedEntity.getEntityData() != null) {
             final Entity entity = rootedEntity.getEntity();
             if (entity!=null) {
@@ -402,15 +402,43 @@ public class EntityContextMenu extends JPopupMenu {
                                 EntityAcceptor.class,
                                 EntityAcceptor.PERSPECTIVE_CHANGE_LOOKUP_PATH
                         );
-                for ( EntityAcceptor entityAcceptor: entityAcceptors ) {
+                boolean lastItemWasSeparator = false;
+                int expectedCount = 0;
+                List<JComponent> actionItemList = new ArrayList<JComponent>();
+                for ( EntityAcceptor entityAcceptor: entityAcceptors ) {                    
+                    final Integer order = entityAcceptor.getOrder();
+                    if (entityAcceptor.isPrecededBySeparator() && (! lastItemWasSeparator)) {
+                        orderedMap.put(order - 1, new JSeparator());
+                        expectedCount ++;
+                    }
                     JMenuItem item = new JMenuItem(entityAcceptor.getActionLabel());
                     item.addActionListener( new EntityAcceptorActionListener( entityAcceptor ) );
-                    items.add( item );
+                    orderedMap.put(order, item);
+                    actionItemList.add( item ); // Bail alternative if ordering fails.
+                    expectedCount ++;
+                    if (entityAcceptor.isSucceededBySeparator()) {
+                        orderedMap.put(order + 1, new JSeparator());
+                        expectedCount ++;
+                        lastItemWasSeparator = true;
+                    }
+                    else {
+                        lastItemWasSeparator = false;
+                    }
+                }
+                
+                // This is the bail strategy for order key clashes.
+                if ( orderedMap.size() < expectedCount) {
+                    String message = String.format(
+                            "With menu items and separators, expected {} but added {} open-for-context items."
+                          + "  This indicates an order key clash.  Please check the getOrder methods of all impls.\n"
+                          + "Returning an unordered version of item list.", 
+                            expectedCount, orderedMap.size());
+                    log.warn(message);
+                    return actionItemList;
                 }
             }
         }
-
-        return items;
+        return orderedMap.values();
     }
     
     public JMenuItem getWrapEntityItem() {

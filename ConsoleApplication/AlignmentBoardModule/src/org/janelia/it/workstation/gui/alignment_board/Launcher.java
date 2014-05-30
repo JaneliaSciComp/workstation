@@ -76,5 +76,20 @@ public class Launcher implements EntityAcceptor  {
     public boolean isCompatible(Entity e) {
         return e.getEntityTypeName().equals( EntityConstants.TYPE_ALIGNMENT_BOARD );
     }
+    
+    @Override
+    public Integer getOrder() {
+        return 200;
+    }
 
+    @Override
+    public boolean isPrecededBySeparator() {
+        return false;
+    }
+
+    @Override
+    public boolean isSucceededBySeparator() {
+        return false;
+    }
+    
 }
