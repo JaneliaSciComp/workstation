@@ -17,8 +17,8 @@ import org.janelia.it.workstation.shared.exception_handlers.PrintStackTraceHandl
 import org.janelia.it.workstation.shared.util.ThreadQueue;
 import org.janelia.it.workstation.shared.workers.SimpleWorker;
 import org.janelia.it.jacs.compute.api.support.MappedId;
-import org.janelia.it.jacs.compute.api.support.SageTerm;
-import org.janelia.it.jacs.compute.api.support.SolrResults;
+import org.janelia.it.jacs.shared.solr.SageTerm;
+import org.janelia.it.jacs.shared.solr.SolrResults;
 import org.janelia.it.jacs.model.entity.*;
 import org.janelia.it.jacs.model.ontology.OntologyAnnotation;
 import org.janelia.it.jacs.model.ontology.types.OntologyElementType;

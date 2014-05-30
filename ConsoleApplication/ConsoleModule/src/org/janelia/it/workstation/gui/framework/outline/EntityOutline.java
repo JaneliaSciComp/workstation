@@ -190,7 +190,9 @@ public abstract class EntityOutline extends EntityTree implements org.janelia.it
             add(getRootItem());
             add(getNewRootFolderItem());
             add(getWrapperCreatorItem());
-            add(getOpenForContextItem());
+            for ( JMenuItem item: getOpenForContextItems() ) {
+                add(item);
+            }
         }
 
         protected JMenuItem getRootItem() {

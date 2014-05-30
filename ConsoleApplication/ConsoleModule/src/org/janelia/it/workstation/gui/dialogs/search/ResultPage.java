@@ -3,7 +3,7 @@ package org.janelia.it.workstation.gui.dialogs.search;
 import java.util.*;
 
 import org.janelia.it.jacs.compute.api.support.MappedId;
-import org.janelia.it.jacs.compute.api.support.SolrResults;
+import org.janelia.it.jacs.shared.solr.SolrResults;
 import org.janelia.it.jacs.model.entity.Entity;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

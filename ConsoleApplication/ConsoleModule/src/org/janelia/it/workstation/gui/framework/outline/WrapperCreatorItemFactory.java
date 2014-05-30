@@ -8,6 +8,7 @@ package org.janelia.it.workstation.gui.framework.outline;
 
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.util.Collection;
 import javax.swing.JMenuItem;
 
 import org.janelia.it.workstation.nb_action.EntityWrapperCreator;
@@ -34,30 +35,35 @@ public class WrapperCreatorItemFactory {
     public JMenuItem makeEntityWrapperCreatorItem(final org.janelia.it.workstation.model.entity.RootedEntity rootedEntity) {
         JMenuItem wrapEntityItem = null;
         final ServiceAcceptorHelper helper = new ServiceAcceptorHelper();
-        EntityWrapperCreator wrapperCreator
+        Collection<EntityWrapperCreator> wrapperCreators
                 = helper.findHandler(rootedEntity, EntityWrapperCreator.class, EntityWrapperCreator.LOOKUP_PATH);
-        if (wrapperCreator != null) {
+        for ( EntityWrapperCreator wrapperCreator: wrapperCreators ) {
             wrapEntityItem = new JMenuItem(wrapperCreator.getActionLabel());
-            wrapEntityItem.addActionListener(new ActionListener() {
-                @Override
-                public void actionPerformed(ActionEvent e) {
-                    try {
-                        EntityWrapperCreator wrapperCreator
-                                = helper.findHandler(rootedEntity, EntityWrapperCreator.class, EntityWrapperCreator.LOOKUP_PATH);
-                        if (wrapperCreator == null) {
-                            log.warn("No service provider for this entity.");
-                        } else {
-                            wrapperCreator.wrapEntity(rootedEntity);
-                        }
-                    } catch (Exception ex) {
-                        org.janelia.it.workstation.api.entity_model.management.ModelMgr.getModelMgr().handleException(ex);
-                    }
-
-                }
-            });
-
+            wrapEntityItem.addActionListener(new WrapEntityActionListener(wrapperCreator, rootedEntity));
         }
         return wrapEntityItem;
+    }
+    
+    class WrapEntityActionListener implements ActionListener {
+        private EntityWrapperCreator wrapperCreator;
+        private org.janelia.it.workstation.model.entity.RootedEntity rootedEntity;
+        public WrapEntityActionListener( EntityWrapperCreator wrapperCreator, org.janelia.it.workstation.model.entity.RootedEntity rootedEntity ) {
+            this.wrapperCreator = wrapperCreator;
+            this.rootedEntity = rootedEntity;
+        }
+        @Override
+        public void actionPerformed(ActionEvent e) {
+            try {
+                if (wrapperCreator == null) {
+                    log.warn("No service provider for this entity.");
+                } else {
+                    wrapperCreator.wrapEntity(rootedEntity);
+                }
+            } catch (Exception ex) {
+                org.janelia.it.workstation.api.entity_model.management.ModelMgr.getModelMgr().handleException(ex);
+            }
+
+        }
     }
 
 }

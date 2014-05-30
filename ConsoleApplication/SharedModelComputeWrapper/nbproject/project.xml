@@ -124,6 +124,7 @@
                 <package>org.janelia.it.jacs.shared.perf</package>
                 <package>org.janelia.it.jacs.shared.processors.recruitment</package>
                 <package>org.janelia.it.jacs.shared.screen</package>
+                <package>org.janelia.it.jacs.shared.solr</package>
                 <package>org.janelia.it.jacs.shared.tasks</package>
                 <package>org.janelia.it.jacs.shared.utils</package>
                 <package>org.janelia.it.jacs.shared.utils.entity</package>

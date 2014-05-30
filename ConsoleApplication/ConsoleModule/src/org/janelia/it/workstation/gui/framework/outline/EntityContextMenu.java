@@ -133,7 +133,9 @@ public class EntityContextMenu extends JPopupMenu {
 
         setNextAddRequiresSeparator(true);
         add(getHudMenuItem());
-        add(getOpenForContextItem());
+        for ( JMenuItem item: getOpenForContextItems() ) {
+            add(item);
+        }
         add(getWrapEntityItem());
         add(getOpenSliceViewerItem());
 
@@ -387,88 +389,33 @@ public class EntityContextMenu extends JPopupMenu {
     }
 
     /** Makes the item for showing the entity in its own viewer iff the entity type is correct. */
-    public JMenuItem getOpenForContextItem() {
-        JMenuItem alignBrdVwItem = null;
+    public Collection<JMenuItem> getOpenForContextItems() {
+        Collection<JMenuItem> items = new ArrayList<JMenuItem>();
         if (rootedEntity != null && rootedEntity.getEntityData() != null) {
             final Entity entity = rootedEntity.getEntity();
             if (entity!=null) {
 
                 final ServiceAcceptorHelper helper = new ServiceAcceptorHelper();
-                EntityAcceptor entityAcceptor
+                Collection<EntityAcceptor> entityAcceptors
                         = helper.findHandler(
                                 entity, 
                                 EntityAcceptor.class,
                                 EntityAcceptor.PERSPECTIVE_CHANGE_LOOKUP_PATH
                         );
-                if (entityAcceptor != null) {
-                    alignBrdVwItem = new JMenuItem(entityAcceptor.getActionLabel());
-                    alignBrdVwItem.addActionListener(new ActionListener() {
-                        @Override
-                        public void actionPerformed(ActionEvent e) {
-                            try {
-                                // Pickup the sought value.
-                                EntityAcceptor entityAcceptor
-                                        = helper.findHandler(
-                                                entity,
-                                                EntityAcceptor.class,
-                                                EntityAcceptor.PERSPECTIVE_CHANGE_LOOKUP_PATH
-                                        );
-                                if (entityAcceptor == null) {
-                                    log.warn("No service provider for this entity.");
-                                } else {
-                                    entityAcceptor.acceptEntity(entity);
-                                }
-                            } catch (Exception ex) {
-                                org.janelia.it.workstation.api.entity_model.management.ModelMgr.getModelMgr().handleException(ex);
-                            }
-
-                        }
-                    });
-
+                for ( EntityAcceptor entityAcceptor: entityAcceptors ) {
+                    JMenuItem item = new JMenuItem(entityAcceptor.getActionLabel());
+                    item.addActionListener( new EntityAcceptorActionListener( entityAcceptor ) );
+                    items.add( item );
                 }
             }
         }
 
-        return alignBrdVwItem;
+        return items;
     }
-
+    
     public JMenuItem getWrapEntityItem() {
         if (multiple) return null;
         return new WrapperCreatorItemFactory().makeEntityWrapperCreatorItem( rootedEntity );
-
-//        
-//        JMenuItem wrapEntityItem = null;
-//        
-//        if (rootedEntity != null && rootedEntity.getEntityData() != null) {
-//            final ServiceAcceptorHelper helper = new ServiceAcceptorHelper();
-//            EntityWrapperCreator wrapperCreator
-//                    = helper.findHandler(rootedEntity, EntityWrapperCreator.class, EntityWrapperCreator.LOOKUP_PATH);
-//
-//            if (wrapperCreator != null) {
-//                wrapEntityItem = new JMenuItem(wrapperCreator.getActionLabel());
-//                wrapEntityItem.addActionListener(new ActionListener() {
-//                    @Override
-//                    public void actionPerformed(ActionEvent e) {
-//                        try {
-//                            EntityWrapperCreator wrapperCreator
-//                                    = helper.findHandler(rootedEntity, EntityWrapperCreator.class, EntityWrapperCreator.LOOKUP_PATH);
-//                            if (wrapperCreator == null) {
-//                                log.warn("No service provider for this entity.");
-//                            } else {
-//                                wrapperCreator.wrapEntity(rootedEntity);
-//                            }
-//                        } catch (Exception ex) {
-//                            ModelMgr.getModelMgr().handleException(ex);
-//                        }
-//
-//                    }
-//                });
-//
-//            }
-//
-//        }
-//
-//        return wrapEntityItem;
     }
        
     public JMenuItem getOpenSliceViewerItem() {
@@ -1978,4 +1925,26 @@ public class EntityContextMenu extends JPopupMenu {
     public void setNextAddRequiresSeparator(boolean nextAddRequiresSeparator) {
         this.nextAddRequiresSeparator = nextAddRequiresSeparator;
     }
+    
+    public class EntityAcceptorActionListener implements ActionListener {
+
+        private EntityAcceptor entityAcceptor;
+
+        public EntityAcceptorActionListener(EntityAcceptor entityAcceptor) {
+            this.entityAcceptor = entityAcceptor;
+        }
+
+        @Override
+        public void actionPerformed(ActionEvent e) {
+            try {
+                Entity entity = rootedEntity.getEntity();
+                // Pickup the sought value.
+                entityAcceptor.acceptEntity(entity);
+            } catch (Exception ex) {
+                org.janelia.it.workstation.api.entity_model.management.ModelMgr.getModelMgr().handleException(ex);
+            }
+
+        }
+    }
+
 }
