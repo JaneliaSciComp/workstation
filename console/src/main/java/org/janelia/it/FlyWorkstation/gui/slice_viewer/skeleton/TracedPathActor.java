@@ -1,14 +1,5 @@
 package org.janelia.it.FlyWorkstation.gui.slice_viewer.skeleton;
 
-import java.nio.ByteBuffer;
-import java.nio.ByteOrder;
-import java.nio.FloatBuffer;
-
-import javax.media.opengl.GL;
-import javax.media.opengl.GL2GL3;
-import javax.media.opengl.GLAutoDrawable;
-import javax.media.opengl.glu.GLU;
-
 import org.janelia.it.FlyWorkstation.geom.CoordinateAxis;
 import org.janelia.it.FlyWorkstation.geom.Vec3;
 import org.janelia.it.FlyWorkstation.gui.opengl.GLActor;
@@ -21,6 +12,14 @@ import org.janelia.it.FlyWorkstation.tracing.AnchoredVoxelPath;
 import org.janelia.it.FlyWorkstation.tracing.SegmentIndex;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import javax.media.opengl.GL;
+import javax.media.opengl.GL2GL3;
+import javax.media.opengl.GLAutoDrawable;
+import javax.media.opengl.glu.GLU;
+import java.nio.ByteBuffer;
+import java.nio.ByteOrder;
+import java.nio.FloatBuffer;
 
 public class TracedPathActor 
 implements GLActor
@@ -96,7 +95,7 @@ implements GLActor
     }
 
     @Override
-    public void display(GLAutoDrawable glDrawable) {
+    public synchronized void display(GLAutoDrawable glDrawable) {
         // check that vertices are ready
         if (!verticesReady) {
             if (tileFormat != null) {

@@ -1,29 +1,5 @@
 package org.janelia.it.FlyWorkstation.gui.slice_viewer.skeleton;
 
-import java.awt.Color;
-import java.awt.Graphics2D;
-import java.awt.Image;
-import java.awt.image.BufferedImage;
-import java.nio.ByteBuffer;
-import java.nio.ByteOrder;
-import java.nio.FloatBuffer;
-import java.nio.IntBuffer;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.Vector;
-import java.util.concurrent.ConcurrentHashMap;
-
-import javax.media.opengl.GL;
-import javax.media.opengl.GL2;
-// import javax.media.opengl.GL2;
-import javax.media.opengl.GL2GL3;
-import javax.media.opengl.GLAutoDrawable;
-import javax.swing.ImageIcon;
-
 import org.janelia.it.FlyWorkstation.geom.Vec3;
 import org.janelia.it.FlyWorkstation.gui.camera.Camera3d;
 import org.janelia.it.FlyWorkstation.gui.opengl.GLActor;
@@ -31,13 +7,10 @@ import org.janelia.it.FlyWorkstation.gui.slice_viewer.TileFormat;
 import org.janelia.it.FlyWorkstation.gui.slice_viewer.shader.AnchorShader;
 import org.janelia.it.FlyWorkstation.gui.slice_viewer.shader.PassThroughTextureShader;
 import org.janelia.it.FlyWorkstation.gui.slice_viewer.shader.PathShader;
-// import org.janelia.it.FlyWorkstation.gui.slice_viewer.shader.TracedPathShader;
 import org.janelia.it.FlyWorkstation.gui.util.Icons;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.BoundingBox3d;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.shader.AbstractShader.ShaderCreationException;
 import org.janelia.it.FlyWorkstation.octree.ZoomedVoxelIndex;
-// import org.slf4j.Logger;
-// import org.slf4j.LoggerFactory;
 import org.janelia.it.FlyWorkstation.signal.Signal;
 import org.janelia.it.FlyWorkstation.signal.Signal1;
 import org.janelia.it.FlyWorkstation.signal.Slot;
@@ -46,6 +19,26 @@ import org.janelia.it.FlyWorkstation.tracing.AnchoredVoxelPath;
 import org.janelia.it.FlyWorkstation.tracing.SegmentIndex;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import javax.media.opengl.GL;
+import javax.media.opengl.GL2;
+import javax.media.opengl.GL2GL3;
+import javax.media.opengl.GLAutoDrawable;
+import javax.swing.*;
+import java.awt.*;
+import java.awt.image.BufferedImage;
+import java.nio.ByteBuffer;
+import java.nio.ByteOrder;
+import java.nio.FloatBuffer;
+import java.nio.IntBuffer;
+import java.util.*;
+import java.util.List;
+import java.util.concurrent.ConcurrentHashMap;
+
+// import javax.media.opengl.GL2;
+// import org.janelia.it.FlyWorkstation.gui.slice_viewer.shader.TracedPathShader;
+// import org.slf4j.Logger;
+// import org.slf4j.LoggerFactory;
 
 /**
  * SkeletonActor is responsible for painting neuron traces in the slice viewer.
@@ -139,7 +132,7 @@ implements GLActor
 		// log.info("New SkeletonActor");
 	}
 	
-	private void displayLines(GLAutoDrawable glDrawable) {
+	private synchronized void displayLines(GLAutoDrawable glDrawable) {
 		// Line segments using vertex buffer objects
 		if (lineIndices == null)
 			return;
