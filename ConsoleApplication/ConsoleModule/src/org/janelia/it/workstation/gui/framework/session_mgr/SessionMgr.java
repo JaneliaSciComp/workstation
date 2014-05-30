@@ -1,22 +1,30 @@
 package org.janelia.it.workstation.gui.framework.session_mgr;
 
+import de.javasoft.plaf.synthetica.SyntheticaBlackEyeLookAndFeel;
+import org.janelia.it.workstation.api.entity_model.management.ModelMgr;
+import org.janelia.it.workstation.api.facade.concrete_facade.ejb.EJBFactory;
 import org.janelia.it.workstation.api.facade.facade_mgr.FacadeManager;
 import org.janelia.it.workstation.api.facade.roles.ExceptionHandler;
 import org.janelia.it.workstation.api.stub.data.SystemError;
+import org.janelia.it.workstation.gui.framework.console.Browser;
 import org.janelia.it.workstation.gui.framework.external_listener.ExternalListener;
 import org.janelia.it.workstation.gui.framework.keybind.KeyBindings;
 import org.janelia.it.workstation.gui.framework.pref_controller.PrefController;
 import org.janelia.it.workstation.shared.filestore.PathTranslator;
 import org.janelia.it.workstation.shared.util.ConsoleProperties;
 import org.janelia.it.workstation.shared.util.PropertyConfigurator;
+import org.janelia.it.workstation.shared.util.RendererType2D;
 import org.janelia.it.workstation.shared.util.Utils;
 import org.janelia.it.workstation.shared.util.filecache.LocalFileCache;
+import org.janelia.it.workstation.shared.util.filecache.WebDavClient;
+import org.janelia.it.workstation.web.EmbeddedWebServer;
 import org.janelia.it.workstation.ws.EmbeddedAxisServer;
 import org.janelia.it.jacs.model.user_data.Subject;
 import org.janelia.it.jacs.model.user_data.SubjectRelationship;
 import org.janelia.it.jacs.model.user_data.User;
 import org.janelia.it.jacs.shared.utils.StringUtils;
 import org.janelia.it.workstation.gui.util.WindowLocator;
+import org.janelia.it.workstation.ws.ExternalClient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -61,28 +69,28 @@ public class SessionMgr {
     public static boolean rootAccess = false;
 
     private static JFrame mainFrame;
-    private static org.janelia.it.workstation.api.entity_model.management.ModelMgr modelManager = org.janelia.it.workstation.api.entity_model.management.ModelMgr.getModelMgr();
+    private static ModelMgr modelManager = ModelMgr.getModelMgr();
     private static SessionMgr sessionManager = new SessionMgr();
-    private org.janelia.it.workstation.gui.framework.session_mgr.SessionModel sessionModel = org.janelia.it.workstation.gui.framework.session_mgr.SessionModel.getSessionModel();
+    private SessionModel sessionModel = SessionModel.getSessionModel();
     private float browserSize = .8f;
     private String browserTitle;
     private ImageIcon browserImageIcon;
     private Component splashPanel;
     private ExternalListener externalHttpListener;
     private EmbeddedAxisServer axisServer;
-    private org.janelia.it.workstation.web.EmbeddedWebServer webServer;
+    private EmbeddedWebServer webServer;
     private File settingsFile;
     private String prefsDir = System.getProperty("user.home") + ConsoleProperties.getString("Console.Home.Path");
     private String prefsFile = prefsDir + ".JW_Settings";
-    private Map<org.janelia.it.workstation.gui.framework.session_mgr.BrowserModel, org.janelia.it.workstation.gui.framework.console.Browser> browserModelsToBrowser = new HashMap<org.janelia.it.workstation.gui.framework.session_mgr.BrowserModel, org.janelia.it.workstation.gui.framework.console.Browser>();
+    private Map<BrowserModel, Browser> browserModelsToBrowser = new HashMap<BrowserModel, Browser>();
     private WindowListener myBrowserWindowListener = new MyBrowserListener();
-    private org.janelia.it.workstation.gui.framework.console.Browser activeBrowser;
+    private Browser activeBrowser;
     private String appName, appVersion;
     private boolean isLoggedIn;
     private Subject loggedInSubject;
     private Subject authenticatedSubject;
     private Long currentSessionId;
-    private org.janelia.it.workstation.shared.util.filecache.WebDavClient webDavClient;
+    private WebDavClient webDavClient;
     private LocalFileCache localFileCache;
 
     private SessionMgr() {
@@ -117,14 +125,14 @@ public class SessionMgr {
         }
 
         readSettingsFile();
-        org.janelia.it.workstation.api.facade.concrete_facade.ejb.EJBFactory.initFromModelProperties(sessionModel);
+        EJBFactory.initFromModelProperties(sessionModel);
         PathTranslator.initFromModelProperties(sessionModel);
 
         // -----------------------------------------------
         // initialize WebDAV and local cache components
-        webDavClient = new org.janelia.it.workstation.shared.util.filecache.WebDavClient(
+        webDavClient = new WebDavClient(
                 ConsoleProperties.getString("console.webDavClient.baseUrl",
-                        org.janelia.it.workstation.shared.util.filecache.WebDavClient.JACS_WEBDAV_BASE_URL),
+                        WebDavClient.JACS_WEBDAV_BASE_URL),
                 ConsoleProperties.getInt("console.webDavClient.maxConnectionsPerHost", 100),
                 ConsoleProperties.getInt("console.webDavClient.maxTotalConnections", 100));
 
@@ -146,7 +154,7 @@ public class SessionMgr {
         }
 
         if (getModelProperty(SessionMgr.DISPLAY_RENDERER_2D) == null) {
-            setModelProperty(SessionMgr.DISPLAY_RENDERER_2D, org.janelia.it.workstation.shared.util.RendererType2D.IMAGE_IO.toString());
+            setModelProperty(SessionMgr.DISPLAY_RENDERER_2D, RendererType2D.IMAGE_IO.toString());
         }
 
         log.info("Using 2d renderer: {}", getModelProperty(SessionMgr.DISPLAY_RENDERER_2D));
@@ -270,7 +278,7 @@ public class SessionMgr {
         return sessionManager;
     }
 
-    public org.janelia.it.workstation.gui.framework.session_mgr.SessionModel getSessionModel() {
+    public SessionModel getSessionModel() {
         return sessionModel;
     }
 
@@ -282,15 +290,15 @@ public class SessionMgr {
         return sessionModel.addExternalClient(newClientName);
     }
 
-    public List<org.janelia.it.workstation.ws.ExternalClient> getExternalClients() {
+    public List<ExternalClient> getExternalClients() {
         return sessionModel.getExternalClients();
     }
 
-    public List<org.janelia.it.workstation.ws.ExternalClient> getExternalClientsByName(String clientName) {
+    public List<ExternalClient> getExternalClientsByName(String clientName) {
         return sessionModel.getExternalClientsByName(clientName);
     }
 
-    public org.janelia.it.workstation.ws.ExternalClient getExternalClientByPort(int targetPort) {
+    public ExternalClient getExternalClientByPort(int targetPort) {
         return sessionModel.getExternalClientByPort(targetPort);
     }
 
@@ -303,7 +311,7 @@ public class SessionMgr {
     }
 
     public static KeyBindings getKeyBindings() {
-        return org.janelia.it.workstation.gui.framework.session_mgr.SessionModel.getKeyBindings();
+        return SessionModel.getKeyBindings();
     }
 
     public Object getModelProperty(Object key) {
@@ -365,7 +373,7 @@ public class SessionMgr {
     /**
      * @return the session client for issuing WebDAV requests.
      */
-    public org.janelia.it.workstation.shared.util.filecache.WebDavClient getWebDavClient() {
+    public WebDavClient getWebDavClient() {
         return webDavClient;
     }
 
@@ -475,8 +483,8 @@ public class SessionMgr {
         modelManager.handleException(throwable);
     }
 
-    public org.janelia.it.workstation.gui.framework.console.Browser newBrowser() {
-        org.janelia.it.workstation.gui.framework.console.Browser browser = new org.janelia.it.workstation.gui.framework.console.Browser(browserSize, sessionModel.addBrowserModel());
+    public Browser newBrowser() {
+        Browser browser = new Browser(browserSize, sessionModel.addBrowserModel());
         if (browserImageIcon != null) {
             browser.setBrowserImageIcon(browserImageIcon);
         }
@@ -485,7 +493,7 @@ public class SessionMgr {
         return browser;
     }
 
-    public void removeBrowser(org.janelia.it.workstation.gui.framework.console.Browser browser) {
+    public void removeBrowser(Browser browser) {
         browserModelsToBrowser.remove(browser.getBrowserModel());
         sessionModel.removeBrowserModel(browser.getBrowserModel());
     }
@@ -517,11 +525,11 @@ public class SessionMgr {
         //  System.exit(errorlevel);
     }
 
-    public void addSessionModelListener(org.janelia.it.workstation.gui.framework.session_mgr.SessionModelListener sessionModelListener) {
+    public void addSessionModelListener(SessionModelListener sessionModelListener) {
         sessionModel.addSessionListener(sessionModelListener);
     }
 
-    public void removeSessionModelListener(org.janelia.it.workstation.gui.framework.session_mgr.SessionModelListener sessionModelListener) {
+    public void removeSessionModelListener(SessionModelListener sessionModelListener) {
         sessionModel.removeSessionListener(sessionModelListener);
     }
 
@@ -542,7 +550,7 @@ public class SessionMgr {
             if (lookAndFeelClassName.contains("BlackEye")) {
                 isDarkLook = true;
                 try {
-                    UIManager.setLookAndFeel(new de.javasoft.plaf.synthetica.SyntheticaBlackEyeLookAndFeel() {
+                    UIManager.setLookAndFeel(new SyntheticaBlackEyeLookAndFeel() {
                         @Override
                         protected void loadCustomXML() throws ParseException {
                             loadXMLConfig("/SyntheticaBlackEyeLookAndFeel.xml");
@@ -614,11 +622,11 @@ public class SessionMgr {
     /**
      * Use getBrowser, it's shorter and static.
      */
-    public org.janelia.it.workstation.gui.framework.console.Browser getActiveBrowser() {
+    public Browser getActiveBrowser() {
         return activeBrowser;
     }
 
-    public static org.janelia.it.workstation.gui.framework.console.Browser getBrowser() {
+    public static Browser getBrowser() {
         return getSessionMgr().getActiveBrowser();
     }
 
@@ -689,7 +697,7 @@ public class SessionMgr {
     public void startWebServer(int port) {
         try {
             if (webServer == null) {
-                webServer = new org.janelia.it.workstation.web.EmbeddedWebServer(port);
+                webServer = new EmbeddedWebServer(port);
             }
             webServer.start();
         }
@@ -710,12 +718,12 @@ public class SessionMgr {
         }
     }
 
-    public org.janelia.it.workstation.web.EmbeddedWebServer getWebServer() {
+    public EmbeddedWebServer getWebServer() {
         return webServer;
     }
 
-    public org.janelia.it.workstation.gui.framework.console.Browser getBrowserFor(org.janelia.it.workstation.gui.framework.session_mgr.BrowserModel model) {
-        return (org.janelia.it.workstation.gui.framework.console.Browser) browserModelsToBrowser.get(model);
+    public Browser getBrowserFor(BrowserModel model) {
+        return (Browser) browserModelsToBrowser.get(model);
     }
 
     public void saveUserSettings() {
@@ -754,7 +762,7 @@ public class SessionMgr {
                 isLoggedIn = true;
 
                 String runAsUser = (String) SessionMgr.getSessionMgr().getModelProperty(SessionMgr.RUN_AS_USER);
-                loggedInSubject = StringUtils.isEmpty(runAsUser) ? authenticatedSubject : org.janelia.it.workstation.api.entity_model.management.ModelMgr.getModelMgr().getSubject(runAsUser);
+                loggedInSubject = StringUtils.isEmpty(runAsUser) ? authenticatedSubject : ModelMgr.getModelMgr().getSubject(runAsUser);
 
                 if (loggedInSubject == null) {
                     JOptionPane.showMessageDialog(SessionMgr.getMainFrame(), "Cannot run as non-existent subject " + runAsUser, "Error", JOptionPane.ERROR_MESSAGE);
@@ -772,7 +780,7 @@ public class SessionMgr {
 
                 if (relogin) {
                     log.info("Clearing all caches");
-                    org.janelia.it.workstation.api.entity_model.management.ModelMgr.getModelMgr().invalidateCache();
+                    ModelMgr.getModelMgr().invalidateCache();
                     if (SessionMgr.getBrowser() != null) {
                         log.info("Refreshing all views");
                         SessionMgr.getBrowser().getEntityOutline().refresh();
@@ -942,7 +950,7 @@ public class SessionMgr {
         File file = null;
         if (mgr.isFileCacheAvailable()) {
             final LocalFileCache cache = mgr.getFileCache();
-            final org.janelia.it.workstation.shared.util.filecache.WebDavClient client = mgr.getWebDavClient();
+            final WebDavClient client = mgr.getWebDavClient();
             try {
                 final URL url = client.getWebDavUrl(standardPath);
                 file = cache.getFile(url, forceRefresh);
@@ -968,7 +976,7 @@ public class SessionMgr {
     public static URL getURL(String standardPath) {
         try {
             SessionMgr sessionMgr = getSessionMgr();
-            org.janelia.it.workstation.shared.util.filecache.WebDavClient client = sessionMgr.getWebDavClient();
+            WebDavClient client = sessionMgr.getWebDavClient();
             URL remoteFileUrl = client.getWebDavUrl(standardPath);
             LocalFileCache cache = sessionMgr.getFileCache();
             return sessionMgr.isFileCacheAvailable() ? cache.getEffectiveUrl(remoteFileUrl) : remoteFileUrl;

@@ -1,5 +1,7 @@
 package org.janelia.it.workstation.gui.framework.console;
 
+import org.janelia.it.workstation.shared.util.FreeMemoryWatcher;
+
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.MouseEvent;
@@ -65,7 +67,7 @@ public class FreeMemoryViewer extends JPanel implements Observer {
     }
 
     public void update(Observable observable, Object obj) {
-        if (observable instanceof org.janelia.it.workstation.shared.util.FreeMemoryWatcher && obj instanceof Integer) {
+        if (observable instanceof FreeMemoryWatcher && obj instanceof Integer) {
             int value = ((Integer) obj).intValue();
             if (value >= YELLOW_BAR) percentageLabel.setBackground(Color.green);
             if (value >= RED_BAR && value < YELLOW_BAR) percentageLabel.setBackground(Color.yellow);
@@ -158,14 +160,14 @@ public class FreeMemoryViewer extends JPanel implements Observer {
     }
 
     private long getTotalMemory() {
-        return org.janelia.it.workstation.shared.util.FreeMemoryWatcher.getFreeMemoryWatcher().getTotalMemory();
+        return FreeMemoryWatcher.getFreeMemoryWatcher().getTotalMemory();
     }
 
     private long getUsedMemory() {
-        return org.janelia.it.workstation.shared.util.FreeMemoryWatcher.getFreeMemoryWatcher().getUsedMemory();
+        return FreeMemoryWatcher.getFreeMemoryWatcher().getUsedMemory();
     }
 
     private long getFreeMemory() {
-        return org.janelia.it.workstation.shared.util.FreeMemoryWatcher.getFreeMemoryWatcher().getFreeMemory();
+        return FreeMemoryWatcher.getFreeMemoryWatcher().getFreeMemory();
     }
 }

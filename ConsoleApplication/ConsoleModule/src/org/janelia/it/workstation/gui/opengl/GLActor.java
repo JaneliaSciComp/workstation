@@ -1,6 +1,8 @@
 package org.janelia.it.workstation.gui.opengl;
 
 // import javax.media.opengl.GL2;
+import org.janelia.it.workstation.gui.viewer3d.BoundingBox3d;
+
 import javax.media.opengl.GLAutoDrawable;
 
 public interface GLActor
@@ -12,7 +14,7 @@ extends GLResource
 	 */
 	public void display(GLAutoDrawable glDrawable);
 	
-	public org.janelia.it.workstation.gui.viewer3d.BoundingBox3d getBoundingBox3d();
+	public BoundingBox3d getBoundingBox3d();
 
 	/**
 	 * Initializes this actor for the given OpenGL context

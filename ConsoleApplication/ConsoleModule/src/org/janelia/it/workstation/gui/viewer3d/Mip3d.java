@@ -1,7 +1,11 @@
 package org.janelia.it.workstation.gui.viewer3d;
 
+import org.janelia.it.workstation.gui.opengl.GLActor;
 import org.janelia.it.workstation.gui.viewer3d.masking.MaskBuilderI;
 import org.janelia.it.workstation.gui.viewer3d.masking.RenderMappingI;
+import org.janelia.it.workstation.gui.viewer3d.resolver.FileResolver;
+import org.janelia.it.workstation.gui.viewer3d.texture.RenderMapTextureBean;
+import org.janelia.it.workstation.gui.viewer3d.texture.TextureDataI;
 
 import javax.swing.*;
 import java.awt.*;
@@ -85,7 +89,7 @@ public class Mip3d extends BaseGLViewer implements ActionListener {
      * @param resolver flexibility: allows different ways of resolving the file, which may be server-based.
      * @return true if it worked; false otherwise.
      */
-    public boolean loadVolume(String fileName, VolumeBrickFactory volumeBrickFactory, org.janelia.it.workstation.gui.viewer3d.resolver.FileResolver resolver) {
+    public boolean loadVolume(String fileName, VolumeBrickFactory volumeBrickFactory, FileResolver resolver) {
         VolumeLoader volumeLoader = new VolumeLoader(resolver);
         if (volumeLoader.loadVolume(fileName)) {
             volumeModel.removeAllListeners();
@@ -106,7 +110,7 @@ public class Mip3d extends BaseGLViewer implements ActionListener {
      *
      * @param signalTexture the pre-built texture.
      */
-    public void setVolume( VolumeBrickFactory volumeBrickFactory, org.janelia.it.workstation.gui.viewer3d.texture.TextureDataI signalTexture ) {
+    public void setVolume( VolumeBrickFactory volumeBrickFactory, TextureDataI signalTexture ) {
         if ( signalTexture != null ) {
             volumeModel.removeAllListeners();
             volumeModel.resetToDefaults();
@@ -128,8 +132,8 @@ public class Mip3d extends BaseGLViewer implements ActionListener {
      * @return true if sufficient params passed.
      */
     public boolean setVolume(
-            org.janelia.it.workstation.gui.viewer3d.texture.TextureDataI signalTexture,
-            org.janelia.it.workstation.gui.viewer3d.texture.TextureDataI maskTexture,
+            TextureDataI signalTexture,
+            TextureDataI maskTexture,
             VolumeBrickFactory factory,
             RenderMappingI renderMapping,
             double axisLengthDivisor ) {
@@ -137,7 +141,7 @@ public class Mip3d extends BaseGLViewer implements ActionListener {
         if ( signalTexture != null ) {
             VolumeBrickI brick = null;
             if ( maskTexture != null ) {
-                org.janelia.it.workstation.gui.viewer3d.texture.RenderMapTextureBean renderMapTextureData = new org.janelia.it.workstation.gui.viewer3d.texture.RenderMapTextureBean();
+                RenderMapTextureBean renderMapTextureData = new RenderMapTextureBean();
                 renderMapTextureData.setMapping( renderMapping );
                 renderMapTextureData.setVolumeModel( volumeModel );
 
@@ -183,7 +187,7 @@ public class Mip3d extends BaseGLViewer implements ActionListener {
 	public boolean loadVolume(
             String fileName,
             MaskBuilderI maskBuilder,
-            org.janelia.it.workstation.gui.viewer3d.resolver.FileResolver resolver,
+            FileResolver resolver,
             VolumeBrickFactory vbFactory,
             RenderMappingI renderMapping,
             float gamma
@@ -193,9 +197,9 @@ public class Mip3d extends BaseGLViewer implements ActionListener {
             volumeModel.setGammaAdjustment(gamma);
             VolumeBrickI brick = null;
             if ( maskBuilder != null ) {
-                org.janelia.it.workstation.gui.viewer3d.texture.TextureDataI combinedTextureData = maskBuilder.getCombinedTextureData();
+                TextureDataI combinedTextureData = maskBuilder.getCombinedTextureData();
 
-                org.janelia.it.workstation.gui.viewer3d.texture.RenderMapTextureBean renderMapTextureData = new org.janelia.it.workstation.gui.viewer3d.texture.RenderMapTextureBean();
+                RenderMapTextureBean renderMapTextureData = new RenderMapTextureBean();
                 renderMapTextureData.setMapping( renderMapping );
                 brick = vbFactory.getVolumeBrick( volumeModel, combinedTextureData, renderMapTextureData );
                 volumeLoader.populateVolumeAcceptor(brick);
@@ -290,7 +294,7 @@ public class Mip3d extends BaseGLViewer implements ActionListener {
     }
 
     /** Special synchronized method, for adding actors. Supports multi-threaded brick-add. */
-    private void addActorToRenderer(org.janelia.it.workstation.gui.opengl.GLActor brick) {
+    private void addActorToRenderer(GLActor brick) {
         synchronized ( this ) {
             renderer.addActor(brick);
             renderer.resetView();

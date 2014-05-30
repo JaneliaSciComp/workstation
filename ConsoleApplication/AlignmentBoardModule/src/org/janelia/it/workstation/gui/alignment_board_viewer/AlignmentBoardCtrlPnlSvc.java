@@ -6,10 +6,12 @@ package org.janelia.it.workstation.gui.alignment_board_viewer;
  * and open the template in the editor.
  */
 
+import org.janelia.it.workstation.gui.alignment_board_viewer.gui_elements.AlignmentBoardControlsPanel;
+
 /**
  * Implement this to provide a component.
  * @author fosterl
  */
 public interface AlignmentBoardCtrlPnlSvc {
-    org.janelia.it.workstation.gui.alignment_board_viewer.gui_elements.AlignmentBoardControlsPanel getControlsComponent();
+    AlignmentBoardControlsPanel getControlsComponent();
 }

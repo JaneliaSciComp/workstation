@@ -12,15 +12,24 @@ import javax.swing.JFrame;
 import javax.swing.JMenu;
 import javax.swing.JMenuBar;
 import javax.swing.JPopupMenu;
+import javax.swing.SwingUtilities;
 import javax.swing.UIManager;
 
+import org.janelia.it.workstation.geom.Vec3;
 import org.janelia.it.workstation.gui.FullScreenMode;
+import org.janelia.it.workstation.gui.TrackballInteractor;
 import org.janelia.it.workstation.gui.camera.BasicObservableCamera3d;
+import org.janelia.it.workstation.gui.camera.ObservableCamera3d;
+import org.janelia.it.workstation.gui.opengl.GLSceneComposer;
+import org.janelia.it.workstation.gui.opengl.LightingActor;
+import org.janelia.it.workstation.gui.opengl.MeshActor;
 import org.janelia.it.workstation.gui.opengl.MeshGroupActor;
+import org.janelia.it.workstation.gui.opengl.PolygonalMesh;
 import org.janelia.it.workstation.gui.opengl.SolidBackgroundActor;
 
 import com.jogamp.common.GlueGenVersion;
 import com.jogamp.opengl.JoglVersion;
+import org.janelia.it.workstation.gui.opengl.stereo3d.StereoModeChooser;
 
 @SuppressWarnings("serial")
 public class GourdDemo extends JFrame
@@ -46,7 +55,7 @@ public class GourdDemo extends JFrame
             = GLProfile.getMinimum(true);
 
     public static void main(String[] args) {
-        javax.swing.SwingUtilities.invokeLater(new Runnable() {
+        SwingUtilities.invokeLater(new Runnable() {
             public void run() {
                 new GourdDemo();
             }
@@ -77,9 +86,9 @@ public class GourdDemo extends JFrame
         // Hey! A one line full screen mode decorator!
         addKeyListener(new FullScreenMode(this));
 
-        org.janelia.it.workstation.gui.opengl.PolygonalMesh gourdMesh;
+        PolygonalMesh gourdMesh;
         try {
-            gourdMesh = org.janelia.it.workstation.gui.opengl.PolygonalMesh.createMeshFromObjFile(
+            gourdMesh = PolygonalMesh.createMeshFromObjFile(
                     this.getClass().getResourceAsStream("gourd.obj"));
         } catch (IOException e) {
             e.printStackTrace();
@@ -87,22 +96,22 @@ public class GourdDemo extends JFrame
         }
 
         // Create camera
-        org.janelia.it.workstation.gui.camera.ObservableCamera3d camera = new BasicObservableCamera3d();
-        camera.setFocus(new org.janelia.it.workstation.geom.Vec3(0, 0, 0));
+        ObservableCamera3d camera = new BasicObservableCamera3d();
+        camera.setFocus(new Vec3(0, 0, 0));
         camera.setPixelsPerSceneUnit(200);
 
-        org.janelia.it.workstation.gui.opengl.GLSceneComposer sceneComposer =
-            new org.janelia.it.workstation.gui.opengl.GLSceneComposer(camera, glPanel);
+        GLSceneComposer sceneComposer =
+            new GLSceneComposer(camera, glPanel);
         sceneComposer.addBackgroundActor(new SolidBackgroundActor(
                 Color.gray));
-        sceneComposer.addOpaqueActor(new org.janelia.it.workstation.gui.opengl.LightingActor());
+        sceneComposer.addOpaqueActor(new LightingActor());
         MeshGroupActor meshGroup = new MeshGroupActor();
-        meshGroup.addActor(new org.janelia.it.workstation.gui.opengl.MeshActor(gourdMesh));
+        meshGroup.addActor(new MeshActor(gourdMesh));
         sceneComposer.addOpaqueActor(meshGroup);
         // sceneComposer.addOpaqueActor(new TeapotActor());
 
         // Enable stereo 3D selection
-        org.janelia.it.workstation.gui.opengl.stereo3d.StereoModeChooser stereoModeChooser = new org.janelia.it.workstation.gui.opengl.stereo3d.StereoModeChooser(glPanel);
+        StereoModeChooser stereoModeChooser = new StereoModeChooser(glPanel);
         stereoModeChooser.stereoModeChangedSignal.connect(sceneComposer.setStereoModeSlot);
         // Menus
         JMenuBar menuBar = new JMenuBar();
@@ -113,7 +122,7 @@ public class GourdDemo extends JFrame
 
         // Apply mouse interactions: drag to rotate etc.
         // Another one-line functionality decorator!
-        new org.janelia.it.workstation.gui.TrackballInteractor(glPanel, camera);
+        new TrackballInteractor(glPanel, camera);
 
         //Display the window.
         pack();

@@ -16,6 +16,10 @@ import javax.swing.Icon;
 import javax.swing.JPanel;
 import javax.swing.JToggleButton;
 
+import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
+import org.janelia.it.workstation.gui.util.CompoundIcon;
+import org.janelia.it.workstation.gui.util.RotatedIcon;
+import org.janelia.it.workstation.gui.util.TextIcon;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -53,9 +57,9 @@ public class VerticalPanelPicker extends JPanel {
     public void addPanel(final String title, final Icon icon, final String tooltip, final JPanel panel) {
 
         JToggleButton button = new JToggleButton();
-        org.janelia.it.workstation.gui.util.TextIcon ti = new org.janelia.it.workstation.gui.util.TextIcon(button, title);
-        org.janelia.it.workstation.gui.util.RotatedIcon ri = new org.janelia.it.workstation.gui.util.RotatedIcon(ti, org.janelia.it.workstation.gui.util.RotatedIcon.Rotate.DOWN);
-        org.janelia.it.workstation.gui.util.CompoundIcon ci = new org.janelia.it.workstation.gui.util.CompoundIcon(org.janelia.it.workstation.gui.util.CompoundIcon.Axis.Y_AXIS, 5, icon, ri);
+        TextIcon ti = new TextIcon(button, title);
+        RotatedIcon ri = new RotatedIcon(ti, RotatedIcon.Rotate.DOWN);
+        CompoundIcon ci = new CompoundIcon(CompoundIcon.Axis.Y_AXIS, 5, icon, ri);
         button.setFocusable(false);
         button.setIcon(ci);
         button.setToolTipText(tooltip);
@@ -114,7 +118,7 @@ public class VerticalPanelPicker extends JPanel {
             }
         }
         catch (Exception e) {
-            org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr.getSessionMgr().handleException(e);
+            SessionMgr.getSessionMgr().handleException(e);
         }
     }
 

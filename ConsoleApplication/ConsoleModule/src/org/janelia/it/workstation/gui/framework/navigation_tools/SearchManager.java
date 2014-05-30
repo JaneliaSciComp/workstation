@@ -8,6 +8,12 @@ package org.janelia.it.workstation.gui.framework.navigation_tools;
  */
 
 import org.janelia.it.workstation.api.entity_model.access.ModelMgrAdapter;
+import org.janelia.it.workstation.api.entity_model.management.ModelMgr;
+import org.janelia.it.workstation.api.stub.data.ControlledVocabulary;
+import org.janelia.it.workstation.gui.framework.console.Browser;
+import org.janelia.it.workstation.gui.framework.session_mgr.BrowserModel;
+import org.janelia.it.workstation.gui.framework.session_mgr.BrowserModelListenerAdapter;
+import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.workstation.gui.framework.session_mgr.SessionModelListener;
 import org.janelia.it.workstation.shared.util.text_component.StandardTextField;
 import org.janelia.it.jacs.model.entity.Entity;
@@ -55,8 +61,8 @@ public class SearchManager {
   JButton navigateButton = new JButton();
   JButton closeButton = new JButton();
 
-  private org.janelia.it.workstation.api.stub.data.ControlledVocabulary searchTypeControlledVocabulary;
-  private org.janelia.it.workstation.gui.framework.console.Browser browser;
+  private ControlledVocabulary searchTypeControlledVocabulary;
+  private Browser browser;
   private JFrame mainFrame;
 //  private GenomeVersion currentGenomeVersion;
   private static final String lineSep=System.getProperty("line.separator");
@@ -83,12 +89,12 @@ public class SearchManager {
 
   private SearchManager() {
     try  {
-      mainFrame = org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr.getMainFrame();
-      browser = org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr.getBrowser();
+      mainFrame = SessionMgr.getMainFrame();
+      browser = SessionMgr.getBrowser();
       userDialog = new JDialog(mainFrame,"Search Known Features", false);
       userDialog.addWindowListener(myWindowListener);
       browser.getBrowserModel().addBrowserModelListener(browserModelListener);
-      org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr.getSessionMgr().addSessionModelListener(sessionModelListener);
+      SessionMgr.getSessionMgr().addSessionModelListener(sessionModelListener);
       jbInit();
 
       /**
@@ -96,7 +102,7 @@ public class SearchManager {
        * if they are still valid, then add any new searches to the list.
        */
 //      searchTypeControlledVocabulary = GenomeVersion.getNavigationSearchTypes();
-      ArrayList frequentSearchList = (ArrayList) org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr.getSessionMgr().getModelProperty(FREQUENT_SEARCH_TYPES);
+      ArrayList frequentSearchList = (ArrayList) SessionMgr.getSessionMgr().getModelProperty(FREQUENT_SEARCH_TYPES);
       ArrayList newSearchList = new ArrayList(searchTypeControlledVocabulary.getNames());
 
       if (frequentSearchList != null) {
@@ -117,12 +123,12 @@ public class SearchManager {
         }
       }
 
-      if (org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr.getSessionMgr().getModelProperty(FOCUS_SUBVIEWS_UPON_NAVIGATION)==null) {
-        org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr.getSessionMgr().setModelProperty(FOCUS_SUBVIEWS_UPON_NAVIGATION, Boolean.TRUE);
+      if (SessionMgr.getSessionMgr().getModelProperty(FOCUS_SUBVIEWS_UPON_NAVIGATION)==null) {
+        SessionMgr.getSessionMgr().setModelProperty(FOCUS_SUBVIEWS_UPON_NAVIGATION, Boolean.TRUE);
       }
       else {
         boolean tmpBoolean = ((Boolean)
-          org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr.getSessionMgr().getModelProperty(FOCUS_SUBVIEWS_UPON_NAVIGATION)).booleanValue();
+          SessionMgr.getSessionMgr().getModelProperty(FOCUS_SUBVIEWS_UPON_NAVIGATION)).booleanValue();
         subviewFocusCheckBox.setSelected(tmpBoolean);
       }
     }
@@ -151,7 +157,7 @@ public class SearchManager {
     showSearchDialog(browser, true);
   }
 
-  public void showSearchDialog(org.janelia.it.workstation.gui.framework.console.Browser browser, boolean autoSearch) {
+  public void showSearchDialog(Browser browser, boolean autoSearch) {
 //    Set selectedGenomeVersions= ModelMgr.getModelMgr().getSelectedGenomeVersions();
 //    Set allGenomeVersions=ModelMgr.getModelMgr().getAvailableGenomeVersions();
     Entity entity = browser.getBrowserModel().getCurrentSelection();
@@ -160,7 +166,7 @@ public class SearchManager {
     // Since this method gets called so many times, we only want the listeners added once.
     if (!listenersSet) {
       browser.getBrowserModel().addBrowserModelListener(browserCurrentSelectionListener, false);
-      org.janelia.it.workstation.api.entity_model.management.ModelMgr.getModelMgr().addModelMgrObserver(myModelMgrObserver);
+      ModelMgr.getModelMgr().addModelMgrObserver(myModelMgrObserver);
       listenersSet = true;
     }
 
@@ -218,7 +224,7 @@ public class SearchManager {
     subviewFocusCheckBox.setBounds(new Rectangle(25, 199, 222, 19));
     subviewFocusCheckBox.addActionListener(new ActionListener() {
       public void actionPerformed(ActionEvent e) {
-        org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr.getSessionMgr().setModelProperty(FOCUS_SUBVIEWS_UPON_NAVIGATION,
+        SessionMgr.getSessionMgr().setModelProperty(FOCUS_SUBVIEWS_UPON_NAVIGATION,
           new Boolean(subviewFocusCheckBox.isSelected()));
       }
     });
@@ -392,20 +398,20 @@ public class SearchManager {
     }
     // Zero should be the most recent search item anyway.
     typeComboBox.setSelectedIndex(0);
-    org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr.getSessionMgr().setModelProperty(FREQUENT_SEARCH_TYPES, newList);
+    SessionMgr.getSessionMgr().setModelProperty(FREQUENT_SEARCH_TYPES, newList);
 
-    statusLabel.setText(STATUS + org.janelia.it.workstation.gui.framework.navigation_tools.AutoNavigationMgr.SEARCH_INITIATED);
+    statusLabel.setText(STATUS + AutoNavigationMgr.SEARCH_INITIATED);
     searchButton.setEnabled(false);
     if (availableGVRadioButton.isSelected()) {
-      org.janelia.it.workstation.gui.framework.navigation_tools.AutoNavigationMgr.getAutoNavigationMgr().findEntity(browser,
+      AutoNavigationMgr.getAutoNavigationMgr().findEntity(browser,
         getSearchType(),getSearchString());
     }
     else if (currentGVRadioButton.isSelected()) {
-      org.janelia.it.workstation.gui.framework.navigation_tools.AutoNavigationMgr.getAutoNavigationMgr().findEntityInGenomeVersion(browser,
+      AutoNavigationMgr.getAutoNavigationMgr().findEntityInGenomeVersion(browser,
         getSearchType(),getSearchString()/*,currentGenomeVersion*/);
     }
     else if (loadedGVRadioButton.isSelected()) {
-      org.janelia.it.workstation.gui.framework.navigation_tools.AutoNavigationMgr.getAutoNavigationMgr().findEntityInSelectedGenomeVersions(
+      AutoNavigationMgr.getAutoNavigationMgr().findEntityInSelectedGenomeVersions(
         browser,getSearchType(),getSearchString());
     }
   }
@@ -428,7 +434,7 @@ public class SearchManager {
    * Closing the dialog should remove the listeners.
    */
   void closeButton_actionPerformed(ActionEvent e) {
-    org.janelia.it.workstation.api.entity_model.management.ModelMgr.getModelMgr().removeModelMgrObserver(myModelMgrObserver);
+    ModelMgr.getModelMgr().removeModelMgrObserver(myModelMgrObserver);
     browser.getBrowserModel().removeBrowserModelListener(browserCurrentSelectionListener);
     listenersSet = false;
     userDialog.setVisible(false);
@@ -441,8 +447,8 @@ public class SearchManager {
   public void dispose() {
     browser.getBrowserModel().removeBrowserModelListener(browserCurrentSelectionListener);
     browser.getBrowserModel().removeBrowserModelListener(browserModelListener);
-    org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr.getSessionMgr().removeSessionModelListener(sessionModelListener);
-    org.janelia.it.workstation.api.entity_model.management.ModelMgr.getModelMgr().removeModelMgrObserver(myModelMgrObserver);
+    SessionMgr.getSessionMgr().removeSessionModelListener(sessionModelListener);
+    ModelMgr.getModelMgr().removeModelMgrObserver(myModelMgrObserver);
     listenersSet = false;
     userDialog.removeWindowListener(myWindowListener);
     userDialog.dispose();
@@ -453,10 +459,10 @@ public class SearchManager {
 
     NavigationPath navPath=(NavigationPath)navPaths.get(resultsList.getSelectedIndex());
     if (browser==null || this.newBrowserCheckBox.isSelected())
-     org.janelia.it.workstation.gui.framework.navigation_tools.AutoNavigationMgr.getAutoNavigationMgr().navigate(
+     AutoNavigationMgr.getAutoNavigationMgr().navigate(
         navPath);
     else
-     org.janelia.it.workstation.gui.framework.navigation_tools.AutoNavigationMgr.getAutoNavigationMgr().navigate(
+     AutoNavigationMgr.getAutoNavigationMgr().navigate(
         browser,navPath);
   }
 
@@ -466,8 +472,8 @@ public class SearchManager {
    * ability upon navigation.
    */
    private class MySessionModelListener implements SessionModelListener {
-    public void browserAdded(org.janelia.it.workstation.gui.framework.session_mgr.BrowserModel browserModel){}
-    public void browserRemoved(org.janelia.it.workstation.gui.framework.session_mgr.BrowserModel browserModel){}
+    public void browserAdded(BrowserModel browserModel){}
+    public void browserRemoved(BrowserModel browserModel){}
     public void sessionWillExit(){}
     public void modelPropertyChanged(Object key, Object oldValue, Object newValue){
       if (key.equals(FOCUS_SUBVIEWS_UPON_NAVIGATION)) {
@@ -481,12 +487,12 @@ public class SearchManager {
    * Comminucate state changes generically through the transient Browser Model
    * Generic Properties.
    */
-  private class MyBrowserModelListener extends org.janelia.it.workstation.gui.framework.session_mgr.BrowserModelListenerAdapter {
+  private class MyBrowserModelListener extends BrowserModelListenerAdapter {
     public void modelPropertyChanged(Object key, Object oldValue, Object newValue){
-      if (key.equals(org.janelia.it.workstation.gui.framework.navigation_tools.AutoNavigationMgr.PATH_DISCOVERED)) {
+      if (key.equals(AutoNavigationMgr.PATH_DISCOVERED)) {
         addSearchResults((NavigationPath[])newValue);
       }
-      else if (key.equals(org.janelia.it.workstation.gui.framework.navigation_tools.AutoNavigationMgr.SEARCH_INITIATED)) {
+      else if (key.equals(AutoNavigationMgr.SEARCH_INITIATED)) {
         // Upon new search, remove all old items.
         navPaths.clear();
         resultsList.setListData(new Vector());
@@ -494,7 +500,7 @@ public class SearchManager {
         statusLabel.setText(STATUS + (String)key);
         searchButton.setEnabled(false);
       }
-      else if (key.equals(org.janelia.it.workstation.gui.framework.navigation_tools.AutoNavigationMgr.SEARCH_COMPLETE)) {
+      else if (key.equals(AutoNavigationMgr.SEARCH_COMPLETE)) {
         searchButton.setEnabled(true);
         statusLabel.setText(STATUS + (String)key);
       }
@@ -549,7 +555,7 @@ public class SearchManager {
    * text and state of the radio buttons.  This MUST be separate from the other
    * browser model listener!!!
    */
-  private class MyBrowserModelCurrentSelectionListener extends org.janelia.it.workstation.gui.framework.session_mgr.BrowserModelListenerAdapter {
+  private class MyBrowserModelCurrentSelectionListener extends BrowserModelListenerAdapter {
     public void browserCurrentSelectionChanged(Entity newSelection) {
       showSearchDialog(browser, false);
     }

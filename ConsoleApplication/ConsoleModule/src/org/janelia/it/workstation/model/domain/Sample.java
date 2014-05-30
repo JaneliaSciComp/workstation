@@ -4,6 +4,9 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.janelia.it.jacs.model.entity.EntityConstants;
+import org.janelia.it.workstation.api.entity_model.management.ModelMgr;
+import org.janelia.it.workstation.model.entity.RootedEntity;
+import org.janelia.it.workstation.model.viewer.MaskedVolume;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -20,9 +23,9 @@ public class Sample extends AlignedEntityWrapper implements Viewable2d, Viewable
     private String imagePathFast3d;
     private List<Neuron> neuronSet;
     private VolumeImage reference;
-    private org.janelia.it.workstation.model.viewer.MaskedVolume maskedVolume;
+    private MaskedVolume maskedVolume;
 
-    public Sample(org.janelia.it.workstation.model.entity.RootedEntity entity) {
+    public Sample(RootedEntity entity) {
         super(entity);
     }
     
@@ -31,25 +34,25 @@ public class Sample extends AlignedEntityWrapper implements Viewable2d, Viewable
         log.debug("Loading alignment contexts for sample (id={})",getName(),getId());
         List<AlignmentContext> contexts = new ArrayList<AlignmentContext>();
         
-        org.janelia.it.workstation.api.entity_model.management.ModelMgr.getModelMgr().loadLazyEntity(getInternalEntity(), false);
+        ModelMgr.getModelMgr().loadLazyEntity(getInternalEntity(), false);
 
-        for(org.janelia.it.workstation.model.entity.RootedEntity pipelineRun : getInternalRootedEntity().getChildrenOfType(EntityConstants.TYPE_PIPELINE_RUN)) {
+        for(RootedEntity pipelineRun : getInternalRootedEntity().getChildrenOfType(EntityConstants.TYPE_PIPELINE_RUN)) {
             log.debug("Checking pipeline run '{}' (id={})",pipelineRun.getName(),pipelineRun.getEntityId());
-            org.janelia.it.workstation.api.entity_model.management.ModelMgr.getModelMgr().loadLazyEntity(pipelineRun.getEntity(), false);
+            ModelMgr.getModelMgr().loadLazyEntity(pipelineRun.getEntity(), false);
             
-            for(org.janelia.it.workstation.model.entity.RootedEntity pipelineResult : pipelineRun.getChildrenForAttribute(EntityConstants.ATTRIBUTE_RESULT)) {
+            for(RootedEntity pipelineResult : pipelineRun.getChildrenForAttribute(EntityConstants.ATTRIBUTE_RESULT)) {
                 if (pipelineResult.getEntity().getValueByAttributeName(EntityConstants.TYPE_ALIGNMENT_SPACE)!=null) {
                 
                     log.debug("  Checking '{}'",pipelineResult.getName());    
-                    org.janelia.it.workstation.api.entity_model.management.ModelMgr.getModelMgr().loadLazyEntity(pipelineResult.getEntity(), false);
+                    ModelMgr.getModelMgr().loadLazyEntity(pipelineResult.getEntity(), false);
                                         
                     if (pipelineResult.getType().equals(EntityConstants.TYPE_ALIGNMENT_RESULT)) {
-                        org.janelia.it.workstation.model.entity.RootedEntity supportingFiles = pipelineResult.getChildForAttribute(EntityConstants.ATTRIBUTE_SUPPORTING_FILES);
-                        org.janelia.it.workstation.api.entity_model.management.ModelMgr.getModelMgr().loadLazyEntity(supportingFiles.getEntity(), false);
+                        RootedEntity supportingFiles = pipelineResult.getChildForAttribute(EntityConstants.ATTRIBUTE_SUPPORTING_FILES);
+                        ModelMgr.getModelMgr().loadLazyEntity(supportingFiles.getEntity(), false);
                         
-                        for(org.janelia.it.workstation.model.entity.RootedEntity alignedVolume : supportingFiles.getChildrenOfType(EntityConstants.TYPE_IMAGE_3D)) {
+                        for(RootedEntity alignedVolume : supportingFiles.getChildrenOfType(EntityConstants.TYPE_IMAGE_3D)) {
                             log.debug("    Checking aligned volume '{}' (id={})",alignedVolume.getName(),alignedVolume.getEntityId());
-                            org.janelia.it.workstation.api.entity_model.management.ModelMgr.getModelMgr().loadLazyEntity(alignedVolume.getEntity(), false);
+                            ModelMgr.getModelMgr().loadLazyEntity(alignedVolume.getEntity(), false);
                             
                             String alignmentSpaceName = alignedVolume.getValueByAttributeName(EntityConstants.TYPE_ALIGNMENT_SPACE);
                             String opticalResolution = alignedVolume.getValueByAttributeName(EntityConstants.ATTRIBUTE_OPTICAL_RESOLUTION);
@@ -74,37 +77,37 @@ public class Sample extends AlignedEntityWrapper implements Viewable2d, Viewable
         log.debug("Loading contextualized children for sample '{}' (id={})",getName(),getId());
         
         initChildren();
-        org.janelia.it.workstation.api.entity_model.management.ModelMgr.getModelMgr().loadLazyEntity(getInternalEntity(), false);
+        ModelMgr.getModelMgr().loadLazyEntity(getInternalEntity(), false);
         
         this.neuronSet = new ArrayList<Neuron>();
         
         String matchedAlignmentSpace = null;
         String matchedOpticalRes = null;
         String matchedPixelRes = null;
-        org.janelia.it.workstation.model.entity.RootedEntity volume = null;
-        org.janelia.it.workstation.model.entity.RootedEntity separation = null;
-        org.janelia.it.workstation.model.entity.RootedEntity fragmentCollection = null;
+        RootedEntity volume = null;
+        RootedEntity separation = null;
+        RootedEntity fragmentCollection = null;
         
-        for(org.janelia.it.workstation.model.entity.RootedEntity pipelineRun : getInternalRootedEntity().getChildrenOfType(EntityConstants.TYPE_PIPELINE_RUN)) {
+        for(RootedEntity pipelineRun : getInternalRootedEntity().getChildrenOfType(EntityConstants.TYPE_PIPELINE_RUN)) {
             log.debug("Checking pipeline run '{}' (id={})",pipelineRun.getName(),pipelineRun.getEntityId());
-            org.janelia.it.workstation.api.entity_model.management.ModelMgr.getModelMgr().loadLazyEntity(pipelineRun.getEntity(), false);
+            ModelMgr.getModelMgr().loadLazyEntity(pipelineRun.getEntity(), false);
             
-            for(org.janelia.it.workstation.model.entity.RootedEntity pipelineResult : pipelineRun.getChildrenForAttribute(EntityConstants.ATTRIBUTE_RESULT)) {
+            for(RootedEntity pipelineResult : pipelineRun.getChildrenForAttribute(EntityConstants.ATTRIBUTE_RESULT)) {
                 String alignmentSpaceName = pipelineResult.getEntity().getValueByAttributeName(EntityConstants.TYPE_ALIGNMENT_SPACE);
                 log.debug("  Checking '{}'",pipelineResult.getName());    
-                org.janelia.it.workstation.api.entity_model.management.ModelMgr.getModelMgr().loadLazyEntity(pipelineResult.getEntity(), false);
+                ModelMgr.getModelMgr().loadLazyEntity(pipelineResult.getEntity(), false);
                 
                 if (alignmentSpaceName!=null && alignmentSpaceName.equals(alignmentContext.getAlignmentSpaceName())) {
                     matchedAlignmentSpace = alignmentContext.getAlignmentSpaceName();
                     
                     if (pipelineResult.getType().equals(EntityConstants.TYPE_ALIGNMENT_RESULT)) {
                         
-                        org.janelia.it.workstation.model.entity.RootedEntity supportingFiles = pipelineResult.getChildForAttribute(EntityConstants.ATTRIBUTE_SUPPORTING_FILES);
-                        org.janelia.it.workstation.api.entity_model.management.ModelMgr.getModelMgr().loadLazyEntity(supportingFiles.getEntity(), false);
+                        RootedEntity supportingFiles = pipelineResult.getChildForAttribute(EntityConstants.ATTRIBUTE_SUPPORTING_FILES);
+                        ModelMgr.getModelMgr().loadLazyEntity(supportingFiles.getEntity(), false);
                         
-                        for(org.janelia.it.workstation.model.entity.RootedEntity alignedVolume : supportingFiles.getChildrenOfType(EntityConstants.TYPE_IMAGE_3D)) {
+                        for(RootedEntity alignedVolume : supportingFiles.getChildrenOfType(EntityConstants.TYPE_IMAGE_3D)) {
                             log.debug("    Checking aligned volume '{}' (id={})",alignedVolume.getName(),alignedVolume.getEntityId());
-                            org.janelia.it.workstation.api.entity_model.management.ModelMgr.getModelMgr().loadLazyEntity(alignedVolume.getEntity(), false);
+                            ModelMgr.getModelMgr().loadLazyEntity(alignedVolume.getEntity(), false);
                             
                             String opticalRes = alignedVolume.getValueByAttributeName(EntityConstants.ATTRIBUTE_OPTICAL_RESOLUTION);
                             if (opticalRes!=null && opticalRes.equals(alignmentContext.getOpticalResolution())) {
@@ -118,11 +121,11 @@ public class Sample extends AlignedEntityWrapper implements Viewable2d, Viewable
                             }
                         }
                         
-                        for(org.janelia.it.workstation.model.entity.RootedEntity sep : pipelineResult.getChildrenOfType(EntityConstants.TYPE_NEURON_SEPARATOR_PIPELINE_RESULT)) {
+                        for(RootedEntity sep : pipelineResult.getChildrenOfType(EntityConstants.TYPE_NEURON_SEPARATOR_PIPELINE_RESULT)) {
                             String opticalRes = sep.getValueByAttributeName(EntityConstants.ATTRIBUTE_OPTICAL_RESOLUTION);
                             String pixelRes = sep.getValueByAttributeName(EntityConstants.ATTRIBUTE_PIXEL_RESOLUTION);
                             log.debug("    Checking neuron separation '{}' (id={})",sep.getName(),sep.getEntityId());
-                            org.janelia.it.workstation.api.entity_model.management.ModelMgr.getModelMgr().loadLazyEntity(sep.getEntity(), false);
+                            ModelMgr.getModelMgr().loadLazyEntity(sep.getEntity(), false);
                             
                             if (opticalRes!=null && opticalRes.equals(alignmentContext.getOpticalResolution())) {
                                 matchedOpticalRes = opticalRes;
@@ -137,12 +140,12 @@ public class Sample extends AlignedEntityWrapper implements Viewable2d, Viewable
                                     separation = sep;
                                     fragmentCollection = sep.getChildOfType(EntityConstants.TYPE_NEURON_FRAGMENT_COLLECTION);
 
-                                    org.janelia.it.workstation.model.entity.RootedEntity sepSupportingFiles = sep.getChildForAttribute(EntityConstants.ATTRIBUTE_SUPPORTING_FILES);
-                                    org.janelia.it.workstation.api.entity_model.management.ModelMgr.getModelMgr().loadLazyEntity(sepSupportingFiles.getEntity(), false);
+                                    RootedEntity sepSupportingFiles = sep.getChildForAttribute(EntityConstants.ATTRIBUTE_SUPPORTING_FILES);
+                                    ModelMgr.getModelMgr().loadLazyEntity(sepSupportingFiles.getEntity(), false);
                                     
                                     // Reset the reference, so that we can make sure that we get the one for this neuron separation
                                     reference = null;
-                    	        	for(org.janelia.it.workstation.model.entity.RootedEntity image3d : sepSupportingFiles.getChildrenOfType(EntityConstants.TYPE_IMAGE_3D)) {
+                    	        	for(RootedEntity image3d : sepSupportingFiles.getChildrenOfType(EntityConstants.TYPE_IMAGE_3D)) {
                     	        		if (image3d.getName().startsWith("Reference.")) {
                     	        			reference = new VolumeImage(image3d);
                     	        		};
@@ -166,7 +169,7 @@ public class Sample extends AlignedEntityWrapper implements Viewable2d, Viewable
         }
         
         if (volume!=null) {
-            org.janelia.it.workstation.model.entity.RootedEntity fast3dImage = volume.getChildForAttribute(EntityConstants.ATTRIBUTE_DEFAULT_FAST_3D_IMAGE);
+            RootedEntity fast3dImage = volume.getChildForAttribute(EntityConstants.ATTRIBUTE_DEFAULT_FAST_3D_IMAGE);
             if (fast3dImage != null) {
                 imagePathFast3d = fast3dImage.getValueByAttributeName(EntityConstants.ATTRIBUTE_FILE_PATH);
                 log.debug("Got fast 3d image: {}",imagePathFast3d);
@@ -174,14 +177,14 @@ public class Sample extends AlignedEntityWrapper implements Viewable2d, Viewable
         }
         
         if (separation!=null) {
-            maskedVolume = new org.janelia.it.workstation.model.viewer.MaskedVolume(separation.getValueByAttributeName(EntityConstants.ATTRIBUTE_FILE_PATH));
+            maskedVolume = new MaskedVolume(separation.getValueByAttributeName(EntityConstants.ATTRIBUTE_FILE_PATH));
             if (maskedVolume!=null) {
                 log.debug("Got masked volume: {}",maskedVolume.getSignalLabelPath());
             }
             
             if (fragmentCollection!=null) {
-                org.janelia.it.workstation.api.entity_model.management.ModelMgr.getModelMgr().loadLazyEntity(fragmentCollection.getEntity(), false);
-                for(org.janelia.it.workstation.model.entity.RootedEntity neuronFragment : fragmentCollection.getChildrenOfType(EntityConstants.TYPE_NEURON_FRAGMENT)) {
+                ModelMgr.getModelMgr().loadLazyEntity(fragmentCollection.getEntity(), false);
+                for(RootedEntity neuronFragment : fragmentCollection.getChildrenOfType(EntityConstants.TYPE_NEURON_FRAGMENT)) {
                     Neuron neuron = new Neuron(neuronFragment);
                     neuronSet.add(neuron);
                     addChild(neuron);
@@ -234,7 +237,7 @@ public class Sample extends AlignedEntityWrapper implements Viewable2d, Viewable
     }
 
     @Override
-    public org.janelia.it.workstation.model.viewer.MaskedVolume getMaskedVolume() {
+    public MaskedVolume getMaskedVolume() {
         return maskedVolume;
     }
 

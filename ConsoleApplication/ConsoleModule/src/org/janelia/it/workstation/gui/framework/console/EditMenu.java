@@ -1,9 +1,13 @@
 package org.janelia.it.workstation.gui.framework.console;
 
+import org.janelia.it.workstation.api.entity_model.access.observer.ModifyManagerObserverAdapter;
+import org.janelia.it.workstation.api.entity_model.management.ModifyMgr;
 import org.janelia.it.workstation.gui.framework.pref_controller.PrefController;
+import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
 
 import javax.swing.*;
 import javax.swing.text.DefaultEditorKit;
+import java.awt.Event;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.InputEvent;
@@ -36,7 +40,7 @@ public class EditMenu extends JMenu {
     private Action pasteAction;
     
     public EditMenu() {
-        userHomeDir = org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr.getSessionMgr().getApplicationOutputDirectory();
+        userHomeDir = SessionMgr.getSessionMgr().getApplicationOutputDirectory();
         setText("Edit");
         this.setMnemonic('E');
         menuUnDo = new JMenuItem("Undo", 'U');
@@ -69,17 +73,17 @@ public class EditMenu extends JMenu {
         cutAction = new MyCutAction();
         cutAction.putValue(Action.NAME, "Cut");
         menuCut = new JMenuItem(cutAction);
-        menuCut.setAccelerator(KeyStroke.getKeyStroke(java.awt.event.KeyEvent.VK_X, java.awt.Event.META_MASK));
+        menuCut.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_X, Event.META_MASK));
 
         copyAction = new MyCopyAction();
         copyAction.putValue(Action.NAME, "Copy");
         menuCopy = new JMenuItem(copyAction);
-        menuCopy.setAccelerator(KeyStroke.getKeyStroke(java.awt.event.KeyEvent.VK_C, java.awt.Event.META_MASK));
+        menuCopy.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_C, Event.META_MASK));
 
         pasteAction = new MyPasteAction();
         pasteAction.putValue(Action.NAME, "Paste");
         menuPaste = new JMenuItem(pasteAction);
-        menuPaste.setAccelerator(KeyStroke.getKeyStroke(java.awt.event.KeyEvent.VK_V, java.awt.Event.META_MASK));
+        menuPaste.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_V, Event.META_MASK));
 
         menuSetPreferences = new JMenu("Preferences");
         menuSetPreferences.setMnemonic('P');
@@ -112,8 +116,8 @@ public class EditMenu extends JMenu {
     }
 
     private void establishPrefController(String prefLevel) {
-        org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr.getMainFrame().repaint();
-        PrefController.getPrefController().getPrefInterface(prefLevel, org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr.getMainFrame());
+        SessionMgr.getMainFrame().repaint();
+        PrefController.getPrefController().getPrefInterface(prefLevel, SessionMgr.getMainFrame());
     }
 
     /**
@@ -131,13 +135,13 @@ public class EditMenu extends JMenu {
             out.close();
         }
         catch (Exception ex) {
-            org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr.getSessionMgr().handleException(ex);
+            SessionMgr.getSessionMgr().handleException(ex);
         }
     }
 
     private void unDo_actionPerformed(ActionEvent e) {
         //  try{
-        org.janelia.it.workstation.api.entity_model.management.ModifyMgr.getModifyMgr().undoCommand();
+        ModifyMgr.getModifyMgr().undoCommand();
 
         /*
                             }catch(Exception ex){
@@ -150,7 +154,7 @@ public class EditMenu extends JMenu {
 
     private void reDo_actionPerformed(ActionEvent e) {
         // try{
-        org.janelia.it.workstation.api.entity_model.management.ModifyMgr.getModifyMgr().redoCommand();
+        ModifyMgr.getModifyMgr().redoCommand();
 
         /*
         }catch(Exception ex){
@@ -162,7 +166,7 @@ public class EditMenu extends JMenu {
         */
     }
 
-    class CommandObserver extends org.janelia.it.workstation.api.entity_model.access.observer.ModifyManagerObserverAdapter {
+    class CommandObserver extends ModifyManagerObserverAdapter {
         public void noteCanUndo(String undoString) {
             if (undoString != null) {
                 menuUnDo.setText("Undo " + undoString);

@@ -31,7 +31,7 @@ public class BaseballCardPanelTest extends JFrame {
     public static final int HEIGHT = 800;
     public static final int WIDTH = 800;
 
-    private org.janelia.it.workstation.gui.framework.viewer.BaseballCardPanel panel;
+    private BaseballCardPanel panel;
     private Logger logger = LoggerFactory.getLogger( BaseballCardPanelTest.class );
 
     public static void main( String[] args ) throws Exception {
@@ -57,7 +57,7 @@ public class BaseballCardPanelTest extends JFrame {
         this.setSize(WIDTH, HEIGHT);
         this.setLocation( 0, 0 );
 
-        panel = new org.janelia.it.workstation.gui.framework.viewer.BaseballCardPanel( true, WIDTH, 10 );
+        panel = new BaseballCardPanel( true, WIDTH, 10 );
         this.add(panel, BorderLayout.CENTER);
         panel.setPreferredSize(this.getSize());
         this.setDefaultCloseOperation( WindowConstants.EXIT_ON_CLOSE );

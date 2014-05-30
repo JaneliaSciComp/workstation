@@ -5,15 +5,19 @@ import java.util.List;
 
 import javax.swing.AbstractAction;
 
+import org.janelia.it.workstation.geom.Vec3;
+import org.janelia.it.workstation.gui.camera.Camera3d;
 import org.janelia.it.workstation.gui.slice_viewer.TileConsumer;
+import org.janelia.it.workstation.gui.viewer3d.BoundingBox3d;
+import org.janelia.it.workstation.gui.viewer3d.interfaces.VolumeImage3d;
 
 public class ResetZoomAction extends AbstractAction {
 	private List<TileConsumer> widgets;
-	private org.janelia.it.workstation.gui.viewer3d.interfaces.VolumeImage3d volumeImage;
+	private VolumeImage3d volumeImage;
 
 	public ResetZoomAction(
 			List<TileConsumer> widgets,
-			org.janelia.it.workstation.gui.viewer3d.interfaces.VolumeImage3d volumeImage)
+			VolumeImage3d volumeImage)
 	{
 		this.widgets = widgets;
 		this.volumeImage = volumeImage;
@@ -32,7 +36,7 @@ public class ResetZoomAction extends AbstractAction {
 			return;
 		double newZoom = Double.POSITIVE_INFINITY;
 		// TODO - assumes all viewers share one camera
-		org.janelia.it.workstation.gui.camera.Camera3d camera = null;
+		Camera3d camera = null;
 		for (TileConsumer viewer : widgets) {
 			if (camera == null)
 				camera = viewer.getCamera();
@@ -56,12 +60,12 @@ public class ResetZoomAction extends AbstractAction {
 
 	private double getZoom(TileConsumer viewer) {
 		// Need to fit entire bounding box...
-		org.janelia.it.workstation.gui.viewer3d.BoundingBox3d box = volumeImage.getBoundingBox3d();
-		org.janelia.it.workstation.geom.Vec3 boxSize = new org.janelia.it.workstation.geom.Vec3(box.getWidth(), box.getHeight(), box.getDepth());
+		BoundingBox3d box = volumeImage.getBoundingBox3d();
+		Vec3 boxSize = new Vec3(box.getWidth(), box.getHeight(), box.getDepth());
 		// ...plus offset from center
-		org.janelia.it.workstation.geom.Vec3 bc = box.getCenter();
-		org.janelia.it.workstation.geom.Vec3 focus = viewer.getCamera().getFocus();
-		org.janelia.it.workstation.geom.Vec3 offset = bc.minus(focus).times(2.0);
+		Vec3 bc = box.getCenter();
+		Vec3 focus = viewer.getCamera().getFocus();
+		Vec3 offset = bc.minus(focus).times(2.0);
 		for (int i : new int[] {0,1,2}) {
 			offset.set(i, Math.abs(offset.get(i)));
 		}

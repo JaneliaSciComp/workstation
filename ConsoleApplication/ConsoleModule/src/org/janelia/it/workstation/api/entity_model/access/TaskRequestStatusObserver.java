@@ -1,5 +1,6 @@
 package org.janelia.it.workstation.api.entity_model.access;
 
+import org.janelia.it.workstation.api.entity_model.fundtype.TaskRequestState;
 import org.janelia.it.workstation.api.entity_model.fundtype.TaskRequestStatus;
 
 /**
@@ -10,7 +11,7 @@ import org.janelia.it.workstation.api.entity_model.fundtype.TaskRequestStatus;
  */
 public interface TaskRequestStatusObserver {
 
-    void stateChanged(TaskRequestStatus taskRequestStatus, org.janelia.it.workstation.api.entity_model.fundtype.TaskRequestState newState);
+    void stateChanged(TaskRequestStatus taskRequestStatus, TaskRequestState newState);
 
     void loadedPercentageChanged(TaskRequestStatus taskRequestStatus, int newPercent);
 

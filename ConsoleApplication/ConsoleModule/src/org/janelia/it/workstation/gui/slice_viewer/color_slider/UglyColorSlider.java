@@ -19,7 +19,7 @@ public class UglyColorSlider extends JSlider
 	protected ImageColorModel imageColorModel;
 	private ColorChannelRangeModel rangeModel = new ColorChannelRangeModel();
 	private Color whiteColor = Color.white;
-	private org.janelia.it.workstation.gui.slice_viewer.color_slider.UglyColorSliderUI ui;
+	private UglyColorSliderUI ui;
 
 	private boolean updatingFromModel = false; // flag to prevent recursion
 
@@ -126,7 +126,7 @@ public class UglyColorSlider extends JSlider
 	@Override
 	public void updateUI() {
 		if (ui == null) {
-			ui = new org.janelia.it.workstation.gui.slice_viewer.color_slider.UglyColorSliderUI(this);
+			ui = new UglyColorSliderUI(this);
 			addMouseWheelListener(ui.createTrackListener(this));
 		}
 		setUI(ui);

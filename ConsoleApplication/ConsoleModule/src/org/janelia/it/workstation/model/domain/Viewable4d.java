@@ -1,7 +1,9 @@
 package org.janelia.it.workstation.model.domain;
 
+import org.janelia.it.workstation.model.viewer.MaskedVolume;
+
 public interface Viewable4d {
 
-    public org.janelia.it.workstation.model.viewer.MaskedVolume getMaskedVolume();
+    public MaskedVolume getMaskedVolume();
     
 }

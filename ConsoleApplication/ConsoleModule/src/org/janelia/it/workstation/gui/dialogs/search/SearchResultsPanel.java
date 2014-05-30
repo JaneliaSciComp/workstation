@@ -19,8 +19,16 @@ import org.apache.solr.client.solrj.SolrQuery;
 import org.apache.solr.client.solrj.response.FacetField;
 import org.apache.solr.client.solrj.response.FacetField.Count;
 import org.apache.solr.client.solrj.response.QueryResponse;
+import org.janelia.it.workstation.api.entity_model.management.ModelMgr;
 import org.janelia.it.workstation.gui.dialogs.search.SearchAttribute.DataStore;
 import org.janelia.it.workstation.gui.dialogs.search.SearchConfiguration.AttrGroup;
+import org.janelia.it.workstation.gui.framework.outline.Refreshable;
+import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
+import org.janelia.it.workstation.gui.framework.table.DynamicColumn;
+import org.janelia.it.workstation.gui.framework.table.DynamicRow;
+import org.janelia.it.workstation.gui.framework.table.DynamicTable;
+import org.janelia.it.workstation.gui.util.Icons;
+import org.janelia.it.workstation.gui.util.panels.ScrollablePanel;
 import org.janelia.it.workstation.shared.util.ConcurrentUtils;
 import org.janelia.it.workstation.shared.workers.SimpleWorker;
 import org.janelia.it.jacs.shared.solr.EntityDocument;
@@ -36,7 +44,7 @@ import org.slf4j.LoggerFactory;
  * 
  * @author <a href="mailto:rokickik@janelia.hhmi.org">Konrad Rokicki</a>
  */
-public abstract class SearchResultsPanel extends JPanel implements SearchConfigurationListener, org.janelia.it.workstation.gui.framework.outline.Refreshable {
+public abstract class SearchResultsPanel extends JPanel implements SearchConfigurationListener, Refreshable {
 
 	private static final Logger log = LoggerFactory.getLogger(SearchResultsPanel.class);
 	
@@ -59,18 +67,18 @@ public abstract class SearchResultsPanel extends JPanel implements SearchConfigu
     protected final JLabel projectionStatusLabel;
     protected final JPanel resultsPane;
     protected final JPanel projectionPane;
-    protected final org.janelia.it.workstation.gui.framework.table.DynamicTable resultsTable;
-    protected final org.janelia.it.workstation.gui.framework.table.DynamicTable projectionTable;
+    protected final DynamicTable resultsTable;
+    protected final DynamicTable projectionTable;
     protected final ListSelectionListener resultsTableListener;
     protected final ListSelectionListener projectionTableListener;
  	protected final JScrollPane facetScrollPane;
  	protected final JScrollPane attrScrollPane;
  	protected final JTabbedPane leftTabbedPane;
-	private final Map<org.janelia.it.workstation.gui.framework.table.DynamicColumn,JCheckBox> attrCheckboxes =  new HashMap<org.janelia.it.workstation.gui.framework.table.DynamicColumn,JCheckBox>();
+	private final Map<DynamicColumn,JCheckBox> attrCheckboxes =  new HashMap<DynamicColumn,JCheckBox>();
 	
     // Search state
  	protected final SearchParametersPanel paramsPanel;
- 	protected final Map<String, org.janelia.it.workstation.gui.framework.table.DynamicColumn> columnByName = new HashMap<String, org.janelia.it.workstation.gui.framework.table.DynamicColumn>();
+ 	protected final Map<String, DynamicColumn> columnByName = new HashMap<String, DynamicColumn>();
  	protected final Map<String,Set<String>> filters = new HashMap<String,Set<String>>();
  	protected SearchConfiguration searchConfig;
     protected String sortField;
@@ -78,7 +86,7 @@ public abstract class SearchResultsPanel extends JPanel implements SearchConfigu
     protected String fullQueryString = "";
     
     // Results
-    protected org.janelia.it.workstation.gui.dialogs.search.SearchResults searchResults = new org.janelia.it.workstation.gui.dialogs.search.SearchResults();
+    protected SearchResults searchResults = new SearchResults();
     
 	public SearchResultsPanel(SearchParametersPanel paramsPanel) {
 		setLayout(new BorderLayout());
@@ -90,7 +98,7 @@ public abstract class SearchResultsPanel extends JPanel implements SearchConfigu
         // --------------------------------x
         Color color = new Color(238,238,238);
         
-        facetsPanel = new org.janelia.it.workstation.gui.util.panels.ScrollablePanel();
+        facetsPanel = new ScrollablePanel();
         facetsPanel.setLayout(new BoxLayout(facetsPanel, BoxLayout.PAGE_AXIS));
         facetsPanel.setOpaque(false);
         facetScrollPane = new JScrollPane();
@@ -98,7 +106,7 @@ public abstract class SearchResultsPanel extends JPanel implements SearchConfigu
         facetScrollPane.getViewport().setBackground(color);
         facetScrollPane.setBorder(BorderFactory.createEmptyBorder());
         
-        attrsPanel = new org.janelia.it.workstation.gui.util.panels.ScrollablePanel();
+        attrsPanel = new ScrollablePanel();
         attrsPanel.setLayout(new BoxLayout(attrsPanel, BoxLayout.PAGE_AXIS));
         attrsPanel.setOpaque(false);
         attrScrollPane = new JScrollPane();
@@ -113,9 +121,9 @@ public abstract class SearchResultsPanel extends JPanel implements SearchConfigu
         // --------------------------------
         // Results on right
         // --------------------------------
-        resultsTable = new org.janelia.it.workstation.gui.framework.table.DynamicTable() {
+        resultsTable = new DynamicTable() {
 			@Override
-			public Object getValue(Object userObject, org.janelia.it.workstation.gui.framework.table.DynamicColumn column) {
+			public Object getValue(Object userObject, DynamicColumn column) {
 				return searchConfig.getValue(userObject, column.getName());
 			}
 			@Override
@@ -131,7 +139,7 @@ public abstract class SearchResultsPanel extends JPanel implements SearchConfigu
         	@Override
         	protected void rowClicked(int row) {
         		if (row<0) return;
-        		org.janelia.it.workstation.gui.framework.table.DynamicRow drow = getRows().get(row);
+        		DynamicRow drow = getRows().get(row);
         		EntityDocument doc = (EntityDocument)drow.getUserObject();
         		documentSelected(doc);
         		if (doc.getEntity()!=null) {
@@ -145,9 +153,9 @@ public abstract class SearchResultsPanel extends JPanel implements SearchConfigu
 		resultsTable.setBorder(BorderFactory.createEmptyBorder(0, 0, 12, 5));
 
 		
-        projectionTable = new org.janelia.it.workstation.gui.framework.table.DynamicTable() {
+        projectionTable = new DynamicTable() {
 			@Override
-			public Object getValue(Object userObject, org.janelia.it.workstation.gui.framework.table.DynamicColumn column) {
+			public Object getValue(Object userObject, DynamicColumn column) {
 				return searchConfig.getValue(userObject, column.getName());
 			}
 			@Override
@@ -174,7 +182,7 @@ public abstract class SearchResultsPanel extends JPanel implements SearchConfigu
 				projectionJTable.getSelectionModel().removeListSelectionListener(projectionTableListener);
 				List<Entity> list = new ArrayList<Entity>();
 				for(int row : resultsJTable.getSelectedRows()) {
-	        		org.janelia.it.workstation.gui.framework.table.DynamicRow drow = resultsTable.getRows().get(row);
+	        		DynamicRow drow = resultsTable.getRows().get(row);
 	        		EntityDocument doc = (EntityDocument)drow.getUserObject();
 	        		Entity entity = doc.getEntity();
 	            	for(ResultPage resultPage : searchResults.getPages()) {
@@ -194,7 +202,7 @@ public abstract class SearchResultsPanel extends JPanel implements SearchConfigu
 				resultsJTable.getSelectionModel().removeListSelectionListener(resultsTableListener);
 				List<Entity> list = new ArrayList<Entity>();
 				for(int row : projectionJTable.getSelectedRows()) {
-	        		org.janelia.it.workstation.gui.framework.table.DynamicRow drow = projectionTable.getRows().get(row);
+	        		DynamicRow drow = projectionTable.getRows().get(row);
 	        		Entity mappedEntity = (Entity)drow.getUserObject();
 	            	for(ResultPage resultPage : searchResults.getPages()) {
 	            		List<Entity> resultEntities = resultPage.getResultEntities(mappedEntity.getId());
@@ -219,7 +227,7 @@ public abstract class SearchResultsPanel extends JPanel implements SearchConfigu
         resultsPane.add(resultsTable, BorderLayout.CENTER);
 
 
-        JButton hideProjectionButton = new JButton(org.janelia.it.workstation.gui.util.Icons.getIcon("close_red.png"));
+        JButton hideProjectionButton = new JButton(Icons.getIcon("close_red.png"));
         hideProjectionButton.setBorderPainted(false);
         hideProjectionButton.setToolTipText("Close mapped result view");
         hideProjectionButton.addActionListener(new ActionListener() {
@@ -269,24 +277,24 @@ public abstract class SearchResultsPanel extends JPanel implements SearchConfigu
 		projectionTable.clearColumns();
 		columnByName.clear();
 		
-    	Map<AttrGroup, List<org.janelia.it.workstation.gui.dialogs.search.SearchAttribute>> attributeGroups = searchConfig.getAttributeGroups();
+    	Map<AttrGroup, List<SearchAttribute>> attributeGroups = searchConfig.getAttributeGroups();
     	
-    	for(org.janelia.it.workstation.gui.dialogs.search.SearchAttribute attr : attributeGroups.get(AttrGroup.BASIC)) {
-			org.janelia.it.workstation.gui.framework.table.DynamicColumn column = resultsTable.addColumn(attr.getName(), attr.getLabel(), !attr.getName().equals("id"), false, true, attr.isSortable());
+    	for(SearchAttribute attr : attributeGroups.get(AttrGroup.BASIC)) {
+			DynamicColumn column = resultsTable.addColumn(attr.getName(), attr.getLabel(), !attr.getName().equals("id"), false, true, attr.isSortable());
 			columnByName.put(attr.getName(), column);
 			if (attr.getDataStore()==DataStore.ENTITY) {
 			    projectionTable.addColumn(attr.getName(), attr.getLabel(), !attr.getName().equals("id"), false, true, false);
 			}
     	}
     	
-    	for(org.janelia.it.workstation.gui.dialogs.search.SearchAttribute attr : attributeGroups.get(AttrGroup.EXT)) {
-    		org.janelia.it.workstation.gui.framework.table.DynamicColumn column = resultsTable.addColumn(attr.getName(), attr.getLabel(), false, false, true, attr.isSortable());
+    	for(SearchAttribute attr : attributeGroups.get(AttrGroup.EXT)) {
+    		DynamicColumn column = resultsTable.addColumn(attr.getName(), attr.getLabel(), false, false, true, attr.isSortable());
     		columnByName.put(attr.getName(), column);
     		projectionTable.addColumn(attr.getName(), attr.getLabel(), false, false, true, false);
     	}
 
-		for(org.janelia.it.workstation.gui.dialogs.search.SearchAttribute attr : attributeGroups.get(AttrGroup.SAGE)) {
-			org.janelia.it.workstation.gui.framework.table.DynamicColumn column = resultsTable.addColumn(attr.getName(), attr.getLabel(), false, false, true, attr.isSortable());
+		for(SearchAttribute attr : attributeGroups.get(AttrGroup.SAGE)) {
+			DynamicColumn column = resultsTable.addColumn(attr.getName(), attr.getLabel(), false, false, true, attr.isSortable());
 			columnByName.put(attr.getName(), column);
 		}
 		
@@ -435,13 +443,13 @@ public abstract class SearchResultsPanel extends JPanel implements SearchConfigu
 	                ConcurrentUtils.invoke(success);
 		    	}
 		    	catch (Exception e) {
-		    		org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr.getSessionMgr().handleException(e);
+		    		SessionMgr.getSessionMgr().handleException(e);
 		    	}
 			}
 			
 			@Override
 			protected void hadError(Throwable error) {
-				org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr.getSessionMgr().handleException(error);
+				SessionMgr.getSessionMgr().handleException(error);
 		    	if (showLoading) resultsTable.showNothing();
 			}
     	};
@@ -462,7 +470,7 @@ public abstract class SearchResultsPanel extends JPanel implements SearchConfigu
 		query.setStart(pageSize*page);
 		query.setRows(pageSize);
 		
-		return org.janelia.it.workstation.api.entity_model.management.ModelMgr.getModelMgr().searchSolr(query);
+		return ModelMgr.getModelMgr().searchSolr(query);
     }
     
     public void projectResults(final ResultTreeMapping projection) {
@@ -483,7 +491,7 @@ public abstract class SearchResultsPanel extends JPanel implements SearchConfigu
 			}
 			@Override
 			protected void hadError(Throwable error) {
-				org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr.getSessionMgr().handleException(error);
+				SessionMgr.getSessionMgr().handleException(error);
 			}
 		};
 		
@@ -504,7 +512,7 @@ public abstract class SearchResultsPanel extends JPanel implements SearchConfigu
 			}
 			@Override
 			protected void hadError(Throwable error) {
-				org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr.getSessionMgr().handleException(error);
+				SessionMgr.getSessionMgr().handleException(error);
 			}
 		};
 		
@@ -519,10 +527,10 @@ public abstract class SearchResultsPanel extends JPanel implements SearchConfigu
     	//if (pageResults.getResultList().isEmpty()) numResults = 0;
     	    	
     	// Show any columns for attributes that were used in the search criteria
-    	for(org.janelia.it.workstation.gui.dialogs.search.SearchCriteria searchCriteria : paramsPanel.getSearchCriteriaList()) {
-    		org.janelia.it.workstation.gui.dialogs.search.SearchAttribute attr = searchCriteria.getAttribute();
+    	for(SearchCriteria searchCriteria : paramsPanel.getSearchCriteriaList()) {
+    		SearchAttribute attr = searchCriteria.getAttribute();
     		if (attr!=null) {
-	    		org.janelia.it.workstation.gui.framework.table.DynamicColumn column = columnByName.get(attr.getName());
+	    		DynamicColumn column = columnByName.get(attr.getName());
 	    		if (column!=null) {
 	    			column.setVisible(true);
 	    			JCheckBox checkBox = attrCheckboxes.get(column);
@@ -585,7 +593,7 @@ public abstract class SearchResultsPanel extends JPanel implements SearchConfigu
 		private List<SortKey> sortKeys = new ArrayList<SortKey>();
 		
 		public SolrRowSorter() {
-			List<org.janelia.it.workstation.gui.framework.table.DynamicColumn> columns = resultsTable.getDisplayedColumns();
+			List<DynamicColumn> columns = resultsTable.getDisplayedColumns();
 			for (int i=0; i<columns.size(); i++) {
 				if (columns.get(i).getName().equals(sortField)) {
 					sortKeys.add(new SortKey(i, ascending?SortOrder.ASCENDING:SortOrder.DESCENDING));
@@ -595,8 +603,8 @@ public abstract class SearchResultsPanel extends JPanel implements SearchConfigu
 		
 		@Override
 		public void toggleSortOrder(int columnNum) {
-			List<org.janelia.it.workstation.gui.framework.table.DynamicColumn> columns = resultsTable.getDisplayedColumns();
-			org.janelia.it.workstation.gui.framework.table.DynamicColumn column = columns.get(columnNum);
+			List<DynamicColumn> columns = resultsTable.getDisplayedColumns();
+			DynamicColumn column = columns.get(columnNum);
 			if (!column.isVisible() || !column.isSortable()) return;
 			
 			SortOrder newOrder = SortOrder.ASCENDING;
@@ -701,7 +709,7 @@ public abstract class SearchResultsPanel extends JPanel implements SearchConfigu
     		
     		for(final Count count : ff.getValues()) {
     			
-    			final org.janelia.it.workstation.gui.dialogs.search.SearchAttribute attr = searchConfig.getAttributeByName(ff.getName());
+    			final SearchAttribute attr = searchConfig.getAttributeByName(ff.getName());
     			final String name = attr==null?null:attr.getName();
     			final String label = searchConfig.getFormattedFieldValue(count.getName(), name)+" ("+count.getCount()+")";
     			
@@ -751,10 +759,10 @@ public abstract class SearchResultsPanel extends JPanel implements SearchConfigu
 			attrsPanel.add(Box.createRigidArea(new Dimension(0,10)));
 			attrsPanel.add(attrGroupPanel);
 
-			for(final org.janelia.it.workstation.gui.dialogs.search.SearchAttribute attr : searchConfig.getAttributeGroups().get(currGroup)) {
+			for(final SearchAttribute attr : searchConfig.getAttributeGroups().get(currGroup)) {
 			    
-				final org.janelia.it.workstation.gui.framework.table.DynamicColumn column1 = resultsTable.getColumn(attr.getName());
-                final org.janelia.it.workstation.gui.framework.table.DynamicColumn column2 = projectionTable.getColumn(attr.getName());
+				final DynamicColumn column1 = resultsTable.getColumn(attr.getName());
+                final DynamicColumn column2 = projectionTable.getColumn(attr.getName());
                 
 				final JCheckBox checkBox = new JCheckBox(new AbstractAction(attr.getLabel()) {
 					public void actionPerformed(ActionEvent e) {
@@ -811,20 +819,20 @@ public abstract class SearchResultsPanel extends JPanel implements SearchConfigu
     	return StringUtils.underscoreToTitleCase(fieldName);
     }
 
-	public org.janelia.it.workstation.gui.framework.table.DynamicTable getResultsTable() {
+	public DynamicTable getResultsTable() {
 		return resultsTable;
 	}
 	
 	public void setColumnVisibility(String attrName, boolean visible) {
-	    final org.janelia.it.workstation.gui.framework.table.DynamicColumn column = resultsTable.getColumn(attrName);
+	    final DynamicColumn column = resultsTable.getColumn(attrName);
 	    column.setVisible(visible);
 	}
 
-	public org.janelia.it.workstation.gui.framework.table.DynamicTable getMappedResultsTable() {
+	public DynamicTable getMappedResultsTable() {
 		return projectionTable;
 	}
 	
-	public org.janelia.it.workstation.gui.dialogs.search.SearchResults getSearchResults() {
+	public SearchResults getSearchResults() {
 		return searchResults;
 	}	
 	

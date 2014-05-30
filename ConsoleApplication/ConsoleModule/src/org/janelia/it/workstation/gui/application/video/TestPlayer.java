@@ -122,7 +122,7 @@ public class TestPlayer extends VlcjTest {
 		mediaPlayer.setEnableKeyInputHandling(false);
 		mediaPlayer.setEnableMouseInputHandling(false);
 
-		controlsPanel = new org.janelia.it.workstation.gui.application.video.PlayerControlsPanel(mediaPlayer);
+		controlsPanel = new PlayerControlsPanel(mediaPlayer);
 		videoAdjustPanel = new PlayerVideoAdjustPanel(mediaPlayer);
 
 		mainFrame.setLayout(new BorderLayout());

@@ -2,11 +2,14 @@ package org.janelia.it.workstation.gui.framework.bookmark;
 
 import org.janelia.it.jacs.model.entity.Entity;
 import org.janelia.it.jacs.model.entity.EntityConstants;
+import org.janelia.it.workstation.gui.framework.navigation_tools.NavigationPath;
+import org.janelia.it.workstation.shared.preferences.InfoObject;
+import org.janelia.it.workstation.shared.preferences.PreferenceManager;
 
 import java.util.Properties;
 
 
-public class BookmarkInfo extends org.janelia.it.workstation.shared.preferences.InfoObject {
+public class BookmarkInfo extends InfoObject {
 
     private static final String OID_IDENTIFIER    = "OIDIdentifier";
     private static final String OID_NAMESPACE     = "OIDNamespace";
@@ -82,7 +85,7 @@ public class BookmarkInfo extends org.janelia.it.workstation.shared.preferences.
         getBookmarkAttributesForEntity(bookmarkEntity);
         this.name = this.oid.toString();
         this.species = "Drosophila Melanogaster";/*bookmarkEntity.getGenomeVersion().getSpecies().toString();*/
-        this.keyBase= org.janelia.it.workstation.shared.preferences.PreferenceManager.getKeyForName(name, true);
+        this.keyBase= PreferenceManager.getKeyForName(name, true);
         this.bookmarkURLText = getURLForEntity(bookmarkEntity);
     }
 
@@ -245,8 +248,8 @@ public class BookmarkInfo extends org.janelia.it.workstation.shared.preferences.
         searchValue = EntityConstants.TYPE_SAMPLE;
     }
 
-    public org.janelia.it.workstation.gui.framework.navigation_tools.NavigationPath getNavigationPath() /*throws InvalidPropertyFormat*/ {
-        org.janelia.it.workstation.gui.framework.navigation_tools.NavigationPath[] paths = new org.janelia.it.workstation.gui.framework.navigation_tools.NavigationPath[0];
+    public NavigationPath getNavigationPath() /*throws InvalidPropertyFormat*/ {
+        NavigationPath[] paths = new NavigationPath[0];
 //        if (getGenomeVersion()==null) return null;
 //        else paths=getGenomeVersion().getNavigationPathsToOIDInThisGenomeVersion(oid);
         return paths.length==0 ? null : paths[0];

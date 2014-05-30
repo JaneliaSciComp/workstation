@@ -1,11 +1,12 @@
 package org.janelia.it.workstation.gui.framework.navigation_tools;
 
+import java.io.Serializable;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
 
-public class NavigationPath implements java.io.Serializable, Comparable
+public class NavigationPath implements Serializable, Comparable
 {
   private String displayName;
   private List  nodeArray;

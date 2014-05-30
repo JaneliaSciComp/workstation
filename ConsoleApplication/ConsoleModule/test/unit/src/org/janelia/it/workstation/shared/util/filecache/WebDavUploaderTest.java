@@ -15,23 +15,23 @@ import java.util.*;
 import static org.junit.Assert.*;
 
 /**
- * Tests the {@link org.janelia.it.workstation.shared.util.filecache.WebDavUploader} class.
+ * Tests the {@link WebDavUploader} class.
  *
  * @author Eric Trautman
  */
 public class WebDavUploaderTest {
 
-    private org.janelia.it.workstation.shared.util.filecache.WebDavClient client;
-    private org.janelia.it.workstation.shared.util.filecache.WebDavUploader uploader;
+    private WebDavClient client;
+    private WebDavUploader uploader;
     private File testRootParentDirectory;
     private File testNestedDirectory;
     private List<File> testFiles;
 
     @Before
     public void setUp() throws Exception {
-        client = new org.janelia.it.workstation.shared.util.filecache.WebDavClient(WebDavClient.JACS_WEBDAV_BASE_URL, 100, 100);
+        client = new WebDavClient(WebDavClient.JACS_WEBDAV_BASE_URL, 100, 100);
         client.setCredentials(WebDavClientTest.WEBDAV_TEST_USER_CREDENTIALS);
-        uploader = new org.janelia.it.workstation.shared.util.filecache.WebDavUploader(client, WebDavClientTest.JACS_WEBDAV_TEST_WRITE_ROOT_PATH);
+        uploader = new WebDavUploader(client, WebDavClientTest.JACS_WEBDAV_TEST_WRITE_ROOT_PATH);
 
         final String ts = CachedFileTest.buildTimestampName();
         testRootParentDirectory = new File("test-upload-" + ts);
@@ -80,7 +80,7 @@ public class WebDavUploaderTest {
 
         URL url = client.getWebDavUrl(remotePath);
 
-        org.janelia.it.workstation.shared.util.filecache.WebDavFile webDavFile = client.findFile(url);
+        WebDavFile webDavFile = client.findFile(url);
         assertNotNull("uploaded file " + url + " missing from server", webDavFile);
     }
 
@@ -189,7 +189,7 @@ public class WebDavUploaderTest {
 
         URL url = client.getWebDavUrl(remotePath);
 
-        List<org.janelia.it.workstation.shared.util.filecache.WebDavFile> list = client.findAllInternalFiles(url);
+        List<WebDavFile> list = client.findAllInternalFiles(url);
 
         assertEquals("invalid number of files created under " + url, testFiles.size(), list.size());
 

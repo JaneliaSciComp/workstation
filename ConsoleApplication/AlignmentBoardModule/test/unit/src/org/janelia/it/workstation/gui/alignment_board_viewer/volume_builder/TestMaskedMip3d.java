@@ -20,6 +20,7 @@ import java.awt.*;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -118,7 +119,7 @@ public class TestMaskedMip3d {
                             throw new IllegalArgumentException( "Cannot open mask file " + mf );
                         }
 
-                        java.util.List<RenderableBean> beans = new ArrayList<RenderableBean>();
+                        List<RenderableBean> beans = new ArrayList<RenderableBean>();
                         vmb = new VolumeMaskBuilder();
                         VolumeLoader vLoader = new VolumeLoader( resolver );
 

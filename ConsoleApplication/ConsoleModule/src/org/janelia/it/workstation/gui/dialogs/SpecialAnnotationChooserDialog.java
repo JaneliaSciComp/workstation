@@ -2,6 +2,7 @@ package org.janelia.it.workstation.gui.dialogs;
 
 import org.janelia.it.workstation.api.entity_model.access.ModelMgrAdapter;
 import org.janelia.it.workstation.api.entity_model.management.ModelMgr;
+import org.janelia.it.workstation.gui.framework.actions.AnnotateAction;
 import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.workstation.gui.framework.viewer.IconDemoPanel;
 import org.janelia.it.workstation.model.entity.RootedEntity;
@@ -141,7 +142,7 @@ public class SpecialAnnotationChooserDialog extends JFrame{
                                 }
                                 int i = 0;
                                 for(OntologyElement element: ontologyElements){
-                                    org.janelia.it.workstation.gui.framework.actions.AnnotateAction action = new org.janelia.it.workstation.gui.framework.actions.AnnotateAction();
+                                    AnnotateAction action = new AnnotateAction();
                                     action.init(element);
                                     action.doAnnotation(rootedEntity.getEntity(),element,model.getValueAt(i,1));
                                     i++;

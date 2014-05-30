@@ -2,6 +2,7 @@ package org.janelia.it.workstation.gui.alignment_board_viewer.channel_split;
 
 import org.janelia.it.workstation.gui.alignment_board.channel_split.ChannelSplitStrategyI;
 import org.janelia.it.workstation.gui.alignment_board.loader.ChannelMetaData;
+import org.janelia.it.workstation.gui.alignment_board_viewer.masking.MultiMaskTracker;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -15,10 +16,10 @@ import org.slf4j.LoggerFactory;
  * Implements a channel split, by giving a byte to each channel-data contender.
  */
 public class ByteChannelSplitStrategy implements ChannelSplitStrategyI {
-    private org.janelia.it.workstation.gui.alignment_board_viewer.masking.MultiMaskTracker multiMaskTracker;
+    private MultiMaskTracker multiMaskTracker;
     private Logger logger = LoggerFactory.getLogger( ByteChannelSplitStrategy.class );
 
-    public ByteChannelSplitStrategy( org.janelia.it.workstation.gui.alignment_board_viewer.masking.MultiMaskTracker multiMaskTracker ) {
+    public ByteChannelSplitStrategy( MultiMaskTracker multiMaskTracker ) {
         this.multiMaskTracker = multiMaskTracker;
     }
 
@@ -35,7 +36,7 @@ public class ByteChannelSplitStrategy implements ChannelSplitStrategyI {
     public byte[] getUpdatedValue(ChannelMetaData channelMetaData, int originalMask, byte[] channelsData, int multiMaskId) {
         assert channelsData.length == channelMetaData.byteCount * channelMetaData.channelCount
                 : "Unexpected raw data count " + channelsData.length;
-        org.janelia.it.workstation.gui.alignment_board_viewer.masking.MultiMaskTracker.MultiMaskBean multiMaskBean = multiMaskTracker.getMultiMaskBean( multiMaskId );
+        MultiMaskTracker.MultiMaskBean multiMaskBean = multiMaskTracker.getMultiMaskBean( multiMaskId );
         int maskOffset = multiMaskBean.getMaskOffset( originalMask );
         byte[] rtnVal = new byte[ channelsData.length ];
         if ( maskOffset == -1 ) {

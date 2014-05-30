@@ -24,17 +24,26 @@ import javax.swing.KeyStroke;
 
 import org.janelia.it.workstation.geom.CoordinateAxis;
 import org.janelia.it.workstation.geom.Rotation3d;
+import org.janelia.it.workstation.geom.Vec3;
+import org.janelia.it.workstation.gui.camera.Camera3d;
+import org.janelia.it.workstation.gui.camera.ObservableCamera3d;
 import org.janelia.it.workstation.gui.opengl.GLActor;
 import org.janelia.it.workstation.gui.slice_viewer.action.BasicMouseMode;
 import org.janelia.it.workstation.gui.slice_viewer.action.MouseMode;
+import org.janelia.it.workstation.gui.slice_viewer.action.PanMode;
 import org.janelia.it.workstation.gui.slice_viewer.action.TraceMode;
 import org.janelia.it.workstation.gui.slice_viewer.action.WheelMode;
+import org.janelia.it.workstation.gui.slice_viewer.action.ZScanMode;
 import org.janelia.it.workstation.gui.slice_viewer.action.ZoomMode;
 import org.janelia.it.workstation.gui.slice_viewer.action.MouseMode.Mode;
+import org.janelia.it.workstation.gui.slice_viewer.skeleton.SkeletonActor;
+import org.janelia.it.workstation.gui.util.Icons;
 import org.janelia.it.workstation.gui.util.MouseHandler;
 import org.janelia.it.workstation.gui.viewer3d.interfaces.AwtActor;
 import org.janelia.it.workstation.gui.viewer3d.interfaces.Viewport;
+import org.janelia.it.workstation.gui.viewer3d.interfaces.VolumeImage3d;
 import org.janelia.it.workstation.signal.Signal1;
+import org.janelia.it.workstation.signal.Slot;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -50,8 +59,8 @@ implements MouseModalWidget, TileConsumer
 {
     private static final Logger log = LoggerFactory.getLogger(OrthogonalViewer.class);
 
-	private org.janelia.it.workstation.gui.camera.Camera3d camera;
-	private org.janelia.it.workstation.gui.viewer3d.interfaces.VolumeImage3d volume;
+	private Camera3d camera;
+	private VolumeImage3d volume;
 	private CoordinateAxis sliceAxis;
 	private SliceRenderer renderer = new SliceRenderer();
 
@@ -64,22 +73,22 @@ implements MouseModalWidget, TileConsumer
     MenuItemGenerator systemMenuItemGenerator;
     MenuItemGenerator modeMenuItemGenerator;
     //
-    protected org.janelia.it.workstation.gui.slice_viewer.RubberBand rubberBand = new org.janelia.it.workstation.gui.slice_viewer.RubberBand();
-    protected org.janelia.it.workstation.gui.slice_viewer.skeleton.SkeletonActor skeletonActor;
+    protected RubberBand rubberBand = new RubberBand();
+    protected SkeletonActor skeletonActor;
     protected SliceActor sliceActor;
     private ReticleActor reticleActor;
     // 
     private List<AwtActor> hudActors = new Vector<AwtActor>();
 
     public Signal1<String> statusMessageChanged = new Signal1<String>();
-    public org.janelia.it.workstation.signal.Slot repaintSlot = new org.janelia.it.workstation.signal.Slot() {
+    public Slot repaintSlot = new Slot() {
         @Override
         public void execute() {
             repaint();
         }
     };
 
-	private org.janelia.it.workstation.gui.slice_viewer.TileServer tileServer;
+	private TileServer tileServer;
 
 	public OrthogonalViewer(CoordinateAxis axis) {
 		init(axis);
@@ -174,7 +183,7 @@ implements MouseModalWidget, TileConsumer
         		actor.paint(g2);
     }
     
-	public void setCamera(org.janelia.it.workstation.gui.camera.ObservableCamera3d camera) {
+	public void setCamera(ObservableCamera3d camera) {
         if (camera == null)
             return;
         if (camera == this.camera)
@@ -195,11 +204,11 @@ implements MouseModalWidget, TileConsumer
 		this.systemMenuItemGenerator = systemMenuItemGenerator;
 	}
 
-	public void setVolumeImage3d(org.janelia.it.workstation.gui.viewer3d.interfaces.VolumeImage3d volume) {
+	public void setVolumeImage3d(VolumeImage3d volume) {
 		this.volume = volume;
 		// TODO put bounding box in BasicMouseMode
 		if (mouseModeId == MouseMode.Mode.PAN) {
-		    ((org.janelia.it.workstation.gui.slice_viewer.action.PanMode)mouseMode).setBoundingBox(volume.getBoundingBox3d());
+		    ((PanMode)mouseMode).setBoundingBox(volume.getBoundingBox3d());
 		}
 		if (mouseModeId == MouseMode.Mode.TRACE) {
 		    ((TraceMode)mouseMode).setBoundingBox(volume.getBoundingBox3d());
@@ -247,7 +256,7 @@ implements MouseModalWidget, TileConsumer
     @Override
     public void mouseMoved(MouseEvent event) {
         mouseMode.mouseMoved(event);
-        org.janelia.it.workstation.geom.Vec3 xyz = pointComputer.worldFromPixel(event.getPoint());
+        Vec3 xyz = pointComputer.worldFromPixel(event.getPoint());
         DecimalFormat fmt = new DecimalFormat("0.0");
         String msg = "["
                 + fmt.format(xyz.getX())
@@ -268,7 +277,7 @@ implements MouseModalWidget, TileConsumer
             return; // no change
         this.mouseModeId = modeId;
         if (modeId == MouseMode.Mode.PAN) {
-            org.janelia.it.workstation.gui.slice_viewer.action.PanMode panMode = new org.janelia.it.workstation.gui.slice_viewer.action.PanMode();
+            PanMode panMode = new PanMode();
             panMode.setViewerInGround(getViewerInGround());
             if (volume != null)
                 panMode.setBoundingBox(volume.getBoundingBox3d());
@@ -321,7 +330,7 @@ implements MouseModalWidget, TileConsumer
             this.wheelMode = new ZoomMode();
         }
         else if (wheelModeId == WheelMode.Mode.SCAN) {
-            org.janelia.it.workstation.gui.slice_viewer.action.ZScanMode scanMode = new org.janelia.it.workstation.gui.slice_viewer.action.ZScanMode(volume);
+            ZScanMode scanMode = new ZScanMode(volume);
             scanMode.setSliceAxis(sliceAxis);
             if (tileServer != null) {
             	AbstractTextureLoadAdapter loadAdapter = tileServer.getLoadAdapter();
@@ -343,7 +352,7 @@ implements MouseModalWidget, TileConsumer
     }
 
     @Override
-    public org.janelia.it.workstation.gui.slice_viewer.RubberBand getRubberBand() {
+    public RubberBand getRubberBand() {
         return rubberBand;
     }
 
@@ -357,7 +366,7 @@ implements MouseModalWidget, TileConsumer
         return this;
     }
 
-	public void setSkeletonActor(org.janelia.it.workstation.gui.slice_viewer.skeleton.SkeletonActor skeletonActor) {
+	public void setSkeletonActor(SkeletonActor skeletonActor) {
 		if (this.skeletonActor == skeletonActor)
 			return;
 		this.skeletonActor = skeletonActor;
@@ -368,7 +377,7 @@ implements MouseModalWidget, TileConsumer
 	}
 
 	@Override
-	public org.janelia.it.workstation.gui.camera.Camera3d getCamera() {
+	public Camera3d getCamera() {
 		return camera;
 	}
 
@@ -404,10 +413,10 @@ implements MouseModalWidget, TileConsumer
 		double res = volume.getResolution(ix);
 		// At lower zoom, we must jump multiple slices to see a different image
 		int deltaSlice = 1;
-		org.janelia.it.workstation.gui.slice_viewer.TileSet someTiles = sliceActor.getViewTileManager().getLatestTiles();
+		TileSet someTiles = sliceActor.getViewTileManager().getLatestTiles();
 		if (someTiles.size() > 0)
 			deltaSlice = someTiles.iterator().next().getIndex().getDeltaSlice();
-		org.janelia.it.workstation.geom.Vec3 dFocus = new org.janelia.it.workstation.geom.Vec3(0,0,0);
+		Vec3 dFocus = new Vec3(0,0,0);
 		dFocus.set(ix, sliceCount * res * deltaSlice);
 		camera.setFocus(camera.getFocus().plus(dFocus));
 	}
@@ -446,7 +455,7 @@ implements MouseModalWidget, TileConsumer
 		PreviousSliceAction(OrthogonalViewer viewer) {
 			super(-1, viewer);
 			putValue(NAME, "Previous "+viewer.sliceAxis.getName()+" Slice");
-			putValue(SMALL_ICON, org.janelia.it.workstation.gui.util.Icons.getIcon("z_stack_up.png"));
+			putValue(SMALL_ICON, Icons.getIcon("z_stack_up.png"));
 			putValue(MNEMONIC_KEY, (int)KeyEvent.VK_PAGE_UP);
 			KeyStroke accelerator = KeyStroke.getKeyStroke(
 				KeyEvent.VK_PAGE_UP, 0);
@@ -462,7 +471,7 @@ implements MouseModalWidget, TileConsumer
 		NextSliceAction(OrthogonalViewer viewer) {
 			super(1, viewer);
 			putValue(NAME, "Next "+viewer.sliceAxis.getName()+" Slice");
-			putValue(SMALL_ICON, org.janelia.it.workstation.gui.util.Icons.getIcon("z_stack_down.png"));
+			putValue(SMALL_ICON, Icons.getIcon("z_stack_down.png"));
 			putValue(MNEMONIC_KEY, (int)KeyEvent.VK_PAGE_DOWN);
 			KeyStroke accelerator = KeyStroke.getKeyStroke(
 				KeyEvent.VK_PAGE_DOWN, 0);
@@ -474,7 +483,7 @@ implements MouseModalWidget, TileConsumer
 		}
 	}
 
-	public void setTileServer(org.janelia.it.workstation.gui.slice_viewer.TileServer tileServer) {
+	public void setTileServer(TileServer tileServer) {
 		if (tileServer == this.tileServer)
 			return;
 		this.tileServer = tileServer;
@@ -484,7 +493,7 @@ implements MouseModalWidget, TileConsumer
 	}
 
 	@Override
-	public org.janelia.it.workstation.signal.Slot getRepaintSlot() {
+	public Slot getRepaintSlot() {
 		return repaintSlot;
 	}
 

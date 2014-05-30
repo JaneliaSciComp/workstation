@@ -1,8 +1,18 @@
 package org.janelia.it.workstation.gui.alignment_board_viewer.texture;
 
+import org.janelia.it.workstation.gui.alignment_board_viewer.renderable.RenderableDataSourceI;
 import org.janelia.it.workstation.gui.viewer3d.masking.RenderMappingI;
 import org.janelia.it.workstation.gui.alignment_board_viewer.renderable.MaskChanRenderableData;
 import org.janelia.it.workstation.gui.viewer3d.renderable.RenderableBean;
+import org.janelia.it.workstation.model.domain.AlignmentContext;
+import org.janelia.it.workstation.model.domain.Compartment;
+import org.janelia.it.workstation.model.domain.CompartmentSet;
+import org.janelia.it.workstation.model.domain.EntityWrapper;
+import org.janelia.it.workstation.model.domain.MaskIndexed;
+import org.janelia.it.workstation.model.domain.Masked3d;
+import org.janelia.it.workstation.model.domain.Neuron;
+import org.janelia.it.workstation.model.domain.Sample;
+import org.janelia.it.workstation.model.domain.VolumeImage;
 import org.janelia.it.workstation.model.viewer.AlignedItem;
 import org.janelia.it.workstation.model.viewer.AlignmentBoardContext;
 import org.janelia.it.jacs.model.entity.Entity;
@@ -16,7 +26,7 @@ import java.util.*;
 /**
  * Implements the data source against the context of the alignment board.  New read pass each call.
  */
-public class ABContextDataSource implements org.janelia.it.workstation.gui.alignment_board_viewer.renderable.RenderableDataSourceI {
+public class ABContextDataSource implements RenderableDataSourceI {
 
     // This data was manually extracted from some Yoshi/standard-space-size data.  It is named as:
     //   prefix_1822248087368761442_9.mask
@@ -49,11 +59,11 @@ public class ABContextDataSource implements org.janelia.it.workstation.gui.align
 
         for ( AlignedItem alignedItem : context.getAlignedItems() ) {
 
-            org.janelia.it.workstation.model.domain.EntityWrapper itemEntity = alignedItem.getItemWrapper();
-            if ( itemEntity instanceof org.janelia.it.workstation.model.domain.Sample) {
+            EntityWrapper itemEntity = alignedItem.getItemWrapper();
+            if ( itemEntity instanceof Sample) {
                 currentSample = alignedItem;
                 currentCompartmentSet = null;
-                org.janelia.it.workstation.model.domain.Sample sample = (org.janelia.it.workstation.model.domain.Sample)itemEntity;
+                Sample sample = (Sample)itemEntity;
                 Entity internalEntity = sample.getInternalEntity();
 
                 MaskChanRenderableData containerRenderable = getNonRenderingRenderableData(internalEntity);
@@ -63,37 +73,37 @@ public class ABContextDataSource implements org.janelia.it.workstation.gui.align
                 Collection<AlignedItem> childItems = alignedItem.getAlignedItems();
                 if ( childItems != null ) {
                     for ( AlignedItem childItem: childItems ) {
-                        if ( childItem.getItemWrapper() instanceof org.janelia.it.workstation.model.domain.Neuron) {
+                        if ( childItem.getItemWrapper() instanceof Neuron) {
                             liveFileCount += getRenderableData( rtnVal, nextTranslatedNum++, false, childItem );
                         }
-                        else if ( childItem.getItemWrapper() instanceof org.janelia.it.workstation.model.domain.VolumeImage) {
-                            org.janelia.it.workstation.model.domain.VolumeImage image = (org.janelia.it.workstation.model.domain.VolumeImage)childItem.getItemWrapper();
+                        else if ( childItem.getItemWrapper() instanceof VolumeImage) {
+                            VolumeImage image = (VolumeImage)childItem.getItemWrapper();
                             liveFileCount += getRenderableData( rtnVal, nextTranslatedNum++, image, childItem );
                         }
                     }
                 }
             }
-            else if ( itemEntity instanceof org.janelia.it.workstation.model.domain.Neuron) {
+            else if ( itemEntity instanceof Neuron) {
                 liveFileCount += getRenderableData(rtnVal, nextTranslatedNum, false, alignedItem);
             }
-            else if ( itemEntity instanceof org.janelia.it.workstation.model.domain.CompartmentSet) {
+            else if ( itemEntity instanceof CompartmentSet) {
                 currentSample = null;
                 currentCompartmentSet = alignedItem;
 
-                org.janelia.it.workstation.model.domain.CompartmentSet compartmentSet = (org.janelia.it.workstation.model.domain.CompartmentSet)itemEntity;
+                CompartmentSet compartmentSet = (CompartmentSet)itemEntity;
                 Entity internalEntity = compartmentSet.getInternalEntity();
 
                 MaskChanRenderableData containerRenderable = getNonRenderingRenderableData(internalEntity);
 
                 rtnVal.add( containerRenderable );
 
-                org.janelia.it.workstation.model.domain.AlignmentContext targetAlignmentSpace = context.getAlignmentContext();
+                AlignmentContext targetAlignmentSpace = context.getAlignmentContext();
 
                 Collection<AlignedItem> childItems = alignedItem.getAlignedItems();
                 if ( childItems != null ) {
                     for ( AlignedItem item: childItems ) {
-                        if ( item.getItemWrapper() instanceof org.janelia.it.workstation.model.domain.Compartment) {
-                            org.janelia.it.workstation.model.domain.AlignmentContext compartmentAlignmentSpace = new org.janelia.it.workstation.model.domain.AlignmentContext(
+                        if ( item.getItemWrapper() instanceof Compartment) {
+                            AlignmentContext compartmentAlignmentSpace = new AlignmentContext(
                                     internalEntity.getValueByAttributeName( EntityConstants.ATTRIBUTE_ALIGNMENT_SPACE ),
                                     internalEntity.getValueByAttributeName( EntityConstants.ATTRIBUTE_OPTICAL_RESOLUTION ),
                                     internalEntity.getValueByAttributeName( EntityConstants.ATTRIBUTE_PIXEL_RESOLUTION )
@@ -106,7 +116,7 @@ public class ABContextDataSource implements org.janelia.it.workstation.gui.align
                 }
 
             }
-            else if ( itemEntity instanceof org.janelia.it.workstation.model.domain.Compartment) {
+            else if ( itemEntity instanceof Compartment) {
                 liveFileCount += getRenderableData(rtnVal, nextTranslatedNum, true, alignedItem);
             }
         }
@@ -165,7 +175,7 @@ public class ABContextDataSource implements org.janelia.it.workstation.gui.align
         nfRenderable.setBean( renderableBean );
         nfRenderable.setCompartment( isCompartment );
 
-        org.janelia.it.workstation.model.domain.Masked3d masked = (org.janelia.it.workstation.model.domain.Masked3d)item.getItemWrapper();
+        Masked3d masked = (Masked3d)item.getItemWrapper();
         String maskPath = getMaskPath(masked);
         nfRenderable.setMaskPath( maskPath );
         String channelPath = getChannelPath(masked);
@@ -182,7 +192,7 @@ public class ABContextDataSource implements org.janelia.it.workstation.gui.align
     private int getRenderableData(
         Collection<MaskChanRenderableData> maskChanRenderableDatas,
         int nextTranslatedNum,
-        org.janelia.it.workstation.model.domain.VolumeImage volumeImage,
+        VolumeImage volumeImage,
         AlignedItem item
     ) {
         RenderableBean renderableBean = new RenderableBean();
@@ -218,7 +228,7 @@ public class ABContextDataSource implements org.janelia.it.workstation.gui.align
      * @param masked has a mask file associated.
      * @return that mask file.
      */
-    private String getMaskPath( org.janelia.it.workstation.model.domain.Masked3d masked ) {
+    private String getMaskPath( Masked3d masked ) {
         return masked.getMask3dImageFilepath();
     }
 
@@ -228,7 +238,7 @@ public class ABContextDataSource implements org.janelia.it.workstation.gui.align
      * @param masked has a channel file associated.
      * @return that channel file.
      */
-    private String getChannelPath( org.janelia.it.workstation.model.domain.Masked3d masked ) {
+    private String getChannelPath( Masked3d masked ) {
         return masked.getChan3dImageFilepath();
     }
 
@@ -249,7 +259,7 @@ public class ABContextDataSource implements org.janelia.it.workstation.gui.align
 
     private RenderableBean createRenderableBean( int translatedNum, boolean isCompartment, AlignedItem item ) {
         Entity internalEntity = item.getInternalEntity();
-        org.janelia.it.workstation.model.domain.MaskIndexed maskIndexed = (org.janelia.it.workstation.model.domain.MaskIndexed)item.getItemWrapper();
+        MaskIndexed maskIndexed = (MaskIndexed)item.getItemWrapper();
         int maskIndex = maskIndexed.getMaskIndex();
         logger.debug(
                 "Creating Renderable Bean for: " + item.getItemWrapper().getName() + " original index=" + maskIndex +
@@ -304,7 +314,7 @@ public class ABContextDataSource implements org.janelia.it.workstation.gui.align
                 renderableBean.setRgb(rgb);
             }
             else if ( isCompartment ) {
-                org.janelia.it.workstation.model.domain.Compartment compartment = (org.janelia.it.workstation.model.domain.Compartment)item.getItemWrapper();
+                Compartment compartment = (Compartment)item.getItemWrapper();
                 byte[] rgb = new byte[ 4 ];
                 if ( currentCompartmentSet.isPassthroughRendering() ) {
                     setPassthroughRGB( rgb );

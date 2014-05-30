@@ -5,6 +5,7 @@ import java.io.File;
 import java.net.URL;
 import java.util.concurrent.*;
 
+import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.workstation.shared.util.ConsoleProperties;
 import org.janelia.it.workstation.shared.util.Utils;
 import org.janelia.it.workstation.shared.workers.SimpleWorker;
@@ -61,9 +62,9 @@ public abstract class LoadImageWorker extends SimpleWorker {
 
         StopWatch stopWatch = TIMER ? new LoggingStopWatch("LoadImageWorker") : null;
 
-        ImageCache imageCache = org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr.getBrowser().getImageCache();
+        ImageCache imageCache = SessionMgr.getBrowser().getImageCache();
         if (imageCache != null) {
-            this.maxSizeImage = org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr.getBrowser().getImageCache().get(imageFilename);
+            this.maxSizeImage = SessionMgr.getBrowser().getImageCache().get(imageFilename);
             if (maxSizeImage != null) {
                 if (TIMER) {
                     stopWatch.lap("getFromCache");
@@ -79,13 +80,13 @@ public abstract class LoadImageWorker extends SimpleWorker {
 
         if (useCacheBehind) {
             // Async cache-behind
-            URL imageFileURL = org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr.getURL(imageFilename);
+            URL imageFileURL = SessionMgr.getURL(imageFilename);
             maxSizeImage = Utils.readImage(imageFileURL);
             if (TIMER) {
                 stopWatch.lap("readImage");
             }
             if (maxSizeImage != null) {
-                org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr.getBrowser().getImageCache().put(imageFilename, maxSizeImage);
+                SessionMgr.getBrowser().getImageCache().put(imageFilename, maxSizeImage);
                 if (TIMER) {
                     stopWatch.lap("putInCache");
                 }
@@ -93,7 +94,7 @@ public abstract class LoadImageWorker extends SimpleWorker {
         }
         else {
             // Sync cache-ahead
-            File imageFile = org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr.getCachedFile(imageFilename, false);
+            File imageFile = SessionMgr.getCachedFile(imageFilename, false);
             maxSizeImage = Utils.readImage(imageFile.toURI().toURL());
             if (TIMER) {
                 stopWatch.lap("readCachedAheadImage");

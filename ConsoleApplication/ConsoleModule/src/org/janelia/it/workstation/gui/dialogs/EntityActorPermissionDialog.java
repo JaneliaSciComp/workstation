@@ -10,7 +10,11 @@ import javax.swing.*;
 
 import net.miginfocom.swing.MigLayout;
 
+import org.janelia.it.workstation.api.entity_model.management.ModelMgr;
 import org.janelia.it.workstation.gui.framework.access.Accessibility;
+import org.janelia.it.workstation.gui.framework.outline.EntityDetailsPanel;
+import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
+import org.janelia.it.workstation.gui.util.Icons;
 import org.janelia.it.workstation.shared.util.Utils;
 import org.janelia.it.workstation.shared.workers.IndeterminateProgressMonitor;
 import org.janelia.it.workstation.shared.workers.SimpleWorker;
@@ -25,7 +29,7 @@ import org.janelia.it.jacs.model.user_data.Subject;
  */
 public class EntityActorPermissionDialog extends ModalDialog implements Accessibility {
     
-	private org.janelia.it.workstation.gui.framework.outline.EntityDetailsPanel parent;
+	private EntityDetailsPanel parent;
 	
     private JPanel attrPanel;
     private JComboBox subjectCombobox;
@@ -36,7 +40,7 @@ public class EntityActorPermissionDialog extends ModalDialog implements Accessib
     private Entity entity;
     private EntityActorPermission eap;
     
-    public EntityActorPermissionDialog(org.janelia.it.workstation.gui.framework.outline.EntityDetailsPanel parent) {
+    public EntityActorPermissionDialog(EntityDetailsPanel parent) {
 
     	this.parent = parent;
     	
@@ -161,14 +165,14 @@ public class EntityActorPermissionDialog extends ModalDialog implements Accessib
 			protected void doStuff() throws Exception {
 				String permissions = (readCheckbox.isSelected()?"r":"")+""+(writeCheckbox.isSelected()?"w":"");
 				if (eap==null) {
-					eap = org.janelia.it.workstation.api.entity_model.management.ModelMgr.getModelMgr().grantPermissions(entity.getId(), subject.getKey(), permissions, recursive);
+					eap = ModelMgr.getModelMgr().grantPermissions(entity.getId(), subject.getKey(), permissions, recursive);
 				}
 				else {
 					eap.setSubjectKey(subject.getKey());
 					eap.setPermissions(permissions);
-					org.janelia.it.workstation.api.entity_model.management.ModelMgr.getModelMgr().saveOrUpdatePermission(eap);
+					ModelMgr.getModelMgr().saveOrUpdatePermission(eap);
 				}
-				org.janelia.it.workstation.api.entity_model.management.ModelMgr.getModelMgr().invalidateCache(entity, recursive);
+				ModelMgr.getModelMgr().invalidateCache(entity, recursive);
 			}
 			
 			@Override
@@ -179,7 +183,7 @@ public class EntityActorPermissionDialog extends ModalDialog implements Accessib
 			
 			@Override
 			protected void hadError(Throwable error) {
-				org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr.getSessionMgr().handleException(error);
+				SessionMgr.getSessionMgr().handleException(error);
 				Utils.setDefaultCursor(parent);
 			}
 		};
@@ -212,7 +216,7 @@ public class EntityActorPermissionDialog extends ModalDialog implements Accessib
 			Subject subject = (Subject)value;
 
 			if (subject==null) {
-				setIcon(org.janelia.it.workstation.gui.util.Icons.getIcon("error.png"));
+				setIcon(Icons.getIcon("error.png"));
 				setText("Unknown");
 				return this;
 			}
@@ -226,10 +230,10 @@ public class EntityActorPermissionDialog extends ModalDialog implements Accessib
 			}
 						
 			if (subject.getKey()!=null && subject.getKey().startsWith("group:")) {
-				setIcon(org.janelia.it.workstation.gui.util.Icons.getIcon("group.png"));
+				setIcon(Icons.getIcon("group.png"));
 			}
 			else {
-				setIcon(org.janelia.it.workstation.gui.util.Icons.getIcon("user.png"));
+				setIcon(Icons.getIcon("user.png"));
 			}
 			
 			setText(subject.getFullName()+" ("+subject.getName()+")");

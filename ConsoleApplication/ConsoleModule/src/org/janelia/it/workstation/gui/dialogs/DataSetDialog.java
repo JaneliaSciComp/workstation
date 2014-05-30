@@ -26,7 +26,9 @@ import javax.swing.event.DocumentListener;
 
 import net.miginfocom.swing.MigLayout;
 
+import org.janelia.it.workstation.api.entity_model.management.ModelMgr;
 import org.janelia.it.workstation.gui.framework.access.Accessibility;
+import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.workstation.shared.util.Utils;
 import org.janelia.it.workstation.shared.workers.SimpleWorker;
 import org.janelia.it.jacs.model.entity.Entity;
@@ -117,7 +119,7 @@ public class DataSetDialog extends ModalDialog implements Accessibility {
     
     private void updateDataSetIdentifier() {
     	if (dataSetEntity==null) {
-    		identifierInput.setText(EntityUtils.createDenormIdentifierFromName(org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr.getSubjectKey(), nameInput.getText()));
+    		identifierInput.setText(EntityUtils.createDenormIdentifierFromName(SessionMgr.getSubjectKey(), nameInput.getText()));
     	} 
     }
     
@@ -215,7 +217,7 @@ public class DataSetDialog extends ModalDialog implements Accessibility {
 
         final String sampleNamePattern = sampleNamePatternInput.getText();
         if (!sampleNamePattern.contains(SLIDE_CODE_PATTERN)) {
-            JOptionPane.showMessageDialog(org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr.getMainFrame(),
+            JOptionPane.showMessageDialog(SessionMgr.getMainFrame(),
                     "Sample name pattern must contain the unique identifier \""+SLIDE_CODE_PATTERN+"\"", "Invalid Sample Name Pattern", JOptionPane.ERROR_MESSAGE);
             return;
         }
@@ -228,44 +230,44 @@ public class DataSetDialog extends ModalDialog implements Accessibility {
 			protected void doStuff() throws Exception {
 				
 				if (dataSetEntity==null) {
-					dataSetEntity = org.janelia.it.workstation.api.entity_model.management.ModelMgr.getModelMgr().createDataSet(nameInput.getText());
+					dataSetEntity = ModelMgr.getModelMgr().createDataSet(nameInput.getText());
 				}
 				else {
 					dataSetEntity.setName(nameInput.getText());	
 				}
 				
 				if (!StringUtils.isEmpty(sampleNamePattern)) {
-				    org.janelia.it.workstation.api.entity_model.management.ModelMgr.getModelMgr().setOrUpdateValue(dataSetEntity, EntityConstants.ATTRIBUTE_SAMPLE_NAME_PATTERN, sampleNamePattern);
+				    ModelMgr.getModelMgr().setOrUpdateValue(dataSetEntity, EntityConstants.ATTRIBUTE_SAMPLE_NAME_PATTERN, sampleNamePattern);
 				}
 				else {
                     EntityData patternEd = dataSetEntity.getEntityDataByAttributeName(EntityConstants.ATTRIBUTE_SAMPLE_NAME_PATTERN);
                     if (patternEd!=null) {
                         dataSetEntity.getEntityData().remove(patternEd);
-                        org.janelia.it.workstation.api.entity_model.management.ModelMgr.getModelMgr().removeEntityData(patternEd);
+                        ModelMgr.getModelMgr().removeEntityData(patternEd);
                     }
 				}
 
                 if (!StringUtils.isEmpty(sampleImageType)) {
-                    org.janelia.it.workstation.api.entity_model.management.ModelMgr.getModelMgr().setOrUpdateValue(dataSetEntity, EntityConstants.ATTRIBUTE_SAMPLE_IMAGE_TYPE, sampleImageType);
+                    ModelMgr.getModelMgr().setOrUpdateValue(dataSetEntity, EntityConstants.ATTRIBUTE_SAMPLE_IMAGE_TYPE, sampleImageType);
                 }
                 else {
                     EntityData typeEd = dataSetEntity.getEntityDataByAttributeName(EntityConstants.ATTRIBUTE_SAMPLE_IMAGE_TYPE);
                     if (typeEd!=null) {
                         dataSetEntity.getEntityData().remove(typeEd);
-                        org.janelia.it.workstation.api.entity_model.management.ModelMgr.getModelMgr().removeEntityData(typeEd);
+                        ModelMgr.getModelMgr().removeEntityData(typeEd);
                     }
                 }
                 
-				org.janelia.it.workstation.api.entity_model.management.ModelMgr.getModelMgr().setOrUpdateValue(dataSetEntity, EntityConstants.ATTRIBUTE_PIPELINE_PROCESS, getCheckboxValues(processCheckboxes));
+				ModelMgr.getModelMgr().setOrUpdateValue(dataSetEntity, EntityConstants.ATTRIBUTE_PIPELINE_PROCESS, getCheckboxValues(processCheckboxes));
 				
 				if (sageSyncCheckbox.isSelected()) {
-					org.janelia.it.workstation.api.entity_model.management.ModelMgr.getModelMgr().setAttributeAsTag(dataSetEntity, EntityConstants.ATTRIBUTE_SAGE_SYNC);
+					ModelMgr.getModelMgr().setAttributeAsTag(dataSetEntity, EntityConstants.ATTRIBUTE_SAGE_SYNC);
 				}
 				else {
 					EntityData sageSyncEd = dataSetEntity.getEntityDataByAttributeName(EntityConstants.ATTRIBUTE_SAGE_SYNC);
 					if (sageSyncEd!=null) {
 					    dataSetEntity.getEntityData().remove(sageSyncEd);
-					    org.janelia.it.workstation.api.entity_model.management.ModelMgr.getModelMgr().removeEntityData(sageSyncEd);
+					    ModelMgr.getModelMgr().removeEntityData(sageSyncEd);
 					}
 				}
 			}
@@ -279,7 +281,7 @@ public class DataSetDialog extends ModalDialog implements Accessibility {
 			
 			@Override
 			protected void hadError(Throwable error) {
-				org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr.getSessionMgr().handleException(error);
+				SessionMgr.getSessionMgr().handleException(error);
 				Utils.setDefaultCursor(DataSetDialog.this);
 		    	setVisible(false);
 			}

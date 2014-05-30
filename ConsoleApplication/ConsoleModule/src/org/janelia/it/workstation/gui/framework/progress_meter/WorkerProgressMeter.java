@@ -11,6 +11,13 @@ import java.util.Set;
 import javax.swing.*;
 import javax.swing.plaf.basic.BasicProgressBarUI;
 
+import org.janelia.it.workstation.api.entity_model.events.WorkerChangedEvent;
+import org.janelia.it.workstation.api.entity_model.events.WorkerEndedEvent;
+import org.janelia.it.workstation.api.entity_model.events.WorkerStartedEvent;
+import org.janelia.it.workstation.api.entity_model.management.ModelMgr;
+import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
+import org.janelia.it.workstation.gui.util.Icons;
+import org.janelia.it.workstation.shared.workers.BackgroundWorker;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -40,8 +47,8 @@ public class WorkerProgressMeter extends JDialog {
     private JButton clearButton;
     private JButton okButton;
     
-    private ImageIcon animatedIcon = org.janelia.it.workstation.gui.util.Icons.getIcon("cog_small_anim_orange.gif");
-    private ImageIcon staticIcon = org.janelia.it.workstation.gui.util.Icons.getIcon("cog_small.gif");
+    private ImageIcon animatedIcon = Icons.getIcon("cog_small_anim_orange.gif");
+    private ImageIcon staticIcon = Icons.getIcon("cog_small.gif");
     private JLabel menuLabel;
     
     static {
@@ -102,7 +109,7 @@ public class WorkerProgressMeter extends JDialog {
     public JPanel getMeterPanel() { return wholeMeterPanel; }
 
     private WorkerProgressMeter() {
-        this(org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr.getMainFrame(), "Progress Monitor", false);
+        this(SessionMgr.getMainFrame(), "Progress Monitor", false);
 
         // Exported UI element for use in the top level menu
         menuLabel = new JLabel(staticIcon);
@@ -115,18 +122,18 @@ public class WorkerProgressMeter extends JDialog {
     }
     
     protected void resetPosition() {
-        Point bp = org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr.getMainFrame().getLocation();
-        Dimension bs = org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr.getMainFrame().getSize();
+        Point bp = SessionMgr.getMainFrame().getLocation();
+        Dimension bs = SessionMgr.getMainFrame().getSize();
         Point tp = menuLabel.getLocation();
         // Fudge the title bar height, since it's probably he same as the menu height
-        int titleBarHeight = org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr.getMainFrame().getJMenuBar().getSize().height;
+        int titleBarHeight = SessionMgr.getMainFrame().getJMenuBar().getSize().height;
         setLocation(new Point(bp.x + bs.width - getWidth(), bp.y + titleBarHeight + tp.y));
     }
 
     public static WorkerProgressMeter getProgressMeter() {
         if (progressMeter == null) {
             progressMeter = new WorkerProgressMeter();
-            org.janelia.it.workstation.api.entity_model.management.ModelMgr.getModelMgr().registerOnEventBus(progressMeter);
+            ModelMgr.getModelMgr().registerOnEventBus(progressMeter);
         }
         return progressMeter;
     }    
@@ -155,7 +162,7 @@ public class WorkerProgressMeter extends JDialog {
         return false;
     }
     
-    public void addWorker(org.janelia.it.workstation.shared.workers.BackgroundWorker worker) {
+    public void addWorker(BackgroundWorker worker) {
         mainPanel.add(new MonitoredWorkerPanel(worker));
         refresh();
     }
@@ -214,7 +221,7 @@ public class WorkerProgressMeter extends JDialog {
     }
     
     @Subscribe
-    public void processEvent(org.janelia.it.workstation.api.entity_model.events.WorkerStartedEvent e) {
+    public void processEvent(WorkerStartedEvent e) {
         log.debug("Worker started: {}",e.getWorker().getName());
         addWorker(e.getWorker());
         updateMenuLabel();
@@ -222,7 +229,7 @@ public class WorkerProgressMeter extends JDialog {
     }
     
     @Subscribe
-    public void processEvent(org.janelia.it.workstation.api.entity_model.events.WorkerChangedEvent e) {
+    public void processEvent(WorkerChangedEvent e) {
         MonitoredWorkerPanel workerPanel = getWorkerPanel(e.getWorker());
         if (workerPanel!=null) {
             log.debug("Worker changed: {}, Status:{}",e.getWorker().getName(),e.getWorker().getStatus());
@@ -232,7 +239,7 @@ public class WorkerProgressMeter extends JDialog {
     }
     
     @Subscribe
-    public void processEvent(org.janelia.it.workstation.api.entity_model.events.WorkerEndedEvent e) {
+    public void processEvent(WorkerEndedEvent e) {
         MonitoredWorkerPanel workerPanel = getWorkerPanel(e.getWorker());
         if (workerPanel!=null) {
             log.debug("Worker ended: {}",e.getWorker().getName());
@@ -241,7 +248,7 @@ public class WorkerProgressMeter extends JDialog {
         }
     }
 
-    private MonitoredWorkerPanel getWorkerPanel(org.janelia.it.workstation.shared.workers.BackgroundWorker worker) {
+    private MonitoredWorkerPanel getWorkerPanel(BackgroundWorker worker) {
         for(Component child : mainPanel.getComponents()) {
             if (child instanceof MonitoredWorkerPanel) {
                 MonitoredWorkerPanel workerPanel = (MonitoredWorkerPanel)child;
@@ -263,9 +270,9 @@ public class WorkerProgressMeter extends JDialog {
         
         private Long endedAt;
         private boolean cancelled = false;
-        private org.janelia.it.workstation.shared.workers.BackgroundWorker worker;
+        private BackgroundWorker worker;
         
-        public MonitoredWorkerPanel(org.janelia.it.workstation.shared.workers.BackgroundWorker backgroundWorker) {
+        public MonitoredWorkerPanel(BackgroundWorker backgroundWorker) {
             this.worker = backgroundWorker;
             
             setAlignmentX(Component.LEFT_ALIGNMENT);
@@ -291,7 +298,7 @@ public class WorkerProgressMeter extends JDialog {
             add(progressBar);
             
             this.nextButton = new JButton();
-            nextButton.setIcon(org.janelia.it.workstation.gui.util.Icons.getIcon("arrow_forward.gif"));
+            nextButton.setIcon(Icons.getIcon("arrow_forward.gif"));
             nextButton.setFocusable(false);
             nextButton.setBorderPainted(false);
             nextButton.setToolTipText("View results");
@@ -305,7 +312,7 @@ public class WorkerProgressMeter extends JDialog {
             add(nextButton);
             
             this.closeButton = new JButton();
-            closeButton.setIcon(org.janelia.it.workstation.gui.util.Icons.getIcon("close_red.png"));
+            closeButton.setIcon(Icons.getIcon("close_red.png"));
             closeButton.setFocusable(false);
             closeButton.setBorderPainted(false);
             closeButton.setToolTipText("Cancel");
@@ -324,7 +331,7 @@ public class WorkerProgressMeter extends JDialog {
             add(closeButton);
         }
         
-        public org.janelia.it.workstation.shared.workers.BackgroundWorker getWorker() {
+        public BackgroundWorker getWorker() {
             return worker;
         }
         

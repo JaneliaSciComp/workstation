@@ -7,12 +7,22 @@ import org.janelia.it.jacs.shared.file_chooser.FileChooser;
 import org.janelia.it.jacs.shared.solr.EntityDocument;
 import org.janelia.it.jacs.shared.solr.SolrResults;
 import org.janelia.it.jacs.shared.utils.StringUtils;
+import org.janelia.it.workstation.api.entity_model.management.EntitySelectionModel;
+import org.janelia.it.workstation.api.entity_model.management.ModelMgr;
+import org.janelia.it.workstation.gui.dialogs.ModalDialog;
 import org.janelia.it.workstation.gui.framework.actions.OpenWithDefaultAppAction;
+import org.janelia.it.workstation.gui.framework.outline.EntityOutline;
+import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
+import org.janelia.it.workstation.gui.framework.table.DynamicColumn;
+import org.janelia.it.workstation.gui.framework.table.DynamicRow;
+import org.janelia.it.workstation.gui.framework.table.DynamicTable;
+import org.janelia.it.workstation.model.entity.RootedEntity;
 import org.janelia.it.workstation.model.utils.FolderUtils;
 import org.janelia.it.workstation.shared.util.Utils;
 import org.janelia.it.workstation.shared.workers.SimpleWorker;
 
 import javax.swing.*;
+import javax.swing.filechooser.FileFilter;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -31,7 +41,7 @@ import java.util.regex.Pattern;
  * 
  * @author <a href="mailto:rokickik@janelia.hhmi.org">Konrad Rokicki</a>
  */
-public class GeneralSearchDialog extends org.janelia.it.workstation.gui.dialogs.ModalDialog {
+public class GeneralSearchDialog extends ModalDialog {
 
 	/** Default directory for exports */
 	protected static final String DEFAULT_EXPORT_DIR = System.getProperty("user.home");
@@ -136,7 +146,7 @@ public class GeneralSearchDialog extends org.janelia.it.workstation.gui.dialogs.
 			folderNameField.setText(getNextFolderName());	
 		}
 
-		Component browser = org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr.getMainFrame();
+		Component browser = SessionMgr.getMainFrame();
 		setPreferredSize(new Dimension((int)(browser.getWidth()*0.8),(int)(browser.getHeight()*0.8)));
 
     	paramsPanel.getInputField().requestFocus();
@@ -183,21 +193,21 @@ public class GeneralSearchDialog extends org.janelia.it.workstation.gui.dialogs.
 	
     protected synchronized void saveResults() {
 
-		final org.janelia.it.workstation.gui.dialogs.search.SearchResults searchResults = resultsPanel.getSearchResults();
-    	final org.janelia.it.workstation.gui.framework.table.DynamicTable table = searchResults.getResultTreeMapping()==null?resultsPanel.getResultsTable():resultsPanel.getMappedResultsTable();
+		final SearchResults searchResults = resultsPanel.getSearchResults();
+    	final DynamicTable table = searchResults.getResultTreeMapping()==null?resultsPanel.getResultsTable():resultsPanel.getMappedResultsTable();
     	if (table.getSelectedRows().isEmpty()) {
     		table.getTable().getSelectionModel().setSelectionInterval(0, table.getRows().size()-1);
     	}
     	
     	SimpleWorker worker = new SimpleWorker() {
 
-    		private org.janelia.it.workstation.model.entity.RootedEntity saveFolder;
+    		private RootedEntity saveFolder;
     		
 			@Override
 			protected void doStuff() throws Exception {
 				
 				List<Long> childIds = new ArrayList<Long>();
-				for(org.janelia.it.workstation.gui.framework.table.DynamicRow row : table.getSelectedRows()) {
+				for(DynamicRow row : table.getSelectedRows()) {
 					Object o = row.getUserObject();
 					Entity entity = null;
 					if (o instanceof Entity) {
@@ -217,7 +227,7 @@ public class GeneralSearchDialog extends org.janelia.it.workstation.gui.dialogs.
 			    SwingUtilities.invokeLater(new Runnable() {
                     @Override
                     public void run() {
-                        org.janelia.it.workstation.api.entity_model.management.ModelMgr.getModelMgr().getEntitySelectionModel().selectEntity(org.janelia.it.workstation.api.entity_model.management.EntitySelectionModel.CATEGORY_OUTLINE, saveFolder.getUniqueId(), true);
+                        ModelMgr.getModelMgr().getEntitySelectionModel().selectEntity(EntitySelectionModel.CATEGORY_OUTLINE, saveFolder.getUniqueId(), true);
                         setVisible(false);
                     }
                 });
@@ -225,7 +235,7 @@ public class GeneralSearchDialog extends org.janelia.it.workstation.gui.dialogs.
 			
 			@Override
 			protected void hadError(Throwable error) {
-				org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr.getSessionMgr().handleException(error);
+				SessionMgr.getSessionMgr().handleException(error);
 		    	Utils.setDefaultCursor(GeneralSearchDialog.this);
 			}
 		};
@@ -239,7 +249,7 @@ public class GeneralSearchDialog extends org.janelia.it.workstation.gui.dialogs.
      * @return
      */
 	protected String getNextFolderName() {
-		final org.janelia.it.workstation.gui.framework.outline.EntityOutline entityOutline = org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr.getBrowser().getEntityOutline();
+		final EntityOutline entityOutline = SessionMgr.getBrowser().getEntityOutline();
 		if (entityOutline==null) return "";
 		int maxNum = 0;
 		for(EntityData ed : entityOutline.getRootEntity().getEntityData()) {
@@ -275,7 +285,7 @@ public class GeneralSearchDialog extends org.janelia.it.workstation.gui.dialogs.
         }
         
         chooser.setSelectedFile(defaultFile);
-        chooser.setFileFilter(new javax.swing.filechooser.FileFilter() {
+        chooser.setFileFilter(new FileFilter() {
 			@Override
 			public String getDescription() {
 				return "Tab-delimited Files (*.xls, *.txt)";
@@ -305,12 +315,12 @@ public class GeneralSearchDialog extends org.janelia.it.workstation.gui.dialogs.
 				FileWriter writer = new FileWriter(destFile);
 
 				StringBuffer buf = new StringBuffer();
-				for(org.janelia.it.workstation.gui.framework.table.DynamicColumn column : resultsPanel.getResultsTable().getDisplayedColumns()) {
+				for(DynamicColumn column : resultsPanel.getResultsTable().getDisplayedColumns()) {
 					if (buf.length()>0) buf.append("\t");
 					buf.append(column.getLabel());
 				}
 				if (projection!=null) {
-					for(org.janelia.it.workstation.gui.framework.table.DynamicColumn column : resultsPanel.getMappedResultsTable().getDisplayedColumns()) {
+					for(DynamicColumn column : resultsPanel.getMappedResultsTable().getDisplayedColumns()) {
 						buf.append("\t");
 						buf.append(column.getLabel());
 					}
@@ -318,7 +328,7 @@ public class GeneralSearchDialog extends org.janelia.it.workstation.gui.dialogs.
 				buf.append("\n");
 				writer.write(buf.toString());
 				
-				org.janelia.it.workstation.gui.dialogs.search.SearchResults searchResults = new org.janelia.it.workstation.gui.dialogs.search.SearchResults();
+				SearchResults searchResults = new SearchResults();
 				
 				long numProcessed = 0;
 				int page = 0;
@@ -343,7 +353,7 @@ public class GeneralSearchDialog extends org.janelia.it.workstation.gui.dialogs.
 							if (mappedDocs.isEmpty()) {
 								buf = new StringBuffer();
 								int i = 0;
-								for(org.janelia.it.workstation.gui.framework.table.DynamicColumn column : resultsPanel.getResultsTable().getDisplayedColumns()) {
+								for(DynamicColumn column : resultsPanel.getResultsTable().getDisplayedColumns()) {
 									Object value = searchConfig.getValue(entityDoc, column.getName());
 									if (i++>0) buf.append("\t");
 									if (value!=null) {
@@ -359,7 +369,7 @@ public class GeneralSearchDialog extends org.janelia.it.workstation.gui.dialogs.
 									
 									buf = new StringBuffer();
 									int i = 0;
-									for(org.janelia.it.workstation.gui.framework.table.DynamicColumn column : resultsPanel.getResultsTable().getDisplayedColumns()) {
+									for(DynamicColumn column : resultsPanel.getResultsTable().getDisplayedColumns()) {
 										Object value = searchConfig.getValue(entityDoc, column.getName());
 										if (i++>0) buf.append("\t");
 										if (value!=null) {
@@ -369,7 +379,7 @@ public class GeneralSearchDialog extends org.janelia.it.workstation.gui.dialogs.
 									}
 
 									if (projection!=null) {
-										for(org.janelia.it.workstation.gui.framework.table.DynamicColumn column : resultsPanel.getMappedResultsTable().getDisplayedColumns()) {
+										for(DynamicColumn column : resultsPanel.getMappedResultsTable().getDisplayedColumns()) {
 											Object value = searchConfig.getValue(mappedDoc, column.getName());
 											buf.append("\t");
 											if (value!=null) {
@@ -386,7 +396,7 @@ public class GeneralSearchDialog extends org.janelia.it.workstation.gui.dialogs.
 						else {
 							buf = new StringBuffer();
 							int i = 0;
-							for(org.janelia.it.workstation.gui.framework.table.DynamicColumn column : resultsPanel.getResultsTable().getDisplayedColumns()) {
+							for(DynamicColumn column : resultsPanel.getResultsTable().getDisplayedColumns()) {
 								Object value = searchConfig.getValue(entityDoc, column.getName());
 								if (i++>0) buf.append("\t");
 								if (value!=null) {
@@ -420,7 +430,7 @@ public class GeneralSearchDialog extends org.janelia.it.workstation.gui.dialogs.
 			
 			@Override
 			protected void hadError(Throwable error) {
-				org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr.getSessionMgr().handleException(error);
+				SessionMgr.getSessionMgr().handleException(error);
 			}
 		};
 

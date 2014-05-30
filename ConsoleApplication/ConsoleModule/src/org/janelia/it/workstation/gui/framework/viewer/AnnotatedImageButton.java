@@ -12,6 +12,13 @@ import java.util.List;
 
 import javax.swing.*;
 
+import org.janelia.it.workstation.api.entity_model.management.ModelMgr;
+import org.janelia.it.workstation.gui.framework.outline.EntityTransferHandler;
+import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
+import org.janelia.it.workstation.gui.util.Icons;
+import org.janelia.it.workstation.gui.util.MouseForwarder;
+import org.janelia.it.workstation.gui.util.panels.ViewerSettingsPanel;
+import org.janelia.it.workstation.model.entity.RootedEntity;
 import org.janelia.it.workstation.shared.util.Utils;
 import org.janelia.it.workstation.shared.workers.SimpleWorker;
 import org.janelia.it.jacs.model.entity.Entity;
@@ -39,7 +46,7 @@ public abstract class AnnotatedImageButton extends JPanel implements DragGesture
     protected DragSource source;
     protected double aspectRatio;
     protected final IconPanel iconPanel;
-    protected final org.janelia.it.workstation.model.entity.RootedEntity rootedEntity;
+    protected final RootedEntity rootedEntity;
     protected SimpleWorker annotationLoadingWorker;
 
     private static BufferedImage normalBorderImage;
@@ -56,7 +63,7 @@ public abstract class AnnotatedImageButton extends JPanel implements DragGesture
         normalBackground = new Color(241, 241, 241);
         selectedBackground = new Color(203, 203, 203);
 
-        if (org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr.getSessionMgr().isDarkLook()) {
+        if (SessionMgr.getSessionMgr().isDarkLook()) {
             normalBorder = "border_dark_normal.png";
             selectedBorder = "border_dark_selected.png";
             normalBackground = null;
@@ -68,11 +75,11 @@ public abstract class AnnotatedImageButton extends JPanel implements DragGesture
             selectedBorderImage = Utils.toBufferedImage(Utils.getClasspathImage(selectedBorder).getImage());
         }
         catch (FileNotFoundException e) {
-            org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr.getSessionMgr().handleException(e);
+            SessionMgr.getSessionMgr().handleException(e);
         }
     }
 
-    public AnnotatedImageButton(final org.janelia.it.workstation.model.entity.RootedEntity rootedEntity, final IconPanel iconPanel) {
+    public AnnotatedImageButton(final RootedEntity rootedEntity, final IconPanel iconPanel) {
 
         normalBackground = getBackground();
         setBackground(normalBackground);
@@ -80,12 +87,12 @@ public abstract class AnnotatedImageButton extends JPanel implements DragGesture
         this.iconPanel = iconPanel;
         this.rootedEntity = rootedEntity;
 
-        Boolean disableImageDrag = (Boolean) org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr.getSessionMgr().getModelProperty(org.janelia.it.workstation.gui.util.panels.ViewerSettingsPanel.DISABLE_IMAGE_DRAG_PROPERTY);
+        Boolean disableImageDrag = (Boolean) SessionMgr.getSessionMgr().getModelProperty(ViewerSettingsPanel.DISABLE_IMAGE_DRAG_PROPERTY);
         if (disableImageDrag == null || disableImageDrag == false) {
             this.source = new DragSource();
             source.createDefaultDragGestureRecognizer(this, DnDConstants.ACTION_LINK, this);
 
-            setTransferHandler(new org.janelia.it.workstation.gui.framework.outline.EntityTransferHandler() {
+            setTransferHandler(new EntityTransferHandler() {
                 @Override
                 public JComponent getDropTargetComponent() {
                     return AnnotatedImageButton.this;
@@ -113,7 +120,7 @@ public abstract class AnnotatedImageButton extends JPanel implements DragGesture
 
         loadingLabel = new JLabel();
         loadingLabel.setOpaque(false);
-        loadingLabel.setIcon(org.janelia.it.workstation.gui.util.Icons.getLoadingIcon());
+        loadingLabel.setIcon(Icons.getLoadingIcon());
         loadingLabel.setHorizontalAlignment(SwingConstants.CENTER);
         loadingLabel.setVerticalAlignment(SwingConstants.CENTER);
 
@@ -159,13 +166,13 @@ public abstract class AnnotatedImageButton extends JPanel implements DragGesture
         }
 
         // Fix event dispatching so that user can click on the title or the tags and still select the button
-        titleLabel.addMouseListener(new org.janelia.it.workstation.gui.util.MouseForwarder(this, "JLabel(titleLabel)->AnnotatedImageButton"));
-        subtitleLabel.addMouseListener(new org.janelia.it.workstation.gui.util.MouseForwarder(this, "JLabel(titleLabel)->AnnotatedImageButton"));
+        titleLabel.addMouseListener(new MouseForwarder(this, "JLabel(titleLabel)->AnnotatedImageButton"));
+        subtitleLabel.addMouseListener(new MouseForwarder(this, "JLabel(titleLabel)->AnnotatedImageButton"));
 
         refresh(rootedEntity);
     }
 
-    public final void refresh(org.janelia.it.workstation.model.entity.RootedEntity rootedEntity) {
+    public final void refresh(RootedEntity rootedEntity) {
 
         mainPanel.removeAll();
 
@@ -198,7 +205,7 @@ public abstract class AnnotatedImageButton extends JPanel implements DragGesture
 
                         @Override
                         protected void doStuff() throws Exception {
-                            loadedRep = org.janelia.it.workstation.api.entity_model.management.ModelMgr.getModelMgr().getEntityById(rep.getId());
+                            loadedRep = ModelMgr.getModelMgr().getEntityById(rep.getId());
                         }
 
                         @Override
@@ -209,7 +216,7 @@ public abstract class AnnotatedImageButton extends JPanel implements DragGesture
 
                         @Override
                         protected void hadError(Throwable error) {
-                            org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr.getSessionMgr().handleException(error);
+                            SessionMgr.getSessionMgr().handleException(error);
                         }
 
                     };
@@ -251,7 +258,7 @@ public abstract class AnnotatedImageButton extends JPanel implements DragGesture
         subtitleLabel.setVisible(true);
     }
 
-    public abstract JComponent init(org.janelia.it.workstation.model.entity.RootedEntity rootedEntity);
+    public abstract JComponent init(RootedEntity rootedEntity);
 
     public synchronized void setTitleVisible(boolean visible) {
         titleLabel.setVisible(visible);
@@ -268,7 +275,7 @@ public abstract class AnnotatedImageButton extends JPanel implements DragGesture
     public synchronized void setAnnotationView(AnnotationView annotationView) {
         this.annotationView = annotationView;
         // Fix event dispatching so that user can click on the tags and still select the button
-        ((JPanel) annotationView).addMouseListener(new org.janelia.it.workstation.gui.util.MouseForwarder(this, "JPanel(annotationView)->AnnotatedImageButton"));
+        ((JPanel) annotationView).addMouseListener(new MouseForwarder(this, "JPanel(annotationView)->AnnotatedImageButton"));
         if (annotationsLoaded) {
             showAnnotations(annotationView.getAnnotations());
         }
@@ -298,7 +305,7 @@ public abstract class AnnotatedImageButton extends JPanel implements DragGesture
         buttonPanel.revalidate();
     }
 
-    public org.janelia.it.workstation.model.entity.RootedEntity getRootedEntity() {
+    public RootedEntity getRootedEntity() {
         return rootedEntity;
     }
 
@@ -342,7 +349,7 @@ public abstract class AnnotatedImageButton extends JPanel implements DragGesture
             }
         }
         if (!isSelected() && !keyDown) {
-            org.janelia.it.workstation.api.entity_model.management.ModelMgr.getModelMgr().getEntitySelectionModel().selectEntity(iconPanel.getSelectionCategory(), rootedEntity.getId(), true);
+            ModelMgr.getModelMgr().getEntitySelectionModel().selectEntity(iconPanel.getSelectionCategory(), rootedEntity.getId(), true);
         }
         getTransferHandler().exportAsDrag(this, dge.getTriggerEvent(), TransferHandler.LINK);
     }

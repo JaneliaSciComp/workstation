@@ -2,8 +2,11 @@ package org.janelia.it.workstation.gui.framework.actions;
 
 import java.awt.Component;
 
+import org.janelia.it.workstation.api.entity_model.management.ModelMgr;
+import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.workstation.shared.workers.IndeterminateProgressMonitor;
 import org.janelia.it.jacs.model.user_data.tiledMicroscope.TmSample;
+import org.janelia.it.workstation.shared.workers.SimpleWorker;
 
 import javax.swing.*;
 
@@ -27,9 +30,9 @@ public class CreateTiledMicroscopeSampleAction implements Action {
     @Override
     public void doAction() {
 
-        final Component mainFrame = org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr.getMainFrame();
+        final Component mainFrame = SessionMgr.getMainFrame();
 
-        org.janelia.it.workstation.shared.workers.SimpleWorker worker = new org.janelia.it.workstation.shared.workers.SimpleWorker() {
+        SimpleWorker worker = new SimpleWorker() {
 
             @Override
             protected void doStuff() throws Exception {
@@ -38,13 +41,13 @@ public class CreateTiledMicroscopeSampleAction implements Action {
             @Override
             protected void hadSuccess() {
 
-                org.janelia.it.workstation.shared.workers.SimpleWorker worker = new org.janelia.it.workstation.shared.workers.SimpleWorker() {
+                SimpleWorker worker = new SimpleWorker() {
                     
                     private TmSample newSample;
 
                     @Override
                     protected void doStuff() throws Exception {
-                        newSample = org.janelia.it.workstation.api.entity_model.management.ModelMgr.getModelMgr().createTiledMicroscopeSample(org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr.getUsername(), name, pathToRenderFolder);
+                        newSample = ModelMgr.getModelMgr().createTiledMicroscopeSample(SessionMgr.getUsername(), name, pathToRenderFolder);
                     }
                     
                     @Override
@@ -62,7 +65,7 @@ public class CreateTiledMicroscopeSampleAction implements Action {
                         if (null!=newSample) {
                             JOptionPane.showMessageDialog(mainFrame, "Sample " + newSample.getName() + " added successfully.",
                                     "Add New Tiled Microscope Sample", JOptionPane.PLAIN_MESSAGE, null);
-                            org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr.getSessionMgr().getActiveBrowser().getEntityOutline().refresh();
+                            SessionMgr.getSessionMgr().getActiveBrowser().getEntityOutline().refresh();
                         }
                         else {
                             JOptionPane.showMessageDialog(mainFrame, "Error adding sample " + name + ". Please contact support.",
@@ -72,7 +75,7 @@ public class CreateTiledMicroscopeSampleAction implements Action {
                     
                     @Override
                     protected void hadError(Throwable error) {
-                        org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr.getSessionMgr().handleException(error);
+                        SessionMgr.getSessionMgr().handleException(error);
                     }
                 };
                 worker.setProgressMonitor(new IndeterminateProgressMonitor(mainFrame, "Preparing Slice Viewer...", ""));
@@ -81,7 +84,7 @@ public class CreateTiledMicroscopeSampleAction implements Action {
             
             @Override
             protected void hadError(Throwable error) {
-                org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr.getSessionMgr().handleException(error);
+                SessionMgr.getSessionMgr().handleException(error);
             }
         };
         worker.execute();

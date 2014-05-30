@@ -1,5 +1,7 @@
 package org.janelia.it.workstation.gui.viewer3d.loader;
 
+import org.janelia.it.workstation.gui.viewer3d.VolumeDataAcceptor;
+
 /**
  * Created with IntelliJ IDEA.
  * User: fosterl
@@ -13,5 +15,5 @@ public interface VolumeLoaderI {
         TIF, LSM, V3DMASK, V3DSIGNAL, MP4, UNKNOWN
     }
 
-    void populateVolumeAcceptor(org.janelia.it.workstation.gui.viewer3d.VolumeDataAcceptor dataAcceptor);
+    void populateVolumeAcceptor(VolumeDataAcceptor dataAcceptor);
 }

@@ -1,6 +1,7 @@
 package org.janelia.it.workstation.gui.framework.context_menu;
 
 import org.janelia.it.jacs.shared.utils.StringUtils;
+import org.janelia.it.workstation.gui.framework.actions.Action;
 
 import javax.swing.*;
 import java.awt.*;
@@ -89,7 +90,7 @@ public abstract class AbstractContextMenu<T> extends JPopupMenu {
         return copyMenuItem;
 	}
 	
-	protected JMenuItem getActionItem(final org.janelia.it.workstation.gui.framework.actions.Action action) {
+	protected JMenuItem getActionItem(final Action action) {
         JMenuItem actionMenuItem = new JMenuItem("  "+action.getName());
         actionMenuItem.addActionListener(new ActionListener() {
 			@Override

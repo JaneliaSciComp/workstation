@@ -1,8 +1,11 @@
 package org.janelia.it.workstation.lifecycle;
 
+import org.janelia.it.workstation.gui.application.ConsoleApp;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.openide.modules.OnStart;
+
+import java.security.ProtectionDomain;
 
 /**
  * This is run at startup.
@@ -22,7 +25,7 @@ public class Startup implements Runnable {
     }
     private static void setSystemProperties() {
         logger.info("Java version: " + System.getProperty("java.version"));
-        java.security.ProtectionDomain pd = org.janelia.it.workstation.gui.application.ConsoleApp.class.getProtectionDomain();
+        ProtectionDomain pd = ConsoleApp.class.getProtectionDomain();
         logger.debug("Code Source: " + pd.getCodeSource().getLocation());
         System.setProperty("apple.laf.useScreenMenuBar", "false");
 //        System.setProperty("com.apple.mrj.application.apple.menu.about.name",
@@ -32,6 +35,6 @@ public class Startup implements Runnable {
 
     
     public void run() {
-        org.janelia.it.workstation.gui.application.ConsoleApp.newBrowser();
+        ConsoleApp.newBrowser();
     }
 }

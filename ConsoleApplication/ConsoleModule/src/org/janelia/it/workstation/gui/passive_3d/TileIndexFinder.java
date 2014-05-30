@@ -2,6 +2,9 @@ package org.janelia.it.workstation.gui.passive_3d;
 
 import org.janelia.it.workstation.geom.CoordinateAxis;
 import org.janelia.it.workstation.geom.Vec3;
+import org.janelia.it.workstation.gui.camera.Camera3d;
+import org.janelia.it.workstation.gui.slice_viewer.TileFormat;
+import org.janelia.it.workstation.gui.slice_viewer.TileIndex;
 
 import java.util.Collection;
 import java.util.HashSet;
@@ -16,17 +19,17 @@ import java.util.HashSet;
  */
 public class TileIndexFinder {
 
-    private org.janelia.it.workstation.gui.slice_viewer.TileFormat format;
-    private org.janelia.it.workstation.gui.camera.Camera3d camera3d;
+    private TileFormat format;
+    private Camera3d camera3d;
     private CoordinateAxis sliceAxis;
 
-    public TileIndexFinder(org.janelia.it.workstation.gui.slice_viewer.TileFormat format, org.janelia.it.workstation.gui.camera.Camera3d camera3d, CoordinateAxis sliceAxis) {
+    public TileIndexFinder(TileFormat format, Camera3d camera3d, CoordinateAxis sliceAxis) {
         this.format = format;
         this.camera3d = camera3d;
         this.sliceAxis = sliceAxis;
     }
 
-    public Collection<org.janelia.it.workstation.gui.slice_viewer.TileIndex> executeForTileCoords(
+    public Collection<TileIndex> executeForTileCoords(
             int startTileNumX, int startTileNumY, int startTileNumZ, int endTileNumX, int endTileNumY, int endTileNumZ
     ) {
 
@@ -42,16 +45,16 @@ public class TileIndexFinder {
         // Note: using set for collection, so that duplicates may be automatically avoided.  The current
         // "exploring" algorithm for finding slices hits every voxel for its contribution, and this will
         // be prone to duplication, as a tile covers far more than a single voxel.
-        Collection<org.janelia.it.workstation.gui.slice_viewer.TileIndex> sliceIndexSet = new HashSet<org.janelia.it.workstation.gui.slice_viewer.TileIndex>();
+        Collection<TileIndex> sliceIndexSet = new HashSet<TileIndex>();
         addSliceTileIndices( sliceIndexSet, tileCoords );
         return sliceIndexSet;
     }
 
-    private void addSliceTileIndices(Collection<org.janelia.it.workstation.gui.slice_viewer.TileIndex> rtnVal, Collection<Vec3> sliceCoverage) {
+    private void addSliceTileIndices(Collection<TileIndex> rtnVal, Collection<Vec3> sliceCoverage) {
         int zoomLevel = format.zoomLevelForCameraZoom(camera3d.getPixelsPerSceneUnit());
         for ( Vec3 protoVec: sliceCoverage ) {
             // Make an index around this vector.
-            org.janelia.it.workstation.gui.slice_viewer.TileIndex nextTileInx = new org.janelia.it.workstation.gui.slice_viewer.TileIndex(
+            TileIndex nextTileInx = new TileIndex(
                     (int)protoVec.getX(),
                     (int)protoVec.getY(),
                     (int)protoVec.getZ(),

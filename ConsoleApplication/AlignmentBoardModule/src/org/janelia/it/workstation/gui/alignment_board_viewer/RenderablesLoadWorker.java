@@ -1,5 +1,13 @@
 package org.janelia.it.workstation.gui.alignment_board_viewer;
 
+import org.janelia.it.workstation.gui.alignment_board_viewer.gui_elements.GpuSampler;
+import org.janelia.it.workstation.gui.alignment_board_viewer.masking.FileStats;
+import org.janelia.it.workstation.gui.alignment_board_viewer.masking.MultiMaskTracker;
+import org.janelia.it.workstation.gui.alignment_board_viewer.renderable.InvertingComparator;
+import org.janelia.it.workstation.gui.alignment_board_viewer.renderable.MaskChanRenderableData;
+import org.janelia.it.workstation.gui.alignment_board_viewer.renderable.RBComparator;
+import org.janelia.it.workstation.gui.alignment_board_viewer.renderable.RDComparator;
+import org.janelia.it.workstation.gui.alignment_board_viewer.renderable.RenderableDataSourceI;
 import org.janelia.it.workstation.gui.viewer3d.renderable.RenderableBean;
 import org.janelia.it.workstation.gui.alignment_board.loader.MaskChanDataAcceptorI;
 import org.janelia.it.workstation.gui.alignment_board.loader.FragmentSizeSetterAndFilter;
@@ -42,16 +50,16 @@ public class RenderablesLoadWorker extends SimpleWorker implements VolumeLoader 
     private MaskChanMultiFileLoader compartmentLoader;
     private MaskChanMultiFileLoader neuronFragmentLoader;
     private RenderMappingI renderMapping;
-    private org.janelia.it.workstation.gui.alignment_board_viewer.masking.FileStats fileStats;
+    private FileStats fileStats;
 
     private RenderablesMaskBuilder maskTextureBuilder;
     private RenderablesChannelsBuilder signalTextureBuilder;
-    private org.janelia.it.workstation.gui.alignment_board_viewer.renderable.RenderableDataSourceI dataSource;
+    private RenderableDataSourceI dataSource;
     private AlignmentBoardSettings alignmentBoardSettings;
-    private org.janelia.it.workstation.gui.alignment_board_viewer.masking.MultiMaskTracker multiMaskTracker;
+    private MultiMaskTracker multiMaskTracker;
 
     private AlignmentBoardControllable controlCallback;
-    private org.janelia.it.workstation.gui.alignment_board_viewer.gui_elements.GpuSampler sampler;
+    private GpuSampler sampler;
     private int[] axialLengths;
 
     private FileResolver resolver;
@@ -59,11 +67,11 @@ public class RenderablesLoadWorker extends SimpleWorker implements VolumeLoader 
     private Logger logger;
 
     public RenderablesLoadWorker(
-            org.janelia.it.workstation.gui.alignment_board_viewer.renderable.RenderableDataSourceI dataSource,
+            RenderableDataSourceI dataSource,
             RenderMappingI renderMapping,
             AlignmentBoardControllable controlCallback,
             AlignmentBoardSettings settings,
-            org.janelia.it.workstation.gui.alignment_board_viewer.masking.MultiMaskTracker multiMaskTracker
+            MultiMaskTracker multiMaskTracker
     ) {
         logger = LoggerFactory.getLogger(RenderablesLoadWorker.class);
         this.dataSource = dataSource;
@@ -90,12 +98,12 @@ public class RenderablesLoadWorker extends SimpleWorker implements VolumeLoader 
      * @throws Exception for called methods. Particularly threading.
      */
     public RenderablesLoadWorker(
-            org.janelia.it.workstation.gui.alignment_board_viewer.renderable.RenderableDataSourceI dataSource,
+            RenderableDataSourceI dataSource,
             RenderMappingI renderMapping,
             AlignmentBoardControllable controlCallback,
             AlignmentBoardSettings settings,
-            org.janelia.it.workstation.gui.alignment_board_viewer.masking.MultiMaskTracker multiMaskTracker,
-            org.janelia.it.workstation.gui.alignment_board_viewer.gui_elements.GpuSampler sampler
+            MultiMaskTracker multiMaskTracker,
+            GpuSampler sampler
     ) throws Exception {
         this( dataSource, renderMapping, controlCallback, settings, multiMaskTracker );
         this.sampler = sampler;
@@ -109,11 +117,11 @@ public class RenderablesLoadWorker extends SimpleWorker implements VolumeLoader 
         this.loadFiles = loadFiles;
     }
 
-    public org.janelia.it.workstation.gui.alignment_board_viewer.masking.FileStats getFileStats() {
+    public FileStats getFileStats() {
         return fileStats;
     }
 
-    public void setFileStats(org.janelia.it.workstation.gui.alignment_board_viewer.masking.FileStats fileStats) {
+    public void setFileStats(FileStats fileStats) {
         this.fileStats = fileStats;
     }
 
@@ -138,7 +146,7 @@ public class RenderablesLoadWorker extends SimpleWorker implements VolumeLoader 
      * @param maskChanRenderableData renderable data to be applied to volume.
      * @throws Exception from called methods.
      */
-    public void loadVolume( org.janelia.it.workstation.gui.alignment_board_viewer.renderable.MaskChanRenderableData maskChanRenderableData ) throws Exception {
+    public void loadVolume( MaskChanRenderableData maskChanRenderableData ) throws Exception {
         logger.debug(
                 "In load thread, STARTING load of renderable {}.",
                 maskChanRenderableData.getBean().getTranslatedNum()
@@ -177,10 +185,10 @@ public class RenderablesLoadWorker extends SimpleWorker implements VolumeLoader 
     protected void doStuff() throws Exception {
 
         if (dataSource==null) return;
-        Collection<org.janelia.it.workstation.gui.alignment_board_viewer.renderable.MaskChanRenderableData> renderableDatas = dataSource.getRenderableDatas();
+        Collection<MaskChanRenderableData> renderableDatas = dataSource.getRenderableDatas();
 
         // Cut down the to-renders: (at time-of-writing) use only the larger ones.
-        Collection<org.janelia.it.workstation.gui.alignment_board_viewer.renderable.MaskChanRenderableData> originalDatas = new ArrayList<org.janelia.it.workstation.gui.alignment_board_viewer.renderable.MaskChanRenderableData>( renderableDatas );
+        Collection<MaskChanRenderableData> originalDatas = new ArrayList<MaskChanRenderableData>( renderableDatas );
         long fragmentFilterSize = alignmentBoardSettings.getMinimumVoxelCount();
         long fragmentCutoffCount = alignmentBoardSettings.getMaximumNeuronCount();
         if ( fragmentFilterSize != AlignmentBoardSettings.NO_NEURON_SIZE_CONSTRAINT  ||
@@ -214,7 +222,7 @@ public class RenderablesLoadWorker extends SimpleWorker implements VolumeLoader 
             if ( lastUsedMask > -1 ) {
                 multiMaskTracker.setFirstMaskNum( lastUsedMask + 1 ); // Add one to move past all allocated masks.
             }
-            Collections.sort( renderableBeans, new org.janelia.it.workstation.gui.alignment_board_viewer.renderable.InvertingComparator( new org.janelia.it.workstation.gui.alignment_board_viewer.renderable.RBComparator() ) );
+            Collections.sort( renderableBeans, new InvertingComparator( new RBComparator() ) );
 
             renderMapping.setRenderables( renderableBeans );
 
@@ -250,7 +258,7 @@ public class RenderablesLoadWorker extends SimpleWorker implements VolumeLoader 
         controlCallback.loadCompletion(false, loadFiles, error);
     }
 
-    private void buildNothing(Collection<org.janelia.it.workstation.gui.alignment_board_viewer.renderable.MaskChanRenderableData> renderableDatas, List<RenderableBean> renderableBeans) {
+    private void buildNothing(Collection<MaskChanRenderableData> renderableDatas, List<RenderableBean> renderableBeans) {
         if ( checkpoint( "Dummy Load for Timing" ) ) {
             ArrayList<MaskChanDataAcceptorI> dummyAcceptors = new ArrayList<MaskChanDataAcceptorI>();
             // RE-run the scan.  This time only the signal-texture-builder will accept the data.
@@ -305,7 +313,7 @@ public class RenderablesLoadWorker extends SimpleWorker implements VolumeLoader 
      *
      * @param metaDatas one thread for each of these.
      */
-    private void multiThreadedDataLoad(Collection<org.janelia.it.workstation.gui.alignment_board_viewer.renderable.MaskChanRenderableData> metaDatas, boolean buildTexture) {
+    private void multiThreadedDataLoad(Collection<MaskChanRenderableData> metaDatas, boolean buildTexture) {
         controlCallback.clearDisplay();
 
         if ( metaDatas == null  ||  metaDatas.size() == 0 ) {
@@ -406,21 +414,21 @@ public class RenderablesLoadWorker extends SimpleWorker implements VolumeLoader 
      * @return true if the checkpoints were passed, prior-to/during this operation.  False otherwise.
      */
     private boolean filterCheckboxes(
-            Collection<org.janelia.it.workstation.gui.alignment_board_viewer.renderable.MaskChanRenderableData> renderableDatas, Collection<org.janelia.it.workstation.gui.alignment_board_viewer.renderable.MaskChanRenderableData> originalDatas
+            Collection<MaskChanRenderableData> renderableDatas, Collection<MaskChanRenderableData> originalDatas
     ) {
         // Go through the original list.  Anything not in the filtered list must be marked as excluded;
         // anything remaining on the list is un-marked excluded.
-        Map<RenderableBean, org.janelia.it.workstation.gui.alignment_board_viewer.renderable.MaskChanRenderableData> idToData = new HashMap<RenderableBean, org.janelia.it.workstation.gui.alignment_board_viewer.renderable.MaskChanRenderableData>();
-        for ( org.janelia.it.workstation.gui.alignment_board_viewer.renderable.MaskChanRenderableData data: renderableDatas ) {
+        Map<RenderableBean, MaskChanRenderableData> idToData = new HashMap<RenderableBean, MaskChanRenderableData>();
+        for ( MaskChanRenderableData data: renderableDatas ) {
             idToData.put( data.getBean(), data );
         }
         AlignmentBoardMgr.getInstance().getLayersPanel().showLoadingIndicator();
-        for ( org.janelia.it.workstation.gui.alignment_board_viewer.renderable.MaskChanRenderableData data: originalDatas ) {
+        for ( MaskChanRenderableData data: originalDatas ) {
             if ( ! checkpoint( "Filtering checkboxes." ) ) {
                 return false;
             }
 
-            org.janelia.it.workstation.gui.alignment_board_viewer.renderable.MaskChanRenderableData targetData = idToData.get(data.getBean());
+            MaskChanRenderableData targetData = idToData.get(data.getBean());
             RenderableBean bean = data.getBean();
             if ( bean != null  &&
                     bean.getRenderableEntity() != null  &&
@@ -456,7 +464,7 @@ public class RenderablesLoadWorker extends SimpleWorker implements VolumeLoader 
      * @param renderableBeans sources of mask, coloring, etc.
      */
     private void buildSignalVolume(
-            Collection<org.janelia.it.workstation.gui.alignment_board_viewer.renderable.MaskChanRenderableData> renderableDatas, List<RenderableBean> renderableBeans
+            Collection<MaskChanRenderableData> renderableDatas, List<RenderableBean> renderableBeans
     ) {
         // Establish the means for extracting the signal data.
         signalTextureBuilder = new RenderablesChannelsBuilder(
@@ -485,7 +493,7 @@ public class RenderablesLoadWorker extends SimpleWorker implements VolumeLoader 
      * @param renderableBeans sources of mask numbers.
      */
     private void buildMaskVolume(
-            Collection<org.janelia.it.workstation.gui.alignment_board_viewer.renderable.MaskChanRenderableData> renderableDatas, List<RenderableBean> renderableBeans
+            Collection<MaskChanRenderableData> renderableDatas, List<RenderableBean> renderableBeans
     ) {
         // Establish the means for extracting the volume mask.
         maskTextureBuilder = new RenderablesMaskBuilder( alignmentBoardSettings, renderableBeans );
@@ -515,13 +523,13 @@ public class RenderablesLoadWorker extends SimpleWorker implements VolumeLoader 
         maskDataAcceptors.clear();
     }
 
-    private void fileLoad( Collection<org.janelia.it.workstation.gui.alignment_board_viewer.renderable.MaskChanRenderableData> metaDatas, boolean buildTexture ) {
-        List<org.janelia.it.workstation.gui.alignment_board_viewer.renderable.MaskChanRenderableData> sortedMetaDatas = new ArrayList<org.janelia.it.workstation.gui.alignment_board_viewer.renderable.MaskChanRenderableData>();
+    private void fileLoad( Collection<MaskChanRenderableData> metaDatas, boolean buildTexture ) {
+        List<MaskChanRenderableData> sortedMetaDatas = new ArrayList<MaskChanRenderableData>();
         sortedMetaDatas.addAll( metaDatas );
-        Collections.sort( sortedMetaDatas, new org.janelia.it.workstation.gui.alignment_board_viewer.renderable.RDComparator( false ) );
+        Collections.sort( sortedMetaDatas, new RDComparator( false ) );
         int i = 0;
         String msgPrefix = buildTexture ? "Building " : "Examining ";
-        for ( org.janelia.it.workstation.gui.alignment_board_viewer.renderable.MaskChanRenderableData metaData: sortedMetaDatas ) {
+        for ( MaskChanRenderableData metaData: sortedMetaDatas ) {
             logger.debug( "Scheduling mask path {} for load as {}.", metaData.getMaskPath(), metaData.getBean().getTranslatedNum() );
             LoadRunnable runnable = new LoadRunnable( metaData, this, null );
 
@@ -545,9 +553,9 @@ public class RenderablesLoadWorker extends SimpleWorker implements VolumeLoader 
      *  @param renderableBeans just the beans.  This collection will be populated as an OUTPUT of this method.
      *  @return the highest mask number found in any renderable bean.
      */
-    private int extractRenderableBeansFromRenderableDatas(Collection<org.janelia.it.workstation.gui.alignment_board_viewer.renderable.MaskChanRenderableData> renderableDatas, List<RenderableBean> renderableBeans) {
+    private int extractRenderableBeansFromRenderableDatas(Collection<MaskChanRenderableData> renderableDatas, List<RenderableBean> renderableBeans) {
         int lastUsedMask = -1;
-        for ( org.janelia.it.workstation.gui.alignment_board_viewer.renderable.MaskChanRenderableData renderableData: renderableDatas ) {
+        for ( MaskChanRenderableData renderableData: renderableDatas ) {
             RenderableBean bean = renderableData.getBean();
             renderableBeans.add( bean );
             if ( bean.getTranslatedNum() > lastUsedMask ) {
@@ -590,7 +598,7 @@ public class RenderablesLoadWorker extends SimpleWorker implements VolumeLoader 
 
         logger.debug("Adjusting downsample rate from {}.", Thread.currentThread().getName());
         try {
-            org.janelia.it.workstation.gui.alignment_board_viewer.gui_elements.GpuSampler.GpuInfo gpuInfo = sampler.getGpuInfo();
+            GpuSampler.GpuInfo gpuInfo = sampler.getGpuInfo();
 
             // Must set the down sample rate to the newly-discovered best.
             if ( gpuInfo != null ) {
@@ -614,7 +622,7 @@ public class RenderablesLoadWorker extends SimpleWorker implements VolumeLoader 
                 if ( gpuInfo.getFreeTexMem() > LEAST_FULLSIZE_MEM  && belowMaxKnownCompatible ) {
                     alignmentBoardSettings.setDownSampleGuess(1.0);
                 }
-                else if ( org.janelia.it.workstation.gui.alignment_board_viewer.gui_elements.GpuSampler.isDeptStandardGpu(gpuInfo.getRenderer())  &&  belowMaxKnownCompatible ) {
+                else if ( GpuSampler.isDeptStandardGpu(gpuInfo.getRenderer())  &&  belowMaxKnownCompatible ) {
                     alignmentBoardSettings.setDownSampleGuess(1.0);
                 }
                 else {
@@ -647,13 +655,13 @@ public class RenderablesLoadWorker extends SimpleWorker implements VolumeLoader 
         return alignmentBoardSettings;
     }
 
-    private void renderChange(Collection<org.janelia.it.workstation.gui.alignment_board_viewer.renderable.MaskChanRenderableData> metaDatas) {
+    private void renderChange(Collection<MaskChanRenderableData> metaDatas) {
         if ( metaDatas.size() == 0 ) {
             logger.info("No renderables found for alignment board " + dataSource.getName());
         }
         else {
             Collection<RenderableBean> beans = new ArrayList<RenderableBean>();
-            for ( org.janelia.it.workstation.gui.alignment_board_viewer.renderable.MaskChanRenderableData metaData: metaDatas ) {
+            for ( MaskChanRenderableData metaData: metaDatas ) {
                 beans.add( metaData.getBean() );
             }
             renderMapping.setRenderables( beans );

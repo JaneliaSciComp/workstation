@@ -11,6 +11,8 @@ import java.util.*;
 
 
 import org.janelia.it.workstation.geom.Vec3;
+import org.janelia.it.workstation.gui.viewer3d.BoundingBox3d;
+import org.janelia.it.workstation.signal.Signal1;
 import org.janelia.it.workstation.signal.Slot1;
 import org.janelia.it.jacs.model.user_data.tiledMicroscope.*;
 
@@ -49,8 +51,8 @@ public class WorkspaceNeuronList extends JPanel {
     };
 
     // ----- signals
-    public org.janelia.it.workstation.signal.Signal1<TmNeuron> neuronClickedSignal = new org.janelia.it.workstation.signal.Signal1<TmNeuron>();
-    public org.janelia.it.workstation.signal.Signal1<Vec3> cameraPanToSignal = new org.janelia.it.workstation.signal.Signal1<Vec3>();
+    public Signal1<TmNeuron> neuronClickedSignal = new Signal1<TmNeuron>();
+    public Signal1<Vec3> cameraPanToSignal = new Signal1<Vec3>();
 
     public WorkspaceNeuronList(int width) {
         this.width = width;
@@ -222,9 +224,9 @@ public class WorkspaceNeuronList extends JPanel {
         // I'd prefer this calculation be part of TmNeuron, but
         //  I can't use BoundingBox3d there
         if (neuron.getGeoAnnotationMap().size() != 0) {
-            org.janelia.it.workstation.gui.viewer3d.BoundingBox3d bounds = new org.janelia.it.workstation.gui.viewer3d.BoundingBox3d();
+            BoundingBox3d bounds = new BoundingBox3d();
             for (TmGeoAnnotation ann: neuron.getGeoAnnotationMap().values()) {
-                bounds.include(new org.janelia.it.workstation.geom.Vec3(ann.getX(), ann.getY(), ann.getZ()));
+                bounds.include(new Vec3(ann.getX(), ann.getY(), ann.getZ()));
             }
             cameraPanToSignal.emit(bounds.getCenter());
         }

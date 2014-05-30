@@ -8,6 +8,8 @@ package org.janelia.it.workstation.gui.framework.console.nb_action;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 
+import org.janelia.it.workstation.gui.framework.console.Browser;
+import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
 import org.openide.awt.ActionID;
 import org.openide.awt.ActionReference;
 import org.openide.awt.ActionReferences;
@@ -34,7 +36,7 @@ public final class PrintScreenAction implements ActionListener {
     }
     
     private void filePrint_actionPerformed() {
-        org.janelia.it.workstation.gui.framework.console.Browser browser = org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr.getBrowser();
+        Browser browser = SessionMgr.getBrowser();
         browser.printBrowser();
     }
 

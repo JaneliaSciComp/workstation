@@ -12,11 +12,13 @@ import java.util.concurrent.Callable;
 
 import javax.swing.JOptionPane;
 
+import org.janelia.it.workstation.api.entity_model.management.ModelMgr;
 import org.janelia.it.workstation.api.entity_model.management.ModelMgrUtils;
 import org.janelia.it.workstation.gui.framework.console.Browser;
 import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.workstation.model.entity.RootedEntity;
 import org.janelia.it.workstation.shared.util.ConcurrentUtils;
+import org.janelia.it.workstation.shared.workers.BackgroundWorker;
 import org.janelia.it.workstation.shared.workers.IndeterminateProgressMonitor;
 import org.janelia.it.workstation.shared.workers.SimpleWorker;
 import org.janelia.it.jacs.model.entity.Entity;
@@ -81,7 +83,7 @@ public class RemoveEntityAction implements Action {
 				for(EntityData ed : toDelete) {
 					Entity child = ed.getChildEntity();
 	                
-					List<EntityData> parentEds = org.janelia.it.workstation.api.entity_model.management.ModelMgr.getModelMgr().getAllParentEntityDatas(child.getId());
+					List<EntityData> parentEds = ModelMgr.getModelMgr().getAllParentEntityDatas(child.getId());
 			        Map<Long,EntityData> respectedEds = new HashMap<Long,EntityData>();
 			        // The current reference should always be considered
                     respectedEds.put(ed.getId(),ed);
@@ -135,7 +137,7 @@ public class RemoveEntityAction implements Action {
 	                        // When removing a tree, we need to check if its shared, and ask the user if they want to really delete a shared object.
 	                        List<String> sharedNames = new ArrayList<String>();
 	                        List<String> sharedKeys = new ArrayList<String>();
-	                        Set<EntityActorPermission> permissions = org.janelia.it.workstation.api.entity_model.management.ModelMgr.getModelMgr().getFullPermissions(child.getId());
+	                        Set<EntityActorPermission> permissions = ModelMgr.getModelMgr().getFullPermissions(child.getId());
 	                        for(EntityActorPermission permission : permissions) {
 	                            sharedNames.add(permission.getSubjectName());
 	                            sharedKeys.add(permission.getSubjectKey());
@@ -235,7 +237,7 @@ public class RemoveEntityAction implements Action {
 				}
 				        
 				if (runInBackground) {
-    	            org.janelia.it.workstation.shared.workers.BackgroundWorker removeTask = new org.janelia.it.workstation.shared.workers.BackgroundWorker() {
+    	            BackgroundWorker removeTask = new BackgroundWorker() {
     
                         @Override
                         public String getName() {
@@ -249,17 +251,17 @@ public class RemoveEntityAction implements Action {
     							if (removeRootTag.contains(ed)) {
     							    setStatus("Demoting "+ed.getChildEntity().getName()+" from folder");
     							    log.debug("Demoting to common root: "+ed.getChildEntity().getName());
-    								org.janelia.it.workstation.api.entity_model.management.ModelMgr.getModelMgr().demoteCommonRootToFolder(ed.getChildEntity());
+    								ModelMgr.getModelMgr().demoteCommonRootToFolder(ed.getChildEntity());
     							}
     							else if (removeReference.contains(ed)) {
     							    setStatus("Removing reference "+ed.getId());
     							    log.debug("Removing reference: "+ed.getId());
-    								org.janelia.it.workstation.api.entity_model.management.ModelMgr.getModelMgr().removeEntityData(ed);
+    								ModelMgr.getModelMgr().removeEntityData(ed);
     							} 
     							else if (removeTree.contains(ed)) {
     							    setStatus("Removing tree "+ed.getChildEntity().getName());
     							    log.debug("Removing tree: "+ed.getChildEntity().getId());
-    								org.janelia.it.workstation.api.entity_model.management.ModelMgr.getModelMgr().deleteEntityTree(ed.getChildEntity().getId());
+    								ModelMgr.getModelMgr().deleteEntityTree(ed.getChildEntity().getId());
     							}
     							else {
     								throw new IllegalStateException("Unknown deletion type for EntityData.id="+ed.getId());
@@ -289,15 +291,15 @@ public class RemoveEntityAction implements Action {
                             for(EntityData ed : toReallyDelete) {
                                 if (removeRootTag.contains(ed)) {
                                     log.debug("Demoting to common root: "+ed.getChildEntity().getName());
-                                    org.janelia.it.workstation.api.entity_model.management.ModelMgr.getModelMgr().demoteCommonRootToFolder(ed.getChildEntity());
+                                    ModelMgr.getModelMgr().demoteCommonRootToFolder(ed.getChildEntity());
                                 }
                                 else if (removeReference.contains(ed)) {
                                     log.debug("Removing reference: "+ed.getId());
-                                    org.janelia.it.workstation.api.entity_model.management.ModelMgr.getModelMgr().removeEntityData(ed);
+                                    ModelMgr.getModelMgr().removeEntityData(ed);
                                 } 
                                 else if (removeTree.contains(ed)) {
                                     log.debug("Removing tree: "+ed.getChildEntity().getId());
-                                    org.janelia.it.workstation.api.entity_model.management.ModelMgr.getModelMgr().deleteEntityTree(ed.getChildEntity().getId());
+                                    ModelMgr.getModelMgr().deleteEntityTree(ed.getChildEntity().getId());
                                 }
                                 else {
                                     throw new IllegalStateException("Unknown deletion type for EntityData.id="+ed.getId());

@@ -7,6 +7,11 @@ package org.janelia.it.workstation.gui.framework.navigation_tools;
  */
 
 import org.janelia.it.jacs.model.entity.Entity;
+import org.janelia.it.workstation.api.entity_model.access.TaskRequestStatusObserverAdapter;
+import org.janelia.it.workstation.api.entity_model.fundtype.TaskRequestState;
+import org.janelia.it.workstation.api.entity_model.fundtype.TaskRequestStatus;
+import org.janelia.it.workstation.gui.framework.console.Browser;
+import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
 
 import javax.swing.*;
 import java.awt.*;
@@ -18,11 +23,11 @@ import java.awt.*;
  * kinds of search.
  */
 public class AutoNavigator {
-    private org.janelia.it.workstation.gui.framework.console.Browser browser;
+    private Browser browser;
     private static String BAD_NAVIGATION_RANGE = "Range given for navigation not in bounds of the Genomic Axis";
     private static AutoNavigator lastUserAutoNavigationChoice;
 
-    public AutoNavigator(org.janelia.it.workstation.gui.framework.console.Browser browser) {
+    public AutoNavigator(Browser browser) {
         lastUserAutoNavigationChoice = this;
         this.browser = browser;
     }
@@ -162,11 +167,11 @@ public class AutoNavigator {
                    try {
                     EventQueue.invokeLater(new Runnable() {
                         public void run() {
-                            JOptionPane.showMessageDialog(org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr.getMainFrame(), "Navigation Complete!", "Information", JOptionPane.INFORMATION_MESSAGE);
+                            JOptionPane.showMessageDialog(SessionMgr.getMainFrame(), "Navigation Complete!", "Information", JOptionPane.INFORMATION_MESSAGE);
                         }});
                     }
                     catch (Exception ex) {
-                      org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr.getSessionMgr().handleException(ex);
+                      SessionMgr.getSessionMgr().handleException(ex);
                     }
                 }
                 browser.getBrowserModel().setModelProperty("NavigationComplete", entity);
@@ -208,9 +213,9 @@ public class AutoNavigator {
 //            return request;
 //        } // End method
 //
-        private void waitForLoading(org.janelia.it.workstation.api.entity_model.fundtype.TaskRequestStatus ls) {
-            if (ls.getTaskRequestState() != org.janelia.it.workstation.api.entity_model.fundtype.TaskRequestStatus.COMPLETE &&
-                ls.getTaskRequestState() != org.janelia.it.workstation.api.entity_model.fundtype.TaskRequestStatus.INACTIVE) {
+        private void waitForLoading(TaskRequestStatus ls) {
+            if (ls.getTaskRequestState() != TaskRequestStatus.COMPLETE &&
+                ls.getTaskRequestState() != TaskRequestStatus.INACTIVE) {
                 ls.addTaskRequestStatusObserver(new TaskObserver(this), true);
                 synchronized(this) {
                     try {
@@ -240,16 +245,16 @@ public class AutoNavigator {
 //        }
     } // End inner class
 
-    class TaskObserver extends org.janelia.it.workstation.api.entity_model.access.TaskRequestStatusObserverAdapter {
+    class TaskObserver extends TaskRequestStatusObserverAdapter {
         Thread waitingThread;
 
         public TaskObserver(Thread waitingThread) {
             this.waitingThread = waitingThread;
         }
 
-        public void stateChanged(org.janelia.it.workstation.api.entity_model.fundtype.TaskRequestStatus taskRequestStatus, org.janelia.it.workstation.api.entity_model.fundtype.TaskRequestState newState){
+        public void stateChanged(TaskRequestStatus taskRequestStatus, TaskRequestState newState){
          //   System.out.println("Received "+newState+" status Sending notify for "+taskRequestStatus);
-            if (newState == org.janelia.it.workstation.api.entity_model.fundtype.TaskRequestStatus.COMPLETE) {
+            if (newState == TaskRequestStatus.COMPLETE) {
                 taskRequestStatus.removeTaskRequestStatusObserver(this);
                 waitingThread.interrupt();
             }

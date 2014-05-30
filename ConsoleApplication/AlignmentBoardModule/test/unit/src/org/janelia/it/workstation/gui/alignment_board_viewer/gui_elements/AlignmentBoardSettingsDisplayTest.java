@@ -31,7 +31,7 @@ public class AlignmentBoardSettingsDisplayTest {
         new WorkstationEnvironment().invoke();
         VolumeModel volumeModel = new VolumeModel();
         volumeModel.setCropCoords( new CropCoordSet() );
-        org.janelia.it.workstation.gui.alignment_board_viewer.gui_elements.AlignmentBoardControlsDialog testDialog = new org.janelia.it.workstation.gui.alignment_board_viewer.gui_elements.AlignmentBoardControlsDialog(
+        AlignmentBoardControlsDialog testDialog = new AlignmentBoardControlsDialog(
                 new JFrame(), volumeModel, new AlignmentBoardSettings()
         );
         testDialog.addWindowListener( new WindowAdapter() {

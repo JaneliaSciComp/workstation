@@ -80,7 +80,7 @@ public class AnnotationTablePanel extends JPanel implements AnnotationView {
     @Override
     public void setPreferredSize(Dimension preferredSize) {
         super.setPreferredSize(preferredSize);
-        if (preferredSize.height == org.janelia.it.workstation.gui.framework.viewer.ImagesPanel.MIN_TABLE_HEIGHT) {
+        if (preferredSize.height == ImagesPanel.MIN_TABLE_HEIGHT) {
             removeAll();
             add(summaryLabel, BorderLayout.CENTER);
         }
@@ -100,7 +100,7 @@ public class AnnotationTablePanel extends JPanel implements AnnotationView {
             @Override
             protected void doubleLeftClicked(MouseEvent e) {
                 SessionMgr.getSessionMgr().setModelProperty(
-                        ViewerSettingsPanel.ANNOTATION_TABLES_HEIGHT_PROPERTY, org.janelia.it.workstation.gui.framework.viewer.ImagesPanel.DEFAULT_TABLE_HEIGHT);
+                        ViewerSettingsPanel.ANNOTATION_TABLES_HEIGHT_PROPERTY, ImagesPanel.DEFAULT_TABLE_HEIGHT);
                 e.consume();
             }
 

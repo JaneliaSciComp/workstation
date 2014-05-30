@@ -1,5 +1,7 @@
 package org.janelia.it.workstation.gui.viewer3d.texture;
 
+import org.janelia.it.workstation.gui.viewer3d.VolumeDataAcceptor;
+import org.janelia.it.workstation.gui.viewer3d.volume_builder.VolumeDataChunk;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -122,7 +124,7 @@ public class TextureMediator {
                     );
                 }
 
-                for ( org.janelia.it.workstation.gui.viewer3d.volume_builder.VolumeDataChunk volumeDataChunk: textureData.getTextureData().getVolumeChunks() ) {
+                for ( VolumeDataChunk volumeDataChunk: textureData.getTextureData().getVolumeChunks() ) {
                     ByteBuffer data = ByteBuffer.wrap( volumeDataChunk.getData() );
                     data.rewind();
 
@@ -208,7 +210,7 @@ public class TextureMediator {
                 //DEBUG: back to original, and see if can eliminate some possibilities.
                 byte[] rawBytes = new byte[ (int)textureData.getTextureData().length() ];
                 int nextInx = 0;
-                for ( org.janelia.it.workstation.gui.viewer3d.volume_builder.VolumeDataChunk volumeDataChunk: textureData.getTextureData().getVolumeChunks() ) {
+                for ( VolumeDataChunk volumeDataChunk: textureData.getTextureData().getVolumeChunks() ) {
                     System.arraycopy( volumeDataChunk.getData(), 0, rawBytes, nextInx, volumeDataChunk.getData().length );
                     nextInx += volumeDataChunk.getData().length;
                 }
@@ -434,7 +436,7 @@ public class TextureMediator {
             internalFormat = textureData.getExplicitInternalFormat();
         }
         else {
-            if (textureData.getColorSpace() == org.janelia.it.workstation.gui.viewer3d.VolumeDataAcceptor.TextureColorSpace.COLOR_SPACE_SRGB)
+            if (textureData.getColorSpace() == VolumeDataAcceptor.TextureColorSpace.COLOR_SPACE_SRGB)
                 internalFormat = GL2.GL_SRGB8_ALPHA8;
 
             // This: tested against a mask file.
@@ -446,7 +448,7 @@ public class TextureMediator {
                 }
             }
 
-            if (textureData.getColorSpace() == org.janelia.it.workstation.gui.viewer3d.VolumeDataAcceptor.TextureColorSpace.COLOR_SPACE_RGB) {
+            if (textureData.getColorSpace() == VolumeDataAcceptor.TextureColorSpace.COLOR_SPACE_RGB) {
                 internalFormat = GL2.GL_RGB;
             }
 
@@ -473,7 +475,7 @@ public class TextureMediator {
     //--------------------------- End: Helpers for glTexImage3D
 
     private void testRawBufferContents(int pixelByteCount, byte[] rawBuffer) {
-        java.util.Map<Integer,Integer> allFoundFrequencies = new java.util.HashMap<Integer,Integer>();
+        Map<Integer,Integer> allFoundFrequencies = new HashMap<Integer,Integer>();
 
         int nonZeroCount = 0;
         for (byte aRawBuffer : rawBuffer) {

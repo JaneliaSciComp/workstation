@@ -1,5 +1,9 @@
 package org.janelia.it.workstation.gui.viewer3d.learning;
 
+import org.janelia.it.workstation.geom.Vec3;
+import org.janelia.it.workstation.gui.opengl.GLActor;
+import org.janelia.it.workstation.gui.viewer3d.BoundingBox3d;
+
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.nio.FloatBuffer;
@@ -8,8 +12,9 @@ import javax.media.opengl.GL2;
 import javax.media.opengl.GLAutoDrawable;
 
 import java.nio.*;
+import java.util.Date;
 
-public class RectSolid implements org.janelia.it.workstation.gui.opengl.GLActor {
+public class RectSolid implements GLActor {
 
     private static final float Z_BACK_PLANE = -75.0f;
     private static final float Z_FRONT_PLANE = 75.0f;
@@ -147,7 +152,7 @@ public class RectSolid implements org.janelia.it.workstation.gui.opengl.GLActor 
     public void draw( GL2 gl ) throws Exception {
         errorCheck( gl, "Before rect-solid draw...");
         //Rotate around the axis based on the rotation matrix (rotation, x, y, z)
-        long timeS = new java.util.Date().getTime() / 20;
+        long timeS = new Date().getTime() / 20;
         float yDegrees = timeS - ((timeS / 360) * 360);
         //Log.v("DUMP", "degrees=" + yDegrees);
 
@@ -191,9 +196,9 @@ public class RectSolid implements org.janelia.it.workstation.gui.opengl.GLActor 
     }
 
     @Override
-    public org.janelia.it.workstation.gui.viewer3d.BoundingBox3d getBoundingBox3d() {
-        org.janelia.it.workstation.gui.viewer3d.BoundingBox3d result = new org.janelia.it.workstation.gui.viewer3d.BoundingBox3d();
-        org.janelia.it.workstation.geom.Vec3 half = new org.janelia.it.workstation.geom.Vec3(0,0,0);
+    public BoundingBox3d getBoundingBox3d() {
+        BoundingBox3d result = new BoundingBox3d();
+        Vec3 half = new Vec3(0,0,0);
         for (int i = 0; i < 3; ++i)
             half.set( i, 0.5 * 1024 );
         result.include(half.minus());

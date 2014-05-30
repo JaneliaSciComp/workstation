@@ -19,6 +19,7 @@ import javax.swing.JMenuItem;
 import javax.swing.JOptionPane;
 import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.workstation.gui.framework.tool_manager.ToolInfo;
+import org.janelia.it.workstation.gui.framework.tool_manager.ToolMgr;
 import org.janelia.it.workstation.gui.util.WindowLocator;
 import org.janelia.it.workstation.shared.util.Utils;
 import org.openide.awt.ActionID;
@@ -67,7 +68,7 @@ public final class ToolsMenuAction extends AbstractAction implements Presenter.M
     private List<JMenuItem> createMenuItems() {
         JFrame frame = WindowLocator.getMainFrame();
         JMenuBar menuBar = frame.getJMenuBar();
-        Set keySet = org.janelia.it.workstation.gui.framework.tool_manager.ToolMgr.getTools().keySet();
+        Set keySet = ToolMgr.getTools().keySet();
         return createMenuItems(keySet);
 
     }
@@ -76,7 +77,7 @@ public final class ToolsMenuAction extends AbstractAction implements Presenter.M
         List<JMenuItem> newItems = new ArrayList<JMenuItem>();
         for (final Object o : keySet) {
             JMenuItem tmpMenuItem = null;
-            ToolInfo tmpTool = org.janelia.it.workstation.gui.framework.tool_manager.ToolMgr.getTool((String) o);
+            ToolInfo tmpTool = ToolMgr.getTool((String) o);
             try {
                 tmpMenuItem = new JMenuItem(tmpTool.getName(),
                         Utils.getClasspathImage(tmpTool.getIconPath()));
@@ -85,7 +86,7 @@ public final class ToolsMenuAction extends AbstractAction implements Presenter.M
                     @Override
                     public void actionPerformed(ActionEvent e) {
                         try {
-                            org.janelia.it.workstation.gui.framework.tool_manager.ToolMgr.runTool((String) o);
+                            ToolMgr.runTool((String) o);
                         } catch (Exception e1) {
                             JOptionPane.showMessageDialog(
                                     SessionMgr.getMainFrame(),

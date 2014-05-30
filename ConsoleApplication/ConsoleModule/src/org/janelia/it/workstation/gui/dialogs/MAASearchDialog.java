@@ -2,9 +2,11 @@ package org.janelia.it.workstation.gui.dialogs;
 
 import net.miginfocom.swing.MigLayout;
 import org.janelia.it.workstation.api.entity_model.management.EntitySelectionModel;
+import org.janelia.it.workstation.api.entity_model.management.ModelMgr;
 import org.janelia.it.workstation.api.entity_model.management.ModelMgrUtils;
 import org.janelia.it.workstation.gui.framework.access.Accessibility;
 import org.janelia.it.workstation.gui.framework.console.Browser;
+import org.janelia.it.workstation.gui.framework.outline.EntityOutline;
 import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.workstation.model.entity.RootedEntity;
 import org.janelia.it.workstation.model.utils.FolderUtils;
@@ -176,7 +178,7 @@ public class MAASearchDialog extends ModalDialog implements Accessibility, Actio
 			protected void doStuff() throws Exception {
 
 				Entity topLevelFolder = null;
-				for (Entity entity : org.janelia.it.workstation.api.entity_model.management.ModelMgr.getModelMgr().getCommonRootEntities()) {
+				for (Entity entity : ModelMgr.getModelMgr().getCommonRootEntities()) {
 					if (entity.getName().equals(ScreenEvalConstants.TOP_LEVEL_FOLDER_NAME)
 							&& ModelMgrUtils.isOwner(entity)) {
 						topLevelFolder = entity;
@@ -187,7 +189,7 @@ public class MAASearchDialog extends ModalDialog implements Accessibility, Actio
 					return;
 				}
 
-				topLevelFolder = org.janelia.it.workstation.api.entity_model.management.ModelMgr.getModelMgr().loadLazyEntity(topLevelFolder, false);
+				topLevelFolder = ModelMgr.getModelMgr().loadLazyEntity(topLevelFolder, false);
 				for (Entity child : topLevelFolder.getOrderedChildren()) {
 					compEntityMap.put(child.getName(), child);
 				}
@@ -266,10 +268,10 @@ public class MAASearchDialog extends ModalDialog implements Accessibility, Actio
 
 				for (String compartment : compEntityMap.keySet()) {
 					Entity compEntity = compEntityMap.get(compartment);
-					compEntity = org.janelia.it.workstation.api.entity_model.management.ModelMgr.getModelMgr().loadLazyEntity(compEntity, false);
+					compEntity = ModelMgr.getModelMgr().loadLazyEntity(compEntity, false);
 
 					for (Entity intFolder : compEntity.getOrderedChildren()) {
-						intFolder = org.janelia.it.workstation.api.entity_model.management.ModelMgr.getModelMgr().loadLazyEntity(intFolder, false);
+						intFolder = ModelMgr.getModelMgr().loadLazyEntity(intFolder, false);
 						int i = ScreenEvalUtils.getValueFromFolderName(intFolder);
 
 						for (Entity distFolder : intFolder.getOrderedChildren()) {
@@ -405,11 +407,11 @@ public class MAASearchDialog extends ModalDialog implements Accessibility, Actio
 
 			@Override
 			protected void hadSuccess() {
-				final org.janelia.it.workstation.gui.framework.outline.EntityOutline entityOutline = SessionMgr.getBrowser().getEntityOutline();
+				final EntityOutline entityOutline = SessionMgr.getBrowser().getEntityOutline();
 				entityOutline.totalRefresh(true, new Callable<Void>() {
 					@Override
 					public Void call() throws Exception {
-						org.janelia.it.workstation.api.entity_model.management.ModelMgr.getModelMgr().getEntitySelectionModel().selectEntity(
+						ModelMgr.getModelMgr().getEntitySelectionModel().selectEntity(
 								EntitySelectionModel.CATEGORY_OUTLINE, saveFolder.getUniqueId(), true);
 						Utils.setDefaultCursor(MAASearchDialog.this);
 						setVisible(false);
@@ -513,7 +515,7 @@ public class MAASearchDialog extends ModalDialog implements Accessibility, Actio
 				//upMapping.add(EntityConstants.TYPE_FOLDER);
 				upMapping.add(EntityConstants.TYPE_SCREEN_SAMPLE);
 				log.trace("Got " + maskIds.size() + " masks for " + key);
-				List<MappedId> mappedIds = org.janelia.it.workstation.api.entity_model.management.ModelMgr.getModelMgr().getProjectedResults(maskIds, upMapping, downMapping);
+				List<MappedId> mappedIds = ModelMgr.getModelMgr().getProjectedResults(maskIds, upMapping, downMapping);
 				for (MappedId mappedId : mappedIds) {
 					samples.add(mappedId.getMappedId());
 				}

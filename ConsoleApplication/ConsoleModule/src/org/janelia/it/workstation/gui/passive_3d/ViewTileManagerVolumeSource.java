@@ -2,7 +2,14 @@ package org.janelia.it.workstation.gui.passive_3d;
 
 import org.janelia.it.workstation.geom.CoordinateAxis;
 import org.janelia.it.workstation.geom.Rotation3d;
+import org.janelia.it.workstation.geom.Vec3;
 import org.janelia.it.workstation.gui.camera.BasicObservableCamera3d;
+import org.janelia.it.workstation.gui.camera.Camera3d;
+import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
+import org.janelia.it.workstation.gui.slice_viewer.BlockTiffOctreeLoadAdapter;
+import org.janelia.it.workstation.gui.slice_viewer.TextureData2dGL;
+import org.janelia.it.workstation.gui.slice_viewer.TileFormat;
+import org.janelia.it.workstation.gui.slice_viewer.TileIndex;
 import org.janelia.it.workstation.gui.viewer3d.interfaces.Viewport;
 import org.janelia.it.workstation.gui.viewer3d.texture.TextureDataBean;
 import org.janelia.it.workstation.gui.viewer3d.texture.TextureDataI;
@@ -35,7 +42,7 @@ public class ViewTileManagerVolumeSource implements VolumeSource {
     public static final int BRICK_WIDTH = 512;
     public static final int BRICK_HEIGHT = 512;
     public static final int BRICK_DEPTH = 512;
-    private org.janelia.it.workstation.gui.camera.Camera3d camera;
+    private Camera3d camera;
     private Viewport viewport;
     private CoordinateAxis sliceAxis;
     private Rotation3d viewerInGround;
@@ -51,12 +58,12 @@ public class ViewTileManagerVolumeSource implements VolumeSource {
 
     private VolumeAcceptor volumeAcceptor;
 
-    private org.janelia.it.workstation.gui.slice_viewer.BlockTiffOctreeLoadAdapter dataAdapter;
+    private BlockTiffOctreeLoadAdapter dataAdapter;
 
     private Logger logger = LoggerFactory.getLogger( ViewTileManagerVolumeSource.class );
     private PrintWriter sliceRecorder; //*** TEMP ***
 
-    public ViewTileManagerVolumeSource(org.janelia.it.workstation.gui.camera.Camera3d camera,
+    public ViewTileManagerVolumeSource(Camera3d camera,
                                        Viewport viewport,
                                        CoordinateAxis sliceAxis,
                                        Rotation3d viewerInGround,
@@ -67,7 +74,7 @@ public class ViewTileManagerVolumeSource implements VolumeSource {
         this.sliceAxis = sliceAxis;
         this.dataUrl = dataUrl;
 
-        dataAdapter = new org.janelia.it.workstation.gui.slice_viewer.BlockTiffOctreeLoadAdapter();
+        dataAdapter = new BlockTiffOctreeLoadAdapter();
     }
 
     @Override
@@ -81,13 +88,13 @@ public class ViewTileManagerVolumeSource implements VolumeSource {
         dataAdapter.setTopFolder( new File( dataUrl.toURI() ) );
 
         // Cloning the camera, to leave the original as was found.
-        org.janelia.it.workstation.gui.camera.Camera3d iterationCamera = new BasicObservableCamera3d();
+        Camera3d iterationCamera = new BasicObservableCamera3d();
         iterationCamera.setFocus(camera.getFocus());
         iterationCamera.setPixelsPerSceneUnit(camera.getPixelsPerSceneUnit());
         iterationCamera.setRotation(camera.getRotation());
 
         TextureDataI textureDataFor3D = null;
-        org.janelia.it.workstation.gui.slice_viewer.TileFormat tileFormat = dataAdapter.getTileFormat();
+        TileFormat tileFormat = dataAdapter.getTileFormat();
 
         logger.info("Absolute start/end Y are {}..{}.", absoluteReqVolStartY, absoluteReqVolEndY );
 
@@ -127,7 +134,7 @@ public class ViewTileManagerVolumeSource implements VolumeSource {
         absoluteReqVolEndZ = absoluteReqVolStartZ + BRICK_DEPTH - 1;
 
         TileIndexFinder indexFinder = new TileIndexFinder( tileFormat, camera, sliceAxis );
-        Collection<org.janelia.it.workstation.gui.slice_viewer.TileIndex> indices = indexFinder.executeForTileCoords(
+        Collection<TileIndex> indices = indexFinder.executeForTileCoords(
                 startTileNumX, startTileNumY, startTileNumZ,
                 endTileNumX, endTileNumY, endTileNumZ // Assume: takes care of maxima on its own.
         );
@@ -139,8 +146,8 @@ public class ViewTileManagerVolumeSource implements VolumeSource {
 
         // Executing loads through a queue. Await queue rundown, then iterate over the results to standardize values.
         ExecutorService threadPool = Executors.newFixedThreadPool( 5 );
-        Map<org.janelia.it.workstation.gui.slice_viewer.TileIndex, org.janelia.it.workstation.gui.slice_viewer.TextureData2dGL> dataCollection = new HashMap<org.janelia.it.workstation.gui.slice_viewer.TileIndex, org.janelia.it.workstation.gui.slice_viewer.TextureData2dGL>();
-        for ( org.janelia.it.workstation.gui.slice_viewer.TileIndex index: indices ) {
+        Map<TileIndex, TextureData2dGL> dataCollection = new HashMap<TileIndex, TextureData2dGL>();
+        for ( TileIndex index: indices ) {
             LoadToRamRunnable runnable = new LoadToRamRunnable( index, dataCollection );
             threadPool.execute( runnable );
         }
@@ -149,11 +156,11 @@ public class ViewTileManagerVolumeSource implements VolumeSource {
             threadPool.awaitTermination( 300, TimeUnit.SECONDS );
         } catch ( InterruptedException ie ) {
             ie.printStackTrace();
-            org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr.getSessionMgr().handleException( ie );
+            SessionMgr.getSessionMgr().handleException( ie );
         }
 
-        for ( org.janelia.it.workstation.gui.slice_viewer.TileIndex index: dataCollection.keySet() ) {
-            org.janelia.it.workstation.gui.slice_viewer.TextureData2dGL data = dataCollection.get( index );
+        for ( TileIndex index: dataCollection.keySet() ) {
+            TextureData2dGL data = dataCollection.get( index );
             stdByteCount = setAndStandardize( stdByteCount, data.getBitDepth()/8, "Byte Count" );
             stdChannelCount = setAndStandardize( stdChannelCount, data.getChannelCount(), "Channel Count" );
             stdInternalFormat = setAndStandardize( stdInternalFormat, data.getInternalFormat(), "Internal Format" );
@@ -181,13 +188,13 @@ public class ViewTileManagerVolumeSource implements VolumeSource {
         volumeAcceptor.accept( textureDataFor3D );
     }
 
-    private void acceptTileData(ByteBuffer pixels, org.janelia.it.workstation.gui.slice_viewer.TileIndex tileIndex, int byteCount, int channelCount) {
+    private void acceptTileData(ByteBuffer pixels, TileIndex tileIndex, int byteCount, int channelCount) {
         int stdTileSize = BRICK_WIDTH * BRICK_HEIGHT;
-        org.janelia.it.workstation.gui.slice_viewer.TileFormat tileFormat = dataAdapter.getTileFormat();
+        TileFormat tileFormat = dataAdapter.getTileFormat();
 
         // Dealing with tile indices, need to be able to convert tile index back to absolute coordinates,
         // to figure out where the tile is placed within the slice.
-        org.janelia.it.workstation.geom.Vec3[] corners = tileFormat.cornersForTileIndex( tileIndex );
+        Vec3[] corners = tileFormat.cornersForTileIndex( tileIndex );
 
         // Adjust for the inversion of Y between tile set and screen.
         FragmentLoadParmBean paramBean = new FragmentLoadParmBean();
@@ -288,7 +295,7 @@ public class ViewTileManagerVolumeSource implements VolumeSource {
         public int inVolEndY;
 
         // Tile or "input" related values.
-        public org.janelia.it.workstation.geom.Vec3[] corners;
+        public Vec3[] corners;
 
         public int inTileStartX;
         public int inTileStartY;
@@ -334,16 +341,16 @@ public class ViewTileManagerVolumeSource implements VolumeSource {
 
     //----------------------------------------------------------INNER CLASSES
     private class LoadToRamRunnable implements Runnable {
-        private org.janelia.it.workstation.gui.slice_viewer.TileIndex index;
-        private Map<org.janelia.it.workstation.gui.slice_viewer.TileIndex, org.janelia.it.workstation.gui.slice_viewer.TextureData2dGL> indexToTexData;
-        public LoadToRamRunnable( org.janelia.it.workstation.gui.slice_viewer.TileIndex index, Map<org.janelia.it.workstation.gui.slice_viewer.TileIndex, org.janelia.it.workstation.gui.slice_viewer.TextureData2dGL> indexToTexData ) {
+        private TileIndex index;
+        private Map<TileIndex, TextureData2dGL> indexToTexData;
+        public LoadToRamRunnable( TileIndex index, Map<TileIndex, TextureData2dGL> indexToTexData ) {
             this.index = index;
             this.indexToTexData = indexToTexData;
         }
 
         public void run() {
             try {
-                org.janelia.it.workstation.gui.slice_viewer.TextureData2dGL data = dataAdapter.loadToRam( index );
+                TextureData2dGL data = dataAdapter.loadToRam( index );
                 indexToTexData.put( index, data );
             } catch ( Exception ex ) {
                 ex.printStackTrace();

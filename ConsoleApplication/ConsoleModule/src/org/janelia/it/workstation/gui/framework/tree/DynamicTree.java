@@ -29,6 +29,7 @@ import javax.swing.tree.TreeNode;
 import javax.swing.tree.TreePath;
 import javax.swing.tree.TreeSelectionModel;
 
+import org.janelia.it.workstation.gui.framework.outline.Refreshable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -38,7 +39,7 @@ import org.slf4j.LoggerFactory;
  * @author saffordt
  * @author <a href="mailto:rokickik@janelia.hhmi.org">Konrad Rokicki</a>
  */
-public class DynamicTree extends JPanel implements org.janelia.it.workstation.gui.framework.outline.Refreshable {
+public class DynamicTree extends JPanel implements Refreshable {
     
     private static final Logger log = LoggerFactory.getLogger(DynamicTree.class);
     

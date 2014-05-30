@@ -1,10 +1,25 @@
 package org.janelia.it.workstation.gui.dialogs;
 
 import org.janelia.it.jacs.model.entity.Entity;
+import org.janelia.it.jacs.model.tasks.Event;
 import org.janelia.it.jacs.model.tasks.Task;
 import org.janelia.it.jacs.model.tasks.TaskParameter;
 import org.janelia.it.jacs.model.tasks.maskSearch.MaskSearchTask;
 import org.janelia.it.jacs.model.user_data.Node;
+import org.janelia.it.workstation.api.entity_model.access.TaskRequestStatusObserverAdapter;
+import org.janelia.it.workstation.api.entity_model.fundtype.TaskRequest;
+import org.janelia.it.workstation.api.entity_model.fundtype.TaskRequestState;
+import org.janelia.it.workstation.api.entity_model.fundtype.TaskRequestStatus;
+import org.janelia.it.workstation.api.entity_model.fundtype.TaskThreadBase;
+import org.janelia.it.workstation.api.entity_model.management.EntitySelectionModel;
+import org.janelia.it.workstation.api.entity_model.management.ModelMgr;
+import org.janelia.it.workstation.gui.framework.outline.EntityOutline;
+import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
+import org.janelia.it.workstation.model.entity.RootedEntity;
+import org.janelia.it.workstation.shared.util.ConsoleProperties;
+import org.janelia.it.workstation.shared.util.Utils;
+import org.janelia.it.workstation.shared.workers.SimpleWorker;
+import org.janelia.it.workstation.shared.workers.TaskMonitoringWorker;
 import org.jdesktop.swingx.VerticalLayout;
 
 import javax.swing.*;
@@ -48,7 +63,7 @@ public class MaskSearchDialog extends ModalDialog {
     private final JCheckBox  skipZeroesCheckBox;
     private JFileChooser fileChooser;
     private Long currentTaskId;
-    private org.janelia.it.workstation.api.entity_model.fundtype.TaskRequest searchRequest;
+    private TaskRequest searchRequest;
 
     public MaskSearchDialog() {
 
@@ -65,12 +80,12 @@ public class MaskSearchDialog extends ModalDialog {
         topLevelFolderLabel.setToolTipText(TOOLTIP_TOP_LEVEL_FOLDER);
         folderField = new JTextField(40);
         // Use the previous destination; otherwise, suggest the default user location
-        if (null!= org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr.getSessionMgr().getModelProperty(PREF_MASK_SEARCH_SERVICE_FOLDER_NAME)&&
-                !"".equals(org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr.getSessionMgr().getModelProperty(PREF_MASK_SEARCH_SERVICE_FOLDER_NAME))) {
-            folderField.setText((String) org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr.getSessionMgr().getModelProperty(PREF_MASK_SEARCH_SERVICE_FOLDER_NAME));
+        if (null!= SessionMgr.getSessionMgr().getModelProperty(PREF_MASK_SEARCH_SERVICE_FOLDER_NAME)&&
+                !"".equals(SessionMgr.getSessionMgr().getModelProperty(PREF_MASK_SEARCH_SERVICE_FOLDER_NAME))) {
+            folderField.setText((String) SessionMgr.getSessionMgr().getModelProperty(PREF_MASK_SEARCH_SERVICE_FOLDER_NAME));
         }
         else {
-            folderField.setText(org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr.getUsername()+TOP_LEVEL_FOLDER_NAME);
+            folderField.setText(SessionMgr.getUsername()+TOP_LEVEL_FOLDER_NAME);
         }
         folderField.setToolTipText(TOOLTIP_TOP_LEVEL_FOLDER);
 
@@ -84,12 +99,12 @@ public class MaskSearchDialog extends ModalDialog {
 
         String pathText;
         // Figure out the user path preference
-        if (null!= org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr.getSessionMgr().getModelProperty(PREF_MASK_SEARCH_SERVICE_INPUT_DIR)&&
-                !"".equals(org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr.getSessionMgr().getModelProperty(PREF_MASK_SEARCH_SERVICE_INPUT_DIR))) {
-            pathText=((String) org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr.getSessionMgr().getModelProperty(PREF_MASK_SEARCH_SERVICE_INPUT_DIR));
+        if (null!= SessionMgr.getSessionMgr().getModelProperty(PREF_MASK_SEARCH_SERVICE_INPUT_DIR)&&
+                !"".equals(SessionMgr.getSessionMgr().getModelProperty(PREF_MASK_SEARCH_SERVICE_INPUT_DIR))) {
+            pathText=((String) SessionMgr.getSessionMgr().getModelProperty(PREF_MASK_SEARCH_SERVICE_INPUT_DIR));
         }
         else {
-            pathText = org.janelia.it.workstation.shared.util.ConsoleProperties.getString("remote.defaultLinuxDataPath");
+            pathText = ConsoleProperties.getString("remote.defaultLinuxDataPath");
         }
         pathTextField = new JTextField(40);
         pathTextField.setText(pathText);
@@ -107,7 +122,7 @@ public class MaskSearchDialog extends ModalDialog {
 
             JButton _filePathButton = null;
             try {
-                _filePathButton = new JButton(org.janelia.it.workstation.shared.util.Utils.getClasspathImage("magnifier.png"));
+                _filePathButton = new JButton(Utils.getClasspathImage("magnifier.png"));
             }
             catch (FileNotFoundException e) {
                 e.printStackTrace();
@@ -131,9 +146,9 @@ public class MaskSearchDialog extends ModalDialog {
         matrixFieldLabel.setToolTipText(TOOLTIP_MATRIX);
         matrixTextField = new JTextField(40);
         // Use the previous setting; otherwise, suggest the default matrix setting
-        if (null!= org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr.getSessionMgr().getModelProperty(PREF_MASK_SEARCH_SERVICE_MATRIX)&&
-                !"".equals(org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr.getSessionMgr().getModelProperty(PREF_MASK_SEARCH_SERVICE_MATRIX))) {
-            matrixTextField.setText((String) org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr.getSessionMgr().getModelProperty(PREF_MASK_SEARCH_SERVICE_MATRIX));
+        if (null!= SessionMgr.getSessionMgr().getModelProperty(PREF_MASK_SEARCH_SERVICE_MATRIX)&&
+                !"".equals(SessionMgr.getSessionMgr().getModelProperty(PREF_MASK_SEARCH_SERVICE_MATRIX))) {
+            matrixTextField.setText((String) SessionMgr.getSessionMgr().getModelProperty(PREF_MASK_SEARCH_SERVICE_MATRIX));
         }
         else {
             matrixTextField.setText(MaskSearchTask.DEFAULT_MATRIX);
@@ -148,9 +163,9 @@ public class MaskSearchDialog extends ModalDialog {
         queryChannelFieldLabel.setToolTipText(TOOLTIP_QUERY);
         queryChannelTextField = new JTextField(40);
         // Use the previous setting; otherwise, suggest the default channel setting
-        if (null!= org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr.getSessionMgr().getModelProperty(PREF_MASK_SEARCH_QUERY_CHANNEL)&&
-                !"".equals(org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr.getSessionMgr().getModelProperty(PREF_MASK_SEARCH_QUERY_CHANNEL))) {
-            queryChannelTextField.setText((String) org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr.getSessionMgr().getModelProperty(PREF_MASK_SEARCH_QUERY_CHANNEL));
+        if (null!= SessionMgr.getSessionMgr().getModelProperty(PREF_MASK_SEARCH_QUERY_CHANNEL)&&
+                !"".equals(SessionMgr.getSessionMgr().getModelProperty(PREF_MASK_SEARCH_QUERY_CHANNEL))) {
+            queryChannelTextField.setText((String) SessionMgr.getSessionMgr().getModelProperty(PREF_MASK_SEARCH_QUERY_CHANNEL));
         }
         else {
             queryChannelTextField.setText(MaskSearchTask.DEFAULT_QUERY_CHANNEL);
@@ -164,9 +179,9 @@ public class MaskSearchDialog extends ModalDialog {
         JLabel maxHitsFieldLabel  = new JLabel("Max Hits:");
         maxHitsTextField = new JTextField(40);
         // Use the previous setting; otherwise, suggest the default max hits setting
-        if (null!= org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr.getSessionMgr().getModelProperty(PREF_MASK_SEARCH_MAX_HITS)&&
-                !"".equals(org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr.getSessionMgr().getModelProperty(PREF_MASK_SEARCH_MAX_HITS))) {
-            maxHitsTextField.setText((String) org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr.getSessionMgr().getModelProperty(PREF_MASK_SEARCH_MAX_HITS));
+        if (null!= SessionMgr.getSessionMgr().getModelProperty(PREF_MASK_SEARCH_MAX_HITS)&&
+                !"".equals(SessionMgr.getSessionMgr().getModelProperty(PREF_MASK_SEARCH_MAX_HITS))) {
+            maxHitsTextField.setText((String) SessionMgr.getSessionMgr().getModelProperty(PREF_MASK_SEARCH_MAX_HITS));
         }
         else {
             maxHitsTextField.setText(MaskSearchTask.DEFAULT_MAX_HITS);
@@ -178,9 +193,9 @@ public class MaskSearchDialog extends ModalDialog {
 
         skipZeroesCheckBox = new JCheckBox("Search Non-Zero Mask Only");
         // Use the previous setting; otherwise, suggest the default max hits setting
-        if (null!= org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr.getSessionMgr().getModelProperty(PREF_MASK_SEARCH_SKIP_ZEROES)&&
-                !"".equals(org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr.getSessionMgr().getModelProperty(PREF_MASK_SEARCH_SKIP_ZEROES))) {
-            skipZeroesCheckBox.setSelected(Boolean.valueOf((String) org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr.getSessionMgr().getModelProperty(PREF_MASK_SEARCH_SKIP_ZEROES)));
+        if (null!= SessionMgr.getSessionMgr().getModelProperty(PREF_MASK_SEARCH_SKIP_ZEROES)&&
+                !"".equals(SessionMgr.getSessionMgr().getModelProperty(PREF_MASK_SEARCH_SKIP_ZEROES))) {
+            skipZeroesCheckBox.setSelected(Boolean.valueOf((String) SessionMgr.getSessionMgr().getModelProperty(PREF_MASK_SEARCH_SKIP_ZEROES)));
         }
         else {
             skipZeroesCheckBox.setSelected(Boolean.valueOf(MaskSearchTask.DEFAULT_SKIP_ZEROES));
@@ -222,7 +237,7 @@ public class MaskSearchDialog extends ModalDialog {
 
     public void runMaskSearchService() {
 
-        org.janelia.it.workstation.shared.util.Utils.setWaitingCursor(this);
+        Utils.setWaitingCursor(this);
 
         final String inputDirPath = pathTextField.getText().trim();
         final String topLevelFolderName = folderField.getText().trim();
@@ -233,25 +248,25 @@ public class MaskSearchDialog extends ModalDialog {
 
         // Update user Preferences
         if (null!=topLevelFolderName) {
-            org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr.getSessionMgr().setModelProperty(PREF_MASK_SEARCH_SERVICE_FOLDER_NAME,topLevelFolderName);
+            SessionMgr.getSessionMgr().setModelProperty(PREF_MASK_SEARCH_SERVICE_FOLDER_NAME,topLevelFolderName);
         }
         if (null!=inputDirPath) {
-            org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr.getSessionMgr().setModelProperty(PREF_MASK_SEARCH_SERVICE_INPUT_DIR,inputDirPath);
+            SessionMgr.getSessionMgr().setModelProperty(PREF_MASK_SEARCH_SERVICE_INPUT_DIR,inputDirPath);
         }
         if (null!=matrixValue) {
-            org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr.getSessionMgr().setModelProperty(PREF_MASK_SEARCH_SERVICE_MATRIX,matrixValue);
+            SessionMgr.getSessionMgr().setModelProperty(PREF_MASK_SEARCH_SERVICE_MATRIX,matrixValue);
         }
         if (null!=queryChannel) {
-            org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr.getSessionMgr().setModelProperty(PREF_MASK_SEARCH_QUERY_CHANNEL,queryChannel);
+            SessionMgr.getSessionMgr().setModelProperty(PREF_MASK_SEARCH_QUERY_CHANNEL,queryChannel);
         }
         if (null!=maxHits) {
-            org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr.getSessionMgr().setModelProperty(PREF_MASK_SEARCH_MAX_HITS,maxHits);
+            SessionMgr.getSessionMgr().setModelProperty(PREF_MASK_SEARCH_MAX_HITS,maxHits);
         }
         if (null!=skipZeroes) {
-            org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr.getSessionMgr().setModelProperty(PREF_MASK_SEARCH_SKIP_ZEROES,skipZeroes);
+            SessionMgr.getSessionMgr().setModelProperty(PREF_MASK_SEARCH_SKIP_ZEROES,skipZeroes);
         }
 
-        org.janelia.it.workstation.shared.workers.SimpleWorker executeWorker = new org.janelia.it.workstation.shared.workers.SimpleWorker() {
+        SimpleWorker executeWorker = new SimpleWorker() {
 
             @Override
             protected void doStuff() throws Exception {
@@ -260,7 +275,7 @@ public class MaskSearchDialog extends ModalDialog {
 
             @Override
             protected void hadSuccess() {
-                org.janelia.it.workstation.shared.util.Utils.setDefaultCursor(MaskSearchDialog.this);
+                Utils.setDefaultCursor(MaskSearchDialog.this);
 //                Browser browser = SessionMgr.getBrowser();
 //                browser.setPerspective(Perspective.TaskMonitoring);
                 setVisible(false);
@@ -269,7 +284,7 @@ public class MaskSearchDialog extends ModalDialog {
             @Override
             protected void hadError(Throwable error) {
                 error.printStackTrace();
-                org.janelia.it.workstation.shared.util.Utils.setDefaultCursor(MaskSearchDialog.this);
+                Utils.setDefaultCursor(MaskSearchDialog.this);
                 JOptionPane.showMessageDialog(MaskSearchDialog.this,
                         "Error submitting job: "+error.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
             }
@@ -288,16 +303,16 @@ public class MaskSearchDialog extends ModalDialog {
     private void startMaskSearch(String path, String topLevelFolderName, String matrixValue, String queryChannel,
                                  String maxHits, String skipZeroes) {
         try {
-            String owner = org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr.getSubjectKey();
+            String owner = SessionMgr.getSubjectKey();
             String process = "MaskSearch";
-            Task task = new MaskSearchTask(new HashSet<Node>(), owner, new ArrayList<org.janelia.it.jacs.model.tasks.Event>(),
+            Task task = new MaskSearchTask(new HashSet<Node>(), owner, new ArrayList<Event>(),
                     new HashSet<TaskParameter>(), path, topLevelFolderName, matrixValue, queryChannel, maxHits, skipZeroes);
             task.setJobName("Mask Search Task");
-            task = org.janelia.it.workstation.api.entity_model.management.ModelMgr.getModelMgr().saveOrUpdateTask(task);
+            task = ModelMgr.getModelMgr().saveOrUpdateTask(task);
             currentTaskId = task.getObjectId();
             final File tmpFile = new File(path);
-            searchRequest = org.janelia.it.workstation.api.entity_model.management.ModelMgr.getModelMgr().submitJob(process, task);
-            org.janelia.it.workstation.shared.workers.TaskMonitoringWorker taskWorker = new org.janelia.it.workstation.shared.workers.TaskMonitoringWorker(currentTaskId) {
+            searchRequest = ModelMgr.getModelMgr().submitJob(process, task);
+            TaskMonitoringWorker taskWorker = new TaskMonitoringWorker(currentTaskId) {
 
                 @Override
                 public String getName() {
@@ -323,16 +338,16 @@ public class MaskSearchDialog extends ModalDialog {
                     return new Callable<Void>() {
                         @Override
                         public Void call() throws Exception {
-                            ArrayList<Entity> tmpFolder = (ArrayList<Entity>) org.janelia.it.workstation.api.entity_model.management.ModelMgr.getModelMgr().getEntitiesByName(folderField.getText().trim());
+                            ArrayList<Entity> tmpFolder = (ArrayList<Entity>) ModelMgr.getModelMgr().getEntitiesByName(folderField.getText().trim());
                             if (null!=tmpFolder && tmpFolder.size()>0 && null!=tmpFolder.get(0).getId()) {
-                                final Entity tmpFolderEntity = org.janelia.it.workstation.api.entity_model.management.ModelMgr.getModelMgr().getEntityById(tmpFolder.get(0).getId());
-                                final org.janelia.it.workstation.gui.framework.outline.EntityOutline entityOutline = org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr.getBrowser().getEntityOutline();
+                                final Entity tmpFolderEntity = ModelMgr.getModelMgr().getEntityById(tmpFolder.get(0).getId());
+                                final EntityOutline entityOutline = SessionMgr.getBrowser().getEntityOutline();
                                 entityOutline.totalRefresh(true, new Callable<Void>() {
                                     @Override
                                     public Void call() throws Exception {
-                                        org.janelia.it.workstation.api.entity_model.management.ModelMgr.getModelMgr().getEntitySelectionModel().selectEntity(org.janelia.it.workstation.api.entity_model.management.EntitySelectionModel.CATEGORY_OUTLINE,
+                                        ModelMgr.getModelMgr().getEntitySelectionModel().selectEntity(EntitySelectionModel.CATEGORY_OUTLINE,
                                                 tmpFolderEntity.getId().toString(), true);
-                                        org.janelia.it.workstation.model.entity.RootedEntity re = new org.janelia.it.workstation.model.entity.RootedEntity(tmpFolderEntity);
+                                        RootedEntity re = new RootedEntity(tmpFolderEntity);
                                         entityOutline.selectEntityByUniqueId(re.getId());
                                         return null;
                                     }
@@ -358,15 +373,15 @@ public class MaskSearchDialog extends ModalDialog {
 //            waitForLoading(taskStatus);
         }
         catch (Exception e) {
-            org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr.getSessionMgr().handleException(e);
+            SessionMgr.getSessionMgr().handleException(e);
         }
     }
 
     /**
      * Wait for the loadRequestStatus to finish before continuing
      */
-    protected void waitForLoading(final org.janelia.it.workstation.api.entity_model.fundtype.TaskRequestStatus ls) {
-        if (ls.getTaskRequestState() == org.janelia.it.workstation.api.entity_model.fundtype.TaskRequestStatus.RUNNING || ls.getTaskRequestState() == org.janelia.it.workstation.api.entity_model.fundtype.TaskRequestStatus.WAITING) {
+    protected void waitForLoading(final TaskRequestStatus ls) {
+        if (ls.getTaskRequestState() == TaskRequestStatus.RUNNING || ls.getTaskRequestState() == TaskRequestStatus.WAITING) {
             ls.addTaskRequestStatusObserver(new TaskObserver(Thread.currentThread()), false);
             synchronized (this) {
                 try {
@@ -378,46 +393,46 @@ public class MaskSearchDialog extends ModalDialog {
         }
     }
 
-    final class SearchWatcher extends org.janelia.it.workstation.api.entity_model.fundtype.TaskThreadBase {
+    final class SearchWatcher extends TaskThreadBase {
 
         boolean monitorState = true;
-        public SearchWatcher(final org.janelia.it.workstation.api.entity_model.fundtype.TaskRequest request) {
+        public SearchWatcher(final TaskRequest request) {
             super(request);
         }
 
-        public SearchWatcher(final org.janelia.it.workstation.api.entity_model.fundtype.TaskRequest request, final boolean monitorState) {
+        public SearchWatcher(final TaskRequest request, final boolean monitorState) {
             super(request);
             this.monitorState = monitorState;
         }
 
         public void run() {
             if (monitorState) {
-                taskRequestStatus.setTaskRequestState(org.janelia.it.workstation.api.entity_model.fundtype.TaskRequestStatus.RUNNING);
+                taskRequestStatus.setTaskRequestState(TaskRequestStatus.RUNNING);
             }
             try {
-                Task task = org.janelia.it.workstation.api.entity_model.management.ModelMgr.getModelMgr().getTaskById(this.taskRequest.getTaskFilter().getTaskId());
+                Task task = ModelMgr.getModelMgr().getTaskById(this.taskRequest.getTaskFilter().getTaskId());
                 if (monitorState) {
                     if (task.isDone()) {
-                        taskRequestStatus.setTaskRequestState(org.janelia.it.workstation.api.entity_model.fundtype.TaskRequestStatus.COMPLETE);
+                        taskRequestStatus.setTaskRequestState(TaskRequestStatus.COMPLETE);
                     }
                 }
 
             }
             catch (Exception ex) {
-                org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr.getSessionMgr().handleException(ex);
+                SessionMgr.getSessionMgr().handleException(ex);
             }
         }
     }
 
-    static final class TaskObserver extends org.janelia.it.workstation.api.entity_model.access.TaskRequestStatusObserverAdapter {
+    static final class TaskObserver extends TaskRequestStatusObserverAdapter {
         final Thread waitingThread;
 
         public TaskObserver(final Thread waitingThread) {
             this.waitingThread = waitingThread;
         }
 
-        public void stateChanged(final org.janelia.it.workstation.api.entity_model.fundtype.TaskRequestStatus loadRequestStatus, final org.janelia.it.workstation.api.entity_model.fundtype.TaskRequestState newState) {
-            if (loadRequestStatus.getTaskRequestState() == org.janelia.it.workstation.api.entity_model.fundtype.TaskRequestStatus.COMPLETE) {
+        public void stateChanged(final TaskRequestStatus loadRequestStatus, final TaskRequestState newState) {
+            if (loadRequestStatus.getTaskRequestState() == TaskRequestStatus.COMPLETE) {
                 loadRequestStatus.removeTaskRequestStatusObserver(this);
                 waitingThread.interrupt();
             }

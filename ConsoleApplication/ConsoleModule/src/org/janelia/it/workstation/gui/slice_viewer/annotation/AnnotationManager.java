@@ -1,5 +1,6 @@
 package org.janelia.it.workstation.gui.slice_viewer.annotation;
 
+import org.janelia.it.workstation.api.entity_model.management.ModelMgr;
 import org.janelia.it.workstation.geom.Vec3;
 import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.workstation.gui.slice_viewer.QuadViewUi;
@@ -10,10 +11,12 @@ import org.janelia.it.workstation.octree.ZoomedVoxelIndex;
 import org.janelia.it.workstation.shared.workers.SimpleWorker;
 import org.janelia.it.workstation.signal.Slot;
 import org.janelia.it.workstation.signal.Slot1;
+import org.janelia.it.workstation.tracing.AnchoredVoxelPath;
 import org.janelia.it.workstation.tracing.PathTraceToParentRequest;
 import org.janelia.it.jacs.model.entity.Entity;
 import org.janelia.it.jacs.model.entity.EntityConstants;
 import org.janelia.it.jacs.model.user_data.tiledMicroscope.*;
+import org.janelia.it.workstation.tracing.PathTraceToParentWorker;
 
 import javax.swing.*;
 import java.awt.*;
@@ -38,7 +41,7 @@ elements of what's been done; that's handled by signals emitted from AnnotationM
 */
 {
 
-    org.janelia.it.workstation.api.entity_model.management.ModelMgr modelMgr;
+    ModelMgr modelMgr;
 
     // annotation model object
     private AnnotationModel annotationModel;
@@ -148,9 +151,9 @@ elements of what's been done; that's handled by signals emitted from AnnotationM
         }
     };
 
-    public Slot1<org.janelia.it.workstation.tracing.AnchoredVoxelPath> addPathRequestedSlot = new Slot1<org.janelia.it.workstation.tracing.AnchoredVoxelPath>() {
+    public Slot1<AnchoredVoxelPath> addPathRequestedSlot = new Slot1<AnchoredVoxelPath>() {
         @Override
-        public void execute(org.janelia.it.workstation.tracing.AnchoredVoxelPath voxelPath) {
+        public void execute(AnchoredVoxelPath voxelPath) {
             if (voxelPath != null) {
                 TmAnchoredPathEndpoints endpoints = new TmAnchoredPathEndpoints(
                         voxelPath.getSegmentIndex().getAnchor1Guid(),
@@ -187,7 +190,7 @@ elements of what's been done; that's handled by signals emitted from AnnotationM
     public AnnotationManager(AnnotationModel annotationModel, QuadViewUi quadViewUi) {
         this.annotationModel = annotationModel;
         this.quadViewUi = quadViewUi;
-        modelMgr = org.janelia.it.workstation.api.entity_model.management.ModelMgr.getModelMgr();
+        modelMgr = ModelMgr.getModelMgr();
     }
 
     public Entity getInitialEntity() {
@@ -957,7 +960,7 @@ elements of what's been done; that's handled by signals emitted from AnnotationM
         request.setXyz2(new Vec3(parent.getX(), parent.getY(), parent.getZ()));
 
         // tracing:
-        org.janelia.it.workstation.tracing.PathTraceToParentWorker worker = new org.janelia.it.workstation.tracing.PathTraceToParentWorker(request, AUTOMATIC_TRACING_TIMEOUT);
+        PathTraceToParentWorker worker = new PathTraceToParentWorker(request, AUTOMATIC_TRACING_TIMEOUT);
         worker.pathTracedSignal.connect(addPathRequestedSlot);
         worker.execute();
 

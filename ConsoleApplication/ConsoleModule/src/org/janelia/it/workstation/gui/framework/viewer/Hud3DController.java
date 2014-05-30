@@ -8,6 +8,7 @@ package org.janelia.it.workstation.gui.framework.viewer;
  *
  * A kind of controller class. We use this for setting up HUD's 3D with new info.
  */
+import org.janelia.it.workstation.gui.util.Icons;
 import org.janelia.it.workstation.gui.viewer3d.Mip3d;
 
 import javax.swing.*;
@@ -140,7 +141,7 @@ public class Hud3DController implements ActionListener {
     private void markBusy() {
         // Testing existance, and removing the busy label here implies this method can be called state-ignorant.
         if ( busyLabel == null ) {
-            busyLabel = new JLabel(org.janelia.it.workstation.gui.util.Icons.getLoadingIcon());
+            busyLabel = new JLabel(Icons.getLoadingIcon());
         }
         hud.remove(busyLabel);
         hud.remove(mip3d);

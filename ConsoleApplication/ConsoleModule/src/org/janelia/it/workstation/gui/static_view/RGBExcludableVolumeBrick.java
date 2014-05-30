@@ -1,7 +1,14 @@
 package org.janelia.it.workstation.gui.static_view;
 
 import org.janelia.it.workstation.geom.CoordinateAxis;
+import org.janelia.it.workstation.geom.Vec3;
+import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.workstation.gui.static_view.shader.RGBExcludableShader;
+import org.janelia.it.workstation.gui.viewer3d.BoundingBox3d;
+import org.janelia.it.workstation.gui.viewer3d.VolumeBrickI;
+import org.janelia.it.workstation.gui.viewer3d.VolumeModel;
+import org.janelia.it.workstation.gui.viewer3d.buffering.VtxCoordBufMgr;
+import org.janelia.it.workstation.gui.viewer3d.texture.TextureDataI;
 import org.janelia.it.workstation.gui.viewer3d.texture.TextureMediator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -18,7 +25,7 @@ import java.util.List;
  * @author brunsc
  *
  */
-public class RGBExcludableVolumeBrick implements org.janelia.it.workstation.gui.viewer3d.VolumeBrickI
+public class RGBExcludableVolumeBrick implements VolumeBrickI
 {
     public enum RenderMethod {MAXIMUM_INTENSITY, ALPHA_BLENDING}
 
@@ -45,8 +52,8 @@ public class RGBExcludableVolumeBrick implements org.janelia.it.workstation.gui.
 
     private boolean bIsInitialized;
 
-    private org.janelia.it.workstation.gui.viewer3d.buffering.VtxCoordBufMgr bufferManager;
-    private org.janelia.it.workstation.gui.viewer3d.VolumeModel volumeModel;
+    private VtxCoordBufMgr bufferManager;
+    private VolumeModel volumeModel;
 
     private static Logger logger = LoggerFactory.getLogger( RGBExcludableVolumeBrick.class );
 
@@ -67,8 +74,8 @@ public class RGBExcludableVolumeBrick implements org.janelia.it.workstation.gui.
 
     }
 
-    public RGBExcludableVolumeBrick(org.janelia.it.workstation.gui.viewer3d.VolumeModel volumeModel) {
-        bufferManager = new org.janelia.it.workstation.gui.viewer3d.buffering.VtxCoordBufMgr();
+    public RGBExcludableVolumeBrick(VolumeModel volumeModel) {
+        bufferManager = new VtxCoordBufMgr();
         setVolumeModel( volumeModel );
     }
 
@@ -110,7 +117,7 @@ public class RGBExcludableVolumeBrick implements org.janelia.it.workstation.gui.
 
                 bBuffersNeedUpload = false;
             } catch ( Exception ex ) {
-                org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr.getSessionMgr().handleException( ex );
+                SessionMgr.getSessionMgr().handleException( ex );
             }
         }
 		// tidy up
@@ -183,11 +190,11 @@ public class RGBExcludableVolumeBrick implements org.janelia.it.workstation.gui.
 		// or backward.
 		// "InGround" means in the WORLD object reference frame.
 		// (the view vector in the EYE reference frame is always [0,0,-1])
-		org.janelia.it.workstation.geom.Vec3 viewVectorInGround = volumeModel.getCamera3d().getRotation().times(new org.janelia.it.workstation.geom.Vec3(0,0,1));
+		Vec3 viewVectorInGround = volumeModel.getCamera3d().getRotation().times(new Vec3(0,0,1));
 
 		// Compute the principal axis of the view direction; that's the direction we will slice along.
 		CoordinateAxis a1 = CoordinateAxis.X; // First guess principal axis is X.  Who knows?
-		org.janelia.it.workstation.geom.Vec3 vv = viewVectorInGround;
+		Vec3 vv = viewVectorInGround;
 		if ( Math.abs(vv.y()) > Math.abs(vv.get(a1.index())) )
 			a1 = CoordinateAxis.Y; // OK, maybe Y axis is principal
 		if ( Math.abs(vv.z()) > Math.abs(vv.get(a1.index())) )
@@ -222,9 +229,9 @@ public class RGBExcludableVolumeBrick implements org.janelia.it.workstation.gui.
 	}
 
     @Override
-	public org.janelia.it.workstation.gui.viewer3d.BoundingBox3d getBoundingBox3d() {
-		org.janelia.it.workstation.gui.viewer3d.BoundingBox3d result = new org.janelia.it.workstation.gui.viewer3d.BoundingBox3d();
-		org.janelia.it.workstation.geom.Vec3 half = new org.janelia.it.workstation.geom.Vec3(0,0,0);
+	public BoundingBox3d getBoundingBox3d() {
+		BoundingBox3d result = new BoundingBox3d();
+		Vec3 half = new Vec3(0,0,0);
 		for (int i = 0; i < 3; ++i)
 			half.set(i, 0.5 * signalTextureMediator.getVolumeMicrometers()[i]);
 		result.include(half.minus());
@@ -234,7 +241,7 @@ public class RGBExcludableVolumeBrick implements org.janelia.it.workstation.gui.
 
     //---------------------------------IMPLEMENT VolumeDataAcceptor
     @Override
-    public void setTextureData(org.janelia.it.workstation.gui.viewer3d.texture.TextureDataI textureData) {
+    public void setTextureData(TextureDataI textureData) {
         if ( signalTextureMediator == null ) {
             signalTextureMediator = new TextureMediator();
             textureMediators.add( signalTextureMediator );
@@ -252,9 +259,9 @@ public class RGBExcludableVolumeBrick implements org.janelia.it.workstation.gui.
     }
 
     /** This is a constructor-helper.  It has the listener setup required to properly use the volume model. */
-    private void setVolumeModel( org.janelia.it.workstation.gui.viewer3d.VolumeModel volumeModel ) {
+    private void setVolumeModel( VolumeModel volumeModel ) {
         this.volumeModel = volumeModel;
-        org.janelia.it.workstation.gui.viewer3d.VolumeModel.UpdateListener updateVolumeListener = new org.janelia.it.workstation.gui.viewer3d.VolumeModel.UpdateListener() {
+        VolumeModel.UpdateListener updateVolumeListener = new VolumeModel.UpdateListener() {
             @Override
             public void updateVolume() {
                 refresh();

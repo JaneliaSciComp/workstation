@@ -1,5 +1,9 @@
 package org.janelia.it.workstation.gui.opengl.stereo3d;
 
+import org.janelia.it.workstation.gui.opengl.GLActorContext;
+import org.janelia.it.workstation.gui.opengl.GLError;
+import org.janelia.it.workstation.gui.opengl.GLSceneComposer;
+
 import javax.media.opengl.GL;
 import javax.media.opengl.GL2;
 import javax.media.opengl.GL2GL3;
@@ -11,15 +15,15 @@ public class HardwareStereoMode extends BasicStereoMode
 {
     
     @Override
-    public void display(org.janelia.it.workstation.gui.opengl.GLActorContext actorContext,
-            org.janelia.it.workstation.gui.opengl.GLSceneComposer composer)
+    public void display(GLActorContext actorContext,
+            GLSceneComposer composer)
     {
         GLAutoDrawable glDrawable = actorContext.getGLAutoDrawable();
         updateViewport(glDrawable);
 
         if (canDisplay(glDrawable)) {
             GL gl = glDrawable.getGL();
-            org.janelia.it.workstation.gui.opengl.GLError.checkGlError(gl, "hardware stereo 44");
+            GLError.checkGlError(gl, "hardware stereo 44");
             GL2GL3 gl2gl3 = gl.getGL2GL3();
             
             gl.glClearColor(0,0,0,0);
@@ -33,7 +37,7 @@ public class HardwareStereoMode extends BasicStereoMode
             gl.glClear(GL.GL_COLOR_BUFFER_BIT);
             composer.displayScene(actorContext);
             
-            org.janelia.it.workstation.gui.opengl.GLError.checkGlError(gl, "hardware stereo 59");
+            GLError.checkGlError(gl, "hardware stereo 59");
             // Left
             setLeftEyeView(actorContext, composer.getCameraScreenGeometry());
             gl2gl3.glDrawBuffer(GL2.GL_BACK_LEFT);
@@ -41,9 +45,9 @@ public class HardwareStereoMode extends BasicStereoMode
             composer.displayScene(actorContext);
     
             // Restore default double buffer mode
-            org.janelia.it.workstation.gui.opengl.GLError.checkGlError(gl, "hardware stereo 69");
+            GLError.checkGlError(gl, "hardware stereo 69");
             gl2gl3.glDrawBuffer(GL2GL3.GL_BACK_LEFT);
-            org.janelia.it.workstation.gui.opengl.GLError.checkGlError(gl, "hardware stereo 71");
+            GLError.checkGlError(gl, "hardware stereo 71");
         }
         else {
             setMonoscopicView(actorContext, composer.getCameraScreenGeometry());

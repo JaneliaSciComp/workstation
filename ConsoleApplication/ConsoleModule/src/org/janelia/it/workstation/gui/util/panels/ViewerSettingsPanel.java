@@ -2,8 +2,11 @@ package org.janelia.it.workstation.gui.util.panels;
 
 import org.janelia.it.workstation.gui.framework.pref_controller.PrefController;
 import org.janelia.it.workstation.gui.framework.roles.PrefEditor;
+import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
+import org.janelia.it.workstation.gui.framework.viewer.ImagesPanel;
 
 import javax.swing.*;
+import javax.swing.border.TitledBorder;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 import java.awt.*;
@@ -25,16 +28,16 @@ public class ViewerSettingsPanel extends JPanel implements PrefEditor {
     JCheckBox onlySessionAnnotations = new JCheckBox();
     JCheckBox hideAnnotatedImages = new JCheckBox();
     JCheckBox showAnnotationTables = new JCheckBox();
-    JSlider annotationTableHeight = new JSlider(org.janelia.it.workstation.gui.framework.viewer.ImagesPanel.MIN_TABLE_HEIGHT, org.janelia.it.workstation.gui.framework.viewer.ImagesPanel.MAX_TABLE_HEIGHT, org.janelia.it.workstation.gui.framework.viewer.ImagesPanel.DEFAULT_TABLE_HEIGHT);
+    JSlider annotationTableHeight = new JSlider(ImagesPanel.MIN_TABLE_HEIGHT, ImagesPanel.MAX_TABLE_HEIGHT, ImagesPanel.DEFAULT_TABLE_HEIGHT);
     
-    org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr sessionMgr = org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr.getSessionMgr();
+    SessionMgr sessionMgr = SessionMgr.getSessionMgr();
 
     public ViewerSettingsPanel(JFrame parentFrame) {
         try {
             jbInit();
         }
         catch (Exception e) {
-            org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr.getSessionMgr().handleException(e);
+            SessionMgr.getSessionMgr().handleException(e);
         }
     }
 
@@ -52,7 +55,7 @@ public class ViewerSettingsPanel extends JPanel implements PrefEditor {
     	
     	JPanel interfaceOptions = new JPanel();
         interfaceOptions.setLayout(new BoxLayout(interfaceOptions, BoxLayout.Y_AXIS));
-        interfaceOptions.setBorder(new javax.swing.border.TitledBorder("Interface Options"));
+        interfaceOptions.setBorder(new TitledBorder("Interface Options"));
         
         disableImageDrag.setText("Disable drag and drop in the image viewer");
         disableImageDrag.addActionListener(new ActionListener() {
@@ -79,7 +82,7 @@ public class ViewerSettingsPanel extends JPanel implements PrefEditor {
     	
     	JPanel imageOptions = new JPanel();
         imageOptions.setLayout(new BoxLayout(imageOptions, BoxLayout.Y_AXIS));
-        imageOptions.setBorder(new javax.swing.border.TitledBorder("Image Options"));
+        imageOptions.setBorder(new TitledBorder("Image Options"));
         
         invertColorSpace.setText("Invert colors on all images");
         invertColorSpace.addActionListener(new ActionListener() {
@@ -106,7 +109,7 @@ public class ViewerSettingsPanel extends JPanel implements PrefEditor {
         
         JPanel annotationPanel = new JPanel();
         annotationPanel.setLayout(new BoxLayout(annotationPanel, BoxLayout.Y_AXIS));
-        annotationPanel.setBorder(new javax.swing.border.TitledBorder("Annotation Options"));
+        annotationPanel.setBorder(new TitledBorder("Annotation Options"));
         
         
         onlySessionAnnotations.setText("Only show annotations within the current annotation session");
@@ -146,7 +149,7 @@ public class ViewerSettingsPanel extends JPanel implements PrefEditor {
 		});
 
         if (sessionMgr.getModelProperty(ANNOTATION_TABLES_HEIGHT_PROPERTY) == null) {
-        	sessionMgr.setModelProperty(ANNOTATION_TABLES_HEIGHT_PROPERTY, org.janelia.it.workstation.gui.framework.viewer.ImagesPanel.DEFAULT_TABLE_HEIGHT);
+        	sessionMgr.setModelProperty(ANNOTATION_TABLES_HEIGHT_PROPERTY, ImagesPanel.DEFAULT_TABLE_HEIGHT);
         }
         else {
         	annotationTableHeight.setValue((Integer)sessionMgr.getModelProperty(ANNOTATION_TABLES_HEIGHT_PROPERTY));

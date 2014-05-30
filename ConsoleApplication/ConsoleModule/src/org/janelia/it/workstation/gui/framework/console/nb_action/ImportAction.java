@@ -8,6 +8,7 @@ package org.janelia.it.workstation.gui.framework.console.nb_action;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 
+import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
 import org.openide.awt.ActionID;
 import org.openide.awt.ActionReference;
 import org.openide.awt.ActionReferences;
@@ -34,7 +35,7 @@ public final class ImportAction implements ActionListener {
     }
     
     private void menuFileImport_actionPerformed() {
-        org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr.getBrowser().getImportDialog().showDialog(null);
+        SessionMgr.getBrowser().getImportDialog().showDialog(null);
     }
 
 }

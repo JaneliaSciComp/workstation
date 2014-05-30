@@ -27,7 +27,7 @@ extends AbstractTextureLoadAdapter
 	throws IOException
 	{
 		this.urlStalk = urlStalk;
-		tileFormat.setIndexStyle(org.janelia.it.workstation.gui.slice_viewer.TileIndex.IndexStyle.QUADTREE);
+		tileFormat.setIndexStyle(TileIndex.IndexStyle.QUADTREE);
 		parseMetadata(urlStalk);
 	}
 	
@@ -57,7 +57,7 @@ extends AbstractTextureLoadAdapter
 	}
 
 	@Override
-	public org.janelia.it.workstation.gui.slice_viewer.TextureData2dGL loadToRam(org.janelia.it.workstation.gui.slice_viewer.TileIndex index)
+	public TextureData2dGL loadToRam(TileIndex index)
 	throws TileLoadError, MissingTileException
 	{
 		int z = index.getZ();
@@ -90,7 +90,7 @@ extends AbstractTextureLoadAdapter
 		} catch (IOException e) {
 			throw new TileLoadError(e);
 		}
-		org.janelia.it.workstation.gui.slice_viewer.TextureData2dGL tex = new org.janelia.it.workstation.gui.slice_viewer.TextureData2dGL();
+		TextureData2dGL tex = new TextureData2dGL();
 		tex.loadRenderedImage(image);
 		return tex;
 	}

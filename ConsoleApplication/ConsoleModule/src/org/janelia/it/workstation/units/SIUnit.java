@@ -1,6 +1,6 @@
 package org.janelia.it.workstation.units;
 
-public class SIUnit<D extends PhysicalDimension> implements org.janelia.it.workstation.units.PhysicalUnit<D>
+public class SIUnit<D extends PhysicalDimension> implements PhysicalUnit<D>
 {
 	private String name;
 	private String symbol;

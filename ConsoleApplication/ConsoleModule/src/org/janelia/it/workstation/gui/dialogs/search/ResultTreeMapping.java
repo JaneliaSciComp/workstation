@@ -3,6 +3,7 @@ package org.janelia.it.workstation.gui.dialogs.search;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.janelia.it.workstation.api.entity_model.management.ModelMgr;
 import org.janelia.it.workstation.gui.framework.outline.EntityTree;
 import org.janelia.it.jacs.compute.api.support.EntityMapStep;
 import org.janelia.it.jacs.compute.api.support.MappedId;
@@ -74,7 +75,7 @@ public class ResultTreeMapping {
 		for(EntityMapStep step : downMappingSteps) {
 			downMapping.add(step.getEntityType());
 		}
-		return org.janelia.it.workstation.api.entity_model.management.ModelMgr.getModelMgr().getProjectedResults(entityIds, upMapping, downMapping);
+		return ModelMgr.getModelMgr().getProjectedResults(entityIds, upMapping, downMapping);
 	}
 	
 	private List<String> getFullPaths(String[] path) {

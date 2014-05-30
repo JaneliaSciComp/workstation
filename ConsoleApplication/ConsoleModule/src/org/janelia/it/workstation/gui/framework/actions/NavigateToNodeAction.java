@@ -2,6 +2,8 @@ package org.janelia.it.workstation.gui.framework.actions;
 
 import org.janelia.it.jacs.model.entity.EntityData;
 import org.janelia.it.jacs.model.ontology.OntologyElement;
+import org.janelia.it.workstation.gui.framework.outline.OntologyOutline;
+import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
 
 /**
  * This action expands or collapses the corresponding entity node in the ontology tree.
@@ -12,7 +14,7 @@ public class NavigateToNodeAction extends OntologyElementAction {
 
     @Override
     public void doAction() {
-        final org.janelia.it.workstation.gui.framework.outline.OntologyOutline ontologyOutline = org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr.getBrowser().getOntologyOutline();
+        final OntologyOutline ontologyOutline = SessionMgr.getBrowser().getOntologyOutline();
         
         OntologyElement element = getOntologyElement();
         if (element==null) {

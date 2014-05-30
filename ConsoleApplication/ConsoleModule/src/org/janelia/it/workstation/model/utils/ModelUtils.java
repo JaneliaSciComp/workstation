@@ -1,7 +1,7 @@
 package org.janelia.it.workstation.model.utils;
 
-import com.google.common.collect.ComparisonChain;
-import com.google.common.collect.Ordering;
+import static org.janelia.it.jacs.shared.utils.EntityUtils.areLoaded;
+
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -11,11 +11,14 @@ import java.util.List;
 import org.janelia.it.jacs.model.entity.Entity;
 import org.janelia.it.jacs.model.entity.EntityConstants;
 import org.janelia.it.jacs.model.entity.EntityData;
-import static org.janelia.it.jacs.shared.utils.EntityUtils.areLoaded;
 import org.janelia.it.jacs.shared.utils.StringUtils;
 import org.janelia.it.workstation.api.entity_model.management.ModelMgr;
+import org.janelia.it.workstation.model.domain.EntityWrapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import com.google.common.collect.ComparisonChain;
+import com.google.common.collect.Ordering;
 
 /**
  * Utilities for dealing with model objects.
@@ -26,9 +29,9 @@ public class ModelUtils {
 
     private static final Logger log = LoggerFactory.getLogger(ModelUtils.class);
     
-    public static Collection<Entity> getInternalEntities(Collection<org.janelia.it.workstation.model.domain.EntityWrapper> wrappers) {
+    public static Collection<Entity> getInternalEntities(Collection<EntityWrapper> wrappers) {
         List<Entity> entities = new ArrayList<Entity>();
-        for (org.janelia.it.workstation.model.domain.EntityWrapper wrapper : wrappers) {
+        for(EntityWrapper wrapper : wrappers) {
             entities.add(wrapper.getInternalEntity());
         }
         return entities;

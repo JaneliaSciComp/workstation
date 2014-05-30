@@ -1,5 +1,8 @@
 package org.janelia.it.workstation.gui.framework.console;
 
+import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
+import org.janelia.it.workstation.gui.util.MailDialogueBox;
+
 import javax.swing.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -19,7 +22,7 @@ public class HelpMenu extends JMenu {
     public HelpMenu(Browser console) {
         super("Help");
         this.setMnemonic('H');
-        parentFrame = org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr.getMainFrame();
+        parentFrame = SessionMgr.getMainFrame();
         add(new JMenuItem("Call Christopher - x4662"));
         add(new JMenuItem("Call Don    - x4656"));
         add(new JMenuItem("Call Eric   - x4655"));
@@ -38,8 +41,8 @@ public class HelpMenu extends JMenu {
     }
 
     private void bugReport_actionPerformed(){
-        org.janelia.it.workstation.gui.util.MailDialogueBox popup = new org.janelia.it.workstation.gui.util.MailDialogueBox(parentFrame,
-                (String) org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr.getSessionMgr().getModelProperty(org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr.USER_EMAIL),
+        MailDialogueBox popup = new MailDialogueBox(parentFrame,
+                (String) SessionMgr.getSessionMgr().getModelProperty(SessionMgr.USER_EMAIL),
                 "Bug report");
         popup.showPopupThenSendEmail();
     }

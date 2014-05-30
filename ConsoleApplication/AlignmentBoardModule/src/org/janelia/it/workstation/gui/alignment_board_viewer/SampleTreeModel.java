@@ -5,6 +5,7 @@ import java.util.List;
 
 import javax.swing.event.TreeModelListener;
 import javax.swing.tree.TreeModel;
+import javax.swing.tree.TreePath;
 
 import org.janelia.it.workstation.api.entity_model.management.ModelMgr;
 import org.janelia.it.workstation.gui.alignment_board.ab_mgr.AlignmentBoardMgr;
@@ -123,17 +124,17 @@ public class SampleTreeModel implements TreeModel {
     }
 
     @Override
-    public void addTreeModelListener(javax.swing.event.TreeModelListener l) {
+    public void addTreeModelListener(TreeModelListener l) {
         listeners.add(l);
     }
 
     @Override
-    public void removeTreeModelListener(javax.swing.event.TreeModelListener l) {
+    public void removeTreeModelListener(TreeModelListener l) {
         listeners.remove(l);
     }
     
     @Override
-    public void valueForPathChanged(javax.swing.tree.TreePath path, Object newValue) {
+    public void valueForPathChanged(TreePath path, Object newValue) {
         throw new AssertionError("This method should never be called");
     }
 

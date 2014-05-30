@@ -9,6 +9,7 @@ import java.util.Vector;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import org.janelia.it.workstation.geom.UnitVec3;
+import org.janelia.it.workstation.geom.Vec3;
 
 public class PolygonalMesh {
     private List<Face> faces = new Vector<Face>();
@@ -40,11 +41,11 @@ public class PolygonalMesh {
             if (face.computedNormal != null)
                 continue;
             // 1) collect first three vertices as Vec3
-            org.janelia.it.workstation.geom.Vec3[] nv = new org.janelia.it.workstation.geom.Vec3[3];
+            Vec3[] nv = new Vec3[3];
             for (int i = 0; i < 3; ++i) {
                 int v = face.vertexIndexes.get(i);
                 PolygonalMesh.Vertex vtx = getVertexes().get(v-1);
-                nv[i] = new org.janelia.it.workstation.geom.Vec3(vtx.getX(), vtx.getY(), vtx.getZ()).times(1.0/vtx.getW());
+                nv[i] = new Vec3(vtx.getX(), vtx.getY(), vtx.getZ()).times(1.0/vtx.getW());
             }
             face.computedNormal = new UnitVec3(nv[2].minus(nv[1]).cross(nv[0].minus(nv[1])));
         }        
@@ -56,9 +57,9 @@ public class PolygonalMesh {
     public void computeVertexNormals() {
         // Average all face normals for each vertex
         int sv = this.vertexes.size();
-        org.janelia.it.workstation.geom.Vec3[] vn = new org.janelia.it.workstation.geom.Vec3[sv];
+        Vec3[] vn = new Vec3[sv];
         // Initialize to zero
-        org.janelia.it.workstation.geom.Vec3 zeroVec3 = new org.janelia.it.workstation.geom.Vec3(0,0,0);
+        Vec3 zeroVec3 = new Vec3(0,0,0);
         for (int i = 0; i < sv; ++i)
             vn[i] = zeroVec3;
         // Average all faces vertex participates in

@@ -11,6 +11,6 @@ import org.janelia.it.workstation.gui.viewer3d.texture.TextureDataI;
  * Implement this to take inputs destined for a constructor, and make the right volume brick.
  */
 public interface VolumeBrickFactory {
-    VolumeBrickI getVolumeBrick( org.janelia.it.workstation.gui.viewer3d.VolumeModel model );
-    VolumeBrickI getVolumeBrick( org.janelia.it.workstation.gui.viewer3d.VolumeModel model, TextureDataI maskTextureData, TextureDataI colorMapTextureData );
+    VolumeBrickI getVolumeBrick( VolumeModel model );
+    VolumeBrickI getVolumeBrick( VolumeModel model, TextureDataI maskTextureData, TextureDataI colorMapTextureData );
 }

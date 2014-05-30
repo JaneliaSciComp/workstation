@@ -11,8 +11,16 @@ import java.util.concurrent.Callable;
 
 import javax.swing.*;
 
+import org.janelia.it.workstation.api.entity_model.management.EntitySelectionModel;
+import org.janelia.it.workstation.api.entity_model.management.ModelMgr;
+import org.janelia.it.workstation.gui.framework.outline.EntitySelectionHistory;
 import org.janelia.it.workstation.gui.framework.outline.EntityViewerState;
+import org.janelia.it.workstation.gui.framework.session_mgr.BrowserModel;
+import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.workstation.gui.framework.session_mgr.SessionModelListener;
+import org.janelia.it.workstation.gui.util.Icons;
+import org.janelia.it.workstation.gui.util.MouseForwarder;
+import org.janelia.it.workstation.model.entity.RootedEntity;
 import org.janelia.it.workstation.shared.util.ConcurrentUtils;
 import org.janelia.it.workstation.shared.workers.SimpleWorker;
 import org.janelia.it.jacs.model.entity.Entity;
@@ -27,7 +35,7 @@ public abstract class TextViewer extends Viewer {
     protected ViewerToolbar toolbar;
     protected JTextArea textArea;
     protected JScrollPane scrollPane;
-    protected org.janelia.it.workstation.model.entity.RootedEntity contextRootedEntity;
+    protected RootedEntity contextRootedEntity;
     protected SessionModelListener sessionModelListener;
 
     public TextViewer(ViewerPane viewerPane) {
@@ -38,7 +46,7 @@ public abstract class TextViewer extends Viewer {
         setFocusable(true);
 
         toolbar = createToolbar();
-        toolbar.addMouseListener(new org.janelia.it.workstation.gui.util.MouseForwarder(this, "JToolBar->ErrorViewer"));
+        toolbar.addMouseListener(new MouseForwarder(this, "JToolBar->ErrorViewer"));
         add(toolbar, BorderLayout.NORTH);
 
         this.textArea = new JTextArea();
@@ -48,15 +56,15 @@ public abstract class TextViewer extends Viewer {
         this.scrollPane = new JScrollPane(textArea);
         add(scrollPane, BorderLayout.CENTER);
 
-        textArea.addMouseListener(new org.janelia.it.workstation.gui.util.MouseForwarder(this, "JTextPane->ErrorViewer"));
+        textArea.addMouseListener(new MouseForwarder(this, "JTextPane->ErrorViewer"));
 
         sessionModelListener = new SessionModelListener() {
             @Override
-            public void browserAdded(org.janelia.it.workstation.gui.framework.session_mgr.BrowserModel browserModel) {
+            public void browserAdded(BrowserModel browserModel) {
             }
 
             @Override
-            public void browserRemoved(org.janelia.it.workstation.gui.framework.session_mgr.BrowserModel browserModel) {
+            public void browserRemoved(BrowserModel browserModel) {
             }
 
             @Override
@@ -70,7 +78,7 @@ public abstract class TextViewer extends Viewer {
                 }
             }
         };
-        org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr.getSessionMgr().addSessionModelListener(sessionModelListener);
+        SessionMgr.getSessionMgr().addSessionModelListener(sessionModelListener);
     }
 
     protected final ViewerToolbar createToolbar() {
@@ -79,7 +87,7 @@ public abstract class TextViewer extends Viewer {
 
             @Override
             protected void goBack() {
-                final org.janelia.it.workstation.gui.framework.outline.EntitySelectionHistory history = getViewerPane().getEntitySelectionHistory();
+                final EntitySelectionHistory history = getViewerPane().getEntitySelectionHistory();
                 SwingUtilities.invokeLater(new Runnable() {
                     @Override
                     public void run() {
@@ -90,7 +98,7 @@ public abstract class TextViewer extends Viewer {
 
             @Override
             protected void goForward() {
-                final org.janelia.it.workstation.gui.framework.outline.EntitySelectionHistory history = getViewerPane().getEntitySelectionHistory();
+                final EntitySelectionHistory history = getViewerPane().getEntitySelectionHistory();
                 SwingUtilities.invokeLater(new Runnable() {
                     @Override
                     public void run() {
@@ -106,17 +114,17 @@ public abstract class TextViewer extends Viewer {
 
             @Override
             protected JPopupMenu getPopupPathMenu() {
-                List<org.janelia.it.workstation.model.entity.RootedEntity> rootedAncestors = getViewerPane().getRootedAncestors();
+                List<RootedEntity> rootedAncestors = getViewerPane().getRootedAncestors();
                 if (rootedAncestors == null) {
                     return null;
                 }
                 final JPopupMenu pathMenu = new JPopupMenu();
-                for (final org.janelia.it.workstation.model.entity.RootedEntity ancestor : rootedAncestors) {
-                    JMenuItem pathMenuItem = new JMenuItem(ancestor.getEntity().getName(), org.janelia.it.workstation.gui.util.Icons.getIcon(ancestor.getEntity()));
+                for (final RootedEntity ancestor : rootedAncestors) {
+                    JMenuItem pathMenuItem = new JMenuItem(ancestor.getEntity().getName(), Icons.getIcon(ancestor.getEntity()));
                     pathMenuItem.addActionListener(new ActionListener() {
                         @Override
                         public void actionPerformed(ActionEvent e) {
-                            org.janelia.it.workstation.api.entity_model.management.ModelMgr.getModelMgr().getEntitySelectionModel().selectEntity(org.janelia.it.workstation.api.entity_model.management.EntitySelectionModel.CATEGORY_OUTLINE, ancestor.getUniqueId(), true);
+                            ModelMgr.getModelMgr().getEntitySelectionModel().selectEntity(EntitySelectionModel.CATEGORY_OUTLINE, ancestor.getUniqueId(), true);
                         }
                     });
                     pathMenuItem.setEnabled(pathMenu.getComponentCount() > 0);
@@ -131,7 +139,7 @@ public abstract class TextViewer extends Viewer {
     @Override
     public void showLoadingIndicator() {
         removeAll();
-        add(new JLabel(org.janelia.it.workstation.gui.util.Icons.getLoadingIcon()));
+        add(new JLabel(Icons.getLoadingIcon()));
         this.updateUI();
     }
 
@@ -141,7 +149,7 @@ public abstract class TextViewer extends Viewer {
         textArea.setCaretPosition(0);
 
         // Update back/forward navigation
-        org.janelia.it.workstation.gui.framework.outline.EntitySelectionHistory history = getViewerPane().getEntitySelectionHistory();
+        EntitySelectionHistory history = getViewerPane().getEntitySelectionHistory();
         toolbar.getPrevButton().setEnabled(history.isBackEnabled());
         toolbar.getNextButton().setEnabled(history.isNextEnabled());
 
@@ -151,12 +159,12 @@ public abstract class TextViewer extends Viewer {
     }
 
     @Override
-    public void loadEntity(org.janelia.it.workstation.model.entity.RootedEntity rootedEntity) {
+    public void loadEntity(RootedEntity rootedEntity) {
         loadEntity(rootedEntity, null);
     }
 
     @Override
-    public synchronized void loadEntity(final org.janelia.it.workstation.model.entity.RootedEntity rootedEntity, final Callable<Void> success) {
+    public synchronized void loadEntity(final RootedEntity rootedEntity, final Callable<Void> success) {
 
         this.contextRootedEntity = rootedEntity;
         if (contextRootedEntity == null) {
@@ -183,7 +191,7 @@ public abstract class TextViewer extends Viewer {
 
             @Override
             protected void hadError(Throwable error) {
-                org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr.getSessionMgr().handleException(error);
+                SessionMgr.getSessionMgr().handleException(error);
             }
         };
 
@@ -191,7 +199,7 @@ public abstract class TextViewer extends Viewer {
 
     }
 
-    public abstract String getText(org.janelia.it.workstation.model.entity.RootedEntity rootedEntity) throws Exception;
+    public abstract String getText(RootedEntity rootedEntity) throws Exception;
 
     @Override
     public void refresh() {
@@ -214,15 +222,15 @@ public abstract class TextViewer extends Viewer {
 
         SimpleWorker refreshWorker = new SimpleWorker() {
 
-            org.janelia.it.workstation.model.entity.RootedEntity rootedEntity = contextRootedEntity;
+            RootedEntity rootedEntity = contextRootedEntity;
 
             @Override
             protected void doStuff() throws Exception {
-                Entity entity = org.janelia.it.workstation.api.entity_model.management.ModelMgr.getModelMgr().getEntityById(rootedEntity.getEntity().getId());
+                Entity entity = ModelMgr.getModelMgr().getEntityById(rootedEntity.getEntity().getId());
                 if (entity == null) {
                     return;
                 }
-                rootedEntity.setEntity(org.janelia.it.workstation.api.entity_model.management.ModelMgr.getModelMgr().loadLazyEntity(entity, false));
+                rootedEntity.setEntity(ModelMgr.getModelMgr().loadLazyEntity(entity, false));
             }
 
             @Override
@@ -237,7 +245,7 @@ public abstract class TextViewer extends Viewer {
 
             @Override
             protected void hadError(Throwable error) {
-                org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr.getSessionMgr().handleException(error);
+                SessionMgr.getSessionMgr().handleException(error);
             }
         };
 
@@ -257,30 +265,30 @@ public abstract class TextViewer extends Viewer {
 
     @Override
     public void close() {
-        org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr.getSessionMgr().removeSessionModelListener(sessionModelListener);
+        SessionMgr.getSessionMgr().removeSessionModelListener(sessionModelListener);
     }
 
     @Override
-    public List<org.janelia.it.workstation.model.entity.RootedEntity> getRootedEntities() {
-        List<org.janelia.it.workstation.model.entity.RootedEntity> rootedEntities = new ArrayList<org.janelia.it.workstation.model.entity.RootedEntity>();
+    public List<RootedEntity> getRootedEntities() {
+        List<RootedEntity> rootedEntities = new ArrayList<RootedEntity>();
         rootedEntities.add(contextRootedEntity);
         return rootedEntities;
     }
 
     @Override
-    public List<org.janelia.it.workstation.model.entity.RootedEntity> getSelectedEntities() {
-        List<org.janelia.it.workstation.model.entity.RootedEntity> rootedEntities = new ArrayList<org.janelia.it.workstation.model.entity.RootedEntity>();
+    public List<RootedEntity> getSelectedEntities() {
+        List<RootedEntity> rootedEntities = new ArrayList<RootedEntity>();
         rootedEntities.add(contextRootedEntity);
         return rootedEntities;
     }
 
     @Override
-    public org.janelia.it.workstation.model.entity.RootedEntity getRootedEntityById(String uniqueId) {
+    public RootedEntity getRootedEntityById(String uniqueId) {
         return contextRootedEntity.getUniqueId().equals(uniqueId) ? contextRootedEntity : null;
     }
 
     @Override
-    public org.janelia.it.workstation.model.entity.RootedEntity getContextRootedEntity() {
+    public RootedEntity getContextRootedEntity() {
         return contextRootedEntity;
     }
     

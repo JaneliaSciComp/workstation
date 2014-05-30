@@ -32,6 +32,9 @@ import loci.formats.in.*;
 
 import org.apache.commons.httpclient.HttpClient;
 import org.apache.commons.httpclient.methods.GetMethod;
+import org.apache.commons.io.IOUtils;
+import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
+import org.janelia.it.workstation.shared.filestore.PathTranslator;
 import org.janelia.it.workstation.shared.workers.IndeterminateProgressMonitor;
 import org.janelia.it.workstation.shared.workers.SimpleWorker;
 import org.janelia.it.jacs.model.entity.Entity;
@@ -174,7 +177,7 @@ public class Utils {
      */
     public static BufferedImage readImage(String path) throws Exception {
         try {
-            String selectedRenderer = (String) org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr.getSessionMgr().getModelProperty(org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr.DISPLAY_RENDERER_2D);
+            String selectedRenderer = (String) SessionMgr.getSessionMgr().getModelProperty(SessionMgr.DISPLAY_RENDERER_2D);
             
             RendererType2D renderer = selectedRenderer==null ? RendererType2D.LOCI : RendererType2D.valueOf(selectedRenderer);
             BufferedImage image = null;
@@ -186,7 +189,7 @@ public class Utils {
                 try {
                     
                     if (path.startsWith("http://")) {
-                        HttpClient client = org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr.getSessionMgr().getWebDavClient().getHttpClient();
+                        HttpClient client = SessionMgr.getSessionMgr().getWebDavClient().getHttpClient();
                         get = new GetMethod(path);
                         int responseCode = client.executeMethod(get);
                         log.trace("readImage: GET "+responseCode+", path="+path);
@@ -539,7 +542,7 @@ public class Utils {
             
             @Override
             protected void doStuff() throws Exception {
-                file = org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr.getCachedFile(filePath, false);
+                file = SessionMgr.getCachedFile(filePath, false);
             }
             
             @Override
@@ -557,10 +560,10 @@ public class Utils {
             
             @Override
             protected void hadError(Throwable error) {
-                org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr.getSessionMgr().handleException(error);
+                SessionMgr.getSessionMgr().handleException(error);
             }
         };
-        worker.setProgressMonitor(new IndeterminateProgressMonitor(org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr.getMainFrame(), "Retrieving file...", ""));
+        worker.setProgressMonitor(new IndeterminateProgressMonitor(SessionMgr.getMainFrame(), "Retrieving file...", ""));
         worker.execute();
     }
     
@@ -572,13 +575,13 @@ public class Utils {
      */
     public static void processStandardFilepath(final String filePath, final FileCallable callback) {
 
-        final File file = new File(org.janelia.it.workstation.shared.filestore.PathTranslator.convertPath(filePath));
+        final File file = new File(PathTranslator.convertPath(filePath));
         if (file.canRead()) {
             try {
                 callback.call(file);
             }
             catch (Exception e) {
-                org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr.getSessionMgr().handleException(e);
+                SessionMgr.getSessionMgr().handleException(e);
             }
         }
         else {
@@ -586,7 +589,7 @@ public class Utils {
                 @Override
                 public void call(File file) throws Exception {
                     if (file==null) {
-                        JOptionPane.showMessageDialog(org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr.getMainFrame(),
+                        JOptionPane.showMessageDialog(SessionMgr.getMainFrame(),
                                 "Could not open file path", "Error", JOptionPane.ERROR_MESSAGE);
                     }
                     else {
@@ -643,7 +646,7 @@ public class Utils {
                 }
             } 
             finally {
-                org.apache.commons.io.IOUtils.closeQuietly(output);
+                IOUtils.closeQuietly(output);
             }
         } 
         finally {

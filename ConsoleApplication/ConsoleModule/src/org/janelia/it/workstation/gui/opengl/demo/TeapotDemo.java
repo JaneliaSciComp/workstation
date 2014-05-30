@@ -10,10 +10,12 @@ import javax.media.opengl.awt.GLCanvas;
 // GLJPanel won't work with hardware stereo 3d
 // import javax.media.opengl.awt.GLJPanel;
 import javax.swing.JFrame;
+import javax.swing.SwingUtilities;
 
 import org.janelia.it.workstation.geom.Vec3;
 import org.janelia.it.workstation.gui.FullScreenMode;
 import org.janelia.it.workstation.gui.TrackballInteractor;
+import org.janelia.it.workstation.gui.camera.ObservableCamera3d;
 import org.janelia.it.workstation.gui.viewer3d.TeapotActor;
 import org.janelia.it.workstation.gui.camera.BasicObservableCamera3d;
 import org.janelia.it.workstation.gui.opengl.CompositeGLActor;
@@ -26,7 +28,7 @@ public class TeapotDemo extends JFrame
 {
 
 	public static void main(String[] args) {
-        javax.swing.SwingUtilities.invokeLater(new Runnable() {
+        SwingUtilities.invokeLater(new Runnable() {
             public void run() {
             	new TeapotDemo();
             }
@@ -61,7 +63,7 @@ public class TeapotDemo extends JFrame
 		monoActor.addActor(new TeapotActor());
         
 		// Create camera
-		org.janelia.it.workstation.gui.camera.ObservableCamera3d camera = new BasicObservableCamera3d();
+		ObservableCamera3d camera = new BasicObservableCamera3d();
 		camera.setFocus(new Vec3(0, 0, 0));
 		camera.setPixelsPerSceneUnit(200);
 

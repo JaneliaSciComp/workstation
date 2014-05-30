@@ -1,5 +1,9 @@
 package org.janelia.it.workstation.gui.slice_viewer.generator;
 
+import org.janelia.it.workstation.geom.CoordinateAxis;
+import org.janelia.it.workstation.gui.slice_viewer.TileFormat;
+import org.janelia.it.workstation.gui.slice_viewer.TileIndex;
+
 import java.util.Iterator;
 
 /**
@@ -8,14 +12,14 @@ import java.util.Iterator;
  *
  */
 public class MinResSliceGenerator 
-implements Iterable<org.janelia.it.workstation.gui.slice_viewer.TileIndex>, Iterator<org.janelia.it.workstation.gui.slice_viewer.TileIndex>
+implements Iterable<TileIndex>, Iterator<TileIndex>
 {
-	org.janelia.it.workstation.gui.slice_viewer.TileIndex index1, index2;
+	TileIndex index1, index2;
 	int sliceMin, sliceMax;
 	boolean useFirst = true;
-	private org.janelia.it.workstation.geom.CoordinateAxis sliceAxis;
+	private CoordinateAxis sliceAxis;
 
-	public MinResSliceGenerator(org.janelia.it.workstation.gui.slice_viewer.TileFormat tileFormat, org.janelia.it.workstation.geom.CoordinateAxis sliceAxis)
+	public MinResSliceGenerator(TileFormat tileFormat, CoordinateAxis sliceAxis)
 	{
 		this.sliceAxis = sliceAxis;
 		int maxZoom = tileFormat.getZoomLevelCount() - 1;
@@ -27,7 +31,7 @@ implements Iterable<org.janelia.it.workstation.gui.slice_viewer.TileIndex>, Iter
 		// Start at center and move out
 		int slice0 = (sliceMin + sliceMax)/2;
 		xyz[sa] = slice0;
-		index1 = new org.janelia.it.workstation.gui.slice_viewer.TileIndex(xyz[0], xyz[1], xyz[2], maxZoom,
+		index1 = new TileIndex(xyz[0], xyz[1], xyz[2], maxZoom,
 				maxZoom, tileFormat.getIndexStyle(),
 				sliceAxis);
 		index2 = index1.nextSlice();		
@@ -45,8 +49,8 @@ implements Iterable<org.janelia.it.workstation.gui.slice_viewer.TileIndex>, Iter
 	}
 
 	@Override
-	public org.janelia.it.workstation.gui.slice_viewer.TileIndex next() {
-		org.janelia.it.workstation.gui.slice_viewer.TileIndex result = index2;
+	public TileIndex next() {
+		TileIndex result = index2;
 		if (useFirst)
 			result = index1; // because it is the turn of index1
 		if ((index1 == null) || (index1.getCoordinate(sliceAxis.index()) < sliceMin))
@@ -69,7 +73,7 @@ implements Iterable<org.janelia.it.workstation.gui.slice_viewer.TileIndex>, Iter
 	}
 
 	@Override
-	public Iterator<org.janelia.it.workstation.gui.slice_viewer.TileIndex> iterator() {
+	public Iterator<TileIndex> iterator() {
 		return this;
 	}
 

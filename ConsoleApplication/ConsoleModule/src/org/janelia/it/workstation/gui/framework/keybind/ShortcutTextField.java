@@ -31,7 +31,7 @@ public class ShortcutTextField extends JTextField {
 
     protected void processKeyEvent(KeyEvent e) {
         if (e.getID() == KeyEvent.KEY_PRESSED) {
-            if (org.janelia.it.workstation.gui.framework.keybind.KeymapUtil.isModifier(e)) return;
+            if (KeymapUtil.isModifier(e)) return;
             if (e.getKeyCode()==KeyEvent.VK_BACK_SPACE) {
             	setKeyStroke(null);
             }
@@ -43,7 +43,7 @@ public class ShortcutTextField extends JTextField {
 
     public void setKeyStroke(KeyStroke keyStroke) {
         myKeyStroke = keyStroke;
-        setText(keyStroke==null?"": org.janelia.it.workstation.gui.framework.keybind.KeymapUtil.getTextByKeyStroke(keyStroke));
+        setText(keyStroke==null?"": KeymapUtil.getTextByKeyStroke(keyStroke));
         updateCurrentKeyStrokeInfo();
     }
 

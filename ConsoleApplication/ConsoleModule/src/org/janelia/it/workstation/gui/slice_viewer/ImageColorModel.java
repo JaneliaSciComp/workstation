@@ -5,6 +5,7 @@ import java.util.Arrays;
 import java.util.Vector;
 
 import com.google.common.base.Joiner;
+import org.janelia.it.workstation.gui.viewer3d.interfaces.VolumeImage3d;
 import org.janelia.it.workstation.signal.Signal;
 import org.janelia.it.workstation.signal.Slot1;
 
@@ -35,7 +36,7 @@ public class ImageColorModel
 	}
 	**/
 	
-	public ImageColorModel(org.janelia.it.workstation.gui.viewer3d.interfaces.VolumeImage3d volumeImage)
+	public ImageColorModel(VolumeImage3d volumeImage)
 	{
 		reset(volumeImage);
 	}
@@ -209,7 +210,7 @@ public class ImageColorModel
 		colorModelInitializedSignal.emit();
 	}
 	
-	public void reset(org.janelia.it.workstation.gui.viewer3d.interfaces.VolumeImage3d volumeImage)
+	public void reset(VolumeImage3d volumeImage)
 	{
 		if (volumeImage == null)
 			return;

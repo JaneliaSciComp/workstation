@@ -17,8 +17,8 @@ import java.util.concurrent.Callable;
  * @author Eric Trautman
  */
 public abstract class RemoteFileLoader
-        extends CacheLoader<URL, org.janelia.it.workstation.shared.util.filecache.CachedFile>
-        implements Callable<org.janelia.it.workstation.shared.util.filecache.CachedFile> {
+        extends CacheLoader<URL, CachedFile>
+        implements Callable<CachedFile> {
     
     private URL url;
 
@@ -33,19 +33,19 @@ public abstract class RemoteFileLoader
     public abstract LocalFileCache getCache();
 
     @Override
-    public org.janelia.it.workstation.shared.util.filecache.CachedFile call() throws Exception {
+    public CachedFile call() throws Exception {
         return load(url);
     }
 
     @Override
-    public org.janelia.it.workstation.shared.util.filecache.CachedFile load(URL url) throws Exception {
+    public CachedFile load(URL url) throws Exception {
         
-        org.janelia.it.workstation.shared.util.filecache.CachedFile cachedFile;
+        CachedFile cachedFile;
 
         final LocalFileCache cache = getCache();
-        final org.janelia.it.workstation.shared.util.filecache.WebDavClient client = cache.getWebDavClient();
+        final WebDavClient client = cache.getWebDavClient();
 
-        org.janelia.it.workstation.shared.util.filecache.WebDavFile webDavFile = client.findFile(url);
+        WebDavFile webDavFile = client.findFile(url);
 
         // check for catastrophic case of file larger than entire cache
         final long size = webDavFile.getKilobytes();
@@ -116,16 +116,16 @@ public abstract class RemoteFileLoader
      * @throws IllegalStateException
      *   if the local file cannot be created.
      *
-     * @throws org.janelia.it.workstation.shared.util.filecache.WebDavException
+     * @throws WebDavException
      *   if the file cannot be retrieved.
      */
-    protected static org.janelia.it.workstation.shared.util.filecache.CachedFile loadRemoteFile(org.janelia.it.workstation.shared.util.filecache.WebDavFile webDavFile,
+    protected static CachedFile loadRemoteFile(WebDavFile webDavFile,
                                                File tempFile,
                                                File activeFile,
-                                               org.janelia.it.workstation.shared.util.filecache.WebDavClient client)
-            throws IllegalArgumentException, IllegalStateException, org.janelia.it.workstation.shared.util.filecache.WebDavException {
+                                               WebDavClient client)
+            throws IllegalArgumentException, IllegalStateException, WebDavException {
 
-        org.janelia.it.workstation.shared.util.filecache.CachedFile cachedFile = new org.janelia.it.workstation.shared.util.filecache.CachedFile(webDavFile, activeFile);
+        CachedFile cachedFile = new CachedFile(webDavFile, activeFile);
 
         final URL remoteFileUrl = webDavFile.getUrl();
 

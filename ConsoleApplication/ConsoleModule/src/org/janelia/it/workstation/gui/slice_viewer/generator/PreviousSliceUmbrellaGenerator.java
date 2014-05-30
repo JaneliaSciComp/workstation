@@ -1,5 +1,7 @@
 package org.janelia.it.workstation.gui.slice_viewer.generator;
 
+import org.janelia.it.workstation.gui.slice_viewer.TileIndex;
+
 import java.util.Iterator;
 
 /**
@@ -8,19 +10,19 @@ import java.util.Iterator;
  *
  */
 public class PreviousSliceUmbrellaGenerator 
-implements Iterator<org.janelia.it.workstation.gui.slice_viewer.TileIndex>, Iterable<org.janelia.it.workstation.gui.slice_viewer.TileIndex>
+implements Iterator<TileIndex>, Iterable<TileIndex>
 {
 	private int sliceMin;
-	private org.janelia.it.workstation.gui.slice_viewer.TileIndex index;
+	private TileIndex index;
 	private int stepCount = 0;
 	
-	public PreviousSliceUmbrellaGenerator(org.janelia.it.workstation.gui.slice_viewer.TileIndex seed, int sliceMin) {
+	public PreviousSliceUmbrellaGenerator(TileIndex seed, int sliceMin) {
 		this.sliceMin = sliceMin;
 		index = seed.previousSlice();
 	}
 	
 	@Override
-	public Iterator<org.janelia.it.workstation.gui.slice_viewer.TileIndex> iterator() {
+	public Iterator<TileIndex> iterator() {
 		return this;
 	}
 
@@ -30,16 +32,16 @@ implements Iterator<org.janelia.it.workstation.gui.slice_viewer.TileIndex>, Iter
 	}
 
 	@Override
-	public org.janelia.it.workstation.gui.slice_viewer.TileIndex next() {
-		org.janelia.it.workstation.gui.slice_viewer.TileIndex result = index;
+	public TileIndex next() {
+		TileIndex result = index;
 		// Lower resolution as we get farther from center slice
 		if (stepCount == 5) { // lower resolution farther from center
-			org.janelia.it.workstation.gui.slice_viewer.TileIndex i = index.zoomOut();
+			TileIndex i = index.zoomOut();
 			if (i != null)
 				index = i;
 		}
 		if (stepCount == 50) { // lower resolution farther from center
-			org.janelia.it.workstation.gui.slice_viewer.TileIndex i = index.zoomOut();
+			TileIndex i = index.zoomOut();
 			if (i != null)
 				index = i;
 		}

@@ -3,6 +3,14 @@ package org.janelia.it.workstation.gui.alignment_board_viewer;
 import org.janelia.it.workstation.gui.alignment_board.loader.FragmentSizeSetterAndFilter;
 import org.janelia.it.workstation.gui.alignment_board.loader.MaskChanDataAcceptorI;
 import org.janelia.it.workstation.gui.alignment_board.loader.MaskChanMultiFileLoader;
+import org.janelia.it.workstation.gui.alignment_board_viewer.gui_elements.ControlsListener;
+import org.janelia.it.workstation.gui.alignment_board_viewer.masking.TextureBuilderI;
+import org.janelia.it.workstation.gui.alignment_board_viewer.renderable.MaskChanRenderableData;
+import org.janelia.it.workstation.gui.alignment_board_viewer.renderable.RBComparator;
+import org.janelia.it.workstation.gui.alignment_board_viewer.renderable.RDComparator;
+import org.janelia.it.workstation.gui.alignment_board_viewer.volume_builder.RenderablesChannelsBuilder;
+import org.janelia.it.workstation.gui.alignment_board_viewer.volume_export.FilteringAcceptorDecorator;
+import org.janelia.it.workstation.gui.alignment_board_viewer.volume_export.RecoloringAcceptorDecorator;
 import org.janelia.it.workstation.gui.viewer3d.renderable.RenderableBean;
 import org.janelia.it.workstation.gui.alignment_board_viewer.volume_builder.RenderablesMaskBuilder;
 import org.janelia.it.workstation.gui.alignment_board.loader.MaskSingleFileLoader;
@@ -30,7 +38,7 @@ public class FileExportLoadWorker extends SimpleWorker implements VolumeLoader {
 
     public static final int ONLY_ONE_THREAD = 1;  // No thread safety, so constraining to 1-at-a-time.
     private MaskChanMultiFileLoader loader;
-    private org.janelia.it.workstation.gui.alignment_board_viewer.masking.TextureBuilderI textureBuilder;
+    private TextureBuilderI textureBuilder;
     private FileExportParamBean paramBean;
 
     private FileResolver resolver;
@@ -48,7 +56,7 @@ public class FileExportLoadWorker extends SimpleWorker implements VolumeLoader {
     }
 
     @Override
-    public void loadVolume( org.janelia.it.workstation.gui.alignment_board_viewer.renderable.MaskChanRenderableData maskChanRenderableData ) throws Exception {
+    public void loadVolume( MaskChanRenderableData maskChanRenderableData ) throws Exception {
         logger.debug(
                 "In load thread, STARTING load of renderable {}.",
                 maskChanRenderableData.getBean().getTranslatedNum()
@@ -60,7 +68,7 @@ public class FileExportLoadWorker extends SimpleWorker implements VolumeLoader {
             return;
         }
 
-        MaskChanStreamSource streamSource = new MaskChanStreamSource( maskChanRenderableData, resolver, paramBean.getMethod() == org.janelia.it.workstation.gui.alignment_board_viewer.gui_elements.ControlsListener.ExportMethod.color );
+        MaskChanStreamSource streamSource = new MaskChanStreamSource( maskChanRenderableData, resolver, paramBean.getMethod() == ControlsListener.ExportMethod.color );
         if ( ! streamSource.getSanity().isSane() ) {
             logger.warn( streamSource.getSanity().getMessage() );
             return;
@@ -82,14 +90,14 @@ public class FileExportLoadWorker extends SimpleWorker implements VolumeLoader {
         // Cut down the to-renders: use only the larger ones.
         long fragmentFilterSize = paramBean.getFilterSize();
         long maxNeuronCount = paramBean.getMaxNeuronCount();
-        Collection<org.janelia.it.workstation.gui.alignment_board_viewer.renderable.MaskChanRenderableData> filteredRenderableDatas = paramBean.getRenderableDatas();
+        Collection<MaskChanRenderableData> filteredRenderableDatas = paramBean.getRenderableDatas();
         if ( fragmentFilterSize != AlignmentBoardSettings.NO_NEURON_SIZE_CONSTRAINT  ||
              maxNeuronCount !=  AlignmentBoardSettings.NO_NEURON_SIZE_CONSTRAINT ) {
 
             FragmentSizeSetterAndFilter filter = new FragmentSizeSetterAndFilter( fragmentFilterSize, maxNeuronCount );
             filteredRenderableDatas = filter.filter( filteredRenderableDatas );
         }
-        for ( org.janelia.it.workstation.gui.alignment_board_viewer.renderable.MaskChanRenderableData renderableData: filteredRenderableDatas ) {
+        for ( MaskChanRenderableData renderableData: filteredRenderableDatas ) {
             RenderableBean bean = renderableData.getBean();
             renderableBeans.add( bean );
 
@@ -106,18 +114,18 @@ public class FileExportLoadWorker extends SimpleWorker implements VolumeLoader {
             }
         }
 
-        Collections.sort( renderableBeans, Collections.reverseOrder( new org.janelia.it.workstation.gui.alignment_board_viewer.renderable.RBComparator() ) );
+        Collections.sort( renderableBeans, Collections.reverseOrder( new RBComparator() ) );
 
-        List<org.janelia.it.workstation.gui.alignment_board_viewer.renderable.MaskChanRenderableData> sortedRenderableDatas = new ArrayList<org.janelia.it.workstation.gui.alignment_board_viewer.renderable.MaskChanRenderableData>();
+        List<MaskChanRenderableData> sortedRenderableDatas = new ArrayList<MaskChanRenderableData>();
         sortedRenderableDatas.addAll( filteredRenderableDatas );
-        Collections.sort( sortedRenderableDatas, new org.janelia.it.workstation.gui.alignment_board_viewer.renderable.RDComparator( false ) );
+        Collections.sort( sortedRenderableDatas, new RDComparator( false ) );
 
         // Establish the means for extracting the volume mask.
         AlignmentBoardSettings customWritebackSettings = new AlignmentBoardSettings();
         customWritebackSettings.setChosenDownSampleRate(1.0);
         customWritebackSettings.setGammaFactor( paramBean.getGammaFactor() );
 
-        if ( paramBean.getMethod() == org.janelia.it.workstation.gui.alignment_board_viewer.gui_elements.ControlsListener.ExportMethod.binary ) {
+        if ( paramBean.getMethod() == ControlsListener.ExportMethod.binary ) {
             // Using only binary values.
             customWritebackSettings.setShowChannelData( false );
             textureBuilder = new RenderablesMaskBuilder( customWritebackSettings, renderableBeans, true );
@@ -126,12 +134,12 @@ public class FileExportLoadWorker extends SimpleWorker implements VolumeLoader {
             multiThreadedDataLoad( sortedRenderableDatas );
 
         }
-        else if ( paramBean.getMethod() == org.janelia.it.workstation.gui.alignment_board_viewer.gui_elements.ControlsListener.ExportMethod.color ) {
+        else if ( paramBean.getMethod() == ControlsListener.ExportMethod.color ) {
             // Using full color values.
 
             // HERE: change this like RenderablesLoadWorker, with two calls: one for mask, one for chan.
             customWritebackSettings.setShowChannelData( true );
-            textureBuilder = new org.janelia.it.workstation.gui.alignment_board_viewer.volume_builder.RenderablesChannelsBuilder(
+            textureBuilder = new RenderablesChannelsBuilder(
                     customWritebackSettings, null, null, renderableBeans
             );
 
@@ -163,9 +171,9 @@ public class FileExportLoadWorker extends SimpleWorker implements VolumeLoader {
             outerAcceptor = textureBuilder;
         }
         else {
-            outerAcceptor = new org.janelia.it.workstation.gui.alignment_board_viewer.volume_export.FilteringAcceptorDecorator( textureBuilder, paramBean.getCropCoords() );
+            outerAcceptor = new FilteringAcceptorDecorator( textureBuilder, paramBean.getCropCoords() );
         }
-        outerAcceptor = new org.janelia.it.workstation.gui.alignment_board_viewer.volume_export.RecoloringAcceptorDecorator( outerAcceptor, paramBean.getGammaFactor() );
+        outerAcceptor = new RecoloringAcceptorDecorator( outerAcceptor, paramBean.getGammaFactor() );
 
         loader.setAcceptors( Arrays.<MaskChanDataAcceptorI>asList(outerAcceptor) );
     }
@@ -175,7 +183,7 @@ public class FileExportLoadWorker extends SimpleWorker implements VolumeLoader {
      *
      * @param metaDatas one thread for each of these.
      */
-    private void multiThreadedDataLoad(Collection<org.janelia.it.workstation.gui.alignment_board_viewer.renderable.MaskChanRenderableData> metaDatas) {
+    private void multiThreadedDataLoad(Collection<MaskChanRenderableData> metaDatas) {
 
         if ( metaDatas == null  ||  metaDatas.size() == 0 ) {
             logger.info( "No renderables provided." );
@@ -208,10 +216,10 @@ public class FileExportLoadWorker extends SimpleWorker implements VolumeLoader {
 
     /** The multi-thread load may not be used, because of upstream problems with multi-threading. */
     @SuppressWarnings("unused")
-    private void multiThreadedFileLoad(Collection<org.janelia.it.workstation.gui.alignment_board_viewer.renderable.MaskChanRenderableData> metaDatas) {
+    private void multiThreadedFileLoad(Collection<MaskChanRenderableData> metaDatas) {
         // First load the compartments.
         final CyclicBarrier compartmentsLoadBarrier = new CyclicBarrier( metaDatas.size() + 1 );
-        for ( org.janelia.it.workstation.gui.alignment_board_viewer.renderable.MaskChanRenderableData metaData: metaDatas ) {
+        for ( MaskChanRenderableData metaData: metaDatas ) {
             // Multithreaded load.
             if ( metaData.isCompartment() ) {
                 LoadRunnable runnable = new LoadRunnable( metaData, this, compartmentsLoadBarrier );
@@ -224,7 +232,7 @@ public class FileExportLoadWorker extends SimpleWorker implements VolumeLoader {
         // Once all compartments have been loaded, do the neuron fragments.  This gives
         // the fragments a higher priority for volume writeback.
         final CyclicBarrier fragmentsLoadBarrier = new CyclicBarrier( metaDatas.size() + 1 );
-        for ( org.janelia.it.workstation.gui.alignment_board_viewer.renderable.MaskChanRenderableData metaData: metaDatas ) {
+        for ( MaskChanRenderableData metaData: metaDatas ) {
             // Multithreaded load.
             if ( ! metaData.isCompartment() ) {
                 LoadRunnable runnable = new LoadRunnable( metaData, this, fragmentsLoadBarrier );
@@ -235,9 +243,9 @@ public class FileExportLoadWorker extends SimpleWorker implements VolumeLoader {
         awaitBarrier( fragmentsLoadBarrier );
     }
 
-    private void multiThreadedFileLoad( Collection<org.janelia.it.workstation.gui.alignment_board_viewer.renderable.MaskChanRenderableData> metaDatas, int maxThreads ) {
+    private void multiThreadedFileLoad( Collection<MaskChanRenderableData> metaDatas, int maxThreads ) {
         ExecutorService threadPool = Executors.newFixedThreadPool(maxThreads);
-        for ( org.janelia.it.workstation.gui.alignment_board_viewer.renderable.MaskChanRenderableData metaData: metaDatas ) {
+        for ( MaskChanRenderableData metaData: metaDatas ) {
             logger.debug( "Scheduling mask path {} for load.", metaData.getMaskPath() );
             LoadRunnable runnable = new LoadRunnable( metaData, this, null );
             threadPool.execute(runnable);
@@ -269,19 +277,19 @@ public class FileExportLoadWorker extends SimpleWorker implements VolumeLoader {
      * This is a parameterization to the constructor for the "outer" class.
      */
     public static class FileExportParamBean {
-        private Collection<org.janelia.it.workstation.gui.alignment_board_viewer.renderable.MaskChanRenderableData> renderableDatas;
+        private Collection<MaskChanRenderableData> renderableDatas;
         private Collection<float[]> cropCoords;
         private Callback callback;
-        private org.janelia.it.workstation.gui.alignment_board_viewer.gui_elements.ControlsListener.ExportMethod method;
+        private ControlsListener.ExportMethod method;
         private long filterSize;
         private long maxNeuronCount;
         private double gammaFactor;
 
-        public Collection<org.janelia.it.workstation.gui.alignment_board_viewer.renderable.MaskChanRenderableData> getRenderableDatas() {
+        public Collection<MaskChanRenderableData> getRenderableDatas() {
             return renderableDatas;
         }
 
-        public void setRenderableDatas(Collection<org.janelia.it.workstation.gui.alignment_board_viewer.renderable.MaskChanRenderableData> renderableDatas) {
+        public void setRenderableDatas(Collection<MaskChanRenderableData> renderableDatas) {
             this.renderableDatas = renderableDatas;
         }
 
@@ -307,11 +315,11 @@ public class FileExportLoadWorker extends SimpleWorker implements VolumeLoader {
             }
         }
 
-        public org.janelia.it.workstation.gui.alignment_board_viewer.gui_elements.ControlsListener.ExportMethod getMethod() {
+        public ControlsListener.ExportMethod getMethod() {
             return method;
         }
 
-        public void setMethod(org.janelia.it.workstation.gui.alignment_board_viewer.gui_elements.ControlsListener.ExportMethod method) {
+        public void setMethod(ControlsListener.ExportMethod method) {
             this.method = method;
         }
 

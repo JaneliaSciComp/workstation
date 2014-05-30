@@ -8,24 +8,27 @@ import org.janelia.it.workstation.gui.viewer3d.loader.V3dSignalFileLoader;
 import org.janelia.it.workstation.gui.viewer3d.loader.V3dMaskFileLoader;
 import org.apache.commons.io.FilenameUtils;
 import org.janelia.it.workstation.gui.viewer3d.VolumeDataAcceptor.TextureColorSpace;
+import org.janelia.it.workstation.gui.viewer3d.loader.VolumeFileLoaderI;
+import org.janelia.it.workstation.gui.viewer3d.loader.VolumeLoaderI;
+import org.janelia.it.workstation.gui.viewer3d.resolver.FileResolver;
 import org.janelia.it.workstation.gui.viewer3d.texture.TextureDataI;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 
-public class VolumeLoader implements org.janelia.it.workstation.gui.viewer3d.loader.VolumeLoaderI {
+public class VolumeLoader implements VolumeLoaderI {
 
     private static final int MAX_FILE_LOAD_RETRY = 3;
     private static final int WAIT_BETWEEN_FILE_LOAD_RETRIES = 1000;
 
-    private org.janelia.it.workstation.gui.viewer3d.resolver.FileResolver resolver;
+    private FileResolver resolver;
     private boolean isLuminance = false;
     private TextureDataI textureData;
 
     private Logger logger;
 
-    public VolumeLoader( org.janelia.it.workstation.gui.viewer3d.resolver.FileResolver resolver ) {
+    public VolumeLoader( FileResolver resolver ) {
         logger = LoggerFactory.getLogger( VolumeLoader.class );
         this.resolver = resolver;
     }
@@ -43,7 +46,7 @@ public class VolumeLoader implements org.janelia.it.workstation.gui.viewer3d.loa
             logger.debug("FILENAME: {}", localFileName);
             String baseName = FilenameUtils.getBaseName(localFileName);
 
-            org.janelia.it.workstation.gui.viewer3d.loader.VolumeFileLoaderI fileLoader = null;
+            VolumeFileLoaderI fileLoader = null;
             TextureDataBuilder textureDataBuilder = null;
             switch ( getFileType( localFileName, baseName, extension ) ) {
                 case TIF:
@@ -125,21 +128,21 @@ public class VolumeLoader implements org.janelia.it.workstation.gui.viewer3d.loa
     private FileType getFileType( String filename, String baseName, String extension ) {
         logger.debug("FILENAME: {}", filename);
 
-        if (extension.startsWith(org.janelia.it.workstation.gui.viewer3d.loader.VolumeFileLoaderI.TIF_EXT)) {
+        if (extension.startsWith(VolumeFileLoaderI.TIF_EXT)) {
             return FileType.TIF;
         }
-        else if (extension.startsWith(org.janelia.it.workstation.gui.viewer3d.loader.VolumeFileLoaderI.LSM_EXT)) {
+        else if (extension.startsWith(VolumeFileLoaderI.LSM_EXT)) {
             return FileType.LSM;
         }
-        else if (extension.startsWith(org.janelia.it.workstation.gui.viewer3d.loader.VolumeFileLoaderI.MP4_EXT)) {
+        else if (extension.startsWith(VolumeFileLoaderI.MP4_EXT)) {
             return FileType.MP4;
         }
-        else if (extension.startsWith(org.janelia.it.workstation.gui.viewer3d.loader.VolumeFileLoaderI.V3D_EXT) &&
+        else if (extension.startsWith(VolumeFileLoaderI.V3D_EXT) &&
                  ( baseName.startsWith( V3dMaskFileLoader.CONSOLIDATED_LABEL_MASK ) ||
                    baseName.startsWith( V3dMaskFileLoader.COMPARTMENT_MASK_INDEX ) ) ) {
             return FileType.V3DMASK;
         }
-        else if (extension.startsWith(org.janelia.it.workstation.gui.viewer3d.loader.VolumeFileLoaderI.V3D_EXT)) {
+        else if (extension.startsWith(VolumeFileLoaderI.V3D_EXT)) {
             return FileType.V3DSIGNAL;
         }
         else {
@@ -151,14 +154,14 @@ public class VolumeLoader implements org.janelia.it.workstation.gui.viewer3d.loa
         // Default to linear color space
         // But look for some exceptions we know about
         TextureColorSpace colorSpace = TextureColorSpace.COLOR_SPACE_LINEAR;
-        if (baseName.startsWith(org.janelia.it.workstation.gui.viewer3d.loader.VolumeFileLoaderI.CONSOLIDATED_SIGNAL_FILE))
+        if (baseName.startsWith(VolumeFileLoaderI.CONSOLIDATED_SIGNAL_FILE))
             colorSpace = TextureColorSpace.COLOR_SPACE_SRGB;
         if (baseName.startsWith("Aligned20xScale"))
             colorSpace = TextureColorSpace.COLOR_SPACE_SRGB;
-        if (baseName.startsWith(org.janelia.it.workstation.gui.viewer3d.loader.VolumeFileLoaderI.REFERENCE_FILE))
+        if (baseName.startsWith(VolumeFileLoaderI.REFERENCE_FILE))
             colorSpace = TextureColorSpace.COLOR_SPACE_SRGB;
         // assume all mpegs are in sRGB color space
-        if (extension.startsWith(org.janelia.it.workstation.gui.viewer3d.loader.VolumeFileLoaderI.MP4_EXT))
+        if (extension.startsWith(VolumeFileLoaderI.MP4_EXT))
             colorSpace = TextureColorSpace.COLOR_SPACE_SRGB;
 
         return colorSpace;

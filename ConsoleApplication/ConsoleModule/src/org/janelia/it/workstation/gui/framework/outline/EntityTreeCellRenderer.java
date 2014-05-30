@@ -17,6 +17,8 @@ import javax.swing.tree.TreeCellRenderer;
 import org.janelia.it.jacs.model.entity.Entity;
 import org.janelia.it.jacs.model.entity.EntityConstants;
 import org.janelia.it.jacs.model.entity.EntityData;
+import org.janelia.it.workstation.api.entity_model.management.ModelMgrUtils;
+import org.janelia.it.workstation.gui.util.Icons;
 
 /**
  * Special tree cell renderer for generic Entity trees.
@@ -127,11 +129,11 @@ public class EntityTreeCellRenderer extends DefaultTreeCellRenderer implements T
 
                 // Set the labels
                 titleLabel.setText(entity.getName());
-                titleLabel.setIcon(org.janelia.it.workstation.gui.util.Icons.getIcon(entity));
+                titleLabel.setIcon(Icons.getIcon(entity));
                 titleLabel.setToolTipText(entityTypeName);
 
                 String dateStr = entity.getUpdatedDate() == null ? "" : df.format(entity.getUpdatedDate());
-                String ownerStr = org.janelia.it.workstation.api.entity_model.management.ModelMgrUtils.getNameFromSubjectKey(entity.getOwnerKey());
+                String ownerStr = ModelMgrUtils.getNameFromSubjectKey(entity.getOwnerKey());
 
                 if (ed != null && (entityAttrName.equals(EntityConstants.ATTRIBUTE_RESULT) || entityTypeName.equals(EntityConstants.TYPE_PIPELINE_RUN))) {
                     typeLabel.setText(dateStr + " " + ownerStr);

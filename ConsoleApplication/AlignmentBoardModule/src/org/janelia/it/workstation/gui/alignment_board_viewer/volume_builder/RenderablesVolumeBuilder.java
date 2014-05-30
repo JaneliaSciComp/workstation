@@ -1,6 +1,7 @@
 package org.janelia.it.workstation.gui.alignment_board_viewer.volume_builder;
 
 import org.janelia.it.workstation.gui.alignment_board.loader.MaskChanDataAcceptorI;
+import org.janelia.it.workstation.gui.alignment_board_viewer.masking.VolumeConsistencyChecker;
 import org.slf4j.Logger;
 
 
@@ -26,7 +27,7 @@ public abstract class RenderablesVolumeBuilder implements MaskChanDataAcceptorI 
     protected float[] coordCoverage;
 
     private int nextVolumeCount = 0;
-    private final org.janelia.it.workstation.gui.alignment_board_viewer.masking.VolumeConsistencyChecker checker = new org.janelia.it.workstation.gui.alignment_board_viewer.masking.VolumeConsistencyChecker();
+    private final VolumeConsistencyChecker checker = new VolumeConsistencyChecker();
 
     //----------------------------------------IMPLEMENT MaskChanDataAcceptorI (partially)
     @Override

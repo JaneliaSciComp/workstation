@@ -5,6 +5,10 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
 
+import org.janelia.it.workstation.api.entity_model.management.ModelMgr;
+import org.janelia.it.workstation.gui.framework.actions.Action;
+import org.janelia.it.workstation.gui.framework.actions.OntologyElementAction;
+import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.workstation.model.utils.OntologyKeyBind;
 import org.janelia.it.workstation.model.utils.OntologyKeyBindings;
 import org.janelia.it.jacs.model.entity.Entity;
@@ -22,20 +26,20 @@ public class KeyBindings {
 	
 	private static final Logger log = LoggerFactory.getLogger(KeyBindings.class);
 	
-    private Map<KeyboardShortcut, org.janelia.it.workstation.gui.framework.actions.Action> generalBindings;
-    private Map<KeyboardShortcut, org.janelia.it.workstation.gui.framework.actions.Action> ontologyBindings;
+    private Map<KeyboardShortcut, Action> generalBindings;
+    private Map<KeyboardShortcut, Action> ontologyBindings;
 
     public KeyBindings() {
-        this.generalBindings = new HashMap<KeyboardShortcut, org.janelia.it.workstation.gui.framework.actions.Action>();
-        this.ontologyBindings = new HashMap<KeyboardShortcut, org.janelia.it.workstation.gui.framework.actions.Action>();
+        this.generalBindings = new HashMap<KeyboardShortcut, Action>();
+        this.ontologyBindings = new HashMap<KeyboardShortcut, Action>();
     }
 
-    public org.janelia.it.workstation.gui.framework.actions.Action getConflict(KeyboardShortcut shortcut) {
+    public Action getConflict(KeyboardShortcut shortcut) {
         return ontologyBindings.get(shortcut);
     }
 
-    private KeyboardShortcut getBinding(Map<KeyboardShortcut, org.janelia.it.workstation.gui.framework.actions.Action> bindings, org.janelia.it.workstation.gui.framework.actions.Action action) {
-        for (Map.Entry<KeyboardShortcut, org.janelia.it.workstation.gui.framework.actions.Action> entry : bindings.entrySet()) {
+    private KeyboardShortcut getBinding(Map<KeyboardShortcut, Action> bindings, Action action) {
+        for (Map.Entry<KeyboardShortcut, Action> entry : bindings.entrySet()) {
             if (action.equals(entry.getValue())) {
                 return entry.getKey();
             }
@@ -43,7 +47,7 @@ public class KeyBindings {
         return null;
     }
 
-    public KeyboardShortcut getBinding(org.janelia.it.workstation.gui.framework.actions.Action action) {
+    public KeyboardShortcut getBinding(Action action) {
         if (action == null) {
             throw new IllegalArgumentException("Action cannot be null for KeyBindings.getBinding(Action)");
         }
@@ -54,10 +58,10 @@ public class KeyBindings {
         return getBinding(generalBindings, action);
     }
 
-    private void setBinding(Map<KeyboardShortcut, org.janelia.it.workstation.gui.framework.actions.Action> bindings, KeyboardShortcut shortcut, org.janelia.it.workstation.gui.framework.actions.Action action) {
+    private void setBinding(Map<KeyboardShortcut, Action> bindings, KeyboardShortcut shortcut, Action action) {
         // First remove all existing shortcuts for the action
         ArrayList<KeyboardShortcut> binds = new ArrayList<KeyboardShortcut>();
-        for (Map.Entry<KeyboardShortcut, org.janelia.it.workstation.gui.framework.actions.Action> entry : bindings.entrySet()) {
+        for (Map.Entry<KeyboardShortcut, Action> entry : bindings.entrySet()) {
             if (action.equals(entry.getValue())) {
                 binds.add(entry.getKey());
             }
@@ -71,8 +75,8 @@ public class KeyBindings {
         }
     }
 
-    public void setBinding(KeyboardShortcut shortcut, org.janelia.it.workstation.gui.framework.actions.Action action) {
-        if (action instanceof org.janelia.it.workstation.gui.framework.actions.OntologyElementAction) {
+    public void setBinding(KeyboardShortcut shortcut, Action action) {
+        if (action instanceof OntologyElementAction) {
             setBinding(ontologyBindings, shortcut, action);
         }
         else {
@@ -82,7 +86,7 @@ public class KeyBindings {
     }
 
     public boolean executeBinding(KeyboardShortcut shortcut) {
-        org.janelia.it.workstation.gui.framework.actions.Action action = ontologyBindings.get(shortcut);
+        Action action = ontologyBindings.get(shortcut);
         if (action == null) {
             action = generalBindings.get(shortcut);
         }
@@ -103,14 +107,14 @@ public class KeyBindings {
      *
      * @param root
      */
-    public void loadOntologyKeybinds(Entity root, Map<String, org.janelia.it.workstation.gui.framework.actions.Action> entityActionMap) {
+    public void loadOntologyKeybinds(Entity root, Map<String, Action> entityActionMap) {
 
         log.info("Loading key bindings for ontology: "+root.getId());
 
         ontologyBindings.clear();
 
         try {
-        	OntologyKeyBindings ontologyKeyBindings = org.janelia.it.workstation.api.entity_model.management.ModelMgr.getModelMgr().loadOntologyKeyBindings(root.getId());
+        	OntologyKeyBindings ontologyKeyBindings = ModelMgr.getModelMgr().loadOntologyKeyBindings(root.getId());
         	Set<OntologyKeyBind> keybinds = ontologyKeyBindings.getKeybinds();
         	
         	for (OntologyKeyBind bind : keybinds) {
@@ -121,7 +125,7 @@ public class KeyBindings {
                     
                     for(String uniqueId : entityActionMap.keySet()) {
                         if (uniqueId.endsWith("e_"+entityId)) {
-                            org.janelia.it.workstation.gui.framework.actions.Action action = entityActionMap.get(uniqueId);
+                            Action action = entityActionMap.get(uniqueId);
                             ontologyBindings.put(shortcut, action);
                         }
                     }
@@ -135,7 +139,7 @@ public class KeyBindings {
         }
         catch (Exception e) {
         	log.error("Could not load user's key binding preferences",e);
-            org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr.getSessionMgr().handleException(e);
+            SessionMgr.getSessionMgr().handleException(e);
         }
     }
 
@@ -148,21 +152,21 @@ public class KeyBindings {
         
     	log.info("Saving key bindings for ontology "+root.getId());
 
-        OntologyKeyBindings ontologyKeyBindings = new OntologyKeyBindings(org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr.getSubjectKey(), root.getId());
+        OntologyKeyBindings ontologyKeyBindings = new OntologyKeyBindings(SessionMgr.getSubjectKey(), root.getId());
         try {
-            for (Map.Entry<KeyboardShortcut, org.janelia.it.workstation.gui.framework.actions.Action> entry : ontologyBindings.entrySet()) {
-                if (entry.getValue() instanceof org.janelia.it.workstation.gui.framework.actions.OntologyElementAction) {
+            for (Map.Entry<KeyboardShortcut, Action> entry : ontologyBindings.entrySet()) {
+                if (entry.getValue() instanceof OntologyElementAction) {
                     KeyboardShortcut shortcut = entry.getKey();
-                    org.janelia.it.workstation.gui.framework.actions.OntologyElementAction action = (org.janelia.it.workstation.gui.framework.actions.OntologyElementAction) entry.getValue();
+                    OntologyElementAction action = (OntologyElementAction) entry.getValue();
                     ontologyKeyBindings.addBinding(shortcut.toString(), EntityUtils.getEntityIdFromUniqueId(action.getUniqueId()));
                 }
             }
 
-            org.janelia.it.workstation.api.entity_model.management.ModelMgr.getModelMgr().saveOntologyKeyBindings(ontologyKeyBindings);
+            ModelMgr.getModelMgr().saveOntologyKeyBindings(ontologyKeyBindings);
         }
         catch (Exception e) {
         	log.error("Could not save user's key binding preferences",e);
-            org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr.getSessionMgr().handleException(e);
+            SessionMgr.getSessionMgr().handleException(e);
         }
     }
 
@@ -172,11 +176,11 @@ public class KeyBindings {
     public void removeOntologyKeybinds(Entity root) {
 
         try {
-            org.janelia.it.workstation.api.entity_model.management.ModelMgr.getModelMgr().removeOntologyKeyBindings(root.getId());
+            ModelMgr.getModelMgr().removeOntologyKeyBindings(root.getId());
         }
         catch (Exception e) {
             log.error("Could not delete key binding preferences for defunct ontology " + root.getName(),e);
-            org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr.getSessionMgr().handleException(e);
+            SessionMgr.getSessionMgr().handleException(e);
         }
     }
 }

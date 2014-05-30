@@ -8,6 +8,8 @@ package org.janelia.it.workstation.gui.framework.console.nb_action;
 
 import javax.swing.JCheckBoxMenuItem;
 
+import org.janelia.it.workstation.gui.framework.console.Browser;
+import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
 import org.openide.windows.Mode;
 import org.openide.windows.TopComponent;
 import org.openide.windows.WindowManager;
@@ -43,12 +45,12 @@ public class ViewActionDelegate {
     public void linkLeftRightViewers() {
         final JCheckBoxMenuItem linkViewersMenuItem = 
                 new JCheckBoxMenuItem("Link Left/Right Viewers", true);
-        org.janelia.it.workstation.gui.framework.console.Browser browser = org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr.getBrowser();
+        Browser browser = SessionMgr.getBrowser();
         browser.setIsViewersLinked(linkViewersMenuItem.isSelected());
     }
     
     public void resetWindow() {
-        org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr.getBrowser().resetBrowserPosition();
+        SessionMgr.getBrowser().resetBrowserPosition();
     }
 
     private void changeModes(String sourceMode, String targetMode) {

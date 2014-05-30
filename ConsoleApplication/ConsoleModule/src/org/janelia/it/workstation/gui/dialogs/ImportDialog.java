@@ -17,11 +17,14 @@ import java.util.concurrent.CancellationException;
 
 import javax.swing.*;
 
+import org.janelia.it.workstation.api.entity_model.management.ModelMgr;
 import org.janelia.it.workstation.gui.framework.console.Browser;
+import org.janelia.it.workstation.gui.framework.outline.EntityOutline;
 import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.workstation.model.entity.RootedEntity;
 import org.janelia.it.workstation.shared.util.Utils;
 import org.janelia.it.workstation.shared.util.filecache.WebDavUploader;
+import org.janelia.it.workstation.shared.workers.BackgroundWorker;
 import org.janelia.it.workstation.shared.workers.SimpleWorker;
 import org.janelia.it.workstation.shared.workers.TaskMonitoringWorker;
 import org.janelia.it.jacs.model.entity.EntityConstants;
@@ -346,7 +349,7 @@ public class ImportDialog extends ModalDialog {
                            final Long importFolderId) {
 
         try {            
-            org.janelia.it.workstation.shared.workers.BackgroundWorker executeWorker = new TaskMonitoringWorker() {
+            BackgroundWorker executeWorker = new TaskMonitoringWorker() {
     
                 @Override
                 public String getName() {
@@ -380,7 +383,7 @@ public class ImportDialog extends ModalDialog {
                         @Override
                         public Void call() throws Exception {
                             final Browser browser = SessionMgr.getBrowser();
-                            final org.janelia.it.workstation.gui.framework.outline.EntityOutline entityOutline = browser.getEntityOutline();
+                            final EntityOutline entityOutline = browser.getEntityOutline();
                             entityOutline.totalRefresh(true, new Callable<Void>() {
                                 @Override
                                 public Void call() throws Exception {
@@ -389,7 +392,7 @@ public class ImportDialog extends ModalDialog {
                                         
                                         @Override
                                         protected void doStuff() throws Exception {
-                                            org.janelia.it.workstation.api.entity_model.management.ModelMgr.getModelMgr().refreshChildren(rootedEntity.getEntity());
+                                            ModelMgr.getModelMgr().refreshChildren(rootedEntity.getEntity());
                                         }
                                         
                                         @Override
@@ -431,7 +434,7 @@ public class ImportDialog extends ModalDialog {
                              Long importTopLevelFolderId) throws Exception {
 
         final SessionMgr sessionMgr = SessionMgr.getSessionMgr();
-        final org.janelia.it.workstation.api.entity_model.management.ModelMgr modelMgr = org.janelia.it.workstation.api.entity_model.management.ModelMgr.getModelMgr();
+        final ModelMgr modelMgr = ModelMgr.getModelMgr();
         final WebDavUploader uploader = new WebDavUploader(sessionMgr.getWebDavClient());
 
         String uploadPath;

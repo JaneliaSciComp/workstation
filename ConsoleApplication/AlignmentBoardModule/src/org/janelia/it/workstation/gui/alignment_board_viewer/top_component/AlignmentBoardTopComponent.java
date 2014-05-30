@@ -7,6 +7,9 @@ package org.janelia.it.workstation.gui.alignment_board_viewer.top_component;
 
 import com.google.common.eventbus.Subscribe;
 import java.awt.BorderLayout;
+import java.util.Properties;
+import javax.swing.GroupLayout;
+import javax.swing.JPanel;
 import javax.swing.SwingUtilities;
 import org.janelia.it.workstation.api.entity_model.management.ModelMgr;
 import org.janelia.it.workstation.gui.alignment_board.Launcher;
@@ -96,33 +99,33 @@ public final class AlignmentBoardTopComponent extends TopComponent {
     // <editor-fold defaultstate="collapsed" desc="Generated Code">//GEN-BEGIN:initComponents
     private void initComponents() {
 
-        contentPanel = new javax.swing.JPanel();
+        contentPanel = new JPanel();
 
-        javax.swing.GroupLayout contentPanelLayout = new javax.swing.GroupLayout(contentPanel);
+        GroupLayout contentPanelLayout = new GroupLayout(contentPanel);
         contentPanel.setLayout(contentPanelLayout);
         contentPanelLayout.setHorizontalGroup(
-            contentPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            contentPanelLayout.createParallelGroup(GroupLayout.Alignment.LEADING)
             .addGap(0, 814, Short.MAX_VALUE)
         );
         contentPanelLayout.setVerticalGroup(
-            contentPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            contentPanelLayout.createParallelGroup(GroupLayout.Alignment.LEADING)
             .addGap(0, 864, Short.MAX_VALUE)
         );
 
-        javax.swing.GroupLayout layout = new javax.swing.GroupLayout(this);
+        GroupLayout layout = new GroupLayout(this);
         this.setLayout(layout);
         layout.setHorizontalGroup(
-            layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addComponent(contentPanel, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+            layout.createParallelGroup(GroupLayout.Alignment.LEADING)
+            .addComponent(contentPanel, GroupLayout.DEFAULT_SIZE, GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
         );
         layout.setVerticalGroup(
-            layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addComponent(contentPanel, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+            layout.createParallelGroup(GroupLayout.Alignment.LEADING)
+            .addComponent(contentPanel, GroupLayout.DEFAULT_SIZE, GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
         );
     }// </editor-fold>//GEN-END:initComponents
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
-    private javax.swing.JPanel contentPanel;
+    private JPanel contentPanel;
     // End of variables declaration//GEN-END:variables
     @Override
     public void componentOpened() {
@@ -157,14 +160,14 @@ public final class AlignmentBoardTopComponent extends TopComponent {
         }
     }
 
-    void writeProperties(java.util.Properties p) {
+    void writeProperties(Properties p) {
         // better to version settings since initial version as advocated at
         // http://wiki.apidesign.org/wiki/PropertyFiles
         p.setProperty("version", "1.0");
         // TODO store your settings
     }
 
-    void readProperties(java.util.Properties p) {
+    void readProperties(Properties p) {
         String version = p.getProperty("version");
         // TODO read your settings according to their version
     }

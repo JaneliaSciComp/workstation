@@ -119,7 +119,7 @@ public class TestMaskChan3DViz {
         public void loadVolume(TextureDataI signalTexture, TextureDataI maskTexture) {
             mip3d.getVolumeModel().setGammaAdjustment( (float)AlignmentBoardSettings.DEFAULT_GAMMA );
             mip3d.getVolumeModel().setCameraDepth( new Vec3( 0.0, 0.0, 0.0 ) );
-            VolumeBrickFactory volumeBrickFactory = new org.janelia.it.workstation.gui.alignment_board_viewer.MultiTexVolumeBrickFactory();
+            VolumeBrickFactory volumeBrickFactory = new MultiTexVolumeBrickFactory();
             if ( ! mip3d.setVolume(
                     signalTexture, maskTexture, volumeBrickFactory, renderMapping, 1.0
             ) ) {

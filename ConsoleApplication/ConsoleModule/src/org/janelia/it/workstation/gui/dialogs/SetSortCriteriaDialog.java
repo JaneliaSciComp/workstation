@@ -21,17 +21,16 @@ import javax.swing.JPanel;
 
 import net.miginfocom.swing.MigLayout;
 
-import org.janelia.it.workstation.gui.framework.access.Accessibility;
-import org.janelia.it.workstation.shared.util.Utils;
-import org.janelia.it.workstation.shared.workers.SimpleWorker;
 import org.janelia.it.jacs.model.entity.Entity;
 import org.janelia.it.jacs.model.entity.EntityConstants;
 import org.janelia.it.jacs.model.entity.EntityData;
 import org.janelia.it.jacs.shared.utils.EntityUtils;
 import org.janelia.it.jacs.shared.utils.StringUtils;
 import org.janelia.it.workstation.api.entity_model.management.ModelMgr;
+import org.janelia.it.workstation.gui.framework.access.Accessibility;
 import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
-import org.janelia.it.workstation.model.utils.ModelUtils;
+import org.janelia.it.workstation.shared.util.Utils;
+import org.janelia.it.workstation.shared.workers.SimpleWorker;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -120,14 +119,14 @@ public class SetSortCriteriaDialog extends ModalDialog implements Accessibility 
         this.entity = entity;
 
         if (!EntityUtils.areLoaded(entity.getEntityData())) {
-            Utils.setWaitingCursor(org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr.getMainFrame());
+            Utils.setWaitingCursor(SessionMgr.getMainFrame());
             try {
-                org.janelia.it.workstation.api.entity_model.management.ModelMgr.getModelMgr().loadLazyEntity(entity, false);
+                ModelMgr.getModelMgr().loadLazyEntity(entity, false);
             }
             catch (Exception e) {
-                org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr.getSessionMgr().handleException(e);
+                SessionMgr.getSessionMgr().handleException(e);
             }
-            Utils.setDefaultCursor(org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr.getMainFrame());
+            Utils.setDefaultCursor(SessionMgr.getMainFrame());
         }
 
         // Find common attributes in child entities that the user can sort by
@@ -179,12 +178,12 @@ public class SetSortCriteriaDialog extends ModalDialog implements Accessibility 
     }
 
     private void saveAndClose() {
-
-        Utils.setWaitingCursor(org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr.getMainFrame());
-
-        final String sortField = (String) sortingFieldCombobox.getSelectedItem();
-        final String sortOrder = (String) sortingOrderCombobox.getSelectedItem();
-
+        
+    	Utils.setWaitingCursor(SessionMgr.getMainFrame());
+    	
+    	final String sortField = (String)sortingFieldCombobox.getSelectedItem();
+        final String sortOrder = (String)sortingOrderCombobox.getSelectedItem();
+    	
         if (DEFAULT_SORT_VALUE.equals(sortField)) {
             JOptionPane.showMessageDialog(this, "No sort field selected", "Error", JOptionPane.ERROR_MESSAGE);
             return;
@@ -209,14 +208,14 @@ public class SetSortCriteriaDialog extends ModalDialog implements Accessibility 
 
             @Override
             protected void hadSuccess() {
-                Utils.setDefaultCursor(org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr.getMainFrame());
-                org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr.getBrowser().getEntityOutline().refresh(true, true, null);
+                Utils.setDefaultCursor(SessionMgr.getMainFrame());
+			    SessionMgr.getBrowser().getEntityOutline().refresh(true, true, null);
             }
 
             @Override
             protected void hadError(Throwable error) {
-                org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr.getSessionMgr().handleException(error);
-                Utils.setDefaultCursor(org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr.getMainFrame());
+				SessionMgr.getSessionMgr().handleException(error);
+				Utils.setDefaultCursor(SessionMgr.getMainFrame());
             }
         };
         worker.execute();

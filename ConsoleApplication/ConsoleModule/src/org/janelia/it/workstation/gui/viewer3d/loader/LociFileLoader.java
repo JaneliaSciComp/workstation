@@ -3,6 +3,8 @@ package org.janelia.it.workstation.gui.viewer3d.loader;
 import loci.formats.FormatException;
 import loci.formats.IFormatReader;
 import loci.formats.gui.BufferedImageReader;
+import org.janelia.it.workstation.gui.viewer3d.texture.TextureDataBean;
+import org.janelia.it.workstation.gui.viewer3d.texture.TextureDataI;
 
 import java.awt.image.BufferedImage;
 import java.io.IOException;
@@ -15,11 +17,11 @@ import java.io.IOException;
  *
  * This may be extended for any data builder that needs a loci read method.
  */
-public abstract class LociFileLoader extends org.janelia.it.workstation.gui.viewer3d.loader.TextureDataBuilder implements org.janelia.it.workstation.gui.viewer3d.loader.VolumeFileLoaderI {
+public abstract class LociFileLoader extends TextureDataBuilder implements VolumeFileLoaderI {
 
     @Override
-    public org.janelia.it.workstation.gui.viewer3d.texture.TextureDataI createTextureDataBean() {
-        return new org.janelia.it.workstation.gui.viewer3d.texture.TextureDataBean(argbTextureIntArray, sx, sy, sz );
+    public TextureDataI createTextureDataBean() {
+        return new TextureDataBean(argbTextureIntArray, sx, sy, sz );
     }
 
     /** A facility for loci reader users. */

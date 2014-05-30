@@ -1,5 +1,12 @@
 package org.janelia.it.workstation.api.facade.facade_mgr;
 
+import org.janelia.it.workstation.api.facade.abstract_facade.AnnotationFacade;
+import org.janelia.it.workstation.api.facade.abstract_facade.ComputeFacade;
+import org.janelia.it.workstation.api.facade.abstract_facade.ControlledVocabService;
+import org.janelia.it.workstation.api.facade.abstract_facade.EntityFacade;
+import org.janelia.it.workstation.api.facade.abstract_facade.OntologyFacade;
+import org.janelia.it.workstation.api.facade.abstract_facade.SolrFacade;
+
 /**
  * Created by IntelliJ IDEA.
  * User: saffordt
@@ -14,7 +21,7 @@ public abstract class FacadeManagerBase {
     public static final ConnectionStatus CONNECTION_STATUS_NO_DEFINED_INFORMATION_SERVICE = new ConnectionStatus("No Location for the Information Service was defined", false);
     public static final ConnectionStatus CONNECTION_STATUS_CANNOT_CONNECT = new ConnectionStatus("Cannot connect to Information Service", true);
 
-    public abstract org.janelia.it.workstation.api.facade.abstract_facade.ControlledVocabService getControlledVocabService() throws Exception;
+    public abstract ControlledVocabService getControlledVocabService() throws Exception;
 
     public abstract String getDataSourceSelectorClass(); //note class must implement DataSourceSelector
 
@@ -41,14 +48,14 @@ public abstract class FacadeManagerBase {
 
     //     private static final int OBJECT_BD_GRTR_THAN_PARAM = 1;  // As used in BigDecimal.compareTo
 
-    public abstract org.janelia.it.workstation.api.facade.abstract_facade.OntologyFacade getOntologyFacade();
+    public abstract OntologyFacade getOntologyFacade();
 
-    public abstract org.janelia.it.workstation.api.facade.abstract_facade.EntityFacade getEntityFacade();
+    public abstract EntityFacade getEntityFacade();
 
-    public abstract org.janelia.it.workstation.api.facade.abstract_facade.AnnotationFacade getAnnotationFacade();
+    public abstract AnnotationFacade getAnnotationFacade();
 
-    public abstract org.janelia.it.workstation.api.facade.abstract_facade.SolrFacade getSolrFacade();
+    public abstract SolrFacade getSolrFacade();
     
-    public abstract org.janelia.it.workstation.api.facade.abstract_facade.ComputeFacade getComputeFacade();
+    public abstract ComputeFacade getComputeFacade();
 }
 

@@ -1,5 +1,8 @@
 package org.janelia.it.workstation.gui.slice_viewer.action;
 
+import org.janelia.it.workstation.gui.camera.Camera3d;
+import org.janelia.it.workstation.gui.slice_viewer.MouseModalWidget;
+
 import java.awt.event.MouseWheelListener;
 
 public interface WheelMode
@@ -9,8 +12,8 @@ extends MouseWheelListener
         ZOOM,
         SCAN
     }
-	public org.janelia.it.workstation.gui.slice_viewer.MouseModalWidget getWidget();
-	public void setWidget(org.janelia.it.workstation.gui.slice_viewer.MouseModalWidget widget, boolean updateCursor);
-	org.janelia.it.workstation.gui.camera.Camera3d getCamera();
-	void setCamera(org.janelia.it.workstation.gui.camera.Camera3d camera);
+	public MouseModalWidget getWidget();
+	public void setWidget(MouseModalWidget widget, boolean updateCursor);
+	Camera3d getCamera();
+	void setCamera(Camera3d camera);
 }

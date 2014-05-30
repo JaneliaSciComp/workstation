@@ -1,5 +1,6 @@
 package org.janelia.it.workstation.gui.framework.session_mgr;
 
+import org.janelia.it.workstation.shared.util.EmptyIterator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -62,7 +63,7 @@ public abstract class GenericModel {
     }
 
     public Iterator getModelPropertyKeys() {
-        if (modelProperties == null) return new org.janelia.it.workstation.shared.util.EmptyIterator();
+        if (modelProperties == null) return new EmptyIterator();
         return modelProperties.keySet().iterator();
     }
 

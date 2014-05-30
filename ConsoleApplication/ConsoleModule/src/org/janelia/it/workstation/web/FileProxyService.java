@@ -15,6 +15,7 @@ import javax.servlet.http.HttpServletResponse;
 import org.eclipse.jetty.server.Request;
 import org.eclipse.jetty.server.handler.AbstractHandler;
 import org.janelia.it.workstation.shared.util.Utils;
+import org.janelia.it.workstation.shared.util.WorkstationFile;
 import org.perf4j.StopWatch;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -59,11 +60,11 @@ public class FileProxyService extends AbstractHandler {
                 return;
             }
             
-            org.janelia.it.workstation.shared.util.WorkstationFile wfile = null;
+            WorkstationFile wfile = null;
             OutputStream output = null;
             
             try {
-                wfile = new org.janelia.it.workstation.shared.util.WorkstationFile(standardPath);
+                wfile = new WorkstationFile(standardPath);
                 
                 // Read from WebDav
                 wfile.get("HEAD".equals(method));

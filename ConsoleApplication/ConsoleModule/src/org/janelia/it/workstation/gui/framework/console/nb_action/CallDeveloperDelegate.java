@@ -8,6 +8,7 @@ package org.janelia.it.workstation.gui.framework.console.nb_action;
 
 import javax.swing.JFrame;
 
+import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.workstation.gui.util.MailDialogueBox;
 import org.janelia.it.workstation.gui.util.WindowLocator;
 
@@ -19,7 +20,7 @@ public class CallDeveloperDelegate {
     public void actOnCallDeveloper() {
         JFrame parentFrame = (JFrame) WindowLocator.getMainFrame();
         MailDialogueBox popup = new MailDialogueBox(parentFrame,
-                (String) org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr.getSessionMgr().getModelProperty(org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr.USER_EMAIL),
+                (String) SessionMgr.getSessionMgr().getModelProperty(SessionMgr.USER_EMAIL),
                 "Bug report");
         popup.showPopupThenSendEmail();
     }

@@ -48,7 +48,7 @@ public class NBitChannelSplitStrategyTest {
         Set<RenderableBean> renderables = getMockRenderableBeans();
 
         // Finally, traverse input values to see how the outputs look.
-        org.janelia.it.workstation.gui.alignment_board_viewer.channel_split.NBitChannelSplitStrategy channelSplitter = new org.janelia.it.workstation.gui.alignment_board_viewer.channel_split.NBitChannelSplitStrategy(tracker, 4);
+        NBitChannelSplitStrategy channelSplitter = new NBitChannelSplitStrategy(tracker, 4);
         channelMetaData.renderableBean = renderables.iterator().next();
         // Channels-data is little endian.  Plugging in values with that assumption.
         byte[] channelsData;
@@ -96,7 +96,7 @@ public class NBitChannelSplitStrategyTest {
         Set<RenderableBean> renderables = getMockRenderableBeans();
 
         // Finally, traverse input values to see how the outputs look.
-        org.janelia.it.workstation.gui.alignment_board_viewer.channel_split.NBitChannelSplitStrategy channelSplitter = new org.janelia.it.workstation.gui.alignment_board_viewer.channel_split.NBitChannelSplitStrategy(tracker, 4);
+        NBitChannelSplitStrategy channelSplitter = new NBitChannelSplitStrategy(tracker, 4);
         channelMetaData.renderableBean = renderables.iterator().next();
         // Channels-data is little endian.  Plugging in values with that assumption.
         byte[] channelsData;
@@ -138,7 +138,7 @@ public class NBitChannelSplitStrategyTest {
         //System.out.println("-=====================Testing Split Depth of 5");
         // Here, setup with the normal boilerplate.
         ChannelMetaData channelMetaData = makeOneByteChannelMetaData();
-        org.janelia.it.workstation.gui.alignment_board_viewer.channel_split.NBitChannelSplitStrategy channelSplitter = new org.janelia.it.workstation.gui.alignment_board_viewer.channel_split.NBitChannelSplitStrategy(tracker, 4);
+        NBitChannelSplitStrategy channelSplitter = new NBitChannelSplitStrategy(tracker, 4);
         Set<RenderableBean> renderables = getMockRenderableBeans();
         channelMetaData.renderableBean = renderables.iterator().next();
 
@@ -178,7 +178,7 @@ public class NBitChannelSplitStrategyTest {
         Assert.assertArrayEquals( new byte[] {0,0,0,0}, finalOrableData );
     }
 
-    private byte[] addSplitData(ChannelMetaData channelMetaData, org.janelia.it.workstation.gui.alignment_board_viewer.channel_split.NBitChannelSplitStrategy channelSplitter, byte[] channelsData, int origMask, int multiMaskId, int affectedByte, int expectedValue ) {
+    private byte[] addSplitData(ChannelMetaData channelMetaData, NBitChannelSplitStrategy channelSplitter, byte[] channelsData, int origMask, int multiMaskId, int affectedByte, int expectedValue ) {
         byte[] orableChannelPart;
         orableChannelPart = channelSplitter.getUpdatedValue( channelMetaData, origMask, channelsData, multiMaskId );
         Assert.assertTrue( orableChannelPart[ affectedByte ] == expectedValue );

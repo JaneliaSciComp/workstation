@@ -12,6 +12,7 @@ import com.google.common.collect.Iterators;
 import com.sun.media.jai.codec.ImageCodec;
 import com.sun.media.jai.codec.ImageEncoder;
 import com.sun.media.jai.codec.TIFFEncodeParam;
+import org.janelia.it.workstation.geom.Vec3;
 
 public class ExtractOctreeSubvolume {
 
@@ -25,11 +26,11 @@ public class ExtractOctreeSubvolume {
 			usage(args);
 			System.exit(1);
 		}
-		org.janelia.it.workstation.geom.Vec3 corner1 = new org.janelia.it.workstation.geom.Vec3(
+		Vec3 corner1 = new Vec3(
 				Double.parseDouble(args[0]),
 				Double.parseDouble(args[1]),
 				Double.parseDouble(args[2]));
-		org.janelia.it.workstation.geom.Vec3 corner2 = new org.janelia.it.workstation.geom.Vec3(
+		Vec3 corner2 = new Vec3(
 				Double.parseDouble(args[3]),
 				Double.parseDouble(args[4]),
 				Double.parseDouble(args[5]));
@@ -54,15 +55,15 @@ public class ExtractOctreeSubvolume {
 	 * @throws IOException 
 	 */
 	private static void extractSubvolume(
-			org.janelia.it.workstation.geom.Vec3 corner1,
-			org.janelia.it.workstation.geom.Vec3 corner2,
+			Vec3 corner1,
+			Vec3 corner2,
 			double resolutionMicrometers,
 			File inputOctreeFolder,
 			File outputTiff) throws IOException 
 	{
 		SharedVolumeImage wholeImage = new SharedVolumeImage();
 		wholeImage.loadURL(inputOctreeFolder.toURI().toURL());
-		org.janelia.it.workstation.gui.slice_viewer.Subvolume subvolume = new org.janelia.it.workstation.gui.slice_viewer.Subvolume(corner1, corner2, resolutionMicrometers, wholeImage);
+		Subvolume subvolume = new Subvolume(corner1, corner2, resolutionMicrometers, wholeImage);
 		// Write output tiff
 		BufferedImage outSlices[] = subvolume.getAsBufferedImages();
 		TIFFEncodeParam params = new TIFFEncodeParam();

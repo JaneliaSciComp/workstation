@@ -5,12 +5,13 @@ import java.awt.event.InputEvent;
 import java.awt.event.MouseEvent;
 
 import org.janelia.it.workstation.geom.Vec3;
+import org.janelia.it.workstation.gui.viewer3d.BoundingBox3d;
 
 // Click and drag mouse to drag the image in X and Y
 public class PanMode
 extends BasicMouseMode
 {
-    private org.janelia.it.workstation.gui.viewer3d.BoundingBox3d boundingBox;
+    private BoundingBox3d boundingBox;
     
     public PanMode() {
 		setHoverCursor(BasicMouseMode.createCursor("grab_opened.png", 8, 8));
@@ -56,11 +57,11 @@ extends BasicMouseMode
 		}
 	}
 
-    public org.janelia.it.workstation.gui.viewer3d.BoundingBox3d getBoundingBox() {
+    public BoundingBox3d getBoundingBox() {
         return boundingBox;
     }
 
-    public void setBoundingBox(org.janelia.it.workstation.gui.viewer3d.BoundingBox3d boundingBox) {
+    public void setBoundingBox(BoundingBox3d boundingBox) {
         this.boundingBox = boundingBox;
     }
 }

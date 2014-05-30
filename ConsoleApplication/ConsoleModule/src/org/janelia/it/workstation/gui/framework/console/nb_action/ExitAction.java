@@ -11,6 +11,7 @@ import java.awt.event.ActionListener;
 import java.awt.event.WindowEvent;
 import javax.swing.JFrame;
 
+import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
 import org.openide.awt.ActionID;
 import org.openide.awt.ActionReference;
 import org.openide.awt.ActionRegistration;
@@ -29,7 +30,7 @@ public final class ExitAction implements ActionListener {
 
     @Override
     public void actionPerformed(ActionEvent e) {
-        JFrame mainFrame = org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr.getMainFrame();
+        JFrame mainFrame = SessionMgr.getMainFrame();
         WindowEvent wev = new WindowEvent(mainFrame, WindowEvent.WINDOW_CLOSING);
         Toolkit.getDefaultToolkit().getSystemEventQueue().postEvent(wev);
     }

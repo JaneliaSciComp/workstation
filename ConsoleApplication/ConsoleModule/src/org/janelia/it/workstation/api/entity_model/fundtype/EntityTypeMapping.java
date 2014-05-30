@@ -3,9 +3,10 @@ package org.janelia.it.workstation.api.entity_model.fundtype;
 import org.janelia.it.workstation.api.facade.facade_mgr.FacadeManager;
 import org.janelia.it.jacs.model.entity.EntityType;
 
+import java.io.Serializable;
 import java.util.*;
 
-public class EntityTypeMapping implements java.io.Serializable {
+public class EntityTypeMapping implements Serializable {
     static private Map environmentToEntityName = new HashMap();
     static private Map valueToFeatureName = new HashMap();
     static private Map valueToDisplayName = new HashMap();

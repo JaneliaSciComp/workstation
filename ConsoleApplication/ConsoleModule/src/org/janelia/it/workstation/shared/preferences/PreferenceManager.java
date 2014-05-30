@@ -27,7 +27,7 @@ public abstract class PreferenceManager {
   protected static final String DESCRIPTION         = "Description";
   public final static String GROUP_DIR              = "GROUP_DIR";
 
-  protected ArrayList<org.janelia.it.workstation.shared.preferences.PrefMgrListener> listeners = new ArrayList<org.janelia.it.workstation.shared.preferences.PrefMgrListener>();
+  protected ArrayList<PrefMgrListener> listeners = new ArrayList<PrefMgrListener>();
   protected String filenameFilter = ".properties";
   protected String userDirectory = System.getProperty("user.home");
 
@@ -252,7 +252,7 @@ public abstract class PreferenceManager {
    * in a subsequent release.
    */
   public void firePreferencesChangedEvent() {
-      for (org.janelia.it.workstation.shared.preferences.PrefMgrListener listener : listeners) {
+      for (PrefMgrListener listener : listeners) {
           (listener).preferencesChanged();
       }
   }
@@ -478,10 +478,10 @@ public abstract class PreferenceManager {
   }
 
 
-  public void registerPrefMgrListener(org.janelia.it.workstation.shared.preferences.PrefMgrListener listener) {
+  public void registerPrefMgrListener(PrefMgrListener listener) {
     if (listener!=null) listeners.add(listener);
   }
-  public void removePrefMgrListener(org.janelia.it.workstation.shared.preferences.PrefMgrListener listener) {
+  public void removePrefMgrListener(PrefMgrListener listener) {
     if (listeners.contains(listener)) listeners.remove(listener);
   }
 

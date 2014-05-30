@@ -14,6 +14,8 @@ import javax.swing.JPanel;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 
+import org.janelia.it.workstation.gui.slice_viewer.color_slider.UglyColorSlider;
+import org.janelia.it.workstation.gui.util.Icons;
 import org.janelia.it.workstation.signal.Slot;
 
 public class ColorChannelWidget extends JPanel 
@@ -23,7 +25,7 @@ public class ColorChannelWidget extends JPanel
 	private VisibilityButton visibilityButton;
 	private ImageColorModel imageColorModel;
 	private ColorButton colorButton;
-	private org.janelia.it.workstation.gui.slice_viewer.color_slider.UglyColorSlider slider;
+	private UglyColorSlider slider;
 	
 	ColorChannelWidget(int channelIndex, ImageColorModel imageColorModel) {
 		this.channelIndex = channelIndex;
@@ -36,7 +38,7 @@ public class ColorChannelWidget extends JPanel
 		// setAlignmentX(Component.RIGHT_ALIGNMENT);
 		visibilityButton = new VisibilityButton();
 		add(visibilityButton);
-		slider = new org.janelia.it.workstation.gui.slice_viewer.color_slider.UglyColorSlider(channelIndex, imageColorModel);
+		slider = new UglyColorSlider(channelIndex, imageColorModel);
 		add(slider);
 		add(colorButton);
 		updateColor();
@@ -68,7 +70,7 @@ public class ColorChannelWidget extends JPanel
 			return;
 		if (imageColorModel.getChannelCount() <= channelIndex)
 			return;
-		org.janelia.it.workstation.gui.slice_viewer.ChannelColorModel ccm = imageColorModel.getChannel(channelIndex);
+		ChannelColorModel ccm = imageColorModel.getChannel(channelIndex);
 		ccm.setColor(whiteColor);
 	}
 
@@ -77,7 +79,7 @@ public class ColorChannelWidget extends JPanel
 			return;
 		if (imageColorModel.getChannelCount() <= channelIndex)
 			return;
-		org.janelia.it.workstation.gui.slice_viewer.ChannelColorModel ccm = imageColorModel.getChannel(channelIndex);
+		ChannelColorModel ccm = imageColorModel.getChannel(channelIndex);
 		setWhiteColor(ccm.getColor());
 	}
 
@@ -86,7 +88,7 @@ public class ColorChannelWidget extends JPanel
             return;
         if (imageColorModel.getChannelCount() <= channelIndex)
             return;
-        org.janelia.it.workstation.gui.slice_viewer.ChannelColorModel ccm = imageColorModel.getChannel(channelIndex);
+        ChannelColorModel ccm = imageColorModel.getChannel(channelIndex);
         visibilityButton.setSelected(ccm.isVisible());
     }
 	
@@ -95,10 +97,10 @@ public class ColorChannelWidget extends JPanel
 		private static final long serialVersionUID = 1L;
 		public VisibilityButton() {
 			super(new ChannelVisibilityAction(channelIndex));
-			setIcon(org.janelia.it.workstation.gui.util.Icons.getIcon("closed_eye.png"));
-            setRolloverIcon(org.janelia.it.workstation.gui.util.Icons.getIcon("closed_eye.png"));
-			setSelectedIcon(org.janelia.it.workstation.gui.util.Icons.getIcon("eye.png"));
-			setRolloverSelectedIcon(org.janelia.it.workstation.gui.util.Icons.getIcon("eye.png"));
+			setIcon(Icons.getIcon("closed_eye.png"));
+            setRolloverIcon(Icons.getIcon("closed_eye.png"));
+			setSelectedIcon(Icons.getIcon("eye.png"));
+			setRolloverSelectedIcon(Icons.getIcon("eye.png"));
 			setSelected(true);
 			setToolTipText("Click to show/hide color channel " + channelIndex);
 			setMaximumSize(getPreferredSize()); // after loading icon on Windows
@@ -106,7 +108,7 @@ public class ColorChannelWidget extends JPanel
 	}
 	
 	
-	class ColorButton extends org.janelia.it.workstation.gui.slice_viewer.ToolButton
+	class ColorButton extends ToolButton
 	{
 		private static final long serialVersionUID = 1L;
 		
@@ -147,7 +149,7 @@ public class ColorChannelWidget extends JPanel
 		public void actionPerformed(ActionEvent event) {
 			if (imageColorModel.getChannelCount() <= channelIndex)
 				return;
-			org.janelia.it.workstation.gui.slice_viewer.ChannelColorModel ccm = imageColorModel.getChannel(channelIndex);
+			ChannelColorModel ccm = imageColorModel.getChannel(channelIndex);
 			VisibilityButton button = (VisibilityButton)event.getSource();
 			ccm.setVisible(button.isSelected());
 			// System.out.println("visibility");
@@ -203,7 +205,7 @@ public class ColorChannelWidget extends JPanel
 				return;
 			if (imageColorModel.getChannelCount() <= channelIndex)
 				return;
-			org.janelia.it.workstation.gui.slice_viewer.ChannelColorModel ccm = imageColorModel.getChannel(channelIndex);
+			ChannelColorModel ccm = imageColorModel.getChannel(channelIndex);
 			originalColor = ccm.getColor();
 			colorChooser.setColor(originalColor);
 			colorDialog.setVisible(true);

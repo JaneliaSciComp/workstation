@@ -1,22 +1,49 @@
 package org.janelia.it.workstation.gui.slice_viewer;
 
 import org.janelia.it.workstation.geom.CoordinateAxis;
+import org.janelia.it.workstation.geom.Vec3;
 import org.janelia.it.workstation.gui.camera.BasicObservableCamera3d;
 import org.janelia.it.workstation.gui.slice_viewer.TileServer.LoadStatus;
 import org.janelia.it.workstation.gui.slice_viewer.action.AdvanceZSlicesAction;
+import org.janelia.it.workstation.gui.slice_viewer.action.CenterNextParentAction;
+import org.janelia.it.workstation.gui.slice_viewer.action.GoBackZSlicesAction;
 import org.janelia.it.workstation.gui.slice_viewer.action.MouseMode;
 import org.janelia.it.workstation.gui.slice_viewer.action.MouseMode.Mode;
+import org.janelia.it.workstation.gui.slice_viewer.action.NextZSliceAction;
+import org.janelia.it.workstation.gui.slice_viewer.action.OpenFolderAction;
 import org.janelia.it.workstation.gui.slice_viewer.action.OrthogonalModeAction;
+import org.janelia.it.workstation.gui.slice_viewer.action.PanModeAction;
+import org.janelia.it.workstation.gui.slice_viewer.action.PreviousZSliceAction;
+import org.janelia.it.workstation.gui.slice_viewer.action.RecentFileList;
+import org.janelia.it.workstation.gui.slice_viewer.action.ResetColorsAction;
+import org.janelia.it.workstation.gui.slice_viewer.action.ResetViewAction;
+import org.janelia.it.workstation.gui.slice_viewer.action.ResetZoomAction;
 import org.janelia.it.workstation.gui.slice_viewer.action.SliceScanAction;
 import org.janelia.it.workstation.gui.slice_viewer.action.TraceMouseModeAction;
 import org.janelia.it.workstation.gui.slice_viewer.action.WheelMode;
+import org.janelia.it.workstation.gui.slice_viewer.action.ZScanMode;
+import org.janelia.it.workstation.gui.slice_viewer.action.ZScanScrollModeAction;
+import org.janelia.it.workstation.gui.slice_viewer.action.ZoomInAction;
+import org.janelia.it.workstation.gui.slice_viewer.action.ZoomMaxAction;
 import org.janelia.it.workstation.gui.slice_viewer.action.ZoomMouseModeAction;
+import org.janelia.it.workstation.gui.slice_viewer.action.ZoomOutAction;
 import org.janelia.it.workstation.gui.slice_viewer.action.ZoomScrollModeAction;
 import org.janelia.it.workstation.gui.slice_viewer.action.OrthogonalModeAction.OrthogonalMode;
+import org.janelia.it.workstation.gui.slice_viewer.annotation.AnnotationManager;
+import org.janelia.it.workstation.gui.slice_viewer.annotation.AnnotationModel;
 import org.janelia.it.workstation.gui.slice_viewer.annotation.AnnotationPanel;
 import org.janelia.it.jacs.model.entity.Entity;
+import org.janelia.it.workstation.gui.slice_viewer.annotation.SliceViewerTranslator;
+import org.janelia.it.workstation.gui.slice_viewer.skeleton.Anchor;
+import org.janelia.it.workstation.gui.slice_viewer.skeleton.Skeleton;
+import org.janelia.it.workstation.gui.slice_viewer.skeleton.SkeletonActor;
+import org.janelia.it.workstation.gui.viewer3d.BoundingBox3d;
+import org.janelia.it.workstation.signal.Signal;
 import org.janelia.it.workstation.signal.Signal1;
+import org.janelia.it.workstation.signal.Slot;
 import org.janelia.it.workstation.signal.Slot1;
+import org.janelia.it.workstation.tracing.AnchoredVoxelPath;
+import org.janelia.it.workstation.tracing.PathTraceToParentRequest;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -70,8 +97,8 @@ public class QuadViewUi extends JPanel
 			camera);
 
 	// TODO - promote volumeImage, colorModel out of sliceviewer
-	org.janelia.it.workstation.gui.slice_viewer.TileServer tileServer = sliceViewer.getTileServer();
-	private org.janelia.it.workstation.gui.slice_viewer.SharedVolumeImage volumeImage = tileServer.getSharedVolumeImage(); // TODO - volume does not belong down there!
+	TileServer tileServer = sliceViewer.getTileServer();
+	private SharedVolumeImage volumeImage = tileServer.getSharedVolumeImage(); // TODO - volume does not belong down there!
 	private ImageColorModel imageColorModel = new ImageColorModel(volumeImage);
 
 	// Four quadrants for orthogonal views
@@ -119,42 +146,42 @@ public class QuadViewUi extends JPanel
 	private JLabel statusLabel = new JLabel("status area");
 	private LoadStatusLabel loadStatusLabel = new LoadStatusLabel();
 	
-	org.janelia.it.workstation.gui.slice_viewer.action.ZScanMode zScanMode = new org.janelia.it.workstation.gui.slice_viewer.action.ZScanMode(volumeImage);
+	ZScanMode zScanMode = new ZScanMode(volumeImage);
 	
 	// annotation things
     private AnnotationPanel annotationPanel;
-	private org.janelia.it.workstation.gui.slice_viewer.annotation.AnnotationModel annotationModel = new org.janelia.it.workstation.gui.slice_viewer.annotation.AnnotationModel();
-	private org.janelia.it.workstation.gui.slice_viewer.annotation.AnnotationManager annotationMgr = new org.janelia.it.workstation.gui.slice_viewer.annotation.AnnotationManager(annotationModel, this);
-    private org.janelia.it.workstation.gui.slice_viewer.annotation.SliceViewerTranslator sliceViewerTranslator = new org.janelia.it.workstation.gui.slice_viewer.annotation.SliceViewerTranslator(annotationModel, sliceViewer);
+	private AnnotationModel annotationModel = new AnnotationModel();
+	private AnnotationManager annotationMgr = new AnnotationManager(annotationModel, this);
+    private SliceViewerTranslator sliceViewerTranslator = new SliceViewerTranslator(annotationModel, sliceViewer);
 
 	// Actions
-	private final Action openFolderAction = new org.janelia.it.workstation.gui.slice_viewer.action.OpenFolderAction(sliceViewer, this);
-	private org.janelia.it.workstation.gui.slice_viewer.action.RecentFileList recentFileList = new org.janelia.it.workstation.gui.slice_viewer.action.RecentFileList(new JMenu("Open Recent"));
-	private final Action resetViewAction = new org.janelia.it.workstation.gui.slice_viewer.action.ResetViewAction(allSliceViewers, volumeImage);
-	private final Action resetColorsAction = new org.janelia.it.workstation.gui.slice_viewer.action.ResetColorsAction(imageColorModel);
+	private final Action openFolderAction = new OpenFolderAction(sliceViewer, this);
+	private RecentFileList recentFileList = new RecentFileList(new JMenu("Open Recent"));
+	private final Action resetViewAction = new ResetViewAction(allSliceViewers, volumeImage);
+	private final Action resetColorsAction = new ResetColorsAction(imageColorModel);
 	// mode actions (and groups)
 	private final ZoomMouseModeAction zoomMouseModeAction = new ZoomMouseModeAction();
-	private final org.janelia.it.workstation.gui.slice_viewer.action.PanModeAction panModeAction = new org.janelia.it.workstation.gui.slice_viewer.action.PanModeAction();
-    private org.janelia.it.workstation.gui.slice_viewer.skeleton.Skeleton skeleton = new org.janelia.it.workstation.gui.slice_viewer.skeleton.Skeleton();
+	private final PanModeAction panModeAction = new PanModeAction();
+    private Skeleton skeleton = new Skeleton();
     private final TraceMouseModeAction traceMouseModeAction = new TraceMouseModeAction();
     // 
 	private final ButtonGroup mouseModeGroup = new ButtonGroup();
-	private final org.janelia.it.workstation.gui.slice_viewer.action.ZScanScrollModeAction zScanScrollModeAction = new org.janelia.it.workstation.gui.slice_viewer.action.ZScanScrollModeAction();
+	private final ZScanScrollModeAction zScanScrollModeAction = new ZScanScrollModeAction();
 	private final ZoomScrollModeAction zoomScrollModeAction = new ZoomScrollModeAction();
 	private final ButtonGroup scrollModeGroup = new ButtonGroup();
 	private final OrthogonalModeAction orthogonalModeAction = new OrthogonalModeAction();
 	// zoom actions
-	private final Action zoomInAction = new org.janelia.it.workstation.gui.slice_viewer.action.ZoomInAction(camera);
-	private final Action zoomOutAction = new org.janelia.it.workstation.gui.slice_viewer.action.ZoomOutAction(camera);
-	private final Action zoomMaxAction = new org.janelia.it.workstation.gui.slice_viewer.action.ZoomMaxAction(camera, volumeImage);
-	private final Action resetZoomAction = new org.janelia.it.workstation.gui.slice_viewer.action.ResetZoomAction(allSliceViewers, volumeImage);
+	private final Action zoomInAction = new ZoomInAction(camera);
+	private final Action zoomOutAction = new ZoomOutAction(camera);
+	private final Action zoomMaxAction = new ZoomMaxAction(camera, volumeImage);
+	private final Action resetZoomAction = new ResetZoomAction(allSliceViewers, volumeImage);
 	// Z scan actions
-	private final SliceScanAction nextZSliceAction = new org.janelia.it.workstation.gui.slice_viewer.action.NextZSliceAction(volumeImage, camera);
-	private final SliceScanAction previousZSliceAction = new org.janelia.it.workstation.gui.slice_viewer.action.PreviousZSliceAction(volumeImage, camera);
+	private final SliceScanAction nextZSliceAction = new NextZSliceAction(volumeImage, camera);
+	private final SliceScanAction previousZSliceAction = new PreviousZSliceAction(volumeImage, camera);
 	private final SliceScanAction advanceZSlicesAction = new AdvanceZSlicesAction(volumeImage, camera, 10);
-	private final SliceScanAction goBackZSlicesAction = new org.janelia.it.workstation.gui.slice_viewer.action.GoBackZSlicesAction(volumeImage, camera, -10);
+	private final SliceScanAction goBackZSlicesAction = new GoBackZSlicesAction(volumeImage, camera, -10);
 	// annotation-related
-    private final org.janelia.it.workstation.gui.slice_viewer.action.CenterNextParentAction centerNextParentAction = new org.janelia.it.workstation.gui.slice_viewer.action.CenterNextParentAction();
+    private final CenterNextParentAction centerNextParentAction = new CenterNextParentAction();
 
 	private final Action clearCacheAction = new AbstractAction() {
 		private static final long serialVersionUID = 1L;
@@ -183,11 +210,11 @@ public class QuadViewUi extends JPanel
 	    public Signal1<WheelMode.Mode> wheelModeChangedSignal = 
 	        new Signal1<WheelMode.Mode>();
 
-    public Signal1<org.janelia.it.workstation.tracing.AnchoredVoxelPath> addAnchoredPathRequestSignal = new Signal1<org.janelia.it.workstation.tracing.AnchoredVoxelPath>();
+    public Signal1<AnchoredVoxelPath> addAnchoredPathRequestSignal = new Signal1<AnchoredVoxelPath>();
 
-    public Signal1<org.janelia.it.workstation.tracing.PathTraceToParentRequest> tracePathRequestedSignal = new Signal1<org.janelia.it.workstation.tracing.PathTraceToParentRequest>();
+    public Signal1<PathTraceToParentRequest> tracePathRequestedSignal = new Signal1<PathTraceToParentRequest>();
 
-    public org.janelia.it.workstation.signal.Signal closeWorkspaceRequestSignal = new org.janelia.it.workstation.signal.Signal();
+    public Signal closeWorkspaceRequestSignal = new Signal();
 
 	private Slot1<MouseMode.Mode> onMouseModeChangedSlot = new Slot1<MouseMode.Mode>() {
 		@Override
@@ -208,9 +235,9 @@ public class QuadViewUi extends JPanel
 		}
 	};
 	    
-	protected Slot1<org.janelia.it.workstation.geom.Vec3> changeZ = new Slot1<org.janelia.it.workstation.geom.Vec3>() {
+	protected Slot1<Vec3> changeZ = new Slot1<Vec3>() {
 		@Override
-		public void execute(org.janelia.it.workstation.geom.Vec3 focus) {
+		public void execute(Vec3 focus) {
 			int z = (int)Math.round((focus.getZ()-0.5) / volumeImage.getZResolution());
 			zScanSlider.setValue(z);
 			zScanSpinner.setValue(z);
@@ -229,14 +256,14 @@ public class QuadViewUi extends JPanel
 		}
 	};
 	
-	public Slot1<org.janelia.it.workstation.geom.Vec3> setCameraFocusSlot = new Slot1<org.janelia.it.workstation.geom.Vec3>() {
+	public Slot1<Vec3> setCameraFocusSlot = new Slot1<Vec3>() {
 		@Override
-		public void execute(org.janelia.it.workstation.geom.Vec3 focus) {
+		public void execute(Vec3 focus) {
 			camera.setFocus(focus);
 		}
 	};
 	
-	protected org.janelia.it.workstation.signal.Slot updateRangesSlot = new org.janelia.it.workstation.signal.Slot() {
+	protected Slot updateRangesSlot = new Slot() {
 		@Override
 		public void execute() 
 		{
@@ -295,10 +322,10 @@ public class QuadViewUi extends JPanel
 		}
 	};
 
-    public org.janelia.it.workstation.signal.Slot centerNextParentSlot = new org.janelia.it.workstation.signal.Slot() {
+    public Slot centerNextParentSlot = new Slot() {
         @Override
         public void execute() {
-            org.janelia.it.workstation.gui.slice_viewer.skeleton.Anchor anchor = getSkeletonActor().getNextParent();
+            Anchor anchor = getSkeletonActor().getNextParent();
             if (anchor != null) {
                 setCameraFocusSlot.execute(anchor.getLocation());
             }
@@ -316,7 +343,7 @@ public class QuadViewUi extends JPanel
                     tileServer.getLoadAdapter().getTileFormat());
 
             // construct new request; add image data to anchor and pass it on
-            org.janelia.it.workstation.tracing.PathTraceToParentRequest request = new org.janelia.it.workstation.tracing.PathTraceToParentRequest(annotationID);
+            PathTraceToParentRequest request = new PathTraceToParentRequest(annotationID);
             request.setImageVolme(volumeImage);
             request.setTextureCache(tileServer.getTextureCache());
             tracePathRequestedSignal.emit(request);
@@ -330,7 +357,7 @@ public class QuadViewUi extends JPanel
         }
     };
 
-    public org.janelia.it.workstation.signal.Slot colorModelUpdatedSlot = new org.janelia.it.workstation.signal.Slot() {
+    public Slot colorModelUpdatedSlot = new Slot() {
         @Override
         public void execute() {
             lockBlackButton.setSelected(imageColorModel.isBlackSynchronized());
@@ -445,7 +472,7 @@ public class QuadViewUi extends JPanel
         annotationPanel.centerAnnotationSignal.connect(centerNextParentSlot);
         // TODO other orthogonal viewers
         OrthogonalPanel viewPanels[] = {neViewer, swViewer, nwViewer};
-        org.janelia.it.workstation.gui.slice_viewer.skeleton.SkeletonActor sharedSkeletonActor = getSkeletonActor();
+        SkeletonActor sharedSkeletonActor = getSkeletonActor();
         sharedSkeletonActor.setSkeleton(sliceViewer.getSkeleton());
         for (OrthogonalPanel v : viewPanels) {
             mouseModeChangedSignal.connect(v.setMouseModeSlot);
@@ -476,7 +503,7 @@ LLF: the hookup for the 3d snapshot.
 
             final boolean bShowTileOutlines = false; // Debugging aid
             if (bShowTileOutlines) {
-            	v.getViewer().addActor(new org.janelia.it.workstation.gui.slice_viewer.TileOutlineActor(v.getViewTileManager())); // for debugging
+            	v.getViewer().addActor(new TileOutlineActor(v.getViewTileManager())); // for debugging
             }
             // Add skeleton actor AFTER slice actor
             v.getViewer().setSkeletonActor(sharedSkeletonActor);
@@ -499,8 +526,8 @@ LLF: the hookup for the 3d snapshot.
 	
 	private double getMinZoom() {
 		double result = getMaxZoom();
-		org.janelia.it.workstation.gui.viewer3d.BoundingBox3d box = volumeImage.getBoundingBox3d();
-		org.janelia.it.workstation.geom.Vec3 volSize = new org.janelia.it.workstation.geom.Vec3(box.getWidth(), box.getHeight(), box.getDepth());
+		BoundingBox3d box = volumeImage.getBoundingBox3d();
+		Vec3 volSize = new Vec3(box.getWidth(), box.getHeight(), box.getDepth());
 		for (TileConsumer viewer : allSliceViewers) {
 			if (! viewer.isShowing())
 				continue;
@@ -512,7 +539,7 @@ LLF: the hookup for the 3d snapshot.
 				continue;
 			// Fit two of the whole volume on the screen
 			// Rotate volume to match viewer orientation
-			org.janelia.it.workstation.geom.Vec3 rotSize = viewer.getViewerInGround().inverse().times(volSize);
+			Vec3 rotSize = viewer.getViewerInGround().inverse().times(volSize);
 			double zx = 0.5 * w / Math.abs(rotSize.x());
 			double zy = 0.5 * h / Math.abs(rotSize.y());
 			double z = Math.min(zx, zy);
@@ -529,7 +556,7 @@ LLF: the hookup for the 3d snapshot.
 		tileServer.refreshCurrentTileSetSlot.execute();
 	}
 	
-	private org.janelia.it.workstation.gui.slice_viewer.skeleton.SkeletonActor getSkeletonActor() {
+	private SkeletonActor getSkeletonActor() {
 		return sliceViewer.getSkeletonActor();
 	}
 	
@@ -638,7 +665,7 @@ LLF: the hookup for the 3d snapshot.
 		
 		colorLockPanel.add(Box.createHorizontalStrut(30));
 
-		imageColorModel.getColorModelInitializedSignal().connect(new org.janelia.it.workstation.signal.Slot() {
+		imageColorModel.getColorModelInitializedSignal().connect(new Slot() {
 			@Override
 			public void execute() {
 				// System.out.println("Updating slider visibility");
@@ -703,14 +730,14 @@ LLF: the hookup for the 3d snapshot.
 		zViewerPanel.add(zScanPanel);
 		zScanPanel.setLayout(new BoxLayout(zScanPanel, BoxLayout.X_AXIS));
 	
-        org.janelia.it.workstation.gui.slice_viewer.ToolButton button_2 = new org.janelia.it.workstation.gui.slice_viewer.ToolButton(goBackZSlicesAction);
+        ToolButton button_2 = new ToolButton(goBackZSlicesAction);
 		button_2.setAction(goBackZSlicesAction);
 		button_2.setMargin(new Insets(0, 0, 0, 0));
 		button_2.setHideActionText(true);
 		button_2.setAlignmentX(0.5f);
 		zScanPanel.add(button_2);
 		
-		org.janelia.it.workstation.gui.slice_viewer.ToolButton button_1 = new org.janelia.it.workstation.gui.slice_viewer.ToolButton(previousZSliceAction);
+		ToolButton button_1 = new ToolButton(previousZSliceAction);
 		button_1.setAction(previousZSliceAction);
 		button_1.setMargin(new Insets(0, 0, 0, 0));
 		button_1.setHideActionText(true);
@@ -728,14 +755,14 @@ LLF: the hookup for the 3d snapshot.
 		zScanSlider.setPaintTicks(true);
 		zScanPanel.add(zScanSlider);
 		
-		org.janelia.it.workstation.gui.slice_viewer.ToolButton button_3 = new org.janelia.it.workstation.gui.slice_viewer.ToolButton(nextZSliceAction);
+		ToolButton button_3 = new ToolButton(nextZSliceAction);
 		button_3.setAction(nextZSliceAction);
 		button_3.setMargin(new Insets(0, 0, 0, 0));
 		button_3.setHideActionText(true);
 		button_3.setAlignmentX(0.5f);
 		zScanPanel.add(button_3);
 		
-		org.janelia.it.workstation.gui.slice_viewer.ToolButton button_4 = new org.janelia.it.workstation.gui.slice_viewer.ToolButton(advanceZSlicesAction);
+		ToolButton button_4 = new ToolButton(advanceZSlicesAction);
 		button_4.setAction(advanceZSlicesAction);
 		button_4.setMargin(new Insets(0, 0, 0, 0));
 		button_4.setHideActionText(true);
@@ -762,7 +789,7 @@ LLF: the hookup for the 3d snapshot.
 		viewerPlusPanel.add(panel_1);
 		panel_1.setLayout(new BoxLayout(panel_1, BoxLayout.Y_AXIS));
 		
-		org.janelia.it.workstation.gui.slice_viewer.ToolButton zoomInButton = new org.janelia.it.workstation.gui.slice_viewer.ToolButton(zoomInAction);
+		ToolButton zoomInButton = new ToolButton(zoomInAction);
 		zoomInButton.setAlignmentX(0.5f);
 		zoomInButton.setMargin(new Insets(0, 0, 0, 0));
 		zoomInButton.setHideActionText(true);
@@ -792,7 +819,7 @@ LLF: the hookup for the 3d snapshot.
 			}
 		});
 		
-		org.janelia.it.workstation.gui.slice_viewer.ToolButton zoomOutButton = new org.janelia.it.workstation.gui.slice_viewer.ToolButton(zoomOutAction);
+		ToolButton zoomOutButton = new ToolButton(zoomOutAction);
 		zoomOutButton.setAction(zoomOutAction);
 		zoomOutButton.setMargin(new Insets(0, 0, 0, 0));
 		zoomOutButton.setHideActionText(true);
@@ -1026,7 +1053,7 @@ LLF: the hookup for the 3d snapshot.
 	}
 	
 	private boolean setZSlice(int z) {
-		org.janelia.it.workstation.geom.Vec3 oldFocus = camera.getFocus();
+		Vec3 oldFocus = camera.getFocus();
 		int oldValue = (int)Math.round(oldFocus.getZ() / volumeImage.getZResolution() - 0.5);
 		if (oldValue == z)
 			return false; // camera is already pretty close
@@ -1036,7 +1063,7 @@ LLF: the hookup for the 3d snapshot.
 		double maxZ = volumeImage.getBoundingBox3d().getMax().getZ() - halfVoxel;
 		newZ = Math.max(newZ, minZ);
 		newZ = Math.min(newZ, maxZ);
-		camera.setFocus(new org.janelia.it.workstation.geom.Vec3(oldFocus.getX(), oldFocus.getY(), newZ));
+		camera.setFocus(new Vec3(oldFocus.getX(), oldFocus.getY(), newZ));
 		return true;
 	}
 
@@ -1146,7 +1173,7 @@ LLF: the hookup for the 3d snapshot.
         JMenu recentFileMenu = new JMenu("Open Recent");
         recentFileMenu.setVisible(false);
         mnFile.add(recentFileMenu);
-        recentFileList = new org.janelia.it.workstation.gui.slice_viewer.action.RecentFileList(recentFileMenu);
+        recentFileList = new RecentFileList(recentFileMenu);
         recentFileList.getOpenUrlRequestedSignal().connect(loadUrlSlot);
 
         return mnFile;
@@ -1293,7 +1320,7 @@ LLF: the hookup for the 3d snapshot.
     		setHorizontalTextPosition(JLabel.CENTER);
     		setVerticalTextPosition(JLabel.CENTER);
     		//
-    		setLoadStatus(org.janelia.it.workstation.gui.slice_viewer.TileServer.LoadStatus.UNINITIALIZED);
+    		setLoadStatus(TileServer.LoadStatus.UNINITIALIZED);
     	}
     	
     	void setLoadStatus(LoadStatus loadStatus) {
@@ -1301,9 +1328,9 @@ LLF: the hookup for the 3d snapshot.
     			return; // no change
     		this.loadStatus = loadStatus;
     		setText(Integer.toString(loadStatus.ordinal() - 1));
-    		if (loadStatus.ordinal() >= org.janelia.it.workstation.gui.slice_viewer.TileServer.LoadStatus.BEST_TEXTURES_LOADED.ordinal())
+    		if (loadStatus.ordinal() >= TileServer.LoadStatus.BEST_TEXTURES_LOADED.ordinal())
     			setIcon(checkIcon);
-    		else if (loadStatus.ordinal() >= org.janelia.it.workstation.gui.slice_viewer.TileServer.LoadStatus.NO_TEXTURES_LOADED.ordinal())
+    		else if (loadStatus.ordinal() >= TileServer.LoadStatus.NO_TEXTURES_LOADED.ordinal())
     			setIcon(busyIcon);
     		else
     			setIcon(emptyIcon);

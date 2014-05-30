@@ -9,6 +9,8 @@ import org.janelia.it.jacs.model.entity.Entity;
 import org.janelia.it.jacs.model.entity.EntityConstants;
 import org.janelia.it.jacs.model.entity.EntityData;
 import org.janelia.it.jacs.shared.utils.EntityUtils;
+import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
+import org.janelia.it.workstation.model.entity.RootedEntity;
 
 /**
  * Utilities for dealing with Entities via the ModelMgr. In general, most of these methods access the database and 
@@ -35,7 +37,7 @@ public class ModelMgrUtils {
 	 * @return
 	 */
     public static boolean isOwner(Entity entity) {
-        return EntityUtils.isOwner(entity, org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr.getSubjectKey());
+        return EntityUtils.isOwner(entity, SessionMgr.getSubjectKey());
     }
 
     /**
@@ -45,7 +47,7 @@ public class ModelMgrUtils {
      * @return
      */
 	public static boolean hasReadAccess(Entity entity) {
-	    return EntityUtils.hasReadAccess(entity, org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr.getSubjectKeys());
+	    return EntityUtils.hasReadAccess(entity, SessionMgr.getSubjectKeys());
 	}
 
     /**
@@ -55,14 +57,14 @@ public class ModelMgrUtils {
      * @return
      */
 	public static boolean hasWriteAccess(Entity entity) {
-        return EntityUtils.hasWriteAccess(entity, org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr.getSubjectKeys());
+        return EntityUtils.hasWriteAccess(entity, SessionMgr.getSubjectKeys());
 	}
     
     public static EntityData addChild(Entity parent, Entity child) throws Exception {
 		return ModelMgr.getModelMgr().addEntityToParent(parent, child);
     }
 
-	public static org.janelia.it.workstation.model.entity.RootedEntity getChildFolder(org.janelia.it.workstation.model.entity.RootedEntity parent, String name, boolean createIfMissing) throws Exception {
+	public static RootedEntity getChildFolder(RootedEntity parent, String name, boolean createIfMissing) throws Exception {
 		Entity entity = parent.getEntity();
 		if (!EntityUtils.areLoaded(entity.getEntityData())) {
 			entity = ModelMgr.getModelMgr().loadLazyEntity(entity, false);
@@ -79,7 +81,7 @@ public class ModelMgrUtils {
 			}
 		}
 		
-		org.janelia.it.workstation.model.entity.RootedEntity child = parent.getChild(repFolderEd);
+		RootedEntity child = parent.getChild(repFolderEd);
 		if (!EntityUtils.areLoaded(child.getEntity().getEntityData())) {
 			child.setEntity(ModelMgr.getModelMgr().loadLazyEntity(child.getEntity(), false));
 		}

@@ -40,12 +40,17 @@ import javax.swing.tree.DefaultMutableTreeNode;
 import javax.swing.tree.DefaultTreeModel;
 
 import org.janelia.it.workstation.api.entity_model.access.ModelMgrAdapter;
+import org.janelia.it.workstation.api.entity_model.events.EntityChangeEvent;
 import org.janelia.it.workstation.api.entity_model.events.EntityCreateEvent;
 import org.janelia.it.workstation.api.entity_model.events.EntityInvalidationEvent;
 import org.janelia.it.workstation.api.entity_model.events.EntityRemoveEvent;
 import org.janelia.it.workstation.api.entity_model.management.EntitySelectionModel;
+import org.janelia.it.workstation.api.entity_model.management.ModelMgr;
 import org.janelia.it.workstation.gui.dialogs.EntityDetailsDialog;
+import org.janelia.it.workstation.gui.dialogs.KeyBindDialog;
 import org.janelia.it.workstation.gui.framework.actions.Action;
+import org.janelia.it.workstation.gui.framework.actions.AnnotateAction;
+import org.janelia.it.workstation.gui.framework.actions.CreateOntologyAction;
 import org.janelia.it.workstation.gui.framework.actions.NavigateToNodeAction;
 import org.janelia.it.workstation.gui.framework.actions.OntologyElementAction;
 import org.janelia.it.workstation.gui.framework.keybind.KeyboardShortcut;
@@ -54,6 +59,7 @@ import org.janelia.it.workstation.gui.framework.outline.ontology.OntologyContext
 import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.workstation.gui.framework.tree.ExpansionState;
 import org.janelia.it.workstation.gui.util.Icons;
+import org.janelia.it.workstation.gui.util.JScrollPopupMenu;
 import org.janelia.it.workstation.gui.util.MouseForwarder;
 import org.janelia.it.workstation.model.entity.RootedEntity;
 import org.janelia.it.workstation.shared.util.ConcurrentUtils;
@@ -79,7 +85,7 @@ import com.google.common.eventbus.Subscribe;
  *
  * @author <a href="mailto:rokickik@janelia.hhmi.org">Konrad Rokicki</a>
  */
-public abstract class OntologyOutline extends EntityTree implements org.janelia.it.workstation.gui.framework.outline.Refreshable, org.janelia.it.workstation.gui.framework.outline.ActivatableView {
+public abstract class OntologyOutline extends EntityTree implements Refreshable, ActivatableView {
 
     public static final String ONTOLOGY_COMPONENT_NAME = "OntologyViewerTopComponent";
     private static final Logger log = LoggerFactory.getLogger(OntologyOutline.class);
@@ -89,7 +95,7 @@ public abstract class OntologyOutline extends EntityTree implements org.janelia.
     private String currUniqueId;
 
     private final KeyListener keyListener;
-    private final org.janelia.it.workstation.gui.dialogs.KeyBindDialog keyBindDialog;
+    private final KeyBindDialog keyBindDialog;
 
     private boolean recordingKeyBinds = false;
 
@@ -140,7 +146,7 @@ public abstract class OntologyOutline extends EntityTree implements org.janelia.
         };
 
         // Prepare the key binding dialog box
-        this.keyBindDialog = new org.janelia.it.workstation.gui.dialogs.KeyBindDialog(this);
+        this.keyBindDialog = new KeyBindDialog(this);
         keyBindDialog.pack();
 
         keyBindDialog.addComponentListener(new ComponentAdapter() {
@@ -153,7 +159,7 @@ public abstract class OntologyOutline extends EntityTree implements org.janelia.
         });
 
         // Listen for changes to the model
-        org.janelia.it.workstation.api.entity_model.management.ModelMgr.getModelMgr().addModelMgrObserver(new ModelMgrAdapter() {
+        ModelMgr.getModelMgr().addModelMgrObserver(new ModelMgrAdapter() {
             @Override
             public void ontologySelected(long rootId) {
                 try {
@@ -190,7 +196,7 @@ public abstract class OntologyOutline extends EntityTree implements org.janelia.
 
         log.debug("Init outline with {} ontology roots", entityRootList.size());
 
-        Long selectedId = org.janelia.it.workstation.api.entity_model.management.ModelMgr.getModelMgr().getCurrentOntologyId();
+        Long selectedId = ModelMgr.getModelMgr().getCurrentOntologyId();
         Entity selectedEntityRoot = null;
 
         this.entityRootList = new ArrayList<Entity>();
@@ -263,7 +269,7 @@ public abstract class OntologyOutline extends EntityTree implements org.janelia.
 
             @Override
             protected void doStuff() throws Exception {
-                tree = org.janelia.it.workstation.api.entity_model.management.ModelMgr.getModelMgr().getEntityTree(nextRoot.getId());
+                tree = ModelMgr.getModelMgr().getEntityTree(nextRoot.getId());
             }
 
             @Override
@@ -315,7 +321,7 @@ public abstract class OntologyOutline extends EntityTree implements org.janelia.
         populateActionMap(new RootedEntity(root));
 
         // Replace the cell renderer with one that knows about the outline so that it can retrieve key binds
-        selectedTree.setCellRenderer(new org.janelia.it.workstation.gui.framework.outline.OntologyTreeCellRenderer(OntologyOutline.this));
+        selectedTree.setCellRenderer(new OntologyTreeCellRenderer(OntologyOutline.this));
 
         JTree tree = getTree();
 
@@ -327,7 +333,7 @@ public abstract class OntologyOutline extends EntityTree implements org.janelia.
         tree.setRootVisible(true);
         tree.setDragEnabled(true);
         tree.setDropMode(DropMode.ON_OR_INSERT);
-        tree.setTransferHandler(new org.janelia.it.workstation.gui.framework.outline.OntologyElementTransferHandler() {
+        tree.setTransferHandler(new OntologyElementTransferHandler() {
             @Override
             public JComponent getDropTargetComponent() {
                 return OntologyOutline.this;
@@ -369,7 +375,7 @@ public abstract class OntologyOutline extends EntityTree implements org.janelia.
                 @Override
                 public void actionPerformed(ActionEvent e) {
 
-                    final org.janelia.it.workstation.gui.util.JScrollPopupMenu ontologyListMenu = new org.janelia.it.workstation.gui.util.JScrollPopupMenu();
+                    final JScrollPopupMenu ontologyListMenu = new JScrollPopupMenu();
                     ontologyListMenu.setMaximumVisibleRows(20);
 
                     for (final Entity entityRoot : entityRootList) {
@@ -382,7 +388,7 @@ public abstract class OntologyOutline extends EntityTree implements org.janelia.
                         roleMenuItem.setIcon(Icons.getIcon(entityRoot));
                         roleMenuItem.addActionListener(new ActionListener() {
                             public void actionPerformed(ActionEvent e) {
-                                org.janelia.it.workstation.api.entity_model.management.ModelMgr.getModelMgr().setCurrentOntologyId(entityRoot.getId());
+                                ModelMgr.getModelMgr().setCurrentOntologyId(entityRoot.getId());
                             }
                         });
                         ontologyListMenu.add(roleMenuItem);
@@ -394,7 +400,7 @@ public abstract class OntologyOutline extends EntityTree implements org.janelia.
                     addMenuItem.setIcon(Icons.getIcon("folder_add.png"));
                     addMenuItem.addActionListener(new ActionListener() {
                         public void actionPerformed(ActionEvent e) {
-                            Action action = new org.janelia.it.workstation.gui.framework.actions.CreateOntologyAction();
+                            Action action = new CreateOntologyAction();
                             action.doAction();
                         }
                     });
@@ -449,7 +455,7 @@ public abstract class OntologyOutline extends EntityTree implements org.janelia.
         }
 
         private JMenuItem getNewRootFolderItem() {
-            Action action = new org.janelia.it.workstation.gui.framework.actions.CreateOntologyAction("  Create New Ontology");
+            Action action = new CreateOntologyAction("  Create New Ontology");
             return getActionItem(action);
         }
     }
@@ -533,7 +539,7 @@ public abstract class OntologyOutline extends EntityTree implements org.janelia.
         this.currUniqueId = uniqueId;
 
         log.debug("Selecting node {}", uniqueId);
-        org.janelia.it.workstation.api.entity_model.management.ModelMgr.getModelMgr().getEntitySelectionModel().selectEntity(EntitySelectionModel.CATEGORY_ONTOLOGY, uniqueId + "", true);
+        ModelMgr.getModelMgr().getEntitySelectionModel().selectEntity(EntitySelectionModel.CATEGORY_ONTOLOGY, uniqueId + "", true);
     }
 
     /**
@@ -553,7 +559,7 @@ public abstract class OntologyOutline extends EntityTree implements org.janelia.
             action = new NavigateToNodeAction();
         }
         else {
-            action = new org.janelia.it.workstation.gui.framework.actions.AnnotateAction();
+            action = new AnnotateAction();
         }
 
         log.trace("Associating element {} with path {}", element.getId(), rootedEntity.getUniqueId());
@@ -578,7 +584,7 @@ public abstract class OntologyOutline extends EntityTree implements org.janelia.
 
             if (entityRootList != null) {
                 entityRootList.add(entity);
-                Collections.sort(entityRootList, new org.janelia.it.workstation.gui.framework.outline.EntityRootComparator());
+                Collections.sort(entityRootList, new EntityRootComparator());
             }
         }
     }
@@ -612,7 +618,7 @@ public abstract class OntologyOutline extends EntityTree implements org.janelia.
 
     @Subscribe
     @Override
-    public void entityChanged(org.janelia.it.workstation.api.entity_model.events.EntityChangeEvent event) {
+    public void entityChanged(EntityChangeEvent event) {
         super.entityChanged(event);
         final Entity entity = event.getEntity();
 
@@ -718,7 +724,7 @@ public abstract class OntologyOutline extends EntityTree implements org.janelia.
         log.debug("Starting whole tree refresh (invalidateCache={}, restoreState={})", invalidateCache, expansionState != null);
 
         showLoadingIndicator();
-        org.janelia.it.workstation.api.entity_model.management.ModelMgr.getModelMgr().unregisterOnEventBus(OntologyOutline.this);
+        ModelMgr.getModelMgr().unregisterOnEventBus(OntologyOutline.this);
 
         SimpleWorker entityOutlineLoadingWorker = new SimpleWorker() {
 
@@ -727,7 +733,7 @@ public abstract class OntologyOutline extends EntityTree implements org.janelia.
             @Override
             protected void doStuff() throws Exception {
                 if (invalidateCache && getRootEntity() != null) {
-                    org.janelia.it.workstation.api.entity_model.management.ModelMgr.getModelMgr().invalidateCache();
+                    ModelMgr.getModelMgr().invalidateCache();
                 }
                 rootList = loadRootList();
             }
@@ -735,7 +741,7 @@ public abstract class OntologyOutline extends EntityTree implements org.janelia.
             @Override
             protected void hadSuccess() {
                 try {
-                    org.janelia.it.workstation.api.entity_model.management.ModelMgr.getModelMgr().registerOnEventBus(OntologyOutline.this);
+                    ModelMgr.getModelMgr().registerOnEventBus(OntologyOutline.this);
 
                     init(rootList, new Callable<Void>() {
                         @Override

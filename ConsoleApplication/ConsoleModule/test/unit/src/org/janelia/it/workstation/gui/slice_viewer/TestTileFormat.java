@@ -13,8 +13,8 @@ import org.junit.experimental.categories.Category;
 public class TestTileFormat {
 
 	// Volume like "M:/render/2013-04-25-AAV/"
-	private org.janelia.it.workstation.gui.slice_viewer.TileFormat createAavFormat() {
-		org.janelia.it.workstation.gui.slice_viewer.TileFormat tileFormat = new org.janelia.it.workstation.gui.slice_viewer.TileFormat();
+	private TileFormat createAavFormat() {
+		TileFormat tileFormat = new TileFormat();
 		tileFormat.setDefaultParameters();
 		tileFormat.setVolumeSize(new int[] {65536, 65536, 7936});
 		tileFormat.setVoxelMicrometers(new double[] {1.0, 1.0, 1.0});
@@ -24,8 +24,8 @@ public class TestTileFormat {
 	}
 	
 	// xyz->TileIndex->cornerXyz sanity check
-	private void sanityCheckXyz(Vec3 xyz, org.janelia.it.workstation.gui.slice_viewer.TileFormat format, int zoom) {
-		org.janelia.it.workstation.gui.slice_viewer.TileIndex ix = format.tileIndexForXyz(xyz, zoom, CoordinateAxis.Z);
+	private void sanityCheckXyz(Vec3 xyz, TileFormat format, int zoom) {
+		TileIndex ix = format.tileIndexForXyz(xyz, zoom, CoordinateAxis.Z);
 		Vec3 corners[] = format.cornersForTileIndex(ix);
 		// Verify that the tile corners bound the seed point xyz
 		double epsilon = 1e-6; // roundoff error tolerance
@@ -40,7 +40,7 @@ public class TestTileFormat {
 		assertTrue(corners[0].getX() <= corners[3].getX());
 		// Verify that adjacent tiles perfectly cover space
 		// Consider another tile to the lower right of ix
-		org.janelia.it.workstation.gui.slice_viewer.TileIndex ixDiag = new org.janelia.it.workstation.gui.slice_viewer.TileIndex(
+		TileIndex ixDiag = new TileIndex(
 				ix.getX()+1, ix.getY()-1, ix.getZ(),
 				ix.getZoom(), ix.getMaxZoom(), 
 				ix.getIndexStyle(),
@@ -54,18 +54,18 @@ public class TestTileFormat {
 	@Test
     @Category(TestCategories.FastTests.class)
     public void testTileIndexForXyz() {
-		org.janelia.it.workstation.gui.slice_viewer.TileFormat tileFormat = createAavFormat();
+		TileFormat tileFormat = createAavFormat();
 		
 		// Test simple upper left front corner tile
 		Vec3 xyz1 = new Vec3(0, 0, 0);
-		org.janelia.it.workstation.gui.slice_viewer.TileIndex ix1 = tileFormat.tileIndexForXyz(xyz1, 0, CoordinateAxis.Z);
+		TileIndex ix1 = tileFormat.tileIndexForXyz(xyz1, 0, CoordinateAxis.Z);
 		assertEquals(0, ix1.getX());
 		assertEquals(63, ix1.getY());
 		assertEquals(0, ix1.getZ());
 
 		// Test general tile
 		Vec3 xyz2 = new Vec3(29952.0, 24869.6, 1243.5);
-		org.janelia.it.workstation.gui.slice_viewer.TileIndex ix2 = tileFormat.tileIndexForXyz(xyz2, 0, CoordinateAxis.Z);
+		TileIndex ix2 = tileFormat.tileIndexForXyz(xyz2, 0, CoordinateAxis.Z);
 		assertEquals(29, ix2.getX());
 		assertEquals(39, ix2.getY());
 		assertEquals(1243, ix2.getZ());
@@ -90,9 +90,9 @@ public class TestTileFormat {
 		TileFormat tileFormat = createAavFormat();
 
 		// upper left front corner tile
-		org.janelia.it.workstation.gui.slice_viewer.TileIndex ix1 = new org.janelia.it.workstation.gui.slice_viewer.TileIndex(0, 63, 0,
+		TileIndex ix1 = new TileIndex(0, 63, 0,
 				0, 0, 
-				org.janelia.it.workstation.gui.slice_viewer.TileIndex.IndexStyle.OCTREE,
+				TileIndex.IndexStyle.OCTREE,
 				CoordinateAxis.Z);
 		Vec3 corners[] = tileFormat.cornersForTileIndex(ix1);
 		// Order of corners should be like this:

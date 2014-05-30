@@ -1,5 +1,7 @@
 package org.janelia.it.workstation.gui.util;
 
+import org.janelia.it.workstation.shared.util.SystemInfo;
+
 import java.awt.Component;
 import java.awt.Graphics2D;
 import java.awt.Graphics;
@@ -164,7 +166,7 @@ public class RotatedIcon implements Icon
 			
 			// Adding this line is a terrible hack. 
 			// TODO: Figure out why this class doesn't render correctly in Linux without this extra line. 
-			if (org.janelia.it.workstation.shared.util.SystemInfo.isLinux) g2.translate(0, 10);
+			if (SystemInfo.isLinux) g2.translate(0, 10);
 			
 			icon.paintIcon(c, g2,  -cWidth, yAdjustment - cHeight);
     	}

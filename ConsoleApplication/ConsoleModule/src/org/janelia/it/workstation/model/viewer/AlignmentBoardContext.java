@@ -10,6 +10,14 @@ import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.workstation.gui.viewer3d.events.AlignmentBoardEvent;
 import org.janelia.it.workstation.gui.viewer3d.events.AlignmentBoardItemChangeEvent;
 import org.janelia.it.workstation.gui.viewer3d.events.AlignmentBoardItemChangeEvent.ChangeType;
+import org.janelia.it.workstation.model.domain.AlignmentContext;
+import org.janelia.it.workstation.model.domain.Compartment;
+import org.janelia.it.workstation.model.domain.CompartmentSet;
+import org.janelia.it.workstation.model.domain.EntityWrapper;
+import org.janelia.it.workstation.model.domain.EntityWrapperFactory;
+import org.janelia.it.workstation.model.domain.Neuron;
+import org.janelia.it.workstation.model.domain.Sample;
+import org.janelia.it.workstation.model.domain.VolumeImage;
 import org.janelia.it.workstation.model.entity.RootedEntity;
 import org.janelia.it.jacs.model.entity.Entity;
 import org.janelia.it.jacs.model.entity.EntityConstants;
@@ -21,18 +29,18 @@ public class AlignmentBoardContext extends AlignedItem {
 
     private static final Logger log = LoggerFactory.getLogger(AlignmentBoardContext.class);
 
-    private org.janelia.it.workstation.model.domain.AlignmentContext context;
+    private AlignmentContext context;
     
     public AlignmentBoardContext(RootedEntity rootedEntity) {
         super(rootedEntity);
         String as = getInternalEntity().getValueByAttributeName(EntityConstants.ATTRIBUTE_ALIGNMENT_SPACE);
         String ores = getInternalEntity().getValueByAttributeName(EntityConstants.ATTRIBUTE_OPTICAL_RESOLUTION);
         String pres = getInternalEntity().getValueByAttributeName(EntityConstants.ATTRIBUTE_PIXEL_RESOLUTION);
-        this.context = new org.janelia.it.workstation.model.domain.AlignmentContext(as, ores, pres);
+        this.context = new AlignmentContext(as, ores, pres);
     }
 
     @Override
-    public void loadContextualizedChildren(org.janelia.it.workstation.model.domain.AlignmentContext alignmentContext) throws Exception {
+    public void loadContextualizedChildren(AlignmentContext alignmentContext) throws Exception {
 
         log.debug("Loading contextualized children for alignment board '{}' (id={})",getName(),getId());
         initChildren();
@@ -51,7 +59,7 @@ public class AlignmentBoardContext extends AlignedItem {
         }
     }
 
-    public org.janelia.it.workstation.model.domain.AlignmentContext getAlignmentContext() {
+    public AlignmentContext getAlignmentContext() {
         return context;
     }
 
@@ -90,13 +98,13 @@ public class AlignmentBoardContext extends AlignedItem {
         String type = rootedEntity.getType();
         
         if (EntityConstants.TYPE_SAMPLE.equals(type)) {
-            org.janelia.it.workstation.model.domain.Sample sample = (org.janelia.it.workstation.model.domain.Sample) org.janelia.it.workstation.model.domain.EntityWrapperFactory.wrap(rootedEntity);
+            Sample sample = (Sample) EntityWrapperFactory.wrap(rootedEntity);
             sample.loadContextualizedChildren(context);
             addNewAlignedEntity(sample);
         }
         else if (EntityConstants.TYPE_NEURON_FRAGMENT.equals(type)) {
             Entity sampleEntity = ModelMgr.getModelMgr().getAncestorWithType(rootedEntity.getEntity(), EntityConstants.TYPE_SAMPLE);
-            org.janelia.it.workstation.model.domain.Sample sample = (org.janelia.it.workstation.model.domain.Sample) org.janelia.it.workstation.model.domain.EntityWrapperFactory.wrap(new RootedEntity(sampleEntity));
+            Sample sample = (Sample) EntityWrapperFactory.wrap(new RootedEntity(sampleEntity));
 
             Entity separationEntity = getPipelineAncestor(rootedEntity);
             Entity alignmentEntity = ModelMgr.getModelMgr().getAncestorWithType(separationEntity, EntityConstants.TYPE_ALIGNMENT_RESULT);
@@ -111,7 +119,7 @@ public class AlignmentBoardContext extends AlignedItem {
 
             sample.loadContextualizedChildren(context);
             
-            for(org.janelia.it.workstation.model.domain.Neuron neuron : sample.getNeuronSet()) {
+            for(Neuron neuron : sample.getNeuronSet()) {
                 if (neuron.getId().equals(rootedEntity.getEntityId())) {
                     addNewAlignedEntity(neuron);
                     return;
@@ -123,7 +131,7 @@ public class AlignmentBoardContext extends AlignedItem {
         }
         else if (EntityConstants.TYPE_IMAGE_3D.equals(type)  &&  rootedEntity.getName().startsWith( "Reference" )) {
             Entity sampleEntity = ModelMgr.getModelMgr().getAncestorWithType(rootedEntity.getEntity(), EntityConstants.TYPE_SAMPLE);
-            org.janelia.it.workstation.model.domain.Sample sample = (org.janelia.it.workstation.model.domain.Sample) org.janelia.it.workstation.model.domain.EntityWrapperFactory.wrap(new RootedEntity(sampleEntity));
+            Sample sample = (Sample) EntityWrapperFactory.wrap(new RootedEntity(sampleEntity));
 
             Entity separationEntity = getPipelineAncestor(rootedEntity);
             Entity alignmentEntity = ModelMgr.getModelMgr().getAncestorWithType(separationEntity, EntityConstants.TYPE_ALIGNMENT_RESULT);
@@ -137,7 +145,7 @@ public class AlignmentBoardContext extends AlignedItem {
             }
 
             sample.loadContextualizedChildren(context);
-            org.janelia.it.workstation.model.domain.VolumeImage volumeImage = sample.getReference();
+            VolumeImage volumeImage = sample.getReference();
             if ( volumeImage != null ) {
                 addNewAlignedEntity( volumeImage );
             }
@@ -172,7 +180,7 @@ public class AlignmentBoardContext extends AlignedItem {
         }
 
         if (context==null) {
-            this.context = new org.janelia.it.workstation.model.domain.AlignmentContext(alignmentSpaceName, opticalResolution, pixelResolution);
+            this.context = new AlignmentContext(alignmentSpaceName, opticalResolution, pixelResolution);
         }
         return true;
     }
@@ -183,14 +191,14 @@ public class AlignmentBoardContext extends AlignedItem {
      * @param wrapper to be added to the board
      * @throws Exception
      */
-    public void addNewAlignedEntity(org.janelia.it.workstation.model.domain.EntityWrapper wrapper) throws Exception {
+    public void addNewAlignedEntity(EntityWrapper wrapper) throws Exception {
 
         log.info("Adding new aligned entity: {}", wrapper.getName());
         
         final Collection<AlignmentBoardEvent> events = new ArrayList<AlignmentBoardEvent>();
         
-        if (wrapper instanceof org.janelia.it.workstation.model.domain.Sample) {
-            org.janelia.it.workstation.model.domain.Sample sample = (org.janelia.it.workstation.model.domain.Sample)wrapper;
+        if (wrapper instanceof Sample) {
+            Sample sample = (Sample)wrapper;
             AlignedItem sampleAlignedItem = getAlignedItemWithEntityId(sample.getId());
 
             if (sampleAlignedItem==null) {
@@ -200,13 +208,13 @@ public class AlignmentBoardContext extends AlignedItem {
                 
                 sampleAlignedItem = ModelMgr.getModelMgr().addAlignedItem(this, sample, true);
                 sampleAlignedItem.loadContextualizedChildren(getAlignmentContext());
-                org.janelia.it.workstation.model.domain.VolumeImage reference = sample.getReference();
+                VolumeImage reference = sample.getReference();
                 if ( reference != null ) {
                     log.info("Adding reference: {}", reference.getName());
                     AlignedItem childItem = ModelMgr.getModelMgr().addAlignedItem(sampleAlignedItem, reference, true);
                     childItem.loadContextualizedChildren(getAlignmentContext());
                 }
-                for (org.janelia.it.workstation.model.domain.EntityWrapper neuron : sample.getNeuronSet()) {
+                for (EntityWrapper neuron : sample.getNeuronSet()) {
                     log.debug("Adding neuron: {}", neuron.getName());
                     AlignedItem childItem = ModelMgr.getModelMgr().addAlignedItem(sampleAlignedItem, neuron, true);
                     childItem.loadContextualizedChildren(getAlignmentContext());
@@ -218,15 +226,15 @@ public class AlignmentBoardContext extends AlignedItem {
                 events.add(new AlignmentBoardItemChangeEvent(this, sampleAlignedItem, ChangeType.VisibilityChange));
             }
         }
-        else if (wrapper instanceof org.janelia.it.workstation.model.domain.VolumeImage) {
+        else if (wrapper instanceof VolumeImage) {
             log.info("Adding reference: {}", wrapper.getName());
             events.addAll(handleChildWrapper(wrapper));
         }
-        else if (wrapper instanceof org.janelia.it.workstation.model.domain.Neuron) {
+        else if (wrapper instanceof Neuron) {
             events.addAll(handleChildWrapper(wrapper));
         }
-        else if (wrapper instanceof org.janelia.it.workstation.model.domain.CompartmentSet) {
-            org.janelia.it.workstation.model.domain.CompartmentSet compartmentSet = (org.janelia.it.workstation.model.domain.CompartmentSet) wrapper;
+        else if (wrapper instanceof CompartmentSet) {
+            CompartmentSet compartmentSet = (CompartmentSet) wrapper;
             AlignedItem compartmentSetAlignedItem = getAlignedItemWithEntityId(compartmentSet.getId());
             
             if (compartmentSetAlignedItem == null) {
@@ -237,7 +245,7 @@ public class AlignmentBoardContext extends AlignedItem {
                 compartmentSetAlignedItem = ModelMgr.getModelMgr().addAlignedItem(this, compartmentSet, true);
                 compartmentSetAlignedItem.loadContextualizedChildren(getAlignmentContext());
                 
-                for (org.janelia.it.workstation.model.domain.Compartment child : compartmentSet.getCompartmentSet()) {
+                for (Compartment child : compartmentSet.getCompartmentSet()) {
                     log.debug("Adding compartment: {}", child.getName());
                     AlignedItem alignedItem = ModelMgr.getModelMgr().addAlignedItem(compartmentSetAlignedItem, child, true);
                     alignedItem.loadContextualizedChildren(getAlignmentContext());
@@ -250,7 +258,7 @@ public class AlignmentBoardContext extends AlignedItem {
             }
 
         }
-        else if (wrapper instanceof org.janelia.it.workstation.model.domain.Compartment) {
+        else if (wrapper instanceof Compartment) {
             log.debug("Handling compartment " + wrapper.getName());
             events.addAll(handleChildWrapper(wrapper));
         }
@@ -263,12 +271,12 @@ public class AlignmentBoardContext extends AlignedItem {
         }
     }
     
-    private Collection<AlignmentBoardEvent> handleChildWrapper(org.janelia.it.workstation.model.domain.EntityWrapper wrapper) throws Exception {
+    private Collection<AlignmentBoardEvent> handleChildWrapper(EntityWrapper wrapper) throws Exception {
         
         Collection<AlignmentBoardEvent> events = new ArrayList<AlignmentBoardEvent>();
         
-        org.janelia.it.workstation.model.domain.EntityWrapper child = wrapper;
-        org.janelia.it.workstation.model.domain.EntityWrapper parent = wrapper.getParent();
+        EntityWrapper child = wrapper;
+        EntityWrapper parent = wrapper.getParent();
 
         AlignedItem parentAlignedItem = getAlignedItemWithEntityId(parent.getId());
         if (parentAlignedItem==null) {

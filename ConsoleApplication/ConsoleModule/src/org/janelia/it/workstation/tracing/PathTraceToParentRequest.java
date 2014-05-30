@@ -1,6 +1,8 @@
 package org.janelia.it.workstation.tracing;
 
+import org.janelia.it.workstation.geom.Vec3;
 import org.janelia.it.workstation.gui.slice_viewer.SharedVolumeImage;
+import org.janelia.it.workstation.gui.slice_viewer.TextureCache;
 
 /**
  * this class encapsulates a request for a path to be traced from an
@@ -17,14 +19,14 @@ import org.janelia.it.workstation.gui.slice_viewer.SharedVolumeImage;
 public class PathTraceToParentRequest {
 
 
-    private org.janelia.it.workstation.geom.Vec3 xyz1;
-    private org.janelia.it.workstation.geom.Vec3 xyz2;
+    private Vec3 xyz1;
+    private Vec3 xyz2;
     private Long anchorGuid1;
     private Long anchorGuid2;
-    private org.janelia.it.workstation.tracing.SegmentIndex segmentIndex; // for hashing
+    private SegmentIndex segmentIndex; // for hashing
 
     private SharedVolumeImage imageVolme;
-    private org.janelia.it.workstation.gui.slice_viewer.TextureCache textureCache;
+    private TextureCache textureCache;
 
 
     public PathTraceToParentRequest(Long anchorGuid) {
@@ -53,23 +55,23 @@ public class PathTraceToParentRequest {
         return true;
     }
 
-    public org.janelia.it.workstation.tracing.SegmentIndex getSegmentIndex() {
+    public SegmentIndex getSegmentIndex() {
         return segmentIndex;
     }
 
-    public org.janelia.it.workstation.geom.Vec3 getXyz1() {
+    public Vec3 getXyz1() {
         return xyz1;
     }
 
-    public void setXyz1(org.janelia.it.workstation.geom.Vec3 xyz1) {
+    public void setXyz1(Vec3 xyz1) {
         this.xyz1 = xyz1;
     }
 
-    public org.janelia.it.workstation.geom.Vec3 getXyz2() {
+    public Vec3 getXyz2() {
         return xyz2;
     }
 
-    public void setXyz2(org.janelia.it.workstation.geom.Vec3 xyz2) {
+    public void setXyz2(Vec3 xyz2) {
         this.xyz2 = xyz2;
     }
 
@@ -97,11 +99,11 @@ public class PathTraceToParentRequest {
         this.imageVolme = imageVolme;
     }
 
-    public org.janelia.it.workstation.gui.slice_viewer.TextureCache getTextureCache() {
+    public TextureCache getTextureCache() {
         return textureCache;
     }
 
-    public void setTextureCache(org.janelia.it.workstation.gui.slice_viewer.TextureCache textureCache) {
+    public void setTextureCache(TextureCache textureCache) {
         this.textureCache = textureCache;
     }
 

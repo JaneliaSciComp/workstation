@@ -2,6 +2,9 @@ package org.janelia.it.workstation.gui.slice_viewer.generator;
 
 import java.util.Iterator;
 
+import org.janelia.it.workstation.gui.slice_viewer.Tile2d;
+import org.janelia.it.workstation.gui.slice_viewer.TileFormat;
+import org.janelia.it.workstation.gui.slice_viewer.TileIndex;
 import org.janelia.it.workstation.gui.slice_viewer.TileSet;
 
 /**
@@ -11,26 +14,26 @@ import org.janelia.it.workstation.gui.slice_viewer.TileSet;
  *
  */
 public class SliceGenerator 
-implements Iterable<org.janelia.it.workstation.gui.slice_viewer.TileIndex>, Iterator<org.janelia.it.workstation.gui.slice_viewer.TileIndex>
+implements Iterable<TileIndex>, Iterator<TileIndex>
 {
 	// Outer loop iterates over slice
-	private Iterator<org.janelia.it.workstation.gui.slice_viewer.TileIndex> sliceGenerator;
-	private org.janelia.it.workstation.gui.slice_viewer.TileIndex baseIndex;
+	private Iterator<TileIndex> sliceGenerator;
+	private TileIndex baseIndex;
 	// Inner loop iterates over tiles
 	private TileSet tileSet;
-	private Iterator<org.janelia.it.workstation.gui.slice_viewer.Tile2d> tileIter;
-	private org.janelia.it.workstation.gui.slice_viewer.Tile2d tile;
+	private Iterator<Tile2d> tileIter;
+	private Tile2d tile;
 
-	public SliceGenerator(org.janelia.it.workstation.gui.slice_viewer.TileFormat tileFormat, TileSet tileSet) {
+	public SliceGenerator(TileFormat tileFormat, TileSet tileSet) {
 		// Identify slice boundaries
-		org.janelia.it.workstation.gui.slice_viewer.TileIndex ix1 = tileSet.iterator().next().getIndex();
+		TileIndex ix1 = tileSet.iterator().next().getIndex();
 		int axisIx = ix1.getSliceAxis().index();
 		int sliceMin = tileFormat.getOrigin()[axisIx];
 		int sliceMax = sliceMin + tileFormat.getVolumeSize()[axisIx] - 1;
 		// Choose one tile to initialize search area in slice
 		PreviousSliceGenerator down = new PreviousSliceGenerator(ix1, sliceMin);
 		NextSliceGenerator up = new NextSliceGenerator(ix1, sliceMax);
-		sliceGenerator = new InterleavedIterator<org.janelia.it.workstation.gui.slice_viewer.TileIndex>(down, up);
+		sliceGenerator = new InterleavedIterator<TileIndex>(down, up);
 		this.tileSet = tileSet;
 		tileIter = this.tileSet.iterator();
 		baseIndex = tileSet.iterator().next().getIndex();
@@ -49,8 +52,8 @@ implements Iterable<org.janelia.it.workstation.gui.slice_viewer.TileIndex>, Iter
 	 * Compute current TileIndex from current tile and baseIndex.
 	 * @return
 	 */
-	private org.janelia.it.workstation.gui.slice_viewer.TileIndex currentIndex() {
-		org.janelia.it.workstation.gui.slice_viewer.TileIndex result = tile.getIndex();
+	private TileIndex currentIndex() {
+		TileIndex result = tile.getIndex();
 		// First correct zoom
 		while (result.getZoom() < baseIndex.getZoom())
 			result = result.zoomOut();
@@ -59,7 +62,7 @@ implements Iterable<org.janelia.it.workstation.gui.slice_viewer.TileIndex>, Iter
 		int sliceIx = result.getSliceAxis().index();
 		xyz[sliceIx] = baseIndex.getCoordinate(sliceIx);
 		// Now merge baseIndex with tile index
-		result = new org.janelia.it.workstation.gui.slice_viewer.TileIndex(
+		result = new TileIndex(
 				xyz[0],
 				xyz[1],
 				xyz[2],
@@ -71,7 +74,7 @@ implements Iterable<org.janelia.it.workstation.gui.slice_viewer.TileIndex>, Iter
 	}
 	
 	@Override
-	public org.janelia.it.workstation.gui.slice_viewer.TileIndex next() {
+	public TileIndex next() {
 		// First check for more tiles (inner loop)
 		if (tileIter.hasNext())
 			tile = tileIter.next();
@@ -88,7 +91,7 @@ implements Iterable<org.janelia.it.workstation.gui.slice_viewer.TileIndex>, Iter
 	}
 
 	@Override
-	public Iterator<org.janelia.it.workstation.gui.slice_viewer.TileIndex> iterator() {
+	public Iterator<TileIndex> iterator() {
 		return this;
 	}
 

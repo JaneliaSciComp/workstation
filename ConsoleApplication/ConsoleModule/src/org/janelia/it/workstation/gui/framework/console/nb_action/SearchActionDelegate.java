@@ -6,6 +6,10 @@
 
 package org.janelia.it.workstation.gui.framework.console.nb_action;
 
+import org.janelia.it.workstation.gui.dialogs.MAASearchDialog;
+import org.janelia.it.workstation.gui.framework.console.Browser;
+import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
+
 /**
  * Action backing for searches of all types.
  * @author fosterl
@@ -32,14 +36,14 @@ public class SearchActionDelegate {
     }
 
     public void maaSearch() {
-        org.janelia.it.workstation.gui.dialogs.MAASearchDialog maaSearchDialog = getBrowser().getMAASearchDialog();
+        MAASearchDialog maaSearchDialog = getBrowser().getMAASearchDialog();
         if (maaSearchDialog!=null && maaSearchDialog.isAccessible()) {
             maaSearchDialog.showDialog();
         }
 
     }
 
-    private org.janelia.it.workstation.gui.framework.console.Browser getBrowser() {
-        return org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr.getBrowser();
+    private Browser getBrowser() {
+        return SessionMgr.getBrowser();
     }
 }

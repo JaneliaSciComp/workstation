@@ -5,6 +5,7 @@ import java.util.*;
 import org.janelia.it.jacs.compute.api.support.MappedId;
 import org.janelia.it.jacs.shared.solr.SolrResults;
 import org.janelia.it.jacs.model.entity.Entity;
+import org.janelia.it.workstation.api.entity_model.management.ModelMgr;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -43,7 +44,7 @@ public class ResultPage {
 		mappedEntityList.clear();
 	}
 	
-	public void projectResults(final ResultTreeMapping projection, final org.janelia.it.workstation.gui.dialogs.search.SearchResults searchResults) throws Exception {
+	public void projectResults(final ResultTreeMapping projection, final SearchResults searchResults) throws Exception {
 
 		clearMapping();
 		
@@ -65,7 +66,7 @@ public class ResultPage {
 			mappedEntityIds.add(mappedEntityId);
 		}
 		
-		List<Entity> allMappedEntities = org.janelia.it.workstation.api.entity_model.management.ModelMgr.getModelMgr().getEntityByIds(new ArrayList<Long>(mappedEntityIds));
+		List<Entity> allMappedEntities = ModelMgr.getModelMgr().getEntityByIds(new ArrayList<Long>(mappedEntityIds));
 		
 		for(Entity entity : allMappedEntities) {
 		    if (entity!=null) {

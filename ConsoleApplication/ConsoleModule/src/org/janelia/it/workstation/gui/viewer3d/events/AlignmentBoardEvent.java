@@ -1,5 +1,7 @@
 package org.janelia.it.workstation.gui.viewer3d.events;
 
+import org.janelia.it.workstation.model.viewer.AlignmentBoardContext;
+
 /**
  * An even concerned a single alignment board.
  * 
@@ -7,13 +9,13 @@ package org.janelia.it.workstation.gui.viewer3d.events;
  */
 public abstract class AlignmentBoardEvent { 
     
-    private final org.janelia.it.workstation.model.viewer.AlignmentBoardContext alignmentBoardContext;
+    private final AlignmentBoardContext alignmentBoardContext;
     
-	public AlignmentBoardEvent(org.janelia.it.workstation.model.viewer.AlignmentBoardContext alignmentBoardContext) {
+	public AlignmentBoardEvent(AlignmentBoardContext alignmentBoardContext) {
 		this.alignmentBoardContext = alignmentBoardContext;		
 	}
 	
-	public org.janelia.it.workstation.model.viewer.AlignmentBoardContext getAlignmentBoardContext() {
+	public AlignmentBoardContext getAlignmentBoardContext() {
 	    return alignmentBoardContext;
 	}
 }

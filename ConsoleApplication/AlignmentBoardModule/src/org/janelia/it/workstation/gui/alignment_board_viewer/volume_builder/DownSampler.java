@@ -6,6 +6,8 @@ import org.janelia.it.workstation.shared.workers.SimpleWorker;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.HashMap;
+import java.util.Map;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
@@ -192,8 +194,8 @@ public class DownSampler {
 
         byte[] value = null;
 
-        java.util.Map<Long,Integer> frequencies =
-                new java.util.HashMap<Long,Integer>();
+        Map<Long,Integer> frequencies =
+                new HashMap<Long,Integer>();
 
         // Neighborhood starts at the x,y,z values of the loops.  There will be one
         // such neighborhood for each of these down-sampled coord sets: x,y,z
