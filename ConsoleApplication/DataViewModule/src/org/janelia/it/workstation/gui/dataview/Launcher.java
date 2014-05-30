@@ -45,4 +45,19 @@ public class Launcher implements EntityAcceptor  {
         // Only administrators can use the data viewer
         return SessionMgr.authenticatedSubjectIsInGroup(Group.ADMIN_GROUP_NAME) || SessionMgr.currentUserIsInGroup(Group.ADMIN_GROUP_NAME);
     }
+
+    @Override
+    public Integer getOrder() {
+        return 100;
+    }
+
+    @Override
+    public boolean isPrecededBySeparator() {
+        return false;
+    }
+
+    @Override
+    public boolean isSucceededBySeparator() {
+        return true;
+    }
 }
