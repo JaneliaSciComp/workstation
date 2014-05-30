@@ -53,7 +53,7 @@ public class SetSortCriteriaDialog extends ModalDialog implements Accessibility 
     private static final float PERCENT_PRESENT = 0.8f;
 
     private static final String[] intrinsicFields = {EntityConstants.VALUE_SC_GUID, EntityConstants.VALUE_SC_NAME, EntityConstants.VALUE_SC_DATE_CREATED, EntityConstants.VALUE_SC_DATE_UPDATED};
-    private static final String DEFAULT_SORT_VALUE = "Choose field...";
+    private static final String DEFAULT_SORT_VALUE = "Default";
 
     private JPanel attrPanel;
     private JComboBox sortingFieldCombobox;
@@ -184,19 +184,14 @@ public class SetSortCriteriaDialog extends ModalDialog implements Accessibility 
         final String sortField = (String) sortingFieldCombobox.getSelectedItem();
         final String sortOrder = (String) sortingOrderCombobox.getSelectedItem();
 
-        if (DEFAULT_SORT_VALUE.equals(sortField)) {
-            JOptionPane.showMessageDialog(this, "No sort field selected", "Error", JOptionPane.ERROR_MESSAGE);
-            return;
-        }
-
         SimpleWorker worker = new SimpleWorker() {
 
             @Override
             protected void doStuff() throws Exception {
-                if (StringUtils.isEmpty(sortField)) {
+                if (StringUtils.isEmpty(sortField) || DEFAULT_SORT_VALUE.equals(sortField)) {
                     String currCriteria = ModelMgr.getModelMgr().getSortCriteria(entity.getId());
                     if (currCriteria != null) {
-                        ModelMgr.getModelMgr().saveSortCriteria(entity.getId(), sortField);
+                        ModelMgr.getModelMgr().saveSortCriteria(entity.getId(), null);
                     }
                 }
                 else {
