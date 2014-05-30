@@ -1,5 +1,7 @@
 package org.janelia.it.workstation.gui.opengl;
 
+import org.janelia.it.workstation.gui.viewer3d.BoundingBox3d;
+
 /**
  * Extension of GLActor that can make use of GLActor context interface
  * to optionally use faked up OpenGL version < 3.1 state.
@@ -13,7 +15,7 @@ public interface GL3Actor {
      */
     public void display(GLActorContext context);
     
-    public org.janelia.it.workstation.gui.viewer3d.BoundingBox3d getBoundingBox3d();
+    public BoundingBox3d getBoundingBox3d();
 
     /**
      * Initializes this actor for the given OpenGL context

@@ -1,8 +1,11 @@
 package org.janelia.it.workstation.gui.framework.outline;
 
 import java.io.NotSerializableException;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
+import java.util.EventObject;
 
-public class DataReadyEvent extends java.util.EventObject {
+public class DataReadyEvent extends EventObject {
 
     public DataReadyEvent(Object source) {
         super(source);
@@ -12,7 +15,7 @@ public class DataReadyEvent extends java.util.EventObject {
      * Throws NotSerializableException, since DataReadyEvent objects are not
      * intended to be serializable.
      */
-    private void writeObject(java.io.ObjectOutputStream out) throws NotSerializableException {
+    private void writeObject(ObjectOutputStream out) throws NotSerializableException {
         throw new NotSerializableException("Not serializable.");
     }
 
@@ -20,7 +23,7 @@ public class DataReadyEvent extends java.util.EventObject {
      * Throws NotSerializableException, since DataReadyEvent objects are not
      * intended to be serializable.
      */
-    private void readObject(java.io.ObjectInputStream in) throws NotSerializableException {
+    private void readObject(ObjectInputStream in) throws NotSerializableException {
         throw new NotSerializableException("Not serializable.");
     }
 

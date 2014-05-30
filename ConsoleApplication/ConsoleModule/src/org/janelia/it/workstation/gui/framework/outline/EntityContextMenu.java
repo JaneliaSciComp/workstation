@@ -1,12 +1,32 @@
 package org.janelia.it.workstation.gui.framework.outline;
 
+import org.janelia.it.workstation.api.entity_model.management.EntitySelectionModel;
+import org.janelia.it.workstation.api.entity_model.management.ModelMgr;
+import org.janelia.it.workstation.api.entity_model.management.ModelMgrUtils;
+import org.janelia.it.workstation.gui.dialogs.EntityDetailsDialog;
+import org.janelia.it.workstation.gui.dialogs.SpecialAnnotationChooserDialog;
+import org.janelia.it.workstation.gui.dialogs.TaskDetailsDialog;
+import org.janelia.it.workstation.gui.framework.actions.Action;
+import org.janelia.it.workstation.gui.framework.actions.AnnotateAction;
+import org.janelia.it.workstation.gui.framework.actions.OpenInFinderAction;
+import org.janelia.it.workstation.gui.framework.actions.OpenWithDefaultAppAction;
+import org.janelia.it.workstation.gui.framework.actions.RemoveEntityAction;
+import org.janelia.it.workstation.gui.framework.console.Browser;
+import org.janelia.it.workstation.gui.framework.console.Perspective;
+import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
+import org.janelia.it.workstation.gui.framework.tool_manager.ToolMgr;
 import org.janelia.it.workstation.gui.split_picking.SplitPickingPanel;
 import org.janelia.it.workstation.api.entity_model.management.ModelMgrEntityLoader;
 import org.janelia.it.workstation.gui.dialogs.SetSortCriteriaDialog;
 import org.janelia.it.workstation.gui.framework.viewer.Hud;
+import org.janelia.it.workstation.gui.util.DesktopApi;
 import org.janelia.it.workstation.gui.util.JScrollMenu;
+import org.janelia.it.workstation.model.entity.RootedEntity;
+import org.janelia.it.workstation.model.utils.AnnotationSession;
 import org.janelia.it.workstation.nb_action.EntityAcceptor;
 import org.janelia.it.workstation.nb_action.ServiceAcceptorHelper;
+import org.janelia.it.workstation.shared.util.ConsoleProperties;
+import org.janelia.it.workstation.shared.util.SystemInfo;
 import org.janelia.it.workstation.shared.util.Utils;
 import org.janelia.it.workstation.shared.workers.SimpleWorker;
 import org.janelia.it.jacs.model.entity.Entity;
@@ -23,6 +43,8 @@ import org.janelia.it.jacs.shared.utils.MailHelper;
 import org.janelia.it.jacs.shared.utils.StringUtils;
 import org.janelia.it.jacs.shared.utils.entity.EntityVisitor;
 import org.janelia.it.jacs.shared.utils.entity.EntityVistationBuilder;
+import org.janelia.it.workstation.shared.workers.TaskMonitoringWorker;
+import org.janelia.it.workstation.ws.ExternalClient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -54,25 +76,25 @@ public class EntityContextMenu extends JPopupMenu {
 
     private static final Logger log = LoggerFactory.getLogger(EntityContextMenu.class);
 
-    protected static final org.janelia.it.workstation.gui.framework.console.Browser browser = org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr.getBrowser();
-    protected static final Component mainFrame = org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr.getMainFrame();
+    protected static final Browser browser = SessionMgr.getBrowser();
+    protected static final Component mainFrame = SessionMgr.getMainFrame();
 
     // Download directories
-    private static final File downloadDir = new File(org.janelia.it.workstation.shared.util.SystemInfo.getDownloadsDir(), "Workstation Images");
-    private static final File splitsDir = new File(org.janelia.it.workstation.shared.util.SystemInfo.getDownloadsDir(), "Split Channel Images");
+    private static final File downloadDir = new File(SystemInfo.getDownloadsDir(), "Workstation Images");
+    private static final File splitsDir = new File(SystemInfo.getDownloadsDir(), "Split Channel Images");
 
     // Lock to make sure only one file is downloaded at a time 
     private static final Lock copyFileLock = new ReentrantLock();
     
     // Current selection
-    protected final List<org.janelia.it.workstation.model.entity.RootedEntity> rootedEntityList;
-    protected final org.janelia.it.workstation.model.entity.RootedEntity rootedEntity;
+    protected final List<RootedEntity> rootedEntityList;
+    protected final RootedEntity rootedEntity;
     protected final boolean multiple;
         
     // Internal state
     protected boolean nextAddRequiresSeparator = false;
 
-    public EntityContextMenu(List<org.janelia.it.workstation.model.entity.RootedEntity> rootedEntityList) {
+    public EntityContextMenu(List<RootedEntity> rootedEntityList) {
         this.rootedEntityList = rootedEntityList;
         this.rootedEntity = rootedEntityList.size() == 1 ? rootedEntityList.get(0) : null;
         this.multiple = rootedEntityList.size() > 1;
@@ -81,9 +103,9 @@ public class EntityContextMenu extends JPopupMenu {
         }
     }
 
-    public EntityContextMenu(org.janelia.it.workstation.model.entity.RootedEntity rootedEntity) {
+    public EntityContextMenu(RootedEntity rootedEntity) {
         this.rootedEntity = rootedEntity;
-        this.rootedEntityList = new ArrayList<org.janelia.it.workstation.model.entity.RootedEntity>();
+        this.rootedEntityList = new ArrayList<RootedEntity>();
         rootedEntityList.add(rootedEntity);
         this.multiple = false;
         checkNotNull(rootedEntity, "Rooted entity cannot be null");
@@ -139,7 +161,7 @@ public class EntityContextMenu extends JPopupMenu {
         add(getWrapEntityItem());
         add(getOpenSliceViewerItem());
 
-        if ((org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr.getSubjectKey().equals("user:simpsonj") || org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr.getSubjectKey()
+        if ((SessionMgr.getSubjectKey().equals("user:simpsonj") || SessionMgr.getSubjectKey()
                 .equals("group:simpsonlab")) && !this.multiple) {
             add(getSpecialAnnotationSession());
         }
@@ -147,7 +169,7 @@ public class EntityContextMenu extends JPopupMenu {
 
     private void addBadDataButtons(JMenu errorMenu) {
 
-        Entity errorOntology = org.janelia.it.workstation.api.entity_model.management.ModelMgr.getModelMgr().getErrorOntology();
+        Entity errorOntology = ModelMgr.getModelMgr().getErrorOntology();
         
         if (errorOntology!=null && EntityUtils.isInitialized(errorOntology)) {
             for (final EntityData entityData : errorOntology.getOrderedEntityData()) {
@@ -164,7 +186,7 @@ public class EntityContextMenu extends JPopupMenu {
                                     @Override
                                     protected void doStuff() throws Exception {
                                         String annotationValue = "";
-                                        List<Entity> annotationEntities = org.janelia.it.workstation.api.entity_model.management.ModelMgr.getModelMgr()
+                                        List<Entity> annotationEntities = ModelMgr.getModelMgr()
                                                 .getAnnotationsForEntity(rootedEntity.getEntity().getId());
                                         for (Entity annotation : annotationEntities) {
                                             if (annotation.getValueByAttributeName(
@@ -185,9 +207,9 @@ public class EntityContextMenu extends JPopupMenu {
                                         sBuf.append("Annotation: ").append(annotationValue).append("\n\n");
                                         MailHelper helper = new MailHelper();
                                         helper.sendEmail(
-                                                (String) org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr.getSessionMgr().getModelProperty(
-                                                        org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr.USER_EMAIL),
-                                                org.janelia.it.workstation.shared.util.ConsoleProperties.getString("console.HelpEmail"), tempsubject,
+                                                (String) SessionMgr.getSessionMgr().getModelProperty(
+                                                        SessionMgr.USER_EMAIL),
+                                                ConsoleProperties.getString("console.HelpEmail"), tempsubject,
                                                 sBuf.toString());
                                     }
 
@@ -197,7 +219,7 @@ public class EntityContextMenu extends JPopupMenu {
 
                                     @Override
                                     protected void hadError(Throwable error) {
-                                        org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr.getSessionMgr().handleException(error);
+                                        SessionMgr.getSessionMgr().handleException(error);
                                     }
                                 };
                                 simpleWorker.execute();
@@ -205,7 +227,7 @@ public class EntityContextMenu extends JPopupMenu {
                             }
                         };
 
-                        org.janelia.it.workstation.gui.framework.actions.AnnotateAction action = new org.janelia.it.workstation.gui.framework.actions.AnnotateAction(doSuccess);
+                        AnnotateAction action = new AnnotateAction(doSuccess);
                         action.init(element);
                         action.doAction();
                     }
@@ -234,11 +256,11 @@ public class EntityContextMenu extends JPopupMenu {
         if (multiple) return null;
         
         JMenuItem detailsMenuItem = new JMenuItem("  View Details");
-        detailsMenuItem.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_I, java.awt.Event.META_MASK));
+        detailsMenuItem.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_I, Event.META_MASK));
         detailsMenuItem.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                new org.janelia.it.workstation.gui.dialogs.EntityDetailsDialog().showForRootedEntity(rootedEntity);
+                new EntityDetailsDialog().showForRootedEntity(rootedEntity);
             }
         });
         return detailsMenuItem;
@@ -247,13 +269,13 @@ public class EntityContextMenu extends JPopupMenu {
     protected JMenuItem getPermissionItem() {
         if (multiple) return null;
         
-        if (!org.janelia.it.workstation.api.entity_model.management.ModelMgrUtils.isOwner(rootedEntity.getEntity())) return null;
+        if (!ModelMgrUtils.isOwner(rootedEntity.getEntity())) return null;
         
         JMenuItem detailsMenuItem = new JMenuItem("  Change Permissions");
         detailsMenuItem.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                new org.janelia.it.workstation.gui.dialogs.EntityDetailsDialog().showForRootedEntity(rootedEntity, EntityDetailsPanel.TAB_NAME_PERMISSIONS);
+                new EntityDetailsDialog().showForRootedEntity(rootedEntity, EntityDetailsPanel.TAB_NAME_PERMISSIONS);
             }
         });
         return detailsMenuItem;
@@ -280,7 +302,7 @@ public class EntityContextMenu extends JPopupMenu {
 
     private void gotoEntity(final Entity entity, final String ancestorType) {
 
-        Utils.setWaitingCursor(org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr.getMainFrame());
+        Utils.setWaitingCursor(SessionMgr.getMainFrame());
 
         SimpleWorker worker = new SimpleWorker() {
 
@@ -290,7 +312,7 @@ public class EntityContextMenu extends JPopupMenu {
             @Override
             protected void doStuff() throws Exception {
                 if (ancestorType != null) {
-                    targetEntity = org.janelia.it.workstation.api.entity_model.management.ModelMgr.getModelMgr().getAncestorWithType(entity, ancestorType);
+                    targetEntity = ModelMgr.getModelMgr().getAncestorWithType(entity, ancestorType);
                 }
 
                 final String currUniqueId = rootedEntity.getUniqueId();
@@ -301,7 +323,7 @@ public class EntityContextMenu extends JPopupMenu {
                     this.uniqueId = currUniqueId.substring(0, currUniqueId.indexOf(targetId) + targetId.length());
                 } else {
                     // Find the best context to show the entity in
-                    List<List<EntityData>> edPaths = org.janelia.it.workstation.api.entity_model.management.ModelMgr.getModelMgr().getPathsToRoots(targetEntity.getId());
+                    List<List<EntityData>> edPaths = ModelMgr.getModelMgr().getPathsToRoots(targetEntity.getId());
                     List<EntityDataPath> paths = new ArrayList<EntityDataPath>();
                     for (List<EntityData> path : edPaths) {
                         EntityDataPath edp = new EntityDataPath(path);
@@ -329,7 +351,7 @@ public class EntityContextMenu extends JPopupMenu {
             @Override
             protected void hadError(Throwable error) {
                 Utils.setDefaultCursor(mainFrame);
-                org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr.getSessionMgr().handleException(error);
+                SessionMgr.getSessionMgr().handleException(error);
             }
         };
 
@@ -345,8 +367,8 @@ public class EntityContextMenu extends JPopupMenu {
                 Integer p2Score = 0;
                 p1Score += p1.getRootOwner().startsWith("group:") ? 2 : 0;
                 p2Score += p2.getRootOwner().startsWith("group:") ? 2 : 0;
-                p1Score += org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr.getSubjectKey().equals(p1.getRootOwner()) ? 1 : 0;
-                p2Score += org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr.getSubjectKey().equals(p2.getRootOwner()) ? 1 : 0;
+                p1Score += SessionMgr.getSubjectKey().equals(p1.getRootOwner()) ? 1 : 0;
+                p2Score += SessionMgr.getSubjectKey().equals(p2.getRootOwner()) ? 1 : 0;
                 EntityData e1 = p1.getPath().get(0);
                 EntityData e2 = p2.getPath().get(0);
                 int c = p2Score.compareTo(p1Score);
@@ -361,7 +383,7 @@ public class EntityContextMenu extends JPopupMenu {
 
     public JMenuItem getPasteAnnotationItem() {
         // If no curent annotation item selected then do nothing
-        if (null == org.janelia.it.workstation.api.entity_model.management.ModelMgr.getModelMgr().getCurrentSelectedOntologyAnnotation()) {
+        if (null == ModelMgr.getModelMgr().getCurrentSelectedOntologyAnnotation()) {
             return null;
         }
         JMenuItem pasteItem = new JMenuItem("  Paste Annotation");
@@ -369,19 +391,19 @@ public class EntityContextMenu extends JPopupMenu {
             @Override
             public void actionPerformed(ActionEvent actionEvent) {
                 try {
-                    final List<org.janelia.it.workstation.model.entity.RootedEntity> selectedEntities = browser.getViewerManager()
+                    final List<RootedEntity> selectedEntities = browser.getViewerManager()
                             .getActiveViewer().getSelectedEntities();
-                    OntologyAnnotation baseAnnotation = org.janelia.it.workstation.api.entity_model.management.ModelMgr.getModelMgr().getCurrentSelectedOntologyAnnotation();
-                    for (org.janelia.it.workstation.model.entity.RootedEntity entity : selectedEntities) {
-                        org.janelia.it.workstation.model.utils.AnnotationSession tmpSession = org.janelia.it.workstation.api.entity_model.management.ModelMgr.getModelMgr().getCurrentAnnotationSession();
+                    OntologyAnnotation baseAnnotation = ModelMgr.getModelMgr().getCurrentSelectedOntologyAnnotation();
+                    for (RootedEntity entity : selectedEntities) {
+                        AnnotationSession tmpSession = ModelMgr.getModelMgr().getCurrentAnnotationSession();
                         OntologyAnnotation tmpAnnotation = new OntologyAnnotation((null == tmpSession) ? null
                                 : tmpSession.getId(), entity.getEntityId(), baseAnnotation.getKeyEntityId(),
                                 baseAnnotation.getKeyString(), baseAnnotation.getValueEntityId(), baseAnnotation
                                         .getValueString());
-                        org.janelia.it.workstation.api.entity_model.management.ModelMgr.getModelMgr().createOntologyAnnotation(tmpAnnotation);
+                        ModelMgr.getModelMgr().createOntologyAnnotation(tmpAnnotation);
                     }
                 } catch (Exception e) {
-                    org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr.getSessionMgr().handleException(e);
+                    SessionMgr.getSessionMgr().handleException(e);
                 }
             }
         });
@@ -456,7 +478,7 @@ public class EntityContextMenu extends JPopupMenu {
                 sliceVwItem.addActionListener(new ActionListener() {
                     @Override
                     public void actionPerformed(ActionEvent e) {
-                        browser.setPerspective(org.janelia.it.workstation.gui.framework.console.Perspective.SliceViewer);
+                        browser.setPerspective(Perspective.SliceViewer);
                         browser.getViewerManager().getActiveViewer().loadEntity(rootedEntity);
                     }
                 });
@@ -604,10 +626,10 @@ public class EntityContextMenu extends JPopupMenu {
                 }
 
                 try {
-                    org.janelia.it.workstation.api.entity_model.management.ModelMgr.getModelMgr().renameEntity(rootedEntity.getEntity(), newName);
+                    ModelMgr.getModelMgr().renameEntity(rootedEntity.getEntity(), newName);
                 } catch (Exception ex) {
                     ex.printStackTrace();
-                    JOptionPane.showMessageDialog(org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr.getMainFrame(),
+                    JOptionPane.showMessageDialog(SessionMgr.getMainFrame(),
                             "Error renaming entity", "Error", JOptionPane.ERROR_MESSAGE);
                 }
 
@@ -615,7 +637,7 @@ public class EntityContextMenu extends JPopupMenu {
         });
 
         Entity entity = rootedEntity.getEntity();
-        if (!org.janelia.it.workstation.api.entity_model.management.ModelMgrUtils.hasWriteAccess(entity) || EntityUtils.isProtected(entity)) {
+        if (!ModelMgrUtils.hasWriteAccess(entity) || EntityUtils.isProtected(entity)) {
             renameItem.setEnabled(false);
         }
 
@@ -633,7 +655,7 @@ public class EntityContextMenu extends JPopupMenu {
     protected JMenuItem getProcessingBlockItem() {
 
         final List<Entity> samples = new ArrayList<Entity>();
-        for (org.janelia.it.workstation.model.entity.RootedEntity rootedEntity : rootedEntityList) {
+        for (RootedEntity rootedEntity : rootedEntityList) {
             Entity sample = rootedEntity.getEntity();
             if (sample.getEntityTypeName().equals(EntityConstants.TYPE_SAMPLE)) {
                 samples.add(sample);
@@ -648,7 +670,7 @@ public class EntityContextMenu extends JPopupMenu {
         blockItem.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent actionEvent) {
 
-                int result = JOptionPane.showConfirmDialog(org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr.getMainFrame(), "Are you sure you want to purge "+samples.size()+" sample(s) "+
+                int result = JOptionPane.showConfirmDialog(SessionMgr.getMainFrame(), "Are you sure you want to purge "+samples.size()+" sample(s) "+
                         "by deleting all large files associated with them, and block all future processing?",  
                 		"Purge And Block Processing", JOptionPane.OK_CANCEL_OPTION);
                 
@@ -664,14 +686,14 @@ public class EntityContextMenu extends JPopupMenu {
                     
                     HashSet<TaskParameter> taskParameters = new HashSet<TaskParameter>();
                     taskParameters.add(new TaskParameter("sample entity id", sampleIdBuf.toString(), null));
-                    task = org.janelia.it.workstation.api.entity_model.management.ModelMgr.getModelMgr().submitJob("ConsolePurgeAndBlockSample", "Purge And Block Sample", taskParameters);
+                    task = ModelMgr.getModelMgr().submitJob("ConsolePurgeAndBlockSample", "Purge And Block Sample", taskParameters);
                 }
                 catch (Exception e) {
-                    org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr.getSessionMgr().handleException(e);
+                    SessionMgr.getSessionMgr().handleException(e);
                     return;
                 }
 
-                org.janelia.it.workstation.shared.workers.TaskMonitoringWorker taskWorker = new org.janelia.it.workstation.shared.workers.TaskMonitoringWorker(task.getObjectId()) {
+                TaskMonitoringWorker taskWorker = new TaskMonitoringWorker(task.getObjectId()) {
 
                     @Override
                     public String getName() {
@@ -683,7 +705,7 @@ public class EntityContextMenu extends JPopupMenu {
                         setStatus("Executing");
                         super.doStuff();
                         for(Entity sample : samples) {
-                            org.janelia.it.workstation.api.entity_model.management.ModelMgr.getModelMgr().invalidateCache(sample, true);
+                            ModelMgr.getModelMgr().invalidateCache(sample, true);
                         }
                     }
                 };
@@ -692,9 +714,9 @@ public class EntityContextMenu extends JPopupMenu {
             }
         });
 
-        for(org.janelia.it.workstation.model.entity.RootedEntity rootedEntity : rootedEntityList) {
+        for(RootedEntity rootedEntity : rootedEntityList) {
             Entity sample = rootedEntity.getEntity();
-            if (!org.janelia.it.workstation.api.entity_model.management.ModelMgrUtils.hasWriteAccess(sample) || EntityUtils.isProtected(sample)) {
+            if (!ModelMgrUtils.hasWriteAccess(sample) || EntityUtils.isProtected(sample)) {
                 blockItem.setEnabled(false);
                 break;
             }
@@ -706,7 +728,7 @@ public class EntityContextMenu extends JPopupMenu {
     protected JMenuItem getMarkForReprocessingItem() {
 
         final List<Entity> samples = new ArrayList<Entity>();
-        for (org.janelia.it.workstation.model.entity.RootedEntity rootedEntity : rootedEntityList) {
+        for (RootedEntity rootedEntity : rootedEntityList) {
             Entity sample = rootedEntity.getEntity();
             if (sample.getEntityTypeName().equals(EntityConstants.TYPE_SAMPLE)) {
                 samples.add(sample);
@@ -721,7 +743,7 @@ public class EntityContextMenu extends JPopupMenu {
         markItem.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent actionEvent) {
 
-                int result = JOptionPane.showConfirmDialog(org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr.getMainFrame(), "Are you sure you want these "+samples.size()+" sample(s) to be reprocessed "
+                int result = JOptionPane.showConfirmDialog(SessionMgr.getMainFrame(), "Are you sure you want these "+samples.size()+" sample(s) to be reprocessed "
                         + "during the next scheduled refresh?",  "Mark for Reprocessing", JOptionPane.OK_CANCEL_OPTION);
                 
                 if (result != 0) return;
@@ -731,7 +753,7 @@ public class EntityContextMenu extends JPopupMenu {
                     @Override
                     protected void doStuff() throws Exception {
                         for(final Entity sample : samples) {
-                            org.janelia.it.workstation.api.entity_model.management.ModelMgr.getModelMgr().setOrUpdateValue(sample, EntityConstants.ATTRIBUTE_STATUS, EntityConstants.VALUE_MARKED);
+                            ModelMgr.getModelMgr().setOrUpdateValue(sample, EntityConstants.ATTRIBUTE_STATUS, EntityConstants.VALUE_MARKED);
                         }
                     }
                     
@@ -741,7 +763,7 @@ public class EntityContextMenu extends JPopupMenu {
                     
                     @Override
                     protected void hadError(Throwable error) {
-                        org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr.getSessionMgr().handleException(error);
+                        SessionMgr.getSessionMgr().handleException(error);
                     }
                 };
                 
@@ -749,9 +771,9 @@ public class EntityContextMenu extends JPopupMenu {
             }
         });
 
-        for(org.janelia.it.workstation.model.entity.RootedEntity rootedEntity : rootedEntityList) {
+        for(RootedEntity rootedEntity : rootedEntityList) {
             Entity sample = rootedEntity.getEntity();
-            if (!org.janelia.it.workstation.api.entity_model.management.ModelMgrUtils.hasWriteAccess(sample) || EntityUtils.isProtected(sample)) {
+            if (!ModelMgrUtils.hasWriteAccess(sample) || EntityUtils.isProtected(sample)) {
                 markItem.setEnabled(false);
                 break;
             }
@@ -763,7 +785,7 @@ public class EntityContextMenu extends JPopupMenu {
     private JMenuItem getVerificationMovieItem() {
         if (multiple) return null;
 
-        if (!org.janelia.it.workstation.gui.framework.actions.OpenWithDefaultAppAction.isSupported())
+        if (!OpenWithDefaultAppAction.isSupported())
             return null;
         
         final Entity sample = rootedEntity.getEntity();
@@ -782,7 +804,7 @@ public class EntityContextMenu extends JPopupMenu {
                     
                     @Override
                     protected void doStuff() throws Exception {
-                        org.janelia.it.workstation.api.entity_model.management.ModelMgr.getModelMgr().loadLazyEntity(sample, false);
+                        ModelMgr.getModelMgr().loadLazyEntity(sample, false);
                         Entity alignedSample = null;
                         for(Entity child : sample.getChildren()) {
                             if (child.getEntityTypeName().equals(EntityConstants.TYPE_SAMPLE) 
@@ -831,13 +853,13 @@ public class EntityContextMenu extends JPopupMenu {
                             return;
                         }
                         
-                        org.janelia.it.workstation.gui.framework.actions.OpenWithDefaultAppAction action = new org.janelia.it.workstation.gui.framework.actions.OpenWithDefaultAppAction(movie);
+                        OpenWithDefaultAppAction action = new OpenWithDefaultAppAction(movie);
                         action.doAction();
                     }
                     
                     @Override
                     protected void hadError(Throwable error) {
-                        org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr.getSessionMgr().handleException(error);
+                        SessionMgr.getSessionMgr().handleException(error);
                     }
                 };
 
@@ -849,7 +871,7 @@ public class EntityContextMenu extends JPopupMenu {
             movieItem.setEnabled(false);
         }
         
-        if (!org.janelia.it.workstation.api.entity_model.management.ModelMgrUtils.hasWriteAccess(sample) || EntityUtils.isProtected(sample)) {
+        if (!ModelMgrUtils.hasWriteAccess(sample) || EntityUtils.isProtected(sample)) {
             movieItem.setEnabled(false);
         }
 
@@ -861,7 +883,7 @@ public class EntityContextMenu extends JPopupMenu {
         final List<Long> ads = new ArrayList<Long>();
         final List<Long> dbds = new ArrayList<Long>();
 
-        for (org.janelia.it.workstation.model.entity.RootedEntity re : rootedEntityList) {
+        for (RootedEntity re : rootedEntityList) {
             String splitPart = re.getEntity().getValueByAttributeName(EntityConstants.ATTRIBUTE_SPLIT_PART);
             if ("AD".equals(splitPart)) {
                 ads.add(re.getEntityId());
@@ -870,20 +892,20 @@ public class EntityContextMenu extends JPopupMenu {
             }
         }
 
-        org.janelia.it.workstation.model.entity.RootedEntity workingFolder = new org.janelia.it.workstation.model.entity.RootedEntity(commonRoot);
-        org.janelia.it.workstation.model.entity.RootedEntity splitLinesFolder = org.janelia.it.workstation.api.entity_model.management.ModelMgrUtils.getChildFolder(workingFolder,
+        RootedEntity workingFolder = new RootedEntity(commonRoot);
+        RootedEntity splitLinesFolder = ModelMgrUtils.getChildFolder(workingFolder,
                 SplitPickingPanel.FOLDER_NAME_SEARCH_RESULTS, true);
 
         if (!ads.isEmpty()) {
-            org.janelia.it.workstation.model.entity.RootedEntity adFolder = org.janelia.it.workstation.api.entity_model.management.ModelMgrUtils.getChildFolder(splitLinesFolder,
+            RootedEntity adFolder = ModelMgrUtils.getChildFolder(splitLinesFolder,
                     SplitPickingPanel.FOLDER_NAME_SPLIT_LINES_AD, true);
-            org.janelia.it.workstation.api.entity_model.management.ModelMgr.getModelMgr().addChildren(adFolder.getEntityId(), ads, EntityConstants.ATTRIBUTE_ENTITY);
+            ModelMgr.getModelMgr().addChildren(adFolder.getEntityId(), ads, EntityConstants.ATTRIBUTE_ENTITY);
         }
 
         if (!dbds.isEmpty()) {
-            org.janelia.it.workstation.model.entity.RootedEntity dbdFolder = org.janelia.it.workstation.api.entity_model.management.ModelMgrUtils.getChildFolder(splitLinesFolder,
+            RootedEntity dbdFolder = ModelMgrUtils.getChildFolder(splitLinesFolder,
                     SplitPickingPanel.FOLDER_NAME_SPLIT_LINES_DBD, true);
-            org.janelia.it.workstation.api.entity_model.management.ModelMgr.getModelMgr().addChildren(dbdFolder.getEntityId(), dbds, EntityConstants.ATTRIBUTE_ENTITY);
+            ModelMgr.getModelMgr().addChildren(dbdFolder.getEntityId(), dbds, EntityConstants.ATTRIBUTE_ENTITY);
         }
     }
 
@@ -899,7 +921,7 @@ public class EntityContextMenu extends JPopupMenu {
 
         for (final EntityData rootEd : rootEds) {
             final Entity commonRoot = rootEd.getChildEntity();
-            if (!org.janelia.it.workstation.api.entity_model.management.ModelMgrUtils.hasWriteAccess(commonRoot))
+            if (!ModelMgrUtils.hasWriteAccess(commonRoot))
                 continue;
 
             JMenuItem commonRootItem = new JMenuItem(commonRoot.getName());
@@ -918,7 +940,7 @@ public class EntityContextMenu extends JPopupMenu {
 
                         @Override
                         protected void hadError(Throwable error) {
-                            org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr.getSessionMgr().handleException(error);
+                            SessionMgr.getSessionMgr().handleException(error);
                         }
                     };
                     worker.execute();
@@ -948,7 +970,7 @@ public class EntityContextMenu extends JPopupMenu {
                     @Override
                     protected void doStuff() throws Exception {
                         // Update database
-                        newFolder = org.janelia.it.workstation.api.entity_model.management.ModelMgr.getModelMgr().createCommonRoot(folderName);
+                        newFolder = ModelMgr.getModelMgr().createCommonRoot(folderName);
                         addToSplitFolder(newFolder);
                     }
 
@@ -959,7 +981,7 @@ public class EntityContextMenu extends JPopupMenu {
 
                     @Override
                     protected void hadError(Throwable error) {
-                        org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr.getSessionMgr().handleException(error);
+                        SessionMgr.getSessionMgr().handleException(error);
                     }
                 };
                 worker.execute();
@@ -996,13 +1018,13 @@ public class EntityContextMenu extends JPopupMenu {
                     @Override
                     protected void doStuff() throws Exception {
                         // Update database
-                        Entity newFolder = org.janelia.it.workstation.api.entity_model.management.ModelMgr.getModelMgr().createCommonRoot(folderName);
+                        Entity newFolder = ModelMgr.getModelMgr().createCommonRoot(folderName);
 
                         List<Long> ids = new ArrayList<Long>();
-                        for (org.janelia.it.workstation.model.entity.RootedEntity rootedEntity : rootedEntityList) {
+                        for (RootedEntity rootedEntity : rootedEntityList) {
                             ids.add(rootedEntity.getEntity().getId());
                         }
-                        org.janelia.it.workstation.api.entity_model.management.ModelMgr.getModelMgr().addChildren(newFolder.getId(), ids, EntityConstants.ATTRIBUTE_ENTITY);
+                        ModelMgr.getModelMgr().addChildren(newFolder.getId(), ids, EntityConstants.ATTRIBUTE_ENTITY);
                     }
 
                     @Override
@@ -1012,7 +1034,7 @@ public class EntityContextMenu extends JPopupMenu {
 
                     @Override
                     protected void hadError(Throwable error) {
-                        org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr.getSessionMgr().handleException(error);
+                        SessionMgr.getSessionMgr().handleException(error);
                     }
                 };
                 worker.execute();
@@ -1026,7 +1048,7 @@ public class EntityContextMenu extends JPopupMenu {
 
         for (EntityData rootEd : rootEds) {
             final Entity commonRoot = rootEd.getChildEntity();
-            if (!org.janelia.it.workstation.api.entity_model.management.ModelMgrUtils.hasWriteAccess(commonRoot))
+            if (!ModelMgrUtils.hasWriteAccess(commonRoot))
                 continue;
 
             JMenuItem commonRootItem = new JMenuItem(commonRoot.getName());
@@ -1036,10 +1058,10 @@ public class EntityContextMenu extends JPopupMenu {
                         @Override
                         protected void doStuff() throws Exception {
                             List<Long> ids = new ArrayList<Long>();
-                            for (org.janelia.it.workstation.model.entity.RootedEntity rootedEntity : rootedEntityList) {
+                            for (RootedEntity rootedEntity : rootedEntityList) {
                                 ids.add(rootedEntity.getEntity().getId());
                             }
-                            org.janelia.it.workstation.api.entity_model.management.ModelMgr.getModelMgr().addChildren(commonRoot.getId(), ids,
+                            ModelMgr.getModelMgr().addChildren(commonRoot.getId(), ids,
                                     EntityConstants.ATTRIBUTE_ENTITY);
                         }
 
@@ -1050,7 +1072,7 @@ public class EntityContextMenu extends JPopupMenu {
 
                         @Override
                         protected void hadError(Throwable error) {
-                            org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr.getSessionMgr().handleException(error);
+                            SessionMgr.getSessionMgr().handleException(error);
                         }
                     };
                     worker.execute();
@@ -1073,7 +1095,7 @@ public class EntityContextMenu extends JPopupMenu {
 
     private JMenuItem getDeleteItem(String nameSuffix, boolean runInBackground) {
 
-        for (org.janelia.it.workstation.model.entity.RootedEntity rootedEntity : rootedEntityList) {
+        for (RootedEntity rootedEntity : rootedEntityList) {
             EntityData ed = rootedEntity.getEntityData();
             if (ed.getId() == null && !EntityUtils.isCommonRoot(ed.getChildEntity()) && !EntityUtils.isOntologyRoot(ed.getChildEntity())) {
                 // Fake ED, not a root, this must be part of an annotation session.
@@ -1082,7 +1104,7 @@ public class EntityContextMenu extends JPopupMenu {
             }
         }
 
-        final org.janelia.it.workstation.gui.framework.actions.Action action = new org.janelia.it.workstation.gui.framework.actions.RemoveEntityAction(rootedEntityList, true, runInBackground);
+        final Action action = new RemoveEntityAction(rootedEntityList, true, runInBackground);
 
         JMenuItem deleteItem = new JMenuItem("  " + action.getName()+nameSuffix);
         deleteItem.addActionListener(new ActionListener() {
@@ -1091,16 +1113,16 @@ public class EntityContextMenu extends JPopupMenu {
             }
         });
         
-        for (org.janelia.it.workstation.model.entity.RootedEntity rootedEntity : rootedEntityList) {
+        for (RootedEntity rootedEntity : rootedEntityList) {
             Entity entity = rootedEntity.getEntity();
             Entity parent = rootedEntity.getEntityData().getParentEntity();
             
             boolean canDelete = true;
             // User can't delete if they don't have write access
-            if (!org.janelia.it.workstation.api.entity_model.management.ModelMgrUtils.hasWriteAccess(entity)) {
+            if (!ModelMgrUtils.hasWriteAccess(entity)) {
                 canDelete = false;
                 // Unless they own the parent
-                if (parent!=null && parent.getId()!=null && org.janelia.it.workstation.api.entity_model.management.ModelMgrUtils.hasWriteAccess(parent)) {
+                if (parent!=null && parent.getId()!=null && ModelMgrUtils.hasWriteAccess(parent)) {
                     canDelete = true;
                 }
             }
@@ -1109,7 +1131,7 @@ public class EntityContextMenu extends JPopupMenu {
             if (EntityUtils.isProtected(entity)) {
                 canDelete = false;
                 // Unless they own the parent
-                if (parent!=null && parent.getId()!=null && org.janelia.it.workstation.api.entity_model.management.ModelMgrUtils.hasWriteAccess(parent)) {
+                if (parent!=null && parent.getId()!=null && ModelMgrUtils.hasWriteAccess(parent)) {
                     canDelete = true;
                 }
             }
@@ -1128,7 +1150,7 @@ public class EntityContextMenu extends JPopupMenu {
         }
 
         HashSet<Long> parentIds = new HashSet<Long>();
-        for (org.janelia.it.workstation.model.entity.RootedEntity rootedEntity : rootedEntityList) {
+        for (RootedEntity rootedEntity : rootedEntityList) {
             // Add all parent ids to a collection
             if (null != rootedEntity.getEntityData().getParentEntity()
                     && EntityConstants.TYPE_NEURON_FRAGMENT.equals(rootedEntity.getEntity().getEntityTypeName())) {
@@ -1156,8 +1178,8 @@ public class EntityContextMenu extends JPopupMenu {
                         setProgress(1);
                         Long parentId = null;
                         List<Entity> fragments = new ArrayList<Entity>();
-                        for (org.janelia.it.workstation.model.entity.RootedEntity entity : rootedEntityList) {
-                            Long resultId = org.janelia.it.workstation.api.entity_model.management.ModelMgr
+                        for (RootedEntity entity : rootedEntityList) {
+                            Long resultId = ModelMgr
                                     .getModelMgr()
                                     .getAncestorWithType(entity.getEntity(),
                                             EntityConstants.TYPE_NEURON_SEPARATOR_PIPELINE_RESULT).getId();
@@ -1195,7 +1217,7 @@ public class EntityContextMenu extends JPopupMenu {
                         HashSet<TaskParameter> taskParameters = new HashSet<TaskParameter>();
                         taskParameters.add(new TaskParameter(NeuronMergeTask.PARAM_separationEntityId, parentId.toString(), null));
                         taskParameters.add(new TaskParameter(NeuronMergeTask.PARAM_commaSeparatedNeuronFragmentList, Task.csvStringFromCollection(fragmentIds), null));
-                        org.janelia.it.workstation.api.entity_model.management.ModelMgr.getModelMgr().submitJob("NeuronMerge", "Neuron Merge Task", taskParameters);
+                        ModelMgr.getModelMgr().submitJob("NeuronMerge", "Neuron Merge Task", taskParameters);
                     }
 
                     @Override
@@ -1204,7 +1226,7 @@ public class EntityContextMenu extends JPopupMenu {
 
                     @Override
                     protected void hadError(Throwable error) {
-                        org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr.getSessionMgr().handleException(error);
+                        SessionMgr.getSessionMgr().handleException(error);
                     }
 
                 };
@@ -1246,19 +1268,19 @@ public class EntityContextMenu extends JPopupMenu {
                     HashSet<TaskParameter> taskParameters = new HashSet<TaskParameter>();
                     taskParameters.add(new TaskParameter("folder id", folder.getId().toString(), null));
                     taskParameters.add(new TaskParameter("target stack id", targetEntity.getId().toString(), null));
-                    Task task = org.janelia.it.workstation.api.entity_model.management.ModelMgr.getModelMgr().submitJob("SortBySimilarity", "Sort By Similarity", taskParameters);
+                    Task task = ModelMgr.getModelMgr().submitJob("SortBySimilarity", "Sort By Similarity", taskParameters);
 
-                    final org.janelia.it.workstation.gui.dialogs.TaskDetailsDialog dialog = new org.janelia.it.workstation.gui.dialogs.TaskDetailsDialog(true);
+                    final TaskDetailsDialog dialog = new TaskDetailsDialog(true);
                     dialog.showForTask(task);
                     browser.getViewerManager().getActiveViewer().refresh();
                 } 
                 catch (Exception e) {
-                    org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr.getSessionMgr().handleException(e);
+                    SessionMgr.getSessionMgr().handleException(e);
                 }
             }
         });
 
-        sortItem.setEnabled(org.janelia.it.workstation.api.entity_model.management.ModelMgrUtils.hasWriteAccess(folder));
+        sortItem.setEnabled(ModelMgrUtils.hasWriteAccess(folder));
         return sortItem;
     }
 
@@ -1282,19 +1304,19 @@ public class EntityContextMenu extends JPopupMenu {
                     dialog.showForEntity(targetEntity);
                 } 
                 catch (Exception e) {
-                    org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr.getSessionMgr().handleException(e);
+                    SessionMgr.getSessionMgr().handleException(e);
                 }
             }
         });
 
-        sortItem.setEnabled(org.janelia.it.workstation.api.entity_model.management.ModelMgrUtils.hasWriteAccess(targetEntity));
+        sortItem.setEnabled(ModelMgrUtils.hasWriteAccess(targetEntity));
         return sortItem;
     }
     
     protected JMenuItem getDownloadMenu() {
 
         List<Entity> entitiesWithFilepaths = new ArrayList<Entity>();
-        for(final org.janelia.it.workstation.model.entity.RootedEntity rootedEntity : rootedEntityList) {
+        for(final RootedEntity rootedEntity : rootedEntityList) {
             final Entity targetEntity = rootedEntity.getEntity();
             final String filepath = EntityUtils.getDefault3dImageFilePath(targetEntity);
             if (filepath!=null) {
@@ -1359,13 +1381,13 @@ public class EntityContextMenu extends JPopupMenu {
                             
                             @Override
                             protected void doStuff() throws Exception {
-                                Entity targetLoaded = org.janelia.it.workstation.api.entity_model.management.ModelMgr.getModelMgr().loadLazyEntity(entity, false);
+                                Entity targetLoaded = ModelMgr.getModelMgr().loadLazyEntity(entity, false);
                                 this.default3dImage = targetLoaded.getChildByAttributeName(EntityConstants.ATTRIBUTE_DEFAULT_3D_IMAGE);
                                 if (entity.getEntityTypeName().equals(EntityConstants.TYPE_SAMPLE)) {
                                     this.sample = entity;
                                 }
                                 else {
-                                    this.sample = org.janelia.it.workstation.api.entity_model.management.ModelMgr.getModelMgr().getAncestorWithType(entity, EntityConstants.TYPE_SAMPLE);
+                                    this.sample = ModelMgr.getModelMgr().getAncestorWithType(entity, EntityConstants.TYPE_SAMPLE);
                                 }
                                 this.targetDir = new File(splitChannels ? splitsDir : downloadDir, sample.getName());
                             }
@@ -1391,7 +1413,7 @@ public class EntityContextMenu extends JPopupMenu {
                                                 "Files already exist. Open existing folder, or run the download anyway?", "Files already exist", JOptionPane.YES_NO_OPTION,
                                                 JOptionPane.QUESTION_MESSAGE, null, options, options[0]);
                                         if (n==0) {
-                                            org.janelia.it.workstation.gui.util.DesktopApi.browse(targetDir);
+                                            DesktopApi.browse(targetDir);
                                             return;
                                         }
                                     }
@@ -1401,16 +1423,16 @@ public class EntityContextMenu extends JPopupMenu {
                                         HashSet<TaskParameter> taskParameters = new HashSet<TaskParameter>();
                                         taskParameters.add(new TaskParameter("filepath", filepath, null));
                                         taskParameters.add(new TaskParameter("output extension", extension, null));
-                                        task = org.janelia.it.workstation.api.entity_model.management.ModelMgr.getModelMgr().submitJob("ConsoleSplitChannels", "Split Channels", taskParameters);
+                                        task = ModelMgr.getModelMgr().submitJob("ConsoleSplitChannels", "Split Channels", taskParameters);
                                     }
                                     else {    
                                         HashSet<TaskParameter> taskParameters = new HashSet<TaskParameter>();
                                         taskParameters.add(new TaskParameter("filepath", filepath, null));
                                         taskParameters.add(new TaskParameter("output extension", extension, null));
-                                        task = org.janelia.it.workstation.api.entity_model.management.ModelMgr.getModelMgr().submitJob("ConsoleConvertFile", "Convert File", taskParameters);
+                                        task = ModelMgr.getModelMgr().submitJob("ConsoleConvertFile", "Convert File", taskParameters);
                                     }
 
-                                    org.janelia.it.workstation.shared.workers.TaskMonitoringWorker taskWorker = new org.janelia.it.workstation.shared.workers.TaskMonitoringWorker(task.getObjectId()) {
+                                    TaskMonitoringWorker taskWorker = new TaskMonitoringWorker(task.getObjectId()) {
 
                                         @Override
                                         public String getName() {
@@ -1481,7 +1503,7 @@ public class EntityContextMenu extends JPopupMenu {
                                             return new Callable<Void>() {
                                                 @Override
                                                 public Void call() throws Exception {
-                                                	org.janelia.it.workstation.gui.util.DesktopApi.browse(targetDir);
+                                                	DesktopApi.browse(targetDir);
                                                     return null;
                                                 }
                                             };
@@ -1499,7 +1521,7 @@ public class EntityContextMenu extends JPopupMenu {
                             
                             @Override
                             protected void hadError(Throwable error) {
-                                org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr.getSessionMgr().handleException(error);
+                                SessionMgr.getSessionMgr().handleException(error);
                             }
                         };
                         
@@ -1507,7 +1529,7 @@ public class EntityContextMenu extends JPopupMenu {
                     }
                 } 
                 catch (Exception e) {
-                    org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr.getSessionMgr().handleException(e);
+                    SessionMgr.getSessionMgr().handleException(e);
                 }
             }
         });
@@ -1529,7 +1551,7 @@ public class EntityContextMenu extends JPopupMenu {
                     @Override
                     protected void doStuff() throws Exception {
                         if (EntityUtils.isInitialized(rootedEntity.getEntity())) {
-                            rootedEntity.setEntity(org.janelia.it.workstation.api.entity_model.management.ModelMgr.getModelMgr().loadLazyEntity(rootedEntity.getEntity(),
+                            rootedEntity.setEntity(ModelMgr.getModelMgr().loadLazyEntity(rootedEntity.getEntity(),
                                     false));
                         }
                     }
@@ -1537,13 +1559,13 @@ public class EntityContextMenu extends JPopupMenu {
                     @Override
                     protected void hadSuccess() {
                         browser.getViewerManager().showEntityInMainViewer(rootedEntity);
-                        org.janelia.it.workstation.api.entity_model.management.ModelMgr.getModelMgr().getEntitySelectionModel()
-                                .selectEntity(org.janelia.it.workstation.api.entity_model.management.EntitySelectionModel.CATEGORY_OUTLINE, rootedEntity.getUniqueId(), true);
+                        ModelMgr.getModelMgr().getEntitySelectionModel()
+                                .selectEntity(EntitySelectionModel.CATEGORY_OUTLINE, rootedEntity.getUniqueId(), true);
                     }
 
                     @Override
                     protected void hadError(Throwable error) {
-                        org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr.getSessionMgr().handleException(error);
+                        SessionMgr.getSessionMgr().handleException(error);
                     }
                 };
                 worker.execute();
@@ -1567,7 +1589,7 @@ public class EntityContextMenu extends JPopupMenu {
                     @Override
                     protected void doStuff() throws Exception {
                         if (EntityUtils.isInitialized(rootedEntity.getEntity())) {
-                            rootedEntity.setEntity(org.janelia.it.workstation.api.entity_model.management.ModelMgr.getModelMgr().loadLazyEntity(rootedEntity.getEntity(),
+                            rootedEntity.setEntity(ModelMgr.getModelMgr().loadLazyEntity(rootedEntity.getEntity(),
                                     false));
                         }
                     }
@@ -1575,13 +1597,13 @@ public class EntityContextMenu extends JPopupMenu {
                     @Override
                     protected void hadSuccess() {
                         browser.getViewerManager().showEntityInSecViewer(rootedEntity);
-                        org.janelia.it.workstation.api.entity_model.management.ModelMgr.getModelMgr().getEntitySelectionModel()
-                                .selectEntity(org.janelia.it.workstation.api.entity_model.management.EntitySelectionModel.CATEGORY_OUTLINE, rootedEntity.getUniqueId(), true);
+                        ModelMgr.getModelMgr().getEntitySelectionModel()
+                                .selectEntity(EntitySelectionModel.CATEGORY_OUTLINE, rootedEntity.getUniqueId(), true);
                     }
 
                     @Override
                     protected void hadError(Throwable error) {
-                        org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr.getSessionMgr().handleException(error);
+                        SessionMgr.getSessionMgr().handleException(error);
                     }
                 };
                 worker.execute();
@@ -1593,12 +1615,12 @@ public class EntityContextMenu extends JPopupMenu {
     protected JMenuItem getOpenInFinderItem() {
         if (multiple)
             return null;
-        if (!org.janelia.it.workstation.gui.framework.actions.OpenInFinderAction.isSupported())
+        if (!OpenInFinderAction.isSupported())
             return null;
         String filepath = EntityUtils.getAnyFilePath(rootedEntity.getEntity());
         JMenuItem menuItem = null;
         if (!StringUtils.isEmpty(filepath)) {
-            menuItem = getActionItem(new org.janelia.it.workstation.gui.framework.actions.OpenInFinderAction(rootedEntity.getEntity()) {
+            menuItem = getActionItem(new OpenInFinderAction(rootedEntity.getEntity()) {
                 @Override
                 public String getName() {
                     String name = super.getName();
@@ -1614,11 +1636,11 @@ public class EntityContextMenu extends JPopupMenu {
     protected JMenuItem getOpenWithAppItem() {
         if (multiple)
             return null;
-        if (!org.janelia.it.workstation.gui.framework.actions.OpenWithDefaultAppAction.isSupported())
+        if (!OpenWithDefaultAppAction.isSupported())
             return null;
         String filepath = EntityUtils.getAnyFilePath(rootedEntity.getEntity());
         if (!StringUtils.isEmpty(filepath)) {
-            org.janelia.it.workstation.gui.framework.actions.OpenWithDefaultAppAction action = new org.janelia.it.workstation.gui.framework.actions.OpenWithDefaultAppAction(rootedEntity.getEntity()) {
+            OpenWithDefaultAppAction action = new OpenWithDefaultAppAction(rootedEntity.getEntity()) {
                 @Override
                 public String getName() {
                     return "  Open With OS";
@@ -1638,7 +1660,7 @@ public class EntityContextMenu extends JPopupMenu {
             fijiMenuItem.addActionListener(new ActionListener() {
                 public void actionPerformed(ActionEvent actionEvent) {
                     try {
-                        org.janelia.it.workstation.gui.framework.tool_manager.ToolMgr.openFile(org.janelia.it.workstation.gui.framework.tool_manager.ToolMgr.TOOL_FIJI, path, null);
+                        ToolMgr.openFile(ToolMgr.TOOL_FIJI, path, null);
                     } catch (Exception e) {
                         JOptionPane.showMessageDialog(mainFrame, "Could not launch this tool. "
                                 + "Please choose the appropriate file path from the Tools->Configure Tools area",
@@ -1663,25 +1685,25 @@ public class EntityContextMenu extends JPopupMenu {
                     try {
                         Entity result = rootedEntity.getEntity();
                         if (!entityType.equals(EntityConstants.TYPE_NEURON_SEPARATOR_PIPELINE_RESULT)) {
-                            result = org.janelia.it.workstation.api.entity_model.management.ModelMgr.getModelMgr().getAncestorWithType(result,
+                            result = ModelMgr.getModelMgr().getAncestorWithType(result,
                                     EntityConstants.TYPE_NEURON_SEPARATOR_PIPELINE_RESULT);
                         }
 
                         if (result != null) {
                             // Check that there is a valid NA instance running
-                            List<org.janelia.it.workstation.ws.ExternalClient> clients = org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr.getSessionMgr().getExternalClientsByName(org.janelia.it.workstation.api.entity_model.management.ModelMgr.NEURON_ANNOTATOR_CLIENT_NAME);
+                            List<ExternalClient> clients = SessionMgr.getSessionMgr().getExternalClientsByName(ModelMgr.NEURON_ANNOTATOR_CLIENT_NAME);
                             // If no NA client then try to start one
                             if (clients.isEmpty()) {
                                 startNA();
                             }
                             // If NA clients "exist", make sure they are up
                             else {
-                                ArrayList<org.janelia.it.workstation.ws.ExternalClient> finalList = new ArrayList<org.janelia.it.workstation.ws.ExternalClient>();
-                                for (org.janelia.it.workstation.ws.ExternalClient client : clients) {
+                                ArrayList<ExternalClient> finalList = new ArrayList<ExternalClient>();
+                                for (ExternalClient client : clients) {
                                     boolean connected = client.isConnected();
                                     if (!connected) {
                                         log.debug("Removing client "+client.getName()+" as the heartbeat came back negative.");
-                                        org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr.getSessionMgr().removeExternalClientByPort(client.getClientPort());
+                                        SessionMgr.getSessionMgr().removeExternalClientByPort(client.getClientPort());
                                     }
                                     else {
                                         finalList.add(client);
@@ -1693,8 +1715,8 @@ public class EntityContextMenu extends JPopupMenu {
                                 }
                             }
 
-                            if (org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr.getSessionMgr()
-                                    .getExternalClientsByName(org.janelia.it.workstation.api.entity_model.management.ModelMgr.NEURON_ANNOTATOR_CLIENT_NAME).isEmpty()) {
+                            if (SessionMgr.getSessionMgr()
+                                    .getExternalClientsByName(ModelMgr.NEURON_ANNOTATOR_CLIENT_NAME).isEmpty()) {
                                 JOptionPane.showMessageDialog(mainFrame,
                                         "Could not get Neuron Annotator to launch and connect. "
                                                 + "Please contact support.", "Launch ERROR", JOptionPane.ERROR_MESSAGE);
@@ -1702,10 +1724,10 @@ public class EntityContextMenu extends JPopupMenu {
                             }
 
                             log.debug("Requesting entity view in Neuron Annotator: " + result.getId());
-                            org.janelia.it.workstation.api.entity_model.management.ModelMgr.getModelMgr().notifyEntityViewRequestedInNeuronAnnotator(result.getId());
+                            ModelMgr.getModelMgr().notifyEntityViewRequestedInNeuronAnnotator(result.getId());
                         }
                     } catch (Exception e) {
-                        org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr.getSessionMgr().handleException(e);
+                        SessionMgr.getSessionMgr().handleException(e);
                     }
                 }
             });
@@ -1716,14 +1738,14 @@ public class EntityContextMenu extends JPopupMenu {
 
     private void startNA() throws Exception {
         log.debug("Client {} is not running. Starting a new instance.",
-                org.janelia.it.workstation.api.entity_model.management.ModelMgr.NEURON_ANNOTATOR_CLIENT_NAME);
-        org.janelia.it.workstation.gui.framework.tool_manager.ToolMgr.runTool(org.janelia.it.workstation.gui.framework.tool_manager.ToolMgr.TOOL_NA);
+                ModelMgr.NEURON_ANNOTATOR_CLIENT_NAME);
+        ToolMgr.runTool(ToolMgr.TOOL_NA);
         boolean notRunning = true;
         int killCount = 0;
         while (notRunning && killCount < 2) {
-            if (org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr.getSessionMgr()
-                    .getExternalClientsByName(org.janelia.it.workstation.api.entity_model.management.ModelMgr.NEURON_ANNOTATOR_CLIENT_NAME).isEmpty()) {
-                log.debug("Waiting for {} to start.", org.janelia.it.workstation.api.entity_model.management.ModelMgr.NEURON_ANNOTATOR_CLIENT_NAME);
+            if (SessionMgr.getSessionMgr()
+                    .getExternalClientsByName(ModelMgr.NEURON_ANNOTATOR_CLIENT_NAME).isEmpty()) {
+                log.debug("Waiting for {} to start.", ModelMgr.NEURON_ANNOTATOR_CLIENT_NAME);
                 Thread.sleep(3000);
                 killCount++;
             }
@@ -1742,7 +1764,7 @@ public class EntityContextMenu extends JPopupMenu {
             vaa3dMenuItem.addActionListener(new ActionListener() {
                 public void actionPerformed(ActionEvent actionEvent) {
                     try {
-                        org.janelia.it.workstation.gui.framework.tool_manager.ToolMgr.openFile(org.janelia.it.workstation.gui.framework.tool_manager.ToolMgr.TOOL_VAA3D, path, null);
+                        ToolMgr.openFile(ToolMgr.TOOL_VAA3D, path, null);
                     } catch (Exception e) {
                         JOptionPane.showMessageDialog(mainFrame, "Could not launch this tool. "
                                 + "Please choose the appropriate file path from the Tools->Configure Tools area",
@@ -1764,7 +1786,7 @@ public class EntityContextMenu extends JPopupMenu {
             vaa3dMenuItem.addActionListener(new ActionListener() {
                 public void actionPerformed(ActionEvent actionEvent) {
                     try {
-                        org.janelia.it.workstation.gui.framework.tool_manager.ToolMgr.openFile(org.janelia.it.workstation.gui.framework.tool_manager.ToolMgr.TOOL_VAA3D, path, org.janelia.it.workstation.gui.framework.tool_manager.ToolMgr.MODE_3D);
+                        ToolMgr.openFile(ToolMgr.TOOL_VAA3D, path, ToolMgr.MODE_3D);
                     } catch (Exception e) {
                         JOptionPane.showMessageDialog(mainFrame, "Could not launch this tool. "
                                 + "Please choose the appropriate file path from the Tools->Configure Tools area",
@@ -1788,7 +1810,7 @@ public class EntityContextMenu extends JPopupMenu {
                     try {
                         browser.getImportDialog().showDialog(rootedEntity);
                     } catch (Exception ex) {
-                        org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr.getSessionMgr().handleException(ex);
+                        SessionMgr.getSessionMgr().handleException(ex);
                     }
                 }
             });
@@ -1817,12 +1839,12 @@ public class EntityContextMenu extends JPopupMenu {
                     try {
                         // Update database
                         Entity parentFolder = rootedEntity.getEntity();
-                        Entity newFolder = org.janelia.it.workstation.api.entity_model.management.ModelMgr.getModelMgr().createEntity(EntityConstants.TYPE_FOLDER, folderName);
-                        org.janelia.it.workstation.api.entity_model.management.ModelMgr.getModelMgr().addEntityToParent(parentFolder, newFolder,
+                        Entity newFolder = ModelMgr.getModelMgr().createEntity(EntityConstants.TYPE_FOLDER, folderName);
+                        ModelMgr.getModelMgr().addEntityToParent(parentFolder, newFolder,
                                 parentFolder.getMaxOrderIndex() + 1, EntityConstants.ATTRIBUTE_ENTITY);
 
                     } catch (Exception ex) {
-                        org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr.getSessionMgr().handleException(ex);
+                        SessionMgr.getSessionMgr().handleException(ex);
                     }
                 }
             });
@@ -1850,7 +1872,7 @@ public class EntityContextMenu extends JPopupMenu {
 
                     @Override
                     protected void doStuff() throws Exception {
-                        fullEntity = org.janelia.it.workstation.api.entity_model.management.ModelMgr.getModelMgr().loadLazyEntity(entity, true);
+                        fullEntity = ModelMgr.getModelMgr().loadLazyEntity(entity, true);
                         entities = EntityUtils.getDescendantsOfType(fullEntity, EntityConstants.TYPE_NEURON_FRAGMENT,
                                 true);
                     }
@@ -1862,7 +1884,7 @@ public class EntityContextMenu extends JPopupMenu {
 
                     @Override
                     protected void hadError(Throwable error) {
-                        org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr.getSessionMgr().handleException(error);
+                        SessionMgr.getSessionMgr().handleException(error);
                     }
                 };
 
@@ -1881,17 +1903,17 @@ public class EntityContextMenu extends JPopupMenu {
         searchHereMenuItem.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent actionEvent) {
                 try {
-                    org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr.getBrowser().getGeneralSearchDialog()
+                    SessionMgr.getBrowser().getGeneralSearchDialog()
                             .showDialog(rootedEntity.getEntity());
                 } catch (Exception e) {
-                    org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr.getSessionMgr().handleException(e);
+                    SessionMgr.getSessionMgr().handleException(e);
                 }
             }
         });
         return searchHereMenuItem;
     }
 
-    protected JMenuItem getActionItem(final org.janelia.it.workstation.gui.framework.actions.Action action) {
+    protected JMenuItem getActionItem(final Action action) {
         JMenuItem actionMenuItem = new JMenuItem(action.getName());
         actionMenuItem.addActionListener(new ActionListener() {
             @Override
@@ -1907,15 +1929,15 @@ public class EntityContextMenu extends JPopupMenu {
         specialAnnotationSession.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                if (null == org.janelia.it.workstation.api.entity_model.management.ModelMgr.getModelMgr().getCurrentOntology()) {
+                if (null == ModelMgr.getModelMgr().getCurrentOntology()) {
                     JOptionPane.showMessageDialog(mainFrame,
                             "Please select an ontology in the ontology window.", "Null Ontology Warning",
                             JOptionPane.WARNING_MESSAGE);
                 } else {
-                    if (!org.janelia.it.workstation.gui.dialogs.SpecialAnnotationChooserDialog.getDialog().isVisible()) {
-                        org.janelia.it.workstation.gui.dialogs.SpecialAnnotationChooserDialog.getDialog().setVisible(true);
+                    if (!SpecialAnnotationChooserDialog.getDialog().isVisible()) {
+                        SpecialAnnotationChooserDialog.getDialog().setVisible(true);
                     } else {
-                        org.janelia.it.workstation.gui.dialogs.SpecialAnnotationChooserDialog.getDialog().transferFocus();
+                        SpecialAnnotationChooserDialog.getDialog().transferFocus();
                     }
                 }
             }
@@ -1969,7 +1991,7 @@ public class EntityContextMenu extends JPopupMenu {
                 // Pickup the sought value.
                 entityAcceptor.acceptEntity(entity);
             } catch (Exception ex) {
-                org.janelia.it.workstation.api.entity_model.management.ModelMgr.getModelMgr().handleException(ex);
+                ModelMgr.getModelMgr().handleException(ex);
             }
 
         }

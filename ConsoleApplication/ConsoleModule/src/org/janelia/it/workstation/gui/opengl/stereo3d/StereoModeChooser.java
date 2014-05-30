@@ -16,7 +16,7 @@ import org.janelia.it.workstation.signal.Signal1;
 
 public class StereoModeChooser 
 {
-    private org.janelia.it.workstation.gui.opengl.stereo3d.StereoMode stereoMode = null;
+    private StereoMode stereoMode = null;
     private List<StereoAction> stereoActions = new Vector<StereoAction>();
     boolean bEyesSwapped = false;
     @SuppressWarnings("serial")
@@ -32,7 +32,7 @@ public class StereoModeChooser
         }
     };
     
-    public Signal1<org.janelia.it.workstation.gui.opengl.stereo3d.StereoMode> stereoModeChangedSignal = new Signal1<org.janelia.it.workstation.gui.opengl.stereo3d.StereoMode>();
+    public Signal1<StereoMode> stereoModeChangedSignal = new Signal1<StereoMode>();
 	private GLDrawable glPanel;
     
 	
@@ -42,14 +42,14 @@ public class StereoModeChooser
     	
     	// Create a series of swing Actions.
     	stereoActions.add(new StereoAction(new MonoStereoMode(), "Off (Monoscopic)"));
-    	stereoActions.add(new StereoAction(new org.janelia.it.workstation.gui.opengl.stereo3d.LeftEyeStereoMode(), "Left Eye View"));
-    	stereoActions.add(new StereoAction(new org.janelia.it.workstation.gui.opengl.stereo3d.RightEyeStereoMode(), "Right Eye View"));
+    	stereoActions.add(new StereoAction(new LeftEyeStereoMode(), "Left Eye View"));
+    	stereoActions.add(new StereoAction(new RightEyeStereoMode(), "Right Eye View"));
     	stereoActions.add(new StereoAction(new LeftRightStereoMode(), "Side-by-Side"));
-    	stereoActions.add(new StereoAction(new org.janelia.it.workstation.gui.opengl.stereo3d.AnaglyphGreenMagentaStereoMode(), "Green/Magenta"));
+    	stereoActions.add(new StereoAction(new AnaglyphGreenMagentaStereoMode(), "Green/Magenta"));
     	stereoActions.add(new StereoAction(new AnaglyphRedCyanStereoMode(), "Red/Cyan"));
     	stereoActions.add(new HardwareStereoAction(
-    			new org.janelia.it.workstation.gui.opengl.stereo3d.HardwareStereoMode(), "Quad Buffered"));
-    	stereoActions.add(new StereoAction(new org.janelia.it.workstation.gui.opengl.stereo3d.RowInterleavedStereoMode(), "Scan line interleaved"));
+    			new HardwareStereoMode(), "Quad Buffered"));
+    	stereoActions.add(new StereoAction(new RowInterleavedStereoMode(), "Scan line interleaved"));
     	
     	stereoMode = stereoActions.get(0).getMode();
     }
@@ -80,13 +80,13 @@ public class StereoModeChooser
 	
 	@SuppressWarnings("serial")
 	class StereoAction extends AbstractAction {
-		org.janelia.it.workstation.gui.opengl.stereo3d.StereoMode mode;
-		StereoAction(org.janelia.it.workstation.gui.opengl.stereo3d.StereoMode mode, String menuString) {
+		StereoMode mode;
+		StereoAction(StereoMode mode, String menuString) {
 			super(menuString);
 			this.mode = mode;
 		}
 		
-		public org.janelia.it.workstation.gui.opengl.stereo3d.StereoMode getMode() {
+		public StereoMode getMode() {
 			return mode;
 		}
 		
@@ -107,9 +107,9 @@ public class StereoModeChooser
 	@SuppressWarnings("serial")
 	class HardwareStereoAction extends StereoAction 
 	{
-		org.janelia.it.workstation.gui.opengl.stereo3d.HardwareStereoMode hardwareMode;
+		HardwareStereoMode hardwareMode;
 		
-		HardwareStereoAction(org.janelia.it.workstation.gui.opengl.stereo3d.HardwareStereoMode mode, String menuString) {
+		HardwareStereoAction(HardwareStereoMode mode, String menuString) {
 			super(mode, menuString);
 			hardwareMode = mode;
 		}

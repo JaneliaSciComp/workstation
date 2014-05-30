@@ -7,6 +7,8 @@ package org.janelia.it.workstation.gui.util.server_status;
  * @version
  */
 
+import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
+
 import javax.swing.*;
 import java.io.BufferedReader;
 import java.io.InputStream;
@@ -92,7 +94,7 @@ public class ServerStatusReportChecker implements Runnable {
                 return;
             }
 
-            JFrame mainFrame = org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr.getMainFrame();
+            JFrame mainFrame = SessionMgr.getMainFrame();
             JOptionPane optionPane = new JOptionPane();
             optionPane.showMessageDialog(mainFrame, message, "New Server Status Message", JOptionPane.INFORMATION_MESSAGE);
             lastReport = message;

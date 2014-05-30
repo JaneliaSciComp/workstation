@@ -1,5 +1,9 @@
 package org.janelia.it.workstation.gui.framework.navigation_tools;
 
+import org.janelia.it.workstation.api.entity_model.access.observer.NavigationObserver;
+import org.janelia.it.workstation.gui.framework.console.Browser;
+import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
+
 import javax.swing.*;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -26,17 +30,17 @@ public class AutoNavigationMgr {
     }
 
     public void showNavigationCompleteMsgs(boolean show) {
-        org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr.getSessionMgr().setModelProperty(NAV_COMPLETE_KEY, new Boolean(show));
+        SessionMgr.getSessionMgr().setModelProperty(NAV_COMPLETE_KEY, new Boolean(show));
     }
 
     public boolean isShowingNavigationCompleteMsgs() {
-        Boolean bool = (Boolean) org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr.getSessionMgr().getModelProperty(NAV_COMPLETE_KEY);
+        Boolean bool = (Boolean) SessionMgr.getSessionMgr().getModelProperty(NAV_COMPLETE_KEY);
         return bool != null && bool.booleanValue();
     }
 
 
   // Returns a boolean about successful path discovery.
-  public void findEntityInSelectedGenomeVersions(org.janelia.it.workstation.gui.framework.console.Browser browser, String searchType, String searchString) {
+  public void findEntityInSelectedGenomeVersions(Browser browser, String searchType, String searchString) {
 //    Set selectedGenomeVersions= ModelMgr.getModelMgr().getSelectedGenomeVersions();
 //    GenomeVersion genomeVersion;
 //    NavigationObserver observer=new MyNavigationObserver(browser,selectedGenomeVersions.size());
@@ -57,7 +61,7 @@ public class AutoNavigationMgr {
   }
 
   // Returns a boolean about successful path discovery.
-  public void findEntityInGenomeVersion(org.janelia.it.workstation.gui.framework.console.Browser browser, String searchType,
+  public void findEntityInGenomeVersion(Browser browser, String searchType,
           String searchString/*, GenomeVersion genomeVersion*/) {
     lastSearchType = searchType;
     lastSearchString = searchString;
@@ -73,7 +77,7 @@ public class AutoNavigationMgr {
   }
 
     // Returns a boolean about successful path discovery.
-    public void findEntity(org.janelia.it.workstation.gui.framework.console.Browser browser, String searchType, String searchString) {
+    public void findEntity(Browser browser, String searchType, String searchString) {
         lastSearchType = searchType;
         lastSearchString = searchString;
         browser.getBrowserModel().setModelProperty(SEARCH_INITIATED, null);
@@ -82,12 +86,12 @@ public class AutoNavigationMgr {
 //            new MyNavigationObserver(browser,1));
         }
         catch (Exception ex) {
-          org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr.getSessionMgr().handleException(ex);
+          SessionMgr.getSessionMgr().handleException(ex);
         }
     }
 
 
-  public void navigate(org.janelia.it.workstation.gui.framework.console.Browser browser,NavigationPath path) {
+  public void navigate(Browser browser,NavigationPath path) {
     if (path!=null) {
         AutoNavigator av=new AutoNavigator(browser);
         av.autoNavigate(path,isShowingNavigationCompleteMsgs());
@@ -96,7 +100,7 @@ public class AutoNavigationMgr {
 
 
   public void navigate (NavigationPath path) {
-     navigate(org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr.getSessionMgr().newBrowser(),path);
+     navigate(SessionMgr.getSessionMgr().newBrowser(),path);
   }
 
 //  public ControlledVocabulary getNavigationSearchTypes() {
@@ -104,18 +108,18 @@ public class AutoNavigationMgr {
 //  }
 //
   /* Opens dialog, and gets search info from user.  Will then autoNavigate*/
-  public void queryUserForSearchThenNavigate(org.janelia.it.workstation.gui.framework.console.Browser browser) {
+  public void queryUserForSearchThenNavigate(Browser browser) {
       //pop up user query
       SearchManager.getSearchManager().showSearchDialog(browser, false);
   }
 
-  private class MyNavigationObserver implements org.janelia.it.workstation.api.entity_model.access.observer.NavigationObserver {
-    org.janelia.it.workstation.gui.framework.console.Browser browser;
+  private class MyNavigationObserver implements NavigationObserver {
+    Browser browser;
     int expectedNotifications=0;
     int receivedNotifications=0;
     List navigationPathList=new ArrayList();
 
-    private MyNavigationObserver(org.janelia.it.workstation.gui.framework.console.Browser browser,int expectedNotifications){
+    private MyNavigationObserver(Browser browser,int expectedNotifications){
       this.browser=browser;
       this.expectedNotifications=expectedNotifications;
     }

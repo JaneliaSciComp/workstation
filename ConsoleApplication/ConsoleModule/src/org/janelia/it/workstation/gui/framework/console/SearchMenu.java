@@ -1,8 +1,13 @@
 package org.janelia.it.workstation.gui.framework.console;
 
+import org.janelia.it.workstation.gui.dialogs.MAASearchDialog;
+import org.janelia.it.workstation.shared.util.SystemInfo;
+
 import javax.swing.*;
+import java.awt.Event;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.KeyEvent;
 
 /**
  * Created by IntelliJ IDEA.
@@ -23,7 +28,7 @@ public class SearchMenu extends JMenu {
             	browser.getGeneralSearchDialog().showDialog();
             }
         });
-        searchMenuItem.setAccelerator(KeyStroke.getKeyStroke(java.awt.event.KeyEvent.VK_F, org.janelia.it.workstation.shared.util.SystemInfo.isMac?java.awt.Event.META_MASK:java.awt.Event.CTRL_MASK));
+        searchMenuItem.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_F, SystemInfo.isMac? Event.META_MASK: Event.CTRL_MASK));
         add(searchMenuItem);
         
         JMenuItem patternSearchMenuItem = new JMenuItem("Pattern Annotation Search");
@@ -53,7 +58,7 @@ public class SearchMenu extends JMenu {
         });
         add(giantFiberSearchMenuItem);
 
-        final org.janelia.it.workstation.gui.dialogs.MAASearchDialog maaSearchDialog = browser.getMAASearchDialog();
+        final MAASearchDialog maaSearchDialog = browser.getMAASearchDialog();
         if (maaSearchDialog!=null && maaSearchDialog.isAccessible()) {
         	JMenuItem menuItem = new JMenuItem("MAA Screen Search");
             menuItem.addActionListener(new ActionListener() {

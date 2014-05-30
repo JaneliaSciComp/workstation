@@ -3,13 +3,16 @@ package org.janelia.it.workstation.api.entity_model.management;
 import com.google.common.eventbus.AsyncEventBus;
 import com.google.common.eventbus.EventBus;
 import org.apache.solr.client.solrj.SolrQuery;
+import org.janelia.it.workstation.api.entity_model.access.ModelMgrObserver;
 import org.janelia.it.workstation.api.entity_model.fundtype.TaskFilter;
+import org.janelia.it.workstation.api.entity_model.fundtype.TaskRequest;
 import org.janelia.it.workstation.api.facade.facade_mgr.FacadeManager;
 import org.janelia.it.workstation.api.facade.roles.ExceptionHandler;
 import org.janelia.it.workstation.api.stub.data.NoDataException;
 import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.workstation.model.domain.EntityWrapper;
 import org.janelia.it.workstation.model.entity.RootedEntity;
+import org.janelia.it.workstation.model.utils.AnnotationSession;
 import org.janelia.it.workstation.model.utils.OntologyKeyBind;
 import org.janelia.it.workstation.model.utils.OntologyKeyBindings;
 import org.janelia.it.workstation.model.viewer.AlignedItem;
@@ -60,17 +63,17 @@ public class ModelMgr {
 
     private final EventBus modelEventBus;
     private final EntityModel entityModel;
-    private final org.janelia.it.workstation.api.entity_model.management.EntitySelectionModel entitySelectionModel;
+    private final EntitySelectionModel entitySelectionModel;
     private final UserColorMapping userColorMapping;
 
 //    private Entity selectedOntology;
 //    private OntologyKeyBindings ontologyKeyBindings;
-    private org.janelia.it.workstation.model.utils.AnnotationSession annotationSession;
+    private AnnotationSession annotationSession;
     private OntologyAnnotation currentSelectedOntologyAnnotation;
     
     public Entity ERROR_ONTOLOGY = null;
     
-    private final List<org.janelia.it.workstation.api.entity_model.access.ModelMgrObserver> modelMgrObservers = new ArrayList<org.janelia.it.workstation.api.entity_model.access.ModelMgrObserver>();
+    private final List<ModelMgrObserver> modelMgrObservers = new ArrayList<ModelMgrObserver>();
     
     
     static {
@@ -86,7 +89,7 @@ public class ModelMgr {
             log.info("ModelMgr c'tor from  " + Thread.currentThread().getClass().getClassLoader() + "/" + Thread.currentThread().getContextClassLoader() +  " in thread " + Thread.currentThread());
 
             this.entityModel = new EntityModel();
-            this.entitySelectionModel = new org.janelia.it.workstation.api.entity_model.management.EntitySelectionModel();
+            this.entitySelectionModel = new EntitySelectionModel();
             this.userColorMapping = new UserColorMapping();
             this.modelEventBus = new AsyncEventBus("awt", new Executor() {
                 public void execute(Runnable cmd) {
@@ -109,16 +112,16 @@ public class ModelMgr {
         return modelManager;
     }
 
-    public void addModelMgrObserver(org.janelia.it.workstation.api.entity_model.access.ModelMgrObserver mml) {
+    public void addModelMgrObserver(ModelMgrObserver mml) {
         if (null!=mml) {modelMgrObservers.add(mml);}
     }
 
-    public void removeModelMgrObserver(org.janelia.it.workstation.api.entity_model.access.ModelMgrObserver mml) {
+    public void removeModelMgrObserver(ModelMgrObserver mml) {
         if (null!=mml && modelMgrObservers.contains(mml)) {modelMgrObservers.remove(mml);}
     }
 
-    public List<org.janelia.it.workstation.api.entity_model.access.ModelMgrObserver> getModelMgrObservers() {
-        return new ArrayList<org.janelia.it.workstation.api.entity_model.access.ModelMgrObserver>(modelMgrObservers);
+    public List<ModelMgrObserver> getModelMgrObservers() {
+        return new ArrayList<ModelMgrObserver>(modelMgrObservers);
     }
 
     public void registerExceptionHandler(ExceptionHandler handler) {
@@ -157,11 +160,11 @@ public class ModelMgr {
         return userColorMapping;
     }
 
-    public org.janelia.it.workstation.model.utils.AnnotationSession getCurrentAnnotationSession() {
+    public AnnotationSession getCurrentAnnotationSession() {
         return annotationSession;
     }
 
-    public void setCurrentAnnotationSession(org.janelia.it.workstation.model.utils.AnnotationSession session) {
+    public void setCurrentAnnotationSession(AnnotationSession session) {
         if (annotationSession == null || session == null || !annotationSession.getId().equals(session.getId())) {
             this.annotationSession = session;
             if (annotationSession == null)
@@ -265,14 +268,14 @@ public class ModelMgr {
             SwingUtilities.invokeLater(new Runnable() {
                 @Override
                 public void run() {
-                    for (org.janelia.it.workstation.api.entity_model.access.ModelMgrObserver listener : getModelMgrObservers()) {
+                    for (ModelMgrObserver listener : getModelMgrObservers()) {
                         listener.ontologySelected(ontologyId);
                     }
                 }
             });
         }
         else {
-            for (org.janelia.it.workstation.api.entity_model.access.ModelMgrObserver listener : getModelMgrObservers()) {
+            for (ModelMgrObserver listener : getModelMgrObservers()) {
                 listener.ontologySelected(ontologyId);
             }
         }
@@ -283,14 +286,14 @@ public class ModelMgr {
             SwingUtilities.invokeLater(new Runnable() {
                 @Override
                 public void run() {
-                    for (org.janelia.it.workstation.api.entity_model.access.ModelMgrObserver listener : getModelMgrObservers()) {
+                    for (ModelMgrObserver listener : getModelMgrObservers()) {
                         listener.ontologyChanged(entityId);
                     }
                 }
             });
         }
         else {
-            for (org.janelia.it.workstation.api.entity_model.access.ModelMgrObserver listener : getModelMgrObservers()) {
+            for (ModelMgrObserver listener : getModelMgrObservers()) {
                 listener.ontologyChanged(entityId);
             }
         }
@@ -301,14 +304,14 @@ public class ModelMgr {
             SwingUtilities.invokeLater(new Runnable() {
                 @Override
                 public void run() {
-                    for (org.janelia.it.workstation.api.entity_model.access.ModelMgrObserver listener : getModelMgrObservers()) {
+                    for (ModelMgrObserver listener : getModelMgrObservers()) {
                         listener.entitySelected(category, identifier, clearAll);
                     }
                 }
             });
         }
         else {
-            for (org.janelia.it.workstation.api.entity_model.access.ModelMgrObserver listener : getModelMgrObservers()) {
+            for (ModelMgrObserver listener : getModelMgrObservers()) {
                 listener.entitySelected(category, identifier, clearAll);
             }
         }
@@ -319,14 +322,14 @@ public class ModelMgr {
             SwingUtilities.invokeLater(new Runnable() {
                 @Override
                 public void run() {
-                    for (org.janelia.it.workstation.api.entity_model.access.ModelMgrObserver listener : getModelMgrObservers()) {
+                    for (ModelMgrObserver listener : getModelMgrObservers()) {
                         listener.entityDeselected(category, identifier);
                     }
                 }
             });
         }
         else {
-            for (org.janelia.it.workstation.api.entity_model.access.ModelMgrObserver listener : getModelMgrObservers()) {
+            for (ModelMgrObserver listener : getModelMgrObservers()) {
                 listener.entityDeselected(category, identifier);
             }
         }
@@ -337,14 +340,14 @@ public class ModelMgr {
             SwingUtilities.invokeLater(new Runnable() {
                 @Override
                 public void run() {
-                    for (org.janelia.it.workstation.api.entity_model.access.ModelMgrObserver listener : getModelMgrObservers()) {
+                    for (ModelMgrObserver listener : getModelMgrObservers()) {
                         listener.entityChanged(entityId);
                     }
                 }
             });
         }
         else {
-            for (org.janelia.it.workstation.api.entity_model.access.ModelMgrObserver listener : getModelMgrObservers()) {
+            for (ModelMgrObserver listener : getModelMgrObservers()) {
                 listener.entityChanged(entityId);
             }
         }
@@ -355,14 +358,14 @@ public class ModelMgr {
             SwingUtilities.invokeLater(new Runnable() {
                 @Override
                 public void run() {
-                    for (org.janelia.it.workstation.api.entity_model.access.ModelMgrObserver listener : getModelMgrObservers()) {
+                    for (ModelMgrObserver listener : getModelMgrObservers()) {
                         listener.entityChildrenChanged(entityId);
                     }
                 }
             });
         }
         else {
-            for (org.janelia.it.workstation.api.entity_model.access.ModelMgrObserver listener : getModelMgrObservers()) {
+            for (ModelMgrObserver listener : getModelMgrObservers()) {
                 listener.entityChildrenChanged(entityId);
             }
         }
@@ -373,14 +376,14 @@ public class ModelMgr {
             SwingUtilities.invokeLater(new Runnable() {
                 @Override
                 public void run() {
-                    for (org.janelia.it.workstation.api.entity_model.access.ModelMgrObserver listener : getModelMgrObservers()) {
+                    for (ModelMgrObserver listener : getModelMgrObservers()) {
                         listener.entityRemoved(entityId);
                     }
                 }
             });
         }
         else {
-            for (org.janelia.it.workstation.api.entity_model.access.ModelMgrObserver listener : getModelMgrObservers()) {
+            for (ModelMgrObserver listener : getModelMgrObservers()) {
                 listener.entityRemoved(entityId);
             }
         }
@@ -391,14 +394,14 @@ public class ModelMgr {
             SwingUtilities.invokeLater(new Runnable() {
                 @Override
                 public void run() {
-                    for (org.janelia.it.workstation.api.entity_model.access.ModelMgrObserver listener : getModelMgrObservers()) {
+                    for (ModelMgrObserver listener : getModelMgrObservers()) {
                         listener.entityDataRemoved(entityDataId);
                     }
                 }
             });
         }
         else {
-            for (org.janelia.it.workstation.api.entity_model.access.ModelMgrObserver listener : getModelMgrObservers()) {
+            for (ModelMgrObserver listener : getModelMgrObservers()) {
                 listener.entityDataRemoved(entityDataId);
             }
         }
@@ -408,7 +411,7 @@ public class ModelMgr {
         if (SessionMgr.getSessionMgr().getExternalClientsByName(NEURON_ANNOTATOR_CLIENT_NAME).isEmpty()) {
             return false;
         }
-        for (org.janelia.it.workstation.api.entity_model.access.ModelMgrObserver listener : getModelMgrObservers()) {
+        for (ModelMgrObserver listener : getModelMgrObservers()) {
             listener.entityViewRequested(entityId);
         }
         return true;
@@ -419,14 +422,14 @@ public class ModelMgr {
             SwingUtilities.invokeLater(new Runnable() {
                 @Override
                 public void run() {
-                    for (org.janelia.it.workstation.api.entity_model.access.ModelMgrObserver listener : getModelMgrObservers()) {
+                    for (ModelMgrObserver listener : getModelMgrObservers()) {
                         listener.annotationsChanged(entityId);
                     }
                 }
             });
         }
         else {
-            for (org.janelia.it.workstation.api.entity_model.access.ModelMgrObserver listener : getModelMgrObservers()) {
+            for (ModelMgrObserver listener : getModelMgrObservers()) {
                 listener.annotationsChanged(entityId);
             }
         }
@@ -437,7 +440,7 @@ public class ModelMgr {
             SwingUtilities.invokeLater(new Runnable() {
                 @Override
                 public void run() {
-                    for (org.janelia.it.workstation.api.entity_model.access.ModelMgrObserver listener : getModelMgrObservers()) {
+                    for (ModelMgrObserver listener : getModelMgrObservers()) {
                         listener.sessionSelected(sessionId);
                     }
                 }
@@ -445,7 +448,7 @@ public class ModelMgr {
         }
         else {
             
-            for (org.janelia.it.workstation.api.entity_model.access.ModelMgrObserver listener : getModelMgrObservers()) {
+            for (ModelMgrObserver listener : getModelMgrObservers()) {
                 listener.sessionSelected(sessionId);
             }
         }
@@ -456,14 +459,14 @@ public class ModelMgr {
             SwingUtilities.invokeLater(new Runnable() {
                 @Override
                 public void run() {
-                    for (org.janelia.it.workstation.api.entity_model.access.ModelMgrObserver listener : getModelMgrObservers()) {
+                    for (ModelMgrObserver listener : getModelMgrObservers()) {
                         listener.sessionDeselected();
                     }
                 }
             });
         }
         else {
-            for (org.janelia.it.workstation.api.entity_model.access.ModelMgrObserver listener : getModelMgrObservers()) {
+            for (ModelMgrObserver listener : getModelMgrObservers()) {
                 listener.sessionDeselected();
             }
         }
@@ -473,7 +476,7 @@ public class ModelMgr {
         FacadeManager.getFacadeManager().prepareForSystemExit();
     }
 
-    public org.janelia.it.workstation.api.entity_model.management.EntitySelectionModel getEntitySelectionModel() {
+    public EntitySelectionModel getEntitySelectionModel() {
         return entitySelectionModel;
     }
     
@@ -611,7 +614,7 @@ public class ModelMgr {
         return FacadeManager.getFacadeManager().getOntologyFacade().getOntologyTree(rootId);
     }
     
-    public org.janelia.it.workstation.model.utils.AnnotationSession getAnnotationSession(Long sessionId) throws Exception {
+    public AnnotationSession getAnnotationSession(Long sessionId) throws Exception {
         if (annotationSession != null && annotationSession.getId().equals(sessionId)) {
             return annotationSession;
         }
@@ -620,7 +623,7 @@ public class ModelMgr {
         if (task == null) return null;
         if (task instanceof AnnotationSessionTask) {
             AnnotationSessionTask ast = (AnnotationSessionTask)task;
-            return new org.janelia.it.workstation.model.utils.AnnotationSession(ast);
+            return new AnnotationSession(ast);
         }
         
         return null;
@@ -837,9 +840,9 @@ public class ModelMgr {
         return task;
     }
     
-    public org.janelia.it.workstation.api.entity_model.fundtype.TaskRequest submitJob(String processDefName, Task task) throws Exception {
+    public TaskRequest submitJob(String processDefName, Task task) throws Exception {
         FacadeManager.getFacadeManager().getComputeFacade().submitJob(processDefName, task.getObjectId());
-        return new org.janelia.it.workstation.api.entity_model.fundtype.TaskRequest(new TaskFilter(task.getJobName(), task.getObjectId()));
+        return new TaskRequest(new TaskFilter(task.getJobName(), task.getObjectId()));
     }
 
     public List<Task> getUserParentTasks() throws Exception {

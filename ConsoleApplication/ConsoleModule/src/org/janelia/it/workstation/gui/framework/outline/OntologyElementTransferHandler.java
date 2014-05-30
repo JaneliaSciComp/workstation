@@ -7,6 +7,8 @@ import javax.swing.JComponent;
 import javax.swing.JTree;
 import javax.swing.tree.DefaultMutableTreeNode;
 
+import org.janelia.it.jacs.model.ontology.types.EnumItem;
+import org.janelia.it.workstation.model.entity.RootedEntity;
 import org.janelia.it.workstation.shared.util.Utils;
 import org.janelia.it.jacs.model.entity.EntityConstants;
 import org.janelia.it.jacs.model.ontology.OntologyElement;
@@ -55,7 +57,7 @@ public abstract class OntologyElementTransferHandler extends EntityTransferHandl
      * @return true if transfer is allowed
      */
     @Override
-    protected boolean allowTransfer(EntityTree entityTree, DefaultMutableTreeNode targetNode, List<org.janelia.it.workstation.model.entity.RootedEntity> entitiesToAdd) {
+    protected boolean allowTransfer(EntityTree entityTree, DefaultMutableTreeNode targetNode, List<RootedEntity> entitiesToAdd) {
 
         OntologyOutline ontologyOutline = (OntologyOutline) entityTree;
 
@@ -78,7 +80,7 @@ public abstract class OntologyElementTransferHandler extends EntityTransferHandl
             return false;
         }
 
-        for (org.janelia.it.workstation.model.entity.RootedEntity rootedEntity : entitiesToAdd) {
+        for (RootedEntity rootedEntity : entitiesToAdd) {
 
             OntologyElement element = ontologyOutline.getOntologyElement(rootedEntity.getEntityData());
             if (element == null) {
@@ -87,13 +89,13 @@ public abstract class OntologyElementTransferHandler extends EntityTransferHandl
             }
 
             if (type instanceof org.janelia.it.jacs.model.ontology.types.Enum) {
-                if (!(element.getType() instanceof org.janelia.it.jacs.model.ontology.types.EnumItem)) {
+                if (!(element.getType() instanceof EnumItem)) {
                     log.debug("Disallow transfer because the target is an Enum, but the element is not an EnumItem");
                     return false;
                 }
             }
             else {
-                if (element.getType() instanceof org.janelia.it.jacs.model.ontology.types.EnumItem) {
+                if (element.getType() instanceof EnumItem) {
                     log.debug("Disallow transfer because the target is not an Enum, but the element is an EnumItem");
                     return false;
                 }

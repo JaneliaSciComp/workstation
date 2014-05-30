@@ -7,6 +7,6 @@ package org.janelia.it.workstation.units;
  */
 public interface Displacement2d
 {
-	PhysicalQuantity<org.janelia.it.workstation.units.BaseDimension.Length> getX();
-	PhysicalQuantity<org.janelia.it.workstation.units.BaseDimension.Length> getY();
+	PhysicalQuantity<BaseDimension.Length> getX();
+	PhysicalQuantity<BaseDimension.Length> getY();
 }

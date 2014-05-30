@@ -1,5 +1,7 @@
 package org.janelia.it.workstation.gui.framework.viewer;
 
+import org.janelia.it.workstation.api.entity_model.management.ModelMgr;
+import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.workstation.shared.workers.SimpleWorker;
 import org.janelia.it.jacs.model.entity.Entity;
 import org.janelia.it.jacs.model.entity.EntityConstants;
@@ -118,7 +120,7 @@ public class EntityFilenameFetcher {
             @Override
             protected void doStuff() throws Exception {
                 if (entity != null  &&  EntityUtils.isInitialized(entity)) {
-                	org.janelia.it.workstation.api.entity_model.management.ModelMgr.getModelMgr().loadLazyEntity(entity, false);
+                	ModelMgr.getModelMgr().loadLazyEntity(entity, false);
                 }
             }
 
@@ -128,7 +130,7 @@ public class EntityFilenameFetcher {
 
             @Override
             protected void hadError(Throwable error) {
-                org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr.getSessionMgr().handleException(error);
+                SessionMgr.getSessionMgr().handleException(error);
             }
         };
         worker.execute();

@@ -1,12 +1,14 @@
 package org.janelia.it.workstation.gui.opengl;
 
+import org.janelia.it.workstation.gui.viewer3d.BoundingBox3d;
+
 import javax.media.opengl.GL;
 import javax.media.opengl.GL2;
 
 public class LightingActor implements GL3Actor {
 
 	@Override
-	public org.janelia.it.workstation.gui.viewer3d.BoundingBox3d getBoundingBox3d() {
+	public BoundingBox3d getBoundingBox3d() {
 		return null;
 	}
 
@@ -31,11 +33,11 @@ public class LightingActor implements GL3Actor {
 	}
 
     @Override
-    public void display(org.janelia.it.workstation.gui.opengl.GLActorContext context) {
+    public void display(GLActorContext context) {
     }
 
     @Override
-    public void init(org.janelia.it.workstation.gui.opengl.GLActorContext context) {
+    public void init(GLActorContext context) {
         GL gl = context.getGLAutoDrawable().getGL();
         if (gl.isGL2()) {
             initGL2(gl.getGL2());
@@ -46,7 +48,7 @@ public class LightingActor implements GL3Actor {
     }
 
     @Override
-    public void dispose(org.janelia.it.workstation.gui.opengl.GLActorContext context) {
+    public void dispose(GLActorContext context) {
     }
 
 }

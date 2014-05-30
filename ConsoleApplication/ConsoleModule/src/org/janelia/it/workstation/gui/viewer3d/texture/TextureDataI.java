@@ -1,5 +1,6 @@
 package org.janelia.it.workstation.gui.viewer3d.texture;
 
+import org.janelia.it.workstation.gui.viewer3d.masking.VolumeDataI;
 import org.janelia.it.workstation.gui.viewer3d.renderable.RenderableBean;
 import org.janelia.it.workstation.gui.viewer3d.VolumeDataAcceptor;
 
@@ -17,8 +18,8 @@ import java.util.Collection;
 public interface TextureDataI {
     public static final int UNSET_VALUE = -1;
 
-    void setTextureData( org.janelia.it.workstation.gui.viewer3d.masking.VolumeDataI textureData );
-    org.janelia.it.workstation.gui.viewer3d.masking.VolumeDataI getTextureData();
+    void setTextureData( VolumeDataI textureData );
+    VolumeDataI getTextureData();
 
     int getSx();
 

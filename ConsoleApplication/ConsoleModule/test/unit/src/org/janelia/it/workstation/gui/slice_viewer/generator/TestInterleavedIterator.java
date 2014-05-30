@@ -16,10 +16,10 @@ public class TestInterleavedIterator {
 		Integer a[] = {0, -1, 1, -2, 2, -3, -4};
 		List<Integer> expectedResult = Arrays.asList(a);
 		//
-		org.janelia.it.workstation.gui.slice_viewer.generator.RangeIterator r1 = new org.janelia.it.workstation.gui.slice_viewer.generator.RangeIterator(3);
-		org.janelia.it.workstation.gui.slice_viewer.generator.RangeIterator r2 = new org.janelia.it.workstation.gui.slice_viewer.generator.RangeIterator(-1, -5, -1);
-		org.janelia.it.workstation.gui.slice_viewer.generator.InterleavedIterator<Integer> i =
-				new org.janelia.it.workstation.gui.slice_viewer.generator.InterleavedIterator<Integer>(r1, r2);
+		RangeIterator r1 = new RangeIterator(3);
+		RangeIterator r2 = new RangeIterator(-1, -5, -1);
+		InterleavedIterator<Integer> i =
+				new InterleavedIterator<Integer>(r1, r2);
 		List<Integer> actualResult = new Vector<Integer>();
 		for (int val : i)
 			actualResult.add(val);
@@ -29,7 +29,7 @@ public class TestInterleavedIterator {
 	@Test
 	public void testRemove() {
 		// This is not a useful behavior. Perhaps it should not be tested.
-		org.janelia.it.workstation.gui.slice_viewer.generator.InterleavedIterator<Integer> i =
+		InterleavedIterator<Integer> i =
 				new InterleavedIterator<Integer>(null, null);
 		try {
 			i.remove();

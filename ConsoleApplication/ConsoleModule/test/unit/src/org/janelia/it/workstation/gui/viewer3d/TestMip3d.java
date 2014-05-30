@@ -20,13 +20,13 @@ public class TestMip3d {
 	 * @param args
 	 */
 	public static void main(final String[] args) {
-        javax.swing.SwingUtilities.invokeLater(new Runnable() {
+        SwingUtilities.invokeLater(new Runnable() {
             public void run() {
                 JFrame frame = new JFrame("Test MipWidget");
                 frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
                 JLabel label = new JLabel("Test MipWidget");
                 frame.getContentPane().add(label);
-                org.janelia.it.workstation.gui.viewer3d.Mip3d mipWidget = new org.janelia.it.workstation.gui.viewer3d.Mip3d();
+                Mip3d mipWidget = new Mip3d();
                 mipWidget.clear();
                 try {
                 	// mipWidget.loadVolume("/Users/brunsc/smallRefTest.tif");
@@ -73,9 +73,9 @@ public class TestMip3d {
                         fn = args[ 0 ];
                     }
 
-                    org.janelia.it.workstation.gui.viewer3d.VolumeBrickFactory factory = new VolumeBrickFactory() {
+                    VolumeBrickFactory factory = new VolumeBrickFactory() {
                         @Override
-                        public org.janelia.it.workstation.gui.viewer3d.VolumeBrickI getVolumeBrick(org.janelia.it.workstation.gui.viewer3d.VolumeModel model) {
+                        public VolumeBrickI getVolumeBrick(VolumeModel model) {
                             return new RGBExcludableVolumeBrick( model );
                         }
 

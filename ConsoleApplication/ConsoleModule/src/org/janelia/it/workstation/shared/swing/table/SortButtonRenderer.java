@@ -67,14 +67,14 @@ public class SortButtonRenderer extends JButton implements TableCellRenderer {
         downButton = new JButton();
         downButton.setMargin(new Insets(0, 0, 0, 0));
         downButton.setHorizontalTextPosition(LEFT);
-        downButton.setIcon(new org.janelia.it.workstation.shared.swing.table.BevelArrowIcon(org.janelia.it.workstation.shared.swing.table.BevelArrowIcon.DOWN, false, false));
-        downButton.setPressedIcon(new org.janelia.it.workstation.shared.swing.table.BevelArrowIcon(org.janelia.it.workstation.shared.swing.table.BevelArrowIcon.DOWN, false, true));
+        downButton.setIcon(new BevelArrowIcon(BevelArrowIcon.DOWN, false, false));
+        downButton.setPressedIcon(new BevelArrowIcon(BevelArrowIcon.DOWN, false, true));
 
         upButton = new JButton();
         upButton.setMargin(new Insets(0, 0, 0, 0));
         upButton.setHorizontalTextPosition(LEFT);
-        upButton.setIcon(new org.janelia.it.workstation.shared.swing.table.BevelArrowIcon(org.janelia.it.workstation.shared.swing.table.BevelArrowIcon.UP, false, false));
-        upButton.setPressedIcon(new org.janelia.it.workstation.shared.swing.table.BevelArrowIcon(org.janelia.it.workstation.shared.swing.table.BevelArrowIcon.UP, false, true));
+        upButton.setIcon(new BevelArrowIcon(BevelArrowIcon.UP, false, false));
+        upButton.setPressedIcon(new BevelArrowIcon(BevelArrowIcon.UP, false, true));
     }
 
     /**

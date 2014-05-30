@@ -1,5 +1,8 @@
 package org.janelia.it.workstation.api.entity_model.access;
 
+import org.janelia.it.workstation.api.entity_model.fundtype.TaskRequestState;
+import org.janelia.it.workstation.api.entity_model.fundtype.TaskRequestStatus;
+
 /**
  * Created by IntelliJ IDEA.
  * User: saffordt
@@ -11,13 +14,13 @@ public abstract class TaskRequestStatusObserverAdapter implements TaskRequestSta
     protected TaskRequestStatusObserverAdapter() {
     }//Constructor Protected to force subclassing
 
-    public void stateChanged(org.janelia.it.workstation.api.entity_model.fundtype.TaskRequestStatus taskRequestStatus, org.janelia.it.workstation.api.entity_model.fundtype.TaskRequestState newState) {
+    public void stateChanged(TaskRequestStatus taskRequestStatus, TaskRequestState newState) {
     }
 
-    public void loadedPercentageChanged(org.janelia.it.workstation.api.entity_model.fundtype.TaskRequestStatus taskRequestStatus, int newPercent) {
+    public void loadedPercentageChanged(TaskRequestStatus taskRequestStatus, int newPercent) {
     }
 
-    public void notifiedPercentageChanged(org.janelia.it.workstation.api.entity_model.fundtype.TaskRequestStatus taskRequestStatus, int newPercent) {
+    public void notifiedPercentageChanged(TaskRequestStatus taskRequestStatus, int newPercent) {
     }
 //  public void alignedPercentageChanged(TaskRequestStatus taskRequestStatus,  int newPercent){}
 }

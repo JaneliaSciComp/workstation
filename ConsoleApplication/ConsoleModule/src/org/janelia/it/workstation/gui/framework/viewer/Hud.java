@@ -1,5 +1,8 @@
 package org.janelia.it.workstation.gui.framework.viewer;
 
+import org.janelia.it.workstation.gui.dialogs.ModalDialog;
+import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
+import org.janelia.it.workstation.gui.util.panels.ViewerSettingsPanel;
 import org.janelia.it.workstation.gui.viewer3d.Mip3d;
 import org.janelia.it.workstation.shared.util.Utils;
 import org.janelia.it.jacs.model.entity.Entity;
@@ -20,7 +23,7 @@ import java.io.File;
  *
  * @author <a href="mailto:rokickik@janelia.hhmi.org">Konrad Rokicki</a>
  */
-public class Hud extends org.janelia.it.workstation.gui.dialogs.ModalDialog {
+public class Hud extends ModalDialog {
 
     private static final Logger log = LoggerFactory.getLogger(Hud.class);
     
@@ -157,7 +160,7 @@ public class Hud extends org.janelia.it.workstation.gui.dialogs.ModalDialog {
                 }
             }
             else {
-                JOptionPane.showMessageDialog(org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr.getMainFrame(), "Sorry, no image to display.");
+                JOptionPane.showMessageDialog(SessionMgr.getMainFrame(), "Sorry, no image to display.");
                 log.info("No image established for {}:{}", entity.getName(), entity.getEntityTypeName());
             }
         }
@@ -174,10 +177,10 @@ public class Hud extends org.janelia.it.workstation.gui.dialogs.ModalDialog {
         else {
 
             BufferedImage image = null;
-            org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr sessionMgr = org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr.getSessionMgr();
+            SessionMgr sessionMgr = SessionMgr.getSessionMgr();
             Boolean invertImage
-                    = (Boolean) sessionMgr.getModelProperty(org.janelia.it.workstation.gui.util.panels.ViewerSettingsPanel.INVERT_IMAGE_COLORS_PROPERTY);
-            ImageCache ic = org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr.getBrowser().getImageCache();
+                    = (Boolean) sessionMgr.getModelProperty(ViewerSettingsPanel.INVERT_IMAGE_COLORS_PROPERTY);
+            ImageCache ic = SessionMgr.getBrowser().getImageCache();
             if (ic != null) {
                 image = ic.get(imagePath);
             }
@@ -185,7 +188,7 @@ public class Hud extends org.janelia.it.workstation.gui.dialogs.ModalDialog {
             // Ensure we have an image and that it is cached.
             if (image == null) {
                 log.info("In HUD: must load image.");
-                final File imageFile = org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr.getCachedFile(imagePath, false);
+                final File imageFile = SessionMgr.getCachedFile(imagePath, false);
                 if (imageFile != null) {
                     image = Utils.readImage(imageFile.getAbsolutePath());
                     if (ic != null) {

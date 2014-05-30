@@ -27,9 +27,13 @@ import javax.swing.ImageIcon;
 import org.janelia.it.workstation.geom.Vec3;
 import org.janelia.it.workstation.gui.camera.Camera3d;
 import org.janelia.it.workstation.gui.opengl.GLActor;
+import org.janelia.it.workstation.gui.slice_viewer.TileFormat;
+import org.janelia.it.workstation.gui.slice_viewer.shader.AnchorShader;
 import org.janelia.it.workstation.gui.slice_viewer.shader.PassThroughTextureShader;
 // import TracedPathShader;
+import org.janelia.it.workstation.gui.slice_viewer.shader.PathShader;
 import org.janelia.it.workstation.gui.util.Icons;
+import org.janelia.it.workstation.gui.viewer3d.BoundingBox3d;
 import org.janelia.it.workstation.gui.viewer3d.shader.AbstractShader.ShaderCreationException;
 import org.janelia.it.workstation.octree.ZoomedVoxelIndex;
 // import org.slf4j.Logger;
@@ -38,6 +42,7 @@ import org.janelia.it.workstation.signal.Signal;
 import org.janelia.it.workstation.signal.Signal1;
 import org.janelia.it.workstation.signal.Slot;
 import org.janelia.it.workstation.signal.Slot1;
+import org.janelia.it.workstation.tracing.AnchoredVoxelPath;
 import org.janelia.it.workstation.tracing.SegmentIndex;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -72,9 +77,9 @@ implements GLActor
 	private IntBuffer pointIndices;
 	private boolean linesNeedCopy = false;
 	private boolean verticesNeedCopy = false;
-	private org.janelia.it.workstation.gui.slice_viewer.shader.PathShader lineShader = new org.janelia.it.workstation.gui.slice_viewer.shader.PathShader();
-	private org.janelia.it.workstation.gui.slice_viewer.shader.AnchorShader anchorShader = new org.janelia.it.workstation.gui.slice_viewer.shader.AnchorShader();
-	private org.janelia.it.workstation.gui.viewer3d.BoundingBox3d bb = new org.janelia.it.workstation.gui.viewer3d.BoundingBox3d();
+	private PathShader lineShader = new PathShader();
+	private AnchorShader anchorShader = new AnchorShader();
+	private BoundingBox3d bb = new BoundingBox3d();
 	//
 	private BufferedImage anchorImage;
 	private int anchorTextureId = -1;
@@ -83,17 +88,17 @@ implements GLActor
 	//
 	private Skeleton skeleton;
 	// Vertex buffer objects need indices
-	private Map<org.janelia.it.workstation.gui.slice_viewer.skeleton.Anchor, Integer> anchorIndices = new HashMap<org.janelia.it.workstation.gui.slice_viewer.skeleton.Anchor, Integer>();
-	private Map<Integer, org.janelia.it.workstation.gui.slice_viewer.skeleton.Anchor> indexAnchors = new HashMap<Integer, org.janelia.it.workstation.gui.slice_viewer.skeleton.Anchor>();
+	private Map<Anchor, Integer> anchorIndices = new HashMap<Anchor, Integer>();
+	private Map<Integer, Anchor> indexAnchors = new HashMap<Integer, Anchor>();
 	private Camera3d camera;
 	private float zThicknessInPixels = 100;
 	//
-	private org.janelia.it.workstation.gui.slice_viewer.skeleton.Anchor nextParent = null;
+	private Anchor nextParent = null;
 	//
     private boolean bIsVisible = true;
     
-    private Map<SegmentIndex, org.janelia.it.workstation.gui.slice_viewer.skeleton.TracedPathActor> tracedSegments =
-    		new ConcurrentHashMap<SegmentIndex, org.janelia.it.workstation.gui.slice_viewer.skeleton.TracedPathActor>();
+    private Map<SegmentIndex, TracedPathActor> tracedSegments =
+    		new ConcurrentHashMap<SegmentIndex, TracedPathActor>();
 
     // note: this initial color is now overridden by other components
     private float neuronColor[] = {0.8f,1.0f,0.3f};
@@ -103,7 +108,7 @@ implements GLActor
 	
 	public Signal skeletonActorChangedSignal = new Signal();
 
-    public Signal1<org.janelia.it.workstation.gui.slice_viewer.skeleton.Anchor> nextParentChangedSignal = new Signal1<org.janelia.it.workstation.gui.slice_viewer.skeleton.Anchor>();
+    public Signal1<Anchor> nextParentChangedSignal = new Signal1<Anchor>();
 	
 	private Slot updateAnchorsSlot = new Slot() {
 		@Override
@@ -128,7 +133,7 @@ implements GLActor
         }
     };
 
-	private org.janelia.it.workstation.gui.slice_viewer.TileFormat tileFormat;
+	private TileFormat tileFormat;
 
 	public SkeletonActor() {
 		// log.info("New SkeletonActor");
@@ -358,17 +363,17 @@ implements GLActor
 		// black background
         gl.glLineWidth(5.0f);
 		lineShader.setUniform3v(gl2gl3, "baseColor", 1, blackColor);
-		for (org.janelia.it.workstation.gui.slice_viewer.skeleton.TracedPathActor segment : tracedSegments.values())
+		for (TracedPathActor segment : tracedSegments.values())
 		    segment.display(glDrawable);
 		// neuron colored foreground
         gl.glLineWidth(3.0f);
 		lineShader.setUniform3v(gl2gl3, "baseColor", 1, neuronColor);
-        for (org.janelia.it.workstation.gui.slice_viewer.skeleton.TracedPathActor segment : tracedSegments.values())
+        for (TracedPathActor segment : tracedSegments.values())
             segment.display(glDrawable);
 		lineShader.unload(gl2);
 	}
 
-	public int getIndexForAnchor(org.janelia.it.workstation.gui.slice_viewer.skeleton.Anchor anchor) {
+	public int getIndexForAnchor(Anchor anchor) {
 		if (anchor == null)
 			return -1;
 		if (anchorIndices.containsKey(anchor))
@@ -376,12 +381,12 @@ implements GLActor
 		return -1;
 	}
 	
-	public org.janelia.it.workstation.gui.slice_viewer.skeleton.Anchor getAnchorAtIndex(int index) {
+	public Anchor getAnchorAtIndex(int index) {
 		return indexAnchors.get(index);
 	}
 	
 	@Override
-	public org.janelia.it.workstation.gui.viewer3d.BoundingBox3d getBoundingBox3d() {
+	public BoundingBox3d getBoundingBox3d() {
 		return bb; // TODO actually populate bounding box
 	}
 
@@ -448,7 +453,7 @@ implements GLActor
 		indexAnchors.clear();
 		int pointCount = 0;
 		// Populate vertex array
-		for (org.janelia.it.workstation.gui.slice_viewer.skeleton.Anchor anchor : skeleton.getAnchors()) {
+		for (Anchor anchor : skeleton.getAnchors()) {
 			Vec3 xyz = anchor.getLocation();
 			vertices.put((float)xyz.getX());
 			vertices.put((float)xyz.getY());
@@ -466,14 +471,14 @@ implements GLActor
 		//
 		// Update Traced path actors
 		Set<SegmentIndex> foundSegments = new HashSet<SegmentIndex>();
-		Collection<org.janelia.it.workstation.tracing.AnchoredVoxelPath> skeletonSegments = skeleton.getTracedSegments();
+		Collection<AnchoredVoxelPath> skeletonSegments = skeleton.getTracedSegments();
 		// log.info("Skeleton has " + skeletonSegments.size() + " traced segments");
-		for (org.janelia.it.workstation.tracing.AnchoredVoxelPath segment : skeletonSegments) {
+		for (AnchoredVoxelPath segment : skeletonSegments) {
 			SegmentIndex ix = segment.getSegmentIndex();
 			foundSegments.add(ix);
 			if (tracedSegments.containsKey(ix)) {
 				// Is the old traced segment still valid?
-				org.janelia.it.workstation.tracing.AnchoredVoxelPath oldSegment = tracedSegments.get(ix).getSegment();
+				AnchoredVoxelPath oldSegment = tracedSegments.get(ix).getSegment();
 				List<ZoomedVoxelIndex> p0 = oldSegment.getPath();
 				List<ZoomedVoxelIndex> p1 = segment.getPath();
 				boolean looksTheSame = true;
@@ -488,7 +493,7 @@ implements GLActor
 				else
 					tracedSegments.remove(ix); // obsolete. remove it.
 			}
-			org.janelia.it.workstation.gui.slice_viewer.skeleton.TracedPathActor actor = new org.janelia.it.workstation.gui.slice_viewer.skeleton.TracedPathActor(segment, getTileFormat());
+			TracedPathActor actor = new TracedPathActor(segment, getTileFormat());
 			addTracedSegment(actor);
 		}
     	// log.info("tracedSegments.size() [485] = "+tracedSegments.size());
@@ -504,11 +509,11 @@ implements GLActor
 		//
 		// Populate line index buffer - AFTER traced segments have been finalized
 		List<Integer> tempLineIndices = new Vector<Integer>(); // because we don't know size yet
-		for (org.janelia.it.workstation.gui.slice_viewer.skeleton.Anchor anchor : skeleton.getAnchors()) {
+		for (Anchor anchor : skeleton.getAnchors()) {
 			int i1 = getIndexForAnchor(anchor);
 			if (i1 < 0)
 				continue;
-			for (org.janelia.it.workstation.gui.slice_viewer.skeleton.Anchor neighbor : anchor.getNeighbors()) {
+			for (Anchor neighbor : anchor.getNeighbors()) {
 				int i2 = getIndexForAnchor(neighbor);
 				if (i2 < 0)
 					continue;
@@ -535,7 +540,7 @@ implements GLActor
 		pointBytes.order(ByteOrder.nativeOrder());
 		pointIndices = pointBytes.asIntBuffer();
 		pointIndices.rewind();
-		for (org.janelia.it.workstation.gui.slice_viewer.skeleton.Anchor anchor : skeleton.getAnchors()) {
+		for (Anchor anchor : skeleton.getAnchors()) {
 			int i1 = anchorIndices.get(anchor);
 			pointIndices.put(i1);
 		}
@@ -544,17 +549,17 @@ implements GLActor
 		skeletonActorChangedSignal.emit();
 	}
 	
-	public void setTileFormat(org.janelia.it.workstation.gui.slice_viewer.TileFormat tileFormat) {
+	public void setTileFormat(TileFormat tileFormat) {
 		this.tileFormat = tileFormat;
 
         // propagate to all traced path actors, too:
-        for (org.janelia.it.workstation.gui.slice_viewer.skeleton.TracedPathActor path : tracedSegments.values()) {
+        for (TracedPathActor path : tracedSegments.values()) {
             path.setTileFormat(tileFormat);
         }
 
 	}
 	
-	private org.janelia.it.workstation.gui.slice_viewer.TileFormat getTileFormat() {
+	private TileFormat getTileFormat() {
 		return tileFormat;
 	}
 
@@ -677,7 +682,7 @@ implements GLActor
 		gl.glDeleteTextures(2, ix1, 0);
 		int ix2[] = {vbo, lineIbo, pointIbo, colorBo};
 		gl.glDeleteBuffers(4, ix2, 0);
-		for (org.janelia.it.workstation.gui.slice_viewer.skeleton.TracedPathActor path : tracedSegments.values())
+		for (TracedPathActor path : tracedSegments.values())
 			path.dispose(glDrawable);
 		tracedSegments.clear();
     	// log.info("tracedSegments.size() [629] = "+tracedSegments.size());
@@ -690,14 +695,14 @@ implements GLActor
 		skeletonActorChangedSignal.emit(); // TODO leads to instability?
 	}
 
-	public org.janelia.it.workstation.gui.slice_viewer.skeleton.Anchor getNextParent() {
+	public Anchor getNextParent() {
 		return nextParent;
 	}
 
     public boolean setNextParentByID(Long annotationID) {
         // find the anchor corresponding to this annotation ID and pass along
-        org.janelia.it.workstation.gui.slice_viewer.skeleton.Anchor foundAnchor = null;
-        for (org.janelia.it.workstation.gui.slice_viewer.skeleton.Anchor testAnchor: getSkeleton().getAnchors()) {
+        Anchor foundAnchor = null;
+        for (Anchor testAnchor: getSkeleton().getAnchors()) {
             if (testAnchor.getGuid().equals(annotationID)) {
                 foundAnchor = testAnchor;
                 break;
@@ -708,7 +713,7 @@ implements GLActor
         return setNextParent(foundAnchor);
     }
 
-	public boolean setNextParent(org.janelia.it.workstation.gui.slice_viewer.skeleton.Anchor parent) {
+	public boolean setNextParent(Anchor parent) {
 		if (parent == nextParent)
 			return false;
 		nextParent = parent;
@@ -722,7 +727,7 @@ implements GLActor
 	/*
 	 * Change visual anchor position without actually changing the Skeleton model
 	 */
-	public void lightweightNudgeAnchor(org.janelia.it.workstation.gui.slice_viewer.skeleton.Anchor dragAnchor, Vec3 dv) {
+	public void lightweightNudgeAnchor(Anchor dragAnchor, Vec3 dv) {
 		if (dragAnchor == null)
 			return;
 		int index = getIndexForAnchor(dragAnchor);
@@ -735,7 +740,7 @@ implements GLActor
 		skeletonActorChangedSignal.emit();
 	}
 	
-	public void lightweightPlaceAnchor(org.janelia.it.workstation.gui.slice_viewer.skeleton.Anchor dragAnchor, Vec3 location) {
+	public void lightweightPlaceAnchor(Anchor dragAnchor, Vec3 location) {
 		if (dragAnchor == null)
 			return;
 		int index = getIndexForAnchor(dragAnchor);
@@ -758,7 +763,7 @@ implements GLActor
         skeletonActorChangedSignal.emit();
     }
 
-    public void addTracedSegment(org.janelia.it.workstation.gui.slice_viewer.skeleton.TracedPathActor actor) {
+    public void addTracedSegment(TracedPathActor actor) {
     	// log.info("tracedSegments.size() [691] = "+tracedSegments.size());
     	// log.info("Adding traced segment to SkeletonActor");
         tracedSegments.put(actor.getSegmentIndex(), actor);

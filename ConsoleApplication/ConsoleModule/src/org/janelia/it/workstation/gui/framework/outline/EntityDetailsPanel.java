@@ -28,11 +28,20 @@ import javax.swing.ListSelectionModel;
 import javax.swing.SwingConstants;
 
 import org.apache.solr.client.solrj.SolrQuery;
+import org.janelia.it.workstation.api.entity_model.management.ModelMgr;
+import org.janelia.it.workstation.api.entity_model.management.ModelMgrUtils;
 import org.janelia.it.workstation.gui.dialogs.EntityActorPermissionDialog;
 import org.janelia.it.workstation.gui.dialogs.search.SearchAttribute;
 import org.janelia.it.workstation.gui.dialogs.search.SearchConfiguration;
 import org.janelia.it.workstation.gui.dialogs.search.SearchConfiguration.AttrGroup;
 import org.janelia.it.workstation.gui.framework.access.Accessibility;
+import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
+import org.janelia.it.workstation.gui.framework.table.DynamicColumn;
+import org.janelia.it.workstation.gui.framework.table.DynamicTable;
+import org.janelia.it.workstation.gui.framework.viewer.AnnotationTablePanel;
+import org.janelia.it.workstation.gui.framework.viewer.AnnotationView;
+import org.janelia.it.workstation.gui.util.Icons;
+import org.janelia.it.workstation.model.entity.RootedEntity;
 import org.janelia.it.workstation.shared.util.Utils;
 import org.janelia.it.workstation.shared.workers.IndeterminateProgressMonitor;
 import org.janelia.it.workstation.shared.workers.SimpleWorker;
@@ -78,17 +87,17 @@ public class EntityDetailsPanel extends JPanel implements Accessibility, Refresh
 
     private JLabel attributesLoadingLabel;
     private JPanel attributesPanel;
-    private org.janelia.it.workstation.gui.framework.table.DynamicTable attributesTable;
+    private DynamicTable attributesTable;
 
     private JLabel permissionsLoadingLabel;
     private JPanel permissionsPanel;
-    private org.janelia.it.workstation.gui.framework.table.DynamicTable permissionsTable;
+    private DynamicTable permissionsTable;
     private JPanel permissionsButtonPane;
     private JButton addPermissionButton;
 
     private JLabel annotationsLoadingLabel;
     private JPanel annotationsPanel;
-    private org.janelia.it.workstation.gui.framework.viewer.AnnotationView annotationsView;
+    private AnnotationView annotationsView;
 
     private EntityActorPermissionDialog eapDialog;
 
@@ -99,7 +108,7 @@ public class EntityDetailsPanel extends JPanel implements Accessibility, Refresh
     private JLabel createLoadingLabel() {
         JLabel loadingLabel = new JLabel();
         loadingLabel.setOpaque(false);
-        loadingLabel.setIcon(org.janelia.it.workstation.gui.util.Icons.getLoadingIcon());
+        loadingLabel.setIcon(Icons.getLoadingIcon());
         loadingLabel.setHorizontalAlignment(SwingConstants.CENTER);
         loadingLabel.setVerticalAlignment(SwingConstants.CENTER);
         return loadingLabel;
@@ -123,9 +132,9 @@ public class EntityDetailsPanel extends JPanel implements Accessibility, Refresh
         // Attributes tab
         attributesLoadingLabel = createLoadingLabel();
         attributesPanel = new JPanel(new BorderLayout());
-        attributesTable = new org.janelia.it.workstation.gui.framework.table.DynamicTable(true, false) {
+        attributesTable = new DynamicTable(true, false) {
             @Override
-            public Object getValue(Object userObject, org.janelia.it.workstation.gui.framework.table.DynamicColumn column) {
+            public Object getValue(Object userObject, DynamicColumn column) {
                 AttributeValue attrValue = (AttributeValue) userObject;
                 if (null != attrValue) {
                     if (column.getName().equals(ATTRIBUTES_COLUMN_KEY)) {
@@ -141,14 +150,14 @@ public class EntityDetailsPanel extends JPanel implements Accessibility, Refresh
         attributesTable.addColumn(ATTRIBUTES_COLUMN_KEY, ATTRIBUTES_COLUMN_KEY, true, false, false, true);
         attributesTable.addColumn(ATTRIBUTES_COLUMN_VALUE, ATTRIBUTES_COLUMN_VALUE, true, false, false, true);
 
-        tabbedPane.addTab(TAB_NAME_ATTRIBUTES, org.janelia.it.workstation.gui.util.Icons.getIcon("table.png"), attributesPanel, "The data entity's attributes");
+        tabbedPane.addTab(TAB_NAME_ATTRIBUTES, Icons.getIcon("table.png"), attributesPanel, "The data entity's attributes");
 
         // Permissions tab
         permissionsLoadingLabel = createLoadingLabel();
         permissionsPanel = new JPanel(new BorderLayout());
-        permissionsTable = new org.janelia.it.workstation.gui.framework.table.DynamicTable(true, false) {
+        permissionsTable = new DynamicTable(true, false) {
             @Override
-            public Object getValue(Object userObject, org.janelia.it.workstation.gui.framework.table.DynamicColumn column) {
+            public Object getValue(Object userObject, DynamicColumn column) {
                 EntityActorPermission eap = (EntityActorPermission) userObject;
                 if (null != eap) {
                     if (column.getName().equals(PERMISSIONS_COLUMN_SUBJECT)) {
@@ -187,7 +196,7 @@ public class EntityDetailsPanel extends JPanel implements Accessibility, Refresh
         				// No menu for the permanent owner permission. In the future this might show a "gifting" option
                         // if the owner wants to transfer ownership.
                     }
-                    else if (org.janelia.it.workstation.api.entity_model.management.ModelMgrUtils.isOwner(entity)) {
+                    else if (ModelMgrUtils.isOwner(entity)) {
 
                         JMenuItem editItem = new JMenuItem("  Edit Permission");
                         editItem.addActionListener(new ActionListener() {
@@ -218,9 +227,9 @@ public class EntityDetailsPanel extends JPanel implements Accessibility, Refresh
 
                                     @Override
                                     protected void doStuff() throws Exception {
-                                        org.janelia.it.workstation.api.entity_model.management.ModelMgr.getModelMgr().revokePermissions(eap.getEntity().getId(), eap.getSubjectKey(), recursive);
+                                        ModelMgr.getModelMgr().revokePermissions(eap.getEntity().getId(), eap.getSubjectKey(), recursive);
                                         if (recursive) {
-                                            org.janelia.it.workstation.api.entity_model.management.ModelMgr.getModelMgr().invalidateCache(entity, true);
+                                            ModelMgr.getModelMgr().invalidateCache(entity, true);
                                         }
                                     }
 
@@ -232,7 +241,7 @@ public class EntityDetailsPanel extends JPanel implements Accessibility, Refresh
 
                                     @Override
                                     protected void hadError(Throwable error) {
-                                        org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr.getSessionMgr().handleException(error);
+                                        SessionMgr.getSessionMgr().handleException(error);
                                         Utils.setDefaultCursor(EntityDetailsPanel.this);
                                         refresh();
                                     }
@@ -278,14 +287,14 @@ public class EntityDetailsPanel extends JPanel implements Accessibility, Refresh
         permissionsPanel.add(permissionsButtonPane, BorderLayout.NORTH);
         permissionsPanel.add(permissionsTable, BorderLayout.CENTER);
 
-        tabbedPane.addTab("Permissions", org.janelia.it.workstation.gui.util.Icons.getIcon("group.png"), permissionsPanel, "Who has access to the this data entity");
+        tabbedPane.addTab("Permissions", Icons.getIcon("group.png"), permissionsPanel, "Who has access to the this data entity");
 
         // Annotations tab
         annotationsLoadingLabel = createLoadingLabel();
         annotationsPanel = new JPanel(new BorderLayout());
-        annotationsView = new org.janelia.it.workstation.gui.framework.viewer.AnnotationTablePanel();
+        annotationsView = new AnnotationTablePanel();
 
-        tabbedPane.addTab("Annotations", org.janelia.it.workstation.gui.util.Icons.getIcon("page_white_edit.png"), annotationsPanel, "The user annotations");
+        tabbedPane.addTab("Annotations", Icons.getIcon("page_white_edit.png"), annotationsPanel, "The user annotations");
     }
 
     public void showNothing() {
@@ -317,11 +326,11 @@ public class EntityDetailsPanel extends JPanel implements Accessibility, Refresh
         annotationsPanel.add(annotationsLoadingLabel, BorderLayout.CENTER);
     }
 
-    public void loadRootedEntity(org.janelia.it.workstation.model.entity.RootedEntity rootedEntity) {
+    public void loadRootedEntity(RootedEntity rootedEntity) {
         loadRootedEntity(rootedEntity, TAB_NAME_ATTRIBUTES);
     }
 
-    public void loadRootedEntity(org.janelia.it.workstation.model.entity.RootedEntity rootedEntity, String defaultTab) {
+    public void loadRootedEntity(RootedEntity rootedEntity, String defaultTab) {
         if (rootedEntity == null) {
             showNothing();
             return;
@@ -357,7 +366,7 @@ public class EntityDetailsPanel extends JPanel implements Accessibility, Refresh
         log.debug("Loading attributes for {}", entity.getId());
         showAttributesLoadingIndicator();
 
-        final SearchConfiguration searchConfig = org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr.getBrowser().getGeneralSearchConfig();
+        final SearchConfiguration searchConfig = SessionMgr.getBrowser().getGeneralSearchConfig();
 
         SimpleWorker worker = new SimpleWorker() {
 
@@ -367,11 +376,11 @@ public class EntityDetailsPanel extends JPanel implements Accessibility, Refresh
 
             @Override
             protected void doStuff() throws Exception {
-                this.loadedEntity = org.janelia.it.workstation.api.entity_model.management.ModelMgr.getModelMgr().getEntityById(entityId);
+                this.loadedEntity = ModelMgr.getModelMgr().getEntityById(entityId);
                 log.debug("Loading entity {}", entity.getId());
                 try {
                     SolrQuery query = new SolrQuery("id:" + entityId);
-                    SolrResults results = org.janelia.it.workstation.api.entity_model.management.ModelMgr.getModelMgr().searchSolr(query);
+                    SolrResults results = ModelMgr.getModelMgr().searchSolr(query);
                     this.doc = results.getEntityDocuments().isEmpty() ? null : results.getEntityDocuments().iterator().next();
                     log.debug("Loading entity document {}", entity.getId());
                 }
@@ -452,7 +461,7 @@ public class EntityDetailsPanel extends JPanel implements Accessibility, Refresh
 
             @Override
             protected void hadError(Throwable error) {
-                org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr.getSessionMgr().handleException(error);
+                SessionMgr.getSessionMgr().handleException(error);
                 attributesPanel.removeAll();
                 attributesPanel.add(attributesTable, BorderLayout.CENTER);
                 attributesPanel.revalidate();
@@ -471,7 +480,7 @@ public class EntityDetailsPanel extends JPanel implements Accessibility, Refresh
 
             @Override
             protected void doStuff() throws Exception {
-                subjects = org.janelia.it.workstation.api.entity_model.management.ModelMgr.getModelMgr().getSubjects();
+                subjects = ModelMgr.getModelMgr().getSubjects();
                 Collections.sort(subjects, new Comparator<Subject>() {
                     @Override
                     public int compare(Subject o1, Subject o2) {
@@ -483,13 +492,13 @@ public class EntityDetailsPanel extends JPanel implements Accessibility, Refresh
             @Override
             protected void hadSuccess() {
                 setSubjects(subjects);
-                addPermissionButton.setEnabled(org.janelia.it.workstation.api.entity_model.management.ModelMgrUtils.isOwner(entity));
+                addPermissionButton.setEnabled(ModelMgrUtils.isOwner(entity));
                 log.debug("Setting permission button state to {}", addPermissionButton.isEnabled());
             }
 
             @Override
             protected void hadError(Throwable error) {
-                org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr.getSessionMgr().handleException(error);
+                SessionMgr.getSessionMgr().handleException(error);
             }
         };
         worker.execute();
@@ -536,7 +545,7 @@ public class EntityDetailsPanel extends JPanel implements Accessibility, Refresh
 
             @Override
             protected void hadError(Throwable error) {
-                org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr.getSessionMgr().handleException(error);
+                SessionMgr.getSessionMgr().handleException(error);
             }
         };
         permissionsLoadingWorker.execute();
@@ -556,7 +565,7 @@ public class EntityDetailsPanel extends JPanel implements Accessibility, Refresh
 
             @Override
             protected void doStuff() throws Exception {
-                for (Entity entityAnnot : org.janelia.it.workstation.api.entity_model.management.ModelMgr.getModelMgr().getAnnotationsForEntity(entity.getId())) {
+                for (Entity entityAnnot : ModelMgr.getModelMgr().getAnnotationsForEntity(entity.getId())) {
                     OntologyAnnotation annotation = new OntologyAnnotation();
                     annotation.init(entityAnnot);
                     if (null != annotation.getTargetEntityId()) {
@@ -578,7 +587,7 @@ public class EntityDetailsPanel extends JPanel implements Accessibility, Refresh
 
             @Override
             protected void hadError(Throwable error) {
-                org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr.getSessionMgr().handleException(error);
+                SessionMgr.getSessionMgr().handleException(error);
                 annotationsPanel.removeAll();
                 annotationsPanel.add((JPanel) annotationsView, BorderLayout.CENTER);
                 annotationsPanel.revalidate();

@@ -7,6 +7,12 @@ import com.google.common.cache.RemovalNotification;
 import com.google.common.collect.HashMultimap;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Multimap;
+import org.janelia.it.workstation.api.entity_model.events.EntityChangeEvent;
+import org.janelia.it.workstation.api.entity_model.events.EntityChildrenLoadedEvent;
+import org.janelia.it.workstation.api.entity_model.events.EntityCreateEvent;
+import org.janelia.it.workstation.api.entity_model.events.EntityInvalidationEvent;
+import org.janelia.it.workstation.api.entity_model.events.EntityRemoveEvent;
+import org.janelia.it.workstation.api.facade.abstract_facade.AnnotationFacade;
 import org.janelia.it.workstation.api.facade.abstract_facade.EntityFacade;
 import org.janelia.it.jacs.model.entity.Entity;
 import org.janelia.it.jacs.model.entity.EntityConstants;
@@ -14,6 +20,10 @@ import org.janelia.it.jacs.model.entity.EntityData;
 import org.janelia.it.jacs.model.entity.ForbiddenEntity;
 import org.janelia.it.jacs.model.ontology.types.OntologyElementType;
 import org.janelia.it.jacs.shared.utils.EntityUtils;
+import org.janelia.it.workstation.api.facade.abstract_facade.OntologyFacade;
+import org.janelia.it.workstation.api.facade.facade_mgr.FacadeManager;
+import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
+import org.janelia.it.workstation.model.entity.RootedEntity;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -50,8 +60,8 @@ public class EntityModel {
 
     private static final Logger log = LoggerFactory.getLogger(EntityModel.class);
 
-    private final org.janelia.it.workstation.api.facade.abstract_facade.AnnotationFacade annotationFacade;
-    private final org.janelia.it.workstation.api.facade.abstract_facade.OntologyFacade ontologyFacade;
+    private final AnnotationFacade annotationFacade;
+    private final OntologyFacade ontologyFacade;
     private final EntityFacade entityFacade;
     private final Cache<Long, Entity> entityCache;
     private final Map<Long, Entity> commonRootCache;
@@ -59,9 +69,9 @@ public class EntityModel {
     private final Multimap<Long, Long> parentMap;
 
     public EntityModel() {
-        this.annotationFacade = org.janelia.it.workstation.api.facade.facade_mgr.FacadeManager.getFacadeManager().getAnnotationFacade();
-        this.ontologyFacade = org.janelia.it.workstation.api.facade.facade_mgr.FacadeManager.getFacadeManager().getOntologyFacade();
-        this.entityFacade = org.janelia.it.workstation.api.facade.facade_mgr.FacadeManager.getFacadeManager().getEntityFacade();
+        this.annotationFacade = FacadeManager.getFacadeManager().getAnnotationFacade();
+        this.ontologyFacade = FacadeManager.getFacadeManager().getOntologyFacade();
+        this.entityFacade = FacadeManager.getFacadeManager().getEntityFacade();
         this.entityCache = CacheBuilder.newBuilder().softValues().removalListener(new RemovalListener<Long, Entity>() {
             @Override
             public void onRemoval(RemovalNotification<Long, Entity> notification) {
@@ -214,7 +224,7 @@ public class EntityModel {
                 }
             } catch (Throwable e) {
                 log.error("Error trying to walk entity " + entity.getId());
-                org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr.getSessionMgr().handleException(e);
+                SessionMgr.getSessionMgr().handleException(e);
             }
         }
         return putOrUpdate(entity);
@@ -242,7 +252,7 @@ public class EntityModel {
         commonRootCache.clear();
         ontologyRootCache.clear();
         parentMap.clear();
-        ModelMgr.getModelMgr().postOnEventBus(new org.janelia.it.workstation.api.entity_model.events.EntityInvalidationEvent());
+        ModelMgr.getModelMgr().postOnEventBus(new EntityInvalidationEvent());
     }
 
     /**
@@ -565,7 +575,7 @@ public class EntityModel {
      * @throws Exception
      */
     public List<Entity> getEntitiesByName(String entityName) throws Exception {
-        List<Entity> entities = org.janelia.it.workstation.api.facade.facade_mgr.FacadeManager.getFacadeManager().getEntityFacade().getEntitiesByName(entityName);
+        List<Entity> entities = FacadeManager.getFacadeManager().getEntityFacade().getEntitiesByName(entityName);
         return putOrUpdateAll(entities);
     }
 
@@ -577,7 +587,7 @@ public class EntityModel {
      * @throws Exception
      */
     public List<Entity> getOwnedEntitiesByName(String entityName) throws Exception {
-        List<Entity> entities = org.janelia.it.workstation.api.facade.facade_mgr.FacadeManager.getFacadeManager().getEntityFacade().getOwnedEntitiesByName(entityName);
+        List<Entity> entities = FacadeManager.getFacadeManager().getEntityFacade().getOwnedEntitiesByName(entityName);
         return putOrUpdateAll(entities);
     }
 
@@ -1099,7 +1109,7 @@ public class EntityModel {
      * @return canonical entity instance
      * @throws Exception
      */
-    public org.janelia.it.workstation.model.entity.RootedEntity createAlignmentBoard(String alignmentBoardName, String alignmentSpace, String opticalRes, String pixelRes) throws Exception {
+    public RootedEntity createAlignmentBoard(String alignmentBoardName, String alignmentSpace, String opticalRes, String pixelRes) throws Exception {
         synchronized (this) {
 
             Entity boardEntity = annotationFacade.createAlignmentBoard(alignmentBoardName, alignmentSpace, opticalRes, pixelRes);
@@ -1119,7 +1129,7 @@ public class EntityModel {
                 alignmentBoardFolder = getCommonRootFolder(EntityConstants.NAME_ALIGNMENT_BOARDS);
             }
 
-            org.janelia.it.workstation.model.entity.RootedEntity abRootedEntity = new org.janelia.it.workstation.model.entity.RootedEntity(alignmentBoardFolder);
+            RootedEntity abRootedEntity = new RootedEntity(alignmentBoardFolder);
 
             loadLazyEntity(alignmentBoardFolder, false);
 
@@ -1145,7 +1155,7 @@ public class EntityModel {
      * @return canonical entity instance
      * @throws Exception
      */
-    public org.janelia.it.workstation.model.entity.RootedEntity addAlignedItem(Entity parent, Entity entity, String alignedItemName, boolean visible) throws Exception {
+    public RootedEntity addAlignedItem(Entity parent, Entity entity, String alignedItemName, boolean visible) throws Exception {
 
         checkIfCanonicalEntity(parent);
         checkIfCanonicalEntity(entity);
@@ -1160,7 +1170,7 @@ public class EntityModel {
             log.debug("Added aligned item (id={}) to parent (id={})", entity.getId(), parent.getId());
             notifyEntityChanged(parent);
 
-            org.janelia.it.workstation.model.entity.RootedEntity abRootedEntity = new org.janelia.it.workstation.model.entity.RootedEntity(getEntityById(parent.getId()));
+            RootedEntity abRootedEntity = new RootedEntity(getEntityById(parent.getId()));
             return abRootedEntity.getChildById(newAlignedEntity.getId());
         }
     }
@@ -1328,34 +1338,34 @@ public class EntityModel {
         if (log.isTraceEnabled()) {
             log.trace("Generating EntityChildrenLoadedEvent for {}", EntityUtils.identify(entity));
         }
-        ModelMgr.getModelMgr().postOnEventBus(new org.janelia.it.workstation.api.entity_model.events.EntityChildrenLoadedEvent(entity));
+        ModelMgr.getModelMgr().postOnEventBus(new EntityChildrenLoadedEvent(entity));
     }
 
     private void notifyEntityCreated(Entity entity) {
         if (log.isTraceEnabled()) {
             log.trace("Generating EntityCreateEvent for {}", EntityUtils.identify(entity));
         }
-        ModelMgr.getModelMgr().postOnEventBus(new org.janelia.it.workstation.api.entity_model.events.EntityCreateEvent(entity));
+        ModelMgr.getModelMgr().postOnEventBus(new EntityCreateEvent(entity));
     }
 
     private void notifyEntityChanged(Entity entity) {
         if (log.isTraceEnabled()) {
             log.trace("Generating EntityChangeEvent for {}", EntityUtils.identify(entity));
         }
-        ModelMgr.getModelMgr().postOnEventBus(new org.janelia.it.workstation.api.entity_model.events.EntityChangeEvent(entity));
+        ModelMgr.getModelMgr().postOnEventBus(new EntityChangeEvent(entity));
     }
 
     private void notifyEntityRemoved(Entity entity, Set<EntityData> parentEds) {
         if (log.isTraceEnabled()) {
             log.trace("Generating EntityRemoveEvent for {}", EntityUtils.identify(entity));
         }
-        ModelMgr.getModelMgr().postOnEventBus(new org.janelia.it.workstation.api.entity_model.events.EntityRemoveEvent(entity, parentEds));
+        ModelMgr.getModelMgr().postOnEventBus(new EntityRemoveEvent(entity, parentEds));
     }
 
     private void notifyEntitiesInvalidated(Collection<Entity> entities) {
         if (log.isTraceEnabled()) {
             log.trace("Generating EntityInvalidationEvent with {} entities", entities.size());
         }
-        ModelMgr.getModelMgr().postOnEventBus(new org.janelia.it.workstation.api.entity_model.events.EntityInvalidationEvent(entities));
+        ModelMgr.getModelMgr().postOnEventBus(new EntityInvalidationEvent(entities));
     }
 }

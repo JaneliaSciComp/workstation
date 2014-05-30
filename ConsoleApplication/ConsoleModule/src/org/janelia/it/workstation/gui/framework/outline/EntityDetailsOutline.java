@@ -7,6 +7,10 @@ import javax.swing.JPanel;
 
 import org.janelia.it.jacs.model.entity.Entity;
 import org.janelia.it.jacs.shared.utils.EntityUtils;
+import org.janelia.it.workstation.api.entity_model.access.ModelMgrAdapter;
+import org.janelia.it.workstation.api.entity_model.events.EntityChangeEvent;
+import org.janelia.it.workstation.api.entity_model.management.ModelMgr;
+import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -22,7 +26,7 @@ public class EntityDetailsOutline extends JPanel implements Refreshable, Activat
     private static final Logger log = LoggerFactory.getLogger(EntityDetailsOutline.class);
 
     private final EntityDetailsPanel entityDetailsPanel;
-    private org.janelia.it.workstation.api.entity_model.access.ModelMgrAdapter mml;
+    private ModelMgrAdapter mml;
     private Entity entity;
 
     public EntityDetailsOutline() {
@@ -30,18 +34,18 @@ public class EntityDetailsOutline extends JPanel implements Refreshable, Activat
         setMinimumSize(new Dimension(0, 0));
 
         this.entityDetailsPanel = new EntityDetailsPanel();
-        this.mml = new org.janelia.it.workstation.api.entity_model.access.ModelMgrAdapter() {
+        this.mml = new ModelMgrAdapter() {
             @Override
             public void entitySelected(String category, String uniqueId, boolean clearAll) {
                 if (clearAll) {
                     try {
                         Long entityId = EntityUtils.getEntityIdFromUniqueId(uniqueId);
                         if (entityId != null) {
-                            org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr.getBrowser().getViewerManager().showEntityInInspector(org.janelia.it.workstation.api.entity_model.management.ModelMgr.getModelMgr().getEntityById(entityId));
+                            SessionMgr.getBrowser().getViewerManager().showEntityInInspector(ModelMgr.getModelMgr().getEntityById(entityId));
                         }
                     }
                     catch (Exception e) {
-                        org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr.getSessionMgr().handleException(e);
+                        SessionMgr.getSessionMgr().handleException(e);
                     }
                 }
             }
@@ -49,7 +53,7 @@ public class EntityDetailsOutline extends JPanel implements Refreshable, Activat
             @Override
             public void entityDeselected(String category, String entityId) {
                 if (entity != null && entity.getId().equals(entityId)) {
-                    org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr.getBrowser().getViewerManager().showEntityInInspector(null);
+                    SessionMgr.getBrowser().getViewerManager().showEntityInInspector(null);
                 }
             }
         };
@@ -80,12 +84,12 @@ public class EntityDetailsOutline extends JPanel implements Refreshable, Activat
 
     @Override
     public void totalRefresh() {
-        org.janelia.it.workstation.api.entity_model.management.ModelMgr.getModelMgr().invalidateCache(entity, false);
+        ModelMgr.getModelMgr().invalidateCache(entity, false);
         try {
-            this.entity = org.janelia.it.workstation.api.entity_model.management.ModelMgr.getModelMgr().getEntityById(entity.getId());
+            this.entity = ModelMgr.getModelMgr().getEntityById(entity.getId());
         }
         catch (Exception e) {
-            org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr.getSessionMgr().handleException(e);
+            SessionMgr.getSessionMgr().handleException(e);
         }
         refresh();
     }
@@ -93,20 +97,20 @@ public class EntityDetailsOutline extends JPanel implements Refreshable, Activat
     @Override
     public void activate() {
         log.info("Activating");
-        org.janelia.it.workstation.api.entity_model.management.ModelMgr.getModelMgr().registerOnEventBus(this);
-        org.janelia.it.workstation.api.entity_model.management.ModelMgr.getModelMgr().addModelMgrObserver(mml);
+        ModelMgr.getModelMgr().registerOnEventBus(this);
+        ModelMgr.getModelMgr().addModelMgrObserver(mml);
         refresh();
     }
 
     @Override
     public void deactivate() {
         log.info("Deactivating");
-        org.janelia.it.workstation.api.entity_model.management.ModelMgr.getModelMgr().unregisterOnEventBus(this);
-        org.janelia.it.workstation.api.entity_model.management.ModelMgr.getModelMgr().removeModelMgrObserver(mml);
+        ModelMgr.getModelMgr().unregisterOnEventBus(this);
+        ModelMgr.getModelMgr().removeModelMgrObserver(mml);
     }
 
     @Subscribe
-    public void entityChanged(org.janelia.it.workstation.api.entity_model.events.EntityChangeEvent event) {
+    public void entityChanged(EntityChangeEvent event) {
         if (this.entity != null) {
             if (event.getEntity().getId().equals(this.entity.getId())) {
                 refresh();

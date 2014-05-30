@@ -22,7 +22,14 @@ import org.janelia.it.workstation.api.entity_model.management.ModelMgr;
 import org.janelia.it.workstation.gui.dialogs.choose.EntityChooser;
 import org.janelia.it.workstation.gui.dialogs.choose.OntologyElementChooser;
 import org.janelia.it.workstation.gui.framework.console.Browser;
+import org.janelia.it.workstation.gui.framework.outline.EntityOutline;
+import org.janelia.it.workstation.gui.framework.outline.EntityTreeCellRenderer;
+import org.janelia.it.workstation.gui.framework.outline.OntologyOutline;
+import org.janelia.it.workstation.gui.framework.outline.OntologyTreeCellRenderer;
+import org.janelia.it.workstation.gui.framework.outline.SelectionTreePanel;
+import org.janelia.it.workstation.gui.framework.outline.SessionOutline;
 import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
+import org.janelia.it.workstation.model.utils.AnnotationSession;
 import org.janelia.it.workstation.shared.util.Utils;
 import org.janelia.it.workstation.shared.workers.SimpleWorker;
 import org.janelia.it.jacs.model.entity.Entity;
@@ -47,12 +54,12 @@ public class AnnotationSessionPropertyDialog extends ModalDialog {
     private JTextField nameValueField;
     private JLabel ownerValueLabel;
 
-    private org.janelia.it.workstation.gui.framework.outline.SelectionTreePanel<Entity> entityTreePanel;
-    private org.janelia.it.workstation.gui.framework.outline.SelectionTreePanel<OntologyElement> categoryTreePanel;
+    private SelectionTreePanel<Entity> entityTreePanel;
+    private SelectionTreePanel<OntologyElement> categoryTreePanel;
 
     private AnnotationSessionTask task;
 
-    public AnnotationSessionPropertyDialog(final org.janelia.it.workstation.gui.framework.outline.EntityOutline entityOutline, final org.janelia.it.workstation.gui.framework.outline.OntologyOutline ontologyOutline) {
+    public AnnotationSessionPropertyDialog(final EntityOutline entityOutline, final OntologyOutline ontologyOutline) {
 
         GridBagConstraints c = new GridBagConstraints();
 
@@ -77,7 +84,7 @@ public class AnnotationSessionPropertyDialog extends ModalDialog {
 
         JPanel treesPanel = new JPanel(new GridLayout(1, 2));
 
-        entityTreePanel = new org.janelia.it.workstation.gui.framework.outline.SelectionTreePanel<Entity>("Entities to annotate") {
+        entityTreePanel = new SelectionTreePanel<Entity>("Entities to annotate") {
             public void addClicked() {
 
                 final EntityChooser entityChooser = new EntityChooser("Choose entities to annotate", entityOutline);
@@ -141,7 +148,7 @@ public class AnnotationSessionPropertyDialog extends ModalDialog {
         entityTreePanel.setPreferredSize(new Dimension(500, 500));
         treesPanel.add(entityTreePanel);
 
-        categoryTreePanel = new org.janelia.it.workstation.gui.framework.outline.SelectionTreePanel<OntologyElement>("Annotations to complete") {
+        categoryTreePanel = new SelectionTreePanel<OntologyElement>("Annotations to complete") {
             public void addClicked() {
 
                 Utils.setWaitingCursor(categoryTreePanel);
@@ -218,10 +225,10 @@ public class AnnotationSessionPropertyDialog extends ModalDialog {
 
     private void init() {
         entityTreePanel.createNewTree();
-        entityTreePanel.getDynamicTree().setCellRenderer(new org.janelia.it.workstation.gui.framework.outline.EntityTreeCellRenderer());
+        entityTreePanel.getDynamicTree().setCellRenderer(new EntityTreeCellRenderer());
 
         categoryTreePanel.createNewTree();
-        categoryTreePanel.getDynamicTree().setCellRenderer(new org.janelia.it.workstation.gui.framework.outline.OntologyTreeCellRenderer());
+        categoryTreePanel.getDynamicTree().setCellRenderer(new OntologyTreeCellRenderer());
     }
 
     public AnnotationSessionTask getTask() {
@@ -244,7 +251,7 @@ public class AnnotationSessionPropertyDialog extends ModalDialog {
         packAndShow();
     }
 
-    public void showForSession(org.janelia.it.workstation.model.utils.AnnotationSession session) {
+    public void showForSession(AnnotationSession session) {
 
         init();
 
@@ -292,7 +299,7 @@ public class AnnotationSessionPropertyDialog extends ModalDialog {
 
             Browser browser = SessionMgr.getBrowser();
 //            browser.getOutlookBar().setVisibleBarByName(Browser.BAR_SESSIONS);
-            final org.janelia.it.workstation.gui.framework.outline.SessionOutline sessionOutline = browser.getAnnotationSessionOutline();
+            final SessionOutline sessionOutline = browser.getAnnotationSessionOutline();
             sessionOutline.loadAnnotationSessions(new Callable<Void>() {
 				public Void call() throws Exception {
 					// Wait until the sessions are loaded before getting the new one and selecting it

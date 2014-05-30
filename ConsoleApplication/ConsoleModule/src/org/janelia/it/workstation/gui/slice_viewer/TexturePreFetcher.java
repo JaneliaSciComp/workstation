@@ -15,8 +15,8 @@ public class TexturePreFetcher
 {
 	// private static final Logger log = LoggerFactory.getLogger(TexturePreFetcher.class);
 
-	private org.janelia.it.workstation.gui.slice_viewer.TextureCache textureCache; // holds texture
-	private org.janelia.it.workstation.gui.slice_viewer.AbstractTextureLoadAdapter loadAdapter; // knows how to load textures
+	private TextureCache textureCache; // holds texture
+	private AbstractTextureLoadAdapter loadAdapter; // knows how to load textures
 	private ThreadPoolExecutor textureLoadExecutor;
 	// private Map<TileIndex, TileIndex> recentRequests; // LRU list of recent requests
 	// private Set<TileIndex> queuedRequests = new HashSet<TileIndex>();
@@ -46,7 +46,7 @@ public class TexturePreFetcher
 	 * 
 	 * Returns "true" if this tile would occupy desired space in the future cache.
 	 */
-	public synchronized boolean loadDisplayedTexture(TileIndex index, org.janelia.it.workstation.gui.slice_viewer.TileServer tileServer)
+	public synchronized boolean loadDisplayedTexture(TileIndex index, TileServer tileServer)
 	{
 		if (textureCache == null)
 			return false;
@@ -64,9 +64,9 @@ public class TexturePreFetcher
 		// 	return false;
 		if (textureCache.isLoadQueued(index))
 			return false;
-		org.janelia.it.workstation.gui.slice_viewer.TileTexture texture = new org.janelia.it.workstation.gui.slice_viewer.TileTexture(index, loadAdapter);
+		TileTexture texture = new TileTexture(index, loadAdapter);
 		// TODO - handle MISSING textures vs. ERROR textures
-		Future<?> foo = textureLoadExecutor.submit(new org.janelia.it.workstation.gui.slice_viewer.TextureLoadWorker(texture, textureCache));
+		Future<?> foo = textureLoadExecutor.submit(new TextureLoadWorker(texture, textureCache));
 		futures.put(foo, texture.getIndex());
 		textureCache.setLoadQueued(index, true);
 		// recentRequests.put(index, index);
@@ -100,19 +100,19 @@ public class TexturePreFetcher
 		futures.clear();
 	}
 	
-	public org.janelia.it.workstation.gui.slice_viewer.AbstractTextureLoadAdapter getLoadAdapter() {
+	public AbstractTextureLoadAdapter getLoadAdapter() {
 		return loadAdapter;
 	}
 
-	public void setLoadAdapter(org.janelia.it.workstation.gui.slice_viewer.AbstractTextureLoadAdapter loadAdapter) {
+	public void setLoadAdapter(AbstractTextureLoadAdapter loadAdapter) {
 		this.loadAdapter = loadAdapter;
 	}
 
-	public org.janelia.it.workstation.gui.slice_viewer.TextureCache getTextureCache() {
+	public TextureCache getTextureCache() {
 		return textureCache;
 	}
 
-	public void setTextureCache(org.janelia.it.workstation.gui.slice_viewer.TextureCache textureCache) {
+	public void setTextureCache(TextureCache textureCache) {
 		this.textureCache = textureCache;
 	}
 	

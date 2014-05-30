@@ -12,6 +12,7 @@ import javax.swing.event.ChangeListener;
 
 import org.janelia.it.workstation.geom.CoordinateAxis;
 import org.janelia.it.workstation.geom.Vec3;
+import org.janelia.it.workstation.gui.camera.ObservableCamera3d;
 import org.janelia.it.workstation.gui.slice_viewer.action.MouseMode;
 import org.janelia.it.workstation.gui.slice_viewer.action.WheelMode;
 import org.janelia.it.workstation.gui.viewer3d.BoundingBox3d;
@@ -30,12 +31,12 @@ extends JPanel
 	private JSpinner spinner = new JSpinner();
 	private SpinnerNumberModel spinnerNumberModel = new SpinnerNumberModel();
 	private CoordinateAxis axis;	
-	private org.janelia.it.workstation.gui.camera.ObservableCamera3d camera;
-	private org.janelia.it.workstation.gui.slice_viewer.SharedVolumeImage volume;
+	private ObservableCamera3d camera;
+	private SharedVolumeImage volume;
 
-	private org.janelia.it.workstation.gui.slice_viewer.OrthogonalViewer viewer;
-	private org.janelia.it.workstation.gui.slice_viewer.ViewTileManager viewTileManager;
-	private org.janelia.it.workstation.gui.slice_viewer.TileServer tileServer;
+	private OrthogonalViewer viewer;
+	private ViewTileManager viewTileManager;
+	private TileServer tileServer;
 	
 	public Slot1<MouseMode.Mode> setMouseModeSlot = new Slot1<MouseMode.Mode>() 
 	{
@@ -55,13 +56,13 @@ extends JPanel
     
     public OrthogonalPanel(CoordinateAxis axis) {
 		this.axis = axis;
-		viewer = new org.janelia.it.workstation.gui.slice_viewer.OrthogonalViewer(axis);
+		viewer = new OrthogonalViewer(axis);
 		init();
 	}	
 	
 	public OrthogonalPanel(CoordinateAxis axis, GLContextSharer contextSharer) {
 		this.axis = axis;
-		viewer = new org.janelia.it.workstation.gui.slice_viewer.OrthogonalViewer(axis,
+		viewer = new OrthogonalViewer(axis,
 				contextSharer.getCapabilities(),
 				contextSharer.getChooser(),
 				contextSharer.getContext());
@@ -69,18 +70,18 @@ extends JPanel
 	}
 
 	private void init() {
-		viewTileManager = new org.janelia.it.workstation.gui.slice_viewer.ViewTileManager(viewer);
+		viewTileManager = new ViewTileManager(viewer);
 		viewer.setSliceActor(new SliceActor(viewTileManager));
 		spinner.setModel(spinnerNumberModel);
 		setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
 		add(viewer);
 		scanPanel.setLayout(new BoxLayout(scanPanel, BoxLayout.X_AXIS));
 		scanPanel.add(new JLabel(" "+axis.getName()));
-		scanPanel.add(new org.janelia.it.workstation.gui.slice_viewer.ToolButton(new org.janelia.it.workstation.gui.slice_viewer.OrthogonalViewer.PreviousSliceAction(viewer)));
+		scanPanel.add(new ToolButton(new OrthogonalViewer.PreviousSliceAction(viewer)));
 		slider.setMajorTickSpacing(10);
 		slider.setPaintTicks(true); // Avoid windows slider display bug
 		scanPanel.add(slider);
-		scanPanel.add(new org.janelia.it.workstation.gui.slice_viewer.ToolButton(new org.janelia.it.workstation.gui.slice_viewer.OrthogonalViewer.NextSliceAction(viewer)));
+		scanPanel.add(new ToolButton(new OrthogonalViewer.NextSliceAction(viewer)));
 		spinner.setPreferredSize(new Dimension(
 				73, // good value for showing up to ten thousands place
 				spinner.getPreferredSize().height));
@@ -157,14 +158,14 @@ extends JPanel
 		}
 	};
 
-	public void setCamera(org.janelia.it.workstation.gui.camera.ObservableCamera3d camera) {
+	public void setCamera(ObservableCamera3d camera) {
 		this.camera = camera;
 		viewer.setCamera(camera);
 		camera.getFocusChangedSignal().connect(
 				setSliceSlot);
 	}
 	
-	public void setSharedVolumeImage(org.janelia.it.workstation.gui.slice_viewer.SharedVolumeImage volumeImage3d) {
+	public void setSharedVolumeImage(SharedVolumeImage volumeImage3d) {
 		if (this.volume == volumeImage3d)
 			return; // no change
 		this.volume = volumeImage3d;
@@ -173,7 +174,7 @@ extends JPanel
 		viewTileManager.setVolumeImage(volumeImage3d);
 	}
 	
-	public void setTileServer(org.janelia.it.workstation.gui.slice_viewer.TileServer tileServer) {
+	public void setTileServer(TileServer tileServer) {
 		if (this.tileServer == tileServer)
 			return; // no change
 		viewTileManager.setTextureCache(tileServer.getTextureCache());
@@ -183,7 +184,7 @@ extends JPanel
 		viewer.setTileServer(tileServer);
 	}
 	
-	public void setSystemMenuItemGenerator(org.janelia.it.workstation.gui.slice_viewer.MenuItemGenerator systemMenuItemGenerator)
+	public void setSystemMenuItemGenerator(MenuItemGenerator systemMenuItemGenerator)
 	{
 		viewer.setSystemMenuItemGenerator(systemMenuItemGenerator);
 	}
@@ -214,7 +215,7 @@ extends JPanel
 		return slider;
 	}
 
-	public org.janelia.it.workstation.gui.slice_viewer.ViewTileManager getViewTileManager() {
+	public ViewTileManager getViewTileManager() {
 		return viewTileManager;
 	}
 
@@ -222,7 +223,7 @@ extends JPanel
 		this.slider = slider;
 	}
 
-    public org.janelia.it.workstation.gui.slice_viewer.OrthogonalViewer getViewer() {
+    public OrthogonalViewer getViewer() {
         return viewer;
     }
 

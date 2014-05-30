@@ -4,20 +4,24 @@ import javax.media.opengl.GL;
 import javax.media.opengl.GL2;
 
 import com.jogamp.opengl.util.gl2.GLUT;
+import org.janelia.it.workstation.geom.Vec3;
+import org.janelia.it.workstation.gui.opengl.GL3Actor;
+import org.janelia.it.workstation.gui.opengl.GLActorContext;
+import org.janelia.it.workstation.gui.opengl.GLError;
 
-public class TeapotActor implements org.janelia.it.workstation.gui.opengl.GL3Actor
+public class TeapotActor implements GL3Actor
 {
     private GLUT glut = new GLUT();
 
 	public BoundingBox3d getBoundingBox3d() {
 		BoundingBox3d result = new BoundingBox3d();
-		result.include(new org.janelia.it.workstation.geom.Vec3(1,1,1));
-		result.include(new org.janelia.it.workstation.geom.Vec3(-1,-1,-1));
+		result.include(new Vec3(1,1,1));
+		result.include(new Vec3(-1,-1,-1));
 		return result;
 	}
 	
     @Override
-    public void display(org.janelia.it.workstation.gui.opengl.GLActorContext context)
+    public void display(GLActorContext context)
     {
         GL gl = context.getGLAutoDrawable().getGL();
         if (gl.isGL2()) {
@@ -37,14 +41,14 @@ public class TeapotActor implements org.janelia.it.workstation.gui.opengl.GL3Act
         else {
             // TODO - won't work with GL3...
         }
-        org.janelia.it.workstation.gui.opengl.GLError.checkGlError(gl, "TeapotActor display");
+        GLError.checkGlError(gl, "TeapotActor display");
     }
 
     @Override
-    public void init(org.janelia.it.workstation.gui.opengl.GLActorContext context)
+    public void init(GLActorContext context)
     {}
 
     @Override
-    public void dispose(org.janelia.it.workstation.gui.opengl.GLActorContext context)
+    public void dispose(GLActorContext context)
     {}
 }

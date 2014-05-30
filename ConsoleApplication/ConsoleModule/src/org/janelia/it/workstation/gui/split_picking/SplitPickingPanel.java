@@ -3,7 +3,22 @@ package org.janelia.it.workstation.gui.split_picking;
 import com.google.common.collect.ComparisonChain;
 import com.google.common.collect.Ordering;
 import com.google.common.eventbus.Subscribe;
+import org.janelia.it.workstation.api.entity_model.events.EntityInvalidationEvent;
+import org.janelia.it.workstation.api.entity_model.management.EntitySelectionModel;
+import org.janelia.it.workstation.api.entity_model.management.ModelMgr;
+import org.janelia.it.workstation.api.entity_model.management.ModelMgrUtils;
+import org.janelia.it.workstation.gui.dialogs.MAASearchDialog;
+import org.janelia.it.workstation.gui.dialogs.PatternSearchDialog;
 import org.janelia.it.workstation.gui.framework.actions.OpenWithDefaultAppAction;
+import org.janelia.it.workstation.gui.framework.outline.Refreshable;
+import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
+import org.janelia.it.workstation.gui.framework.viewer.AnnotatedImageButton;
+import org.janelia.it.workstation.gui.framework.viewer.IconDemoPanel;
+import org.janelia.it.workstation.gui.framework.viewer.IconDemoToolbar;
+import org.janelia.it.workstation.gui.framework.viewer.Viewer;
+import org.janelia.it.workstation.gui.framework.viewer.ViewerPane;
+import org.janelia.it.workstation.gui.framework.viewer.ViewerSplitPanel;
+import org.janelia.it.workstation.model.entity.RootedEntity;
 import org.janelia.it.workstation.shared.workers.IndeterminateProgressMonitor;
 import org.janelia.it.workstation.shared.workers.SimpleWorker;
 import org.janelia.it.jacs.model.entity.Entity;
@@ -20,6 +35,7 @@ import org.slf4j.LoggerFactory;
 
 import javax.swing.*;
 import javax.swing.Timer;
+import javax.swing.filechooser.FileFilter;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -42,7 +58,7 @@ import org.openide.windows.TopComponent;
  * 
  * @author <a href="mailto:rokickik@janelia.hhmi.org">Konrad Rokicki</a>
  */
-public class SplitPickingPanel extends JPanel implements org.janelia.it.workstation.gui.framework.outline.Refreshable {
+public class SplitPickingPanel extends JPanel implements Refreshable {
 
 	private static final Logger log = LoggerFactory.getLogger(SplitPickingPanel.class);
 	
@@ -70,14 +86,14 @@ public class SplitPickingPanel extends JPanel implements org.janelia.it.workstat
 	private final JButton maaSearchButton;
 	private final JButton prefixButton;
 	private final JButton resultFolderButton;
-	private final org.janelia.it.workstation.gui.framework.viewer.IconDemoPanel crossesViewer;
+	private final IconDemoPanel crossesViewer;
 //	private final JTextField methodField;
 //	private final JTextField blurField;
 	
-	private org.janelia.it.workstation.model.entity.RootedEntity splitPickingFolder;
-	private org.janelia.it.workstation.model.entity.RootedEntity workingFolder;
-	private org.janelia.it.workstation.model.entity.RootedEntity searchResultsFolder;
-	private org.janelia.it.workstation.model.entity.RootedEntity crossFolder;
+	private RootedEntity splitPickingFolder;
+	private RootedEntity workingFolder;
+	private RootedEntity searchResultsFolder;
+	private RootedEntity crossFolder;
 	private String crossPrefix;
 	private Integer nextSuffix;
 	private List<Entity> crosses;
@@ -100,7 +116,7 @@ public class SplitPickingPanel extends JPanel implements org.janelia.it.workstat
 		prefixPanel.add(prefixLabel);
 
 
-		crossPrefix = (String) org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr.getSessionMgr().getModelProperty(CROSS_PREFIX_PROPERTY);
+		crossPrefix = (String) SessionMgr.getSessionMgr().getModelProperty(CROSS_PREFIX_PROPERTY);
 		prefixButton = new JButton(crossPrefix==null?"Enter prefix":crossPrefix);
 		prefixButton.setFocusable(false);
 		prefixButton.addActionListener(new ActionListener() {
@@ -144,7 +160,7 @@ public class SplitPickingPanel extends JPanel implements org.janelia.it.workstat
 			@Override
 			public void actionPerformed(ActionEvent e) {
 				if (workingFolder==null) {
-					JOptionPane.showMessageDialog(org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr.getMainFrame(), "Please choose a working folder first", "Error", JOptionPane.ERROR_MESSAGE);
+					JOptionPane.showMessageDialog(SessionMgr.getMainFrame(), "Please choose a working folder first", "Error", JOptionPane.ERROR_MESSAGE);
 					return;
 				}
 				
@@ -152,19 +168,19 @@ public class SplitPickingPanel extends JPanel implements org.janelia.it.workstat
 					
 					@Override
 					protected void doStuff() throws Exception {
-						searchResultsFolder = org.janelia.it.workstation.api.entity_model.management.ModelMgrUtils.getChildFolder(workingFolder, FOLDER_NAME_SEARCH_RESULTS, true);
+						searchResultsFolder = ModelMgrUtils.getChildFolder(workingFolder, FOLDER_NAME_SEARCH_RESULTS, true);
 					}
 					
 					@Override
 					protected void hadSuccess() {
-						org.janelia.it.workstation.gui.dialogs.PatternSearchDialog dialog = getPatternSearchDialog();
+						PatternSearchDialog dialog = getPatternSearchDialog();
 						List<Long> sampleIds  = dialog.showDialog(true);
 						createLocalGrouping(sampleIds, dialog.getSaveFolderName());
 					}
 					
 					@Override
 					protected void hadError(Throwable error) {
-						org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr.getSessionMgr().handleException(error);
+						SessionMgr.getSessionMgr().handleException(error);
 					}
 				};
 				
@@ -179,7 +195,7 @@ public class SplitPickingPanel extends JPanel implements org.janelia.it.workstat
 			@Override
 			public void actionPerformed(ActionEvent e) {
 				if (workingFolder==null) {
-					JOptionPane.showMessageDialog(org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr.getMainFrame(), "Please choose a working folder first", "Error", JOptionPane.ERROR_MESSAGE);
+					JOptionPane.showMessageDialog(SessionMgr.getMainFrame(), "Please choose a working folder first", "Error", JOptionPane.ERROR_MESSAGE);
 					return;
 				}
 				
@@ -187,19 +203,19 @@ public class SplitPickingPanel extends JPanel implements org.janelia.it.workstat
 					
 					@Override
 					protected void doStuff() throws Exception {
-						searchResultsFolder = org.janelia.it.workstation.api.entity_model.management.ModelMgrUtils.getChildFolder(workingFolder, FOLDER_NAME_SEARCH_RESULTS, true);
+						searchResultsFolder = ModelMgrUtils.getChildFolder(workingFolder, FOLDER_NAME_SEARCH_RESULTS, true);
 					}
 					
 					@Override
 					protected void hadSuccess() {
-						org.janelia.it.workstation.gui.dialogs.MAASearchDialog dialog = getMAASearchDialog();
+						MAASearchDialog dialog = getMAASearchDialog();
 						List<Long> sampleIds = dialog.showDialog(true);
 						createLocalGrouping(sampleIds, dialog.getSaveFolderName());
 					}
 					
 					@Override
 					protected void hadError(Throwable error) {
-						org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr.getSessionMgr().handleException(error);
+						SessionMgr.getSessionMgr().handleException(error);
 					}
 				};
 				
@@ -222,11 +238,11 @@ public class SplitPickingPanel extends JPanel implements org.janelia.it.workstat
 			@Override
 			public void actionPerformed(ActionEvent e) {
 				if (workingFolder==null) {
-					JOptionPane.showMessageDialog(org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr.getMainFrame(), "Please choose a result folder first", "Error", JOptionPane.ERROR_MESSAGE);
+					JOptionPane.showMessageDialog(SessionMgr.getMainFrame(), "Please choose a result folder first", "Error", JOptionPane.ERROR_MESSAGE);
 					return;
 				}
 				if (crossPrefix==null) {
-					JOptionPane.showMessageDialog(org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr.getMainFrame(), "Please choose a cross prefix first", "Error", JOptionPane.ERROR_MESSAGE);
+					JOptionPane.showMessageDialog(SessionMgr.getMainFrame(), "Please choose a cross prefix first", "Error", JOptionPane.ERROR_MESSAGE);
 					return;
 				}
 				createCrosses();
@@ -271,11 +287,11 @@ public class SplitPickingPanel extends JPanel implements org.janelia.it.workstat
 			@Override
 			public void actionPerformed(ActionEvent e) {
 				if (workingFolder==null) {
-					JOptionPane.showMessageDialog(org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr.getMainFrame(), "Please choose a result folder first", "Error", JOptionPane.ERROR_MESSAGE);
+					JOptionPane.showMessageDialog(SessionMgr.getMainFrame(), "Please choose a result folder first", "Error", JOptionPane.ERROR_MESSAGE);
 					return;
 				}
 				if (crossFolder==null) {
-					JOptionPane.showMessageDialog(org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr.getMainFrame(), "Please compute some crosses first", "Error", JOptionPane.ERROR_MESSAGE);
+					JOptionPane.showMessageDialog(SessionMgr.getMainFrame(), "Please compute some crosses first", "Error", JOptionPane.ERROR_MESSAGE);
 					return;
 				}
 
@@ -296,13 +312,13 @@ public class SplitPickingPanel extends JPanel implements org.janelia.it.workstat
 		c.weighty = 0.01;
 		add(mainPanel, c);
 		
-		org.janelia.it.workstation.gui.framework.viewer.ViewerPane crossesPane = new org.janelia.it.workstation.gui.framework.viewer.ViewerPane(null, org.janelia.it.workstation.api.entity_model.management.EntitySelectionModel.CATEGORY_CROSS_VIEW, false);
-		crossesViewer = new org.janelia.it.workstation.gui.framework.viewer.IconDemoPanel(crossesPane) {
+		ViewerPane crossesPane = new ViewerPane(null, EntitySelectionModel.CATEGORY_CROSS_VIEW, false);
+		crossesViewer = new IconDemoPanel(crossesPane) {
 			
 			@Override
-			protected org.janelia.it.workstation.gui.framework.viewer.IconDemoToolbar createToolbar() {
+			protected IconDemoToolbar createToolbar() {
 				// Override to customize the toolbar
-				org.janelia.it.workstation.gui.framework.viewer.IconDemoToolbar toolbar = super.createToolbar();
+				IconDemoToolbar toolbar = super.createToolbar();
 				JToolBar t = toolbar.getToolbar();
 				t.removeAll();
 				t.add(toolbar.getRefreshButton());
@@ -312,7 +328,7 @@ public class SplitPickingPanel extends JPanel implements org.janelia.it.workstat
 			}
 			
 			@Override
-			protected void buttonDrillDown(org.janelia.it.workstation.gui.framework.viewer.AnnotatedImageButton button) {
+			protected void buttonDrillDown(AnnotatedImageButton button) {
 				// Do nothing, this panel does not support drill down
 			}
 			
@@ -320,7 +336,7 @@ public class SplitPickingPanel extends JPanel implements org.janelia.it.workstat
 			protected void entitySelected(String rootedEntityId, boolean clearAll) {
 				super.entitySelected(rootedEntityId, clearAll);
 				
-				final org.janelia.it.workstation.model.entity.RootedEntity rootedEntity = getRootedEntityById(rootedEntityId);
+				final RootedEntity rootedEntity = getRootedEntityById(rootedEntityId);
 				if (rootedEntity == null) {
 					log.warn("entitySelected: cannot find entity with id="+rootedEntityId);
 					return;
@@ -350,7 +366,7 @@ public class SplitPickingPanel extends JPanel implements org.janelia.it.workstat
 		c.weighty = 1.0;
 		add(crossesPane, c);
 
-		org.janelia.it.workstation.api.entity_model.management.ModelMgr.getModelMgr().registerOnEventBus(this);
+		ModelMgr.getModelMgr().registerOnEventBus(this);
 		loadExistingCrossSimulations();
 	}
 
@@ -363,9 +379,9 @@ public class SplitPickingPanel extends JPanel implements org.janelia.it.workstat
 			
 			@Override
 			protected void doStuff() throws Exception {
-				List<Entity> allCrosses = org.janelia.it.workstation.api.entity_model.management.ModelMgr.getModelMgr().getOwnedEntitiesByTypeName(EntityConstants.TYPE_SCREEN_SAMPLE_CROSS);
+				List<Entity> allCrosses = ModelMgr.getModelMgr().getOwnedEntitiesByTypeName(EntityConstants.TYPE_SCREEN_SAMPLE_CROSS);
 				for(Entity cross : allCrosses) {
-					if (!cross.getOwnerKey().equals(org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr.getSubjectKey())) continue;
+					if (!cross.getOwnerKey().equals(SessionMgr.getSubjectKey())) continue;
 					crosses.add(cross);
 					String label = cross.getValueByAttributeName(EntityConstants.ATTRIBUTE_CROSS_LABEL);
 					if (label==null) continue;
@@ -393,7 +409,7 @@ public class SplitPickingPanel extends JPanel implements org.janelia.it.workstat
 			
 			@Override
 			protected void hadError(Throwable error) {
-				org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr.getSessionMgr().handleException(error);
+				SessionMgr.getSessionMgr().handleException(error);
 			}
 		};
 		
@@ -433,7 +449,7 @@ public class SplitPickingPanel extends JPanel implements org.janelia.it.workstat
 								Set<Long> doneTasks = new HashSet<Long>();
 								for(Long taskId : runningTasks) {
 									try {
-										Task task = org.janelia.it.workstation.api.entity_model.management.ModelMgr.getModelMgr().getTaskById(taskId);
+										Task task = ModelMgr.getModelMgr().getTaskById(taskId);
 										if (task!= null) {
 											Event lastEvent = task.getLastNonDeletedEvent();
 											if (lastEvent != null) {
@@ -444,7 +460,7 @@ public class SplitPickingPanel extends JPanel implements org.janelia.it.workstat
 										}
 									}
 									catch (Exception ex) {
-										org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr.getSessionMgr().handleException(ex);
+										SessionMgr.getSessionMgr().handleException(ex);
 									}
 								}
 								
@@ -472,8 +488,8 @@ public class SplitPickingPanel extends JPanel implements org.janelia.it.workstat
 	 * @param viewer
 	 * @param entityId
 	 */
-	private void selectAndScroll(final org.janelia.it.workstation.gui.framework.viewer.IconDemoPanel viewer, final Long entityId) {
-		org.janelia.it.workstation.api.entity_model.management.ModelMgr.getModelMgr().getEntitySelectionModel().selectEntity(viewer.getSelectionCategory(), ""+entityId, true);
+	private void selectAndScroll(final IconDemoPanel viewer, final Long entityId) {
+		ModelMgr.getModelMgr().getEntitySelectionModel().selectEntity(viewer.getSelectionCategory(), ""+entityId, true);
 		SwingUtilities.invokeLater(new Runnable() {
 			@Override
 			public void run() {
@@ -485,11 +501,11 @@ public class SplitPickingPanel extends JPanel implements org.janelia.it.workstat
 	@Override
 	public void refresh() {
 		
-		org.janelia.it.workstation.gui.dialogs.MAASearchDialog maaSearchDialog = getMAASearchDialog();
+		MAASearchDialog maaSearchDialog = getMAASearchDialog();
 		maaSearchButton.setVisible(maaSearchDialog!=null && maaSearchDialog.isAccessible());
 		
-		final org.janelia.it.workstation.gui.framework.viewer.IconDemoPanel mainViewer = getMainViewer();
-		final org.janelia.it.workstation.gui.framework.viewer.IconDemoPanel secViewer = getSecondaryViewer();
+		final IconDemoPanel mainViewer = getMainViewer();
+		final IconDemoPanel secViewer = getSecondaryViewer();
 		
 		SimpleWorker refreshWorker = new SimpleWorker() {
 			
@@ -499,22 +515,22 @@ public class SplitPickingPanel extends JPanel implements org.janelia.it.workstat
 			@Override
 			protected void doStuff() throws Exception {
 				
-				for(Entity entity : org.janelia.it.workstation.api.entity_model.management.ModelMgr.getModelMgr().getCommonRootEntities()) {
-					if (FOLDER_NAME_SPLIT_PICKING.equals(entity.getName()) && org.janelia.it.workstation.api.entity_model.management.ModelMgrUtils.hasWriteAccess(entity)) {
-						splitPickingFolderEntity = org.janelia.it.workstation.api.entity_model.management.ModelMgr.getModelMgr().loadLazyEntity(entity, false);
+				for(Entity entity : ModelMgr.getModelMgr().getCommonRootEntities()) {
+					if (FOLDER_NAME_SPLIT_PICKING.equals(entity.getName()) && ModelMgrUtils.hasWriteAccess(entity)) {
+						splitPickingFolderEntity = ModelMgr.getModelMgr().loadLazyEntity(entity, false);
 						break;
 					}
 				}
 				
 				if (splitPickingFolderEntity==null) {
-					splitPickingFolderEntity = org.janelia.it.workstation.api.entity_model.management.ModelMgr.getModelMgr().createCommonRoot(FOLDER_NAME_SPLIT_PICKING);
+					splitPickingFolderEntity = ModelMgr.getModelMgr().createCommonRoot(FOLDER_NAME_SPLIT_PICKING);
 				}
 			}
 			
 			@Override
 			protected void hadSuccess() {
 
-				splitPickingFolder = new org.janelia.it.workstation.model.entity.RootedEntity(splitPickingFolderEntity);
+				splitPickingFolder = new RootedEntity(splitPickingFolderEntity);
 				
 				SwingUtilities.invokeLater(new Runnable() {
                     
@@ -522,7 +538,7 @@ public class SplitPickingPanel extends JPanel implements org.janelia.it.workstat
                     public void run() {
                         expandEntityOutline(splitPickingFolder.getUniqueId());
                         
-                        final Long lastWorkingFolderId = (Long) org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr.getSessionMgr().getModelProperty(LAST_WORKING_FOLDER_ID_PROPERTY);
+                        final Long lastWorkingFolderId = (Long) SessionMgr.getSessionMgr().getModelProperty(LAST_WORKING_FOLDER_ID_PROPERTY);
                         if (lastWorkingFolderId!=null) {
                             for(EntityData childEd : splitPickingFolderEntity.getEntityData()) {
                                 Entity child = childEd.getChildEntity();
@@ -562,7 +578,7 @@ public class SplitPickingPanel extends JPanel implements org.janelia.it.workstat
 			
 			@Override
 			protected void hadError(Throwable error) {
-				org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr.getSessionMgr().handleException(error);
+				SessionMgr.getSessionMgr().handleException(error);
 			}
 		};
 		refreshWorker.execute();        
@@ -575,14 +591,14 @@ public class SplitPickingPanel extends JPanel implements org.janelia.it.workstat
 	}
 	
 	@Subscribe 
-	public void entityInvalidated(org.janelia.it.workstation.api.entity_model.events.EntityInvalidationEvent event) {
+	public void entityInvalidated(EntityInvalidationEvent event) {
 		// TODO: implement this to update the entities	
 	}
 	
 	private void showPrefixEditingDialog() {
 
 		// Add button clicked
-		final String prefix = (String) JOptionPane.showInputDialog(org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr.getMainFrame(),
+		final String prefix = (String) JOptionPane.showInputDialog(SessionMgr.getMainFrame(),
 				"Cross Prefix (a unique identifier will be appended to this to create each cross label):\n",
 				"Set your cross prefix", JOptionPane.PLAIN_MESSAGE, null, null, crossPrefix);
 		if ((prefix == null) || (prefix.length() <= 0)) {
@@ -591,7 +607,7 @@ public class SplitPickingPanel extends JPanel implements org.janelia.it.workstat
 
 		crossPrefix = prefix;
 		prefixButton.setText(crossPrefix);
-		org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr.getSessionMgr().setModelProperty(CROSS_PREFIX_PROPERTY, crossPrefix);
+		SessionMgr.getSessionMgr().setModelProperty(CROSS_PREFIX_PROPERTY, crossPrefix);
 	}
 
 	private void createLocalGrouping(final List<Long> sampleIds, final String saveFolderName) {
@@ -601,15 +617,15 @@ public class SplitPickingPanel extends JPanel implements org.janelia.it.workstat
 		
 		SimpleWorker groupingWorker = new SimpleWorker() {
 
-			private org.janelia.it.workstation.model.entity.RootedEntity saveFolder;
-			private org.janelia.it.workstation.model.entity.RootedEntity localGroupAdFolder;
-			private org.janelia.it.workstation.model.entity.RootedEntity localGroupDbdFolder;
+			private RootedEntity saveFolder;
+			private RootedEntity localGroupAdFolder;
+			private RootedEntity localGroupDbdFolder;
 			
 			@Override
 			protected void doStuff() throws Exception {
 				getProgressMonitor().setNote("Loading data");
 				
-				List<Entity> samples = org.janelia.it.workstation.api.entity_model.management.ModelMgr.getModelMgr().getEntityByIds(sampleIds);
+				List<Entity> samples = ModelMgr.getModelMgr().getEntityByIds(sampleIds);
 				
 				getProgressMonitor().setNote("Getting representative samples");
 				
@@ -633,31 +649,31 @@ public class SplitPickingPanel extends JPanel implements org.janelia.it.workstat
 
 				getProgressMonitor().setNote("Saving split lines");
 				
-				Entity saveFolderEntity = org.janelia.it.workstation.api.entity_model.management.ModelMgr.getModelMgr().createEntity(EntityConstants.TYPE_FOLDER, saveFolderName);
-				EntityData saveFolderEd = org.janelia.it.workstation.api.entity_model.management.ModelMgr.getModelMgr().addEntityToParent(searchResultsFolder.getEntity(), saveFolderEntity);
+				Entity saveFolderEntity = ModelMgr.getModelMgr().createEntity(EntityConstants.TYPE_FOLDER, saveFolderName);
+				EntityData saveFolderEd = ModelMgr.getModelMgr().addEntityToParent(searchResultsFolder.getEntity(), saveFolderEntity);
 				saveFolder = searchResultsFolder.getChild(saveFolderEd);
 				
 				saveRepresentedGroupings(repAd, repDbd, saveFolder);
-				localGroupAdFolder = org.janelia.it.workstation.api.entity_model.management.ModelMgrUtils.getChildFolder(saveFolder, SplitPickingPanel.FOLDER_NAME_SPLIT_LINES_AD, false);
-				localGroupDbdFolder = org.janelia.it.workstation.api.entity_model.management.ModelMgrUtils.getChildFolder(saveFolder, SplitPickingPanel.FOLDER_NAME_SPLIT_LINES_DBD, false);
+				localGroupAdFolder = ModelMgrUtils.getChildFolder(saveFolder, SplitPickingPanel.FOLDER_NAME_SPLIT_LINES_AD, false);
+				localGroupDbdFolder = ModelMgrUtils.getChildFolder(saveFolder, SplitPickingPanel.FOLDER_NAME_SPLIT_LINES_DBD, false);
 
 				getProgressMonitor().close();
 			}
 			
 			@Override
 			protected void hadSuccess() {
-				org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr.getBrowser().getEntityOutline().expandByUniqueId(saveFolder.getUniqueId());
+				SessionMgr.getBrowser().getEntityOutline().expandByUniqueId(saveFolder.getUniqueId());
 				showEntityInMainViewer(localGroupAdFolder);
 				showEntityInSecViewer(localGroupDbdFolder);
 			}
 			
 			@Override
 			protected void hadError(Throwable error) {
-				org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr.getSessionMgr().handleException(error);
+				SessionMgr.getSessionMgr().handleException(error);
 			}
 		};
 
-		IndeterminateProgressMonitor pm = new IndeterminateProgressMonitor(org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr.getMainFrame(), "Organizing results", "");
+		IndeterminateProgressMonitor pm = new IndeterminateProgressMonitor(SessionMgr.getMainFrame(), "Organizing results", "");
 		pm.setMillisToDecideToPopup(0);
 		pm.setMillisToPopup(0);
 		groupingWorker.setProgressMonitor(pm);
@@ -666,20 +682,20 @@ public class SplitPickingPanel extends JPanel implements org.janelia.it.workstat
 	
 	private void createCrosses() {
 		
-		org.janelia.it.workstation.api.entity_model.management.EntitySelectionModel esm = org.janelia.it.workstation.api.entity_model.management.ModelMgr.getModelMgr().getEntitySelectionModel();
-		final List<String> mainSelectionIds = esm.getSelectedEntitiesIds(org.janelia.it.workstation.api.entity_model.management.EntitySelectionModel.CATEGORY_MAIN_VIEW);
-		final List<String> secSelectionIds = esm.getSelectedEntitiesIds(org.janelia.it.workstation.api.entity_model.management.EntitySelectionModel.CATEGORY_SEC_VIEW);
+		EntitySelectionModel esm = ModelMgr.getModelMgr().getEntitySelectionModel();
+		final List<String> mainSelectionIds = esm.getSelectedEntitiesIds(EntitySelectionModel.CATEGORY_MAIN_VIEW);
+		final List<String> secSelectionIds = esm.getSelectedEntitiesIds(EntitySelectionModel.CATEGORY_SEC_VIEW);
 		
 		final List<Entity> samples1 = new ArrayList<Entity>();
 		final List<Entity> samples2 = new ArrayList<Entity>();
 		
-		org.janelia.it.workstation.gui.framework.viewer.Viewer mainViewer = getMainViewer();
-		for(org.janelia.it.workstation.model.entity.RootedEntity rootedEntity : mainViewer.getRootedEntities()) {
+		Viewer mainViewer = getMainViewer();
+		for(RootedEntity rootedEntity : mainViewer.getRootedEntities()) {
 			for(String mainSelectionId : mainSelectionIds) {
 				if (rootedEntity.getId().equals(mainSelectionId)) {
 					Entity sample = rootedEntity.getEntity();
 					if (!sample.getEntityTypeName().equals(EntityConstants.TYPE_SCREEN_SAMPLE) && !sample.getEntityTypeName().equals(EntityConstants.TYPE_FLY_LINE)) {
-						JOptionPane.showMessageDialog(org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr.getMainFrame(), "Not a Screen Sample or Fly Line: "+sample.getName(), "Error", JOptionPane.ERROR_MESSAGE);
+						JOptionPane.showMessageDialog(SessionMgr.getMainFrame(), "Not a Screen Sample or Fly Line: "+sample.getName(), "Error", JOptionPane.ERROR_MESSAGE);
 						return;
 					}
 					log.info("Adding sample1 "+sample.getName());
@@ -688,13 +704,13 @@ public class SplitPickingPanel extends JPanel implements org.janelia.it.workstat
 			}
 		}
 		
-		org.janelia.it.workstation.gui.framework.viewer.Viewer secViewer = getSecondaryViewer();
-		for(org.janelia.it.workstation.model.entity.RootedEntity rootedEntity : secViewer.getRootedEntities()) {
+		Viewer secViewer = getSecondaryViewer();
+		for(RootedEntity rootedEntity : secViewer.getRootedEntities()) {
 			for(String secSelectionId : secSelectionIds) {
 				if (rootedEntity.getId().equals(secSelectionId)) {
 					Entity sample = rootedEntity.getEntity();
 					if (!sample.getEntityTypeName().equals(EntityConstants.TYPE_SCREEN_SAMPLE) && !sample.getEntityTypeName().equals(EntityConstants.TYPE_FLY_LINE)) {
-						JOptionPane.showMessageDialog(org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr.getMainFrame(), "Not a Screen Sample or Fly Line: "+sample.getName(), "Error", JOptionPane.ERROR_MESSAGE);
+						JOptionPane.showMessageDialog(SessionMgr.getMainFrame(), "Not a Screen Sample or Fly Line: "+sample.getName(), "Error", JOptionPane.ERROR_MESSAGE);
 						return;
 					}
 					log.info("Adding sample2 "+sample.getName());
@@ -705,12 +721,12 @@ public class SplitPickingPanel extends JPanel implements org.janelia.it.workstat
 		
 		final int numCrosses = samples1.size() * samples2.size();
 		if (numCrosses > MAX_TOTAL_CROSSES) {
-			JOptionPane.showMessageDialog(org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr.getMainFrame(), "Cannot run "+numCrosses+" crosses (limited to "+MAX_TOTAL_CROSSES+" max)", "Error", JOptionPane.ERROR_MESSAGE);
+			JOptionPane.showMessageDialog(SessionMgr.getMainFrame(), "Cannot run "+numCrosses+" crosses (limited to "+MAX_TOTAL_CROSSES+" max)", "Error", JOptionPane.ERROR_MESSAGE);
 			return;
 		}
 		else if (numCrosses > MAX_FREE_CROSSES) {
 			Object[] options = {"Yes", "Cancel"};
-			int deleteConfirmation = JOptionPane.showOptionDialog(org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr.getMainFrame(),
+			int deleteConfirmation = JOptionPane.showOptionDialog(SessionMgr.getMainFrame(),
 					"Are you sure you want to compute "+numCrosses+" crosses?", "Compute Crosses",
 					JOptionPane.YES_NO_OPTION, JOptionPane.QUESTION_MESSAGE, null, options, options[1]);
 			if (deleteConfirmation != 0) {
@@ -718,7 +734,7 @@ public class SplitPickingPanel extends JPanel implements org.janelia.it.workstat
 			}
 		}
 		else if (numCrosses == 0) {
-			JOptionPane.showMessageDialog(org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr.getMainFrame(), "Please select at least one Screen Sample or Fly Line in each viewer", "Error", JOptionPane.ERROR_MESSAGE);
+			JOptionPane.showMessageDialog(SessionMgr.getMainFrame(), "Please select at least one Screen Sample or Fly Line in each viewer", "Error", JOptionPane.ERROR_MESSAGE);
 			return;
 		}
 
@@ -730,7 +746,7 @@ public class SplitPickingPanel extends JPanel implements org.janelia.it.workstat
 			protected void doStuff() throws Exception {
 
 				if (crossFolder==null) {
-					setCrossFolder(org.janelia.it.workstation.api.entity_model.management.ModelMgrUtils.getChildFolder(workingFolder, FOLDER_NAME_CROSSES, true));
+					setCrossFolder(ModelMgrUtils.getChildFolder(workingFolder, FOLDER_NAME_CROSSES, true));
 				}
 
 				if (crossesViewer.getRootedEntities()!=null) {
@@ -758,7 +774,7 @@ public class SplitPickingPanel extends JPanel implements org.janelia.it.workstat
 					String message = numCrosses==1 ? 
 							"You have already simulated this cross before. Recompute it?" : 
 							"You have already simulated "+numExisting+" out of these "+numCrosses+" crosses. Recompute them?";
-					int deleteConfirmation = JOptionPane.showOptionDialog(org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr.getMainFrame(), message, "Recompute?",
+					int deleteConfirmation = JOptionPane.showOptionDialog(SessionMgr.getMainFrame(), message, "Recompute?",
 							JOptionPane.YES_NO_OPTION, JOptionPane.QUESTION_MESSAGE, null, options, options[1]);
 					if (deleteConfirmation == 0) {
 						existingCrosses.clear();
@@ -789,21 +805,21 @@ public class SplitPickingPanel extends JPanel implements org.janelia.it.workstat
 							for(Entity sample2 : samples2) {
 								setProgress(i++, numCrosses+1);
 
-								sample1 = org.janelia.it.workstation.api.entity_model.management.ModelMgr.getModelMgr().loadLazyEntity(sample1, false);
-								sample2 = org.janelia.it.workstation.api.entity_model.management.ModelMgr.getModelMgr().loadLazyEntity(sample2, false);
+								sample1 = ModelMgr.getModelMgr().loadLazyEntity(sample1, false);
+								sample2 = ModelMgr.getModelMgr().loadLazyEntity(sample2, false);
 								
 								String crossName = createCrossName(sample1, sample2);
 								if (existingCrosses.contains(crossName)) {
 									continue;
 								}
 								
-								Entity cross = org.janelia.it.workstation.api.entity_model.management.ModelMgr.getModelMgr().createEntity(EntityConstants.TYPE_SCREEN_SAMPLE_CROSS, crossName);
-								org.janelia.it.workstation.api.entity_model.management.ModelMgr.getModelMgr().setOrUpdateValue(cross, EntityConstants.ATTRIBUTE_CROSS_LABEL, createNextCrossLabel());
+								Entity cross = ModelMgr.getModelMgr().createEntity(EntityConstants.TYPE_SCREEN_SAMPLE_CROSS, crossName);
+								ModelMgr.getModelMgr().setOrUpdateValue(cross, EntityConstants.ATTRIBUTE_CROSS_LABEL, createNextCrossLabel());
 								
 								List<Long> childrenIds = new ArrayList<Long>();
 								childrenIds.add(sample1.getId());
 								childrenIds.add(sample2.getId());
-								org.janelia.it.workstation.api.entity_model.management.ModelMgr.getModelMgr().addChildren(cross.getId(), childrenIds, EntityConstants.ATTRIBUTE_ENTITY);
+								ModelMgr.getModelMgr().addChildren(cross.getId(), childrenIds, EntityConstants.ATTRIBUTE_ENTITY);
 								
 								if (sample1.getEntityTypeName().equals(EntityConstants.TYPE_FLY_LINE)) {
 									Entity rep = sample1.getChildByAttributeName(EntityConstants.ATTRIBUTE_REPRESENTATIVE_SAMPLE);
@@ -831,7 +847,7 @@ public class SplitPickingPanel extends JPanel implements org.janelia.it.workstat
 							}
 						}
 						
-						org.janelia.it.workstation.api.entity_model.management.ModelMgr.getModelMgr().addChildren(parent.getId(), outputIds, EntityConstants.ATTRIBUTE_ENTITY);
+						ModelMgr.getModelMgr().addChildren(parent.getId(), outputIds, EntityConstants.ATTRIBUTE_ENTITY);
 						startIntersections(sampleIds1, sampleIds2, outputIds);
 					}
 					
@@ -854,17 +870,17 @@ public class SplitPickingPanel extends JPanel implements org.janelia.it.workstat
 					
 					@Override
 					protected void hadError(Throwable error) {
-						org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr.getSessionMgr().handleException(error);
+						SessionMgr.getSessionMgr().handleException(error);
 					}
 				};
 				
-				worker2.setProgressMonitor(new ProgressMonitor(org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr.getMainFrame(), "Submitting jobs to the compute cluster...", "", 0, 100));
+				worker2.setProgressMonitor(new ProgressMonitor(SessionMgr.getMainFrame(), "Submitting jobs to the compute cluster...", "", 0, 100));
 				worker2.execute();
 			}
 			
 			@Override
 			protected void hadError(Throwable error) {
-				org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr.getSessionMgr().handleException(error);
+				SessionMgr.getSessionMgr().handleException(error);
 			}
 		};
 		
@@ -885,7 +901,7 @@ public class SplitPickingPanel extends JPanel implements org.janelia.it.workstat
     	taskParameters.add(new TaskParameter("output entity id_list", idList3Str, null));
     	taskParameters.add(new TaskParameter("intersection method", method, null));
     	taskParameters.add(new TaskParameter("kernel size", kernelSize, null));
-        Task task = org.janelia.it.workstation.api.entity_model.management.ModelMgr.getModelMgr().submitJob("ScreenSampleCrossService", "Screen Sample Cross Service", taskParameters);
+        Task task = ModelMgr.getModelMgr().submitJob("ScreenSampleCrossService", "Screen Sample Cross Service", taskParameters);
         
         log.info("Submitted task "+task.getDisplayName()+" id="+task.getObjectId());
         runningTasks.add(task.getObjectId());
@@ -903,12 +919,12 @@ public class SplitPickingPanel extends JPanel implements org.janelia.it.workstat
 	private String createCrossName(Entity sample1, Entity sample2) {
 
 		try {
-			sample1 = org.janelia.it.workstation.api.entity_model.management.ModelMgr.getModelMgr().loadLazyEntity(sample1, false);
-			sample2 = org.janelia.it.workstation.api.entity_model.management.ModelMgr.getModelMgr().loadLazyEntity(sample2, false);
+			sample1 = ModelMgr.getModelMgr().loadLazyEntity(sample1, false);
+			sample2 = ModelMgr.getModelMgr().loadLazyEntity(sample2, false);
 			
 			Entity balancedDbd = sample2.getChildByAttributeName(EntityConstants.ATTRIBUTE_BALANCED_FLYLINE);
 			if (balancedDbd != null) {
-				balancedDbd = org.janelia.it.workstation.api.entity_model.management.ModelMgr.getModelMgr().loadLazyEntity(balancedDbd, false);
+				balancedDbd = ModelMgr.getModelMgr().loadLazyEntity(balancedDbd, false);
 				sample2 = balancedDbd;
 			}
 	
@@ -933,20 +949,20 @@ public class SplitPickingPanel extends JPanel implements org.janelia.it.workstat
 		SimpleWorker worker = new SimpleWorker() {
 			@Override
 			protected void doStuff() throws Exception {
-				searchResultsFolder = org.janelia.it.workstation.api.entity_model.management.ModelMgrUtils.getChildFolder(workingFolder, FOLDER_NAME_SEARCH_RESULTS, true);
+				searchResultsFolder = ModelMgrUtils.getChildFolder(workingFolder, FOLDER_NAME_SEARCH_RESULTS, true);
 				
 				// Load in all search results
-				searchResultsFolder.setEntity(org.janelia.it.workstation.api.entity_model.management.ModelMgr.getModelMgr().loadLazyEntity(searchResultsFolder.getEntity(), false));
+				searchResultsFolder.setEntity(ModelMgr.getModelMgr().loadLazyEntity(searchResultsFolder.getEntity(), false));
 				for(Entity searchResultFolderEntity : searchResultsFolder.getEntity().getChildren()) {
-					searchResultFolderEntity = org.janelia.it.workstation.api.entity_model.management.ModelMgr.getModelMgr().loadLazyEntity(searchResultFolderEntity, false);
+					searchResultFolderEntity = ModelMgr.getModelMgr().loadLazyEntity(searchResultFolderEntity, false);
 					for(Entity domainFolderEntity : searchResultFolderEntity.getChildren()) {
-						domainFolderEntity = org.janelia.it.workstation.api.entity_model.management.ModelMgr.getModelMgr().loadLazyEntity(domainFolderEntity, false);
+						domainFolderEntity = ModelMgr.getModelMgr().loadLazyEntity(domainFolderEntity, false);
 					}
 				}
 				
-				crossFolder = org.janelia.it.workstation.api.entity_model.management.ModelMgrUtils.getChildFolder(workingFolder, FOLDER_NAME_CROSSES, true);
+				crossFolder = ModelMgrUtils.getChildFolder(workingFolder, FOLDER_NAME_CROSSES, true);
 				if (crossFolder!=null) {
-					org.janelia.it.workstation.api.entity_model.management.ModelMgr.getModelMgr().refreshEntityAndChildren(crossFolder.getEntity());
+					ModelMgr.getModelMgr().refreshEntityAndChildren(crossFolder.getEntity());
 				}
 			}
 			
@@ -954,7 +970,7 @@ public class SplitPickingPanel extends JPanel implements org.janelia.it.workstat
 			protected void hadSuccess() {
 				resultFolderButton.setText(workingFolder.getEntity().getName());
 				
-				org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr.getSessionMgr().setModelProperty(LAST_WORKING_FOLDER_ID_PROPERTY, workingFolder.getEntity().getId());
+				SessionMgr.getSessionMgr().setModelProperty(LAST_WORKING_FOLDER_ID_PROPERTY, workingFolder.getEntity().getId());
 				
 				if (crossFolder!=null) {
 					log.info("Loading into cross viewer: {}",crossFolder.getId());
@@ -976,7 +992,7 @@ public class SplitPickingPanel extends JPanel implements org.janelia.it.workstat
 			
 			@Override
 			protected void hadError(Throwable error) {
-				org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr.getSessionMgr().handleException(error);
+				SessionMgr.getSessionMgr().handleException(error);
 			}
 		};
 		
@@ -986,8 +1002,8 @@ public class SplitPickingPanel extends JPanel implements org.janelia.it.workstat
 	private void updateViewers() {
 
 		if (splitPickingFolder==null || workingFolder==null || searchResultsFolder==null) {
-			org.janelia.it.workstation.gui.framework.viewer.IconDemoPanel mainViewer = getMainViewer();
-			org.janelia.it.workstation.gui.framework.viewer.IconDemoPanel secViewer = getSecondaryViewer();
+			IconDemoPanel mainViewer = getMainViewer();
+			IconDemoPanel secViewer = getSecondaryViewer();
 			mainViewer.clear();
 			if (secViewer!=null) {
 				secViewer.clear();
@@ -1013,7 +1029,7 @@ public class SplitPickingPanel extends JPanel implements org.janelia.it.workstat
 		// Get the parent lines
 		Entity entity1 = null;
 		Entity entity2 = null;
-		List<org.janelia.it.workstation.model.entity.RootedEntity> selected = crossesViewer.getSelectedEntities();
+		List<RootedEntity> selected = crossesViewer.getSelectedEntities();
 		if (selected!=null && selected.size()==1) {
 			Entity crossEntity = selected.get(0).getEntity();
 			for(EntityData childEd : crossEntity.getOrderedEntityData()) {
@@ -1034,21 +1050,21 @@ public class SplitPickingPanel extends JPanel implements org.janelia.it.workstat
 
 			private Entity sourceEntity1 = finalEntity1;
 			private Entity sourceEntity2 = finalEntity2;
-			private org.janelia.it.workstation.model.entity.RootedEntity adFolder;
-			private org.janelia.it.workstation.model.entity.RootedEntity dbdFolder;
+			private RootedEntity adFolder;
+			private RootedEntity dbdFolder;
 			
 			@Override
 			protected void doStuff() throws Exception {
 				if (sourceEntity1 != null) {
 					if (!EntityUtils.isInitialized(sourceEntity1)) {
-						sourceEntity1 = org.janelia.it.workstation.api.entity_model.management.ModelMgr.getModelMgr().getEntityById(sourceEntity1.getId());
+						sourceEntity1 = ModelMgr.getModelMgr().getEntityById(sourceEntity1.getId());
 					}
 					log.info("Parent line 1 is {}",sourceEntity1.getName());
 					adFolder = findDomainFolderContainingEntity(searchResultsFolder, sourceEntity1.getId(), FOLDER_NAME_SPLIT_LINES_AD);
 				}
 				if (sourceEntity2 != null) {
 					if (!EntityUtils.isInitialized(sourceEntity2)) {
-						sourceEntity2 = org.janelia.it.workstation.api.entity_model.management.ModelMgr.getModelMgr().getEntityById(sourceEntity2.getId());
+						sourceEntity2 = ModelMgr.getModelMgr().getEntityById(sourceEntity2.getId());
 					}
 					log.info("Parent line 2 is {}",sourceEntity1.getName());
 					dbdFolder = findDomainFolderContainingEntity(searchResultsFolder, sourceEntity2.getId(), FOLDER_NAME_SPLIT_LINES_DBD);
@@ -1056,16 +1072,16 @@ public class SplitPickingPanel extends JPanel implements org.janelia.it.workstat
 				if (adFolder==null && dbdFolder==null) {
 					log.info("No cross is selected, so selecting latest search result");
 					// Nothing is selected, so just load the last search result.
-					org.janelia.it.workstation.model.entity.RootedEntity latestResult = searchResultsFolder.getLatestChildOfType(EntityConstants.TYPE_FOLDER);
+					RootedEntity latestResult = searchResultsFolder.getLatestChildOfType(EntityConstants.TYPE_FOLDER);
 					if (latestResult==null) return;
-					adFolder = org.janelia.it.workstation.api.entity_model.management.ModelMgrUtils.getChildFolder(latestResult, FOLDER_NAME_SPLIT_LINES_AD, false);
-					dbdFolder = org.janelia.it.workstation.api.entity_model.management.ModelMgrUtils.getChildFolder(latestResult, FOLDER_NAME_SPLIT_LINES_DBD, false);
+					adFolder = ModelMgrUtils.getChildFolder(latestResult, FOLDER_NAME_SPLIT_LINES_AD, false);
+					dbdFolder = ModelMgrUtils.getChildFolder(latestResult, FOLDER_NAME_SPLIT_LINES_DBD, false);
 				}
 			}
 			
-			private org.janelia.it.workstation.model.entity.RootedEntity findDomainFolderContainingEntity(org.janelia.it.workstation.model.entity.RootedEntity root, long entityId, String domainName) {
-				for(org.janelia.it.workstation.model.entity.RootedEntity searchResultFolder : root.getRootedChildren()) {
-					org.janelia.it.workstation.model.entity.RootedEntity domainFolder = searchResultFolder.getChildByName(domainName);
+			private RootedEntity findDomainFolderContainingEntity(RootedEntity root, long entityId, String domainName) {
+				for(RootedEntity searchResultFolder : root.getRootedChildren()) {
+					RootedEntity domainFolder = searchResultFolder.getChildByName(domainName);
 					for(Entity flylineEntity : domainFolder.getEntity().getChildren()) {
 						if (flylineEntity.getId().equals(entityId)) return domainFolder;
 					}
@@ -1075,8 +1091,8 @@ public class SplitPickingPanel extends JPanel implements org.janelia.it.workstat
 			
 			@Override
 			protected void hadSuccess() {
-				final org.janelia.it.workstation.gui.framework.viewer.IconDemoPanel mainViewer = getMainViewer();
-				final org.janelia.it.workstation.gui.framework.viewer.IconDemoPanel secViewer = getSecondaryViewer();
+				final IconDemoPanel mainViewer = getMainViewer();
+				final IconDemoPanel secViewer = getSecondaryViewer();
 				
 				if (adFolder!=null) {
 					log.info("Got AD folder: {}",adFolder.getUniqueId());
@@ -1114,7 +1130,7 @@ public class SplitPickingPanel extends JPanel implements org.janelia.it.workstat
 			
 			@Override
 			protected void hadError(Throwable error) {
-				org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr.getSessionMgr().handleException(error);
+				SessionMgr.getSessionMgr().handleException(error);
 			}
 		};
 		
@@ -1138,7 +1154,7 @@ public class SplitPickingPanel extends JPanel implements org.janelia.it.workstat
 						setWorkingFolderEntity(childEd);
 					}
 					catch (Exception e) {
-						org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr.getSessionMgr().handleException(e);
+						SessionMgr.getSessionMgr().handleException(e);
 					}
 				}
 			});
@@ -1153,19 +1169,19 @@ public class SplitPickingPanel extends JPanel implements org.janelia.it.workstat
 			public void actionPerformed(ActionEvent actionEvent) {
 
 				// Add button clicked
-				final String folderName = (String) JOptionPane.showInputDialog(org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr.getMainFrame(), "Folder Name:\n",
+				final String folderName = (String) JOptionPane.showInputDialog(SessionMgr.getMainFrame(), "Folder Name:\n",
 						"Create working folder", JOptionPane.PLAIN_MESSAGE, null, null, null);
 				if ((folderName == null) || (folderName.length() <= 0)) {
 					return;
 				}
 
 				try {
-					Entity folder = org.janelia.it.workstation.api.entity_model.management.ModelMgr.getModelMgr().createEntity(EntityConstants.TYPE_FOLDER, folderName);
-					EntityData childEd = org.janelia.it.workstation.api.entity_model.management.ModelMgr.getModelMgr().addEntityToParent(splitPickingFolder.getEntity(), folder);
+					Entity folder = ModelMgr.getModelMgr().createEntity(EntityConstants.TYPE_FOLDER, folderName);
+					EntityData childEd = ModelMgr.getModelMgr().addEntityToParent(splitPickingFolder.getEntity(), folder);
 					setWorkingFolderEntity(childEd);
 				}
 				catch (Exception e) {
-					org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr.getSessionMgr().handleException(e);
+					SessionMgr.getSessionMgr().handleException(e);
 				}
 			}
 		});
@@ -1179,23 +1195,23 @@ public class SplitPickingPanel extends JPanel implements org.janelia.it.workstat
 
     	List<Long> entityIds = new ArrayList<Long>();
     	for(Entity screenSample : screenSamples) {
-    		Set<Long> parentIds = org.janelia.it.workstation.api.entity_model.management.ModelMgr.getModelMgr().getParentIdsForAttribute(screenSample.getId(), EntityConstants.ATTRIBUTE_REPRESENTATIVE_SAMPLE);
+    		Set<Long> parentIds = ModelMgr.getModelMgr().getParentIdsForAttribute(screenSample.getId(), EntityConstants.ATTRIBUTE_REPRESENTATIVE_SAMPLE);
     		if (!parentIds.isEmpty()) {
     			entityIds.addAll(parentIds);
     		}
     	}
     	
-    	return org.janelia.it.workstation.api.entity_model.management.ModelMgr.getModelMgr().getEntityByIds(entityIds);
+    	return ModelMgr.getModelMgr().getEntityByIds(entityIds);
     }
     
-    public void saveRepresentedGroupings(List<Entity> representedAd, List<Entity> representedDbd, org.janelia.it.workstation.model.entity.RootedEntity folder) throws Exception {
+    public void saveRepresentedGroupings(List<Entity> representedAd, List<Entity> representedDbd, RootedEntity folder) throws Exception {
 
-    	org.janelia.it.workstation.model.entity.RootedEntity groupAdFolder = org.janelia.it.workstation.api.entity_model.management.ModelMgrUtils.getChildFolder(folder, SplitPickingPanel.FOLDER_NAME_SPLIT_LINES_AD, true);
-    	org.janelia.it.workstation.model.entity.RootedEntity groupDbdFolder = org.janelia.it.workstation.api.entity_model.management.ModelMgrUtils.getChildFolder(folder, SplitPickingPanel.FOLDER_NAME_SPLIT_LINES_DBD, true);
+    	RootedEntity groupAdFolder = ModelMgrUtils.getChildFolder(folder, SplitPickingPanel.FOLDER_NAME_SPLIT_LINES_AD, true);
+    	RootedEntity groupDbdFolder = ModelMgrUtils.getChildFolder(folder, SplitPickingPanel.FOLDER_NAME_SPLIT_LINES_DBD, true);
 
-    	org.janelia.it.workstation.api.entity_model.management.ModelMgr.getModelMgr().updateChildIndex(groupAdFolder.getEntityData(), 0);
-    	org.janelia.it.workstation.api.entity_model.management.ModelMgr.getModelMgr().updateChildIndex(groupDbdFolder.getEntityData(), 1);
-    	org.janelia.it.workstation.api.entity_model.management.ModelMgrUtils.fixOrderIndicies(folder.getEntity(), new Comparator<EntityData>() {
+    	ModelMgr.getModelMgr().updateChildIndex(groupAdFolder.getEntityData(), 0);
+    	ModelMgr.getModelMgr().updateChildIndex(groupDbdFolder.getEntityData(), 1);
+    	ModelMgrUtils.fixOrderIndicies(folder.getEntity(), new Comparator<EntityData>() {
             @Override
             public int compare(EntityData o1, EntityData o2) {
                 return ComparisonChain.start()
@@ -1211,19 +1227,19 @@ public class SplitPickingPanel extends JPanel implements org.janelia.it.workstat
     	List<Long> newSplitDbdIds = EntityUtils.getEntityIdList(representedDbd);
     	
         // Remove current 
-    	org.janelia.it.workstation.api.entity_model.management.ModelMgrUtils.removeAllChildren(groupAdFolder.getEntity());
-    	org.janelia.it.workstation.api.entity_model.management.ModelMgrUtils.removeAllChildren(groupDbdFolder.getEntity());
+    	ModelMgrUtils.removeAllChildren(groupAdFolder.getEntity());
+    	ModelMgrUtils.removeAllChildren(groupDbdFolder.getEntity());
         
         // Add new 
     	if (!newSplitAdIds.isEmpty()) {
-    		org.janelia.it.workstation.api.entity_model.management.ModelMgr.getModelMgr().addChildren(groupAdFolder.getEntity().getId(), newSplitAdIds, EntityConstants.ATTRIBUTE_ENTITY);
+    		ModelMgr.getModelMgr().addChildren(groupAdFolder.getEntity().getId(), newSplitAdIds, EntityConstants.ATTRIBUTE_ENTITY);
     	}
     	if (!newSplitDbdIds.isEmpty()) {
-    		org.janelia.it.workstation.api.entity_model.management.ModelMgr.getModelMgr().addChildren(groupDbdFolder.getEntity().getId(), newSplitDbdIds, EntityConstants.ATTRIBUTE_ENTITY);
+    		ModelMgr.getModelMgr().addChildren(groupDbdFolder.getEntity().getId(), newSplitDbdIds, EntityConstants.ATTRIBUTE_ENTITY);
     	}
     
-    	org.janelia.it.workstation.api.entity_model.management.ModelMgr.getModelMgr().refreshEntityAndChildren(groupAdFolder.getEntity());
-    	org.janelia.it.workstation.api.entity_model.management.ModelMgr.getModelMgr().refreshEntityAndChildren(groupDbdFolder.getEntity());
+    	ModelMgr.getModelMgr().refreshEntityAndChildren(groupAdFolder.getEntity());
+    	ModelMgr.getModelMgr().refreshEntityAndChildren(groupDbdFolder.getEntity());
     }
     
     protected synchronized void exportResults() {
@@ -1240,7 +1256,7 @@ public class SplitPickingPanel extends JPanel implements org.janelia.it.workstat
         }
         
         chooser.setSelectedFile(defaultFile);
-        chooser.setFileFilter(new javax.swing.filechooser.FileFilter() {
+        chooser.setFileFilter(new FileFilter() {
 			@Override
 			public String getDescription() {
 				return "Tab-delimited Files (*.xls, *.txt)";
@@ -1251,7 +1267,7 @@ public class SplitPickingPanel extends JPanel implements org.janelia.it.workstat
 			}
 		});
 
-        if (chooser.showDialog(org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr.getMainFrame(), "OK") == FileChooser.CANCEL_OPTION) {
+        if (chooser.showDialog(SessionMgr.getMainFrame(), "OK") == FileChooser.CANCEL_OPTION) {
             return;
         }
 
@@ -1284,11 +1300,11 @@ public class SplitPickingPanel extends JPanel implements org.janelia.it.workstat
 
 				long numTotal = crossesViewer.getRootedEntities().size();
 				long numProcessed = 0;
-				for(org.janelia.it.workstation.model.entity.RootedEntity crossRootedEntity : crossesViewer.getRootedEntities()) {
+				for(RootedEntity crossRootedEntity : crossesViewer.getRootedEntities()) {
 					
-					org.janelia.it.workstation.api.entity_model.management.ModelMgr.getModelMgr().refreshEntityAndChildren(crossRootedEntity.getEntity());
+					ModelMgr.getModelMgr().refreshEntityAndChildren(crossRootedEntity.getEntity());
 					
-					Entity crossEntity = org.janelia.it.workstation.api.entity_model.management.ModelMgr.getModelMgr().getEntityTree(crossRootedEntity.getEntity().getId());
+					Entity crossEntity = ModelMgr.getModelMgr().getEntityTree(crossRootedEntity.getEntity().getId());
 					
 					Entity flylineAd = null;
 					Entity flylineDbd = null;
@@ -1317,8 +1333,8 @@ public class SplitPickingPanel extends JPanel implements org.janelia.it.workstat
 							continue;
 						}
 
-						flylineAd = org.janelia.it.workstation.api.entity_model.management.ModelMgr.getModelMgr().loadLazyEntity(flylineAd, false);
-						flylineDbd = org.janelia.it.workstation.api.entity_model.management.ModelMgr.getModelMgr().loadLazyEntity(flylineDbd, false);
+						flylineAd = ModelMgr.getModelMgr().loadLazyEntity(flylineAd, false);
+						flylineDbd = ModelMgr.getModelMgr().loadLazyEntity(flylineDbd, false);
 						
 						String crossLabel = crossEntity.getValueByAttributeName(EntityConstants.ATTRIBUTE_CROSS_LABEL);
 						Entity balancedAd = flylineAd.getChildByAttributeName(EntityConstants.ATTRIBUTE_BALANCED_FLYLINE);
@@ -1368,7 +1384,7 @@ public class SplitPickingPanel extends JPanel implements org.janelia.it.workstat
 			
 			@Override
 			protected void hadSuccess() {
-				int rv = JOptionPane.showConfirmDialog(org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr.getMainFrame(), "Data was successfully exported to "+destFile+". Open file in default viewer?",
+				int rv = JOptionPane.showConfirmDialog(SessionMgr.getMainFrame(), "Data was successfully exported to "+destFile+". Open file in default viewer?",
 						"Export successful", JOptionPane.YES_NO_OPTION, JOptionPane.INFORMATION_MESSAGE);
 				if (rv==JOptionPane.YES_OPTION) {
 					OpenWithDefaultAppAction openAction = new OpenWithDefaultAppAction(destFile);
@@ -1378,42 +1394,42 @@ public class SplitPickingPanel extends JPanel implements org.janelia.it.workstat
 			
 			@Override
 			protected void hadError(Throwable error) {
-				org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr.getSessionMgr().handleException(error);
+				SessionMgr.getSessionMgr().handleException(error);
 			}
 		};
 
-    	worker.setProgressMonitor(new ProgressMonitor(org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr.getMainFrame(), "Exporting data", "", 0, 100));
+    	worker.setProgressMonitor(new ProgressMonitor(SessionMgr.getMainFrame(), "Exporting data", "", 0, 100));
 		worker.execute();
     }
 
     //---------------------------------Viewer Interactions
-    private void showEntityInMainViewer( org.janelia.it.workstation.model.entity.RootedEntity entity ) {
+    private void showEntityInMainViewer( RootedEntity entity ) {
         getLanesTopComponent().showEntityInMainViewer(entity);
     }
     
-    private void showEntityInMainViewer( org.janelia.it.workstation.model.entity.RootedEntity entity, Callable callable ) {
+    private void showEntityInMainViewer( RootedEntity entity, Callable callable ) {
         getLanesTopComponent().showEntityInMainViewer(entity, callable);
     }
     
-    private void showEntityInSecViewer( org.janelia.it.workstation.model.entity.RootedEntity entity, Callable callable ) {
+    private void showEntityInSecViewer( RootedEntity entity, Callable callable ) {
         getLanesTopComponent().showEntityInSecViewer(entity, callable);
     }
     
-    private void showEntityInSecViewer( org.janelia.it.workstation.model.entity.RootedEntity entity ) {
+    private void showEntityInSecViewer( RootedEntity entity ) {
         getLanesTopComponent().showEntityInSecViewer(entity);
     }
     
-    private org.janelia.it.workstation.gui.framework.viewer.IconDemoPanel getSecondaryViewer() {
+    private IconDemoPanel getSecondaryViewer() {
         SplitPickingLanesTopComponent lanes = getLanesTopComponent();
         return lanes.getSecondaryPanel();
     }
 
-    private org.janelia.it.workstation.gui.framework.viewer.IconDemoPanel getMainViewer() {
+    private IconDemoPanel getMainViewer() {
         SplitPickingLanesTopComponent lanes = getLanesTopComponent();
         return lanes.getMainPanel();
     }
 
-    private org.janelia.it.workstation.gui.framework.viewer.ViewerSplitPanel getViewerContainer() {
+    private ViewerSplitPanel getViewerContainer() {
         return getLanesTopComponent().getViewerSplitPanel();
     }
 
@@ -1421,11 +1437,11 @@ public class SplitPickingPanel extends JPanel implements org.janelia.it.workstat
         return getViewerContainer().getMainSplitPane();
     }
 
-    private org.janelia.it.workstation.gui.dialogs.MAASearchDialog getMAASearchDialog() {
-        return org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr.getBrowser().getMAASearchDialog();
+    private MAASearchDialog getMAASearchDialog() {
+        return SessionMgr.getBrowser().getMAASearchDialog();
     }
 	
-    private org.janelia.it.workstation.gui.dialogs.PatternSearchDialog getPatternSearchDialog() {
+    private PatternSearchDialog getPatternSearchDialog() {
         // Push the split picking lanes into user's face, then
         // start the pattern search.  That way, once user has
         // searched, split picking lanes show.  Then do same
@@ -1435,7 +1451,7 @@ public class SplitPickingPanel extends JPanel implements org.janelia.it.workstat
         tc = getTopComponent( SplitPickingTopComponent.PREFERRED_ID );
         tc.requestActive();
         
-        return org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr.getBrowser().getPatternSearchDialog();
+        return SessionMgr.getBrowser().getPatternSearchDialog();
     }
 
     private SplitPickingLanesTopComponent getLanesTopComponent() {
@@ -1459,7 +1475,7 @@ public class SplitPickingPanel extends JPanel implements org.janelia.it.workstat
     }
 
 	private void expandEntityOutline(final String uniqueId) {
-		org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr.getBrowser().getEntityOutline().expandByUniqueId(uniqueId);
+		SessionMgr.getBrowser().getEntityOutline().expandByUniqueId(uniqueId);
 	}
     
 	private String commafy(List<Long> list) {
@@ -1471,27 +1487,27 @@ public class SplitPickingPanel extends JPanel implements org.janelia.it.workstat
 		return sb.toString();
 	}
 	
-	public org.janelia.it.workstation.model.entity.RootedEntity getWorkingFolder() {
+	public RootedEntity getWorkingFolder() {
 		return workingFolder;
 	}
 
-	public void setWorkingFolder(org.janelia.it.workstation.model.entity.RootedEntity workingFolder) {
+	public void setWorkingFolder(RootedEntity workingFolder) {
 		this.workingFolder = workingFolder;
 	}
 
-	public org.janelia.it.workstation.model.entity.RootedEntity getRepFolder() {
+	public RootedEntity getRepFolder() {
 		return searchResultsFolder;
 	}
 
-	public void setRepFolder(org.janelia.it.workstation.model.entity.RootedEntity repFolder) {
+	public void setRepFolder(RootedEntity repFolder) {
 		this.searchResultsFolder = repFolder;
 	}
 
-	public org.janelia.it.workstation.model.entity.RootedEntity getCrossFolder() {
+	public RootedEntity getCrossFolder() {
 		return crossFolder;
 	}
 
-	public void setCrossFolder(org.janelia.it.workstation.model.entity.RootedEntity crossFolder) {
+	public void setCrossFolder(RootedEntity crossFolder) {
 		this.crossFolder = crossFolder;
 	}
 	

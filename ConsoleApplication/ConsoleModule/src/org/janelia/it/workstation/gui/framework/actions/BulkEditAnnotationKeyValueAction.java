@@ -1,8 +1,12 @@
 package org.janelia.it.workstation.gui.framework.actions;
 
+import org.janelia.it.workstation.api.entity_model.management.ModelMgr;
 import org.janelia.it.workstation.gui.dialogs.AnnotationBuilderDialog;
 import org.janelia.it.workstation.gui.framework.outline.Annotations;
+import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
+import org.janelia.it.workstation.gui.framework.viewer.IconDemoPanel;
 import org.janelia.it.workstation.gui.framework.viewer.Viewer;
+import org.janelia.it.workstation.model.entity.RootedEntity;
 import org.janelia.it.workstation.shared.workers.SimpleWorker;
 import org.janelia.it.jacs.model.entity.Entity;
 import org.janelia.it.jacs.model.entity.EntityConstants;
@@ -25,8 +29,8 @@ public class BulkEditAnnotationKeyValueAction implements Action {
 
     public BulkEditAnnotationKeyValueAction(OntologyAnnotation tag) {
         selectedEntities = new ArrayList<String>(
-                org.janelia.it.workstation.api.entity_model.management.ModelMgr.getModelMgr().getEntitySelectionModel().getSelectedEntitiesIds(
-                        org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr.getBrowser().getViewerManager().getActiveViewer().getSelectionCategory()));
+                ModelMgr.getModelMgr().getEntitySelectionModel().getSelectedEntitiesIds(
+                        SessionMgr.getBrowser().getViewerManager().getActiveViewer().getSelectionCategory()));
         this.tag = tag;
     }
 
@@ -39,9 +43,9 @@ public class BulkEditAnnotationKeyValueAction implements Action {
     public void doAction() {
         try {
         	// TODO: this should really use the ModelMgr
-        	final Viewer viewer = org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr.getBrowser().getViewerManager().getActiveViewer();
-        	if (viewer instanceof org.janelia.it.workstation.gui.framework.viewer.IconDemoPanel) {
-        		org.janelia.it.workstation.gui.framework.viewer.IconDemoPanel iconDemoPanel = (org.janelia.it.workstation.gui.framework.viewer.IconDemoPanel)viewer;
+        	final Viewer viewer = SessionMgr.getBrowser().getViewerManager().getActiveViewer();
+        	if (viewer instanceof IconDemoPanel) {
+        		IconDemoPanel iconDemoPanel = (IconDemoPanel)viewer;
             	final Annotations annotations = iconDemoPanel.getAnnotations();
                 final Map<Long, List<OntologyAnnotation>> annotationMap = annotations.getFilteredAnnotationMap();
                 
@@ -61,7 +65,7 @@ public class BulkEditAnnotationKeyValueAction implements Action {
                         try {
                             int i=1;
                             for(String selectedId : selectedEntities) {
-                                org.janelia.it.workstation.model.entity.RootedEntity rootedEntity = viewer.getRootedEntityById(selectedId);
+                                RootedEntity rootedEntity = viewer.getRootedEntityById(selectedId);
                                 List<OntologyAnnotation> entityAnnotations = annotationMap.get(rootedEntity.getEntity().getId());
                                 if (entityAnnotations==null) {
                                     continue;
@@ -74,12 +78,12 @@ public class BulkEditAnnotationKeyValueAction implements Action {
                                         String namePrefix = tmpName.substring(0,tmpName.indexOf("=")+2);
                                         annotation.getEntity().setName(namePrefix+value);
                                         try {
-                                            Entity tmpAnnotatedEntity = org.janelia.it.workstation.api.entity_model.management.ModelMgr.getModelMgr().getEntityById(annotation.getTargetEntityId());
-                                            org.janelia.it.workstation.api.entity_model.management.ModelMgr.getModelMgr().saveOrUpdateAnnotation(tmpAnnotatedEntity, annotation.getEntity());
+                                            Entity tmpAnnotatedEntity = ModelMgr.getModelMgr().getEntityById(annotation.getTargetEntityId());
+                                            ModelMgr.getModelMgr().saveOrUpdateAnnotation(tmpAnnotatedEntity, annotation.getEntity());
                                         }
                                         catch (Exception e1) {
                                             e1.printStackTrace();
-                                            org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr.getSessionMgr().handleException(e1);
+                                            SessionMgr.getSessionMgr().handleException(e1);
                                         }
                                     }
                                 }
@@ -88,7 +92,7 @@ public class BulkEditAnnotationKeyValueAction implements Action {
                         }
                         catch (Exception e1) {
                             e1.printStackTrace();
-                            org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr.getSessionMgr().handleException(e1);
+                            SessionMgr.getSessionMgr().handleException(e1);
                         }
                     }
 
@@ -99,16 +103,16 @@ public class BulkEditAnnotationKeyValueAction implements Action {
 
                     @Override
                     protected void hadError(Throwable error) {
-                        org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr.getSessionMgr().handleException(error);
+                        SessionMgr.getSessionMgr().handleException(error);
                     }
                 };
 
-                worker.setProgressMonitor(new ProgressMonitor(org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr.getMainFrame(), "Editing Annotations", "", 0, 100));
+                worker.setProgressMonitor(new ProgressMonitor(SessionMgr.getMainFrame(), "Editing Annotations", "", 0, 100));
                 worker.execute();
         	}
         }
         catch (Exception ex) {
-        	org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr.getSessionMgr().handleException(ex);
+        	SessionMgr.getSessionMgr().handleException(ex);
         }
     	
     }

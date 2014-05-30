@@ -9,12 +9,13 @@ package org.janelia.it.workstation.api.entity_model.management;
 
 import java.util.ArrayList;
 import java.util.Iterator;
+import java.util.List;
 
 /**
  * CompositeEditToken provides a mechanism for bundling together several
  * individual edit tokens into a single action.
  */
-public class CompositeCommand extends org.janelia.it.workstation.api.entity_model.management.Command
+public class CompositeCommand extends Command
 {
     private String commandName;
     /**
@@ -27,7 +28,7 @@ public class CompositeCommand extends org.janelia.it.workstation.api.entity_mode
      * @label sub commands
      * @link aggregationByValue
      */
-    private java.util.List subCommandList;
+    private List subCommandList;
 
 
     /**
@@ -41,11 +42,11 @@ public class CompositeCommand extends org.janelia.it.workstation.api.entity_mode
 
     public void validatePreconditions()throws CommandPreconditionException {
         for (Iterator i = subCommandList.iterator(); i.hasNext(); ) {
-            org.janelia.it.workstation.api.entity_model.management.Command subCommand = (org.janelia.it.workstation.api.entity_model.management.Command)i.next();
+            Command subCommand = (Command)i.next();
             try{
                 subCommand.validatePreconditions();
             }catch(CommandPreconditionException ex){
-                throw(new org.janelia.it.workstation.api.entity_model.management.CompositeCommandPreconditionException(this, "One of the subcommands failed with this message : \n"+ex.getMessage()));
+                throw(new CompositeCommandPreconditionException(this, "One of the subcommands failed with this message : \n"+ex.getMessage()));
             }
         }
 
@@ -56,7 +57,7 @@ public class CompositeCommand extends org.janelia.it.workstation.api.entity_mode
      * addNextCommand().  Command actions MUST be
      * added in the order in which they should be executed!
      */
-    public void addNextCommand( org.janelia.it.workstation.api.entity_model.management.Command newSubCommand )
+    public void addNextCommand( Command newSubCommand )
     {
         // The ArrayList adds to the end.
         subCommandList.add(newSubCommand);
@@ -70,9 +71,9 @@ public class CompositeCommand extends org.janelia.it.workstation.api.entity_mode
      * The CommandTokens in the list are added to this CompositeCommand individually,
      * not as a CompositeCommand
      */
-    public void addNextCommandList( java.util.List newSubCommands ) {
+    public void addNextCommandList( List newSubCommands ) {
         for (Iterator i = newSubCommands.iterator(); i.hasNext(); ) {
-            this.addNextCommand((org.janelia.it.workstation.api.entity_model.management.Command)i.next());
+            this.addNextCommand((Command)i.next());
         }
     }
 
@@ -84,18 +85,18 @@ public class CompositeCommand extends org.janelia.it.workstation.api.entity_mode
      * returned token will be the inverses of the components of this
      * token, in reverse order.
      */
-    public org.janelia.it.workstation.api.entity_model.management.Command execute() throws Exception
+    public Command execute() throws Exception
     {
         // Execute my components in order
         // and gather their inverses in reverse order...
         boolean isInvertable = true;
-        java.util.List reverseOrderedInvserseSubCommands = new ArrayList();
+        List reverseOrderedInvserseSubCommands = new ArrayList();
 
         // Iterate through this CompositeCommandToken's sub-commandTokens,
         // Collecting the inverse commands and making sure the command is invertable.
         for (Iterator i = subCommandList.iterator(); i.hasNext(); ) {
-            org.janelia.it.workstation.api.entity_model.management.Command subCommand = (org.janelia.it.workstation.api.entity_model.management.Command)i.next();
-            org.janelia.it.workstation.api.entity_model.management.Command inverseSubCommand = subCommand.execute();
+            Command subCommand = (Command)i.next();
+            Command inverseSubCommand = subCommand.execute();
             // We are reversing the order of the inverse commands, so add to the front of the list.
             if ( inverseSubCommand != null ) reverseOrderedInvserseSubCommands.add(0, inverseSubCommand);
                 // If any sub-commands are not invertable, then this composite is not invertable.
@@ -125,7 +126,7 @@ public class CompositeCommand extends org.janelia.it.workstation.api.entity_mode
     public String getCommandLogMessage() {
         String resultStr="";
         for(Iterator iter=subCommandList.iterator();iter.hasNext();){
-            org.janelia.it.workstation.api.entity_model.management.Command c=(org.janelia.it.workstation.api.entity_model.management.Command)iter.next();
+            Command c=(Command)iter.next();
             resultStr=resultStr+c.getCommandLogMessage()+"\n";
 
         }

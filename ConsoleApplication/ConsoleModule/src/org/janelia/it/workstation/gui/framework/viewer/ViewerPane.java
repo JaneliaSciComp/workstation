@@ -11,6 +11,10 @@ import java.util.concurrent.Callable;
 
 import javax.swing.*;
 
+import org.janelia.it.workstation.api.entity_model.management.ModelMgr;
+import org.janelia.it.workstation.gui.framework.outline.EntitySelectionHistory;
+import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
+import org.janelia.it.workstation.gui.util.Icons;
 import org.janelia.it.workstation.model.entity.RootedEntity;
 import org.janelia.it.workstation.shared.util.ConcurrentUtils;
 import org.janelia.it.workstation.shared.workers.SimpleWorker;
@@ -31,8 +35,8 @@ public class ViewerPane extends JPanel {
 
     private static final Font titleLabelFont = new Font("Sans Serif", Font.PLAIN, 12);
 
-    private final org.janelia.it.workstation.gui.framework.viewer.ViewerContainer viewerContainer;
-    private final org.janelia.it.workstation.gui.framework.outline.EntitySelectionHistory entitySelectionHistory;
+    private final ViewerContainer viewerContainer;
+    private final EntitySelectionHistory entitySelectionHistory;
     private final String selectionCategory;
     private final JLabel titleLabel;
     private final JPanel mainTitlePane;
@@ -43,13 +47,13 @@ public class ViewerPane extends JPanel {
     protected List<RootedEntity> rootedAncestors;
     protected SimpleWorker ancestorLoadingWorker;
 
-    public ViewerPane(org.janelia.it.workstation.gui.framework.viewer.ViewerContainer viewerContainer, String selectionCategory, boolean showHideButton) {
+    public ViewerPane(ViewerContainer viewerContainer, String selectionCategory, boolean showHideButton) {
 
         setLayout(new BorderLayout());
 
         this.viewerContainer = viewerContainer;
         this.selectionCategory = selectionCategory;
-        this.entitySelectionHistory = new org.janelia.it.workstation.gui.framework.outline.EntitySelectionHistory();
+        this.entitySelectionHistory = new EntitySelectionHistory();
 
         titleLabel = new JLabel(" ");
         titleLabel.setBorder(BorderFactory.createEmptyBorder(1, 5, 3, 0));
@@ -69,7 +73,7 @@ public class ViewerPane extends JPanel {
         mainTitlePane.add(titleLabel, c);
 
         if (showHideButton) {
-            JButton hideButton = new JButton(org.janelia.it.workstation.gui.util.Icons.getIcon("close_red.png"));
+            JButton hideButton = new JButton(Icons.getIcon("close_red.png"));
             hideButton.setPreferredSize(new Dimension(16, 16));
             hideButton.setBorderPainted(false);
             hideButton.setToolTipText("Close this viewer");
@@ -153,7 +157,7 @@ public class ViewerPane extends JPanel {
         return selectionCategory;
     }
 
-    public org.janelia.it.workstation.gui.framework.outline.EntitySelectionHistory getEntitySelectionHistory() {
+    public EntitySelectionHistory getEntitySelectionHistory() {
         return entitySelectionHistory;
     }
 
@@ -171,7 +175,7 @@ public class ViewerPane extends JPanel {
         return this.equals(viewerContainer.getActiveViewerPane());
     }
 
-    public org.janelia.it.workstation.gui.framework.viewer.ViewerContainer getViewerContainer() {
+    public ViewerContainer getViewerContainer() {
         return viewerContainer;
     }
 
@@ -213,7 +217,7 @@ public class ViewerPane extends JPanel {
                     Long entityId = EntityUtils.getEntityIdFromUniqueId(uniqueId);
                     entityIds.add(entityId);
                 }
-                Map<Long, Entity> entityMap = EntityUtils.getEntityMap(org.janelia.it.workstation.api.entity_model.management.ModelMgr.getModelMgr().getEntityByIds(entityIds));
+                Map<Long, Entity> entityMap = EntityUtils.getEntityMap(ModelMgr.getModelMgr().getEntityByIds(entityIds));
 
                 for (String uniqueId : uniqueIds) {
                     Long entityId = EntityUtils.getEntityIdFromUniqueId(uniqueId);
@@ -236,7 +240,7 @@ public class ViewerPane extends JPanel {
 
             @Override
             protected void hadError(Throwable error) {
-                org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr.getSessionMgr().handleException(error);
+                SessionMgr.getSessionMgr().handleException(error);
 
             }
         };

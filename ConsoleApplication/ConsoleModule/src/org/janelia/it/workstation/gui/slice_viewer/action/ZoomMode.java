@@ -12,6 +12,10 @@ import java.util.Vector;
 
 import javax.swing.JMenuItem;
 
+import org.janelia.it.workstation.geom.Vec3;
+import org.janelia.it.workstation.gui.camera.Camera3d;
+import org.janelia.it.workstation.gui.slice_viewer.MenuItemGenerator;
+import org.janelia.it.workstation.gui.slice_viewer.MouseModalWidget;
 import org.janelia.it.workstation.gui.slice_viewer.RubberBand;
 import org.janelia.it.workstation.gui.viewer3d.interfaces.Viewport;
 
@@ -33,12 +37,12 @@ implements WheelMode, MouseMode
 	}
 
 	@Override
-	public org.janelia.it.workstation.gui.slice_viewer.MouseModalWidget getWidget() {
+	public MouseModalWidget getWidget() {
 		return mode.getWidget();
 	}
 
 	@Override
-	public org.janelia.it.workstation.gui.camera.Camera3d getCamera() {
+	public Camera3d getCamera() {
 		return mode.getCamera();
 	}
 
@@ -132,7 +136,7 @@ implements WheelMode, MouseMode
 	@Override
 	public void mouseWheelMoved(MouseWheelEvent event) 
 	{
-		org.janelia.it.workstation.gui.camera.Camera3d camera = getCamera();
+		Camera3d camera = getCamera();
 		if (camera == null)
 			return;
 		int notches = event.getWheelRotation();
@@ -143,14 +147,14 @@ implements WheelMode, MouseMode
 		camera.incrementZoom(zoomRatio);
 		if (isCenterOnCursor()) {
 			Point2D dx = getWidget().getPixelOffsetFromCenter(event.getPoint());
-			org.janelia.it.workstation.geom.Vec3 dv = new org.janelia.it.workstation.geom.Vec3(dx.getX(), dx.getY(), 0.0);
+			Vec3 dv = new Vec3(dx.getX(), dx.getY(), 0.0);
 			dv = dv.times(zoomRatio - 1.0);
 			camera.incrementFocusPixels(dv);
 		}
 	}
 
 	@Override
-	public void setCamera(org.janelia.it.workstation.gui.camera.Camera3d camera) {
+	public void setCamera(Camera3d camera) {
 		mode.setCamera(camera);
 	}
 
@@ -159,7 +163,7 @@ implements WheelMode, MouseMode
 	}
 
 	@Override
-	public void setWidget(org.janelia.it.workstation.gui.slice_viewer.MouseModalWidget widget, boolean updateCursor) {
+	public void setWidget(MouseModalWidget widget, boolean updateCursor) {
 		mode.setWidget(widget, updateCursor);
 	}
 
@@ -195,8 +199,8 @@ implements WheelMode, MouseMode
 	}
 
     @Override
-    public org.janelia.it.workstation.gui.slice_viewer.MenuItemGenerator getMenuItemGenerator() {
-        return new org.janelia.it.workstation.gui.slice_viewer.MenuItemGenerator() {
+    public MenuItemGenerator getMenuItemGenerator() {
+        return new MenuItemGenerator() {
             @Override
             public List<JMenuItem> getMenus(MouseEvent event) {
                 return new Vector<JMenuItem>(); // empty list

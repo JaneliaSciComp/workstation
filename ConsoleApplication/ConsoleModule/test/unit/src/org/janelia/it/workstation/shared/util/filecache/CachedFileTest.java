@@ -19,7 +19,7 @@ import java.util.Date;
 import static org.junit.Assert.*;
 
 /**
- * Tests the {@link org.janelia.it.workstation.shared.util.filecache.CachedFile} class.
+ * Tests the {@link CachedFile} class.
  *
  * @author Eric Trautman
  */
@@ -63,13 +63,13 @@ public class CachedFileTest {
 
         final MockWebDavClient mockWebDavClient = new MockWebDavClient();
 
-        org.janelia.it.workstation.shared.util.filecache.WebDavFile webDavFile = new org.janelia.it.workstation.shared.util.filecache.WebDavFile(null, testRemoteFile);
+        WebDavFile webDavFile = new WebDavFile(null, testRemoteFile);
         String urlPath = webDavFile.getUrl().getPath();
         File activeFile = new File(testCacheActiveDirectory, urlPath);
         File tempFile = new File(testCacheTempDirectory, "test-temp-file");
 
-        org.janelia.it.workstation.shared.util.filecache.CachedFile cachedFile = new org.janelia.it.workstation.shared.util.filecache.CachedFile(webDavFile, activeFile);
-        org.janelia.it.workstation.shared.util.filecache.RemoteFileLoader.loadRemoteFile(webDavFile, tempFile, activeFile, mockWebDavClient);
+        CachedFile cachedFile = new CachedFile(webDavFile, activeFile);
+        RemoteFileLoader.loadRemoteFile(webDavFile, tempFile, activeFile, mockWebDavClient);
 
         File localFile = cachedFile.getLocalFile();
         assertNotNull("local file is missing", localFile);
@@ -79,7 +79,7 @@ public class CachedFileTest {
         assertNotNull("meta file is missing",
                       metaFile);
 
-        org.janelia.it.workstation.shared.util.filecache.CachedFile reloadedCachedFile = CachedFile.loadPreviouslyCachedFile(metaFile);
+        CachedFile reloadedCachedFile = CachedFile.loadPreviouslyCachedFile(metaFile);
         assertEquals("reloaded URL value differs",
                      cachedFile.getUrl(), reloadedCachedFile.getUrl());
 
@@ -98,7 +98,7 @@ public class CachedFileTest {
 
         validateDirectoryFileCount("after remove", testCacheActiveDirectory, 0);
 
-        webDavFile = new org.janelia.it.workstation.shared.util.filecache.WebDavFile(null, testRemoteDirectory);
+        webDavFile = new WebDavFile(null, testRemoteDirectory);
         urlPath = webDavFile.getUrl().getPath();
         activeFile = new File(testCacheActiveDirectory, urlPath);
         tempFile = new File(testCacheTempDirectory, "test-temp-dir");

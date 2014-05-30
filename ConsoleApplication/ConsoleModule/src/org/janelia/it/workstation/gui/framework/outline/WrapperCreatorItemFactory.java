@@ -11,6 +11,8 @@ import java.awt.event.ActionListener;
 import java.util.Collection;
 import javax.swing.JMenuItem;
 
+import org.janelia.it.workstation.api.entity_model.management.ModelMgr;
+import org.janelia.it.workstation.model.entity.RootedEntity;
 import org.janelia.it.workstation.nb_action.EntityWrapperCreator;
 import org.janelia.it.workstation.nb_action.ServiceAcceptorHelper;
 import org.slf4j.Logger;
@@ -32,7 +34,7 @@ public class WrapperCreatorItemFactory {
      * @param rootedEntity build another item around this; may be null.
      * @return the menu item suitable for add to menu.
      */
-    public JMenuItem makeEntityWrapperCreatorItem(final org.janelia.it.workstation.model.entity.RootedEntity rootedEntity) {
+    public JMenuItem makeEntityWrapperCreatorItem(final RootedEntity rootedEntity) {
         JMenuItem wrapEntityItem = null;
         final ServiceAcceptorHelper helper = new ServiceAcceptorHelper();
         Collection<EntityWrapperCreator> wrapperCreators
@@ -46,8 +48,8 @@ public class WrapperCreatorItemFactory {
     
     class WrapEntityActionListener implements ActionListener {
         private EntityWrapperCreator wrapperCreator;
-        private org.janelia.it.workstation.model.entity.RootedEntity rootedEntity;
-        public WrapEntityActionListener( EntityWrapperCreator wrapperCreator, org.janelia.it.workstation.model.entity.RootedEntity rootedEntity ) {
+        private RootedEntity rootedEntity;
+        public WrapEntityActionListener( EntityWrapperCreator wrapperCreator, RootedEntity rootedEntity ) {
             this.wrapperCreator = wrapperCreator;
             this.rootedEntity = rootedEntity;
         }
@@ -60,7 +62,7 @@ public class WrapperCreatorItemFactory {
                     wrapperCreator.wrapEntity(rootedEntity);
                 }
             } catch (Exception ex) {
-                org.janelia.it.workstation.api.entity_model.management.ModelMgr.getModelMgr().handleException(ex);
+                ModelMgr.getModelMgr().handleException(ex);
             }
 
         }

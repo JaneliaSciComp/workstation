@@ -2,7 +2,9 @@ package org.janelia.it.workstation.gui.framework.console;
 
 import org.janelia.it.workstation.gui.framework.bookmark.BookmarkInfo;
 import org.janelia.it.workstation.gui.framework.bookmark.BookmarkListener;
+import org.janelia.it.workstation.gui.framework.bookmark.BookmarkMgr;
 import org.janelia.it.workstation.gui.framework.bookmark.BookmarkTableDialog;
+import org.janelia.it.workstation.gui.framework.session_mgr.BrowserModelListenerAdapter;
 import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.jacs.model.entity.Entity;
 
@@ -23,7 +25,7 @@ public class BookmarkMenu extends JMenu implements BookmarkListener {
   public BookmarkMenu(Browser b) {
     this.browser=b;
     browser.getBrowserModel().addBrowserModelListener(browserListener);
-    org.janelia.it.workstation.gui.framework.bookmark.BookmarkMgr.getBookmarkMgr().registerPrefMgrListener(this);
+    BookmarkMgr.getBookmarkMgr().registerPrefMgrListener(this);
     setText("Bookmark");
     this.setMnemonic('B');
 
@@ -32,7 +34,7 @@ public class BookmarkMenu extends JMenu implements BookmarkListener {
     addBookmarkMI.setEnabled(false);
     addBookmarkMI.addActionListener(new ActionListener()  {
       public void actionPerformed(ActionEvent e) {
-        org.janelia.it.workstation.gui.framework.bookmark.BookmarkMgr.getBookmarkMgr().addBookmark(new BookmarkInfo(lastSelection));
+        BookmarkMgr.getBookmarkMgr().addBookmark(new BookmarkInfo(lastSelection));
       }
     });
 
@@ -40,7 +42,7 @@ public class BookmarkMenu extends JMenu implements BookmarkListener {
     bookmarkMI.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_B, InputEvent.CTRL_MASK, false));
     bookmarkMI.addActionListener(new ActionListener()  {
       public void actionPerformed(ActionEvent e) {
-         new BookmarkTableDialog(SessionMgr.getMainFrame(), org.janelia.it.workstation.gui.framework.bookmark.BookmarkMgr.getBookmarkMgr().getBookmarks());
+         new BookmarkTableDialog(SessionMgr.getMainFrame(), BookmarkMgr.getBookmarkMgr().getBookmarks());
       }
     });
     createMenu();
@@ -63,7 +65,7 @@ public class BookmarkMenu extends JMenu implements BookmarkListener {
   }
 
 
-  class MyBrowserListener extends org.janelia.it.workstation.gui.framework.session_mgr.BrowserModelListenerAdapter {
+  class MyBrowserListener extends BrowserModelListenerAdapter {
     public void browserCurrentSelectionChanged(Entity newSelection){
       lastSelection=newSelection;
 //      if (lastSelection!=null && addBookmarkMI!=null && !newSelection.hasNullID()) addBookmarkMI.setEnabled(true);

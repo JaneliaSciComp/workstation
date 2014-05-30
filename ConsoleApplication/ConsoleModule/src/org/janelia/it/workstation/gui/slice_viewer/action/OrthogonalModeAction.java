@@ -1,5 +1,8 @@
 package org.janelia.it.workstation.gui.slice_viewer.action;
 
+import org.janelia.it.workstation.gui.util.Icons;
+import org.janelia.it.workstation.signal.Signal1;
+
 import java.awt.event.ActionEvent;
 
 import javax.swing.AbstractAction;
@@ -15,8 +18,8 @@ public class OrthogonalModeAction extends AbstractAction
 		ORTHOGONAL, Z_VIEW
 	}
 
-	public org.janelia.it.workstation.signal.Signal1<OrthogonalMode> orthogonalModeChanged =
-			new org.janelia.it.workstation.signal.Signal1<OrthogonalMode>();
+	public Signal1<OrthogonalMode> orthogonalModeChanged =
+			new Signal1<OrthogonalMode>();
 	
 	private OrthogonalMode mode;
 	
@@ -42,7 +45,7 @@ public class OrthogonalModeAction extends AbstractAction
 		// Modify values so next trigger activates OPPOSITE mode.
 		// System.out.println("Set Z View Mode");
 		putValue(NAME, "Show Orthogonal Views");
-		putValue(SMALL_ICON, org.janelia.it.workstation.gui.util.Icons.getIcon("OrthogonalMode.png"));
+		putValue(SMALL_ICON, Icons.getIcon("OrthogonalMode.png"));
 		putValue(SHORT_DESCRIPTION, 
 				"Show orthogonal X/Y/Z slice views.");
 	}
@@ -52,7 +55,7 @@ public class OrthogonalModeAction extends AbstractAction
 		// Modify values so next trigger activates OPPOSITE mode.
 		// System.out.println("Set Orthogonal Mode");
 		putValue(NAME, "Show Z Slice View");
-		putValue(SMALL_ICON, org.janelia.it.workstation.gui.util.Icons.getIcon("ZViewMode.png"));
+		putValue(SMALL_ICON, Icons.getIcon("ZViewMode.png"));
 		putValue(SHORT_DESCRIPTION, 
 				"View slices down Z axis.");
 	}

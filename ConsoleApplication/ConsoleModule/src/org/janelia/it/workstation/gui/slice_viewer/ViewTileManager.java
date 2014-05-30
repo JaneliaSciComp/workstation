@@ -6,6 +6,9 @@ import java.util.Set;
 
 import org.janelia.it.workstation.geom.CoordinateAxis;
 import org.janelia.it.workstation.geom.Rotation3d;
+import org.janelia.it.workstation.geom.Vec3;
+import org.janelia.it.workstation.gui.camera.Camera3d;
+import org.janelia.it.workstation.gui.viewer3d.BoundingBox3d;
 import org.janelia.it.workstation.gui.viewer3d.interfaces.Viewport;
 import org.janelia.it.workstation.signal.Signal1;
 import org.janelia.it.workstation.signal.Slot1;
@@ -72,22 +75,22 @@ public class ViewTileManager {
 	
 	// Latest tiles list stores the current desired tile set, even if
 	// not all of the tiles are ready.
-	private org.janelia.it.workstation.gui.slice_viewer.TileSet latestTiles;
+	private TileSet latestTiles;
 	// Emergency tiles list stores a recently displayed view, so that
 	// SOMETHING gets displayed while the current view is being loaded.
-	private org.janelia.it.workstation.gui.slice_viewer.TileSet emergencyTiles;
+	private TileSet emergencyTiles;
 	// LastGoodTiles always hold a displayable tile set, even when emergency
 	// tiles are loading.
-	private org.janelia.it.workstation.gui.slice_viewer.TileSet lastGoodTiles;
+	private TileSet lastGoodTiles;
 	private Set<TileIndex> neededTextures = new HashSet<TileIndex>();
 	private Set<TileIndex> displayableTextures = new HashSet<TileIndex>();
 
 	// private double zoomOffset = 0.5; // tradeoff between optimal resolution (0.0) and speed.
-	private org.janelia.it.workstation.gui.slice_viewer.TileSet previousTiles;
+	private TileSet previousTiles;
 
-	private org.janelia.it.workstation.gui.slice_viewer.TileConsumer tileConsumer;
+	private TileConsumer tileConsumer;
 	private TextureCache textureCache;
-	private org.janelia.it.workstation.gui.slice_viewer.SharedVolumeImage volumeImage;
+	private SharedVolumeImage volumeImage;
 
 	public Signal1<LoadStatus> loadStatusChanged = new Signal1<LoadStatus>();
 	
@@ -101,7 +104,7 @@ public class ViewTileManager {
 		}
 	};
 	
-	public ViewTileManager(org.janelia.it.workstation.gui.slice_viewer.TileConsumer tileConsumer)
+	public ViewTileManager(TileConsumer tileConsumer)
 	{
 		this.tileConsumer = tileConsumer;
 	}
@@ -114,12 +117,12 @@ public class ViewTileManager {
 			lastGoodTiles.clear();
 	}
 	
-	public org.janelia.it.workstation.gui.slice_viewer.TileSet createLatestTiles()
+	public TileSet createLatestTiles()
 	{
 		return createLatestTiles(tileConsumer);
 	}
 	
-	protected org.janelia.it.workstation.gui.slice_viewer.TileSet createLatestTiles(org.janelia.it.workstation.gui.slice_viewer.TileConsumer tileConsumer)
+	protected TileSet createLatestTiles(TileConsumer tileConsumer)
 	{
 		return createLatestTiles(tileConsumer.getCamera(), 
 				tileConsumer.getViewport(),
@@ -128,10 +131,10 @@ public class ViewTileManager {
 	}
 	
 	// June 20, 2013 Generalized for non-Z axes
-	public org.janelia.it.workstation.gui.slice_viewer.TileSet createLatestTiles(org.janelia.it.workstation.gui.camera.Camera3d camera, Viewport viewport,
+	public TileSet createLatestTiles(Camera3d camera, Viewport viewport,
 			CoordinateAxis sliceAxis, Rotation3d viewerInGround)
 	{
-		org.janelia.it.workstation.gui.slice_viewer.TileSet result = new org.janelia.it.workstation.gui.slice_viewer.TileSet();
+		TileSet result = new TileSet();
 		if (volumeImage.getLoadAdapter() == null)
 			return result;
 		if (! tileConsumer.isShowing()) // Hidden viewer shows no tiles.
@@ -152,9 +155,9 @@ public class ViewTileManager {
 		// Rearrange from rotation matrix
 		// Which axis (x,y,z) corresponds to width, height, and depth?
 		for (int whd = 0; whd < 3; ++whd) {
-			org.janelia.it.workstation.geom.Vec3 vWhd = new org.janelia.it.workstation.geom.Vec3(0,0,0);
+			Vec3 vWhd = new Vec3(0,0,0);
 			vWhd.set(whd, 1.0);
-			org.janelia.it.workstation.geom.Vec3 vXyz = viewerInGround.times(vWhd);
+			Vec3 vXyz = viewerInGround.times(vWhd);
 			double max = 0.0;
 			for (int xyz = 0; xyz < 3; ++xyz) {
 				double test = Math.abs(vXyz.get(xyz));
@@ -166,11 +169,11 @@ public class ViewTileManager {
 		}
 		
 		// 2) z or other slice axisIndex (d: depth)
-		org.janelia.it.workstation.geom.Vec3 focus = camera.getFocus();
+		Vec3 focus = camera.getFocus();
 		double fD = focus.get(xyzFromWhd[2]);
 		// Correct for bottom Y origin of Raveler tile coordinate system
 		// (everything else is top Y origin: image, our OpenGL, user facing coordinate system)
-		org.janelia.it.workstation.gui.viewer3d.BoundingBox3d bb = volumeImage.getBoundingBox3d();
+		BoundingBox3d bb = volumeImage.getBoundingBox3d();
 		double bottomY = bb.getMax().getY();
 		if (xyzFromWhd[2] == 1) {
 			fD = bottomY - fD - 0.5; // bounding box extends 0.5 voxels past final slice
@@ -269,20 +272,20 @@ public class ViewTileManager {
 		this.textureCache = textureCache;
 	}
 
-	public org.janelia.it.workstation.gui.slice_viewer.TileConsumer getTileConsumer() {
+	public TileConsumer getTileConsumer() {
 		return tileConsumer;
 	}
 
-	public org.janelia.it.workstation.gui.slice_viewer.SharedVolumeImage getVolumeImage() {
+	public SharedVolumeImage getVolumeImage() {
 		return volumeImage;
 	}
 
-	public void setVolumeImage(org.janelia.it.workstation.gui.slice_viewer.SharedVolumeImage volumeImage) {
+	public void setVolumeImage(SharedVolumeImage volumeImage) {
 		this.volumeImage = volumeImage;
 	}
 
 	// Produce a list of renderable tiles to complete this view
-	public org.janelia.it.workstation.gui.slice_viewer.TileSet updateDisplayTiles()
+	public TileSet updateDisplayTiles()
 	{
 		// Update latest tile set
 		latestTiles = createLatestTiles();
@@ -290,7 +293,7 @@ public class ViewTileManager {
 
 		// Push latest textures to front of LRU cache
 		for (Tile2d tile : latestTiles) {
-			org.janelia.it.workstation.gui.slice_viewer.TileTexture texture = tile.getBestTexture();
+			TileTexture texture = tile.getBestTexture();
 			if (texture == null)
 				continue;
 			textureCache.markHistorical(texture);
@@ -307,9 +310,9 @@ public class ViewTileManager {
 			emergencyTiles = latestTiles;
 
 		// Which tile set will we display this time?
-		org.janelia.it.workstation.gui.slice_viewer.TileSet result = latestTiles;
+		TileSet result = latestTiles;
 		if (latestTiles.canDisplay()) {
-			if (latestTiles.getLoadStatus() == org.janelia.it.workstation.gui.slice_viewer.TileSet.LoadStatus.BEST_TEXTURES_LOADED)
+			if (latestTiles.getLoadStatus() == TileSet.LoadStatus.BEST_TEXTURES_LOADED)
 				setLoadStatus(LoadStatus.BEST_TEXTURES_LOADED);
 			else
 				setLoadStatus(LoadStatus.IMPERFECT_TEXTURES_LOADED);
@@ -393,7 +396,7 @@ public class ViewTileManager {
 		return result;
 	}	
 
-	public org.janelia.it.workstation.gui.slice_viewer.TileSet getLatestTiles() {
+	public TileSet getLatestTiles() {
 		return latestTiles;
 	}
 	

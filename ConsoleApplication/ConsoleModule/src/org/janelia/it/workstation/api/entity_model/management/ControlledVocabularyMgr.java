@@ -1,8 +1,13 @@
 package org.janelia.it.workstation.api.entity_model.management;
 
 
+import org.janelia.it.workstation.api.facade.abstract_facade.ControlledVocabService;
+import org.janelia.it.workstation.api.facade.facade_mgr.FacadeManager;
+import org.janelia.it.workstation.api.facade.facade_mgr.InUseProtocolListener;
 import org.janelia.it.workstation.api.stub.data.ControlledVocabUtil;
 import org.janelia.it.jacs.shared.utils.ControlledVocabElement;
+import org.janelia.it.workstation.api.stub.data.ControlledVocabulary;
+import org.janelia.it.workstation.api.stub.data.NoDataException;
 
 import java.util.ArrayList;
 import java.util.Hashtable;
@@ -11,14 +16,14 @@ import java.util.Map;
 
 public class ControlledVocabularyMgr {
 
-    private org.janelia.it.workstation.api.facade.abstract_facade.ControlledVocabService ctrlVocabServ = null;
+    private ControlledVocabService ctrlVocabServ = null;
     private Map vocabHash = new Hashtable();
     private boolean cacheControlledVocabs = true;
-    private final org.janelia.it.workstation.api.stub.data.ControlledVocabulary EMPTY_VOCAB = new org.janelia.it.workstation.api.stub.data.ControlledVocabulary();
-    private org.janelia.it.workstation.api.facade.facade_mgr.InUseProtocolListener protocolListener = new MyInUseProtocolListener();
+    private final ControlledVocabulary EMPTY_VOCAB = new ControlledVocabulary();
+    private InUseProtocolListener protocolListener = new MyInUseProtocolListener();
 
     private ControlledVocabularyMgr() {
-        org.janelia.it.workstation.api.facade.facade_mgr.FacadeManager.addInUseProtocolListener(protocolListener);
+        FacadeManager.addInUseProtocolListener(protocolListener);
     }
 
     private static ControlledVocabularyMgr staticMgr = new ControlledVocabularyMgr();
@@ -31,10 +36,10 @@ public class ControlledVocabularyMgr {
         return ControlledVocabUtil.isNullVocabIndex(vocabIndex);
     }
 
-    public org.janelia.it.workstation.api.stub.data.ControlledVocabulary getControlledVocabulary(Long entityOID, String vocabIndex) {
+    public ControlledVocabulary getControlledVocabulary(Long entityOID, String vocabIndex) {
         // Return a cached one if we have it
         if (this.isCaching()) {
-            org.janelia.it.workstation.api.stub.data.ControlledVocabulary retVal = (org.janelia.it.workstation.api.stub.data.ControlledVocabulary) this.vocabHash.get(vocabIndex);
+            ControlledVocabulary retVal = (ControlledVocabulary) this.vocabHash.get(vocabIndex);
             if (retVal != null) {
                 return retVal;
             }
@@ -54,18 +59,18 @@ public class ControlledVocabularyMgr {
                 vocabElements = ControlledVocabUtil.getControlledVocab(vocabIndex, map);
             }
         }
-        catch (org.janelia.it.workstation.api.stub.data.NoDataException noDataEx) {
+        catch (NoDataException noDataEx) {
             try {
                 Map map = ControlledVocabUtil.getControlledVocabulariesFromResource();
                 vocabElements = ControlledVocabUtil.getControlledVocab(vocabIndex, map);
             }
-            catch (org.janelia.it.workstation.api.stub.data.NoDataException noDataEx1) {
+            catch (NoDataException noDataEx1) {
                 return EMPTY_VOCAB;
             }
         }
 
         List orderedNames = new ArrayList(vocabElements.length);
-        org.janelia.it.workstation.api.stub.data.ControlledVocabulary retVal = new org.janelia.it.workstation.api.stub.data.ControlledVocabulary(orderedNames);
+        ControlledVocabulary retVal = new ControlledVocabulary(orderedNames);
         for (int i = 0; i < vocabElements.length; i++) {
             orderedNames.add(vocabElements[i].value);
             retVal.addEntry(vocabElements[i].value, vocabElements[i].name);
@@ -108,7 +113,7 @@ public class ControlledVocabularyMgr {
     protected boolean checkSetConnection() {
         if (this.ctrlVocabServ == null) {
             try {
-                this.ctrlVocabServ = org.janelia.it.workstation.api.facade.facade_mgr.FacadeManager.getFacadeManager().getControlledVocabService();
+                this.ctrlVocabServ = FacadeManager.getFacadeManager().getControlledVocabService();
             }
             catch (Exception ex) {
                 return false;
@@ -117,7 +122,7 @@ public class ControlledVocabularyMgr {
         return true;
     }
 
-    private class MyInUseProtocolListener implements org.janelia.it.workstation.api.facade.facade_mgr.InUseProtocolListener {
+    private class MyInUseProtocolListener implements InUseProtocolListener {
         public void protocolAddedToInUseList(String protocol) {
             cleanCache();
         }

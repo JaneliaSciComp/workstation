@@ -1,5 +1,6 @@
 package org.janelia.it.workstation.gui.framework.viewer;
 
+import org.janelia.it.workstation.api.entity_model.management.ModelMgr;
 import org.janelia.it.workstation.gui.dialogs.AnnotationBuilderDialog;
 import org.janelia.it.workstation.gui.framework.actions.BulkEditAnnotationKeyValueAction;
 import org.janelia.it.workstation.gui.framework.actions.RemoveAnnotationKeyValueAction;
@@ -8,6 +9,7 @@ import org.janelia.it.workstation.gui.framework.outline.OntologyOutline;
 import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.workstation.gui.util.Icons;
 import org.janelia.it.workstation.model.entity.RootedEntity;
+import org.janelia.it.workstation.model.utils.AnnotationSession;
 import org.janelia.it.workstation.shared.util.Utils;
 import org.janelia.it.workstation.shared.workers.SimpleWorker;
 import org.janelia.it.jacs.model.entity.Entity;
@@ -31,7 +33,7 @@ import java.util.List;
  *
  * @author <a href="mailto:rokickik@janelia.hhmi.org">Konrad Rokicki</a>
  */
-public class AnnotationTagCloudPanel extends TagCloudPanel<OntologyAnnotation> implements org.janelia.it.workstation.gui.framework.viewer.AnnotationView {
+public class AnnotationTagCloudPanel extends TagCloudPanel<OntologyAnnotation> implements AnnotationView {
 	
 	private static final Logger log = LoggerFactory.getLogger(AnnotationTagCloudPanel.class);
 	
@@ -43,7 +45,7 @@ public class AnnotationTagCloudPanel extends TagCloudPanel<OntologyAnnotation> i
 
             @Override
             protected void doStuff() throws Exception {
-            	org.janelia.it.workstation.api.entity_model.management.ModelMgr.getModelMgr().removeAnnotation(tag.getId());
+            	ModelMgr.getModelMgr().removeAnnotation(tag.getId());
             }
 
             @Override
@@ -65,8 +67,8 @@ public class AnnotationTagCloudPanel extends TagCloudPanel<OntologyAnnotation> i
     @Override
     protected void showPopupMenu(final MouseEvent e, final OntologyAnnotation tag) {
     	
-    	org.janelia.it.workstation.gui.framework.viewer.Viewer viewer = SessionMgr.getBrowser().getViewerManager().getActiveViewer();
-		List<String> selectionIds = org.janelia.it.workstation.api.entity_model.management.ModelMgr.getModelMgr().getEntitySelectionModel().getSelectedEntitiesIds(viewer.getSelectionCategory());
+    	Viewer viewer = SessionMgr.getBrowser().getViewerManager().getActiveViewer();
+		List<String> selectionIds = ModelMgr.getModelMgr().getEntitySelectionModel().getSelectedEntitiesIds(viewer.getSelectionCategory());
 		List<RootedEntity> rootedEntityList = new ArrayList<RootedEntity>();
 		for (String entityId : selectionIds) {
 			rootedEntityList.add(viewer.getRootedEntityById(entityId));
@@ -93,7 +95,7 @@ public class AnnotationTagCloudPanel extends TagCloudPanel<OntologyAnnotation> i
 
                 try {
                     String tmpOntKeyId = tag.getEntity().getValueByAttributeName(EntityConstants.ATTRIBUTE_ANNOTATION_ONTOLOGY_KEY_ENTITY_ID);
-                    Entity tmpOntologyTerm = org.janelia.it.workstation.api.entity_model.management.ModelMgr.getModelMgr().getEntityById(tmpOntKeyId);
+                    Entity tmpOntologyTerm = ModelMgr.getModelMgr().getEntityById(tmpOntKeyId);
                     if (null!=tmpOntologyTerm) {
                         String tmpOntologyTermType = tmpOntologyTerm.getValueByAttributeName(EntityConstants.ATTRIBUTE_ONTOLOGY_TERM_TYPE);
                         if (EntityConstants.VALUE_ONTOLOGY_TERM_TYPE_ENUM.equals(tmpOntologyTermType) ||
@@ -159,8 +161,8 @@ public class AnnotationTagCloudPanel extends TagCloudPanel<OntologyAnnotation> i
                         String namePrefix = tmpName.substring(0,tmpName.indexOf("=")+2);
                         tag.getEntity().setName(namePrefix+value);
                         try {
-                            Entity tmpAnnotatedEntity = org.janelia.it.workstation.api.entity_model.management.ModelMgr.getModelMgr().getEntityById(tag.getTargetEntityId());
-                            org.janelia.it.workstation.api.entity_model.management.ModelMgr.getModelMgr().saveOrUpdateAnnotation(tmpAnnotatedEntity, tag.getEntity());
+                            Entity tmpAnnotatedEntity = ModelMgr.getModelMgr().getEntityById(tag.getTargetEntityId());
+                            ModelMgr.getModelMgr().saveOrUpdateAnnotation(tmpAnnotatedEntity, tag.getEntity());
                         }
                         catch (Exception e1) {
                             e1.printStackTrace();
@@ -175,7 +177,7 @@ public class AnnotationTagCloudPanel extends TagCloudPanel<OntologyAnnotation> i
             copyItem.addActionListener(new ActionListener() {
                 @Override
                 public void actionPerformed(ActionEvent actionEvent) {
-                    org.janelia.it.workstation.api.entity_model.management.ModelMgr.getModelMgr().setCurrentSelectedOntologyAnnotation(tag);
+                    ModelMgr.getModelMgr().setCurrentSelectedOntologyAnnotation(tag);
                 }
             });
             popupMenu.add(copyItem);
@@ -198,7 +200,7 @@ public class AnnotationTagCloudPanel extends TagCloudPanel<OntologyAnnotation> i
 	protected JLabel createTagLabel(OntologyAnnotation tag) {
 		JLabel label = super.createTagLabel(tag);
 		
-		label.setBackground(org.janelia.it.workstation.api.entity_model.management.ModelMgr.getModelMgr().getUserColorMapping().getColor(tag.getOwner()));
+		label.setBackground(ModelMgr.getModelMgr().getUserColorMapping().getColor(tag.getOwner()));
 
         if (tag.isComputation()) {
             label.setToolTipText("This annotation was computationally inferred");
@@ -208,7 +210,7 @@ public class AnnotationTagCloudPanel extends TagCloudPanel<OntologyAnnotation> i
             label.setToolTipText("This annotation was made by "+tag.getOwner());
         }
         
-		org.janelia.it.workstation.model.utils.AnnotationSession currentSession = org.janelia.it.workstation.api.entity_model.management.ModelMgr.getModelMgr().getCurrentAnnotationSession();
+		AnnotationSession currentSession = ModelMgr.getModelMgr().getCurrentAnnotationSession();
 		if (currentSession != null) {
 			if (tag.getSessionId() != null && tag.getSessionId().equals(currentSession.getId())) {
 				// This annotation is in the current session, so display it normally.	

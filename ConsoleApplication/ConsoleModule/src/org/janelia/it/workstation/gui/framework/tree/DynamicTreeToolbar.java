@@ -18,6 +18,7 @@ import javax.swing.event.DocumentListener;
 import javax.swing.text.Position.Bias;
 import javax.swing.tree.DefaultMutableTreeNode;
 
+import org.janelia.it.workstation.gui.util.Icons;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -46,7 +47,7 @@ public class DynamicTreeToolbar extends JPanel {
         toolBar.setFloatable(false);
         toolBar.setRollover(true);
         
-        expandAllButton = new JButton(org.janelia.it.workstation.gui.util.Icons.getExpandAllIcon());
+        expandAllButton = new JButton(Icons.getExpandAllIcon());
         expandAllButton.setToolTipText("Expand all the nodes in the tree.");
         expandAllButton.setFocusable(false);
         expandAllButton.addActionListener(new ActionListener() {
@@ -63,7 +64,7 @@ public class DynamicTreeToolbar extends JPanel {
         });
         toolBar.add(expandAllButton);
 
-        collapseAllButton = new JButton(org.janelia.it.workstation.gui.util.Icons.getCollapseAllIcon());
+        collapseAllButton = new JButton(Icons.getCollapseAllIcon());
         collapseAllButton.setToolTipText("Collapse all the nodes in the tree.");
         collapseAllButton.setFocusable(false);
         collapseAllButton.addActionListener(new ActionListener() {
@@ -81,7 +82,7 @@ public class DynamicTreeToolbar extends JPanel {
         });
         toolBar.add(collapseAllButton);
 
-        refreshButton = new JButton(org.janelia.it.workstation.gui.util.Icons.getRefreshIcon());
+        refreshButton = new JButton(Icons.getRefreshIcon());
         refreshButton.setToolTipText("Refresh the data in the tree.");
         refreshButton.setFocusable(false);
         refreshButton.addActionListener(new ActionListener() {
@@ -113,7 +114,7 @@ public class DynamicTreeToolbar extends JPanel {
         toolBar.add(textField);
 
         JButton prevButton = new JButton();
-        prevButton.setIcon(org.janelia.it.workstation.gui.util.Icons.getIcon("resultset_previous.png"));
+        prevButton.setIcon(Icons.getIcon("resultset_previous.png"));
         prevButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
@@ -124,7 +125,7 @@ public class DynamicTreeToolbar extends JPanel {
         toolBar.add(prevButton);
         
         JButton nextButton = new JButton();
-        nextButton.setIcon(org.janelia.it.workstation.gui.util.Icons.getIcon("resultset_next.png"));
+        nextButton.setIcon(Icons.getIcon("resultset_next.png"));
         nextButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {

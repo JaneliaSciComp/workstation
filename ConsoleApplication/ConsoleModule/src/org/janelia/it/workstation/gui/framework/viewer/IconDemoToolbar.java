@@ -90,8 +90,8 @@ public abstract class IconDemoToolbar extends ViewerToolbar {
 
         toolbar.addSeparator();
 
-        imageSizeSlider = new JSlider(org.janelia.it.workstation.gui.framework.viewer.ImagesPanel.MIN_IMAGE_WIDTH, org.janelia.it.workstation.gui.framework.viewer.ImagesPanel.MAX_IMAGE_WIDTH,
-                org.janelia.it.workstation.gui.framework.viewer.ImagesPanel.DEFAULT_THUMBNAIL_SIZE);
+        imageSizeSlider = new JSlider(ImagesPanel.MIN_IMAGE_WIDTH, ImagesPanel.MAX_IMAGE_WIDTH,
+                ImagesPanel.DEFAULT_THUMBNAIL_SIZE);
         imageSizeSlider.setFocusable(false);
         imageSizeSlider.setMaximumSize(new Dimension(200, Integer.MAX_VALUE));
         imageSizeSlider.setToolTipText("Image size percentage");

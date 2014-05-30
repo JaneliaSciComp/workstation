@@ -3,8 +3,10 @@ package org.janelia.it.workstation.tracing;
 import org.janelia.it.workstation.geom.CoordinateAxis;
 import org.janelia.it.workstation.geom.Vec3;
 import org.janelia.it.workstation.gui.slice_viewer.Subvolume;
+import org.janelia.it.workstation.gui.slice_viewer.TileFormat;
 import org.janelia.it.workstation.octree.ZoomLevel;
 import org.janelia.it.workstation.octree.ZoomedVoxelIndex;
+import org.janelia.it.workstation.shared.workers.BackgroundWorker;
 import org.janelia.it.workstation.signal.Signal1;
 
 import java.util.List;
@@ -16,7 +18,7 @@ import java.util.Vector;
  *
  * djo, 1/14
  */
-public class PathTraceToParentWorker extends org.janelia.it.workstation.shared.workers.BackgroundWorker {
+public class PathTraceToParentWorker extends BackgroundWorker {
 
     private PathTraceToParentRequest request;
 
@@ -46,14 +48,14 @@ public class PathTraceToParentWorker extends org.janelia.it.workstation.shared.w
         // note: can also use setProgress(long curr, long total)
 
         setStatus("Retrieving data");
-        org.janelia.it.workstation.gui.slice_viewer.TileFormat tileFormat = request.getImageVolme().getLoadAdapter().getTileFormat();
+        TileFormat tileFormat = request.getImageVolme().getLoadAdapter().getTileFormat();
         // A series of conversions to get to ZoomedVoxelIndex
         Vec3 vec3_1 = request.getXyz1();
         Vec3 vec3_2 = request.getXyz2();
-        org.janelia.it.workstation.gui.slice_viewer.TileFormat.MicrometerXyz um1 = new org.janelia.it.workstation.gui.slice_viewer.TileFormat.MicrometerXyz(vec3_1.getX(), vec3_1.getY(), vec3_1.getZ());
-        org.janelia.it.workstation.gui.slice_viewer.TileFormat.MicrometerXyz um2 = new org.janelia.it.workstation.gui.slice_viewer.TileFormat.MicrometerXyz(vec3_2.getX(), vec3_2.getY(), vec3_2.getZ());
-        org.janelia.it.workstation.gui.slice_viewer.TileFormat.VoxelXyz vox1 = tileFormat.voxelXyzForMicrometerXyz(um1);
-        org.janelia.it.workstation.gui.slice_viewer.TileFormat.VoxelXyz vox2 = tileFormat.voxelXyzForMicrometerXyz(um2);
+        TileFormat.MicrometerXyz um1 = new TileFormat.MicrometerXyz(vec3_1.getX(), vec3_1.getY(), vec3_1.getZ());
+        TileFormat.MicrometerXyz um2 = new TileFormat.MicrometerXyz(vec3_2.getX(), vec3_2.getY(), vec3_2.getZ());
+        TileFormat.VoxelXyz vox1 = tileFormat.voxelXyzForMicrometerXyz(um1);
+        TileFormat.VoxelXyz vox2 = tileFormat.voxelXyzForMicrometerXyz(um2);
         ZoomLevel zoomLevel = new ZoomLevel(0);
         ZoomedVoxelIndex zv1 = tileFormat.zoomedVoxelIndexForVoxelXyz(
                 vox1, zoomLevel, CoordinateAxis.Z);
@@ -74,7 +76,7 @@ public class PathTraceToParentWorker extends org.janelia.it.workstation.shared.w
 
         Subvolume subvolume = new Subvolume(v1pad, v2pad, request.getImageVolme(),
                 request.getTextureCache());
-        org.janelia.it.workstation.tracing.AStar astar = new org.janelia.it.workstation.tracing.AStar(subvolume);
+        AStar astar = new AStar(subvolume);
 
         setStatus("Tracing");
         List<ZoomedVoxelIndex> path = astar.trace(zv1, zv2, timeout); // This is the slow part
@@ -92,9 +94,9 @@ public class PathTraceToParentWorker extends org.janelia.it.workstation.shared.w
             setStatus("Finishing");
 
             // launder the request down to a more generic request
-            org.janelia.it.workstation.tracing.PathTraceRequest simpleRequest = new org.janelia.it.workstation.tracing.PathTraceRequest(request.getXyz1(),
+            PathTraceRequest simpleRequest = new PathTraceRequest(request.getXyz1(),
                     request.getXyz2(), request.getAnchorGuid1(), request.getAnchorGuid2());
-            org.janelia.it.workstation.tracing.TracedPathSegment result = new org.janelia.it.workstation.tracing.TracedPathSegment(simpleRequest, path, intensities);
+            TracedPathSegment result = new TracedPathSegment(simpleRequest, path, intensities);
             pathTracedSignal.emit(result);
 
             setStatus("Done");

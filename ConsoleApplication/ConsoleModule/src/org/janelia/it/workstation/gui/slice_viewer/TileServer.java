@@ -11,6 +11,13 @@ import java.util.Map;
 import java.util.Set;
 import java.util.Vector;
 
+import org.janelia.it.workstation.geom.CoordinateAxis;
+import org.janelia.it.workstation.gui.slice_viewer.generator.InterleavedIterator;
+import org.janelia.it.workstation.gui.slice_viewer.generator.MinResSliceGenerator;
+import org.janelia.it.workstation.gui.slice_viewer.generator.SliceGenerator;
+import org.janelia.it.workstation.gui.slice_viewer.generator.UmbrellaSliceGenerator;
+import org.janelia.it.workstation.signal.Signal1;
+import org.janelia.it.workstation.signal.Slot;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -47,13 +54,13 @@ implements ComponentListener // so changes in viewer size/visibility can be trac
 	
 	// New path for handling tile updates July 9, 2013 cmb
 	private Set<TileIndex> currentDisplayTiles = new HashSet<TileIndex>();
-	public org.janelia.it.workstation.signal.Slot refreshCurrentTileSetSlot = new org.janelia.it.workstation.signal.Slot() {
+	public Slot refreshCurrentTileSetSlot = new Slot() {
 		@Override
 		public void execute() {refreshCurrentTileSet();}
 	};
 	
 	// Initiate loading of low resolution textures
-	private org.janelia.it.workstation.signal.Slot startMinResPreFetchSlot = new org.janelia.it.workstation.signal.Slot() {
+	private Slot startMinResPreFetchSlot = new Slot() {
 		@Override
 		public void execute() {
 			// log.info("starting pre fetch of lowest resolution tiles");
@@ -63,13 +70,13 @@ implements ComponentListener // so changes in viewer size/visibility can be trac
 			// queue load of all low resolution textures
 			minResPreFetcher.clear();
 			TileFormat format = sharedVolumeImage.getLoadAdapter().getTileFormat();
-			List<org.janelia.it.workstation.gui.slice_viewer.generator.MinResSliceGenerator> generators = new Vector<org.janelia.it.workstation.gui.slice_viewer.generator.MinResSliceGenerator>();
+			List<MinResSliceGenerator> generators = new Vector<MinResSliceGenerator>();
 			if (format.isHasXSlices())
-				generators.add(new org.janelia.it.workstation.gui.slice_viewer.generator.MinResSliceGenerator(format, org.janelia.it.workstation.geom.CoordinateAxis.X));
+				generators.add(new MinResSliceGenerator(format, CoordinateAxis.X));
 			if (format.isHasYSlices())
-				generators.add(new org.janelia.it.workstation.gui.slice_viewer.generator.MinResSliceGenerator(format, org.janelia.it.workstation.geom.CoordinateAxis.Y));
+				generators.add(new MinResSliceGenerator(format, CoordinateAxis.Y));
 			if (format.isHasZSlices())
-				generators.add(new org.janelia.it.workstation.gui.slice_viewer.generator.MinResSliceGenerator(format, org.janelia.it.workstation.geom.CoordinateAxis.Z));
+				generators.add(new MinResSliceGenerator(format, CoordinateAxis.Z));
 
 			Iterable<TileIndex> tileGenerator;
 			if (generators.size() < 1)
@@ -77,10 +84,10 @@ implements ComponentListener // so changes in viewer size/visibility can be trac
 			else if (generators.size() == 1)
 				tileGenerator = generators.get(0);
 			else {
-				Iterator<org.janelia.it.workstation.gui.slice_viewer.generator.MinResSliceGenerator> i = generators.iterator();
-				tileGenerator = new org.janelia.it.workstation.gui.slice_viewer.generator.InterleavedIterator<TileIndex>(i.next(), i.next());
+				Iterator<MinResSliceGenerator> i = generators.iterator();
+				tileGenerator = new InterleavedIterator<TileIndex>(i.next(), i.next());
 				while (i.hasNext()) {
-					tileGenerator = new org.janelia.it.workstation.gui.slice_viewer.generator.InterleavedIterator<TileIndex>(tileGenerator, i.next());
+					tileGenerator = new InterleavedIterator<TileIndex>(tileGenerator, i.next());
 				}
 			}
 			int tileCount = 0;
@@ -92,10 +99,10 @@ implements ComponentListener // so changes in viewer size/visibility can be trac
 		}
 	};
 
-	public org.janelia.it.workstation.signal.Signal1<TileIndex> textureLoadedSignal = new org.janelia.it.workstation.signal.Signal1<TileIndex>();
-	public org.janelia.it.workstation.signal.Signal1<LoadStatus> loadStatusChangedSignal = new org.janelia.it.workstation.signal.Signal1<LoadStatus>();
+	public Signal1<TileIndex> textureLoadedSignal = new Signal1<TileIndex>();
+	public Signal1<LoadStatus> loadStatusChangedSignal = new Signal1<LoadStatus>();
 
-	public org.janelia.it.workstation.signal.Slot onVolumeInitializedSlot = new org.janelia.it.workstation.signal.Slot() {
+	public Slot onVolumeInitializedSlot = new Slot() {
 		@Override
 		public void execute() {
             if (sharedVolumeImage == null)
@@ -109,7 +116,7 @@ implements ComponentListener // so changes in viewer size/visibility can be trac
 		}
 	};
 	
-	private org.janelia.it.workstation.signal.Slot updateLoadStatusSlot = new org.janelia.it.workstation.signal.Slot() {
+	private Slot updateLoadStatusSlot = new Slot() {
 		@Override
 		public void execute() {
 			updateLoadStatus();
@@ -198,7 +205,7 @@ implements ComponentListener // so changes in viewer size/visibility can be trac
 		return textureCache;
 	}
 	
-	public org.janelia.it.workstation.signal.Signal1<URL> getVolumeInitializedSignal() {
+	public Signal1<URL> getVolumeInitializedSignal() {
 		return sharedVolumeImage.volumeInitializedSignal;
 	}
 
@@ -282,10 +289,10 @@ implements ComponentListener // so changes in viewer size/visibility can be trac
 			*/
 			
 			// Sort tiles into X, Y, and Z slices to help with generators
-			Map<org.janelia.it.workstation.geom.CoordinateAxis, TileSet> axisTiles = new HashMap<org.janelia.it.workstation.geom.CoordinateAxis, TileSet>();
+			Map<CoordinateAxis, TileSet> axisTiles = new HashMap<CoordinateAxis, TileSet>();
 			for (Tile2d tile : currentTiles) {
 				TileIndex i = tile.getIndex();
-				org.janelia.it.workstation.geom.CoordinateAxis axis = i.getSliceAxis();
+				CoordinateAxis axis = i.getSliceAxis();
 				if (! axisTiles.containsKey(axis))
 					axisTiles.put(axis, new TileSet());
 				axisTiles.get(axis).add(tile);
@@ -293,13 +300,13 @@ implements ComponentListener // so changes in viewer size/visibility can be trac
 			// Create one umbrella generator for each (used) direction.
 			List<Iterable<TileIndex>> umbrellas = new Vector<Iterable<TileIndex>>();
 			List<Iterable<TileIndex>> fullSlices = new Vector<Iterable<TileIndex>>();
-			for (org.janelia.it.workstation.geom.CoordinateAxis axis : axisTiles.keySet()) {
+			for (CoordinateAxis axis : axisTiles.keySet()) {
 				TileSet tiles = axisTiles.get(axis);
 				// Umbrella Z scan
-				Iterable<TileIndex> sliceGen = new org.janelia.it.workstation.gui.slice_viewer.generator.UmbrellaSliceGenerator(getLoadAdapter().getTileFormat(), tiles);
+				Iterable<TileIndex> sliceGen = new UmbrellaSliceGenerator(getLoadAdapter().getTileFormat(), tiles);
 				umbrellas.add(sliceGen);
 				// Full resolution Z scan
-				sliceGen = new org.janelia.it.workstation.gui.slice_viewer.generator.SliceGenerator(getLoadAdapter().getTileFormat(), tiles);
+				sliceGen = new SliceGenerator(getLoadAdapter().getTileFormat(), tiles);
 				fullSlices.add(sliceGen);
 			}
 			// Interleave the various umbrella generators
@@ -312,14 +319,14 @@ implements ComponentListener // so changes in viewer size/visibility can be trac
 				}
 				else { // more than one axis
 					Iterator<Iterable<TileIndex>> sliceIter = umbrellas.iterator();
-					combinedUmbrella = new org.janelia.it.workstation.gui.slice_viewer.generator.InterleavedIterator<TileIndex>(sliceIter.next(), sliceIter.next());
+					combinedUmbrella = new InterleavedIterator<TileIndex>(sliceIter.next(), sliceIter.next());
 					while (sliceIter.hasNext())
-						combinedUmbrella = new org.janelia.it.workstation.gui.slice_viewer.generator.InterleavedIterator<TileIndex>(combinedUmbrella, sliceIter.next());
+						combinedUmbrella = new InterleavedIterator<TileIndex>(combinedUmbrella, sliceIter.next());
 					//
 					sliceIter = fullSlices.iterator();
-					combinedFullSlice = new org.janelia.it.workstation.gui.slice_viewer.generator.InterleavedIterator<TileIndex>(sliceIter.next(), sliceIter.next());
+					combinedFullSlice = new InterleavedIterator<TileIndex>(sliceIter.next(), sliceIter.next());
 					while (sliceIter.hasNext())
-						combinedFullSlice = new org.janelia.it.workstation.gui.slice_viewer.generator.InterleavedIterator<TileIndex>(combinedFullSlice, sliceIter.next());
+						combinedFullSlice = new InterleavedIterator<TileIndex>(combinedFullSlice, sliceIter.next());
 				}
 				
 				// Load umbrella slices

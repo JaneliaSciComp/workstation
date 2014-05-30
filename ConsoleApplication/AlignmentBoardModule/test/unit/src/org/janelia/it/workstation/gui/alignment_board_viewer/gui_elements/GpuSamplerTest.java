@@ -23,15 +23,15 @@ public class GpuSamplerTest {
     @Test
     public void isItStandard() {
         Logger logger = LoggerFactory.getLogger( GpuSamplerTest.class );
-        org.janelia.it.workstation.gui.alignment_board_viewer.gui_elements.GpuSampler sampler = new org.janelia.it.workstation.gui.alignment_board_viewer.gui_elements.GpuSampler( Color.blue );
+        GpuSampler sampler = new GpuSampler( Color.blue );
         Future<Boolean> growsUpToBeFickle = sampler.isDepartmentStandardGraphicsMac();
         logger.info("This 'test' really requires knowledge of your system to be effective.  Watch log output.");
         try {
             if ( growsUpToBeFickle.get() ) {
-                logger.info("Detected department-choice card.  Please run glxinfo|grep OpenGL.  Look for " + org.janelia.it.workstation.gui.alignment_board_viewer.gui_elements.GpuSampler.STANDARD_CARD_RENDERER_STR);
+                logger.info("Detected department-choice card.  Please run glxinfo|grep OpenGL.  Look for " + GpuSampler.STANDARD_CARD_RENDERER_STR);
             }
             else {
-                logger.info("Did not detect here.  Please run glxinfo|grep OpenGL.  Look for " + org.janelia.it.workstation.gui.alignment_board_viewer.gui_elements.GpuSampler.STANDARD_CARD_RENDERER_STR);
+                logger.info("Did not detect here.  Please run glxinfo|grep OpenGL.  Look for " + GpuSampler.STANDARD_CARD_RENDERER_STR);
             }
         } catch ( Exception ex ) {
             ex.printStackTrace();

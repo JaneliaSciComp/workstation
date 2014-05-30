@@ -5,6 +5,7 @@ import java.util.Collection;
 import java.util.List;
 
 import org.janelia.it.jacs.model.entity.Entity;
+import org.janelia.it.workstation.model.domain.EntityWrapper;
 
 /**
  * Utilities for dealing with model objects.
@@ -13,9 +14,9 @@ import org.janelia.it.jacs.model.entity.Entity;
  */
 public class ModelUtils {
 	
-    public static Collection<Entity> getInternalEntities(Collection<org.janelia.it.workstation.model.domain.EntityWrapper> wrappers) {
+    public static Collection<Entity> getInternalEntities(Collection<EntityWrapper> wrappers) {
         List<Entity> entities = new ArrayList<Entity>();
-        for(org.janelia.it.workstation.model.domain.EntityWrapper wrapper : wrappers) {
+        for(EntityWrapper wrapper : wrappers) {
             entities.add(wrapper.getInternalEntity());
         }
         return entities;

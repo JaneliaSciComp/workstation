@@ -83,7 +83,7 @@ public class ChannelReadTest {
         assertNotNull("null channel volume data in builder", channelVolumeData);
 
         int volumeDataZeroCount = 0;
-        java.util.TreeMap<Byte,Integer> frequencies = new TreeMap<Byte,Integer>();
+        TreeMap<Byte,Integer> frequencies = new TreeMap<Byte,Integer>();
         for (VolumeDataChunk chunk: channelVolumeData.getVolumeChunks() ) {
             for ( Byte aByte: chunk.getData() ) {
                 if ( aByte == (byte)0 ) {

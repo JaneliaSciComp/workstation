@@ -11,6 +11,7 @@ import java.util.Set;
 import javax.swing.JComponent;
 
 import org.janelia.it.jacs.model.entity.Entity;
+import org.janelia.it.workstation.model.entity.RootedEntity;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -22,16 +23,16 @@ public class TransferableEntityList implements Transferable {
     private static final Logger log = LoggerFactory.getLogger(TransferableEntityList.class);
 
     private static final DataFlavor sourceFlavor = getDataFlavor(EntityTree.class);
-    private static final DataFlavor rootedEntityFlavor = getDataFlavor(org.janelia.it.workstation.model.entity.RootedEntity.class);
+    private static final DataFlavor rootedEntityFlavor = getDataFlavor(RootedEntity.class);
     private static final DataFlavor entityFlavor = getDataFlavor(Entity.class);
     private static final DataFlavor stringFlavor = getDataFlavor(String.class);
 
     private final Set<DataFlavor> flavors = new HashSet<DataFlavor>();
 
     protected JComponent sourceComponent;
-    protected List<org.janelia.it.workstation.model.entity.RootedEntity> rootedEntities;
+    protected List<RootedEntity> rootedEntities;
 
-    public TransferableEntityList(JComponent sourceComponent, List<org.janelia.it.workstation.model.entity.RootedEntity> rootedEntities) {
+    public TransferableEntityList(JComponent sourceComponent, List<RootedEntity> rootedEntities) {
         this.sourceComponent = sourceComponent;
         this.rootedEntities = rootedEntities;
         initFlavors(sourceFlavor, rootedEntityFlavor, entityFlavor, stringFlavor);
@@ -53,14 +54,14 @@ public class TransferableEntityList implements Transferable {
         }
         else if (flavor == entityFlavor) {
             List<Entity> entities = new ArrayList<Entity>();
-            for (org.janelia.it.workstation.model.entity.RootedEntity rootedEntity : rootedEntities) {
+            for (RootedEntity rootedEntity : rootedEntities) {
                 entities.add(rootedEntity.getEntity());
             }
             return entities;
         }
         else if (flavor == stringFlavor) {
             StringBuilder sb = new StringBuilder();
-            for (org.janelia.it.workstation.model.entity.RootedEntity rootedEntity : rootedEntities) {
+            for (RootedEntity rootedEntity : rootedEntities) {
                 if (sb.length() > 0) {
                     sb.append(", ");
                 }

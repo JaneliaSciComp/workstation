@@ -1,6 +1,8 @@
 package org.janelia.it.workstation.api.facade.concrete_facade.xml;
 
+import org.janelia.it.workstation.api.facade.abstract_facade.ControlledVocabService;
 import org.janelia.it.workstation.api.facade.abstract_facade.EntityFacade;
+import org.janelia.it.workstation.api.facade.abstract_facade.OntologyFacade;
 import org.janelia.it.workstation.api.facade.facade_mgr.FacadeManagerBase;
 
 /**
@@ -9,8 +11,8 @@ import org.janelia.it.workstation.api.facade.facade_mgr.FacadeManagerBase;
  */
 public abstract class XmlFacadeManager extends FacadeManagerBase {
 
-    private org.janelia.it.workstation.api.facade.abstract_facade.OntologyFacade ontologyLoader = null;
-    private org.janelia.it.workstation.api.facade.abstract_facade.ControlledVocabService controlledVocabularyService = null;
+    private OntologyFacade ontologyLoader = null;
+    private ControlledVocabService controlledVocabularyService = null;
 
     public abstract String getDataSourceSelectorClass();
 
@@ -55,7 +57,7 @@ public abstract class XmlFacadeManager extends FacadeManagerBase {
     /**
      * Return new or cached controlled vocab service.
      */
-    public org.janelia.it.workstation.api.facade.abstract_facade.ControlledVocabService getControlledVocabService() throws Exception {
+    public ControlledVocabService getControlledVocabService() throws Exception {
 //      if (controlledVocabularyService == null)
 //         controlledVocabularyService = new XmlControlledVocabService();
 //

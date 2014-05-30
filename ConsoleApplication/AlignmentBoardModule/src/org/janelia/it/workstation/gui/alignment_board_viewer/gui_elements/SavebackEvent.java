@@ -13,7 +13,7 @@ import java.util.Collection;
 public class SavebackEvent {
     private Collection<float[]> absoluteCoords;
     private CompletionListener completionListener;
-    private org.janelia.it.workstation.gui.alignment_board_viewer.gui_elements.ControlsListener.ExportMethod method;
+    private ControlsListener.ExportMethod method;
     private double gammaFactor;
 
     public SavebackEvent() {
@@ -36,11 +36,11 @@ public class SavebackEvent {
         this.completionListener = completionListener;
     }
 
-    public org.janelia.it.workstation.gui.alignment_board_viewer.gui_elements.ControlsListener.ExportMethod getMethod() {
+    public ControlsListener.ExportMethod getMethod() {
         return method;
     }
 
-    public void setMethod(org.janelia.it.workstation.gui.alignment_board_viewer.gui_elements.ControlsListener.ExportMethod method) {
+    public void setMethod(ControlsListener.ExportMethod method) {
         this.method = method;
     }
 

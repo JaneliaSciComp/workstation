@@ -3,8 +3,13 @@ package org.janelia.it.workstation.gui.slice_viewer.skeleton;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
+import org.janelia.it.workstation.geom.Vec3;
+import org.janelia.it.workstation.gui.slice_viewer.HistoryStack;
+import org.janelia.it.workstation.signal.Signal;
 import org.janelia.it.workstation.signal.Signal1;
+import org.janelia.it.workstation.signal.Slot;
 import org.janelia.it.workstation.signal.Slot1;
+import org.janelia.it.workstation.tracing.AnchoredVoxelPath;
 import org.janelia.it.workstation.tracing.SegmentIndex;
 import org.janelia.it.jacs.model.user_data.tiledMicroscope.TmGeoAnnotation;
 import org.slf4j.Logger;
@@ -21,10 +26,10 @@ public class Skeleton {
 	 *
 	 */
 	public class AnchorSeed {
-		private org.janelia.it.workstation.geom.Vec3 location;
+		private Vec3 location;
 		private Anchor parent;
 
-		public AnchorSeed(org.janelia.it.workstation.geom.Vec3 location, Anchor parent) {
+		public AnchorSeed(Vec3 location, Anchor parent) {
 			this.location = location;
 			this.parent = parent;
 		}
@@ -35,21 +40,21 @@ public class Skeleton {
 			return parent.getGuid();
 		}
 		
-		public org.janelia.it.workstation.geom.Vec3 getLocation() {
+		public Vec3 getLocation() {
 			return location;
 		}
 	};
 	
 	private Set<Anchor> anchors = new LinkedHashSet<Anchor>();
 	
-	private Map<SegmentIndex, org.janelia.it.workstation.tracing.AnchoredVoxelPath> tracedSegments =
-			new ConcurrentHashMap<SegmentIndex, org.janelia.it.workstation.tracing.AnchoredVoxelPath>();
+	private Map<SegmentIndex, AnchoredVoxelPath> tracedSegments =
+			new ConcurrentHashMap<SegmentIndex, AnchoredVoxelPath>();
 	
 	private Map<Long, Anchor> anchorsByGuid = new HashMap<Long, Anchor>();
 	// TODO - anchor browsing history should maybe move farther back
-	private org.janelia.it.workstation.gui.slice_viewer.HistoryStack<Anchor> anchorHistory = new org.janelia.it.workstation.gui.slice_viewer.HistoryStack<Anchor>();
+	private HistoryStack<Anchor> anchorHistory = new HistoryStack<Anchor>();
 
-	public org.janelia.it.workstation.signal.Signal skeletonChangedSignal = new org.janelia.it.workstation.signal.Signal();
+	public Signal skeletonChangedSignal = new Signal();
 	public Signal1<Long> pathTraceRequestedSignal = new Signal1<Long>();
 
 	// API for synchronizing with back end database
@@ -62,7 +67,7 @@ public class Skeleton {
 	public Slot1<TmGeoAnnotation> addAnchorSlot = new Slot1<TmGeoAnnotation>() {
 		@Override
 		public void execute(TmGeoAnnotation tga) {
-			org.janelia.it.workstation.geom.Vec3 location = new org.janelia.it.workstation.geom.Vec3(tga.getX(), tga.getY(), tga.getZ());
+			Vec3 location = new Vec3(tga.getX(), tga.getY(), tga.getZ());
 			Anchor parentAnchor = anchorsByGuid.get(tga.getParentId());
 			Anchor anchor = new Anchor(location, parentAnchor);
 			anchor.setGuid(tga.getId());
@@ -128,13 +133,13 @@ public class Skeleton {
     public Signal1<Anchor> splitNeuriteRequestedSignal = new Signal1<Anchor>();
 
 	///// CLEAR
-	public org.janelia.it.workstation.signal.Slot clearSlot = new org.janelia.it.workstation.signal.Slot() {
+	public Slot clearSlot = new Slot() {
 		@Override
 		public void execute() {
 			clear();
 		}
 	};
-	public org.janelia.it.workstation.signal.Signal clearedSignal = new org.janelia.it.workstation.signal.Signal();
+	public Signal clearedSignal = new Signal();
 
 	///// MOVE
 	public Signal1<Anchor> anchorMovedSignal = new Signal1<Anchor>();
@@ -144,20 +149,20 @@ public class Skeleton {
 			Anchor anchor = anchorsByGuid.get(tga.getId());
 			if (anchor == null)
 				return;
-			anchor.setLocation(new org.janelia.it.workstation.geom.Vec3(tga.getX(), tga.getY(), tga.getZ()));
+			anchor.setLocation(new Vec3(tga.getX(), tga.getY(), tga.getZ()));
 		}
 	};
 
-    public Slot1<org.janelia.it.workstation.tracing.AnchoredVoxelPath> addAnchoredPathSlot = new Slot1<org.janelia.it.workstation.tracing.AnchoredVoxelPath>() {
+    public Slot1<AnchoredVoxelPath> addAnchoredPathSlot = new Slot1<AnchoredVoxelPath>() {
         @Override
-        public void execute(org.janelia.it.workstation.tracing.AnchoredVoxelPath path) {
+        public void execute(AnchoredVoxelPath path) {
             addTracedSegment(path);
         }
     };
 
-    public Slot1<org.janelia.it.workstation.tracing.AnchoredVoxelPath> removeAnchoredPathSlot = new Slot1<org.janelia.it.workstation.tracing.AnchoredVoxelPath>() {
+    public Slot1<AnchoredVoxelPath> removeAnchoredPathSlot = new Slot1<AnchoredVoxelPath>() {
         @Override
-        public void execute(org.janelia.it.workstation.tracing.AnchoredVoxelPath path) {
+        public void execute(AnchoredVoxelPath path) {
             removeTracedSegment(path);
         }
     };
@@ -190,7 +195,7 @@ public class Skeleton {
 		return anchor;
 	}
 
-	public void addAnchorAtXyz(org.janelia.it.workstation.geom.Vec3 xyz, Anchor parent) {
+	public void addAnchorAtXyz(Vec3 xyz, Anchor parent) {
 		addAnchorRequestedSignal.emit(new AnchorSeed(xyz, parent));
 	}
 
@@ -301,7 +306,7 @@ public class Skeleton {
 		return anchors;
 	}
 	
-	public org.janelia.it.workstation.gui.slice_viewer.HistoryStack<Anchor> getHistory() {
+	public HistoryStack<Anchor> getHistory() {
 		return anchorHistory;
 	}
 
@@ -318,7 +323,7 @@ public class Skeleton {
         pathTraceRequestedSignal.emit(anchor.getGuid());
     }
 
-	public void addTracedSegment(org.janelia.it.workstation.tracing.AnchoredVoxelPath path)
+	public void addTracedSegment(AnchoredVoxelPath path)
 	{
 	    SegmentIndex ix = path.getSegmentIndex();
 		tracedSegments.put(ix, path);
@@ -326,15 +331,15 @@ public class Skeleton {
 		skeletonChangedSignal.emit();
 	}
 
-    public void removeTracedSegment(org.janelia.it.workstation.tracing.AnchoredVoxelPath path) {
+    public void removeTracedSegment(AnchoredVoxelPath path) {
         SegmentIndex ix = path.getSegmentIndex();
         tracedSegments.remove(ix);
         skeletonChangedSignal.emit();
     }
 
-	public Collection<org.janelia.it.workstation.tracing.AnchoredVoxelPath> getTracedSegments() {
+	public Collection<AnchoredVoxelPath> getTracedSegments() {
 		// log.info("tracedSegments.size() [305] = "+tracedSegments.size());
-		Collection<org.janelia.it.workstation.tracing.AnchoredVoxelPath> result = tracedSegments.values();
+		Collection<AnchoredVoxelPath> result = tracedSegments.values();
 		// log.info("tracedSegments.values().size() [307] = "+result.size());
 		return result;
 	}

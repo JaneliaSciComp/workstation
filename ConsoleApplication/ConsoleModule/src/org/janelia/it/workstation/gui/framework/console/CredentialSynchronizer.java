@@ -1,5 +1,7 @@
 package org.janelia.it.workstation.gui.framework.console;
 
+import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
+
 /**
  * Created by IntelliJ IDEA.
  * This puts login and password info into the console properties.  Checking the login
@@ -14,8 +16,8 @@ package org.janelia.it.workstation.gui.framework.console;
 public class CredentialSynchronizer {
 
     public void synchronize( Browser browser ) {
-        browser.getBrowserModel().setModelProperty("LOGIN", org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr.getSessionMgr().getModelProperty("LOGIN"));
-        browser.getBrowserModel().setModelProperty("PASSWORD", org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr.getSessionMgr().getModelProperty("PASSWORD"));
+        browser.getBrowserModel().setModelProperty("LOGIN", SessionMgr.getSessionMgr().getModelProperty("LOGIN"));
+        browser.getBrowserModel().setModelProperty("PASSWORD", SessionMgr.getSessionMgr().getModelProperty("PASSWORD"));
 
     }
 

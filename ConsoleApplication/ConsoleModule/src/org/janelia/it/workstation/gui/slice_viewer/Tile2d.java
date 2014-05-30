@@ -9,6 +9,7 @@ import org.janelia.it.workstation.geom.CoordinateAxis;
 import org.janelia.it.workstation.geom.Vec3;
 import org.janelia.it.workstation.gui.camera.Camera3d;
 import org.janelia.it.workstation.gui.opengl.GLActor;
+import org.janelia.it.workstation.gui.viewer3d.BoundingBox3d;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -42,14 +43,14 @@ implements GLActor
 	private static final Logger log = LoggerFactory.getLogger(Tile2d.class);
 	
 	private LoadStatus loadStatus = LoadStatus.NO_TEXTURE_LOADED;
-	private org.janelia.it.workstation.gui.slice_viewer.TileTexture bestTexture;
-	private org.janelia.it.workstation.gui.slice_viewer.TileIndex index;
+	private TileTexture bestTexture;
+	private TileIndex index;
 	private double yMax = 0; // To help flip Raveler tiles in Y
 	private TileFormat tileFormat;
 	private int filter = GL2.GL_LINEAR;
-	private org.janelia.it.workstation.gui.viewer3d.BoundingBox3d boundingBox3d;
+	private BoundingBox3d boundingBox3d;
 	
-	public Tile2d(org.janelia.it.workstation.gui.slice_viewer.TileIndex key, TileFormat tileFormat) {
+	public Tile2d(TileIndex key, TileFormat tileFormat) {
 		if (key == null) {
 			log.error("Tile with null index constructed");
 		}
@@ -63,13 +64,13 @@ implements GLActor
 	{
 		if (getLoadStatus().ordinal() >= LoadStatus.BEST_TEXTURE_LOADED.ordinal())
 			return; // Already as good as it gets
-		org.janelia.it.workstation.gui.slice_viewer.TileIndex ix = getIndex();
+		TileIndex ix = getIndex();
 		if (ix == null) {
 			log.error("Tile with null index");
 			return;
 		}
-		org.janelia.it.workstation.gui.slice_viewer.TileTexture texture = textureCache.get(ix);
-		if ((texture != null) && (texture.getLoadStatus().ordinal() >= org.janelia.it.workstation.gui.slice_viewer.TileTexture.LoadStatus.RAM_LOADED.ordinal()))
+		TileTexture texture = textureCache.get(ix);
+		if ((texture != null) && (texture.getLoadStatus().ordinal() >= TileTexture.LoadStatus.RAM_LOADED.ordinal()))
 		{
 			// Hey! I just noticed I have the best possible texture
 			bestTexture = texture;
@@ -92,7 +93,7 @@ implements GLActor
 					// texture = textureCache.get(ix);
 				}
 			}
-			else if (texture.getLoadStatus().ordinal() < org.janelia.it.workstation.gui.slice_viewer.TileTexture.LoadStatus.RAM_LOADED.ordinal()) {
+			else if (texture.getLoadStatus().ordinal() < TileTexture.LoadStatus.RAM_LOADED.ordinal()) {
 				// log.info("cache miss texture not loaded "+ix);
 			}
 			else {
@@ -146,7 +147,7 @@ implements GLActor
 		this.filter = filter;
 	}
 
-	public org.janelia.it.workstation.gui.slice_viewer.TileIndex getIndex() {
+	public TileIndex getIndex() {
 		return index;
 	}
 
@@ -158,7 +159,7 @@ implements GLActor
 		this.loadStatus = stage;
 	}
 
-	public void setBestTexture(org.janelia.it.workstation.gui.slice_viewer.TileTexture bestTexture) {
+	public void setBestTexture(TileTexture bestTexture) {
 		this.bestTexture = bestTexture;
 		boundingBox3d = computeBoundingBox();
 	}
@@ -298,7 +299,7 @@ implements GLActor
 		return xyzToWhd;
 	}
 	
-	private org.janelia.it.workstation.gui.viewer3d.BoundingBox3d computeBoundingBox() {
+	private BoundingBox3d computeBoundingBox() {
 		// Permute coordinates for tiles that have non-Z orientations.
 		int zoomScale = (int)(Math.pow(2.0, getIndex().getZoom()) + 0.1);
 		// Permute coordinates for tiles that have non-Z orientations.
@@ -328,7 +329,7 @@ implements GLActor
         	y0 = yMax - y0;
         	y1 = y0 - tileHeight;
         }
-        org.janelia.it.workstation.gui.viewer3d.BoundingBox3d result = new org.janelia.it.workstation.gui.viewer3d.BoundingBox3d();
+        BoundingBox3d result = new BoundingBox3d();
         // Bounding box will be one-voxel thick in slice direction
         double dz = 0.50 * tileFormat.getTileSize()[whdToXyz[2]];
         result.include(permutedVertex3d(x0, y0, z-dz, whdToXyz));
@@ -369,7 +370,7 @@ implements GLActor
 	}
 	
 	@Override
-	public org.janelia.it.workstation.gui.viewer3d.BoundingBox3d getBoundingBox3d() {
+	public BoundingBox3d getBoundingBox3d() {
 		return boundingBox3d;
 	}
 
@@ -385,7 +386,7 @@ implements GLActor
 	public void dispose(GLAutoDrawable glDrawable) {
 	}
 
-	public org.janelia.it.workstation.gui.slice_viewer.TileTexture getBestTexture() {
+	public TileTexture getBestTexture() {
 		return bestTexture;
 	}
 

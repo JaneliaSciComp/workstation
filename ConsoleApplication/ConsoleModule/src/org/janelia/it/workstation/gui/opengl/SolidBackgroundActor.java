@@ -9,6 +9,8 @@ import javax.media.opengl.GL;
 import javax.media.opengl.GL2GL3;
 
 import org.janelia.it.workstation.gui.opengl.shader.BasicShader;
+import org.janelia.it.workstation.gui.opengl.shader.SolidColor120Shader;
+import org.janelia.it.workstation.gui.viewer3d.BoundingBox3d;
 
 /**
  * Should work for both GL2 and GL3
@@ -25,7 +27,7 @@ implements GL3Actor
     private Method method = Method.QUAD_VBO;
     private boolean initialized = false;
     private float[] color = {1,0,1,1};
-    private org.janelia.it.workstation.gui.opengl.shader.SolidColor120Shader shader = new org.janelia.it.workstation.gui.opengl.shader.SolidColor120Shader();
+    private SolidColor120Shader shader = new SolidColor120Shader();
 
     // Paint a quad to cover the screen
     private final float dx = 1.0f; // 1.0 to exactly cover viewport
@@ -87,7 +89,7 @@ implements GL3Actor
     }
 
     @Override
-    public org.janelia.it.workstation.gui.viewer3d.BoundingBox3d getBoundingBox3d() {
+    public BoundingBox3d getBoundingBox3d() {
         return null;
     }
 

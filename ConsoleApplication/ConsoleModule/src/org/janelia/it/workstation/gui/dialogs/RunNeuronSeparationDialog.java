@@ -3,6 +3,7 @@ package org.janelia.it.workstation.gui.dialogs;
 import loci.plugins.config.SpringUtilities;
 import org.janelia.it.workstation.api.entity_model.management.ModelMgr;
 import org.janelia.it.workstation.gui.framework.console.Browser;
+import org.janelia.it.workstation.gui.framework.console.Perspective;
 import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.workstation.shared.util.Utils;
 import org.janelia.it.workstation.shared.workers.SimpleWorker;
@@ -237,7 +238,7 @@ public class RunNeuronSeparationDialog extends ModalDialog {
 			protected void hadSuccess() {
 		    	Utils.setDefaultCursor(RunNeuronSeparationDialog.this);
 	            Browser browser = SessionMgr.getBrowser();
-                browser.setPerspective(org.janelia.it.workstation.gui.framework.console.Perspective.TaskMonitoring);
+                browser.setPerspective(Perspective.TaskMonitoring);
 				setVisible(false);
 			}
 			

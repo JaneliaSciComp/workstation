@@ -4,6 +4,8 @@ import org.janelia.it.workstation.api.facade.concrete_facade.xml.ValidationManag
 import org.janelia.it.workstation.gui.framework.pref_controller.PrefController;
 import org.janelia.it.workstation.gui.framework.roles.PrefEditor;
 import org.janelia.it.jacs.shared.file_chooser.FileChooser;
+import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
+import org.janelia.it.workstation.gui.util.swing_models.CollectionJListModel;
 
 import javax.swing.*;
 import javax.swing.border.BevelBorder;
@@ -28,10 +30,10 @@ public class ToolSettingsPanel extends JPanel implements PrefEditor {
     private JComboBox validationComboBox;
     private static String fileSep = File.separator;
     private static final String LOCATION_PROP_NAME = "ToolLocations";
-    protected File directoryPrefFile = new File(org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr.getSessionMgr().getApplicationOutputDirectory() + fileSep + "userPrefs." + LOCATION_PROP_NAME);
+    protected File directoryPrefFile = new File(SessionMgr.getSessionMgr().getApplicationOutputDirectory() + fileSep + "userPrefs." + LOCATION_PROP_NAME);
 
     private JList currentDirectoryJList;
-    private org.janelia.it.workstation.gui.util.swing_models.CollectionJListModel directoryLocationModel;
+    private CollectionJListModel directoryLocationModel;
     private JButton removeDirectoryButton = new JButton("Remove Selected Directory");
 
     public ToolSettingsPanel(JFrame parentFrame) {
@@ -40,7 +42,7 @@ public class ToolSettingsPanel extends JPanel implements PrefEditor {
             jbInit();
         }
         catch (Exception ex) {
-            org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr.getSessionMgr().handleException(ex);
+            SessionMgr.getSessionMgr().handleException(ex);
         }
     }
 
@@ -81,7 +83,7 @@ public class ToolSettingsPanel extends JPanel implements PrefEditor {
             } // Change required.
         } // End try to save changes.
         catch (Exception ex) {
-            org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr.getSessionMgr().handleException(ex);
+            SessionMgr.getSessionMgr().handleException(ex);
         } // End catch for delete
         // End datasource dir selection, apply code
 
@@ -109,7 +111,7 @@ public class ToolSettingsPanel extends JPanel implements PrefEditor {
         addDirectoryButton.setRequestFocusEnabled(false);
 
         List directoryLocationCollection = getExistingDirectoryLocations();
-        directoryLocationModel = new org.janelia.it.workstation.gui.util.swing_models.CollectionJListModel(directoryLocationCollection);
+        directoryLocationModel = new CollectionJListModel(directoryLocationCollection);
         currentDirectoryJList = new JList(directoryLocationModel);
         ActionListener rdListener = new ModelRemovalListener(currentDirectoryJList);
         removeDirectoryButton.addActionListener(rdListener);
@@ -243,11 +245,11 @@ public class ToolSettingsPanel extends JPanel implements PrefEditor {
                 ostream.close();
             } // Permission granted.
             else {
-                org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr.getSessionMgr().handleException(new IllegalArgumentException("XML Directory List is null or Cannot Write " + directoryPrefFile.getAbsoluteFile()));
+                SessionMgr.getSessionMgr().handleException(new IllegalArgumentException("XML Directory List is null or Cannot Write " + directoryPrefFile.getAbsoluteFile()));
             } // Not granted
         } // End try block.
         catch (Exception ex) {
-            org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr.getSessionMgr().handleException(new IllegalArgumentException("XML Directory Prefs " + directoryPrefFile.getAbsoluteFile() + " File Cannot be Written"));
+            SessionMgr.getSessionMgr().handleException(new IllegalArgumentException("XML Directory Prefs " + directoryPrefFile.getAbsoluteFile() + " File Cannot be Written"));
         } // End catch block for writeback of preferred directory.
 
     } // End method
@@ -272,7 +274,7 @@ public class ToolSettingsPanel extends JPanel implements PrefEditor {
 
             if (widgetForRemoval.getSelectedValues() != null) {
                 Object[] removables = widgetForRemoval.getSelectedValues();
-                org.janelia.it.workstation.gui.util.swing_models.CollectionJListModel listModel = (org.janelia.it.workstation.gui.util.swing_models.CollectionJListModel) widgetForRemoval.getModel();
+                CollectionJListModel listModel = (CollectionJListModel) widgetForRemoval.getModel();
                 for (Object removable : removables) listModel.remove(removable);
 
                 button.setEnabled(listModel.getSize() > 0);

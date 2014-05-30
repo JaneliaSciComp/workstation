@@ -16,11 +16,15 @@ import com.jogamp.opengl.util.texture.TextureCoords;
 import com.jogamp.opengl.util.texture.TextureData;
 import com.jogamp.opengl.util.texture.TextureIO;
 import com.jogamp.opengl.util.texture.awt.AWTTextureIO;
+import org.janelia.it.workstation.geom.Vec3;
+import org.janelia.it.workstation.gui.opengl.GLActor;
+import org.janelia.it.workstation.gui.viewer3d.BoundingBox3d;
+import org.janelia.it.workstation.gui.viewer3d.interfaces.VolumeImage3d;
 
 /**
  * Test implementation for showing 2D images in slice viewer.
  */
-public class Basic2dImageVolume implements org.janelia.it.workstation.gui.viewer3d.interfaces.VolumeImage3d, org.janelia.it.workstation.gui.opengl.GLActor
+public class Basic2dImageVolume implements VolumeImage3d, GLActor
 {
 	TextureData textureData;
 	Texture texture;
@@ -90,14 +94,14 @@ public class Basic2dImageVolume implements org.janelia.it.workstation.gui.viewer
 	}
 
 	@Override
-	public org.janelia.it.workstation.gui.viewer3d.BoundingBox3d getBoundingBox3d() {
-		org.janelia.it.workstation.gui.viewer3d.BoundingBox3d box = new org.janelia.it.workstation.gui.viewer3d.BoundingBox3d();
+	public BoundingBox3d getBoundingBox3d() {
+		BoundingBox3d box = new BoundingBox3d();
 		if (textureData != null) {
-			box.setMin(new org.janelia.it.workstation.geom.Vec3(0,0,0));
+			box.setMin(new Vec3(0,0,0));
 			double x = textureData.getWidth();
 			double y = textureData.getHeight();
 			double z = 0.0;
-			box.setMax(new org.janelia.it.workstation.geom.Vec3(x, y, z));
+			box.setMax(new Vec3(x, y, z));
 		}
 		return box;
 	}
@@ -133,8 +137,8 @@ public class Basic2dImageVolume implements org.janelia.it.workstation.gui.viewer
 	}
 
     @Override
-    public org.janelia.it.workstation.geom.Vec3 getVoxelCenter() {
-        org.janelia.it.workstation.geom.Vec3 result = new org.janelia.it.workstation.geom.Vec3();
+    public Vec3 getVoxelCenter() {
+        Vec3 result = new Vec3();
         for (int i = 0; i < 3; ++i) {
             double range = getBoundingBox3d().getMax().get(i) - getBoundingBox3d().getMin().get(i);
             int voxelCount = (int)Math.round(range/getResolution(i));

@@ -1,12 +1,15 @@
 package org.janelia.it.workstation.gui.opengl.stereo3d;
 
+import org.janelia.it.workstation.gui.opengl.GLActorContext;
+import org.janelia.it.workstation.gui.opengl.GLSceneComposer;
+
 import javax.media.opengl.GLAutoDrawable;
 
 public class RightEyeStereoMode extends BasicStereoMode
 {
     @Override
-    public void display(org.janelia.it.workstation.gui.opengl.GLActorContext actorContext,
-            org.janelia.it.workstation.gui.opengl.GLSceneComposer composer)
+    public void display(GLActorContext actorContext,
+            GLSceneComposer composer)
     {
         GLAutoDrawable glDrawable = actorContext.getGLAutoDrawable();
         updateViewport(glDrawable);

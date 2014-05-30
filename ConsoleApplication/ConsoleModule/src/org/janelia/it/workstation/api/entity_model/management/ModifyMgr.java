@@ -9,7 +9,7 @@ import java.util.*;
  ModifyManager is a singleton class that mediates changes to the model
  so that they can be undone, redone, and commited to the remote database.
  @see ModifyManagerObserver
- @see org.janelia.it.workstation.api.entity_model.management.Command
+ @see Command
  */
 public class ModifyMgr {
 /* ____________________________________________________________________
@@ -107,7 +107,7 @@ public class ModifyMgr {
      * @supplierCardinality 0..*
      * @label observers
      */
-    private java.util.HashSet observerSet = new java.util.HashSet();
+    private HashSet observerSet = new HashSet();
 
     /**
      * Stored to return the string for the UnDo message
@@ -155,7 +155,7 @@ public class ModifyMgr {
     private String getLatestUndoCommandText()
     {
         String undoText = null;
-        org.janelia.it.workstation.api.entity_model.management.Command command = this.getLatestUndoCommand();
+        Command command = this.getLatestUndoCommand();
         if ( command != null ) undoText = command.toString();
         return undoText;
     }
@@ -167,7 +167,7 @@ public class ModifyMgr {
     private String getLatestRedoCommandText()
     {
         String redoText = null;
-        org.janelia.it.workstation.api.entity_model.management.Command command = this.getLatestRedoCommand();
+        Command command = this.getLatestRedoCommand();
         if ( command != null ) redoText = command.toString();
         return redoText;
     }
@@ -182,9 +182,9 @@ public class ModifyMgr {
      return gUndoStack;
      }
      */
-    public org.janelia.it.workstation.api.entity_model.management.Command getLatestUndoCommand()
+    public Command getLatestUndoCommand()
     {
-        return (org.janelia.it.workstation.api.entity_model.management.Command)undoCommandList.get(0);
+        return (Command)undoCommandList.get(0);
     }
 
 
@@ -198,9 +198,9 @@ public class ModifyMgr {
      }
      */
 
-    public org.janelia.it.workstation.api.entity_model.management.Command getLatestRedoCommand()
+    public Command getLatestRedoCommand()
     {
-        return (org.janelia.it.workstation.api.entity_model.management.Command)redoCommandList.get(0);
+        return (Command)redoCommandList.get(0);
     }
 
 
@@ -240,7 +240,7 @@ public class ModifyMgr {
     /**
      * Notify all ModifyManagerObservers of start of a command.
      */
-    private void doNotifyCommandStart(org.janelia.it.workstation.api.entity_model.management.Command command)
+    private void doNotifyCommandStart(Command command)
     {
         this.postNotification(command.toString(), NOTE_COMMAND_START);
    /*
@@ -256,7 +256,7 @@ public class ModifyMgr {
     /**
      * Notify all ModifyManagerObservers of start of a command.
      */
-    private void doNotifyCommandFinish(org.janelia.it.workstation.api.entity_model.management.Command command, int commandKind)
+    private void doNotifyCommandFinish(Command command, int commandKind)
     {
         this.postNotification(command.toString(), NOTE_COMMAND_FINISH, commandKind);
     }
@@ -267,18 +267,18 @@ public class ModifyMgr {
      * subsequent save operations that modify the remote database.
      * @param nextCommand is the command to be executed locally.
      */
-    public void doCommand(org.janelia.it.workstation.api.entity_model.management.Command nextCommand)/* throws Exception*/ {
+    public void doCommand(Command nextCommand)/* throws Exception*/ {
         try {
             nextCommand.validatePreconditions();
             doNotifyCommandStart(nextCommand);
-            org.janelia.it.workstation.api.entity_model.management.Command inverseToken = nextCommand.execute();
+            Command inverseToken = nextCommand.execute();
             flushRedoStack();
             nextCommand.validatePostconditions();
             doNotifyCommandFinish(nextCommand, DO_COMMAND);
             pushCommandName(nextCommand.toString());
             addDoCommandToCommandHistoryList(nextCommand);
             if( inverseToken == nextCommand )
-                throw new org.janelia.it.workstation.api.entity_model.management.BadCommandInverseException( nextCommand );
+                throw new BadCommandInverseException( nextCommand );
             if ( inverseToken != null )
                 pushUndoToken( inverseToken );
             doNotifyStatusChange();
@@ -295,7 +295,7 @@ public class ModifyMgr {
             this.postNotification(nextCommand.toString(), NOTE_COMMAND_EXECUTION_EXCEPTION);
             ModelMgr.getModelMgr().handleException(execEx);
         }
-        catch (org.janelia.it.workstation.api.entity_model.management.CommandPostconditionException postEx) {
+        catch (CommandPostconditionException postEx) {
             // @todo We should roll-back here as we do have the undo-command.
             this.postNotification(nextCommand.toString(), NOTE_COMMAND_POSTCONDITION_EXCEPTION);
             ModelMgr.getModelMgr().handleException(postEx);
@@ -329,13 +329,13 @@ public class ModifyMgr {
      */
     public void undoCommand() {
         try {
-            org.janelia.it.workstation.api.entity_model.management.Command undoToken = popUndoToken();
+            Command undoToken = popUndoToken();
             doNotifyCommandStart(undoToken);
-            org.janelia.it.workstation.api.entity_model.management.Command redoToken = undoToken.execute();
+            Command redoToken = undoToken.execute();
             doNotifyCommandFinish(undoToken, UNDO_COMMAND);
             popCommandName();
             if( redoToken == undoToken )
-                throw new org.janelia.it.workstation.api.entity_model.management.BadCommandInverseException( undoToken );
+                throw new BadCommandInverseException( undoToken );
             pushRedoToken( redoToken );
             doNotifyStatusChange();
 
@@ -366,13 +366,13 @@ public class ModifyMgr {
      */
     public void redoCommand()  {
         try {
-            org.janelia.it.workstation.api.entity_model.management.Command redoToken = popRedoToken();
+            Command redoToken = popRedoToken();
             doNotifyCommandStart(redoToken);
-            org.janelia.it.workstation.api.entity_model.management.Command undoToken = redoToken.execute();
+            Command undoToken = redoToken.execute();
             doNotifyCommandFinish(redoToken, REDO_COMMAND);
             pushRedoCommandName(redoToken.toString());
             if( undoToken == redoToken )
-                throw new org.janelia.it.workstation.api.entity_model.management.BadCommandInverseException( redoToken );
+                throw new BadCommandInverseException( redoToken );
             pushUndoToken( undoToken );
             doNotifyStatusChange();
 
@@ -448,11 +448,11 @@ public class ModifyMgr {
      * Pop the latest undo command off the stack & return it.
      * If the undo stack is now empty, notify the observers.
      */
-    private org.janelia.it.workstation.api.entity_model.management.Command popUndoToken() throws org.janelia.it.workstation.api.entity_model.management.AbsentUndoException
+    private Command popUndoToken() throws AbsentUndoException
     {
-        org.janelia.it.workstation.api.entity_model.management.Command undoToken = (org.janelia.it.workstation.api.entity_model.management.Command)undoCommandList.get(0);
+        Command undoToken = (Command)undoCommandList.get(0);
         // If we don't have any, throw an exception...
-        if( undoToken == null )  throw new org.janelia.it.workstation.api.entity_model.management.AbsentUndoException();
+        if( undoToken == null )  throw new AbsentUndoException();
             // Otherwise, remove it.
         else  {
             commandHistoryStringList.add("Undo "+undoToken.getCommandLogMessage());
@@ -486,11 +486,11 @@ public class ModifyMgr {
      * Pop the latest redo command off the stack & return it.
      * If the redo stack is now empty, notify the observers.
      */
-    private org.janelia.it.workstation.api.entity_model.management.Command popRedoToken() throws org.janelia.it.workstation.api.entity_model.management.AbsentRedoException
+    private Command popRedoToken() throws AbsentRedoException
     {
-        org.janelia.it.workstation.api.entity_model.management.Command redoToken = (org.janelia.it.workstation.api.entity_model.management.Command)redoCommandList.get(0);
+        Command redoToken = (Command)redoCommandList.get(0);
         // If we don't have any, throw an exception...
-        if( redoToken == null ) throw new org.janelia.it.workstation.api.entity_model.management.AbsentRedoException();
+        if( redoToken == null ) throw new AbsentRedoException();
             // Otherwise, remove it.
         else {
             commandHistoryStringList.add("Redo "+redoToken.getCommandLogMessage());
@@ -516,7 +516,7 @@ public class ModifyMgr {
      * Push a command onto the front of the Undo stack.
      * If the command argument is null, flush the Undo stack.
      */
-    private void pushUndoToken( org.janelia.it.workstation.api.entity_model.management.Command undoToken )
+    private void pushUndoToken( Command undoToken )
     {
         // if no undo token was returned (passed), flush the undo stack
         if( undoToken == null ) flushUndoStack();
@@ -541,7 +541,7 @@ public class ModifyMgr {
 
 
 
-    private void addDoCommandToCommandHistoryList(org.janelia.it.workstation.api.entity_model.management.Command c){
+    private void addDoCommandToCommandHistoryList(Command c){
         String commlogmessg=c.getCommandLogMessage();
         commandHistoryStringList.add("Do "+commlogmessg);
     }
@@ -568,7 +568,7 @@ public class ModifyMgr {
      * Push a command onto front of the Redo stack.
      * If the command argument is null, flush the redo stack.
      */
-    private void pushRedoToken( org.janelia.it.workstation.api.entity_model.management.Command redoToken )
+    private void pushRedoToken( Command redoToken )
     {
         // if no redo token was returned, flush the redo stack
         if( redoToken == null ) flushRedoStack();

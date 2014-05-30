@@ -1,7 +1,13 @@
 package org.janelia.it.workstation.gui.util.panels;
 
+import org.janelia.it.workstation.api.facade.facade_mgr.FacadeManager;
+import org.janelia.it.workstation.gui.framework.console.Browser;
+import org.janelia.it.workstation.gui.framework.console.Perspective;
 import org.janelia.it.workstation.gui.framework.pref_controller.PrefController;
 import org.janelia.it.workstation.gui.framework.roles.PrefEditor;
+import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
+import org.janelia.it.workstation.shared.util.PropertyConfigurator;
+import org.janelia.it.workstation.shared.util.SystemInfo;
 import org.janelia.it.workstation.shared.util.Utils;
 import org.janelia.it.workstation.shared.util.text_component.StandardTextField;
 import org.janelia.it.workstation.shared.workers.SimpleWorker;
@@ -60,16 +66,16 @@ public class DataSourceSettingsPanel extends JPanel implements PrefEditor {
     
     public DataSourceSettingsPanel(@SuppressWarnings("UnusedParameters")
                                    JFrame parentFrame) {
-        final org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr sessionMgr = org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr.getSessionMgr();
+        final SessionMgr sessionMgr = SessionMgr.getSessionMgr();
         try {
-            userLogin = (String) getModelProperty(org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr.USER_NAME, "");
-            userPassword = (String) getModelProperty(org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr.USER_PASSWORD, "");
-            userEmail = (String) getModelProperty(org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr.USER_EMAIL, "");
-            cacheDisabled = (Boolean) getModelProperty(org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr.FILE_CACHE_DISABLED_PROPERTY, false);
-            cacheCapacity = (Integer) getModelProperty(org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr.FILE_CACHE_GIGABYTE_CAPACITY_PROPERTY,
-                                                   org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr.MIN_FILE_CACHE_GIGABYTE_CAPACITY);
-            runAsUser = (String) getModelProperty(org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr.RUN_AS_USER, "");
-            downloadsDir = org.janelia.it.workstation.shared.util.SystemInfo.getDownloadsDir().getAbsolutePath();
+            userLogin = (String) getModelProperty(SessionMgr.USER_NAME, "");
+            userPassword = (String) getModelProperty(SessionMgr.USER_PASSWORD, "");
+            userEmail = (String) getModelProperty(SessionMgr.USER_EMAIL, "");
+            cacheDisabled = (Boolean) getModelProperty(SessionMgr.FILE_CACHE_DISABLED_PROPERTY, false);
+            cacheCapacity = (Integer) getModelProperty(SessionMgr.FILE_CACHE_GIGABYTE_CAPACITY_PROPERTY,
+                                                   SessionMgr.MIN_FILE_CACHE_GIGABYTE_CAPACITY);
+            runAsUser = (String) getModelProperty(SessionMgr.RUN_AS_USER, "");
+            downloadsDir = SystemInfo.getDownloadsDir().getAbsolutePath();
             jbInit();
         }
         catch (Exception ex) {
@@ -95,10 +101,10 @@ public class DataSourceSettingsPanel extends JPanel implements PrefEditor {
      */
     public void cancelChanges() {
         if (userLogin == null || userPassword == null || userEmail == null) {
-            org.janelia.it.workstation.shared.util.PropertyConfigurator.getProperties().setProperty(org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr.USER_NAME, "NoUserLogin");
-            org.janelia.it.workstation.shared.util.PropertyConfigurator.getProperties().setProperty(org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr.USER_PASSWORD, "NoUserPassword");
-            org.janelia.it.workstation.shared.util.PropertyConfigurator.getProperties().setProperty(org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr.USER_EMAIL, "NoUserEmail");
-            org.janelia.it.workstation.shared.util.PropertyConfigurator.getProperties().setProperty(org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr.RUN_AS_USER, "NoRunAsUser");
+            PropertyConfigurator.getProperties().setProperty(SessionMgr.USER_NAME, "NoUserLogin");
+            PropertyConfigurator.getProperties().setProperty(SessionMgr.USER_PASSWORD, "NoUserPassword");
+            PropertyConfigurator.getProperties().setProperty(SessionMgr.USER_EMAIL, "NoUserEmail");
+            PropertyConfigurator.getProperties().setProperty(SessionMgr.RUN_AS_USER, "NoRunAsUser");
         }
         settingsChanged = false;
     }
@@ -129,10 +135,10 @@ public class DataSourceSettingsPanel extends JPanel implements PrefEditor {
         cacheCapacity = (Integer) fileCacheSpinner.getValue();
         downloadsDir = downloadsDirField.getText().trim();
         
-        final org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr sessionMgr = org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr.getSessionMgr();
+        final SessionMgr sessionMgr = SessionMgr.getSessionMgr();
 
         final boolean cacheDisabledChanged =
-                ! cacheDisabled.equals(sessionMgr.getModelProperty(org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr.FILE_CACHE_DISABLED_PROPERTY));
+                ! cacheDisabled.equals(sessionMgr.getModelProperty(SessionMgr.FILE_CACHE_DISABLED_PROPERTY));
         if (cacheDisabledChanged) {
             sessionMgr.setFileCacheDisabled(cacheDisabled);
         }
@@ -143,38 +149,38 @@ public class DataSourceSettingsPanel extends JPanel implements PrefEditor {
             sessionMgr.setFileCacheGigabyteCapacity(cacheCapacity);
         }
 
-        if ((!userLogin.equals(sessionMgr.getModelProperty(org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr.USER_NAME))) ||
-            (!userPassword.equals(sessionMgr.getModelProperty(org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr.USER_PASSWORD))) ||
-            (!userEmail.equals(sessionMgr.getModelProperty(org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr.USER_EMAIL))) ||
-            (!runAsUser.equals(sessionMgr.getModelProperty(org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr.RUN_AS_USER)))) {
+        if ((!userLogin.equals(sessionMgr.getModelProperty(SessionMgr.USER_NAME))) ||
+            (!userPassword.equals(sessionMgr.getModelProperty(SessionMgr.USER_PASSWORD))) ||
+            (!userEmail.equals(sessionMgr.getModelProperty(SessionMgr.USER_EMAIL))) ||
+            (!runAsUser.equals(sessionMgr.getModelProperty(SessionMgr.RUN_AS_USER)))) {
             // If the login has changed then wipe out the runAs field and value.
-            if ((!userLogin.equals(sessionMgr.getModelProperty(org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr.USER_NAME)))) {
+            if ((!userLogin.equals(sessionMgr.getModelProperty(SessionMgr.USER_NAME)))) {
                 runAsTextField.setText("");
                 runAsUser="";
             }
             log.info("Setting properties in model...");
-            sessionMgr.setModelProperty(org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr.RUN_AS_USER, runAsUser);
-            sessionMgr.setModelProperty(org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr.USER_NAME, userLogin);
-            sessionMgr.setModelProperty(org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr.USER_PASSWORD, userPassword);
-            sessionMgr.setModelProperty(org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr.USER_EMAIL, userEmail);
-            boolean loginSuccess = org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr.getSessionMgr().loginSubject();
+            sessionMgr.setModelProperty(SessionMgr.RUN_AS_USER, runAsUser);
+            sessionMgr.setModelProperty(SessionMgr.USER_NAME, userLogin);
+            sessionMgr.setModelProperty(SessionMgr.USER_PASSWORD, userPassword);
+            sessionMgr.setModelProperty(SessionMgr.USER_EMAIL, userEmail);
+            boolean loginSuccess = SessionMgr.getSessionMgr().loginSubject();
             if (loginSuccess) {
-                runAsPanel.setVisible(org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr.authenticatedSubjectIsInGroup(Group.ADMIN_GROUP_NAME));
+                runAsPanel.setVisible(SessionMgr.authenticatedSubjectIsInGroup(Group.ADMIN_GROUP_NAME));
             }
 
-            final org.janelia.it.workstation.gui.framework.console.Browser browser = org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr.getBrowser();
+            final Browser browser = SessionMgr.getBrowser();
             if (browser != null) {
-                browser.setPerspective(org.janelia.it.workstation.gui.framework.console.Perspective.ImageBrowser);
+                browser.setPerspective(Perspective.ImageBrowser);
             }
 
-            org.janelia.it.workstation.api.facade.facade_mgr.FacadeManager.addProtocolToUseList(org.janelia.it.workstation.api.facade.facade_mgr.FacadeManager.getEJBProtocolString());
+            FacadeManager.addProtocolToUseList(FacadeManager.getEJBProtocolString());
         }
 
         if (cacheDisabledChanged || cacheCapacityChanged) {
             updateFileCacheComponents(true);
         }
         
-        org.janelia.it.workstation.shared.util.SystemInfo.setDownloadsDir(downloadsDir);
+        SystemInfo.setDownloadsDir(downloadsDir);
 
         settingsChanged = false;
         return new String[0];
@@ -247,7 +253,7 @@ public class DataSourceSettingsPanel extends JPanel implements PrefEditor {
         runAsPanel.add(Box.createHorizontalStrut(10));
         runAsPanel.add(runAsTextField);
         
-        if (org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr.authenticatedSubjectIsInGroup(Group.ADMIN_GROUP_NAME)) {
+        if (SessionMgr.authenticatedSubjectIsInGroup(Group.ADMIN_GROUP_NAME)) {
             loginPanel.add(runAsPanel);
             loginPanel.add(Box.createVerticalStrut(10));
         }
@@ -500,9 +506,9 @@ public class DataSourceSettingsPanel extends JPanel implements PrefEditor {
 
         // ---------------------
         fileCacheSpinner = new JSpinner(
-                new SpinnerNumberModel(org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr.MIN_FILE_CACHE_GIGABYTE_CAPACITY,
-                        org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr.MIN_FILE_CACHE_GIGABYTE_CAPACITY,
-                        org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr.MAX_FILE_CACHE_GIGABYTE_CAPACITY,
+                new SpinnerNumberModel(SessionMgr.MIN_FILE_CACHE_GIGABYTE_CAPACITY,
+                        SessionMgr.MIN_FILE_CACHE_GIGABYTE_CAPACITY,
+                        SessionMgr.MAX_FILE_CACHE_GIGABYTE_CAPACITY,
                         1));
         fileCacheSpinner.setMaximumSize(new Dimension(200, 100));
 
@@ -537,7 +543,7 @@ public class DataSourceSettingsPanel extends JPanel implements PrefEditor {
         fileCacheClearButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr.getSessionMgr().clearFileCache();
+                SessionMgr.getSessionMgr().clearFileCache();
                 updateFileCacheComponents(false);
             }
         });
@@ -554,7 +560,7 @@ public class DataSourceSettingsPanel extends JPanel implements PrefEditor {
 
     private void updateFileCacheComponents(final boolean waitForReload) {
 
-        final org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr sessionMgr = org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr.getSessionMgr();
+        final SessionMgr sessionMgr = SessionMgr.getSessionMgr();
         final int capacity = sessionMgr.getFileCacheGigabyteCapacity();
 
         fileCacheSpinner.setValue(capacity);
@@ -591,7 +597,7 @@ public class DataSourceSettingsPanel extends JPanel implements PrefEditor {
                 
                 @Override
                 protected void hadError(Throwable error) {
-                    org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr.getSessionMgr().handleException(error);
+                    SessionMgr.getSessionMgr().handleException(error);
                 }
             };
             worker.execute();
@@ -607,7 +613,7 @@ public class DataSourceSettingsPanel extends JPanel implements PrefEditor {
 
     private Object getModelProperty(String key,
                                     Object defaultValue) {
-        final org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr sessionMgr = org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr.getSessionMgr();
+        final SessionMgr sessionMgr = SessionMgr.getSessionMgr();
         Object value = sessionMgr.getModelProperty(key);
         if (value == null) {
             value = defaultValue;

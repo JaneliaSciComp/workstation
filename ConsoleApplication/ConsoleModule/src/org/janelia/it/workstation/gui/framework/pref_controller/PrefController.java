@@ -1,5 +1,8 @@
 package org.janelia.it.workstation.gui.framework.pref_controller;
 
+import org.janelia.it.workstation.gui.framework.roles.PrefEditor;
+import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
+
 import javax.swing.*;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
@@ -88,7 +91,7 @@ public class PrefController {
                 // Get the prefLevel of the panel requested.
                 constructor = prefEditorsMap.get(key);
                 component = (Component) constructor.newInstance(new Object[]{parentFrame});
-                prefLevel = ((org.janelia.it.workstation.gui.framework.roles.PrefEditor) component).getPanelGroup();
+                prefLevel = ((PrefEditor) component).getPanelGroup();
                 keyName = component.getName();
             }
             else prefLevel = (String) key;
@@ -100,14 +103,14 @@ public class PrefController {
                 if (component.getName() == null) {
                     component.setName(handle.toString());
                 }
-                if (((org.janelia.it.workstation.gui.framework.roles.PrefEditor) component).getPanelGroup().equals(prefLevel)) {
+                if (((PrefEditor) component).getPanelGroup().equals(prefLevel)) {
                     orderedEditorMap.put((component).getName(), component);
                     classToNameMap.put(handle, component.getName());
                 }
             }
         }
         catch (Exception ex) {
-            org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr.getSessionMgr().handleException(ex);
+            SessionMgr.getSessionMgr().handleException(ex);
         }
         if (keyName.equals("")) keyName = DEFAULT;
         redrawTabs(keyName, prefLevel);
@@ -124,8 +127,8 @@ public class PrefController {
         for (Object o : orderedEditorMap.keySet()) {
             tmpName = (String) o;
             tmpComponent = orderedEditorMap.get(tmpName);
-            if (((org.janelia.it.workstation.gui.framework.roles.PrefEditor) tmpComponent).getPanelGroup().equals(selectedTabGroup)) {
-                tabPane.addTab(tmpName, null, tmpComponent, ((org.janelia.it.workstation.gui.framework.roles.PrefEditor) tmpComponent).getDescription());
+            if (((PrefEditor) tmpComponent).getPanelGroup().equals(selectedTabGroup)) {
+                tabPane.addTab(tmpName, null, tmpComponent, ((PrefEditor) tmpComponent).getDescription());
             }
         }
         if (!selectedKeyName.equals(DEFAULT)) {
@@ -137,7 +140,7 @@ public class PrefController {
             }
         }
         else tabPane.setSelectedIndex(0);
-        mainDialog.setTitle("Preferences: " + ((org.janelia.it.workstation.gui.framework.roles.PrefEditor) tabPane.getSelectedComponent()).getPanelGroup());
+        mainDialog.setTitle("Preferences: " + ((PrefEditor) tabPane.getSelectedComponent()).getPanelGroup());
         mainDialog.pack();
     }
 
@@ -160,7 +163,7 @@ public class PrefController {
         Class[] interfaces = prefEditor.getInterfaces();
         boolean editorSupported = false;
         for (Class anInterface : interfaces) {
-            if (anInterface == org.janelia.it.workstation.gui.framework.roles.PrefEditor.class) {
+            if (anInterface == PrefEditor.class) {
                 editorSupported = true;
                 break;
             }
@@ -269,7 +272,7 @@ public class PrefController {
      */
     private void applyButton_actionPerformed() {
         propagateApplyChanges();
-        if (!org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr.getSessionMgr().isLoggedIn() || null== org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr.getUserEmail()) {
+        if (!SessionMgr.getSessionMgr().isLoggedIn() || null== SessionMgr.getUserEmail()) {
             Object[] options = {"Fix Login", "Exit Program"};
             final int answer = JOptionPane.showOptionDialog(null, "Please correct your login or email information.", "Login Information Invalid",
                     JOptionPane.OK_CANCEL_OPTION, JOptionPane.QUESTION_MESSAGE, null, options, options[0]);
@@ -277,7 +280,7 @@ public class PrefController {
                 return;
             }
             else {
-                org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr.getSessionMgr().systemExit();
+                SessionMgr.getSessionMgr().systemExit();
             }
 
         }
@@ -290,7 +293,7 @@ public class PrefController {
      */
     private void okButton_actionPerformed() {
         propagateApplyChanges();
-        if (!org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr.getSessionMgr().isLoggedIn() || null== org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr.getUserEmail()) {
+        if (!SessionMgr.getSessionMgr().isLoggedIn() || null== SessionMgr.getUserEmail()) {
             Object[] options = {"Fix Login", "Exit Program"};
             final int answer = JOptionPane.showOptionDialog(null, "Please correct your login or email information.", "Login Information Invalid",
                     JOptionPane.OK_CANCEL_OPTION, JOptionPane.QUESTION_MESSAGE, null, options, options[0]);
@@ -298,14 +301,14 @@ public class PrefController {
                 return;
             }
             else {
-                org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr.getSessionMgr().systemExit();
+                SessionMgr.getSessionMgr().systemExit();
             }
 
         }
         tabPane.removeAll();
         // This will clear out the panels and nuke the listeners.
         for (Object o : orderedEditorMap.values()) {
-            ((org.janelia.it.workstation.gui.framework.roles.PrefEditor) o).dispose();
+            ((PrefEditor) o).dispose();
         }
         orderedEditorMap = new TreeMap<String, Component>(new MyComparator());
         mainDialog.setVisible(false);
@@ -321,8 +324,8 @@ public class PrefController {
 
         for (int x = 0; x < tabPane.getComponentCount(); x++) {
             try {
-                if (((org.janelia.it.workstation.gui.framework.roles.PrefEditor) tabPane.getComponentAt(x)).hasChanged()) {
-                    delayedApplication = ((org.janelia.it.workstation.gui.framework.roles.PrefEditor) tabPane.getComponentAt(x)).applyChanges();
+                if (((PrefEditor) tabPane.getComponentAt(x)).hasChanged()) {
+                    delayedApplication = ((PrefEditor) tabPane.getComponentAt(x)).applyChanges();
                     if (delayedApplication != null && delayedApplication.length > 0) {
                         List<String> msgList = new ArrayList<String>();
                         msgList.add("The following changes from " + tabPane.getComponentAt(x).getName() + " will not take effect until the next session:");
@@ -332,7 +335,7 @@ public class PrefController {
                 }
             }
             catch (Exception ex) {
-                org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr.getSessionMgr().handleException(ex);
+                SessionMgr.getSessionMgr().handleException(ex);
             }
         }
     }
@@ -343,7 +346,7 @@ public class PrefController {
      * tabs, and close the frame.
      */
     private void cancelDialog() {
-        if (!org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr.getSessionMgr().isLoggedIn()) {
+        if (!SessionMgr.getSessionMgr().isLoggedIn()) {
             Object[] options = {"Fix Login", "Exit Program"};
             final int answer = JOptionPane.showOptionDialog(null, "Please correct your login information.", "Login Information Invalid",
                     JOptionPane.OK_CANCEL_OPTION, JOptionPane.QUESTION_MESSAGE, null, options, options[0]);
@@ -351,18 +354,18 @@ public class PrefController {
                 return;
             }
             else {
-                org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr.getSessionMgr().systemExit();
+                SessionMgr.getSessionMgr().systemExit();
             }
 
         }
         for (int x = 0; x < tabPane.getComponentCount(); x++) {
-            if (((org.janelia.it.workstation.gui.framework.roles.PrefEditor) tabPane.getComponentAt(x)).hasChanged())
-                ((org.janelia.it.workstation.gui.framework.roles.PrefEditor) tabPane.getComponentAt(x)).cancelChanges();
+            if (((PrefEditor) tabPane.getComponentAt(x)).hasChanged())
+                ((PrefEditor) tabPane.getComponentAt(x)).cancelChanges();
         }
         tabPane.removeAll();
         // This will clear out the panels and nuke the listeners.
         for (Object o : orderedEditorMap.values()) {
-            ((org.janelia.it.workstation.gui.framework.roles.PrefEditor) o).dispose();
+            ((PrefEditor) o).dispose();
         }
         orderedEditorMap = new TreeMap<String, Component>(new MyComparator());
         mainDialog.setVisible(false);

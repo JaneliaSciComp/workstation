@@ -1,5 +1,7 @@
 package org.janelia.it.workstation.gui.opengl;
 
+import org.janelia.it.workstation.geom.Vec3;
+
 /**
  * Matrix implementation to help recapitulate the fixed functionality
  * lost after OpenGL version 3.1.
@@ -25,17 +27,17 @@ public class GLMatrix {
      * @param up Specifies the direction of the up vector.
      */
     public void gluLookAt(
-            org.janelia.it.workstation.geom.Vec3 eye,
-            org.janelia.it.workstation.geom.Vec3 center,
-            org.janelia.it.workstation.geom.Vec3 up)
+            Vec3 eye,
+            Vec3 center,
+            Vec3 up)
     {
         // http://www.opengl.org/sdk/docs/man2/xhtml/gluLookAt.xml
-        org.janelia.it.workstation.geom.Vec3 f = center.minus(eye);
+        Vec3 f = center.minus(eye);
         f = f.times(1.0 / f.norm());
-        org.janelia.it.workstation.geom.Vec3 upNorm = up.times(1.0 / up.norm());
-        org.janelia.it.workstation.geom.Vec3 s = f.cross(upNorm);
-        org.janelia.it.workstation.geom.Vec3 sNorm = s.times(1.0/s.norm());
-        org.janelia.it.workstation.geom.Vec3 u = sNorm.cross(f);
+        Vec3 upNorm = up.times(1.0 / up.norm());
+        Vec3 s = f.cross(upNorm);
+        Vec3 sNorm = s.times(1.0/s.norm());
+        Vec3 u = sNorm.cross(f);
         // Transpose to keep with opengl docs visual nomenclature
         float[] M = {
             (float)s.getX(), (float)u.getX(), (float)-f.getX(), 0,

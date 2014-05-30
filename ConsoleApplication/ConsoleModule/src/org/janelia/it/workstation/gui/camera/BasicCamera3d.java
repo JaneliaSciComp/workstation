@@ -1,5 +1,7 @@
 package org.janelia.it.workstation.gui.camera;
 
+import org.janelia.it.workstation.geom.Rotation3d;
+import org.janelia.it.workstation.geom.Vec3;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -9,15 +11,15 @@ implements Camera3d
 	private static final Logger log = LoggerFactory.getLogger(BasicCamera3d.class);
 
 	// View center
-    private org.janelia.it.workstation.geom.Vec3 focus = new org.janelia.it.workstation.geom.Vec3(0,0,0); // in scene units
-    private org.janelia.it.workstation.geom.Rotation3d rotation = new org.janelia.it.workstation.geom.Rotation3d();
+    private Vec3 focus = new Vec3(0,0,0); // in scene units
+    private Rotation3d rotation = new Rotation3d();
     private double pixelsPerSceneUnit = 1.0; // zoom
 
     public BasicCamera3d() {
     	// System.out.println("construct camera");
     }
     
-	public org.janelia.it.workstation.geom.Vec3 getFocus() {
+	public Vec3 getFocus() {
 		return focus;
 	}
 
@@ -25,18 +27,18 @@ implements Camera3d
 		return pixelsPerSceneUnit;
 	}
 
-	public org.janelia.it.workstation.geom.Rotation3d getRotation() {
+	public Rotation3d getRotation() {
 		return rotation;
 	}
 	
     @Override
 	public boolean incrementFocusPixels(double dx, double dy, double dz) {
-		return incrementFocusPixels(new org.janelia.it.workstation.geom.Vec3(dx, dy, dz));
+		return incrementFocusPixels(new Vec3(dx, dy, dz));
 	}
 	
 	@Override
-	public boolean incrementFocusPixels(org.janelia.it.workstation.geom.Vec3 offset) {
-		org.janelia.it.workstation.geom.Vec3 v = offset.times(1.0 / pixelsPerSceneUnit);
+	public boolean incrementFocusPixels(Vec3 offset) {
+		Vec3 v = offset.times(1.0 / pixelsPerSceneUnit);
 		return setFocus(focus.plus(v));
 	}
 
@@ -50,14 +52,14 @@ implements Camera3d
     }
     
     public boolean resetFocus() {
-    		return setFocus(new org.janelia.it.workstation.geom.Vec3(0,0,0));
+    		return setFocus(new Vec3(0,0,0));
     }
     
     public boolean resetRotation() {
-    		return setRotation(new org.janelia.it.workstation.geom.Rotation3d());
+    		return setRotation(new Rotation3d());
     }
     
-    public boolean setFocus(org.janelia.it.workstation.geom.Vec3 f) {
+    public boolean setFocus(Vec3 f) {
 		if (f == focus)
 			return false; // no change
 		if (Double.isNaN(f.getX())) {
@@ -71,10 +73,10 @@ implements Camera3d
 
 	@Override
 	public boolean setFocus(double x, double y, double z) {
-		return setFocus(new org.janelia.it.workstation.geom.Vec3(x, y, z));
+		return setFocus(new Vec3(x, y, z));
 	}
 
-    public boolean setRotation(org.janelia.it.workstation.geom.Rotation3d r) {
+    public boolean setRotation(Rotation3d r) {
 		if (r == rotation)
 			return false; // no change
 		rotation = r;

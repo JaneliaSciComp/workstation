@@ -1,6 +1,8 @@
 package org.janelia.it.workstation.gui.slice_viewer;
 
 import org.janelia.it.workstation.api.entity_model.access.ModelMgrAdapter;
+import org.janelia.it.workstation.api.entity_model.access.ModelMgrObserver;
+import org.janelia.it.workstation.api.entity_model.management.ModelMgr;
 import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.workstation.gui.framework.viewer.Viewer;
 import org.janelia.it.workstation.gui.framework.viewer.ViewerPane;
@@ -37,7 +39,7 @@ public class SliceViewViewer extends Viewer {
     private RootedEntity slcRootedEntity;
 
     private QuadViewUi viewUI;
-    private org.janelia.it.workstation.api.entity_model.access.ModelMgrObserver modelMgrObserver;
+    private ModelMgrObserver modelMgrObserver;
     private Logger logger = LoggerFactory.getLogger(SliceViewViewer.class);
 
     public SliceViewViewer(ViewerPane viewerPane) {
@@ -74,7 +76,7 @@ public class SliceViewViewer extends Viewer {
         } else if (initialEntity.getEntityTypeName().equals(EntityConstants.TYPE_TILE_MICROSCOPE_WORKSPACE)) {
             String sampleID = initialEntity.getValueByAttributeName(EntityConstants.ATTRIBUTE_WORKSPACE_SAMPLE_IDS);
             try {
-                sliceSample = org.janelia.it.workstation.api.entity_model.management.ModelMgr.getModelMgr().getEntityById(sampleID);
+                sliceSample = ModelMgr.getModelMgr().getEntityById(sampleID);
             } catch (Exception e) {
                 e.printStackTrace();
             }
@@ -136,7 +138,7 @@ public class SliceViewViewer extends Viewer {
     @Override
     public void close() {
         logger.info("Closing");
-        org.janelia.it.workstation.api.entity_model.management.ModelMgr.getModelMgr().unregisterOnEventBus(this);
+        ModelMgr.getModelMgr().unregisterOnEventBus(this);
         deleteAll();
     }
 
@@ -165,7 +167,7 @@ public class SliceViewViewer extends Viewer {
 
     private void establishObserver() {
         modelMgrObserver = new ModelMgrListener( this, sliceSample);
-        org.janelia.it.workstation.api.entity_model.management.ModelMgr.getModelMgr().addModelMgrObserver(modelMgrObserver);
+        ModelMgr.getModelMgr().addModelMgrObserver(modelMgrObserver);
     }
 
     private void deleteAll() {
@@ -181,7 +183,7 @@ public class SliceViewViewer extends Viewer {
 
     private void clearObserver() {
         if ( modelMgrObserver != null ) {
-            org.janelia.it.workstation.api.entity_model.management.ModelMgr.getModelMgr().removeModelMgrObserver(modelMgrObserver);
+            ModelMgr.getModelMgr().removeModelMgrObserver(modelMgrObserver);
         }
     }
 
@@ -205,7 +207,7 @@ public class SliceViewViewer extends Viewer {
     
     @Override
     public EntityViewerState saveViewerState() {
-        Set<String> selectedIds = new HashSet<String>(org.janelia.it.workstation.api.entity_model.management.ModelMgr.getModelMgr().getEntitySelectionModel().getSelectedEntitiesIds(getSelectionCategory()));
+        Set<String> selectedIds = new HashSet<String>(ModelMgr.getModelMgr().getEntitySelectionModel().getSelectedEntitiesIds(getSelectionCategory()));
         return new EntityViewerState(getClass(), slcRootedEntity, selectedIds);
     }
     

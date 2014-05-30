@@ -4,6 +4,7 @@ import javax.media.opengl.GL2;
 import javax.media.opengl.GLAutoDrawable;
 
 import org.janelia.it.workstation.gui.opengl.GLActor;
+import org.janelia.it.workstation.gui.viewer3d.BoundingBox3d;
 
 public class PracticeBlueTileActor 
 implements GLActor
@@ -22,9 +23,9 @@ implements GLActor
 	}
 
 	@Override
-	public org.janelia.it.workstation.gui.viewer3d.BoundingBox3d getBoundingBox3d() {
+	public BoundingBox3d getBoundingBox3d() {
 		// NOTE - Y coordinate is inverted w.r.t. glVertex3d(...)
-		org.janelia.it.workstation.gui.viewer3d.BoundingBox3d result = new org.janelia.it.workstation.gui.viewer3d.BoundingBox3d();
+		BoundingBox3d result = new BoundingBox3d();
 		result.setMin(0, -10, 0);
 		result.setMax(10,  0, 0);
 		return result;

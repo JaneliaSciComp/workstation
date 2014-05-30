@@ -9,6 +9,8 @@ import javax.swing.SwingUtilities;
 
 import org.janelia.it.jacs.model.entity.Entity;
 import org.janelia.it.jacs.model.ontology.OntologyAnnotation;
+import org.janelia.it.workstation.api.entity_model.management.ModelMgr;
+import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
 
 /**
  * Annotations about the entities which the user is currently interacting with.
@@ -33,14 +35,14 @@ public class Annotations {
     	
         try {
         	clear();
-            for(Entity entityAnnot : org.janelia.it.workstation.api.entity_model.management.ModelMgr.getModelMgr().getAnnotationsForEntities(entityIds)) {
+            for(Entity entityAnnot : ModelMgr.getModelMgr().getAnnotationsForEntities(entityIds)) {
             	OntologyAnnotation annotation = new OntologyAnnotation();
             	annotation.init(entityAnnot);
             	annotations.add(annotation);
             }
         }
         catch (Exception e) {
-            org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr.getSessionMgr().handleException(e);
+            SessionMgr.getSessionMgr().handleException(e);
         }
     }
 	
@@ -50,14 +52,14 @@ public class Annotations {
     	
         try {
         	clear();
-            for(Entity entityAnnot : org.janelia.it.workstation.api.entity_model.management.ModelMgr.getModelMgr().getAnnotationsForChildren(parentId)) {
+            for(Entity entityAnnot : ModelMgr.getModelMgr().getAnnotationsForChildren(parentId)) {
             	OntologyAnnotation annotation = new OntologyAnnotation();
             	annotation.init(entityAnnot);
             	annotations.add(annotation);
             }
         }
         catch (Exception e) {
-            org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr.getSessionMgr().handleException(e);
+            SessionMgr.getSessionMgr().handleException(e);
         }
     }
 
@@ -82,7 +84,7 @@ public class Annotations {
     	
     	// Reload them
         try {
-            for(Entity entityAnnot : org.janelia.it.workstation.api.entity_model.management.ModelMgr.getModelMgr().getAnnotationsForEntity(entityId)) {
+            for(Entity entityAnnot : ModelMgr.getModelMgr().getAnnotationsForEntity(entityId)) {
             	OntologyAnnotation annotation = new OntologyAnnotation();
             	annotation.init(entityAnnot);
                 if(annotation.getTargetEntityId()!=null) {
@@ -93,7 +95,7 @@ public class Annotations {
             }
         }
         catch (Exception e) {
-            org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr.getSessionMgr().handleException(e);
+            SessionMgr.getSessionMgr().handleException(e);
         }
     }
     

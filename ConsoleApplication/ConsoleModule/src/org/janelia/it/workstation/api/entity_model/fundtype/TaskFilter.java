@@ -2,12 +2,14 @@ package org.janelia.it.workstation.api.entity_model.fundtype;
 
 import org.janelia.it.jacs.model.entity.EntityType;
 
-public class TaskFilter implements java.io.Serializable {
+import java.io.Serializable;
+
+public class TaskFilter implements Serializable {
 
     private String name;
     private Long taskId;
     private EntityTypeSet entityTypes = null;
-    private org.janelia.it.workstation.api.entity_model.fundtype.TaskFilterStatus taskFilterStatus;
+    private TaskFilterStatus taskFilterStatus;
 
     public TaskFilter(String name) {
         this.name = name;
@@ -19,7 +21,7 @@ public class TaskFilter implements java.io.Serializable {
     public TaskFilter(String name, Long taskId) {
         this.name = name;
         this.taskId = taskId;
-        taskFilterStatus = new org.janelia.it.workstation.api.entity_model.fundtype.TaskFilterStatus(this);
+        taskFilterStatus = new TaskFilterStatus(this);
     }
 
     /**
@@ -60,7 +62,7 @@ public class TaskFilter implements java.io.Serializable {
         return "TaskFilter: " + getFilterName();
     }
 
-    public org.janelia.it.workstation.api.entity_model.fundtype.TaskFilterStatus getTaskFilterStatus() {
+    public TaskFilterStatus getTaskFilterStatus() {
         return taskFilterStatus;
     }
 

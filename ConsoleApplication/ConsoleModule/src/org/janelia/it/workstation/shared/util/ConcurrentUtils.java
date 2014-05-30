@@ -1,5 +1,7 @@
 package org.janelia.it.workstation.shared.util;
 
+import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
+
 import java.util.concurrent.Callable;
 
 /**
@@ -15,7 +17,7 @@ public class ConcurrentUtils {
                 callback.call();
             }
             catch (Exception e) {
-                org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr.getSessionMgr().handleException(e);
+                SessionMgr.getSessionMgr().handleException(e);
             }
         }
     }

@@ -11,6 +11,7 @@ import javax.media.opengl.GL2GL3;
 import javax.media.opengl.glu.GLU;
 
 import org.janelia.it.workstation.geom.Vec3;
+import org.janelia.it.workstation.gui.viewer3d.BoundingBox3d;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -48,8 +49,8 @@ implements GL3Actor
     }
     
     private boolean smoothing = true;
-    private org.janelia.it.workstation.gui.opengl.PolygonalMesh mesh;
-    private org.janelia.it.workstation.gui.viewer3d.BoundingBox3d boundingBox;
+    private PolygonalMesh mesh;
+    private BoundingBox3d boundingBox;
     private DisplayMethod displayMethod 
         // 	= DisplayMethod.GL2_VERTEX_BUFFER_OBJECTS; // GL2 only...
     	//  = DisplayMethod.GL2_DISPLAY_LISTS;
@@ -62,13 +63,13 @@ implements GL3Actor
     private int indexCount = 0;
     private int vertexArrayObject = 0;
     
-    public MeshActor(org.janelia.it.workstation.gui.opengl.PolygonalMesh mesh) {
+    public MeshActor(PolygonalMesh mesh) {
         this.mesh = mesh;
         mesh.computeFaceNormals();
         mesh.computeVertexNormals();
         // Compute bounding box
-        org.janelia.it.workstation.gui.viewer3d.BoundingBox3d bb = new org.janelia.it.workstation.gui.viewer3d.BoundingBox3d();
-        for (org.janelia.it.workstation.gui.opengl.PolygonalMesh.Vertex v : mesh.getVertexes()) {
+        BoundingBox3d bb = new BoundingBox3d();
+        for (PolygonalMesh.Vertex v : mesh.getVertexes()) {
             Vec3 p = new Vec3(
                     v.getX()/v.getW(),
                     v.getY()/v.getW(),
@@ -108,13 +109,13 @@ implements GL3Actor
     private void displayUsingImmediateMode(GL2 gl2) {
         checkGlError(gl2, "display mesh using immediate mode 0");
     	gl2.glEnable(GL2.GL_LIGHTING);
-        for (org.janelia.it.workstation.gui.opengl.PolygonalMesh.Face face : mesh.getFaces()) {
+        for (PolygonalMesh.Face face : mesh.getFaces()) {
             // Paint
             gl2.glBegin(GL2.GL_TRIANGLE_FAN);
             if ((!smoothing) && (face.computedNormal != null))
                 gl2.glNormal3f((float)face.computedNormal.getX(), (float)face.computedNormal.getY(), (float)face.computedNormal.getZ());
             for (int v : face.vertexIndexes) {
-                org.janelia.it.workstation.gui.opengl.PolygonalMesh.Vertex vertex = mesh.getVertexes().get(v-1);
+                PolygonalMesh.Vertex vertex = mesh.getVertexes().get(v-1);
                 if (smoothing && (vertex.computedNormal != null))
                     gl2.glNormal3f((float)vertex.computedNormal.getX(), (float)vertex.computedNormal.getY(), (float)vertex.computedNormal.getZ());
                 gl2.glVertex4d(vertex.getX(), vertex.getY(), vertex.getZ(), vertex.getW());
@@ -145,7 +146,7 @@ implements GL3Actor
         vertexByteBuffer.order(ByteOrder.nativeOrder());
         FloatBuffer vertices = vertexByteBuffer.asFloatBuffer();
         vertices.rewind();
-        for (org.janelia.it.workstation.gui.opengl.PolygonalMesh.Vertex v : mesh.getVertexes()) {
+        for (PolygonalMesh.Vertex v : mesh.getVertexes()) {
             // vertex
             vertices.put((float)v.getX());
             vertices.put((float)v.getY());
@@ -166,7 +167,7 @@ implements GL3Actor
         checkGlError(gl, "initialize vbos 167");
         // indices
         int triangleCount = 0;
-        for (org.janelia.it.workstation.gui.opengl.PolygonalMesh.Face f : mesh.getFaces())
+        for (PolygonalMesh.Face f : mesh.getFaces())
             triangleCount += f.vertexIndexes.size() - 2;
         indexCount = triangleCount * 3;
         long totalIndexByteCount = indexCount * Integer.SIZE/8;
@@ -175,7 +176,7 @@ implements GL3Actor
         indexByteBuffer.order(ByteOrder.nativeOrder());
         IntBuffer indices = indexByteBuffer.asIntBuffer();
         indices.rewind();
-        for (org.janelia.it.workstation.gui.opengl.PolygonalMesh.Face f : mesh.getFaces()) {
+        for (PolygonalMesh.Face f : mesh.getFaces()) {
             int v0 = f.vertexIndexes.get(0) - 1;
             // One triangle for every point after number 2
             for (int t = 0; t < f.vertexIndexes.size() - 2; ++t) {
@@ -289,7 +290,7 @@ implements GL3Actor
     }
     
     @Override
-    public org.janelia.it.workstation.gui.viewer3d.BoundingBox3d getBoundingBox3d() {
+    public BoundingBox3d getBoundingBox3d() {
         return boundingBox;
     }
 
@@ -318,7 +319,7 @@ implements GL3Actor
     }
 
     @Override
-    public void display(org.janelia.it.workstation.gui.opengl.GLActorContext context) {
+    public void display(GLActorContext context) {
         GL gl = context.getGLAutoDrawable().getGL();
         if (gl.isGL2()) {
             displayGL2(gl.getGL2());
@@ -329,11 +330,11 @@ implements GL3Actor
     }
 
     @Override
-    public void init(org.janelia.it.workstation.gui.opengl.GLActorContext context) {
+    public void init(GLActorContext context) {
     }
 
     @Override
-    public void dispose(org.janelia.it.workstation.gui.opengl.GLActorContext context) {
+    public void dispose(GLActorContext context) {
         GL gl = context.getGLAutoDrawable().getGL();
         if (displayList > 0) {
             GL2 gl2 = gl.getGL2();

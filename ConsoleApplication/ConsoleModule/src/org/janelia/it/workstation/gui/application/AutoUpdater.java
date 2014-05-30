@@ -1,10 +1,26 @@
 package org.janelia.it.workstation.gui.application;
 
+import org.janelia.it.workstation.api.facade.concrete_facade.ejb.EJBFacadeManager;
+import org.janelia.it.workstation.api.facade.concrete_facade.ejb.EJBFactory;
+import org.janelia.it.workstation.api.facade.facade_mgr.FacadeManager;
+import org.janelia.it.workstation.gui.framework.exception_handlers.ExitHandler;
+import org.janelia.it.workstation.gui.framework.exception_handlers.UserNotificationExceptionHandler;
+import org.janelia.it.workstation.gui.framework.pref_controller.PrefController;
+import org.janelia.it.workstation.gui.framework.session_mgr.BrowserModelListenerAdapter;
+import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
+import org.janelia.it.workstation.gui.framework.session_mgr.SessionModel;
 import org.janelia.it.workstation.gui.util.panels.ApplicationSettingsPanel;
 import org.janelia.it.jacs.compute.api.ComputeBeanRemote;
 import org.janelia.it.jacs.shared.utils.FileUtil;
 import org.janelia.it.jacs.shared.utils.IOUtils;
 import org.janelia.it.jacs.shared.utils.SystemCall;
+import org.janelia.it.workstation.gui.util.panels.DataSourceSettingsPanel;
+import org.janelia.it.workstation.gui.util.panels.ViewerSettingsPanel;
+import org.janelia.it.workstation.shared.filestore.PathTranslator;
+import org.janelia.it.workstation.shared.util.ConsoleProperties;
+import org.janelia.it.workstation.shared.util.SystemInfo;
+import org.janelia.it.workstation.shared.util.Utils;
+import org.janelia.it.workstation.shared.workers.SimpleWorker;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -55,41 +71,41 @@ public class AutoUpdater extends JFrame implements PropertyChangeListener {
 	    try {
 	        // This try block is copied from ConsoleApp. We may want to consolidate these in the future.
 	        
-            org.janelia.it.workstation.shared.util.ConsoleProperties.load();
+            ConsoleProperties.load();
             
-            org.janelia.it.workstation.api.facade.facade_mgr.FacadeManager.registerFacade(org.janelia.it.workstation.api.facade.facade_mgr.FacadeManager.getEJBProtocolString(), org.janelia.it.workstation.api.facade.concrete_facade.ejb.EJBFacadeManager.class, "JACS EJB Facade Manager");
+            FacadeManager.registerFacade(FacadeManager.getEJBProtocolString(), EJBFacadeManager.class, "JACS EJB Facade Manager");
             
-            final org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr sessionMgr = org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr.getSessionMgr();
-            sessionMgr.registerExceptionHandler(new org.janelia.it.workstation.gui.framework.exception_handlers.UserNotificationExceptionHandler());
-            sessionMgr.registerExceptionHandler(new org.janelia.it.workstation.gui.framework.exception_handlers.ExitHandler());
+            final SessionMgr sessionMgr = SessionMgr.getSessionMgr();
+            sessionMgr.registerExceptionHandler(new UserNotificationExceptionHandler());
+            sessionMgr.registerExceptionHandler(new ExitHandler());
             sessionMgr.registerPreferenceInterface(ApplicationSettingsPanel.class, ApplicationSettingsPanel.class);
-            sessionMgr.registerPreferenceInterface(org.janelia.it.workstation.gui.util.panels.DataSourceSettingsPanel.class, org.janelia.it.workstation.gui.util.panels.DataSourceSettingsPanel.class);
-            sessionMgr.registerPreferenceInterface(org.janelia.it.workstation.gui.util.panels.ViewerSettingsPanel.class, org.janelia.it.workstation.gui.util.panels.ViewerSettingsPanel.class);
+            sessionMgr.registerPreferenceInterface(DataSourceSettingsPanel.class, DataSourceSettingsPanel.class);
+            sessionMgr.registerPreferenceInterface(ViewerSettingsPanel.class, ViewerSettingsPanel.class);
     
-            org.janelia.it.workstation.gui.framework.session_mgr.SessionModel sessionModel = org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr.getSessionMgr().getSessionModel();
+            SessionModel sessionModel = SessionMgr.getSessionMgr().getSessionModel();
             sessionModel.addModelListener(new ModelObserver());
             
             // Assuming that the user has entered the login/password information, now validate
-            String username = (String) org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr.getSessionMgr().getModelProperty(org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr.USER_NAME);
-            String email = (String) org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr.getSessionMgr().getModelProperty(org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr.USER_EMAIL);
+            String username = (String) SessionMgr.getSessionMgr().getModelProperty(SessionMgr.USER_NAME);
+            String email = (String) SessionMgr.getSessionMgr().getModelProperty(SessionMgr.USER_EMAIL);
             
             if (username==null || email==null) {
                 Object[] options = {"Enter Login", "Exit Program"};
                 final int answer = JOptionPane.showOptionDialog(null, "Please enter your login and email information.", "Information Required",
                         JOptionPane.OK_CANCEL_OPTION, JOptionPane.QUESTION_MESSAGE, null, options, options[0]);
                 if (answer == 0) {
-                    org.janelia.it.workstation.gui.framework.pref_controller.PrefController.getPrefController().getPrefInterface(org.janelia.it.workstation.gui.util.panels.DataSourceSettingsPanel.class, null);
+                    PrefController.getPrefController().getPrefInterface(DataSourceSettingsPanel.class, null);
                 }
                 else {
-                    org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr.getSessionMgr().systemExit();
+                    SessionMgr.getSessionMgr().systemExit();
                 }
             }
             
-            org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr.getSessionMgr().loginSubject();
+            SessionMgr.getSessionMgr().loginSubject();
 	    }
 	    catch (Exception e) {
-            org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr.getSessionMgr().handleException(e);
-            org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr.getSessionMgr().systemExit();
+            SessionMgr.getSessionMgr().handleException(e);
+            SessionMgr.getSessionMgr().systemExit();
 	    }
         
         setTitle("Workstation AutoUpdate");
@@ -100,12 +116,12 @@ public class AutoUpdater extends JFrame implements PropertyChangeListener {
         add(mainPane, BorderLayout.CENTER);
 	}
 
-    private class ModelObserver extends org.janelia.it.workstation.gui.framework.session_mgr.BrowserModelListenerAdapter {
+    private class ModelObserver extends BrowserModelListenerAdapter {
         
         @Override
         public void modelPropertyChanged(Object key, Object oldValue, Object newValue) {
             log.info("Model change detected, saving user settings");
-            org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr.getSessionMgr().saveUserSettings();
+            SessionMgr.getSessionMgr().saveUserSettings();
         }
         
     }
@@ -129,7 +145,7 @@ public class AutoUpdater extends JFrame implements PropertyChangeListener {
 					showVersionCheck();
 				}
 				catch (Exception e) {
-					org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr.getSessionMgr().handleException(e);
+					SessionMgr.getSessionMgr().handleException(e);
 					System.exit(1);
 				}
 			}
@@ -138,9 +154,9 @@ public class AutoUpdater extends JFrame implements PropertyChangeListener {
 
 	public void showVersionCheck() throws Exception {
 		
-        ComputeBeanRemote computeBean = org.janelia.it.workstation.api.facade.concrete_facade.ejb.EJBFactory.getRemoteComputeBean();
+        ComputeBeanRemote computeBean = EJBFactory.getRemoteComputeBean();
         this.serverVersion = computeBean.getAppVersion();
-        this.clientVersion = org.janelia.it.workstation.shared.util.ConsoleProperties.getString("console.versionNumber");
+        this.clientVersion = ConsoleProperties.getString("console.versionNumber");
 
         log.info("Client version: {}",clientVersion);
         log.info("Server version: {}",serverVersion);
@@ -149,25 +165,25 @@ public class AutoUpdater extends JFrame implements PropertyChangeListener {
 
             log.info("Client/server versions do not match");
             
-            if (org.janelia.it.workstation.shared.util.SystemInfo.isMac) {
+            if (SystemInfo.isMac) {
             	log.info("Configuring for Mac...");
             	newBuildDir = "JaneliaWorkstation_"+serverVersion;
         	}
-        	else if (org.janelia.it.workstation.shared.util.SystemInfo.isLinux) {
+        	else if (SystemInfo.isLinux) {
         		log.info("Configuring for Linux...");
         		newBuildDir = "JaneliaWorkstation_linux_"+serverVersion;
         	}
-            else if (org.janelia.it.workstation.shared.util.SystemInfo.isWindows) {
+            else if (SystemInfo.isWindows) {
             	log.info("Configuring for Windows...");
                 newBuildDir = "JaneliaWorkstation_windows_"+serverVersion;
             }
             else {
-        		throw new IllegalStateException("Operation system not supported: "+ org.janelia.it.workstation.shared.util.SystemInfo.OS_NAME);
+        		throw new IllegalStateException("Operation system not supported: "+ SystemInfo.OS_NAME);
         	}
             
             String releaseNotes = null;
             try {
-                URL releaseNotesURL = org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr.getURL(org.janelia.it.workstation.shared.filestore.PathTranslator.JACS_DEPLOYMENT_PATH_NFS + "/JaneliaWorkstation/" + newBuildDir + "/releaseNotes.txt");
+                URL releaseNotesURL = SessionMgr.getURL(PathTranslator.JACS_DEPLOYMENT_PATH_NFS + "/JaneliaWorkstation/" + newBuildDir + "/releaseNotes.txt");
                 releaseNotes = IOUtils.readInputStream(releaseNotesURL.openStream());
             }
             catch (Exception e) {
@@ -297,7 +313,7 @@ public class AutoUpdater extends JFrame implements PropertyChangeListener {
     	pack();
         setLocationRelativeTo(null);
     	
-		org.janelia.it.workstation.shared.workers.SimpleWorker updater = new org.janelia.it.workstation.shared.workers.SimpleWorker() {
+		SimpleWorker updater = new SimpleWorker() {
 
 		    private String remoteFile;
 		    private File downloadsDir;
@@ -310,17 +326,17 @@ public class AutoUpdater extends JFrame implements PropertyChangeListener {
 			    
 			    firePropertyChange(UPDATE_STATE_PROPERTY, 0, STATE_DOWNLOAD);
 			    
-	            downloadsDir = org.janelia.it.workstation.shared.util.SystemInfo.getDownloadsDir();
+	            downloadsDir = SystemInfo.getDownloadsDir();
 	            
-	            if (org.janelia.it.workstation.shared.util.SystemInfo.isMac) {
+	            if (SystemInfo.isMac) {
 	                log.info("Configuring for Mac...");
 	                newBuildDir = "JaneliaWorkstation_"+serverVersion;
-                    remoteFile = org.janelia.it.workstation.shared.filestore.PathTranslator.JACS_DEPLOYMENT_PATH_NFS+"/JaneliaWorkstation/"+ newBuildDir +".tgz";
+                    remoteFile = PathTranslator.JACS_DEPLOYMENT_PATH_NFS+"/JaneliaWorkstation/"+ newBuildDir +".tgz";
 	                downloadFile = new File(downloadsDir, newBuildDir +".tgz");
 	                extractedDir = new File(downloadsDir, newBuildDir);
 	                packageDir = new File(extractedDir, "JaneliaWorkstation.app");
 	            }
-	            else if (org.janelia.it.workstation.shared.util.SystemInfo.isLinux) {
+	            else if (SystemInfo.isLinux) {
 	                log.info("Configuring for Linux...");
                     try {
                         FileUtil.ensureDirExists(downloadsDir.getAbsolutePath());
@@ -329,21 +345,21 @@ public class AutoUpdater extends JFrame implements PropertyChangeListener {
                         log.error("Tried to ensure dir ("+downloadsDir.getAbsolutePath()+")exists in the AutoUpdater and the check bombed.  Swallowing...");
                     }
 	                newBuildDir = "JaneliaWorkstation_linux_"+serverVersion;
-                    remoteFile = org.janelia.it.workstation.shared.filestore.PathTranslator.JACS_DEPLOYMENT_PATH_NFS+"/JaneliaWorkstation/"+ newBuildDir +".tgz";
+                    remoteFile = PathTranslator.JACS_DEPLOYMENT_PATH_NFS+"/JaneliaWorkstation/"+ newBuildDir +".tgz";
 	                downloadFile = new File(downloadsDir, newBuildDir +".tgz");
 	                extractedDir = new File(downloadsDir, newBuildDir);
 	                packageDir = extractedDir;
 	            }
-	            else if (org.janelia.it.workstation.shared.util.SystemInfo.isWindows) {
+	            else if (SystemInfo.isWindows) {
 	                log.info("Configuring for Windows...");
 	                newBuildDir = "JaneliaWorkstation_windows_"+serverVersion;
-                    remoteFile = org.janelia.it.workstation.shared.filestore.PathTranslator.JACS_DEPLOYMENT_PATH_NFS+"/JaneliaWorkstation/"+ newBuildDir +".zip";
+                    remoteFile = PathTranslator.JACS_DEPLOYMENT_PATH_NFS+"/JaneliaWorkstation/"+ newBuildDir +".zip";
 	                downloadFile = new File(downloadsDir, newBuildDir +".zip");
 	                extractedDir = new File(downloadsDir, newBuildDir);
 	                packageDir = extractedDir;
 	            }
 	            else {
-	                throw new IllegalStateException("Operation system not supported: "+ org.janelia.it.workstation.shared.util.SystemInfo.OS_NAME);
+	                throw new IllegalStateException("Operation system not supported: "+ SystemInfo.OS_NAME);
 	            }
 
 	            log.info("  remoteFile: {}",remoteFile);
@@ -362,7 +378,7 @@ public class AutoUpdater extends JFrame implements PropertyChangeListener {
 
 				try {
     				log.info("Downloading update from {}",remoteFile);
-    				org.janelia.it.workstation.shared.util.Utils.copyURLToFile(remoteFile, downloadFile, this);
+    				Utils.copyURLToFile(remoteFile, downloadFile, this);
 				}
 				catch (Exception e) {
                     log.info("Unable to download remote file: "+remoteFile);
@@ -372,7 +388,7 @@ public class AutoUpdater extends JFrame implements PropertyChangeListener {
 				
 				firePropertyChange(UPDATE_STATE_PROPERTY, STATE_DOWNLOAD, STATE_DECOMPRESS);
 				        
-				if (org.janelia.it.workstation.shared.util.SystemInfo.isWindows) {
+				if (SystemInfo.isWindows) {
                     log.info("Unzipping {}",downloadFile);
                     FileUtil.zipUncompress(downloadFile, downloadsDir.getAbsolutePath());
                 }
@@ -411,14 +427,14 @@ public class AutoUpdater extends JFrame implements PropertyChangeListener {
 					// Ignore
 				}
 				catch (Exception e) {
-		            org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr.getSessionMgr().handleException(e);
+		            SessionMgr.getSessionMgr().handleException(e);
 		            printPathAndExit("",1);
 				}
 			}
 			
 			@Override
 			protected void hadError(Throwable error) {
-	            org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr.getSessionMgr().handleException(error);
+	            SessionMgr.getSessionMgr().handleException(error);
 	            printPathAndExit("",1);
 			}
 		};
@@ -486,7 +502,7 @@ public class AutoUpdater extends JFrame implements PropertyChangeListener {
             updater.checkVersions();
         }
         catch (Exception ex) {
-            org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr.getSessionMgr().handleException(ex);
+            SessionMgr.getSessionMgr().handleException(ex);
 			printPathAndExit("",1);
         }
     }

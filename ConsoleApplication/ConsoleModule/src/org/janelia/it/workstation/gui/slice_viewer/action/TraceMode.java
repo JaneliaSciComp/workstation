@@ -13,32 +13,41 @@ import java.util.Vector;
 import javax.swing.AbstractAction;
 import javax.swing.JMenuItem;
 
+import org.janelia.it.workstation.geom.Vec3;
+import org.janelia.it.workstation.gui.slice_viewer.MenuItemGenerator;
+import org.janelia.it.workstation.gui.slice_viewer.MouseModalWidget;
 import org.janelia.it.workstation.gui.slice_viewer.skeleton.Anchor;
+import org.janelia.it.workstation.gui.slice_viewer.skeleton.Skeleton;
+import org.janelia.it.workstation.gui.slice_viewer.skeleton.SkeletonActor;
+import org.janelia.it.workstation.gui.slice_viewer.skeleton.SkeletonSwcExporter;
+import org.janelia.it.workstation.gui.viewer3d.BoundingBox3d;
+import org.janelia.it.workstation.gui.viewer3d.interfaces.Viewport;
+import org.janelia.it.workstation.signal.Slot1;
 
 public class TraceMode extends BasicMouseMode 
 implements MouseMode, KeyListener
 {
-	private org.janelia.it.workstation.gui.slice_viewer.skeleton.Skeleton skeleton;
-	private org.janelia.it.workstation.gui.slice_viewer.skeleton.SkeletonActor skeletonActor;
+	private Skeleton skeleton;
+	private SkeletonActor skeletonActor;
 	private int currentHover = -1;
 	// private Anchor hoverAnchor = null;
-	private org.janelia.it.workstation.geom.Vec3 popupXyz = null;
+	private Vec3 popupXyz = null;
 	// Sometimes users move an anchor with the mouse
-	private org.janelia.it.workstation.gui.slice_viewer.skeleton.Anchor dragAnchor = null;
+	private Anchor dragAnchor = null;
 	private Point dragStart = null;
 	private Cursor grabHandCursor = BasicMouseMode.createCursor("grab_closed.png", 7, 7);
 	private Cursor penCursor = BasicMouseMode.createCursor("nib.png", 7, 0);
 	private Cursor crossCursor = BasicMouseMode.createCursor("crosshair.png", 7, 7);
 	private Cursor penPlusCursor = BasicMouseMode.createCursor("nib_plus.png", 7, 0);
 	private Point pressPoint;
-	private org.janelia.it.workstation.gui.viewer3d.interfaces.Viewport viewport;
-	private org.janelia.it.workstation.gui.viewer3d.BoundingBox3d boundingBox;
+	private Viewport viewport;
+	private BoundingBox3d boundingBox;
 	// private Anchor nextParent = null;
 	private boolean autoFocusNextAnchor = false;
 	
-	public org.janelia.it.workstation.signal.Slot1<Anchor> focusOnAnchorSlot = new org.janelia.it.workstation.signal.Slot1<Anchor>() {
+	public Slot1<Anchor> focusOnAnchorSlot = new Slot1<Anchor>() {
 		@Override
-		public void execute(org.janelia.it.workstation.gui.slice_viewer.skeleton.Anchor anchor) {
+		public void execute(Anchor anchor) {
 			if (! autoFocusNextAnchor)
 				return;
 			skeletonActor.setNextParent(anchor);
@@ -49,7 +58,7 @@ implements MouseMode, KeyListener
 		}
 	};
 	
-	public TraceMode(org.janelia.it.workstation.gui.slice_viewer.skeleton.Skeleton skeleton) {
+	public TraceMode(Skeleton skeleton) {
 		this.skeleton = skeleton;
 		setHoverCursor(penCursor);
 		setDragCursor(crossCursor);
@@ -86,7 +95,7 @@ implements MouseMode, KeyListener
 		// Double click to center; on anchor or on slice point
 		if (event.getClickCount() == 2) {
             if (currentHover >= 0) {
-                org.janelia.it.workstation.gui.slice_viewer.skeleton.Anchor hoverAnchor = skeletonActor.getAnchorAtIndex(currentHover);
+                Anchor hoverAnchor = skeletonActor.getAnchorAtIndex(currentHover);
                 camera.setFocus(hoverAnchor.getLocation());
                 skeleton.getHistory().push(hoverAnchor);
             }
@@ -97,12 +106,12 @@ implements MouseMode, KeyListener
 		}
 	}
 	
-	private void appendAnchor(org.janelia.it.workstation.geom.Vec3 xyz) {
+	private void appendAnchor(Vec3 xyz) {
 		autoFocusNextAnchor = true; // center on new position
 		skeleton.addAnchorAtXyz(xyz, skeletonActor.getNextParent());
 	}
 	
-	private void seedAnchor(org.janelia.it.workstation.geom.Vec3 xyz) {
+	private void seedAnchor(Vec3 xyz) {
 		autoFocusNextAnchor = true; // center on new position
 		skeleton.addAnchorAtXyz(xyz, null);
 	}
@@ -112,13 +121,13 @@ implements MouseMode, KeyListener
 		// BUTTON1 is near-click for both left and right handed mice (right?)
 		if ((event.getButton() == MouseEvent.BUTTON1) && event.isShiftDown()) {
 			// Place new anchor
-			org.janelia.it.workstation.geom.Vec3 xyz = worldFromPixel(event.getPoint());
+			Vec3 xyz = worldFromPixel(event.getPoint());
 			// System.out.println("Trace click "+xyz);
 			appendAnchor(xyz);
 		}
 		else if (event.getButton() == MouseEvent.BUTTON1) {
 			if (currentHover >= 0) {
-				org.janelia.it.workstation.gui.slice_viewer.skeleton.Anchor anchor = skeletonActor.getAnchorAtIndex(currentHover);
+				Anchor anchor = skeletonActor.getAnchorAtIndex(currentHover);
 				skeletonActor.setNextParent(anchor);
 				// System.out.println("select parent anchor "+currentHover);
 			}
@@ -130,7 +139,7 @@ implements MouseMode, KeyListener
 		super.mouseDragged(event);
 		// We might be moving an anchor
 		if (dragAnchor != null) {
-			org.janelia.it.workstation.geom.Vec3 loc = worldFromPixel(event.getPoint());
+			Vec3 loc = worldFromPixel(event.getPoint());
 			skeletonActor.lightweightPlaceAnchor(dragAnchor, loc);
 		}
 		// Middle button drag to pan
@@ -139,7 +148,7 @@ implements MouseMode, KeyListener
 			checkCursor(grabHandCursor);
 			Point p1 = getPreviousPoint();
 			Point p2 = getPoint();
-			org.janelia.it.workstation.geom.Vec3 dx = new org.janelia.it.workstation.geom.Vec3(p1.x - p2.x, p1.y - p2.y, 0);
+			Vec3 dx = new Vec3(p1.x - p2.x, p1.y - p2.y, 0);
 			dx = viewerInGround.times(dx);
 			getCamera().incrementFocusPixels(dx);
 			if (boundingBox != null)
@@ -151,20 +160,20 @@ implements MouseMode, KeyListener
 	@Override
 	public void mouseMoved(MouseEvent event) {
 		super.mouseMoved(event);
-		org.janelia.it.workstation.geom.Vec3 xyz = worldFromPixel(event.getPoint());
+		Vec3 xyz = worldFromPixel(event.getPoint());
 		int pixelRadius = 5;
 		double worldRadius = pixelRadius / camera.getPixelsPerSceneUnit();
 		// TODO - if this gets slow, use a more efficient search structure, like an octree
 		// Find smallest squared distance
 		double cutoff = worldRadius * worldRadius;
 		double minDist2 = 10 * cutoff; // start too big
-		org.janelia.it.workstation.gui.slice_viewer.skeleton.Anchor closest = null;
-		for (org.janelia.it.workstation.gui.slice_viewer.skeleton.Anchor a : skeleton.getAnchors()) {
+		Anchor closest = null;
+		for (Anchor a : skeleton.getAnchors()) {
 			double dz = Math.abs(2.0 * (xyz.getZ() - a.getLocation().getZ()) * camera.getPixelsPerSceneUnit());
 			if (dz >= 0.95 * viewport.getDepth())
 				continue; // outside of Z (most of) range
 			// Use X/Y (not Z) for distance comparison
-			org.janelia.it.workstation.geom.Vec3 dv = xyz.minus(a.getLocation());
+			Vec3 dv = xyz.minus(a.getLocation());
 			dv = viewerInGround.inverse().times(dv); // rotate into screen space
 			double dx = dv.getX();
 			double dy = dv.getY();
@@ -220,19 +229,19 @@ implements MouseMode, KeyListener
 			if (dragAnchor != null) {
 				Point finalPos = event.getPoint();
 				if (dragStart.distance(event.getPoint()) > 2.0) {
-					org.janelia.it.workstation.geom.Vec3 location = worldFromPixel(finalPos);
-					org.janelia.it.workstation.geom.Vec3 oldLoc = dragAnchor.getLocation();
-					org.janelia.it.workstation.geom.Vec3 dLoc = location.minus(oldLoc);
+					Vec3 location = worldFromPixel(finalPos);
+					Vec3 oldLoc = dragAnchor.getLocation();
+					Vec3 dLoc = location.minus(oldLoc);
 					// relaxed restriction on move; used to disallow movement in z to
                     //  prevent changing plane of annotations dragged while not actually
                     //  on their plane (since they are visible and draggable in nearby
                     //  planes)
 					// Vec3 viewPlane = viewerInGround.inverse().times(new Vec3(1,1,0));
-					org.janelia.it.workstation.geom.Vec3 viewPlane = viewerInGround.inverse().times(new org.janelia.it.workstation.geom.Vec3(1,1,1));
+					Vec3 viewPlane = viewerInGround.inverse().times(new Vec3(1,1,1));
 					for (int i = 0; i < 3; ++i) {
 						dLoc.set(i, dLoc.get(i) * viewPlane.get(i));
 					}
-					org.janelia.it.workstation.geom.Vec3 newLoc = oldLoc.plus(dLoc);
+					Vec3 newLoc = oldLoc.plus(dLoc);
 					dragAnchor.setLocation(newLoc);
 					skeleton.getHistory().push(dragAnchor);
 				}
@@ -249,31 +258,31 @@ implements MouseMode, KeyListener
 		}
 	}
 	
-	public void setActor(org.janelia.it.workstation.gui.slice_viewer.skeleton.SkeletonActor actor) {
+	public void setActor(SkeletonActor actor) {
 		this.skeletonActor = actor;
 	}
 
-	public org.janelia.it.workstation.gui.slice_viewer.skeleton.SkeletonActor getActor() {
+	public SkeletonActor getActor() {
 		return skeletonActor;
 	}
 	
-    public org.janelia.it.workstation.gui.viewer3d.BoundingBox3d getBoundingBox() {
+    public BoundingBox3d getBoundingBox() {
 		return boundingBox;
 	}
 
-	public void setBoundingBox(org.janelia.it.workstation.gui.viewer3d.BoundingBox3d boundingBox) {
+	public void setBoundingBox(BoundingBox3d boundingBox) {
 		this.boundingBox = boundingBox;
 	}
 
-	private org.janelia.it.workstation.gui.slice_viewer.skeleton.Anchor getHoverAnchor() {
+	private Anchor getHoverAnchor() {
         if (currentHover >= 0)
             return skeletonActor.getAnchorAtIndex(currentHover);
 		return null;
 	}
 	
 	@Override
-    public org.janelia.it.workstation.gui.slice_viewer.MenuItemGenerator getMenuItemGenerator() {
-        return new org.janelia.it.workstation.gui.slice_viewer.MenuItemGenerator() {
+    public MenuItemGenerator getMenuItemGenerator() {
+        return new MenuItemGenerator() {
             @SuppressWarnings("serial")
 			@Override
             public List<JMenuItem> getMenus(MouseEvent event) 
@@ -287,8 +296,8 @@ implements MouseMode, KeyListener
                         public void actionPerformed(ActionEvent e) {} // does nothing (closes context menu)
                     }));
                     ///// Popup menu items that require an anchor under the mouse /////
-                    org.janelia.it.workstation.gui.slice_viewer.skeleton.Anchor hover = getHoverAnchor();
-                    org.janelia.it.workstation.gui.slice_viewer.skeleton.Anchor parent = skeletonActor.getNextParent();
+                    Anchor hover = getHoverAnchor();
+                    Anchor parent = skeletonActor.getNextParent();
                     result.add(null); // separator
                     if (hover == null) { // No anchor under mouse? Maybe user wants to create a new anchor.
                         ///// Popup menu items that do not require an anchor under the mouse /////
@@ -324,7 +333,7 @@ implements MouseMode, KeyListener
                             private static final long serialVersionUID = 1L;
                             @Override
                             public void actionPerformed(ActionEvent e) {
-                            	org.janelia.it.workstation.gui.slice_viewer.skeleton.Anchor h = getHoverAnchor();
+                            	Anchor h = getHoverAnchor();
                             	if (h == null)
                             		return;
                             	skeleton.getHistory().push(h);
@@ -337,7 +346,7 @@ implements MouseMode, KeyListener
                             result.add(new JMenuItem(new AbstractAction("Trace path to parent") {
                                 @Override
                                 public void actionPerformed(ActionEvent e) {
-                                    org.janelia.it.workstation.gui.slice_viewer.skeleton.Anchor h = getHoverAnchor();
+                                    Anchor h = getHoverAnchor();
                                     skeleton.traceAnchorConnection(h);
                                 }
                             }));
@@ -384,7 +393,7 @@ implements MouseMode, KeyListener
                         result.add(new JMenuItem(new AbstractAction("Export SWC file rooted at this anchor...") {
 							@Override
 							public void actionPerformed(ActionEvent event) {
-								new org.janelia.it.workstation.gui.slice_viewer.skeleton.SkeletonSwcExporter(getHoverAnchor()).dialogAndExport(getWidget().getComponent());
+								new SkeletonSwcExporter(getHoverAnchor()).dialogAndExport(getWidget().getComponent());
 							}
                         }));
                         result.add(new JMenuItem(new AbstractAction("Split anchor") {
@@ -428,15 +437,15 @@ implements MouseMode, KeyListener
     }
 	
 	@Override
-	public void setWidget(org.janelia.it.workstation.gui.slice_viewer.MouseModalWidget widget, boolean updateCursor) {
+	public void setWidget(MouseModalWidget widget, boolean updateCursor) {
 		super.setWidget(widget, updateCursor);
 	}
 
-	public org.janelia.it.workstation.gui.viewer3d.interfaces.Viewport getViewport() {
+	public Viewport getViewport() {
 		return viewport;
 	}
 
-	public void setViewport(org.janelia.it.workstation.gui.viewer3d.interfaces.Viewport viewport) {
+	public void setViewport(Viewport viewport) {
 		this.viewport = viewport;
 	}
 
@@ -444,11 +453,11 @@ implements MouseMode, KeyListener
 	public void keyPressed(KeyEvent event) {
 		checkShiftPlusCursor(event);
 		int keyCode = event.getKeyCode();
-		org.janelia.it.workstation.gui.slice_viewer.skeleton.Anchor historyAnchor = null;
+		Anchor historyAnchor = null;
 		switch(keyCode) {
 		case KeyEvent.VK_BACK_SPACE:
 		case KeyEvent.VK_DELETE:
-			org.janelia.it.workstation.gui.slice_viewer.skeleton.Anchor parentAnchor = skeletonActor.getNextParent();
+			Anchor parentAnchor = skeletonActor.getNextParent();
 			if (parentAnchor != null) {
 				skeleton.delete(parentAnchor);
 			}

@@ -17,7 +17,7 @@ import java.util.List;
 import static org.junit.Assert.*;
 
 /**
- * Tests the {@link org.janelia.it.workstation.shared.util.filecache.LocalFileCache} class.
+ * Tests the {@link LocalFileCache} class.
  *
  * @author Eric Trautman
  */
@@ -32,7 +32,7 @@ public class LocalFileCacheTest {
     private List<File> filesToDeleteDuringTearDown;
     private List<File> directoriesToDeleteDuringTearDown;
 
-    private org.janelia.it.workstation.shared.util.filecache.LocalFileCache cache;
+    private LocalFileCache cache;
 
     @Before
     public void setUp() throws Exception {
@@ -209,7 +209,7 @@ public class LocalFileCacheTest {
         try {
             cache.getFile(testRemoteFile.toURI().toURL());
             fail("file larger than cache should have caused exception");
-        } catch (org.janelia.it.workstation.shared.util.filecache.FileNotCacheableException e) {
+        } catch (FileNotCacheableException e) {
             Throwable cause = e.getCause();
             assertNotNull("exception cause is missing", cause);
             LOG.info("succesfully received exception, message is: " +
@@ -293,14 +293,14 @@ public class LocalFileCacheTest {
         final File parentDirectory = cachedFileWithoutMeta.getParentFile();
 
         File deletedMetaFile = new File(parentDirectory,
-                                        org.janelia.it.workstation.shared.util.filecache.CachedFile.getMetaFileName(cachedFileWithoutMeta));
+                                        CachedFile.getMetaFileName(cachedFileWithoutMeta));
         if (! deletedMetaFile.delete()) {
             fail("failed to remove cachedFileWithoutMeta meta file " +
                         deletedMetaFile.getAbsolutePath());
         }
 
         final File orphanedMetaFile = new File(parentDirectory,
-                                               org.janelia.it.workstation.shared.util.filecache.CachedFile.getMetaFileName(deletedCachedFile));
+                                               CachedFile.getMetaFileName(deletedCachedFile));
         if (! deletedCachedFile.delete()) {
             fail("failed to remove cached file " + deletedCachedFile.getAbsolutePath());
         }

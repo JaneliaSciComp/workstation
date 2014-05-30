@@ -1,5 +1,8 @@
 package org.janelia.it.workstation.ws;
 
+import org.janelia.it.workstation.api.entity_model.access.ModelMgrObserver;
+import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
+
 import java.util.LinkedHashMap;
 import java.util.Map;
 
@@ -11,7 +14,7 @@ import javax.xml.ws.Endpoint;
  * 
  * @author <a href="mailto:rokickik@janelia.hhmi.org">Konrad Rokicki</a>
  */
-public class EmbeddedAxisServer implements org.janelia.it.workstation.api.entity_model.access.ModelMgrObserver {
+public class EmbeddedAxisServer implements ModelMgrObserver {
     
     private final String baseUrl;
     private Endpoint obs;
@@ -43,14 +46,14 @@ public class EmbeddedAxisServer implements org.janelia.it.workstation.api.entity
 	public void ontologySelected(long rootId) {
 		Map<String,Object> parameters = new LinkedHashMap<String,Object>();
 		parameters.put("rootId",rootId);
-		org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr.getSessionMgr().sendMessageToExternalClients("ontologySelected", parameters);
+		SessionMgr.getSessionMgr().sendMessageToExternalClients("ontologySelected", parameters);
 	}
 
 	@Override
 	public void ontologyChanged(long rootId) {
 		Map<String,Object> parameters = new LinkedHashMap<String,Object>();
 		parameters.put("rootId",rootId);
-		org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr.getSessionMgr().sendMessageToExternalClients("ontologyChanged", parameters);
+		SessionMgr.getSessionMgr().sendMessageToExternalClients("ontologyChanged", parameters);
 	}
 
 	@Override
@@ -74,55 +77,55 @@ public class EmbeddedAxisServer implements org.janelia.it.workstation.api.entity
     public void entityChanged(long entityId) {
 		Map<String,Object> parameters = new LinkedHashMap<String,Object>();
 		parameters.put("entityId",entityId);
-		org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr.getSessionMgr().sendMessageToExternalClients("entityChanged", parameters);
+		SessionMgr.getSessionMgr().sendMessageToExternalClients("entityChanged", parameters);
 	}
 
 	@Override
     public void entityChildrenChanged(long entityId) {
 		Map<String,Object> parameters = new LinkedHashMap<String,Object>();
 		parameters.put("entityId",entityId);
-		org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr.getSessionMgr().sendMessageToExternalClients("entityChildrenChanged", parameters);
+		SessionMgr.getSessionMgr().sendMessageToExternalClients("entityChildrenChanged", parameters);
 	}
 
 	@Override
     public void entityRemoved(long entityId) {
 		Map<String,Object> parameters = new LinkedHashMap<String,Object>();
 		parameters.put("entityId",entityId);
-		org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr.getSessionMgr().sendMessageToExternalClients("entityRemoved", parameters);
+		SessionMgr.getSessionMgr().sendMessageToExternalClients("entityRemoved", parameters);
     }
 
 	@Override
     public void entityDataRemoved(long entityDataId) {
 		Map<String,Object> parameters = new LinkedHashMap<String,Object>();
 		parameters.put("entityDataId",entityDataId);
-		org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr.getSessionMgr().sendMessageToExternalClients("entityDataRemoved", parameters);
+		SessionMgr.getSessionMgr().sendMessageToExternalClients("entityDataRemoved", parameters);
     }
 	
 	@Override
 	public void entityViewRequested(long entityId) {
 		Map<String,Object> parameters = new LinkedHashMap<String,Object>();
 		parameters.put("entityId",entityId);
-		org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr.getSessionMgr().sendMessageToExternalClients("entityViewRequested", parameters);
+		SessionMgr.getSessionMgr().sendMessageToExternalClients("entityViewRequested", parameters);
 	}
 
 	@Override
 	public void annotationsChanged(long entityId) {
 		Map<String,Object> parameters = new LinkedHashMap<String,Object>();
 		parameters.put("entityId",entityId);
-		org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr.getSessionMgr().sendMessageToExternalClients("annotationsChanged", parameters);
+		SessionMgr.getSessionMgr().sendMessageToExternalClients("annotationsChanged", parameters);
 	}
 
 	@Override
 	public void sessionSelected(long sessionId) {
 		Map<String,Object> parameters = new LinkedHashMap<String,Object>();
 		parameters.put("sessionId",sessionId);
-		org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr.getSessionMgr().sendMessageToExternalClients("sessionSelected", parameters);
+		SessionMgr.getSessionMgr().sendMessageToExternalClients("sessionSelected", parameters);
 	}
 
 	@Override
 	public void sessionDeselected() {
 		Map<String,Object> parameters = new LinkedHashMap<String,Object>();
-		org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr.getSessionMgr().sendMessageToExternalClients("sessionDeselected", parameters);
+		SessionMgr.getSessionMgr().sendMessageToExternalClients("sessionDeselected", parameters);
 	}
 
 }

@@ -4,6 +4,7 @@ import org.janelia.it.jacs.model.entity.Entity;
 import org.janelia.it.jacs.model.entity.EntityConstants;
 import org.janelia.it.jacs.model.entity.EntityData;
 import org.janelia.it.jacs.shared.utils.StringUtils;
+import org.janelia.it.workstation.model.entity.RootedEntity;
 
 /**
  * Created with IntelliJ IDEA.
@@ -16,7 +17,7 @@ import org.janelia.it.jacs.shared.utils.StringUtils;
  */
 public class Compartment extends EntityWrapper implements Viewable2d, Masked3d, MaskIndexed, Comparable<Compartment> {
 
-    public Compartment( org.janelia.it.workstation.model.entity.RootedEntity compartmentEntity ) {
+    public Compartment( RootedEntity compartmentEntity ) {
         super( compartmentEntity );
     }
 

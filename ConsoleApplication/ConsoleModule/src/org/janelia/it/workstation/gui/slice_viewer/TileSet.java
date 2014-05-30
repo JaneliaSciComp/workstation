@@ -57,10 +57,10 @@ extends HashSet<Tile2d>
 			return 1.0f; // TODO up-to-date
 		float result = 0.0f;
 		for (Tile2d tile : this) {
-			org.janelia.it.workstation.gui.slice_viewer.TileTexture texture = tile.getBestTexture();
+			TileTexture texture = tile.getBestTexture();
 			if (texture == null)
 				continue; // no texture at all
-			if (texture.getLoadStatus().ordinal() < org.janelia.it.workstation.gui.slice_viewer.TileTexture.LoadStatus.RAM_LOADED.ordinal())
+			if (texture.getLoadStatus().ordinal() < TileTexture.LoadStatus.RAM_LOADED.ordinal())
 				continue; // texture is not loaded yet
 			if (texture.getIndex().equals(tile.getIndex()))
 				result += 1.0f; // full resolution texture

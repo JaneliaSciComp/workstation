@@ -1,5 +1,7 @@
 package org.janelia.it.workstation.api.entity_model.events;
 
+import org.janelia.it.workstation.model.domain.EntityWrapper;
+
 /**
  * An event in the entity model affecting the given entity in some way.
  * 
@@ -7,13 +9,13 @@ package org.janelia.it.workstation.api.entity_model.events;
  */
 public class EntityWrapperEvent {
 
-	private org.janelia.it.workstation.model.domain.EntityWrapper wrapper;
+	private EntityWrapper wrapper;
 	
-	public EntityWrapperEvent(org.janelia.it.workstation.model.domain.EntityWrapper wrapper) {
+	public EntityWrapperEvent(EntityWrapper wrapper) {
 		this.wrapper = wrapper;
 	}
 
-	public org.janelia.it.workstation.model.domain.EntityWrapper getWrapper() {
+	public EntityWrapper getWrapper() {
 		return wrapper;
 	}
 }

@@ -4,6 +4,7 @@ import java.awt.event.ActionEvent;
 import javax.swing.AbstractAction;
 import javax.swing.KeyStroke;
 
+import org.janelia.it.workstation.gui.util.Icons;
 import org.janelia.it.workstation.signal.Signal1;
 
 // PanModeAction puts the slice viewer into Pan mode.
@@ -15,7 +16,7 @@ public class PanModeAction extends AbstractAction
 
 	public PanModeAction() {
 		putValue(NAME, "Pan");
-		putValue(SMALL_ICON, org.janelia.it.workstation.gui.util.Icons.getIcon("grab_opened.png"));
+		putValue(SMALL_ICON, Icons.getIcon("grab_opened.png"));
 		String acc = "H";
 		KeyStroke accelerator = KeyStroke.getKeyStroke(acc);
 		putValue(ACCELERATOR_KEY, accelerator);

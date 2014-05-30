@@ -15,6 +15,8 @@
  */
 package org.janelia.it.workstation.gui.framework.keybind;
 
+import org.janelia.it.workstation.shared.util.SystemInfo;
+
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.InputEvent;
@@ -78,14 +80,14 @@ public class KeymapUtil {
     }
 
     private static String getModifiersText(int modifiers) {
-        if (org.janelia.it.workstation.shared.util.SystemInfo.isMac) {
+        if (SystemInfo.isMac) {
             try {
                 Class appleLaf = Class.forName(APPLE_LAF_AQUA_LOOK_AND_FEEL_CLASS_NAME);
                 Method getModifiers = appleLaf.getMethod(GET_KEY_MODIFIERS_TEXT_METHOD, int.class, boolean.class);
                 return (String) getModifiers.invoke(appleLaf, modifiers, Boolean.FALSE);
             }
             catch (Exception e) {
-                if (org.janelia.it.workstation.shared.util.SystemInfo.isMacOSLeopard) {
+                if (SystemInfo.isMacOSLeopard) {
                     return getKeyModifiersTextForMacOSLeopard(modifiers);
                 }
 

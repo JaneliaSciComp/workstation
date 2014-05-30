@@ -21,5 +21,5 @@ implements AnchoredVoxelPath
     public PathTraceRequest getRequest() {return request;}
     public List<ZoomedVoxelIndex> getPath() {return path;}
     public List<Integer> getIntensities() {return intensities;}
-    public org.janelia.it.workstation.tracing.SegmentIndex getSegmentIndex() {return request.getSegmentIndex();}
+    public SegmentIndex getSegmentIndex() {return request.getSegmentIndex();}
 }

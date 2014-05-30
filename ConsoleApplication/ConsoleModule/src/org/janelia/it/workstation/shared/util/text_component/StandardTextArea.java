@@ -2,6 +2,8 @@ package org.janelia.it.workstation.shared.util.text_component;
 
 import javax.swing.*;
 import javax.swing.text.Document;
+import java.awt.event.WindowAdapter;
+import java.awt.event.WindowEvent;
 
 /**
  * Title:        Standard Text Area
@@ -29,8 +31,8 @@ public class StandardTextArea extends JTextArea {
         lFrame.setLocation(100, 100);
         lFrame.getContentPane().add(lArea);
         lFrame.setVisible(true);
-        lFrame.addWindowListener(new java.awt.event.WindowAdapter() {
-            public void windowClosing(java.awt.event.WindowEvent we) {
+        lFrame.addWindowListener(new WindowAdapter() {
+            public void windowClosing(WindowEvent we) {
                 System.exit(0);
             }
         });

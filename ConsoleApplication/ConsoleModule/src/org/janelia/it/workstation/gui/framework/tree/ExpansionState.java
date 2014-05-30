@@ -9,6 +9,7 @@ import java.util.concurrent.Callable;
 import javax.swing.tree.DefaultMutableTreeNode;
 import javax.swing.tree.TreePath;
 
+import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.workstation.shared.util.ConcurrentUtils;
 import org.janelia.it.workstation.shared.util.Utils;
 import org.janelia.it.jacs.shared.utils.EntityUtils;
@@ -130,7 +131,7 @@ public class ExpansionState {
 				setCalledSuccess(true);
 			}
 			catch (Exception e) {
-				org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr.getSessionMgr().handleException(e);
+				SessionMgr.getSessionMgr().handleException(e);
 			}
 		}
     }

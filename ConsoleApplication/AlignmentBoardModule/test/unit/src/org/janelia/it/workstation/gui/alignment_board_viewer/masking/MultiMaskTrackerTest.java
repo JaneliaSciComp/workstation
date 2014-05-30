@@ -21,7 +21,7 @@ import static org.junit.Assert.*;
  */
 @Category(TestCategories.FastTests.class)
 public class MultiMaskTrackerTest {
-    private org.janelia.it.workstation.gui.alignment_board_viewer.masking.MultiMaskTracker tracker;
+    private MultiMaskTracker tracker;
 
     private static final String EXPECTED_STRING_OUTPUT = "Looking at multimask 58.\n" +
             "6.\n" +
@@ -88,9 +88,9 @@ public class MultiMaskTrackerTest {
             "Mask expansion is 6.\n" +
             "Voxel count is 1.\n";
 
-    public static org.janelia.it.workstation.gui.alignment_board_viewer.masking.MultiMaskTracker createMultiMaskTracker() {
+    public static MultiMaskTracker createMultiMaskTracker() {
         // This should setup a tracker containing several multimasks.
-        org.janelia.it.workstation.gui.alignment_board_viewer.masking.MultiMaskTracker tracker = new org.janelia.it.workstation.gui.alignment_board_viewer.masking.MultiMaskTracker();
+        MultiMaskTracker tracker = new MultiMaskTracker();
         tracker.setFirstMaskNum(55);
         tracker.getMask(1, 2);        // Discovers 1, where 2 was before.  Therefore 2 is higher priority.
         tracker.getMask(1, 2);
@@ -114,7 +114,7 @@ public class MultiMaskTrackerTest {
         assertEquals("invalid mask value for (4,7)", new Integer(61), maskValue);
         int maskExpansionCount = tracker.getMaskExpansionCount( maskValue );
         assertEquals("invalid mask expansion count for mask value " + maskValue, 2, maskExpansionCount);
-        org.janelia.it.workstation.gui.alignment_board_viewer.masking.MultiMaskTracker.MultiMaskBean mmBean = tracker.getMultiMaskBean( maskValue );
+        MultiMaskTracker.MultiMaskBean mmBean = tracker.getMultiMaskBean( maskValue );
         assertEquals("invalid voxel count for mask value " + maskValue, 50, mmBean.getVoxelCount());
 
         tracker.getMask(6, 60);
@@ -150,7 +150,7 @@ public class MultiMaskTrackerTest {
     public void testTrackerContents() throws Exception {
         StringBuilder outputBuilder = new StringBuilder();
         for ( Integer multiMask: tracker.getMultiMaskBeans().keySet() ) {
-            org.janelia.it.workstation.gui.alignment_board_viewer.masking.MultiMaskTracker.MultiMaskBean bean = tracker.getMultiMaskBeans().get( multiMask );
+            MultiMaskTracker.MultiMaskBean bean = tracker.getMultiMaskBeans().get( multiMask );
             outputBuilder.append("Looking at multimask ").append(multiMask).append(".\n");
             for ( Integer subMask: bean.getAltMasks() ) {
                 outputBuilder.append(subMask).append(".\n");

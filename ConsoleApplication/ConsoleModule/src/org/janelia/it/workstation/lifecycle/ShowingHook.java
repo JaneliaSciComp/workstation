@@ -8,6 +8,7 @@ package org.janelia.it.workstation.lifecycle;
 
 import javax.swing.JFrame;
 
+import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.workstation.gui.util.WindowLocator;
 import org.janelia.it.workstation.shared.util.ConsoleProperties;
 import org.openide.windows.OnShowing;
@@ -24,7 +25,7 @@ public class ShowingHook implements Runnable {
         JFrame frame = WindowLocator.getMainFrame();
         String title = ConsoleProperties.getString("console.Title") + " " + ConsoleProperties.getString("console.versionNumber");
         frame.setTitle( title );
-        org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr.getBrowser().supportMenuProcessing();
+        SessionMgr.getBrowser().supportMenuProcessing();
     }
 
 }

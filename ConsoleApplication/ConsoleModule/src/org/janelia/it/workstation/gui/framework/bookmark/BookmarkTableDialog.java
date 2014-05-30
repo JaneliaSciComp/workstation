@@ -1,5 +1,8 @@
 package org.janelia.it.workstation.gui.framework.bookmark;
 
+import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
+import org.janelia.it.workstation.shared.swing.table.SortButtonRenderer;
+
 import javax.swing.*;
 import javax.swing.table.*;
 import java.awt.*;
@@ -33,7 +36,7 @@ public class BookmarkTableDialog extends JDialog {
     JButton editButton = new JButton();
     JButton closeButton = new JButton();
     JButton navigateButton = new JButton();
-    org.janelia.it.workstation.gui.framework.bookmark.BookmarkInfo selectedBookmark;
+    BookmarkInfo selectedBookmark;
 
     public BookmarkTableDialog(JFrame parentFrame, TreeMap bookmarkMap) {
         super(parentFrame, "Bookmarks", false);
@@ -51,20 +54,20 @@ public class BookmarkTableDialog extends JDialog {
             ex.printStackTrace();
         }
 
-        if (org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr.getSessionMgr().getModelProperty(CLOSE_DIALOG_AFTER_NAVIGATION)==null) {
-            org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr.getSessionMgr().setModelProperty(CLOSE_DIALOG_AFTER_NAVIGATION,
+        if (SessionMgr.getSessionMgr().getModelProperty(CLOSE_DIALOG_AFTER_NAVIGATION)==null) {
+            SessionMgr.getSessionMgr().setModelProperty(CLOSE_DIALOG_AFTER_NAVIGATION,
                     Boolean.TRUE);
             closeCheckBox.setSelected(true);
         }
         else {
-            boolean tmpBoolean = ((Boolean) org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr.getSessionMgr().
+            boolean tmpBoolean = ((Boolean) SessionMgr.getSessionMgr().
                     getModelProperty(CLOSE_DIALOG_AFTER_NAVIGATION)).booleanValue();
             closeCheckBox.setSelected(tmpBoolean);
         }
 
         closeCheckBox.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent evt) {
-                org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr.getSessionMgr().setModelProperty(CLOSE_DIALOG_AFTER_NAVIGATION,
+                SessionMgr.getSessionMgr().setModelProperty(CLOSE_DIALOG_AFTER_NAVIGATION,
                         new Boolean(closeCheckBox.isSelected()));
             }
         });
@@ -96,7 +99,7 @@ public class BookmarkTableDialog extends JDialog {
         table = new JTable(dataModel);
         table.getTableHeader().addMouseListener(new ColumnListener(table));
         TableColumnModel columnModel = table.getColumnModel();
-        final org.janelia.it.workstation.shared.swing.table.SortButtonRenderer headerRenderer = new org.janelia.it.workstation.shared.swing.table.SortButtonRenderer();
+        final SortButtonRenderer headerRenderer = new SortButtonRenderer();
         int i = dataModel.getColumnCount();
         for (int j = 0; j < i; j++) {
             columnModel.getColumn(j).setHeaderRenderer(headerRenderer);
@@ -140,7 +143,7 @@ public class BookmarkTableDialog extends JDialog {
             public void keyReleased(KeyEvent e){}
         });
 
-        table.addMouseListener(new java.awt.event.MouseAdapter() {
+        table.addMouseListener(new MouseAdapter() {
             public void mousePressed(MouseEvent e) {
                 if(e.getClickCount() == 2) {
                     navigateToRowItem();
@@ -163,27 +166,27 @@ public class BookmarkTableDialog extends JDialog {
         enableEvents(AWTEvent.WINDOW_EVENT_MASK);
 
         deleteButton.setText("Delete");
-        deleteButton.addActionListener(new java.awt.event.ActionListener() {
+        deleteButton.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
                 deleteButton_actionPerformed(e);
             }
         });
         closeButton.setText("Close");
-        closeButton.addActionListener(new java.awt.event.ActionListener() {
+        closeButton.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
                 closeButton_actionPerformed(e);
             }
         });
 
         editButton.setText("Edit");
-        editButton.addActionListener(new java.awt.event.ActionListener() {
+        editButton.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
                 editButton_actionPerformed(e);
             }
         });
 
         navigateButton.setText("Navigate");
-        navigateButton.addActionListener(new java.awt.event.ActionListener() {
+        navigateButton.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
                 navigateToRowItem();
             }
@@ -230,7 +233,7 @@ public class BookmarkTableDialog extends JDialog {
 
     private void deleteButton_actionPerformed(ActionEvent evt){
         if (table.getSelectedRow()<0) return;
-        org.janelia.it.workstation.gui.framework.bookmark.BookmarkInfo tmpInfo = (org.janelia.it.workstation.gui.framework.bookmark.BookmarkInfo)data.get(table.getSelectedRow());
+        BookmarkInfo tmpInfo = (BookmarkInfo)data.get(table.getSelectedRow());
         BookmarkMgr.getBookmarkMgr().deleteBookmark(tmpInfo);
         BookmarkMgr.getBookmarkMgr().fireBookmarksChanged();
         updateData();
@@ -242,7 +245,7 @@ public class BookmarkTableDialog extends JDialog {
     private void editButton_actionPerformed(ActionEvent evt){
         int row = table.getSelectedRow();
         if (row<0) return;
-        org.janelia.it.workstation.gui.framework.bookmark.BookmarkInfo tmpInfo = (org.janelia.it.workstation.gui.framework.bookmark.BookmarkInfo)data.get(row);
+        BookmarkInfo tmpInfo = (BookmarkInfo)data.get(row);
         new BookmarkPropertyDialog(parentFrame, "Bookmarks", true, tmpInfo);
         ((MyTableModel)table.getModel()).fireTableDataChanged();
     }
@@ -251,7 +254,7 @@ public class BookmarkTableDialog extends JDialog {
     private void navigateToRowItem(){
         int row = table.getSelectedRow();
         if (row<0) return;
-        org.janelia.it.workstation.gui.framework.bookmark.BookmarkInfo tmpInfo = (org.janelia.it.workstation.gui.framework.bookmark.BookmarkInfo)data.get(row);
+        BookmarkInfo tmpInfo = (BookmarkInfo)data.get(row);
         BookmarkMgr.getBookmarkMgr().selectBookmark(tmpInfo);
         if (closeCheckBox.isSelected()) BookmarkTableDialog.this.dispose();
     }
@@ -276,7 +279,7 @@ public class BookmarkTableDialog extends JDialog {
         public boolean isCellEditable(int row, int col) { return false; }
 
         public Object getValueAt(int row, int col) {
-            org.janelia.it.workstation.gui.framework.bookmark.BookmarkInfo tmpInfo = (org.janelia.it.workstation.gui.framework.bookmark.BookmarkInfo)data.get(row);
+            BookmarkInfo tmpInfo = (BookmarkInfo)data.get(row);
             switch (col) {
                 // Species Name
                 case 0: { return tmpInfo.getSpecies(); }
@@ -325,7 +328,7 @@ public class BookmarkTableDialog extends JDialog {
             String rowName = new String("");
             int targetRow = table.getSelectedRow();
             if (targetRow >= 0 && targetRow < table.getRowCount())
-                rowName = ((org.janelia.it.workstation.gui.framework.bookmark.BookmarkInfo)data.get(targetRow)).getName();
+                rowName = ((BookmarkInfo)data.get(targetRow)).getName();
 
             TableColumnModel colModel = table.getColumnModel();
             int colModelIndex = colModel.getColumnIndexAtX(e.getX());
@@ -362,8 +365,8 @@ public class BookmarkTableDialog extends JDialog {
             Object compObj1, compObj2;
             int retVal;
             try {
-                compObj1 = getValueAt((org.janelia.it.workstation.gui.framework.bookmark.BookmarkInfo)o1,sortCol);
-                compObj2 = getValueAt((org.janelia.it.workstation.gui.framework.bookmark.BookmarkInfo)o2,sortCol);
+                compObj1 = getValueAt((BookmarkInfo)o1,sortCol);
+                compObj2 = getValueAt((BookmarkInfo)o2,sortCol);
                 if (compObj1==null || compObj2==null) return 0;
                 retVal = 0;
                 if (compObj1 instanceof Comparable && compObj2 instanceof Comparable) {
@@ -385,7 +388,7 @@ public class BookmarkTableDialog extends JDialog {
             return retVal;
         }
 
-        protected Object getValueAt(org.janelia.it.workstation.gui.framework.bookmark.BookmarkInfo bi, int col) {
+        protected Object getValueAt(BookmarkInfo bi, int col) {
             switch(col) {
                 case 0: return bi.getSpecies();
                 case 1: return bi.getBookmarkType();

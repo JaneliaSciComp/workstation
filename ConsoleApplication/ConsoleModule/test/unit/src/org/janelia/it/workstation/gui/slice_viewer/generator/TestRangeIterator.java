@@ -15,22 +15,22 @@ public class TestRangeIterator {
 	@Test
 	public void testRangeIteratorConstructor() {
 		//
-		org.janelia.it.workstation.gui.slice_viewer.generator.RangeIterator r = new org.janelia.it.workstation.gui.slice_viewer.generator.RangeIterator(0, 1, 1);
+		RangeIterator r = new RangeIterator(0, 1, 1);
 		assertTrue(r.hasNext());
 		r.next();
 		assertFalse(r.hasNext());
 		// 
-		r = new org.janelia.it.workstation.gui.slice_viewer.generator.RangeIterator(0, 1, 2);
+		r = new RangeIterator(0, 1, 2);
 		assertTrue(r.hasNext());
 		r.next();
 		assertFalse(r.hasNext());
 		// 
-		r = new org.janelia.it.workstation.gui.slice_viewer.generator.RangeIterator(0, 2, 2);
+		r = new RangeIterator(0, 2, 2);
 		assertTrue(r.hasNext());
 		r.next();
 		assertFalse(r.hasNext());
 		// 
-		r = new org.janelia.it.workstation.gui.slice_viewer.generator.RangeIterator(0, 2, 1);
+		r = new RangeIterator(0, 2, 1);
 		assertTrue(r.hasNext());
 		r.next();
 		assertTrue(r.hasNext());
@@ -40,23 +40,23 @@ public class TestRangeIterator {
 
 	@Test
 	public void testHasNext() {
-		org.janelia.it.workstation.gui.slice_viewer.generator.RangeIterator r = new org.janelia.it.workstation.gui.slice_viewer.generator.RangeIterator(1);
+		RangeIterator r = new RangeIterator(1);
 		assertTrue(r.hasNext());
 		r.next();
 		assertFalse(r.hasNext());
-		r = new org.janelia.it.workstation.gui.slice_viewer.generator.RangeIterator(0);
+		r = new RangeIterator(0);
 		assertFalse(r.hasNext());
 	}
 
 	@Test
 	public void testNext() {
-		org.janelia.it.workstation.gui.slice_viewer.generator.RangeIterator r = new org.janelia.it.workstation.gui.slice_viewer.generator.RangeIterator(0, 1, 1);
+		RangeIterator r = new RangeIterator(0, 1, 1);
 		assertEquals(0, r.next().intValue());
 	}
 
 	@Test
 	public void testRemove() {
-		org.janelia.it.workstation.gui.slice_viewer.generator.RangeIterator r = new org.janelia.it.workstation.gui.slice_viewer.generator.RangeIterator(1);
+		RangeIterator r = new RangeIterator(1);
 		r.next();
 		try {
 			r.remove();

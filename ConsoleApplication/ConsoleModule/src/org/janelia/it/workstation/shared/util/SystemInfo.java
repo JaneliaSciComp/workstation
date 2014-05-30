@@ -1,9 +1,13 @@
 package org.janelia.it.workstation.shared.util;
 
+import com.sun.management.OperatingSystemMXBean;
+import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.File;
+import java.lang.management.ManagementFactory;
+import java.lang.management.OperatingSystemMXBean;
 import java.util.Date;
 import java.util.Random;
 
@@ -110,11 +114,11 @@ public class SystemInfo {
     }
     
     public static void setDownloadsDir(String downloadsDir) {
-        org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr.getSessionMgr().setModelProperty(org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr.DOWNLOADS_DIR, downloadsDir);
+        SessionMgr.getSessionMgr().setModelProperty(SessionMgr.DOWNLOADS_DIR, downloadsDir);
     }
     
     public static File getDownloadsDir() {
-        String downloadsDir = (String) org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr.getSessionMgr().getModelProperty(org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr.DOWNLOADS_DIR);
+        String downloadsDir = (String) SessionMgr.getSessionMgr().getModelProperty(SessionMgr.DOWNLOADS_DIR);
         File downloadsDirFile = null;
         if (downloadsDir==null) {
             if (SystemInfo.isMac) {
@@ -147,9 +151,9 @@ public class SystemInfo {
         return downloadsDirFile;
     }
     
-    private static com.sun.management.OperatingSystemMXBean getOSMXBean() {
-        java.lang.management.OperatingSystemMXBean mxbean = java.lang.management.ManagementFactory.getOperatingSystemMXBean();
-        com.sun.management.OperatingSystemMXBean sunmxbean = (com.sun.management.OperatingSystemMXBean) mxbean;
+    private static OperatingSystemMXBean getOSMXBean() {
+        OperatingSystemMXBean mxbean = ManagementFactory.getOperatingSystemMXBean();
+        OperatingSystemMXBean sunmxbean = (OperatingSystemMXBean) mxbean;
         return sunmxbean;
     }
     

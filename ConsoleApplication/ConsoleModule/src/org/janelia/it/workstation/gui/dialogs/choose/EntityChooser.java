@@ -9,6 +9,8 @@ import javax.swing.tree.TreePath;
 import javax.swing.tree.TreeSelectionModel;
 
 import org.janelia.it.jacs.model.entity.EntityData;
+import org.janelia.it.workstation.gui.framework.outline.EntityOutline;
+import org.janelia.it.workstation.gui.framework.outline.EntityTree;
 
 
 /**
@@ -19,19 +21,19 @@ import org.janelia.it.jacs.model.entity.EntityData;
  */
 public class EntityChooser extends AbstractChooser<EntityData> {
 
-    private final org.janelia.it.workstation.gui.framework.outline.EntityTree entityTree;
+    private final EntityTree entityTree;
     private final List<String> uniqueIds = new ArrayList<String>();
 
-    public EntityChooser(String title, org.janelia.it.workstation.gui.framework.outline.EntityTree entityTree) {
+    public EntityChooser(String title, EntityTree entityTree) {
     	setTitle(title);
         this.entityTree = entityTree;
         entityTree.getTree().getSelectionModel().setSelectionMode(TreeSelectionModel.DISCONTIGUOUS_TREE_SELECTION);
         addChooser(entityTree);
     }
     
-    public EntityChooser(String title, org.janelia.it.workstation.gui.framework.outline.EntityOutline entityOutline) {
+    public EntityChooser(String title, EntityOutline entityOutline) {
     	setTitle(title);
-        entityTree = new org.janelia.it.workstation.gui.framework.outline.EntityTree() {
+        entityTree = new EntityTree() {
             protected void nodeDoubleClicked(MouseEvent e) {
                 chooseSelection();
             }
@@ -41,7 +43,7 @@ public class EntityChooser extends AbstractChooser<EntityData> {
         addChooser(entityTree);
     }
 
-    public org.janelia.it.workstation.gui.framework.outline.EntityTree getEntityTree() {
+    public EntityTree getEntityTree() {
         return entityTree;
     }
 

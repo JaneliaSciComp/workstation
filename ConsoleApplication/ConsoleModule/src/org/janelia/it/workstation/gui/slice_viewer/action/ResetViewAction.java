@@ -5,19 +5,21 @@ import java.util.List;
 
 import javax.swing.AbstractAction;
 
+import org.janelia.it.workstation.gui.camera.Camera3d;
 import org.janelia.it.workstation.gui.slice_viewer.TileConsumer;
+import org.janelia.it.workstation.gui.viewer3d.interfaces.VolumeImage3d;
 
 public class ResetViewAction 
 extends AbstractAction
 {
 	private static final long serialVersionUID = 1L;
 	protected List<TileConsumer> widgets;
-	private org.janelia.it.workstation.gui.viewer3d.interfaces.VolumeImage3d volumeImage;
+	private VolumeImage3d volumeImage;
 	private ResetZoomAction resetZoomAction;
 
 	public ResetViewAction(
 			List<TileConsumer> widgets,
-			org.janelia.it.workstation.gui.viewer3d.interfaces.VolumeImage3d volumeImage)
+			VolumeImage3d volumeImage)
 	{
 		this.widgets = widgets;
 		this.volumeImage = volumeImage;
@@ -32,7 +34,7 @@ extends AbstractAction
 		if (widgets.size() < 1)
 			return;
 		// First center...
-		org.janelia.it.workstation.gui.camera.Camera3d camera = widgets.iterator().next().getCamera();
+		Camera3d camera = widgets.iterator().next().getCamera();
 		if (! camera.setFocus(volumeImage.getVoxelCenter()))
 			return;
 		// ...then scale.

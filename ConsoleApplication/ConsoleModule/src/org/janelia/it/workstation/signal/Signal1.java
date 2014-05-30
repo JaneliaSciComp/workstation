@@ -1,32 +1,35 @@
 package org.janelia.it.workstation.signal;
 
+import org.janelia.it.workstation.gui.slice_viewer.BasicSignalSlot;
+import org.janelia.it.workstation.gui.slice_viewer.BasicSignalSlot1;
+
 import java.util.Observable;
 
 
 // Java Observable that acts a bit like a Qt Signal
 public class Signal1<T extends Object> 
 extends Observable
-implements org.janelia.it.workstation.gui.slice_viewer.BasicSignalSlot1<T>
+implements BasicSignalSlot1<T>
 {
 	public void emit(T arg) {
 		setChanged();
 		notifyObservers(arg);
 	}
 
-	public void connect(org.janelia.it.workstation.gui.slice_viewer.BasicSignalSlot1<T> dest) {
+	public void connect(BasicSignalSlot1<T> dest) {
 		addObserver(dest);
 	}
 
-	public void disconnect(org.janelia.it.workstation.gui.slice_viewer.BasicSignalSlot1<T> dest) {
+	public void disconnect(BasicSignalSlot1<T> dest) {
 		deleteObserver(dest);
 	}
 
-	public void disconnect(org.janelia.it.workstation.gui.slice_viewer.BasicSignalSlot noArgDest) {
+	public void disconnect(BasicSignalSlot noArgDest) {
 		deleteObserver(noArgDest);
 	}
 	
 	// Argument can be ignored by the listener with this version of connect()
-	public void connect(org.janelia.it.workstation.gui.slice_viewer.BasicSignalSlot noArgListener) {
+	public void connect(BasicSignalSlot noArgListener) {
 		addObserver(noArgListener);
 	}
 

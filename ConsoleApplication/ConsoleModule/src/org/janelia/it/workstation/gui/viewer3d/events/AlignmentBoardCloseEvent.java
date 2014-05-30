@@ -1,5 +1,7 @@
 package org.janelia.it.workstation.gui.viewer3d.events;
 
+import org.janelia.it.workstation.model.viewer.AlignmentBoardContext;
+
 /**
  * The given alignment board has just been closed.
  * 
@@ -7,7 +9,7 @@ package org.janelia.it.workstation.gui.viewer3d.events;
  */
 public class AlignmentBoardCloseEvent extends AlignmentBoardEvent {
     
-	public AlignmentBoardCloseEvent(org.janelia.it.workstation.model.viewer.AlignmentBoardContext alignmentBoardContext) {
+	public AlignmentBoardCloseEvent(AlignmentBoardContext alignmentBoardContext) {
 		super(alignmentBoardContext);		
 	}
 }

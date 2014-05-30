@@ -2,6 +2,7 @@ package org.janelia.it.workstation.gui.viewer3d;
 
 import org.janelia.it.workstation.geom.Vec3;
 import org.janelia.it.workstation.gui.camera.BasicCamera3d;
+import org.janelia.it.workstation.gui.camera.Camera3d;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -28,7 +29,7 @@ public class VolumeModel {
     private float cropOutLevel = DEFAULT_CROPOUT;
     private Vec3 cameraDepth;
     private boolean colorSaveBrightness = true;
-    private org.janelia.it.workstation.gui.camera.Camera3d camera3d;
+    private Camera3d camera3d;
     private float[] colorMask = DEFAULT_COLOR_MASK;
     private float[] voxelMicrometers;
     private int[] voxelDimensions;
@@ -112,7 +113,7 @@ public class VolumeModel {
         listeners.clear();
     }
 
-    public org.janelia.it.workstation.gui.camera.Camera3d getCamera3d() {
+    public Camera3d getCamera3d() {
         if ( camera3d == null ) {
             camera3d = new BasicCamera3d();
         }
@@ -135,7 +136,7 @@ public class VolumeModel {
         getCamera3d().setPixelsPerSceneUnit( Math.abs( screenPixelDistance / cameraFocusDistance ) );
     }
 
-    public void setCamera3d(org.janelia.it.workstation.gui.camera.Camera3d camera3d) {
+    public void setCamera3d(Camera3d camera3d) {
         this.camera3d = camera3d;
     }
 

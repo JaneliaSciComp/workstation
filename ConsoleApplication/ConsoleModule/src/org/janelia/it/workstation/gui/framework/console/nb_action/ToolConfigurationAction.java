@@ -9,6 +9,7 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import javax.swing.JFrame;
 import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
+import org.janelia.it.workstation.gui.framework.tool_manager.ToolConfigurationDialog;
 import org.janelia.it.workstation.gui.util.WindowLocator;
 import org.openide.awt.ActionID;
 import org.openide.awt.ActionReference;
@@ -30,7 +31,7 @@ public final class ToolConfigurationAction implements ActionListener {
     public void actionPerformed(ActionEvent e) {
         try {
             JFrame parent = WindowLocator.getMainFrame();
-            new org.janelia.it.workstation.gui.framework.tool_manager.ToolConfigurationDialog(parent);
+            new ToolConfigurationDialog(parent);
         } catch ( Exception bse ) {
             SessionMgr.getSessionMgr().handleException( bse );
         }

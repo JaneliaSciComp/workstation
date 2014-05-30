@@ -7,7 +7,12 @@ package org.janelia.it.workstation.gui.framework.console.nb_action;
 
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.util.List;
 
+import org.janelia.it.workstation.api.entity_model.management.ModelMgr;
+import org.janelia.it.workstation.api.facade.facade_mgr.FacadeManager;
+import org.janelia.it.workstation.gui.dialogs.EntityDetailsDialog;
+import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.workstation.shared.util.Utils;
 import org.janelia.it.jacs.model.entity.Entity;
 import org.openide.awt.ActionID;
@@ -34,18 +39,18 @@ public final class ViewDetailsAction implements ActionListener {
     @Override
     public void actionPerformed(ActionEvent e) {
         try {
-            viewDetails_actionPerformed(e, org.janelia.it.workstation.api.facade.facade_mgr.FacadeManager.getEJBProtocolString(), null);
+            viewDetails_actionPerformed(e, FacadeManager.getEJBProtocolString(), null);
         } catch (Exception e1) {
-            org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr.getSessionMgr().handleException(e1);
+            SessionMgr.getSessionMgr().handleException(e1);
         }
     }
 
     private void viewDetails_actionPerformed(ActionEvent e, String protocol, Object dataSource) throws Exception {
-        java.util.List<String> tmpSelections = org.janelia.it.workstation.api.entity_model.management.ModelMgr.getModelMgr().getEntitySelectionModel().getLatestGlobalSelection();
+        List<String> tmpSelections = ModelMgr.getModelMgr().getEntitySelectionModel().getLatestGlobalSelection();
         if (null != tmpSelections && tmpSelections.size() == 1) {
-            Entity tmpSelectedEntity = org.janelia.it.workstation.api.entity_model.management.ModelMgr.getModelMgr().getEntityById(Utils.getEntityIdFromUniqueId(tmpSelections.get(0)));
+            Entity tmpSelectedEntity = ModelMgr.getModelMgr().getEntityById(Utils.getEntityIdFromUniqueId(tmpSelections.get(0)));
             if (null != tmpSelectedEntity) {
-                new org.janelia.it.workstation.gui.dialogs.EntityDetailsDialog().showForEntity(tmpSelectedEntity);
+                new EntityDetailsDialog().showForEntity(tmpSelectedEntity);
             }
         }
     }

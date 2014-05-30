@@ -6,6 +6,10 @@ import org.janelia.it.jacs.model.entity.Entity;
 import org.janelia.it.jacs.model.entity.EntityConstants;
 import org.janelia.it.jacs.model.entity.EntityData;
 import org.janelia.it.jacs.shared.utils.EntityUtils;
+import org.janelia.it.workstation.api.entity_model.management.EntitySelectionModel;
+import org.janelia.it.workstation.api.entity_model.management.ModelMgr;
+import org.janelia.it.workstation.api.entity_model.management.ModelMgrUtils;
+import org.janelia.it.workstation.model.entity.RootedEntity;
 
 /**
  * Utilities for dealing with Folder entities. 
@@ -14,7 +18,7 @@ import org.janelia.it.jacs.shared.utils.EntityUtils;
  */
 public class FolderUtils {
 	
-	public static org.janelia.it.workstation.model.entity.RootedEntity saveEntitiesToFolder(org.janelia.it.workstation.model.entity.RootedEntity parentFolder, String folderName, List<Long> entityIds) throws Exception {
+	public static RootedEntity saveEntitiesToFolder(RootedEntity parentFolder, String folderName, List<Long> entityIds) throws Exception {
 	
 		if (parentFolder==null) {
 			return saveEntitiesToCommonRoot(folderName, entityIds);
@@ -25,8 +29,8 @@ public class FolderUtils {
 		Entity saveFolder = null;
 		if (saveFolderEd == null) {
 			// No existing folder, so create a new one
-			saveFolder = org.janelia.it.workstation.api.entity_model.management.ModelMgr.getModelMgr().createEntity(EntityConstants.TYPE_FOLDER, folderName);
-			saveFolderEd = org.janelia.it.workstation.api.entity_model.management.ModelMgr.getModelMgr().addEntityToParent(parentFolder.getEntity(), saveFolder, parentFolder.getEntity().getMaxOrderIndex()+1, EntityConstants.ATTRIBUTE_ENTITY);
+			saveFolder = ModelMgr.getModelMgr().createEntity(EntityConstants.TYPE_FOLDER, folderName);
+			saveFolderEd = ModelMgr.getModelMgr().addEntityToParent(parentFolder.getEntity(), saveFolder, parentFolder.getEntity().getMaxOrderIndex()+1, EntityConstants.ATTRIBUTE_ENTITY);
 		}
 		else {
 			saveFolder = saveFolderEd.getChildEntity();	
@@ -36,12 +40,12 @@ public class FolderUtils {
         return parentFolder.getChild(saveFolderEd);
 	}
 	
-	public static org.janelia.it.workstation.model.entity.RootedEntity saveEntitiesToCommonRoot(String commonRootName, List<Long> entityIds) throws Exception {
+	public static RootedEntity saveEntitiesToCommonRoot(String commonRootName, List<Long> entityIds) throws Exception {
 
 		Entity saveFolder = null;
-		List<Entity> commonRoots = org.janelia.it.workstation.api.entity_model.management.ModelMgr.getModelMgr().getCommonRootEntities();
+		List<Entity> commonRoots = ModelMgr.getModelMgr().getCommonRootEntities();
 		for(Entity commonRoot : commonRoots) {
-		    if (!org.janelia.it.workstation.api.entity_model.management.ModelMgrUtils.hasWriteAccess(commonRoot)) continue;
+		    if (!ModelMgrUtils.hasWriteAccess(commonRoot)) continue;
 			if (commonRoot.getName().equals(commonRootName)) {
 				saveFolder = commonRoot;
 			}
@@ -49,18 +53,18 @@ public class FolderUtils {
 
 		if (saveFolder == null) {
 			// No existing folder, so create a new one
-			saveFolder = org.janelia.it.workstation.api.entity_model.management.ModelMgr.getModelMgr().createCommonRoot(commonRootName);
+			saveFolder = ModelMgr.getModelMgr().createCommonRoot(commonRootName);
 		}
 
 		saveEntities(saveFolder, entityIds);
-		return new org.janelia.it.workstation.model.entity.RootedEntity(saveFolder);
+		return new RootedEntity(saveFolder);
 	}
 	
 	public static void saveEntities(Entity saveFolder, List<Long> entityIds) throws Exception {
-		org.janelia.it.workstation.api.entity_model.management.ModelMgr.getModelMgr().addChildren(saveFolder.getId(), entityIds, EntityConstants.ATTRIBUTE_ENTITY);
+		ModelMgr.getModelMgr().addChildren(saveFolder.getId(), entityIds, EntityConstants.ATTRIBUTE_ENTITY);
 	}	
 	
 	public static void selectCommonRoot(Entity commonRoot) {
-		org.janelia.it.workstation.api.entity_model.management.ModelMgr.getModelMgr().getEntitySelectionModel().selectEntity(org.janelia.it.workstation.api.entity_model.management.EntitySelectionModel.CATEGORY_OUTLINE, "/e_"+commonRoot.getId(), true);
+		ModelMgr.getModelMgr().getEntitySelectionModel().selectEntity(EntitySelectionModel.CATEGORY_OUTLINE, "/e_"+commonRoot.getId(), true);
 	}
 }

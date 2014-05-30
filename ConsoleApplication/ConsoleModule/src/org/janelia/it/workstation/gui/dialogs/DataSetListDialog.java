@@ -11,9 +11,14 @@ import java.util.List;
 
 import javax.swing.*;
 
+import org.janelia.it.workstation.api.entity_model.management.ModelMgr;
 import org.janelia.it.workstation.gui.framework.access.Accessibility;
+import org.janelia.it.workstation.gui.framework.outline.Refreshable;
+import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.workstation.gui.framework.table.DynamicColumn;
 import org.janelia.it.workstation.gui.framework.table.DynamicRow;
+import org.janelia.it.workstation.gui.framework.table.DynamicTable;
+import org.janelia.it.workstation.gui.util.Icons;
 import org.janelia.it.workstation.shared.util.Utils;
 import org.janelia.it.workstation.shared.workers.SimpleWorker;
 import org.janelia.it.jacs.model.entity.Entity;
@@ -27,11 +32,11 @@ import org.janelia.it.jacs.model.entity.cv.PipelineProcess;
  *
  * @author <a href="mailto:rokickik@janelia.hhmi.org">Konrad Rokicki</a>
  */
-public class DataSetListDialog extends ModalDialog implements Accessibility, org.janelia.it.workstation.gui.framework.outline.Refreshable {
+public class DataSetListDialog extends ModalDialog implements Accessibility, Refreshable {
 
     private JLabel loadingLabel;
     private JPanel mainPanel;
-    private org.janelia.it.workstation.gui.framework.table.DynamicTable dynamicTable;
+    private DynamicTable dynamicTable;
     private DataSetDialog dataSetDialog;
     
     public DataSetListDialog() {
@@ -42,7 +47,7 @@ public class DataSetListDialog extends ModalDialog implements Accessibility, org
         
         loadingLabel = new JLabel();
         loadingLabel.setOpaque(false);
-        loadingLabel.setIcon(org.janelia.it.workstation.gui.util.Icons.getLoadingIcon());
+        loadingLabel.setIcon(Icons.getLoadingIcon());
         loadingLabel.setHorizontalAlignment(SwingConstants.CENTER);
         loadingLabel.setVerticalAlignment(SwingConstants.CENTER);
         
@@ -51,7 +56,7 @@ public class DataSetListDialog extends ModalDialog implements Accessibility, org
     	
     	add(mainPanel, BorderLayout.CENTER);
         
-        dynamicTable = new org.janelia.it.workstation.gui.framework.table.DynamicTable(true, false) {
+        dynamicTable = new DynamicTable(true, false) {
             @Override
 			public Object getValue(Object userObject, DynamicColumn column) {
             	Entity dataSetEntity = (Entity)userObject;
@@ -109,7 +114,7 @@ public class DataSetListDialog extends ModalDialog implements Accessibility, org
 
     							@Override
     							protected void doStuff() throws Exception {
-    								org.janelia.it.workstation.api.entity_model.management.ModelMgr.getModelMgr().deleteEntityTree(dataSetEntity.getId());
+    								ModelMgr.getModelMgr().deleteEntityTree(dataSetEntity.getId());
     							}
     							
     							@Override
@@ -120,7 +125,7 @@ public class DataSetListDialog extends ModalDialog implements Accessibility, org
     							
     							@Override
     							protected void hadError(Throwable error) {
-    								org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr.getSessionMgr().handleException(error);
+    								SessionMgr.getSessionMgr().handleException(error);
     								Utils.setDefaultCursor(DataSetListDialog.this);
     								loadDataSets();
     							}
@@ -160,13 +165,13 @@ public class DataSetListDialog extends ModalDialog implements Accessibility, org
                         @Override
                         protected void doStuff() throws Exception {
                             if (selected) {
-                                org.janelia.it.workstation.api.entity_model.management.ModelMgr.getModelMgr().setAttributeAsTag(dataSetEntity, EntityConstants.ATTRIBUTE_SAGE_SYNC);
+                                ModelMgr.getModelMgr().setAttributeAsTag(dataSetEntity, EntityConstants.ATTRIBUTE_SAGE_SYNC);
                             }
                             else {
                                 EntityData sageSyncEd = dataSetEntity.getEntityDataByAttributeName(EntityConstants.ATTRIBUTE_SAGE_SYNC);
                                 if (sageSyncEd!=null) {
                                     dataSetEntity.getEntityData().remove(sageSyncEd);
-                                    org.janelia.it.workstation.api.entity_model.management.ModelMgr.getModelMgr().removeEntityData(sageSyncEd);
+                                    ModelMgr.getModelMgr().removeEntityData(sageSyncEd);
                                 }
                             }
                         }
@@ -177,7 +182,7 @@ public class DataSetListDialog extends ModalDialog implements Accessibility, org
                         
                         @Override
                         protected void hadError(Throwable error) {
-                            org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr.getSessionMgr().handleException(error);
+                            SessionMgr.getSessionMgr().handleException(error);
                         }
                     };
                     worker.execute();
@@ -222,7 +227,7 @@ public class DataSetListDialog extends ModalDialog implements Accessibility, org
 
     	loadDataSets();
 
-		Component mainFrame = org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr.getMainFrame();
+		Component mainFrame = SessionMgr.getMainFrame();
 		setPreferredSize(new Dimension((int)(mainFrame.getWidth()*0.4),(int)(mainFrame.getHeight()*0.4)));
 		
         // Show dialog and wait
@@ -240,7 +245,7 @@ public class DataSetListDialog extends ModalDialog implements Accessibility, org
         	
 			@Override
 			protected void doStuff() throws Exception {
-				for(Entity dataSetEntity : org.janelia.it.workstation.api.entity_model.management.ModelMgr.getModelMgr().getDataSets()) {
+				for(Entity dataSetEntity : ModelMgr.getModelMgr().getDataSets()) {
 					dataSetEntities.add(dataSetEntity);
 				}
 			}
@@ -262,7 +267,7 @@ public class DataSetListDialog extends ModalDialog implements Accessibility, org
 			
 			@Override
 			protected void hadError(Throwable error) {
-				org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr.getSessionMgr().handleException(error);
+				SessionMgr.getSessionMgr().handleException(error);
 				mainPanel.removeAll();
 		        mainPanel.add(dynamicTable, BorderLayout.CENTER);
 		        mainPanel.revalidate();
@@ -282,7 +287,7 @@ public class DataSetListDialog extends ModalDialog implements Accessibility, org
     			buf.append(value);
     		}
     		catch (Exception e) {
-    			org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr.getSessionMgr().handleException(new Exception("Unrecognized enumerated value: "+key));
+    			SessionMgr.getSessionMgr().handleException(new Exception("Unrecognized enumerated value: "+key));
     		}
     	}
     	return buf.toString();

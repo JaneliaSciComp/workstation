@@ -11,6 +11,7 @@ import org.janelia.it.jacs.compute.api.EntityBeanRemote;
 import org.janelia.it.jacs.model.entity.Entity;
 import org.janelia.it.jacs.model.entity.EntityConstants;
 import org.janelia.it.jacs.model.entity.EntityData;
+import org.janelia.it.workstation.api.facade.concrete_facade.ejb.EJBFactory;
 
 /**
  * Export an entity graph to Neo4j's batch-importer tab-delimited format.
@@ -27,8 +28,8 @@ public class Neo4jBatchExporter {
 	private static final Color pink = new Color(0xFC717B);
 	private static final Color orange = new Color(0xFF8B3D);
 	
-	private EntityBeanRemote entityBean = org.janelia.it.workstation.api.facade.concrete_facade.ejb.EJBFactory.getRemoteEntityBean();
-	private AnnotationBeanRemote annotationBean = org.janelia.it.workstation.api.facade.concrete_facade.ejb.EJBFactory.getRemoteAnnotationBean();
+	private EntityBeanRemote entityBean = EJBFactory.getRemoteEntityBean();
+	private AnnotationBeanRemote annotationBean = EJBFactory.getRemoteAnnotationBean();
 	
 	private Set<Long> visitedNodes = new HashSet<Long>();
 	

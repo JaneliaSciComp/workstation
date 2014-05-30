@@ -4,6 +4,10 @@ import org.janelia.it.jacs.compute.api.ComputeBeanRemote;
 import org.janelia.it.jacs.model.tasks.Task;
 import org.janelia.it.jacs.model.user_data.Subject;
 import org.janelia.it.jacs.model.user_data.UserToolEvent;
+import org.janelia.it.workstation.api.facade.abstract_facade.ComputeFacade;
+import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
+import org.janelia.it.workstation.shared.util.ConsoleProperties;
+import org.janelia.it.workstation.shared.util.filecache.WebDavClient;
 
 import java.net.Authenticator;
 import java.net.PasswordAuthentication;
@@ -15,7 +19,7 @@ import java.util.List;
  * Date: 8/8/11
  * Time: 11:06 AM
  */
-public class EJBComputeFacade implements org.janelia.it.workstation.api.facade.abstract_facade.ComputeFacade {
+public class EJBComputeFacade implements ComputeFacade {
 
     @Override
     public Task saveOrUpdateTask(Task task) throws Exception {
@@ -55,22 +59,22 @@ public class EJBComputeFacade implements org.janelia.it.workstation.api.facade.a
     
     @Override
     public List<Task> getUserTasks() throws Exception {
-        return EJBFactory.getRemoteComputeBean().getUserTasks(org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr.getSubjectKey());
+        return EJBFactory.getRemoteComputeBean().getUserTasks(SessionMgr.getSubjectKey());
     }
 
     @Override
     public List<Task> getUserParentTasks() throws Exception {
-        return EJBFactory.getRemoteComputeBean().getRecentUserParentTasks(org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr.getSubjectKey());
+        return EJBFactory.getRemoteComputeBean().getRecentUserParentTasks(SessionMgr.getSubjectKey());
     }
     
     @Override
     public List<Task> getUserTasksByType(String taskName) throws Exception {
-        return EJBFactory.getRemoteComputeBean().getUserTasksByType(taskName, org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr.getSubjectKey());
+        return EJBFactory.getRemoteComputeBean().getUserTasksByType(taskName, SessionMgr.getSubjectKey());
     }
 
     @Override
     public Subject getSubject() throws Exception {
-        return EJBFactory.getRemoteComputeBean().getSubjectWithPreferences(org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr.getSubjectKey());
+        return EJBFactory.getRemoteComputeBean().getSubjectWithPreferences(SessionMgr.getSubjectKey());
     }
 
     @Override
@@ -90,9 +94,9 @@ public class EJBComputeFacade implements org.janelia.it.workstation.api.facade.a
 
     @Override
     public Subject loginSubject() throws Exception {
-        final org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr mgr = org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr.getSessionMgr();
-        final String userName = (String) mgr.getModelProperty(org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr.USER_NAME);
-        final String password = (String) mgr.getModelProperty(org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr.USER_PASSWORD);
+        final SessionMgr mgr = SessionMgr.getSessionMgr();
+        final String userName = (String) mgr.getModelProperty(SessionMgr.USER_NAME);
+        final String password = (String) mgr.getModelProperty(SessionMgr.USER_PASSWORD);
         final ComputeBeanRemote compute = EJBFactory.getRemoteComputeBean();
         final Subject loggedInSubject = compute.login(userName, password);
 
@@ -104,7 +108,7 @@ public class EJBComputeFacade implements org.janelia.it.workstation.api.facade.a
                                                       password.toCharArray());
                 }
             });
-            org.janelia.it.workstation.shared.util.filecache.WebDavClient webDavClient = mgr.getWebDavClient();
+            WebDavClient webDavClient = mgr.getWebDavClient();
             webDavClient.setCredentialsUsingAuthenticator();
         }
 
@@ -114,21 +118,21 @@ public class EJBComputeFacade implements org.janelia.it.workstation.api.facade.a
     @Override
     public void beginSession() {
         UserToolEvent loginEvent = EJBFactory.getRemoteComputeBean().beginSession(
-                org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr.getSessionMgr().getSubject().getName(),
-                org.janelia.it.workstation.shared.util.ConsoleProperties.getString("console.Title"),
-                org.janelia.it.workstation.shared.util.ConsoleProperties.getString("console.versionNumber"));
+                SessionMgr.getSessionMgr().getSubject().getName(),
+                ConsoleProperties.getString("console.Title"),
+                ConsoleProperties.getString("console.versionNumber"));
         if (null!=loginEvent && null!=loginEvent.getSessionId()) {
-            org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr.getSessionMgr().setCurrentSessionId(loginEvent.getSessionId());
+            SessionMgr.getSessionMgr().setCurrentSessionId(loginEvent.getSessionId());
         }
     }
     
     @Override
     public void endSession() {
     	EJBFactory.getRemoteComputeBean().endSession(
-                org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr.getSessionMgr().getSubject().getName(),
-                org.janelia.it.workstation.shared.util.ConsoleProperties.getString("console.Title"),
-                org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr.getSessionMgr().getCurrentSessionId());
-        org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr.getSessionMgr().setCurrentSessionId(null);
+                SessionMgr.getSessionMgr().getSubject().getName(),
+                ConsoleProperties.getString("console.Title"),
+                SessionMgr.getSessionMgr().getCurrentSessionId());
+        SessionMgr.getSessionMgr().setCurrentSessionId(null);
     }
     
     @Override

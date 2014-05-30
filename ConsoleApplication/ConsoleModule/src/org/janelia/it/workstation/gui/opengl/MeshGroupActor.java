@@ -1,5 +1,9 @@
 package org.janelia.it.workstation.gui.opengl;
 
+import org.janelia.it.workstation.gui.opengl.shader.BasicShader;
+import org.janelia.it.workstation.gui.opengl.shader.Mesh120Shader;
+import org.janelia.it.workstation.gui.opengl.shader.Mesh150Shader;
+
 import java.util.List;
 import java.util.Vector;
 
@@ -15,9 +19,9 @@ public class MeshGroupActor extends CompositeGLActor
 implements GL3Actor
 {
 	// Different shaders appropriate for GL2 and GL3...
-    private org.janelia.it.workstation.gui.opengl.shader.Mesh120Shader shader120 = new org.janelia.it.workstation.gui.opengl.shader.Mesh120Shader();
-    private org.janelia.it.workstation.gui.opengl.shader.Mesh150Shader shader150 = new org.janelia.it.workstation.gui.opengl.shader.Mesh150Shader();
-    private org.janelia.it.workstation.gui.opengl.shader.BasicShader shader = shader120;
+    private Mesh120Shader shader120 = new Mesh120Shader();
+    private Mesh150Shader shader150 = new Mesh150Shader();
+    private BasicShader shader = shader120;
     private int vertexLocation = 0;
     private int normalLocation = 1;
     private boolean bIsInitialized = false;
@@ -80,7 +84,7 @@ implements GL3Actor
             shader.init(gl2gl3);
             vertexLocation = gl2gl3.glGetAttribLocation(shader.getShaderProgram(), "vertex");
             normalLocation = gl2gl3.glGetAttribLocation(shader.getShaderProgram(), "normal");
-        } catch (org.janelia.it.workstation.gui.opengl.shader.BasicShader.ShaderCreationException e) {
+        } catch (BasicShader.ShaderCreationException e) {
             e.printStackTrace();
         }
         for (GL3Actor actor : actors) {

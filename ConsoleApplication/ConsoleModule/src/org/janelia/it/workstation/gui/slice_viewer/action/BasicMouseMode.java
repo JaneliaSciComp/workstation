@@ -18,6 +18,11 @@ import javax.swing.ImageIcon;
 import javax.swing.JMenuItem;
 
 import org.janelia.it.workstation.geom.Rotation3d;
+import org.janelia.it.workstation.geom.Vec3;
+import org.janelia.it.workstation.gui.camera.Camera3d;
+import org.janelia.it.workstation.gui.slice_viewer.MenuItemGenerator;
+import org.janelia.it.workstation.gui.slice_viewer.MouseModalWidget;
+import org.janelia.it.workstation.gui.util.Icons;
 import org.janelia.it.workstation.gui.viewer3d.interfaces.Viewport;
 
 public class BasicMouseMode implements MouseMode
@@ -36,13 +41,13 @@ public class BasicMouseMode implements MouseMode
 	protected Cursor hoverCursor; // shown when mouse button released
 	protected Cursor altCursor; // shown when shift/ctrl pressed
 	protected Cursor currentCursor = hoverCursor;
-	protected org.janelia.it.workstation.gui.slice_viewer.MouseModalWidget widget;
-	protected org.janelia.it.workstation.gui.camera.Camera3d camera;
+	protected MouseModalWidget widget;
+	protected Camera3d camera;
 	protected Rotation3d viewerInGround = new Rotation3d();
 	
 	public static Cursor createCursor(String fileName, int x, int y) {
 		Toolkit toolkit = Toolkit.getDefaultToolkit();
-		ImageIcon icon = org.janelia.it.workstation.gui.util.Icons.getIcon(fileName);
+		ImageIcon icon = Icons.getIcon(fileName);
 		// Put 16x16 cursor inside Windows 32x32 cursor
 		// to avoid "Hamburger Helper" look.
 		Image iconImage = icon.getImage();
@@ -151,12 +156,12 @@ public class BasicMouseMode implements MouseMode
 	}
 
 	@Override
-	public org.janelia.it.workstation.gui.slice_viewer.MouseModalWidget getWidget() {
+	public MouseModalWidget getWidget() {
 		return widget;
 	}
 
 	@Override
-	public void setWidget(org.janelia.it.workstation.gui.slice_viewer.MouseModalWidget widget, boolean updateCursor) {
+	public void setWidget(MouseModalWidget widget, boolean updateCursor) {
 		if (this.widget == widget)
 			return;
 		this.widget = widget;
@@ -165,12 +170,12 @@ public class BasicMouseMode implements MouseMode
 	}
 
 	@Override
-	public org.janelia.it.workstation.gui.camera.Camera3d getCamera() {
+	public Camera3d getCamera() {
 		return camera;
 	}
 
 	@Override
-	public void setCamera(org.janelia.it.workstation.gui.camera.Camera3d camera) {
+	public void setCamera(Camera3d camera) {
 		this.camera = camera;
 	}
 
@@ -190,14 +195,14 @@ public class BasicMouseMode implements MouseMode
         this.viewerInGround = viewerInGround;
     }
 
-    public org.janelia.it.workstation.geom.Vec3 worldFromPixel(Point pixel) {
+    public Vec3 worldFromPixel(Point pixel) {
 		// Initialize to screen space position
-		org.janelia.it.workstation.geom.Vec3 result = new org.janelia.it.workstation.geom.Vec3(pixel.getX(), pixel.getY(), 0);
+		Vec3 result = new Vec3(pixel.getX(), pixel.getY(), 0);
 		// Normalize to screen viewport center
 		Viewport vp = getWidget().getViewport();
 		// TODO - test non-zero origins
-		result = result.minus(new org.janelia.it.workstation.geom.Vec3(vp.getOriginX(), vp.getOriginY(), 0)); // origin
-		result = result.minus(new org.janelia.it.workstation.geom.Vec3(vp.getWidth()/2.0, vp.getHeight()/2.0, 0)); // center
+		result = result.minus(new Vec3(vp.getOriginX(), vp.getOriginY(), 0)); // origin
+		result = result.minus(new Vec3(vp.getWidth()/2.0, vp.getHeight()/2.0, 0)); // center
 		// Convert from pixel units to world units
 		result = result.times(1.0/getCamera().getPixelsPerSceneUnit());
 		// Apply viewer orientation, e.g. X/Y/Z orthogonal viewers
@@ -209,16 +214,16 @@ public class BasicMouseMode implements MouseMode
 		return result;
 	}
 	
-	public Point pixelFromWorld(org.janelia.it.workstation.geom.Vec3 v) {
-		org.janelia.it.workstation.geom.Vec3 result = v;
+	public Point pixelFromWorld(Vec3 v) {
+		Vec3 result = v;
 		result = result.minus(getCamera().getFocus());
 		// Apply viewer orientation, e.g. X/Y/Z orthogonal viewers
 		result = viewerInGround.inverse().times(result);
 		result = result.times(getCamera().getPixelsPerSceneUnit());
 		// TODO - apply rotation, but only for rotatable viewers, UNLIKE slice viewer
 		Viewport vp = getWidget().getViewport();
-		result = result.plus(new org.janelia.it.workstation.geom.Vec3(vp.getWidth()/2.0, vp.getHeight()/2.0, 0));
-		result = result.plus(new org.janelia.it.workstation.geom.Vec3(vp.getOriginX(), vp.getOriginY(), 0));
+		result = result.plus(new Vec3(vp.getWidth()/2.0, vp.getHeight()/2.0, 0));
+		result = result.plus(new Vec3(vp.getOriginX(), vp.getOriginY(), 0));
 		return new Point((int)Math.round(result.getX()), (int)Math.round(result.getY()));
 	}
 
@@ -228,8 +233,8 @@ public class BasicMouseMode implements MouseMode
 	}
 
     @Override
-    public org.janelia.it.workstation.gui.slice_viewer.MenuItemGenerator getMenuItemGenerator() {
-        return new org.janelia.it.workstation.gui.slice_viewer.MenuItemGenerator() {
+    public MenuItemGenerator getMenuItemGenerator() {
+        return new MenuItemGenerator() {
             @Override
             public List<JMenuItem> getMenus(MouseEvent event) {
                 return new Vector<JMenuItem>(); // empty list

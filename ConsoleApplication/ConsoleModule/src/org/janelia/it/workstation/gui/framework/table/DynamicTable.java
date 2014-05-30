@@ -44,12 +44,12 @@ public abstract class DynamicTable extends JPanel {
 //    private ButtonHeaderRenderer headerRenderer;
 //    private JPopupMenu headerPopupMenu;
     
-    private List<org.janelia.it.workstation.gui.framework.table.DynamicColumn> columns = new ArrayList<org.janelia.it.workstation.gui.framework.table.DynamicColumn>();
-    private List<org.janelia.it.workstation.gui.framework.table.DynamicColumn> displayedColumns = new ArrayList<org.janelia.it.workstation.gui.framework.table.DynamicColumn>();
-    private List<org.janelia.it.workstation.gui.framework.table.DynamicRow> rows = new ArrayList<org.janelia.it.workstation.gui.framework.table.DynamicRow>();
+    private List<DynamicColumn> columns = new ArrayList<DynamicColumn>();
+    private List<DynamicColumn> displayedColumns = new ArrayList<DynamicColumn>();
+    private List<DynamicRow> rows = new ArrayList<DynamicRow>();
     private List<Object> userObjects = new ArrayList<Object>();
     
-    private Map<org.janelia.it.workstation.gui.framework.table.DynamicColumn,TableCellRenderer> renderers = new HashMap<org.janelia.it.workstation.gui.framework.table.DynamicColumn,TableCellRenderer>();
+    private Map<DynamicColumn,TableCellRenderer> renderers = new HashMap<DynamicColumn,TableCellRenderer>();
 
     private Rectangle currViewRect;
     private boolean hasMoreResults = false;
@@ -274,7 +274,7 @@ public abstract class DynamicTable extends JPanel {
      * @param row
      * @param data
      */
-    protected void valueChanged(org.janelia.it.workstation.gui.framework.table.DynamicColumn dc, int row, Object data) {
+    protected void valueChanged(DynamicColumn dc, int row, Object data) {
     }
     
 //	private class HeaderListener extends MouseAdapter {
@@ -393,7 +393,7 @@ public abstract class DynamicTable extends JPanel {
     protected void backgroundClicked() {
     }
     
-    public org.janelia.it.workstation.gui.framework.table.DynamicColumn addColumn(String label) {
+    public DynamicColumn addColumn(String label) {
     	return addColumn(label, label, true, false, false, false);
     }
     
@@ -405,8 +405,8 @@ public abstract class DynamicTable extends JPanel {
      * @param switchable
      * @return
      */
-    public org.janelia.it.workstation.gui.framework.table.DynamicColumn addColumn(String name, String label, boolean visible, boolean editable, boolean switchable, boolean sortable) {
-    	org.janelia.it.workstation.gui.framework.table.DynamicColumn col = new org.janelia.it.workstation.gui.framework.table.DynamicColumn(name, label, visible, editable, switchable, sortable);
+    public DynamicColumn addColumn(String name, String label, boolean visible, boolean editable, boolean switchable, boolean sortable) {
+    	DynamicColumn col = new DynamicColumn(name, label, visible, editable, switchable, sortable);
     	columns.add(col);
     	return col;
     }
@@ -423,7 +423,7 @@ public abstract class DynamicTable extends JPanel {
      * @param name
      * @return
      */
-    public List<org.janelia.it.workstation.gui.framework.table.DynamicColumn> getColumns() {
+    public List<DynamicColumn> getColumns() {
     	return columns;
     }
 
@@ -432,7 +432,7 @@ public abstract class DynamicTable extends JPanel {
      * @param name
      * @return
      */
-    public List<org.janelia.it.workstation.gui.framework.table.DynamicColumn> getDisplayedColumns() {
+    public List<DynamicColumn> getDisplayedColumns() {
     	return displayedColumns;
     }
     
@@ -441,8 +441,8 @@ public abstract class DynamicTable extends JPanel {
      * @param name
      * @return
      */
-    public org.janelia.it.workstation.gui.framework.table.DynamicColumn getColumn(String name) {
-    	for(org.janelia.it.workstation.gui.framework.table.DynamicColumn col : columns) {
+    public DynamicColumn getColumn(String name) {
+    	for(DynamicColumn col : columns) {
     		if (col.getName().equals(name)) {
     			return col;
     		}
@@ -450,7 +450,7 @@ public abstract class DynamicTable extends JPanel {
     	return null;
     }
     
-    public TableColumn getTableColumn(org.janelia.it.workstation.gui.framework.table.DynamicColumn column) {
+    public TableColumn getTableColumn(DynamicColumn column) {
     	int index = columns.indexOf(column);
     	if (index<0) return null;
     	return table.getColumnModel().getColumn(index);
@@ -461,8 +461,8 @@ public abstract class DynamicTable extends JPanel {
      * @param userObject
      * @return
      */
-    public org.janelia.it.workstation.gui.framework.table.DynamicRow addRow(Object userObject) {
-    	org.janelia.it.workstation.gui.framework.table.DynamicRow row = new org.janelia.it.workstation.gui.framework.table.DynamicRow(userObject);
+    public DynamicRow addRow(Object userObject) {
+    	DynamicRow row = new DynamicRow(userObject);
     	rows.add(row);
     	userObjects.add(userObject);
     	return row;
@@ -472,7 +472,7 @@ public abstract class DynamicTable extends JPanel {
      * Returns a list of the rows in display order.
      * @return
      */
-    public List<org.janelia.it.workstation.gui.framework.table.DynamicRow> getRows() {
+    public List<DynamicRow> getRows() {
     	return rows;
     }
     
@@ -480,7 +480,7 @@ public abstract class DynamicTable extends JPanel {
     	return userObjects;
     }
 
-    public void removeRow(org.janelia.it.workstation.gui.framework.table.DynamicRow row) {
+    public void removeRow(DynamicRow row) {
     	userObjects.remove(rows.indexOf(row));
     	rows.remove(row);
     	updateTableModel();
@@ -496,7 +496,7 @@ public abstract class DynamicTable extends JPanel {
      * Returns the first currently selected row.
      * @return
      */
-    public org.janelia.it.workstation.gui.framework.table.DynamicRow getCurrentRow() {
+    public DynamicRow getCurrentRow() {
     	for (int i : table.getSelectedRows()) {
     		return rows.get(table.convertRowIndexToModel(i));
     	}
@@ -507,8 +507,8 @@ public abstract class DynamicTable extends JPanel {
      * Returns all of the selected rows.
      * @return
      */
-    public List<org.janelia.it.workstation.gui.framework.table.DynamicRow> getSelectedRows() {
-    	List<org.janelia.it.workstation.gui.framework.table.DynamicRow> selected = new ArrayList<org.janelia.it.workstation.gui.framework.table.DynamicRow>();
+    public List<DynamicRow> getSelectedRows() {
+    	List<DynamicRow> selected = new ArrayList<DynamicRow>();
         for (int i : table.getSelectedRows()) {
             int mi = table.convertRowIndexToModel(i);
         	selected.add(rows.get(mi));
@@ -531,7 +531,7 @@ public abstract class DynamicTable extends JPanel {
     
     public boolean navigateToRowWithObject(Object userObject) {
     	int i = 0;
-    	for(org.janelia.it.workstation.gui.framework.table.DynamicRow row : rows) {
+    	for(DynamicRow row : rows) {
     		if (row.getUserObject().equals(userObject)) {
     			int vi = table.convertRowIndexToView(i);
     			table.getSelectionModel().setSelectionInterval(vi, vi);
@@ -543,7 +543,7 @@ public abstract class DynamicTable extends JPanel {
     	return false;
     }
 
-    public org.janelia.it.workstation.gui.framework.table.DynamicRow getRowForUserObject(Object userObject) {
+    public DynamicRow getRowForUserObject(Object userObject) {
     	return rows.get(userObjects.indexOf(userObject));
     }
     
@@ -553,7 +553,7 @@ public abstract class DynamicTable extends JPanel {
      * @param column
      * @return
      */
-    public abstract Object getValue(Object userObject, org.janelia.it.workstation.gui.framework.table.DynamicColumn column);
+    public abstract Object getValue(Object userObject, DynamicColumn column);
     
     /**
      * Synchronous method for updating the JTable model. Should be called from the EDT.
@@ -565,7 +565,7 @@ public abstract class DynamicTable extends JPanel {
         // Data formatted for the JTable
         Vector<String> columnNames = new Vector<String>();
         
-        for(org.janelia.it.workstation.gui.framework.table.DynamicColumn column : columns) {
+        for(DynamicColumn column : columns) {
         	if (column.isVisible()) {
         		columnNames.add(column.getLabel());
         		displayedColumns.add(column);
@@ -575,10 +575,10 @@ public abstract class DynamicTable extends JPanel {
         Vector<Vector<Object>> data = new Vector<Vector<Object>>();
 
         // Build the data in column order
-        for (org.janelia.it.workstation.gui.framework.table.DynamicRow row : rows) {
+        for (DynamicRow row : rows) {
             Vector<Object> rowData = new Vector<Object>();
 
-            for(org.janelia.it.workstation.gui.framework.table.DynamicColumn column : displayedColumns) {
+            for(DynamicColumn column : displayedColumns) {
         		Object value = getValue(row.getUserObject(), column);
         		rowData.add(value == null ? "" : value);
             }
@@ -603,7 +603,7 @@ public abstract class DynamicTable extends JPanel {
                 int row = e.getFirstRow();
                 int column = e.getColumn();
                 TableModel model = (TableModel)e.getSource();
-                org.janelia.it.workstation.gui.framework.table.DynamicColumn dc = getColumns().get(column);
+                DynamicColumn dc = getColumns().get(column);
                 Object data = model.getValueAt(row, column);
                 valueChanged(dc, row, data);
             } 
@@ -612,7 +612,7 @@ public abstract class DynamicTable extends JPanel {
         table.setModel(tableModel);
         
         TableColumnModel colModel = table.getTableHeader().getColumnModel();
-        for(org.janelia.it.workstation.gui.framework.table.DynamicColumn column : displayedColumns) {
+        for(DynamicColumn column : displayedColumns) {
         	TableCellRenderer renderer = renderers.get(column);
         	if (renderer == null) continue;
         	int c = displayedColumns.indexOf(column);
@@ -624,7 +624,7 @@ public abstract class DynamicTable extends JPanel {
         autoResizeColWidth();
     }
     
-    public void setColumnRenderer(org.janelia.it.workstation.gui.framework.table.DynamicColumn column, TableCellRenderer renderer) {
+    public void setColumnRenderer(DynamicColumn column, TableCellRenderer renderer) {
     	renderers.put(column, renderer);
     }
     

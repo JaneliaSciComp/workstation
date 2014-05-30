@@ -30,6 +30,7 @@ import org.janelia.it.workstation.api.entity_model.events.EntityChangeEvent;
 import org.janelia.it.workstation.api.entity_model.events.EntityCreateEvent;
 import org.janelia.it.workstation.api.entity_model.events.EntityInvalidationEvent;
 import org.janelia.it.workstation.api.entity_model.management.EntitySelectionModel;
+import org.janelia.it.workstation.api.entity_model.management.ModelMgr;
 import org.janelia.it.workstation.api.entity_model.management.ModelMgrUtils;
 import org.janelia.it.workstation.gui.dialogs.ScreenEvaluationDialog;
 import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
@@ -50,7 +51,7 @@ import com.google.common.eventbus.Subscribe;
  *
  * @author <a href="mailto:rokickik@janelia.hhmi.org">Konrad Rokicki</a>
  */
-public abstract class EntityOutline extends EntityTree implements org.janelia.it.workstation.gui.framework.outline.Refreshable, org.janelia.it.workstation.gui.framework.outline.ActivatableView {
+public abstract class EntityOutline extends EntityTree implements Refreshable, ActivatableView {
 
     private static final Logger log = LoggerFactory.getLogger(EntityOutline.class);
 
@@ -85,7 +86,7 @@ public abstract class EntityOutline extends EntityTree implements org.janelia.it
     public void activate() {
         log.info("Activating");
         super.activate();
-        org.janelia.it.workstation.api.entity_model.management.ModelMgr.getModelMgr().addModelMgrObserver(mml);
+        ModelMgr.getModelMgr().addModelMgrObserver(mml);
         refresh();
     }
 
@@ -93,7 +94,7 @@ public abstract class EntityOutline extends EntityTree implements org.janelia.it
     public void deactivate() {
         log.info("Deactivating");
         super.deactivate();
-        org.janelia.it.workstation.api.entity_model.management.ModelMgr.getModelMgr().removeModelMgrObserver(mml);
+        ModelMgr.getModelMgr().removeModelMgrObserver(mml);
     }
 
     public void init(List<Entity> entityRootList) {
@@ -180,7 +181,7 @@ public abstract class EntityOutline extends EntityTree implements org.janelia.it
      */
     public abstract List<Entity> loadRootList() throws Exception;
 
-    private class EntityOutlineContextMenu extends org.janelia.it.workstation.gui.framework.outline.EntityContextMenu {
+    private class EntityOutlineContextMenu extends EntityContextMenu {
 
         public EntityOutlineContextMenu(DefaultMutableTreeNode node, String uniqueId) {
             super(new RootedEntity(uniqueId, getEntityData(node)));
@@ -223,7 +224,7 @@ public abstract class EntityOutline extends EntityTree implements org.janelia.it
                         @Override
                         protected void doStuff() throws Exception {
                             // Update database
-                            newFolder = org.janelia.it.workstation.api.entity_model.management.ModelMgr.getModelMgr().createCommonRoot(folderName);
+                            newFolder = ModelMgr.getModelMgr().createCommonRoot(folderName);
                         }
 
                         @Override
@@ -450,7 +451,7 @@ public abstract class EntityOutline extends EntityTree implements org.janelia.it
         log.debug("Starting whole tree refresh (invalidateCache={}, restoreState={})", invalidateCache, expansionState != null);
 
         showLoadingIndicator();
-        org.janelia.it.workstation.api.entity_model.management.ModelMgr.getModelMgr().unregisterOnEventBus(EntityOutline.this);
+        ModelMgr.getModelMgr().unregisterOnEventBus(EntityOutline.this);
 
         SimpleWorker entityOutlineLoadingWorker = new SimpleWorker() {
 
@@ -458,14 +459,14 @@ public abstract class EntityOutline extends EntityTree implements org.janelia.it
 
             protected void doStuff() throws Exception {
                 if (invalidateCache && getRootEntity() != null) {
-                    org.janelia.it.workstation.api.entity_model.management.ModelMgr.getModelMgr().invalidateCache();
+                    ModelMgr.getModelMgr().invalidateCache();
                 }
                 rootList = loadRootList();
             }
 
             protected void hadSuccess() {
                 try {
-                    org.janelia.it.workstation.api.entity_model.management.ModelMgr.getModelMgr().registerOnEventBus(EntityOutline.this);
+                    ModelMgr.getModelMgr().registerOnEventBus(EntityOutline.this);
 
                     init(rootList);
                     currUniqueId = null;
@@ -615,7 +616,7 @@ public abstract class EntityOutline extends EntityTree implements org.janelia.it
         String uniqueId = getDynamicTree().getUniqueId(node);
         if (!uniqueId.equals(currUniqueId)) {
             this.currUniqueId = uniqueId;
-            org.janelia.it.workstation.api.entity_model.management.ModelMgr.getModelMgr().getEntitySelectionModel().selectEntity(EntitySelectionModel.CATEGORY_OUTLINE, uniqueId + "", true);
+            ModelMgr.getModelMgr().getEntitySelectionModel().selectEntity(EntitySelectionModel.CATEGORY_OUTLINE, uniqueId + "", true);
         }
         else {
             return;

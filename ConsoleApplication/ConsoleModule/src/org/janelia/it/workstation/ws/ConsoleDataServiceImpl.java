@@ -18,6 +18,13 @@ import javax.jws.soap.SOAPBinding;
 import org.janelia.it.jacs.model.entity.Entity;
 import org.janelia.it.jacs.model.entity.EntityData;
 import org.janelia.it.jacs.model.ontology.OntologyAnnotation;
+import org.janelia.it.workstation.api.entity_model.management.ModelMgr;
+import org.janelia.it.workstation.api.facade.facade_mgr.FacadeManager;
+import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
+import org.janelia.it.workstation.model.utils.AnnotationSession;
+import org.janelia.it.workstation.model.utils.OntologyKeyBindings;
+import org.janelia.it.workstation.shared.filestore.PathTranslator;
+import org.janelia.it.workstation.shared.util.ConsoleProperties;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -37,27 +44,27 @@ public class ConsoleDataServiceImpl {
 	private static final Logger log = LoggerFactory.getLogger(ConsoleDataServiceImpl.class);
 	
 	public int reservePort(String clientName) {
-        int port = org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr.getSessionMgr().addExternalClient(clientName);
+        int port = SessionMgr.getSessionMgr().addExternalClient(clientName);
 		log.info("Reserving port "+port+" for client "+clientName);
 		return port;
 	}
 	
 	public void registerClient(int port, String endpointUrl) throws Exception {
-    	ExternalClient client = org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr.getSessionMgr().getExternalClientByPort(port);
+    	ExternalClient client = SessionMgr.getSessionMgr().getExternalClientByPort(port);
     	client.init(endpointUrl);
     	log.info("Initialized client on port "+port+" with endpoint "+endpointUrl);
 
 		Map<String,Object> parameters = new HashMap<String,Object>();
 		
-		if (org.janelia.it.workstation.api.entity_model.management.ModelMgr.getModelMgr().getCurrentOntology() != null) {
+		if (ModelMgr.getModelMgr().getCurrentOntology() != null) {
 			parameters.clear();
-			parameters.put("rootId", org.janelia.it.workstation.api.entity_model.management.ModelMgr.getModelMgr().getCurrentOntology().getId());
+			parameters.put("rootId", ModelMgr.getModelMgr().getCurrentOntology().getId());
 			client.sendMessage("ontologySelected", parameters);
 		}
 		
-		if (org.janelia.it.workstation.api.entity_model.management.ModelMgr.getModelMgr().getCurrentAnnotationSession() != null) {
+		if (ModelMgr.getModelMgr().getCurrentAnnotationSession() != null) {
 			parameters.clear();
-			parameters.put("sessionId", org.janelia.it.workstation.api.entity_model.management.ModelMgr.getModelMgr().getCurrentAnnotationSession().getId());
+			parameters.put("sessionId", ModelMgr.getModelMgr().getCurrentAnnotationSession().getId());
 			client.sendMessage("sessionSelected", parameters);
 		}
     }
@@ -73,19 +80,19 @@ public class ConsoleDataServiceImpl {
     }
     
     public Entity createAnnotation(OntologyAnnotation annotation) throws Exception {
-        return org.janelia.it.workstation.api.entity_model.management.ModelMgr.getModelMgr().createOntologyAnnotation(annotation);
+        return ModelMgr.getModelMgr().createOntologyAnnotation(annotation);
     }
     
     public void removeAnnotation(long annotationId) throws Exception {
-        org.janelia.it.workstation.api.entity_model.management.ModelMgr.getModelMgr().removeAnnotation(annotationId);
+        ModelMgr.getModelMgr().removeAnnotation(annotationId);
     }
     
     public Entity[] getAnnotationsForEntity(long entityId) throws Exception {
-    	return org.janelia.it.workstation.api.entity_model.management.ModelMgr.getModelMgr().getAnnotationsForEntity(entityId).toArray(new Entity[0]);
+    	return ModelMgr.getModelMgr().getAnnotationsForEntity(entityId).toArray(new Entity[0]);
     }
 
     public Entity[] getAnnotationsForEntities(Long[] entityIds) throws Exception {
-    	return org.janelia.it.workstation.api.entity_model.management.ModelMgr.getModelMgr().getAnnotationsForEntities(Arrays.asList(entityIds)).toArray(new Entity[0]);
+    	return ModelMgr.getModelMgr().getAnnotationsForEntities(Arrays.asList(entityIds)).toArray(new Entity[0]);
     }
 	
 //    public List<Entity> getAnnotationsForSession(Long annotationSessionId) throws Exception {
@@ -138,41 +145,41 @@ public class ConsoleDataServiceImpl {
 //    }
 	
 	public Entity getOntology(long rootId) throws Exception {
-		return org.janelia.it.workstation.api.entity_model.management.ModelMgr.getModelMgr().getOntologyTree(rootId);
+		return ModelMgr.getModelMgr().getOntologyTree(rootId);
 	}
 
-	public org.janelia.it.workstation.model.utils.AnnotationSession getAnnotationSession(long sessionId) throws Exception {
-		return org.janelia.it.workstation.api.entity_model.management.ModelMgr.getModelMgr().getAnnotationSession(sessionId);
+	public AnnotationSession getAnnotationSession(long sessionId) throws Exception {
+		return ModelMgr.getModelMgr().getAnnotationSession(sessionId);
 	}
 	
-	public org.janelia.it.workstation.model.utils.OntologyKeyBindings getKeybindings(long ontologyId) throws Exception {
-		return org.janelia.it.workstation.api.entity_model.management.ModelMgr.getModelMgr().loadOntologyKeyBindings(ontologyId);
+	public OntologyKeyBindings getKeybindings(long ontologyId) throws Exception {
+		return ModelMgr.getModelMgr().loadOntologyKeyBindings(ontologyId);
 	}
 	
     public Entity getEntityById(long entityId) throws Exception {
-        return translatePaths(org.janelia.it.workstation.api.facade.facade_mgr.FacadeManager.getFacadeManager().getEntityFacade().getEntityById(entityId));
+        return translatePaths(FacadeManager.getFacadeManager().getEntityFacade().getEntityById(entityId));
     }
 
     public Entity getEntityAndChildren(long entityId) throws Exception {
-        return translatePaths(org.janelia.it.workstation.api.facade.facade_mgr.FacadeManager.getFacadeManager().getEntityFacade().getEntityAndChildren(entityId));
+        return translatePaths(FacadeManager.getFacadeManager().getEntityFacade().getEntityAndChildren(entityId));
     }
 
 	public Entity getEntityTree(long entityId) throws Exception {
-        return translatePaths(org.janelia.it.workstation.api.facade.facade_mgr.FacadeManager.getFacadeManager().getEntityFacade().getEntityTree(entityId));
+        return translatePaths(FacadeManager.getFacadeManager().getEntityFacade().getEntityTree(entityId));
     }
 
     public Entity[] getParentEntityArray(long childEntityId) throws Exception {
-    	List<Entity> list = org.janelia.it.workstation.api.entity_model.management.ModelMgr.getModelMgr().getParentEntities(childEntityId);
+    	List<Entity> list = ModelMgr.getModelMgr().getParentEntities(childEntityId);
     	return list.toArray(new Entity[0]);
     }
     
     public EntityData[] getParentEntityDataArray(long childEntityId) throws Exception {
-    	List<EntityData> list = org.janelia.it.workstation.api.entity_model.management.ModelMgr.getModelMgr().getParentEntityDatas(childEntityId);
+    	List<EntityData> list = ModelMgr.getModelMgr().getParentEntityDatas(childEntityId);
     	return list.toArray(new EntityData[0]);
     }
     
     public Entity getAncestorWithType(long entityId, String type) throws Exception {
-    	return org.janelia.it.workstation.api.entity_model.management.ModelMgr.getModelMgr().getAncestorWithType(org.janelia.it.workstation.api.entity_model.management.ModelMgr.getModelMgr().getEntityById(entityId), type);
+    	return ModelMgr.getModelMgr().getAncestorWithType(ModelMgr.getModelMgr().getEntityById(entityId), type);
     }
     
 //    public EntityData saveEntityDataForEntity(EntityData newData) throws Exception {
@@ -180,17 +187,17 @@ public class ConsoleDataServiceImpl {
 //    }
     
     public String getUserAnnotationColor(String username) throws Exception {
-        Color color = org.janelia.it.workstation.api.entity_model.management.ModelMgr.getModelMgr().getUserAnnotationColor(username);
+        Color color = ModelMgr.getModelMgr().getUserAnnotationColor(username);
         String rgb = Integer.toHexString((color.getRGB() & 0xffffff) | 0x1000000).substring(1);
         return rgb;
     }
     
     private Entity translatePaths(Entity entity) {
-        if (org.janelia.it.workstation.shared.util.ConsoleProperties.getBoolean("console.WebServer.proxyFiles")) {
-            return org.janelia.it.workstation.shared.filestore.PathTranslator.translatePathsToProxy(entity);
+        if (ConsoleProperties.getBoolean("console.WebServer.proxyFiles")) {
+            return PathTranslator.translatePathsToProxy(entity);
         }
         else {
-            return org.janelia.it.workstation.shared.filestore.PathTranslator.translatePathsToCurrentPlatform(entity);
+            return PathTranslator.translatePathsToCurrentPlatform(entity);
         }
     }
 }

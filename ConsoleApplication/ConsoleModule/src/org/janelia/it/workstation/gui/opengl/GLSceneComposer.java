@@ -9,6 +9,9 @@ import javax.media.opengl.glu.GLU;
 
 import org.janelia.it.workstation.geom.Rotation3d;
 import org.janelia.it.workstation.geom.Vec3;
+import org.janelia.it.workstation.gui.camera.ObservableCamera3d;
+import org.janelia.it.workstation.gui.opengl.stereo3d.MonoStereoMode;
+import org.janelia.it.workstation.gui.opengl.stereo3d.StereoMode;
 import org.janelia.it.workstation.signal.Signal;
 import org.janelia.it.workstation.signal.Slot;
 import org.janelia.it.workstation.signal.Slot1;
@@ -33,13 +36,13 @@ implements GLEventListener
     private static Logger logger = LoggerFactory.getLogger( GLSceneComposer.class );
     protected static GLU glu = new GLU();
 
-    private org.janelia.it.workstation.gui.opengl.stereo3d.StereoMode stereoMode = new org.janelia.it.workstation.gui.opengl.stereo3d.MonoStereoMode();
+    private StereoMode stereoMode = new MonoStereoMode();
     boolean stereoModeNeedsCleanup = true; // for Mac
 
 	private static final Vec3 upInCamera = new Vec3(0,-1,0);
-	private org.janelia.it.workstation.gui.camera.ObservableCamera3d camera;
+	private ObservableCamera3d camera;
 
-	private org.janelia.it.workstation.gui.opengl.CameraScreenGeometry cameraScreenGeometry;
+	private CameraScreenGeometry cameraScreenGeometry;
 
 	private boolean useDepth = true;
 	
@@ -48,7 +51,7 @@ implements GLEventListener
     private CompositeGLActor transparentActors = new CompositeGLActor();
     private CompositeGLActor hudActors = new CompositeGLActor();
     
-    private org.janelia.it.workstation.gui.opengl.GL3Actor[] allActors = {
+    private GL3Actor[] allActors = {
             backgroundActors,
             opaqueActors,
             transparentActors,
@@ -56,7 +59,7 @@ implements GLEventListener
     };
 
     private GLAutoDrawable glComponent;
-    org.janelia.it.workstation.gui.opengl.GL2Adapter gl2Adapter = null;
+    GL2Adapter gl2Adapter = null;
 
     private boolean viewChanged = true;
     private Slot onViewChangedSlot = new Slot() {
@@ -69,14 +72,14 @@ implements GLEventListener
     
     public Signal viewChangedSignal = new Signal();
 
-	public Slot1<org.janelia.it.workstation.gui.opengl.stereo3d.StereoMode> setStereoModeSlot = new Slot1<org.janelia.it.workstation.gui.opengl.stereo3d.StereoMode>() {
+	public Slot1<StereoMode> setStereoModeSlot = new Slot1<StereoMode>() {
 		@Override
-		public void execute(org.janelia.it.workstation.gui.opengl.stereo3d.StereoMode mode) {
+		public void execute(StereoMode mode) {
 			setStereoMode(mode);
 		}
 	};
 
-	public GLSceneComposer(org.janelia.it.workstation.gui.camera.ObservableCamera3d camera, GLAutoDrawable component)
+	public GLSceneComposer(ObservableCamera3d camera, GLAutoDrawable component)
 	{
 	    this.camera = camera;
 	    camera.getViewChangedSignal().connect(onViewChangedSlot);
@@ -84,7 +87,7 @@ implements GLEventListener
 	    // double screenEyeDistanceCm = 70.0; // varies per seat
 	    // Library Dell U2713H 2560x1440 pixels; 59.67x33.57 cm; => 42.9 pixels/cm
 	    // double screenPixelsPerCm = 42.9; // varies per monitor
-	    cameraScreenGeometry = new org.janelia.it.workstation.gui.opengl.CameraScreenGeometry(camera,
+	    cameraScreenGeometry = new CameraScreenGeometry(camera,
 	            70.0, // screenEyeDistanceCm
 	            42.9, // screenPixelsPerCm
 	            6.2); // intraOcularDistanceCm
@@ -98,15 +101,15 @@ implements GLEventListener
             }});
 	}
 
-    public void addBackgroundActor(org.janelia.it.workstation.gui.opengl.GL3Actor actor) {
+    public void addBackgroundActor(GL3Actor actor) {
         backgroundActors.addActor(actor);
     }
 
-    public void addOpaqueActor(org.janelia.it.workstation.gui.opengl.GL3Actor actor) {
+    public void addOpaqueActor(GL3Actor actor) {
         opaqueActors.addActor(actor);
     }
 
-    public void addTransparentActor(org.janelia.it.workstation.gui.opengl.GL3Actor actor) {
+    public void addTransparentActor(GL3Actor actor) {
         transparentActors.addActor(actor);
     }
 
@@ -123,7 +126,7 @@ implements GLEventListener
 	{
 	    GL gl = glDrawable.getGL();
 	    checkGlError(gl, "GLSceneComposer display 123");
-	    org.janelia.it.workstation.gui.opengl.GLActorContext actorContext = new org.janelia.it.workstation.gui.opengl.GLActorContext(glDrawable, gl2Adapter);
+	    GLActorContext actorContext = new GLActorContext(glDrawable, gl2Adapter);
         checkGlError(gl, "GLSceneComposer display 125");
 	    if (viewChanged) {
             updateModelViewMatrix(actorContext);
@@ -165,32 +168,32 @@ implements GLEventListener
         checkGlError(gl, "GLSceneComposer display 154");
 	}
 
-	public void displayBackground(org.janelia.it.workstation.gui.opengl.GLActorContext actorContext) {
+	public void displayBackground(GLActorContext actorContext) {
 	    backgroundActors.display(actorContext);
 	}
 	
-    public void displayOpaque(org.janelia.it.workstation.gui.opengl.GLActorContext actorContext) {
+    public void displayOpaque(GLActorContext actorContext) {
         opaqueActors.display(actorContext);
     }
     
-    public void displayTransparent(org.janelia.it.workstation.gui.opengl.GLActorContext actorContext) {
+    public void displayTransparent(GLActorContext actorContext) {
         transparentActors.display(actorContext);
     }
     
-    public void displayHud(org.janelia.it.workstation.gui.opengl.GLActorContext actorContext) {
+    public void displayHud(GLActorContext actorContext) {
         hudActors.display(actorContext);
     }
     
-    public void displayScene(org.janelia.it.workstation.gui.opengl.GLActorContext actorContext) {
+    public void displayScene(GLActorContext actorContext) {
         GL gl = actorContext.getGLAutoDrawable().getGL();
-        org.janelia.it.workstation.gui.opengl.GLError.checkGlError(gl, "GLSceneComposer displayScene 170");
+        GLError.checkGlError(gl, "GLSceneComposer displayScene 170");
         if (useDepth) {
             gl.glClear(GL.GL_DEPTH_BUFFER_BIT);
         }
         // Render in 4 passes
-        org.janelia.it.workstation.gui.opengl.GLError.checkGlError(gl, "GLSceneComposer displayScene 175");
+        GLError.checkGlError(gl, "GLSceneComposer displayScene 175");
         gl.glDisable(GL.GL_DEPTH_TEST);
-        org.janelia.it.workstation.gui.opengl.GLError.checkGlError(gl, "GLSceneComposer displayScene 177");
+        GLError.checkGlError(gl, "GLSceneComposer displayScene 177");
         displayBackground(actorContext);
         if (useDepth)
             gl.glEnable(GL.GL_DEPTH_TEST);        	
@@ -201,8 +204,8 @@ implements GLEventListener
     
 	@Override
 	public void dispose(GLAutoDrawable glDrawable) {
-        org.janelia.it.workstation.gui.opengl.GLActorContext actorContext = new org.janelia.it.workstation.gui.opengl.GLActorContext(glDrawable, gl2Adapter);
-	    for (org.janelia.it.workstation.gui.opengl.GL3Actor actor : allActors)
+        GLActorContext actorContext = new GLActorContext(glDrawable, gl2Adapter);
+	    for (GL3Actor actor : allActors)
 	        actor.dispose(actorContext);
 	    stereoMode.dispose(glDrawable);
 	}
@@ -217,13 +220,13 @@ implements GLEventListener
 	    // Could be GLCanvas vs GLJPanel...
 	    gl2gl3.glEnable(GL2GL3.GL_FRAMEBUFFER_SRGB);
 	    // 
-	    gl2Adapter = org.janelia.it.workstation.gui.opengl.GL2AdapterFactory.createGL2Adapter(glDrawable);
-	    org.janelia.it.workstation.gui.opengl.GLActorContext actorContext = new org.janelia.it.workstation.gui.opengl.GLActorContext(glDrawable, gl2Adapter);
+	    gl2Adapter = GL2AdapterFactory.createGL2Adapter(glDrawable);
+	    GLActorContext actorContext = new GLActorContext(glDrawable, gl2Adapter);
 		if (useDepth) {
 			gl.glEnable(GL.GL_DEPTH_TEST);
 			gl.glClearDepth(1.0);
 		}
-		for (org.janelia.it.workstation.gui.opengl.GL3Actor actor : allActors)
+		for (GL3Actor actor : allActors)
 		    actor.init(actorContext);
         checkGlError(gl, "GLSceneComposer init 217");
 	}
@@ -239,9 +242,9 @@ implements GLEventListener
         checkGlError(gl, "GLSceneComposer reshape 228");
 	}
 
-	protected void updateModelViewMatrix(org.janelia.it.workstation.gui.opengl.GLActorContext actorContext) {
-		org.janelia.it.workstation.gui.opengl.GL2Adapter ga = actorContext.getGL2Adapter();
-		ga.glMatrixMode(org.janelia.it.workstation.gui.opengl.GL2Adapter.MatrixMode.GL_MODELVIEW);
+	protected void updateModelViewMatrix(GLActorContext actorContext) {
+		GL2Adapter ga = actorContext.getGL2Adapter();
+		ga.glMatrixMode(GL2Adapter.MatrixMode.GL_MODELVIEW);
 		ga.glLoadIdentity();
 		Vec3 f = camera.getFocus();
 	    Rotation3d g_R_c = camera.getRotation();
@@ -256,11 +259,11 @@ implements GLEventListener
 	            u_g.x(), u_g.y(), u_g.z()); // up vector in ground
 	}
 
-    public org.janelia.it.workstation.gui.opengl.CameraScreenGeometry getCameraScreenGeometry() {
+    public CameraScreenGeometry getCameraScreenGeometry() {
         return cameraScreenGeometry;
     }
 
-	public void setStereoMode(org.janelia.it.workstation.gui.opengl.stereo3d.StereoMode mode) {
+	public void setStereoMode(StereoMode mode) {
 		// if (this.stereoMode == mode) return; // Just swap eye might have changed, still repaint
 	    if (this.stereoMode != mode) {
 	        stereoMode = mode;

@@ -4,6 +4,7 @@ import java.util.List;
 import java.util.concurrent.Callable;
 
 import org.janelia.it.jacs.model.entity.EntityConstants;
+import org.janelia.it.workstation.model.entity.RootedEntity;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -62,7 +63,7 @@ public abstract class IconPanel extends Viewer {
      * @param rootedEntity
      */
     @Override
-    public abstract void loadEntity(org.janelia.it.workstation.model.entity.RootedEntity rootedEntity);
+    public abstract void loadEntity(RootedEntity rootedEntity);
 
     /**
      * Display the given RootedEntity in the viewer, and then call the callback.
@@ -71,7 +72,7 @@ public abstract class IconPanel extends Viewer {
      * @param success
      */
     @Override
-    public abstract void loadEntity(org.janelia.it.workstation.model.entity.RootedEntity rootedEntity, final Callable<Void> success);
+    public abstract void loadEntity(RootedEntity rootedEntity, final Callable<Void> success);
 
     /**
      * Returns all RootedEntity objects loaded in the viewer.
@@ -79,7 +80,7 @@ public abstract class IconPanel extends Viewer {
      * @return
      */
     @Override
-    public abstract List<org.janelia.it.workstation.model.entity.RootedEntity> getRootedEntities();
+    public abstract List<RootedEntity> getRootedEntities();
 
     /**
      * Returns all RootedEntity objected which are currently selected in the viewer.
@@ -87,7 +88,7 @@ public abstract class IconPanel extends Viewer {
      * @return
      */
     @Override
-    public abstract List<org.janelia.it.workstation.model.entity.RootedEntity> getSelectedEntities();
+    public abstract List<RootedEntity> getSelectedEntities();
 
     /**
      * Returns the RootedEntity with the given uniqueId, assuming that its currently loaded in the viewer.
@@ -96,7 +97,7 @@ public abstract class IconPanel extends Viewer {
      * @return
      */
     @Override
-    public abstract org.janelia.it.workstation.model.entity.RootedEntity getRootedEntityById(String uniqueId);
+    public abstract RootedEntity getRootedEntityById(String uniqueId);
 
     /**
      * Called when the viewer is about to close forever. This is an opportunity to clean up any listeners or

@@ -1,8 +1,10 @@
 package org.janelia.it.workstation.gui.dialogs;
 
 import java.awt.BorderLayout;
+import java.awt.Event;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.KeyEvent;
 import java.util.*;
 import java.util.concurrent.Callable;
 
@@ -11,10 +13,15 @@ import javax.swing.*;
 import loci.plugins.config.SpringUtilities;
 
 import org.janelia.it.workstation.api.entity_model.access.ModelMgrAdapter;
+import org.janelia.it.workstation.api.entity_model.management.ModelMgr;
+import org.janelia.it.workstation.api.entity_model.management.ModelMgrUtils;
 import org.janelia.it.workstation.gui.framework.access.Accessibility;
 import org.janelia.it.workstation.gui.framework.keybind.KeymapUtil;
 import org.janelia.it.workstation.gui.framework.outline.Annotations;
+import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
+import org.janelia.it.workstation.model.entity.RootedEntity;
 import org.janelia.it.workstation.shared.util.ConcurrentUtils;
+import org.janelia.it.workstation.shared.util.SystemInfo;
 import org.janelia.it.workstation.shared.workers.SimpleWorker;
 import org.janelia.it.jacs.model.entity.Entity;
 import org.janelia.it.jacs.model.entity.EntityConstants;
@@ -50,8 +57,8 @@ public class ScreenEvaluationDialog extends ModalDialog implements Accessibility
 	private Map<String,Entity> folderCache = new HashMap<String,Entity>();
 	private Map<String,Map<Long,String>> reverseFolderCache = new HashMap<String,Map<Long,String>>();
 	
-	private KeyStroke moveChangedKeystroke = KeyStroke.getKeyStroke(java.awt.event.KeyEvent.VK_R, org.janelia.it.workstation.shared.util.SystemInfo.isMac?java.awt.Event.META_MASK:java.awt.Event.CTRL_MASK);
-	private KeyStroke moveAllKeystroke = KeyStroke.getKeyStroke(java.awt.event.KeyEvent.VK_R, (org.janelia.it.workstation.shared.util.SystemInfo.isMac?java.awt.Event.META_MASK:java.awt.Event.CTRL_MASK)|java.awt.Event.SHIFT_MASK);
+	private KeyStroke moveChangedKeystroke = KeyStroke.getKeyStroke(KeyEvent.VK_R, SystemInfo.isMac? Event.META_MASK: Event.CTRL_MASK);
+	private KeyStroke moveAllKeystroke = KeyStroke.getKeyStroke(KeyEvent.VK_R, (SystemInfo.isMac? Event.META_MASK: Event.CTRL_MASK)| Event.SHIFT_MASK);
 	
 	private boolean isCurrFolderDirty = false;
 	private Set<Long> dirtyEntities = new HashSet<Long>();
@@ -62,7 +69,7 @@ public class ScreenEvaluationDialog extends ModalDialog implements Accessibility
 
 		setModalityType(ModalityType.MODELESS);
 		
-		Integer behavior = (Integer) org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr.getSessionMgr().getModelProperty(SCREEN_EVAL_ORGANIZATION_PROPERTY);
+		Integer behavior = (Integer) SessionMgr.getSessionMgr().getModelProperty(SCREEN_EVAL_ORGANIZATION_PROPERTY);
 		if (behavior==null) {
 			behavior = 2;
 			setBehaviorPreference(behavior);
@@ -152,7 +159,7 @@ public class ScreenEvaluationDialog extends ModalDialog implements Accessibility
 	}
 
 	public void setBehaviorPreference(int behavior) {
-		org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr.getSessionMgr().setModelProperty(SCREEN_EVAL_ORGANIZATION_PROPERTY, behavior);
+		SessionMgr.getSessionMgr().setModelProperty(SCREEN_EVAL_ORGANIZATION_PROPERTY, behavior);
 	}
 	
 	public void init() {
@@ -163,8 +170,8 @@ public class ScreenEvaluationDialog extends ModalDialog implements Accessibility
 			protected void doStuff() throws Exception {
 				
 				Entity topLevelFolder = null;
-				for(Entity entity : org.janelia.it.workstation.api.entity_model.management.ModelMgr.getModelMgr().getOwnedEntitiesByName(ScreenEvalConstants.TOP_LEVEL_FOLDER_NAME)) {
-					if (org.janelia.it.workstation.api.entity_model.management.ModelMgrUtils.isOwner(entity)) {
+				for(Entity entity : ModelMgr.getModelMgr().getOwnedEntitiesByName(ScreenEvalConstants.TOP_LEVEL_FOLDER_NAME)) {
+					if (ModelMgrUtils.isOwner(entity)) {
 						topLevelFolder = entity;
 					}
 				}
@@ -173,7 +180,7 @@ public class ScreenEvaluationDialog extends ModalDialog implements Accessibility
 					return;
 				}
 				
-				topLevelFolder = org.janelia.it.workstation.api.entity_model.management.ModelMgr.getModelMgr().loadLazyEntity(topLevelFolder, false);
+				topLevelFolder = ModelMgr.getModelMgr().loadLazyEntity(topLevelFolder, false);
 				for(Entity child : topLevelFolder.getOrderedChildren()) {
 					compEntityMap.put(child.getName(), child);
 				}
@@ -185,7 +192,7 @@ public class ScreenEvaluationDialog extends ModalDialog implements Accessibility
 			
 			@Override
 			protected void hadError(Throwable error) {
-				org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr.getSessionMgr().handleException(error);
+				SessionMgr.getSessionMgr().handleException(error);
 			}
 		};
 		
@@ -194,11 +201,11 @@ public class ScreenEvaluationDialog extends ModalDialog implements Accessibility
 	
 	private void addListeners() {
 	
-    	InputMap inputMap = org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr.getMainFrame().getRootPane().getInputMap(JComponent.WHEN_ANCESTOR_OF_FOCUSED_COMPONENT);
+    	InputMap inputMap = SessionMgr.getMainFrame().getRootPane().getInputMap(JComponent.WHEN_ANCESTOR_OF_FOCUSED_COMPONENT);
     	inputMap.put(moveChangedKeystroke,"moveChangedAction");
     	inputMap.put(moveAllKeystroke,"moveAllAction");
     	
-    	ActionMap actionMap = org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr.getMainFrame().getRootPane().getActionMap();
+    	ActionMap actionMap = SessionMgr.getMainFrame().getRootPane().getActionMap();
     	actionMap.put("moveChangedAction",new AbstractAction("moveChangedAction") {
 			@Override
 			public void actionPerformed(ActionEvent e) {
@@ -212,11 +219,11 @@ public class ScreenEvaluationDialog extends ModalDialog implements Accessibility
 			}
 		});
 		
-		org.janelia.it.workstation.api.entity_model.management.ModelMgr.getModelMgr().addModelMgrObserver(new ModelMgrAdapter() {
+		ModelMgr.getModelMgr().addModelMgrObserver(new ModelMgrAdapter() {
 			@Override
 			public void annotationsChanged(final long entityId) {
 				
-				if (!org.janelia.it.workstation.api.entity_model.management.ModelMgr.getModelMgr().getCurrentOntology().getName().equals(ScreenEvalConstants.SCORE_ONTOLOGY_NAME)) {
+				if (!ModelMgr.getModelMgr().getCurrentOntology().getName().equals(ScreenEvalConstants.SCORE_ONTOLOGY_NAME)) {
 					return;
 				}
 				
@@ -234,7 +241,7 @@ public class ScreenEvaluationDialog extends ModalDialog implements Accessibility
 						
 						@Override
 						protected void hadError(Throwable error) {
-							org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr.getSessionMgr().handleException(error);
+							SessionMgr.getSessionMgr().handleException(error);
 						}
 					};
 					worker.execute();
@@ -258,7 +265,7 @@ public class ScreenEvaluationDialog extends ModalDialog implements Accessibility
 			entityIds.addAll(dirtyEntities);
 		}
 		else {
-			for(org.janelia.it.workstation.model.entity.RootedEntity rootedEntity : org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr.getBrowser().getViewerManager().getActiveViewer().getRootedEntities()) {
+			for(RootedEntity rootedEntity : SessionMgr.getBrowser().getViewerManager().getActiveViewer().getRootedEntities()) {
 				entityIds.add(rootedEntity.getEntityId());
 			}
 		}
@@ -284,11 +291,11 @@ public class ScreenEvaluationDialog extends ModalDialog implements Accessibility
 			
 			@Override
 			protected void hadError(Throwable error) {
-				org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr.getSessionMgr().handleException(error);
+				SessionMgr.getSessionMgr().handleException(error);
 			}
 		};
 
-		worker.setProgressMonitor(new ProgressMonitor(org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr.getMainFrame(), "Organizing...", "", 0, 100));
+		worker.setProgressMonitor(new ProgressMonitor(SessionMgr.getMainFrame(), "Organizing...", "", 0, 100));
 		worker.execute();
 	}
 	
@@ -324,10 +331,10 @@ public class ScreenEvaluationDialog extends ModalDialog implements Accessibility
 			int d = ScreenEvalUtils.getValueFromAnnotation(distribution);
 			
 			// The entity 
-			Entity entity = org.janelia.it.workstation.api.entity_model.management.ModelMgr.getModelMgr().getEntityById(entityId);
+			Entity entity = ModelMgr.getModelMgr().getEntityById(entityId);
 			String compartment = entity.getName();
 			
-			List<EntityData> parentEds = org.janelia.it.workstation.api.entity_model.management.ModelMgr.getModelMgr().getParentEntityDatas(entityId);
+			List<EntityData> parentEds = ModelMgr.getModelMgr().getParentEntityDatas(entityId);
 			Map<Long,String> distCache = getDistCache(compartment);
 			
 			Integer ci = null;
@@ -373,14 +380,14 @@ public class ScreenEvaluationDialog extends ModalDialog implements Accessibility
 			Entity compartmentEntity = compEntityMap.get(compartment);
 			
 			if (!EntityUtils.areLoaded(compartmentEntity.getEntityData())) {
-				compartmentEntity = org.janelia.it.workstation.api.entity_model.management.ModelMgr.getModelMgr().loadLazyEntity(compartmentEntity, false);
+				compartmentEntity = ModelMgr.getModelMgr().loadLazyEntity(compartmentEntity, false);
 			}
 			
 			for(Entity intChild : compartmentEntity.getChildren()) {
 				int i = ScreenEvalUtils.getValueFromFolderName(intChild);
 				
 				if (!EntityUtils.areLoaded(intChild.getEntityData())) {
-					intChild = org.janelia.it.workstation.api.entity_model.management.ModelMgr.getModelMgr().loadLazyEntity(intChild, false);
+					intChild = ModelMgr.getModelMgr().loadLazyEntity(intChild, false);
 				}
 				
 				for(Entity distChild : intChild.getChildren()) {
@@ -399,7 +406,7 @@ public class ScreenEvaluationDialog extends ModalDialog implements Accessibility
 	}
 	
 	private void moveToFolder(long entityId, List<EntityData> currEds, Entity targetFolder) throws Exception {
-		org.janelia.it.workstation.api.entity_model.management.ModelMgr modelMgr = org.janelia.it.workstation.api.entity_model.management.ModelMgr.getModelMgr();
+		ModelMgr modelMgr = ModelMgr.getModelMgr();
 		// Add to new folder
 		List<Long> childrenIds = new ArrayList<Long>();
 		childrenIds.add(entityId);
@@ -438,6 +445,6 @@ public class ScreenEvaluationDialog extends ModalDialog implements Accessibility
 	}
 	
 	public boolean isAccessible() {
-		return "user:jenetta".equals(org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr.getSubjectKey());
+		return "user:jenetta".equals(SessionMgr.getSubjectKey());
 	}
 }

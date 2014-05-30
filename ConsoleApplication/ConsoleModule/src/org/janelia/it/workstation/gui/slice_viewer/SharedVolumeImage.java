@@ -1,5 +1,10 @@
 package org.janelia.it.workstation.gui.slice_viewer;
 
+import org.janelia.it.workstation.geom.Vec3;
+import org.janelia.it.workstation.gui.viewer3d.BoundingBox3d;
+import org.janelia.it.workstation.gui.viewer3d.interfaces.VolumeImage3d;
+import org.janelia.it.workstation.signal.Signal1;
+
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
@@ -8,15 +13,15 @@ import java.net.URISyntaxException;
 import java.net.URL;
 
 public class SharedVolumeImage 
-implements org.janelia.it.workstation.gui.viewer3d.interfaces.VolumeImage3d
+implements VolumeImage3d
 {
 	private AbstractTextureLoadAdapter loadAdapter;
-	private org.janelia.it.workstation.gui.viewer3d.BoundingBox3d boundingBox3d = new org.janelia.it.workstation.gui.viewer3d.BoundingBox3d();
+	private BoundingBox3d boundingBox3d = new BoundingBox3d();
 
-	public org.janelia.it.workstation.signal.Signal1<URL> volumeInitializedSignal = new org.janelia.it.workstation.signal.Signal1<URL>();
+	public Signal1<URL> volumeInitializedSignal = new Signal1<URL>();
 
 	@Override
-	public org.janelia.it.workstation.gui.viewer3d.BoundingBox3d getBoundingBox3d() {
+	public BoundingBox3d getBoundingBox3d() {
 		return boundingBox3d;
 	}
 
@@ -28,8 +33,8 @@ implements org.janelia.it.workstation.gui.viewer3d.interfaces.VolumeImage3d
 	}
 
 	@Override
-	public org.janelia.it.workstation.geom.Vec3 getVoxelCenter() {
-	    org.janelia.it.workstation.geom.Vec3 result = new org.janelia.it.workstation.geom.Vec3();
+	public Vec3 getVoxelCenter() {
+	    Vec3 result = new Vec3();
 	    for (int i = 0; i < 3; ++i) {
 	        double range = getBoundingBox3d().getMax().get(i) - getBoundingBox3d().getMin().get(i);
 	        int voxelCount = (int)Math.round(range/getResolution(i));
@@ -137,7 +142,7 @@ implements org.janelia.it.workstation.gui.viewer3d.interfaces.VolumeImage3d
 		// Update bounding box
 		// Compute bounding box
 		TileFormat tf = getLoadAdapter().getTileFormat();
-		org.janelia.it.workstation.gui.viewer3d.BoundingBox3d newBox = tf.calcBoundingBox();
+		BoundingBox3d newBox = tf.calcBoundingBox();
 		boundingBox3d.setMin(newBox.getMin());
 		boundingBox3d.setMax(newBox.getMax());
 		

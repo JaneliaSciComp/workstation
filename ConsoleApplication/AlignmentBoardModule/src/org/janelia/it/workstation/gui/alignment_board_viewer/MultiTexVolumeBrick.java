@@ -8,7 +8,11 @@ import com.jogamp.common.nio.Buffers;
 
 import org.janelia.it.workstation.geom.CoordinateAxis;
 import org.janelia.it.workstation.geom.Vec3;
+import org.janelia.it.workstation.gui.alignment_board_viewer.shader.MultiTexVolumeBrickShader;
 import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
+import org.janelia.it.workstation.gui.viewer3d.BoundingBox3d;
+import org.janelia.it.workstation.gui.viewer3d.VolumeBrickI;
+import org.janelia.it.workstation.gui.viewer3d.VolumeModel;
 import org.janelia.it.workstation.gui.viewer3d.buffering.VtxCoordBufMgr;
 import org.janelia.it.workstation.gui.viewer3d.texture.TextureDataI;
 import org.janelia.it.workstation.gui.viewer3d.texture.TextureMediator;
@@ -23,7 +27,7 @@ import javax.swing.*;
  * @author brunsc
  *
  */
-public class MultiTexVolumeBrick implements org.janelia.it.workstation.gui.viewer3d.VolumeBrickI
+public class MultiTexVolumeBrick implements VolumeBrickI
 {
     public enum RenderMethod {MAXIMUM_INTENSITY, ALPHA_BLENDING}
 
@@ -53,14 +57,14 @@ public class MultiTexVolumeBrick implements org.janelia.it.workstation.gui.viewe
     private boolean bColorMapTextureNeedsUpload = false;
     private boolean bBuffersNeedUpload = true;
 
-    private org.janelia.it.workstation.gui.alignment_board_viewer.shader.MultiTexVolumeBrickShader volumeBrickShader = new org.janelia.it.workstation.gui.alignment_board_viewer.shader.MultiTexVolumeBrickShader();
+    private MultiTexVolumeBrickShader volumeBrickShader = new MultiTexVolumeBrickShader();
 
     private boolean bIsInitialized;
     @SuppressWarnings("ALL")
     private boolean bUseSyntheticData = false;
 
     private VtxCoordBufMgr bufferManager;
-    private org.janelia.it.workstation.gui.viewer3d.VolumeModel volumeModel;
+    private VolumeModel volumeModel;
 
     private static Logger logger = LoggerFactory.getLogger( MultiTexVolumeBrick.class );
 
@@ -98,7 +102,7 @@ public class MultiTexVolumeBrick implements org.janelia.it.workstation.gui.viewe
 
     }
 
-    public MultiTexVolumeBrick(org.janelia.it.workstation.gui.viewer3d.VolumeModel volumeModel) {
+    public MultiTexVolumeBrick(VolumeModel volumeModel) {
         bufferManager = new VtxCoordBufMgr();
         setVolumeModel( volumeModel );
     }
@@ -261,8 +265,8 @@ public class MultiTexVolumeBrick implements org.janelia.it.workstation.gui.viewe
 	}
 
     @Override
-	public org.janelia.it.workstation.gui.viewer3d.BoundingBox3d getBoundingBox3d() {
-		org.janelia.it.workstation.gui.viewer3d.BoundingBox3d result = new org.janelia.it.workstation.gui.viewer3d.BoundingBox3d();
+	public BoundingBox3d getBoundingBox3d() {
+		BoundingBox3d result = new BoundingBox3d();
 		Vec3 half = new Vec3(0,0,0);
 		for (int i = 0; i < 3; ++i)
 			half.set(i, 0.5 * signalTextureMediator.getVolumeMicrometers()[i]);
@@ -361,9 +365,9 @@ public class MultiTexVolumeBrick implements org.janelia.it.workstation.gui.viewe
     }
 
     /** This is a constructor-helper.  It has the listener setup required to properly use the volume model. */
-    private void setVolumeModel( org.janelia.it.workstation.gui.viewer3d.VolumeModel volumeModel ) {
+    private void setVolumeModel( VolumeModel volumeModel ) {
         this.volumeModel = volumeModel;
-        org.janelia.it.workstation.gui.viewer3d.VolumeModel.UpdateListener updateVolumeListener = new org.janelia.it.workstation.gui.viewer3d.VolumeModel.UpdateListener() {
+        VolumeModel.UpdateListener updateVolumeListener = new VolumeModel.UpdateListener() {
             @Override
             public void updateVolume() {
                 refresh();

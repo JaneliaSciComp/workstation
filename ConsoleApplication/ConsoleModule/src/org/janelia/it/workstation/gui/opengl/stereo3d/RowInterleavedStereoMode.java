@@ -15,6 +15,7 @@ import javax.media.opengl.GLDrawable;
 import org.janelia.it.workstation.gui.opengl.GL2Adapter;
 import org.janelia.it.workstation.gui.opengl.GLActorContext;
 import org.janelia.it.workstation.gui.opengl.GLError;
+import org.janelia.it.workstation.gui.opengl.GLSceneComposer;
 
 public class RowInterleavedStereoMode extends BasicStereoMode
 {
@@ -22,7 +23,7 @@ public class RowInterleavedStereoMode extends BasicStereoMode
 	
     @Override
     public void display(GLActorContext actorContext,
-            org.janelia.it.workstation.gui.opengl.GLSceneComposer composer)
+            GLSceneComposer composer)
     {
         GLAutoDrawable glDrawable = actorContext.getGLAutoDrawable();
         GL gl = glDrawable.getGL();

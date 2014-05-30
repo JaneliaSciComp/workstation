@@ -15,7 +15,7 @@ import java.util.List;
 import static org.junit.Assert.*;
 
 /**
- * Tests the {@link org.janelia.it.workstation.gui.alignment_board_viewer.renderable.RBComparator} class.
+ * Tests the {@link RBComparator} class.
  *
  * @author Les Foster
  */
@@ -39,10 +39,10 @@ public class RBComparatorTest {
 
     @Test
     public void testCompare() throws Exception {
-        org.janelia.it.workstation.gui.alignment_board_viewer.renderable.RBComparator comparator = new RBComparator();
+        RBComparator comparator = new RBComparator();
         List<RenderableBean> beanList = new RenderableBeanCollection().createCollection();
 
-        Collections.sort( beanList, new org.janelia.it.workstation.gui.alignment_board_viewer.renderable.InvertingComparator( comparator ) );
+        Collections.sort( beanList, new InvertingComparator( comparator ) );
 
         // Here's the tough part: checking that the order is as expected.
         checkCollationConformation(beanList);

@@ -12,6 +12,7 @@ import java.util.List;
 import javax.swing.*;
 import javax.swing.tree.*;
 
+import org.janelia.it.workstation.geom.Vec3;
 import org.janelia.it.workstation.signal.Signal1;
 import org.janelia.it.workstation.signal.Slot1;
 
@@ -44,7 +45,7 @@ public class NeuriteTreePanel extends JPanel
     };
 
     // ----- signals
-    public Signal1<org.janelia.it.workstation.geom.Vec3> cameraPanToSignal = new Signal1<org.janelia.it.workstation.geom.Vec3>();
+    public Signal1<Vec3> cameraPanToSignal = new Signal1<Vec3>();
     public Signal1<TmGeoAnnotation> annotationClickedSignal = new Signal1<TmGeoAnnotation>();
 
 
@@ -260,7 +261,7 @@ public class NeuriteTreePanel extends JPanel
         TmGeoAnnotation annotation = getAnnotationAtPath(path);
 
         // emit signal
-        cameraPanToSignal.emit(new org.janelia.it.workstation.geom.Vec3(annotation.getX(), annotation.getY(), annotation.getZ()));
+        cameraPanToSignal.emit(new Vec3(annotation.getX(), annotation.getY(), annotation.getZ()));
     }
 
     private void sortGeoAnnotationList(List<TmGeoAnnotation> annotationList) {

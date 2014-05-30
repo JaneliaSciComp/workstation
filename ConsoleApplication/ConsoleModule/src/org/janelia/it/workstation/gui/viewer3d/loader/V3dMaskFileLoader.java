@@ -1,5 +1,6 @@
 package org.janelia.it.workstation.gui.viewer3d.loader;
 
+import org.janelia.it.workstation.gui.viewer3d.texture.MaskTextureDataBean;
 import org.janelia.it.workstation.gui.viewer3d.volume_builder.VolumeDataBean;
 import org.janelia.it.workstation.gui.viewer3d.stream.V3dRawImageStream;
 import org.janelia.it.workstation.gui.viewer3d.texture.TextureDataI;
@@ -10,6 +11,8 @@ import java.io.BufferedInputStream;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Set;
 import java.util.TreeSet;
 import java.util.zip.DataFormatException;
@@ -23,7 +26,7 @@ import java.util.zip.DataFormatException;
  * Invoke this to build a mask-specific file from v3d file types.  Such files will contain "labels", rather than
  * color data, which are treated in transit-to-GPU as luminance values.
  */
-public class V3dMaskFileLoader extends org.janelia.it.workstation.gui.viewer3d.loader.TextureDataBuilder implements org.janelia.it.workstation.gui.viewer3d.loader.VolumeFileLoaderI {
+public class V3dMaskFileLoader extends TextureDataBuilder implements VolumeFileLoaderI {
     public static final String COMPARTMENT_MASK_INDEX = "maskIndex";
     public static final String CONSOLIDATED_LABEL_MASK = "ConsolidatedLabel";
 
@@ -32,7 +35,7 @@ public class V3dMaskFileLoader extends org.janelia.it.workstation.gui.viewer3d.l
 
     @Override
     protected TextureDataI createTextureDataBean() {
-        return new org.janelia.it.workstation.gui.viewer3d.texture.MaskTextureDataBean(new VolumeDataBean( textureByteArray, sx, sy, sz ), sx, sy, sz );
+        return new MaskTextureDataBean(new VolumeDataBean( textureByteArray, sx, sy, sz ), sx, sy, sz );
     }
 
     @Override
@@ -135,7 +138,7 @@ public class V3dMaskFileLoader extends org.janelia.it.workstation.gui.viewer3d.l
                 int yOffset = zOffset + (outSy-outY) * outSx; // zOffset + outY * outSx;
                 int outX = 0;
                 for ( int x = 0; x < sx-xScale; x += xScale ) {
-                    java.util.Map<Integer,Integer> frequencies = new java.util.HashMap<Integer,Integer>();
+                    Map<Integer,Integer> frequencies = new HashMap<Integer,Integer>();
 
                     int value = 0; // Arrive at our final value using the neighborhood comparisons.
 

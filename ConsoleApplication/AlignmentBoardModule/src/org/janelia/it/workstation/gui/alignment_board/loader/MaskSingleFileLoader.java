@@ -1,5 +1,6 @@
 package org.janelia.it.workstation.gui.alignment_board.loader;
 
+import org.janelia.it.workstation.gui.alignment_board_viewer.masking.FileStats;
 import org.janelia.it.workstation.gui.viewer3d.renderable.RenderableBean;
 import org.janelia.it.workstation.shared.annotations.NotThreadSafe;
 import org.slf4j.Logger;
@@ -110,7 +111,7 @@ public class MaskSingleFileLoader {
 
     private byte[] allFChannelBytes;
     private double[] channelAverages;
-    private org.janelia.it.workstation.gui.alignment_board_viewer.masking.FileStats fileStats;
+    private FileStats fileStats;
 
     /**
      * Mostly-null. Only for getting voxel count into bean. Provide the bean so that the voxel sizing may be added to it.
@@ -131,7 +132,7 @@ public class MaskSingleFileLoader {
             Collection<MaskChanDataAcceptorI> maskAcceptors,
             Collection<MaskChanDataAcceptorI> channelAcceptors,
             RenderableBean renderableBean,
-            org.janelia.it.workstation.gui.alignment_board_viewer.masking.FileStats fileStats
+            FileStats fileStats
     ) {
         this.maskAcceptors = maskAcceptors;
         this.channelAcceptors = channelAcceptors;

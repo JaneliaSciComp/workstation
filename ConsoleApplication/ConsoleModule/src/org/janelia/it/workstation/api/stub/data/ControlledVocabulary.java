@@ -1,8 +1,9 @@
 package org.janelia.it.workstation.api.stub.data;
 
+import java.io.Serializable;
 import java.util.*;
 
-public class ControlledVocabulary implements java.io.Serializable {
+public class ControlledVocabulary implements Serializable {
     private Map forwardMap = new HashMap();
     private Map reverseMap = new HashMap();
     private List keyOrder = null;

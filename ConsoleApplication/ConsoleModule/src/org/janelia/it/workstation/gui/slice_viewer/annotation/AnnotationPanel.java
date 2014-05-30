@@ -4,6 +4,9 @@ package org.janelia.it.workstation.gui.slice_viewer.annotation;
 // std lib imports
 
 import org.janelia.it.jacs.model.user_data.tiledMicroscope.TmWorkspace;
+import org.janelia.it.workstation.gui.util.Icons;
+import org.janelia.it.workstation.signal.Signal;
+import org.janelia.it.workstation.signal.Slot1;
 
 import javax.swing.*;
 
@@ -64,7 +67,7 @@ public class AnnotationPanel extends JPanel
         };
 
     // ----- signals & slots
-    public org.janelia.it.workstation.signal.Signal centerAnnotationSignal = new org.janelia.it.workstation.signal.Signal();
+    public Signal centerAnnotationSignal = new Signal();
     private final Action centerAnnotationAction = new AbstractAction() {
         @Override
         public void actionPerformed(ActionEvent actionEvent) {
@@ -72,7 +75,7 @@ public class AnnotationPanel extends JPanel
         }
     };
 
-    public org.janelia.it.workstation.signal.Slot1<TmWorkspace> workspaceLoadedSlot = new org.janelia.it.workstation.signal.Slot1<TmWorkspace>() {
+    public Slot1<TmWorkspace> workspaceLoadedSlot = new Slot1<TmWorkspace>() {
         @Override
         public void execute(TmWorkspace workspace) {
             if (workspace != null) {
@@ -185,7 +188,7 @@ public class AnnotationPanel extends JPanel
         // workspace tool menu button
         final JButton workspaceToolButton = new JButton();
         String gearIconFilename = "cog.png";
-        ImageIcon gearIcon = org.janelia.it.workstation.gui.util.Icons.getIcon(gearIconFilename);
+        ImageIcon gearIcon = Icons.getIcon(gearIconFilename);
         workspaceToolButton.setIcon(gearIcon);
         workspaceToolButton.setHideActionText(true);
         workspaceToolButton.setMinimumSize(workspaceButtonsPanel.getPreferredSize());
@@ -285,7 +288,7 @@ public class AnnotationPanel extends JPanel
         centerAnnotationAction.putValue(Action.SHORT_DESCRIPTION, "Center on current annotation [C]");
         centerAnnotationButton.setAction(centerAnnotationAction);
         String parentIconFilename = "ParentAnchor16.png";
-        ImageIcon anchorIcon = org.janelia.it.workstation.gui.util.Icons.getIcon(parentIconFilename);
+        ImageIcon anchorIcon = Icons.getIcon(parentIconFilename);
         centerAnnotationButton.setIcon(anchorIcon);
         centerAnnotationButton.setHideActionText(true);
         neuriteButtonsPanel.add(centerAnnotationButton);

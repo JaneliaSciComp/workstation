@@ -1,6 +1,8 @@
 package org.janelia.it.workstation.gui.framework.navigation_tools;
 
-public class NavigationNode implements java.io.Serializable {
+import java.io.Serializable;
+
+public class NavigationNode implements Serializable {
 
   private Long     id;
   private int     nodeType;

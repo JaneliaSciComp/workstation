@@ -1,10 +1,14 @@
 package org.janelia.it.workstation.shared.filestore;
 
 import org.hibernate.Hibernate;
+import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
+import org.janelia.it.workstation.gui.framework.session_mgr.SessionModel;
 import org.janelia.it.workstation.shared.util.ConsoleProperties;
 import org.janelia.it.jacs.model.entity.Entity;
 import org.janelia.it.jacs.model.entity.EntityConstants;
 import org.janelia.it.jacs.model.entity.EntityData;
+import org.janelia.it.workstation.shared.util.SystemInfo;
+import org.janelia.it.workstation.web.FileProxyService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -30,9 +34,9 @@ public class PathTranslator {
     public static String jacsDataPath;
     
     
-    public static void initFromModelProperties(org.janelia.it.workstation.gui.framework.session_mgr.SessionModel sessionModel) {
+    public static void initFromModelProperties(SessionModel sessionModel) {
     	
-    	jacsDataPath = (String)sessionModel.getModelProperty(org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr.JACS_DATA_PATH_PROPERTY);
+    	jacsDataPath = (String)sessionModel.getModelProperty(SessionMgr.JACS_DATA_PATH_PROPERTY);
         if (jacsDataPath == null) {
         	File jacsData = new File(PathTranslator.JACS_DATA_PATH_NFS);
             if (jacsData.canRead()) {
@@ -41,7 +45,7 @@ public class PathTranslator {
             else {
             	jacsDataPath = PathTranslator.getOsSpecificRootPath();
             }
-            sessionModel.setModelProperty(org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr.JACS_DATA_PATH_PROPERTY, jacsDataPath);
+            sessionModel.setModelProperty(SessionMgr.JACS_DATA_PATH_PROPERTY, jacsDataPath);
         }
         
         log.info("Using JACS data path: "+jacsDataPath);
@@ -58,7 +62,7 @@ public class PathTranslator {
         	filepath = filepath.replace(JACS_DATA_PATH_NFS, jacsDataPath);	
         }
         
-        if (org.janelia.it.workstation.shared.util.SystemInfo.isWindows) {
+        if (SystemInfo.isWindows) {
         	filepath = filepath.replaceAll("/", "\\\\");
         }
         
@@ -95,7 +99,7 @@ public class PathTranslator {
             if (entityData.getEntityAttrName().equals(EntityConstants.ATTRIBUTE_FILE_PATH)) {
                 String path = entityData.getValue();
                 try {
-                    String url = org.janelia.it.workstation.web.FileProxyService.getProxiedFileUrl(path).toString();
+                    String url = FileProxyService.getProxiedFileUrl(path).toString();
                     entityData.setValue(url);
                 }
                 catch (MalformedURLException e) {
@@ -114,9 +118,9 @@ public class PathTranslator {
     }
 
     private static String getOsSpecificRootPath() {
-        if (org.janelia.it.workstation.shared.util.SystemInfo.isMac) { return PathTranslator.JACS_DATA_PATH_MAC; }
-        else if (org.janelia.it.workstation.shared.util.SystemInfo.isLinux) { return PathTranslator.JACS_DATA_PATH_NFS; }
-        else if (org.janelia.it.workstation.shared.util.SystemInfo.isWindows) {return PathTranslator.JACS_DATA_PATH_WINDOWS; }
+        if (SystemInfo.isMac) { return PathTranslator.JACS_DATA_PATH_MAC; }
+        else if (SystemInfo.isLinux) { return PathTranslator.JACS_DATA_PATH_NFS; }
+        else if (SystemInfo.isWindows) {return PathTranslator.JACS_DATA_PATH_WINDOWS; }
         return "";
     }
 }

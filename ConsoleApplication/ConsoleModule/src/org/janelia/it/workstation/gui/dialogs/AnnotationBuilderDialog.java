@@ -1,5 +1,7 @@
 package org.janelia.it.workstation.gui.dialogs;
 
+import org.janelia.it.workstation.api.entity_model.management.ModelMgr;
+import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
 import org.jdesktop.swingx.autocomplete.AutoCompleteDecorator;
 
 import javax.swing.*;
@@ -24,8 +26,8 @@ public class AnnotationBuilderDialog extends JDialog {
     private StringBuilder annotationValue = new StringBuilder();
 
     public AnnotationBuilderDialog(){
-        super(org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr.getMainFrame(),"Edit Value", true);
-        TreeSet<String> ontologyTermSet = org.janelia.it.workstation.api.entity_model.management.ModelMgr.getModelMgr().getOntologyTermSet(org.janelia.it.workstation.api.entity_model.management.ModelMgr.getModelMgr().getCurrentOntology());
+        super(SessionMgr.getMainFrame(),"Edit Value", true);
+        TreeSet<String> ontologyTermSet = ModelMgr.getModelMgr().getOntologyTermSet(ModelMgr.getModelMgr().getCurrentOntology());
         final JComboBox comboBox = new JComboBox(ontologyTermSet.toArray());
         comboBox.setEditable(true);
         comboBox.setSelectedItem(null);
@@ -116,8 +118,8 @@ public class AnnotationBuilderDialog extends JDialog {
         //Create and set up the window.
         this.setDefaultCloseOperation(JDialog.DISPOSE_ON_CLOSE);
         this.setResizable(false);
-        this.setIconImage(org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr.getBrowser().getIconImage());
-        this.setLocationRelativeTo(org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr.getMainFrame());
+        this.setIconImage(SessionMgr.getBrowser().getIconImage());
+        this.setLocationRelativeTo(SessionMgr.getMainFrame());
         annotationPanel.setOpaque(true); //content panes must be opaque
         this.setContentPane(annotationPanel);
 

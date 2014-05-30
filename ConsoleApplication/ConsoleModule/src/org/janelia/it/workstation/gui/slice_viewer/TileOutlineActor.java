@@ -3,13 +3,17 @@ package org.janelia.it.workstation.gui.slice_viewer;
 import javax.media.opengl.GL2;
 import javax.media.opengl.GLAutoDrawable;
 
+import org.janelia.it.workstation.gui.camera.Camera3d;
+import org.janelia.it.workstation.gui.opengl.GLActor;
+import org.janelia.it.workstation.gui.slice_viewer.shader.OutlineShader;
+import org.janelia.it.workstation.gui.viewer3d.BoundingBox3d;
 import org.janelia.it.workstation.gui.viewer3d.shader.AbstractShader;
 
 public class TileOutlineActor 
-implements org.janelia.it.workstation.gui.opengl.GLActor
+implements GLActor
 {
 	private ViewTileManager viewTileManager;
-	private org.janelia.it.workstation.gui.slice_viewer.shader.OutlineShader outlineShader = new org.janelia.it.workstation.gui.slice_viewer.shader.OutlineShader();
+	private OutlineShader outlineShader = new OutlineShader();
 
 	public TileOutlineActor(ViewTileManager viewTileManager) {
 		this.viewTileManager = viewTileManager;
@@ -25,7 +29,7 @@ implements org.janelia.it.workstation.gui.opengl.GLActor
 			return;
 		if (tiles.size() < 1)
 			return;
-		org.janelia.it.workstation.gui.camera.Camera3d camera = viewTileManager.getTileConsumer().getCamera();
+		Camera3d camera = viewTileManager.getTileConsumer().getCamera();
         GL2 gl = glDrawable.getGL().getGL2();
 		outlineShader.load(gl);
 		gl.glLineWidth(2.0f);
@@ -37,7 +41,7 @@ implements org.janelia.it.workstation.gui.opengl.GLActor
 	}
 
 	@Override
-	public org.janelia.it.workstation.gui.viewer3d.BoundingBox3d getBoundingBox3d() {
+	public BoundingBox3d getBoundingBox3d() {
 		return viewTileManager.getVolumeImage().getBoundingBox3d();
 	}
 

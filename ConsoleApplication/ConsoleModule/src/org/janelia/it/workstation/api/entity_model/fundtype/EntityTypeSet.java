@@ -1,5 +1,8 @@
 package org.janelia.it.workstation.api.entity_model.fundtype;
 
+import org.janelia.it.workstation.api.facade.facade_mgr.FacadeManager;
+
+import java.io.Serializable;
 import java.util.*;
 
 /**
@@ -16,7 +19,7 @@ import java.util.*;
  * Other sets can be added using the public constructor, which will had them into the array
  * returned by the static method getEntityTypeSets().
  */
-public class EntityTypeSet extends AbstractSet implements java.io.Serializable {
+public class EntityTypeSet extends AbstractSet implements Serializable {
 
     private static Map nameToEntityTypeSet = new HashMap();
 
@@ -49,7 +52,7 @@ public class EntityTypeSet extends AbstractSet implements java.io.Serializable {
             }
         }
         catch (Exception ex) {
-            org.janelia.it.workstation.api.facade.facade_mgr.FacadeManager.handleException(ex);
+            FacadeManager.handleException(ex);
         }
     } // End static initializer
 

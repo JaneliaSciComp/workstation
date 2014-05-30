@@ -1,5 +1,7 @@
 package org.janelia.it.workstation.gui.slice_viewer.action;
 
+import org.janelia.it.workstation.signal.Signal1;
+
 import java.awt.event.ActionEvent;
 import java.net.URL;
 
@@ -17,7 +19,7 @@ public class RecentFileAction extends AbstractAction
 	// private static final Logger log = LoggerFactory.getLogger(RecentFileAction.class);
 	
 	private URL url;
-	private org.janelia.it.workstation.signal.Signal1<URL> openFileRequestedSignal = new org.janelia.it.workstation.signal.Signal1<URL>();
+	private Signal1<URL> openFileRequestedSignal = new Signal1<URL>();
 
 	RecentFileAction(URL url) {
 		setUrl(url);
@@ -58,7 +60,7 @@ public class RecentFileAction extends AbstractAction
 		putValue(SHORT_DESCRIPTION, "Load image from " + url.toString());
 	}
 
-	public org.janelia.it.workstation.signal.Signal1<URL> getOpenFileRequestedSignal() {
+	public Signal1<URL> getOpenFileRequestedSignal() {
 		return openFileRequestedSignal;
 	}
 

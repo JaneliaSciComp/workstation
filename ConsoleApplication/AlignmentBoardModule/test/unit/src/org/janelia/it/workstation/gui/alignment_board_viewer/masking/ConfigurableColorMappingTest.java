@@ -43,9 +43,9 @@ public class ConfigurableColorMappingTest {
     @Test
     public void testColorAssignments() {
         MultiMaskTracker testingTracker = MultiMaskTrackerTest.createMultiMaskTracker();
-        org.janelia.it.workstation.gui.alignment_board_viewer.masking.FileStats fileStats = new org.janelia.it.workstation.gui.alignment_board_viewer.masking.FileStats();
+        FileStats fileStats = new FileStats();
         testingTracker.setFileStats( fileStats );
-        org.janelia.it.workstation.gui.alignment_board_viewer.masking.ConfigurableColorMapping colorMapping = new org.janelia.it.workstation.gui.alignment_board_viewer.masking.ConfigurableColorMapping(
+        ConfigurableColorMapping colorMapping = new ConfigurableColorMapping(
                 testingTracker, fileStats
         );
 

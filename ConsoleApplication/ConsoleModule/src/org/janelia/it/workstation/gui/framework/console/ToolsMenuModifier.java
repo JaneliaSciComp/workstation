@@ -1,7 +1,9 @@
 package org.janelia.it.workstation.gui.framework.console;
 
+import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.workstation.gui.framework.tool_manager.ToolInfo;
 import org.janelia.it.workstation.gui.framework.tool_manager.ToolListener;
+import org.janelia.it.workstation.gui.framework.tool_manager.ToolMgr;
 import org.janelia.it.workstation.shared.util.Utils;
 
 import javax.swing.*;
@@ -32,7 +34,7 @@ public class ToolsMenuModifier implements ToolListener {
     private Logger logger = LoggerFactory.getLogger( ToolsMenuModifier.class );
     
     public ToolsMenuModifier() {
-        org.janelia.it.workstation.gui.framework.tool_manager.ToolMgr.getToolMgr().registerPrefMgrListener(this);
+        ToolMgr.getToolMgr().registerPrefMgrListener(this);
     }
 
     public void rebuildMenu() {
@@ -104,7 +106,7 @@ public class ToolsMenuModifier implements ToolListener {
 
             @Override
             protected void hadError(Throwable error) {
-                org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr.getSessionMgr().handleException(error);
+                SessionMgr.getSessionMgr().handleException(error);
             }
             
         };
@@ -130,7 +132,7 @@ public class ToolsMenuModifier implements ToolListener {
                 JMenu menu = menuBar.getMenu(i);
                 if (menu.getText().trim().equalsIgnoreCase("tools")) {
                     toolsMenu = menu;
-                    Set keySet = org.janelia.it.workstation.gui.framework.tool_manager.ToolMgr.getTools().keySet();
+                    Set keySet = ToolMgr.getTools().keySet();
                     List<JMenuItem> newItems = createMenuItems(keySet);
                     add(newItems, toolsMenu, menuBar);
 
@@ -149,7 +151,7 @@ public class ToolsMenuModifier implements ToolListener {
         List<JMenuItem> newItems = new ArrayList<JMenuItem>();
         for (final Object o : keySet) {
             JMenuItem tmpMenuItem = null;
-            ToolInfo tmpTool = org.janelia.it.workstation.gui.framework.tool_manager.ToolMgr.getTool((String) o);
+            ToolInfo tmpTool = ToolMgr.getTool((String) o);
             try {
                 tmpMenuItem = new JMenuItem(tmpTool.getName(),
                         Utils.getClasspathImage(tmpTool.getIconPath()));
@@ -158,10 +160,10 @@ public class ToolsMenuModifier implements ToolListener {
                     @Override
                     public void actionPerformed(ActionEvent e) {
                         try {
-                            org.janelia.it.workstation.gui.framework.tool_manager.ToolMgr.runTool((String) o);
+                            ToolMgr.runTool((String) o);
                         } catch (Exception e1) {
                             JOptionPane.showMessageDialog(
-                                    org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr.getMainFrame(),
+                                    SessionMgr.getMainFrame(),
                                     "Could not launch this tool. "
                                             + "Please choose the appropriate file path from the Tools->Configure Tools area",
                                     "ToolInfo Launch ERROR",
@@ -192,7 +194,7 @@ public class ToolsMenuModifier implements ToolListener {
 
         @Override
         protected void hadError(Throwable error) {
-            org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr.getSessionMgr().handleException( error );
+            SessionMgr.getSessionMgr().handleException( error );
         }
         
     }

@@ -17,7 +17,7 @@ public class DynamicImageButton extends AnnotatedImageButton {
 
     private DynamicImagePanel dynamicImagePanel;
 
-    public DynamicImageButton(final RootedEntity rootedEntity, final org.janelia.it.workstation.gui.framework.viewer.IconPanel iconPanel) {
+    public DynamicImageButton(final RootedEntity rootedEntity, final IconPanel iconPanel) {
         super(rootedEntity, iconPanel);
     }
 

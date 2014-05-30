@@ -1,6 +1,7 @@
 package org.janelia.it.workstation.gui.framework.tool_manager;
 
 import org.janelia.it.workstation.shared.preferences.InfoObject;
+import org.janelia.it.workstation.shared.preferences.PreferenceManager;
 
 import java.util.Properties;
 
@@ -43,7 +44,7 @@ public class ToolInfo extends InfoObject {
         this.name = name;
         this.path = pathText;
         this.iconPath = iconPath;
-        this.keyBase = org.janelia.it.workstation.shared.preferences.PreferenceManager.getKeyForName(name, true);
+        this.keyBase = PreferenceManager.getKeyForName(name, true);
     }
 
     // This constructor should only be used for the clone.

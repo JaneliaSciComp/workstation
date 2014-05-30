@@ -18,9 +18,9 @@ public class TestExtractSubvolume {
     @Category(TestCategories.PrototypeTests.class) // mark this as prototype until octree folder can be properly setup
     public void testExtractUpperRightBackValue() {
         // I see a neurite going from one of these points to another in data set AAV 4/25/2013
-        org.janelia.it.workstation.octree.ZoomLevel zoomLevel = new ZoomLevel(0);
-        org.janelia.it.workstation.octree.ZoomedVoxelIndex v1 = new org.janelia.it.workstation.octree.ZoomedVoxelIndex(zoomLevel, 29952, 24869, 1243); // upper right back corner
-        org.janelia.it.workstation.octree.ZoomedVoxelIndex v2 = new org.janelia.it.workstation.octree.ZoomedVoxelIndex(zoomLevel, 29753, 25609, 1233); // lower left front corner
+        ZoomLevel zoomLevel = new ZoomLevel(0);
+        ZoomedVoxelIndex v1 = new ZoomedVoxelIndex(zoomLevel, 29952, 24869, 1243); // upper right back corner
+        ZoomedVoxelIndex v2 = new ZoomedVoxelIndex(zoomLevel, 29753, 25609, 1233); // lower left front corner
         SharedVolumeImage wholeImage = new SharedVolumeImage();
         // TODO - this only works on Windows with mousebrainmicro drive mounted as M:
         String octreeFolder = "M:/render/2013-04-25-AAV";
@@ -31,10 +31,10 @@ public class TestExtractSubvolume {
             fail("Error opening octree directory "+octreeFolder);
         }
         // Create some padding around the neurite ends
-        org.janelia.it.workstation.octree.ZoomedVoxelIndex v1pad = new org.janelia.it.workstation.octree.ZoomedVoxelIndex(
+        ZoomedVoxelIndex v1pad = new ZoomedVoxelIndex(
                 v1.getZoomLevel(),
                 v1.getX()+10, v1.getY()-10, v1.getZ()+10);
-        org.janelia.it.workstation.octree.ZoomedVoxelIndex v2pad = new org.janelia.it.workstation.octree.ZoomedVoxelIndex(
+        ZoomedVoxelIndex v2pad = new ZoomedVoxelIndex(
                 v2.getZoomLevel(),
                 v2.getX()-10, v2.getY()+10, v2.getZ()-10);
         //
