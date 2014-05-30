@@ -62,6 +62,7 @@ import org.slf4j.LoggerFactory;
 import com.google.common.collect.HashMultimap;
 import com.google.common.collect.Multimap;
 import com.google.common.eventbus.Subscribe;
+import org.janelia.it.workstation.model.utils.ModelUtils;
 
 /**
  * This viewer shows images in a grid. It is modeled after OS X Finder. It wraps an ImagesPanel and provides a lot of
@@ -969,7 +970,7 @@ public class IconDemoPanel extends IconPanel {
 
         log.debug("loadEntity {} (@{})", entity.getName(), System.identityHashCode(entity));
 
-        List<EntityData> eds = EntityUtils.getSortedEntityDatas(entity);
+        List<EntityData> eds = ModelUtils.getSortedEntityDatas(entity);
         List<EntityData> children = new ArrayList<EntityData>();
         for (EntityData ed : eds) {
             Entity child = ed.getChildEntity();

@@ -45,6 +45,7 @@ import com.google.common.collect.HashMultimap;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Multimap;
 import com.google.common.eventbus.Subscribe;
+import org.janelia.it.workstation.model.utils.ModelUtils;
 
 /**
  * A tree of Entities that may load lazily. Manages all the asynchronous loading and tree updating that happens in the
@@ -438,7 +439,7 @@ public class EntityTree extends JPanel implements ActivatableView {
                 Entity entity = getEntity(node);
                 log.debug("recreateChildNodes for node (@{}) with entity: {}", System.identityHashCode(node), EntityUtils.identify(entity));
 
-                List<EntityData> edList = EntityUtils.getSortedEntityDatas(entity);
+                List<EntityData> edList = ModelUtils.getSortedEntityDatas(entity);
 
                 List<DefaultMutableTreeNode> childNodes = new ArrayList<DefaultMutableTreeNode>();
                 for (int i = 0; i < node.getChildCount(); i++) {

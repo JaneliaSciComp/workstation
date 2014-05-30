@@ -53,6 +53,7 @@ public class ModelMgr {
     public static final String NEURON_ANNOTATOR_CLIENT_NAME = "NeuronAnnotator";
     public static final String CATEGORY_KEYBINDS_GENERAL = "Keybind:General";
     public static final String CATEGORY_KEYBINDS_ONTOLOGY = "Keybind:Ontology:";
+    public static final String CATEGORY_SORT_CRITERIA = "SortCriteria:";
     
     private static ModelMgr modelManager = new ModelMgr();
     private ThreadQueue threadQueue;
@@ -220,6 +221,30 @@ public class ModelMgr {
             }
         }
         return finalList;
+    }
+    
+    public String loadSortCriteria(Long entityId) throws Exception {
+        Subject subject = ModelMgr.getModelMgr().getSubject(SessionMgr.getSessionMgr().getSubject().getKey());
+        Map<String, SubjectPreference> prefs = subject.getCategoryPreferences(CATEGORY_SORT_CRITERIA);
+        String entityIdStr = entityId.toString();
+        for (SubjectPreference pref : prefs.values()) {
+            if (pref.getName().equals(entityIdStr)) {
+                return pref.getValue();
+            }
+        }
+        return null;
+    }
+    
+    public void saveSortCriteria(Long entityId, String sortCriteria) throws Exception {
+        Subject subject = ModelMgr.getModelMgr().getSubject(SessionMgr.getSessionMgr().getSubject().getKey());
+        if (StringUtils.isEmpty(sortCriteria)) {
+            subject.getPreferenceMap().remove(CATEGORY_SORT_CRITERIA + ":" + entityId);
+        }
+        else {
+            subject.setPreference(new SubjectPreference(entityId.toString(), CATEGORY_SORT_CRITERIA, sortCriteria));    
+        }
+        Subject newSubject = ModelMgr.getModelMgr().saveOrUpdateSubject(subject);
+        SessionMgr.getSessionMgr().setSubject(newSubject);
     }
 
     public OntologyKeyBindings loadOntologyKeyBindings(long ontologyId) throws Exception {
