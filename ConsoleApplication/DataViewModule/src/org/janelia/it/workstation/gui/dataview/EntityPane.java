@@ -14,6 +14,7 @@ import org.janelia.it.workstation.shared.workers.SimpleWorker;
 import org.janelia.it.jacs.model.entity.Entity;
 import org.janelia.it.jacs.model.entity.EntityData;
 import org.janelia.it.jacs.model.entity.EntityType;
+import org.janelia.it.workstation.model.utils.ModelUtils;
 
 /**
  * A panel for displaying either lists of entities or Solr search results.

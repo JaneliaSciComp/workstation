@@ -226,8 +226,8 @@ public class ModelMgr {
         return finalList;
     }
     
-    public String loadSortCriteria(Long entityId) throws Exception {
-        Subject subject = ModelMgr.getModelMgr().getSubject(SessionMgr.getSessionMgr().getSubject().getKey());
+    public String getSortCriteria(Long entityId) {
+        Subject subject = SessionMgr.getSessionMgr().getSubject();
         Map<String, SubjectPreference> prefs = subject.getCategoryPreferences(CATEGORY_SORT_CRITERIA);
         String entityIdStr = entityId.toString();
         for (SubjectPreference pref : prefs.values()) {
@@ -241,10 +241,12 @@ public class ModelMgr {
     public void saveSortCriteria(Long entityId, String sortCriteria) throws Exception {
         Subject subject = ModelMgr.getModelMgr().getSubject(SessionMgr.getSessionMgr().getSubject().getKey());
         if (StringUtils.isEmpty(sortCriteria)) {
-            subject.getPreferenceMap().remove(CATEGORY_SORT_CRITERIA + ":" + entityId);
+            subject.getPreferenceMap().remove(CATEGORY_SORT_CRITERIA + ":" + entityId);  
+            log.debug("Removed user preference: "+CATEGORY_SORT_CRITERIA+":"+entityId);
         }
         else {
             subject.setPreference(new SubjectPreference(entityId.toString(), CATEGORY_SORT_CRITERIA, sortCriteria));    
+            log.debug("Saved user preference: "+CATEGORY_SORT_CRITERIA+":"+entityId+"="+sortCriteria);
         }
         Subject newSubject = ModelMgr.getModelMgr().saveOrUpdateSubject(subject);
         SessionMgr.getSessionMgr().setSubject(newSubject);

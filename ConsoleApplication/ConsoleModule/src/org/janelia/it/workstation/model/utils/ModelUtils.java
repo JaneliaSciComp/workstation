@@ -19,6 +19,7 @@ import org.slf4j.LoggerFactory;
 
 import com.google.common.collect.ComparisonChain;
 import com.google.common.collect.Ordering;
+import org.janelia.it.jacs.model.entity.ForbiddenEntity;
 
 /**
  * Utilities for dealing with model objects.
@@ -40,14 +41,17 @@ public class ModelUtils {
     public static List<EntityData> getSortedEntityDatas(Entity entity) {
 
         String sortCriteria = null;
-        try {
-            sortCriteria = ModelMgr.getModelMgr().loadSortCriteria(entity.getId());
-        }
-        catch (Exception e) {
-            log.error("Error loading sort criteria for {}"+entity.getId());
+        if (entity.getId()!=null) {
+            try {
+                sortCriteria = ModelMgr.getModelMgr().getSortCriteria(entity.getId());
+            }
+            catch (Exception e) {
+                log.error("Error loading sort criteria for {}", entity.getName());
+            }
         }
         
         if (StringUtils.isEmpty(sortCriteria)) {
+            log.trace("Sorted {} by default ordering",entity.getName());
             return entity.getOrderedEntityData();
         }
 
@@ -84,10 +88,19 @@ public class ModelUtils {
                 else if (e2 == null) {
                     return sortAsc ? 1 : -1;
                 }
-
+                
+                if (e1 instanceof ForbiddenEntity) {
+                    if (e2 instanceof ForbiddenEntity) {
+                        return 0;
+                    }
+                    return 1;
+                }
+                if (e2 instanceof ForbiddenEntity) {
+                    return -1;
+                }
+                
                 ComparisonChain chain = ComparisonChain.start();
                 if (EntityConstants.VALUE_SC_GUID.equals(sortField)) {
-                    chain = chain.compare(e1.getId(), e2.getId(), Ordering.natural().nullsLast());
                 }
                 else if (EntityConstants.VALUE_SC_NAME.equals(sortField)) {
                     chain = chain.compare(e1.getName(), e2.getName(), Ordering.natural().nullsLast());
@@ -102,11 +115,12 @@ public class ModelUtils {
                     chain = chain.compare(e1.getValueByAttributeName(sortField), e2.getValueByAttributeName(sortField), Ordering.natural().nullsLast());
                 }
 
-                chain = chain.compare(e1.getId(), e2.getId());
+                chain = chain.compare(e1.getId(), e2.getId(), Ordering.natural().nullsLast());
                 return chain.result();
             }
         });
 
+        log.trace("Sorted {} by {}",entity.getName(),sortCriteria);
         return eds;
     }
 }

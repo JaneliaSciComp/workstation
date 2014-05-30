@@ -122,10 +122,10 @@ public class EntityDetailsPanel extends JPanel implements Accessibility, Refresh
         tabNames.add(TAB_NAME_PERMISSIONS);
         tabNames.add(TAB_NAME_ANNOTATIONS);
 
-		// Child dialogs
+        // Child dialogs
         eapDialog = new EntityActorPermissionDialog(this);
 
-		// Tabbed pane
+        // Tabbed pane
         tabbedPane = new JTabbedPane();
         add(tabbedPane, BorderLayout.CENTER);
 
@@ -193,7 +193,7 @@ public class EntityDetailsPanel extends JPanel implements Accessibility, Refresh
                     final EntityActorPermission eap = (EntityActorPermission) getRows().get(table.getSelectedRow()).getUserObject();
 
                     if (OWNER_PERMISSION.equals(eap.getPermissions())) {
-        				// No menu for the permanent owner permission. In the future this might show a "gifting" option
+                        // No menu for the permanent owner permission. In the future this might show a "gifting" option
                         // if the owner wants to transfer ownership.
                     }
                     else if (ModelMgrUtils.isOwner(entity)) {
@@ -397,15 +397,18 @@ public class EntityDetailsPanel extends JPanel implements Accessibility, Refresh
                 loadAnnotations();
                 loadPermissions();
 
-                log.debug("Showing attributes");
-
                 // Update the attribute table
                 attributesTable.removeAllRows();
 
                 attributesTable.addRow(new AttributeValue("GUID", "" + loadedEntity.getId()));
                 attributesTable.addRow(new AttributeValue("Name", loadedEntity.getName()));
                 attributesTable.addRow(new AttributeValue("Type", loadedEntity.getEntityTypeName()));
-                attributesTable.addRow(new AttributeValue("Num Children", "" + loadedEntity.getNumChildren()));
+
+                String sortCriteria = ModelMgr.getModelMgr().getSortCriteria(loadedEntity.getId());
+                if (sortCriteria != null) {
+                    attributesTable.addRow(new AttributeValue("Sort Criteria", sortCriteria));
+                }
+
                 if (role != null) {
                     attributesTable.addRow(new AttributeValue("Role", role));
                 }
@@ -528,8 +531,6 @@ public class EntityDetailsPanel extends JPanel implements Accessibility, Refresh
             @Override
             protected void hadSuccess() {
 
-                log.debug("Showing permissions");
-
                 permissionsTable.removeAllRows();
                 permissionsTable.addRow(new EntityActorPermission(entity, entity.getOwnerKey(), OWNER_PERMISSION));
                 for (EntityActorPermission eap : eaps) {
@@ -576,9 +577,6 @@ public class EntityDetailsPanel extends JPanel implements Accessibility, Refresh
 
             @Override
             protected void hadSuccess() {
-
-                log.debug("Showing annotations");
-
                 annotationsView.setAnnotations(annotations);
                 annotationsPanel.removeAll();
                 annotationsPanel.add((JPanel) annotationsView, BorderLayout.CENTER);

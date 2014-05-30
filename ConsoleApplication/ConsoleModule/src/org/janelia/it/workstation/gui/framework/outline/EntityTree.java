@@ -723,7 +723,7 @@ public class EntityTree extends JPanel implements ActivatableView {
         entityDataIdToNodeMap.put(newEd.getId(), newNode);
 
         // Get children
-        List<EntityData> dataList = entity.getOrderedEntityData();
+        List<EntityData> dataList = ModelUtils.getSortedEntityDatas(entity);
         List<EntityData> childDataList = new ArrayList<EntityData>();
 
         boolean allHidden = true;

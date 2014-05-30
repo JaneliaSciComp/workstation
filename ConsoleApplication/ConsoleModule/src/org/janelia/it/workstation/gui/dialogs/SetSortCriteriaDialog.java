@@ -8,6 +8,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.Callable;
 
 import javax.swing.BorderFactory;
 import javax.swing.Box;
@@ -24,8 +25,10 @@ import net.miginfocom.swing.MigLayout;
 import org.janelia.it.jacs.model.entity.Entity;
 import org.janelia.it.jacs.model.entity.EntityConstants;
 import org.janelia.it.jacs.model.entity.EntityData;
+import org.janelia.it.jacs.model.entity.ForbiddenEntity;
 import org.janelia.it.jacs.shared.utils.EntityUtils;
 import org.janelia.it.jacs.shared.utils.StringUtils;
+import org.janelia.it.workstation.api.entity_model.events.EntityChangeEvent;
 import org.janelia.it.workstation.api.entity_model.management.ModelMgr;
 import org.janelia.it.workstation.gui.framework.access.Accessibility;
 import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
@@ -42,9 +45,9 @@ import org.slf4j.LoggerFactory;
 public class SetSortCriteriaDialog extends ModalDialog implements Accessibility {
 
     private static final Logger log = LoggerFactory.getLogger(SetSortCriteriaDialog.class);
-    
+
     public static final String SORT_CRITERIA_PROP_PREFIX = "SortCriteria";
-    
+
     /**
      * An attribute must be present on this percentage of child entities in order to be considered a sortable field
      */
@@ -132,6 +135,9 @@ public class SetSortCriteriaDialog extends ModalDialog implements Accessibility 
         // Find common attributes in child entities that the user can sort by
         Map<String, Integer> attrCounts = new HashMap<String, Integer>();
         for (Entity child : entity.getChildren()) {
+            if (child instanceof ForbiddenEntity) {
+                continue;
+            }
             for (EntityData ed : child.getEntityData()) {
                 if (ed.getChildEntity() == null) {
                     Integer count = attrCounts.get(ed.getEntityAttrName());
@@ -161,29 +167,24 @@ public class SetSortCriteriaDialog extends ModalDialog implements Accessibility 
         attrPanel.add(new JLabel("Sort order: "), "");
         attrPanel.add(sortingOrderCombobox, "wrap");
 
-        try {
-            String currCriteria = ModelMgr.getModelMgr().loadSortCriteria(entity.getId());
-            if (!StringUtils.isEmpty(currCriteria)) {
-                String sortField = currCriteria.substring(1);
-                String sortOrder = currCriteria.startsWith("-") ? EntityConstants.VALUE_SC_SORT_ORDER_DESC : EntityConstants.VALUE_SC_SORT_ORDER_ASC;
-                sortingFieldModel.setSelectedItem(sortField);
-                sortingOrderModel.setSelectedItem(sortOrder);
-            }
-        }
-        catch (Exception e) {
-            log.error("Error loading sort criteria for {}",entity.getId());
+        String currCriteria = ModelMgr.getModelMgr().getSortCriteria(entity.getId());
+        if (!StringUtils.isEmpty(currCriteria)) {
+            String sortField = currCriteria.substring(1);
+            String sortOrder = currCriteria.startsWith("-") ? EntityConstants.VALUE_SC_SORT_ORDER_DESC : EntityConstants.VALUE_SC_SORT_ORDER_ASC;
+            sortingFieldModel.setSelectedItem(sortField);
+            sortingOrderModel.setSelectedItem(sortOrder);
         }
 
         packAndShow();
     }
 
     private void saveAndClose() {
-        
-    	Utils.setWaitingCursor(SessionMgr.getMainFrame());
-    	
-    	final String sortField = (String)sortingFieldCombobox.getSelectedItem();
-        final String sortOrder = (String)sortingOrderCombobox.getSelectedItem();
-    	
+
+        Utils.setWaitingCursor(SessionMgr.getMainFrame());
+
+        final String sortField = (String) sortingFieldCombobox.getSelectedItem();
+        final String sortOrder = (String) sortingOrderCombobox.getSelectedItem();
+
         if (DEFAULT_SORT_VALUE.equals(sortField)) {
             JOptionPane.showMessageDialog(this, "No sort field selected", "Error", JOptionPane.ERROR_MESSAGE);
             return;
@@ -194,8 +195,8 @@ public class SetSortCriteriaDialog extends ModalDialog implements Accessibility 
             @Override
             protected void doStuff() throws Exception {
                 if (StringUtils.isEmpty(sortField)) {
-                    String currCriteria = ModelMgr.getModelMgr().loadSortCriteria(entity.getId());
-                    if (currCriteria!=null) {
+                    String currCriteria = ModelMgr.getModelMgr().getSortCriteria(entity.getId());
+                    if (currCriteria != null) {
                         ModelMgr.getModelMgr().saveSortCriteria(entity.getId(), sortField);
                     }
                 }
@@ -209,13 +210,15 @@ public class SetSortCriteriaDialog extends ModalDialog implements Accessibility 
             @Override
             protected void hadSuccess() {
                 Utils.setDefaultCursor(SessionMgr.getMainFrame());
-			    SessionMgr.getBrowser().getEntityOutline().refresh(true, true, null);
+                ModelMgr.getModelMgr().postOnEventBus(new EntityChangeEvent(entity));
+                //SessionMgr.getBrowser().getViewerManager().getActiveViewer().refresh();
+                //SessionMgr.getBrowser().getEntityOutline().refresh(false, true, null);
             }
 
             @Override
             protected void hadError(Throwable error) {
-				SessionMgr.getSessionMgr().handleException(error);
-				Utils.setDefaultCursor(SessionMgr.getMainFrame());
+                SessionMgr.getSessionMgr().handleException(error);
+                Utils.setDefaultCursor(SessionMgr.getMainFrame());
             }
         };
         worker.execute();

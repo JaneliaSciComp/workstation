@@ -22,6 +22,8 @@ import org.janelia.it.workstation.shared.workers.SimpleWorker;
 import org.janelia.it.jacs.model.entity.EntityConstants;
 import org.janelia.it.jacs.shared.utils.StringUtils;
 import org.openide.util.lookup.ServiceProvider;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Use this with or without a known sample, to create a new Alignment Board.
@@ -30,6 +32,9 @@ import org.openide.util.lookup.ServiceProvider;
  */
 @ServiceProvider(service=EntityWrapperCreator.class,path=EntityWrapperCreator.LOOKUP_PATH)
 public class AlignmentBoardCreator implements EntityWrapperCreator {
+    
+    private static final Logger log = LoggerFactory.getLogger(AlignmentBoardCreator.class);
+    
     private RootedEntity sampleRootedEntity;
     
     public void execute() {
@@ -145,11 +150,11 @@ public class AlignmentBoardCreator implements EntityWrapperCreator {
     public boolean isCompatible(RootedEntity e) {
         setSampleRootedEntity(e);
         if ( e == null ) {
-System.out.println("Just nulled-out the rooted entity to ABCreator");
+            log.debug("Just nulled-out the rooted entity to ABCreator");
             return true;
         }
         else {
-System.out.println("Just UN-Nulled rooted entity in ABCreator");            
+            log.debug("Just UN-Nulled rooted entity in ABCreator");            
             // Caching the test entity, for use in action label.
             final String entityTypeName = e.getEntity().getEntityTypeName();
             return entityTypeName.equals( EntityConstants.TYPE_SAMPLE )   ||

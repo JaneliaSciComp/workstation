@@ -631,7 +631,7 @@ public class LayersPanel extends JPanel implements Refreshable {
     private void refresh(final boolean restoreState, final boolean invalidateCache, final Callable<Void> success) {
         // TODO: respect cache invalidation parameter
         if (alignmentBoardContext==null) {
-            log.warn("No alignment board context ready for layers panel.");
+            log.debug("No alignment board context ready for layers panel.");
             return;
         }
         if (restoreState) {
