@@ -1,13 +1,10 @@
 package org.janelia.it.workstation.shared.util;
 
-import com.sun.management.OperatingSystemMXBean;
 import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.File;
-import java.lang.management.ManagementFactory;
-import java.lang.management.OperatingSystemMXBean;
 import java.util.Date;
 import java.util.Random;
 
@@ -150,10 +147,10 @@ public class SystemInfo {
         }
         return downloadsDirFile;
     }
-    
-    private static OperatingSystemMXBean getOSMXBean() {
-        OperatingSystemMXBean mxbean = ManagementFactory.getOperatingSystemMXBean();
-        OperatingSystemMXBean sunmxbean = (OperatingSystemMXBean) mxbean;
+
+    private static com.sun.management.OperatingSystemMXBean getOSMXBean() {
+        java.lang.management.OperatingSystemMXBean mxbean = java.lang.management.ManagementFactory.getOperatingSystemMXBean();
+        com.sun.management.OperatingSystemMXBean sunmxbean = (com.sun.management.OperatingSystemMXBean) mxbean;
         return sunmxbean;
     }
     
