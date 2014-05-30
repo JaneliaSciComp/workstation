@@ -15,6 +15,9 @@ import javax.swing.*;
 import javax.swing.table.DefaultTableModel;
 import javax.swing.table.TableModel;
 
+import org.janelia.it.workstation.api.entity_model.management.ModelMgr;
+import org.janelia.it.workstation.gui.util.Icons;
+import org.janelia.it.workstation.gui.util.MouseHandler;
 import org.janelia.it.workstation.shared.util.Utils;
 import org.janelia.it.workstation.shared.workers.SimpleWorker;
 import org.janelia.it.jacs.model.entity.Entity;
@@ -42,7 +45,7 @@ public class EntityDataPane extends JPanel {
     private final JScrollPane scrollPane;
     private List<EntityData> datas;
     private TableModel tableModel;
-    private JComponent loadingView = new JLabel(org.janelia.it.workstation.gui.util.Icons.getLoadingIcon());
+    private JComponent loadingView = new JLabel(Icons.getLoadingIcon());
 
     private SimpleWorker loadTask;
 
@@ -71,7 +74,7 @@ public class EntityDataPane extends JPanel {
         table.setColumnSelectionAllowed(false);
         table.setRowSelectionAllowed(true);
 
-        table.addMouseListener(new org.janelia.it.workstation.gui.util.MouseHandler() {
+        table.addMouseListener(new MouseHandler() {
             @Override
             protected void popupTriggered(MouseEvent e) {
                 if (datas == null) {
@@ -183,12 +186,12 @@ public class EntityDataPane extends JPanel {
                     Entity child = data.getChildEntity();
                     if (child != null && !EntityUtils.isInitialized(child)) {
                         System.out.println("Fetching child " + child.getId());
-                        data.setChildEntity(org.janelia.it.workstation.api.entity_model.management.ModelMgr.getModelMgr().getEntityById(child.getId()));
+                        data.setChildEntity(ModelMgr.getModelMgr().getEntityById(child.getId()));
                     }
                     Entity parent = data.getParentEntity();
                     if (parent != null && !EntityUtils.isInitialized(parent)) {
                         System.out.println("Fetching parent " + parent.getId());
-                        data.setParentEntity(org.janelia.it.workstation.api.entity_model.management.ModelMgr.getModelMgr().getEntityById(parent.getId()));
+                        data.setParentEntity(ModelMgr.getModelMgr().getEntityById(parent.getId()));
                     }
                     if (isCancelled()) {
                         return;

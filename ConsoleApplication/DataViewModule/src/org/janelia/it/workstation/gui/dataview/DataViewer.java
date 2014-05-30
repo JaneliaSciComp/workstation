@@ -17,11 +17,11 @@ public class DataViewer extends JPanel {
     private static final double realEstatePercent = 1.0;
 
     private SearchConfiguration searchConfig;
-    private org.janelia.it.workstation.gui.dataview.SearchPane searchPane;
-    private org.janelia.it.workstation.gui.dataview.EntityTypePane entityTypePane;
+    private SearchPane searchPane;
+    private EntityTypePane entityTypePane;
     private EntityPane entityPane;
-    private org.janelia.it.workstation.gui.dataview.EntityDataPane entityParentsPane;
-    private org.janelia.it.workstation.gui.dataview.EntityDataPane entityChildrenPane;
+    private EntityDataPane entityParentsPane;
+    private EntityDataPane entityChildrenPane;
     private JPanel progressPanel;
 
     public DataViewer() {
@@ -50,7 +50,7 @@ public class DataViewer extends JPanel {
 
         searchConfig = new SearchConfiguration();
 
-        entityParentsPane = new org.janelia.it.workstation.gui.dataview.EntityDataPane("Entity Data: Parents", true, false) {
+        entityParentsPane = new EntityDataPane("Entity Data: Parents", true, false) {
             @Override
             protected void doubleClick(EntityData entityData) {
                 if (entityData.getParentEntity() != null) {
@@ -59,7 +59,7 @@ public class DataViewer extends JPanel {
             }
         };
 
-        entityChildrenPane = new org.janelia.it.workstation.gui.dataview.EntityDataPane("Entity Data: Children", false, true) {
+        entityChildrenPane = new EntityDataPane("Entity Data: Children", false, true) {
             @Override
             protected void doubleClick(EntityData entityData) {
                 if (entityData.getChildEntity() != null) {
@@ -68,7 +68,7 @@ public class DataViewer extends JPanel {
             }
         };
 
-        searchPane = new org.janelia.it.workstation.gui.dataview.SearchPane(searchConfig) {
+        searchPane = new SearchPane(searchConfig) {
             @Override
             public void performHibernateSearch(String searchString) {
                 if (searchString.matches("\\d{19}")) {
@@ -91,7 +91,7 @@ public class DataViewer extends JPanel {
         };
 
         entityPane = new EntityPane(searchConfig, searchPane, entityParentsPane, entityChildrenPane);
-        entityTypePane = new org.janelia.it.workstation.gui.dataview.EntityTypePane(entityPane);
+        entityTypePane = new EntityTypePane(entityPane);
 
         double frameHeight = (double) DataViewer.this.getPreferredSize().height - 30;
         double frameWidth = (double) DataViewer.this.getPreferredSize().width - 30;
@@ -125,19 +125,19 @@ public class DataViewer extends JPanel {
         return searchConfig;
     }
 
-    public org.janelia.it.workstation.gui.dataview.SearchPane getSearchPane() {
+    public SearchPane getSearchPane() {
         return searchPane;
     }
 
-    public org.janelia.it.workstation.gui.dataview.EntityTypePane getEntityTypePane() {
+    public EntityTypePane getEntityTypePane() {
         return entityTypePane;
     }
 
-    public org.janelia.it.workstation.gui.dataview.EntityDataPane getEntityParentsPane() {
+    public EntityDataPane getEntityParentsPane() {
         return entityParentsPane;
     }
 
-    public org.janelia.it.workstation.gui.dataview.EntityDataPane getEntityChildrenPane() {
+    public EntityDataPane getEntityChildrenPane() {
         return entityChildrenPane;
     }
 
