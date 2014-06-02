@@ -1,28 +1,9 @@
 package org.janelia.it.FlyWorkstation.gui.framework.outline;
 
-import java.awt.BorderLayout;
-import java.awt.event.MouseEvent;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.concurrent.Callable;
-
-import javax.swing.JLabel;
-import javax.swing.JOptionPane;
-import javax.swing.JPanel;
-import javax.swing.JTree;
-import javax.swing.ProgressMonitor;
-import javax.swing.SwingUtilities;
-import javax.swing.ToolTipManager;
-import javax.swing.tree.DefaultMutableTreeNode;
-import javax.swing.tree.TreePath;
-
+import com.google.common.collect.HashMultimap;
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Multimap;
+import com.google.common.eventbus.Subscribe;
 import org.janelia.it.FlyWorkstation.api.entity_model.events.EntityChangeEvent;
 import org.janelia.it.FlyWorkstation.api.entity_model.events.EntityChildrenLoadedEvent;
 import org.janelia.it.FlyWorkstation.api.entity_model.events.EntityInvalidationEvent;
@@ -36,6 +17,7 @@ import org.janelia.it.FlyWorkstation.gui.framework.tree.LazyTreeNode;
 import org.janelia.it.FlyWorkstation.gui.framework.tree.LazyTreeNodeLoader;
 import org.janelia.it.FlyWorkstation.gui.util.Icons;
 import org.janelia.it.FlyWorkstation.model.entity.RootedEntity;
+import org.janelia.it.FlyWorkstation.model.utils.ModelUtils;
 import org.janelia.it.FlyWorkstation.shared.util.ConcurrentUtils;
 import org.janelia.it.FlyWorkstation.shared.util.Utils;
 import org.janelia.it.FlyWorkstation.shared.workers.FakeProgressWorker;
@@ -47,10 +29,14 @@ import org.janelia.it.jacs.shared.utils.EntityUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.collect.HashMultimap;
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.Multimap;
-import com.google.common.eventbus.Subscribe;
+import javax.swing.*;
+import javax.swing.tree.DefaultMutableTreeNode;
+import javax.swing.tree.TreePath;
+import java.awt.*;
+import java.awt.event.MouseEvent;
+import java.util.*;
+import java.util.List;
+import java.util.concurrent.Callable;
 
 /**
  * A tree of Entities that may load lazily. Manages all the asynchronous loading and tree updating that happens in the
@@ -418,8 +404,8 @@ public class EntityTree extends JPanel implements ActivatableView {
                 
                 Entity entity = getEntity(node);
                 log.debug("recreateChildNodes for node (@{}) with entity: {}",System.identityHashCode(node),EntityUtils.identify(entity));
-                
-                List<EntityData> edList = EntityUtils.getSortedEntityDatas(entity);
+
+                List<EntityData> edList = ModelUtils.getSortedEntityDatas(entity);
 
             	List<DefaultMutableTreeNode> childNodes = new ArrayList<DefaultMutableTreeNode>();
                 for (int i = 0; i < node.getChildCount(); i++) {
@@ -675,8 +661,7 @@ public class EntityTree extends JPanel implements ActivatableView {
         entityDataIdToNodeMap.put(newEd.getId(), newNode);
         
         // Get children
-        
-        List<EntityData> dataList = entity.getOrderedEntityData();
+        List<EntityData> dataList = ModelUtils.getSortedEntityDatas(entity);
         List<EntityData> childDataList = new ArrayList<EntityData>();
 
         boolean allHidden = true;
