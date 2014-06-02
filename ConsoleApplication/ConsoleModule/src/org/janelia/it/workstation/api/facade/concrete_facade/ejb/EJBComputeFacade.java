@@ -129,15 +129,20 @@ public class EJBComputeFacade implements ComputeFacade {
     @Override
     public void endSession() {
         try{
-    	EJBFactory.getRemoteComputeBean().endSession(
+            EJBFactory.getRemoteComputeBean().endSession(
                 SessionMgr.getSessionMgr().getSubject().getName(),
                 ConsoleProperties.getString("console.Title"),
                 SessionMgr.getSessionMgr().getCurrentSessionId());
-        SessionMgr.getSessionMgr().setCurrentSessionId(null);
-        }catch( NullPointerException npe){
+            SessionMgr.getSessionMgr().setCurrentSessionId(null);
+        } catch( NullPointerException npe){   
+            // This is for bug FW-2512.  At time of writing, unable to duplicate
+            // this exception. This bug may have been fixed by unrelated commit.
+            // Therefore, leaving this trail to see which
+            // possible thing is null. LLF, 6/1/2014.
             System.out.println("Remote compute bean: " + EJBFactory.getRemoteComputeBean());
             System.out.println("SessionMgr: " + SessionMgr.getSessionMgr());
             System.out.println("Subject: " + SessionMgr.getSessionMgr().getSubject());
+            throw npe;
         }
     }
     
