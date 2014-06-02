@@ -264,7 +264,7 @@ public class AlignmentBoardPanel extends JPanel implements AlignmentBoardControl
             ) {
             String msg = "Failed to load volume to mip3d.";
             logger.error(msg);
-            throw new RuntimeException( msg );
+            //throw new RuntimeException( msg );
         }
         else {
             logger.info("Setting volume maxima on settings.");
