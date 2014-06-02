@@ -318,6 +318,7 @@ public class RenderablesLoadWorker extends SimpleWorker implements VolumeLoader 
 
         if ( metaDatas == null  ||  metaDatas.size() == 0 ) {
             logger.info( "No renderables found for alignment board " + dataSource.getName() );
+            multiThreadedTextureBuild();
         }
         else {
             logger.debug( "In load thread, after getting bean list." );

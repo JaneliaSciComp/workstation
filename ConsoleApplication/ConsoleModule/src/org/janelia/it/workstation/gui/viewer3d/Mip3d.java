@@ -13,6 +13,8 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseWheelEvent;
+import org.janelia.it.workstation.geom.Vec3;
+import org.janelia.it.workstation.shared.util.SystemInfo;
 
 public class Mip3d extends BaseGLViewer implements ActionListener {
 
@@ -138,6 +140,7 @@ public class Mip3d extends BaseGLViewer implements ActionListener {
             RenderMappingI renderMapping,
             double axisLengthDivisor ) {
         this.axisLengthDivisor = axisLengthDivisor;
+        boolean rtnVal = false;
         if ( signalTexture != null ) {
             VolumeBrickI brick = null;
             if ( maskTexture != null ) {
@@ -152,28 +155,31 @@ public class Mip3d extends BaseGLViewer implements ActionListener {
             }
             brick.setTextureData( signalTexture );
 
-            boolean isMac = System.getProperty("os.name").toLowerCase().contains("mac");
+            boolean isMac = SystemInfo.OS_NAME.contains("mac");
             if ( isMac ) {
                 // Enforce opaque, transparent ordering of actors.
                 this.renderer.addActor( brick );
             }
-            AxesActor axes = new AxesActor();
-            BoundingBox3d brickBox = brick.getBoundingBox3d();
-            axes.setAxisLengths( brickBox.getWidth(), brickBox.getHeight(), brickBox.getDepth() );
-            axes.setAxisLengthDivisor( axisLengthDivisor );
-            axes.setFullAxes( true );
-            this.renderer.addActor( axes );
-
+            addAxes( brick.getBoundingBox3d(), axisLengthDivisor);
             if ( ! isMac ) {
                 // Must add the brick _after_ the axes for non-Mac systems.
                 this.renderer.addActor( brick );
             }
 
-            return true;
+            rtnVal = true;
         }
         else {
-            return false;
+            BoundingBox3d boundingBox = new BoundingBox3d();
+            boundingBox.setMax( 
+                    new Vec3(
+                            volumeModel.getVoxelDimensions()[0], 
+                            volumeModel.getVoxelDimensions()[1], 
+                            volumeModel.getVoxelDimensions()[2] )
+            );
+            boundingBox.setMin(new Vec3(0,0,0));
+            addAxes( boundingBox, axisLengthDivisor );
         }
+        return rtnVal;
     }
 
     /**
@@ -299,6 +305,14 @@ public class Mip3d extends BaseGLViewer implements ActionListener {
             renderer.addActor(brick);
             renderer.resetView();
         }
+    }
+
+    private void addAxes(BoundingBox3d boundingBox, double axisLengthDivisor) {
+        AxesActor axes = new AxesActor();
+        axes.setAxisLengths( boundingBox.getWidth(), boundingBox.getHeight(), boundingBox.getDepth() );
+        axes.setAxisLengthDivisor( axisLengthDivisor );
+        axes.setFullAxes( true );
+        this.renderer.addActor( axes );
     }
 
 }

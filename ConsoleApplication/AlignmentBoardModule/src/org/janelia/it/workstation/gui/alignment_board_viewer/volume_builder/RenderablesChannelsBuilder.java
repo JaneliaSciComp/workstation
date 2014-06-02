@@ -190,7 +190,12 @@ public class RenderablesChannelsBuilder extends RenderablesVolumeBuilder impleme
             if ( this.channelInterpreter == null ) {
                 msg += " No channel data ever added.";
             }
-            throw new RuntimeException(msg);
+            else {
+                channelInterpreter.close();
+            }
+            logger.error(msg);
+            return null;
+            //throw new RuntimeException(msg);
         }
 
         if ( channelInterpreter != null )

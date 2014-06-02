@@ -28,8 +28,10 @@ public class TexBuildRunnable implements Runnable {
 
     public void run() {
         try {
-            logger.info( "About to build texture data." );
-            textureData = textureBuilder.buildTextureData();
+            if ( textureBuilder != null ) {
+                logger.info( "About to build texture data." );
+                textureData = textureBuilder.buildTextureData();
+            }
             logger.info( "Awaiting barrier." );
             barrier.await();
         } catch ( Exception ex ) {

@@ -128,11 +128,17 @@ public class EJBComputeFacade implements ComputeFacade {
     
     @Override
     public void endSession() {
+        try{
     	EJBFactory.getRemoteComputeBean().endSession(
                 SessionMgr.getSessionMgr().getSubject().getName(),
                 ConsoleProperties.getString("console.Title"),
                 SessionMgr.getSessionMgr().getCurrentSessionId());
         SessionMgr.getSessionMgr().setCurrentSessionId(null);
+        }catch( NullPointerException npe){
+            System.out.println("Remote compute bean: " + EJBFactory.getRemoteComputeBean());
+            System.out.println("SessionMgr: " + SessionMgr.getSessionMgr());
+            System.out.println("Subject: " + SessionMgr.getSessionMgr().getSubject());
+        }
     }
     
     @Override
