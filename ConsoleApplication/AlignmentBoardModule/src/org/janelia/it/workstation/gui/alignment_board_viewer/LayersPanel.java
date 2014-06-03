@@ -771,18 +771,20 @@ public class LayersPanel extends JPanel implements Refreshable {
 
         private Color getGammaCorrectedSwatchColor(Color color) {
             double[] colorRGB = new double[ 3 ];
-            colorRGB[ 0 ] = color.getRed() / 256.0;
-            colorRGB[ 1 ] = color.getGreen() / 256.0;
-            colorRGB[ 2 ] = color.getBlue() / 256.0;
+            if ( color != null ) {
+                colorRGB[ 0] = color.getRed() / 256.0;
+                colorRGB[ 1] = color.getGreen() / 256.0;
+                colorRGB[ 2] = color.getBlue() / 256.0;
+            }
             return getGammaCorrectedSwatchColor( colorRGB );
         }
 
         private Color getGammaCorrectedSwatchColor(double[] colorRGB) {
             return new Color(
-                                            (int)(256.0 * Math.pow( colorRGB[ 0 ], VolumeModel.STANDARDIZED_GAMMA_MULTIPLIER ) ),
-                                            (int)(256.0 * Math.pow( colorRGB[ 1 ], VolumeModel.STANDARDIZED_GAMMA_MULTIPLIER ) ),
-                                            (int)(256.0 * Math.pow( colorRGB[ 2 ], VolumeModel.STANDARDIZED_GAMMA_MULTIPLIER ) )
-                                    );
+                    (int) (256.0 * Math.pow(colorRGB[ 0], VolumeModel.STANDARDIZED_GAMMA_MULTIPLIER)),
+                    (int) (256.0 * Math.pow(colorRGB[ 1], VolumeModel.STANDARDIZED_GAMMA_MULTIPLIER)),
+                    (int) (256.0 * Math.pow(colorRGB[ 2], VolumeModel.STANDARDIZED_GAMMA_MULTIPLIER))
+            );
         }
     }
     
