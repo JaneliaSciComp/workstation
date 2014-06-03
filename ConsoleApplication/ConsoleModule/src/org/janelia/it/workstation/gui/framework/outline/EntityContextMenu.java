@@ -1314,7 +1314,6 @@ public class EntityContextMenu extends JPopupMenu {
             }
         });
 
-        sortItem.setEnabled(ModelMgrUtils.hasWriteAccess(targetEntity));
         return sortItem;
     }
     
