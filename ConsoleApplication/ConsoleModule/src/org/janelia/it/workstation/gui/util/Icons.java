@@ -165,7 +165,11 @@ public class Icons {
         
         String type = entity.getEntityTypeName();
         
-        if (EntityConstants.TYPE_FOLDER.equals(type) || EntityConstants.TYPE_ONTOLOGY_ROOT.equals(type)) {
+        if (EntityConstants.TYPE_WORKSPACE.equals(type)) {
+        	if (large) return getIcon("folder_large.png");
+        	return getIcon("folder_green.png");    
+        }
+        else if (EntityConstants.TYPE_FOLDER.equals(type) || EntityConstants.TYPE_ONTOLOGY_ROOT.equals(type)) {
             if (large) return getIcon("folder_large.png");
             
             String typeSuffix = "";

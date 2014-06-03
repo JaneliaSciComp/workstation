@@ -1,14 +1,27 @@
 package org.janelia.it.workstation.gui.framework.console;
 
-import java.awt.*;
+import java.awt.BorderLayout;
+import java.awt.CardLayout;
+import java.awt.Component;
+import java.awt.Dimension;
+import java.awt.Graphics2D;
+import java.awt.Image;
+import java.awt.Point;
+import java.awt.Toolkit;
 import java.awt.image.BufferedImage;
 import java.awt.print.PageFormat;
 import java.awt.print.PrinterJob;
 import java.util.Collections;
 import java.util.List;
 
-import javax.swing.*;
+import javax.swing.ImageIcon;
+import javax.swing.JComponent;
+import javax.swing.JFrame;
+import javax.swing.JOptionPane;
+import javax.swing.JPanel;
+import javax.swing.SwingUtilities;
 
+import org.janelia.it.jacs.model.entity.Entity;
 import org.janelia.it.workstation.api.entity_model.management.ModelMgr;
 import org.janelia.it.workstation.gui.dialogs.AnnotationSessionPropertyDialog;
 import org.janelia.it.workstation.gui.dialogs.DataSetListDialog;
@@ -39,13 +52,11 @@ import org.janelia.it.workstation.shared.util.FreeMemoryWatcher;
 import org.janelia.it.workstation.shared.util.PrintableComponent;
 import org.janelia.it.workstation.shared.util.PrintableImage;
 import org.janelia.it.workstation.shared.util.SystemInfo;
-import org.janelia.it.jacs.model.entity.Entity;
 import org.openide.windows.Mode;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import org.openide.windows.TopComponent;
 import org.openide.windows.WindowManager;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Created by IntelliJ IDEA.
@@ -161,9 +172,7 @@ public class Browser implements Cloneable {
         entityOutline = new EntityOutline() {
             @Override
             public List<Entity> loadRootList() throws Exception {
-                List<Entity> roots = ModelMgr.getModelMgr().getCommonRootEntities();
-                Collections.sort(roots, new EntityRootComparator());
-                return roots;
+            	return ModelMgr.getModelMgr().getWorkspaces();
             }
         };
 

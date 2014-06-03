@@ -35,6 +35,13 @@ import javax.swing.JSeparator;
 import javax.swing.SwingUtilities;
 import javax.swing.UIManager;
 
+import org.janelia.it.jacs.model.entity.Entity;
+import org.janelia.it.jacs.model.entity.EntityConstants;
+import org.janelia.it.jacs.model.entity.EntityData;
+import org.janelia.it.jacs.model.entity.ForbiddenEntity;
+import org.janelia.it.jacs.model.ontology.OntologyAnnotation;
+import org.janelia.it.jacs.shared.utils.EntityUtils;
+import org.janelia.it.jacs.shared.utils.StringUtils;
 import org.janelia.it.workstation.api.entity_model.access.ModelMgrAdapter;
 import org.janelia.it.workstation.api.entity_model.access.ModelMgrObserver;
 import org.janelia.it.workstation.api.entity_model.events.EntityChangeEvent;
@@ -51,8 +58,8 @@ import org.janelia.it.workstation.gui.framework.keybind.KeymapUtil;
 import org.janelia.it.workstation.gui.framework.outline.AnnotationFilter;
 import org.janelia.it.workstation.gui.framework.outline.Annotations;
 import org.janelia.it.workstation.gui.framework.outline.EntityContextMenu;
-import org.janelia.it.workstation.gui.framework.outline.EntityOutline;
 import org.janelia.it.workstation.gui.framework.outline.EntitySelectionHistory;
+import org.janelia.it.workstation.gui.framework.outline.EntityViewerState;
 import org.janelia.it.workstation.gui.framework.session_mgr.BrowserModel;
 import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.workstation.gui.framework.session_mgr.SessionModelListener;
@@ -62,25 +69,17 @@ import org.janelia.it.workstation.gui.util.MouseHandler;
 import org.janelia.it.workstation.gui.util.panels.ViewerSettingsPanel;
 import org.janelia.it.workstation.model.entity.RootedEntity;
 import org.janelia.it.workstation.model.utils.AnnotationSession;
+import org.janelia.it.workstation.model.utils.ModelUtils;
 import org.janelia.it.workstation.shared.util.ConcurrentUtils;
 import org.janelia.it.workstation.shared.util.SystemInfo;
 import org.janelia.it.workstation.shared.util.Utils;
 import org.janelia.it.workstation.shared.workers.SimpleWorker;
-import org.janelia.it.jacs.model.entity.Entity;
-import org.janelia.it.jacs.model.entity.EntityConstants;
-import org.janelia.it.jacs.model.entity.EntityData;
-import org.janelia.it.jacs.model.entity.ForbiddenEntity;
-import org.janelia.it.jacs.model.ontology.OntologyAnnotation;
-import org.janelia.it.jacs.shared.utils.EntityUtils;
-import org.janelia.it.jacs.shared.utils.StringUtils;
-import org.janelia.it.workstation.gui.framework.outline.EntityViewerState;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.common.collect.HashMultimap;
 import com.google.common.collect.Multimap;
 import com.google.common.eventbus.Subscribe;
-import org.janelia.it.workstation.model.utils.ModelUtils;
 
 /**
  * This viewer shows images in a grid. It is modeled after OS X Finder. It wraps an ImagesPanel and provides a lot of
@@ -999,7 +998,7 @@ public class IconDemoPanel extends IconPanel {
 
         List<RootedEntity> lazyRootedEntities = new ArrayList<RootedEntity>();
         for (EntityData ed : children) {
-            String childId = EntityOutline.getChildUniqueId(rootedEntity.getUniqueId(), ed);
+            String childId = ModelUtils.getChildUniqueId(rootedEntity.getUniqueId(), ed);
             lazyRootedEntities.add(new RootedEntity(childId, ed));
         }
 

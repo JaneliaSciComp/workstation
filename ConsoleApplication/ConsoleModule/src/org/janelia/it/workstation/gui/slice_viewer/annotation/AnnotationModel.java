@@ -6,14 +6,13 @@ package org.janelia.it.workstation.gui.slice_viewer.annotation;
 import org.janelia.it.workstation.geom.Vec3;
 import org.janelia.it.workstation.geom.ParametrizedLine;
 import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
-
 import org.janelia.it.workstation.signal.Signal1;
 import org.janelia.it.workstation.signal.Slot1;
-
 import org.janelia.it.workstation.api.entity_model.management.ModelMgr;
-
+import org.janelia.it.workstation.api.entity_model.management.ModelMgrUtils;
 import org.janelia.it.jacs.model.entity.Entity;
 import org.janelia.it.jacs.model.user_data.tiledMicroscope.*;
+import org.janelia.it.jacs.shared.screen.ScreenEvalConstants;
 
 import java.awt.*;
 import java.util.ArrayList;
@@ -316,7 +315,7 @@ that need to respond to changing data.
      * @throws Exception
      */
     public Entity getOrCreateWorkspacesFolder() throws Exception {
-        Entity workspaceRootEntity = modelMgr.getCommonRootEntityByName(WORKSPACES_FOLDER_NAME);
+        Entity workspaceRootEntity = ModelMgr.getModelMgr().getOwnedCommonRootByName(WORKSPACES_FOLDER_NAME);
         if (workspaceRootEntity == null) {
             workspaceRootEntity = modelMgr.createCommonRoot(WORKSPACES_FOLDER_NAME);
         }

@@ -32,8 +32,6 @@ public interface EntityFacade {
     
     public List<Entity> getOwnedEntitiesByName(String entityName) throws Exception;
 
-    public List<Entity> getCommonRootEntities() throws Exception;
-    
     public List<Entity> getAlignmentSpaces() throws Exception;
      
     public Set<Entity> getChildEntities(Long parentEntityId) throws Exception;

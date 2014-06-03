@@ -6,9 +6,7 @@ import org.janelia.it.jacs.model.entity.Entity;
 import org.janelia.it.jacs.model.entity.EntityConstants;
 import org.janelia.it.jacs.model.entity.EntityData;
 import org.janelia.it.jacs.shared.utils.EntityUtils;
-import org.janelia.it.workstation.api.entity_model.management.EntitySelectionModel;
 import org.janelia.it.workstation.api.entity_model.management.ModelMgr;
-import org.janelia.it.workstation.api.entity_model.management.ModelMgrUtils;
 import org.janelia.it.workstation.model.entity.RootedEntity;
 
 /**
@@ -42,15 +40,7 @@ public class FolderUtils {
 	
 	public static RootedEntity saveEntitiesToCommonRoot(String commonRootName, List<Long> entityIds) throws Exception {
 
-		Entity saveFolder = null;
-		List<Entity> commonRoots = ModelMgr.getModelMgr().getCommonRootEntities();
-		for(Entity commonRoot : commonRoots) {
-		    if (!ModelMgrUtils.hasWriteAccess(commonRoot)) continue;
-			if (commonRoot.getName().equals(commonRootName)) {
-				saveFolder = commonRoot;
-			}
-		}
-
+		Entity saveFolder = ModelMgr.getModelMgr().getOwnedCommonRootByName(commonRootName);
 		if (saveFolder == null) {
 			// No existing folder, so create a new one
 			saveFolder = ModelMgr.getModelMgr().createCommonRoot(commonRootName);
@@ -62,9 +52,5 @@ public class FolderUtils {
 	
 	public static void saveEntities(Entity saveFolder, List<Long> entityIds) throws Exception {
 		ModelMgr.getModelMgr().addChildren(saveFolder.getId(), entityIds, EntityConstants.ATTRIBUTE_ENTITY);
-	}	
-	
-	public static void selectCommonRoot(Entity commonRoot) {
-		ModelMgr.getModelMgr().getEntitySelectionModel().selectEntity(EntitySelectionModel.CATEGORY_OUTLINE, "/e_"+commonRoot.getId(), true);
 	}
 }

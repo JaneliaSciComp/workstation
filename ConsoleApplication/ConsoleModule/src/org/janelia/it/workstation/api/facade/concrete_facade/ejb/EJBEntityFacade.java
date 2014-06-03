@@ -60,11 +60,6 @@ public class EJBEntityFacade implements EntityFacade {
     }
 
     @Override
-    public List<Entity> getCommonRootEntities() throws Exception {
-        return EJBFactory.getRemoteAnnotationBean().getCommonRootEntities(SessionMgr.getSubjectKey());
-    }
-    
-    @Override
     public List<Entity> getAlignmentSpaces() throws Exception {
         return EJBFactory.getRemoteAnnotationBean().getAlignmentSpaces(SessionMgr.getSubjectKey());
     }
