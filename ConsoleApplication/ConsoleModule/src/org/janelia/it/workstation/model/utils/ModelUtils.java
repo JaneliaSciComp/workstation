@@ -19,6 +19,7 @@ import org.slf4j.LoggerFactory;
 
 import com.google.common.collect.ComparisonChain;
 import com.google.common.collect.Ordering;
+
 import org.janelia.it.jacs.model.entity.ForbiddenEntity;
 
 /**
@@ -122,5 +123,12 @@ public class ModelUtils {
 
         log.trace("Sorted {} by {}",entity.getName(),sortCriteria);
         return eds;
+    }
+
+    public static String getChildUniqueId(String parentUniqueId, EntityData entityData) {
+        String uniqueId = parentUniqueId;
+        uniqueId += "/ed_" + entityData.getId();
+        uniqueId += "/e_" + entityData.getChildEntity().getId();
+        return uniqueId;
     }
 }

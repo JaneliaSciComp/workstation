@@ -93,6 +93,10 @@ public class EntityTree extends JPanel implements ActivatableView {
         ModelMgr.getModelMgr().unregisterOnEventBus(this);
     }
 
+    public EntityData getRootEntityData() {
+        return rootEntityData;
+    }
+    
     public Entity getRootEntity() {
         if (rootEntityData == null) {
             return null;
@@ -166,7 +170,7 @@ public class EntityTree extends JPanel implements ActivatableView {
         entityDataIdToNodeMap.clear();
         entityIdToNodeMap.clear();
         uniqueIdToNodeMap.clear();
-
+        
         // Dummy ed for the root
         EntityData rootEd = new EntityData();
         rootEd.setChildEntity(rootEntity);
@@ -174,6 +178,10 @@ public class EntityTree extends JPanel implements ActivatableView {
         createNewTree(rootEd);
 
         if (rootEntity != null) {
+            
+            uniqueIdToNodeMap.put(getRootUniqueId(), selectedTree.getRootNode());
+            entityIdToNodeMap.put(rootEntity.getId(), selectedTree.getRootNode());
+        
             addNodes(null, rootEd, 0);
         }
 
@@ -195,21 +203,21 @@ public class EntityTree extends JPanel implements ActivatableView {
             return;
         }
 
-        final Collection<DefaultMutableTreeNode> nodes = new HashSet<DefaultMutableTreeNode>();
+        final Collection<DefaultMutableTreeNode> affectedNodes = new HashSet<DefaultMutableTreeNode>();
 
         Collection<Entity> invalidated = event.getInvalidatedEntities();
         for (Entity entity : invalidated) {
             for (DefaultMutableTreeNode node : getNodesByEntityId(entity.getId())) {
-                nodes.add(node);
+                affectedNodes.add(node);
             }
         }
 
-        if (nodes.isEmpty()) {
+        if (affectedNodes.isEmpty()) {
             return;
         }
 
-        List<DefaultMutableTreeNode> sortedNodes = new ArrayList<DefaultMutableTreeNode>(nodes);
-        Collections.sort(sortedNodes, new Comparator<DefaultMutableTreeNode>() {
+        List<DefaultMutableTreeNode> sortedAffectedNodes = new ArrayList<DefaultMutableTreeNode>(affectedNodes);
+        Collections.sort(sortedAffectedNodes, new Comparator<DefaultMutableTreeNode>() {
             @Override
             public int compare(DefaultMutableTreeNode o1, DefaultMutableTreeNode o2) {
                 String u1 = getDynamicTree().getUniqueId(o1);
@@ -218,13 +226,14 @@ public class EntityTree extends JPanel implements ActivatableView {
             }
         });
 
-        log.debug("Entities affecting {} nodes were invalidated", sortedNodes.size());
+        log.debug("Entities affecting {} nodes were invalidated", sortedAffectedNodes.size());
 
         try {
             final ExpansionState expansionState = new ExpansionState();
             expansionState.storeExpansionState(getDynamicTree());
 
-            for (final DefaultMutableTreeNode node : sortedNodes) {
+            for (final DefaultMutableTreeNode node : sortedAffectedNodes) {
+                
                 Entity treeEntity = getEntity(node);
                 log.debug("Invalidated node (@{}) containing entity {}", System.identityHashCode(node), EntityUtils.identify(treeEntity));
 
@@ -235,7 +244,7 @@ public class EntityTree extends JPanel implements ActivatableView {
                 }
             }
 
-            for (final DefaultMutableTreeNode node : sortedNodes) {
+            for (final DefaultMutableTreeNode node : sortedAffectedNodes) {
                 log.trace("Recreating children of invalidated node: {} (@{})", getDynamicTree().getUniqueId(node), System.identityHashCode(node));
                 getDynamicTree().recreateChildNodes(node);
             }
@@ -647,14 +656,11 @@ public class EntityTree extends JPanel implements ActivatableView {
     public Collection<DefaultMutableTreeNode> getNodesByEntityDataId(Long entityDataId) {
         return entityDataIdToNodeMap.get(entityDataId);
     }
-
-    public static String getChildUniqueId(String parentUniqueId, EntityData entityData) {
-        String uniqueId = parentUniqueId;
-        uniqueId += "/ed_" + entityData.getId();
-        uniqueId += "/e_" + entityData.getChildEntity().getId();
-        return uniqueId;
+    
+    public String getRootUniqueId() {
+    	return "/e_"+rootEntityData.getChildEntity().getId();
     }
-
+    
     public String getCurrUniqueId() {
         return getDynamicTree().getUniqueId(getDynamicTree().getCurrentNode());
     }

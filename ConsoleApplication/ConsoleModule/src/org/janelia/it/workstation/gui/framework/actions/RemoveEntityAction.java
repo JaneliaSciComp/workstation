@@ -111,11 +111,10 @@ public class RemoveEntityAction implements Action {
 	                            // references, the user will be warned about them before the tree is deleted.
 	                            removeTree.add(ed);
 	                        }
-	                        else if (ed.getId()==null) {
-	                            // User wants to delete the root, but it's referenced elsewhere. So let's just remove the 
-	                            // common root tag, but leave the tree intact, so that it remains in the other places it 
-	                            // is referenced.
+	                        else if (ed.getParentEntity().getEntityTypeName().equals(EntityConstants.TYPE_WORKSPACE)) {
+	                            // User wants to delete the workspace reference to the root, which makes it no longer a root.
 	                            removeRootTag.add(ed);
+	                            removeReference.add(ed);
 	                        }
 	                        else {
 	                            // User wants to delete a reference to the root.
@@ -253,18 +252,15 @@ public class RemoveEntityAction implements Action {
     							    log.debug("Demoting to common root: "+ed.getChildEntity().getName());
     								ModelMgr.getModelMgr().demoteCommonRootToFolder(ed.getChildEntity());
     							}
-    							else if (removeReference.contains(ed)) {
+    							if (removeReference.contains(ed)) {
     							    setStatus("Removing reference "+ed.getId());
     							    log.debug("Removing reference: "+ed.getId());
     								ModelMgr.getModelMgr().removeEntityData(ed);
     							} 
-    							else if (removeTree.contains(ed)) {
+    							if (removeTree.contains(ed)) {
     							    setStatus("Removing tree "+ed.getChildEntity().getName());
     							    log.debug("Removing tree: "+ed.getChildEntity().getId());
     								ModelMgr.getModelMgr().deleteEntityTree(ed.getChildEntity().getId());
-    							}
-    							else {
-    								throw new IllegalStateException("Unknown deletion type for EntityData.id="+ed.getId());
     							}
     						}
     					}

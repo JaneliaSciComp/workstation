@@ -87,28 +87,33 @@ public class EntityContextMenu extends JPopupMenu {
     private static final Lock copyFileLock = new ReentrantLock();
     
     // Current selection
-    protected final List<RootedEntity> rootedEntityList;
-    protected final RootedEntity rootedEntity;
-    protected final boolean multiple;
+    protected List<RootedEntity> rootedEntityList;
+    protected RootedEntity rootedEntity;
+    protected boolean multiple;
         
     // Internal state
     protected boolean nextAddRequiresSeparator = false;
 
+    public EntityContextMenu() {
+    }
+    
     public EntityContextMenu(List<RootedEntity> rootedEntityList) {
+        init(rootedEntityList);
+    }
+
+    public  EntityContextMenu(RootedEntity rootedEntity) {
+        List<RootedEntity> rootedEntityList = new ArrayList<RootedEntity>();
+        rootedEntityList.add(rootedEntity);
+        init(rootedEntityList);
+    }
+    
+    public final void init(List<RootedEntity> rootedEntityList) {
         this.rootedEntityList = rootedEntityList;
         this.rootedEntity = rootedEntityList.size() == 1 ? rootedEntityList.get(0) : null;
         this.multiple = rootedEntityList.size() > 1;
         if (!multiple) {
             checkNotNull(rootedEntity, "Rooted entity cannot be null");
         }
-    }
-
-    public EntityContextMenu(RootedEntity rootedEntity) {
-        this.rootedEntity = rootedEntity;
-        this.rootedEntityList = new ArrayList<RootedEntity>();
-        rootedEntityList.add(rootedEntity);
-        this.multiple = false;
-        checkNotNull(rootedEntity, "Rooted entity cannot be null");
     }
     
     public void addMenuItems() {
@@ -1048,7 +1053,7 @@ public class EntityContextMenu extends JPopupMenu {
 
         for (EntityData rootEd : rootEds) {
             final Entity commonRoot = rootEd.getChildEntity();
-            if (!ModelMgrUtils.hasWriteAccess(commonRoot))
+            if (commonRoot==null || !ModelMgrUtils.hasWriteAccess(commonRoot))
                 continue;
 
             JMenuItem commonRootItem = new JMenuItem(commonRoot.getName());
@@ -1309,7 +1314,6 @@ public class EntityContextMenu extends JPopupMenu {
             }
         });
 
-        sortItem.setEnabled(ModelMgrUtils.hasWriteAccess(targetEntity));
         return sortItem;
     }
     

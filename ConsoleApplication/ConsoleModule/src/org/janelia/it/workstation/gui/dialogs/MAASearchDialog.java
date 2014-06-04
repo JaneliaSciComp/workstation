@@ -177,14 +177,7 @@ public class MAASearchDialog extends ModalDialog implements Accessibility, Actio
 			@Override
 			protected void doStuff() throws Exception {
 
-				Entity topLevelFolder = null;
-				for (Entity entity : ModelMgr.getModelMgr().getCommonRootEntities()) {
-					if (entity.getName().equals(ScreenEvalConstants.TOP_LEVEL_FOLDER_NAME)
-							&& ModelMgrUtils.isOwner(entity)) {
-						topLevelFolder = entity;
-					}
-				}
-
+				Entity topLevelFolder = ModelMgr.getModelMgr().getOwnedCommonRootByName(ScreenEvalConstants.TOP_LEVEL_FOLDER_NAME);
 				if (topLevelFolder == null) {
 					return;
 				}

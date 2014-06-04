@@ -66,15 +66,15 @@ public class DynamicTree extends JPanel implements Refreshable {
         tree.setLargeModel(true);
 
         tree.addMouseListener(new MouseAdapter() {
+            @Override
             public void mouseReleased(MouseEvent e) {
-
                 int row = tree.getRowForLocation(e.getX(), e.getY());
                 if (e.isPopupTrigger()) {
-                    tree.setSelectionRow(row);
+                    if (tree.getSelectionCount()<=1 && !e.isShiftDown()) tree.setSelectionRow(row);
                     showPopupMenu(e);
                     return;
                 }
-                if (row >= 0) {
+                if (row >= 0 && !e.isShiftDown()) {
                     // This masking is to make sure that the right button is being double clicked, not left and then right or right and then left
                     if (e.getClickCount() == 2 && e.getButton() == MouseEvent.BUTTON1 && (e.getModifiersEx() | InputEvent.BUTTON3_MASK) == InputEvent.BUTTON3_MASK) {
                         nodeDoubleClicked(e);
@@ -84,17 +84,17 @@ public class DynamicTree extends JPanel implements Refreshable {
                     }
                 }
             }
-
+            @Override
             public void mousePressed(MouseEvent e) {
                 // We have to also listen for mousePressed because OSX generates the popup trigger here
                 // instead of mouseReleased like any sane OS.
                 int row = tree.getRowForLocation(e.getX(), e.getY());
                 if (e.isPopupTrigger()) {
-                    tree.setSelectionRow(row);
+                    if (tree.getSelectionCount()<=1 && !e.isShiftDown()) tree.setSelectionRow(row);
                     showPopupMenu(e);
                     return;
                 }
-                if (row >= 0) {
+                if (row >= 0 && !e.isShiftDown()) {
                     nodePressed(e);
                 }
             }

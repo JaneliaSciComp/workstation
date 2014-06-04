@@ -134,12 +134,6 @@ public abstract class EntityTransferHandler extends TransferHandler {
                 TreePath targetPath = dl.getPath();
                 DefaultMutableTreeNode targetNode = (DefaultMutableTreeNode) targetPath.getLastPathComponent();
 
-                // Can't moved to the root unless it's visible
-                if (!targetEntityTree.getTree().isRootVisible() && targetNode.isRoot()) {
-                    log.debug("Disallow transfer because target node is a root");
-                    return false;
-                }
-
                 JComponent sourceComponent = (JComponent) support.getTransferable().getTransferData(sourceFlavor);
 
                 // Derive unique TreePaths for the source entities. It will allow us to enforce some tree-based rules.
@@ -156,6 +150,10 @@ public abstract class EntityTransferHandler extends TransferHandler {
                     int[] selRows = jtree.getSelectionRows();
                     if (selRows != null && selRows.length > 0) {
                         TreePath path = jtree.getPathForRow(selRows[0]);
+                        if (path.getLastPathComponent().equals(targetNode)) {
+                            log.debug("Disallow transfer of nodes into one of the selected nodes");
+                            return false;
+                        }
                         if (path != null) {
                             sourcePaths.add(path);
                         }
@@ -376,6 +374,9 @@ public abstract class EntityTransferHandler extends TransferHandler {
                 while (enumeration.hasMoreElements()) {
                     DefaultMutableTreeNode childNode = (DefaultMutableTreeNode) enumeration.nextElement();
                     EntityData ed = entityTree.getEntityData(childNode);
+                    // TODO: This check is not exactly correct. If the entity already exists in the target, then this will assume we're reordering, 
+                    // when really we're copying in a duplicate. That leads to some unwanted behavior, but fixing it is a large task, and we're 
+                    // going to replace this entirely with NetBeans stuff in the future, so it's probably not worth fixing right now.
                     if (ed != null && ed.getChildEntity() != null && Utils.areSameEntity(rootedEntity.getEntity(), ed.getChildEntity())) {
                         log.debug("  This is a reordering, so we'll delete the source: " + ed.getId());
                         deleteSourceEds = true;

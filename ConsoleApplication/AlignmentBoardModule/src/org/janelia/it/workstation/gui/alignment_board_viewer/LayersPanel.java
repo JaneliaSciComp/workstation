@@ -30,6 +30,7 @@ import javax.swing.tree.TreePath;
 
 import org.janelia.it.workstation.api.entity_model.events.EntityInvalidationEvent;
 import org.janelia.it.workstation.api.entity_model.management.ModelMgr;
+import org.janelia.it.workstation.api.entity_model.management.ModelMgrUtils;
 import org.janelia.it.workstation.gui.alignment_board_viewer.masking.FileStats;
 import org.janelia.it.workstation.gui.framework.outline.EntityTransferHandler;
 import org.janelia.it.workstation.gui.framework.outline.Refreshable;
@@ -60,6 +61,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.common.eventbus.Subscribe;
+
 import java.util.ArrayList;
 
 /**
@@ -351,7 +353,7 @@ public class LayersPanel extends JPanel implements Refreshable {
             @Override
             protected void doStuff() throws Exception {
                 log.trace("load alignment board with id: {}",alignmentBoardId);
-                Entity commonRoot = ModelMgr.getModelMgr().getCommonRootEntityByName(ALIGNMENT_BOARDS_FOLDER);
+                Entity commonRoot = ModelMgr.getModelMgr().getOwnedCommonRootByName(ALIGNMENT_BOARDS_FOLDER);
                 ModelMgr.getModelMgr().loadLazyEntity(commonRoot, false);
                 RootedEntity commonRootedEntity = new RootedEntity(commonRoot);
                 RootedEntity abRootedEntity = commonRootedEntity.getChildById(alignmentBoardId);

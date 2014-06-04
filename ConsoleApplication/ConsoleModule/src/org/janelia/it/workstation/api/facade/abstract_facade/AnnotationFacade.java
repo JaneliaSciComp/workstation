@@ -4,6 +4,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import org.janelia.it.jacs.compute.api.ComputeException;
 import org.janelia.it.jacs.model.entity.Entity;
 import org.janelia.it.jacs.model.entity.EntityData;
 import org.janelia.it.jacs.shared.annotation.DataDescriptor;
@@ -17,13 +18,13 @@ import org.janelia.it.jacs.shared.annotation.FilterResult;
  * Time: 9:33 AM
  */
 public interface AnnotationFacade {
-	
+
     public List<Entity> getAnnotationsForEntity(Long entityId) throws Exception;
 
     public List<Entity> getAnnotationsForEntities(List<Long> entityIds) throws Exception;
-    
+
     public long getNumDescendantsAnnotated(Long entityId) throws Exception;
-    
+
     public List<Entity> getAnnotationsForChildren(Long entityId) throws Exception;
 
     public List<Entity> getEntitiesForAnnotationSession(Long annotationSessionId) throws Exception;
@@ -35,11 +36,11 @@ public interface AnnotationFacade {
     public List<Long> getEntityIdsInAlignmentSpace(String opticalRes, String pixelRes, List<Long> guids) throws Exception;
 
     public Set<Long> getCompletedEntityIds(Long annotationSessionId) throws Exception;
-    
+
     public void removeAnnotation(Long annotationId) throws Exception;
 
     public void removeAllOntologyAnnotationsForSession(Long annotationSessionId) throws Exception;
-    
+
     public Object[] getPatternAnnotationQuantifierMapsFromSummary() throws Exception;
 
     public Object[] getMaskQuantifierMapsFromSummary(String maskFolderName) throws Exception;
@@ -51,12 +52,12 @@ public interface AnnotationFacade {
     public List<String> patternSearchGetCompartmentList(String type) throws Exception;
 
     public FilterResult patternSearchGetFilteredResults(String type, Map<String, Set<DataFilter>> filterMap) throws Exception;
-    
-	public Entity createDataSet(String dataSetName) throws Exception;
-	
-	public List<Entity> getDataSets() throws Exception;
-	
-	public Entity createAlignmentBoard(String alignmentBoardName, String alignmentSpace, String opticalRes, String pixelRes) throws Exception;
-	
-	public EntityData addAlignedItem(Entity parentEntity, Entity child, String alignedItemName, boolean visible) throws Exception;
+
+    public Entity createDataSet(String dataSetName) throws Exception;
+
+    public List<Entity> getDataSets() throws Exception;
+
+    public Entity createAlignmentBoard(String alignmentBoardName, String alignmentSpace, String opticalRes, String pixelRes) throws Exception;
+
+    public EntityData addAlignedItem(Entity parentEntity, Entity child, String alignedItemName, boolean visible) throws Exception;
 }
