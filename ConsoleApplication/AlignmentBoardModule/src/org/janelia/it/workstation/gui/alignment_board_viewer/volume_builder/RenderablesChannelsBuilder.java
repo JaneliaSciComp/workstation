@@ -17,6 +17,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.media.opengl.GL2;
+import javax.media.opengl.GL2GL3;
 import java.nio.ByteOrder;
 import java.util.Collection;
 
@@ -203,7 +204,7 @@ public class RenderablesChannelsBuilder extends RenderablesVolumeBuilder impleme
 
         TextureDataI textureData;
         double downSampleRate = settings.getAcceptedDownsampleRate();
-        if ( downSampleRate != 0.0   &&   downSampleRate != 1.0 ) {
+        if ( downSampleRate > 1.0 ) {
             DownSampler downSampler = new DownSampler( paddedSx, paddedSy, paddedSz );
             DownSampler.DownsampledTextureData downSampling = downSampler.getDownSampledVolume(
                     channelVolumeData,
@@ -250,11 +251,11 @@ public class RenderablesChannelsBuilder extends RenderablesVolumeBuilder impleme
          */
 
         if ( bytesPerChannel == 1 )
-            textureData.setExplicitVoxelComponentType( GL2.GL_BYTE ); //GL2.GL_UNSIGNED_INT_8_8_8_8 );
+            textureData.setExplicitVoxelComponentType( GL2GL3.GL_BYTE );
         else if ( bytesPerChannel == 2 )
-            textureData.setExplicitVoxelComponentType( GL2.GL_UNSIGNED_SHORT );
-        textureData.setExplicitVoxelComponentOrder( GL2.GL_RGBA );
-        textureData.setExplicitInternalFormat( GL2.GL_RGBA );
+            textureData.setExplicitVoxelComponentType( GL2GL3.GL_UNSIGNED_SHORT );
+        textureData.setExplicitVoxelComponentOrder(GL2GL3.GL_RGBA);
+        textureData.setExplicitInternalFormat(GL2GL3.GL_RGBA);
 
         textureData.setRenderables( renderableBeans );
 
@@ -294,6 +295,18 @@ public class RenderablesChannelsBuilder extends RenderablesVolumeBuilder impleme
 
 
     //----------------------------------------HELPER METHODS
+    @SuppressWarnings("unused")
+    private void dumpVolume() {
+        int nonZeroCount = 0;
+        for ( int i = 0; i < channelVolumeData.length(); i++ ) {
+            byte value = channelVolumeData.getValueAt( i );
+            if ( value > 0 ) {
+                nonZeroCount ++;
+            }
+        }
+        logger.info("Found {} non-zero values in channel/signal texture.", nonZeroCount);
+    }
+
     /** Call this prior to any update-data operations. */
     private void init() {
         if ( needsChannelInit) {

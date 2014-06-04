@@ -35,7 +35,7 @@ public class TextureMediator {
     private TextureDataI textureData;
     private final Logger logger = LoggerFactory.getLogger( TextureMediator.class );
 
-    private Map<Integer,String> glConstantToName;
+    private static Map<Integer,String> glConstantToName;
 
     public static int[] genTextureIds( GL2 gl, int count ) {
         int[] rtnVal = new int[ count ];
@@ -536,7 +536,7 @@ public class TextureMediator {
     }
 
     /** Gets a string name of an OpenGL constant used in this class.  For debugging purposes. */
-    private String getConstantName( Integer openGlEnumConstant ) {
+    public static String getConstantName( Integer openGlEnumConstant ) {
         String rtnVal;
         if ( glConstantToName == null ) {
             glConstantToName = new HashMap<Integer,String>();

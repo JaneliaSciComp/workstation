@@ -67,4 +67,34 @@ public class FileStats {
     }
 
     public int getItemCount() { return channelAverageMap.size(); }
+
+    @SuppressWarnings("unused")
+    public void dumpChannelAverages() {
+        double[] maxima = new double[3];
+        for (Long key: channelAverageMap.keySet()) {
+            double[] avg = channelAverageMap.get(key);
+            if ( avg.length > 2 ) {
+                System.out.println("Average for ID " + key + ": ["+avg[0]+","+avg[1]+","+avg[2]+"]");
+                accumulateMaxima(avg, maxima, 0);
+                accumulateMaxima(avg, maxima, 1);
+                accumulateMaxima(avg,maxima,2);
+            }
+            else if (avg.length > 1) {
+                System.out.println("Average for ID " + key + ": ["+avg[0]+","+avg[1]+"]");
+                accumulateMaxima(avg, maxima, 0);
+                accumulateMaxima(avg, maxima, 1);
+            }
+            else {
+                System.out.println("Average for ID " + key + ": ["+avg[0]+"]");
+                accumulateMaxima(avg, maxima, 0);
+            }
+        }
+        System.out.println("Max avg red = " + maxima[0] + ", max avg green = " + maxima[1] + ", max avg blue = " + maxima[2]);
+    }
+    
+    private void accumulateMaxima( double[] avg, double[] maxima, int inx ) {
+        if ( avg[inx] > maxima[inx] ) {
+            maxima[inx] = avg[inx];
+        }
+    }
 }
