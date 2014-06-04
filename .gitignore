@@ -1,6 +1,7 @@
 flyworkstation.log
 workstation.log
 build
+build_eclipse
 dist
 private
 jacs/src/org/janelia/it/jacs/server/ie/jaxb

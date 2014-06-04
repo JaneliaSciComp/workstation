@@ -312,16 +312,19 @@ public abstract class EntityOutline extends EntityTree implements Refreshable, A
             refresh(false, true, null);
         }
         else {
-        for(Entity entity : event.getInvalidatedEntities()) {
-            if (entity.getId().equals(root.getId())) {
-                try {
-                    root = ModelMgr.getModelMgr().getEntityById(root.getId());
-                }
-                catch (Exception e) {
-                    SessionMgr.getSessionMgr().handleException(e);
+            for(Entity entity : event.getInvalidatedEntities()) {
+                if (entity.getId().equals(root.getId())) {
+                    try {
+                        root = ModelMgr.getModelMgr().getEntityById(root.getId());
+                        DefaultMutableTreeNode rootNode = selectedTree.getRootNode();
+                        getEntityData(rootNode).setChildEntity(root);
+                        getDynamicTree().recreateChildNodes(rootNode);
+                    }
+                    catch (Exception e) {
+                        SessionMgr.getSessionMgr().handleException(e);
+                    }
                 }
             }
-        }
         }
     }
     
@@ -503,7 +506,7 @@ public abstract class EntityOutline extends EntityTree implements Refreshable, A
             DefaultMutableTreeNode ancestor = getNodeByUniqueId(ancestorId);
             if (ancestor == null) {
                 // Give up, can't find the entity with this uniqueId
-                log.warn("expandByUniqueId cannot locate " + uniqueId);
+                log.warn("expandByUniqueId cannot locate " + ancestorId);
                 return;
             }
             if (!getDynamicTree().childrenAreLoaded(ancestor)) {

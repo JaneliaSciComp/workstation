@@ -962,9 +962,14 @@ public class EntityModel {
     public Entity createCommonRootFolder(Long workspaceId, String folderName) throws Exception {
         Entity commonRoot = null;
         synchronized (this) {
-            commonRoot = annotationFacade.createFolderInWorkspace(workspaceId, folderName);
+            EntityData commonRootEd = entityFacade.createFolderInWorkspace(workspaceId, folderName);
+            commonRoot = putOrUpdate(commonRootEd.getChildEntity());
+            
+            // Update in-memory workspace entity 
+            Entity workspace = getEntityById(workspaceId);
+            workspace.getEntityData().add(commonRootEd);
+            
             log.debug("Created new common root: {}", EntityUtils.identify(commonRoot));
-            commonRoot = putOrUpdate(commonRoot);
             Collection<Long> ids = new ArrayList<Long>();
             ids.add(workspaceId);
             invalidate(ids);
@@ -1056,7 +1061,7 @@ public class EntityModel {
         synchronized (this) {
             if (workspaceCache.isEmpty()) {
                 log.debug("Getting workspaces");
-                for (Entity workspace : annotationFacade.getWorkspaces()) {
+                for (Entity workspace : entityFacade.getWorkspaces()) {
                     loadLazyEntity(workspace, false);
                     workspaceCache.put(workspace.getId(), workspace);
                 }

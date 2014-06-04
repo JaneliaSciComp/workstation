@@ -220,6 +220,20 @@ public class EJBEntityFacade implements EntityFacade {
     	return EJBFactory.getRemoteEntityBean().saveOrUpdatePermission(SessionMgr.getSubjectKey(), eap);
     }
 
+    @Override
+    public List<Entity> getWorkspaces() throws Exception {
+    	return EJBFactory.getRemoteEntityBean().getWorkspaces(SessionMgr.getSubjectKey());
+    }
+
+    @Override
+    public EntityData addRootToWorkspace(Long workspaceId, Long entityId) throws Exception {
+    	return EJBFactory.getRemoteEntityBean().addRootToWorkspace(SessionMgr.getSubjectKey(), workspaceId, entityId);
+    }
+    
+    @Override
+    public EntityData createFolderInWorkspace(Long workspaceId, String entityName) throws Exception {
+    	return EJBFactory.getRemoteEntityBean().createFolderInWorkspace(SessionMgr.getSubjectKey(), workspaceId, entityName);
+    }
 
     // Addition of the interface for the Tiled Microscope Data
     @Override

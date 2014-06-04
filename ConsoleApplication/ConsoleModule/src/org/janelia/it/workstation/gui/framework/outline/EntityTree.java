@@ -170,7 +170,7 @@ public class EntityTree extends JPanel implements ActivatableView {
         entityDataIdToNodeMap.clear();
         entityIdToNodeMap.clear();
         uniqueIdToNodeMap.clear();
-
+        
         // Dummy ed for the root
         EntityData rootEd = new EntityData();
         rootEd.setChildEntity(rootEntity);
@@ -178,6 +178,10 @@ public class EntityTree extends JPanel implements ActivatableView {
         createNewTree(rootEd);
 
         if (rootEntity != null) {
+            
+            uniqueIdToNodeMap.put(getRootUniqueId(), selectedTree.getRootNode());
+            entityIdToNodeMap.put(rootEntity.getId(), selectedTree.getRootNode());
+        
             addNodes(null, rootEd, 0);
         }
 
