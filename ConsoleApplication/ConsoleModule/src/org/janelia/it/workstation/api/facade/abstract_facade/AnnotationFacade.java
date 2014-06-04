@@ -60,10 +60,4 @@ public interface AnnotationFacade {
     public Entity createAlignmentBoard(String alignmentBoardName, String alignmentSpace, String opticalRes, String pixelRes) throws Exception;
 
     public EntityData addAlignedItem(Entity parentEntity, Entity child, String alignedItemName, boolean visible) throws Exception;
-
-    public List<Entity> getWorkspaces() throws Exception;
-
-    public void addRootToWorkspace(Long workspaceId, Long entityId) throws Exception;
-
-    public Entity createFolderInWorkspace(Long workspaceId, String entityName) throws Exception;
 }

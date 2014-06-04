@@ -131,19 +131,4 @@ public class EJBAnnotationFacade extends EJBEntityFacade implements AnnotationFa
     public EntityData addAlignedItem(Entity parentEntity, Entity child, String alignedItemName, boolean visible) throws Exception {
         return EJBFactory.getRemoteAnnotationBean().addAlignedItem(parentEntity, child, alignedItemName, visible);
     }
-    
-    @Override
-    public List<Entity> getWorkspaces() throws Exception {
-    	return EJBFactory.getRemoteAnnotationBean().getWorkspaces(SessionMgr.getSubjectKey());
-    }
-
-    @Override
-    public void addRootToWorkspace(Long workspaceId, Long entityId) throws Exception {
-    	EJBFactory.getRemoteAnnotationBean().addRootToWorkspace(SessionMgr.getSubjectKey(), workspaceId, entityId);
-    }
-    
-    @Override
-    public Entity createFolderInWorkspace(Long workspaceId, String entityName) throws Exception {
-    	return EJBFactory.getRemoteAnnotationBean().createFolderInWorkspace(SessionMgr.getSubjectKey(), workspaceId, entityName);
-    }
 }
