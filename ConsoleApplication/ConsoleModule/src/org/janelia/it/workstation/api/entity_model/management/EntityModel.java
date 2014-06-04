@@ -962,9 +962,14 @@ public class EntityModel {
     public Entity createCommonRootFolder(Long workspaceId, String folderName) throws Exception {
         Entity commonRoot = null;
         synchronized (this) {
-            commonRoot = entityFacade.createFolderInWorkspace(workspaceId, folderName);
+            EntityData commonRootEd = entityFacade.createFolderInWorkspace(workspaceId, folderName);
+            commonRoot = putOrUpdate(commonRootEd.getChildEntity());
+            
+            // Update in-memory workspace entity 
+            Entity workspace = getEntityById(workspaceId);
+            workspace.getEntityData().add(commonRootEd);
+            
             log.debug("Created new common root: {}", EntityUtils.identify(commonRoot));
-            commonRoot = putOrUpdate(commonRoot);
             Collection<Long> ids = new ArrayList<Long>();
             ids.add(workspaceId);
             invalidate(ids);

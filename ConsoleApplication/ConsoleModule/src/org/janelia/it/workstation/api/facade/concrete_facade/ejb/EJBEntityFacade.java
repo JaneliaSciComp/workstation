@@ -226,12 +226,12 @@ public class EJBEntityFacade implements EntityFacade {
     }
 
     @Override
-    public void addRootToWorkspace(Long workspaceId, Long entityId) throws Exception {
-    	EJBFactory.getRemoteEntityBean().addRootToWorkspace(SessionMgr.getSubjectKey(), workspaceId, entityId);
+    public EntityData addRootToWorkspace(Long workspaceId, Long entityId) throws Exception {
+    	return EJBFactory.getRemoteEntityBean().addRootToWorkspace(SessionMgr.getSubjectKey(), workspaceId, entityId);
     }
     
     @Override
-    public Entity createFolderInWorkspace(Long workspaceId, String entityName) throws Exception {
+    public EntityData createFolderInWorkspace(Long workspaceId, String entityName) throws Exception {
     	return EJBFactory.getRemoteEntityBean().createFolderInWorkspace(SessionMgr.getSubjectKey(), workspaceId, entityName);
     }
 

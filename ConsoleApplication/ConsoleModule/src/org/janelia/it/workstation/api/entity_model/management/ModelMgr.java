@@ -697,6 +697,7 @@ public class ModelMgr {
 
     public List<Entity> getWorkspaces() throws Exception {
         return entityModel.getWorkspaces();
+
     }
 
     public void setCurrentWorkspaceId(Long workspaceId) {

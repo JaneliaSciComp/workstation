@@ -11,7 +11,6 @@ import org.janelia.it.workstation.api.entity_model.management.EntitySelectionMod
 import org.janelia.it.workstation.api.entity_model.management.ModelMgr;
 import org.janelia.it.workstation.gui.dialogs.ModalDialog;
 import org.janelia.it.workstation.gui.framework.actions.OpenWithDefaultAppAction;
-import org.janelia.it.workstation.gui.framework.outline.EntityOutline;
 import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.workstation.gui.framework.table.DynamicColumn;
 import org.janelia.it.workstation.gui.framework.table.DynamicRow;
@@ -33,6 +32,10 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import org.janelia.it.jacs.model.entity.EntityConstants;
+import org.janelia.it.jacs.shared.utils.EntityUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * A dialog for performing general searches. Allows for saving the results to the entity model,
@@ -42,6 +45,8 @@ import java.util.regex.Pattern;
  */
 public class GeneralSearchDialog extends ModalDialog {
 
+    private static final Logger log = LoggerFactory.getLogger(GeneralSearchDialog.class);
+    
     /**
      * Default directory for exports
      */
@@ -115,9 +120,9 @@ public class GeneralSearchDialog extends ModalDialog {
         JLabel folderNameLabel = new JLabel("Save selected objects to folder: ");
         buttonPane.add(folderNameLabel);
 
-        folderNameField = new JTextField(10);
+        folderNameField = new JTextField(30);
         folderNameField.setToolTipText("Enter the folder name to save the results in");
-        folderNameField.setMaximumSize(new Dimension(400, 20));
+        folderNameField.setMaximumSize(new Dimension(400, 25));
         buttonPane.add(folderNameField);
 
         JButton okButton = new JButton("Save Selected");
@@ -145,8 +150,28 @@ public class GeneralSearchDialog extends ModalDialog {
 
     protected void init() {
 
-        if (StringUtils.isEmpty(folderNameField.getText()) || folderNameField.getText().matches("^Search Results #(\\d+)$")) {
-            folderNameField.setText(getNextFolderName());
+        if (StringUtils.isEmpty(folderNameField.getText()) || folderNameField.getText().matches(".*Search Results #(\\d+)$")) {
+            SimpleWorker worker = new SimpleWorker() {
+
+                private String folderName;
+
+                @Override
+                protected void doStuff() throws Exception {
+                    folderName = getNextFolderName();
+                }
+
+                @Override
+                protected void hadSuccess() {
+                    folderNameField.setText(folderName);
+                }
+
+                @Override
+                protected void hadError(Throwable error) {
+                    SessionMgr.getSessionMgr().handleException(error);
+                }
+            };
+
+            worker.execute();
         }
 
         Component browser = SessionMgr.getMainFrame();
@@ -198,17 +223,61 @@ public class GeneralSearchDialog extends ModalDialog {
 
         final SearchResults searchResults = resultsPanel.getSearchResults();
         final DynamicTable table = searchResults.getResultTreeMapping() == null ? resultsPanel.getResultsTable() : resultsPanel.getMappedResultsTable();
+        
+        if (table.getRows().isEmpty()) {
+            JOptionPane.showMessageDialog(GeneralSearchDialog.this, "There are no results to save");
+            return;
+        }
+        
         if (table.getSelectedRows().isEmpty()) {
             table.getTable().getSelectionModel().setSelectionInterval(0, table.getRows().size() - 1);
         }
-
+                 
+        final String folderNameValue = folderNameField.getText();
+        if (StringUtils.isEmpty(folderNameValue)) {
+            JOptionPane.showMessageDialog(GeneralSearchDialog.this, "Enter a folder name or path tin which to save the results");
+            return;
+        }
+        
         SimpleWorker worker = new SimpleWorker() {
 
             private RootedEntity saveFolder;
 
             @Override
             protected void doStuff() throws Exception {
+                
+                Long workspaceId = ModelMgr.getModelMgr().getCurrentWorkspaceId();
+                if (workspaceId==null) throw new IllegalStateException("No workspace is selected");
+                Entity workspace = ModelMgr.getModelMgr().getEntityById(workspaceId);
+                
+                RootedEntity searchResultsRE = new RootedEntity(workspace);
+                
+                int i = 0;
+                for(String folderName : folderNameValue.split("/")) {
+                    RootedEntity parentRE = searchResultsRE;
+                    searchResultsRE = parentRE.getChildByName(folderName);
+                    
+                    if (searchResultsRE==null) {
+                        Entity newFolder =null;
+                        if (i==0) {
+                            newFolder = ModelMgr.getModelMgr().createCommonRoot(folderName);
+                            if (folderName.equals(EntityConstants.NAME_SEARCH_RESULTS)) {
+                                ModelMgr.getModelMgr().setAttributeAsTag(newFolder, EntityConstants.ATTRIBUTE_IS_PROTECTED);
+                            }
+                        }
+                        else {
+                            newFolder = ModelMgr.getModelMgr().createEntity(EntityConstants.TYPE_FOLDER, folderName);
+                            ModelMgr.getModelMgr().addEntityToParent(parentRE.getEntity(), newFolder, parentRE.getEntity().getMaxOrderIndex() + 1, EntityConstants.ATTRIBUTE_ENTITY);
+                        }
+                        searchResultsRE = parentRE.getChildByName(folderName);
+                    }
+                    i++;
+                }
 
+                if (searchResultsRE==null) {
+                    throw new IllegalStateException("Could not create result folder");
+                }
+                
                 List<Long> childIds = new ArrayList<Long>();
                 for (DynamicRow row : table.getSelectedRows()) {
                     Object o = row.getUserObject();
@@ -219,10 +288,13 @@ public class GeneralSearchDialog extends ModalDialog {
                     else if (o instanceof EntityDocument) {
                         entity = ((EntityDocument) o).getEntity();
                     }
+                    else {
+                        throw new IllegalStateException("Unrecognized object type: "+o.getClass().getName());
+                    }
                     childIds.add(entity.getId());
                 }
-
-                saveFolder = FolderUtils.saveEntitiesToCommonRoot(folderNameField.getText(), childIds);
+                
+                saveFolder = FolderUtils.saveEntitiesToFolder(searchResultsRE, childIds);
             }
 
             @Override
@@ -252,13 +324,22 @@ public class GeneralSearchDialog extends ModalDialog {
      *
      * @return
      */
-    protected String getNextFolderName() {
-        final EntityOutline entityOutline = SessionMgr.getBrowser().getEntityOutline();
-        if (entityOutline == null) {
+    protected String getNextFolderName() throws Exception {
+        Long workspaceId = ModelMgr.getModelMgr().getCurrentWorkspaceId();
+        if (workspaceId==null) {
             return "";
         }
+        
+        Entity workspace = ModelMgr.getModelMgr().getEntityById(workspaceId);
+        Entity searchResults = EntityUtils.findChildWithNameAndType(workspace, EntityConstants.NAME_SEARCH_RESULTS, EntityConstants.TYPE_FOLDER);
+        if (searchResults==null) {
+            return EntityConstants.NAME_SEARCH_RESULTS+"/Search Results #1";
+        }
+        
+        ModelMgr.getModelMgr().loadLazyEntity(searchResults, false);
+        
         int maxNum = 0;
-        for (EntityData ed : entityOutline.getRootEntity().getEntityData()) {
+        for (EntityData ed : searchResults.getEntityData()) {
             Entity topLevelFolder = ed.getChildEntity();
             if (topLevelFolder != null) {
                 Pattern p = Pattern.compile("^Search Results #(\\d+)$");
@@ -274,7 +355,7 @@ public class GeneralSearchDialog extends ModalDialog {
                 }
             }
         }
-        return "Search Results #" + (maxNum + 1);
+        return EntityConstants.NAME_SEARCH_RESULTS+"/Search Results #" + (maxNum + 1);
     }
 
     protected synchronized void exportResults() {
