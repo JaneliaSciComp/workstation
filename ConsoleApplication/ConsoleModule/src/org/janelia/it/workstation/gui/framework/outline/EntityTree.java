@@ -393,6 +393,14 @@ public class EntityTree extends JPanel implements ActivatableView {
      */
     protected void nodeDoubleClicked(MouseEvent e) {
     }
+    
+    /**
+     * Override this method to do something when the user clicks the background.
+     *
+     * @param e
+     */
+    protected void backgroundClicked(MouseEvent e) {
+    }
 
     protected void createNewTree(EntityData root) {
 
@@ -413,6 +421,10 @@ public class EntityTree extends JPanel implements ActivatableView {
 
             protected void nodeDoubleClicked(MouseEvent e) {
                 EntityTree.this.nodeDoubleClicked(e);
+            }
+
+            protected void backgroundClicked(MouseEvent e) {
+                EntityTree.this.backgroundClicked(e);
             }
 
             @Override
@@ -535,7 +547,7 @@ public class EntityTree extends JPanel implements ActivatableView {
                 if (node == null) {
                     return null;
                 }
-                if (!getTree().isRootVisible() && node == getDynamicTree().getRootNode()) {
+                if (!getTree().isRootVisible() && node == getDynamicTree().getRootNode() && rootEntityData.getChildEntity().getId()==null) {
                     return "/";
                 }
                 StringBuffer sb = new StringBuffer();

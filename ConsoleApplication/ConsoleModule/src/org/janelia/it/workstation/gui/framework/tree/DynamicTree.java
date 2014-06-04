@@ -69,19 +69,27 @@ public class DynamicTree extends JPanel implements Refreshable {
             @Override
             public void mouseReleased(MouseEvent e) {
                 int row = tree.getRowForLocation(e.getX(), e.getY());
+                log.trace("mouseReleased row={}, e={}",row,e);
                 if (e.isPopupTrigger()) {
                     if (tree.getSelectionCount()<=1 && !e.isShiftDown()) tree.setSelectionRow(row);
                     showPopupMenu(e);
                     return;
                 }
-                if (row >= 0 && !e.isShiftDown()) {
-                    // This masking is to make sure that the right button is being double clicked, not left and then right or right and then left
-                    if (e.getClickCount() == 2 && e.getButton() == MouseEvent.BUTTON1 && (e.getModifiersEx() | InputEvent.BUTTON3_MASK) == InputEvent.BUTTON3_MASK) {
-                        nodeDoubleClicked(e);
+                // Did the user click on a node?
+                if (row >= 0) {
+                    // if shift is down, then we don't want to generate node click events, because the user is trying to manipulate multiple nodes with either DnD or the popup menu
+                    if (!e.isShiftDown()) {
+                        // This masking is to make sure that the right button is being double clicked, not left and then right or right and then left
+                        if (e.getClickCount() == 2 && e.getButton() == MouseEvent.BUTTON1 && (e.getModifiersEx() | InputEvent.BUTTON3_MASK) == InputEvent.BUTTON3_MASK) {
+                            nodeDoubleClicked(e);
+                        }
+                        else if (e.getClickCount() == 1 && e.getButton() == MouseEvent.BUTTON1) {
+                            nodeClicked(e);
+                        }
                     }
-                    else if (e.getClickCount() == 1 && e.getButton() == MouseEvent.BUTTON1) {
-                        nodeClicked(e);
-                    }
+                }
+                else {
+                    backgroundClicked(e);
                 }
             }
             @Override
@@ -89,13 +97,17 @@ public class DynamicTree extends JPanel implements Refreshable {
                 // We have to also listen for mousePressed because OSX generates the popup trigger here
                 // instead of mouseReleased like any sane OS.
                 int row = tree.getRowForLocation(e.getX(), e.getY());
+                log.trace("mousePressed row={}, e={}",row,e);
                 if (e.isPopupTrigger()) {
                     if (tree.getSelectionCount()<=1 && !e.isShiftDown()) tree.setSelectionRow(row);
                     showPopupMenu(e);
                     return;
                 }
-                if (row >= 0 && !e.isShiftDown()) {
-                    nodePressed(e);
+                // See comments for mouseReleased, they apply here as well.
+                if (row >= 0) {
+                    if (!e.isShiftDown()) {
+                        nodePressed(e);
+                    }
                 }
             }
         });
@@ -287,6 +299,14 @@ public class DynamicTree extends JPanel implements Refreshable {
      * @param e
      */
     protected void nodeDoubleClicked(MouseEvent e) {
+    }
+
+    /**
+     * Override this method to do something when the user clicks the background.
+     *
+     * @param e
+     */
+    protected void backgroundClicked(MouseEvent e) {
     }
 
     /**
