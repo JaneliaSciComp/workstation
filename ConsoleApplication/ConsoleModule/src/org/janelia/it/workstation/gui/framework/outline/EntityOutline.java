@@ -47,6 +47,7 @@ import org.slf4j.LoggerFactory;
 
 import com.google.common.eventbus.Subscribe;
 import java.util.ArrayList;
+import org.janelia.it.workstation.gui.dialogs.SetSortCriteriaDialog;
 import org.janelia.it.workstation.shared.workers.IndeterminateProgressMonitor;
 
 /**
@@ -170,8 +171,9 @@ public abstract class EntityOutline extends EntityTree implements Refreshable, A
             init(rootedEntities);
         }
 
-        public void addRootMenuItems() {
-            add(getRootItem());
+        public void addRootMenuItems() {     
+            add(getRootItem());   
+            add(getSetSortCriteriaItem());
             add(getNewRootFolderItem());
             add(getWrapperCreatorItem());
             for (JComponent item : getOpenForContextItems()) {
@@ -180,11 +182,34 @@ public abstract class EntityOutline extends EntityTree implements Refreshable, A
         }
 
         protected JMenuItem getRootItem() {
-            JMenuItem titleMenuItem = new JMenuItem("Data");
+            JMenuItem titleMenuItem = new JMenuItem(getRootEntity().getName());
             titleMenuItem.setEnabled(false);
             return titleMenuItem;
         }
 
+        protected JMenuItem getSetSortCriteriaItem() {
+
+            if (multiple) {
+                return null;
+            }
+
+            JMenuItem sortItem = new JMenuItem("  Set Sorting Criteria");
+
+            sortItem.addActionListener(new ActionListener() {
+                public void actionPerformed(ActionEvent actionEvent) {
+                    try {
+                        SetSortCriteriaDialog dialog = new SetSortCriteriaDialog();
+                        dialog.showForEntity(getRootEntity());
+                    } 
+                    catch (Exception e) {
+                        SessionMgr.getSessionMgr().handleException(e);
+                    }
+                }
+            });
+
+            return sortItem;
+        }
+        
         private JMenuItem getNewRootFolderItem() {
             if (multiple) {
                 return null;
@@ -265,7 +290,8 @@ public abstract class EntityOutline extends EntityTree implements Refreshable, A
         
         // Create context menu
         final EntityOutlineContextMenu popupMenu = new EntityOutlineContextMenu(nodes);
-        if (nodes.isEmpty()) {
+        if (nodes.isEmpty()) { 
+            ModelMgr.getModelMgr().getEntitySelectionModel().selectEntity(EntitySelectionModel.CATEGORY_OUTLINE, getRootUniqueId(), true);
             popupMenu.addRootMenuItems();
         }
         else {
@@ -275,34 +301,16 @@ public abstract class EntityOutline extends EntityTree implements Refreshable, A
         popupMenu.show(selectedTree.getTree(), e.getX(), e.getY());
     }
 
-    /**
-     * Override this method to do something when the user left clicks a node.
-     *
-     * @param e
-     */
     @Override
     protected void nodeClicked(MouseEvent e) {
         this.currUniqueId = null;
         selectNode(selectedTree.getCurrentNode());
     }
 
-    /**
-     * Override this method to do something when the user presses down on a
-     * node.
-     *
-     * @param e
-     */
     @Override
-    protected void nodePressed(MouseEvent e) {
-    }
-
-    /**
-     * Override this method to do something when the user double clicks a node.
-     *
-     * @param e
-     */
-    @Override
-    protected void nodeDoubleClicked(MouseEvent e) {
+    protected void backgroundClicked(MouseEvent e) {
+        this.currUniqueId = null;
+        ModelMgr.getModelMgr().getEntitySelectionModel().selectEntity(EntitySelectionModel.CATEGORY_OUTLINE, getRootUniqueId(), true);
     }
 
     @Override

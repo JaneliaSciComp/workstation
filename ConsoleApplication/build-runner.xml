@@ -44,7 +44,7 @@ of adapter.
 
     <target name="debug" description="Debug application">
         <ant antfile="build.xml" target="run">
-            <property name="run.args.extra" value="-J-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=5005"/>
+            <property name="run.args.extra" value="-J-Xmx16000m -J-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=5005"/>
         </ant>
     </target>
 

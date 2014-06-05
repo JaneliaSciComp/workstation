@@ -58,7 +58,6 @@ public class ModelUtils {
 
         List<EntityData> eds = new ArrayList<EntityData>(entity.getEntityData());
         if (!areLoaded(eds)) {
-            log.warn("Cannot sort unloaded children for {}", entity.getName());
             return entity.getOrderedEntityData();
         }
 

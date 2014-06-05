@@ -230,7 +230,7 @@ public class EntityModel {
                 }
             }
             catch (Throwable e) {
-                log.error("Error trying to walk entity " + entity.getId());
+                log.error("Error trying to walk entity " + entity.getId(), e);
                 SessionMgr.getSessionMgr().handleException(e);
             }
         }
@@ -953,8 +953,9 @@ public class EntityModel {
     }
 
     /**
-     * Create a new common root folder and cache it.
-     *
+     * Create a new common root folder in the given workspace.
+     * 
+     * @param workspaceId
      * @param folderName
      * @return canonical entity instance
      * @throws Exception
@@ -963,16 +964,18 @@ public class EntityModel {
         Entity commonRoot = null;
         synchronized (this) {
             EntityData commonRootEd = entityFacade.createFolderInWorkspace(workspaceId, folderName);
-            commonRoot = putOrUpdate(commonRootEd.getChildEntity());
             
             // Update in-memory workspace entity 
             Entity workspace = getEntityById(workspaceId);
             workspace.getEntityData().add(commonRootEd);
             
-            log.debug("Created new common root: {}", EntityUtils.identify(commonRoot));
-            Collection<Long> ids = new ArrayList<Long>();
-            ids.add(workspaceId);
-            invalidate(ids);
+            // Link to the correct workspace entity
+            commonRootEd.setParentEntity(workspace);
+            
+            // Finally we can cache the new common root
+            commonRoot = putOrUpdate(commonRootEd.getChildEntity());
+            
+            notifyEntityCreated(commonRoot);
         }
         return commonRoot;
     }
@@ -1060,10 +1063,12 @@ public class EntityModel {
     public List<Entity> getWorkspaces() throws Exception {
         synchronized (this) {
             if (workspaceCache.isEmpty()) {
-                log.debug("Getting workspaces");
+                log.info("Getting workspaces from database");
                 for (Entity workspace : entityFacade.getWorkspaces()) {
                     loadLazyEntity(workspace, false);
-                    workspaceCache.put(workspace.getId(), workspace);
+                    Entity cachedRoot = putOrUpdate(workspace, false);
+                    workspaceCache.put(workspace.getId(), cachedRoot);
+                    
                 }
             }
         }
@@ -1088,6 +1093,29 @@ public class EntityModel {
         }
         return results;
     }
+    
+    /**
+     * Returns the first root in the given workspace with the specified name.
+     * If no root exists, create it and then return it. This method ensures that 
+     * the workspace entity gets updated as well.
+     *
+     * @param workspaceId
+     * @param name
+     * @return
+     * @throws Exception
+     */
+    public Entity getOrCreateCommonRootByName(Long workspaceId, String name) throws Exception {
+        List<Entity> matching = getCommonRootsByName(workspaceId, name);
+        Entity result;
+        if (matching.isEmpty()) {
+            result = createCommonRootFolder(workspaceId, name);
+        }
+        else {
+            result = matching.get(0);    
+        }
+        return result;
+    }
+    
 
     /**
      * Returns the first common root with a given name which is owned by the user.
@@ -1142,7 +1170,7 @@ public class EntityModel {
 
     /**
      * Create a new Alignment board and cache it.
-     *
+     * 
      * @param boardName Name of the Alignment Board
      * @return canonical entity instance
      * @throws Exception
@@ -1150,23 +1178,15 @@ public class EntityModel {
     public RootedEntity createAlignmentBoard(Long workspaceId, String alignmentBoardName, String alignmentSpace, String opticalRes, String pixelRes) throws Exception {
         synchronized (this) {
 
+            Entity alignmentBoardFolder = getOrCreateCommonRootByName(workspaceId, EntityConstants.NAME_ALIGNMENT_BOARDS);
             Entity boardEntity = annotationFacade.createAlignmentBoard(alignmentBoardName, alignmentSpace, opticalRes, pixelRes);
-            Entity alignmentBoardFolder = getOwnedCommonRootByName(EntityConstants.NAME_ALIGNMENT_BOARDS);
-            if (alignmentBoardFolder == null) {
-                createCommonRootFolder(workspaceId, EntityConstants.NAME_ALIGNMENT_BOARDS);
-            }
-
-            RootedEntity abRootedEntity = new RootedEntity(alignmentBoardFolder);
-
+            
+            // Reload the alignment board folder to get the new board
+            alignmentBoardFolder = reloadById(alignmentBoardFolder.getId());
             loadLazyEntity(alignmentBoardFolder, false);
-
-            EntityData childEd = null;
-            for (EntityData ed : alignmentBoardFolder.getEntityData()) {
-                if (ed.getChildEntity() != null && ed.getChildEntity().getId().equals(boardEntity.getId())) {
-                    childEd = ed;
-                }
-            }
-
+            RootedEntity abRootedEntity = new RootedEntity(alignmentBoardFolder);
+            
+            EntityData childEd = EntityUtils.findChildEntityDataWithChildId(alignmentBoardFolder, boardEntity.getId());
             if (childEd == null) {
                 throw new IllegalStateException("Could not retrieve the new alignment board");
             }
