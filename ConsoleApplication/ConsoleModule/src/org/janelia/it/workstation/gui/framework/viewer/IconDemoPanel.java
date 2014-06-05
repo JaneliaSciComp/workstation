@@ -770,6 +770,12 @@ public class IconDemoPanel extends IconPanel {
             protected void currImageSizeChanged(int imageSize) {
                 imagesPanel.setMaxImageWidth(imageSize);
                 imagesPanel.recalculateGrid();
+                SwingUtilities.invokeLater(new Runnable() {
+                    @Override
+                    public void run() {
+                        imagesPanel.scrollSelectedEntitiesToCenter();
+                    }
+                });
             }
 
             @Override
