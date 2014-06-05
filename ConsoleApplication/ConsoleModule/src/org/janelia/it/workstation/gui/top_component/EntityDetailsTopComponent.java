@@ -30,9 +30,9 @@ import javax.swing.JPanel;
         //iconBase="SET/PATH/TO/ICON/HERE", 
         persistenceType = TopComponent.PERSISTENCE_ALWAYS
 )
-@TopComponent.Registration(mode = "appExplorerBtm", openAtStartup = true)
+@TopComponent.Registration(mode = "appExplorerBtm", openAtStartup = true, position = 100)
 @ActionID(category = "Window", id = "org.janelia.it.workstation.gui.dialogs.nb.EntityDetailsTopComponent")
-@ActionReference(path = "Menu/Window" /*, position = 333 */)
+@ActionReference(path = "Menu/Window", position = 100 )
 @TopComponent.OpenActionRegistration(
         displayName = "#CTL_EntityDetailsAction",
         preferredID = "EntityDetailsTopComponent"

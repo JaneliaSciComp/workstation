@@ -4,6 +4,8 @@ package org.janelia.it.workstation.gui.alignment_board_viewer.volume_builder;
 import org.janelia.it.workstation.gui.alignment_board_viewer.MultiTexVolumeBrickFactory;
 import org.janelia.it.workstation.gui.alignment_board_viewer.masking.ConfigurableColorMapping;
 import org.janelia.it.workstation.gui.alignment_board_viewer.masking.VolumeMaskBuilder;
+import org.janelia.it.workstation.gui.opengl.GLActor;
+import org.janelia.it.workstation.gui.viewer3d.VolumeBrickActorBuilder;
 import org.janelia.it.workstation.gui.viewer3d.masking.RenderMappingI;
 import org.janelia.it.workstation.gui.viewer3d.renderable.RenderableBean;
 import org.janelia.it.workstation.gui.viewer3d.Mip3d;
@@ -228,8 +230,13 @@ public class TestMaskedMip3d {
                     }
 
                     MultiTexVolumeBrickFactory factory = new MultiTexVolumeBrickFactory();
-                    if ( ! mipWidget.loadVolume( fn, vmb, resolver, factory, colorMapping, 1.0f ) ) {
+                    VolumeBrickActorBuilder actorBuilder = new VolumeBrickActorBuilder();
+                    GLActor actor = actorBuilder.buildVolumeBrickActor(mipWidget.getVolumeModel(), factory, resolver, fn);
+                    if ( actor == null ) {
                         throw new RuntimeException( "Failed to load " + fn );
+                    }
+                    else {
+                        mipWidget.addActor(actor);
                     }
 
                     frame.getContentPane().add(mipWidget);

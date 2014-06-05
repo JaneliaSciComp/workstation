@@ -6,11 +6,14 @@ import org.janelia.it.workstation.gui.WorkstationEnvironment;
 import org.janelia.it.workstation.gui.alignment_board_viewer.masking.MultiMaskTracker;
 import org.janelia.it.workstation.gui.alignment_board_viewer.gui_elements.AlignmentBoardControlsDialog;
 import org.janelia.it.workstation.gui.alignment_board_viewer.masking.ConfigurableColorMapping;
+import org.janelia.it.workstation.gui.opengl.GLActor;
+import org.janelia.it.workstation.gui.viewer3d.VolumeBrickActorBuilder;
 import org.janelia.it.workstation.gui.viewer3d.masking.RenderMappingI;
 import org.janelia.it.workstation.gui.viewer3d.Mip3d;
 import org.janelia.it.workstation.gui.viewer3d.VolumeBrickFactory;
 import org.janelia.it.workstation.gui.viewer3d.texture.TextureDataI;
 import org.janelia.it.jacs.model.TestCategories;
+import org.janelia.it.workstation.shared.util.SystemInfo;
 import org.junit.experimental.categories.Category;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -120,12 +123,27 @@ public class TestMaskChan3DViz {
             mip3d.getVolumeModel().setGammaAdjustment( (float)AlignmentBoardSettings.DEFAULT_GAMMA );
             mip3d.getVolumeModel().setCameraDepth( new Vec3( 0.0, 0.0, 0.0 ) );
             VolumeBrickFactory volumeBrickFactory = new MultiTexVolumeBrickFactory();
-            if ( ! mip3d.setVolume(
-                    signalTexture, maskTexture, volumeBrickFactory, renderMapping, 1.0
-            ) ) {
+            VolumeBrickActorBuilder actorBuilder = new VolumeBrickActorBuilder();
+
+            GLActor brickActor = actorBuilder.buildVolumeBrickActor(mip3d.getVolumeModel(), signalTexture, maskTexture, volumeBrickFactory, renderMapping);
+            if ( brickActor == null ) {
                 logger.error( "Failed to load volume to mip3d." );
             }
-
+            else {
+                GLActor axesActor = actorBuilder.buildAxesActor(mip3d.getVolumeModel(), 1.0);
+                boolean isMac = SystemInfo.OS_NAME.contains("mac");
+                if ( isMac ) {
+                    // Enforce opaque, transparent ordering of actors.
+                    mip3d.addActor( brickActor );
+                }
+                if ( axesActor != null ) {
+                    mip3d.addActor( axesActor );
+                }
+                if ( ! isMac ) {
+                    // Must add the brick _after_ the axes for non-Mac systems.
+                    mip3d.addActor( brickActor );
+                }
+            }
         }
 
         @Override
