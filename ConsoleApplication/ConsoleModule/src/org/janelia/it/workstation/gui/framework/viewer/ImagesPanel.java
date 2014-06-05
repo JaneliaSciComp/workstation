@@ -403,7 +403,7 @@ public class ImagesPanel extends JScrollPane {
         if (lowestAspectRatio == null || aspectRatio < lowestAspectRatio) {
             this.lowestAspectRatio = aspectRatio;
             // Is this needed? Doesn't seem to be...
-//			setMaxImageWidth(maxImageWidth);
+            //setMaxImageWidth(maxImageWidth);
         }
     }
 
@@ -440,13 +440,7 @@ public class ImagesPanel extends JScrollPane {
             }
         }
     }
-
-    public void setInvertedColors(boolean inverted) {
-        for (AnnotatedImageButton button : buttons.values()) {
-            button.setInvertedColors(inverted);
-        }
-    }
-
+    
     private boolean setSelection(final AnnotatedImageButton button, boolean selection) {
         if (button.isSelected() != selection) {
             button.setSelected(selection);

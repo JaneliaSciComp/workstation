@@ -324,9 +324,6 @@ public abstract class AnnotatedImageButton extends JPanel implements DragGesture
         }
     }
 
-    public void setInvertedColors(boolean inverted) {
-    }
-
     public void setViewable(boolean wantViewable) {
     }
 

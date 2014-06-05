@@ -26,7 +26,7 @@ import java.io.File;
 public class Hud extends ModalDialog {
 
     private static final Logger log = LoggerFactory.getLogger(Hud.class);
-    
+
     public static final String THREE_D_CONTROL = "3D";
 
     private Entity entity;
@@ -36,7 +36,6 @@ public class Hud extends ModalDialog {
     private JCheckBox render3DCheckbox;
     private final JMenu rgbMenu = new JMenu("RGB Controls");
     private Hud3DController hud3DController;
-    
 
     private static Hud instance;
 
@@ -143,7 +142,7 @@ public class Hud extends ModalDialog {
                 imageEstablished = establishImage();
             }
             catch (Exception ex) {
-                log.error("Failed to establish image",ex);
+                log.error("Failed to establish image", ex);
             }
 
             if (imageEstablished) {
@@ -178,8 +177,6 @@ public class Hud extends ModalDialog {
 
             BufferedImage image = null;
             SessionMgr sessionMgr = SessionMgr.getSessionMgr();
-            Boolean invertImage
-                    = (Boolean) sessionMgr.getModelProperty(ViewerSettingsPanel.INVERT_IMAGE_COLORS_PROPERTY);
             ImageCache ic = SessionMgr.getBrowser().getImageCache();
             if (ic != null) {
                 image = ic.get(imagePath);
@@ -203,10 +200,6 @@ public class Hud extends ModalDialog {
                 rtnVal = false;
             }
             else {
-                // May need to invert the colors to conform to the current settings.
-                if (invertImage) {
-                    image = Utils.invertImage(image);
-                }
                 // Force the image to be on the screen
                 Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize();
                 if (image.getHeight() > screenSize.height) {
@@ -242,7 +235,7 @@ public class Hud extends ModalDialog {
             }
             catch (Exception ex) {
                 JOptionPane.showMessageDialog(this, "Failed to load 3D image.");
-                log.error("Failed to load 3D image",ex);
+                log.error("Failed to load 3D image", ex);
                 set3dModeEnabled(false);
                 handleRenderSelection();
 

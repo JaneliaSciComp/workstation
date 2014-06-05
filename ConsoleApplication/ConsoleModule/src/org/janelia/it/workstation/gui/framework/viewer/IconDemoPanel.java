@@ -602,17 +602,7 @@ public class IconDemoPanel extends IconPanel {
             @Override
             public void modelPropertyChanged(Object key, Object oldValue, Object newValue) {
 
-                if (ViewerSettingsPanel.INVERT_IMAGE_COLORS_PROPERTY.equals(key)) {
-                    Utils.setWaitingCursor(IconDemoPanel.this);
-                    try {
-                        imagesPanel.setInvertedColors((Boolean) newValue);
-                        imagesPanel.repaint();
-                    }
-                    finally {
-                        Utils.setDefaultCursor(IconDemoPanel.this);
-                    }
-                }
-                else if (ViewerSettingsPanel.ONLY_SESSION_ANNOTATIONS_PROPERTY.equals(key)) {
+                if (ViewerSettingsPanel.ONLY_SESSION_ANNOTATIONS_PROPERTY.equals(key)) {
                     refreshAnnotations(null);
                 }
                 else if (ViewerSettingsPanel.HIDE_ANNOTATED_PROPERTY.equals(key)) {
@@ -1160,13 +1150,8 @@ public class IconDemoPanel extends IconPanel {
         imagesPanel.setRootedEntities(getRootedEntities());
 
         // Update preferences for each button
-        Boolean invertImages = (Boolean) SessionMgr.getSessionMgr().getModelProperty(
-                ViewerSettingsPanel.INVERT_IMAGE_COLORS_PROPERTY);
         Boolean tagTable = (Boolean) SessionMgr.getSessionMgr().getModelProperty(
                 ViewerSettingsPanel.SHOW_ANNOTATION_TABLES_PROPERTY);
-        if (invertImages == null) {
-            invertImages = false;
-        }
         if (tagTable == null) {
             tagTable = false;
         }
@@ -1174,7 +1159,6 @@ public class IconDemoPanel extends IconPanel {
         imagesPanel.setTagTable(tagTable);
         imagesPanel.setTagVisbility(iconDemoToolbar.areTagsVisible());
         imagesPanel.setTitleVisbility(iconDemoToolbar.areTitlesVisible());
-        imagesPanel.setInvertedColors(invertImages);
 
         // Since the images are not loaded yet, this will just resize the empty
         // buttons so that we can calculate the grid correctly

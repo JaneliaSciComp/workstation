@@ -31,9 +31,7 @@ public abstract class DynamicImagePanel extends JPanel {
     protected final String imageFilename;
     protected final Integer maxSize;
     protected BufferedImage maxSizeImage;
-    protected BufferedImage invertedMaxSizeImage;
     protected int displaySize;
-    protected boolean inverted = false;
     protected boolean viewable = false;
 
     protected final JLabel loadingLabel;
@@ -105,15 +103,6 @@ public abstract class DynamicImagePanel extends JPanel {
     }
 
     /**
-     * Returns true if the image colors have been inverted.
-     *
-     * @return
-     */
-    public boolean isInverted() {
-        return inverted;
-    }
-
-    /**
      * Returns true if the image is viewable (loaded or loading).
      *
      * @return
@@ -132,31 +121,13 @@ public abstract class DynamicImagePanel extends JPanel {
                 // Must be currently loading, in which case this method will get called again when the loading is done
             }
             else {
-                if (inverted && invertedMaxSizeImage == null) {
-                    setInvertedColors(true);
-                }
-                BufferedImage orig = inverted ? invertedMaxSizeImage : maxSizeImage;
-                BufferedImage image = Utils.getScaledImage(orig, imageSize);
+                BufferedImage image = Utils.getScaledImage(maxSizeImage, imageSize);
                 imageLabel.setIcon(new ImageIcon(image));
             }
         }
 
         this.displaySize = imageSize;
         invalidate();
-    }
-
-    public synchronized void setInvertedColors(boolean inverted) {
-
-        this.inverted = inverted;
-        if (inverted == true && maxSizeImage != null) {
-            invertedMaxSizeImage = Utils.invertImage(maxSizeImage);
-        }
-        else {
-            // Free up memory when we don't need inverted images
-            invertedMaxSizeImage = null;
-        }
-
-        rescaleImage(displaySize);
     }
 
     /**
@@ -239,7 +210,6 @@ public abstract class DynamicImagePanel extends JPanel {
                 if (SessionMgr.getSessionMgr().isUnloadImages()) {
                     // Clear all references to the image data so that it can be cleared out of memory
                     maxSizeImage = null;
-                    invertedMaxSizeImage = null;
                     imageLabel.setIcon(null);
                     // Show the loading label until the image needs to be loaded again
                     setImageLabel(loadingLabel);
@@ -259,7 +229,7 @@ public abstract class DynamicImagePanel extends JPanel {
     }
 
     public BufferedImage getMaxSizeImage() {
-        return (inverted) ? invertedMaxSizeImage : maxSizeImage;
+        return maxSizeImage;
     }
 
     private void setMaxSizeImage(BufferedImage maxSizeImage) {
