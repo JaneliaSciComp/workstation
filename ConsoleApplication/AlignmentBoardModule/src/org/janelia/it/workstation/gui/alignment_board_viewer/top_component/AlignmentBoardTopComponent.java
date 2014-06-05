@@ -39,9 +39,9 @@ import org.slf4j.LoggerFactory;
         //iconBase="SET/PATH/TO/ICON/HERE", 
         persistenceType = TopComponent.PERSISTENCE_ALWAYS
 )
-@TopComponent.Registration(mode = "editor", openAtStartup = true)
+@TopComponent.Registration(mode = "editor", openAtStartup = false, position = 300)
 @ActionID(category = "Window", id = "AlignmentBoardTopComponent")
-@ActionReference(path = "Menu/Window" /*, position = 333 */)
+@ActionReference(path = "Menu/Window", position = 300 )
 @TopComponent.OpenActionRegistration(
         displayName = "#CTL_AlignmentBoardAction",
         preferredID = "AlignmentBoardTopComponent"

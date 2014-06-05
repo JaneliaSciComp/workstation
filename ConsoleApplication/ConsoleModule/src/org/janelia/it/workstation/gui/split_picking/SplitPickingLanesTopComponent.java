@@ -34,9 +34,9 @@ import javax.swing.JPanel;
         //iconBase="SET/PATH/TO/ICON/HERE", 
         persistenceType = TopComponent.PERSISTENCE_ALWAYS
 )
-@TopComponent.Registration(mode = "editor", openAtStartup = false)
+@TopComponent.Registration(mode = "editor", openAtStartup = false, position = 200)
 @ActionID(category = "Window", id = "SplitPickingLanesTopComponent")
-@ActionReference(path = "Menu/Window" /*, position = 333 */)
+@ActionReference(path = "Menu/Window", position = 200 )
 @TopComponent.OpenActionRegistration(
         displayName = "#CTL_SplitPickingLanesAction",
         preferredID = "SplitPickingLanesTopComponent"
