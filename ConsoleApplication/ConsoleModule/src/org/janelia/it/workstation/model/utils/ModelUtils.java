@@ -59,7 +59,6 @@ public class ModelUtils {
         }
 
         if (!EntityUtils.areLoaded(eds)) {
-            log.warn("Cannot sort unloaded entity datas for {}",entity.getName());
             return entity.getOrderedEntityData();
         }
 
