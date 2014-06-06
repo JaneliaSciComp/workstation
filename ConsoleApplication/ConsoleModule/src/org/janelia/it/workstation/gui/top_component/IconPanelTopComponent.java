@@ -15,9 +15,6 @@ import org.openide.awt.ActionReference;
 import org.openide.windows.TopComponent;
 import org.openide.util.NbBundle.Messages;
 
-import javax.swing.GroupLayout;
-import javax.swing.JPanel;
-
 /**
  * Top component which displays something.
  */
