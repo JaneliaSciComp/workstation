@@ -5,6 +5,7 @@ import java.util.*;
 import org.janelia.it.jacs.model.entity.Entity;
 import org.janelia.it.jacs.model.entity.EntityData;
 import org.janelia.it.jacs.shared.utils.EntityUtils;
+import org.janelia.it.workstation.api.entity_model.management.ModelMgrUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -102,12 +103,10 @@ public class RootedEntity {
 
     public List<RootedEntity> getChildrenOfType(String typeName) {
         List<RootedEntity> items = new ArrayList<RootedEntity>();
-        for (EntityData entityData : getEntity().getOrderedEntityData()) {
-            Entity child = entityData.getChildEntity();
-            if (child != null) {
-                if (typeName == null || typeName.equals(child.getEntityTypeName())) {
-                    items.add(getChild(entityData));
-                }
+        for (EntityData ed : ModelMgrUtils.getAccessibleEntityDatas(getEntity())) {
+            Entity child = ed.getChildEntity();
+            if (typeName == null || typeName.equals(child.getEntityTypeName())) {
+                items.add(getChild(ed));
             }
         }
         return items;
@@ -126,12 +125,9 @@ public class RootedEntity {
 
     public List<RootedEntity> getChildrenForAttribute(String attrName) {
         List<RootedEntity> items = new ArrayList<RootedEntity>();
-        for (EntityData entityData : getEntity().getOrderedEntityData()) {
-            if (attrName == null || attrName.equals(entityData.getEntityAttrName())) {
-                Entity child = entityData.getChildEntity();
-                if (child != null) {
-                    items.add(getChild(entityData));
-                }
+        for (EntityData ed : ModelMgrUtils.getAccessibleEntityDatasWithChildren(getEntity())) {
+            if (attrName == null || attrName.equals(ed.getEntityAttrName())) {
+                items.add(getChild(ed));
             }
         }
         return items;
@@ -149,23 +145,21 @@ public class RootedEntity {
     }
 
     public RootedEntity getLatestChildOfType(String entityTypeName) {
-        List<EntityData> eds = getEntity().getOrderedEntityData();
+        List<EntityData> eds = ModelMgrUtils.getAccessibleEntityDatasWithChildren(getEntity());
         Collections.reverse(eds);
         for (EntityData ed : eds) {
             Entity child = ed.getChildEntity();
-            if (child != null) {
-                if (!child.getEntityTypeName().equals(entityTypeName)) {
-                    continue;
-                }
-                return getChild(ed);
+            if (!child.getEntityTypeName().equals(entityTypeName)) {
+                continue;
             }
+            return getChild(ed);
         }
         return null;
     }
 
     public EntityData getEntityDataByAttributeName(String attributeName) {
         Set<EntityData> matchingData = new HashSet<EntityData>();
-        for (EntityData ed : getEntity().getEntityData()) {
+        for (EntityData ed : ModelMgrUtils.getAccessibleEntityDatas(getEntity())) {
             if (ed.getEntityAttrName().matches(attributeName)) {
                 matchingData.add(ed);
             }
@@ -190,10 +184,8 @@ public class RootedEntity {
     public List<RootedEntity> getRootedChildren() {
 
         List<RootedEntity> children = new ArrayList<RootedEntity>();
-        for (EntityData ed : getEntity().getEntityData()) {
-            if (ed.getChildEntity() != null) {
-                children.add(getChild(ed));
-            }
+        for (EntityData ed : ModelMgrUtils.getAccessibleEntityDatasWithChildren(getEntity())) {
+            children.add(getChild(ed));
         }
         return children;
     }

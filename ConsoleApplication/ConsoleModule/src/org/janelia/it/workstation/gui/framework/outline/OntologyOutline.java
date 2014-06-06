@@ -79,6 +79,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.common.eventbus.Subscribe;
+import org.janelia.it.workstation.api.entity_model.management.ModelMgrUtils;
 
 /**
  * The right-hand ontology panel which displays all the ontologies that a user has access to.
@@ -631,12 +632,10 @@ public abstract class OntologyOutline extends EntityTree implements Refreshable,
                     String uniqueId = getDynamicTree().getUniqueId(node);
                     RootedEntity changedRe = getRootedEntity(uniqueId);
 
-                    for (EntityData ed : changedRe.getEntity().getEntityData()) {
+                    for (EntityData ed : ModelMgrUtils.getAccessibleEntityDatasWithChildren(changedRe.getEntity())) {
                         Entity child = ed.getChildEntity();
-                        if (child != null) {
-                            RootedEntity childRe = changedRe.getChild(ed);
-                            populateActionMap(childRe);
-                        }
+                        RootedEntity childRe = changedRe.getChild(ed);
+                        populateActionMap(childRe);
                     }
                 }
             }

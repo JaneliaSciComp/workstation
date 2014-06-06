@@ -10,6 +10,7 @@ import org.janelia.it.jacs.model.entity.Entity;
 import org.janelia.it.jacs.model.entity.EntityConstants;
 import org.janelia.it.jacs.model.entity.EntityData;
 import org.janelia.it.jacs.shared.utils.EntityUtils;
+import org.janelia.it.workstation.api.entity_model.management.ModelMgrUtils;
 import org.janelia.it.workstation.model.domain.AlignmentContext;
 import org.janelia.it.workstation.model.domain.EntityWrapper;
 import org.janelia.it.workstation.model.domain.EntityWrapperFactory;
@@ -79,7 +80,7 @@ public class AlignedItem extends EntityWrapper {
         for(RootedEntity child : rootedEntity.getChildrenForAttribute(EntityConstants.ATTRIBUTE_ITEM)) {
             AlignedItem alignedItem = new AlignedItem(child);
             addChild(alignedItem);
-            if (EntityUtils.areLoaded(child.getEntity().getEntityData())) {
+            if (ModelMgrUtils.areChildrenLoaded(child.getEntity())) {
                 alignedItem.loadContextualizedChildren(alignmentContext);
             }
         }

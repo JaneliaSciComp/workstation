@@ -188,7 +188,7 @@ public class MAASearchDialog extends ModalDialog implements Accessibility, Actio
                 }
 
                 topLevelFolder = ModelMgr.getModelMgr().loadLazyEntity(topLevelFolder, false);
-                for (Entity child : topLevelFolder.getOrderedChildren()) {
+                for (Entity child : ModelMgrUtils.getAccessibleChildren(topLevelFolder)) {
                     compEntityMap.put(child.getName(), child);
                 }
             }
@@ -268,14 +268,14 @@ public class MAASearchDialog extends ModalDialog implements Accessibility, Actio
                     Entity compEntity = compEntityMap.get(compartment);
                     compEntity = ModelMgr.getModelMgr().loadLazyEntity(compEntity, false);
 
-                    for (Entity intFolder : compEntity.getOrderedChildren()) {
+                    for (Entity intFolder : ModelMgrUtils.getAccessibleChildren(compEntity)) {
                         intFolder = ModelMgr.getModelMgr().loadLazyEntity(intFolder, false);
                         int i = ScreenEvalUtils.getValueFromFolderName(intFolder);
 
-                        for (Entity distFolder : intFolder.getOrderedChildren()) {
+                        for (Entity distFolder : ModelMgrUtils.getAccessibleChildren(intFolder)) {
                             int d = ScreenEvalUtils.getValueFromFolderName(distFolder);
                             String key = ScreenEvalUtils.getKey(compartment, i, d);
-                            countMap.put(key, distFolder.getChildren().size());
+                            countMap.put(key, ModelMgrUtils.getNumAccessibleChildren(distFolder));
                             folderMap.put(key, distFolder);
                         }
                     }
@@ -501,10 +501,8 @@ public class MAASearchDialog extends ModalDialog implements Accessibility, Actio
 
             Entity distFolder = folderMap.get(key);
             List<Long> maskIds = new ArrayList<Long>();
-            for (EntityData ed : distFolder.getEntityData()) {
-                if (ed.getChildEntity() != null) {
-                    maskIds.add(ed.getChildEntity().getId());
-                }
+            for (EntityData ed : ModelMgrUtils.getAccessibleEntityDatasWithChildren(distFolder)) {
+                maskIds.add(ed.getChildEntity().getId());
             }
 
             if (!maskIds.isEmpty()) {

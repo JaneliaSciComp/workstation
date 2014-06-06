@@ -421,7 +421,7 @@ public class EntityDetailsPanel extends JPanel implements Accessibility, Refresh
 
                 Set<String> attrNames = new HashSet<String>();
 
-                List<EntityData> entityDatas = new ArrayList<EntityData>(loadedEntity.getEntityData());
+                List<EntityData> entityDatas = ModelMgrUtils.getAccessibleEntityDatas(loadedEntity);
                 Collections.sort(entityDatas, new Comparator<EntityData>() {
                     @Override
                     public int compare(EntityData o1, EntityData o2) {
@@ -430,7 +430,7 @@ public class EntityDetailsPanel extends JPanel implements Accessibility, Refresh
                 });
 
                 for (EntityData entityData : entityDatas) {
-                    if (entityData.getChildEntity() == null) {
+                        if (entityData.getChildEntity() == null) {
                         String attrName = entityData.getEntityAttrName();
                         AttributeValue attrValue = new AttributeValue(attrName, entityData.getValue());
                         attrNames.add(attrName);

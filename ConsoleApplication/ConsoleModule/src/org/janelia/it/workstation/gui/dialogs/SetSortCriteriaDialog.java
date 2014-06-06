@@ -16,7 +16,6 @@ import javax.swing.DefaultComboBoxModel;
 import javax.swing.JButton;
 import javax.swing.JComboBox;
 import javax.swing.JLabel;
-import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 
 import net.miginfocom.swing.MigLayout;
@@ -24,11 +23,11 @@ import net.miginfocom.swing.MigLayout;
 import org.janelia.it.jacs.model.entity.Entity;
 import org.janelia.it.jacs.model.entity.EntityConstants;
 import org.janelia.it.jacs.model.entity.EntityData;
-import org.janelia.it.jacs.model.entity.ForbiddenEntity;
 import org.janelia.it.jacs.shared.utils.EntityUtils;
 import org.janelia.it.jacs.shared.utils.StringUtils;
 import org.janelia.it.workstation.api.entity_model.events.EntityChangeEvent;
 import org.janelia.it.workstation.api.entity_model.management.ModelMgr;
+import org.janelia.it.workstation.api.entity_model.management.ModelMgrUtils;
 import org.janelia.it.workstation.gui.framework.access.Accessibility;
 import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.workstation.shared.util.Utils;
@@ -120,7 +119,7 @@ public class SetSortCriteriaDialog extends ModalDialog implements Accessibility 
 
         this.entity = entity;
 
-        if (!EntityUtils.areLoaded(entity.getEntityData())) {
+        if (!ModelMgrUtils.areChildrenLoaded(entity)) {
             Utils.setWaitingCursor(SessionMgr.getMainFrame());
             try {
                 ModelMgr.getModelMgr().loadLazyEntity(entity, false);
@@ -133,25 +132,20 @@ public class SetSortCriteriaDialog extends ModalDialog implements Accessibility 
 
         // Find common attributes in child entities that the user can sort by
         Map<String, Integer> attrCounts = new HashMap<String, Integer>();
-        for (Entity child : entity.getChildren()) {
-            if (child instanceof ForbiddenEntity) {
-                continue;
-            }
-            for (EntityData ed : child.getEntityData()) {
-                if (ed.getChildEntity() == null) {
-                    Integer count = attrCounts.get(ed.getEntityAttrName());
-                    if (count == null) {
-                        count = 1;
-                    }
-                    attrCounts.put(ed.getEntityAttrName(), count + 1);
+        for (Entity child : ModelMgrUtils.getAccessibleChildren(entity)) {
+            for (EntityData ed : ModelMgrUtils.getAccessibleEntityDatas(child)) {
+                Integer count = attrCounts.get(ed.getEntityAttrName());
+                if (count == null) {
+                    count = 1;
                 }
+                attrCounts.put(ed.getEntityAttrName(), count + 1);
             }
         }
 
         List<String> attrKeys = new ArrayList<String>(attrCounts.keySet());
         Collections.sort(attrKeys);
 
-        int total = entity.getChildren().size();
+        int total = ModelMgrUtils.getNumAccessibleChildren(entity);
         for (String attr : attrKeys) {
             int count = attrCounts.get(attr);
             if ((float) count / (float) total > PERCENT_PRESENT) {

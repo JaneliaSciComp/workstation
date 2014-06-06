@@ -143,11 +143,11 @@ public class EntityTreeCellRenderer extends DefaultTreeCellRenderer implements T
                 }
 
                 if (entityTypeName.equals(EntityConstants.TYPE_NEURON_FRAGMENT_COLLECTION)) {
-                    metaLabel.setText("(" + entity.getEntityData().size() + " fragments)");
+                    metaLabel.setText("(" + ModelMgrUtils.getAccessibleChildren(entity).size() + " fragments)");
                 }
 
                 if (entityTypeName.equals(EntityConstants.TYPE_CURATED_NEURON_COLLECTION)) {
-                    metaLabel.setText("(" + entity.getEntityData().size() + " items)");
+                    metaLabel.setText("(" + ModelMgrUtils.getAccessibleChildren(entity).size() + " items)");
                 }
 
                 if (isHighlighted(entity)) {

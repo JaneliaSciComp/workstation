@@ -1,7 +1,5 @@
 package org.janelia.it.workstation.model.utils;
 
-import static org.janelia.it.jacs.shared.utils.EntityUtils.areLoaded;
-
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -21,6 +19,8 @@ import com.google.common.collect.ComparisonChain;
 import com.google.common.collect.Ordering;
 
 import org.janelia.it.jacs.model.entity.ForbiddenEntity;
+import org.janelia.it.jacs.shared.utils.EntityUtils;
+import org.janelia.it.workstation.api.entity_model.management.ModelMgrUtils;
 
 /**
  * Utilities for dealing with model objects.
@@ -51,13 +51,15 @@ public class ModelUtils {
             }
         }
         
+        List<EntityData> eds = ModelMgrUtils.getAccessibleEntityDatas(entity);
+        
         if (StringUtils.isEmpty(sortCriteria)) {
             log.trace("Sorted {} by default ordering",entity.getName());
-            return entity.getOrderedEntityData();
+            return eds;
         }
 
-        List<EntityData> eds = new ArrayList<EntityData>(entity.getEntityData());
-        if (!areLoaded(eds)) {
+        if (!EntityUtils.areLoaded(eds)) {
+            log.warn("Cannot sort unloaded entity datas for {}",entity.getName());
             return entity.getOrderedEntityData();
         }
 
