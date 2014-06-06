@@ -5,7 +5,6 @@
  */
 package org.janelia.it.workstation.gui.top_component;
 
-import java.awt.BorderLayout;
 import java.util.Properties;
 
 import org.janelia.it.workstation.gui.framework.console.Browser;
@@ -19,9 +18,6 @@ import org.openide.windows.TopComponent;
 import org.openide.util.NbBundle.Messages;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import javax.swing.GroupLayout;
-import javax.swing.JPanel;
 
 /**
  * Top component which displays something.
