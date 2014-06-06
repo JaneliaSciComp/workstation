@@ -153,10 +153,12 @@ public class ViewerManager {
 
     public void showEntityInViewerPane(RootedEntity rootedEntity, ViewerPane viewerPane, Callable<Void> callable) {
         
-        RootedEntity currContextRE = viewerPane.getViewer().getContextRootedEntity();
-        if (currContextRE!=null && currContextRE.getId().equals(rootedEntity.getId())) {
-            log.trace("Viewer has already loaded entity: "+rootedEntity.getName());
-            return;
+        if (viewerPane.getViewer()!=null) {
+            RootedEntity currContextRE = viewerPane.getViewer().getContextRootedEntity();
+            if (currContextRE!=null && currContextRE.getId().equals(rootedEntity.getId())) {
+                log.trace("Viewer has already loaded entity: "+rootedEntity.getName());
+                return;
+            }
         }
         
         saveViewerState();
