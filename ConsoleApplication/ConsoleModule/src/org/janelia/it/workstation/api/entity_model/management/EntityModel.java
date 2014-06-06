@@ -1074,7 +1074,7 @@ public class EntityModel {
         }
         return new ArrayList<Entity>(workspaceCache.values());
     }
-
+    
     /**
      * Returns all the roots in the given workspace with the specified name.
      *
@@ -1083,15 +1083,35 @@ public class EntityModel {
      * @return
      * @throws Exception
      */
-    public List<Entity> getCommonRootsByName(Long workspaceId, String name) throws Exception {
+    public List<Entity> getOwnedCommonRootsByName(Long workspaceId, String name) throws Exception {
         List<Entity> results = new ArrayList<Entity>();
         Entity workspace = getEntityById(workspaceId);
-        for (Entity commonRoot : workspace.getChildren()) {
-            if (commonRoot.getName().equals(name)) {
+        for (Entity commonRoot : workspace.getOrderedChildren()) {
+            if (ModelMgrUtils.isOwner(commonRoot) && commonRoot.getName().equals(name)) {
                 results.add(commonRoot);
             }
         }
         return results;
+    }
+
+    /**
+     * Returns the first root in the given workspace with the specified name.
+     *
+     * @param workspaceId
+     * @param name
+     * @return
+     * @throws Exception
+     */
+    public Entity getOwnedCommonRootByName(Long workspaceId, String name) throws Exception {
+        List<Entity> matching = getOwnedCommonRootsByName(workspaceId, name);
+        Entity result = null;
+        if (!matching.isEmpty()) {
+            if (matching.size()>1) {
+                log.warn("More than one common root with name {} in workspace {}",name,workspaceId);
+            }
+            result = matching.get(0);    
+        }
+        return result;
     }
     
     /**
@@ -1105,7 +1125,7 @@ public class EntityModel {
      * @throws Exception
      */
     public Entity getOrCreateCommonRootByName(Long workspaceId, String name) throws Exception {
-        List<Entity> matching = getCommonRootsByName(workspaceId, name);
+        List<Entity> matching = getOwnedCommonRootsByName(workspaceId, name);
         Entity result;
         if (matching.isEmpty()) {
             result = createCommonRootFolder(workspaceId, name);
@@ -1114,25 +1134,6 @@ public class EntityModel {
             result = matching.get(0);    
         }
         return result;
-    }
-    
-
-    /**
-     * Returns the first common root with a given name which is owned by the user.
-     *
-     * @param name
-     * @return
-     * @throws Exception
-     */
-    public Entity getOwnedCommonRootByName(String name) throws Exception {
-        for (Entity workspace : getWorkspaces()) {
-            for (Entity commonRoot : workspace.getOrderedChildren()) {
-                if (ModelMgrUtils.isOwner(commonRoot) && commonRoot.getName().equals(name)) {
-                    return commonRoot;
-                }
-            }
-        }
-        return null;
     }
 
     /**
@@ -1184,11 +1185,12 @@ public class EntityModel {
             // Reload the alignment board folder to get the new board
             alignmentBoardFolder = reloadById(alignmentBoardFolder.getId());
             loadLazyEntity(alignmentBoardFolder, false);
+            
             RootedEntity abRootedEntity = new RootedEntity(alignmentBoardFolder);
             
             EntityData childEd = EntityUtils.findChildEntityDataWithChildId(alignmentBoardFolder, boardEntity.getId());
             if (childEd == null) {
-                throw new IllegalStateException("Could not retrieve the new alignment board");
+                throw new IllegalStateException("Could not retrieve the new alignment board: "+boardEntity.getId());
             }
 
             return abRootedEntity.getChild(childEd);

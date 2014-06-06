@@ -4,6 +4,7 @@
 
 package org.janelia.it.workstation.gui.viewer3d;
 
+import org.janelia.it.workstation.gui.opengl.GLActor;
 import org.janelia.it.workstation.gui.static_view.RGBExcludableVolumeBrick;
 import org.janelia.it.workstation.gui.viewer3d.resolver.TrivialFileResolver;
 import org.janelia.it.workstation.gui.viewer3d.texture.TextureDataI;
@@ -68,7 +69,6 @@ public class TestMip3d {
 
 
                     // All black.  String fn = "/Volumes/jacsData/filestore/MaskResources/Compartment/maskRGB.v3dpbd";
-
                     if ( args.length > 0 ) {
                         fn = args[ 0 ];
                     }
@@ -84,8 +84,17 @@ public class TestMip3d {
                             return null;
                         }
                     };
-                    if ( ! mipWidget.loadVolume(fn, factory, new TrivialFileResolver() ) )
+
+                    VolumeBrickActorBuilder actorBuilder = new VolumeBrickActorBuilder();
+                    GLActor actor = actorBuilder.buildVolumeBrickActor(
+                            mipWidget.getVolumeModel(), factory, new TrivialFileResolver(), fn
+                    );
+
+                    if ( actor == null )
                         System.out.println("Volume load failed.");
+                    else
+                        mipWidget.addActor(actor);
+
                 	// mipWidget.loadVolume("/Users/brunsc/projects/fast_load/test_dir2/fastLoad/ConsolidatedSignal2_25.v3dpbd", new TrivialFileResolver());
                 	// mipWidget.loadVolume("/Users/brunsc/projects/fast_load/test_dir2/fastLoad/ConsolidatedSignal2_25.v3draw");
                 	// mipWidget.loadVolume("/Users/brunsc/projects/fast_load/test_dir/fastLoad/ConsolidatedSignal2_25.mp4");

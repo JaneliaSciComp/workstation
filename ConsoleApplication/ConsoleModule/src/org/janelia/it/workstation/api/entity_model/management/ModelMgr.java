@@ -708,19 +708,12 @@ public class ModelMgr {
         return currWorkspaceId;
     }
 
-    public List<Entity> getCommonRootsByName(String name) throws Exception {
-        if (currWorkspaceId == null) {
-            throw new IllegalStateException("No workspace is selected");
-        }
-        return getCommonRootsByName(currWorkspaceId, name);
-    }
-
-    public List<Entity> getCommonRootsByName(Long workspaceId, String name) throws Exception {
-        return entityModel.getCommonRootsByName(workspaceId, name);
-    }
-
     public Entity getOwnedCommonRootByName(String name) throws Exception {
-        return entityModel.getOwnedCommonRootByName(name);
+        if (currWorkspaceId==null) {
+            log.warn("No workspace is loaded, can't retrieve common root "+name);
+            return null;
+        }
+        return entityModel.getOwnedCommonRootByName(currWorkspaceId, name);
     }
 
     public Entity getEntityAndChildren(long entityId) throws Exception {

@@ -29,9 +29,9 @@ import javax.swing.JPanel;
         //iconBase="SET/PATH/TO/ICON/HERE", 
         persistenceType = TopComponent.PERSISTENCE_ALWAYS
 )
-@TopComponent.Registration(mode = "rightSlidingSide", openAtStartup = true, position=400)
+@TopComponent.Registration(mode = "rightSlidingSide", openAtStartup = false, position=400)
 @ActionID(category = "Window", id = "SplitPickingTopComponent")
-@ActionReference(path = "Menu/Window" /*, position = 333 */)
+@ActionReference(path = "Menu/Window", position = 400)
 @TopComponent.OpenActionRegistration(
         displayName = "#CTL_SplitPickingAction",
         preferredID = "SplitPickingTopComponent"

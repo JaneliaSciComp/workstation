@@ -192,37 +192,7 @@ public class SplitPickingPanel extends JPanel implements Refreshable {
 
         maaSearchButton = new JButton("MAA Search");
         maaSearchButton.setFocusable(false);
-        maaSearchButton.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                if (workingFolder == null) {
-                    JOptionPane.showMessageDialog(SessionMgr.getMainFrame(), "Please choose a working folder first", "Error", JOptionPane.ERROR_MESSAGE);
-                    return;
-                }
-
-                SimpleWorker worker = new SimpleWorker() {
-
-                    @Override
-                    protected void doStuff() throws Exception {
-                        searchResultsFolder = ModelMgrUtils.getChildFolder(workingFolder, FOLDER_NAME_SEARCH_RESULTS, true);
-                    }
-
-                    @Override
-                    protected void hadSuccess() {
-                        MAASearchDialog dialog = getMAASearchDialog();
-                        List<Long> sampleIds = dialog.showDialog(true);
-                        createLocalGrouping(sampleIds, dialog.getSaveFolderName());
-                    }
-
-                    @Override
-                    protected void hadError(Throwable error) {
-                        SessionMgr.getSessionMgr().handleException(error);
-                    }
-                };
-
-                worker.execute();
-            }
-        });
+        maaSearchButton.addActionListener( new MaaSearchActionListener() );
         searchPanel.add(maaSearchButton);
 
         searchPanel.setPreferredSize(new Dimension(0, STEP_PANEL_HEIGHT));
@@ -234,20 +204,7 @@ public class SplitPickingPanel extends JPanel implements Refreshable {
         JLabel computeLabel = new JLabel("4. Compute selected intersections: ");
         computePanel.add(computeLabel);
         JButton crossButton = new JButton("Compute");
-        crossButton.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                if (workingFolder == null) {
-                    JOptionPane.showMessageDialog(SessionMgr.getMainFrame(), "Please choose a result folder first", "Error", JOptionPane.ERROR_MESSAGE);
-                    return;
-                }
-                if (crossPrefix == null) {
-                    JOptionPane.showMessageDialog(SessionMgr.getMainFrame(), "Please choose a cross prefix first", "Error", JOptionPane.ERROR_MESSAGE);
-                    return;
-                }
-                createCrosses();
-            }
-        });
+        crossButton.addActionListener(new CrossButtonActionListener());
         computePanel.add(crossButton);
         computePanel.setPreferredSize(new Dimension(0, STEP_PANEL_HEIGHT));
         computePanel.setAlignmentX(Component.LEFT_ALIGNMENT);
@@ -282,21 +239,7 @@ public class SplitPickingPanel extends JPanel implements Refreshable {
         JLabel exportLabel = new JLabel("5. Export results to file: ");
         exportPanel.add(exportLabel);
         JButton exportButton = new JButton("Export");
-        exportButton.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                if (workingFolder == null) {
-                    JOptionPane.showMessageDialog(SessionMgr.getMainFrame(), "Please choose a result folder first", "Error", JOptionPane.ERROR_MESSAGE);
-                    return;
-                }
-                if (crossFolder == null) {
-                    JOptionPane.showMessageDialog(SessionMgr.getMainFrame(), "Please compute some crosses first", "Error", JOptionPane.ERROR_MESSAGE);
-                    return;
-                }
-
-                exportResults();
-            }
-        });
+        exportButton.addActionListener(new ExportButtonActionListener());
         exportPanel.add(exportButton);
         exportPanel.setPreferredSize(new Dimension(0, STEP_PANEL_HEIGHT));
         exportPanel.setAlignmentX(Component.LEFT_ALIGNMENT);
@@ -1528,4 +1471,67 @@ public class SplitPickingPanel extends JPanel implements Refreshable {
         this.crossFolder = crossFolder;
     }
 
+    private class MaaSearchActionListener implements ActionListener {
+
+        @Override
+        public void actionPerformed(ActionEvent e) {
+            if (workingFolder == null) {
+                JOptionPane.showMessageDialog(SessionMgr.getMainFrame(), "Please choose a working folder first", "Error", JOptionPane.ERROR_MESSAGE);
+                return;
+            }
+
+            SimpleWorker worker = new SimpleWorker() {
+
+                @Override
+                protected void doStuff() throws Exception {
+                    searchResultsFolder = ModelMgrUtils.getChildFolder(workingFolder, FOLDER_NAME_SEARCH_RESULTS, true);
+                }
+
+                @Override
+                protected void hadSuccess() {
+                    MAASearchDialog dialog = getMAASearchDialog();
+                    List<Long> sampleIds = dialog.showDialog(true);
+                    createLocalGrouping(sampleIds, dialog.getSaveFolderName());
+                }
+
+                @Override
+                protected void hadError(Throwable error) {
+                    SessionMgr.getSessionMgr().handleException(error);
+                }
+            };
+
+            worker.execute();
+        }
+    }
+    
+    private class CrossButtonActionListener implements ActionListener {
+        @Override
+        public void actionPerformed(ActionEvent e) {
+            if (workingFolder == null) {
+                JOptionPane.showMessageDialog(SessionMgr.getMainFrame(), "Please choose a result folder first", "Error", JOptionPane.ERROR_MESSAGE);
+                return;
+            }
+            if (crossPrefix == null) {
+                JOptionPane.showMessageDialog(SessionMgr.getMainFrame(), "Please choose a cross prefix first", "Error", JOptionPane.ERROR_MESSAGE);
+                return;
+            }
+            createCrosses();
+        }
+    }
+    
+    private class ExportButtonActionListener implements ActionListener {
+        @Override
+        public void actionPerformed(ActionEvent e) {
+            if (workingFolder == null) {
+                JOptionPane.showMessageDialog(SessionMgr.getMainFrame(), "Please choose a result folder first", "Error", JOptionPane.ERROR_MESSAGE);
+                return;
+            }
+            if (crossFolder == null) {
+                JOptionPane.showMessageDialog(SessionMgr.getMainFrame(), "Please compute some crosses first", "Error", JOptionPane.ERROR_MESSAGE);
+                return;
+            }
+
+            exportResults();
+        }
+    }
 }

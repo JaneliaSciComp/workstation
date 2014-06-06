@@ -8,11 +8,10 @@ package org.janelia.it.workstation.gui.framework.viewer;
  *
  * A swing worker to load the volume from the filename, in background.
  */
+import org.apache.xml.resolver.apps.resolver;
+import org.janelia.it.workstation.gui.opengl.GLActor;
 import org.janelia.it.workstation.gui.static_view.RGBExcludableVolumeBrick;
-import org.janelia.it.workstation.gui.viewer3d.Mip3d;
-import org.janelia.it.workstation.gui.viewer3d.VolumeBrickFactory;
-import org.janelia.it.workstation.gui.viewer3d.VolumeBrickI;
-import org.janelia.it.workstation.gui.viewer3d.VolumeModel;
+import org.janelia.it.workstation.gui.viewer3d.*;
 import org.janelia.it.workstation.gui.viewer3d.resolver.CacheFileResolver;
 import org.janelia.it.workstation.gui.viewer3d.texture.TextureDataI;
 
@@ -54,7 +53,9 @@ public class Load3dSwingWorker extends SwingWorker<Boolean,Boolean> {
                     return null; // Trivial case.
                 }
             };
-            mip3d.loadVolume(filename, factory, new CacheFileResolver());
+            VolumeBrickActorBuilder actorBuilder = new VolumeBrickActorBuilder();
+            GLActor actor = actorBuilder.buildVolumeBrickActor(mip3d.getVolumeModel(), factory, new CacheFileResolver(), filename);
+            mip3d.addActor( actor );
             filenameSufficient();
         }
         else {
@@ -62,7 +63,9 @@ public class Load3dSwingWorker extends SwingWorker<Boolean,Boolean> {
         }
     }
 
+    /** A template method callback to be overridden by subclasses. */
     public void filenameSufficient() {}
+    /** A template method callback to be overridden by subclasses. */
     public void filenameUnavailable() {}
 }
 
