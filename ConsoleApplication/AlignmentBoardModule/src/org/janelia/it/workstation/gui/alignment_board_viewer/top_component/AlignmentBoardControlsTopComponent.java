@@ -80,6 +80,8 @@ public final class AlignmentBoardControlsTopComponent extends TopComponent {
 
         jPanel1 = new javax.swing.JPanel();
 
+        setPreferredSize(new java.awt.Dimension(0, 0));
+
         jPanel1.setLayout(new java.awt.BorderLayout());
 
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(this);
