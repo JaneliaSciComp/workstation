@@ -295,7 +295,7 @@ public abstract class EntityTransferHandler extends TransferHandler {
                 if (childIndex == -1) { // DropMode.ON
                     EntityData parentEd = (EntityData) parent.getUserObject();
                     Entity parentEntity = parentEd.getChildEntity();
-                    index = parentEntity.getChildren().size();
+                    index = ModelMgrUtils.getNumAccessibleChildren(parentEntity);
                 }
             }
 
@@ -401,10 +401,8 @@ public abstract class EntityTransferHandler extends TransferHandler {
         }
 
         Map<Long, EntityData> realEdMap = new HashMap<Long, EntityData>();
-        for (EntityData ed : parentEntity.getEntityData()) {
-            if (ed.getChildEntity() != null) {
-                realEdMap.put(ed.getId(), ed);
-            }
+        for (EntityData ed : ModelMgrUtils.getAccessibleEntityDatasWithChildren(parentEntity)) {
+            realEdMap.put(ed.getId(), ed);
         }
 
         List<EntityData> realEdsList = new ArrayList<EntityData>();

@@ -34,6 +34,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import org.janelia.it.jacs.model.entity.EntityConstants;
 import org.janelia.it.jacs.shared.utils.EntityUtils;
+import org.janelia.it.workstation.api.entity_model.management.ModelMgrUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -339,18 +340,17 @@ public class GeneralSearchDialog extends ModalDialog {
         ModelMgr.getModelMgr().loadLazyEntity(searchResults, false);
         
         int maxNum = 0;
-        for (EntityData ed : searchResults.getEntityData()) {
+        
+        for (EntityData ed : ModelMgrUtils.getAccessibleEntityDatasWithChildren(searchResults)) {
             Entity topLevelFolder = ed.getChildEntity();
-            if (topLevelFolder != null) {
-                Pattern p = Pattern.compile("^Search Results #(\\d+)$");
-                Matcher m = p.matcher(topLevelFolder.getName());
-                if (m.matches()) {
-                    String num = m.group(1);
-                    if (num != null && !"".equals(num)) {
-                        int n = Integer.parseInt(num);
-                        if (n > maxNum) {
-                            maxNum = n;
-                        }
+            Pattern p = Pattern.compile("^Search Results #(\\d+)$");
+            Matcher m = p.matcher(topLevelFolder.getName());
+            if (m.matches()) {
+                String num = m.group(1);
+                if (num != null && !"".equals(num)) {
+                    int n = Integer.parseInt(num);
+                    if (n > maxNum) {
+                        maxNum = n;
                     }
                 }
             }

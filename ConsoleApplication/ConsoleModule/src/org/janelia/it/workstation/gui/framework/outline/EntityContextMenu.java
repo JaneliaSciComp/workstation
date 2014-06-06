@@ -177,8 +177,7 @@ public class EntityContextMenu extends JPopupMenu {
         Entity errorOntology = ModelMgr.getModelMgr().getErrorOntology();
         
         if (errorOntology!=null && EntityUtils.isInitialized(errorOntology)) {
-            for (final EntityData entityData : errorOntology.getOrderedEntityData()) {
-                if (entityData.getChildEntity()==null) continue;
+            for (final EntityData entityData : ModelMgrUtils.getAccessibleEntityDatasWithChildren(errorOntology)) {
             	final OntologyElement element = new OntologyElement(entityData.getParentEntity(), entityData.getChildEntity());
                 errorMenu.add(new JMenuItem(element.getName())).addActionListener(new ActionListener() {
                     @Override
@@ -811,7 +810,7 @@ public class EntityContextMenu extends JPopupMenu {
                     protected void doStuff() throws Exception {
                         ModelMgr.getModelMgr().loadLazyEntity(sample, false);
                         Entity alignedSample = null;
-                        for(Entity child : sample.getChildren()) {
+                        for(Entity child : ModelMgrUtils.getAccessibleChildren(sample)) {
                             if (child.getEntityTypeName().equals(EntityConstants.TYPE_SAMPLE) 
                                     && child.getValueByAttributeName(EntityConstants.ATTRIBUTE_OBJECTIVE)!=null) {
                                 alignedSample = child;
@@ -830,7 +829,7 @@ public class EntityContextMenu extends JPopupMenu {
                                 .run(new EntityVisitor() {
                             public void visit(Entity supportingData) throws Exception {
                                 loader.populateChildren(supportingData);
-                                for(Entity child : supportingData.getChildren()) {
+                                for(Entity child : ModelMgrUtils.getAccessibleChildren(supportingData)) {
                                     if (child.getName().equals("VerifyMovie.mp4") 
                                             || child.getName().equals("AlignVerify.mp4")) {
                                         movie = child;
@@ -922,7 +921,7 @@ public class EntityContextMenu extends JPopupMenu {
 
         JMenu newFolderMenu = new JMenu("  Add To Screen Picking Folder");
 
-        List<EntityData> rootEds = browser.getEntityOutline().getRootEntity().getOrderedEntityData();
+        List<EntityData> rootEds = ModelMgrUtils.getAccessibleEntityDatasWithChildren(browser.getEntityOutline().getRootEntity());
 
         for (final EntityData rootEd : rootEds) {
             final Entity commonRoot = rootEd.getChildEntity();
@@ -1049,12 +1048,11 @@ public class EntityContextMenu extends JPopupMenu {
         newFolderMenu.add(createNewItem);
         newFolderMenu.addSeparator();
         
-        List<EntityData> rootEds = browser.getEntityOutline().getRootEntity().getOrderedEntityData();
+        List<EntityData> rootEds = ModelMgrUtils.getAccessibleEntityDatasWithChildren(browser.getEntityOutline().getRootEntity());
 
         for (EntityData rootEd : rootEds) {
             final Entity commonRoot = rootEd.getChildEntity();
-            if (commonRoot==null || !ModelMgrUtils.hasWriteAccess(commonRoot))
-                continue;
+            if (!ModelMgrUtils.hasWriteAccess(commonRoot)) continue;
 
             JMenuItem commonRootItem = new JMenuItem(commonRoot.getName());
             commonRootItem.addActionListener(new ActionListener() {

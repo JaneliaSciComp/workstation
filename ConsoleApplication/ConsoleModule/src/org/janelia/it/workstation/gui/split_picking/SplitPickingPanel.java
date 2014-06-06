@@ -486,9 +486,9 @@ public class SplitPickingPanel extends JPanel implements Refreshable {
 
                         final Long lastWorkingFolderId = (Long) SessionMgr.getSessionMgr().getModelProperty(LAST_WORKING_FOLDER_ID_PROPERTY);
                         if (lastWorkingFolderId != null) {
-                            for (EntityData childEd : splitPickingFolderEntity.getEntityData()) {
+                            for (EntityData childEd : ModelMgrUtils.getAccessibleEntityDatasWithChildren(splitPickingFolderEntity)) {
                                 Entity child = childEd.getChildEntity();
-                                if (child != null && child.getId().equals(lastWorkingFolderId)) {
+                                if (child.getId().equals(lastWorkingFolderId)) {
                                     resultFolderEntityData = childEd;
                                     break;
                                 }
@@ -903,9 +903,9 @@ public class SplitPickingPanel extends JPanel implements Refreshable {
 
                 // Load in all search results
                 searchResultsFolder.setEntity(ModelMgr.getModelMgr().loadLazyEntity(searchResultsFolder.getEntity(), false));
-                for (Entity searchResultFolderEntity : searchResultsFolder.getEntity().getChildren()) {
+                for (Entity searchResultFolderEntity : ModelMgrUtils.getAccessibleChildren(searchResultsFolder.getEntity())) {
                     searchResultFolderEntity = ModelMgr.getModelMgr().loadLazyEntity(searchResultFolderEntity, false);
-                    for (Entity domainFolderEntity : searchResultFolderEntity.getChildren()) {
+                    for (Entity domainFolderEntity : ModelMgrUtils.getAccessibleChildren(searchResultFolderEntity)) {
                         domainFolderEntity = ModelMgr.getModelMgr().loadLazyEntity(domainFolderEntity, false);
                     }
                 }
@@ -982,7 +982,7 @@ public class SplitPickingPanel extends JPanel implements Refreshable {
         List<RootedEntity> selected = crossesViewer.getSelectedEntities();
         if (selected != null && selected.size() == 1) {
             Entity crossEntity = selected.get(0).getEntity();
-            for (EntityData childEd : crossEntity.getOrderedEntityData()) {
+            for (EntityData childEd : ModelMgrUtils.getAccessibleEntityDatas(crossEntity)) {
                 if (!childEd.getEntityAttrName().equals(EntityConstants.ATTRIBUTE_ENTITY)) {
                     continue;
                 }
@@ -1036,7 +1036,7 @@ public class SplitPickingPanel extends JPanel implements Refreshable {
             private RootedEntity findDomainFolderContainingEntity(RootedEntity root, long entityId, String domainName) {
                 for (RootedEntity searchResultFolder : root.getRootedChildren()) {
                     RootedEntity domainFolder = searchResultFolder.getChildByName(domainName);
-                    for (Entity flylineEntity : domainFolder.getEntity().getChildren()) {
+                    for (Entity flylineEntity : ModelMgrUtils.getAccessibleChildren(domainFolder.getEntity())) {
                         if (flylineEntity.getId().equals(entityId)) {
                             return domainFolder;
                         }
@@ -1099,12 +1099,8 @@ public class SplitPickingPanel extends JPanel implements Refreshable {
 
         JPopupMenu chooseFolderMenu = new JPopupMenu();
 
-        for (final EntityData childEd : splitPickingFolder.getEntity().getOrderedEntityData()) {
+        for (final EntityData childEd : ModelMgrUtils.getAccessibleEntityDatasWithChildren(splitPickingFolder.getEntity())) {
             Entity child = childEd.getChildEntity();
-            if (child == null) {
-                continue;
-            }
-
             JMenuItem commonRootItem = new JMenuItem(child.getName());
             commonRootItem.addActionListener(new ActionListener() {
                 public void actionPerformed(ActionEvent actionEvent) {
@@ -1269,7 +1265,7 @@ public class SplitPickingPanel extends JPanel implements Refreshable {
 
                     if (crossEntity.getEntityTypeName().equals(EntityConstants.TYPE_SCREEN_SAMPLE_CROSS)) {
 
-                        for (Entity child : crossEntity.getChildren()) {
+                        for (Entity child : ModelMgrUtils.getAccessibleChildren(crossEntity)) {
                             if (child.getEntityTypeName().equals(EntityConstants.TYPE_FLY_LINE)) {
                                 String splitPart = child.getValueByAttributeName(EntityConstants.ATTRIBUTE_SPLIT_PART);
                                 if ("AD".equals(splitPart)) {
