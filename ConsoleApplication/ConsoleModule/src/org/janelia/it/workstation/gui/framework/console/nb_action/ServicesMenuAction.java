@@ -38,13 +38,15 @@ public final class ServicesMenuAction extends AbstractAction implements Presente
         Browser browser = SessionMgr.getBrowser();
         final ScreenEvaluationDialog screenEvaluationDialog = browser.getScreenEvaluationDialog();
         if (screenEvaluationDialog.isAccessible()) {
-        	JMenuItem menuItem = new JMenuItem(SCREEN_EVAL_ITEM);
+            JMenuItem menuItem = new JMenuItem(SCREEN_EVAL_ITEM);
+            menuItem.addActionListener( this );
             subMenu.add(menuItem);
         }
         
         final DataSetListDialog dataSetListDialog = browser.getDataSetListDialog();
         if (dataSetListDialog.isAccessible()) {
-        	JMenuItem menuItem = new JMenuItem(DATA_SETS_ITEM);
+            JMenuItem menuItem = new JMenuItem(DATA_SETS_ITEM);
+            menuItem.addActionListener( this );
             subMenu.add(menuItem);
         }
     }
