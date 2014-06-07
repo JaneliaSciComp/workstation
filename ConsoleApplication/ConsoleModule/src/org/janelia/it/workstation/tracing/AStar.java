@@ -13,6 +13,7 @@ import org.janelia.it.workstation.octree.ZoomLevel;
 import org.janelia.it.workstation.octree.ZoomedVoxelIndex;
 
 import com.google.common.collect.Lists;
+import org.janelia.it.workstation.raster.VoxelIndex;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -56,7 +57,7 @@ public class AStar {
     private double voxelSizeX = 1.0;
     private double voxelSizeY = 1.0;
     private double voxelSizeZ = 1.0;
-    Map<org.janelia.it.workstation.raster.VoxelIndex, Node> allNodes = new HashMap<org.janelia.it.workstation.raster.VoxelIndex, Node>();
+    Map<VoxelIndex, Node> allNodes = new HashMap<VoxelIndex, Node>();
 
     private static final Logger log = LoggerFactory.getLogger(AStar.class);
 
@@ -70,11 +71,11 @@ public class AStar {
             ZoomedVoxelIndex goal0,
             double timout)
     {
-        Node start = getNode(new org.janelia.it.workstation.raster.VoxelIndex(
+        Node start = getNode(new VoxelIndex(
                 start0.getX() - volume.getOrigin().getX(), 
                 start0.getY() - volume.getOrigin().getY(), 
                 start0.getZ() - volume.getOrigin().getZ()));
-        Node goal = getNode(new org.janelia.it.workstation.raster.VoxelIndex(
+        Node goal = getNode(new VoxelIndex(
                 goal0.getX() - volume.getOrigin().getX(), 
                 goal0.getY() - volume.getOrigin().getY(), 
                 goal0.getZ() - volume.getOrigin().getZ()));
@@ -132,7 +133,7 @@ public class AStar {
                     return null;
                 }
             }
-            for (org.janelia.it.workstation.raster.VoxelIndex neighborIndex : getNeighbors(current.index))
+            for (VoxelIndex neighborIndex : getNeighbors(current.index))
             {
                 Node neighbor = getNode(neighborIndex);
                 double tentativeGScore = current.gScore
@@ -154,7 +155,7 @@ public class AStar {
         return null;
     }
     
-    private double distanceBetween(org.janelia.it.workstation.raster.VoxelIndex current, org.janelia.it.workstation.raster.VoxelIndex neighbor) {
+    private double distanceBetween(VoxelIndex current, VoxelIndex neighbor) {
         // Set distance to cost of second node.
         int intensity = volume.getIntensityLocal(neighbor, 0);
         double pathScore = getPathStepCostForIntensity(intensity);
@@ -173,25 +174,25 @@ public class AStar {
         return pathScore * distance;
     }
     
-    private List<org.janelia.it.workstation.raster.VoxelIndex> getNeighbors(org.janelia.it.workstation.raster.VoxelIndex center) {
+    private List<VoxelIndex> getNeighbors(VoxelIndex center) {
         // For performance, don't step to diagonals
         // Thus, up to six neighbors in 3D
-        List<org.janelia.it.workstation.raster.VoxelIndex> result = new Vector<org.janelia.it.workstation.raster.VoxelIndex>();
+        List<VoxelIndex> result = new Vector<VoxelIndex>();
         //
         if (neighborClass == NeighborClass.SIX_CONNECTED) {
             if (center.getX() > 0)
-                result.add(new org.janelia.it.workstation.raster.VoxelIndex(center.getX()-1, center.getY(), center.getZ()));
+                result.add(new VoxelIndex(center.getX()-1, center.getY(), center.getZ()));
             if (center.getY() > 0)
-                result.add(new org.janelia.it.workstation.raster.VoxelIndex(center.getX(), center.getY()-1, center.getZ()));
+                result.add(new VoxelIndex(center.getX(), center.getY()-1, center.getZ()));
             if (center.getZ() > 0)
-                result.add(new org.janelia.it.workstation.raster.VoxelIndex(center.getX(), center.getY(), center.getZ()-1));
+                result.add(new VoxelIndex(center.getX(), center.getY(), center.getZ()-1));
             //
             if (center.getX() < volume.getExtent().getX() - 1)
-                result.add(new org.janelia.it.workstation.raster.VoxelIndex(center.getX()+1, center.getY(), center.getZ()));
+                result.add(new VoxelIndex(center.getX()+1, center.getY(), center.getZ()));
             if (center.getX() < volume.getExtent().getY() - 1)
-                result.add(new org.janelia.it.workstation.raster.VoxelIndex(center.getX(), center.getY()+1, center.getZ()));
+                result.add(new VoxelIndex(center.getX(), center.getY()+1, center.getZ()));
             if (center.getX() < volume.getExtent().getZ() - 1)
-                result.add(new org.janelia.it.workstation.raster.VoxelIndex(center.getX(), center.getY(), center.getZ()+1));
+                result.add(new VoxelIndex(center.getX(), center.getY(), center.getZ()+1));
         }
         else if (neighborClass == NeighborClass.TWENTYSIX_CONNECTED) {
             for (int dx = -1; dx <= 1; ++dx) {
@@ -208,7 +209,7 @@ public class AStar {
                         int z = center.getZ() + dz;
                         if (z < 0) continue;
                         if (z >= volume.getExtent().getZ() - 1) continue;
-                        result.add(new org.janelia.it.workstation.raster.VoxelIndex(x, y, z));
+                        result.add(new VoxelIndex(x, y, z));
                     }
                 }
             }
@@ -217,7 +218,7 @@ public class AStar {
         return result;
     }
     
-    private Node getNode(org.janelia.it.workstation.raster.VoxelIndex index) {
+    private Node getNode(VoxelIndex index) {
         if (! allNodes.containsKey(index))
             allNodes.put(index, new Node(index));
         return allNodes.get(index);
@@ -344,7 +345,7 @@ public class AStar {
     }
 
     // Must not overestimate actual cost of path to goal
-    double heuristicCostEstimate(org.janelia.it.workstation.raster.VoxelIndex v1, org.janelia.it.workstation.raster.VoxelIndex v2) {
+    double heuristicCostEstimate(VoxelIndex v1, VoxelIndex v2) {
         double dx = (v1.getX() - v2.getX()) * voxelSizeX;
         double dy = (v1.getY() - v2.getY()) * voxelSizeY;
         double dz = (v1.getZ() - v2.getZ()) * voxelSizeZ;
@@ -362,7 +363,7 @@ public class AStar {
     }
     
     static class Node {
-        Node(org.janelia.it.workstation.raster.VoxelIndex index) {
+        Node(VoxelIndex index) {
             this.index = index;
         }
 
@@ -386,6 +387,6 @@ public class AStar {
         double fScore = Double.NaN;
         double gScore = Double.NaN;
         Node cameFrom = null;
-        org.janelia.it.workstation.raster.VoxelIndex index;
+        VoxelIndex index;
     }
 }

@@ -2,6 +2,10 @@ package org.janelia.it.workstation.gui.alignment_board_viewer.volume_export;
 
 import org.janelia.it.workstation.gui.alignment_board.ab_mgr.AlignmentBoardMgr;
 import org.janelia.it.workstation.gui.alignment_board_viewer.FileExportLoadWorker;
+import org.janelia.it.workstation.gui.alignment_board_viewer.gui_elements.AlignmentBoardControlsDialog;
+import org.janelia.it.workstation.gui.alignment_board_viewer.gui_elements.CompletionListener;
+import org.janelia.it.workstation.gui.alignment_board_viewer.gui_elements.ControlsListener;
+import org.janelia.it.workstation.gui.alignment_board_viewer.texture.ABContextDataSource;
 import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.workstation.gui.viewer3d.Mip3d;
 import org.janelia.it.workstation.gui.viewer3d.masking.RenderMappingI;
@@ -9,6 +13,7 @@ import org.janelia.it.workstation.gui.alignment_board_viewer.renderable.MaskChan
 import org.janelia.it.workstation.gui.viewer3d.resolver.CacheFileResolver;
 import org.janelia.it.workstation.gui.viewer3d.texture.TextureDataI;
 import org.janelia.it.workstation.gui.viewer3d.volume_builder.VolumeDataChunk;
+import org.janelia.it.workstation.model.domain.EntityWrapper;
 import org.janelia.it.workstation.model.viewer.AlignmentBoardContext;
 import org.janelia.it.workstation.shared.workers.SimpleWorker;
 import org.slf4j.Logger;
@@ -16,8 +21,10 @@ import org.slf4j.LoggerFactory;
 
 import javax.swing.*;
 import java.awt.*;
+import java.awt.image.BufferedImage;
 import java.io.*;
 import java.util.*;
+import java.util.List;
 
 /**
  * Created with IntelliJ IDEA.
@@ -31,7 +38,7 @@ public class VolumeWritebackHandler {
     private final RenderMappingI renderMapping;
     private final Collection<float[]> cropCoords;
     private final Mip3d mip3d;
-    private final org.janelia.it.workstation.gui.alignment_board_viewer.gui_elements.CompletionListener completionListener;
+    private final CompletionListener completionListener;
     private int filterSize;
     private int maxNeurons;
     private double gammaFactor;
@@ -42,7 +49,7 @@ public class VolumeWritebackHandler {
     public VolumeWritebackHandler(
             RenderMappingI renderMapping,
             Collection<float[]> cropCoords,
-            org.janelia.it.workstation.gui.alignment_board_viewer.gui_elements.CompletionListener completionListener,
+            CompletionListener completionListener,
             Mip3d mip3d,
             double gammaFactor,
             int filterSize,
@@ -63,8 +70,8 @@ public class VolumeWritebackHandler {
      *
      * @param method how to write the file.
      */
-    public void writeBackVolumeSelection( org.janelia.it.workstation.gui.alignment_board_viewer.gui_elements.ControlsListener.ExportMethod method ) {
-        if ( method == org.janelia.it.workstation.gui.alignment_board_viewer.gui_elements.ControlsListener.ExportMethod.mip ) {
+    public void writeBackVolumeSelection( ControlsListener.ExportMethod method ) {
+        if ( method == ControlsListener.ExportMethod.mip ) {
 
             SimpleWorker mipExportWorker = new SimpleWorker() {
                 @Override
@@ -73,8 +80,8 @@ public class VolumeWritebackHandler {
                     if ( writeBackFile != null ) {
                         // Need to take a screen shot of the MIP3D object.
                         // Get a buffered image of the component.
-                        java.awt.image.BufferedImage bufferedImage = new java.awt.image.BufferedImage(
-                                mip3d.getWidth(), mip3d.getHeight(), java.awt.image.BufferedImage.TYPE_INT_RGB
+                        BufferedImage bufferedImage = new BufferedImage(
+                                mip3d.getWidth(), mip3d.getHeight(), BufferedImage.TYPE_INT_RGB
                         );
                         Graphics2D graphics = bufferedImage.createGraphics();
                         mip3d.paint(graphics);
@@ -110,7 +117,7 @@ public class VolumeWritebackHandler {
             // Save back volume as three-D tiff.
             Map<Integer,byte[]> renderableIdVsRenderMethod = renderMapping.getMapping();
 
-            org.janelia.it.workstation.gui.alignment_board_viewer.texture.ABContextDataSource dataSource = new org.janelia.it.workstation.gui.alignment_board_viewer.texture.ABContextDataSource(
+            ABContextDataSource dataSource = new ABContextDataSource(
                     AlignmentBoardMgr.getInstance().getLayersPanel().getAlignmentBoardContext()
             );
 
@@ -146,10 +153,10 @@ public class VolumeWritebackHandler {
         PrintWriter pw = new PrintWriter( new FileWriter( metaFile ) );
 
         AlignmentBoardContext abContext = AlignmentBoardMgr.getInstance().getLayersPanel().getAlignmentBoardContext();
-        java.util.List<org.janelia.it.workstation.model.domain.EntityWrapper> children = abContext.getChildren();
-        for ( org.janelia.it.workstation.model.domain.EntityWrapper nextChild: children ) {
+        List<EntityWrapper> children = abContext.getChildren();
+        for ( EntityWrapper nextChild: children ) {
             pw.println("Container Item: NAME=" + nextChild.getName() + ", ID=" + nextChild.getUniqueId());
-            for ( org.janelia.it.workstation.model.domain.EntityWrapper grandChild: nextChild.getChildren() ) {
+            for ( EntityWrapper grandChild: nextChild.getChildren() ) {
                 pw.println("Neuron: ID=" + grandChild.getUniqueId() + " NAME=" + grandChild.getName() + " TYPE=" + grandChild.getType() + " OWNER=" + grandChild.getOwnerKey());
             }
         }
@@ -164,7 +171,7 @@ public class VolumeWritebackHandler {
         fileChooser.setToolTipText("Pick an output location for the exported file.");
         JDialog backingComponent = null;
         for ( Window dialog: JDialog.getWindows() ) {
-            if (org.janelia.it.workstation.gui.alignment_board_viewer.gui_elements.AlignmentBoardControlsDialog.CONTAINING_DIALOG_NAME.equals(dialog.getName()) ) {
+            if (AlignmentBoardControlsDialog.CONTAINING_DIALOG_NAME.equals(dialog.getName()) ) {
                 backingComponent = (JDialog)dialog;
             }
         }

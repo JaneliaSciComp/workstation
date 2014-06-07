@@ -7,6 +7,7 @@ package org.janelia.it.workstation.api.facade.concrete_facade.xml;
 
 import com.sun.org.apache.xerces.internal.parsers.SAXParser;
 import org.xml.sax.ErrorHandler;
+import org.xml.sax.SAXException;
 import org.xml.sax.SAXParseException;
 import org.xml.sax.helpers.DefaultHandler;
 
@@ -128,7 +129,7 @@ public class ValidatingParser {
             new File(lTempfileName).delete();
 
         }
-        catch (org.xml.sax.SAXException lSAXE) {
+        catch (SAXException lSAXE) {
             System.out.println("ERROR: SAX Exception during parse");
             System.out.println("INFO: " + lSAXE.getMessage());
             throw new IllegalArgumentException(lSAXE.getMessage());

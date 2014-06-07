@@ -1,5 +1,7 @@
 package org.janelia.it.workstation.gui.viewer3d.loader;
 
+import org.janelia.it.workstation.gui.viewer3d.stream.V3dRawImageStream;
+
 import java.io.IOException;
 import java.util.Set;
 import java.util.TreeSet;
@@ -29,7 +31,7 @@ public class V3dByteReader {
      * @return distinct set of all values found in the stream.
      * @throws java.io.IOException thrown by called methods.
      */
-    public Set<Integer> readBytes(org.janelia.it.workstation.gui.viewer3d.stream.V3dRawImageStream sliceStream, int sx, int sy, int sz, int pixelBytes)
+    public Set<Integer> readBytes(V3dRawImageStream sliceStream, int sx, int sy, int sz, int pixelBytes)
             throws IOException {
         textureByteArray = new byte[(sx * sy * sz) * pixelBytes];
 
@@ -37,7 +39,7 @@ public class V3dByteReader {
         for (int z = 0; z < sz; z ++ ) {
             int zOffset = z * sx * sy;
             sliceStream.loadNextSlice();
-            org.janelia.it.workstation.gui.viewer3d.stream.V3dRawImageStream.Slice slice = sliceStream.getCurrentSlice();
+            V3dRawImageStream.Slice slice = sliceStream.getCurrentSlice();
             for (int y = 0; y < sy; y ++ ) {
                 int yOffset = zOffset + calcYOffset(y, sy) * sx;
                 for (int x = 0; x < sx; x ++ ) {
@@ -64,7 +66,7 @@ public class V3dByteReader {
      * @return distinct set of all values found in the stream.
      * @throws java.io.IOException thrown by called methods.
      */
-    public Set<Integer> readBytes(org.janelia.it.workstation.gui.viewer3d.stream.V3dRawImageStream sliceStream, int sx, int sy, int sz)
+    public Set<Integer> readBytes(V3dRawImageStream sliceStream, int sx, int sy, int sz)
             throws IOException {
         textureByteArray = new byte[(sx * sy * sz)];
 
@@ -72,7 +74,7 @@ public class V3dByteReader {
         for (int z = 0; z < sz; z ++ ) {
             int zOffset = z * sx * sy;
             sliceStream.loadNextSlice();
-            org.janelia.it.workstation.gui.viewer3d.stream.V3dRawImageStream.Slice slice = sliceStream.getCurrentSlice();
+            V3dRawImageStream.Slice slice = sliceStream.getCurrentSlice();
             for (int y = 0; y < sy; y ++ ) {
                 int yOffset = zOffset + calcYOffset(y, sy) * sx;
                 for (int x = 0; x < sx; x ++ ) {
@@ -97,7 +99,7 @@ public class V3dByteReader {
      * @return distinct set of all values found in the stream.
      * @throws java.io.IOException thrown by called methods.
      */
-    public Set<Integer> readBytesToInts(org.janelia.it.workstation.gui.viewer3d.stream.V3dRawImageStream sliceStream, int sx, int sy, int sz)
+    public Set<Integer> readBytesToInts(V3dRawImageStream sliceStream, int sx, int sy, int sz)
             throws IOException {
 
         int pixelBytes = 4;
@@ -106,7 +108,7 @@ public class V3dByteReader {
         for (int z = 0; z < sz; z ++ ) {
             int zOffset = z * sx * sy;
             sliceStream.loadNextSlice();
-            org.janelia.it.workstation.gui.viewer3d.stream.V3dRawImageStream.Slice slice = sliceStream.getCurrentSlice();
+            V3dRawImageStream.Slice slice = sliceStream.getCurrentSlice();
             for (int y = 0; y < sy; y ++ ) {
                 int yOffset = zOffset + calcYOffset(y, sy) * sx;
                 for (int x = 0; x < sx; x ++ ) {

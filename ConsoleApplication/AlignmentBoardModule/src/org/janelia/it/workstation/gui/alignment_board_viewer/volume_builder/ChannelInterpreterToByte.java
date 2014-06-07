@@ -1,6 +1,8 @@
 package org.janelia.it.workstation.gui.alignment_board_viewer.volume_builder;
 
 import org.janelia.it.workstation.gui.alignment_board.channel_split.ChannelSplitStrategyI;
+import org.janelia.it.workstation.gui.alignment_board_viewer.channel_split.ChannelSplitStrategyFactory;
+import org.janelia.it.workstation.gui.alignment_board_viewer.masking.MultiMaskTracker;
 import org.janelia.it.workstation.gui.viewer3d.masking.VolumeDataI;
 import org.janelia.it.workstation.gui.alignment_board.loader.ChannelMetaData;
 import org.slf4j.Logger;
@@ -22,7 +24,7 @@ public class ChannelInterpreterToByte implements ChannelInterpreterI {
     private ByteChannelDelegate byteChannelDelegate;
 
     private final Logger logger = LoggerFactory.getLogger( ChannelInterpreterToByte.class );
-    private org.janelia.it.workstation.gui.alignment_board_viewer.channel_split.ChannelSplitStrategyFactory splitStrategyFactory;
+    private ChannelSplitStrategyFactory splitStrategyFactory;
 
     /**
      * Construct with volume data to be modified, as well as the mask volume for reference.
@@ -31,14 +33,14 @@ public class ChannelInterpreterToByte implements ChannelInterpreterI {
      * @param wholeMaskVolume to reference for mask in use.
      * @param multiMaskTracker to help with mask-based channel data changes.
      */
-    public ChannelInterpreterToByte(VolumeDataI signalVolume, VolumeDataI wholeMaskVolume, org.janelia.it.workstation.gui.alignment_board_viewer.masking.MultiMaskTracker multiMaskTracker) {
+    public ChannelInterpreterToByte(VolumeDataI signalVolume, VolumeDataI wholeMaskVolume, MultiMaskTracker multiMaskTracker) {
         this.wholeSignalVolume = signalVolume;
         this.wholeMaskVolume = wholeMaskVolume;
         this.byteChannelDelegate = new ByteChannelDelegate( signalVolume );
         if ( wholeMaskVolume == null || wholeSignalVolume == null ) {
             throw new IllegalArgumentException("Null not allowed here.");
         }
-        splitStrategyFactory = new org.janelia.it.workstation.gui.alignment_board_viewer.channel_split.ChannelSplitStrategyFactory( multiMaskTracker );
+        splitStrategyFactory = new ChannelSplitStrategyFactory( multiMaskTracker );
     }
 
     /**
@@ -54,7 +56,7 @@ public class ChannelInterpreterToByte implements ChannelInterpreterI {
             long targetPos
     ) {
 
-        int multiMaskId = getMaskValue(targetPos, targetChannelMetaData.channelCount, org.janelia.it.workstation.gui.alignment_board_viewer.volume_builder.RenderablesMaskBuilder.UNIVERSAL_MASK_BYTE_COUNT);  //TODO consider passing mask-size into the interpreter or moving the constant somewhere more general.
+        int multiMaskId = getMaskValue(targetPos, targetChannelMetaData.channelCount, RenderablesMaskBuilder.UNIVERSAL_MASK_BYTE_COUNT);  //TODO consider passing mask-size into the interpreter or moving the constant somewhere more general.
 
         if ( srcChannelMetaData.byteCount == 1  &&  srcChannelMetaData.channelCount == 1  &&  multiMaskId == orignalMaskNum ) {
             // 1:1 straight copy to volume.

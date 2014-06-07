@@ -3,15 +3,20 @@ package org.janelia.it.workstation.gui.slice_viewer.generator;
 import java.util.Iterator;
 
 import org.janelia.it.workstation.gui.camera.BasicCamera3d;
+import org.janelia.it.workstation.gui.camera.Camera3d;
+import org.janelia.it.workstation.gui.slice_viewer.Tile2d;
+import org.janelia.it.workstation.gui.slice_viewer.TileConsumer;
+import org.janelia.it.workstation.gui.slice_viewer.TileIndex;
 import org.janelia.it.workstation.gui.slice_viewer.TileServer;
 import org.janelia.it.workstation.gui.slice_viewer.TileSet;
+import org.janelia.it.workstation.gui.slice_viewer.ViewTileManager;
 
 public class LodGenerator 
-implements Iterable<org.janelia.it.workstation.gui.slice_viewer.TileIndex>, Iterator<org.janelia.it.workstation.gui.slice_viewer.TileIndex>
+implements Iterable<TileIndex>, Iterator<TileIndex>
 {
 	private TileServer tileServer;
 	Iterator<Integer> allLod;
-	Iterator<org.janelia.it.workstation.gui.slice_viewer.Tile2d> tileIter;
+	Iterator<Tile2d> tileIter;
 	int zoom;
 	
 	public LodGenerator(TileServer tileServer) {
@@ -19,7 +24,7 @@ implements Iterable<org.janelia.it.workstation.gui.slice_viewer.TileIndex>, Iter
 		TileSet tileSet = tileServer.createLatestTiles();
 		if (tileSet.size() < 1)
 			return;
-		org.janelia.it.workstation.gui.slice_viewer.Tile2d tile = tileSet.iterator().next();
+		Tile2d tile = tileSet.iterator().next();
 		int minZoom = 0;
 		int startZoom = tile.getIndex().getZoom();
 		int maxZoom = tile.getIndex().getMaxZoom();
@@ -43,14 +48,14 @@ implements Iterable<org.janelia.it.workstation.gui.slice_viewer.TileIndex>, Iter
 	}
 
 	@Override
-	public org.janelia.it.workstation.gui.slice_viewer.TileIndex next() {
+	public TileIndex next() {
 		// inner loop over tiles
 		if ((tileIter != null) && (tileIter.hasNext()))
 			return tileIter.next().getIndex();
 		// outer loop over zoom levels
 		zoom = allLod.next();
-		org.janelia.it.workstation.gui.camera.Camera3d c0 = tileServer.getViewTileManagers().iterator().next().getTileConsumer().getCamera(); // assume all TileConsumers have the same camera...
-		org.janelia.it.workstation.gui.camera.Camera3d camera = new BasicCamera3d();
+		Camera3d c0 = tileServer.getViewTileManagers().iterator().next().getTileConsumer().getCamera(); // assume all TileConsumers have the same camera...
+		Camera3d camera = new BasicCamera3d();
 		camera.setFocus(c0.getFocus());
 		camera.setPixelsPerSceneUnit(c0.getPixelsPerSceneUnit());
 		camera.setRotation(c0.getRotation());
@@ -59,8 +64,8 @@ implements Iterable<org.janelia.it.workstation.gui.slice_viewer.TileIndex>, Iter
 		while (testZoom != zoom) {
 			double factor = Math.pow(2, testZoom - zoom);
 			camera.setPixelsPerSceneUnit(factor * camera.getPixelsPerSceneUnit());
-			for (org.janelia.it.workstation.gui.slice_viewer.ViewTileManager vtm : tileServer.getViewTileManagers()) {
-				org.janelia.it.workstation.gui.slice_viewer.TileConsumer viewer = vtm.getTileConsumer();
+			for (ViewTileManager vtm : tileServer.getViewTileManagers()) {
+				TileConsumer viewer = vtm.getTileConsumer();
 				// Same tiles, different camera
 				tileSet.addAll(vtm.createLatestTiles(
 						camera,
@@ -80,7 +85,7 @@ implements Iterable<org.janelia.it.workstation.gui.slice_viewer.TileIndex>, Iter
 	}
 
 	@Override
-	public Iterator<org.janelia.it.workstation.gui.slice_viewer.TileIndex> iterator() {
+	public Iterator<TileIndex> iterator() {
 		return this;
 	}
 

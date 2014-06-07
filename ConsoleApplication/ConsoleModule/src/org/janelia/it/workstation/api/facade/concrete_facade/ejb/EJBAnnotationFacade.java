@@ -10,6 +10,8 @@ import org.janelia.it.jacs.model.entity.EntityData;
 import org.janelia.it.jacs.shared.annotation.DataDescriptor;
 import org.janelia.it.jacs.shared.annotation.DataFilter;
 import org.janelia.it.jacs.shared.annotation.FilterResult;
+import org.janelia.it.workstation.api.facade.abstract_facade.AnnotationFacade;
+import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
 
 /**
  * Created by IntelliJ IDEA.
@@ -17,11 +19,11 @@ import org.janelia.it.jacs.shared.annotation.FilterResult;
  * Date: 8/8/11
  * Time: 9:31 AM
  */
-public class EJBAnnotationFacade extends EJBEntityFacade implements org.janelia.it.workstation.api.facade.abstract_facade.AnnotationFacade {
+public class EJBAnnotationFacade extends EJBEntityFacade implements AnnotationFacade {
 
     @Override
     public List<Entity> getAnnotationsForEntity(Long entityId) throws Exception {
-        return EJBFactory.getRemoteAnnotationBean().getAnnotationsForEntity(org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr.getSubjectKey(), entityId);
+        return EJBFactory.getRemoteAnnotationBean().getAnnotationsForEntity(SessionMgr.getSubjectKey(), entityId);
     }
     
     @Override
@@ -31,31 +33,31 @@ public class EJBAnnotationFacade extends EJBEntityFacade implements org.janelia.
 
     @Override
     public List<Entity> getAnnotationsForEntities(List<Long> entityIds) throws Exception {
-        return EJBFactory.getRemoteAnnotationBean().getAnnotationsForEntities(org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr.getSubjectKey(),
+        return EJBFactory.getRemoteAnnotationBean().getAnnotationsForEntities(SessionMgr.getSubjectKey(),
                 entityIds);
     }
 
     @Override
     public List<Entity> getAnnotationsForChildren(Long parentId) throws Exception {
-        return EJBFactory.getRemoteAnnotationBean().getAnnotationsForChildren(org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr.getSubjectKey(),
+        return EJBFactory.getRemoteAnnotationBean().getAnnotationsForChildren(SessionMgr.getSubjectKey(),
         		parentId);
     }
     
     @Override
     public List<Entity> getEntitiesForAnnotationSession(Long annotationSessionId) throws Exception {
-        return EJBFactory.getRemoteAnnotationBean().getEntitiesForAnnotationSession(org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr.getSubjectKey(),
+        return EJBFactory.getRemoteAnnotationBean().getEntitiesForAnnotationSession(SessionMgr.getSubjectKey(),
                 annotationSessionId);
     }
 
     @Override
     public List<Entity> getAnnotationsForSession(Long annotationSessionId) throws Exception {
-        return EJBFactory.getRemoteAnnotationBean().getAnnotationsForSession(org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr.getSubjectKey(),
+        return EJBFactory.getRemoteAnnotationBean().getAnnotationsForSession(SessionMgr.getSubjectKey(),
                 annotationSessionId);
     }
 
     @Override
     public List<Entity> getCategoriesForAnnotationSession(Long annotationSessionId) throws Exception {
-        return EJBFactory.getRemoteAnnotationBean().getCategoriesForAnnotationSession(org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr.getSubjectKey(),
+        return EJBFactory.getRemoteAnnotationBean().getCategoriesForAnnotationSession(SessionMgr.getSubjectKey(),
                 annotationSessionId);
     }
 
@@ -71,12 +73,12 @@ public class EJBAnnotationFacade extends EJBEntityFacade implements org.janelia.
     
     @Override
     public void removeAnnotation(Long annotationId) throws Exception {
-        EJBFactory.getRemoteAnnotationBean().removeOntologyAnnotation(org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr.getSubjectKey(), annotationId);
+        EJBFactory.getRemoteAnnotationBean().removeOntologyAnnotation(SessionMgr.getSubjectKey(), annotationId);
     }
 
     @Override
     public void removeAllOntologyAnnotationsForSession(Long annotationSessionId) throws Exception {
-        EJBFactory.getRemoteAnnotationBean().removeAllOntologyAnnotationsForSession(org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr.getSubjectKey(),
+        EJBFactory.getRemoteAnnotationBean().removeAllOntologyAnnotationsForSession(SessionMgr.getSubjectKey(),
                 annotationSessionId);
     }
 
@@ -112,17 +114,17 @@ public class EJBAnnotationFacade extends EJBEntityFacade implements org.janelia.
 
     @Override
     public Entity createDataSet(String dataSetName) throws Exception {
-        return EJBFactory.getRemoteAnnotationBean().createDataSet(org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr.getSubjectKey(), dataSetName);
+        return EJBFactory.getRemoteAnnotationBean().createDataSet(SessionMgr.getSubjectKey(), dataSetName);
     }
 
     @Override
     public List<Entity> getDataSets() throws Exception {
-    	return EJBFactory.getRemoteAnnotationBean().getUserDataSets(Arrays.asList(org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr.getSubjectKey()));
+    	return EJBFactory.getRemoteAnnotationBean().getUserDataSets(Arrays.asList(SessionMgr.getSubjectKey()));
 	}
     
     @Override
     public Entity createAlignmentBoard(String alignmentBoardName, String alignmentSpace, String opticalRes, String pixelRes) throws Exception {
-        return EJBFactory.getRemoteAnnotationBean().createAlignmentBoard(org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr.getSubjectKey(), alignmentBoardName, alignmentSpace, opticalRes, pixelRes);
+        return EJBFactory.getRemoteAnnotationBean().createAlignmentBoard(SessionMgr.getSubjectKey(), alignmentBoardName, alignmentSpace, opticalRes, pixelRes);
     }
 
     @Override

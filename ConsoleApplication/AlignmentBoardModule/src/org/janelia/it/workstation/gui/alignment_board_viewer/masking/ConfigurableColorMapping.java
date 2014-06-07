@@ -1,5 +1,6 @@
 package org.janelia.it.workstation.gui.alignment_board_viewer.masking;
 
+import org.janelia.it.workstation.gui.alignment_board_viewer.renderable.RBComparator;
 import org.janelia.it.workstation.gui.viewer3d.masking.RenderMappingI;
 import org.janelia.it.workstation.gui.alignment_board_viewer.renderable.InvertingComparator;
 import org.janelia.it.workstation.gui.viewer3d.renderable.RenderableBean;
@@ -41,13 +42,13 @@ public class ConfigurableColorMapping implements RenderMappingI {
 
     private Map<Long,Integer> guidToRenderMethod;
     private Collection<RenderableBean> renderableBeans;
-    private org.janelia.it.workstation.gui.alignment_board_viewer.masking.MultiMaskTracker multiMaskTracker;
+    private MultiMaskTracker multiMaskTracker;
     private FileStats fileStats;
     private int maxDepthExceededCount = 0;
     private Logger logger = LoggerFactory.getLogger(ConfigurableColorMapping.class);
 
     public ConfigurableColorMapping() {}
-    public ConfigurableColorMapping( org.janelia.it.workstation.gui.alignment_board_viewer.masking.MultiMaskTracker multiMaskTracker, FileStats fileStats ) {
+    public ConfigurableColorMapping( MultiMaskTracker multiMaskTracker, FileStats fileStats ) {
         this.multiMaskTracker = multiMaskTracker;
         this.fileStats = fileStats;
     }
@@ -69,7 +70,7 @@ public class ConfigurableColorMapping implements RenderMappingI {
             logger.warn(
                     "Exceeded max depth for multimask rendering {} times.  Max depth is {}.",
                     maxDepthExceededCount,
-                    org.janelia.it.workstation.gui.alignment_board_viewer.masking.MultiMaskTracker.MAX_MASK_DEPTH
+                    MultiMaskTracker.MAX_MASK_DEPTH
             );
 
             // Give the user some kind of warning of what just happened.
@@ -103,9 +104,9 @@ public class ConfigurableColorMapping implements RenderMappingI {
     private void mapMultiMasks(Map<Integer, byte[]> maskMappings) {
         if ( multiMaskTracker != null ) {
             List<Integer> orderedMasks = prioritizeMasks();
-            Map<Integer, org.janelia.it.workstation.gui.alignment_board_viewer.masking.MultiMaskTracker.MultiMaskBean> multiMaskMap = multiMaskTracker.getMultiMaskBeans();
+            Map<Integer, MultiMaskTracker.MultiMaskBean> multiMaskMap = multiMaskTracker.getMultiMaskBeans();
             for ( Integer multiMask: multiMaskMap.keySet() ) {
-                org.janelia.it.workstation.gui.alignment_board_viewer.masking.MultiMaskTracker.MultiMaskBean bean = multiMaskMap.get( multiMask );
+                MultiMaskTracker.MultiMaskBean bean = multiMaskMap.get( multiMask );
                 int leastPos = Integer.MAX_VALUE;
                 Integer chosenAltMask = null;
                 for ( int nextAltMask: bean.getAltMasks() ) {
@@ -136,7 +137,7 @@ public class ConfigurableColorMapping implements RenderMappingI {
                         );
                         rgb[ 3 ] = RenderMappingI.NON_RENDERING;
                     }
-                    else if ( maskOffset <= org.janelia.it.workstation.gui.alignment_board_viewer.masking.MultiMaskTracker.MAX_MASK_DEPTH ) {
+                    else if ( maskOffset <= MultiMaskTracker.MAX_MASK_DEPTH ) {
                         int intensityOffsetInterp;
 
                         // Using the number of alternates to signal to shader how to treat the mask offset number.
@@ -241,7 +242,7 @@ public class ConfigurableColorMapping implements RenderMappingI {
         //  Within each type, rank by decreasing voxel count.
         List<RenderableBean> sortedBeans = new ArrayList<RenderableBean>();
         sortedBeans.addAll( renderableBeans );
-        Collections.sort( sortedBeans, new InvertingComparator( new org.janelia.it.workstation.gui.alignment_board_viewer.renderable.RBComparator() ) );
+        Collections.sort( sortedBeans, new InvertingComparator( new RBComparator() ) );
         /*
             Debug
         System.out.println("Check Sort Order from mapping class.");

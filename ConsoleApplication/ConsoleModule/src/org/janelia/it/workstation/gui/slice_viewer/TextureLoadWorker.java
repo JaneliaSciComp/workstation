@@ -14,18 +14,18 @@ public class TextureLoadWorker implements Runnable
 {
 	private static final Logger log = LoggerFactory.getLogger(TextureLoadWorker.class);
 	
-	private org.janelia.it.workstation.gui.slice_viewer.TileTexture texture;
+	private TileTexture texture;
 	private TextureCache textureCache;
 
-	public TextureLoadWorker(org.janelia.it.workstation.gui.slice_viewer.TileTexture texture, TextureCache textureCache)
+	public TextureLoadWorker(TileTexture texture, TextureCache textureCache)
 	{
-		if (texture.getLoadStatus().ordinal() < org.janelia.it.workstation.gui.slice_viewer.TileTexture.LoadStatus.LOAD_QUEUED.ordinal())
-			texture.setLoadStatus(org.janelia.it.workstation.gui.slice_viewer.TileTexture.LoadStatus.LOAD_QUEUED);
+		if (texture.getLoadStatus().ordinal() < TileTexture.LoadStatus.LOAD_QUEUED.ordinal())
+			texture.setLoadStatus(TileTexture.LoadStatus.LOAD_QUEUED);
 		this.texture = texture;
 		this.textureCache = textureCache;
 	}
 
-	public org.janelia.it.workstation.gui.slice_viewer.TileTexture getTexture() {
+	public TileTexture getTexture() {
 		return texture;
 	}
 
@@ -44,12 +44,12 @@ public class TextureLoadWorker implements Runnable
 			// log.info("Skipping duplicate load of texture (2) "+index);
 		}
 		// Don't load this texture if it is already loaded
-		else if (texture.getLoadStatus().ordinal() == org.janelia.it.workstation.gui.slice_viewer.TileTexture.LoadStatus.RAM_LOADING.ordinal())
+		else if (texture.getLoadStatus().ordinal() == TileTexture.LoadStatus.RAM_LOADING.ordinal())
 		{
 			// log.info("Skipping duplicate load of texture "+texture.getIndex());
 			// return; // already loading
 		}
-		else if (texture.getLoadStatus().ordinal() > org.janelia.it.workstation.gui.slice_viewer.TileTexture.LoadStatus.RAM_LOADING.ordinal())
+		else if (texture.getLoadStatus().ordinal() > TileTexture.LoadStatus.RAM_LOADING.ordinal())
 		{
 			// log.info("Skipping duplicate load of texture "+texture.getIndex());
 			// return; // already loaded or loading

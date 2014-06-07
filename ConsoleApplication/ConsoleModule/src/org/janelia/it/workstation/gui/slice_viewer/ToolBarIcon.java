@@ -1,5 +1,7 @@
 package org.janelia.it.workstation.gui.slice_viewer;
 
+import org.janelia.it.workstation.gui.util.Icons;
+
 import java.awt.Image;
 import java.awt.Toolkit;
 import java.awt.image.FilteredImageSource;
@@ -14,7 +16,7 @@ public class ToolBarIcon extends JLabel
 	private static final long serialVersionUID = 1L;
 
 	public ToolBarIcon(String imageFileName) {
-		ImageIcon icon = org.janelia.it.workstation.gui.util.Icons.getIcon(imageFileName);
+		ImageIcon icon = Icons.getIcon(imageFileName);
 		setIcon(icon);
 		Image img = icon.getImage();
 		// GrayFilter grayFilter = new GrayFilter(false, 30);

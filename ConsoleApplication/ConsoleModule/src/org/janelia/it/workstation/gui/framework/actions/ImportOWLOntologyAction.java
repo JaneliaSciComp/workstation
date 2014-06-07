@@ -8,6 +8,9 @@ import javax.swing.JFileChooser;
 import javax.swing.JOptionPane;
 import javax.swing.ProgressMonitor;
 
+import org.janelia.it.workstation.gui.framework.outline.OntologyOutline;
+import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
+import org.janelia.it.workstation.gui.ontology.OWLDataLoader;
 import org.semanticweb.owlapi.model.OWLException;
 
 /**
@@ -28,12 +31,12 @@ public class ImportOWLOntologyAction implements Action, PropertyChangeListener {
     }
     
     private ProgressMonitor progressMonitor;
-    private org.janelia.it.workstation.gui.ontology.OWLDataLoader owlLoader;
+    private OWLDataLoader owlLoader;
     
     @Override
     public void doAction() {
 
-        final org.janelia.it.workstation.gui.framework.outline.OntologyOutline ontologyOutline = org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr.getBrowser().getOntologyOutline();
+        final OntologyOutline ontologyOutline = SessionMgr.getBrowser().getOntologyOutline();
 
         final JFileChooser fc = new JFileChooser();
         int returnVal = fc.showOpenDialog(ontologyOutline);
@@ -52,7 +55,7 @@ public class ImportOWLOntologyAction implements Action, PropertyChangeListener {
             progressMonitor = new ProgressMonitor(ontologyOutline, "Importing OWL", "", 0, 100);
             progressMonitor.setProgress(0);
 
-            owlLoader = new org.janelia.it.workstation.gui.ontology.OWLDataLoader(file) {
+            owlLoader = new OWLDataLoader(file) {
 
                 protected void hadSuccess() {
                     ontologyOutline.refresh(true, true, null);

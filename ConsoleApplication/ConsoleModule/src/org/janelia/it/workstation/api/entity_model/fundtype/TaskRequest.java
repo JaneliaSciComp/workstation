@@ -1,23 +1,25 @@
 package org.janelia.it.workstation.api.entity_model.fundtype;
 
+import java.io.Serializable;
+
 /**
  * Created by IntelliJ IDEA.
  * User: saffordt
  * Date: 7/22/11
  * Time: 4:00 PM
  */
-public class TaskRequest implements java.io.Serializable {
+public class TaskRequest implements Serializable {
 
     //  private RangeSet ranges;
 //  private Bin bin;
     private TaskFilter taskFilter;
-    private org.janelia.it.workstation.api.entity_model.fundtype.TaskRequestStatus taskRequestStatus;
+    private TaskRequestStatus taskRequestStatus;
     private boolean isUnloadRequest;
 
 
     public TaskRequest(TaskFilter taskFilter) {
         this.taskFilter = taskFilter;
-        taskRequestStatus = new org.janelia.it.workstation.api.entity_model.fundtype.TaskRequestStatus(taskFilter);
+        taskRequestStatus = new TaskRequestStatus(taskFilter);
     }
 
 //  public TaskRequest(Range range,TaskFilter taskFilter) {
@@ -68,7 +70,7 @@ public class TaskRequest implements java.io.Serializable {
         return taskFilter;
     }
 
-    public org.janelia.it.workstation.api.entity_model.fundtype.TaskRequestStatus getTaskRequestStatus() {
+    public TaskRequestStatus getTaskRequestStatus() {
         return taskRequestStatus;
     }
 }

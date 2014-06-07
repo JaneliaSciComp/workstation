@@ -9,6 +9,7 @@ import javax.swing.tree.DefaultMutableTreeNode;
 import javax.swing.tree.DefaultTreeCellRenderer;
 import javax.swing.tree.TreeCellRenderer;
 
+import org.janelia.it.workstation.gui.framework.actions.Action;
 import org.janelia.it.workstation.gui.framework.keybind.KeyboardShortcut;
 import org.janelia.it.workstation.gui.framework.keybind.KeymapUtil;
 import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
@@ -144,7 +145,7 @@ public class OntologyTreeCellRenderer extends DefaultTreeCellRenderer implements
                 keybindLabel.setText(" ");
 
                 if (ontologyOutline != null) {
-                    org.janelia.it.workstation.gui.framework.actions.Action action = ontologyOutline.getActionForNode(node);
+                    Action action = ontologyOutline.getActionForNode(node);
                     if (action != null) {
                         KeyboardShortcut bind = SessionMgr.getKeyBindings().getBinding(action);
                         if (bind != null) {

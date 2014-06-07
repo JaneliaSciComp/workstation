@@ -8,6 +8,8 @@ package org.janelia.it.workstation.api.facade.concrete_facade.xml;
  */
 
 import org.janelia.it.jacs.shared.utils.FileUtil;
+import org.janelia.it.workstation.api.facade.facade_mgr.FacadeManager;
+import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
 
 import java.io.*;
 import java.util.*;
@@ -41,7 +43,7 @@ public class ValidationManager {
     private static String fileSep = System.getProperty("file.separator");
 
     //----------------------------OBJECT MEMBER VARIABLES
-    private File validationPrefFile = new File(org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr.getSessionMgr().getApplicationOutputDirectory() + fileSep + "userPrefs." + VALIDATION_PROP_NAME);
+    private File validationPrefFile = new File(SessionMgr.getSessionMgr().getApplicationOutputDirectory() + fileSep + "userPrefs." + VALIDATION_PROP_NAME);
 
     private List filesValidatedInSession = null;
 
@@ -193,7 +195,7 @@ public class ValidationManager {
             ostream.close();
         } // End try block.
         catch (Exception ex) {
-            org.janelia.it.workstation.api.facade.facade_mgr.FacadeManager.handleException(new IllegalArgumentException("XML Validation Prefs file cannot be written"));
+            FacadeManager.handleException(new IllegalArgumentException("XML Validation Prefs file cannot be written"));
         } // End catch block for writeback of preferred directory.
 
         // Force re-read of file on next validation 'look'.
@@ -216,13 +218,13 @@ public class ValidationManager {
             StringBuffer overallValidationOutput = new StringBuffer();
             validateWholeDirectory(directoryName, extensions, overallValidationOutput);
             if ((overallValidationOutput != null) && (overallValidationOutput.length() > 0)) {
-                org.janelia.it.workstation.api.facade.facade_mgr.FacadeManager.handleException(new InvalidXmlException(overallValidationOutput, directoryName, getParseTitle()));
+                FacadeManager.handleException(new InvalidXmlException(overallValidationOutput, directoryName, getParseTitle()));
             } // Found errors.
 
         } // End try block for val.
         catch (Exception ex) {
             // Unable to fully validate.
-            org.janelia.it.workstation.api.facade.facade_mgr.FacadeManager.handleException(ex);
+            FacadeManager.handleException(ex);
         } // End catch for val.
 
     } // End method: validateWholeDirectory
@@ -255,11 +257,11 @@ public class ValidationManager {
             } // For all separate paths.
 
             if ((overallValidationOutput != null) && (overallValidationOutput.length() > 0)) {
-                org.janelia.it.workstation.api.facade.facade_mgr.FacadeManager.handleException(new InvalidXmlException(overallValidationOutput, ALL_PARSE_REPORT_TITLE, getParseTitle()));
+                FacadeManager.handleException(new InvalidXmlException(overallValidationOutput, ALL_PARSE_REPORT_TITLE, getParseTitle()));
             } // Found errors.
         } // End try block
         catch (Exception ex) {
-            org.janelia.it.workstation.api.facade.facade_mgr.FacadeManager.handleException(ex);
+            FacadeManager.handleException(ex);
         } // End catch
 
     } // End method: validateAll
@@ -337,7 +339,7 @@ public class ValidationManager {
             StringBuffer header = new StringBuffer();
             appendErrorHeader(header, fileName);
             validationOutput.insert(0, header.toString());
-            org.janelia.it.workstation.api.facade.facade_mgr.FacadeManager.handleException(new InvalidXmlException(validationOutput, fileName, getParseTitle()));
+            FacadeManager.handleException(new InvalidXmlException(validationOutput, fileName, getParseTitle()));
         } // Got errors to report.
     } // End method
 
@@ -354,7 +356,7 @@ public class ValidationManager {
         StringBuffer validationOutput = null;
         validationOutput = validateInputFile(fileName, requestedValidationType);
         if ((validationOutput != null) && (validationOutput.length() > 0))
-            org.janelia.it.workstation.api.facade.facade_mgr.FacadeManager.handleException(new InvalidXmlException(validationOutput, fileName, getParseTitle()));
+            FacadeManager.handleException(new InvalidXmlException(validationOutput, fileName, getParseTitle()));
     } // End method
 
     /**
@@ -370,7 +372,7 @@ public class ValidationManager {
         StringBuffer validationOutput = null;
         validationOutput = revalidateInputFile(fileName, requestedValidationType);
         if ((validationOutput != null) && (validationOutput.length() > 0))
-            org.janelia.it.workstation.api.facade.facade_mgr.FacadeManager.handleException(new InvalidXmlException(validationOutput, fileName, getParseTitle()));
+            FacadeManager.handleException(new InvalidXmlException(validationOutput, fileName, getParseTitle()));
     } // End method
 
     /**
@@ -421,7 +423,7 @@ public class ValidationManager {
         } // End try block for val.
         catch (Exception ex) {
             // Unable to fully validate.
-            org.janelia.it.workstation.api.facade.facade_mgr.FacadeManager.handleException(ex);
+            FacadeManager.handleException(ex);
         } // End catch for val.
 
     } // End method: validateWholeDirectory

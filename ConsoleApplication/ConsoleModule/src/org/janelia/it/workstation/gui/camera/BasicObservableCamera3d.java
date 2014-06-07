@@ -2,19 +2,22 @@ package org.janelia.it.workstation.gui.camera;
 
 import java.util.Observable;
 
+import org.janelia.it.workstation.geom.Rotation3d;
 import org.janelia.it.workstation.geom.Vec3;
+import org.janelia.it.workstation.signal.Signal;
+import org.janelia.it.workstation.signal.Signal1;
 
 public class BasicObservableCamera3d 
 extends Observable 
 implements Camera3d, ObservableCamera3d
 {
 	private Camera3d camera = new BasicCamera3d();
-	protected org.janelia.it.workstation.signal.Signal viewChangedSignal = new org.janelia.it.workstation.signal.Signal();
-	protected org.janelia.it.workstation.signal.Signal1<Double> zoomChangedSignal = new org.janelia.it.workstation.signal.Signal1<Double>();
-	protected org.janelia.it.workstation.signal.Signal1<Vec3> focusChangedSignal = new org.janelia.it.workstation.signal.Signal1<Vec3>();
+	protected Signal viewChangedSignal = new Signal();
+	protected Signal1<Double> zoomChangedSignal = new Signal1<Double>();
+	protected Signal1<Vec3> focusChangedSignal = new Signal1<Vec3>();
 
 	
-	public org.janelia.it.workstation.signal.Signal1<Vec3> getFocusChangedSignal() {
+	public Signal1<Vec3> getFocusChangedSignal() {
 		return focusChangedSignal;
 	}
 
@@ -22,12 +25,12 @@ implements Camera3d, ObservableCamera3d
 	 * @see org.janelia.it.workstation.gui.viewer3d.camera.ObservableCamera3d#getViewChangedSignal()
 	 */
 	@Override
-	public org.janelia.it.workstation.signal.Signal getViewChangedSignal() {
+	public Signal getViewChangedSignal() {
 		return viewChangedSignal;
 	}
 	
 	@Override
-	public org.janelia.it.workstation.signal.Signal1<Double> getZoomChangedSignal() {
+	public Signal1<Double> getZoomChangedSignal() {
 		return zoomChangedSignal;
 	}
 
@@ -40,7 +43,7 @@ implements Camera3d, ObservableCamera3d
 	}
 
 	@Override
-	public boolean incrementFocusPixels(org.janelia.it.workstation.geom.Vec3 offset) {
+	public boolean incrementFocusPixels(Vec3 offset) {
 		boolean result = markAndNotify(camera.incrementFocusPixels(offset));
 		if (result)
 			getFocusChangedSignal().emit(camera.getFocus());
@@ -65,7 +68,7 @@ implements Camera3d, ObservableCamera3d
 	}
 
 	@Override
-	public org.janelia.it.workstation.geom.Vec3 getFocus() {
+	public Vec3 getFocus() {
 		return camera.getFocus();
 	}
 
@@ -75,7 +78,7 @@ implements Camera3d, ObservableCamera3d
 	}
 
 	@Override
-	public org.janelia.it.workstation.geom.Rotation3d getRotation() {
+	public Rotation3d getRotation() {
 		return camera.getRotation();
 	}
 
@@ -93,7 +96,7 @@ implements Camera3d, ObservableCamera3d
 	}
 
 	@Override
-	public boolean setFocus(org.janelia.it.workstation.geom.Vec3 f) {
+	public boolean setFocus(Vec3 f) {
 		boolean result = markAndNotify(camera.setFocus(f));
 		if (result)
 			getFocusChangedSignal().emit(camera.getFocus());
@@ -109,7 +112,7 @@ implements Camera3d, ObservableCamera3d
 	}
 
 	@Override
-	public boolean setRotation(org.janelia.it.workstation.geom.Rotation3d r) {
+	public boolean setRotation(Rotation3d r) {
 		return markAndNotify(camera.setRotation(r));
 	}
 

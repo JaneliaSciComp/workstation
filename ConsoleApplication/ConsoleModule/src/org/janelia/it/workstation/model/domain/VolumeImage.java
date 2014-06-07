@@ -8,7 +8,7 @@ import org.janelia.it.jacs.model.entity.EntityConstants;
  * 
  * @author <a href="mailto:rokickik@janelia.hhmi.org">Konrad Rokicki</a>
  */
-public class VolumeImage extends EntityWrapper implements Viewable2d, Viewable3d, org.janelia.it.workstation.model.domain.Masked3d {
+public class VolumeImage extends EntityWrapper implements Viewable2d, Viewable3d, Masked3d {
 
     public VolumeImage(RootedEntity reference) {
         super(reference);

@@ -3,9 +3,13 @@ package org.janelia.it.workstation.gui.opengl.stereo3d;
 import javax.media.opengl.GL;
 import javax.media.opengl.GLAutoDrawable;
 
+import org.janelia.it.workstation.gui.camera.Camera3d;
+import org.janelia.it.workstation.gui.opengl.CameraScreenGeometry;
 import org.janelia.it.workstation.gui.opengl.GL2Adapter;
 import org.janelia.it.workstation.gui.opengl.GLActorContext;
 import org.janelia.it.workstation.gui.opengl.GL2Adapter.MatrixMode;
+import org.janelia.it.workstation.gui.opengl.GLError;
+import org.janelia.it.workstation.gui.opengl.GLSceneComposer;
 
 public class BasicStereoMode implements StereoMode {
     protected int viewportWidth = 1;
@@ -14,15 +18,15 @@ public class BasicStereoMode implements StereoMode {
 
     @Override
     public void display(GLActorContext actorContext,
-            org.janelia.it.workstation.gui.opengl.GLSceneComposer composer)
+            GLSceneComposer composer)
     {
         GLAutoDrawable glDrawable = actorContext.getGLAutoDrawable();
         GL gl = glDrawable.getGL();
-        org.janelia.it.workstation.gui.opengl.GLError.checkGlError(gl, "BasicStereoMode display 24");
+        GLError.checkGlError(gl, "BasicStereoMode display 24");
         updateViewport(glDrawable);
         setMonoscopicView(actorContext, composer.getCameraScreenGeometry());
         composer.displayScene(actorContext);
-        org.janelia.it.workstation.gui.opengl.GLError.checkGlError(gl, "BasicStereoMode display 29");
+        GLError.checkGlError(gl, "BasicStereoMode display 29");
     }
 
     @Override
@@ -55,19 +59,19 @@ public class BasicStereoMode implements StereoMode {
     }
 
     protected void setLeftEyeView(GLActorContext actorContext,
-            org.janelia.it.workstation.gui.opengl.CameraScreenGeometry cameraScreenGeometry)
+            CameraScreenGeometry cameraScreenGeometry)
     {
         updateProjectionMatrix(actorContext, cameraScreenGeometry, -1.0);
     }
 
     protected void setMonoscopicView(GLActorContext actorContext,
-            org.janelia.it.workstation.gui.opengl.CameraScreenGeometry cameraScreenGeometry)
+            CameraScreenGeometry cameraScreenGeometry)
     {
         updateProjectionMatrix(actorContext, cameraScreenGeometry, 0);
     }
 
     protected void setRightEyeView(GLActorContext actorContext,
-            org.janelia.it.workstation.gui.opengl.CameraScreenGeometry cameraScreenGeometry)
+            CameraScreenGeometry cameraScreenGeometry)
     {
         updateProjectionMatrix(actorContext, cameraScreenGeometry, 1.0);
     }
@@ -83,7 +87,7 @@ public class BasicStereoMode implements StereoMode {
      * @param eyeShift -1 for left eye, +1 for right eye, 0 for mono
      */
     protected void updateProjectionMatrix(GLActorContext actorContext,
-            org.janelia.it.workstation.gui.opengl.CameraScreenGeometry cameraScreenGeometry, double eyeShift)
+            CameraScreenGeometry cameraScreenGeometry, double eyeShift)
     {
         if (isEyesSwapped())
             eyeShift = -eyeShift;
@@ -98,7 +102,7 @@ public class BasicStereoMode implements StereoMode {
         double camDistCm = cameraScreenGeometry.getScreenEyeDistanceCm();
         double camDistPx = camDistCm
                 * cameraScreenGeometry.getScreenPixelsPerCm();
-        org.janelia.it.workstation.gui.camera.Camera3d camera = cameraScreenGeometry.getCamera();
+        Camera3d camera = cameraScreenGeometry.getCamera();
         double camDistScene = camDistPx / camera.getPixelsPerSceneUnit();
         double tanx = camDistPx;
         double tany = h / 2.0;

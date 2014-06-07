@@ -45,7 +45,7 @@ public class TestAStar {
         System.out.println("Finished loading subvolume.");
         // 
         System.out.println("Initializing A*...");
-        org.janelia.it.workstation.tracing.AStar astar = new org.janelia.it.workstation.tracing.AStar(subvolume);
+        AStar astar = new AStar(subvolume);
         System.out.println("Finished initializing A*.");
         System.out.println("Tracing path...");
         List<ZoomedVoxelIndex> path = astar.trace(v1, v2, 1000.0);

@@ -11,7 +11,12 @@ import javax.swing.JPanel;
 import javax.swing.JPopupMenu;
 import javax.swing.JTable;
 
+import org.janelia.it.workstation.api.entity_model.management.ModelMgr;
+import org.janelia.it.workstation.gui.dialogs.search.SearchAttribute;
+import org.janelia.it.workstation.gui.dialogs.search.SearchConfiguration;
 import org.janelia.it.workstation.gui.dialogs.search.SearchConfiguration.AttrGroup;
+import org.janelia.it.workstation.gui.dialogs.search.SearchConfigurationEvent;
+import org.janelia.it.workstation.gui.dialogs.search.SearchConfigurationListener;
 import org.janelia.it.workstation.gui.framework.outline.Refreshable;
 import org.janelia.it.workstation.gui.framework.table.DynamicColumn;
 import org.janelia.it.workstation.gui.framework.table.DynamicTable;
@@ -24,7 +29,7 @@ import org.janelia.it.jacs.model.entity.EntityType;
  *
  * @author <a href="mailto:rokickik@janelia.hhmi.org">Konrad Rokicki</a>
  */
-public abstract class EntityListPane extends JPanel implements org.janelia.it.workstation.gui.dialogs.search.SearchConfigurationListener, Refreshable {
+public abstract class EntityListPane extends JPanel implements SearchConfigurationListener, Refreshable {
 
     /**
      * Format for displaying dates
@@ -125,7 +130,7 @@ public abstract class EntityListPane extends JPanel implements org.janelia.it.wo
 
             @Override
             protected void doStuff() throws Exception {
-                List<Entity> entities = org.janelia.it.workstation.api.entity_model.management.ModelMgr.getModelMgr().getOwnedEntitiesByTypeName(entityType.getName());
+                List<Entity> entities = ModelMgr.getModelMgr().getOwnedEntitiesByTypeName(entityType.getName());
                 if (isCancelled()) {
                     return;
                 }
@@ -206,7 +211,7 @@ public abstract class EntityListPane extends JPanel implements org.janelia.it.wo
 
             @Override
             protected void doStuff() throws Exception {
-                fullEntity = org.janelia.it.workstation.api.entity_model.management.ModelMgr.getModelMgr().getEntityById(entity.getId());
+                fullEntity = ModelMgr.getModelMgr().getEntityById(entity.getId());
                 titleLabel.setText("Entity: " + entity.getEntityTypeName() + " (" + entity.getName() + ")");
                 List<Entity> entities = new ArrayList<Entity>();
                 entities.add(fullEntity);
@@ -252,15 +257,15 @@ public abstract class EntityListPane extends JPanel implements org.janelia.it.wo
     }
 
     @Override
-    public void configurationChange(org.janelia.it.workstation.gui.dialogs.search.SearchConfigurationEvent evt) {
-        org.janelia.it.workstation.gui.dialogs.search.SearchConfiguration searchConfig = evt.getSearchConfig();
-        Map<AttrGroup, List<org.janelia.it.workstation.gui.dialogs.search.SearchAttribute>> attributeGroups = searchConfig.getAttributeGroups();
+    public void configurationChange(SearchConfigurationEvent evt) {
+        SearchConfiguration searchConfig = evt.getSearchConfig();
+        Map<AttrGroup, List<SearchAttribute>> attributeGroups = searchConfig.getAttributeGroups();
 
-        for (org.janelia.it.workstation.gui.dialogs.search.SearchAttribute attr : attributeGroups.get(AttrGroup.BASIC)) {
+        for (SearchAttribute attr : attributeGroups.get(AttrGroup.BASIC)) {
             resultsTable.addColumn(attr.getName(), attr.getLabel(), true, false, true, attr.isSortable());
         }
 
-        for (org.janelia.it.workstation.gui.dialogs.search.SearchAttribute attr : attributeGroups.get(AttrGroup.EXT)) {
+        for (SearchAttribute attr : attributeGroups.get(AttrGroup.EXT)) {
             resultsTable.addColumn(attr.getName(), attr.getLabel(), false, false, true, true);
         }
 

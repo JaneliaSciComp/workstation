@@ -16,17 +16,17 @@ import java.util.Map;
  *
  * @author Eric Trautman
  */
-public class MockWebDavClient extends org.janelia.it.workstation.shared.util.filecache.WebDavClient {
+public class MockWebDavClient extends WebDavClient {
 
-    private Map<URL, List<org.janelia.it.workstation.shared.util.filecache.WebDavFile>> urlToFileList;
+    private Map<URL, List<WebDavFile>> urlToFileList;
 
     public MockWebDavClient() {
-        urlToFileList = new HashMap<URL, List<org.janelia.it.workstation.shared.util.filecache.WebDavFile>>();
+        urlToFileList = new HashMap<URL, List<WebDavFile>>();
     }
 
     public void mapFileUsingDefaultUrl(File file) {
-        org.janelia.it.workstation.shared.util.filecache.WebDavFile webDavFile = new org.janelia.it.workstation.shared.util.filecache.WebDavFile(null, file);
-        List<org.janelia.it.workstation.shared.util.filecache.WebDavFile> list = new ArrayList<org.janelia.it.workstation.shared.util.filecache.WebDavFile>();
+        WebDavFile webDavFile = new WebDavFile(null, file);
+        List<WebDavFile> list = new ArrayList<WebDavFile>();
         list.add(webDavFile);
         urlToFileList.put(webDavFile.getUrl(), list);
     }
@@ -41,10 +41,10 @@ public class MockWebDavClient extends org.janelia.it.workstation.shared.util.fil
     public void mapUrlToFileList(URL url,
                                  List<File> fileList) {
         if (fileList.size() > 0) {
-            List<org.janelia.it.workstation.shared.util.filecache.WebDavFile> webDavFileList =
-                    new ArrayList<org.janelia.it.workstation.shared.util.filecache.WebDavFile>(fileList.size());
+            List<WebDavFile> webDavFileList =
+                    new ArrayList<WebDavFile>(fileList.size());
             for (File file : fileList) {
-                webDavFileList.add(new org.janelia.it.workstation.shared.util.filecache.WebDavFile(null, file));
+                webDavFileList.add(new WebDavFile(null, file));
             }
             urlToFileList.put(url, webDavFileList);
         }
@@ -56,53 +56,53 @@ public class MockWebDavClient extends org.janelia.it.workstation.shared.util.fil
     }
 
     @Override
-    public org.janelia.it.workstation.shared.util.filecache.WebDavFile findFile(URL url)
-            throws org.janelia.it.workstation.shared.util.filecache.WebDavException {
-        List<org.janelia.it.workstation.shared.util.filecache.WebDavFile> list = urlToFileList.get(url);
+    public WebDavFile findFile(URL url)
+            throws WebDavException {
+        List<WebDavFile> list = urlToFileList.get(url);
         if ((list == null) || (list.size() == 0)) {
-            throw new org.janelia.it.workstation.shared.util.filecache.WebDavException("no test file registered for " + url);
+            throw new WebDavException("no test file registered for " + url);
         }
         return list.get(0);
     }
 
     @Override
     public boolean isAvailable(URL url)
-            throws org.janelia.it.workstation.shared.util.filecache.WebDavException {
+            throws WebDavException {
         return (urlToFileList.containsKey(url));
     }
 
     @Override
-    public List<org.janelia.it.workstation.shared.util.filecache.WebDavFile> findAllInternalFiles(URL url)
-            throws org.janelia.it.workstation.shared.util.filecache.WebDavException {
+    public List<WebDavFile> findAllInternalFiles(URL url)
+            throws WebDavException {
         return getFiles(url, true);
     }
 
     @Override
-    public List<org.janelia.it.workstation.shared.util.filecache.WebDavFile> findImmediateInternalFiles(URL url)
-            throws org.janelia.it.workstation.shared.util.filecache.WebDavException {
+    public List<WebDavFile> findImmediateInternalFiles(URL url)
+            throws WebDavException {
         return getFiles(url, false);
     }
 
     @Override
     public void createDirectory(URL directoryUrl)
             throws WebDavException {
-        List<org.janelia.it.workstation.shared.util.filecache.WebDavFile> webDavFileList = new ArrayList<org.janelia.it.workstation.shared.util.filecache.WebDavFile>();
-        webDavFileList.add(new org.janelia.it.workstation.shared.util.filecache.WebDavFile(null, new File(directoryUrl.getPath())));
+        List<WebDavFile> webDavFileList = new ArrayList<WebDavFile>();
+        webDavFileList.add(new WebDavFile(null, new File(directoryUrl.getPath())));
         urlToFileList.put(directoryUrl, webDavFileList);
     }
 
     @Override
     public void saveFile(URL url,
                          File file) {
-        List<org.janelia.it.workstation.shared.util.filecache.WebDavFile> webDavFileList = new ArrayList<org.janelia.it.workstation.shared.util.filecache.WebDavFile>();
-        webDavFileList.add(new org.janelia.it.workstation.shared.util.filecache.WebDavFile(null, file));
+        List<WebDavFile> webDavFileList = new ArrayList<WebDavFile>();
+        webDavFileList.add(new WebDavFile(null, file));
         urlToFileList.put(url, webDavFileList);
     }
 
-    private List<org.janelia.it.workstation.shared.util.filecache.WebDavFile> getFiles(URL url,
+    private List<WebDavFile> getFiles(URL url,
                                       boolean addAll) {
 
-        List<org.janelia.it.workstation.shared.util.filecache.WebDavFile> list = new ArrayList<org.janelia.it.workstation.shared.util.filecache.WebDavFile>();
+        List<WebDavFile> list = new ArrayList<WebDavFile>();
 
         final String directoryPath = url.getPath();
         String path;

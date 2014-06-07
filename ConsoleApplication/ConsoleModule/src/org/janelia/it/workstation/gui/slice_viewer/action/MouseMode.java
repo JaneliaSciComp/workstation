@@ -1,5 +1,9 @@
 package org.janelia.it.workstation.gui.slice_viewer.action;
 
+import org.janelia.it.workstation.gui.camera.Camera3d;
+import org.janelia.it.workstation.gui.slice_viewer.MenuItemGenerator;
+import org.janelia.it.workstation.gui.slice_viewer.MouseModalWidget;
+
 import java.awt.Cursor;
 import java.awt.event.KeyListener;
 import java.awt.event.MouseListener;
@@ -20,10 +24,10 @@ extends MouseMotionListener, MouseListener, KeyListener
 	public void setDragCursor(Cursor dragCursor);
 	public Cursor getHoverCursor();
 	public void setHoverCursor(Cursor hoverCursor);
-	public org.janelia.it.workstation.gui.slice_viewer.MouseModalWidget getWidget();
-	org.janelia.it.workstation.gui.camera.Camera3d getCamera();
-	void setCamera(org.janelia.it.workstation.gui.camera.Camera3d camera);
+	public MouseModalWidget getWidget();
+	Camera3d getCamera();
+	void setCamera(Camera3d camera);
 	public String getToolTipText();
-    public org.janelia.it.workstation.gui.slice_viewer.MenuItemGenerator getMenuItemGenerator();
-	void setWidget(org.janelia.it.workstation.gui.slice_viewer.MouseModalWidget widget, boolean updateCursor);
+    public MenuItemGenerator getMenuItemGenerator();
+	void setWidget(MouseModalWidget widget, boolean updateCursor);
 }

@@ -1,6 +1,7 @@
 package org.janelia.it.workstation.gui.viewer3d;
 
 import org.janelia.it.workstation.geom.Vec3;
+import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.workstation.gui.opengl.GLActor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -102,7 +103,7 @@ public class AxesActor implements GLActor
 
                 bBuffersNeedUpload = false;
             } catch ( Exception ex ) {
-                org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr.getSessionMgr().handleException( ex );
+                SessionMgr.getSessionMgr().handleException( ex );
             }
         }
 

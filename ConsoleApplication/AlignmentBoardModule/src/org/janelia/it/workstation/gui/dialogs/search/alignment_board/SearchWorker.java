@@ -12,7 +12,7 @@ import org.janelia.it.workstation.model.entity.RootedEntity;
 import org.janelia.it.workstation.model.viewer.AlignmentBoardContext;
 import org.janelia.it.workstation.shared.workers.SimpleWorker;
 import org.janelia.it.jacs.compute.api.support.SolrQueryBuilder;
-import org.janelia.it.jacs.compute.api.support.SolrResults;
+import org.janelia.it.jacs.shared.solr.SolrResults;
 import org.janelia.it.jacs.model.entity.Entity;
 import org.janelia.it.jacs.model.entity.EntityConstants;
 import org.janelia.it.jacs.shared.utils.StringUtils;
@@ -20,6 +20,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.*;
+import org.janelia.it.workstation.api.entity_model.management.ModelMgrUtils;
 
 /**
  * This "fields" requests to search, and deposits the results back into the param's receiver.
@@ -143,7 +144,7 @@ public class SearchWorker extends SimpleWorker {
                 // Now, to "prowl" the trees of the result list, to find out what can be added, here.
                 if ( entity.getEntityTypeName().equals( EntityConstants.TYPE_SAMPLE ) ) {
                     RootedEntity rootedEntity = null;
-                    Entity childEntity = entity.getChildren().iterator().next();
+                    Entity childEntity = ModelMgrUtils.getAccessibleChildren(entity).iterator().next();
                     rootedEntity =
                             new RootedEntity( ModelMgr.getModelMgr().getAncestorWithType( childEntity, EntityConstants.TYPE_SAMPLE ) );
 

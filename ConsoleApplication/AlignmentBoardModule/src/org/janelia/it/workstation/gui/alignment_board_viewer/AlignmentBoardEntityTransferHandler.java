@@ -20,6 +20,7 @@ import javax.swing.*;
 import java.awt.datatransfer.Transferable;
 import java.util.Iterator;
 import java.util.List;
+import org.janelia.it.workstation.api.entity_model.management.ModelMgrUtils;
 
 /**
  * Created with IntelliJ IDEA.
@@ -153,10 +154,10 @@ public class AlignmentBoardEntityTransferHandler extends EntityTransferHandler {
         int fragmentCount = 0;
         int sampleCount = 0;
         // Some entities would make it onto the board.  Let's get the remaining capacity of that board.
-        for ( Entity container: abEntity.getChildren() ) {
+        for ( Entity container: ModelMgrUtils.getAccessibleChildren(abEntity) ) {
             // Looking at sample contents, only; ignore the compartment sets.
             if ( ! container.getName().startsWith( EntityConstants.TYPE_COMPARTMENT_SET ) ) {
-                fragmentCount += container.getChildren().size();
+                fragmentCount += ModelMgrUtils.getAccessibleChildren(container).size();
                 sampleCount ++;
             }
         }

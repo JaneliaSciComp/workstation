@@ -12,7 +12,9 @@ import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.border.Border;
 
+import org.janelia.it.workstation.gui.util.MouseForwarder;
 import org.janelia.it.workstation.gui.util.MouseHandler;
+import org.janelia.it.workstation.gui.util.WrapLayout;
 
 /**
  * A panel that shows a bunch of tags in a loose wrapping fashion.
@@ -29,7 +31,7 @@ public class TagCloudPanel<T> extends JPanel {
     private List<T> tags = new ArrayList<T>();
 
     public TagCloudPanel() {
-        setLayout(new org.janelia.it.workstation.gui.util.WrapLayout());
+        setLayout(new WrapLayout());
         setOpaque(false);
     }
 
@@ -152,7 +154,7 @@ public class TagCloudPanel<T> extends JPanel {
                     tagDoubleClicked(e, tag);
                 }
             });
-            tagLabel.addMouseListener(new org.janelia.it.workstation.gui.util.MouseForwarder(this, "JLabel->TagCloudPanel"));
+            tagLabel.addMouseListener(new MouseForwarder(this, "JLabel->TagCloudPanel"));
         }
 
         // When there are too many tags, display a "More" button that the user can click to get everything.

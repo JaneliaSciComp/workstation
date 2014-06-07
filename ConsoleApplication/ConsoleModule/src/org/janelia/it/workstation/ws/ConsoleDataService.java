@@ -10,6 +10,8 @@ import javax.jws.soap.SOAPBinding;
 import org.janelia.it.jacs.model.entity.Entity;
 import org.janelia.it.jacs.model.entity.EntityData;
 import org.janelia.it.jacs.model.ontology.OntologyAnnotation;
+import org.janelia.it.workstation.model.utils.AnnotationSession;
+import org.janelia.it.workstation.model.utils.OntologyKeyBindings;
 
 /**
  * The Console server interface for clients to call in order to request data. This implementation accepts and returns
@@ -59,11 +61,11 @@ public interface ConsoleDataService extends Remote {
 			@WebParam(name = "rootId") long rootId)
 			throws RemoteException;
 
-	public org.janelia.it.workstation.model.utils.AnnotationSession getAnnotationSession(
+	public AnnotationSession getAnnotationSession(
 			@WebParam(name = "sessionId") long sessionId)
 			throws RemoteException;
 	
-	public org.janelia.it.workstation.model.utils.OntologyKeyBindings getKeybindings(
+	public OntologyKeyBindings getKeybindings(
 			@WebParam(name = "ontologyId") long ontologyId)
 			throws RemoteException;
 	

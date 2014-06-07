@@ -3,6 +3,7 @@ package org.janelia.it.workstation.gui.dialogs.search;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.net.URI;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.List;
@@ -12,8 +13,10 @@ import javax.swing.border.EtchedBorder;
 
 import org.janelia.it.workstation.gui.dialogs.search.SearchAttribute.DataType;
 import org.janelia.it.jacs.compute.api.support.SolrQueryBuilder;
-import org.janelia.it.jacs.compute.api.support.SolrUtils;
+import org.janelia.it.jacs.shared.solr.SolrUtils;
 import org.janelia.it.jacs.model.entity.Entity;
+import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
+import org.janelia.it.workstation.gui.util.Icons;
 
 /**
  * A reusable panel for defining general search parameters. 
@@ -38,9 +41,9 @@ public class SearchParametersPanel extends JPanel implements SearchConfiguration
     protected final JButton clearButton;
     
     // Search state
-    protected org.janelia.it.workstation.gui.dialogs.search.SearchConfiguration searchConfig;
+    protected SearchConfiguration searchConfig;
     protected Entity searchRoot;
-    protected List<org.janelia.it.workstation.gui.dialogs.search.SearchCriteria> searchCriteriaList = new ArrayList<org.janelia.it.workstation.gui.dialogs.search.SearchCriteria>();
+    protected List<SearchCriteria> searchCriteriaList = new ArrayList<SearchCriteria>();
     protected String searchString = "";
     
     public SearchParametersPanel() {
@@ -69,7 +72,7 @@ public class SearchParametersPanel extends JPanel implements SearchConfiguration
             }
         });
         
-        deleteContextButton = new JButton(org.janelia.it.workstation.gui.util.Icons.getIcon("close.png"));
+        deleteContextButton = new JButton(Icons.getIcon("close.png"));
         deleteContextButton.setBorderPainted(false);
         deleteContextButton.addActionListener(new ActionListener() {
 			@Override
@@ -93,7 +96,7 @@ public class SearchParametersPanel extends JPanel implements SearchConfiguration
         criteriaPanel = new JPanel();
         criteriaPanel.setLayout(new BoxLayout(criteriaPanel, BoxLayout.PAGE_AXIS));
         
-        JButton addCriteriaButton = new JButton("Add search criteria", org.janelia.it.workstation.gui.util.Icons.getIcon("add.png"));
+        JButton addCriteriaButton = new JButton("Add search criteria", Icons.getIcon("add.png"));
         addCriteriaButton.setBorderPainted(false);
         addCriteriaButton.setBorder(BorderFactory.createEmptyBorder(10,13,10,10));
         addCriteriaButton.setIconTextGap(20);
@@ -134,17 +137,17 @@ public class SearchParametersPanel extends JPanel implements SearchConfiguration
 			}
 		});
         
-        JButton infoButton = new JButton(org.janelia.it.workstation.gui.util.Icons.getIcon("info.png"));
+        JButton infoButton = new JButton(Icons.getIcon("info.png"));
         infoButton.setBorderPainted(false);
         infoButton.addActionListener(new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent e) {
 				// TODO: make a custom help page later
 	            try {
-	            	Desktop.getDesktop().browse(new java.net.URI("http://lucene.apache.org/core/old_versioned_docs/versions/3_5_0/queryparsersyntax.html"));
+	            	Desktop.getDesktop().browse(new URI("http://lucene.apache.org/core/old_versioned_docs/versions/3_5_0/queryparsersyntax.html"));
 	            }
 	            catch (Exception ex) {
-	            	org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr.getSessionMgr().handleException(ex);
+	            	SessionMgr.getSessionMgr().handleException(ex);
 	            }
 			}
 		});
@@ -192,7 +195,7 @@ public class SearchParametersPanel extends JPanel implements SearchConfiguration
         add(contentPanel, BorderLayout.CENTER);
     }
     
-	public void init(org.janelia.it.workstation.gui.dialogs.search.SearchConfiguration searchConfig) {
+	public void init(SearchConfiguration searchConfig) {
 		if (searchConfig.isReady()) {
 			this.searchConfig = searchConfig;
 	    	advancedSearchCheckbox.setEnabled(true);
@@ -214,7 +217,7 @@ public class SearchParametersPanel extends JPanel implements SearchConfiguration
 		searchString = (String)inputField.getSelectedItem();
 		
 		SolrQueryBuilder builder = new SolrQueryBuilder();
-		for(String subjectKey : org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr.getSubjectKeys()) {
+		for(String subjectKey : SessionMgr.getSubjectKeys()) {
 			builder.addOwnerKey(subjectKey);
 		}
 		
@@ -228,12 +231,12 @@ public class SearchParametersPanel extends JPanel implements SearchConfiguration
     		
     		StringBuilder aux = new StringBuilder();
     		
-    		for(org.janelia.it.workstation.gui.dialogs.search.SearchCriteria criteria : searchCriteriaList) {
+    		for(SearchCriteria criteria : searchCriteriaList) {
     			
     			String value1 = null;
     			String value2 = null;
     			
-    			org.janelia.it.workstation.gui.dialogs.search.SearchAttribute sa = criteria.getAttribute();
+    			SearchAttribute sa = criteria.getAttribute();
     			if (sa==null) continue;
     			
     			if (sa.getDataType().equals(DataType.DATE)) {
@@ -311,7 +314,7 @@ public class SearchParametersPanel extends JPanel implements SearchConfiguration
 	}
 	
 	private void addSearchCriteria(boolean enableDelete) {
-		org.janelia.it.workstation.gui.dialogs.search.SearchCriteria searchCriteria = new org.janelia.it.workstation.gui.dialogs.search.SearchCriteria(searchConfig.getAttributes(), enableDelete) {
+		SearchCriteria searchCriteria = new SearchCriteria(searchConfig.getAttributes(), enableDelete) {
 			@Override
 			protected void removeSearchCriteria() {
 				searchCriteriaList.remove(this);
@@ -341,7 +344,7 @@ public class SearchParametersPanel extends JPanel implements SearchConfiguration
 		return searchRoot;
 	}
 
-	public List<org.janelia.it.workstation.gui.dialogs.search.SearchCriteria> getSearchCriteriaList() {
+	public List<SearchCriteria> getSearchCriteriaList() {
 		return searchCriteriaList;
 	}
 

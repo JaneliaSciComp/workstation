@@ -7,6 +7,7 @@ import java.awt.Graphics2D;
 import java.awt.Point;
 
 import org.janelia.it.workstation.gui.viewer3d.interfaces.AwtActor;
+import org.janelia.it.workstation.signal.Signal;
 
 public class RubberBand
 implements AwtActor
@@ -25,7 +26,7 @@ implements AwtActor
 	protected Point endPoint = new Point(30, 30);
 	boolean visible = false;
 
-	public org.janelia.it.workstation.signal.Signal changed = new org.janelia.it.workstation.signal.Signal();
+	public Signal changed = new Signal();
 	
 	public Point getStartPoint() {
 		return startPoint;

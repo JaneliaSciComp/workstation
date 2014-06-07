@@ -1,15 +1,19 @@
 package org.janelia.it.workstation.gui.framework.exception_handlers;
 
+import org.janelia.it.workstation.api.facade.concrete_facade.ejb.EJBFactory;
 import org.janelia.it.workstation.api.facade.concrete_facade.xml.InvalidXmlException;
 import org.janelia.it.workstation.api.facade.concrete_facade.xml.XMLSecurityException;
 import org.janelia.it.workstation.api.facade.facade_mgr.ConnectionStatusException;
 import org.janelia.it.workstation.api.facade.facade_mgr.FacadeManager;
 import org.janelia.it.workstation.api.facade.roles.ExceptionHandler;
 import org.janelia.it.workstation.api.stub.data.FatalCommError;
+import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.workstation.gui.util.MailDialogueBox;
+import org.janelia.it.workstation.shared.util.FreeMemoryWatcher;
 import org.janelia.it.workstation.shared.util.Utils;
 import org.janelia.it.workstation.shared.util.text_component.StandardTextArea;
 
+import javax.naming.AuthenticationException;
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ActionEvent;
@@ -52,7 +56,7 @@ public class UserNotificationExceptionHandler implements ExceptionHandler {
        displayFatalComm(throwable);
        return;
      }
-     if (throwable instanceof javax.naming.AuthenticationException || throwable instanceof SecurityException) {
+     if (throwable instanceof AuthenticationException || throwable instanceof SecurityException) {
        displayAuthentication(throwable);
        return;
      }
@@ -127,7 +131,7 @@ public class UserNotificationExceptionHandler implements ExceptionHandler {
         messages[2] = "Please try again in several minutes";
 
         if (getEmailURL() != null) {
-            sendEmail(throwable, "JaneliaWorkstation", "Major Error -- Server " + org.janelia.it.workstation.api.facade.concrete_facade.ejb.EJBFactory.getAppServerName() + " cannot contact database!");
+            sendEmail(throwable, "JaneliaWorkstation", "Major Error -- Server " + EJBFactory.getAppServerName() + " cannot contact database!");
         }
         getOptionPane().showMessageDialog(getParentFrame(), messages, "ERROR!!", JOptionPane.ERROR_MESSAGE);
     }
@@ -173,8 +177,8 @@ public class UserNotificationExceptionHandler implements ExceptionHandler {
     private void sendEmail(Throwable exception) {
         try {
 
-            MailDialogueBox mailDialogueBox = new MailDialogueBox(org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr.getMainFrame(),
-                    (String) org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr.getSessionMgr().getModelProperty(org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr.USER_EMAIL),
+            MailDialogueBox mailDialogueBox = new MailDialogueBox(SessionMgr.getMainFrame(),
+                    (String) SessionMgr.getSessionMgr().getModelProperty(SessionMgr.USER_EMAIL),
                     "Workstation Exception Report",
                     "Problem Description:");
             try {
@@ -292,11 +296,11 @@ public class UserNotificationExceptionHandler implements ExceptionHandler {
         sb.append("Exception Thrown of class: " + throwable.getClass() + lineSep + lineSep);
         sb.append("User Description: " + lineSep + desc + lineSep + lineSep);
         sb.append("User email: " + emailFrom + lineSep);
-        sb.append("Version: " + org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr.getSessionMgr().getApplicationName() + " v" + org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr.getSessionMgr().getApplicationVersion() + lineSep);
+        sb.append("Version: " + SessionMgr.getSessionMgr().getApplicationName() + " v" + SessionMgr.getSessionMgr().getApplicationVersion() + lineSep);
         sb.append("Build Date: " + buildDate + lineSep);
         sb.append("Local (Users Time Zone) Date: " + new Date().toString() + lineSep);
-        sb.append("Total Memory: " + org.janelia.it.workstation.shared.util.FreeMemoryWatcher.getFreeMemoryWatcher().getTotalMemory() + lineSep);
-        sb.append("Free Memory : " + org.janelia.it.workstation.shared.util.FreeMemoryWatcher.getFreeMemoryWatcher().getFreeMemory() + lineSep);
+        sb.append("Total Memory: " + FreeMemoryWatcher.getFreeMemoryWatcher().getTotalMemory() + lineSep);
+        sb.append("Free Memory : " + FreeMemoryWatcher.getFreeMemoryWatcher().getFreeMemory() + lineSep);
         List inUseProtocols = FacadeManager.getInUseProtocolStrings();
         sb.append("In Use Protocols: ");
         for (Iterator it = inUseProtocols.iterator(); it.hasNext(); ) {
@@ -338,7 +342,7 @@ public class UserNotificationExceptionHandler implements ExceptionHandler {
     private URL getEmailURL() {
         if (emailURL != null) return emailURL;
         // todo These features expect a bunch of helper jsps.  Fix this.
-        String appServer = org.janelia.it.workstation.api.facade.concrete_facade.ejb.EJBFactory.getAppServerName();
+        String appServer = EJBFactory.getAppServerName();
         if (appServer != null) {
             appServer = "http://" + appServer;
             try {
@@ -412,7 +416,7 @@ public class UserNotificationExceptionHandler implements ExceptionHandler {
     }
 
     private JFrame getParentFrame() {
-        return org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr.getMainFrame();
+        return SessionMgr.getMainFrame();
     }
 
 }

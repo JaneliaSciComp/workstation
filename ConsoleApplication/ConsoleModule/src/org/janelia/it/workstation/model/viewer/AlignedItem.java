@@ -4,11 +4,17 @@ import java.awt.Color;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.janelia.it.workstation.api.entity_model.management.ModelMgr;
 import org.janelia.it.workstation.gui.viewer3d.masking.RenderMappingI;
 import org.janelia.it.jacs.model.entity.Entity;
 import org.janelia.it.jacs.model.entity.EntityConstants;
 import org.janelia.it.jacs.model.entity.EntityData;
 import org.janelia.it.jacs.shared.utils.EntityUtils;
+import org.janelia.it.workstation.api.entity_model.management.ModelMgrUtils;
+import org.janelia.it.workstation.model.domain.AlignmentContext;
+import org.janelia.it.workstation.model.domain.EntityWrapper;
+import org.janelia.it.workstation.model.domain.EntityWrapperFactory;
+import org.janelia.it.workstation.model.entity.RootedEntity;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -18,7 +24,7 @@ import org.slf4j.LoggerFactory;
  * 
  * @author <a href="mailto:rokickik@janelia.hhmi.org">Konrad Rokicki</a>
  */
-public class AlignedItem extends org.janelia.it.workstation.model.domain.EntityWrapper {
+public class AlignedItem extends EntityWrapper {
 
     private static final Logger log = LoggerFactory.getLogger(AlignedItem.class);
     public enum InclusionStatus {
@@ -46,35 +52,35 @@ public class AlignedItem extends org.janelia.it.workstation.model.domain.EntityW
         }
     };
 
-    private org.janelia.it.workstation.model.domain.EntityWrapper itemWrapper;
+    private EntityWrapper itemWrapper;
     
-    public AlignedItem(org.janelia.it.workstation.model.entity.RootedEntity rootedEntity) {
+    public AlignedItem(RootedEntity rootedEntity) {
         super(rootedEntity);
     }
 
     @Override
-    public void loadContextualizedChildren(org.janelia.it.workstation.model.domain.AlignmentContext alignmentContext) throws Exception {
+    public void loadContextualizedChildren(AlignmentContext alignmentContext) throws Exception {
         
         // TODO: sanity check everything against the alignment context
         
         initChildren();
-        org.janelia.it.workstation.api.entity_model.management.ModelMgr.getModelMgr().loadLazyEntity(getInternalEntity(), false);
+        ModelMgr.getModelMgr().loadLazyEntity(getInternalEntity(), false);
         
-        org.janelia.it.workstation.model.entity.RootedEntity rootedEntity = getInternalRootedEntity();
+        RootedEntity rootedEntity = getInternalRootedEntity();
         EntityData itemEd = rootedEntity.getEntity().getEntityDataByAttributeName(EntityConstants.ATTRIBUTE_ENTITY);
         if (itemEd!=null) {
             try {
-                this.itemWrapper = org.janelia.it.workstation.model.domain.EntityWrapperFactory.wrap(rootedEntity.getChild(itemEd));
+                this.itemWrapper = EntityWrapperFactory.wrap(rootedEntity.getChild(itemEd));
             }
             catch (IllegalArgumentException e) {
                 log.warn("Can't add child: "+itemEd.getChildEntity().getName()+", "+e);
             }
         }
         
-        for(org.janelia.it.workstation.model.entity.RootedEntity child : rootedEntity.getChildrenForAttribute(EntityConstants.ATTRIBUTE_ITEM)) {
+        for(RootedEntity child : rootedEntity.getChildrenForAttribute(EntityConstants.ATTRIBUTE_ITEM)) {
             AlignedItem alignedItem = new AlignedItem(child);
             addChild(alignedItem);
-            if (EntityUtils.areLoaded(child.getEntity().getEntityData())) {
+            if (ModelMgrUtils.areChildrenLoaded(child.getEntity())) {
                 alignedItem.loadContextualizedChildren(alignmentContext);
             }
         }
@@ -84,7 +90,7 @@ public class AlignedItem extends org.janelia.it.workstation.model.domain.EntityW
      * Returns the underlying domain object (e.g. Sample, Neuron, Mask, etc) that is contextualized by this AlignedItem.
      * @return
      */
-    public org.janelia.it.workstation.model.domain.EntityWrapper getItemWrapper() {
+    public EntityWrapper getItemWrapper() {
         return itemWrapper;
     }
 
@@ -100,7 +106,7 @@ public class AlignedItem extends org.janelia.it.workstation.model.domain.EntityW
                     "Calling getAlignedItems will return null.");
         }
         List<AlignedItem> alignedItems = new ArrayList<AlignedItem>();
-        for(org.janelia.it.workstation.model.domain.EntityWrapper wrapper : getChildren()) {
+        for(EntityWrapper wrapper : getChildren()) {
             if (wrapper instanceof AlignedItem) {
                 alignedItems.add((AlignedItem)wrapper);
             }
@@ -130,7 +136,7 @@ public class AlignedItem extends org.janelia.it.workstation.model.domain.EntityW
             }
             else {
                 // Step in one more level.
-                for ( org.janelia.it.workstation.model.domain.EntityWrapper childWrapper: item.getChildren() ) {
+                for ( EntityWrapper childWrapper: item.getChildren() ) {
                     if ( childWrapper instanceof AlignedItem ) {
                         AlignedItem childItem = (AlignedItem)childWrapper;
                         if ( childItem.getId().equals(entityId)) {
@@ -159,7 +165,7 @@ public class AlignedItem extends org.janelia.it.workstation.model.domain.EntityW
      * @throws Exception
      */
     public void setIsVisible(boolean visible) throws Exception {
-        org.janelia.it.workstation.api.entity_model.management.ModelMgr.getModelMgr().setOrUpdateValue(getInternalEntity(), EntityConstants.ATTRIBUTE_VISIBILITY, new Boolean(visible).toString());
+        ModelMgr.getModelMgr().setOrUpdateValue(getInternalEntity(), EntityConstants.ATTRIBUTE_VISIBILITY, new Boolean(visible).toString());
     }
     
     /**
@@ -178,7 +184,7 @@ public class AlignedItem extends org.janelia.it.workstation.model.domain.EntityW
      * @throws Exception
      */
     public void setColorHex(String colorHex) throws Exception {
-        org.janelia.it.workstation.api.entity_model.management.ModelMgr.getModelMgr().setOrUpdateValue(getInternalEntity(), EntityConstants.ATTRIBUTE_COLOR, colorHex);
+        ModelMgr.getModelMgr().setOrUpdateValue(getInternalEntity(), EntityConstants.ATTRIBUTE_COLOR, colorHex);
     }
 
     /**
@@ -228,7 +234,7 @@ public class AlignedItem extends org.janelia.it.workstation.model.domain.EntityW
      */
     public void setPassthroughRendering(boolean passthroughRendering) throws Exception {
         String value = passthroughRendering ? RenderMappingI.PASSTHROUGH_RENDER_ATTRIBUTE : null;
-        org.janelia.it.workstation.api.entity_model.management.ModelMgr.getModelMgr().setOrUpdateValue(getInternalEntity(), EntityConstants.ATTRIBUTE_RENDER_METHOD, value);
+        ModelMgr.getModelMgr().setOrUpdateValue(getInternalEntity(), EntityConstants.ATTRIBUTE_RENDER_METHOD, value);
     }
 
     /**
@@ -257,7 +263,7 @@ public class AlignedItem extends org.janelia.it.workstation.model.domain.EntityW
      */
     public void setInclusionStatus( InclusionStatus status ) throws Exception {
         String value = status.toString();
-        org.janelia.it.workstation.api.entity_model.management.ModelMgr.getModelMgr().setOrUpdateValue(getInternalEntity(), EntityConstants.ATTRIBUTE_INCLUSION_STATUS, value);
+        ModelMgr.getModelMgr().setOrUpdateValue(getInternalEntity(), EntityConstants.ATTRIBUTE_INCLUSION_STATUS, value);
     }
 
     /**
@@ -272,7 +278,7 @@ public class AlignedItem extends org.janelia.it.workstation.model.domain.EntityW
             removeChild(alignedItem);
         }
         else {
-            for(org.janelia.it.workstation.model.domain.EntityWrapper entityWrapper : getChildren()) {
+            for(EntityWrapper entityWrapper : getChildren()) {
                 if (entityWrapper instanceof AlignedItem) {
                     AlignedItem childAlignedItem = (AlignedItem)entityWrapper;
                     childAlignedItem.findAndRemoveAlignedEntity(alignedItem);

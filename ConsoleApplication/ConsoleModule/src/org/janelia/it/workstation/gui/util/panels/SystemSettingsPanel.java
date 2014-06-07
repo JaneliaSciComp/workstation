@@ -9,8 +9,11 @@ import javax.swing.border.TitledBorder;
 
 import loci.plugins.config.SpringUtilities;
 
+import org.janelia.it.workstation.api.facade.concrete_facade.ejb.EJBFactory;
 import org.janelia.it.workstation.gui.framework.pref_controller.PrefController;
 import org.janelia.it.workstation.gui.framework.roles.PrefEditor;
+import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
+import org.janelia.it.workstation.shared.filestore.PathTranslator;
 import org.janelia.it.workstation.shared.util.PropertyConfigurator;
 
 public class SystemSettingsPanel extends JPanel implements PrefEditor {
@@ -32,11 +35,11 @@ public class SystemSettingsPanel extends JPanel implements PrefEditor {
         try {
         	System.out.println("Reading data source settings ");
         	
-            jacsDataPath = (String) org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr.getSessionMgr().getModelProperty(org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr.JACS_DATA_PATH_PROPERTY);
+            jacsDataPath = (String) SessionMgr.getSessionMgr().getModelProperty(SessionMgr.JACS_DATA_PATH_PROPERTY);
             if (jacsDataPath == null) jacsDataPath = "";
-            jacsInteractiveServer = (String) org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr.getSessionMgr().getModelProperty(org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr.JACS_INTERACTIVE_SERVER_PROPERTY);
+            jacsInteractiveServer = (String) SessionMgr.getSessionMgr().getModelProperty(SessionMgr.JACS_INTERACTIVE_SERVER_PROPERTY);
             if (jacsInteractiveServer == null) jacsInteractiveServer = "";
-            jacsPipelineServer = (String) org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr.getSessionMgr().getModelProperty(org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr.JACS_PIPELINE_SERVER_PROPERTY);
+            jacsPipelineServer = (String) SessionMgr.getSessionMgr().getModelProperty(SessionMgr.JACS_PIPELINE_SERVER_PROPERTY);
             if (jacsPipelineServer == null) jacsPipelineServer = "";
             
             System.out.println("jacsDataPath="+jacsDataPath);
@@ -46,7 +49,7 @@ public class SystemSettingsPanel extends JPanel implements PrefEditor {
             jbInit();
         }
         catch (Exception ex) {
-            org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr.getSessionMgr().handleException(ex);
+            SessionMgr.getSessionMgr().handleException(ex);
         }
     }
 
@@ -68,9 +71,9 @@ public class SystemSettingsPanel extends JPanel implements PrefEditor {
      */
     public void cancelChanges() {
         if (jacsDataPath == null || jacsInteractiveServer == null || jacsPipelineServer == null) {
-            PropertyConfigurator.getProperties().setProperty(org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr.JACS_DATA_PATH_PROPERTY, "NoDataPathProperty");
-            PropertyConfigurator.getProperties().setProperty(org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr.JACS_INTERACTIVE_SERVER_PROPERTY, "NoInteractiveServerProperty");
-            PropertyConfigurator.getProperties().setProperty(org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr.JACS_PIPELINE_SERVER_PROPERTY, "NoPipelineServerProperty");
+            PropertyConfigurator.getProperties().setProperty(SessionMgr.JACS_DATA_PATH_PROPERTY, "NoDataPathProperty");
+            PropertyConfigurator.getProperties().setProperty(SessionMgr.JACS_INTERACTIVE_SERVER_PROPERTY, "NoInteractiveServerProperty");
+            PropertyConfigurator.getProperties().setProperty(SessionMgr.JACS_PIPELINE_SERVER_PROPERTY, "NoPipelineServerProperty");
         }
         settingsChanged = false;
     }
@@ -94,16 +97,16 @@ public class SystemSettingsPanel extends JPanel implements PrefEditor {
         jacsInteractiveServer = jacsInteractiveServerField.getText().trim();
         jacsPipelineServer = jacsPipelineServerField.getText().trim();
         
-        if ((!jacsDataPath.equals(org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr.getSessionMgr().getModelProperty(org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr.JACS_DATA_PATH_PROPERTY)))
-                || (!jacsInteractiveServer.equals(org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr.getSessionMgr().getModelProperty(org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr.JACS_INTERACTIVE_SERVER_PROPERTY)))
-                || (!jacsPipelineServer.equals(org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr.getSessionMgr().getModelProperty(org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr.JACS_PIPELINE_SERVER_PROPERTY)))) {
-            org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr.getSessionMgr().setModelProperty(org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr.JACS_DATA_PATH_PROPERTY, jacsDataPath);
-            org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr.getSessionMgr().setModelProperty(org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr.JACS_INTERACTIVE_SERVER_PROPERTY, jacsInteractiveServer);
-            org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr.getSessionMgr().setModelProperty(org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr.JACS_PIPELINE_SERVER_PROPERTY, jacsPipelineServer);
+        if ((!jacsDataPath.equals(SessionMgr.getSessionMgr().getModelProperty(SessionMgr.JACS_DATA_PATH_PROPERTY)))
+                || (!jacsInteractiveServer.equals(SessionMgr.getSessionMgr().getModelProperty(SessionMgr.JACS_INTERACTIVE_SERVER_PROPERTY)))
+                || (!jacsPipelineServer.equals(SessionMgr.getSessionMgr().getModelProperty(SessionMgr.JACS_PIPELINE_SERVER_PROPERTY)))) {
+            SessionMgr.getSessionMgr().setModelProperty(SessionMgr.JACS_DATA_PATH_PROPERTY, jacsDataPath);
+            SessionMgr.getSessionMgr().setModelProperty(SessionMgr.JACS_INTERACTIVE_SERVER_PROPERTY, jacsInteractiveServer);
+            SessionMgr.getSessionMgr().setModelProperty(SessionMgr.JACS_PIPELINE_SERVER_PROPERTY, jacsPipelineServer);
             
-            org.janelia.it.workstation.shared.filestore.PathTranslator.initFromModelProperties(org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr.getSessionMgr().getSessionModel());
-            org.janelia.it.workstation.api.facade.concrete_facade.ejb.EJBFactory.initFromModelProperties(org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr.getSessionMgr().getSessionModel());
-            org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr.getSessionMgr().loginSubject();
+            PathTranslator.initFromModelProperties(SessionMgr.getSessionMgr().getSessionModel());
+            EJBFactory.initFromModelProperties(SessionMgr.getSessionMgr().getSessionModel());
+            SessionMgr.getSessionMgr().loginSubject();
         }
         settingsChanged = false;
         return (String[]) delayedChanges.toArray(new String[delayedChanges.size()]);

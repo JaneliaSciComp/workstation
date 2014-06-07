@@ -36,7 +36,7 @@ public class ImagesPanel extends JScrollPane {
     public static final int DEFAULT_TABLE_HEIGHT = 200;
     public static final int MAX_TABLE_HEIGHT = 500;
     private final AtomicBoolean loadUnloadImagesInterrupt = new AtomicBoolean(false);
-    private final HashMap<String, org.janelia.it.workstation.gui.framework.viewer.AnnotatedImageButton> buttons = new LinkedHashMap<String, org.janelia.it.workstation.gui.framework.viewer.AnnotatedImageButton>();
+    private final HashMap<String, AnnotatedImageButton> buttons = new LinkedHashMap<String, AnnotatedImageButton>();
     private Map<Long, List<OntologyAnnotation>> filteredAnnotationMap = new HashMap<Long, List<OntologyAnnotation>>();
 
     private KeyListener buttonKeyListener;
@@ -99,7 +99,7 @@ public class ImagesPanel extends JScrollPane {
     /**
      * Returns the button with the given entity.
      */
-    public org.janelia.it.workstation.gui.framework.viewer.AnnotatedImageButton getButtonById(String id) {
+    public AnnotatedImageButton getButtonById(String id) {
         return buttons.get(id);
     }
 
@@ -129,9 +129,9 @@ public class ImagesPanel extends JScrollPane {
     }
 
     public void cancelAllLoads() {
-        for (org.janelia.it.workstation.gui.framework.viewer.AnnotatedImageButton button : buttons.values()) {
-            if (button instanceof org.janelia.it.workstation.gui.framework.viewer.DynamicImageButton) {
-                ((org.janelia.it.workstation.gui.framework.viewer.DynamicImageButton) button).cancelLoad();
+        for (AnnotatedImageButton button : buttons.values()) {
+            if (button instanceof DynamicImageButton) {
+                ((DynamicImageButton) button).cancelLoad();
             }
         }
     }
@@ -143,8 +143,8 @@ public class ImagesPanel extends JScrollPane {
 
         buttons.clear();
         for (Component component : buttonsPanel.getComponents()) {
-            if (component instanceof org.janelia.it.workstation.gui.framework.viewer.AnnotatedImageButton) {
-                org.janelia.it.workstation.gui.framework.viewer.AnnotatedImageButton button = (org.janelia.it.workstation.gui.framework.viewer.AnnotatedImageButton) component;
+            if (component instanceof AnnotatedImageButton) {
+                AnnotatedImageButton button = (AnnotatedImageButton) component;
                 buttonsPanel.remove(button);
             }
         }
@@ -156,14 +156,14 @@ public class ImagesPanel extends JScrollPane {
                 continue;
             }
 
-            org.janelia.it.workstation.gui.framework.viewer.AnnotatedImageButton button;
+            AnnotatedImageButton button;
 
             String filepath = EntityUtils.getImageFilePath(rootedEntity.getEntity(), iconPanel.getCurrImageRole());
             if (filepath != null) {
-                button = new org.janelia.it.workstation.gui.framework.viewer.DynamicImageButton(rootedEntity, iconPanel);
+                button = new DynamicImageButton(rootedEntity, iconPanel);
             }
             else {
-                button = new org.janelia.it.workstation.gui.framework.viewer.StaticImageButton(rootedEntity, iconPanel);
+                button = new StaticImageButton(rootedEntity, iconPanel);
             }
 
             button.setTitleVisible(iconPanel.areTitlesVisible());
@@ -187,7 +187,7 @@ public class ImagesPanel extends JScrollPane {
     }
 
     public void removeRootedEntity(RootedEntity rootedEntity) {
-        org.janelia.it.workstation.gui.framework.viewer.AnnotatedImageButton button = buttons.get(rootedEntity.getId());
+        AnnotatedImageButton button = buttons.get(rootedEntity.getId());
         if (button == null) {
             return; // Button was already removed, probably because of a EntityChangedEvent
         }
@@ -203,7 +203,7 @@ public class ImagesPanel extends JScrollPane {
      * Show the given annotations on the appropriate images.
      */
     public void showAllAnnotations() {
-        for (org.janelia.it.workstation.gui.framework.viewer.AnnotatedImageButton button : buttons.values()) {
+        for (AnnotatedImageButton button : buttons.values()) {
             showAnnotationsForEntity(button.getRootedEntity().getEntity().getId());
         }
     }
@@ -215,7 +215,7 @@ public class ImagesPanel extends JScrollPane {
         SwingUtilities.invokeLater(new Runnable() {
             @Override
             public void run() {
-                for (org.janelia.it.workstation.gui.framework.viewer.AnnotatedImageButton button : getButtonsByEntityId(entityId)) {
+                for (AnnotatedImageButton button : getButtonsByEntityId(entityId)) {
                     List<OntologyAnnotation> entityAnnotations = filteredAnnotationMap.get(entityId);
                     button.showAnnotations(entityAnnotations);
                 }
@@ -223,9 +223,9 @@ public class ImagesPanel extends JScrollPane {
         });
     }
 
-    public List<org.janelia.it.workstation.gui.framework.viewer.AnnotatedImageButton> getButtonsByEntityId(Long entityId) {
-        List<org.janelia.it.workstation.gui.framework.viewer.AnnotatedImageButton> entityButtons = new ArrayList<org.janelia.it.workstation.gui.framework.viewer.AnnotatedImageButton>();
-        for (org.janelia.it.workstation.gui.framework.viewer.AnnotatedImageButton button : buttons.values()) {
+    public List<AnnotatedImageButton> getButtonsByEntityId(Long entityId) {
+        List<AnnotatedImageButton> entityButtons = new ArrayList<AnnotatedImageButton>();
+        for (AnnotatedImageButton button : buttons.values()) {
             if (button.getRootedEntity().getEntity().getId().equals(entityId)) {
                 entityButtons.add(button);
             }
@@ -247,7 +247,7 @@ public class ImagesPanel extends JScrollPane {
 
         int maxImageHeight = (int) Math.round(maxImageWidth / aspectRatio);
 
-        for (org.janelia.it.workstation.gui.framework.viewer.AnnotatedImageButton button : buttons.values()) {
+        for (AnnotatedImageButton button : buttons.values()) {
             try {
                 button.setImageSize(maxImageWidth, maxImageHeight);
             }
@@ -265,7 +265,7 @@ public class ImagesPanel extends JScrollPane {
         }
         log.trace("resizeTables: {}", tableHeight);
         this.currTableHeight = tableHeight;
-        for (org.janelia.it.workstation.gui.framework.viewer.AnnotatedImageButton button : buttons.values()) {
+        for (AnnotatedImageButton button : buttons.values()) {
             try {
                 button.resizeTable(tableHeight);
             }
@@ -277,7 +277,7 @@ public class ImagesPanel extends JScrollPane {
 
     public synchronized void showAllButtons() {
         buttonsPanel.removeAll();
-        for (org.janelia.it.workstation.gui.framework.viewer.AnnotatedImageButton button : buttons.values()) {
+        for (AnnotatedImageButton button : buttons.values()) {
             buttonsPanel.add(button);
         }
         revalidate();
@@ -286,7 +286,7 @@ public class ImagesPanel extends JScrollPane {
 
     public synchronized void hideButtons(Collection<Long> entityIds) {
         for (Long entityId : entityIds) {
-            org.janelia.it.workstation.gui.framework.viewer.AnnotatedImageButton button = getButtonById(entityId + "");
+            AnnotatedImageButton button = getButtonById(entityId + "");
             buttonsPanel.remove(button);
         }
         revalidate();
@@ -309,18 +309,18 @@ public class ImagesPanel extends JScrollPane {
         if (rootedEntity == null) {
             return;
         }
-        org.janelia.it.workstation.gui.framework.viewer.AnnotatedImageButton selectedButton = getButtonById(rootedEntity.getId());
+        AnnotatedImageButton selectedButton = getButtonById(rootedEntity.getId());
         scrollButtonToCenter(selectedButton);
     }
 
-    public void scrollButtonToVisible(org.janelia.it.workstation.gui.framework.viewer.AnnotatedImageButton button) {
+    public void scrollButtonToVisible(AnnotatedImageButton button) {
         if (button == null) {
             return;
         }
         getViewport().scrollRectToVisible(button.getBounds());
     }
 
-    public void scrollButtonToCenter(org.janelia.it.workstation.gui.framework.viewer.AnnotatedImageButton button) {
+    public void scrollButtonToCenter(AnnotatedImageButton button) {
 
         if (button == null) {
             return;
@@ -357,7 +357,7 @@ public class ImagesPanel extends JScrollPane {
         viewport.scrollRectToVisible(rect);
     }
 
-    public void scrollButtonToTop(org.janelia.it.workstation.gui.framework.viewer.AnnotatedImageButton button) {
+    public void scrollButtonToTop(AnnotatedImageButton button) {
 
         if (button == null) {
             return;
@@ -382,17 +382,17 @@ public class ImagesPanel extends JScrollPane {
     }
 
     public void scrollSelectedEntitiesToCenter() {
-        List<org.janelia.it.workstation.gui.framework.viewer.AnnotatedImageButton> selected = getSelectedButtons();
+        List<AnnotatedImageButton> selected = getSelectedButtons();
         if (selected.isEmpty()) {
             return;
         }
         int i = selected.size() / 2;
-        org.janelia.it.workstation.gui.framework.viewer.AnnotatedImageButton centerOfMass = selected.get(i);
+        AnnotatedImageButton centerOfMass = selected.get(i);
         scrollButtonToCenter(centerOfMass);
     }
 
     public void scrollSelectedEntitiesToTop() {
-        List<org.janelia.it.workstation.gui.framework.viewer.AnnotatedImageButton> selected = getSelectedButtons();
+        List<AnnotatedImageButton> selected = getSelectedButtons();
         if (selected.isEmpty()) {
             return;
         }
@@ -403,24 +403,24 @@ public class ImagesPanel extends JScrollPane {
         if (lowestAspectRatio == null || aspectRatio < lowestAspectRatio) {
             this.lowestAspectRatio = aspectRatio;
             // Is this needed? Doesn't seem to be...
-//			setMaxImageWidth(maxImageWidth);
+            //setMaxImageWidth(maxImageWidth);
         }
     }
 
     public void setTitleVisbility(boolean visible) {
-        for (org.janelia.it.workstation.gui.framework.viewer.AnnotatedImageButton button : buttons.values()) {
+        for (AnnotatedImageButton button : buttons.values()) {
             button.setTitleVisible(visible);
         }
     }
 
     public void setTagVisbility(boolean visible) {
-        for (org.janelia.it.workstation.gui.framework.viewer.AnnotatedImageButton button : buttons.values()) {
+        for (AnnotatedImageButton button : buttons.values()) {
             button.setTagsVisible(visible);
         }
     }
 
     public void setTagTable(boolean tagTable) {
-        for (final org.janelia.it.workstation.gui.framework.viewer.AnnotatedImageButton button : buttons.values()) {
+        for (final AnnotatedImageButton button : buttons.values()) {
             if (tagTable) {
                 if (button.getAnnotationView() instanceof AnnotationTablePanel) {
                     return;
@@ -428,10 +428,10 @@ public class ImagesPanel extends JScrollPane {
                 button.setAnnotationView(new AnnotationTablePanel());
             }
             else {
-                if (button.getAnnotationView() instanceof org.janelia.it.workstation.gui.framework.viewer.AnnotationTagCloudPanel) {
+                if (button.getAnnotationView() instanceof AnnotationTagCloudPanel) {
                     return;
                 }
-                button.setAnnotationView(new org.janelia.it.workstation.gui.framework.viewer.AnnotationTagCloudPanel() {
+                button.setAnnotationView(new AnnotationTagCloudPanel() {
                     @Override
                     protected void moreDoubleClicked(MouseEvent e) {
                         new EntityDetailsDialog().showForRootedEntity(button.getRootedEntity());
@@ -440,14 +440,8 @@ public class ImagesPanel extends JScrollPane {
             }
         }
     }
-
-    public void setInvertedColors(boolean inverted) {
-        for (org.janelia.it.workstation.gui.framework.viewer.AnnotatedImageButton button : buttons.values()) {
-            button.setInvertedColors(inverted);
-        }
-    }
-
-    private boolean setSelection(final org.janelia.it.workstation.gui.framework.viewer.AnnotatedImageButton button, boolean selection) {
+    
+    private boolean setSelection(final AnnotatedImageButton button, boolean selection) {
         if (button.isSelected() != selection) {
             button.setSelected(selection);
             return true;
@@ -461,7 +455,7 @@ public class ImagesPanel extends JScrollPane {
      */
     public void setSelection(String selectedEntityId, boolean selection, boolean clearAll) {
         if (clearAll) {
-            for (org.janelia.it.workstation.gui.framework.viewer.AnnotatedImageButton button : buttons.values()) {
+            for (AnnotatedImageButton button : buttons.values()) {
                 RootedEntity rootedEntity = button.getRootedEntity();
                 if (rootedEntity.getId().equals(selectedEntityId) || rootedEntity.getEntity().getId().toString().equals(selectedEntityId)) {
                     setSelection(button, true);
@@ -472,16 +466,16 @@ public class ImagesPanel extends JScrollPane {
             }
         }
         else {
-            org.janelia.it.workstation.gui.framework.viewer.AnnotatedImageButton button = buttons.get(selectedEntityId);
+            AnnotatedImageButton button = buttons.get(selectedEntityId);
             if (button != null) {
                 setSelection(button, selection);
             }
         }
     }
 
-    public List<org.janelia.it.workstation.gui.framework.viewer.AnnotatedImageButton> getSelectedButtons() {
-        List<org.janelia.it.workstation.gui.framework.viewer.AnnotatedImageButton> selected = new ArrayList<org.janelia.it.workstation.gui.framework.viewer.AnnotatedImageButton>();
-        for (org.janelia.it.workstation.gui.framework.viewer.AnnotatedImageButton button : buttons.values()) {
+    public List<AnnotatedImageButton> getSelectedButtons() {
+        List<AnnotatedImageButton> selected = new ArrayList<AnnotatedImageButton>();
+        for (AnnotatedImageButton button : buttons.values()) {
             if (button.isSelected()) {
                 selected.add(button);
             }
@@ -510,7 +504,7 @@ public class ImagesPanel extends JScrollPane {
         log.trace("Recalculating image grid");
 
         double maxButtonWidth = 0;
-        for (org.janelia.it.workstation.gui.framework.viewer.AnnotatedImageButton button : buttons.values()) {
+        for (AnnotatedImageButton button : buttons.values()) {
             int w = button.getPreferredSize().width;
             if (w > maxButtonWidth) {
                 maxButtonWidth = w;
@@ -553,7 +547,7 @@ public class ImagesPanel extends JScrollPane {
                 if (buttonsPanel.getColumns() == 1) {
                     viewRect.setSize(viewRect.width, viewRect.height + 100);
                 }
-                for (org.janelia.it.workstation.gui.framework.viewer.AnnotatedImageButton button : buttons.values()) {
+                for (AnnotatedImageButton button : buttons.values()) {
                     if (loadUnloadImagesInterrupt.get()) {
                         log.trace("loadUnloadImages interrupted");
                         return;

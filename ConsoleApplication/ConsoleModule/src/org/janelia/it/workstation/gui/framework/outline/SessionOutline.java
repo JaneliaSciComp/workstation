@@ -18,11 +18,16 @@ import java.util.concurrent.Callable;
 import javax.swing.*;
 
 import org.janelia.it.workstation.api.entity_model.access.ModelMgrAdapter;
+import org.janelia.it.workstation.api.entity_model.management.ModelMgr;
+import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.workstation.gui.framework.table.DynamicColumn;
 import org.janelia.it.workstation.gui.framework.table.DynamicRow;
+import org.janelia.it.workstation.gui.framework.table.DynamicTable;
 import org.janelia.it.workstation.gui.framework.table.ProgressCellRenderer;
 import org.janelia.it.workstation.gui.framework.viewer.IconDemoPanel;
+import org.janelia.it.workstation.gui.util.Icons;
 import org.janelia.it.workstation.model.entity.RootedEntity;
+import org.janelia.it.workstation.model.utils.AnnotationSession;
 import org.janelia.it.workstation.shared.util.ConcurrentUtils;
 import org.janelia.it.workstation.shared.workers.SimpleWorker;
 import org.janelia.it.jacs.model.entity.Entity;
@@ -40,11 +45,11 @@ public class SessionOutline extends JPanel implements Refreshable, ActivatableVi
     private static final String COLUMN_NAME = "Name";
     private static final String COLUMN_PCT_COMPLETE = "% Complete";
 
-    private List<org.janelia.it.workstation.model.utils.AnnotationSession> sessions = new ArrayList<org.janelia.it.workstation.model.utils.AnnotationSession>();
-    private org.janelia.it.workstation.model.utils.AnnotationSession currSession;
+    private List<AnnotationSession> sessions = new ArrayList<AnnotationSession>();
+    private AnnotationSession currSession;
     private Component consoleFrame;
     protected final JPanel tablePanel;
-    private org.janelia.it.workstation.gui.framework.table.DynamicTable dynamicTable;
+    private DynamicTable dynamicTable;
     private SimpleWorker loadingWorker;
     private ModelMgrAdapter mml;
     	
@@ -77,7 +82,7 @@ public class SessionOutline extends JPanel implements Refreshable, ActivatableVi
 
 			@Override
 			public void annotationsChanged(long entityId) {
-				for(org.janelia.it.workstation.model.utils.AnnotationSession session : sessions) {
+				for(AnnotationSession session : sessions) {
 					session.clearCompletedIds();
 				}
 				dynamicTable.updateTableModel();
@@ -91,13 +96,13 @@ public class SessionOutline extends JPanel implements Refreshable, ActivatableVi
 
     @Override
     public void activate() {
-        org.janelia.it.workstation.api.entity_model.management.ModelMgr.getModelMgr().addModelMgrObserver(mml);
+        ModelMgr.getModelMgr().addModelMgrObserver(mml);
         refresh();
     }
 
     @Override
     public void deactivate() {
-        org.janelia.it.workstation.api.entity_model.management.ModelMgr.getModelMgr().removeModelMgrObserver(mml);
+        ModelMgr.getModelMgr().removeModelMgrObserver(mml);
     }
     
     @Override
@@ -106,7 +111,7 @@ public class SessionOutline extends JPanel implements Refreshable, ActivatableVi
         loadAnnotationSessions(new Callable<Void>() {
 			public Void call() throws Exception {
 				// Wait until the sessions are loaded before getting the current one and reselecting it
-				org.janelia.it.workstation.model.utils.AnnotationSession session = org.janelia.it.workstation.api.entity_model.management.ModelMgr.getModelMgr().getCurrentAnnotationSession();
+				AnnotationSession session = ModelMgr.getModelMgr().getCurrentAnnotationSession();
 				if (session != null) {
 					currSession = null;
 					selectSessionById(session.getId());	
@@ -123,7 +128,7 @@ public class SessionOutline extends JPanel implements Refreshable, ActivatableVi
 	
     public void showLoadingIndicator() {
         tablePanel.removeAll();
-        tablePanel.add(new JLabel(org.janelia.it.workstation.gui.util.Icons.getLoadingIcon()));
+        tablePanel.add(new JLabel(Icons.getLoadingIcon()));
     }
 
     public void loadAnnotationSessions(final Callable success) {
@@ -137,7 +142,7 @@ public class SessionOutline extends JPanel implements Refreshable, ActivatableVi
             private List<Task> tasks;
 
             protected void doStuff() throws Exception {
-                tasks = org.janelia.it.workstation.api.entity_model.management.ModelMgr.getModelMgr().getUserTasksByType(AnnotationSessionTask.TASK_NAME);
+                tasks = ModelMgr.getModelMgr().getUserTasksByType(AnnotationSessionTask.TASK_NAME);
             }
 
             protected void hadSuccess() {
@@ -165,12 +170,12 @@ public class SessionOutline extends JPanel implements Refreshable, ActivatableVi
     
 	public void initializeTable(List<Task> tasks) {
 		
-        dynamicTable = new org.janelia.it.workstation.gui.framework.table.DynamicTable() {
+        dynamicTable = new DynamicTable() {
         	
             @Override
 			public Object getValue(Object userObject, DynamicColumn column) {
 
-            	org.janelia.it.workstation.model.utils.AnnotationSession session = (org.janelia.it.workstation.model.utils.AnnotationSession)userObject;
+            	AnnotationSession session = (AnnotationSession)userObject;
             	if (column.getName().equals(COLUMN_NAME)) {
             		return session.getName();
             	}
@@ -189,19 +194,19 @@ public class SessionOutline extends JPanel implements Refreshable, ActivatableVi
             	
                 Object o = dynamicTable.getCurrentRow().getUserObject();
 
-                if (o instanceof org.janelia.it.workstation.model.utils.AnnotationSession) {
-                    final org.janelia.it.workstation.model.utils.AnnotationSession session = (org.janelia.it.workstation.model.utils.AnnotationSession) o;
+                if (o instanceof AnnotationSession) {
+                    final AnnotationSession session = (AnnotationSession) o;
                 	selectSession(session);
                     
                     JMenuItem editMenuItem = new JMenuItem("  Edit");
                     editMenuItem.addActionListener(new ActionListener() {
                         public void actionPerformed(ActionEvent actionEvent) {
-                            org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr.getBrowser().getAnnotationSessionPropertyDialog().showForSession(session);
+                            SessionMgr.getBrowser().getAnnotationSessionPropertyDialog().showForSession(session);
                         }
                     });
                     popupMenu.add(editMenuItem);
 
-                    if (session.getTask().getOwner().equals(org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr.getUsername())) {
+                    if (session.getTask().getOwner().equals(SessionMgr.getUsername())) {
                         JMenuItem deleteMenuItem = new JMenuItem("  Delete");
                         deleteMenuItem.addActionListener(new ActionListener() {
                             public void actionPerformed(ActionEvent actionEvent) {
@@ -219,8 +224,8 @@ public class SessionOutline extends JPanel implements Refreshable, ActivatableVi
             @Override
 			protected void rowClicked(int row) {
                 Object o = dynamicTable.getCurrentRow().getUserObject();
-                if (o instanceof org.janelia.it.workstation.model.utils.AnnotationSession) {
-                    final org.janelia.it.workstation.model.utils.AnnotationSession session = (org.janelia.it.workstation.model.utils.AnnotationSession) o;
+                if (o instanceof AnnotationSession) {
+                    final AnnotationSession session = (AnnotationSession) o;
                     session.clearDerivedProperties();
                     selectSession(session);
                 }
@@ -244,7 +249,7 @@ public class SessionOutline extends JPanel implements Refreshable, ActivatableVi
 			@Override
 			protected int getValueAtRowIndex(int rowIndex) {
 				DynamicRow row = dynamicTable.getRows().get(rowIndex);
-				org.janelia.it.workstation.model.utils.AnnotationSession session = (org.janelia.it.workstation.model.utils.AnnotationSession)row.getUserObject();
+				AnnotationSession session = (AnnotationSession)row.getUserObject();
 				return (int)Math.round(session.getPercentComplete()*100);
 			}
 		});
@@ -252,7 +257,7 @@ public class SessionOutline extends JPanel implements Refreshable, ActivatableVi
         if (null != tasks) {
 	        for (Task task : tasks) {
 	            if (task.isTaskDeleted()) continue;
-	            org.janelia.it.workstation.model.utils.AnnotationSession session = new org.janelia.it.workstation.model.utils.AnnotationSession((AnnotationSessionTask) task);
+	            AnnotationSession session = new AnnotationSession((AnnotationSessionTask) task);
 	            sessions.add(session);
 	            dynamicTable.addRow(session);
 	        }
@@ -267,9 +272,9 @@ public class SessionOutline extends JPanel implements Refreshable, ActivatableVi
         repaint();
     }
 	
-    private void deleteSession(org.janelia.it.workstation.model.utils.AnnotationSession session) {
+    private void deleteSession(AnnotationSession session) {
 
-        if (!session.getTask().getOwner().equals(org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr.getUsername())) {
+        if (!session.getTask().getOwner().equals(SessionMgr.getUsername())) {
             JOptionPane.showMessageDialog(consoleFrame, "Only the owner may delete a session", "Cannot Delete", JOptionPane.ERROR_MESSAGE);
             return;
         }
@@ -279,10 +284,10 @@ public class SessionOutline extends JPanel implements Refreshable, ActivatableVi
 
         try {
             // Remove all annotations
-            org.janelia.it.workstation.api.entity_model.management.ModelMgr.getModelMgr().removeAllOntologyAnnotationsForSession(session.getTask().getObjectId());
+            ModelMgr.getModelMgr().removeAllOntologyAnnotationsForSession(session.getTask().getObjectId());
 
             // Remove the task
-            org.janelia.it.workstation.api.entity_model.management.ModelMgr.getModelMgr().deleteTaskById(session.getTask().getObjectId());
+            ModelMgr.getModelMgr().deleteTaskById(session.getTask().getObjectId());
 
             // Update Tree UI
             dynamicTable.removeRow(dynamicTable.getCurrentRow());
@@ -294,9 +299,9 @@ public class SessionOutline extends JPanel implements Refreshable, ActivatableVi
         }
     }
 
-    public org.janelia.it.workstation.model.utils.AnnotationSession getSessionById(long taskId) {
+    public AnnotationSession getSessionById(long taskId) {
     	for(DynamicRow row : dynamicTable.getRows()) {
-            org.janelia.it.workstation.model.utils.AnnotationSession session = (org.janelia.it.workstation.model.utils.AnnotationSession) row.getUserObject();
+            AnnotationSession session = (AnnotationSession) row.getUserObject();
             if (session.getTask().getObjectId().equals(taskId)) {
                 return session;
             }
@@ -308,7 +313,7 @@ public class SessionOutline extends JPanel implements Refreshable, ActivatableVi
         selectSession(getSessionById(taskId));
     }
 
-    public void selectSession(org.janelia.it.workstation.model.utils.AnnotationSession session) {
+    public void selectSession(AnnotationSession session) {
     	if (currSession == session) return;
 		
     	currSession = session;
@@ -318,7 +323,7 @@ public class SessionOutline extends JPanel implements Refreshable, ActivatableVi
 		dynamicTable.navigateToRowWithObject(session);
 
 		// TODO: update this so that it uses the ViewerManager API instead
-		final IconDemoPanel panel = ((IconDemoPanel) org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr.getBrowser().getViewerManager().getActiveViewer(IconDemoPanel.class));
+		final IconDemoPanel panel = ((IconDemoPanel) SessionMgr.getBrowser().getViewerManager().getActiveViewer(IconDemoPanel.class));
 		
 		if (session != null) {
 			panel.showLoadingIndicator();
@@ -331,6 +336,6 @@ public class SessionOutline extends JPanel implements Refreshable, ActivatableVi
 			panel.loadImageEntities(fakeREs);
 		}
 		
-		org.janelia.it.workstation.api.entity_model.management.ModelMgr.getModelMgr().setCurrentAnnotationSession(session);
+		ModelMgr.getModelMgr().setCurrentAnnotationSession(session);
     }
 }

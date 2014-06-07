@@ -12,6 +12,8 @@ import javax.swing.tree.TreeSelectionModel;
 
 import org.janelia.it.jacs.model.entity.Entity;
 import org.janelia.it.jacs.model.ontology.OntologyElement;
+import org.janelia.it.workstation.gui.framework.actions.AnnotateAction;
+import org.janelia.it.workstation.gui.framework.outline.OntologyOutline;
 
 /**
  * An ontology term chooser that can display an ontology specified by an OntologyRoot and allows the user to select
@@ -21,13 +23,13 @@ import org.janelia.it.jacs.model.ontology.OntologyElement;
  */
 public class OntologyElementChooser extends AbstractChooser<OntologyElement> {
 
-    private org.janelia.it.workstation.gui.framework.outline.OntologyOutline ontologyOutline;
+    private OntologyOutline ontologyOutline;
     private boolean canAnnotate = false;
     
     public OntologyElementChooser(String title, Entity ontologyRoot) {
     	setTitle(title);
     	
-        ontologyOutline = new org.janelia.it.workstation.gui.framework.outline.OntologyOutline() {
+        ontologyOutline = new OntologyOutline() {
             
             @Override
             public List<Entity> loadRootList() throws Exception {
@@ -38,7 +40,7 @@ public class OntologyElementChooser extends AbstractChooser<OntologyElement> {
                     DefaultMutableTreeNode node = ontologyOutline.getDynamicTree().getCurrentNode();
                     OntologyElement element = (OntologyElement) node.getUserObject();
                     if(canAnnotate){
-                        org.janelia.it.workstation.gui.framework.actions.AnnotateAction action = new org.janelia.it.workstation.gui.framework.actions.AnnotateAction();
+                        AnnotateAction action = new AnnotateAction();
                         action.init(element);
                         action.doAction();
                         OntologyElementChooser.this.setVisible(false);
@@ -79,7 +81,7 @@ public class OntologyElementChooser extends AbstractChooser<OntologyElement> {
         DefaultMutableTreeNode currNode = ontologyOutline.getDynamicTree().getCurrentNode();
         OntologyElement currElement = ontologyOutline.getOntologyElement(currNode);
         if (canAnnotate){
-            org.janelia.it.workstation.gui.framework.actions.AnnotateAction action = new org.janelia.it.workstation.gui.framework.actions.AnnotateAction();
+            AnnotateAction action = new AnnotateAction();
             action.init(currElement);
             action.doAction();
             OntologyElementChooser.this.setVisible(false);

@@ -2,6 +2,9 @@ package org.janelia.it.workstation.gui.alignment_board_viewer.volume_builder;
 
 import org.janelia.it.workstation.gui.alignment_board_viewer.AlignmentBoardSettings;
 import org.janelia.it.workstation.gui.alignment_board.loader.MaskChanDataAcceptorI;
+import org.janelia.it.workstation.gui.alignment_board_viewer.MultiTexVolumeBrick;
+import org.janelia.it.workstation.gui.alignment_board_viewer.masking.MultiMaskTracker;
+import org.janelia.it.workstation.gui.alignment_board_viewer.masking.TextureBuilderI;
 import org.janelia.it.workstation.gui.viewer3d.VolumeDataAcceptor;
 import org.janelia.it.workstation.gui.alignment_board.loader.ChannelMetaData;
 import org.janelia.it.workstation.gui.viewer3d.loader.VolumeLoaderI;
@@ -14,6 +17,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.media.opengl.GL2;
+import javax.media.opengl.GL2GL3;
 import java.nio.ByteOrder;
 import java.util.Collection;
 
@@ -26,7 +30,7 @@ import java.util.Collection;
  * This implementation of a mask builder takes renderables as its driving data.  It will accept the renderables,
  * along with their applicable chunks of data, to produce its texture data volume, in memory.
  */
-public class RenderablesChannelsBuilder extends RenderablesVolumeBuilder implements VolumeLoaderI, org.janelia.it.workstation.gui.alignment_board_viewer.masking.TextureBuilderI {
+public class RenderablesChannelsBuilder extends RenderablesVolumeBuilder implements VolumeLoaderI, TextureBuilderI {
 
     private static final String COUNT_DISCREPANCY_FORMAT = "%s count mismatch. Old count was %d; new count is %d.\n";
 
@@ -40,14 +44,14 @@ public class RenderablesChannelsBuilder extends RenderablesVolumeBuilder impleme
     private final AlignmentBoardSettings settings;
     private final Collection<RenderableBean> renderableBeans;
     private VolumeDataI maskVolumeData;
-    private org.janelia.it.workstation.gui.alignment_board_viewer.masking.MultiMaskTracker multiMaskTracker;
+    private MultiMaskTracker multiMaskTracker;
 
     protected boolean needsChannelInit = false; // Initialized for emphasis.
     private final Logger logger = LoggerFactory.getLogger( RenderablesChannelsBuilder.class );
 
     public RenderablesChannelsBuilder(
             AlignmentBoardSettings settings,
-            org.janelia.it.workstation.gui.alignment_board_viewer.masking.MultiMaskTracker multiMaskTracker,
+            MultiMaskTracker multiMaskTracker,
             VolumeDataI maskVolumeData,
             Collection<RenderableBean> renderableBeans
     ) {
@@ -187,7 +191,12 @@ public class RenderablesChannelsBuilder extends RenderablesVolumeBuilder impleme
             if ( this.channelInterpreter == null ) {
                 msg += " No channel data ever added.";
             }
-            throw new RuntimeException(msg);
+            else {
+                channelInterpreter.close();
+            }
+            logger.error(msg);
+            return null;
+            //throw new RuntimeException(msg);
         }
 
         if ( channelInterpreter != null )
@@ -195,9 +204,9 @@ public class RenderablesChannelsBuilder extends RenderablesVolumeBuilder impleme
 
         TextureDataI textureData;
         double downSampleRate = settings.getAcceptedDownsampleRate();
-        if ( downSampleRate != 0.0   &&   downSampleRate != 1.0 ) {
-            org.janelia.it.workstation.gui.alignment_board_viewer.volume_builder.DownSampler downSampler = new org.janelia.it.workstation.gui.alignment_board_viewer.volume_builder.DownSampler( paddedSx, paddedSy, paddedSz );
-            org.janelia.it.workstation.gui.alignment_board_viewer.volume_builder.DownSampler.DownsampledTextureData downSampling = downSampler.getDownSampledVolume(
+        if ( downSampleRate > 1.0 ) {
+            DownSampler downSampler = new DownSampler( paddedSx, paddedSy, paddedSz );
+            DownSampler.DownsampledTextureData downSampling = downSampler.getDownSampledVolume(
                     channelVolumeData,
                     channelMetaData.channelCount* bytesPerChannel,
                     downSampleRate,
@@ -221,7 +230,7 @@ public class RenderablesChannelsBuilder extends RenderablesVolumeBuilder impleme
         }
         textureData.setChannelCount( channelMetaData.channelCount );
 
-        textureData.setColorSpace( org.janelia.it.workstation.gui.alignment_board_viewer.MultiTexVolumeBrick.TextureColorSpace.COLOR_SPACE_LINEAR );
+        textureData.setColorSpace( MultiTexVolumeBrick.TextureColorSpace.COLOR_SPACE_LINEAR );
         textureData.setVoxelMicrometers(new Double[]{1.0, 1.0, 1.0});
         textureData.setByteOrder(ByteOrder.nativeOrder());
         textureData.setPixelByteCount(bytesPerChannel);
@@ -242,11 +251,11 @@ public class RenderablesChannelsBuilder extends RenderablesVolumeBuilder impleme
          */
 
         if ( bytesPerChannel == 1 )
-            textureData.setExplicitVoxelComponentType( GL2.GL_BYTE ); //GL2.GL_UNSIGNED_INT_8_8_8_8 );
+            textureData.setExplicitVoxelComponentType( GL2GL3.GL_BYTE );
         else if ( bytesPerChannel == 2 )
-            textureData.setExplicitVoxelComponentType( GL2.GL_UNSIGNED_SHORT );
-        textureData.setExplicitVoxelComponentOrder( GL2.GL_RGBA );
-        textureData.setExplicitInternalFormat( GL2.GL_RGBA );
+            textureData.setExplicitVoxelComponentType( GL2GL3.GL_UNSIGNED_SHORT );
+        textureData.setExplicitVoxelComponentOrder(GL2GL3.GL_RGBA);
+        textureData.setExplicitInternalFormat(GL2GL3.GL_RGBA);
 
         textureData.setRenderables( renderableBeans );
 
@@ -286,6 +295,18 @@ public class RenderablesChannelsBuilder extends RenderablesVolumeBuilder impleme
 
 
     //----------------------------------------HELPER METHODS
+    @SuppressWarnings("unused")
+    private void dumpVolume() {
+        int nonZeroCount = 0;
+        for ( int i = 0; i < channelVolumeData.length(); i++ ) {
+            byte value = channelVolumeData.getValueAt( i );
+            if ( value > 0 ) {
+                nonZeroCount ++;
+            }
+        }
+        logger.info("Found {} non-zero values in channel/signal texture.", nonZeroCount);
+    }
+
     /** Call this prior to any update-data operations. */
     private void init() {
         if ( needsChannelInit) {
@@ -331,7 +352,7 @@ public class RenderablesChannelsBuilder extends RenderablesVolumeBuilder impleme
                 }
 
                 if ( channelVolumeData == null ) {
-                    channelVolumeData = new org.janelia.it.workstation.gui.alignment_board_viewer.volume_builder.VeryLargeVolumeData(
+                    channelVolumeData = new VeryLargeVolumeData(
                             (int)paddedSx, (int)paddedSy, (int)paddedSz, bytesPerChannel * channelMetaData.channelCount
                     );
                     // OLD WAY:
@@ -347,7 +368,7 @@ public class RenderablesChannelsBuilder extends RenderablesVolumeBuilder impleme
                     channelInterpreter = new FirstInToByteInterpreter(channelVolumeData);
                 }
                 else {
-                    channelInterpreter = new org.janelia.it.workstation.gui.alignment_board_viewer.volume_builder.ChannelInterpreterToByte(channelVolumeData, maskVolumeData, multiMaskTracker);
+                    channelInterpreter = new ChannelInterpreterToByte(channelVolumeData, maskVolumeData, multiMaskTracker);
                 }
 
                 needsChannelInit = false;

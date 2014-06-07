@@ -1,14 +1,10 @@
 package org.janelia.it.workstation.gui.dataview;
 
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
-import java.util.ArrayList;
-import java.util.List;
-import javax.swing.JFrame;
-
-import javax.swing.JMenuItem;
-import javax.swing.JOptionPane;
-
+import org.janelia.it.jacs.model.entity.Entity;
+import org.janelia.it.jacs.model.user_data.Subject;
+import org.janelia.it.jacs.shared.utils.EntityUtils;
+import org.janelia.it.jacs.shared.utils.StringUtils;
+import org.janelia.it.workstation.api.entity_model.management.ModelMgr;
 import org.janelia.it.workstation.gui.dialogs.EntityDetailsDialog;
 import org.janelia.it.workstation.gui.framework.actions.OpenInFinderAction;
 import org.janelia.it.workstation.gui.framework.actions.OpenWithDefaultAppAction;
@@ -16,12 +12,14 @@ import org.janelia.it.workstation.gui.framework.context_menu.AbstractContextMenu
 import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.workstation.shared.util.Utils;
 import org.janelia.it.workstation.shared.workers.SimpleWorker;
-import org.janelia.it.jacs.model.entity.Entity;
-import org.janelia.it.jacs.model.user_data.Subject;
-import org.janelia.it.jacs.shared.utils.EntityUtils;
-import org.janelia.it.jacs.shared.utils.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import javax.swing.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * Context pop up menu for entities in the data viewer.
@@ -81,7 +79,7 @@ public class DataviewContextMenu extends AbstractContextMenu<Entity> {
                 }
 	            
 	            try {
-	            	org.janelia.it.workstation.api.entity_model.management.ModelMgr.getModelMgr().renameEntity(entity, newName);
+	            	ModelMgr.getModelMgr().renameEntity(entity, newName);
 	            }
                 catch (Exception error) {
                 	SessionMgr.getSessionMgr().handleException(error);
@@ -165,7 +163,7 @@ public class DataviewContextMenu extends AbstractContextMenu<Entity> {
             protected void doStuff() throws Exception {
 	            // Get number of annotations for each deletion candidate
 	            for (Entity entity : toDelete) {
-                    numAnnotated.add(org.janelia.it.workstation.api.entity_model.management.ModelMgr.getModelMgr().getNumDescendantsAnnotated(entity.getId()));
+                    numAnnotated.add(ModelMgr.getModelMgr().getNumDescendantsAnnotated(entity.getId()));
 	            }
             }
 
@@ -200,10 +198,10 @@ public class DataviewContextMenu extends AbstractContextMenu<Entity> {
 	                    	Entity entity = toDeleteForReal.get(i);
 	                    	Boolean needSu = needSuForReal.get(i);
 	                        if (needSu) {
-	                            SessionMgr.getSessionMgr().setSubject(org.janelia.it.workstation.api.entity_model.management.ModelMgr.getModelMgr().getSubject(entity.getOwnerKey()));
+	                            SessionMgr.getSessionMgr().setSubject(ModelMgr.getModelMgr().getSubject(entity.getOwnerKey()));
 	                        }
 	    	            	System.out.println("Deleting "+entity.getId());
-    	                    org.janelia.it.workstation.api.entity_model.management.ModelMgr.getModelMgr().deleteEntityTree(entity.getId(), unlink);
+    	                    ModelMgr.getModelMgr().deleteEntityTree(entity.getId(), unlink);
     	                    if (needSu) {
                                 SessionMgr.getSessionMgr().setSubject(realSubject);
                             }

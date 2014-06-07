@@ -7,13 +7,16 @@ import org.janelia.it.workstation.gui.camera.BasicObservableCamera3d;
 import org.janelia.it.workstation.gui.opengl.GL2Adapter;
 import org.janelia.it.workstation.gui.opengl.GL2AdapterFactory;
 import org.janelia.it.workstation.gui.opengl.GLActor;
+import org.janelia.it.workstation.gui.viewer3d.error_trap.JaneliaDebugGL2;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.media.opengl.DebugGL2;
 import javax.media.opengl.GLAutoDrawable;
 import java.awt.*;
- 
+import java.util.ArrayList;
+import java.util.List;
+
 class MipRenderer 
     extends BaseRenderer
 {
@@ -28,7 +31,7 @@ class MipRenderer
     private double defaultHeightInPixels = 400.0;
     private double widthInPixels = defaultHeightInPixels;
     private double heightInPixels = defaultHeightInPixels;
-    private org.janelia.it.workstation.gui.viewer3d.VolumeModel volumeModel;
+    private VolumeModel volumeModel;
     private boolean resetFirstRedraw;
     private boolean hasBeenReset = false;
 
@@ -38,7 +41,7 @@ class MipRenderer
     public MipRenderer() {
         logger = LoggerFactory.getLogger(MipRenderer.class);
 		// actors.add(new TeapotActor()); // solid shading is not supported right now
-        volumeModel = new org.janelia.it.workstation.gui.viewer3d.VolumeModel();
+        volumeModel = new VolumeModel();
         BasicObservableCamera3d camera3d = new BasicObservableCamera3d();
         camera3d.setFocus( 0.0, 0.0, -DEFAULT_CAMERA_FOCUS_DISTANCE );
         getVolumeModel().setCamera3d(camera3d);
@@ -91,11 +94,11 @@ class MipRenderer
                 u.x(), u.y(), u.z()); // up vector in ground
 
         if ( System.getProperty( "glComposablePipelineDebug", "f" ).toLowerCase().startsWith("t") ) {
-            DebugGL2 debugGl2 = new org.janelia.it.workstation.gui.viewer3d.error_trap.JaneliaDebugGL2(glDrawable);
+            DebugGL2 debugGl2 = new JaneliaDebugGL2(glDrawable);
             glDrawable.setGL(debugGl2);
         }
 
-        java.util.List<GLActor> localActors = new java.util.ArrayList<GLActor>( actors );
+        List<GLActor> localActors = new ArrayList<GLActor>( actors );
         for (GLActor actor : localActors)
             actor.display(glDrawable);
 
@@ -218,7 +221,7 @@ class MipRenderer
 		zoom(zoomRatio);
     }
 
-    public org.janelia.it.workstation.gui.viewer3d.VolumeModel getVolumeModel() {
+    public VolumeModel getVolumeModel() {
         return volumeModel;
     }
 
@@ -280,7 +283,7 @@ class MipRenderer
     }
 
     private double getMaxRes() {
-        org.janelia.it.workstation.gui.viewer3d.VolumeModel model = getVolumeModel();
+        VolumeModel model = getVolumeModel();
         return (double) Math.min(
             model.getVoxelMicrometers()[0],
             Math.min(

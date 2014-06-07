@@ -11,6 +11,8 @@ import java.awt.event.MouseWheelListener;
 
 import org.janelia.it.workstation.geom.Rotation3d;
 import org.janelia.it.workstation.geom.UnitVec3;
+import org.janelia.it.workstation.geom.Vec3;
+import org.janelia.it.workstation.gui.camera.Camera3d;
 
 /**
  * TrackballInteractor reads mouse events from a Component, and
@@ -28,12 +30,12 @@ import org.janelia.it.workstation.geom.UnitVec3;
 public class TrackballInteractor 
 implements MouseListener, MouseMotionListener, MouseWheelListener 
 {
-	private org.janelia.it.workstation.gui.camera.Camera3d camera;
+	private Camera3d camera;
 	private Component component;
 	private Point point;
 	private Point previousPoint;
 
-	public TrackballInteractor(Component component, org.janelia.it.workstation.gui.camera.Camera3d camera) {
+	public TrackballInteractor(Component component, Camera3d camera) {
 		this.camera = camera;
 		this.component = component;
 		component.addMouseListener(this);
@@ -41,11 +43,11 @@ implements MouseListener, MouseMotionListener, MouseWheelListener
 		component.addMouseWheelListener(this);
 	}
 
-	public org.janelia.it.workstation.gui.camera.Camera3d getCamera() {
+	public Camera3d getCamera() {
 		return camera;
 	}
 
-	public void setCamera(org.janelia.it.workstation.gui.camera.Camera3d camera) {
+	public void setCamera(Camera3d camera) {
 		this.camera = camera;
 	}
 
@@ -94,7 +96,7 @@ implements MouseListener, MouseMotionListener, MouseWheelListener
 		if (event.getClickCount() == 2) {
 			double cx = component.getWidth()/2.0;
 			double cy = component.getHeight()/2.0;
-			org.janelia.it.workstation.geom.Vec3 dx = new org.janelia.it.workstation.geom.Vec3(point.x-cx, point.y-cy, 0);
+			Vec3 dx = new Vec3(point.x-cx, point.y-cy, 0);
 			dx = dx.times(1.0/camera.getPixelsPerSceneUnit());
 			dx = camera.getRotation().times(dx);
 			camera.setFocus(camera.getFocus().plus(dx));
@@ -159,15 +161,15 @@ implements MouseListener, MouseMotionListener, MouseWheelListener
 		Point p1 = previousPoint;
 		Point p2 = point;
 		// Point dx = new Point(p2.x - p1.x, p2.y - p1.y);
-		org.janelia.it.workstation.geom.Vec3 dx = new org.janelia.it.workstation.geom.Vec3(p2.x - p1.x, p2.y - p1.y, 0.0);
-	    org.janelia.it.workstation.geom.Vec3 oldFocus = camera.getFocus();
+		Vec3 dx = new Vec3(p2.x - p1.x, p2.y - p1.y, 0.0);
+	    Vec3 oldFocus = camera.getFocus();
 	    // How much to move camera focus?
-	    org.janelia.it.workstation.geom.Vec3 dFocus = new org.janelia.it.workstation.geom.Vec3(-dx.x(), -dx.y(), -dx.z());
+	    Vec3 dFocus = new Vec3(-dx.x(), -dx.y(), -dx.z());
 	    // Convert from pixels to scene units
 	    dFocus = dFocus.times(1.0/camera.getPixelsPerSceneUnit());
 	    dFocus = camera.getRotation().times(dFocus);
 	    // Nudge focus
-	    org.janelia.it.workstation.geom.Vec3 newFocus = oldFocus.plus(dFocus);
+	    Vec3 newFocus = oldFocus.plus(dFocus);
 	    camera.setFocus(newFocus);		
 	}
 

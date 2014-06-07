@@ -14,6 +14,7 @@ import org.janelia.it.workstation.shared.workers.SimpleWorker;
 import org.janelia.it.jacs.model.entity.Entity;
 import org.janelia.it.jacs.model.entity.EntityData;
 import org.janelia.it.jacs.model.entity.EntityType;
+import org.janelia.it.workstation.model.utils.ModelUtils;
 
 /**
  * A panel for displaying either lists of entities or Solr search results.
@@ -22,10 +23,10 @@ import org.janelia.it.jacs.model.entity.EntityType;
  */
 public class EntityPane extends JPanel {
 
-    private final org.janelia.it.workstation.gui.dataview.EntityListPane entityListPane;
+    private final EntityListPane entityListPane;
     private final SearchResultsPanel searchResultsPanel;
 
-    private final org.janelia.it.workstation.gui.dataview.SearchPane searchPanel;
+    private final SearchPane searchPanel;
     private final EntityDataPane entityParentsPane;
     private final EntityDataPane entityChildrenPane;
 
@@ -35,7 +36,7 @@ public class EntityPane extends JPanel {
     }
     private ResultViewType currentView;
 
-    public EntityPane(final SearchConfiguration searchConfig, final org.janelia.it.workstation.gui.dataview.SearchPane searchPanel,
+    public EntityPane(final SearchConfiguration searchConfig, final SearchPane searchPanel,
             final EntityDataPane entityParentsPane, final EntityDataPane entityChildrenPane) {
 
         setLayout(new BorderLayout());
@@ -44,7 +45,7 @@ public class EntityPane extends JPanel {
         this.entityParentsPane = entityParentsPane;
         this.entityChildrenPane = entityChildrenPane;
 
-        this.entityListPane = new org.janelia.it.workstation.gui.dataview.EntityListPane() {
+        this.entityListPane = new EntityListPane() {
             @Override
             public void entitySelected(Entity entity) {
                 populateEntityDataPanes(entity);
@@ -239,7 +240,7 @@ public class EntityPane extends JPanel {
 //    	entityListPane.showEntities(entities);
     }
 
-    public org.janelia.it.workstation.gui.dataview.SearchPane getSearchPane() {
+    public SearchPane getSearchPane() {
         return searchPanel;
     }
 
@@ -247,8 +248,8 @@ public class EntityPane extends JPanel {
         return searchResultsPanel;
     }
 
-    protected org.janelia.it.workstation.gui.dataview.DataviewContextMenu getPopupMenu(List<Entity> selectedEntities, String label) {
+    protected DataviewContextMenu getPopupMenu(List<Entity> selectedEntities, String label) {
         // Create context menu
-        return new org.janelia.it.workstation.gui.dataview.DataviewContextMenu(selectedEntities, label);
+        return new DataviewContextMenu(selectedEntities, label);
     }
 }

@@ -1,5 +1,7 @@
 package org.janelia.it.workstation.gui.opengl;
 
+import org.janelia.it.workstation.gui.viewer3d.BoundingBox3d;
+
 import java.util.List;
 import java.util.Vector;
 
@@ -16,8 +18,8 @@ implements GL3Actor
 	}
 	
     @Override
-    public org.janelia.it.workstation.gui.viewer3d.BoundingBox3d getBoundingBox3d() {
-        org.janelia.it.workstation.gui.viewer3d.BoundingBox3d result = new org.janelia.it.workstation.gui.viewer3d.BoundingBox3d();
+    public BoundingBox3d getBoundingBox3d() {
+        BoundingBox3d result = new BoundingBox3d();
         for (GL3Actor actor : actors)
             result.include(actor.getBoundingBox3d());
         return result;

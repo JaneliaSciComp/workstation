@@ -24,17 +24,17 @@ public class Mp4OctreeLoadAdapter extends AbstractTextureLoadAdapter
 	}
 	
 	public Mp4OctreeLoadAdapter() {
-		tileFormat.setIndexStyle(org.janelia.it.workstation.gui.slice_viewer.TileIndex.IndexStyle.OCTREE);
+		tileFormat.setIndexStyle(TileIndex.IndexStyle.OCTREE);
 	}
 
 	@Override
-    org.janelia.it.workstation.gui.slice_viewer.TextureData2dGL loadToRam(org.janelia.it.workstation.gui.slice_viewer.TileIndex tileIndex) throws TileLoadError,
+    TextureData2dGL loadToRam(TileIndex tileIndex) throws TileLoadError,
 			MissingTileException 
 	{
 		URL folder;
 		try {
 			// second part of URL must not begin with "/", or it will be treated as absolute
-			String subFolder = org.janelia.it.workstation.gui.slice_viewer.BlockTiffOctreeLoadAdapter.getOctreeFilePath(tileIndex, tileFormat).toString();
+			String subFolder = BlockTiffOctreeLoadAdapter.getOctreeFilePath(tileIndex, tileFormat).toString();
 			subFolder = subFolder.replaceAll("\\\\", "/"); // replace backslash with slash (Windows File->URL)
 			subFolder = subFolder.replaceAll("^[/]+", ""); // remove leading slash, if present
 			if ( (subFolder.length() > 0) && (! subFolder.endsWith("/")) )
@@ -61,7 +61,7 @@ public class Mp4OctreeLoadAdapter extends AbstractTextureLoadAdapter
 		sniffMetadata(topFolder);
 	}
 	
-	protected org.janelia.it.workstation.gui.slice_viewer.TextureData2dGL loadSlice(URL folder, int relativeZ)
+	protected TextureData2dGL loadSlice(URL folder, int relativeZ)
 	throws TileLoadError
 	{
 		int sc = tileFormat.getChannelCount();
@@ -117,7 +117,7 @@ public class Mp4OctreeLoadAdapter extends AbstractTextureLoadAdapter
 			// localLoadTimer.mark("merged channels");
 		}
 		
-		org.janelia.it.workstation.gui.slice_viewer.TextureData2dGL tex = new org.janelia.it.workstation.gui.slice_viewer.TextureData2dGL();
+		TextureData2dGL tex = new TextureData2dGL();
 		tex.loadRenderedImage(composite);
 		return tex;	
 	}

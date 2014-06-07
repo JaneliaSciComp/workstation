@@ -7,15 +7,17 @@ import javax.media.opengl.GLAutoDrawable;
 
 import org.janelia.it.workstation.geom.Vec3;
 import org.janelia.it.workstation.gui.opengl.GLActor;
+import org.janelia.it.workstation.gui.viewer3d.BoundingBox3d;
+import org.janelia.it.workstation.gui.viewer3d.interfaces.VolumeImage3d;
 
 // Blue square in the X/Y plane
 public class PracticeBlueVolume 
-implements org.janelia.it.workstation.gui.viewer3d.interfaces.VolumeImage3d, GLActor
+implements VolumeImage3d, GLActor
 {
 	private GLActor actor = new PracticeBlueTileActor();
 	
 	@Override
-	public org.janelia.it.workstation.gui.viewer3d.BoundingBox3d getBoundingBox3d() {
+	public BoundingBox3d getBoundingBox3d() {
 		return actor.getBoundingBox3d();
 	}
 

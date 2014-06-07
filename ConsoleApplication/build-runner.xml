@@ -36,12 +36,15 @@ of adapter.
     </target>
 
     <target name="run" description="Launch application">
-        <ant antfile="build.xml" target="run"/>
+        <ant antfile="build.xml" target="run">
+            <property name="nbplatform.default.netbeans.dest.dir" value="${basedir}" />
+            <property name="nbplatform.default.harness.dir" value="${basedir}/harness" />
+        </ant>
     </target>
 
     <target name="debug" description="Debug application">
         <ant antfile="build.xml" target="run">
-            <property name="run.args.extra" value="-J-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=5005"/>
+            <property name="run.args.extra" value="-J-Xmx16000m -J-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=5005"/>
         </ant>
     </target>
 

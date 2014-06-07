@@ -1,5 +1,11 @@
 package org.janelia.it.workstation.gui.slice_viewer;
 
+import org.janelia.it.workstation.geom.CoordinateAxis;
+import org.janelia.it.workstation.geom.Vec3;
+import org.janelia.it.workstation.octree.ZoomLevel;
+import org.janelia.it.workstation.octree.ZoomedVoxelIndex;
+import org.janelia.it.workstation.raster.VoxelIndex;
+
 import java.awt.Transparency;
 import java.awt.color.ColorSpace;
 import java.awt.image.BufferedImage;
@@ -18,8 +24,8 @@ import java.util.Set;
 public class Subvolume {
 	
 	// private int extentVoxels[] = {0, 0, 0};
-	private org.janelia.it.workstation.octree.ZoomedVoxelIndex origin; // upper left front corner within parent volume
-	private org.janelia.it.workstation.raster.VoxelIndex extent; // width, height, depth
+	private ZoomedVoxelIndex origin; // upper left front corner within parent volume
+	private VoxelIndex extent; // width, height, depth
 	private ByteBuffer bytes;
 	private ShortBuffer shorts;
 	private int bytesPerIntensity = 1;
@@ -35,9 +41,9 @@ public class Subvolume {
      * @param wholeImage
      */
 	public Subvolume(
-	        org.janelia.it.workstation.octree.ZoomedVoxelIndex corner1,
-	        org.janelia.it.workstation.octree.ZoomedVoxelIndex corner2,
-	        org.janelia.it.workstation.gui.slice_viewer.SharedVolumeImage wholeImage)
+	        ZoomedVoxelIndex corner1,
+	        ZoomedVoxelIndex corner2,
+	        SharedVolumeImage wholeImage)
 	{
 	    initialize(corner1, corner2, wholeImage, null);
 	}
@@ -53,34 +59,34 @@ public class Subvolume {
 	 * @param textureCache
 	 */
     public Subvolume(
-            org.janelia.it.workstation.octree.ZoomedVoxelIndex corner1,
-            org.janelia.it.workstation.octree.ZoomedVoxelIndex corner2,
-            org.janelia.it.workstation.gui.slice_viewer.SharedVolumeImage wholeImage,
+            ZoomedVoxelIndex corner1,
+            ZoomedVoxelIndex corner2,
+            SharedVolumeImage wholeImage,
             TextureCache textureCache)
     {
         initialize(corner1, corner2, wholeImage, textureCache);
     }
     
-	private void initialize(org.janelia.it.workstation.octree.ZoomedVoxelIndex corner1,
-            org.janelia.it.workstation.octree.ZoomedVoxelIndex corner2,
-            org.janelia.it.workstation.gui.slice_viewer.SharedVolumeImage wholeImage,
+	private void initialize(ZoomedVoxelIndex corner1,
+            ZoomedVoxelIndex corner2,
+            SharedVolumeImage wholeImage,
             TextureCache textureCache)
 	{
 	    // Both corners must be the same zoom resolution
 	    assert(corner1.getZoomLevel().equals(corner2.getZoomLevel()));
 	    // Populate data fields
-	    org.janelia.it.workstation.octree.ZoomLevel zoom = corner1.getZoomLevel();
-	    origin = new org.janelia.it.workstation.octree.ZoomedVoxelIndex(
+	    ZoomLevel zoom = corner1.getZoomLevel();
+	    origin = new ZoomedVoxelIndex(
 	            zoom,
 	            Math.min(corner1.getX(), corner2.getX()),
                 Math.min(corner1.getY(), corner2.getY()),
                 Math.min(corner1.getZ(), corner2.getZ()));
-	    org.janelia.it.workstation.octree.ZoomedVoxelIndex farCorner = new org.janelia.it.workstation.octree.ZoomedVoxelIndex(
+	    ZoomedVoxelIndex farCorner = new ZoomedVoxelIndex(
                 zoom,
                 Math.max(corner1.getX(), corner2.getX()),
                 Math.max(corner1.getY(), corner2.getY()),
                 Math.max(corner1.getZ(), corner2.getZ()));
-	    extent = new org.janelia.it.workstation.raster.VoxelIndex(
+	    extent = new VoxelIndex(
 	            farCorner.getX() - origin.getX() + 1,
                 farCorner.getY() - origin.getY() + 1,
                 farCorner.getZ() - origin.getZ() + 1);
@@ -97,8 +103,8 @@ public class Subvolume {
 	    if (bytesPerIntensity == 2)
 	        shorts = bytes.asShortBuffer();
 	    // Load tiles from volume representation
-	    TileIndex tileMin0 = tileFormat.tileIndexForZoomedVoxelIndex(origin, org.janelia.it.workstation.geom.CoordinateAxis.Z);
-        TileIndex tileMax0 = tileFormat.tileIndexForZoomedVoxelIndex(farCorner, org.janelia.it.workstation.geom.CoordinateAxis.Z);
+	    TileIndex tileMin0 = tileFormat.tileIndexForZoomedVoxelIndex(origin, CoordinateAxis.Z);
+        TileIndex tileMax0 = tileFormat.tileIndexForZoomedVoxelIndex(farCorner, CoordinateAxis.Z);
         // Guard against y-flip. Make it so general it could find some other future situation too.
         // Enforce that tileMin x/y/z are no larger than tileMax x/y/z
         TileIndex tileMin = new TileIndex(
@@ -136,7 +142,7 @@ public class Subvolume {
                 // First try to get image from cache...
                 if ( (textureCache != null) && (textureCache.containsKey(tileIx)) )
                 {
-                    org.janelia.it.workstation.gui.slice_viewer.TileTexture tt = textureCache.get(tileIx);
+                    TileTexture tt = textureCache.get(tileIx);
                     tileData = tt.getTextureData();
                 }
                 // ... if that fails, load the data right now.
@@ -144,7 +150,7 @@ public class Subvolume {
                     tileData = loadAdapter.loadToRam(tileIx);
                 TileFormat.TileXyz tileXyz = new TileFormat.TileXyz(
                         tileIx.getX(), tileIx.getY(), tileIx.getZ());
-                org.janelia.it.workstation.octree.ZoomedVoxelIndex tileOrigin = tileFormat.zoomedVoxelIndexForTileXyz(
+                ZoomedVoxelIndex tileOrigin = tileFormat.zoomedVoxelIndexForTileXyz(
                         tileXyz, zoom, tileIx.getSliceAxis());
                 
                 // One Z-tile goes to one destination Z coordinate in this subvolume.
@@ -206,17 +212,17 @@ public class Subvolume {
 
     // Load an octree subvolume into memory as a dense volume block
     public Subvolume(
-            org.janelia.it.workstation.geom.Vec3 corner1,
-            org.janelia.it.workstation.geom.Vec3 corner2,
+            Vec3 corner1,
+            Vec3 corner2,
             double micrometerResolution,
-            org.janelia.it.workstation.gui.slice_viewer.SharedVolumeImage wholeImage)
+            SharedVolumeImage wholeImage)
     {
         // Use the TileFormat class to convert between micrometer coordinates
         // and the arcane integer TileIndex coordinates.
         TileFormat tileFormat = wholeImage.getLoadAdapter().getTileFormat();
         // Compute correct zoom level based on requested resolution
         int zoom = tileFormat.zoomLevelForCameraZoom(1.0/micrometerResolution);
-        org.janelia.it.workstation.octree.ZoomLevel zoomLevel = new org.janelia.it.workstation.octree.ZoomLevel(zoom);
+        ZoomLevel zoomLevel = new ZoomLevel(zoom);
         // Compute extreme tile indices
         //
         TileFormat.VoxelXyz vix1 = tileFormat.voxelXyzForMicrometerXyz(
@@ -226,12 +232,12 @@ public class Subvolume {
                 new TileFormat.MicrometerXyz(
                         corner2.getX(), corner2.getY(), corner2.getZ()));
         //
-        org.janelia.it.workstation.octree.ZoomedVoxelIndex zvix1 = tileFormat.zoomedVoxelIndexForVoxelXyz(
+        ZoomedVoxelIndex zvix1 = tileFormat.zoomedVoxelIndexForVoxelXyz(
                 vix1, 
-                zoomLevel, org.janelia.it.workstation.geom.CoordinateAxis.Z);
-        org.janelia.it.workstation.octree.ZoomedVoxelIndex zvix2 = tileFormat.zoomedVoxelIndexForVoxelXyz(
+                zoomLevel, CoordinateAxis.Z);
+        ZoomedVoxelIndex zvix2 = tileFormat.zoomedVoxelIndexForVoxelXyz(
                 vix2, 
-                zoomLevel, org.janelia.it.workstation.geom.CoordinateAxis.Z);
+                zoomLevel, CoordinateAxis.Z);
         //
         initialize(zvix1, zvix2, wholeImage, null);
     }
@@ -292,11 +298,11 @@ public class Subvolume {
         return channelCount;
     }
 
-    public org.janelia.it.workstation.raster.VoxelIndex getExtent() {
+    public VoxelIndex getExtent() {
         return extent;
     }
 
-    public int getIntensityGlobal(org.janelia.it.workstation.octree.ZoomedVoxelIndex v1, int channelIndex)
+    public int getIntensityGlobal(ZoomedVoxelIndex v1, int channelIndex)
     {
         int c = channelIndex;
         int x = v1.getX() - origin.getX();
@@ -322,11 +328,11 @@ public class Subvolume {
             return bytes.get(offset);
     }
 
-    public org.janelia.it.workstation.octree.ZoomedVoxelIndex getOrigin() {
+    public ZoomedVoxelIndex getOrigin() {
         return origin;
     }
 
-    public int getIntensityLocal(org.janelia.it.workstation.raster.VoxelIndex v1, int channelIndex) {
+    public int getIntensityLocal(VoxelIndex v1, int channelIndex) {
         int c = channelIndex;
         int x = v1.getX();
         int y = v1.getY();

@@ -12,6 +12,10 @@ import javax.swing.table.DefaultTableCellRenderer;
 import javax.swing.table.DefaultTableModel;
 import javax.swing.table.TableColumn;
 
+import org.janelia.it.workstation.api.entity_model.management.EntitySelectionModel;
+import org.janelia.it.workstation.api.entity_model.management.ModelMgr;
+import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
+import org.janelia.it.workstation.model.entity.RootedEntity;
 import org.janelia.it.workstation.model.utils.FolderUtils;
 import org.janelia.it.workstation.shared.util.Utils;
 import org.janelia.it.workstation.shared.workers.SimpleWorker;
@@ -37,7 +41,7 @@ public class PatternSearchDialog extends ModalDialog {
 
     final Color DARK_GREEN = new Color(0,120,0);
 
-    private org.janelia.it.workstation.model.entity.RootedEntity outputFolder;
+    private RootedEntity outputFolder;
     
     DefaultTableModel tableModel;
     
@@ -81,7 +85,7 @@ public class PatternSearchDialog extends ModalDialog {
     final List<Boolean> currentListModified = new ArrayList<Boolean>();
     FilterResult filterResult;
     
-    private org.janelia.it.workstation.model.entity.RootedEntity saveFolder;
+    private RootedEntity saveFolder;
 	private boolean returnInsteadOfSaving = false;
 	private boolean saveClicked = false;
 
@@ -380,7 +384,7 @@ public class PatternSearchDialog extends ModalDialog {
     	showDialog(null);
     }
 
-    public org.janelia.it.workstation.model.entity.RootedEntity showDialog(org.janelia.it.workstation.model.entity.RootedEntity outputFolder) {
+    public RootedEntity showDialog(RootedEntity outputFolder) {
     	this.outputFolder = outputFolder;
     	this.saveFolder = null;
 		this.returnInsteadOfSaving = false;
@@ -408,7 +412,7 @@ public class PatternSearchDialog extends ModalDialog {
 			return results;
 		}
 		catch (Exception e) {
-			org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr.getSessionMgr().handleException(e);
+			SessionMgr.getSessionMgr().handleException(e);
 			return new ArrayList<Long>();
 		}
 	}
@@ -569,10 +573,10 @@ public class PatternSearchDialog extends ModalDialog {
         }
         try {
             Long startTime = new Date().getTime();
-            int loadingState = org.janelia.it.workstation.api.entity_model.management.ModelMgr.getModelMgr().patternSearchGetState();
+            int loadingState = ModelMgr.getModelMgr().patternSearchGetState();
             while (loadingState == PatternAnnotationDataManager.STATE_LOADING && (new Date().getTime() - startTime) < MAX_LOADING_WAIT_MS) {
                 Thread.sleep(1000);
-                loadingState = org.janelia.it.workstation.api.entity_model.management.ModelMgr.getModelMgr().patternSearchGetState();
+                loadingState = ModelMgr.getModelMgr().patternSearchGetState();
             }
             if (loadingState != PatternAnnotationDataManager.STATE_READY) {
                 throw new Exception(("Pattern Annotation loading timeout"));
@@ -580,8 +584,8 @@ public class PatternSearchDialog extends ModalDialog {
             Long endTime = new Date().getTime();
             Long loadingTime = endTime - startTime;
             log.info("PatterSearchDialog : Pattern Annotation loading time=" + loadingTime + " ms");
-            compartmentAbbreviationList = org.janelia.it.workstation.api.entity_model.management.ModelMgr.getModelMgr().patternSearchGetCompartmentList(RelativePatternAnnotationDataManager.RELATIVE_TYPE);
-            List<DataDescriptor> relativeDescriptorList = org.janelia.it.workstation.api.entity_model.management.ModelMgr.getModelMgr().patternSearchGetDataDescriptors(RelativePatternAnnotationDataManager.RELATIVE_TYPE);
+            compartmentAbbreviationList = ModelMgr.getModelMgr().patternSearchGetCompartmentList(RelativePatternAnnotationDataManager.RELATIVE_TYPE);
+            List<DataDescriptor> relativeDescriptorList = ModelMgr.getModelMgr().patternSearchGetDataDescriptors(RelativePatternAnnotationDataManager.RELATIVE_TYPE);
             managerDescriptorMap.put(RelativePatternAnnotationDataManager.RELATIVE_TYPE, relativeDescriptorList);
             initializeCurrentListModified();
             initFilters();
@@ -612,7 +616,7 @@ public class PatternSearchDialog extends ModalDialog {
             @Override
             protected void hadError(Throwable error) {
                 Utils.setDefaultCursor(PatternSearchDialog.this);
-                org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr.getSessionMgr().handleException(error);
+                SessionMgr.getSessionMgr().handleException(error);
                 setStatusMessage("Error during quantifier load", Color.RED);
             }
         };
@@ -682,7 +686,7 @@ public class PatternSearchDialog extends ModalDialog {
             filterMap.put(dataDescriptor.getName(), filterSet);
         }
 
-        FilterResult filterResult= org.janelia.it.workstation.api.entity_model.management.ModelMgr.getModelMgr().patternSearchGetFilteredResults(RelativePatternAnnotationDataManager.RELATIVE_TYPE, filterMap);
+        FilterResult filterResult= ModelMgr.getModelMgr().patternSearchGetFilteredResults(RelativePatternAnnotationDataManager.RELATIVE_TYPE, filterMap);
         setStatusMessage("Result has " + filterResult.getSampleList().size()+" members", Color.GREEN);
 
         return filterResult;
@@ -732,7 +736,7 @@ public class PatternSearchDialog extends ModalDialog {
                 SwingUtilities.invokeLater(new Runnable() {
                     @Override
                     public void run() {
-                        org.janelia.it.workstation.api.entity_model.management.ModelMgr.getModelMgr().getEntitySelectionModel().selectEntity(org.janelia.it.workstation.api.entity_model.management.EntitySelectionModel.CATEGORY_OUTLINE, saveFolder.getUniqueId(), true);
+                        ModelMgr.getModelMgr().getEntitySelectionModel().selectEntity(EntitySelectionModel.CATEGORY_OUTLINE, saveFolder.getUniqueId(), true);
                         setVisible(false);
                         resetSearchState();
                     }
@@ -741,7 +745,7 @@ public class PatternSearchDialog extends ModalDialog {
 
             @Override
             protected void hadError(Throwable error) {
-                org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr.getSessionMgr().handleException(error);
+                SessionMgr.getSessionMgr().handleException(error);
                 Utils.setDefaultCursor(PatternSearchDialog.this);
                 resetSearchState();
             }

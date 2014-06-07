@@ -7,6 +7,13 @@ import com.google.common.cache.RemovalNotification;
 import com.google.common.collect.HashMultimap;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Multimap;
+
+import org.janelia.it.workstation.api.entity_model.events.EntityChangeEvent;
+import org.janelia.it.workstation.api.entity_model.events.EntityChildrenLoadedEvent;
+import org.janelia.it.workstation.api.entity_model.events.EntityCreateEvent;
+import org.janelia.it.workstation.api.entity_model.events.EntityInvalidationEvent;
+import org.janelia.it.workstation.api.entity_model.events.EntityRemoveEvent;
+import org.janelia.it.workstation.api.facade.abstract_facade.AnnotationFacade;
 import org.janelia.it.workstation.api.facade.abstract_facade.EntityFacade;
 import org.janelia.it.jacs.model.entity.Entity;
 import org.janelia.it.jacs.model.entity.EntityConstants;
@@ -14,10 +21,15 @@ import org.janelia.it.jacs.model.entity.EntityData;
 import org.janelia.it.jacs.model.entity.ForbiddenEntity;
 import org.janelia.it.jacs.model.ontology.types.OntologyElementType;
 import org.janelia.it.jacs.shared.utils.EntityUtils;
+import org.janelia.it.workstation.api.facade.abstract_facade.OntologyFacade;
+import org.janelia.it.workstation.api.facade.facade_mgr.FacadeManager;
+import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
+import org.janelia.it.workstation.model.entity.RootedEntity;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.swing.*;
+
 import java.util.*;
 
 import static com.google.common.base.Preconditions.checkArgument;
@@ -50,18 +62,18 @@ public class EntityModel {
 
     private static final Logger log = LoggerFactory.getLogger(EntityModel.class);
 
-    private final org.janelia.it.workstation.api.facade.abstract_facade.AnnotationFacade annotationFacade;
-    private final org.janelia.it.workstation.api.facade.abstract_facade.OntologyFacade ontologyFacade;
+    private final AnnotationFacade annotationFacade;
+    private final OntologyFacade ontologyFacade;
     private final EntityFacade entityFacade;
     private final Cache<Long, Entity> entityCache;
-    private final Map<Long, Entity> commonRootCache;
+    private final Map<Long, Entity> workspaceCache;
     private final Map<Long, Entity> ontologyRootCache;
     private final Multimap<Long, Long> parentMap;
 
     public EntityModel() {
-        this.annotationFacade = org.janelia.it.workstation.api.facade.facade_mgr.FacadeManager.getFacadeManager().getAnnotationFacade();
-        this.ontologyFacade = org.janelia.it.workstation.api.facade.facade_mgr.FacadeManager.getFacadeManager().getOntologyFacade();
-        this.entityFacade = org.janelia.it.workstation.api.facade.facade_mgr.FacadeManager.getFacadeManager().getEntityFacade();
+        this.annotationFacade = FacadeManager.getFacadeManager().getAnnotationFacade();
+        this.ontologyFacade = FacadeManager.getFacadeManager().getOntologyFacade();
+        this.entityFacade = FacadeManager.getFacadeManager().getEntityFacade();
         this.entityCache = CacheBuilder.newBuilder().softValues().removalListener(new RemovalListener<Long, Entity>() {
             @Override
             public void onRemoval(RemovalNotification<Long, Entity> notification) {
@@ -70,9 +82,9 @@ public class EntityModel {
                     Entity entity = notification.getValue();
                     log.trace("Removing evicted entity from parentMap: {}", EntityUtils.identify(entity));
                     parentMap.removeAll(id);
-                    if (commonRootCache.containsKey(id)) {
-                        log.trace("Removed entity was a common root, clearing the common root cache...");
-                        commonRootCache.clear();
+                    if (workspaceCache.containsKey(id)) {
+                        log.trace("Removed entity was a workspace, clearing the workspace cache...");
+                        workspaceCache.clear();
                     }
                     if (ontologyRootCache.containsKey(id)) {
                         log.trace("Removed entity was a common root, clearing the ontology root cache...");
@@ -81,7 +93,7 @@ public class EntityModel {
                 }
             }
         }).build();
-        this.commonRootCache = new LinkedHashMap<Long, Entity>();
+        this.workspaceCache = new LinkedHashMap<Long, Entity>();
         this.ontologyRootCache = new LinkedHashMap<Long, Entity>();
         this.parentMap = HashMultimap.<Long, Long>create();
     }
@@ -96,12 +108,14 @@ public class EntityModel {
             Entity presentEntity = entityCache.getIfPresent(entity.getId());
             if (presentEntity == null) {
                 throw new IllegalStateException("Not in entity model: " + EntityUtils.identify(entity));
-            } else if (presentEntity != entity) {
+            }
+            else if (presentEntity != entity) {
                 throw new IllegalStateException("EntityModel: Instance mismatch: " + entity.getName()
                         + " (cached=" + System.identityHashCode(presentEntity)
                         + ") vs (this=" + System.identityHashCode(entity) + ")");
             }
-        } catch (Exception e) {
+        }
+        catch (Exception e) {
             log.warn("Problem verifying entity model", e);
         }
     }
@@ -135,10 +149,12 @@ public class EntityModel {
                     log.trace("putOrUpdate: Updating cached instance: {}", EntityUtils.identify(canonicalEntity));
                     EntityUtils.updateEntity(canonicalEntity, entity);
                     notifyEntityChanged(canonicalEntity);
-                } else {
+                }
+                else {
                     log.trace("putOrUpdate: Returning cached instance: {}", EntityUtils.identify(canonicalEntity));
                 }
-            } else {
+            }
+            else {
                 canonicalEntity = entity;
                 log.trace("putOrUpdate: Caching: {}", EntityUtils.identify(canonicalEntity));
                 entityCache.put(entity.getId(), entity);
@@ -154,7 +170,8 @@ public class EntityModel {
                 Entity parent = entityCache.getIfPresent(parentId);
                 if (parent != null) {
                     for (EntityData ed : parent.getEntityData()) {
-                        if (ed.getChildEntity() != null && ed.getChildEntity().getId().equals(canonicalEntity.getId())) {
+                        Entity child = ed.getChildEntity();
+                        if (child != null && !(child instanceof ForbiddenEntity) && child.getId().equals(canonicalEntity.getId())) {
                             //log.trace("putOrUpdate: Replacing child {} on existing parent {}",EntityUtils.identify(canonicalEntity), EntityUtils.identify(parent));
                             ed.setChildEntity(canonicalEntity);
                         }
@@ -212,9 +229,10 @@ public class EntityModel {
                         ed.setChildEntity(child);
                     }
                 }
-            } catch (Throwable e) {
-                log.error("Error trying to walk entity " + entity.getId());
-                org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr.getSessionMgr().handleException(e);
+            }
+            catch (Throwable e) {
+                log.error("Error trying to walk entity " + entity.getId(), e);
+                SessionMgr.getSessionMgr().handleException(e);
             }
         }
         return putOrUpdate(entity);
@@ -239,10 +257,10 @@ public class EntityModel {
      */
     public void invalidateAll() {
         entityCache.invalidateAll();
-        commonRootCache.clear();
+        workspaceCache.clear();
         ontologyRootCache.clear();
         parentMap.clear();
-        ModelMgr.getModelMgr().postOnEventBus(new org.janelia.it.workstation.api.entity_model.events.EntityInvalidationEvent());
+        ModelMgr.getModelMgr().postOnEventBus(new EntityInvalidationEvent());
     }
 
     /**
@@ -314,7 +332,7 @@ public class EntityModel {
         log.debug("Got parents: {}", parentIds);
 
         entityCache.invalidate(entity.getId());
-        commonRootCache.remove(entity.getId());
+        workspaceCache.remove(entity.getId());
         ontologyRootCache.remove(entity.getId());
 
         // Reload the entity and stick it into the cache
@@ -322,7 +340,8 @@ public class EntityModel {
         try {
             canonicalEntity = putOrUpdate(entityFacade.getEntityById(entity.getId()));
             log.debug("Got new canonical entity: {}", EntityUtils.identify(canonicalEntity));
-        } catch (Exception e) {
+        }
+        catch (Exception e) {
             log.error("Problem reloading invalidated entity: {}", EntityUtils.identify(entity), e);
             return;
         }
@@ -333,7 +352,8 @@ public class EntityModel {
             if (parent != null) {
                 boolean found = false;
                 for (EntityData ed : parent.getEntityData()) {
-                    if (ed.getChildEntity() != null && canonicalEntity.getId().equals(ed.getChildEntity().getId())) {
+                    Entity child = ed.getChildEntity();
+                    if (child != null && !(child instanceof ForbiddenEntity) && canonicalEntity.getId().equals(child.getId())) {
                         log.trace("putOrUpdate: Replacing child {} on existing parent {}", EntityUtils.identify(canonicalEntity), EntityUtils.identify(parent));
                         ed.setChildEntity(canonicalEntity);
                         found = true;
@@ -342,7 +362,8 @@ public class EntityModel {
                 if (!found) {
                     log.debug("Entity not found in parent: {}", EntityUtils.identify(parent));
                 }
-            } else {
+            }
+            else {
                 log.debug("Parent entity not found: {}", parentId);
             }
         }
@@ -523,10 +544,12 @@ public class EntityModel {
         log.debug((recurse ? "Recursively loading" : "Loading") + " lazy entity: {}", EntityUtils.identify(entity));
         if (recurse) {
             loadLazyEntity(retEntity, new HashSet<Long>());
-        } else {
+        }
+        else {
             if (!EntityUtils.areLoaded(retEntity.getEntityData())) {
                 refreshChildren(retEntity);
-            } else {
+            }
+            else {
                 log.debug("Entity is already loaded: {}", EntityUtils.identify(entity));
                 notifyEntityChildrenLoaded(entity);
             }
@@ -565,7 +588,7 @@ public class EntityModel {
      * @throws Exception
      */
     public List<Entity> getEntitiesByName(String entityName) throws Exception {
-        List<Entity> entities = org.janelia.it.workstation.api.facade.facade_mgr.FacadeManager.getFacadeManager().getEntityFacade().getEntitiesByName(entityName);
+        List<Entity> entities = FacadeManager.getFacadeManager().getEntityFacade().getEntitiesByName(entityName);
         return putOrUpdateAll(entities);
     }
 
@@ -577,7 +600,7 @@ public class EntityModel {
      * @throws Exception
      */
     public List<Entity> getOwnedEntitiesByName(String entityName) throws Exception {
-        List<Entity> entities = org.janelia.it.workstation.api.facade.facade_mgr.FacadeManager.getFacadeManager().getEntityFacade().getOwnedEntitiesByName(entityName);
+        List<Entity> entities = FacadeManager.getFacadeManager().getEntityFacade().getOwnedEntitiesByName(entityName);
         return putOrUpdateAll(entities);
     }
 
@@ -636,7 +659,8 @@ public class EntityModel {
             if (value == null || !value.equals(attributeName)) {
                 EntityUtils.addAttributeAsTag(newEntity, attributeName);
                 canonicalEntity = putOrUpdate(entityFacade.saveEntity(newEntity));
-            } else {
+            }
+            else {
                 canonicalEntity = getEntityById(entity.getId());
             }
         }
@@ -743,7 +767,8 @@ public class EntityModel {
         if (existingEd != null) {
             existingEd.setValue(value);
             notifyEntityChanged(entity);
-        } else {
+        }
+        else {
             invalidate(entity, false);
         }
 
@@ -773,7 +798,8 @@ public class EntityModel {
             if (existingEd != null) {
                 notifyEntityChanged(entity);
                 existingEd.setValue(value);
-            } else {
+            }
+            else {
                 invalidate(entity, false);
             }
         }
@@ -845,7 +871,7 @@ public class EntityModel {
 
             // Remove from cache
             entityCache.invalidate(entity.getId());
-            commonRootCache.remove(entity.getId());
+            workspaceCache.remove(entity.getId());
             ontologyRootCache.remove(entity.getId());
 
             // Go through the cache and evict any entities which have this entity as a child
@@ -853,7 +879,8 @@ public class EntityModel {
                 boolean invalidate = false;
                 for (Iterator<EntityData> edIterator = parent.getEntityData().iterator(); edIterator.hasNext();) {
                     EntityData childEd = edIterator.next();
-                    if (childEd.getChildEntity() != null && childEd.getChildEntity().getId().equals(entity.getId())) {
+                    Entity child = childEd.getChildEntity();
+                    if (child != null && !(child instanceof ForbiddenEntity) && child.getId().equals(entity.getId())) {
                         log.debug("Found parent: {}", EntityUtils.identify(parent));
                         invalidate = true;
                         edIterator.remove();
@@ -929,24 +956,31 @@ public class EntityModel {
     }
 
     /**
-     * Create a new common root folder and cache it.
-     *
+     * Create a new common root folder in the given workspace.
+     * 
+     * @param workspaceId
      * @param folderName
      * @return canonical entity instance
      * @throws Exception
      */
-    public Entity createCommonRootFolder(String folderName) throws Exception {
-        Entity newRoot = null;
+    public Entity createCommonRootFolder(Long workspaceId, String folderName) throws Exception {
+        Entity commonRoot = null;
         synchronized (this) {
-            newRoot = entityFacade.createEntity(EntityConstants.TYPE_FOLDER, folderName);
-            EntityUtils.addAttributeAsTag(newRoot, EntityConstants.ATTRIBUTE_COMMON_ROOT);
-            newRoot = entityFacade.saveEntity(newRoot);
-            commonRootCache.put(newRoot.getId(), newRoot);
-            log.debug("Created new common root: {}", EntityUtils.identify(newRoot));
-            newRoot = putOrUpdate(newRoot);
+            EntityData commonRootEd = entityFacade.createFolderInWorkspace(workspaceId, folderName);
+            
+            // Update in-memory workspace entity 
+            Entity workspace = getEntityById(workspaceId);
+            workspace.getEntityData().add(commonRootEd);
+            
+            // Link to the correct workspace entity
+            commonRootEd.setParentEntity(workspace);
+            
+            // Finally we can cache the new common root
+            commonRoot = putOrUpdate(commonRootEd.getChildEntity());
+            
+            notifyEntityCreated(commonRoot);
         }
-        notifyEntityCreated(newRoot);
-        return newRoot;
+        return commonRoot;
     }
 
     /**
@@ -960,7 +994,6 @@ public class EntityModel {
         Entity newRoot = null;
         synchronized (this) {
             newRoot = ontologyFacade.createOntologyRoot(ontologyName);
-            commonRootCache.put(newRoot.getId(), newRoot);
             log.debug("Created new ontology root: {}", EntityUtils.identify(newRoot));
             newRoot = putOrUpdate(newRoot);
         }
@@ -992,21 +1025,6 @@ public class EntityModel {
     }
 
     /**
-     * Retrieve an existing common root folder by name.
-     *
-     * @param folderName
-     * @return canonical entity instance
-     */
-    public Entity getCommonRootFolder(String folderName) throws Exception {
-        for (Entity commonRoot : getCommonRoots()) {
-            if (commonRoot.getName().equals(folderName) && ModelMgrUtils.isOwner(commonRoot)) {
-                return commonRoot;
-            }
-        }
-        return null;
-    }
-
-    /**
      * Retrieve an existing ontology root folder by name.
      *
      * @param ontologyRoot
@@ -1033,7 +1051,6 @@ public class EntityModel {
             EntityData rootTagEd = commonRoot.getEntityDataByAttributeName(EntityConstants.ATTRIBUTE_COMMON_ROOT);
             checkArgument(rootTagEd != null, "Entity is not a common root: {}", EntityUtils.identify(commonRoot));
             entityFacade.removeEntityData(rootTagEd);
-            commonRootCache.remove(commonRoot.getId());
             log.debug("Demoted common root {} to regular folder", EntityUtils.identify(commonRoot));
             commonRoot.getEntityData().remove(rootTagEd);
         }
@@ -1046,17 +1063,80 @@ public class EntityModel {
      * @return canonical entity instances
      * @throws Exception
      */
-    public List<Entity> getCommonRoots() throws Exception {
+    public List<Entity> getWorkspaces() throws Exception {
         synchronized (this) {
-            if (commonRootCache.isEmpty()) {
-                log.debug("Getting common roots");
-                for (Entity commonRoot : entityFacade.getCommonRootEntities()) {
-                    Entity cachedRoot = putOrUpdate(commonRoot, true);
-                    commonRootCache.put(cachedRoot.getId(), cachedRoot);
+            if (workspaceCache.isEmpty()) {
+                log.info("Getting workspaces from database");
+                for (Entity workspace : entityFacade.getWorkspaces()) {
+                    loadLazyEntity(workspace, false);
+                    Entity cachedRoot = putOrUpdate(workspace, false);
+                    workspaceCache.put(workspace.getId(), cachedRoot);
+                    
                 }
             }
         }
-        return new ArrayList<Entity>(commonRootCache.values());
+        return new ArrayList<Entity>(workspaceCache.values());
+    }
+    
+    /**
+     * Returns all the roots in the given workspace with the specified name.
+     *
+     * @param workspaceId
+     * @param name
+     * @return
+     * @throws Exception
+     */
+    public List<Entity> getOwnedCommonRootsByName(Long workspaceId, String name) throws Exception {
+        List<Entity> results = new ArrayList<Entity>();
+        Entity workspace = getEntityById(workspaceId);
+        for (Entity commonRoot : ModelMgrUtils.getAccessibleChildren(workspace)) {
+            if (ModelMgrUtils.isOwner(commonRoot) && commonRoot.getName().equals(name)) {
+                results.add(commonRoot);
+            }
+        }
+        return results;
+    }
+
+    /**
+     * Returns the first root in the given workspace with the specified name.
+     *
+     * @param workspaceId
+     * @param name
+     * @return
+     * @throws Exception
+     */
+    public Entity getOwnedCommonRootByName(Long workspaceId, String name) throws Exception {
+        List<Entity> matching = getOwnedCommonRootsByName(workspaceId, name);
+        Entity result = null;
+        if (!matching.isEmpty()) {
+            if (matching.size()>1) {
+                log.warn("More than one common root with name {} in workspace {}",name,workspaceId);
+            }
+            result = matching.get(0);    
+        }
+        return result;
+    }
+    
+    /**
+     * Returns the first root in the given workspace with the specified name.
+     * If no root exists, create it and then return it. This method ensures that 
+     * the workspace entity gets updated as well.
+     *
+     * @param workspaceId
+     * @param name
+     * @return
+     * @throws Exception
+     */
+    public Entity getOrCreateCommonRootByName(Long workspaceId, String name) throws Exception {
+        List<Entity> matching = getOwnedCommonRootsByName(workspaceId, name);
+        Entity result;
+        if (matching.isEmpty()) {
+            result = createCommonRootFolder(workspaceId, name);
+        }
+        else {
+            result = matching.get(0);    
+        }
+        return result;
     }
 
     /**
@@ -1094,44 +1174,26 @@ public class EntityModel {
 
     /**
      * Create a new Alignment board and cache it.
-     *
+     * 
      * @param boardName Name of the Alignment Board
      * @return canonical entity instance
      * @throws Exception
      */
-    public org.janelia.it.workstation.model.entity.RootedEntity createAlignmentBoard(String alignmentBoardName, String alignmentSpace, String opticalRes, String pixelRes) throws Exception {
+    public RootedEntity createAlignmentBoard(Long workspaceId, String alignmentBoardName, String alignmentSpace, String opticalRes, String pixelRes) throws Exception {
         synchronized (this) {
 
+            Entity alignmentBoardFolder = getOrCreateCommonRootByName(workspaceId, EntityConstants.NAME_ALIGNMENT_BOARDS);
             Entity boardEntity = annotationFacade.createAlignmentBoard(alignmentBoardName, alignmentSpace, opticalRes, pixelRes);
-            Entity alignmentBoardFolder = getCommonRootFolder(EntityConstants.NAME_ALIGNMENT_BOARDS);
-            if (alignmentBoardFolder == null) {
-                for (Entity entity : getOwnedEntitiesByName(EntityConstants.NAME_ALIGNMENT_BOARDS)) {
-                    if (EntityUtils.isCommonRoot(entity) && ModelMgrUtils.isOwner(entity)) {
-                        alignmentBoardFolder = entity;
-                        log.info("Found alignment board: {}", EntityUtils.identify(entity));
-                    }
-                }
-                alignmentBoardFolder = putOrUpdate(alignmentBoardFolder);
-                commonRootCache.put(alignmentBoardFolder.getId(), alignmentBoardFolder);
-                notifyEntityCreated(alignmentBoardFolder);
-            } else {
-                invalidate(alignmentBoardFolder, false);
-                alignmentBoardFolder = getCommonRootFolder(EntityConstants.NAME_ALIGNMENT_BOARDS);
-            }
-
-            org.janelia.it.workstation.model.entity.RootedEntity abRootedEntity = new org.janelia.it.workstation.model.entity.RootedEntity(alignmentBoardFolder);
-
+            
+            // Reload the alignment board folder to get the new board
+            alignmentBoardFolder = reloadById(alignmentBoardFolder.getId());
             loadLazyEntity(alignmentBoardFolder, false);
-
-            EntityData childEd = null;
-            for (EntityData ed : alignmentBoardFolder.getEntityData()) {
-                if (ed.getChildEntity() != null && ed.getChildEntity().getId().equals(boardEntity.getId())) {
-                    childEd = ed;
-                }
-            }
-
+            
+            RootedEntity abRootedEntity = new RootedEntity(alignmentBoardFolder);
+            
+            EntityData childEd = EntityUtils.findChildEntityDataWithChildId(alignmentBoardFolder, boardEntity.getId());
             if (childEd == null) {
-                throw new IllegalStateException("Could not retrieve the new alignment board");
+                throw new IllegalStateException("Could not retrieve the new alignment board: "+boardEntity.getId());
             }
 
             return abRootedEntity.getChild(childEd);
@@ -1145,7 +1207,7 @@ public class EntityModel {
      * @return canonical entity instance
      * @throws Exception
      */
-    public org.janelia.it.workstation.model.entity.RootedEntity addAlignedItem(Entity parent, Entity entity, String alignedItemName, boolean visible) throws Exception {
+    public RootedEntity addAlignedItem(Entity parent, Entity entity, String alignedItemName, boolean visible) throws Exception {
 
         checkIfCanonicalEntity(parent);
         checkIfCanonicalEntity(entity);
@@ -1160,7 +1222,7 @@ public class EntityModel {
             log.debug("Added aligned item (id={}) to parent (id={})", entity.getId(), parent.getId());
             notifyEntityChanged(parent);
 
-            org.janelia.it.workstation.model.entity.RootedEntity abRootedEntity = new org.janelia.it.workstation.model.entity.RootedEntity(getEntityById(parent.getId()));
+            RootedEntity abRootedEntity = new RootedEntity(getEntityById(parent.getId()));
             return abRootedEntity.getChildById(newAlignedEntity.getId());
         }
     }
@@ -1289,7 +1351,8 @@ public class EntityModel {
                         log.trace("Replacing unloaded entity with forbidden entity: {}", ed.getChildEntity().getId());
                         ed.setChildEntity(new ForbiddenEntity(ed.getChildEntity()));
                     }
-                } else if (recurse) {
+                }
+                else if (recurse) {
                     replaceUnloadedChildrenWithForbiddenEntities(ed.getChildEntity(), true, forbiddenIds);
                 }
             }
@@ -1318,7 +1381,8 @@ public class EntityModel {
                 ForbiddenEntity fe = (ForbiddenEntity) ed.getChildEntity();
                 ed.setChildEntity(fe.getEntity());
                 forbiddenIds.add(ed.getChildEntity().getId());
-            } else if (recurse) {
+            }
+            else if (recurse) {
                 replaceForbiddenEntitiesWithUnloadedChildren(ed.getChildEntity(), true, forbiddenIds);
             }
         }
@@ -1328,34 +1392,34 @@ public class EntityModel {
         if (log.isTraceEnabled()) {
             log.trace("Generating EntityChildrenLoadedEvent for {}", EntityUtils.identify(entity));
         }
-        ModelMgr.getModelMgr().postOnEventBus(new org.janelia.it.workstation.api.entity_model.events.EntityChildrenLoadedEvent(entity));
+        ModelMgr.getModelMgr().postOnEventBus(new EntityChildrenLoadedEvent(entity));
     }
 
     private void notifyEntityCreated(Entity entity) {
         if (log.isTraceEnabled()) {
             log.trace("Generating EntityCreateEvent for {}", EntityUtils.identify(entity));
         }
-        ModelMgr.getModelMgr().postOnEventBus(new org.janelia.it.workstation.api.entity_model.events.EntityCreateEvent(entity));
+        ModelMgr.getModelMgr().postOnEventBus(new EntityCreateEvent(entity));
     }
 
     private void notifyEntityChanged(Entity entity) {
         if (log.isTraceEnabled()) {
             log.trace("Generating EntityChangeEvent for {}", EntityUtils.identify(entity));
         }
-        ModelMgr.getModelMgr().postOnEventBus(new org.janelia.it.workstation.api.entity_model.events.EntityChangeEvent(entity));
+        ModelMgr.getModelMgr().postOnEventBus(new EntityChangeEvent(entity));
     }
 
     private void notifyEntityRemoved(Entity entity, Set<EntityData> parentEds) {
         if (log.isTraceEnabled()) {
             log.trace("Generating EntityRemoveEvent for {}", EntityUtils.identify(entity));
         }
-        ModelMgr.getModelMgr().postOnEventBus(new org.janelia.it.workstation.api.entity_model.events.EntityRemoveEvent(entity, parentEds));
+        ModelMgr.getModelMgr().postOnEventBus(new EntityRemoveEvent(entity, parentEds));
     }
 
     private void notifyEntitiesInvalidated(Collection<Entity> entities) {
         if (log.isTraceEnabled()) {
             log.trace("Generating EntityInvalidationEvent with {} entities", entities.size());
         }
-        ModelMgr.getModelMgr().postOnEventBus(new org.janelia.it.workstation.api.entity_model.events.EntityInvalidationEvent(entities));
+        ModelMgr.getModelMgr().postOnEventBus(new EntityInvalidationEvent(entities));
     }
 }

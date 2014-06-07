@@ -25,7 +25,7 @@ public class AlignmentBoardControlsPanel extends JPanel {
     private static final Dimension DN_SAMPLE_DROPDOWN_SIZE = new Dimension(120, 50);
     private static final Dimension DN_SAMPLE_MAX_DROPDOWN_SIZE = new Dimension(240, 50);
     private static final int PREFERRED_HEIGHT = 600;
-    private static final int MIN_WIDTH = 440;
+    private static final int MIN_WIDTH = 0;
     private static final Dimension SIZE = new Dimension( MIN_WIDTH, PREFERRED_HEIGHT );
 
     private AlignmentBoardControls controls;

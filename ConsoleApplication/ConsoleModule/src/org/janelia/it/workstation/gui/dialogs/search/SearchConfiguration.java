@@ -14,14 +14,18 @@ import java.util.List;
 import java.util.Map;
 
 import org.apache.solr.common.SolrDocument;
+import org.janelia.it.workstation.api.entity_model.management.ModelMgr;
+import org.janelia.it.workstation.api.entity_model.management.ModelMgrUtils;
 import org.janelia.it.workstation.gui.dialogs.search.SearchAttribute.DataStore;
 import org.janelia.it.workstation.gui.dialogs.search.SearchAttribute.DataType;
-import org.janelia.it.jacs.compute.api.support.EntityDocument;
-import org.janelia.it.jacs.compute.api.support.SageTerm;
-import org.janelia.it.jacs.compute.api.support.SolrUtils;
+import org.janelia.it.jacs.shared.solr.EntityDocument;
+import org.janelia.it.jacs.shared.solr.SageTerm;
+import org.janelia.it.jacs.shared.solr.SolrUtils;
 import org.janelia.it.jacs.model.entity.Entity;
 import org.janelia.it.jacs.model.entity.EntityAttribute;
 import org.janelia.it.jacs.shared.utils.StringUtils;
+import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
+import org.janelia.it.workstation.shared.workers.SimpleWorker;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -92,7 +96,7 @@ public class SearchConfiguration {
 		attributes.clear();
 		vocab = null;
 		
-    	org.janelia.it.workstation.shared.workers.SimpleWorker attrLoadingWorker = new org.janelia.it.workstation.shared.workers.SimpleWorker() {
+    	SimpleWorker attrLoadingWorker = new SimpleWorker() {
 			
 			@Override
 			protected void doStuff() throws Exception {
@@ -109,7 +113,7 @@ public class SearchConfiguration {
 					attrByName.put(attr.getName(), attr);
 				}
 				
-				List<EntityAttribute> attrs = org.janelia.it.workstation.api.entity_model.management.ModelMgr.getModelMgr().getEntityAttributes();
+				List<EntityAttribute> attrs = ModelMgr.getModelMgr().getEntityAttributes();
 				Collections.sort(attrs, new Comparator<EntityAttribute>() {
 					@Override
 					public int compare(EntityAttribute o1, EntityAttribute o2) {
@@ -128,7 +132,7 @@ public class SearchConfiguration {
 					attrByName.put(attr.getName(), attr);
 				}
 				
-				vocab = org.janelia.it.workstation.api.entity_model.management.ModelMgr.getModelMgr().getFlyLightVocabulary();
+				vocab = ModelMgr.getModelMgr().getFlyLightVocabulary();
 				List<SageTerm> terms = new ArrayList<SageTerm>(vocab.values());
 				Collections.sort(terms, new Comparator<SageTerm>() {
 					@Override
@@ -156,7 +160,7 @@ public class SearchConfiguration {
 			
 			@Override
 			protected void hadError(Throwable error) {
-				org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr.getSessionMgr().handleException(error);
+				SessionMgr.getSessionMgr().handleException(error);
 			}
     	};
 		
@@ -232,7 +236,7 @@ public class SearchConfiguration {
 			value = entity.getEntityTypeName();
 		}
 		else if ("username".equals(fieldName)) {
-			value = org.janelia.it.workstation.api.entity_model.management.ModelMgrUtils.getNameFromSubjectKey(entity.getOwnerKey());
+			value = ModelMgrUtils.getNameFromSubjectKey(entity.getOwnerKey());
 		}
 		else if ("creation_date".equals(fieldName)) {
 			value = entity.getCreationDate();
@@ -243,7 +247,7 @@ public class SearchConfiguration {
 		else if (doc!=null) {
 			if ("annotations".equals(fieldName)) {
 				StringBuffer sb = new StringBuffer();
-				for(String subjectKey : org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr.getSubjectKeys()) {
+				for(String subjectKey : SessionMgr.getSubjectKeys()) {
 				    String owner = subjectKey.contains(":") ? subjectKey.split(":")[1] : subjectKey;
 					Object v = doc.getFieldValues(owner+"_annotations");
 					if (v!=null) {

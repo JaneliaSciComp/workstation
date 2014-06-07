@@ -5,6 +5,13 @@ import org.janelia.it.jacs.model.entity.Entity;
 import org.janelia.it.jacs.model.entity.EntityConstants;
 import org.janelia.it.jacs.model.entity.EntityData;
 import org.janelia.it.jacs.shared.annotation.MaskAnnotationDataManager;
+import org.janelia.it.workstation.api.entity_model.management.EntitySelectionModel;
+import org.janelia.it.workstation.api.entity_model.management.ModelMgr;
+import org.janelia.it.workstation.gui.framework.outline.EntityOutline;
+import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
+import org.janelia.it.workstation.model.entity.RootedEntity;
+import org.janelia.it.workstation.shared.util.Utils;
+import org.janelia.it.workstation.shared.workers.SimpleWorker;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -36,7 +43,7 @@ public class GiantFiberSearchDialog extends ModalDialog {
 
     private static final String GIANT_FIBER_FOLDER_NAME="GiantFiber";
 
-    private org.janelia.it.workstation.model.entity.RootedEntity outputFolder;
+    private RootedEntity outputFolder;
 
     DefaultTableModel tableModel;
 
@@ -81,7 +88,7 @@ public class GiantFiberSearchDialog extends ModalDialog {
     private JLabel statusLabel;
     MaskAnnotationDataManager maskManager=new MaskAnnotationDataManager();
 
-    private final org.janelia.it.workstation.shared.workers.SimpleWorker quantifierLoaderWorker=createQuantifierLoaderWorker();
+    private final SimpleWorker quantifierLoaderWorker=createQuantifierLoaderWorker();
 
     private final Map<String, Map<String, MinMaxModel>> filterSetMap=new HashMap<String, Map<String, MinMaxModel>>();
     private final Map<String, MinMaxSelectionRow> minMaxRowMap=new HashMap<String, MinMaxSelectionRow>();
@@ -323,7 +330,7 @@ public class GiantFiberSearchDialog extends ModalDialog {
 
         log.info("Begin loading");
         
-        org.janelia.it.workstation.shared.workers.SimpleWorker worker = new org.janelia.it.workstation.shared.workers.SimpleWorker() {
+        SimpleWorker worker = new SimpleWorker() {
 
             @Override
             protected void doStuff() throws Exception {
@@ -338,14 +345,14 @@ public class GiantFiberSearchDialog extends ModalDialog {
                 final String maskNameIndexPath =
                         getPath(giantFiberResourcePath, "maskNameIndex.txt");
 
-                URL maskSummaryFile = org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr.getURL(maskSummaryPath);
-                URL maskNameIndexFile = org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr.getURL(maskNameIndexPath);
+                URL maskSummaryFile = SessionMgr.getURL(maskSummaryPath);
+                URL maskNameIndexFile = SessionMgr.getURL(maskNameIndexPath);
                 try {
                     maskManager.loadMaskCompartmentList(maskNameIndexFile);
                     maskManager.loadMaskSummaryFile(maskSummaryFile);
                     compartmentAbbreviationList = maskManager.getCompartmentListInstance();
                 } catch ( Exception ex ) {
-                    JOptionPane.showMessageDialog( org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr.getMainFrame(), "Failed to load Giant Fiber Compartments");
+                    JOptionPane.showMessageDialog( SessionMgr.getMainFrame(), "Failed to load Giant Fiber Compartments");
                     ex.printStackTrace();
                 }
             }
@@ -380,13 +387,13 @@ public class GiantFiberSearchDialog extends ModalDialog {
 
             @Override
             protected void hadError(Throwable error) {
-                org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr.getSessionMgr().handleException(error);
-                org.janelia.it.workstation.shared.util.Utils.setDefaultCursor(GiantFiberSearchDialog.this);
+                SessionMgr.getSessionMgr().handleException(error);
+                Utils.setDefaultCursor(GiantFiberSearchDialog.this);
                 resetSearchState();
             }
         };
 
-        org.janelia.it.workstation.shared.util.Utils.setWaitingCursor(GiantFiberSearchDialog.this);
+        Utils.setWaitingCursor(GiantFiberSearchDialog.this);
         worker.execute();
 
     }
@@ -547,7 +554,7 @@ public class GiantFiberSearchDialog extends ModalDialog {
         showDialog(null);
     }
 
-    public void showDialog(org.janelia.it.workstation.model.entity.RootedEntity outputFolder) {
+    public void showDialog(RootedEntity outputFolder) {
         this.outputFolder = outputFolder;
         init();
     }
@@ -695,7 +702,7 @@ public class GiantFiberSearchDialog extends ModalDialog {
             try {
                 Long startTime=new Date().getTime();
 //                System.out.println("GiantFiberSearchDialog getMaskQuantifierMapsFromSummary() start");
-                Object[] sampleMaps = org.janelia.it.workstation.api.entity_model.management.ModelMgr.getModelMgr().getMaskQuantifierMapsFromSummary(GIANT_FIBER_FOLDER_NAME);
+                Object[] sampleMaps = ModelMgr.getModelMgr().getMaskQuantifierMapsFromSummary(GIANT_FIBER_FOLDER_NAME);
                 sampleInfoMap = (Map<Long, Map<String,String>>)sampleMaps[0];
                 quantifierInfoMap = (Map<Long, List<Double>>)sampleMaps[1];
                 Long elapsedTime=new Date().getTime() - startTime;
@@ -709,12 +716,12 @@ public class GiantFiberSearchDialog extends ModalDialog {
         }
     }
 
-    org.janelia.it.workstation.shared.workers.SimpleWorker createQuantifierLoaderWorker() {
-        return new org.janelia.it.workstation.shared.workers.SimpleWorker() {
+    SimpleWorker createQuantifierLoaderWorker() {
+        return new SimpleWorker() {
 
             @Override
             protected void doStuff() throws Exception {
-                org.janelia.it.workstation.shared.util.Utils.setWaitingCursor(GiantFiberSearchDialog.this);
+                Utils.setWaitingCursor(GiantFiberSearchDialog.this);
                 setStatusMessage("Loading quantifier maps...");
                 loadPatternAnnotationQuantifierMapsFromSummary();
                 setStatusMessage("Computing scores...");
@@ -732,8 +739,8 @@ public class GiantFiberSearchDialog extends ModalDialog {
 
             @Override
             protected void hadError(Throwable error) {
-                org.janelia.it.workstation.shared.util.Utils.setDefaultCursor(GiantFiberSearchDialog.this);
-                org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr.getSessionMgr().handleException(error);
+                Utils.setDefaultCursor(GiantFiberSearchDialog.this);
+                SessionMgr.getSessionMgr().handleException(error);
                 setStatusMessage("Error during quantifier load");
             }
         };
@@ -958,36 +965,36 @@ public class GiantFiberSearchDialog extends ModalDialog {
 
     protected synchronized void saveCurrentSet() {
 
-        org.janelia.it.workstation.shared.workers.SimpleWorker worker = new org.janelia.it.workstation.shared.workers.SimpleWorker() {
+        SimpleWorker worker = new SimpleWorker() {
 
-            private org.janelia.it.workstation.model.entity.RootedEntity newRootedFolder;
+            private RootedEntity newRootedFolder;
 
             @Override
             protected void doStuff() throws Exception {
             	
             	Entity newFolder = null;
                 if (outputFolder!=null) {
-                	newFolder = org.janelia.it.workstation.api.entity_model.management.ModelMgr.getModelMgr().createEntity(EntityConstants.TYPE_FOLDER, currentSetTextField.getText());
-                    EntityData childEd = org.janelia.it.workstation.api.entity_model.management.ModelMgr.getModelMgr().addEntityToParent(outputFolder.getEntity(), newFolder, outputFolder.getEntity().getMaxOrderIndex()+1, EntityConstants.ATTRIBUTE_ENTITY);
+                	newFolder = ModelMgr.getModelMgr().createEntity(EntityConstants.TYPE_FOLDER, currentSetTextField.getText());
+                    EntityData childEd = ModelMgr.getModelMgr().addEntityToParent(outputFolder.getEntity(), newFolder, outputFolder.getEntity().getMaxOrderIndex()+1, EntityConstants.ATTRIBUTE_ENTITY);
                     newRootedFolder = outputFolder.getChild(childEd);
                 }
                 else {
-                	newFolder = org.janelia.it.workstation.api.entity_model.management.ModelMgr.getModelMgr().createCommonRoot(currentSetTextField.getText());
-                    newRootedFolder = new org.janelia.it.workstation.model.entity.RootedEntity(newFolder);
+                	newFolder = ModelMgr.getModelMgr().createCommonRoot(currentSetTextField.getText());
+                    newRootedFolder = new RootedEntity(newFolder);
                 }
 
-                org.janelia.it.workstation.api.entity_model.management.ModelMgr.getModelMgr().addChildren(newFolder.getId(),
+                ModelMgr.getModelMgr().addChildren(newFolder.getId(),
                         new ArrayList<Long>(membershipSampleSet), EntityConstants.ATTRIBUTE_ENTITY);
             }
 
             @Override
             protected void hadSuccess() {
-                final org.janelia.it.workstation.gui.framework.outline.EntityOutline entityOutline = org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr.getBrowser().getEntityOutline();
+                final EntityOutline entityOutline = SessionMgr.getBrowser().getEntityOutline();
                 entityOutline.totalRefresh(true, new Callable<Void>() {
                     @Override
                     public Void call() throws Exception {
-                        org.janelia.it.workstation.api.entity_model.management.ModelMgr.getModelMgr().getEntitySelectionModel().selectEntity(org.janelia.it.workstation.api.entity_model.management.EntitySelectionModel.CATEGORY_OUTLINE, newRootedFolder.getUniqueId(), true);
-                        org.janelia.it.workstation.shared.util.Utils.setDefaultCursor(GiantFiberSearchDialog.this);
+                        ModelMgr.getModelMgr().getEntitySelectionModel().selectEntity(EntitySelectionModel.CATEGORY_OUTLINE, newRootedFolder.getUniqueId(), true);
+                        Utils.setDefaultCursor(GiantFiberSearchDialog.this);
                         setVisible(false);
                         resetSearchState();
                         return null;
@@ -997,13 +1004,13 @@ public class GiantFiberSearchDialog extends ModalDialog {
 
             @Override
             protected void hadError(Throwable error) {
-                org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr.getSessionMgr().handleException(error);
-                org.janelia.it.workstation.shared.util.Utils.setDefaultCursor(GiantFiberSearchDialog.this);
+                SessionMgr.getSessionMgr().handleException(error);
+                Utils.setDefaultCursor(GiantFiberSearchDialog.this);
                 resetSearchState();
             }
         };
 
-        org.janelia.it.workstation.shared.util.Utils.setWaitingCursor(GiantFiberSearchDialog.this);
+        Utils.setWaitingCursor(GiantFiberSearchDialog.this);
         worker.execute();
     }
 
@@ -1018,7 +1025,7 @@ public class GiantFiberSearchDialog extends ModalDialog {
             currentListModified.set(row, false);
         }
         globalMinMaxPanel.applyGlobalSettings();
-        org.janelia.it.workstation.shared.util.Utils.setDefaultCursor(GiantFiberSearchDialog.this);
+        Utils.setDefaultCursor(GiantFiberSearchDialog.this);
         setStatusMessage("Ready");
     }
 

@@ -29,6 +29,7 @@ import javax.swing.tree.TreeNode;
 import javax.swing.tree.TreePath;
 import javax.swing.tree.TreeSelectionModel;
 
+import org.janelia.it.workstation.gui.framework.outline.Refreshable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -38,7 +39,7 @@ import org.slf4j.LoggerFactory;
  * @author saffordt
  * @author <a href="mailto:rokickik@janelia.hhmi.org">Konrad Rokicki</a>
  */
-public class DynamicTree extends JPanel implements org.janelia.it.workstation.gui.framework.outline.Refreshable {
+public class DynamicTree extends JPanel implements Refreshable {
     
     private static final Logger log = LoggerFactory.getLogger(DynamicTree.class);
     
@@ -65,36 +66,48 @@ public class DynamicTree extends JPanel implements org.janelia.it.workstation.gu
         tree.setLargeModel(true);
 
         tree.addMouseListener(new MouseAdapter() {
+            @Override
             public void mouseReleased(MouseEvent e) {
-
                 int row = tree.getRowForLocation(e.getX(), e.getY());
+                log.trace("mouseReleased row={}, e={}",row,e);
                 if (e.isPopupTrigger()) {
-                    tree.setSelectionRow(row);
+                    if (tree.getSelectionCount()<=1 && !e.isShiftDown()) tree.setSelectionRow(row);
                     showPopupMenu(e);
                     return;
                 }
+                // Did the user click on a node?
                 if (row >= 0) {
-                    // This masking is to make sure that the right button is being double clicked, not left and then right or right and then left
-                    if (e.getClickCount() == 2 && e.getButton() == MouseEvent.BUTTON1 && (e.getModifiersEx() | InputEvent.BUTTON3_MASK) == InputEvent.BUTTON3_MASK) {
-                        nodeDoubleClicked(e);
-                    }
-                    else if (e.getClickCount() == 1 && e.getButton() == MouseEvent.BUTTON1) {
-                        nodeClicked(e);
+                    // if shift is down, then we don't want to generate node click events, because the user is trying to manipulate multiple nodes with either DnD or the popup menu
+                    if (!e.isShiftDown()) {
+                        // This masking is to make sure that the right button is being double clicked, not left and then right or right and then left
+                        if (e.getClickCount() == 2 && e.getButton() == MouseEvent.BUTTON1 && (e.getModifiersEx() | InputEvent.BUTTON3_MASK) == InputEvent.BUTTON3_MASK) {
+                            nodeDoubleClicked(e);
+                        }
+                        else if (e.getClickCount() == 1 && e.getButton() == MouseEvent.BUTTON1) {
+                            nodeClicked(e);
+                        }
                     }
                 }
+                else {
+                    backgroundClicked(e);
+                }
             }
-
+            @Override
             public void mousePressed(MouseEvent e) {
                 // We have to also listen for mousePressed because OSX generates the popup trigger here
                 // instead of mouseReleased like any sane OS.
                 int row = tree.getRowForLocation(e.getX(), e.getY());
+                log.trace("mousePressed row={}, e={}",row,e);
                 if (e.isPopupTrigger()) {
-                    tree.setSelectionRow(row);
+                    if (tree.getSelectionCount()<=1 && !e.isShiftDown()) tree.setSelectionRow(row);
                     showPopupMenu(e);
                     return;
                 }
+                // See comments for mouseReleased, they apply here as well.
                 if (row >= 0) {
-                    nodePressed(e);
+                    if (!e.isShiftDown()) {
+                        nodePressed(e);
+                    }
                 }
             }
         });
@@ -286,6 +299,14 @@ public class DynamicTree extends JPanel implements org.janelia.it.workstation.gu
      * @param e
      */
     protected void nodeDoubleClicked(MouseEvent e) {
+    }
+
+    /**
+     * Override this method to do something when the user clicks the background.
+     *
+     * @param e
+     */
+    protected void backgroundClicked(MouseEvent e) {
     }
 
     /**

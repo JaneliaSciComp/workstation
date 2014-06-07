@@ -3,10 +3,11 @@ package org.janelia.it.workstation.gui.viewer3d.interfaces;
 import java.net.URL;
 
 import org.janelia.it.workstation.geom.Vec3;
+import org.janelia.it.workstation.gui.viewer3d.BoundingBox3d;
 
 public interface VolumeImage3d 
 {
-	public org.janelia.it.workstation.gui.viewer3d.BoundingBox3d getBoundingBox3d();
+	public BoundingBox3d getBoundingBox3d();
 	public int getMaximumIntensity(); // e.g. "255" for 8-bit images
 	// public double getMaximumResolution(); // in scene units
 	public double getXResolution(); // in scene units

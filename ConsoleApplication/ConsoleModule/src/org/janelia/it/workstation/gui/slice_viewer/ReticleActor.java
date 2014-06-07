@@ -3,6 +3,7 @@ package org.janelia.it.workstation.gui.slice_viewer;
 import java.awt.Graphics2D;
 import java.awt.Image;
 
+import org.janelia.it.workstation.gui.util.Icons;
 import org.janelia.it.workstation.gui.viewer3d.interfaces.AwtActor;
 import org.janelia.it.workstation.gui.viewer3d.interfaces.Viewport;
 
@@ -18,7 +19,7 @@ public class ReticleActor implements AwtActor {
 
 	public ReticleActor(Viewport viewport) {
 		this.viewport = viewport;
-		reticleImage = org.janelia.it.workstation.gui.util.Icons.getIcon("center_crosshair.png").getImage();
+		reticleImage = Icons.getIcon("center_crosshair.png").getImage();
 	}
 	
 	@Override

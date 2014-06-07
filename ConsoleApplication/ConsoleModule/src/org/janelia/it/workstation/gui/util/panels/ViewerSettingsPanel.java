@@ -2,8 +2,11 @@ package org.janelia.it.workstation.gui.util.panels;
 
 import org.janelia.it.workstation.gui.framework.pref_controller.PrefController;
 import org.janelia.it.workstation.gui.framework.roles.PrefEditor;
+import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
+import org.janelia.it.workstation.gui.framework.viewer.ImagesPanel;
 
 import javax.swing.*;
+import javax.swing.border.TitledBorder;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 import java.awt.*;
@@ -11,30 +14,29 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 
 public class ViewerSettingsPanel extends JPanel implements PrefEditor {
+
     private boolean settingsChanged = false;
 
     public static final String DISABLE_IMAGE_DRAG_PROPERTY = "SessionMgr.DisableImageDragProperty";
-    public static final String INVERT_IMAGE_COLORS_PROPERTY = "SessionMgr.InvertImageColorProperty";
     public static final String ONLY_SESSION_ANNOTATIONS_PROPERTY = "SessionMgr.OnlySessionAnnotationsProperty";
     public static final String HIDE_ANNOTATED_PROPERTY = "SessionMgr.HideAnnotatedProperty";
     public static final String SHOW_ANNOTATION_TABLES_PROPERTY = "SessionMgr.ShowAnnotationTablesProperty";
     public static final String ANNOTATION_TABLES_HEIGHT_PROPERTY = "SessionMgr.AnnotationTablesHeightProperty";
-    
+
     JCheckBox disableImageDrag = new JCheckBox();
-    JCheckBox invertColorSpace = new JCheckBox();
     JCheckBox onlySessionAnnotations = new JCheckBox();
     JCheckBox hideAnnotatedImages = new JCheckBox();
     JCheckBox showAnnotationTables = new JCheckBox();
-    JSlider annotationTableHeight = new JSlider(org.janelia.it.workstation.gui.framework.viewer.ImagesPanel.MIN_TABLE_HEIGHT, org.janelia.it.workstation.gui.framework.viewer.ImagesPanel.MAX_TABLE_HEIGHT, org.janelia.it.workstation.gui.framework.viewer.ImagesPanel.DEFAULT_TABLE_HEIGHT);
-    
-    org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr sessionMgr = org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr.getSessionMgr();
+    JSlider annotationTableHeight = new JSlider(ImagesPanel.MIN_TABLE_HEIGHT, ImagesPanel.MAX_TABLE_HEIGHT, ImagesPanel.DEFAULT_TABLE_HEIGHT);
+
+    SessionMgr sessionMgr = SessionMgr.getSessionMgr();
 
     public ViewerSettingsPanel(JFrame parentFrame) {
         try {
             jbInit();
         }
         catch (Exception e) {
-            org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr.getSessionMgr().handleException(e);
+            SessionMgr.getSessionMgr().handleException(e);
         }
     }
 
@@ -48,12 +50,13 @@ public class ViewerSettingsPanel extends JPanel implements PrefEditor {
 
     private void jbInit() throws Exception {
 
-    	/*************** Interface Options ***************/
-    	
-    	JPanel interfaceOptions = new JPanel();
+        /**
+         * ************* Interface Options **************
+         */
+        JPanel interfaceOptions = new JPanel();
         interfaceOptions.setLayout(new BoxLayout(interfaceOptions, BoxLayout.Y_AXIS));
-        interfaceOptions.setBorder(new javax.swing.border.TitledBorder("Interface Options"));
-        
+        interfaceOptions.setBorder(new TitledBorder("Interface Options"));
+
         disableImageDrag.setText("Disable drag and drop in the image viewer");
         disableImageDrag.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent evt) {
@@ -62,10 +65,10 @@ public class ViewerSettingsPanel extends JPanel implements PrefEditor {
         });
 
         if (sessionMgr.getModelProperty(DISABLE_IMAGE_DRAG_PROPERTY) == null) {
-        	sessionMgr.setModelProperty(DISABLE_IMAGE_DRAG_PROPERTY, Boolean.FALSE);
+            sessionMgr.setModelProperty(DISABLE_IMAGE_DRAG_PROPERTY, Boolean.FALSE);
         }
         else {
-        	disableImageDrag.setSelected((Boolean) sessionMgr.getModelProperty(DISABLE_IMAGE_DRAG_PROPERTY));
+            disableImageDrag.setSelected((Boolean) sessionMgr.getModelProperty(DISABLE_IMAGE_DRAG_PROPERTY));
         }
 
         interfaceOptions.add(Box.createVerticalStrut(5));
@@ -75,40 +78,13 @@ public class ViewerSettingsPanel extends JPanel implements PrefEditor {
         this.add(Box.createVerticalStrut(10));
         this.add(interfaceOptions);
 
-    	/*************** Image Options ***************/
-    	
-    	JPanel imageOptions = new JPanel();
-        imageOptions.setLayout(new BoxLayout(imageOptions, BoxLayout.Y_AXIS));
-        imageOptions.setBorder(new javax.swing.border.TitledBorder("Image Options"));
-        
-        invertColorSpace.setText("Invert colors on all images");
-        invertColorSpace.addActionListener(new ActionListener() {
-            public void actionPerformed(ActionEvent evt) {
-                settingsChanged = true;
-            }
-        });
-
-        if (sessionMgr.getModelProperty(INVERT_IMAGE_COLORS_PROPERTY) == null) {
-        	sessionMgr.setModelProperty(INVERT_IMAGE_COLORS_PROPERTY, Boolean.FALSE);
-        }
-        else {
-            invertColorSpace.setSelected((Boolean) sessionMgr.getModelProperty(INVERT_IMAGE_COLORS_PROPERTY));
-        }
-
-        imageOptions.add(Box.createVerticalStrut(5));
-        imageOptions.add(invertColorSpace);
-        imageOptions.add(Box.createVerticalStrut(5));
-        this.setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
-        this.add(Box.createVerticalStrut(10));
-        this.add(imageOptions);
-
-    	/*************** Annotation Options ***************/
-        
+        /**
+         * ************* Annotation Options **************
+         */
         JPanel annotationPanel = new JPanel();
         annotationPanel.setLayout(new BoxLayout(annotationPanel, BoxLayout.Y_AXIS));
-        annotationPanel.setBorder(new javax.swing.border.TitledBorder("Annotation Options"));
-        
-        
+        annotationPanel.setBorder(new TitledBorder("Annotation Options"));
+
         onlySessionAnnotations.setText("Only show annotations within the current annotation session");
         onlySessionAnnotations.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent evt) {
@@ -116,12 +92,11 @@ public class ViewerSettingsPanel extends JPanel implements PrefEditor {
             }
         });
         if (sessionMgr.getModelProperty(ONLY_SESSION_ANNOTATIONS_PROPERTY) == null) {
-        	sessionMgr.setModelProperty(ONLY_SESSION_ANNOTATIONS_PROPERTY, Boolean.FALSE);
+            sessionMgr.setModelProperty(ONLY_SESSION_ANNOTATIONS_PROPERTY, Boolean.FALSE);
         }
         else {
-        	onlySessionAnnotations.setSelected((Boolean) sessionMgr.getModelProperty(ONLY_SESSION_ANNOTATIONS_PROPERTY));
+            onlySessionAnnotations.setSelected((Boolean) sessionMgr.getModelProperty(ONLY_SESSION_ANNOTATIONS_PROPERTY));
         }
-        
 
         hideAnnotatedImages.setText("Hide images that have been annotated completely according to the session's ruleset");
         hideAnnotatedImages.addActionListener(new ActionListener() {
@@ -130,29 +105,28 @@ public class ViewerSettingsPanel extends JPanel implements PrefEditor {
             }
         });
         if (sessionMgr.getModelProperty(HIDE_ANNOTATED_PROPERTY) == null) {
-        	sessionMgr.setModelProperty(HIDE_ANNOTATED_PROPERTY, Boolean.FALSE);
+            sessionMgr.setModelProperty(HIDE_ANNOTATED_PROPERTY, Boolean.FALSE);
         }
         else {
-        	hideAnnotatedImages.setSelected((Boolean) sessionMgr.getModelProperty(HIDE_ANNOTATED_PROPERTY));
+            hideAnnotatedImages.setSelected((Boolean) sessionMgr.getModelProperty(HIDE_ANNOTATED_PROPERTY));
         }
-        
 
         annotationTableHeight.setMaximumSize(new Dimension(300, Integer.MAX_VALUE));
         annotationTableHeight.addChangeListener(new ChangeListener() {
-			@Override
-			public void stateChanged(ChangeEvent e) {
-				settingsChanged = true;
-			}
-		});
+            @Override
+            public void stateChanged(ChangeEvent e) {
+                settingsChanged = true;
+            }
+        });
 
         if (sessionMgr.getModelProperty(ANNOTATION_TABLES_HEIGHT_PROPERTY) == null) {
-        	sessionMgr.setModelProperty(ANNOTATION_TABLES_HEIGHT_PROPERTY, org.janelia.it.workstation.gui.framework.viewer.ImagesPanel.DEFAULT_TABLE_HEIGHT);
+            sessionMgr.setModelProperty(ANNOTATION_TABLES_HEIGHT_PROPERTY, ImagesPanel.DEFAULT_TABLE_HEIGHT);
         }
         else {
-        	annotationTableHeight.setValue((Integer)sessionMgr.getModelProperty(ANNOTATION_TABLES_HEIGHT_PROPERTY));
+            annotationTableHeight.setValue((Integer) sessionMgr.getModelProperty(ANNOTATION_TABLES_HEIGHT_PROPERTY));
         }
         annotationTableHeight.setEnabled(false);
-        
+
         final JLabel tableHeightLabel = new JLabel("Annotation table height: ");
 
         final JPanel tableHeightPanel = new JPanel();
@@ -160,8 +134,7 @@ public class ViewerSettingsPanel extends JPanel implements PrefEditor {
         tableHeightPanel.add(Box.createHorizontalStrut(15));
         tableHeightPanel.add(tableHeightLabel);
         tableHeightPanel.add(annotationTableHeight);
-        
-        
+
         showAnnotationTables.setText("Show annotations in a table instead of a tag cloud");
         showAnnotationTables.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent evt) {
@@ -170,18 +143,18 @@ public class ViewerSettingsPanel extends JPanel implements PrefEditor {
             }
         });
         if (sessionMgr.getModelProperty(SHOW_ANNOTATION_TABLES_PROPERTY) == null) {
-        	sessionMgr.setModelProperty(SHOW_ANNOTATION_TABLES_PROPERTY, Boolean.FALSE);
+            sessionMgr.setModelProperty(SHOW_ANNOTATION_TABLES_PROPERTY, Boolean.FALSE);
         }
         else {
-        	showAnnotationTables.setSelected((Boolean) sessionMgr.getModelProperty(SHOW_ANNOTATION_TABLES_PROPERTY));
-        	annotationTableHeight.setEnabled(showAnnotationTables.isSelected());
+            showAnnotationTables.setSelected((Boolean) sessionMgr.getModelProperty(SHOW_ANNOTATION_TABLES_PROPERTY));
+            annotationTableHeight.setEnabled(showAnnotationTables.isSelected());
         }
-        
+
         onlySessionAnnotations.setAlignmentX(Component.LEFT_ALIGNMENT);
         hideAnnotatedImages.setAlignmentX(Component.LEFT_ALIGNMENT);
         showAnnotationTables.setAlignmentX(Component.LEFT_ALIGNMENT);
         tableHeightPanel.setAlignmentX(Component.LEFT_ALIGNMENT);
-        
+
         annotationPanel.add(Box.createVerticalStrut(5));
         annotationPanel.add(onlySessionAnnotations);
         annotationPanel.add(Box.createVerticalStrut(5));
@@ -189,7 +162,7 @@ public class ViewerSettingsPanel extends JPanel implements PrefEditor {
         annotationPanel.add(Box.createVerticalStrut(5));
         annotationPanel.add(showAnnotationTables);
         annotationPanel.add(tableHeightPanel);
-        
+
         this.add(Box.createVerticalStrut(20));
         this.add(annotationPanel);
     }
@@ -214,9 +187,6 @@ public class ViewerSettingsPanel extends JPanel implements PrefEditor {
         if (disableImageDrag.isSelected() != (Boolean) sessionMgr.getModelProperty(DISABLE_IMAGE_DRAG_PROPERTY)) {
             sessionMgr.setModelProperty(DISABLE_IMAGE_DRAG_PROPERTY, disableImageDrag.isSelected());
         }
-        if (invertColorSpace.isSelected() != (Boolean) sessionMgr.getModelProperty(INVERT_IMAGE_COLORS_PROPERTY)) {
-            sessionMgr.setModelProperty(INVERT_IMAGE_COLORS_PROPERTY, invertColorSpace.isSelected());
-        }
         if (onlySessionAnnotations.isSelected() != (Boolean) sessionMgr.getModelProperty(ONLY_SESSION_ANNOTATIONS_PROPERTY)) {
             sessionMgr.setModelProperty(ONLY_SESSION_ANNOTATIONS_PROPERTY, onlySessionAnnotations.isSelected());
         }
@@ -225,12 +195,11 @@ public class ViewerSettingsPanel extends JPanel implements PrefEditor {
         }
         if (showAnnotationTables.isSelected() != (Boolean) sessionMgr.getModelProperty(SHOW_ANNOTATION_TABLES_PROPERTY)) {
             sessionMgr.setModelProperty(SHOW_ANNOTATION_TABLES_PROPERTY, showAnnotationTables.isSelected());
-        } 
+        }
         if (annotationTableHeight.getValue() != (Integer) sessionMgr.getModelProperty(ANNOTATION_TABLES_HEIGHT_PROPERTY)) {
             sessionMgr.setModelProperty(ANNOTATION_TABLES_HEIGHT_PROPERTY, annotationTableHeight.getValue());
-        } 
+        }
         return NO_DELAYED_CHANGES;
     }
-
 
 }

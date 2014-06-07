@@ -4,7 +4,15 @@ package org.janelia.it.workstation.api.facade.concrete_facade.ejb;
 import java.util.HashMap;
 import java.util.Map;
 
+import org.janelia.it.workstation.api.facade.abstract_facade.AnnotationFacade;
+import org.janelia.it.workstation.api.facade.abstract_facade.ComputeFacade;
+import org.janelia.it.workstation.api.facade.abstract_facade.ControlledVocabService;
+import org.janelia.it.workstation.api.facade.abstract_facade.EntityFacade;
+import org.janelia.it.workstation.api.facade.abstract_facade.OntologyFacade;
+import org.janelia.it.workstation.api.facade.abstract_facade.SolrFacade;
+import org.janelia.it.workstation.api.facade.facade_mgr.ConnectionStatus;
 import org.janelia.it.workstation.api.facade.facade_mgr.FacadeManagerBase;
+import org.janelia.it.workstation.gui.framework.session_mgr.LoginProperties;
 import org.janelia.it.workstation.shared.util.PropertyConfigurator;
 
 public class EJBFacadeManager extends FacadeManagerBase {
@@ -23,11 +31,11 @@ public class EJBFacadeManager extends FacadeManagerBase {
     private String password;
 
     // Facades
-    private org.janelia.it.workstation.api.facade.abstract_facade.EntityFacade entityFacade;
-    private org.janelia.it.workstation.api.facade.abstract_facade.OntologyFacade ontologyFacade;
-    private org.janelia.it.workstation.api.facade.abstract_facade.AnnotationFacade annotationFacade;
-    private org.janelia.it.workstation.api.facade.abstract_facade.SolrFacade solrFacade;
-    private org.janelia.it.workstation.api.facade.abstract_facade.ComputeFacade computeFacade;
+    private EntityFacade entityFacade;
+    private OntologyFacade ontologyFacade;
+    private AnnotationFacade annotationFacade;
+    private SolrFacade solrFacade;
+    private ComputeFacade computeFacade;
 
     public EJBFacadeManager() {
     } //only instantiated by FacadeManager.
@@ -37,7 +45,7 @@ public class EJBFacadeManager extends FacadeManagerBase {
     }
 
     @Override
-    public org.janelia.it.workstation.api.facade.abstract_facade.OntologyFacade getOntologyFacade() {
+    public OntologyFacade getOntologyFacade() {
         if (ontologyFacade == null) {
             ontologyFacade = new EJBOntologyFacade();
         }
@@ -45,33 +53,33 @@ public class EJBFacadeManager extends FacadeManagerBase {
     }
 
     @Override
-    public org.janelia.it.workstation.api.facade.abstract_facade.EntityFacade getEntityFacade() {
+    public EntityFacade getEntityFacade() {
         if (entityFacade == null) {
-            entityFacade = new org.janelia.it.workstation.api.facade.concrete_facade.ejb.EJBEntityFacade();
+            entityFacade = new EJBEntityFacade();
         }
         return entityFacade;
     }
 
     @Override
-    public org.janelia.it.workstation.api.facade.abstract_facade.AnnotationFacade getAnnotationFacade() {
+    public AnnotationFacade getAnnotationFacade() {
         if (annotationFacade == null) {
-            annotationFacade = new org.janelia.it.workstation.api.facade.concrete_facade.ejb.EJBAnnotationFacade();
+            annotationFacade = new EJBAnnotationFacade();
         }
         return annotationFacade;
     }
     
     @Override
-    public org.janelia.it.workstation.api.facade.abstract_facade.SolrFacade getSolrFacade() {
+    public SolrFacade getSolrFacade() {
         if (solrFacade == null) {
-        	solrFacade = new org.janelia.it.workstation.api.facade.concrete_facade.ejb.EJBSolrFacade();
+        	solrFacade = new EJBSolrFacade();
         }
         return solrFacade;
     }
 
     @Override
-    public org.janelia.it.workstation.api.facade.abstract_facade.ComputeFacade getComputeFacade() {
+    public ComputeFacade getComputeFacade() {
         if (computeFacade == null) {
-            computeFacade = new org.janelia.it.workstation.api.facade.concrete_facade.ejb.EJBComputeFacade();
+            computeFacade = new EJBComputeFacade();
         }
         return computeFacade;
     }
@@ -79,7 +87,7 @@ public class EJBFacadeManager extends FacadeManagerBase {
     /**
      * This method will be called if the previous one returns true.
      */
-    public org.janelia.it.workstation.api.facade.facade_mgr.ConnectionStatus initiateConnection() {
+    public ConnectionStatus initiateConnection() {
         try {
             EJBFactory.getRemoteAnnotationBean();
             // KLUDGE!
@@ -100,14 +108,14 @@ public class EJBFacadeManager extends FacadeManagerBase {
             return CONNECTION_STATUS_BAD_CREDENTIALS;
         }
         catch (Exception ex) {
-            return new org.janelia.it.workstation.api.facade.facade_mgr.ConnectionStatus(ex.getMessage(), true);
+            return new ConnectionStatus(ex.getMessage(), true);
         }
 
         return CONNECTION_STATUS_OK;
     }
 
     @Override
-    public org.janelia.it.workstation.api.facade.abstract_facade.ControlledVocabService getControlledVocabService() throws Exception {
+    public ControlledVocabService getControlledVocabService() throws Exception {
         return null;  //To change body of implemented methods use File | Settings | File Templates.
     }
 
@@ -129,7 +137,7 @@ public class EJBFacadeManager extends FacadeManagerBase {
             return username;
         }
 
-        username = PropertyConfigurator.getProperties().getProperty(org.janelia.it.workstation.gui.framework.session_mgr.LoginProperties.SERVER_LOGIN_NAME);
+        username = PropertyConfigurator.getProperties().getProperty(LoginProperties.SERVER_LOGIN_NAME);
 
         return username;
     }
@@ -139,7 +147,7 @@ public class EJBFacadeManager extends FacadeManagerBase {
             return password;
         }
 
-        password = PropertyConfigurator.getProperties().getProperty(org.janelia.it.workstation.gui.framework.session_mgr.LoginProperties.SERVER_LOGIN_PASSWORD);
+        password = PropertyConfigurator.getProperties().getProperty(LoginProperties.SERVER_LOGIN_PASSWORD);
 
         return password;
     }

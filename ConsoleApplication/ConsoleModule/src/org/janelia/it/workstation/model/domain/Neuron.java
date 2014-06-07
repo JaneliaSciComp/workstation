@@ -2,6 +2,7 @@ package org.janelia.it.workstation.model.domain;
 
 import org.janelia.it.jacs.model.entity.EntityConstants;
 import org.janelia.it.jacs.shared.utils.StringUtils;
+import org.janelia.it.workstation.model.entity.RootedEntity;
 
 /**
  * A neuron with different representations.
@@ -10,7 +11,7 @@ import org.janelia.it.jacs.shared.utils.StringUtils;
  */
 public class Neuron extends EntityWrapper implements Viewable2d, Masked3d, MaskIndexed {
 
-    public Neuron(org.janelia.it.workstation.model.entity.RootedEntity neuronFragment) {
+    public Neuron(RootedEntity neuronFragment) {
         super(neuronFragment);
     }
 

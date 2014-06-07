@@ -3,6 +3,7 @@ package org.janelia.it.workstation.api.entity_model.management;
 import org.janelia.it.jacs.model.entity.Entity;
 import org.janelia.it.jacs.model.entity.EntityConstants;
 import org.janelia.it.jacs.model.entity.EntityData;
+import org.janelia.it.workstation.api.facade.facade_mgr.FacadeManager;
 
 import java.util.Date;
 import java.util.HashSet;
@@ -37,7 +38,7 @@ public class EntityFactory {
             }
         }
         catch (Exception fcEx) {
-            org.janelia.it.workstation.api.facade.facade_mgr.FacadeManager.handleException(fcEx);
+            FacadeManager.handleException(fcEx);
             newEntity = null;
         }
 

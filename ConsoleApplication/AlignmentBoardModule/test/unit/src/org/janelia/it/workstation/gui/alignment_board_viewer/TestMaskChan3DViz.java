@@ -6,11 +6,16 @@ import org.janelia.it.workstation.gui.WorkstationEnvironment;
 import org.janelia.it.workstation.gui.alignment_board_viewer.masking.MultiMaskTracker;
 import org.janelia.it.workstation.gui.alignment_board_viewer.gui_elements.AlignmentBoardControlsDialog;
 import org.janelia.it.workstation.gui.alignment_board_viewer.masking.ConfigurableColorMapping;
+import org.janelia.it.workstation.gui.opengl.GLActor;
+import org.janelia.it.workstation.gui.viewer3d.VolumeBrickActorBuilder;
+import org.janelia.it.workstation.gui.viewer3d.VolumeModel;
 import org.janelia.it.workstation.gui.viewer3d.masking.RenderMappingI;
 import org.janelia.it.workstation.gui.viewer3d.Mip3d;
 import org.janelia.it.workstation.gui.viewer3d.VolumeBrickFactory;
+import org.janelia.it.workstation.gui.viewer3d.resolver.TrivialFileResolver;
 import org.janelia.it.workstation.gui.viewer3d.texture.TextureDataI;
 import org.janelia.it.jacs.model.TestCategories;
+import org.janelia.it.workstation.shared.util.SystemInfo;
 import org.junit.experimental.categories.Category;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -29,6 +34,11 @@ import java.awt.*;
 public class TestMaskChan3DViz {
 
     private static final Dimension FRAME_SIZE = new Dimension(100, 10);
+    // The launching of a "workstation environment" facilitates the use of the database for fetching
+    // input files.  However, it also _forces_ that to happen.  This boolean switch can be used
+    // to make that go whichever way is needed.
+    private static final boolean USE_LOCAL_RESOURCE_DEFAULT = true;
+    private static boolean useLocalResource = USE_LOCAL_RESOURCE_DEFAULT;
 
     /**
 	 * @param args filenames for all mask and all channel files, in that order, to be displayed.
@@ -39,16 +49,25 @@ public class TestMaskChan3DViz {
                 if ( args.length == 0 ) {
                     throw new IllegalArgumentException(
                             "Usage: java " + TestMaskChan3DViz.class.getName() +
-                            " <mask-file> <chan-file> [<mask-file> <chan-file>]* "
+                            " <mask-file> <chan-file> [<mask-file> <chan-file>]* (use-local-resources)" +
+                            "\n       Where optional final boolean says 'use a file', not 'use a URL'"
                     );
                 }
 
-                if ( args.length % 2 != 0 ) {
+                // Note: any multiple of 2 implies pairs of files, m/c.
+                if ( args.length < 2 ) {
                     throw new IllegalArgumentException("Need both mask and channel for all renderables.");
                 }
 
+                // Beyond final of the group may be a boolean.
+                if ( args.length % 2 > 0 ) {
+                    useLocalResource = Boolean.parseBoolean( args[ args.length - 1 ] );
+                }
+
                 try {
-                    new WorkstationEnvironment().invoke();
+                    if ( ! useLocalResource ) {
+                        new WorkstationEnvironment().invoke();
+                    }
 
                     // Setup a testing color-wheel mapping.
                     JFrame frame = new JFrame("Test MipWidget for Masking");
@@ -69,13 +88,15 @@ public class TestMaskChan3DViz {
 
                     RenderMappingI renderMapping = new ConfigurableColorMapping();
                     RenderablesLoadWorker loadWorker = new RenderablesLoadWorker(
-                            new Chan3DVizDataSource( args ),
+                            new Chan3DVizDataSource( roundDownArgs( args ) ),
                             renderMapping,
                             new TestControlCallback( mipWidget, renderMapping, frame.getContentPane() ),
                             settings,
                             new MultiMaskTracker()
                     );
-                    //loadWorker.setResolver( new TrivialFileResolver() );
+                    if ( useLocalResource ) {
+                        loadWorker.setResolver( new TrivialFileResolver() );
+                    }
                     loadWorker.execute();
 
                     //Display the window.
@@ -90,6 +111,16 @@ public class TestMaskChan3DViz {
             }
         });
 	}
+
+    /** This ensures that we have only an even number of arguments to pass along. */
+    private static final String[] roundDownArgs( String[] args ) {
+        int arraySize = args.length - ( args.length % 2 );
+        String[] finalArgs = new String[ arraySize ];
+        for ( int i = 0; i < finalArgs.length; i++ ) {
+            finalArgs[ i ] = args[ i ];
+        }
+        return finalArgs;
+    }
 
     public static class TestControlCallback implements AlignmentBoardControllable {
         private Logger logger = LoggerFactory.getLogger( TestControlCallback.class );
@@ -117,15 +148,30 @@ public class TestMaskChan3DViz {
 
         @Override
         public void loadVolume(TextureDataI signalTexture, TextureDataI maskTexture) {
-            mip3d.getVolumeModel().setGammaAdjustment( (float)AlignmentBoardSettings.DEFAULT_GAMMA );
-            mip3d.getVolumeModel().setCameraDepth( new Vec3( 0.0, 0.0, 0.0 ) );
-            VolumeBrickFactory volumeBrickFactory = new org.janelia.it.workstation.gui.alignment_board_viewer.MultiTexVolumeBrickFactory();
-            if ( ! mip3d.setVolume(
-                    signalTexture, maskTexture, volumeBrickFactory, renderMapping, 1.0
-            ) ) {
+            VolumeModel volumeModel = mip3d.getVolumeModel();
+            volumeModel.setGammaAdjustment((float) AlignmentBoardSettings.DEFAULT_GAMMA);
+            volumeModel.setCameraDepth(new Vec3(0.0, 0.0, 0.0));
+            VolumeBrickFactory volumeBrickFactory = new MultiTexVolumeBrickFactory();
+            VolumeBrickActorBuilder actorBuilder = new VolumeBrickActorBuilder();
+            GLActor brickActor = actorBuilder.buildVolumeBrickActor(volumeModel, signalTexture, maskTexture, volumeBrickFactory, renderMapping);
+            if ( brickActor == null ) {
                 logger.error( "Failed to load volume to mip3d." );
             }
-
+            else {
+                GLActor axesActor = actorBuilder.buildAxesActor(brickActor.getBoundingBox3d(), 1.0);
+                boolean isMac = SystemInfo.OS_NAME.contains("mac");
+                if ( isMac ) {
+                    // Enforce opaque, transparent ordering of actors.
+                    mip3d.addActor( brickActor );
+                }
+                if ( axesActor != null ) {
+                    mip3d.addActor( axesActor );
+                }
+                if ( ! isMac ) {
+                    // Must add the brick _after_ the axes for non-Mac systems.
+                    mip3d.addActor( brickActor );
+                }
+            }
         }
 
         @Override

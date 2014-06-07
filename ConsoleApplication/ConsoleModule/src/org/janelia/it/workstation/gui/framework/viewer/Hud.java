@@ -1,5 +1,8 @@
 package org.janelia.it.workstation.gui.framework.viewer;
 
+import org.janelia.it.workstation.gui.dialogs.ModalDialog;
+import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
+import org.janelia.it.workstation.gui.util.panels.ViewerSettingsPanel;
 import org.janelia.it.workstation.gui.viewer3d.Mip3d;
 import org.janelia.it.workstation.shared.util.Utils;
 import org.janelia.it.jacs.model.entity.Entity;
@@ -20,10 +23,10 @@ import java.io.File;
  *
  * @author <a href="mailto:rokickik@janelia.hhmi.org">Konrad Rokicki</a>
  */
-public class Hud extends org.janelia.it.workstation.gui.dialogs.ModalDialog {
+public class Hud extends ModalDialog {
 
     private static final Logger log = LoggerFactory.getLogger(Hud.class);
-    
+
     public static final String THREE_D_CONTROL = "3D";
 
     private Entity entity;
@@ -33,7 +36,6 @@ public class Hud extends org.janelia.it.workstation.gui.dialogs.ModalDialog {
     private JCheckBox render3DCheckbox;
     private final JMenu rgbMenu = new JMenu("RGB Controls");
     private Hud3DController hud3DController;
-    
 
     private static Hud instance;
 
@@ -140,7 +142,7 @@ public class Hud extends org.janelia.it.workstation.gui.dialogs.ModalDialog {
                 imageEstablished = establishImage();
             }
             catch (Exception ex) {
-                log.error("Failed to establish image",ex);
+                log.error("Failed to establish image", ex);
             }
 
             if (imageEstablished) {
@@ -157,7 +159,7 @@ public class Hud extends org.janelia.it.workstation.gui.dialogs.ModalDialog {
                 }
             }
             else {
-                JOptionPane.showMessageDialog(org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr.getMainFrame(), "Sorry, no image to display.");
+                JOptionPane.showMessageDialog(SessionMgr.getMainFrame(), "Sorry, no image to display.");
                 log.info("No image established for {}:{}", entity.getName(), entity.getEntityTypeName());
             }
         }
@@ -174,10 +176,8 @@ public class Hud extends org.janelia.it.workstation.gui.dialogs.ModalDialog {
         else {
 
             BufferedImage image = null;
-            org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr sessionMgr = org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr.getSessionMgr();
-            Boolean invertImage
-                    = (Boolean) sessionMgr.getModelProperty(org.janelia.it.workstation.gui.util.panels.ViewerSettingsPanel.INVERT_IMAGE_COLORS_PROPERTY);
-            ImageCache ic = org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr.getBrowser().getImageCache();
+            SessionMgr sessionMgr = SessionMgr.getSessionMgr();
+            ImageCache ic = SessionMgr.getBrowser().getImageCache();
             if (ic != null) {
                 image = ic.get(imagePath);
             }
@@ -185,7 +185,7 @@ public class Hud extends org.janelia.it.workstation.gui.dialogs.ModalDialog {
             // Ensure we have an image and that it is cached.
             if (image == null) {
                 log.info("In HUD: must load image.");
-                final File imageFile = org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr.getCachedFile(imagePath, false);
+                final File imageFile = SessionMgr.getCachedFile(imagePath, false);
                 if (imageFile != null) {
                     image = Utils.readImage(imageFile.getAbsolutePath());
                     if (ic != null) {
@@ -200,10 +200,6 @@ public class Hud extends org.janelia.it.workstation.gui.dialogs.ModalDialog {
                 rtnVal = false;
             }
             else {
-                // May need to invert the colors to conform to the current settings.
-                if (invertImage) {
-                    image = Utils.invertImage(image);
-                }
                 // Force the image to be on the screen
                 Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize();
                 if (image.getHeight() > screenSize.height) {
@@ -239,7 +235,7 @@ public class Hud extends org.janelia.it.workstation.gui.dialogs.ModalDialog {
             }
             catch (Exception ex) {
                 JOptionPane.showMessageDialog(this, "Failed to load 3D image.");
-                log.error("Failed to load 3D image",ex);
+                log.error("Failed to load 3D image", ex);
                 set3dModeEnabled(false);
                 handleRenderSelection();
 

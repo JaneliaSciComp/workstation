@@ -2,6 +2,8 @@ package org.janelia.it.workstation.gui.alignment_board_viewer.gui_elements;
 
 import org.janelia.it.workstation.gui.alignment_board.ab_mgr.AlignmentBoardMgr;
 import org.janelia.it.workstation.gui.alignment_board_viewer.AlignmentBoardSettings;
+import org.janelia.it.workstation.gui.alignment_board_viewer.volume_export.CoordCropper3D;
+import org.janelia.it.workstation.gui.dialogs.search.alignment_board.ABTargetedSearchDialog;
 import org.janelia.it.workstation.gui.viewer3d.CropCoordSet;
 import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.workstation.gui.util.Icons;
@@ -102,11 +104,11 @@ public class AlignmentBoardControls {
     private JButton orButton;
     private JButton clearButton;
 
-    private org.janelia.it.workstation.gui.alignment_board_viewer.gui_elements.RangeSlider xSlider;
-    private org.janelia.it.workstation.gui.alignment_board_viewer.gui_elements.RangeSlider ySlider;
-    private org.janelia.it.workstation.gui.alignment_board_viewer.gui_elements.RangeSlider zSlider;
+    private RangeSlider xSlider;
+    private RangeSlider ySlider;
+    private RangeSlider zSlider;
 
-    private org.janelia.it.workstation.gui.dialogs.search.alignment_board.ABTargetedSearchDialog searchDialog;
+    private ABTargetedSearchDialog searchDialog;
 
     private ChangeListener selectionSliderListener;
 
@@ -120,7 +122,7 @@ public class AlignmentBoardControls {
     private boolean readyForOutput = false;
 
     private Map<Integer,Integer> downSampleRateToIndex;
-    private final Collection<org.janelia.it.workstation.gui.alignment_board_viewer.gui_elements.ControlsListener> listeners = new ArrayList<org.janelia.it.workstation.gui.alignment_board_viewer.gui_elements.ControlsListener>();
+    private final Collection<ControlsListener> listeners = new ArrayList<ControlsListener>();
     private VolumeModel volumeModel;
     private AlignmentBoardSettings settings;
 
@@ -145,11 +147,11 @@ public class AlignmentBoardControls {
     }
 
     /** Control who observes.  Synchronized for thread safety. */
-    public synchronized void addSettingsListener( org.janelia.it.workstation.gui.alignment_board_viewer.gui_elements.ControlsListener listener ) {
+    public synchronized void addSettingsListener( ControlsListener listener ) {
         listeners.add(listener);
     }
 
-    public synchronized void removeSettingsListener( org.janelia.it.workstation.gui.alignment_board_viewer.gui_elements.ControlsListener listener ) {
+    public synchronized void removeSettingsListener( ControlsListener listener ) {
         listeners.remove(listener);
     }
 
@@ -310,7 +312,7 @@ public class AlignmentBoardControls {
             int[] maxima = new int[] {
                     xMax, yMax, zMax
             };
-            org.janelia.it.workstation.gui.alignment_board_viewer.volume_export.CoordCropper3D coordCropper = new org.janelia.it.workstation.gui.alignment_board_viewer.volume_export.CoordCropper3D();
+            CoordCropper3D coordCropper = new CoordCropper3D();
             float[] denormalizedCoords = coordCropper.getDenormalizedCropCoords(
                     currentCoords, maxima
             );
@@ -390,15 +392,15 @@ public class AlignmentBoardControls {
         return clearButton;
     }
 
-    public org.janelia.it.workstation.gui.alignment_board_viewer.gui_elements.RangeSlider getxSlider() {
+    public RangeSlider getxSlider() {
         return xSlider;
     }
 
-    public org.janelia.it.workstation.gui.alignment_board_viewer.gui_elements.RangeSlider getySlider() {
+    public RangeSlider getySlider() {
         return ySlider;
     }
 
-    public org.janelia.it.workstation.gui.alignment_board_viewer.gui_elements.RangeSlider getzSlider() {
+    public RangeSlider getzSlider() {
         return zSlider;
     }
 
@@ -443,7 +445,7 @@ public class AlignmentBoardControls {
         zSlider.setUpperValue(zMax);
 
         selectionSliderListener = new SliderChangeListener(
-                new org.janelia.it.workstation.gui.alignment_board_viewer.gui_elements.RangeSlider[]{ xSlider, ySlider, zSlider }, volumeModel, this
+                new RangeSlider[]{ xSlider, ySlider, zSlider }, volumeModel, this
         );
 
         xSlider.addChangeListener(selectionSliderListener);
@@ -512,7 +514,7 @@ public class AlignmentBoardControls {
             deltaSettings = true;
         }
 
-        for ( org.janelia.it.workstation.gui.alignment_board_viewer.gui_elements.ControlsListener listener: listeners ) {
+        for ( ControlsListener listener: listeners ) {
             if ( deltaBrightness ) {
                 logger.debug("Setting brightness to {}.", settings.getGammaFactor());
                 listener.setBrightness( settings.getGammaFactor() );
@@ -528,40 +530,40 @@ public class AlignmentBoardControls {
     private synchronized void fireCropEvent() {
         CropCoordSet cropCoordSet = volumeModel.getCropCoords();
         if ( cropCoordSet.getAcceptedCoordinates().size() > 0  ||  cropCoordSet.getCurrentCoordinates() != null ) {
-            for ( org.janelia.it.workstation.gui.alignment_board_viewer.gui_elements.ControlsListener listener: listeners ) {
+            for ( ControlsListener listener: listeners ) {
                 listener.updateCropCoords();
             }
         }
     }
 
     private synchronized void fireForceCropEvent() {
-        for ( org.janelia.it.workstation.gui.alignment_board_viewer.gui_elements.ControlsListener listener: listeners ) {
+        for ( ControlsListener listener: listeners ) {
             listener.updateCropCoords();
         }
     }
 
     private synchronized void fireSavebackEvent( SavebackEvent event ) {
-        for ( org.janelia.it.workstation.gui.alignment_board_viewer.gui_elements.ControlsListener listener: listeners ) {
+        for ( ControlsListener listener: listeners ) {
             listener.exportSelection(event);
         }
 
     }
 
     private synchronized void fireBlackOutCrop( boolean blackout ) {
-        for ( org.janelia.it.workstation.gui.alignment_board_viewer.gui_elements.ControlsListener listener: listeners ) {
+        for ( ControlsListener listener: listeners ) {
             listener.setCropBlackout(blackout);
         }
     }
 
     private synchronized void fireEventConnectToggle() {
         boolean connectState = settings.isEventConnected();
-        for ( org.janelia.it.workstation.gui.alignment_board_viewer.gui_elements.ControlsListener listener: listeners ) {
+        for ( ControlsListener listener: listeners ) {
             listener.setConnectEditEvents( connectState );
         }
     }
 
     private synchronized void fireRebuild() {
-        for ( org.janelia.it.workstation.gui.alignment_board_viewer.gui_elements.ControlsListener listener: listeners ) {
+        for ( ControlsListener listener: listeners ) {
             listener.forceRebuild();
         }
     }
@@ -574,9 +576,9 @@ public class AlignmentBoardControls {
         Font newFont = new Font( oldFont.getName(), Font.PLAIN, 12 );
         //Font newFont = oldFont.deriveFont( 9 );
 
-        xSlider = new org.janelia.it.workstation.gui.alignment_board_viewer.gui_elements.RangeSlider();
-        ySlider = new org.janelia.it.workstation.gui.alignment_board_viewer.gui_elements.RangeSlider();
-        zSlider = new org.janelia.it.workstation.gui.alignment_board_viewer.gui_elements.RangeSlider();
+        xSlider = new RangeSlider();
+        ySlider = new RangeSlider();
+        zSlider = new RangeSlider();
 
         //        this(null, title, LEADING, DEFAULT_POSITION, null, null);
         xSlider.setBorder( makeFontedBorder("Selection X Bounds", newFont));
@@ -635,7 +637,7 @@ public class AlignmentBoardControls {
                 SavebackEvent event = new SavebackEvent();
                 event.setAbsoluteCoords(acceptedCords);
                 event.setCompletionListener(buttonEnableListener);
-                event.setMethod(org.janelia.it.workstation.gui.alignment_board_viewer.gui_elements.ControlsListener.ExportMethod.binary);
+                event.setMethod(ControlsListener.ExportMethod.binary);
                 event.setGammaFactor( APPLY_NO_GAMMA );
                 fireSavebackEvent(event);
 
@@ -658,7 +660,7 @@ public class AlignmentBoardControls {
                 SavebackEvent event = new SavebackEvent();
                 event.setAbsoluteCoords(acceptedCords);
                 event.setCompletionListener(buttonEnableListener);
-                event.setMethod(org.janelia.it.workstation.gui.alignment_board_viewer.gui_elements.ControlsListener.ExportMethod.color);
+                event.setMethod(ControlsListener.ExportMethod.color);
                 if (volumeModel.isColorSaveBrightness()) {
                     event.setGammaFactor(settings.getGammaFactor() * VolumeModel.STANDARDIZED_GAMMA_MULTIPLIER);
                 } else {
@@ -684,7 +686,7 @@ public class AlignmentBoardControls {
                 SavebackEvent event = new SavebackEvent();
                 event.setAbsoluteCoords(acceptedCords);
                 event.setCompletionListener(buttonEnableListener);
-                event.setMethod(org.janelia.it.workstation.gui.alignment_board_viewer.gui_elements.ControlsListener.ExportMethod.mip);
+                event.setMethod(ControlsListener.ExportMethod.mip);
                 event.setGammaFactor(settings.getGammaFactor());
                 fireSavebackEvent(event);
             }
@@ -698,7 +700,7 @@ public class AlignmentBoardControls {
         search.addActionListener(new ActionListener() {
             public void actionPerformed( ActionEvent ae ) {
                 if ( searchDialog == null ) {
-                    searchDialog = new org.janelia.it.workstation.gui.dialogs.search.alignment_board.ABTargetedSearchDialog(
+                    searchDialog = new ABTargetedSearchDialog(
                             AlignmentBoardMgr.getInstance().getLayersPanel().getAlignmentBoardContext()
                     );
                 }
@@ -944,7 +946,7 @@ public class AlignmentBoardControls {
         resetSelectionSlider(zSlider);
     }
 
-    private void resetSelectionSlider( org.janelia.it.workstation.gui.alignment_board_viewer.gui_elements.RangeSlider rangeSlider ) {
+    private void resetSelectionSlider( RangeSlider rangeSlider ) {
         rangeSlider.setUpperValue(rangeSlider.getMaximum());
         rangeSlider.setValue(rangeSlider.getMinimum());
     }
@@ -974,7 +976,7 @@ public class AlignmentBoardControls {
                 xSlider.getMaximum(), ySlider.getMaximum(), zSlider.getMaximum()
         };
         for ( float[] nextAccepted: cropCoordSet.getAcceptedCoordinates() ) {
-            org.janelia.it.workstation.gui.alignment_board_viewer.volume_export.CoordCropper3D cropper3D = new org.janelia.it.workstation.gui.alignment_board_viewer.volume_export.CoordCropper3D();
+            CoordCropper3D cropper3D = new CoordCropper3D();
             float[] adjusted = cropper3D.getDenormalizedCropCoords( nextAccepted, maxima, downSampleRate );
             micrometerCropCoords.add( adjusted );
         }
@@ -992,7 +994,7 @@ public class AlignmentBoardControls {
             partialVolumeConstraints = true;
         }
 
-        org.janelia.it.workstation.gui.alignment_board_viewer.volume_export.CoordCropper3D cropper = new org.janelia.it.workstation.gui.alignment_board_viewer.volume_export.CoordCropper3D();
+        CoordCropper3D cropper = new CoordCropper3D();
         return partialVolumeConstraints ?
                 cropper.getCropCoords( xSlider, ySlider, zSlider, downSampleRate ) :
                 null;
@@ -1073,12 +1075,12 @@ public class AlignmentBoardControls {
 
     /** This listener updates the current display with latest slider tweaks. */
     public static class SliderChangeListener implements ChangeListener {
-        private final org.janelia.it.workstation.gui.alignment_board_viewer.gui_elements.RangeSlider[] sliders;
+        private final RangeSlider[] sliders;
         private final AlignmentBoardControls controls;
         private final VolumeModel volumeModel;
 
         public SliderChangeListener(
-                org.janelia.it.workstation.gui.alignment_board_viewer.gui_elements.RangeSlider[] rangeSliders,
+                RangeSlider[] rangeSliders,
                 VolumeModel volumeModel,
                 AlignmentBoardControls controls
         ) {
@@ -1088,7 +1090,7 @@ public class AlignmentBoardControls {
         }
 
         public void stateChanged(ChangeEvent e) {
-            float[] cropCoords = new org.janelia.it.workstation.gui.alignment_board_viewer.volume_export.CoordCropper3D().getNormalizedCropCoords(sliders);
+            float[] cropCoords = new CoordCropper3D().getNormalizedCropCoords(sliders);
             CropCoordSet cropCoordSet = volumeModel.getCropCoords();
             cropCoordSet.setCurrentCoordinates( cropCoords );
             controls.fireCropEvent();

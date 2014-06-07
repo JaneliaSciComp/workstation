@@ -1,5 +1,10 @@
 package org.janelia.it.workstation.api.facade.concrete_facade.xml;
 
+import org.janelia.it.workstation.api.facade.abstract_facade.AnnotationFacade;
+import org.janelia.it.workstation.api.facade.abstract_facade.ComputeFacade;
+import org.janelia.it.workstation.api.facade.abstract_facade.EntityFacade;
+import org.janelia.it.workstation.api.facade.abstract_facade.OntologyFacade;
+import org.janelia.it.workstation.api.facade.abstract_facade.SolrFacade;
 import org.janelia.it.workstation.api.facade.facade_mgr.ConnectionStatus;
 import org.janelia.it.workstation.api.facade.facade_mgr.FacadeManager;
 import org.janelia.it.workstation.shared.util.ConsoleProperties;
@@ -26,7 +31,7 @@ public class XmlServiceFacadeManager extends XmlFacadeManager {
     public static final File URLS_PREF_FILE = new File(System.getProperty("user.home") + ConsoleProperties.getString("Console.Home.Path") + LOCATION_PROP_NAME + ".properties");
 
     //-------------------------------------------MEMBER VARIABLES
-    private org.janelia.it.workstation.api.facade.abstract_facade.OntologyFacade ontology = null;
+    private OntologyFacade ontology = null;
 
     //-------------------------------------------CONSTRUCTORS
 
@@ -131,27 +136,27 @@ public class XmlServiceFacadeManager extends XmlFacadeManager {
     } // End method: canAddMoreDataSources
 
     @Override
-    public org.janelia.it.workstation.api.facade.abstract_facade.OntologyFacade getOntologyFacade() {
+    public OntologyFacade getOntologyFacade() {
         return null;
     }
 
     @Override
-    public org.janelia.it.workstation.api.facade.abstract_facade.EntityFacade getEntityFacade() {
+    public EntityFacade getEntityFacade() {
         return null;
     }
 
     @Override
-    public org.janelia.it.workstation.api.facade.abstract_facade.AnnotationFacade getAnnotationFacade() {
+    public AnnotationFacade getAnnotationFacade() {
         return null;
     }
 
     @Override
-    public org.janelia.it.workstation.api.facade.abstract_facade.ComputeFacade getComputeFacade() {
+    public ComputeFacade getComputeFacade() {
         return null;
     }
 
     @Override
-    public org.janelia.it.workstation.api.facade.abstract_facade.SolrFacade getSolrFacade() {
+    public SolrFacade getSolrFacade() {
         return null;
     }
     

@@ -223,12 +223,12 @@ public class ToolMgr extends PreferenceManager {
     }
 
 
-    public void addToolListener(org.janelia.it.workstation.gui.framework.tool_manager.ToolListener listener) {
+    public void addToolListener(ToolListener listener) {
         if (listeners==null) listeners=new ArrayList<PrefMgrListener>();
         listeners.add(listener);
     }
 
-    public void removeToolListener(org.janelia.it.workstation.gui.framework.tool_manager.ToolListener listener) {
+    public void removeToolListener(ToolListener listener) {
         if (listeners==null) return;
         listeners.remove(listener);
         if (listeners.isEmpty()) {
@@ -351,7 +351,7 @@ public class ToolMgr extends PreferenceManager {
     public void fireToolsChanged() {
         if (listeners!=null) {
             for (Object listener : listeners) {
-                ((org.janelia.it.workstation.gui.framework.tool_manager.ToolListener) listener).toolsChanged();
+                ((ToolListener) listener).toolsChanged();
             }
         }
     }

@@ -73,7 +73,7 @@ public class BookmarkMgr extends PreferenceManager {
      return bookmarkCollection;
   }
 
-  public void addBookmark(org.janelia.it.workstation.gui.framework.bookmark.BookmarkInfo bookmark) {
+  public void addBookmark(BookmarkInfo bookmark) {
       if (null==bookmark.getId() || 0==bookmark.getId()) {
         JOptionPane.showMessageDialog(SessionMgr.getMainFrame(),
           "Bookmarking local entities is not allowed.",
@@ -84,7 +84,7 @@ public class BookmarkMgr extends PreferenceManager {
       fireBookmarksChanged();
   }
 
-  public void deleteBookmark(org.janelia.it.workstation.gui.framework.bookmark.BookmarkInfo bookmark) {
+  public void deleteBookmark(BookmarkInfo bookmark) {
     String tmpName = bookmark.getName();
     deletedInfos.put(bookmark.getKeyName(), bookmark);
     bookmarkCollection.remove(tmpName);
@@ -116,9 +116,9 @@ public class BookmarkMgr extends PreferenceManager {
    */
   public void selectBookmark(String bookmarkDisplayName) {
     for (Iterator it = bookmarkCollection.keySet().iterator(); it.hasNext(); ) {
-      org.janelia.it.workstation.gui.framework.bookmark.BookmarkInfo tmpInfo = (org.janelia.it.workstation.gui.framework.bookmark.BookmarkInfo)bookmarkCollection.get(it.next());
+      BookmarkInfo tmpInfo = (BookmarkInfo)bookmarkCollection.get(it.next());
       if (tmpInfo.getDisplayName()!=null && tmpInfo.getDisplayName().equals(bookmarkDisplayName)) {
-        selectBookmark((org.janelia.it.workstation.gui.framework.bookmark.BookmarkInfo)bookmarkCollection.get(tmpInfo.getName()));
+        selectBookmark((BookmarkInfo)bookmarkCollection.get(tmpInfo.getName()));
         return;
       }
     }
@@ -126,7 +126,7 @@ public class BookmarkMgr extends PreferenceManager {
   }
 
 
-  public void selectBookmark(org.janelia.it.workstation.gui.framework.bookmark.BookmarkInfo bookmark) {
+  public void selectBookmark(BookmarkInfo bookmark) {
 
      NavigationPath navPath;
      try {
@@ -173,7 +173,7 @@ public class BookmarkMgr extends PreferenceManager {
   protected void mergeIntoWorkingCollections(Map targetMasterCollection) {
     for (Iterator it = targetMasterCollection.keySet().iterator();it.hasNext();) {
       InfoObject tmpObject = (InfoObject)((InfoObject)targetMasterCollection.get((String)it.next())).clone();
-      if (tmpObject instanceof org.janelia.it.workstation.gui.framework.bookmark.BookmarkInfo) {
+      if (tmpObject instanceof BookmarkInfo) {
         bookmarkCollection.put(tmpObject.getName(), tmpObject);
       }
     }
@@ -241,7 +241,7 @@ public class BookmarkMgr extends PreferenceManager {
     Set uniqueBookmarks = getUniqueKeys(bookmarkProperties);
     for (Iterator it = uniqueBookmarks.iterator();it.hasNext();) {
       String nameBase = new String((String)it.next());
-      org.janelia.it.workstation.gui.framework.bookmark.BookmarkInfo tmpBookmarkInfo = new org.janelia.it.workstation.gui.framework.bookmark.BookmarkInfo(nameBase, bookmarkProperties, sourceFile);
+      BookmarkInfo tmpBookmarkInfo = new BookmarkInfo(nameBase, bookmarkProperties, sourceFile);
       targetMasterCollection.put("Bookmark."+nameBase, tmpBookmarkInfo);
     }
   }

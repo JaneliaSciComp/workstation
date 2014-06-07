@@ -30,6 +30,7 @@ import javax.swing.tree.TreePath;
 
 import org.janelia.it.workstation.api.entity_model.events.EntityInvalidationEvent;
 import org.janelia.it.workstation.api.entity_model.management.ModelMgr;
+import org.janelia.it.workstation.api.entity_model.management.ModelMgrUtils;
 import org.janelia.it.workstation.gui.alignment_board_viewer.masking.FileStats;
 import org.janelia.it.workstation.gui.framework.outline.EntityTransferHandler;
 import org.janelia.it.workstation.gui.framework.outline.Refreshable;
@@ -60,6 +61,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.common.eventbus.Subscribe;
+
 import java.util.ArrayList;
 
 /**
@@ -351,7 +353,7 @@ public class LayersPanel extends JPanel implements Refreshable {
             @Override
             protected void doStuff() throws Exception {
                 log.trace("load alignment board with id: {}",alignmentBoardId);
-                Entity commonRoot = ModelMgr.getModelMgr().getCommonRootEntityByName(ALIGNMENT_BOARDS_FOLDER);
+                Entity commonRoot = ModelMgr.getModelMgr().getOwnedCommonRootByName(ALIGNMENT_BOARDS_FOLDER);
                 ModelMgr.getModelMgr().loadLazyEntity(commonRoot, false);
                 RootedEntity commonRootedEntity = new RootedEntity(commonRoot);
                 RootedEntity abRootedEntity = commonRootedEntity.getChildById(alignmentBoardId);
@@ -631,7 +633,7 @@ public class LayersPanel extends JPanel implements Refreshable {
     private void refresh(final boolean restoreState, final boolean invalidateCache, final Callable<Void> success) {
         // TODO: respect cache invalidation parameter
         if (alignmentBoardContext==null) {
-            log.warn("No alignment board context ready for layers panel.");
+            log.debug("No alignment board context ready for layers panel.");
             return;
         }
         if (restoreState) {
@@ -771,18 +773,20 @@ public class LayersPanel extends JPanel implements Refreshable {
 
         private Color getGammaCorrectedSwatchColor(Color color) {
             double[] colorRGB = new double[ 3 ];
-            colorRGB[ 0 ] = color.getRed() / 256.0;
-            colorRGB[ 1 ] = color.getGreen() / 256.0;
-            colorRGB[ 2 ] = color.getBlue() / 256.0;
+            if ( color != null ) {
+                colorRGB[ 0] = color.getRed() / 256.0;
+                colorRGB[ 1] = color.getGreen() / 256.0;
+                colorRGB[ 2] = color.getBlue() / 256.0;
+            }
             return getGammaCorrectedSwatchColor( colorRGB );
         }
 
         private Color getGammaCorrectedSwatchColor(double[] colorRGB) {
             return new Color(
-                                            (int)(256.0 * Math.pow( colorRGB[ 0 ], VolumeModel.STANDARDIZED_GAMMA_MULTIPLIER ) ),
-                                            (int)(256.0 * Math.pow( colorRGB[ 1 ], VolumeModel.STANDARDIZED_GAMMA_MULTIPLIER ) ),
-                                            (int)(256.0 * Math.pow( colorRGB[ 2 ], VolumeModel.STANDARDIZED_GAMMA_MULTIPLIER ) )
-                                    );
+                    (int) (256.0 * Math.pow(colorRGB[ 0], VolumeModel.STANDARDIZED_GAMMA_MULTIPLIER)),
+                    (int) (256.0 * Math.pow(colorRGB[ 1], VolumeModel.STANDARDIZED_GAMMA_MULTIPLIER)),
+                    (int) (256.0 * Math.pow(colorRGB[ 2], VolumeModel.STANDARDIZED_GAMMA_MULTIPLIER))
+            );
         }
     }
     

@@ -1,5 +1,7 @@
 package org.janelia.it.workstation.gui.framework.console;
 
+import org.janelia.it.workstation.shared.util.FreeMemoryWatcher;
+
 import javax.swing.*;
 
 import java.awt.*;
@@ -58,13 +60,13 @@ public class StatusBar extends JPanel {
     public void useFreeMemoryViewer(boolean use) {
         if (use) {
             if (freeMemoryViewer == null) freeMemoryViewer = new FreeMemoryViewer();
-            org.janelia.it.workstation.shared.util.FreeMemoryWatcher.getFreeMemoryWatcher().addObserver(freeMemoryViewer);
+            FreeMemoryWatcher.getFreeMemoryWatcher().addObserver(freeMemoryViewer);
             add(freeMemoryViewer);
         }
         else {
             if (freeMemoryViewer != null) {
                 remove(freeMemoryViewer);
-                org.janelia.it.workstation.shared.util.FreeMemoryWatcher.getFreeMemoryWatcher().deleteObserver(freeMemoryViewer);
+                FreeMemoryWatcher.getFreeMemoryWatcher().deleteObserver(freeMemoryViewer);
                 freeMemoryViewer = null;
                 label.setText(label.getText());
             }

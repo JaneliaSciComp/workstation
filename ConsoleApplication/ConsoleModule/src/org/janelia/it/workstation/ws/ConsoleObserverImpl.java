@@ -6,6 +6,8 @@
  */
 package org.janelia.it.workstation.ws;
 
+import org.janelia.it.workstation.api.entity_model.access.ModelMgrObserver;
+
 import javax.jws.WebService;
 import javax.jws.soap.SOAPBinding;
 
@@ -19,7 +21,7 @@ import javax.jws.soap.SOAPBinding;
 @WebService(endpointInterface= "org.janelia.it.workstation.ws.ConsoleObserver",
 			serviceName="ConsoleObserver",	
 			portName="ObsPort", name="Obs")
-public class ConsoleObserverImpl implements org.janelia.it.workstation.api.entity_model.access.ModelMgrObserver {
+public class ConsoleObserverImpl implements ModelMgrObserver {
 
 	private IllegalStateException e = new IllegalStateException(
 			"This endpoint is meant as a guideline interface for client implementations. It is not a functional service.");

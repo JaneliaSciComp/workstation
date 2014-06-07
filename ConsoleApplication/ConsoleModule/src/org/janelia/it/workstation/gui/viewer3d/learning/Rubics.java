@@ -1,11 +1,18 @@
 package org.janelia.it.workstation.gui.viewer3d.learning;
 
+import org.janelia.it.workstation.geom.CoordinateAxis;
+import org.janelia.it.workstation.geom.Vec3;
+import org.janelia.it.workstation.gui.opengl.GLActor;
+import org.janelia.it.workstation.gui.viewer3d.BoundingBox3d;
+import org.janelia.it.workstation.gui.viewer3d.buffering.VtxCoordBufMgr;
+import org.janelia.it.workstation.gui.viewer3d.texture.TextureMediator;
+
 import javax.media.opengl.GL2;
 import javax.media.opengl.GLAutoDrawable;
 
 import java.nio.*;
 
-public class Rubics implements org.janelia.it.workstation.gui.opengl.GLActor {
+public class Rubics implements GLActor {
 
     // This helps to track whether the class has been re-loaded by Android or not.
     private static int __class_instance = 0;
@@ -13,14 +20,14 @@ public class Rubics implements org.janelia.it.workstation.gui.opengl.GLActor {
         __class_instance++;
     }
 
-    private org.janelia.it.workstation.gui.viewer3d.buffering.VtxCoordBufMgr bufferManager;
+    private VtxCoordBufMgr bufferManager;
     private FloatBuffer matSpecBufF;
     private FloatBuffer matShinBufF;
     private FloatBuffer lightPosBufF;
 
     public Rubics() {
-        bufferManager = new org.janelia.it.workstation.gui.viewer3d.buffering.VtxCoordBufMgr();
-        org.janelia.it.workstation.gui.viewer3d.texture.TextureMediator simplifiedMediator = new org.janelia.it.workstation.gui.viewer3d.texture.TextureMediator() {
+        bufferManager = new VtxCoordBufMgr();
+        TextureMediator simplifiedMediator = new TextureMediator() {
             private Double[] volMicro = new Double[] {
                     360.0, 223.0, 110.0
             };
@@ -80,7 +87,7 @@ public class Rubics implements org.janelia.it.workstation.gui.opengl.GLActor {
 //        new RectSolid().draw( gl );
         errorCheck( gl, "Before rubics draw...");
         appearance( gl );
-        bufferManager.drawNoTex( gl, org.janelia.it.workstation.geom.CoordinateAxis.Z, 1.0 );
+        bufferManager.drawNoTex( gl, CoordinateAxis.Z, 1.0 );
         errorCheck(gl, "After all rubics Drawing");
     }
 
@@ -96,9 +103,9 @@ public class Rubics implements org.janelia.it.workstation.gui.opengl.GLActor {
     }
 
     @Override
-    public org.janelia.it.workstation.gui.viewer3d.BoundingBox3d getBoundingBox3d() {
-        org.janelia.it.workstation.gui.viewer3d.BoundingBox3d result = new org.janelia.it.workstation.gui.viewer3d.BoundingBox3d();
-        org.janelia.it.workstation.geom.Vec3 half = new org.janelia.it.workstation.geom.Vec3(0,0,0);
+    public BoundingBox3d getBoundingBox3d() {
+        BoundingBox3d result = new BoundingBox3d();
+        Vec3 half = new Vec3(0,0,0);
         for (int i = 0; i < 3; ++i)
             half.set( i, 0.5 * 1024 );
         result.include(half.minus());

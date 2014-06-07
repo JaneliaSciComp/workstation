@@ -17,7 +17,7 @@ import java.util.List;
 import static org.junit.Assert.*;
 
 /**
- * Tests the {@link org.janelia.it.workstation.shared.util.filecache.WebDavClient} class.
+ * Tests the {@link WebDavClient} class.
  *
  * @author Eric Trautman
  */
@@ -45,13 +45,13 @@ public class WebDavClientTest {
     public static final UsernamePasswordCredentials WEBDAV_TEST_USER_CREDENTIALS =
             new UsernamePasswordCredentials("testuser", "testuser");
 
-    private org.janelia.it.workstation.shared.util.filecache.WebDavClient client;
+    private WebDavClient client;
     private URL testUrlWithoutSlash;
     private URL testUrlWithSlash;
 
     @Before
     public void setUp() throws Exception {
-        client = new org.janelia.it.workstation.shared.util.filecache.WebDavClient(org.janelia.it.workstation.shared.util.filecache.WebDavClient.JACS_WEBDAV_BASE_URL, 100, 100);
+        client = new WebDavClient(WebDavClient.JACS_WEBDAV_BASE_URL, 100, 100);
         final String testHref = JACS_WEBDAV_TEST_ROOT_PATH + "/test-read/unit-test-files";
         testUrlWithoutSlash = client.getWebDavUrl(testHref);
         testUrlWithSlash = client.getWebDavUrl(testHref + "/");
@@ -76,7 +76,7 @@ public class WebDavClientTest {
 
         client.setCredentials(WEBDAV_TEST_USER_CREDENTIALS);
 
-        org.janelia.it.workstation.shared.util.filecache.WebDavFile webDavFile = client.findFile(testUrlWithSlash);
+        WebDavFile webDavFile = client.findFile(testUrlWithSlash);
         assertTrue("base directory should be identified as a directory", webDavFile.isDirectory());
 
         assertEquals("invalid URL saved for base directory", testUrlWithSlash, webDavFile.getUrl());
@@ -145,7 +145,7 @@ public class WebDavClientTest {
     @Category(TestCategories.FastTests.class)
     public void testGetWebDavUrl() throws Exception {
         final String path = "/path with 25% /bad/ \\chars\\.txt";
-        final String expectedUrlString = org.janelia.it.workstation.shared.util.filecache.WebDavClient.JACS_WEBDAV_BASE_URL +
+        final String expectedUrlString = WebDavClient.JACS_WEBDAV_BASE_URL +
                                          "/path%20with%2025%25%20/bad/%20%5Cchars%5C.txt";
         final URL url = client.getWebDavUrl(path);
         assertEquals("invalid URL string returned for path '" + path + "'", expectedUrlString, url.toString());

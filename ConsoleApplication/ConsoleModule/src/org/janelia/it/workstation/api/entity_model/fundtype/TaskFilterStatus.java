@@ -1,10 +1,12 @@
 package org.janelia.it.workstation.api.entity_model.fundtype;
 
+import java.io.Serializable;
+
 /**
  * @author Peter Davies
  */
 
-public class TaskFilterStatus implements java.io.Serializable {
+public class TaskFilterStatus implements Serializable {
 
     private static final long serialVersionUID = 1;
     private TaskFilter taskFilter;

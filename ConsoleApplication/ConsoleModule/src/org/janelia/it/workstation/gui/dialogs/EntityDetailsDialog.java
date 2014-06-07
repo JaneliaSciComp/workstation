@@ -9,9 +9,12 @@ import java.awt.event.ActionListener;
 import javax.swing.*;
 
 import org.janelia.it.workstation.api.entity_model.access.ModelMgrAdapter;
+import org.janelia.it.workstation.api.entity_model.management.ModelMgr;
 import org.janelia.it.workstation.gui.framework.outline.EntityDetailsPanel;
 import org.janelia.it.jacs.model.entity.Entity;
 import org.janelia.it.jacs.model.entity.EntityData;
+import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
+import org.janelia.it.workstation.model.entity.RootedEntity;
 
 /**
  * A dialog for viewing details about an entity.
@@ -58,11 +61,11 @@ public class EntityDetailsDialog extends ModalDialog {
         add(buttonPane, BorderLayout.SOUTH);
     }
     
-    public void showForRootedEntity(org.janelia.it.workstation.model.entity.RootedEntity rootedEntity) {
+    public void showForRootedEntity(RootedEntity rootedEntity) {
     	showForRootedEntity(rootedEntity, EntityDetailsPanel.TAB_NAME_ATTRIBUTES);
     }
     
-    public void showForRootedEntity(org.janelia.it.workstation.model.entity.RootedEntity rootedEntity, String defaultTab) {
+    public void showForRootedEntity(RootedEntity rootedEntity, String defaultTab) {
     	EntityData entityData = rootedEntity.getEntityData();
     	showForEntity(rootedEntity.getEntity(), entityData.getEntityAttrName()==null?"":entityData.getEntityAttrName(), defaultTab);
     }
@@ -78,16 +81,16 @@ public class EntityDetailsDialog extends ModalDialog {
     private void showForEntity(final Entity entity, final String role, String defaultTab) {
         
         // Register this dialog as a model observer
-        org.janelia.it.workstation.api.entity_model.management.ModelMgr.getModelMgr().addModelMgrObserver(modelMgrAdapter);
+        ModelMgr.getModelMgr().addModelMgrObserver(modelMgrAdapter);
         
         entityDetailsPanel.loadEntity(entity, role, defaultTab);
         setTitle("Details: "+entity.getName());
-        Component mainFrame = org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr.getMainFrame();
+        Component mainFrame = SessionMgr.getMainFrame();
         setPreferredSize(new Dimension((int)(mainFrame.getWidth()*0.5),(int)(mainFrame.getHeight()*0.8)));
         // Show dialog and wait
         packAndShow();
         
         // Dialog is closing, clean up observer
-        org.janelia.it.workstation.api.entity_model.management.ModelMgr.getModelMgr().removeModelMgrObserver(modelMgrAdapter);
+        ModelMgr.getModelMgr().removeModelMgrObserver(modelMgrAdapter);
     }
 }

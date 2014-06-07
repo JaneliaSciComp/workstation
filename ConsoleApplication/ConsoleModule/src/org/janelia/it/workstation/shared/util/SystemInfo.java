@@ -1,9 +1,12 @@
 package org.janelia.it.workstation.shared.util;
 
+import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.File;
+import java.util.Date;
+import java.util.Random;
 
 /**
  * Adapted from IDEA code base.
@@ -21,6 +24,9 @@ public class SystemInfo {
     public static final String JAVA_RUNTIME_VERSION = System.getProperty("java.runtime.version");
     public static final String ARCH_DATA_MODEL = System.getProperty("sun.arch.data.model");
     public static final String SUN_DESKTOP = System.getProperty("sun.desktop");
+
+    public static final String DOWNLOADS_FINAL_PATH_DIR = "Downloads/";
+    public static final String USERHOME_SYSPROP_NAME = "user.home";
 
     public static final boolean isWindows = OS_NAME.startsWith("windows");
     public static final boolean isWindowsNT = OS_NAME.startsWith("windows nt");
@@ -105,21 +111,31 @@ public class SystemInfo {
     }
     
     public static void setDownloadsDir(String downloadsDir) {
-        org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr.getSessionMgr().setModelProperty(org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr.DOWNLOADS_DIR, downloadsDir);
+        SessionMgr.getSessionMgr().setModelProperty(SessionMgr.DOWNLOADS_DIR, downloadsDir);
     }
     
     public static File getDownloadsDir() {
-        String downloadsDir = (String) org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr.getSessionMgr().getModelProperty(org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr.DOWNLOADS_DIR);
+        String downloadsDir = (String) SessionMgr.getSessionMgr().getModelProperty(SessionMgr.DOWNLOADS_DIR);
         File downloadsDirFile = null;
         if (downloadsDir==null) {
             if (SystemInfo.isMac) {
-                downloadsDirFile = new File(System.getProperty("user.home"),"Downloads/");
+                downloadsDirFile = new File(System.getProperty(USERHOME_SYSPROP_NAME), DOWNLOADS_FINAL_PATH_DIR);
             }
             else if (SystemInfo.isLinux) {
-                downloadsDirFile = new File("/tmp/"+ org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr.getUsername()+"/");
+                String userHome = System.getProperty(USERHOME_SYSPROP_NAME);
+                String[] userHomePathParts = userHome.split( System.getProperty("file.separator" ) );
+                String usernameFromPath = "";
+                if ( userHomePathParts.length > 0 ) {
+                    usernameFromPath = userHomePathParts[ userHomePathParts.length - 1 ];                
+                }
+                else {
+                    usernameFromPath += new Random( new Date().getTime() ).nextInt();
+                    log.warn("Using random temp path for downloads: {}.", usernameFromPath);
+                }
+                downloadsDirFile = new File("/tmp/"+ usernameFromPath +"/" + DOWNLOADS_FINAL_PATH_DIR);
             }
             else if (SystemInfo.isWindows) {
-                downloadsDirFile = new File(System.getProperty("user.home"),"Downloads/");
+                downloadsDirFile = new File(System.getProperty(USERHOME_SYSPROP_NAME), DOWNLOADS_FINAL_PATH_DIR);
             }
             else {
                 throw new IllegalStateException("Operation system not supported: "+SystemInfo.OS_NAME);
@@ -131,7 +147,7 @@ public class SystemInfo {
         }
         return downloadsDirFile;
     }
-    
+
     private static com.sun.management.OperatingSystemMXBean getOSMXBean() {
         java.lang.management.OperatingSystemMXBean mxbean = java.lang.management.ManagementFactory.getOperatingSystemMXBean();
         com.sun.management.OperatingSystemMXBean sunmxbean = (com.sun.management.OperatingSystemMXBean) mxbean;

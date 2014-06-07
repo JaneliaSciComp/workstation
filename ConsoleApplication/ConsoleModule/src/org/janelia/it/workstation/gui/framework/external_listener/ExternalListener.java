@@ -1,5 +1,7 @@
 package org.janelia.it.workstation.gui.framework.external_listener;
 
+import org.janelia.it.workstation.api.stub.data.ControlledVocabulary;
+
 import javax.swing.*;
 import java.io.*;
 import java.net.BindException;
@@ -213,7 +215,7 @@ public class ExternalListener {
 
     private Set getValidSearchTypes() {
         // todo Fix this
-        org.janelia.it.workstation.api.stub.data.ControlledVocabulary cv = new org.janelia.it.workstation.api.stub.data.ControlledVocabulary();//AutoNavigationMgr.getAutoNavigationMgr().getNavigationSearchTypes();
+        ControlledVocabulary cv = new ControlledVocabulary();//AutoNavigationMgr.getAutoNavigationMgr().getNavigationSearchTypes();
         String[] values = cv.getValues();
         return new HashSet(Arrays.asList(values));
     }
@@ -223,7 +225,7 @@ public class ExternalListener {
         int index = instructionString.indexOf(DYNAMIC_STRING);
         String bodyString = "";
         // todo Fix this
-        org.janelia.it.workstation.api.stub.data.ControlledVocabulary cv = new org.janelia.it.workstation.api.stub.data.ControlledVocabulary(); //AutoNavigationMgr.getAutoNavigationMgr().getNavigationSearchTypes();
+        ControlledVocabulary cv = new ControlledVocabulary(); //AutoNavigationMgr.getAutoNavigationMgr().getNavigationSearchTypes();
         String[] values = cv.getValues();
         for (int i = 0; i < values.length; i++) {
             bodyString += "<BR>" + values[i] + " = " + cv.lookup(values[i]);
@@ -238,7 +240,7 @@ public class ExternalListener {
         if (index > -1) {
             String bodyString = "";
             // Fix this
-            org.janelia.it.workstation.api.stub.data.ControlledVocabulary cv = new org.janelia.it.workstation.api.stub.data.ControlledVocabulary();//AutoNavigationMgr.getAutoNavigationMgr().getNavigationSearchTypes();
+            ControlledVocabulary cv = new ControlledVocabulary();//AutoNavigationMgr.getAutoNavigationMgr().getNavigationSearchTypes();
             String[] values = cv.getValues();
             for (int i = 0; i < values.length; i++) {
                 bodyString += "<BR>" + values[i] + " = " + cv.lookup(values[i]);
@@ -268,7 +270,7 @@ public class ExternalListener {
                     nextType = (String) searchType;
                     if (parameters.get(nextType) != null) {
                         // Fix this
-                        org.janelia.it.workstation.api.stub.data.ControlledVocabulary cv = new org.janelia.it.workstation.api.stub.data.ControlledVocabulary(); //AutoNavigationMgr.getAutoNavigationMgr().getNavigationSearchTypes();
+                        ControlledVocabulary cv = new ControlledVocabulary(); //AutoNavigationMgr.getAutoNavigationMgr().getNavigationSearchTypes();
                         String tmpSearch = cv.lookup(nextType);
                         if (tmpSearch.equals(nextType)) tmpSearch = null;
                         // Fix this

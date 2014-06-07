@@ -1,5 +1,13 @@
 package org.janelia.it.workstation.gui.util.panels;
 
+import org.janelia.it.workstation.gui.framework.navigation_tools.AutoNavigationMgr;
+import org.janelia.it.workstation.gui.framework.pref_controller.PrefController;
+import org.janelia.it.workstation.gui.framework.roles.PrefEditor;
+import org.janelia.it.workstation.gui.framework.session_mgr.BrowserModel;
+import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
+import org.janelia.it.workstation.gui.framework.session_mgr.SessionModelListener;
+import org.janelia.it.workstation.shared.util.RendererType2D;
+
 import java.awt.BorderLayout;
 import java.awt.Dimension;
 import java.awt.Rectangle;
@@ -9,8 +17,9 @@ import java.util.HashMap;
 import java.util.Map;
 
 import javax.swing.*;
+import javax.swing.border.TitledBorder;
 
-public class ApplicationSettingsPanel extends JPanel implements org.janelia.it.workstation.gui.framework.roles.PrefEditor {
+public class ApplicationSettingsPanel extends JPanel implements PrefEditor {
     private boolean settingsChanged = false;
     private static final String SUBVIEW_FOCUS = "FocusSubviewsUponNavigation";
     JCheckBox subviewFocusCheckBox = new JCheckBox();
@@ -18,7 +27,7 @@ public class ApplicationSettingsPanel extends JPanel implements org.janelia.it.w
     JCheckBox memoryUsage = new JCheckBox();
     JCheckBox navComplete = new JCheckBox();
     JCheckBox unloadImages = new JCheckBox();
-    org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr sessionMgr = org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr.getSessionMgr();
+    SessionMgr sessionMgr = SessionMgr.getSessionMgr();
     MySessionModelListener sessionModelListener = new MySessionModelListener();
     ButtonGroup buttonLookAndFeelGroup = new ButtonGroup();
     Map<ButtonModel, String> buttonToLafMap = new HashMap<ButtonModel, String>();
@@ -40,7 +49,7 @@ public class ApplicationSettingsPanel extends JPanel implements org.janelia.it.w
     }
 
     public String getPanelGroup() {
-        return org.janelia.it.workstation.gui.framework.pref_controller.PrefController.APPLICATION_EDITOR;
+        return PrefController.APPLICATION_EDITOR;
     }
 
     private void jbInit() throws Exception {
@@ -55,28 +64,28 @@ public class ApplicationSettingsPanel extends JPanel implements org.janelia.it.w
         
         JPanel pnlLayoutOptions = new JPanel();
         pnlLayoutOptions.setLayout(new BoxLayout(pnlLayoutOptions, BoxLayout.Y_AXIS));
-        pnlLayoutOptions.setBorder(new javax.swing.border.TitledBorder("Browser Options"));
+        pnlLayoutOptions.setBorder(new TitledBorder("Browser Options"));
         subEditors.setText("Display SubViews When Available");
         subEditors.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent evt) {
                 settingsChanged = true;
             }
         });
-        if (null != sessionMgr.getModelProperty(org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr.DISPLAY_SUB_EDITOR_PROPERTY)) {
-            subEditors.setSelected((Boolean) sessionMgr.getModelProperty(org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr.DISPLAY_SUB_EDITOR_PROPERTY));
+        if (null != sessionMgr.getModelProperty(SessionMgr.DISPLAY_SUB_EDITOR_PROPERTY)) {
+            subEditors.setSelected((Boolean) sessionMgr.getModelProperty(SessionMgr.DISPLAY_SUB_EDITOR_PROPERTY));
         }
 
         subviewFocusCheckBox.setText("Focus SubViews Upon Navigation");
         subviewFocusCheckBox.setBounds(new Rectangle(25, 199, 222, 19));
         subviewFocusCheckBox.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
-                org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr.getSessionMgr().setModelProperty(SUBVIEW_FOCUS, subviewFocusCheckBox.isSelected());
+                SessionMgr.getSessionMgr().setModelProperty(SUBVIEW_FOCUS, subviewFocusCheckBox.isSelected());
             }
         });
-        if (org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr.getSessionMgr().getModelProperty(SUBVIEW_FOCUS) == null) {
-            org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr.getSessionMgr().setModelProperty(SUBVIEW_FOCUS, Boolean.TRUE);
+        if (SessionMgr.getSessionMgr().getModelProperty(SUBVIEW_FOCUS) == null) {
+            SessionMgr.getSessionMgr().setModelProperty(SUBVIEW_FOCUS, Boolean.TRUE);
         } else {
-            boolean tmpBoolean = (Boolean) org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr.getSessionMgr().getModelProperty(SUBVIEW_FOCUS);
+            boolean tmpBoolean = (Boolean) SessionMgr.getSessionMgr().getModelProperty(SUBVIEW_FOCUS);
             subviewFocusCheckBox.setSelected(tmpBoolean);
         }
         
@@ -87,7 +96,7 @@ public class ApplicationSettingsPanel extends JPanel implements org.janelia.it.w
             }
         });
 
-        memoryUsage.setSelected((Boolean) sessionMgr.getModelProperty(org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr.DISPLAY_FREE_MEMORY_METER_PROPERTY));
+        memoryUsage.setSelected((Boolean) sessionMgr.getModelProperty(SessionMgr.DISPLAY_FREE_MEMORY_METER_PROPERTY));
 
         pnlLayoutOptions.add(Box.createVerticalStrut(5));
         pnlLayoutOptions.add(subEditors);
@@ -105,7 +114,7 @@ public class ApplicationSettingsPanel extends JPanel implements org.janelia.it.w
         // ------------------------------------------------------------------------------------------------------------
         
         JPanel popupPanel = new JPanel();
-        popupPanel.setBorder(new javax.swing.border.TitledBorder("Pop-up Information Options"));
+        popupPanel.setBorder(new TitledBorder("Pop-up Information Options"));
         navComplete.setText("Show Navigation/Search complete messages");
         navComplete.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent evt) {
@@ -114,7 +123,7 @@ public class ApplicationSettingsPanel extends JPanel implements org.janelia.it.w
         });
         popupPanel.setLayout(new BoxLayout(popupPanel, BoxLayout.Y_AXIS));
         popupPanel.add(Box.createVerticalStrut(5));
-        navComplete.setSelected(org.janelia.it.workstation.gui.framework.navigation_tools.AutoNavigationMgr.getAutoNavigationMgr().isShowingNavigationCompleteMsgs());
+        navComplete.setSelected(AutoNavigationMgr.getAutoNavigationMgr().isShowingNavigationCompleteMsgs());
         popupPanel.add(navComplete);
         popupPanel.add(Box.createVerticalStrut(5));
         mainPanel.add(Box.createVerticalStrut(20));
@@ -125,7 +134,7 @@ public class ApplicationSettingsPanel extends JPanel implements org.janelia.it.w
         // ------------------------------------------------------------------------------------------------------------
         
         JPanel pnlLookAndFeelOptions = new JPanel();
-        pnlLookAndFeelOptions.setBorder(new javax.swing.border.TitledBorder("Look and Feel Options"));
+        pnlLookAndFeelOptions.setBorder(new TitledBorder("Look and Feel Options"));
 
         pnlLookAndFeelOptions.setLayout(new BoxLayout(pnlLookAndFeelOptions, BoxLayout.Y_AXIS));
         UIManager.LookAndFeelInfo[] infos = UIManager.getInstalledLookAndFeels();
@@ -152,12 +161,12 @@ public class ApplicationSettingsPanel extends JPanel implements org.janelia.it.w
         // ------------------------------------------------------------------------------------------------------------
         
         JPanel pnlRendererOptions = new JPanel();
-        pnlRendererOptions.setBorder(new javax.swing.border.TitledBorder("2D Image Renderer"));
+        pnlRendererOptions.setBorder(new TitledBorder("2D Image Renderer"));
 
         pnlRendererOptions.setLayout(new BoxLayout(pnlRendererOptions, BoxLayout.Y_AXIS));
 
-        String selectedRenderer = (String) org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr.getSessionMgr().getModelProperty(org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr.DISPLAY_RENDERER_2D);
-        for (org.janelia.it.workstation.shared.util.RendererType2D type : org.janelia.it.workstation.shared.util.RendererType2D.values()) {
+        String selectedRenderer = (String) SessionMgr.getSessionMgr().getModelProperty(SessionMgr.DISPLAY_RENDERER_2D);
+        for (RendererType2D type : RendererType2D.values()) {
             JRadioButton  rb = new JRadioButton(type.getName());
             rb.addActionListener(new ActionListener() {
                 public void actionPerformed(ActionEvent evt) {
@@ -179,7 +188,7 @@ public class ApplicationSettingsPanel extends JPanel implements org.janelia.it.w
         // ------------------------------------------------------------------------------------------------------------
 
         JPanel imageLoadingPanel = new JPanel();
-        imageLoadingPanel.setBorder(new javax.swing.border.TitledBorder("Image Loading Options"));
+        imageLoadingPanel.setBorder(new TitledBorder("Image Loading Options"));
         unloadImages.setText("Unload images which are not visible on the screen");
         unloadImages.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent evt) {
@@ -188,7 +197,7 @@ public class ApplicationSettingsPanel extends JPanel implements org.janelia.it.w
         });
         imageLoadingPanel.setLayout(new BoxLayout(imageLoadingPanel, BoxLayout.Y_AXIS));
         imageLoadingPanel.add(Box.createVerticalStrut(5));
-        unloadImages.setSelected((Boolean) sessionMgr.getModelProperty(org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr.UNLOAD_IMAGES_PROPERTY));
+        unloadImages.setSelected((Boolean) sessionMgr.getModelProperty(SessionMgr.UNLOAD_IMAGES_PROPERTY));
         imageLoadingPanel.add(unloadImages);
         imageLoadingPanel.add(Box.createVerticalStrut(5));
         mainPanel.add(Box.createVerticalStrut(20));
@@ -214,22 +223,22 @@ public class ApplicationSettingsPanel extends JPanel implements org.janelia.it.w
         return "Application Settings";
     }
 
-    class MySessionModelListener implements org.janelia.it.workstation.gui.framework.session_mgr.SessionModelListener {
-        public void browserAdded(org.janelia.it.workstation.gui.framework.session_mgr.BrowserModel browserModel) {
+    class MySessionModelListener implements SessionModelListener {
+        public void browserAdded(BrowserModel browserModel) {
         }
 
-        public void browserRemoved(org.janelia.it.workstation.gui.framework.session_mgr.BrowserModel browserModel) {
+        public void browserRemoved(BrowserModel browserModel) {
         }
 
         public void sessionWillExit() {
         }
 
         public void modelPropertyChanged(Object key, Object oldValue, Object newValue) {
-            if (key.equals(org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr.DISPLAY_FREE_MEMORY_METER_PROPERTY))
+            if (key.equals(SessionMgr.DISPLAY_FREE_MEMORY_METER_PROPERTY))
                 memoryUsage.setSelected((Boolean) newValue);
             if (key.equals(SUBVIEW_FOCUS))
                 subviewFocusCheckBox.setSelected((Boolean) newValue);
-            if (key.equals(org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr.DISPLAY_SUB_EDITOR_PROPERTY))
+            if (key.equals(SessionMgr.DISPLAY_SUB_EDITOR_PROPERTY))
                 subEditors.setSelected((Boolean) newValue);
         }
     }
@@ -245,34 +254,34 @@ public class ApplicationSettingsPanel extends JPanel implements org.janelia.it.w
     public String[] applyChanges() {
         settingsChanged = false;
         if (memoryUsage.isSelected() != (Boolean) sessionMgr
-                .getModelProperty(org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr.DISPLAY_FREE_MEMORY_METER_PROPERTY)) {
-            sessionMgr.setModelProperty(org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr.DISPLAY_FREE_MEMORY_METER_PROPERTY, memoryUsage.isSelected());
+                .getModelProperty(SessionMgr.DISPLAY_FREE_MEMORY_METER_PROPERTY)) {
+            sessionMgr.setModelProperty(SessionMgr.DISPLAY_FREE_MEMORY_METER_PROPERTY, memoryUsage.isSelected());
         }
-        if (subEditors.isSelected() != (Boolean) sessionMgr.getModelProperty(org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr.DISPLAY_SUB_EDITOR_PROPERTY)) {
-            sessionMgr.setModelProperty(org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr.DISPLAY_SUB_EDITOR_PROPERTY, subEditors.isSelected());
+        if (subEditors.isSelected() != (Boolean) sessionMgr.getModelProperty(SessionMgr.DISPLAY_SUB_EDITOR_PROPERTY)) {
+            sessionMgr.setModelProperty(SessionMgr.DISPLAY_SUB_EDITOR_PROPERTY, subEditors.isSelected());
         }
         if (subviewFocusCheckBox.isSelected() != (Boolean) sessionMgr.getModelProperty(SUBVIEW_FOCUS)) {
             sessionMgr.setModelProperty(SUBVIEW_FOCUS, subviewFocusCheckBox.isSelected());
         }
-        org.janelia.it.workstation.gui.framework.navigation_tools.AutoNavigationMgr.getAutoNavigationMgr().showNavigationCompleteMsgs(navComplete.isSelected());
+        AutoNavigationMgr.getAutoNavigationMgr().showNavigationCompleteMsgs(navComplete.isSelected());
 
         try {
             String newLaf = buttonToLafMap.get(buttonLookAndFeelGroup.getSelection());
-            if (!newLaf.equals(sessionMgr.getModelProperty(org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr.DISPLAY_LOOK_AND_FEEL))) {
-                JOptionPane.showMessageDialog(org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr.getMainFrame(),
+            if (!newLaf.equals(sessionMgr.getModelProperty(SessionMgr.DISPLAY_LOOK_AND_FEEL))) {
+                JOptionPane.showMessageDialog(SessionMgr.getMainFrame(),
                         "You will need to restart the application to completely update the look and feel.",
                         "Restart recommended", JOptionPane.INFORMATION_MESSAGE);
-                sessionMgr.setModelProperty(org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr.DISPLAY_LOOK_AND_FEEL, newLaf);
+                sessionMgr.setModelProperty(SessionMgr.DISPLAY_LOOK_AND_FEEL, newLaf);
             }
         } catch (Exception ex) {
-            org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr.getSessionMgr().handleException(ex);
+            SessionMgr.getSessionMgr().handleException(ex);
         }
         
         String newRenderer = buttonToRendererMap.get(rendererGroup.getSelection());
-        sessionMgr.setModelProperty(org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr.DISPLAY_RENDERER_2D, newRenderer);
+        sessionMgr.setModelProperty(SessionMgr.DISPLAY_RENDERER_2D, newRenderer);
 
-        if (unloadImages.isSelected() != (Boolean) sessionMgr.getModelProperty(org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr.UNLOAD_IMAGES_PROPERTY)) {
-            sessionMgr.setModelProperty(org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr.UNLOAD_IMAGES_PROPERTY, unloadImages.isSelected());
+        if (unloadImages.isSelected() != (Boolean) sessionMgr.getModelProperty(SessionMgr.UNLOAD_IMAGES_PROPERTY)) {
+            sessionMgr.setModelProperty(SessionMgr.UNLOAD_IMAGES_PROPERTY, unloadImages.isSelected());
         }
         
         return NO_DELAYED_CHANGES;

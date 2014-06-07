@@ -17,7 +17,17 @@ import javax.swing.JPanel;
 import javax.swing.JToolBar;
 
 import org.janelia.it.workstation.gui.alignment_board.ab_mgr.AlignmentBoardMgr;
+import org.janelia.it.workstation.gui.alignment_board_viewer.gui_elements.AlignmentBoardControls;
+import org.janelia.it.workstation.gui.alignment_board_viewer.gui_elements.AlignmentBoardControlsDialog;
+import org.janelia.it.workstation.gui.alignment_board_viewer.gui_elements.AlignmentBoardControlsPanel;
+import org.janelia.it.workstation.gui.alignment_board_viewer.gui_elements.GpuSampler;
+import org.janelia.it.workstation.gui.alignment_board_viewer.gui_elements.SavebackEvent;
+import org.janelia.it.workstation.gui.alignment_board_viewer.masking.ConfigurableColorMapping;
+import org.janelia.it.workstation.gui.alignment_board_viewer.masking.MultiMaskTracker;
 import org.janelia.it.workstation.gui.alignment_board_viewer.top_component.AlignmentBoardControlsTopComponent;
+import org.janelia.it.workstation.gui.opengl.GLActor;
+import org.janelia.it.workstation.gui.viewer3d.VolumeBrickActorBuilder;
+import org.janelia.it.workstation.shared.util.SystemInfo;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -73,12 +83,12 @@ public class AlignmentBoardPanel extends JPanel implements AlignmentBoardControl
     private JPanel wrapperPanel;
 
     private RenderMappingI renderMapping;
-    private org.janelia.it.workstation.gui.alignment_board_viewer.masking.MultiMaskTracker multiMaskTracker;
+    private MultiMaskTracker multiMaskTracker;
     @SuppressWarnings("unused")
     private BrainGlow brainGlow;
-    private org.janelia.it.workstation.gui.alignment_board_viewer.gui_elements.AlignmentBoardControlsPanel settingsPanel;
-    private org.janelia.it.workstation.gui.alignment_board_viewer.gui_elements.AlignmentBoardControlsDialog settingsDialog;
-    private org.janelia.it.workstation.gui.alignment_board_viewer.gui_elements.AlignmentBoardControls controls;
+    private AlignmentBoardControlsPanel settingsPanel;
+    private AlignmentBoardControlsDialog settingsDialog;
+    private AlignmentBoardControls controls;
     private Logger logger = LoggerFactory.getLogger(AlignmentBoardPanel.class);
 
     private boolean loadingInProgress = false;
@@ -92,7 +102,6 @@ public class AlignmentBoardPanel extends JPanel implements AlignmentBoardControl
     private boolean boardOpen = false;
     private boolean connectEditEvents = true;
 
-    private Double cachedDownSampleGuess = null;
     private AlignmentBoardSettings settingsData;
     private ShutdownListener shutdownListener;
     private JToolBar toolbar;
@@ -104,10 +113,10 @@ public class AlignmentBoardPanel extends JPanel implements AlignmentBoardControl
     public AlignmentBoardPanel() {
         logger.info( "C'tor" );
         settingsData = new AlignmentBoardSettings();
-        multiMaskTracker = new org.janelia.it.workstation.gui.alignment_board_viewer.masking.MultiMaskTracker();
+        multiMaskTracker = new MultiMaskTracker();
         fileStats = new FileStats();
         multiMaskTracker.setFileStats( fileStats );
-        renderMapping = new org.janelia.it.workstation.gui.alignment_board_viewer.masking.ConfigurableColorMapping( multiMaskTracker, fileStats );
+        renderMapping = new ConfigurableColorMapping( multiMaskTracker, fileStats );
         setLayout(new BorderLayout());
         
         setTransferHandler( new AlignmentBoardEntityTransferHandler( this ) );
@@ -248,25 +257,38 @@ public class AlignmentBoardPanel extends JPanel implements AlignmentBoardControl
 
         logger.info("Setting Mip3d Volume.");
         MultiTexVolumeBrickFactory volumeBrickFactory = new MultiTexVolumeBrickFactory();
-        if ( ! mip3d.setVolume(
-                signalTexture,
-                maskTexture,
-                volumeBrickFactory,
-                renderMapping,
-                settingsData.getAcceptedDownsampleRate() )
-            ) {
+        VolumeBrickActorBuilder actorBuilder = new VolumeBrickActorBuilder();
+        GLActor volumeBrickActor = actorBuilder.buildVolumeBrickActor(mip3d.getVolumeModel(), signalTexture, maskTexture, volumeBrickFactory, renderMapping);
+        if ( volumeBrickActor == null ) {
             String msg = "Failed to load volume to mip3d.";
             logger.error(msg);
-            throw new RuntimeException( msg );
+            //throw new RuntimeException( msg );
         }
         else {
+            boolean isMac = SystemInfo.OS_NAME.contains("mac");
+            if ( isMac ) {
+                // Enforce opaque, transparent ordering of actors.
+                mip3d.addActor( volumeBrickActor );
+            }
+            GLActor axesActor = actorBuilder.buildAxesActor(
+                    volumeBrickActor.getBoundingBox3d(), 
+                    settingsData.getAcceptedDownsampleRate()
+            );
+            if ( axesActor != null ) {
+                mip3d.addActor( axesActor );
+            }
+            if ( ! isMac ) {
+                // Must add the brick _after_ the axes for non-Mac systems.
+                mip3d.addActor( volumeBrickActor );
+            }
+
             logger.info("Setting volume maxima on settings.");
             settingsPanel.setVolumeMaxima(signalTexture.getSx(), signalTexture.getSy(), signalTexture.getSz());
         }
 
         multiMaskTracker.checkDepthExceeded();
     }
-
+    
     @Override
     public void displayReady() {
         mip3d.refresh();
@@ -429,7 +451,7 @@ public class AlignmentBoardPanel extends JPanel implements AlignmentBoardControl
 
     //------------------------------IMPLEMENTS AlignmentBoardCtrlPnlSvc
     @Override
-    public org.janelia.it.workstation.gui.alignment_board_viewer.gui_elements.AlignmentBoardControlsPanel getControlsComponent() {
+    public AlignmentBoardControlsPanel getControlsComponent() {
         return settingsPanel;
     }
 
@@ -576,27 +598,16 @@ public class AlignmentBoardPanel extends JPanel implements AlignmentBoardControl
                     }
                     loadWorker = null;
                     dataSource = new ABContextDataSource(context);
-                    if ( cachedDownSampleGuess == null ) {
-                        org.janelia.it.workstation.gui.alignment_board_viewer.gui_elements.GpuSampler sampler = getGpuSampler(context.getAlignmentContext());
-                        loadWorker = new RenderablesLoadWorker(
-                                dataSource,
-                                renderMapping,
-                                AlignmentBoardPanel.this,
-                                settingsData,
-                                multiMaskTracker,
-                                sampler
-                        );
-                        loadWorker.setAxialLengths(axialLengths);
-                    }
-                    else {
-                        loadWorker = new RenderablesLoadWorker(
-                                dataSource,
-                                renderMapping,
-                                AlignmentBoardPanel.this,
-                                settingsData,
-                                multiMaskTracker
-                        );
-                    }
+                    GpuSampler sampler = getGpuSampler(context.getAlignmentContext());
+                    loadWorker = new RenderablesLoadWorker(
+                            dataSource,
+                            renderMapping,
+                            AlignmentBoardPanel.this,
+                            settingsData,
+                            multiMaskTracker,
+                            sampler
+                    );
+                    loadWorker.setAxialLengths(axialLengths);
 
                     IndeterminateNoteProgressMonitor monitor =
                             new IndeterminateNoteProgressMonitor(
@@ -621,11 +632,11 @@ public class AlignmentBoardPanel extends JPanel implements AlignmentBoardControl
 
     }
 
-    private org.janelia.it.workstation.gui.alignment_board_viewer.gui_elements.GpuSampler getGpuSampler(AlignmentContext alignmentContext) {
+    private GpuSampler getGpuSampler(AlignmentContext alignmentContext) {
         float[] opticalResolution = parseResolution(alignmentContext.getOpticalResolution());
 
         // Must find the best downsample rate.
-        org.janelia.it.workstation.gui.alignment_board_viewer.gui_elements.GpuSampler sampler = new org.janelia.it.workstation.gui.alignment_board_viewer.gui_elements.GpuSampler( this.getBackground() );
+        GpuSampler sampler = new GpuSampler( this.getBackground() );
         GLProfile profile = GLProfile.get(GLProfile.GL2);
         GLCapabilities capabilities = new GLCapabilities(profile);
         GLJPanel feedbackPanel = new GLJPanel( capabilities );
@@ -674,9 +685,9 @@ public class AlignmentBoardPanel extends JPanel implements AlignmentBoardControl
         // If the mip3d is re-created, so must the settings dialog be.  It depends on the Mip3d.
         removeSettingsPanel(layersPanel);
         logger.info("New settings");
-        controls = new org.janelia.it.workstation.gui.alignment_board_viewer.gui_elements.AlignmentBoardControls( mip3d, mip3d.getVolumeModel(), settingsData );
+        controls = new AlignmentBoardControls( mip3d, mip3d.getVolumeModel(), settingsData );
         
-        settingsPanel = new org.janelia.it.workstation.gui.alignment_board_viewer.gui_elements.AlignmentBoardControlsPanel( controls );
+        settingsPanel = new AlignmentBoardControlsPanel( controls );
         settingsPanel.setName( SETTINGS_PANEL_NAME );
         settingsPanel.setEnabled( false );
         
@@ -894,7 +905,7 @@ public class AlignmentBoardPanel extends JPanel implements AlignmentBoardControl
         }
 
         @Override
-        public void exportSelection( org.janelia.it.workstation.gui.alignment_board_viewer.gui_elements.SavebackEvent event ) {
+        public void exportSelection( SavebackEvent event ) {
             AlignmentBoardSettings settingsData = viewer.settingsData;
             VolumeWritebackHandler writebackHandler = new VolumeWritebackHandler(
                     renderMapping,

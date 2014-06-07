@@ -3,6 +3,7 @@ package org.janelia.it.workstation.gui.framework.outline;
 import java.awt.datatransfer.DataFlavor;
 import java.awt.datatransfer.Transferable;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.List;
@@ -53,7 +54,7 @@ public abstract class EntityTransferHandler extends TransferHandler {
 
         if (sourceComponent instanceof JTree) {
 
-            org.janelia.it.workstation.gui.framework.outline.EntityTree entityTree = (org.janelia.it.workstation.gui.framework.outline.EntityTree) getEntityTreeAncestor(sourceComponent);
+            EntityTree entityTree = (EntityTree) getEntityTreeAncestor(sourceComponent);
             JTree tree = entityTree.getTree();
             TreePath[] paths = tree.getSelectionPaths();
             if (paths == null) {
@@ -116,7 +117,7 @@ public abstract class EntityTransferHandler extends TransferHandler {
             DropLocation dropLocation = support.getDropLocation();
             JComponent dropTarget = getDropTargetComponent();
 
-            if (dropTarget instanceof org.janelia.it.workstation.gui.framework.outline.EntityTree) {
+            if (dropTarget instanceof EntityTree) {
 
                 DataFlavor reFlavor = TransferableEntityList.getRootedEntityFlavor();
                 DataFlavor sourceFlavor = TransferableEntityList.getSourceFlavor();
@@ -126,35 +127,33 @@ public abstract class EntityTransferHandler extends TransferHandler {
                     return false;
                 }
 
-                org.janelia.it.workstation.gui.framework.outline.EntityTree targetEntityTree = (org.janelia.it.workstation.gui.framework.outline.EntityTree) dropTarget;
+                EntityTree targetEntityTree = (EntityTree) dropTarget;
 
                 // Drag to the entity tree
                 JTree.DropLocation dl = (JTree.DropLocation) dropLocation;
                 TreePath targetPath = dl.getPath();
                 DefaultMutableTreeNode targetNode = (DefaultMutableTreeNode) targetPath.getLastPathComponent();
 
-                // Can't moved to the root unless it's visible
-                if (!targetEntityTree.getTree().isRootVisible() && targetNode.isRoot()) {
-                    log.debug("Disallow transfer because target node is a root");
-                    return false;
-                }
-
                 JComponent sourceComponent = (JComponent) support.getTransferable().getTransferData(sourceFlavor);
 
                 // Derive unique TreePaths for the source entities. It will allow us to enforce some tree-based rules.
                 List<TreePath> sourcePaths = new ArrayList<TreePath>();
-                if (sourceComponent instanceof org.janelia.it.workstation.gui.framework.outline.EntityTree) {
+                if (sourceComponent instanceof EntityTree) {
 
                     if (sourceComponent != targetEntityTree) {
                         log.debug("Disallow tree to tree transfer");
                         return false;
                     }
 
-                    org.janelia.it.workstation.gui.framework.outline.EntityTree tree = (org.janelia.it.workstation.gui.framework.outline.EntityTree) sourceComponent;
+                    EntityTree tree = (EntityTree) sourceComponent;
                     JTree jtree = tree.getTree();
                     int[] selRows = jtree.getSelectionRows();
                     if (selRows != null && selRows.length > 0) {
                         TreePath path = jtree.getPathForRow(selRows[0]);
+                        if (path.getLastPathComponent().equals(targetNode)) {
+                            log.debug("Disallow transfer of nodes into one of the selected nodes");
+                            return false;
+                        }
                         if (path != null) {
                             sourcePaths.add(path);
                         }
@@ -240,7 +239,7 @@ public abstract class EntityTransferHandler extends TransferHandler {
      * @param entitiesToAdd list of entities to add to the the new parentv
      * @return true if transfer is allowed
      */
-    protected boolean allowTransfer(org.janelia.it.workstation.gui.framework.outline.EntityTree entityTree, DefaultMutableTreeNode targetNode, List<RootedEntity> entitiesToAdd) {
+    protected boolean allowTransfer(EntityTree entityTree, DefaultMutableTreeNode targetNode, List<RootedEntity> entitiesToAdd) {
 
         // Disallow transfer if target node is not owned by the user
         Entity targetEntity = entityTree.getEntity(targetNode);
@@ -284,7 +283,7 @@ public abstract class EntityTransferHandler extends TransferHandler {
             DefaultMutableTreeNode parent = null;
             int index = 0;
 
-            if (dropTarget instanceof org.janelia.it.workstation.gui.framework.outline.EntityTree) {
+            if (dropTarget instanceof EntityTree) {
                 // Get drop location info
                 JTree.DropLocation dl = (JTree.DropLocation) support.getDropLocation();
                 int childIndex = dl.getChildIndex();
@@ -296,7 +295,7 @@ public abstract class EntityTransferHandler extends TransferHandler {
                 if (childIndex == -1) { // DropMode.ON
                     EntityData parentEd = (EntityData) parent.getUserObject();
                     Entity parentEntity = parentEd.getChildEntity();
-                    index = parentEntity.getChildren().size();
+                    index = ModelMgrUtils.getNumAccessibleChildren(parentEntity);
                 }
             }
 
@@ -307,16 +306,16 @@ public abstract class EntityTransferHandler extends TransferHandler {
                 @Override
                 protected void doStuff() throws Exception {
                     // Actually perform the transfer
-                    if (dropTarget instanceof org.janelia.it.workstation.gui.framework.outline.EntityTree) {
-                        org.janelia.it.workstation.gui.framework.outline.EntityTree targetEntityTree = (org.janelia.it.workstation.gui.framework.outline.EntityTree) dropTarget;
+                    if (dropTarget instanceof EntityTree) {
+                        EntityTree targetEntityTree = (EntityTree) dropTarget;
                         addEntities(targetEntityTree, finalParent, rootedEntities, finalIndex, support.getDropAction() == MOVE);
                     }
                     else {
                         // Find drop acceptors, and figure out which are compatible.
                         ServiceAcceptorHelper saHelper = new ServiceAcceptorHelper();
-                        DropAcceptor target = saHelper.findHandler(dropTarget, DropAcceptor.class, DropAcceptor.LOOKUP_PATH);
-                        if (target != null) {
-                            target.drop(rootedEntities);
+                        Collection<DropAcceptor> targets = saHelper.findHandler(dropTarget, DropAcceptor.class, DropAcceptor.LOOKUP_PATH);
+                        for ( DropAcceptor acceptor: targets ) {
+                            acceptor.drop(rootedEntities);
                         }
                     }
                 }
@@ -350,7 +349,7 @@ public abstract class EntityTransferHandler extends TransferHandler {
      * @param deleteSources delete the sources after copying them (i.e. make this a move operation)
      * @throws Exception
      */
-    protected void addEntities(org.janelia.it.workstation.gui.framework.outline.EntityTree entityTree, DefaultMutableTreeNode targetNode, List<RootedEntity> entitiesToAdd, int destIndex, boolean deleteSources) throws Exception {
+    protected void addEntities(EntityTree entityTree, DefaultMutableTreeNode targetNode, List<RootedEntity> entitiesToAdd, int destIndex, boolean deleteSources) throws Exception {
 
         Entity parentEntity = entityTree.getEntity(targetNode);
 
@@ -375,6 +374,9 @@ public abstract class EntityTransferHandler extends TransferHandler {
                 while (enumeration.hasMoreElements()) {
                     DefaultMutableTreeNode childNode = (DefaultMutableTreeNode) enumeration.nextElement();
                     EntityData ed = entityTree.getEntityData(childNode);
+                    // TODO: This check is not exactly correct. If the entity already exists in the target, then this will assume we're reordering, 
+                    // when really we're copying in a duplicate. That leads to some unwanted behavior, but fixing it is a large task, and we're 
+                    // going to replace this entirely with NetBeans stuff in the future, so it's probably not worth fixing right now.
                     if (ed != null && ed.getChildEntity() != null && Utils.areSameEntity(rootedEntity.getEntity(), ed.getChildEntity())) {
                         log.debug("  This is a reordering, so we'll delete the source: " + ed.getId());
                         deleteSourceEds = true;
@@ -399,10 +401,8 @@ public abstract class EntityTransferHandler extends TransferHandler {
         }
 
         Map<Long, EntityData> realEdMap = new HashMap<Long, EntityData>();
-        for (EntityData ed : parentEntity.getEntityData()) {
-            if (ed.getChildEntity() != null) {
-                realEdMap.put(ed.getId(), ed);
-            }
+        for (EntityData ed : ModelMgrUtils.getAccessibleEntityDatasWithChildren(parentEntity)) {
+            realEdMap.put(ed.getId(), ed);
         }
 
         List<EntityData> realEdsList = new ArrayList<EntityData>();
@@ -434,14 +434,14 @@ public abstract class EntityTransferHandler extends TransferHandler {
         }
     }
 
-    protected org.janelia.it.workstation.gui.framework.outline.EntityTree getEntityTreeAncestor(JComponent sourceComponent) {
+    protected EntityTree getEntityTreeAncestor(JComponent sourceComponent) {
         JComponent component = sourceComponent;
         while (true) {
             if (component == null) {
                 break;
             }
-            if (component instanceof org.janelia.it.workstation.gui.framework.outline.EntityTree) {
-                return (org.janelia.it.workstation.gui.framework.outline.EntityTree) component;
+            if (component instanceof EntityTree) {
+                return (EntityTree) component;
             }
             component = (JComponent) component.getParent();
         }

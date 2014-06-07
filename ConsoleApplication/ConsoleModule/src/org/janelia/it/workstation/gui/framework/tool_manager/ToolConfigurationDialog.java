@@ -5,6 +5,7 @@ import org.janelia.it.workstation.shared.util.Utils;
 
 import javax.swing.*;
 import javax.swing.table.DefaultTableModel;
+import javax.swing.table.TableModel;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -177,7 +178,7 @@ public class ToolConfigurationDialog extends JDialog {
     private void printDebugData(JTable table) {
         int numRows = table.getRowCount();
         int numCols = table.getColumnCount();
-        javax.swing.table.TableModel model = table.getModel();
+        TableModel model = table.getModel();
 
         System.out.println("Value of data: ");
         for (int i = 0; i < numRows; i++) {

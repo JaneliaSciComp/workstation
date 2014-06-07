@@ -1,5 +1,8 @@
 package org.janelia.it.workstation.gui.viewer3d.loader;
 
+import org.janelia.it.workstation.gui.viewer3d.stream.V3dRawImageStream;
+import org.janelia.it.workstation.gui.viewer3d.texture.TextureDataBean;
+import org.janelia.it.workstation.gui.viewer3d.texture.TextureDataI;
 import org.janelia.it.workstation.gui.viewer3d.volume_builder.VolumeDataBean;
 
 import javax.media.opengl.GL;
@@ -17,18 +20,18 @@ import java.util.zip.DataFormatException;
  *
  * Loader of signal data, from v3dpbd format input file.
  */
-public class V3dSignalFileLoader extends org.janelia.it.workstation.gui.viewer3d.loader.TextureDataBuilder implements org.janelia.it.workstation.gui.viewer3d.loader.VolumeFileLoaderI {
+public class V3dSignalFileLoader extends TextureDataBuilder implements VolumeFileLoaderI {
 
     @Override
-    protected org.janelia.it.workstation.gui.viewer3d.texture.TextureDataI createTextureDataBean() {
+    protected TextureDataI createTextureDataBean() {
         int interpolationMethod = GL.GL_LINEAR;
         if ( channelCount >= 3 ) {
-            org.janelia.it.workstation.gui.viewer3d.texture.TextureDataBean textureDataBean = new org.janelia.it.workstation.gui.viewer3d.texture.TextureDataBean(argbTextureIntArray, sx, sy, sz);
+            TextureDataBean textureDataBean = new TextureDataBean(argbTextureIntArray, sx, sy, sz);
             textureDataBean.setInterpolationMethod( interpolationMethod );
             return textureDataBean;
         }
         else {
-            org.janelia.it.workstation.gui.viewer3d.texture.TextureDataBean textureDataBean = new org.janelia.it.workstation.gui.viewer3d.texture.TextureDataBean(new VolumeDataBean( textureByteArray, sx, sy, sz ), sx, sy, sz);
+            TextureDataBean textureDataBean = new TextureDataBean(new VolumeDataBean( textureByteArray, sx, sy, sz ), sx, sy, sz);
             textureDataBean.setInterpolationMethod( interpolationMethod );
             return textureDataBean;
         }
@@ -44,7 +47,7 @@ public class V3dSignalFileLoader extends org.janelia.it.workstation.gui.viewer3d
     }
 
     private void loadV3dRaw(InputStream inputStream) throws IOException, DataFormatException {
-        org.janelia.it.workstation.gui.viewer3d.stream.V3dRawImageStream sliceStream = new org.janelia.it.workstation.gui.viewer3d.stream.V3dRawImageStream(inputStream);
+        V3dRawImageStream sliceStream = new V3dRawImageStream(inputStream);
         sx = sliceStream.getDimension(0);
         sy = sliceStream.getDimension(1);
         sz = sliceStream.getDimension(2);
@@ -64,7 +67,7 @@ public class V3dSignalFileLoader extends org.janelia.it.workstation.gui.viewer3d
         }
     }
 
-    private void loadV3dIntRaw(org.janelia.it.workstation.gui.viewer3d.stream.V3dRawImageStream sliceStream, int sc )
+    private void loadV3dIntRaw(V3dRawImageStream sliceStream, int sc )
             throws IOException, DataFormatException {
 
         double scale = 1.0;
@@ -82,7 +85,7 @@ public class V3dSignalFileLoader extends org.janelia.it.workstation.gui.viewer3d
             for (int z = 0; z < sz; ++z) {
                 int zOffset = z * sx * sy;
                 sliceStream.loadNextSlice();
-                org.janelia.it.workstation.gui.viewer3d.stream.V3dRawImageStream.Slice slice = sliceStream.getCurrentSlice();
+                V3dRawImageStream.Slice slice = sliceStream.getCurrentSlice();
                 for (int y = 0; y < sy; ++y) {
                     int yOffset = zOffset + y * sx;
                     for (int x = 0; x < sx; ++x) {
@@ -102,7 +105,7 @@ public class V3dSignalFileLoader extends org.janelia.it.workstation.gui.viewer3d
         header = sliceStream.getHeaderKey();
     }
 
-    private void loadV3dByteRaw(org.janelia.it.workstation.gui.viewer3d.stream.V3dRawImageStream sliceStream)
+    private void loadV3dByteRaw(V3dRawImageStream sliceStream)
             throws IOException, DataFormatException {
 
         V3dByteReader byteReader = new V3dByteReader();

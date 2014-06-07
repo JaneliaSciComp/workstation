@@ -6,6 +6,8 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
+import org.janelia.it.workstation.signal.Signal;
+import org.janelia.it.workstation.signal.Signal1;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -23,16 +25,16 @@ public class TextureCache
 	// private Set<TileIndex> queuedRequests = new HashSet<TileIndex>();
 	private Map<TileIndex, Long> queuedTextureTime = new HashMap<TileIndex, Long>();
 
-	public org.janelia.it.workstation.signal.Signal getCacheClearedSignal() {
+	public Signal getCacheClearedSignal() {
 		return cacheClearedSignal;
 	}
-	private org.janelia.it.workstation.signal.Signal cacheClearedSignal = new org.janelia.it.workstation.signal.Signal();
+	private Signal cacheClearedSignal = new Signal();
 	
-	public org.janelia.it.workstation.signal.Signal queueDrainedSignal = new org.janelia.it.workstation.signal.Signal();
+	public Signal queueDrainedSignal = new Signal();
 
-	public org.janelia.it.workstation.signal.Signal1<TileIndex> textureLoadedSignal = new org.janelia.it.workstation.signal.Signal1<TileIndex>();
+	public Signal1<TileIndex> textureLoadedSignal = new Signal1<TileIndex>();
 
-	public synchronized void add(org.janelia.it.workstation.gui.slice_viewer.TileTexture texture) {
+	public synchronized void add(TileTexture texture) {
 		TileIndex index = texture.getIndex();
 		if (containsKey(index))
 			log.warn("Adding texture that is already in cache "+index);
@@ -63,7 +65,7 @@ public class TextureCache
 				|| futureCache.containsKey(index);
 	}
 	
-	synchronized org.janelia.it.workstation.gui.slice_viewer.TileTexture get(TileIndex index) {
+	synchronized TileTexture get(TileIndex index) {
 		if (persistentCache.containsKey(index))
 			return persistentCache.get(index);
 		else if (historyCache.containsKey(index))
@@ -110,7 +112,7 @@ public class TextureCache
 	
 	// Indicate that a particular texture has been viewed, rather than simply
 	// pre-fetched.
-	public synchronized void markHistorical(org.janelia.it.workstation.gui.slice_viewer.TileTexture tile) {
+	public synchronized void markHistorical(TileTexture tile) {
 		if (tile == null)
 			return;
 		// Only future cached textures need to be moved.
@@ -123,8 +125,8 @@ public class TextureCache
 	
 	public int size() {return futureCache.size() + historyCache.size() + persistentCache.size();}
 	
-	public synchronized Collection<org.janelia.it.workstation.gui.slice_viewer.TileTexture> values() {
-		Set<org.janelia.it.workstation.gui.slice_viewer.TileTexture> result = new HashSet<org.janelia.it.workstation.gui.slice_viewer.TileTexture>();
+	public synchronized Collection<TileTexture> values() {
+		Set<TileTexture> result = new HashSet<TileTexture>();
 		result.addAll(historyCache.values());
 		result.addAll(futureCache.values());
 		result.addAll(persistentCache.values());

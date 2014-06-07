@@ -1,30 +1,62 @@
 package org.janelia.it.workstation.gui.framework.console;
 
-import java.awt.*;
+import java.awt.BorderLayout;
+import java.awt.CardLayout;
+import java.awt.Component;
+import java.awt.Dimension;
+import java.awt.Graphics2D;
+import java.awt.Image;
+import java.awt.Point;
+import java.awt.Toolkit;
+import java.awt.image.BufferedImage;
 import java.awt.print.PageFormat;
 import java.awt.print.PrinterJob;
 import java.util.Collections;
 import java.util.List;
 
-import javax.swing.*;
+import javax.swing.ImageIcon;
+import javax.swing.JComponent;
+import javax.swing.JFrame;
+import javax.swing.JOptionPane;
+import javax.swing.JPanel;
+import javax.swing.SwingUtilities;
 
+import org.janelia.it.jacs.model.entity.Entity;
+import org.janelia.it.workstation.api.entity_model.management.ModelMgr;
+import org.janelia.it.workstation.gui.dialogs.AnnotationSessionPropertyDialog;
+import org.janelia.it.workstation.gui.dialogs.DataSetListDialog;
+import org.janelia.it.workstation.gui.dialogs.GiantFiberSearchDialog;
+import org.janelia.it.workstation.gui.dialogs.ImportDialog;
+import org.janelia.it.workstation.gui.dialogs.MAASearchDialog;
+import org.janelia.it.workstation.gui.dialogs.MaskSearchDialog;
+import org.janelia.it.workstation.gui.dialogs.PatternSearchDialog;
+import org.janelia.it.workstation.gui.dialogs.RunNeuronSeparationDialog;
+import org.janelia.it.workstation.gui.dialogs.ScreenEvaluationDialog;
 import org.janelia.it.workstation.gui.dialogs.search.GeneralSearchDialog;
 import org.janelia.it.workstation.gui.dialogs.search.SearchConfiguration;
+import org.janelia.it.workstation.gui.framework.outline.EntityDetailsOutline;
+import org.janelia.it.workstation.gui.framework.outline.EntityOutline;
+import org.janelia.it.workstation.gui.framework.outline.EntityRootComparator;
+import org.janelia.it.workstation.gui.framework.outline.OntologyOutline;
+import org.janelia.it.workstation.gui.framework.outline.SessionOutline;
+import org.janelia.it.workstation.gui.framework.outline.VerticalPanelPicker;
 import org.janelia.it.workstation.gui.framework.session_mgr.BrowserModel;
+import org.janelia.it.workstation.gui.framework.session_mgr.BrowserModelListenerAdapter;
 import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.workstation.gui.framework.session_mgr.SessionModelListener;
 import org.janelia.it.workstation.gui.framework.viewer.IconDemoPanel;
+import org.janelia.it.workstation.gui.framework.viewer.ImageCache;
+import org.janelia.it.workstation.gui.slice_viewer.SliceViewViewer;
 import org.janelia.it.workstation.gui.util.WindowLocator;
+import org.janelia.it.workstation.shared.util.FreeMemoryWatcher;
 import org.janelia.it.workstation.shared.util.PrintableComponent;
 import org.janelia.it.workstation.shared.util.PrintableImage;
 import org.janelia.it.workstation.shared.util.SystemInfo;
-import org.janelia.it.jacs.model.entity.Entity;
 import org.openide.windows.Mode;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import org.openide.windows.TopComponent;
 import org.openide.windows.WindowManager;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Created by IntelliJ IDEA.
@@ -57,34 +89,34 @@ public class Browser implements Cloneable {
     private JPanel collapsedOutlineView = new JPanel();
     private JPanel mainPanel = new JPanel();
     private ViewerManager viewerManager;
-    private final org.janelia.it.workstation.gui.framework.viewer.ImageCache imageCache = new org.janelia.it.workstation.gui.framework.viewer.ImageCache();
+    private final ImageCache imageCache = new ImageCache();
     private CardLayout layout = new CardLayout();
     private SessionModelListener modelListener = new MySessionModelListener();
 
     private BrowserModel browserModel;
-    private org.janelia.it.workstation.gui.framework.outline.SessionOutline sessionOutline;
-    private org.janelia.it.workstation.gui.framework.outline.EntityOutline entityOutline;
-    private org.janelia.it.workstation.gui.framework.outline.EntityDetailsOutline entityDetailsOutline;
+    private SessionOutline sessionOutline;
+    private EntityOutline entityOutline;
+    private EntityDetailsOutline entityDetailsOutline;
     private ToolsMenuModifier toolsMenuModifier;
 
-    private org.janelia.it.workstation.gui.framework.outline.VerticalPanelPicker rightPanel;
-    private org.janelia.it.workstation.gui.framework.outline.OntologyOutline ontologyOutline;
+    private VerticalPanelPicker rightPanel;
+    private OntologyOutline ontologyOutline;
 
-    private org.janelia.it.workstation.gui.dialogs.AnnotationSessionPropertyDialog annotationSessionPropertyPanel;
-    private org.janelia.it.workstation.gui.dialogs.ImportDialog importDialog;
-    private org.janelia.it.workstation.gui.dialogs.RunNeuronSeparationDialog runNeuronSeparationDialog;
+    private AnnotationSessionPropertyDialog annotationSessionPropertyPanel;
+    private ImportDialog importDialog;
+    private RunNeuronSeparationDialog runNeuronSeparationDialog;
     private SearchConfiguration generalSearchConfig;
     private GeneralSearchDialog generalSearchDialog;
-    private org.janelia.it.workstation.gui.dialogs.PatternSearchDialog patternSearchDialog;
-    private org.janelia.it.workstation.gui.dialogs.GiantFiberSearchDialog giantFiberSearchDialog;
-    private org.janelia.it.workstation.gui.dialogs.ScreenEvaluationDialog screenEvaluationDialog;
-    private org.janelia.it.workstation.gui.dialogs.MAASearchDialog maaSearchDialog;
-    private org.janelia.it.workstation.gui.dialogs.DataSetListDialog dataSetListDialog;
+    private PatternSearchDialog patternSearchDialog;
+    private GiantFiberSearchDialog giantFiberSearchDialog;
+    private ScreenEvaluationDialog screenEvaluationDialog;
+    private MAASearchDialog maaSearchDialog;
+    private DataSetListDialog dataSetListDialog;
     private StatusBar statusBar = new StatusBar();
     private ImageIcon browserImageIcon;
     private Image iconImage;
     private PageFormat pageFormat;
-    private org.janelia.it.workstation.gui.dialogs.MaskSearchDialog arbitraryMaskSearchDialog;
+    private MaskSearchDialog arbitraryMaskSearchDialog;
 
     /**
      * Center Window, use passed realEstatePercent (0-1.0, where 1.0 is 100% of the screen)
@@ -111,7 +143,7 @@ public class Browser implements Cloneable {
         }
     }
 
-    public org.janelia.it.workstation.gui.framework.viewer.ImageCache getImageCache() {
+    public ImageCache getImageCache() {
         return imageCache;
     }
 
@@ -135,31 +167,29 @@ public class Browser implements Cloneable {
         browserModel.addBrowserModelListener(new BrowserModelObserver());
         SessionMgr.getSessionMgr().addSessionModelListener(modelListener);
 
-        sessionOutline = new org.janelia.it.workstation.gui.framework.outline.SessionOutline(SessionMgr.getMainFrame());
+        sessionOutline = new SessionOutline(SessionMgr.getMainFrame());
 
-        entityOutline = new org.janelia.it.workstation.gui.framework.outline.EntityOutline() {
+        entityOutline = new EntityOutline() {
             @Override
             public List<Entity> loadRootList() throws Exception {
-                List<Entity> roots = org.janelia.it.workstation.api.entity_model.management.ModelMgr.getModelMgr().getCommonRootEntities();
-                Collections.sort(roots, new org.janelia.it.workstation.gui.framework.outline.EntityRootComparator());
+            	return ModelMgr.getModelMgr().getWorkspaces();
+            }
+        };
+
+        entityDetailsOutline = new EntityDetailsOutline();
+
+        ontologyOutline = new OntologyOutline() {
+            @Override
+            public List<Entity> loadRootList() throws Exception {
+                List<Entity> roots = ModelMgr.getModelMgr().getOntologyRootEntities();
+                Collections.sort(roots, new EntityRootComparator());
                 return roots;
             }
         };
 
-        entityDetailsOutline = new org.janelia.it.workstation.gui.framework.outline.EntityDetailsOutline();
-
-        ontologyOutline = new org.janelia.it.workstation.gui.framework.outline.OntologyOutline() {
-            @Override
-            public List<Entity> loadRootList() throws Exception {
-                List<Entity> roots = org.janelia.it.workstation.api.entity_model.management.ModelMgr.getModelMgr().getOntologyRootEntities();
-                Collections.sort(roots, new org.janelia.it.workstation.gui.framework.outline.EntityRootComparator());
-                return roots;
-            }
-        };
-
-        annotationSessionPropertyPanel = new org.janelia.it.workstation.gui.dialogs.AnnotationSessionPropertyDialog(entityOutline, ontologyOutline);
-        importDialog = new org.janelia.it.workstation.gui.dialogs.ImportDialog("Import Files");
-        runNeuronSeparationDialog = new org.janelia.it.workstation.gui.dialogs.RunNeuronSeparationDialog();
+        annotationSessionPropertyPanel = new AnnotationSessionPropertyDialog(entityOutline, ontologyOutline);
+        importDialog = new ImportDialog("Import Files");
+        runNeuronSeparationDialog = new RunNeuronSeparationDialog();
 
         generalSearchConfig = new SearchConfiguration();
         generalSearchConfig.load();
@@ -168,16 +198,16 @@ public class Browser implements Cloneable {
         List<String> searchHistory = (List<String>) SessionMgr.getSessionMgr().getModelProperty(SEARCH_HISTORY);
         generalSearchDialog.setSearchHistory(searchHistory);
 
-        patternSearchDialog = new org.janelia.it.workstation.gui.dialogs.PatternSearchDialog();
-        giantFiberSearchDialog = new org.janelia.it.workstation.gui.dialogs.GiantFiberSearchDialog();
-        arbitraryMaskSearchDialog = new org.janelia.it.workstation.gui.dialogs.MaskSearchDialog();
-        screenEvaluationDialog = new org.janelia.it.workstation.gui.dialogs.ScreenEvaluationDialog();
-        maaSearchDialog = new org.janelia.it.workstation.gui.dialogs.MAASearchDialog(this);
-        dataSetListDialog = new org.janelia.it.workstation.gui.dialogs.DataSetListDialog();
+        patternSearchDialog = new PatternSearchDialog();
+        giantFiberSearchDialog = new GiantFiberSearchDialog();
+        arbitraryMaskSearchDialog = new MaskSearchDialog();
+        screenEvaluationDialog = new ScreenEvaluationDialog();
+        maaSearchDialog = new MAASearchDialog(this);
+        dataSetListDialog = new DataSetListDialog();
 
         ontologyOutline.setPreferredSize(new Dimension());
 
-        org.janelia.it.workstation.gui.framework.console.BrowserPosition consolePosition = (org.janelia.it.workstation.gui.framework.console.BrowserPosition) SessionMgr.getSessionMgr().getModelProperty(BROWSER_POSITION);
+        BrowserPosition consolePosition = (BrowserPosition) SessionMgr.getSessionMgr().getModelProperty(BROWSER_POSITION);
         if (null == consolePosition) {
             consolePosition = resetBrowserPosition();
         }
@@ -215,7 +245,7 @@ public class Browser implements Cloneable {
         // Ensure sufficient resources.
         long requiredSize = (long) (RGB_TYPE_BYTES_PER_PIXEL * frame.getWidth() * frame.getHeight()) + (long) PRINT_OVERHEAD_SIZE;
 
-        if (requiredSize > org.janelia.it.workstation.shared.util.FreeMemoryWatcher.getFreeMemoryWatcher().getFreeMemory()) {
+        if (requiredSize > FreeMemoryWatcher.getFreeMemoryWatcher().getFreeMemory()) {
             JOptionPane.showMessageDialog(frame, MEMORY_EXCEEDED_PRT_SCR_MSG, MEMORY_EXCEEDED_ADVISORY, JOptionPane.ERROR_MESSAGE);
 
             return;
@@ -231,7 +261,7 @@ public class Browser implements Cloneable {
 
         if (printJob.printDialog()) {
             // Get a buffered image of the frame.
-            java.awt.image.BufferedImage bufferedImage = new java.awt.image.BufferedImage(frame.getWidth(), frame.getHeight(), java.awt.image.BufferedImage.TYPE_INT_RGB);
+            BufferedImage bufferedImage = new BufferedImage(frame.getWidth(), frame.getHeight(), BufferedImage.TYPE_INT_RGB);
             Graphics2D graphics = bufferedImage.createGraphics();
             frame.paint(graphics);
 
@@ -299,7 +329,7 @@ public class Browser implements Cloneable {
         statusBar.useFreeMemoryViewer(false);
     }
 
-    public org.janelia.it.workstation.gui.dialogs.MaskSearchDialog getMaskSearchDialog() {
+    public MaskSearchDialog getMaskSearchDialog() {
         return arbitraryMaskSearchDialog;
     }
 
@@ -309,7 +339,7 @@ public class Browser implements Cloneable {
         new CredentialSynchronizer().synchronize(this);
     }
 
-    private class BrowserModelObserver extends org.janelia.it.workstation.gui.framework.session_mgr.BrowserModelListenerAdapter {
+    private class BrowserModelObserver extends BrowserModelListenerAdapter {
 
         @Override
         public void browserCurrentSelectionChanged(Entity newSelection) {
@@ -325,10 +355,10 @@ public class Browser implements Cloneable {
         public void browserClosing() {
             SessionMgr.getSessionMgr().removeSessionModelListener(modelListener);
 
-            org.janelia.it.workstation.gui.framework.console.BrowserPosition position = (org.janelia.it.workstation.gui.framework.console.BrowserPosition) SessionMgr.getSessionMgr().getModelProperty(BROWSER_POSITION);
+            BrowserPosition position = (BrowserPosition) SessionMgr.getSessionMgr().getModelProperty(BROWSER_POSITION);
 
             if (position == null) {
-                position = new org.janelia.it.workstation.gui.framework.console.BrowserPosition();
+                position = new BrowserPosition();
             }
 
             SessionMgr.getSessionMgr().setModelProperty(BROWSER_POSITION, position);
@@ -364,15 +394,15 @@ public class Browser implements Cloneable {
         return viewerManager;
     }
 
-    public org.janelia.it.workstation.gui.framework.outline.EntityOutline getEntityOutline() {
+    public EntityOutline getEntityOutline() {
         return entityOutline;
     }
 
-    public org.janelia.it.workstation.gui.framework.outline.EntityDetailsOutline getEntityDetailsOutline() {
+    public EntityDetailsOutline getEntityDetailsOutline() {
         return entityDetailsOutline;
     }
 
-    public org.janelia.it.workstation.gui.framework.outline.OntologyOutline getOntologyOutline() {
+    public OntologyOutline getOntologyOutline() {
         return ontologyOutline;
     }
 
@@ -380,39 +410,39 @@ public class Browser implements Cloneable {
         rightPanel.showPanel(panelName);
     }
 
-    public org.janelia.it.workstation.gui.framework.outline.SessionOutline getAnnotationSessionOutline() {
+    public SessionOutline getAnnotationSessionOutline() {
         return sessionOutline;
     }
 
-    public org.janelia.it.workstation.gui.dialogs.AnnotationSessionPropertyDialog getAnnotationSessionPropertyDialog() {
+    public AnnotationSessionPropertyDialog getAnnotationSessionPropertyDialog() {
         return annotationSessionPropertyPanel;
     }
 
-    public org.janelia.it.workstation.gui.dialogs.RunNeuronSeparationDialog getRunNeuronSeparationDialog() {
+    public RunNeuronSeparationDialog getRunNeuronSeparationDialog() {
         return runNeuronSeparationDialog;
     }
 
-    public org.janelia.it.workstation.gui.dialogs.ImportDialog getImportDialog() {
+    public ImportDialog getImportDialog() {
         return importDialog;
     }
 
-    public org.janelia.it.workstation.gui.dialogs.PatternSearchDialog getPatternSearchDialog() {
+    public PatternSearchDialog getPatternSearchDialog() {
         return patternSearchDialog;
     }
 
-    public org.janelia.it.workstation.gui.dialogs.GiantFiberSearchDialog getGiantFiberSearchDialog() {
+    public GiantFiberSearchDialog getGiantFiberSearchDialog() {
         return giantFiberSearchDialog;
     }
 
-    public org.janelia.it.workstation.gui.dialogs.ScreenEvaluationDialog getScreenEvaluationDialog() {
+    public ScreenEvaluationDialog getScreenEvaluationDialog() {
         return screenEvaluationDialog;
     }
 
-    public org.janelia.it.workstation.gui.dialogs.MAASearchDialog getMAASearchDialog() {
+    public MAASearchDialog getMAASearchDialog() {
         return maaSearchDialog;
     }
 
-    public org.janelia.it.workstation.gui.dialogs.DataSetListDialog getDataSetListDialog() {
+    public DataSetListDialog getDataSetListDialog() {
         return dataSetListDialog;
     }
 
@@ -433,7 +463,7 @@ public class Browser implements Cloneable {
                 break;
             case SliceViewer:
                 viewerManager.clearAllViewers();
-                viewerManager.ensureViewerClass(viewerManager.getMainViewerPane(), org.janelia.it.workstation.gui.slice_viewer.SliceViewViewer.class);
+                viewerManager.ensureViewerClass(viewerManager.getMainViewerPane(), SliceViewViewer.class);
                 break;
             case ImageBrowser:
             default:
@@ -443,9 +473,9 @@ public class Browser implements Cloneable {
         }
     }
 
-    public org.janelia.it.workstation.gui.framework.console.BrowserPosition resetBrowserPosition() {
+    public BrowserPosition resetBrowserPosition() {
 
-        org.janelia.it.workstation.gui.framework.console.BrowserPosition position = new org.janelia.it.workstation.gui.framework.console.BrowserPosition();
+        BrowserPosition position = new BrowserPosition();
         position.setHorizontalLeftDividerLocation(400);
         position.setHorizontalRightDividerLocation(1100);
         position.setVerticalDividerLocation(800);
@@ -477,7 +507,7 @@ public class Browser implements Cloneable {
     }
 
     private void openOntologyComponent() {
-        TopComponent win = WindowLocator.getByName(org.janelia.it.workstation.gui.framework.outline.OntologyOutline.ONTOLOGY_COMPONENT_NAME);
+        TopComponent win = WindowLocator.getByName(OntologyOutline.ONTOLOGY_COMPONENT_NAME);
         if (!win.isOpened()) {
             Mode propertiesMode = WindowManager.getDefault().findMode("properties");
             if (propertiesMode != null) {

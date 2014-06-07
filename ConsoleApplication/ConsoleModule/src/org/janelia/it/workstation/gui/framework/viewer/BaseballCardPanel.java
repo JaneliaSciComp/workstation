@@ -1,6 +1,12 @@
 package org.janelia.it.workstation.gui.framework.viewer;
 
 import org.janelia.it.jacs.model.entity.Entity;
+import org.janelia.it.workstation.gui.framework.table.DynamicColumn;
+import org.janelia.it.workstation.gui.framework.table.DynamicTable;
+import org.janelia.it.workstation.gui.framework.viewer.baseball_card.BaseballCard;
+import org.janelia.it.workstation.gui.framework.viewer.search.SolrResultsMetaData;
+import org.janelia.it.workstation.gui.util.Icons;
+import org.janelia.it.workstation.model.entity.RootedEntity;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -30,16 +36,16 @@ public class BaseballCardPanel extends JPanel implements RootedEntityReceiver {
     private static final String STATUS_TEXT_FMT = "%d results found for '%s' in this alignment context, %d results loaded.";
     private static final String STATUS_TOOLTIP_FMT = "Query took %d milliseconds";
 
-    private List<org.janelia.it.workstation.gui.framework.viewer.baseball_card.BaseballCard> cards;
+    private List<BaseballCard> cards;
     private boolean selectable;
     private int preferredWidth;
     private int rowsPerPage;
     private int nextEntityNum;
-    private org.janelia.it.workstation.gui.framework.table.DynamicTable cardTable;
+    private DynamicTable cardTable;
     private ControlCallback controlCallback;
-    private List<org.janelia.it.workstation.model.entity.RootedEntity> rootedEntities;
+    private List<RootedEntity> rootedEntities;
     private JLabel statusLabel;
-    private org.janelia.it.workstation.gui.framework.viewer.search.SolrResultsMetaData solrResultsMetaData;
+    private SolrResultsMetaData solrResultsMetaData;
 
     private Logger logger = LoggerFactory.getLogger( BaseballCardPanel.class );
 
@@ -60,14 +66,14 @@ public class BaseballCardPanel extends JPanel implements RootedEntityReceiver {
 
     @Override
     public void setRootedEntities(
-            List<org.janelia.it.workstation.model.entity.RootedEntity> rootedEntities, org.janelia.it.workstation.gui.framework.viewer.search.SolrResultsMetaData solrResultsMetaData
+            List<RootedEntity> rootedEntities, SolrResultsMetaData solrResultsMetaData
     ) {
         this.rootedEntities = rootedEntities;
         this.solrResultsMetaData = solrResultsMetaData;
-        cards = new ArrayList<org.janelia.it.workstation.gui.framework.viewer.baseball_card.BaseballCard>();
+        cards = new ArrayList<BaseballCard>();
         for ( nextEntityNum = 0; nextEntityNum < rowsPerPage  &&  nextEntityNum < rootedEntities.size(); nextEntityNum ++ ) {
-            org.janelia.it.workstation.model.entity.RootedEntity rootedEntity = rootedEntities.get( nextEntityNum );
-            cards.add( new org.janelia.it.workstation.gui.framework.viewer.baseball_card.BaseballCard( rootedEntity.getEntity() ) );
+            RootedEntity rootedEntity = rootedEntities.get( nextEntityNum );
+            cards.add( new BaseballCard( rootedEntity.getEntity() ) );
         }
         establishGui();
         requestRedraw();
@@ -76,8 +82,8 @@ public class BaseballCardPanel extends JPanel implements RootedEntityReceiver {
     public void showAnotherPage() {
         int endOfPage = nextEntityNum + rowsPerPage;
         for ( ; nextEntityNum < endOfPage  &&  nextEntityNum < rootedEntities.size(); nextEntityNum++ ) {
-            org.janelia.it.workstation.model.entity.RootedEntity rootedEntity = rootedEntities.get( nextEntityNum );
-            org.janelia.it.workstation.gui.framework.viewer.baseball_card.BaseballCard card = new org.janelia.it.workstation.gui.framework.viewer.baseball_card.BaseballCard(rootedEntity.getEntity());
+            RootedEntity rootedEntity = rootedEntities.get( nextEntityNum );
+            BaseballCard card = new BaseballCard(rootedEntity.getEntity());
             cards.add( card );
             cardTable.addRow( card );
         }
@@ -88,8 +94,8 @@ public class BaseballCardPanel extends JPanel implements RootedEntityReceiver {
 
     public void showAll() {
         for ( ; nextEntityNum < rootedEntities.size(); nextEntityNum++ ) {
-            org.janelia.it.workstation.model.entity.RootedEntity rootedEntity = rootedEntities.get( nextEntityNum );
-            org.janelia.it.workstation.gui.framework.viewer.baseball_card.BaseballCard card = new org.janelia.it.workstation.gui.framework.viewer.baseball_card.BaseballCard(rootedEntity.getEntity());
+            RootedEntity rootedEntity = rootedEntities.get( nextEntityNum );
+            BaseballCard card = new BaseballCard(rootedEntity.getEntity());
             cards.add( card );
             cardTable.addRow( card );
         }
@@ -101,17 +107,17 @@ public class BaseballCardPanel extends JPanel implements RootedEntityReceiver {
     public void showLoadingIndicator() {
         removeAll();
         setLayout( new BorderLayout() );
-        add(new JLabel(org.janelia.it.workstation.gui.util.Icons.getLoadingIcon()), BorderLayout.CENTER);
+        add(new JLabel(Icons.getLoadingIcon()), BorderLayout.CENTER);
         requestRedraw();
     }
 
     /** Everything checked can be returned from here. */
-    public List<org.janelia.it.workstation.gui.framework.viewer.baseball_card.BaseballCard> getSelectedCards() {
-        List<org.janelia.it.workstation.gui.framework.viewer.baseball_card.BaseballCard> returnList = new ArrayList<org.janelia.it.workstation.gui.framework.viewer.baseball_card.BaseballCard>();
+    public List<BaseballCard> getSelectedCards() {
+        List<BaseballCard> returnList = new ArrayList<BaseballCard>();
         List<Object> selectedObjects = cardTable.getSelectedObjects();
         for ( Object o: selectedObjects ) {
-            if (o instanceof org.janelia.it.workstation.gui.framework.viewer.baseball_card.BaseballCard) {
-                returnList.add( (org.janelia.it.workstation.gui.framework.viewer.baseball_card.BaseballCard) o );
+            if (o instanceof BaseballCard) {
+                returnList.add( (BaseballCard) o );
             }
         }
         return returnList;
@@ -124,10 +130,10 @@ public class BaseballCardPanel extends JPanel implements RootedEntityReceiver {
     private void establishGui() {
         removeAll();
 
-        cardTable = new org.janelia.it.workstation.gui.framework.table.DynamicTable( true, true ) {
+        cardTable = new DynamicTable( true, true ) {
             @Override
-            public Object getValue(Object userObject, org.janelia.it.workstation.gui.framework.table.DynamicColumn column) {
-                org.janelia.it.workstation.gui.framework.viewer.baseball_card.BaseballCard card = (org.janelia.it.workstation.gui.framework.viewer.baseball_card.BaseballCard)userObject;
+            public Object getValue(Object userObject, DynamicColumn column) {
+                BaseballCard card = (BaseballCard)userObject;
                 if ( IMAGE_COLUMN_HEADER.equals( column.getName() )) {
                     return card.getDynamicImagePanel();
                 }
@@ -168,7 +174,7 @@ public class BaseballCardPanel extends JPanel implements RootedEntityReceiver {
 
                 if (lsm.getMinSelectionIndex() == lsm.getMaxSelectionIndex()) {
 
-                    final org.janelia.it.workstation.gui.framework.viewer.baseball_card.BaseballCard value = cards.get(target.getSelectedRow());
+                    final BaseballCard value = cards.get(target.getSelectedRow());
 
                     JMenuItem titleMenuItem = new JMenuItem(value.getEntity().getName());
                     titleMenuItem.setEnabled(false);
@@ -201,24 +207,24 @@ public class BaseballCardPanel extends JPanel implements RootedEntityReceiver {
 
         };
         ComponentSelfRenderer componentSelfRenderer = new ComponentSelfRenderer(this);
-        cardTable.getTable().setRowHeight(org.janelia.it.workstation.gui.framework.viewer.baseball_card.BaseballCard.IMAGE_HEIGHT);
+        cardTable.getTable().setRowHeight(BaseballCard.IMAGE_HEIGHT);
 
-        org.janelia.it.workstation.gui.framework.table.DynamicColumn imageColumn =  cardTable.addColumn(IMAGE_COLUMN_HEADER);
+        DynamicColumn imageColumn =  cardTable.addColumn(IMAGE_COLUMN_HEADER);
         cardTable.setColumnRenderer( imageColumn, componentSelfRenderer );
-        org.janelia.it.workstation.gui.framework.table.DynamicColumn detailsColumn = cardTable.addColumn(DETAILS_COLUMN_HEADER);
+        DynamicColumn detailsColumn = cardTable.addColumn(DETAILS_COLUMN_HEADER);
         cardTable.setColumnRenderer( detailsColumn, componentSelfRenderer );
 
         cardTable.getTable().setRowSelectionAllowed(selectable);
         cardTable.getTable().setSelectionMode(ListSelectionModel.MULTIPLE_INTERVAL_SELECTION);
 
         Dimension detailsSize = new Dimension(
-                preferredWidth - org.janelia.it.workstation.gui.framework.viewer.baseball_card.BaseballCard.IMAGE_WIDTH - 50, org.janelia.it.workstation.gui.framework.viewer.baseball_card.BaseballCard.IMAGE_HEIGHT
+                preferredWidth - BaseballCard.IMAGE_WIDTH - 50, BaseballCard.IMAGE_HEIGHT
         );
         Dimension imageSize = new Dimension(
-                org.janelia.it.workstation.gui.framework.viewer.baseball_card.BaseballCard.IMAGE_WIDTH, org.janelia.it.workstation.gui.framework.viewer.baseball_card.BaseballCard.IMAGE_HEIGHT
+                BaseballCard.IMAGE_WIDTH, BaseballCard.IMAGE_HEIGHT
         );
         for ( int i = 0; i < cards.size(); i++ ) {
-            org.janelia.it.workstation.gui.framework.viewer.baseball_card.BaseballCard card = cards.get( i );
+            BaseballCard card = cards.get( i );
             addCardToTable(detailsSize, imageSize, card);
         }
         cardTable.setMaxColWidth( Math.max( detailsSize.width, imageSize.width ) );
@@ -263,17 +269,17 @@ public class BaseballCardPanel extends JPanel implements RootedEntityReceiver {
                 unselectedBackground.darker() :
                 unselectedBackground.brighter();
 
-        for (org.janelia.it.workstation.gui.framework.viewer.baseball_card.BaseballCard card : cards) {
+        for (BaseballCard card : cards) {
             card.setBackground( unselectedBackground );
         }
 
-        List<org.janelia.it.workstation.gui.framework.viewer.baseball_card.BaseballCard> selection = getSelectedCards();
-        for (org.janelia.it.workstation.gui.framework.viewer.baseball_card.BaseballCard selected : selection) {
+        List<BaseballCard> selection = getSelectedCards();
+        for (BaseballCard selected : selection) {
             selected.setBackground( selectionBackground );
         }
     }
 
-    private void addCardToTable( Dimension detailsSize, Dimension imageSize, org.janelia.it.workstation.gui.framework.viewer.baseball_card.BaseballCard card) {
+    private void addCardToTable( Dimension detailsSize, Dimension imageSize, BaseballCard card) {
         card.getDynamicImagePanel().setPreferredSize(imageSize);
         card.getEntityDetailsPanel().setPreferredSize(detailsSize);
 
@@ -283,8 +289,8 @@ public class BaseballCardPanel extends JPanel implements RootedEntityReceiver {
     private void updateMoreButtonsAndStatus() {
         for ( int i = 0; i < this.getComponentCount(); i++  ) {
             Component component = this.getComponent( i );
-            if ( component instanceof org.janelia.it.workstation.gui.framework.table.DynamicTable) {
-                org.janelia.it.workstation.gui.framework.table.DynamicTable table = (org.janelia.it.workstation.gui.framework.table.DynamicTable)component;
+            if ( component instanceof DynamicTable) {
+                DynamicTable table = (DynamicTable)component;
                 table.setMoreResults( nextEntityNum < rootedEntities.size() );
             }
         }

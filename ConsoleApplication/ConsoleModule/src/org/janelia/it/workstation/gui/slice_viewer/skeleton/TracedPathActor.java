@@ -9,12 +9,19 @@ import javax.media.opengl.GL2GL3;
 import javax.media.opengl.GLAutoDrawable;
 import javax.media.opengl.glu.GLU;
 
+import org.janelia.it.workstation.geom.CoordinateAxis;
+import org.janelia.it.workstation.geom.Vec3;
+import org.janelia.it.workstation.gui.opengl.GLActor;
+import org.janelia.it.workstation.gui.slice_viewer.TileFormat;
+import org.janelia.it.workstation.gui.viewer3d.BoundingBox3d;
+import org.janelia.it.workstation.octree.ZoomedVoxelIndex;
+import org.janelia.it.workstation.tracing.AnchoredVoxelPath;
 import org.janelia.it.workstation.tracing.SegmentIndex;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 public class TracedPathActor 
-implements org.janelia.it.workstation.gui.opengl.GLActor
+implements GLActor
 {
     private static Logger logger = LoggerFactory.getLogger( TracedPathActor.class );
     protected static GLU glu = new GLU();
@@ -22,7 +29,7 @@ implements org.janelia.it.workstation.gui.opengl.GLActor
     private final int floatsPerVertex = 3;
     private final int bytesPerFloat = Float.SIZE/8;
     private int vertexLocation = 0; // shader program uniform index
-    private org.janelia.it.workstation.gui.viewer3d.BoundingBox3d boundingBox = new org.janelia.it.workstation.gui.viewer3d.BoundingBox3d();
+    private BoundingBox3d boundingBox = new BoundingBox3d();
     private int vertexVbo = 0;
     // private int vertexArrayObject = 0;
     private ByteBuffer vertexByteBuffer;
@@ -30,12 +37,12 @@ implements org.janelia.it.workstation.gui.opengl.GLActor
     private boolean bIsInitialized = false;
 	private SegmentIndex segmentIndex;
 	// For determining if traced path is still appropriate
-	org.janelia.it.workstation.tracing.AnchoredVoxelPath segment;
-    private org.janelia.it.workstation.gui.slice_viewer.TileFormat tileFormat;
+	AnchoredVoxelPath segment;
+    private TileFormat tileFormat;
     // can't always calculate vertices right away, so track if we have:
     private boolean verticesReady = false;
 
-    public TracedPathActor(org.janelia.it.workstation.tracing.AnchoredVoxelPath segment, org.janelia.it.workstation.gui.slice_viewer.TileFormat tileFormat)
+    public TracedPathActor(AnchoredVoxelPath segment, TileFormat tileFormat)
     {
     	this.segment = segment;
         this.tileFormat = tileFormat;
@@ -59,10 +66,10 @@ implements org.janelia.it.workstation.gui.opengl.GLActor
         vertexByteBuffer.order(ByteOrder.nativeOrder());
         FloatBuffer vertices = vertexByteBuffer.asFloatBuffer();
         vertices.rewind();
-        for (org.janelia.it.workstation.octree.ZoomedVoxelIndex zv : segment.getPath()) {
-            org.janelia.it.workstation.gui.slice_viewer.TileFormat.VoxelXyz vx = tileFormat.voxelXyzForZoomedVoxelIndex(zv, org.janelia.it.workstation.geom.CoordinateAxis.Z);
-            org.janelia.it.workstation.gui.slice_viewer.TileFormat.MicrometerXyz umXyz = tileFormat.micrometerXyzForVoxelXyz(vx, org.janelia.it.workstation.geom.CoordinateAxis.Z);
-            org.janelia.it.workstation.geom.Vec3 v = new org.janelia.it.workstation.geom.Vec3(
+        for (ZoomedVoxelIndex zv : segment.getPath()) {
+            TileFormat.VoxelXyz vx = tileFormat.voxelXyzForZoomedVoxelIndex(zv, CoordinateAxis.Z);
+            TileFormat.MicrometerXyz umXyz = tileFormat.micrometerXyzForVoxelXyz(vx, CoordinateAxis.Z);
+            Vec3 v = new Vec3(
                     // Translate from upper left front corner of voxel to center of voxel
                     umXyz.getX() + 0.5 * tileFormat.getVoxelMicrometers()[0],
                     umXyz.getY() + 0.5 * tileFormat.getVoxelMicrometers()[1],
@@ -87,7 +94,7 @@ implements org.janelia.it.workstation.gui.opengl.GLActor
     }
 
     @Override
-    public void display(GLAutoDrawable glDrawable) {
+    public synchronized void display(GLAutoDrawable glDrawable) {
         // check that vertices are ready
         if (!verticesReady) {
             if (tileFormat != null) {
@@ -114,11 +121,11 @@ implements org.janelia.it.workstation.gui.opengl.GLActor
     }
 
     @Override
-    public org.janelia.it.workstation.gui.viewer3d.BoundingBox3d getBoundingBox3d() {
+    public BoundingBox3d getBoundingBox3d() {
         return boundingBox;
     }
 
-    public org.janelia.it.workstation.tracing.AnchoredVoxelPath getSegment() {
+    public AnchoredVoxelPath getSegment() {
 		return segment;
 	}
 
@@ -175,11 +182,11 @@ implements org.janelia.it.workstation.gui.opengl.GLActor
 		return segmentIndex;
 	}
 
-    public org.janelia.it.workstation.gui.slice_viewer.TileFormat getTileFormat() {
+    public TileFormat getTileFormat() {
         return tileFormat;
     }
 
-    public void setTileFormat(org.janelia.it.workstation.gui.slice_viewer.TileFormat tileFormat) {
+    public void setTileFormat(TileFormat tileFormat) {
         this.tileFormat = tileFormat;
     }
 

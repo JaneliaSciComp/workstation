@@ -35,19 +35,6 @@ import javax.swing.JSeparator;
 import javax.swing.SwingUtilities;
 import javax.swing.UIManager;
 
-import org.janelia.it.workstation.api.entity_model.access.ModelMgrAdapter;
-import org.janelia.it.workstation.api.entity_model.events.EntityInvalidationEvent;
-import org.janelia.it.workstation.api.entity_model.management.EntitySelectionModel;
-import org.janelia.it.workstation.api.entity_model.management.ModelMgrUtils;
-import org.janelia.it.workstation.gui.framework.keybind.KeyboardShortcut;
-import org.janelia.it.workstation.gui.framework.keybind.KeymapUtil;
-import org.janelia.it.workstation.gui.framework.outline.Annotations;
-import org.janelia.it.workstation.gui.framework.outline.EntityContextMenu;
-import org.janelia.it.workstation.gui.framework.session_mgr.SessionModelListener;
-import org.janelia.it.workstation.gui.util.panels.ViewerSettingsPanel;
-import org.janelia.it.workstation.shared.util.ConcurrentUtils;
-import org.janelia.it.workstation.shared.util.Utils;
-import org.janelia.it.workstation.shared.workers.SimpleWorker;
 import org.janelia.it.jacs.model.entity.Entity;
 import org.janelia.it.jacs.model.entity.EntityConstants;
 import org.janelia.it.jacs.model.entity.EntityData;
@@ -55,7 +42,38 @@ import org.janelia.it.jacs.model.entity.ForbiddenEntity;
 import org.janelia.it.jacs.model.ontology.OntologyAnnotation;
 import org.janelia.it.jacs.shared.utils.EntityUtils;
 import org.janelia.it.jacs.shared.utils.StringUtils;
+import org.janelia.it.workstation.api.entity_model.access.ModelMgrAdapter;
+import org.janelia.it.workstation.api.entity_model.access.ModelMgrObserver;
+import org.janelia.it.workstation.api.entity_model.events.EntityChangeEvent;
+import org.janelia.it.workstation.api.entity_model.events.EntityInvalidationEvent;
+import org.janelia.it.workstation.api.entity_model.events.EntityRemoveEvent;
+import org.janelia.it.workstation.api.entity_model.management.EntitySelectionModel;
+import org.janelia.it.workstation.api.entity_model.management.ModelMgr;
+import org.janelia.it.workstation.api.entity_model.management.ModelMgrUtils;
+import org.janelia.it.workstation.api.entity_model.management.UserColorMapping;
+import org.janelia.it.workstation.gui.framework.actions.Action;
+import org.janelia.it.workstation.gui.framework.actions.RemoveEntityAction;
+import org.janelia.it.workstation.gui.framework.keybind.KeyboardShortcut;
+import org.janelia.it.workstation.gui.framework.keybind.KeymapUtil;
+import org.janelia.it.workstation.gui.framework.outline.AnnotationFilter;
+import org.janelia.it.workstation.gui.framework.outline.Annotations;
+import org.janelia.it.workstation.gui.framework.outline.EntityContextMenu;
+import org.janelia.it.workstation.gui.framework.outline.EntitySelectionHistory;
 import org.janelia.it.workstation.gui.framework.outline.EntityViewerState;
+import org.janelia.it.workstation.gui.framework.session_mgr.BrowserModel;
+import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
+import org.janelia.it.workstation.gui.framework.session_mgr.SessionModelListener;
+import org.janelia.it.workstation.gui.util.Icons;
+import org.janelia.it.workstation.gui.util.MouseForwarder;
+import org.janelia.it.workstation.gui.util.MouseHandler;
+import org.janelia.it.workstation.gui.util.panels.ViewerSettingsPanel;
+import org.janelia.it.workstation.model.entity.RootedEntity;
+import org.janelia.it.workstation.model.utils.AnnotationSession;
+import org.janelia.it.workstation.model.utils.ModelUtils;
+import org.janelia.it.workstation.shared.util.ConcurrentUtils;
+import org.janelia.it.workstation.shared.util.SystemInfo;
+import org.janelia.it.workstation.shared.util.Utils;
+import org.janelia.it.workstation.shared.workers.SimpleWorker;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -96,18 +114,18 @@ public class IconDemoPanel extends IconPanel {
     protected JLabel pagingStatusLabel;
 
     // Hud dialog
-    protected org.janelia.it.workstation.gui.framework.viewer.Hud hud;
+    protected Hud hud;
 
     // These members deal with the context and entities within it
-    protected org.janelia.it.workstation.model.entity.RootedEntity contextRootedEntity;
-    protected List<org.janelia.it.workstation.model.entity.RootedEntity> allRootedEntities;
-    protected Multimap<String, org.janelia.it.workstation.model.entity.RootedEntity> allRootedEntitiesByPathId = HashMultimap.<String, org.janelia.it.workstation.model.entity.RootedEntity>create();
-    protected Multimap<Long, org.janelia.it.workstation.model.entity.RootedEntity> allRootedEntitiesByEntityId = HashMultimap.<Long, org.janelia.it.workstation.model.entity.RootedEntity>create();
+    protected RootedEntity contextRootedEntity;
+    protected List<RootedEntity> allRootedEntities;
+    protected Multimap<String, RootedEntity> allRootedEntitiesByPathId = HashMultimap.<String, RootedEntity>create();
+    protected Multimap<Long, RootedEntity> allRootedEntitiesByEntityId = HashMultimap.<Long, RootedEntity>create();
     protected int numPages;
 
     // These members deal with entities on the current page only
     protected int currPage;
-    protected List<org.janelia.it.workstation.model.entity.RootedEntity> pageRootedEntities;
+    protected List<RootedEntity> pageRootedEntities;
     protected final Annotations annotations = new Annotations();
     protected final List<String> allUsers = new ArrayList<String>();
     protected final Set<String> hiddenUsers = new HashSet<String>();
@@ -123,7 +141,7 @@ public class IconDemoPanel extends IconPanel {
 
     // Listeners
     protected SessionModelListener sessionModelListener;
-    protected org.janelia.it.workstation.api.entity_model.access.ModelMgrObserver modelMgrObserver;
+    protected ModelMgrObserver modelMgrObserver;
 
     // Listen for key strokes and execute the appropriate key bindings
     // TODO: we should replace this with an action map in the future
@@ -139,13 +157,13 @@ public class IconDemoPanel extends IconPanel {
             }
 
             KeyboardShortcut shortcut = KeyboardShortcut.createShortcut(e);
-            if (!org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr.getKeyBindings().executeBinding(shortcut)) {
+            if (!SessionMgr.getKeyBindings().executeBinding(shortcut)) {
 
                 // No keybinds matched, use the default behavior
                 // Ctrl-A or Meta-A to select all
-                if (e.getKeyCode() == KeyEvent.VK_A && ((org.janelia.it.workstation.shared.util.SystemInfo.isMac && e.isMetaDown()) || (e.isControlDown()))) {
-                    for (org.janelia.it.workstation.model.entity.RootedEntity rootedEntity : pageRootedEntities) {
-                        org.janelia.it.workstation.api.entity_model.management.ModelMgr.getModelMgr().getEntitySelectionModel().selectEntity(getSelectionCategory(), rootedEntity.getId(), false);
+                if (e.getKeyCode() == KeyEvent.VK_A && ((SystemInfo.isMac && e.isMetaDown()) || (e.isControlDown()))) {
+                    for (RootedEntity rootedEntity : pageRootedEntities) {
+                        ModelMgr.getModelMgr().getEntitySelectionModel().selectEntity(getSelectionCategory(), rootedEntity.getId(), false);
                     }
                     if (pageRootedEntities.size() < allRootedEntities.size()) {
                         selectionButtonContainer.setVisible(true);
@@ -163,22 +181,22 @@ public class IconDemoPanel extends IconPanel {
                 // Enter with a single entity selected triggers an outline
                 // navigation
                 if (e.getKeyCode() == KeyEvent.VK_ENTER) {
-                    List<String> selectedIds = org.janelia.it.workstation.api.entity_model.management.ModelMgr.getModelMgr().getEntitySelectionModel().getSelectedEntitiesIds(getSelectionCategory());
+                    List<String> selectedIds = ModelMgr.getModelMgr().getEntitySelectionModel().getSelectedEntitiesIds(getSelectionCategory());
                     if (selectedIds.size() != 1) {
                         return;
                     }
                     String selectedId = selectedIds.get(0);
-                    org.janelia.it.workstation.api.entity_model.management.ModelMgr.getModelMgr().getEntitySelectionModel().selectEntity(EntitySelectionModel.CATEGORY_OUTLINE, selectedId, true);
+                    ModelMgr.getModelMgr().getEntitySelectionModel().selectEntity(EntitySelectionModel.CATEGORY_OUTLINE, selectedId, true);
                     return;
                 }
 
                 // Delete triggers deletion
                 if (e.getKeyCode() == KeyEvent.VK_DELETE) {
-                    List<org.janelia.it.workstation.model.entity.RootedEntity> selected = getSelectedEntities();
+                    List<RootedEntity> selected = getSelectedEntities();
                     if (selected.isEmpty()) {
                         return;
                     }
-                    final org.janelia.it.workstation.gui.framework.actions.Action action = new org.janelia.it.workstation.gui.framework.actions.RemoveEntityAction(selected, true, false);
+                    final Action action = new RemoveEntityAction(selected, true, false);
                     action.doAction();
                     e.consume();
                     return;
@@ -186,7 +204,7 @@ public class IconDemoPanel extends IconPanel {
 
                 // Tab and arrow navigation to page through the images
                 boolean clearAll = false;
-                org.janelia.it.workstation.model.entity.RootedEntity rootedEntity = null;
+                RootedEntity rootedEntity = null;
                 if (e.getKeyCode() == KeyEvent.VK_TAB) {
                     clearAll = true;
                     if (e.isShiftDown()) {
@@ -207,9 +225,9 @@ public class IconDemoPanel extends IconPanel {
                 }
 
                 if (rootedEntity != null) {
-                    org.janelia.it.workstation.gui.framework.viewer.AnnotatedImageButton button = imagesPanel.getButtonById(rootedEntity.getId());
+                    AnnotatedImageButton button = imagesPanel.getButtonById(rootedEntity.getId());
                     if (button != null) {
-                        org.janelia.it.workstation.api.entity_model.management.ModelMgr.getModelMgr().getEntitySelectionModel().selectEntity(getSelectionCategory(), rootedEntity.getId(), clearAll);
+                        ModelMgr.getModelMgr().getEntitySelectionModel().selectEntity(getSelectionCategory(), rootedEntity.getId(), clearAll);
                         imagesPanel.scrollEntityToCenter(rootedEntity);
                         button.requestFocus();
                         updateHud(false);
@@ -223,18 +241,18 @@ public class IconDemoPanel extends IconPanel {
     };
 
     // Listener for clicking on buttons
-    protected MouseListener buttonMouseListener = new org.janelia.it.workstation.gui.util.MouseHandler() {
+    protected MouseListener buttonMouseListener = new MouseHandler() {
 
         @Override
         protected void popupTriggered(MouseEvent e) {
             if (e.isConsumed()) {
                 return;
             }
-            org.janelia.it.workstation.gui.framework.viewer.AnnotatedImageButton button = getButtonAncestor(e.getComponent());
+            AnnotatedImageButton button = getButtonAncestor(e.getComponent());
             // Select the button first
-            org.janelia.it.workstation.model.entity.RootedEntity rootedEntity = button.getRootedEntity();
+            RootedEntity rootedEntity = button.getRootedEntity();
             if (!button.isSelected()) {
-                org.janelia.it.workstation.api.entity_model.management.ModelMgr.getModelMgr().getEntitySelectionModel().selectEntity(getSelectionCategory(), rootedEntity.getId(), true);
+                ModelMgr.getModelMgr().getEntitySelectionModel().selectEntity(getSelectionCategory(), rootedEntity.getId(), true);
             }
             getButtonPopupMenu().show(e.getComponent(), e.getX(), e.getY());
             e.consume();
@@ -245,7 +263,7 @@ public class IconDemoPanel extends IconPanel {
             if (e.isConsumed()) {
                 return;
             }
-            org.janelia.it.workstation.gui.framework.viewer.AnnotatedImageButton button = getButtonAncestor(e.getComponent());
+            AnnotatedImageButton button = getButtonAncestor(e.getComponent());
             buttonDrillDown(button);
             // Double-clicking an image in gallery view triggers an outline selection
             e.consume();
@@ -257,19 +275,19 @@ public class IconDemoPanel extends IconPanel {
             if (e.isConsumed()) {
                 return;
             }
-            org.janelia.it.workstation.gui.framework.viewer.AnnotatedImageButton button = getButtonAncestor(e.getComponent());
+            AnnotatedImageButton button = getButtonAncestor(e.getComponent());
             if (e.getButton() != MouseEvent.BUTTON1 || e.getClickCount() < 0) {
                 return;
             }
-            buttonSelection(button, (org.janelia.it.workstation.shared.util.SystemInfo.isMac && e.isMetaDown()) || e.isControlDown(), e.isShiftDown());
+            buttonSelection(button, (SystemInfo.isMac && e.isMetaDown()) || e.isControlDown(), e.isShiftDown());
         }
     };
 
     protected JPopupMenu getButtonPopupMenu() {
-        List<String> selectionIds = org.janelia.it.workstation.api.entity_model.management.ModelMgr.getModelMgr().getEntitySelectionModel().getSelectedEntitiesIds(getSelectionCategory());
-        List<org.janelia.it.workstation.model.entity.RootedEntity> rootedEntityList = new ArrayList<org.janelia.it.workstation.model.entity.RootedEntity>();
+        List<String> selectionIds = ModelMgr.getModelMgr().getEntitySelectionModel().getSelectedEntitiesIds(getSelectionCategory());
+        List<RootedEntity> rootedEntityList = new ArrayList<RootedEntity>();
         for (String entityId : selectionIds) {
-            org.janelia.it.workstation.model.entity.RootedEntity re = getRootedEntityById(entityId);
+            RootedEntity re = getRootedEntityById(entityId);
             if (re == null) {
                 log.warn("Could not locate selected entity with id {}", entityId);
             }
@@ -286,21 +304,21 @@ public class IconDemoPanel extends IconPanel {
     /**
      * This is a separate method so that it can be overridden to accommodate other behavior patterns.
      */
-    protected void buttonDrillDown(org.janelia.it.workstation.gui.framework.viewer.AnnotatedImageButton button) {
-        org.janelia.it.workstation.model.entity.RootedEntity rootedEntity = button.getRootedEntity();
-        org.janelia.it.workstation.model.entity.RootedEntity currRootedEntity = getContextRootedEntity();
+    protected void buttonDrillDown(AnnotatedImageButton button) {
+        RootedEntity rootedEntity = button.getRootedEntity();
+        RootedEntity currRootedEntity = getContextRootedEntity();
         if (currRootedEntity == null || currRootedEntity == rootedEntity) {
             return;
         }
         if (StringUtils.isEmpty(rootedEntity.getUniqueId())) {
             return;
         }
-        org.janelia.it.workstation.api.entity_model.management.ModelMgr.getModelMgr().getEntitySelectionModel().selectEntity(EntitySelectionModel.CATEGORY_OUTLINE, rootedEntity.getUniqueId(), true);
+        ModelMgr.getModelMgr().getEntitySelectionModel().selectEntity(EntitySelectionModel.CATEGORY_OUTLINE, rootedEntity.getUniqueId(), true);
     }
 
-    protected void buttonSelection(org.janelia.it.workstation.gui.framework.viewer.AnnotatedImageButton button, boolean multiSelect, boolean rangeSelect) {
+    protected void buttonSelection(AnnotatedImageButton button, boolean multiSelect, boolean rangeSelect) {
         final String category = getSelectionCategory();
-        final org.janelia.it.workstation.model.entity.RootedEntity rootedEntity = button.getRootedEntity();
+        final RootedEntity rootedEntity = button.getRootedEntity();
         final String rootedEntityId = rootedEntity.getId();
 
         selectionButtonContainer.setVisible(false);
@@ -309,24 +327,24 @@ public class IconDemoPanel extends IconPanel {
             // With the meta key we toggle items in the current
             // selection without clearing it
             if (!button.isSelected()) {
-                org.janelia.it.workstation.api.entity_model.management.ModelMgr.getModelMgr().getEntitySelectionModel().selectEntity(category, rootedEntityId, false);
+                ModelMgr.getModelMgr().getEntitySelectionModel().selectEntity(category, rootedEntityId, false);
             }
             else {
-                org.janelia.it.workstation.api.entity_model.management.ModelMgr.getModelMgr().getEntitySelectionModel().deselectEntity(category, rootedEntityId);
+                ModelMgr.getModelMgr().getEntitySelectionModel().deselectEntity(category, rootedEntityId);
             }
         }
         else {
             // With shift, we select ranges
-            String lastSelected = org.janelia.it.workstation.api.entity_model.management.ModelMgr.getModelMgr().getEntitySelectionModel().getLastSelectedEntityIdByCategory(getSelectionCategory());
+            String lastSelected = ModelMgr.getModelMgr().getEntitySelectionModel().getLastSelectedEntityIdByCategory(getSelectionCategory());
             if (rangeSelect && lastSelected != null) {
                 // Walk through the buttons and select everything between the last and current selections
                 boolean selecting = false;
-                List<org.janelia.it.workstation.model.entity.RootedEntity> rootedEntities = getRootedEntities();
-                for (org.janelia.it.workstation.model.entity.RootedEntity otherRootedEntity : rootedEntities) {
+                List<RootedEntity> rootedEntities = getRootedEntities();
+                for (RootedEntity otherRootedEntity : rootedEntities) {
                     if (otherRootedEntity.getId().equals(lastSelected) || otherRootedEntity.getId().equals(rootedEntityId)) {
                         if (otherRootedEntity.getId().equals(rootedEntityId)) {
                             // Always select the button that was clicked
-                            org.janelia.it.workstation.api.entity_model.management.ModelMgr.getModelMgr().getEntitySelectionModel().selectEntity(category, otherRootedEntity.getId(), false);
+                            ModelMgr.getModelMgr().getEntitySelectionModel().selectEntity(category, otherRootedEntity.getId(), false);
                         }
                         if (selecting) {
                             return; // We already selected, this is the end
@@ -335,25 +353,25 @@ public class IconDemoPanel extends IconPanel {
                         continue; // Skip selection of the first and last items, which should already be selected
                     }
                     if (selecting) {
-                        org.janelia.it.workstation.api.entity_model.management.ModelMgr.getModelMgr().getEntitySelectionModel().selectEntity(category, otherRootedEntity.getId(), false);
+                        ModelMgr.getModelMgr().getEntitySelectionModel().selectEntity(category, otherRootedEntity.getId(), false);
                     }
                 }
             }
             else {
                 // This is a good old fashioned single button selection
-                org.janelia.it.workstation.api.entity_model.management.ModelMgr.getModelMgr().getEntitySelectionModel().selectEntity(category, rootedEntityId, true);
+                ModelMgr.getModelMgr().getEntitySelectionModel().selectEntity(category, rootedEntityId, true);
             }
         }
 
         button.requestFocus();
     }
 
-    private org.janelia.it.workstation.gui.framework.viewer.AnnotatedImageButton getButtonAncestor(Component component) {
+    private AnnotatedImageButton getButtonAncestor(Component component) {
         Component c = component;
-        while (!(c instanceof org.janelia.it.workstation.gui.framework.viewer.AnnotatedImageButton)) {
+        while (!(c instanceof AnnotatedImageButton)) {
             c = c.getParent();
         }
-        return (org.janelia.it.workstation.gui.framework.viewer.AnnotatedImageButton) c;
+        return (AnnotatedImageButton) c;
     }
 
     public IconDemoPanel(ViewerPane viewerPane) {
@@ -366,11 +384,11 @@ public class IconDemoPanel extends IconPanel {
 
         sessionModelListener = new SessionModelListener() {
             @Override
-            public void browserAdded(org.janelia.it.workstation.gui.framework.session_mgr.BrowserModel browserModel) {
+            public void browserAdded(BrowserModel browserModel) {
             }
 
             @Override
-            public void browserRemoved(org.janelia.it.workstation.gui.framework.session_mgr.BrowserModel browserModel) {
+            public void browserRemoved(BrowserModel browserModel) {
             }
 
             @Override
@@ -384,23 +402,23 @@ public class IconDemoPanel extends IconPanel {
                 }
             }
         };
-        org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr.getSessionMgr().addSessionModelListener(sessionModelListener);
+        SessionMgr.getSessionMgr().addSessionModelListener(sessionModelListener);
 
-        hud = org.janelia.it.workstation.gui.framework.viewer.Hud.getSingletonInstance();
+        hud = Hud.getSingletonInstance();
         hud.addKeyListener(keyListener);
 
-        splashPanel = new JLabel(org.janelia.it.workstation.gui.util.Icons.getIcon("workstation_logo_white.png"));
+        splashPanel = new JLabel(Icons.getIcon("workstation_logo_white.png"));
         add(splashPanel);
 
         iconDemoToolbar = createToolbar();
-        iconDemoToolbar.addMouseListener(new org.janelia.it.workstation.gui.util.MouseForwarder(this, "JToolBar->IconDemoPanel"));
+        iconDemoToolbar.addMouseListener(new MouseForwarder(this, "JToolBar->IconDemoPanel"));
 
         imagesPanel = new ImagesPanel(this);
         imagesPanel.setButtonKeyListener(keyListener);
         imagesPanel.setButtonMouseListener(buttonMouseListener);
-        imagesPanel.addMouseListener(new org.janelia.it.workstation.gui.util.MouseForwarder(this, "ImagesPanel->IconDemoPanel"));
+        imagesPanel.addMouseListener(new MouseForwarder(this, "ImagesPanel->IconDemoPanel"));
 
-        prevPageButton = new JButton(org.janelia.it.workstation.gui.util.Icons.getIcon("arrow_back.gif"));
+        prevPageButton = new JButton(Icons.getIcon("arrow_back.gif"));
         prevPageButton.setToolTipText("Back A Page");
         prevPageButton.addActionListener(new ActionListener() {
             @Override
@@ -409,7 +427,7 @@ public class IconDemoPanel extends IconPanel {
             }
         });
 
-        nextPageButton = new JButton(org.janelia.it.workstation.gui.util.Icons.getIcon("arrow_forward.gif"));
+        nextPageButton = new JButton(Icons.getIcon("arrow_forward.gif"));
         nextPageButton.setToolTipText("Forward A Page");
         nextPageButton.addActionListener(new ActionListener() {
             @Override
@@ -418,7 +436,7 @@ public class IconDemoPanel extends IconPanel {
             }
         });
 
-        startPageButton = new JButton(org.janelia.it.workstation.gui.util.Icons.getIcon("arrow_double_left.png"));
+        startPageButton = new JButton(Icons.getIcon("arrow_double_left.png"));
         startPageButton.setToolTipText("Jump To Start");
         startPageButton.addActionListener(new ActionListener() {
             @Override
@@ -427,7 +445,7 @@ public class IconDemoPanel extends IconPanel {
             }
         });
 
-        endPageButton = new JButton(org.janelia.it.workstation.gui.util.Icons.getIcon("arrow_double_right.png"));
+        endPageButton = new JButton(Icons.getIcon("arrow_double_right.png"));
         endPageButton.setToolTipText("Jump To End");
         endPageButton.addActionListener(new ActionListener() {
             @Override
@@ -474,7 +492,7 @@ public class IconDemoPanel extends IconPanel {
 
         addKeyListener(keyListener);
 
-        imagesPanel.addMouseListener(new org.janelia.it.workstation.gui.util.MouseHandler() {
+        imagesPanel.addMouseListener(new MouseHandler() {
             @Override
             protected void popupTriggered(MouseEvent e) {
                 if (contextRootedEntity == null) {
@@ -499,17 +517,17 @@ public class IconDemoPanel extends IconPanel {
                         try {
                             // Update database
                             Entity parentFolder = contextRootedEntity.getEntity();
-                            Entity newFolder = org.janelia.it.workstation.api.entity_model.management.ModelMgr.getModelMgr().createEntity(EntityConstants.TYPE_FOLDER, folderName);
-                            org.janelia.it.workstation.api.entity_model.management.ModelMgr.getModelMgr().addEntityToParent(parentFolder, newFolder);
+                            Entity newFolder = ModelMgr.getModelMgr().createEntity(EntityConstants.TYPE_FOLDER, folderName);
+                            ModelMgr.getModelMgr().addEntityToParent(parentFolder, newFolder);
                         }
                         catch (Exception ex) {
-                            org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr.getSessionMgr().handleException(ex);
+                            SessionMgr.getSessionMgr().handleException(ex);
                         }
                     }
                 });
 
                 if (!contextRootedEntity.getEntity().getEntityTypeName().equals(EntityConstants.TYPE_FOLDER)
-                        || !contextRootedEntity.getEntity().getOwnerKey().equals(org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr.getSubjectKey())) {
+                        || !contextRootedEntity.getEntity().getOwnerKey().equals(SessionMgr.getSubjectKey())) {
                     newFolderItem.setEnabled(false);
                 }
 
@@ -547,8 +565,8 @@ public class IconDemoPanel extends IconPanel {
                 }
             }
         };
-        org.janelia.it.workstation.api.entity_model.management.ModelMgr.getModelMgr().addModelMgrObserver(modelMgrObserver);
-        org.janelia.it.workstation.api.entity_model.management.ModelMgr.getModelMgr().registerOnEventBus(this);
+        ModelMgr.getModelMgr().addModelMgrObserver(modelMgrObserver);
+        ModelMgr.getModelMgr().registerOnEventBus(this);
 
         this.addComponentListener(new ComponentAdapter() {
             @Override
@@ -557,7 +575,7 @@ public class IconDemoPanel extends IconPanel {
             }
         });
 
-        annotations.setFilter(new org.janelia.it.workstation.gui.framework.outline.AnnotationFilter() {
+        annotations.setFilter(new AnnotationFilter() {
             @Override
             public boolean accept(OntologyAnnotation annotation) {
 
@@ -565,10 +583,10 @@ public class IconDemoPanel extends IconPanel {
                 if (hiddenUsers.contains(annotation.getOwner())) {
                     return false;
                 }
-                org.janelia.it.workstation.model.utils.AnnotationSession session = org.janelia.it.workstation.api.entity_model.management.ModelMgr.getModelMgr().getCurrentAnnotationSession();
+                AnnotationSession session = ModelMgr.getModelMgr().getCurrentAnnotationSession();
 
                 // Hidden by session?
-                Boolean onlySession = (Boolean) org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr.getSessionMgr().getModelProperty(
+                Boolean onlySession = (Boolean) SessionMgr.getSessionMgr().getModelProperty(
                         ViewerSettingsPanel.ONLY_SESSION_ANNOTATIONS_PROPERTY);
                 if ((onlySession != null && !onlySession) || session == null) {
                     return true;
@@ -579,22 +597,12 @@ public class IconDemoPanel extends IconPanel {
             }
         });
 
-        org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr.getSessionMgr().addSessionModelListener(new SessionModelListener() {
+        SessionMgr.getSessionMgr().addSessionModelListener(new SessionModelListener() {
 
             @Override
             public void modelPropertyChanged(Object key, Object oldValue, Object newValue) {
 
-                if (ViewerSettingsPanel.INVERT_IMAGE_COLORS_PROPERTY.equals(key)) {
-                    Utils.setWaitingCursor(IconDemoPanel.this);
-                    try {
-                        imagesPanel.setInvertedColors((Boolean) newValue);
-                        imagesPanel.repaint();
-                    }
-                    finally {
-                        Utils.setDefaultCursor(IconDemoPanel.this);
-                    }
-                }
-                else if (ViewerSettingsPanel.ONLY_SESSION_ANNOTATIONS_PROPERTY.equals(key)) {
+                if (ViewerSettingsPanel.ONLY_SESSION_ANNOTATIONS_PROPERTY.equals(key)) {
                     refreshAnnotations(null);
                 }
                 else if (ViewerSettingsPanel.HIDE_ANNOTATED_PROPERTY.equals(key)) {
@@ -622,17 +630,17 @@ public class IconDemoPanel extends IconPanel {
             }
 
             @Override
-            public void browserRemoved(org.janelia.it.workstation.gui.framework.session_mgr.BrowserModel browserModel) {
+            public void browserRemoved(BrowserModel browserModel) {
             }
 
             @Override
-            public void browserAdded(org.janelia.it.workstation.gui.framework.session_mgr.BrowserModel browserModel) {
+            public void browserAdded(BrowserModel browserModel) {
             }
         });
     }
 
     @Subscribe
-    public void entityChanged(org.janelia.it.workstation.api.entity_model.events.EntityChangeEvent event) {
+    public void entityChanged(EntityChangeEvent event) {
         Entity entity = event.getEntity();
         if (contextRootedEntity == null) {
             return;
@@ -642,10 +650,10 @@ public class IconDemoPanel extends IconPanel {
             loadEntity(contextRootedEntity, null);
         }
         else {
-            for (org.janelia.it.workstation.gui.framework.viewer.AnnotatedImageButton button : imagesPanel.getButtonsByEntityId(entity.getId())) {
+            for (AnnotatedImageButton button : imagesPanel.getButtonsByEntityId(entity.getId())) {
                 log.debug("({}) Refreshing button because entity was changed: '{}'", getSelectionCategory(), entity.getName());
 
-                org.janelia.it.workstation.model.entity.RootedEntity rootedEntity = button.getRootedEntity();
+                RootedEntity rootedEntity = button.getRootedEntity();
                 if (rootedEntity != null) {
                     Entity buttonEntity = rootedEntity.getEntity();
                     if (entity != buttonEntity) {
@@ -662,7 +670,7 @@ public class IconDemoPanel extends IconPanel {
     }
 
     @Subscribe
-    public void entityRemoved(org.janelia.it.workstation.api.entity_model.events.EntityRemoveEvent event) {
+    public void entityRemoved(EntityRemoveEvent event) {
         Entity entity = event.getEntity();
         if (contextRootedEntity == null) {
             return;
@@ -671,7 +679,7 @@ public class IconDemoPanel extends IconPanel {
             goParent();
         }
         else {
-            for (org.janelia.it.workstation.model.entity.RootedEntity rootedEntity : new ArrayList<org.janelia.it.workstation.model.entity.RootedEntity>(pageRootedEntities)) {
+            for (RootedEntity rootedEntity : new ArrayList<RootedEntity>(pageRootedEntities)) {
                 if (rootedEntity.getEntityId().equals(entity.getId())) {
                     removeRootedEntity(rootedEntity);
                     return;
@@ -698,7 +706,7 @@ public class IconDemoPanel extends IconPanel {
                     break;
                 }
                 else {
-                    for (final org.janelia.it.workstation.model.entity.RootedEntity rootedEntity : new ArrayList<org.janelia.it.workstation.model.entity.RootedEntity>(pageRootedEntities)) {
+                    for (final RootedEntity rootedEntity : new ArrayList<RootedEntity>(pageRootedEntities)) {
                         if (rootedEntity.getEntityId().equals(entity.getId())) {
                             affected = true;
                             break;
@@ -752,21 +760,27 @@ public class IconDemoPanel extends IconPanel {
             protected void currImageSizeChanged(int imageSize) {
                 imagesPanel.setMaxImageWidth(imageSize);
                 imagesPanel.recalculateGrid();
+                SwingUtilities.invokeLater(new Runnable() {
+                    @Override
+                    public void run() {
+                        imagesPanel.scrollSelectedEntitiesToCenter();
+                    }
+                });
             }
 
             @Override
             protected JPopupMenu getPopupPathMenu() {
-                List<org.janelia.it.workstation.model.entity.RootedEntity> rootedAncestors = getViewerPane().getRootedAncestors();
+                List<RootedEntity> rootedAncestors = getViewerPane().getRootedAncestors();
                 if (rootedAncestors == null) {
                     return null;
                 }
                 final JPopupMenu pathMenu = new JPopupMenu();
-                for (final org.janelia.it.workstation.model.entity.RootedEntity ancestor : rootedAncestors) {
-                    JMenuItem pathMenuItem = new JMenuItem(ancestor.getEntity().getName(), org.janelia.it.workstation.gui.util.Icons.getIcon(ancestor.getEntity()));
+                for (final RootedEntity ancestor : rootedAncestors) {
+                    JMenuItem pathMenuItem = new JMenuItem(ancestor.getEntity().getName(), Icons.getIcon(ancestor.getEntity()));
                     pathMenuItem.addActionListener(new ActionListener() {
                         @Override
                         public void actionPerformed(ActionEvent e) {
-                            org.janelia.it.workstation.api.entity_model.management.ModelMgr.getModelMgr().getEntitySelectionModel().selectEntity(EntitySelectionModel.CATEGORY_OUTLINE, ancestor.getUniqueId(), true);
+                            ModelMgr.getModelMgr().getEntitySelectionModel().selectEntity(EntitySelectionModel.CATEGORY_OUTLINE, ancestor.getUniqueId(), true);
                         }
                     });
                     pathMenuItem.setEnabled(pathMenu.getComponentCount() > 0);
@@ -778,7 +792,7 @@ public class IconDemoPanel extends IconPanel {
             @Override
             protected JPopupMenu getPopupUserMenu() {
                 final JPopupMenu userListMenu = new JPopupMenu();
-                org.janelia.it.workstation.api.entity_model.management.UserColorMapping userColors = org.janelia.it.workstation.api.entity_model.management.ModelMgr.getModelMgr().getUserColorMapping();
+                UserColorMapping userColors = ModelMgr.getModelMgr().getUserColorMapping();
 
                 // Save the list of users so that when the function actually runs, the
                 // users it affects are the same users that were displayed
@@ -816,7 +830,7 @@ public class IconDemoPanel extends IconPanel {
                             refreshAnnotations(null);
                         }
                     });
-                    userMenuItem.setIcon(org.janelia.it.workstation.gui.util.Icons.getIcon("user.png"));
+                    userMenuItem.setIcon(Icons.getIcon("user.png"));
                     userListMenu.add(userMenuItem);
                 }
 
@@ -859,7 +873,7 @@ public class IconDemoPanel extends IconPanel {
         if (pageRootedEntities == null) {
             return;
         }
-        EntitySelectionModel esm = org.janelia.it.workstation.api.entity_model.management.ModelMgr.getModelMgr().getEntitySelectionModel();
+        EntitySelectionModel esm = ModelMgr.getModelMgr().getEntitySelectionModel();
         int s = esm.getSelectedEntitiesIds(getSelectionCategory()).size();
         statusLabel.setText(s + " of " + allRootedEntities.size() + " selected");
     }
@@ -868,16 +882,16 @@ public class IconDemoPanel extends IconPanel {
      * This should be called by any handler that wishes to show/unshow the HUD.
      */
     private void updateHud(boolean toggle) {
-        List<String> selectedIds = org.janelia.it.workstation.api.entity_model.management.ModelMgr.getModelMgr().getEntitySelectionModel().getSelectedEntitiesIds(getSelectionCategory());
+        List<String> selectedIds = ModelMgr.getModelMgr().getEntitySelectionModel().getSelectedEntitiesIds(getSelectionCategory());
         if (selectedIds.size() != 1) {
             hud.hideDialog();
             return;
         }
         Entity entity = null;
         String selectedId = selectedIds.get(0);
-        for (org.janelia.it.workstation.model.entity.RootedEntity re : getRootedEntitiesById(selectedId)) {
+        for (RootedEntity re : getRootedEntitiesById(selectedId)) {
             // Get the image from the annotated image button which is also a Dynamic Image Button.
-            final org.janelia.it.workstation.gui.framework.viewer.AnnotatedImageButton button = imagesPanel.getButtonById(re.getId());
+            final AnnotatedImageButton button = imagesPanel.getButtonById(re.getId());
             if (button instanceof DynamicImageButton) {
                 entity = re.getEntity();
                 break;   // Only one.
@@ -901,7 +915,7 @@ public class IconDemoPanel extends IconPanel {
                     clear();
                 }
                 else {
-                    org.janelia.it.workstation.api.entity_model.management.ModelMgr.getModelMgr().getEntitySelectionModel().selectEntity(EntitySelectionModel.CATEGORY_OUTLINE, parentId, true);
+                    ModelMgr.getModelMgr().getEntitySelectionModel().selectEntity(EntitySelectionModel.CATEGORY_OUTLINE, parentId, true);
                 }
             }
         });
@@ -939,8 +953,8 @@ public class IconDemoPanel extends IconPanel {
     }
 
     private synchronized void selectAll() {
-        for (org.janelia.it.workstation.model.entity.RootedEntity rootedEntity : allRootedEntities) {
-            org.janelia.it.workstation.api.entity_model.management.ModelMgr.getModelMgr().getEntitySelectionModel().selectEntity(getSelectionCategory(), rootedEntity.getId(), false);
+        for (RootedEntity rootedEntity : allRootedEntities) {
+            ModelMgr.getModelMgr().getEntitySelectionModel().selectEntity(getSelectionCategory(), rootedEntity.getId(), false);
         }
         selectionButtonContainer.setVisible(false);
     }
@@ -948,17 +962,17 @@ public class IconDemoPanel extends IconPanel {
     @Override
     public void showLoadingIndicator() {
         removeAll();
-        add(new JLabel(org.janelia.it.workstation.gui.util.Icons.getLoadingIcon()));
+        add(new JLabel(Icons.getLoadingIcon()));
         this.updateUI();
     }
 
     @Override
-    public void loadEntity(org.janelia.it.workstation.model.entity.RootedEntity rootedEntity) {
+    public void loadEntity(RootedEntity rootedEntity) {
         loadEntity(rootedEntity, null);
     }
 
     @Override
-    public synchronized void loadEntity(org.janelia.it.workstation.model.entity.RootedEntity rootedEntity, final Callable<Void> success) {
+    public synchronized void loadEntity(RootedEntity rootedEntity, final Callable<Void> success) {
 
         this.contextRootedEntity = rootedEntity;
         if (contextRootedEntity == null) {
@@ -969,7 +983,7 @@ public class IconDemoPanel extends IconPanel {
 
         log.debug("loadEntity {} (@{})", entity.getName(), System.identityHashCode(entity));
 
-        List<EntityData> eds = EntityUtils.getSortedEntityDatas(entity);
+        List<EntityData> eds = ModelUtils.getSortedEntityDatas(entity);
         List<EntityData> children = new ArrayList<EntityData>();
         for (EntityData ed : eds) {
             Entity child = ed.getChildEntity();
@@ -978,10 +992,10 @@ public class IconDemoPanel extends IconPanel {
             }
         }
 
-        List<org.janelia.it.workstation.model.entity.RootedEntity> lazyRootedEntities = new ArrayList<org.janelia.it.workstation.model.entity.RootedEntity>();
+        List<RootedEntity> lazyRootedEntities = new ArrayList<RootedEntity>();
         for (EntityData ed : children) {
-            String childId = org.janelia.it.workstation.gui.framework.outline.EntityOutline.getChildUniqueId(rootedEntity.getUniqueId(), ed);
-            lazyRootedEntities.add(new org.janelia.it.workstation.model.entity.RootedEntity(childId, ed));
+            String childId = ModelUtils.getChildUniqueId(rootedEntity.getUniqueId(), ed);
+            lazyRootedEntities.add(new RootedEntity(childId, ed));
         }
 
         if (lazyRootedEntities.isEmpty()) {
@@ -989,24 +1003,24 @@ public class IconDemoPanel extends IconPanel {
         }
 
         // Update back/forward navigation
-        org.janelia.it.workstation.gui.framework.outline.EntitySelectionHistory history = getViewerPane().getEntitySelectionHistory();
+        EntitySelectionHistory history = getViewerPane().getEntitySelectionHistory();
         iconDemoToolbar.getPrevButton().setEnabled(history.isBackEnabled());
         iconDemoToolbar.getNextButton().setEnabled(history.isNextEnabled());
 
         loadImageEntities(lazyRootedEntities, success);
     }
 
-    public void loadImageEntities(final List<org.janelia.it.workstation.model.entity.RootedEntity> lazyRootedEntities) {
+    public void loadImageEntities(final List<RootedEntity> lazyRootedEntities) {
         // TODO: revisit this, since it doesn't set contextRootedEntity
         loadImageEntities(lazyRootedEntities, null);
     }
 
-    private synchronized void loadImageEntities(final List<org.janelia.it.workstation.model.entity.RootedEntity> lazyRootedEntities, final Callable<Void> success) {
+    private synchronized void loadImageEntities(final List<RootedEntity> lazyRootedEntities, final Callable<Void> success) {
 
         this.allRootedEntitiesByEntityId.clear();
         this.allRootedEntitiesByPathId.clear();
         this.allRootedEntities = lazyRootedEntities;
-        for (org.janelia.it.workstation.model.entity.RootedEntity re : allRootedEntities) {
+        for (RootedEntity re : allRootedEntities) {
             allRootedEntitiesByEntityId.put(re.getEntityId(), re);
             allRootedEntitiesByPathId.put(re.getId(), re);
         }
@@ -1029,7 +1043,7 @@ public class IconDemoPanel extends IconPanel {
             j = allRootedEntities.size();
         }
 
-        final List<org.janelia.it.workstation.model.entity.RootedEntity> pageEntities = allRootedEntities.subList(i, j);
+        final List<RootedEntity> pageEntities = allRootedEntities.subList(i, j);
 
         entityLoadInProgress.set(true);
         annotationLoadInProgress.set(true);
@@ -1053,19 +1067,19 @@ public class IconDemoPanel extends IconPanel {
 
         entityLoadingWorker = new SimpleWorker() {
 
-            private List<org.janelia.it.workstation.model.entity.RootedEntity> loadedRootedEntities = new ArrayList<org.janelia.it.workstation.model.entity.RootedEntity>();
+            private List<RootedEntity> loadedRootedEntities = new ArrayList<RootedEntity>();
 
             @Override
             protected void doStuff() throws Exception {
-                for (org.janelia.it.workstation.model.entity.RootedEntity rootedEntity : pageEntities) {
+                for (RootedEntity rootedEntity : pageEntities) {
                     if (!EntityUtils.isInitialized(rootedEntity.getEntity())) {
                         log.warn("Had to load entity " + rootedEntity.getEntity().getId());
-                        rootedEntity.getEntityData().setChildEntity(org.janelia.it.workstation.api.entity_model.management.ModelMgr.getModelMgr().getEntityById(rootedEntity.getEntity().getId()));
+                        rootedEntity.getEntityData().setChildEntity(ModelMgr.getModelMgr().getEntityById(rootedEntity.getEntity().getId()));
                     }
                     EntityData defaultImageEd = rootedEntity.getEntity().getEntityDataByAttributeName(EntityConstants.ATTRIBUTE_DEFAULT_2D_IMAGE);
                     if (defaultImageEd != null && defaultImageEd.getValue() == null && defaultImageEd.getChildEntity() != null) {
                         log.warn("Had to load default image " + rootedEntity.getEntity().getName());
-                        defaultImageEd.setChildEntity(org.janelia.it.workstation.api.entity_model.management.ModelMgr.getModelMgr().getEntityById(defaultImageEd.getChildEntity().getId()));
+                        defaultImageEd.setChildEntity(ModelMgr.getModelMgr().getEntityById(defaultImageEd.getChildEntity().getId()));
                     }
                     loadedRootedEntities.add(rootedEntity);
                 }
@@ -1079,7 +1093,7 @@ public class IconDemoPanel extends IconPanel {
 
             @Override
             protected void hadError(Throwable error) {
-                org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr.getSessionMgr().handleException(error);
+                SessionMgr.getSessionMgr().handleException(error);
             }
         };
         entityLoadingWorker.execute();
@@ -1089,7 +1103,7 @@ public class IconDemoPanel extends IconPanel {
             @Override
             protected void doStuff() throws Exception {
                 List<Long> entityIds = new ArrayList<Long>();
-                for (org.janelia.it.workstation.model.entity.RootedEntity rootedEntity : pageEntities) {
+                for (RootedEntity rootedEntity : pageEntities) {
                     entityIds.add(rootedEntity.getEntityId());
                 }
                 annotations.init(entityIds);
@@ -1115,7 +1129,7 @@ public class IconDemoPanel extends IconPanel {
 
             @Override
             protected void hadError(Throwable error) {
-                org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr.getSessionMgr().handleException(error);
+                SessionMgr.getSessionMgr().handleException(error);
             }
         };
         annotationsInitWorker.execute();
@@ -1136,13 +1150,8 @@ public class IconDemoPanel extends IconPanel {
         imagesPanel.setRootedEntities(getRootedEntities());
 
         // Update preferences for each button
-        Boolean invertImages = (Boolean) org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr.getSessionMgr().getModelProperty(
-                ViewerSettingsPanel.INVERT_IMAGE_COLORS_PROPERTY);
-        Boolean tagTable = (Boolean) org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr.getSessionMgr().getModelProperty(
+        Boolean tagTable = (Boolean) SessionMgr.getSessionMgr().getModelProperty(
                 ViewerSettingsPanel.SHOW_ANNOTATION_TABLES_PROPERTY);
-        if (invertImages == null) {
-            invertImages = false;
-        }
         if (tagTable == null) {
             tagTable = false;
         }
@@ -1150,7 +1159,6 @@ public class IconDemoPanel extends IconPanel {
         imagesPanel.setTagTable(tagTable);
         imagesPanel.setTagVisbility(iconDemoToolbar.areTagsVisible());
         imagesPanel.setTitleVisbility(iconDemoToolbar.areTitlesVisible());
-        imagesPanel.setInvertedColors(invertImages);
 
         // Since the images are not loaded yet, this will just resize the empty
         // buttons so that we can calculate the grid correctly
@@ -1158,7 +1166,7 @@ public class IconDemoPanel extends IconPanel {
         imagesPanel.setMaxImageWidth(imagesPanel.getMaxImageWidth());
 
         // Update selection
-        EntitySelectionModel esm = org.janelia.it.workstation.api.entity_model.management.ModelMgr.getModelMgr().getEntitySelectionModel();
+        EntitySelectionModel esm = ModelMgr.getModelMgr().getEntitySelectionModel();
         esm.deselectAll(getSelectionCategory());
 
         // Actually display everything
@@ -1187,7 +1195,7 @@ public class IconDemoPanel extends IconPanel {
         });
     }
 
-    protected void removeRootedEntity(final org.janelia.it.workstation.model.entity.RootedEntity rootedEntity) {
+    protected void removeRootedEntity(final RootedEntity rootedEntity) {
         int index = getRootedEntities().indexOf(rootedEntity);
         if (index < 0) {
             return;
@@ -1204,9 +1212,9 @@ public class IconDemoPanel extends IconPanel {
         SwingUtilities.invokeLater(new Runnable() {
             @Override
             public void run() {
-                org.janelia.it.workstation.model.entity.RootedEntity next = getNextEntity();
+                RootedEntity next = getNextEntity();
                 if (next != null) {
-                    org.janelia.it.workstation.api.entity_model.management.ModelMgr.getModelMgr().getEntitySelectionModel().selectEntity(getSelectionCategory(), next.getId(), true);
+                    ModelMgr.getModelMgr().getEntitySelectionModel().selectEntity(getSelectionCategory(), next.getId(), true);
                 }
                 imagesPanel.removeRootedEntity(rootedEntity);
                 imagesPanel.recalculateGrid();
@@ -1216,7 +1224,7 @@ public class IconDemoPanel extends IconPanel {
 
     private void filterEntities() {
 
-        org.janelia.it.workstation.model.utils.AnnotationSession session = org.janelia.it.workstation.api.entity_model.management.ModelMgr.getModelMgr().getCurrentAnnotationSession();
+        AnnotationSession session = ModelMgr.getModelMgr().getCurrentAnnotationSession();
         if (session == null) {
             return;
         }
@@ -1224,7 +1232,7 @@ public class IconDemoPanel extends IconPanel {
         Set<Long> completed = session.getCompletedEntityIds();
 
         imagesPanel.showAllButtons();
-        Boolean hideAnnotated = (Boolean) org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr.getSessionMgr().getModelProperty(
+        Boolean hideAnnotated = (Boolean) SessionMgr.getSessionMgr().getModelProperty(
                 ViewerSettingsPanel.HIDE_ANNOTATED_PROPERTY);
         if (hideAnnotated != null && hideAnnotated) {
             imagesPanel.hideButtons(completed);
@@ -1251,7 +1259,7 @@ public class IconDemoPanel extends IconPanel {
             }
 
             protected void hadError(Throwable error) {
-                org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr.getSessionMgr().handleException(error);
+                SessionMgr.getSessionMgr().handleException(error);
             }
         };
 
@@ -1315,14 +1323,14 @@ public class IconDemoPanel extends IconPanel {
 
         log.debug("Starting a refresh");
 
-        final List<String> selectedIds = new ArrayList<String>(org.janelia.it.workstation.api.entity_model.management.ModelMgr.getModelMgr().getEntitySelectionModel().getSelectedEntitiesIds(getSelectionCategory()));
+        final List<String> selectedIds = new ArrayList<String>(ModelMgr.getModelMgr().getEntitySelectionModel().getSelectedEntitiesIds(getSelectionCategory()));
         final Callable<Void> success = new Callable<Void>() {
             @Override
             public Void call() throws Exception {
                 // At the very end, reselect our buttons if possible
                 boolean first = true;
                 for (String selectedId : selectedIds) {
-                    org.janelia.it.workstation.api.entity_model.management.ModelMgr.getModelMgr().getEntitySelectionModel().selectEntity(getSelectionCategory(), selectedId, first);
+                    ModelMgr.getModelMgr().getEntitySelectionModel().selectEntity(getSelectionCategory(), selectedId, first);
                     first = false;
                 }
                 // Now call the user's callback 
@@ -1335,13 +1343,13 @@ public class IconDemoPanel extends IconPanel {
 
         SimpleWorker refreshWorker = new SimpleWorker() {
 
-            org.janelia.it.workstation.model.entity.RootedEntity rootedEntity = contextRootedEntity;
+            RootedEntity rootedEntity = contextRootedEntity;
 
             protected void doStuff() throws Exception {
                 if (invalidateCache) {
-                    org.janelia.it.workstation.api.entity_model.management.ModelMgr.getModelMgr().invalidateCache(rootedEntity.getEntity(), true);
+                    ModelMgr.getModelMgr().invalidateCache(rootedEntity.getEntity(), true);
                 }
-                Entity entity = org.janelia.it.workstation.api.entity_model.management.ModelMgr.getModelMgr().getEntityAndChildren(rootedEntity.getEntity().getId());
+                Entity entity = ModelMgr.getModelMgr().getEntityAndChildren(rootedEntity.getEntity().getId());
                 rootedEntity.setEntity(entity);
             }
 
@@ -1371,7 +1379,7 @@ public class IconDemoPanel extends IconPanel {
 
             protected void hadError(Throwable error) {
                 refreshInProgress.set(false);
-                org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr.getSessionMgr().handleException(error);
+                SessionMgr.getSessionMgr().handleException(error);
             }
         };
 
@@ -1398,9 +1406,9 @@ public class IconDemoPanel extends IconPanel {
     @Override
     public void close() {
         log.debug("Closing {}", getSelectionCategory());
-        org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr.getSessionMgr().removeSessionModelListener(sessionModelListener);
-        org.janelia.it.workstation.api.entity_model.management.ModelMgr.getModelMgr().removeModelMgrObserver(modelMgrObserver);
-        org.janelia.it.workstation.api.entity_model.management.ModelMgr.getModelMgr().unregisterOnEventBus(this);
+        SessionMgr.getSessionMgr().removeSessionModelListener(sessionModelListener);
+        ModelMgr.getModelMgr().removeModelMgrObserver(modelMgrObserver);
+        ModelMgr.getModelMgr().unregisterOnEventBus(this);
     }
 
     public synchronized void showImagePanel() {
@@ -1414,7 +1422,7 @@ public class IconDemoPanel extends IconPanel {
         repaint();
     }
 
-    public org.janelia.it.workstation.model.entity.RootedEntity getPreviousEntity() {
+    public RootedEntity getPreviousEntity() {
         if (pageRootedEntities == null) {
             return null;
         }
@@ -1426,7 +1434,7 @@ public class IconDemoPanel extends IconPanel {
         return pageRootedEntities.get(i - 1);
     }
 
-    public org.janelia.it.workstation.model.entity.RootedEntity getNextEntity() {
+    public RootedEntity getNextEntity() {
         if (pageRootedEntities == null) {
             return null;
         }
@@ -1439,16 +1447,16 @@ public class IconDemoPanel extends IconPanel {
     }
 
     @Override
-    public synchronized List<org.janelia.it.workstation.model.entity.RootedEntity> getRootedEntities() {
+    public synchronized List<RootedEntity> getRootedEntities() {
         return pageRootedEntities;
     }
 
-    private synchronized void setRootedEntities(List<org.janelia.it.workstation.model.entity.RootedEntity> rootedEntities) {
+    private synchronized void setRootedEntities(List<RootedEntity> rootedEntities) {
         this.pageRootedEntities = rootedEntities;
 
         Set<String> imageRoles = new HashSet<String>();
-        for (org.janelia.it.workstation.model.entity.RootedEntity rootedEntity : rootedEntities) {
-            for (EntityData ed : rootedEntity.getEntity().getEntityData()) {
+        for (RootedEntity rootedEntity : rootedEntities) {
+            for (EntityData ed : ModelMgrUtils.getAccessibleEntityDatas(rootedEntity.getEntity())) {
                 if (EntityUtils.hasImageRole(ed)) {
                     imageRoles.add(ed.getEntityAttrName());
                 }
@@ -1465,12 +1473,12 @@ public class IconDemoPanel extends IconPanel {
         }
     }
 
-    public synchronized org.janelia.it.workstation.model.entity.RootedEntity getLastSelectedEntity() {
-        String entityId = org.janelia.it.workstation.api.entity_model.management.ModelMgr.getModelMgr().getEntitySelectionModel().getLastSelectedEntityIdByCategory(getSelectionCategory());
+    public synchronized RootedEntity getLastSelectedEntity() {
+        String entityId = ModelMgr.getModelMgr().getEntitySelectionModel().getLastSelectedEntityIdByCategory(getSelectionCategory());
         if (entityId == null) {
             return null;
         }
-        org.janelia.it.workstation.gui.framework.viewer.AnnotatedImageButton button = imagesPanel.getButtonById(entityId);
+        AnnotatedImageButton button = imagesPanel.getButtonById(entityId);
         if (button == null) {
             return null;
         }
@@ -1478,13 +1486,13 @@ public class IconDemoPanel extends IconPanel {
     }
 
     @Override
-    public List<org.janelia.it.workstation.model.entity.RootedEntity> getSelectedEntities() {
-        List<org.janelia.it.workstation.model.entity.RootedEntity> selectedEntities = new ArrayList<org.janelia.it.workstation.model.entity.RootedEntity>();
+    public List<RootedEntity> getSelectedEntities() {
+        List<RootedEntity> selectedEntities = new ArrayList<RootedEntity>();
         if (pageRootedEntities == null) {
             return selectedEntities;
         }
-        for (org.janelia.it.workstation.model.entity.RootedEntity rootedEntity : pageRootedEntities) {
-            org.janelia.it.workstation.gui.framework.viewer.AnnotatedImageButton button = imagesPanel.getButtonById(rootedEntity.getId());
+        for (RootedEntity rootedEntity : pageRootedEntities) {
+            AnnotatedImageButton button = imagesPanel.getButtonById(rootedEntity.getId());
             if (button.isSelected()) {
                 selectedEntities.add(rootedEntity);
             }
@@ -1496,7 +1504,7 @@ public class IconDemoPanel extends IconPanel {
         return iconDemoToolbar;
     }
 
-    public org.janelia.it.workstation.gui.framework.viewer.Hud getHud() {
+    public Hud getHud() {
         return hud;
     }
 
@@ -1505,12 +1513,12 @@ public class IconDemoPanel extends IconPanel {
     }
 
     @Override
-    public org.janelia.it.workstation.model.entity.RootedEntity getContextRootedEntity() {
+    public RootedEntity getContextRootedEntity() {
         return contextRootedEntity;
     }
 
-    private List<org.janelia.it.workstation.model.entity.RootedEntity> getRootedEntitiesById(String id) {
-        List<org.janelia.it.workstation.model.entity.RootedEntity> res = new ArrayList<org.janelia.it.workstation.model.entity.RootedEntity>();
+    private List<RootedEntity> getRootedEntitiesById(String id) {
+        List<RootedEntity> res = new ArrayList<RootedEntity>();
         // Assume these are path ids
         res.addAll(allRootedEntitiesByPathId.get(id));
         if (res.isEmpty()) {
@@ -1527,8 +1535,8 @@ public class IconDemoPanel extends IconPanel {
     }
 
     @Override
-    public org.janelia.it.workstation.model.entity.RootedEntity getRootedEntityById(String id) {
-        List<org.janelia.it.workstation.model.entity.RootedEntity> res = getRootedEntitiesById(id);
+    public RootedEntity getRootedEntityById(String id) {
+        List<RootedEntity> res = getRootedEntitiesById(id);
         if (res == null || res.isEmpty()) {
             return null;
         }
@@ -1550,7 +1558,7 @@ public class IconDemoPanel extends IconPanel {
         // We could get this from the EntitySelectionModel, but sometimes that 
         // doesn't have the latest select the user is currently making.
         Set<String> selectedIds = new HashSet<String>();
-        for(org.janelia.it.workstation.gui.framework.viewer.AnnotatedImageButton button : imagesPanel.getSelectedButtons()) {
+        for(AnnotatedImageButton button : imagesPanel.getSelectedButtons()) {
             selectedIds.add(button.getRootedEntity().getId());
         }
         return new EntityViewerState(getClass(), contextRootedEntity, selectedIds);
@@ -1567,7 +1575,7 @@ public class IconDemoPanel extends IconPanel {
                 // Go to the right page
                 int i = 0;
                 int firstIdIndex = 0;
-                for (org.janelia.it.workstation.model.entity.RootedEntity rootedEntity : allRootedEntities) {
+                for (RootedEntity rootedEntity : allRootedEntities) {
                     if (state.getSelectedIds().contains(rootedEntity.getId())) {
                         firstIdIndex = i;
                         break;
@@ -1579,7 +1587,7 @@ public class IconDemoPanel extends IconPanel {
                     @Override
                     public Void call() throws Exception {
                         for (String selectedId : state.getSelectedIds()) {
-                            org.janelia.it.workstation.api.entity_model.management.ModelMgr.getModelMgr().getEntitySelectionModel().selectEntity(getSelectionCategory(), selectedId, false);
+                            ModelMgr.getModelMgr().getEntitySelectionModel().selectEntity(getSelectionCategory(), selectedId, false);
                         }
                         // Wait for all selections to finish before we scroll
                         SwingUtilities.invokeLater(new Runnable() {

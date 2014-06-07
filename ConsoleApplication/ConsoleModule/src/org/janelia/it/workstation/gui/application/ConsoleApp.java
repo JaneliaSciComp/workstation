@@ -18,6 +18,7 @@ import org.slf4j.LoggerFactory;
 
 import javax.swing.*;
 import java.awt.*;
+import java.security.ProtectionDomain;
 
 /**
  * Created by IntelliJ IDEA.
@@ -32,7 +33,7 @@ public class ConsoleApp {
 	
     static {
     	log.info("Java version: " + System.getProperty("java.version"));
-        java.security.ProtectionDomain pd = ConsoleApp.class.getProtectionDomain();
+        ProtectionDomain pd = ConsoleApp.class.getProtectionDomain();
         log.debug("Code Source: " + pd.getCodeSource().getLocation());
         // Establish some OS-specific stuff
         // Set these, Mac may use - // take the menu bar off the jframe

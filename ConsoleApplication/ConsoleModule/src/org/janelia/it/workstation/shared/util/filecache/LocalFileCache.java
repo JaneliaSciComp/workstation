@@ -490,7 +490,7 @@ public class LocalFileCache {
 
         LOG.info("loadCacheFromFilesystem: starting load");
 
-        org.janelia.it.workstation.shared.util.filecache.LocalFileLoader loader = new org.janelia.it.workstation.shared.util.filecache.LocalFileLoader(activeDirectory);
+        LocalFileLoader loader = new LocalFileLoader(activeDirectory);
         final List<CachedFile> cachedFiles = loader.locateCachedFiles();
         for (CachedFile cachedFile : cachedFiles) {
             // make sure newer cache record has not already been loaded

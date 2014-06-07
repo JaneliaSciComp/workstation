@@ -4,6 +4,7 @@ import org.janelia.it.workstation.api.entity_model.events.WorkerChangedEvent;
 import org.janelia.it.jacs.compute.engine.service.ServiceException;
 import org.janelia.it.jacs.model.tasks.Event;
 import org.janelia.it.jacs.model.tasks.Task;
+import org.janelia.it.workstation.api.entity_model.management.ModelMgr;
 
 /**
  * A background worker thread which monitors a server-side task. 
@@ -28,9 +29,9 @@ public class TaskMonitoringWorker extends BackgroundWorker {
     protected void doStuff() throws Exception {
         
         while (true) {
-            this.task = org.janelia.it.workstation.api.entity_model.management.ModelMgr.getModelMgr().getTaskById(taskId);
+            this.task = ModelMgr.getModelMgr().getTaskById(taskId);
             setStatus(task.getLastEvent().getDescription());
-            org.janelia.it.workstation.api.entity_model.management.ModelMgr.getModelMgr().postOnEventBus(new WorkerChangedEvent(this));
+            ModelMgr.getModelMgr().postOnEventBus(new WorkerChangedEvent(this));
             
             if (task==null) {
                 throw new IllegalStateException("Task does not exist: "+taskId);

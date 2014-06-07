@@ -1,5 +1,7 @@
 package org.janelia.it.workstation.gui.viewer3d;
 
+import org.janelia.it.workstation.gui.viewer3d.texture.TextureDataI;
+
 /**
  * Created with IntelliJ IDEA.
  * User: fosterl
@@ -15,6 +17,6 @@ public interface VolumeDataAcceptor {
         COLOR_SPACE_SRGB, // R,G,B values are already gamma corrected for display on computer monitors
     }
 
-    void setTextureData( org.janelia.it.workstation.gui.viewer3d.texture.TextureDataI textureData );
+    void setTextureData( TextureDataI textureData );
 
 }

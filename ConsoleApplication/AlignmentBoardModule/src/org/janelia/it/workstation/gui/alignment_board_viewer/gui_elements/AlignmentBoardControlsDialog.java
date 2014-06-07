@@ -26,7 +26,7 @@ public class AlignmentBoardControlsDialog extends JDialog {
     private static final String LAUNCH_AS = "Controls";
     private static final String LAUNCH_DESCRIPTION = "Present a dialog allowing users to change settings.";
 
-    private org.janelia.it.workstation.gui.alignment_board_viewer.gui_elements.AlignmentBoardControlsPanel controlsPanel;
+    private AlignmentBoardControlsPanel controlsPanel;
     private Component centering;
 
     /**
@@ -43,7 +43,7 @@ public class AlignmentBoardControlsDialog extends JDialog {
     public AlignmentBoardControlsDialog( Component centering, AlignmentBoardControls controls ) {
         this.setName(CONTAINING_DIALOG_NAME);
         this.centering = centering;
-        controlsPanel = new org.janelia.it.workstation.gui.alignment_board_viewer.gui_elements.AlignmentBoardControlsPanel( controls );
+        controlsPanel = new AlignmentBoardControlsPanel( controls );
         this.setSize( controlsPanel.getSize() );
         this.setPreferredSize( controlsPanel.getSize() );
         this.setLayout( new BorderLayout() );
@@ -66,7 +66,7 @@ public class AlignmentBoardControlsDialog extends JDialog {
         add(bottomButtonPanel, BorderLayout.SOUTH);
     }
 
-    public org.janelia.it.workstation.gui.alignment_board_viewer.gui_elements.AlignmentBoardControlsPanel getControlsPanel() {
+    public AlignmentBoardControlsPanel getControlsPanel() {
         return controlsPanel;
     }
 

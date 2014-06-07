@@ -4,12 +4,15 @@ import javax.media.opengl.GL2;
 
 import org.janelia.it.workstation.geom.Rotation3d;
 import org.janelia.it.workstation.geom.Quaternion.AngleAxis;
+import org.janelia.it.workstation.geom.Vec3;
+import org.janelia.it.workstation.gui.camera.Camera3d;
+import org.janelia.it.workstation.gui.viewer3d.ViewportGL;
 
 // GLOrthoCamera sets up orthographic view for OpenGL from a Camera3d
 public class GLOrthoCamera 
 {
-	protected org.janelia.it.workstation.gui.camera.Camera3d camera;
-	protected org.janelia.it.workstation.gui.viewer3d.ViewportGL viewport;
+	protected Camera3d camera;
+	protected ViewportGL viewport;
 	protected boolean isPushed = false; // Help manage RAII in crippled Java language
     // Viewer orientation relative to canonical orientation.
     // Canonical orientation is x-right, y-down, z-away
@@ -23,15 +26,15 @@ public class GLOrthoCamera
 		this.viewerInGround = viewerInGround;
 	}
 
-	public org.janelia.it.workstation.gui.viewer3d.ViewportGL getViewport() {
+	public ViewportGL getViewport() {
 		return viewport;
 	}
 
-	public void setViewport(org.janelia.it.workstation.gui.viewer3d.ViewportGL viewport) {
+	public void setViewport(ViewportGL viewport) {
 		this.viewport = viewport;
 	}
 
-	public GLOrthoCamera(org.janelia.it.workstation.gui.camera.Camera3d camera) {
+	public GLOrthoCamera(Camera3d camera) {
 		this.camera = camera;
 	}
 
@@ -41,7 +44,7 @@ public class GLOrthoCamera
 			System.err.println("Error: GLOrthoCamera was not torn down properly");
 	}
 	
-	public org.janelia.it.workstation.gui.camera.Camera3d getCamera() {
+	public Camera3d getCamera() {
 		return camera;
 	}
 
@@ -57,7 +60,7 @@ public class GLOrthoCamera
 		return true;
 	}
 
-	public void setCamera(org.janelia.it.workstation.gui.camera.Camera3d camera) {
+	public void setCamera(Camera3d camera) {
 		this.camera = camera;
 	}
 	
@@ -96,7 +99,7 @@ public class GLOrthoCamera
 		double s = camera.getPixelsPerSceneUnit();
 		gl.glScaled(s, s, s);
 		// translate
-		org.janelia.it.workstation.geom.Vec3 f = camera.getFocus();
+		Vec3 f = camera.getFocus();
 		// System.out.println("glTranslated "+f.z());
 		// Apply viewer rotation
 		// TODO - before or after translation?

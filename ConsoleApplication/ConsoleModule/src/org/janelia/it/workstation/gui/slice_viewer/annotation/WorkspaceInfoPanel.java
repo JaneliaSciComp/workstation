@@ -5,6 +5,8 @@ import javax.swing.*;
 import java.awt.*;
 
 
+import org.janelia.it.workstation.api.entity_model.management.ModelMgr;
+import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.workstation.shared.workers.SimpleWorker;
 import org.janelia.it.workstation.signal.Slot1;
 import org.janelia.it.jacs.model.user_data.tiledMicroscope.*;
@@ -73,7 +75,7 @@ public class WorkspaceInfoPanel extends JPanel
 
                 @Override
                 protected void doStuff() throws Exception {
-                    sampleName = org.janelia.it.workstation.api.entity_model.management.ModelMgr.getModelMgr().getEntityById(workspace.getSampleID()).getName();
+                    sampleName = ModelMgr.getModelMgr().getEntityById(workspace.getSampleID()).getName();
                 }
 
                 @Override
@@ -83,7 +85,7 @@ public class WorkspaceInfoPanel extends JPanel
 
                 @Override
                 protected void hadError(Throwable error) {
-                    org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr.getSessionMgr().handleException(error);
+                    SessionMgr.getSessionMgr().handleException(error);
                 }
             };
             labelFiller.execute();

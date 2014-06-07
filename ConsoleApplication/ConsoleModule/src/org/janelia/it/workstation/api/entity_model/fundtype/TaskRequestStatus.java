@@ -7,12 +7,15 @@ package org.janelia.it.workstation.api.entity_model.fundtype;
  * Time: 3:58 PM
  */
 
+import org.janelia.it.workstation.api.entity_model.access.TaskRequestStatusObserver;
+
 import javax.swing.*;
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-public class TaskRequestStatus implements java.io.Serializable {
+public class TaskRequestStatus implements Serializable {
 
     public static final TaskRequestState INACTIVE = new TaskRequestState("Inactive");
     public static final TaskRequestState WAITING = new TaskRequestState("Waiting for Thread");
@@ -93,7 +96,7 @@ public class TaskRequestStatus implements java.io.Serializable {
      * to be sent on the Swing/AWT Event Queue Thread.  Specify true
      * if you are observing from a class that interacts with Swing/AWT classes.
      */
-    public void addTaskRequestStatusObserver(org.janelia.it.workstation.api.entity_model.access.TaskRequestStatusObserver observer, boolean swingThreadNotificationOnly) {
+    public void addTaskRequestStatusObserver(TaskRequestStatusObserver observer, boolean swingThreadNotificationOnly) {
 
         addTaskRequestStatusObserver(observer, swingThreadNotificationOnly, true);
     }
@@ -103,7 +106,7 @@ public class TaskRequestStatus implements java.io.Serializable {
      * to be sent on the Swing/AWT Event Queue Thread.  Specify true
      * if you are observing from a class that interacts with Swing/AWT classes.
      */
-    public void addTaskRequestStatusObserver(org.janelia.it.workstation.api.entity_model.access.TaskRequestStatusObserver observer, boolean swingThreadNotificationOnly, boolean bringUpToDate) {
+    public void addTaskRequestStatusObserver(TaskRequestStatusObserver observer, boolean swingThreadNotificationOnly, boolean bringUpToDate) {
 
         if (swingThreadNotificationOnly) {
             if (swingEventThreadObservers == null)
@@ -122,7 +125,7 @@ public class TaskRequestStatus implements java.io.Serializable {
         }
     }
 
-    public void removeTaskRequestStatusObserver(org.janelia.it.workstation.api.entity_model.access.TaskRequestStatusObserver observer) {
+    public void removeTaskRequestStatusObserver(TaskRequestStatusObserver observer) {
         if (swingEventThreadObservers != null) {
             swingEventThreadObservers.remove(observer);
             if (swingEventThreadObservers.size() == 0) swingEventThreadObservers = null;
@@ -203,11 +206,11 @@ public class TaskRequestStatus implements java.io.Serializable {
     }
 
     private void postNewState(TaskRequestState newState) {
-        org.janelia.it.workstation.api.entity_model.access.TaskRequestStatusObserver[] anyThreadObservers = getObservers(false);
+        TaskRequestStatusObserver[] anyThreadObservers = getObservers(false);
         if (anyThreadObservers.length > 0) {
             new Notifier(anyThreadObservers, newState).run();
         }
-        org.janelia.it.workstation.api.entity_model.access.TaskRequestStatusObserver[] swingThreadObservers = getObservers(true);
+        TaskRequestStatusObserver[] swingThreadObservers = getObservers(true);
         if (swingThreadObservers.length > 0) {
             if (SwingUtilities.isEventDispatchThread()) new Notifier(swingThreadObservers, newState).run();
             else SwingUtilities.invokeLater(new Notifier(swingThreadObservers, newState));
@@ -215,28 +218,28 @@ public class TaskRequestStatus implements java.io.Serializable {
     }
 
     private void postNewPercent(int newPercentage, int type) {
-        org.janelia.it.workstation.api.entity_model.access.TaskRequestStatusObserver[] anyThreadObservers = getObservers(false);
+        TaskRequestStatusObserver[] anyThreadObservers = getObservers(false);
         if (anyThreadObservers.length > 0) {
             new Notifier(anyThreadObservers, newPercentage, type).run();
         }
-        org.janelia.it.workstation.api.entity_model.access.TaskRequestStatusObserver[] swingThreadObservers = getObservers(true);
+        TaskRequestStatusObserver[] swingThreadObservers = getObservers(true);
         if (swingThreadObservers.length > 0) {
             if (SwingUtilities.isEventDispatchThread()) new Notifier(swingThreadObservers, newPercentage, type).run();
             else SwingUtilities.invokeLater(new Notifier(swingThreadObservers, newPercentage, type));
         }
     }
 
-    private org.janelia.it.workstation.api.entity_model.access.TaskRequestStatusObserver[] getObservers(boolean swingThread) {
-        org.janelia.it.workstation.api.entity_model.access.TaskRequestStatusObserver[] emptyArray = new org.janelia.it.workstation.api.entity_model.access.TaskRequestStatusObserver[0];
+    private TaskRequestStatusObserver[] getObservers(boolean swingThread) {
+        TaskRequestStatusObserver[] emptyArray = new TaskRequestStatusObserver[0];
         if (swingThread) {
             if (swingEventThreadObservers != null) {
-                return (org.janelia.it.workstation.api.entity_model.access.TaskRequestStatusObserver[]) swingEventThreadObservers.toArray(emptyArray);
+                return (TaskRequestStatusObserver[]) swingEventThreadObservers.toArray(emptyArray);
             }
             else return emptyArray;
         }
         else {
             if (anyThreadObservers != null) {
-                return (org.janelia.it.workstation.api.entity_model.access.TaskRequestStatusObserver[]) anyThreadObservers.toArray(emptyArray);
+                return (TaskRequestStatusObserver[]) anyThreadObservers.toArray(emptyArray);
             }
             else return emptyArray;
         }
@@ -245,24 +248,24 @@ public class TaskRequestStatus implements java.io.Serializable {
     private class Notifier implements Runnable {
         private int percentLoaded;
         private TaskRequestState state;
-        private org.janelia.it.workstation.api.entity_model.access.TaskRequestStatusObserver[] observers;
+        private TaskRequestStatusObserver[] observers;
         private int type;
 
-        private Notifier(org.janelia.it.workstation.api.entity_model.access.TaskRequestStatusObserver[] observers, int percent, int type) {
+        private Notifier(TaskRequestStatusObserver[] observers, int percent, int type) {
 
             this.type = type;
             this.observers = observers;
             this.percentLoaded = percent;
         }
 
-        private Notifier(org.janelia.it.workstation.api.entity_model.access.TaskRequestStatusObserver[] observers, TaskRequestState state) {
+        private Notifier(TaskRequestStatusObserver[] observers, TaskRequestState state) {
 
             this.observers = observers;
             this.state = state;
         }
 
         public void run() {
-            for (org.janelia.it.workstation.api.entity_model.access.TaskRequestStatusObserver observer : observers) {
+            for (TaskRequestStatusObserver observer : observers) {
                 if (state != null) observer.stateChanged(TaskRequestStatus.this, state);
                 else switch (type) {
                     case LOADED_PERCENTAGE:

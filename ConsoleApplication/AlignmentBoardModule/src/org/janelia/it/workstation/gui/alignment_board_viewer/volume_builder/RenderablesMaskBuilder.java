@@ -3,6 +3,7 @@ package org.janelia.it.workstation.gui.alignment_board_viewer.volume_builder;
 import org.janelia.it.workstation.gui.alignment_board.loader.ChannelMetaData;
 import org.janelia.it.workstation.gui.alignment_board.loader.MaskChanDataAcceptorI;
 import org.janelia.it.workstation.gui.alignment_board_viewer.AlignmentBoardSettings;
+import org.janelia.it.workstation.gui.alignment_board_viewer.masking.TextureBuilderI;
 import org.janelia.it.workstation.gui.viewer3d.masking.VolumeDataI;
 import org.janelia.it.workstation.gui.viewer3d.VolumeDataAcceptor;
 import org.janelia.it.workstation.gui.viewer3d.masking.MaskBuilderI;
@@ -29,7 +30,7 @@ import org.slf4j.LoggerFactory;
  * renderables have parts of their volumes overlapping, the last one added takes precence over any previously-
  * added renderable.
  */
-public class RenderablesMaskBuilder extends RenderablesVolumeBuilder implements MaskBuilderI, org.janelia.it.workstation.gui.alignment_board_viewer.masking.TextureBuilderI {
+public class RenderablesMaskBuilder extends RenderablesVolumeBuilder implements MaskBuilderI, TextureBuilderI {
 
     public static final int UNIVERSAL_MASK_BYTE_COUNT = 2;
     private static final int UNIVERSAL_MASK_CHANNEL_COUNT = 1;

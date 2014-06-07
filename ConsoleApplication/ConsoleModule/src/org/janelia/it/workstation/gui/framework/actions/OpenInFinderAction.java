@@ -6,6 +6,11 @@ import javax.swing.JOptionPane;
 
 import org.janelia.it.jacs.model.entity.Entity;
 import org.janelia.it.jacs.shared.utils.EntityUtils;
+import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
+import org.janelia.it.workstation.gui.util.DesktopApi;
+import org.janelia.it.workstation.shared.util.FileCallable;
+import org.janelia.it.workstation.shared.util.SystemInfo;
+import org.janelia.it.workstation.shared.util.Utils;
 
 /**
  * Given an entity with a File Path, reveal the path in Finder.
@@ -20,7 +25,7 @@ public class OpenInFinderAction implements Action {
 	 * @return true if this operation is supported on the current system.
 	 */
 	public static boolean isSupported() {
-        return (org.janelia.it.workstation.shared.util.SystemInfo.isMac || org.janelia.it.workstation.shared.util.SystemInfo.isLinux || org.janelia.it.workstation.shared.util.SystemInfo.isWindows);
+        return (SystemInfo.isMac || SystemInfo.isLinux || SystemInfo.isWindows);
 	}
 	
 	public OpenInFinderAction(Entity entity) {
@@ -29,13 +34,13 @@ public class OpenInFinderAction implements Action {
 	
 	@Override
 	public String getName() {
-		if (org.janelia.it.workstation.shared.util.SystemInfo.isMac) {
+		if (SystemInfo.isMac) {
 			return "Reveal In Finder";
 		}
-		else if (org.janelia.it.workstation.shared.util.SystemInfo.isLinux) {
+		else if (SystemInfo.isLinux) {
 			return "Reveal In File Manager";
 		}
-        else if (org.janelia.it.workstation.shared.util.SystemInfo.isWindows) {
+        else if (SystemInfo.isWindows) {
             return "Reveal In Windows Explorer";
         }
 		return null;
@@ -49,16 +54,16 @@ public class OpenInFinderAction implements Action {
 				throw new Exception("Entity has no file path");
 			}
 			
-            org.janelia.it.workstation.shared.util.Utils.processStandardFilepath(filePath, new org.janelia.it.workstation.shared.util.FileCallable() {
+            Utils.processStandardFilepath(filePath, new FileCallable() {
                 @Override
                 public void call(File file) throws Exception {
                     if (file == null) {
-                        JOptionPane.showMessageDialog(org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr.getMainFrame(),
+                        JOptionPane.showMessageDialog(SessionMgr.getMainFrame(),
                                 "Could not open file path", "Error", JOptionPane.ERROR_MESSAGE);
                     } else {
-                        if (!org.janelia.it.workstation.gui.util.DesktopApi.browse(file)) {
+                        if (!DesktopApi.browse(file)) {
                             // NO-FRAME SessionMgr.getSessionMgr().getActiveBrowser(),
-                            JOptionPane.showMessageDialog(org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr.getMainFrame(),
+                            JOptionPane.showMessageDialog(SessionMgr.getMainFrame(),
                                     "Error opening file path", "Error", JOptionPane.ERROR_MESSAGE);
                         }
                     }
@@ -66,7 +71,7 @@ public class OpenInFinderAction implements Action {
             });
 		}
 		catch (Exception e) {
-			org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr.getSessionMgr().handleException(e);
+			SessionMgr.getSessionMgr().handleException(e);
 		}
 	}
 }

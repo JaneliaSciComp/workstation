@@ -1,5 +1,6 @@
 package org.janelia.it.workstation.gui.framework.outline;
 
+import org.janelia.it.workstation.gui.util.Icons;
 import org.janelia.it.workstation.shared.util.Utils;
 import org.janelia.it.workstation.shared.workers.SimpleWorker;
 import org.janelia.it.jacs.model.entity.Entity;
@@ -27,7 +28,7 @@ public abstract class AbstractEntityTable extends JScrollPane {
 
     public AbstractEntityTable() {
 
-        loadingView = new JLabel(org.janelia.it.workstation.gui.util.Icons.getLoadingIcon());
+        loadingView = new JLabel(Icons.getLoadingIcon());
 
         table = new JTable();
         table.setFillsViewportHeight(true);
@@ -169,7 +170,7 @@ public abstract class AbstractEntityTable extends JScrollPane {
         // Must clone in case removeDataListener gets called by the listener
         List<DataAvailabilityListener> clone = new ArrayList<DataAvailabilityListener>(listeners);
         for (DataAvailabilityListener listener : clone) {
-            listener.dataReady(new org.janelia.it.workstation.gui.framework.outline.DataReadyEvent(AbstractEntityTable.this));
+            listener.dataReady(new DataReadyEvent(AbstractEntityTable.this));
         }
     }
 

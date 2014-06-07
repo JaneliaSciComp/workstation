@@ -1,5 +1,8 @@
 package org.janelia.it.workstation.gui.viewer3d.texture;
 
+import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
+import org.janelia.it.workstation.gui.viewer3d.VolumeModel;
+import org.janelia.it.workstation.gui.viewer3d.masking.VolumeDataI;
 import org.janelia.it.workstation.gui.viewer3d.volume_builder.VolumeDataBean;
 import org.janelia.it.workstation.gui.viewer3d.masking.RenderMappingI;
 import org.janelia.it.workstation.gui.viewer3d.renderable.RenderableBean;
@@ -32,7 +35,7 @@ public class RenderMapTextureBean implements TextureDataI {
     // This must be divisible by (4 x line-width) for the graphics card.  It must also be divisible by entries-per-set.
     private static final int DIVISIBILITY_VALUE = ((4 * LINE_WIDTH) * ENTRIES_PER_COORD_SET) / 2; // Smallest size...
 
-    private org.janelia.it.workstation.gui.viewer3d.VolumeModel volumeModel;
+    private VolumeModel volumeModel;
     private RenderMappingI renderMapping;
 
     //private byte[] mapData;
@@ -48,7 +51,7 @@ public class RenderMapTextureBean implements TextureDataI {
      *
      * @param volumeModel contains various controlling info.
      */
-    public void setVolumeModel( org.janelia.it.workstation.gui.viewer3d.VolumeModel volumeModel ) {
+    public void setVolumeModel( VolumeModel volumeModel ) {
         this.volumeModel = volumeModel;
     }
 
@@ -62,12 +65,12 @@ public class RenderMapTextureBean implements TextureDataI {
     }
 
     @Override
-    public void setTextureData(org.janelia.it.workstation.gui.viewer3d.masking.VolumeDataI textureData) {
+    public void setTextureData(VolumeDataI textureData) {
         // Ignored.
     }
 
     @Override
-    public org.janelia.it.workstation.gui.viewer3d.masking.VolumeDataI getTextureData() {
+    public VolumeDataI getTextureData() {
         Map<Integer,byte[]> renderingMap = renderMapping.getMapping();
         if ( renderingMap == null || renderingMap.size() > MAP_SIZE ) {
             throw new IllegalArgumentException("Invalid inputs for render mapping");
@@ -88,7 +91,7 @@ public class RenderMapTextureBean implements TextureDataI {
             Collection<float[]> acceptedCoordinates = volumeModel.getCropCoords().getAcceptedCoordinates();
             if ( acceptedCoordinates.size() > MAX_COORD_SETS ) {
                 acceptedCoordinates.clear();
-                org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr.getSessionMgr().handleException(
+                SessionMgr.getSessionMgr().handleException(
                         new IllegalArgumentException( "Too many crop volumes.  Max is " + MAX_COORD_SETS + ". Rejecting all saved coords.")
                 );
             }

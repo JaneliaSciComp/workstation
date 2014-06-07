@@ -18,7 +18,7 @@ public class TestPolygonalMesh {
         InputStream gourdStream = this.getClass().getResourceAsStream(objName);
         if (gourdStream == null)
             fail("Failed to open OBJ file resource "+objName);
-        org.janelia.it.workstation.gui.opengl.PolygonalMesh testMesh = new org.janelia.it.workstation.gui.opengl.PolygonalMesh();
+        PolygonalMesh testMesh = new PolygonalMesh();
         assertEquals(testMesh.getVertexes().size(), 0);        
         assertEquals(testMesh.getFaces().size(), 0);        
         try {

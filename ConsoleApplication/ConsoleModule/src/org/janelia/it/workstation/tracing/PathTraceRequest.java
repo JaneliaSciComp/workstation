@@ -1,14 +1,16 @@
 package org.janelia.it.workstation.tracing;
 
+import org.janelia.it.workstation.geom.Vec3;
+
 public class PathTraceRequest {
 
-    private org.janelia.it.workstation.geom.Vec3 xyz1;
-    private org.janelia.it.workstation.geom.Vec3 xyz2;
+    private Vec3 xyz1;
+    private Vec3 xyz2;
     private Long anchorGuid1;
     private Long anchorGuid2;
     private SegmentIndex segmentIndex; // for hashing
 
-    public PathTraceRequest(org.janelia.it.workstation.geom.Vec3 xyz1, org.janelia.it.workstation.geom.Vec3 xyz2, Long guid1, Long guid2) {
+    public PathTraceRequest(Vec3 xyz1, Vec3 xyz2, Long guid1, Long guid2) {
         this.xyz1 = xyz1;
         this.xyz2 = xyz2;
         this.anchorGuid1 = guid1;
@@ -16,11 +18,11 @@ public class PathTraceRequest {
         this.segmentIndex = new SegmentIndex(guid1, guid2);
     }
 
-    public org.janelia.it.workstation.geom.Vec3 getXyz1() {
+    public Vec3 getXyz1() {
         return xyz1;
     }
 
-    public org.janelia.it.workstation.geom.Vec3 getXyz2() {
+    public Vec3 getXyz2() {
         return xyz2;
     }
     

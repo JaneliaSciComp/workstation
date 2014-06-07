@@ -6,9 +6,12 @@ import java.util.List;
 import java.util.Set;
 import java.util.TreeSet;
 
+import org.janelia.it.workstation.api.entity_model.management.ModelMgr;
 import org.janelia.it.workstation.model.entity.RootedEntity;
 import org.janelia.it.jacs.model.entity.Entity;
 import org.janelia.it.jacs.model.entity.EntityConstants;
+import org.janelia.it.workstation.api.entity_model.management.ModelMgrUtils;
+import org.janelia.it.workstation.model.viewer.MaskedVolume;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -19,13 +22,13 @@ import org.slf4j.LoggerFactory;
  * Time: 12:41 PM
  *
  * This is a container for
- * @see org.janelia.it.workstation.model.domain.Compartment
+ * @see Compartment
  * objects which are all in the same alignment space.
  */
-public class CompartmentSet extends AlignedEntityWrapper implements Viewable2d, Viewable3d, org.janelia.it.workstation.model.domain.Viewable4d {
+public class CompartmentSet extends AlignedEntityWrapper implements Viewable2d, Viewable3d, Viewable4d {
 
     private Logger log;
-    private Collection<org.janelia.it.workstation.model.domain.Compartment> compartmentSet;
+    private Collection<Compartment> compartmentSet;
 
     public CompartmentSet( RootedEntity wrappedEntity ) {
         super( wrappedEntity );
@@ -47,7 +50,7 @@ public class CompartmentSet extends AlignedEntityWrapper implements Viewable2d, 
     }
 
     @Override
-    public org.janelia.it.workstation.model.viewer.MaskedVolume getMaskedVolume() {
+    public MaskedVolume getMaskedVolume() {
         return null;
     }
 
@@ -59,11 +62,11 @@ public class CompartmentSet extends AlignedEntityWrapper implements Viewable2d, 
         initChildren();
         this.compartmentSet = Collections.EMPTY_LIST;
 
-        List<Entity> compartmentSets = org.janelia.it.workstation.api.entity_model.management.ModelMgr.getModelMgr().getEntitiesByTypeName(EntityConstants.TYPE_COMPARTMENT_SET);
+        List<Entity> compartmentSets = ModelMgr.getModelMgr().getEntitiesByTypeName(EntityConstants.TYPE_COMPARTMENT_SET);
 
         for ( Entity compartmentSetEntity: compartmentSets ) {
             log.debug("Checking compartment set '{}', (id={})", compartmentSetEntity.getName(), compartmentSetEntity.getId());
-            org.janelia.it.workstation.api.entity_model.management.ModelMgr.getModelMgr().loadLazyEntity( compartmentSetEntity, false );
+            ModelMgr.getModelMgr().loadLazyEntity( compartmentSetEntity, false );
 
             AlignmentContext compartmentSetSpace = new AlignmentContext(
                     compartmentSetEntity.getValueByAttributeName( EntityConstants.ATTRIBUTE_ALIGNMENT_SPACE ),
@@ -75,16 +78,15 @@ public class CompartmentSet extends AlignedEntityWrapper implements Viewable2d, 
             if ( targetSpace.equals( compartmentSetSpace ) ) {
                 // Found the right one.
                 log.debug("Found compartment set '{}', (id={}).", compartmentSetEntity.getName(), compartmentSetEntity.getId());
-                compartmentSet = new TreeSet<org.janelia.it.workstation.model.domain.Compartment>();
+                compartmentSet = new TreeSet<Compartment>();
 
                 // Getting all the compartments.
-                compartmentSetEntity = org.janelia.it.workstation.api.entity_model.management.ModelMgr.getModelMgr().getEntityAndChildren( compartmentSetEntity.getId() );
-                Set<Entity> children = compartmentSetEntity.getChildren();
-                for ( Entity child: children ) {
+                compartmentSetEntity = ModelMgr.getModelMgr().getEntityAndChildren( compartmentSetEntity.getId() );
+                for (Entity child: ModelMgrUtils.getAccessibleChildren(compartmentSetEntity)) {
                     log.debug("Adding child compartment of {}.", child.getName());
                     if ( child.getEntityTypeName().equals( EntityConstants.TYPE_COMPARTMENT ) ) {
-                        org.janelia.it.workstation.api.entity_model.management.ModelMgr.getModelMgr().loadLazyEntity( child, false );
-                        org.janelia.it.workstation.model.domain.Compartment compartmentWrapper = new org.janelia.it.workstation.model.domain.Compartment( new RootedEntity( child ) );
+                        ModelMgr.getModelMgr().loadLazyEntity( child, false );
+                        Compartment compartmentWrapper = new Compartment( new RootedEntity( child ) );
                         compartmentSet.add( compartmentWrapper );
                         addChild(compartmentWrapper);
 
@@ -94,7 +96,7 @@ public class CompartmentSet extends AlignedEntityWrapper implements Viewable2d, 
         }
     }
 
-    public Collection<org.janelia.it.workstation.model.domain.Compartment> getCompartmentSet() {
+    public Collection<Compartment> getCompartmentSet() {
         return compartmentSet;
     }
 }

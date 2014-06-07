@@ -1,16 +1,18 @@
 package org.janelia.it.workstation.api.entity_model.events;
 
+import org.janelia.it.workstation.shared.workers.BackgroundWorker;
+
 /**
  * A worker has changed in some way.
  * 
  * @author <a href="mailto:rokickik@janelia.hhmi.org">Konrad Rokicki</a>
  */
 public class WorkerEvent {
-    private org.janelia.it.workstation.shared.workers.BackgroundWorker worker;
-    public WorkerEvent(org.janelia.it.workstation.shared.workers.BackgroundWorker worker) {
+    private BackgroundWorker worker;
+    public WorkerEvent(BackgroundWorker worker) {
         this.worker = worker;
     }
-    public org.janelia.it.workstation.shared.workers.BackgroundWorker getWorker() {
+    public BackgroundWorker getWorker() {
         return worker;
     }
 }

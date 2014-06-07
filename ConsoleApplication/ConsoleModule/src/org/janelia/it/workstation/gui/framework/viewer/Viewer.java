@@ -7,6 +7,9 @@ import java.util.concurrent.Callable;
 
 import javax.swing.JPanel;
 import org.janelia.it.workstation.gui.framework.outline.EntityViewerState;
+import org.janelia.it.workstation.gui.framework.outline.Refreshable;
+import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
+import org.janelia.it.workstation.model.entity.RootedEntity;
 
 /**
  * A viewer panel that is refreshable and can be placed inside a ViewerPane.
@@ -15,7 +18,7 @@ import org.janelia.it.workstation.gui.framework.outline.EntityViewerState;
  *
  * @author <a href="mailto:rokickik@janelia.hhmi.org">Konrad Rokicki</a>
  */
-public abstract class Viewer extends JPanel implements org.janelia.it.workstation.gui.framework.outline.Refreshable {
+public abstract class Viewer extends JPanel implements Refreshable {
 
     private final ViewerPane viewerPane;
 
@@ -35,9 +38,9 @@ public abstract class Viewer extends JPanel implements org.janelia.it.workstatio
 
     public void setAsActive() {
         if (!viewerPane.isActive()) {
-            org.janelia.it.workstation.model.entity.RootedEntity contextRootedEntity = getContextRootedEntity();
+            RootedEntity contextRootedEntity = getContextRootedEntity();
             if (contextRootedEntity != null) {
-                org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr.getBrowser().getEntityOutline().highlightEntityByUniqueId(contextRootedEntity.getId());
+                SessionMgr.getBrowser().getEntityOutline().highlightEntityByUniqueId(contextRootedEntity.getId());
             }
         }
         viewerPane.setAsActive();
@@ -47,7 +50,7 @@ public abstract class Viewer extends JPanel implements org.janelia.it.workstatio
         return viewerPane;
     }
 
-    public abstract org.janelia.it.workstation.model.entity.RootedEntity getContextRootedEntity();
+    public abstract RootedEntity getContextRootedEntity();
 
     /**
      * Clear the view.
@@ -62,31 +65,31 @@ public abstract class Viewer extends JPanel implements org.janelia.it.workstatio
     /**
      * Display the given RootedEntity in the viewer.
      */
-    public abstract void loadEntity(org.janelia.it.workstation.model.entity.RootedEntity rootedEntity);
+    public abstract void loadEntity(RootedEntity rootedEntity);
 
     /**
      * Display the given RootedEntity in the viewer, and then call the callback.
      */
-    public abstract void loadEntity(org.janelia.it.workstation.model.entity.RootedEntity rootedEntity, final Callable<Void> success);
+    public abstract void loadEntity(RootedEntity rootedEntity, final Callable<Void> success);
 
     /**
      * Returns all RootedEntity objects loaded in the viewer.
      *
      * @return
      */
-    public abstract List<org.janelia.it.workstation.model.entity.RootedEntity> getRootedEntities();
+    public abstract List<RootedEntity> getRootedEntities();
 
     /**
      * Returns all RootedEntity objected which are currently selected in the viewer.
      *
      * @return
      */
-    public abstract List<org.janelia.it.workstation.model.entity.RootedEntity> getSelectedEntities();
+    public abstract List<RootedEntity> getSelectedEntities();
 
     /**
      * Returns the RootedEntity with the given uniqueId, assuming that its currently loaded in the viewer.
      */
-    public abstract org.janelia.it.workstation.model.entity.RootedEntity getRootedEntityById(String uniqueId);
+    public abstract RootedEntity getRootedEntityById(String uniqueId);
 
     /**
      * Called when the viewer is about to close forever. This is an opportunity to clean up any listeners or

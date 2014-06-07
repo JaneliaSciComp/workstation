@@ -6,15 +6,21 @@
 package org.janelia.it.workstation.gui.split_picking;
 
 import java.awt.BorderLayout;
+import java.util.Properties;
 import java.util.concurrent.Callable;
 
+import org.janelia.it.workstation.gui.framework.console.ViewerManager;
 import org.janelia.it.workstation.gui.framework.viewer.IconDemoPanel;
 import org.janelia.it.workstation.gui.framework.viewer.ViewerSplitPanel;
+import org.janelia.it.workstation.model.entity.RootedEntity;
 import org.netbeans.api.settings.ConvertAsProperties;
 import org.openide.awt.ActionID;
 import org.openide.awt.ActionReference;
 import org.openide.windows.TopComponent;
 import org.openide.util.NbBundle.Messages;
+
+import javax.swing.GroupLayout;
+import javax.swing.JPanel;
 
 /**
  * Top component which displays something.
@@ -28,9 +34,9 @@ import org.openide.util.NbBundle.Messages;
         //iconBase="SET/PATH/TO/ICON/HERE", 
         persistenceType = TopComponent.PERSISTENCE_ALWAYS
 )
-@TopComponent.Registration(mode = "editor", openAtStartup = false)
+@TopComponent.Registration(mode = "editor", openAtStartup = false, position = 200)
 @ActionID(category = "Window", id = "SplitPickingLanesTopComponent")
-@ActionReference(path = "Menu/Window" /*, position = 333 */)
+@ActionReference(path = "Menu/Window", position = 200 )
 @TopComponent.OpenActionRegistration(
         displayName = "#CTL_SplitPickingLanesAction",
         preferredID = "SplitPickingLanesTopComponent"
@@ -43,13 +49,13 @@ import org.openide.util.NbBundle.Messages;
 public final class SplitPickingLanesTopComponent extends TopComponent {
     public static final String PREFERRED_ID = "SplitPickingLanesTopComponent";
 
-    private org.janelia.it.workstation.gui.framework.console.ViewerManager viewerManager;
+    private ViewerManager viewerManager;
     
     public SplitPickingLanesTopComponent() {
         initComponents();
         setName(Bundle.CTL_SplitPickingLanesTopComponent());
         setToolTipText(Bundle.HINT_SplitPickingLanesTopComponent());
-        viewerManager = new org.janelia.it.workstation.gui.framework.console.ViewerManager();
+        viewerManager = new ViewerManager();
         jPanel1.add( viewerManager.getViewerContainer(), BorderLayout.CENTER );
     }
     
@@ -61,19 +67,19 @@ public final class SplitPickingLanesTopComponent extends TopComponent {
         return (IconDemoPanel)viewerManager.getSecViewer(IconDemoPanel.class);
     }
     
-    public void showEntityInMainViewer( org.janelia.it.workstation.model.entity.RootedEntity entity ) {
+    public void showEntityInMainViewer( RootedEntity entity ) {
         viewerManager.showEntityInMainViewer( entity );
     }
     
-    public void showEntityInSecViewer( org.janelia.it.workstation.model.entity.RootedEntity entity ) {
+    public void showEntityInSecViewer( RootedEntity entity ) {
         viewerManager.showEntityInSecViewer( entity );
     }
     
-    public void showEntityInMainViewer( org.janelia.it.workstation.model.entity.RootedEntity entity, Callable callable ) {
+    public void showEntityInMainViewer( RootedEntity entity, Callable callable ) {
         viewerManager.showEntityInMainViewer( entity, callable );
     }
     
-    public void showEntityInSecViewer( org.janelia.it.workstation.model.entity.RootedEntity entity, Callable callable ) {
+    public void showEntityInSecViewer( RootedEntity entity, Callable callable ) {
         viewerManager.showEntityInSecViewer( entity, callable );
     }
     
@@ -89,24 +95,24 @@ public final class SplitPickingLanesTopComponent extends TopComponent {
     // <editor-fold defaultstate="collapsed" desc="Generated Code">//GEN-BEGIN:initComponents
     private void initComponents() {
 
-        jPanel1 = new javax.swing.JPanel();
+        jPanel1 = new JPanel();
 
-        jPanel1.setLayout(new java.awt.BorderLayout());
+        jPanel1.setLayout(new BorderLayout());
 
-        javax.swing.GroupLayout layout = new javax.swing.GroupLayout(this);
+        GroupLayout layout = new GroupLayout(this);
         this.setLayout(layout);
         layout.setHorizontalGroup(
-            layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addComponent(jPanel1, javax.swing.GroupLayout.Alignment.TRAILING, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+            layout.createParallelGroup(GroupLayout.Alignment.LEADING)
+            .addComponent(jPanel1, GroupLayout.Alignment.TRAILING, GroupLayout.DEFAULT_SIZE, GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
         );
         layout.setVerticalGroup(
-            layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addComponent(jPanel1, javax.swing.GroupLayout.Alignment.TRAILING, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+            layout.createParallelGroup(GroupLayout.Alignment.LEADING)
+            .addComponent(jPanel1, GroupLayout.Alignment.TRAILING, GroupLayout.DEFAULT_SIZE, GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
         );
     }// </editor-fold>//GEN-END:initComponents
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
-    private javax.swing.JPanel jPanel1;
+    private JPanel jPanel1;
     // End of variables declaration//GEN-END:variables
     @Override
     public void componentOpened() {
@@ -118,14 +124,14 @@ public final class SplitPickingLanesTopComponent extends TopComponent {
         // TODO add custom code on component closing
     }
 
-    void writeProperties(java.util.Properties p) {
+    void writeProperties(Properties p) {
         // better to version settings since initial version as advocated at
         // http://wiki.apidesign.org/wiki/PropertyFiles
         p.setProperty("version", "1.0");
         // TODO store your settings
     }
 
-    void readProperties(java.util.Properties p) {
+    void readProperties(Properties p) {
         String version = p.getProperty("version");
         // TODO read your settings according to their version
     }

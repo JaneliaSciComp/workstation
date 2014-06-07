@@ -9,6 +9,7 @@ import javax.media.opengl.awt.GLCanvas;
 import javax.media.opengl.awt.GLJPanel;
 import javax.swing.BoxLayout;
 import javax.swing.JFrame;
+import javax.swing.SwingUtilities;
 
 // Demonstration program to show that GL_FRAMEBUFFER_SRGB is not
 // respected by GLJPanel in JOGL 2.1. The two displayed boxes should
@@ -20,7 +21,7 @@ import javax.swing.JFrame;
 public class TestSrgbFramebuffer extends JFrame implements GLEventListener 
 {
     public static void main(String[] args) {
-        javax.swing.SwingUtilities.invokeLater(new Runnable() {
+        SwingUtilities.invokeLater(new Runnable() {
             public void run() {
                 new TestSrgbFramebuffer();
             }

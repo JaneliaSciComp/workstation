@@ -4,10 +4,13 @@
  */
 package org.janelia.it.workstation.gui.static_view.shader;
 
+import org.janelia.it.workstation.gui.viewer3d.shader.AbstractShader;
+import org.janelia.it.workstation.gui.viewer3d.texture.TextureMediator;
+
 import javax.media.opengl.GL2;
 import java.nio.IntBuffer;
 
-public class RGBExcludableShader extends org.janelia.it.workstation.gui.viewer3d.shader.AbstractShader {
+public class RGBExcludableShader extends AbstractShader {
     // Shader GLSL source is expected to be in the same package as this class.  Otherwise,
     // a prefix of the relative path could be given, as in "shader_sub_pkg/AShader.glsl"
     public static final String VERTEX_SHADER = "RGBExcludableVtx.glsl";
@@ -23,7 +26,7 @@ public class RGBExcludableShader extends org.janelia.it.workstation.gui.viewer3d
     private int vertexAttribLoc = -1;
     private int texCoordAttribLoc = -1;
 
-    private org.janelia.it.workstation.gui.viewer3d.texture.TextureMediator signalTextureMediator;
+    private TextureMediator signalTextureMediator;
 
     @Override
     public String getVertexShader() {
@@ -69,7 +72,7 @@ public class RGBExcludableShader extends org.janelia.it.workstation.gui.viewer3d
      *
      * @param signalTextureMediator intermediator for signal.
      */
-    public void setSignalTextureMediator(org.janelia.it.workstation.gui.viewer3d.texture.TextureMediator signalTextureMediator) {
+    public void setSignalTextureMediator(TextureMediator signalTextureMediator) {
         this.signalTextureMediator = signalTextureMediator;
     }
 
@@ -85,7 +88,7 @@ public class RGBExcludableShader extends org.janelia.it.workstation.gui.viewer3d
         setTextureUniform(gl, "signalTexture", signalTextureMediator);
     }
 
-    private void setTextureUniform( GL2 gl, String shaderUniformName, org.janelia.it.workstation.gui.viewer3d.texture.TextureMediator textureMediator ) {
+    private void setTextureUniform( GL2 gl, String shaderUniformName, TextureMediator textureMediator ) {
         int signalTextureLoc = gl.glGetUniformLocation( getShaderProgram(), shaderUniformName );
         if ( signalTextureLoc == -1 ) {
             throw new RuntimeException( "Failed to find " + shaderUniformName + " texture location." );

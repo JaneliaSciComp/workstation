@@ -348,8 +348,8 @@ public class DownSamplerTest {
         double yScale = scaleAll;
         double zScale = scaleAll;
 
-        org.janelia.it.workstation.gui.alignment_board_viewer.volume_builder.DownSampler downSampler = new org.janelia.it.workstation.gui.alignment_board_viewer.volume_builder.DownSampler( sx, sy, sz );
-        org.janelia.it.workstation.gui.alignment_board_viewer.volume_builder.DownSampler.DownsampledTextureData data =
+        DownSampler downSampler = new DownSampler( sx, sy, sz );
+        DownSampler.DownsampledTextureData data =
                 downSampler.getDownSampledVolume( new VolumeDataBean( volume, sx, sy, sz ), voxelBytes, xScale, yScale, zScale );
         assertNotSame("Zero-length volume.", data.getVolume().length(), 0);
         for (int i = 0; i < data.getVolume().length(); i++ ) {

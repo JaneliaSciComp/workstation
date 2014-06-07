@@ -29,17 +29,17 @@ implements GLActor
 	@SuppressWarnings("unused")
 	private static final Logger log = LoggerFactory.getLogger(SliceActor.class);
 
-	private org.janelia.it.workstation.gui.slice_viewer.ViewTileManager viewTileManager;
+	private ViewTileManager viewTileManager;
 	
 	private boolean needsGlDisposal = false; // flag for deferred OpenGL data reset
 	private boolean needsTextureCacheClear = false; // flag for deferred clear of texture cache
 	
-	private org.janelia.it.workstation.gui.slice_viewer.ImageColorModel imageColorModel;
+	private ImageColorModel imageColorModel;
 	private SliceColorShader shader = new SliceColorShader();
 	private NumeralShader numeralShader = new NumeralShader();
 	private OutlineShader outlineShader = new OutlineShader();
 	
-	public SliceActor(org.janelia.it.workstation.gui.slice_viewer.ViewTileManager viewTileManager)
+	public SliceActor(ViewTileManager viewTileManager)
 	{
 		this.viewTileManager = viewTileManager;
 	}
@@ -55,7 +55,7 @@ implements GLActor
 	    GL gl = glDrawable.getGL();
 	    // Manage opengl garbage collection, while we have a valid context
 	    if (viewTileManager != null) {
-	        org.janelia.it.workstation.gui.slice_viewer.TextureCache tc = viewTileManager.getTextureCache();
+	        TextureCache tc = viewTileManager.getTextureCache();
 	        if (tc != null) {
 	            int[] txIds = tc.popObsoleteTextureIds();
 	            if (txIds.length > 0)
@@ -70,7 +70,7 @@ implements GLActor
 			return;
 		
         // upload textures to video card, if needed
-        for (org.janelia.it.workstation.gui.slice_viewer.Tile2d tile: tiles) {
+        for (Tile2d tile: tiles) {
             tile.init(glDrawable);
         }
         
@@ -86,7 +86,7 @@ implements GLActor
 			filter = GL2.GL_NEAREST; // distinct voxels at high zoom
         GL2 gl2 = glDrawable.getGL().getGL2();
 		shader.load(gl2);
-		for (org.janelia.it.workstation.gui.slice_viewer.Tile2d tile: tiles) {
+		for (Tile2d tile: tiles) {
 			tile.setFilter(filter);
 			tile.display(glDrawable, camera);
 		}
@@ -98,8 +98,8 @@ implements GLActor
 			// fetch (typical?) texture dimensions
 			int th = 10;
 			int tw = 10;
-			for (org.janelia.it.workstation.gui.slice_viewer.Tile2d tile: tiles) {
-				org.janelia.it.workstation.gui.slice_viewer.TileTexture texture = tile.getBestTexture();
+			for (Tile2d tile: tiles) {
+				TileTexture texture = tile.getBestTexture();
 				if (texture != null) {
 					th = texture.getTexture().getHeight();
 					tw = texture.getTexture().getWidth();
@@ -117,7 +117,7 @@ implements GLActor
 				numeralShader.setQuarterRotations(3);
 			// render numerals
 			numeralShader.load(gl2);
-			for (org.janelia.it.workstation.gui.slice_viewer.Tile2d tile: tiles) {
+			for (Tile2d tile: tiles) {
 				tile.setFilter(GL2.GL_NEAREST);
 				// numeralShader.setTexturePixels(???);
 				tile.display(glDrawable, camera);
@@ -156,14 +156,14 @@ implements GLActor
 	@Override
 	public void dispose(GLAutoDrawable glDrawable) {
 		// System.out.println("dispose RavelerTileServer");
-		org.janelia.it.workstation.gui.slice_viewer.TextureCache textureCache = viewTileManager.getTextureCache();
+		TextureCache textureCache = viewTileManager.getTextureCache();
         GL2 gl = glDrawable.getGL().getGL2();
-		for (org.janelia.it.workstation.gui.slice_viewer.TileTexture tileTexture : textureCache.values()) {
-			if (tileTexture.getLoadStatus().ordinal() < org.janelia.it.workstation.gui.slice_viewer.TileTexture.LoadStatus.GL_LOADED.ordinal())
+		for (TileTexture tileTexture : textureCache.values()) {
+			if (tileTexture.getLoadStatus().ordinal() < TileTexture.LoadStatus.GL_LOADED.ordinal())
 				continue;
-			org.janelia.it.workstation.gui.slice_viewer.PyramidTexture joglTexture = tileTexture.getTexture();
+			PyramidTexture joglTexture = tileTexture.getTexture();
 			joglTexture.destroy(gl);
-			tileTexture.setLoadStatus(org.janelia.it.workstation.gui.slice_viewer.TileTexture.LoadStatus.RAM_LOADED);
+			tileTexture.setLoadStatus(TileTexture.LoadStatus.RAM_LOADED);
 		}
 		needsGlDisposal = false;
 	}
@@ -173,11 +173,11 @@ implements GLActor
 		return viewTileManager.getVolumeImage().getBoundingBox3d();
 	}
 	
-	public org.janelia.it.workstation.gui.slice_viewer.ImageColorModel getImageColorModel() {
+	public ImageColorModel getImageColorModel() {
 		return imageColorModel;
 	}
 
-	public org.janelia.it.workstation.gui.slice_viewer.ViewTileManager getViewTileManager() {
+	public ViewTileManager getViewTileManager() {
 		return viewTileManager;
 	}
 
@@ -199,12 +199,12 @@ implements GLActor
 	}
 	
 	public void reportTextureTimings() {
-		org.janelia.it.workstation.gui.slice_viewer.TextureCache textureCache = viewTileManager.getTextureCache();
+		TextureCache textureCache = viewTileManager.getTextureCache();
 		if (textureCache.size() == 0) {
 			System.out.println("(No textures were loaded)");
 			return;
 		}
-		for (org.janelia.it.workstation.gui.slice_viewer.TileTexture texture : textureCache.values()) {
+		for (TileTexture texture : textureCache.values()) {
 			// Time to download image bytes
 			long value = texture.getDownloadDataTime();
 			if (value != texture.getInvalidTime()) {
@@ -213,7 +213,7 @@ implements GLActor
 		}
 	}
 	
-	public void setImageColorModel(org.janelia.it.workstation.gui.slice_viewer.ImageColorModel imageColorModel) {
+	public void setImageColorModel(ImageColorModel imageColorModel) {
 		this.imageColorModel = imageColorModel;
 		shader.setImageColorModel(imageColorModel);
 		numeralShader.setImageColorModel(imageColorModel);

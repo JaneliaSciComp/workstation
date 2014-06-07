@@ -45,14 +45,14 @@ package org.janelia.it.workstation.geom;
  */
 public class Transform3d {
     private Rotation3d rotation = new Rotation3d();
-    private org.janelia.it.workstation.geom.Vec3 translation = new org.janelia.it.workstation.geom.Vec3();
+    private Vec3 translation = new Vec3();
 
     public Transform3d() {
         rotation = new Rotation3d();
-        translation = new org.janelia.it.workstation.geom.Vec3();
+        translation = new Vec3();
     }
     
-    public Transform3d(Rotation3d rotation, org.janelia.it.workstation.geom.Vec3 translation) {
+    public Transform3d(Rotation3d rotation, Vec3 translation) {
         this.rotation = rotation;
         this.translation = translation;
     }
@@ -63,7 +63,7 @@ public class Transform3d {
                 this.times(rhs.translation));
     }
     
-    public org.janelia.it.workstation.geom.Vec3 times(org.janelia.it.workstation.geom.Vec3 rhs) {
+    public Vec3 times(Vec3 rhs) {
         return translation.plus(rotation.times(rhs));
     }
 }

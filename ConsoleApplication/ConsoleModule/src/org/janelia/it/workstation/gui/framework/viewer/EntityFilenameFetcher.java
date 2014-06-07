@@ -1,5 +1,7 @@
 package org.janelia.it.workstation.gui.framework.viewer;
 
+import org.janelia.it.workstation.api.entity_model.management.ModelMgr;
+import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.workstation.shared.workers.SimpleWorker;
 import org.janelia.it.jacs.model.entity.Entity;
 import org.janelia.it.jacs.model.entity.EntityConstants;
@@ -10,6 +12,7 @@ import org.slf4j.LoggerFactory;
 
 import java.util.HashMap;
 import java.util.Map;
+import org.janelia.it.workstation.api.entity_model.management.ModelMgrUtils;
 
 /**
  * Created by IntelliJ IDEA.
@@ -45,7 +48,7 @@ public class EntityFilenameFetcher {
     /**  Given you already know the image's role, call this with your entity. */
     public String fetchFilename(Entity entity, String imageRole) {
         ensureEntityLoaded( entity );
-        for (EntityData ed: entity.getEntityData()) {
+        for (EntityData ed : ModelMgrUtils.getAccessibleEntityDatas(entity)) {
             ensureEntityLoaded(ed.getChildEntity());
         }
 
@@ -59,7 +62,7 @@ public class EntityFilenameFetcher {
 
     public String fetchFilename(Entity entity, FilenameType fetcherFilenameType) {
         ensureEntityLoaded( entity );
-        for (EntityData ed: entity.getEntityData()) {
+        for (EntityData ed : ModelMgrUtils.getAccessibleEntityDatas(entity)) {
             ensureEntityLoaded(ed.getChildEntity());
         }
 
@@ -118,7 +121,7 @@ public class EntityFilenameFetcher {
             @Override
             protected void doStuff() throws Exception {
                 if (entity != null  &&  EntityUtils.isInitialized(entity)) {
-                	org.janelia.it.workstation.api.entity_model.management.ModelMgr.getModelMgr().loadLazyEntity(entity, false);
+                	ModelMgr.getModelMgr().loadLazyEntity(entity, false);
                 }
             }
 
@@ -128,7 +131,7 @@ public class EntityFilenameFetcher {
 
             @Override
             protected void hadError(Throwable error) {
-                org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr.getSessionMgr().handleException(error);
+                SessionMgr.getSessionMgr().handleException(error);
             }
         };
         worker.execute();

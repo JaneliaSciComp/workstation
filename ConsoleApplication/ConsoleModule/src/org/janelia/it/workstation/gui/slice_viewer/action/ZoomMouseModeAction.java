@@ -1,5 +1,8 @@
 package org.janelia.it.workstation.gui.slice_viewer.action;
 
+import org.janelia.it.workstation.gui.util.Icons;
+import org.janelia.it.workstation.signal.Signal1;
+
 import java.awt.event.ActionEvent;
 import javax.swing.AbstractAction;
 import javax.swing.KeyStroke;
@@ -9,11 +12,11 @@ public class ZoomMouseModeAction extends AbstractAction
 {
 	private static final long serialVersionUID = 1L;
 	
-    public org.janelia.it.workstation.signal.Signal1<MouseMode.Mode> setMouseModeSignal = new org.janelia.it.workstation.signal.Signal1<MouseMode.Mode>();
+    public Signal1<MouseMode.Mode> setMouseModeSignal = new Signal1<MouseMode.Mode>();
 
 	public ZoomMouseModeAction() {
 		putValue(NAME, "Zoom");
-		putValue(SMALL_ICON, org.janelia.it.workstation.gui.util.Icons.getIcon("magnify_glass.png"));
+		putValue(SMALL_ICON, Icons.getIcon("magnify_glass.png"));
 		String acc = "Z";
 		KeyStroke accelerator = KeyStroke.getKeyStroke(acc);
 		putValue(ACCELERATOR_KEY, accelerator);

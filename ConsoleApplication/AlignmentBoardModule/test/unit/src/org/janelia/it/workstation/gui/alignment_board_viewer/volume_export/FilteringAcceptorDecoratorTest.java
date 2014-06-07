@@ -14,7 +14,7 @@ import java.util.List;
 import static org.junit.Assert.*;
 
 /**
- * Tests the {@link org.janelia.it.workstation.gui.alignment_board_viewer.volume_export.FilteringAcceptorDecorator} class.
+ * Tests the {@link FilteringAcceptorDecorator} class.
  *
  * @author Les Foster
  */
@@ -53,14 +53,14 @@ public class FilteringAcceptorDecoratorTest {
     @Test
     public void testAddChannelData() throws Exception {
         ChannelMetaData md = MockAcceptor.getTestableMetaData();
-        org.janelia.it.workstation.gui.alignment_board_viewer.volume_export.FilteringAcceptorDecorator filter = new org.janelia.it.workstation.gui.alignment_board_viewer.volume_export.FilteringAcceptorDecorator( wrappedAcceptor, cropCoords );
+        FilteringAcceptorDecorator filter = new FilteringAcceptorDecorator( wrappedAcceptor, cropCoords );
         createChannelAcceptor(md, filter);
         verifyFiteredValues();
     }
 
     @Test
     public void testAddMaskData() throws Exception {
-        org.janelia.it.workstation.gui.alignment_board_viewer.volume_export.FilteringAcceptorDecorator filter = new org.janelia.it.workstation.gui.alignment_board_viewer.volume_export.FilteringAcceptorDecorator( wrappedAcceptor, cropCoords );
+        FilteringAcceptorDecorator filter = new FilteringAcceptorDecorator( wrappedAcceptor, cropCoords );
         createMaskAcceptor(filter);
         verifyFiteredValues();
     }
@@ -115,7 +115,7 @@ public class FilteringAcceptorDecoratorTest {
         }
     }
 
-    private void createChannelAcceptor(ChannelMetaData md, org.janelia.it.workstation.gui.alignment_board_viewer.volume_export.FilteringAcceptorDecorator filter) throws Exception {
+    private void createChannelAcceptor(ChannelMetaData md, FilteringAcceptorDecorator filter) throws Exception {
         byte[] junkData = new byte[] { 12, 12, 12 };
         for ( int i = 0; i < 300; i++ ) {
             for ( int j = 0; j < 300; j++ ) {
@@ -128,7 +128,7 @@ public class FilteringAcceptorDecoratorTest {
         }
     }
 
-    private void createMaskAcceptor(org.janelia.it.workstation.gui.alignment_board_viewer.volume_export.FilteringAcceptorDecorator filter) throws Exception {
+    private void createMaskAcceptor(FilteringAcceptorDecorator filter) throws Exception {
         for ( int i = 0; i < 300; i++ ) {
             for ( int j = 0; j < 300; j++ ) {
                 for ( int k = 0; k < 300; k++ ) {

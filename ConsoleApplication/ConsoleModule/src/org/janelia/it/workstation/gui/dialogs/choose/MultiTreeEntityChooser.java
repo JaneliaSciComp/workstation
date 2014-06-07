@@ -9,6 +9,7 @@ import javax.swing.tree.TreePath;
 import javax.swing.tree.TreeSelectionModel;
 
 import org.janelia.it.jacs.model.entity.EntityData;
+import org.janelia.it.workstation.gui.framework.outline.EntityTree;
 
 
 /**
@@ -21,12 +22,12 @@ public class MultiTreeEntityChooser extends AbstractChooser<EntityData> {
     private final List<String> uniqueIds = new ArrayList<String>();
     private final JTabbedPane tabbedPane;
     
-    public MultiTreeEntityChooser(String title, List<org.janelia.it.workstation.gui.framework.outline.EntityTree> entityTrees) {
+    public MultiTreeEntityChooser(String title, List<EntityTree> entityTrees) {
     	setTitle(title);
         this.tabbedPane = new JTabbedPane();
         
         int i = 1;
-        for(org.janelia.it.workstation.gui.framework.outline.EntityTree entityTree : entityTrees) {
+        for(EntityTree entityTree : entityTrees) {
         	entityTree.getTree().getSelectionModel().setSelectionMode(TreeSelectionModel.SINGLE_TREE_SELECTION);
         	tabbedPane.addTab("Tree #"+i, entityTree);
         	i++;
@@ -37,7 +38,7 @@ public class MultiTreeEntityChooser extends AbstractChooser<EntityData> {
 
     protected List<EntityData> choosePressed() {
     	List<EntityData> chosen = new ArrayList<EntityData>();
-    	org.janelia.it.workstation.gui.framework.outline.EntityTree entityTree = getSelectedTree();
+    	EntityTree entityTree = getSelectedTree();
     	TreePath[] selectionPaths = entityTree.getDynamicTree().getTree().getSelectionPaths();
     	if (selectionPaths==null) return chosen;
         for (TreePath path : selectionPaths) {
@@ -52,7 +53,7 @@ public class MultiTreeEntityChooser extends AbstractChooser<EntityData> {
     	return uniqueIds;
     }
     
-    public org.janelia.it.workstation.gui.framework.outline.EntityTree getSelectedTree() {
-    	return (org.janelia.it.workstation.gui.framework.outline.EntityTree)tabbedPane.getSelectedComponent();
+    public EntityTree getSelectedTree() {
+    	return (EntityTree)tabbedPane.getSelectedComponent();
     }
 }

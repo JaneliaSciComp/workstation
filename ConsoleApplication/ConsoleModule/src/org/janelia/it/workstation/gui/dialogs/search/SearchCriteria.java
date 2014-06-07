@@ -12,6 +12,7 @@ import net.sourceforge.jdatepicker.JDateComponentFactory;
 import net.sourceforge.jdatepicker.impl.JDatePickerImpl;
 
 import org.janelia.it.workstation.gui.dialogs.search.SearchAttribute.DataType;
+import org.janelia.it.workstation.gui.util.Icons;
 
 /**
  * A simple search criteria specified against a SearchAttribute chosen from a list of attributes.
@@ -34,14 +35,14 @@ public abstract class SearchCriteria extends JPanel {
     protected JDatePickerImpl endDatePicker;
     
 	private SearchAttribute attribute;
-	private org.janelia.it.workstation.gui.dialogs.search.CriteriaOperator op;
+	private CriteriaOperator op;
 	
 	public SearchCriteria(List<SearchAttribute> attributes, boolean enableDelete) {
 		
 		setLayout(new FlowLayout(FlowLayout.LEFT));
 		
 		if (enableDelete) {
-	        JButton deleteCriteriaButton = new JButton(org.janelia.it.workstation.gui.util.Icons.getIcon("delete.png"));
+	        JButton deleteCriteriaButton = new JButton(Icons.getIcon("delete.png"));
 	        deleteCriteriaButton.setBorderPainted(false);
 	        deleteCriteriaButton.addActionListener(new ActionListener() {
 				@Override
@@ -113,7 +114,7 @@ public abstract class SearchCriteria extends JPanel {
 			@Override
 			public void actionPerformed(ActionEvent e) {
 				if ("comboBoxChanged".equals(e.getActionCommand())) {
-					setOperator((org.janelia.it.workstation.gui.dialogs.search.CriteriaOperator)operatorBox.getSelectedItem());
+					setOperator((CriteriaOperator)operatorBox.getSelectedItem());
 				}
 			}
 		});
@@ -124,10 +125,10 @@ public abstract class SearchCriteria extends JPanel {
 			termModel.addElement(attribute);
 		}
 		DefaultComboBoxModel operatorModel = (DefaultComboBoxModel)operatorBox.getModel();
-		for(org.janelia.it.workstation.gui.dialogs.search.CriteriaOperator op : org.janelia.it.workstation.gui.dialogs.search.CriteriaOperator.values()) {
+		for(CriteriaOperator op : CriteriaOperator.values()) {
 			operatorModel.addElement(op);
 		}
-		operatorModel.setSelectedItem(org.janelia.it.workstation.gui.dialogs.search.CriteriaOperator.NOT_NULL);
+		operatorModel.setSelectedItem(CriteriaOperator.NOT_NULL);
 	}
 
 	private void setAttribute(SearchAttribute attribute) {
@@ -149,7 +150,7 @@ public abstract class SearchCriteria extends JPanel {
 		revalidate();
 	}
 	
-	private void setOperator(org.janelia.it.workstation.gui.dialogs.search.CriteriaOperator op) {
+	private void setOperator(CriteriaOperator op) {
 		
 		this.op = op;
 		if (op==null) return;
@@ -204,7 +205,7 @@ public abstract class SearchCriteria extends JPanel {
 		return attribute;
 	}
 
-	public org.janelia.it.workstation.gui.dialogs.search.CriteriaOperator getOp() {
+	public CriteriaOperator getOp() {
 		return op;
 	}
 

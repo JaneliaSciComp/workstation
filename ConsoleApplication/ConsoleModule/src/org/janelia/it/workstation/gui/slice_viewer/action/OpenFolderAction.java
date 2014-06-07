@@ -11,12 +11,13 @@ import javax.swing.JFileChooser;
 import javax.swing.JOptionPane;
 
 import org.janelia.it.workstation.gui.slice_viewer.QuadViewUi;
+import org.janelia.it.workstation.gui.viewer3d.interfaces.VolumeImage3d;
 
 public class OpenFolderAction extends AbstractAction 
 {
 	private static final long serialVersionUID = 1L;
 	private JComponent parent;
-	private org.janelia.it.workstation.gui.viewer3d.interfaces.VolumeImage3d image;
+	private VolumeImage3d image;
     private QuadViewUi quadViewUi;
 	private JFileChooser fileChooser = new JFileChooser();
 	

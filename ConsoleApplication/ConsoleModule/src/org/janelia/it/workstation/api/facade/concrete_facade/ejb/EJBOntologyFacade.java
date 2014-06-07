@@ -6,6 +6,8 @@ import org.janelia.it.jacs.model.entity.Entity;
 import org.janelia.it.jacs.model.entity.EntityData;
 import org.janelia.it.jacs.model.ontology.OntologyAnnotation;
 import org.janelia.it.jacs.model.ontology.types.OntologyElementType;
+import org.janelia.it.workstation.api.facade.abstract_facade.OntologyFacade;
+import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
 
 /**
  * Created by IntelliJ IDEA.
@@ -13,36 +15,36 @@ import org.janelia.it.jacs.model.ontology.types.OntologyElementType;
  * Date: 8/5/11
  * Time: 10:48 AM
  */
-public class EJBOntologyFacade extends EJBEntityFacade implements org.janelia.it.workstation.api.facade.abstract_facade.OntologyFacade {
+public class EJBOntologyFacade extends EJBEntityFacade implements OntologyFacade {
     
     public List<Entity> getOntologyRootEntities() throws Exception {
-        return EJBFactory.getRemoteAnnotationBean().getOntologyRootEntities(org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr.getSubjectKey());
+        return EJBFactory.getRemoteAnnotationBean().getOntologyRootEntities(SessionMgr.getSubjectKey());
     }
 
     @Override
     public Entity createOntologyAnnotation(OntologyAnnotation annotation) throws Exception {
-        return EJBFactory.getRemoteAnnotationBean().createOntologyAnnotation(org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr.getSubjectKey(), annotation);
+        return EJBFactory.getRemoteAnnotationBean().createOntologyAnnotation(SessionMgr.getSubjectKey(), annotation);
     }
     
     @Override
     public void removeOntologyAnnotation(Long annotationId) throws Exception {
-        EJBFactory.getRemoteAnnotationBean().removeOntologyAnnotation(org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr.getSubjectKey(), annotationId);
+        EJBFactory.getRemoteAnnotationBean().removeOntologyAnnotation(SessionMgr.getSubjectKey(), annotationId);
     }
 
     @Override
     public Entity createOntologyRoot(String ontologyName) throws Exception {
-        return EJBFactory.getRemoteAnnotationBean().createOntologyRoot(org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr.getSubjectKey(), ontologyName);
+        return EJBFactory.getRemoteAnnotationBean().createOntologyRoot(SessionMgr.getSubjectKey(), ontologyName);
     }
 
     @Override
     public EntityData createOntologyTerm(Long parentEntityId, String label, OntologyElementType type, Integer orderIndex) throws Exception {
-        return EJBFactory.getRemoteAnnotationBean().createOntologyTerm(org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr.getSubjectKey(),
+        return EJBFactory.getRemoteAnnotationBean().createOntologyTerm(SessionMgr.getSubjectKey(),
                 parentEntityId, label, type, orderIndex);
     }
 
     @Override
     public Entity getOntologyTree(Long rootEntityId) throws Exception {
-        return EJBFactory.getRemoteAnnotationBean().getOntologyTree(org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr.getSubjectKey(),
+        return EJBFactory.getRemoteAnnotationBean().getOntologyTree(SessionMgr.getSubjectKey(),
                 rootEntityId);
     }
 

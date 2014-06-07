@@ -1,25 +1,25 @@
 package org.janelia.it.workstation.gui.dataview;
 
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
-import java.awt.event.MouseEvent;
-import java.util.List;
-import java.util.TreeMap;
+import org.janelia.it.jacs.model.entity.EntityAttribute;
+import org.janelia.it.jacs.model.entity.EntityType;
+import org.janelia.it.jacs.shared.solr.SolrUtils;
+import org.janelia.it.jacs.shared.utils.StringUtils;
+import org.janelia.it.workstation.api.entity_model.management.ModelMgr;
+import org.janelia.it.workstation.gui.dialogs.search.SearchResultsPanel;
+import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
+import org.janelia.it.workstation.gui.util.MouseHandler;
+import org.janelia.it.workstation.shared.workers.SimpleWorker;
 
 import javax.swing.*;
 import javax.swing.tree.DefaultMutableTreeNode;
 import javax.swing.tree.DefaultTreeModel;
 import javax.swing.tree.TreeModel;
 import javax.swing.tree.TreePath;
-
-import org.janelia.it.workstation.gui.dialogs.search.SearchResultsPanel;
-import org.janelia.it.workstation.gui.util.MouseHandler;
-import org.janelia.it.workstation.shared.workers.SimpleWorker;
-import org.janelia.it.jacs.compute.api.support.SolrUtils;
-import org.janelia.it.jacs.model.entity.EntityAttribute;
-import org.janelia.it.jacs.model.entity.EntityType;
-import org.janelia.it.jacs.shared.utils.StringUtils;
-import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.awt.event.MouseEvent;
+import java.util.List;
+import java.util.TreeMap;
 
 /**
  * The left-hand panel which lists the Entity types and their attributes.
@@ -85,7 +85,7 @@ public class EntityTypePane extends JScrollPane {
                     }
 
                     try {
-                        org.janelia.it.workstation.api.entity_model.management.ModelMgr.getModelMgr().createEntityType(typeName);
+                        ModelMgr.getModelMgr().createEntityType(typeName);
                         refresh();
                     }
                     catch (Exception x) {
@@ -110,7 +110,7 @@ public class EntityTypePane extends JScrollPane {
                     }
 
                     try {
-                        org.janelia.it.workstation.api.entity_model.management.ModelMgr.getModelMgr().createEntityAttribute(entityType.getName(), attrName);
+                        ModelMgr.getModelMgr().createEntityAttribute(entityType.getName(), attrName);
                         refresh();
                     }
                     catch (Exception x) {
@@ -162,7 +162,7 @@ public class EntityTypePane extends JScrollPane {
             @Override
             protected void doStuff() throws Exception {
 
-                List<EntityType> entityTypes = org.janelia.it.workstation.api.entity_model.management.ModelMgr.getModelMgr().getEntityTypes();
+                List<EntityType> entityTypes = ModelMgr.getModelMgr().getEntityTypes();
                 TreeMap<String, EntityType> sortedCollection = new TreeMap<String, EntityType>();
                 for (EntityType entityType : entityTypes) {
                     sortedCollection.put(entityType.getName(), entityType);

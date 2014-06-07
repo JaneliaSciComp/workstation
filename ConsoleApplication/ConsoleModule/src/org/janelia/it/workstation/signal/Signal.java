@@ -1,23 +1,25 @@
 package org.janelia.it.workstation.signal;
 
+import org.janelia.it.workstation.gui.slice_viewer.BasicSignalSlot;
+
 import java.util.Observable;
 
 
 // Java Observable that acts a bit like a Qt Signal
 public class Signal
 extends Observable
-implements org.janelia.it.workstation.gui.slice_viewer.BasicSignalSlot
+implements BasicSignalSlot
 {
 	public void emit() {
 		setChanged();
 		notifyObservers();
 	}
 	
-	public void connect(org.janelia.it.workstation.gui.slice_viewer.BasicSignalSlot dest) {
+	public void connect(BasicSignalSlot dest) {
 		addObserver(dest);
 	}
 
-	public void disconnect(org.janelia.it.workstation.gui.slice_viewer.BasicSignalSlot dest) {
+	public void disconnect(BasicSignalSlot dest) {
 		deleteObserver(dest);
 	}
 

@@ -1,5 +1,6 @@
 package org.janelia.it.workstation.shared.util;
 
+import java.io.Serializable;
 import java.util.Enumeration;
 import java.util.Hashtable;
 import java.util.Vector;
@@ -14,7 +15,7 @@ import java.util.Vector;
 *  Initially Written by: Peter Davies
 *
 */
-public class MultiHash extends Hashtable implements java.io.Serializable {
+public class MultiHash extends Hashtable implements Serializable {
     /**
      * Put a value into the multiHash...
      * If we don't have a vector fo this key, create one.

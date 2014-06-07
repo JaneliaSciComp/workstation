@@ -14,6 +14,9 @@ import loci.plugins.config.SpringUtilities;
 
 import org.janelia.it.jacs.model.tasks.Event;
 import org.janelia.it.jacs.model.tasks.Task;
+import org.janelia.it.workstation.api.entity_model.management.ModelMgr;
+import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
+import org.janelia.it.workstation.gui.util.Icons;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -122,7 +125,7 @@ public class TaskDetailsDialog extends ModalDialog {
     		endRefresh();
         }
         else {
-        	statusLabel.setIcon(org.janelia.it.workstation.gui.util.Icons.getLoadingIcon());
+        	statusLabel.setIcon(Icons.getLoadingIcon());
         
 	        if (refreshTimer==null || !refreshTimer.isRunning()) {
 	        	refreshTimer = new Timer(REFRESH_DELAY_MS, new ActionListener() {
@@ -130,7 +133,7 @@ public class TaskDetailsDialog extends ModalDialog {
 					public void actionPerformed(ActionEvent e) {
 						try {
 							log.debug("Refresh "+taskId);
-							final Task updatedTask = org.janelia.it.workstation.api.entity_model.management.ModelMgr.getModelMgr().getTaskById(taskId);
+							final Task updatedTask = ModelMgr.getModelMgr().getTaskById(taskId);
 							SwingUtilities.invokeLater(new Runnable() {
 								@Override
 								public void run() {
@@ -139,7 +142,7 @@ public class TaskDetailsDialog extends ModalDialog {
 							});
 						}
 						catch (Exception error) {
-							org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr.getSessionMgr().handleException(error);
+							SessionMgr.getSessionMgr().handleException(error);
 						}
 					}
 				});

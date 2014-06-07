@@ -8,6 +8,9 @@ import java.awt.event.ActionListener;
 import javax.swing.JMenu;
 import javax.swing.JMenuItem;
 
+import org.janelia.it.workstation.api.entity_model.management.ModelMgrUtils;
+import org.janelia.it.workstation.gui.framework.actions.Action;
+import org.janelia.it.workstation.gui.framework.actions.CreateOntologyTermAction;
 import org.janelia.it.workstation.gui.framework.actions.RemoveAnnotationTermAction;
 import org.janelia.it.jacs.model.ontology.OntologyElement;
 import org.janelia.it.jacs.model.ontology.types.Category;
@@ -19,15 +22,19 @@ import org.janelia.it.jacs.model.ontology.types.Interval;
 import org.janelia.it.jacs.model.ontology.types.OntologyElementType;
 import org.janelia.it.jacs.model.ontology.types.Tag;
 import org.janelia.it.jacs.model.ontology.types.Text;
+import org.janelia.it.workstation.gui.framework.console.Browser;
+import org.janelia.it.workstation.gui.framework.outline.EntityContextMenu;
+import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
+import org.janelia.it.workstation.model.entity.RootedEntity;
 
 /**
  * Context pop up menu for ontology elements.
  * 
  * @author <a href="mailto:rokickik@janelia.hhmi.org">Konrad Rokicki</a>
  */
-public class OntologyContextMenu extends org.janelia.it.workstation.gui.framework.outline.EntityContextMenu {
+public class OntologyContextMenu extends EntityContextMenu {
 
-    protected static final org.janelia.it.workstation.gui.framework.console.Browser browser = org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr.getBrowser();
+    protected static final Browser browser = SessionMgr.getBrowser();
 
     // Current selection
     protected final OntologyElement ontologyElement;
@@ -35,7 +42,7 @@ public class OntologyContextMenu extends org.janelia.it.workstation.gui.framewor
     // Internal state
     protected boolean nextAddRequiresSeparator = false;
 
-    public OntologyContextMenu(org.janelia.it.workstation.model.entity.RootedEntity rootedEntity, OntologyElement ontologyElement) {
+    public OntologyContextMenu(RootedEntity rootedEntity, OntologyElement ontologyElement) {
         super(rootedEntity);
         this.ontologyElement = ontologyElement;
         checkNotNull(rootedEntity, "Rooted entity cannot be null");
@@ -62,7 +69,7 @@ public class OntologyContextMenu extends org.janelia.it.workstation.gui.framewor
         menuItem.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr.getBrowser().getOntologyOutline().assignShortcutForCurrentNode();
+                SessionMgr.getBrowser().getOntologyOutline().assignShortcutForCurrentNode();
             }
         });
         return menuItem;
@@ -82,7 +89,7 @@ public class OntologyContextMenu extends org.janelia.it.workstation.gui.framewor
             smi.addActionListener(new ActionListener() {
                 @Override
                 public void actionPerformed(ActionEvent e) {
-                    org.janelia.it.workstation.gui.framework.actions.Action action = new org.janelia.it.workstation.gui.framework.actions.CreateOntologyTermAction(EnumItem.class.getSimpleName());
+                    Action action = new CreateOntologyTermAction(EnumItem.class.getSimpleName());
                     action.doAction();
                 }
             });
@@ -97,19 +104,19 @@ public class OntologyContextMenu extends org.janelia.it.workstation.gui.framewor
                     smi.addActionListener(new ActionListener() {
                         @Override
                         public void actionPerformed(ActionEvent e) {
-                            org.janelia.it.workstation.gui.framework.actions.Action action = new org.janelia.it.workstation.gui.framework.actions.CreateOntologyTermAction(nodeType.getSimpleName());
+                            Action action = new CreateOntologyTermAction(nodeType.getSimpleName());
                             action.doAction();
                         }
                     });
                     addMenuPopup.add(smi);
                 }
                 catch (Exception ex) {
-                    org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr.getSessionMgr().handleException(ex);
+                    SessionMgr.getSessionMgr().handleException(ex);
                 }
             }
         }
 
-        if (!org.janelia.it.workstation.api.entity_model.management.ModelMgrUtils.hasWriteAccess(rootedEntity.getEntity())) {
+        if (!ModelMgrUtils.hasWriteAccess(rootedEntity.getEntity())) {
             addMenuPopup.setEnabled(false);
         }
         

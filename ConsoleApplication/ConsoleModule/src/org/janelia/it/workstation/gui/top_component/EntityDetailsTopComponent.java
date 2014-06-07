@@ -6,7 +6,9 @@
 package org.janelia.it.workstation.gui.top_component;
 
 import java.awt.BorderLayout;
+import java.util.Properties;
 
+import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
 import org.netbeans.api.settings.ConvertAsProperties;
 import org.openide.awt.ActionID;
 import org.openide.awt.ActionReference;
@@ -25,9 +27,9 @@ import org.openide.util.NbBundle.Messages;
         //iconBase="SET/PATH/TO/ICON/HERE", 
         persistenceType = TopComponent.PERSISTENCE_ALWAYS
 )
-@TopComponent.Registration(mode = "appExplorerBtm", openAtStartup = true)
+@TopComponent.Registration(mode = "appExplorerBtm", openAtStartup = true, position = 100)
 @ActionID(category = "Window", id = "org.janelia.it.workstation.gui.dialogs.nb.EntityDetailsTopComponent")
-@ActionReference(path = "Menu/Window" /*, position = 333 */)
+@ActionReference(path = "Menu/Window", position = 100 )
 @TopComponent.OpenActionRegistration(
         displayName = "#CTL_EntityDetailsAction",
         preferredID = "EntityDetailsTopComponent"
@@ -43,8 +45,7 @@ public final class EntityDetailsTopComponent extends TopComponent {
         initComponents();
         setName(Bundle.CTL_EntityDetailsTopComponent());
         setToolTipText(Bundle.HINT_EntityDetailsTopComponent());
-        jPanel1.setLayout( new BorderLayout() );
-        jPanel1.add( org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr.getBrowser().getEntityDetailsOutline(), BorderLayout.CENTER );
+        jPanel1.add( SessionMgr.getBrowser().getEntityDetailsOutline(), BorderLayout.CENTER );
     }
 
     /**
@@ -57,16 +58,7 @@ public final class EntityDetailsTopComponent extends TopComponent {
 
         jPanel1 = new javax.swing.JPanel();
 
-        javax.swing.GroupLayout jPanel1Layout = new javax.swing.GroupLayout(jPanel1);
-        jPanel1.setLayout(jPanel1Layout);
-        jPanel1Layout.setHorizontalGroup(
-            jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGap(0, 400, Short.MAX_VALUE)
-        );
-        jPanel1Layout.setVerticalGroup(
-            jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGap(0, 300, Short.MAX_VALUE)
-        );
+        jPanel1.setLayout(new java.awt.BorderLayout());
 
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(this);
         this.setLayout(layout);
@@ -93,14 +85,14 @@ public final class EntityDetailsTopComponent extends TopComponent {
         // TODO add custom code on component closing
     }
 
-    void writeProperties(java.util.Properties p) {
+    void writeProperties(Properties p) {
         // better to version settings since initial version as advocated at
         // http://wiki.apidesign.org/wiki/PropertyFiles
         p.setProperty("version", "1.0");
         // TODO store your settings
     }
 
-    void readProperties(java.util.Properties p) {
+    void readProperties(Properties p) {
         String version = p.getProperty("version");
         // TODO read your settings according to their version
     }

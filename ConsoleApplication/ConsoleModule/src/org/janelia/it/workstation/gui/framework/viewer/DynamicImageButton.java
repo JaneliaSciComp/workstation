@@ -17,7 +17,7 @@ public class DynamicImageButton extends AnnotatedImageButton {
 
     private DynamicImagePanel dynamicImagePanel;
 
-    public DynamicImageButton(final RootedEntity rootedEntity, final org.janelia.it.workstation.gui.framework.viewer.IconPanel iconPanel) {
+    public DynamicImageButton(final RootedEntity rootedEntity, final IconPanel iconPanel) {
         super(rootedEntity, iconPanel);
     }
 
@@ -34,12 +34,6 @@ public class DynamicImageButton extends AnnotatedImageButton {
         // asynchronously within the the load image worker
         this.dynamicImagePanel = new DynamicImagePanel(filepath, ImagesPanel.MAX_IMAGE_WIDTH) {
             protected void syncToViewerState() {
-//            	this.displaySize = iconPanel.getImagesPanel().getMaxImageWidth();
-//        		Boolean invertImages = (Boolean)SessionMgr.getSessionMgr().getModelProperty(
-//        				ViewerSettingsPanel.INVERT_IMAGE_COLORS_PROPERTY);
-//                if (invertImages!=null && invertImages) {
-//                	setInvertedColors(true);
-//                }
             }
         };
         return dynamicImagePanel;
@@ -54,11 +48,6 @@ public class DynamicImageButton extends AnnotatedImageButton {
         super.setImageSize(width, height);
         dynamicImagePanel.rescaleImage(width);
         dynamicImagePanel.setPreferredSize(new Dimension(width, height));
-    }
-
-    @Override
-    public void setInvertedColors(boolean inverted) {
-        dynamicImagePanel.setInvertedColors(inverted);
     }
 
     @Override

@@ -3,6 +3,7 @@ package org.janelia.it.workstation.api.facade.facade_mgr;
 import java.util.*;
 
 import org.janelia.it.workstation.api.facade.roles.ExceptionHandler;
+import org.janelia.it.workstation.api.stub.data.NoDataException;
 
 public class FacadeManager {
 
@@ -141,16 +142,16 @@ public class FacadeManager {
     }
 
     /** Added synch keyword because had seen NPE during runs from NetBeans IDE. */
-    static synchronized public org.janelia.it.workstation.api.facade.facade_mgr.FacadeManagerBase getFacadeManager() {
+    static synchronized public FacadeManagerBase getFacadeManager() {
     	return getFacadeManager(getProtocol());
     }
 
-    static public org.janelia.it.workstation.api.facade.facade_mgr.FacadeManagerBase getFacadeManager(String protocol) {
+    static public FacadeManagerBase getFacadeManager(String protocol) {
         try {
-            org.janelia.it.workstation.api.facade.facade_mgr.FacadeManagerBase concreteFacade = (org.janelia.it.workstation.api.facade.facade_mgr.FacadeManagerBase) concreteFacades.get(protocol);
+            FacadeManagerBase concreteFacade = (FacadeManagerBase) concreteFacades.get(protocol);
             if (concreteFacade != null) return concreteFacade;
             else {
-                concreteFacade = (org.janelia.it.workstation.api.facade.facade_mgr.FacadeManagerBase) ((Class) concreteFacadesClasses.get(protocol)).newInstance();
+                concreteFacade = (FacadeManagerBase) ((Class) concreteFacadesClasses.get(protocol)).newInstance();
                 concreteFacades.put(protocol, concreteFacade);
                 return concreteFacade;
             }
@@ -164,15 +165,15 @@ public class FacadeManager {
 
     static public ConnectionStatus addProtocolToUseList(String protocol) {
         if (inUseProtocols.contains(protocol)) {
-            return org.janelia.it.workstation.api.facade.facade_mgr.FacadeManagerBase.CONNECTION_STATUS_OK;
+            return FacadeManagerBase.CONNECTION_STATUS_OK;
         }
         // todo Shouldn't this be a HashSet?
         inUseProtocols.add(protocol);
-        org.janelia.it.workstation.api.facade.facade_mgr.FacadeManagerBase concreteFacade = (org.janelia.it.workstation.api.facade.facade_mgr.FacadeManagerBase) concreteFacades.get(protocol);
+        FacadeManagerBase concreteFacade = (FacadeManagerBase) concreteFacades.get(protocol);
         try {
             // If this protocol does not have a corresponding concrete facade in the list create it.
             if (concreteFacade == null) {
-                concreteFacade = (org.janelia.it.workstation.api.facade.facade_mgr.FacadeManagerBase) ((Class) concreteFacadesClasses.get(protocol)).newInstance();
+                concreteFacade = (FacadeManagerBase) ((Class) concreteFacadesClasses.get(protocol)).newInstance();
                 concreteFacades.put(protocol, concreteFacade);
             }
         }
@@ -180,10 +181,10 @@ public class FacadeManager {
             handleException(e);
         }
         ConnectionStatus status = concreteFacade.initiateConnection();
-        if (status != org.janelia.it.workstation.api.facade.facade_mgr.FacadeManagerBase.CONNECTION_STATUS_OK) {
+        if (status != FacadeManagerBase.CONNECTION_STATUS_OK) {
             concreteFacades.remove(protocol);
             inUseProtocols.remove(protocol);
-            if (status == org.janelia.it.workstation.api.facade.facade_mgr.FacadeManagerBase.CONNECTION_STATUS_BAD_CREDENTIALS) {
+            if (status == FacadeManagerBase.CONNECTION_STATUS_BAD_CREDENTIALS) {
                 return status;
             }
             else {
@@ -193,7 +194,7 @@ public class FacadeManager {
         }
         if (protocolListeners != null) {
             for (Object protocolListener : protocolListeners) {
-                ((org.janelia.it.workstation.api.facade.facade_mgr.InUseProtocolListener) protocolListener).protocolAddedToInUseList(protocol);
+                ((InUseProtocolListener) protocolListener).protocolAddedToInUseList(protocol);
             }
         }
         return status;
@@ -202,8 +203,8 @@ public class FacadeManager {
 
     static public void removeProtocolFromUseList(String protocol) {
         if (protocolListeners != null && concreteFacades.containsKey(protocol)) {
-            org.janelia.it.workstation.api.facade.facade_mgr.InUseProtocolListener[] listeners = (org.janelia.it.workstation.api.facade.facade_mgr.InUseProtocolListener[]) protocolListeners.toArray(new org.janelia.it.workstation.api.facade.facade_mgr.InUseProtocolListener[0]);
-            for (org.janelia.it.workstation.api.facade.facade_mgr.InUseProtocolListener listener : listeners) {
+            InUseProtocolListener[] listeners = (InUseProtocolListener[]) protocolListeners.toArray(new InUseProtocolListener[0]);
+            for (InUseProtocolListener listener : listeners) {
                 listener.protocolRemovedFromInUseList(protocol);
             }
         }
@@ -229,12 +230,12 @@ public class FacadeManager {
     }
 
     static public boolean canProtocolAddMoreDataSources(String protocol) {
-        org.janelia.it.workstation.api.facade.facade_mgr.FacadeManagerBase base = getFacadeManager(protocol);
+        FacadeManagerBase base = getFacadeManager(protocol);
         return base.canAddMoreDataSources();
     }
 
 
-    static public void addInUseProtocolListener(org.janelia.it.workstation.api.facade.facade_mgr.InUseProtocolListener protocolListener) {
+    static public void addInUseProtocolListener(InUseProtocolListener protocolListener) {
         if (protocolListeners == null) protocolListeners = new Vector();
         protocolListeners.add(protocolListener);
         for (Object inUseProtocol : inUseProtocols) {
@@ -242,7 +243,7 @@ public class FacadeManager {
         }
     }
 
-    static public void removeInUseProtocolListener(org.janelia.it.workstation.api.facade.facade_mgr.InUseProtocolListener protocolListener) {
+    static public void removeInUseProtocolListener(InUseProtocolListener protocolListener) {
         if (protocolListeners == null) return;
         protocolListeners.remove(protocolListener);
     }
@@ -257,22 +258,22 @@ public class FacadeManager {
     }
 
 
-    static public org.janelia.it.workstation.api.facade.facade_mgr.DataSourceSelector getDataSourceSelectorForProtocol(String protocol) {
-        org.janelia.it.workstation.api.facade.facade_mgr.FacadeManagerBase base = getFacadeManager(protocol);
+    static public DataSourceSelector getDataSourceSelectorForProtocol(String protocol) {
+        FacadeManagerBase base = getFacadeManager(protocol);
         String className = base.getDataSourceSelectorClass();
         if (className == null) return null;
         try {
             Class[] supportedInterfaces = Class.forName(className).getInterfaces();
             boolean supported = false;
             for (Class supportedInterface : supportedInterfaces) {
-                if (supportedInterface.equals(org.janelia.it.workstation.api.facade.facade_mgr.DataSourceSelector.class)) {
+                if (supportedInterface.equals(DataSourceSelector.class)) {
                     supported = true;
                     break;
                 }
             }
             if (!supported)
                 throw new IllegalStateException("Class " + className + " returned by " + "protocol " + protocol + " as a DataSourceSelector does not support the " + "DataSourceSelector interface.");
-            return (org.janelia.it.workstation.api.facade.facade_mgr.DataSourceSelector) Class.forName(className).newInstance();
+            return (DataSourceSelector) Class.forName(className).newInstance();
         }
         catch (Exception ex) {
             throw new IllegalStateException("Class " + className + " returned by " + "protocol " + protocol + " as a DataSourceSelector cannot be " + "instanciated. " + ex.toString());
@@ -289,7 +290,7 @@ public class FacadeManager {
         	throwable.printStackTrace();
         	return;
         }
-        if (throwable instanceof org.janelia.it.workstation.api.stub.data.NoDataException) return;
+        if (throwable instanceof NoDataException) return;
         for (Enumeration e = exceptionHandlers.elements(); e.hasMoreElements(); )
             ((ExceptionHandler) e.nextElement()).handleException(throwable);
     }

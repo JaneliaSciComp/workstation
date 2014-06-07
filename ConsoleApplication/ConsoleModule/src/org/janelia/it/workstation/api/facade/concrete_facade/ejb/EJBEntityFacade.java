@@ -3,6 +3,8 @@ package org.janelia.it.workstation.api.facade.concrete_facade.ejb;
 import org.janelia.it.jacs.compute.api.support.MappedId;
 import org.janelia.it.jacs.model.entity.*;
 import org.janelia.it.jacs.model.user_data.tiledMicroscope.*;
+import org.janelia.it.workstation.api.facade.abstract_facade.EntityFacade;
+import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -16,7 +18,7 @@ import java.util.Set;
  * Date: 8/5/11
  * Time: 10:49 AM
  */
-public class EJBEntityFacade implements org.janelia.it.workstation.api.facade.abstract_facade.EntityFacade {
+public class EJBEntityFacade implements EntityFacade {
     @Override
     public List<EntityType> getEntityTypes() throws Exception {
         return EJBFactory.getRemoteEntityBean().getEntityTypes();
@@ -29,54 +31,49 @@ public class EJBEntityFacade implements org.janelia.it.workstation.api.facade.ab
     
     @Override
     public Entity getEntityById(Long entityId) throws Exception {
-        return EJBFactory.getRemoteEntityBean().getEntityById(org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr.getSubjectKey(), entityId);
+        return EJBFactory.getRemoteEntityBean().getEntityById(SessionMgr.getSubjectKey(), entityId);
     }
     
     @Override
     public List<Entity> getEntitiesById(List<Long> entityIds) throws Exception {
-        return EJBFactory.getRemoteEntityBean().getEntitiesById(org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr.getSubjectKey(), entityIds);
+        return EJBFactory.getRemoteEntityBean().getEntitiesById(SessionMgr.getSubjectKey(), entityIds);
     }
     
     @Override
     public Entity getEntityTree(Long entityId) throws Exception {
-        return EJBFactory.getRemoteEntityBean().getEntityTree(org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr.getSubjectKey(), entityId);
+        return EJBFactory.getRemoteEntityBean().getEntityTree(SessionMgr.getSubjectKey(), entityId);
     }
 
     @Override
     public Entity getEntityAndChildren(Long entityId) throws Exception {
-        return EJBFactory.getRemoteEntityBean().getEntityAndChildren(org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr.getSubjectKey(), entityId);
+        return EJBFactory.getRemoteEntityBean().getEntityAndChildren(SessionMgr.getSubjectKey(), entityId);
     }
 
     @Override
     public ArrayList<Entity> getEntitiesByName(String entityName) throws Exception {
-        return new ArrayList<Entity>(EJBFactory.getRemoteEntityBean().getEntitiesByName(org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr.getSubjectKey(), entityName));
+        return new ArrayList<Entity>(EJBFactory.getRemoteEntityBean().getEntitiesByName(SessionMgr.getSubjectKey(), entityName));
     }
 
     @Override
     public ArrayList<Entity> getOwnedEntitiesByName(String entityName) throws Exception {
-        return new ArrayList<Entity>(EJBFactory.getRemoteEntityBean().getUserEntitiesByName(org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr.getSubjectKey(), entityName));
+        return new ArrayList<Entity>(EJBFactory.getRemoteEntityBean().getUserEntitiesByName(SessionMgr.getSubjectKey(), entityName));
     }
 
     @Override
-    public List<Entity> getCommonRootEntities() throws Exception {
-        return EJBFactory.getRemoteAnnotationBean().getCommonRootEntities(org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr.getSubjectKey());
-    }
-    
-    @Override
     public List<Entity> getAlignmentSpaces() throws Exception {
-        return EJBFactory.getRemoteAnnotationBean().getAlignmentSpaces(org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr.getSubjectKey());
+        return EJBFactory.getRemoteAnnotationBean().getAlignmentSpaces(SessionMgr.getSubjectKey());
     }
     
     @Override
     public List<List<EntityData>> getPathsToRoots(Long entityId) throws Exception {
-    	Entity entity = EJBFactory.getRemoteEntityBean().getEntityById(org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr.getSubjectKey(), entityId);
-    	return EJBFactory.getRemoteEntityBean().getPathsToRoots(org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr.getSubjectKey(), entity.getId());
+    	Entity entity = EJBFactory.getRemoteEntityBean().getEntityById(SessionMgr.getSubjectKey(), entityId);
+    	return EJBFactory.getRemoteEntityBean().getPathsToRoots(SessionMgr.getSubjectKey(), entity.getId());
     }
     
     @Override
     public List<EntityData> getParentEntityDatas(Long childEntityId) throws Exception {
     	List<EntityData> list = new ArrayList<EntityData>();
-    	Set<EntityData> set = EJBFactory.getRemoteEntityBean().getParentEntityDatas(org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr.getSubjectKey(), childEntityId);
+    	Set<EntityData> set = EJBFactory.getRemoteEntityBean().getParentEntityDatas(SessionMgr.getSubjectKey(), childEntityId);
     	if (set==null) return list;
     	list.addAll(set);
         return list;
@@ -94,7 +91,7 @@ public class EJBEntityFacade implements org.janelia.it.workstation.api.facade.ab
     @Override
     public Set<Long> getParentIdsForAttribute(long childEntityId, String attributeName) throws Exception {
     	Set<Long> set = new HashSet<Long>();
-    	Set<Long> results = EJBFactory.getRemoteEntityBean().getParentIdsForAttribute(org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr.getSubjectKey(), childEntityId, attributeName);
+    	Set<Long> results = EJBFactory.getRemoteEntityBean().getParentIdsForAttribute(SessionMgr.getSubjectKey(), childEntityId, attributeName);
     	if (results==null) return set;
     	set.addAll(results);
         return set;
@@ -103,7 +100,7 @@ public class EJBEntityFacade implements org.janelia.it.workstation.api.facade.ab
     @Override
     public List<Entity> getParentEntities(Long childEntityId) throws Exception {
     	List<Entity> list = new ArrayList<Entity>();
-    	Set<Entity> set = EJBFactory.getRemoteEntityBean().getParentEntities(org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr.getSubjectKey(), childEntityId);
+    	Set<Entity> set = EJBFactory.getRemoteEntityBean().getParentEntities(SessionMgr.getSubjectKey(), childEntityId);
     	if (set==null) return list;
     	list.addAll(set);
         return list;
@@ -111,77 +108,77 @@ public class EJBEntityFacade implements org.janelia.it.workstation.api.facade.ab
     
     @Override
     public Set<Entity> getChildEntities(Long parentEntityId) throws Exception {
-        String user = org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr.getSubjectKey();
+        String user = SessionMgr.getSubjectKey();
         return EJBFactory.getRemoteEntityBean().getChildEntities(user, parentEntityId);
     }
 
     @Override
     public List<Entity> getEntitiesByTypeName(String entityTypeName) throws Exception {
-        return EJBFactory.getRemoteEntityBean().getEntitiesByTypeName(org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr.getSubjectKey(), entityTypeName);
+        return EJBFactory.getRemoteEntityBean().getEntitiesByTypeName(SessionMgr.getSubjectKey(), entityTypeName);
     }
     
     @Override
     public List<Entity> getOwnedEntitiesByTypeName(String entityTypeName) throws Exception {
-        return EJBFactory.getRemoteEntityBean().getUserEntitiesByTypeName(org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr.getSubjectKey(), entityTypeName);
+        return EJBFactory.getRemoteEntityBean().getUserEntitiesByTypeName(SessionMgr.getSubjectKey(), entityTypeName);
     }
 
     @Override
     public Entity saveEntity(Entity entity) throws Exception {
-        return EJBFactory.getRemoteEntityBean().saveOrUpdateEntity(org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr.getSubjectKey(), entity);
+        return EJBFactory.getRemoteEntityBean().saveOrUpdateEntity(SessionMgr.getSubjectKey(), entity);
     }
     
     @Override
     public EntityData saveEntityDataForEntity(EntityData newData) throws Exception {
-        return EJBFactory.getRemoteEntityBean().saveOrUpdateEntityData(org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr.getSubjectKey(), newData);
+        return EJBFactory.getRemoteEntityBean().saveOrUpdateEntityData(SessionMgr.getSubjectKey(), newData);
     }
 
     @Override
     public boolean deleteEntityById(Long entityId) throws Exception {
-        return EJBFactory.getRemoteEntityBean().deleteEntityById(org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr.getSubjectKey(), entityId);
+        return EJBFactory.getRemoteEntityBean().deleteEntityById(SessionMgr.getSubjectKey(), entityId);
     }
 
     @Override
     public void deleteEntityTree(Long entityId) throws Exception {
-        EJBFactory.getRemoteEntityBean().deleteEntityTreeById(org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr.getSubjectKey(), entityId);
+        EJBFactory.getRemoteEntityBean().deleteEntityTreeById(SessionMgr.getSubjectKey(), entityId);
     }
     
     @Override
     public void deleteEntityTree(Long entityId, boolean unlinkMultipleParents) throws Exception {
-	    EJBFactory.getRemoteEntityBean().deleteEntityTreeById(org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr.getSubjectKey(), entityId, unlinkMultipleParents);
+	    EJBFactory.getRemoteEntityBean().deleteEntityTreeById(SessionMgr.getSubjectKey(), entityId, unlinkMultipleParents);
     }
     
     @Override
     public Entity createEntity(String entityTypeName, String entityName) throws Exception {
-        return EJBFactory.getRemoteEntityBean().createEntity(org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr.getSubjectKey(), entityTypeName, entityName);
+        return EJBFactory.getRemoteEntityBean().createEntity(SessionMgr.getSubjectKey(), entityTypeName, entityName);
     }
 
     @Override
     public EntityData addEntityToParent(Entity parent, Entity entity, Integer index, String attrName) throws Exception {
-        return EJBFactory.getRemoteEntityBean().addEntityToParent(org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr.getSubjectKey(), parent.getId(), entity.getId(), index, attrName);
+        return EJBFactory.getRemoteEntityBean().addEntityToParent(SessionMgr.getSubjectKey(), parent.getId(), entity.getId(), index, attrName);
     }
 
     @Override
     public EntityData updateChildIndex(EntityData entityData, Integer orderIndex) throws Exception {
-        return EJBFactory.getRemoteEntityBean().updateChildIndex(org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr.getSubjectKey(), entityData, orderIndex);
+        return EJBFactory.getRemoteEntityBean().updateChildIndex(SessionMgr.getSubjectKey(), entityData, orderIndex);
     }
 
     @Override
     public Entity updateChildIndexes(Entity entity) throws Exception {
-        return EJBFactory.getRemoteEntityBean().saveOrUpdateEntityDatas(org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr.getSubjectKey(), entity);
+        return EJBFactory.getRemoteEntityBean().saveOrUpdateEntityDatas(SessionMgr.getSubjectKey(), entity);
     }
     
     @Override
     public EntityData setOrUpdateValue(Long entityId, String attributeName, String value) throws Exception {
-        return EJBFactory.getRemoteEntityBean().setOrUpdateValue(org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr.getSubjectKey(), entityId, attributeName, value);
+        return EJBFactory.getRemoteEntityBean().setOrUpdateValue(SessionMgr.getSubjectKey(), entityId, attributeName, value);
     }
     
     public Collection<EntityData> setOrUpdateValues(Collection<Long> entityIds, String attributeName, String value) throws Exception {
-        return EJBFactory.getRemoteEntityBean().setOrUpdateValues(org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr.getSubjectKey(), entityIds, attributeName, value);
+        return EJBFactory.getRemoteEntityBean().setOrUpdateValues(SessionMgr.getSubjectKey(), entityIds, attributeName, value);
     }
     
     @Override
     public void removeEntityData(EntityData ed) throws Exception {
-        EJBFactory.getRemoteEntityBean().deleteEntityData(org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr.getSubjectKey(), ed.getId());
+        EJBFactory.getRemoteEntityBean().deleteEntityData(SessionMgr.getSubjectKey(), ed.getId());
     }
 
     public void createEntityType(String typeName) throws Exception {
@@ -193,36 +190,50 @@ public class EJBEntityFacade implements org.janelia.it.workstation.api.facade.ab
     }
     
     public Entity getAncestorWithType(Entity entity, String typeName) throws Exception {
-    	return EJBFactory.getRemoteEntityBean().getAncestorWithType(org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr.getSubjectKey(), entity.getId(), typeName);
+    	return EJBFactory.getRemoteEntityBean().getAncestorWithType(SessionMgr.getSubjectKey(), entity.getId(), typeName);
     }
 
 	public void addChildren(Long parentId, List<Long> childrenIds, String attributeName) throws Exception {
-    	EJBFactory.getRemoteEntityBean().addChildren(org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr.getSubjectKey(), parentId, childrenIds, attributeName);
+    	EJBFactory.getRemoteEntityBean().addChildren(SessionMgr.getSubjectKey(), parentId, childrenIds, attributeName);
 	}
 	
 	public List<MappedId> getProjectedResults(List<Long> entityIds, List<String> upMapping, List<String> downMapping) throws Exception {
-		return EJBFactory.getRemoteEntityBean().getProjectedResults(org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr.getSubjectKey(), entityIds, upMapping, downMapping);
+		return EJBFactory.getRemoteEntityBean().getProjectedResults(SessionMgr.getSubjectKey(), entityIds, upMapping, downMapping);
 	}
 
 	public Set<EntityActorPermission> getFullPermissions(Long entityId) throws Exception {
-	    return EJBFactory.getRemoteEntityBean().getFullPermissions(org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr.getSubjectKey(), entityId);
+	    return EJBFactory.getRemoteEntityBean().getFullPermissions(SessionMgr.getSubjectKey(), entityId);
 	}
 	
     @Override
     public EntityActorPermission grantPermissions(Long entityId, String granteeKey, String permissions, boolean recursive) throws Exception {
-    	return EJBFactory.getRemoteEntityBean().grantPermissions(org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr.getSubjectKey(), entityId, granteeKey, permissions, recursive);
+    	return EJBFactory.getRemoteEntityBean().grantPermissions(SessionMgr.getSubjectKey(), entityId, granteeKey, permissions, recursive);
     }
 
     @Override
     public void revokePermissions(Long entityId, String revokeeKey, boolean recursive) throws Exception {
-    	EJBFactory.getRemoteEntityBean().revokePermissions(org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr.getSubjectKey(), entityId, revokeeKey, recursive);
+    	EJBFactory.getRemoteEntityBean().revokePermissions(SessionMgr.getSubjectKey(), entityId, revokeeKey, recursive);
     }
     
     @Override
     public EntityActorPermission saveOrUpdatePermission(EntityActorPermission eap) throws Exception {
-    	return EJBFactory.getRemoteEntityBean().saveOrUpdatePermission(org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr.getSubjectKey(), eap);
+    	return EJBFactory.getRemoteEntityBean().saveOrUpdatePermission(SessionMgr.getSubjectKey(), eap);
     }
 
+    @Override
+    public List<Entity> getWorkspaces() throws Exception {
+    	return EJBFactory.getRemoteEntityBean().getWorkspaces(SessionMgr.getSubjectKey());
+    }
+
+    @Override
+    public EntityData addRootToWorkspace(Long workspaceId, Long entityId) throws Exception {
+    	return EJBFactory.getRemoteEntityBean().addRootToWorkspace(SessionMgr.getSubjectKey(), workspaceId, entityId);
+    }
+    
+    @Override
+    public EntityData createFolderInWorkspace(Long workspaceId, String entityName) throws Exception {
+    	return EJBFactory.getRemoteEntityBean().createFolderInWorkspace(SessionMgr.getSubjectKey(), workspaceId, entityName);
+    }
 
     // Addition of the interface for the Tiled Microscope Data
     @Override

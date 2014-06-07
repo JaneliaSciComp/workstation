@@ -10,6 +10,7 @@ import org.janelia.it.workstation.octree.ZoomedVoxelIndex;
 import org.janelia.it.workstation.signal.Signal;
 import org.janelia.it.workstation.signal.Signal1;
 import org.janelia.it.workstation.signal.Slot1;
+import org.janelia.it.workstation.tracing.AnchoredVoxelPath;
 import org.janelia.it.workstation.tracing.SegmentIndex;
 import org.janelia.it.jacs.model.user_data.tiledMicroscope.*;
 
@@ -128,8 +129,8 @@ public class SliceViewerTranslator {
     public Signal clearSkeletonSignal = new Signal();
     public Signal1<Long> setNextParentSignal = new Signal1<Long>();
 
-    public Signal1<org.janelia.it.workstation.tracing.AnchoredVoxelPath> anchoredPathAddedSignal = new Signal1<org.janelia.it.workstation.tracing.AnchoredVoxelPath>();
-    public Signal1<org.janelia.it.workstation.tracing.AnchoredVoxelPath> anchoredPathRemovedSignal = new Signal1<org.janelia.it.workstation.tracing.AnchoredVoxelPath>();
+    public Signal1<AnchoredVoxelPath> anchoredPathAddedSignal = new Signal1<AnchoredVoxelPath>();
+    public Signal1<AnchoredVoxelPath> anchoredPathRemovedSignal = new Signal1<AnchoredVoxelPath>();
 
     public Signal1<Color> changeGlobalColorSignal = new Signal1<Color>();
     public Signal1<String> loadColorModelSignal = new Signal1<String>();
@@ -300,7 +301,7 @@ public class SliceViewerTranslator {
      * @param path = TmAnchoredPath
      * @return corresponding AnchoredVoxelPath
      */
-    private org.janelia.it.workstation.tracing.AnchoredVoxelPath TAP2AVP(TmAnchoredPath path) {
+    private AnchoredVoxelPath TAP2AVP(TmAnchoredPath path) {
         // prepare the data:
         TmAnchoredPathEndpoints endpoints = path.getEndpoints();
         final SegmentIndex inputSegmentIndex = new SegmentIndex(endpoints.getAnnotationID1(),
@@ -312,7 +313,7 @@ public class SliceViewerTranslator {
         }
 
         // do a quick implementation of the interface:
-        org.janelia.it.workstation.tracing.AnchoredVoxelPath voxelPath = new org.janelia.it.workstation.tracing.AnchoredVoxelPath() {
+        AnchoredVoxelPath voxelPath = new AnchoredVoxelPath() {
             SegmentIndex segmentIndex;
             List<ZoomedVoxelIndex> path;
 

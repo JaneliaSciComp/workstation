@@ -1,5 +1,8 @@
 package org.janelia.it.workstation.gui.framework.viewer.baseball_card;
 
+import org.janelia.it.workstation.api.entity_model.management.ModelMgr;
+import org.janelia.it.workstation.gui.framework.viewer.DynamicImagePanel;
+import org.janelia.it.workstation.gui.framework.viewer.ImagesPanel;
 import org.janelia.it.workstation.shared.workers.SimpleWorker;
 import org.janelia.it.jacs.model.entity.Entity;
 import org.janelia.it.jacs.model.entity.EntityConstants;
@@ -30,7 +33,7 @@ public class BaseballCard {
     public static final int IMAGE_WIDTH = 100;
     public static final int IMAGE_HEIGHT = 100;
     private Entity entity;
-    private org.janelia.it.workstation.gui.framework.viewer.DynamicImagePanel dynamicImagePanel;
+    private DynamicImagePanel dynamicImagePanel;
     private JPanel textDetailsPanel;
     private Logger logger = LoggerFactory.getLogger( BaseballCard.class );
 
@@ -69,7 +72,7 @@ public class BaseballCard {
 
             @Override
             protected void doStuff() throws Exception {
-                for(Entity entityAnnot : org.janelia.it.workstation.api.entity_model.management.ModelMgr.getModelMgr().getAnnotationsForEntity(entity.getId())) {
+                for(Entity entityAnnot : ModelMgr.getModelMgr().getAnnotationsForEntity(entity.getId())) {
                     OntologyAnnotation annotation = new OntologyAnnotation();
                     annotation.init(entityAnnot);
                     if(null!=annotation.getTargetEntityId())
@@ -88,7 +91,7 @@ public class BaseballCard {
                 String entityNameDesignation = entity.getName();
                 if ( entity.getEntityTypeName().equals( EntityConstants.TYPE_NEURON_FRAGMENT ) ) {
                     try {
-                        Entity entityParent = org.janelia.it.workstation.api.entity_model.management.ModelMgr.getModelMgr().getAncestorWithType(entity, EntityConstants.TYPE_SAMPLE);
+                        Entity entityParent = ModelMgr.getModelMgr().getAncestorWithType(entity, EntityConstants.TYPE_SAMPLE);
                         if ( entityParent == null ) {
                             entityNameDesignation = "Mock-Parent / " + entityNameDesignation;
                         }
@@ -171,7 +174,7 @@ public class BaseballCard {
         return textDetailsPanel;
     }
 
-    public org.janelia.it.workstation.gui.framework.viewer.DynamicImagePanel getDynamicImagePanel() {
+    public DynamicImagePanel getDynamicImagePanel() {
         return dynamicImagePanel;
     }
 
@@ -183,9 +186,9 @@ public class BaseballCard {
         return rtnVal;
     }
 
-    private org.janelia.it.workstation.gui.framework.viewer.DynamicImagePanel getDynamicImagePanel(String imageFilePath) {
-        final org.janelia.it.workstation.gui.framework.viewer.DynamicImagePanel rtnVal = new org.janelia.it.workstation.gui.framework.viewer.DynamicImagePanel(
-                imageFilePath, org.janelia.it.workstation.gui.framework.viewer.ImagesPanel.MAX_IMAGE_WIDTH
+    private DynamicImagePanel getDynamicImagePanel(String imageFilePath) {
+        final DynamicImagePanel rtnVal = new DynamicImagePanel(
+                imageFilePath, ImagesPanel.MAX_IMAGE_WIDTH
         ) {
             protected void syncToViewerState() {
             }

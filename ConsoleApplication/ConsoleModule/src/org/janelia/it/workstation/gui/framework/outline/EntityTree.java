@@ -23,12 +23,18 @@ import javax.swing.ToolTipManager;
 import javax.swing.tree.DefaultMutableTreeNode;
 import javax.swing.tree.TreePath;
 
+import org.janelia.it.workstation.api.entity_model.events.EntityChangeEvent;
 import org.janelia.it.workstation.api.entity_model.events.EntityChildrenLoadedEvent;
 import org.janelia.it.workstation.api.entity_model.events.EntityInvalidationEvent;
+import org.janelia.it.workstation.api.entity_model.events.EntityRemoveEvent;
+import org.janelia.it.workstation.api.entity_model.management.ModelMgr;
 import org.janelia.it.workstation.api.entity_model.management.ModelMgrUtils;
+import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.workstation.gui.framework.tree.DynamicTree;
 import org.janelia.it.workstation.gui.framework.tree.ExpansionState;
+import org.janelia.it.workstation.gui.framework.tree.LazyTreeNode;
 import org.janelia.it.workstation.gui.framework.tree.LazyTreeNodeLoader;
+import org.janelia.it.workstation.gui.util.Icons;
 import org.janelia.it.workstation.model.entity.RootedEntity;
 import org.janelia.it.workstation.shared.util.ConcurrentUtils;
 import org.janelia.it.workstation.shared.util.Utils;
@@ -45,6 +51,7 @@ import com.google.common.collect.HashMultimap;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Multimap;
 import com.google.common.eventbus.Subscribe;
+import org.janelia.it.workstation.model.utils.ModelUtils;
 
 /**
  * A tree of Entities that may load lazily. Manages all the asynchronous loading and tree updating that happens in the
@@ -76,16 +83,20 @@ public class EntityTree extends JPanel implements ActivatableView {
     @Override
     public void activate() {
         log.debug("Register {} on event bus: {}", this.getClass().getName(), System.identityHashCode(this));
-        org.janelia.it.workstation.api.entity_model.management.ModelMgr.getModelMgr().registerOnEventBus(this);
+        ModelMgr.getModelMgr().registerOnEventBus(this);
         refresh();
     }
 
     @Override
     public void deactivate() {
         log.debug("Unregister {} on event bus: {}", this.getClass().getName(), System.identityHashCode(this));
-        org.janelia.it.workstation.api.entity_model.management.ModelMgr.getModelMgr().unregisterOnEventBus(this);
+        ModelMgr.getModelMgr().unregisterOnEventBus(this);
     }
 
+    public EntityData getRootEntityData() {
+        return rootEntityData;
+    }
+    
     public Entity getRootEntity() {
         if (rootEntityData == null) {
             return null;
@@ -101,7 +112,7 @@ public class EntityTree extends JPanel implements ActivatableView {
 
     public void showLoadingIndicator() {
         treesPanel.removeAll();
-        treesPanel.add(new JLabel(org.janelia.it.workstation.gui.util.Icons.getLoadingIcon()));
+        treesPanel.add(new JLabel(Icons.getLoadingIcon()));
         revalidate();
         repaint();
     }
@@ -127,7 +138,7 @@ public class EntityTree extends JPanel implements ActivatableView {
             private Entity rootEntity;
 
             protected void doStuff() throws Exception {
-                rootEntity = org.janelia.it.workstation.api.entity_model.management.ModelMgr.getModelMgr().getEntityById(rootId);
+                rootEntity = ModelMgr.getModelMgr().getEntityById(rootId);
             }
 
             protected void hadSuccess() {
@@ -159,7 +170,7 @@ public class EntityTree extends JPanel implements ActivatableView {
         entityDataIdToNodeMap.clear();
         entityIdToNodeMap.clear();
         uniqueIdToNodeMap.clear();
-
+        
         // Dummy ed for the root
         EntityData rootEd = new EntityData();
         rootEd.setChildEntity(rootEntity);
@@ -167,6 +178,10 @@ public class EntityTree extends JPanel implements ActivatableView {
         createNewTree(rootEd);
 
         if (rootEntity != null) {
+            
+            uniqueIdToNodeMap.put(getRootUniqueId(), selectedTree.getRootNode());
+            entityIdToNodeMap.put(rootEntity.getId(), selectedTree.getRootNode());
+        
             addNodes(null, rootEd, 0);
         }
 
@@ -188,21 +203,21 @@ public class EntityTree extends JPanel implements ActivatableView {
             return;
         }
 
-        final Collection<DefaultMutableTreeNode> nodes = new HashSet<DefaultMutableTreeNode>();
+        final Collection<DefaultMutableTreeNode> affectedNodes = new HashSet<DefaultMutableTreeNode>();
 
         Collection<Entity> invalidated = event.getInvalidatedEntities();
         for (Entity entity : invalidated) {
             for (DefaultMutableTreeNode node : getNodesByEntityId(entity.getId())) {
-                nodes.add(node);
+                affectedNodes.add(node);
             }
         }
 
-        if (nodes.isEmpty()) {
+        if (affectedNodes.isEmpty()) {
             return;
         }
 
-        List<DefaultMutableTreeNode> sortedNodes = new ArrayList<DefaultMutableTreeNode>(nodes);
-        Collections.sort(sortedNodes, new Comparator<DefaultMutableTreeNode>() {
+        List<DefaultMutableTreeNode> sortedAffectedNodes = new ArrayList<DefaultMutableTreeNode>(affectedNodes);
+        Collections.sort(sortedAffectedNodes, new Comparator<DefaultMutableTreeNode>() {
             @Override
             public int compare(DefaultMutableTreeNode o1, DefaultMutableTreeNode o2) {
                 String u1 = getDynamicTree().getUniqueId(o1);
@@ -211,24 +226,25 @@ public class EntityTree extends JPanel implements ActivatableView {
             }
         });
 
-        log.debug("Entities affecting {} nodes were invalidated", sortedNodes.size());
+        log.debug("Entities affecting {} nodes were invalidated", sortedAffectedNodes.size());
 
         try {
             final ExpansionState expansionState = new ExpansionState();
             expansionState.storeExpansionState(getDynamicTree());
 
-            for (final DefaultMutableTreeNode node : sortedNodes) {
+            for (final DefaultMutableTreeNode node : sortedAffectedNodes) {
+                
                 Entity treeEntity = getEntity(node);
                 log.debug("Invalidated node (@{}) containing entity {}", System.identityHashCode(node), EntityUtils.identify(treeEntity));
 
                 if (treeEntity.getId() != null) {
                     // Not a dummy node, get a replacement entity
-                    Entity newEntity = org.janelia.it.workstation.api.entity_model.management.ModelMgr.getModelMgr().getEntityById(treeEntity.getId());
+                    Entity newEntity = ModelMgr.getModelMgr().getEntityById(treeEntity.getId());
                     getEntityData(node).setChildEntity(newEntity);
                 }
             }
 
-            for (final DefaultMutableTreeNode node : sortedNodes) {
+            for (final DefaultMutableTreeNode node : sortedAffectedNodes) {
                 log.trace("Recreating children of invalidated node: {} (@{})", getDynamicTree().getUniqueId(node), System.identityHashCode(node));
                 getDynamicTree().recreateChildNodes(node);
             }
@@ -236,12 +252,12 @@ public class EntityTree extends JPanel implements ActivatableView {
             expansionState.restoreExpansionState(getDynamicTree(), true);
         }
         catch (Exception e) {
-            org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr.getSessionMgr().handleException(e);
+            SessionMgr.getSessionMgr().handleException(e);
         }
     }
 
     @Subscribe
-    public void entityChanged(org.janelia.it.workstation.api.entity_model.events.EntityChangeEvent event) {
+    public void entityChanged(EntityChangeEvent event) {
         if (rootEntityData == null) {
             return;
         }
@@ -267,7 +283,7 @@ public class EntityTree extends JPanel implements ActivatableView {
     }
 
     @Subscribe
-    public void entityRemoved(org.janelia.it.workstation.api.entity_model.events.EntityRemoveEvent event) {
+    public void entityRemoved(EntityRemoveEvent event) {
         if (rootEntityData == null) {
             return;
         }
@@ -377,6 +393,14 @@ public class EntityTree extends JPanel implements ActivatableView {
      */
     protected void nodeDoubleClicked(MouseEvent e) {
     }
+    
+    /**
+     * Override this method to do something when the user clicks the background.
+     *
+     * @param e
+     */
+    protected void backgroundClicked(MouseEvent e) {
+    }
 
     protected void createNewTree(EntityData root) {
 
@@ -399,12 +423,16 @@ public class EntityTree extends JPanel implements ActivatableView {
                 EntityTree.this.nodeDoubleClicked(e);
             }
 
+            protected void backgroundClicked(MouseEvent e) {
+                EntityTree.this.backgroundClicked(e);
+            }
+
             @Override
             public void expandNodeWithLazyChildren(final DefaultMutableTreeNode node, final Callable<Void> success) {
 
                 log.debug("expandNodeWithLazyChildren: {}", EntityUtils.identify(getEntity(node)));
 
-                if (EntityUtils.areLoaded(getEntity(node).getEntityData())) {
+                if (ModelMgrUtils.areChildrenLoaded(getEntity(node))) {
                     SwingUtilities.invokeLater(new Runnable() {
                         @Override
                         public void run() {
@@ -429,7 +457,7 @@ public class EntityTree extends JPanel implements ActivatableView {
             @Override
             public void loadLazyNodeData(DefaultMutableTreeNode node) throws Exception {
                 Entity entity = getEntity(node);
-                entity = org.janelia.it.workstation.api.entity_model.management.ModelMgr.getModelMgr().loadLazyEntity(entity, false);
+                entity = ModelMgr.getModelMgr().loadLazyEntity(entity, false);
             }
 
             @Override
@@ -438,7 +466,7 @@ public class EntityTree extends JPanel implements ActivatableView {
                 Entity entity = getEntity(node);
                 log.debug("recreateChildNodes for node (@{}) with entity: {}", System.identityHashCode(node), EntityUtils.identify(entity));
 
-                List<EntityData> edList = EntityUtils.getSortedEntityDatas(entity);
+                List<EntityData> edList = ModelUtils.getSortedEntityDatas(entity);
 
                 List<DefaultMutableTreeNode> childNodes = new ArrayList<DefaultMutableTreeNode>();
                 for (int i = 0; i < node.getChildCount(); i++) {
@@ -481,7 +509,7 @@ public class EntityTree extends JPanel implements ActivatableView {
                     protected void doStuff() throws Exception {
                         progressMonitor.setProgress(1);
                         entityData = getEntityData(node);
-                        entity = org.janelia.it.workstation.api.entity_model.management.ModelMgr.getModelMgr().getEntityTree(entityData.getChildEntity().getId());
+                        entity = ModelMgr.getModelMgr().getEntityTree(entityData.getChildEntity().getId());
                     }
 
                     @Override
@@ -506,11 +534,11 @@ public class EntityTree extends JPanel implements ActivatableView {
                     @Override
                     protected void hadError(Throwable error) {
                         Utils.setDefaultCursor(EntityTree.this);
-                        org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr.getSessionMgr().handleException(error);
+                        SessionMgr.getSessionMgr().handleException(error);
                     }
                 };
 
-                loadingWorker.setProgressMonitor(new ProgressMonitor(org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr.getMainFrame(), "Loading tree...", "", 0, 100));
+                loadingWorker.setProgressMonitor(new ProgressMonitor(SessionMgr.getMainFrame(), "Loading tree...", "", 0, 100));
                 loadingWorker.execute();
             }
 
@@ -519,7 +547,7 @@ public class EntityTree extends JPanel implements ActivatableView {
                 if (node == null) {
                     return null;
                 }
-                if (!getTree().isRootVisible() && node == getDynamicTree().getRootNode()) {
+                if (!getTree().isRootVisible() && node == getDynamicTree().getRootNode() && rootEntityData.getChildEntity().getId()==null) {
                     return "/";
                 }
                 StringBuffer sb = new StringBuffer();
@@ -562,7 +590,7 @@ public class EntityTree extends JPanel implements ActivatableView {
         };
 
         // Replace the cell renderer
-        selectedTree.setCellRenderer(new org.janelia.it.workstation.gui.framework.outline.EntityTreeCellRenderer());
+        selectedTree.setCellRenderer(new EntityTreeCellRenderer());
     }
 
     /**
@@ -640,14 +668,11 @@ public class EntityTree extends JPanel implements ActivatableView {
     public Collection<DefaultMutableTreeNode> getNodesByEntityDataId(Long entityDataId) {
         return entityDataIdToNodeMap.get(entityDataId);
     }
-
-    public static String getChildUniqueId(String parentUniqueId, EntityData entityData) {
-        String uniqueId = parentUniqueId;
-        uniqueId += "/ed_" + entityData.getId();
-        uniqueId += "/e_" + entityData.getChildEntity().getId();
-        return uniqueId;
+    
+    public String getRootUniqueId() {
+    	return "/e_"+rootEntityData.getChildEntity().getId();
     }
-
+    
     public String getCurrUniqueId() {
         return getDynamicTree().getUniqueId(getDynamicTree().getCurrentNode());
     }
@@ -716,7 +741,7 @@ public class EntityTree extends JPanel implements ActivatableView {
         entityDataIdToNodeMap.put(newEd.getId(), newNode);
 
         // Get children
-        List<EntityData> dataList = entity.getOrderedEntityData();
+        List<EntityData> dataList = ModelUtils.getSortedEntityDatas(entity);
         List<EntityData> childDataList = new ArrayList<EntityData>();
 
         boolean allHidden = true;
@@ -741,7 +766,7 @@ public class EntityTree extends JPanel implements ActivatableView {
             if (visitedEds.contains(newEd.getId())) {
                 if (!childDataList.isEmpty()) {
                     log.trace(indent + "EntityTree.addNodes - add lazy node to " + getEntity(parentNode).getName());
-                    selectedTree.addObject(parentNode, new org.janelia.it.workstation.gui.framework.tree.LazyTreeNode());
+                    selectedTree.addObject(parentNode, new LazyTreeNode());
                 }
                 log.trace(indent + "EntityTree.addNodes - already been at " + entity.getName() + " (" + newEd.getId() + ")");
                 return;
@@ -766,7 +791,7 @@ public class EntityTree extends JPanel implements ActivatableView {
         // Test for proxies
         if (!EntityUtils.areLoaded(dataList)) {
             log.trace(indent + "EntityTree.addChildren - add lazy node to node (@{})", System.identityHashCode(parentNode));
-            selectedTree.addObject(parentNode, new org.janelia.it.workstation.gui.framework.tree.LazyTreeNode());
+            selectedTree.addObject(parentNode, new LazyTreeNode());
             return 1;
         }
         else {

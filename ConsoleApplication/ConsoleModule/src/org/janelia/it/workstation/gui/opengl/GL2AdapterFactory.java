@@ -110,8 +110,8 @@ public class GL2AdapterFactory {
     static class GL3GL2Adapter implements GL2Adapter {
         private GL3 gl;
         private GLMatrixState glMatrixState = new GLMatrixState();
-        private org.janelia.it.workstation.gui.opengl.GLLightingState glLightingState = new org.janelia.it.workstation.gui.opengl.GLLightingState();
-        private org.janelia.it.workstation.gui.opengl.GLMaterialState glMaterialState = new org.janelia.it.workstation.gui.opengl.GLMaterialState();
+        private GLLightingState glLightingState = new GLLightingState();
+        private GLMaterialState glMaterialState = new GLMaterialState();
 
         public GL3GL2Adapter(GL3 gl) {
             this.gl = gl;

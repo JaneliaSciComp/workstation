@@ -6,6 +6,7 @@ import java.util.*;
 
 import javax.swing.JMenuItem;
 
+import org.janelia.it.workstation.api.entity_model.management.ModelMgr;
 import org.janelia.it.workstation.gui.dialogs.EntityDetailsDialog;
 import org.janelia.it.workstation.gui.dialogs.choose.EntityChooser;
 import org.janelia.it.workstation.gui.dialogs.choose.MultiTreeEntityChooser;
@@ -153,7 +154,7 @@ public class SearchResultContextMenu extends AbstractContextMenu<Entity> {
 							hadError(new Exception("Cannot map entity to itself."));
 						}
 						else {
-							org.janelia.it.workstation.gui.dialogs.search.ResultTreeMapping projection = new org.janelia.it.workstation.gui.dialogs.search.ResultTreeMapping(selectedTree, startingPath, uniqueId);
+							ResultTreeMapping projection = new ResultTreeMapping(selectedTree, startingPath, uniqueId);
 							searchResultsPanel.projectResults(projection);	
 						}
 					}
@@ -176,7 +177,7 @@ public class SearchResultContextMenu extends AbstractContextMenu<Entity> {
 		if (visited.contains(entity.getId())) return rootPaths;
 		visited.add(entity.getId());
 		
-		List<EntityData> parents = org.janelia.it.workstation.api.entity_model.management.ModelMgr.getModelMgr().getParentEntityDatas(entity.getId());
+		List<EntityData> parents = ModelMgr.getModelMgr().getParentEntityDatas(entity.getId());
 		
 		if (parents.isEmpty()) {
 			List<Object> path = new ArrayList<Object>();
@@ -187,7 +188,7 @@ public class SearchResultContextMenu extends AbstractContextMenu<Entity> {
 		
 		for (EntityData parentEd : parents) {
 			Entity parent = parentEd.getParentEntity();
-			parent = org.janelia.it.workstation.api.entity_model.management.ModelMgr.getModelMgr().getEntityById(parent.getId());
+			parent = ModelMgr.getModelMgr().getEntityById(parent.getId());
 			List<List<Object>> parentPaths = getRootPaths(parent, visited);
 			for(List<Object> parentPath : parentPaths) {
 				parentPath.add(parentEd);
