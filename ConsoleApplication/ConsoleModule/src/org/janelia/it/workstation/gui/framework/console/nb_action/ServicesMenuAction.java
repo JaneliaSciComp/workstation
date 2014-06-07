@@ -6,6 +6,7 @@
 package org.janelia.it.workstation.gui.framework.console.nb_action;
 
 import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 import javax.swing.AbstractAction;
 import javax.swing.JMenu;
 import javax.swing.JMenuItem;
@@ -39,26 +40,28 @@ public final class ServicesMenuAction extends AbstractAction implements Presente
         final ScreenEvaluationDialog screenEvaluationDialog = browser.getScreenEvaluationDialog();
         if (screenEvaluationDialog.isAccessible()) {
             JMenuItem menuItem = new JMenuItem(SCREEN_EVAL_ITEM);
-            menuItem.addActionListener( this );
+            menuItem.addActionListener( new ActionListener() {
+                public void actionPerformed( ActionEvent ae ) {
+                    new ServicesActionDelegate().presentScreenEvalDialog();
+                }
+            });
             subMenu.add(menuItem);
         }
         
         final DataSetListDialog dataSetListDialog = browser.getDataSetListDialog();
         if (dataSetListDialog.isAccessible()) {
             JMenuItem menuItem = new JMenuItem(DATA_SETS_ITEM);
-            menuItem.addActionListener( this );
+            menuItem.addActionListener( new ActionListener() {
+                public void actionPerformed( ActionEvent ae ) {
+                    new ServicesActionDelegate().presentDataSetListDialog();
+                }
+            });
             subMenu.add(menuItem);
         }
     }
     
     @Override
     public void actionPerformed(ActionEvent e) {
-        if ( e.getActionCommand().equals( DATA_SETS_ITEM) ) {
-            new ServicesActionDelegate().presentDataSetListDialog();
-        }
-        else if ( e.getActionCommand().equals( SCREEN_EVAL_ITEM) ) {
-            new ServicesActionDelegate().presentScreenEvalDialog();
-        }
     }
 
     @Override
