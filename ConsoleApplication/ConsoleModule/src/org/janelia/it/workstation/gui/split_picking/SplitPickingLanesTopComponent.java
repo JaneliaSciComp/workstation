@@ -42,8 +42,8 @@ import javax.swing.JPanel;
         preferredID = "SplitPickingLanesTopComponent"
 )
 @Messages({
-    "CTL_SplitPickingLanesAction=SplitPickingLanes",
-    "CTL_SplitPickingLanesTopComponent=Split Picking Lanes",
+    "CTL_SplitPickingLanesAction=Split Picking Lanes",
+    "CTL_SplitPickingLanesTopComponent=Split Picking Tool",
     "HINT_SplitPickingLanesTopComponent=Choose one image from each lane"
 })
 public final class SplitPickingLanesTopComponent extends TopComponent {

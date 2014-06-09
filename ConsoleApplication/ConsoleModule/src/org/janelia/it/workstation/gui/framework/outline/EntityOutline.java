@@ -115,8 +115,12 @@ public abstract class EntityOutline extends EntityTree implements Refreshable, A
         }
         else {
             // TODO: allow the user to choose the workspace. For now there is just one.
-            this.root = entityRootList.get(0);
-            ModelMgr.getModelMgr().setCurrentWorkspaceId(root.getId());
+            try {
+                this.root = ModelMgr.getModelMgr().getCurrentWorkspace();
+            }
+            catch (Exception e) {
+                SessionMgr.getSessionMgr().handleException(e);
+            }
             initializeTree(root);
         }
     }

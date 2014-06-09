@@ -6,6 +6,7 @@ import org.janelia.it.jacs.model.entity.Entity;
 import org.janelia.it.jacs.model.entity.EntityData;
 import org.janelia.it.jacs.shared.utils.EntityUtils;
 import org.janelia.it.workstation.api.entity_model.management.ModelMgrUtils;
+import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -97,13 +98,17 @@ public class RootedEntity {
         return getChild(EntityUtils.findChildEntityDataWithName(getEntity(), childName));
     }
 
+    public RootedEntity getOwnedChildByName(String childName) {
+        return getChild(EntityUtils.findChildEntityDataWithNameAndOwner(getEntity(), childName, SessionMgr.getSubjectKey()));
+    }
+    
     public RootedEntity getChildById(long childId) {
         return getChild(EntityUtils.findChildEntityDataWithChildId(getEntity(), childId));
     }
 
     public List<RootedEntity> getChildrenOfType(String typeName) {
         List<RootedEntity> items = new ArrayList<RootedEntity>();
-        for (EntityData ed : ModelMgrUtils.getAccessibleEntityDatas(getEntity())) {
+        for (EntityData ed : ModelMgrUtils.getAccessibleEntityDatasWithChildren(getEntity())) {
             Entity child = ed.getChildEntity();
             if (typeName == null || typeName.equals(child.getEntityTypeName())) {
                 items.add(getChild(ed));

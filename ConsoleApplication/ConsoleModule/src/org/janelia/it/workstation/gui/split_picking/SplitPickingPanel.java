@@ -91,8 +91,6 @@ public class SplitPickingPanel extends JPanel implements Refreshable {
     private final JButton prefixButton;
     private final JButton resultFolderButton;
     private final IconDemoPanel crossesViewer;
-//	private final JTextField methodField;
-//	private final JTextField blurField;
 
     private RootedEntity splitPickingFolder;
     private RootedEntity workingFolder;
@@ -210,30 +208,6 @@ public class SplitPickingPanel extends JPanel implements Refreshable {
         computePanel.setAlignmentX(Component.LEFT_ALIGNMENT);
         mainPanel.add(computePanel);
 
-//		JPanel param1Panel = new JPanel();
-//		param1Panel.setLayout(new BoxLayout(param1Panel, BoxLayout.LINE_AXIS));
-//		JLabel param1Label = new JLabel("Method (0=minimum value, 1=geometric mean, 2=scaled product): ");
-//		param1Panel.add(Box.createHorizontalStrut(50));
-//		param1Panel.add(param1Label);		
-//		methodField = new JTextField("0");
-//		methodField.setMaximumSize(new Dimension(50, STEP_PANEL_HEIGHT));
-//		param1Panel.add(methodField);
-//		param1Panel.setPreferredSize(new Dimension(0, STEP_PANEL_HEIGHT));
-//		param1Panel.setAlignmentX(Component.LEFT_ALIGNMENT);
-//		mainPanel.add(param1Panel);
-//		
-//
-//		JPanel param2Panel = new JPanel();
-//		param2Panel.setLayout(new BoxLayout(param2Panel, BoxLayout.LINE_AXIS));
-//		JLabel param2Label = new JLabel("Gaussian kernel size for blur: ");
-//		param2Panel.add(Box.createHorizontalStrut(50));
-//		param2Panel.add(param2Label);
-//		blurField = new JTextField("3");
-//		blurField.setMaximumSize(new Dimension(50, STEP_PANEL_HEIGHT));
-//		param2Panel.add(blurField);
-//		param2Panel.setPreferredSize(new Dimension(0, STEP_PANEL_HEIGHT));
-//		param2Panel.setAlignmentX(Component.LEFT_ALIGNMENT);
-//		mainPanel.add(param2Panel);
         JPanel exportPanel = new JPanel();
         exportPanel.setLayout(new BoxLayout(exportPanel, BoxLayout.LINE_AXIS));
         JLabel exportLabel = new JLabel("5. Export results to file: ");
@@ -340,7 +314,7 @@ public class SplitPickingPanel extends JPanel implements Refreshable {
                             }
                         }
                         catch (NumberFormatException e) {
-                            e.printStackTrace();
+                            log.error("Cannot parse suffix: "+suffix,e);
                         }
                     }
                 }
@@ -447,6 +421,8 @@ public class SplitPickingPanel extends JPanel implements Refreshable {
     @Override
     public void refresh() {
 
+        log.info("Refreshing split picker");
+
         MAASearchDialog maaSearchDialog = getMAASearchDialog();
         maaSearchButton.setVisible(maaSearchDialog != null && maaSearchDialog.isAccessible());
 
@@ -455,28 +431,26 @@ public class SplitPickingPanel extends JPanel implements Refreshable {
 
         SimpleWorker refreshWorker = new SimpleWorker() {
 
-            Entity splitPickingFolderEntity;
-            EntityData resultFolderEntityData;
+            RootedEntity splitPickingFolderRE;
+            RootedEntity resultFolderRE;
 
             @Override
             protected void doStuff() throws Exception {
-                splitPickingFolderEntity = ModelMgr.getModelMgr().getOwnedCommonRootByName(FOLDER_NAME_SPLIT_PICKING);
-                if (splitPickingFolderEntity == null) {
-                    if (ModelMgr.getModelMgr().getCurrentWorkspaceId()!=null) {
-                        splitPickingFolderEntity = ModelMgr.getModelMgr().createCommonRoot(FOLDER_NAME_SPLIT_PICKING);    
-                    }
+                splitPickingFolderRE = ModelMgr.getModelMgr().getOwnedTopLevelRootedEntity(FOLDER_NAME_SPLIT_PICKING);
+                if (splitPickingFolderRE == null) {
+                    splitPickingFolderRE = ModelMgr.getModelMgr().createTopLevelRootedEntity(FOLDER_NAME_SPLIT_PICKING);
                 }
                 else {
-                    splitPickingFolderEntity = ModelMgr.getModelMgr().loadLazyEntity(splitPickingFolderEntity, false);
+                    ModelMgr.getModelMgr().loadLazyEntity(splitPickingFolderRE.getEntity(), false);
                 }
             }
 
             @Override
             protected void hadSuccess() {
 
-                if (splitPickingFolderEntity==null) return;
+                if (splitPickingFolderRE==null) return;
                 
-                splitPickingFolder = new RootedEntity(splitPickingFolderEntity);
+                splitPickingFolder = splitPickingFolderRE;
 
                 SwingUtilities.invokeLater(new Runnable() {
 
@@ -486,17 +460,11 @@ public class SplitPickingPanel extends JPanel implements Refreshable {
 
                         final Long lastWorkingFolderId = (Long) SessionMgr.getSessionMgr().getModelProperty(LAST_WORKING_FOLDER_ID_PROPERTY);
                         if (lastWorkingFolderId != null) {
-                            for (EntityData childEd : ModelMgrUtils.getAccessibleEntityDatasWithChildren(splitPickingFolderEntity)) {
-                                Entity child = childEd.getChildEntity();
-                                if (child.getId().equals(lastWorkingFolderId)) {
-                                    resultFolderEntityData = childEd;
-                                    break;
-                                }
-                            }
+                            resultFolderRE = splitPickingFolderRE.getChildById(lastWorkingFolderId);
                         }
 
-                        if (resultFolderEntityData != null) {
-                            setWorkingFolderEntity(resultFolderEntityData);
+                        if (resultFolderRE != null) {
+                            setWorkingFolder(resultFolderRE);
 
                             // Refresh the image viewer
                             crossesViewer.refresh();
@@ -506,7 +474,6 @@ public class SplitPickingPanel extends JPanel implements Refreshable {
                                 @Override
                                 public void run() {
                                     // Resize viewers
-                                    //getRightSplitPane().setDividerLocation(0.66);
                                     getMainSplitPane().setDividerLocation(0.5);
                                     // Resize images to 1 per row       
                                     int fullWidth = getViewerContainer().getWidth();
@@ -694,7 +661,7 @@ public class SplitPickingPanel extends JPanel implements Refreshable {
             protected void doStuff() throws Exception {
 
                 if (crossFolder == null) {
-                    setCrossFolder(ModelMgrUtils.getChildFolder(workingFolder, FOLDER_NAME_CROSSES, true));
+                    crossFolder = ModelMgrUtils.getChildFolder(workingFolder, FOLDER_NAME_CROSSES, true);
                 }
 
                 if (crossesViewer.getRootedEntities() != null) {
@@ -887,13 +854,14 @@ public class SplitPickingPanel extends JPanel implements Refreshable {
         }
     }
 
-    private void setWorkingFolderEntity(final EntityData workingFolderEntityEd) {
+    private void setWorkingFolder(final RootedEntity workingFolder) {
 
-        workingFolder = null;
-        searchResultsFolder = null;
-        crossFolder = null;
+        log.info("Setting workingFolder to {}",workingFolder.getName());
+        
+        this.workingFolder = workingFolder;
+        this.searchResultsFolder = null;
+        this.crossFolder = null;
 
-        workingFolder = splitPickingFolder.getChild(workingFolderEntityEd);
         expandEntityOutline(workingFolder.getUniqueId());
 
         SimpleWorker worker = new SimpleWorker() {
@@ -976,37 +944,46 @@ public class SplitPickingPanel extends JPanel implements Refreshable {
             expandEntityOutline(workingFolder.getUniqueId());
         }
 
-        // Get the parent lines
-        Entity entity1 = null;
-        Entity entity2 = null;
+        // Is there a cross selected?
         List<RootedEntity> selected = crossesViewer.getSelectedEntities();
+        Entity crossEntity = null;
         if (selected != null && selected.size() == 1) {
-            Entity crossEntity = selected.get(0).getEntity();
-            for (EntityData childEd : ModelMgrUtils.getAccessibleEntityDatas(crossEntity)) {
-                if (!childEd.getEntityAttrName().equals(EntityConstants.ATTRIBUTE_ENTITY)) {
-                    continue;
-                }
-                if (entity1 == null) {
-                    entity1 = childEd.getChildEntity();
-                }
-                else {
-                    entity2 = childEd.getChildEntity();
-                    break;
-                }
-            }
+            crossEntity = selected.get(0).getEntity();
         }
 
-        final Entity finalEntity1 = entity1;
-        final Entity finalEntity2 = entity2;
+        final Entity finalCrossEntity = crossEntity;
         SimpleWorker worker = new SimpleWorker() {
 
-            private Entity sourceEntity1 = finalEntity1;
-            private Entity sourceEntity2 = finalEntity2;
+            private Entity sourceEntity1;
+            private Entity sourceEntity2;
             private RootedEntity adFolder;
             private RootedEntity dbdFolder;
 
             @Override
             protected void doStuff() throws Exception {
+                
+                if (finalCrossEntity!=null) {
+                    // Get the parent lines
+                    ModelMgr.getModelMgr().loadLazyEntity(finalCrossEntity, false);
+                    for (EntityData childEd : ModelMgrUtils.getAccessibleEntityDatas(finalCrossEntity)) {
+                        if (!childEd.getEntityAttrName().equals(EntityConstants.ATTRIBUTE_ENTITY)) {
+                            continue;
+                        }
+                        Entity child = childEd.getChildEntity(); 
+                        String splitPart = child.getValueByAttributeName(EntityConstants.ATTRIBUTE_SPLIT_PART);
+                        if (splitPart==null) continue;
+                        if ("AD".equals(splitPart)) {
+                            sourceEntity1 = child;
+                        }
+                        else if ("DBD".equals(splitPart)) {
+                            sourceEntity2 = child;
+                        }
+                        else {
+                            log.warn("Unrecognized split part: "+splitPart);
+                        }
+                    }
+                }
+                
                 if (sourceEntity1 != null) {
                     if (!EntityUtils.isInitialized(sourceEntity1)) {
                         sourceEntity1 = ModelMgr.getModelMgr().getEntityById(sourceEntity1.getId());
@@ -1014,13 +991,15 @@ public class SplitPickingPanel extends JPanel implements Refreshable {
                     log.info("Parent line 1 is {}", sourceEntity1.getName());
                     adFolder = findDomainFolderContainingEntity(searchResultsFolder, sourceEntity1.getId(), FOLDER_NAME_SPLIT_LINES_AD);
                 }
+                
                 if (sourceEntity2 != null) {
                     if (!EntityUtils.isInitialized(sourceEntity2)) {
                         sourceEntity2 = ModelMgr.getModelMgr().getEntityById(sourceEntity2.getId());
                     }
-                    log.info("Parent line 2 is {}", sourceEntity1.getName());
+                    log.info("Parent line 2 is {}", sourceEntity2.getName());
                     dbdFolder = findDomainFolderContainingEntity(searchResultsFolder, sourceEntity2.getId(), FOLDER_NAME_SPLIT_LINES_DBD);
                 }
+                
                 if (adFolder == null && dbdFolder == null) {
                     log.info("No cross is selected, so selecting latest search result");
                     // Nothing is selected, so just load the last search result.
@@ -1036,8 +1015,8 @@ public class SplitPickingPanel extends JPanel implements Refreshable {
             private RootedEntity findDomainFolderContainingEntity(RootedEntity root, long entityId, String domainName) {
                 for (RootedEntity searchResultFolder : root.getRootedChildren()) {
                     RootedEntity domainFolder = searchResultFolder.getChildByName(domainName);
-                    for (Entity flylineEntity : ModelMgrUtils.getAccessibleChildren(domainFolder.getEntity())) {
-                        if (flylineEntity.getId().equals(entityId)) {
+                    for (RootedEntity flyline : domainFolder.getRootedChildren()) {
+                        if (flyline.getEntityId().equals(entityId)) {
                             return domainFolder;
                         }
                     }
@@ -1056,6 +1035,7 @@ public class SplitPickingPanel extends JPanel implements Refreshable {
                         @Override
                         public Void call() throws Exception {
                             if (sourceEntity1 != null) {
+                                log.info("Selecting in main viewer: {}", sourceEntity1.getName());
                                 selectAndScroll(mainViewer, sourceEntity1.getId());
                             }
                             return null;
@@ -1073,6 +1053,7 @@ public class SplitPickingPanel extends JPanel implements Refreshable {
                         @Override
                         public Void call() throws Exception {
                             if (sourceEntity2 != null) {
+                                log.info("Selecting in secondary viewer: {}", sourceEntity2.getName());
                                 selectAndScroll(secViewer, sourceEntity2.getId());
                             }
                             return null;
@@ -1099,13 +1080,12 @@ public class SplitPickingPanel extends JPanel implements Refreshable {
 
         JPopupMenu chooseFolderMenu = new JPopupMenu();
 
-        for (final EntityData childEd : ModelMgrUtils.getAccessibleEntityDatasWithChildren(splitPickingFolder.getEntity())) {
-            Entity child = childEd.getChildEntity();
-            JMenuItem commonRootItem = new JMenuItem(child.getName());
+        for (final RootedEntity folderRE : splitPickingFolder.getChildrenOfType(EntityConstants.TYPE_FOLDER)) {
+            JMenuItem commonRootItem = new JMenuItem(folderRE.getName());
             commonRootItem.addActionListener(new ActionListener() {
                 public void actionPerformed(ActionEvent actionEvent) {
                     try {
-                        setWorkingFolderEntity(childEd);
+                        setWorkingFolder(folderRE);
                     }
                     catch (Exception e) {
                         SessionMgr.getSessionMgr().handleException(e);
@@ -1132,7 +1112,7 @@ public class SplitPickingPanel extends JPanel implements Refreshable {
                 try {
                     Entity folder = ModelMgr.getModelMgr().createEntity(EntityConstants.TYPE_FOLDER, folderName);
                     EntityData childEd = ModelMgr.getModelMgr().addEntityToParent(splitPickingFolder.getEntity(), folder);
-                    setWorkingFolderEntity(childEd);
+                    setWorkingFolder(splitPickingFolder.getChild(childEd));
                 }
                 catch (Exception e) {
                     SessionMgr.getSessionMgr().handleException(e);
@@ -1446,25 +1426,13 @@ public class SplitPickingPanel extends JPanel implements Refreshable {
     public RootedEntity getWorkingFolder() {
         return workingFolder;
     }
-
-    public void setWorkingFolder(RootedEntity workingFolder) {
-        this.workingFolder = workingFolder;
-    }
-
+    
     public RootedEntity getRepFolder() {
         return searchResultsFolder;
     }
 
-    public void setRepFolder(RootedEntity repFolder) {
-        this.searchResultsFolder = repFolder;
-    }
-
     public RootedEntity getCrossFolder() {
         return crossFolder;
-    }
-
-    public void setCrossFolder(RootedEntity crossFolder) {
-        this.crossFolder = crossFolder;
     }
 
     private class MaaSearchActionListener implements ActionListener {

@@ -29,7 +29,7 @@ import javax.swing.JPanel;
         //iconBase="SET/PATH/TO/ICON/HERE", 
         persistenceType = TopComponent.PERSISTENCE_ALWAYS
 )
-@TopComponent.Registration(mode = "rightSlidingSide", openAtStartup = false, position=400)
+@TopComponent.Registration(mode = "properties", openAtStartup = false, position=400)
 @ActionID(category = "Window", id = "SplitPickingTopComponent")
 @ActionReference(path = "Menu/Window", position = 400)
 @TopComponent.OpenActionRegistration(
@@ -37,8 +37,8 @@ import javax.swing.JPanel;
         preferredID = "SplitPickingTopComponent"
 )
 @Messages({
-    "CTL_SplitPickingAction=SplitPicking",
-    "CTL_SplitPickingTopComponent=Split Picking Tool",
+    "CTL_SplitPickingAction=Split Picking Tool",
+    "CTL_SplitPickingTopComponent=Split Picking Workflow",
     "HINT_SplitPickingTopComponent=Choosing from two lines to combine"
 })
 public final class SplitPickingTopComponent extends TopComponent {
