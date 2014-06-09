@@ -50,9 +50,9 @@ public class VolumeBrickActorBuilder {
     }
 
     /**
-     * A multi-thread-load-friendly overload of the set-volume method.  The texture objects may be
-     * built at the caller's leisure, rather than being requested of passed-in builders.  This
-     * method does NOT reset the view.
+     * A null-friendly overload.  The texture objects may be
+     * built at the caller's leisure, rather than being requested of 
+     * passed-in builders.  This method does NOT reset the view.
      *
      * @param volumeModel for delegated methods.
      * @param factory for creating volume brick.
@@ -91,9 +91,7 @@ public class VolumeBrickActorBuilder {
     }
 
     /**
-     * A multi-thread-load-friendly overload of the set-volume method.  The texture objects may be
-     * built at the caller's leisure, rather than being requested of passed-in builders.  This
-     * method does NOT reset the view.
+     * This overload makes multiple actors, to accommodate OpenGL/JOGL limits.
      *
      * @param volumeModel for delegated methods.
      * @param factory for creating volume brick.
@@ -108,24 +106,21 @@ public class VolumeBrickActorBuilder {
             TextureDataI maskTexture,
             VolumeBrickFactory factory,
             RenderMappingI renderMapping) {
+        
+        checkActorParameters(signalTexture, maskTexture);
+        final int chunkCount = signalTexture.getTextureData().getVolumeChunks().length;
 
-        if ( signalTexture == null || maskTexture == null ) {
-            throw new IllegalArgumentException( "Mask and signal must both be non-null." );
+        // Making one actor per chunk.
+        GLActor[] actors = new GLActor[ chunkCount ];
+        RenderMapTextureBean renderMapTextureData = new RenderMapTextureBean();
+        for (int i = 0; i < chunkCount; i++) {
+            renderMapTextureData.setMapping(renderMapping);
+            renderMapTextureData.setVolumeModel(volumeModel);
+
+            VolumeBrickI brick = factory.getPartialVolumeBrick(volumeModel, signalTexture, maskTexture, renderMapTextureData, i);
+            actors[ i ] = brick;
         }
         
-        GLActor[] actors = new GLActor[1];
-        GLActor actor = null;
-        VolumeBrickI brick = null;
-
-        RenderMapTextureBean renderMapTextureData = new RenderMapTextureBean();
-        renderMapTextureData.setMapping(renderMapping);
-        renderMapTextureData.setVolumeModel(volumeModel);
-        
-        brick = factory.getVolumeBrick(volumeModel, maskTexture, renderMapTextureData);
-        brick.setTextureData(signalTexture);
-        actor = brick;
-        
-        actors[ 0 ] = actor;
         return actors;
     }
 
@@ -154,6 +149,17 @@ public class VolumeBrickActorBuilder {
         );
         boundingBox.setMin(new Vec3(0, 0, 0));
         return boundingBox;
+    }
+
+    private void checkActorParameters(TextureDataI signalTexture, TextureDataI maskTexture) throws IllegalArgumentException {
+        if ( signalTexture == null || maskTexture == null ) {
+            throw new IllegalArgumentException( "Mask and signal must both be non-null." );
+        }
+        
+        if ( signalTexture.getTextureData().getVolumeChunks().length !=
+                maskTexture.getTextureData().getVolumeChunks().length ) {
+            throw new IllegalArgumentException( "Mask and signal must have same number of chunks." );
+        }
     }
 
 }

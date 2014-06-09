@@ -42,14 +42,10 @@ public class Snapshot3d extends ModalDialog {
     private void launch( TextureDataI textureData ) {
         Mip3d mip3d = new Mip3d();
         mip3d.clear();
-        VolumeBrickFactory factory = new VolumeBrickFactory() {
+        VolumeBrickFactory factory = new AbstractVolumeBrickFactory() {
             @Override
             public VolumeBrickI getVolumeBrick(VolumeModel model) {
                 return new RGBExcludableVolumeBrick( model );
-            }
-            @Override
-            public VolumeBrickI getVolumeBrick(VolumeModel model, TextureDataI maskTextureData, TextureDataI renderMapTextureData ) {
-                return null; // Trivial case.
             }
         };
 

@@ -73,15 +73,10 @@ public class TestMip3d {
                         fn = args[ 0 ];
                     }
 
-                    VolumeBrickFactory factory = new VolumeBrickFactory() {
+                    VolumeBrickFactory factory = new AbstractVolumeBrickFactory() {
                         @Override
                         public VolumeBrickI getVolumeBrick(VolumeModel model) {
                             return new RGBExcludableVolumeBrick( model );
-                        }
-
-                        @Override
-                        public VolumeBrickI getVolumeBrick(VolumeModel model, TextureDataI maskTextureData, TextureDataI colorMapTextureData) {
-                            return null;
                         }
                     };
 

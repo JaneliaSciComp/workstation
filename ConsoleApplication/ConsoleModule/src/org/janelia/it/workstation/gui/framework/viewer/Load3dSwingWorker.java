@@ -42,15 +42,10 @@ public class Load3dSwingWorker extends SwingWorker<Boolean,Boolean> {
     protected void done() {
         if ( filename != null ) {
             mip3d.clear();
-            VolumeBrickFactory factory = new VolumeBrickFactory() {
+            VolumeBrickFactory factory = new AbstractVolumeBrickFactory() {
                 @Override
                 public VolumeBrickI getVolumeBrick(VolumeModel model) {
                     return new RGBExcludableVolumeBrick( model );
-                }
-
-                @Override
-                public VolumeBrickI getVolumeBrick(VolumeModel model, TextureDataI maskTextureData, TextureDataI renderMapTextureData ) {
-                    return null; // Trivial case.
                 }
             };
             VolumeBrickActorBuilder actorBuilder = new VolumeBrickActorBuilder();

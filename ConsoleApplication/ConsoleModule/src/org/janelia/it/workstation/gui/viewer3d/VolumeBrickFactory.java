@@ -13,4 +13,5 @@ import org.janelia.it.workstation.gui.viewer3d.texture.TextureDataI;
 public interface VolumeBrickFactory {
     VolumeBrickI getVolumeBrick( VolumeModel model );
     VolumeBrickI getVolumeBrick( VolumeModel model, TextureDataI maskTextureData, TextureDataI colorMapTextureData );
+    VolumeBrickI getPartialVolumeBrick( VolumeModel model, TextureDataI signalTexureData, TextureDataI maskTextureData, TextureDataI colorMapTextureData, int partNum );
 }

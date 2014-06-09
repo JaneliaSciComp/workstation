@@ -88,18 +88,6 @@ public class VeryLargeVolumeData implements VolumeDataI {
         }
     }
 
-    private int calculateSlabParameters(int sizeX, int sizeY, int sizeZ, int bytesPerVoxel, double numSlabs) {
-        int slicesPerSlab = (int)Math.ceil( sizeZ / numSlabs);
-        int sliceSize = sizeX * sizeY * bytesPerVoxel;
-        long strawSlabExtent = sliceSize * slicesPerSlab;
-        if ( strawSlabExtent > Integer.MAX_VALUE ) {
-            throw new IllegalArgumentException( "Slab sizes would exceed max array size." );
-        }
-        slabExtent = sliceSize * slicesPerSlab;
-        volumeExtent = (long)sliceSize * (long)sizeZ;
-        return slicesPerSlab;
-    }
-
     @Override
     public boolean isVolumeAvailable() {
         return true;
@@ -128,6 +116,18 @@ public class VeryLargeVolumeData implements VolumeDataI {
     @Override
     public long length() {
         return volumeExtent;
+    }
+
+    private int calculateSlabParameters(int sizeX, int sizeY, int sizeZ, int bytesPerVoxel, double numSlabs) {
+        int slicesPerSlab = (int)Math.ceil( sizeZ / numSlabs);
+        int sliceSize = sizeX * sizeY * bytesPerVoxel;
+        long strawSlabExtent = sliceSize * slicesPerSlab;
+        if ( strawSlabExtent > Integer.MAX_VALUE ) {
+            throw new IllegalArgumentException( "Slab sizes would exceed max array size." );
+        }
+        slabExtent = sliceSize * slicesPerSlab;
+        volumeExtent = (long)sliceSize * (long)sizeZ;
+        return slicesPerSlab;
     }
 
     /**

@@ -25,6 +25,8 @@ public class VtxCoordBufMgr {
 
     private int vertexAttributeLoc = 0;
     private int texCoordAttributeLoc = 1;
+    private int startingSliceIndex = 0;
+    private int endingSliceIndex = -1;
 
     private boolean drawWithElements = true;
 
@@ -61,6 +63,16 @@ public class VtxCoordBufMgr {
     public void setCoordAttributeLocations( int vertexAttributeLoc, int texCoordAttributeLoc ) {
         this.vertexAttributeLoc = vertexAttributeLoc;
         this.texCoordAttributeLoc = texCoordAttributeLoc;
+    }
+    
+    /**
+     * Use this to override the default "whole slice axis" coverage.
+     * @param startingSlice start from here, base 0.
+     * @param endingSlice end before here, base 0.
+     */
+    public void setSliceLimits( int startingSlice, int endingSlice ) {
+        this.startingSliceIndex = startingSlice;
+        this.endingSliceIndex = endingSlice;
     }
 
     /**
@@ -140,7 +152,7 @@ public class VtxCoordBufMgr {
 
                 texCoordBuf[ firstInx ].rewind();
                 short inxOffset = 0;
-                for (int sliceInx = 0; sliceInx < sliceCount; ++sliceInx) {
+                for (int sliceInx = startingSliceIndex; sliceInx < startingSliceIndex + sliceCount; ++sliceInx) {
                     // insert final coordinate into buffers
 
                     // FORWARD axes.
@@ -431,8 +443,15 @@ public class VtxCoordBufMgr {
     }
 
     private int computeEffectiveAxisLen(int index) {
-        double firstAxisLen = textureMediator.getVolumeMicrometers()[ index % 3 ];
-        return (int)(0.5 + firstAxisLen / textureMediator.getVoxelMicrometers()[ index % 3 ]);
+        int effectiveLen = 0;
+        if ( endingSliceIndex == -1 ) {
+            double firstAxisLen = textureMediator.getVolumeMicrometers()[ index % 3 ];
+            effectiveLen = (int)(0.5 + firstAxisLen / textureMediator.getVoxelMicrometers()[ index % 3 ]);
+        }
+        else {
+            effectiveLen =  endingSliceIndex - startingSliceIndex;
+        }
+        return effectiveLen;
     }
 
     private void addIndices(int index, short inxOffset) {
