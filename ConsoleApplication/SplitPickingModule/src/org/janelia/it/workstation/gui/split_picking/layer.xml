@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE filesystem PUBLIC "-//NetBeans//DTD Filesystem 1.2//EN" "http://www.netbeans.org/dtds/filesystem-1_2.dtd">
+<filesystem>
+    <folder name="Windows2">
+        <folder name="Groups">
+            <file name="split_picking_plugin.wsgrp" url="Groups/split_picking_plugin.wsgrp"/>
+            <folder name="split_picking_plugin">
+                <file name="SplitPickingTopComponent.wstcgrp" url="Groups/split_picking_plugin/SplitPickingTopComponent.wstcgrp"/>
+                <file name="SplitPickingLanesTopComponent.wstcgrp" url="Groups/split_picking_plugin/SplitPickingLanesTopComponent.wstcgrp"/>
+            </folder>
+        </folder>
+    </folder>
+</filesystem>

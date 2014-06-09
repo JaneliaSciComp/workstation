@@ -1,0 +1,5 @@
+Manifest-Version: 1.0
+OpenIDE-Module: org.janelia.it.workstation.gui.split_picking
+OpenIDE-Module-Localizing-Bundle: org/janelia/it/workstation/gui/split_picking/Bundle.properties
+OpenIDE-Module-Specification-Version: 1.0
+

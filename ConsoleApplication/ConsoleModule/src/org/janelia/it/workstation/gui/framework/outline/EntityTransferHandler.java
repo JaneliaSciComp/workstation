@@ -79,7 +79,7 @@ public abstract class EntityTransferHandler extends TransferHandler {
             for (String selectedId : selectedEntities) {
                 RootedEntity matchingEntity = viewer.getRootedEntityById(selectedId);
                 if (matchingEntity == null) {
-                    throw new IllegalStateException("Entity not found in viewer: " + selectedId);
+                    log.warn("Entity not found in viewer: " + selectedId);
                 }
                 entityList.add(matchingEntity);
             }

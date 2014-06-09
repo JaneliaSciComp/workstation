@@ -16,9 +16,11 @@ import org.openide.util.NbBundle.Messages;
 
 import javax.swing.GroupLayout;
 import javax.swing.JPanel;
+import org.openide.windows.TopComponentGroup;
+import org.openide.windows.WindowManager;
 
 /**
- * Top component which displays something.
+ * Top component for the split picking workflow panel.
  */
 @ConvertAsProperties(
         dtd = "-//org.janelia.it.workstation.gui.split_picking//SplitPicking//EN",
@@ -84,12 +86,19 @@ public final class SplitPickingTopComponent extends TopComponent {
     // End of variables declaration//GEN-END:variables
     @Override
     public void componentOpened() {
+        TopComponentGroup tcg = WindowManager.getDefault().findTopComponentGroup("split_picking_plugin");
+        if (tcg != null) {
+            tcg.open();
+        }
         splitPickingPanel.refresh();
     }
 
     @Override
     public void componentClosed() {
-        // TODO add custom code on component closing
+        TopComponentGroup tcg = WindowManager.getDefault().findTopComponentGroup("split_picking_plugin");
+        if (tcg != null) {
+            tcg.close();
+        }
     }
 
     void writeProperties(Properties p) {

@@ -1390,12 +1390,11 @@ public class SplitPickingPanel extends JPanel implements Refreshable {
 
     private SplitPickingLanesTopComponent getLanesTopComponent() {
         SplitPickingLanesTopComponent rtnVal = null;
-        TopComponent tc = getTopComponent(
-                SplitPickingLanesTopComponent.PREFERRED_ID
-        );
+        TopComponent tc = getTopComponent(SplitPickingLanesTopComponent.PREFERRED_ID);
         if (tc instanceof SplitPickingLanesTopComponent) {
             if (!tc.isOpened()) {
                 tc.open();
+                tc.requestActive();
             }
             SplitPickingLanesTopComponent lanes = (SplitPickingLanesTopComponent) tc;
             rtnVal = lanes;
