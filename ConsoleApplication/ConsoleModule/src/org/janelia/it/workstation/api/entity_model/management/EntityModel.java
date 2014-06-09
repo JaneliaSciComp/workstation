@@ -170,7 +170,8 @@ public class EntityModel {
                 Entity parent = entityCache.getIfPresent(parentId);
                 if (parent != null) {
                     for (EntityData ed : parent.getEntityData()) {
-                        if (ed.getChildEntity() != null && ed.getChildEntity().getId().equals(canonicalEntity.getId())) {
+                        Entity child = ed.getChildEntity();
+                        if (child != null && !(child instanceof ForbiddenEntity) && child.getId().equals(canonicalEntity.getId())) {
                             //log.trace("putOrUpdate: Replacing child {} on existing parent {}",EntityUtils.identify(canonicalEntity), EntityUtils.identify(parent));
                             ed.setChildEntity(canonicalEntity);
                         }
@@ -351,7 +352,8 @@ public class EntityModel {
             if (parent != null) {
                 boolean found = false;
                 for (EntityData ed : parent.getEntityData()) {
-                    if (ed.getChildEntity() != null && canonicalEntity.getId().equals(ed.getChildEntity().getId())) {
+                    Entity child = ed.getChildEntity();
+                    if (child != null && !(child instanceof ForbiddenEntity) && canonicalEntity.getId().equals(child.getId())) {
                         log.trace("putOrUpdate: Replacing child {} on existing parent {}", EntityUtils.identify(canonicalEntity), EntityUtils.identify(parent));
                         ed.setChildEntity(canonicalEntity);
                         found = true;
@@ -877,7 +879,8 @@ public class EntityModel {
                 boolean invalidate = false;
                 for (Iterator<EntityData> edIterator = parent.getEntityData().iterator(); edIterator.hasNext();) {
                     EntityData childEd = edIterator.next();
-                    if (childEd.getChildEntity() != null && childEd.getChildEntity().getId().equals(entity.getId())) {
+                    Entity child = childEd.getChildEntity();
+                    if (child != null && !(child instanceof ForbiddenEntity) && child.getId().equals(entity.getId())) {
                         log.debug("Found parent: {}", EntityUtils.identify(parent));
                         invalidate = true;
                         edIterator.remove();
@@ -1086,7 +1089,7 @@ public class EntityModel {
     public List<Entity> getOwnedCommonRootsByName(Long workspaceId, String name) throws Exception {
         List<Entity> results = new ArrayList<Entity>();
         Entity workspace = getEntityById(workspaceId);
-        for (Entity commonRoot : workspace.getOrderedChildren()) {
+        for (Entity commonRoot : ModelMgrUtils.getAccessibleChildren(workspace)) {
             if (ModelMgrUtils.isOwner(commonRoot) && commonRoot.getName().equals(name)) {
                 results.add(commonRoot);
             }

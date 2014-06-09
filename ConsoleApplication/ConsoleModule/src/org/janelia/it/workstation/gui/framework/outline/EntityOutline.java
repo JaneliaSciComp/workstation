@@ -47,6 +47,8 @@ import org.slf4j.LoggerFactory;
 
 import com.google.common.eventbus.Subscribe;
 import java.util.ArrayList;
+import org.janelia.it.jacs.shared.utils.StringUtils;
+import org.janelia.it.workstation.api.entity_model.management.ModelMgrUtils;
 import org.janelia.it.workstation.gui.dialogs.SetSortCriteriaDialog;
 import org.janelia.it.workstation.shared.workers.IndeterminateProgressMonitor;
 
@@ -310,7 +312,9 @@ public abstract class EntityOutline extends EntityTree implements Refreshable, A
     @Override
     protected void backgroundClicked(MouseEvent e) {
         this.currUniqueId = null;
-        ModelMgr.getModelMgr().getEntitySelectionModel().selectEntity(EntitySelectionModel.CATEGORY_OUTLINE, getRootUniqueId(), true);
+        if (!StringUtils.isEmpty(getRootUniqueId())) {
+            ModelMgr.getModelMgr().getEntitySelectionModel().selectEntity(EntitySelectionModel.CATEGORY_OUTLINE, getRootUniqueId(), true);
+        }
     }
 
     @Override
@@ -344,8 +348,8 @@ public abstract class EntityOutline extends EntityTree implements Refreshable, A
 
             EntityData newEd = null;
             int i = 0;
-            for (EntityData ed : root.getOrderedEntityData()) {
-                if (ed.getChildEntity() != null && ed.getChildEntity().getId().equals(entity.getId())) {
+            for (EntityData ed : ModelMgrUtils.getAccessibleEntityDatasWithChildren(root)) {
+                if (ed.getChildEntity().getId().equals(entity.getId())) {
                     newEd = ed;
                     break;
                 }
@@ -369,7 +373,7 @@ public abstract class EntityOutline extends EntityTree implements Refreshable, A
 
         Set<Entity> toRemove = new HashSet<Entity>();
 
-        for (Entity commonRoot : root.getOrderedChildren()) {
+        for (Entity commonRoot : ModelMgrUtils.getAccessibleChildren(root)) {
             if (commonRoot.getId().equals(entity.getId())) {
                 // A common root has changed
                 if (entity.getValueByAttributeName(EntityConstants.ATTRIBUTE_COMMON_ROOT) == null) {

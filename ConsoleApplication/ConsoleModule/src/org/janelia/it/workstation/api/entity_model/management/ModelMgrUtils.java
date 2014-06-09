@@ -8,6 +8,7 @@ import java.util.List;
 import org.janelia.it.jacs.model.entity.Entity;
 import org.janelia.it.jacs.model.entity.EntityConstants;
 import org.janelia.it.jacs.model.entity.EntityData;
+import org.janelia.it.jacs.model.entity.ForbiddenEntity;
 import org.janelia.it.jacs.shared.utils.EntityUtils;
 import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.workstation.model.entity.RootedEntity;
@@ -72,7 +73,7 @@ public class ModelMgrUtils {
 
     public static RootedEntity getChildFolder(RootedEntity parent, String name, boolean createIfMissing) throws Exception {
         Entity entity = parent.getEntity();
-        if (!EntityUtils.areLoaded(entity.getEntityData())) {
+        if (!ModelMgrUtils.areChildrenLoaded(entity)) {
             entity = ModelMgr.getModelMgr().loadLazyEntity(entity, false);
             parent.setEntity(entity);
         }
@@ -88,7 +89,7 @@ public class ModelMgrUtils {
         }
 
         RootedEntity child = parent.getChild(repFolderEd);
-        if (!EntityUtils.areLoaded(child.getEntity().getEntityData())) {
+        if (!ModelMgrUtils.areChildrenLoaded(child.getEntity())) {
             child.setEntity(ModelMgr.getModelMgr().loadLazyEntity(child.getEntity(), false));
         }
         return child;
@@ -112,14 +113,11 @@ public class ModelMgrUtils {
         }
 
         if (!found || !ignoreNested) {
-            if (!EntityUtils.areLoaded(entity.getEntityData())) {
+            if (!ModelMgrUtils.areChildrenLoaded(entity)) {
                 entity = ModelMgr.getModelMgr().loadLazyEntity(entity, !ignoreNested);
             }
-            for (EntityData entityData : entity.getOrderedEntityData()) {
-                Entity child = entityData.getChildEntity();
-                if (child != null) {
-                    items.addAll(ModelMgrUtils.getDescendantsOfType(child, typeName, ignoreNested));
-                }
+            for (EntityData entityData : getAccessibleEntityDatasWithChildren(entity)) {
+                items.addAll(ModelMgrUtils.getDescendantsOfType(entityData.getChildEntity(), typeName, ignoreNested));
             }
         }
 
@@ -128,10 +126,8 @@ public class ModelMgrUtils {
 
     public static void removeAllChildren(Entity entity) throws Exception {
         List<EntityData> toDelete = new ArrayList<EntityData>();
-        for (EntityData ed : new ArrayList<EntityData>(entity.getEntityData())) {
-            if (ed.getChildEntity() != null) {
-                toDelete.add(ed);
-            }
+        for (EntityData ed : ModelMgrUtils.getAccessibleEntityDatasWithChildren(entity)) {
+            toDelete.add(ed);
         }
         ModelMgr.getModelMgr().deleteBulkEntityData(entity, toDelete);
     }
@@ -145,10 +141,8 @@ public class ModelMgrUtils {
      */
     public static void fixOrderIndicies(Entity entity, Comparator<EntityData> comparator) throws Exception {
         List<EntityData> orderedData = new ArrayList<EntityData>();
-        for (EntityData ed : entity.getEntityData()) {
-            if (ed.getChildEntity() != null) {
-                orderedData.add(ed);
-            }
+        for (EntityData ed : ModelMgrUtils.getAccessibleEntityDatasWithChildren(entity)) {
+            orderedData.add(ed);
         }
         Collections.sort(orderedData, comparator);
 
@@ -158,5 +152,90 @@ public class ModelMgrUtils {
         }
 
         ModelMgr.getModelMgr().saveOrUpdateEntity(entity);
+    }
+    
+    public static List<EntityData> getAccessibleEntityDatas(Entity entity) {
+        List<EntityData> entityDatas = new ArrayList<EntityData>();
+        for (EntityData ed : entity.getOrderedEntityData()) {
+            Entity child = ed.getChildEntity();
+            if (child!=null && child instanceof ForbiddenEntity) {
+                continue;
+            }
+            entityDatas.add(ed);
+        }
+        return entityDatas;
+    } 
+    
+    public static List<EntityData> getAccessibleEntityDatasWithChildren(Entity entity) {
+        List<EntityData> entityDatas = new ArrayList<EntityData>();
+        for (EntityData ed : entity.getOrderedEntityData()) {
+            Entity child = ed.getChildEntity();
+            if (child==null) {
+                continue;
+            }
+            if (child instanceof ForbiddenEntity) {
+                continue;
+            }
+            entityDatas.add(ed);
+        }
+        return entityDatas;
+    } 
+            
+    public static int getNumAccessibleEntityDatas(Entity entity) {
+        int c = 0;
+        for (EntityData ed : entity.getEntityData()) {
+            Entity child = ed.getChildEntity();
+            if (child!=null && child instanceof ForbiddenEntity) {
+                continue;
+            }
+            c++;
+        }
+        return c;
+    } 
+    
+    public static List<Entity> getAccessibleChildren(Entity entity) {
+        List<Entity> children = new ArrayList<Entity>();
+        for (EntityData ed : entity.getOrderedEntityData()) {
+            Entity child = ed.getChildEntity();
+            if (child==null) {
+                continue;
+            }
+            if (child instanceof ForbiddenEntity) {
+                continue;
+            }
+            children.add(child);
+        }
+        return children;
+    } 
+    
+    public static int getNumAccessibleChildren(Entity entity) {
+        int c = 0;
+        for (EntityData ed : entity.getEntityData()) {
+            Entity child = ed.getChildEntity();
+            if (child==null) {
+                continue;
+            }
+            if (child instanceof ForbiddenEntity) {
+                continue;
+            }
+            c++;
+        }
+        return c;
+    } 
+    
+    public static boolean areChildrenLoaded(Entity entity) {
+        for (EntityData entityData : entity.getEntityData()) {
+            Entity child = entityData.getChildEntity();
+            if (child==null) {
+                continue;
+            }
+            if (child instanceof ForbiddenEntity) {
+                continue;
+            }
+            if (!EntityUtils.isInitialized(child)) {
+                return false;
+            }
+        }
+        return true;
     }
 }

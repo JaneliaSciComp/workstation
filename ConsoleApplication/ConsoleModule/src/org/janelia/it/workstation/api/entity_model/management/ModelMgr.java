@@ -221,7 +221,7 @@ public class ModelMgr {
 
     public TreeSet<String> getOntologyTermSet(Entity ontologyRoot) {
         TreeSet<String> ontologyElementTreeSet = new TreeSet<String>();
-        List<Entity> list = ontologyRoot.getOrderedChildren();
+        List<Entity> list = ModelMgrUtils.getAccessibleChildren(ontologyRoot);
         list = ontologyWalker(list);
         for (Entity entity : list) {
             ontologyElementTreeSet.add(entity.getName());
@@ -233,8 +233,9 @@ public class ModelMgr {
         List<Entity> finalList = new ArrayList<Entity>();
         finalList.addAll(list);
         for (Entity entity : list) {
-            if (null != entity.getChildren()) {
-                finalList.addAll(ontologyWalker(entity.getOrderedChildren()));
+            List<Entity> accessible = ModelMgrUtils.getAccessibleChildren(entity);
+            if (null != accessible) {
+                finalList.addAll(ontologyWalker(accessible));
             }
         }
         return finalList;

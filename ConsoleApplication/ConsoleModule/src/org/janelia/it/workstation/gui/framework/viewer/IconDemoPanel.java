@@ -1456,7 +1456,7 @@ public class IconDemoPanel extends IconPanel {
 
         Set<String> imageRoles = new HashSet<String>();
         for (RootedEntity rootedEntity : rootedEntities) {
-            for (EntityData ed : rootedEntity.getEntity().getEntityData()) {
+            for (EntityData ed : ModelMgrUtils.getAccessibleEntityDatas(rootedEntity.getEntity())) {
                 if (EntityUtils.hasImageRole(ed)) {
                     imageRoles.add(ed.getEntityAttrName());
                 }

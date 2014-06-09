@@ -10,6 +10,7 @@ import org.janelia.it.workstation.api.entity_model.management.ModelMgr;
 import org.janelia.it.workstation.model.entity.RootedEntity;
 import org.janelia.it.jacs.model.entity.Entity;
 import org.janelia.it.jacs.model.entity.EntityConstants;
+import org.janelia.it.workstation.api.entity_model.management.ModelMgrUtils;
 import org.janelia.it.workstation.model.viewer.MaskedVolume;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -81,8 +82,7 @@ public class CompartmentSet extends AlignedEntityWrapper implements Viewable2d, 
 
                 // Getting all the compartments.
                 compartmentSetEntity = ModelMgr.getModelMgr().getEntityAndChildren( compartmentSetEntity.getId() );
-                Set<Entity> children = compartmentSetEntity.getChildren();
-                for ( Entity child: children ) {
+                for (Entity child: ModelMgrUtils.getAccessibleChildren(compartmentSetEntity)) {
                     log.debug("Adding child compartment of {}.", child.getName());
                     if ( child.getEntityTypeName().equals( EntityConstants.TYPE_COMPARTMENT ) ) {
                         ModelMgr.getModelMgr().loadLazyEntity( child, false );

@@ -432,7 +432,7 @@ public class EntityTree extends JPanel implements ActivatableView {
 
                 log.debug("expandNodeWithLazyChildren: {}", EntityUtils.identify(getEntity(node)));
 
-                if (EntityUtils.areLoaded(getEntity(node).getEntityData())) {
+                if (ModelMgrUtils.areChildrenLoaded(getEntity(node))) {
                     SwingUtilities.invokeLater(new Runnable() {
                         @Override
                         public void run() {
