@@ -71,10 +71,10 @@ public class MultiTexVolumeBrick implements VolumeBrickI {
 
     private static Logger logger = LoggerFactory.getLogger(MultiTexVolumeBrick.class);
 
-    static {
-        try {
-            SwingUtilities.invokeLater(new Runnable() {
-                public void run() {
+//    static {
+//        try {
+//            SwingUtilities.invokeLater(new Runnable() {
+//                public void run() {
 // 3rd
 //                    GLProfile profile = GLProfile.get(GLProfile.GL3);
 //                    GLCapabilities glCaps = new GLCapabilities(profile);
@@ -96,16 +96,16 @@ public class MultiTexVolumeBrick implements VolumeBrickI {
 //                    GL2 gl = ctx.getGL().getGL2();
 // 1st
 //                    new JOCLSimpleGL2(capabilities);
-                }
-            });
-        } catch (Throwable th) {
-            logger.error("No GL2 profile available");
-        }
+//                }
+//            });
+//        } catch (Throwable th) {
+//            logger.error("No GL2 profile available");
+//        }
+//
+//    }
 
-    }
-
-    public MultiTexVolumeBrick(VolumeModel volumeModel) {
-        bufferManager = new VtxCoordBufMgr();
+    public MultiTexVolumeBrick(VolumeModel volumeModel, VtxCoordBufMgr bufMgr) {
+        this.bufferManager = bufMgr;
         setVolumeModel(volumeModel);
     }
 

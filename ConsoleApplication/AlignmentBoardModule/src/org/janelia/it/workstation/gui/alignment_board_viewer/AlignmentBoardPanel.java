@@ -258,8 +258,8 @@ public class AlignmentBoardPanel extends JPanel implements AlignmentBoardControl
         logger.info("Setting Mip3d Volume.");
         MultiTexVolumeBrickFactory volumeBrickFactory = new MultiTexVolumeBrickFactory();
         VolumeBrickActorBuilder actorBuilder = new VolumeBrickActorBuilder();
-        GLActor volumeBrickActor = actorBuilder.buildVolumeBrickActor(mip3d.getVolumeModel(), signalTexture, maskTexture, volumeBrickFactory, renderMapping);
-        if ( volumeBrickActor == null ) {
+        GLActor[] volumeBrickActors = actorBuilder.buildVolumeBrickActors(mip3d.getVolumeModel(), signalTexture, maskTexture, volumeBrickFactory, renderMapping);
+        if ( volumeBrickActors == null || volumeBrickActors.length == 0 ) {
             String msg = "Failed to load volume to mip3d.";
             logger.error(msg);
             //throw new RuntimeException( msg );
@@ -268,18 +268,22 @@ public class AlignmentBoardPanel extends JPanel implements AlignmentBoardControl
             boolean isMac = SystemInfo.OS_NAME.contains("mac");
             if ( isMac ) {
                 // Enforce opaque, transparent ordering of actors.
-                mip3d.addActor( volumeBrickActor );
+                for ( int i = 0; i < volumeBrickActors.length; i++ ) {
+                    mip3d.addActor( volumeBrickActors[i] );
+                }
             }
             GLActor axesActor = actorBuilder.buildAxesActor(
-                    volumeBrickActor.getBoundingBox3d(), 
+                    volumeBrickActors[0].getBoundingBox3d(), 
                     settingsData.getAcceptedDownsampleRate()
             );
             if ( axesActor != null ) {
                 mip3d.addActor( axesActor );
             }
             if ( ! isMac ) {
-                // Must add the brick _after_ the axes for non-Mac systems.
-                mip3d.addActor( volumeBrickActor );
+                // Must add the brick(s) _after_ the axes for non-Mac systems.
+                for ( int i = 0; i < volumeBrickActors.length; i++ ) {
+                    mip3d.addActor( volumeBrickActors[i] );
+                }
             }
 
             logger.info("Setting volume maxima on settings.");

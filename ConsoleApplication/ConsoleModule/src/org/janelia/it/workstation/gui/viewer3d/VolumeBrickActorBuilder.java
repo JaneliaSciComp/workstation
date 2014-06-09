@@ -59,7 +59,7 @@ public class VolumeBrickActorBuilder {
      * @param signalTexture for the intensity data.
      * @param maskTexture for the labels.
      * @param renderMapping for the mapping of labels to rendering techniques.
-     * @return true if sufficient params passed.
+     * @return a new brick actor if sufficient params passed.
      */
     public GLActor buildVolumeBrickActor(
             VolumeModel volumeModel,
@@ -88,6 +88,49 @@ public class VolumeBrickActorBuilder {
             actor = buildAxesActor( createBoundsOfVolumeModel(volumeModel), 1.0 );
         }
         return actor;
+    }
+
+    /**
+     * A multi-thread-load-friendly overload of the set-volume method.  The texture objects may be
+     * built at the caller's leisure, rather than being requested of passed-in builders.  This
+     * method does NOT reset the view.
+     *
+     * @param volumeModel for delegated methods.
+     * @param factory for creating volume brick.
+     * @param signalTexture for the intensity data.
+     * @param maskTexture for the labels.
+     * @param renderMapping for the mapping of labels to rendering techniques.
+     * @return all required actors.
+     */
+    public GLActor[] buildVolumeBrickActors(
+            VolumeModel volumeModel,
+            TextureDataI signalTexture,
+            TextureDataI maskTexture,
+            VolumeBrickFactory factory,
+            RenderMappingI renderMapping) {
+
+        GLActor[] actors = new GLActor[1];
+        GLActor actor = null;
+        if ( signalTexture != null ) {
+            VolumeBrickI brick = null;
+            if ( maskTexture != null ) {
+                RenderMapTextureBean renderMapTextureData = new RenderMapTextureBean();
+                renderMapTextureData.setMapping( renderMapping );
+                renderMapTextureData.setVolumeModel( volumeModel );
+
+                brick = factory.getVolumeBrick( volumeModel, maskTexture, renderMapTextureData );
+            }
+            else {
+                brick = factory.getVolumeBrick( volumeModel );
+            }
+            brick.setTextureData( signalTexture );
+            actor = brick;
+        }
+        else {
+            actor = buildAxesActor( createBoundsOfVolumeModel(volumeModel), 1.0 );
+        }
+        actors[ 0 ] = actor;
+        return actors;
     }
 
     /**
