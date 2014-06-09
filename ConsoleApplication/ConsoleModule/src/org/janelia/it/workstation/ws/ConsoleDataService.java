@@ -16,86 +16,86 @@ import org.janelia.it.workstation.model.utils.OntologyKeyBindings;
 /**
  * The Console server interface for clients to call in order to request data. This implementation accepts and returns
  * SOAP-friendly types like arrays instead of collection interfaces like Lists, which are not supported by JAX-WS.
- * 
+ *
  * @author <a href="mailto:rokickik@janelia.hhmi.org">Konrad Rokicki</a>
  */
 @WebService
 @SOAPBinding(style = SOAPBinding.Style.RPC)
 public interface ConsoleDataService extends Remote {
 
-	public int reservePort(
-			@WebParam(name = "clientName") String clientName) 
-			throws RemoteException;
+    public int reservePort(
+            @WebParam(name = "clientName") String clientName)
+            throws RemoteException;
 
-	public void registerClient(
-			@WebParam(name = "port") int port, 
-			@WebParam(name = "endpointUrl") String endpointUrl) 
-			throws RemoteException;
-    
+    public void registerClient(
+            @WebParam(name = "port") int port,
+            @WebParam(name = "endpointUrl") String endpointUrl)
+            throws RemoteException;
+
     public void selectEntity(
-			@WebParam(name = "entityId") long entityId,
-			@WebParam(name = "clearAll") boolean clearAll)
-    		throws RemoteException;
+            @WebParam(name = "entityId") long entityId,
+            @WebParam(name = "clearAll") boolean clearAll)
+            throws RemoteException;
 
     public void deselectEntity(
-			@WebParam(name = "entityId") long entityId)
-    		throws RemoteException;
-    
+            @WebParam(name = "entityId") long entityId)
+            throws RemoteException;
+
     public void createAnnotation(
-    		@WebParam(name = "annotation") OntologyAnnotation annotation) 
-    		throws RemoteException;
+            @WebParam(name = "annotation") OntologyAnnotation annotation)
+            throws RemoteException;
 
     public void removeAnnotation(
-    		@WebParam(name = "annotationId") long annotationId) 
-    		throws RemoteException;
-    	
+            @WebParam(name = "annotationId") long annotationId)
+            throws RemoteException;
+
     public Entity[] getAnnotationsForEntity(
-			@WebParam(name = "entityId") long entityId)
-    		throws RemoteException;
+            @WebParam(name = "entityId") long entityId)
+            throws RemoteException;
 
     public Entity[] getAnnotationsForEntities(
-			@WebParam(name = "entityIds") Long[] entityIds)
-    		throws RemoteException;
+            @WebParam(name = "entityIds") Long[] entityIds)
+            throws RemoteException;
 
-	public Entity getOntology(
-			@WebParam(name = "rootId") long rootId)
-			throws RemoteException;
+    public Entity getOntology(
+            @WebParam(name = "rootId") long rootId)
+            throws RemoteException;
 
-	public AnnotationSession getAnnotationSession(
-			@WebParam(name = "sessionId") long sessionId)
-			throws RemoteException;
-	
-	public OntologyKeyBindings getKeybindings(
-			@WebParam(name = "ontologyId") long ontologyId)
-			throws RemoteException;
-	
+    public AnnotationSession getAnnotationSession(
+            @WebParam(name = "sessionId") long sessionId)
+            throws RemoteException;
+
+    public OntologyKeyBindings getKeybindings(
+            @WebParam(name = "ontologyId") long ontologyId)
+            throws RemoteException;
+
     public Entity getEntityById(
-    		@WebParam(name = "entityId") long entityId)
-    		throws RemoteException;
+            @WebParam(name = "entityId") long entityId)
+            throws RemoteException;
 
     public Entity getEntityAndChildren(
             @WebParam(name = "entityId") long entityId)
             throws RemoteException;
 
-	public Entity getEntityTree(
-			@WebParam(name = "entityId") long entityId) 
-			throws RemoteException;
+    public Entity getEntityTree(
+            @WebParam(name = "entityId") long entityId)
+            throws RemoteException;
 
     public Entity[] getParentEntityArray(
-    		@WebParam(name = "childEntityId") long childEntityId)
-    		throws RemoteException;
-    
+            @WebParam(name = "childEntityId") long childEntityId)
+            throws RemoteException;
+
     public EntityData[] getParentEntityDataArray(
-    		@WebParam(name = "childEntityId") long childEntityId)
-    		throws RemoteException;
+            @WebParam(name = "childEntityId") long childEntityId)
+            throws RemoteException;
 
     public Entity getAncestorWithType(
-    		@WebParam(name = "entityId") long entityId, 
-    		@WebParam(name = "type") String type) 
-    		throws RemoteException;
-    
+            @WebParam(name = "entityId") long entityId,
+            @WebParam(name = "type") String type)
+            throws RemoteException;
+
     public String getUserAnnotationColor(
-    		@WebParam(name = "username") String username)
-    		throws RemoteException;
-    
+            @WebParam(name = "username") String username)
+            throws RemoteException;
+
 }
