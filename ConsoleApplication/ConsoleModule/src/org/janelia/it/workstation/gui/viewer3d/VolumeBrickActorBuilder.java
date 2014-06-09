@@ -109,26 +109,22 @@ public class VolumeBrickActorBuilder {
             VolumeBrickFactory factory,
             RenderMappingI renderMapping) {
 
+        if ( signalTexture == null || maskTexture == null ) {
+            throw new IllegalArgumentException( "Mask and signal must both be non-null." );
+        }
+        
         GLActor[] actors = new GLActor[1];
         GLActor actor = null;
-        if ( signalTexture != null ) {
-            VolumeBrickI brick = null;
-            if ( maskTexture != null ) {
-                RenderMapTextureBean renderMapTextureData = new RenderMapTextureBean();
-                renderMapTextureData.setMapping( renderMapping );
-                renderMapTextureData.setVolumeModel( volumeModel );
+        VolumeBrickI brick = null;
 
-                brick = factory.getVolumeBrick( volumeModel, maskTexture, renderMapTextureData );
-            }
-            else {
-                brick = factory.getVolumeBrick( volumeModel );
-            }
-            brick.setTextureData( signalTexture );
-            actor = brick;
-        }
-        else {
-            actor = buildAxesActor( createBoundsOfVolumeModel(volumeModel), 1.0 );
-        }
+        RenderMapTextureBean renderMapTextureData = new RenderMapTextureBean();
+        renderMapTextureData.setMapping(renderMapping);
+        renderMapTextureData.setVolumeModel(volumeModel);
+        
+        brick = factory.getVolumeBrick(volumeModel, maskTexture, renderMapTextureData);
+        brick.setTextureData(signalTexture);
+        actor = brick;
+        
         actors[ 0 ] = actor;
         return actors;
     }
