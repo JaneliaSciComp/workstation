@@ -35,7 +35,7 @@ import javax.swing.JPanel;
         preferredID = "DataViewerTopComponent"
 )
 @Messages({
-    "CTL_DataViewerAction=DataViewer",
+    "CTL_DataViewerAction=Data Viewer",
     "CTL_DataViewerTopComponent=DataViewer Window",
     "HINT_DataViewerTopComponent=This is a DataViewer window"
 })

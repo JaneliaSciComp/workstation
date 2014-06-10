@@ -50,7 +50,7 @@ import java.util.*;
 import java.util.List;
 import java.util.concurrent.Executor;
 
-public class ModelMgr {
+public final class ModelMgr {
 
     private static final Logger log = LoggerFactory.getLogger(ModelMgr.class);
 
@@ -108,13 +108,17 @@ public class ModelMgr {
                     }
                 }
             });
-
         }
         log.info("Successfully initialized");
     } //Singleton enforcement
 
     public static synchronized ModelMgr getModelMgr() {
         return modelManager;
+    }
+    
+    public void init() throws Exception {
+        // TODO: in the future, this should not rely on SessionMgr
+        getCurrentWorkspace();
     }
 
     public void addModelMgrObserver(ModelMgrObserver mml) {
@@ -586,9 +590,18 @@ public class ModelMgr {
         if (currWorkspaceId == null) {
             throw new IllegalStateException("Cannot create common root when workspace is not selected");
         }
-        return entityModel.createCommonRootFolder(currWorkspaceId, name);
+        return entityModel.createCommonRootFolder(currWorkspaceId, name).getChildEntity();
     }
-
+    
+    public RootedEntity createTopLevelRootedEntity(String name) throws Exception {
+        if (currWorkspaceId == null) {
+            throw new IllegalStateException("Cannot create common root when workspace is not selected");
+        }
+        EntityData commonRootEd = entityModel.createCommonRootFolder(currWorkspaceId, name);
+        RootedEntity workspaceRE = new RootedEntity(getCurrentWorkspace());
+        return workspaceRE.getChildById(commonRootEd.getChildEntity().getId());
+    }
+    
     public RootedEntity createAlignmentBoard(String alignmentBoardName, String alignmentSpace, String opticalRes, String pixelRes) throws Exception {
         return entityModel.createAlignmentBoard(currWorkspaceId, alignmentBoardName, alignmentSpace, opticalRes, pixelRes);
     }
@@ -698,7 +711,6 @@ public class ModelMgr {
 
     public List<Entity> getWorkspaces() throws Exception {
         return entityModel.getWorkspaces();
-
     }
 
     public void setCurrentWorkspaceId(Long workspaceId) {
@@ -708,7 +720,25 @@ public class ModelMgr {
     public Long getCurrentWorkspaceId() {
         return currWorkspaceId;
     }
+    
+    public Entity getCurrentWorkspace() throws Exception {
+        if (currWorkspaceId==null) {
+            // No current workspace defined, so make it the default workspace
+            for(Entity workspace : getWorkspaces()) {
+                if (workspace.getName().equals(EntityConstants.NAME_DEFAULT_WORKSPACE)) {
+                    setCurrentWorkspaceId(workspace.getId());    
+                }
+            }
+        }
+        return entityModel.getEntityById(currWorkspaceId);
+    }
 
+    public RootedEntity getOwnedTopLevelRootedEntity(String name) throws Exception {
+        if (currWorkspaceId==null) return null;
+        RootedEntity workspaceRE = new RootedEntity(getCurrentWorkspace());
+        return workspaceRE.getOwnedChildByName(name);
+    }
+    
     public Entity getOwnedCommonRootByName(String name) throws Exception {
         if (currWorkspaceId==null) {
             log.warn("No workspace is loaded, can't retrieve common root "+name);

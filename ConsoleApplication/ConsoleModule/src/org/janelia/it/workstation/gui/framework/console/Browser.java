@@ -149,6 +149,9 @@ public class Browser implements Cloneable {
 
     private void jbInit(BrowserModel browserModel) throws Exception {
 
+        // Initialize workspace
+        ModelMgr.getModelMgr().init();
+        
         viewerManager = new ViewerManager();
 
         boolean isViewersLinked = false;

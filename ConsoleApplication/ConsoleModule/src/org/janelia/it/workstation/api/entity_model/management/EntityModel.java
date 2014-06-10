@@ -963,10 +963,10 @@ public class EntityModel {
      * @return canonical entity instance
      * @throws Exception
      */
-    public Entity createCommonRootFolder(Long workspaceId, String folderName) throws Exception {
-        Entity commonRoot = null;
+    public EntityData createCommonRootFolder(Long workspaceId, String folderName) throws Exception {
+        EntityData commonRootEd = null;
         synchronized (this) {
-            EntityData commonRootEd = entityFacade.createFolderInWorkspace(workspaceId, folderName);
+            commonRootEd = entityFacade.createFolderInWorkspace(workspaceId, folderName);
             
             // Update in-memory workspace entity 
             Entity workspace = getEntityById(workspaceId);
@@ -976,11 +976,10 @@ public class EntityModel {
             commonRootEd.setParentEntity(workspace);
             
             // Finally we can cache the new common root
-            commonRoot = putOrUpdate(commonRootEd.getChildEntity());
-            
+            Entity commonRoot = putOrUpdate(commonRootEd.getChildEntity());
             notifyEntityCreated(commonRoot);
         }
-        return commonRoot;
+        return commonRootEd;
     }
 
     /**
@@ -1131,7 +1130,7 @@ public class EntityModel {
         List<Entity> matching = getOwnedCommonRootsByName(workspaceId, name);
         Entity result;
         if (matching.isEmpty()) {
-            result = createCommonRootFolder(workspaceId, name);
+            result = createCommonRootFolder(workspaceId, name).getChildEntity();
         }
         else {
             result = matching.get(0);    

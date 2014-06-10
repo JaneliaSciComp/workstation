@@ -16,9 +16,11 @@ import org.openide.util.NbBundle.Messages;
 
 import javax.swing.GroupLayout;
 import javax.swing.JPanel;
+import org.openide.windows.TopComponentGroup;
+import org.openide.windows.WindowManager;
 
 /**
- * Top component which displays something.
+ * Top component for the split picking workflow panel.
  */
 @ConvertAsProperties(
         dtd = "-//org.janelia.it.workstation.gui.split_picking//SplitPicking//EN",
@@ -29,7 +31,7 @@ import javax.swing.JPanel;
         //iconBase="SET/PATH/TO/ICON/HERE", 
         persistenceType = TopComponent.PERSISTENCE_ALWAYS
 )
-@TopComponent.Registration(mode = "rightSlidingSide", openAtStartup = false, position=400)
+@TopComponent.Registration(mode = "properties", openAtStartup = false, position=400)
 @ActionID(category = "Window", id = "SplitPickingTopComponent")
 @ActionReference(path = "Menu/Window", position = 400)
 @TopComponent.OpenActionRegistration(
@@ -37,8 +39,8 @@ import javax.swing.JPanel;
         preferredID = "SplitPickingTopComponent"
 )
 @Messages({
-    "CTL_SplitPickingAction=SplitPicking",
-    "CTL_SplitPickingTopComponent=Split Picking Tool",
+    "CTL_SplitPickingAction=Split Picking Tool",
+    "CTL_SplitPickingTopComponent=Split Picking Workflow",
     "HINT_SplitPickingTopComponent=Choosing from two lines to combine"
 })
 public final class SplitPickingTopComponent extends TopComponent {
@@ -84,12 +86,19 @@ public final class SplitPickingTopComponent extends TopComponent {
     // End of variables declaration//GEN-END:variables
     @Override
     public void componentOpened() {
+        TopComponentGroup tcg = WindowManager.getDefault().findTopComponentGroup("split_picking_plugin");
+        if (tcg != null) {
+            tcg.open();
+        }
         splitPickingPanel.refresh();
     }
 
     @Override
     public void componentClosed() {
-        // TODO add custom code on component closing
+        TopComponentGroup tcg = WindowManager.getDefault().findTopComponentGroup("split_picking_plugin");
+        if (tcg != null) {
+            tcg.close();
+        }
     }
 
     void writeProperties(Properties p) {

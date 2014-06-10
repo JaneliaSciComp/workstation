@@ -1,8 +1,3 @@
-/*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
- */
 package org.janelia.it.workstation.gui.split_picking;
 
 import java.awt.BorderLayout;
@@ -15,15 +10,16 @@ import org.janelia.it.workstation.gui.framework.viewer.ViewerSplitPanel;
 import org.janelia.it.workstation.model.entity.RootedEntity;
 import org.netbeans.api.settings.ConvertAsProperties;
 import org.openide.awt.ActionID;
-import org.openide.awt.ActionReference;
 import org.openide.windows.TopComponent;
 import org.openide.util.NbBundle.Messages;
 
 import javax.swing.GroupLayout;
 import javax.swing.JPanel;
+import org.openide.windows.TopComponentGroup;
+import org.openide.windows.WindowManager;
 
 /**
- * Top component which displays something.
+ * Top component showing dual AD/DBD split picking views.
  */
 @ConvertAsProperties(
         dtd = "-//org.janelia.it.workstation.gui.split_picking//SplitPickingLanes//EN",
@@ -35,21 +31,15 @@ import javax.swing.JPanel;
         persistenceType = TopComponent.PERSISTENCE_ALWAYS
 )
 @TopComponent.Registration(mode = "editor", openAtStartup = false, position = 200)
-@ActionID(category = "Window", id = "SplitPickingLanesTopComponent")
-@ActionReference(path = "Menu/Window", position = 200 )
-@TopComponent.OpenActionRegistration(
-        displayName = "#CTL_SplitPickingLanesAction",
-        preferredID = "SplitPickingLanesTopComponent"
-)
 @Messages({
-    "CTL_SplitPickingLanesAction=SplitPickingLanes",
-    "CTL_SplitPickingLanesTopComponent=Split Picking Lanes",
+    "CTL_SplitPickingLanesAction=Split Picking Lanes",
+    "CTL_SplitPickingLanesTopComponent=Split Picking Tool",
     "HINT_SplitPickingLanesTopComponent=Choose one image from each lane"
 })
 public final class SplitPickingLanesTopComponent extends TopComponent {
     public static final String PREFERRED_ID = "SplitPickingLanesTopComponent";
 
-    private ViewerManager viewerManager;
+    private final ViewerManager viewerManager;
     
     public SplitPickingLanesTopComponent() {
         initComponents();
@@ -121,7 +111,10 @@ public final class SplitPickingLanesTopComponent extends TopComponent {
 
     @Override
     public void componentClosed() {
-        // TODO add custom code on component closing
+        TopComponentGroup tcg = WindowManager.getDefault().findTopComponentGroup("split_picking_plugin");
+        if (tcg != null) {
+            tcg.close();
+        }
     }
 
     void writeProperties(Properties p) {

@@ -157,6 +157,14 @@ public class ViewerManager {
             RootedEntity currContextRE = viewerPane.getViewer().getContextRootedEntity();
             if (currContextRE!=null && currContextRE.getId().equals(rootedEntity.getId())) {
                 log.trace("Viewer has already loaded entity: "+rootedEntity.getName());
+                if (callable!=null) {
+                    try {
+                        callable.call();
+                    }
+                    catch (Exception e) {
+                        SessionMgr.getSessionMgr().handleException(e);
+                    }
+                }
                 return;
             }
         }
