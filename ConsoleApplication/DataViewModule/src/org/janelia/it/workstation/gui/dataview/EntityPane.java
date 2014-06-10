@@ -14,7 +14,8 @@ import org.janelia.it.workstation.shared.workers.SimpleWorker;
 import org.janelia.it.jacs.model.entity.Entity;
 import org.janelia.it.jacs.model.entity.EntityData;
 import org.janelia.it.jacs.model.entity.EntityType;
-import org.janelia.it.workstation.model.utils.ModelUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * A panel for displaying either lists of entities or Solr search results.
@@ -23,6 +24,8 @@ import org.janelia.it.workstation.model.utils.ModelUtils;
  */
 public class EntityPane extends JPanel {
 
+    private static final Logger log = LoggerFactory.getLogger(EntityPane.class);
+    
     private final EntityListPane entityListPane;
     private final SearchResultsPanel searchResultsPanel;
 
@@ -94,7 +97,7 @@ public class EntityPane extends JPanel {
 
     public void populateEntityDataPanes(final Entity entity) {
 
-        System.out.println("Populate data panes with " + entity);
+        log.info("Populate data panes with " + entity);
 
         entityParentsPane.showLoading();
         entityChildrenPane.showLoading();
@@ -233,7 +236,7 @@ public class EntityPane extends JPanel {
 //        	System.out.println(binding.getVariable("output"));
         }
         catch (Exception e) {
-            e.printStackTrace();
+            log.error("Error running Groovy code",e);
         }
 
         // TODO: implement

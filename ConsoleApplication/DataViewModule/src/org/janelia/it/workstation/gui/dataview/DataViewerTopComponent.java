@@ -4,8 +4,6 @@ import java.awt.BorderLayout;
 import java.util.Properties;
 
 import org.netbeans.api.settings.ConvertAsProperties;
-import org.openide.awt.ActionID;
-import org.openide.awt.ActionReference;
 import org.openide.windows.TopComponent;
 import org.openide.util.NbBundle.Messages;
 import org.openide.util.lookup.Lookups;
@@ -28,12 +26,6 @@ import javax.swing.JPanel;
         persistenceType = TopComponent.PERSISTENCE_NEVER
 )
 @TopComponent.Registration(mode = "editor", openAtStartup = false)
-@ActionID(category = "Window", id = "org.janelia.it.workstation.gui.dataview.DataViewerTopComponent")
-@ActionReference(path = "Menu/Window" /*, position = 333 */)
-@TopComponent.OpenActionRegistration(
-        displayName = "#CTL_DataViewerAction",
-        preferredID = "DataViewerTopComponent"
-)
 @Messages({
     "CTL_DataViewerAction=Data Viewer",
     "CTL_DataViewerTopComponent=DataViewer Window",
