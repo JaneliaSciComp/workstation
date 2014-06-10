@@ -13,6 +13,7 @@ import javax.swing.JPanel;
 import javax.swing.SwingUtilities;
 import org.janelia.it.workstation.api.entity_model.management.ModelMgr;
 import org.janelia.it.workstation.gui.alignment_board.Launcher;
+import org.janelia.it.workstation.gui.alignment_board.ab_mgr.AlignmentBoardMgr;
 import org.janelia.it.workstation.gui.alignment_board_viewer.AlignmentBoardPanel;
 import org.janelia.it.workstation.gui.viewer3d.events.AlignmentBoardItemChangeEvent;
 import org.janelia.it.workstation.gui.viewer3d.events.AlignmentBoardOpenEvent;
@@ -35,16 +36,16 @@ import org.slf4j.LoggerFactory;
         autostore = false
 )
 @TopComponent.Description(
-        preferredID = "AlignmentBoardTopComponent",
+        preferredID = AlignmentBoardMgr.ALIGNMENT_BOARD_TOP_COMPONENT_ID,
         //iconBase="SET/PATH/TO/ICON/HERE", 
         persistenceType = TopComponent.PERSISTENCE_ALWAYS
 )
 @TopComponent.Registration(mode = "editor", openAtStartup = false, position = 300)
-@ActionID(category = "Window", id = "AlignmentBoardTopComponent")
+@ActionID(category = "Window", id = AlignmentBoardMgr.ALIGNMENT_BOARD_TOP_COMPONENT_ID)
 @ActionReference(path = "Menu/Window", position = 300 )
 @TopComponent.OpenActionRegistration(
         displayName = "#CTL_AlignmentBoardAction",
-        preferredID = "AlignmentBoardTopComponent"
+        preferredID = AlignmentBoardMgr.ALIGNMENT_BOARD_TOP_COMPONENT_ID
 )
 @Messages({
     "CTL_AlignmentBoardAction=Alignment Board",
