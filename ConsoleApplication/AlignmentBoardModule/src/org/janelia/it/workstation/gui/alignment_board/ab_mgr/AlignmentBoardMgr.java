@@ -14,8 +14,11 @@ import org.janelia.it.workstation.gui.alignment_board_viewer.LayersPanel;
  * @author fosterl
  */
 public class AlignmentBoardMgr {
-    private static AlignmentBoardMgr instance = new AlignmentBoardMgr();
-    private LayersPanel layersPanel = new LayersPanel();
+    public static final String ALIGNMENT_BOARD_TOP_COMPONENT_ID = "AlignmentBoardTopComponent";
+    public static final String ALIGNMENT_BOARD_CTRLS_TOP_COMPONENT_ID = "AlignmentBoardControlsTopComponent";
+
+    private static final AlignmentBoardMgr instance = new AlignmentBoardMgr();
+    private final LayersPanel layersPanel = new LayersPanel();
     private AlignmentBoardMgr() {}
     public static AlignmentBoardMgr getInstance() {
         return instance;
