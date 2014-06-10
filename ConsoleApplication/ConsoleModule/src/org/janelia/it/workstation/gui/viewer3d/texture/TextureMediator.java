@@ -97,6 +97,11 @@ public class TextureMediator {
             gl.glTexEnvi(GL2.GL_TEXTURE_ENV, GL2.GL_TEXTURE_ENV_MODE, GL2.GL_REPLACE);
             reportError( "glTexEnv MODE-REPLACE", gl );
 
+            int totalSzForChunks = 0;
+            for ( VolumeDataChunk volumeDataChunk: textureData.getTextureData().getVolumeChunks() ) {
+                totalSzForChunks += volumeDataChunk.getDepth();
+            }
+            
             try {
                 gl.glTexImage3D(
                         GL2.GL_TEXTURE_3D,
@@ -104,7 +109,7 @@ public class TextureMediator {
                         getInternalFormat(), // as stored INTO graphics hardware, w/ srgb info (GLint internal format)
                         textureData.getSx(), // width
                         textureData.getSy(), // height
-                        textureData.getSz(), // depth
+                        totalSzForChunks, // depth
                         0, // border
                         getVoxelComponentOrder(), // voxel component order (GLenum format)
                         getVoxelComponentType(), // voxel component type=packed RGBA values(GLenum type)
@@ -123,18 +128,22 @@ public class TextureMediator {
                             ";  expected remaining is " + expectedRemaining
                     );
                 }
+                reportError( "glTexImage-Allocation", gl );
 
+                int nextZPos = 0;
                 for ( VolumeDataChunk volumeDataChunk: textureData.getTextureData().getVolumeChunks() ) {
                     ByteBuffer data = ByteBuffer.wrap( volumeDataChunk.getData() );
                     data.rewind();
 
-                    logger.debug("Sub-image: {}, {}, " + volumeDataChunk.getStartZ(), volumeDataChunk.getStartX(), volumeDataChunk.getStartY() );
+                    logger.debug("Sub-image: {}, {}, {}.", volumeDataChunk.getStartX(), volumeDataChunk.getStartY(),  volumeDataChunk.getStartZ());
+                    logger.debug("Sub-w/h/d: {}, {}, {}.", volumeDataChunk.getWidth(),  volumeDataChunk.getHeight(),  volumeDataChunk.getDepth());
+                    logger.debug("Vox Comp Order: {}; Vox Comp Type: {}.", getConstantName(getVoxelComponentOrder()), getConstantName(getVoxelComponentType()));
                     gl.glTexSubImage3D(
                             GL2.GL_TEXTURE_3D,
                             0, // mipmap level
                             volumeDataChunk.getStartX(),
                             volumeDataChunk.getStartY(),
-                            volumeDataChunk.getStartZ(),
+                            nextZPos,
                             volumeDataChunk.getWidth(), // width
                             volumeDataChunk.getHeight(), // height
                             volumeDataChunk.getDepth(), // depth
@@ -142,6 +151,8 @@ public class TextureMediator {
                             getVoxelComponentType(), // voxel component type=packed RGBA values(GLenum type)
                             data
                     );
+                    nextZPos += volumeDataChunk.getDepth();
+                    reportError( "glTexImage-push", gl );
 
                 }
 
@@ -154,7 +165,6 @@ public class TextureMediator {
                 );
                 exGlTexImage.printStackTrace();
             }
-            reportError( "glTexImage", gl );
             gl.glBindTexture( GL2.GL_TEXTURE_3D, 0 );
             gl.glDisable( GL2.GL_TEXTURE_3D );
             reportError( "disable-tex", gl );
