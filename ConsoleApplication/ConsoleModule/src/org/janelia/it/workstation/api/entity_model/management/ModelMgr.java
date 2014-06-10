@@ -60,7 +60,7 @@ public final class ModelMgr {
     public static final String CATEGORY_KEYBINDS_ONTOLOGY = "Keybind:Ontology:";
     public static final String CATEGORY_SORT_CRITERIA = "SortCriteria:";
 
-    private static ModelMgr modelManager = new ModelMgr();
+    private static final ModelMgr modelManager = new ModelMgr();
     private ThreadQueue threadQueue;
     private ThreadQueue notificationQueue;
 
@@ -693,6 +693,12 @@ public final class ModelMgr {
         return null;
     }
 
+    public void reset() {
+        entityModel.invalidateAll();
+        this.currWorkspaceId = null;
+        this.annotationSession = null;
+    }
+    
     public void invalidateCache() {
         entityModel.invalidateAll();
     }
@@ -730,7 +736,9 @@ public final class ModelMgr {
                 }
             }
         }
-        return entityModel.getEntityById(currWorkspaceId);
+        Entity curr = entityModel.getEntityById(currWorkspaceId);
+        log.info("Got current workspace {} as {}",currWorkspaceId,curr);
+        return curr;
     }
 
     public RootedEntity getOwnedTopLevelRootedEntity(String name) throws Exception {
