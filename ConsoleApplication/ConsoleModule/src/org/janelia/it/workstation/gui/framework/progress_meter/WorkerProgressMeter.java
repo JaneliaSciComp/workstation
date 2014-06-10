@@ -3,8 +3,6 @@ package org.janelia.it.workstation.gui.framework.progress_meter;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.awt.event.MouseAdapter;
-import java.awt.event.MouseEvent;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -15,20 +13,21 @@ import org.janelia.it.workstation.api.entity_model.events.WorkerChangedEvent;
 import org.janelia.it.workstation.api.entity_model.events.WorkerEndedEvent;
 import org.janelia.it.workstation.api.entity_model.events.WorkerStartedEvent;
 import org.janelia.it.workstation.api.entity_model.management.ModelMgr;
-import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.workstation.gui.util.Icons;
 import org.janelia.it.workstation.shared.workers.BackgroundWorker;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.common.eventbus.Subscribe;
+import org.janelia.it.workstation.gui.util.WindowLocator;
+import org.openide.windows.TopComponent;
 
 /**
  * A progress meter for all background worker tasks.
  * 
  * @author <a href="mailto:rokickik@janelia.hhmi.org">Konrad Rokicki</a>
  */
-public class WorkerProgressMeter extends JDialog {
+public class WorkerProgressMeter extends JPanel {
     
     public static final Dimension PREFERRED_DIMENSION = new Dimension(800, 600);
 
@@ -40,28 +39,23 @@ public class WorkerProgressMeter extends JDialog {
     
     private static final Font statusFont = new Font("Sans Serif", Font.PLAIN, 10);
     
-    private static WorkerProgressMeter progressMeter;
+    private static WorkerProgressMeter instance;
     
-    private JPanel wholeMeterPanel = new JPanel();
-    private JPanel mainPanel = new JPanel();
-    private JButton clearButton;
-    private JButton okButton;
+    private final JPanel mainPanel;
+    private final JButton clearButton;
+    private final JButton okButton;
     
-    private ImageIcon animatedIcon = Icons.getIcon("cog_small_anim_orange.gif");
-    private ImageIcon staticIcon = Icons.getIcon("cog_small.gif");
-    private JLabel menuLabel;
+    private final ImageIcon animatedIcon = Icons.getIcon("cog_small_anim_orange.gif");
+    private final ImageIcon staticIcon = Icons.getIcon("cog_small.gif");
+    private ImageIcon currIcon = staticIcon;
     
-    static {
-        WorkerProgressMeter.getProgressMeter();
-    }
-
-    private WorkerProgressMeter(Frame frame, String title, boolean modal) {
-        super(frame, title, modal);
-
-        wholeMeterPanel.setPreferredSize(PREFERRED_DIMENSION);
-        wholeMeterPanel.setLayout(new BorderLayout());
-        setPreferredSize(PREFERRED_DIMENSION);
+    private WorkerProgressMeter() {
         
+        setPreferredSize(PREFERRED_DIMENSION);
+        setLayout(new BorderLayout());
+        
+        this.mainPanel = new JPanel();
+                
         JPanel scrollLayer = new JPanel();
         scrollLayer.setLayout(new BorderLayout());
         scrollLayer.add(mainPanel, BorderLayout.CENTER);
@@ -73,7 +67,7 @@ public class WorkerProgressMeter extends JDialog {
         scrollPane.setHorizontalScrollBarPolicy(ScrollPaneConstants.HORIZONTAL_SCROLLBAR_NEVER);
         
         setLayout(new BorderLayout());
-        wholeMeterPanel.add(scrollPane, BorderLayout.CENTER);
+        add(scrollPane, BorderLayout.CENTER);
 
         this.clearButton = new JButton("Clear Completed");
         clearButton.setToolTipText("Remove all finished operations");
@@ -101,41 +95,15 @@ public class WorkerProgressMeter extends JDialog {
         buttonPane.add(clearButton);
         buttonPane.add(okButton);
         
-        wholeMeterPanel.add(buttonPane, BorderLayout.SOUTH);
-        add(wholeMeterPanel);
-        pack();
-    }
-    
-    public JPanel getMeterPanel() { return wholeMeterPanel; }
-
-    private WorkerProgressMeter() {
-        this(SessionMgr.getMainFrame(), "Progress Monitor", false);
-
-        // Exported UI element for use in the top level menu
-        menuLabel = new JLabel(staticIcon);
-        menuLabel.addMouseListener(new MouseAdapter() {
-            public void mouseReleased(MouseEvent e) {
-                resetPosition();
-                setVisible(true);
-            }
-        });
-    }
-    
-    protected void resetPosition() {
-        Point bp = SessionMgr.getMainFrame().getLocation();
-        Dimension bs = SessionMgr.getMainFrame().getSize();
-        Point tp = menuLabel.getLocation();
-        // Fudge the title bar height, since it's probably he same as the menu height
-        int titleBarHeight = SessionMgr.getMainFrame().getJMenuBar().getSize().height;
-        setLocation(new Point(bp.x + bs.width - getWidth(), bp.y + titleBarHeight + tp.y));
+        add(buttonPane, BorderLayout.SOUTH);
     }
 
-    public static WorkerProgressMeter getProgressMeter() {
-        if (progressMeter == null) {
-            progressMeter = new WorkerProgressMeter();
-            ModelMgr.getModelMgr().registerOnEventBus(progressMeter);
+    public static WorkerProgressMeter getSingletonInstance() {
+        if (instance == null) {
+            instance = new WorkerProgressMeter();
+            ModelMgr.getModelMgr().registerOnEventBus(instance);
         }
-        return progressMeter;
+        return instance;
     }    
     
     public boolean hasWorkersInProgress() {
@@ -197,35 +165,56 @@ public class WorkerProgressMeter extends JDialog {
         SwingUtilities.invokeLater(new Runnable() {
             @Override
             public void run() {
-                resetPosition();
                 clearButton.setEnabled(hasWorkersCompleted());
                 mainPanel.revalidate();
                 mainPanel.repaint();
             }
         });
     }
-    
-    public JLabel getMenuLabel() {
-        return menuLabel;
-    }
-    
-    private void updateMenuLabel() {
+        
+    private void updateMenuLabel(boolean showProgress) {
         if (hasWorkersInProgress()) {
-            menuLabel.setIcon(animatedIcon);
+            currIcon = animatedIcon;
         }
         else {
-            menuLabel.setIcon(staticIcon);
+            currIcon = staticIcon;
         }
-        menuLabel.revalidate();
-        menuLabel.repaint();
+        
+        TopComponent tc = WindowLocator.getByName(ProgressTopComponent.PREFERRED_ID);
+        if (tc!=null) {
+            tc.open();
+            
+            // TODO: figure out a way to apply a custom BusyTabsSupport to the rightSlidingPane, so that we can use a custom busy icon
+//            if (hasWorkersInProgress()) {
+//                tc.makeBusy(true);
+//            }
+//            else {
+//                tc.makeBusy(false);
+//            }
+            
+            if (showProgress) {
+                tc.requestVisible();
+            }
+        }
+    }
+    
+    public ImageIcon getStaticIcon() {
+        return staticIcon;
+    }
+    
+    public ImageIcon getAnimatedIcon() {
+        return animatedIcon;
+    }
+    
+    public ImageIcon getCurrentIcon() {
+        return currIcon;
     }
     
     @Subscribe
     public void processEvent(WorkerStartedEvent e) {
         log.debug("Worker started: {}",e.getWorker().getName());
         addWorker(e.getWorker());
-        updateMenuLabel();
-        setVisible(true);
+        updateMenuLabel(true);
     }
     
     @Subscribe
@@ -234,7 +223,7 @@ public class WorkerProgressMeter extends JDialog {
         if (workerPanel!=null) {
             log.debug("Worker changed: {}, Status:{}",e.getWorker().getName(),e.getWorker().getStatus());
             workerPanel.update();
-            updateMenuLabel();
+            updateMenuLabel(false);
         }
     }
     
@@ -244,7 +233,7 @@ public class WorkerProgressMeter extends JDialog {
         if (workerPanel!=null) {
             log.debug("Worker ended: {}",e.getWorker().getName());
             workerPanel.update();
-            updateMenuLabel();
+            updateMenuLabel(false);
         }
     }
 

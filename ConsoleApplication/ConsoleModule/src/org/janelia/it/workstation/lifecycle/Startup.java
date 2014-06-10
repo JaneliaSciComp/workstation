@@ -19,8 +19,7 @@ public class Startup implements Runnable {
         try {
             setSystemProperties();
         } catch ( Exception ex ) {
-            ex.printStackTrace();
-            logger.error("Failed to initialize starting-hook.");
+            logger.error("Failed to initialize starting-hook.",ex);
         }
     }
     private static void setSystemProperties() {
