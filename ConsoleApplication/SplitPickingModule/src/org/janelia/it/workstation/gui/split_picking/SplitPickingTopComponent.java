@@ -1,8 +1,3 @@
-/*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
- */
 package org.janelia.it.workstation.gui.split_picking;
 
 import java.awt.BorderLayout;
@@ -16,8 +11,9 @@ import org.openide.util.NbBundle.Messages;
 
 import javax.swing.GroupLayout;
 import javax.swing.JPanel;
-import org.openide.windows.TopComponentGroup;
-import org.openide.windows.WindowManager;
+import org.janelia.it.workstation.gui.util.WindowLocator;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Top component for the split picking workflow panel.
@@ -44,19 +40,24 @@ import org.openide.windows.WindowManager;
     "HINT_SplitPickingTopComponent=Choosing from two lines to combine"
 })
 public final class SplitPickingTopComponent extends TopComponent {
-    public static final String PREFERRED_ID = "SplitPickingTopComponent";
+    
+    private Logger log = LoggerFactory.getLogger( SplitPickingTopComponent.class );
 
-    private SplitPickingPanel splitPickingPanel;
+    public static final String PREFERRED_ID = "SplitPickingTopComponent";
+    
+    private final SplitPickingPanel splitPickingPanel;
     
     public SplitPickingTopComponent() {
         initComponents();
         splitPickingPanel = new SplitPickingPanel();
-        jPanel1.add( splitPickingPanel, BorderLayout.CENTER );
         setName(Bundle.CTL_SplitPickingTopComponent());
         setToolTipText(Bundle.HINT_SplitPickingTopComponent());
-
     }
 
+    private void initMyComponents() {
+        jPanel1.add( splitPickingPanel, BorderLayout.CENTER );
+    }
+    
     /**
      * This method is called from within the constructor to initialize the form.
      * WARNING: Do NOT modify this code. The content of this method is always
@@ -86,19 +87,16 @@ public final class SplitPickingTopComponent extends TopComponent {
     // End of variables declaration//GEN-END:variables
     @Override
     public void componentOpened() {
-        TopComponentGroup tcg = WindowManager.getDefault().findTopComponentGroup("split_picking_plugin");
-        if (tcg != null) {
-            tcg.open();
-        }
+        initMyComponents();
         splitPickingPanel.refresh();
     }
 
     @Override
     public void componentClosed() {
-        TopComponentGroup tcg = WindowManager.getDefault().findTopComponentGroup("split_picking_plugin");
-        if (tcg != null) {
-            tcg.close();
-        }
+         // Closing the group doesn't seem to work, so we close the lanes explicitely
+         TopComponent tc = WindowLocator.getByName(SplitPickingLanesTopComponent.PREFERRED_ID);
+         if (tc!=null) tc.close();
+         
     }
 
     void writeProperties(Properties p) {

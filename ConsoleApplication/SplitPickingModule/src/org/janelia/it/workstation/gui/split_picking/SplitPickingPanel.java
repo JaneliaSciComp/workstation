@@ -1381,26 +1381,18 @@ public class SplitPickingPanel extends JPanel implements Refreshable {
         // searched, split picking lanes show.  Then do same
         // for main wizard panel to stack the focus order.
         TopComponent tc = getLanesTopComponent();
-        tc.requestActive();
         tc = getTopComponent(SplitPickingTopComponent.PREFERRED_ID);
         tc.requestActive();
-
         return SessionMgr.getBrowser().getPatternSearchDialog();
     }
 
     private SplitPickingLanesTopComponent getLanesTopComponent() {
-        SplitPickingLanesTopComponent rtnVal = null;
-        TopComponent tc = getTopComponent(SplitPickingLanesTopComponent.PREFERRED_ID);
-        if (tc instanceof SplitPickingLanesTopComponent) {
-            if (!tc.isOpened()) {
-                tc.open();
-                tc.requestActive();
-            }
-            SplitPickingLanesTopComponent lanes = (SplitPickingLanesTopComponent) tc;
-            rtnVal = lanes;
+        SplitPickingLanesTopComponent lanes = (SplitPickingLanesTopComponent)getTopComponent(SplitPickingLanesTopComponent.PREFERRED_ID);
+        if (!lanes.isOpened()) {
+            lanes.open();
         }
-
-        return rtnVal;
+        lanes.requestActive();
+        return lanes;
     }
 
     private TopComponent getTopComponent(String preferredId) {
