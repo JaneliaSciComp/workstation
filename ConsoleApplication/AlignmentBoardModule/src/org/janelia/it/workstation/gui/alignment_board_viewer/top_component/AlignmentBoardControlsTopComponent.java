@@ -7,9 +7,7 @@ package org.janelia.it.workstation.gui.alignment_board_viewer.top_component;
 
 import java.awt.BorderLayout;
 import java.util.Properties;
-import javax.swing.GroupLayout;
 import javax.swing.JLabel;
-import javax.swing.JPanel;
 import javax.swing.JSplitPane;
 import org.janelia.it.workstation.gui.alignment_board.ab_mgr.AlignmentBoardMgr;
 import org.janelia.it.workstation.gui.alignment_board_viewer.LayersPanel;
@@ -30,16 +28,16 @@ import org.slf4j.LoggerFactory;
         autostore = false
 )
 @TopComponent.Description(
-        preferredID = "AlignmentBoardControlsTopComponent",
+        preferredID = AlignmentBoardMgr.ALIGNMENT_BOARD_CTRLS_TOP_COMPONENT_ID,
         //iconBase="SET/PATH/TO/ICON/HERE", 
         persistenceType = TopComponent.PERSISTENCE_ALWAYS
 )
 @TopComponent.Registration(mode = "properties", openAtStartup = false)
-@ActionID(category = "Window", id = "AlignmentBoardControlsTopComponent")
+@ActionID(category = "Window", id = AlignmentBoardMgr.ALIGNMENT_BOARD_CTRLS_TOP_COMPONENT_ID)
 @ActionReference(path = "Menu/Window" /*, position = 333 */)
 @TopComponent.OpenActionRegistration(
         displayName = "#CTL_AlignmentBoardControlsAction",
-        preferredID = "AlignmentBoardControlsTopComponent"
+        preferredID = AlignmentBoardMgr.ALIGNMENT_BOARD_CTRLS_TOP_COMPONENT_ID
 )
 @Messages({
     "CTL_AlignmentBoardControlsAction=Alignment Board Controls",
