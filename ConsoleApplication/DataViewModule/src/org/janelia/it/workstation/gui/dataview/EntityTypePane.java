@@ -20,6 +20,7 @@ import java.awt.event.ActionListener;
 import java.awt.event.MouseEvent;
 import java.util.List;
 import java.util.TreeMap;
+import org.janelia.it.workstation.gui.util.WindowLocator;
 
 /**
  * The left-hand panel which lists the Entity types and their attributes.
@@ -30,13 +31,8 @@ public class EntityTypePane extends JScrollPane {
 
     private SimpleWorker loadTask;
     private final JTree tree;
-    private final SearchPane searchPane;
-    private final SearchResultsPanel searchResultsPanel;
 
-    public EntityTypePane(EntityPane entityPane) {
-
-        this.searchPane = entityPane.getSearchPane();
-        this.searchResultsPanel = entityPane.getSearchResultsPanel();
+    public EntityTypePane() {
 
         tree = new JTree(new DefaultMutableTreeNode("Loading..."));
         setViewportView(tree);
@@ -46,21 +42,6 @@ public class EntityTypePane extends JScrollPane {
             protected void popupTriggered(MouseEvent e) {
                 tree.setSelectionRow(tree.getRowForLocation(e.getX(), e.getY()));
                 showPopupMenu(e);
-            }
-
-            @Override
-            protected void singleLeftClicked(MouseEvent e) {
-                TreePath path = tree.getClosestPathForLocation(e.getX(), e.getY());
-                DefaultMutableTreeNode node = (DefaultMutableTreeNode) path.getLastPathComponent();
-                if (node.getUserObject() instanceof EntityType) {
-//                    DataviewApp.getMainFrame().getEntityPane().showEntities((EntityType) node.getUserObject());
-//                    tree.setSelectionPath(path);
-                }
-                else if (node.getUserObject() instanceof EntityAttribute) {
-//                    DefaultMutableTreeNode parent = (DefaultMutableTreeNode) node.getParent();
-//                    DataviewApp.getMainFrame().getEntityPane().showEntities((EntityType) parent.getUserObject());
-//                    tree.setSelectionPath(path.getParentPath());
-                }
             }
         });
     }
@@ -125,6 +106,9 @@ public class EntityTypePane extends JScrollPane {
             searchItem.addActionListener(new ActionListener() {
                 @Override
                 public void actionPerformed(ActionEvent e) {
+                    EntityPane entityPane = getEntityPane();
+                    SearchPane searchPane = entityPane.getSearchPane();
+                    SearchResultsPanel searchResultsPanel = entityPane.getSearchResultsPanel();
                     searchPane.setTabIndex(1);
                     searchPane.getSolrPanel().setSearchString("+entity_type:\"" + entityType.getName() + "\"");
                     searchPane.performSolrSearch(true);
@@ -140,6 +124,9 @@ public class EntityTypePane extends JScrollPane {
             searchItem.addActionListener(new ActionListener() {
                 @Override
                 public void actionPerformed(ActionEvent e) {
+                    EntityPane entityPane = getEntityPane();
+                    SearchPane searchPane = entityPane.getSearchPane();
+                    SearchResultsPanel searchResultsPanel = entityPane.getSearchResultsPanel();
                     searchPane.setTabIndex(1);
                     String attrName = SolrUtils.getDynamicFieldName(entityAttr.getName());
                     searchPane.getSolrPanel().setSearchString("+" + attrName + ":*");
@@ -151,6 +138,16 @@ public class EntityTypePane extends JScrollPane {
         }
 
         popupMenu.show((JComponent) e.getSource(), e.getX(), e.getY());
+    }
+    
+    private EntityPane getEntityPane() { 
+        DataViewerTopComponent tc = (DataViewerTopComponent)WindowLocator.getByName(DataViewerTopComponent.PREFERRED_ID);
+        if (tc!=null) {
+            tc.open();
+            tc.requestActive();
+            return tc.getDataViewer().getEntityPane();
+        }
+        return null;
     }
 
     public void refresh() {
