@@ -143,6 +143,7 @@ public class Skeleton {
 
 	///// MOVE
 	public Signal1<Anchor> anchorMovedSignal = new Signal1<Anchor>();
+	public Signal1<Anchor> anchorMovedSilentSignal = new Signal1<Anchor>();
 	public Slot1<TmGeoAnnotation> moveAnchorBackSlot = new Slot1<TmGeoAnnotation>() {
 		@Override
 		public void execute(TmGeoAnnotation tga) {
@@ -178,6 +179,7 @@ public class Skeleton {
         anchorReparentedSignal.connect(skeletonChangedSignal);
         anchorNeighborsUpdatedSignal.connect(skeletonChangedSignal);
 		anchorMovedSignal.connect(skeletonChangedSignal);
+		anchorMovedSilentSignal.connect(skeletonChangedSignal);
 		// log.info("Skeleton constructor");
 	}
 	
@@ -190,6 +192,8 @@ public class Skeleton {
 			anchorsByGuid.put(guid, anchor);
 		anchor.anchorMovedSignal.disconnect(this.anchorMovedSignal);
 		anchor.anchorMovedSignal.connect(this.anchorMovedSignal);
+		anchor.anchorMovedSilentSignal.disconnect(this.anchorMovedSilentSignal);
+		anchor.anchorMovedSilentSignal.connect(this.anchorMovedSilentSignal);
 		anchorHistory.push(anchor);
 		anchorAddedSignal.emit(anchor);
 		return anchor;
@@ -258,6 +262,7 @@ public class Skeleton {
 		anchorHistory.remove(anchor);
 		//
 		anchor.anchorMovedSignal.disconnect(this.anchorMovedSignal);
+		anchor.anchorMovedSilentSignal.disconnect(this.anchorMovedSilentSignal);
 		anchorDeletedSignal.emit(anchor);
 		return true;
 	}

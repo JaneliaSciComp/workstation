@@ -123,14 +123,14 @@ elements of what's been done; that's handled by signals emitted from AnnotationM
                 double dy = closest.getY() - anchor.getLocation().getY();
                 double dz = closest.getZ() - anchor.getLocation().getZ();
                 if (dx * dx + dy * dy + dz * dz < DRAG_MERGE_THRESHOLD_SQUARED) {
-                    System.out.println("merging " + anchor.getGuid() + " to " + anchor.getLocation());
+                    // System.out.println("merging " + anchor.getGuid() + " to " + anchor.getLocation());
                     mergeNeurite(anchor.getGuid(), closest.getId());
                     return;
                 }
             }
 
             // no merge, so move
-            System.out.println("moving " + anchor.getGuid() + " to " + anchor.getLocation());
+            // System.out.println("moving " + anchor.getGuid() + " to " + anchor.getLocation());
             moveAnnotation(anchor.getGuid(), anchor.getLocation());
         }
     };
@@ -445,7 +445,7 @@ elements of what's been done; that's handled by signals emitted from AnnotationM
 
         TmGeoAnnotation sourceAnnotation = annotationModel.getGeoAnnotationFromID(sourceAnnotationID);
         TmGeoAnnotation targetAnnotation = annotationModel.getGeoAnnotationFromID(targetAnnotationID);
-        System.out.println("merge requested, " + sourceAnnotationID + " to " + targetAnnotationID);
+        // System.out.println("merge requested, " + sourceAnnotationID + " to " + targetAnnotationID);
 
         // same neurite = cycle = NO!
         if (annotationModel.getNeuriteRootAnnotation(sourceAnnotation).getId().equals(
