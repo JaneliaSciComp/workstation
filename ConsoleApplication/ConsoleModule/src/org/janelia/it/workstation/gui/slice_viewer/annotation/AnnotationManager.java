@@ -458,10 +458,10 @@ elements of what's been done; that's handled by signals emitted from AnnotationM
             return;
         }
 
-        // are you sure dialog; especially if different neurons?
+        // are you sure dialog; should probably provide more info, but not
+        //  clear what that would be; "merge neurite rooted at xyz with ## annotations
+        //  in neuron A with ..."?
         int ans =  JOptionPane.showConfirmDialog(null,
-                // could put in annotation coords, neuron names?
-                // String.format("%s has %d nodes; delete?"),
                 "Merge neurites?",
                 "Merge neurites?",
                 JOptionPane.OK_CANCEL_OPTION);

@@ -143,7 +143,7 @@ public class Skeleton {
 
 	///// MOVE
 	public Signal1<Anchor> anchorMovedSignal = new Signal1<Anchor>();
-	public Slot1<TmGeoAnnotation> moveAnchorSlot = new Slot1<TmGeoAnnotation>() {
+	public Slot1<TmGeoAnnotation> moveAnchorBackSlot = new Slot1<TmGeoAnnotation>() {
 		@Override
 		public void execute(TmGeoAnnotation tga) {
 			Anchor anchor = anchorsByGuid.get(tga.getId());
