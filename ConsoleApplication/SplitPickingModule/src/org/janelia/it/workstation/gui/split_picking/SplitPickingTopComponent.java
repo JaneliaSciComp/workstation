@@ -17,6 +17,8 @@ import org.slf4j.LoggerFactory;
 
 /**
  * Top component for the split picking workflow panel.
+ * 
+ * @author <a href="mailto:rokickik@janelia.hhmi.org">Konrad Rokicki</a>
  */
 @ConvertAsProperties(
         dtd = "-//org.janelia.it.workstation.gui.split_picking//SplitPicking//EN",
