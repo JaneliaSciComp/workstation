@@ -13,14 +13,13 @@ import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.workstation.gui.viewer3d.BoundingBox3d;
 import org.janelia.it.workstation.gui.viewer3d.VolumeBrickI;
 import org.janelia.it.workstation.gui.viewer3d.VolumeModel;
-import org.janelia.it.workstation.gui.viewer3d.buffering.VtxCoordBufMgr;
+import org.janelia.it.workstation.gui.viewer3d.buffering.VtxCoordBufMgrI;
 import org.janelia.it.workstation.gui.viewer3d.texture.TextureDataI;
 import org.janelia.it.workstation.gui.viewer3d.texture.TextureMediator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.media.opengl.*;
-import javax.swing.*;
 
 /**
  * Class draws a transparent rectangular volume with a 3D opengl texture
@@ -66,7 +65,7 @@ public class MultiTexVolumeBrick implements VolumeBrickI {
     @SuppressWarnings("ALL")
     private boolean bUseSyntheticData = false;
 
-    private VtxCoordBufMgr bufferManager;
+    private VtxCoordBufMgrI bufferManager;
     private VolumeModel volumeModel;
 
     private static Logger logger = LoggerFactory.getLogger(MultiTexVolumeBrick.class);
@@ -104,7 +103,7 @@ public class MultiTexVolumeBrick implements VolumeBrickI {
 //
 //    }
 
-    public MultiTexVolumeBrick(VolumeModel volumeModel, VtxCoordBufMgr bufMgr) {
+    public MultiTexVolumeBrick(VolumeModel volumeModel, VtxCoordBufMgrI bufMgr) {
         this.bufferManager = bufMgr;
         setVolumeModel(volumeModel);
     }

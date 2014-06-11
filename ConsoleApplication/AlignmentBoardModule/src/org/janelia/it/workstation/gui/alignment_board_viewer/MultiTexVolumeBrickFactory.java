@@ -2,6 +2,7 @@ package org.janelia.it.workstation.gui.alignment_board_viewer;
 
 import java.nio.ByteOrder;
 import java.util.Collection;
+import org.janelia.it.workstation.gui.alignment_board_viewer.buffering.SegmentedVtxCoordBufMgr;
 import org.janelia.it.workstation.gui.viewer3d.VolumeBrickFactory;
 import org.janelia.it.workstation.gui.viewer3d.VolumeBrickI;
 import org.janelia.it.workstation.gui.viewer3d.VolumeDataAcceptor;
@@ -56,9 +57,8 @@ public class MultiTexVolumeBrickFactory implements VolumeBrickFactory {
                                               TextureDataI maskTextureData,
                                               TextureDataI colorMapTextureData,
                                               int partNum) {
-        VtxCoordBufMgr bufferManager = new VtxCoordBufMgr();
+        SegmentedVtxCoordBufMgr bufferManager = new SegmentedVtxCoordBufMgr();
         VolumeDataChunk chunk = signalTextureData.getTextureData().getVolumeChunks()[ partNum ];
-        bufferManager.setSliceLimits(chunk.getStartZ(), chunk.getStartZ() + chunk.getDepth());
         MultiTexVolumeBrick volumeBrick = new MultiTexVolumeBrick(model, bufferManager);
         volumeBrick.setMaskTextureData(getSingleChunkTexture(maskTextureData, partNum));
         volumeBrick.setColorMapTextureData(colorMapTextureData);

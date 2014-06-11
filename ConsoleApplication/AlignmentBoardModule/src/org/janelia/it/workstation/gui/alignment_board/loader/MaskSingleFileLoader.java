@@ -397,7 +397,7 @@ public class MaskSingleFileLoader {
             logger.debug( "Got axis key of {}", axis );
             this.setDimensionOrder( axis );
 
-            volumeVoxels = getVolumeVoxels( sx, sy, sz );
+            volumeVoxels = getPaddedVolumeVoxels( sx, sy, sz );
 
             targetSliceSize = volumeVoxels[0] * volumeVoxels[1]; // sx * sy
 
@@ -616,8 +616,8 @@ public class MaskSingleFileLoader {
         return allChannelBytes;
     }
 
-    /** Size of volume mask.  Numbers of voxels in all three directions. */
-    private Long[] getVolumeVoxels( long sx, long sy, long sz ) {
+    /** Size of volume mask.  Padded to accommodate minimum divisibility. */
+    private Long[] getPaddedVolumeVoxels( long sx, long sy, long sz ) {
         Long[] voxels = { sx, sy, sz };
 
         // May need to add more bytes to ensure that the coords are each multiples of a certain number of bytes.

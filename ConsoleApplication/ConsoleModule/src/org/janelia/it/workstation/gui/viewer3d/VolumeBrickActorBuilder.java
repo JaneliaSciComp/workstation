@@ -112,8 +112,8 @@ public class VolumeBrickActorBuilder {
 
         // Making one actor per chunk.
         GLActor[] actors = new GLActor[ chunkCount ];
-        RenderMapTextureBean renderMapTextureData = new RenderMapTextureBean();
         for (int i = 0; i < chunkCount; i++) {
+            RenderMapTextureBean renderMapTextureData = new RenderMapTextureBean();
             renderMapTextureData.setMapping(renderMapping);
             renderMapTextureData.setVolumeModel(volumeModel);
 

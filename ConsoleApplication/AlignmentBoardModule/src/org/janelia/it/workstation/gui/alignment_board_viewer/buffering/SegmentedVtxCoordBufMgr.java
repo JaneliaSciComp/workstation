@@ -1,10 +1,11 @@
-package org.janelia.it.workstation.gui.viewer3d.buffering;
+package org.janelia.it.workstation.gui.alignment_board_viewer.buffering;
 
 import org.janelia.it.workstation.gui.viewer3d.texture.TextureMediator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.nio.*;
+import org.janelia.it.workstation.gui.viewer3d.buffering.AbstractCoordBufMgr;
 
 /**
  * Created with IntelliJ IDEA.
@@ -14,19 +15,28 @@ import java.nio.*;
  *
  * This delegate/helper handles buffering required for 3D rendering.
  */
-public class VtxCoordBufMgr extends AbstractCoordBufMgr {
+public class SegmentedVtxCoordBufMgr extends AbstractCoordBufMgr {
     private static final int NUM_BUFFERS_PER_TYPE = 3 * 2; // 3=x,y,z;  2=pos,neg
 
-    private final Logger logger = LoggerFactory.getLogger(VtxCoordBufMgr.class);
+    private final Logger logger = LoggerFactory.getLogger(SegmentedVtxCoordBufMgr.class);
 
-    public VtxCoordBufMgr() {
+    private int startingSliceIndex = 0;
+    private int endingSliceIndex = 1;
+    
+    public SegmentedVtxCoordBufMgr() {
     }
 
-    public VtxCoordBufMgr( TextureMediator textureMediator ) {
+    public SegmentedVtxCoordBufMgr( TextureMediator textureMediator ) {
         this();
         setTextureMediator( textureMediator );
-    }        
+    }
 
+    @Override
+    public void setCoordAttributeLocations( int vertexAttributeLoc, int texCoordAttributeLoc ) {
+        this.vertexAttributeLoc = vertexAttributeLoc;
+        this.texCoordAttributeLoc = texCoordAttributeLoc;
+    }
+    
     /**
      * This method builds the buffers of vertices for both geometry and texture.  These are calculated similarly,
      * but with different ranges.  There are multiple such buffers of both types, and they are kept in arrays.
@@ -60,11 +70,9 @@ public class VtxCoordBufMgr extends AbstractCoordBufMgr {
                 geometryCoordBuf[ i ] = geoByteBuffer.asFloatBuffer();
 
                 // One index per vertex.  Not one per coord.  No need for x,y,z.
-                if ( drawWithElements ) {
-                    ByteBuffer inxByteBuffer = ByteBuffer.allocateDirect(numVertices * Short.SIZE / 8);
-                    inxByteBuffer.order(ByteOrder.nativeOrder());
-                    indexBuf[ i ] = inxByteBuffer.asShortBuffer();
-                }
+                ByteBuffer inxByteBuffer = ByteBuffer.allocateDirect(numVertices * Short.SIZE / 8);
+                inxByteBuffer.order(ByteOrder.nativeOrder());
+                indexBuf[ i] = inxByteBuffer.asShortBuffer();
             }
 
             // Now produce the vertexes to stuff into all of the buffers.
@@ -105,7 +113,7 @@ public class VtxCoordBufMgr extends AbstractCoordBufMgr {
 
                 texCoordBuf[ firstInx ].rewind();
                 short inxOffset = 0;
-                for (int sliceInx = 0; sliceInx < sliceCount; ++sliceInx) {
+                for (int sliceInx = startingSliceIndex; sliceInx < startingSliceIndex + sliceCount; ++sliceInx) {
                     // insert final coordinate into buffers
 
                     // FORWARD axes.
@@ -122,9 +130,7 @@ public class VtxCoordBufMgr extends AbstractCoordBufMgr {
                             textureMediator.textureCoordFromVoxelCoord( p10 ),
                             textureMediator.textureCoordFromVoxelCoord( p11 )
                     );
-                    if ( drawWithElements ) {
-                        addIndices(firstInx, inxOffset);
-                    }
+                    addIndices(firstInx, inxOffset);
 
                     // Now, take care of the negative-direction alternate to this buffer pair.
                     p00[ firstInx ] = p01[firstInx] = p10[firstInx] = p11[firstInx] = -sliceLoc;
@@ -137,9 +143,7 @@ public class VtxCoordBufMgr extends AbstractCoordBufMgr {
                             textureMediator.textureCoordFromVoxelCoord( p10 ),
                             textureMediator.textureCoordFromVoxelCoord( p11 )
                     );
-                    if ( drawWithElements ) {
-                        addIndices(firstInx + NUM_AXES, inxOffset);
-                    }
+                    addIndices(firstInx + NUM_AXES, inxOffset);
 
                     inxOffset += 6;
 
@@ -148,6 +152,19 @@ public class VtxCoordBufMgr extends AbstractCoordBufMgr {
             }
 
         }
+    }
+
+    @Override
+    protected int computeEffectiveAxisLen(int index) {
+        int effectiveLen = 0;
+        if ( endingSliceIndex == -1 ) {
+            double firstAxisLen = textureMediator.getVolumeMicrometers()[ index % 3 ];
+            effectiveLen = (int)(0.5 + firstAxisLen / textureMediator.getVoxelMicrometers()[ index % 3 ]);
+        }
+        else {
+            effectiveLen =  endingSliceIndex - startingSliceIndex;
+        }
+        return effectiveLen;
     }
 
 }

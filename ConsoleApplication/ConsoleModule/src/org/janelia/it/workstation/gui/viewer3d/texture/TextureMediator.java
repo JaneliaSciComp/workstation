@@ -302,7 +302,6 @@ public class TextureMediator {
             // Rescale from voxels to texture units (range 0-1)
             tc[i] /= voxels[i]; // texture units
         }
-
         return tc;
     }
 
