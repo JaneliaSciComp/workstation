@@ -2,6 +2,7 @@ package org.janelia.it.workstation.gui.alignment_board_viewer;
 
 import java.nio.ByteOrder;
 import java.util.Collection;
+import org.janelia.it.workstation.gui.alignment_board_viewer.buffering.AxialSegmentRangeBean;
 import org.janelia.it.workstation.gui.alignment_board_viewer.buffering.SegmentedVtxCoordBufMgr;
 import org.janelia.it.workstation.gui.viewer3d.VolumeBrickFactory;
 import org.janelia.it.workstation.gui.viewer3d.VolumeBrickI;
@@ -57,8 +58,16 @@ public class MultiTexVolumeBrickFactory implements VolumeBrickFactory {
                                               TextureDataI maskTextureData,
                                               TextureDataI colorMapTextureData,
                                               int partNum) {
-        SegmentedVtxCoordBufMgr bufferManager = new SegmentedVtxCoordBufMgr();
+        
         VolumeDataChunk chunk = signalTextureData.getTextureData().getVolumeChunks()[ partNum ];
+        AxialSegmentRangeBean rangeBean = new AxialSegmentRangeBean();
+        rangeBean.setxRange(new int[] { chunk.getStartX(), chunk.getStartX() + chunk.getWidth() } );
+        rangeBean.setyRange(new int[] { chunk.getStartY(), chunk.getStartY() + chunk.getHeight() } );
+        rangeBean.setzRange(new int[] { chunk.getStartZ(), chunk.getStartZ() + chunk.getDepth() } );
+
+        SegmentedVtxCoordBufMgr bufferManager = new SegmentedVtxCoordBufMgr();
+        bufferManager.setSegmentRanges(rangeBean);
+        
         MultiTexVolumeBrick volumeBrick = new MultiTexVolumeBrick(model, bufferManager);
         volumeBrick.setMaskTextureData(getSingleChunkTexture(maskTextureData, partNum));
         volumeBrick.setColorMapTextureData(colorMapTextureData);

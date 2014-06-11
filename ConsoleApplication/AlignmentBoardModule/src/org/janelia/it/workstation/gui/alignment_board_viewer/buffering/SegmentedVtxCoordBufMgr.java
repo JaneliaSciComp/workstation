@@ -18,17 +18,22 @@ import org.janelia.it.workstation.gui.viewer3d.buffering.AbstractCoordBufMgr;
 public class SegmentedVtxCoordBufMgr extends AbstractCoordBufMgr {
     private static final int NUM_BUFFERS_PER_TYPE = 3 * 2; // 3=x,y,z;  2=pos,neg
 
+    private AxialSegmentRangeBean segmentRanges;
     private final Logger logger = LoggerFactory.getLogger(SegmentedVtxCoordBufMgr.class);
 
-    private int startingSliceIndex = 0;
-    private int endingSliceIndex = 1;
-    
     public SegmentedVtxCoordBufMgr() {
     }
 
     public SegmentedVtxCoordBufMgr( TextureMediator textureMediator ) {
         this();
         setTextureMediator( textureMediator );
+    }
+    
+    /**
+     * @param segmentRanges the segmentRanges to set
+     */
+    public void setSegmentRanges(AxialSegmentRangeBean segmentRanges) {
+        this.segmentRanges = segmentRanges;
     }
 
     @Override
@@ -72,7 +77,7 @@ public class SegmentedVtxCoordBufMgr extends AbstractCoordBufMgr {
                 // One index per vertex.  Not one per coord.  No need for x,y,z.
                 ByteBuffer inxByteBuffer = ByteBuffer.allocateDirect(numVertices * Short.SIZE / 8);
                 inxByteBuffer.order(ByteOrder.nativeOrder());
-                indexBuf[ i] = inxByteBuffer.asShortBuffer();
+                indexBuf[ i ] = inxByteBuffer.asShortBuffer();
             }
 
             // Now produce the vertexes to stuff into all of the buffers.
@@ -83,6 +88,7 @@ public class SegmentedVtxCoordBufMgr extends AbstractCoordBufMgr {
                 float secondAxisLen = textureMediator.getVolumeMicrometers()[ secondInx ].floatValue();
                 int thirdInx = (firstInx + 2) % NUM_AXES;
                 float thirdAxisLen = textureMediator.getVolumeMicrometers()[ thirdInx ].floatValue();
+                
                 // compute number of slices
                 int sliceCount = computeEffectiveAxisLen(firstInx);
                 float slice0 = firstAxisLen / 2.0f + textureMediator.getVoxelMicrometers()[ firstInx ].floatValue();
@@ -113,7 +119,8 @@ public class SegmentedVtxCoordBufMgr extends AbstractCoordBufMgr {
 
                 texCoordBuf[ firstInx ].rewind();
                 short inxOffset = 0;
-                for (int sliceInx = startingSliceIndex; sliceInx < startingSliceIndex + sliceCount; ++sliceInx) {
+                int[] range = segmentRanges.getRangeByAxisNum(firstInx);
+                for (int sliceInx = range[AxialSegmentRangeBean.START_INX]; sliceInx < range[AxialSegmentRangeBean.END_INX]; ++sliceInx) {
                     // insert final coordinate into buffers
 
                     // FORWARD axes.
@@ -156,15 +163,8 @@ public class SegmentedVtxCoordBufMgr extends AbstractCoordBufMgr {
 
     @Override
     protected int computeEffectiveAxisLen(int index) {
-        int effectiveLen = 0;
-        if ( endingSliceIndex == -1 ) {
-            double firstAxisLen = textureMediator.getVolumeMicrometers()[ index % 3 ];
-            effectiveLen = (int)(0.5 + firstAxisLen / textureMediator.getVoxelMicrometers()[ index % 3 ]);
-        }
-        else {
-            effectiveLen =  endingSliceIndex - startingSliceIndex;
-        }
-        return effectiveLen;
+        final int[] range = segmentRanges.getRangeByAxisNum(index);
+        return range[ AxialSegmentRangeBean.END_INX ] - range[ AxialSegmentRangeBean.START_INX ];
     }
 
 }
