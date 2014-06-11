@@ -17,7 +17,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * Retrieve icons in the classpath by filename. 
+ * Retrieve icons in the class path by filename. 
  * 
  * @author <a href="mailto:rokickik@janelia.hhmi.org">Konrad Rokicki</a>
  */
@@ -25,10 +25,10 @@ public class Icons {
 
     private static final Logger log = LoggerFactory.getLogger(Icons.class);
     
-    private static Icon missingIcon = new MissingIcon();
+    private static final Icon missingIcon = new MissingIcon();
 
-    public static Map<String,ImageIcon> cache = new HashMap<String,ImageIcon>();
-    public static Map<String,BufferedImage> imageCache = new HashMap<String,BufferedImage>();
+    public static final Map<String,ImageIcon> cache = new HashMap<String,ImageIcon>();
+    public static final Map<String,BufferedImage> imageCache = new HashMap<String,BufferedImage>();
 
     /**
      * Returns an animated icon for representing a missing image.
@@ -136,7 +136,6 @@ public class Icons {
     }
 
     /**
-     * TODO: refactor this
      * @param entity
      * @return
      */
@@ -165,7 +164,19 @@ public class Icons {
         
         String type = entity.getEntityTypeName();
         
-        if (EntityConstants.TYPE_WORKSPACE.equals(type)) {
+        if (EntityConstants.TYPE_TILE_MICROSCOPE_WORKSPACE.equals(type)) {
+        	if (large) return getIcon("workspace_large.png");
+        	return getIcon("workspace.png");    
+        }
+        else if (EntityConstants.TYPE_TILE_MICROSCOPE_NEURON.equals(type)) {
+        	if (large) return getIcon("monitor_large.png");
+        	return getIcon("monitor.png");    
+        }
+        else if (EntityConstants.TYPE_PROPERTY_SET.equals(type)) {
+        	if (large) return getIcon("properties_large.png");
+        	return getIcon("properties.png");    
+        }
+        else if (EntityConstants.TYPE_WORKSPACE.equals(type)) {
         	if (large) return getIcon("folder_large.png");
         	return getIcon("folder_green.png");    
         }
