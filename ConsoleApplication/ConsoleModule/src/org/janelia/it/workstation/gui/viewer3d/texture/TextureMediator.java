@@ -130,6 +130,8 @@ public class TextureMediator {
                 }
                 reportError( "glTexImage-Allocation", gl );
 
+                // Within the 3D texture represented here (which is a sub-
+                // texture of the overall) starting at 0==z is correct.
                 int nextZPos = 0;
                 for ( VolumeDataChunk volumeDataChunk: textureData.getTextureData().getVolumeChunks() ) {
                     ByteBuffer data = ByteBuffer.wrap( volumeDataChunk.getData() );
