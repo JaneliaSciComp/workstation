@@ -150,7 +150,7 @@ public class Skeleton {
 			Anchor anchor = anchorsByGuid.get(tga.getId());
 			if (anchor == null)
 				return;
-			anchor.setLocation(new Vec3(tga.getX(), tga.getY(), tga.getZ()));
+			anchor.setLocationSilent(new Vec3(tga.getX(), tga.getY(), tga.getZ()));
 		}
 	};
 
