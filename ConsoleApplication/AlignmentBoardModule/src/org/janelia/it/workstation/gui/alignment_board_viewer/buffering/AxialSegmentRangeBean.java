@@ -13,8 +13,8 @@ package org.janelia.it.workstation.gui.alignment_board_viewer.buffering;
  * @author fosterl
  */
 public class AxialSegmentRangeBean {
-    public static final int START_INX = 0;
-    public static final int END_INX = 1;        
+    public static final int LOW_INX = 0;
+    public static final int HIGH_INX = 1;        
     
     private int[] xRange;
     private int[] yRange;
@@ -85,7 +85,7 @@ public class AxialSegmentRangeBean {
         if ( range.length != 2 ) {
             throw new IllegalArgumentException("Invalid range array size.   Must be exactly 2.");
         }
-        if ( range[ START_INX ] > range[ END_INX ] ) {
+        if ( range[ LOW_INX ] > range[ HIGH_INX ] ) {
             throw new IllegalArgumentException("Invalid range: end < start");
         }
     }
