@@ -83,27 +83,50 @@ public class SegmentedVtxCoordBufMgr extends AbstractCoordBufMgr {
             // Now produce the vertexes to stuff into all of the buffers.
             //  Making sets of four.
             for ( int firstInx = 0; firstInx < NUM_AXES; firstInx++ ) {
-                float firstAxisLen = textureMediator.getVolumeMicrometers()[ firstInx ].floatValue();
                 int secondInx = (firstInx + 1) % NUM_AXES;
-                float secondAxisLen = textureMediator.getVolumeMicrometers()[ secondInx ].floatValue();
                 int thirdInx = (firstInx + 2) % NUM_AXES;
-                float thirdAxisLen = textureMediator.getVolumeMicrometers()[ thirdInx ].floatValue();
-                
-                // compute number of slices
-                int sliceCount = computeEffectiveAxisLen(firstInx);
-                float slice0 = firstAxisLen / 2.0f + textureMediator.getVoxelMicrometers()[ firstInx ].floatValue();
                 float direction = -1.0f;
                 if ( firstInx > 2 ) {
                     direction = 1.0f;
                 }
+
+                float firstAxisLength = textureMediator.getVolumeMicrometers()[ firstInx ].floatValue();
+                float secondAxisLength = textureMediator.getVolumeMicrometers()[ secondInx ].floatValue();
+                float thirdAxisLength = textureMediator.getVolumeMicrometers()[ thirdInx ].floatValue();
+                
+                // compute number of slices
+                float temporary = 0;
+                float firstSegmentStart = segmentRanges.getRangeByAxisNum( firstInx )[ AxialSegmentRangeBean.START_INX ]/2.0f;
+                float firstSegmentEnd = segmentRanges.getRangeByAxisNum( firstInx )[ AxialSegmentRangeBean.END_INX ]/2.0f;
+                if ( direction > 0 ) {
+                    firstSegmentStart = firstSegmentEnd;
+                }
+                float slice0 = firstAxisLength / 2.0f + textureMediator.getVoxelMicrometers()[ firstInx ].floatValue() +
+                        direction * firstSegmentStart;
                 float sliceSep = direction * textureMediator.getVoxelMicrometers()[ firstInx ].floatValue();
 
         		// Below "x", "y", and "z" actually refer to a1, a2, and a3, respectively;
-                float second0 = secondAxisLen / 2.0f + textureMediator.getVoxelMicrometers()[secondInx].floatValue();
-                float second1 = -second0;
+                float secondSegmentStart = segmentRanges.getRangeByAxisNum( secondInx )[ AxialSegmentRangeBean.START_INX ]/2.0f;
+                float secondSegmentEnd = segmentRanges.getRangeByAxisNum( secondInx )[ AxialSegmentRangeBean.END_INX ]/2.0f;
+                if ( direction > 0 ) {
+                    temporary = secondSegmentStart;
+                    secondSegmentStart = secondSegmentEnd;
+                    secondSegmentEnd = temporary;
+                }
+                float secondStart = secondAxisLength / 2.0f + textureMediator.getVoxelMicrometers()[secondInx].floatValue() +
+                        direction * secondSegmentStart;
+                float secondEnd = secondStart + direction * secondSegmentEnd;
 
-                float third0 = thirdAxisLen / 2.0f + textureMediator.getVoxelMicrometers()[thirdInx].floatValue();
-                float third1 = -third0;
+                float thirdSegmentStart = segmentRanges.getRangeByAxisNum( thirdInx )[ AxialSegmentRangeBean.START_INX ]/2.0f;
+                float thirdSegmentEnd = segmentRanges.getRangeByAxisNum( thirdInx )[ AxialSegmentRangeBean.END_INX ]/2.0f;
+                if ( direction > 0 ) {
+                   temporary = thirdSegmentStart;
+                   thirdSegmentStart = thirdSegmentEnd;
+                   thirdSegmentEnd = temporary;
+                }
+                float thirdStart = thirdAxisLength / 2.0f + textureMediator.getVoxelMicrometers()[thirdInx].floatValue() +
+                        direction * thirdSegmentStart;
+                float thirdEnd = thirdStart + direction * thirdSegmentEnd;
 
                 // Four points for four slice corners
                 float[] p00 = {0,0,0};
@@ -112,11 +135,19 @@ public class SegmentedVtxCoordBufMgr extends AbstractCoordBufMgr {
                 float[] p01 = {0,0,0};
 
                 // reswizzle coordinate axes back to actual X, Y, Z (except x, saved for later)
-                p00[ secondInx ] = p01[ secondInx ] = second0;
-                p10[ secondInx ] = p11[ secondInx ] = second1;
-                p00[ thirdInx ] = p10[ thirdInx ] = third0;
-                p01[ thirdInx ] = p11[ thirdInx ] = third1;
+                p00[ secondInx ] = p01[ secondInx ] = secondStart;
+                p10[ secondInx ] = p11[ secondInx ] = secondEnd;
+                p00[ thirdInx ] = p10[ thirdInx ] = thirdStart;
+                p01[ thirdInx ] = p11[ thirdInx ] = thirdEnd;
 
+                logger.info("Swizzled points, for axis {} are \n\t{}\n\t{}\n\t{}\n\t{}\n",
+                        firstInx,
+                        p00[0] + "," + p00[1] + "," + p00[2],
+                        p10[0] + "," + p10[1] + "," + p10[2],
+                        p11[0] + "," + p11[1] + "," + p11[2],
+                        p01[0] + "," + p01[1] + "," + p01[2]
+                );
+                
                 texCoordBuf[ firstInx ].rewind();
                 short inxOffset = 0;
                 int[] range = segmentRanges.getRangeByAxisNum(firstInx);
