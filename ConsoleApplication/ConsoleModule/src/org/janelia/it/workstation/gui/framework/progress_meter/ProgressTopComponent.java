@@ -40,7 +40,7 @@ public final class ProgressTopComponent extends TopComponent {
 
     public static final String PREFERRED_ID = "ProgressTopComponent";
     
-    private final WorkerProgressMeter progressMeter = WorkerProgressMeter.getSingletonInstance();
+    private final ProgressMeterPanel progressMeter = ProgressMeterPanel.getSingletonInstance();
     
     public ProgressTopComponent() {
         initComponents();

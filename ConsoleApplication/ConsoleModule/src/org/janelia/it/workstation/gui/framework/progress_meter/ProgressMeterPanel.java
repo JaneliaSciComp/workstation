@@ -27,11 +27,11 @@ import org.openide.windows.TopComponent;
  * 
  * @author <a href="mailto:rokickik@janelia.hhmi.org">Konrad Rokicki</a>
  */
-public class WorkerProgressMeter extends JPanel {
+public class ProgressMeterPanel extends JPanel {
     
     public static final Dimension PREFERRED_DIMENSION = new Dimension(800, 600);
 
-    private static final Logger log = LoggerFactory.getLogger(WorkerProgressMeter.class);
+    private static final Logger log = LoggerFactory.getLogger(ProgressMeterPanel.class);
     
     private static final int LABEL_COLUMN_WIDTH = 400;
     private static final int PROGRESS_COLUMN_WIDTH = 150;
@@ -39,7 +39,7 @@ public class WorkerProgressMeter extends JPanel {
     
     private static final Font statusFont = new Font("Sans Serif", Font.PLAIN, 10);
     
-    private static WorkerProgressMeter instance;
+    private static ProgressMeterPanel instance;
     
     private final JPanel mainPanel;
     private final JButton clearButton;
@@ -49,7 +49,7 @@ public class WorkerProgressMeter extends JPanel {
     private final ImageIcon staticIcon = Icons.getIcon("cog_small.gif");
     private ImageIcon currIcon = staticIcon;
     
-    private WorkerProgressMeter() {
+    private ProgressMeterPanel() {
         
         setPreferredSize(PREFERRED_DIMENSION);
         setLayout(new BorderLayout());
@@ -98,9 +98,9 @@ public class WorkerProgressMeter extends JPanel {
         add(buttonPane, BorderLayout.SOUTH);
     }
 
-    public static WorkerProgressMeter getSingletonInstance() {
+    public static ProgressMeterPanel getSingletonInstance() {
         if (instance == null) {
-            instance = new WorkerProgressMeter();
+            instance = new ProgressMeterPanel();
             ModelMgr.getModelMgr().registerOnEventBus(instance);
         }
         return instance;
