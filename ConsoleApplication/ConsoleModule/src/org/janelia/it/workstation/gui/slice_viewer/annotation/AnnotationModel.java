@@ -201,7 +201,7 @@ that need to respond to changing data.
 
     /**
      * find the annotation closest to the input location, exluding
-     * the given annotation (input null to include all annotations)
+     * the input annotation (null = don't exclude any)
      */
     public TmGeoAnnotation getClosestAnnotation(Vec3 location, TmGeoAnnotation excludedAnnotation) {
 
@@ -216,10 +216,17 @@ that need to respond to changing data.
 
         double dx, dy, dz, dist;
 
+        // our valid IDs are positive, so this will never match
+        Long excludedAnnotationID;
+        if (excludedAnnotation == null) {
+            excludedAnnotationID = -1L;
+        } else {
+            excludedAnnotationID = excludedAnnotation.getId();
+        }
         for (TmNeuron neuron: getCurrentWorkspace().getNeuronList()) {
             for (TmGeoAnnotation root: neuron.getRootAnnotations()) {
                 for (TmGeoAnnotation ann: root.getSubTreeList()) {
-                    if (excludedAnnotation.getId().equals(ann.getId())) {
+                    if (excludedAnnotationID.equals(ann.getId())) {
                         continue;
                     }
                     dx = ann.getX() - x;
