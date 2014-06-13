@@ -146,11 +146,15 @@ public class MaskChanMultiFileLoader {
         if (isCheckForConsistency()) {
             checker.report(true, logger);
         }
-        for (MaskChanDataAcceptorI acceptor : maskAcceptors) {
-            acceptor.endData(logger);
+        if (maskAcceptors != null) {
+            for (MaskChanDataAcceptorI acceptor : maskAcceptors) {
+                acceptor.endData(logger);
+            }
         }
-        for (MaskChanDataAcceptorI acceptor : channelAcceptors) {
-            acceptor.endData(logger);
+        if (channelAcceptors != null) {
+            for (MaskChanDataAcceptorI acceptor : channelAcceptors) {
+                acceptor.endData(logger);
+            }
         }
     }
 

@@ -60,7 +60,6 @@ public class VeryLargeVolumeData implements VolumeDataI {
         numSlabs = (int)Math.ceil( (double)volumeExtent / (double)slabExtent );
 
         logger.debug("Slab extent is {}.", slabExtent );
-        logger.debug("Volume extent over slab extent is {}.", (volumeExtent / slabExtent));
         logger.debug("Slices per slab is {}.", slicesPerSlab);
         logger.debug("Number of slabs is {}.", numSlabs);
         logger.debug("Volume extent is {}.", volumeExtent);
