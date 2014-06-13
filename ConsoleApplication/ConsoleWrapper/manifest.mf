@@ -1,5 +1,5 @@
 Manifest-Version: 1.0
-OpenIDE-Module: org.janelia.it.FlyWorkstation
-OpenIDE-Module-Localizing-Bundle: org/janelia/it/FlyWorkstation/Bundle.properties
+OpenIDE-Module: org.janelia.it.workstation
+OpenIDE-Module-Localizing-Bundle: org/janelia/it/workstation/Bundle.properties
 OpenIDE-Module-Specification-Version: 1.0
 

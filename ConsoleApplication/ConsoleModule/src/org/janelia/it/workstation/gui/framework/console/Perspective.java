@@ -1,0 +1,23 @@
+package org.janelia.it.workstation.gui.framework.console;
+
+/**
+ * A perspective configures the console in a specific way for some specific task.
+ * 
+ * @author <a href="mailto:rokickik@janelia.hhmi.org">Konrad Rokicki</a>
+ */
+public enum Perspective {
+    
+    ImageBrowser("Image Browsing"),
+    SliceViewer("Slice Viewer"),
+    TaskMonitoring("Task Monitoring");
+    
+    private String name;
+    
+    private Perspective(String name) {
+        this.name = name;
+    }
+    
+    public String getName() {
+        return name;
+    }
+}

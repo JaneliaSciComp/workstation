@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?><module codename="org.netbeans.modules.options.api/1">
+    <module_version install_time="1381502827625" last="true" origin="installer" specification_version="1.36.1">
+        <file crc="73733985" name="config/ModuleAutoDeps/org-netbeans-modules-options-api.xml"/>
+        <file crc="1511401705" name="config/Modules/org-netbeans-modules-options-api.xml"/>
+        <file crc="3932182511" name="modules/locale/org-netbeans-modules-options-api_ja.jar"/>
+        <file crc="11253142" name="modules/locale/org-netbeans-modules-options-api_pt_BR.jar"/>
+        <file crc="3698403676" name="modules/locale/org-netbeans-modules-options-api_ru.jar"/>
+        <file crc="830778281" name="modules/locale/org-netbeans-modules-options-api_zh_CN.jar"/>
+        <file crc="3644472914" name="modules/org-netbeans-modules-options-api.jar"/>
+    </module_version>
+</module>

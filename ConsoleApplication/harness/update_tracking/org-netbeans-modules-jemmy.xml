@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?><module codename="org.netbeans.modules.jemmy/3">
+    <module_version install_time="1381501307559" last="true" origin="installer" specification_version="3.21.1">
+        <file crc="2792960258" name="config/Modules/org-netbeans-modules-jemmy.xml"/>
+        <file crc="4195459132" name="docs/jemmy-2.3.1.1-doc.zip"/>
+        <file crc="1182184280" name="docs/jemmy-2.3.1.1-src.zip"/>
+        <file crc="1418457136" name="modules/ext/jemmy-2.3.1.1.jar"/>
+        <file crc="1901184081" name="modules/locale/org-netbeans-modules-jemmy_ja.jar"/>
+        <file crc="1415837513" name="modules/locale/org-netbeans-modules-jemmy_pt_BR.jar"/>
+        <file crc="471940180" name="modules/locale/org-netbeans-modules-jemmy_ru.jar"/>
+        <file crc="3026411097" name="modules/locale/org-netbeans-modules-jemmy_zh_CN.jar"/>
+        <file crc="1346570441" name="modules/org-netbeans-modules-jemmy.jar"/>
+    </module_version>
+</module>

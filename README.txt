@@ -206,3 +206,11 @@ xmlsec.jar
 Copyright (c) 2000-2010, Apache XML Project. All Rights Reserved.
 See ./licenses/apache-2.0.txt file.
 
+
+ICONS
+
+FamFamFam Silk Icons - http://www.famfamfam.com/lab/icons/silk/
+FS Icons Ubuntu by Frank Souza - http://franksouza183.deviantart.com/
+
+
+

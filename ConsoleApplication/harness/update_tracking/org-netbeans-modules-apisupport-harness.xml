@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?><module codename="org.netbeans.modules.apisupport.harness">
+    <module_version install_time="1381502153329" last="true" origin="installer" specification_version="1.36.1">
+        <file crc="2155541304" name="README"/>
+        <file crc="2309339016" name="antlib/bindex-2.2.jar"/>
+        <file crc="623532342" name="antlib/jsearch-2.0_05.jar"/>
+        <file crc="3762876293" name="build.xml"/>
+        <file crc="76329471" name="common.xml"/>
+        <file crc="2967796174" name="config/Modules/org-netbeans-modules-apisupport-harness.xml"/>
+        <file crc="1289644161" name="etc/Info.plist"/>
+        <file crc="271397868" name="etc/app.conf"/>
+        <file crc="2195682192" name="etc/applicationIcon.icns"/>
+        <file crc="2118771748" name="jdk.xml"/>
+        <file crc="3954786254" name="jnlp.xml"/>
+        <file crc="1061983195" name="jnlp/jnlp-launcher.jar"/>
+        <file crc="1518226452" name="jnlp/jnlp-servlet.jar"/>
+        <file crc="619523513" name="launchers/app.exe"/>
+        <file crc="299707086" name="launchers/app.sh"/>
+        <file crc="1253453561" name="launchers/app64.exe"/>
+        <file crc="1618502330" name="launchers/pre7_app.exe"/>
+        <file crc="2223057369" name="launchers/pre7_app_w.exe"/>
+        <file crc="2524502209" name="modules/locale/org-netbeans-modules-apisupport-harness_ja.jar"/>
+        <file crc="925315275" name="modules/locale/org-netbeans-modules-apisupport-harness_pt_BR.jar"/>
+        <file crc="2129837060" name="modules/locale/org-netbeans-modules-apisupport-harness_ru.jar"/>
+        <file crc="2339915494" name="modules/locale/org-netbeans-modules-apisupport-harness_zh_CN.jar"/>
+        <file crc="1064262096" name="modules/org-netbeans-modules-apisupport-harness.jar"/>
+        <file crc="1644352092" name="no-testcoverage.xml"/>
+        <file crc="3495537136" name="osgi.xml"/>
+        <file crc="3791548449" name="run.xml"/>
+        <file crc="3826327853" name="suite.xml"/>
+        <file crc="1881817101" name="tasks.jar"/>
+    </module_version>
+</module>

@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?><module codename="org.netbeans.modules.netbinox">
+    <module_version install_time="1381502287206" last="true" origin="installer" specification_version="1.32.1">
+        <file crc="3482404302" name="config/Modules/org-netbeans-modules-netbinox.xml"/>
+        <file crc="1507257544" name="modules/ext/org.eclipse.osgi_3.8.0.v20120529-1548.jar"/>
+        <file crc="862844018" name="modules/locale/org-netbeans-modules-netbinox_ja.jar"/>
+        <file crc="1950997557" name="modules/locale/org-netbeans-modules-netbinox_pt_BR.jar"/>
+        <file crc="4284068786" name="modules/locale/org-netbeans-modules-netbinox_ru.jar"/>
+        <file crc="3950556934" name="modules/locale/org-netbeans-modules-netbinox_zh_CN.jar"/>
+        <file crc="2822060147" name="modules/org-netbeans-modules-netbinox.jar"/>
+    </module_version>
+</module>
