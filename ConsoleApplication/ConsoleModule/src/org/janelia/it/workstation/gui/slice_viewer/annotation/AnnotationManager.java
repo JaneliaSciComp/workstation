@@ -57,7 +57,10 @@ elements of what's been done; that's handled by signals emitted from AnnotationM
 
     // when dragging to merge, how close in pixels (squared) to trigger
     //  a merge instead of a move
-    private static final double DRAG_MERGE_THRESHOLD_SQUARED = 8000.0;
+    // this distance chosen by trial and error; I annotated a neuron
+    //  at what seemed like a reasonable zoom level, and I experimented
+    //  until the distance threshold seemed right
+    private static final double DRAG_MERGE_THRESHOLD_SQUARED = 250.0;
 
 
     // ----- slots
@@ -114,24 +117,21 @@ elements of what's been done; that's handled by signals emitted from AnnotationM
     public Slot1<Anchor> moveAnchorRequestedSlot = new Slot1<Anchor>() {
         @Override
         public void execute(Anchor anchor) {
-            // if the destination of the move is close enough to another anchor,
-            //  we interpret it as a merge request instead
-            TmGeoAnnotation closest = annotationModel.getClosestAnnotation(anchor.getLocation(),
-                    annotationModel.getGeoAnnotationFromID(anchor.getGuid()));
-            if (closest != null) {
-                double dx = closest.getX() - anchor.getLocation().getX();
-                double dy = closest.getY() - anchor.getLocation().getY();
-                double dz = closest.getZ() - anchor.getLocation().getZ();
-                if (dx * dx + dy * dy + dz * dz < DRAG_MERGE_THRESHOLD_SQUARED) {
-                    // System.out.println("merging " + anchor.getGuid() + " to " + anchor.getLocation());
-                    mergeNeurite(anchor.getGuid(), closest.getId());
-                    return;
-                }
-            }
 
-            // no merge, so move
-            // System.out.println("moving " + anchor.getGuid() + " to " + anchor.getLocation());
-            moveAnnotation(anchor.getGuid(), anchor.getLocation());
+            // find closest to new anchor location that isn't the annotation already
+            //  associated with anchor
+            TmGeoAnnotation closest = annotationModel.getClosestAnnotation(anchor.getLocation(),
+                annotationModel.getGeoAnnotationFromID(anchor.getGuid()));
+
+
+            // check distance and other restrictions
+            if (closest != null && canMergeNeurite(anchor, closest)) {
+                // System.out.println("merging " + anchor.getGuid() + " to " + anchor.getLocation());
+                mergeNeurite(anchor.getGuid(), closest.getId());
+            } else {
+                // System.out.println("moving " + anchor.getGuid() + " to " + anchor.getLocation());
+                moveAnnotation(anchor.getGuid(), anchor.getLocation());
+            }
         }
     };
 
@@ -435,6 +435,33 @@ elements of what's been done; that's handled by signals emitted from AnnotationM
         }
     }
 
+
+    public boolean canMergeNeurite(Anchor anchor, TmGeoAnnotation closest) {
+
+        // can't merge with itself
+        if (anchor.getGuid().equals(closest.getId())) {
+            return false;
+        }
+
+        // distance: close enough?
+        double dx = closest.getX() - anchor.getLocation().getX();
+        double dy = closest.getY() - anchor.getLocation().getY();
+        double dz = closest.getZ() - anchor.getLocation().getZ();
+        if (dx * dx + dy * dy + dz * dz > DRAG_MERGE_THRESHOLD_SQUARED) {
+            return false;
+        }
+
+        // can't merge with same neurite (don't create cycles!)
+        TmGeoAnnotation sourceAnnotation = annotationModel.getGeoAnnotationFromID(anchor.getGuid());
+        TmGeoAnnotation targetAnnotation = annotationModel.getGeoAnnotationFromID(closest.getId());
+        if (annotationModel.getNeuriteRootAnnotation(sourceAnnotation).getId().equals(
+                annotationModel.getNeuriteRootAnnotation(targetAnnotation).getId())) {
+            return false;
+        }
+
+        return true;
+    }
+
     /**
      * merge the two neurites to which the two annotations belong
      *
@@ -448,6 +475,7 @@ elements of what's been done; that's handled by signals emitted from AnnotationM
         // System.out.println("merge requested, " + sourceAnnotationID + " to " + targetAnnotationID);
 
         // same neurite = cycle = NO!
+        // this should already be filtered out, but it's important enough to check twice
         if (annotationModel.getNeuriteRootAnnotation(sourceAnnotation).getId().equals(
                 annotationModel.getNeuriteRootAnnotation(targetAnnotation).getId())) {
             JOptionPane.showMessageDialog(null,
