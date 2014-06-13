@@ -29,8 +29,8 @@ public class MeshRenderTestFacilities {
         renderableBean.setAlignedItemId(COMPARTMENT_RENDERABLE_ID);
         renderableData.setBean( renderableBean );
 
-        renderableData.setMaskPath(LOCAL_COMPARTMENT_MASK_FILE_PATH);
-        renderableData.setChannelPath(LOCAL_COMPARTMENT_CHAN_FILE_PATH);
+        renderableData.setMaskPath("/Users/fosterl/Documents/alignment_board/compartments_1450_725_436/compartment_26.mask");
+        renderableData.setChannelPath("/Users/fosterl/Documents/alignment_board/compartments_1450_725_436/compartment_26.chan");
         beanList.add( renderableData );
         return beanList;
     }

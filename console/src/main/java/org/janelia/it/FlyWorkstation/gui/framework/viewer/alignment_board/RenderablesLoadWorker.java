@@ -171,6 +171,7 @@ public class RenderablesLoadWorker extends SimpleWorker implements RenderableDat
         if ( fragmentFilterSize != AlignmentBoardSettings.NO_NEURON_SIZE_CONSTRAINT  ||
              fragmentCutoffCount != AlignmentBoardSettings.NO_NEURON_SIZE_CONSTRAINT ) {
             FragmentSizeSetterAndFilter filter = new FragmentSizeSetterAndFilter( fragmentFilterSize, fragmentCutoffCount );
+            filter.setResolver( resolver );
             renderableDatas = filter.filter( renderableDatas );
         }
 

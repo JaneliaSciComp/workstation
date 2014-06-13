@@ -10,6 +10,7 @@ import org.janelia.it.FlyWorkstation.gui.framework.viewer.alignment_board.Render
 import org.janelia.it.FlyWorkstation.gui.alignment_board_viewer.masking.ConfigurableColorMapping;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.Mip3d;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.VolumeBrickFactory;
+import org.janelia.it.FlyWorkstation.gui.viewer3d.resolver.TrivialFileResolver;
 import org.janelia.it.jacs.model.TestCategories;
 import org.janelia.it.jacs.shared.loader.Chan3DVizDataSource;
 import org.janelia.it.jacs.shared.loader.masking.RenderMappingI;
@@ -68,7 +69,7 @@ public class TestMaskChan3DViz {
                     AlignmentBoardSettings settings = new AlignmentBoardSettings();
                     settings.setShowChannelData( true );
                     settings.setGammaFactor( AlignmentBoardSettings.DEFAULT_GAMMA );
-                    settings.setChosenDownSampleRate(AlignmentBoardSettings.UNSELECTED_DOWNSAMPLE_RATE);
+                    settings.setChosenDownSampleRate(2);
 
                     RenderMappingI renderMapping = new ConfigurableColorMapping();
                     RenderablesLoadWorker loadWorker = new RenderablesLoadWorker(
@@ -78,7 +79,7 @@ public class TestMaskChan3DViz {
                             settings,
                             new MultiMaskTracker()
                     );
-                    //loadWorker.setResolver( new TrivialFileResolver() );
+                    loadWorker.setResolver( new TrivialFileResolver() );
                     loadWorker.execute();
 
                     //Display the window.

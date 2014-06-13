@@ -28,6 +28,7 @@ public class FragmentSizeSetterAndFilter {
     private Logger logger = Logger.getLogger(FragmentSizeSetterAndFilter.class);
     private long thresholdVoxelCount;
     private long thresholdNeuronCount;
+    private FileResolver resolver;
 
     private Map<Long,Long> renDataBeanItemParentIdToChildCount;
 
@@ -42,6 +43,10 @@ public class FragmentSizeSetterAndFilter {
         }
     }
 
+    public void setResolver( FileResolver resolver ) {
+        this.resolver = resolver;
+    }
+
     /**
      * Eliminates non-usables off the list.
      *
@@ -51,7 +56,9 @@ public class FragmentSizeSetterAndFilter {
     public Collection<MaskChanRenderableData> filter( Collection<MaskChanRenderableData> rawList ) {
 
         // For each data, read up its voxel count.
-        FileResolver resolver = new CacheFileResolver();
+        if ( resolver == null ) {
+            resolver = new CacheFileResolver();
+        }
         for ( MaskChanRenderableData data: rawList ) {
             String maskPath = data.getMaskPath();
             if ( maskPath != null ) {
