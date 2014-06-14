@@ -96,8 +96,9 @@ public class EJBFactory {
      * @return EJBObject
      */
     public static Object getRemoteInterface(String lookupName, boolean remotePipeline) {
+        InitialContext ic=null;
         try {
-            InitialContext ic = createInitialContext(remotePipeline);
+            ic = createInitialContext(remotePipeline);
             if (!lookupName.startsWith("compute/")) {
                 lookupName = "compute/" + lookupName;
             }
@@ -109,6 +110,16 @@ public class EJBFactory {
         catch (NamingException e) {
             e.printStackTrace();
             return null;
+        }
+        finally {
+            if (null!=ic) {
+                try {
+                    ic.close();
+                }
+                catch (NamingException e) {
+                    e.printStackTrace();
+                }
+            }
         }
     }
 

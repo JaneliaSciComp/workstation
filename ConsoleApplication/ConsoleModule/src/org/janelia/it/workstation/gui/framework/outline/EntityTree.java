@@ -547,8 +547,8 @@ public class EntityTree extends JPanel implements ActivatableView {
                 if (node == null) {
                     return null;
                 }
-                if (!getTree().isRootVisible() && node == getDynamicTree().getRootNode() && rootEntityData.getChildEntity().getId()==null) {
-                    return "/";
+                if (node.isRoot()) {
+                    return getRootUniqueId();
                 }
                 StringBuffer sb = new StringBuffer();
                 DefaultMutableTreeNode curr = node;

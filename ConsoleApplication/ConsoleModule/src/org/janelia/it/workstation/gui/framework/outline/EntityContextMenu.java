@@ -1274,6 +1274,9 @@ public class EntityContextMenu extends JPopupMenu {
                                 else {
                                     this.sample = ModelMgr.getModelMgr().getAncestorWithType(entity, EntityConstants.TYPE_SAMPLE);
                                 }
+                                if (sample==null) {
+                                    this.sample = entity;
+                                }
                                 this.targetDir = new File(splitChannels ? splitsDir : downloadDir, sample.getName());
                             }
                             

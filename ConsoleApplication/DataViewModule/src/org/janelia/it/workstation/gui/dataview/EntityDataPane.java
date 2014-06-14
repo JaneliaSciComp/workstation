@@ -172,7 +172,7 @@ public class EntityDataPane extends JPanel {
     public void showEntityData(final List<EntityData> datas) {
 
         if (loadTask != null && !loadTask.isDone()) {
-            System.out.println("Cancel current entity data load for " + title);
+            log.info("Cancel current entity data load for {}",title);
             loadTask.cancel(true);
         }
 
@@ -185,12 +185,12 @@ public class EntityDataPane extends JPanel {
                 for (EntityData data : datas) {
                     Entity child = data.getChildEntity();
                     if (child != null && !EntityUtils.isInitialized(child)) {
-                        System.out.println("Fetching child " + child.getId());
+                        log.info("Fetching child {}",child.getId());
                         data.setChildEntity(ModelMgr.getModelMgr().getEntityById(child.getId()));
                     }
                     Entity parent = data.getParentEntity();
                     if (parent != null && !EntityUtils.isInitialized(parent)) {
-                        System.out.println("Fetching parent " + parent.getId());
+                        log.info("Fetching parent {}",parent.getId());
                         data.setParentEntity(ModelMgr.getModelMgr().getEntityById(parent.getId()));
                     }
                     if (isCancelled()) {
@@ -204,7 +204,7 @@ public class EntityDataPane extends JPanel {
             @Override
             protected void hadSuccess() {
                 if (tableModel == null) {
-                    System.out.println("TableModel was null");
+                    log.info("TableModel was null");
                     return;
                 }
                 else {

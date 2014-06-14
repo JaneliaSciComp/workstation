@@ -23,6 +23,8 @@ import org.janelia.it.workstation.gui.framework.table.DynamicTable;
 import org.janelia.it.workstation.shared.workers.SimpleWorker;
 import org.janelia.it.jacs.model.entity.Entity;
 import org.janelia.it.jacs.model.entity.EntityType;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * A panel for displaying lists of entities.
@@ -30,6 +32,8 @@ import org.janelia.it.jacs.model.entity.EntityType;
  * @author <a href="mailto:rokickik@janelia.hhmi.org">Konrad Rokicki</a>
  */
 public abstract class EntityListPane extends JPanel implements SearchConfigurationListener, Refreshable {
+
+    private static final Logger log = LoggerFactory.getLogger(EntityListPane.class);
 
     /**
      * Format for displaying dates
@@ -117,11 +121,11 @@ public abstract class EntityListPane extends JPanel implements SearchConfigurati
         shownEntity = null;
 
         if (loadTask != null && !loadTask.isDone()) {
-            System.out.println("Cancel current entity type load");
+            log.info("Cancel current entity type load");
             loadTask.cancel(true);
         }
 
-        System.out.println("Loading entities of type " + entityType.getName());
+        log.info("Loading entities of type {}",entityType.getName());
 
         titleLabel.setText("Entity: " + entityType.getName());
         showLoading();
@@ -155,7 +159,7 @@ public abstract class EntityListPane extends JPanel implements SearchConfigurati
     public void showEntities(final List<Entity> entities) {
 
         if (loadTask != null && !loadTask.isDone()) {
-            System.out.println("Cancel current entity type load");
+            log.info("Cancel current entity type load");
             loadTask.cancel(true);
         }
 
@@ -197,13 +201,13 @@ public abstract class EntityListPane extends JPanel implements SearchConfigurati
         shownEntity = entity;
 
         if (loadTask != null && !loadTask.isDone()) {
-            System.out.println("Cancel current entity load");
+            log.info("Cancel current entity load");
             loadTask.cancel(true);
         }
 
         showLoading();
 
-        System.out.println("Loading entity " + entity.getName());
+        log.info("Loading entity {}",entity.getName());
 
         loadTask = new SimpleWorker() {
 

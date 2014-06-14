@@ -1,5 +1,8 @@
 Manifest-Version: 1.0
 OpenIDE-Module: org.janelia.it.workstation.gui.split_picking
+OpenIDE-Module-Layer: org/janelia/it/workstation/gui/split_picking/layer.xml
 OpenIDE-Module-Localizing-Bundle: org/janelia/it/workstation/gui/split_picking/Bundle.properties
 OpenIDE-Module-Specification-Version: 1.0
+OpenIDE-Module-Long-Description: This module provides a tool for simulation of crossing split-GAL4 lines
+OpenIDE-Module-Short-Description: This module provides a tool for simulation of crossing split-GAL4 lines 
 

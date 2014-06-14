@@ -18,7 +18,6 @@ public class DataViewer extends JPanel {
 
     private SearchConfiguration searchConfig;
     private SearchPane searchPane;
-    private EntityTypePane entityTypePane;
     private EntityPane entityPane;
     private EntityDataPane entityParentsPane;
     private EntityDataPane entityChildrenPane;
@@ -41,7 +40,6 @@ public class DataViewer extends JPanel {
 
         setLayout(new BorderLayout());
 
-//        setJMenuBar(new DataviewMenuBar(this));
         initUI();
         initData();
     }
@@ -91,7 +89,6 @@ public class DataViewer extends JPanel {
         };
 
         entityPane = new EntityPane(searchConfig, searchPane, entityParentsPane, entityChildrenPane);
-        entityTypePane = new EntityTypePane(entityPane);
 
         double frameHeight = (double) DataViewer.this.getPreferredSize().height - 30;
         double frameWidth = (double) DataViewer.this.getPreferredSize().width - 30;
@@ -104,17 +101,12 @@ public class DataViewer extends JPanel {
         splitPaneVerticalOuter.setDividerLocation((int) (frameHeight * 0.5));
         splitPaneVerticalOuter.setResizeWeight(0.5);
 
-        JSplitPane splitPaneHorizontal = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, true, entityTypePane, splitPaneVerticalOuter);
-        splitPaneHorizontal.setDividerLocation((int) (frameWidth * 0.15));
-        splitPaneHorizontal.setResizeWeight(0.2);
-
         add(searchPane, BorderLayout.NORTH);
-        add(splitPaneHorizontal, BorderLayout.CENTER);
+        add(splitPaneVerticalOuter, BorderLayout.CENTER);
     }
 
     private void initData() {
         searchConfig.load();
-        entityTypePane.refresh();
     }
 
     public EntityPane getEntityPane() {
@@ -127,10 +119,6 @@ public class DataViewer extends JPanel {
 
     public SearchPane getSearchPane() {
         return searchPane;
-    }
-
-    public EntityTypePane getEntityTypePane() {
-        return entityTypePane;
     }
 
     public EntityDataPane getEntityParentsPane() {

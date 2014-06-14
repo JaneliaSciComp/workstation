@@ -477,6 +477,7 @@ public abstract class EntityOutline extends EntityTree implements Refreshable, A
                     ModelMgr.getModelMgr().registerOnEventBus(EntityOutline.this);
 
                     init(rootList);
+                    
                     currUniqueId = null;
                     refreshInProgress.set(false);
 

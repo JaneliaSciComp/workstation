@@ -125,7 +125,7 @@ public class SliceViewerTranslator {
     public Signal1<TmGeoAnnotation> anchorAddedSignal = new Signal1<TmGeoAnnotation>();
     public Signal1<TmGeoAnnotation> anchorDeletedSignal = new Signal1<TmGeoAnnotation>();
     public Signal1<TmGeoAnnotation> anchorReparentedSignal = new Signal1<TmGeoAnnotation>();
-    public Signal1<TmGeoAnnotation> anchorMovedSignal = new Signal1<TmGeoAnnotation>();
+    public Signal1<TmGeoAnnotation> anchorMovedBackSignal = new Signal1<TmGeoAnnotation>();
     public Signal clearSkeletonSignal = new Signal();
     public Signal1<Long> setNextParentSignal = new Signal1<Long>();
 
@@ -146,7 +146,7 @@ public class SliceViewerTranslator {
         anchorAddedSignal.connect(skeleton.addAnchorSlot);
         anchorDeletedSignal.connect(skeleton.deleteAnchorSlot);
         anchorReparentedSignal.connect(skeleton.reparentAnchorSlot);
-        anchorMovedSignal.connect(skeleton.moveAnchorSlot);
+        anchorMovedBackSignal.connect(skeleton.moveAnchorBackSlot);
         clearSkeletonSignal.connect(skeleton.clearSlot);
 
         setNextParentSignal.connect(sliceViewer.getSkeletonActor().setNextParentSlot);
@@ -238,7 +238,7 @@ public class SliceViewerTranslator {
      * and we want it moved back
      */
     public void unmoveAnnotation(TmGeoAnnotation annotation) {
-        anchorMovedSignal.emit(annotation);
+        anchorMovedBackSignal.emit(annotation);
     }
 
     public void addAnchoredPath(TmAnchoredPath path) {

@@ -9,17 +9,17 @@ import org.janelia.it.workstation.gui.framework.viewer.IconDemoPanel;
 import org.janelia.it.workstation.gui.framework.viewer.ViewerSplitPanel;
 import org.janelia.it.workstation.model.entity.RootedEntity;
 import org.netbeans.api.settings.ConvertAsProperties;
-import org.openide.awt.ActionID;
 import org.openide.windows.TopComponent;
 import org.openide.util.NbBundle.Messages;
 
-import javax.swing.GroupLayout;
-import javax.swing.JPanel;
-import org.openide.windows.TopComponentGroup;
-import org.openide.windows.WindowManager;
+import org.janelia.it.workstation.gui.util.WindowLocator;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Top component showing dual AD/DBD split picking views.
+ * 
+ * @author <a href="mailto:rokickik@janelia.hhmi.org">Konrad Rokicki</a>
  */
 @ConvertAsProperties(
         dtd = "-//org.janelia.it.workstation.gui.split_picking//SplitPickingLanes//EN",
@@ -37,6 +37,9 @@ import org.openide.windows.WindowManager;
     "HINT_SplitPickingLanesTopComponent=Choose one image from each lane"
 })
 public final class SplitPickingLanesTopComponent extends TopComponent {
+    
+    private Logger log = LoggerFactory.getLogger(SplitPickingLanesTopComponent.class);
+    
     public static final String PREFERRED_ID = "SplitPickingLanesTopComponent";
 
     private final ViewerManager viewerManager;
@@ -46,7 +49,6 @@ public final class SplitPickingLanesTopComponent extends TopComponent {
         setName(Bundle.CTL_SplitPickingLanesTopComponent());
         setToolTipText(Bundle.HINT_SplitPickingLanesTopComponent());
         viewerManager = new ViewerManager();
-        jPanel1.add( viewerManager.getViewerContainer(), BorderLayout.CENTER );
     }
     
     public IconDemoPanel getMainPanel() {
@@ -85,36 +87,34 @@ public final class SplitPickingLanesTopComponent extends TopComponent {
     // <editor-fold defaultstate="collapsed" desc="Generated Code">//GEN-BEGIN:initComponents
     private void initComponents() {
 
-        jPanel1 = new JPanel();
+        mainPanel = new javax.swing.JPanel();
 
-        jPanel1.setLayout(new BorderLayout());
+        mainPanel.setLayout(new java.awt.BorderLayout());
 
-        GroupLayout layout = new GroupLayout(this);
+        javax.swing.GroupLayout layout = new javax.swing.GroupLayout(this);
         this.setLayout(layout);
         layout.setHorizontalGroup(
-            layout.createParallelGroup(GroupLayout.Alignment.LEADING)
-            .addComponent(jPanel1, GroupLayout.Alignment.TRAILING, GroupLayout.DEFAULT_SIZE, GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+            layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addComponent(mainPanel, javax.swing.GroupLayout.Alignment.TRAILING, javax.swing.GroupLayout.DEFAULT_SIZE, 271, Short.MAX_VALUE)
         );
         layout.setVerticalGroup(
-            layout.createParallelGroup(GroupLayout.Alignment.LEADING)
-            .addComponent(jPanel1, GroupLayout.Alignment.TRAILING, GroupLayout.DEFAULT_SIZE, GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+            layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addComponent(mainPanel, javax.swing.GroupLayout.Alignment.TRAILING, javax.swing.GroupLayout.DEFAULT_SIZE, 292, Short.MAX_VALUE)
         );
     }// </editor-fold>//GEN-END:initComponents
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
-    private JPanel jPanel1;
+    private javax.swing.JPanel mainPanel;
     // End of variables declaration//GEN-END:variables
     @Override
     public void componentOpened() {
-        // TODO add custom code on component opening
+        mainPanel.add(viewerManager.getViewerContainer(), BorderLayout.CENTER);
     }
 
     @Override
     public void componentClosed() {
-        TopComponentGroup tcg = WindowManager.getDefault().findTopComponentGroup("split_picking_plugin");
-        if (tcg != null) {
-            tcg.close();
-        }
+        TopComponent tc = WindowLocator.getByName(SplitPickingTopComponent.PREFERRED_ID);
+         if (tc!=null) tc.close();
     }
 
     void writeProperties(Properties p) {

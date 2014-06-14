@@ -779,8 +779,8 @@ public class SessionMgr {
                 FacadeManager.getFacadeManager().getComputeFacade().beginSession();
 
                 if (relogin) {
-                    log.info("Clearing all caches");
-                    ModelMgr.getModelMgr().invalidateCache();
+                    log.info("Clearing entity model");
+                    ModelMgr.getModelMgr().reset();
                     if (SessionMgr.getBrowser() != null) {
                         log.info("Refreshing all views");
                         SessionMgr.getBrowser().getEntityOutline().refresh();

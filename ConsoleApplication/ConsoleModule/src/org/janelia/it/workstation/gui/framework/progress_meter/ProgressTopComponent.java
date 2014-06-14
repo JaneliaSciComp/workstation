@@ -1,86 +1,59 @@
-/*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
- */
 package org.janelia.it.workstation.gui.framework.progress_meter;
 
 import java.awt.BorderLayout;
-import java.awt.Graphics2D;
-import java.awt.GraphicsConfiguration;
-import java.awt.GraphicsDevice;
-import java.awt.GraphicsEnvironment;
 import java.awt.Image;
-import java.awt.image.BufferedImage;
 import java.util.Properties;
-import javax.swing.GroupLayout;
-import javax.swing.Icon;
-import javax.swing.ImageIcon;
-import javax.swing.JPanel;
 
 import org.netbeans.api.settings.ConvertAsProperties;
+import org.openide.awt.ActionID;
+import org.openide.awt.ActionReference;
 import org.openide.windows.TopComponent;
 import org.openide.util.NbBundle.Messages;
 
 /**
- * Top component which displays something.
+ * Top component which usually slides in from the right side when a background
+ * task is executed. Shows progress and "next step" buttons for all 
+ * background tasks.
  */
 @ConvertAsProperties(
         dtd = "-//org.janelia.it.workstation.gui.framework.progress_meter//ProgressTopComponent//EN",
         autostore = false
 )
 @TopComponent.Description(
-        preferredID = "ProgressTopComponent",
-        iconBase = "images/cog_small_anim.gif",
+        preferredID = ProgressTopComponent.PREFERRED_ID,
+        //iconBase = "images/cog_small_anim.gif",
         persistenceType = TopComponent.PERSISTENCE_ALWAYS
 )
 @TopComponent.Registration(mode = "rightSlidingSide", openAtStartup = true, position=100)
-//@ActionID(category = "Window", id = "ProgressTopComponent")
-//@ActionReference(path = "Menu/Window" /*, position = 333 */)
+@ActionID(category = "Window", id = "ProgressTopComponent")
+@ActionReference(path = "Menu/Window", position = 333)
 @TopComponent.OpenActionRegistration(
         displayName = "#CTL_ProgressTopComponentAction",
         preferredID = "ProgressTopComponentTopComponent"
 )
 @Messages({
-    "CTL_ProgressTopComponentAction=ProgressTopComponent",
-    "CTL_ProgressTopComponent=",
-    "HINT_ProgressTopComponentTopComponent=See progress of running tasks"
+    "CTL_ProgressTopComponentAction=Background Tasks",
+    "CTL_ProgressTopComponent=Background Tasks",
+    "HINT_ProgressTopComponentTopComponent=See progress of background tasks"
 })
 public final class ProgressTopComponent extends TopComponent {
 
+    public static final String PREFERRED_ID = "ProgressTopComponent";
+    
+    private final ProgressMeterPanel progressMeter = ProgressMeterPanel.getSingletonInstance();
+    
     public ProgressTopComponent() {
         initComponents();
-        // NOTE: must set as border-layout from Design pane.
-        jPanel1.add( WorkerProgressMeter.getProgressMeter().getMeterPanel(), BorderLayout.CENTER );
         setName(Bundle.CTL_ProgressTopComponent());
         setToolTipText(Bundle.HINT_ProgressTopComponentTopComponent());
-        putClientProperty(TopComponent.PROP_CLOSING_DISABLED, Boolean.TRUE);
-        putClientProperty(TopComponent.PROP_DRAGGING_DISABLED, Boolean.TRUE);
-        putClientProperty(TopComponent.PROP_MAXIMIZATION_DISABLED, Boolean.TRUE);
-        putClientProperty(TopComponent.PROP_SLIDING_DISABLED, Boolean.TRUE);
-        putClientProperty(TopComponent.PROP_UNDOCKING_DISABLED, Boolean.TRUE);
-
     }
     
     @Override
     public Image getIcon() {
-        // From http://stackoverflow.com/questions/5830533/how-can-i-convert-an-icon-to-an-image
-        Icon icon = WorkerProgressMeter.getProgressMeter().getMenuLabel().getIcon();
-        if (icon instanceof ImageIcon) {
-            return ((ImageIcon) icon).getImage();
-        } else {
-            int w = icon.getIconWidth();
-            int h = icon.getIconHeight();
-            GraphicsEnvironment ge
-                    = GraphicsEnvironment.getLocalGraphicsEnvironment();
-            GraphicsDevice gd = ge.getDefaultScreenDevice();
-            GraphicsConfiguration gc = gd.getDefaultConfiguration();
-            BufferedImage image = gc.createCompatibleImage(w, h);
-            Graphics2D g = image.createGraphics();
-            icon.paintIcon(null, g, 0, 0);
-            g.dispose();
-            return image;
-        }
+        // TODO: figure out a way to reliably repaint the TopComponent's icon, 
+        // and use getCurrentIcon to get either the static or animated icon.
+        // For now we'll just show the static icon always.
+        return progressMeter.getStaticIcon().getImage();
     }
 
     /**
@@ -91,30 +64,28 @@ public final class ProgressTopComponent extends TopComponent {
     // <editor-fold defaultstate="collapsed" desc="Generated Code">//GEN-BEGIN:initComponents
     private void initComponents() {
 
-        jPanel1 = new JPanel();
+        mainPanel = new javax.swing.JPanel();
 
-        jPanel1.setLayout(new BorderLayout());
+        mainPanel.setLayout(new java.awt.BorderLayout());
 
-        GroupLayout layout = new GroupLayout(this);
+        javax.swing.GroupLayout layout = new javax.swing.GroupLayout(this);
         this.setLayout(layout);
         layout.setHorizontalGroup(
-            layout.createParallelGroup(GroupLayout.Alignment.LEADING)
-            .addComponent(jPanel1, GroupLayout.Alignment.TRAILING, GroupLayout.DEFAULT_SIZE, GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+            layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addComponent(mainPanel, javax.swing.GroupLayout.DEFAULT_SIZE, 234, Short.MAX_VALUE)
         );
         layout.setVerticalGroup(
-            layout.createParallelGroup(GroupLayout.Alignment.LEADING)
-            .addGroup(GroupLayout.Alignment.TRAILING, layout.createSequentialGroup()
-                .addComponent(jPanel1, GroupLayout.DEFAULT_SIZE, GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                .addContainerGap())
+            layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addComponent(mainPanel, javax.swing.GroupLayout.DEFAULT_SIZE, 222, Short.MAX_VALUE)
         );
     }// </editor-fold>//GEN-END:initComponents
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
-    private JPanel jPanel1;
+    private javax.swing.JPanel mainPanel;
     // End of variables declaration//GEN-END:variables
     @Override
     public void componentOpened() {
-        // TODO add custom code on component opening
+        mainPanel.add(progressMeter, BorderLayout.CENTER);
     }
 
     @Override

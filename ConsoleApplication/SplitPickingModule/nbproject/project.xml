@@ -88,9 +88,7 @@
                     </run-dependency>
                 </dependency>
             </module-dependencies>
-            <public-packages>
-                <package>org.janelia.it.workstation.gui.split_picking</package>
-            </public-packages>
+            <public-packages/>
         </data>
     </configuration>
 </project>

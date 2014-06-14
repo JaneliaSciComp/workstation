@@ -1,61 +1,44 @@
 package org.janelia.it.workstation.gui.dataview;
 
-import java.awt.BorderLayout;
-import java.util.Properties;
-import org.janelia.it.workstation.gui.util.WindowLocator;
-
 import org.netbeans.api.settings.ConvertAsProperties;
 import org.openide.windows.TopComponent;
 import org.openide.util.NbBundle.Messages;
-import org.openide.util.lookup.Lookups;
-
 
 /**
- * Top component for the entity-based data viewer. 
+ * Top component for showing the data modeling (entity type/attribute) tree. 
  * 
  * @author <a href="mailto:rokickik@janelia.hhmi.org">Konrad Rokicki</a>
  */
 @ConvertAsProperties(
-        dtd = "-//org.janelia.it.workstation.gui.dataview//DataViewer//EN",
+        dtd = "-//org.janelia.it.workstation.gui.dataview//DataModeling//EN",
         autostore = false
 )
 @TopComponent.Description(
-        preferredID = DataViewerTopComponent.PREFERRED_ID,
+        preferredID = DataModelingTopComponent.PREFERRED_ID,
         //iconBase="SET/PATH/TO/ICON/HERE", 
-        persistenceType = TopComponent.PERSISTENCE_NEVER
+        persistenceType = TopComponent.PERSISTENCE_ALWAYS
 )
-@TopComponent.Registration(mode = "editor", openAtStartup = false)
+@TopComponent.Registration(mode = "properties", openAtStartup = false, position=600)
 @Messages({
-    "CTL_DataViewerAction=Data Viewer",
-    "CTL_DataViewerTopComponent=Data Viewer",
-    "HINT_DataViewerTopComponent=This is a Data Viewer window"
+    "CTL_DataModelingAction=Data Modeling",
+    "CTL_DataModelingTopComponent=Data Modeling",
+    "HINT_DataModelingTopComponent=This is a Data Modeling panel"
 })
-public final class DataViewerTopComponent extends TopComponent {
+public final class DataModelingTopComponent extends TopComponent {
 
-    public static final String PREFERRED_ID = "DataViewerTopComponent";
+    public static final String PREFERRED_ID = "DataModelingTopComponent";
     
-    private final DataViewer dataViewer;
+    private final EntityTypePane entityTypePane;
     
-    public DataViewerTopComponent() {
+    public DataModelingTopComponent() {
         initComponents();
-        setName(Bundle.CTL_DataViewerTopComponent());
-        setToolTipText(Bundle.HINT_DataViewerTopComponent());
-        establishEntityAcceptor();
-        dataViewer = new DataViewer();
+        setName(Bundle.CTL_DataModelingTopComponent());
+        setToolTipText(Bundle.HINT_DataModelingTopComponent());
+        this.entityTypePane = new EntityTypePane();
     }
 
-    //------------------------------------------HELPERS
-    private void establishEntityAcceptor() {
-        Launcher launcher = new Launcher();
-        this.associateLookup( Lookups.singleton( launcher ) );
-    }
-        
-    public void openDataViewer(Long entityId) {
-        dataViewer.getEntityPane().performSearchById(entityId);
-    }
-    
-    public DataViewer getDataViewer() {
-        return dataViewer;
+    public EntityTypePane getEntityTypePane() {
+        return entityTypePane;
     }
     
     /**
@@ -88,32 +71,23 @@ public final class DataViewerTopComponent extends TopComponent {
     // End of variables declaration//GEN-END:variables
     @Override
     public void componentOpened() {
-        contentPanel.add(dataViewer, BorderLayout.CENTER);
-        TopComponent tc = WindowLocator.getByName(DataModelingTopComponent.PREFERRED_ID);
-         if (tc!=null) {
-             tc.open();
-             tc.requestActive();
-         }
-        
+        contentPanel.add(entityTypePane);
+        entityTypePane.refresh();
     }
 
     @Override
     public void componentClosed() {
-         contentPanel.remove(dataViewer);
-         TopComponent tc = WindowLocator.getByName(DataModelingTopComponent.PREFERRED_ID);
-         if (tc!=null) {
-             tc.close();
-         }
+        contentPanel.remove(entityTypePane);
     }
 
-    void writeProperties(Properties p) {
+    void writeProperties(java.util.Properties p) {
         // better to version settings since initial version as advocated at
         // http://wiki.apidesign.org/wiki/PropertyFiles
         p.setProperty("version", "1.0");
         // TODO store your settings
     }
 
-    void readProperties(Properties p) {
+    void readProperties(java.util.Properties p) {
         String version = p.getProperty("version");
         // TODO read your settings according to their version
     }
