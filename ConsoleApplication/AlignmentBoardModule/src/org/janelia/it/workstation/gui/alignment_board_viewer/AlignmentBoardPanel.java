@@ -259,7 +259,10 @@ public class AlignmentBoardPanel extends JPanel implements AlignmentBoardControl
         logger.info("Setting Mip3d Volume.");
         MultiTexVolumeBrickFactory volumeBrickFactory = new MultiTexVolumeBrickFactory();
         VolumeBrickActorBuilder actorBuilder = new VolumeBrickActorBuilder();
-        GLActor[] volumeBrickActors = actorBuilder.buildVolumeBrickActors(mip3d.getVolumeModel(), signalTexture, maskTexture, volumeBrickFactory, renderMapping);
+        GLActor[] volumeBrickActors = //new GLActor[1];
+                actorBuilder.buildVolumeBrickActors(mip3d.getVolumeModel(), signalTexture, maskTexture, volumeBrickFactory, renderMapping);
+        //volumeBrickActors[0] = actorBuilder.buildVolumeBrickActor(mip3d.getVolumeModel(), volumeBrickFactory, signalTexture);
+
         if ( volumeBrickActors == null || volumeBrickActors.length == 0 ) {
             String msg = "Failed to load volume to mip3d.";
             logger.error(msg);
@@ -292,8 +295,7 @@ public class AlignmentBoardPanel extends JPanel implements AlignmentBoardControl
                 settingsPanel.setVolumeMaxima(signalTexture.getSx(), signalTexture.getSy(), signalTexture.getSz());
             }
             else {
-                final BoundingBox3d boundingBox3d = volumeBrickActor.getBoundingBox3d();
-                settingsPanel.setVolumeMaxima( (int)boundingBox3d.getWidth(), (int)boundingBox3d.getHeight(), (int)boundingBox3d.getDepth() );
+                settingsPanel.setVolumeMaxima( 100, 100, 100 );
             }
         }
 

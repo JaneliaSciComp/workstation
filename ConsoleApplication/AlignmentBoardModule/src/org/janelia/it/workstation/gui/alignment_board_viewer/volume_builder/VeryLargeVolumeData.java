@@ -51,7 +51,7 @@ public class VeryLargeVolumeData implements VolumeDataI {
         }
         // Increase number of slabs, if the slice size is very large.
         int slicesPerSlab = calculateSlabParameters(sizeX, sizeY, sizeZ, bytesPerVoxel, numSlabs);
-        if ( slabExtent > 100000000 ) {
+        if ( slabExtent / bytesPerVoxel > 25000000 ) {
             numSlabs *= 4;
             slicesPerSlab = calculateSlabParameters(sizeX, sizeY, sizeZ, bytesPerVoxel, numSlabs );
         }

@@ -155,10 +155,15 @@ public class VolumeBrickActorBuilder {
         if ( signalTexture == null || maskTexture == null ) {
             throw new IllegalArgumentException( "Mask and signal must both be non-null." );
         }
+        final int signalChunkCount = signalTexture.getTextureData().getVolumeChunks().length;
+        final int maskChunkCount = maskTexture.getTextureData().getVolumeChunks().length;
         
-        if ( signalTexture.getTextureData().getVolumeChunks().length !=
-                maskTexture.getTextureData().getVolumeChunks().length ) {
-            throw new IllegalArgumentException( "Mask and signal must have same number of chunks." );
+        if ( signalChunkCount != maskChunkCount ) {
+            String msg = String.format( 
+                    "Mask and signal must have same number of chunks. Signal has %d; mask has %d.",
+                    signalChunkCount, maskChunkCount
+            );
+            throw new IllegalArgumentException( msg );
         }
     }
 
