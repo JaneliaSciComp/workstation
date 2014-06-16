@@ -44,7 +44,7 @@ import org.janelia.it.workstation.gui.alignment_board.ab_mgr.AlignmentBoardMgr;
 public class RenderablesLoadWorker extends SimpleWorker implements VolumeLoader {
 
     private static final int LEAST_FULLSIZE_MEM = 1500000; // Ex: 1,565,620
-    private static final long MAX_CUBIC_VOLUME_FOR_STD_BOARD = 1712 * 1370 * 492;
+    private static final long MAX_CUBIC_VOLUME_FOR_STD_BOARD = 704 * 704 * 512;
     private Boolean loadFiles = true;
 
     private MaskChanMultiFileLoader compartmentLoader;
@@ -235,8 +235,13 @@ public class RenderablesLoadWorker extends SimpleWorker implements VolumeLoader 
 
             //buildNothing(renderableDatas, renderableBeans);
 
-            buildMaskVolume(renderableDatas, renderableBeans);
-            buildSignalVolume(renderableDatas, renderableBeans);
+            if ( renderableDatas.size() > 0 ) {
+                buildMaskVolume(renderableDatas, renderableBeans);
+                buildSignalVolume(renderableDatas, renderableBeans);
+            }
+            else {
+                controlCallback.displayReady();                
+            }
 
             compartmentLoader.close();
             neuronFragmentLoader.close();
@@ -609,9 +614,9 @@ public class RenderablesLoadWorker extends SimpleWorker implements VolumeLoader 
 
                 // Need to consider size of volume. Max found to _render_
                 // with "standard" memory is known.
-                long cubicVoxels = 0L;
+                long cubicVoxels = 1L;
                 for ( int i = 0; i < axialLengths.length; i++ ) {
-                    cubicVoxels += axialLengths[ i ];
+                    cubicVoxels *= axialLengths[ i ];
                 }
                 boolean belowMaxKnownCompatible = 
                         MAX_CUBIC_VOLUME_FOR_STD_BOARD >= cubicVoxels;

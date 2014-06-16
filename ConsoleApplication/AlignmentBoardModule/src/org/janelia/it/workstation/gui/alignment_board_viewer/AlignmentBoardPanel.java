@@ -53,6 +53,7 @@ import org.janelia.it.jacs.model.entity.Entity;
 import org.janelia.it.workstation.gui.viewer3d.events.AlignmentBoardItemChangeEvent;
 import org.janelia.it.workstation.gui.viewer3d.events.AlignmentBoardOpenEvent;
 import org.janelia.it.workstation.gui.util.WindowLocator;
+import org.janelia.it.workstation.gui.viewer3d.BoundingBox3d;
 import org.janelia.it.workstation.model.domain.AlignmentContext;
 import org.openide.util.lookup.InstanceContent;
 import org.openide.util.lookup.ServiceProvider;
@@ -283,7 +284,13 @@ public class AlignmentBoardPanel extends JPanel implements AlignmentBoardControl
             }
 
             logger.info("Setting volume maxima on settings.");
-            settingsPanel.setVolumeMaxima(signalTexture.getSx(), signalTexture.getSy(), signalTexture.getSz());
+            if ( signalTexture != null ) {
+                settingsPanel.setVolumeMaxima(signalTexture.getSx(), signalTexture.getSy(), signalTexture.getSz());
+            }
+            else {
+                final BoundingBox3d boundingBox3d = volumeBrickActor.getBoundingBox3d();
+                settingsPanel.setVolumeMaxima( (int)boundingBox3d.getWidth(), (int)boundingBox3d.getHeight(), (int)boundingBox3d.getDepth() );
+            }
         }
 
         multiMaskTracker.checkDepthExceeded();
@@ -851,6 +858,12 @@ public class AlignmentBoardPanel extends JPanel implements AlignmentBoardControl
 
     private int[] parseDimensions( String dimensionsString ) {
         int[] rtnVal = new int[ 3 ];
+        // One, particular alignment space has been truncated and requires
+        // far less space than advertized.
+        if ( dimensionsString.equals("1712x1370x492")) {
+            logger.warn( "Altering size of alignment space from {}.", dimensionsString );
+            return new int[] {650, 704, 512};
+        }
         String[] dimensionStrs = dimensionsString.split( "x" );
         if ( dimensionStrs.length == rtnVal.length ) {
             for ( int i = 0; i < rtnVal.length; i++ ) {
