@@ -53,32 +53,7 @@ public class SegmentedVtxCoordBufMgr extends AbstractCoordBufMgr {
     public void buildBuffers() {
         vertexCountByAxis = new int[ NUM_AXES ];
         if ( texCoordBuf[ 0 ] == null  &&  textureMediator != null ) {
-            // Compute sizes, and allocate buffers.
-            logger.info("Allocating buffers");
-            for ( int i = 0; i < NUM_BUFFERS_PER_TYPE; i++ ) {
-                // Three coords per vertex.  Six vertexes per slice.  Times number of slices.
-                int numVertices = VERTICES_PER_SLICE * computeEffectiveAxisLen(i % NUM_AXES);
-                int numCoords = COORDS_PER_VERTEX * numVertices;
-                vertexCountByAxis[ i % NUM_AXES ] = numVertices;
-
-                // NOTE on usage.  Here, 'allocateDirect' is used, because otherwise there would be no backing array.
-                //  However, this is not guaranteed by the Java NIO contract.  Hence under some circumstances,
-                //  this may not be true.  Wrapping an array did not provide a backing array on my system.
-                //  Further, the use of a byte-buffer is required because of the different endian-ness between
-                //  Java and the native system.
-                ByteBuffer texByteBuffer = ByteBuffer.allocateDirect(numCoords * Float.SIZE / 8);
-                texByteBuffer.order( ByteOrder.nativeOrder() );
-                texCoordBuf[ i ] = texByteBuffer.asFloatBuffer();
-
-                ByteBuffer geoByteBuffer = ByteBuffer.allocateDirect(numCoords * Float.SIZE / 8);
-                geoByteBuffer.order(ByteOrder.nativeOrder());
-                geometryCoordBuf[ i ] = geoByteBuffer.asFloatBuffer();
-
-                // One index per vertex.  Not one per coord.  No need for x,y,z.
-                ByteBuffer inxByteBuffer = ByteBuffer.allocateDirect(numVertices * Short.SIZE / 8);
-                inxByteBuffer.order(ByteOrder.nativeOrder());
-                indexBuf[ i ] = inxByteBuffer.asShortBuffer();
-            }
+            allocateBuffers();
 
             // Now produce the vertexes to stuff into all of the buffers.
             //  Making sets of four.
@@ -93,7 +68,7 @@ public class SegmentedVtxCoordBufMgr extends AbstractCoordBufMgr {
                 // compute number of slices
                 float firstSegmentStart = segmentRanges.getRangeByAxisNum( firstInx )[ AxialSegmentRangeBean.HIGH_INX ];
                 float firstSegmentEnd = segmentRanges.getRangeByAxisNum( firstInx )[ AxialSegmentRangeBean.LOW_INX ];
-                float slice0 = firstAxisLength - (firstAxisLength / 2.0f);
+                float slice0 = (firstAxisLength - (firstAxisLength / 2.0f));
                 float sliceSep = textureMediator.getVoxelMicrometers()[ firstInx ].floatValue();
 
         		// Below "x", "y", and "z" actually refer to a1, a2, and a3, respectively;
@@ -132,7 +107,8 @@ public class SegmentedVtxCoordBufMgr extends AbstractCoordBufMgr {
                 texCoordBuf[ firstInx ].rewind();
                 short inxOffset = 0;
                 int[] range = segmentRanges.getRangeByAxisNum(firstInx);
-                for (int sliceInx = range[AxialSegmentRangeBean.HIGH_INX]; sliceInx > range[AxialSegmentRangeBean.LOW_INX]; --sliceInx) {
+//                for (int sliceInx = range[AxialSegmentRangeBean.HIGH_INX]; sliceInx > range[AxialSegmentRangeBean.LOW_INX]; --sliceInx) {
+                for (int sliceInx = range[AxialSegmentRangeBean.LOW_INX]; sliceInx < range[AxialSegmentRangeBean.HIGH_INX]; ++sliceInx) {
                     // insert final coordinate into buffers
 
                     // FORWARD axes.
@@ -179,6 +155,35 @@ public class SegmentedVtxCoordBufMgr extends AbstractCoordBufMgr {
     protected int computeEffectiveAxisLen(int index) {
         final int[] range = segmentRanges.getRangeByAxisNum(index);
         return range[ AxialSegmentRangeBean.HIGH_INX ] - range[ AxialSegmentRangeBean.LOW_INX ];
+    }
+
+    private void allocateBuffers() {
+        // Compute sizes, and allocate buffers.
+        logger.info("Allocating buffers");
+        for ( int i = 0; i < NUM_BUFFERS_PER_TYPE; i++ ) {
+            // Three coords per vertex.  Six vertexes per slice.  Times number of slices.
+            int numVertices = VERTICES_PER_SLICE * computeEffectiveAxisLen(i % NUM_AXES);
+            int numCoords = COORDS_PER_VERTEX * numVertices;
+            vertexCountByAxis[ i % NUM_AXES ] = numVertices;
+            
+            // NOTE on usage.  Here, 'allocateDirect' is used, because otherwise there would be no backing array.
+            //  However, this is not guaranteed by the Java NIO contract.  Hence under some circumstances,
+            //  this may not be true.  Wrapping an array did not provide a backing array on my system.
+            //  Further, the use of a byte-buffer is required because of the different endian-ness between
+            //  Java and the native system.
+            ByteBuffer texByteBuffer = ByteBuffer.allocateDirect(numCoords * Float.SIZE / 8);
+            texByteBuffer.order( ByteOrder.nativeOrder() );
+            texCoordBuf[ i ] = texByteBuffer.asFloatBuffer();
+            
+            ByteBuffer geoByteBuffer = ByteBuffer.allocateDirect(numCoords * Float.SIZE / 8);
+            geoByteBuffer.order(ByteOrder.nativeOrder());
+            geometryCoordBuf[ i ] = geoByteBuffer.asFloatBuffer();
+            
+            // One index per vertex.  Not one per coord.  No need for x,y,z.
+            ByteBuffer inxByteBuffer = ByteBuffer.allocateDirect(numVertices * Short.SIZE / 8);
+            inxByteBuffer.order(ByteOrder.nativeOrder());
+            indexBuf[ i ] = inxByteBuffer.asShortBuffer();
+        }
     }
 
 }
