@@ -1,0 +1,11 @@
+flyworkstation.log
+workstation.log
+build
+build_eclipse
+dist
+private
+jacs/src/org/janelia/it/jacs/server/ie/jaxb
+shared/src/org/janelia/it/jacs/shared/blast/blastxmlparser/jaxb
+buildprocess/intellij-make/
+ConsoleApplication/SharedModelComputeWrapper/release
+jacs.iws
