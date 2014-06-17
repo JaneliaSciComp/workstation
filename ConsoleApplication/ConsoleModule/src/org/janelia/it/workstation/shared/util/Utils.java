@@ -17,9 +17,11 @@ import java.util.concurrent.CancellationException;
 import javax.imageio.ImageIO;
 import javax.media.jai.operator.InvertDescriptor;
 import javax.swing.ImageIcon;
+import javax.swing.JFrame;
 import javax.swing.JOptionPane;
 import javax.swing.JTable;
 import javax.swing.SwingConstants;
+import javax.swing.SwingUtilities;
 import javax.swing.table.DefaultTableCellRenderer;
 import javax.swing.table.DefaultTableColumnModel;
 import javax.swing.table.TableCellRenderer;
@@ -38,6 +40,7 @@ import org.janelia.it.workstation.shared.filestore.PathTranslator;
 import org.janelia.it.workstation.shared.workers.IndeterminateProgressMonitor;
 import org.janelia.it.workstation.shared.workers.SimpleWorker;
 import org.janelia.it.jacs.model.entity.Entity;
+import org.openide.windows.WindowManager;
 import org.perf4j.LoggingStopWatch;
 import org.perf4j.StopWatch;
 import org.slf4j.Logger;
@@ -693,5 +696,65 @@ public class Utils {
             }
         }
         return count;
+    }
+    
+    public static void runOnEDT(Runnable runnable) {
+        try {
+            if (SwingUtilities.isEventDispatchThread()) {
+                runnable.run();
+            }
+            else {
+                SwingUtilities.invokeAndWait(runnable);
+            }
+        }
+        catch (Exception ex) {
+            SessionMgr.getSessionMgr().handleException(ex);
+        }
+    }
+
+    public static void queueOnEDT(Runnable runnable) {
+        try {
+            if (SwingUtilities.isEventDispatchThread()) {
+                runnable.run();
+            }
+            else {
+                SwingUtilities.invokeLater(runnable);
+            }
+        }
+        catch (Exception ex) {
+            SessionMgr.getSessionMgr().handleException(ex);
+        }
+    }
+    
+    public static void runOffEDT(final Runnable runnable) {
+        runOffEDT(runnable, null);
+    }
+    
+    public static void runOffEDT(final Runnable runnable, final Runnable callbackOnEDT) {
+        try {
+            if (!SwingUtilities.isEventDispatchThread()) {
+                runnable.run();
+            }
+            else {
+                SimpleWorker worker = new SimpleWorker() {
+                    @Override
+                    protected void doStuff() throws Exception {
+                        if (runnable!=null) runnable.run();
+                    }
+                    @Override
+                    protected void hadSuccess() {
+                        if (callbackOnEDT!=null) callbackOnEDT.run();
+                    }
+                    @Override
+                    protected void hadError(Throwable e) {
+                        SessionMgr.getSessionMgr().handleException(e);
+                    }
+                };
+                worker.execute();
+            }
+        }
+        catch (Exception ex) {
+            SessionMgr.getSessionMgr().handleException(ex);
+        }
     }
 }
