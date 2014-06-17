@@ -163,6 +163,35 @@
                 <package>com.explodingpixels.util</package>
                 <package>com.explodingpixels.widgets</package>
                 <package>com.explodingpixels.widgets.plaf</package>
+                <package>com.fasterxml.jackson.annotation</package>
+                <package>com.fasterxml.jackson.core</package>
+                <package>com.fasterxml.jackson.core.base</package>
+                <package>com.fasterxml.jackson.core.format</package>
+                <package>com.fasterxml.jackson.core.io</package>
+                <package>com.fasterxml.jackson.core.json</package>
+                <package>com.fasterxml.jackson.core.sym</package>
+                <package>com.fasterxml.jackson.core.type</package>
+                <package>com.fasterxml.jackson.core.util</package>
+                <package>com.fasterxml.jackson.databind</package>
+                <package>com.fasterxml.jackson.databind.annotation</package>
+                <package>com.fasterxml.jackson.databind.cfg</package>
+                <package>com.fasterxml.jackson.databind.deser</package>
+                <package>com.fasterxml.jackson.databind.deser.impl</package>
+                <package>com.fasterxml.jackson.databind.deser.std</package>
+                <package>com.fasterxml.jackson.databind.exc</package>
+                <package>com.fasterxml.jackson.databind.ext</package>
+                <package>com.fasterxml.jackson.databind.introspect</package>
+                <package>com.fasterxml.jackson.databind.jsonFormatVisitors</package>
+                <package>com.fasterxml.jackson.databind.jsonschema</package>
+                <package>com.fasterxml.jackson.databind.jsontype</package>
+                <package>com.fasterxml.jackson.databind.jsontype.impl</package>
+                <package>com.fasterxml.jackson.databind.module</package>
+                <package>com.fasterxml.jackson.databind.node</package>
+                <package>com.fasterxml.jackson.databind.ser</package>
+                <package>com.fasterxml.jackson.databind.ser.impl</package>
+                <package>com.fasterxml.jackson.databind.ser.std</package>
+                <package>com.fasterxml.jackson.databind.type</package>
+                <package>com.fasterxml.jackson.databind.util</package>
                 <package>com.google.common.annotations</package>
                 <package>com.google.common.base</package>
                 <package>com.google.common.base.internal</package>
@@ -258,6 +287,13 @@
                 <package>com.kenai.jaffl.struct</package>
                 <package>com.kenai.jaffl.util</package>
                 <package>com.kenai.jffi</package>
+                <package>com.mongodb</package>
+                <package>com.mongodb.gridfs</package>
+                <package>com.mongodb.io</package>
+                <package>com.mongodb.tools</package>
+                <package>com.mongodb.util</package>
+                <package>com.mongodb.util.management</package>
+                <package>com.mongodb.util.management.jmx</package>
                 <package>com.sun.activation.registries</package>
                 <package>com.sun.activation.viewers</package>
                 <package>com.sun.codemodel</package>
@@ -464,6 +500,11 @@
                 <package>de.javasoft.synthetica.netbeans</package>
                 <package>de.javasoft.util</package>
                 <package>de.javasoft.util.java2d</package>
+                <package>de.undercouch.bson4jackson</package>
+                <package>de.undercouch.bson4jackson.io</package>
+                <package>de.undercouch.bson4jackson.serializers</package>
+                <package>de.undercouch.bson4jackson.types</package>
+                <package>de.undercouch.bson4jackson.uuid</package>
                 <package>de.uulm.ecs.ai.owlapi.krssparser</package>
                 <package>de.uulm.ecs.ai.owlapi.krssrenderer</package>
                 <package>delaunay</package>
@@ -551,6 +592,8 @@
                 <package>javatests</package>
                 <package>javax.activation</package>
                 <package>javax.annotation</package>
+                <package>javax.annotation.concurrent</package>
+                <package>javax.annotation.meta</package>
                 <package>javax.annotation.security</package>
                 <package>javax.jws</package>
                 <package>javax.jws.soap</package>
@@ -1331,6 +1374,11 @@
                 <package>org.apache.xpath.operations</package>
                 <package>org.apache.xpath.patterns</package>
                 <package>org.apache.xpath.res</package>
+                <package>org.bson</package>
+                <package>org.bson.io</package>
+                <package>org.bson.types</package>
+                <package>org.bson.util</package>
+                <package>org.bson.util.annotations</package>
                 <package>org.codehaus.groovy</package>
                 <package>org.codehaus.groovy.ant</package>
                 <package>org.codehaus.groovy.antlr</package>
@@ -1612,6 +1660,18 @@
                 <package>org.jibx.runtime</package>
                 <package>org.jibx.runtime.impl</package>
                 <package>org.jibx.util</package>
+                <package>org.jnp.interfaces</package>
+                <package>org.jnp.interfaces.java</package>
+                <package>org.jnp.interfaces.jnp</package>
+                <package>org.jnp.server</package>
+                <package>org.jongo</package>
+                <package>org.jongo.bson</package>
+                <package>org.jongo.marshall</package>
+                <package>org.jongo.marshall.jackson</package>
+                <package>org.jongo.marshall.jackson.bson4jackson</package>
+                <package>org.jongo.marshall.jackson.configuration</package>
+                <package>org.jongo.marshall.jackson.oid</package>
+                <package>org.jongo.query</package>
                 <package>org.kohsuke.rngom.ast.builder</package>
                 <package>org.kohsuke.rngom.ast.om</package>
                 <package>org.kohsuke.rngom.ast.util</package>
@@ -1961,6 +2021,10 @@
                 <binary-origin>release/modules/ext/axiom-api-1.2.11.jar</binary-origin>
             </class-path-extension>
             <class-path-extension>
+                <runtime-relative-path>ext/mongo-java-driver-2.11.3.jar</runtime-relative-path>
+                <binary-origin>release/modules/ext/mongo-java-driver-2.11.3.jar</binary-origin>
+            </class-path-extension>
+            <class-path-extension>
                 <runtime-relative-path>ext/syntheticaBlackMoon.jar</runtime-relative-path>
                 <binary-origin>release/modules/ext/syntheticaBlackMoon.jar</binary-origin>
             </class-path-extension>
@@ -2011,6 +2075,10 @@
             <class-path-extension>
                 <runtime-relative-path>ext/jython.jar</runtime-relative-path>
                 <binary-origin>release/modules/ext/jython.jar</binary-origin>
+            </class-path-extension>
+            <class-path-extension>
+                <runtime-relative-path>ext/jsr305-1.3.9.jar</runtime-relative-path>
+                <binary-origin>release/modules/ext/jsr305-1.3.9.jar</binary-origin>
             </class-path-extension>
             <class-path-extension>
                 <runtime-relative-path>ext/bcel-5.1.jar</runtime-relative-path>
@@ -2093,6 +2161,10 @@
                 <binary-origin>release/modules/ext/jalopy-1.5rc3.jar</binary-origin>
             </class-path-extension>
             <class-path-extension>
+                <runtime-relative-path>ext/bson4jackson-2.2.3.jar</runtime-relative-path>
+                <binary-origin>release/modules/ext/bson4jackson-2.2.3.jar</binary-origin>
+            </class-path-extension>
+            <class-path-extension>
                 <runtime-relative-path>ext/perf4j-0.9.16-logbackonly.jar</runtime-relative-path>
                 <binary-origin>release/modules/ext/perf4j-0.9.16-logbackonly.jar</binary-origin>
             </class-path-extension>
@@ -2121,6 +2193,10 @@
                 <binary-origin>release/modules/ext/lz4-1.1.1.jar</binary-origin>
             </class-path-extension>
             <class-path-extension>
+                <runtime-relative-path>ext/jongo-1.0.jar</runtime-relative-path>
+                <binary-origin>release/modules/ext/jongo-1.0.jar</binary-origin>
+            </class-path-extension>
+            <class-path-extension>
                 <runtime-relative-path>ext/logback-core-1.0.13.jar</runtime-relative-path>
                 <binary-origin>release/modules/ext/logback-core-1.0.13.jar</binary-origin>
             </class-path-extension>
@@ -2131,6 +2207,10 @@
             <class-path-extension>
                 <runtime-relative-path>ext/vlcj-1.3.0-b1.jar</runtime-relative-path>
                 <binary-origin>release/modules/ext/vlcj-1.3.0-b1.jar</binary-origin>
+            </class-path-extension>
+            <class-path-extension>
+                <runtime-relative-path>ext/jackson-core-2.2.3.jar</runtime-relative-path>
+                <binary-origin>release/modules/ext/jackson-core-2.2.3.jar</binary-origin>
             </class-path-extension>
             <class-path-extension>
                 <runtime-relative-path>ext/mac_widgets-0.9.5.jar</runtime-relative-path>
@@ -2361,6 +2441,10 @@
                 <binary-origin>release/modules/ext/axis2-json-1.5.5.jar</binary-origin>
             </class-path-extension>
             <class-path-extension>
+                <runtime-relative-path>ext/jackson-annotations-2.2.3.jar</runtime-relative-path>
+                <binary-origin>release/modules/ext/jackson-annotations-2.2.3.jar</binary-origin>
+            </class-path-extension>
+            <class-path-extension>
                 <runtime-relative-path>ext/axis2-adb-1.5.5.jar</runtime-relative-path>
                 <binary-origin>release/modules/ext/axis2-adb-1.5.5.jar</binary-origin>
             </class-path-extension>
@@ -2403,6 +2487,10 @@
             <class-path-extension>
                 <runtime-relative-path>ext/gluegen-rt.jar</runtime-relative-path>
                 <binary-origin>release/modules/ext/gluegen-rt.jar</binary-origin>
+            </class-path-extension>
+            <class-path-extension>
+                <runtime-relative-path>ext/jackson-databind-2.2.3.jar</runtime-relative-path>
+                <binary-origin>release/modules/ext/jackson-databind-2.2.3.jar</binary-origin>
             </class-path-extension>
             <class-path-extension>
                 <runtime-relative-path>ext/axis2-xmlbeans-1.5.5.jar</runtime-relative-path>
