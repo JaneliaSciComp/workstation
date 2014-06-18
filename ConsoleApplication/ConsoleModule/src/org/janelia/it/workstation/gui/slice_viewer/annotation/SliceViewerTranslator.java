@@ -155,6 +155,7 @@ public class SliceViewerTranslator {
         setNextParentSignal.connect(sliceViewer.getSkeletonActor().setNextParentSlot);
 
         anchoredPathAddedSignal.connect(skeleton.addAnchoredPathSlot);
+        anchoredPathsAddedSignal.connect(skeleton.addAnchoredPathsSlot);
         anchoredPathRemovedSignal.connect(skeleton.removeAnchoredPathSlot);
 
         changeGlobalColorSignal.connect(sliceViewer.getSkeletonActor().changeGlobalColorSlot);
@@ -248,6 +249,14 @@ public class SliceViewerTranslator {
         anchoredPathAddedSignal.emit(TAP2AVP(path));
     }
 
+    public void addAnchoredPaths(List<TmAnchoredPath> pathList) {
+        List<AnchoredVoxelPath> voxelPathList = new ArrayList<AnchoredVoxelPath>();
+        for (TmAnchoredPath path: pathList) {
+            voxelPathList.add(TAP2AVP(path));
+        }
+        anchoredPathsAddedSignal.emit(voxelPathList);
+    }
+
     public void removeAnchoredPaths(List<TmAnchoredPath> pathList) {
         for (TmAnchoredPath path: pathList) {
         anchoredPathRemovedSignal.emit(TAP2AVP(path));
@@ -288,13 +297,14 @@ public class SliceViewerTranslator {
                 }
             }
 
-            // draw anchored paths, too
-            // could fold into above loop at some point
+            // draw anchored paths, too, after all the anchors are drawn
+            List<TmAnchoredPath> annList = new ArrayList<TmAnchoredPath>();
             for (TmNeuron neuron: workspace.getNeuronList()) {
                 for (TmAnchoredPath path: neuron.getAnchoredPathMap().values()) {
-                    addAnchoredPath(path);
+                    annList.add(path);
                 }
             }
+            addAnchoredPaths(annList);
         }
     }
 

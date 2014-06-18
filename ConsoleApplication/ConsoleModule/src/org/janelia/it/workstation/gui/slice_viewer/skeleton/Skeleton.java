@@ -185,6 +185,13 @@ public class Skeleton {
         }
     };
 
+    public Slot1<List<AnchoredVoxelPath>> addAnchoredPathsSlot = new Slot1<List<AnchoredVoxelPath>>() {
+        @Override
+        public void execute(List<AnchoredVoxelPath> pathList) {
+            addTracedSegments(pathList);
+        }
+    };
+
     public Slot1<AnchoredVoxelPath> removeAnchoredPathSlot = new Slot1<AnchoredVoxelPath>() {
         @Override
         public void execute(AnchoredVoxelPath path) {
@@ -379,6 +386,14 @@ public class Skeleton {
 		// log.info("tracedSegments.size() [300] = "+tracedSegments.size());
 		skeletonChangedSignal.emit();
 	}
+
+    public void addTracedSegments(List<AnchoredVoxelPath> pathList) {
+        for (AnchoredVoxelPath path: pathList) {
+            SegmentIndex ix = path.getSegmentIndex();
+            tracedSegments.put(ix, path);
+        }
+        skeletonChangedSignal.emit();
+    }
 
     public void removeTracedSegment(AnchoredVoxelPath path) {
         SegmentIndex ix = path.getSegmentIndex();
