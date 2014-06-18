@@ -29,9 +29,9 @@ import org.slf4j.LoggerFactory;
  */
 public class TreeNodeChildFactory extends ChildFactory<DomainObject> {
 
-    private Logger log = LoggerFactory.getLogger(TreeNodeChildFactory.class);
+    private final static Logger log = LoggerFactory.getLogger(TreeNodeChildFactory.class);
     
-    private WeakReference<TreeNode> treeNodeRef;
+    private final WeakReference<TreeNode> treeNodeRef;
     
     public TreeNodeChildFactory(TreeNode treeNode) {
         this.treeNodeRef = new WeakReference<TreeNode>(treeNode);
@@ -45,8 +45,8 @@ public class TreeNodeChildFactory extends ChildFactory<DomainObject> {
         
         DomainDAO dao = DomainExplorerTopComponent.getDao();
         List<DomainObject> children = dao.getDomainObjects(SessionMgr.getSubjectKey(), treeNode.getChildren());
-        if (children.size()!=treeNode.getChildren().size()) {
-            log.info("Did not get all children: {}!={}",children.size(),treeNode.getChildren().size());   
+        if (children.size()!=treeNode.getNumChildren()) {
+            log.info("Did not get all children: {}!={}",children.size(),treeNode.getNumChildren());   
         }
         
         Map<Long,DomainObject> map = new HashMap<Long,DomainObject>();
@@ -54,15 +54,15 @@ public class TreeNodeChildFactory extends ChildFactory<DomainObject> {
             map.put(obj.getId(), obj);
         }
         
-        //log.info("{} has the following references: ",treeNode.getName());
-        for(Reference reference : treeNode.getChildren()) {
-            //log.info("  {}#{}",reference.getTargetType(),reference.getTargetId());
-            DomainObject obj = map.get(reference.getTargetId());
-            if (obj!=null) {
-                list.add(obj);
-            }
-            else {
-                list.add(new DeadReference(reference));
+        if (treeNode.getChildren()!=null) {
+            for(Reference reference : treeNode.getChildren()) {
+                DomainObject obj = map.get(reference.getTargetId());
+                if (obj!=null) {
+                    list.add(obj);
+                }
+                else {
+                    list.add(new DeadReference(reference));
+                }
             }
         }
         
@@ -73,23 +73,23 @@ public class TreeNodeChildFactory extends ChildFactory<DomainObject> {
     protected Node createNodeForKey(DomainObject key) {
         try {
             if (TreeNode.class.isAssignableFrom(key.getClass())) {
-                return new TreeNodeNode(this, (TreeNode) key);
+                return new TreeNodeNode(this, (TreeNode)key);
             }
             else if (Sample.class.isAssignableFrom(key.getClass())) {
-                return new SampleNode((Sample) key);
+                return new SampleNode(this, (Sample)key);
             }
             else if (NeuronFragment.class.isAssignableFrom(key.getClass())) {
-                return new NeuronFragmentNode(null, (NeuronFragment) key);
+                return new NeuronFragmentNode(null, (NeuronFragment)key);
             }
             else if (DeadReference.class.isAssignableFrom(key.getClass())) {
-                return new DeadReferenceNode((DeadReference) key);
+                return new DeadReferenceNode((DeadReference)key);
             }
             else {
                 log.warn("Cannot handle type: " + key.getClass().getName());
             }
         }
         catch (Exception e) {
-            log.error("Error creating node for tree node child " + key.getId(), e);
+            log.error("Error creating node for key " + key, e);
         }
         return null;
     }
@@ -115,6 +115,7 @@ public class TreeNodeChildFactory extends ChildFactory<DomainObject> {
             }
         },new Runnable() {
             public void run() {
+                log.info("refreshing view after adding child");
                 refresh();
             }
         });
@@ -134,6 +135,7 @@ public class TreeNodeChildFactory extends ChildFactory<DomainObject> {
             }
         },new Runnable() {
             public void run() {
+                log.info("refreshing view after removing child");
                 refresh();
             }
         });

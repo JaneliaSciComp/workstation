@@ -24,7 +24,6 @@ import org.openide.actions.MoveDownAction;
 import org.openide.actions.MoveUpAction;
 import org.openide.actions.PasteAction;
 import org.openide.actions.RenameAction;
-import org.openide.nodes.BeanNode;
 import org.openide.nodes.Children;
 import org.openide.nodes.Index;
 import org.openide.nodes.Node;
@@ -38,15 +37,15 @@ import org.slf4j.LoggerFactory;
  *
  * @author rokickik
  */
-public class TreeNodeNode extends BeanNode<TreeNode> {
+public class TreeNodeNode extends DomainObjectNode {
     
-    private Logger log = LoggerFactory.getLogger(TreeNodeNode.class);
+    private final static Logger log = LoggerFactory.getLogger(TreeNodeNode.class);
     
-    private TreeNodeChildFactory parentChildFactory;
-    private TreeNodeChildFactory childFactory;
+    private final TreeNodeChildFactory parentChildFactory;
+    private final TreeNodeChildFactory childFactory;
     
     public TreeNodeNode(TreeNodeChildFactory parentChildFactory, TreeNode treeNode) throws Exception {
-        super(treeNode);
+        super(parentChildFactory, treeNode);
         this.parentChildFactory = parentChildFactory;
         this.childFactory = new TreeNodeChildFactory(treeNode);
         Children lazyChildren = Children.create(childFactory, true);
@@ -70,7 +69,7 @@ public class TreeNodeNode extends BeanNode<TreeNode> {
                     @Override
                     public void run() {
                         DomainDAO dao = DomainExplorerTopComponent.getDao();
-                        dao.reorderChildren(SessionMgr.getSubjectKey(), getBean(), order);
+                        dao.reorderChildren(SessionMgr.getSubjectKey(), getTreeNode(), order);
                     }
                 },new Runnable() {
                     @Override
@@ -82,45 +81,26 @@ public class TreeNodeNode extends BeanNode<TreeNode> {
         });
     }
     
-    @Override
-    public boolean canCut() {
-        return true;
-    }
-
-    @Override
-    public boolean canCopy() {
-        return true;
-    }
-
-    @Override
-    public boolean canRename() {
-        return true;
-    }
-    
-    @Override
-    public boolean canDestroy() {
-        if (getBean() instanceof MaterializedView) {
-            return false;
-        }
-        return true;
+    private TreeNode getTreeNode() {
+        return (TreeNode)getBean();
     }
     
     @Override
     public Action[] getActions(boolean context) {
         return new Action[]{
-                    RenameAction.get(RenameAction.class),
-                    CutAction.get(CutAction.class),
-                    CopyAction.get(CopyAction.class),
-                    PasteAction.get(PasteAction.class),
-                    DeleteAction.get(DeleteAction.class),
-                    MoveUpAction.get(MoveUpAction.class),
-                    MoveDownAction.get(MoveDownAction.class)
-                };
+            RenameAction.get(RenameAction.class),
+            CutAction.get(CutAction.class),
+            CopyAction.get(CopyAction.class),
+            PasteAction.get(PasteAction.class),
+            DeleteAction.get(DeleteAction.class),
+            MoveUpAction.get(MoveUpAction.class),
+            MoveDownAction.get(MoveDownAction.class)
+        };
     }
 
     @Override
     public void setName(final String newName) {
-        final TreeNode treeNode = getBean();
+        final TreeNode treeNode = getTreeNode();
         final String oldName = treeNode.getName();
         treeNode.setName(newName);
         Utils.runOffEDT(new Runnable() {
@@ -142,52 +122,21 @@ public class TreeNodeNode extends BeanNode<TreeNode> {
         if (parentChildFactory==null) {
             throw new IllegalStateException("Cannot destroy node without parent");
         }
-        TreeNode treeNode = getBean();
-        log.info("Destroying ", treeNode.getName());
+        TreeNode treeNode = getTreeNode();
+        log.info("Destroying {}", treeNode.getName());
         parentChildFactory.removeChild(treeNode);
-    }
-
-    @Override
-    public Transferable clipboardCopy() throws IOException {
-        log.info("clipboard COPY "+getBean());
-        Transferable deflt = super.clipboardCopy();
-        ExTransferable added = ExTransferable.create(deflt);
-        added.put(new ExTransferable.Single(DomainObjectFlavor.DOMAIN_OBJECT_FLAVOR) {
-            @Override
-            protected TreeNode getData() {
-                return (TreeNode)getBean();
-            }
-        });
-        return added;
-    }
-    
-    @Override
-    public Transferable clipboardCut() throws IOException {
-        log.info("clipboard CUT "+getBean());
-        Transferable deflt = super.clipboardCut();
-        ExTransferable added = ExTransferable.create(deflt);
-        added.put(new ExTransferable.Single(DomainObjectFlavor.DOMAIN_OBJECT_FLAVOR) {
-            @Override
-            protected TreeNode getData() {
-                return (TreeNode)getBean();
-            }
-        });
-        return added;
     }
     
     @Override
     public PasteType getDropType(final Transferable t, int action, int index) {
-
-        final TreeNode treeNode = getBean();
-        log.info("getDropType for {} at index {} ",treeNode,index);
-        
+        final TreeNode treeNode = getTreeNode();
         if (t.isDataFlavorSupported(DomainObjectFlavor.DOMAIN_OBJECT_FLAVOR)) {
             return new PasteType() {
                 @Override
                 public Transferable paste() throws IOException {
                     try {
                         DomainObject domainObject = (DomainObject) t.getTransferData(DomainObjectFlavor.DOMAIN_OBJECT_FLAVOR);
-                        log.info("Pasting {} on {}"+domainObject.getId(),treeNode.getName());
+                        log.info("Pasting {} on {}",domainObject.getId(),treeNode.getName());
                         childFactory.addChild(domainObject);
                         final Node node = NodeTransfer.node(t, NodeTransfer.DND_MOVE + NodeTransfer.CLIPBOARD_CUT);
                         if (node != null) {
@@ -209,23 +158,21 @@ public class TreeNodeNode extends BeanNode<TreeNode> {
     @Override
     protected void createPasteTypes(Transferable t, List<PasteType> s) {
         super.createPasteTypes(t, s);
-//        final TreeNode treeNode = getBean();
-//        log.info("createPasteTypes called for {} with list: {} ",treeNode.getName(),s);
-//        PasteType p = getDropType(t, 0, 0);
-//        if (p != null) {
-//            s.add(p);
-//        }
+        PasteType p = getDropType(t, 0, 0);
+        if (p != null) {
+            s.add(p);
+        }
     }
     
     @Override
     public Image getIcon(int type) {
 
         String typeSuffix = "";
-        if (getBean() instanceof MaterializedView) {
-            if (getBean().getName().equals(EntityConstants.NAME_DATA_SETS)) {
+        if (getTreeNode() instanceof MaterializedView) {
+            if (getTreeNode().getName().equals(EntityConstants.NAME_DATA_SETS)) {
                 typeSuffix = "_database";
             }
-            else if (getBean().getName().equals(EntityConstants.NAME_SHARED_DATA)) {
+            else if (getTreeNode().getName().equals(EntityConstants.NAME_SHARED_DATA)) {
                 typeSuffix = "_user";
             }
             else {
@@ -233,11 +180,11 @@ public class TreeNodeNode extends BeanNode<TreeNode> {
             }
         }
 
-        if (!getBean().getOwnerKey().equals(SessionMgr.getSubjectKey())) {
+        if (!getTreeNode().getOwnerKey().equals(SessionMgr.getSubjectKey())) {
             return Icons.getIcon("folder_blue"+typeSuffix+".png").getImage();
         }
         else {
-            if (getBean().getName().equals(EntityConstants.NAME_ALIGNMENT_BOARDS)) {
+            if (getTreeNode().getName().equals(EntityConstants.NAME_ALIGNMENT_BOARDS)) {
                 return Icons.getIcon("folder_palette.png").getImage();
             }
             else {
@@ -248,9 +195,9 @@ public class TreeNodeNode extends BeanNode<TreeNode> {
     
     @Override
     public String getHtmlDisplayName() {
-        if (getBean() != null) {
-            return "<font color='!Label.foreground'>" + getBean().getName() + "</font>" +
-                    " <font color='#957D47'><i>" + getBean().getOwnerKey() + "</i></font>";
+        if (getTreeNode() != null) {
+            return "<font color='!Label.foreground'>" + getTreeNode().getName() + "</font>" +
+                    " <font color='#957D47'><i>" + getTreeNode().getOwnerKey() + "</i></font>";
         } else {
             return null;
         }
