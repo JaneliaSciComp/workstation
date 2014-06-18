@@ -66,7 +66,7 @@ public class ResultPage {
 			mappedEntityIds.add(mappedEntityId);
 		}
 		
-		List<Entity> allMappedEntities = ModelMgr.getModelMgr().getEntityByIds(new ArrayList<Long>(mappedEntityIds));
+		List<Entity> allMappedEntities = ModelMgr.getModelMgr().getEntitiesByIds(new ArrayList<Long>(mappedEntityIds));
 		
 		for(Entity entity : allMappedEntities) {
 		    if (entity!=null) {
