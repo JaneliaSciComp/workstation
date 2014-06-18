@@ -734,6 +734,7 @@ public class Utils {
         try {
             if (!SwingUtilities.isEventDispatchThread()) {
                 runnable.run();
+                SwingUtilities.invokeLater(callbackOnEDT);
             }
             else {
                 SimpleWorker worker = new SimpleWorker() {

@@ -670,6 +670,7 @@ public class EntityTree extends JPanel implements ActivatableView {
     }
     
     public String getRootUniqueId() {
+        if (rootEntityData==null) return null;
     	return "/e_"+rootEntityData.getChildEntity().getId();
     }
     
