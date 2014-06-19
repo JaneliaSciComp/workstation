@@ -5,14 +5,16 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import org.janelia.it.jacs.model.domain.DomainObject;
+import org.janelia.it.jacs.model.domain.LSMImage;
 import org.janelia.it.jacs.model.domain.NeuronFragment;
 import org.janelia.it.jacs.model.domain.Reference;
 import org.janelia.it.jacs.model.domain.Sample;
 import org.janelia.it.jacs.model.domain.TreeNode;
 import org.janelia.it.workstation.gui.browser.DomainDAO;
 import org.janelia.it.workstation.gui.browser.DomainExplorerTopComponent;
-import org.janelia.it.workstation.gui.browser.nodes.DeadReference;
+import org.janelia.it.workstation.gui.browser.model.DeadReference;
 import org.janelia.it.workstation.gui.browser.nodes.DeadReferenceNode;
+import org.janelia.it.workstation.gui.browser.nodes.LSMImageNode;
 import org.janelia.it.workstation.gui.browser.nodes.NeuronFragmentNode;
 import org.janelia.it.workstation.gui.browser.nodes.SampleNode;
 import org.janelia.it.workstation.gui.browser.nodes.TreeNodeNode;
@@ -79,10 +81,13 @@ public class TreeNodeChildFactory extends ChildFactory<DomainObject> {
                 return new SampleNode(this, (Sample)key);
             }
             else if (NeuronFragment.class.isAssignableFrom(key.getClass())) {
-                return new NeuronFragmentNode(null, (NeuronFragment)key);
+                return new NeuronFragmentNode(this, (NeuronFragment)key);
+            }
+            else if (LSMImage.class.isAssignableFrom(key.getClass())) {
+                return new LSMImageNode(this, (LSMImage)key);
             }
             else if (DeadReference.class.isAssignableFrom(key.getClass())) {
-                return new DeadReferenceNode((DeadReference)key);
+                return new DeadReferenceNode(this, (DeadReference)key);
             }
             else {
                 log.warn("Cannot handle type: " + key.getClass().getName());
@@ -99,7 +104,6 @@ public class TreeNodeChildFactory extends ChildFactory<DomainObject> {
         log.warn("refreshing {}",treeNode.getName());
         refresh(true);
     }
-    
     
     public void addChild(final DomainObject domainObject) {
         final TreeNode treeNode = treeNodeRef.get();

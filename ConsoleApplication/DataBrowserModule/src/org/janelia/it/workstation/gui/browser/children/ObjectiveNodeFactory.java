@@ -20,8 +20,8 @@ public class ObjectiveNodeFactory extends ChildFactory<String> {
     
     private final WeakReference<Sample> sampleRef;
     
-    public ObjectiveNodeFactory(Sample sampleRef) {
-        this.sampleRef = new WeakReference<Sample>(sampleRef);
+    public ObjectiveNodeFactory(Sample sample) {
+        this.sampleRef = new WeakReference<Sample>(sample);
     }
     
     @Override

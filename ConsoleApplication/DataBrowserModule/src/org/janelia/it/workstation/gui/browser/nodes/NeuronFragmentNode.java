@@ -21,12 +21,7 @@ public class NeuronFragmentNode extends DomainObjectNode {
     }
     
     @Override
-    public String getHtmlDisplayName() {
-        if (getBean() != null) {
-            return "<font color='!Label.foreground'>Neuron Fragment " + getNeuronFragment().getNumber() + "</font>" +
-                    " <font color='#957D47'><i>" + getNeuronFragment().getOwnerKey() + "</i></font>";
-        } else {
-            return null;
-        }
+    public String getPrimaryLabel() {
+        return "Neuron Fragment "+getNeuronFragment().getNumber();
     }
 }

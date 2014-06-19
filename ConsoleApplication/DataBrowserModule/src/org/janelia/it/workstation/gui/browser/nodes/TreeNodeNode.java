@@ -1,9 +1,11 @@
 package org.janelia.it.workstation.gui.browser.nodes;
 
+import com.google.common.collect.Lists;
 import java.awt.Image;
 import java.awt.datatransfer.Transferable;
 import java.awt.datatransfer.UnsupportedFlavorException;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.List;
 import javax.swing.Action;
 import org.janelia.it.jacs.model.domain.DomainObject;
@@ -28,25 +30,18 @@ import org.openide.nodes.Children;
 import org.openide.nodes.Index;
 import org.openide.nodes.Node;
 import org.openide.nodes.NodeTransfer;
-import org.openide.util.datatransfer.ExTransferable;
 import org.openide.util.datatransfer.PasteType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-/**
- *
- * @author rokickik
- */
 public class TreeNodeNode extends DomainObjectNode {
     
     private final static Logger log = LoggerFactory.getLogger(TreeNodeNode.class);
     
-    private final TreeNodeChildFactory parentChildFactory;
     private final TreeNodeChildFactory childFactory;
     
     public TreeNodeNode(TreeNodeChildFactory parentChildFactory, TreeNode treeNode) throws Exception {
         super(parentChildFactory, treeNode);
-        this.parentChildFactory = parentChildFactory;
         this.childFactory = new TreeNodeChildFactory(treeNode);
         Children lazyChildren = Children.create(childFactory, true);
         setChildren(lazyChildren);
@@ -86,18 +81,53 @@ public class TreeNodeNode extends DomainObjectNode {
     }
     
     @Override
-    public Action[] getActions(boolean context) {
-        return new Action[]{
-            RenameAction.get(RenameAction.class),
-            CutAction.get(CutAction.class),
-            CopyAction.get(CopyAction.class),
-            PasteAction.get(PasteAction.class),
-            DeleteAction.get(DeleteAction.class),
-            MoveUpAction.get(MoveUpAction.class),
-            MoveDownAction.get(MoveDownAction.class)
-        };
+    public String getPrimaryLabel() {
+        return getTreeNode().getName();
     }
+    
+    @Override
+    public Image getIcon(int type) {
 
+        String typeSuffix = "";
+        if (getTreeNode() instanceof MaterializedView) {
+            if (getTreeNode().getName().equals(EntityConstants.NAME_DATA_SETS)) {
+                typeSuffix = "_database";
+            }
+            else if (getTreeNode().getName().equals(EntityConstants.NAME_SHARED_DATA)) {
+                typeSuffix = "_user";
+            }
+            else {
+                typeSuffix = "_key";
+            }
+        }
+
+        if (!getTreeNode().getOwnerKey().equals(SessionMgr.getSubjectKey())) {
+            return Icons.getIcon("folder_blue"+typeSuffix+".png").getImage();
+        }
+        else {
+            if (getTreeNode().getName().equals(EntityConstants.NAME_ALIGNMENT_BOARDS)) {
+                return Icons.getIcon("folder_palette.png").getImage();
+            }
+            else {
+                return Icons.getIcon("folder"+typeSuffix+".png").getImage();    
+            }
+        }
+    }
+    
+    @Override
+    public boolean canRename() {
+        return true;
+    }
+    
+    @Override
+    public Action[] getActions(boolean context) {
+        Action[] superActions = super.getActions(context);
+        List<Action> actions = new ArrayList<Action>();
+        actions.add(RenameAction.get(RenameAction.class));
+        actions.addAll(Lists.newArrayList(superActions));
+        return actions.toArray(new Action[0]);
+    }
+    
     @Override
     public void setName(final String newName) {
         final TreeNode treeNode = getTreeNode();
@@ -117,16 +147,6 @@ public class TreeNodeNode extends DomainObjectNode {
         });
     }
 
-    @Override
-    public void destroy() throws IOException {
-        if (parentChildFactory==null) {
-            throw new IllegalStateException("Cannot destroy node without parent");
-        }
-        TreeNode treeNode = getTreeNode();
-        log.info("Destroying {}", treeNode.getName());
-        parentChildFactory.removeChild(treeNode);
-    }
-    
     @Override
     public PasteType getDropType(final Transferable t, int action, int index) {
         final TreeNode treeNode = getTreeNode();
@@ -163,66 +183,4 @@ public class TreeNodeNode extends DomainObjectNode {
             s.add(p);
         }
     }
-    
-    @Override
-    public Image getIcon(int type) {
-
-        String typeSuffix = "";
-        if (getTreeNode() instanceof MaterializedView) {
-            if (getTreeNode().getName().equals(EntityConstants.NAME_DATA_SETS)) {
-                typeSuffix = "_database";
-            }
-            else if (getTreeNode().getName().equals(EntityConstants.NAME_SHARED_DATA)) {
-                typeSuffix = "_user";
-            }
-            else {
-                typeSuffix = "_key";
-            }
-        }
-
-        if (!getTreeNode().getOwnerKey().equals(SessionMgr.getSubjectKey())) {
-            return Icons.getIcon("folder_blue"+typeSuffix+".png").getImage();
-        }
-        else {
-            if (getTreeNode().getName().equals(EntityConstants.NAME_ALIGNMENT_BOARDS)) {
-                return Icons.getIcon("folder_palette.png").getImage();
-            }
-            else {
-                return Icons.getIcon("folder"+typeSuffix+".png").getImage();    
-            }
-        }
-    }
-    
-    @Override
-    public String getHtmlDisplayName() {
-        if (getTreeNode() != null) {
-            return "<font color='!Label.foreground'>" + getTreeNode().getName() + "</font>" +
-                    " <font color='#957D47'><i>" + getTreeNode().getOwnerKey() + "</i></font>";
-        } else {
-            return null;
-        }
-    }
-    
-//    @Override
-//    public Action[] getActions(boolean context) {
-//        Action[] result = new Action[]{
-//            new RefreshAction()
-//        };
-//        return result;
-//    }
-//
-//    private final class RefreshAction extends AbstractAction {
-//
-//        public RefreshAction() {
-//            putValue(Action.NAME, "Refresh");
-//        }
-//
-//        @Override
-//        public void actionPerformed(ActionEvent e) {
-//            //EntityExplorerTopComponent.refreshNode();
-//        }
-//    }
-//    
-//    
-
 }
