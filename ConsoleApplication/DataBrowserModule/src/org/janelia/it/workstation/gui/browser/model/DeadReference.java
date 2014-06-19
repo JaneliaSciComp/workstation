@@ -1,4 +1,4 @@
-package org.janelia.it.workstation.gui.browser.nodes;
+package org.janelia.it.workstation.gui.browser.model;
 
 import java.util.Set;
 import org.janelia.it.jacs.model.domain.DomainObject;

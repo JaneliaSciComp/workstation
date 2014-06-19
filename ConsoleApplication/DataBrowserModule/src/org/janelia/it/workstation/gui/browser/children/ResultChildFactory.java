@@ -2,7 +2,6 @@ package org.janelia.it.workstation.gui.browser.children;
 
 import java.lang.ref.WeakReference;
 import java.util.List;
-import org.janelia.it.jacs.model.domain.NeuronSeparation;
 import org.janelia.it.jacs.model.domain.PipelineResult;
 import org.janelia.it.jacs.model.domain.Sample;
 import org.janelia.it.workstation.gui.browser.nodes.PipelineResultNode;

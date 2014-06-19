@@ -205,7 +205,6 @@ public class DomainDAO {
         	log.error("No object type for "+type);
         	return new ArrayList<DomainObject>();
         }
-    	
         return toList(getCollection(type).find("{_id:{$in:#},readers:{$in:#}}", ids, subjects).as(clazz), ids);
     }
 
