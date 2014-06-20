@@ -1,5 +1,6 @@
 package org.janelia.it.workstation.gui.browser.api;
 
+import java.util.Collection;
 import java.util.Iterator;
 import org.janelia.it.jacs.model.domain.DomainObject;
 import org.janelia.it.jacs.model.domain.Reference;
@@ -19,5 +20,9 @@ public class DomainUtils {
             }
         }
         return false;
+    }
+
+    public static boolean isEmpty(Collection<?> collection) {
+        return collection==null || collection.isEmpty();
     }
 }

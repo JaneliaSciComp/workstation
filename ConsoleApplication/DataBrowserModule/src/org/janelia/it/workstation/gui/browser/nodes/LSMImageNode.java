@@ -5,11 +5,13 @@ import java.io.File;
 import org.janelia.it.jacs.model.domain.LSMImage;
 import org.janelia.it.workstation.gui.util.Icons;
 import org.openide.nodes.ChildFactory;
+import org.openide.nodes.Children;
 
 public class LSMImageNode extends DomainObjectNode {
     
     public LSMImageNode(ChildFactory parentChildFactory, LSMImage lsmImage) throws Exception {
         super(parentChildFactory, lsmImage);
+        setChildren(Children.LEAF);
     }
     
     private LSMImage getLSMImage() {

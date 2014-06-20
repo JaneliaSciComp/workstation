@@ -22,7 +22,7 @@ public class ObjectiveNode extends InternalNode<String> {
     public ObjectiveNode(Sample sample, String objective) throws Exception {
         super(objective);
         this.sampleRef = new WeakReference<Sample>(sample);
-        setChildren(Children.create(new ObjectiveNode.MyChildFactory(), true));
+        setChildren(Children.create(new ObjectiveNode.MyChildFactory(), true));    
     }
     
     public String getObjective() {

@@ -4,11 +4,13 @@ import org.janelia.it.workstation.gui.browser.model.DeadReference;
 import java.awt.Image;
 import org.janelia.it.workstation.gui.util.Icons;
 import org.openide.nodes.ChildFactory;
+import org.openide.nodes.Children;
 
 public class DeadReferenceNode extends DomainObjectNode {
     
     public DeadReferenceNode(ChildFactory parentChildFactory, DeadReference deadReference) throws Exception {
         super(parentChildFactory, deadReference);
+        setChildren(Children.LEAF);
     }
     
     public DeadReference getDeadReference() {
