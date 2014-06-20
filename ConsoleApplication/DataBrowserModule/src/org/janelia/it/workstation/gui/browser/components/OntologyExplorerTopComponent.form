@@ -17,7 +17,7 @@
     <DimensionLayout dim="0">
       <Group type="103" groupAlignment="0" attributes="0">
           <Component id="jToolBar" max="32767" attributes="0"/>
-          <Component id="beanTreeView" alignment="0" pref="596" max="32767" attributes="0"/>
+          <Component id="beanTreeView" alignment="0" max="32767" attributes="0"/>
       </Group>
     </DimensionLayout>
     <DimensionLayout dim="1">
@@ -57,7 +57,7 @@
               <Connection code="Icons.getRefreshIcon()" type="code"/>
             </Property>
             <Property name="text" type="java.lang.String" editor="org.netbeans.modules.i18n.form.FormI18nStringEditor">
-              <ResourceString bundle="org/janelia/it/workstation/gui/browser/components/Bundle.properties" key="DomainExplorerTopComponent.refreshButton.text" replaceFormat="org.openide.util.NbBundle.getMessage({sourceFileName}.class, &quot;{key}&quot;)"/>
+              <ResourceString bundle="org/janelia/it/workstation/gui/browser/components/Bundle.properties" key="OntologyExplorerTopComponent.refreshButton.text" replaceFormat="org.openide.util.NbBundle.getMessage({sourceFileName}.class, &quot;{key}&quot;)"/>
             </Property>
             <Property name="focusable" type="boolean" value="false"/>
             <Property name="horizontalTextPosition" type="int" value="0"/>
@@ -70,12 +70,11 @@
         <Component class="javax.swing.JToggleButton" name="setShortcutsButton">
           <Properties>
             <Property name="text" type="java.lang.String" editor="org.netbeans.modules.i18n.form.FormI18nStringEditor">
-              <ResourceString bundle="org/janelia/it/workstation/gui/browser/components/Bundle.properties" key="DomainExplorerTopComponent.viewToggleButton.text" replaceFormat="org.openide.util.NbBundle.getMessage({sourceFileName}.class, &quot;{key}&quot;)"/>
+              <ResourceString bundle="org/janelia/it/workstation/gui/browser/components/Bundle.properties" key="OntologyExplorerTopComponent.viewToggleButton.text" replaceFormat="org.openide.util.NbBundle.getMessage({sourceFileName}.class, &quot;{key}&quot;)"/>
             </Property>
             <Property name="toolTipText" type="java.lang.String" editor="org.netbeans.modules.i18n.form.FormI18nStringEditor">
-              <ResourceString bundle="org/janelia/it/workstation/gui/browser/components/Bundle.properties" key="DomainExplorerTopComponent.viewToggleButton.toolTipText" replaceFormat="org.openide.util.NbBundle.getMessage({sourceFileName}.class, &quot;{key}&quot;)"/>
+              <ResourceString bundle="org/janelia/it/workstation/gui/browser/components/Bundle.properties" key="OntologyExplorerTopComponent.viewToggleButton.toolTipText" replaceFormat="org.openide.util.NbBundle.getMessage({sourceFileName}.class, &quot;{key}&quot;)"/>
             </Property>
-            <Property name="actionCommand" type="java.lang.String" value=""/>
             <Property name="focusable" type="boolean" value="false"/>
             <Property name="horizontalTextPosition" type="int" value="0"/>
             <Property name="verticalTextPosition" type="int" value="3"/>

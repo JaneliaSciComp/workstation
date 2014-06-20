@@ -1,8 +1,3 @@
-/*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
- */
 package org.janelia.it.workstation.gui.browser.components;
 
 import java.util.Collection;
@@ -10,11 +5,9 @@ import javax.swing.ActionMap;
 import javax.swing.DefaultComboBoxModel;
 import javax.swing.SwingUtilities;
 import javax.swing.text.DefaultEditorKit;
-import org.janelia.it.jacs.model.domain.Ontology;
 import org.janelia.it.jacs.model.domain.ontology.Ontology;
 import org.janelia.it.workstation.gui.browser.api.DomainDAO;
-import static org.janelia.it.workstation.gui.browser.components.DomainExplorerTopComponent.MONGO_SERVER_URL;
-import org.janelia.it.workstation.gui.browser.nodes.TreeNodeNode;
+import org.janelia.it.workstation.gui.browser.nodes.OntologyNode;
 import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.workstation.gui.util.Icons;
 import org.netbeans.api.settings.ConvertAsProperties;
@@ -103,14 +96,13 @@ public final class OntologyExplorerTopComponent extends TopComponent implements 
             public void run() {
                 try {
                     DomainDAO dao = getDao();
-                    Collection<Ontology> workspaces = dao.getOntologies(SessionMgr.getSubjectKey());
+                    Collection<Ontology> ontologies = dao.getOntologies(SessionMgr.getSubjectKey());
                     DefaultComboBoxModel<OntologyWrapper> model = new DefaultComboBoxModel<OntologyWrapper>();
-                    for (Ontology workspace : workspaces) {
-                        OntologyWrapper wrapper = new OntologyWrapper(workspace);
+                    for (Ontology ontology : ontologies) {
+                        OntologyWrapper wrapper = new OntologyWrapper(ontology);
                         model.addElement(wrapper);
-                        if (workspace.getOwnerKey().equals(SessionMgr.getSubjectKey())) {
+                        if (currOntology==null && ontology.getOwnerKey().equals(SessionMgr.getSubjectKey())) {
                             currOntology = wrapper;
-                            break;
                         }
                     }
                     model.setSelectedItem(currOntology);
@@ -124,8 +116,8 @@ public final class OntologyExplorerTopComponent extends TopComponent implements 
         });
     }
 
-    private void loadOntology(Ontology workspace) throws Exception {
-        mgr.setRootContext(new OntologyNode(null, workspace));
+    private void loadOntology(Ontology ontology) throws Exception {
+        mgr.setRootContext(new OntologyNode(ontology));
     }
     
     /**
@@ -157,7 +149,7 @@ public final class OntologyExplorerTopComponent extends TopComponent implements 
         jToolBar.add(ontologyCombo);
 
         refreshButton.setIcon(Icons.getRefreshIcon());
-        org.openide.awt.Mnemonics.setLocalizedText(refreshButton, org.openide.util.NbBundle.getMessage(OntologyExplorerTopComponent.class, "DomainExplorerTopComponent.refreshButton.text")); // NOI18N
+        org.openide.awt.Mnemonics.setLocalizedText(refreshButton, org.openide.util.NbBundle.getMessage(OntologyExplorerTopComponent.class, "OntologyExplorerTopComponent.refreshButton.text")); // NOI18N
         refreshButton.setFocusable(false);
         refreshButton.setHorizontalTextPosition(javax.swing.SwingConstants.CENTER);
         refreshButton.setVerticalTextPosition(javax.swing.SwingConstants.BOTTOM);
@@ -168,9 +160,8 @@ public final class OntologyExplorerTopComponent extends TopComponent implements 
         });
         jToolBar.add(refreshButton);
 
-        org.openide.awt.Mnemonics.setLocalizedText(setShortcutsButton, org.openide.util.NbBundle.getMessage(OntologyExplorerTopComponent.class, "DomainExplorerTopComponent.viewToggleButton.text")); // NOI18N
-        setShortcutsButton.setToolTipText(org.openide.util.NbBundle.getMessage(OntologyExplorerTopComponent.class, "DomainExplorerTopComponent.viewToggleButton.toolTipText")); // NOI18N
-        setShortcutsButton.setActionCommand("");
+        org.openide.awt.Mnemonics.setLocalizedText(setShortcutsButton, org.openide.util.NbBundle.getMessage(OntologyExplorerTopComponent.class, "OntologyExplorerTopComponent.viewToggleButton.text")); // NOI18N
+        setShortcutsButton.setToolTipText(org.openide.util.NbBundle.getMessage(OntologyExplorerTopComponent.class, "OntologyExplorerTopComponent.viewToggleButton.toolTipText")); // NOI18N
         setShortcutsButton.setFocusable(false);
         setShortcutsButton.setHorizontalTextPosition(javax.swing.SwingConstants.CENTER);
         setShortcutsButton.setVerticalTextPosition(javax.swing.SwingConstants.BOTTOM);
@@ -188,7 +179,7 @@ public final class OntologyExplorerTopComponent extends TopComponent implements 
         layout.setHorizontalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addComponent(jToolBar, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-            .addComponent(beanTreeView, javax.swing.GroupLayout.DEFAULT_SIZE, 596, Short.MAX_VALUE)
+            .addComponent(beanTreeView, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
         );
         layout.setVerticalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
@@ -205,7 +196,7 @@ public final class OntologyExplorerTopComponent extends TopComponent implements 
             loadOntology(wrapper.getOntology());
         }
         catch (Exception e) {
-            log.error("Error changing workspace", e);
+            log.error("Error changing ontology", e);
         }
     }//GEN-LAST:event_ontologyComboItemStateChanged
 
@@ -224,7 +215,7 @@ public final class OntologyExplorerTopComponent extends TopComponent implements 
             }
         }
         catch (Exception e) {
-            log.error("Error changing view", e);
+            log.error("Error setting shortcuts", e);
         }
     }//GEN-LAST:event_setShortcutsButtonStateChanged
 

@@ -102,9 +102,8 @@ public final class DomainExplorerTopComponent extends TopComponent implements Ex
                     for (Workspace workspace : workspaces) {
                         WorkspaceWrapper wrapper = new WorkspaceWrapper(workspace);
                         model.addElement(wrapper);
-                        if (workspace.getOwnerKey().equals(SessionMgr.getSubjectKey())) {
+                        if (currWorkspace==null && workspace.getOwnerKey().equals(SessionMgr.getSubjectKey())) {
                             currWorkspace = wrapper;
-                            break;
                         }
                     }
                     model.setSelectedItem(currWorkspace);
@@ -205,6 +204,10 @@ public final class DomainExplorerTopComponent extends TopComponent implements Ex
         return showNeuronView;
     }
 
+    private void refreshButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_refreshButtonActionPerformed
+        loadWorkspaces();
+    }//GEN-LAST:event_refreshButtonActionPerformed
+
     private void viewToggleButtonStateChanged(javax.swing.event.ChangeEvent evt) {//GEN-FIRST:event_viewToggleButtonStateChanged
 
         try {
@@ -217,10 +220,6 @@ public final class DomainExplorerTopComponent extends TopComponent implements Ex
             log.error("Error changing view", e);
         }
     }//GEN-LAST:event_viewToggleButtonStateChanged
-
-    private void refreshButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_refreshButtonActionPerformed
-        loadWorkspaces();
-    }//GEN-LAST:event_refreshButtonActionPerformed
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private org.openide.explorer.view.BeanTreeView beanTreeView;
