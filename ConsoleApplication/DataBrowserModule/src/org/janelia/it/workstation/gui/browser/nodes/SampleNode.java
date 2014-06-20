@@ -2,10 +2,10 @@ package org.janelia.it.workstation.gui.browser.nodes;
 
 import java.awt.Image;
 import org.janelia.it.jacs.model.domain.Sample;
-import org.janelia.it.workstation.gui.browser.DomainExplorerTopComponent;
-import org.janelia.it.workstation.gui.browser.children.NeuronNodeFactory;
-import org.janelia.it.workstation.gui.browser.children.ObjectiveNodeFactory;
-import org.janelia.it.workstation.gui.browser.children.TreeNodeChildFactory;
+import org.janelia.it.workstation.gui.browser.components.DomainExplorerTopComponent;
+import org.janelia.it.workstation.gui.browser.nodes.children.NeuronNodeFactory;
+import org.janelia.it.workstation.gui.browser.nodes.children.ObjectiveNodeFactory;
+import org.janelia.it.workstation.gui.browser.nodes.children.TreeNodeChildFactory;
 import org.janelia.it.workstation.gui.util.Icons;
 import org.openide.nodes.Children;
 import org.slf4j.Logger;

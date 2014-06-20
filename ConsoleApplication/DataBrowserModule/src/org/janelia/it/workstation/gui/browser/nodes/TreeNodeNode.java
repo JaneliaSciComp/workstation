@@ -12,19 +12,14 @@ import org.janelia.it.jacs.model.domain.DomainObject;
 import org.janelia.it.jacs.model.domain.MaterializedView;
 import org.janelia.it.jacs.model.domain.TreeNode;
 import org.janelia.it.jacs.model.entity.EntityConstants;
-import org.janelia.it.workstation.gui.browser.DomainDAO;
-import org.janelia.it.workstation.gui.browser.DomainExplorerTopComponent;
-import org.janelia.it.workstation.gui.browser.children.TreeNodeChildFactory;
+import org.janelia.it.workstation.gui.browser.api.DomainDAO;
+import org.janelia.it.workstation.gui.browser.components.DomainExplorerTopComponent;
+import org.janelia.it.workstation.gui.browser.api.DomainUtils;
+import org.janelia.it.workstation.gui.browser.nodes.children.TreeNodeChildFactory;
 import org.janelia.it.workstation.gui.browser.flavors.DomainObjectFlavor;
 import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.workstation.gui.util.Icons;
 import org.janelia.it.workstation.shared.util.Utils;
-import org.openide.actions.CopyAction;
-import org.openide.actions.CutAction;
-import org.openide.actions.DeleteAction;
-import org.openide.actions.MoveDownAction;
-import org.openide.actions.MoveUpAction;
-import org.openide.actions.PasteAction;
 import org.openide.actions.RenameAction;
 import org.openide.nodes.Children;
 import org.openide.nodes.Index;
@@ -120,6 +115,14 @@ public class TreeNodeNode extends DomainObjectNode {
     }
     
     @Override
+    public boolean canDestroy() {
+        if (getBean() instanceof MaterializedView) {
+            return false;
+        }
+        return true;
+    }
+    
+    @Override
     public Action[] getActions(boolean context) {
         Action[] superActions = super.getActions(context);
         List<Action> actions = new ArrayList<Action>();
@@ -135,13 +138,13 @@ public class TreeNodeNode extends DomainObjectNode {
         treeNode.setName(newName);
         Utils.runOffEDT(new Runnable() {
             public void run() {
-                log.info("Changing name from " + oldName + " to: " + newName);
+                log.trace("Changing name from " + oldName + " to: " + newName);
                 DomainDAO dao = DomainExplorerTopComponent.getDao();
                 dao.updateProperty(SessionMgr.getSubjectKey(), treeNode, "name", newName);
             }
         },new Runnable() {
             public void run() {
-                log.info("Fire name change from" + oldName + " to: " + newName);
+                log.trace("Fire name change from" + oldName + " to: " + newName);
                 fireDisplayNameChange(oldName, newName); 
             }
         });
@@ -157,6 +160,10 @@ public class TreeNodeNode extends DomainObjectNode {
                     try {
                         DomainObject domainObject = (DomainObject) t.getTransferData(DomainObjectFlavor.DOMAIN_OBJECT_FLAVOR);
                         log.info("Pasting {} on {}",domainObject.getId(),treeNode.getName());
+                        if (DomainUtils.hasChild(treeNode, domainObject)) {
+                            log.info("Child already exists. TODO: should reorder it to the end");
+                            return null;
+                        }
                         childFactory.addChild(domainObject);
                         final Node node = NodeTransfer.node(t, NodeTransfer.DND_MOVE + NodeTransfer.CLIPBOARD_CUT);
                         if (node != null) {

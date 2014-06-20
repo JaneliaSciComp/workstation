@@ -1,5 +1,6 @@
-package org.janelia.it.workstation.gui.browser;
+package org.janelia.it.workstation.gui.browser.components;
 
+import org.janelia.it.workstation.gui.browser.api.DomainDAO;
 import java.util.Collection;
 import javax.swing.ActionMap;
 import javax.swing.DefaultComboBoxModel;
@@ -57,7 +58,6 @@ public final class DomainExplorerTopComponent extends TopComponent implements Ex
         initComponents();
         setName(Bundle.CTL_DomainExplorerTopComponent());
         setToolTipText(Bundle.HINT_DomainExplorerTopComponent());
-        putClientProperty(TopComponent.PROP_CLOSING_DISABLED, Boolean.TRUE);
         associateLookup(ExplorerUtils.createLookup(mgr, getActionMap()));
 
         ActionMap map = this.getActionMap ();
@@ -182,9 +182,9 @@ public final class DomainExplorerTopComponent extends TopComponent implements Ex
         layout.setVerticalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, layout.createSequentialGroup()
-                .addComponent(toolBar, javax.swing.GroupLayout.PREFERRED_SIZE, 30, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addComponent(toolBar, javax.swing.GroupLayout.PREFERRED_SIZE, 32, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(beanTreeView, javax.swing.GroupLayout.DEFAULT_SIZE, 514, Short.MAX_VALUE)
+                .addComponent(beanTreeView, javax.swing.GroupLayout.DEFAULT_SIZE, 512, Short.MAX_VALUE)
                 .addContainerGap())
         );
     }// </editor-fold>//GEN-END:initComponents
