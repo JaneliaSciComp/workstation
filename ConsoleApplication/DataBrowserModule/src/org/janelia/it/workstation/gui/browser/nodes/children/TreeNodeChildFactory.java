@@ -1,4 +1,4 @@
-package org.janelia.it.workstation.gui.browser.children;
+package org.janelia.it.workstation.gui.browser.nodes.children;
 
 import java.lang.ref.WeakReference;
 import java.util.HashMap;
@@ -10,8 +10,8 @@ import org.janelia.it.jacs.model.domain.NeuronFragment;
 import org.janelia.it.jacs.model.domain.Reference;
 import org.janelia.it.jacs.model.domain.Sample;
 import org.janelia.it.jacs.model.domain.TreeNode;
-import org.janelia.it.workstation.gui.browser.DomainDAO;
-import org.janelia.it.workstation.gui.browser.DomainExplorerTopComponent;
+import org.janelia.it.workstation.gui.browser.api.DomainDAO;
+import org.janelia.it.workstation.gui.browser.components.DomainExplorerTopComponent;
 import org.janelia.it.workstation.gui.browser.model.DeadReference;
 import org.janelia.it.workstation.gui.browser.nodes.DeadReferenceNode;
 import org.janelia.it.workstation.gui.browser.nodes.LSMImageNode;
@@ -135,7 +135,12 @@ public class TreeNodeChildFactory extends ChildFactory<DomainObject> {
             public void run() {
                 log.warn("removing child {} from {}",domainObject.getId(),treeNode.getName());
                 DomainDAO dao = DomainExplorerTopComponent.getDao();
-                dao.removeChild(SessionMgr.getSubjectKey(), treeNode, domainObject);
+                if (domainObject instanceof DeadReference) {
+                    dao.removeReference(SessionMgr.getSubjectKey(), treeNode, ((DeadReference)domainObject).getReference());
+                }
+                else {
+                    dao.removeChild(SessionMgr.getSubjectKey(), treeNode, domainObject);
+                }
             }
         },new Runnable() {
             public void run() {

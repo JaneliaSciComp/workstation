@@ -5,10 +5,6 @@ import java.awt.Image;
 import org.janelia.it.workstation.gui.util.Icons;
 import org.openide.nodes.ChildFactory;
 
-/**
- *
- * @author rokickik
- */
 public class DeadReferenceNode extends DomainObjectNode {
     
     public DeadReferenceNode(ChildFactory parentChildFactory, DeadReference deadReference) throws Exception {
@@ -27,5 +23,15 @@ public class DeadReferenceNode extends DomainObjectNode {
     @Override
     public Image getIcon(int type) {
         return Icons.getIcon("bullet_error.png").getImage();
+    }
+    
+    @Override
+    public boolean canCut() {
+        return false;
+    }
+
+    @Override
+    public boolean canCopy() {
+        return false;
     }
 }

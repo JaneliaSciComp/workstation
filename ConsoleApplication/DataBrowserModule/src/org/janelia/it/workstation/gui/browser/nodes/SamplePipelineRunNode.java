@@ -4,7 +4,7 @@ import java.awt.Image;
 import java.lang.ref.WeakReference;
 import org.janelia.it.jacs.model.domain.Sample;
 import org.janelia.it.jacs.model.domain.SamplePipelineRun;
-import org.janelia.it.workstation.gui.browser.children.ResultChildFactory;
+import org.janelia.it.workstation.gui.browser.nodes.children.ResultChildFactory;
 import org.janelia.it.workstation.gui.util.Icons;
 import org.openide.nodes.Children;
 

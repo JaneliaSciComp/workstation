@@ -1,4 +1,4 @@
-package org.janelia.it.workstation.gui.browser;
+package org.janelia.it.workstation.gui.browser.api;
 
 import java.net.UnknownHostException;
 import java.util.ArrayList;
@@ -175,7 +175,9 @@ public class DomainDAO {
     	
         List<DomainObject> domainObjects = new ArrayList<DomainObject>();
         if (references==null || references.isEmpty()) return domainObjects;
-        
+              
+        log.info("getDomainObjects(subjectKey={},references.size={})",subjectKey,references.size());
+  
         Multimap<String,Long> referenceMap = ArrayListMultimap.<String,Long>create();
         for(Reference reference : references) {
             if (reference==null) {
@@ -186,7 +188,9 @@ public class DomainDAO {
         }
         
         for(String type : referenceMap.keySet()) {
-            domainObjects.addAll(getDomainObjects(subjectKey, type, referenceMap.get(type)));
+            List<DomainObject> objs = getDomainObjects(subjectKey, type, referenceMap.get(type));
+            log.info("Found {} results for {}",type,objs.size());
+            domainObjects.addAll(objs);
         }
         
         return domainObjects;
@@ -197,13 +201,16 @@ public class DomainDAO {
      */
     public List<DomainObject> getDomainObjects(String subjectKey, String type, Collection<Long> ids) {
         // TODO: remove this after the next db load fixes it
-        if ("workspace".equals(type)) type = "treeNode";
+        if ("workspace".equals(type)) type = "treeNode"; 
+        
+        log.info("getDomainObjects(subjectKey={},type={},ids.size={})",subjectKey,type,ids.size());
+
         Set<String> subjects = getSubjectSet(subjectKey);
 
         Class<? extends DomainObject> clazz = getObjectClass(type);
         if (clazz==null) {
-        	log.error("No object type for "+type);
-        	return new ArrayList<DomainObject>();
+            log.error("No object type for "+type);
+            return new ArrayList<DomainObject>();
         }
         return toList(getCollection(type).find("{_id:{$in:#},readers:{$in:#}}", ids, subjects).as(clazz), ids);
     }
@@ -416,9 +423,14 @@ public class DomainDAO {
     public void removeChild(String subjectKey, TreeNode treeNode, DomainObject domainObject) {
         Long targetId = domainObject.getId();
         String targetType = getType(domainObject);
+        Reference reference = new Reference(targetType, targetId);
+        removeReference(subjectKey, treeNode, reference);
+    }
+    
+    public void removeReference(String subjectKey, TreeNode treeNode, Reference reference) {
         for(Iterator<Reference> i = treeNode.getChildren().iterator(); i.hasNext(); ) {
             Reference iref = i.next();
-            if (iref.getTargetId().equals(targetId) && iref.getTargetType().equals(targetType)) {
+            if (iref.equals(reference)) {
                 i.remove();
             }
         }

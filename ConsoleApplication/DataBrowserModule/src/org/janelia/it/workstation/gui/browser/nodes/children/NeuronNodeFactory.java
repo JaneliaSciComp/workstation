@@ -1,4 +1,4 @@
-package org.janelia.it.workstation.gui.browser.children;
+package org.janelia.it.workstation.gui.browser.nodes.children;
 
 import java.lang.ref.WeakReference;
 import java.util.ArrayList;
@@ -11,8 +11,8 @@ import org.janelia.it.jacs.model.domain.ObjectiveSample;
 import org.janelia.it.jacs.model.domain.PipelineResult;
 import org.janelia.it.jacs.model.domain.Sample;
 import org.janelia.it.jacs.model.domain.SamplePipelineRun;
-import org.janelia.it.workstation.gui.browser.DomainDAO;
-import org.janelia.it.workstation.gui.browser.DomainExplorerTopComponent;
+import org.janelia.it.workstation.gui.browser.api.DomainDAO;
+import org.janelia.it.workstation.gui.browser.components.DomainExplorerTopComponent;
 import org.janelia.it.workstation.gui.browser.nodes.NeuronFragmentNode;
 import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
 import org.openide.nodes.ChildFactory;

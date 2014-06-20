@@ -10,28 +10,25 @@ import org.janelia.it.jacs.model.domain.Reference;
  */
 public class DeadReference implements DomainObject {
 
-    private Long id;
-    private String type;
+    private Reference reference;
     
     public DeadReference(Reference reference) {
-        this.id = reference.getTargetId();
-        this.type = reference.getTargetType();
+        this.reference = reference;
+    }
+    
+    public Reference getReference() {
+        return reference;
     }
 
     public Long getId() {
-        return id;
+        return reference.getTargetId();
     }
-
+    
     public void setId(Long id) {
-        this.id = id;
     }
 
     public String getType() {
-        return type;
-    }
-
-    public void setType(String type) {
-        this.type = type;
+        return reference.getTargetType();
     }
     
     public String getOwnerKey() {
