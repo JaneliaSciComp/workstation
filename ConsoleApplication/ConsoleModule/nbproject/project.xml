@@ -7,7 +7,7 @@
             <suite-component/>
             <module-dependencies>
                 <dependency>
-                    <code-name-base>org.janalia.it.jacs.shared</code-name-base>
+                    <code-name-base>org.janelia.it.jacs.shared</code-name-base>
                     <build-prerequisite/>
                     <compile-dependency/>
                     <run-dependency>
@@ -139,7 +139,6 @@
                 <package>org.janelia.it.workstation.gui.application</package>
                 <package>org.janelia.it.workstation.gui.application.video</package>
                 <package>org.janelia.it.workstation.gui.camera</package>
-                <package>org.janelia.it.workstation.gui.dataview</package>
                 <package>org.janelia.it.workstation.gui.dialogs</package>
                 <package>org.janelia.it.workstation.gui.dialogs.choose</package>
                 <package>org.janelia.it.workstation.gui.dialogs.search</package>
@@ -179,6 +178,7 @@
                 <package>org.janelia.it.workstation.gui.slice_viewer.generator</package>
                 <package>org.janelia.it.workstation.gui.slice_viewer.shader</package>
                 <package>org.janelia.it.workstation.gui.slice_viewer.skeleton</package>
+                <package>org.janelia.it.workstation.gui.split_picking</package>
                 <package>org.janelia.it.workstation.gui.static_view</package>
                 <package>org.janelia.it.workstation.gui.static_view.shader</package>
                 <package>org.janelia.it.workstation.gui.top_component</package>
@@ -228,6 +228,18 @@
             <class-path-extension>
                 <runtime-relative-path>ext/junit-4.11.jar</runtime-relative-path>
                 <binary-origin>release/modules/ext/junit-4.11.jar</binary-origin>
+            </class-path-extension>
+            <class-path-extension>
+                <runtime-relative-path>ext/model.jar</runtime-relative-path>
+                <binary-origin>release/modules/ext/model.jar</binary-origin>
+            </class-path-extension>
+            <class-path-extension>
+                <runtime-relative-path>ext/compute.jar</runtime-relative-path>
+                <binary-origin>release/modules/ext/compute.jar</binary-origin>
+            </class-path-extension>
+            <class-path-extension>
+                <runtime-relative-path>ext/shared.jar</runtime-relative-path>
+                <binary-origin>release/modules/ext/shared.jar</binary-origin>
             </class-path-extension>
         </data>
     </configuration>
