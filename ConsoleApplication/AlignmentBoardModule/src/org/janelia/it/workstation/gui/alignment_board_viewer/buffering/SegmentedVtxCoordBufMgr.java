@@ -66,41 +66,41 @@ public class SegmentedVtxCoordBufMgr extends AbstractCoordBufMgr {
                 float thirdAxisLength = textureMediator.getVolumeMicrometers()[ thirdInx ].floatValue();                
                 
                 // compute number of slices
-                float firstSegmentStart = segmentRanges.getRangeByAxisNum( firstInx )[ AxialSegmentRangeBean.HIGH_INX ];
-                float firstSegmentEnd = segmentRanges.getRangeByAxisNum( firstInx )[ AxialSegmentRangeBean.LOW_INX ];
+                float firstSegmentStart = segmentRanges.getRangeByAxisNum( firstInx )[ AxialSegmentRangeBean.LOW_INX ];
+                float firstSegmentEnd = segmentRanges.getRangeByAxisNum( firstInx )[ AxialSegmentRangeBean.HIGH_INX ];
                 float slice0 = (firstAxisLength - (firstAxisLength / 2.0f));
                 float sliceSep = textureMediator.getVoxelMicrometers()[ firstInx ].floatValue();
 
         		// Below "x", "y", and "z" actually refer to a1, a2, and a3, respectively;
-                float secondSegmentStart = segmentRanges.getRangeByAxisNum( secondInx )[ AxialSegmentRangeBean.HIGH_INX ];
-                float secondSegmentEnd = segmentRanges.getRangeByAxisNum( secondInx )[ AxialSegmentRangeBean.LOW_INX ];
+                float secondSegmentStart = segmentRanges.getRangeByAxisNum( secondInx )[ AxialSegmentRangeBean.LOW_INX ];
+                float secondSegmentEnd = segmentRanges.getRangeByAxisNum( secondInx )[ AxialSegmentRangeBean.HIGH_INX ];
                 float secondStart = secondSegmentStart - (secondAxisLength / 2.0f);
                 float secondEnd = secondSegmentEnd - (secondAxisLength / 2.0f);
 
-                float thirdSegmentStart = segmentRanges.getRangeByAxisNum( thirdInx )[ AxialSegmentRangeBean.HIGH_INX ];
-                float thirdSegmentEnd = segmentRanges.getRangeByAxisNum( thirdInx )[ AxialSegmentRangeBean.LOW_INX ];
+                float thirdSegmentStart = segmentRanges.getRangeByAxisNum( thirdInx )[ AxialSegmentRangeBean.LOW_INX ];
+                float thirdSegmentEnd = segmentRanges.getRangeByAxisNum( thirdInx )[ AxialSegmentRangeBean.HIGH_INX ];
                 float thirdStart = thirdSegmentStart - (thirdAxisLength / 2.0f);
                 float thirdEnd = thirdSegmentEnd - (thirdAxisLength / 2.0f);
 
-                // Four points for four slice corners
-                float[] p00 = {0,0,0};
-                float[] p10 = {0,0,0};
-                float[] p11 = {0,0,0};
-                float[] p01 = {0,0,0};
+                // Four vertices for four slice corners
+                float[] v00 = {0,0,0};   // conceptual 'lower left' 
+                float[] v10 = {0,0,0};   // conceptual 'lower right'
+                float[] v11 = {0,0,0};   // conceptual 'upper right'
+                float[] v01 = {0,0,0};   // conceptual 'upper left'
 
                 // reswizzle coordinate axes back to actual X, Y, Z (except x, saved for later)
-                p00[ secondInx ] = p01[ secondInx ] = secondStart;
-                p10[ secondInx ] = p11[ secondInx ] = secondEnd;
-                p00[ thirdInx ] = p10[ thirdInx ] = thirdStart;
-                p01[ thirdInx ] = p11[ thirdInx ] = thirdEnd;
+                v00[ secondInx ] = v01[ secondInx ] = secondStart;
+                v10[ secondInx ] = v11[ secondInx ] = secondEnd;
+                v00[ thirdInx ] = v10[ thirdInx ] = thirdStart;
+                v01[ thirdInx ] = v11[ thirdInx ] = thirdEnd;
 
                 if ( logger.isDebugEnabled() ) {
-                    logger.debug("Swizzled points, for axis {} are \n\t{}\n\t{}\n\t{}\n\t{}\n",
+                    logger.debug("Swizzled vertices, for axis {} are \n\t{}\n\t{}\n\t{}\n\t{}\n",
                         firstInx,
-                        p00[0] + "," + p00[1] + "," + p00[2],
-                        p10[0] + "," + p10[1] + "," + p10[2],
-                        p11[0] + "," + p11[1] + "," + p11[2],
-                        p01[0] + "," + p01[1] + "," + p01[2]
+                        v00[0] + "," + v00[1] + "," + v00[2],
+                        v10[0] + "," + v10[1] + "," + v10[2],
+                        v11[0] + "," + v11[1] + "," + v11[2],
+                        v01[0] + "," + v01[1] + "," + v01[2]
                     );
                 }
                 
@@ -117,29 +117,31 @@ public class SegmentedVtxCoordBufMgr extends AbstractCoordBufMgr {
                         logger.info("For {}, have sliceInx={}, slice0={}, sliceSep={}, sliceLoc={}.", firstInx, sliceInx, slice0, sliceSep, sliceLoc);
 
                     // NOTE: only one of the three axes need change for each slice.  Other two remain same.
-                    p00[ firstInx ] = p01[firstInx] = p10[firstInx] = p11[firstInx] = sliceLoc;
+                    v00[ firstInx ] = v01[firstInx] = v10[firstInx] = v11[firstInx] = sliceLoc;
 
-                    addGeometry(firstInx, p00, p10, p11, p01);
-                    addTextureCoords(
-                            firstInx,
-                            textureMediator.textureCoordFromVoxelCoord( p00 ),
-                            textureMediator.textureCoordFromVoxelCoord( p01 ),
-                            textureMediator.textureCoordFromVoxelCoord( p10 ),
-                            textureMediator.textureCoordFromVoxelCoord( p11 )
-                    );
+                    addGeometry(firstInx, v00, v10, v11, v01);
+                    float[] t00 = textureMediator.textureCoordFromVoxelCoord( v00 );
+                    float[] t01 = textureMediator.textureCoordFromVoxelCoord( v01 );
+                    float[] t10 = textureMediator.textureCoordFromVoxelCoord( v10 );
+                    float[] t11 = textureMediator.textureCoordFromVoxelCoord( v11 );
+                    if ( firstInx == 2 )
+                        checkGeometry( v00, v01, v10, v11, t00, t01, t10, t11 );
+                    
+                    addTextureCoords( firstInx, t00, t01, t10, t11 );
                     addIndices(firstInx, inxOffset);
 
                     // Now, take care of the negative-direction alternate to this buffer pair.
-                    p00[ firstInx ] = p01[firstInx] = p10[firstInx] = p11[firstInx] = sliceLoc; //-sliceLoc.  Later: subtract this from the max slice.
+                    v00[ firstInx ] = v01[firstInx] = v10[firstInx] = v11[firstInx] = sliceLoc; //-sliceLoc.  Later: subtract this from the max slice.
 
-                    addGeometry(firstInx + NUM_AXES, p00, p10, p11, p01);
-                    addTextureCoords(
-                            firstInx + NUM_AXES,
-                            textureMediator.textureCoordFromVoxelCoord( p00 ),
-                            textureMediator.textureCoordFromVoxelCoord( p01 ),
-                            textureMediator.textureCoordFromVoxelCoord( p10 ),
-                            textureMediator.textureCoordFromVoxelCoord( p11 )
-                    );
+                    addGeometry(firstInx + NUM_AXES, v00, v10, v11, v01);
+                    t00 = textureMediator.textureCoordFromVoxelCoord( v00 );
+                    t01 = textureMediator.textureCoordFromVoxelCoord( v01 );
+                    t10 = textureMediator.textureCoordFromVoxelCoord( v10 );
+                    t11 = textureMediator.textureCoordFromVoxelCoord( v11 );
+//                    if ( firstInx == 2 )
+//                        checkGeometry( v00, v01, v10, v11, t00, t01, t10, t11 );
+                    
+                    addTextureCoords( firstInx + NUM_AXES, t00, t01, t10, t11 );
                     addIndices(firstInx + NUM_AXES, inxOffset);
 
                     inxOffset += 6;
@@ -155,6 +157,39 @@ public class SegmentedVtxCoordBufMgr extends AbstractCoordBufMgr {
     protected int computeEffectiveAxisLen(int index) {
         final int[] range = segmentRanges.getRangeByAxisNum(index);
         return range[ AxialSegmentRangeBean.HIGH_INX ] - range[ AxialSegmentRangeBean.LOW_INX ];
+    }
+    
+    /** 
+     * Debug code: given the definitions for positions and textures, dump em.
+     * @param v00 vertex at 'lower left' corner
+     * @param v01 vertex at 'upper left' corner
+     * @param v10 vertex at 'lower right' corner
+     * @param v11 vertex at 'upper right' corner
+     * @param t00 tex coord at 'lower left' corner
+     * @param t01 tex coord at 'upper left' corner
+     * @param t10 tex coord at 'lower right' corner
+     * @param t11 tex coord at 'upper right' corner 
+     */
+    private void checkGeometry(
+            float[] v00, float[] v01, float[] v10, float[] v11,
+            float[] t00, float[] t01, float[] t10, float[] t11
+    ) {
+        logger.info( String.format( "Vertex %s: tex-coord %s 'lower left'", expandFloatArray(v00), expandFloatArray(t00 ) ) );
+        logger.info( String.format( "Vertex %s: tex-coord %s 'upper left'", expandFloatArray(v01), expandFloatArray(t01 ) ) );
+        logger.info( String.format( "Vertex %s: tex-coord %s 'lower right'", expandFloatArray(v10), expandFloatArray(t10 ) ) );
+        logger.info( String.format( "Vertex %s: tex-coord %s 'upper right'", expandFloatArray(v11), expandFloatArray(t11 ) ) );
+    }
+    
+    private String expandFloatArray( float[] members ) {
+        StringBuilder bldr = new StringBuilder("[");
+        for ( float member: members ) {
+            if ( bldr.length() > 1 ) {
+                bldr.append(",");
+            }
+            bldr.append(member);
+        }
+        bldr.append("]");
+        return bldr.toString();
     }
 
     private void allocateBuffers() {
