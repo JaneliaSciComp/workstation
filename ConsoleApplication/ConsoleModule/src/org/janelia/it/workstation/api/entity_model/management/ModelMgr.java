@@ -542,7 +542,7 @@ public final class ModelMgr {
         return entityModel.getEntityById(entityId);
     }
 
-    public List<Entity> getEntityByIds(List<Long> entityIds) throws Exception {
+    public List<Entity> getEntitiesByIds(List<Long> entityIds) throws Exception {
         return entityModel.getEntitiesById(entityIds);
     }
 

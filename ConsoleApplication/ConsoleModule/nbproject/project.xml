@@ -7,7 +7,7 @@
             <suite-component/>
             <module-dependencies>
                 <dependency>
-                    <code-name-base>org.janalia.it.jacs.shared</code-name-base>
+                    <code-name-base>org.janelia.it.jacs.shared</code-name-base>
                     <build-prerequisite/>
                     <compile-dependency/>
                     <run-dependency>
@@ -139,7 +139,6 @@
                 <package>org.janelia.it.workstation.gui.application</package>
                 <package>org.janelia.it.workstation.gui.application.video</package>
                 <package>org.janelia.it.workstation.gui.camera</package>
-                <package>org.janelia.it.workstation.gui.dataview</package>
                 <package>org.janelia.it.workstation.gui.dialogs</package>
                 <package>org.janelia.it.workstation.gui.dialogs.choose</package>
                 <package>org.janelia.it.workstation.gui.dialogs.search</package>

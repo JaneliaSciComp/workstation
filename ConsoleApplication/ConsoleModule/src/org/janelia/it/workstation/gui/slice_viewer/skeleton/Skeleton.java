@@ -74,14 +74,38 @@ public class Skeleton {
 			addAnchor(anchor);
 		}
 	};
-	// Direct connection in case there is no database. Connect to addAnchorRequestedSignal in this case.
-	// Don't use this when workstation is functioning.
-	public Slot1<AnchorSeed> addShortCircuitAnchorSlot = new Slot1<AnchorSeed>() {
-		@Override
-		public void execute(AnchorSeed seed) {
-			addAnchor(new Anchor(seed.location, seed.parent));
-		}
-	};
+    /**
+     * add multiple anchors at once; in the input list, every annotation must
+     * appear later in the list than its parent, or the connecting lines won't
+     * be drawn correctly
+     */
+    public Slot1<List<TmGeoAnnotation>> addAnchorsSlot = new Slot1<List<TmGeoAnnotation>>() {
+        @Override
+        public void execute(List<TmGeoAnnotation> annotationList) {
+            List<Anchor> anchorList = new ArrayList<Anchor>();
+            Map<Long, Anchor> tempAnchorsByGuid = new HashMap<Long, Anchor>();
+            for (TmGeoAnnotation ann: annotationList) {
+                Vec3 location = new Vec3(ann.getX(), ann.getY(), ann.getZ());
+
+                // anchorsByGuid isn't populated until the next call, so we
+                //  need to check for parents in the batch we're adding as
+                //  well; this is a bit redundant, but it maintatins the
+                //  separation; this slot only prepares a list, it doesn't
+                //  write to any of Skeleton's data structures
+                Anchor parentAnchor = anchorsByGuid.get(ann.getParentId());
+                if (parentAnchor == null) {
+                    // check our batch, too
+                    parentAnchor = tempAnchorsByGuid.get(ann.getParentId());
+                }
+
+                Anchor anchor = new Anchor(location, parentAnchor);
+                anchor.setGuid(ann.getId());
+                tempAnchorsByGuid.put(anchor.getGuid(), anchor);
+                anchorList.add(anchor);
+            }
+            addAnchors(anchorList);
+        }
+    };
 	// AFTER anchor has already been added (not simply requested)
 	public Signal1<Anchor> anchorAddedSignal = new Signal1<Anchor>();
 
@@ -161,6 +185,13 @@ public class Skeleton {
         }
     };
 
+    public Slot1<List<AnchoredVoxelPath>> addAnchoredPathsSlot = new Slot1<List<AnchoredVoxelPath>>() {
+        @Override
+        public void execute(List<AnchoredVoxelPath> pathList) {
+            addTracedSegments(pathList);
+        }
+    };
+
     public Slot1<AnchoredVoxelPath> removeAnchoredPathSlot = new Slot1<AnchoredVoxelPath>() {
         @Override
         public void execute(AnchoredVoxelPath path) {
@@ -197,6 +228,26 @@ public class Skeleton {
 		anchorHistory.push(anchor);
 		anchorAddedSignal.emit(anchor);
 		return anchor;
+	}
+
+	public void addAnchors(List<Anchor> anchorList) {
+        for (Anchor anchor: anchorList) {
+            if (anchors.contains(anchor))
+                continue;
+            anchors.add(anchor);
+            Long guid = anchor.getGuid();
+            if (guid != null)
+                anchorsByGuid.put(guid, anchor);
+            anchor.anchorMovedSignal.disconnect(this.anchorMovedSignal);
+            anchor.anchorMovedSignal.connect(this.anchorMovedSignal);
+            anchor.anchorMovedSilentSignal.disconnect(this.anchorMovedSilentSignal);
+            anchor.anchorMovedSilentSignal.connect(this.anchorMovedSilentSignal);
+            anchorHistory.push(anchor);
+        }
+        // this is a bit of a cheat; I send one anchor knowing that it's
+        //  never used--the whole skeleton gets updated, and that's what
+        //  I want since I've potentially added many anchors
+        anchorAddedSignal.emit(anchorList.get(0));
 	}
 
 	public void addAnchorAtXyz(Vec3 xyz, Anchor parent) {
@@ -335,6 +386,14 @@ public class Skeleton {
 		// log.info("tracedSegments.size() [300] = "+tracedSegments.size());
 		skeletonChangedSignal.emit();
 	}
+
+    public void addTracedSegments(List<AnchoredVoxelPath> pathList) {
+        for (AnchoredVoxelPath path: pathList) {
+            SegmentIndex ix = path.getSegmentIndex();
+            tracedSegments.put(ix, path);
+        }
+        skeletonChangedSignal.emit();
+    }
 
     public void removeTracedSegment(AnchoredVoxelPath path) {
         SegmentIndex ix = path.getSegmentIndex();

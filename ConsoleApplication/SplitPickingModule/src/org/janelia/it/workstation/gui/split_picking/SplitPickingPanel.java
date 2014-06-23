@@ -540,7 +540,7 @@ public class SplitPickingPanel extends JPanel implements Refreshable {
             protected void doStuff() throws Exception {
                 getProgressMonitor().setNote("Loading data");
 
-                List<Entity> samples = ModelMgr.getModelMgr().getEntityByIds(sampleIds);
+                List<Entity> samples = ModelMgr.getModelMgr().getEntitiesByIds(sampleIds);
 
                 getProgressMonitor().setNote("Getting representative samples");
 
@@ -1135,7 +1135,7 @@ public class SplitPickingPanel extends JPanel implements Refreshable {
             }
         }
 
-        return ModelMgr.getModelMgr().getEntityByIds(entityIds);
+        return ModelMgr.getModelMgr().getEntitiesByIds(entityIds);
     }
 
     public void saveRepresentedGroupings(List<Entity> representedAd, List<Entity> representedDbd, RootedEntity folder) throws Exception {
