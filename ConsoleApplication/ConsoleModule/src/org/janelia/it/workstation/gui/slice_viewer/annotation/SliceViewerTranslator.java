@@ -123,6 +123,7 @@ public class SliceViewerTranslator {
     public Signal1<Vec3> cameraPanToSignal = new Signal1<Vec3>();
 
     public Signal1<TmGeoAnnotation> anchorAddedSignal = new Signal1<TmGeoAnnotation>();
+    public Signal1<List<TmGeoAnnotation>> anchorsAddedSignal = new Signal1<List<TmGeoAnnotation>>();
     public Signal1<TmGeoAnnotation> anchorDeletedSignal = new Signal1<TmGeoAnnotation>();
     public Signal1<TmGeoAnnotation> anchorReparentedSignal = new Signal1<TmGeoAnnotation>();
     public Signal1<TmGeoAnnotation> anchorMovedBackSignal = new Signal1<TmGeoAnnotation>();
@@ -130,6 +131,7 @@ public class SliceViewerTranslator {
     public Signal1<Long> setNextParentSignal = new Signal1<Long>();
 
     public Signal1<AnchoredVoxelPath> anchoredPathAddedSignal = new Signal1<AnchoredVoxelPath>();
+    public Signal1<List<AnchoredVoxelPath>> anchoredPathsAddedSignal = new Signal1<List<AnchoredVoxelPath>>();
     public Signal1<AnchoredVoxelPath> anchoredPathRemovedSignal = new Signal1<AnchoredVoxelPath>();
 
     public Signal1<Color> changeGlobalColorSignal = new Signal1<Color>();
@@ -144,6 +146,7 @@ public class SliceViewerTranslator {
 
     public void connectSkeletonSignals(Skeleton skeleton) {
         anchorAddedSignal.connect(skeleton.addAnchorSlot);
+        anchorsAddedSignal.connect(skeleton.addAnchorsSlot);
         anchorDeletedSignal.connect(skeleton.deleteAnchorSlot);
         anchorReparentedSignal.connect(skeleton.reparentAnchorSlot);
         anchorMovedBackSignal.connect(skeleton.moveAnchorBackSlot);
@@ -152,6 +155,7 @@ public class SliceViewerTranslator {
         setNextParentSignal.connect(sliceViewer.getSkeletonActor().setNextParentSlot);
 
         anchoredPathAddedSignal.connect(skeleton.addAnchoredPathSlot);
+        anchoredPathsAddedSignal.connect(skeleton.addAnchoredPathsSlot);
         anchoredPathRemovedSignal.connect(skeleton.removeAnchoredPathSlot);
 
         changeGlobalColorSignal.connect(sliceViewer.getSkeletonActor().changeGlobalColorSlot);
@@ -245,6 +249,14 @@ public class SliceViewerTranslator {
         anchoredPathAddedSignal.emit(TAP2AVP(path));
     }
 
+    public void addAnchoredPaths(List<TmAnchoredPath> pathList) {
+        List<AnchoredVoxelPath> voxelPathList = new ArrayList<AnchoredVoxelPath>();
+        for (TmAnchoredPath path: pathList) {
+            voxelPathList.add(TAP2AVP(path));
+        }
+        anchoredPathsAddedSignal.emit(voxelPathList);
+    }
+
     public void removeAnchoredPaths(List<TmAnchoredPath> pathList) {
         for (TmAnchoredPath path: pathList) {
         anchoredPathRemovedSignal.emit(TAP2AVP(path));
@@ -279,19 +291,20 @@ public class SliceViewerTranslator {
             //  so lines get drawn correctly
             for (TmNeuron neuron: workspace.getNeuronList()) {
                 for (TmGeoAnnotation root: neuron.getRootAnnotations()) {
-                    for (TmGeoAnnotation ann: root.getSubTreeList()) {
-                        anchorAddedSignal.emit(ann);
-                    }
+                    // first step in optimization; could conceivably aggregate these
+                    //  lists into one big list and send signal once:
+                    anchorsAddedSignal.emit(root.getSubTreeList());
                 }
             }
 
-            // draw anchored paths, too
-            // could fold into above loop at some point
+            // draw anchored paths, too, after all the anchors are drawn
+            List<TmAnchoredPath> annList = new ArrayList<TmAnchoredPath>();
             for (TmNeuron neuron: workspace.getNeuronList()) {
                 for (TmAnchoredPath path: neuron.getAnchoredPathMap().values()) {
-                    addAnchoredPath(path);
+                    annList.add(path);
                 }
             }
+            addAnchoredPaths(annList);
         }
     }
 

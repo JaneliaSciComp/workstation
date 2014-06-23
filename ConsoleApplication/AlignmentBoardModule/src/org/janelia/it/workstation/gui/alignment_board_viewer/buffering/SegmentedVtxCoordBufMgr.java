@@ -112,7 +112,7 @@ public class SegmentedVtxCoordBufMgr extends AbstractCoordBufMgr {
                     // insert final coordinate into buffers
 
                     // FORWARD axes.
-                    float sliceLoc = slice0 - (sliceInx * sliceSep);
+                    float sliceLoc = (sliceInx * sliceSep);
                     if (firstInx == 2)
                         logger.info("For {}, have sliceInx={}, slice0={}, sliceSep={}, sliceLoc={}.", firstInx, sliceInx, slice0, sliceSep, sliceLoc);
 
@@ -130,7 +130,7 @@ public class SegmentedVtxCoordBufMgr extends AbstractCoordBufMgr {
                     addIndices(firstInx, inxOffset);
 
                     // Now, take care of the negative-direction alternate to this buffer pair.
-                    p00[ firstInx ] = p01[firstInx] = p10[firstInx] = p11[firstInx] = -sliceLoc;
+                    p00[ firstInx ] = p01[firstInx] = p10[firstInx] = p11[firstInx] = sliceLoc; //-sliceLoc.  Later: subtract this from the max slice.
 
                     addGeometry(firstInx + NUM_AXES, p00, p10, p11, p01);
                     addTextureCoords(
