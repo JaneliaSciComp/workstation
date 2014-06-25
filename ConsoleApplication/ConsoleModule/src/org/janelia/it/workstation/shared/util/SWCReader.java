@@ -106,6 +106,21 @@ public class SWCReader {
         return true;
     }
 
+    /**
+     * usually headers are of the form "# KEY thing1 thing2 ...";
+     * given a KEY, return the full line if it exists in the header;
+     * returns first found
+     */
+    public String findHeaderLine(String key) {
+        for (String line: headerList) {
+            String [] items = line.split("\\s+");
+            if (items.length >= 2 && items[1].equals(key)) {
+                return line;
+            }
+        }
+        return null;
+    }
+
     public List<SWCNode> getNodeList() {
         return nodeList;
     }

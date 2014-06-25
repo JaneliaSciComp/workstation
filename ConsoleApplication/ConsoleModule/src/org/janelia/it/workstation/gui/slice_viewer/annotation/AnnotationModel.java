@@ -879,6 +879,26 @@ that need to respond to changing data.
         //  insert into db sequentially, since we have no bulk update
         //  for annotations right now
 
+        // note from CB, July 2013: Vaa3d can't handle large coordinates in swc files,
+        //  so he added an OFFSET header and recentered on zero when exporting
+        // therefore, if that header is present, respect it
+        double offsetx = 0.0;
+        double offsety = 0.0;
+        double offsetz = 0.0;
+        String offsetHeader = reader.findHeaderLine("OFFSET");
+        if (offsetHeader != null) {
+            String [] items = offsetHeader.split("\\s+");
+            // expect # OFFSET x y z
+            if (items.length == 5) {
+                offsetx = Double.parseDouble(items[2]);
+                offsety = Double.parseDouble(items[3]);
+                offsetz = Double.parseDouble(items[4]);
+            } else {
+                // what to do? exception or ignore?
+            }
+        }
+
+
         // create one neuron for the file; take name from the filename
         TmNeuron neuron = modelMgr.createTiledMicroscopeNeuron(getCurrentWorkspace().getId(), swcFile.getName());
 
@@ -887,11 +907,13 @@ that need to respond to changing data.
         for (SWCNode node: reader.getNodeList()) {
             if (node.getParentIndex() == -1) {
                 annotation = modelMgr.addGeometricAnnotation(neuron.getId(),
-                    null, 0, node.getX(), node.getY(), node.getZ(), "");
+                    null, 0, node.getX() + offsetx, node.getY() + offsety,
+                    node.getZ() + offsetz, "");
             } else {
                 annotation = modelMgr.addGeometricAnnotation(neuron.getId(),
                     annotations.get(node.getParentIndex()).getId(),
-                    0, node.getX(), node.getY(), node.getZ(), "");
+                    0, node.getX() + offsetx, node.getY() + offsety,
+                    node.getZ() + offsetz, "");
             }
             annotations.put(node.getIndex(), annotation);
         }
