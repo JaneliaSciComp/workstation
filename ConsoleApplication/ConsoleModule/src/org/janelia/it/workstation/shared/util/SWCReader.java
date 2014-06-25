@@ -34,13 +34,11 @@ public class SWCReader {
     public SWCReader(File swcFile) throws IOException {
 
         this.swcFile = swcFile;
-
-        // read and parse it
-        parseFile();
+        readParseFile();
 
     }
 
-    private void parseFile() throws IOException {
+    private void readParseFile() throws IOException {
         List<String> lines = Files.readAllLines(swcFile.toPath(), Charset.defaultCharset());
 
         for (String line: lines) {
@@ -83,13 +81,13 @@ public class SWCReader {
                 nRoots += 1;
             }
 
-            // -- node valid: valid type, positive radius
+            // is node valid: valid type, positive radius
             if (!node.isValid()) {
                 invalidReason = String.format("invalid node (index %d)", node.getIndex());
                 return false;
             }
 
-            // -- each node parent exists (or is root)
+            // each node parent exists (or is root)
             if (!possibleParents.contains(node.getParentIndex())) {
                 invalidReason = String.format("node with invalid parent index %d", node.getParentIndex());
                 return false;
@@ -97,7 +95,7 @@ public class SWCReader {
             possibleParents.add(node.getIndex());
         }
 
-        // -- at least one root
+        // at least one root
         if (nRoots == 0) {
             invalidReason = "no root node";
             return false;
@@ -108,8 +106,8 @@ public class SWCReader {
 
     /**
      * usually headers are of the form "# KEY thing1 thing2 ...";
-     * given a KEY, return the full line if it exists in the header;
-     * returns first found
+     * given a KEY, return the full line if it exists in the header,
+     * else null; returns first such line found
      */
     public String findHeaderLine(String key) {
         for (String line: headerList) {

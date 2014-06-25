@@ -875,10 +875,6 @@ that need to respond to changing data.
                 swcFile.getName(), reader.getInvalidReason()));
         }
 
-        // let's go with brute force at first; loop over everything and
-        //  insert into db sequentially, since we have no bulk update
-        //  for annotations right now
-
         // note from CB, July 2013: Vaa3d can't handle large coordinates in swc files,
         //  so he added an OFFSET header and recentered on zero when exporting
         // therefore, if that header is present, respect it
@@ -894,7 +890,7 @@ that need to respond to changing data.
                 offsety = Double.parseDouble(items[3]);
                 offsetz = Double.parseDouble(items[4]);
             } else {
-                // what to do? exception or ignore?
+                // ignore the line if we can't parse it
             }
         }
 
@@ -906,6 +902,9 @@ that need to respond to changing data.
         }
         TmNeuron neuron = modelMgr.createTiledMicroscopeNeuron(getCurrentWorkspace().getId(), neuronName);
 
+        // let's go with brute force for now; loop over nodes and
+        //  insert into db sequentially, since we have no bulk update
+        //  for annotations right now
         Map<Integer, TmGeoAnnotation> annotations = new HashMap<Integer, TmGeoAnnotation>();
         TmGeoAnnotation annotation;
         for (SWCNode node: reader.getNodeList()) {
@@ -923,28 +922,15 @@ that need to respond to changing data.
         }
 
 
-
-        // update workspace; update and select new neuron
+        // update workspace; update and select new neuron; this will draw points as well
         updateCurrentWorkspace();
         workspaceLoadedSignal.emit(getCurrentWorkspace());
-
         setCurrentNeuron(neuron);
-
-
-
-        // draw points (bulk update)
-        // annotationAddedSignal.emit(annotation);
-        // wait...I think the workspace load will do this for us
-
 
 
         // normally if automatic tracing is enabled, we'd do that here, but
         //  for bulk import, I don't think this is a good idea right now,
         //  as we have no mechanism for managing the jobs
-
-
-
-
 
     }
 }
