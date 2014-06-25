@@ -76,6 +76,20 @@ public class SWCNode {
 
     }
 
+    /**
+     * simple validity checks; not returning a reason at this point
+     */
+    public boolean isValid() {
+        // couple simple validity checks
+        if (radius <= 0.0) {
+            return false;
+        }
+        if (!SEGMENT_TYPES.containsKey(segmentType)) {
+            return false;
+        }
+        return true;
+    }
+
     public int getIndex() {
         return index;
     }

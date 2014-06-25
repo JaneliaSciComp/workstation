@@ -172,6 +172,12 @@ public class AnnotationPanel extends JPanel
         });
         workspaceToolMenu.add(automaticTracingMenuItem);
 
+        ImportSWCAction importSWCAction = new ImportSWCAction();
+        importSWCAction.putValue(Action.NAME, "Import SWC file...");
+        importSWCAction.putValue(Action.SHORT_DESCRIPTION,
+                "Import an SWC file into the workspace");
+        workspaceToolMenu.add(new JMenuItem(importSWCAction));
+
         ChooseAnnotationColorAction changeGlobalAnnotationColorAction = new ChooseAnnotationColorAction();
         changeGlobalAnnotationColorAction.putValue(Action.NAME, "Set global annotation color...");
         changeGlobalAnnotationColorAction.putValue(Action.SHORT_DESCRIPTION,
@@ -364,5 +370,21 @@ public class AnnotationPanel extends JPanel
         }
     }
 
+    class ImportSWCAction extends AbstractAction {
+        @Override
+        public void actionPerformed(ActionEvent e) {
+
+            // note: when it's time to add toggle and/or options, you can look into
+            //  adding an accesory view to dialog; however, not clear that it will
+            //  give enough flexibility compared to doing a custom dialog from the start
+
+            // could specify a dir to open in, but not sure what to choose
+            JFileChooser chooser = new JFileChooser();
+            int returnValue = chooser.showOpenDialog(AnnotationPanel.this);
+            if (returnValue == JFileChooser.APPROVE_OPTION) {
+                annotationMgr.importSWCFile(chooser.getSelectedFile());
+            }
+        }
+    }
 }
 

@@ -8,6 +8,7 @@ import org.janelia.it.workstation.gui.slice_viewer.skeleton.Anchor;
 import org.janelia.it.workstation.gui.slice_viewer.skeleton.Skeleton;
 
 import org.janelia.it.workstation.octree.ZoomedVoxelIndex;
+import org.janelia.it.workstation.shared.util.SWCReader;
 import org.janelia.it.workstation.shared.workers.SimpleWorker;
 import org.janelia.it.workstation.signal.Slot;
 import org.janelia.it.workstation.signal.Slot1;
@@ -20,6 +21,8 @@ import org.janelia.it.workstation.tracing.PathTraceToParentWorker;
 
 import javax.swing.*;
 import java.awt.*;
+import java.io.File;
+import java.io.IOException;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
@@ -28,17 +31,17 @@ import java.util.regex.Pattern;
 
 
 public class AnnotationManager
-/*
-this class is the middleman between the UI and the model.  first, the UI makes naive requests 
-(eg, add annotation).  then this class determines if the request is valid (eg, can't add
-if no neuron), popping dialogs if needed.  lastly, this class gathers and/or reformats info as
-needed to actually make the call to the back end, usually spinning off a worker thread to
-do so.  
-
-this class's slots are usually connected to various UI signals, and its signals typically 
-hook up to AnnotationModel slots.  this class has no responsibilities in notifying UI 
-elements of what's been done; that's handled by signals emitted from AnnotationModel.
-*/
+/**
+ * this class is the middleman between the UI and the model.  first, the UI makes naive requests 
+ * (eg, add annotation).  then this class determines if the request is valid (eg, can't add
+ * if no neuron), popping dialogs if needed.  lastly, this class gathers and/or reformats info as
+ * needed to actually make the call to the back end, usually spinning off a worker thread to
+ * do so.  
+ * 
+ * this class's slots are usually connected to various UI signals, and its signals typically 
+ * hook up to AnnotationModel slots.  this class has no responsibilities in notifying UI 
+ * elements of what's been done; that's handled by signals emitted from AnnotationModel.
+ */
 {
 
     ModelMgr modelMgr;
@@ -998,5 +1001,46 @@ elements of what's been done; that's handled by signals emitted from AnnotationM
         // worker.executeWithEvents();
 
     }
+
+    public void importSWCFile(final File swcFile) {
+        if (annotationModel.getCurrentWorkspace() == null) {
+            // dialog?
+            return;
+        }
+
+        if (!swcFile.exists()) {
+            JOptionPane.showMessageDialog(null,
+                    "SWC file " + swcFile.getName() + " does not exist!",
+                    "No SWC file!",
+                    JOptionPane.ERROR_MESSAGE);
+        } else {
+
+            // note for the future: at this point, we could pop another dialog with:
+            //  (a) info: file has xxx nodes; continue?
+            //  (b) option to downsample
+            //  (c) option to include/exclude automatically traced paths, if we can
+            //      store that info in the file
+            //  (d) option to shift position (add constant x, y, z offset)
+
+            SimpleWorker importer = new SimpleWorker() {
+                @Override
+                protected void doStuff() throws Exception {
+                    annotationModel.importSWCData(swcFile);
+                }
+
+                @Override
+                protected void hadSuccess() {
+                    // signal will be sent, stuff will happen...
+                }
+
+                @Override
+                protected void hadError(Throwable error) {
+                    SessionMgr.getSessionMgr().handleException(error);
+                }
+            };
+            importer.execute();
+        }
+    }
+
 }
 

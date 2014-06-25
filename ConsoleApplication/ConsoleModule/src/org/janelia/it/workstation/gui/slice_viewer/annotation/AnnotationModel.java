@@ -6,17 +6,20 @@ package org.janelia.it.workstation.gui.slice_viewer.annotation;
 import org.janelia.it.workstation.geom.Vec3;
 import org.janelia.it.workstation.geom.ParametrizedLine;
 import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
+import org.janelia.it.workstation.shared.util.SWCNode;
+import org.janelia.it.workstation.shared.util.SWCReader;
 import org.janelia.it.workstation.signal.Signal1;
 import org.janelia.it.workstation.signal.Slot1;
 import org.janelia.it.workstation.api.entity_model.management.ModelMgr;
-import org.janelia.it.workstation.api.entity_model.management.ModelMgrUtils;
 import org.janelia.it.jacs.model.entity.Entity;
 import org.janelia.it.jacs.model.user_data.tiledMicroscope.*;
-import org.janelia.it.jacs.shared.screen.ScreenEvalConstants;
 
 import java.awt.*;
+import java.io.File;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 
 public class AnnotationModel
@@ -861,5 +864,61 @@ that need to respond to changing data.
         } else {
             return false;
         }
+    }
+
+    public void importSWCData(File swcFile) throws Exception {
+
+        // the constructor also triggers the parsing, but not the validation
+        SWCReader reader = new SWCReader(swcFile);
+        if (!reader.isValid()) {
+            throw new Exception(String.format("invalid SWC file %s; reason: %s",
+                swcFile.getName(), reader.getInvalidReason()));
+        }
+
+        // let's go with brute force at first; loop over everything and
+        //  insert into db sequentially, since we have no bulk update
+        //  for annotations right now
+
+        // create one neuron for the file; take name from the filename
+        TmNeuron neuron = modelMgr.createTiledMicroscopeNeuron(getCurrentWorkspace().getId(), swcFile.getName());
+
+        Map<Integer, TmGeoAnnotation> annotations = new HashMap<Integer, TmGeoAnnotation>();
+        TmGeoAnnotation annotation;
+        for (SWCNode node: reader.getNodeList()) {
+            if (node.getParentIndex() == -1) {
+                annotation = modelMgr.addGeometricAnnotation(neuron.getId(),
+                    null, 0, node.getX(), node.getY(), node.getZ(), "");
+            } else {
+                annotation = modelMgr.addGeometricAnnotation(neuron.getId(),
+                    annotations.get(node.getParentIndex()).getId(),
+                    0, node.getX(), node.getY(), node.getZ(), "");
+            }
+            annotations.put(node.getIndex(), annotation);
+        }
+
+
+
+        // update workspace; update and select new neuron
+        updateCurrentWorkspace();
+        workspaceLoadedSignal.emit(getCurrentWorkspace());
+
+        setCurrentNeuron(neuron);
+
+
+
+        // draw points (bulk update)
+        // annotationAddedSignal.emit(annotation);
+        // wait...I think the workspace load will do this for us
+
+
+
+        // normally if automatic tracing is enabled, we'd do that here, but
+        //  for bulk import, I don't think this is a good idea right now,
+        //  as we have no mechanism for managing the jobs
+
+
+
+
+
     }
 }
