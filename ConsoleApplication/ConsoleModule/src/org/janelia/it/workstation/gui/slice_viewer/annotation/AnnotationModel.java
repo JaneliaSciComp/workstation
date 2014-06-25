@@ -899,8 +899,12 @@ that need to respond to changing data.
         }
 
 
-        // create one neuron for the file; take name from the filename
-        TmNeuron neuron = modelMgr.createTiledMicroscopeNeuron(getCurrentWorkspace().getId(), swcFile.getName());
+        // create one neuron for the file; take name from the filename (strip extension)
+        String neuronName = swcFile.getName();
+        if (neuronName.endsWith(".swc")) {
+            neuronName = neuronName.substring(0, neuronName.length() - 4);
+        }
+        TmNeuron neuron = modelMgr.createTiledMicroscopeNeuron(getCurrentWorkspace().getId(), neuronName);
 
         Map<Integer, TmGeoAnnotation> annotations = new HashMap<Integer, TmGeoAnnotation>();
         TmGeoAnnotation annotation;
