@@ -297,7 +297,6 @@ public abstract class EntityOutline extends EntityTree implements Refreshable, A
         // Create context menu
         final EntityOutlineContextMenu popupMenu = new EntityOutlineContextMenu(nodes);
         if (nodes.isEmpty()) { 
-            ModelMgr.getModelMgr().getEntitySelectionModel().selectEntity(EntitySelectionModel.CATEGORY_OUTLINE, getRootUniqueId(), true);
             popupMenu.addRootMenuItems();
         }
         else {
@@ -311,14 +310,6 @@ public abstract class EntityOutline extends EntityTree implements Refreshable, A
     protected void nodeClicked(MouseEvent e) {
         this.currUniqueId = null;
         selectNode(selectedTree.getCurrentNode());
-    }
-
-    @Override
-    protected void backgroundClicked(MouseEvent e) {
-        this.currUniqueId = null;
-        if (!StringUtils.isEmpty(getRootUniqueId())) {
-            ModelMgr.getModelMgr().getEntitySelectionModel().selectEntity(EntitySelectionModel.CATEGORY_OUTLINE, getRootUniqueId(), true);
-        }
     }
 
     @Override
