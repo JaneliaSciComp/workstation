@@ -27,6 +27,7 @@
         <SOURCES />
       </library>
     </orderEntry>
+    <orderEntry type="library" name="Apache Commons" level="project" />
   </component>
 </module>
 
