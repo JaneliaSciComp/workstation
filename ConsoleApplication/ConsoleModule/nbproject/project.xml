@@ -171,13 +171,13 @@
                 <package>org.janelia.it.workstation.gui.opengl.shader</package>
                 <package>org.janelia.it.workstation.gui.opengl.stereo3d</package>
                 <package>org.janelia.it.workstation.gui.passive_3d</package>
-                <package>org.janelia.it.workstation.gui.slice_viewer</package>
-                <package>org.janelia.it.workstation.gui.slice_viewer.action</package>
-                <package>org.janelia.it.workstation.gui.slice_viewer.annotation</package>
-                <package>org.janelia.it.workstation.gui.slice_viewer.color_slider</package>
-                <package>org.janelia.it.workstation.gui.slice_viewer.generator</package>
-                <package>org.janelia.it.workstation.gui.slice_viewer.shader</package>
-                <package>org.janelia.it.workstation.gui.slice_viewer.skeleton</package>
+                <package>org.janelia.it.workstation.gui.large_volume_viewer</package>
+                <package>org.janelia.it.workstation.gui.large_volume_viewer.action</package>
+                <package>org.janelia.it.workstation.gui.large_volume_viewer.annotation</package>
+                <package>org.janelia.it.workstation.gui.large_volume_viewer.color_slider</package>
+                <package>org.janelia.it.workstation.gui.large_volume_viewer.generator</package>
+                <package>org.janelia.it.workstation.gui.large_volume_viewer.shader</package>
+                <package>org.janelia.it.workstation.gui.large_volume_viewer.skeleton</package>
                 <package>org.janelia.it.workstation.gui.static_view</package>
                 <package>org.janelia.it.workstation.gui.static_view.shader</package>
                 <package>org.janelia.it.workstation.gui.top_component</package>
