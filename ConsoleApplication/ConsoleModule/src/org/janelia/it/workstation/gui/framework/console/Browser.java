@@ -46,7 +46,7 @@ import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.workstation.gui.framework.session_mgr.SessionModelListener;
 import org.janelia.it.workstation.gui.framework.viewer.IconDemoPanel;
 import org.janelia.it.workstation.gui.framework.viewer.ImageCache;
-import org.janelia.it.workstation.gui.slice_viewer.SliceViewViewer;
+import org.janelia.it.workstation.gui.large_volume_viewer.LargeVolumeViewViewer;
 import org.janelia.it.workstation.gui.util.WindowLocator;
 import org.janelia.it.workstation.shared.util.FreeMemoryWatcher;
 import org.janelia.it.workstation.shared.util.PrintableComponent;
@@ -464,9 +464,9 @@ public class Browser implements Cloneable {
                 openOntologyComponent();
                 viewerManager.clearAllViewers();
                 break;
-            case SliceViewer:
+            case LargeVolumeViewer:
                 viewerManager.clearAllViewers();
-                viewerManager.ensureViewerClass(viewerManager.getMainViewerPane(), SliceViewViewer.class);
+                viewerManager.ensureViewerClass(viewerManager.getMainViewerPane(), LargeVolumeViewViewer.class);
                 break;
             case ImageBrowser:
             default:

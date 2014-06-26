@@ -7,7 +7,7 @@
             <suite-component/>
             <module-dependencies>
                 <dependency>
-                    <code-name-base>org.janalia.it.jacs.shared</code-name-base>
+                    <code-name-base>org.janelia.it.jacs.shared</code-name-base>
                     <build-prerequisite/>
                     <compile-dependency/>
                     <run-dependency>
