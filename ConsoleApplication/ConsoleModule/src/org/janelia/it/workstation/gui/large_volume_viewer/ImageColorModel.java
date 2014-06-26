@@ -241,9 +241,8 @@ public class ImageColorModel
 			getChannel(0).setColor(Color.white);
 		}
 		else if (getChannelCount() == 2) {
-			// magenta/green uses orthogonal primaries and balances brightness
-			getChannel(0).setColor(Color.yellow);
-			getChannel(1).setColor(Color.cyan);
+			getChannel(0).setColor(Color.green);
+			getChannel(1).setColor(Color.magenta);
 		}
 		else {
 			for (ChannelColorModel channel : channels) {
