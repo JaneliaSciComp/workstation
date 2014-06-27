@@ -217,7 +217,7 @@ public class ViewerPane extends JPanel {
                     Long entityId = EntityUtils.getEntityIdFromUniqueId(uniqueId);
                     entityIds.add(entityId);
                 }
-                Map<Long, Entity> entityMap = EntityUtils.getEntityMap(ModelMgr.getModelMgr().getEntityByIds(entityIds));
+                Map<Long, Entity> entityMap = EntityUtils.getEntityMap(ModelMgr.getModelMgr().getEntitiesByIds(entityIds));
 
                 for (String uniqueId : uniqueIds) {
                     Long entityId = EntityUtils.getEntityIdFromUniqueId(uniqueId);
