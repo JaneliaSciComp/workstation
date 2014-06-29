@@ -3,8 +3,8 @@ package org.janelia.it.workstation.gui.passive_3d;
 import org.janelia.it.workstation.geom.CoordinateAxis;
 import org.janelia.it.workstation.geom.Vec3;
 import org.janelia.it.workstation.gui.camera.Camera3d;
-import org.janelia.it.workstation.gui.slice_viewer.TileFormat;
-import org.janelia.it.workstation.gui.slice_viewer.TileIndex;
+import org.janelia.it.workstation.gui.large_volume_viewer.TileFormat;
+import org.janelia.it.workstation.gui.large_volume_viewer.TileIndex;
 
 import java.util.Collection;
 import java.util.HashSet;
