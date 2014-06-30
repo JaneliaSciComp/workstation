@@ -4,6 +4,7 @@ import java.awt.Component;
 import java.util.List;
 import javax.swing.JOptionPane;
 import javax.swing.SwingUtilities;
+import org.janelia.it.jacs.model.entity.Entity;
 import org.janelia.it.workstation.api.entity_model.management.ModelMgr;
 import org.janelia.it.workstation.gui.alignment_board.Launcher;
 import org.janelia.it.workstation.gui.framework.console.Browser;
@@ -14,6 +15,7 @@ import org.janelia.it.workstation.model.domain.AlignmentContext;
 import org.janelia.it.workstation.model.domain.AlignmentContextFactory;
 import org.janelia.it.workstation.model.domain.EntityWrapperFactory;
 import org.janelia.it.workstation.model.domain.Sample;
+import org.janelia.it.workstation.model.domain.EntityWrapper;
 import org.janelia.it.workstation.model.entity.RootedEntity;
 import org.janelia.it.workstation.model.viewer.AlignmentBoardContext;
 import org.janelia.it.workstation.nb_action.EntityWrapperCreator;
@@ -35,7 +37,7 @@ public class AlignmentBoardCreator implements EntityWrapperCreator {
     
     private static final Logger log = LoggerFactory.getLogger(AlignmentBoardCreator.class);
     
-    private RootedEntity sampleRootedEntity;
+    private RootedEntity rootedEntity;
     
     public void execute() {
 
@@ -45,13 +47,29 @@ public class AlignmentBoardCreator implements EntityWrapperCreator {
         SimpleWorker worker = new SimpleWorker() {
             
             private Sample sample;
+            private EntityWrapper sampleMember;
             private List<AlignmentContext> contexts;
             
             @Override
             protected void doStuff() throws Exception {
-                if (getSampleRootedEntity()!=null) {
-                    this.sample = (Sample)EntityWrapperFactory.wrap(getSampleRootedEntity());
-                    this.contexts = sample.getAvailableAlignmentContexts();
+//                RootedEntity rootedEntity = getRootedEntity();
+                if (rootedEntity!=null) {
+                    if (rootedEntity.getType().equals(EntityConstants.TYPE_SAMPLE) ) {
+                        this.sample = (Sample) EntityWrapperFactory.wrap(getRootedEntity());
+                        this.contexts = sample.getAvailableAlignmentContexts();
+                    }
+                    else {                        
+                        // Verify we have the sample ancestor.
+                        Entity sampleEntity = ModelMgr.getModelMgr().getAncestorWithType(rootedEntity.getEntity(), EntityConstants.TYPE_SAMPLE);
+                        if (sampleEntity == null) {
+                            throw new Exception("No sample ancestor found for neuron fragment " + rootedEntity.getId());
+                        }
+                        this.sample = (Sample) EntityWrapperFactory.wrap(new RootedEntity(sampleEntity));
+                        this.sampleMember = EntityWrapperFactory.wrap(getRootedEntity());
+                        this.sampleMember.setParent(sample);
+                        
+                        this.contexts = sample.getAvailableAlignmentContexts();
+                    }
                 }
                 else {
                     this.contexts = new AlignmentContextFactory().getAllAlignmentContexts();
@@ -89,7 +107,12 @@ public class AlignmentBoardCreator implements EntityWrapperCreator {
                         newBoard = ModelMgr.getModelMgr().createAlignmentBoard(boardName, 
                                 alignmentContext.getAlignmentSpaceName(), alignmentContext.getOpticalResolution(), alignmentContext.getPixelResolution());
                         AlignmentBoardContext alignmentBoardContext = new AlignmentBoardContext(newBoard);
-                        if (sample!=null) {
+                        // Presence of a sample member implies that single child of
+                        // the sample must be added without its siblings.
+                        if (sampleMember!=null) {
+                            alignmentBoardContext.addNewAlignedEntity(sampleMember);
+                        }
+                        else if (sample!=null) {
                             alignmentBoardContext.addNewAlignedEntity(sample);
                         }
                     }
@@ -126,36 +149,22 @@ public class AlignmentBoardCreator implements EntityWrapperCreator {
         worker.execute();
     }
 
-    /**
-     * @return the sampleRootedEntity
-     */
-    public RootedEntity getSampleRootedEntity() {
-        return sampleRootedEntity;
-    }
-
-    /**
-     * @param sampleRootedEntity the sampleRootedEntity to set
-     */
-    public void setSampleRootedEntity(RootedEntity sampleRootedEntity) {
-        this.sampleRootedEntity = sampleRootedEntity;
-    }
-
     @Override
     public void wrapEntity(RootedEntity e) {
-        this.sampleRootedEntity = (RootedEntity)e;
+        this.rootedEntity = (RootedEntity)e;
         execute();
     }
 
     @Override
     public boolean isCompatible(RootedEntity e) {
-        setSampleRootedEntity(e);
+        setRootedEntity(e);
         if ( e == null ) {
             log.debug("Just nulled-out the rooted entity to ABCreator");
             return true;
         }
         else {
             log.debug("Just UN-Nulled rooted entity in ABCreator");            
-            // Caching the test entity, for use in action label.
+            // Caching the test sampleEntity, for use in action label.
             final String entityTypeName = e.getEntity().getEntityTypeName();
             return entityTypeName.equals( EntityConstants.TYPE_SAMPLE )   ||
                    entityTypeName.equals( EntityConstants.TYPE_NEURON_FRAGMENT );
@@ -164,12 +173,26 @@ public class AlignmentBoardCreator implements EntityWrapperCreator {
 
     @Override
     public String getActionLabel() {
-        if ( sampleRootedEntity == null ) {
+        if ( rootedEntity == null ) {
             return "  Create New Alignment Board";
         }
         else {
             return "  Open In New Alignment Board";
         }
+    }
+
+    /**
+     * @param rootedEntity the rootedEntity to set
+     */
+    private void setRootedEntity(RootedEntity rootedEntity) {
+        this.rootedEntity = rootedEntity;
+    }
+
+    /**
+     * @return the rootedEntity
+     */
+    private RootedEntity getRootedEntity() {
+        return rootedEntity;
     }
 
 }
