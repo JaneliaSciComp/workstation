@@ -1,6 +1,7 @@
 package org.janelia.it.workstation.gui.alignment_board_viewer.creation;
 
 import java.awt.Component;
+import java.util.Collections;
 import java.util.List;
 import javax.swing.JOptionPane;
 import javax.swing.SwingUtilities;
@@ -23,6 +24,7 @@ import org.janelia.it.workstation.shared.workers.IndeterminateProgressMonitor;
 import org.janelia.it.workstation.shared.workers.SimpleWorker;
 import org.janelia.it.jacs.model.entity.EntityConstants;
 import org.janelia.it.jacs.shared.utils.StringUtils;
+import org.janelia.it.workstation.model.domain.Neuron;
 import org.openide.util.lookup.ServiceProvider;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -52,7 +54,6 @@ public class AlignmentBoardCreator implements EntityWrapperCreator {
             
             @Override
             protected void doStuff() throws Exception {
-//                RootedEntity rootedEntity = getRootedEntity();
                 if (rootedEntity!=null) {
                     if (rootedEntity.getType().equals(EntityConstants.TYPE_SAMPLE) ) {
                         this.sample = (Sample) EntityWrapperFactory.wrap(getRootedEntity());
@@ -67,8 +68,44 @@ public class AlignmentBoardCreator implements EntityWrapperCreator {
                         this.sample = (Sample) EntityWrapperFactory.wrap(new RootedEntity(sampleEntity));
                         this.sampleMember = EntityWrapperFactory.wrap(getRootedEntity());
                         this.sampleMember.setParent(sample);
+
+                        // The grandparent entity here will be an aligned neuron separation.
+                        // The parent of the sample member will be a neuron fragment collection.
+                        String alignmentSpaceName = null;
+                        String opticalRes = null;
+                        String pixelRes = null;
+                        Entity neuronSeparation = ModelMgr.getModelMgr().getAncestorWithType(rootedEntity.getEntity(), EntityConstants.TYPE_NEURON_SEPARATOR_PIPELINE_RESULT);
+                        if ( neuronSeparation != null ) {
+                            RootedEntity rootedNS = new RootedEntity( neuronSeparation );
+                            alignmentSpaceName = rootedNS.getValueByAttributeName( EntityConstants.ATTRIBUTE_ALIGNMENT_SPACE );
+                            opticalRes = rootedNS.getValueByAttributeName( EntityConstants.ATTRIBUTE_OPTICAL_RESOLUTION );
+                            pixelRes = rootedNS.getValueByAttributeName( EntityConstants.ATTRIBUTE_PIXEL_RESOLUTION );
+                            if ( alignmentSpaceName == null ) {
+                                // Need to resolve by comparing with all sample contexts.
+                                List<AlignmentContext> sampleContexts = sample.getAvailableAlignmentContexts();
+                                for ( AlignmentContext context: sampleContexts ) {
+                                    if ( context.getOpticalResolution().equals(opticalRes)  &&  
+                                         context.getPixelResolution().equals(pixelRes) ) {
+                                        if ( contexts != null ) {
+                                            // Avoid chosing when multiple contexts match.
+                                            contexts = null;
+                                            break;
+                                        }
+                                        this.contexts = Collections.singletonList( context );
+                                    }
+                                }
+                                if ( contexts == null ) {
+                                    this.contexts = sampleContexts;
+                                    log.warn("Failed to find neuron or ref's alignment space.  Showing user whole list from sample.");
+                                }
+                            }
+                            else {
+                                this.contexts = Collections.singletonList(
+                                    new AlignmentContext( alignmentSpaceName, opticalRes, pixelRes )
+                                );
+                            }
+                        }
                         
-                        this.contexts = sample.getAvailableAlignmentContexts();
                     }
                 }
                 else {
