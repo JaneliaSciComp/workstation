@@ -9,15 +9,18 @@ package org.janelia.it.workstation.gui.util.panels;
 import java.awt.Component;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import javax.swing.Box;
+import java.io.IOException;
 import javax.swing.BoxLayout;
 import javax.swing.JButton;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JTextField;
+import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.workstation.gui.util.WindowLocator;
 import org.janelia.it.workstation.shared.util.SystemInfo;
 import org.openide.LifecycleManager;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * This panel holds the memory settings widgets, including the action
@@ -26,8 +29,11 @@ import org.openide.LifecycleManager;
  * @author fosterl
  */
 public class MemorySettingPanel extends JPanel {
+    public static final String TOOLTIP_TEXT = "Change maximum memory available to this application.\n"
+            + "Affects only the current computer.";
     private static final Long ONE_GIG = 1024L*1024L*1024L;
     
+    private Logger logger = LoggerFactory.getLogger( MemorySettingPanel.class );
     private JTextField memorySetting;
     private JButton execButton;
     private String existingMemorySetting;
@@ -42,13 +48,20 @@ public class MemorySettingPanel extends JPanel {
         execButton = new JButton( "Save" );
         execButton.addActionListener( new SaveSettingListener() );
 
-        existingMemorySetting = getMemorySetting();
+        try {
+            existingMemorySetting = getMemorySetting();
+        } catch ( IOException ioe ) {
+            logger.error("IOException " + ioe + " while gathering memory setting");
+            existingMemorySetting = "-1";
+        }
         memorySetting.setText( existingMemorySetting );
 
         layoutUI();
     }
     
     private void layoutUI() {
+        this.setToolTipText(TOOLTIP_TEXT);
+        
         final BoxLayout boxLayout = new BoxLayout( this, BoxLayout.Y_AXIS);
         this.setLayout(boxLayout);
         memorySetting.setMaximumSize( memorySetting.getPreferredSize() );
@@ -80,7 +93,7 @@ public class MemorySettingPanel extends JPanel {
                     return; // Do nothing.
                 }
                 else {
-                    setMemorySetting( memorySetting.toString() );
+                    setMemorySetting( memorySetting );
                     // Now, let user know we will bring down the client,
                     // and subsequently do so.
                     JOptionPane.showMessageDialog(
@@ -95,6 +108,9 @@ public class MemorySettingPanel extends JPanel {
 
                 }
                 
+            } catch ( IOException ioe ) {
+                logger.error("IOException " + ioe + " while pushing memory setting.");
+                SessionMgr.getSessionMgr().handleException(ioe);
             } catch ( NullPointerException | NumberFormatException npe_nfe ) {
                 JOptionPane.showMessageDialog( 
                         WindowLocator.getMainFrame(), 
@@ -111,16 +127,16 @@ public class MemorySettingPanel extends JPanel {
      * Does a file-dredge to find the existing memory setting.
      * @return 
      */
-    private String getMemorySetting() {
-        return "0";
+    private String getMemorySetting() throws IOException {
+        return new Integer(SystemInfo.getMemoryAllocation()).toString();
     }
     
     /**
      * Looks up file and modifies it.
      * @param value 
      */
-    private void setMemorySetting( String value ) {
-        
+    private void setMemorySetting( Integer value ) throws IOException {
+        SystemInfo.setMemoryAllocation( value );
     }
     
 }
