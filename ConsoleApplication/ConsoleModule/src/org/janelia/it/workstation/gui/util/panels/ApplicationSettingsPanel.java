@@ -130,6 +130,16 @@ public class ApplicationSettingsPanel extends JPanel implements PrefEditor {
         mainPanel.add(popupPanel);
 
         // ------------------------------------------------------------------------------------------------------------
+        // Memory Settings
+        // ------------------------------------------------------------------------------------------------------------
+
+        JPanel pnlMemorySetting = new MemorySettingPanel();
+        pnlMemorySetting.setBorder(new TitledBorder("Max Memory (Gb)"));        
+        mainPanel.add(Box.createVerticalStrut(20));        
+        
+        mainPanel.add(pnlMemorySetting);
+
+        // ------------------------------------------------------------------------------------------------------------
         // Look and Feel
         // ------------------------------------------------------------------------------------------------------------
         
