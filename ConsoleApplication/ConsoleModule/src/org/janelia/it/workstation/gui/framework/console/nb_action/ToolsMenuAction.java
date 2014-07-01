@@ -38,7 +38,7 @@ import org.slf4j.LoggerFactory;
         displayName = "#CTL_ToolsMenuAction"
 )
 @ActionReference(path = "Menu/Tools", position = 100)
-@Messages("CTL_ToolsMenuAction=Configured Tools")
+@Messages("CTL_ToolsMenuAction=Tools")
 public final class ToolsMenuAction extends AbstractAction implements Presenter.Menu {
 
     private Logger logger = LoggerFactory.getLogger( ToolsMenuAction.class );
@@ -56,7 +56,6 @@ public final class ToolsMenuAction extends AbstractAction implements Presenter.M
     @Override
     public JMenuItem getMenuPresenter() {
         List<JMenuItem> newItems = createMenuItems();
-        subMenu.removeAll();
         if (newItems != null) {
             for (JMenuItem item : newItems) {
                 subMenu.add(item);
