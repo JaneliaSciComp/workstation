@@ -19,7 +19,6 @@ import org.janelia.it.workstation.gui.large_volume_viewer.MouseModalWidget;
 import org.janelia.it.workstation.gui.large_volume_viewer.skeleton.Anchor;
 import org.janelia.it.workstation.gui.large_volume_viewer.skeleton.Skeleton;
 import org.janelia.it.workstation.gui.large_volume_viewer.skeleton.SkeletonActor;
-import org.janelia.it.workstation.gui.large_volume_viewer.skeleton.SkeletonSwcExporter;
 import org.janelia.it.workstation.gui.viewer3d.BoundingBox3d;
 import org.janelia.it.workstation.gui.viewer3d.interfaces.Viewport;
 import org.janelia.it.workstation.signal.Slot1;
@@ -389,12 +388,6 @@ implements MouseMode, KeyListener
                             public void actionPerformed(ActionEvent actionEvent) {
                                 skeleton.deleteLinkRequest(getHoverAnchor());
                             }
-                        }));
-                        result.add(new JMenuItem(new AbstractAction("Export SWC file rooted at this anchor...") {
-							@Override
-							public void actionPerformed(ActionEvent event) {
-								new SkeletonSwcExporter(getHoverAnchor()).dialogAndExport(getWidget().getComponent());
-							}
                         }));
                         result.add(new JMenuItem(new AbstractAction("Split anchor") {
                             @Override
