@@ -15,6 +15,7 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.ItemEvent;
 import java.awt.event.ItemListener;
+import java.io.File;
 
 
 /**
@@ -382,6 +383,7 @@ public class AnnotationPanel extends JPanel
             if (annotationModel.getCurrentNeuron() != null) {
                 JFileChooser chooser = new JFileChooser();
                 chooser.setDialogTitle("Save swc file");
+                chooser.setSelectedFile(new File(annotationModel.getCurrentNeuron().getName() + ".swc"));
                 int returnValue = chooser.showSaveDialog(AnnotationPanel.this);
                 if (returnValue == JFileChooser.APPROVE_OPTION) {
                     annotationMgr.exportCurrentNeuronAsSWC(chooser.getSelectedFile());
