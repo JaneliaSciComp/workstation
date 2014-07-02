@@ -23,6 +23,7 @@ import java.awt.*;
 import java.io.File;
 import java.net.URL;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -998,6 +999,28 @@ public class AnnotationManager
         //  new task, so it's far too intrusive to be used for our purpose; see FW-2191
         // worker.executeWithEvents();
 
+    }
+
+    public void exportCurrentNeuronAsSWC(final File swcFile) {
+        final Long neuronID = annotationModel.getCurrentNeuron().getId();
+
+        SimpleWorker saver = new SimpleWorker() {
+            @Override
+            protected void doStuff() throws Exception {
+                annotationModel.exportSWCData(swcFile, Arrays.asList(neuronID));
+            }
+
+            @Override
+            protected void hadSuccess() {
+                // nothing here
+            }
+
+            @Override
+            protected void hadError(Throwable error) {
+                SessionMgr.getSessionMgr().handleException(error);
+            }
+        };
+        saver.execute();
     }
 
     public void importSWCFile(final File swcFile) {
