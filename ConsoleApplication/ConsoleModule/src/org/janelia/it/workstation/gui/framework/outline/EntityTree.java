@@ -480,6 +480,8 @@ public class EntityTree extends JPanel implements ActivatableView {
             @Override
             public void expandAll(final DefaultMutableTreeNode node, final boolean expand) {
 
+                if (node==null) return;
+                
                 if (!expand || !isLazyLoading()) {
                     super.expandAll(node, expand);
                     return;
@@ -501,7 +503,11 @@ public class EntityTree extends JPanel implements ActivatableView {
                     protected void doStuff() throws Exception {
                         progressMonitor.setProgress(1);
                         entityData = getEntityData(node);
-                        entity = ModelMgr.getModelMgr().getEntityTree(entityData.getChildEntity().getId());
+                        if (entityData!=null) {
+                            if (entityData.getChildEntity()!=null) {
+                                entity = ModelMgr.getModelMgr().getEntityTree(entityData.getChildEntity().getId());
+                            }
+                        }
                     }
 
                     @Override
@@ -512,10 +518,12 @@ public class EntityTree extends JPanel implements ActivatableView {
                         if (getProgress() < 90) {
                             setProgress(90);
                         }
-                        entityData.setChildEntity(entity);
-                        node.setUserObject(entityData);
-                        recreateChildNodes(node);
-                        expandAll(new TreePath(node.getPath()), expand);
+                        if (entityData!=null && entity!=null) {
+                            entityData.setChildEntity(entity);
+                            node.setUserObject(entityData);
+                            recreateChildNodes(node);
+                            expandAll(new TreePath(node.getPath()), expand);
+                        }
                         SwingUtilities.updateComponentTreeUI(EntityTree.this);
                         if (getProgress() < 100) {
                             setProgress(100);
