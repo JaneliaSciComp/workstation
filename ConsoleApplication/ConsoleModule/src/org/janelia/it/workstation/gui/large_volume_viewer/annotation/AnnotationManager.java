@@ -1001,6 +1001,31 @@ public class AnnotationManager
 
     }
 
+    public void exportAllNeuronsAsSWC(final File swcFile) {
+        final List<Long> neuronIDList = new ArrayList<Long>();
+        for (TmNeuron neuron: annotationModel.getCurrentWorkspace().getNeuronList()) {
+            neuronIDList.add(neuron.getId());
+        }
+
+        SimpleWorker saver = new SimpleWorker() {
+            @Override
+            protected void doStuff() throws Exception {
+                annotationModel.exportSWCData(swcFile, neuronIDList);
+            }
+
+            @Override
+            protected void hadSuccess() {
+                // nothing here
+            }
+
+            @Override
+            protected void hadError(Throwable error) {
+                SessionMgr.getSessionMgr().handleException(error);
+            }
+        };
+        saver.execute();
+    }
+
     public void exportCurrentNeuronAsSWC(final File swcFile) {
         final Long neuronID = annotationModel.getCurrentNeuron().getId();
 

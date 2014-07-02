@@ -173,6 +173,12 @@ public class AnnotationPanel extends JPanel
         });
         workspaceToolMenu.add(automaticTracingMenuItem);
 
+        ExportAllSWCAction exportAllSWCAction = new ExportAllSWCAction();
+        exportAllSWCAction.putValue(Action.NAME, "Export SWC file...");
+        exportAllSWCAction.putValue(Action.SHORT_DESCRIPTION,
+                "Export all neurons to SWC file");
+        workspaceToolMenu.add(new JMenuItem((exportAllSWCAction)));
+
         ImportSWCAction importSWCAction = new ImportSWCAction();
         importSWCAction.putValue(Action.NAME, "Import SWC file...");
         importSWCAction.putValue(Action.SHORT_DESCRIPTION,
@@ -216,11 +222,11 @@ public class AnnotationPanel extends JPanel
         // neuron tool pop-up menu (triggered by button, below)
         final JPopupMenu neuronToolMenu = new JPopupMenu();
 
-        ExportSWCAction exportSWCAction = new ExportSWCAction();
-        exportSWCAction.putValue(Action.NAME, "Export SWC file...");
-        exportSWCAction.putValue(Action.SHORT_DESCRIPTION,
+        ExportCurrentSWCAction exportCurrentSWCAction = new ExportCurrentSWCAction();
+        exportCurrentSWCAction.putValue(Action.NAME, "Export SWC file...");
+        exportCurrentSWCAction.putValue(Action.SHORT_DESCRIPTION,
                 "Export selected neuron as an SWC file");
-        neuronToolMenu.add(exportSWCAction);
+        neuronToolMenu.add(exportCurrentSWCAction);
         neuronToolMenu.add(new JMenuItem(new AbstractAction("Rename") {
             public void actionPerformed(ActionEvent e) {
                 annotationMgr.renameNeuron();
@@ -377,7 +383,22 @@ public class AnnotationPanel extends JPanel
         }
     }
 
-    class ExportSWCAction extends AbstractAction {
+    class ExportAllSWCAction extends AbstractAction {
+        @Override
+        public void actionPerformed(ActionEvent e) {
+            if (annotationModel.getCurrentNeuron() != null) {
+                JFileChooser chooser = new JFileChooser();
+                chooser.setDialogTitle("Save swc file");
+                chooser.setSelectedFile(new File(annotationModel.getCurrentWorkspace().getName() + ".swc"));
+                int returnValue = chooser.showSaveDialog(AnnotationPanel.this);
+                if (returnValue == JFileChooser.APPROVE_OPTION) {
+                    annotationMgr.exportAllNeuronsAsSWC(chooser.getSelectedFile());
+                }
+            }
+        }
+    }
+
+    class ExportCurrentSWCAction extends AbstractAction {
         @Override
         public void actionPerformed(ActionEvent e) {
             if (annotationModel.getCurrentNeuron() != null) {
