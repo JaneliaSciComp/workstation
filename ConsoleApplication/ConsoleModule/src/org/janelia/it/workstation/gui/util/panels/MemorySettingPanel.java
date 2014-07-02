@@ -7,11 +7,11 @@
 package org.janelia.it.workstation.gui.util.panels;
 
 import java.awt.Component;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
+import java.awt.HeadlessException;
+import java.awt.event.KeyEvent;
+import java.awt.event.KeyListener;
 import java.io.IOException;
 import javax.swing.BoxLayout;
-import javax.swing.JButton;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JTextField;
@@ -35,18 +35,91 @@ public class MemorySettingPanel extends JPanel {
     
     private Logger logger = LoggerFactory.getLogger( MemorySettingPanel.class );
     private JTextField memorySetting;
-    private JButton execButton;
     private String existingMemorySetting;
+    private SettingListener listener;
     
     public MemorySettingPanel() {
         initUI();
     }
+
+    public boolean isChanged() {
+        return (! existingMemorySetting.equals(memorySetting.getText()));
+    }
     
+    public void setSettingListener( SettingListener listener ) {
+        this.listener = listener;
+    }
+    
+    public boolean saveSettings() throws HeadlessException {
+        String memorySettingStr = memorySetting.getText();
+        try {
+            Integer memorySetting = Integer.parseInt(memorySettingStr.trim());
+            Integer totalAvailableGb = (int) (SystemInfo.getTotalSystemMemory() / ONE_GIG);
+            if (memorySetting > totalAvailableGb) {
+                JOptionPane.showMessageDialog(
+                        WindowLocator.getMainFrame(),
+                        "Unacceptable value " + memorySettingStr + ".  The system has only " + totalAvailableGb + "Gb.",
+                        "Please Re-Enter",
+                        JOptionPane.ERROR_MESSAGE,
+                        null
+                );
+            } else if (memorySetting.equals(existingMemorySetting)) {
+                return true; // Do nothing.
+            } else {
+                setMemorySetting(memorySetting);
+                // Now, let user know we will bring down the client,
+                // and subsequently do so.
+                JOptionPane.showMessageDialog(
+                        WindowLocator.getMainFrame(),
+                        "In order to complete this change, the client must be restarted.\nShutting down now.",
+                        "Shutting Down Now",
+                        JOptionPane.INFORMATION_MESSAGE,
+                        null
+                );
+                // Force exit.
+                LifecycleManager.getDefault().exit();
+            }
+        } catch (IOException ioe) {
+            logger.error("IOException " + ioe + " while pushing memory setting.");
+            SessionMgr.getSessionMgr().handleException(ioe);
+        } catch (NullPointerException | NumberFormatException npe_nfe) {
+            JOptionPane.showMessageDialog(
+                    WindowLocator.getMainFrame(),
+                    "Unacceptable value " + memorySettingStr + ".  Integer required.",
+                    "Please Re-Enter",
+                    JOptionPane.ERROR_MESSAGE,
+                    null
+            );
+        }
+        return false;
+    }
     
     private void initUI() {
         memorySetting = new JTextField( 15 );
-        execButton = new JButton( "Save" );
-        execButton.addActionListener( new SaveSettingListener() );
+        memorySetting.addKeyListener( new KeyListener() {
+
+            @Override
+            public void keyTyped(KeyEvent e) {
+                exec();
+            }
+
+            @Override
+            public void keyPressed(KeyEvent e) {
+                exec();
+            }
+
+            @Override
+            public void keyReleased(KeyEvent e) {
+                exec();
+            }
+            
+            private void exec() {
+                if ( listener != null ) {
+                    listener.settingChanged();
+                }
+            }
+    
+        });
 
         try {
             existingMemorySetting = getMemorySetting();
@@ -58,7 +131,7 @@ public class MemorySettingPanel extends JPanel {
 
         layoutUI();
     }
-    
+
     private void layoutUI() {
         this.setToolTipText(TOOLTIP_TEXT);
         
@@ -66,61 +139,7 @@ public class MemorySettingPanel extends JPanel {
         this.setLayout(boxLayout);
         memorySetting.setMaximumSize( memorySetting.getPreferredSize() );
         memorySetting.setAlignmentX(Component.LEFT_ALIGNMENT);
-        this.add( memorySetting );
-        execButton.setMaximumSize( execButton.getPreferredSize() );
-        execButton.setAlignmentX(Component.LEFT_ALIGNMENT);
-        this.add( execButton );
-        
-    }
-    
-    private class SaveSettingListener implements ActionListener {
-        @Override
-        public void actionPerformed( ActionEvent ae ) {
-            String memorySettingStr = memorySetting.getText();
-            try {
-                Integer memorySetting = Integer.parseInt( memorySettingStr.trim() );
-                Integer totalAvailableGb = (int)(SystemInfo.getTotalSystemMemory() / ONE_GIG);
-                if ( memorySetting > totalAvailableGb ) {                    
-                    JOptionPane.showMessageDialog( 
-                            WindowLocator.getMainFrame(),
-                            "Unacceptable value " + memorySettingStr + ".  The system has only " + totalAvailableGb + "Gb.",
-                            "Please Re-Enter", 
-                            JOptionPane.ERROR_MESSAGE,
-                            null 
-                    );
-                }
-                else if ( memorySetting.equals(existingMemorySetting) ) {
-                    return; // Do nothing.
-                }
-                else {
-                    setMemorySetting( memorySetting );
-                    // Now, let user know we will bring down the client,
-                    // and subsequently do so.
-                    JOptionPane.showMessageDialog(
-                            WindowLocator.getMainFrame(),
-                            "In order to complete this change, the client must be restarted.\nShutting down now.",
-                            "Shutting Down Now",
-                            JOptionPane.INFORMATION_MESSAGE,
-                            null
-                    );
-                    // Force exit.
-                    LifecycleManager.getDefault().exit();
-
-                }
-                
-            } catch ( IOException ioe ) {
-                logger.error("IOException " + ioe + " while pushing memory setting.");
-                SessionMgr.getSessionMgr().handleException(ioe);
-            } catch ( NullPointerException | NumberFormatException npe_nfe ) {
-                JOptionPane.showMessageDialog( 
-                        WindowLocator.getMainFrame(), 
-                        "Unacceptable value " + memorySettingStr + ".  Integer required.",
-                        "Please Re-Enter", 
-                        JOptionPane.ERROR_MESSAGE, 
-                        null
-                );
-            }
-        }
+        this.add( memorySetting );        
     }
     
     /**
@@ -139,4 +158,7 @@ public class MemorySettingPanel extends JPanel {
         SystemInfo.setMemoryAllocation( value );
     }
     
+    public static interface SettingListener {
+        void settingChanged();
+    }
 }

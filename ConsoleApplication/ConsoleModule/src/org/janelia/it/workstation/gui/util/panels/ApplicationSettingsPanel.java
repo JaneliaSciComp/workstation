@@ -22,6 +22,7 @@ import javax.swing.border.TitledBorder;
 public class ApplicationSettingsPanel extends JPanel implements PrefEditor {
     private boolean settingsChanged = false;
     private static final String SUBVIEW_FOCUS = "FocusSubviewsUponNavigation";
+    private MemorySettingPanel pnlMemorySetting;
     JCheckBox subviewFocusCheckBox = new JCheckBox();
     JCheckBox subEditors = new JCheckBox();
     JCheckBox memoryUsage = new JCheckBox();
@@ -133,8 +134,16 @@ public class ApplicationSettingsPanel extends JPanel implements PrefEditor {
         // Memory Settings
         // ------------------------------------------------------------------------------------------------------------
 
-        JPanel pnlMemorySetting = new MemorySettingPanel();
+        pnlMemorySetting = new MemorySettingPanel();
         pnlMemorySetting.setBorder(new TitledBorder("Max Memory (Gb)"));        
+        pnlMemorySetting.setSettingListener(
+                new MemorySettingPanel.SettingListener() {
+                    @Override
+                    public void settingChanged() {                        
+                        settingsChanged = true;
+                    }
+                }
+        );
         mainPanel.add(Box.createVerticalStrut(20));        
         
         mainPanel.add(pnlMemorySetting);
@@ -272,6 +281,9 @@ public class ApplicationSettingsPanel extends JPanel implements PrefEditor {
         }
         if (subviewFocusCheckBox.isSelected() != (Boolean) sessionMgr.getModelProperty(SUBVIEW_FOCUS)) {
             sessionMgr.setModelProperty(SUBVIEW_FOCUS, subviewFocusCheckBox.isSelected());
+        }
+        if (pnlMemorySetting.isChanged()) {
+            pnlMemorySetting.saveSettings();
         }
         AutoNavigationMgr.getAutoNavigationMgr().showNavigationCompleteMsgs(navComplete.isSelected());
 
