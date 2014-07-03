@@ -2,7 +2,8 @@ package org.janelia.it.workstation.gui.browser.nodes;
 
 import java.awt.Image;
 import java.io.File;
-import org.janelia.it.jacs.model.domain.LSMImage;
+
+import org.janelia.it.jacs.model.domain.sample.LSMImage;
 import org.janelia.it.workstation.gui.util.Icons;
 import org.openide.nodes.ChildFactory;
 import org.openide.nodes.Children;

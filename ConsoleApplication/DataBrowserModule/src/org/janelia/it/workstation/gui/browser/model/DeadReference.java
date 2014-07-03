@@ -1,6 +1,8 @@
 package org.janelia.it.workstation.gui.browser.model;
 
+import java.util.Date;
 import java.util.Set;
+
 import org.janelia.it.jacs.model.domain.DomainObject;
 import org.janelia.it.jacs.model.domain.Reference;
 
@@ -51,4 +53,24 @@ public class DeadReference implements DomainObject {
 
     public void setWriters(Set<String> writers) {
     }
+
+	@Override
+	public Date getCreationDate() {
+		return null;
+	}
+
+	@Override
+	public void setCreationDate(Date creationDate) {
+	}
+
+	@Override
+	public Date getUpdatedDate() {
+		return null;
+	}
+
+	@Override
+	public void setUpdatedDate(Date updatedDate) {
+	}
+    
+    
 }

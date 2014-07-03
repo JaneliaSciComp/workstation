@@ -3,7 +3,8 @@ package org.janelia.it.workstation.gui.browser.nodes.children;
 import java.lang.ref.WeakReference;
 import java.util.Collections;
 import java.util.List;
-import org.janelia.it.jacs.model.domain.Sample;
+
+import org.janelia.it.jacs.model.domain.sample.Sample;
 import org.janelia.it.workstation.gui.browser.nodes.ObjectiveNode;
 import org.openide.nodes.ChildFactory;
 import org.openide.nodes.Node;

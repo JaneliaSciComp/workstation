@@ -1,7 +1,8 @@
 package org.janelia.it.workstation.gui.browser.nodes;
 
 import java.awt.Image;
-import org.janelia.it.jacs.model.domain.NeuronFragment;
+
+import org.janelia.it.jacs.model.domain.sample.NeuronFragment;
 import org.janelia.it.workstation.gui.util.Icons;
 import org.openide.nodes.ChildFactory;
 import org.openide.nodes.Children;

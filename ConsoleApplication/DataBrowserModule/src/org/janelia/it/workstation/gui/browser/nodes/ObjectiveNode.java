@@ -3,9 +3,10 @@ package org.janelia.it.workstation.gui.browser.nodes;
 import java.awt.Image;
 import java.lang.ref.WeakReference;
 import java.util.List;
-import org.janelia.it.jacs.model.domain.ObjectiveSample;
-import org.janelia.it.jacs.model.domain.Sample;
-import org.janelia.it.jacs.model.domain.SamplePipelineRun;
+
+import org.janelia.it.jacs.model.domain.sample.ObjectiveSample;
+import org.janelia.it.jacs.model.domain.sample.Sample;
+import org.janelia.it.jacs.model.domain.sample.SamplePipelineRun;
 import org.janelia.it.workstation.gui.util.Icons;
 import org.openide.nodes.ChildFactory;
 import org.openide.nodes.Children;

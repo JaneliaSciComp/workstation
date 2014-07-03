@@ -5,9 +5,11 @@ import java.awt.datatransfer.Transferable;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+
 import javax.swing.Action;
+
 import org.janelia.it.jacs.model.domain.DomainObject;
-import org.janelia.it.jacs.model.domain.MaterializedView;
+import org.janelia.it.jacs.model.domain.workspace.MaterializedView;
 import org.janelia.it.workstation.gui.browser.nodes.children.TreeNodeChildFactory;
 import org.janelia.it.workstation.gui.browser.flavors.DomainObjectFlavor;
 import org.openide.actions.CopyAction;

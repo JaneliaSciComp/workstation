@@ -5,27 +5,31 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import org.janelia.it.jacs.model.domain.Annotation;
 import org.janelia.it.jacs.model.domain.DomainObject;
-import org.janelia.it.jacs.model.domain.FlyLine;
-import org.janelia.it.jacs.model.domain.LSMImage;
-import org.janelia.it.jacs.model.domain.NeuronFragment;
-import org.janelia.it.jacs.model.domain.PatternMask;
 import org.janelia.it.jacs.model.domain.Reference;
 import org.janelia.it.jacs.model.domain.ReverseReference;
-import org.janelia.it.jacs.model.domain.Sample;
-import org.janelia.it.jacs.model.domain.ScreenSample;
 import org.janelia.it.jacs.model.domain.Subject;
-import org.janelia.it.jacs.model.domain.TreeNode;
-import org.janelia.it.jacs.model.domain.Workspace;
+import org.janelia.it.jacs.model.domain.ontology.Annotation;
 import org.janelia.it.jacs.model.domain.ontology.Ontology;
+import org.janelia.it.jacs.model.domain.sample.LSMImage;
+import org.janelia.it.jacs.model.domain.sample.NeuronFragment;
+import org.janelia.it.jacs.model.domain.sample.Sample;
+import org.janelia.it.jacs.model.domain.screen.FlyLine;
+import org.janelia.it.jacs.model.domain.screen.PatternMask;
+import org.janelia.it.jacs.model.domain.screen.ScreenSample;
+import org.janelia.it.jacs.model.domain.workspace.TreeNode;
+import org.janelia.it.jacs.model.domain.workspace.Workspace;
+import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
 import org.jongo.Jongo;
 import org.jongo.MongoCollection;
 import org.jongo.marshall.jackson.JacksonMapper;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.fasterxml.jackson.databind.MapperFeature;
 import com.google.common.collect.ArrayListMultimap;
@@ -37,10 +41,6 @@ import com.mongodb.DB;
 import com.mongodb.MongoClient;
 import com.mongodb.WriteConcern;
 import com.mongodb.WriteResult;
-import java.util.Iterator;
-import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /**
  * The main domain-object DAO for the JACS system.
