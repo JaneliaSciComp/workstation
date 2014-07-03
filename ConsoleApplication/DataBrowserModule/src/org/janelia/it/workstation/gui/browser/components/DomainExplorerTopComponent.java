@@ -1,13 +1,16 @@
 package org.janelia.it.workstation.gui.browser.components;
 
 import org.janelia.it.workstation.gui.browser.api.DomainDAO;
+
 import java.util.Collection;
+
 import javax.swing.ActionMap;
 import javax.swing.DefaultComboBoxModel;
 import javax.swing.SwingUtilities;
 import javax.swing.text.DefaultEditorKit;
+
 import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
-import org.janelia.it.jacs.model.domain.Workspace;
+import org.janelia.it.jacs.model.domain.workspace.Workspace;
 import org.janelia.it.workstation.gui.browser.nodes.TreeNodeNode;
 import org.janelia.it.workstation.gui.util.Icons;
 import org.netbeans.api.settings.ConvertAsProperties;

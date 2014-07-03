@@ -1,14 +1,17 @@
 package org.janelia.it.workstation.gui.browser.nodes;
 
 import com.google.common.collect.Lists;
+
 import java.awt.Image;
 import java.awt.datatransfer.Transferable;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+
 import javax.swing.Action;
-import org.janelia.it.jacs.model.domain.MaterializedView;
+
 import org.janelia.it.jacs.model.domain.ontology.Ontology;
+import org.janelia.it.jacs.model.domain.workspace.MaterializedView;
 import org.janelia.it.workstation.gui.browser.api.DomainDAO;
 import org.janelia.it.workstation.gui.browser.api.DomainUtils;
 import org.janelia.it.workstation.gui.browser.components.DomainExplorerTopComponent;

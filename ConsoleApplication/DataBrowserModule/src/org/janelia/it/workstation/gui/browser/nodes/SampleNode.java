@@ -1,7 +1,8 @@
 package org.janelia.it.workstation.gui.browser.nodes;
 
 import java.awt.Image;
-import org.janelia.it.jacs.model.domain.Sample;
+
+import org.janelia.it.jacs.model.domain.sample.Sample;
 import org.janelia.it.workstation.gui.browser.components.DomainExplorerTopComponent;
 import org.janelia.it.workstation.gui.browser.nodes.children.NeuronNodeFactory;
 import org.janelia.it.workstation.gui.browser.nodes.children.ObjectiveNodeFactory;

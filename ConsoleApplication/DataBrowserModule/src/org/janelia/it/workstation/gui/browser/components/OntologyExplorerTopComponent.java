@@ -107,7 +107,9 @@ public final class OntologyExplorerTopComponent extends TopComponent implements 
                     }
                     model.setSelectedItem(currOntology);
                     ontologyCombo.setModel(model);
-                    loadOntology(currOntology.getOntology());
+                    if (currOntology!=null) {
+                        loadOntology(currOntology.getOntology());
+                    }
                 }
                 catch (Exception e) {
                     SessionMgr.getSessionMgr().handleException(e);
