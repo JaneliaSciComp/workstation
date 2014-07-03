@@ -6,8 +6,9 @@ package org.janelia.it.workstation.gui.large_volume_viewer.annotation;
 import org.janelia.it.workstation.geom.Vec3;
 import org.janelia.it.workstation.geom.ParametrizedLine;
 import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
+import org.janelia.it.workstation.shared.util.SWCDataConverter;
 import org.janelia.it.workstation.shared.util.SWCNode;
-import org.janelia.it.workstation.shared.util.SWCReader;
+import org.janelia.it.workstation.shared.util.SWCData;
 import org.janelia.it.workstation.signal.Signal1;
 import org.janelia.it.workstation.signal.Slot1;
 import org.janelia.it.workstation.api.entity_model.management.ModelMgr;
@@ -866,13 +867,40 @@ that need to respond to changing data.
         }
     }
 
+    /**
+     * export the neurons in the input list into the given file, in swc format;
+     * all neurons (and all their neurites!) are crammed into a single file
+     */
+    public void exportSWCData(File swcFile, List<Long> neuronIDList) throws Exception {
+
+        // get fresh neuron objects from ID list
+        ArrayList<TmNeuron> neuronList = new ArrayList<TmNeuron>();
+        for (Long ID: neuronIDList) {
+            if (ID != null) {
+                TmNeuron foundNeuron = null;
+                for (TmNeuron neuron: getCurrentWorkspace().getNeuronList()) {
+                    if (neuron.getId().equals(ID)) {
+                        foundNeuron = neuron;
+                    }
+                }
+                if (foundNeuron != null) {
+                    neuronList.add(foundNeuron);
+                }
+            }
+        }
+
+        // get swcdata via converter, then write
+        SWCData swcData = SWCDataConverter.fromTmNeuron(neuronList);
+        swcData.write(swcFile);
+    }
+
     public void importSWCData(File swcFile) throws Exception {
 
         // the constructor also triggers the parsing, but not the validation
-        SWCReader reader = new SWCReader(swcFile);
-        if (!reader.isValid()) {
+        SWCData swcData = SWCData.read(swcFile);
+        if (!swcData.isValid()) {
             throw new Exception(String.format("invalid SWC file %s; reason: %s",
-                swcFile.getName(), reader.getInvalidReason()));
+                    swcFile.getName(), swcData.getInvalidReason()));
         }
 
         // note from CB, July 2013: Vaa3d can't handle large coordinates in swc files,
@@ -881,7 +909,7 @@ that need to respond to changing data.
         double offsetx = 0.0;
         double offsety = 0.0;
         double offsetz = 0.0;
-        String offsetHeader = reader.findHeaderLine("OFFSET");
+        String offsetHeader = swcData.findHeaderLine("OFFSET");
         if (offsetHeader != null) {
             String [] items = offsetHeader.split("\\s+");
             // expect # OFFSET x y z
@@ -907,7 +935,7 @@ that need to respond to changing data.
         //  for annotations right now
         Map<Integer, TmGeoAnnotation> annotations = new HashMap<Integer, TmGeoAnnotation>();
         TmGeoAnnotation annotation;
-        for (SWCNode node: reader.getNodeList()) {
+        for (SWCNode node: swcData.getNodeList()) {
             if (node.getParentIndex() == -1) {
                 annotation = modelMgr.addGeometricAnnotation(neuron.getId(),
                     null, 0, node.getX() + offsetx, node.getY() + offsety,
