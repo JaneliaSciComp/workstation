@@ -1,5 +1,6 @@
 package org.janelia.it.workstation.gui.browser.nodes;
 
+import java.awt.Image;
 import java.awt.datatransfer.DataFlavor;
 import java.awt.datatransfer.Transferable;
 import java.io.IOException;
@@ -12,6 +13,7 @@ import org.janelia.it.jacs.model.domain.DomainObject;
 import org.janelia.it.jacs.model.domain.workspace.MaterializedView;
 import org.janelia.it.workstation.gui.browser.nodes.children.TreeNodeChildFactory;
 import org.janelia.it.workstation.gui.browser.flavors.DomainObjectFlavor;
+import org.janelia.it.workstation.gui.util.Icons;
 import org.openide.actions.CopyAction;
 import org.openide.actions.CutAction;
 import org.openide.actions.DeleteAction;
@@ -81,6 +83,11 @@ public class DomainObjectNode extends BeanNode<DomainObject> {
         actions.add(CutAction.get(CutAction.class));
         actions.add(MoveDownAction.get(MoveDownAction.class));
         return actions.toArray(new Action[0]);
+    }
+    
+    @Override
+    public Image getIcon(int type) {
+        return Icons.getIcon("brick_grey.png").getImage();
     }
     
     @Override

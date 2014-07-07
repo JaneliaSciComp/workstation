@@ -1,11 +1,13 @@
 package org.janelia.it.workstation.gui.browser.nodes;
 
+import java.awt.Image;
 import java.awt.datatransfer.DataFlavor;
 import java.awt.datatransfer.Transferable;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import javax.swing.Action;
+import org.janelia.it.workstation.gui.util.Icons;
 import org.openide.actions.CopyAction;
 import org.openide.nodes.BeanNode;
 import org.openide.util.datatransfer.ExTransferable;
@@ -52,6 +54,11 @@ public class InternalNode<T> extends BeanNode<T> {
         List<Action> actions = new ArrayList<Action>();
         actions.add(CopyAction.get(CopyAction.class));
         return actions.toArray(new Action[0]);
+    }
+    
+    @Override
+    public Image getIcon(int type) {
+        return Icons.getIcon("package.png").getImage();
     }
     
     @Override

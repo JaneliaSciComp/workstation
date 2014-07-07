@@ -35,11 +35,6 @@ public class ObjectiveNode extends InternalNode<String> {
         return getObjective();
     }
     
-    @Override
-    public Image getIcon(int type) {
-        return Icons.getIcon("page_white.png").getImage();
-    }
-    
     public class MyChildFactory extends ChildFactory<SamplePipelineRun> {
     
         @Override

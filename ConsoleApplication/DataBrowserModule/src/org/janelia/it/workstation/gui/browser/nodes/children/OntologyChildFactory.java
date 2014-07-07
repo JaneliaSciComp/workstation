@@ -32,7 +32,7 @@ public class OntologyChildFactory extends ChildFactory<OntologyTerm> {
     protected boolean createKeys(List<OntologyTerm> list) {
         OntologyTerm ontologyTerm = ontologyTermRef.get();
         if (ontologyTerm==null) return false;
-        log.info("Creating children keys for {}",ontologyTerm.getName());   
+        log.trace("Creating children keys for {}",ontologyTerm.getName());   
         if (ontologyTerm.getTerms()!=null) {
             for(OntologyTerm term : ontologyTerm.getTerms()) {
                 list.add(term);

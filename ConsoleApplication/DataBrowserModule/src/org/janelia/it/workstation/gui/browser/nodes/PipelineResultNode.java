@@ -1,17 +1,16 @@
 package org.janelia.it.workstation.gui.browser.nodes;
 
-import java.awt.Image;
 import java.lang.ref.WeakReference;
 
 import org.janelia.it.jacs.model.domain.sample.NeuronSeparation;
 import org.janelia.it.jacs.model.domain.sample.PipelineResult;
 import org.janelia.it.jacs.model.domain.sample.Sample;
 import org.janelia.it.jacs.model.domain.sample.SampleAlignmentResult;
+import org.janelia.it.jacs.model.domain.sample.SampleCellCountingResult;
 import org.janelia.it.jacs.model.domain.sample.SamplePipelineRun;
 import org.janelia.it.jacs.model.domain.sample.SampleProcessingResult;
 import org.janelia.it.workstation.gui.browser.nodes.children.NeuronNodeFactory;
 import org.janelia.it.workstation.gui.browser.nodes.children.ResultChildFactory;
-import org.janelia.it.workstation.gui.util.Icons;
 import org.openide.nodes.Children;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -52,9 +51,13 @@ public class PipelineResultNode extends InternalNode<PipelineResult> {
             else if (result instanceof SampleProcessingResult) {
                 name = "Sample Processing";
             }
+            else if (result instanceof SampleCellCountingResult) {
+                SampleCellCountingResult cellCountingResult = (SampleCellCountingResult)result;
+                name = cellCountingResult.getName();
+            }
             else if (result instanceof SampleAlignmentResult) {
                 SampleAlignmentResult alignment = (SampleAlignmentResult)result;
-                name = "Sample Alignment";
+                name = alignment.getName();
             }
             else {
                 name = result.getClass().getName();
@@ -66,10 +69,5 @@ public class PipelineResultNode extends InternalNode<PipelineResult> {
     @Override
     public String getSecondaryLabel() {
         return getBean().getCreationDate()+"";
-    }
-    
-    @Override
-    public Image getIcon(int type) {
-        return Icons.getIcon("folder_image.png").getImage();
     }
 }
