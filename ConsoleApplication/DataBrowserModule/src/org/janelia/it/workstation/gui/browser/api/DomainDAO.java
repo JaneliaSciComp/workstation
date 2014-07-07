@@ -241,6 +241,11 @@ public class DomainDAO {
         return toList(lsmCollection.find("{sampleId:#,readers:{$in:#}}",id, subjects).as(LSMImage.class));
     }
     
+    public List<ScreenSample> getScreenSampleByFlyLine(String subjectKey, String flyLine) {
+        Set<String> subjects = getSubjectSet(subjectKey);
+        return toList(screenSampleCollection.find("{flyLine:{$regex:#},readers:{$in:#}}",flyLine+".*", subjects).as(ScreenSample.class));
+    }
+    
     public List<NeuronFragment> getNeuronFragmentsBySampleId(String subjectKey, Long sampleId) {
         Set<String> subjects = getSubjectSet(subjectKey);
         return toList(fragmentCollection.find("{sampleId:#,readers:{$in:#}}",sampleId,subjects).as(NeuronFragment.class));

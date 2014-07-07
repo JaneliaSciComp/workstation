@@ -38,9 +38,4 @@ public class SamplePipelineRunNode extends InternalNode<SamplePipelineRun> {
     public String getSecondaryLabel() {
         return getSamplePipelineRun().getCreationDate()+"";
     }
-    
-    @Override
-    public Image getIcon(int type) {
-        return Icons.getIcon("folder_image.png").getImage();
-    }
 }
