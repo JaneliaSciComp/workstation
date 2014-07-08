@@ -13,7 +13,7 @@ import javax.swing.JPopupMenu;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-// Shared base class for Mip3d and SliceViewer
+// Shared base class for Mip3d and LargeVolumeViewer
 public abstract class BaseGLViewer 
 //extends GLCanvas // in case heavyweight widget is preferred
 extends GLJPanel // in case lightweight widget is required

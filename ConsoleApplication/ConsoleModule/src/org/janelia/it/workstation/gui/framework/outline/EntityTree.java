@@ -393,38 +393,30 @@ public class EntityTree extends JPanel implements ActivatableView {
      */
     protected void nodeDoubleClicked(MouseEvent e) {
     }
-    
-    /**
-     * Override this method to do something when the user clicks the background.
-     *
-     * @param e
-     */
-    protected void backgroundClicked(MouseEvent e) {
-    }
 
     protected void createNewTree(EntityData root) {
 
         this.rootEntityData = root;
         selectedTree = new DynamicTree(root, showToolbar, isLazyLoading) {
 
+            @Override
             protected void showPopupMenu(MouseEvent e) {
                 EntityTree.this.showPopupMenu(e);
             }
 
+            @Override
             protected void nodeClicked(MouseEvent e) {
                 EntityTree.this.nodeClicked(e);
             }
 
+            @Override
             protected void nodePressed(MouseEvent e) {
                 EntityTree.this.nodePressed(e);
             }
 
+            @Override
             protected void nodeDoubleClicked(MouseEvent e) {
                 EntityTree.this.nodeDoubleClicked(e);
-            }
-
-            protected void backgroundClicked(MouseEvent e) {
-                EntityTree.this.backgroundClicked(e);
             }
 
             @Override
@@ -445,6 +437,7 @@ public class EntityTree extends JPanel implements ActivatableView {
                 }
 
                 SimpleWorker loadingWorker = new LazyTreeNodeLoader(selectedTree, node) {
+                    @Override
                     protected void doneLoading() {
                         log.debug("expandNodeWithLazyChildren completed, from database: {}", getEntity(node).getName());
                         ConcurrentUtils.invokeAndHandleExceptions(success);
@@ -456,8 +449,7 @@ public class EntityTree extends JPanel implements ActivatableView {
 
             @Override
             public void loadLazyNodeData(DefaultMutableTreeNode node) throws Exception {
-                Entity entity = getEntity(node);
-                entity = ModelMgr.getModelMgr().loadLazyEntity(entity, false);
+                ModelMgr.getModelMgr().loadLazyEntity(getEntity(node), false);
             }
 
             @Override
@@ -488,6 +480,8 @@ public class EntityTree extends JPanel implements ActivatableView {
             @Override
             public void expandAll(final DefaultMutableTreeNode node, final boolean expand) {
 
+                if (node==null) return;
+                
                 if (!expand || !isLazyLoading()) {
                     super.expandAll(node, expand);
                     return;
@@ -509,7 +503,11 @@ public class EntityTree extends JPanel implements ActivatableView {
                     protected void doStuff() throws Exception {
                         progressMonitor.setProgress(1);
                         entityData = getEntityData(node);
-                        entity = ModelMgr.getModelMgr().getEntityTree(entityData.getChildEntity().getId());
+                        if (entityData!=null) {
+                            if (entityData.getChildEntity()!=null) {
+                                entity = ModelMgr.getModelMgr().getEntityTree(entityData.getChildEntity().getId());
+                            }
+                        }
                     }
 
                     @Override
@@ -520,10 +518,12 @@ public class EntityTree extends JPanel implements ActivatableView {
                         if (getProgress() < 90) {
                             setProgress(90);
                         }
-                        entityData.setChildEntity(entity);
-                        node.setUserObject(entityData);
-                        recreateChildNodes(node);
-                        expandAll(new TreePath(node.getPath()), expand);
+                        if (entityData!=null && entity!=null) {
+                            entityData.setChildEntity(entity);
+                            node.setUserObject(entityData);
+                            recreateChildNodes(node);
+                            expandAll(new TreePath(node.getPath()), expand);
+                        }
                         SwingUtilities.updateComponentTreeUI(EntityTree.this);
                         if (getProgress() < 100) {
                             setProgress(100);

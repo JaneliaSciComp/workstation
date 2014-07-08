@@ -3,7 +3,7 @@ package org.janelia.it.workstation;
 
 
 import org.janelia.it.workstation.gui.opengl.TestPolygonalMesh;
-import org.janelia.it.workstation.gui.slice_viewer.TestTileFormat;
+import org.janelia.it.workstation.gui.large_volume_viewer.TestTileFormat;
 import org.janelia.it.workstation.shared.util.filecache.CachedFileTest;
 import org.janelia.it.workstation.shared.util.filecache.LocalFileCacheTest;
 import org.janelia.it.workstation.shared.util.filecache.WebDavClientTest;

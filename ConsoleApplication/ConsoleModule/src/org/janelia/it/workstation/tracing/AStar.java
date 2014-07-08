@@ -8,7 +8,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.Vector;
-import org.janelia.it.workstation.gui.slice_viewer.Subvolume;
+import org.janelia.it.workstation.gui.large_volume_viewer.Subvolume;
 import org.janelia.it.workstation.octree.ZoomLevel;
 import org.janelia.it.workstation.octree.ZoomedVoxelIndex;
 

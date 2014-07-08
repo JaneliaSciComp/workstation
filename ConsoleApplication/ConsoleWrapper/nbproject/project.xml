@@ -1093,6 +1093,26 @@
                 <package>org.apache.commons.codec.digest</package>
                 <package>org.apache.commons.codec.language</package>
                 <package>org.apache.commons.codec.net</package>
+                <package>org.apache.commons.compress.archivers</package>
+                <package>org.apache.commons.compress.archivers.ar</package>
+                <package>org.apache.commons.compress.archivers.arj</package>
+                <package>org.apache.commons.compress.archivers.cpio</package>
+                <package>org.apache.commons.compress.archivers.dump</package>
+                <package>org.apache.commons.compress.archivers.jar</package>
+                <package>org.apache.commons.compress.archivers.sevenz</package>
+                <package>org.apache.commons.compress.archivers.tar</package>
+                <package>org.apache.commons.compress.archivers.zip</package>
+                <package>org.apache.commons.compress.changes</package>
+                <package>org.apache.commons.compress.compressors</package>
+                <package>org.apache.commons.compress.compressors.bzip2</package>
+                <package>org.apache.commons.compress.compressors.gzip</package>
+                <package>org.apache.commons.compress.compressors.lzma</package>
+                <package>org.apache.commons.compress.compressors.pack200</package>
+                <package>org.apache.commons.compress.compressors.snappy</package>
+                <package>org.apache.commons.compress.compressors.xz</package>
+                <package>org.apache.commons.compress.compressors.z</package>
+                <package>org.apache.commons.compress.compressors.z._internal_</package>
+                <package>org.apache.commons.compress.utils</package>
                 <package>org.apache.commons.fileupload</package>
                 <package>org.apache.commons.fileupload.disk</package>
                 <package>org.apache.commons.fileupload.portlet</package>
@@ -2246,6 +2266,10 @@
             <class-path-extension>
                 <runtime-relative-path>ext/commons-codec-1.5.jar</runtime-relative-path>
                 <binary-origin>release/modules/ext/commons-codec-1.5.jar</binary-origin>
+            </class-path-extension>
+            <class-path-extension>
+                <runtime-relative-path>ext/commons-compress-1.8.1.jar</runtime-relative-path>
+                <binary-origin>release/modules/ext/commons-compress-1.8.1.jar</binary-origin>
             </class-path-extension>
             <class-path-extension>
                 <runtime-relative-path>ext/Simple_Neurite_Tracer-2.0.2-SNAPSHOT.jar</runtime-relative-path>
