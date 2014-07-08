@@ -107,14 +107,11 @@ public class SegmentedVtxCoordBufMgr extends AbstractCoordBufMgr {
                 texCoordBuf[ firstInx ].rewind();
                 short inxOffset = 0;
                 int[] range = segmentRanges.getRangeByAxisNum(firstInx);
-//                for (int sliceInx = range[AxialSegmentRangeBean.HIGH_INX]; sliceInx > range[AxialSegmentRangeBean.LOW_INX]; --sliceInx) {
                 for (int sliceInx = range[AxialSegmentRangeBean.LOW_INX]; sliceInx < range[AxialSegmentRangeBean.HIGH_INX]; ++sliceInx) {
                     // insert final coordinate into buffers
 
                     // FORWARD axes.
                     float sliceLoc = -(slice0 - (sliceInx * sliceSep));
-                    if (firstInx == 2)
-                        logger.info("For {}, have sliceInx={}, slice0={}, sliceSep={}, sliceLoc={}.", firstInx, sliceInx, slice0, sliceSep, sliceLoc);
 
                     // NOTE: only one of the three axes need change for each slice.  Other two remain same.
                     v00[ firstInx ] = v01[firstInx] = v10[firstInx] = v11[firstInx] = sliceLoc;
@@ -124,8 +121,8 @@ public class SegmentedVtxCoordBufMgr extends AbstractCoordBufMgr {
                     float[] t01 = textureCoordFromVoxelCoord( v01 );
                     float[] t10 = textureCoordFromVoxelCoord( v10 );
                     float[] t11 = textureCoordFromVoxelCoord( v11 );
-                    if ( firstInx == 2 )
-                        checkGeometry( v00, v01, v10, v11, t00, t01, t10, t11 );
+                    logger.info("For Positive {}, have sliceInx={}, slice0={}, sliceSep={}, sliceLoc={}.", firstInx, sliceInx, slice0, sliceSep, sliceLoc);
+                    checkGeometry(v00, v01, v10, v11, t00, t01, t10, t11);
                     
                     addTextureCoords( firstInx, t00, t01, t10, t11 );
                     addIndices(firstInx, inxOffset);
@@ -134,12 +131,12 @@ public class SegmentedVtxCoordBufMgr extends AbstractCoordBufMgr {
                     v00[ firstInx ] = v01[firstInx] = v10[firstInx] = v11[firstInx] = -sliceLoc;
 
                     addGeometry(firstInx + NUM_AXES, v00, v10, v11, v01);
-                    t00 = textureCoordFromVoxelCoord( v00 );
-                    t01 = textureCoordFromVoxelCoord( v01 );
-                    t10 = textureCoordFromVoxelCoord( v10 );
-                    t11 = textureCoordFromVoxelCoord( v11 );
-//                    if ( firstInx == 2 )
-//                        checkGeometry( v00, v01, v10, v11, t00, t01, t10, t11 );
+                    invertFraction( t00, firstInx );
+                    invertFraction( t01, firstInx );
+                    invertFraction( t10, firstInx );
+                    invertFraction( t11, firstInx );
+                    logger.info("For Negative {}, have sliceInx={}, slice0={}, sliceSep={}, sliceLoc={}.", firstInx, sliceInx, slice0, sliceSep, sliceLoc);
+                    checkGeometry(v00, v01, v10, v11, t00, t01, t10, t11);
                     
                     addTextureCoords( firstInx + NUM_AXES, t00, t01, t10, t11 );
                     addIndices(firstInx + NUM_AXES, inxOffset);
@@ -157,6 +154,17 @@ public class SegmentedVtxCoordBufMgr extends AbstractCoordBufMgr {
     protected int computeEffectiveAxisLen(int index) {
         final int[] range = segmentRanges.getRangeByAxisNum(index);
         return range[ AxialSegmentRangeBean.HIGH_INX ] - range[ AxialSegmentRangeBean.LOW_INX ];
+    }
+    
+    /**
+     * Assumes the array value at position given in index needs to be 1.0-
+     * complemented.
+     * 
+     * @param array containing value
+     * @param fractionInx position to modify.
+     */
+    private void invertFraction( float[] array, int fractionInx ) {
+        array[ fractionInx ] = 1.0f - array[ fractionInx ];
     }
     
      /**
@@ -184,8 +192,10 @@ public class SegmentedVtxCoordBufMgr extends AbstractCoordBufMgr {
     }
 
     private int getRangeForAxis( int axisNum ) {
-        return segmentRanges.getRangeByAxisNum(axisNum)[ AxialSegmentRangeBean.HIGH_INX ] -
-               segmentRanges.getRangeByAxisNum(axisNum)[ AxialSegmentRangeBean.LOW_INX ];
+        return Math.abs(
+               segmentRanges.getRangeByAxisNum(axisNum)[ AxialSegmentRangeBean.HIGH_INX ] -
+               segmentRanges.getRangeByAxisNum(axisNum)[ AxialSegmentRangeBean.LOW_INX ]
+        );
     }
     
     /** 
