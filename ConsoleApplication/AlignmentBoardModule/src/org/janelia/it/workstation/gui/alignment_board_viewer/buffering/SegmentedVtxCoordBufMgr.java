@@ -120,10 +120,10 @@ public class SegmentedVtxCoordBufMgr extends AbstractCoordBufMgr {
                     v00[ firstInx ] = v01[firstInx] = v10[firstInx] = v11[firstInx] = sliceLoc;
 
                     addGeometry(firstInx, v00, v10, v11, v01);
-                    float[] t00 = textureMediator.textureCoordFromVoxelCoord( v00 );
-                    float[] t01 = textureMediator.textureCoordFromVoxelCoord( v01 );
-                    float[] t10 = textureMediator.textureCoordFromVoxelCoord( v10 );
-                    float[] t11 = textureMediator.textureCoordFromVoxelCoord( v11 );
+                    float[] t00 = textureCoordFromVoxelCoord( v00 );
+                    float[] t01 = textureCoordFromVoxelCoord( v01 );
+                    float[] t10 = textureCoordFromVoxelCoord( v10 );
+                    float[] t11 = textureCoordFromVoxelCoord( v11 );
                     if ( firstInx == 2 )
                         checkGeometry( v00, v01, v10, v11, t00, t01, t10, t11 );
                     
@@ -134,10 +134,10 @@ public class SegmentedVtxCoordBufMgr extends AbstractCoordBufMgr {
                     v00[ firstInx ] = v01[firstInx] = v10[firstInx] = v11[firstInx] = -sliceLoc;
 
                     addGeometry(firstInx + NUM_AXES, v00, v10, v11, v01);
-                    t00 = textureMediator.textureCoordFromVoxelCoord( v00 );
-                    t01 = textureMediator.textureCoordFromVoxelCoord( v01 );
-                    t10 = textureMediator.textureCoordFromVoxelCoord( v10 );
-                    t11 = textureMediator.textureCoordFromVoxelCoord( v11 );
+                    t00 = textureCoordFromVoxelCoord( v00 );
+                    t01 = textureCoordFromVoxelCoord( v01 );
+                    t10 = textureCoordFromVoxelCoord( v10 );
+                    t11 = textureCoordFromVoxelCoord( v11 );
 //                    if ( firstInx == 2 )
 //                        checkGeometry( v00, v01, v10, v11, t00, t01, t10, t11 );
                     
@@ -157,6 +157,35 @@ public class SegmentedVtxCoordBufMgr extends AbstractCoordBufMgr {
     protected int computeEffectiveAxisLen(int index) {
         final int[] range = segmentRanges.getRangeByAxisNum(index);
         return range[ AxialSegmentRangeBean.HIGH_INX ] - range[ AxialSegmentRangeBean.LOW_INX ];
+    }
+    
+     /**
+     * @param voxelCoord a voxel coordinate set for geometry.
+     * @return texture coordinate set that corresponds, in range 0..1
+     */
+    private float[] textureCoordFromVoxelCoord(float[] voxelCoord) {
+        float[] tc = {voxelCoord[0], voxelCoord[1], voxelCoord[2]}; // micrometers, origin at center
+        int slabThickness0 = getRangeForAxis( 0 );
+        int slabThickness1 = getRangeForAxis( 1 );
+        int slabThickness2 = getRangeForAxis( 2 );
+        int[] voxelCoverage = new int[]{ slabThickness0, slabThickness1, slabThickness2 };
+        Double[] volumeMicrometers = textureMediator.getVolumeMicrometers();
+        Double[] voxelMicrometers = textureMediator.getVoxelMicrometers();
+        for (int i =0; i < 3; ++i) {
+            // Move origin to upper left corner
+            tc[i] -= segmentRanges.getRangeByAxisNum( i )[ AxialSegmentRangeBean.LOW_INX ];
+            tc[i] += (volumeMicrometers[i] / 2.0); // micrometers, origin at corner
+            // Rescale from micrometers to voxelCoverage
+            tc[i] /= voxelMicrometers[i]; // voxelCoverage, origin at corner
+            // Rescale from voxelCoverage to texture units (range 0-1)
+            tc[i] /= voxelCoverage[i]; // texture units
+        }
+        return tc;
+    }
+
+    private int getRangeForAxis( int axisNum ) {
+        return segmentRanges.getRangeByAxisNum(axisNum)[ AxialSegmentRangeBean.HIGH_INX ] -
+               segmentRanges.getRangeByAxisNum(axisNum)[ AxialSegmentRangeBean.LOW_INX ];
     }
     
     /** 
