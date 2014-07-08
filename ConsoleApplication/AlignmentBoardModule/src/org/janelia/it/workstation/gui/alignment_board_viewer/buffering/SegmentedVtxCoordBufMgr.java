@@ -68,7 +68,7 @@ public class SegmentedVtxCoordBufMgr extends AbstractCoordBufMgr {
                 // compute number of slices
                 float firstSegmentStart = segmentRanges.getRangeByAxisNum( firstInx )[ AxialSegmentRangeBean.LOW_INX ];
                 float firstSegmentEnd = segmentRanges.getRangeByAxisNum( firstInx )[ AxialSegmentRangeBean.HIGH_INX ];
-                float slice0 = (firstAxisLength - (firstAxisLength / 2.0f));
+                float slice0 = (firstAxisLength / 2.0f);
                 float sliceSep = textureMediator.getVoxelMicrometers()[ firstInx ].floatValue();
 
         		// Below "x", "y", and "z" actually refer to a1, a2, and a3, respectively;
@@ -112,7 +112,7 @@ public class SegmentedVtxCoordBufMgr extends AbstractCoordBufMgr {
                     // insert final coordinate into buffers
 
                     // FORWARD axes.
-                    float sliceLoc = (sliceInx * sliceSep);
+                    float sliceLoc = -(slice0 - (sliceInx * sliceSep));
                     if (firstInx == 2)
                         logger.info("For {}, have sliceInx={}, slice0={}, sliceSep={}, sliceLoc={}.", firstInx, sliceInx, slice0, sliceSep, sliceLoc);
 
@@ -131,7 +131,7 @@ public class SegmentedVtxCoordBufMgr extends AbstractCoordBufMgr {
                     addIndices(firstInx, inxOffset);
 
                     // Now, take care of the negative-direction alternate to this buffer pair.
-                    v00[ firstInx ] = v01[firstInx] = v10[firstInx] = v11[firstInx] = sliceLoc; //-sliceLoc.  Later: subtract this from the max slice.
+                    v00[ firstInx ] = v01[firstInx] = v10[firstInx] = v11[firstInx] = -sliceLoc;
 
                     addGeometry(firstInx + NUM_AXES, v00, v10, v11, v01);
                     t00 = textureMediator.textureCoordFromVoxelCoord( v00 );
