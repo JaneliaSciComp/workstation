@@ -28,21 +28,10 @@ import java.util.Set;
  * the writer method writes the file out; it runs its validator first
  *
  *
- * to do:
- * + rename class
- * + add read static method
- * + add write method (calls validate)
- * + validate: headers start with #
- * + add empty constructor
- * + add constructor that takes list of header, nodes
- * + add clear
- * ~ should isValid() check for nodes with "large" x, y, z values?  prob. not
- * + add merge/addFrom()
- * - add write(String filename)?  not until I need it
- * - add setter or equiv. for nodes, header lines?  or better, append items
- *      to list (and validate, since that's easy; we have validate node, and
- *      we can split off validate header line, too, from isvalid())  no, not
- *      until I need them
+ * possible improvements:
+ * - add write(String filename) (rather than File)
+ * - add setter or equiv. for nodes, header lines?  not really needed; it's
+ *      intended that construct the lists elsewhere; SWCData is a dumb wrapper
  *
  *
  * djo, 6/14
