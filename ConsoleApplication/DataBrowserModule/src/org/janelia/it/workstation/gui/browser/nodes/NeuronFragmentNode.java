@@ -10,12 +10,11 @@ import org.openide.nodes.Children;
 public class NeuronFragmentNode extends DomainObjectNode {
     
     public NeuronFragmentNode(ChildFactory parentChildFactory, NeuronFragment neuronFragment) throws Exception {
-        super(parentChildFactory, neuronFragment);
-        setChildren(Children.LEAF);
+        super(parentChildFactory, Children.LEAF, neuronFragment);
     }
     
     private NeuronFragment getNeuronFragment() {
-        return (NeuronFragment)getBean();
+        return (NeuronFragment)getDomainObject();
     }
     
     @Override

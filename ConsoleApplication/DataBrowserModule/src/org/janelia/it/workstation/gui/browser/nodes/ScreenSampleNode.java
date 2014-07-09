@@ -15,12 +15,11 @@ public class ScreenSampleNode extends DomainObjectNode {
     private final static Logger log = LoggerFactory.getLogger(ScreenSampleNode.class);
     
     public ScreenSampleNode(ChildFactory parentChildFactory, ScreenSample screenSample) throws Exception {
-        super(parentChildFactory, screenSample);
-        setChildren(Children.create(new PatternMaskSetNodeFactory(screenSample), true));
+        super(parentChildFactory, Children.create(new PatternMaskSetNodeFactory(screenSample), true), screenSample);
     }
     
     private ScreenSample getScreenSample() {
-        return (ScreenSample)getBean();
+        return (ScreenSample)getDomainObject();
     }
     
     @Override

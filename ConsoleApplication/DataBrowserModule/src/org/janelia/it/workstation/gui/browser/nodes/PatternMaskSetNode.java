@@ -16,14 +16,13 @@ public class PatternMaskSetNode extends InternalNode<PatternMaskSet> {
     private final WeakReference<PatternMaskSet> patternMaskSetRef;
     
     public PatternMaskSetNode(ChildFactory parentChildFactory, ScreenSample screenSample, PatternMaskSet patternMaskSet) throws Exception {
-        super(patternMaskSet);
+        super(Children.create(new PatternMaskNodeFactory(screenSample, patternMaskSet), true), patternMaskSet);
         this.screenSampleRef = new WeakReference<ScreenSample>(screenSample);
         this.patternMaskSetRef = new WeakReference<PatternMaskSet>(patternMaskSet);
-        setChildren(Children.create(new PatternMaskNodeFactory(screenSample, patternMaskSet), true));   
     }
     
     private PatternMaskSet getPatternMaskSet() {
-        return (PatternMaskSet)getBean();
+        return (PatternMaskSet)getObject();
     }
     
     @Override

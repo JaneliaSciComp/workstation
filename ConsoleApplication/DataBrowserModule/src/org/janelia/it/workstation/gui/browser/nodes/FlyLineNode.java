@@ -15,12 +15,11 @@ public class FlyLineNode extends DomainObjectNode {
     private final static Logger log = LoggerFactory.getLogger(FlyLineNode.class);
     
     public FlyLineNode(TreeNodeChildFactory parentChildFactory, FlyLine flyLine) throws Exception {
-        super(parentChildFactory, flyLine);
-        setChildren(Children.create(new ScreenSampleNodeFactory(flyLine), true));   
+        super(parentChildFactory, Children.create(new ScreenSampleNodeFactory(flyLine), true), flyLine);
     }
     
     private FlyLine getFlyLine() {
-        return (FlyLine)getBean();
+        return (FlyLine)getDomainObject();
     }
     
     @Override

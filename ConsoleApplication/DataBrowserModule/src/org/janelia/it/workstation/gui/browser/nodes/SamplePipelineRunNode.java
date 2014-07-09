@@ -1,13 +1,11 @@
 package org.janelia.it.workstation.gui.browser.nodes;
 
-import java.awt.Image;
 import java.lang.ref.WeakReference;
 
 import org.janelia.it.jacs.model.domain.sample.Sample;
 import org.janelia.it.jacs.model.domain.sample.SamplePipelineRun;
 import org.janelia.it.workstation.gui.browser.api.DomainUtils;
 import org.janelia.it.workstation.gui.browser.nodes.children.ResultChildFactory;
-import org.janelia.it.workstation.gui.util.Icons;
 import org.openide.nodes.Children;
 
 public class SamplePipelineRunNode extends InternalNode<SamplePipelineRun> {
@@ -15,18 +13,12 @@ public class SamplePipelineRunNode extends InternalNode<SamplePipelineRun> {
     private final WeakReference<Sample> sampleRef;
     
     public SamplePipelineRunNode(Sample sample, SamplePipelineRun run) throws Exception {
-        super(run);
+        super(DomainUtils.isEmpty(run.getResults())?Children.LEAF:Children.create(new ResultChildFactory(sample, run), true), run);
         this.sampleRef = new WeakReference<Sample>(sample);
-        if (DomainUtils.isEmpty(run.getResults())) {
-            setChildren(Children.LEAF);
-        }
-        else {
-            setChildren(Children.create(new ResultChildFactory(sample, run), true));       
-        }
     }
     
     public SamplePipelineRun getSamplePipelineRun() {
-        return (SamplePipelineRun)getBean();
+        return (SamplePipelineRun)getObject();
     }
     
     @Override

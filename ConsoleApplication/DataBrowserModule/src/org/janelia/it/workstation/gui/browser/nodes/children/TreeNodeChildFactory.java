@@ -24,7 +24,7 @@ import org.janelia.it.workstation.gui.browser.nodes.SampleNode;
 import org.janelia.it.workstation.gui.browser.nodes.ScreenSampleNode;
 import org.janelia.it.workstation.gui.browser.nodes.TreeNodeNode;
 import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
-import org.janelia.it.workstation.shared.util.Utils;
+import org.janelia.it.workstation.shared.workers.SimpleWorker;
 import org.openide.nodes.ChildFactory;
 import org.openide.nodes.Node;
 import org.slf4j.Logger;
@@ -124,18 +124,24 @@ public class TreeNodeChildFactory extends ChildFactory<DomainObject> {
             log.warn("Cannot add child to unloaded treeNode");
             return;
         }
-        Utils.runOffEDT(new Runnable() {
-            public void run() {
+        SimpleWorker worker = new SimpleWorker() {
+            @Override
+            protected void doStuff() throws Exception {
                 log.warn("adding child {} to {}",domainObject.getId(),treeNode.getName());
                 DomainDAO dao = DomainExplorerTopComponent.getDao();
                 dao.addChild(SessionMgr.getSubjectKey(), treeNode, domainObject);
             }
-        },new Runnable() {
-            public void run() {
+            @Override
+            protected void hadSuccess() {
                 log.info("refreshing view after adding child");
                 refresh();
             }
-        });
+            @Override
+            protected void hadError(Throwable error) {
+                SessionMgr.getSessionMgr().handleException(error);
+            }
+        };
+        worker.execute();
     }
 
     public void removeChild(final DomainObject domainObject) {
@@ -144,8 +150,9 @@ public class TreeNodeChildFactory extends ChildFactory<DomainObject> {
             log.warn("Cannot remove child from unloaded treeNode");
             return;
         }
-        Utils.runOffEDT(new Runnable() {
-            public void run() {
+        SimpleWorker worker = new SimpleWorker() {
+            @Override
+            protected void doStuff() throws Exception {
                 log.warn("removing child {} from {}",domainObject.getId(),treeNode.getName());
                 DomainDAO dao = DomainExplorerTopComponent.getDao();
                 if (domainObject instanceof DeadReference) {
@@ -155,12 +162,17 @@ public class TreeNodeChildFactory extends ChildFactory<DomainObject> {
                     dao.removeChild(SessionMgr.getSubjectKey(), treeNode, domainObject);
                 }
             }
-        },new Runnable() {
-            public void run() {
+            @Override
+            protected void hadSuccess() {
                 log.info("refreshing view after removing child");
                 refresh();
             }
-        });
+            @Override
+            protected void hadError(Throwable error) {
+                SessionMgr.getSessionMgr().handleException(error);
+            }
+        };
+        worker.execute();
     }
 
 

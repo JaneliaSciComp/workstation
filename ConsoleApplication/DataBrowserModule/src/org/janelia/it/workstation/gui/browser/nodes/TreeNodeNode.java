@@ -22,7 +22,7 @@ import org.janelia.it.workstation.gui.browser.nodes.children.TreeNodeChildFactor
 import org.janelia.it.workstation.gui.browser.flavors.DomainObjectFlavor;
 import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.workstation.gui.util.Icons;
-import org.janelia.it.workstation.shared.util.Utils;
+import org.janelia.it.workstation.shared.workers.SimpleWorker;
 import org.openide.actions.RenameAction;
 import org.openide.nodes.Children;
 import org.openide.nodes.Index;
@@ -39,15 +39,14 @@ public class TreeNodeNode extends DomainObjectNode {
     private final TreeNodeChildFactory childFactory;
     
     public TreeNodeNode(TreeNodeChildFactory parentChildFactory, TreeNode treeNode) throws Exception {
-        super(parentChildFactory, treeNode);
-        if (treeNode.getNumChildren()==0) {
-            this.childFactory = null;
-            setChildren(Children.LEAF);
-        }
-        else {
-            this.childFactory = new TreeNodeChildFactory(treeNode);
-            setChildren(Children.create(childFactory, true));
-            getCookieSet().add(new Index.Support() {
+        this(parentChildFactory, treeNode.getNumChildren()==0?null:new TreeNodeChildFactory(treeNode), treeNode);
+    }
+    
+    private TreeNodeNode(TreeNodeChildFactory parentChildFactory, final TreeNodeChildFactory childFactory, TreeNode treeNode) throws Exception {
+        super(parentChildFactory, treeNode.getNumChildren()==0?Children.LEAF:Children.create(childFactory, true), treeNode);
+        this.childFactory = childFactory;
+        if (treeNode.getNumChildren()>0) {
+            getLookupContents().add(new Index.Support() {
                 @Override
                 public Node[] getNodes() {
                     return getChildren().getNodes();
@@ -58,25 +57,29 @@ public class TreeNodeNode extends DomainObjectNode {
                 }
                 @Override
                 public void reorder(final int[] order) {
-                    Utils.runOffEDT(new Runnable() {
+                    SimpleWorker worker = new SimpleWorker() {
                         @Override
-                        public void run() {
+                        protected void doStuff() throws Exception {
                             DomainDAO dao = DomainExplorerTopComponent.getDao();
                             dao.reorderChildren(SessionMgr.getSubjectKey(), getTreeNode(), order);
                         }
-                    },new Runnable() {
                         @Override
-                        public void run() {
+                        protected void hadSuccess() {
                             childFactory.refresh();
                         }
-                    });
+                        @Override
+                        protected void hadError(Throwable error) {
+                            SessionMgr.getSessionMgr().handleException(error);
+                        }
+                    };
+                    worker.execute();
                 }
             });
         }
     }
     
     private TreeNode getTreeNode() {
-        return (TreeNode)getBean();
+        return (TreeNode)getDomainObject();
     }
     
     @Override
@@ -120,7 +123,7 @@ public class TreeNodeNode extends DomainObjectNode {
     
     @Override
     public boolean canDestroy() {
-        if (getBean() instanceof MaterializedView) {
+        if (getDomainObject() instanceof MaterializedView) {
             return false;
         }
         return true;
@@ -140,18 +143,25 @@ public class TreeNodeNode extends DomainObjectNode {
         final TreeNode treeNode = getTreeNode();
         final String oldName = treeNode.getName();
         treeNode.setName(newName);
-        Utils.runOffEDT(new Runnable() {
-            public void run() {
+
+        SimpleWorker worker = new SimpleWorker() {
+            @Override
+            protected void doStuff() throws Exception {
                 log.trace("Changing name from " + oldName + " to: " + newName);
                 DomainDAO dao = DomainExplorerTopComponent.getDao();
                 dao.updateProperty(SessionMgr.getSubjectKey(), treeNode, "name", newName);
             }
-        },new Runnable() {
-            public void run() {
+            @Override
+            protected void hadSuccess() {
                 log.trace("Fire name change from" + oldName + " to: " + newName);
                 fireDisplayNameChange(oldName, newName); 
             }
-        });
+            @Override
+            protected void hadError(Throwable error) {
+                SessionMgr.getSessionMgr().handleException(error);
+            }
+        };
+        worker.execute();
     }
 
     @Override

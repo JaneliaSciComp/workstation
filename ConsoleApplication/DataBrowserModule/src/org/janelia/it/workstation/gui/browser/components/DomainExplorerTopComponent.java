@@ -55,10 +55,12 @@ public final class DomainExplorerTopComponent extends TopComponent implements Ex
     protected static final String MONGO_SERVER_URL = "rokicki-ws";
     protected static final String MONGO_DATABASE = "jacs";
 
-    private ExplorerManager mgr = new ExplorerManager();
+    private final ExplorerManager mgr = new ExplorerManager();
 
     public DomainExplorerTopComponent() {
         initComponents();
+        beanTreeView.setDefaultActionAllowed(false);
+        
         setName(Bundle.CTL_DomainExplorerTopComponent());
         setToolTipText(Bundle.HINT_DomainExplorerTopComponent());
         associateLookup(ExplorerUtils.createLookup(mgr, getActionMap()));
