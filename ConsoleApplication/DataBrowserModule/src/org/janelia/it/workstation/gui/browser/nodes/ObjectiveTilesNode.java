@@ -4,23 +4,22 @@ import java.lang.ref.WeakReference;
 import java.util.List;
 
 import org.janelia.it.jacs.model.domain.sample.ObjectiveSample;
-import org.janelia.it.jacs.model.domain.sample.PipelineResult;
 import org.janelia.it.jacs.model.domain.sample.Sample;
-import org.janelia.it.jacs.model.domain.sample.SamplePipelineRun;
+import org.janelia.it.jacs.model.domain.sample.SampleTile;
 import org.openide.nodes.ChildFactory;
 import org.openide.nodes.Children;
 import org.openide.nodes.Node;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class ObjectiveNode extends InternalNode<String> {
+public class ObjectiveTilesNode extends InternalNode<String> {
     
-    private final static Logger log = LoggerFactory.getLogger(ObjectiveNode.class);
+    private final static Logger log = LoggerFactory.getLogger(ObjectiveTilesNode.class);
     
     private final WeakReference<Sample> sampleRef;
     
-    public ObjectiveNode(Sample sample, String objective) throws Exception {
-        super(Children.create(new ObjectiveNode.MyChildFactory(sample, objective), true), objective);
+    public ObjectiveTilesNode(Sample sample, String objective) throws Exception {
+        super(Children.create(new ObjectiveTilesNode.MyChildFactory(sample, objective), true), objective);
         this.sampleRef = new WeakReference<Sample>(sample);
     }
     
@@ -30,10 +29,10 @@ public class ObjectiveNode extends InternalNode<String> {
     
     @Override
     public String getPrimaryLabel() {
-        return getObjective();
+        return "Tiles";
     }
     
-    static class MyChildFactory extends ChildFactory<Object> {
+    static class MyChildFactory extends ChildFactory<SampleTile> {
     
         private final WeakReference<Sample> sampleRef;
         private final WeakReference<String> objectiveRef;
@@ -44,38 +43,24 @@ public class ObjectiveNode extends InternalNode<String> {
         }
         
         @Override
-        protected boolean createKeys(List<Object> list) {
+        protected boolean createKeys(List<SampleTile> list) {
             Sample sample = sampleRef.get();
             if (sample==null) return false;
             String objective = objectiveRef.get();
             if (objective==null) return false;
             ObjectiveSample objectiveSample = sample.getObjectives().get(objective);
-            
             if (objectiveSample.getTiles()!=null) {
-                list.add(objectiveSample.getTiles());
-            }
-            
-            if (objectiveSample.getPipelineRuns()!=null) {
-                for(SamplePipelineRun run : objectiveSample.getPipelineRuns()) {
-                    list.add(run);
-                }
+                list.addAll(objectiveSample.getTiles());
             }
             return true;
         }
 
         @Override
-        protected Node createNodeForKey(Object key) {
-            if (sampleRef==null) return null;
+        protected Node createNodeForKey(SampleTile key) {
             Sample sample = sampleRef.get();
-            if (objectiveRef==null) return null;
-            String objective = objectiveRef.get();
+            if (sample==null) return null;
             try {
-                if (key instanceof PipelineResult) {
-                    return new PipelineResultNode(sample, (PipelineResult)key);
-                }
-                else if (key instanceof List) {
-                    return new ObjectiveTilesNode(sample, objective);
-                }
+                return new ObjectiveTileNode(sample, key);
             }
             catch (Exception e) {
                 log.error("Error creating node for key " + key, e);
