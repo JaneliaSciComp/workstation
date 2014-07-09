@@ -7,6 +7,7 @@ import java.util.Map;
 
 import org.janelia.it.jacs.model.domain.DomainObject;
 import org.janelia.it.jacs.model.domain.Reference;
+import org.janelia.it.jacs.model.domain.compartments.CompartmentSet;
 import org.janelia.it.jacs.model.domain.sample.LSMImage;
 import org.janelia.it.jacs.model.domain.sample.NeuronFragment;
 import org.janelia.it.jacs.model.domain.sample.Sample;
@@ -16,6 +17,7 @@ import org.janelia.it.jacs.model.domain.workspace.TreeNode;
 import org.janelia.it.workstation.gui.browser.api.DomainDAO;
 import org.janelia.it.workstation.gui.browser.components.DomainExplorerTopComponent;
 import org.janelia.it.workstation.gui.browser.model.DeadReference;
+import org.janelia.it.workstation.gui.browser.nodes.CompartmentSetNode;
 import org.janelia.it.workstation.gui.browser.nodes.DeadReferenceNode;
 import org.janelia.it.workstation.gui.browser.nodes.FlyLineNode;
 import org.janelia.it.workstation.gui.browser.nodes.LSMImageNode;
@@ -98,6 +100,9 @@ public class TreeNodeChildFactory extends ChildFactory<DomainObject> {
             }
             else if (FlyLine.class.isAssignableFrom(key.getClass())) {
                 return new FlyLineNode(this, (FlyLine)key);
+            }
+            else if (CompartmentSet.class.isAssignableFrom(key.getClass())) {
+                return new CompartmentSetNode(this, (CompartmentSet)key);
             }
             else if (DeadReference.class.isAssignableFrom(key.getClass())) {
                 return new DeadReferenceNode(this, (DeadReference)key);

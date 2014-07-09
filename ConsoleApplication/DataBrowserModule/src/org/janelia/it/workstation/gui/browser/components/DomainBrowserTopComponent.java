@@ -133,8 +133,9 @@ public final class DomainBrowserTopComponent extends TopComponent implements Loo
                 numChildrenLabel.setText("");
             }
         } else {
-            nameLabel.setText("[no selection]");
-            numChildrenLabel.setText("");
+            // No change to current DomainObject selection
+            //nameLabel.setText("[no selection]");
+            //numChildrenLabel.setText("");
         }
     }
 
