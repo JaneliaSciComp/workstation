@@ -48,7 +48,7 @@ public class PathTraceToParentWorker extends BackgroundWorker {
         // note: can also use setProgress(long curr, long total)
 
         setStatus("Retrieving data");
-        TileFormat tileFormat = request.getImageVolme().getLoadAdapter().getTileFormat();
+        TileFormat tileFormat = request.getImageVolume().getLoadAdapter().getTileFormat();
         // A series of conversions to get to ZoomedVoxelIndex
         Vec3 vec3_1 = request.getXyz1();
         Vec3 vec3_2 = request.getXyz2();
@@ -74,7 +74,7 @@ public class PathTraceToParentWorker extends BackgroundWorker {
                 Math.max(zv1.getY(), zv2.getY()) + padPixels,
                 Math.max(zv1.getZ(), zv2.getZ()) + padPixels);
 
-        Subvolume subvolume = new Subvolume(v1pad, v2pad, request.getImageVolme(),
+        Subvolume subvolume = new Subvolume(v1pad, v2pad, request.getImageVolume(),
                 request.getTextureCache());
         AStar astar = new AStar(subvolume);
 
