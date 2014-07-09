@@ -19,11 +19,10 @@ import org.janelia.it.workstation.gui.browser.flavors.DomainObjectFlavor;
 import org.janelia.it.workstation.gui.browser.nodes.children.OntologyChildFactory;
 import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.workstation.gui.util.Icons;
-import org.janelia.it.workstation.shared.util.Utils;
+import org.janelia.it.workstation.shared.workers.SimpleWorker;
 import org.openide.actions.RenameAction;
+import org.openide.nodes.ChildFactory;
 import org.openide.nodes.Children;
-import org.openide.nodes.Index;
-import org.openide.nodes.Node;
 import org.openide.util.datatransfer.PasteType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -35,49 +34,50 @@ public class OntologyNode extends DomainObjectNode {
     private final OntologyChildFactory childFactory;
     
     public OntologyNode(Ontology ontology) throws Exception {
-        super(null, ontology);
-        if (DomainUtils.isEmpty(ontology.getTerms())) {
-            this.childFactory = null;
-            setChildren(Children.LEAF);
-        }
-        else {
-            this.childFactory = new OntologyChildFactory(ontology, ontology);
-            Children lazyChildren = Children.create(childFactory, true);
-            setChildren(lazyChildren);
-
-            getCookieSet().add(new Index.Support() {
-
-                @Override
-                public Node[] getNodes() {
-                    return getChildren().getNodes();
-                }
-
-                @Override
-                public int getNodesCount() {
-                    return getNodes().length;
-                }
-
-                @Override
-                public void reorder(final int[] order) {
-                    Utils.runOffEDT(new Runnable() {
-                        @Override
-                        public void run() {
-                            DomainDAO dao = DomainExplorerTopComponent.getDao();
-                            //dao.reorderChildren(SessionMgr.getSubjectKey(), getTreeNode(), order);
-                        }
-                    }, new Runnable() {
-                        @Override
-                        public void run() {
-                            childFactory.refresh();
-                        }
-                    });
-                }
-            });
+        this(null, DomainUtils.isEmpty(ontology.getTerms()) ? null:new OntologyChildFactory(ontology, ontology), ontology);
+    }
+    
+    private OntologyNode(ChildFactory parentChildFactory, OntologyChildFactory childFactory, Ontology ontology) throws Exception {
+        super(parentChildFactory, DomainUtils.isEmpty(ontology.getTerms()) ? Children.LEAF:Children.create(childFactory, true), ontology);
+        this.childFactory = childFactory;
+        if (!DomainUtils.isEmpty(ontology.getTerms())) {
+//            getCookieSet().add(new Index.Support() {
+//
+//                @Override
+//                public Node[] getNodes() {
+//                    return getChildren().getNodes();
+//                }
+//
+//                @Override
+//                public int getNodesCount() {
+//                    return getNodes().length;
+//                }
+//
+//                @Override
+//                public void reorder(final int[] order) {
+//                    SimpleWorker worker = new SimpleWorker() {
+//                        @Override
+//                        protected void doStuff() throws Exception {
+//                            DomainDAO dao = DomainExplorerTopComponent.getDao();
+//                            //dao.reorderChildren(SessionMgr.getSubjectKey(), getTreeNode(), order);
+//                        }
+//                        @Override
+//                        protected void hadSuccess() {
+//                            childFactory.refresh();
+//                        }
+//                        @Override
+//                        protected void hadError(Throwable error) {
+//                            SessionMgr.getSessionMgr().handleException(error);
+//                        }
+//                    };
+//                    worker.execute();
+//                }
+//            });
         }
     }
     
     private Ontology getOntology() {
-        return (Ontology)getBean();
+        return (Ontology)getDomainObject();
     }
     
     @Override
@@ -102,7 +102,7 @@ public class OntologyNode extends DomainObjectNode {
     
     @Override
     public boolean canDestroy() {
-        if (getBean() instanceof MaterializedView) {
+        if (getDomainObject() instanceof MaterializedView) {
             return false;
         }
         return true;
@@ -122,18 +122,24 @@ public class OntologyNode extends DomainObjectNode {
         final Ontology ontology = getOntology();
         final String oldName = ontology.getName();
         ontology.setName(newName);
-        Utils.runOffEDT(new Runnable() {
-            public void run() {
+        SimpleWorker worker = new SimpleWorker() {
+            @Override
+            protected void doStuff() throws Exception {
                 log.trace("Changing name from " + oldName + " to: " + newName);
                 DomainDAO dao = DomainExplorerTopComponent.getDao();
                 dao.updateProperty(SessionMgr.getSubjectKey(), ontology, "name", newName);
             }
-        },new Runnable() {
-            public void run() {
+            @Override
+            protected void hadSuccess() {
                 log.trace("Fire name change from" + oldName + " to: " + newName);
                 fireDisplayNameChange(oldName, newName); 
             }
-        });
+            @Override
+            protected void hadError(Throwable error) {
+                SessionMgr.getSessionMgr().handleException(error);
+            }
+        };
+        worker.execute();
     }
 
     @Override

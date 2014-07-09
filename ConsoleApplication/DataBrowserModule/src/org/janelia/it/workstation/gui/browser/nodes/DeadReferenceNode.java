@@ -9,12 +9,11 @@ import org.openide.nodes.Children;
 public class DeadReferenceNode extends DomainObjectNode {
     
     public DeadReferenceNode(ChildFactory parentChildFactory, DeadReference deadReference) throws Exception {
-        super(parentChildFactory, deadReference);
-        setChildren(Children.LEAF);
+        super(parentChildFactory, Children.LEAF, deadReference);
     }
     
     public DeadReference getDeadReference() {
-        return (DeadReference)getBean();
+        return (DeadReference)getDomainObject();
     }
     
     @Override

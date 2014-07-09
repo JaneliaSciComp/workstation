@@ -1,13 +1,11 @@
 package org.janelia.it.workstation.gui.browser.nodes;
 
-import java.awt.Image;
 import java.lang.ref.WeakReference;
 import java.util.List;
 
 import org.janelia.it.jacs.model.domain.sample.ObjectiveSample;
 import org.janelia.it.jacs.model.domain.sample.Sample;
 import org.janelia.it.jacs.model.domain.sample.SamplePipelineRun;
-import org.janelia.it.workstation.gui.util.Icons;
 import org.openide.nodes.ChildFactory;
 import org.openide.nodes.Children;
 import org.openide.nodes.Node;
@@ -21,13 +19,12 @@ public class ObjectiveNode extends InternalNode<String> {
     private final WeakReference<Sample> sampleRef;
     
     public ObjectiveNode(Sample sample, String objective) throws Exception {
-        super(objective);
+        super(Children.create(new ObjectiveNode.MyChildFactory(sample, objective), true), objective);
         this.sampleRef = new WeakReference<Sample>(sample);
-        setChildren(Children.create(new ObjectiveNode.MyChildFactory(), true));    
     }
     
     public String getObjective() {
-        return getBean();
+        return (String)getObject();
     }
     
     @Override
@@ -35,14 +32,22 @@ public class ObjectiveNode extends InternalNode<String> {
         return getObjective();
     }
     
-    public class MyChildFactory extends ChildFactory<SamplePipelineRun> {
+    static class MyChildFactory extends ChildFactory<SamplePipelineRun> {
     
+        private final WeakReference<Sample> sampleRef;
+        private final WeakReference<String> objective;
+        
+        public MyChildFactory(Sample sample, String objective) {
+            this.sampleRef = new WeakReference<Sample>(sample);
+            this.objective = new WeakReference<String>(objective);
+        }
+        
         @Override
         protected boolean createKeys(List<SamplePipelineRun> list) {
             if (sampleRef==null) return false;
             Sample sample = sampleRef.get();
             if (sample==null) return false;
-            ObjectiveSample objectiveSample = sample.getObjectives().get(getObjective());
+            ObjectiveSample objectiveSample = sample.getObjectives().get(objective.get());
             if (objectiveSample.getPipelineRuns()!=null) {
                 for(SamplePipelineRun run : objectiveSample.getPipelineRuns()) {
                     list.add(run);

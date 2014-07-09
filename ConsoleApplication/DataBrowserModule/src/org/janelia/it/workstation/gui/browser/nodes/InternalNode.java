@@ -3,14 +3,24 @@ package org.janelia.it.workstation.gui.browser.nodes;
 import java.awt.Image;
 import java.awt.datatransfer.DataFlavor;
 import java.awt.datatransfer.Transferable;
+import java.beans.Introspector;
+import java.beans.PropertyDescriptor;
 import java.io.IOException;
+import java.lang.reflect.Method;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 import javax.swing.Action;
+import org.janelia.it.workstation.gui.browser.components.DatePropertyEditor;
 import org.janelia.it.workstation.gui.util.Icons;
+import org.openide.ErrorManager;
 import org.openide.actions.CopyAction;
-import org.openide.nodes.BeanNode;
+import org.openide.nodes.AbstractNode;
+import org.openide.nodes.Children;
+import org.openide.nodes.PropertySupport;
+import org.openide.nodes.Sheet;
 import org.openide.util.datatransfer.ExTransferable;
+import org.openide.util.lookup.Lookups;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -18,16 +28,20 @@ import org.slf4j.LoggerFactory;
  *
  * @author <a href="mailto:rokickik@janelia.hhmi.org">Konrad Rokicki</a>
  */
-public class InternalNode<T> extends BeanNode<T> {
+public class InternalNode<T> extends AbstractNode {
 
     private final static Logger log = LoggerFactory.getLogger(InternalNode.class);
     
-    public InternalNode(T object) throws Exception {
-        super(object);
+    public InternalNode(Children children, T object) throws Exception {
+        super(children, Lookups.singleton(object));
+    }
+    
+    public T getObject() {
+        return (T)getLookup().lookup(Object.class);
     }
     
     public String getPrimaryLabel() {
-        return getBean().toString();
+        return getObject().toString();
     }
     
     public String getSecondaryLabel() {
@@ -62,6 +76,11 @@ public class InternalNode<T> extends BeanNode<T> {
     }
     
     @Override
+    public Image getOpenedIcon(int type) {
+        return getIcon(type);
+    }
+    
+    @Override
     public String getHtmlDisplayName() {
         String primary = getPrimaryLabel();
         String secondary = getSecondaryLabel();
@@ -81,7 +100,7 @@ public class InternalNode<T> extends BeanNode<T> {
     
     @Override
     public Transferable clipboardCopy() throws IOException {
-        log.info("clipboard COPY "+getBean());
+        log.info("clipboard COPY "+getObject());
         Transferable deflt = super.clipboardCopy();
         ExTransferable added = ExTransferable.create(deflt);
         added.put(new ExTransferable.Single(DataFlavor.stringFlavor) {
@@ -93,4 +112,38 @@ public class InternalNode<T> extends BeanNode<T> {
         return added;
     }
     
+    @Override
+    protected Sheet createSheet() {
+
+        Sheet sheet = Sheet.createDefault();
+        Sheet.Set set = Sheet.createPropertiesSet();
+        T obj = getObject();
+        
+        try {
+
+            for(PropertyDescriptor propertyDescriptor : 
+                Introspector.getBeanInfo(obj.getClass()).getPropertyDescriptors()) {
+                Method getter = propertyDescriptor.getReadMethod();
+                Method setter = propertyDescriptor.getWriteMethod();
+                PropertySupport.Reflection prop = 
+                        new PropertySupport.Reflection(obj, getter.getReturnType(), getter, setter);
+                prop.setName(unCamelCase(getter.getName().replaceFirst("get", "")));
+                set.put(prop);
+                
+                if (getter.getReturnType().isAssignableFrom(Date.class)) {
+                    prop.setPropertyEditorClass(DatePropertyEditor.class);        
+                }
+            }
+
+        } catch (Exception ex) {
+            ErrorManager.getDefault();
+        }
+
+        sheet.put(set);
+        return sheet;
+    }
+
+    public static String unCamelCase(String s) {
+        return s.replaceAll("(?<=\\p{Ll})(?=\\p{Lu})|(?<=\\p{L})(?=\\p{Lu}\\p{Ll})", " ");
+    }
 }

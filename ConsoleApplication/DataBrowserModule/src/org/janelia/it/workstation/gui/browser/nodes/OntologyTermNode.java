@@ -18,18 +18,14 @@ public class OntologyTermNode extends InternalNode<OntologyTerm> {
     private final WeakReference<Ontology> ontologyRef;
     
     public OntologyTermNode(Ontology ontology, OntologyTerm ontologyTerm) throws Exception {
-        super(ontologyTerm);
+        super(DomainUtils.isEmpty(ontologyTerm.getTerms())
+                ?Children.LEAF
+                :Children.create(new OntologyChildFactory(ontology, ontologyTerm), true), ontologyTerm);
         this.ontologyRef = new WeakReference<Ontology>(ontology);
-        if (DomainUtils.isEmpty(ontologyTerm.getTerms())) {
-            setChildren(Children.LEAF);
-        }
-        else {
-            setChildren(Children.create(new OntologyChildFactory(ontology, ontologyTerm), true));   
-        }
     }
     
     private OntologyTerm getOntologyTerm() {
-        return (OntologyTerm)getBean();
+        return (OntologyTerm)getObject();
     }
     
     @Override

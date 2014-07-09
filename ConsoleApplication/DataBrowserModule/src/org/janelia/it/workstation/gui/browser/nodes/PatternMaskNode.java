@@ -10,12 +10,11 @@ import org.openide.nodes.Children;
 public class PatternMaskNode extends DomainObjectNode {
     
     public PatternMaskNode(ChildFactory parentChildFactory, PatternMask patternMask) throws Exception {
-        super(parentChildFactory, patternMask);
-        setChildren(Children.LEAF);
+        super(parentChildFactory, Children.LEAF, patternMask);
     }
     
     private PatternMask getPatternMask() {
-        return (PatternMask)getBean();
+        return (PatternMask)getDomainObject();
     }
     
     @Override

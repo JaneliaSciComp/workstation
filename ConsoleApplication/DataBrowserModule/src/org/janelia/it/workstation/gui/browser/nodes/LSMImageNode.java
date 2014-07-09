@@ -11,12 +11,11 @@ import org.openide.nodes.Children;
 public class LSMImageNode extends DomainObjectNode {
     
     public LSMImageNode(ChildFactory parentChildFactory, LSMImage lsmImage) throws Exception {
-        super(parentChildFactory, lsmImage);
-        setChildren(Children.LEAF);
+        super(parentChildFactory, Children.LEAF, lsmImage);
     }
     
     private LSMImage getLSMImage() {
-        return (LSMImage)getBean();
+        return (LSMImage)getDomainObject();
     }
     
     @Override

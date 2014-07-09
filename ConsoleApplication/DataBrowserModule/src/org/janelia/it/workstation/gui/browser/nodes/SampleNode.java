@@ -17,17 +17,14 @@ public class SampleNode extends DomainObjectNode {
     private final static Logger log = LoggerFactory.getLogger(SampleNode.class);
     
     public SampleNode(TreeNodeChildFactory parentChildFactory, Sample sample) throws Exception {
-        super(parentChildFactory, sample);
-        if (DomainExplorerTopComponent.isShowNeurons()) {
-            setChildren(Children.create(new NeuronNodeFactory(sample), true));   
-        }
-        else {  
-            setChildren(Children.create(new ObjectiveNodeFactory(sample), true));   
-        }
+        super(parentChildFactory, 
+                DomainExplorerTopComponent.isShowNeurons()
+                        ?Children.create(new NeuronNodeFactory(sample), true)
+                        :Children.create(new ObjectiveNodeFactory(sample), true), sample);
     }
     
     private Sample getSample() {
-        return (Sample)getBean();
+        return (Sample)getDomainObject();
     }
     
     @Override

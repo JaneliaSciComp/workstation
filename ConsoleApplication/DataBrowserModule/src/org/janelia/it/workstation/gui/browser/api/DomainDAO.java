@@ -41,6 +41,8 @@ import com.mongodb.DB;
 import com.mongodb.MongoClient;
 import com.mongodb.WriteConcern;
 import com.mongodb.WriteResult;
+import org.janelia.it.jacs.model.domain.compartments.CompartmentSet;
+import org.janelia.it.jacs.model.domain.gui.AlignmentBoard;
 
 /**
  * The main domain-object DAO for the JACS system.
@@ -51,8 +53,8 @@ public class DomainDAO {
 
     private Logger log = LoggerFactory.getLogger(DomainDAO.class);
 
-    private static final String[] domainTypes = {"treeNode","sample","screenSample","patternMask","flyLine","lsm","fragment","annotation","ontology"};
-    private static final Class<?>[] domainClasses = {TreeNode.class,Sample.class,ScreenSample.class,PatternMask.class,FlyLine.class,LSMImage.class,NeuronFragment.class,Annotation.class,Ontology.class};
+    private static final String[] domainTypes = {"treeNode","sample","screenSample","patternMask","flyLine","lsm","fragment","annotation","ontology","compartmentSet","alignmentBoard"};
+    private static final Class<?>[] domainClasses = {TreeNode.class,Sample.class,ScreenSample.class,PatternMask.class,FlyLine.class,LSMImage.class,NeuronFragment.class,Annotation.class,Ontology.class,CompartmentSet.class,AlignmentBoard.class};
 
     private BiMap<String, Class<? extends DomainObject>> typeClasses = HashBiMap.create();
     
@@ -271,10 +273,10 @@ public class DomainDAO {
         return toList(screenSampleCollection.find("{readers:{$in:#}}",subjectKey,subjects).as(ScreenSample.class));
     }
     
-    public List<PatternMask> getPatternMasks(String subjectKey, Long screenSampleId) {
-        Set<String> subjects = getSubjectSet(subjectKey);
-        return toList(patternMaskCollection.find("{screenSampleId:#,readers:{$in:#}}",screenSampleId,subjects).as(PatternMask.class));
-    }
+//    public List<PatternMask> getPatternMasksByScreenSampleId(String subjectKey, Long screenSampleId) {
+//        Set<String> subjects = getSubjectSet(subjectKey);
+//        return toList(patternMaskCollection.find("{screenSampleId:#,readers:{$in:#}}",screenSampleId,subjects).as(PatternMask.class));
+//    }
    
     public TreeNode getTreeNodeById(String subjectKey, Long id) {
         Set<String> subjects = getSubjectSet(subjectKey);
@@ -366,16 +368,16 @@ public class DomainDAO {
         }
     }
     
-    public void save(String subjectKey, DomainObject domainObject) {
+    public void save(String subjectKey, DomainObject domainObject) throws Exception {
         String type = getType(domainObject);
         MongoCollection collection = getCollection(type);
-        WriteResult wr = collection.update("{_id:#,writers:#}",domainObject.getId(),subjectKey).with(domainObject);
+        WriteResult wr = collection.update("{_id:#,writers:#,updatedDate:#}",domainObject.getId(),subjectKey,domainObject.getUpdatedDate()).with(domainObject);
         if (wr.getN()!=1) {
-            log.error("Erro r saving object "+domainObject.getId());
+            throw new Exception("Error saving object "+domainObject.getId()+": "+wr.getError());
         }
     }
 
-    public void reorderChildren(String subjectKey, TreeNode treeNode, int[] order) {
+    public void reorderChildren(String subjectKey, TreeNode treeNode, int[] order) throws Exception {
         
         List<Reference> references = new ArrayList<Reference>(treeNode.getChildren());
         
@@ -417,7 +419,7 @@ public class DomainDAO {
         }
     }
 
-    public void addChild(String subjectKey, TreeNode treeNode, DomainObject domainObject) {
+    public void addChild(String subjectKey, TreeNode treeNode, DomainObject domainObject) throws Exception {
         Reference ref = new Reference();
         ref.setTargetId(domainObject.getId());
         ref.setTargetType(getType(domainObject));
@@ -425,14 +427,14 @@ public class DomainDAO {
         save(subjectKey, treeNode);
     }
     
-    public void removeChild(String subjectKey, TreeNode treeNode, DomainObject domainObject) {
+    public void removeChild(String subjectKey, TreeNode treeNode, DomainObject domainObject) throws Exception {
         Long targetId = domainObject.getId();
         String targetType = getType(domainObject);
         Reference reference = new Reference(targetType, targetId);
         removeReference(subjectKey, treeNode, reference);
     }
     
-    public void removeReference(String subjectKey, TreeNode treeNode, Reference reference) {
+    public void removeReference(String subjectKey, TreeNode treeNode, Reference reference) throws Exception {
         for(Iterator<Reference> i = treeNode.getChildren().iterator(); i.hasNext(); ) {
             Reference iref = i.next();
             if (iref.equals(reference)) {
@@ -445,9 +447,9 @@ public class DomainDAO {
     public void updateProperty(String subjectKey, DomainObject domainObject, String propName, String propValue) {
         String type = getType(domainObject);
         MongoCollection collection = getCollection(type);
-        WriteResult wr = collection.update("{_id:#,writers:#}",domainObject.getId(),subjectKey).with("{"+propName+":#}",propValue);
+        WriteResult wr = collection.update("{_id:#,writers:#}",domainObject.getId(),subjectKey).with("{"+propName+":#,$currentDate:{updatedDate:true}}",propValue);
         if (wr.getN()!=1) {
-            log.warn("Could not update single object: "+domainObject.getId());
+            log.warn("Could not update "+type+"#"+domainObject.getId()+"."+propName+": "+wr.getError());
         }
     }
     

@@ -22,25 +22,21 @@ public class PipelineResultNode extends InternalNode<PipelineResult> {
     private final WeakReference<Sample> sampleRef;
     
     public PipelineResultNode(Sample sample, PipelineResult result) throws Exception {
-        super(result);
+        super((result instanceof NeuronSeparation)
+                ?Children.create(new NeuronNodeFactory(sample, (NeuronSeparation)result), true)
+                :Children.create(new ResultChildFactory(sample, (PipelineResult)result), true), result);
         this.sampleRef = new WeakReference<Sample>(sample);
-        if (getBean() instanceof NeuronSeparation) {
-            setChildren(Children.create(new NeuronNodeFactory(sample, (NeuronSeparation)getBean()), true));   
-        }
-        else {
-            setChildren(Children.create(new ResultChildFactory(sample, (PipelineResult)getBean()), true));
-        } 
     }
     
     private PipelineResult getPipelineResult() {
-        return (PipelineResult)getBean();
+        return (PipelineResult)getObject();
     }
     
     @Override
     public String getPrimaryLabel() {
         String name = "Result";
         PipelineResult result = getPipelineResult();
-        if (getBean() != null) {
+        if (getObject() != null) {
             if (result instanceof SamplePipelineRun) {
                 SamplePipelineRun run = (SamplePipelineRun)result;
                 name = run.getName();
@@ -68,6 +64,6 @@ public class PipelineResultNode extends InternalNode<PipelineResult> {
     
     @Override
     public String getSecondaryLabel() {
-        return getBean().getCreationDate()+"";
+        return getObject().getCreationDate()+"";
     }
 }

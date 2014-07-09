@@ -6,7 +6,8 @@ import org.janelia.it.jacs.model.domain.DomainObject;
 import org.janelia.it.jacs.model.domain.ontology.Ontology;
 import org.janelia.it.jacs.model.domain.ontology.OntologyTerm;
 import org.janelia.it.workstation.gui.browser.nodes.OntologyTermNode;
-import org.janelia.it.workstation.shared.util.Utils;
+import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
+import org.janelia.it.workstation.shared.workers.SimpleWorker;
 import org.openide.nodes.ChildFactory;
 import org.openide.nodes.Node;
 import org.slf4j.Logger;
@@ -63,18 +64,25 @@ public class OntologyChildFactory extends ChildFactory<OntologyTerm> {
         if (ontology==null) return;
         final OntologyTerm ontologyTerm = ontologyTermRef.get();
         if (ontologyTerm==null) return;
-        Utils.runOffEDT(new Runnable() {
-            public void run() {
+        
+        SimpleWorker worker = new SimpleWorker() {
+            @Override
+            protected void doStuff() throws Exception {
 //                log.warn("adding child {} to {}",domainObject.getId(),treeNode.getName());
 //                DomainDAO dao = DomainExplorerTopComponent.getDao();
 //                dao.addChild(SessionMgr.getSubjectKey(), treeNode, domainObject);
             }
-        },new Runnable() {
-            public void run() {
+            @Override
+            protected void hadSuccess() {
                 log.info("refreshing view after adding child");
                 refresh();
             }
-        });
+            @Override
+            protected void hadError(Throwable error) {
+                SessionMgr.getSessionMgr().handleException(error);
+            }
+        };
+        worker.execute();
     }
 
     public void removeChild(final DomainObject domainObject) {
@@ -82,8 +90,10 @@ public class OntologyChildFactory extends ChildFactory<OntologyTerm> {
         if (ontology==null) return;
         final OntologyTerm ontologyTerm = ontologyTermRef.get();
         if (ontologyTerm==null) return;
-        Utils.runOffEDT(new Runnable() {
-            public void run() {
+        
+        SimpleWorker worker = new SimpleWorker() {
+            @Override
+            protected void doStuff() throws Exception {
 //                log.warn("removing child {} from {}",domainObject.getId(),treeNode.getName());
 //                DomainDAO dao = DomainExplorerTopComponent.getDao();
 //                if (domainObject instanceof DeadReference) {
@@ -93,12 +103,17 @@ public class OntologyChildFactory extends ChildFactory<OntologyTerm> {
 //                    dao.removeChild(SessionMgr.getSubjectKey(), treeNode, domainObject);
 //                }
             }
-        },new Runnable() {
-            public void run() {
+            @Override
+            protected void hadSuccess() {
                 log.info("refreshing view after removing child");
                 refresh();
             }
-        });
+            @Override
+            protected void hadError(Throwable error) {
+                SessionMgr.getSessionMgr().handleException(error);
+            }
+        };
+        worker.execute();
     }
 
 
