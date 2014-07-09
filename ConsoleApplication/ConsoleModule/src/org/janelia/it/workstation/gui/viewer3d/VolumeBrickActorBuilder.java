@@ -108,9 +108,10 @@ public class VolumeBrickActorBuilder {
             RenderMappingI renderMapping) {
         
         checkActorParameters(signalTexture, maskTexture);
-        final int chunkCount = signalTexture.getTextureData().getVolumeChunks().length;
+        int chunkCount = signalTexture.getTextureData().getVolumeChunks().length;
 
         // Making one actor per chunk.
+chunkCount = 1; // TEMP;        
         GLActor[] actors = new GLActor[ chunkCount ];
         for (int i = 0; i < chunkCount; i++) {
             RenderMapTextureBean renderMapTextureData = new RenderMapTextureBean();
