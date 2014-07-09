@@ -858,7 +858,16 @@ that need to respond to changing data.
         globalAnnotationColorChangedSignal.emit(color);
     }
 
-    private boolean automatedTracingEnabled() {
+    public boolean automatedRefinementEnabled() {
+        String automaticRefinementPref = getCurrentWorkspace().getPreferences().getProperty(AnnotationsConstants.PREF_AUTOMATIC_POINT_REFINEMENT);
+        if (automaticRefinementPref != null) {
+            return Boolean.parseBoolean(automaticRefinementPref);
+        } else {
+            return false;
+        }
+    }
+
+    public boolean automatedTracingEnabled() {
         String automaticTracingPref = getCurrentWorkspace().getPreferences().getProperty(AnnotationsConstants.PREF_AUTOMATIC_TRACING);
         if (automaticTracingPref != null) {
             return Boolean.parseBoolean(automaticTracingPref);

@@ -304,12 +304,20 @@ public class AnnotationManager
         SimpleWorker adder = new SimpleWorker() {
             @Override
             protected void doStuff() throws Exception {
+                Vec3 finalLocation;
+                if (annotationModel.automatedRefinementEnabled()) {
+                    PointRefiner refiner = new PointRefiner(quadViewUi.getSubvolumeProvider());
+                    finalLocation = refiner.refine(xyz);
+                } else {
+                    finalLocation = xyz;
+                }
+
                 if (parentID == null) {
                     // if parentID is null, it's a new root in current neuron
-                    annotationModel.addRootAnnotation(currentNeuron, xyz);
+                    annotationModel.addRootAnnotation(currentNeuron, finalLocation);
                 } else {
                     annotationModel.addChildAnnotation(
-                            currentNeuron.getGeoAnnotationMap().get(parentID), xyz);
+                            currentNeuron.getGeoAnnotationMap().get(parentID), finalLocation);
                 }
             }
 
@@ -955,6 +963,27 @@ public class AnnotationManager
 
     }
 
+    public void setAutomaticRefinement(final boolean state) {
+        SimpleWorker saver = new SimpleWorker() {
+            @Override
+            protected void doStuff() throws Exception {
+                annotationModel.setPreference(AnnotationsConstants.PREF_AUTOMATIC_POINT_REFINEMENT,
+                        String.valueOf(state));
+            }
+
+            @Override
+            protected void hadSuccess() {
+                // nothing here
+            }
+
+            @Override
+            protected void hadError(Throwable error) {
+                SessionMgr.getSessionMgr().handleException(error);
+            }
+        };
+        saver.execute();
+    }
+
     public void setAutomaticTracing(final boolean state) {
         SimpleWorker saver = new SimpleWorker() {
             @Override
@@ -974,7 +1003,6 @@ public class AnnotationManager
             }
         };
         saver.execute();
-
     }
 
     private void tracePathToParent(PathTraceToParentRequest request) {

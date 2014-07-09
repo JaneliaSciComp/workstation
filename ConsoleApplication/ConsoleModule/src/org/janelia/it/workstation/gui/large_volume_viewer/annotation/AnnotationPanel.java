@@ -39,11 +39,14 @@ public class AnnotationPanel extends JPanel
     private WorkspaceInfoPanel workspaceInfoPanel;
     private WorkspaceNeuronList workspaceNeuronList;
     private JCheckBoxMenuItem automaticTracingMenuItem;
+    private JCheckBoxMenuItem automaticRefinementMenuItem;
 
     // other UI stuff
     private static final int width = 250;
 
     private static final boolean defaultAutomaticTracing = false;
+    private static final boolean defaultAutomaticRefinement = false;
+
 
     // ----- actions
     private final Action createNeuronAction = new AbstractAction() {
@@ -80,6 +83,10 @@ public class AnnotationPanel extends JPanel
         @Override
         public void execute(TmWorkspace workspace) {
             if (workspace != null) {
+                String automaticRefinementPref = workspace.getPreferences().getProperty(AnnotationsConstants.PREF_AUTOMATIC_POINT_REFINEMENT);
+                if (automaticRefinementPref != null) {
+                    automaticRefinementMenuItem.setSelected(Boolean.parseBoolean(automaticRefinementPref));
+                }
                 String automaticTracingPref = workspace.getPreferences().getProperty(AnnotationsConstants.PREF_AUTOMATIC_TRACING);
                 if (automaticTracingPref != null) {
                     automaticTracingMenuItem.setSelected(Boolean.parseBoolean(automaticTracingPref));
@@ -162,6 +169,16 @@ public class AnnotationPanel extends JPanel
 
         // workspace tool pop-up menu (triggered by button, below)
         final JPopupMenu workspaceToolMenu = new JPopupMenu();
+
+        automaticRefinementMenuItem = new JCheckBoxMenuItem("Automatic refinement");
+        automaticRefinementMenuItem.setSelected(defaultAutomaticRefinement);
+        automaticRefinementMenuItem.addItemListener(new ItemListener() {
+            @Override
+            public void itemStateChanged(ItemEvent itemEvent) {
+                annotationMgr.setAutomaticRefinement(itemEvent.getStateChange() == ItemEvent.SELECTED);
+            }
+        });
+        workspaceToolMenu.add(automaticRefinementMenuItem);
 
         automaticTracingMenuItem = new JCheckBoxMenuItem("Automatic tracing");
         automaticTracingMenuItem.setSelected(defaultAutomaticTracing);
