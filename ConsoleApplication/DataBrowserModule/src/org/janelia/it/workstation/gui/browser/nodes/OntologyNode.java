@@ -23,6 +23,8 @@ import org.janelia.it.workstation.shared.workers.SimpleWorker;
 import org.openide.actions.RenameAction;
 import org.openide.nodes.ChildFactory;
 import org.openide.nodes.Children;
+import org.openide.nodes.Index;
+import org.openide.nodes.Node;
 import org.openide.util.datatransfer.PasteType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -37,42 +39,42 @@ public class OntologyNode extends DomainObjectNode {
         this(null, DomainUtils.isEmpty(ontology.getTerms()) ? null:new OntologyChildFactory(ontology, ontology), ontology);
     }
     
-    private OntologyNode(ChildFactory parentChildFactory, OntologyChildFactory childFactory, Ontology ontology) throws Exception {
+    private OntologyNode(ChildFactory parentChildFactory, final OntologyChildFactory childFactory, Ontology ontology) throws Exception {
         super(parentChildFactory, DomainUtils.isEmpty(ontology.getTerms()) ? Children.LEAF:Children.create(childFactory, true), ontology);
         this.childFactory = childFactory;
         if (!DomainUtils.isEmpty(ontology.getTerms())) {
-//            getCookieSet().add(new Index.Support() {
-//
-//                @Override
-//                public Node[] getNodes() {
-//                    return getChildren().getNodes();
-//                }
-//
-//                @Override
-//                public int getNodesCount() {
-//                    return getNodes().length;
-//                }
-//
-//                @Override
-//                public void reorder(final int[] order) {
-//                    SimpleWorker worker = new SimpleWorker() {
-//                        @Override
-//                        protected void doStuff() throws Exception {
-//                            DomainDAO dao = DomainExplorerTopComponent.getDao();
-//                            //dao.reorderChildren(SessionMgr.getSubjectKey(), getTreeNode(), order);
-//                        }
-//                        @Override
-//                        protected void hadSuccess() {
-//                            childFactory.refresh();
-//                        }
-//                        @Override
-//                        protected void hadError(Throwable error) {
-//                            SessionMgr.getSessionMgr().handleException(error);
-//                        }
-//                    };
-//                    worker.execute();
-//                }
-//            });
+            getLookupContents().add(new Index.Support() {
+
+                @Override
+                public Node[] getNodes() {
+                    return getChildren().getNodes();
+                }
+
+                @Override
+                public int getNodesCount() {
+                    return getNodes().length;
+                }
+
+                @Override
+                public void reorder(final int[] order) {
+                    SimpleWorker worker = new SimpleWorker() {
+                        @Override
+                        protected void doStuff() throws Exception {
+                            DomainDAO dao = DomainExplorerTopComponent.getDao();
+                            //dao.reorderChildren(SessionMgr.getSubjectKey(), getTreeNode(), order);
+                        }
+                        @Override
+                        protected void hadSuccess() {
+                            childFactory.refresh();
+                        }
+                        @Override
+                        protected void hadError(Throwable error) {
+                            SessionMgr.getSessionMgr().handleException(error);
+                        }
+                    };
+                    worker.execute();
+                }
+            });
         }
     }
     
