@@ -43,6 +43,7 @@ import com.mongodb.WriteConcern;
 import com.mongodb.WriteResult;
 import org.janelia.it.jacs.model.domain.compartments.CompartmentSet;
 import org.janelia.it.jacs.model.domain.gui.AlignmentBoard;
+import org.janelia.it.jacs.model.domain.support.MongoUtils;
 
 /**
  * The main domain-object DAO for the JACS system.
@@ -53,11 +54,6 @@ public class DomainDAO {
 
     private Logger log = LoggerFactory.getLogger(DomainDAO.class);
 
-    private static final String[] domainTypes = {"treeNode","sample","screenSample","patternMask","flyLine","lsm","fragment","annotation","ontology","compartmentSet","alignmentBoard"};
-    private static final Class<?>[] domainClasses = {TreeNode.class,Sample.class,ScreenSample.class,PatternMask.class,FlyLine.class,LSMImage.class,NeuronFragment.class,Annotation.class,Ontology.class,CompartmentSet.class,AlignmentBoard.class};
-
-    private BiMap<String, Class<? extends DomainObject>> typeClasses = HashBiMap.create();
-    
     protected MongoClient m;
     protected DB db;
     protected Jongo jongo;
@@ -90,11 +86,6 @@ public class DomainDAO {
         fragmentCollection = jongo.getCollection("fragment");
         annotationCollection = jongo.getCollection("annotation");
         ontologyCollection = jongo.getCollection("ontology");
-        for(int i=0; i<DomainDAO.domainTypes.length; i++) {
-            String domainType = DomainDAO.domainTypes[i];
-            Class<? extends DomainObject> domainClass = (Class<? extends DomainObject>)DomainDAO.domainClasses[i];
-            typeClasses.put(domainType, domainClass);
-        }
     }
     
     public Jongo getJongo() {
@@ -105,31 +96,18 @@ public class DomainDAO {
         m.setWriteConcern(writeConcern);
     }
 
-    public String getType(DomainObject domainObject) {
-        Class<?> clazz = domainObject.getClass();
-        String type = null;
-        while (type==null && !clazz.equals(Object.class)) {
-            type = typeClasses.inverse().get(clazz);
-            clazz = clazz.getSuperclass();
-        }
-        if (type==null) {
-            throw new IllegalStateException("No mapped type for object class: "+domainObject.getClass().getName());
-        }
-        return type;
+    public Class<? extends DomainObject> getObjectClass(String collectionName) {
+        return MongoUtils.getObjectClass(collectionName);
     }
     
-    public Map<String, Class<? extends DomainObject>> getDomainClassMap() {
-        return Collections.unmodifiableMap(typeClasses);
+    public String getType(DomainObject domainObject) {
+        return MongoUtils.getCollectionName(domainObject);
     }
-
+    
     public MongoCollection getCollection(String type) {
         return jongo.getCollection(type);
     }
     
-    public Class<? extends DomainObject> getObjectClass(String type) {
-        return typeClasses.get(type);
-    }
-
     /** 
      * Return the set of subjectKeys which are readable by the given subject. This includes the subject itself, and all of the groups it is part of. 
      */
