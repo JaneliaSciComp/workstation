@@ -34,6 +34,7 @@
                 <package>org.janelia.it.jacs.model.domain.ontology</package>
                 <package>org.janelia.it.jacs.model.domain.sample</package>
                 <package>org.janelia.it.jacs.model.domain.screen</package>
+                <package>org.janelia.it.jacs.model.domain.support</package>
                 <package>org.janelia.it.jacs.model.domain.workspace</package>
                 <package>org.janelia.it.jacs.model.download</package>
                 <package>org.janelia.it.jacs.model.entity</package>
