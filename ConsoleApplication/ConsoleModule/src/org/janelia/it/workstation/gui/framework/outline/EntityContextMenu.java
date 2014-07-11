@@ -95,7 +95,6 @@ public class EntityContextMenu extends JPopupMenu {
     public final void init(List<RootedEntity> rootedEntityList) {
         this.rootedEntityList = rootedEntityList;
         this.rootedEntity = rootedEntityList.size() == 1 ? rootedEntityList.get(0) : null;
-        log.info("Init context menu, rootedEntity ="+rootedEntity.getName());
         this.multiple = rootedEntityList.size() > 1;
         if (!multiple) {
             checkNotNull(rootedEntity, "Rooted entity cannot be null");
