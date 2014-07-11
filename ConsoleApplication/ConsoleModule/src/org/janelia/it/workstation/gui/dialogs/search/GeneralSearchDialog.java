@@ -256,7 +256,7 @@ public class GeneralSearchDialog extends ModalDialog {
                 int i = 0;
                 for(String folderName : folderNameValue.split("/")) {
                     RootedEntity parentRE = searchResultsRE;
-                    searchResultsRE = parentRE.getChildByName(folderName);
+                    searchResultsRE = parentRE.getOwnedChildByName(folderName);
                     
                     if (searchResultsRE==null) {
                         Entity newFolder =null;
@@ -270,7 +270,7 @@ public class GeneralSearchDialog extends ModalDialog {
                             newFolder = ModelMgr.getModelMgr().createEntity(EntityConstants.TYPE_FOLDER, folderName);
                             ModelMgr.getModelMgr().addEntityToParent(parentRE.getEntity(), newFolder, parentRE.getEntity().getMaxOrderIndex() + 1, EntityConstants.ATTRIBUTE_ENTITY);
                         }
-                        searchResultsRE = parentRE.getChildByName(folderName);
+                        searchResultsRE = parentRE.getOwnedChildByName(folderName);
                     }
                     i++;
                 }
@@ -332,7 +332,8 @@ public class GeneralSearchDialog extends ModalDialog {
         }
         
         Entity workspace = ModelMgr.getModelMgr().getEntityById(workspaceId);
-        Entity searchResults = EntityUtils.findChildWithNameAndType(workspace, EntityConstants.NAME_SEARCH_RESULTS, EntityConstants.TYPE_FOLDER);
+
+        Entity searchResults = EntityUtils.findChildWithNameAndTypeAndOwner(workspace, EntityConstants.NAME_SEARCH_RESULTS, EntityConstants.TYPE_FOLDER, SessionMgr.getUsername());
         if (searchResults==null) {
             return EntityConstants.NAME_SEARCH_RESULTS+"/Search Results #1";
         }
