@@ -8,16 +8,13 @@ import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.workstation.gui.framework.session_mgr.SessionModelListener;
 import org.janelia.it.workstation.shared.util.RendererType2D;
 
-import java.awt.BorderLayout;
-import java.awt.Dimension;
-import java.awt.Rectangle;
+import javax.swing.*;
+import javax.swing.border.TitledBorder;
+import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.util.HashMap;
 import java.util.Map;
-
-import javax.swing.*;
-import javax.swing.border.TitledBorder;
 
 public class ApplicationSettingsPanel extends JPanel implements PrefEditor {
     private boolean settingsChanged = false;
@@ -135,7 +132,7 @@ public class ApplicationSettingsPanel extends JPanel implements PrefEditor {
         // ------------------------------------------------------------------------------------------------------------
 
         pnlMemorySetting = new MemorySettingPanel();
-        pnlMemorySetting.setBorder(new TitledBorder("Max Memory (Gb)"));        
+        pnlMemorySetting.setBorder(new TitledBorder("Max Memory (GB)"));
         pnlMemorySetting.setSettingListener(
                 new MemorySettingPanel.SettingListener() {
                     @Override
