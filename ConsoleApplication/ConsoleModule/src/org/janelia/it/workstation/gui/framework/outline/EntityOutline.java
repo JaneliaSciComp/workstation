@@ -338,6 +338,7 @@ public abstract class EntityOutline extends EntityTree implements Refreshable, A
     @Subscribe
     public void entityCreated(EntityCreateEvent event) {
         Entity entity = event.getEntity();
+        
         if (entity.getValueByAttributeName(EntityConstants.ATTRIBUTE_COMMON_ROOT) != null) {
             log.debug("New common root detected: {}", EntityUtils.identify(entity));
 

@@ -326,12 +326,8 @@ public class GeneralSearchDialog extends ModalDialog {
      * @return
      */
     protected String getNextFolderName() throws Exception {
-        Long workspaceId = ModelMgr.getModelMgr().getCurrentWorkspaceId();
-        if (workspaceId==null) {
-            return "";
-        }
         
-        Entity workspace = ModelMgr.getModelMgr().getEntityById(workspaceId);
+        Entity workspace = ModelMgr.getModelMgr().getCurrentWorkspace();
 
         Entity searchResults = EntityUtils.findChildWithNameAndTypeAndOwner(workspace, EntityConstants.NAME_SEARCH_RESULTS, EntityConstants.TYPE_FOLDER, SessionMgr.getUsername());
         if (searchResults==null) {
@@ -356,7 +352,7 @@ public class GeneralSearchDialog extends ModalDialog {
                 }
             }
         }
-        return EntityConstants.NAME_SEARCH_RESULTS+"/Search Results #" + (maxNum + 1);
+        return searchResults.getName()+"/Search Results #" + (maxNum + 1);
     }
 
     protected synchronized void exportResults() {
