@@ -41,6 +41,11 @@
                 </file>
             </folder>
         </folder>
+        <folder name="Window">
+            <file name="SwitchToRecentDocumentAction.shadow_hidden"/>
+            <file name="Tools_hidden"/>
+            <file name="Web_hidden"/>
+        </folder>
     </folder>
     <folder name="Services">
         <folder name="AutoupdateType">
