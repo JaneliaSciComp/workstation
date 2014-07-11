@@ -192,29 +192,6 @@ public abstract class EntityOutline extends EntityTree implements Refreshable, A
             titleMenuItem.setEnabled(false);
             return titleMenuItem;
         }
-
-        protected JMenuItem getSetSortCriteriaItem() {
-
-            if (multiple) {
-                return null;
-            }
-
-            JMenuItem sortItem = new JMenuItem("  Set Sorting Criteria");
-
-            sortItem.addActionListener(new ActionListener() {
-                public void actionPerformed(ActionEvent actionEvent) {
-                    try {
-                        SetSortCriteriaDialog dialog = new SetSortCriteriaDialog();
-                        dialog.showForEntity(getRootEntity());
-                    } 
-                    catch (Exception e) {
-                        SessionMgr.getSessionMgr().handleException(e);
-                    }
-                }
-            });
-
-            return sortItem;
-        }
         
         private JMenuItem getNewRootFolderItem() {
             if (multiple) {
