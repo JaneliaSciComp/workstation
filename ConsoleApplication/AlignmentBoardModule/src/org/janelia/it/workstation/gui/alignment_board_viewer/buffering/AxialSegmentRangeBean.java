@@ -36,6 +36,19 @@ public class AxialSegmentRangeBean {
         }
     }
     
+    public int getAxisLength( int axialOffset ) {
+        final int[] rangeArr = getRangeByAxisNum( axialOffset );
+        return rangeArr[ HIGH_INX ] - rangeArr[ LOW_INX ];
+    }
+    
+    public int getAxisLow( int axialOffset ) {
+        return getRangeByAxisNum( axialOffset )[ LOW_INX ];
+    }
+    
+    public int getAxisHigh( int axialOffset ) {
+        return getRangeByAxisNum( axialOffset )[ HIGH_INX ];
+    }
+    
     /**
      * @return the xRange
      */
