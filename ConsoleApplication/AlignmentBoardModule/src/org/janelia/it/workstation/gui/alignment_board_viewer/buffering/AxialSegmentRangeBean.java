@@ -20,6 +20,10 @@ public class AxialSegmentRangeBean {
     private int[] yRange;
     private int[] zRange;
 
+    private boolean partialx;
+    private boolean partialy;
+    private boolean partialz = true; //TEMP
+
     /**
      * Use canonical axial order 0,1,2 for x,y,z, and return whichever
      * range corresponds to the axis # given.
@@ -33,6 +37,15 @@ public class AxialSegmentRangeBean {
             case 1 : return yRange;
             case 2 : return zRange;
             default: return null;
+        }
+    }
+
+    public boolean isPartialByAxisNum( int axialOffset ) {
+        switch( axialOffset ) {
+            case 0: return partialx;
+            case 1: return partialy;
+            case 2: return partialz;
+            default: return false;
         }
     }
     
@@ -94,6 +107,30 @@ public class AxialSegmentRangeBean {
         this.zRange = zRange;
     }
                 
+    public boolean isPartialx() {
+        return partialx;
+    }
+
+    public void setPartialx(boolean partialx) {
+        this.partialx = partialx;
+    }
+
+    public boolean isPartialy() {
+        return partialy;
+    }
+
+    public void setPartialy(boolean partialy) {
+        this.partialy = partialy;
+    }
+
+    public boolean isPartialz() {
+        return partialz;
+    }
+
+    public void setPartialz(boolean partialz) {
+        this.partialz = partialz;
+    }
+
     private void testRange(int[] range) throws IllegalArgumentException {
         if ( range.length != 2 ) {
             throw new IllegalArgumentException("Invalid range array size.   Must be exactly 2.");

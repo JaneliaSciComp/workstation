@@ -123,28 +123,33 @@ public class SegmentedVtxCoordBufMgr extends AbstractCoordBufMgr {
                     float[] t01 = textureCoordFromVoxelCoord( v01 );
                     float[] t10 = textureCoordFromVoxelCoord( v10 );
                     float[] t11 = textureCoordFromVoxelCoord( v11 );
-//                    if ( firstInx == 2 ) {
-//                        logger.info("For Positive {}, have sliceInx={}, slice0={}, sliceSep={}, sliceLoc={}.", firstInx, sliceInx, slice0, sliceSep, sliceLoc);
-//                        checkGeometry(v00, v01, v10, v11, t00, t01, t10, t11);
-//                    }
+                    if ( firstInx == 2 ) {
+                        logger.info("For Positive {}, have sliceInx={}, slice0={}, sliceSep={}, sliceLoc={}.", firstInx, sliceInx, slice0, sliceSep, sliceLoc);
+                        checkGeometry(v00, v01, v10, v11, t00, t01, t10, t11);
+                    }
                     
                     addTextureCoords( firstInx, t00, t01, t10, t11 );
                     addIndices(firstInx, inxOffset);
 
                     // Now, take care of the negative-direction alternate to this buffer pair.
-                    v00[ firstInx ] = v01[firstInx] = v10[firstInx] = v11[firstInx] = -sliceLoc;
-//todo do the dumping again.  Work out what we WANT the output coords to be,
-//and then change code to make it consistently happen.
+                    if ( segmentRanges.isPartialByAxisNum( firstInx ) ) {
+                        int[] axialRange = segmentRanges.getRangeByAxisNum( firstInx );
+                        v00[ firstInx ] = v01[firstInx] = v10[firstInx] = v11[firstInx] = -( axialRange[0] + (axialRange[1] - sliceInx) );
+                    }
+                    else {
+                        v00[ firstInx ] = v01[firstInx] = v10[firstInx] = v11[firstInx] = -sliceLoc;
+                    }
 
                     addGeometry( firstInx + NUM_AXES, v00, v10, v11, v01 );
                     invertFraction( t00, firstInx );
                     invertFraction( t01, firstInx );
                     invertFraction( t10, firstInx );
                     invertFraction( t11, firstInx );
-//                    if ( firstInx == 2 ) {
-//                        logger.info("For Negative {}, have sliceInx={}, slice0={}, sliceSep={}, sliceLoc={}.", firstInx, sliceInx, slice0, sliceSep, sliceLoc);
-//                        checkGeometry(v00, v01, v10, v11, t00, t01, t10, t11);
-//                    }
+
+                    if ( firstInx == 2 ) {
+                        logger.info("For Negative {}, have sliceInx={}, slice0={}, sliceSep={}, sliceLoc={}.", firstInx, sliceInx, slice0, sliceSep, sliceLoc);
+                        checkGeometry(v00, v01, v10, v11, t00, t01, t10, t11);
+                    }
                     
                     addTextureCoords( firstInx + NUM_AXES, t00, t01, t10, t11 );
                     addIndices(firstInx + NUM_AXES, inxOffset);
