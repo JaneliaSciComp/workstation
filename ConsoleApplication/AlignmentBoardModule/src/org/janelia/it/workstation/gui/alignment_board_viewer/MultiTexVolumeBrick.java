@@ -5,6 +5,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import com.jogamp.common.nio.Buffers;
+import java.util.Arrays;
 
 import org.janelia.it.workstation.geom.CoordinateAxis;
 import org.janelia.it.workstation.geom.Vec3;
@@ -110,7 +111,6 @@ public class MultiTexVolumeBrick implements VolumeBrickI
     //---------------------------------------IMPLEMEMNTS GLActor
     @Override
 	public void init(GLAutoDrawable glDrawable) {
-
         // Avoid carrying out any operations if there is no real data.
         if ( signalTextureMediator == null  &&  maskTextureMediator == null ) {
             logger.warn("No textures for volume brick.");
@@ -215,9 +215,16 @@ public class MultiTexVolumeBrick implements VolumeBrickI
             reportError( gl, "display mux brick - alpha" );
         }
         else if (renderMethod == RenderMethod.MAXIMUM_INTENSITY) {
-            gl.glBlendEquation(GL2.GL_MAX);
-            gl.glBlendFunc(GL2.GL_ONE, GL2.GL_DST_ALPHA);
             // gl.glBlendFunc(GL2.GL_ONE_MINUS_DST_COLOR, GL2.GL_ZERO); // inverted?  http://stackoverflow.com/questions/2656905/opengl-invert-framebuffer-pixels
+            if ( Arrays.equals( volumeModel.getBackgroundColorFArr(), VolumeModel.DEFAULT_BACKGROUND_COLOR ) ) {
+                gl.glBlendEquation(GL2.GL_MAX);
+                gl.glBlendFunc( GL2.GL_ONE, GL2.GL_DST_ALPHA );
+            }
+            else {
+//                gl.glBlendEquation(GL2.GL_FUNC_SUBTRACT);
+                gl.glBlendEquation(GL2.GL_MIN);
+                gl.glBlendFunc( GL2.GL_ONE, GL2.GL_DST_ALPHA );
+            }
             reportError( gl, "display mux brick - max intensity" );
         }
         if (bUseShader) {

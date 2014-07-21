@@ -20,6 +20,10 @@ public class VolumeModel {
     public static final float DEFAULT_GAMMA_ADJUSTMENT = 1.0f;
     public static final Vec3 DEFAULT_FOCUS_IN_GROUND = new Vec3(0, 0, 0);
     public static final float[] DEFAULT_COLOR_MASK = {1.0f, 1.0f, 1.0f};
+    // The "normal" background color should be black. The only alternative
+    // supported as of this time is white.
+    public static final float[] DEFAULT_BACKGROUND_COLOR = {0.0f, 0.0f, 0.0f};    
+    public static final float[] ALT_BACKGROUND_COLOR = {1.0f, 1.0f, 1.0f};    
     public static final float DEFAULT_CROPOUT = 0.25f;
     public static final boolean DEFAULT_SAVE_BRIGHTNESS = true;
     public static final float STANDARDIZED_GAMMA_MULTIPLIER = 0.46f;
@@ -30,9 +34,10 @@ public class VolumeModel {
     private Vec3 cameraDepth;
     private boolean colorSaveBrightness = true;
     private Camera3d camera3d;
+    private float[] backgroundColor = DEFAULT_BACKGROUND_COLOR;
     private float[] colorMask = DEFAULT_COLOR_MASK;
     private float[] voxelMicrometers;
-    private int[] voxelDimensions;
+    private int[] voxelDimensions;   
 
     private Collection<UpdateListener> listeners = new ArrayList<UpdateListener>();
 
@@ -170,6 +175,20 @@ public class VolumeModel {
 
     public void setColorSaveBrightness(boolean colorSaveBrightness) {
         this.colorSaveBrightness = colorSaveBrightness;
+    }
+
+    /**
+     * @return the backgroundColor
+     */
+    public float[] getBackgroundColorFArr() {
+        return backgroundColor;
+    }
+
+    /**
+     * @param backgroundColor the backgroundColor to set
+     */
+    public void setBackgroundColor(float[] backgroundColor) {
+        this.backgroundColor = backgroundColor;
     }
 
     public static interface UpdateListener {

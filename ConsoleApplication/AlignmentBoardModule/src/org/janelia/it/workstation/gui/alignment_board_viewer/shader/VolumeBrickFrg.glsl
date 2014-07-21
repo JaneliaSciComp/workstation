@@ -7,6 +7,7 @@ uniform sampler3D colorMapTexture;
 uniform float gammaAdjustment = 1.0;
 uniform float cropOutLevel = 0.05;
 uniform int hasMaskingTexture;
+uniform int whiteBackground = 0;
 
 // "Cropping" region driven by feeds into the shader.
 // As soon as any cropping is done, ALL the below must have values in other than -1.
@@ -16,6 +17,19 @@ uniform float startCropY = -1.0;
 uniform float endCropY = 1.0;
 uniform float startCropZ = -1.0;
 uniform float endCropZ = 1.0;
+
+vec4 bypassVoxel()
+{
+    // Display strategy: bypass unseen values.
+    if ( whiteBackground == 0 )
+    {
+        discard;
+    }
+    else
+    {
+        return vec4( 1.0, 1.0, 1.0, 1.0 );
+    }    
+}
 
 vec3 getMapCoord( float location )
 {
@@ -88,8 +102,6 @@ float computeIntensity( vec4 inputColor, float pos, float posInterp )
             byteUsed *= 256.0;
             if ( byteInxFloor == byteInx )
             {   // Bottom nibble.
-//                float topNibble = floor( byteUsed / 16.0 );
-//                rtnVal = byteUsed - (topNibble * 16);
                 for (int i = 0; i < 4; i++)
                 {
                     rtnVal = lowBitAdd( rtnVal, byteUsed, pow( 2.0, float( i ) ) );
@@ -122,8 +134,7 @@ vec4 volumeMask(vec4 origColor)
 
         if ( ( ( origColor[0] + origColor[1] + origColor[2] ) == 0.0 ) )
         {
-            // Display strategy: bypass unseen values.
-            discard;
+            return bypassVoxel();
         }
         else
         {
@@ -173,7 +184,7 @@ vec4 volumeMask(vec4 origColor)
             if ( mappedColor[ 3 ] == 0.0 )
             {
                 // This constitutes an "off" switch.
-                discard;
+                return bypassVoxel();
             }
             else if ( renderMethod == 4.0 )
             {
@@ -220,7 +231,8 @@ vec4 volumeMask(vec4 origColor)
     }
     else if ( ( origColor[0] + origColor[1] + origColor[2] ) == 0.0 )
     {
-        discard;
+        // Display strategy: bypass unseen values.
+        return bypassVoxel();
     }
 
     return rtnVal;
@@ -331,12 +343,43 @@ vec4 crop(vec4 origColor)
     }
 }
 
+vec4 adjustForBgrnd(vec4 origColor)
+{    
+    if ( whiteBackground == 1 )
+    {
+/*
+        return vec4(
+            clamp( 1.0 - origColor.r, 0.001, 1.0 ),
+            clamp( 1.0 - origColor.g, 0.001, 1.0 ),
+            clamp( 1.0 - origColor.b, 0.001, 1.0 ),
+            1.0
+        );
+*/
+        // Based on LUMA conversion: Y=0.33R + 0.5G + 0.16B, and
+        // subtracting each multiplier by 1.
+        if ( origColor.r == 1.0 && origColor.g == 1.0 && origColor.b == 1.0 )
+        {
+            return origColor;
+        }
+        return vec4(
+            clamp( (0.67 * origColor.r), 0.0, 1.0 ),
+            origColor.g,
+            clamp( (0.84 * origColor.b), 0.0, 1.0 ),
+            1.0
+        );
+    }
+    else
+    {
+        return origColor;
+    }
+}
+
 void main()
 {
     vec4 origColor = texture3D(signalTexture, gl_TexCoord[0].xyz);
     vec4 maskedColor = volumeMask(origColor);
     vec4 gammaAdjustedColor = gammaAdjust(maskedColor);
-    gl_FragColor = crop(gammaAdjustedColor);
-
+    vec4 cropColor = crop(gammaAdjustedColor);
+    gl_FragColor = adjustForBgrnd(cropColor);
 }
 
