@@ -4,7 +4,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 /**
- * used by the SWCReader class to hold each point in the neuron
+ * used by the SWCData class to hold each point in the neuron
  *
  * see http://research.mssm.edu/cnic/swc.html; node holds info
  * from one line in SWC file
@@ -88,6 +88,19 @@ public class SWCNode {
             return false;
         }
         return true;
+    }
+
+    /**
+     * returns a string (no newline) that is suitable for writing the node
+     * into an SWC file
+     */
+    public String toSWCline () {
+        return String.format("%d\t%d\t%f\t%f\t%f\t%f\t%d",
+                index,
+                segmentType,
+                x, y, z,
+                radius,
+                parentIndex);
     }
 
     public int getIndex() {

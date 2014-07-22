@@ -1,12 +1,22 @@
 package org.janelia.it.workstation.shared.util;
 
+import de.javasoft.io.FileUtils;
 import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.io.PrintWriter;
+import java.nio.file.Paths;
 import java.util.Date;
+import java.util.Properties;
 import java.util.Random;
+import org.openide.modules.InstalledFileLocator;
+import org.openide.util.NbBundle;
 
 /**
  * Adapted from IDEA code base.
@@ -17,6 +27,10 @@ public class SystemInfo {
 
     private static final Logger log = LoggerFactory.getLogger(SystemInfo.class);
     
+    public static final String MEMORY_SETTING_PREFIX = "-J-Xmx";
+    public static final String DEFAULT_OPTIONS_PROP = "default_options";
+    public static final String ETC_SUBPATH = "etc";
+
     public static final String OS_NAME = System.getProperty("os.name").toLowerCase();
     public static final String OS_VERSION = System.getProperty("os.version").toLowerCase();
     public static final String OS_ARCH = System.getProperty("os.arch");
@@ -173,4 +187,134 @@ public class SystemInfo {
             return null;
         }
     }
+    
+    /**
+     * Gets the -Xmx setting in current use.
+     * @return gigs being requested at launch.
+     */
+    public static int getMemoryAllocation() throws IOException {
+        File brandingConfig = getOrCreateBrandingConfigFile();
+        String[] defaultOptions = getDefaultOptions( brandingConfig );
+        String javaMemoryOption = getJavaMemOption( defaultOptions );
+        if ( javaMemoryOption == null ) {
+            return -1;
+        }
+        
+        final int numberEndPt = javaMemoryOption.length() - 1;
+        char rangeIndicator = javaMemoryOption.charAt( numberEndPt );
+        final int numberStartPt = MEMORY_SETTING_PREFIX.length();
+        int rtnVal = 0;
+        if ( rangeIndicator != 'm' ) {
+            // Default of 4Gb to return.
+            rtnVal = 4;
+        }
+        else {
+            // Stored as megabytes. Presented to user as gigabytes.
+            rtnVal = Integer.parseInt( javaMemoryOption.substring( numberStartPt, numberEndPt ) ) / 1024;        
+        }
+        return rtnVal;
+    }
+    
+    /**
+     * Sets the ultimate -Xmx allocation setting.
+     * @param memoryInGb how many gigs to use.
+     */
+    public static void setMemoryAllocation( int memoryInGb ) throws IOException {
+        File brandingConfig = getOrCreateBrandingConfigFile();
+        Properties props = loadNbConfig( brandingConfig );
+        String value = (String)props.get( DEFAULT_OPTIONS_PROP );
+        int optStart = value.indexOf(MEMORY_SETTING_PREFIX) + MEMORY_SETTING_PREFIX.length();
+        int optEnd = value.indexOf( " ", optStart );
+        
+        String newDefaultOpts = value.substring( 0, optStart ) + memoryInGb * 1024 + "m" + value.substring( optEnd );
+        reWriteProperty( brandingConfig, DEFAULT_OPTIONS_PROP, newDefaultOpts );
+    }
+    
+    /**
+     * Returns the user's copy of the branding configuration file,
+     * but creates one by copying it from the main one, if it does
+     * not yet exist.
+     * 
+     * @return 
+     */
+    private static File getOrCreateBrandingConfigFile() throws IOException {
+        String brandingToken = NbBundle.getBranding();
+        File userSettingsDir = new File( System.getProperty("netbeans.user") );
+        if ( ! userSettingsDir.toString().contains("testuserdir") ) {
+            userSettingsDir = new File( userSettingsDir.toString(), ETC_SUBPATH );
+        }
+        final String configFile = brandingToken + ".conf";
+        File fqBrandingConfig = new File( userSettingsDir, configFile );
+        if ( ! fqBrandingConfig.exists() ) {
+            // Need to create-by-copy.
+            synchronized ( SystemInfo.class ) {
+                // Double-check.  While this thread waited, the thing
+                // could have been copied already.
+                if (!fqBrandingConfig.exists()) {
+                    File sysWideConfig = InstalledFileLocator.getDefault().locate(configFile, null, false);
+                    if ( sysWideConfig == null ) {
+                        String nbHome = System.getProperty("netbeans.home");
+                        File parent = new File( nbHome ).getParentFile();
+                        File containingDir = new File( parent, ETC_SUBPATH );
+                        sysWideConfig = new File( containingDir, "netbeans.conf" );
+                    }
+                    if (sysWideConfig != null  &&  sysWideConfig.canRead()) {
+                        // Do the file copy.
+                        log.info("Copying " + sysWideConfig + " to " + fqBrandingConfig);
+                        if ( ! fqBrandingConfig.getParentFile().exists() ) {
+                            fqBrandingConfig.getParentFile().mkdir();
+                        }
+                        FileUtils.copy(sysWideConfig, fqBrandingConfig, false, false, null);
+                    }
+                    else {
+                        log.error("Failed to save config file changes.  Config file used was {}.", sysWideConfig);
+                    }
+                }
+            }
+            
+        }
+        
+        return fqBrandingConfig;
+    }
+    
+    private static String getJavaMemOption( String[] defaultOptions ) {
+        String rtnVal = null;
+        for ( String defaultOption: defaultOptions ) {
+            if ( defaultOption.startsWith( MEMORY_SETTING_PREFIX ) ) {
+                rtnVal = defaultOption;
+                break;
+            }
+        }
+        return rtnVal;
+    }
+    
+    private static String[] getDefaultOptions( File infile ) throws IOException {
+        Properties props = loadNbConfig( infile );
+        String value = (String)props.get( "default_options" );
+        if ( value != null ) {
+            return value.split( " " );
+        }
+        else {
+            return new String[0];
+        }
+    }
+    
+    private static Properties loadNbConfig( File infile ) throws IOException {
+        Properties props = new Properties();
+        props.load( new FileInputStream( infile ) );
+        return props;
+    }
+    
+    private synchronized static void reWriteProperty( File outFile, String propName, String propValue ) throws IOException {
+        Properties oldProps = loadNbConfig( outFile );
+        oldProps.setProperty( propName, propValue );
+        try ( PrintWriter pw = new PrintWriter(new FileWriter(outFile) ) ) {
+            for ( Object name: oldProps.keySet () ) {
+                pw.println(name + "=" + oldProps.getProperty(name.toString()));
+            }
+        } catch ( IOException ioe ) {
+            throw ioe;
+        }
+    }
+    
 }

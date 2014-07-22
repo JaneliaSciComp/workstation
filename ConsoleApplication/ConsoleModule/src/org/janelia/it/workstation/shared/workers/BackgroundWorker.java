@@ -42,9 +42,14 @@ public abstract class BackgroundWorker extends SimpleWorker {
 
     public abstract String getName();
 
-    protected void setStatus(String status) {
+    public void setStatus(String status) {
         this.status = status;
         ModelMgr.getModelMgr().postOnEventBus(new WorkerChangedEvent(this));
+    }
+
+    public void setFinalStatus(String status) {
+        setStatus(status);
+        setProgress(100);
     }
 
     @Override

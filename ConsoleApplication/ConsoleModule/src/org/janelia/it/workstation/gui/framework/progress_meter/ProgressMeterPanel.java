@@ -43,8 +43,7 @@ public class ProgressMeterPanel extends JPanel {
     
     private final JPanel mainPanel;
     private final JButton clearButton;
-    private final JButton okButton;
-    
+
     private final ImageIcon animatedIcon = Icons.getIcon("cog_small_anim_orange.gif");
     private final ImageIcon staticIcon = Icons.getIcon("cog_small.gif");
     private ImageIcon currIcon = staticIcon;
@@ -79,22 +78,12 @@ public class ProgressMeterPanel extends JPanel {
             }
         });
 
-        this.okButton = new JButton("OK");
-        okButton.setToolTipText("Hide this window");
-        okButton.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                setVisible(false);
-            }
-        });
-
         JPanel buttonPane = new JPanel();
         buttonPane.setLayout(new BoxLayout(buttonPane, BoxLayout.LINE_AXIS));
         buttonPane.setBorder(BorderFactory.createEmptyBorder(0, 10, 10, 10));
         buttonPane.add(Box.createHorizontalGlue());
         buttonPane.add(clearButton);
-        buttonPane.add(okButton);
-        
+
         add(buttonPane, BorderLayout.SOUTH);
     }
 
@@ -146,7 +135,7 @@ public class ProgressMeterPanel extends JPanel {
     }
     
     private void clearCompleted() {
-        Set<MonitoredWorkerPanel> toRemove = new HashSet<MonitoredWorkerPanel>();
+        Set<MonitoredWorkerPanel> toRemove = new HashSet<>();
         for(Component child : mainPanel.getComponents()) {
             if (child instanceof MonitoredWorkerPanel) {
                 MonitoredWorkerPanel workerPanel = (MonitoredWorkerPanel)child;
@@ -210,13 +199,15 @@ public class ProgressMeterPanel extends JPanel {
         return currIcon;
     }
     
+    @SuppressWarnings("UnusedDeclaration") // event bus usage not detected by IDE
     @Subscribe
     public void processEvent(WorkerStartedEvent e) {
         log.debug("Worker started: {}",e.getWorker().getName());
         addWorker(e.getWorker());
         updateMenuLabel(true);
     }
-    
+
+    @SuppressWarnings("UnusedDeclaration") // event bus usage not detected by IDE
     @Subscribe
     public void processEvent(WorkerChangedEvent e) {
         MonitoredWorkerPanel workerPanel = getWorkerPanel(e.getWorker());
@@ -226,7 +217,8 @@ public class ProgressMeterPanel extends JPanel {
             updateMenuLabel(false);
         }
     }
-    
+
+    @SuppressWarnings("UnusedDeclaration") // event bus usage not detected by IDE
     @Subscribe
     public void processEvent(WorkerEndedEvent e) {
         MonitoredWorkerPanel workerPanel = getWorkerPanel(e.getWorker());

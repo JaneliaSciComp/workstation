@@ -1,40 +1,11 @@
 package org.janelia.it.workstation.gui.framework.outline;
 
-import org.janelia.it.workstation.api.entity_model.management.EntitySelectionModel;
-import org.janelia.it.workstation.api.entity_model.management.ModelMgr;
-import org.janelia.it.workstation.api.entity_model.management.ModelMgrUtils;
-import org.janelia.it.workstation.gui.dialogs.EntityDetailsDialog;
-import org.janelia.it.workstation.gui.dialogs.SpecialAnnotationChooserDialog;
-import org.janelia.it.workstation.gui.dialogs.TaskDetailsDialog;
-import org.janelia.it.workstation.gui.framework.actions.Action;
-import org.janelia.it.workstation.gui.framework.actions.AnnotateAction;
-import org.janelia.it.workstation.gui.framework.actions.OpenInFinderAction;
-import org.janelia.it.workstation.gui.framework.actions.OpenWithDefaultAppAction;
-import org.janelia.it.workstation.gui.framework.actions.RemoveEntityAction;
-import org.janelia.it.workstation.gui.framework.console.Browser;
-import org.janelia.it.workstation.gui.framework.console.Perspective;
-import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
-import org.janelia.it.workstation.gui.framework.tool_manager.ToolMgr;
-import org.janelia.it.workstation.api.entity_model.management.ModelMgrEntityLoader;
-import org.janelia.it.workstation.gui.dialogs.SetSortCriteriaDialog;
-import org.janelia.it.workstation.gui.framework.viewer.Hud;
-import org.janelia.it.workstation.gui.util.DesktopApi;
-import org.janelia.it.workstation.gui.util.JScrollMenu;
-import org.janelia.it.workstation.model.entity.RootedEntity;
-import org.janelia.it.workstation.model.utils.AnnotationSession;
-import org.janelia.it.workstation.nb_action.EntityAcceptor;
-import org.janelia.it.workstation.nb_action.ServiceAcceptorHelper;
-import org.janelia.it.workstation.shared.util.ConsoleProperties;
-import org.janelia.it.workstation.shared.util.SystemInfo;
-import org.janelia.it.workstation.shared.util.Utils;
-import org.janelia.it.workstation.shared.workers.SimpleWorker;
 import org.janelia.it.jacs.model.entity.Entity;
 import org.janelia.it.jacs.model.entity.EntityConstants;
 import org.janelia.it.jacs.model.entity.EntityData;
 import org.janelia.it.jacs.model.ontology.OntologyAnnotation;
 import org.janelia.it.jacs.model.ontology.OntologyElement;
 import org.janelia.it.jacs.model.tasks.Task;
-import org.janelia.it.jacs.model.tasks.TaskMessage;
 import org.janelia.it.jacs.model.tasks.TaskParameter;
 import org.janelia.it.jacs.model.tasks.neuron.NeuronMergeTask;
 import org.janelia.it.jacs.shared.utils.EntityUtils;
@@ -42,25 +13,44 @@ import org.janelia.it.jacs.shared.utils.MailHelper;
 import org.janelia.it.jacs.shared.utils.StringUtils;
 import org.janelia.it.jacs.shared.utils.entity.EntityVisitor;
 import org.janelia.it.jacs.shared.utils.entity.EntityVistationBuilder;
-import org.janelia.it.workstation.shared.workers.TaskMonitoringWorker;
+import org.janelia.it.workstation.api.entity_model.management.EntitySelectionModel;
+import org.janelia.it.workstation.api.entity_model.management.ModelMgr;
+import org.janelia.it.workstation.api.entity_model.management.ModelMgrEntityLoader;
+import org.janelia.it.workstation.api.entity_model.management.ModelMgrUtils;
+import org.janelia.it.workstation.gui.dialogs.EntityDetailsDialog;
+import org.janelia.it.workstation.gui.dialogs.SetSortCriteriaDialog;
+import org.janelia.it.workstation.gui.dialogs.SpecialAnnotationChooserDialog;
+import org.janelia.it.workstation.gui.dialogs.TaskDetailsDialog;
+import org.janelia.it.workstation.gui.framework.actions.Action;
+import org.janelia.it.workstation.gui.framework.actions.*;
+import org.janelia.it.workstation.gui.framework.console.Browser;
+import org.janelia.it.workstation.gui.framework.console.Perspective;
+import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
+import org.janelia.it.workstation.gui.framework.tool_manager.ToolMgr;
+import org.janelia.it.workstation.gui.framework.viewer.Hud;
+import org.janelia.it.workstation.gui.util.JScrollMenu;
+import org.janelia.it.workstation.model.entity.RootedEntity;
+import org.janelia.it.workstation.model.utils.AnnotationSession;
+import org.janelia.it.workstation.nb_action.EntityAcceptor;
+import org.janelia.it.workstation.nb_action.ServiceAcceptorHelper;
+import org.janelia.it.workstation.shared.util.ConsoleProperties;
+import org.janelia.it.workstation.shared.util.Utils;
+import org.janelia.it.workstation.shared.workers.*;
 import org.janelia.it.workstation.ws.ExternalClient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.swing.*;
-
 import java.awt.*;
 import java.awt.datatransfer.StringSelection;
 import java.awt.datatransfer.Transferable;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.InputEvent;
 import java.awt.event.KeyEvent;
-import java.io.File;
-import java.io.FilenameFilter;
 import java.util.*;
 import java.util.List;
 import java.util.concurrent.Callable;
-import java.util.concurrent.CancellationException;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
@@ -78,13 +68,9 @@ public class EntityContextMenu extends JPopupMenu {
     protected static final Browser browser = SessionMgr.getBrowser();
     protected static final Component mainFrame = SessionMgr.getMainFrame();
 
-    // Download directories
-    private static final File downloadDir = new File(SystemInfo.getDownloadsDir(), "Workstation Images");
-    private static final File splitsDir = new File(SystemInfo.getDownloadsDir(), "Split Channel Images");
-
-    // Lock to make sure only one file is downloaded at a time 
+    // Lock to make sure only one file is downloaded at a time
     private static final Lock copyFileLock = new ReentrantLock();
-    
+
     // Current selection
     protected List<RootedEntity> rootedEntityList;
     protected RootedEntity rootedEntity;
@@ -101,7 +87,7 @@ public class EntityContextMenu extends JPopupMenu {
     }
 
     public  EntityContextMenu(RootedEntity rootedEntity) {
-        List<RootedEntity> rootedEntityList = new ArrayList<RootedEntity>();
+        List<RootedEntity> rootedEntityList = new ArrayList<>();
         rootedEntityList.add(rootedEntity);
         init(rootedEntityList);
     }
@@ -152,6 +138,7 @@ public class EntityContextMenu extends JPopupMenu {
         setNextAddRequiresSeparator(true);
         add(getSortBySimilarityItem());
         add(getMergeItem());
+        add(getLsmDownloadMenu());
         add(getDownloadMenu());
         add(getImportItem());
 //        add(getCreateSessionItem());
@@ -258,7 +245,7 @@ public class EntityContextMenu extends JPopupMenu {
         if (multiple) return null;
         
         JMenuItem detailsMenuItem = new JMenuItem("  View Details");
-        detailsMenuItem.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_I, Event.META_MASK));
+        detailsMenuItem.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_I, InputEvent.META_MASK));
         detailsMenuItem.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
@@ -326,7 +313,7 @@ public class EntityContextMenu extends JPopupMenu {
                 } else {
                     // Find the best context to show the entity in
                     List<List<EntityData>> edPaths = ModelMgr.getModelMgr().getPathsToRoots(targetEntity.getId());
-                    List<EntityDataPath> paths = new ArrayList<EntityDataPath>();
+                    List<EntityDataPath> paths = new ArrayList<>();
                     for (List<EntityData> path : edPaths) {
                         EntityDataPath edp = new EntityDataPath(path);
                         if (!edp.isHidden()) {
@@ -414,7 +401,7 @@ public class EntityContextMenu extends JPopupMenu {
 
     /** Makes the item for showing the entity in its own viewer iff the entity type is correct. */
     public Collection<JComponent> getOpenForContextItems() {
-        TreeMap<Integer,JComponent> orderedMap = new TreeMap<Integer,JComponent>();
+        TreeMap<Integer,JComponent> orderedMap = new TreeMap<>();
         if (rootedEntity != null && rootedEntity.getEntityData() != null) {
             final Entity entity = rootedEntity.getEntity();
             if (entity!=null) {
@@ -428,7 +415,7 @@ public class EntityContextMenu extends JPopupMenu {
                         );
                 boolean lastItemWasSeparator = false;
                 int expectedCount = 0;
-                List<JComponent> actionItemList = new ArrayList<JComponent>();
+                List<JComponent> actionItemList = new ArrayList<>();
                 for ( EntityAcceptor entityAcceptor: entityAcceptors ) {                    
                     final Integer order = entityAcceptor.getOrder();
                     if (entityAcceptor.isPrecededBySeparator() && (! lastItemWasSeparator)) {
@@ -452,12 +439,10 @@ public class EntityContextMenu extends JPopupMenu {
                 
                 // This is the bail strategy for order key clashes.
                 if ( orderedMap.size() < expectedCount) {
-                    String message = String.format(
-                            "With menu items and separators, expected {} but added {} open-for-context items."
-                          + "  This indicates an order key clash.  Please check the getOrder methods of all impls.\n"
-                          + "Returning an unordered version of item list.", 
+                    log.warn("With menu items and separators, expected {} but added {} open-for-context items." +
+                            "  This indicates an order key clash.  Please check the getOrder methods of all impls." +
+                            "  Returning an unordered version of item list.",
                             expectedCount, orderedMap.size());
-                    log.warn(message);
                     return actionItemList;
                 }
             }
@@ -656,7 +641,7 @@ public class EntityContextMenu extends JPopupMenu {
 
     protected JMenuItem getProcessingBlockItem() {
 
-        final List<Entity> samples = new ArrayList<Entity>();
+        final List<Entity> samples = new ArrayList<>();
         for (RootedEntity rootedEntity : rootedEntityList) {
             Entity sample = rootedEntity.getEntity();
             if (sample.getEntityTypeName().equals(EntityConstants.TYPE_SAMPLE)) {
@@ -678,7 +663,7 @@ public class EntityContextMenu extends JPopupMenu {
                 
                 if (result != 0) return;
 
-                Task task = null;
+                Task task;
                 try {
                     StringBuilder sampleIdBuf = new StringBuilder();
                     for(Entity sample : samples) {
@@ -686,7 +671,7 @@ public class EntityContextMenu extends JPopupMenu {
                         sampleIdBuf.append(sample.getId());
                     }
                     
-                    HashSet<TaskParameter> taskParameters = new HashSet<TaskParameter>();
+                    HashSet<TaskParameter> taskParameters = new HashSet<>();
                     taskParameters.add(new TaskParameter("sample entity id", sampleIdBuf.toString(), null));
                     task = ModelMgr.getModelMgr().submitJob("ConsolePurgeAndBlockSample", "Purge And Block Sample", taskParameters);
                 }
@@ -729,7 +714,7 @@ public class EntityContextMenu extends JPopupMenu {
 
     protected JMenuItem getMarkForReprocessingItem() {
 
-        final List<Entity> samples = new ArrayList<Entity>();
+        final List<Entity> samples = new ArrayList<>();
         for (RootedEntity rootedEntity : rootedEntityList) {
             Entity sample = rootedEntity.getEntity();
             if (sample.getEntityTypeName().equals(EntityConstants.TYPE_SAMPLE)) {
@@ -882,11 +867,6 @@ public class EntityContextMenu extends JPopupMenu {
     
     protected JMenu getAddToRootFolderItem() {
 
-        if (!multiple && rootedEntity.getEntity() != null
-                && rootedEntity.getEntity().getValueByAttributeName(EntityConstants.ATTRIBUTE_COMMON_ROOT) != null) {
-            return null;
-        }
-
         JMenu newFolderMenu = new JScrollMenu("  Add To Top-Level Folder");
 
         JMenuItem createNewItem = new JMenuItem("Create New...");
@@ -907,7 +887,7 @@ public class EntityContextMenu extends JPopupMenu {
                         // Update database
                         Entity newFolder = ModelMgr.getModelMgr().createCommonRoot(folderName);
 
-                        List<Long> ids = new ArrayList<Long>();
+                        List<Long> ids = new ArrayList<>();
                         for (RootedEntity rootedEntity : rootedEntityList) {
                             ids.add(rootedEntity.getEntity().getId());
                         }
@@ -943,7 +923,7 @@ public class EntityContextMenu extends JPopupMenu {
                     SimpleWorker worker = new SimpleWorker() {
                         @Override
                         protected void doStuff() throws Exception {
-                            List<Long> ids = new ArrayList<Long>();
+                            List<Long> ids = new ArrayList<>();
                             for (RootedEntity rootedEntity : rootedEntityList) {
                                 ids.add(rootedEntity.getEntity().getId());
                             }
@@ -1035,7 +1015,7 @@ public class EntityContextMenu extends JPopupMenu {
             return null;
         }
 
-        HashSet<Long> parentIds = new HashSet<Long>();
+        HashSet<Long> parentIds = new HashSet<>();
         for (RootedEntity rootedEntity : rootedEntityList) {
             // Add all parent ids to a collection
             if (null != rootedEntity.getEntityData().getParentEntity()
@@ -1063,7 +1043,7 @@ public class EntityContextMenu extends JPopupMenu {
                     protected void doStuff() throws Exception {
                         setProgress(1);
                         Long parentId = null;
-                        List<Entity> fragments = new ArrayList<Entity>();
+                        List<Entity> fragments = new ArrayList<>();
                         for (RootedEntity entity : rootedEntityList) {
                             Long resultId = ModelMgr
                                     .getModelMgr()
@@ -1090,7 +1070,7 @@ public class EntityContextMenu extends JPopupMenu {
                             }
                         });
 
-                        HashSet<String> fragmentIds = new LinkedHashSet<String>();
+                        HashSet<String> fragmentIds = new LinkedHashSet<>();
                         for (Entity fragment : fragments) {
                             fragmentIds.add(fragment.getId().toString());
                         }
@@ -1100,7 +1080,7 @@ public class EntityContextMenu extends JPopupMenu {
                             return;
                         }
                         
-                        HashSet<TaskParameter> taskParameters = new HashSet<TaskParameter>();
+                        HashSet<TaskParameter> taskParameters = new HashSet<>();
                         taskParameters.add(new TaskParameter(NeuronMergeTask.PARAM_separationEntityId, parentId.toString(), null));
                         taskParameters.add(new TaskParameter(NeuronMergeTask.PARAM_commaSeparatedNeuronFragmentList, Task.csvStringFromCollection(fragmentIds), null));
                         ModelMgr.getModelMgr().submitJob("NeuronMerge", "Neuron Merge Task", taskParameters);
@@ -1151,7 +1131,7 @@ public class EntityContextMenu extends JPopupMenu {
         sortItem.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent actionEvent) {
                 try {
-                    HashSet<TaskParameter> taskParameters = new HashSet<TaskParameter>();
+                    HashSet<TaskParameter> taskParameters = new HashSet<>();
                     taskParameters.add(new TaskParameter("folder id", folder.getId().toString(), null));
                     taskParameters.add(new TaskParameter("target stack id", targetEntity.getId().toString(), null));
                     Task task = ModelMgr.getModelMgr().submitJob("SortBySimilarity", "Sort By Similarity", taskParameters);
@@ -1177,7 +1157,8 @@ public class EntityContextMenu extends JPopupMenu {
         }
 
         final Entity targetEntity = rootedEntity.getEntity();
-        if (!targetEntity.getEntityTypeName().equals(EntityConstants.TYPE_FOLDER)) {
+        final String targetType = targetEntity.getEntityTypeName();
+        if (!targetType.equals(EntityConstants.TYPE_FOLDER) && !targetType.equals(EntityConstants.TYPE_WORKSPACE)) {
             return null;
         }
         
@@ -1200,18 +1181,23 @@ public class EntityContextMenu extends JPopupMenu {
     
     protected JMenuItem getDownloadMenu() {
 
-        List<Entity> entitiesWithFilepaths = new ArrayList<Entity>();
+        List<Entity> entitiesWithFilepaths = new ArrayList<>();
         for(final RootedEntity rootedEntity : rootedEntityList) {
             final Entity targetEntity = rootedEntity.getEntity();
             final String filepath = EntityUtils.getDefault3dImageFilePath(targetEntity);
             if (filepath!=null) {
-                entitiesWithFilepaths.add(targetEntity);
+                // conversion pipeline can't handle bz2 (yet), so filter them out
+                if (! filepath.endsWith(Utils.EXTENSION_BZ2)) {
+                    entitiesWithFilepaths.add(targetEntity);
+                }
             }
         }
-        if (entitiesWithFilepaths.isEmpty()) return null;
-        
+        if (entitiesWithFilepaths.isEmpty()) {
+            return null;
+        }
+
         String[] DOWNLOAD_EXTENSIONS = {"tif", "v3draw", "v3dpbd", "mp4"};
-        String itemTitle = null;
+        String itemTitle;
         if (entitiesWithFilepaths.size()>1) {
             itemTitle = "  Download "+entitiesWithFilepaths.size()+" 3D Images As...";
         }
@@ -1221,17 +1207,61 @@ public class EntityContextMenu extends JPopupMenu {
         
         JMenu downloadMenu = new JMenu(itemTitle);
         for(String extension : DOWNLOAD_EXTENSIONS) {
-            add(downloadMenu, getDownloadItem(entitiesWithFilepaths, false, extension));    
+            add(downloadMenu, getDownloadItem(entitiesWithFilepaths, false, extension));
         }
         for(String extension : DOWNLOAD_EXTENSIONS) {
-            add(downloadMenu, getDownloadItem(entitiesWithFilepaths, true, extension));    
+            add(downloadMenu, getDownloadItem(entitiesWithFilepaths, true, extension));
         }
         return downloadMenu;
     }
-    
-    protected JMenuItem getDownloadItem(final List<Entity> entitiesWithFilepaths, final boolean splitChannels, final String extension) {
-        
-        String itemTitle = null;
+
+    protected JMenuItem getLsmDownloadMenu() {
+
+        boolean foundAtLeastOneBzippedFile = false;
+
+        List<Entity> entitiesWithFilepaths = new ArrayList<>();
+        Entity targetEntity;
+        String filePath;
+        for (RootedEntity rootedEntity : rootedEntityList) {
+            targetEntity = rootedEntity.getEntity();
+            filePath = EntityUtils.getDefault3dImageFilePath(targetEntity);
+            if (filePath != null) {
+                // only include .lsm or .lsm.bz2 files
+                if (filePath.endsWith(Utils.EXTENSION_LSM)) {
+                    entitiesWithFilepaths.add(targetEntity);
+                } else if (filePath.endsWith(Utils.EXTENSION_LSM_BZ2)) {
+                    foundAtLeastOneBzippedFile = true;
+                    entitiesWithFilepaths.add(targetEntity);
+                }
+            }
+        }
+
+        if (entitiesWithFilepaths.isEmpty()) {
+            return null;
+        }
+
+        String itemTitle;
+        if (entitiesWithFilepaths.size()>1) {
+            itemTitle = "  Download " + entitiesWithFilepaths.size() + " LSMs As...";
+        }
+        else {
+            itemTitle = "  Download LSM As...";
+        }
+
+        JMenu downloadMenu = new JMenu(itemTitle);
+        add(downloadMenu, getDownloadItem(entitiesWithFilepaths, false, Utils.EXTENSION_LSM));
+        if (foundAtLeastOneBzippedFile) {
+            add(downloadMenu, getDownloadItem(entitiesWithFilepaths, false, Utils.EXTENSION_BZ2));
+        }
+
+        return downloadMenu;
+    }
+
+    protected JMenuItem getDownloadItem(final Collection<Entity> entitiesWithFilepaths,
+                                        final boolean splitChannels,
+                                        final String extension) {
+
+        String itemTitle;
         if (splitChannels) {
             if (multiple) {
                 itemTitle = "Split Channel "+extension+" Files (Background Task)";
@@ -1254,169 +1284,12 @@ public class EntityContextMenu extends JPopupMenu {
         downloadItem.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent actionEvent) {
                 try {
-                    for(final Entity entity : entitiesWithFilepaths) {
-
-                        final String filepath = EntityUtils.getDefault3dImageFilePath(entity);
-                        
-                        SimpleWorker worker = new SimpleWorker() {
-
-                            protected Entity default3dImage;
-                            protected Entity sample;
-                            protected File targetDir;
-                            
-                            @Override
-                            protected void doStuff() throws Exception {
-                                Entity targetLoaded = ModelMgr.getModelMgr().loadLazyEntity(entity, false);
-                                this.default3dImage = targetLoaded.getChildByAttributeName(EntityConstants.ATTRIBUTE_DEFAULT_3D_IMAGE);
-                                if (entity.getEntityTypeName().equals(EntityConstants.TYPE_SAMPLE)) {
-                                    this.sample = entity;
-                                }
-                                else {
-                                    this.sample = ModelMgr.getModelMgr().getAncestorWithType(entity, EntityConstants.TYPE_SAMPLE);
-                                }
-                                if (sample==null) {
-                                    this.sample = entity;
-                                }
-                                this.targetDir = new File(splitChannels ? splitsDir : downloadDir, sample.getName());
-                            }
-                            
-                            @Override
-                            protected void hadSuccess() {
-                                try {
-                                    String idStr = default3dImage==null?"":"_ID"+default3dImage.getId().toString();
-                                    final String localFilePrefix = sample.getName()+idStr+"_";
-                                    
-                                    log.debug("Checking {} for files that start with {} and end with "+extension,targetDir,localFilePrefix);
-                                    
-                                    File[] files = targetDir.listFiles(new FilenameFilter() {
-                                        @Override
-                                        public boolean accept(File dir, String name) {
-                                            return name.startsWith(localFilePrefix) && name.endsWith(extension);
-                                        }
-                                    });
-
-                                    if (files!=null && files.length>0) {
-                                        Object[] options = { "Open folder", "Run anyway" };
-                                        int n = JOptionPane.showOptionDialog(mainFrame, 
-                                                "Files already exist. Open existing folder, or run the download anyway?", "Files already exist", JOptionPane.YES_NO_OPTION,
-                                                JOptionPane.QUESTION_MESSAGE, null, options, options[0]);
-                                        if (n==0) {
-                                            DesktopApi.browse(targetDir);
-                                            return;
-                                        }
-                                    }
-                                    
-                                    Task task = null;
-                                    if (splitChannels) {
-                                        HashSet<TaskParameter> taskParameters = new HashSet<TaskParameter>();
-                                        taskParameters.add(new TaskParameter("filepath", filepath, null));
-                                        taskParameters.add(new TaskParameter("output extension", extension, null));
-                                        task = ModelMgr.getModelMgr().submitJob("ConsoleSplitChannels", "Split Channels", taskParameters);
-                                    }
-                                    else {    
-                                        HashSet<TaskParameter> taskParameters = new HashSet<TaskParameter>();
-                                        taskParameters.add(new TaskParameter("filepath", filepath, null));
-                                        taskParameters.add(new TaskParameter("output extension", extension, null));
-                                        task = ModelMgr.getModelMgr().submitJob("ConsoleConvertFile", "Convert File", taskParameters);
-                                    }
-
-                                    TaskMonitoringWorker taskWorker = new TaskMonitoringWorker(task.getObjectId()) {
-
-                                        @Override
-                                        public String getName() {
-                                            return "Downloading "+sample.getName();
-                                        }
-
-                                        @Override
-                                        protected void doStuff() throws Exception {
-
-                                            setStatus("Grid execution");
-                                            
-                                            // Wait until task is finished
-                                            super.doStuff(); 
-                                            
-                                            if (isCancelled()) throw new CancellationException();
-                                            setStatus("Parse result");
-                                            
-                                            // Since there is no way to log task output vars, we use a convention where the last message 
-                                            // will contain the output directory path.
-                                            String resultFiles = null;
-                                            List<TaskMessage> messages = new ArrayList<TaskMessage>(getTask().getMessages());
-                                            if (!messages.isEmpty()) {
-                                                Collections.sort(messages, new Comparator<TaskMessage>() {
-                                                    @Override
-                                                    public int compare(TaskMessage o1, TaskMessage o2) {
-                                                        return o2.getMessageId().compareTo(o1.getMessageId());
-                                                    }
-                                                });
-                                                resultFiles = messages.get(0).getMessage();
-                                            }
-                                            
-                                            if (isCancelled()) throw new CancellationException();
-                                            
-                                            if (resultFiles==null) {
-                                                throw new Exception("No result files generated");
-                                            }
-                                            
-                                            // Copy the files to the local drive
-                                            String[] pathAndFiles = resultFiles.split(":");
-                                            String path = pathAndFiles[0];
-                                            String[] files = pathAndFiles[1].split(",");
-                                            for(String filepath : files) {
-                                                copyChannelFile(path+"/"+filepath);    
-                                            }
-                                            
-                                            if (isCancelled()) throw new CancellationException();
-                                            setStatus("Done");
-                                            
-                                            setProgress(100);
-                                        }
-
-                                        private void copyChannelFile(String standardFilepath) throws Exception {
-                                            File remoteFile = new File(standardFilepath);
-                                            File localFile = new File(targetDir, localFilePrefix+remoteFile.getName());
-
-                                            setStatus("Waiting to download...");
-                                            copyFileLock.lock();
-                                            try {
-                                                setStatus("Downloading "+remoteFile.getName());
-                                                Utils.copyURLToFile(standardFilepath, localFile, this);
-                                            } finally {
-                                                copyFileLock.unlock();
-                                            }    
-                                        }
-                                        
-                                        @Override
-                                        public Callable<Void> getSuccessCallback() {
-                                            return new Callable<Void>() {
-                                                @Override
-                                                public Void call() throws Exception {
-                                                	DesktopApi.browse(targetDir);
-                                                    return null;
-                                                }
-                                            };
-                                        }
-                                    };
-
-                                    taskWorker.executeWithEvents();
-                                    
-                                }
-                                catch (Exception e) {
-                                    hadError(e);
-                                    return;
-                                }   
-                            }
-                            
-                            @Override
-                            protected void hadError(Throwable error) {
-                                SessionMgr.getSessionMgr().handleException(error);
-                            }
-                        };
-                        
-                        worker.execute();
+                    for (Entity entity : entitiesWithFilepaths) {
+                        org.janelia.it.workstation.shared.workers.SampleDownloadWorker sampleDownloadWorker =
+                                new org.janelia.it.workstation.shared.workers.SampleDownloadWorker(entity, extension, splitChannels, copyFileLock);
+                        sampleDownloadWorker.execute();
                     }
-                } 
-                catch (Exception e) {
+                } catch (Exception e) {
                     SessionMgr.getSessionMgr().handleException(e);
                 }
             }
@@ -1424,7 +1297,7 @@ public class EntityContextMenu extends JPopupMenu {
         
         return downloadItem;
     }
-    
+
     protected JMenuItem getOpenInFirstViewerItem() {
         if (multiple)
             return null;
@@ -1551,7 +1424,7 @@ public class EntityContextMenu extends JPopupMenu {
                         ToolMgr.openFile(ToolMgr.TOOL_FIJI, path, null);
                     } catch (Exception e) {
                         JOptionPane.showMessageDialog(mainFrame, "Could not launch this tool. "
-                                + "Please choose the appropriate file path from the Tools->Configure Tools area",
+                                        + "Please choose the appropriate file path from the Tools->Configure Tools area",
                                 "Tool Launch ERROR", JOptionPane.ERROR_MESSAGE);
                     }
                 }
@@ -1586,7 +1459,7 @@ public class EntityContextMenu extends JPopupMenu {
                             }
                             // If NA clients "exist", make sure they are up
                             else {
-                                ArrayList<ExternalClient> finalList = new ArrayList<ExternalClient>();
+                                ArrayList<ExternalClient> finalList = new ArrayList<>();
                                 for (ExternalClient client : clients) {
                                     boolean connected = client.isConnected();
                                     if (!connected) {
@@ -1740,48 +1613,6 @@ public class EntityContextMenu extends JPopupMenu {
             return newFolderItem;
         }
         return null;
-    }
-
-    protected JMenuItem getCreateSessionItem() {
-        if (multiple) return null;
-
-        JMenuItem newFragSessionItem = new JMenuItem("  Create Annotation Session...");
-        newFragSessionItem.addActionListener(new ActionListener() {
-            public void actionPerformed(ActionEvent actionEvent) {
-
-                final Entity entity = rootedEntity.getEntity();
-                final String uniqueId = rootedEntity.getUniqueId();
-                if (uniqueId == null)
-                    return;
-
-                SimpleWorker loadingWorker = new SimpleWorker() {
-                    private Entity fullEntity;
-                    private List<Entity> entities;
-
-                    @Override
-                    protected void doStuff() throws Exception {
-                        fullEntity = ModelMgr.getModelMgr().loadLazyEntity(entity, true);
-                        entities = EntityUtils.getDescendantsOfType(fullEntity, EntityConstants.TYPE_NEURON_FRAGMENT,
-                                true);
-                    }
-
-                    @Override
-                    protected void hadSuccess() {
-                        browser.getAnnotationSessionPropertyDialog().showForNewSession(fullEntity.getName(), entities);
-                    }
-
-                    @Override
-                    protected void hadError(Throwable error) {
-                        SessionMgr.getSessionMgr().handleException(error);
-                    }
-                };
-
-                loadingWorker.execute();
-
-            }
-        });
-
-        return newFragSessionItem;
     }
 
     protected JMenuItem getSearchHereItem() {

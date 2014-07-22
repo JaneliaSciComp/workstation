@@ -88,9 +88,6 @@ public class DynamicTree extends JPanel implements Refreshable {
                         }
                     }
                 }
-                else {
-                    backgroundClicked(e);
-                }
             }
             @Override
             public void mousePressed(MouseEvent e) {
@@ -299,14 +296,6 @@ public class DynamicTree extends JPanel implements Refreshable {
      * @param e
      */
     protected void nodeDoubleClicked(MouseEvent e) {
-    }
-
-    /**
-     * Override this method to do something when the user clicks the background.
-     *
-     * @param e
-     */
-    protected void backgroundClicked(MouseEvent e) {
     }
 
     /**
