@@ -22,6 +22,7 @@ import org.slf4j.LoggerFactory;
 
 import javax.media.opengl.*;
 import javax.swing.*;
+import org.janelia.it.workstation.gui.viewer3d.shader.AbstractShader.ShaderCreationException;
 
 /**
  * Class draws a transparent rectangular volume with a 3D opengl texture
@@ -35,11 +36,11 @@ public class MultiTexVolumeBrick implements VolumeBrickI
     private TextureMediator signalTextureMediator;
     private TextureMediator maskTextureMediator;
     private TextureMediator colorMapTextureMediator;
-    private List<TextureMediator> textureMediators = new ArrayList<TextureMediator>();
+    private final List<TextureMediator> textureMediators = new ArrayList<>();
 
     // Vary these parameters to taste
 	// Rendering variables
-	private RenderMethod renderMethod = 
+	private final RenderMethod renderMethod = 
 		// RenderMethod.ALPHA_BLENDING;
 		RenderMethod.MAXIMUM_INTENSITY; // MIP
     private boolean bUseShader = true; // Controls whether to load and use shader program(s).
@@ -51,27 +52,28 @@ public class MultiTexVolumeBrick implements VolumeBrickI
      * to reach a multiple of 8
      */
     // OpenGL state
-    private int[] signalTextureVoxels = {8,8,8};
-	private IntBuffer signalData = Buffers.newDirectIntBuffer(signalTextureVoxels[0]* signalTextureVoxels[1]* signalTextureVoxels[2]);
+    private final int[] signalTextureVoxels = {8,8,8};
+	private final IntBuffer signalData = Buffers.newDirectIntBuffer(signalTextureVoxels[0]* signalTextureVoxels[1]* signalTextureVoxels[2]);
     private boolean bSignalTextureNeedsUpload = false;
     private boolean bMaskTextureNeedsUpload = false;
     private boolean bColorMapTextureNeedsUpload = false;
     private boolean bBuffersNeedUpload = true;
 
-    private MultiTexVolumeBrickShader volumeBrickShader = new MultiTexVolumeBrickShader();
+    private final MultiTexVolumeBrickShader volumeBrickShader = new MultiTexVolumeBrickShader();
 
     private boolean bIsInitialized;
     @SuppressWarnings("ALL")
-    private boolean bUseSyntheticData = false;
+    private final boolean bUseSyntheticData = false;
 
-    private VtxCoordBufMgr bufferManager;
+    private final VtxCoordBufMgr bufferManager;
     private VolumeModel volumeModel;
 
-    private static Logger logger = LoggerFactory.getLogger( MultiTexVolumeBrick.class );
+    private static final Logger logger = LoggerFactory.getLogger( MultiTexVolumeBrick.class );
 
     static {
         try {
             SwingUtilities.invokeLater(new Runnable() {
+                @Override
                 public void run() {
 // 3rd
 //                    GLProfile profile = GLProfile.get(GLProfile.GL3);
@@ -110,6 +112,7 @@ public class MultiTexVolumeBrick implements VolumeBrickI
 
     //---------------------------------------IMPLEMEMNTS GLActor
     @Override
+    @SuppressWarnings("CallToThreadDumpStack")
 	public void init(GLAutoDrawable glDrawable) {
         // Avoid carrying out any operations if there is no real data.
         if ( signalTextureMediator == null  &&  maskTextureMediator == null ) {
@@ -147,7 +150,7 @@ public class MultiTexVolumeBrick implements VolumeBrickI
                 );
                 volumeBrickShader.init(gl);
                 reportError( gl, "init mux brick - shader" );
-            } catch ( Exception ex ) {
+            } catch ( ShaderCreationException ex ) {
                 ex.printStackTrace();
                 bUseShader = false;
             }

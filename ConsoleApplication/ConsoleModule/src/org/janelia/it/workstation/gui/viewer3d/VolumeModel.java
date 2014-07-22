@@ -5,6 +5,7 @@ import org.janelia.it.workstation.gui.camera.BasicCamera3d;
 import org.janelia.it.workstation.gui.camera.Camera3d;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 
 /**
@@ -87,7 +88,7 @@ public class VolumeModel {
     public void setVolumeUpdate() {
         Collection<UpdateListener> currentListeners;
         synchronized (this) {
-            currentListeners = new ArrayList<UpdateListener>( listeners );
+            currentListeners = new ArrayList<>( listeners );
         }
         for ( UpdateListener listener: currentListeners ) {
             listener.updateVolume();
@@ -98,7 +99,7 @@ public class VolumeModel {
     public void setRenderUpdate() {
         Collection<UpdateListener> currentListeners;
         synchronized (this) {
-            currentListeners = new ArrayList<UpdateListener>( listeners );
+            currentListeners = new ArrayList<>( listeners );
         }
         for ( UpdateListener listener: currentListeners ) {
             listener.updateRendering();
@@ -182,6 +183,21 @@ public class VolumeModel {
      */
     public float[] getBackgroundColorFArr() {
         return backgroundColor;
+    }
+    
+    /**
+     * @param whiteBackgroundFlag tells whether to set color white or black.
+     */
+    public void setWhiteBackground( boolean whiteBackgroundFlag ) {
+        setBackgroundColor(
+                whiteBackgroundFlag ?
+                        VolumeModel.ALT_BACKGROUND_COLOR :
+                        VolumeModel.DEFAULT_BACKGROUND_COLOR 
+        );
+    }
+    
+    public boolean isWhiteBackground() {
+        return Arrays.equals( backgroundColor, VolumeModel.ALT_BACKGROUND_COLOR );
     }
 
     /**

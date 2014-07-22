@@ -343,18 +343,11 @@ vec4 crop(vec4 origColor)
     }
 }
 
+/*
 vec4 adjustForBgrnd(vec4 origColor)
 {    
     if ( whiteBackground == 1 )
     {
-/*
-        return vec4(
-            clamp( 1.0 - origColor.r, 0.001, 1.0 ),
-            clamp( 1.0 - origColor.g, 0.001, 1.0 ),
-            clamp( 1.0 - origColor.b, 0.001, 1.0 ),
-            1.0
-        );
-*/
         // Based on LUMA conversion: Y=0.33R + 0.5G + 0.16B, and
         // subtracting each multiplier by 1.
         if ( origColor.r == 1.0 && origColor.g == 1.0 && origColor.b == 1.0 )
@@ -373,13 +366,14 @@ vec4 adjustForBgrnd(vec4 origColor)
         return origColor;
     }
 }
+*/
 
 void main()
 {
     vec4 origColor = texture3D(signalTexture, gl_TexCoord[0].xyz);
     vec4 maskedColor = volumeMask(origColor);
     vec4 gammaAdjustedColor = gammaAdjust(maskedColor);
-    vec4 cropColor = crop(gammaAdjustedColor);
-    gl_FragColor = adjustForBgrnd(cropColor);
+    gl_FragColor = crop(gammaAdjustedColor);
+//    gl_FragColor = adjustForBgrnd(cropColor);
 }
 
