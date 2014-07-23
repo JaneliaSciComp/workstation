@@ -751,7 +751,7 @@ public class LayersPanel extends JPanel implements Refreshable {
                     label.setToolTipText( "Chosen (mono) color rendering" );
                 }
                 else {
-                    if ( fileStats != null  &&  ( !alignedItem.getItemWrapper().getType().toLowerCase().contains("compartment") ) ) {
+                    if ( fileStats != null  &&  alignedItem.getItemWrapper() != null  &&  ( !alignedItem.getItemWrapper().getType().toLowerCase().contains("compartment") ) ) {
                         double[] colorRGB = fileStats.getChannelAverages(alignedItem.getId());
                         if ( colorRGB == null ) {
                             // Happens with reference channels.

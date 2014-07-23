@@ -130,8 +130,10 @@ public class AlignedItem extends EntityWrapper {
             		"Calling getAlignedItemWithEntityId will return null.",getName(),getType());
             return null;
         }
-        for(AlignedItem item : getAlignedItems()) {
-            if (item.getItemWrapper().getId().equals(entityId)) {
+        for (AlignedItem item : getAlignedItems()) {
+            if (item.getItemWrapper() != null  && 
+                item.getItemWrapper().getId() != null  && 
+                item.getItemWrapper().getId().equals(entityId)) {
                 return item;
             }
             else {
