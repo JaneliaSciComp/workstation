@@ -237,15 +237,13 @@ public class MultiTexVolumeBrick implements VolumeBrickI
             volumeBrickShader.setGammaAdjustment( volumeModel.getGammaAdjustment() );
             volumeBrickShader.setCropOutLevel( volumeModel.getCropOutLevel() );
             volumeBrickShader.setCropCoords( volumeModel.getCropCoords() );
+            volumeBrickShader.setWhiteBackground(volumeModel.isWhiteBackground());            
             volumeBrickShader.load(gl);
             int vertexAttribLoc = volumeBrickShader.getVertexAttribLoc();
             int texCoordAttribLoc = volumeBrickShader.getTexCoordAttribLoc();
             bufferManager.setCoordAttributeLocations( vertexAttribLoc, texCoordAttribLoc );
 
             reportError( gl, "display mux brick - flagged shader init" );
-        }
-        if (volumeModel.isWhiteBackground()) {
-            volumeBrickShader.setWhiteBackground();            
         }
 
         displayVolumeSlices(gl);

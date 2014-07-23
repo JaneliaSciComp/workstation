@@ -93,8 +93,8 @@ public class MultiTexVolumeBrickShader extends AbstractShader {
     }
     
     /** Signals to the shader, that it must act appropriately for white surrounding, rather than black. */
-    public void setWhiteBackground() {
-        whiteBackground = true;
+    public void setWhiteBackground(boolean whiteBackground) {
+        this.whiteBackground = whiteBackground;
     }
 
     /**
