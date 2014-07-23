@@ -45,7 +45,7 @@ public class AxesActor implements GLActor
     private int lineBufferHandle;
     private int inxBufferHandle;
     
-    private boolean whiteBackground = false;
+    private VolumeModel volumeModel;
 
     private int lineBufferVertexCount = 0;
 
@@ -72,8 +72,8 @@ public class AxesActor implements GLActor
         setAxisLengths( DEFAULT_AXIS_LEN, DEFAULT_AXIS_LEN, DEFAULT_AXIS_LEN );
     }
 
-    public void setWhiteBackground( boolean whiteBackground ) {
-        this.whiteBackground = whiteBackground;
+    public void setVolumeModel( VolumeModel volumeModel ) {
+        this.volumeModel = volumeModel;
     }
     
     public void setAxisLengths( double xAxisLength, double yAxisLength, double zAxisLength ) {
@@ -141,7 +141,7 @@ public class AxesActor implements GLActor
             reportError( gl, "Display of axes-actor alpha" );
         }
         else if (renderMethod == RenderMethod.MAXIMUM_INTENSITY) {
-            if ( whiteBackground ) {
+            if ( volumeModel.isWhiteBackground() ) {
                 gl.glBlendEquation(GL2.GL_MIN);
             }
             else {
@@ -159,7 +159,7 @@ public class AxesActor implements GLActor
         reportError( gl, "Display of axes-actor 1" );
 
         float alpha = 1.0f;
-        float grayValue = whiteBackground ? 0.85f : 0.15f;
+        float grayValue = volumeModel.isWhiteBackground() ? 0.85f : 0.15f;
         gl.glColor4f(grayValue * 2.0f, grayValue, grayValue, alpha);
         reportError( gl, "Display of axes-actor 2" );
 
