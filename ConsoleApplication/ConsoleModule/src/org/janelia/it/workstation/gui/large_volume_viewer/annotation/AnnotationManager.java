@@ -308,6 +308,9 @@ public class AnnotationManager
                 if (annotationModel.automatedRefinementEnabled()) {
                     PointRefiner refiner = new PointRefiner(quadViewUi.getSubvolumeProvider());
                     finalLocation = refiner.refine(xyz);
+
+                    // System.out.println("add annotation: input point " + xyz);
+                    // System.out.println("add annotation: refined point " + finalLocation);
                 } else {
                     finalLocation = xyz;
                 }

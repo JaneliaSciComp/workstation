@@ -15,6 +15,7 @@ import org.janelia.it.workstation.octree.ZoomedVoxelIndex;
  *
  * eventually this class may switch between several algorithms,
  * which may themselves be implemented in different classes,
+ * which will need their own UIs to input parameters,
  * but to start, it's going to be monolithic and hard-coded
  *
  * djo, 7/14
@@ -29,16 +30,7 @@ public class PointRefiner {
     }
 
     Vec3 refine(Vec3 point) {
-
-        // debug
-        System.out.println("refining " + point);
-
-        // test with identity operation
-        return identity(point);
-    }
-
-    Vec3 identity(Vec3 point) {
-        return point;
+        return maxIntensityZ(point, 5);
     }
 
     /**
@@ -87,13 +79,17 @@ public class PointRefiner {
         long maxIntensity = -1L;
         long currentIntensity;
         long sumIntensitySquared;
+        ZoomedVoxelIndex currentZVI;
         Integer zMaxInt = null;
         for (int z=zmin; z<=zmax; z++) {
             sumIntensitySquared = 0;
+            currentZVI = new ZoomedVoxelIndex(zoomLevel, xc, yc, z);
             for (int c=0; c<volume.getChannelCount(); c++) {
-                currentIntensity = volume.getIntensityGlobal(new ZoomedVoxelIndex(zoomLevel, xc, yc, z), c);
+                currentIntensity = volume.getIntensityGlobal(currentZVI, c);
+                // System.out.println("z: " + z + "; channel " + c + " intensity: " + volume.getIntensityGlobal(currentZVI, c));
                 sumIntensitySquared += currentIntensity * currentIntensity;
             }
+            // System.out.println("z: " + z + "; sum sqr intensity: " + sumIntensitySquared);
             if (sumIntensitySquared > maxIntensity) {
                 zMaxInt = z;
                 maxIntensity = sumIntensitySquared;
