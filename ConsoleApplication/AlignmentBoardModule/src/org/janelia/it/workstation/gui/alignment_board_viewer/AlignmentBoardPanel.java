@@ -273,7 +273,8 @@ public class AlignmentBoardPanel extends JPanel implements AlignmentBoardControl
             }
             GLActor axesActor = actorBuilder.buildAxesActor(
                     volumeBrickActor.getBoundingBox3d(), 
-                    settingsData.getAcceptedDownsampleRate()
+                    settingsData.getAcceptedDownsampleRate(),
+                    mip3d.getVolumeModel().isWhiteBackground()
             );
             if ( axesActor != null ) {
                 mip3d.addActor( axesActor );

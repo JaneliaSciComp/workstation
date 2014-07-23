@@ -44,6 +44,8 @@ public class AxesActor implements GLActor
 
     private int lineBufferHandle;
     private int inxBufferHandle;
+    
+    private boolean whiteBackground = false;
 
     private int lineBufferVertexCount = 0;
 
@@ -70,6 +72,10 @@ public class AxesActor implements GLActor
         setAxisLengths( DEFAULT_AXIS_LEN, DEFAULT_AXIS_LEN, DEFAULT_AXIS_LEN );
     }
 
+    public void setWhiteBackground( boolean whiteBackground ) {
+        this.whiteBackground = whiteBackground;
+    }
+    
     public void setAxisLengths( double xAxisLength, double yAxisLength, double zAxisLength ) {
         axisLengths[ 0 ] = xAxisLength;
         axisLengths[ 1 ] = yAxisLength;
@@ -135,7 +141,12 @@ public class AxesActor implements GLActor
             reportError( gl, "Display of axes-actor alpha" );
         }
         else if (renderMethod == RenderMethod.MAXIMUM_INTENSITY) {
-            gl.glBlendEquation(GL2.GL_MAX);
+            if ( whiteBackground ) {
+                gl.glBlendEquation(GL2.GL_MIN);
+            }
+            else {
+                gl.glBlendEquation(GL2.GL_MAX);
+            }
             gl.glBlendFunc(GL2.GL_ONE, GL2.GL_DST_ALPHA);
             reportError( gl, "Display of axes-actor maxintensity" );
         }
@@ -147,8 +158,9 @@ public class AxesActor implements GLActor
         gl.glBindBuffer( GL2.GL_ARRAY_BUFFER, lineBufferHandle );
         reportError( gl, "Display of axes-actor 1" );
 
-        float grayValue = 0.15f;
-        gl.glColor4f(grayValue * 2.0f, grayValue, grayValue, 1.0f);
+        float alpha = 1.0f;
+        float grayValue = whiteBackground ? 0.85f : 0.15f;
+        gl.glColor4f(grayValue * 2.0f, grayValue, grayValue, alpha);
         reportError( gl, "Display of axes-actor 2" );
 
         gl.glEnableClientState( GL2.GL_VERTEX_ARRAY );  // Prob: not in v2.
