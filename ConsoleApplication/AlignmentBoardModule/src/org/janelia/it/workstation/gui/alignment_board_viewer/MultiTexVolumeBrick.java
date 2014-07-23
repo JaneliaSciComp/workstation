@@ -244,6 +244,9 @@ public class MultiTexVolumeBrick implements VolumeBrickI
 
             reportError( gl, "display mux brick - flagged shader init" );
         }
+        if (volumeModel.isWhiteBackground()) {
+            volumeBrickShader.setWhiteBackground();            
+        }
 
         displayVolumeSlices(gl);
 		if (bUseShader) {
