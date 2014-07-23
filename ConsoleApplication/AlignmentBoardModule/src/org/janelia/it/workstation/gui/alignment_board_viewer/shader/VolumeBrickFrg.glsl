@@ -345,7 +345,25 @@ vec4 crop(vec4 origColor)
     else
     {
         // Very light crop color.
-        return vec4( cropOutLevel * origColor.x, cropOutLevel * origColor.y, cropOutLevel * origColor.z, 1.0 );
+        if (whiteBackground == 1)
+        {
+            if (cropOutLevel == 0.0)
+            {
+                return vec4( 1.0, 1.0, 1.0, 1.0 );
+            }
+            else if (origColor.x == 1.0 && origColor.y == 1.0 && origColor.z == 1.0)
+            {
+                return vec4( 1.0, 1.0, 1.0, 1.0 );
+            }
+            else
+            {
+                return vec4( 1.0 - (cropOutLevel * origColor.x), 1.0 - (cropOutLevel * origColor.y), 1.0 - (cropOutLevel * origColor.z), 1.0 );
+            }
+        }
+        else
+        {
+            return vec4( cropOutLevel * origColor.x, cropOutLevel * origColor.y, cropOutLevel * origColor.z, 1.0 );
+        }
     }
 }
 

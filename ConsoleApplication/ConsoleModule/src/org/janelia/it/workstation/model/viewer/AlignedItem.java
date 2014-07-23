@@ -9,7 +9,6 @@ import org.janelia.it.workstation.gui.viewer3d.masking.RenderMappingI;
 import org.janelia.it.jacs.model.entity.Entity;
 import org.janelia.it.jacs.model.entity.EntityConstants;
 import org.janelia.it.jacs.model.entity.EntityData;
-import org.janelia.it.jacs.shared.utils.EntityUtils;
 import org.janelia.it.workstation.api.entity_model.management.ModelMgrUtils;
 import org.janelia.it.workstation.model.domain.AlignmentContext;
 import org.janelia.it.workstation.model.domain.EntityWrapper;
