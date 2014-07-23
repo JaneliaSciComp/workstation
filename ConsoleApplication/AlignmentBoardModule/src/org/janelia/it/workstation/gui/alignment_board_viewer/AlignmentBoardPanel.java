@@ -776,7 +776,6 @@ public class AlignmentBoardPanel extends JPanel implements AlignmentBoardControl
         configureButton(controls.getColorSave(), COLOR_SAVE_BTN_NAME);
         configureButton(controls.getSearchSave(), SEARCH_SAVE_BTN_NAME);
         configureButton(controls.getScreenShot(), SCREEN_SHOT_BTN_NAME);
-        configureButton(controls.getWhiteBackground(), WHITE_BACKGROUND_BTN_NAME);
 
         toolbar.add(controls.getColorSave());
         toolbar.add(controls.getSearchSave());

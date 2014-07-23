@@ -627,7 +627,15 @@ public class AlignmentBoardControls {
         );
 
         //TODO replace both of these icons with something more appropriate.
-        whiteBackground = new StateDrivenIconToggleButton( Icons.getIcon( "brick_grey.png" ), Icons.getIcon( "brick.png" ) );
+        whiteBackground = new StateDrivenIconToggleButton( Icons.getIcon( "brick_grey.png" ), Icons.getIcon( "brick.png" ) ) {
+            @Override
+            public void setSelected( boolean select ) {
+                super.setSelected( select );
+                String msg = "Selection of white-background now going to {}."+select;
+                logger.info( msg );
+                new RuntimeException(msg).printStackTrace();
+            }
+        };
         whiteBackground.setFocusable(false);
         whiteBackground.setToolTipText(BACKGROUND_LABEL_TIP);
         whiteBackground.setSelected(volumeModel.isWhiteBackground());
@@ -635,7 +643,6 @@ public class AlignmentBoardControls {
             @Override
             public void actionPerformed(ActionEvent ae) {
                 volumeModel.setWhiteBackground( whiteBackground.isSelected() );
-                update(true);
                 fireBackgroundChangeEvent( volumeModel.isWhiteBackground() );
             }
         });
