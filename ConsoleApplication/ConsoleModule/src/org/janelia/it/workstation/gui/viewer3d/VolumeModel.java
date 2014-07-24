@@ -21,6 +21,7 @@ public class VolumeModel {
     public static final float DEFAULT_GAMMA_ADJUSTMENT = 1.0f;
     public static final Vec3 DEFAULT_FOCUS_IN_GROUND = new Vec3(0, 0, 0);
     public static final float[] DEFAULT_COLOR_MASK = {1.0f, 1.0f, 1.0f};
+    public static final int COLOR_MASK_ARR_SIZE = DEFAULT_COLOR_MASK.length;
     // The "normal" background color should be black. The only alternative
     // supported as of this time is white.
     public static final float[] DEFAULT_BACKGROUND_COLOR = {0.0f, 0.0f, 0.0f};    
