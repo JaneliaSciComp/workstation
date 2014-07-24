@@ -158,7 +158,7 @@ public class TestMaskChan3DViz {
                 logger.error( "Failed to load volume to mip3d." );
             }
             else {
-                GLActor axesActor = actorBuilder.buildAxesActor(brickActor.getBoundingBox3d(), 1.0);
+                GLActor axesActor = actorBuilder.buildAxesActor(brickActor.getBoundingBox3d(), 1.0, volumeModel);
                 boolean isMac = SystemInfo.OS_NAME.contains("mac");
                 if ( isMac ) {
                     // Enforce opaque, transparent ordering of actors.

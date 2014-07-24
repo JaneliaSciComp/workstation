@@ -237,6 +237,7 @@ public class MultiTexVolumeBrick implements VolumeBrickI
             volumeBrickShader.setGammaAdjustment( volumeModel.getGammaAdjustment() );
             volumeBrickShader.setCropOutLevel( volumeModel.getCropOutLevel() );
             volumeBrickShader.setCropCoords( volumeModel.getCropCoords() );
+            volumeBrickShader.setWhiteBackground(volumeModel.isWhiteBackground());            
             volumeBrickShader.load(gl);
             int vertexAttribLoc = volumeBrickShader.getVertexAttribLoc();
             int texCoordAttribLoc = volumeBrickShader.getTexCoordAttribLoc();

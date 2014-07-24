@@ -82,7 +82,7 @@ float lowBitAdd(float origVal, float testByte, float addOnSet)
 
 float computeIntensity( vec4 inputColor, float pos, float posInterp )
 {   // Get the intensity bits.
-    float rtnVal = 0.0;
+    float rtnVal = 0;
     if ( posInterp == 0.0 )
     {
         rtnVal = computeMaxIntensity( inputColor );
@@ -119,6 +119,11 @@ float computeIntensity( vec4 inputColor, float pos, float posInterp )
         }
     }
 
+    // Compensate for inversion of intensity.
+    if ( whiteBackground == 1  &&  rtnVal == 0.0 )
+    {
+        rtnVal = 1.0;
+    }
     return rtnVal;
 }
 
@@ -204,9 +209,10 @@ vec4 volumeMask(vec4 origColor)
 
                 // Special case: a translucent compartment.  Here, make a translucent gray appearance.
                 // For gray mappings, fill in solid gray for anything empty, but otherwise just use original.
+                float bgrndFactor = 0.1 + (whiteBackground * 0.8);
                 for (int i = 0; i < 3; i++)
-                {
-                    rtnVal[i] = mappedColor[ i ] * 0.1 * intensity;
+                {                    
+                    rtnVal[i] = mappedColor[ i ] * bgrndFactor * intensity;
                 }
             }
             else if ( renderMethod == 1.0 )
@@ -339,7 +345,25 @@ vec4 crop(vec4 origColor)
     else
     {
         // Very light crop color.
-        return vec4( cropOutLevel * origColor.x, cropOutLevel * origColor.y, cropOutLevel * origColor.z, 1.0 );
+        if (whiteBackground == 1)
+        {
+            if (cropOutLevel == 0.0)
+            {
+                return vec4( 1.0, 1.0, 1.0, 1.0 );
+            }
+            else if (origColor.x == 1.0 && origColor.y == 1.0 && origColor.z == 1.0)
+            {
+                return vec4( 1.0, 1.0, 1.0, 1.0 );
+            }
+            else
+            {
+                return vec4( 1.0 - (cropOutLevel * origColor.x), 1.0 - (cropOutLevel * origColor.y), 1.0 - (cropOutLevel * origColor.z), 1.0 );
+            }
+        }
+        else
+        {
+            return vec4( cropOutLevel * origColor.x, cropOutLevel * origColor.y, cropOutLevel * origColor.z, 1.0 );
+        }
     }
 }
 
