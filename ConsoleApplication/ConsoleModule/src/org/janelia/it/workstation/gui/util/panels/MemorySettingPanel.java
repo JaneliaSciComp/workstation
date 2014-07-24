@@ -71,12 +71,13 @@ public class MemorySettingPanel extends JPanel {
                 // and subsequently do so.
                 JOptionPane.showMessageDialog(
                         WindowLocator.getMainFrame(),
-                        "In order to complete this change, the client must be restarted.\nShutting down now.",
-                        "Shutting Down Now",
+                        "In order to complete this change, the client must be restarted.\nRestarting now.",
+                        "Restarting Now",
                         JOptionPane.INFORMATION_MESSAGE,
                         null
                 );
                 // Force exit.
+                LifecycleManager.getDefault().markForRestart();
                 LifecycleManager.getDefault().exit();
             }
         } catch (IOException ioe) {

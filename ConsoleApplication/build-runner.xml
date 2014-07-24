@@ -14,6 +14,22 @@ of adapter.
         </ant>
     </target>
 
+    <target name="nbms" description="Target to build modules locally.  Assumes no install of NetBeans IDE">
+        <!--<echoproperties/>-->
+        <ant antfile="build.xml" target="nbms">
+            <property name="nbplatform.default.netbeans.dest.dir" value="${basedir}" />
+            <property name="nbplatform.default.harness.dir" value="${basedir}/harness" />
+        </ant>
+    </target>
+
+    <target name="create-platform" description="Target to build platform locally">
+        <!--<echoproperties/>-->
+        <ant antfile="build.xml" target="create-platform">
+            <property name="nbplatform.default.netbeans.dest.dir" value="${basedir}" />
+            <property name="nbplatform.default.harness.dir" value="${basedir}/harness" />
+        </ant>
+    </target>
+
     <target name="prop-copy" description="Get latest versions of properties files from the non-NetBeans Projects.">
         <copy file="${basedir}/../shared/conf/jacs.properties" todir="${basedir}/SharedModelComputeWrapper/src" />
     </target>

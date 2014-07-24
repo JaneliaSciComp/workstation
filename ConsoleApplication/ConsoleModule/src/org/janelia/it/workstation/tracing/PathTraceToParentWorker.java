@@ -42,7 +42,7 @@ public class PathTraceToParentWorker extends BackgroundWorker {
     }
 
     @Override
-    protected  void doStuff() throws Exception {
+    protected void doStuff() throws Exception {
         // this part written by Christopher Bruns
 
         // note: can also use setProgress(long curr, long total)

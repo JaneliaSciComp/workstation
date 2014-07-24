@@ -1,5 +1,6 @@
 package org.janelia.it.workstation.gui.framework.viewer.alignment_board;
 
+import java.util.Arrays;
 import org.janelia.it.workstation.gui.viewer3d.VolumeModel;
 import org.janelia.it.workstation.gui.viewer3d.CropCoordSet;
 import org.janelia.it.jacs.model.TestCategories;
@@ -46,6 +47,7 @@ public class UserSettingSerializerStringTest {
 
         assertEquals("CropOutLevel Differs", volumeModel.getCropOutLevel(), returnedVolumeModel.getCropOutLevel(), doubleDelta);
         assertEquals("Gamma Adjustment Differs", volumeModel.getGammaAdjustment(), returnedVolumeModel.getGammaAdjustment(), doubleDelta);
+        assertTrue("Background Color Differs", Arrays.equals(volumeModel.getBackgroundColorFArr(), returnedVolumeModel.getBackgroundColorFArr() ));
 
         // DEBUG System.out.println("Crop Out Level = " + volumeModel.getCropOutLevel() + ", gamma adjustment = " + volumeModel.getGammaAdjustment() );
         float[] returnedCoordArr = returnedVolumeModel.getCropCoords().getAcceptedCoordinates().iterator().next();

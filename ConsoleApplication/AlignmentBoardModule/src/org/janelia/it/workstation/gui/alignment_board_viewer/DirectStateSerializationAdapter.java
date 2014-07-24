@@ -82,10 +82,20 @@ public class DirectStateSerializationAdapter implements UserSettingSerializer.Se
     }
 
     @Override
+    public boolean isWhiteBackground() {        
+        return volumeModel.isWhiteBackground();
+    }
+
+    @Override
+    public void setWhiteBackground(boolean b) {
+        volumeModel.setWhiteBackground( b );
+    }
+
+    @Override
     public void setGammaAdjustment(float gamma) {
         settings.setGammaFactor( gamma );
         volumeModel.setGammaAdjustment(gamma);
-    }
+    }        
 
     @Override
     public void setCropOutLevel(float level) {

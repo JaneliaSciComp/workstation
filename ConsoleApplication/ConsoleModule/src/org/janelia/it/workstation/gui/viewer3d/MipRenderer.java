@@ -64,9 +64,12 @@ class MipRenderer
     }
 
     @Override
-    public void display(GLAutoDrawable glDrawable) 
-    {
+    public void display(GLAutoDrawable glDrawable) {
+        // Preset background from the volume model.
+        float[] backgroundClrArr = volumeModel.getBackgroundColorFArr();
+        this.backgroundColor = new Color( backgroundClrArr[ 0 ], backgroundClrArr[ 1 ], backgroundClrArr[ 2 ] );
 	    super.display(glDrawable); // fills background
+        
         widthInPixels = glDrawable.getWidth();
         heightInPixels = glDrawable.getHeight();
         if (resetFirstRedraw && (! hasBeenReset)) {
@@ -112,8 +115,7 @@ class MipRenderer
         return Math.abs( volumeModel.getCameraFocusDistance() ) / DISTANCE_TO_SCREEN_IN_PIXELS;
     }
 
-    public void resetView()
-    {
+    public void resetView() {
         // Adjust view to fit the actual objects present
         BoundingBox3d boundingBox = getBoundingBox();
         volumeModel.getCamera3d().setFocus(boundingBox.getCenter());
@@ -122,8 +124,7 @@ class MipRenderer
     }
 
     @Override
-    public void reshape(GLAutoDrawable glDrawable, int x, int y, int width, int height)
-    {
+    public void reshape(GLAutoDrawable glDrawable, int x, int y, int width, int height) {
         this.widthInPixels = width;
         this.heightInPixels = height;
 

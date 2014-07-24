@@ -28,6 +28,19 @@
       </library>
     </orderEntry>
     <orderEntry type="library" name="Apache Commons" level="project" />
+    <orderEntry type="module-library">
+      <library>
+        <CLASSES>
+          <root url="file://$MODULE_DIR$/ConsoleWrapper/release/modules/ext" />
+        </CLASSES>
+        <JAVADOC />
+        <SOURCES>
+          <root url="file://$MODULE_DIR$/ConsoleWrapper/release/modules/ext" />
+        </SOURCES>
+        <jarDirectory url="file://$MODULE_DIR$/ConsoleWrapper/release/modules/ext" recursive="false" />
+        <jarDirectory url="file://$MODULE_DIR$/ConsoleWrapper/release/modules/ext" recursive="false" type="SOURCES" />
+      </library>
+    </orderEntry>
   </component>
 </module>
 

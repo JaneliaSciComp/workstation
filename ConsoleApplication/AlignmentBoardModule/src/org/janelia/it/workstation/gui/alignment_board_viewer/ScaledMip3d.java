@@ -52,7 +52,12 @@ public class ScaledMip3d extends Mip3d {
     }
 
     private void paintScale( Graphics graphics, ScaleFitter.FitReportBean fitReport, String labelText ) {
-        graphics.setColor( Color.white );
+        if ( getVolumeModel().isWhiteBackground() ) {
+            graphics.setColor( Color.black );
+        }
+        else {
+            graphics.setColor( Color.white );
+        }
         graphics.setFont( new Font("Ariel", Font.PLAIN, 10 ) );
         int textHeight = graphics.getFontMetrics().getAscent(); // This is a better "height" estimate for most characters.
         int textWidth = graphics.getFontMetrics().charsWidth( labelText.toCharArray(), 0, labelText.length() );

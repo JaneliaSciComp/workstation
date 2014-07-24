@@ -192,29 +192,6 @@ public abstract class EntityOutline extends EntityTree implements Refreshable, A
             titleMenuItem.setEnabled(false);
             return titleMenuItem;
         }
-
-        protected JMenuItem getSetSortCriteriaItem() {
-
-            if (multiple) {
-                return null;
-            }
-
-            JMenuItem sortItem = new JMenuItem("  Set Sorting Criteria");
-
-            sortItem.addActionListener(new ActionListener() {
-                public void actionPerformed(ActionEvent actionEvent) {
-                    try {
-                        SetSortCriteriaDialog dialog = new SetSortCriteriaDialog();
-                        dialog.showForEntity(getRootEntity());
-                    } 
-                    catch (Exception e) {
-                        SessionMgr.getSessionMgr().handleException(e);
-                    }
-                }
-            });
-
-            return sortItem;
-        }
         
         private JMenuItem getNewRootFolderItem() {
             if (multiple) {
@@ -338,6 +315,7 @@ public abstract class EntityOutline extends EntityTree implements Refreshable, A
     @Subscribe
     public void entityCreated(EntityCreateEvent event) {
         Entity entity = event.getEntity();
+        
         if (entity.getValueByAttributeName(EntityConstants.ATTRIBUTE_COMMON_ROOT) != null) {
             log.debug("New common root detected: {}", EntityUtils.identify(entity));
 
