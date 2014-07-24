@@ -115,30 +115,43 @@ public class VtxCoordBufMgr extends AbstractCoordBufMgr {
                     p00[ firstInx ] = p01[firstInx] = p10[firstInx] = p11[firstInx] = sliceLoc;
 
                     addGeometry(firstInx, p00, p10, p11, p01);
+                    float[] t00 = textureMediator.textureCoordFromVoxelCoord(p00);
+                    float[] t01 = textureMediator.textureCoordFromVoxelCoord(p01);
+                    float[] t10 = textureMediator.textureCoordFromVoxelCoord(p10);
+                    float[] t11 = textureMediator.textureCoordFromVoxelCoord(p11);
                     addTextureCoords(
                             firstInx,
-                            textureMediator.textureCoordFromVoxelCoord( p00 ),
-                            textureMediator.textureCoordFromVoxelCoord( p01 ),
-                            textureMediator.textureCoordFromVoxelCoord( p10 ),
-                            textureMediator.textureCoordFromVoxelCoord( p11 )
+                            t00,
+                            t01,
+                            t10,
+                            t11
                     );
                     if ( drawWithElements ) {
                         addIndices(firstInx, inxOffset);
                     }
 
-                    // Now, take care of the negative-direction alternate to this buffer pair.
+                    // Now, take care of the negative-direction opposite to this buffer pair.
                     p00[ firstInx ] = p01[firstInx] = p10[firstInx] = p11[firstInx] = -sliceLoc;
 
                     addGeometry(firstInx + NUM_AXES, p00, p10, p11, p01);
+                    t00 = textureMediator.textureCoordFromVoxelCoord(p00);
+                    t01 = textureMediator.textureCoordFromVoxelCoord(p01);
+                    t10 = textureMediator.textureCoordFromVoxelCoord(p10);
+                    t11 = textureMediator.textureCoordFromVoxelCoord(p11);
                     addTextureCoords(
                             firstInx + NUM_AXES,
-                            textureMediator.textureCoordFromVoxelCoord( p00 ),
-                            textureMediator.textureCoordFromVoxelCoord( p01 ),
-                            textureMediator.textureCoordFromVoxelCoord( p10 ),
-                            textureMediator.textureCoordFromVoxelCoord( p11 )
+                            t00,
+                            t01,
+                            t10,
+                            t11
                     );
                     if ( drawWithElements ) {
                         addIndices(firstInx + NUM_AXES, inxOffset);
+                    }
+
+                    if ( firstInx == 2 ) {
+                        logger.info("For Negative {}, have sliceInx={}, slice0={}, sliceSep={}, sliceLoc={}.", firstInx, sliceInx, slice0, sliceSep, sliceLoc);
+                        checkGeometry(p00, p01, p10, p11, t00, t01, t10, t11);
                     }
 
                     inxOffset += 6;
@@ -148,6 +161,39 @@ public class VtxCoordBufMgr extends AbstractCoordBufMgr {
             }
 
         }
+    }
+
+    /**
+     * Debug code: given the definitions for positions and textures, dump em.
+     * @param v00 vertex at 'lower left' corner
+     * @param v01 vertex at 'upper left' corner
+     * @param v10 vertex at 'lower right' corner
+     * @param v11 vertex at 'upper right' corner
+     * @param t00 tex coord at 'lower left' corner
+     * @param t01 tex coord at 'upper left' corner
+     * @param t10 tex coord at 'lower right' corner
+     * @param t11 tex coord at 'upper right' corner
+     */
+    private void checkGeometry(
+            float[] v00, float[] v01, float[] v10, float[] v11,
+            float[] t00, float[] t01, float[] t10, float[] t11
+    ) {
+        logger.info( String.format( "Vertex %s: tex-coord %s 'lower left'", expandFloatArray(v00), expandFloatArray(t00 ) ) );
+        logger.info( String.format( "Vertex %s: tex-coord %s 'upper left'", expandFloatArray(v01), expandFloatArray(t01 ) ) );
+        logger.info( String.format( "Vertex %s: tex-coord %s 'lower right'", expandFloatArray(v10), expandFloatArray(t10 ) ) );
+        logger.info( String.format( "Vertex %s: tex-coord %s 'upper right'", expandFloatArray(v11), expandFloatArray(t11 ) ) );
+    }
+
+    private String expandFloatArray( float[] members ) {
+        StringBuilder bldr = new StringBuilder("[");
+        for ( float member: members ) {
+            if ( bldr.length() > 1 ) {
+                bldr.append(",");
+            }
+            bldr.append(member);
+        }
+        bldr.append("]");
+        return bldr.toString();
     }
 
 }

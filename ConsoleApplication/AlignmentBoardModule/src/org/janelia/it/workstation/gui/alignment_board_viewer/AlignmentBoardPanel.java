@@ -259,9 +259,15 @@ public class AlignmentBoardPanel extends JPanel implements AlignmentBoardControl
         logger.info("Setting Mip3d Volume.");
         MultiTexVolumeBrickFactory volumeBrickFactory = new MultiTexVolumeBrickFactory();
         VolumeBrickActorBuilder actorBuilder = new VolumeBrickActorBuilder();
-        GLActor[] volumeBrickActors = //new GLActor[1];
+
+        GLActor[] volumeBrickActors =
                 actorBuilder.buildVolumeBrickActors(mip3d.getVolumeModel(), signalTexture, maskTexture, volumeBrickFactory, renderMapping);
-        //volumeBrickActors[0] = actorBuilder.buildVolumeBrickActor(mip3d.getVolumeModel(), volumeBrickFactory, signalTexture);
+
+        /*
+        // Standard
+        GLActor[] volumeBrickActors = new GLActor[1];
+        volumeBrickActors[0] = actorBuilder.buildVolumeBrickActor(mip3d.getVolumeModel(), volumeBrickFactory, signalTexture);
+        */
 
         if ( volumeBrickActors == null || volumeBrickActors.length == 0 ) {
             String msg = "Failed to load volume to mip3d.";
@@ -278,7 +284,8 @@ public class AlignmentBoardPanel extends JPanel implements AlignmentBoardControl
             }
             GLActor axesActor = actorBuilder.buildAxesActor(
                     volumeBrickActors[0].getBoundingBox3d(), 
-                    settingsData.getAcceptedDownsampleRate()
+                    settingsData.getAcceptedDownsampleRate(),
+                    mip3d.getVolumeModel()
             );
             if ( axesActor != null ) {
                 mip3d.addActor( axesActor );
@@ -941,6 +948,13 @@ public class AlignmentBoardPanel extends JPanel implements AlignmentBoardControl
         @Override
         public void setCropBlackout( boolean blackout ) {
             viewer.mip3d.setCropOutLevel(blackout ? 0.0f : VolumeModel.DEFAULT_CROPOUT);
+        }
+
+        @Override
+        public void setWhiteBackground(boolean whiteBackground) {
+            viewer.serializeInWorker();
+            AlignmentBoardContext ctx = AlignmentBoardMgr.getInstance().getLayersPanel().getAlignmentBoardContext();
+            viewer.updateRendering(ctx);
         }
 
         @Override

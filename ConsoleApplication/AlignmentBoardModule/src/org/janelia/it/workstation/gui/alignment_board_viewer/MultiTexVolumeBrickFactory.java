@@ -61,13 +61,16 @@ public class MultiTexVolumeBrickFactory implements VolumeBrickFactory {
         
         VolumeDataChunk chunk = signalTextureData.getTextureData().getVolumeChunks()[ partNum ];
         AxialSegmentRangeBean rangeBean = new AxialSegmentRangeBean();
-        rangeBean.setxRange(new int[] { chunk.getStartX(), chunk.getStartX() + chunk.getWidth() } );
-        rangeBean.setyRange(new int[] { chunk.getStartY(), chunk.getStartY() + chunk.getHeight() } );
-        rangeBean.setzRange(new int[] { chunk.getStartZ(), chunk.getStartZ() + chunk.getDepth() } );
+        int partialCompensator = rangeBean.isPartialx() ? 1 : 0;
+        rangeBean.setxRange(new int[] { chunk.getStartX(), chunk.getStartX() + chunk.getWidth() + partialCompensator } );
+        partialCompensator = rangeBean.isPartialy() ? 1 : 0;
+        rangeBean.setyRange(new int[] { chunk.getStartY(), chunk.getStartY() + chunk.getHeight() + partialCompensator} );
+        partialCompensator = rangeBean.isPartialz() ? 1 : 0;
+        rangeBean.setzRange(new int[] { chunk.getStartZ(), chunk.getStartZ() + chunk.getDepth() + partialCompensator } );
 
         SegmentedVtxCoordBufMgr bufferManager = new SegmentedVtxCoordBufMgr();
         bufferManager.setSegmentRanges(rangeBean);
-        
+
         MultiTexVolumeBrick volumeBrick = new MultiTexVolumeBrick(model, bufferManager);
         volumeBrick.setMaskTextureData(getSingleChunkTexture(maskTextureData, partNum));
         volumeBrick.setColorMapTextureData(colorMapTextureData);
