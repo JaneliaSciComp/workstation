@@ -45,6 +45,7 @@ public class RenderablesChannelsBuilder extends RenderablesVolumeBuilder impleme
     private final Collection<RenderableBean> renderableBeans;
     private VolumeDataI maskVolumeData;
     private MultiMaskTracker multiMaskTracker;
+    private byte[] presetArray;
 
     protected boolean needsChannelInit = false; // Initialized for emphasis.
     private final Logger logger = LoggerFactory.getLogger( RenderablesChannelsBuilder.class );
@@ -71,6 +72,20 @@ public class RenderablesChannelsBuilder extends RenderablesVolumeBuilder impleme
         channelMetaData.blueChannelInx = 2;
     }
 
+    /**
+     * This may be necessary for file-save-back. Otherwise, background settings
+     * are done in a shader.
+     * 
+     * @param backgroundColorBArr all bytes of the volume data will be preset.
+     */
+    public void setBackgroundColor( byte[] backgroundColorBArr ) {
+        presetArray = new byte[ channelMetaData.channelCount ];
+        System.arraycopy(backgroundColorBArr, 0, presetArray, 0, channelMetaData.rawChannelCount);
+        if ( backgroundColorBArr.length < channelMetaData.channelCount ) {
+            presetArray[ channelMetaData.channelCount - 1 ] = (byte)255;
+        }
+    }
+    
     //----------------------------------------IMPLEMENT MaskChanDataAcceptorI
     /**
      * This is called with data to be loaded.
@@ -352,11 +367,7 @@ public class RenderablesChannelsBuilder extends RenderablesVolumeBuilder impleme
                 }
 
                 if ( channelVolumeData == null ) {
-                    channelVolumeData = new VeryLargeVolumeData(
-                            (int)paddedSx, (int)paddedSy, (int)paddedSz, bytesPerChannel * channelMetaData.channelCount
-                    );
-                    // OLD WAY:
-                    //  channelVolumeData = new VolumeDataBean( (int)arrayLength, (int)paddedSx, (int)paddedSy, (int)paddedSz );
+                    createChannelVolumeData( presetArray );
                 }
 
                 logger.debug(
@@ -374,6 +385,20 @@ public class RenderablesChannelsBuilder extends RenderablesVolumeBuilder impleme
                 needsChannelInit = false;
             }
         }
+    }
+
+    /** This must be called lazily, after padded x,y,z values are discovered. */
+    private void createChannelVolumeData( byte[] presetValue ) {
+        channelVolumeData = new VeryLargeVolumeData(
+                (int)paddedSx,
+                (int)paddedSy,
+                (int)paddedSz,
+                bytesPerChannel * channelMetaData.channelCount,
+                VeryLargeVolumeData.DEFAULT_NUM_SLABS,
+                presetValue
+        );
+        // OLD WAY:
+        //  channelVolumeData = new VolumeDataBean( (int)arrayLength, (int)paddedSx, (int)paddedSy, (int)paddedSz );
     }
 
     private ChannelMetaData cloneChannelMetaData() {

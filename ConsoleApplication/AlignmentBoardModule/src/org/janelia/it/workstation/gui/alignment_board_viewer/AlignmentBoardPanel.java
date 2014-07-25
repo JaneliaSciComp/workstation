@@ -939,7 +939,7 @@ public class AlignmentBoardPanel extends JPanel implements AlignmentBoardControl
         
         @Override
         public void setWhiteBackground( boolean whiteBackground ) {
-            viewer.serialize();
+            viewer.serializeInWorker();
             AlignmentBoardContext ctx = AlignmentBoardMgr.getInstance().getLayersPanel().getAlignmentBoardContext();
             viewer.updateRendering(ctx);
         }
