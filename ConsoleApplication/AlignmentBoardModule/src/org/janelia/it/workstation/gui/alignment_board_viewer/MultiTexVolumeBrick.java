@@ -341,7 +341,7 @@ public class MultiTexVolumeBrick implements VolumeBrickI {
         if (vv.get(a1.index()) < 0.0) {
             direction = -1.0; // points toward, front to back, 0 to n
         }
-        logger.info("Displaying in direction "+direction+" along axis " + a1.index() + "/" + a1.getName());
+        logger.debug("Displaying in direction "+direction+" along axis " + a1.index() + "/" + a1.getName());
         bufferManager.draw(gl, a1, direction);
         reportError(gl, "Volume Brick, after draw.");
 

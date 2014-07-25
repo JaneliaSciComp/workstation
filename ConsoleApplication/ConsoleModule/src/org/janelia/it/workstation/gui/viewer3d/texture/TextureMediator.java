@@ -116,11 +116,11 @@ public class TextureMediator {
                         null
                 );
 
-                int expectedRemaining = textureData.getSx() * textureData.getSy() * textureData.getSz()
+                int expectedRemaining = textureData.getSx() * textureData.getSy() * totalSzForChunks
                         * textureData.getPixelByteCount() * textureData.getChannelCount();
                 if ( expectedRemaining != textureData.getTextureData().length() ) {
                     logger.warn( "Invalid remainder vs texture data dimensions.  Sx=" + textureData.getSx() +
-                            " Sy=" + textureData.getSy() + " Sz=" + textureData.getSz() +
+                            " Sy=" + textureData.getSy() + " Sz=" + totalSzForChunks +
                             " storageFmtReq=" + getStorageFormatMultiplier() +
                             " pixelByteCount=" + textureData.getPixelByteCount() +
                             ";  total remaining is " +

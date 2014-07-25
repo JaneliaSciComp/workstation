@@ -122,11 +122,7 @@ public class SegmentedVtxCoordBufMgr extends AbstractCoordBufMgr {
                     float[] t01 = textureCoordFromVoxelCoord( v01 );
                     float[] t10 = textureCoordFromVoxelCoord( v10 );
                     float[] t11 = textureCoordFromVoxelCoord( v11 );
-//                    if ( firstInx == 2 ) {
-//                        logger.info("For Positive {}, have sliceInx={}, slice0={}, sliceSep={}, sliceLoc={}.", firstInx, sliceInx, slice0, sliceSep, sliceLoc);
-//                        checkGeometry(v00, v01, v10, v11, t00, t01, t10, t11);
-//                    }
-                    
+
                     addTextureCoords( firstInx, t00, t01, t10, t11 );
                     addIndices(firstInx, inxOffset);
 
@@ -150,10 +146,6 @@ public class SegmentedVtxCoordBufMgr extends AbstractCoordBufMgr {
                     float[] t01 = textureCoordFromVoxelCoord( v01 );
                     float[] t10 = textureCoordFromVoxelCoord( v10 );
                     float[] t11 = textureCoordFromVoxelCoord( v11 );
-//                    if ( firstInx == 2 ) {
-//                        logger.info("For Positive {}, have sliceInx={}, slice0={}, sliceSep={}, sliceLoc={}.", firstInx, sliceInx, slice0, sliceSep, sliceLoc);
-//                        checkGeometry(v00, v01, v10, v11, t00, t01, t10, t11);
-//                    }
 
                     addTextureCoords( firstInx + NUM_AXES, t00, t01, t10, t11 );
                     addIndices(firstInx + NUM_AXES, inxOffset);
@@ -162,7 +154,7 @@ public class SegmentedVtxCoordBufMgr extends AbstractCoordBufMgr {
 
                 }
 
-                logger.info("Added {} vertices as geometry.", totalVtxCoords);
+                logger.debug("Added {} vertices as geometry.", totalVtxCoords);
             }
 
         }
