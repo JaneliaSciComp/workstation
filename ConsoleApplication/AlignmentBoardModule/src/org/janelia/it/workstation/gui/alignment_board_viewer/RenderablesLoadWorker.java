@@ -188,7 +188,7 @@ public class RenderablesLoadWorker extends SimpleWorker implements VolumeLoader 
         Collection<MaskChanRenderableData> renderableDatas = dataSource.getRenderableDatas();
 
         // Cut down the to-renders: (at time-of-writing) use only the larger ones.
-        Collection<MaskChanRenderableData> originalDatas = new ArrayList<MaskChanRenderableData>( renderableDatas );
+        Collection<MaskChanRenderableData> originalDatas = new ArrayList<>( renderableDatas );
         long fragmentFilterSize = alignmentBoardSettings.getMinimumVoxelCount();
         long fragmentCutoffCount = alignmentBoardSettings.getMaximumNeuronCount();
         if ( fragmentFilterSize != AlignmentBoardSettings.NO_NEURON_SIZE_CONSTRAINT  ||
@@ -217,7 +217,7 @@ public class RenderablesLoadWorker extends SimpleWorker implements VolumeLoader 
             if ( ! passedCheckPointAfterFilter )
                 return;
 
-            List<RenderableBean> renderableBeans = new ArrayList<RenderableBean>();
+            List<RenderableBean> renderableBeans = new ArrayList<>();
             int lastUsedMask = extractRenderableBeansFromRenderableDatas( renderableDatas, renderableBeans );
             if ( lastUsedMask > -1 ) {
                 multiMaskTracker.setFirstMaskNum( lastUsedMask + 1 ); // Add one to move past all allocated masks.
@@ -584,7 +584,9 @@ public class RenderablesLoadWorker extends SimpleWorker implements VolumeLoader 
                 controlCallback.close();
                 rtnVal = false;
                 logger.warn("Bailed at checkpoint {}.", checkPointNote);
-                pm.close();
+                if (pm != null) {
+                    pm.close();
+                }
             }
             else {
                 pm.setNote( checkPointNote );
@@ -662,11 +664,11 @@ public class RenderablesLoadWorker extends SimpleWorker implements VolumeLoader 
     }
 
     private void renderChange(Collection<MaskChanRenderableData> metaDatas) {
-        if ( metaDatas.size() == 0 ) {
+        if ( metaDatas.isEmpty() ) {
             logger.info("No renderables found for alignment board " + dataSource.getName());
         }
         else {
-            Collection<RenderableBean> beans = new ArrayList<RenderableBean>();
+            Collection<RenderableBean> beans = new ArrayList<>();
             for ( MaskChanRenderableData metaData: metaDatas ) {
                 beans.add( metaData.getBean() );
             }

@@ -1034,7 +1034,7 @@ public class AlignmentBoardPanel extends JPanel implements AlignmentBoardControl
             // NOTE:  currently, there is a bug in multibrick+downsample. Final vertex is 0,0,0, and should not be!
             volumeBrickActors = new GLActor[1];
             volumeBrickActors[0] = actorBuilder.buildVolumeBrickActor(
-                    volumeModel, volumeBrickFactory, signalTexture
+                    volumeModel, signalTexture, maskTexture, volumeBrickFactory, renderMapping
             );
         }
         else {
