@@ -170,7 +170,7 @@ public class AnnotationPanel extends JPanel
         // workspace tool pop-up menu (triggered by button, below)
         final JPopupMenu workspaceToolMenu = new JPopupMenu();
 
-        automaticRefinementMenuItem = new JCheckBoxMenuItem("Automatic refinement");
+        automaticRefinementMenuItem = new JCheckBoxMenuItem("Automatic point refinement");
         automaticRefinementMenuItem.setSelected(defaultAutomaticRefinement);
         automaticRefinementMenuItem.addItemListener(new ItemListener() {
             @Override
@@ -180,7 +180,7 @@ public class AnnotationPanel extends JPanel
         });
         workspaceToolMenu.add(automaticRefinementMenuItem);
 
-        automaticTracingMenuItem = new JCheckBoxMenuItem("Automatic tracing");
+        automaticTracingMenuItem = new JCheckBoxMenuItem("Automatic path tracing");
         automaticTracingMenuItem.setSelected(defaultAutomaticTracing);
         automaticTracingMenuItem.addItemListener(new ItemListener() {
             @Override
