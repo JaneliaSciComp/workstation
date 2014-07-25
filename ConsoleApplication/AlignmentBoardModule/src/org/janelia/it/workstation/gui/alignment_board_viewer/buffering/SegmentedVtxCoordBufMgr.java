@@ -225,7 +225,7 @@ public class SegmentedVtxCoordBufMgr extends AbstractCoordBufMgr {
 
     private void allocateBuffers() {
         // Compute sizes, and allocate buffers.
-        logger.info("Allocating buffers");
+        logger.debug("Allocating buffers");
         int totalVertices = 0;
         for ( int i = 0; i < NUM_BUFFERS_PER_TYPE; i++ ) {
             // Three coords per vertex.  Six vertexes per slice.  Times number of slices.
@@ -252,7 +252,7 @@ public class SegmentedVtxCoordBufMgr extends AbstractCoordBufMgr {
             inxByteBuffer.order(ByteOrder.nativeOrder());
             indexBuf[ i ] = inxByteBuffer.asShortBuffer();
         }
-        logger.info("Allocated {} vertices.", totalVertices);
+        logger.debug("Allocated {} vertices.", totalVertices);
     }
 
 }
