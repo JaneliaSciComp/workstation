@@ -37,7 +37,7 @@ public class VolumeBrickActorBuilder {
      * @param volumeModel for creating volume brick.
      * @param volumeBrickFactory for creating volume brick.
      */
-    public GLActor buildVolumeBrickActor(VolumeModel volumeModel, VolumeBrickFactory volumeBrickFactory, TextureDataI signalTexture) {
+    public GLActor buildSignalOnlyVolumeBrickActor(VolumeModel volumeModel, VolumeBrickFactory volumeBrickFactory, TextureDataI signalTexture) {
         GLActor returnValue = null;
         if ( signalTexture != null ) {
             volumeModel.removeAllListeners();

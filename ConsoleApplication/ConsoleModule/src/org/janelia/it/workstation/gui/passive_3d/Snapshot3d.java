@@ -50,7 +50,7 @@ public class Snapshot3d extends ModalDialog {
         };
 
         VolumeBrickActorBuilder actorBuilder = new VolumeBrickActorBuilder();
-        GLActor actor = actorBuilder.buildVolumeBrickActor(mip3d.getVolumeModel(), factory, textureData);
+        GLActor actor = actorBuilder.buildSignalOnlyVolumeBrickActor(mip3d.getVolumeModel(), factory, textureData);
         if ( actor != null ) {
             mip3d.addActor(actor);
         }
