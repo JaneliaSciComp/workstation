@@ -19,7 +19,6 @@ import java.util.Collection;
  */
 public class VolumeModel {
     public static final float DEFAULT_GAMMA_ADJUSTMENT = 1.0f;
-    public static final Vec3 DEFAULT_FOCUS_IN_GROUND = new Vec3(0, 0, 0);
     public static final float[] DEFAULT_COLOR_MASK = {1.0f, 1.0f, 1.0f};
     public static final int COLOR_MASK_ARR_SIZE = DEFAULT_COLOR_MASK.length;
     // The "normal" background color should be black. The only alternative
@@ -41,7 +40,7 @@ public class VolumeModel {
     private float[] voxelMicrometers;
     private int[] voxelDimensions;   
 
-    private Collection<UpdateListener> listeners = new ArrayList<UpdateListener>();
+    private Collection<UpdateListener> listeners = new ArrayList<>();
 
     /** This may be useful for situations like the HUD, which retains a reference to
      * the volume model across invocations.  Call this prior to reset.
@@ -112,6 +111,8 @@ public class VolumeModel {
         listeners.add(listener);
     }
 
+    /** It should always be possible to remove a listener. */
+    @SuppressWarnings("unused")
     public synchronized void removeUpdateListener( UpdateListener listener ) {
         listeners.remove(listener);
     }
