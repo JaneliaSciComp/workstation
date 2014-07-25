@@ -26,8 +26,7 @@ public class MultiTexVolumeBrickFactory implements VolumeBrickFactory {
     @Override
     public VolumeBrickI getVolumeBrick(VolumeModel model) {
         VtxCoordBufMgr bufferManager = new VtxCoordBufMgr();
-        MultiTexVolumeBrick volumeBrick = new MultiTexVolumeBrick(model, bufferManager);
-        return volumeBrick;
+        return new MultiTexVolumeBrick(model, bufferManager);
     }
 
     @Override
