@@ -66,8 +66,8 @@ public class SegmentedVtxCoordBufMgr extends AbstractCoordBufMgr {
                 float thirdAxisLength = textureMediator.getVolumeMicrometers()[ thirdInx ].floatValue();                
                 
                 // compute number of slices
-                float firstSegmentStart = segmentRanges.getAxisLow( firstInx );
-                float firstSegmentEnd = segmentRanges.getAxisHigh( firstInx );
+                //float firstSegmentStart = segmentRanges.getAxisLow( firstInx );
+                //float firstSegmentEnd = segmentRanges.getAxisHigh( firstInx );
                 float slice0 = (firstAxisLength / 2.0f);
                 float sliceSep = textureMediator.getVoxelMicrometers()[ firstInx ].floatValue();
 
@@ -200,6 +200,7 @@ public class SegmentedVtxCoordBufMgr extends AbstractCoordBufMgr {
      * @param t10 tex coord at 'lower right' corner
      * @param t11 tex coord at 'upper right' corner 
      */
+    @SuppressWarnings("unused")
     private void checkGeometry(
             float[] v00, float[] v01, float[] v10, float[] v11,
             float[] t00, float[] t01, float[] t10, float[] t11

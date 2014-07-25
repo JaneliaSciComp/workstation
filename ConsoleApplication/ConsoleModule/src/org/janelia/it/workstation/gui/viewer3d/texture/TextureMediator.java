@@ -486,7 +486,7 @@ public class TextureMediator {
     //--------------------------- End: Helpers for glTexImage3D
 
     private void testRawBufferContents(int pixelByteCount, byte[] rawBuffer) {
-        Map<Integer,Integer> allFoundFrequencies = new HashMap<Integer,Integer>();
+        Map<Integer,Integer> allFoundFrequencies = new HashMap<>();
 
         int nonZeroCount = 0;
         for (byte aRawBuffer : rawBuffer) {
@@ -550,7 +550,7 @@ public class TextureMediator {
     public static String getConstantName( Integer openGlEnumConstant ) {
         String rtnVal;
         if ( glConstantToName == null ) {
-            glConstantToName = new HashMap<Integer,String>();
+            glConstantToName = new HashMap<>();
             glConstantToName.put( GL2.GL_UNSIGNED_INT_8_8_8_8_REV, "GL2.GL_UNSIGNED_INT_8_8_8_8_REV" );
             glConstantToName.put( GL2.GL_UNSIGNED_INT_8_8_8_8, "GL2.GL_UNSIGNED_INT_8_8_8_8" );
             glConstantToName.put( GL2.GL_UNSIGNED_BYTE, "GL2.GL_UNSIGNED_BYTE" );

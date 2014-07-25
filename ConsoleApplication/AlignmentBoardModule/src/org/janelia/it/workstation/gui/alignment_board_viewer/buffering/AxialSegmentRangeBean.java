@@ -40,6 +40,7 @@ public class AxialSegmentRangeBean {
         }
     }
 
+    @SuppressWarnings("unused")
     public boolean isPartialByAxisNum( int axialOffset ) {
         switch( axialOffset ) {
             case 0: return partialx;
@@ -65,6 +66,7 @@ public class AxialSegmentRangeBean {
     /**
      * @return the xRange
      */
+    @SuppressWarnings("unused")
     public int[] getxRange() {
         return xRange;
     }
@@ -80,6 +82,7 @@ public class AxialSegmentRangeBean {
     /**
      * @return the yRange
      */
+    @SuppressWarnings("unused")
     public int[] getyRange() {
         return yRange;
     }
@@ -95,6 +98,7 @@ public class AxialSegmentRangeBean {
     /**
      * @return the zRange
      */
+    @SuppressWarnings("unused")
     public int[] getzRange() {
         return zRange;
     }
@@ -111,6 +115,7 @@ public class AxialSegmentRangeBean {
         return partialx;
     }
 
+    @SuppressWarnings("unused")
     public void setPartialx(boolean partialx) {
         this.partialx = partialx;
     }
@@ -119,6 +124,7 @@ public class AxialSegmentRangeBean {
         return partialy;
     }
 
+    @SuppressWarnings("unused")
     public void setPartialy(boolean partialy) {
         this.partialy = partialy;
     }
@@ -127,6 +133,7 @@ public class AxialSegmentRangeBean {
         return partialz;
     }
 
+    @SuppressWarnings("unused")
     public void setPartialz(boolean partialz) {
         this.partialz = partialz;
     }

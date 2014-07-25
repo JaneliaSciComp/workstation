@@ -80,7 +80,7 @@ public class MultiTexVolumeBrickFactory implements VolumeBrickFactory {
     
     private TextureDataI getSingleChunkTexture( TextureDataI multiChunkTexture, int partNum ) {
         VolumeDataI chunkVolume = new SubChunkingVolumeDecorator( multiChunkTexture.getTextureData(), partNum );
-        TextureDataI returnValue = new SubChunkingTexDecorator( multiChunkTexture, partNum, multiChunkTexture.getSz() );
+        TextureDataI returnValue = new SubChunkingTexDecorator( multiChunkTexture, multiChunkTexture.getSz() );
         returnValue.setTextureData(chunkVolume);
         return returnValue;
     }
@@ -93,11 +93,8 @@ public class MultiTexVolumeBrickFactory implements VolumeBrickFactory {
         private int sY;
         private int sZ;
         
-        private int chunkNum;
-        
-        public SubChunkingTexDecorator(TextureDataI wrappedTextureData, int chunkNum, int sZ) {
+        public SubChunkingTexDecorator(TextureDataI wrappedTextureData, int sZ) {
             this.wrappedData = wrappedTextureData;
-            this.chunkNum = chunkNum;
             this.sZ = sZ;
         }
 
