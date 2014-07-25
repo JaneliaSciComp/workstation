@@ -53,9 +53,6 @@ import org.janelia.it.jacs.model.entity.Entity;
 import org.janelia.it.workstation.gui.viewer3d.events.AlignmentBoardItemChangeEvent;
 import org.janelia.it.workstation.gui.viewer3d.events.AlignmentBoardOpenEvent;
 import org.janelia.it.workstation.gui.util.WindowLocator;
-import org.janelia.it.workstation.gui.viewer3d.BoundingBox3d;
-import org.janelia.it.workstation.model.domain.AlignmentContext;
-import org.openide.util.lookup.InstanceContent;
 import org.openide.util.lookup.ServiceProvider;
 
 /**
@@ -104,13 +101,10 @@ public class AlignmentBoardPanel extends JPanel implements AlignmentBoardControl
     private boolean connectEditEvents = true;
 
     private AlignmentBoardSettings settingsData;
-    private ShutdownListener shutdownListener;
     private JToolBar toolbar;
     private ABContextDataSource dataSource;
     private FileStats fileStats;
     
-    private InstanceContent content = new InstanceContent();
-
     public AlignmentBoardPanel() {
         logger.info( "C'tor" );
         settingsData = new AlignmentBoardSettings();
@@ -123,8 +117,7 @@ public class AlignmentBoardPanel extends JPanel implements AlignmentBoardControl
         setTransferHandler( new AlignmentBoardEntityTransferHandler( this ) );
 
         // Saveback settings.
-        shutdownListener = new ShutdownListener();
-        SessionMgr.getSessionMgr().addSessionModelListener( shutdownListener );                
+        SessionMgr.getSessionMgr().addSessionModelListener( new ShutdownListener() );
     }
 
     /** Call this at clear-time. */
@@ -150,7 +143,7 @@ public class AlignmentBoardPanel extends JPanel implements AlignmentBoardControl
         AlignmentBoardContext alignmentBoardContext = layersPanel.getAlignmentBoardContext();
         if ( alignmentBoardContext == null ) {
             return null;
-        };
+        }
         return alignmentBoardContext.getInternalRootedEntity();
 	}
 	
@@ -257,17 +250,14 @@ public class AlignmentBoardPanel extends JPanel implements AlignmentBoardControl
     public void loadVolume( TextureDataI signalTexture, TextureDataI maskTexture ) {
 
         logger.info("Setting Mip3d Volume.");
-        MultiTexVolumeBrickFactory volumeBrickFactory = new MultiTexVolumeBrickFactory();
-        VolumeBrickActorBuilder actorBuilder = new VolumeBrickActorBuilder();
-
         GLActor[] volumeBrickActors =
-                actorBuilder.buildVolumeBrickActors(mip3d.getVolumeModel(), signalTexture, maskTexture, volumeBrickFactory, renderMapping);
-
-        /*
-        // Standard
-        GLActor[] volumeBrickActors = new GLActor[1];
-        volumeBrickActors[0] = actorBuilder.buildVolumeBrickActor(mip3d.getVolumeModel(), volumeBrickFactory, signalTexture);
-        */
+                buildVolumeBrickActors(
+                        mip3d.getVolumeModel(),
+                        signalTexture,
+                        maskTexture,
+                        renderMapping,
+                        settingsData.getAcceptedDownsampleRate() > 1
+                );
 
         if ( volumeBrickActors == null || volumeBrickActors.length == 0 ) {
             String msg = "Failed to load volume to mip3d.";
@@ -282,6 +272,7 @@ public class AlignmentBoardPanel extends JPanel implements AlignmentBoardControl
                     mip3d.addActor( volumeBrickActors[i] );
                 }
             }
+            VolumeBrickActorBuilder actorBuilder = new VolumeBrickActorBuilder();
             GLActor axesActor = actorBuilder.buildAxesActor(
                     volumeBrickActors[0].getBoundingBox3d(), 
                     settingsData.getAcceptedDownsampleRate(),
@@ -618,7 +609,7 @@ public class AlignmentBoardPanel extends JPanel implements AlignmentBoardControl
                     }
                     loadWorker = null;
                     dataSource = new ABContextDataSource(context);
-                    GpuSampler sampler = getGpuSampler(context.getAlignmentContext());
+                    GpuSampler sampler = getGpuSampler();
                     loadWorker = new RenderablesLoadWorker(
                             dataSource,
                             renderMapping,
@@ -652,9 +643,7 @@ public class AlignmentBoardPanel extends JPanel implements AlignmentBoardControl
 
     }
 
-    private GpuSampler getGpuSampler(AlignmentContext alignmentContext) {
-        float[] opticalResolution = parseResolution(alignmentContext.getOpticalResolution());
-
+    private GpuSampler getGpuSampler() {
         // Must find the best downsample rate.
         GpuSampler sampler = new GpuSampler( this.getBackground() );
         GLProfile profile = GLProfile.get(GLProfile.GL2);
@@ -1016,6 +1005,46 @@ public class AlignmentBoardPanel extends JPanel implements AlignmentBoardControl
         public void modelPropertyChanged(Object key, Object oldValue, Object newValue) {
         }
 
+    }
+
+    /**
+     * Delegates the creation of the actor array.   This is where the strategy is implemented, for choosing between
+     * different kinds of volume bricks.
+     * At ToW, based on whether downsampling is in use or not.
+     *
+     * @param volumeModel required to keep info for actor in sync with rest of system.
+     * @param signalTexture primary texture for color stacks.
+     * @param maskTexture texture for ids.
+     * @param renderMapping id-to-color.
+     * @param downSampled to decide which way to go.
+     * @return actors suitable for the strategy described.
+     */
+    public GLActor[] buildVolumeBrickActors(
+            VolumeModel volumeModel,
+            TextureDataI signalTexture,
+            TextureDataI maskTexture,
+            RenderMappingI renderMapping,
+            boolean downSampled
+    ) {
+        VolumeBrickActorBuilder actorBuilder = new VolumeBrickActorBuilder();
+        MultiTexVolumeBrickFactory volumeBrickFactory = new MultiTexVolumeBrickFactory();
+        GLActor[] volumeBrickActors;
+        if ( downSampled  ) {
+            // Only one brick needed, if downsample already in place.
+            // NOTE:  currently, there is a bug in multibrick+downsample. Final vertex is 0,0,0, and should not be!
+            volumeBrickActors = new GLActor[1];
+            volumeBrickActors[0] = actorBuilder.buildVolumeBrickActor(
+                    volumeModel, volumeBrickFactory, signalTexture
+            );
+        }
+        else {
+            // Use more than one brick, if not downsample.
+            volumeBrickActors = actorBuilder.buildVolumeBrickActors(
+                    volumeModel, signalTexture, maskTexture, volumeBrickFactory, renderMapping
+            );
+        }
+
+        return volumeBrickActors;
     }
 
 }

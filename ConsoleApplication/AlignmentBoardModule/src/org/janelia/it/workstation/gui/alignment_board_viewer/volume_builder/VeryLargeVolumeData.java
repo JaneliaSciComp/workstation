@@ -18,6 +18,7 @@ import org.slf4j.LoggerFactory;
 public class VeryLargeVolumeData implements VolumeDataI {
 
     public static final int DEFAULT_NUM_SLABS = 8;
+    public static final int MAX_SLAB_EXTENT = 25000000;
     private int slabExtent = 0;
     private long volumeExtent = 0L;
     private Logger logger = LoggerFactory.getLogger( VeryLargeVolumeData.class );
@@ -51,7 +52,7 @@ public class VeryLargeVolumeData implements VolumeDataI {
         }
         // Increase number of slabs, if the slice size is very large.
         int slicesPerSlab = calculateSlabParameters(sizeX, sizeY, sizeZ, bytesPerVoxel, numSlabs);
-        if ( slabExtent > 100000000 ) {
+        if ( slabExtent / bytesPerVoxel > MAX_SLAB_EXTENT ) {
             numSlabs *= 4;
             slicesPerSlab = calculateSlabParameters(sizeX, sizeY, sizeZ, bytesPerVoxel, numSlabs );
         }
@@ -59,10 +60,10 @@ public class VeryLargeVolumeData implements VolumeDataI {
         // Recalculate number of slabs, so that excess data is not allocated.
         numSlabs = (int)Math.ceil( (double)volumeExtent / (double)slabExtent );
 
-        logger.debug("Slab extent is {}.", slabExtent );
-        logger.debug("Slices per slab is {}.", slicesPerSlab);
-        logger.debug("Number of slabs is {}.", numSlabs);
-        logger.debug("Volume extent is {}.", volumeExtent);
+        logger.info("Slab extent is {}.", slabExtent );
+        logger.info("Slices per slab is {}.", slicesPerSlab);
+        logger.info("Number of slabs is {}.", numSlabs);
+        logger.info("Volume extent is {}.", volumeExtent);
 
         slabs = new byte[ numSlabs ][];
         chunks = new VolumeDataChunk[ numSlabs ];
