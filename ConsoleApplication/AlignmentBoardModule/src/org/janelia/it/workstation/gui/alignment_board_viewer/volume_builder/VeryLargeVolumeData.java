@@ -28,7 +28,7 @@ public class VeryLargeVolumeData implements VolumeDataI {
     private VolumeDataChunk[] chunks;
 
     public VeryLargeVolumeData( int sizeX, int sizeY, int sizeZ, int bytesPerVoxel ) {
-        this( sizeX, sizeY, sizeZ, bytesPerVoxel, DEFAULT_NUM_SLABS );
+        this( sizeX, sizeY, sizeZ, bytesPerVoxel, DEFAULT_NUM_SLABS, null );
     }
 
     /**
@@ -41,7 +41,7 @@ public class VeryLargeVolumeData implements VolumeDataI {
      * @param bytesPerVoxel how many bytes for each voxel.
      * @param numSlabs how many divisions of the original volume are wanted?
      */
-    public VeryLargeVolumeData( int sizeX, int sizeY, int sizeZ, int bytesPerVoxel, int numSlabs ) {
+    public VeryLargeVolumeData( int sizeX, int sizeY, int sizeZ, int bytesPerVoxel, int numSlabs, byte[] presetValue ) {
         this.sizeX = sizeX;
         this.sizeY = sizeY;
 
@@ -51,7 +51,7 @@ public class VeryLargeVolumeData implements VolumeDataI {
         }
         // Increase number of slabs, if the slice size is very large.
         int slicesPerSlab = calculateSlabParameters(sizeX, sizeY, sizeZ, bytesPerVoxel, numSlabs);
-        if ( slabExtent / bytesPerVoxel > 25000000 ) {
+        if ( slabExtent > 100000000 ) {
             numSlabs *= 4;
             slicesPerSlab = calculateSlabParameters(sizeX, sizeY, sizeZ, bytesPerVoxel, numSlabs );
         }
@@ -75,12 +75,14 @@ public class VeryLargeVolumeData implements VolumeDataI {
             slabEnd += slabExtent;
             VolumeDataChunk chunk = getVolumeDataChunk( slicesPerSlab, slabIndex, slicesPerSlab );
             chunks[ slabIndex ] = chunk;
+            presetSlabData(presetValue, slabIndex);
             slicesRemaining -= slicesPerSlab;
         }
         if ( slabEnd < volumeExtent ) {
             slabs[ lastSlabIndex ] = new byte[ (int)(volumeExtent - slabEnd) ];
             VolumeDataChunk chunk = getVolumeDataChunk( slicesPerSlab, lastSlabIndex, slicesRemaining );
             chunks[ lastSlabIndex ] = chunk;
+            presetSlabData(presetValue, lastSlabIndex);
         }
         else {
             logger.error( "Invalid calculations: final slab would be empty." );
@@ -146,6 +148,16 @@ public class VeryLargeVolumeData implements VolumeDataI {
         chunk.setDepth( depth );
         chunk.setStartZ( (int)(slicesPerSlab * slabNumber) );
         return chunk;
+    }
+
+    private void presetSlabData(byte[] presetValue, int slabIndex) {
+        // Perform many array copies to get the slabs preset with the chosen
+        // value.
+        if ( presetValue != null ) {
+            for ( int i = 0; i < slabExtent; i += presetValue.length) {
+                System.arraycopy(presetValue, 0, slabs[ slabIndex ], i, presetValue.length);
+            }
+        }
     }
 
     private int getSlabNo(long location) {
