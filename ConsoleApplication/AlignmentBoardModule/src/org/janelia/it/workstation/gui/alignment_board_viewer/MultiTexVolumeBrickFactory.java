@@ -60,11 +60,11 @@ public class MultiTexVolumeBrickFactory implements VolumeBrickFactory {
         
         VolumeDataChunk chunk = signalTextureData.getTextureData().getVolumeChunks()[ partNum ];
         AxialSegmentRangeBean rangeBean = new AxialSegmentRangeBean();
-        int partialCompensator = rangeBean.isPartialx() ? 1 : 0;
+        int partialCompensator = rangeBean.isPartialx() ? 2 : 0;
         rangeBean.setxRange(new int[] { chunk.getStartX(), chunk.getStartX() + chunk.getWidth() + partialCompensator } );
-        partialCompensator = rangeBean.isPartialy() ? 1 : 0;
+        partialCompensator = rangeBean.isPartialy() ? 2 : 0;
         rangeBean.setyRange(new int[] { chunk.getStartY(), chunk.getStartY() + chunk.getHeight() + partialCompensator} );
-        partialCompensator = rangeBean.isPartialz() ? 1 : 0;
+        partialCompensator = rangeBean.isPartialz() ? 2 : 0;
         rangeBean.setzRange(new int[] { chunk.getStartZ(), chunk.getStartZ() + chunk.getDepth() + partialCompensator } );
 
         SegmentedVtxCoordBufMgr bufferManager = new SegmentedVtxCoordBufMgr();
