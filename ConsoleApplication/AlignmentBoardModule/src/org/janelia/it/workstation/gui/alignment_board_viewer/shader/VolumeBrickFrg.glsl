@@ -367,31 +367,6 @@ vec4 crop(vec4 origColor)
     }
 }
 
-/*
-vec4 adjustForBgrnd(vec4 origColor)
-{    
-    if ( whiteBackground == 1 )
-    {
-        // Based on LUMA conversion: Y=0.33R + 0.5G + 0.16B, and
-        // subtracting each multiplier by 1.
-        if ( origColor.r == 1.0 && origColor.g == 1.0 && origColor.b == 1.0 )
-        {
-            return origColor;
-        }
-        return vec4(
-            clamp( (0.67 * origColor.r), 0.0, 1.0 ),
-            origColor.g,
-            clamp( (0.84 * origColor.b), 0.0, 1.0 ),
-            1.0
-        );
-    }
-    else
-    {
-        return origColor;
-    }
-}
-*/
-
 void main()
 {
     vec4 origColor = texture3D(signalTexture, gl_TexCoord[0].xyz);
