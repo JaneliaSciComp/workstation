@@ -22,7 +22,7 @@ public class VeryLargeVolumeTest {
     private byte[] dataBytes;
 
     private void init( int slabCount ) {
-        volumeData = new VeryLargeVolumeData(5,5,5, 2, slabCount);
+        volumeData = new VeryLargeVolumeData(5,5,5, 2, slabCount, null);
         String testValue = "AABBCCDDEEFFGGHHIIJJKKLLMMNNOOPPQQRRSSTTUUVVWWXXYY";
 
         String allData = testValue + testValue + testValue + testValue + testValue;
