@@ -119,6 +119,10 @@ public class AxesActor implements GLActor
 
     @Override
 	public void display(GLAutoDrawable glDrawable) {
+        // May have been instructed to hide these things.
+        if ( ! volumeModel.isShowAxes() )
+            return;
+        
         GL2 gl = glDrawable.getGL().getGL2();
         reportError( gl, "Display of axes-actor upon entry" );
 
