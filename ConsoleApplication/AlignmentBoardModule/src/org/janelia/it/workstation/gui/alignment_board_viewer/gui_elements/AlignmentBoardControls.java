@@ -629,7 +629,7 @@ public class AlignmentBoardControls {
             }
         });
         
-        showingAxes = new StateDrivenIconToggleButton( Icons.getIcon( "center_crosshair.png" ), Icons.getIcon( "brain.png" ) );
+        showingAxes = new StateDrivenIconToggleButton( Icons.getIcon( "axes_on.png" ), Icons.getIcon( "axes_off.png" ) );
         showingAxes.setFocusable( false );
         showingAxes.setToolTipText( SHOW_AXES_TOOLTIP_TEXT );
         showingAxes.setSelected( VolumeModel.DEFAULT_SHOWING_AXES );
@@ -642,7 +642,7 @@ public class AlignmentBoardControls {
         });
 
         //TODO replace both of these icons with something more appropriate.
-        whiteBackground = new StateDrivenIconToggleButton( Icons.getIcon( "brick_grey.png" ), Icons.getIcon( "brick.png" ) );
+        whiteBackground = new StateDrivenIconToggleButton( Icons.getIcon( "background_white.png" ), Icons.getIcon( "background_black.png" ) );
         whiteBackground.setFocusable(false);
         whiteBackground.setToolTipText(BACKGROUND_LABEL_TIP);
         whiteBackground.setSelected(volumeModel.isWhiteBackground());
