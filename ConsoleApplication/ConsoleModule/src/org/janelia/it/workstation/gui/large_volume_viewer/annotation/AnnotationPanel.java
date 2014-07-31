@@ -83,14 +83,21 @@ public class AnnotationPanel extends JPanel
         @Override
         public void execute(TmWorkspace workspace) {
             if (workspace != null) {
+                boolean state;
                 String automaticRefinementPref = workspace.getPreferences().getProperty(AnnotationsConstants.PREF_AUTOMATIC_POINT_REFINEMENT);
                 if (automaticRefinementPref != null) {
-                    automaticRefinementMenuItem.setSelected(Boolean.parseBoolean(automaticRefinementPref));
+                    state = Boolean.parseBoolean(automaticRefinementPref);
+                } else {
+                    state = false;
                 }
+                automaticRefinementMenuItem.setSelected(state);
                 String automaticTracingPref = workspace.getPreferences().getProperty(AnnotationsConstants.PREF_AUTOMATIC_TRACING);
                 if (automaticTracingPref != null) {
-                    automaticTracingMenuItem.setSelected(Boolean.parseBoolean(automaticTracingPref));
+                    state = Boolean.parseBoolean(automaticTracingPref);
+                } else {
+                    state = false;
                 }
+                automaticTracingMenuItem.setSelected(state);
             }
         }
     };
