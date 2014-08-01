@@ -25,6 +25,7 @@ import java.awt.image.BufferedImage;
 import java.io.*;
 import java.util.*;
 import java.util.List;
+import org.janelia.it.workstation.gui.viewer3d.VolumeModel;
 
 /**
  * Created with IntelliJ IDEA.
@@ -42,6 +43,7 @@ public class VolumeWritebackHandler {
     private int filterSize;
     private int maxNeurons;
     private double gammaFactor;
+    private byte[] backgroundColorArr;
     private File writeBackFile;
 
     private final Logger logger = LoggerFactory.getLogger( VolumeWritebackHandler.class );
@@ -63,6 +65,7 @@ public class VolumeWritebackHandler {
         this.filterSize = filterSize;
         this.maxNeurons = maxNeurons;
         this.gammaFactor = gammaFactor;
+        this.backgroundColorArr = colorToByte( mip3d.getVolumeModel().getBackgroundColorFArr() );
     }
 
     /**
@@ -121,7 +124,7 @@ public class VolumeWritebackHandler {
                     AlignmentBoardMgr.getInstance().getLayersPanel().getAlignmentBoardContext()
             );
 
-            Collection<MaskChanRenderableData> searchDatas = new ArrayList<MaskChanRenderableData>();
+            Collection<MaskChanRenderableData> searchDatas = new ArrayList<>();
             for ( MaskChanRenderableData data: dataSource.getRenderableDatas() ) {
                 byte[] rendition = renderableIdVsRenderMethod.get( data.getBean().getTranslatedNum() );
                 if ( rendition != null  &&  rendition[ 3 ] != RenderMappingI.NON_RENDERING ) {
@@ -141,6 +144,7 @@ public class VolumeWritebackHandler {
             paramBean.setFilterSize(filterSize);
             paramBean.setMaxNeuronCount(maxNeurons);
             paramBean.setGammaFactor(gammaFactor);
+            paramBean.setBackgroundColorArr(backgroundColorArr);
 
             FileExportLoadWorker fileExportLoadWorker = new FileExportLoadWorker( paramBean );
             fileExportLoadWorker.setResolver(new CacheFileResolver());
@@ -222,7 +226,7 @@ public class VolumeWritebackHandler {
         /** This is a simple testing mechanism to sanity-check the contents of the texture being saved. */
         @SuppressWarnings("unused")
         private void frequencyReport( TextureDataI texture ) {
-            Map<Byte,Integer> byteValToCount = new HashMap<Byte,Integer>();
+            Map<Byte,Integer> byteValToCount = new HashMap<>();
             for ( VolumeDataChunk chunk: texture.getTextureData().getVolumeChunks() ) {
                 byte[] textureBytes = chunk.getData();
 
@@ -245,5 +249,27 @@ public class VolumeWritebackHandler {
             logger.info( bldr.toString() );
 
         }
+    }
+    
+    private byte[] colorToByte( float[] colorFArr ) {
+        byte[] rtnVal = null;
+        if (colorFArr != null) {
+            int zeroCount = 0;
+            rtnVal = new byte[ VolumeModel.COLOR_MASK_ARR_SIZE ];
+            for (int i = 0; i < VolumeModel.COLOR_MASK_ARR_SIZE; i++) {
+                // Get around the vagaries of floating point.
+                if (colorFArr[ i ] < 0.0001) {
+                    rtnVal[ i ] = 0;
+                    zeroCount++;
+                } else {
+                    rtnVal[ i ] = (byte)(255.0f * colorFArr[ i ]);
+                }
+            }
+            if (zeroCount == VolumeModel.COLOR_MASK_ARR_SIZE) {
+                rtnVal = null;
+            }
+        }
+        
+        return rtnVal;
     }
 }

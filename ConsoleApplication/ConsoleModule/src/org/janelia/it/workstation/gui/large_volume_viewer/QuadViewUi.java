@@ -38,6 +38,8 @@ import org.janelia.it.workstation.gui.large_volume_viewer.skeleton.Anchor;
 import org.janelia.it.workstation.gui.large_volume_viewer.skeleton.Skeleton;
 import org.janelia.it.workstation.gui.large_volume_viewer.skeleton.SkeletonActor;
 import org.janelia.it.workstation.gui.viewer3d.BoundingBox3d;
+import org.janelia.it.workstation.octree.ZoomLevel;
+import org.janelia.it.workstation.octree.ZoomedVoxelIndex;
 import org.janelia.it.workstation.signal.Signal;
 import org.janelia.it.workstation.signal.Signal1;
 import org.janelia.it.workstation.signal.Slot;
@@ -344,7 +346,7 @@ public class QuadViewUi extends JPanel
 
             // construct new request; add image data to anchor and pass it on
             PathTraceToParentRequest request = new PathTraceToParentRequest(annotationID);
-            request.setImageVolme(volumeImage);
+            request.setImageVolume(volumeImage);
             request.setTextureCache(tileServer.getTextureCache());
             tracePathRequestedSignal.emit(request);
         }
@@ -1306,7 +1308,15 @@ LLF: the hookup for the 3d snapshot.
 
 		}
     };
-    
+
+    /**
+     * this method returns a provider of read-only subvolume of data (maximum zoom,
+     * intended for calculations)
+     */
+    public SubvolumeProvider getSubvolumeProvider(){
+        return new SubvolumeProvider(volumeImage, tileServer);
+    }
+
     static class LoadStatusLabel extends JLabel {
     	private LoadStatus loadStatus = null;
     	private ImageIcon busyIcon;

@@ -304,28 +304,11 @@ public class Subvolume {
 
     public int getIntensityGlobal(ZoomedVoxelIndex v1, int channelIndex)
     {
-        int c = channelIndex;
-        int x = v1.getX() - origin.getX();
-        int y = v1.getY() - origin.getY();
-        int z = v1.getZ() - origin.getZ();
-        // Compute offset into local raster
-        int offset = 0;
-        // color channel is fastest moving dimension
-        int stride = 1;
-        offset += c * stride;
-        // x
-        stride *= channelCount;
-        offset += x * stride;
-        // y
-        stride *= extent.getX();
-        offset += y * stride;
-        // z
-        stride *= extent.getY();
-        offset += z * stride;
-        if (bytesPerIntensity == 2)
-            return shorts.get(offset);
-        else
-            return bytes.get(offset);
+        return getIntensityLocal(new VoxelIndex(
+            v1.getX() - origin.getX(),
+            v1.getY() - origin.getY(),
+            v1.getZ() - origin.getZ()),
+            channelIndex);
     }
 
     public ZoomedVoxelIndex getOrigin() {
@@ -351,10 +334,12 @@ public class Subvolume {
         // z
         stride *= extent.getY();
         offset += z * stride;
+        // our data is unsigned but Java doesn't do unsigned, so strip off the
+        //  sign bit explicitly; since we're returning int, no worry about overflow
         if (bytesPerIntensity == 2)
-            return shorts.get(offset);
+            return shorts.get(offset) & 0xffff;
         else
-            return bytes.get(offset);
+            return bytes.get(offset) & 0xff;
     }
 	
 }

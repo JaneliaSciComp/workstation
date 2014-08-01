@@ -85,7 +85,7 @@ public class VolumeBrickActorBuilder {
             actor = brick;
         }
         else {
-            actor = buildAxesActor( createBoundsOfVolumeModel(volumeModel), 1.0 );
+            actor = buildAxesActor( createBoundsOfVolumeModel(volumeModel), 1.0, volumeModel );
         }
         return actor;
     }
@@ -95,10 +95,12 @@ public class VolumeBrickActorBuilder {
      *
      * @param boundingBox tells extrema for the axes.
      * @param axisLengthDivisor applies downsampling abbreviation of axes.
+     * @param volumeModel tells the axes actor whether its background will be white.
      * @return the actor.
      */
-    public GLActor buildAxesActor(BoundingBox3d boundingBox, double axisLengthDivisor) {
+    public GLActor buildAxesActor(BoundingBox3d boundingBox, double axisLengthDivisor, VolumeModel volumeModel) {
         AxesActor axes = new AxesActor();
+        axes.setVolumeModel(volumeModel);
         axes.setAxisLengths( boundingBox.getWidth(), boundingBox.getHeight(), boundingBox.getDepth() );
         axes.setAxisLengthDivisor( axisLengthDivisor );
         axes.setFullAxes( true );

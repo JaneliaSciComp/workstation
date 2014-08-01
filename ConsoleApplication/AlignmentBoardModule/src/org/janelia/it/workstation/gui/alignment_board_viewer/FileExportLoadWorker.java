@@ -43,7 +43,7 @@ public class FileExportLoadWorker extends SimpleWorker implements VolumeLoader {
 
     private FileResolver resolver;
 
-    private Logger logger;
+    private final Logger logger;
 
     public FileExportLoadWorker( FileExportParamBean paramBean ) {
         logger = LoggerFactory.getLogger(FileExportLoadWorker.class);
@@ -85,7 +85,7 @@ public class FileExportLoadWorker extends SimpleWorker implements VolumeLoader {
     @Override
     protected void doStuff() throws Exception {
 
-        List<RenderableBean> renderableBeans = new ArrayList<RenderableBean>();
+        List<RenderableBean> renderableBeans = new ArrayList<>();
 
         // Cut down the to-renders: use only the larger ones.
         long fragmentFilterSize = paramBean.getFilterSize();
@@ -102,13 +102,14 @@ public class FileExportLoadWorker extends SimpleWorker implements VolumeLoader {
             renderableBeans.add( bean );
 
             // Need to add sizing data to each renderable bean prior to sorting, if not yet set.
-            MaskSingleFileLoader loader = new MaskSingleFileLoader( bean );
+            MaskSingleFileLoader localLoader = new MaskSingleFileLoader( bean );
             if ( bean.getVoxelCount() <= 0  &&  renderableData.getMaskPath() != null ) {
                 File infile = new File( resolver.getResolvedFilename( renderableData.getMaskPath() ) );
                 if ( infile.canRead() ) {
-                    FileInputStream fis = new FileInputStream( infile );
-                    long voxelCount = loader.getVoxelCount( fis );
-                    fis.close();
+                    long voxelCount;
+                    try (FileInputStream fis = new FileInputStream( infile )) {
+                        voxelCount = localLoader.getVoxelCount( fis );
+                    }
                     bean.setVoxelCount(voxelCount);
                 }
             }
@@ -116,7 +117,7 @@ public class FileExportLoadWorker extends SimpleWorker implements VolumeLoader {
 
         Collections.sort( renderableBeans, Collections.reverseOrder( new RBComparator() ) );
 
-        List<MaskChanRenderableData> sortedRenderableDatas = new ArrayList<MaskChanRenderableData>();
+        List<MaskChanRenderableData> sortedRenderableDatas = new ArrayList<>();
         sortedRenderableDatas.addAll( filteredRenderableDatas );
         Collections.sort( sortedRenderableDatas, new RDComparator( false ) );
 
@@ -137,11 +138,16 @@ public class FileExportLoadWorker extends SimpleWorker implements VolumeLoader {
         else if ( paramBean.getMethod() == ControlsListener.ExportMethod.color ) {
             // Using full color values.
 
-            // HERE: change this like RenderablesLoadWorker, with two calls: one for mask, one for chan.
             customWritebackSettings.setShowChannelData( true );
-            textureBuilder = new RenderablesChannelsBuilder(
+            RenderablesChannelsBuilder rcb = new RenderablesChannelsBuilder(
                     customWritebackSettings, null, null, renderableBeans
             );
+                       
+            // Push background bytes into the volume, if necessary.
+            if (! paramBean.isNullBackground() ) {
+                rcb.setBackgroundColor(paramBean.getBackgroundColorArr());
+            }
+            textureBuilder = rcb;
 
             setupLoader();
             multiThreadedDataLoad( sortedRenderableDatas );
@@ -162,12 +168,12 @@ public class FileExportLoadWorker extends SimpleWorker implements VolumeLoader {
     }
 
     private void setupLoader() {
-        // Setup the loader to traverse all this data on demand.
+        // Setup the localLoader to traverse all this data on demand.
         loader = new MaskChanMultiFileLoader();
         loader.setEnforcePadding( false ); // Do not extend dimensions of resulting volume beyond established space.
         loader.setCheckForConsistency( false );  // Do not force all files to share characteristics like channel count.
         MaskChanDataAcceptorI outerAcceptor;
-        if ( paramBean.getCropCoords() == null || paramBean.getCropCoords().size() == 0 ) {
+        if ( paramBean.getCropCoords() == null || paramBean.getCropCoords().isEmpty() ) {
             outerAcceptor = textureBuilder;
         }
         else {
@@ -185,7 +191,7 @@ public class FileExportLoadWorker extends SimpleWorker implements VolumeLoader {
      */
     private void multiThreadedDataLoad(Collection<MaskChanRenderableData> metaDatas) {
 
-        if ( metaDatas == null  ||  metaDatas.size() == 0 ) {
+        if ( metaDatas == null  ||  metaDatas.isEmpty() ) {
             logger.info( "No renderables provided." );
         }
         else {
@@ -284,6 +290,8 @@ public class FileExportLoadWorker extends SimpleWorker implements VolumeLoader {
         private long filterSize;
         private long maxNeuronCount;
         private double gammaFactor;
+        private byte[] backgroundColorArr;
+        private boolean nullBackground = true;
 
         public Collection<MaskChanRenderableData> getRenderableDatas() {
             return renderableDatas;
@@ -345,6 +353,38 @@ public class FileExportLoadWorker extends SimpleWorker implements VolumeLoader {
 
         public void setGammaFactor(double gammaFactor) {
             this.gammaFactor = gammaFactor;
+        }
+
+        /**
+         * Background color will be written into all the "empty"
+         * voxels, unless it is all zero.
+         * 
+         * @return the backgroundColorArr
+         */
+        public byte[] getBackgroundColorArr() {
+            return backgroundColorArr;
+        }
+
+        /**
+         * Background color will be written into all the "empty"
+         * voxels, unless it is all zero.
+         * 
+         * @param backgroundColorArr the backgroundColorArr to set
+         */
+        public void setBackgroundColorArr(byte[] backgroundColorArr) {
+            if ( backgroundColorArr != null ) {
+                for ( int i = 0; i < backgroundColorArr.length; i++ ) {
+                    if ( backgroundColorArr[i] != 0 ) {
+                        nullBackground = false;
+                        break;
+                    }
+                }
+            }
+            this.backgroundColorArr = backgroundColorArr;
+        }
+        
+        public boolean isNullBackground() {
+            return nullBackground;
         }
     }
 

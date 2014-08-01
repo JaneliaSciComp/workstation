@@ -29,13 +29,15 @@ public class UserSettingSerializer implements Serializable {
     public static final String MIN_VOXELS_SETTING = "MinVoxelCutoff";
     public static final String MAX_NEURON_SETTING = "MaxNeuronsCutoff";
     public static final String SAVE_BRIGHTNESS_SETTING = "SaveGammaInTiff";
+    public static final String WHITE_BACKGROUND_SETTING = "WhiteBackground";
+    public static final String SHOW_AXES_SETTING = "ShowAxes";
 
     public static final int MAX_SERIALIZED_SETTINGS_STR = 65535;
 
-    private SerializationAdapter serializationAdapter;
+    private final SerializationAdapter serializationAdapter;
     private Entity alignmentBoard;
 
-    private Logger logger = LoggerFactory.getLogger( UserSettingSerializer.class );
+    private final Logger logger = LoggerFactory.getLogger( UserSettingSerializer.class );
 
     /**
      * Convenience method for quickly checking if any alignment board has settings stored with it.  Could help
@@ -178,7 +180,11 @@ public class UserSettingSerializer implements Serializable {
 
         builder.append( SAVE_BRIGHTNESS_SETTING ).append("=").append(serializationAdapter.isSaveColorBrightness()).append("\n");
 
-        logger.debug("SETTINGS: {} serialized", builder);
+        builder.append( WHITE_BACKGROUND_SETTING ).append("=").append(serializationAdapter.isWhiteBackground()).append("\n");
+        
+        builder.append( SHOW_AXES_SETTING ).append("=").append(serializationAdapter.isShowAxes()).append("\n");
+        
+        logger.info("SETTINGS: {} serialized", builder);
         return builder.toString();
     }
 
@@ -193,7 +199,7 @@ public class UserSettingSerializer implements Serializable {
 
         // Add settings to current runtime.
         String[] settingsStrings = settingString.split( "\n" );
-        Map<String,String> settingToValue = new HashMap<String,String>();
+        Map<String,String> settingToValue = new HashMap<>();
         for ( String setting: settingsStrings ) {
             // Ignore comments.
             int equalPos = setting.indexOf( '=' );
@@ -230,7 +236,7 @@ public class UserSettingSerializer implements Serializable {
         str = settingToValue.get( SELECTION_BOUNDS_SETTING );
         nonEmpty = nonEmpty(str);
         if ( nonEmpty ) {
-            Collection<float[]> coordinateSets = new ArrayList<float[]>();
+            Collection<float[]> coordinateSets = new ArrayList<>();
             FloatParseAcceptor floatParseAcceptor = new FloatParseAcceptor( coordinateSets );
             parseTuples(str, 6, floatParseAcceptor);
             CropCoordSet cropCoordSet = new CropCoordSet();
@@ -247,7 +253,7 @@ public class UserSettingSerializer implements Serializable {
         str = settingToValue.get(FOCUS_SETTING);
         nonEmpty = nonEmpty(str);
         if ( nonEmpty ) {
-            Collection<double[]> coordinateSets = new ArrayList<double[]>();
+            Collection<double[]> coordinateSets = new ArrayList<>();
             DoubleParseAcceptor doubleParseAcceptor = new DoubleParseAcceptor( coordinateSets );
             parseTuples(str, 3, doubleParseAcceptor);
             if ( coordinateSets.size() >= 1 ) {
@@ -261,7 +267,7 @@ public class UserSettingSerializer implements Serializable {
         str = settingToValue.get(CAMERA_DEPTH);
         nonEmpty = nonEmpty(str);
         if ( nonEmpty ) {
-            Collection<double[]> coordinateSets = new ArrayList<double[]>();
+            Collection<double[]> coordinateSets = new ArrayList<>();
             DoubleParseAcceptor doubleParseAcceptor = new DoubleParseAcceptor( coordinateSets );
             parseTuples(str, 3, doubleParseAcceptor);
             if ( coordinateSets.size() >= 1 ) {
@@ -273,7 +279,7 @@ public class UserSettingSerializer implements Serializable {
         str = settingToValue.get( CAMERA_ROTATION_SETTING );
         nonEmpty = nonEmpty(str);
         if ( nonEmpty ) {
-            Collection<double[]> coordinateSets = new ArrayList<double[]>();
+            Collection<double[]> coordinateSets = new ArrayList<>();
             DoubleParseAcceptor doubleParseAcceptor = new DoubleParseAcceptor( coordinateSets );
             parseTuples(str, 3, doubleParseAcceptor);
             if ( coordinateSets.size() == 3 ) {
@@ -314,6 +320,33 @@ public class UserSettingSerializer implements Serializable {
                 );
             }
         }
+        
+        str = settingToValue.get( WHITE_BACKGROUND_SETTING );
+        nonEmpty = nonEmpty( str );
+        if ( nonEmpty ) {
+            try {
+                serializationAdapter.setWhiteBackground( Boolean.parseBoolean( str ) );
+            } catch ( Exception ex ) {
+                logger.warn(
+                        "Invalid boolean setting for white background {}.",
+                        str
+                );
+            }
+        }        
+                
+        str = settingToValue.get( SHOW_AXES_SETTING );
+        nonEmpty = nonEmpty( str );
+        if ( nonEmpty ) {
+            try {
+                serializationAdapter.setShowAxes( Boolean.parseBoolean( str ) );
+            } catch ( Exception ex ) {
+                logger.warn(
+                        "Invalid boolean setting for showing axes {}.",
+                        str
+                );
+            }
+        }        
+        
 
     }
 
@@ -337,7 +370,7 @@ public class UserSettingSerializer implements Serializable {
             try {
                 Long constraint = Long.parseLong( str );
                 setter.setConstraint(constraint);
-            } catch ( Exception ex ) {
+            } catch ( NumberFormatException ex ) {
                 logger.warn(
                         "Invalid min voxel count cuttoff of {} stored.  Ignoring value.",
                         str
@@ -410,10 +443,11 @@ public class UserSettingSerializer implements Serializable {
     }
 
     private class FloatParseAcceptor  implements CoordTupleAcceptor {
-        private Collection<float[]> targetCollection;
+        private final Collection<float[]> targetCollection;
         public FloatParseAcceptor( Collection<float[]> targetCollection ) {
             this.targetCollection = targetCollection;
         }
+        @Override
         public void accept( String[] coords ) {
             float[] cropCoordArray = new float[ coords.length ];
             int offs = 0;
@@ -425,10 +459,11 @@ public class UserSettingSerializer implements Serializable {
     }
 
     private class DoubleParseAcceptor  implements CoordTupleAcceptor {
-        private Collection<double[]> targetCollection;
+        private final Collection<double[]> targetCollection;
         public DoubleParseAcceptor( Collection<double[]> targetCollection ) {
             this.targetCollection = targetCollection;
         }
+        @Override
         public void accept( String[] coords ) {
             double[] cropCoordArray = new double[ coords.length ];
             int offs = 0;
@@ -456,6 +491,8 @@ public class UserSettingSerializer implements Serializable {
         Vec3 getFocus();                            // VolumeModel.getCamera3d()
         CropCoordSet getCropCoords();               // VolumeModel
         boolean isSaveColorBrightness();            // VolumeModel
+        boolean isWhiteBackground();                // VolumeModel
+        boolean isShowAxes();                       // VolumeModel
 
         // Deserialization
         void setGammaAdjustment( float gamma );     // VolumeModel, alignmentBoardSettings as setGammaFactor(float)
@@ -468,6 +505,8 @@ public class UserSettingSerializer implements Serializable {
         void setCameraDepth(double[] cameraFocusArr);  // Complicated...
         void setRotation( Collection<double[]> rotation );  // volumeModel.getCamera3d().getRotation().setWithCaution(
         void setSaveColorBrightness( boolean b );   // VolumeModel
+        void setWhiteBackground( boolean b );       // VolumeModel
+        void setShowAxes( boolean b );              // VolumeModel
    }
 
 }

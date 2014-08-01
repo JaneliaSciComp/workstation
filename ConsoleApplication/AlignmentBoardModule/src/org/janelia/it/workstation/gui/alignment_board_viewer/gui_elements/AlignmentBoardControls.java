@@ -69,6 +69,7 @@ public class AlignmentBoardControls {
     private static final String OR_BUTTON_TIP = "<html>Combine <font color='red'>this</font> selection region<br>" +
             "with previous selection region(s)<br></html>";
     private static final String OR_BUTTON_LABEL = "OR";
+    private static final String BACKGROUND_LABEL_TIP = "<html>Toggle background color between white (<emph>true</emph>) and black (<emph>false</emph>)</html>";
     private static final String CLEAR_BUTTON_LABEL = "Clear Selection";
     private static final String CLEAR_BUTTON_TOOLTIP_TEXT = "Drop all sub-volume selections made in this session.";
     private static final String NON_SELECT_BLACKOUT = "Non-selected region blacked out";
@@ -77,6 +78,7 @@ public class AlignmentBoardControls {
     private static final String NON_SELECT_BLACKOUT_TOOLTIP_TEXT = NON_SELECT_BLACKOUT;
     private static final String SAVE_COLORS_BRIGHT = "Apply Brightness to Color TIFF";
     private static final String SAVE_COLORS_BRIGHT_TOOLTIP_TEXT = SAVE_COLORS_BRIGHT;
+    private static final String SHOW_AXES_TOOLTIP_TEXT = "Show Axes";
     private static final String ESTIMATED_BEST_RESOLUTION = "Best Guess";
     private static final String DOWN_SAMPLE_PROP_NAME = "AlignmentBoard_Downsample_Rate";
     private static final String GUESS_LABEL_FMT = "Best Guess: %s";
@@ -118,11 +120,13 @@ public class AlignmentBoardControls {
 
     private JToggleButton blackout;
     private AbstractButton colorSaveBrightness;
+    private AbstractButton showingAxes;    
+    private AbstractButton whiteBackground;
 
     private boolean readyForOutput = false;
 
     private Map<Integer,Integer> downSampleRateToIndex;
-    private final Collection<ControlsListener> listeners = new ArrayList<ControlsListener>();
+    private final Collection<ControlsListener> listeners = new ArrayList<>();
     private VolumeModel volumeModel;
     private AlignmentBoardSettings settings;
 
@@ -143,6 +147,7 @@ public class AlignmentBoardControls {
             updateCurrentSelectionFromSettings();
             updateCropOutLevelFromVolumeModel();
             updateColorBrightnessSaveFromVolumeModel();
+            updateWhiteBackgroundFromVolumeModel();
         }
     }
 
@@ -266,7 +271,7 @@ public class AlignmentBoardControls {
             if ( rtnVal < AlignmentBoardSettings.NO_NEURON_SIZE_CONSTRAINT) {
                 throw new RuntimeException();
             }
-        } catch ( Exception ex ) {
+        } catch ( RuntimeException ex ) {
             JOptionPane.showMessageDialog( SessionMgr.getMainFrame(), "Failed to parse count " + selectedValue + " to integer value.");
             constraintTextField.setForeground( Color.red );
         }
@@ -412,6 +417,14 @@ public class AlignmentBoardControls {
         return colorSaveBrightness;
     }
 
+    public AbstractButton getWhiteBackground() {
+        return whiteBackground;
+    }
+
+    public AbstractButton getShowingAxes() {
+        return showingAxes;
+    }
+    
     private void updateCropOutLevelFromVolumeModel() {
         // Cropout is either dim or dark.  The setting is a float, but varying the level is not being exploited at
         // this time; hence the default is dim, and if the default is not in use, then the non-default of dark is used.
@@ -423,6 +436,10 @@ public class AlignmentBoardControls {
         blackout.setSelected(isCropBlackout);
     }
 
+    private void updateWhiteBackgroundFromVolumeModel() {
+        whiteBackground.setSelected(volumeModel.isWhiteBackground());
+    }
+    
     private void updateColorBrightnessSaveFromVolumeModel() {
         colorSaveBrightness.setSelected(volumeModel.isColorSaveBrightness());
     }
@@ -520,12 +537,11 @@ public class AlignmentBoardControls {
                 listener.setBrightness( settings.getGammaFactor() );
             }
             if ( deltaSettings ) {
-                logger.info("Serializing show-channel as {} / {}.", settings.isShowChannelData(), newUseSignal );
                 listener.updateSettings();
             }
 
         }
-    }
+    }        
 
     private synchronized void fireCropEvent() {
         CropCoordSet cropCoordSet = volumeModel.getCropCoords();
@@ -561,6 +577,12 @@ public class AlignmentBoardControls {
             listener.setConnectEditEvents( connectState );
         }
     }
+    
+    private synchronized void fireRenderRefresh() {
+        for ( ControlsListener listener: listeners ) {
+            listener.forceRenderRefresh();
+        }
+    }
 
     private synchronized void fireRebuild() {
         for ( ControlsListener listener: listeners ) {
@@ -590,6 +612,7 @@ public class AlignmentBoardControls {
         blackout.setSelected(false);
         blackout.setFocusable(false);
         blackout.addActionListener(new ActionListener() {
+            @Override
             public void actionPerformed(ActionEvent ae) {
                 fireBlackOutCrop(blackout.isSelected());
             }
@@ -599,16 +622,42 @@ public class AlignmentBoardControls {
         colorSaveBrightness.setFocusable( false );
         colorSaveBrightness.setToolTipText( SAVE_COLORS_BRIGHT_TOOLTIP_TEXT );
         colorSaveBrightness.setSelected(VolumeModel.DEFAULT_SAVE_BRIGHTNESS);
-        colorSaveBrightness.addActionListener(
-                new ActionListener() {
-                    public void actionPerformed(ActionEvent ae) {
-                        volumeModel.setColorSaveBrightness(colorSaveBrightness.isSelected());
-                    }
-                }
-        );
+        colorSaveBrightness.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent ae) {
+                volumeModel.setColorSaveBrightness(colorSaveBrightness.isSelected());
+            }
+        });
+        
+        showingAxes = new StateDrivenIconToggleButton( Icons.getIcon( "axes_on.png" ), Icons.getIcon( "axes_off.png" ) );
+        showingAxes.setFocusable( false );
+        showingAxes.setToolTipText( SHOW_AXES_TOOLTIP_TEXT );
+        showingAxes.setSelected( VolumeModel.DEFAULT_SHOWING_AXES );
+        showingAxes.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent ae) {
+                volumeModel.setShowAxes(showingAxes.isSelected());
+                fireRenderRefresh();
+            }
+        });
+
+        //TODO replace both of these icons with something more appropriate.
+        whiteBackground = new StateDrivenIconToggleButton( Icons.getIcon( "background_white.png" ), Icons.getIcon( "background_black.png" ) );
+        whiteBackground.setFocusable(false);
+        whiteBackground.setToolTipText(BACKGROUND_LABEL_TIP);
+        whiteBackground.setSelected(volumeModel.isWhiteBackground());
+        whiteBackground.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent ae) {
+                volumeModel.setWhiteBackground( whiteBackground.isSelected() );
+                fireRenderRefresh();
+            }
+        });
+
         commitButton = new JButton( COMMIT_CHANGES );
         commitButton.setToolTipText( COMMIT_CHANGES_TOOLTIP_TEXT );
         commitButton.addActionListener(new ActionListener() {
+            @Override
             public void actionPerformed(ActionEvent ae) {
                 doSettingsEvent();
                 commitButton.setEnabled( false );
@@ -619,6 +668,7 @@ public class AlignmentBoardControls {
         searchSave = new JButton( Icons.getIcon( "masked_drive_go.png" ) );
         searchSave.setToolTipText( SAVE_AS_SEARCH_TIFF_TOOLTIP_TEXT );
         searchSave.addActionListener(new ActionListener() {
+            @Override
             public void actionPerformed(ActionEvent ae) {
                 logger.info(
                         "Selection covers (X): " + xSlider.getValue() + ".." + xSlider.getUpperValue() +
@@ -647,13 +697,14 @@ public class AlignmentBoardControls {
         colorSave = new JButton( Icons.getIcon( "color_drive_go.png" ) );
         colorSave.setToolTipText( SAVE_AS_COLOR_TIFF_TOOLTIP_TEXT );
         colorSave.addActionListener(new ActionListener() {
-            private CompletionListener buttonEnableListener = new CompletionListener() {
+            private final CompletionListener buttonEnableListener = new CompletionListener() {
                 @Override
                 public void complete() {
                     setButtonRelaxed(colorSave, SAVE_AS_COLOR_TIFF_TOOLTIP_TEXT);
                 }
             };
 
+            @Override
             public void actionPerformed(ActionEvent ae) {
                 setButtonBusy(colorSave);
                 Collection<float[]> acceptedCords = getCombinedCropCoords(1.0);
@@ -673,13 +724,14 @@ public class AlignmentBoardControls {
         screenShot = new JButton( Icons.getIcon( "drive_go.png" ) );
         screenShot.setToolTipText(SAVE_SCREEN_SHOT_TOOLTIP_TEXT);
         screenShot.addActionListener(new ActionListener() {
-            private CompletionListener buttonEnableListener = new CompletionListener() {
+            private final CompletionListener buttonEnableListener = new CompletionListener() {
                 @Override
                 public void complete() {
                     screenShot.setEnabled(true);
                 }
             };
 
+            @Override
             public void actionPerformed(ActionEvent ae) {
                 screenShot.setEnabled(false);
                 Collection<float[]> acceptedCords = getCombinedCropCoords();
@@ -698,6 +750,7 @@ public class AlignmentBoardControls {
         search.setText("Add Data to Board");
         // NOTE: for now, not disabling the button.  Launched dialog is modal, and will prevent other launch.
         search.addActionListener(new ActionListener() {
+            @Override
             public void actionPerformed( ActionEvent ae ) {
                 if ( searchDialog == null ) {
                     searchDialog = new ABTargetedSearchDialog(
@@ -711,6 +764,7 @@ public class AlignmentBoardControls {
         clearButton = new JButton( CLEAR_BUTTON_LABEL );
         clearButton.setToolTipText( CLEAR_BUTTON_TOOLTIP_TEXT );
         clearButton.addActionListener( new ActionListener() {
+            @Override
             public void actionPerformed( ActionEvent ae ) {
                 resetSelectionSliders();
                 CropCoordSet cropCoordSet = volumeModel.getCropCoords();
@@ -771,10 +825,11 @@ public class AlignmentBoardControls {
 
             }
         });
-
+        
         orButton = new JButton( OR_BUTTON_LABEL );
         orButton.setToolTipText(OR_BUTTON_TIP);
         orButton.addActionListener(new ActionListener() {
+            @Override
             public void actionPerformed(ActionEvent ae) {
                 CropCoordSet cropCoordSet = volumeModel.getCropCoords();
                 cropCoordSet.acceptCurrentCoordinates();
@@ -795,7 +850,7 @@ public class AlignmentBoardControls {
         brightnessSlider.setToolTipText(GAMMA_TOOLTIP);
         brightnessSlider.setBorder(makeFontedBorder("Brightness", newFont));
 
-        downSampleRateToIndex = new HashMap<Integer,Integer>();
+        downSampleRateToIndex = new HashMap<>();
         downSampleRateToIndex.put( 0, 0 );
         downSampleRateToIndex.put( 1, 1 );
         downSampleRateToIndex.put( 2, 2 );
@@ -959,7 +1014,7 @@ public class AlignmentBoardControls {
         float[] absoluteCropCoords = getCurrentCropCoords( downSampleRate );
         Collection<float[]> acceptedCoords = getMicrometerCropCoords( downSampleRate );
         if ( ! CropCoordSet.alreadyAccepted( acceptedCoords, absoluteCropCoords ) ) {
-            Collection<float[]> combinedCoords = new HashSet<float[]>();
+            Collection<float[]> combinedCoords = new HashSet<>();
             combinedCoords.add( absoluteCropCoords );
             combinedCoords.addAll( acceptedCoords );
             return combinedCoords;
@@ -971,7 +1026,7 @@ public class AlignmentBoardControls {
 
     private Collection<float[]> getMicrometerCropCoords( double downSampleRate ) {
         CropCoordSet cropCoordSet = volumeModel.getCropCoords();
-        Collection<float[]> micrometerCropCoords = new HashSet<float[]>( cropCoordSet.getAcceptedCoordinates().size() );
+        Collection<float[]> micrometerCropCoords = new HashSet<>( cropCoordSet.getAcceptedCoordinates().size() );
         int[] maxima = new int[] {
                 xSlider.getMaximum(), ySlider.getMaximum(), zSlider.getMaximum()
         };
@@ -1003,13 +1058,14 @@ public class AlignmentBoardControls {
     //-------------------------------------------------INNER CLASSES/INTERFACES
 
     class StateDrivenIconToggleButton extends JToggleButton {
-        private Icon setIcon;
-        private Icon unsetIcon;
+        private final Icon setIcon;
+        private final Icon unsetIcon;
         public StateDrivenIconToggleButton( Icon setIcon, Icon unsetIcon ) {
             this.setIcon = setIcon;
             this.unsetIcon = unsetIcon;
         }
 
+        @Override
         public Icon getIcon() {
             if ( this.isSelected() ) {
                 return setIcon;
@@ -1023,7 +1079,7 @@ public class AlignmentBoardControls {
     /** Simple list-and-map-driven combo box model. */
     class ABSDComboBoxModel implements ComboBoxModel {
 
-        private List<Integer> rates = new ArrayList<Integer>();
+        private final List<Integer> rates = new ArrayList<>();
         private Object selectedItem;
 
         public ABSDComboBoxModel( Map<Integer,Integer> rateToIndex ) {
@@ -1089,6 +1145,7 @@ public class AlignmentBoardControls {
             this.controls = controls;
         }
 
+        @Override
         public void stateChanged(ChangeEvent e) {
             float[] cropCoords = new CoordCropper3D().getNormalizedCropCoords(sliders);
             CropCoordSet cropCoordSet = volumeModel.getCropCoords();

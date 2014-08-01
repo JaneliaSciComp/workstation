@@ -69,7 +69,7 @@ import org.openide.util.lookup.ServiceProvider;
 @ServiceProvider(service = AlignmentBoardCtrlPnlSvc.class)
 public class AlignmentBoardPanel extends JPanel implements AlignmentBoardControllable, AlignmentBoardCtrlPnlSvc {
 
-    private static final String SETTINGS_LAUNCH_BTN_NAME = "AlignmentBoard::SettingsLaunchButton";
+    private static final String WHITE_BACKGROUND_BTN_NAME = "AlignmentBoard::WhiteBackgroundButton";
     private static final String COLOR_SAVE_BTN_NAME = "AlignmentBoard::ColorSaveButton";
     private static final String SEARCH_SAVE_BTN_NAME = "AlignmentBoard::SearchSaveButton";
     private static final String SCREEN_SHOT_BTN_NAME = "AlignmentBoard::ScreenShotButton";
@@ -273,7 +273,8 @@ public class AlignmentBoardPanel extends JPanel implements AlignmentBoardControl
             }
             GLActor axesActor = actorBuilder.buildAxesActor(
                     volumeBrickActor.getBoundingBox3d(), 
-                    settingsData.getAcceptedDownsampleRate()
+                    settingsData.getAcceptedDownsampleRate(),
+                    mip3d.getVolumeModel()
             );
             if ( axesActor != null ) {
                 mip3d.addActor( axesActor );
@@ -776,7 +777,6 @@ public class AlignmentBoardPanel extends JPanel implements AlignmentBoardControl
         configureButton(controls.getColorSave(), COLOR_SAVE_BTN_NAME);
         configureButton(controls.getSearchSave(), SEARCH_SAVE_BTN_NAME);
         configureButton(controls.getScreenShot(), SCREEN_SHOT_BTN_NAME);
-        //configureButton(launchSettingsButton, SETTINGS_LAUNCH_BTN_NAME);
 
         toolbar.add(controls.getColorSave());
         toolbar.add(controls.getSearchSave());
@@ -786,8 +786,9 @@ public class AlignmentBoardPanel extends JPanel implements AlignmentBoardControl
 
         toolbar.add(controls.getBlackout());
         toolbar.add(controls.getColorSaveBrightness());
-        toolbar.add(controls.getConnectEvents()); // NOTE: can omit this control, here.
-        //toolbar.add(launchSettingsButton);
+        toolbar.add(controls.getConnectEvents());
+        toolbar.add(controls.getWhiteBackground());
+        toolbar.add(controls.getShowingAxes());
 
         add(toolbar, BorderLayout.PAGE_START);
 
@@ -935,6 +936,13 @@ public class AlignmentBoardPanel extends JPanel implements AlignmentBoardControl
         @Override
         public void setCropBlackout( boolean blackout ) {
             viewer.mip3d.setCropOutLevel(blackout ? 0.0f : VolumeModel.DEFAULT_CROPOUT);
+        }
+        
+        @Override
+        public void forceRenderRefresh() {
+            viewer.serializeInWorker();
+            AlignmentBoardContext ctx = AlignmentBoardMgr.getInstance().getLayersPanel().getAlignmentBoardContext();
+            viewer.updateRendering(ctx);
         }
 
         @Override
