@@ -28,20 +28,22 @@ public class VolumeModel {
     public static final float[] ALT_BACKGROUND_COLOR = {1.0f, 1.0f, 1.0f};    
     public static final float DEFAULT_CROPOUT = 0.25f;
     public static final boolean DEFAULT_SAVE_BRIGHTNESS = true;
+    public static final boolean DEFAULT_SHOWING_AXES = true;
     public static final float STANDARDIZED_GAMMA_MULTIPLIER = 0.46f;
 
     private CropCoordSet cropCoordSet = CropCoordSet.getDefaultCropCoordSet();
     private float gammaAdjustment = DEFAULT_GAMMA_ADJUSTMENT;
     private float cropOutLevel = DEFAULT_CROPOUT;
     private Vec3 cameraDepth;
-    private boolean colorSaveBrightness = true;
+    private boolean colorSaveBrightness = DEFAULT_SAVE_BRIGHTNESS;
     private Camera3d camera3d;
     private float[] backgroundColor = DEFAULT_BACKGROUND_COLOR;
     private float[] colorMask = DEFAULT_COLOR_MASK;
     private float[] voxelMicrometers;
-    private int[] voxelDimensions;   
+    private int[] voxelDimensions;
+    private boolean showAxes = DEFAULT_SHOWING_AXES;
 
-    private Collection<UpdateListener> listeners = new ArrayList<UpdateListener>();
+    private Collection<UpdateListener> listeners = new ArrayList<>();
 
     /** This may be useful for situations like the HUD, which retains a reference to
      * the volume model across invocations.  Call this prior to reset.
@@ -206,6 +208,19 @@ public class VolumeModel {
      */
     public void setBackgroundColor(float[] backgroundColor) {
         this.backgroundColor = backgroundColor;
+    }
+
+    public boolean isShowAxes() {
+        return showAxes;
+    }
+
+    /**
+     * Setting this true allows axes to be visible; false hides them.
+     * 
+     * @param showAxes the showAxes to set
+     */
+    public void setShowAxes(boolean showAxes) {
+        this.showAxes = showAxes;
     }
 
     public static interface UpdateListener {

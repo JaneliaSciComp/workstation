@@ -32,6 +32,8 @@ public class UserSettingSerializerStringTest {
         float[] cropCoordArr = new float[]{0.1f, 0.1f, 0.1f, 0.25f, 0.25f, 0.25f};
         cropCoords.setAcceptedCoordinates(Collections.singletonList(cropCoordArr));
         volumeModel.setCropCoords(cropCoords);
+        volumeModel.setWhiteBackground( ! volumeModel.isWhiteBackground() );     // Force to non-default values.
+        volumeModel.setShowAxes( ! volumeModel.isShowAxes() );
 
         AlignmentBoardSettings settings = new AlignmentBoardSettings();
         UserSettingSerializer serializer;
@@ -48,6 +50,8 @@ public class UserSettingSerializerStringTest {
         assertEquals("CropOutLevel Differs", volumeModel.getCropOutLevel(), returnedVolumeModel.getCropOutLevel(), doubleDelta);
         assertEquals("Gamma Adjustment Differs", volumeModel.getGammaAdjustment(), returnedVolumeModel.getGammaAdjustment(), doubleDelta);
         assertTrue("Background Color Differs", Arrays.equals(volumeModel.getBackgroundColorFArr(), returnedVolumeModel.getBackgroundColorFArr() ));
+        assertEquals("White-background Differs", volumeModel.isWhiteBackground(), returnedVolumeModel.isWhiteBackground());
+        assertEquals("Show-Axes Differs", volumeModel.isShowAxes(), returnedVolumeModel.isShowAxes());
 
         // DEBUG System.out.println("Crop Out Level = " + volumeModel.getCropOutLevel() + ", gamma adjustment = " + volumeModel.getGammaAdjustment() );
         float[] returnedCoordArr = returnedVolumeModel.getCropCoords().getAcceptedCoordinates().iterator().next();

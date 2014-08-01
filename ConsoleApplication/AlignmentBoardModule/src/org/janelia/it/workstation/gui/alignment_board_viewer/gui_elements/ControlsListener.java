@@ -15,7 +15,7 @@ public interface ControlsListener {
     void updateCropCoords();
     void exportSelection( SavebackEvent savebackEvent );
     void setCropBlackout( boolean blackout );
-    void setWhiteBackground( boolean whiteBackground );
+    void forceRenderRefresh();
     void setConnectEditEvents( boolean connectEditEvents );
     void forceRebuild();
 }

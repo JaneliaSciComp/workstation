@@ -24,6 +24,7 @@ public class SerializationAdapterBean implements UserSettingSerializer.Serializa
     private boolean showChannelData;
     private boolean saveColorBrightness;
     private boolean whiteBackground;
+    private boolean showAxes;
     private Vec3 focus;
     private Vec3 focusInGround;
     private CropCoordSet cropCoordSet;
@@ -144,5 +145,15 @@ public class SerializationAdapterBean implements UserSettingSerializer.Serializa
     @Override
     public void setMaximumNeuronCount(long maximumNeuronCount) {
         this.maximumNeuronCount = maximumNeuronCount;
+    }
+
+    @Override
+    public boolean isShowAxes() {
+        return showAxes;
+    }
+
+    @Override
+    public void setShowAxes(boolean b) {
+        this.showAxes = b;
     }
 }

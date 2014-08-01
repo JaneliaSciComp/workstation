@@ -78,6 +78,7 @@ public class AlignmentBoardControls {
     private static final String NON_SELECT_BLACKOUT_TOOLTIP_TEXT = NON_SELECT_BLACKOUT;
     private static final String SAVE_COLORS_BRIGHT = "Apply Brightness to Color TIFF";
     private static final String SAVE_COLORS_BRIGHT_TOOLTIP_TEXT = SAVE_COLORS_BRIGHT;
+    private static final String SHOW_AXES_TOOLTIP_TEXT = "Show Axes";
     private static final String ESTIMATED_BEST_RESOLUTION = "Best Guess";
     private static final String DOWN_SAMPLE_PROP_NAME = "AlignmentBoard_Downsample_Rate";
     private static final String GUESS_LABEL_FMT = "Best Guess: %s";
@@ -119,7 +120,7 @@ public class AlignmentBoardControls {
 
     private JToggleButton blackout;
     private AbstractButton colorSaveBrightness;
-    
+    private AbstractButton showingAxes;    
     private AbstractButton whiteBackground;
 
     private boolean readyForOutput = false;
@@ -420,6 +421,10 @@ public class AlignmentBoardControls {
         return whiteBackground;
     }
 
+    public AbstractButton getShowingAxes() {
+        return showingAxes;
+    }
+    
     private void updateCropOutLevelFromVolumeModel() {
         // Cropout is either dim or dark.  The setting is a float, but varying the level is not being exploited at
         // this time; hence the default is dim, and if the default is not in use, then the non-default of dark is used.
@@ -573,9 +578,9 @@ public class AlignmentBoardControls {
         }
     }
     
-    private synchronized void fireBackgroundChangeEvent( boolean whiteBackgroundFlag ) {
+    private synchronized void fireRenderRefresh() {
         for ( ControlsListener listener: listeners ) {
-            listener.setWhiteBackground( whiteBackgroundFlag );
+            listener.forceRenderRefresh();
         }
     }
 
@@ -617,17 +622,27 @@ public class AlignmentBoardControls {
         colorSaveBrightness.setFocusable( false );
         colorSaveBrightness.setToolTipText( SAVE_COLORS_BRIGHT_TOOLTIP_TEXT );
         colorSaveBrightness.setSelected(VolumeModel.DEFAULT_SAVE_BRIGHTNESS);
-        colorSaveBrightness.addActionListener(
-                new ActionListener() {
-                    @Override
-                    public void actionPerformed(ActionEvent ae) {
-                        volumeModel.setColorSaveBrightness(colorSaveBrightness.isSelected());
-                    }
-                }
-        );
+        colorSaveBrightness.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent ae) {
+                volumeModel.setColorSaveBrightness(colorSaveBrightness.isSelected());
+            }
+        });
+        
+        showingAxes = new StateDrivenIconToggleButton( Icons.getIcon( "axes_on.png" ), Icons.getIcon( "axes_off.png" ) );
+        showingAxes.setFocusable( false );
+        showingAxes.setToolTipText( SHOW_AXES_TOOLTIP_TEXT );
+        showingAxes.setSelected( VolumeModel.DEFAULT_SHOWING_AXES );
+        showingAxes.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent ae) {
+                volumeModel.setShowAxes(showingAxes.isSelected());
+                fireRenderRefresh();
+            }
+        });
 
         //TODO replace both of these icons with something more appropriate.
-        whiteBackground = new StateDrivenIconToggleButton( Icons.getIcon( "brick_grey.png" ), Icons.getIcon( "brick.png" ) );
+        whiteBackground = new StateDrivenIconToggleButton( Icons.getIcon( "background_white.png" ), Icons.getIcon( "background_black.png" ) );
         whiteBackground.setFocusable(false);
         whiteBackground.setToolTipText(BACKGROUND_LABEL_TIP);
         whiteBackground.setSelected(volumeModel.isWhiteBackground());
@@ -635,7 +650,7 @@ public class AlignmentBoardControls {
             @Override
             public void actionPerformed(ActionEvent ae) {
                 volumeModel.setWhiteBackground( whiteBackground.isSelected() );
-                fireBackgroundChangeEvent( volumeModel.isWhiteBackground() );
+                fireRenderRefresh();
             }
         });
 

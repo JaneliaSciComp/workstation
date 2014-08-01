@@ -788,6 +788,7 @@ public class AlignmentBoardPanel extends JPanel implements AlignmentBoardControl
         toolbar.add(controls.getColorSaveBrightness());
         toolbar.add(controls.getConnectEvents());
         toolbar.add(controls.getWhiteBackground());
+        toolbar.add(controls.getShowingAxes());
 
         add(toolbar, BorderLayout.PAGE_START);
 
@@ -938,7 +939,7 @@ public class AlignmentBoardPanel extends JPanel implements AlignmentBoardControl
         }
         
         @Override
-        public void setWhiteBackground( boolean whiteBackground ) {
+        public void forceRenderRefresh() {
             viewer.serializeInWorker();
             AlignmentBoardContext ctx = AlignmentBoardMgr.getInstance().getLayersPanel().getAlignmentBoardContext();
             viewer.updateRendering(ctx);

@@ -30,6 +30,7 @@ public class UserSettingSerializer implements Serializable {
     public static final String MAX_NEURON_SETTING = "MaxNeuronsCutoff";
     public static final String SAVE_BRIGHTNESS_SETTING = "SaveGammaInTiff";
     public static final String WHITE_BACKGROUND_SETTING = "WhiteBackground";
+    public static final String SHOW_AXES_SETTING = "ShowAxes";
 
     public static final int MAX_SERIALIZED_SETTINGS_STR = 65535;
 
@@ -180,7 +181,9 @@ public class UserSettingSerializer implements Serializable {
         builder.append( SAVE_BRIGHTNESS_SETTING ).append("=").append(serializationAdapter.isSaveColorBrightness()).append("\n");
 
         builder.append( WHITE_BACKGROUND_SETTING ).append("=").append(serializationAdapter.isWhiteBackground()).append("\n");
-
+        
+        builder.append( SHOW_AXES_SETTING ).append("=").append(serializationAdapter.isShowAxes()).append("\n");
+        
         logger.info("SETTINGS: {} serialized", builder);
         return builder.toString();
     }
@@ -330,6 +333,20 @@ public class UserSettingSerializer implements Serializable {
                 );
             }
         }        
+                
+        str = settingToValue.get( SHOW_AXES_SETTING );
+        nonEmpty = nonEmpty( str );
+        if ( nonEmpty ) {
+            try {
+                serializationAdapter.setShowAxes( Boolean.parseBoolean( str ) );
+            } catch ( Exception ex ) {
+                logger.warn(
+                        "Invalid boolean setting for showing axes {}.",
+                        str
+                );
+            }
+        }        
+        
 
     }
 
@@ -475,6 +492,7 @@ public class UserSettingSerializer implements Serializable {
         CropCoordSet getCropCoords();               // VolumeModel
         boolean isSaveColorBrightness();            // VolumeModel
         boolean isWhiteBackground();                // VolumeModel
+        boolean isShowAxes();                       // VolumeModel
 
         // Deserialization
         void setGammaAdjustment( float gamma );     // VolumeModel, alignmentBoardSettings as setGammaFactor(float)
@@ -488,6 +506,7 @@ public class UserSettingSerializer implements Serializable {
         void setRotation( Collection<double[]> rotation );  // volumeModel.getCamera3d().getRotation().setWithCaution(
         void setSaveColorBrightness( boolean b );   // VolumeModel
         void setWhiteBackground( boolean b );       // VolumeModel
+        void setShowAxes( boolean b );              // VolumeModel
    }
 
 }
