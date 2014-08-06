@@ -23,6 +23,8 @@ public class SerializationAdapterBean implements UserSettingSerializer.Serializa
     private Rotation3d rotation;
     private boolean showChannelData;
     private boolean saveColorBrightness;
+    private boolean whiteBackground;
+    private boolean showAxes;
     private Vec3 focus;
     private Vec3 focusInGround;
     private CropCoordSet cropCoordSet;
@@ -78,6 +80,16 @@ public class SerializationAdapterBean implements UserSettingSerializer.Serializa
     }
 
     @Override
+    public boolean isWhiteBackground() {
+        return whiteBackground;
+    }
+
+    @Override
+    public void setWhiteBackground(boolean whiteBackground) {
+        this.whiteBackground = whiteBackground;
+    }
+
+    @Override
     public void setGammaAdjustment(float gamma) {
         this.gamma = gamma;
     }
@@ -125,11 +137,23 @@ public class SerializationAdapterBean implements UserSettingSerializer.Serializa
         }
     }
 
+    @Override
     public long getMaximumNeuronCount() {
         return maximumNeuronCount;
     }
 
+    @Override
     public void setMaximumNeuronCount(long maximumNeuronCount) {
         this.maximumNeuronCount = maximumNeuronCount;
+    }
+
+    @Override
+    public boolean isShowAxes() {
+        return showAxes;
+    }
+
+    @Override
+    public void setShowAxes(boolean b) {
+        this.showAxes = b;
     }
 }

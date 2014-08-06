@@ -15,6 +15,7 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.ItemEvent;
 import java.awt.event.ItemListener;
+import java.io.File;
 
 
 /**
@@ -38,11 +39,14 @@ public class AnnotationPanel extends JPanel
     private WorkspaceInfoPanel workspaceInfoPanel;
     private WorkspaceNeuronList workspaceNeuronList;
     private JCheckBoxMenuItem automaticTracingMenuItem;
+    private JCheckBoxMenuItem automaticRefinementMenuItem;
 
     // other UI stuff
     private static final int width = 250;
 
     private static final boolean defaultAutomaticTracing = false;
+    private static final boolean defaultAutomaticRefinement = false;
+
 
     // ----- actions
     private final Action createNeuronAction = new AbstractAction() {
@@ -79,10 +83,21 @@ public class AnnotationPanel extends JPanel
         @Override
         public void execute(TmWorkspace workspace) {
             if (workspace != null) {
+                boolean state;
+                String automaticRefinementPref = workspace.getPreferences().getProperty(AnnotationsConstants.PREF_AUTOMATIC_POINT_REFINEMENT);
+                if (automaticRefinementPref != null) {
+                    state = Boolean.parseBoolean(automaticRefinementPref);
+                } else {
+                    state = false;
+                }
+                automaticRefinementMenuItem.setSelected(state);
                 String automaticTracingPref = workspace.getPreferences().getProperty(AnnotationsConstants.PREF_AUTOMATIC_TRACING);
                 if (automaticTracingPref != null) {
-                    automaticTracingMenuItem.setSelected(Boolean.parseBoolean(automaticTracingPref));
+                    state = Boolean.parseBoolean(automaticTracingPref);
+                } else {
+                    state = false;
                 }
+                automaticTracingMenuItem.setSelected(state);
             }
         }
     };
@@ -162,7 +177,17 @@ public class AnnotationPanel extends JPanel
         // workspace tool pop-up menu (triggered by button, below)
         final JPopupMenu workspaceToolMenu = new JPopupMenu();
 
-        automaticTracingMenuItem = new JCheckBoxMenuItem("Automatic tracing");
+        automaticRefinementMenuItem = new JCheckBoxMenuItem("Automatic point refinement");
+        automaticRefinementMenuItem.setSelected(defaultAutomaticRefinement);
+        automaticRefinementMenuItem.addItemListener(new ItemListener() {
+            @Override
+            public void itemStateChanged(ItemEvent itemEvent) {
+                annotationMgr.setAutomaticRefinement(itemEvent.getStateChange() == ItemEvent.SELECTED);
+            }
+        });
+        workspaceToolMenu.add(automaticRefinementMenuItem);
+
+        automaticTracingMenuItem = new JCheckBoxMenuItem("Automatic path tracing");
         automaticTracingMenuItem.setSelected(defaultAutomaticTracing);
         automaticTracingMenuItem.addItemListener(new ItemListener() {
             @Override
@@ -171,6 +196,12 @@ public class AnnotationPanel extends JPanel
             }
         });
         workspaceToolMenu.add(automaticTracingMenuItem);
+
+        ExportAllSWCAction exportAllSWCAction = new ExportAllSWCAction();
+        exportAllSWCAction.putValue(Action.NAME, "Export SWC file...");
+        exportAllSWCAction.putValue(Action.SHORT_DESCRIPTION,
+                "Export all neurons to SWC file");
+        workspaceToolMenu.add(new JMenuItem((exportAllSWCAction)));
 
         ImportSWCAction importSWCAction = new ImportSWCAction();
         importSWCAction.putValue(Action.NAME, "Import SWC file...");
@@ -214,6 +245,12 @@ public class AnnotationPanel extends JPanel
 
         // neuron tool pop-up menu (triggered by button, below)
         final JPopupMenu neuronToolMenu = new JPopupMenu();
+
+        ExportCurrentSWCAction exportCurrentSWCAction = new ExportCurrentSWCAction();
+        exportCurrentSWCAction.putValue(Action.NAME, "Export SWC file...");
+        exportCurrentSWCAction.putValue(Action.SHORT_DESCRIPTION,
+                "Export selected neuron as an SWC file");
+        neuronToolMenu.add(exportCurrentSWCAction);
         neuronToolMenu.add(new JMenuItem(new AbstractAction("Rename") {
             public void actionPerformed(ActionEvent e) {
                 annotationMgr.renameNeuron();
@@ -370,6 +407,36 @@ public class AnnotationPanel extends JPanel
         }
     }
 
+    class ExportAllSWCAction extends AbstractAction {
+        @Override
+        public void actionPerformed(ActionEvent e) {
+            if (annotationModel.getCurrentNeuron() != null) {
+                JFileChooser chooser = new JFileChooser();
+                chooser.setDialogTitle("Save swc file");
+                chooser.setSelectedFile(new File(annotationModel.getCurrentWorkspace().getName() + ".swc"));
+                int returnValue = chooser.showSaveDialog(AnnotationPanel.this);
+                if (returnValue == JFileChooser.APPROVE_OPTION) {
+                    annotationMgr.exportAllNeuronsAsSWC(chooser.getSelectedFile());
+                }
+            }
+        }
+    }
+
+    class ExportCurrentSWCAction extends AbstractAction {
+        @Override
+        public void actionPerformed(ActionEvent e) {
+            if (annotationModel.getCurrentNeuron() != null) {
+                JFileChooser chooser = new JFileChooser();
+                chooser.setDialogTitle("Save swc file");
+                chooser.setSelectedFile(new File(annotationModel.getCurrentNeuron().getName() + ".swc"));
+                int returnValue = chooser.showSaveDialog(AnnotationPanel.this);
+                if (returnValue == JFileChooser.APPROVE_OPTION) {
+                    annotationMgr.exportCurrentNeuronAsSWC(chooser.getSelectedFile());
+                }
+            }
+        }
+    }
+
     class ImportSWCAction extends AbstractAction {
         @Override
         public void actionPerformed(ActionEvent e) {
@@ -380,6 +447,7 @@ public class AnnotationPanel extends JPanel
 
             // could specify a dir to open in, but not sure what to choose
             JFileChooser chooser = new JFileChooser();
+            chooser.setDialogTitle("Choose swc file");
             int returnValue = chooser.showOpenDialog(AnnotationPanel.this);
             if (returnValue == JFileChooser.APPROVE_OPTION) {
                 annotationMgr.importSWCFile(chooser.getSelectedFile());

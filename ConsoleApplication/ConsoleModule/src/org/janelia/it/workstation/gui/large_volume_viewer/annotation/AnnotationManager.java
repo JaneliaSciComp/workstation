@@ -1,5 +1,6 @@
 package org.janelia.it.workstation.gui.large_volume_viewer.annotation;
 
+import com.google.common.base.Stopwatch;
 import org.janelia.it.workstation.api.entity_model.management.ModelMgr;
 import org.janelia.it.workstation.geom.Vec3;
 import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
@@ -23,6 +24,7 @@ import java.awt.*;
 import java.io.File;
 import java.net.URL;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -303,12 +305,27 @@ public class AnnotationManager
         SimpleWorker adder = new SimpleWorker() {
             @Override
             protected void doStuff() throws Exception {
+                Vec3 finalLocation;
+                if (annotationModel.automatedRefinementEnabled()) {
+                    // Stopwatch stopwatch = new Stopwatch();
+                    // stopwatch.start();
+                    PointRefiner refiner = new PointRefiner(quadViewUi.getSubvolumeProvider());
+                    finalLocation = refiner.refine(xyz);
+                    // stopwatch.stop();
+                    // System.out.println("refined annotation; elapsed time = " + stopwatch.toString());
+
+                    // System.out.println("add annotation: input point " + xyz);
+                    // System.out.println("add annotation: refined point " + finalLocation);
+                } else {
+                    finalLocation = xyz;
+                }
+
                 if (parentID == null) {
                     // if parentID is null, it's a new root in current neuron
-                    annotationModel.addRootAnnotation(currentNeuron, xyz);
+                    annotationModel.addRootAnnotation(currentNeuron, finalLocation);
                 } else {
                     annotationModel.addChildAnnotation(
-                            currentNeuron.getGeoAnnotationMap().get(parentID), xyz);
+                            currentNeuron.getGeoAnnotationMap().get(parentID), finalLocation);
                 }
             }
 
@@ -954,6 +971,27 @@ public class AnnotationManager
 
     }
 
+    public void setAutomaticRefinement(final boolean state) {
+        SimpleWorker saver = new SimpleWorker() {
+            @Override
+            protected void doStuff() throws Exception {
+                annotationModel.setPreference(AnnotationsConstants.PREF_AUTOMATIC_POINT_REFINEMENT,
+                        String.valueOf(state));
+            }
+
+            @Override
+            protected void hadSuccess() {
+                // nothing here
+            }
+
+            @Override
+            protected void hadError(Throwable error) {
+                SessionMgr.getSessionMgr().handleException(error);
+            }
+        };
+        saver.execute();
+    }
+
     public void setAutomaticTracing(final boolean state) {
         SimpleWorker saver = new SimpleWorker() {
             @Override
@@ -973,7 +1011,6 @@ public class AnnotationManager
             }
         };
         saver.execute();
-
     }
 
     private void tracePathToParent(PathTraceToParentRequest request) {
@@ -998,6 +1035,53 @@ public class AnnotationManager
         //  new task, so it's far too intrusive to be used for our purpose; see FW-2191
         // worker.executeWithEvents();
 
+    }
+
+    public void exportAllNeuronsAsSWC(final File swcFile) {
+        final List<Long> neuronIDList = new ArrayList<Long>();
+        for (TmNeuron neuron: annotationModel.getCurrentWorkspace().getNeuronList()) {
+            neuronIDList.add(neuron.getId());
+        }
+
+        SimpleWorker saver = new SimpleWorker() {
+            @Override
+            protected void doStuff() throws Exception {
+                annotationModel.exportSWCData(swcFile, neuronIDList);
+            }
+
+            @Override
+            protected void hadSuccess() {
+                // nothing here
+            }
+
+            @Override
+            protected void hadError(Throwable error) {
+                SessionMgr.getSessionMgr().handleException(error);
+            }
+        };
+        saver.execute();
+    }
+
+    public void exportCurrentNeuronAsSWC(final File swcFile) {
+        final Long neuronID = annotationModel.getCurrentNeuron().getId();
+
+        SimpleWorker saver = new SimpleWorker() {
+            @Override
+            protected void doStuff() throws Exception {
+                annotationModel.exportSWCData(swcFile, Arrays.asList(neuronID));
+            }
+
+            @Override
+            protected void hadSuccess() {
+                // nothing here
+            }
+
+            @Override
+            protected void hadError(Throwable error) {
+                SessionMgr.getSessionMgr().handleException(error);
+            }
+        };
+        saver.execute();
     }
 
     public void importSWCFile(final File swcFile) {

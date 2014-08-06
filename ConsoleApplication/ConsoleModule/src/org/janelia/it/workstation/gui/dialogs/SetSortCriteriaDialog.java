@@ -55,6 +55,7 @@ public class SetSortCriteriaDialog extends ModalDialog implements Accessibility 
     private static final String DEFAULT_SORT_VALUE = "Default";
 
     private JPanel attrPanel;
+    private JLabel targetLabel;
     private JComboBox sortingFieldCombobox;
     private JComboBox sortingOrderCombobox;
     private DefaultComboBoxModel sortingFieldModel;
@@ -68,6 +69,8 @@ public class SetSortCriteriaDialog extends ModalDialog implements Accessibility 
         attrPanel = new JPanel(new MigLayout("wrap 2, ins 20"));
         add(attrPanel, BorderLayout.CENTER);
 
+        targetLabel = new JLabel();
+        
         sortingFieldCombobox = new JComboBox();
         sortingFieldCombobox.setEditable(false);
         sortingFieldCombobox.setToolTipText("Choose sorting field");
@@ -118,6 +121,7 @@ public class SetSortCriteriaDialog extends ModalDialog implements Accessibility 
     public void showForEntity(final Entity entity) {
 
         this.entity = entity;
+        targetLabel.setText(entity.getName());
 
         if (!ModelMgrUtils.areChildrenLoaded(entity)) {
             Utils.setWaitingCursor(SessionMgr.getMainFrame());
@@ -155,6 +159,8 @@ public class SetSortCriteriaDialog extends ModalDialog implements Accessibility 
 
         attrPanel.removeAll();
 
+        attrPanel.add(new JLabel("Sort folder: "), "");
+        attrPanel.add(targetLabel, "wrap");
         attrPanel.add(new JLabel("Sort by: "), "");
         attrPanel.add(sortingFieldCombobox, "wrap");
         attrPanel.add(new JLabel("Sort order: "), "");

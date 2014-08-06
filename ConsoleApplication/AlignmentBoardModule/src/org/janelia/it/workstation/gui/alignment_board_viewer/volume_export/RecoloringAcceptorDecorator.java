@@ -162,7 +162,7 @@ public class RecoloringAcceptorDecorator  extends AbstractAcceptorDecorator {
     /** Channel data for some objects (at t-o-w, compartments) includes only a single byte, but this lets us use more powerful coloring systems. */
     private ChannelMetaData getSubstitutedMetaData(ChannelMetaData channelMetaData) {
         if ( metaDataMap == null ) {
-            metaDataMap = new HashMap<ChannelMetaData,ChannelMetaData>();
+            metaDataMap = new HashMap<>();
         }
         ChannelMetaData substitutedChannelMetaData = metaDataMap.get( channelMetaData );
         if ( substitutedChannelMetaData == null ) {

@@ -256,7 +256,7 @@ public class SystemInfo {
                         String nbHome = System.getProperty("netbeans.home");
                         File parent = new File( nbHome ).getParentFile();
                         File containingDir = new File( parent, ETC_SUBPATH );
-                        sysWideConfig = new File( containingDir, configFile );
+                        sysWideConfig = new File( containingDir, "netbeans.conf" );
                     }
                     if (sysWideConfig != null  &&  sysWideConfig.canRead()) {
                         // Do the file copy.
@@ -267,7 +267,7 @@ public class SystemInfo {
                         FileUtils.copy(sysWideConfig, fqBrandingConfig, false, false, null);
                     }
                     else {
-                        throw new RuntimeException("Failed to save config file changes.");
+                        log.error("Failed to save config file changes.  Config file used was {}.", sysWideConfig);
                     }
                 }
             }

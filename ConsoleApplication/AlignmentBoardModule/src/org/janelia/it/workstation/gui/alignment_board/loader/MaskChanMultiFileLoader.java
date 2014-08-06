@@ -36,14 +36,14 @@ public class MaskChanMultiFileLoader {
     private boolean enforcePadding = true;
     private boolean dimWriteback;
 
-    private Logger logger = LoggerFactory.getLogger(MaskChanMultiFileLoader.class);
+    private final Logger logger = LoggerFactory.getLogger(MaskChanMultiFileLoader.class);
 
     /**
      * Anything on this list could receive data from the files under study.
      */
     public void setAcceptors(Collection<MaskChanDataAcceptorI> acceptors) {
-        maskAcceptors = new ArrayList<MaskChanDataAcceptorI>();
-        channelAcceptors = new ArrayList<MaskChanDataAcceptorI>();
+        maskAcceptors = new ArrayList<>();
+        channelAcceptors = new ArrayList<>();
 
         for (MaskChanDataAcceptorI acceptor : acceptors) {
             if (acceptor.getAcceptableInputs().equals(MaskChanDataAcceptorI.Acceptable.channel)) {
@@ -71,7 +71,7 @@ public class MaskChanMultiFileLoader {
         logger.debug("Read called.");
 
         ExecutorService executorService = Executors.newFixedThreadPool(N_THREADS);
-        List<Future<Void>> followUps = new ArrayList<Future<Void>>();
+        List<Future<Void>> followUps = new ArrayList<>();
 
         ChannelSingleFileLoader channelLoader = new ChannelSingleFileLoader(bean);
         InputStream channelInputStream = streamSource.getChannelInputStream();
@@ -88,6 +88,7 @@ public class MaskChanMultiFileLoader {
         for (int slabNo = 0; slabNo < NUM_SEGMENTS; slabNo++) {
             final int finalSlabNo = slabNo;
             Callable<Void> segmentTask = new Callable<Void>() {
+                @Override
                 public Void call() throws Exception {
                     MaskSingleFileLoader singleFileLoader = new MaskSingleFileLoader(maskAcceptors, channelAcceptors, bean, fileStats);
                     singleFileLoader.setApplicableSegment(finalSlabNo, NUM_SEGMENTS);
@@ -101,18 +102,16 @@ public class MaskChanMultiFileLoader {
                     } else {
                         singleFileLoader.setIntensityDivisor(1);
                     }
-
-                    InputStream maskInputStream = streamSource.getMaskInputStream();
-
-                    singleFileLoader.read(maskInputStream, finalChannelDataBean);
-
-                    // Accumulate information for final sanity check.
-                    if (isCheckForConsistency()) {
-                        checker.accumulate(
-                                bean.getTranslatedNum(), singleFileLoader.getDimensions(), singleFileLoader.getChannelMetaData()
-                        );
+                    try (InputStream maskInputStream = streamSource.getMaskInputStream()) {
+                        singleFileLoader.read(maskInputStream, finalChannelDataBean);
+                        
+                        // Accumulate information for final sanity check.
+                        if (isCheckForConsistency()) {
+                            checker.accumulate(
+                                    bean.getTranslatedNum(), singleFileLoader.getDimensions(), singleFileLoader.getChannelMetaData()
+                            );
+                        }
                     }
-                    maskInputStream.close();
                     return null;
                 }
             };
@@ -127,7 +126,7 @@ public class MaskChanMultiFileLoader {
             try {
                 future.get();
             }
-            catch (Exception ex) {
+            catch (InterruptedException | ExecutionException ex) {
                 ex.printStackTrace();
                 lastException = ex;
             }
