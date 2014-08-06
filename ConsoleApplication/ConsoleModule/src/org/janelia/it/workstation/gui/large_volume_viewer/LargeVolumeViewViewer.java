@@ -95,7 +95,13 @@ public class LargeVolumeViewViewer extends Viewer {
         // be sure we've successfully gotten the sample before loading it!
         if (sliceSample.getEntityTypeName().equals(EntityConstants.TYPE_3D_TILE_MICROSCOPE_SAMPLE)) {
             try {
-                viewUI.loadFile(sliceSample.getValueByAttributeName(EntityConstants.ATTRIBUTE_FILE_PATH));
+                if (!viewUI.loadFile(sliceSample.getValueByAttributeName(EntityConstants.ATTRIBUTE_FILE_PATH))) {
+                    JOptionPane.showMessageDialog(this.getParent(),
+                            "Could not open sample entity for this workspace!",
+                            "Could not open workspace",
+                            JOptionPane.ERROR_MESSAGE);
+                }
+                return;
             }
             catch (MalformedURLException e) {
                 SessionMgr.getSessionMgr().handleException(e);
