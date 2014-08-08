@@ -31,7 +31,7 @@ import org.openide.util.NbBundle.Messages;
         preferredID = "GeometricSearchTopComponent"
 )
 @Messages({
-    "CTL_GeometricSearchAction=GeometricSearch",
+    "CTL_GeometricSearchAction=Geometric Search",
     "CTL_GeometricSearchTopComponent=Geometric Search",
     "HINT_GeometricSearchTopComponent=This is a Geometric Search window"
 })
