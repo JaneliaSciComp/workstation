@@ -5,7 +5,7 @@ and those of the NetBeans system can be properly negotiated.  This is a sort
 of adapter.
 -->
 <project name="run-console-build" default="build">
-
+    <property environment="env"/>
     <target name="build" description="Build using ant target" depends="prop-copy,internal-jar-copy">
         <echoproperties/>
         <ant antfile="build.xml" target="build">
@@ -66,9 +66,10 @@ of adapter.
 
     <macrodef name="exec-target" description="Carry Out Target via Exec">
         <attribute name="target"/>
+
         <sequential>
             <!-- NOTE: failonerror is possible, here, but it hides the error text. -->
-            <exec executable="${antexec}" outputproperty="antout">
+            <exec executable="${env.antexec}" outputproperty="antout">
                 <arg value="-Dnbplatform.default.netbeans.dest.dir=${basedir}"/>
                 <arg value="-Dnbplatform.default.harness.dir=${basedir}/harness" />
                 <arg value="-f"/>
@@ -122,7 +123,7 @@ of adapter.
               build
         -->
         <echo message="This target still requires presetting antexec."/>
-        <exec executable="${antexec}" outputproperty="antout">
+        <exec executable="${env.antexec}" outputproperty="antout">
             <!-- First arg is used explicitly in NetBeans, but found unneeded and difficult to set, here. -->
             <!--<arg value="-Dgenerator-jdk-location-forward-slashes=/Library/Java/JavaVirtualMachines/jdk1.7.0_51.jdk/Contents/Home "-->
             <arg value="-Dnbplatform.default.netbeans.dest.dir=${basedir}"/>
