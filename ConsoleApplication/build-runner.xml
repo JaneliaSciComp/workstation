@@ -137,9 +137,9 @@ of adapter.
             <arg value="-Dnbi.stub.location=${basedir}/harness/nbi/stub"/>
             <arg value="-Dnbi.engine.jar=${basedir}/harness/modules/ext/nbi-engine.jar"/>
             <arg value="-Dnbi.stub.common.location=${basedir}/harness/nbi/.common"/>
-            <arg value="-Dnbi.icon.file=${basedir}/branding/core/core.jar/org/netbeans/core/startup/frame48.gif"/>
+            <arg value="-Dnbi.icon.file=${basedir}/janeliaws.icns"/>
             <arg value="-Dnbi.ant.tasks.jar=${basedir}/harness/modules/ext/nbi-ant-tasks.jar"/>
-            <arg value="-Dnbi.dock.icon.file=${basedir}/harness/etc/applicationIcon.icns"/>
+            <arg value="-Dnbi.dock.icon.file=${basedir}/janeliaws.icns"/>
             <arg value="-Dnbi.registries.management.jar=${basedir}/harness/modules/ext/nbi-registries-management.jar" />
             <arg value="-f"/>
             <arg value="${basedir}/harness/nbi/stub/template.xml"/>
