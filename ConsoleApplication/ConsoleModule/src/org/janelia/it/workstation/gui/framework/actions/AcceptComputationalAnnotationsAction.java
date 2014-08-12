@@ -15,33 +15,31 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * This action removes an entity from some parent. If the entity becomes an orphan, then it is completely deleted.
+ * This action accepts all computational annotations on an entity or multiple entities, "curating" them into normal annotations. 
  *
  * @author <a href="mailto:rokickik@janelia.hhmi.org">Konrad Rokicki</a>
  */
-public class RemoveAnnotationKeyValueAction implements Action {
+public class AcceptComputationalAnnotationsAction implements Action {
 
 	private List<String> selectedEntities;
-	private OntologyAnnotation tag;
 
-    public RemoveAnnotationKeyValueAction(OntologyAnnotation tag) {
+    public AcceptComputationalAnnotationsAction() {
         selectedEntities = new ArrayList<String>(
                 ModelMgr.getModelMgr().getEntitySelectionModel().getSelectedEntitiesIds(
                         SessionMgr.getBrowser().getViewerManager().getActiveViewer().getSelectionCategory()));
-        this.tag = tag;
     }
 
     @Override
     public String getName() {
-    	return selectedEntities.size()>1?"  Remove \""+tag.toString()+"\" Annotation From "+selectedEntities.size()+" Entities":"  Remove Annotation";
+    	return selectedEntities.size()>1?"  Accept All Computational Annotations on "+selectedEntities.size()+" Entities":"  Accept All Computational Annotations on This Entity";
     }
 	
     @Override
     public void doAction() {
 
     	if (selectedEntities.size()>1) {
-            int deleteConfirmation = JOptionPane.showConfirmDialog(SessionMgr.getMainFrame(), "Are you sure you want to delete this annotation from all selected entities?", "Delete Annotations", JOptionPane.YES_NO_OPTION);
-            if (deleteConfirmation != 0) {
+            int acceptConfirmation = JOptionPane.showConfirmDialog(SessionMgr.getMainFrame(), "Are you sure you want to accept all computational annotations on all selected entities?", "Accept Annotations", JOptionPane.YES_NO_OPTION);
+            if (acceptConfirmation != 0) {
                 return;
             }
     	}
@@ -59,7 +57,6 @@ public class RemoveAnnotationKeyValueAction implements Action {
 
                     @Override
                     protected void doStuff() throws Exception {
-
                         int i=1;
             			for(String selectedId : selectedEntities) {
             				RootedEntity rootedEntity = viewer.getRootedEntityById(selectedId);
@@ -67,11 +64,7 @@ public class RemoveAnnotationKeyValueAction implements Action {
                             if (entityAnnotations==null) {
                             	continue;
                             }
-                            for(OntologyAnnotation annotation : entityAnnotations) {
-                            	if (annotation.toString().equals(tag.toString())) {
-                            		ModelMgr.getModelMgr().removeAnnotation(annotation.getId());
-                            	}
-                            }
+                    		ModelMgr.getModelMgr().acceptComputationAnnotation(rootedEntity.getEntity().getId(), entityAnnotations);
         		            setProgress(i++, selectedEntities.size());
                     	}
                     }
@@ -87,7 +80,7 @@ public class RemoveAnnotationKeyValueAction implements Action {
                     }
                 };
 
-                worker.setProgressMonitor(new ProgressMonitor(SessionMgr.getMainFrame(), "Deleting Annotations", "", 0, 100));
+                worker.setProgressMonitor(new ProgressMonitor(SessionMgr.getMainFrame(), "Accepting Annotations", "", 0, 100));
                 worker.execute();
         	}
         }

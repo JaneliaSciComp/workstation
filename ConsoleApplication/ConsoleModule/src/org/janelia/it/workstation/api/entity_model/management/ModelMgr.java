@@ -672,6 +672,22 @@ public final class ModelMgr {
         notifyAnnotationsChanged(annotation.getTargetEntityId());
     }
 
+    public void acceptComputationAnnotation(Long entityId, List<OntologyAnnotation> entityAnnotations) throws Exception {
+        for(OntologyAnnotation annotation : entityAnnotations) {
+        	if (annotation.isComputation()) {
+                Entity annotationEntity = annotation.getEntity();
+                if (annotationEntity == null || annotationEntity.getId() == null) {
+                    return;
+                }
+                EntityData computationalEd = annotationEntity.getEntityDataByAttributeName(EntityConstants.ATTRIBUTE_ANNOTATION_IS_COMPUTATIONAL);
+                if (annotationEntity!=null) {
+                	entityModel.deleteEntityData(computationalEd);
+                }
+        	}
+        }
+        notifyAnnotationsChanged(entityId);
+    }
+    
     public Entity getOntologyTree(Long rootId) throws Exception {
         return FacadeManager.getFacadeManager().getOntologyFacade().getOntologyTree(rootId);
     }
