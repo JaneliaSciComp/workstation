@@ -826,6 +826,9 @@ public class EntityModel {
             if (entityData.getParentEntity() != null) {
                 parent = entityCache.getIfPresent(entityData.getParentEntity().getId());
                 if (parent != null) {
+                	// This shouldn't be necessary since we're invalidating the parent, 
+                	// but it's a little more forgiving of clients that don't respond to invalidation
+                	parent.getEntityData().remove(entityData); 
                     invalidate(parent, false);
                 }
             }
