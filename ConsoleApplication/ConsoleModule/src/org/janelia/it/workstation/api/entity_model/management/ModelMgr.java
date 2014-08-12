@@ -717,17 +717,13 @@ public final class ModelMgr {
     
     public void invalidateCache() {
         entityModel.invalidateAll();
-    }
-
-    public void invalidateCache(Collection<Entity> entities, boolean recurse) {
-        entityModel.invalidate(entities, recurse);
-    }
-
-    public void invalidate(Collection<Long> entityIds) {
-        entityModel.invalidate(entityIds);
+        this.currWorkspaceId = null;
     }
 
     public void invalidateCache(Entity entity, boolean recurse) {
+        if (entity.getId().equals(currWorkspaceId)) {
+            this.currWorkspaceId = null;
+        }
         entityModel.invalidate(entity, recurse);
     }
 
