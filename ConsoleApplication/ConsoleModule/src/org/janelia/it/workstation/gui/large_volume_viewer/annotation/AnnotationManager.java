@@ -320,6 +320,8 @@ public class AnnotationManager
                     finalLocation = xyz;
                 }
 
+                // Stopwatch stopwatch = new Stopwatch();
+                // stopwatch.start();
                 if (parentID == null) {
                     // if parentID is null, it's a new root in current neuron
                     annotationModel.addRootAnnotation(currentNeuron, finalLocation);
@@ -327,6 +329,8 @@ public class AnnotationManager
                     annotationModel.addChildAnnotation(
                             currentNeuron.getGeoAnnotationMap().get(parentID), finalLocation);
                 }
+                // stopwatch.stop();
+                // System.out.println("added annotation; elapsed time = " + stopwatch.toString());
             }
 
             @Override
