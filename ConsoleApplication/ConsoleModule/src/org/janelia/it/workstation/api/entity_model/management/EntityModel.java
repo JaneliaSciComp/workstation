@@ -969,14 +969,9 @@ public class EntityModel {
             
             // Update in-memory workspace entity 
             Entity workspace = getEntityById(workspaceId);
-            workspace.getEntityData().add(commonRootEd);
+            invalidate(workspace, false);
+            workspace = getEntityById(workspaceId);
             
-            // Link to the correct workspace entity
-            commonRootEd.setParentEntity(workspace);
-            
-            // Finally we can cache the new common root
-            Entity commonRoot = putOrUpdate(commonRootEd.getChildEntity());
-            notifyEntityCreated(commonRoot);
             notifyEntityChanged(workspace);
         }
         return commonRootEd;
