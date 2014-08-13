@@ -338,35 +338,6 @@ public abstract class EntityOutline extends EntityTree implements Refreshable, A
         }
     }
 
-    @Subscribe
-    @Override
-    public void entityChanged(EntityChangeEvent event) {
-        super.entityChanged(event);
-        Entity entity = event.getEntity();
-
-        Set<Entity> toRemove = new HashSet<Entity>();
-
-        for (Entity commonRoot : ModelMgrUtils.getAccessibleChildren(root)) {
-            if (commonRoot.getId().equals(entity.getId())) {
-                // A common root has changed
-                if (entity.getValueByAttributeName(EntityConstants.ATTRIBUTE_COMMON_ROOT) == null) {
-                    log.debug("No longer a common root: {}", EntityUtils.identify(entity));
-                    // It is no longer a common root!
-                    toRemove.add(commonRoot);
-                }
-            }
-        }
-
-        for (Entity entityRoot : toRemove) {
-            log.debug("Removing entity root: {}", EntityUtils.identify(entityRoot));
-            for (DefaultMutableTreeNode node : getNodesByEntityId(entityRoot.getId())) {
-                if (node.getParent().equals(getTree().getModel().getRoot())) {
-                    removeNode(node);
-                }
-            }
-        }
-    }
-
     @Override
     public void refresh() {
         refresh(true, null);
