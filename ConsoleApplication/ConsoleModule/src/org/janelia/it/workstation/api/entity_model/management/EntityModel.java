@@ -199,10 +199,6 @@ public class EntityModel {
                         c++;
                     }
                 }
-                if (entity.getNumChildren() != null && entity.getNumChildren() != c) {
-                    log.warn("Denormalized numChildren (" + entity.getNumChildren()
-                            + ") does not match actual number of children (" + c + ") for entity " + entity.getId());
-                }
             }
 
             return canonicalEntity;
@@ -981,6 +977,7 @@ public class EntityModel {
             // Finally we can cache the new common root
             Entity commonRoot = putOrUpdate(commonRootEd.getChildEntity());
             notifyEntityCreated(commonRoot);
+            notifyEntityChanged(workspace);
         }
         return commonRootEd;
     }
