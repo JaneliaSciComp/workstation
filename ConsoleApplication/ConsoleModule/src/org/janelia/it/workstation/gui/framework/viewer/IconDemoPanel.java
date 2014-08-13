@@ -1247,7 +1247,7 @@ public class IconDemoPanel extends IconPanel {
         if (annotations == null || pageRootedEntities == null) {
             return;
         }
-
+        
         annotationLoadingWorker = new SimpleWorker() {
 
             protected void doStuff() throws Exception {
