@@ -51,7 +51,7 @@ public class ABContextDataSource implements RenderableDataSourceI {
     @Override
     public Collection<MaskChanRenderableData> getRenderableDatas() {
         logger.debug( "Getting renderable datas." );
-        Collection<MaskChanRenderableData> rtnVal = new ArrayList<MaskChanRenderableData>();
+        Collection<MaskChanRenderableData> rtnVal = new ArrayList<>();
 
         int nextTranslatedNum = 1;
 
@@ -271,6 +271,7 @@ public class ABContextDataSource implements RenderableDataSourceI {
         renderableBean.setTranslatedNum(translatedNum);
         renderableBean.setRenderableEntity(internalEntity);
         renderableBean.setAlignedItemId(item.getId());
+        renderableBean.setAlignedItem(item);
         if ( isCompartment ) {
             renderableBean.setInvertedY( false );
             renderableBean.setType(EntityConstants.TYPE_COMPARTMENT );
