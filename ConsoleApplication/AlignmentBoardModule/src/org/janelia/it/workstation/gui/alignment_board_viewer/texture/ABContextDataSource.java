@@ -174,6 +174,7 @@ public class ABContextDataSource implements RenderableDataSourceI {
         MaskChanRenderableData nfRenderable = new MaskChanRenderableData();
         nfRenderable.setBean( renderableBean );
         nfRenderable.setCompartment( isCompartment );
+        renderableBean.setAlignedItem( item );
 
         Masked3d masked = (Masked3d)item.getItemWrapper();
         String maskPath = getMaskPath(masked);
@@ -201,6 +202,7 @@ public class ABContextDataSource implements RenderableDataSourceI {
         renderableBean.setTranslatedNum(nextTranslatedNum);
         renderableBean.setType("Reference");     //todo move this to EntityConstants
         renderableBean.setRenderableEntity( volumeImage.getInternalEntity() );
+        renderableBean.setAlignedItem( item );
         setAppearance( false, item, renderableBean );
         MaskChanRenderableData data = new MaskChanRenderableData();
         data.setBean( renderableBean );
