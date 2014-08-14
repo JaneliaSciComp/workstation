@@ -65,6 +65,7 @@ public class LayerContextMenu extends JPopupMenu {
         setNextAddRequiresSeparator(true);
         add(getChooseColorItem());
         add(getDropColorItem());
+        add(getShowOverlapsItem());
         // This is a special debug item. It may also not be working as intended. LLF, 1/10/2014
         if ( SessionMgr.getUsername().equals( "fosterl" ) ) {
             add(getRawRenderToggle());
@@ -218,9 +219,41 @@ public class LayerContextMenu extends JPopupMenu {
         return copyMenuItem;
     }
 
+    protected JMenuItem getShowOverlapsItem() {
+        JMenuItem copyMenuItem = new JMenuItem("  Show Only Overlapping");
+        copyMenuItem.setToolTipText("Display only items which overlap this one.");
+        copyMenuItem.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+
+                SimpleWorker worker = new SimpleWorker() {
+                    @Override
+                    protected void doStuff() throws Exception {
+                        alignedItem.setColor(null);
+                    }
+
+                    @Override
+                    protected void hadSuccess() {
+                        AlignmentBoardItemChangeEvent event = new AlignmentBoardItemChangeEvent(
+                                alignmentBoardContext, alignedItem, ChangeType.OverlapFilter);
+                        ModelMgr.getModelMgr().postOnEventBus(event);
+                    }
+
+                    @Override
+                    protected void hadError(Throwable error) {
+                        SessionMgr.getSessionMgr().handleException(error);
+                    }
+                };
+                worker.execute();
+            }
+        });
+        return copyMenuItem;
+    }
+
     protected JMenuItem getRenameItem() {
         JMenuItem renameItem = new JMenuItem("  Set Alias");
         renameItem.addActionListener(new ActionListener() {
+            @Override
             public void actionPerformed(ActionEvent actionEvent) {
 
                 final String newName = (String) JOptionPane.showInputDialog(SessionMgr.getMainFrame(), "Alias:\n", "Set Alias For "
@@ -259,7 +292,7 @@ public class LayerContextMenu extends JPopupMenu {
 
     protected JMenuItem getDeleteUnderClickItem() {
 
-        List<RootedEntity> rootedEntityList = new ArrayList<RootedEntity>();
+        List<RootedEntity> rootedEntityList = new ArrayList<>();
         rootedEntityList.add(alignedItem.getInternalRootedEntity());
         String name = alignedItem.getName();
         if ( name.length() > 15 ) {
@@ -270,7 +303,7 @@ public class LayerContextMenu extends JPopupMenu {
     }
 
     private JMenuItem getDeleteMultiSelectionItem() {
-        List<RootedEntity> rootedEntityList = new ArrayList<RootedEntity>();
+        List<RootedEntity> rootedEntityList = new ArrayList<>();
         for ( AlignedItem item: multiSelectionItems ) {
             rootedEntityList.add(item.getInternalRootedEntity());
         }
@@ -302,6 +335,7 @@ public class LayerContextMenu extends JPopupMenu {
 
         JMenuItem deleteItem = new JMenuItem(text);
         deleteItem.addActionListener(new ActionListener() {
+            @Override
             public void actionPerformed(ActionEvent actionEvent) {
                 action.doAction();
             }
