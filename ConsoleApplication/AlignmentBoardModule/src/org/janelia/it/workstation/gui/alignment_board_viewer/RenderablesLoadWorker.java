@@ -146,6 +146,7 @@ public class RenderablesLoadWorker extends SimpleWorker implements VolumeLoader 
      * @param maskChanRenderableData renderable data to be applied to volume.
      * @throws Exception from called methods.
      */
+    @Override
     public void loadVolume( MaskChanRenderableData maskChanRenderableData ) throws Exception {
         logger.debug(
                 "In load thread, STARTING load of renderable {}.",
@@ -188,7 +189,7 @@ public class RenderablesLoadWorker extends SimpleWorker implements VolumeLoader 
         Collection<MaskChanRenderableData> renderableDatas = dataSource.getRenderableDatas();
 
         // Cut down the to-renders: (at time-of-writing) use only the larger ones.
-        Collection<MaskChanRenderableData> originalDatas = new ArrayList<MaskChanRenderableData>( renderableDatas );
+        Collection<MaskChanRenderableData> originalDatas = new ArrayList<>( renderableDatas );
         long fragmentFilterSize = alignmentBoardSettings.getMinimumVoxelCount();
         long fragmentCutoffCount = alignmentBoardSettings.getMaximumNeuronCount();
         if ( fragmentFilterSize != AlignmentBoardSettings.NO_NEURON_SIZE_CONSTRAINT  ||
@@ -217,7 +218,7 @@ public class RenderablesLoadWorker extends SimpleWorker implements VolumeLoader 
             if ( ! passedCheckPointAfterFilter )
                 return;
 
-            List<RenderableBean> renderableBeans = new ArrayList<RenderableBean>();
+            List<RenderableBean> renderableBeans = new ArrayList<>();
             int lastUsedMask = extractRenderableBeansFromRenderableDatas( renderableDatas, renderableBeans );
             if ( lastUsedMask > -1 ) {
                 multiMaskTracker.setFirstMaskNum( lastUsedMask + 1 ); // Add one to move past all allocated masks.
@@ -265,7 +266,7 @@ public class RenderablesLoadWorker extends SimpleWorker implements VolumeLoader 
 
     private void buildNothing(Collection<MaskChanRenderableData> renderableDatas, List<RenderableBean> renderableBeans) {
         if ( checkpoint( "Dummy Load for Timing" ) ) {
-            ArrayList<MaskChanDataAcceptorI> dummyAcceptors = new ArrayList<MaskChanDataAcceptorI>();
+            ArrayList<MaskChanDataAcceptorI> dummyAcceptors = new ArrayList<>();
             // RE-run the scan.  This time only the signal-texture-builder will accept the data.
             dummyAcceptors.add(new MaskChanDataAcceptorI() {
                 @Override
@@ -321,7 +322,7 @@ public class RenderablesLoadWorker extends SimpleWorker implements VolumeLoader 
     private void multiThreadedDataLoad(Collection<MaskChanRenderableData> metaDatas, boolean buildTexture) {
         controlCallback.clearDisplay();
 
-        if ( metaDatas == null  ||  metaDatas.size() == 0 ) {
+        if ( metaDatas == null  ||  metaDatas.isEmpty() ) {
             logger.info( "No renderables found for alignment board " + dataSource.getName() );
             multiThreadedTextureBuild();
         }
@@ -370,7 +371,7 @@ public class RenderablesLoadWorker extends SimpleWorker implements VolumeLoader 
 
             if ( getProgressMonitor() != null ) {
                 double downSampleRate = alignmentBoardSettings.getAcceptedDownsampleRate();
-                boolean continueFlag = true;
+                boolean continueFlag;
                 if ( downSampleRate > 1.0 ) {
                     continueFlag = checkpoint("Downsampling / " + alignmentBoardSettings.getAcceptedDownsampleRate());
                 }
@@ -424,7 +425,7 @@ public class RenderablesLoadWorker extends SimpleWorker implements VolumeLoader 
     ) {
         // Go through the original list.  Anything not in the filtered list must be marked as excluded;
         // anything remaining on the list is un-marked excluded.
-        Map<RenderableBean, MaskChanRenderableData> idToData = new HashMap<RenderableBean, MaskChanRenderableData>();
+        Map<RenderableBean, MaskChanRenderableData> idToData = new HashMap<>();
         for ( MaskChanRenderableData data: renderableDatas ) {
             idToData.put( data.getBean(), data );
         }
@@ -478,7 +479,7 @@ public class RenderablesLoadWorker extends SimpleWorker implements VolumeLoader 
         );
 
         if ( checkpoint( "Preparing display" ) ) {
-            ArrayList<MaskChanDataAcceptorI> signalDataAcceptors = new ArrayList<MaskChanDataAcceptorI>();
+            ArrayList<MaskChanDataAcceptorI> signalDataAcceptors = new ArrayList<>();
             // RE-run the scan.  This time only the signal-texture-builder will accept the data.
             signalDataAcceptors.add(signalTextureBuilder);
             neuronFragmentLoader.setAcceptors(signalDataAcceptors);
@@ -513,7 +514,7 @@ public class RenderablesLoadWorker extends SimpleWorker implements VolumeLoader 
                 false    // NOT binary / search writeback.  That happens only for the file writeback code.
         );
 
-        ArrayList<MaskChanDataAcceptorI> maskDataAcceptors = new ArrayList<MaskChanDataAcceptorI>();
+        ArrayList<MaskChanDataAcceptorI> maskDataAcceptors = new ArrayList<>();
         maskDataAcceptors.add(remaskingAcceptorDecorator);
 
         // Setup the loader to traverse all this data on demand. Only the mask-tex-builder accepts data.
@@ -530,7 +531,7 @@ public class RenderablesLoadWorker extends SimpleWorker implements VolumeLoader 
     }
 
     private void fileLoad( Collection<MaskChanRenderableData> metaDatas, boolean buildTexture ) {
-        List<MaskChanRenderableData> sortedMetaDatas = new ArrayList<MaskChanRenderableData>();
+        List<MaskChanRenderableData> sortedMetaDatas = new ArrayList<>();
         sortedMetaDatas.addAll( metaDatas );
         Collections.sort( sortedMetaDatas, new RDComparator( false ) );
         int i = 0;
@@ -662,11 +663,11 @@ public class RenderablesLoadWorker extends SimpleWorker implements VolumeLoader 
     }
 
     private void renderChange(Collection<MaskChanRenderableData> metaDatas) {
-        if ( metaDatas.size() == 0 ) {
+        if ( metaDatas.isEmpty() ) {
             logger.info("No renderables found for alignment board " + dataSource.getName());
         }
         else {
-            Collection<RenderableBean> beans = new ArrayList<RenderableBean>();
+            Collection<RenderableBean> beans = new ArrayList<>();
             for ( MaskChanRenderableData metaData: metaDatas ) {
                 beans.add( metaData.getBean() );
             }

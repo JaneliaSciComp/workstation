@@ -45,7 +45,7 @@ public class ConfigurableColorMapping implements RenderMappingI {
     private MultiMaskTracker multiMaskTracker;
     private FileStats fileStats;
     private int maxDepthExceededCount = 0;
-    private Logger logger = LoggerFactory.getLogger(ConfigurableColorMapping.class);
+    private final Logger logger = LoggerFactory.getLogger(ConfigurableColorMapping.class);
 
     public ConfigurableColorMapping() {}
     public ConfigurableColorMapping( MultiMaskTracker multiMaskTracker, FileStats fileStats ) {
@@ -84,7 +84,7 @@ public class ConfigurableColorMapping implements RenderMappingI {
      * Buildup a map of masks (or intercompatible renderable ids), to their rendering info.
      */
     private Map<Integer,byte[]> makeMaskMappings() {
-        Map<Integer,byte[]> maskMappings = new HashMap<Integer,byte[]>();
+        Map<Integer,byte[]> maskMappings = new HashMap<>();
 
         mapSingleMasks(maskMappings);
         mapMultiMasks(maskMappings);
@@ -164,7 +164,7 @@ public class ConfigurableColorMapping implements RenderMappingI {
     }
 
     /**
-     * 'Single mask' masks. They do not expand into anything.
+     * 'Single-mask' masks. They do not expand into anything.
      *
      * @param maskMappings the output mapping between the mask and its render method/color.
      */
@@ -240,7 +240,7 @@ public class ConfigurableColorMapping implements RenderMappingI {
         // Priority rules:
         //  First Neurons, then reference channels, and finally compartments.
         //  Within each type, rank by decreasing voxel count.
-        List<RenderableBean> sortedBeans = new ArrayList<RenderableBean>();
+        List<RenderableBean> sortedBeans = new ArrayList<>();
         sortedBeans.addAll( renderableBeans );
         Collections.sort( sortedBeans, new InvertingComparator( new RBComparator() ) );
         /*
@@ -252,7 +252,7 @@ public class ConfigurableColorMapping implements RenderMappingI {
             */
 
         // Remarshall into a list of ids.  They will now be in priority order.
-        List<Integer> prioritizedMasks = new ArrayList<Integer>();
+        List<Integer> prioritizedMasks = new ArrayList<>();
         for ( RenderableBean bean: sortedBeans ) {
             prioritizedMasks.add( bean.getTranslatedNum() );
         }
