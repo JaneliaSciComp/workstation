@@ -231,8 +231,18 @@ public class AlignmentBoardPanel extends JPanel implements AlignmentBoardControl
                 
                 Collection<Integer> overlappingMasks = null;
                 for ( MaskChanRenderableData renderableData: renderableDatas ) {
-                    if ( renderableData.getBean().getAlignedItemId() == overlapGuide.getId() ) {
+                    if ( renderableData.getBean() != null  &&
+                         renderableData.getBean().getAlignedItem() != null  &&
+                         renderableData.getBean().getAlignedItem().getId() == overlapGuide.getId() ) {
                         overlappingMasks = multiMaskTracker.getOverlappingMasks( renderableData.getBean().getTranslatedNum() );
+                    }
+                    else {
+                        if ( renderableData.getBean() == null ) {
+                            logger.error("Renderable " + renderableData.getChannelPath() + " has no renderable data.");
+                        }
+                        if ( renderableData.getBean().getRenderableEntity() == null ) {
+                            logger.error("Bean " + renderableData.getBean().getTranslatedNum() + " "+renderableData.getChannelPath() + " has no renderable entity.");
+                        }
                     }
                 }
                 if ( overlappingMasks != null ) {

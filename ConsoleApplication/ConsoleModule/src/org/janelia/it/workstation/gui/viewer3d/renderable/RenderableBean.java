@@ -135,5 +135,7 @@ public class RenderableBean {
 
     public void setAlignedItem( AlignedItem item ) {
         this.alignedItem = item;
+        if ( item != null )
+            this.alignedItemId = item.getId();
     }
 }

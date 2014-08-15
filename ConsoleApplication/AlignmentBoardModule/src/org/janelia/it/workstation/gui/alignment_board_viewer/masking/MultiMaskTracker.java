@@ -149,6 +149,7 @@ public class MultiMaskTracker {
     /** Given a specific mask, find all others that overlap in 3D space. */
     public Collection<Integer> getOverlappingMasks( Integer searchMask ) {
         Collection<Integer> rtnVal = new HashSet<>();
+        rtnVal.add( searchMask );
         
         for ( MultiMaskBean multiMaskBean: maskIdToBean.values() ) {
             if ( multiMaskBean.contains(searchMask) ) {
