@@ -1,5 +1,6 @@
 package org.janelia.it.workstation.gui.alignment_board_viewer.masking;
 
+import java.util.Collection;
 import org.janelia.it.jacs.model.TestCategories;
 import org.junit.Before;
 import org.junit.Test;
@@ -21,6 +22,11 @@ import static org.junit.Assert.*;
  */
 @Category(TestCategories.FastTests.class)
 public class MultiMaskTrackerTest {
+    // NOTE: derived expected overlap count by running this and counting
+    // output.  Should more calls be added to "getMask", this number may
+    // need to be revised.
+    private static final int OVERLAP_TEST_MASK = 1;    
+    private static final int EXPECTED_OVERLAP_COUNT = 8;
     private MultiMaskTracker tracker;
 
     private static final String EXPECTED_STRING_OUTPUT = "Looking at multimask 58.\n" +
@@ -92,11 +98,11 @@ public class MultiMaskTrackerTest {
         // This should setup a tracker containing several multimasks.
         MultiMaskTracker tracker = new MultiMaskTracker();
         tracker.setFirstMaskNum(55);
-        tracker.getMask(1, 2);        // Discovers 1, where 2 was before.  Therefore 2 is higher priority.
-        tracker.getMask(1, 2);
-        tracker.getMask(1, 2);
-        Integer maskValue = tracker.getMask(1, 2);
-        assertEquals("invalid mask value for (1,2)", new Integer(55), maskValue);
+        tracker.getMask(OVERLAP_TEST_MASK, 2);        // Discovers 1, where 2 was before.  Therefore 2 is higher priority.
+        tracker.getMask(OVERLAP_TEST_MASK, 2);
+        tracker.getMask(OVERLAP_TEST_MASK, 2);
+        Integer maskValue = tracker.getMask(OVERLAP_TEST_MASK, 2);
+        assertEquals("invalid mask value for (" + OVERLAP_TEST_MASK + ",2)", new Integer(55), maskValue);
         tracker.getMask(3, 55);
         tracker.getMask(4, 55);
         tracker.getMask(4, 55);
@@ -130,7 +136,7 @@ public class MultiMaskTrackerTest {
         maskExpansionCount = tracker.getMaskExpansionCount(maskValue);
         assertEquals("invalid mask expansion count for mask value " + maskValue, 2, maskExpansionCount);
 
-        tracker.getMask(1,17);
+        tracker.getMask(OVERLAP_TEST_MASK,17);
         tracker.getMask(2,71);
         tracker.getMask(3,72);
         tracker.getMask(4,73);
@@ -164,6 +170,17 @@ public class MultiMaskTrackerTest {
                         " Instead received /" + outputBuilder.toString() + "/.",
                 outputBuilder.toString().equals(EXPECTED_STRING_OUTPUT)
         );
+    }
+    
+    @Test
+    public void testTrackerOverlap() throws Exception {
+        Collection<Integer> overlaps = tracker.getOverlappingMasks( OVERLAP_TEST_MASK );
+        StringBuilder errorBuilder = new StringBuilder();
+        for ( Integer overlap: overlaps ) {
+            errorBuilder.append( "Mask " + OVERLAP_TEST_MASK + " is overlapped by " + overlap );
+            errorBuilder.append( "\n" );
+        }
+        assertEquals( "Overlap calculation incorrect: " + errorBuilder.toString(), EXPECTED_OVERLAP_COUNT, overlaps.size() );
     }
 
 }

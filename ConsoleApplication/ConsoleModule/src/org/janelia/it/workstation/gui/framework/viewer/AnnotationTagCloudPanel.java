@@ -2,6 +2,7 @@ package org.janelia.it.workstation.gui.framework.viewer;
 
 import org.janelia.it.workstation.api.entity_model.management.ModelMgr;
 import org.janelia.it.workstation.gui.dialogs.AnnotationBuilderDialog;
+import org.janelia.it.workstation.gui.framework.actions.AcceptComputationalAnnotationsAction;
 import org.janelia.it.workstation.gui.framework.actions.BulkEditAnnotationKeyValueAction;
 import org.janelia.it.workstation.gui.framework.actions.RemoveAnnotationKeyValueAction;
 import org.janelia.it.workstation.gui.framework.actions.RemoveAnnotationTermAction;
@@ -85,7 +86,7 @@ public class AnnotationTagCloudPanel extends TagCloudPanel<OntologyAnnotation> i
             
         	if (SessionMgr.getSubjectKey().equals(tag.getOwner())) {
         		final RemoveAnnotationTermAction termAction = new RemoveAnnotationTermAction(tag.getKeyEntityId(), tag.getKeyString());
-                JMenuItem deleteByTermItem = new JMenuItem("  "+termAction.getName());
+                JMenuItem deleteByTermItem = new JMenuItem(termAction.getName());
                 deleteByTermItem.addActionListener(new ActionListener() {
                     public void actionPerformed(ActionEvent actionEvent) {
                         termAction.doAction();
@@ -190,7 +191,17 @@ public class AnnotationTagCloudPanel extends TagCloudPanel<OntologyAnnotation> i
             });
             popupMenu.add(detailsItem);
         }
-        
+
+        if (tag.isComputation()) {
+    		final AcceptComputationalAnnotationsAction acceptAction = new AcceptComputationalAnnotationsAction();
+            JMenuItem acceptItem = new JMenuItem(acceptAction.getName());
+            acceptItem.addActionListener(new ActionListener() {
+                public void actionPerformed(ActionEvent actionEvent) {
+                	acceptAction.doAction();
+                }
+            });
+            popupMenu.add(acceptItem);
+        }
 
         popupMenu.show(e.getComponent(), e.getX(), e.getY());
         e.consume();

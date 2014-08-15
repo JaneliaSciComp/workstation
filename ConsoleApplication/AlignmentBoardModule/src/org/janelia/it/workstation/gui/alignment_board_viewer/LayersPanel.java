@@ -30,7 +30,6 @@ import javax.swing.tree.TreePath;
 
 import org.janelia.it.workstation.api.entity_model.events.EntityInvalidationEvent;
 import org.janelia.it.workstation.api.entity_model.management.ModelMgr;
-import org.janelia.it.workstation.api.entity_model.management.ModelMgrUtils;
 import org.janelia.it.workstation.gui.alignment_board_viewer.masking.FileStats;
 import org.janelia.it.workstation.gui.framework.outline.EntityTransferHandler;
 import org.janelia.it.workstation.gui.framework.outline.Refreshable;
@@ -110,7 +109,8 @@ public class LayersPanel extends JPanel implements Refreshable {
         ModelMgr.getModelMgr().unregisterOnEventBus(this);
     }
     
-    public void showNothing() {
+    /** Show an empty panel.  Marked final because called by c'tor. */
+    public final void showNothing() {
         log.debug("Show nothing");
         treesPanel.removeAll();
         revalidate();
@@ -171,6 +171,7 @@ public class LayersPanel extends JPanel implements Refreshable {
         outline.getSelectionModel().setSelectionMode(ListSelectionModel.MULTIPLE_INTERVAL_SELECTION);
         
         outline.addMouseListener(new MouseAdapter() {
+            @Override
             public void mouseReleased(MouseEvent e) {
                 TreePath path = outline.getClosestPathForLocation(e.getX(), e.getY());
                 AlignedItem ai = getAlignedItemAtEventPos( e );
@@ -188,6 +189,7 @@ public class LayersPanel extends JPanel implements Refreshable {
                 }
             }
 
+            @Override
             public void mousePressed(MouseEvent e) {
                 // We have to also listen for mousePressed because OSX generates the popup trigger here
                 // instead of mouseReleased like any sane OS.
@@ -221,7 +223,6 @@ public class LayersPanel extends JPanel implements Refreshable {
 
             private void handlePopup(MouseEvent e, AlignedItem ai) {
                 showPopupMenu(e, ai);
-                return;
             }
 
             private void dispatchForClickType(MouseEvent e) {
@@ -296,7 +297,7 @@ public class LayersPanel extends JPanel implements Refreshable {
     }
 
     /**
-     * Override this method to show a popup menu when the user right clicks a
+     * Show a popup menu when the user right clicks a
      * node in the tree.
      * 
      * @param e
@@ -309,7 +310,7 @@ public class LayersPanel extends JPanel implements Refreshable {
         // Create context menu
         // Need to find aligned multiSelectionItems for the current (multi) selection.
         int[] rows = outline.getSelectedRows();
-        List<AlignedItem> multiSelectionItems = new ArrayList<AlignedItem>();
+        List<AlignedItem> multiSelectionItems = new ArrayList<>();
         for ( int row: rows ) {
             AlignedItem nextItem = getAlignedItemFromRow( row );
             if ( nextItem != null ) {
@@ -322,7 +323,7 @@ public class LayersPanel extends JPanel implements Refreshable {
         popupMenu.show(outline, e.getX(), e.getY());
     }
     
-    private AtomicBoolean loadInProgress = new AtomicBoolean(false);
+    private final AtomicBoolean loadInProgress = new AtomicBoolean(false);
 
     private AlignedItem getAlignedItemFromRow(int row) {
         Object object = outline.getOutlineModel().getValueAt(row, 0);
@@ -467,7 +468,7 @@ public class LayersPanel extends JPanel implements Refreshable {
             columns[i] = tableColumn;
         }
         
-        for(int i=0; i<columns.length; i++) {
+        for (int i=0; i<columns.length; i++) {
             columnModel.removeColumn(columns[i]);
         }
         
@@ -526,7 +527,7 @@ public class LayersPanel extends JPanel implements Refreshable {
         final OutlineExpansionState expansionState = new OutlineExpansionState(outline);
         expansionState.storeExpansionState();
         
-        final Collection<AlignedItem> invalidItems = new HashSet<AlignedItem>();
+        final Collection<AlignedItem> invalidItems = new HashSet<>();
         
         Collection<Entity> invalidated = event.getInvalidatedEntities();
         
@@ -653,7 +654,7 @@ public class LayersPanel extends JPanel implements Refreshable {
         final Color newColor = JColorChooser.showDialog(SessionMgr.getMainFrame(), "Choose color", currColor);
         if (newColor==null) return;
         
-        SimpleWorker worker = new SimpleWorker() {
+        SimpleWorker localWorker = new SimpleWorker() {
             @Override
             protected void doStuff() throws Exception {
                 alignedItem.setColor(newColor);
@@ -671,7 +672,7 @@ public class LayersPanel extends JPanel implements Refreshable {
                 SessionMgr.getSessionMgr().handleException(error);
             }
         };
-        worker.execute();
+        localWorker.execute();
     }
 
     public void setFileStats(FileStats fileStats) {
@@ -751,7 +752,7 @@ public class LayersPanel extends JPanel implements Refreshable {
                     label.setToolTipText( "Chosen (mono) color rendering" );
                 }
                 else {
-                    if ( fileStats != null  &&  ( !alignedItem.getItemWrapper().getType().toLowerCase().contains("compartment") ) ) {
+                    if ( fileStats != null  &&  alignedItem.getItemWrapper() != null  &&  ( !alignedItem.getItemWrapper().getType().toLowerCase().contains("compartment") ) ) {
                         double[] colorRGB = fileStats.getChannelAverages(alignedItem.getId());
                         if ( colorRGB == null ) {
                             // Happens with reference channels.
@@ -877,7 +878,7 @@ public class LayersPanel extends JPanel implements Refreshable {
                 protected void doStuff() throws Exception {
                     alignedItem.setIsVisible(isVisible);
 
-                    Collection<Entity> affectedEntities = new ArrayList<Entity>();
+                    Collection<Entity> affectedEntities = new ArrayList<>();
 
                     for(AlignedItem child : alignedItem.getAlignedItems()) {
                         affectedEntities.add( child.getInternalEntity() );

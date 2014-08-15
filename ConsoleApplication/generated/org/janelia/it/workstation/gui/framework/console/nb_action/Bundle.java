@@ -122,7 +122,7 @@ class Bundle {
         return org.openide.util.NbBundle.getMessage(Bundle.class, "CTL_ToolConfigurationAction");
     }
     /**
-     * @return <i>Configured Tools</i>
+     * @return <i>Tools</i>
      * @see ToolsMenuAction
      */
     static String CTL_ToolsMenuAction() {

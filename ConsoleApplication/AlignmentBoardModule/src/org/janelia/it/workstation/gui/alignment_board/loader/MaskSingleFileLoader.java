@@ -107,7 +107,7 @@ public class MaskSingleFileLoader {
     private int cummulativeVoxelsReadCount = 0;  // evolving state.
     private long lastRayCount = 0;      // evolving state.
 
-    private Logger logger = LoggerFactory.getLogger( MaskSingleFileLoader.class );
+    private final Logger logger = LoggerFactory.getLogger( MaskSingleFileLoader.class );
 
     private byte[] allFChannelBytes;
     private double[] channelAverages;

@@ -2328,12 +2328,12 @@
                 <binary-origin>release/modules/ext/commons-codec-1.5.jar</binary-origin>
             </class-path-extension>
             <class-path-extension>
-                <runtime-relative-path>ext/commons-compress-1.8.1.jar</runtime-relative-path>
-                <binary-origin>release/modules/ext/commons-compress-1.8.1.jar</binary-origin>
-            </class-path-extension>
-            <class-path-extension>
                 <runtime-relative-path>ext/Simple_Neurite_Tracer-2.0.2-SNAPSHOT.jar</runtime-relative-path>
                 <binary-origin>release/modules/ext/Simple_Neurite_Tracer-2.0.2-SNAPSHOT.jar</binary-origin>
+            </class-path-extension>
+            <class-path-extension>
+                <runtime-relative-path>ext/commons-compress-1.8.1.jar</runtime-relative-path>
+                <binary-origin>release/modules/ext/commons-compress-1.8.1.jar</binary-origin>
             </class-path-extension>
             <class-path-extension>
                 <runtime-relative-path>ext/asm.jar</runtime-relative-path>
@@ -2542,10 +2542,6 @@
             <class-path-extension>
                 <runtime-relative-path>ext/servlet-api-3.0.jar</runtime-relative-path>
                 <binary-origin>release/modules/ext/servlet-api-3.0.jar</binary-origin>
-            </class-path-extension>
-            <class-path-extension>
-                <runtime-relative-path>ext/jbossall-client.jar</runtime-relative-path>
-                <binary-origin>release/modules/ext/jbossall-client.jar</binary-origin>
             </class-path-extension>
             <class-path-extension>
                 <runtime-relative-path>ext/syntheticaBlueSteel.jar</runtime-relative-path>

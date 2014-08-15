@@ -867,11 +867,6 @@ public class EntityContextMenu extends JPopupMenu {
     
     protected JMenu getAddToRootFolderItem() {
 
-        if (!multiple && rootedEntity.getEntity() != null
-                && rootedEntity.getEntity().getValueByAttributeName(EntityConstants.ATTRIBUTE_COMMON_ROOT) != null) {
-            return null;
-        }
-
         JMenu newFolderMenu = new JScrollMenu("  Add To Top-Level Folder");
 
         JMenuItem createNewItem = new JMenuItem("Create New...");
@@ -1162,7 +1157,8 @@ public class EntityContextMenu extends JPopupMenu {
         }
 
         final Entity targetEntity = rootedEntity.getEntity();
-        if (!targetEntity.getEntityTypeName().equals(EntityConstants.TYPE_FOLDER)) {
+        final String targetType = targetEntity.getEntityTypeName();
+        if (!targetType.equals(EntityConstants.TYPE_FOLDER) && !targetType.equals(EntityConstants.TYPE_WORKSPACE)) {
             return null;
         }
         

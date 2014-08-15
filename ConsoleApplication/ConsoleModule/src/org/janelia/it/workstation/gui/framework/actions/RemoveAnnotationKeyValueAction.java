@@ -33,7 +33,7 @@ public class RemoveAnnotationKeyValueAction implements Action {
 
     @Override
     public String getName() {
-    	return selectedEntities.size()>1?"Delete \""+tag.toString()+"\" Annotation From "+selectedEntities.size()+" Entities":"Delete Annotation";
+    	return selectedEntities.size()>1?"  Remove \""+tag.toString()+"\" Annotation From "+selectedEntities.size()+" Entities":"  Remove Annotation";
     }
 	
     @Override
@@ -59,7 +59,6 @@ public class RemoveAnnotationKeyValueAction implements Action {
 
                     @Override
                     protected void doStuff() throws Exception {
-                        
 
                         int i=1;
             			for(String selectedId : selectedEntities) {

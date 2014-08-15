@@ -30,16 +30,10 @@
             <file name="SeparatorBeforeGoToLine.instance_hidden"/>
             <file name="org-openide-actions-GotoAction.shadow_hidden"/>
         </folder>
-        <folder name="Services">
-            <folder name="AutoupdateType">
-                <file name="my_update_center.instance">
-                    <attr name="displayName" stringvalue="Workstation Update Center"/>
-                    <attr name="enabled" boolvalue="true"/>
-                    <attr name="instanceCreate" methodvalue="org.netbeans.modules.autoupdate.updateprovider.AutoupdateCatalogFactory.createUpdateProvider"/>
-                    <attr name="instanceOf" stringvalue="org.netbeans.spi.autoupdate.UpdateProvider"/>
-                    <attr name="url" urlvalue="http://jacs-webdav.int.janelia.org/staging/updates.xml"/>
-                </file>
-            </folder>
+        <folder name="Window">
+            <file name="SwitchToRecentDocumentAction.shadow_hidden"/>
+            <file name="Tools_hidden"/>
+            <file name="Web_hidden"/>
         </folder>
     </folder>
     <folder name="Services">

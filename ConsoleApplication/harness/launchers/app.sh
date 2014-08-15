@@ -87,10 +87,10 @@ nbexec=`echo "$progdir"/../platform*/lib/nbexec`
 case "`uname`" in
     Darwin*)
         eval exec sh '"$nbexec"' \
-            --jdkhome '"$jdkhome"' \
+            --jdkhome '"`/usr/libexec/java_home -v 1.7`"' \
             -J-Dcom.apple.mrj.application.apple.menu.about.name='"$APPNAME"' \
             -J-Xdock:name='"$APPNAME"' \
-            '"-J-Xdock:icon=$progdir/../../$APPNAME.icns"' \
+            '"-J-Xdock:icon=$progdir/../$APPNAME.icns"' \
             --clusters '"$clusters"' \
             --userdir '"${userdir}"' \
             ${default_options} \

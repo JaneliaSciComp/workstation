@@ -199,10 +199,6 @@ public class EntityModel {
                         c++;
                     }
                 }
-                if (entity.getNumChildren() != null && entity.getNumChildren() != c) {
-                    log.warn("Denormalized numChildren (" + entity.getNumChildren()
-                            + ") does not match actual number of children (" + c + ") for entity " + entity.getId());
-                }
             }
 
             return canonicalEntity;
@@ -826,6 +822,9 @@ public class EntityModel {
             if (entityData.getParentEntity() != null) {
                 parent = entityCache.getIfPresent(entityData.getParentEntity().getId());
                 if (parent != null) {
+                	// This shouldn't be necessary since we're invalidating the parent, 
+                	// but it's a little more forgiving of clients that don't respond to invalidation
+                	parent.getEntityData().remove(entityData); 
                     invalidate(parent, false);
                 }
             }
@@ -970,14 +969,10 @@ public class EntityModel {
             
             // Update in-memory workspace entity 
             Entity workspace = getEntityById(workspaceId);
-            workspace.getEntityData().add(commonRootEd);
+            invalidate(workspace, false);
+            workspace = getEntityById(workspaceId);
             
-            // Link to the correct workspace entity
-            commonRootEd.setParentEntity(workspace);
-            
-            // Finally we can cache the new common root
-            Entity commonRoot = putOrUpdate(commonRootEd.getChildEntity());
-            notifyEntityCreated(commonRoot);
+            notifyEntityChanged(workspace);
         }
         return commonRootEd;
     }

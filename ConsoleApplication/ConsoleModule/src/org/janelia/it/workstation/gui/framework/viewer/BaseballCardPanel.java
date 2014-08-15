@@ -189,6 +189,7 @@ public class BaseballCardPanel extends JPanel implements RootedEntityReceiver {
                             controlCallback.callerRequiresFocus();
                             // Show in HUD/Light Box
                             Entity entity = value.getEntity();
+                            Hud.getSingletonInstance().hideDialog(); // Ensure: one-way trip
                             Hud.getSingletonInstance().setEntityAndToggleDialog(entity);
                         }
                     });
