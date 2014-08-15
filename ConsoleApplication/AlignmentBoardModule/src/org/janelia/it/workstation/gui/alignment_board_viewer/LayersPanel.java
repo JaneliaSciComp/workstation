@@ -109,7 +109,8 @@ public class LayersPanel extends JPanel implements Refreshable {
         ModelMgr.getModelMgr().unregisterOnEventBus(this);
     }
     
-    public void showNothing() {
+    /** Show an empty panel.  Marked final because called by c'tor. */
+    public final void showNothing() {
         log.debug("Show nothing");
         treesPanel.removeAll();
         revalidate();
@@ -296,7 +297,7 @@ public class LayersPanel extends JPanel implements Refreshable {
     }
 
     /**
-     * Override this method to show a popup menu when the user right clicks a
+     * Show a popup menu when the user right clicks a
      * node in the tree.
      * 
      * @param e
@@ -322,7 +323,7 @@ public class LayersPanel extends JPanel implements Refreshable {
         popupMenu.show(outline, e.getX(), e.getY());
     }
     
-    private AtomicBoolean loadInProgress = new AtomicBoolean(false);
+    private final AtomicBoolean loadInProgress = new AtomicBoolean(false);
 
     private AlignedItem getAlignedItemFromRow(int row) {
         Object object = outline.getOutlineModel().getValueAt(row, 0);

@@ -5,6 +5,8 @@ import java.awt.Component;
 import java.awt.Dimension;
 import java.awt.FlowLayout;
 import java.awt.Point;
+import java.util.Collection;
+import java.util.List;
 
 import javax.media.opengl.GLCapabilities;
 import javax.media.opengl.GLProfile;
@@ -50,11 +52,13 @@ import org.janelia.it.workstation.model.viewer.AlignmentBoardContext;
 import org.janelia.it.workstation.shared.workers.IndeterminateNoteProgressMonitor;
 import org.janelia.it.workstation.shared.workers.SimpleWorker;
 import org.janelia.it.jacs.model.entity.Entity;
+import org.janelia.it.workstation.gui.alignment_board_viewer.renderable.MaskChanRenderableData;
 import org.janelia.it.workstation.gui.viewer3d.events.AlignmentBoardItemChangeEvent;
 import org.janelia.it.workstation.gui.viewer3d.events.AlignmentBoardOpenEvent;
 import org.janelia.it.workstation.gui.util.WindowLocator;
 import org.janelia.it.workstation.gui.viewer3d.BoundingBox3d;
 import org.janelia.it.workstation.model.domain.AlignmentContext;
+import org.janelia.it.workstation.model.viewer.AlignedItem;
 import org.openide.util.lookup.InstanceContent;
 import org.openide.util.lookup.ServiceProvider;
 
@@ -150,7 +154,7 @@ public class AlignmentBoardPanel extends JPanel implements AlignmentBoardControl
         AlignmentBoardContext alignmentBoardContext = layersPanel.getAlignmentBoardContext();
         if ( alignmentBoardContext == null ) {
             return null;
-        };
+        }
         return alignmentBoardContext.getInternalRootedEntity();
 	}
 	
@@ -217,6 +221,45 @@ public class AlignmentBoardPanel extends JPanel implements AlignmentBoardControl
                 // Changing the render mapping values.
                 this.updateRendering( abContext );
 
+            }
+            else if ( AlignmentBoardItemChangeEvent.ChangeType.OverlapFilter.equals( event.getChangeType() ) ) {
+                
+                // Need to turn off all the items which do not stack in
+                // same space as the indicated value.
+                AlignedItem overlapGuide = event.getAlignedItem();
+                Collection<MaskChanRenderableData> renderableDatas = this.dataSource.getRenderableDatas();
+                
+                Collection<Integer> overlappingMasks = null;
+                for ( MaskChanRenderableData renderableData: renderableDatas ) {
+                    if ( renderableData.getBean() != null  &&
+                         renderableData.getBean().getAlignedItem() != null  &&
+                         renderableData.getBean().getAlignedItem().getId() == overlapGuide.getId() ) {
+                        overlappingMasks = multiMaskTracker.getOverlappingMasks( renderableData.getBean().getTranslatedNum() );
+                    }
+                    else {
+                        if ( renderableData.getBean() == null ) {
+                            logger.error("Renderable " + renderableData.getChannelPath() + " has no renderable data.");
+                        }
+                        if ( renderableData.getBean().getRenderableEntity() == null ) {
+                            logger.error("Bean " + renderableData.getBean().getTranslatedNum() + " "+renderableData.getChannelPath() + " has no renderable entity.");
+                        }
+                    }
+                }
+                if ( overlappingMasks != null ) {
+                    for ( MaskChanRenderableData renderableData: renderableDatas ) {
+                        try {
+                            AlignedItem ai = renderableData.getBean().getAlignedItem();
+                            if ( ai != null ) {
+                                ai.setIsVisible( overlappingMasks.contains( renderableData.getBean().getTranslatedNum() ) );
+                            }
+                        } catch ( Exception ex ) {
+                            ModelMgr.getModelMgr().handleException(ex);
+                        }
+                    }
+                }
+                
+                // Changing the render mapping values.
+                this.updateRendering( abContext );
             }
             else if ( ! AlignmentBoardItemChangeEvent.ChangeType.FilterLevelChange.equals( event.getChangeType() ) ) {
                 logger.info( "Change type {}.", event.getChangeType() );
@@ -1000,7 +1043,7 @@ public class AlignmentBoardPanel extends JPanel implements AlignmentBoardControl
             serializeInWorker();
         }
 
-        //@Override
+        @Override
         public void modelPropertyChanged(Object key, Object oldValue, Object newValue) {
         }
 

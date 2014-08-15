@@ -26,7 +26,7 @@ public class MultiMaskTracker {
 
     private List<Integer> dumpedList;
     private Set<Integer> retiredMasks;
-    private Map<String,String> unexpandableVsPrevCombo = new HashMap<String,String>();
+    private Map<String,String> unexpandableVsPrevCombo = new HashMap<>();
     private int maxDepthExceededCount = 0;
     private FileStats fileStats;
     private Logger logger;
@@ -37,9 +37,9 @@ public class MultiMaskTracker {
     public MultiMaskTracker() {
         logger = LoggerFactory.getLogger( MultiMaskTracker.class );
         // Pre-setting sizings on maps to avoid repeated extensions.  We have two-byte masks, hence a ceiling.
-        maskIdToBean = new HashMap<Integer, MultiMaskBean>( 65536 );
-        altMasksToBean = new HashMap<MultiMaskKey, MultiMaskBean>( 65536 );
-        retiredMasks = new HashSet<Integer>( 8192 );
+        maskIdToBean = new HashMap<>( 65536 );
+        altMasksToBean = new HashMap<>( 65536 );
+        retiredMasks = new HashSet<>( 8192 );
     }
 
     public void setFirstMaskNum( int firstMaskNum ) {
@@ -145,11 +145,25 @@ public class MultiMaskTracker {
         MultiMaskBean maskBean = maskIdToBean.get( maskId );
         return maskBean == null ? 1 : maskBean.getAltMaskCount();
     }
+    
+    /** Given a specific mask, find all others that overlap in 3D space. */
+    public Collection<Integer> getOverlappingMasks( Integer searchMask ) {
+        Collection<Integer> rtnVal = new HashSet<>();
+        rtnVal.add( searchMask );
+        
+        for ( MultiMaskBean multiMaskBean: maskIdToBean.values() ) {
+            if ( multiMaskBean.contains(searchMask) ) {
+                rtnVal.addAll( multiMaskBean.getAltMasks() );
+            }
+        }
+        
+        return rtnVal;
+    }
 
     /** This is the "panic button" to press when things are going wrong, to help debug the problem. */
     public void dumpMaskContents( Integer originalMask ) {
         if ( dumpedList == null ) {
-            dumpedList = new ArrayList<Integer>();
+            dumpedList = new ArrayList<>();
         }
         if ( ! dumpedList.contains( originalMask ) ) {
             dumpedList.add(originalMask);
@@ -159,7 +173,7 @@ public class MultiMaskTracker {
 
     /** Call this at the end, to drop resources, etc. */
     public void writeOutstandingDump() {
-        if ( dumpedList == null  &&  unexpandableVsPrevCombo.size() == 0 ) {
+        if ( dumpedList == null  &&  unexpandableVsPrevCombo.isEmpty() ) {
             return;
         }
         boolean printDump = false;
@@ -173,8 +187,9 @@ public class MultiMaskTracker {
                 int oldExpansionPoint = value.indexOf( MSK_KEY_SEP );
                 if ( oldExpansionPoint != -1 ) {
                     String discardedMask = value.substring( 0, oldExpansionPoint );
+                    Integer discardedMaskInt = Integer.parseInt( discardedMask );
                     totalDump.append( discardedMask ).append( "\t" ).append( key );
-                    MultiMaskBean discardedBean = maskIdToBean.get(discardedMask);
+                    MultiMaskBean discardedBean = maskIdToBean.get(discardedMaskInt);
                     if ( discardedBean != null ) {
                         totalDump.append( "\t" ).append(discardedBean.getVoxelCount());
                     }
@@ -339,7 +354,7 @@ public class MultiMaskTracker {
     public static class MultiMaskBean {
         // This mask ID will be pushed to the GPU.
         private Integer multiMaskNum;
-        private List<Integer> altMasks = new ArrayList<Integer>();
+        private List<Integer> altMasks = new ArrayList<>();
         private int voxelCount = 1; // On construction, this instance variable will indicate that 1 voxel is masked.
 
         public MultiMaskKey getInvertedKey() {
@@ -348,7 +363,7 @@ public class MultiMaskTracker {
         }
 
         public MultiMaskKey getExtendedInvertedKey( Integer newAltMask ) {
-            List<Integer> extendedAltMasks = new ArrayList<Integer>( altMasks );
+            List<Integer> extendedAltMasks = new ArrayList<>( altMasks );
             extendedAltMasks.add( newAltMask );
 
             MultiMaskKey rtnVal = new MultiMaskKey( extendedAltMasks );
@@ -371,6 +386,13 @@ public class MultiMaskTracker {
             return altMasks.size();
         }
 
+        /**
+         * Tell if the mask given as param is contained in the set of
+         * alternative (backing / constituent) masks.
+         * 
+         * @param mask search key value.
+         * @return True if in/False if not.
+         */
         public boolean contains( Integer mask ) {
             return altMasks.contains( mask );
         }
@@ -407,8 +429,8 @@ public class MultiMaskTracker {
      * Use this for deciding if a key built up from a newly "approaching" mask, plus the old masks
      * represented by the previous combination found at that slot, equals an existing combination.
      */
-    private static class MultiMaskKey {
-        private int[] constituentMasks;
+    public static class MultiMaskKey {
+        private final int[] constituentMasks;
         public MultiMaskKey( List<Integer> constituentMasks ) {
             this.constituentMasks = new int[ constituentMasks.size() ];
             for ( int i = 0; i < constituentMasks.size(); i++ ) {

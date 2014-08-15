@@ -1,7 +1,6 @@
 package org.janelia.it.workstation.gui.alignment_board_viewer.renderable;
 
 import org.janelia.it.workstation.gui.viewer3d.renderable.RenderableBean;
-import org.jboss.util.Null;
 
 /**
  * Created with IntelliJ IDEA.
@@ -66,7 +65,7 @@ public class MaskChanRenderableData {
     @Override
     public int hashCode() {
         if ( bean == null ) {
-            return Null.VALUE.hashCode();
+            return 0;
         }
         return this.bean.hashCode();
     }

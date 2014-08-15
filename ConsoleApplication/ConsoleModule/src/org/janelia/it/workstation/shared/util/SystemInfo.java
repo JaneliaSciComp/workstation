@@ -2,21 +2,15 @@ package org.janelia.it.workstation.shared.util;
 
 import de.javasoft.io.FileUtils;
 import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
+import org.openide.modules.InstalledFileLocator;
+import org.openide.util.NbBundle;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
-import java.io.FileWriter;
-import java.io.IOException;
-import java.io.PrintWriter;
-import java.nio.file.Paths;
+import java.io.*;
 import java.util.Date;
 import java.util.Properties;
 import java.util.Random;
-import org.openide.modules.InstalledFileLocator;
-import org.openide.util.NbBundle;
 
 /**
  * Adapted from IDEA code base.
@@ -290,7 +284,7 @@ public class SystemInfo {
     
     private static String[] getDefaultOptions( File infile ) throws IOException {
         Properties props = loadNbConfig( infile );
-        String value = (String)props.get( "default_options" );
+        String value = (String)props.get( DEFAULT_OPTIONS_PROP );
         if ( value != null ) {
             return value.split( " " );
         }
