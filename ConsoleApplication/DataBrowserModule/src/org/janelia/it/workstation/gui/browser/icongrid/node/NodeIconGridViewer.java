@@ -10,6 +10,7 @@ import org.janelia.it.jacs.model.domain.interfaces.HasFilepath;
 import org.janelia.it.jacs.model.domain.interfaces.HasFiles;
 import org.janelia.it.workstation.gui.browser.icongrid.IconGridViewer;
 import org.janelia.it.workstation.gui.browser.nodes.DomainObjectNode;
+import org.janelia.it.workstation.gui.browser.nodes.InternalNode;
 import org.openide.nodes.Node;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -24,6 +25,7 @@ public class NodeIconGridViewer extends IconGridViewer<Node> {
     
     private Node contextNode;
     
+    @Override
     public Node getContextObject() {
         return contextNode;
     }
@@ -59,10 +61,14 @@ public class NodeIconGridViewer extends IconGridViewer<Node> {
     public Object getImageUniqueId(Node node) {
         if (node instanceof DomainObjectNode) {
             DomainObjectNode domainObjectNode = (DomainObjectNode)node;
-            return domainObjectNode.getDomainObject().getId();
+            return domainObjectNode.getUniqueId();
+        }
+        else if (node instanceof InternalNode) {
+            return ((InternalNode)node).getUniqueId();
         }
         else {
-            return node.getName();
+            log.warn("Unrecognized node type: "+node.getClass().getName());
+            return node.hashCode();
         }
     }
 
@@ -78,20 +84,29 @@ public class NodeIconGridViewer extends IconGridViewer<Node> {
             DomainObject domainObject = domainObjectNode.getDomainObject();
             StringBuilder urlSb = new StringBuilder();
             
-            if (domainObject instanceof HasFilepath) {
-                urlSb.append(((HasFilepath)domainObject).getFilepath());
-            }
-            
             if (domainObject instanceof HasFiles) {
+                if (domainObject instanceof HasFilepath) {
+                    String rootPath = ((HasFilepath)domainObject).getFilepath();
+                    if (rootPath!=null) {
+                        urlSb.append(rootPath);
+                    }
+                }
                 HasFiles hasFiles = (HasFiles)domainObject;
                 FileType fileType = FileType.valueOf(role);
                 String filepath = hasFiles.getFiles().get(fileType);
-                if (urlSb.length()>0) urlSb.append("/");
-                urlSb.append(filepath);
+                if (filepath!=null) {
+                    if (urlSb.length()>0) urlSb.append("/");
+                    urlSb.append(filepath);
+                }
+                else {
+                    // Clear the URL if there is no filepath for the given role
+                    urlSb = new StringBuilder();
+                }
             }
             
             return urlSb.length()>0 ? urlSb.toString() : null;
         }
+        
         return null;
     }
 

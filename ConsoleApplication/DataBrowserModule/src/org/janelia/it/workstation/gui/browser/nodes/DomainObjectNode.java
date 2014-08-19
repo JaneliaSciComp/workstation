@@ -44,6 +44,8 @@ import org.slf4j.LoggerFactory;
 public class DomainObjectNode extends AbstractNode {
 
     private final static Logger log = LoggerFactory.getLogger(DomainObjectNode.class);
+        
+    private long uniqueId;
     
     protected final ChildFactory parentChildFactory;
     
@@ -58,6 +60,11 @@ public class DomainObjectNode extends AbstractNode {
         this.parentChildFactory = parentChildFactory;
         this.lookupContents = lookupContents;   
         lookupContents.add(domainObject);
+        this.uniqueId = IdGenerator.getNextId();
+    }
+    
+    public Long getUniqueId() {
+        return uniqueId;
     }
     
     protected InstanceContent getLookupContents() {

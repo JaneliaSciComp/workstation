@@ -143,7 +143,7 @@ public abstract class DynamicImagePanel extends JPanel {
         if (imageFilename != null) {
             if (wantViewable) {
                 if (!this.viewable) {
-
+                    
                     loadWorker = new LoadImageWorker(this, imageFilename) {
 
                         @Override

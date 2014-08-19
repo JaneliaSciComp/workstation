@@ -32,7 +32,7 @@ import org.slf4j.LoggerFactory;
         autostore = false
 )
 @TopComponent.Description(
-        preferredID = "DomainExplorerTopComponent",
+        preferredID = DomainExplorerTopComponent.TC_NAME,
         //iconBase="SET/PATH/TO/ICON/HERE", 
         persistenceType = TopComponent.PERSISTENCE_ALWAYS
 )
@@ -52,6 +52,8 @@ public final class DomainExplorerTopComponent extends TopComponent implements Ex
 
     private Logger log = LoggerFactory.getLogger(DomainExplorerTopComponent.class);
 
+    public static final String TC_NAME = "DomainExplorerTopComponent";
+    
     protected static final String MONGO_SERVER_URL = "rokicki-ws";
     protected static final String MONGO_DATABASE = "jacs";
 
@@ -77,7 +79,6 @@ public final class DomainExplorerTopComponent extends TopComponent implements Ex
                 loadWorkspaces();
             }
         });
-
     }
 
     private static DomainDAO dao;

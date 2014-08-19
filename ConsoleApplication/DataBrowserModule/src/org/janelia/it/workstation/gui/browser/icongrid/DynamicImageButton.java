@@ -27,6 +27,9 @@ public class DynamicImageButton<T> extends AnnotatedImageButton<T> {
         if (filepath == null) {
             throw new IllegalStateException("Entity has no filepath");
         }
+        else if (filepath.equals("null")) {
+            throw new IllegalStateException("Entity has null filepath");
+        }
 
         // send original file path so that file path translation or local caching occurs
         // asynchronously within the the load image worker
