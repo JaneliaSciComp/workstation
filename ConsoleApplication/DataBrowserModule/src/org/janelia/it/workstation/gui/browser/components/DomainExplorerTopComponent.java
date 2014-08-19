@@ -1,5 +1,6 @@
 package org.janelia.it.workstation.gui.browser.components;
 
+import java.beans.PropertyVetoException;
 import org.janelia.it.workstation.gui.browser.api.DomainDAO;
 
 import java.util.Collection;
@@ -18,6 +19,7 @@ import org.openide.awt.ActionID;
 import org.openide.awt.ActionReference;
 import org.openide.explorer.ExplorerManager;
 import org.openide.explorer.ExplorerUtils;
+import org.openide.nodes.Node;
 import org.openide.windows.TopComponent;
 import org.openide.util.NbBundle.Messages;
 import org.openide.util.RequestProcessor;
@@ -285,6 +287,19 @@ public final class DomainExplorerTopComponent extends TopComponent implements Ex
 
         public String toString() {
             return workspace.getName() + " (" + workspace.getOwnerKey() + ")";
+        }
+    }
+    
+    public void activate(Node node) {
+        Node[] activatedNodes = new Node[1];
+        activatedNodes[0] = node;
+        
+        try {
+            mgr.setSelectedNodes(activatedNodes);
+            beanTreeView.expandNode(node);
+        }
+        catch (PropertyVetoException e) {
+            log.error("Node selection was vetoed",e);
         }
     }
 }

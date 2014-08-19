@@ -28,7 +28,7 @@ import org.slf4j.LoggerFactory;
  *
  * @author <a href="mailto:rokickik@janelia.hhmi.org">Konrad Rokicki</a>
  */
-public class InternalNode<T> extends AbstractNode {
+public class InternalNode<T> extends AbstractNode implements HasUniqueId {
     
     private long uniqueId;
     

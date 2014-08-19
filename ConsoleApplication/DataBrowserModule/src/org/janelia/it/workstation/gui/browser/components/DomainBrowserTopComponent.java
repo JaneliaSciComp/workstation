@@ -52,11 +52,12 @@ public final class DomainBrowserTopComponent extends TopComponent implements Loo
     
     private final static Logger log = LoggerFactory.getLogger(DomainBrowserTopComponent.class);
     
-    private final IconGridViewer iconGridViewer;
+    private final IconGridViewer<Node> iconGridViewer;
     
     private Lookup.Result<AbstractNode> result = null;
     
     public DomainBrowserTopComponent() {
+        super(Lookup.EMPTY);
         initComponents();
         iconGridViewer = new NodeIconGridViewer();
         mainPanel.add(iconGridViewer, BorderLayout.CENTER);
