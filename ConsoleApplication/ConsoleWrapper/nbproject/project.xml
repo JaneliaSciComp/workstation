@@ -1660,10 +1660,6 @@
                 <package>org.jibx.runtime</package>
                 <package>org.jibx.runtime.impl</package>
                 <package>org.jibx.util</package>
-                <package>org.jnp.interfaces</package>
-                <package>org.jnp.interfaces.java</package>
-                <package>org.jnp.interfaces.jnp</package>
-                <package>org.jnp.server</package>
                 <package>org.jongo</package>
                 <package>org.jongo.bson</package>
                 <package>org.jongo.marshall</package>
@@ -1803,6 +1799,12 @@
                 <package>org.python.tests.multihidden</package>
                 <package>org.python.tests.props</package>
                 <package>org.python.util</package>
+                <package>org.reflections</package>
+                <package>org.reflections.adapters</package>
+                <package>org.reflections.scanners</package>
+                <package>org.reflections.serializers</package>
+                <package>org.reflections.util</package>
+                <package>org.reflections.vfs</package>
                 <package>org.relaxng.datatype</package>
                 <package>org.relaxng.datatype.helpers</package>
                 <package>org.semanticweb.owlapi</package>
@@ -2451,6 +2453,10 @@
             <class-path-extension>
                 <runtime-relative-path>ext/activation-1.1.jar</runtime-relative-path>
                 <binary-origin>release/modules/ext/activation-1.1.jar</binary-origin>
+            </class-path-extension>
+            <class-path-extension>
+                <runtime-relative-path>ext/reflections-0.9.9-RC1.jar</runtime-relative-path>
+                <binary-origin>release/modules/ext/reflections-0.9.9-RC1.jar</binary-origin>
             </class-path-extension>
             <class-path-extension>
                 <runtime-relative-path>ext/syntheticaBlackEye.jar</runtime-relative-path>

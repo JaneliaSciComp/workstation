@@ -124,6 +124,11 @@ public class DomainObjectNode extends AbstractNode {
     }
     
     @Override
+    public String getDisplayName() {
+        return getPrimaryLabel();
+    }
+    
+    @Override
     public String getHtmlDisplayName() {
         String primary = getPrimaryLabel();
         String secondary = getSecondaryLabel();
