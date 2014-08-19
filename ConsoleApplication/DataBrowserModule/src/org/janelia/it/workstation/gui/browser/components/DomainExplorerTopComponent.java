@@ -65,7 +65,7 @@ public final class DomainExplorerTopComponent extends TopComponent implements Ex
         setToolTipText(Bundle.HINT_DomainExplorerTopComponent());
         associateLookup(ExplorerUtils.createLookup(mgr, getActionMap()));
 
-        ActionMap map = this.getActionMap ();
+        ActionMap map = this.getActionMap();
         map.put(DefaultEditorKit.copyAction, ExplorerUtils.actionCopy(mgr));
         map.put(DefaultEditorKit.cutAction, ExplorerUtils.actionCut(mgr));
         map.put(DefaultEditorKit.pasteAction, ExplorerUtils.actionPaste(mgr));

@@ -3,7 +3,6 @@ package org.janelia.it.workstation.gui.browser.api;
 import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
@@ -18,10 +17,8 @@ import org.janelia.it.jacs.model.domain.ontology.Annotation;
 import org.janelia.it.jacs.model.domain.ontology.Ontology;
 import org.janelia.it.jacs.model.domain.sample.LSMImage;
 import org.janelia.it.jacs.model.domain.sample.NeuronFragment;
-import org.janelia.it.jacs.model.domain.sample.Sample;
-import org.janelia.it.jacs.model.domain.screen.FlyLine;
-import org.janelia.it.jacs.model.domain.screen.PatternMask;
 import org.janelia.it.jacs.model.domain.screen.ScreenSample;
+import org.janelia.it.jacs.model.domain.support.MongoUtils;
 import org.janelia.it.jacs.model.domain.workspace.TreeNode;
 import org.janelia.it.jacs.model.domain.workspace.Workspace;
 import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
@@ -33,17 +30,12 @@ import org.slf4j.LoggerFactory;
 
 import com.fasterxml.jackson.databind.MapperFeature;
 import com.google.common.collect.ArrayListMultimap;
-import com.google.common.collect.BiMap;
-import com.google.common.collect.HashBiMap;
 import com.google.common.collect.HashMultimap;
 import com.google.common.collect.Multimap;
 import com.mongodb.DB;
 import com.mongodb.MongoClient;
 import com.mongodb.WriteConcern;
 import com.mongodb.WriteResult;
-import org.janelia.it.jacs.model.domain.compartments.CompartmentSet;
-import org.janelia.it.jacs.model.domain.gui.AlignmentBoard;
-import org.janelia.it.jacs.model.domain.support.MongoUtils;
 
 /**
  * The main domain-object DAO for the JACS system.

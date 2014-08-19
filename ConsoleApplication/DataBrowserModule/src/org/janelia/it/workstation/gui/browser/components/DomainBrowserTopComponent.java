@@ -1,11 +1,18 @@
 package org.janelia.it.workstation.gui.browser.components;
 
+import java.awt.BorderLayout;
+import java.util.Arrays;
 import java.util.Collection;
-import org.janelia.it.jacs.model.domain.DomainObject;
-import org.janelia.it.jacs.model.domain.workspace.TreeNode;
+import java.util.List;
+import org.janelia.it.workstation.gui.browser.icongrid.IconGridViewer;
+import org.janelia.it.workstation.gui.browser.icongrid.node.NodeIconGridViewer;
+import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
+import org.janelia.it.workstation.shared.workers.SimpleWorker;
 import org.netbeans.api.settings.ConvertAsProperties;
 import org.openide.awt.ActionID;
 import org.openide.awt.ActionReference;
+import org.openide.nodes.AbstractNode;
+import org.openide.nodes.Node;
 import org.openide.util.Lookup;
 import org.openide.util.LookupEvent;
 import org.openide.util.LookupListener;
@@ -37,16 +44,20 @@ import org.slf4j.LoggerFactory;
 @Messages({
     "CTL_DomainBrowserAction=Domain Browser",
     "CTL_DomainBrowserTopComponent=Domain Browser",
-    "HINT_DomainBrowserTopComponent=This is a DomainBrowser window"
+    "HINT_DomainBrowserTopComponent=Domain Browser"
 })
 public final class DomainBrowserTopComponent extends TopComponent implements LookupListener {
 
     private final static Logger log = LoggerFactory.getLogger(DomainBrowserTopComponent.class);
     
-    private Lookup.Result<DomainObject> result = null;
+    private final IconGridViewer iconGridViewer;
+    
+    private Lookup.Result<AbstractNode> result = null;
     
     public DomainBrowserTopComponent() {
         initComponents();
+        iconGridViewer = new NodeIconGridViewer();
+        mainPanel.add(iconGridViewer, BorderLayout.CENTER);
         setName(Bundle.CTL_DomainBrowserTopComponent());
         setToolTipText(Bundle.HINT_DomainBrowserTopComponent());
     }
@@ -61,33 +72,8 @@ public final class DomainBrowserTopComponent extends TopComponent implements Loo
     private void initComponents() {
 
         mainPanel = new javax.swing.JPanel();
-        nameLabel = new javax.swing.JLabel();
-        numChildrenLabel = new javax.swing.JLabel();
 
-        org.openide.awt.Mnemonics.setLocalizedText(nameLabel, "jLabel1");
-
-        org.openide.awt.Mnemonics.setLocalizedText(numChildrenLabel, "jLabel2");
-
-        javax.swing.GroupLayout mainPanelLayout = new javax.swing.GroupLayout(mainPanel);
-        mainPanel.setLayout(mainPanelLayout);
-        mainPanelLayout.setHorizontalGroup(
-            mainPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(mainPanelLayout.createSequentialGroup()
-                .addGap(42, 42, 42)
-                .addGroup(mainPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
-                    .addComponent(numChildrenLabel, javax.swing.GroupLayout.DEFAULT_SIZE, 332, Short.MAX_VALUE)
-                    .addComponent(nameLabel, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
-                .addContainerGap(26, Short.MAX_VALUE))
-        );
-        mainPanelLayout.setVerticalGroup(
-            mainPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(mainPanelLayout.createSequentialGroup()
-                .addGap(34, 34, 34)
-                .addComponent(nameLabel)
-                .addGap(18, 18, 18)
-                .addComponent(numChildrenLabel)
-                .addContainerGap(216, Short.MAX_VALUE))
-        );
+        mainPanel.setLayout(new java.awt.BorderLayout());
 
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(this);
         this.setLayout(layout);
@@ -103,13 +89,11 @@ public final class DomainBrowserTopComponent extends TopComponent implements Loo
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JPanel mainPanel;
-    private javax.swing.JLabel nameLabel;
-    private javax.swing.JLabel numChildrenLabel;
     // End of variables declaration//GEN-END:variables
 
     @Override
     public void componentOpened() {
-        result = Utilities.actionsGlobalContext().lookupResult(DomainObject.class);
+        result = Utilities.actionsGlobalContext().lookupResult(AbstractNode.class);
         result.addLookupListener(this);
     }
     
@@ -120,18 +104,43 @@ public final class DomainBrowserTopComponent extends TopComponent implements Loo
 
     @Override
     public void resultChanged(LookupEvent lookupEvent) {
-        Collection<? extends DomainObject> allNodes = result.allInstances();
+        Collection<? extends AbstractNode> allNodes = result.allInstances();
         if (!allNodes.isEmpty()) {
-            DomainObject obj = allNodes.iterator().next();
-            if (obj instanceof TreeNode) {
-                TreeNode treeNode = (TreeNode)obj;
-                nameLabel.setText(treeNode.getName());
-                numChildrenLabel.setText(treeNode.getNumChildren()+" children");
-            }
-            else {
-                nameLabel.setText(obj.getClass().getName()+"#"+obj.getId());
-                numChildrenLabel.setText("");
-            }
+            final AbstractNode obj = allNodes.iterator().next();
+
+            SimpleWorker worker = new SimpleWorker() {
+                
+                Node[] children;
+                
+                @Override
+                protected void doStuff() throws Exception {
+                    children = obj.getChildren().getNodes(true);
+                }
+
+                @Override
+                protected void hadSuccess() {
+                    List<Node> nodes = Arrays.asList(children);
+                    iconGridViewer.setContextObject(obj);
+                    iconGridViewer.showImageObjects(nodes);
+                }
+
+                @Override
+                protected void hadError(Throwable error) {
+                    SessionMgr.getSessionMgr().handleException(error);
+                }
+            };
+            worker.execute();
+            
+            
+//            if (obj instanceof TreeNode) {
+//                TreeNode treeNode = (TreeNode)obj;
+//                nameLabel.setText(treeNode.getName());
+//                numChildrenLabel.setText(treeNode.getNumChildren()+" children");
+//            }
+//            else {
+//                nameLabel.setText(obj.getClass().getName()+"#"+obj.getId());
+//                numChildrenLabel.setText("");
+//            }
         } else {
             // No change to current DomainObject selection
             //nameLabel.setText("[no selection]");
