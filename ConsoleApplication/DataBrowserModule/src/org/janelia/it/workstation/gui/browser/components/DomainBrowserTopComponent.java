@@ -7,6 +7,7 @@ import java.util.List;
 import org.janelia.it.workstation.gui.browser.icongrid.IconGridViewer;
 import org.janelia.it.workstation.gui.browser.icongrid.node.NodeIconGridViewer;
 import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
+import org.janelia.it.workstation.gui.util.WindowLocator;
 import org.janelia.it.workstation.shared.workers.SimpleWorker;
 import org.netbeans.api.settings.ConvertAsProperties;
 import org.openide.awt.ActionID;
@@ -18,7 +19,6 @@ import org.openide.util.LookupEvent;
 import org.openide.util.LookupListener;
 import org.openide.windows.TopComponent;
 import org.openide.util.NbBundle.Messages;
-import org.openide.util.Utilities;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -30,7 +30,7 @@ import org.slf4j.LoggerFactory;
         autostore = false
 )
 @TopComponent.Description(
-        preferredID = "DomainBrowserTopComponent",
+        preferredID = DomainBrowserTopComponent.TC_NAME,
         //iconBase="SET/PATH/TO/ICON/HERE", 
         persistenceType = TopComponent.PERSISTENCE_ALWAYS
 )
@@ -48,6 +48,8 @@ import org.slf4j.LoggerFactory;
 })
 public final class DomainBrowserTopComponent extends TopComponent implements LookupListener {
 
+    public static final String TC_NAME = "DomainBrowserTopComponent";
+    
     private final static Logger log = LoggerFactory.getLogger(DomainBrowserTopComponent.class);
     
     private final IconGridViewer iconGridViewer;
@@ -93,7 +95,11 @@ public final class DomainBrowserTopComponent extends TopComponent implements Loo
 
     @Override
     public void componentOpened() {
-        result = Utilities.actionsGlobalContext().lookupResult(AbstractNode.class);
+        // Typically we would use the following line to react to the currently selected top component
+        //result = Utilities.actionsGlobalContext().lookupResult(AbstractNode.class);
+        // But in this case we're only interested in the domain explorer
+        TopComponent win = WindowLocator.getByName(DomainExplorerTopComponent.TC_NAME);
+        result = win.getLookup().lookupResult(AbstractNode.class);
         result.addLookupListener(this);
     }
     

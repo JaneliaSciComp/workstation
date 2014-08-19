@@ -29,11 +29,18 @@ import org.slf4j.LoggerFactory;
  * @author <a href="mailto:rokickik@janelia.hhmi.org">Konrad Rokicki</a>
  */
 public class InternalNode<T> extends AbstractNode {
-
+    
+    private long uniqueId;
+    
     private final static Logger log = LoggerFactory.getLogger(InternalNode.class);
     
     public InternalNode(Children children, T object) throws Exception {
         super(children, Lookups.singleton(object));
+        this.uniqueId = IdGenerator.getNextId();
+    }
+    
+    public Long getUniqueId() {
+        return uniqueId;
     }
     
     public T getObject() {
