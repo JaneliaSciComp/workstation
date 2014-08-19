@@ -28,10 +28,8 @@ import javax.swing.JSeparator;
 import javax.swing.SwingUtilities;
 import javax.swing.UIManager;
 
-import org.janelia.it.jacs.model.entity.EntityConstants;
 import org.janelia.it.jacs.model.ontology.OntologyAnnotation;
 import org.janelia.it.workstation.api.entity_model.access.ModelMgrObserver;
-import org.janelia.it.workstation.api.entity_model.management.EntitySelectionModel;
 import org.janelia.it.workstation.api.entity_model.management.ModelMgr;
 import org.janelia.it.workstation.api.entity_model.management.ModelMgrUtils;
 import org.janelia.it.workstation.api.entity_model.management.UserColorMapping;
@@ -49,7 +47,13 @@ import org.slf4j.LoggerFactory;
 
 import com.google.common.collect.HashMultimap;
 import com.google.common.collect.Multimap;
+import java.awt.Component;
+import java.awt.event.MouseEvent;
+import java.awt.event.MouseListener;
 import org.janelia.it.jacs.model.domain.enums.FileType;
+import org.janelia.it.workstation.api.entity_model.access.ModelMgrAdapter;
+import org.janelia.it.workstation.gui.util.MouseHandler;
+import org.janelia.it.workstation.shared.util.SystemInfo;
 
 /**
  * This viewer shows images in a grid. It is modeled after OS X Finder. It wraps an ImagesPanel and provides a lot of
@@ -210,48 +214,48 @@ public abstract class IconGridViewer<T> extends IconPanel<T> {
 //        }
 //    };
 //
-//    // Listener for clicking on buttons
-//    protected MouseListener buttonMouseListener = new MouseHandler() {
-//
-//        @Override
-//        protected void popupTriggered(MouseEvent e) {
-////            if (e.isConsumed()) {
-////                return;
-////            }
-////            AnnotatedImageButton button = getButtonAncestor(e.getComponent());
-////            // Select the button first
-////            RootedEntity rootedEntity = button.getRootedEntity();
-////            if (!button.isSelected()) {
-////                ModelMgr.getModelMgr().getEntitySelectionModel().selectEntity(getSelectionCategory(), rootedEntity.getId(), true);
-////            }
-////            getButtonPopupMenu().show(e.getComponent(), e.getX(), e.getY());
-////            e.consume();
-//        }
-//
-//        @Override
-//        protected void doubleLeftClicked(MouseEvent e) {
+    // Listener for clicking on buttons
+    protected MouseListener buttonMouseListener = new MouseHandler() {
+
+        @Override
+        protected void popupTriggered(MouseEvent e) {
 //            if (e.isConsumed()) {
 //                return;
 //            }
 //            AnnotatedImageButton button = getButtonAncestor(e.getComponent());
-//            buttonDrillDown(button);
-//            // Double-clicking an image in gallery view triggers an outline selection
+//            // Select the button first
+//            RootedEntity rootedEntity = button.getRootedEntity();
+//            if (!button.isSelected()) {
+//                ModelMgr.getModelMgr().getEntitySelectionModel().selectEntity(getSelectionCategory(), rootedEntity.getId(), true);
+//            }
+//            getButtonPopupMenu().show(e.getComponent(), e.getX(), e.getY());
 //            e.consume();
-//        }
-//
-//        @Override
-//        public void mouseReleased(MouseEvent e) {
-//            super.mouseReleased(e);
-//            if (e.isConsumed()) {
-//                return;
-//            }
-//            AnnotatedImageButton button = getButtonAncestor(e.getComponent());
-//            if (e.getButton() != MouseEvent.BUTTON1 || e.getClickCount() < 0) {
-//                return;
-//            }
-//            buttonSelection(button, (SystemInfo.isMac && e.isMetaDown()) || e.isControlDown(), e.isShiftDown());
-//        }
-//    };
+        }
+
+        @Override
+        protected void doubleLeftClicked(MouseEvent e) {
+            if (e.isConsumed()) {
+                return;
+            }
+            AnnotatedImageButton button = getButtonAncestor(e.getComponent());
+            buttonDrillDown(button);
+            // Double-clicking an image in gallery view triggers an outline selection
+            e.consume();
+        }
+
+        @Override
+        public void mouseReleased(MouseEvent e) {
+            super.mouseReleased(e);
+            if (e.isConsumed()) {
+                return;
+            }
+            AnnotatedImageButton button = getButtonAncestor(e.getComponent());
+            if (e.getButton() != MouseEvent.BUTTON1 || e.getClickCount() < 0) {
+                return;
+            }
+            buttonSelection(button, (SystemInfo.isMac && e.isMetaDown()) || e.isControlDown(), e.isShiftDown());
+        }
+    };
 
 //    protected JPopupMenu getButtonPopupMenu() {
 //        return null;
@@ -272,78 +276,20 @@ public abstract class IconGridViewer<T> extends IconPanel<T> {
 //        return popupMenu;
 //    }
 //
-//    /**
-//     * This is a separate method so that it can be overridden to accommodate other behavior patterns.
-//     */
-//    protected void buttonDrillDown(AnnotatedImageButton button) {
-//        RootedEntity rootedEntity = button.getRootedEntity();
-//        RootedEntity currRootedEntity = getContextRootedEntity();
-//        if (currRootedEntity == null || currRootedEntity == rootedEntity) {
-//            return;
-//        }
-//        if (StringUtils.isEmpty(rootedEntity.getUniqueId())) {
-//            return;
-//        }
-//        ModelMgr.getModelMgr().getEntitySelectionModel().selectEntity(EntitySelectionModel.CATEGORY_OUTLINE, rootedEntity.getUniqueId(), true);
-//    }
-//
-//    protected void buttonSelection(AnnotatedImageButton button, boolean multiSelect, boolean rangeSelect) {
-//        final String category = getSelectionCategory();
-//        final RootedEntity rootedEntity = button.getRootedEntity();
-//        final String rootedEntityId = rootedEntity.getId();
-//
-//        selectionButtonContainer.setVisible(false);
-//
-//        if (multiSelect) {
-//            // With the meta key we toggle items in the current
-//            // selection without clearing it
-//            if (!button.isSelected()) {
-//                ModelMgr.getModelMgr().getEntitySelectionModel().selectEntity(category, rootedEntityId, false);
-//            }
-//            else {
-//                ModelMgr.getModelMgr().getEntitySelectionModel().deselectEntity(category, rootedEntityId);
-//            }
-//        }
-//        else {
-//            // With shift, we select ranges
-//            String lastSelected = ModelMgr.getModelMgr().getEntitySelectionModel().getLastSelectedEntityIdByCategory(getSelectionCategory());
-//            if (rangeSelect && lastSelected != null) {
-//                // Walk through the buttons and select everything between the last and current selections
-//                boolean selecting = false;
-//                List<RootedEntity> rootedEntities = getRootedEntities();
-//                for (RootedEntity otherRootedEntity : rootedEntities) {
-//                    if (otherRootedEntity.getId().equals(lastSelected) || otherRootedEntity.getId().equals(rootedEntityId)) {
-//                        if (otherRootedEntity.getId().equals(rootedEntityId)) {
-//                            // Always select the button that was clicked
-//                            ModelMgr.getModelMgr().getEntitySelectionModel().selectEntity(category, otherRootedEntity.getId(), false);
-//                        }
-//                        if (selecting) {
-//                            return; // We already selected, this is the end
-//                        }
-//                        selecting = true; // Start selecting
-//                        continue; // Skip selection of the first and last items, which should already be selected
-//                    }
-//                    if (selecting) {
-//                        ModelMgr.getModelMgr().getEntitySelectionModel().selectEntity(category, otherRootedEntity.getId(), false);
-//                    }
-//                }
-//            }
-//            else {
-//                // This is a good old fashioned single button selection
-//                ModelMgr.getModelMgr().getEntitySelectionModel().selectEntity(category, rootedEntityId, true);
-//            }
-//        }
-//
-//        button.requestFocus();
-//    }
-//
-//    private AnnotatedImageButton getButtonAncestor(Component component) {
-//        Component c = component;
-//        while (!(c instanceof AnnotatedImageButton)) {
-//            c = c.getParent();
-//        }
-//        return (AnnotatedImageButton) c;
-//    }
+    /**
+     * This is a separate method so that it can be overridden to accommodate other behavior patterns.
+     */
+    protected abstract void buttonDrillDown(AnnotatedImageButton button);
+
+    protected abstract void buttonSelection(AnnotatedImageButton button, boolean multiSelect, boolean rangeSelect);
+
+    private AnnotatedImageButton getButtonAncestor(Component component) {
+        Component c = component;
+        while (!(c instanceof AnnotatedImageButton)) {
+            c = c.getParent();
+        }
+        return (AnnotatedImageButton) c;
+    }
 
     public IconGridViewer() {
 
@@ -384,8 +330,8 @@ public abstract class IconGridViewer<T> extends IconPanel<T> {
 
         imagesPanel = new ImagesPanel<T>(this);
 //        imagesPanel.setButtonKeyListener(keyListener);
-//        imagesPanel.setButtonMouseListener(buttonMouseListener);
-//        imagesPanel.addMouseListener(new MouseForwarder(this, "ImagesPanel->IconDemoPanel"));
+        imagesPanel.setButtonMouseListener(buttonMouseListener);
+        imagesPanel.addMouseListener(new MouseForwarder(this, "ImagesPanel->IconDemoPanel"));
 
         prevPageButton = new JButton(Icons.getIcon("arrow_back.gif"));
         prevPageButton.setToolTipText("Back A Page");
@@ -505,8 +451,8 @@ public abstract class IconGridViewer<T> extends IconPanel<T> {
 //            }
 //        });
 
-//        modelMgrObserver = new ModelMgrAdapter() {
-//
+        modelMgrObserver = new ModelMgrAdapter() {
+
 //            @Override
 //            public void annotationsChanged(final long entityId) {
 //                if (pageRootedEntities != null) {
@@ -519,23 +465,23 @@ public abstract class IconGridViewer<T> extends IconPanel<T> {
 //                    });
 //                }
 //            }
-//
-//            @Override
-//            public void entitySelected(String category, String entityId, boolean clearAll) {
-//                if (category.equals(getSelectionCategory())) {
-//                    IconGridViewer.this.entitySelected(entityId, clearAll);
-//                }
-//            }
-//
-//            @Override
-//            public void entityDeselected(String category, String entityId) {
-//                if (category.equals(getSelectionCategory())) {
-//                    IconGridViewer.this.entityDeselected(entityId);
-//                }
-//            }
-//        };
-//        ModelMgr.getModelMgr().addModelMgrObserver(modelMgrObserver);
-//        ModelMgr.getModelMgr().registerOnEventBus(this);
+
+            @Override
+            public void entitySelected(String category, String entityId, boolean clearAll) {
+                if (category.equals(getSelectionCategory())) {
+                    IconGridViewer.this.entitySelected(entityId, clearAll);
+                }
+            }
+
+            @Override
+            public void entityDeselected(String category, String entityId) {
+                if (category.equals(getSelectionCategory())) {
+                    IconGridViewer.this.entityDeselected(entityId);
+                }
+            }
+        };
+        ModelMgr.getModelMgr().addModelMgrObserver(modelMgrObserver);
+        ModelMgr.getModelMgr().registerOnEventBus(this);
 
         this.addComponentListener(new ComponentAdapter() {
             @Override
@@ -843,9 +789,10 @@ public abstract class IconGridViewer<T> extends IconPanel<T> {
         if (pageImageObjects == null) {
             return;
         }
-        EntitySelectionModel esm = ModelMgr.getModelMgr().getEntitySelectionModel();
-        int s = esm.getSelectedEntitiesIds(getSelectionCategory()).size();
-        statusLabel.setText(s + " of " + allImageObjects.size() + " selected");
+//        EntitySelectionModel esm = ModelMgr.getModelMgr().getEntitySelectionModel();
+//        int s = esm.getSelectedEntitiesIds(getSelectionCategory()).size();
+//        statusLabel.setText(s + " of " + allImageObjects.size() + " selected");
+        statusLabel.setText("Selection changed");
     }
 
     /**
@@ -1148,8 +1095,8 @@ public abstract class IconGridViewer<T> extends IconPanel<T> {
         imagesPanel.setMaxImageWidth(imagesPanel.getMaxImageWidth());
 
         // Update selection
-        EntitySelectionModel esm = ModelMgr.getModelMgr().getEntitySelectionModel();
-        esm.deselectAll(getSelectionCategory());
+//        EntitySelectionModel esm = ModelMgr.getModelMgr().getEntitySelectionModel();
+//        esm.deselectAll(getSelectionCategory());
 
         // Actually display everything
         showImagePanel();

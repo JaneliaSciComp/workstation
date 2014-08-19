@@ -41,7 +41,7 @@ import org.slf4j.LoggerFactory;
  *
  * @author <a href="mailto:rokickik@janelia.hhmi.org">Konrad Rokicki</a>
  */
-public class DomainObjectNode extends AbstractNode {
+public class DomainObjectNode extends AbstractNode implements HasUniqueId {
 
     private final static Logger log = LoggerFactory.getLogger(DomainObjectNode.class);
         
