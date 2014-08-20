@@ -459,6 +459,42 @@ public class ImagesPanel<T> extends JScrollPane {
      * The identifier can be either a uniqueId (path) or just a simple entity id. In the latter case you may get
      * multiple entities selected, if there are duplicates.
      */
+    public void setSelection(T selectedObject, boolean selection, boolean clearAll) {
+        if (clearAll) {
+            for (AnnotatedImageButton<T> button : buttons.values()) {
+                T imageObject = button.getImageObject();
+                if (imageObject.equals(selectedObject)) {
+                    setSelection(button, true);
+                }
+                else {
+                    setSelection(button, false);
+                }
+            }
+        }
+        else {
+            AnnotatedImageButton button = buttons.get(selectedObject);
+            if (button != null) {
+                setSelection(button, selection);
+            }
+        }
+    }
+    
+    public void setSelectedObjects(Set<T> selectedObjects) {
+        for (AnnotatedImageButton<T> button : buttons.values()) {
+            T imageObject = button.getImageObject();
+            if (selectedObjects.contains(imageObject)) {
+                setSelection(button, true);
+            }
+            else {
+                setSelection(button, false);
+            }
+        }
+    }
+    
+    /**
+     * The identifier can be either a uniqueId (path) or just a simple entity id. In the latter case you may get
+     * multiple entities selected, if there are duplicates.
+     */
     public void setSelection(String selectedEntityId, boolean selection, boolean clearAll) {
         if (clearAll) {
             for (AnnotatedImageButton<T> button : buttons.values()) {

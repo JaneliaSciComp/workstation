@@ -14,6 +14,7 @@ import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.jacs.model.domain.workspace.Workspace;
 import org.janelia.it.workstation.gui.browser.nodes.TreeNodeNode;
 import org.janelia.it.workstation.gui.util.Icons;
+import org.janelia.it.workstation.gui.util.WindowLocator;
 import org.netbeans.api.settings.ConvertAsProperties;
 import org.openide.awt.ActionID;
 import org.openide.awt.ActionReference;
@@ -52,10 +53,10 @@ import org.slf4j.LoggerFactory;
 })
 public final class DomainExplorerTopComponent extends TopComponent implements ExplorerManager.Provider {
 
-    private Logger log = LoggerFactory.getLogger(DomainExplorerTopComponent.class);
-
     public static final String TC_NAME = "DomainExplorerTopComponent";
     
+    private Logger log = LoggerFactory.getLogger(DomainExplorerTopComponent.class);
+
     protected static final String MONGO_SERVER_URL = "rokicki-ws";
     protected static final String MONGO_DATABASE = "jacs";
 
@@ -127,6 +128,11 @@ public final class DomainExplorerTopComponent extends TopComponent implements Ex
 
     private void loadWorkspace(Workspace workspace) throws Exception {
         mgr.setRootContext(new TreeNodeNode(null, workspace));
+        
+        // Share the root context with the browser
+        DomainBrowserTopComponent browser = (DomainBrowserTopComponent)WindowLocator.getByName(DomainBrowserTopComponent.TC_NAME);
+        browser.getExplorerManager().setRootContext(mgr.getRootContext());
+        
     }
 
     /**
@@ -290,7 +296,7 @@ public final class DomainExplorerTopComponent extends TopComponent implements Ex
         }
     }
     
-    public void activate(Node node) {
+    public void activateNode(Node node) {
         Node[] activatedNodes = new Node[1];
         activatedNodes[0] = node;
         

@@ -91,7 +91,6 @@ public abstract class IconGridViewer<T> extends IconPanel<T> {
 //    protected Hud hud;
 
     // These members deal with the context and entities within it
-    protected T contextImageObject;
     protected List<T> allImageObjects;
     protected Multimap<String, T> imageObjectByPathId = HashMultimap.<String, T>create();
     protected Multimap<Long, T> imageObjectByUniqueId = HashMultimap.<Long, T>create();
@@ -480,8 +479,8 @@ public abstract class IconGridViewer<T> extends IconPanel<T> {
                 }
             }
         };
-        ModelMgr.getModelMgr().addModelMgrObserver(modelMgrObserver);
-        ModelMgr.getModelMgr().registerOnEventBus(this);
+//        ModelMgr.getModelMgr().addModelMgrObserver(modelMgrObserver);
+//        ModelMgr.getModelMgr().registerOnEventBus(this);
 
         this.addComponentListener(new ComponentAdapter() {
             @Override
@@ -1317,8 +1316,6 @@ public abstract class IconGridViewer<T> extends IconPanel<T> {
 
         log.debug("Clearing {}", getSelectionCategory());
 
-        // TODO: move this to the ViewerPane
-        this.contextImageObject = null;
         this.pageImageObjects = null;
 
         removeAll();
