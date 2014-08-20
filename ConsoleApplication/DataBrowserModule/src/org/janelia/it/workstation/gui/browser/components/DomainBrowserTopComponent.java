@@ -140,32 +140,11 @@ public final class DomainBrowserTopComponent extends TopComponent implements Loo
     public void resultChanged(LookupEvent lookupEvent) {
         Collection<? extends AbstractNode> allNodes = result.allInstances();
         if (!allNodes.isEmpty()) {
-            final AbstractNode obj = allNodes.iterator().next();
-
-            SimpleWorker worker = new SimpleWorker() {
-                
-                Node[] children;
-                
-                @Override
-                protected void doStuff() throws Exception {
-                    children = obj.getChildren().getNodes(true);
-                }
-
-                @Override
-                protected void hadSuccess() {
-                    List<Node> nodes = Arrays.asList(children);
-                    iconGridViewer.setNode(obj);
-                }
-
-                @Override
-                protected void hadError(Throwable error) {
-                    SessionMgr.getSessionMgr().handleException(error);
-                }
-            };
-            worker.execute();
+            final Node obj = allNodes.iterator().next();
+            iconGridViewer.setContextObject(obj);
         } 
         else {
-            iconGridViewer.setNode(null);
+            iconGridViewer.setContextObject(null);
         }
     }
 

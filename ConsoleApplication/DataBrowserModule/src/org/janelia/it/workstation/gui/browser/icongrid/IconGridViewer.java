@@ -1004,8 +1004,6 @@ public abstract class IconGridViewer<T> extends IconPanel<T> {
         
     }
     
-//    
-//    
 //    public synchronized void loadEntity(RootedEntity rootedEntity, final Callable<Void> success) {
 //
 //        this.contextRootedEntity = rootedEntity;
@@ -1065,6 +1063,8 @@ public abstract class IconGridViewer<T> extends IconPanel<T> {
 
     private synchronized void imageObjectsLoadDone(final Callable<Void> success) {
 
+        log.info("imageObjectsLoadDone");
+        
         if (!SwingUtilities.isEventDispatchThread()) {
             throw new RuntimeException("IconDemoPanel.entityLoadDone called outside of EDT");
         }
@@ -1376,18 +1376,6 @@ public abstract class IconGridViewer<T> extends IconPanel<T> {
     private synchronized void setImageObjects(List<T> imageObjects) {
         this.pageImageObjects = imageObjects;
         populateImageRoles(imageObjects);
-//        Set<String> imageRoles = new HashSet<String>();
-//        for (T imageObject : imageObjects) {
-//            for (EntityData ed : ModelMgrUtils.getAccessibleEntityDatas(imageObject.getEntity())) {
-//                if (EntityUtils.hasImageRole(ed)) {
-//                    imageRoles.add(ed.getEntityAttrName());
-//                }
-//            }
-//        }
-//        allImageRoles.clear();
-//        allImageRoles.addAll(imageRoles);
-//        Collections.sort(allImageRoles);
-
         iconDemoToolbar.getImageRoleButton().setEnabled(!allImageRoles.isEmpty());
         if (!allImageRoles.contains(getCurrImageRole())) {
             setCurrImageRole(FileType.Mip.toString());
