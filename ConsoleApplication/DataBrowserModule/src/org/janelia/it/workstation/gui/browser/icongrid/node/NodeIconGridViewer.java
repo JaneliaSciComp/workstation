@@ -9,6 +9,7 @@ import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.concurrent.atomic.AtomicBoolean;
 import org.janelia.it.jacs.model.domain.DomainObject;
 import org.janelia.it.jacs.model.domain.enums.FileType;
 import org.janelia.it.jacs.model.domain.interfaces.HasFilepath;
@@ -40,23 +41,16 @@ public class NodeIconGridViewer extends IconGridViewer<Node> {
     */
     private transient ExplorerManager manager;
     
-    //
-    // listeners
-    //
-
     /** Listener to nearly everything */
     transient Listener managerListener;
 
     /** weak variation of the listener for property change on the explorer manager */
     transient PropertyChangeListener wlpc;
 
-    /** weak variation of the listener for vetoable change on the explorer manager */
-    transient VetoableChangeListener wlvc;
-
     /** True, if the selection listener is attached. */
     transient boolean listenerActive;
     
-    
+    protected AtomicBoolean childrenLoadInProgress = new AtomicBoolean(false);
     
     public NodeIconGridViewer() {
         super();
@@ -68,32 +62,21 @@ public class NodeIconGridViewer extends IconGridViewer<Node> {
     @Override
     public void addNotify() {
         super.addNotify();
-        log.info("addNotify");
-
-        // run under mutex
+        
         ExplorerManager em = ExplorerManager.find(this);
 
         if (em != manager) {
             if (manager != null) {
-                manager.removeVetoableChangeListener(wlvc);
                 manager.removePropertyChangeListener(wlpc);
             }
-
             manager = em;
-
-            manager.addVetoableChangeListener(wlvc = WeakListeners.vetoableChange(managerListener, manager));
             manager.addPropertyChangeListener(wlpc = WeakListeners.propertyChange(managerListener, manager));
-
-            log.info("ADDDDDD manager listener "+wlvc);
-            
-            //setNode(manager.getExploredContext());
             updateSelection();
             
         } 
         else {
             // bugfix #23509, the listener were removed --> add it again
             if (!listenerActive && (manager != null)) {
-                manager.addVetoableChangeListener(wlvc = WeakListeners.vetoableChange(managerListener, manager));
                 manager.addPropertyChangeListener(wlpc = WeakListeners.propertyChange(managerListener, manager));
             }
         }
@@ -108,23 +91,18 @@ public class NodeIconGridViewer extends IconGridViewer<Node> {
     @Override
     public void removeNotify() {
         super.removeNotify();
-        log.info("removeNotify");
         listenerActive = false;
 
         // bugfix #23509, remove useless listeners
         if (manager != null) {
-            manager.removeVetoableChangeListener(wlvc);
             manager.removePropertyChangeListener(wlpc);
         }
     }
     
-    
     private void updateSelection() {
         Set<Node> selected = new HashSet<Node>(Arrays.asList(manager.getSelectedNodes()));
-        log.info("selection: "+selected);
         imagesPanel.setSelectedObjects(selected);
     }
-    
     
     @Override
     public Node getContextObject() {
@@ -133,6 +111,7 @@ public class NodeIconGridViewer extends IconGridViewer<Node> {
     
     @Override
     public void setContextObject(Node contextNode) {
+        if (manager.getExploredContext()!=null && manager.getExploredContext().equals(contextNode)) return;
         try {
             manager.setExploredContextAndSelection(contextNode, new Node[0]);
         }
@@ -297,28 +276,46 @@ public class NodeIconGridViewer extends IconGridViewer<Node> {
         button.requestFocus();
     }
     
-    public void setNode(final Node node) {
+    private SimpleWorker childLoadingWorker;
+    
+    public synchronized void loadNode(final Node node) {
         
-        if (node==null) {
-            setContextObject(null);
-            clear();
-            return;
+        childrenLoadInProgress.set(true);
+
+        // Indicate a load
+        showLoadingIndicator();
+        
+        // Cancel previous loads
+        imagesPanel.cancelAllLoads();
+        if (childLoadingWorker != null && !childLoadingWorker.isDone()) {
+            childLoadingWorker.disregard();
         }
         
-        SimpleWorker worker = new SimpleWorker() {
+        childLoadingWorker = new SimpleWorker() {
 
             private Node[] children;
 
             @Override
             protected void doStuff() throws Exception {
-                children = node.getChildren().getNodes(true);
+                if (node!=null) {
+                    children = node.getChildren().getNodes(true);
+                }
             }
 
             @Override
             protected void hadSuccess() {
-                List<Node> nodes = Arrays.asList(children);
-                setContextObject(node);
-                showImageObjects(nodes);
+                
+                if (node==null) {
+                    setContextObject(null);
+                    clear();
+                    return;
+                }
+                else {
+                    List<Node> nodes = Arrays.asList(children);
+                    setContextObject(node);
+                    showImageObjects(nodes);
+                }
+            
             }
 
             @Override
@@ -326,33 +323,22 @@ public class NodeIconGridViewer extends IconGridViewer<Node> {
                 SessionMgr.getSessionMgr().handleException(error);
             }
         };
-        worker.execute();
+        
+        childLoadingWorker.execute();
     }
     
-    private final class Listener implements PropertyChangeListener, VetoableChangeListener {
+    private final class Listener implements PropertyChangeListener {
         
-        @Override
-        public void vetoableChange(PropertyChangeEvent evt) throws PropertyVetoException {
-//            if (ExplorerManager.PROP_SELECTED_NODES.equals(evt.getPropertyName())) {
-//                Node[] newNodes = (Node[]) evt.getNewValue();
-//
-//                if (!selectionAccept(newNodes)) {
-//                    throw new PropertyVetoException("", evt); // NOI18N
-//                }
-//            }
-        }
-
         @Override
         public void propertyChange(PropertyChangeEvent evt) {
             if (ExplorerManager.PROP_SELECTED_NODES.equals(evt.getPropertyName())) {
                 updateSelection();
             }
             else if (ExplorerManager.PROP_EXPLORED_CONTEXT.equals(evt.getPropertyName())) {
-                setNode(manager.getExploredContext());
+                loadNode(manager.getExploredContext());
             }
         }
     }
-    
     
 //    // Backspace jumps to parent folder of explored context
 //    private final class GoUpAction extends AbstractAction {

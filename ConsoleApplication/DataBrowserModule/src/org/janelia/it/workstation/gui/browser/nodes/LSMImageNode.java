@@ -26,7 +26,7 @@ public class LSMImageNode extends DomainObjectNode {
     @Override
     public String getPrimaryLabel() {
         LSMImage image = getLSMImage();
-        if (image != null) {
+        if (image!=null && image.getFilepath()!=null) {
             File file = new File(image.getFilepath());
             return file.getName();
         }
