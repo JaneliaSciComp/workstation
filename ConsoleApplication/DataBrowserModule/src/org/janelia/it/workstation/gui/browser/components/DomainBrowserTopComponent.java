@@ -4,7 +4,8 @@ import java.awt.BorderLayout;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
-import org.janelia.it.workstation.gui.browser.icongrid.IconGridViewer;
+import javax.swing.ActionMap;
+import javax.swing.text.DefaultEditorKit;
 import org.janelia.it.workstation.gui.browser.icongrid.node.NodeIconGridViewer;
 import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.workstation.gui.util.WindowLocator;
@@ -12,6 +13,8 @@ import org.janelia.it.workstation.shared.workers.SimpleWorker;
 import org.netbeans.api.settings.ConvertAsProperties;
 import org.openide.awt.ActionID;
 import org.openide.awt.ActionReference;
+import org.openide.explorer.ExplorerManager;
+import org.openide.explorer.ExplorerUtils;
 import org.openide.nodes.AbstractNode;
 import org.openide.nodes.Node;
 import org.openide.util.Lookup;
@@ -46,23 +49,32 @@ import org.slf4j.LoggerFactory;
     "CTL_DomainBrowserTopComponent=Domain Browser",
     "HINT_DomainBrowserTopComponent=Domain Browser"
 })
-public final class DomainBrowserTopComponent extends TopComponent implements LookupListener {
+public final class DomainBrowserTopComponent extends TopComponent implements LookupListener, ExplorerManager.Provider {
 
     public static final String TC_NAME = "DomainBrowserTopComponent";
     
     private final static Logger log = LoggerFactory.getLogger(DomainBrowserTopComponent.class);
     
-    private final IconGridViewer<Node> iconGridViewer;
+    private final NodeIconGridViewer iconGridViewer;
     
     private Lookup.Result<AbstractNode> result = null;
     
+    private final ExplorerManager mgr = new ExplorerManager();
+    
     public DomainBrowserTopComponent() {
-        super(Lookup.EMPTY);
         initComponents();
         iconGridViewer = new NodeIconGridViewer();
         mainPanel.add(iconGridViewer, BorderLayout.CENTER);
+        
         setName(Bundle.CTL_DomainBrowserTopComponent());
         setToolTipText(Bundle.HINT_DomainBrowserTopComponent());
+        associateLookup(ExplorerUtils.createLookup(mgr, getActionMap()));
+        
+        ActionMap map = this.getActionMap();
+        map.put(DefaultEditorKit.copyAction, ExplorerUtils.actionCopy(mgr));
+        map.put(DefaultEditorKit.cutAction, ExplorerUtils.actionCut(mgr));
+        map.put(DefaultEditorKit.pasteAction, ExplorerUtils.actionPaste(mgr));
+        map.put("delete", ExplorerUtils.actionDelete(mgr, true)); 
     }
     
     /**
@@ -110,6 +122,21 @@ public final class DomainBrowserTopComponent extends TopComponent implements Loo
     }
 
     @Override
+    protected void componentActivated() {
+        ExplorerUtils.activateActions(mgr, true);
+    }
+    
+    @Override
+    protected void componentDeactivated() {
+        ExplorerUtils.activateActions(mgr, false);
+    }
+    
+    @Override
+    public ExplorerManager getExplorerManager() {
+        return mgr;
+    }
+    
+    @Override
     public void resultChanged(LookupEvent lookupEvent) {
         Collection<? extends AbstractNode> allNodes = result.allInstances();
         if (!allNodes.isEmpty()) {
@@ -127,8 +154,7 @@ public final class DomainBrowserTopComponent extends TopComponent implements Loo
                 @Override
                 protected void hadSuccess() {
                     List<Node> nodes = Arrays.asList(children);
-                    iconGridViewer.setContextObject(obj);
-                    iconGridViewer.showImageObjects(nodes);
+                    iconGridViewer.setNode(obj);
                 }
 
                 @Override
@@ -137,21 +163,9 @@ public final class DomainBrowserTopComponent extends TopComponent implements Loo
                 }
             };
             worker.execute();
-            
-            
-//            if (obj instanceof TreeNode) {
-//                TreeNode treeNode = (TreeNode)obj;
-//                nameLabel.setText(treeNode.getName());
-//                numChildrenLabel.setText(treeNode.getNumChildren()+" children");
-//            }
-//            else {
-//                nameLabel.setText(obj.getClass().getName()+"#"+obj.getId());
-//                numChildrenLabel.setText("");
-//            }
-        } else {
-            // No change to current DomainObject selection
-            //nameLabel.setText("[no selection]");
-            //numChildrenLabel.setText("");
+        } 
+        else {
+            iconGridViewer.setNode(null);
         }
     }
 
