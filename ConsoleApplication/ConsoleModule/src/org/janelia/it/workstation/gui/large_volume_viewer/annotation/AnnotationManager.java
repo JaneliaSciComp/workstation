@@ -880,7 +880,8 @@ public class AnnotationManager
         }
 
         // ask the user if they really want a new workspace if one is active
-        if (annotationModel.getCurrentWorkspace() != null) {
+        final boolean existingWorkspace = annotationModel.getCurrentWorkspace() != null;
+        if (existingWorkspace) {
             int ans = JOptionPane.showConfirmDialog(null,
                     "You already have an active workspace!  Close and create another?",
                     "Workspace exists",
@@ -919,6 +920,13 @@ public class AnnotationManager
 
                 // now we can create the workspace (finally)
                 annotationModel.createWorkspace(workspaceRootEntity, ID, name);
+
+                // and if there was a previously existing workspace, we'll save the
+                //  existing color model (which isn't cleared by creating a new
+                //  workspace) into the new workspace
+                if (existingWorkspace) {
+                    saveColorModel();
+                }
             }
 
             @Override
