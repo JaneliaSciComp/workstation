@@ -1,17 +1,16 @@
-package org.janelia.it.workstation.ws;
-
-import java.rmi.Remote;
-import java.rmi.RemoteException;
-
-import javax.jws.WebParam;
-import javax.jws.WebService;
-import javax.jws.soap.SOAPBinding;
+package org.janelia.it.FlyWorkstation.ws;
 
 import org.janelia.it.jacs.model.entity.Entity;
 import org.janelia.it.jacs.model.entity.EntityData;
 import org.janelia.it.jacs.model.ontology.OntologyAnnotation;
 import org.janelia.it.workstation.model.utils.AnnotationSession;
 import org.janelia.it.workstation.model.utils.OntologyKeyBindings;
+
+import javax.jws.WebParam;
+import javax.jws.WebService;
+import javax.jws.soap.SOAPBinding;
+import java.rmi.Remote;
+import java.rmi.RemoteException;
 
 /**
  * The Console server interface for clients to call in order to request data. This implementation accepts and returns

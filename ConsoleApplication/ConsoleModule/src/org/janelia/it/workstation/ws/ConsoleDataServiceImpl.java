@@ -1,14 +1,5 @@
 package org.janelia.it.workstation.ws;
 
-import java.awt.Color;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-
-import javax.jws.WebService;
-import javax.jws.soap.SOAPBinding;
-
 import org.janelia.it.jacs.model.entity.Entity;
 import org.janelia.it.jacs.model.entity.EntityData;
 import org.janelia.it.jacs.model.ontology.OntologyAnnotation;
@@ -22,13 +13,21 @@ import org.janelia.it.workstation.shared.util.ConsoleProperties;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.jws.WebService;
+import javax.jws.soap.SOAPBinding;
+import java.awt.*;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
 /**
  * The implementation of the Console server interface.
  *
  * @author saffordt
  * @author <a href="mailto:rokickik@janelia.hhmi.org">Konrad Rokicki</a>
  */
-@WebService(endpointInterface = "org.janelia.it.workstation.ws.ConsoleDataService",
+@WebService(endpointInterface = "org.janelia.it.FlyWorkstation.ws.ConsoleDataService",
         serviceName = "ConsoleDataService",
         portName = "CdsPort", name = "Cds")
 @SOAPBinding(style = SOAPBinding.Style.RPC)

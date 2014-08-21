@@ -1,4 +1,4 @@
-package org.janelia.it.workstation.ws;
+package org.janelia.it.FlyWorkstation.ws;
 
 import javax.jws.WebParam;
 import javax.jws.WebService;
