@@ -949,9 +949,12 @@ that need to respond to changing data.
         //  for annotations right now
 
         // and as long as we're doing brute force, we can update progress
-        //  granularly (if we have a worker)
+        //  granularly (if we have a worker); start with 5% increments (1/20)
         int totalLength = swcData.getNodeList().size();
         int updateFrequency = totalLength / 20;
+        if (updateFrequency == 0) {
+            updateFrequency = 1;
+        }
         if (worker != null) {
             worker.setProgress(0L, totalLength);
         }
