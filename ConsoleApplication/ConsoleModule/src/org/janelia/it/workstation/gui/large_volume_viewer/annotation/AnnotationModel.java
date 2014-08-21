@@ -9,6 +9,7 @@ import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.workstation.shared.util.SWCDataConverter;
 import org.janelia.it.workstation.shared.util.SWCNode;
 import org.janelia.it.workstation.shared.util.SWCData;
+import org.janelia.it.workstation.shared.workers.SimpleWorker;
 import org.janelia.it.workstation.signal.Signal1;
 import org.janelia.it.workstation.signal.Slot1;
 import org.janelia.it.workstation.api.entity_model.management.ModelMgr;
@@ -904,6 +905,10 @@ that need to respond to changing data.
     }
 
     public void importSWCData(File swcFile) throws Exception {
+        importSWCData(swcFile, null);
+    }
+
+    public void importSWCData(File swcFile, SimpleWorker worker) throws Exception {
 
         // the constructor also triggers the parsing, but not the validation
         SWCData swcData = SWCData.read(swcFile);
@@ -942,6 +947,15 @@ that need to respond to changing data.
         // let's go with brute force for now; loop over nodes and
         //  insert into db sequentially, since we have no bulk update
         //  for annotations right now
+
+        // and as long as we're doing brute force, we can update progress
+        //  granularly (if we have a worker)
+        int totalLength = swcData.getNodeList().size();
+        int updateFrequency = totalLength / 20;
+        if (worker != null) {
+            worker.setProgress(0L, totalLength);
+        }
+
         Map<Integer, TmGeoAnnotation> annotations = new HashMap<Integer, TmGeoAnnotation>();
         TmGeoAnnotation annotation;
         for (SWCNode node: swcData.getNodeList()) {
@@ -956,6 +970,9 @@ that need to respond to changing data.
                     node.getZ() + offsetz, "");
             }
             annotations.put(node.getIndex(), annotation);
+            if (worker != null && (node.getIndex() % updateFrequency) == 0) {
+                worker.setProgress(node.getIndex(), totalLength);
+            }
         }
 
 

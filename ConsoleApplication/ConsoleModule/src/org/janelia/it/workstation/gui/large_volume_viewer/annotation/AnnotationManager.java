@@ -9,6 +9,7 @@ import org.janelia.it.workstation.gui.large_volume_viewer.skeleton.Anchor;
 import org.janelia.it.workstation.gui.large_volume_viewer.skeleton.Skeleton;
 
 import org.janelia.it.workstation.octree.ZoomedVoxelIndex;
+import org.janelia.it.workstation.shared.workers.BackgroundWorker;
 import org.janelia.it.workstation.shared.workers.SimpleWorker;
 import org.janelia.it.workstation.signal.Slot;
 import org.janelia.it.workstation.signal.Slot1;
@@ -1108,11 +1109,14 @@ public class AnnotationManager
             //      store that info in the file
             //  (d) option to shift position (add constant x, y, z offset)
 
-            SimpleWorker importer = new SimpleWorker() {
+            BackgroundWorker importer = new BackgroundWorker() {
                 @Override
                 protected void doStuff() throws Exception {
-                    annotationModel.importSWCData(swcFile);
+                    annotationModel.importSWCData(swcFile, this);
                 }
+
+                @Override
+                public String getName() {return "import " + swcFile.getName();}
 
                 @Override
                 protected void hadSuccess() {
@@ -1124,7 +1128,7 @@ public class AnnotationManager
                     SessionMgr.getSessionMgr().handleException(error);
                 }
             };
-            importer.execute();
+            importer.executeWithEvents();
         }
     }
 
