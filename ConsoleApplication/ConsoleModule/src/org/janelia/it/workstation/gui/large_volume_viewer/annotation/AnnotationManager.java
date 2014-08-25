@@ -9,6 +9,7 @@ import org.janelia.it.workstation.gui.large_volume_viewer.skeleton.Anchor;
 import org.janelia.it.workstation.gui.large_volume_viewer.skeleton.Skeleton;
 
 import org.janelia.it.workstation.octree.ZoomedVoxelIndex;
+import org.janelia.it.workstation.shared.workers.BackgroundWorker;
 import org.janelia.it.workstation.shared.workers.SimpleWorker;
 import org.janelia.it.workstation.signal.Slot;
 import org.janelia.it.workstation.signal.Slot1;
@@ -320,6 +321,8 @@ public class AnnotationManager
                     finalLocation = xyz;
                 }
 
+                // Stopwatch stopwatch = new Stopwatch();
+                // stopwatch.start();
                 if (parentID == null) {
                     // if parentID is null, it's a new root in current neuron
                     annotationModel.addRootAnnotation(currentNeuron, finalLocation);
@@ -327,6 +330,8 @@ public class AnnotationManager
                     annotationModel.addChildAnnotation(
                             currentNeuron.getGeoAnnotationMap().get(parentID), finalLocation);
                 }
+                // stopwatch.stop();
+                // System.out.println("added annotation; elapsed time = " + stopwatch.toString());
             }
 
             @Override
@@ -875,7 +880,8 @@ public class AnnotationManager
         }
 
         // ask the user if they really want a new workspace if one is active
-        if (annotationModel.getCurrentWorkspace() != null) {
+        final boolean existingWorkspace = annotationModel.getCurrentWorkspace() != null;
+        if (existingWorkspace) {
             int ans = JOptionPane.showConfirmDialog(null,
                     "You already have an active workspace!  Close and create another?",
                     "Workspace exists",
@@ -914,6 +920,13 @@ public class AnnotationManager
 
                 // now we can create the workspace (finally)
                 annotationModel.createWorkspace(workspaceRootEntity, ID, name);
+
+                // and if there was a previously existing workspace, we'll save the
+                //  existing color model (which isn't cleared by creating a new
+                //  workspace) into the new workspace
+                if (existingWorkspace) {
+                    saveColorModel();
+                }
             }
 
             @Override
@@ -1104,11 +1117,14 @@ public class AnnotationManager
             //      store that info in the file
             //  (d) option to shift position (add constant x, y, z offset)
 
-            SimpleWorker importer = new SimpleWorker() {
+            BackgroundWorker importer = new BackgroundWorker() {
                 @Override
                 protected void doStuff() throws Exception {
-                    annotationModel.importSWCData(swcFile);
+                    annotationModel.importSWCData(swcFile, this);
                 }
+
+                @Override
+                public String getName() {return "import " + swcFile.getName();}
 
                 @Override
                 protected void hadSuccess() {
@@ -1120,7 +1136,7 @@ public class AnnotationManager
                     SessionMgr.getSessionMgr().handleException(error);
                 }
             };
-            importer.execute();
+            importer.executeWithEvents();
         }
     }
 
