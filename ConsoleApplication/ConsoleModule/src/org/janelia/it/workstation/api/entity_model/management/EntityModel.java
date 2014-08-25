@@ -928,7 +928,6 @@ public class EntityModel {
         synchronized (this) {
             ed = entityFacade.addEntityToParent(parent, entity, index, attrName);
             ed.setChildEntity(entity); // replace with a canonical entities
-            putOrUpdate(ed.getParentEntity()); // update child count
             ed.setParentEntity(parent);
             parent.getEntityData().add(ed);
             log.debug("Added entity (id={}) to parent (id={})", entity.getId(), parent.getId());
@@ -966,6 +965,7 @@ public class EntityModel {
         EntityData commonRootEd = null;
         synchronized (this) {
             commonRootEd = entityFacade.createFolderInWorkspace(workspaceId, folderName);
+            putOrUpdate(commonRootEd.getChildEntity());
             
             // Update in-memory workspace entity 
             Entity workspace = getEntityById(workspaceId);
