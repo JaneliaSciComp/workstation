@@ -3,7 +3,6 @@ package org.janelia.it.workstation.shared.util;
 import de.javasoft.io.FileUtils;
 import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
 import org.openide.modules.InstalledFileLocator;
-import org.openide.util.NbBundle;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -232,12 +231,12 @@ public class SystemInfo {
      * @return 
      */
     private static File getOrCreateBrandingConfigFile() throws IOException {
-        String brandingToken = NbBundle.getBranding();
+        String appnameToken ="JaneliaWorkstation";  //todo This needs o be programmatically set and retrieved
         File userSettingsDir = new File( System.getProperty("netbeans.user") );
         if ( ! userSettingsDir.toString().contains("testuserdir") ) {
             userSettingsDir = new File( userSettingsDir.toString(), ETC_SUBPATH );
         }
-        final String configFile = brandingToken + ".conf";
+        final String configFile = appnameToken + ".conf";
         File fqBrandingConfig = new File( userSettingsDir, configFile );
         if ( ! fqBrandingConfig.exists() ) {
             // Need to create-by-copy.
