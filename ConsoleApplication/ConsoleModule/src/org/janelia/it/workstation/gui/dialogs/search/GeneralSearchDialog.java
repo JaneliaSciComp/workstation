@@ -34,6 +34,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import org.janelia.it.jacs.model.entity.EntityConstants;
 import org.janelia.it.jacs.shared.utils.EntityUtils;
+import static org.janelia.it.jacs.shared.utils.EntityUtils.findChildEntityDataWithNameAndTypeAndOwner;
 import org.janelia.it.workstation.api.entity_model.management.ModelMgrUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -247,10 +248,7 @@ public class GeneralSearchDialog extends ModalDialog {
             @Override
             protected void doStuff() throws Exception {
                 
-                Long workspaceId = ModelMgr.getModelMgr().getCurrentWorkspaceId();
-                if (workspaceId==null) throw new IllegalStateException("No workspace is selected");
-                Entity workspace = ModelMgr.getModelMgr().getEntityById(workspaceId);
-                
+                Entity workspace = ModelMgr.getModelMgr().getCurrentWorkspace();
                 RootedEntity searchResultsRE = new RootedEntity(workspace);
                 
                 int i = 0;
@@ -259,18 +257,25 @@ public class GeneralSearchDialog extends ModalDialog {
                     searchResultsRE = parentRE.getOwnedChildByName(folderName);
                     
                     if (searchResultsRE==null) {
-                        Entity newFolder =null;
+                        Entity newFolder = null;
                         if (i==0) {
+                            log.info("Did not find existing top level folder. Creating folder named: "+folderName);
                             newFolder = ModelMgr.getModelMgr().createCommonRoot(folderName);
                             if (folderName.equals(EntityConstants.NAME_SEARCH_RESULTS)) {
                                 ModelMgr.getModelMgr().setAttributeAsTag(newFolder, EntityConstants.ATTRIBUTE_IS_PROTECTED);
                             }
+                            // Refresh parentRE because workspace was invalidated by createCommonRoot
+                            parentRE = new RootedEntity(ModelMgr.getModelMgr().getCurrentWorkspace());
                         }
                         else {
+                            log.info("Did not find existing folder. Creating folder named: "+folderName);
                             newFolder = ModelMgr.getModelMgr().createEntity(EntityConstants.TYPE_FOLDER, folderName);
                             ModelMgr.getModelMgr().addEntityToParent(parentRE.getEntity(), newFolder, parentRE.getEntity().getMaxOrderIndex() + 1, EntityConstants.ATTRIBUTE_ENTITY);
                         }
                         searchResultsRE = parentRE.getOwnedChildByName(folderName);
+                    }
+                    else {
+                        log.info("Found existing Search Results folder: "+searchResultsRE.getName());
                     }
                     i++;
                 }
@@ -329,8 +334,9 @@ public class GeneralSearchDialog extends ModalDialog {
         
         Entity workspace = ModelMgr.getModelMgr().getCurrentWorkspace();
 
-        Entity searchResults = EntityUtils.findChildWithNameAndTypeAndOwner(workspace, EntityConstants.NAME_SEARCH_RESULTS, EntityConstants.TYPE_FOLDER, SessionMgr.getUsername());
+        Entity searchResults = EntityUtils.findChildWithNameAndTypeAndOwner(workspace, EntityConstants.NAME_SEARCH_RESULTS, EntityConstants.TYPE_FOLDER, SessionMgr.getSubjectKey());
         if (searchResults==null) {
+            log.warn("Did not find existing search results folder!");
             return EntityConstants.NAME_SEARCH_RESULTS+"/Search Results #1";
         }
         
@@ -354,7 +360,7 @@ public class GeneralSearchDialog extends ModalDialog {
         }
         return searchResults.getName()+"/Search Results #" + (maxNum + 1);
     }
-
+    
     protected synchronized void exportResults() {
 
         JFileChooser chooser = new JFileChooser();

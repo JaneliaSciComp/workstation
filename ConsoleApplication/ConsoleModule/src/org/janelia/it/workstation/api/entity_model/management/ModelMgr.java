@@ -749,7 +749,7 @@ public final class ModelMgr {
             }
         }
         Entity curr = entityModel.getEntityById(currWorkspaceId);
-        log.info("Got current workspace {} as {}",currWorkspaceId,curr);
+        log.debug("Got current workspace {} as {}",currWorkspaceId,curr);
         return curr;
     }
 
