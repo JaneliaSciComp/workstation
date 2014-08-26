@@ -193,7 +193,7 @@ vec4 volumeMask(vec4 origColor)
             }
             else if ( renderMethod == 4.0 )
             {
-                float multiplier = 0.4 * intensity;
+                float multiplier = (0.4  + (whiteBackground * 0.8)) * intensity;
                 rtnVal = vec4( origColor[ 0 ] * multiplier, origColor[ 1 ] * multiplier, origColor[ 2 ] * multiplier, intensity );
             }
             else if ( renderMethod == 3.0 )
@@ -221,7 +221,7 @@ vec4 volumeMask(vec4 origColor)
                 // maximum intensity of any signal color.
                 for (int i = 0; i < 3; i++)
                 {
-                    rtnVal[i] = mappedColor[ i ] * intensity;
+                    rtnVal[i] = (mappedColor[ i ] + (whiteBackground * 0.3)) * intensity;
                 }
                 rtnVal[3] = intensity;
             }
