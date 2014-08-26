@@ -87,14 +87,14 @@ public class AlignmentBoardPanel extends JPanel implements AlignmentBoardControl
     private RenderablesLoadWorker loadWorker;
     private JPanel wrapperPanel;
 
-    private RenderMappingI renderMapping;
-    private MultiMaskTracker multiMaskTracker;
+    private final RenderMappingI renderMapping;
+    private final MultiMaskTracker multiMaskTracker;
     @SuppressWarnings("unused")
     private BrainGlow brainGlow;
     private AlignmentBoardControlsPanel settingsPanel;
     private AlignmentBoardControlsDialog settingsDialog;
     private AlignmentBoardControls controls;
-    private Logger logger = LoggerFactory.getLogger(AlignmentBoardPanel.class);
+    private final Logger logger = LoggerFactory.getLogger(AlignmentBoardPanel.class);
 
     private boolean loadingInProgress = false;
     private boolean outstandingLoadRequest = false;
@@ -107,14 +107,12 @@ public class AlignmentBoardPanel extends JPanel implements AlignmentBoardControl
     private boolean boardOpen = false;
     private boolean connectEditEvents = true;
 
-    private AlignmentBoardSettings settingsData;
-    private ShutdownListener shutdownListener;
+    private final AlignmentBoardSettings settingsData;
+    private final ShutdownListener shutdownListener;
     private JToolBar toolbar;
     private ABContextDataSource dataSource;
-    private FileStats fileStats;
+    private final FileStats fileStats;
     
-    private InstanceContent content = new InstanceContent();
-
     public AlignmentBoardPanel() {
         logger.info( "C'tor" );
         settingsData = new AlignmentBoardSettings();

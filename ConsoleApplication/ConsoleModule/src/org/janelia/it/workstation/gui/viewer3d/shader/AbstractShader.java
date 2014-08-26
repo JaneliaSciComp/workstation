@@ -86,14 +86,14 @@ public abstract class AbstractShader
             BufferedReader reader = new BufferedReader(
 					new InputStreamReader( resourceStream )
             );
-			StringBuffer stringBuffer = new StringBuffer();
+			StringBuilder programCollector = new StringBuilder();
 			String line;
 			while ((line = reader.readLine()) != null) {
-				stringBuffer.append(line);
-				stringBuffer.append("\n");
+				programCollector.append(line);
+				programCollector.append("\n");
 			}
-			String progString = stringBuffer.toString();
-            logger.debug("Shader contents: {}.", progString);
+			String progString = programCollector.toString();
+            logger.info("Shader contents: {}.", progString);
 			gl.glShaderSource(shaderId, 1, new String[]{progString}, (int[])null, 0);
 			gl.glCompileShader(shaderId);
 			
