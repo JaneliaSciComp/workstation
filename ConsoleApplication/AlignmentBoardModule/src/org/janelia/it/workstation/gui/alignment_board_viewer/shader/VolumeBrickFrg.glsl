@@ -417,9 +417,9 @@ void main()
     if ( whiteBackground == 1 ) {
         vec4 origColor = texture3D(signalTexture, gl_TexCoord[0].xyz);
         vec4 maskedColor = volumeMask(origColor);
-        vec4 gammaAdjustedColor = inverseGammaAdjust(maskedColor);
-        vec4 backlitColor = adjustForBgrnd(gammaAdjustedColor);
-        gl_FragColor = crop(backlitColor);
+        vec4 backlitColor = adjustForBgrnd(maskedColor);
+        vec4 gammaAdjustedColor = gammaAdjust(backlitColor);
+        gl_FragColor = crop(gammaAdjustedColor);
     }
     else {
         vec4 origColor = texture3D(signalTexture, gl_TexCoord[0].xyz);
