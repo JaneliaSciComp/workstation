@@ -1,20 +1,19 @@
 package org.janelia.it.workstation.gui.split_picking;
 
-import java.awt.BorderLayout;
-import java.util.Properties;
-import java.util.concurrent.Callable;
-
 import org.janelia.it.workstation.gui.framework.console.ViewerManager;
 import org.janelia.it.workstation.gui.framework.viewer.IconDemoPanel;
 import org.janelia.it.workstation.gui.framework.viewer.ViewerSplitPanel;
+import org.janelia.it.workstation.gui.util.WindowLocator;
 import org.janelia.it.workstation.model.entity.RootedEntity;
 import org.netbeans.api.settings.ConvertAsProperties;
-import org.openide.windows.TopComponent;
 import org.openide.util.NbBundle.Messages;
-
-import org.janelia.it.workstation.gui.util.WindowLocator;
+import org.openide.windows.TopComponent;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import java.awt.*;
+import java.util.Properties;
+import java.util.concurrent.Callable;
 
 /**
  * Top component showing dual AD/DBD split picking views.
@@ -67,11 +66,11 @@ public final class SplitPickingLanesTopComponent extends TopComponent {
         viewerManager.showEntityInSecViewer( entity );
     }
     
-    public void showEntityInMainViewer( RootedEntity entity, Callable callable ) {
+    public void showEntityInMainViewer( RootedEntity entity, Callable<Void> callable ) {
         viewerManager.showEntityInMainViewer( entity, callable );
     }
     
-    public void showEntityInSecViewer( RootedEntity entity, Callable callable ) {
+    public void showEntityInSecViewer( RootedEntity entity, Callable<Void> callable ) {
         viewerManager.showEntityInSecViewer( entity, callable );
     }
     
