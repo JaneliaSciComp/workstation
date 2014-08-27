@@ -5,6 +5,7 @@
  */
 package org.janelia.it.workstation.gui.geometric_search;
 
+import java.awt.BorderLayout;
 import org.netbeans.api.settings.ConvertAsProperties;
 import org.openide.awt.ActionID;
 import org.openide.awt.ActionReference;
@@ -37,11 +38,13 @@ import org.openide.util.NbBundle.Messages;
 })
 public final class GeometricSearchTopComponent extends TopComponent {
 
+    GeometricSearchAdminPanel adminPanel;
+
     public GeometricSearchTopComponent() {
         initComponents();
+        adminPanel=new GeometricSearchAdminPanel();
         setName(Bundle.CTL_GeometricSearchTopComponent());
         setToolTipText(Bundle.HINT_GeometricSearchTopComponent());
-
     }
 
     /**
@@ -61,8 +64,11 @@ public final class GeometricSearchTopComponent extends TopComponent {
         resultLabel = new javax.swing.JLabel();
         adminTabPanel = new javax.swing.JPanel();
 
+        ////////////////// SEARCH TAB /////////////////////
+
         org.openide.awt.Mnemonics.setLocalizedText(queryLabel, org.openide.util.NbBundle.getMessage(GeometricSearchTopComponent.class, "GeometricSearchTopComponent.queryLabel.text")); // NOI18N
 
+        // Query
         javax.swing.GroupLayout queryPanelLayout = new javax.swing.GroupLayout(queryPanel);
         queryPanel.setLayout(queryPanelLayout);
         queryPanelLayout.setHorizontalGroup(
@@ -79,6 +85,7 @@ public final class GeometricSearchTopComponent extends TopComponent {
                 .addGap(0, 0, Short.MAX_VALUE))
         );
 
+        // Alignment Board
         javax.swing.GroupLayout alignmentBoardPanelLayout = new javax.swing.GroupLayout(alignmentBoardPanel);
         alignmentBoardPanel.setLayout(alignmentBoardPanelLayout);
         alignmentBoardPanelLayout.setHorizontalGroup(
@@ -90,6 +97,7 @@ public final class GeometricSearchTopComponent extends TopComponent {
             .addGap(0, 373, Short.MAX_VALUE)
         );
 
+        // Result Panel
         org.openide.awt.Mnemonics.setLocalizedText(resultLabel, org.openide.util.NbBundle.getMessage(GeometricSearchTopComponent.class, "GeometricSearchTopComponent.resultLabel.text")); // NOI18N
 
         javax.swing.GroupLayout resultPanelLayout = new javax.swing.GroupLayout(resultPanel);
@@ -149,6 +157,8 @@ public final class GeometricSearchTopComponent extends TopComponent {
             .addGap(0, 500, Short.MAX_VALUE)
         );
 
+        /////////////// ADMIN TAB ////////////////
+
         geometricSearchTabPane.addTab(org.openide.util.NbBundle.getMessage(GeometricSearchTopComponent.class, "GeometricSearchTopComponent.adminTabPanel.TabConstraints.tabTitle"), adminTabPanel); // NOI18N
 
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(this);
@@ -182,7 +192,8 @@ public final class GeometricSearchTopComponent extends TopComponent {
     // End of variables declaration//GEN-END:variables
     @Override
     public void componentOpened() {
-        // TODO add custom code on component opening
+        adminTabPanel.setLayout( new BorderLayout() );
+        adminTabPanel.add( adminPanel, BorderLayout.CENTER );
     }
 
     @Override
