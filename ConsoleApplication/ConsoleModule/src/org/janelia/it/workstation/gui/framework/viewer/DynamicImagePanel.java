@@ -156,7 +156,7 @@ public abstract class DynamicImagePanel extends JPanel {
                             setDisplaySize(getNewDisplaySize());
 
                             if (getNewScaledImage() == null) {
-                                log.warn("Scaled image is null");
+                                log.warn("Scaled image is null: {}",imageFilename);
                                 return;
                             }
 
