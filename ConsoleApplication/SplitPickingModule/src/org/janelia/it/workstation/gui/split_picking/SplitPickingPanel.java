@@ -3,6 +3,14 @@ package org.janelia.it.workstation.gui.split_picking;
 import com.google.common.collect.ComparisonChain;
 import com.google.common.collect.Ordering;
 import com.google.common.eventbus.Subscribe;
+import org.janelia.it.jacs.model.entity.Entity;
+import org.janelia.it.jacs.model.entity.EntityConstants;
+import org.janelia.it.jacs.model.entity.EntityData;
+import org.janelia.it.jacs.model.tasks.Event;
+import org.janelia.it.jacs.model.tasks.Task;
+import org.janelia.it.jacs.model.tasks.TaskParameter;
+import org.janelia.it.jacs.shared.file_chooser.FileChooser;
+import org.janelia.it.jacs.shared.utils.EntityUtils;
 import org.janelia.it.workstation.api.entity_model.events.EntityInvalidationEvent;
 import org.janelia.it.workstation.api.entity_model.management.EntitySelectionModel;
 import org.janelia.it.workstation.api.entity_model.management.ModelMgr;
@@ -12,24 +20,12 @@ import org.janelia.it.workstation.gui.dialogs.PatternSearchDialog;
 import org.janelia.it.workstation.gui.framework.actions.OpenWithDefaultAppAction;
 import org.janelia.it.workstation.gui.framework.outline.Refreshable;
 import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
-import org.janelia.it.workstation.gui.framework.viewer.AnnotatedImageButton;
-import org.janelia.it.workstation.gui.framework.viewer.IconDemoPanel;
-import org.janelia.it.workstation.gui.framework.viewer.IconDemoToolbar;
-import org.janelia.it.workstation.gui.framework.viewer.Viewer;
-import org.janelia.it.workstation.gui.framework.viewer.ViewerPane;
-import org.janelia.it.workstation.gui.framework.viewer.ViewerSplitPanel;
+import org.janelia.it.workstation.gui.framework.viewer.*;
+import org.janelia.it.workstation.gui.util.WindowLocator;
 import org.janelia.it.workstation.model.entity.RootedEntity;
 import org.janelia.it.workstation.shared.workers.IndeterminateProgressMonitor;
 import org.janelia.it.workstation.shared.workers.SimpleWorker;
-import org.janelia.it.jacs.model.entity.Entity;
-import org.janelia.it.jacs.model.entity.EntityConstants;
-import org.janelia.it.jacs.model.entity.EntityData;
-import org.janelia.it.jacs.model.tasks.Event;
-import org.janelia.it.jacs.model.tasks.Task;
-import org.janelia.it.jacs.model.tasks.TaskParameter;
-import org.janelia.it.jacs.shared.file_chooser.FileChooser;
-import org.janelia.it.jacs.shared.utils.EntityUtils;
-import org.janelia.it.workstation.gui.util.WindowLocator;
+import org.openide.windows.TopComponent;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -46,8 +42,6 @@ import java.util.List;
 import java.util.concurrent.Callable;
 
 import static com.google.common.base.Preconditions.checkNotNull;
-
-import org.openide.windows.TopComponent;
 
 /**
  * A panel that may be inserted into the right-most view pane and serves as a workflow driver for the GAL4 split line
@@ -1341,11 +1335,11 @@ public class SplitPickingPanel extends JPanel implements Refreshable {
         getLanesTopComponent().showEntityInMainViewer(entity);
     }
 
-    private void showEntityInMainViewer(RootedEntity entity, Callable callable) {
+    private void showEntityInMainViewer(RootedEntity entity, Callable<Void> callable) {
         getLanesTopComponent().showEntityInMainViewer(entity, callable);
     }
 
-    private void showEntityInSecViewer(RootedEntity entity, Callable callable) {
+    private void showEntityInSecViewer(RootedEntity entity, Callable<Void> callable) {
         getLanesTopComponent().showEntityInSecViewer(entity, callable);
     }
 

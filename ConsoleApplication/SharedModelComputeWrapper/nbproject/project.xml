@@ -12,7 +12,7 @@
                     <compile-dependency/>
                     <run-dependency>
                         <release-version>1</release-version>
-                        <specification-version>1</specification-version>
+                        <specification-version>1.1</specification-version>
                     </run-dependency>
                 </dependency>
             </module-dependencies>
@@ -32,10 +32,6 @@
                 <package>org.janelia.it.jacs.model.entity</package>
                 <package>org.janelia.it.jacs.model.entity.cv</package>
                 <package>org.janelia.it.jacs.model.genomics</package>
-                <package>org.janelia.it.jacs.model.graph.annotations</package>
-                <package>org.janelia.it.jacs.model.graph.entity</package>
-                <package>org.janelia.it.jacs.model.graph.entity.support</package>
-                <package>org.janelia.it.jacs.model.graph.support</package>
                 <package>org.janelia.it.jacs.model.lsm</package>
                 <package>org.janelia.it.jacs.model.metadata</package>
                 <package>org.janelia.it.jacs.model.ontology</package>
@@ -56,6 +52,7 @@
                 <package>org.janelia.it.jacs.model.tasks.fly</package>
                 <package>org.janelia.it.jacs.model.tasks.geci</package>
                 <package>org.janelia.it.jacs.model.tasks.genomeProject</package>
+                <package>org.janelia.it.jacs.model.tasks.geometricSearch</package>
                 <package>org.janelia.it.jacs.model.tasks.hmmer</package>
                 <package>org.janelia.it.jacs.model.tasks.hmmer3</package>
                 <package>org.janelia.it.jacs.model.tasks.inspect</package>
@@ -85,6 +82,7 @@
                 <package>org.janelia.it.jacs.model.user_data.export</package>
                 <package>org.janelia.it.jacs.model.user_data.geci</package>
                 <package>org.janelia.it.jacs.model.user_data.genome</package>
+                <package>org.janelia.it.jacs.model.user_data.geometricSearch</package>
                 <package>org.janelia.it.jacs.model.user_data.hmmer</package>
                 <package>org.janelia.it.jacs.model.user_data.hmmer3</package>
                 <package>org.janelia.it.jacs.model.user_data.inspect</package>
@@ -117,6 +115,7 @@
                 <package>org.janelia.it.jacs.shared.fasta</package>
                 <package>org.janelia.it.jacs.shared.file_chooser</package>
                 <package>org.janelia.it.jacs.shared.genomics</package>
+                <package>org.janelia.it.jacs.shared.geometric_search</package>
                 <package>org.janelia.it.jacs.shared.hibernate</package>
                 <package>org.janelia.it.jacs.shared.lucene</package>
                 <package>org.janelia.it.jacs.shared.lucene.data_retrievers</package>
