@@ -49,7 +49,7 @@ public class AxesActor implements GLActor
 
     private int lineBufferVertexCount = 0;
 
-    private static Logger logger = LoggerFactory.getLogger( AxesActor.class );
+    private static final Logger logger = LoggerFactory.getLogger( AxesActor.class );
 
     static {
         try {

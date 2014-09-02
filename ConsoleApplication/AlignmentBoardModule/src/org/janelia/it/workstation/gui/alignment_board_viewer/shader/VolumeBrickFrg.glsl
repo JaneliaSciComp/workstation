@@ -193,7 +193,7 @@ vec4 volumeMask(vec4 origColor)
             }
             else if ( renderMethod == 4.0 )
             {
-                float multiplier = 0.4 * intensity;
+                float multiplier = (0.4) * intensity;
                 rtnVal = vec4( origColor[ 0 ] * multiplier, origColor[ 1 ] * multiplier, origColor[ 2 ] * multiplier, intensity );
             }
             else if ( renderMethod == 3.0 )
@@ -209,7 +209,7 @@ vec4 volumeMask(vec4 origColor)
 
                 // Special case: a translucent compartment.  Here, make a translucent gray appearance.
                 // For gray mappings, fill in solid gray for anything empty, but otherwise just use original.
-                float bgrndFactor = 0.1 + (whiteBackground * 0.8);
+                float bgrndFactor = 0.1;
                 for (int i = 0; i < 3; i++)
                 {                    
                     rtnVal[i] = mappedColor[ i ] * bgrndFactor * intensity;
@@ -221,7 +221,7 @@ vec4 volumeMask(vec4 origColor)
                 // maximum intensity of any signal color.
                 for (int i = 0; i < 3; i++)
                 {
-                    rtnVal[i] = mappedColor[ i ] * intensity;
+                    rtnVal[i] = (mappedColor[ i ]) * intensity;
                 }
                 rtnVal[3] = intensity;
             }
@@ -250,6 +250,18 @@ vec4 gammaAdjust(vec4 origColor)
         pow(origColor[0], gammaAdjustment),
         pow(origColor[1], gammaAdjustment),
         pow(origColor[2], gammaAdjustment),
+        origColor[3]
+    );
+
+    return adjustedColor;
+}
+
+vec4 inverseGammaAdjust(vec4 origColor)
+{
+    vec4 adjustedColor = vec4(
+        pow(origColor[0], 1.0 - gammaAdjustment),
+        pow(origColor[1], 1.0 - gammaAdjustment),
+        pow(origColor[2], 1.0 - gammaAdjustment),
         origColor[3]
     );
 
@@ -367,37 +379,53 @@ vec4 crop(vec4 origColor)
     }
 }
 
-/*
+// From http://stackoverflow.com/questions/15095909/from-rgb-to-hsv-in-opengl-glsl
+vec3 rgb2hsv(vec3 c)
+{
+    vec4 K = vec4(0.0, -1.0 / 3.0, 2.0 / 3.0, -1.0);
+    vec4 p = mix(vec4(c.bg, K.wz), vec4(c.gb, K.xy), step(c.b, c.g));
+    vec4 q = mix(vec4(p.xyw, c.r), vec4(c.r, p.yzx), step(p.x, c.r));
+
+    float d = q.x - min(q.w, q.y);
+    float e = 1.0e-10;
+    return vec3(abs(q.z + (q.w - q.y) / (6.0 * d + e)), d / (q.x + e), q.x);
+}
+
+// From http://stackoverflow.com/questions/15095909/from-rgb-to-hsv-in-opengl-glsl
+vec3 hsv2rgb(vec3 c)
+{
+    vec4 K = vec4(1.0, 2.0 / 3.0, 1.0 / 3.0, 3.0);
+    vec3 p = abs(fract(c.xxx + K.xyz) * 6.0 - K.www);
+    return c.z * mix(K.xxx, clamp(p - K.xxx, 0.0, 1.0), c.y);
+}
+
 vec4 adjustForBgrnd(vec4 origColor)
 {    
-    if ( whiteBackground == 1 )
-    {
-        // Based on LUMA conversion: Y=0.33R + 0.5G + 0.16B, and
-        // subtracting each multiplier by 1.
-        if ( origColor.r == 1.0 && origColor.g == 1.0 && origColor.b == 1.0 )
-        {
-            return origColor;
-        }
-        return vec4(
-            clamp( (0.67 * origColor.r), 0.0, 1.0 ),
-            origColor.g,
-            clamp( (0.84 * origColor.b), 0.0, 1.0 ),
-            1.0
-        );
-    }
-    else
+    if ( origColor.r == 1.0 && origColor.g == 1.0 && origColor.b == 1.0 )
     {
         return origColor;
     }
+
+    vec3 hsv = rgb2hsv( origColor.rgb );
+    hsv[ 2 ] = 1.0 - hsv[ 2 ];
+    vec3 backVert = hsv2rgb( hsv );
+    return vec4( backVert, 1.0 );
 }
-*/
 
 void main()
 {
-    vec4 origColor = texture3D(signalTexture, gl_TexCoord[0].xyz);
-    vec4 maskedColor = volumeMask(origColor);
-    vec4 gammaAdjustedColor = gammaAdjust(maskedColor);
-    gl_FragColor = crop(gammaAdjustedColor);
-//    gl_FragColor = adjustForBgrnd(cropColor);
+    if ( whiteBackground == 1 ) {
+        vec4 origColor = texture3D(signalTexture, gl_TexCoord[0].xyz);
+        vec4 maskedColor = volumeMask(origColor);
+        vec4 backlitColor = adjustForBgrnd(maskedColor);
+        vec4 gammaAdjustedColor = gammaAdjust(backlitColor);
+        gl_FragColor = crop(gammaAdjustedColor);
+    }
+    else {
+        vec4 origColor = texture3D(signalTexture, gl_TexCoord[0].xyz);
+        vec4 maskedColor = volumeMask(origColor);
+        vec4 gammaAdjustedColor = gammaAdjust(maskedColor);
+        gl_FragColor = crop(gammaAdjustedColor);
+    }
 }
 
