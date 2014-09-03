@@ -3,6 +3,8 @@ package org.janelia.it.workstation.api.facade.concrete_facade.ejb;
 import org.janelia.it.workstation.gui.framework.session_mgr.SessionModel;
 import org.janelia.it.workstation.shared.util.ConsoleProperties;
 import org.janelia.it.jacs.compute.api.*;
+import org.janelia.it.jacs.compute.api.GeometricSearchBeanRemote;
+import org.janelia.it.jacs.compute.api.EntityBeanRemote;
 import org.janelia.it.jacs.shared.utils.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -30,6 +32,7 @@ public class EJBFactory {
     private static final String REMOTE_GENOME_CONTEXT_JNDI_NAME = ConsoleProperties.getInstance().getProperty("remote.genome.context.jndi.name");
     private static final String REMOTE_JOB_CONTROL_JNDI_NAME = ConsoleProperties.getInstance().getProperty("remote.job.control.jndi.name");
     private static final String REMOTE_TILED_MICROSCOPE_JNDI_NAME = ConsoleProperties.getInstance().getProperty("remote.tiled.microscope.jndi.name");
+    private static final String REMOTE_GEOMETRIC_SEARCH_JNDI_NAME = ConsoleProperties.getInstance().getProperty("remote.geometric_search.jndi.name");
 
     private static Properties icInteractiveServerProperties = new Properties();
     private static Properties icPipelineServerProperties = new Properties();
@@ -168,6 +171,10 @@ public class EJBFactory {
 
     public static TiledMicroscopeBeanRemote getRemoteTiledMicroscopeBean() {
         return (TiledMicroscopeBeanRemote) getRemoteInterface(REMOTE_TILED_MICROSCOPE_JNDI_NAME);
+    }
+
+    public static GeometricSearchBeanRemote getRemoteGeometricSearchBean() {
+        return (GeometricSearchBeanRemote) getRemoteInterface(REMOTE_GEOMETRIC_SEARCH_JNDI_NAME);
     }
 
 

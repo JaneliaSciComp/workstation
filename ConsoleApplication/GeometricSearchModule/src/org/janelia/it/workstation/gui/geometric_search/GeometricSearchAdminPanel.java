@@ -8,6 +8,7 @@ import javax.swing.*;
 
 import org.janelia.it.jacs.shared.geometric_search.GeometricIndexManagerModel;
 
+import org.janelia.it.workstation.api.facade.concrete_facade.ejb.EJBFactory;
 import org.janelia.it.workstation.gui.framework.outline.Refreshable;
 import org.janelia.it.workstation.gui.framework.table.DynamicColumn;
 import org.janelia.it.workstation.gui.framework.table.DynamicRow;
@@ -19,7 +20,7 @@ import org.slf4j.LoggerFactory;
 
 public class GeometricSearchAdminPanel extends JPanel implements Refreshable {
 
-    private static final Logger log = LoggerFactory.getLogger(GeometricSearchAdminPanel.class);
+    private static final Logger logger = LoggerFactory.getLogger(GeometricSearchAdminPanel.class);
 
     /** How many results to load at a time */
     protected static final int PAGE_SIZE = 100;
@@ -57,9 +58,19 @@ public class GeometricSearchAdminPanel extends JPanel implements Refreshable {
                 if (column.getLabel().equals("Signature")) {
                     return model.getAbbreviatedSignature();
                 } else if (column.getLabel().equals("Start")) {
-                    return new Date(model.getStartTime()).toString();
+                    Long startTime=model.getStartTime();
+                    if (startTime!=null) {
+                        return new Date(model.getStartTime()).toString();
+                    } else {
+                        return "-";
+                    }
                 } else if (column.getLabel().equals("End")) {
-                    return new Date(model.getEndTime()).toString();
+                    Long endTime=model.getEndTime();
+                    if (endTime!=null) {
+                        return new Date(model.getEndTime()).toString();
+                    } else {
+                        return "-";
+                    }
                 } else if (column.getLabel().equals("Total")) {
                     return new Long(model.getTotalIdCount()).toString();
                 } else if (column.getLabel().equals("Successful")) {
@@ -86,9 +97,16 @@ public class GeometricSearchAdminPanel extends JPanel implements Refreshable {
 
         configureScanResultTableColumns();
 
-        List<GeometricIndexManagerModel> modelList=getDummyManagerModel();
-        for (GeometricIndexManagerModel model : modelList) {
-            scanResultTable.addRow(model);
+        List<GeometricIndexManagerModel> modelList=null;
+        try {
+            modelList=EJBFactory.getRemoteGeometricSearchBean().getManagerModel(100);
+        } catch (Exception ex) {
+            logger.error("Exception using RemoteGeometricSearchBean: " + ex.getMessage(), ex);
+        }
+        if (modelList!=null) {
+            for (GeometricIndexManagerModel model : modelList) {
+                scanResultTable.addRow(model);
+            }
         }
 
         scanResultTable.setMaxColWidth(80);
