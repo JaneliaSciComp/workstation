@@ -91,7 +91,7 @@ public class V3dMaskFileLoader extends TextureDataBuilder implements VolumeFileL
 
     /**
      * This method will read in all bytes from the slice stream into a 3-D array. It will then "down-sample" those
-     * using a frequency-of-occurence algorithm, into some fraction of the original size, of cells.
+     * using a frequency-of-occurrence algorithm, into some fraction of the original size, of cells.
      *
      * @param sliceStream source of input data.
      * @return set of all distinct label values found in all cells.

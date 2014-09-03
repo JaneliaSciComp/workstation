@@ -71,7 +71,7 @@ public class DownSampler {
 
     /**
      * This method will "down-sample" the 3D (times pixel bytes) volume to a manageable size
-     * using a frequency-of-occurence algorithm, into some fraction of the original size, of cells.
+     * using a frequency-of-occurrence algorithm, into some fraction of the original size, of cells.
      *
      * @return set of all distinct label values found in all cells.
      */
