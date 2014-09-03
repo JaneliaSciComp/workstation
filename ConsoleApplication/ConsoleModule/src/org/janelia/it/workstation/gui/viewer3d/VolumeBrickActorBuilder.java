@@ -1,5 +1,6 @@
 package org.janelia.it.workstation.gui.viewer3d;
 
+import org.janelia.it.workstation.gui.viewer3d.axes.AxesActor;
 import org.janelia.it.workstation.geom.Vec3;
 import org.janelia.it.workstation.gui.opengl.GLActor;
 import org.janelia.it.workstation.gui.viewer3d.masking.RenderMappingI;
