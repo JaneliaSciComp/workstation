@@ -45,13 +45,6 @@ class Bundle {
         return org.openide.util.NbBundle.getMessage(Bundle.class, "CTL_ImportAction");
     }
     /**
-     * @return <i>MAA Screen Search</i>
-     * @see MaaSearchAction
-     */
-    static String CTL_MaaSearchAction() {
-        return org.openide.util.NbBundle.getMessage(Bundle.class, "CTL_MaaSearchAction");
-    }
-    /**
      * @return <i>Neuron Separation Service</i>
      * @see NeuronSeparationService
      */
