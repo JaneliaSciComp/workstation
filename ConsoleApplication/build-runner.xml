@@ -62,7 +62,7 @@ of adapter.
         <ant antfile="build.xml" target="run">
             <property name="nbplatform.default.netbeans.dest.dir" value="${basedir}" />
             <property name="nbplatform.default.harness.dir" value="${basedir}/harness" />
-            <property name="run.args.extra" value="-J-Xmx16000m -J-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=5005"/>
+            <property name="run.args.extra" value="-J-Xmx16000m -J-agentlib:jdwp=transport=dt_socket,server=y,suspend=y,address=5005"/>
         </ant>
     </target>
 
