@@ -17,6 +17,7 @@ import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.workstation.gui.framework.tree.ExpansionState;
 import org.janelia.it.workstation.shared.workers.SimpleWorker;
 import org.janelia.it.jacs.model.entity.Entity;
+import org.janelia.it.jacs.model.entity.EntityConstants;
 import org.janelia.it.jacs.model.entity.EntityData;
 
 /**
@@ -176,7 +177,7 @@ public class SearchResultContextMenu extends AbstractContextMenu<Entity> {
     private List<List<Object>> getRootPaths(Entity entity, Set<Long> visited) throws Exception {
 
         List<List<Object>> rootPaths = new ArrayList<List<Object>>();
-        if (visited.contains(entity.getId())) {
+        if (!EntityConstants.TYPE_WORKSPACE.equals(entity.getEntityTypeName()) && visited.contains(entity.getId())) {
             return rootPaths;
         }
         visited.add(entity.getId());
