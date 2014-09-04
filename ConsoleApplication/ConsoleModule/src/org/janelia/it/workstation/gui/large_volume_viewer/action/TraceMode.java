@@ -452,7 +452,7 @@ implements MouseMode, KeyListener
 		case KeyEvent.VK_DELETE:
 			Anchor parentAnchor = skeletonActor.getNextParent();
 			if (parentAnchor != null) {
-				skeleton.delete(parentAnchor);
+                skeleton.deleteLinkRequest(parentAnchor);
 			}
 			break;
 		case KeyEvent.VK_LEFT:

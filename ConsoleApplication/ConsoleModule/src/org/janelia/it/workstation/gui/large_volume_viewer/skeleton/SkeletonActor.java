@@ -545,7 +545,11 @@ implements GLActor
 			pointIndices.put(i1);
 		}
 		verticesNeedCopy = true;
-		//
+
+        if (!skeleton.getAnchors().contains(getNextParent())) {
+            setNextParent(null);
+        }
+
 		skeletonActorChangedSignal.emit();
 	}
 	
