@@ -10,6 +10,7 @@ import org.janelia.it.workstation.gui.viewer3d.VolumeModel;
 import org.janelia.it.workstation.gui.viewer3d.buffering.VtxCoordBufMgr;
 import org.janelia.it.workstation.gui.viewer3d.texture.TextureDataI;
 import org.janelia.it.workstation.gui.viewer3d.texture.TextureMediator;
+import static org.janelia.it.workstation.gui.viewer3d.OpenGLUtils.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
