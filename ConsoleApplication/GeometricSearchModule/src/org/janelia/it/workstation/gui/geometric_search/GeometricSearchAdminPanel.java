@@ -4,8 +4,18 @@ import java.awt.BorderLayout;
 import java.awt.Font;
 import java.util.*;
 import java.util.concurrent.Callable;
+import java.util.concurrent.ScheduledFuture;
+import java.util.concurrent.ScheduledThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
 import javax.swing.*;
+import javax.swing.event.TableModelEvent;
+import javax.swing.event.TableModelListener;
+import javax.swing.table.DefaultTableModel;
+import javax.swing.table.TableCellRenderer;
+import javax.swing.table.TableColumnModel;
+import javax.swing.table.TableModel;
 
+import org.janelia.it.jacs.compute.api.GeometricSearchBeanRemote;
 import org.janelia.it.jacs.shared.geometric_search.GeometricIndexManagerModel;
 
 import org.janelia.it.workstation.api.facade.concrete_facade.ejb.EJBFactory;
@@ -22,6 +32,9 @@ public class GeometricSearchAdminPanel extends JPanel implements Refreshable {
 
     private static final Logger logger = LoggerFactory.getLogger(GeometricSearchAdminPanel.class);
 
+    private final ScheduledThreadPoolExecutor adminThreadPool=new ScheduledThreadPoolExecutor(1);
+    private ScheduledFuture<?> adminThreadFuture=null;
+
     /** How many results to load at a time */
     protected static final int PAGE_SIZE = 100;
 
@@ -33,7 +46,7 @@ public class GeometricSearchAdminPanel extends JPanel implements Refreshable {
     protected Font plainFont = new Font("Sans Serif", Font.PLAIN, 11);
 
     // UI Elements
-    protected final DynamicTable scanResultTable;
+    protected final ScanResultTable scanResultTable;
     protected final Map<String, DynamicColumn> scanResultColumnByName = new HashMap<String, DynamicColumn>();
 
 
@@ -45,69 +58,93 @@ public class GeometricSearchAdminPanel extends JPanel implements Refreshable {
 
     GeometricIndexManagerModel b=null;
 
+    private static class ScanResultTable extends DynamicTable {
+        private Long modelLastChangedTimestamp=new Long(0L);
+
+        public Long getModelLastChangedTimestamp() {
+            return modelLastChangedTimestamp;
+        }
+
+        public void setModelLastChangedTimestamp(Long timestamp) {
+            this.modelLastChangedTimestamp=timestamp;
+        }
+
+        @Override
+        public Object getValue(Object userObject, DynamicColumn column) {
+            GeometricIndexManagerModel model = (GeometricIndexManagerModel)userObject;
+            if (column.getLabel().equals("Signature")) {
+                return model.getAbbreviatedSignature();
+            } else if (column.getLabel().equals("Start")) {
+                Long startTime=model.getStartTime();
+                if (startTime!=null) {
+                    return new Date(model.getStartTime()).toString();
+                } else {
+                    return "-";
+                }
+            } else if (column.getLabel().equals("End")) {
+                Long endTime=model.getEndTime();
+                if (endTime!=null) {
+                    return new Date(model.getEndTime()).toString();
+                } else {
+                    return "-";
+                }
+            } else if (column.getLabel().equals("Total")) {
+                return new Long(model.getTotalIdCount()).toString();
+            } else if (column.getLabel().equals("Successful")) {
+                return new Long(model.getSuccessfulCount()).toString();
+            } else if (column.getLabel().equals("Error")) {
+                return new Long(model.getErrorCount()).toString();
+            } else if (column.getLabel().equals("Active")) {
+                return new Long(model.getActiveScannerCount()).toString();
+            } else {
+                return "-";
+            }
+        }
+        @Override
+        protected void loadMoreResults(Callable<Void> success) {
+            //performSearch(searchResults.getNumLoadedPages(), false, success);
+        }
+
+        @Override
+        protected void rowClicked(int row) {
+            if (row<0) return;
+            DynamicRow drow = getRows().get(row);
+        }
+
+        public void updateUserData(List<GeometricIndexManagerModel> newModelList) {
+
+            List<DynamicColumn> columns=getColumns();
+            List<DynamicRow> rows=getRows();
+            TableModel tableModel=getTableModel();
+
+            int i=0;
+            for (DynamicRow row : rows) {
+                Object newUserObject=newModelList.get(i);
+                int j=0;
+                for(DynamicColumn column : columns) {
+                    Object value = getValue(row.getUserObject(), column);
+                    Object newValue = getValue(newUserObject, column);
+                    if (!newValue.equals(value)) {
+                        tableModel.setValueAt(newValue, i, j);
+                    }
+                    j++;
+                }
+                i++;
+            }
+
+        }
+
+    }
+
     public GeometricSearchAdminPanel() {
         setLayout(new BorderLayout());
 
         // --------------------------------
         // Results on right
         // --------------------------------
-        scanResultTable = new DynamicTable() {
-            @Override
-            public Object getValue(Object userObject, DynamicColumn column) {
-                GeometricIndexManagerModel model = (GeometricIndexManagerModel)userObject;
-                if (column.getLabel().equals("Signature")) {
-                    return model.getAbbreviatedSignature();
-                } else if (column.getLabel().equals("Start")) {
-                    Long startTime=model.getStartTime();
-                    if (startTime!=null) {
-                        return new Date(model.getStartTime()).toString();
-                    } else {
-                        return "-";
-                    }
-                } else if (column.getLabel().equals("End")) {
-                    Long endTime=model.getEndTime();
-                    if (endTime!=null) {
-                        return new Date(model.getEndTime()).toString();
-                    } else {
-                        return "-";
-                    }
-                } else if (column.getLabel().equals("Total")) {
-                    return new Long(model.getTotalIdCount()).toString();
-                } else if (column.getLabel().equals("Successful")) {
-                    return new Long(model.getSuccessfulCount()).toString();
-                } else if (column.getLabel().equals("Error")) {
-                    return new Long(model.getErrorCount()).toString();
-                } else if (column.getLabel().equals("Active")) {
-                    return new Long(model.getActiveScannerCount()).toString();
-                } else {
-                    return "-";
-                }
-            }
-            @Override
-            protected void loadMoreResults(Callable<Void> success) {
-                //performSearch(searchResults.getNumLoadedPages(), false, success);
-            }
-
-            @Override
-            protected void rowClicked(int row) {
-                if (row<0) return;
-                DynamicRow drow = getRows().get(row);
-            }
-        };
+        scanResultTable = new ScanResultTable();
 
         configureScanResultTableColumns();
-
-        List<GeometricIndexManagerModel> modelList=null;
-        try {
-            modelList=EJBFactory.getRemoteGeometricSearchBean().getManagerModel(100);
-        } catch (Exception ex) {
-            logger.error("Exception using RemoteGeometricSearchBean: " + ex.getMessage(), ex);
-        }
-        if (modelList!=null) {
-            for (GeometricIndexManagerModel model : modelList) {
-                scanResultTable.addRow(model);
-            }
-        }
 
         scanResultTable.setMaxColWidth(80);
         scanResultTable.setMaxColWidth(600);
@@ -119,6 +156,8 @@ public class GeometricSearchAdminPanel extends JPanel implements Refreshable {
         add(scanResultTable, BorderLayout.CENTER);
 
         scanResultTable.updateTableModel();
+
+        refresh();
     }
 
     public void configureScanResultTableColumns() {
@@ -133,7 +172,10 @@ public class GeometricSearchAdminPanel extends JPanel implements Refreshable {
 
     @Override
     public void refresh() {
-        //performSearch(false, false, true);
+        if (adminThreadFuture!=null) {
+            adminThreadFuture.cancel(true);
+        }
+        adminThreadFuture = adminThreadPool.scheduleWithFixedDelay(new GeometricSearchAdminThread(scanResultTable), 0, 1000, TimeUnit.MILLISECONDS);
     }
 
     @Override
@@ -150,6 +192,9 @@ public class GeometricSearchAdminPanel extends JPanel implements Refreshable {
 //        resultsTable.removeAllRows();
 //        projectionTable.removeAllRows();
 //        projectionPane.setVisible(false);
+
+
+
     }
 
     public DynamicTable getScanResultTable() {
@@ -161,20 +206,38 @@ public class GeometricSearchAdminPanel extends JPanel implements Refreshable {
         column.setVisible(visible);
     }
 
-    public List<GeometricIndexManagerModel> getDummyManagerModel() {
-        List<GeometricIndexManagerModel> modelList=new ArrayList<>();
-        for (int i=0;i<100;i++) {
-            GeometricIndexManagerModel model=new GeometricIndexManagerModel();
-            model.setScannerSignature("Signature "+i);
-            model.setStartTime(new Date().getTime() - 100000L*i);
-            model.setEndTime(new Date().getTime() - 100000L*i + 3000);
-            model.setTotalIdCount(10000 + i);
-            model.setSuccessfulCount( (int)((10000 + i) * 0.99) );
-            model.setErrorCount( (int)((10000 + i) * 0.01) );
-            model.setActiveScannerCount(30 + i%10);
-            modelList.add(model);
+    private static class GeometricSearchAdminThread implements Runnable {
+        ScanResultTable scanResultTable;
+
+        public GeometricSearchAdminThread(ScanResultTable scanResultTable) {
+            this.scanResultTable=scanResultTable;
         }
-        return modelList;
+
+        @Override
+        public void run() {
+            GeometricSearchBeanRemote gsEJB=EJBFactory.getRemoteGeometricSearchBean();
+            List<GeometricIndexManagerModel> modelList=null;
+            try {
+                Long modelTimestamp=gsEJB.getLastModelUpdateTimestamp();
+                if (modelTimestamp>scanResultTable.getModelLastChangedTimestamp()) {
+                    scanResultTable.setModelLastChangedTimestamp(modelTimestamp);
+                    modelList = gsEJB.getManagerModel(100);
+                }
+            } catch (Exception ex) {
+                logger.error("Exception using RemoteGeometricSearchBean: " + ex.getMessage(), ex);
+            }
+            if (modelList!=null) {
+                if (modelList.size()==scanResultTable.getRows().size()) {
+                    scanResultTable.updateUserData(modelList);
+                } else {
+                    scanResultTable.removeAllRows();
+                    for (GeometricIndexManagerModel model : modelList) {
+                        scanResultTable.addRow(model);
+                    }
+                    scanResultTable.updateTableModel();
+                }
+            }
+        }
     }
 
 }
