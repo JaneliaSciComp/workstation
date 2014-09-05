@@ -823,8 +823,8 @@ public class EntityModel {
                 parent = entityCache.getIfPresent(entityData.getParentEntity().getId());
                 if (parent != null) {
                 	// This shouldn't be necessary since we're invalidating the parent, 
-                	// but it's a little more forgiving of clients that don't respond to invalidation
-                	parent.getEntityData().remove(entityData); 
+                    // but it's a little more forgiving of clients that don't respond to invalidation
+                    parent.getEntityData().remove(entityData);
                     invalidate(parent, false);
                 }
             }
@@ -955,7 +955,7 @@ public class EntityModel {
 
     /**
      * Create a new common root folder in the given workspace.
-     * 
+     *
      * @param workspaceId
      * @param folderName
      * @return canonical entity instance
@@ -966,12 +966,12 @@ public class EntityModel {
         synchronized (this) {
             commonRootEd = entityFacade.createFolderInWorkspace(workspaceId, folderName);
             putOrUpdate(commonRootEd.getChildEntity());
-            
+
             // Update in-memory workspace entity 
             Entity workspace = getEntityById(workspaceId);
             invalidate(workspace, false);
             workspace = getEntityById(workspaceId);
-            
+
             notifyEntityChanged(workspace);
         }
         return commonRootEd;
@@ -1065,13 +1065,13 @@ public class EntityModel {
                     loadLazyEntity(workspace, false);
                     Entity cachedRoot = putOrUpdate(workspace, false);
                     workspaceCache.put(workspace.getId(), cachedRoot);
-                    
+
                 }
             }
         }
         return new ArrayList<Entity>(workspaceCache.values());
     }
-    
+
     /**
      * Returns all the roots in the given workspace with the specified name.
      *
@@ -1103,17 +1103,17 @@ public class EntityModel {
         List<Entity> matching = getOwnedCommonRootsByName(workspaceId, name);
         Entity result = null;
         if (!matching.isEmpty()) {
-            if (matching.size()>1) {
-                log.warn("More than one common root with name {} in workspace {}",name,workspaceId);
+            if (matching.size() > 1) {
+                log.warn("More than one common root with name {} in workspace {}", name, workspaceId);
             }
-            result = matching.get(0);    
+            result = matching.get(0);
         }
         return result;
     }
-    
+
     /**
      * Returns the first root in the given workspace with the specified name.
-     * If no root exists, create it and then return it. This method ensures that 
+     * If no root exists, create it and then return it. This method ensures that
      * the workspace entity gets updated as well.
      *
      * @param workspaceId
@@ -1128,7 +1128,7 @@ public class EntityModel {
             result = createCommonRootFolder(workspaceId, name).getChildEntity();
         }
         else {
-            result = matching.get(0);    
+            result = matching.get(0);
         }
         return result;
     }
@@ -1168,7 +1168,7 @@ public class EntityModel {
 
     /**
      * Create a new Alignment board and cache it.
-     * 
+     *
      * @param boardName Name of the Alignment Board
      * @return canonical entity instance
      * @throws Exception
@@ -1178,16 +1178,16 @@ public class EntityModel {
 
             Entity alignmentBoardFolder = getOrCreateCommonRootByName(workspaceId, EntityConstants.NAME_ALIGNMENT_BOARDS);
             Entity boardEntity = annotationFacade.createAlignmentBoard(alignmentBoardName, alignmentSpace, opticalRes, pixelRes);
-            
+
             // Reload the alignment board folder to get the new board
             alignmentBoardFolder = reloadById(alignmentBoardFolder.getId());
             loadLazyEntity(alignmentBoardFolder, false);
-            
+
             RootedEntity abRootedEntity = new RootedEntity(alignmentBoardFolder);
-            
+
             EntityData childEd = EntityUtils.findChildEntityDataWithChildId(alignmentBoardFolder, boardEntity.getId());
             if (childEd == null) {
-                throw new IllegalStateException("Could not retrieve the new alignment board: "+boardEntity.getId());
+                throw new IllegalStateException("Could not retrieve the new alignment board: " + boardEntity.getId());
             }
 
             return abRootedEntity.getChild(childEd);

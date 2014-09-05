@@ -39,6 +39,17 @@ import javax.swing.SwingUtilities;
 import javax.swing.tree.DefaultMutableTreeNode;
 import javax.swing.tree.DefaultTreeModel;
 
+import org.janelia.it.jacs.model.entity.Entity;
+import org.janelia.it.jacs.model.entity.EntityConstants;
+import org.janelia.it.jacs.model.entity.EntityData;
+import org.janelia.it.jacs.model.entity.ForbiddenEntity;
+import org.janelia.it.jacs.model.ontology.OntologyAnnotation;
+import org.janelia.it.jacs.model.ontology.OntologyElement;
+import org.janelia.it.jacs.model.ontology.types.Category;
+import org.janelia.it.jacs.model.ontology.types.Enum;
+import org.janelia.it.jacs.model.ontology.types.EnumText;
+import org.janelia.it.jacs.model.ontology.types.OntologyElementType;
+import org.janelia.it.jacs.shared.utils.EntityUtils;
 import org.janelia.it.workstation.api.entity_model.access.ModelMgrAdapter;
 import org.janelia.it.workstation.api.entity_model.events.EntityChangeEvent;
 import org.janelia.it.workstation.api.entity_model.events.EntityCreateEvent;
@@ -46,11 +57,13 @@ import org.janelia.it.workstation.api.entity_model.events.EntityInvalidationEven
 import org.janelia.it.workstation.api.entity_model.events.EntityRemoveEvent;
 import org.janelia.it.workstation.api.entity_model.management.EntitySelectionModel;
 import org.janelia.it.workstation.api.entity_model.management.ModelMgr;
+import org.janelia.it.workstation.api.entity_model.management.ModelMgrUtils;
 import org.janelia.it.workstation.gui.dialogs.EntityDetailsDialog;
 import org.janelia.it.workstation.gui.dialogs.KeyBindDialog;
 import org.janelia.it.workstation.gui.framework.actions.Action;
 import org.janelia.it.workstation.gui.framework.actions.AnnotateAction;
 import org.janelia.it.workstation.gui.framework.actions.CreateOntologyAction;
+import org.janelia.it.workstation.gui.framework.actions.ImportOWLOntologyAction;
 import org.janelia.it.workstation.gui.framework.actions.NavigateToNodeAction;
 import org.janelia.it.workstation.gui.framework.actions.OntologyElementAction;
 import org.janelia.it.workstation.gui.framework.keybind.KeyboardShortcut;
@@ -64,22 +77,10 @@ import org.janelia.it.workstation.gui.util.MouseForwarder;
 import org.janelia.it.workstation.model.entity.RootedEntity;
 import org.janelia.it.workstation.shared.util.ConcurrentUtils;
 import org.janelia.it.workstation.shared.workers.SimpleWorker;
-import org.janelia.it.jacs.model.entity.Entity;
-import org.janelia.it.jacs.model.entity.EntityConstants;
-import org.janelia.it.jacs.model.entity.EntityData;
-import org.janelia.it.jacs.model.entity.ForbiddenEntity;
-import org.janelia.it.jacs.model.ontology.OntologyAnnotation;
-import org.janelia.it.jacs.model.ontology.OntologyElement;
-import org.janelia.it.jacs.model.ontology.types.Category;
-import org.janelia.it.jacs.model.ontology.types.Enum;
-import org.janelia.it.jacs.model.ontology.types.EnumText;
-import org.janelia.it.jacs.model.ontology.types.OntologyElementType;
-import org.janelia.it.jacs.shared.utils.EntityUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.common.eventbus.Subscribe;
-import org.janelia.it.workstation.api.entity_model.management.ModelMgrUtils;
 
 /**
  * The right-hand ontology panel which displays all the ontologies that a user has access to.
@@ -195,9 +196,10 @@ public abstract class OntologyOutline extends EntityTree implements Refreshable,
             return;
         }
 
-        log.debug("Init outline with {} ontology roots", entityRootList.size());
-
         Long selectedId = ModelMgr.getModelMgr().getCurrentOntologyId();
+
+        log.debug("Init outline with {} ontology roots. Selected id: {}", entityRootList.size(), selectedId);
+        
         Entity selectedEntityRoot = null;
 
         this.entityRootList = new ArrayList<Entity>();
@@ -307,7 +309,7 @@ public abstract class OntologyOutline extends EntityTree implements Refreshable,
     public void showOntologyTree(final Entity ontologyTree) {
 
         this.root = ontologyTree;
-        log.debug("Loaded ontology {}", root.getName());
+        log.debug("Showing ontology tree {}", root.getName());
 
         EntityData rootEd = new EntityData();
         rootEd.setChildEntity(root);
@@ -406,6 +408,16 @@ public abstract class OntologyOutline extends EntityTree implements Refreshable,
                         }
                     });
                     ontologyListMenu.add(addMenuItem);
+
+                    JMenuItem loadOwlItem = new JMenuItem("Load OWL File...");
+                    loadOwlItem.setIcon(Icons.getIcon("folder_add.png"));
+                    loadOwlItem.addActionListener(new ActionListener() {
+                        public void actionPerformed(ActionEvent e) {
+                            Action action = new ImportOWLOntologyAction();
+                            action.doAction();
+                        }
+                    });
+                    ontologyListMenu.add(loadOwlItem);
 
                     ontologyListMenu.show(ontologyButton, 0, ontologyButton.getHeight());
                 }
@@ -735,6 +747,7 @@ public abstract class OntologyOutline extends EntityTree implements Refreshable,
                     ModelMgr.getModelMgr().invalidateCache();
                 }
                 rootList = loadRootList();
+                log.debug("Loaded {} ontology roots", rootList.size());
             }
 
             @Override
@@ -754,10 +767,15 @@ public abstract class OntologyOutline extends EntityTree implements Refreshable,
                                     public Void call() throws Exception {
                                         showTree();
                                         executeCallBacks();
-                                        log.debug("Tree refresh complete");
+                                        log.debug("Tree refresh complete and expansion state restored");
                                         return null;
                                     }
                                 });
+                            }
+                            else {
+                                showTree();
+                                executeCallBacks();
+                                log.debug("Tree refresh complete");
                             }
 
                             return null;
