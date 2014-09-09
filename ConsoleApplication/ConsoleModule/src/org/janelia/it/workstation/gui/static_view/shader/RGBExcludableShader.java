@@ -4,13 +4,13 @@
  */
 package org.janelia.it.workstation.gui.static_view.shader;
 
-import org.janelia.it.workstation.gui.viewer3d.shader.AbstractShader;
 import org.janelia.it.workstation.gui.viewer3d.texture.TextureMediator;
 
 import javax.media.opengl.GL2;
 import java.nio.IntBuffer;
+import org.janelia.it.workstation.gui.viewer3d.shader.SignalShader;
 
-public class RGBExcludableShader extends AbstractShader {
+public class RGBExcludableShader extends SignalShader {
     // Shader GLSL source is expected to be in the same package as this class.  Otherwise,
     // a prefix of the relative path could be given, as in "shader_sub_pkg/AShader.glsl"
     public static final String VERTEX_SHADER = "RGBExcludableVtx.glsl";
@@ -72,6 +72,7 @@ public class RGBExcludableShader extends AbstractShader {
      *
      * @param signalTextureMediator intermediator for signal.
      */
+    @Override
     public void setSignalTextureMediator(TextureMediator signalTextureMediator) {
         this.signalTextureMediator = signalTextureMediator;
     }
@@ -101,7 +102,7 @@ public class RGBExcludableShader extends AbstractShader {
         // Need to push uniform for the filtering parameter.
         int colorMaskLoc = gl.glGetUniformLocation(shaderProgram, "colorMask");
         if ( colorMaskLoc == -1 ) {
-            throw new RuntimeException( "Failed to find color mask uniform location." );
+            throw new RuntimeException( "Failed to find color mask uniform location.  Shader=" + shaderProgram );
         }
 
         float[] localrgb = null;

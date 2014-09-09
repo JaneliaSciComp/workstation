@@ -27,6 +27,7 @@ import java.util.HashMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
+import javax.media.opengl.GL2;
 
 /**
  * Created with IntelliJ IDEA.
@@ -42,6 +43,7 @@ public class ViewTileManagerVolumeSource implements VolumeSource {
     public static final int BRICK_WIDTH = 512;
     public static final int BRICK_HEIGHT = 512;
     public static final int BRICK_DEPTH = 512;
+    public static final int BRICK_CUBIC_DIMENSION = 512;
     private Camera3d camera;
     private Viewport viewport;
     private CoordinateAxis sliceAxis;
@@ -96,13 +98,10 @@ public class ViewTileManagerVolumeSource implements VolumeSource {
         TextureDataI textureDataFor3D = null;
         TileFormat tileFormat = dataAdapter.getTileFormat();
 
-        logger.info("Absolute start/end Y are {}..{}.", absoluteReqVolStartY, absoluteReqVolEndY );
-
         // NOTE: need to take zoom level into account for the expected return values.
         int zoomFactor = (int)Math.pow( 2.0, tileFormat.zoomLevelForCameraZoom( camera.getPixelsPerSceneUnit()) );
-        // NOTE: camera has micrometer units.  TileIndex requires voxel units.  Hence need a conversion for x,y
-        int startTileNumX = (int)Math.floor((camera.getFocus().getX() - BRICK_WIDTH/2/zoomFactor) / tileFormat.getVoxelMicrometers()[ 0 ] / tileFormat.getTileSize()[ 0 ] );
-        int startTileNumY = (int)Math.floor((camera.getFocus().getY() - BRICK_HEIGHT/2/zoomFactor) / tileFormat.getVoxelMicrometers()[ 1 ] / tileFormat.getTileSize()[ 1 ] );
+        int startTileNumX = getTileNum(zoomFactor, tileFormat, 0);
+        int startTileNumY = getTileNum(zoomFactor, tileFormat, 1);
         int startTileNumZ = (int)Math.floor((camera.getFocus().getZ()) / tileFormat.getVoxelMicrometers()[ 2 ] / tileFormat.getTileSize()[ 2 ] );
         logger.info("Starting tile coords=(" + startTileNumX + "," + startTileNumY + "," + startTileNumZ + ")");
 
@@ -113,18 +112,18 @@ public class ViewTileManagerVolumeSource implements VolumeSource {
         startTileNumX = Math.max( 0, startTileNumX );
         startTileNumY = Math.max( 0, startTileNumY );
         startTileNumZ = Math.max( 0, startTileNumZ );
-        int endTileNumX = (int)Math.ceil( startTileNumX + ( (BRICK_WIDTH / 2 - 1) / tileFormat.getVoxelMicrometers()[ 0 ] / tileFormat.getTileSize()[ 0 ] ) );
-        int endTileNumY = (int)Math.ceil( startTileNumY + ( (BRICK_HEIGHT / 2 - 1) / tileFormat.getVoxelMicrometers()[ 1 ] / tileFormat.getTileSize()[ 1 ] ) );
+        int endTileNumX = getEndTileNum(zoomFactor, startTileNumX, tileFormat, 0);
+        int endTileNumY = getEndTileNum(zoomFactor, startTileNumY, tileFormat, 1);
         // Subtracting 1 from ending-tile Z since (N-m)..(N+m) inclusive, covers 2m+1 distinct values.
         int endTileNumZ = (startTileNumZ + BRICK_DEPTH / (int)tileFormat.getVoxelMicrometers()[ 2 ] / tileFormat.getTileSize()[ 2 ]) - 1;
         logger.info("Ending tile coords=(" + endTileNumX + "," + endTileNumY + "," + endTileNumZ + ")");
 
         absoluteReqVolStartX = zoomFactor *
-                (int) Math.floor((camera.getFocus().getX() - BRICK_WIDTH/2/zoomFactor) / tileFormat.getVoxelMicrometers()[ 0 ]);
+                (int) Math.floor((camera.getFocus().getX() - applyZoomFactor(zoomFactor)) / tileFormat.getVoxelMicrometers()[ 0 ]);
         absoluteReqVolStartY = zoomFactor *
-                (int) Math.floor((camera.getFocus().getY() - BRICK_HEIGHT/2/zoomFactor) / tileFormat.getVoxelMicrometers()[ 1 ]);
+                (int) Math.floor((camera.getFocus().getY() - applyZoomFactor(zoomFactor)) / tileFormat.getVoxelMicrometers()[ 1 ]);
         absoluteReqVolStartZ = zoomFactor *
-                (int) Math.floor((camera.getFocus().getZ() - BRICK_DEPTH/2/zoomFactor) / tileFormat.getVoxelMicrometers()[ 2 ]);
+                (int) Math.floor((camera.getFocus().getZ() - applyZoomFactor(zoomFactor)) / tileFormat.getVoxelMicrometers()[ 2 ]);
 
         if ( absoluteReqVolStartZ < 0 )
             absoluteReqVolStartZ = 0;
@@ -132,6 +131,10 @@ public class ViewTileManagerVolumeSource implements VolumeSource {
         absoluteReqVolEndX = absoluteReqVolStartX + BRICK_WIDTH - 1;
         absoluteReqVolEndY = absoluteReqVolStartY + BRICK_HEIGHT - 1;
         absoluteReqVolEndZ = absoluteReqVolStartZ + BRICK_DEPTH - 1;
+
+        logger.info("Absolute start/end X are {}..{}.", absoluteReqVolStartX, absoluteReqVolEndX );
+        logger.info("Absolute start/end Y are {}..{}.", absoluteReqVolStartY, absoluteReqVolEndY );
+        logger.info("Absolute start/end Z are {}..{}.", absoluteReqVolStartZ, absoluteReqVolEndY );
 
         TileIndexFinder indexFinder = new TileIndexFinder( tileFormat, camera, sliceAxis );
         Collection<TileIndex> indices = indexFinder.executeForTileCoords(
@@ -161,9 +164,10 @@ public class ViewTileManagerVolumeSource implements VolumeSource {
 
         for ( TileIndex index: dataCollection.keySet() ) {
             TextureData2dGL data = dataCollection.get( index );
-            stdByteCount = setAndStandardize( stdByteCount, data.getBitDepth()/8, "Byte Count" );
-            stdChannelCount = setAndStandardize( stdChannelCount, data.getChannelCount(), "Channel Count" );
             stdInternalFormat = setAndStandardize( stdInternalFormat, data.getInternalFormat(), "Internal Format" );
+            int typeMultiplier = stdInternalFormat == GL2.GL_LUMINANCE16_ALPHA16 ? 2 : 1;
+            stdByteCount = setAndStandardize( stdByteCount, data.getBitDepth()/8 * typeMultiplier, "Byte Count" );
+            stdChannelCount = setAndStandardize( stdChannelCount, data.getChannelCount(), "Channel Count" );
             stdType = setAndStandardize( stdType, data.getType(), "Type" );
 
             if ( dataVolume == null ) {
@@ -186,6 +190,18 @@ public class ViewTileManagerVolumeSource implements VolumeSource {
         sliceRecorder.close(); //***TEMP***
 
         volumeAcceptor.accept( textureDataFor3D );
+    }
+
+    private int getEndTileNum(int zoomFactor, int startTileNum, TileFormat tileFormat, int index) {
+        return (int)Math.ceil( startTileNum + ( ((applyZoomFactor(zoomFactor)) - 1) / tileFormat.getVoxelMicrometers()[ index ] / tileFormat.getTileSize()[ index ] ) );
+    }
+
+    private int applyZoomFactor(int zoomFactor) {
+        return BRICK_CUBIC_DIMENSION / (int)Math.pow(2.0, zoomFactor);
+    }
+
+    private int getTileNum(int zoomFactor, TileFormat tileFormat, int axis) {
+        return (int)Math.floor((camera.getFocus().get(axis) - applyZoomFactor(zoomFactor)) / tileFormat.getVoxelMicrometers()[ axis ] / tileFormat.getTileSize()[ axis ] );
     }
 
     private void acceptTileData(ByteBuffer pixels, TileIndex tileIndex, int byteCount, int channelCount) {

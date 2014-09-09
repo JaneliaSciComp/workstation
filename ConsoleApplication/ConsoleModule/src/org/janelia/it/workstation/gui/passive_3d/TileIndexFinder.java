@@ -8,6 +8,8 @@ import org.janelia.it.workstation.gui.large_volume_viewer.TileIndex;
 
 import java.util.Collection;
 import java.util.HashSet;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Created with IntelliJ IDEA.
@@ -19,9 +21,11 @@ import java.util.HashSet;
  */
 public class TileIndexFinder {
 
-    private TileFormat format;
-    private Camera3d camera3d;
-    private CoordinateAxis sliceAxis;
+    private final TileFormat format;
+    private final Camera3d camera3d;
+    private final CoordinateAxis sliceAxis;
+    
+    private static final Logger logger = LoggerFactory.getLogger( TileIndexFinder.class );
 
     public TileIndexFinder(TileFormat format, Camera3d camera3d, CoordinateAxis sliceAxis) {
         this.format = format;
@@ -33,7 +37,7 @@ public class TileIndexFinder {
             int startTileNumX, int startTileNumY, int startTileNumZ, int endTileNumX, int endTileNumY, int endTileNumZ
     ) {
 
-        Collection<Vec3> tileCoords = new HashSet<Vec3>();
+        Collection<Vec3> tileCoords = new HashSet<>();
         for ( int i = startTileNumX; i <= endTileNumX; i++ ) {
             for ( int j = startTileNumY; j <= endTileNumY; j++ ) {
                 for ( int k = startTileNumZ; k <= endTileNumZ; k++ ) {
@@ -45,7 +49,7 @@ public class TileIndexFinder {
         // Note: using set for collection, so that duplicates may be automatically avoided.  The current
         // "exploring" algorithm for finding slices hits every voxel for its contribution, and this will
         // be prone to duplication, as a tile covers far more than a single voxel.
-        Collection<TileIndex> sliceIndexSet = new HashSet<TileIndex>();
+        Collection<TileIndex> sliceIndexSet = new HashSet<>();
         addSliceTileIndices( sliceIndexSet, tileCoords );
         return sliceIndexSet;
     }
@@ -64,7 +68,7 @@ public class TileIndexFinder {
             ); //xyz zoom maxzoom syle coordaxis
             rtnVal.add( nextTileInx );
             Vec3[] corners = format.cornersForTileIndex( nextTileInx );
-            System.out.println("Corners found for " + nextTileInx + " are " + corners[ 0 ] + " and " + corners[ 3 ]);
+            logger.info("Corners found for " + nextTileInx + " are " + corners[ 0 ] + " and " + corners[ 3 ]);
         }
     }
 

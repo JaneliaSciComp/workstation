@@ -148,10 +148,12 @@ public class TextureMediator {
 
             } catch ( Exception exGlTexImage ) {
                 logger.error(
-                        "Exception reported during texture upload of NAME:OFFS={}, FORMAT:COMP-ORDER:MULTIPLIER={}",
+                        "Exception reported during texture upload of NAME:OFFS={}, FORMAT:COMP-ORDER:MULTIPLIER:VC-TYPE={}",
                         this.textureName + ":" + this.getTextureOffset(),
-                        this.getInternalFormat() + ":" + this.getVoxelComponentOrder() + ":" +
-                        this.getStorageFormatMultiplier()
+                        getConstantName(this.getInternalFormat()) + ":" +
+                        getConstantName(this.getVoxelComponentOrder()) + ":" +
+                        this.getStorageFormatMultiplier() + ":" + 
+                        getConstantName(this.getVoxelComponentType())
                 );
                 exGlTexImage.printStackTrace();
             }
@@ -236,8 +238,9 @@ public class TextureMediator {
                 logger.error(
                         "Exception reported during texture upload of NAME:OFFS={}, FORMAT:COMP-ORDER:MULTIPLIER={}",
                         this.textureName + ":" + this.getTextureOffset(),
-                        this.getInternalFormat() + ":" + this.getVoxelComponentOrder() + ":" +
-                                this.getStorageFormatMultiplier()
+                        getConstantName(this.getInternalFormat()) + ":" +
+                        getConstantName(this.getVoxelComponentOrder()) + ":" +
+                        getConstantName(this.getStorageFormatMultiplier())
                 );
                 exGlTexImage.printStackTrace();
             }
@@ -554,9 +557,14 @@ public class TextureMediator {
             glConstantToName.put( GL2.GL_SHORT, "GL2.GL_SHORT" );
             glConstantToName.put( GL2.GL_UNSIGNED_BYTE, "GL2.GL_UNSIGNED_BYTE" );
             glConstantToName.put( GL2.GL_UNSIGNED_SHORT, "GL2.GL_UNSIGNED_SHORT" );
+            glConstantToName.put( GL2.GL_LUMINANCE16_ALPHA16, "GL2.GL_LUMINANCE16_ALPHA16");
 
             glConstantToName.put( GL2.GL_BGRA, "GL2.GL_BGRA" );
             glConstantToName.put( GL2.GL_RGBA16, "GL2.GL_RGBA16");
+
+            glConstantToName.put( javax.media.opengl.GL2GL3.GL_BGRA, "GL2GL3.GL_BGRA" );
+            glConstantToName.put( javax.media.opengl.GL2GL3.GL_RGB, "GL2GL3.GL_RGB" );
+            glConstantToName.put( javax.media.opengl.GL2GL3.GL_UNSIGNED_SHORT, "GL2GL3.GL_UNSIGNED_SHORT" );
 
         }
         rtnVal = glConstantToName.get( openGlEnumConstant );
