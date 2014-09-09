@@ -29,7 +29,6 @@ public class RGBExcludableVolumeBrick extends AbstractVolumeBrick
      */
     // OpenGL state
     private boolean bSignalTextureNeedsUpload = false;
-    private boolean bBuffersNeedUpload = true;
 
     private boolean bIsInitialized;
 
@@ -92,12 +91,5 @@ public class RGBExcludableVolumeBrick extends AbstractVolumeBrick
         gl.glDisable( GL2.GL_TEXTURE_3D );
         gl.glDisable( GL2.GL_BLEND );
 	}
-
-    //---------------------------------END: IMPLEMENT VolumeDataAcceptor
-
-    /** Call this when the brick is to be re-shown after an absense. */
-    public void refresh() {
-        bSignalTextureNeedsUpload = true;
-    }
 
 }

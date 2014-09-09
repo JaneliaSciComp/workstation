@@ -151,6 +151,7 @@ public abstract class AbstractVolumeBrick implements VolumeBrickI
 	 */
 	public void displayVolumeSlices(GL2 gl) {
 
+        reportError(gl, "Display Volume Slices, on entry.");
 		// Get the view vector, so we can choose the slice direction,
 		// along one of the three principal axes(X,Y,Z), and either forward
 		// or backward.

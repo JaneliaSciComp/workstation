@@ -307,6 +307,7 @@ public class TextureMediator {
     }
 
     public void setupTexture( GL2 gl ) {
+        reportError("Entering setupTexture", gl, textureName);
         logger.debug( "Texture Data for {} has interp of {}.", textureData.getFilename(),
                 getConstantName( textureData.getInterpolationMethod() ) );
 

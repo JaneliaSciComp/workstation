@@ -7,7 +7,6 @@
 package org.janelia.it.workstation.gui.viewer3d;
 
 import javax.media.opengl.GL2;
-import javax.media.opengl.GLAutoDrawable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -24,6 +23,7 @@ public class OpenGLUtils {
         if ( errorNum > 0 ) {
             logger.error( "Error " + errorNum + "/x0" + hexErrorNum + " during " + operation +
                           " on texture (by 'name' id) " + textureName );
+            new Exception("reportError").printStackTrace();
         }
     }
     
