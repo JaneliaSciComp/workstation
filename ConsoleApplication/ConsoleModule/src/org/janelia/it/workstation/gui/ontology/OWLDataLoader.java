@@ -24,6 +24,7 @@ import java.io.PrintStream;
 import java.net.UnknownHostException;
 import java.util.Map;
 import java.util.Set;
+import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
 
 /**
  * Parses OWL files and loads them into the Entity model as ontologies.
@@ -134,7 +135,7 @@ public class OWLDataLoader extends SimpleWorker {
 
     @Override
     protected void hadError(Throwable error) {
-        error.printStackTrace();
+        SessionMgr.getSessionMgr().handleException(error);
     }
 
     /**

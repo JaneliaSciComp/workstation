@@ -2,7 +2,7 @@
  * This class will allow dynamic selection of colors to present in the renderer, by forwarding parameters changed
  * programmatically, onward into the shader-language implementations.
  */
-package org.janelia.it.workstation.gui.static_view.shader;
+package org.janelia.it.workstation.gui.passive_3d.shader;
 
 import org.janelia.it.workstation.gui.viewer3d.texture.TextureMediator;
 
@@ -10,11 +10,11 @@ import javax.media.opengl.GL2;
 import java.nio.IntBuffer;
 import org.janelia.it.workstation.gui.viewer3d.shader.SignalShader;
 
-public class RGBExcludableShader extends SignalShader {
+public class SnapshotShader extends SignalShader {
     // Shader GLSL source is expected to be in the same package as this class.  Otherwise,
     // a prefix of the relative path could be given, as in "shader_sub_pkg/AShader.glsl"
-    public static final String VERTEX_SHADER = "RGBExcludableVtx.glsl";
-    public static final String FRAGMENT_SHADER = "RGBExcludableFrg.glsl";
+    public static final String VERTEX_SHADER = "SnapshotVtx.glsl";
+    public static final String FRAGMENT_SHADER = "SnapshotFrg.glsl";
 
     private static final float[] SHOW_ALL  = new float[] {
         1.0f, 1.0f, 1.0f
@@ -26,6 +26,12 @@ public class RGBExcludableShader extends SignalShader {
     private int vertexAttribLoc = -1;
     private int texCoordAttribLoc = -1;
 
+    private int channelGammaLoc;
+    private int channelMinLoc;
+    private int channelColorLoc;
+    private int channelScaleLoc;
+    private int channelCountLoc;
+    
     private TextureMediator signalTextureMediator;
 
     @Override
@@ -46,11 +52,16 @@ public class RGBExcludableShader extends SignalShader {
         int shaderProgram = getShaderProgram();
 
         gl.glUseProgram( shaderProgram );
-        pushFilterUniform( gl, shaderProgram );
         setTextureUniforms( gl );
 
-        vertexAttribLoc = gl.glGetAttribLocation( shaderProgram, "vertexAttribute" );
+        vertexAttribLoc   = gl.glGetAttribLocation( shaderProgram, "vertexAttribute" );
         texCoordAttribLoc = gl.glGetAttribLocation( shaderProgram, "texCoordAttribute" );
+
+        channelGammaLoc   = gl.glGetUniformLocation( shaderProgram, "channel_gamma" );
+        channelMinLoc     = gl.glGetUniformLocation( shaderProgram, "channel_min" );
+        channelColorLoc   = gl.glGetUniformLocation( shaderProgram, "channel_color" );
+        channelScaleLoc   = gl.glGetUniformLocation( shaderProgram, "channel_scale" );
+        channelCountLoc   = gl.glGetUniformLocation( shaderProgram, "channel_count" );
     }
 
     public int getVertexAttribLoc() {
@@ -77,12 +88,30 @@ public class RGBExcludableShader extends SignalShader {
         this.signalTextureMediator = signalTextureMediator;
     }
 
-    public void setColorMask( float[] rgb ) {
-        this.rgb = rgb;
-    }
-
+    @Override
     public void unload(GL2 gl) {
         gl.glUseProgram(previousShader);
+    }
+    
+    //------------------------------Unique-to-shader setters
+    public void setChannelGamma( GL2 gl, float[] channelGamma ) {
+        gl.glUniform4fv( channelGammaLoc, 1, channelGamma, 0 );
+    }
+    
+    public void setChannelMin( GL2 gl, float[] channelMin ) {
+        gl.glUniform4fv( channelMinLoc, 1, channelMin, 0 );
+    }
+    
+    public void setChannelColor( GL2 gl, float[] channelColor ) {
+        gl.glUniform3fv( channelColorLoc, 4, channelColor, 0 );
+    }
+    
+    public void setChannelScale( GL2 gl, float[] channelScale ) {
+        gl.glUniform4fv( channelScaleLoc, 1, channelScale, 0 );
+    }
+    
+    public void setChannelCount( GL2 gl, int count ) {
+        gl.glUniform1i( channelCountLoc, count );
     }
 
     private void setTextureUniforms(GL2 gl) {
@@ -98,28 +127,4 @@ public class RGBExcludableShader extends SignalShader {
         // This did not work.  GL.GL_TEXTURE1 ); //textureIds[ 1 ] );
     }
 
-    private void pushFilterUniform(GL2 gl, int shaderProgram) {
-        // Need to push uniform for the filtering parameter.
-        int colorMaskLoc = gl.glGetUniformLocation(shaderProgram, "colorMask");
-        if ( colorMaskLoc == -1 ) {
-            throw new RuntimeException( "Failed to find color mask uniform location.  Shader=" + shaderProgram );
-        }
-
-        float[] localrgb = null;
-        if ( rgb == null ) {
-            localrgb = SHOW_ALL;
-        }
-        else {
-            localrgb = rgb;
-        }
-
-        gl.glUniform4f(
-                colorMaskLoc,
-                localrgb[0],
-                localrgb[1],
-                localrgb[2],
-                1.0f
-        );
-
-    }
 }

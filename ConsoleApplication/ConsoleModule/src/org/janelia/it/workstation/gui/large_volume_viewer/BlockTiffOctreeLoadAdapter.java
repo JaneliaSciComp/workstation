@@ -164,7 +164,7 @@ extends AbstractTextureLoadAdapter
 					indexOk = false;
 			}
 			if (! indexOk) {
-				System.out.println("Bad tile index "+tileIndex);
+				log.error("Bad tile index "+tileIndex);
 				return null;
 			}
 			// offset x/y/z for next deepest level

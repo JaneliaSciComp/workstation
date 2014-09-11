@@ -474,6 +474,7 @@ implements MouseModalWidget, TileConsumer
             );
 
             Snapshot3d snapshotViewer = new Snapshot3d();
+            snapshotViewer.setImageColorModel( imageColorModel );
             snapshotViewer.launch( collector );
 
         } catch ( Exception ex ) {

@@ -14,8 +14,14 @@ import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.nio.FloatBuffer;
 import java.nio.IntBuffer;
+import java.util.ArrayList;
+import java.util.Collection;
 import org.janelia.it.workstation.gui.viewer3d.BoundingBox3d;
 import org.janelia.it.workstation.gui.viewer3d.VolumeModel;
+import org.janelia.it.workstation.gui.viewer3d.text.AxisLabel;
+import org.janelia.it.workstation.gui.viewer3d.text.FontInfo;
+import static org.janelia.it.workstation.gui.viewer3d.OpenGLUtils.*;
+import org.janelia.it.workstation.gui.viewer3d.text.AxisLabel.AxisOfParallel;
 
 /**
  * Draws three conventional axes, with tick marks for scale.
@@ -43,9 +49,14 @@ public class AxesActor implements GLActor
     // OpenGL state
     private boolean bBuffersNeedUpload = true;
     private double[] axisLengths = new double[ 3 ];
+    Collection<AxisLabel> labels = new ArrayList<>();
+    final int[] handleArr = new int[ 1 ];
 
     private int lineBufferHandle;
     private int inxBufferHandle;
+    private int interleavedTexHandle;
+    
+    private FontInfo axisLabelFontInfo;
     
     private VolumeModel volumeModel;
 
@@ -106,6 +117,10 @@ public class AxesActor implements GLActor
 
         if (bBuffersNeedUpload) {
             try {
+                axisLabelFontInfo = new FontInfo(
+                        "monospaced", FontInfo.FontStyle.Plain, 15, "axistickbkbgrnd"
+                );
+        
                 // Uploading buffers sufficient to draw the axes, ticks, etc.
                 buildBuffers(gl);
 
@@ -165,16 +180,24 @@ public class AxesActor implements GLActor
         reportError( gl, "Display of axes-actor 1" );
 
         float alpha = 1.0f;
-        float grayValue = volumeModel.isWhiteBackground() ? 0.85f : 0.15f;
-        gl.glColor4f(grayValue * 2.0f, grayValue, grayValue, alpha);
+        float[] color = new float[ 3 ];
+        if (volumeModel.isWhiteBackground()) {
+            color[ 0] = 1.0f;
+            color[ 1] = 0.85f;
+            color[ 2] = 0.85f;
+        } else {
+            color[ 0] = 0.30f;
+            color[ 1] = 0.15f;
+            color[ 2] = 0.15f;
+        }
+
+        gl.glColor4f( color[ 0 ], color[ 1 ], color[ 2 ], alpha );
         reportError( gl, "Display of axes-actor 2" );
 
         gl.glEnableClientState( GL2.GL_VERTEX_ARRAY );  // Prob: not in v2.
         reportError( gl, "Display of axes-actor 3" );
 
         // 3 floats per coord. Stride is 0, offset to first is 0.
-        //gl.glEnableVertexAttribArray(vertexAttributeLoc);
-        //gl.glVertexAttribPointer(vertexAttributeLoc, 3, GL2.GL_FLOAT, false, 0, 0);
         gl.glVertexPointer(3, GL2.GL_FLOAT, 0, 0);
         reportError( gl, "Display of axes-actor 4" );
 
@@ -201,10 +224,11 @@ public class AxesActor implements GLActor
 		// during resize. So we need to be ready to reinitialize everything.
         bIsInitialized = false;
 
-        IntBuffer toRelease = IntBuffer.allocate(1);
+        IntBuffer toRelease = IntBuffer.allocate(2);
         toRelease.put( lineBufferHandle );
+        toRelease.put( interleavedTexHandle );
         toRelease.rewind();
-        gl.glDeleteBuffers( 1,  toRelease );
+        gl.glDeleteBuffers( 2,  toRelease );
         bBuffersNeedUpload = true;
 	}
 
@@ -313,12 +337,8 @@ public class AxesActor implements GLActor
 
         // Push the coords over to GPU.
         // Make handles for subsequent use.
-        int[] handleArr = new int[ 1 ];
-        gl.glGenBuffers( 1, handleArr, 0 );
-        lineBufferHandle = handleArr[ 0 ];
-
-        gl.glGenBuffers( 1, handleArr, 0 );
-        inxBufferHandle = handleArr[ 0 ];
+        lineBufferHandle = createBufferHandle( gl );
+        inxBufferHandle = createBufferHandle( gl );
 
         // Bind data to the handle, and upload it to the GPU.
         gl.glBindBuffer(GL2.GL_ARRAY_BUFFER, lineBufferHandle);
@@ -340,6 +360,69 @@ public class AxesActor implements GLActor
                 inxBuf,
                 GL2.GL_STATIC_DRAW
         );
+    }
+    
+    private int createBufferHandle( GL2 gl ) {
+        gl.glGenBuffers( 1, handleArr, 0 );
+        return handleArr[ 0 ];
+    }
+    
+    private void buildLabelBuffers( GL2 gl ) {
+
+        FloatBuffer labelBuf = null;
+        int totalBufferSizeBytes = 0;
+        for ( AxisLabel label: labels ) {
+            totalBufferSizeBytes += Float.SIZE / 8 *
+                    (label.getVtxCoords().length
+                    + label.getTexCoords().length);
+        }
+        
+        ByteBuffer baseBuffer = ByteBuffer.allocateDirect(
+                totalBufferSizeBytes
+        );
+        baseBuffer.order(ByteOrder.nativeOrder());
+        labelBuf = baseBuffer.asFloatBuffer();
+        labelBuf.rewind();
+
+        for (AxisLabel label : labels) {
+            for (int i = 0; i < label.getVtxCoords().length; i++) {
+                labelBuf.put(label.getVtxCoords()[ i ]);
+                labelBuf.put(label.getTexCoords()[ i ]);
+            }
+        }
+        labelBuf.rewind();
+        
+        interleavedTexHandle = createBufferHandle(gl);
+        // Bind data to the handle, and upload it to the GPU.
+        gl.glBindBuffer(GL2.GL_ARRAY_BUFFER, interleavedTexHandle);
+        reportError( gl, "Interleaved buffer" );
+        gl.glBufferData(
+                GL2.GL_ARRAY_BUFFER,
+                (long) (labelBuf.capacity() * (Float.SIZE / 8)),
+                labelBuf,
+                GL2.GL_STATIC_DRAW
+        );
+        reportError( gl, "Interleaved Data" );
+
+    }
+    
+    /** Establish a label for the tick. */
+    private void createAxisLabel( 
+            float x, float y, float z,
+            int labelVal, AxisOfParallel axis
+    ) {
+        final String labelText = ""+labelVal;
+
+        float height = axisLabelFontInfo.getFontHeight();
+        float width = axisLabelFontInfo.getWidth( labelText );
+        
+        // NOTE: all text bounds will be arranged as if along the X axis,
+        // but then the final geometry will be adjusted as needed to align
+        // to the relevant axis.
+        AxisLabel.TextBounds textBounds = new AxisLabel.TextBounds( x - width/2, y, z, width, height );
+        AxisLabel axisLabel = new AxisLabel( labelText, axisLabelFontInfo, textBounds, axis );
+        
+        labels.add( axisLabel );
     }
 
     private Geometry getXShapeGeometry(BoundingBox3d boundingBox, int startingIndex) {
@@ -423,16 +506,6 @@ public class AxesActor implements GLActor
 
     private float getOverhang(BoundingBox3d boundingBox) {
         return (float)boundingBox.getDepth() / 8.0f;
-    }
-
-    private void reportError(GL2 gl, String source) {
-        int errNum = gl.glGetError();
-        if ( errNum > 0 ) {
-            logger.warn(
-                    "Error {}/0x0{} encountered in " + source,
-                    errNum, Integer.toHexString(errNum)
-            );
-        }
     }
 
     //  This section makes coordinates for specifically-required letters of the alphabet.
@@ -572,12 +645,24 @@ public class AxesActor implements GLActor
             for ( int vertexI = 0; vertexI < 2; vertexI++ ) {
                 float tickVariance = origin[ tickShapeAxisIteration.getAxisNum() ] +
                         ( tickShapeAxisIteration.getIterationDirectionMultiplier() * ( vertexI * tickSize ) );
-                vertices[ i * 6 + vertexI * 3 + tickAxis.getAxisNum() ] = axisOffset;
-                vertices[ i * 6 + vertexI * 3 + tickShapeAxisIteration.getAxisNum() ] = tickVariance;
-                vertices[ i * 6 + vertexI * 3 + constantAxis ] = origin[ constantAxis ];
+                final int xOffset = i * 6 + vertexI * 3 + tickAxis.getAxisNum();
+                vertices[ xOffset ] = axisOffset;
+                final int yOffset = i * 6 + vertexI * 3 + tickShapeAxisIteration.getAxisNum();
+                vertices[ yOffset ] = tickVariance;
+                final int zOffset = i * 6 + vertexI * 3 + constantAxis;
+                vertices[ zOffset ] = origin[ constantAxis ];
 
                 // The indices of these little lines run n, n+1 for each.
                 indices[ indexCount ] = baseInxOffset + (indexCount ++);
+                
+                // Label at tips of all axes.
+                if ( vertexI == 1   &&   i > 0 ) {
+                    createAxisLabel(                             
+                            vertices[ xOffset ], vertices[ yOffset ], vertices[ zOffset ],
+                            (tickCount) * 100,
+                            AxisOfParallel.getValue( constantAxis )
+                    );
+                }
             }
         }
 

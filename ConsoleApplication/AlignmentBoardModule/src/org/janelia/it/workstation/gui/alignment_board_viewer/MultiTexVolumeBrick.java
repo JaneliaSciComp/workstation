@@ -17,6 +17,7 @@ import org.janelia.it.workstation.gui.viewer3d.VolumeModel;
 import org.janelia.it.workstation.gui.viewer3d.buffering.VtxCoordBufMgr;
 import org.janelia.it.workstation.gui.viewer3d.texture.TextureDataI;
 import org.janelia.it.workstation.gui.viewer3d.texture.TextureMediator;
+import static org.janelia.it.workstation.gui.viewer3d.OpenGLUtils.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -488,16 +489,6 @@ public class MultiTexVolumeBrick implements VolumeBrickI
         logger.info(String.format(
                 "%s [%s, %s, %s]", type, Double.toString(p[0]), Double.toString(p[1]), Double.toString(p[2]))
         );
-    }
-
-    private void reportError(GL2 gl, String source) {
-        int errNum = gl.glGetError();
-        if ( errNum > 0 ) {
-            logger.warn(
-                    "Error {}/0x0{} encountered in " + source,
-                    errNum, Integer.toHexString(errNum)
-            );
-        }
     }
 
 }
