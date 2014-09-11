@@ -374,6 +374,9 @@ public class TextureMediator {
         if ( orderId == GL2.GL_BGRA ) {
             return 4;
         }
+        else if ( orderId == GL2.GL_LUMINANCE16_ALPHA16 ) {
+            return 4;
+        }
         else {
             return 1;
         }

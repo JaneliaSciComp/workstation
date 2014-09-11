@@ -100,6 +100,7 @@ public class GeometricSearchAdminPanel extends JPanel implements Refreshable {
                 return "-";
             }
         }
+
         @Override
         protected void loadMoreResults(Callable<Void> success) {
             //performSearch(searchResults.getNumLoadedPages(), false, success);
@@ -218,11 +219,12 @@ public class GeometricSearchAdminPanel extends JPanel implements Refreshable {
             GeometricSearchBeanRemote gsEJB=EJBFactory.getRemoteGeometricSearchBean();
             List<GeometricIndexManagerModel> modelList=null;
             try {
-                Long modelTimestamp=gsEJB.getLastModelUpdateTimestamp();
-                if (modelTimestamp>scanResultTable.getModelLastChangedTimestamp()) {
-                    scanResultTable.setModelLastChangedTimestamp(modelTimestamp);
-                    modelList = gsEJB.getManagerModel(100);
-                }
+                modelList=gsEJB.getManagerModel(100);
+//                Long modelTimestamp=gsEJB.getModifiedTimestamp();
+//                if (modelTimestamp>scanResultTable.getModelLastChangedTimestamp()) {
+//                    scanResultTable.setModelLastChangedTimestamp(modelTimestamp);
+//                    modelList = gsEJB.getManagerModel(100);
+//                }
             } catch (Exception ex) {
                 logger.error("Exception using RemoteGeometricSearchBean: " + ex.getMessage(), ex);
             }

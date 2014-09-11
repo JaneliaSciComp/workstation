@@ -136,18 +136,23 @@ public class Subvolume {
                 }
             }
         }
+        boolean filledToEnd = true;
         for (TileIndex tileIx : neededTiles) {
             try {
                 TextureData2dGL tileData = null;
                 // First try to get image from cache...
-                if ( (textureCache != null) && (textureCache.containsKey(tileIx)) )
-                {
+                if ( (textureCache != null) && (textureCache.containsKey(tileIx)) ) {
                     TileTexture tt = textureCache.get(tileIx);
                     tileData = tt.getTextureData();
                 }
                 // ... if that fails, load the data right now.
-                if (tileData == null)
+                if (tileData == null) {
                     tileData = loadAdapter.loadToRam(tileIx);
+                }
+                if (tileData == null) {
+                    filledToEnd = false;
+                    continue;
+                }
                 TileFormat.TileXyz tileXyz = new TileFormat.TileXyz(
                         tileIx.getX(), tileIx.getY(), tileIx.getZ());
                 ZoomedVoxelIndex tileOrigin = tileFormat.zoomedVoxelIndexForTileXyz(

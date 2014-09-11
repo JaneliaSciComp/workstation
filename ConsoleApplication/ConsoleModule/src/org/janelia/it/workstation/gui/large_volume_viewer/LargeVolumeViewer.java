@@ -53,6 +53,7 @@ implements MouseModalWidget, TileConsumer
 	private static final Logger log = LoggerFactory.getLogger(LargeVolumeViewer.class);
 
     private boolean optInStatic3d = false;
+    private SubvolumeProvider subvolumeProvider;
     private URL dataUrl;
 
 	protected MouseMode mouseMode;
@@ -183,6 +184,13 @@ implements MouseModalWidget, TileConsumer
         });
         //
 	}
+
+    /**
+     * @param dataUrl the dataUrl to set
+     */
+    public void setDataUrl(URL dataUrl) {
+        this.dataUrl = dataUrl;
+    }
 
 	public void autoContrastNow() {
 		ImageBrightnessStats bs = tileServer.getCurrentBrightnessStats();
@@ -442,8 +450,8 @@ implements MouseModalWidget, TileConsumer
 		mouseMode.keyPressed(event);
 	}
 
-    public void setUrl( URL url ) {
-        dataUrl = url;
+    public void setSubvolumeProvider( SubvolumeProvider subvolumeProvider ) {
+        this.subvolumeProvider = subvolumeProvider;
     }
 
     // TEMP public setting... LLF, 8/2/2013
@@ -467,11 +475,11 @@ implements MouseModalWidget, TileConsumer
         try {
             ViewTileManagerVolumeSource collector = new ViewTileManagerVolumeSource(
                     getCamera(),
-                    getViewport(),
                     getSliceAxis(),
                     getViewerInGround(),
-                    dataUrl
+                    subvolumeProvider
             );
+            collector.setDataUrl(dataUrl);
 
             Snapshot3d snapshotViewer = new Snapshot3d();
             snapshotViewer.setImageColorModel( imageColorModel );

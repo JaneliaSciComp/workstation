@@ -14,31 +14,11 @@ vec4 chooseColor()
     vec4 in_color = texture3D(signalTexture, gl_TexCoord[0].xyz);
 
 /*
-  Uncomment to show a green cube--proving that there are at least some
-  underpinnings to the coordinates.
-  
-if ( 0 == 0 )
-{
-return vec4(0.0,1.0,0.0,1.0);
-}
-*/
-/*
-  Uncommenting this yields a black space with nothing to show.
+  Uncommenting this yields a stack of black and white slabs.
 
 if ( 0 == 0 )
 {
 return in_color;
-}
-*/
-
-/*
-Uncommenting yields empty again, showing whole texture is 0.
-if (0==0)
-{
-if (in_color[0] > 0 || in_color[1] > 0 || in_color[2] > 0)
-{
-return vec4(0.0,0.0,1.0,1.0);
-}
 }
 */
 
