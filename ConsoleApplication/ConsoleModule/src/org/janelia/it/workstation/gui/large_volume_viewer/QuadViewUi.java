@@ -487,11 +487,9 @@ public class QuadViewUi extends JPanel
             v.setSystemMenuItemGenerator(new MenuItemGenerator() {
                 @Override
                 public List<JMenuItem> getMenus(MouseEvent event) {
-                    List<JMenuItem> result = new Vector<JMenuItem>();
+                    List<JMenuItem> result = new Vector<>();
                     result.add(addFileMenuItem());
-/*
-LLF: the hookup for the 3d snapshot.
-*/
+                    // These items include the 3D Snapshot.
                     for ( JMenuItem item: largeVolumeViewer.getLocalItems() ) {
                         result.add(item);
                     }
@@ -1258,8 +1256,8 @@ LLF: the hookup for the 3d snapshot.
 
         // July 1, 2013 elevate url loading from LargeVolumeViewer to QuadViewUi.
         URL url = tmpFile.toURI().toURL();
-        largeVolumeViewer.setUrl( url );
-
+        largeVolumeViewer.setSubvolumeProvider( getSubvolumeProvider() );
+        largeVolumeViewer.setDataUrl( url );
         return loadURL(url);
     }
 

@@ -11,6 +11,7 @@ import org.slf4j.LoggerFactory;
 
 import java.awt.*;
 import org.janelia.it.workstation.gui.large_volume_viewer.ImageColorModel;
+import org.janelia.it.workstation.shared.workers.IndeterminateProgressMonitor;
 
 /**
  * Created with IntelliJ IDEA.
@@ -41,6 +42,7 @@ public class Snapshot3d extends ModalDialog {
      */
     public void launch( VolumeSource volumeSource) {
         SnapshotWorker loadWorker = new SnapshotWorker( volumeSource );
+        loadWorker.setProgressMonitor(new IndeterminateProgressMonitor(SessionMgr.getMainFrame(), "Fetching data", ""));
         loadWorker.execute();
     }
 
@@ -78,7 +80,8 @@ public class Snapshot3d extends ModalDialog {
     }
 
     private class SnapshotWorker extends SimpleWorker {
-        private VolumeSource volumeSource;
+        private final VolumeSource volumeSource;
+        private TextureDataI textureData;
 
         public SnapshotWorker( VolumeSource collector ) {
             this.volumeSource = collector;
@@ -89,7 +92,7 @@ public class Snapshot3d extends ModalDialog {
             volumeAcceptor = new VolumeSource.VolumeAcceptor() {
                 @Override
                 public void accept(TextureDataI textureData) {
-                    launch( textureData );
+                    SnapshotWorker.this.textureData = textureData;
                 }
             };
             volumeSource.getVolume( volumeAcceptor );
@@ -97,6 +100,7 @@ public class Snapshot3d extends ModalDialog {
 
         @Override
         protected void hadSuccess() {
+            launch( textureData );
         }
 
         @Override

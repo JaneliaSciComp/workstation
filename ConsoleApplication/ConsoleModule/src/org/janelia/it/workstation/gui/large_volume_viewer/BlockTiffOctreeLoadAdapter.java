@@ -272,7 +272,7 @@ extends AbstractTextureLoadAdapter
             // System.out.println(tiff.getAbsolutePath());
 			// System.out.println(tileIndex+", "+tiff.toString());
 			if (! tiff.exists())
-				throw new MissingTileException();
+				throw new MissingTileException("Putative tiff file: " + tiff);
 			try {
 				boolean useUrl = false;
 				if (useUrl) { // So SLOW

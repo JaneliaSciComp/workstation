@@ -10,6 +10,9 @@ public abstract class AbstractTextureLoadAdapter
         public MissingTileException(String message) {
             super(message);
         }
+        public MissingTileException(Exception ex) {
+            super(ex);
+        }
 	};
 	
 	public static class TileLoadError extends Exception {
