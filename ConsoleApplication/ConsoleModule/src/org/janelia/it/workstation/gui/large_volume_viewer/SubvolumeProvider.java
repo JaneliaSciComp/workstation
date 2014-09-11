@@ -28,7 +28,22 @@ public class SubvolumeProvider {
      * and one that takes coordinates with that already done
      */
     public Subvolume getSubvolume(Vec3 corner1, Vec3 corner2) {
-        return getSubvolume(corner1, corner2, 0);
+        // all this coordinate stuff is taken from something Christopher
+        //  wrote in support of the path tracing code he wrote
+
+        // A series of conversions to get to ZoomedVoxelIndex
+        TileFormat tileFormat = volumeImage.getLoadAdapter().getTileFormat();
+        TileFormat.MicrometerXyz um1 = new TileFormat.MicrometerXyz(corner1.getX(), corner1.getY(), corner1.getZ());
+        TileFormat.MicrometerXyz um2 = new TileFormat.MicrometerXyz(corner2.getX(), corner2.getY(), corner2.getZ());
+        TileFormat.VoxelXyz vox1 = tileFormat.voxelXyzForMicrometerXyz(um1);
+        TileFormat.VoxelXyz vox2 = tileFormat.voxelXyzForMicrometerXyz(um2);
+        ZoomLevel zoomLevel = new ZoomLevel(0);
+        ZoomedVoxelIndex zv1 = tileFormat.zoomedVoxelIndexForVoxelXyz(
+                vox1, zoomLevel, CoordinateAxis.Z);
+        ZoomedVoxelIndex zv2 = tileFormat.zoomedVoxelIndexForVoxelXyz(
+                vox2, zoomLevel, CoordinateAxis.Z);
+
+        return getSubvolume(zv1, zv2);
     }
     
     /**
@@ -45,6 +60,7 @@ public class SubvolumeProvider {
         TileFormat.MicrometerXyz um2 = new TileFormat.MicrometerXyz(corner2.getX(), corner2.getY(), corner2.getZ());
         TileFormat.VoxelXyz vox1 = tileFormat.voxelXyzForMicrometerXyz(um1);
         TileFormat.VoxelXyz vox2 = tileFormat.voxelXyzForMicrometerXyz(um2);
+
         ZoomLevel zoomLevel = new ZoomLevel(zoomIndex);
         ZoomedVoxelIndex zv1 = tileFormat.zoomedVoxelIndexForVoxelXyz(
                 vox1, zoomLevel, CoordinateAxis.Z);

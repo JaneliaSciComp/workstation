@@ -42,7 +42,7 @@ import org.janelia.it.workstation.gui.large_volume_viewer.SubvolumeProvider;
  * given.
  */
 public class ViewTileManagerVolumeSource implements VolumeSource {
-    public static final int BRICK_CUBIC_DIMENSION = 512;
+    public static final int BRICK_CUBIC_DIMENSION = 128;
     public static final int BRICK_WIDTH = BRICK_CUBIC_DIMENSION;
     public static final int BRICK_HEIGHT = BRICK_CUBIC_DIMENSION;
     public static final int BRICK_DEPTH = BRICK_CUBIC_DIMENSION;
@@ -119,6 +119,7 @@ public class ViewTileManagerVolumeSource implements VolumeSource {
         textureDataFor3D.setVoxelMicrometers(new Double[]{1.0, 1.0, 1.0});
         textureDataFor3D.setChannelCount(stdVals.stdChannelCount);
         textureDataFor3D.setExplicitInternalFormat(stdVals.stdInternalFormat);
+        textureDataFor3D.setExplicitVoxelComponentOrder(stdVals.stdFormat);
         textureDataFor3D.setExplicitVoxelComponentType(stdVals.stdType);
         textureDataFor3D.setPixelByteCount(stdVals.stdByteCount);
 
@@ -238,15 +239,16 @@ public class ViewTileManagerVolumeSource implements VolumeSource {
         );
 
         logger.info("Fetching corners {} to {}, at zoom {}.", corner1, corner2, zoomFactor );
-        Subvolume fetchedSubvolume = subvolumeProvider.getSubvolume(corner1, corner2, /* zoomFactor */ 0);
+        Subvolume fetchedSubvolume = subvolumeProvider.getSubvolume(corner1, corner2, 0 /*zoomFactor*/ );
         stdVals.stdChannelCount = fetchedSubvolume.getChannelCount();
         stdVals.stdInternalFormat = GL2.GL_LUMINANCE16_ALPHA16;
         stdVals.stdType = GL2.GL_UNSIGNED_SHORT;
+        stdVals.stdFormat = GL2.GL_RG;
         stdVals.stdByteCount = fetchedSubvolume.getBytesPerIntensity();
 
         final ByteBuffer byteBuffer = fetchedSubvolume.getByteBuffer();
         byteBuffer.rewind();
-        byte[] transferredBytes = new byte[ byteBuffer.remaining() ];
+        byte[] transferredBytes = new byte[ byteBuffer.capacity() ];
         byteBuffer.get(transferredBytes);
         return transferredBytes;
     }
@@ -346,6 +348,7 @@ public class ViewTileManagerVolumeSource implements VolumeSource {
         public int stdByteCount;
         public int stdChannelCount;
         public int stdInternalFormat;
+        public int stdFormat;
         public int stdType;
     }
     
