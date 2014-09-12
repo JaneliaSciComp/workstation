@@ -51,8 +51,8 @@ public class VolumeLoader implements VolumeLoaderI {
             switch ( getFileType( localFileName, baseName, extension ) ) {
                 case TIF:
                     TifFileLoader tifFileLoader = new TifFileLoader();
-                    textureDataBuilder = tifFileLoader;
                     fileLoader = tifFileLoader;
+                    textureDataBuilder = tifFileLoader;
                     break;
                 case LSM:
                     LsmFileLoader lsmFileLoader = new LsmFileLoader();
