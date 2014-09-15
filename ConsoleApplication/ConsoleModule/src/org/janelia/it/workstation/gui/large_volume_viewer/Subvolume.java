@@ -18,11 +18,23 @@ import java.awt.image.WritableRaster;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.nio.ShortBuffer;
+import java.util.ArrayList;
 import java.util.LinkedHashSet;
+import java.util.List;
 import java.util.Set;
+import java.util.concurrent.Callable;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class Subvolume {
-	
+
+    public static final int N_THREADS = 20;
+
 	// private int extentVoxels[] = {0, 0, 0};
 	private ZoomedVoxelIndex origin; // upper left front corner within parent volume
 	private VoxelIndex extent; // width, height, depth
@@ -30,6 +42,8 @@ public class Subvolume {
 	private ShortBuffer shorts;
 	private int bytesPerIntensity = 1;
 	private int channelCount = 1;
+    
+    private static final Logger logger = LoggerFactory.getLogger( Subvolume.class );
 	
     /**
      * You probably want to run this constructor in a worker
@@ -70,18 +84,18 @@ public class Subvolume {
 	private void initialize(ZoomedVoxelIndex corner1,
             ZoomedVoxelIndex corner2,
             SharedVolumeImage wholeImage,
-            TextureCache textureCache)
+            final TextureCache textureCache)
 	{
 	    // Both corners must be the same zoom resolution
 	    assert(corner1.getZoomLevel().equals(corner2.getZoomLevel()));
 	    // Populate data fields
-	    ZoomLevel zoom = corner1.getZoomLevel();
+	    final ZoomLevel zoom = corner1.getZoomLevel();
 	    origin = new ZoomedVoxelIndex(
 	            zoom,
 	            Math.min(corner1.getX(), corner2.getX()),
                 Math.min(corner1.getY(), corner2.getY()),
                 Math.min(corner1.getZ(), corner2.getZ()));
-	    ZoomedVoxelIndex farCorner = new ZoomedVoxelIndex(
+	    final ZoomedVoxelIndex farCorner = new ZoomedVoxelIndex(
                 zoom,
                 Math.max(corner1.getX(), corner2.getX()),
                 Math.max(corner1.getY(), corner2.getY()),
@@ -91,8 +105,8 @@ public class Subvolume {
                 farCorner.getY() - origin.getY() + 1,
                 farCorner.getZ() - origin.getZ() + 1);
 	    // Allocate raster memory
-	    AbstractTextureLoadAdapter loadAdapter = wholeImage.getLoadAdapter();
-	    TileFormat tileFormat = loadAdapter.getTileFormat();
+	    final AbstractTextureLoadAdapter loadAdapter = wholeImage.getLoadAdapter();
+	    final TileFormat tileFormat = loadAdapter.getTileFormat();
 	    bytesPerIntensity = tileFormat.getBitDepth()/8;
 	    channelCount = tileFormat.getChannelCount();
 	    int totalBytes = bytesPerIntensity 
@@ -102,116 +116,37 @@ public class Subvolume {
 	    bytes.order(ByteOrder.nativeOrder());
 	    if (bytesPerIntensity == 2)
 	        shorts = bytes.asShortBuffer();
-	    // Load tiles from volume representation
-	    TileIndex tileMin0 = tileFormat.tileIndexForZoomedVoxelIndex(origin, CoordinateAxis.Z);
-        TileIndex tileMax0 = tileFormat.tileIndexForZoomedVoxelIndex(farCorner, CoordinateAxis.Z);
-        // Guard against y-flip. Make it so general it could find some other future situation too.
-        // Enforce that tileMin x/y/z are no larger than tileMax x/y/z
-        TileIndex tileMin = new TileIndex(
-                Math.min(tileMin0.getX(), tileMax0.getX()),
-                Math.min(tileMin0.getY(), tileMax0.getY()),
-                Math.min(tileMin0.getZ(), tileMax0.getZ()),
-                tileMin0.getZoom(),
-                tileMin0.getMaxZoom(),
-                tileMin0.getIndexStyle(),
-                tileMin0.getSliceAxis());
-        TileIndex tileMax = new TileIndex(
-                Math.max(tileMin0.getX(), tileMax0.getX()),
-                Math.max(tileMin0.getY(), tileMax0.getY()),
-                Math.max(tileMin0.getZ(), tileMax0.getZ()),
-                tileMax0.getZoom(),
-                tileMax0.getMaxZoom(),
-                tileMax0.getIndexStyle(),
-                tileMax0.getSliceAxis());
-        Set<TileIndex> neededTiles = new LinkedHashSet<TileIndex>();
-        for (int x = tileMin.getX(); x <= tileMax.getX(); ++x) {
-            for (int y = tileMin.getY(); y <= tileMax.getY(); ++y) {
-                for (int z = tileMin.getZ(); z <= tileMax.getZ(); ++z) {
-                    neededTiles.add(new TileIndex(
-                            x, y, z, 
-                            zoom.getLog2ZoomOutFactor(),
-                            tileMin.getMaxZoom(),
-                            tileMin.getIndexStyle(),
-                            tileMin.getSliceAxis()));
+
+        Set<TileIndex> neededTiles = getNeededTileSet(tileFormat, farCorner, zoom);
+        ExecutorService executorService = Executors.newFixedThreadPool( N_THREADS );
+        List<Future<Boolean>> followUps = new ArrayList<>();
+
+        for (final TileIndex tileIx : neededTiles) {
+            Callable<Boolean> fetchTask = new Callable<Boolean>() {
+                @Override
+                public Boolean call() throws Exception {
+                    return fetchTileData(
+                            textureCache, tileIx, loadAdapter, tileFormat, zoom, farCorner
+                    );
                 }
-            }
+            };
+            followUps.add( executorService.submit( fetchTask ) );
         }
-        boolean filledToEnd = true;
-        for (TileIndex tileIx : neededTiles) {
-            try {
-                TextureData2dGL tileData = null;
-                // First try to get image from cache...
-                if ( (textureCache != null) && (textureCache.containsKey(tileIx)) ) {
-                    TileTexture tt = textureCache.get(tileIx);
-                    tileData = tt.getTextureData();
+        executorService.shutdown();
+        
+        try {
+            executorService.awaitTermination(5, TimeUnit.MINUTES);
+            for (Future<Boolean> result : followUps) {
+                if (!result.get()) {
+                    logger.info("Request for {}..{} had tile gaps.", origin, extent);
                 }
-                // ... if that fails, load the data right now.
-                if (tileData == null) {
-                    tileData = loadAdapter.loadToRam(tileIx);
-                }
-                if (tileData == null) {
-                    filledToEnd = false;
-                    continue;
-                }
-                TileFormat.TileXyz tileXyz = new TileFormat.TileXyz(
-                        tileIx.getX(), tileIx.getY(), tileIx.getZ());
-                ZoomedVoxelIndex tileOrigin = tileFormat.zoomedVoxelIndexForTileXyz(
-                        tileXyz, zoom, tileIx.getSliceAxis());
-                
-                // One Z-tile goes to one destination Z coordinate in this subvolume.
-                int dstZ = tileOrigin.getZ() - origin.getZ(); // local Z coordinate
-                // Y
-                int startY = Math.max(origin.getY(), tileOrigin.getY());
-                int endY = Math.min(farCorner.getY(), tileOrigin.getY()+tileData.getHeight()-1);
-                int overlapY = endY - startY + 1;
-                // X
-                int startX = Math.max(origin.getX(), tileOrigin.getX());
-                int endX = Math.min(farCorner.getX(), tileOrigin.getX()+tileData.getUsedWidth()-1);
-                int overlapX = endX - startX + 1;
-                // byte array offsets
-                int pixelBytes = channelCount * bytesPerIntensity;
-                int tileLineBytes = pixelBytes * tileData.getWidth();
-                int subvolumeLineBytes = pixelBytes * extent.getX();
-                // Where to start putting bytes into subvolume?
-                int dstOffset = dstZ * subvolumeLineBytes * extent.getY() // z plane offset
-                        + (startY - origin.getY()) * subvolumeLineBytes // y scan-line offset
-                        + (startX - origin.getX()) * pixelBytes;
-                int srcOffset = (startY - tileOrigin.getY()) * tileLineBytes // y scan-line offset
-                        + (startX - tileOrigin.getX()) * pixelBytes;
-                // Copy one scan line at a time
-                for (int y = 0; y < overlapY; ++y) {
-                    for (int x = 0; x < overlapX; ++x) {
-                        // TODO faster copy
-                        for (int b = 0; b < pixelBytes; ++b) {
-                            int d = dstOffset + x * pixelBytes + b;
-                            int s = srcOffset + x * pixelBytes + b;
-                            /* for debugging
-                            if (d >= bytes.capacity()) {
-                                System.out.println("overflow destination");
-                            }
-                            if (s >= tileData.getPixels().capacity()) {
-                                System.out.println("overflow source");
-                            }
-                            if (bytesPerIntensity == 2) {
-                                int value = sourceShorts.get(s/2) & 0xffff;
-                                if (value > 40370) {
-                                    System.out.println("large value");
-                                }
-                            }
-                            */
-                            bytes.put(d, tileData.getPixels().get(s));
-                        }
-                    }
-                    dstOffset += subvolumeLineBytes;
-                    srcOffset += tileLineBytes;
-                }
-            } catch (AbstractTextureLoadAdapter.TileLoadError e) {
-                // TODO Auto-generated catch block
-                e.printStackTrace();
-            } catch (AbstractTextureLoadAdapter.MissingTileException e) {
-                // TODO Auto-generated catch block
-                e.printStackTrace();
             }
+        } catch ( InterruptedException | ExecutionException ex ) {
+            logger.error(
+                    "Failure awaiting completion of fetch threads for request {}..{}.  Exception report follows.",
+                    origin, extent
+            );
+            ex.printStackTrace();
         }
 	}
 
@@ -347,4 +282,119 @@ public class Subvolume {
             return bytes.get(offset) & 0xff;
     }
 	
+    private boolean fetchTileData(TextureCache textureCache, TileIndex tileIx, AbstractTextureLoadAdapter loadAdapter, TileFormat tileFormat, ZoomLevel zoom, ZoomedVoxelIndex farCorner) {
+        boolean filledToEnd;
+        try {
+            TextureData2dGL tileData = null;
+            // First try to get image from cache...
+            if ( (textureCache != null) && (textureCache.containsKey(tileIx)) ) {
+                TileTexture tt = textureCache.get(tileIx);
+                tileData = tt.getTextureData();
+            }
+            // ... if that fails, load the data right now.
+            if (tileData == null) {
+                tileData = loadAdapter.loadToRam(tileIx);
+            }
+            if (tileData == null) {
+                filledToEnd = false;
+                return filledToEnd;
+            }
+            TileFormat.TileXyz tileXyz = new TileFormat.TileXyz(
+                    tileIx.getX(), tileIx.getY(), tileIx.getZ());
+            ZoomedVoxelIndex tileOrigin = tileFormat.zoomedVoxelIndexForTileXyz(
+                    tileXyz, zoom, tileIx.getSliceAxis());
+            // One Z-tile goes to one destination Z coordinate in this subvolume.
+            int dstZ = tileOrigin.getZ() - origin.getZ(); // local Z coordinate
+            // Y
+            int startY = Math.max(origin.getY(), tileOrigin.getY());
+            int endY = Math.min(farCorner.getY(), tileOrigin.getY()+tileData.getHeight()-1);
+            int overlapY = endY - startY + 1;
+            // X
+            int startX = Math.max(origin.getX(), tileOrigin.getX());
+            int endX = Math.min(farCorner.getX(), tileOrigin.getX()+tileData.getUsedWidth()-1);
+            int overlapX = endX - startX + 1;
+            // byte array offsets
+            int pixelBytes = channelCount * bytesPerIntensity;
+            int tileLineBytes = pixelBytes * tileData.getWidth();
+            int subvolumeLineBytes = pixelBytes * extent.getX();
+            // Where to start putting bytes into subvolume?
+            int dstOffset = dstZ * subvolumeLineBytes * extent.getY() // z plane offset
+                    + (startY - origin.getY()) * subvolumeLineBytes // y scan-line offset
+                    + (startX - origin.getX()) * pixelBytes;
+            int srcOffset = (startY - tileOrigin.getY()) * tileLineBytes // y scan-line offset
+                    + (startX - tileOrigin.getX()) * pixelBytes;
+            // Copy one scan line at a time
+            for (int y = 0; y < overlapY; ++y) {
+                for (int x = 0; x < overlapX; ++x) {
+                    // TODO faster copy
+                    for (int b = 0; b < pixelBytes; ++b) {
+                        int d = dstOffset + x * pixelBytes + b;
+                        int s = srcOffset + x * pixelBytes + b;
+                        /* for debugging
+                        if (d >= bytes.capacity()) {
+                        System.out.println("overflow destination");
+                        }
+                        if (s >= tileData.getPixels().capacity()) {
+                        System.out.println("overflow source");
+                        }
+                        if (bytesPerIntensity == 2) {
+                        int value = sourceShorts.get(s/2) & 0xffff;
+                        if (value > 40370) {
+                        System.out.println("large value");
+                        }
+                        }
+                        */
+                        bytes.put(d, tileData.getPixels().get(s));
+                    }
+                }
+                dstOffset += subvolumeLineBytes;
+                srcOffset += tileLineBytes;
+            }
+        }catch (AbstractTextureLoadAdapter.TileLoadError | AbstractTextureLoadAdapter.MissingTileException e) {
+            // TODO Auto-generated catch block
+            logger.error( "Request for {}..{} failed with error {}.", origin, extent, e.getMessage() );
+            e.printStackTrace();
+        }
+        return false;
+    }
+
+    private Set<TileIndex> getNeededTileSet(TileFormat tileFormat, ZoomedVoxelIndex farCorner, ZoomLevel zoom) {
+        Set<TileIndex> neededTiles = new LinkedHashSet<>();
+        // Load tiles from volume representation
+        TileIndex tileMin0 = tileFormat.tileIndexForZoomedVoxelIndex(origin, CoordinateAxis.Z);
+        TileIndex tileMax0 = tileFormat.tileIndexForZoomedVoxelIndex(farCorner, CoordinateAxis.Z);
+        // Guard against y-flip. Make it so general it could find some other future situation too.
+        // Enforce that tileMin x/y/z are no larger than tileMax x/y/z
+        TileIndex tileMin = new TileIndex(
+                Math.min(tileMin0.getX(), tileMax0.getX()),
+                Math.min(tileMin0.getY(), tileMax0.getY()),
+                Math.min(tileMin0.getZ(), tileMax0.getZ()),
+                tileMin0.getZoom(),
+                tileMin0.getMaxZoom(),
+                tileMin0.getIndexStyle(),
+                tileMin0.getSliceAxis());
+        TileIndex tileMax = new TileIndex(
+                Math.max(tileMin0.getX(), tileMax0.getX()),
+                Math.max(tileMin0.getY(), tileMax0.getY()),
+                Math.max(tileMin0.getZ(), tileMax0.getZ()),
+                tileMax0.getZoom(),
+                tileMax0.getMaxZoom(),
+                tileMax0.getIndexStyle(),
+                tileMax0.getSliceAxis());
+        for (int x = tileMin.getX(); x <= tileMax.getX(); ++x) {
+            for (int y = tileMin.getY(); y <= tileMax.getY(); ++y) {
+                for (int z = tileMin.getZ(); z <= tileMax.getZ(); ++z) {
+                    neededTiles.add(new TileIndex(
+                            x, y, z,
+                            zoom.getLog2ZoomOutFactor(),
+                            tileMin.getMaxZoom(),
+                            tileMin.getIndexStyle(),
+                            tileMin.getSliceAxis()));
+                }
+            }
+        }
+        
+        return neededTiles;
+    }
+
 }

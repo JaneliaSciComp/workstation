@@ -240,8 +240,8 @@ public class ViewTileManagerVolumeSource implements VolumeSource {
                 lowZ + BRICK_CUBIC_DIMENSION - 1
         );
 
-        logger.info("Fetching corners {} to {}, at zoom {}.", corner1, corner2, zoomFactor );
-        Subvolume fetchedSubvolume = subvolumeProvider.getSubvolume(corner1, corner2, 0 /*zoomFactor*/ );
+        logger.info("Fetching corners {} to {}, at fixed zoom 0.", corner1, corner2 );
+        Subvolume fetchedSubvolume = subvolumeProvider.getSubvolume(corner1, corner2, 0 );
         stdVals.stdChannelCount = fetchedSubvolume.getChannelCount();
         stdVals.stdInternalFormat = GL2.GL_LUMINANCE16_ALPHA16;
         stdVals.stdType = GL2.GL_UNSIGNED_SHORT;
@@ -252,14 +252,6 @@ public class ViewTileManagerVolumeSource implements VolumeSource {
         byteBuffer.rewind();
         byte[] transferredBytes = new byte[ byteBuffer.capacity() ];
         byteBuffer.get(transferredBytes);
-        // Swap all shorts end-over-end.
-        /*
-        for ( int i = 0; i < transferredBytes.length; i+=2 ) {
-            byte tempByte = transferredBytes[ i ];
-            transferredBytes[ i ] = transferredBytes[ i + 1 ];
-            transferredBytes[ i + 1 ] = tempByte;
-        }
-        */
         return transferredBytes;
     }
 
