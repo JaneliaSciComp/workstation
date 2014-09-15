@@ -22,10 +22,11 @@ import org.janelia.it.workstation.shared.workers.IndeterminateProgressMonitor;
  * This popup will give users a snapshot volume.  Very simply viewer, relatively speaking.
  */
 public class Snapshot3d extends ModalDialog {
-    private Dimension size = new Dimension( 600, 600 );
+    // Choosing initial width > height as workaround to the reset-focus problem.
+    private Dimension size = new Dimension( 650, 600 );
     private VolumeSource.VolumeAcceptor volumeAcceptor;
     private ImageColorModel imageColorModel;
-    private Logger logger = LoggerFactory.getLogger(Snapshot3d.class);
+    private final Logger logger = LoggerFactory.getLogger(Snapshot3d.class);
     
     public Snapshot3d() {
         super();
