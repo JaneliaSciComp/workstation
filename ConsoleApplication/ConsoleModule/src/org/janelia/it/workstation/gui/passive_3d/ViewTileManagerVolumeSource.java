@@ -30,6 +30,7 @@ import javax.media.opengl.GL2;
 import org.janelia.it.workstation.gui.large_volume_viewer.Subvolume;
 import org.janelia.it.workstation.gui.large_volume_viewer.SubvolumeProvider;
 import org.janelia.it.workstation.gui.viewer3d.VolumeDataAcceptor;
+import org.janelia.it.workstation.shared.workers.IndeterminateNoteProgressMonitor;
 
 /**
  * Created with IntelliJ IDEA.
@@ -41,11 +42,12 @@ import org.janelia.it.workstation.gui.viewer3d.VolumeDataAcceptor;
  * implements by fetching data out of a view tile manager, focused on the viewport/camera/axis and relative position
  * given.
  */
-public class ViewTileManagerVolumeSource implements VolumeSource {
+public class ViewTileManagerVolumeSource implements MonitoredVolumeSource {
     public static final int BRICK_CUBIC_DIMENSION = 512;
     public static final int BRICK_WIDTH = BRICK_CUBIC_DIMENSION;
     public static final int BRICK_HEIGHT = BRICK_CUBIC_DIMENSION;
     public static final int BRICK_DEPTH = BRICK_CUBIC_DIMENSION;
+    private static final String COORDS_FORMAT = "[%3.1f,%3.1f,%3.1f]";
     private Camera3d camera;
     private CoordinateAxis sliceAxis;   //@deprecated
     private Rotation3d viewerInGround;
@@ -62,6 +64,7 @@ public class ViewTileManagerVolumeSource implements VolumeSource {
 
     private VolumeAcceptor volumeAcceptor;
     private TextureDataI textureDataFor3D;
+    private IndeterminateNoteProgressMonitor progressMonitor;
 
     private BlockTiffOctreeLoadAdapter dataAdapter;
 
@@ -91,6 +94,20 @@ public class ViewTileManagerVolumeSource implements VolumeSource {
         this.volumeAcceptor = volumeListener;
         requestTextureData();
         volumeAcceptor.accept(textureDataFor3D);
+    }
+    
+    @Override
+    public String getInfo() {
+        return String.format(COORDS_FORMAT,
+                camera.getFocus().getX(),
+                camera.getFocus().getY(),
+                camera.getFocus().getZ()
+            );
+    }
+    
+    @Override
+    public void setProgressMonitor( IndeterminateNoteProgressMonitor monitor ) {
+        this.progressMonitor = monitor;
     }
 
     /**
@@ -140,6 +157,7 @@ public class ViewTileManagerVolumeSource implements VolumeSource {
     }
 
     private void acceptTileData(ByteBuffer pixels, TileIndex tileIndex, int byteCount, int channelCount) {
+        progressMonitor.setNote( "Assembling volume..." );
         int stdTileSize = BRICK_WIDTH * BRICK_HEIGHT;
         TileFormat tileFormat = dataAdapter.getTileFormat();
 
@@ -227,6 +245,7 @@ public class ViewTileManagerVolumeSource implements VolumeSource {
      * @param stdVals checked for consistency.
      */
     private byte[] fetchTextureData(StandardizedValues stdVals) throws URISyntaxException, IOException {
+        progressMonitor.setNote("Fetching texture data...");
         dataAdapter.setTopFolder( new File( dataUrl.toURI() ) ); //        
         TileFormat tileFormat = dataAdapter.getTileFormat();
         int zoomFactor = (int)Math.pow( 2.0, tileFormat.zoomLevelForCameraZoom( camera.getPixelsPerSceneUnit()) );
@@ -241,7 +260,7 @@ public class ViewTileManagerVolumeSource implements VolumeSource {
         );
 
         logger.info("Fetching corners {} to {}, at fixed zoom 0.", corner1, corner2 );
-        Subvolume fetchedSubvolume = subvolumeProvider.getSubvolume(corner1, corner2, 0 );
+        Subvolume fetchedSubvolume = subvolumeProvider.getSubvolume( corner1, corner2, 0, progressMonitor );
         stdVals.stdChannelCount = fetchedSubvolume.getChannelCount();
         stdVals.stdInternalFormat = GL2.GL_LUMINANCE16_ALPHA16;
         stdVals.stdType = GL2.GL_UNSIGNED_SHORT;

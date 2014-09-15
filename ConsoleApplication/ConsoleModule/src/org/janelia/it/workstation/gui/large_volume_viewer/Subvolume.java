@@ -5,6 +5,7 @@ import org.janelia.it.workstation.geom.Vec3;
 import org.janelia.it.workstation.octree.ZoomLevel;
 import org.janelia.it.workstation.octree.ZoomedVoxelIndex;
 import org.janelia.it.workstation.raster.VoxelIndex;
+import org.janelia.it.workstation.shared.workers.IndeterminateNoteProgressMonitor;
 
 import java.awt.Transparency;
 import java.awt.color.ColorSpace;
@@ -28,13 +29,17 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 public class Subvolume {
 
     public static final int N_THREADS = 20;
-
+    private static final String PROGRESS_REPORT_FORMAT = "%d of %d to go...";
+    
+    private IndeterminateNoteProgressMonitor progressMonitor;
+    
 	// private int extentVoxels[] = {0, 0, 0};
 	private ZoomedVoxelIndex origin; // upper left front corner within parent volume
 	private VoxelIndex extent; // width, height, depth
@@ -42,6 +47,8 @@ public class Subvolume {
 	private ShortBuffer shorts;
 	private int bytesPerIntensity = 1;
 	private int channelCount = 1;
+    private int totalTiles = 0;
+    private int remainingTiles = 0;
     
     private static final Logger logger = LoggerFactory.getLogger( Subvolume.class );
 	
@@ -67,9 +74,9 @@ public class Subvolume {
 	 * thread, because it can take a while to load its
 	 * raster data over the network.
 	 * 
-	 * @param corner1
-	 * @param corner2
-	 * @param wholeImage
+	 * @param corner1 start from here, in 3D
+	 * @param corner2 end here, in 3D
+	 * @param wholeImage 
 	 * @param textureCache
 	 */
     public Subvolume(
@@ -78,6 +85,28 @@ public class Subvolume {
             SharedVolumeImage wholeImage,
             TextureCache textureCache)
     {
+        initialize(corner1, corner2, wholeImage, textureCache);
+    }
+    
+	/**
+	 * You probably want to run this constructor in a worker
+	 * thread, because it can take a while to load its
+	 * raster data over the network.
+	 * 
+	 * @param corner1 start from here, in 3D
+	 * @param corner2 end here, in 3D
+	 * @param wholeImage 
+	 * @param textureCache
+     * @param progressMonitor for reporting relative completion.
+	 */
+    public Subvolume(
+            ZoomedVoxelIndex corner1,
+            ZoomedVoxelIndex corner2,
+            SharedVolumeImage wholeImage,
+            TextureCache textureCache,
+            IndeterminateNoteProgressMonitor progressMonitor)
+    {
+        this.progressMonitor = progressMonitor;
         initialize(corner1, corner2, wholeImage, textureCache);
     }
     
@@ -120,7 +149,10 @@ public class Subvolume {
         Set<TileIndex> neededTiles = getNeededTileSet(tileFormat, farCorner, zoom);
         ExecutorService executorService = Executors.newFixedThreadPool( N_THREADS );
         List<Future<Boolean>> followUps = new ArrayList<>();
-
+        totalTiles = neededTiles.size();
+        remainingTiles = neededTiles.size();
+        reportProgress( totalTiles, totalTiles );
+        
         for (final TileIndex tileIx : neededTiles) {
             Callable<Boolean> fetchTask = new Callable<Boolean>() {
                 @Override
@@ -139,9 +171,13 @@ public class Subvolume {
             for (Future<Boolean> result : followUps) {
                 if (!result.get()) {
                     logger.info("Request for {}..{} had tile gaps.", origin, extent);
+                    break;
                 }
             }
         } catch ( InterruptedException | ExecutionException ex ) {
+            if ( progressMonitor != null ) {
+                progressMonitor.close();
+            }
             logger.error(
                     "Failure awaiting completion of fetch threads for request {}..{}.  Exception report follows.",
                     origin, extent
@@ -282,6 +318,18 @@ public class Subvolume {
             return bytes.get(offset) & 0xff;
     }
 	
+    /**
+     * Report how much is left to be done, for this phase.
+     * 
+     * @param remaining still to come.
+     * @param total all to do.
+     */
+    private void reportProgress( int remaining, int total ) {
+        if ( progressMonitor != null ) {
+            progressMonitor.setNote( String.format( PROGRESS_REPORT_FORMAT, remaining, total ) );
+        }
+    }
+
     private boolean fetchTileData(TextureCache textureCache, TileIndex tileIx, AbstractTextureLoadAdapter loadAdapter, TileFormat tileFormat, ZoomLevel zoom, ZoomedVoxelIndex farCorner) {
         boolean filledToEnd;
         try {
@@ -350,6 +398,16 @@ public class Subvolume {
                 dstOffset += subvolumeLineBytes;
                 srcOffset += tileLineBytes;
             }
+
+            // There is a slim chance this could be decremented to sub-zero,
+            // since there are multiple threads using this method.  However,
+            // we will avoid incurring the overhead of AtomicInteger by simple
+            // accepting that risk (off-by-a-few is not terrible, here), and
+            // simply ensuring the user never sees a negative remainder.
+            remainingTiles --;
+            int remaining = Math.max( 0, remainingTiles );
+            reportProgress( remaining, totalTiles );
+            
         }catch (AbstractTextureLoadAdapter.TileLoadError | AbstractTextureLoadAdapter.MissingTileException e) {
             // TODO Auto-generated catch block
             logger.error( "Request for {}..{} failed with error {}.", origin, extent, e.getMessage() );

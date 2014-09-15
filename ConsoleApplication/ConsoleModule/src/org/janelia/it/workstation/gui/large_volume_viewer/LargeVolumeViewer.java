@@ -42,6 +42,8 @@ import java.net.URL;
 import java.text.DecimalFormat;
 import java.util.Arrays;
 import java.util.List;
+import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
+import org.janelia.it.workstation.shared.workers.IndeterminateNoteProgressMonitor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -472,16 +474,19 @@ implements MouseModalWidget, TileConsumer
 
     /** Launches a 3D popup static-block viewer. */
     private void launch3dViewer() {
-        try {
+        try {            
             ViewTileManagerVolumeSource collector = new ViewTileManagerVolumeSource(
                     getCamera(),
                     getSliceAxis(),
                     getViewerInGround(),
                     subvolumeProvider
-            );
+            );            
             collector.setDataUrl(dataUrl);
 
             Snapshot3d snapshotViewer = new Snapshot3d();
+            IndeterminateNoteProgressMonitor monitor = 
+                    new IndeterminateNoteProgressMonitor(SessionMgr.getMainFrame(), "Fetching tiles", collector.getInfo());
+            snapshotViewer.setLoadProgressMonitor( monitor );
             snapshotViewer.setImageColorModel( imageColorModel );
             snapshotViewer.launch( collector );
 

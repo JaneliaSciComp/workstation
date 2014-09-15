@@ -4,6 +4,7 @@ import org.janelia.it.workstation.geom.CoordinateAxis;
 import org.janelia.it.workstation.geom.Vec3;
 import org.janelia.it.workstation.octree.ZoomLevel;
 import org.janelia.it.workstation.octree.ZoomedVoxelIndex;
+import org.janelia.it.workstation.shared.workers.IndeterminateNoteProgressMonitor;
 
 /**
  * within the large volume viewer, this interface enables our bad habits; the data
@@ -50,7 +51,7 @@ public class SubvolumeProvider {
      * this method returns a read-only subvolume of data (at zoom).
      * @See getVolume(Vec3 corner1, Vec3 corner2)
      */
-    public Subvolume getSubvolume(Vec3 corner1, Vec3 corner2, int zoomIndex) {
+    public Subvolume getSubvolume(Vec3 corner1, Vec3 corner2, int zoomIndex, IndeterminateNoteProgressMonitor monitor) {
         // all this coordinate stuff is taken from something Christopher
         //  wrote in support of the path tracing code he wrote
 
@@ -67,10 +68,10 @@ public class SubvolumeProvider {
         ZoomedVoxelIndex zv2 = tileFormat.zoomedVoxelIndexForVoxelXyz(
                 vox2, zoomLevel, CoordinateAxis.Z);
 
-        return getSubvolume(zv1, zv2);
+        return new Subvolume(zv1, zv2, volumeImage, tileServer.getTextureCache(), monitor);
     }
 
     public Subvolume getSubvolume(ZoomedVoxelIndex zv1, ZoomedVoxelIndex zv2) {
-        return new Subvolume(zv1, zv2, volumeImage, tileServer.getTextureCache());
+        return new Subvolume(zv1, zv2, volumeImage, tileServer.getTextureCache(), null);
     }
 }

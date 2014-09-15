@@ -10,8 +10,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.awt.*;
+import java.beans.PropertyChangeEvent;
 import org.janelia.it.workstation.gui.large_volume_viewer.ImageColorModel;
-import org.janelia.it.workstation.shared.workers.IndeterminateProgressMonitor;
+import org.janelia.it.workstation.shared.workers.IndeterminateNoteProgressMonitor;
 
 /**
  * Created with IntelliJ IDEA.
@@ -23,9 +24,10 @@ import org.janelia.it.workstation.shared.workers.IndeterminateProgressMonitor;
  */
 public class Snapshot3d extends ModalDialog {
     // Choosing initial width > height as workaround to the reset-focus problem.
-    private Dimension size = new Dimension( 650, 600 );
+    private static final Dimension WIDGET_SIZE = new Dimension( 650, 600 );
     private VolumeSource.VolumeAcceptor volumeAcceptor;
     private ImageColorModel imageColorModel;
+    private IndeterminateNoteProgressMonitor monitor;
     private final Logger logger = LoggerFactory.getLogger(Snapshot3d.class);
     
     public Snapshot3d() {
@@ -36,14 +38,26 @@ public class Snapshot3d extends ModalDialog {
         this.imageColorModel = imageColorModel;
     }
     
+    public void setLoadProgressMonitor( IndeterminateNoteProgressMonitor monitor ) {
+        this.monitor = monitor;
+    }
+    
+    public IndeterminateNoteProgressMonitor getMonitor() {
+        return monitor;
+    }
+    
     /**
      * Launching consists of making a load worker, and then executing that.
      *
      * @param volumeSource for getting the data.
      */
-    public void launch( VolumeSource volumeSource) {
+    public void launch( MonitoredVolumeSource volumeSource) {
         SnapshotWorker loadWorker = new SnapshotWorker( volumeSource );
-        loadWorker.setProgressMonitor(new IndeterminateProgressMonitor(SessionMgr.getMainFrame(), "Fetching data", ""));
+        if ( getMonitor() == null ) {
+            setLoadProgressMonitor( new IndeterminateNoteProgressMonitor(SessionMgr.getMainFrame(), "Fetching tiles", volumeSource.getInfo()) );
+        }
+        loadWorker.setProgressMonitor( getMonitor() );
+        volumeSource.setProgressMonitor( getMonitor() );
         loadWorker.execute();
     }
 
@@ -72,8 +86,8 @@ public class Snapshot3d extends ModalDialog {
             logger.error("Failed to create volume brick for {}.", textureData.getFilename());
         }
 
-        this.setPreferredSize( size );
-        this.setMinimumSize( size );
+        this.setPreferredSize( WIDGET_SIZE );
+        this.setMinimumSize( WIDGET_SIZE );
         this.setLayout(new BorderLayout());
         this.add( mip3d, BorderLayout.CENTER );
 
@@ -97,6 +111,20 @@ public class Snapshot3d extends ModalDialog {
                 }
             };
             volumeSource.getVolume( volumeAcceptor );
+        }
+
+        @Override
+        public void propertyChange(PropertyChangeEvent e) {
+            if (progressMonitor == null) {
+                return;
+            }
+            if ("progress".equals(e.getPropertyName())) {
+                int progress = (Integer) e.getNewValue();
+                progressMonitor.setProgress(progress);
+                if (progressMonitor.isCanceled()) {
+                    super.cancel(true);
+                }
+            }
         }
 
         @Override
