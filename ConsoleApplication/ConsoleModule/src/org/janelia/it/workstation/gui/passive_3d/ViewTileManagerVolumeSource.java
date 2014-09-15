@@ -42,7 +42,7 @@ import org.janelia.it.workstation.gui.viewer3d.VolumeDataAcceptor;
  * given.
  */
 public class ViewTileManagerVolumeSource implements VolumeSource {
-    public static final int BRICK_CUBIC_DIMENSION = 64;
+    public static final int BRICK_CUBIC_DIMENSION = 512;
     public static final int BRICK_WIDTH = BRICK_CUBIC_DIMENSION;
     public static final int BRICK_HEIGHT = BRICK_CUBIC_DIMENSION;
     public static final int BRICK_DEPTH = BRICK_CUBIC_DIMENSION;
