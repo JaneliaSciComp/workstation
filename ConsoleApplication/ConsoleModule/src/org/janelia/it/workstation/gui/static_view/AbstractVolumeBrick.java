@@ -166,7 +166,7 @@ public abstract class AbstractVolumeBrick implements VolumeBrickI
 			a1 = CoordinateAxis.Y; // OK, maybe Y axis is principal
 		if ( Math.abs(vv.z()) > Math.abs(vv.get(a1.index())) )
 			a1 = CoordinateAxis.Z; // Alright, it's definitely Z principal.
-
+        
         setupSignalTexture(gl);
 
 		// If principal axis points away from viewer, draw slices front to back,

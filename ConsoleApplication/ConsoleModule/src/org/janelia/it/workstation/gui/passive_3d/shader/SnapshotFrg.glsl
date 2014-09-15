@@ -14,11 +14,28 @@ vec4 chooseColor()
     vec4 in_color = texture3D(signalTexture, gl_TexCoord[0].xyz);
 
 /*
-  Uncommenting this yields a stack of black and white slabs.
-
 if ( 0 == 0 )
 {
-return in_color;
+// THIS appears to knock out all the varying, dimmer detail between slabs.
+//float component = 2 * ( in_color.r - 0.5 );
+
+// THIS leaves every fourth sheet when viewed into Z.
+float componentr = in_color.r;
+if ( componentr > 0.6 )
+{
+    componentr = 1.0 - componentr;
+}
+float componentg = in_color.a;
+if ( componentg > 0.6 )
+{
+    componentg = 1.0 - componentg;
+}
+return vec4( componentr, componentg, 0.0, 1.0);
+
+// Just dim down all.
+//  Yields 16 bright slabs, in gray, with fainter detail between them.
+//return vec4( in_color.r - 0.5 );
+
 }
 */
 

@@ -6,7 +6,6 @@ import org.janelia.it.workstation.geom.Vec3;
 import org.janelia.it.workstation.gui.camera.BasicObservableCamera3d;
 import org.janelia.it.workstation.gui.camera.Camera3d;
 import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
-import org.janelia.it.workstation.shared.workers.IndeterminateProgressMonitor;
 import org.janelia.it.workstation.gui.large_volume_viewer.BlockTiffOctreeLoadAdapter;
 import org.janelia.it.workstation.gui.large_volume_viewer.TextureData2dGL;
 import org.janelia.it.workstation.gui.large_volume_viewer.TileFormat;
@@ -30,6 +29,7 @@ import java.util.concurrent.TimeUnit;
 import javax.media.opengl.GL2;
 import org.janelia.it.workstation.gui.large_volume_viewer.Subvolume;
 import org.janelia.it.workstation.gui.large_volume_viewer.SubvolumeProvider;
+import org.janelia.it.workstation.gui.viewer3d.VolumeDataAcceptor;
 
 /**
  * Created with IntelliJ IDEA.
@@ -42,7 +42,7 @@ import org.janelia.it.workstation.gui.large_volume_viewer.SubvolumeProvider;
  * given.
  */
 public class ViewTileManagerVolumeSource implements VolumeSource {
-    public static final int BRICK_CUBIC_DIMENSION = 128;
+    public static final int BRICK_CUBIC_DIMENSION = 512;
     public static final int BRICK_WIDTH = BRICK_CUBIC_DIMENSION;
     public static final int BRICK_HEIGHT = BRICK_CUBIC_DIMENSION;
     public static final int BRICK_DEPTH = BRICK_CUBIC_DIMENSION;
@@ -122,6 +122,8 @@ public class ViewTileManagerVolumeSource implements VolumeSource {
         textureDataFor3D.setExplicitVoxelComponentOrder(stdVals.stdFormat);
         textureDataFor3D.setExplicitVoxelComponentType(stdVals.stdType);
         textureDataFor3D.setPixelByteCount(stdVals.stdByteCount);
+        textureDataFor3D.setInterpolationMethod( GL2.GL_LINEAR );
+        textureDataFor3D.setColorSpace(VolumeDataAcceptor.TextureColorSpace.COLOR_SPACE_LINEAR);
 
     }
     
@@ -243,13 +245,21 @@ public class ViewTileManagerVolumeSource implements VolumeSource {
         stdVals.stdChannelCount = fetchedSubvolume.getChannelCount();
         stdVals.stdInternalFormat = GL2.GL_LUMINANCE16_ALPHA16;
         stdVals.stdType = GL2.GL_UNSIGNED_SHORT;
-        stdVals.stdFormat = GL2.GL_RG;
+        stdVals.stdFormat = GL2.GL_LUMINANCE_ALPHA;
         stdVals.stdByteCount = fetchedSubvolume.getBytesPerIntensity();
 
         final ByteBuffer byteBuffer = fetchedSubvolume.getByteBuffer();
         byteBuffer.rewind();
         byte[] transferredBytes = new byte[ byteBuffer.capacity() ];
         byteBuffer.get(transferredBytes);
+        // Swap all shorts end-over-end.
+        /*
+        for ( int i = 0; i < transferredBytes.length; i+=2 ) {
+            byte tempByte = transferredBytes[ i ];
+            transferredBytes[ i ] = transferredBytes[ i + 1 ];
+            transferredBytes[ i + 1 ] = tempByte;
+        }
+        */
         return transferredBytes;
     }
 
