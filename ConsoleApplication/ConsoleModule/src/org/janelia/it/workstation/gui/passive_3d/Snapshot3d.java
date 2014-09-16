@@ -11,6 +11,8 @@ import org.slf4j.LoggerFactory;
 
 import java.awt.*;
 import java.beans.PropertyChangeEvent;
+import java.util.Observable;
+import java.util.Observer;
 import javax.swing.JLabel;
 import org.janelia.it.workstation.gui.large_volume_viewer.ImageColorModel;
 import org.janelia.it.workstation.shared.workers.IndeterminateNoteProgressMonitor;
@@ -21,7 +23,7 @@ import org.janelia.it.workstation.shared.workers.IndeterminateNoteProgressMonito
  * Date: 7/31/13
  * Time: 3:25 PM
  *
- * This popup will give users a snapshot volume.  Very simply viewer, relatively speaking.
+ * This popup will give users a snapshot volume.  Very simple viewer, relatively speaking.
  */
 public class Snapshot3d extends ModalDialog {
     // Choosing initial width > height as workaround to the reset-focus problem.
@@ -48,6 +50,14 @@ public class Snapshot3d extends ModalDialog {
 
     public void setImageColorModel( ImageColorModel imageColorModel ) {
         this.imageColorModel = imageColorModel;
+        this.imageColorModel.getColorModelChangedSignal().addObserver(
+                new Observer() {
+                    public void update( Observable target, Object obj ) {
+                        Snapshot3d.this.validate();
+                        Snapshot3d.this.repaint();
+                    }
+                }
+        );
     }
     
     public void setLoadProgressMonitor( IndeterminateNoteProgressMonitor monitor ) {

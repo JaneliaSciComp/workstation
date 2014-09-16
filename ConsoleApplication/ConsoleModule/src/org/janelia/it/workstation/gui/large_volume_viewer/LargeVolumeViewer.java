@@ -458,7 +458,6 @@ implements MouseModalWidget, TileConsumer
         this.subvolumeProvider = subvolumeProvider;
     }
 
-    // TEMP public setting... LLF, 8/2/2013
     public List<JMenuItem> getLocalItems() {
         JMenu snapShot3dSubMenu = new JMenu("3D Snapshot");
 
