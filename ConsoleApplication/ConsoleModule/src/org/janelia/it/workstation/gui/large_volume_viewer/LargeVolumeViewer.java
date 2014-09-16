@@ -501,12 +501,19 @@ implements MouseModalWidget, TileConsumer
                     new IndeterminateNoteProgressMonitor(SessionMgr.getMainFrame(), "Fetching tiles", collector.getInfo());
             snapshotViewer.setLoadProgressMonitor( monitor );
             snapshotViewer.setImageColorModel( imageColorModel );
+            snapshotViewer.setLabelText( labelTextFor3d(cubicDimension) );
             snapshotViewer.launch( collector );
 
         } catch ( Exception ex ) {
             System.err.println("Failed to launch viewer: " + ex.getMessage());
             ex.printStackTrace();
         }
+    }
+
+    private String labelTextFor3d(int cubicDimension) {
+        final Vec3 focus = getCamera().getFocus();
+        String LABEL3d_FORMAT = "Centered at [%3.1f,%3.1f,%3.1f].  %4$dx%4$dx%4$d.";
+        return String.format( LABEL3d_FORMAT, focus.getX(), focus.getY(), focus.getZ(), cubicDimension );
     }
 
 }
