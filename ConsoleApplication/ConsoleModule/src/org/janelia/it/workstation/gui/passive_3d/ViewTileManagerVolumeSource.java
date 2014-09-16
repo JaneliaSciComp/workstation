@@ -248,19 +248,20 @@ public class ViewTileManagerVolumeSource implements MonitoredVolumeSource {
         progressMonitor.setNote("Fetching texture data...");
         dataAdapter.setTopFolder( new File( dataUrl.toURI() ) ); //        
         TileFormat tileFormat = dataAdapter.getTileFormat();
-        int zoomFactor = (int)Math.pow( 2.0, tileFormat.zoomLevelForCameraZoom( camera.getPixelsPerSceneUnit()) );
+        int zoomFactor = tileFormat.zoomLevelForCameraZoom( camera.getPixelsPerSceneUnit());
+        zoomFactor = 0; // TEMP
         double lowX = getCameraLowerBound(0);
         double lowY = getCameraLowerBound(1);
         double lowZ = getCameraLowerBound(2);
         Vec3 corner1 = new Vec3( lowX, lowY, lowZ );
         Vec3 corner2 = new Vec3( 
-                lowX + BRICK_CUBIC_DIMENSION - 1,
-                lowY + BRICK_CUBIC_DIMENSION - 1,
-                lowZ + BRICK_CUBIC_DIMENSION - 1
+                SubvolumeProvider.findUpperBound(lowX, BRICK_CUBIC_DIMENSION),
+                SubvolumeProvider.findUpperBound(lowY, BRICK_CUBIC_DIMENSION),
+                SubvolumeProvider.findUpperBound(lowZ, BRICK_CUBIC_DIMENSION)
         );
 
         logger.info("Fetching corners {} to {}, at fixed zoom 0.", corner1, corner2 );
-        Subvolume fetchedSubvolume = subvolumeProvider.getSubvolume( corner1, corner2, 0, progressMonitor );
+        Subvolume fetchedSubvolume = subvolumeProvider.getSubvolume( corner1, corner2, zoomFactor, progressMonitor );
         stdVals.stdChannelCount = fetchedSubvolume.getChannelCount();
         stdVals.stdInternalFormat = GL2.GL_LUMINANCE16_ALPHA16;
         stdVals.stdType = GL2.GL_UNSIGNED_SHORT;
@@ -275,7 +276,8 @@ public class ViewTileManagerVolumeSource implements MonitoredVolumeSource {
     }
 
     private double getCameraLowerBound( int index ) {
-        return Math.max( 0.0, camera.getFocus().get( index ) - (double)(BRICK_CUBIC_DIMENSION / 2));
+        double focusVal = camera.getFocus().get( index );
+        return SubvolumeProvider.findLowerBound( focusVal, BRICK_CUBIC_DIMENSION );
     }
     
     /**

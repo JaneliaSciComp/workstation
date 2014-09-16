@@ -68,10 +68,53 @@ public class SubvolumeProvider {
         ZoomedVoxelIndex zv2 = tileFormat.zoomedVoxelIndexForVoxelXyz(
                 vox2, zoomLevel, CoordinateAxis.Z);
 
-        return new Subvolume(zv1, zv2, volumeImage, tileServer.getTextureCache(), monitor);
+        ZoomedVoxelIndex zvFull1 = null;
+        ZoomedVoxelIndex zvFull2 = null;
+        
+        // For this override, will back-apply the volume size calculation, to
+        // re-expand the coordinates to original sizes.
+        if ( zoomIndex == 0 ) {
+            zvFull1 = zv1;
+            zvFull2 = zv2;
+        }
+        else {
+            //  First, calculate the center point.
+            Vec3 zoomedCenterPoint = new Vec3(Math.abs(zv1.getX() + zv2.getX()) / 2.0, Math.abs(zv1.getY() + zv2.getY()) / 2.0, Math.abs(zv1.getZ() + zv2.getZ()) / 2.0);
+            //  Next, make new starts/ends.
+            double[] originalSizing = new double[]{
+                Math.abs(corner1.getX() - corner2.getX()) + 1.0,
+                Math.abs(corner1.getY() - corner2.getY()) + 1.0,
+                Math.abs(corner1.getZ() - corner2.getZ()) + 1.0
+            };
+
+            zvFull1 = new ZoomedVoxelIndex(
+                    zoomLevel,
+                    (int) findLowerBound(zoomedCenterPoint.getX(), (int) originalSizing[0]),
+                    (int) findLowerBound(zoomedCenterPoint.getY(), (int) originalSizing[1]),
+                    (int) findLowerBound(zoomedCenterPoint.getZ(), (int) originalSizing[2])
+            );
+
+            zvFull2 = new ZoomedVoxelIndex(
+                    zoomLevel,
+                    (int) findUpperBound(zvFull1.getX(), (int) originalSizing[0]),
+                    (int) findUpperBound(zvFull1.getY(), (int) originalSizing[1]),
+                    (int) findUpperBound(zvFull1.getZ(), (int) originalSizing[2])
+            );
+
+        }
+        
+        return new Subvolume(zvFull1, zvFull2, volumeImage, tileServer.getTextureCache(), monitor);
     }
 
     public Subvolume getSubvolume(ZoomedVoxelIndex zv1, ZoomedVoxelIndex zv2) {
         return new Subvolume(zv1, zv2, volumeImage, tileServer.getTextureCache(), null);
+    }
+    
+    public static double findLowerBound( double centerCoord, int desiredDimension ) {
+        return Math.max( 0.0, centerCoord - (double)(desiredDimension / 2));        
+    }
+    
+    public static double findUpperBound( double lowerCoord, int desiredDimension ) {
+        return lowerCoord + desiredDimension - 1;
     }
 }
