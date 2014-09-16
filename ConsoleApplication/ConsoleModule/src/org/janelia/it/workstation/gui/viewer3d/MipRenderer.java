@@ -259,7 +259,11 @@ class MipRenderer
         // System.out.println("Focus = " + focusInGround);
         // cameraFocusDistance = DEFAULT_CAMERA_FOCUS_DISTANCE * defaultHeightInPixels / heightInPixels;
         double finalAspectRatio = maxAspectRatio(boundingBox);
-        double newFocusDistance = finalAspectRatio * 1.05 * DISTANCE_TO_SCREEN_IN_PIXELS * heightInMicrometers / heightInPixels;
+        double heightRatioFactor = heightInMicrometers / heightInPixels;
+        if ( heightRatioFactor < 0.5 ) {
+            heightRatioFactor *= (1.75 - heightRatioFactor) * (1.75 - heightRatioFactor);
+        }
+        double newFocusDistance = finalAspectRatio * 1.05 * DISTANCE_TO_SCREEN_IN_PIXELS * heightRatioFactor;
         volumeModel.setCameraDepth( new Vec3( 0.0, 0.0, -newFocusDistance ) );
         getVolumeModel().setCameraPixelsPerSceneUnit(DISTANCE_TO_SCREEN_IN_PIXELS, getVolumeModel().getCameraFocusDistance());
     }

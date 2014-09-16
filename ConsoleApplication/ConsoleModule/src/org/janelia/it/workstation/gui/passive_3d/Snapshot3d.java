@@ -32,6 +32,7 @@ public class Snapshot3d extends ModalDialog {
     
     public Snapshot3d() {
         super();
+        super.setModal( false );
     }
 
     public void setImageColorModel( ImageColorModel imageColorModel ) {

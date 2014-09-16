@@ -43,11 +43,9 @@ import org.janelia.it.workstation.shared.workers.IndeterminateNoteProgressMonito
  * given.
  */
 public class ViewTileManagerVolumeSource implements MonitoredVolumeSource {
-    public static final int BRICK_CUBIC_DIMENSION = 512;
-    public static final int BRICK_WIDTH = BRICK_CUBIC_DIMENSION;
-    public static final int BRICK_HEIGHT = BRICK_CUBIC_DIMENSION;
-    public static final int BRICK_DEPTH = BRICK_CUBIC_DIMENSION;
+    private static final int DEFAULT_BRICK_CUBIC_DIMENSION = 512;
     private static final String COORDS_FORMAT = "[%3.1f,%3.1f,%3.1f]";
+    
     private Camera3d camera;
     private CoordinateAxis sliceAxis;   //@deprecated
     private Rotation3d viewerInGround;
@@ -61,6 +59,8 @@ public class ViewTileManagerVolumeSource implements MonitoredVolumeSource {
     private int absoluteReqVolEndY;
     private int absoluteReqVolStartZ;
     private int absoluteReqVolEndZ;
+    
+    private int brickCubicDimension = DEFAULT_BRICK_CUBIC_DIMENSION;
 
     private VolumeAcceptor volumeAcceptor;
     private TextureDataI textureDataFor3D;
@@ -71,8 +71,9 @@ public class ViewTileManagerVolumeSource implements MonitoredVolumeSource {
     private final Logger logger = LoggerFactory.getLogger( ViewTileManagerVolumeSource.class );
 
     public ViewTileManagerVolumeSource(Camera3d camera,
-                                       CoordinateAxis sliceAxis,  //@deprecated
+                                       CoordinateAxis sliceAxis,
                                        Rotation3d viewerInGround,
+                                       int cubicDimension,
                                        SubvolumeProvider subvolumeProvider) throws Exception {
         
         // Cloning the camera, to leave the original as was found.
@@ -84,7 +85,10 @@ public class ViewTileManagerVolumeSource implements MonitoredVolumeSource {
         this.camera = iterationCamera;
         this.viewerInGround = viewerInGround;
         this.sliceAxis = sliceAxis;
-        this.subvolumeProvider = subvolumeProvider;
+        this.subvolumeProvider = subvolumeProvider; 
+        if ( cubicDimension > 0 ) {
+            brickCubicDimension = cubicDimension;
+        }
 
         dataAdapter = new BlockTiffOctreeLoadAdapter();
     }
@@ -131,7 +135,7 @@ public class ViewTileManagerVolumeSource implements MonitoredVolumeSource {
 
         // Now build the data volume.  The data volume bytes will be filled in later.
         textureDataFor3D = new TextureDataBean(
-                new VolumeDataBean( dataVolume, BRICK_WIDTH, BRICK_HEIGHT, BRICK_DEPTH ), BRICK_WIDTH, BRICK_HEIGHT, BRICK_DEPTH
+                new VolumeDataBean( dataVolume, brickCubicDimension, brickCubicDimension, brickCubicDimension ), brickCubicDimension, brickCubicDimension, brickCubicDimension
         );
         textureDataFor3D.setVoxelMicrometers(new Double[]{1.0, 1.0, 1.0});
         textureDataFor3D.setChannelCount(stdVals.stdChannelCount);
@@ -149,7 +153,7 @@ public class ViewTileManagerVolumeSource implements MonitoredVolumeSource {
     }
 
     private int applyZoomFactor(int zoomFactor) {
-        return BRICK_CUBIC_DIMENSION / (int)Math.pow(2.0, zoomFactor);
+        return brickCubicDimension / (int)Math.pow(2.0, zoomFactor);
     }
 
     private int getTileNum(int zoomFactor, TileFormat tileFormat, int axis) {
@@ -158,7 +162,7 @@ public class ViewTileManagerVolumeSource implements MonitoredVolumeSource {
 
     private void acceptTileData(ByteBuffer pixels, TileIndex tileIndex, int byteCount, int channelCount) {
         progressMonitor.setNote( "Assembling volume..." );
-        int stdTileSize = BRICK_WIDTH * BRICK_HEIGHT;
+        int stdTileSize = brickCubicDimension * brickCubicDimension;
         TileFormat tileFormat = dataAdapter.getTileFormat();
 
         // Dealing with tile indices, need to be able to convert tile index back to absolute coordinates,
@@ -206,8 +210,8 @@ public class ViewTileManagerVolumeSource implements MonitoredVolumeSource {
         paramBean.inVolStartX = calcInVolStart( paramBean.xTileAbsStart, absoluteReqVolStartX );
         paramBean.inVolStartY = calcInVolStart( paramBean.yTileAbsStart, absoluteReqVolStartY );
 
-        paramBean.inVolEndX = calcInVolEnd( absoluteReqVolEndX, absoluteReqVolStartX, paramBean.xTileAbsEnd, BRICK_WIDTH );
-        paramBean.inVolEndY = calcInVolEnd( absoluteReqVolEndY, absoluteReqVolStartY, paramBean.yTileAbsStart, BRICK_HEIGHT );
+        paramBean.inVolEndX = calcInVolEnd( absoluteReqVolEndX, absoluteReqVolStartX, paramBean.xTileAbsEnd, brickCubicDimension );
+        paramBean.inVolEndY = calcInVolEnd( absoluteReqVolEndY, absoluteReqVolStartY, paramBean.yTileAbsStart, brickCubicDimension );
 
         paramBean.inTileStartX = calcInTileStart( paramBean.xTileAbsStart, absoluteReqVolStartX );
         paramBean.inTileStartY = calcInTileStart( paramBean.yTileAbsStart, absoluteReqVolStartY );
@@ -255,9 +259,9 @@ public class ViewTileManagerVolumeSource implements MonitoredVolumeSource {
         double lowZ = getCameraLowerBound(2);
         Vec3 corner1 = new Vec3( lowX, lowY, lowZ );
         Vec3 corner2 = new Vec3( 
-                SubvolumeProvider.findUpperBound(lowX, BRICK_CUBIC_DIMENSION),
-                SubvolumeProvider.findUpperBound(lowY, BRICK_CUBIC_DIMENSION),
-                SubvolumeProvider.findUpperBound(lowZ, BRICK_CUBIC_DIMENSION)
+                SubvolumeProvider.findUpperBound(lowX, brickCubicDimension),
+                SubvolumeProvider.findUpperBound(lowY, brickCubicDimension),
+                SubvolumeProvider.findUpperBound(lowZ, brickCubicDimension)
         );
 
         logger.info("Fetching corners {} to {}, at fixed zoom 0.", corner1, corner2 );
@@ -277,7 +281,7 @@ public class ViewTileManagerVolumeSource implements MonitoredVolumeSource {
 
     private double getCameraLowerBound( int index ) {
         double focusVal = camera.getFocus().get( index );
-        return SubvolumeProvider.findLowerBound( focusVal, BRICK_CUBIC_DIMENSION );
+        return SubvolumeProvider.findLowerBound( focusVal, brickCubicDimension );
     }
     
     /**
@@ -309,7 +313,7 @@ public class ViewTileManagerVolumeSource implements MonitoredVolumeSource {
         int endTileNumX = getEndTileNum(zoomFactor, startTileNumX, tileFormat, 0);
         int endTileNumY = getEndTileNum(zoomFactor, startTileNumY, tileFormat, 1);
         // Subtracting 1 from ending-tile Z since (N-m)..(N+m) inclusive, covers 2m+1 distinct values.
-        int endTileNumZ = (startTileNumZ + BRICK_DEPTH / (int)tileFormat.getVoxelMicrometers()[ 2 ] / tileFormat.getTileSize()[ 2 ]) - 1;
+        int endTileNumZ = (startTileNumZ + brickCubicDimension / (int)tileFormat.getVoxelMicrometers()[ 2 ] / tileFormat.getTileSize()[ 2 ]) - 1;
         logger.info("Ending tile coords=(" + endTileNumX + "," + endTileNumY + "," + endTileNumZ + ")");
 
         absoluteReqVolStartX = zoomFactor *
@@ -322,9 +326,9 @@ public class ViewTileManagerVolumeSource implements MonitoredVolumeSource {
         if ( absoluteReqVolStartZ < 0 )
             absoluteReqVolStartZ = 0;
 
-        absoluteReqVolEndX = absoluteReqVolStartX + BRICK_WIDTH - 1;
-        absoluteReqVolEndY = absoluteReqVolStartY + BRICK_HEIGHT - 1;
-        absoluteReqVolEndZ = absoluteReqVolStartZ + BRICK_DEPTH - 1;
+        absoluteReqVolEndX = absoluteReqVolStartX + brickCubicDimension - 1;
+        absoluteReqVolEndY = absoluteReqVolStartY + brickCubicDimension - 1;
+        absoluteReqVolEndZ = absoluteReqVolStartZ + brickCubicDimension - 1;
 
         logger.info("Absolute start/end X are {}..{}.", absoluteReqVolStartX, absoluteReqVolEndX );
         logger.info("Absolute start/end Y are {}..{}.", absoluteReqVolStartY, absoluteReqVolEndY );
@@ -360,7 +364,7 @@ public class ViewTileManagerVolumeSource implements MonitoredVolumeSource {
             stdVals.stdType = setAndStandardize( stdVals.stdType, data.getType(), "Type" );
 
             if ( dataVolume == null ) {
-                dataVolume = new byte[ BRICK_WIDTH * BRICK_HEIGHT * BRICK_DEPTH * stdVals.stdByteCount * stdVals.stdChannelCount ];
+                dataVolume = new byte[ brickCubicDimension * brickCubicDimension * brickCubicDimension * stdVals.stdByteCount * stdVals.stdChannelCount ];
             }
             acceptTileData( data.getPixels(), index, stdVals.stdByteCount, stdVals.stdChannelCount );
 
@@ -484,7 +488,7 @@ public class ViewTileManagerVolumeSource implements MonitoredVolumeSource {
         }
 
         public void run() {
-            int yOutputOffset = (yCounter + paramBean.inVolStartY) * BRICK_WIDTH * bytesPerVoxel * channelsPerVoxel;
+            int yOutputOffset = (yCounter + paramBean.inVolStartY) * brickCubicDimension * bytesPerVoxel * channelsPerVoxel;
             int yInputOffset = (yCounter + paramBean.inTileStartY) * paramBean.tileWidth * bytesPerVoxel * channelsPerVoxel;
 
             int sourceStart = yInputOffset + (paramBean.inTileStartX * bytesPerVoxel * channelsPerVoxel);

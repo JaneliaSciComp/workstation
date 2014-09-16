@@ -40,8 +40,10 @@ import java.awt.event.*;
 import java.awt.geom.Point2D;
 import java.net.URL;
 import java.text.DecimalFormat;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import javax.swing.JMenu;
 import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.workstation.shared.workers.IndeterminateNoteProgressMonitor;
 import org.slf4j.Logger;
@@ -458,27 +460,38 @@ implements MouseModalWidget, TileConsumer
 
     // TEMP public setting... LLF, 8/2/2013
     public List<JMenuItem> getLocalItems() {
-        JMenuItem snapShot3dItem = new JMenuItem( "3D Snapshot" );
+        JMenu snapShot3dSubMenu = new JMenu("3D Snapshot");
 
-        List<JMenuItem> rtnVal = Arrays.asList( snapShot3dItem );
-        snapShot3dItem.addActionListener( new ActionListener() {
-            @Override
-            public void actionPerformed( ActionEvent ae ) {
-                launch3dViewer();
-            }
+        List<JMenuItem> rtnVal = new ArrayList<>();
+        int[] extents = new int[] {
+            64, 128, 512
+        };
 
-        });
+        for (final int extent : extents) {
+            JMenuItem item = new JMenuItem( extent + " cubed" );
+            item.addActionListener(new ActionListener() {
+                @Override
+                public void actionPerformed(ActionEvent ae) {
+                    launch3dViewer( extent );
+                }
+
+            });
+            snapShot3dSubMenu.add( item );
+        }
+        
+        rtnVal.add( snapShot3dSubMenu );
 
         return rtnVal;
     }
 
     /** Launches a 3D popup static-block viewer. */
-    private void launch3dViewer() {
+    private void launch3dViewer( int cubicDimension ) {
         try {            
             ViewTileManagerVolumeSource collector = new ViewTileManagerVolumeSource(
                     getCamera(),
                     getSliceAxis(),
                     getViewerInGround(),
+                    cubicDimension,
                     subvolumeProvider
             );            
             collector.setDataUrl(dataUrl);
