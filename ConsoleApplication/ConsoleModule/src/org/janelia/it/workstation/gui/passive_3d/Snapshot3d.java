@@ -29,8 +29,16 @@ public class Snapshot3d extends ModalDialog {
     private ImageColorModel imageColorModel;
     private IndeterminateNoteProgressMonitor monitor;
     private final Logger logger = LoggerFactory.getLogger(Snapshot3d.class);
+    private static Snapshot3d snapshotInstance;
     
-    public Snapshot3d() {
+    public static Snapshot3d getInstance() {
+        if ( snapshotInstance == null ) {
+            snapshotInstance = new Snapshot3d();
+        }
+        return snapshotInstance;
+    }
+    
+    private Snapshot3d() {
         super();
         super.setModal( false );
     }
@@ -52,7 +60,7 @@ public class Snapshot3d extends ModalDialog {
      *
      * @param volumeSource for getting the data.
      */
-    public void launch( MonitoredVolumeSource volumeSource) {
+    public void launch( MonitoredVolumeSource volumeSource ) {
         SnapshotWorker loadWorker = new SnapshotWorker( volumeSource );
         if ( getMonitor() == null ) {
             setLoadProgressMonitor( new IndeterminateNoteProgressMonitor(SessionMgr.getMainFrame(), "Fetching tiles", volumeSource.getInfo()) );

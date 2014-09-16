@@ -496,7 +496,7 @@ implements MouseModalWidget, TileConsumer
             );            
             collector.setDataUrl(dataUrl);
 
-            Snapshot3d snapshotViewer = new Snapshot3d();
+            Snapshot3d snapshotViewer = Snapshot3d.getInstance();
             IndeterminateNoteProgressMonitor monitor = 
                     new IndeterminateNoteProgressMonitor(SessionMgr.getMainFrame(), "Fetching tiles", collector.getInfo());
             snapshotViewer.setLoadProgressMonitor( monitor );
