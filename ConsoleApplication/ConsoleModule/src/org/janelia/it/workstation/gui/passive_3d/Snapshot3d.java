@@ -11,6 +11,7 @@ import org.slf4j.LoggerFactory;
 
 import java.awt.*;
 import java.beans.PropertyChangeEvent;
+import javax.swing.JLabel;
 import org.janelia.it.workstation.gui.large_volume_viewer.ImageColorModel;
 import org.janelia.it.workstation.shared.workers.IndeterminateNoteProgressMonitor;
 
@@ -28,10 +29,21 @@ public class Snapshot3d extends ModalDialog {
     private VolumeSource.VolumeAcceptor volumeAcceptor;
     private ImageColorModel imageColorModel;
     private IndeterminateNoteProgressMonitor monitor;
+    private String labelText;
+
+    private static Snapshot3d snapshotInstance;
     private final Logger logger = LoggerFactory.getLogger(Snapshot3d.class);
     
-    public Snapshot3d() {
+    public static Snapshot3d getInstance() {
+        if ( snapshotInstance == null ) {
+            snapshotInstance = new Snapshot3d();
+        }
+        return snapshotInstance;
+    }
+    
+    private Snapshot3d() {
         super();
+        super.setModal( false );
     }
 
     public void setImageColorModel( ImageColorModel imageColorModel ) {
@@ -40,6 +52,10 @@ public class Snapshot3d extends ModalDialog {
     
     public void setLoadProgressMonitor( IndeterminateNoteProgressMonitor monitor ) {
         this.monitor = monitor;
+    }
+
+    public void setLabelText( String labelText ) {
+        this.labelText = labelText;
     }
     
     public IndeterminateNoteProgressMonitor getMonitor() {
@@ -51,7 +67,7 @@ public class Snapshot3d extends ModalDialog {
      *
      * @param volumeSource for getting the data.
      */
-    public void launch( MonitoredVolumeSource volumeSource) {
+    public void launch( MonitoredVolumeSource volumeSource ) {
         SnapshotWorker loadWorker = new SnapshotWorker( volumeSource );
         if ( getMonitor() == null ) {
             setLoadProgressMonitor( new IndeterminateNoteProgressMonitor(SessionMgr.getMainFrame(), "Fetching tiles", volumeSource.getInfo()) );
@@ -89,6 +105,9 @@ public class Snapshot3d extends ModalDialog {
         this.setPreferredSize( WIDGET_SIZE );
         this.setMinimumSize( WIDGET_SIZE );
         this.setLayout(new BorderLayout());
+        if ( labelText != null ) {
+            this.add( new JLabel( labelText ), BorderLayout.SOUTH );
+        }
         this.add( mip3d, BorderLayout.CENTER );
 
         packAndShow();
