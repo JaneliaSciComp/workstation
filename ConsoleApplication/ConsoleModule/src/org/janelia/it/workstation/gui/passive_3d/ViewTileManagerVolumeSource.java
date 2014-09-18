@@ -52,7 +52,7 @@ public class ViewTileManagerVolumeSource implements MonitoredVolumeSource {
     private SubvolumeProvider subvolumeProvider;
     private URL dataUrl;
     private byte[] dataVolume;
-
+    
     private int absoluteReqVolStartX;
     private int absoluteReqVolEndX;
     private int absoluteReqVolStartY;
@@ -253,7 +253,7 @@ public class ViewTileManagerVolumeSource implements MonitoredVolumeSource {
         dataAdapter.setTopFolder( new File( dataUrl.toURI() ) ); //        
         TileFormat tileFormat = dataAdapter.getTileFormat();
         int zoomFactor = tileFormat.zoomLevelForCameraZoom( camera.getPixelsPerSceneUnit());
-        zoomFactor = 0; // TEMP
+        //zoomFactor = 1; // TEMP
         double lowX = getCameraLowerBound(0);
         double lowY = getCameraLowerBound(1);
         double lowZ = getCameraLowerBound(2);
@@ -264,7 +264,7 @@ public class ViewTileManagerVolumeSource implements MonitoredVolumeSource {
                 SubvolumeProvider.findUpperBound(lowZ, brickCubicDimension)
         );
 
-        logger.info("Fetching corners {} to {}, at fixed zoom 0.", corner1, corner2 );
+        logger.info( "Fetching corners {} to {}, at zoom {}.", corner1, corner2, zoomFactor );
         Subvolume fetchedSubvolume = subvolumeProvider.getSubvolume( corner1, corner2, zoomFactor, progressMonitor );
         stdVals.stdChannelCount = fetchedSubvolume.getChannelCount();
         stdVals.stdInternalFormat = GL2.GL_LUMINANCE16_ALPHA16;
