@@ -13,6 +13,8 @@ import java.awt.*;
 import java.beans.PropertyChangeEvent;
 import java.util.Observable;
 import java.util.Observer;
+import java.util.Collection;
+import java.util.ArrayList;
 import javax.swing.JLabel;
 import org.janelia.it.workstation.gui.large_volume_viewer.ImageColorModel;
 import org.janelia.it.workstation.shared.workers.IndeterminateNoteProgressMonitor;
@@ -29,6 +31,7 @@ public class Snapshot3d extends ModalDialog {
     // Choosing initial width > height as workaround to the reset-focus problem.
     private static final Dimension WIDGET_SIZE = new Dimension( 650, 600 );
     private VolumeSource.VolumeAcceptor volumeAcceptor;
+    private Collection<Component> locallyAddedComponents = new ArrayList<>();
     private ImageColorModel imageColorModel;
     private IndeterminateNoteProgressMonitor monitor;
     private String labelText;
@@ -83,11 +86,13 @@ public class Snapshot3d extends ModalDialog {
             setLoadProgressMonitor( new IndeterminateNoteProgressMonitor(SessionMgr.getMainFrame(), "Fetching tiles", volumeSource.getInfo()) );
         }
         loadWorker.setProgressMonitor( getMonitor() );
-        volumeSource.setProgressMonitor( getMonitor() );
+        volumeSource.setProgressMonitor( getMonitor() );        
         loadWorker.execute();
     }
 
     private void launch( TextureDataI textureData ) {
+        cleanup();
+
         Mip3d mip3d = new Mip3d();
         mip3d.clear();
         VolumeBrickFactory factory = new VolumeBrickFactory() {
@@ -111,16 +116,27 @@ public class Snapshot3d extends ModalDialog {
         else {
             logger.error("Failed to create volume brick for {}.", textureData.getFilename());
         }
-
+        
+        locallyAddedComponents.add( mip3d );
         this.setPreferredSize( WIDGET_SIZE );
         this.setMinimumSize( WIDGET_SIZE );
         this.setLayout(new BorderLayout());
         if ( labelText != null ) {
-            this.add( new JLabel( labelText ), BorderLayout.SOUTH );
+            final JLabel label = new JLabel( labelText );
+            locallyAddedComponents.add( label );
+            this.add( label, BorderLayout.SOUTH );
         }
         this.add( mip3d, BorderLayout.CENTER );
 
         packAndShow();
+    }
+
+    private void cleanup() {
+        // Cleanup old widgets.
+        for ( Component c: locallyAddedComponents ) {
+            this.remove( c );
+        }
+        locallyAddedComponents.clear();
     }
 
     private class SnapshotWorker extends SimpleWorker {
