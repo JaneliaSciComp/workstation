@@ -29,6 +29,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
+import org.janelia.it.workstation.gui.large_volume_viewer.TileIndex.IndexStyle;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -146,6 +147,14 @@ public class Subvolume {
 	        shorts = bytes.asShortBuffer();
 
         Set<TileIndex> neededTiles = getNeededTileSet(tileFormat, farCorner, zoom);
+        StringBuilder bldr = new StringBuilder();
+        for ( TileIndex tx: neededTiles ) {            
+            bldr.append( "[" )
+                    .append(new Double(tx.getX()).intValue() ).append(",")
+                    .append(new Double(tx.getY()).intValue() ).append( "," )
+                    .append(new Double(tx.getZ()).intValue() ).append("]");
+        }
+        logger.info("Requesting\n" + bldr);
         ExecutorService executorService = Executors.newFixedThreadPool( N_THREADS );
         List<Future<Boolean>> followUps = new ArrayList<>();
         totalTiles = neededTiles.size();
@@ -330,7 +339,7 @@ public class Subvolume {
     }
 
     private boolean fetchTileData(TextureCache textureCache, TileIndex tileIx, AbstractTextureLoadAdapter loadAdapter, TileFormat tileFormat, ZoomLevel zoom, ZoomedVoxelIndex farCorner) {
-        boolean filledToEnd;
+        boolean filledToEnd = true;
         try {
             TextureData2dGL tileData = null;
             // First try to get image from cache...
@@ -344,75 +353,76 @@ public class Subvolume {
             }
             if (tileData == null) {
                 filledToEnd = false;
-                return filledToEnd;
             }
-            TileFormat.TileXyz tileXyz = new TileFormat.TileXyz(
-                    tileIx.getX(), tileIx.getY(), tileIx.getZ());
-            ZoomedVoxelIndex tileOrigin = tileFormat.zoomedVoxelIndexForTileXyz(
-                    tileXyz, zoom, tileIx.getSliceAxis());
-            // One Z-tile goes to one destination Z coordinate in this subvolume.
-            int dstZ = tileOrigin.getZ() - origin.getZ(); // local Z coordinate
-            // Y
-            int startY = Math.max(origin.getY(), tileOrigin.getY());
-            int endY = Math.min(farCorner.getY(), tileOrigin.getY()+tileData.getHeight()-1);
-            int overlapY = endY - startY + 1;
-            // X
-            int startX = Math.max(origin.getX(), tileOrigin.getX());
-            int endX = Math.min(farCorner.getX(), tileOrigin.getX()+tileData.getUsedWidth()-1);
-            int overlapX = endX - startX + 1;
-            // byte array offsets
-            int pixelBytes = channelCount * bytesPerIntensity;
-            int tileLineBytes = pixelBytes * tileData.getWidth();
-            int subvolumeLineBytes = pixelBytes * extent.getX();
-            // Where to start putting bytes into subvolume?
-            int dstOffset = dstZ * subvolumeLineBytes * extent.getY() // z plane offset
-                    + (startY - origin.getY()) * subvolumeLineBytes // y scan-line offset
-                    + (startX - origin.getX()) * pixelBytes;
-            int srcOffset = (startY - tileOrigin.getY()) * tileLineBytes // y scan-line offset
-                    + (startX - tileOrigin.getX()) * pixelBytes;
-            // Copy one scan line at a time
-            for (int y = 0; y < overlapY; ++y) {
-                for (int x = 0; x < overlapX; ++x) {
-                    // TODO faster copy
-                    for (int b = 0; b < pixelBytes; ++b) {
-                        int d = dstOffset + x * pixelBytes + b;
-                        int s = srcOffset + x * pixelBytes + b;
-                        /* for debugging
-                        if (d >= bytes.capacity()) {
-                        System.out.println("overflow destination");
+            else {
+                TileFormat.TileXyz tileXyz = new TileFormat.TileXyz(
+                        tileIx.getX(), tileIx.getY(), tileIx.getZ());
+                ZoomedVoxelIndex tileOrigin = tileFormat.zoomedVoxelIndexForTileXyz(
+                        tileXyz, zoom, tileIx.getSliceAxis());
+                // One Z-tile goes to one destination Z coordinate in this subvolume.
+                int dstZ = tileOrigin.getZ() - origin.getZ(); // local Z coordinate
+                // Y
+                int startY = Math.max(origin.getY(), tileOrigin.getY());
+                int endY = Math.min(farCorner.getY(), tileOrigin.getY() + tileData.getHeight() - 1);
+                int overlapY = endY - startY + 1;
+                // X
+                int startX = Math.max(origin.getX(), tileOrigin.getX());
+                int endX = Math.min(farCorner.getX(), tileOrigin.getX() + tileData.getUsedWidth() - 1);
+                int overlapX = endX - startX + 1;
+                // byte array offsets
+                int pixelBytes = channelCount * bytesPerIntensity;
+                int tileLineBytes = pixelBytes * tileData.getWidth();
+                int subvolumeLineBytes = pixelBytes * extent.getX();
+                // Where to start putting bytes into subvolume?
+                int dstOffset = dstZ * subvolumeLineBytes * extent.getY() // z plane offset
+                        + (startY - origin.getY()) * subvolumeLineBytes // y scan-line offset
+                        + (startX - origin.getX()) * pixelBytes;
+                int srcOffset = (startY - tileOrigin.getY()) * tileLineBytes // y scan-line offset
+                        + (startX - tileOrigin.getX()) * pixelBytes;
+                // Copy one scan line at a time
+                for (int y = 0; y < overlapY; ++y) {
+                    for (int x = 0; x < overlapX; ++x) {
+                        // TODO faster copy
+                        for (int b = 0; b < pixelBytes; ++b) {
+                            int d = dstOffset + x * pixelBytes + b;
+                            int s = srcOffset + x * pixelBytes + b;
+                            /* for debugging
+                             if (d >= bytes.capacity()) {
+                             System.out.println("overflow destination");
+                             }
+                             if (s >= tileData.getPixels().capacity()) {
+                             System.out.println("overflow source");
+                             }
+                             if (bytesPerIntensity == 2) {
+                             int value = sourceShorts.get(s/2) & 0xffff;
+                             if (value > 40370) {
+                             System.out.println("large value");
+                             }
+                             }
+                             */
+                            bytes.put(d, tileData.getPixels().get(s));
                         }
-                        if (s >= tileData.getPixels().capacity()) {
-                        System.out.println("overflow source");
-                        }
-                        if (bytesPerIntensity == 2) {
-                        int value = sourceShorts.get(s/2) & 0xffff;
-                        if (value > 40370) {
-                        System.out.println("large value");
-                        }
-                        }
-                        */
-                        bytes.put(d, tileData.getPixels().get(s));
                     }
+                    dstOffset += subvolumeLineBytes;
+                    srcOffset += tileLineBytes;
                 }
-                dstOffset += subvolumeLineBytes;
-                srcOffset += tileLineBytes;
-            }
 
-            // There is a slim chance this could be decremented to sub-zero,
-            // since there are multiple threads using this method.  However,
-            // we will avoid incurring the overhead of AtomicInteger by simple
-            // accepting that risk (off-by-a-few is not terrible, here), and
-            // simply ensuring the user never sees a negative remainder.
-            remainingTiles --;
-            int remaining = Math.max( 0, remainingTiles );
-            reportProgress( remaining, totalTiles );
+                // There is a slim chance this could be decremented to sub-zero,
+                // since there are multiple threads using this method.  However,
+                // we will avoid incurring the overhead of AtomicInteger by simple
+                // accepting that risk (off-by-a-few is not terrible, here), and
+                // simply ensuring the user never sees a negative remainder.
+                remainingTiles--;
+                int remaining = Math.max(0, remainingTiles);
+                reportProgress(remaining, totalTiles);
+            }
             
-        }catch (AbstractTextureLoadAdapter.TileLoadError | AbstractTextureLoadAdapter.MissingTileException e) {
+        } catch (AbstractTextureLoadAdapter.TileLoadError | AbstractTextureLoadAdapter.MissingTileException e) {
             // TODO Auto-generated catch block
             logger.error( "Request for {}..{} failed with error {}.", origin, extent, e.getMessage() );
             e.printStackTrace();
         }
-        return false;
+        return filledToEnd;
     }
 
     private Set<TileIndex> getNeededTileSet(TileFormat tileFormat, ZoomedVoxelIndex farCorner, ZoomLevel zoom) {
@@ -443,10 +453,10 @@ public class Subvolume {
                 for (int z = tileMin.getZ(); z <= tileMax.getZ(); ++z) {
                     neededTiles.add(new TileIndex(
                             x, y, z,
-                            zoom.getLog2ZoomOutFactor(),
-                            tileMin.getMaxZoom(),
-                            tileMin.getIndexStyle(),
-                            tileMin.getSliceAxis()));
+                        zoom.getLog2ZoomOutFactor(),
+                        tileMin.getMaxZoom(),
+                        tileMin.getIndexStyle(),
+                        tileMin.getSliceAxis()));
                 }
             }
         }
