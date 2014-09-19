@@ -1,7 +1,6 @@
 package org.janelia.it.workstation.gui.passive_3d;
 
 import org.janelia.it.workstation.geom.CoordinateAxis;
-import org.janelia.it.workstation.geom.Rotation3d;
 import org.janelia.it.workstation.geom.Vec3;
 import org.janelia.it.workstation.gui.camera.BasicObservableCamera3d;
 import org.janelia.it.workstation.gui.camera.Camera3d;
@@ -48,7 +47,6 @@ public class ViewTileManagerVolumeSource implements MonitoredVolumeSource {
     
     private Camera3d camera;
     private CoordinateAxis sliceAxis;   //@deprecated
-    private Rotation3d viewerInGround;
     private SubvolumeProvider subvolumeProvider;
     private URL dataUrl;
     private byte[] dataVolume;
@@ -72,7 +70,6 @@ public class ViewTileManagerVolumeSource implements MonitoredVolumeSource {
 
     public ViewTileManagerVolumeSource(Camera3d camera,
                                        CoordinateAxis sliceAxis,
-                                       Rotation3d viewerInGround,
                                        int cubicDimension,
                                        SubvolumeProvider subvolumeProvider) throws Exception {
         
@@ -83,7 +80,6 @@ public class ViewTileManagerVolumeSource implements MonitoredVolumeSource {
         iterationCamera.setRotation(camera.getRotation());
         
         this.camera = iterationCamera;
-        this.viewerInGround = viewerInGround;
         this.sliceAxis = sliceAxis;
         this.subvolumeProvider = subvolumeProvider; 
         if ( cubicDimension > 0 ) {
@@ -253,7 +249,7 @@ public class ViewTileManagerVolumeSource implements MonitoredVolumeSource {
         dataAdapter.setTopFolder( new File( dataUrl.toURI() ) ); //        
         TileFormat tileFormat = dataAdapter.getTileFormat();
         int zoomFactor = tileFormat.zoomLevelForCameraZoom( camera.getPixelsPerSceneUnit());
-        //zoomFactor = 1; // TEMP
+//        int zoomFactor = 0; // TEMP
         double lowX = getCameraLowerBound(0);
         double lowY = getCameraLowerBound(1);
         double lowZ = getCameraLowerBound(2);
@@ -264,8 +260,14 @@ public class ViewTileManagerVolumeSource implements MonitoredVolumeSource {
                 SubvolumeProvider.findUpperBound(lowZ, brickCubicDimension)
         );
 
-        logger.info( "Fetching corners {} to {}, at zoom {}.", corner1, corner2, zoomFactor );
-        Subvolume fetchedSubvolume = subvolumeProvider.getSubvolume( corner1, corner2, zoomFactor, progressMonitor );
+        logger.info( "Fetching centered at {}, at zoom {}.", camera.getFocus(), zoomFactor );
+        int[] extent = new int[] {
+            brickCubicDimension,
+            brickCubicDimension,
+            brickCubicDimension
+        };
+        Subvolume fetchedSubvolume = subvolumeProvider.getSubvolume( camera.getFocus(), extent, zoomFactor, progressMonitor );
+//        Subvolume fetchedSubvolume = subvolumeProvider.getSubvolume( corner1, corner2, zoomFactor, progressMonitor );
         stdVals.stdChannelCount = fetchedSubvolume.getChannelCount();
         stdVals.stdInternalFormat = GL2.GL_LUMINANCE16_ALPHA16;
         stdVals.stdType = GL2.GL_UNSIGNED_SHORT;

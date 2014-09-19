@@ -290,11 +290,20 @@ extends AbstractTextureLoadAdapter
 			tiffBase = "YZ";
 		int sc = tileFormat.getChannelCount();
 		ImageDecoder decoders[] = new ImageDecoder[sc];
+        StringBuilder missingTiffs = new StringBuilder();
+        StringBuilder requestedTiffs = new StringBuilder();
 		for (int c = 0; c < sc; ++c) {
 			File tiff = new File(folder, tiffBase+"."+c+".tif");
+            if ( requestedTiffs.length() > 0 ) {
+                requestedTiffs.append("; ");
+            }
+            requestedTiffs.append(tiff);
 			if (! tiff.exists()) {
                 if ( acceptNullDecoders ) {
-                    log.warn( "Putative tiff file: " + tiff + " not found.  Padding with zeros." );
+                    if ( missingTiffs.length() > 0 ) {
+                        missingTiffs.append(", ");
+                    }
+                    missingTiffs.append( tiff );
                 }
                 else {
     				throw new MissingTileException("Putative tiff file: " + tiff);
@@ -317,6 +326,10 @@ extends AbstractTextureLoadAdapter
                 }
             }
 		}
+        if ( missingTiffs.length() > 0 ) {
+            log.info("All requested tiffs: " + requestedTiffs);
+            log.warn( "Putative tiff file(s): " + missingTiffs + " not found.  Padding with zeros." );
+        }
 		return decoders;
 	}
 	

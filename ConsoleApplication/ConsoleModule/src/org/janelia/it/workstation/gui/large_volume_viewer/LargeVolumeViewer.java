@@ -5,8 +5,7 @@ import org.janelia.it.workstation.geom.Rotation3d;
 import org.janelia.it.workstation.geom.Vec3;
 import org.janelia.it.workstation.gui.camera.ObservableCamera3d;
 import org.janelia.it.workstation.gui.opengl.GLActor;
-import org.janelia.it.workstation.gui.passive_3d.Snapshot3d;
-import org.janelia.it.workstation.gui.passive_3d.ViewTileManagerVolumeSource;
+import org.janelia.it.workstation.gui.passive_3d.Snapshot3DLauncher;
 import org.janelia.it.workstation.gui.large_volume_viewer.action.BasicMouseMode;
 import org.janelia.it.workstation.gui.large_volume_viewer.action.MouseMode;
 import org.janelia.it.workstation.gui.large_volume_viewer.action.PanMode;
@@ -44,8 +43,6 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import javax.swing.JMenu;
-import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
-import org.janelia.it.workstation.shared.workers.IndeterminateNoteProgressMonitor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -56,7 +53,6 @@ implements MouseModalWidget, TileConsumer
 {
 	private static final Logger log = LoggerFactory.getLogger(LargeVolumeViewer.class);
 
-    private boolean optInStatic3d = false;
     private SubvolumeProvider subvolumeProvider;
     private URL dataUrl;
 
@@ -466,12 +462,19 @@ implements MouseModalWidget, TileConsumer
             64, 128, 512
         };
 
+        final Snapshot3DLauncher launcher = new Snapshot3DLauncher(
+                getSliceAxis(),
+                getCamera(),
+                subvolumeProvider,
+                dataUrl,
+                imageColorModel
+        );
         for (final int extent : extents) {
             JMenuItem item = new JMenuItem( extent + " cubed" );
             item.addActionListener(new ActionListener() {
                 @Override
                 public void actionPerformed(ActionEvent ae) {
-                    launch3dViewer( extent );
+                    launcher.launch3dViewer( extent );
                 }
 
             });
@@ -481,38 +484,6 @@ implements MouseModalWidget, TileConsumer
         rtnVal.add( snapShot3dSubMenu );
 
         return rtnVal;
-    }
-
-    /** Launches a 3D popup static-block viewer. */
-    private void launch3dViewer( int cubicDimension ) {
-        try {            
-            ViewTileManagerVolumeSource collector = new ViewTileManagerVolumeSource(
-                    getCamera(),
-                    getSliceAxis(),
-                    getViewerInGround(),
-                    cubicDimension,
-                    subvolumeProvider
-            );            
-            collector.setDataUrl(dataUrl);
-
-            Snapshot3d snapshotViewer = Snapshot3d.getInstance();
-            IndeterminateNoteProgressMonitor monitor = 
-                    new IndeterminateNoteProgressMonitor(SessionMgr.getMainFrame(), "Fetching tiles", collector.getInfo());
-            snapshotViewer.setLoadProgressMonitor( monitor );
-            snapshotViewer.setImageColorModel( imageColorModel );
-            snapshotViewer.setLabelText( labelTextFor3d(cubicDimension) );
-            snapshotViewer.launch( collector );
-
-        } catch ( Exception ex ) {
-            System.err.println("Failed to launch viewer: " + ex.getMessage());
-            ex.printStackTrace();
-        }
-    }
-
-    private String labelTextFor3d(int cubicDimension) {
-        final Vec3 focus = getCamera().getFocus();
-        String LABEL3d_FORMAT = "Centered at [%3.1f,%3.1f,%3.1f].  %4$dx%4$dx%4$d.";
-        return String.format( LABEL3d_FORMAT, focus.getX(), focus.getY(), focus.getZ(), cubicDimension );
     }
 
 }
