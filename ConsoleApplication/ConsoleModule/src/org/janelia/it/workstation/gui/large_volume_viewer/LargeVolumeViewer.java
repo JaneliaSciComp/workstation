@@ -5,7 +5,6 @@ import org.janelia.it.workstation.geom.Rotation3d;
 import org.janelia.it.workstation.geom.Vec3;
 import org.janelia.it.workstation.gui.camera.ObservableCamera3d;
 import org.janelia.it.workstation.gui.opengl.GLActor;
-import org.janelia.it.workstation.gui.passive_3d.Snapshot3DLauncher;
 import org.janelia.it.workstation.gui.large_volume_viewer.action.BasicMouseMode;
 import org.janelia.it.workstation.gui.large_volume_viewer.action.MouseMode;
 import org.janelia.it.workstation.gui.large_volume_viewer.action.PanMode;
@@ -37,12 +36,8 @@ import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.event.*;
 import java.awt.geom.Point2D;
-import java.net.URL;
 import java.text.DecimalFormat;
-import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
-import javax.swing.JMenu;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -52,9 +47,6 @@ extends GLJPanel
 implements MouseModalWidget, TileConsumer
 {
 	private static final Logger log = LoggerFactory.getLogger(LargeVolumeViewer.class);
-
-    private SubvolumeProvider subvolumeProvider;
-    private URL dataUrl;
 
 	protected MouseMode mouseMode;
 	protected MouseMode.Mode mouseModeId;
@@ -184,13 +176,6 @@ implements MouseModalWidget, TileConsumer
         });
         //
 	}
-
-    /**
-     * @param dataUrl the dataUrl to set
-     */
-    public void setDataUrl(URL dataUrl) {
-        this.dataUrl = dataUrl;
-    }
 
 	public void autoContrastNow() {
 		ImageBrightnessStats bs = tileServer.getCurrentBrightnessStats();
@@ -449,41 +434,5 @@ implements MouseModalWidget, TileConsumer
 	public void keyReleased(KeyEvent event) {
 		mouseMode.keyPressed(event);
 	}
-
-    public void setSubvolumeProvider( SubvolumeProvider subvolumeProvider ) {
-        this.subvolumeProvider = subvolumeProvider;
-    }
-
-    public List<JMenuItem> getLocalItems() {
-        JMenu snapShot3dSubMenu = new JMenu("3D Snapshot");
-
-        List<JMenuItem> rtnVal = new ArrayList<>();
-        int[] extents = new int[] {
-            64, 128, 512
-        };
-
-        final Snapshot3DLauncher launcher = new Snapshot3DLauncher(
-                getSliceAxis(),
-                getCamera(),
-                subvolumeProvider,
-                dataUrl,
-                imageColorModel
-        );
-        for (final int extent : extents) {
-            JMenuItem item = new JMenuItem( extent + " cubed" );
-            item.addActionListener(new ActionListener() {
-                @Override
-                public void actionPerformed(ActionEvent ae) {
-                    launcher.launch3dViewer( extent );
-                }
-
-            });
-            snapShot3dSubMenu.add( item );
-        }
-        
-        rtnVal.add( snapShot3dSubMenu );
-
-        return rtnVal;
-    }
 
 }

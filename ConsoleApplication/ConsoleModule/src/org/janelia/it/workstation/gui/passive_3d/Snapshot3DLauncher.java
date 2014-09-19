@@ -6,7 +6,13 @@
 
 package org.janelia.it.workstation.gui.passive_3d;
 
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 import java.net.URL;
+import java.util.ArrayList;
+import java.util.List;
+import javax.swing.JMenu;
+import javax.swing.JMenuItem;
 import org.janelia.it.workstation.geom.CoordinateAxis;
 import org.janelia.it.workstation.geom.Vec3;
 import org.janelia.it.workstation.gui.camera.ObservableCamera3d;
@@ -39,6 +45,32 @@ public class Snapshot3DLauncher {
         this.dataUrl = dataUrl;
         this.camera = camera;
     }
+    
+    public List<JMenuItem> getSnapshotMenuItems() {
+        JMenu snapShot3dSubMenu = new JMenu("3D Snapshot");
+
+        List<JMenuItem> rtnVal = new ArrayList<>();
+        int[] extents = new int[] {
+            64, 128, 512
+        };
+
+        for (final int extent : extents) {
+            JMenuItem item = new JMenuItem( extent + " cubed" );
+            item.addActionListener(new ActionListener() {
+                @Override
+                public void actionPerformed(ActionEvent ae) {
+                    launch3dViewer( extent );
+                }
+
+            });
+            snapShot3dSubMenu.add( item );
+        }
+        
+        rtnVal.add( snapShot3dSubMenu );
+
+        return rtnVal;
+    }    
+
     
     /** Launches a 3D popup static-block viewer. */
     public void launch3dViewer( int cubicDimension ) {
