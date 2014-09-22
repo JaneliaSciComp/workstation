@@ -184,7 +184,7 @@ public class QuadViewUi extends JPanel
 	// annotation-related
     private final CenterNextParentAction centerNextParentAction = new CenterNextParentAction();
     
-    private Snapshot3DLauncher launcher;
+    private Snapshot3DLauncher snapshot3dLauncher;
 
 	private final Action clearCacheAction = new AbstractAction() {
 		private static final long serialVersionUID = 1L;
@@ -490,7 +490,7 @@ public class QuadViewUi extends JPanel
                 public List<JMenuItem> getMenus(MouseEvent event) {
                     List<JMenuItem> result = new Vector<>();
                     result.add(addFileMenuItem());
-                    result.addAll(launcher.getSnapshotMenuItems());
+                    result.addAll(snapshot3dLauncher.getSnapshotMenuItems());
                     result.add(addViewMenuItem());
                     return result;
                 }
@@ -1253,7 +1253,7 @@ public class QuadViewUi extends JPanel
 
         // July 1, 2013 elevate url loading from LargeVolumeViewer to QuadViewUi.
         URL url = tmpFile.toURI().toURL();
-        launcher = new Snapshot3DLauncher(
+        snapshot3dLauncher = new Snapshot3DLauncher(
                 largeVolumeViewer.getSliceAxis(),
                 camera,
                 getSubvolumeProvider(),
