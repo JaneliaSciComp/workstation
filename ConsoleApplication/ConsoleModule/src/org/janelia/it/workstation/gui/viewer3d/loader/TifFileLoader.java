@@ -83,16 +83,14 @@ public class TifFileLoader extends TextureDataBuilder implements VolumeFileLoade
             final int numPages = dec.getNumPages();
             
             for (int imageToLoad = 0; imageToLoad < numPages; imageToLoad++) {
-                RenderedImage op = dec.decodeAsRenderedImage();
-
-                        /*
+                RenderedImage op
                         = new NullOpImage(dec.decodeAsRenderedImage(imageToLoad),
                                 null,
                                 OpImage.OP_IO_BOUND,
                                 null);
-                        */
 
                 wholeImage = renderedToBuffered(op);
+
                 imageCollection.add(wholeImage);
             }
             

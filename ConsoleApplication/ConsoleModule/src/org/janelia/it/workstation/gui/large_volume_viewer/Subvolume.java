@@ -580,62 +580,23 @@ public class Subvolume {
         assert(dimensions[1] % 2 == 0) : "Dimension Y must be divisible by 2";
         assert(dimensions[2] % 2 == 0) : "Dimension Z must be divisible by 2";
         Set<TileIndex> neededTiles = new LinkedHashSet<>();
-        
-        final int centerMinusHalfX = center.getX() - dimensions[0]/2;
-        final int centerMinuxHalfY = center.getY() - dimensions[1]/2;
-        final int centerPlusHalfX = center.getX() + dimensions[0]/2 + 1;
-        final int centerPlusHalfY = center.getY() + dimensions[1]/2 + 1;
-        
-        Vec3 minXyz = new Vec3(
-                Math.min(centerMinusHalfX, centerPlusHalfX),
-                Math.min(centerMinuxHalfY, centerPlusHalfY),
-                center.getZ()
-        );
-        
-        Vec3 maxXyz = new Vec3(
-                Math.max(centerMinusHalfX, centerPlusHalfX),
-                Math.max(centerMinuxHalfY, centerPlusHalfY),
-                center.getZ()
-        );
-        
         // Load tiles from volume representation
 	    ZoomedVoxelIndex centerTileMinVI = new ZoomedVoxelIndex(
 	            zoom,
-                new Double(minXyz.getX()).intValue(),
-                new Double(minXyz.getY()).intValue(),
-                new Double(minXyz.getZ()).intValue()
-	            );
+	            Math.min(center.getX() - dimensions[0]/2, center.getX() + dimensions[0]/2 + 1),
+                Math.min(center.getY() - dimensions[1]/2, center.getY() + dimensions[1]/2 + 1),
+                center.getZ());
 
         // Load tiles from volume representation
 	    ZoomedVoxelIndex centerTileMaxVI = new ZoomedVoxelIndex(
 	            zoom,
-                new Double(maxXyz.getX()).intValue(),
-                new Double(maxXyz.getY()).intValue(),
-                new Double(maxXyz.getZ()).intValue());
+	            Math.max(center.getX() - dimensions[0]/2, center.getX() + dimensions[0]/2 + 1),
+                Math.max(center.getY() - dimensions[1]/2, center.getY() + dimensions[1]/2 + 1),
+                center.getZ());
 
-        TileIndex tileMinCtrZ0 = new TileIndex(
-				new Double(minXyz.getX()).intValue(),
-                new Double(minXyz.getY()).intValue(),
-                new Double(minXyz.getZ()).intValue(),
-				zoom.getLog2ZoomOutFactor(), zoom.getLog2ZoomOutFactor(),
-                tileFormat.getIndexStyle(), CoordinateAxis.Z);
-
-        TileIndex tileMaxCtrZ0 = new TileIndex(
-				new Double(maxXyz.getX()).intValue(),
-                new Double(maxXyz.getY()).intValue(),
-                new Double(maxXyz.getZ()).intValue(),
-				zoom.getLog2ZoomOutFactor(), zoom.getLog2ZoomOutFactor(),
-                tileFormat.getIndexStyle(), CoordinateAxis.Z);
-
-//        TileIndex tileMinCtrZ0 = tileFormat.tileIndexForXyz(
-//                minXyz, /*zoom.getLog2ZoomOutFactor()*/ 0, CoordinateAxis.Z
-//        );
-//        TileIndex tileMaxCtrZ0 = tileFormat.tileIndexForXyz(
-//                maxXyz, /*zoom.getLog2ZoomOutFactor()*/ 0, CoordinateAxis.Z
-//        );
+        TileIndex tileMinCtrZ0 = tileFormat.tileIndexForZoomedVoxelIndex(centerTileMinVI, CoordinateAxis.Z);
+        TileIndex tileMaxCtrZ0 = tileFormat.tileIndexForZoomedVoxelIndex(centerTileMaxVI, CoordinateAxis.Z);
         
-//        TileIndex tileMinCtrZ0 = tileFormat.tileIndexForZoomedVoxelIndex(centerTileMinVI, CoordinateAxis.Z);
-//        TileIndex tileMaxCtrZ0 = tileFormat.tileIndexForZoomedVoxelIndex(centerTileMaxVI, CoordinateAxis.Z);
         // Guard against y-flip. Make it so general it could find some other future situation too.
         // Enforce that tileMinCtrZ x/y/z are no larger than tileMaxCtrZ x/y/z
         // tileMinCtrZ is the minimum xy value for the tile at the center-z point.
@@ -658,9 +619,9 @@ public class Subvolume {
 
         int minZ = Integer.MAX_VALUE; // Seminal value.
         int maxZ = Integer.MIN_VALUE;
-                
-        for (int x = tileMinCtrZ.getX(); x <= tileMaxCtrZ.getX(); x += Math.pow(2.0, tileMinCtrZ.getZoom())) {
-            for (int y = tileMinCtrZ.getY(); y <= tileMaxCtrZ.getY(); y += Math.pow(2.0, tileMinCtrZ.getZoom())) {
+        
+        for (int x = tileMinCtrZ.getX(); x <= tileMaxCtrZ.getX(); ++x) {
+            for (int y = tileMinCtrZ.getY(); y <= tileMaxCtrZ.getY(); ++y) {
                 TileIndex centerTileIndex = new TileIndex(
                         x,y,center.getZ(),
                             zoom.getLog2ZoomOutFactor(),
