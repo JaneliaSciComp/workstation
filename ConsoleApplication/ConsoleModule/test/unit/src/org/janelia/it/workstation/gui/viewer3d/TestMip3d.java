@@ -48,8 +48,9 @@ public class TestMip3d {
 
                     // WORKING:
                     // Compartment masks.
-                    String guideBase = "/Volumes/nobackup/jacs/jacsData/filestore/MaskResources/Compartment/guide/";
-                    String fn = guideBase + "LOP_R.v3dpbd";
+                    String guideBase = "/Volumes/nobackup/jacs/jacsData/filestore/MaskResources/Compartment/guide/";                    
+                    //String fn = guideBase + "LOP_R.v3dpbd";
+                    //String fn = "/Volumes/mousebrainmicro/Tracing/Les/AxonRotate_17511_28654_3405.tif";
                     //String fn = guideBase + "Mask.v3dpbd";
                     //String fn = guideBase + "../maskIndex.v3dpbd";
 
@@ -59,6 +60,8 @@ public class TestMip3d {
                     //String fn = "/Users/fosterl/mean_brain_295_ref_local_with_compartment_edges.tif";
                     //String fn = "/Users/fosterl/Whitebackground_color.tif";
                     //String fn = "/Users/fosterl/Erasmus_Color.tiff";
+                    //String fn = "/Users/fosterl/Regression_12032013a_color_DnSmp.tiff";
+                    String fn = "/Volumes/mousebrainmicro/Tracing/Les/01494/01494-ngc.0.tif";
                     //String fn = "/Users/fosterl/Regression_12032013a_shot.tiff";
                     // BROKEN:
                     //String fn = "/Users/fosterl/Documents/tiff_mousebrain/00507-ngc.1.tif";
