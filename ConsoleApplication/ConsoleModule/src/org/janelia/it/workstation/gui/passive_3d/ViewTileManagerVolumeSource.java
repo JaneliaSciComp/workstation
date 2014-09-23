@@ -248,8 +248,8 @@ public class ViewTileManagerVolumeSource implements MonitoredVolumeSource {
         progressMonitor.setNote("Fetching texture data...");
         dataAdapter.setTopFolder( new File( dataUrl.toURI() ) ); //        
         TileFormat tileFormat = dataAdapter.getTileFormat();
-        int zoomFactor = tileFormat.zoomLevelForCameraZoom( camera.getPixelsPerSceneUnit());
-//        int zoomFactor = 0; // TEMP
+        //TEMP int zoomFactor = tileFormat.zoomLevelForCameraZoom( camera.getPixelsPerSceneUnit());
+        int zoomFactor = 0; // TEMP
         double lowX = getCameraLowerBound(0);
         double lowY = getCameraLowerBound(1);
         double lowZ = getCameraLowerBound(2);

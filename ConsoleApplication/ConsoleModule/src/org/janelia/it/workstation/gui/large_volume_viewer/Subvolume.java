@@ -273,7 +273,7 @@ public class Subvolume {
         try {
             executorService.awaitTermination(5, TimeUnit.MINUTES);
             for (Future<Boolean> result : followUps) {
-                if (!result.get()) {
+                if (result == null || !result.get()) {
                     logger.info("Request for {}..{} had tile gaps.", origin, extent);
                     break;
                 }
@@ -452,9 +452,10 @@ public class Subvolume {
                 tileData = loadAdapter.loadToRam(tileIx);
             }
             if (tileData == null) {
+                logger.info("Found no tile data for " + tileIx);
                 filledToEnd = false;
             }
-            if (origin.getZ() >= 0) {
+            else if (origin.getZ() >= 0) {
                 // If the origin were negative, it would mean there was a
                 // z-drill-in beyond the meaningful boundaries of the nascent
                 //  volume, and no data would be available to be added.
@@ -464,6 +465,7 @@ public class Subvolume {
                         tileXyz, zoom, tileIx.getSliceAxis());
                 // One Z-tile goes to one destination Z coordinate in this subvolume.
                 int dstZ = tileOrigin.getZ() - origin.getZ(); // local Z coordinate
+//                dstZ /= tileIx.getDeltaSlice(); //TEMP
                 // Y
                 int startY = Math.max(origin.getY(), tileOrigin.getY());
                 int endY = Math.min(farCorner.getY(), tileOrigin.getY() + tileData.getHeight() - 1);
