@@ -80,8 +80,9 @@ public class TifFileLoader extends TextureDataBuilder implements VolumeFileLoade
             SeekableStream s = new FileSeekableStream(file);
             TIFFDecodeParam param = null;
             ImageDecoder dec = ImageCodec.createImageDecoder("tiff", s, param);
+            final int numPages = dec.getNumPages();
             
-            for (int imageToLoad = 0; imageToLoad < dec.getNumPages(); imageToLoad++) {
+            for (int imageToLoad = 0; imageToLoad < numPages; imageToLoad++) {
                 RenderedImage op
                         = new NullOpImage(dec.decodeAsRenderedImage(imageToLoad),
                                 null,
