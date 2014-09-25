@@ -3,6 +3,7 @@ package org.janelia.it.workstation.gui.dialogs.search;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.util.*;
+import java.util.concurrent.Future;
 
 import javax.swing.JMenuItem;
 
@@ -19,6 +20,10 @@ import org.janelia.it.workstation.shared.workers.SimpleWorker;
 import org.janelia.it.jacs.model.entity.Entity;
 import org.janelia.it.jacs.model.entity.EntityConstants;
 import org.janelia.it.jacs.model.entity.EntityData;
+import org.janelia.it.jacs.shared.utils.EntityUtils;
+import org.janelia.it.workstation.shared.util.Utils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Context menu for general search results.
@@ -26,6 +31,8 @@ import org.janelia.it.jacs.model.entity.EntityData;
  * @author <a href="mailto:rokickik@janelia.hhmi.org">Konrad Rokicki</a>
  */
 public class SearchResultContextMenu extends AbstractContextMenu<Entity> {
+
+    private static final Logger log = LoggerFactory.getLogger(SearchResultContextMenu.class);
 
     private SearchResultsPanel searchResultsPanel;
 
@@ -67,6 +74,8 @@ public class SearchResultContextMenu extends AbstractContextMenu<Entity> {
             @Override
             public void actionPerformed(ActionEvent e) {
 
+                Utils.setWaitingCursor(searchResultsPanel);
+
                 SimpleWorker worker = new SimpleWorker() {
 
                     List<List<Object>> paths = new ArrayList<List<Object>>();
@@ -97,14 +106,16 @@ public class SearchResultContextMenu extends AbstractContextMenu<Entity> {
                     @Override
                     protected void hadSuccess() {
 
-                        List<EntityTree> trees = new ArrayList<EntityTree>();
-                        Map<EntityTree, String> startingPaths = new HashMap<EntityTree, String>();
+                        final List<EntityTree> trees = new ArrayList<EntityTree>();
+                        final Map<EntityTree, String> startingPaths = new HashMap<EntityTree, String>();
+                        final Set<Future<Boolean>> futures = new HashSet<Future<Boolean>>();
 
+                        PATH_LOOP:
                         for (List<Object> path : paths) {
                             ExpansionState expansion = new ExpansionState();
                             expansion.addExpandedUniqueId("/");
 
-                            StringBuffer sb = new StringBuffer();
+                            StringBuilder sb = new StringBuilder();
                             for (Object p : path) {
                                 sb.append("/");
                                 if (p instanceof Entity) {
@@ -112,14 +123,16 @@ public class SearchResultContextMenu extends AbstractContextMenu<Entity> {
                                     sb.append(((Entity) p).getId());
                                 }
                                 else {
+                                    EntityData ed = (EntityData) p;
                                     sb.append("ed_");
-                                    sb.append(((EntityData) p).getId());
+                                    sb.append(ed.getId());
                                 }
 
                                 expansion.addExpandedUniqueId(sb.toString());
                             }
 
                             String selected = sb.toString();
+                            log.debug("Wil select " + selected);
                             expansion.setSelectedUniqueId(selected);
 
                             EntityTree tree = new EntityTree();
@@ -131,39 +144,80 @@ public class SearchResultContextMenu extends AbstractContextMenu<Entity> {
                                 }
 
                             });
-                            expansion.restoreExpansionState(tree.getDynamicTree(), true);
+                            futures.add(expansion.restoreExpansionState(tree.getDynamicTree(), true));
                             tree.activate();
-
                             trees.add(tree);
                             startingPaths.put(tree, selected);
                         }
 
-                        entityChooser = new MultiTreeEntityChooser("Select relative", trees);
-
-                        int returnVal = entityChooser.showDialog(null);
-
-                        // Dialog has closed, so we need to clean up subscriptions
-                        for (EntityTree entityTree : trees) {
-                            entityTree.deactivate();
+                        if (trees.isEmpty()) {
+                            hadError(new Exception("Could not find any rooted paths"));
                         }
 
-                        if (returnVal != EntityChooser.CHOOSE_OPTION) {
-                            return;
-                        }
-                        String uniqueId = entityChooser.getUniqueIds().get(0);
-                        EntityTree selectedTree = entityChooser.getSelectedTree();
-                        String startingPath = startingPaths.get(selectedTree);
-                        if (startingPath.equals(uniqueId)) {
-                            hadError(new Exception("Cannot map entity to itself."));
-                        }
-                        else {
-                            ResultTreeMapping projection = new ResultTreeMapping(selectedTree, startingPath, uniqueId);
-                            searchResultsPanel.projectResults(projection);
-                        }
+                        log.debug("Waiting for trees to expand");
+
+                        SimpleWorker worker2 = new SimpleWorker() {
+
+                            @Override
+                            protected void doStuff() throws Exception {
+                                for (Future<Boolean> future : futures) {
+                                    try {
+                                        future.get();
+                                    }
+                                    catch (Exception e) {
+                                        log.error("Exception encountered while waiting for tree to expand", e);
+                                    }
+                                }
+                            }
+
+                            @Override
+                            protected void hadSuccess() {
+                                log.debug("All trees expanded");
+                                Utils.setDefaultCursor(searchResultsPanel);
+
+                                entityChooser = new MultiTreeEntityChooser("Select relative", trees);
+
+                                int returnVal = entityChooser.showDialog(null);
+
+                                // Dialog has closed, so we need to clean up subscriptions
+                                for (EntityTree entityTree : trees) {
+                                    entityTree.deactivate();
+                                }
+
+                                if (returnVal != EntityChooser.CHOOSE_OPTION) {
+                                    return;
+                                }
+
+                                if (entityChooser.getUniqueIds().isEmpty()) {
+                                    hadError(new Exception("No selection was made."));
+                                    return;
+                                }
+
+                                String uniqueId = entityChooser.getUniqueIds().get(0);
+                                EntityTree selectedTree = entityChooser.getSelectedTree();
+                                String startingPath = startingPaths.get(selectedTree);
+                                if (startingPath.equals(uniqueId)) {
+                                    hadError(new Exception("Cannot map entity to itself."));
+                                }
+                                else {
+                                    ResultTreeMapping projection = new ResultTreeMapping(selectedTree, startingPath, uniqueId);
+                                    searchResultsPanel.projectResults(projection);
+                                }
+                            }
+
+                            @Override
+                            protected void hadError(Throwable error) {
+                                Utils.setDefaultCursor(searchResultsPanel);
+                                SessionMgr.getSessionMgr().handleException(error);
+                            }
+                        };
+
+                        worker2.execute();
                     }
 
                     @Override
                     protected void hadError(Throwable error) {
+                        Utils.setDefaultCursor(searchResultsPanel);
                         SessionMgr.getSessionMgr().handleException(error);
                     }
                 };
@@ -193,6 +247,13 @@ public class SearchResultContextMenu extends AbstractContextMenu<Entity> {
 
         for (EntityData parentEd : parents) {
             Entity parent = parentEd.getParentEntity();
+
+            if (EntityUtils.isHidden(parentEd)) {
+                // Skip this path, because it should be hidden from the user
+                log.debug("Skipping path becuase it's hidden: " + parent.getName() + "-(" + parentEd.getEntityAttrName() + ")->" + entity.getName());
+                continue;
+            }
+
             parent = ModelMgr.getModelMgr().getEntityById(parent.getId());
             List<List<Object>> parentPaths = getRootPaths(parent, visited);
             for (List<Object> parentPath : parentPaths) {
