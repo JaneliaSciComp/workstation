@@ -71,8 +71,17 @@ public class TiffExporter {
 
             logger.info( "Exporting texture {}.  Size={}", texture.getFilename(), textureSize );
 
-            Collection<BufferedImage> imageList = new ArrayList<BufferedImage>( texture.getSz() );
+            Collection<BufferedImage> imageList = new ArrayList<>( texture.getSz() );
             ExecutorService threadPool = Executors.newFixedThreadPool( MAX_WRITEBACK_THREADS );
+            if ( texture == null || texture.getTextureData() == null ) {
+                logger.error("texture={}");
+                if ( texture != null ) {
+                    logger.error("Texture's texturedata is {} for file {}.", texture.getTextureData(), chosenFile);                    
+                }
+                RuntimeException rex = new RuntimeException( "Nothing to save in partial selection(s).  File export abandoned." );
+                rex.printStackTrace();
+                throw rex;
+            }
             VolumeDataChunk[] volumeChunks = texture.getTextureData().getVolumeChunks();
             int absoluteSliceNum = 0;
             for ( int chunkNum = 0; chunkNum < volumeChunks.length; chunkNum ++ ) {
@@ -109,6 +118,7 @@ public class TiffExporter {
 
             ImageEncoder ienc = ImageCodec.createImageEncoder( "tiff", os, params );
             BufferedImage nextImage = imageList.iterator().next();
+            imageList.remove( nextImage );
             params.setExtraImages( imageList.iterator() );
             ienc.encode( nextImage );
 

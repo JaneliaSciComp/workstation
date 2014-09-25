@@ -683,7 +683,7 @@ public class AlignmentBoardControls {
                     }
                 };
 
-                Collection<float[]> acceptedCords = getCombinedCropCoords(1.0);
+                Collection<float[]> acceptedCords = getCombinedCropCoords(getDownsampleRate());
                 SavebackEvent event = new SavebackEvent();
                 event.setAbsoluteCoords(acceptedCords);
                 event.setCompletionListener(buttonEnableListener);
@@ -707,7 +707,7 @@ public class AlignmentBoardControls {
             @Override
             public void actionPerformed(ActionEvent ae) {
                 setButtonBusy(colorSave);
-                Collection<float[]> acceptedCords = getCombinedCropCoords(1.0);
+                Collection<float[]> acceptedCords = getCombinedCropCoords(getDownsampleRate());
                 SavebackEvent event = new SavebackEvent();
                 event.setAbsoluteCoords(acceptedCords);
                 event.setCompletionListener(buttonEnableListener);

@@ -38,8 +38,6 @@ import org.janelia.it.workstation.gui.large_volume_viewer.skeleton.Anchor;
 import org.janelia.it.workstation.gui.large_volume_viewer.skeleton.Skeleton;
 import org.janelia.it.workstation.gui.large_volume_viewer.skeleton.SkeletonActor;
 import org.janelia.it.workstation.gui.viewer3d.BoundingBox3d;
-import org.janelia.it.workstation.octree.ZoomLevel;
-import org.janelia.it.workstation.octree.ZoomedVoxelIndex;
 import org.janelia.it.workstation.signal.Signal;
 import org.janelia.it.workstation.signal.Signal1;
 import org.janelia.it.workstation.signal.Slot;
@@ -68,6 +66,7 @@ import java.net.URL;
 import java.util.Arrays;
 import java.util.Vector;
 import java.util.List;
+import org.janelia.it.workstation.gui.passive_3d.Snapshot3DLauncher;
 
 /** 
  * Main window for QuadView application.
@@ -184,6 +183,8 @@ public class QuadViewUi extends JPanel
 	private final SliceScanAction goBackZSlicesAction = new GoBackZSlicesAction(volumeImage, camera, -10);
 	// annotation-related
     private final CenterNextParentAction centerNextParentAction = new CenterNextParentAction();
+    
+    private Snapshot3DLauncher snapshot3dLauncher;
 
 	private final Action clearCacheAction = new AbstractAction() {
 		private static final long serialVersionUID = 1L;
@@ -487,15 +488,9 @@ public class QuadViewUi extends JPanel
             v.setSystemMenuItemGenerator(new MenuItemGenerator() {
                 @Override
                 public List<JMenuItem> getMenus(MouseEvent event) {
-                    List<JMenuItem> result = new Vector<JMenuItem>();
+                    List<JMenuItem> result = new Vector<>();
                     result.add(addFileMenuItem());
-/*
-LLF: the hookup for the 3d snapshot.
-*/
-                    for ( JMenuItem item: largeVolumeViewer.getLocalItems() ) {
-                        result.add(item);
-                    }
-
+                    result.addAll(snapshot3dLauncher.getSnapshotMenuItems());
                     result.add(addViewMenuItem());
                     return result;
                 }
@@ -516,7 +511,7 @@ LLF: the hookup for the 3d snapshot.
         panModeAction.actionPerformed(new ActionEvent(this, ActionEvent.ACTION_PERFORMED, null));
         zoomScrollModeAction.actionPerformed(new ActionEvent(this, ActionEvent.ACTION_PERFORMED, null));
 	}
-
+    
 	public void clearCache() {
 		tileServer.clearCache();
 	}
@@ -1258,8 +1253,13 @@ LLF: the hookup for the 3d snapshot.
 
         // July 1, 2013 elevate url loading from LargeVolumeViewer to QuadViewUi.
         URL url = tmpFile.toURI().toURL();
-        largeVolumeViewer.setUrl( url );
-
+        snapshot3dLauncher = new Snapshot3DLauncher(
+                largeVolumeViewer.getSliceAxis(),
+                camera,
+                getSubvolumeProvider(),
+                url,
+                imageColorModel
+        );
         return loadURL(url);
     }
 

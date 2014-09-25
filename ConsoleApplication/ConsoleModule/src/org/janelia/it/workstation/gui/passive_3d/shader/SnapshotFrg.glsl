@@ -14,31 +14,28 @@ vec4 chooseColor()
     vec4 in_color = texture3D(signalTexture, gl_TexCoord[0].xyz);
 
 /*
-  Uncomment to show a green cube--proving that there are at least some
-  underpinnings to the coordinates.
-  
 if ( 0 == 0 )
 {
-return vec4(0.0,1.0,0.0,1.0);
-}
-*/
-/*
-  Uncommenting this yields a black space with nothing to show.
+// THIS appears to knock out all the varying, dimmer detail between slabs.
+//float component = 2 * ( in_color.r - 0.5 );
 
-if ( 0 == 0 )
+// THIS leaves every fourth sheet when viewed into Z.
+float componentr = in_color.r;
+if ( componentr > 0.6 )
 {
-return in_color;
+    componentr = 1.0 - componentr;
 }
-*/
+float componentg = in_color.a;
+if ( componentg > 0.6 )
+{
+    componentg = 1.0 - componentg;
+}
+return vec4( componentr, componentg, 0.0, 1.0);
 
-/*
-Uncommenting yields empty again, showing whole texture is 0.
-if (0==0)
-{
-if (in_color[0] > 0 || in_color[1] > 0 || in_color[2] > 0)
-{
-return vec4(0.0,0.0,1.0,1.0);
-}
+// Just dim down all.
+//  Yields 16 bright slabs, in gray, with fainter detail between them.
+//return vec4( in_color.r - 0.5 );
+
 }
 */
 

@@ -6,6 +6,13 @@ public abstract class AbstractTextureLoadAdapter
 
 	public static class MissingTileException extends Exception {
 		private static final long serialVersionUID = 1L;
+        public MissingTileException() { super(); }
+        public MissingTileException(String message) {
+            super(message);
+        }
+        public MissingTileException(Exception ex) {
+            super(ex);
+        }
 	};
 	
 	public static class TileLoadError extends Exception {

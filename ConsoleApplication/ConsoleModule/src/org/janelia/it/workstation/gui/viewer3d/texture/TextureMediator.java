@@ -209,8 +209,6 @@ public class TextureMediator {
             reportError( "glTexEnv MODE-REPLACE", gl, textureName );
 
             try {
-
-                //DEBUG: back to original, and see if can eliminate some possibilities.
                 byte[] rawBytes = new byte[ (int)textureData.getTextureData().length() ];
                 int nextInx = 0;
                 for ( VolumeDataChunk volumeDataChunk: textureData.getTextureData().getVolumeChunks() ) {
@@ -374,6 +372,9 @@ public class TextureMediator {
         if ( orderId == GL2.GL_BGRA ) {
             return 4;
         }
+        else if ( orderId == GL2.GL_LUMINANCE16_ALPHA16 ) {
+            return 4;
+        }
         else {
             return 1;
         }
@@ -470,7 +471,7 @@ public class TextureMediator {
     //--------------------------- End: Helpers for glTexImage3D
 
     private void testRawBufferContents(int pixelByteCount, byte[] rawBuffer) {
-        Map<Integer,Integer> allFoundFrequencies = new HashMap<Integer,Integer>();
+        Map<Integer,Integer> allFoundFrequencies = new HashMap<>();
 
         int nonZeroCount = 0;
         for (byte aRawBuffer : rawBuffer) {
@@ -529,22 +530,52 @@ public class TextureMediator {
         }
         logger.info("End: Texture Values Dump---------------------");
     }
+    
+    public static void dumpGlTexImageCall(
+            int texImgType,
+            int mipMapLevel,
+            int internalFormat,
+            int sx,
+            int sy,
+            int sz,
+            int border,
+            int voxCompOrder,
+            int voxCompType
+    ) {
+        System.out.println(
+                "glTexImage params:  texImgType=" + getConstantName( texImgType )+
+                ", mipMapLevel=" + mipMapLevel +
+                ", internalFormat=" + getConstantName( internalFormat ) +
+                ", border=" + border +
+                ", sx= " + sx + ", sy=" + sy + ", sz=" + sz +
+                ", componentOrder=" + getConstantName( voxCompOrder ) +
+                ". componentType=" + getConstantName( voxCompType )
+        );
+    }
 
     /** Gets a string name of an OpenGL constant used in this class.  For debugging purposes. */
     public static String getConstantName( Integer openGlEnumConstant ) {
         String rtnVal;
         if ( glConstantToName == null ) {
-            glConstantToName = new HashMap<Integer,String>();
+            glConstantToName = new HashMap<>();
+            glConstantToName.put( GL2.GL_TEXTURE_3D, "GL2.GL_TEXTURE_3D" );
+            glConstantToName.put( GL2.GL_TEXTURE_2D, "GL2.GL_TEXTURE_2D" );
+            glConstantToName.put( GL2.GL_TEXTURE_1D, "GL2.GL_TEXTURE_1D" );
             glConstantToName.put( GL2.GL_UNSIGNED_INT_8_8_8_8_REV, "GL2.GL_UNSIGNED_INT_8_8_8_8_REV" );
             glConstantToName.put( GL2.GL_UNSIGNED_INT_8_8_8_8, "GL2.GL_UNSIGNED_INT_8_8_8_8" );
             glConstantToName.put( GL2.GL_UNSIGNED_BYTE, "GL2.GL_UNSIGNED_BYTE" );
             glConstantToName.put( GL2.GL_UNSIGNED_SHORT, "GL2.GL_UNSIGNED_SHORT" );
 
             glConstantToName.put( GL2.GL_LUMINANCE, "GL2.GL_LUMINANCE" );
+            glConstantToName.put( GL2.GL_LUMINANCE_ALPHA, "GL2.GL_LUMINANCE_ALPHA" );
             glConstantToName.put( GL2.GL_SRGB8_ALPHA8, "GL2.GL_SRGB8_ALPHA8" );
             glConstantToName.put( GL2.GL_LUMINANCE16, "GL2.GL_LUMINANCE16" );
             glConstantToName.put( GL2.GL_RGBA, "GL2.GL_RGBA" );
             glConstantToName.put( GL2.GL_RGB, "GL2.GL_RGB" );
+            glConstantToName.put( GL2.GL_RG, "GL2.GL_RG" );
+            glConstantToName.put( GL2.GL_RED, "GL2.GL_RED" );
+            glConstantToName.put( GL2.GL_BGRA, "GL2.GL_BGRA" );
+            glConstantToName.put( GL2.GL_RGBA16, "GL2.GL_RGBA16");
 
             glConstantToName.put( GL2.GL_LINEAR, "GL2.GL_LINEAR" );
             glConstantToName.put( GL2.GL_NEAREST, "GL2.GL_NEAREST" );
@@ -559,9 +590,6 @@ public class TextureMediator {
             glConstantToName.put( GL2.GL_UNSIGNED_BYTE, "GL2.GL_UNSIGNED_BYTE" );
             glConstantToName.put( GL2.GL_UNSIGNED_SHORT, "GL2.GL_UNSIGNED_SHORT" );
             glConstantToName.put( GL2.GL_LUMINANCE16_ALPHA16, "GL2.GL_LUMINANCE16_ALPHA16");
-
-            glConstantToName.put( GL2.GL_BGRA, "GL2.GL_BGRA" );
-            glConstantToName.put( GL2.GL_RGBA16, "GL2.GL_RGBA16");
 
             glConstantToName.put( javax.media.opengl.GL2GL3.GL_BGRA, "GL2GL3.GL_BGRA" );
             glConstantToName.put( javax.media.opengl.GL2GL3.GL_RGB, "GL2GL3.GL_RGB" );

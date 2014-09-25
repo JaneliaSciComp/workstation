@@ -85,7 +85,7 @@ extends AbstractTextureLoadAdapter
 			// compressedStream.close();
 			pamStream0.close();
 		} catch (IOException e) {
-			throw new MissingTileException();
+			throw new MissingTileException(e);
 		}
 		BufferedReader reader = new BufferedReader(new InputStreamReader(new ByteArrayInputStream(fileBuffer)));
 		// Parse header section

@@ -119,8 +119,10 @@ extends AbstractTextureLoadAdapter
 		File path = new File("");
 		int octreeDepth = tileFormat.getZoomLevelCount();
 		int depth = octreeDepth - tileIndex.getZoom();
-		assert(depth >= 0);
-		assert(depth <= octreeDepth);
+        if (depth < 0 || depth > octreeDepth) {
+            // This situation can happen in production, owning to missing tiles.
+            return null;
+        }
 		// x and y are already corrected for tile size and zoom level
 		int xyz[] = {tileIndex.getX(), tileIndex.getY(), tileIndex.getZ()};
 		int axIx = tileIndex.getSliceAxis().index(); // slice axis index
@@ -193,11 +195,15 @@ extends AbstractTextureLoadAdapter
 		// Create a local load timer to measure timings just in this thread
 		LoadTimer localLoadTimer = new LoadTimer();
 		localLoadTimer.mark("starting slice load");
+        final File octreeFilePath = getOctreeFilePath(tileIndex, tileFormat);
+        if (octreeFilePath == null) {
+            return null;
+        }
 		// TODO - generalize to URL, if possible
 		// (though TIFF requires seek, right?)
 		// Compute octree path from Raveler-style tile indices
-		File folder = new File(topFolder, 
-				getOctreeFilePath(tileIndex, tileFormat).toString());
+		File folder = new File(topFolder, octreeFilePath.toString());
+        
 		// TODO for debugging, show file name for X tiles
 		// Compute local z slice
 		int zoomScale = (int)Math.pow(2, tileIndex.getZoom());
@@ -209,12 +215,13 @@ extends AbstractTextureLoadAdapter
 		if (axisIx == 1)
 			relativeSlice = tileDepth - relativeSlice - 1;
 		
-		ImageDecoder[] decoders = createImageDecoders(folder, tileIndex.getSliceAxis());
+        // Calling this with "true" means I, the caller, accept that the array
+        // returned may have one or more nulls in it.
+		ImageDecoder[] decoders = createImageDecoders(folder, tileIndex.getSliceAxis(), true);
 		
 		// log.info(tileIndex + "" + folder + " : " + relativeSlice);
 		
-		TextureData2dGL result = loadSlice(relativeSlice,
-				decoders);
+		TextureData2dGL result = loadSlice(relativeSlice, decoders);
 		localLoadTimer.mark("finished slice load");
 
 		loadTimer.putAll(localLoadTimer);
@@ -227,36 +234,53 @@ extends AbstractTextureLoadAdapter
 		int sc = tileFormat.getChannelCount();
 		// 2 - decode image
 		RenderedImage channels[] = new RenderedImage[sc];
-		for (int c = 0; c < sc; ++c) {
-			try {
-				ImageDecoder decoder = decoders[c];
-				assert(relativeZ < decoder.getNumPages());
-				channels[c] = decoder.decodeAsRenderedImage(relativeZ);
-			} catch (IOException e) {
-				throw new TileLoadError(e);
-			}
-			// localLoadTimer.mark("loaded slice, channel "+c);
-		}
-		// Combine channels into one image
-		RenderedImage composite = channels[0];
-		if (sc > 1) {
-			ParameterBlockJAI pb = new ParameterBlockJAI("bandmerge");
-			for (int c = 0; c < sc; ++c)
-				pb.addSource(channels[c]);
-			composite = JAI.create("bandmerge", pb);
-			// localLoadTimer.mark("merged channels");
-		}
-		
-		TextureData2dGL result = null;
-		// My texture wrapper implementation
-		TextureData2dGL tex = new TextureData2dGL();
-		tex.loadRenderedImage(composite);
-		result = tex;
-		return result;
+        boolean emptyChannel = false;
+        for (int c = 0; c < sc; ++c) {
+            if (decoders[c] == null)
+                emptyChannel = true;
+        }
+        if (emptyChannel) {
+            return null;
+        }
+        else {
+            for (int c = 0; c < sc; ++c) {
+                try {
+                    ImageDecoder decoder = decoders[c];
+                    assert (relativeZ < decoder.getNumPages());
+                    channels[c] = decoder.decodeAsRenderedImage(relativeZ);
+                } catch (IOException e) {
+                    throw new TileLoadError(e);
+                }
+                // localLoadTimer.mark("loaded slice, channel "+c);
+            }
+            // Combine channels into one image
+            RenderedImage composite = channels[0];
+            if (sc > 1) {
+                ParameterBlockJAI pb = new ParameterBlockJAI("bandmerge");
+                for (int c = 0; c < sc; ++c) {
+                    pb.addSource(channels[c]);
+                }
+                composite = JAI.create("bandmerge", pb);
+                // localLoadTimer.mark("merged channels");
+            }
+
+            TextureData2dGL result = null;
+            // My texture wrapper implementation
+            TextureData2dGL tex = new TextureData2dGL();
+            tex.loadRenderedImage(composite);
+            result = tex;
+            return result;
+        }
 	}
 
 	// TODO - cache decoders if folder has not changed
 	public ImageDecoder[] createImageDecoders(File folder, CoordinateAxis axis)
+			throws MissingTileException, TileLoadError 
+	{
+		return createImageDecoders(folder, axis, false);
+	}
+	
+	public ImageDecoder[] createImageDecoders(File folder, CoordinateAxis axis, boolean acceptNullDecoders)
 			throws MissingTileException, TileLoadError 
 	{
 		String tiffBase = "default"; // Z-view; XY plane
@@ -266,29 +290,46 @@ extends AbstractTextureLoadAdapter
 			tiffBase = "YZ";
 		int sc = tileFormat.getChannelCount();
 		ImageDecoder decoders[] = new ImageDecoder[sc];
+        StringBuilder missingTiffs = new StringBuilder();
+        StringBuilder requestedTiffs = new StringBuilder();
 		for (int c = 0; c < sc; ++c) {
 			File tiff = new File(folder, tiffBase+"."+c+".tif");
-			// log.info(tiff.getAbsolutePath());
-            // System.out.println(tiff.getAbsolutePath());
-			// System.out.println(tileIndex+", "+tiff.toString());
-			if (! tiff.exists())
-				throw new MissingTileException();
-			try {
-				boolean useUrl = false;
-				if (useUrl) { // So SLOW
-					// test URL stream vs (seekable) file stream
-					URL url = tiff.toURI().toURL();
-					InputStream inputStream = url.openStream();
-					decoders[c] = ImageCodec.createImageDecoder("tiff", inputStream, null);
-				}
-				else {
-					SeekableStream s = new FileSeekableStream(tiff);
-					decoders[c] = ImageCodec.createImageDecoder("tiff", s, null);
-				}
-			} catch (IOException e) {
-				throw new TileLoadError(e);
-			}
+            if ( requestedTiffs.length() > 0 ) {
+                requestedTiffs.append("; ");
+            }
+            requestedTiffs.append(tiff);
+			if (! tiff.exists()) {
+                if ( acceptNullDecoders ) {
+                    if ( missingTiffs.length() > 0 ) {
+                        missingTiffs.append(", ");
+                    }
+                    missingTiffs.append( tiff );
+                }
+                else {
+    				throw new MissingTileException("Putative tiff file: " + tiff);
+                }
+            }
+            else {
+                try {
+                    boolean useUrl = false;
+                    if (useUrl) { // So SLOW
+                        // test URL stream vs (seekable) file stream
+                        URL url = tiff.toURI().toURL();
+                        InputStream inputStream = url.openStream();
+                        decoders[c] = ImageCodec.createImageDecoder("tiff", inputStream, null);
+                    } else {
+                        SeekableStream s = new FileSeekableStream(tiff);
+                        decoders[c] = ImageCodec.createImageDecoder("tiff", s, null);
+                    }
+                } catch (IOException e) {
+                    throw new TileLoadError(e);
+                }
+            }
 		}
+        if ( missingTiffs.length() > 0 ) {
+            log.info("All requested tiffs: " + requestedTiffs);
+            log.warn( "Putative tiff file(s): " + missingTiffs + " not found.  Padding with zeros." );
+        }
 		return decoders;
 	}
 	

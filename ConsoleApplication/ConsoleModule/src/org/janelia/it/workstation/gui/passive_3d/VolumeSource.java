@@ -12,6 +12,7 @@ import org.janelia.it.workstation.gui.viewer3d.texture.TextureDataI;
  */
 public interface VolumeSource {
     void getVolume( VolumeAcceptor volumeListener ) throws Exception;
+    String getInfo();
 
     /** Implement this to receive data found by this data source, when it becomes available. */
     public interface VolumeAcceptor {

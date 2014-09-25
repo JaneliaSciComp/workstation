@@ -16,6 +16,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
+import javax.media.opengl.GL2;
 
 public class VolumeLoader implements VolumeLoaderI {
 
@@ -51,8 +52,8 @@ public class VolumeLoader implements VolumeLoaderI {
             switch ( getFileType( localFileName, baseName, extension ) ) {
                 case TIF:
                     TifFileLoader tifFileLoader = new TifFileLoader();
-                    textureDataBuilder = tifFileLoader;
                     fileLoader = tifFileLoader;
+                    textureDataBuilder = tifFileLoader;
                     break;
                 case LSM:
                     LsmFileLoader lsmFileLoader = new LsmFileLoader();
@@ -110,7 +111,18 @@ public class VolumeLoader implements VolumeLoaderI {
                 }
             }
 
-            textureData = textureDataBuilder.buildTextureData( isLuminance );
+            textureData = textureDataBuilder.buildTextureData( isLuminance );            
+            if ( FileType.TIF.equals( getFileType( localFileName, baseName, extension ) )  &&
+                 localFileName.contains("tiff_mousebrain") ) {
+                textureData.setExplicitInternalFormat( GL2.GL_LUMINANCE16 );
+                textureData.setExplicitVoxelComponentOrder( GL2.GL_LUMINANCE_ALPHA );
+                textureData.setExplicitVoxelComponentType( GL2.GL_UNSIGNED_SHORT );
+            }
+            else if ( FileType.TIF.equals( getFileType( localFileName, baseName, extension ) ) ) {
+                textureData.setExplicitInternalFormat( GL2.GL_RGBA );
+                textureData.setExplicitVoxelComponentOrder( GL2.GL_RGBA );
+                textureData.setExplicitVoxelComponentType( GL2.GL_UNSIGNED_BYTE );
+            }
 
             return true;
         }
