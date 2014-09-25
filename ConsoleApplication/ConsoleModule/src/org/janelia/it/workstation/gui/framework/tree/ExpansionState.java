@@ -5,9 +5,16 @@ import java.util.Enumeration;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.concurrent.Callable;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
+import javax.swing.SwingUtilities;
 
 import javax.swing.tree.DefaultMutableTreeNode;
 import javax.swing.tree.TreePath;
+import org.janelia.it.jacs.model.entity.Entity;
+import org.janelia.it.jacs.model.entity.EntityData;
 
 import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.workstation.shared.util.ConcurrentUtils;
@@ -30,9 +37,10 @@ public class ExpansionState {
     private String selected;
 
     private final Set<String> workers = Collections.synchronizedSet(new HashSet<String>());
-    boolean startedAllWorkers = false;
-    boolean calledSuccess = false;
-
+    private boolean startedAllWorkers = false;
+    private boolean done = false;
+    private final ExpansionResult result = new ExpansionResult();
+    
     public void addExpandedUniqueId(String uniqueId) {
         expanded.add(uniqueId);
     }
@@ -42,8 +50,6 @@ public class ExpansionState {
         // In case you want to select something that was not expanded already...
         expanded.addAll(EntityUtils.getPathFromUniqueId(uniqueId));
     }
-
-    ;
 	
     public void storeExpansionState(DynamicTree dynamicTree) {
         if (dynamicTree == null) {
@@ -60,7 +66,7 @@ public class ExpansionState {
         }
         if (dynamicTree.getTree().isExpanded(new TreePath(node.getPath()))) {
             String uniqueId = dynamicTree.getUniqueId(node);
-            log.debug("storeExpansionState Node@{} ({})", System.identityHashCode(node), uniqueId);
+            log.debug("storeExpansionState {}",  uniqueId);
             expanded.add(uniqueId);
         }
 
@@ -70,23 +76,27 @@ public class ExpansionState {
         }
     }
 
-    public void restoreExpansionState(DynamicTree dynamicTree, boolean restoreSelection) {
-        if (dynamicTree == null) {
-            return;
-        }
-        restoreExpansionState(dynamicTree, dynamicTree.getRootNode(), restoreSelection, null);
+    public Future<Boolean> restoreExpansionState(DynamicTree dynamicTree, boolean restoreSelection) {
+        return restoreExpansionState(dynamicTree, restoreSelection, null);
     }
 
-    public void restoreExpansionState(DynamicTree dynamicTree, boolean restoreSelection, Callable<Void> success) {
+    public Future<Boolean> restoreExpansionState(final DynamicTree dynamicTree, final boolean restoreSelection, final Callable<Void> success) {
         if (dynamicTree == null) {
-            return;
+            setDone(true);
+            return result;
         }
-        restoreExpansionState(dynamicTree, dynamicTree.getRootNode(), restoreSelection, success);
-        setStartedAllWorkers(true);
-        callSuccessFunction(success);
+        SwingUtilities.invokeLater(new Runnable() {
+            @Override
+            public void run() {
+                restoreExpansionState(dynamicTree, dynamicTree.getRootNode(), restoreSelection, success);
+                setStartedAllWorkers(true);
+                callSuccessFunction(success);
+            }
+        });
+        return result;
     }
 
-    public void restoreExpansionState(final DynamicTree dynamicTree, final DefaultMutableTreeNode node,
+    private void restoreExpansionState(final DynamicTree dynamicTree, final DefaultMutableTreeNode node,
             final boolean restoreSelection, final Callable<Void> success) {
 
         final String uniqueId = dynamicTree.getUniqueId(node);
@@ -101,7 +111,8 @@ public class ExpansionState {
             return;
         }
 
-        log.debug("restoreExpansionState Node@{} ({})", System.identityHashCode(node), "expand=" + expand + " select=" + select);
+        Entity entity = ((EntityData)node.getUserObject()).getChildEntity();
+        log.debug("restoreExpansionState {} ({})", uniqueId+" "+entity, "expand=" + expand + " select=" + select+" restoreSelection="+restoreSelection);
 
         if (!dynamicTree.childrenAreLoaded(node)) {
 
@@ -140,10 +151,10 @@ public class ExpansionState {
     }
 
     private void callSuccessFunction(Callable<Void> success) {
-        if (hasStartedAllWorkers() && workers.isEmpty() && !hasCalledSuccess()) {
+        if (hasStartedAllWorkers() && workers.isEmpty() && !isDone()) {
             try {
                 ConcurrentUtils.invoke(success);
-                setCalledSuccess(true);
+                setDone(true);
             }
             catch (Exception e) {
                 SessionMgr.getSessionMgr().handleException(e);
@@ -159,11 +170,47 @@ public class ExpansionState {
         this.startedAllWorkers = startedAllWorkers;
     }
 
-    public boolean hasCalledSuccess() {
-        return calledSuccess;
+    public boolean isDone() {
+        return done;
     }
 
-    public void setCalledSuccess(boolean calledSuccess) {
-        this.calledSuccess = calledSuccess;
+    public void setDone(boolean done) {
+        this.done = done;
+    }
+    
+    public class ExpansionResult implements Future<Boolean> {
+                
+        @Override
+        public boolean cancel(boolean mayInterruptIfRunning) {
+            return false;
+        }
+
+        @Override
+        public boolean isCancelled() {
+            return false;
+        }
+
+        @Override
+        public boolean isDone() {
+            return done;
+        }
+
+        @Override
+        public Boolean get() throws InterruptedException, ExecutionException {
+            try {
+                return get(Integer.MAX_VALUE, TimeUnit.MILLISECONDS);
+            } 
+            catch (TimeoutException e) {
+                throw new ExecutionException("Operation timed out", e);
+            }
+        }
+
+        @Override
+        public Boolean get(long timeout, TimeUnit unit) throws InterruptedException, ExecutionException, TimeoutException {
+            while (!isDone()) {
+                Thread.sleep(1000);
+            }
+            return true;
+        }
     }
 }

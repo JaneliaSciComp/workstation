@@ -3,12 +3,15 @@ package org.janelia.it.workstation.gui.dialogs.search;
 import org.janelia.it.jacs.compute.api.support.SolrQueryBuilder;
 import org.janelia.it.jacs.model.entity.Entity;
 import org.janelia.it.jacs.model.entity.EntityData;
+import org.janelia.it.jacs.model.entity.EntityConstants;
 import org.janelia.it.jacs.shared.file_chooser.FileChooser;
 import org.janelia.it.jacs.shared.solr.EntityDocument;
 import org.janelia.it.jacs.shared.solr.SolrResults;
 import org.janelia.it.jacs.shared.utils.StringUtils;
+import org.janelia.it.jacs.shared.utils.EntityUtils;
 import org.janelia.it.workstation.api.entity_model.management.EntitySelectionModel;
 import org.janelia.it.workstation.api.entity_model.management.ModelMgr;
+import org.janelia.it.workstation.api.entity_model.management.ModelMgrUtils;
 import org.janelia.it.workstation.gui.dialogs.ModalDialog;
 import org.janelia.it.workstation.gui.framework.actions.OpenWithDefaultAppAction;
 import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
@@ -32,10 +35,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-import org.janelia.it.jacs.model.entity.EntityConstants;
-import org.janelia.it.jacs.shared.utils.EntityUtils;
-import static org.janelia.it.jacs.shared.utils.EntityUtils.findChildEntityDataWithNameAndTypeAndOwner;
-import org.janelia.it.workstation.api.entity_model.management.ModelMgrUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -48,7 +47,7 @@ import org.slf4j.LoggerFactory;
 public class GeneralSearchDialog extends ModalDialog {
 
     private static final Logger log = LoggerFactory.getLogger(GeneralSearchDialog.class);
-    
+
     /**
      * Default directory for exports
      */
@@ -225,41 +224,41 @@ public class GeneralSearchDialog extends ModalDialog {
 
         final SearchResults searchResults = resultsPanel.getSearchResults();
         final DynamicTable table = searchResults.getResultTreeMapping() == null ? resultsPanel.getResultsTable() : resultsPanel.getMappedResultsTable();
-        
+
         if (table.getRows().isEmpty()) {
             JOptionPane.showMessageDialog(GeneralSearchDialog.this, "There are no results to save");
             return;
         }
-        
+
         if (table.getSelectedRows().isEmpty()) {
             table.getTable().getSelectionModel().setSelectionInterval(0, table.getRows().size() - 1);
         }
-                 
+
         final String folderNameValue = folderNameField.getText();
         if (StringUtils.isEmpty(folderNameValue)) {
             JOptionPane.showMessageDialog(GeneralSearchDialog.this, "Enter a folder name or path tin which to save the results");
             return;
         }
-        
+
         SimpleWorker worker = new SimpleWorker() {
 
             private RootedEntity saveFolder;
 
             @Override
             protected void doStuff() throws Exception {
-                
+
                 Entity workspace = ModelMgr.getModelMgr().getCurrentWorkspace();
                 RootedEntity searchResultsRE = new RootedEntity(workspace);
-                
+
                 int i = 0;
-                for(String folderName : folderNameValue.split("/")) {
+                for (String folderName : folderNameValue.split("/")) {
                     RootedEntity parentRE = searchResultsRE;
                     searchResultsRE = parentRE.getOwnedChildByName(folderName);
-                    
-                    if (searchResultsRE==null) {
+
+                    if (searchResultsRE == null) {
                         Entity newFolder = null;
-                        if (i==0) {
-                            log.info("Did not find existing top level folder. Creating folder named: "+folderName);
+                        if (i == 0) {
+                            log.info("Did not find existing top level folder. Creating folder named: " + folderName);
                             newFolder = ModelMgr.getModelMgr().createCommonRoot(folderName);
                             if (folderName.equals(EntityConstants.NAME_SEARCH_RESULTS)) {
                                 ModelMgr.getModelMgr().setAttributeAsTag(newFolder, EntityConstants.ATTRIBUTE_IS_PROTECTED);
@@ -268,22 +267,22 @@ public class GeneralSearchDialog extends ModalDialog {
                             parentRE = new RootedEntity(ModelMgr.getModelMgr().getCurrentWorkspace());
                         }
                         else {
-                            log.info("Did not find existing folder. Creating folder named: "+folderName);
+                            log.info("Did not find existing folder. Creating folder named: " + folderName);
                             newFolder = ModelMgr.getModelMgr().createEntity(EntityConstants.TYPE_FOLDER, folderName);
                             ModelMgr.getModelMgr().addEntityToParent(parentRE.getEntity(), newFolder, parentRE.getEntity().getMaxOrderIndex() + 1, EntityConstants.ATTRIBUTE_ENTITY);
                         }
                         searchResultsRE = parentRE.getOwnedChildByName(folderName);
                     }
                     else {
-                        log.info("Found existing Search Results folder: "+searchResultsRE.getName());
+                        log.info("Found existing Search Results folder: " + searchResultsRE.getName());
                     }
                     i++;
                 }
 
-                if (searchResultsRE==null) {
+                if (searchResultsRE == null) {
                     throw new IllegalStateException("Could not create result folder");
                 }
-                
+
                 List<Long> childIds = new ArrayList<Long>();
                 for (DynamicRow row : table.getSelectedRows()) {
                     Object o = row.getUserObject();
@@ -295,11 +294,11 @@ public class GeneralSearchDialog extends ModalDialog {
                         entity = ((EntityDocument) o).getEntity();
                     }
                     else {
-                        throw new IllegalStateException("Unrecognized object type: "+o.getClass().getName());
+                        throw new IllegalStateException("Unrecognized object type: " + o.getClass().getName());
                     }
                     childIds.add(entity.getId());
                 }
-                
+
                 saveFolder = FolderUtils.saveEntitiesToFolder(searchResultsRE, childIds);
             }
 
@@ -331,19 +330,19 @@ public class GeneralSearchDialog extends ModalDialog {
      * @return
      */
     protected String getNextFolderName() throws Exception {
-        
+
         Entity workspace = ModelMgr.getModelMgr().getCurrentWorkspace();
 
         Entity searchResults = EntityUtils.findChildWithNameAndTypeAndOwner(workspace, EntityConstants.NAME_SEARCH_RESULTS, EntityConstants.TYPE_FOLDER, SessionMgr.getSubjectKey());
-        if (searchResults==null) {
+        if (searchResults == null) {
             log.warn("Did not find existing search results folder!");
-            return EntityConstants.NAME_SEARCH_RESULTS+"/Search Results #1";
+            return EntityConstants.NAME_SEARCH_RESULTS + "/Search Results #1";
         }
-        
+
         ModelMgr.getModelMgr().loadLazyEntity(searchResults, false);
-        
+
         int maxNum = 0;
-        
+
         for (EntityData ed : ModelMgrUtils.getAccessibleEntityDatasWithChildren(searchResults)) {
             Entity topLevelFolder = ed.getChildEntity();
             Pattern p = Pattern.compile("^Search Results #(\\d+)$");
@@ -358,9 +357,9 @@ public class GeneralSearchDialog extends ModalDialog {
                 }
             }
         }
-        return searchResults.getName()+"/Search Results #" + (maxNum + 1);
+        return searchResults.getName() + "/Search Results #" + (maxNum + 1);
     }
-    
+
     protected synchronized void exportResults() {
 
         JFileChooser chooser = new JFileChooser();
