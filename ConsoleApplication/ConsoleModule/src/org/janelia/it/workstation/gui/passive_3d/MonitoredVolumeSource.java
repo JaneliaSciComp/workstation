@@ -15,5 +15,6 @@ import org.janelia.it.workstation.shared.workers.IndeterminateNoteProgressMonito
  * @author fosterl
  */
 public interface MonitoredVolumeSource extends VolumeSource {
+    public static final String COORDS_FORMAT = "[%3.1f,%3.1f,%3.1f]";
     void setProgressMonitor( IndeterminateNoteProgressMonitor monitor );
 }

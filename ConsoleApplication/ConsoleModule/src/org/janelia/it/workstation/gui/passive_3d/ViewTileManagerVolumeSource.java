@@ -43,7 +43,6 @@ import org.janelia.it.workstation.shared.workers.IndeterminateNoteProgressMonito
  */
 public class ViewTileManagerVolumeSource implements MonitoredVolumeSource {
     private static final int DEFAULT_BRICK_CUBIC_DIMENSION = 512;
-    private static final String COORDS_FORMAT = "[%3.1f,%3.1f,%3.1f]";
     
     private Camera3d camera;
     private CoordinateAxis sliceAxis;   //@deprecated
@@ -71,7 +70,8 @@ public class ViewTileManagerVolumeSource implements MonitoredVolumeSource {
     public ViewTileManagerVolumeSource(Camera3d camera,
                                        CoordinateAxis sliceAxis,
                                        int cubicDimension,
-                                       SubvolumeProvider subvolumeProvider) throws Exception {
+                                       SubvolumeProvider subvolumeProvider,
+                                       URL dataUrl) throws Exception {
         
         // Cloning the camera, to leave the original as was found.
         Camera3d iterationCamera = new BasicObservableCamera3d();
@@ -87,6 +87,7 @@ public class ViewTileManagerVolumeSource implements MonitoredVolumeSource {
         }
 
         dataAdapter = new BlockTiffOctreeLoadAdapter();
+        this.dataUrl = dataUrl;
     }
 
     @Override
@@ -115,13 +116,6 @@ public class ViewTileManagerVolumeSource implements MonitoredVolumeSource {
      */
     public URL getDataUrl() {
         return dataUrl;
-    }
-
-    /**
-     * @param dataUrl the dataUrl to set
-     */
-    public void setDataUrl(URL dataUrl) {
-        this.dataUrl = dataUrl;
     }
 
     private void requestTextureData() throws Exception {
