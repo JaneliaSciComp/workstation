@@ -123,7 +123,7 @@
                 <package>org.janelia.it.jacs.shared.fasta</package>
                 <package>org.janelia.it.jacs.shared.file_chooser</package>
                 <package>org.janelia.it.jacs.shared.genomics</package>
-                <package>org.janelia.it.jacs.shared.geometricSearch</package>
+                <package>org.janelia.it.jacs.shared.geometric_search</package>
                 <package>org.janelia.it.jacs.shared.hibernate</package>
                 <package>org.janelia.it.jacs.shared.lucene</package>
                 <package>org.janelia.it.jacs.shared.lucene.data_retrievers</package>

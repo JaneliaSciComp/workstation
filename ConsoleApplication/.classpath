@@ -17,5 +17,6 @@
 	<classpathentry kind="con" path="org.eclipse.jdt.USER_LIBRARY/JUnit"/>
 	<classpathentry kind="con" path="org.eclipse.jdt.USER_LIBRARY/NetBeansRCP"/>
 	<classpathentry kind="lib" path="ConsoleModule/release/modules/ext/jbossall-client.jar"/>
+	<classpathentry kind="con" path="org.eclipse.jdt.USER_LIBRARY/MongoDB"/>
 	<classpathentry kind="output" path="build_eclipse"/>
 </classpath>

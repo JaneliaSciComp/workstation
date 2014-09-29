@@ -742,33 +742,4 @@ public class Utils {
                                              int scale) {
         return new BigDecimal(numerator / denominator).setScale(scale, BigDecimal.ROUND_HALF_UP);
     }
-    
-    public static void runOffEDT(final Runnable runnable, final Runnable callbackOnEDT) {
-        try {
-            if (!SwingUtilities.isEventDispatchThread()) {
-                runnable.run();
-                SwingUtilities.invokeLater(callbackOnEDT);
-            }
-            else {
-                SimpleWorker worker = new SimpleWorker() {
-                    @Override
-                    protected void doStuff() throws Exception {
-                        if (runnable!=null) runnable.run();
-                    }
-                    @Override
-                    protected void hadSuccess() {
-                        if (callbackOnEDT!=null) callbackOnEDT.run();
-                    }
-                    @Override
-                    protected void hadError(Throwable e) {
-                        SessionMgr.getSessionMgr().handleException(e);
-                    }
-                };
-                worker.execute();
-            }
-        }
-        catch (Exception ex) {
-            SessionMgr.getSessionMgr().handleException(ex);
-        }
-    }
 }
