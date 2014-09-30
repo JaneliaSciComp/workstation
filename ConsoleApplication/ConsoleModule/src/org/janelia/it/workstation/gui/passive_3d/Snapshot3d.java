@@ -9,8 +9,14 @@ import org.janelia.it.workstation.shared.workers.SimpleWorker;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.awt.*;
 import java.beans.PropertyChangeEvent;
+import java.util.Observable;
+import java.util.Observer;
+import java.util.Collection;
+import java.util.ArrayList;
+import java.awt.Dimension;
+import java.awt.Component;
+import java.awt.BorderLayout;
 import javax.swing.JLabel;
 import org.janelia.it.workstation.gui.large_volume_viewer.ImageColorModel;
 import org.janelia.it.workstation.shared.workers.IndeterminateNoteProgressMonitor;
@@ -21,12 +27,13 @@ import org.janelia.it.workstation.shared.workers.IndeterminateNoteProgressMonito
  * Date: 7/31/13
  * Time: 3:25 PM
  *
- * This popup will give users a snapshot volume.  Very simply viewer, relatively speaking.
+ * This popup will give users a snapshot volume.  Very simple viewer, relatively speaking.
  */
 public class Snapshot3d extends ModalDialog {
     // Choosing initial width > height as workaround to the reset-focus problem.
     private static final Dimension WIDGET_SIZE = new Dimension( 650, 600 );
     private VolumeSource.VolumeAcceptor volumeAcceptor;
+    private Collection<Component> locallyAddedComponents = new ArrayList<>();
     private ImageColorModel imageColorModel;
     private IndeterminateNoteProgressMonitor monitor;
     private String labelText;
@@ -48,6 +55,14 @@ public class Snapshot3d extends ModalDialog {
 
     public void setImageColorModel( ImageColorModel imageColorModel ) {
         this.imageColorModel = imageColorModel;
+        this.imageColorModel.getColorModelChangedSignal().addObserver(
+                new Observer() {
+                    public void update( Observable target, Object obj ) {
+                        Snapshot3d.this.validate();
+                        Snapshot3d.this.repaint();
+                    }
+                }
+        );
     }
     
     public void setLoadProgressMonitor( IndeterminateNoteProgressMonitor monitor ) {
@@ -73,52 +88,79 @@ public class Snapshot3d extends ModalDialog {
             setLoadProgressMonitor( new IndeterminateNoteProgressMonitor(SessionMgr.getMainFrame(), "Fetching tiles", volumeSource.getInfo()) );
         }
         loadWorker.setProgressMonitor( getMonitor() );
-        volumeSource.setProgressMonitor( getMonitor() );
+        volumeSource.setProgressMonitor( getMonitor() );        
         loadWorker.execute();
     }
 
-    private void launch( TextureDataI textureData ) {
+    private void launch( Collection<TextureDataI> textureDatas ) {
+        cleanup();
+
         Mip3d mip3d = new Mip3d();
         mip3d.clear();
-        VolumeBrickFactory factory = new VolumeBrickFactory() {
-            @Override
-            public VolumeBrickI getVolumeBrick(VolumeModel model) {
-                SnapshotVolumeBrick svb = new SnapshotVolumeBrick( model );
-                svb.setImageColorModel( imageColorModel );
-                return svb;
-            }
-            @Override
-            public VolumeBrickI getVolumeBrick(VolumeModel model, TextureDataI maskTextureData, TextureDataI renderMapTextureData ) {
-                return null; // Trivial case.
-            }
-        };
+//        VolumeBrickFactory factory = new VolumeBrickFactory() {
+//            @Override
+//            public VolumeBrickI getVolumeBrick(VolumeModel model) {
+//                SnapshotVolumeBrick svb = new SnapshotVolumeBrick( model );
+//                svb.setImageColorModel( imageColorModel );
+//                return svb;
+//            }
+//            @Override
+//            public VolumeBrickI getVolumeBrick(VolumeModel model, TextureDataI maskTextureData, TextureDataI renderMapTextureData ) {
+//                return null; // Trivial case.
+//            }
+//        };
 
-        VolumeBrickActorBuilder actorBuilder = new VolumeBrickActorBuilder();
-        GLActor actor = actorBuilder.buildVolumeBrickActor(mip3d.getVolumeModel(), factory, textureData);
-        if ( actor != null ) {
-            mip3d.addActor(actor);
+        VolumeModel volumeModel = mip3d.getVolumeModel();
+        volumeModel.removeAllListeners();
+        volumeModel.resetToDefaults();
+        SnapshotVolumeBrick brick = new SnapshotVolumeBrick( volumeModel );
+        brick.setImageColorModel( imageColorModel );
+        if ( textureDatas.size() == 1 ) {
+            brick.setTextureData(textureDatas.iterator().next());
         }
         else {
-            logger.error("Failed to create volume brick for {}.", textureData.getFilename());
+            brick.setTextureDatas(textureDatas);
         }
+        mip3d.addActor( brick );
 
+//        VolumeBrickActorBuilder actorBuilder = new VolumeBrickActorBuilder();
+//        GLActor actor = actorBuilder.buildVolumeBrickActor(mip3d.getVolumeModel(), factory, textureDatas);
+//        if ( actor != null ) {
+//            mip3d.addActor(actor);
+//        }
+//        else {
+//            logger.error("Failed to create volume brick.");
+//        }
+        
+        locallyAddedComponents.add( mip3d );
         this.setPreferredSize( WIDGET_SIZE );
         this.setMinimumSize( WIDGET_SIZE );
         this.setLayout(new BorderLayout());
         if ( labelText != null ) {
-            this.add( new JLabel( labelText ), BorderLayout.SOUTH );
+            final JLabel label = new JLabel( labelText );
+            locallyAddedComponents.add( label );
+            this.add( label, BorderLayout.SOUTH );
         }
         this.add( mip3d, BorderLayout.CENTER );
 
         packAndShow();
     }
 
+    private void cleanup() {
+        // Cleanup old widgets.
+        for ( Component c: locallyAddedComponents ) {
+            this.remove( c );
+        }
+        locallyAddedComponents.clear();
+    }
+
     private class SnapshotWorker extends SimpleWorker {
         private final VolumeSource volumeSource;
-        private TextureDataI textureData;
+        private Collection<TextureDataI> textureDatas;
 
         public SnapshotWorker( VolumeSource collector ) {
             this.volumeSource = collector;
+            textureDatas = new ArrayList<>();
         }
 
         @Override
@@ -126,7 +168,7 @@ public class Snapshot3d extends ModalDialog {
             volumeAcceptor = new VolumeSource.VolumeAcceptor() {
                 @Override
                 public void accept(TextureDataI textureData) {
-                    SnapshotWorker.this.textureData = textureData;
+                    SnapshotWorker.this.textureDatas.add( textureData );
                 }
             };
             volumeSource.getVolume( volumeAcceptor );
@@ -148,7 +190,8 @@ public class Snapshot3d extends ModalDialog {
 
         @Override
         protected void hadSuccess() {
-            launch( textureData );
+            progressMonitor.setNote( "Launching viewer." );
+            launch( textureDatas );
         }
 
         @Override

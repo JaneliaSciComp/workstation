@@ -3,28 +3,28 @@ package org.janelia.it.workstation.gui.split_picking;
 @javax.annotation.Generated(value="org.netbeans.modules.openide.util.NbBundleProcessor")
 class Bundle {
     /**
-     * @return <i>SplitPicking</i>
+     * @return <i>Split Picking Tool</i>
      * @see SplitPickingTopComponent
      */
     static String CTL_SplitPickingAction() {
         return org.openide.util.NbBundle.getMessage(Bundle.class, "CTL_SplitPickingAction");
     }
     /**
-     * @return <i>SplitPickingLanes</i>
+     * @return <i>Split Picking Lanes</i>
      * @see SplitPickingLanesTopComponent
      */
     static String CTL_SplitPickingLanesAction() {
         return org.openide.util.NbBundle.getMessage(Bundle.class, "CTL_SplitPickingLanesAction");
     }
     /**
-     * @return <i>Split Picking Lanes</i>
+     * @return <i>Split Picking Tool</i>
      * @see SplitPickingLanesTopComponent
      */
     static String CTL_SplitPickingLanesTopComponent() {
         return org.openide.util.NbBundle.getMessage(Bundle.class, "CTL_SplitPickingLanesTopComponent");
     }
     /**
-     * @return <i>Split Picking Tool</i>
+     * @return <i>Split Picking Workflow</i>
      * @see SplitPickingTopComponent
      */
     static String CTL_SplitPickingTopComponent() {

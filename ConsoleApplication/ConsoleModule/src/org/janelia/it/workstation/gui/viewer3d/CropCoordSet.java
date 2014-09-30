@@ -76,7 +76,7 @@ public class CropCoordSet {
             // See if any of the accepted ones is the same.
             boolean comparesSame = true;
             for ( int i = 0; i < nextAccepted.length  &&  comparesSame; i++ ) {
-                if ( nextAccepted[ i ] != currentCoordinates[ i ] ) {
+                if ( Math.round(nextAccepted[ i ]) != Math.round(currentCoordinates[ i ]) ) {
                     comparesSame = false;
                 }
             }

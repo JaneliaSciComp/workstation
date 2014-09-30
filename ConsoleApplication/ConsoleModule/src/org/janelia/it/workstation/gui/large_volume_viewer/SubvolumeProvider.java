@@ -50,6 +50,7 @@ public class SubvolumeProvider {
     /**
      * this method returns a read-only subvolume of data (at zoom).
      * @See getVolume(Vec3 corner1, Vec3 corner2)
+     * @deprecated See no-corners overload
      */
     public Subvolume getSubvolume(Vec3 corner1, Vec3 corner2, int zoomIndex, IndeterminateNoteProgressMonitor monitor) {
         // all this coordinate stuff is taken from something Christopher
@@ -104,6 +105,33 @@ public class SubvolumeProvider {
         }
         
         return new Subvolume(zvFull1, zvFull2, volumeImage, tileServer.getTextureCache(), monitor);
+    }
+
+    /**
+     * This method returns a read-only subvolume of data (at zoom), centered
+     * at the center coords, and extending around the extent dimension,
+     * symetrically in all directions.
+     * 
+     * @param center volume's center is here.
+     * @param extent x, y, z overal length.
+     * @param zoomIndex zoomed in this much.
+     * @param monitor feeds back progress.
+     * @return R/O sub volume centered at center, extending extent-sub-i div by 2 all directions.
+     */
+    public Subvolume getSubvolume(Vec3 center, int[] extent, int zoomIndex, IndeterminateNoteProgressMonitor monitor) {
+        // all this coordinate stuff is taken from something Christopher
+        //  wrote in support of the path tracing code he wrote
+
+        // A series of conversions to get to ZoomedVoxelIndex
+        TileFormat tileFormat = volumeImage.getLoadAdapter().getTileFormat();
+        TileFormat.MicrometerXyz um = new TileFormat.MicrometerXyz(center.getX(), center.getY(), center.getZ());
+        TileFormat.VoxelXyz vox = tileFormat.voxelXyzForMicrometerXyz(um);
+
+        ZoomLevel zoomLevel = new ZoomLevel(zoomIndex);
+        ZoomedVoxelIndex zv = tileFormat.zoomedVoxelIndexForVoxelXyz(
+                vox, zoomLevel, CoordinateAxis.Z);
+
+        return new Subvolume(zv, volumeImage, extent, tileServer.getTextureCache(), monitor);
     }
 
     public Subvolume getSubvolume(ZoomedVoxelIndex zv1, ZoomedVoxelIndex zv2) {

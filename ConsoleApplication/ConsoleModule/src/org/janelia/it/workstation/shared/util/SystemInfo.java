@@ -20,6 +20,7 @@ public class SystemInfo {
 
     private static final Logger log = LoggerFactory.getLogger(SystemInfo.class);
     
+    private static final String NETBEANS_IDE_SETTING_NAME_PREFIX = "netbeans_";
     public static final String MEMORY_SETTING_PREFIX = "-J-Xmx";
     public static final String DEFAULT_OPTIONS_PROP = "default_options";
     public static final String ETC_SUBPATH = "etc";
@@ -216,6 +217,11 @@ public class SystemInfo {
         File brandingConfig = getOrCreateBrandingConfigFile();
         Properties props = loadNbConfig( brandingConfig );
         String value = (String)props.get( DEFAULT_OPTIONS_PROP );
+        if ( value == null ) {
+            //Last-ditch effort to save settings.
+            value = "\"--branding janeliaws -J-Dapple.awt.brushMetalLook=false -J-XX:PermSize=192m -J-XX:MaxPermSize=1024m -J-Xms1024m -J-Xmx8192-J-Dnetbeans.exception.report.min.level=9999 -J-Dnb.forceui=de.javasoft.synthetica.netbeans.SyntheticaLFCustoms\"";
+            log.warn("Using local-constant version of settings, '{}'.  Unable to find old memory setting.", value);
+        }
         int optStart = value.indexOf(MEMORY_SETTING_PREFIX) + MEMORY_SETTING_PREFIX.length();
         int optEnd = value.indexOf( " ", optStart );
         
@@ -235,6 +241,10 @@ public class SystemInfo {
         File userSettingsDir = new File( System.getProperty("netbeans.user") );
         if ( ! userSettingsDir.toString().contains("testuserdir") ) {
             userSettingsDir = new File( userSettingsDir.toString(), ETC_SUBPATH );
+        }
+        if ( ! userSettingsDir.exists() ) {
+            // Ensure we have the etc dir.
+            userSettingsDir.mkdirs();
         }
         final String configFile = appnameToken + ".conf";
         File fqBrandingConfig = new File( userSettingsDir, configFile );
@@ -257,7 +267,20 @@ public class SystemInfo {
                         if ( ! fqBrandingConfig.getParentFile().exists() ) {
                             fqBrandingConfig.getParentFile().mkdir();
                         }
-                        FileUtils.copy(sysWideConfig, fqBrandingConfig, false, false, null);
+                        // To copy, must change settings for app use, and away
+                        // from the netbeans prefixes.
+                        try ( BufferedReader infileReader = new BufferedReader( new FileReader( sysWideConfig ) ) ) {
+                            try ( PrintWriter outfileWriter = new PrintWriter( new FileWriter( fqBrandingConfig ) ) ) {
+                                String inline = null;
+                                while ( null != ( inline = infileReader.readLine() ) ) {
+                                    if ( inline.startsWith( NETBEANS_IDE_SETTING_NAME_PREFIX ) ) {
+                                        inline = inline.substring( NETBEANS_IDE_SETTING_NAME_PREFIX.length() );                                        
+                                    }
+                                    outfileWriter.println( inline );
+                                }
+                            }
+                        }
+                        
                     }
                     else {
                         log.error("Failed to save config file changes.  Config file used was {}.", sysWideConfig);
@@ -265,6 +288,9 @@ public class SystemInfo {
                 }
             }
             
+        }
+        else {
+            log.info("Found the {} file. No need to copy new one.", fqBrandingConfig);
         }
         
         return fqBrandingConfig;
@@ -294,7 +320,9 @@ public class SystemInfo {
     
     private static Properties loadNbConfig( File infile ) throws IOException {
         Properties props = new Properties();
-        props.load( new FileInputStream( infile ) );
+        if ( infile.exists() ) {
+            props.load( new FileInputStream( infile ) );
+        }
         return props;
     }
     

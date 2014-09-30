@@ -5,8 +5,6 @@ import org.janelia.it.workstation.geom.Rotation3d;
 import org.janelia.it.workstation.geom.Vec3;
 import org.janelia.it.workstation.gui.camera.ObservableCamera3d;
 import org.janelia.it.workstation.gui.opengl.GLActor;
-import org.janelia.it.workstation.gui.passive_3d.Snapshot3d;
-import org.janelia.it.workstation.gui.passive_3d.ViewTileManagerVolumeSource;
 import org.janelia.it.workstation.gui.large_volume_viewer.action.BasicMouseMode;
 import org.janelia.it.workstation.gui.large_volume_viewer.action.MouseMode;
 import org.janelia.it.workstation.gui.large_volume_viewer.action.PanMode;
@@ -38,14 +36,8 @@ import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.event.*;
 import java.awt.geom.Point2D;
-import java.net.URL;
 import java.text.DecimalFormat;
-import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
-import javax.swing.JMenu;
-import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
-import org.janelia.it.workstation.shared.workers.IndeterminateNoteProgressMonitor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -55,10 +47,6 @@ extends GLJPanel
 implements MouseModalWidget, TileConsumer
 {
 	private static final Logger log = LoggerFactory.getLogger(LargeVolumeViewer.class);
-
-    private boolean optInStatic3d = false;
-    private SubvolumeProvider subvolumeProvider;
-    private URL dataUrl;
 
 	protected MouseMode mouseMode;
 	protected MouseMode.Mode mouseModeId;
@@ -188,13 +176,6 @@ implements MouseModalWidget, TileConsumer
         });
         //
 	}
-
-    /**
-     * @param dataUrl the dataUrl to set
-     */
-    public void setDataUrl(URL dataUrl) {
-        this.dataUrl = dataUrl;
-    }
 
 	public void autoContrastNow() {
 		ImageBrightnessStats bs = tileServer.getCurrentBrightnessStats();
@@ -453,67 +434,5 @@ implements MouseModalWidget, TileConsumer
 	public void keyReleased(KeyEvent event) {
 		mouseMode.keyPressed(event);
 	}
-
-    public void setSubvolumeProvider( SubvolumeProvider subvolumeProvider ) {
-        this.subvolumeProvider = subvolumeProvider;
-    }
-
-    // TEMP public setting... LLF, 8/2/2013
-    public List<JMenuItem> getLocalItems() {
-        JMenu snapShot3dSubMenu = new JMenu("3D Snapshot");
-
-        List<JMenuItem> rtnVal = new ArrayList<>();
-        int[] extents = new int[] {
-            64, 128, 512
-        };
-
-        for (final int extent : extents) {
-            JMenuItem item = new JMenuItem( extent + " cubed" );
-            item.addActionListener(new ActionListener() {
-                @Override
-                public void actionPerformed(ActionEvent ae) {
-                    launch3dViewer( extent );
-                }
-
-            });
-            snapShot3dSubMenu.add( item );
-        }
-        
-        rtnVal.add( snapShot3dSubMenu );
-
-        return rtnVal;
-    }
-
-    /** Launches a 3D popup static-block viewer. */
-    private void launch3dViewer( int cubicDimension ) {
-        try {            
-            ViewTileManagerVolumeSource collector = new ViewTileManagerVolumeSource(
-                    getCamera(),
-                    getSliceAxis(),
-                    getViewerInGround(),
-                    cubicDimension,
-                    subvolumeProvider
-            );            
-            collector.setDataUrl(dataUrl);
-
-            Snapshot3d snapshotViewer = Snapshot3d.getInstance();
-            IndeterminateNoteProgressMonitor monitor = 
-                    new IndeterminateNoteProgressMonitor(SessionMgr.getMainFrame(), "Fetching tiles", collector.getInfo());
-            snapshotViewer.setLoadProgressMonitor( monitor );
-            snapshotViewer.setImageColorModel( imageColorModel );
-            snapshotViewer.setLabelText( labelTextFor3d(cubicDimension) );
-            snapshotViewer.launch( collector );
-
-        } catch ( Exception ex ) {
-            System.err.println("Failed to launch viewer: " + ex.getMessage());
-            ex.printStackTrace();
-        }
-    }
-
-    private String labelTextFor3d(int cubicDimension) {
-        final Vec3 focus = getCamera().getFocus();
-        String LABEL3d_FORMAT = "Centered at [%3.1f,%3.1f,%3.1f].  %4$dx%4$dx%4$d.";
-        return String.format( LABEL3d_FORMAT, focus.getX(), focus.getY(), focus.getZ(), cubicDimension );
-    }
 
 }

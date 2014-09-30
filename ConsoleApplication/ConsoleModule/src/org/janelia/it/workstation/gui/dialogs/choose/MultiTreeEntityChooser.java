@@ -39,6 +39,7 @@ public class MultiTreeEntityChooser extends AbstractChooser<EntityData> {
     protected List<EntityData> choosePressed() {
     	List<EntityData> chosen = new ArrayList<EntityData>();
     	EntityTree entityTree = getSelectedTree();
+        if (entityTree==null) return chosen;
     	TreePath[] selectionPaths = entityTree.getDynamicTree().getTree().getSelectionPaths();
     	if (selectionPaths==null) return chosen;
         for (TreePath path : selectionPaths) {
