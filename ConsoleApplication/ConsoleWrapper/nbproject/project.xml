@@ -48,8 +48,6 @@
                 </dependency>
             </module-dependencies>
             <public-packages>
-                <package>EDU.oswego.cs.dl.util.concurrent</package>
-                <package>EDU.oswego.cs.dl.util.concurrent.misc</package>
                 <package>adt</package>
                 <package>amira</package>
                 <package>antlr</package>
@@ -554,17 +552,6 @@
                 <package>javax.activation</package>
                 <package>javax.annotation</package>
                 <package>javax.annotation.security</package>
-                <package>javax.ejb</package>
-                <package>javax.ejb.spi</package>
-                <package>javax.enterprise.deploy.model</package>
-                <package>javax.enterprise.deploy.model.exceptions</package>
-                <package>javax.enterprise.deploy.shared</package>
-                <package>javax.enterprise.deploy.shared.factories</package>
-                <package>javax.enterprise.deploy.spi</package>
-                <package>javax.enterprise.deploy.spi.exceptions</package>
-                <package>javax.enterprise.deploy.spi.factories</package>
-                <package>javax.enterprise.deploy.spi.status</package>
-                <package>javax.jms</package>
                 <package>javax.jws</package>
                 <package>javax.jws.soap</package>
                 <package>javax.mail</package>
@@ -572,15 +559,6 @@
                 <package>javax.mail.internet</package>
                 <package>javax.mail.search</package>
                 <package>javax.mail.util</package>
-                <package>javax.management</package>
-                <package>javax.management.j2ee</package>
-                <package>javax.management.j2ee.statistics</package>
-                <package>javax.management.loading</package>
-                <package>javax.management.modelmbean</package>
-                <package>javax.management.monitor</package>
-                <package>javax.management.openmbean</package>
-                <package>javax.management.relation</package>
-                <package>javax.management.timer</package>
                 <package>javax.media.j3d</package>
                 <package>javax.media.jai</package>
                 <package>javax.media.jai.iterator</package>
@@ -598,18 +576,10 @@
                 <package>javax.media.opengl.glu</package>
                 <package>javax.media.opengl.glu.gl2</package>
                 <package>javax.media.opengl.glu.gl2es1</package>
-                <package>javax.resource</package>
-                <package>javax.resource.cci</package>
-                <package>javax.resource.spi</package>
-                <package>javax.resource.spi.endpoint</package>
-                <package>javax.resource.spi.security</package>
-                <package>javax.resource.spi.work</package>
-                <package>javax.security.jacc</package>
                 <package>javax.servlet</package>
                 <package>javax.servlet.annotation</package>
                 <package>javax.servlet.descriptor</package>
                 <package>javax.servlet.http</package>
-                <package>javax.sql</package>
                 <package>javax.transaction</package>
                 <package>javax.transaction.xa</package>
                 <package>javax.vecmath</package>
@@ -629,8 +599,6 @@
                 <package>javax.xml.bind.helpers</package>
                 <package>javax.xml.bind.util</package>
                 <package>javax.xml.namespace</package>
-                <package>javax.xml.registry</package>
-                <package>javax.xml.registry.infomodel</package>
                 <package>javax.xml.soap</package>
                 <package>javax.xml.stream</package>
                 <package>javax.xml.stream.events</package>
@@ -1302,29 +1270,6 @@
                 <package>org.apache.xml.resolver.helpers</package>
                 <package>org.apache.xml.resolver.readers</package>
                 <package>org.apache.xml.resolver.tools</package>
-                <package>org.apache.xml.security</package>
-                <package>org.apache.xml.security.algorithms</package>
-                <package>org.apache.xml.security.algorithms.implementations</package>
-                <package>org.apache.xml.security.c14n</package>
-                <package>org.apache.xml.security.c14n.helper</package>
-                <package>org.apache.xml.security.c14n.implementations</package>
-                <package>org.apache.xml.security.encryption</package>
-                <package>org.apache.xml.security.exceptions</package>
-                <package>org.apache.xml.security.keys</package>
-                <package>org.apache.xml.security.keys.content</package>
-                <package>org.apache.xml.security.keys.content.keyvalues</package>
-                <package>org.apache.xml.security.keys.content.x509</package>
-                <package>org.apache.xml.security.keys.keyresolver</package>
-                <package>org.apache.xml.security.keys.keyresolver.implementations</package>
-                <package>org.apache.xml.security.keys.storage</package>
-                <package>org.apache.xml.security.keys.storage.implementations</package>
-                <package>org.apache.xml.security.signature</package>
-                <package>org.apache.xml.security.transforms</package>
-                <package>org.apache.xml.security.transforms.implementations</package>
-                <package>org.apache.xml.security.transforms.params</package>
-                <package>org.apache.xml.security.utils</package>
-                <package>org.apache.xml.security.utils.resolver</package>
-                <package>org.apache.xml.security.utils.resolver.implementations</package>
                 <package>org.apache.xml.serialize</package>
                 <package>org.apache.xml.serializer</package>
                 <package>org.apache.xml.serializer.utils</package>
@@ -1614,248 +1559,6 @@
                 <package>org.jaxen.saxpath.helpers</package>
                 <package>org.jaxen.util</package>
                 <package>org.jaxen.xom</package>
-                <package>org.jboss.aop</package>
-                <package>org.jboss.aop.advice</package>
-                <package>org.jboss.aop.instrument</package>
-                <package>org.jboss.aop.joinpoint</package>
-                <package>org.jboss.aop.metadata</package>
-                <package>org.jboss.aop.proxy</package>
-                <package>org.jboss.aop.util</package>
-                <package>org.jboss.aspects.asynch</package>
-                <package>org.jboss.aspects.remoting</package>
-                <package>org.jboss.aspects.security</package>
-                <package>org.jboss.aspects.tx</package>
-                <package>org.jboss.corba</package>
-                <package>org.jboss.crypto</package>
-                <package>org.jboss.crypto.digest</package>
-                <package>org.jboss.deployment</package>
-                <package>org.jboss.deployment.cache</package>
-                <package>org.jboss.deployment.scanner</package>
-                <package>org.jboss.deployment.spi</package>
-                <package>org.jboss.deployment.spi.beans</package>
-                <package>org.jboss.deployment.spi.configurations</package>
-                <package>org.jboss.deployment.spi.factories</package>
-                <package>org.jboss.deployment.spi.status</package>
-                <package>org.jboss.ejb</package>
-                <package>org.jboss.ejb.plugins.cmp.jdbc</package>
-                <package>org.jboss.ejb.plugins.keygenerator</package>
-                <package>org.jboss.ejb3</package>
-                <package>org.jboss.ejb3.asynchronous</package>
-                <package>org.jboss.ejb3.interceptor</package>
-                <package>org.jboss.ejb3.mdb</package>
-                <package>org.jboss.ejb3.mdb.inflow</package>
-                <package>org.jboss.ejb3.metamodel</package>
-                <package>org.jboss.ejb3.naming</package>
-                <package>org.jboss.ejb3.naming.client.java</package>
-                <package>org.jboss.ejb3.proxy</package>
-                <package>org.jboss.ejb3.proxy.handle</package>
-                <package>org.jboss.ejb3.remoting</package>
-                <package>org.jboss.ejb3.service</package>
-                <package>org.jboss.ejb3.session</package>
-                <package>org.jboss.ejb3.stateful</package>
-                <package>org.jboss.ejb3.stateless</package>
-                <package>org.jboss.ejb3.statistics</package>
-                <package>org.jboss.ha.framework.interfaces</package>
-                <package>org.jboss.ha.framework.server</package>
-                <package>org.jboss.ha.framework.test</package>
-                <package>org.jboss.ha.hasessionstate.interfaces</package>
-                <package>org.jboss.ha.jndi</package>
-                <package>org.jboss.iiop</package>
-                <package>org.jboss.iiop.rmi</package>
-                <package>org.jboss.iiop.rmi.marshal</package>
-                <package>org.jboss.iiop.rmi.marshal.strategy</package>
-                <package>org.jboss.injection</package>
-                <package>org.jboss.injection.lang.reflect</package>
-                <package>org.jboss.invocation</package>
-                <package>org.jboss.invocation.http.interfaces</package>
-                <package>org.jboss.invocation.jrmp.interfaces</package>
-                <package>org.jboss.invocation.jrmp.server</package>
-                <package>org.jboss.invocation.pooled.interfaces</package>
-                <package>org.jboss.invocation.unified.interfaces</package>
-                <package>org.jboss.invocation.unified.marshall</package>
-                <package>org.jboss.jmx.adaptor.rmi</package>
-                <package>org.jboss.jmx.connector.invoker.client</package>
-                <package>org.jboss.lang</package>
-                <package>org.jboss.logging</package>
-                <package>org.jboss.logging.appender</package>
-                <package>org.jboss.logging.filter</package>
-                <package>org.jboss.logging.layout</package>
-                <package>org.jboss.logging.util</package>
-                <package>org.jboss.management.mejb</package>
-                <package>org.jboss.monitor.client</package>
-                <package>org.jboss.mq</package>
-                <package>org.jboss.mq.il</package>
-                <package>org.jboss.mq.il.http</package>
-                <package>org.jboss.mq.il.jvm</package>
-                <package>org.jboss.mq.il.oil</package>
-                <package>org.jboss.mq.il.oil2</package>
-                <package>org.jboss.mq.il.rmi</package>
-                <package>org.jboss.mq.il.uil2</package>
-                <package>org.jboss.mq.il.uil2.msgs</package>
-                <package>org.jboss.mq.referenceable</package>
-                <package>org.jboss.mq.selectors</package>
-                <package>org.jboss.mq.xml</package>
-                <package>org.jboss.mx.capability</package>
-                <package>org.jboss.mx.interceptor</package>
-                <package>org.jboss.mx.loading</package>
-                <package>org.jboss.mx.metadata</package>
-                <package>org.jboss.mx.modelmbean</package>
-                <package>org.jboss.mx.notification</package>
-                <package>org.jboss.mx.persistence</package>
-                <package>org.jboss.mx.server</package>
-                <package>org.jboss.mx.server.registry</package>
-                <package>org.jboss.mx.service</package>
-                <package>org.jboss.mx.timer</package>
-                <package>org.jboss.mx.util</package>
-                <package>org.jboss.mx.util.propertyeditor</package>
-                <package>org.jboss.naming</package>
-                <package>org.jboss.naming.client.java</package>
-                <package>org.jboss.naming.interceptors</package>
-                <package>org.jboss.net.protocol</package>
-                <package>org.jboss.net.protocol.file</package>
-                <package>org.jboss.net.protocol.http</package>
-                <package>org.jboss.net.protocol.njar</package>
-                <package>org.jboss.net.protocol.resource</package>
-                <package>org.jboss.net.sockets</package>
-                <package>org.jboss.net.ssl</package>
-                <package>org.jboss.proxy</package>
-                <package>org.jboss.proxy.compiler</package>
-                <package>org.jboss.proxy.ejb</package>
-                <package>org.jboss.proxy.ejb.handle</package>
-                <package>org.jboss.remoting</package>
-                <package>org.jboss.remoting.callback</package>
-                <package>org.jboss.remoting.detection</package>
-                <package>org.jboss.remoting.detection.jndi</package>
-                <package>org.jboss.remoting.detection.multicast</package>
-                <package>org.jboss.remoting.detection.util</package>
-                <package>org.jboss.remoting.ident</package>
-                <package>org.jboss.remoting.invocation</package>
-                <package>org.jboss.remoting.loading</package>
-                <package>org.jboss.remoting.marshal</package>
-                <package>org.jboss.remoting.marshal.compress</package>
-                <package>org.jboss.remoting.marshal.encryption</package>
-                <package>org.jboss.remoting.marshal.http</package>
-                <package>org.jboss.remoting.marshal.rmi</package>
-                <package>org.jboss.remoting.marshal.serializable</package>
-                <package>org.jboss.remoting.network</package>
-                <package>org.jboss.remoting.network.filter</package>
-                <package>org.jboss.remoting.samples.callback</package>
-                <package>org.jboss.remoting.samples.callback.acknowledgement</package>
-                <package>org.jboss.remoting.samples.callback.statistics</package>
-                <package>org.jboss.remoting.samples.chat.client</package>
-                <package>org.jboss.remoting.samples.chat.exceptions</package>
-                <package>org.jboss.remoting.samples.chat.server</package>
-                <package>org.jboss.remoting.samples.chat.utility</package>
-                <package>org.jboss.remoting.samples.config.factories</package>
-                <package>org.jboss.remoting.samples.detection.jndi</package>
-                <package>org.jboss.remoting.samples.detection.jndi.ssl</package>
-                <package>org.jboss.remoting.samples.detection.multicast</package>
-                <package>org.jboss.remoting.samples.http</package>
-                <package>org.jboss.remoting.samples.multiplex</package>
-                <package>org.jboss.remoting.samples.multiplex.invoker</package>
-                <package>org.jboss.remoting.samples.oneway</package>
-                <package>org.jboss.remoting.samples.serialization</package>
-                <package>org.jboss.remoting.samples.simple</package>
-                <package>org.jboss.remoting.samples.stream</package>
-                <package>org.jboss.remoting.samples.transporter.basic</package>
-                <package>org.jboss.remoting.samples.transporter.basic.client</package>
-                <package>org.jboss.remoting.samples.transporter.basic.server</package>
-                <package>org.jboss.remoting.samples.transporter.clustered.client</package>
-                <package>org.jboss.remoting.samples.transporter.clustered.server</package>
-                <package>org.jboss.remoting.samples.transporter.complex</package>
-                <package>org.jboss.remoting.samples.transporter.complex.client</package>
-                <package>org.jboss.remoting.samples.transporter.complex.server</package>
-                <package>org.jboss.remoting.samples.transporter.custom.client</package>
-                <package>org.jboss.remoting.samples.transporter.custom.server</package>
-                <package>org.jboss.remoting.samples.transporter.multiple</package>
-                <package>org.jboss.remoting.samples.transporter.multiple.client</package>
-                <package>org.jboss.remoting.samples.transporter.multiple.server</package>
-                <package>org.jboss.remoting.samples.transporter.proxy</package>
-                <package>org.jboss.remoting.samples.transporter.proxy.client</package>
-                <package>org.jboss.remoting.samples.transporter.proxy.server</package>
-                <package>org.jboss.remoting.samples.transporter.serialization</package>
-                <package>org.jboss.remoting.samples.transporter.serialization.client</package>
-                <package>org.jboss.remoting.samples.transporter.serialization.server</package>
-                <package>org.jboss.remoting.samples.transporter.simple</package>
-                <package>org.jboss.remoting.security</package>
-                <package>org.jboss.remoting.serialization</package>
-                <package>org.jboss.remoting.serialization.impl.java</package>
-                <package>org.jboss.remoting.serialization.impl.jboss</package>
-                <package>org.jboss.remoting.socketfactory</package>
-                <package>org.jboss.remoting.stream</package>
-                <package>org.jboss.remoting.transport</package>
-                <package>org.jboss.remoting.transport.bisocket</package>
-                <package>org.jboss.remoting.transport.coyote</package>
-                <package>org.jboss.remoting.transport.coyote.ssl</package>
-                <package>org.jboss.remoting.transport.http</package>
-                <package>org.jboss.remoting.transport.http.ssl</package>
-                <package>org.jboss.remoting.transport.https</package>
-                <package>org.jboss.remoting.transport.local</package>
-                <package>org.jboss.remoting.transport.multiplex</package>
-                <package>org.jboss.remoting.transport.multiplex.utility</package>
-                <package>org.jboss.remoting.transport.rmi</package>
-                <package>org.jboss.remoting.transport.servlet</package>
-                <package>org.jboss.remoting.transport.servlet.web</package>
-                <package>org.jboss.remoting.transport.socket</package>
-                <package>org.jboss.remoting.transport.sslbisocket</package>
-                <package>org.jboss.remoting.transport.sslmultiplex</package>
-                <package>org.jboss.remoting.transport.sslrmi</package>
-                <package>org.jboss.remoting.transport.sslservlet</package>
-                <package>org.jboss.remoting.transport.sslsocket</package>
-                <package>org.jboss.remoting.transport.web</package>
-                <package>org.jboss.remoting.transporter</package>
-                <package>org.jboss.remoting.util</package>
-                <package>org.jboss.remoting.util.socket</package>
-                <package>org.jboss.resource</package>
-                <package>org.jboss.resource.adapter.jdbc</package>
-                <package>org.jboss.resource.adapter.jdbc.remote</package>
-                <package>org.jboss.resource.connectionmanager</package>
-                <package>org.jboss.security</package>
-                <package>org.jboss.security.auth.callback</package>
-                <package>org.jboss.security.auth.login</package>
-                <package>org.jboss.security.jndi</package>
-                <package>org.jboss.security.plugins</package>
-                <package>org.jboss.security.srp</package>
-                <package>org.jboss.security.srp.jaas</package>
-                <package>org.jboss.security.ssl</package>
-                <package>org.jboss.serial</package>
-                <package>org.jboss.serial.classmetamodel</package>
-                <package>org.jboss.serial.exception</package>
-                <package>org.jboss.serial.finalcontainers</package>
-                <package>org.jboss.serial.io</package>
-                <package>org.jboss.serial.objectmetamodel</package>
-                <package>org.jboss.serial.objectmetamodel.safecloning</package>
-                <package>org.jboss.serial.persister</package>
-                <package>org.jboss.serial.references</package>
-                <package>org.jboss.serial.util</package>
-                <package>org.jboss.system</package>
-                <package>org.jboss.system.pm</package>
-                <package>org.jboss.system.server</package>
-                <package>org.jboss.tm</package>
-                <package>org.jboss.tm.iiop</package>
-                <package>org.jboss.tm.iiop.client</package>
-                <package>org.jboss.tm.integrity</package>
-                <package>org.jboss.tm.usertx.client</package>
-                <package>org.jboss.tm.usertx.interfaces</package>
-                <package>org.jboss.tm.usertx.server</package>
-                <package>org.jboss.util</package>
-                <package>org.jboss.util.coerce</package>
-                <package>org.jboss.util.collection</package>
-                <package>org.jboss.util.deadlock</package>
-                <package>org.jboss.util.file</package>
-                <package>org.jboss.util.id</package>
-                <package>org.jboss.util.loading</package>
-                <package>org.jboss.util.naming</package>
-                <package>org.jboss.util.platform</package>
-                <package>org.jboss.util.property</package>
-                <package>org.jboss.util.property.jmx</package>
-                <package>org.jboss.util.propertyeditor</package>
-                <package>org.jboss.util.state</package>
-                <package>org.jboss.util.state.xml</package>
-                <package>org.jboss.util.stream</package>
-                <package>org.jboss.util.threadpool</package>
-                <package>org.jboss.util.timeout</package>
-                <package>org.jboss.util.xml</package>
                 <package>org.jdesktop.beans</package>
                 <package>org.jdesktop.swingx</package>
                 <package>org.jdesktop.swingx.action</package>
@@ -1909,10 +1612,6 @@
                 <package>org.jibx.runtime</package>
                 <package>org.jibx.runtime.impl</package>
                 <package>org.jibx.util</package>
-                <package>org.jnp.interfaces</package>
-                <package>org.jnp.interfaces.java</package>
-                <package>org.jnp.interfaces.jnp</package>
-                <package>org.jnp.server</package>
                 <package>org.kohsuke.rngom.ast.builder</package>
                 <package>org.kohsuke.rngom.ast.om</package>
                 <package>org.kohsuke.rngom.ast.util</package>
@@ -1932,7 +1631,6 @@
                 <package>org.netbeans.swing.etable</package>
                 <package>org.netbeans.swing.outline</package>
                 <package>org.objectweb.asm</package>
-                <package>org.omg.stub.javax.ejb</package>
                 <package>org.perf4j</package>
                 <package>org.perf4j.aop</package>
                 <package>org.perf4j.chart</package>
@@ -2071,6 +1769,25 @@
                 <package>org.w3c.dom</package>
                 <package>org.w3c.dom.html</package>
                 <package>org.xerial.snappy</package>
+                <package>org.yaml.snakeyaml</package>
+                <package>org.yaml.snakeyaml.composer</package>
+                <package>org.yaml.snakeyaml.constructor</package>
+                <package>org.yaml.snakeyaml.emitter</package>
+                <package>org.yaml.snakeyaml.error</package>
+                <package>org.yaml.snakeyaml.events</package>
+                <package>org.yaml.snakeyaml.extensions.compactnotation</package>
+                <package>org.yaml.snakeyaml.external.biz.base64Coder</package>
+                <package>org.yaml.snakeyaml.external.com.google.gdata.util.common.base</package>
+                <package>org.yaml.snakeyaml.introspector</package>
+                <package>org.yaml.snakeyaml.nodes</package>
+                <package>org.yaml.snakeyaml.parser</package>
+                <package>org.yaml.snakeyaml.reader</package>
+                <package>org.yaml.snakeyaml.representer</package>
+                <package>org.yaml.snakeyaml.resolver</package>
+                <package>org.yaml.snakeyaml.scanner</package>
+                <package>org.yaml.snakeyaml.serializer</package>
+                <package>org.yaml.snakeyaml.tokens</package>
+                <package>org.yaml.snakeyaml.util</package>
                 <package>pal.math</package>
                 <package>process3d</package>
                 <package>repackage</package>
@@ -2210,6 +1927,10 @@
             <class-path-extension>
                 <runtime-relative-path>ext/axis2-jibx-1.5.5.jar</runtime-relative-path>
                 <binary-origin>release/modules/ext/axis2-jibx-1.5.5.jar</binary-origin>
+            </class-path-extension>
+            <class-path-extension>
+                <runtime-relative-path>ext/snakeyaml-1.11-sources.jar</runtime-relative-path>
+                <binary-origin>release/modules/ext/snakeyaml-1.11-sources.jar</binary-origin>
             </class-path-extension>
             <class-path-extension>
                 <runtime-relative-path>ext/geronimo-jta_1.1_spec-1.1.jar</runtime-relative-path>
@@ -2414,6 +2135,10 @@
             <class-path-extension>
                 <runtime-relative-path>ext/mac_widgets-0.9.5.jar</runtime-relative-path>
                 <binary-origin>release/modules/ext/mac_widgets-0.9.5.jar</binary-origin>
+            </class-path-extension>
+            <class-path-extension>
+                <runtime-relative-path>ext/snakeyaml-1.11.jar</runtime-relative-path>
+                <binary-origin>release/modules/ext/snakeyaml-1.11.jar</binary-origin>
             </class-path-extension>
             <class-path-extension>
                 <runtime-relative-path>ext/axiom-impl-1.2.11.jar</runtime-relative-path>
