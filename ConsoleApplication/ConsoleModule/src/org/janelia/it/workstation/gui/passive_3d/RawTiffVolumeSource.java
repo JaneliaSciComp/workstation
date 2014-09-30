@@ -74,9 +74,15 @@ public class RawTiffVolumeSource implements MonitoredVolumeSource {
         progressMonitor.setNote("Loading volume data.");
         TifFileLoader tifFileLoader = new TifFileLoader();
         FileResolver resolver = new CacheFileResolver();
-        tifFileLoader.loadVolumeFile( resolver.getResolvedFilename(tiffFiles.get( 0 )) );
-        System.out.println("Loading " + tiffFiles.get(0));
-        TextureDataI textureData0 = tifFileLoader.buildTextureData(true);
+
+        for ( int i = 0; i < 2; i++ ) {
+            TextureDataI textureData;
+            tifFileLoader.loadVolumeFile( resolver.getResolvedFilename(tiffFiles.get( 0 )) );
+            System.out.println("Loading " + tiffFiles.get(0));
+            textureData = tifFileLoader.buildTextureData(true);
+            volumeListener.accept(textureData);
+        }
+        
         /*
         TODO: blend data0 and data1, voxel-wise.
         
@@ -86,7 +92,6 @@ public class RawTiffVolumeSource implements MonitoredVolumeSource {
          */
         
         progressMonitor.setNote("Launching viewer.");
-        volumeListener.accept(textureData0);
     }
 
     @Override

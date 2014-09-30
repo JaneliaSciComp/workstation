@@ -32,7 +32,7 @@ public abstract class AbstractVolumeBrick implements VolumeBrickI
     public enum RenderMethod {MAXIMUM_INTENSITY, ALPHA_BLENDING}
 
     private TextureMediator signalTextureMediator;
-    private List<TextureMediator> textureMediators = new ArrayList<>();
+    protected List<TextureMediator> textureMediators = new ArrayList<>();
 
     private SignalShader shader;
     
@@ -248,7 +248,7 @@ public abstract class AbstractVolumeBrick implements VolumeBrickI
 
     //---------------------------------END: IMPLEMENT VolumeDataAcceptor
 
-    /** Call this when the brick is to be re-shown after an absense. */
+    /** Call this when the brick is to be re-shown after an absence. */
     public void refresh() {
         bSignalTextureNeedsUpload = true;
     }

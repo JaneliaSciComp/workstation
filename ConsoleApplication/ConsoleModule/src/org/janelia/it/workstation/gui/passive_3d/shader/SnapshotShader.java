@@ -31,8 +31,10 @@ public class SnapshotShader extends SignalShader {
     private int channelColorLoc;
     private int channelScaleLoc;
     private int channelCountLoc;
+    private int interleaveFlagLoc;
     
     private TextureMediator signalTextureMediator;
+    private TextureMediator interleavedTextureMediator; // Optional: can be null.
 
     @Override
     public String getVertexShader() {
@@ -62,6 +64,7 @@ public class SnapshotShader extends SignalShader {
         channelColorLoc   = gl.glGetUniformLocation( shaderProgram, "channel_color" );
         channelScaleLoc   = gl.glGetUniformLocation( shaderProgram, "channel_scale" );
         channelCountLoc   = gl.glGetUniformLocation( shaderProgram, "channel_count" );
+        interleaveFlagLoc = gl.glGetUniformLocation( shaderProgram, "interleave_flag" );
     }
 
     public int getVertexAttribLoc() {
@@ -93,6 +96,10 @@ public class SnapshotShader extends SignalShader {
         gl.glUseProgram(previousShader);
     }
     
+    public void setInterleavedTextureMediator(TextureMediator interleavedTextureMediator) {
+        this.interleavedTextureMediator = interleavedTextureMediator;
+    }
+    
     //------------------------------Unique-to-shader setters
     public void setChannelGamma( GL2 gl, float[] channelGamma ) {
         gl.glUniform4fv( channelGammaLoc, 1, channelGamma, 0 );
@@ -113,9 +120,17 @@ public class SnapshotShader extends SignalShader {
     public void setChannelCount( GL2 gl, int count ) {
         gl.glUniform1i( channelCountLoc, count );
     }
+    
+    /** This flag should be set, if the texture is broken into two interleaved parts. */
+    public void setExplicitInterleave( GL2 gl, boolean interleaveFlag ) {
+        gl.glUniform1i( interleaveFlagLoc, interleaveFlag ? 1 : 0 );
+    }
 
     private void setTextureUniforms(GL2 gl) {
         setTextureUniform(gl, "signalTexture", signalTextureMediator);
+        if ( interleavedTextureMediator != null ) {
+            setTextureUniform(gl, "interleavedTexture", interleavedTextureMediator);
+        }
     }
 
     private void setTextureUniform( GL2 gl, String shaderUniformName, TextureMediator textureMediator ) {
