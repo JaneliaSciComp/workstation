@@ -10,8 +10,12 @@ import javax.media.opengl.GL2;
 import javax.media.opengl.GLAutoDrawable;
 
 import java.awt.Color;
+import java.util.Collection;
+import java.util.Iterator;
 import org.janelia.it.workstation.gui.large_volume_viewer.ChannelColorModel;
 import org.janelia.it.workstation.gui.large_volume_viewer.ImageColorModel;
+import org.janelia.it.workstation.gui.viewer3d.texture.TextureDataI;
+import org.janelia.it.workstation.gui.viewer3d.texture.TextureMediator;
 
 /**
  * VolumeTexture class draws a transparent rectangular volume with a 3D opengl texture
@@ -23,12 +27,15 @@ public class SnapshotVolumeBrick extends AbstractVolumeBrick
     public enum RenderMethod {MAXIMUM_INTENSITY, ALPHA_BLENDING}
 
 	private ImageColorModel imageColorModel;
-
+    private TextureMediator interleavedTextureMediator;
+    private boolean itmNeedsUploaded = false;
+    
     // Vary these parameters to taste
 	// Rendering variables
 	private RenderMethod renderMethod =
 		RenderMethod.MAXIMUM_INTENSITY; // MIP
     private boolean bUseShader = true; // Controls whether to load and use shader program(s).
+    private int[] svbTextureIds = null;
 
     /**
      * Size of our opengl texture, which might be padded with extra voxels
@@ -37,7 +44,7 @@ public class SnapshotVolumeBrick extends AbstractVolumeBrick
     // OpenGL state
     private boolean bSignalTextureNeedsUpload = false;
 
-    private boolean bIsInitialized;
+    private boolean bIsInitialized;    
 
     private static Logger logger = LoggerFactory.getLogger( SnapshotVolumeBrick.class );
 
@@ -50,11 +57,45 @@ public class SnapshotVolumeBrick extends AbstractVolumeBrick
         this.imageColorModel = imageColorModel;
     }
     
+    public void setTextureDatas(Collection<TextureDataI> textureDatas) {
+        if ( textureDatas == null ) {
+            return;
+        }
+        Iterator<TextureDataI> textureDataIterator = textureDatas.iterator();
+        if ( textureDatas.size() >= 1 ) {
+            setTextureData( textureDataIterator.next() );
+        }
+        else if ( textureDatas.size() >= 2 ) {
+            svbTextureIds = new int[1];
+            interleavedTextureMediator = new TextureMediator();
+            interleavedTextureMediator.setTextureData( textureDataIterator.next() );
+            super.textureMediators.add( interleavedTextureMediator );
+        }
+    }    
+    
     @Override
     public void init( GLAutoDrawable glDrawable ) {
+        getShader().setSignalTextureMediator(getSignalTextureMediator());
         super.init( glDrawable );
         logger.info("Initializing....");
+        if ( interleavedTextureMediator != null ) {
+            final GL2 gl = glDrawable.getGL().getGL2();
+            svbTextureIds = TextureMediator.genTextureIds( gl, textureMediators.size() );
+            // NOTE: wish to avoid pushing texture ids past gaps.
+            // Therefore, using signal-tex + 1, here. This brick
+            // is not using the masking texture.
+            interleavedTextureMediator.init( svbTextureIds[ 0 ], TextureMediator.SIGNAL_TEXTURE_OFFSET+1 );
+            uploadInterleavedTexture(gl);
+        }
         bIsInitialized = true;
+    }
+
+    private void uploadInterleavedTexture(final GL2 gl) {
+        if ( itmNeedsUploaded ) {
+            interleavedTextureMediator.deleteTexture(gl);
+            interleavedTextureMediator.uploadTexture(gl);
+            itmNeedsUploaded = false;
+        }
     }
 
     @Override
@@ -70,6 +111,7 @@ public class SnapshotVolumeBrick extends AbstractVolumeBrick
         GL2 gl = glDrawable.getGL().getGL2();
 		if (bSignalTextureNeedsUpload)
 			uploadSignalTexture(gl);
+        uploadInterleavedTexture(gl);
 
 		gl.glShadeModel(GL2.GL_FLAT);
         gl.glDisable(GL2.GL_LIGHTING);
@@ -104,15 +146,23 @@ public class SnapshotVolumeBrick extends AbstractVolumeBrick
         gl.glDisable( GL2.GL_TEXTURE_3D );
         gl.glDisable( GL2.GL_BLEND );
 	}
+    
+    @Override
+	public void dispose(GLAutoDrawable glDrawable) {
+        if ( interleavedTextureMediator != null ) {
+            interleavedTextureMediator.deleteTexture(glDrawable.getGL().getGL2());
+        }
+        svbTextureIds = null;
+    }
 
     private void pushValuesToShader(GL2 gl, SnapshotShader snapshotShader) {
 		int sc = imageColorModel.getChannelCount();
 
         float[] channelColor
                 = {0, 0, 0,
-                    0, 0, 0,
-                    0, 0, 0,
-                    0, 0, 0};
+                   0, 0, 0,
+                   0, 0, 0,
+                   0, 0, 0};
         float[] channelGamma = {1, 1, 1, 1};
         float[] channelMin = {0, 0, 0, 0};
         float[] channelScale = {1, 1, 1, 1};
@@ -139,7 +189,8 @@ public class SnapshotVolumeBrick extends AbstractVolumeBrick
         reportError(gl, "before setting shader values");
         snapshotShader.setChannelCount( gl, 2 );
         reportError(gl, "after pushing channel count.");
-
+        
+        snapshotShader.setExplicitInterleave( gl, interleavedTextureMediator != null );
         snapshotShader.setChannelGamma( gl, channelGamma );
         reportError(gl, "after setting channel gamma");
         snapshotShader.setChannelMin( gl, channelMin );

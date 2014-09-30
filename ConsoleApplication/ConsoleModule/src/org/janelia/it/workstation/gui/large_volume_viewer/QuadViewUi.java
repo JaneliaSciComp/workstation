@@ -1257,6 +1257,7 @@ public class QuadViewUi extends JPanel
                 largeVolumeViewer.getSliceAxis(),
                 camera,
                 getSubvolumeProvider(),
+                pathToFile,
                 url,
                 imageColorModel
         );

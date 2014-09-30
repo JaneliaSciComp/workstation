@@ -11,6 +11,7 @@ import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import org.janelia.it.jacs.compute.api.TiledMicroscopeBeanRemote;
 
 /**
  * Created by IntelliJ IDEA.
@@ -346,6 +347,12 @@ public class EJBEntityFacade implements EntityFacade {
     @Override
     public void deleteAnchoredPath(Long pathID) throws Exception {
         EJBFactory.getRemoteTiledMicroscopeBean().deleteAnchoredPath(pathID);
+    }
+
+    @Override
+    public List<String> getTiffTilePaths(String basePath, int[] viewerCoord) throws Exception {
+        final TiledMicroscopeBeanRemote remoteTiledMicroscopeBean = EJBFactory.getRemoteTiledMicroscopeBean();        
+        return remoteTiledMicroscopeBean.getTiffTilePaths(basePath, viewerCoord);
     }
 
 }
