@@ -20,6 +20,7 @@ public class SystemInfo {
 
     private static final Logger log = LoggerFactory.getLogger(SystemInfo.class);
     
+    private static final String NETBEANS_IDE_SETTING_NAME_PREFIX = "netbeans_";
     public static final String MEMORY_SETTING_PREFIX = "-J-Xmx";
     public static final String DEFAULT_OPTIONS_PROP = "default_options";
     public static final String ETC_SUBPATH = "etc";
@@ -257,7 +258,20 @@ public class SystemInfo {
                         if ( ! fqBrandingConfig.getParentFile().exists() ) {
                             fqBrandingConfig.getParentFile().mkdir();
                         }
-                        FileUtils.copy(sysWideConfig, fqBrandingConfig, false, false, null);
+                        // To copy, must change settings for app use, and away
+                        // from the netbeans prefixes.
+                        try ( BufferedReader infileReader = new BufferedReader( new FileReader( sysWideConfig ) ) ) {
+                            try ( PrintWriter outfileWriter = new PrintWriter( new FileWriter( fqBrandingConfig ) ) ) {
+                                String inline = null;
+                                while ( null != ( inline = infileReader.readLine() ) ) {
+                                    if ( inline.startsWith( NETBEANS_IDE_SETTING_NAME_PREFIX ) ) {
+                                        inline = inline.substring( NETBEANS_IDE_SETTING_NAME_PREFIX.length() );                                        
+                                    }
+                                    outfileWriter.println( inline );
+                                }
+                            }
+                        }
+                        
                     }
                     else {
                         log.error("Failed to save config file changes.  Config file used was {}.", sysWideConfig);
