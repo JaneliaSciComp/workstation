@@ -15,8 +15,6 @@ vec4 chooseColor()
 {
     vec4 in_color = texture3D(signalTexture, gl_TexCoord[0].xyz);
 
-    // Two color images are loaded as luminance/alpha, so look in alpha
-    // for second intensity, not in green.
     if (channel_count == 2)
     {
         if (interleave_flag == 0)
@@ -30,7 +28,17 @@ vec4 chooseColor()
     }
     else
     {
-        in_color.g = in_color.a;
+        if (interleave_flag == 1)
+        {
+            // Two B/W images are loaded separately, so look in one for r+b,
+            // and the second for g.
+            in_color.g = texture3D(interleavedTexture, gl_TexCoord[0].xyz).r;
+        }
+        else
+        {
+            // Not sure this ever happens.
+            in_color.g = in_color.a;
+        }
     }
 
     vec3 out_color = vec3(0, 0, 0);

@@ -32,7 +32,7 @@ public class SnapshotVolumeBrick extends AbstractVolumeBrick
     
     // Vary these parameters to taste
 	// Rendering variables
-	private RenderMethod renderMethod =
+	private final RenderMethod renderMethod =
 		RenderMethod.MAXIMUM_INTENSITY; // MIP
     private boolean bUseShader = true; // Controls whether to load and use shader program(s).
     private int[] svbTextureIds = null;
@@ -43,7 +43,7 @@ public class SnapshotVolumeBrick extends AbstractVolumeBrick
      */
     private boolean bIsInitialized;    
 
-    private static Logger logger = LoggerFactory.getLogger( SnapshotVolumeBrick.class );
+    private static final Logger logger = LoggerFactory.getLogger( SnapshotVolumeBrick.class );
 
     public SnapshotVolumeBrick(VolumeModel volumeModel) {
         super( volumeModel );
@@ -78,7 +78,7 @@ public class SnapshotVolumeBrick extends AbstractVolumeBrick
         logger.info("Initializing....");
         if ( interleavedTextureMediator != null ) {
             final GL2 gl = glDrawable.getGL().getGL2();
-            svbTextureIds = TextureMediator.genTextureIds( gl, textureMediators.size() );
+            svbTextureIds = TextureMediator.genTextureIds( gl, 1 );
             // NOTE: wish to avoid pushing texture ids past gaps.
             // Therefore, using signal-tex + 1, here. This brick
             // is not using the masking texture.
@@ -147,6 +147,7 @@ public class SnapshotVolumeBrick extends AbstractVolumeBrick
     
     @Override
 	public void dispose(GLAutoDrawable glDrawable) {
+        super.dispose(glDrawable);
         if ( interleavedTextureMediator != null ) {
             interleavedTextureMediator.deleteTexture(glDrawable.getGL().getGL2());
         }
@@ -185,7 +186,7 @@ public class SnapshotVolumeBrick extends AbstractVolumeBrick
         }
         
         reportError(gl, "before setting shader values");
-        snapshotShader.setChannelCount( gl, 2 );
+        snapshotShader.setChannelCount( gl, interleavedTextureMediator == null ? 2 : 1 );
         reportError(gl, "after pushing channel count.");
         
         snapshotShader.setExplicitInterleave( gl, interleavedTextureMediator != null );

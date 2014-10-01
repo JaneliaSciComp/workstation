@@ -88,14 +88,6 @@ public class RawTiffVolumeSource implements MonitoredVolumeSource {
             volumeListener.accept(textureData);
         }
         
-        /*
-        TODO: blend data0 and data1, voxel-wise.
-        
-        tifFileLoader = new TifFileLoader();
-        tifFileLoader.loadVolumeFile( tiffFiles.get( 1 ) );
-        TextureDataI textureData1 = tifFileLoader.buildTextureData(true);
-         */
-        
         progressMonitor.setNote("Launching viewer.");
     }
 
