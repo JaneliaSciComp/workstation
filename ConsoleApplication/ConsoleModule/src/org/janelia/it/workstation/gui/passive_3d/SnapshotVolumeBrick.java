@@ -41,9 +41,6 @@ public class SnapshotVolumeBrick extends AbstractVolumeBrick
      * Size of our opengl texture, which might be padded with extra voxels
      * to reach a multiple of 8
      */
-    // OpenGL state
-    private boolean bSignalTextureNeedsUpload = false;
-
     private boolean bIsInitialized;    
 
     private static Logger logger = LoggerFactory.getLogger( SnapshotVolumeBrick.class );
@@ -65,10 +62,11 @@ public class SnapshotVolumeBrick extends AbstractVolumeBrick
         if ( textureDatas.size() >= 1 ) {
             setTextureData( textureDataIterator.next() );
         }
-        else if ( textureDatas.size() >= 2 ) {
+        if ( textureDatas.size() >= 2 ) {
             svbTextureIds = new int[1];
             interleavedTextureMediator = new TextureMediator();
             interleavedTextureMediator.setTextureData( textureDataIterator.next() );
+            itmNeedsUploaded = true;
             super.textureMediators.add( interleavedTextureMediator );
         }
     }    

@@ -7,6 +7,7 @@
 package org.janelia.it.workstation.gui.passive_3d;
 
 import java.util.List;
+import javax.media.opengl.GL2;
 import org.janelia.it.workstation.api.entity_model.management.ModelMgr;
 import org.janelia.it.workstation.gui.camera.BasicObservableCamera3d;
 import org.janelia.it.workstation.gui.camera.Camera3d;
@@ -77,9 +78,13 @@ public class RawTiffVolumeSource implements MonitoredVolumeSource {
 
         for ( int i = 0; i < 2; i++ ) {
             TextureDataI textureData;
-            tifFileLoader.loadVolumeFile( resolver.getResolvedFilename(tiffFiles.get( 0 )) );
-            System.out.println("Loading " + tiffFiles.get(0));
+            tifFileLoader.loadVolumeFile( resolver.getResolvedFilename(tiffFiles.get( i )) );
+            System.out.println("Loading " + tiffFiles.get(i));
             textureData = tifFileLoader.buildTextureData(true);
+            // Presets known to work with this data type.
+            textureData.setExplicitInternalFormat(GL2.GL_LUMINANCE16);
+            textureData.setExplicitVoxelComponentOrder(GL2.GL_LUMINANCE_ALPHA);
+            textureData.setExplicitVoxelComponentType(GL2.GL_UNSIGNED_SHORT);
             volumeListener.accept(textureData);
         }
         

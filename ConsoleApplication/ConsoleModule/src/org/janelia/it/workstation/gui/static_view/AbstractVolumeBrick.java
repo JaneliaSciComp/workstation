@@ -49,7 +49,7 @@ public abstract class AbstractVolumeBrick implements VolumeBrickI
      * to reach a multiple of 8
      */
     // OpenGL state
-    private boolean bSignalTextureNeedsUpload = false;
+    protected boolean bSignalTextureNeedsUpload = false;
     private boolean bBuffersNeedUpload = true;
 
     //private RGBExcludableShader shader = new RGBExcludableShader();

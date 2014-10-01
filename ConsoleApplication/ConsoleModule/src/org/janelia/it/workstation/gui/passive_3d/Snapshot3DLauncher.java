@@ -27,6 +27,9 @@ import org.janelia.it.workstation.shared.workers.IndeterminateNoteProgressMonito
  * @author fosterl
  */
 public class Snapshot3DLauncher {
+    private static final String CENTERED_POINT_FORMAT = "Centered at [%3.1f,%3.1f,%3.1f].  %4$dx%4$dx%4$d.";
+    private final static String CONTAINS_POINT_FORMAT = "Contains point [%3.1f,%3.1f,%3.1f].  Raw Data.";
+
     private CoordinateAxis sliceAxis;
     private SubvolumeProvider subvolumeProvider;
     private ObservableCamera3d camera;
@@ -129,14 +132,12 @@ public class Snapshot3DLauncher {
 
     private String labelTextFor3d(int cubicDimension) {
         final Vec3 focus = camera.getFocus();
-        String LABEL3d_FORMAT = "Centered at [%3.1f,%3.1f,%3.1f].  %4$dx%4$dx%4$d.";
-        return String.format( LABEL3d_FORMAT, focus.getX(), focus.getY(), focus.getZ(), cubicDimension );
+        return String.format( CENTERED_POINT_FORMAT, focus.getX(), focus.getY(), focus.getZ(), cubicDimension );
     }
 
     private String labelTextFor3d() {
         final Vec3 focus = camera.getFocus();
-        String LABEL3d_FORMAT = "Centered at [%3.1f,%3.1f,%3.1f].  Raw Data.";
-        return String.format( LABEL3d_FORMAT, focus.getX(), focus.getY(), focus.getZ() );
+        return String.format( CONTAINS_POINT_FORMAT, focus.getX(), focus.getY(), focus.getZ() );
     }
 
 }
