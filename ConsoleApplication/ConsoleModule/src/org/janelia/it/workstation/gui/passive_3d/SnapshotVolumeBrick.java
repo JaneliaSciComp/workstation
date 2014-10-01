@@ -186,7 +186,7 @@ public class SnapshotVolumeBrick extends AbstractVolumeBrick
         }
         
         reportError(gl, "before setting shader values");
-        snapshotShader.setChannelCount( gl, interleavedTextureMediator == null ? 2 : 1 );
+        snapshotShader.setChannelCount( gl, 2 );//interleavedTextureMediator == null ? 2 : 1 );
         reportError(gl, "after pushing channel count.");
         
         snapshotShader.setExplicitInterleave( gl, interleavedTextureMediator != null );

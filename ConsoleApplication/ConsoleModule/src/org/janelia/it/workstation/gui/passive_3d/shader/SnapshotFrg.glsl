@@ -23,7 +23,7 @@ vec4 chooseColor()
         }
         else
         {
-            in_color.g = texture3D(interleavedTexture, gl_TexCoord[1].xyz).r;
+            in_color.g = texture3D(interleavedTexture, gl_TexCoord[0].xyz).r;
         }
     }
     else
