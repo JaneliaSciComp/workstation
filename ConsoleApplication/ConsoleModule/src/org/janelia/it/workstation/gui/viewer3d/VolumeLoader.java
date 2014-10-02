@@ -115,7 +115,7 @@ public class VolumeLoader implements VolumeLoaderI {
             if ( FileType.TIF.equals( getFileType( localFileName, baseName, extension ) )  &&
                  localFileName.contains("tiff_mousebrain") ) {
                 textureData.setExplicitInternalFormat( GL2.GL_LUMINANCE16 );
-                textureData.setExplicitVoxelComponentOrder( GL2.GL_LUMINANCE_ALPHA );
+                textureData.setExplicitVoxelComponentOrder( GL2.GL_LUMINANCE );
                 textureData.setExplicitVoxelComponentType( GL2.GL_UNSIGNED_SHORT );
             }
             else if ( FileType.TIF.equals( getFileType( localFileName, baseName, extension ) ) ) {

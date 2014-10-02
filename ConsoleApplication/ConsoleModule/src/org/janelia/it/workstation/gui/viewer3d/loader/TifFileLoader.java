@@ -1,12 +1,13 @@
 package org.janelia.it.workstation.gui.viewer3d.loader;
 
-import com.sun.media.jai.codec.FileSeekableStream;
 import com.sun.media.jai.codec.ImageCodec;
 import com.sun.media.jai.codec.ImageDecoder;
 import com.sun.media.jai.codec.MemoryCacheSeekableStream;
 import com.sun.media.jai.codec.SeekableStream;
 import com.sun.media.jai.codec.TIFFDecodeParam;
 import java.awt.image.BufferedImage;
+import java.awt.image.DataBufferByte;
+import java.awt.image.DataBufferUShort;
 import java.awt.image.RenderedImage;
 import java.io.ByteArrayInputStream;
 import java.io.File;
@@ -36,22 +37,30 @@ public class TifFileLoader extends TextureDataBuilder implements VolumeFileLoade
 
     @Override
     public TextureDataI createTextureDataBean() {
-        return new TextureDataBean(argbTextureIntArray, sx, sy, sz );
+        TextureDataBean textureDataBean;
+        if ( pixelBytes < 4 ) {
+            textureDataBean = new TextureDataBean( textureByteArray, sx, sy, sz );
+        }
+        else {
+            textureDataBean = new TextureDataBean( argbTextureIntArray, sx, sy, sz );
+        }
+        textureDataBean.setPixelByteCount(pixelBytes);
+        return textureDataBean;
     }
 
     @Override
     public void loadVolumeFile( String fileName ) throws Exception {
         this.unCachedFileName = fileName;
         sx = -1;
-
-        Collection<BufferedImage> allImages = loadTIFF( new File(fileName) );        
+        
+        final File file = new File(fileName);
+        Collection<BufferedImage> allImages = loadTIFF( file);
+        pixelBytes = -1;
         int zOffset = 0;
+        int sheetSize = -1;
         for ( BufferedImage zSlice: allImages ) {            
             if ( sx == -1 ) {
-                sx = zSlice.getWidth();
-                sy = zSlice.getHeight();
-                sz = allImages.size();
-                argbTextureIntArray = new int[sx*sy*sz];
+                sheetSize = captureAndUsePageDimensions(zSlice, allImages, sheetSize, file);
             }
             else {
                 if ( sx != zSlice.getWidth()  ||  sy != zSlice.getHeight() ) {
@@ -60,15 +69,56 @@ public class TifFileLoader extends TextureDataBuilder implements VolumeFileLoade
                             zSlice.getWidth() + " has dimensions which do not match previous width * height of " + sx + " * " + sy );
                 }
             }
-            
-            zSlice.getRGB(0, 0,
-                    sx, sy,
-                    argbTextureIntArray,
-                    zOffset * sx * sy,
-                    sx);
-
+            storeToBuffer(zOffset, sheetSize, zSlice);
             zOffset ++;
         }
+    }
+
+    private void storeToBuffer(int zOffset, int sheetSize, BufferedImage zSlice) {
+        final int outputBufferOffset = zOffset * sheetSize;
+        if ( pixelBytes == 1 ) {
+            DataBufferByte db = ((DataBufferByte)zSlice.getTile(0, 0).getDataBuffer());
+            byte[] pixels = db.getData();
+            System.arraycopy(pixels, 0, textureByteArray, outputBufferOffset, sheetSize);
+        }
+        else if ( pixelBytes == 2 ) {
+            DataBufferUShort db = ((DataBufferUShort)zSlice.getTile(0, 0).getDataBuffer());
+            short[] pixels = db.getData();
+            int shortOffset = pixelBytes * outputBufferOffset;
+            for ( int i = 0; i < pixels.length; i++ ) {
+                // Changing the order.
+                int unsignedPixelVal = pixels[ i ];
+                if ( pixels[ i ] < 0 ) {
+                    unsignedPixelVal += 65536;
+                }
+                byte byteVal = (byte)((unsignedPixelVal & 0x0000ff00) >> 8);
+                textureByteArray[ i * pixelBytes + shortOffset + 1 ] = byteVal;
+                byteVal = (byte)(unsignedPixelVal & 0x000000ff);
+                textureByteArray[ i * pixelBytes + shortOffset ] = byteVal;
+            }
+        }
+        else if ( pixelBytes == 4 ) {
+            zSlice.getRGB(0, 0,
+                    sx, sy,
+                    argbTextureIntArray, outputBufferOffset,
+                    sx);
+        }
+    }
+
+    private int captureAndUsePageDimensions(BufferedImage zSlice, Collection<BufferedImage> allImages, int sheetSize, final File file) {
+        sx = zSlice.getWidth();
+        sy = zSlice.getHeight();
+        sz = allImages.size();
+        sheetSize = sx * sy;
+        final int totalVoxels = sheetSize*sz;
+        pixelBytes = (int)Math.floor( file.length() / totalVoxels );
+        if ( pixelBytes < 4 ) {
+            textureByteArray = new byte[totalVoxels * pixelBytes];
+        }
+        else {
+            argbTextureIntArray = new int[totalVoxels];
+        }
+        return sheetSize;
     }
     
     /**

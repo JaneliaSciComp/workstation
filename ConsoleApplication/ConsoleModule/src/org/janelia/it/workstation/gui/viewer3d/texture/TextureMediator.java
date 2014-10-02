@@ -178,7 +178,7 @@ public class TextureMediator {
 
             // DEBUG
             //if ( expectedRemaining < 1000000 )
-            //    testTextureContents(gl);
+            //    testTextureContents(gl); // Did NOT work for TIF!
         }
 
     }
