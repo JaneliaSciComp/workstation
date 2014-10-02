@@ -301,4 +301,7 @@ public abstract class AbstractVolumeBrick implements VolumeBrickI
         }
     }
 
+    protected int[] getTextureIds() {
+        return textureIds;
+    }
 }
