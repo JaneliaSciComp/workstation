@@ -208,8 +208,8 @@ public class LargeVolumeViewerTranslator {
         // find some annotation in selected neuron and select it, too
         // let's select the first endpoint we find:
         TmGeoAnnotation firstRoot = neuron.getRootAnnotations().get(0);
-        for (TmGeoAnnotation link: firstRoot.getSubTreeList()) {
-            if (link.getChildren().size() == 0) {
+        for (TmGeoAnnotation link: neuron.getSubTreeList(firstRoot)) {
+            if (link.getChildIds().size() == 0) {
                 setNextParentSignal.emit(link.getId());
                 return;
             }
@@ -293,7 +293,7 @@ public class LargeVolumeViewerTranslator {
                 for (TmGeoAnnotation root: neuron.getRootAnnotations()) {
                     // first step in optimization; could conceivably aggregate these
                     //  lists into one big list and send signal once:
-                    anchorsAddedSignal.emit(root.getSubTreeList());
+                    anchorsAddedSignal.emit(neuron.getSubTreeList(root));
                 }
             }
 

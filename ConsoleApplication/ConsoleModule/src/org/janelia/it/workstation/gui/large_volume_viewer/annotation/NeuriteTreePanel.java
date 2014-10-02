@@ -151,17 +151,9 @@ public class NeuriteTreePanel extends JPanel
                 System.out.println(String.format("root annotation %d at %.1f, %.1f, %.1f",
                         r.getId(), r.getX(), r.getY(), r.getZ()));
 
-                for (TmGeoAnnotation a: r.getSubTreeList()) {
-                    TmGeoAnnotation parent = a.getParent();
-                    Long parentID;
-                    if (parent == null) {
-                        parentID = neuron.getId();
-                    } else {
-                        parentID = parent.getId();
-                    }
+                for (TmGeoAnnotation a: neuron.getSubTreeList(r)) {
                     System.out.println(String.format("annotation %d with parent %d at %.1f, %.1f, %.1f",
-                            a.getId(), parentID, a.getX(), a.getY(), a.getZ()));
-
+                            a.getId(), a.getParentId(), a.getX(), a.getY(), a.getZ()));
                 }
             }
         }        
@@ -193,7 +185,7 @@ public class NeuriteTreePanel extends JPanel
                 labelToAnnotationMap.put(label, root);
 
                 // build tree;
-                populateNeuriteTreeNodeTagged(root, rootNode);
+                populateNeuriteTreeNodeTagged(root, neuron, rootNode);
             }
         }
         neuriteModel.reload();
@@ -204,18 +196,18 @@ public class NeuriteTreePanel extends JPanel
         }
     }
 
-    private void populateNeuriteTreeNodeTagged(TmGeoAnnotation parentAnnotation, DefaultMutableTreeNode rootNode) {
+    private void populateNeuriteTreeNodeTagged(TmGeoAnnotation parentAnnotation, TmNeuron neuron, DefaultMutableTreeNode rootNode) {
         // recurse through nodes; note that everything is a child of the rootNode!
-        List<TmGeoAnnotation> childList = parentAnnotation.getChildren();
+        List<TmGeoAnnotation> childList = neuron.getChildrenOf(parentAnnotation);
         sortGeoAnnotationList(childList);
         for (TmGeoAnnotation childAnnotation: childList) {
-            if (!getNodeType(childAnnotation).equals("node")) {
+            if (!getNodeTypeLabel(childAnnotation).equals("node")) {
                 String label = getTreeString(childAnnotation);
                 DefaultMutableTreeNode childNode = new DefaultMutableTreeNode(label);
                 neuriteModel.insertNodeInto(childNode, rootNode, rootNode.getChildCount());
                 labelToAnnotationMap.put(label, childAnnotation);
             }
-            populateNeuriteTreeNodeTagged(childAnnotation, rootNode);
+            populateNeuriteTreeNodeTagged(childAnnotation, neuron, rootNode);
         }
     }
 
@@ -225,23 +217,22 @@ public class NeuriteTreePanel extends JPanel
         return labelToAnnotationMap.get(label);
     }
 
-    private String getNodeType(TmGeoAnnotation annotation) {
-        if (annotation.getParent() == null) {
+    private String getNodeTypeLabel(TmGeoAnnotation annotation) {
+        if (annotation.isRoot()) {
             return "root";
         } else {
-            int nChildren = annotation.getChildren().size();
-            if (nChildren == 0) {
+            if (annotation.isEnd()) {
                 return "end";
-            } else if (nChildren == 1) {
-                return "node";
-            } else {
+            } else if (annotation.isBranch()) {
                 return "fork";
+            } else {
+                return "node";
             }
         }
     }
 
     private String getTreeString(TmGeoAnnotation annotation) {
-        return getNodeType(annotation) + ": " + annotation.toString();
+        return getNodeTypeLabel(annotation) + ": " + annotation.toString();
     }
 
     public void loadNeuron(TmNeuron neuron) {
