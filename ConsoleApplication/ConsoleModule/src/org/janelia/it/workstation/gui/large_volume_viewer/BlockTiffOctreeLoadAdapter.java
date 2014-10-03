@@ -327,8 +327,8 @@ extends AbstractTextureLoadAdapter
             }
 		}
         if ( missingTiffs.length() > 0 ) {
-            log.info("All requested tiffs: " + requestedTiffs);
-            log.warn( "Putative tiff file(s): " + missingTiffs + " not found.  Padding with zeros." );
+            log.debug("All requested tiffs: " + requestedTiffs);
+            log.debug( "Putative tiff file(s): " + missingTiffs + " not found.  Padding with zeros." );
         }
 		return decoders;
 	}

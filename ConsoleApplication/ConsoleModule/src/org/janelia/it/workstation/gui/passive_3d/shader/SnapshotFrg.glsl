@@ -23,21 +23,8 @@ vec4 chooseColor()
         }
         else
         {
+            // Verified: this code is used when 2 channels/separate tifs avail.
             in_color.g = texture3D(interleavedTexture, gl_TexCoord[0].xyz).r;
-        }
-    }
-    else
-    {
-        if (interleave_flag == 1)
-        {
-            // Two B/W images are loaded separately, so look in one for r+b,
-            // and the second for g.
-            in_color.g = texture3D(interleavedTexture, gl_TexCoord[0].xyz).r;
-        }
-        else
-        {
-            // Not sure this ever happens.
-            in_color.g = in_color.a;
         }
     }
 

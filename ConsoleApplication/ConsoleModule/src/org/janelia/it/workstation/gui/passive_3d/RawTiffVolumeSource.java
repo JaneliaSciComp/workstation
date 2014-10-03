@@ -78,12 +78,11 @@ public class RawTiffVolumeSource implements MonitoredVolumeSource {
 
         for ( int i = 0; i < 2; i++ ) {
             TextureDataI textureData;
-            tifFileLoader.loadVolumeFile( resolver.getResolvedFilename(tiffFiles.get( i )) );
-            System.out.println("Loading " + tiffFiles.get(i));
+            String resolvedFilename = resolver.getResolvedFilename(tiffFiles.get( i ));
+            tifFileLoader.loadVolumeFile( resolvedFilename );
+            System.out.println("Loading " + tiffFiles.get(i) + " as " + resolvedFilename);
             textureData = tifFileLoader.buildTextureData(true);
             // Presets known to work with this data type.
-//            textureData.setExplicitInternalFormat(GL2.GL_LUMINANCE16);
-//            textureData.setExplicitVoxelComponentOrder(GL2.GL_LUMINANCE_ALPHA);
             textureData.setExplicitInternalFormat(GL2.GL_LUMINANCE16);
             textureData.setExplicitVoxelComponentOrder(GL2.GL_LUMINANCE);
             textureData.setExplicitVoxelComponentType(GL2.GL_UNSIGNED_SHORT);

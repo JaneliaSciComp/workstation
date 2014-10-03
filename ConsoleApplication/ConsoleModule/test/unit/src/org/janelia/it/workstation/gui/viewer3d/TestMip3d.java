@@ -58,7 +58,8 @@ public class TestMip3d {
                     //String fn = "/Users/fosterl/Whitebackground_color.tif";
                     //String fn = "/Users/fosterl/Erasmus_Color.tiff";
                     //String fn = "/Users/fosterl/Regression_12032013a_color_blocks.tiff";
-                    String fn = "/Users/fosterl/Documents/tiff_mousebrain/00507-ngc.1.tif";
+                    String fn = "/Users/fosterl/Documents/tiff_mousebrain/00063-ngc.0.tif";
+                    //String fn = "/Users/fosterl/Documents/tiff_mousebrain/00507-ngc.1.tif";
                     //String fn = "/Users/fosterl/Documents/tiff_mousebrain/00507-ngc.0.tif";
 
                     //String fn = "/Volumes/nobackup/jacs/jacsData/filestore/system/Separation/296/418/1778029752666296418/separate/ConsolidatedLabel.v3dpbd";

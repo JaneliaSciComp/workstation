@@ -134,11 +134,11 @@ public class SnapshotShader extends SignalShader {
     }
 
     private void setTextureUniform( GL2 gl, String shaderUniformName, TextureMediator textureMediator ) {
-        int signalTextureLoc = gl.glGetUniformLocation( getShaderProgram(), shaderUniformName );
-        if ( signalTextureLoc == -1 ) {
+        int textureLoc = gl.glGetUniformLocation( getShaderProgram(), shaderUniformName );
+        if ( textureLoc == -1 ) {
             throw new RuntimeException( "Failed to find " + shaderUniformName + " texture location." );
         }
-        gl.glUniform1i(signalTextureLoc, textureMediator.getTextureOffset());
+        gl.glUniform1i(textureLoc, textureMediator.getTextureOffset());
         // This did not work.  GL.GL_TEXTURE1 ); //textureIds[ 1 ] );
     }
 
