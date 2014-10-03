@@ -70,6 +70,13 @@ public class TextureDataBean implements TextureDataI {
         setSz( sz );
     }
 
+    public TextureDataBean(byte[] byteData, int sx, int sy, int sz) {
+        textureData = new VolumeDataBean( byteData, sx, sy, sz );
+        setSx( sx );
+        setSy( sy );
+        setSz( sz );
+    }
+
     @SuppressWarnings("ALL")
     @Override
     public boolean equals( Object other ) {

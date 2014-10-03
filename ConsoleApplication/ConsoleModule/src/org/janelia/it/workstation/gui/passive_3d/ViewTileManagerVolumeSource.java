@@ -43,20 +43,12 @@ import org.janelia.it.workstation.shared.workers.IndeterminateNoteProgressMonito
  */
 public class ViewTileManagerVolumeSource implements MonitoredVolumeSource {
     private static final int DEFAULT_BRICK_CUBIC_DIMENSION = 512;
-    private static final String COORDS_FORMAT = "[%3.1f,%3.1f,%3.1f]";
     
     private Camera3d camera;
     private CoordinateAxis sliceAxis;   //@deprecated
     private SubvolumeProvider subvolumeProvider;
     private URL dataUrl;
     private byte[] dataVolume;
-    
-    private int absoluteReqVolStartX;
-    private int absoluteReqVolEndX;
-    private int absoluteReqVolStartY;
-    private int absoluteReqVolEndY;
-    private int absoluteReqVolStartZ;
-    private int absoluteReqVolEndZ;
     
     private int brickCubicDimension = DEFAULT_BRICK_CUBIC_DIMENSION;
 
@@ -71,7 +63,8 @@ public class ViewTileManagerVolumeSource implements MonitoredVolumeSource {
     public ViewTileManagerVolumeSource(Camera3d camera,
                                        CoordinateAxis sliceAxis,
                                        int cubicDimension,
-                                       SubvolumeProvider subvolumeProvider) throws Exception {
+                                       SubvolumeProvider subvolumeProvider,
+                                       URL dataUrl) throws Exception {
         
         // Cloning the camera, to leave the original as was found.
         Camera3d iterationCamera = new BasicObservableCamera3d();
@@ -87,6 +80,7 @@ public class ViewTileManagerVolumeSource implements MonitoredVolumeSource {
         }
 
         dataAdapter = new BlockTiffOctreeLoadAdapter();
+        this.dataUrl = dataUrl;
     }
 
     @Override
@@ -117,13 +111,6 @@ public class ViewTileManagerVolumeSource implements MonitoredVolumeSource {
         return dataUrl;
     }
 
-    /**
-     * @param dataUrl the dataUrl to set
-     */
-    public void setDataUrl(URL dataUrl) {
-        this.dataUrl = dataUrl;
-    }
-
     private void requestTextureData() throws Exception {
         StandardizedValues stdVals = new StandardizedValues();
         //fetchTextureData(stdVals, false);
@@ -144,99 +131,8 @@ public class ViewTileManagerVolumeSource implements MonitoredVolumeSource {
 
     }
     
-    private int getEndTileNum(int zoomFactor, int startTileNum, TileFormat tileFormat, int index) {
-        return (int)Math.ceil( startTileNum + ( ((applyZoomFactor(zoomFactor)) - 1) / tileFormat.getVoxelMicrometers()[ index ] / tileFormat.getTileSize()[ index ] ) );
-    }
-
     private int applyZoomFactor(int zoomFactor) {
         return brickCubicDimension / (int)Math.pow(2.0, zoomFactor);
-    }
-
-    private int getTileNum(int zoomFactor, TileFormat tileFormat, int axis) {
-        return (int)Math.floor((camera.getFocus().get(axis) - applyZoomFactor(zoomFactor)) / tileFormat.getVoxelMicrometers()[ axis ] / tileFormat.getTileSize()[ axis ] );
-    }
-
-    private void acceptTileData(ByteBuffer pixels, TileIndex tileIndex, int byteCount, int channelCount) {
-        progressMonitor.setNote( "Assembling volume..." );
-        int stdTileSize = brickCubicDimension * brickCubicDimension;
-        TileFormat tileFormat = dataAdapter.getTileFormat();
-
-        // Dealing with tile indices, need to be able to convert tile index back to absolute coordinates,
-        // to figure out where the tile is placed within the slice.
-        Vec3[] corners = tileFormat.cornersForTileIndex( tileIndex );
-
-        // Adjust for the inversion of Y between tile set and screen.
-        FragmentLoadParmBean paramBean = new FragmentLoadParmBean();
-        paramBean.yTileAbsStart = (int)corners[ 0 ].y();
-        paramBean.yTileAbsEnd = (int)corners[ 3 ].y();
-
-        paramBean.xTileAbsStart = (int)corners[ 0 ].x();
-        paramBean.xTileAbsEnd = (int)corners[ 3 ].x();
-        paramBean.corners = corners;
-
-        int zTile = (int)corners[ 0 ].z();
-
-        if ( paramBean.yTileAbsStart > paramBean.yTileAbsEnd ) {
-            logger.error("Start must be < end. Ignoring this tile [{},{}].", tileIndex.getX(), tileIndex.getY() );
-            logger.info("Ignored tile top-left={}.  bottom-right={}." + corners[0], corners[3]);
-            return;
-        }
-
-        // Check for non-overlap of ranges.  If the ranges do not overlap, assume this is not a relevant tile.
-        if ( ( paramBean.yTileAbsStart > absoluteReqVolEndY  ||  paramBean.yTileAbsEnd < absoluteReqVolStartY ) ||
-             ( paramBean.xTileAbsStart > absoluteReqVolEndX || paramBean.xTileAbsEnd < absoluteReqVolStartX ) ) {
-            logger.warn("Tile range not relevant to request: " + paramBean.xTileAbsStart+":"+paramBean.xTileAbsEnd + "; " + paramBean.yTileAbsStart+":"+paramBean.yTileAbsEnd +
-                               ", requested was " + absoluteReqVolStartX+":"+absoluteReqVolEndX + "; " + absoluteReqVolStartY+":"+absoluteReqVolEndY );
-            return;
-        }
-
-        if ( absoluteReqVolStartZ > zTile || absoluteReqVolEndZ < zTile ) {
-            logger.warn("Tile Z value {} not relevant to request {}.", zTile, absoluteReqVolEndZ );
-            return;
-        }
-
-        byte[] pixelArr = new byte[ pixels.capacity() ];
-        pixels.rewind();
-        pixels.get( pixelArr );
-
-        // First, relevant start-x, y, z within tile and within the target volume.
-        //  Recall that the tile has 512-voxel lines along X, and 512 of such lines to make Y.
-        //  The "in-volume" coords are really relative, rather than being based at 0 for whole world of tiles.
-        // "VolStart" and "VolEnd" refer to the 1D array containing the 3D texture we are building.
-        paramBean.inVolStartX = calcInVolStart( paramBean.xTileAbsStart, absoluteReqVolStartX );
-        paramBean.inVolStartY = calcInVolStart( paramBean.yTileAbsStart, absoluteReqVolStartY );
-
-        paramBean.inVolEndX = calcInVolEnd( absoluteReqVolEndX, absoluteReqVolStartX, paramBean.xTileAbsEnd, brickCubicDimension );
-        paramBean.inVolEndY = calcInVolEnd( absoluteReqVolEndY, absoluteReqVolStartY, paramBean.yTileAbsStart, brickCubicDimension );
-
-        paramBean.inTileStartX = calcInTileStart( paramBean.xTileAbsStart, absoluteReqVolStartX );
-        paramBean.inTileStartY = calcInTileStart( paramBean.yTileAbsStart, absoluteReqVolStartY );
-
-        logger.info("absolute request X=(" + absoluteReqVolStartX +
-                "," + absoluteReqVolEndX +
-                "), absolute tile X=(" + paramBean.xTileAbsStart +
-                "," + paramBean.xTileAbsEnd +
-                "), extent of volume, in X=" + tileFormat.getVolumeSize()[ 0 ] +
-                "; in-tile coords X start=" + paramBean.inTileStartX
-        );
-        logger.info("in-vol-X=(" + paramBean.inVolStartX + "," + paramBean.inVolEndX + ")");
-
-        logger.info("absolute request Y=(" + absoluteReqVolStartY +
-                "," + absoluteReqVolEndY + "), absolute tile Y=(" + paramBean.yTileAbsStart +
-                "," + paramBean.yTileAbsEnd + "), extent of volume, in Y=" + tileFormat.getVolumeSize()[ 1 ] +
-                "; in-tile coords Y start=" + paramBean.inTileStartY
-        );
-        logger.info("in-vol-Y=(" + paramBean.inVolStartY + "," + paramBean.inVolEndY + ")");
-
-        // Now add to the growing volume.
-        int zOutputOffset = (zTile - absoluteReqVolStartZ) * stdTileSize * byteCount * channelCount;
-        paramBean.tileWidth = paramBean.xTileAbsEnd - paramBean.xTileAbsStart;
-        for ( int yCounter = 0; yCounter < (paramBean.inVolEndY - paramBean.inVolStartY) - 1; yCounter++ ) {
-
-            Runnable sliceLoadRunnable = new LineFragmentLoader(byteCount, channelCount, pixelArr, paramBean, zOutputOffset, yCounter);
-            sliceLoadRunnable.run(); // TEMP: avoid clutter in output messages.
-
-        }
     }
 
     /**
@@ -286,93 +182,6 @@ public class ViewTileManagerVolumeSource implements MonitoredVolumeSource {
         return SubvolumeProvider.findLowerBound( focusVal, brickCubicDimension );
     }
     
-    /**
-     * Fetching by acting like the main viewer.
-     * @deprecated using new mechanism.
-     * @param stdVals checked for consistency across all tiles.
-     * @throws IOException throws by called
-     * @throws URISyntaxException thrown by called.
-     */
-    private void fetchTextureData(StandardizedValues stdVals, boolean doNotUse) throws IOException, URISyntaxException {
-        dataAdapter.setTopFolder( new File( dataUrl.toURI() ) );
-        
-        TileFormat tileFormat = dataAdapter.getTileFormat();
-        
-        // NOTE: need to take zoom level into account for the expected return values.
-        int zoomFactor = (int)Math.pow( 2.0, tileFormat.zoomLevelForCameraZoom( camera.getPixelsPerSceneUnit()) );
-        int startTileNumX = getTileNum(zoomFactor, tileFormat, 0);
-        int startTileNumY = getTileNum(zoomFactor, tileFormat, 1);
-        int startTileNumZ = (int)Math.floor((camera.getFocus().getZ()) / tileFormat.getVoxelMicrometers()[ 2 ] / tileFormat.getTileSize()[ 2 ] );
-        logger.info("Starting tile coords=(" + startTileNumX + "," + startTileNumY + "," + startTileNumZ + ")");
-
-        // Cover leftward/bottomward/inward by half brick dimension including 0.  Cover rightward/upward/outward
-        // half brick dimension beyond start point.
-        //  Total coverage full brick dimension.
-        //    Dimensions expected to be divisible by 2.
-        startTileNumX = Math.max( 0, startTileNumX );
-        startTileNumY = Math.max( 0, startTileNumY );
-        startTileNumZ = Math.max( 0, startTileNumZ );
-        int endTileNumX = getEndTileNum(zoomFactor, startTileNumX, tileFormat, 0);
-        int endTileNumY = getEndTileNum(zoomFactor, startTileNumY, tileFormat, 1);
-        // Subtracting 1 from ending-tile Z since (N-m)..(N+m) inclusive, covers 2m+1 distinct values.
-        int endTileNumZ = (startTileNumZ + brickCubicDimension / (int)tileFormat.getVoxelMicrometers()[ 2 ] / tileFormat.getTileSize()[ 2 ]) - 1;
-        logger.info("Ending tile coords=(" + endTileNumX + "," + endTileNumY + "," + endTileNumZ + ")");
-
-        absoluteReqVolStartX = zoomFactor *
-                (int) Math.floor((camera.getFocus().getX() - applyZoomFactor(zoomFactor)) / tileFormat.getVoxelMicrometers()[ 0 ]);
-        absoluteReqVolStartY = zoomFactor *
-                (int) Math.floor((camera.getFocus().getY() - applyZoomFactor(zoomFactor)) / tileFormat.getVoxelMicrometers()[ 1 ]);
-        absoluteReqVolStartZ = zoomFactor *
-                (int) Math.floor((camera.getFocus().getZ() - applyZoomFactor(zoomFactor)) / tileFormat.getVoxelMicrometers()[ 2 ]);
-
-        if ( absoluteReqVolStartZ < 0 )
-            absoluteReqVolStartZ = 0;
-
-        absoluteReqVolEndX = absoluteReqVolStartX + brickCubicDimension - 1;
-        absoluteReqVolEndY = absoluteReqVolStartY + brickCubicDimension - 1;
-        absoluteReqVolEndZ = absoluteReqVolStartZ + brickCubicDimension - 1;
-
-        logger.info("Absolute start/end X are {}..{}.", absoluteReqVolStartX, absoluteReqVolEndX );
-        logger.info("Absolute start/end Y are {}..{}.", absoluteReqVolStartY, absoluteReqVolEndY );
-        logger.info("Absolute start/end Z are {}..{}.", absoluteReqVolStartZ, absoluteReqVolEndY );
-
-        TileIndexFinder indexFinder = new TileIndexFinder( tileFormat, camera, sliceAxis );
-        Collection<TileIndex> indices = indexFinder.executeForTileCoords(
-                startTileNumX, startTileNumY, startTileNumZ,
-                endTileNumX, endTileNumY, endTileNumZ // Assume: takes care of maxima on its own.
-        );
-
-        // Executing loads through a queue. Await queue rundown, then iterate over the results to standardize values.
-        ExecutorService threadPool = Executors.newFixedThreadPool( 5 );
-        Map<TileIndex, TextureData2dGL> dataCollection = new HashMap<>();
-        for ( TileIndex index: indices ) {
-            LoadToRamRunnable runnable = new LoadToRamRunnable( index, dataCollection );
-            threadPool.execute( runnable );
-        }
-        threadPool.shutdown();
-        try {
-            threadPool.awaitTermination( 300, TimeUnit.SECONDS );
-        } catch ( InterruptedException ie ) {
-            ie.printStackTrace();
-            SessionMgr.getSessionMgr().handleException( ie );
-        }
-
-        for ( TileIndex index: dataCollection.keySet() ) {
-            TextureData2dGL data = dataCollection.get( index );
-            stdVals.stdInternalFormat = setAndStandardize( stdVals.stdInternalFormat, data.getInternalFormat(), "Internal Format" );
-            int typeMultiplier = stdVals.stdInternalFormat == GL2.GL_LUMINANCE16_ALPHA16 ? 2 : 1;
-            stdVals.stdByteCount = setAndStandardize( stdVals.stdByteCount, data.getBitDepth()/8 * typeMultiplier, "Byte Count" );
-            stdVals.stdChannelCount = setAndStandardize( stdVals.stdChannelCount, data.getChannelCount(), "Channel Count" );
-            stdVals.stdType = setAndStandardize( stdVals.stdType, data.getType(), "Type" );
-
-            if ( dataVolume == null ) {
-                dataVolume = new byte[ brickCubicDimension * brickCubicDimension * brickCubicDimension * stdVals.stdByteCount * stdVals.stdChannelCount ];
-            }
-            acceptTileData( data.getPixels(), index, stdVals.stdByteCount, stdVals.stdChannelCount );
-
-        }
-    }
-
     private class StandardizedValues {
         public int stdByteCount;
         public int stdChannelCount;
@@ -442,25 +251,6 @@ public class ViewTileManagerVolumeSource implements MonitoredVolumeSource {
     }
 
     //----------------------------------------------------------INNER CLASSES
-    private class LoadToRamRunnable implements Runnable {
-        private TileIndex index;
-        private Map<TileIndex, TextureData2dGL> indexToTexData;
-        public LoadToRamRunnable( TileIndex index, Map<TileIndex, TextureData2dGL> indexToTexData ) {
-            this.index = index;
-            this.indexToTexData = indexToTexData;
-        }
-
-        public void run() {
-            try {
-                TextureData2dGL data = dataAdapter.loadToRam( index );
-                indexToTexData.put( index, data );
-            } catch ( Exception ex ) {
-                ex.printStackTrace();
-
-            }
-        }
-    }
-
     private class LineFragmentLoader implements Runnable {
         private int bytesPerVoxel;
         private int channelsPerVoxel;

@@ -8,9 +8,12 @@ import org.janelia.it.workstation.gui.viewer3d.texture.TextureMediator;
 
 import javax.media.opengl.GL2;
 import java.nio.IntBuffer;
-import org.janelia.it.workstation.gui.viewer3d.shader.SignalShader;
+import java.util.HashMap;
+import java.util.Map;
+import org.janelia.it.workstation.gui.viewer3d.shader.TexturedShader;
 
-public class SnapshotShader extends SignalShader {
+public class SnapshotShader extends TexturedShader {
+    public static final String INTERLEAVED_TEXTURE_NAME = "interleavedTexture";
     // Shader GLSL source is expected to be in the same package as this class.  Otherwise,
     // a prefix of the relative path could be given, as in "shader_sub_pkg/AShader.glsl"
     public static final String VERTEX_SHADER = "SnapshotVtx.glsl";
@@ -31,9 +34,10 @@ public class SnapshotShader extends SignalShader {
     private int channelColorLoc;
     private int channelScaleLoc;
     private int channelCountLoc;
+    private int interleaveFlagLoc;
     
-    private TextureMediator signalTextureMediator;
-
+    private final Map<String, TextureMediator> mediatorMap = new HashMap<>();
+    
     @Override
     public String getVertexShader() {
         return VERTEX_SHADER;
@@ -62,6 +66,7 @@ public class SnapshotShader extends SignalShader {
         channelColorLoc   = gl.glGetUniformLocation( shaderProgram, "channel_color" );
         channelScaleLoc   = gl.glGetUniformLocation( shaderProgram, "channel_scale" );
         channelCountLoc   = gl.glGetUniformLocation( shaderProgram, "channel_count" );
+        interleaveFlagLoc = gl.glGetUniformLocation( shaderProgram, "interleave_flag" );
     }
 
     public int getVertexAttribLoc() {
@@ -81,11 +86,12 @@ public class SnapshotShader extends SignalShader {
     /**
      * Note, this must be called with at least the signal mediator, before attempting to set texture uniforms.
      *
-     * @param signalTextureMediator intermediator for signal.
+     * @param textureMediator intermediator for signal.
+     * @param name associated with this texture, in GPU.
      */
     @Override
-    public void setSignalTextureMediator(TextureMediator signalTextureMediator) {
-        this.signalTextureMediator = signalTextureMediator;
+    public void addTextureMediator(TextureMediator textureMediator, String name) {
+        mediatorMap.put( name, textureMediator );
     }
 
     @Override
@@ -113,17 +119,24 @@ public class SnapshotShader extends SignalShader {
     public void setChannelCount( GL2 gl, int count ) {
         gl.glUniform1i( channelCountLoc, count );
     }
+    
+    /** This flag should be set, if the texture is broken into two interleaved parts. */
+    public void setExplicitInterleave( GL2 gl, boolean interleaveFlag ) {
+        gl.glUniform1i( interleaveFlagLoc, interleaveFlag ? 1 : 0 );
+    }
 
     private void setTextureUniforms(GL2 gl) {
-        setTextureUniform(gl, "signalTexture", signalTextureMediator);
+        for ( String name: mediatorMap.keySet() ) {
+            setTextureUniform( gl, name, mediatorMap.get( name ) );
+        }
     }
 
     private void setTextureUniform( GL2 gl, String shaderUniformName, TextureMediator textureMediator ) {
-        int signalTextureLoc = gl.glGetUniformLocation( getShaderProgram(), shaderUniformName );
-        if ( signalTextureLoc == -1 ) {
+        int textureLoc = gl.glGetUniformLocation( getShaderProgram(), shaderUniformName );
+        if ( textureLoc == -1 ) {
             throw new RuntimeException( "Failed to find " + shaderUniformName + " texture location." );
         }
-        gl.glUniform1i(signalTextureLoc, textureMediator.getTextureOffset());
+        gl.glUniform1i(textureLoc, textureMediator.getTextureOffset());
         // This did not work.  GL.GL_TEXTURE1 ); //textureIds[ 1 ] );
     }
 

@@ -22,26 +22,33 @@ import org.janelia.it.workstation.gui.large_volume_viewer.SubvolumeProvider;
 import org.janelia.it.workstation.shared.workers.IndeterminateNoteProgressMonitor;
 
 /**
- *
+ * Sources menu items for presenting the user with their 3D viewer.
+ * 
  * @author fosterl
  */
 public class Snapshot3DLauncher {
+    private static final String CENTERED_POINT_FORMAT = "Centered at [%3.1f,%3.1f,%3.1f].  %4$dx%4$dx%4$d.";
+    private final static String CONTAINS_POINT_FORMAT = "Contains point [%3.1f,%3.1f,%3.1f].  Raw Data.";
+
     private CoordinateAxis sliceAxis;
     private SubvolumeProvider subvolumeProvider;
     private ObservableCamera3d camera;
     private URL dataUrl;
+    private String basePath;
     private ImageColorModel imageColorModel;
     
     public Snapshot3DLauncher(
             CoordinateAxis sliceAxis,
             ObservableCamera3d camera,
             SubvolumeProvider subvolumeProvider,
+            String basePath,
             URL dataUrl,
             ImageColorModel imageColorModel
     ) {
         this.sliceAxis = sliceAxis;
         this.subvolumeProvider = subvolumeProvider;
         this.imageColorModel = imageColorModel;
+        this.basePath = basePath;
         this.dataUrl = dataUrl;
         this.camera = camera;
     }
@@ -65,23 +72,49 @@ public class Snapshot3DLauncher {
             });
             snapShot3dSubMenu.add( item );
         }
+        JMenuItem item = new JMenuItem( "Raw" );
+        item.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent ae) {
+                launchRaw3dViewer();
+            }
+        });
+        snapShot3dSubMenu.add( item );
         
         rtnVal.add( snapShot3dSubMenu );
 
         return rtnVal;
     }    
 
+    /** Launches a 3D popup containing raw data represented by camera position. */
+    public void launchRaw3dViewer() {
+        try {            
+            MonitoredVolumeSource collector = new RawTiffVolumeSource( camera, basePath );
+            
+            Snapshot3d snapshotViewer = Snapshot3d.getInstance();
+            IndeterminateNoteProgressMonitor monitor = 
+                    new IndeterminateNoteProgressMonitor(SessionMgr.getMainFrame(), "Fetching raw data", collector.getInfo());
+            snapshotViewer.setLoadProgressMonitor( monitor );
+            snapshotViewer.setImageColorModel( imageColorModel );
+            snapshotViewer.setLabelText( labelTextFor3d() );
+            snapshotViewer.launch( collector );
+
+        } catch ( Exception ex ) {
+            System.err.println("Failed to launch viewer: " + ex.getMessage());
+            ex.printStackTrace();
+        }
+    }
     
     /** Launches a 3D popup static-block viewer. */
     public void launch3dViewer( int cubicDimension ) {
         try {            
-            ViewTileManagerVolumeSource collector = new ViewTileManagerVolumeSource(
+            MonitoredVolumeSource collector = new ViewTileManagerVolumeSource(
                     camera,
                     sliceAxis,
                     cubicDimension,
-                    subvolumeProvider
+                    subvolumeProvider,
+                    dataUrl
             );            
-            collector.setDataUrl(dataUrl);
 
             Snapshot3d snapshotViewer = Snapshot3d.getInstance();
             IndeterminateNoteProgressMonitor monitor = 
@@ -99,8 +132,12 @@ public class Snapshot3DLauncher {
 
     private String labelTextFor3d(int cubicDimension) {
         final Vec3 focus = camera.getFocus();
-        String LABEL3d_FORMAT = "Centered at [%3.1f,%3.1f,%3.1f].  %4$dx%4$dx%4$d.";
-        return String.format( LABEL3d_FORMAT, focus.getX(), focus.getY(), focus.getZ(), cubicDimension );
+        return String.format( CENTERED_POINT_FORMAT, focus.getX(), focus.getY(), focus.getZ(), cubicDimension );
+    }
+
+    private String labelTextFor3d() {
+        final Vec3 focus = camera.getFocus();
+        return String.format( CONTAINS_POINT_FORMAT, focus.getX(), focus.getY(), focus.getZ() );
     }
 
 }

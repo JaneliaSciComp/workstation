@@ -45,7 +45,12 @@ public abstract class TextureDataBuilder {
             textureData.setHeader(header);
         }
         textureData.setByteOrder(pixelByteOrder);
-        textureData.setPixelByteCount(pixelBytes);
+        if ( textureData.getPixelByteCount() <= 0  ||  textureData.getPixelByteCount() < pixelBytes ) {
+            textureData.setPixelByteCount(pixelBytes);
+        }
+        else {
+            pixelBytes = textureData.getPixelByteCount();
+        }
         textureData.setFilename(unCachedFileName);
         textureData.setChannelCount(channelCount);
 

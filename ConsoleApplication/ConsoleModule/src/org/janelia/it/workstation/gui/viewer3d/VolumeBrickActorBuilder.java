@@ -44,7 +44,7 @@ public class VolumeBrickActorBuilder {
             volumeModel.removeAllListeners();
             volumeModel.resetToDefaults();
             VolumeBrickI brick = volumeBrickFactory.getVolumeBrick(volumeModel);
-            brick.setTextureData(signalTexture);
+            brick.setPrimaryTextureData(signalTexture);
             returnValue = brick ;
         }
         return returnValue;
@@ -82,7 +82,7 @@ public class VolumeBrickActorBuilder {
             else {
                 brick = factory.getVolumeBrick( volumeModel );
             }
-            brick.setTextureData( signalTexture );
+            brick.addTextureData( signalTexture );
             actor = brick;
         }
         else {

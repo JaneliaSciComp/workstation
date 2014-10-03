@@ -1229,4 +1229,9 @@ public final class ModelMgr {
     public void deleteAnchoredPath(Long pathID) throws Exception {
         FacadeManager.getFacadeManager().getEntityFacade().deleteAnchoredPath(pathID);
     }
+
+    public List<String> getTiffTilePaths(String basePath, int[] viewerCoord) throws Exception {
+        return FacadeManager.getFacadeManager().getEntityFacade().getTiffTilePaths(basePath, viewerCoord);
+    }
+
 }

@@ -192,7 +192,7 @@ public class RenderablesChannelsBuilder extends RenderablesVolumeBuilder impleme
     @Override
     public void populateVolumeAcceptor(VolumeDataAcceptor dataAcceptor) {
         logger.debug( "Populating volume acceptor." );
-        dataAcceptor.setTextureData( buildTextureData() );
+        dataAcceptor.setPrimaryTextureData( buildTextureData() );
     }
 
     //----------------------------------------IMPLEMENT TextureBuilderI

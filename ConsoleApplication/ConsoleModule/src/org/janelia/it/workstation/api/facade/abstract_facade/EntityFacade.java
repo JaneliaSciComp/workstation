@@ -146,4 +146,6 @@ public interface EntityFacade {
 
     public void deleteAnchoredPath(Long pathID) throws Exception;
 
+    public List<String> getTiffTilePaths(String basePath, int[] viewerCoord) throws Exception;
+
 }

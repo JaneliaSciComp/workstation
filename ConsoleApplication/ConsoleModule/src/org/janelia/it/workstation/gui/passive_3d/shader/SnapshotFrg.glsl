@@ -1,6 +1,7 @@
 // Fragment shader for all filtering applied by volume brick.
 #version 120
 uniform sampler3D signalTexture;
+uniform sampler3D interleavedTexture;
 
 // Borrowed these from the ColorFrag shader.  Thanks, Christopher Bruns.
 uniform vec3 channel_color[4]; // color for each channel, initially red, green, blue, gray
@@ -8,41 +9,27 @@ uniform vec4 channel_gamma; // brightness for each channel
 uniform vec4 channel_min;
 uniform vec4 channel_scale;
 uniform int channel_count;
+uniform int interleave_flag;
 
 vec4 chooseColor() 
 {
     vec4 in_color = texture3D(signalTexture, gl_TexCoord[0].xyz);
+//in_color = vec4(0,0,0,1); // TEMP
 
-/*
-if ( 0 == 0 )
-{
-// THIS appears to knock out all the varying, dimmer detail between slabs.
-//float component = 2 * ( in_color.r - 0.5 );
-
-// THIS leaves every fourth sheet when viewed into Z.
-float componentr = in_color.r;
-if ( componentr > 0.6 )
-{
-    componentr = 1.0 - componentr;
-}
-float componentg = in_color.a;
-if ( componentg > 0.6 )
-{
-    componentg = 1.0 - componentg;
-}
-return vec4( componentr, componentg, 0.0, 1.0);
-
-// Just dim down all.
-//  Yields 16 bright slabs, in gray, with fainter detail between them.
-//return vec4( in_color.r - 0.5 );
-
-}
-*/
-
-    // Two color images are loaded as luminance/alpha, so look in alpha
-    // for second intensity, not in green.
     if (channel_count == 2)
-        in_color.g = in_color.a;
+    {
+        if (interleave_flag == 0)
+        {
+            in_color.g = in_color.a;
+        }
+        else
+        {
+            // Verified: this code is used when 2 channels/separate tifs avail.
+            in_color.g = texture3D(interleavedTexture, gl_TexCoord[0].xyz).r;
+//in_color.g = 0; // TEMP
+        }
+    }
+
     vec3 out_color = vec3(0, 0, 0);
     for (int c = 0; c < channel_count; ++c) 
     {

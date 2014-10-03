@@ -234,7 +234,7 @@ public class VolumeMaskBuilder implements VolumeDataAcceptor, MaskBuilderI {
     }
 
     @Override
-    public void setTextureData(TextureDataI textureData) {
+    public void setPrimaryTextureData(TextureDataI textureData) {
         //zeroCheckDebug(textureData);
         int maskPixelByteCount = textureData.getPixelByteCount();
         if ( consensusByteCount == 0 ) {
@@ -283,6 +283,15 @@ public class VolumeMaskBuilder implements VolumeDataAcceptor, MaskBuilderI {
         }
         maskingDataBeans.add( textureData );
         textureData.setRenderables( renderables );
+    }
+
+    /**
+     * Added for interface.
+     * @See #setPrimaryTexureData()
+     */
+    @Override
+    public void addTextureData(TextureDataI textureData) {
+        setPrimaryTextureData( textureData );
     }
 
     /**
