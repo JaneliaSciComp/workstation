@@ -35,7 +35,8 @@ import org.janelia.it.workstation.gui.viewer3d.texture.TextureDataI;
  */
 public class TifFileLoader extends TextureDataBuilder implements VolumeFileLoaderI {
 
-    private int depthLimit = 64;
+    public static final int BOUNDARY_MULTIPLE = 16;
+    private int depthLimit = 128;
     private int sheetCountFromFile = -1;
     
     @Override
@@ -111,10 +112,10 @@ public class TifFileLoader extends TextureDataBuilder implements VolumeFileLoade
     private int captureAndUsePageDimensions(BufferedImage zSlice, Collection<BufferedImage> allImages, final File file) {
         sx = zSlice.getWidth();
         sy = zSlice.getHeight();
-        int szMod = depthLimit % 16;
+        int szMod = depthLimit % BOUNDARY_MULTIPLE;
         // Force z dimension to a multiple of 16.
         if ( szMod != 0 ) {
-            sz = ((depthLimit / 16) + 1 ) * 16;
+            sz = ((depthLimit / BOUNDARY_MULTIPLE) + 1 ) * BOUNDARY_MULTIPLE;
         }
         else {
             sz = depthLimit;
@@ -152,6 +153,9 @@ public class TifFileLoader extends TextureDataBuilder implements VolumeFileLoade
             ImageDecoder dec = ImageCodec.createImageDecoder("tiff", s, param);
             int numPages = dec.getNumPages();
             sheetCountFromFile = numPages;
+            if ( depthLimit == -1 ) {
+                depthLimit = sheetCountFromFile;
+            }
             numPages = depthLimit; // TEMP: making a shallow volume to test load.
             
             for (int imageToLoad = 0; imageToLoad < numPages; imageToLoad++) {
