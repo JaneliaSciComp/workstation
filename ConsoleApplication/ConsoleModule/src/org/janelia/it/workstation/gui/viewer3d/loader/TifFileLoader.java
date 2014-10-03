@@ -35,9 +35,18 @@ import org.janelia.it.workstation.gui.viewer3d.texture.TextureDataI;
  */
 public class TifFileLoader extends TextureDataBuilder implements VolumeFileLoaderI {
 
-    public static final int BOUNDARY_MULTIPLE = 16;
+    public static final int BOUNDARY_MULTIPLE = 4;
     private int depthLimit = -1;
     private int sheetCountFromFile = -1;
+    
+    /**
+     * This setter can be used for testing, on systems not powerful
+     * enough to handle the whole rectangular solid.
+     * @param depthLimit 
+     */
+    public void setDepthLimit( int depthLimit ) {
+        this.depthLimit = depthLimit;
+    }
     
     @Override
     public TextureDataI createTextureDataBean() {

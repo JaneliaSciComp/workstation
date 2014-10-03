@@ -24,11 +24,13 @@ import org.slf4j.LoggerFactory;
  * @author fosterl
  */
 public class RawTiffVolumeSource implements MonitoredVolumeSource {
+    public static final int DEPT_STD_GRAPH_CARD_MAX_DEPTH = 172;
 
     private Camera3d camera;
     private String baseDirectoryPath;
     private IndeterminateNoteProgressMonitor progressMonitor;
     private final Logger logger = LoggerFactory.getLogger( RawTiffVolumeSource.class );
+    private int maxDrawPlanes = -1;
 
     /**
      * Seed this object with all it needs to fetch the volume.
@@ -74,6 +76,9 @@ public class RawTiffVolumeSource implements MonitoredVolumeSource {
         }
         progressMonitor.setNote("Loading volume data.");
         TifFileLoader tifFileLoader = new TifFileLoader();
+        if ( maxDrawPlanes > -1 ) {
+            tifFileLoader.setDepthLimit( maxDrawPlanes );
+        }
         FileResolver resolver = new CacheFileResolver();
 
         for ( int i = 0; i < 2; i++ ) {
@@ -107,6 +112,10 @@ public class RawTiffVolumeSource implements MonitoredVolumeSource {
                 camera.getFocus().getY(),
                 camera.getFocus().getZ()
             );
+    }
+    
+    public void setMaxDrawPlanes( int drawPlanes ) {
+        this.maxDrawPlanes = drawPlanes;
     }
 
 }

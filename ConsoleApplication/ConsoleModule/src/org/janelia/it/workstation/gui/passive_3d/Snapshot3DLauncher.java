@@ -76,7 +76,16 @@ public class Snapshot3DLauncher {
         item.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent ae) {
-                launchRaw3dViewer();
+                launchRaw3dViewer(-1);
+            }
+        });
+        snapShot3dSubMenu.add( item );
+
+        item = new JMenuItem( "Abbreviated Raw: " + RawTiffVolumeSource.DEPT_STD_GRAPH_CARD_MAX_DEPTH + " Planes" );
+        item.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent ae) {
+                launchRaw3dViewer( RawTiffVolumeSource.DEPT_STD_GRAPH_CARD_MAX_DEPTH );
             }
         });
         snapShot3dSubMenu.add( item );
@@ -87,10 +96,12 @@ public class Snapshot3DLauncher {
     }    
 
     /** Launches a 3D popup containing raw data represented by camera position. */
-    public void launchRaw3dViewer() {
+    public void launchRaw3dViewer( int maxDrawPlanes ) {
         try {            
-            MonitoredVolumeSource collector = new RawTiffVolumeSource( camera, basePath );
-            
+            RawTiffVolumeSource collector = new RawTiffVolumeSource( camera, basePath );
+            if ( maxDrawPlanes > -1 ) {
+                collector.setMaxDrawPlanes( maxDrawPlanes );
+            }
             Snapshot3d snapshotViewer = Snapshot3d.getInstance();
             IndeterminateNoteProgressMonitor monitor = 
                     new IndeterminateNoteProgressMonitor(SessionMgr.getMainFrame(), "Fetching raw data", collector.getInfo());
