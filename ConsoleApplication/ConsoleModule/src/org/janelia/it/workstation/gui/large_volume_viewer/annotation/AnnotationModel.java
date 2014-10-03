@@ -195,11 +195,13 @@ that need to respond to changing data.
         if (annotation == null) {
             return annotation;
         }
+
+        TmNeuron neuron = getNeuronFromAnnotationID(annotation.getId());
         TmGeoAnnotation current = annotation;
-        TmGeoAnnotation parent = annotation.getParent();
+        TmGeoAnnotation parent = neuron.getParentOf(current);
         while (parent !=null) {
             current = parent;
-            parent = current.getParent();
+            parent = neuron.getParentOf(current);
         }
         return current;
     }
@@ -230,7 +232,7 @@ that need to respond to changing data.
         }
         for (TmNeuron neuron: getCurrentWorkspace().getNeuronList()) {
             for (TmGeoAnnotation root: neuron.getRootAnnotations()) {
-                for (TmGeoAnnotation ann: root.getSubTreeList()) {
+                for (TmGeoAnnotation ann: neuron.getSubTreeList(root)) {
                     if (excludedAnnotationID.equals(ann.getId())) {
                         continue;
                     }
@@ -413,11 +415,11 @@ that need to respond to changing data.
         // find each connecting annotation; if there's a traced path to it,
         //  remove it:
         TmNeuron neuron = getNeuronFromAnnotationID(annotationID);
-        TmGeoAnnotation parent = annotation.getParent();
+        TmGeoAnnotation parent = neuron.getParentOf(annotation);
         if (parent != null) {
             removeAnchoredPath(annotation, parent);
         }
-        for (TmGeoAnnotation neighbor: annotation.getChildren()) {
+        for (TmGeoAnnotation neighbor: neuron.getChildrenOf(annotation)) {
             removeAnchoredPath(annotation, neighbor);
         }
 
@@ -428,7 +430,9 @@ that need to respond to changing data.
         if (automatedTracingEnabled()) {
             // trace to parent, and each child to this parent:
             pathTraceRequestedSignal.emit(annotation.getId());
-            for (TmGeoAnnotation child: annotation.getChildren()) {
+            // get neuron again to be sure it's fresh
+            neuron = getNeuronFromAnnotationID(annotation.getId());
+            for (TmGeoAnnotation child: neuron.getChildrenOf(annotation)) {
                 pathTraceRequestedSignal.emit(child.getId());
             }
         }
@@ -473,7 +477,7 @@ that need to respond to changing data.
 
         // reparent all source annotation's children to dest ann; remove
         //  traced paths while we're here
-        for (TmGeoAnnotation child: sourceAnnotation.getChildren()) {
+        for (TmGeoAnnotation child: sourceNeuron.getChildrenOf(sourceAnnotation)) {
             modelMgr.reparentGeometricAnnotation(child, targetAnnotationID, targetNeuron);
             removeAnchoredPath(child, sourceAnnotation);
         }
@@ -483,12 +487,13 @@ that need to respond to changing data.
 
         // update objects *again*, last time:
         updateCurrentWorkspace();
+        targetNeuron = getNeuronFromAnnotationID(targetAnnotationID);
         setCurrentNeuron(targetNeuron);
 
         // get fresh target annotation, and redraw its children; trigger
         //  traced paths
         TmGeoAnnotation targetAnnotation = getGeoAnnotationFromID(targetAnnotationID);
-        for (TmGeoAnnotation child: targetAnnotation.getChildren()) {
+        for (TmGeoAnnotation child: targetNeuron.getChildrenOf(targetAnnotation)) {
             annotationReparentedSignal.emit(child);
             if (automatedTracingEnabled()) {
                 pathTraceRequestedSignal.emit(child.getId());
@@ -515,7 +520,7 @@ that need to respond to changing data.
         }
 
         // check it's a link; trust no one; error or return?
-        if (link.getParent() == null || link.getChildren().size() > 1) {
+        if (link.isRoot() || link.getChildIds().size() > 1) {
             return;
         }
 
@@ -529,10 +534,10 @@ that need to respond to changing data.
         }
 
         // delete it; reparent its child (if any) to its parent
-        TmGeoAnnotation parent = link.getParent();
+        TmGeoAnnotation parent = neuron.getParentOf(link);
         TmGeoAnnotation child = null;
-        if (link.getChildren().size() == 1) {
-            child = link.getChildren().get(0);
+        if (link.getChildIds().size() == 1) {
+            child = neuron.getChildrenOf(link).get(0);
             modelMgr.reparentGeometricAnnotation(child, parent.getId(), neuron);
 
             // if segment to child had a trace, remove it
@@ -595,13 +600,13 @@ that need to respond to changing data.
         // delete in child-first order
 
         // grab the parent of the root before the root disappears:
-        TmGeoAnnotation rootParent = rootAnnotation.getParent();
+        TmGeoAnnotation rootParent = neuron.getParentOf(rootAnnotation);
 
-        List<TmGeoAnnotation> deleteList = rootAnnotation.getSubTreeList();
+        List<TmGeoAnnotation> deleteList = neuron.getSubTreeList(rootAnnotation);
         for (TmGeoAnnotation annotation: deleteList) {
             // for each annotation, delete any paths traced to its children;
             //  do before the deletion!
-            for (TmGeoAnnotation child: annotation.getChildren()) {
+            for (TmGeoAnnotation child: neuron.getChildrenOf(annotation)) {
                 removeAnchoredPath(annotation, child);
             }
 
@@ -641,19 +646,19 @@ that need to respond to changing data.
         TmGeoAnnotation annotation2;
         boolean reverse;
 
-        if (annotation.getParent() == null) {
+        if (annotation.isRoot()) {
             // root case is special; if one child, split toward child; otherwise, error
             //  (with zero or many children, ambiguous where to put new annotation)
-            if (annotation.getChildren().size() != 1) {
+            if (annotation.getChildIds().size() != 1) {
                 throw new Exception("cannot split root annotation with zero or many children");
             }
-            annotation1 = annotation.getChildren().get(0);
+            annotation1 = neuron.getChildrenOf(annotation).get(0);
             annotation2 = annotation;
             reverse = true;
         } else {
             // regular point: split toward the parent
             annotation1 = annotation;
-            annotation2 = annotation.getParent();
+            annotation2 = neuron.getParentOf(annotation);
             reverse = false;
         }
 
@@ -737,9 +742,9 @@ that need to respond to changing data.
      */
     public void splitNeurite(Long newRootID) throws Exception {
         TmGeoAnnotation newRoot = getGeoAnnotationFromID(newRootID);
-        TmGeoAnnotation newRootParent = newRoot.getParent();
+        TmNeuron neuron = getNeuronFromAnnotationID(newRootID);
+        TmGeoAnnotation newRootParent = neuron.getParentOf(newRoot);
         removeAnchoredPath(newRoot, newRootParent);
-        TmNeuron neuron = getNeuronFromAnnotationID(newRoot.getId());
         modelMgr.splitNeurite(neuron, newRoot);
 
         // update and notify

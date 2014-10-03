@@ -360,7 +360,7 @@ public class AnnotationManager
         } else {
             // verify it's a link and not a root or branch:
             TmGeoAnnotation annotation = annotationModel.getGeoAnnotationFromID(annotationID);
-            if (annotation.getParent() == null || annotation.getChildren().size() > 1) {
+            if (annotation.isRoot() || annotation.getChildIds().size() > 1) {
                 JOptionPane.showMessageDialog(null,
                         "This annotation is either a root (no parent) or branch (many children), not a link!",
                         "Not a link!",
@@ -399,7 +399,8 @@ public class AnnotationManager
 
             // if more than a handful of nodes, ask the user if they are sure (we have
             //  no undo right now!)
-            int nAnnotations = annotationModel.getGeoAnnotationFromID(annotationID).getSubTreeList().size();
+            final TmGeoAnnotation annotation = annotationModel.getGeoAnnotationFromID(annotationID);
+            int nAnnotations = annotationModel.getNeuronFromAnnotationID(annotationID).getSubTreeList(annotation).size();
             if (nAnnotations >= 5) {
                 int ans =  JOptionPane.showConfirmDialog(null,
                         String.format("Selected subtree has %d children; delete?", nAnnotations),
@@ -413,7 +414,7 @@ public class AnnotationManager
             SimpleWorker deleter = new SimpleWorker() {
                 @Override
                 protected void doStuff() throws Exception {
-                    annotationModel.deleteSubTree(annotationModel.getGeoAnnotationFromID(annotationID));
+                    annotationModel.deleteSubTree(annotation);
                 }
 
                 @Override
@@ -558,7 +559,7 @@ public class AnnotationManager
 
         // can't split a root if it has multiple children (ambiguous):
         final TmGeoAnnotation annotation = annotationModel.getGeoAnnotationFromID(annotationID);
-        if (annotation.getParent() == null && annotation.getChildren().size() != 1) {
+        if (annotation.isRoot() && annotation.getChildIds().size() != 1) {
             JOptionPane.showMessageDialog(null,
                     "Cannot split root annotation with multiple children (ambiguous)!",
                     "Error",
@@ -623,7 +624,7 @@ public class AnnotationManager
 
         // if it's already the root, can't split
         final TmGeoAnnotation annotation = annotationModel.getGeoAnnotationFromID(newRootAnnotationID);
-        if (annotation.getParent() == null) {
+        if (annotation.isRoot()) {
             JOptionPane.showMessageDialog(null,
                     "Cannot split neurite at its root annotation!",
                     "Error",
@@ -1028,12 +1029,13 @@ public class AnnotationManager
 
     private void tracePathToParent(PathTraceToParentRequest request) {
         TmGeoAnnotation annotation = annotationModel.getGeoAnnotationFromID(request.getAnchorGuid1());
-        if (annotation.getParent() == null)  {
+        if (annotation.isRoot())  {
             // no parent, no tracing
             return;
         }
 
-        TmGeoAnnotation parent = annotation.getParent();
+        TmNeuron neuron = annotationModel.getNeuronFromAnnotationID(annotation.getId());
+        TmGeoAnnotation parent = neuron.getParentOf(annotation);
         request.setAnchorGuid2(parent.getId());
         request.setXyz1(new Vec3(annotation.getX(), annotation.getY(), annotation.getZ()));
         request.setXyz2(new Vec3(parent.getX(), parent.getY(), parent.getZ()));
