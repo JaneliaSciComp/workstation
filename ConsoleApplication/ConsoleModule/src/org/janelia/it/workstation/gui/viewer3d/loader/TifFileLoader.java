@@ -108,10 +108,17 @@ public class TifFileLoader extends TextureDataBuilder implements VolumeFileLoade
     private int captureAndUsePageDimensions(BufferedImage zSlice, Collection<BufferedImage> allImages, int sheetSize, final File file) {
         sx = zSlice.getWidth();
         sy = zSlice.getHeight();
-        sz = allImages.size();
+        int szMod = allImages.size() % 16;
+        // Force z dimension to a multiple of 16.
+        if ( szMod != 0 ) {
+            sz = ((allImages.size() / 16) + 1 ) * 16;
+        }
+        else {
+            sz = allImages.size();
+        }
         sheetSize = sx * sy;
-        final int totalVoxels = sheetSize*sz;
-        pixelBytes = (int)Math.floor( file.length() / totalVoxels );
+        final int totalVoxels = sheetSize * sz;
+        pixelBytes = (int)Math.floor( file.length() / (sheetSize * allImages.size()) );
         if ( pixelBytes < 4 ) {
             textureByteArray = new byte[totalVoxels * pixelBytes];
         }
