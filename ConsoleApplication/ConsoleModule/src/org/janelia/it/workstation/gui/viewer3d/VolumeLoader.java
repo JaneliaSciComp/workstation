@@ -133,8 +133,9 @@ public class VolumeLoader implements VolumeLoaderI {
     }
 
     /** This picks up the result of the build process carried out above. */
+    @Override
     public void populateVolumeAcceptor(VolumeDataAcceptor dataAcceptor) {
-        dataAcceptor.setTextureData( textureData );
+        dataAcceptor.setPrimaryTextureData( textureData );
     }
 
     private FileType getFileType( String filename, String baseName, String extension ) {

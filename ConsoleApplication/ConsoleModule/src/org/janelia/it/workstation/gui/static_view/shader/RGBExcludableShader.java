@@ -8,9 +8,9 @@ import org.janelia.it.workstation.gui.viewer3d.texture.TextureMediator;
 
 import javax.media.opengl.GL2;
 import java.nio.IntBuffer;
-import org.janelia.it.workstation.gui.viewer3d.shader.SignalShader;
+import org.janelia.it.workstation.gui.viewer3d.shader.TexturedShader;
 
-public class RGBExcludableShader extends SignalShader {
+public class RGBExcludableShader extends TexturedShader {
     // Shader GLSL source is expected to be in the same package as this class.  Otherwise,
     // a prefix of the relative path could be given, as in "shader_sub_pkg/AShader.glsl"
     public static final String VERTEX_SHADER = "RGBExcludableVtx.glsl";
@@ -73,7 +73,7 @@ public class RGBExcludableShader extends SignalShader {
      * @param signalTextureMediator intermediator for signal.
      */
     @Override
-    public void setSignalTextureMediator(TextureMediator signalTextureMediator) {
+    public void addTextureMediator(TextureMediator signalTextureMediator, String name) {
         this.signalTextureMediator = signalTextureMediator;
     }
 

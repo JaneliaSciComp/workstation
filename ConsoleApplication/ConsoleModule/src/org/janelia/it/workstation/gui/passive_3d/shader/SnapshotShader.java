@@ -8,9 +8,12 @@ import org.janelia.it.workstation.gui.viewer3d.texture.TextureMediator;
 
 import javax.media.opengl.GL2;
 import java.nio.IntBuffer;
-import org.janelia.it.workstation.gui.viewer3d.shader.SignalShader;
+import java.util.HashMap;
+import java.util.Map;
+import org.janelia.it.workstation.gui.viewer3d.shader.TexturedShader;
 
-public class SnapshotShader extends SignalShader {
+public class SnapshotShader extends TexturedShader {
+    public static final String INTERLEAVED_TEXTURE_NAME = "interleavedTexture";
     // Shader GLSL source is expected to be in the same package as this class.  Otherwise,
     // a prefix of the relative path could be given, as in "shader_sub_pkg/AShader.glsl"
     public static final String VERTEX_SHADER = "SnapshotVtx.glsl";
@@ -33,9 +36,8 @@ public class SnapshotShader extends SignalShader {
     private int channelCountLoc;
     private int interleaveFlagLoc;
     
-    private TextureMediator signalTextureMediator;
-    private TextureMediator interleavedTextureMediator; // Optional: can be null.
-
+    private final Map<String, TextureMediator> mediatorMap = new HashMap<>();
+    
     @Override
     public String getVertexShader() {
         return VERTEX_SHADER;
@@ -84,20 +86,17 @@ public class SnapshotShader extends SignalShader {
     /**
      * Note, this must be called with at least the signal mediator, before attempting to set texture uniforms.
      *
-     * @param signalTextureMediator intermediator for signal.
+     * @param textureMediator intermediator for signal.
+     * @param name associated with this texture, in GPU.
      */
     @Override
-    public void setSignalTextureMediator(TextureMediator signalTextureMediator) {
-        this.signalTextureMediator = signalTextureMediator;
+    public void addTextureMediator(TextureMediator textureMediator, String name) {
+        mediatorMap.put( name, textureMediator );
     }
 
     @Override
     public void unload(GL2 gl) {
         gl.glUseProgram(previousShader);
-    }
-    
-    public void setInterleavedTextureMediator(TextureMediator interleavedTextureMediator) {
-        this.interleavedTextureMediator = interleavedTextureMediator;
     }
     
     //------------------------------Unique-to-shader setters
@@ -127,9 +126,8 @@ public class SnapshotShader extends SignalShader {
     }
 
     private void setTextureUniforms(GL2 gl) {
-        setTextureUniform(gl, "signalTexture", signalTextureMediator);
-        if ( interleavedTextureMediator != null ) {
-            setTextureUniform(gl, "interleavedTexture", interleavedTextureMediator);
+        for ( String name: mediatorMap.keySet() ) {
+            setTextureUniform( gl, name, mediatorMap.get( name ) );
         }
     }
 

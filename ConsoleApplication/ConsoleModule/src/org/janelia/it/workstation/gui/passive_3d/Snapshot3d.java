@@ -113,7 +113,7 @@ public class Snapshot3d extends ModalDialog {
         SnapshotVolumeBrick brick = new SnapshotVolumeBrick( volumeModel );
         brick.setImageColorModel( imageColorModel );
         if ( textureDatas.size() == 1 ) {
-            brick.setTextureData(textureDatas.iterator().next());
+            brick.setPrimaryTextureData(textureDatas.iterator().next());
         }
         else {
             brick.setTextureDatas(textureDatas);

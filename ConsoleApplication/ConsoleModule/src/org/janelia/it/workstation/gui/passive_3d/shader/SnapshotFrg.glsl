@@ -14,6 +14,7 @@ uniform int interleave_flag;
 vec4 chooseColor() 
 {
     vec4 in_color = texture3D(signalTexture, gl_TexCoord[0].xyz);
+//in_color = vec4(0,0,0,1); // TEMP
 
     if (channel_count == 2)
     {
@@ -25,6 +26,7 @@ vec4 chooseColor()
         {
             // Verified: this code is used when 2 channels/separate tifs avail.
             in_color.g = texture3D(interleavedTexture, gl_TexCoord[0].xyz).r;
+//in_color.g = 0; // TEMP
         }
     }
 

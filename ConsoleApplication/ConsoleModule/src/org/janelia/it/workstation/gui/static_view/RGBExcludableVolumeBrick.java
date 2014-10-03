@@ -42,7 +42,7 @@ public class RGBExcludableVolumeBrick extends AbstractVolumeBrick
     @Override
 	public void display(GLAutoDrawable glDrawable) {
         // Avoid carrying out operations if there is no data.
-        if ( getSignalTextureMediator() == null ) {
+        if ( this.getTextureMediators() == null  ||  this.getTextureMediators().isEmpty() ) {
             logger.warn( "No texture for volume brick." );
             return;
         }
@@ -51,7 +51,7 @@ public class RGBExcludableVolumeBrick extends AbstractVolumeBrick
 			init(glDrawable);
         GL2 gl = glDrawable.getGL().getGL2();
 		if (bSignalTextureNeedsUpload)
-			uploadSignalTexture(gl);
+			uploadAllTextures(gl);
 
 		// debugging objects showing useful boundaries of what we want to render
 		//gl.glColor3d(1,1,1);

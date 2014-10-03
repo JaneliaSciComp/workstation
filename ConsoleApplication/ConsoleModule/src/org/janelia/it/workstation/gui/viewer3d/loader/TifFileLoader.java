@@ -35,6 +35,9 @@ import org.janelia.it.workstation.gui.viewer3d.texture.TextureDataI;
  */
 public class TifFileLoader extends TextureDataBuilder implements VolumeFileLoaderI {
 
+    private int depthLimit = 64;
+    private int sheetCountFromFile = -1;
+    
     @Override
     public TextureDataI createTextureDataBean() {
         TextureDataBean textureDataBean;
@@ -54,13 +57,13 @@ public class TifFileLoader extends TextureDataBuilder implements VolumeFileLoade
         sx = -1;
         
         final File file = new File(fileName);
-        Collection<BufferedImage> allImages = loadTIFF( file);
+        Collection<BufferedImage> allImages = loadTIFF( file );
         pixelBytes = -1;
         int zOffset = 0;
         int sheetSize = -1;
         for ( BufferedImage zSlice: allImages ) {            
             if ( sx == -1 ) {
-                sheetSize = captureAndUsePageDimensions(zSlice, allImages, sheetSize, file);
+                sheetSize = captureAndUsePageDimensions(zSlice, allImages, file);
             }
             else {
                 if ( sx != zSlice.getWidth()  ||  sy != zSlice.getHeight() ) {
@@ -105,20 +108,20 @@ public class TifFileLoader extends TextureDataBuilder implements VolumeFileLoade
         }
     }
 
-    private int captureAndUsePageDimensions(BufferedImage zSlice, Collection<BufferedImage> allImages, int sheetSize, final File file) {
+    private int captureAndUsePageDimensions(BufferedImage zSlice, Collection<BufferedImage> allImages, final File file) {
         sx = zSlice.getWidth();
         sy = zSlice.getHeight();
-        int szMod = allImages.size() % 16;
+        int szMod = depthLimit % 16;
         // Force z dimension to a multiple of 16.
         if ( szMod != 0 ) {
-            sz = ((allImages.size() / 16) + 1 ) * 16;
+            sz = ((depthLimit / 16) + 1 ) * 16;
         }
         else {
-            sz = allImages.size();
+            sz = depthLimit;
         }
-        sheetSize = sx * sy;
+        int sheetSize = sx * sy;
         final int totalVoxels = sheetSize * sz;
-        pixelBytes = (int)Math.floor( file.length() / (sheetSize * allImages.size()) );
+        pixelBytes = (int)Math.floor( file.length() / (sheetSize * sheetCountFromFile) );
         if ( pixelBytes < 4 ) {
             textureByteArray = new byte[totalVoxels * pixelBytes];
         }
@@ -147,7 +150,9 @@ public class TifFileLoader extends TextureDataBuilder implements VolumeFileLoade
             
             TIFFDecodeParam param = null;
             ImageDecoder dec = ImageCodec.createImageDecoder("tiff", s, param);
-            final int numPages = dec.getNumPages();
+            int numPages = dec.getNumPages();
+            sheetCountFromFile = numPages;
+            numPages = depthLimit; // TEMP: making a shallow volume to test load.
             
             for (int imageToLoad = 0; imageToLoad < numPages; imageToLoad++) {
                 RenderedImage op
