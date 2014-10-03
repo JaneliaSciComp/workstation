@@ -36,7 +36,7 @@ import org.janelia.it.workstation.gui.viewer3d.texture.TextureDataI;
 public class TifFileLoader extends TextureDataBuilder implements VolumeFileLoaderI {
 
     public static final int BOUNDARY_MULTIPLE = 16;
-    private int depthLimit = 128;
+    private int depthLimit = -1;
     private int sheetCountFromFile = -1;
     
     @Override

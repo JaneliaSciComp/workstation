@@ -77,10 +77,16 @@ public class RawTiffVolumeSource implements MonitoredVolumeSource {
         FileResolver resolver = new CacheFileResolver();
 
         for ( int i = 0; i < 2; i++ ) {
+            progressMonitor.setNote("Starting loadVolumeFile");        
+            
+            int displayNum = i + 1;
             TextureDataI textureData;
+            progressMonitor.setNote("Caching file " + displayNum);        
             String resolvedFilename = resolver.getResolvedFilename(tiffFiles.get( i ));
+            progressMonitor.setNote("Loading tiff " + displayNum);        
             tifFileLoader.loadVolumeFile( resolvedFilename );
-            System.out.println("Loading " + tiffFiles.get(i) + " as " + resolvedFilename);
+            progressMonitor.setNote("Building texture data from tiff " + displayNum);
+            logger.info("Loading" + tiffFiles.get(i) + " as " + resolvedFilename);
             textureData = tifFileLoader.buildTextureData(true);
             // Presets known to work with this data type.
             textureData.setExplicitInternalFormat(GL2.GL_LUMINANCE16);
@@ -88,8 +94,9 @@ public class RawTiffVolumeSource implements MonitoredVolumeSource {
             textureData.setExplicitVoxelComponentType(GL2.GL_UNSIGNED_SHORT);
             textureData.setPixelByteCount(2);
             volumeListener.accept(textureData);
+            progressMonitor.setNote("Ending load for raw tiff " + displayNum);
         }
-        
+
         progressMonitor.setNote("Launching viewer.");
     }
 
