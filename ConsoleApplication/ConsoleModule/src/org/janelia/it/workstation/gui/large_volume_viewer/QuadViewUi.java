@@ -4,30 +4,8 @@ import org.janelia.it.workstation.geom.CoordinateAxis;
 import org.janelia.it.workstation.geom.Vec3;
 import org.janelia.it.workstation.gui.camera.BasicObservableCamera3d;
 import org.janelia.it.workstation.gui.large_volume_viewer.TileServer.LoadStatus;
-import org.janelia.it.workstation.gui.large_volume_viewer.action.AdvanceZSlicesAction;
-import org.janelia.it.workstation.gui.large_volume_viewer.action.CenterNextParentAction;
-import org.janelia.it.workstation.gui.large_volume_viewer.action.GoBackZSlicesAction;
-import org.janelia.it.workstation.gui.large_volume_viewer.action.MouseMode;
+import org.janelia.it.workstation.gui.large_volume_viewer.action.*;
 import org.janelia.it.workstation.gui.large_volume_viewer.action.MouseMode.Mode;
-import org.janelia.it.workstation.gui.large_volume_viewer.action.NextZSliceAction;
-import org.janelia.it.workstation.gui.large_volume_viewer.action.OpenFolderAction;
-import org.janelia.it.workstation.gui.large_volume_viewer.action.OrthogonalModeAction;
-import org.janelia.it.workstation.gui.large_volume_viewer.action.PanModeAction;
-import org.janelia.it.workstation.gui.large_volume_viewer.action.PreviousZSliceAction;
-import org.janelia.it.workstation.gui.large_volume_viewer.action.RecentFileList;
-import org.janelia.it.workstation.gui.large_volume_viewer.action.ResetColorsAction;
-import org.janelia.it.workstation.gui.large_volume_viewer.action.ResetViewAction;
-import org.janelia.it.workstation.gui.large_volume_viewer.action.ResetZoomAction;
-import org.janelia.it.workstation.gui.large_volume_viewer.action.SliceScanAction;
-import org.janelia.it.workstation.gui.large_volume_viewer.action.TraceMouseModeAction;
-import org.janelia.it.workstation.gui.large_volume_viewer.action.WheelMode;
-import org.janelia.it.workstation.gui.large_volume_viewer.action.ZScanMode;
-import org.janelia.it.workstation.gui.large_volume_viewer.action.ZScanScrollModeAction;
-import org.janelia.it.workstation.gui.large_volume_viewer.action.ZoomInAction;
-import org.janelia.it.workstation.gui.large_volume_viewer.action.ZoomMaxAction;
-import org.janelia.it.workstation.gui.large_volume_viewer.action.ZoomMouseModeAction;
-import org.janelia.it.workstation.gui.large_volume_viewer.action.ZoomOutAction;
-import org.janelia.it.workstation.gui.large_volume_viewer.action.ZoomScrollModeAction;
 import org.janelia.it.workstation.gui.large_volume_viewer.action.OrthogonalModeAction.OrthogonalMode;
 import org.janelia.it.workstation.gui.large_volume_viewer.annotation.AnnotationManager;
 import org.janelia.it.workstation.gui.large_volume_viewer.annotation.AnnotationModel;
@@ -181,6 +159,9 @@ public class QuadViewUi extends JPanel
 	private final SliceScanAction previousZSliceAction = new PreviousZSliceAction(volumeImage, camera);
 	private final SliceScanAction advanceZSlicesAction = new AdvanceZSlicesAction(volumeImage, camera, 10);
 	private final SliceScanAction goBackZSlicesAction = new GoBackZSlicesAction(volumeImage, camera, -10);
+    // go to actions
+    private final GoToLocationAction goToLocationAction = new GoToLocationAction(camera);
+
 	// annotation-related
     private final CenterNextParentAction centerNextParentAction = new CenterNextParentAction();
     
@@ -474,6 +455,8 @@ public class QuadViewUi extends JPanel
         // annotation-related actions:
         centerNextParentAction.centerNextParentSignal.connect(centerNextParentSlot);
         annotationPanel.centerAnnotationSignal.connect(centerNextParentSlot);
+        // go to location action
+        goToLocationAction.gotoLocationSignal.connect(setCameraFocusSlot);
         // TODO other orthogonal viewers
         OrthogonalPanel viewPanels[] = {neViewer, swViewer, nwViewer};
         SkeletonActor sharedSkeletonActor = getSkeletonActor();
@@ -841,7 +824,11 @@ public class QuadViewUi extends JPanel
 		JButton resetViewButton = new JButton("New button");
 		resetViewButton.setAction(resetViewAction);
 		buttonsPanel.add(resetViewButton);
-		
+
+        JButton gotoLocationButton = new JButton("New button");
+        gotoLocationButton.setAction(goToLocationAction);
+        buttonsPanel.add(gotoLocationButton);
+
 		Component verticalGlue = Box.createVerticalGlue();
 		buttonsPanel.add(verticalGlue);
 		
@@ -929,7 +916,8 @@ public class QuadViewUi extends JPanel
         		zoomInAction,
         		zoomOutAction,
         		nextZSliceAction,
-        		previousZSliceAction
+        		previousZSliceAction,
+                goToLocationAction
         		};
         InputMap inputMap = getInputMap(JComponent.WHEN_ANCESTOR_OF_FOCUSED_COMPONENT);
         for (Action action : modeActions) {
