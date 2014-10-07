@@ -17,6 +17,6 @@ public interface VolumeDataAcceptor {
         COLOR_SPACE_SRGB, // R,G,B values are already gamma corrected for display on computer monitors
     }
 
-    void setTextureData( TextureDataI textureData );
-
+    void setPrimaryTextureData( TextureDataI textureData );
+    void addTextureData( TextureDataI textureData );
 }

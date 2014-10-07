@@ -94,6 +94,7 @@ public class AlignmentBoardControlsPanel extends JPanel {
         controls.getOrButton().setEnabled( enabled );
         controls.getDownSampleRateDropdown().setEnabled( enabled );
         controls.getUseSignalDataCheckbox().setEnabled( enabled );
+        controls.getWhiteBackground().setEnabled( enabled );
         setReadyForOutput( enabled );
     }
 
@@ -108,9 +109,10 @@ public class AlignmentBoardControlsPanel extends JPanel {
         regionSelectionPanel.add(controls.getzSlider());
 
         JPanel accumulatorButtonsPanel = new JPanel();
-        accumulatorButtonsPanel.setLayout(new BorderLayout());
-        accumulatorButtonsPanel.add( controls.getOrButton(), BorderLayout.EAST );
-        accumulatorButtonsPanel.add( controls.getClearButton(), BorderLayout.WEST );
+        accumulatorButtonsPanel.setLayout(new GridLayout(1, 3));
+        accumulatorButtonsPanel.add( controls.getOrButton() );
+        accumulatorButtonsPanel.add( controls.getClearButton() );
+        accumulatorButtonsPanel.add( new JLabel( "" ) );
         regionSelectionPanel.add(accumulatorButtonsPanel);
 
         regionSelectionPanel.setToolTipText(GEO_SEARCH_TOOLTIP);
@@ -166,10 +168,6 @@ public class AlignmentBoardControlsPanel extends JPanel {
                 1, nextRow, 1, rowHeight, 1.0, 0.0, GridBagConstraints.NORTHWEST, GridBagConstraints.VERTICAL, insets, 0, 0
         );
 
-        GridBagConstraints commitBtnConstraints = new GridBagConstraints(
-                2, nextRow, 2, rowHeight, 1.0, 0.0, GridBagConstraints.SOUTHWEST, GridBagConstraints.NONE, insets, 0, 0
-        );
-
         nextRow += rowHeight;
         GridBagConstraints regionSelectionPanelConstraints = new GridBagConstraints(
                 0, nextRow, 4, rowHeight, 1.0, 0.0, GridBagConstraints.NORTH, GridBagConstraints.BOTH, insets, 0, 0
@@ -182,7 +180,6 @@ public class AlignmentBoardControlsPanel extends JPanel {
         centralPanel.add( controls.getMaxNeuronCountTF(), maxNeuronCountConstraints );
 
         centralPanel.add( controls.getUseSignalDataCheckbox(), signalDataConstraints );
-        //centralPanel.add( controls.getCommitButton(), commitBtnConstraints );
 
         centralPanel.add( regionSelectionPanel, regionSelectionPanelConstraints );
         add(centralPanel, BorderLayout.CENTER);

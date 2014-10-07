@@ -107,8 +107,7 @@ public abstract class DynamicTable extends JPanel {
 		});
     	loadAllButton.setVisible(false);
 
-    	
-        table = new LargeFontTable(UIManager.getDefaults().getFont("Menu.font")) {
+        table = new JTable() {
     		@Override
     		public TableCellEditor getCellEditor(int row, int col) {
     			TableCellEditor editor = DynamicTable.this.getCellEditor(row, col);

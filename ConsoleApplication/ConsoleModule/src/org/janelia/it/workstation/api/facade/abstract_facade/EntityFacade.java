@@ -146,4 +146,6 @@ public interface EntityFacade {
 
     public void deleteAnchoredPath(Long pathID) throws Exception;
 
+    public RawFileInfo getNearestFileInfo(String basePath, int[] viewerCoord) throws Exception;
+
 }

@@ -58,7 +58,7 @@ public class CreateTiledMicroscopeSampleAction implements Action {
 //                            @Override
 //                            public void run() {
 //                                entityOutline.selectEntityByUniqueId(newSample.getId().toString());
-//                                SessionMgr.getBrowser().setPerspective(Perspective.SliceViewer);
+//                                SessionMgr.getBrowser().setPerspective(Perspective.LargeVolumeViewer);
 //                                SessionMgr.getBrowser().getLayersPanel().openAlignmentBoard(newSample.getId());
 //                            }
 //                        });
@@ -78,7 +78,7 @@ public class CreateTiledMicroscopeSampleAction implements Action {
                         SessionMgr.getSessionMgr().handleException(error);
                     }
                 };
-                worker.setProgressMonitor(new IndeterminateProgressMonitor(mainFrame, "Preparing Slice Viewer...", ""));
+                worker.setProgressMonitor(new IndeterminateProgressMonitor(mainFrame, "Preparing Large Volume Viewer...", ""));
                 worker.execute();
             }
             

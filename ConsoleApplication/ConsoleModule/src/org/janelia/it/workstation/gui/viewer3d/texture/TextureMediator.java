@@ -2,6 +2,7 @@ package org.janelia.it.workstation.gui.viewer3d.texture;
 
 import org.janelia.it.workstation.gui.viewer3d.VolumeDataAcceptor;
 import org.janelia.it.workstation.gui.viewer3d.volume_builder.VolumeDataChunk;
+import static org.janelia.it.workstation.gui.viewer3d.OpenGLUtils.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -63,7 +64,7 @@ public class TextureMediator {
     }
 
     public void uploadTexture( GL2 gl ) {
-        reportError( "upon entry to uploadTexture", gl );
+        reportError( "upon entry to uploadTexture", gl, textureName );
         if ( ! isInitialized ) {
             logger.error("Attempted to upload texture before mediator was initialized.");
             throw new RuntimeException("Failed to upload texture");
@@ -86,16 +87,16 @@ public class TextureMediator {
             }
 
             gl.glActiveTexture( textureSymbolicId );
-            reportError( "glActiveTexture", gl );
+            reportError( "glActiveTexture", gl, textureName );
 
             gl.glEnable( GL2.GL_TEXTURE_3D );
-            reportError( "glEnable", gl );
+            reportError( "glEnable", gl, textureName );
 
             gl.glBindTexture( GL2.GL_TEXTURE_3D, textureName );
-            reportError( "glBindTexture", gl );
+            reportError( "glBindTexture", gl, textureName );
 
             gl.glTexEnvi(GL2.GL_TEXTURE_ENV, GL2.GL_TEXTURE_ENV_MODE, GL2.GL_REPLACE);
-            reportError( "glTexEnv MODE-REPLACE", gl );
+            reportError( "glTexEnv MODE-REPLACE", gl, textureName );
 
             try {
                 gl.glTexImage3D(
@@ -109,6 +110,18 @@ public class TextureMediator {
                         getVoxelComponentOrder(), // voxel component order (GLenum format)
                         getVoxelComponentType(), // voxel component type=packed RGBA values(GLenum type)
                         null
+                );
+                
+                dumpGlTexImageCall(
+                        GL2.GL_TEXTURE_3D,
+                        0, // mipmap level
+                        getInternalFormat(), // as stored INTO graphics hardware, w/ srgb info (GLint internal format)
+                        textureData.getSx(), // width
+                        textureData.getSy(), // height
+                        textureData.getSz(), // depth
+                        0, // border
+                        getVoxelComponentOrder(), // voxel component order (GLenum format)
+                        getVoxelComponentType() // voxel component type=packed RGBA values(GLenum type)
                 );
 
                 int expectedRemaining = textureData.getSx() * textureData.getSy() * textureData.getSz()
@@ -147,23 +160,25 @@ public class TextureMediator {
 
             } catch ( Exception exGlTexImage ) {
                 logger.error(
-                        "Exception reported during texture upload of NAME:OFFS={}, FORMAT:COMP-ORDER:MULTIPLIER={}",
+                        "Exception reported during texture upload of NAME:OFFS={}, FORMAT:COMP-ORDER:MULTIPLIER:VC-TYPE={}",
                         this.textureName + ":" + this.getTextureOffset(),
-                        this.getInternalFormat() + ":" + this.getVoxelComponentOrder() + ":" +
-                        this.getStorageFormatMultiplier()
+                        getConstantName(this.getInternalFormat()) + ":" +
+                        getConstantName(this.getVoxelComponentOrder()) + ":" +
+                        this.getStorageFormatMultiplier() + ":" + 
+                        getConstantName(this.getVoxelComponentType())
                 );
                 exGlTexImage.printStackTrace();
             }
-            reportError( "glTexImage", gl );
+            reportError( "glTexImage", gl, textureName );
             gl.glBindTexture( GL2.GL_TEXTURE_3D, 0 );
             gl.glDisable( GL2.GL_TEXTURE_3D );
-            reportError( "disable-tex", gl );
+            reportError( "disable-tex", gl, textureName );
 
             hasBeenUploaded = true;
 
             // DEBUG
             //if ( expectedRemaining < 1000000 )
-            //    testTextureContents(gl);
+            //    testTextureContents(gl); // Did NOT work for TIF!
         }
 
     }
@@ -194,20 +209,18 @@ public class TextureMediator {
             }
 
             gl.glActiveTexture( textureSymbolicId );
-            reportError( "glActiveTexture", gl );
+            reportError( "glActiveTexture", gl, textureName );
 
             gl.glEnable( GL2.GL_TEXTURE_3D );
-            reportError( "glEnable", gl );
+            reportError( "glEnable", gl, textureName );
 
             gl.glBindTexture( GL2.GL_TEXTURE_3D, textureName );
-            reportError( "glBindTexture", gl );
+            reportError( "glBindTexture", gl, textureName );
 
             gl.glTexEnvi(GL2.GL_TEXTURE_ENV, GL2.GL_TEXTURE_ENV_MODE, GL2.GL_REPLACE);
-            reportError( "glTexEnv MODE-REPLACE", gl );
+            reportError( "glTexEnv MODE-REPLACE", gl, textureName );
 
             try {
-
-                //DEBUG: back to original, and see if can eliminate some possibilities.
                 byte[] rawBytes = new byte[ (int)textureData.getTextureData().length() ];
                 int nextInx = 0;
                 for ( VolumeDataChunk volumeDataChunk: textureData.getTextureData().getVolumeChunks() ) {
@@ -235,16 +248,17 @@ public class TextureMediator {
                 logger.error(
                         "Exception reported during texture upload of NAME:OFFS={}, FORMAT:COMP-ORDER:MULTIPLIER={}",
                         this.textureName + ":" + this.getTextureOffset(),
-                        this.getInternalFormat() + ":" + this.getVoxelComponentOrder() + ":" +
-                                this.getStorageFormatMultiplier()
+                        getConstantName(this.getInternalFormat()) + ":" +
+                        getConstantName(this.getVoxelComponentOrder()) + ":" +
+                        getConstantName(this.getStorageFormatMultiplier())
                 );
                 exGlTexImage.printStackTrace();
             }
-            reportError( "glTexImage", gl );
+            reportError( "glTexImage", gl, textureName );
 
             gl.glBindTexture( GL2.GL_TEXTURE_3D, 0 );
             gl.glDisable( GL2.GL_TEXTURE_3D );
-            reportError( "disable-tex", gl );
+            reportError( "disable-tex", gl, textureName );
 
             hasBeenUploaded = true;
 
@@ -255,13 +269,13 @@ public class TextureMediator {
     /** Release the texture data memory from the GPU. */
     public void deleteTexture( GL2 gl ) {
         if ( hasBeenUploaded ) {
-            reportError( "tex-mediator: upon entry to delete tex", gl );
+            reportError( "tex-mediator: upon entry to delete tex", gl, textureName );
             IntBuffer textureNameBuffer = IntBuffer.allocate( 1 );
             textureNameBuffer.put( textureName );
             textureNameBuffer.rewind();
             textureNameBuffer.rewind();
             gl.glDeleteTextures( 1, textureNameBuffer );
-            reportError( "tex-mediator: delete texture", gl );
+            reportError( "tex-mediator: delete texture", gl, textureName );
             hasBeenUploaded = false;
         }
     }
@@ -303,6 +317,7 @@ public class TextureMediator {
     }
 
     public void setupTexture( GL2 gl ) {
+        reportError("Entering setupTexture", gl, textureName);
         logger.debug( "Texture Data for {} has interp of {}.", textureData.getFilename(),
                 getConstantName( textureData.getInterpolationMethod() ) );
 
@@ -311,19 +326,19 @@ public class TextureMediator {
             throw new RuntimeException( "Texture setup failed." );
         }
         gl.glActiveTexture( textureSymbolicId );
-        reportError( "setupTexture glActiveTexture", gl );
+        reportError( "setupTexture glActiveTexture", gl, textureName );
         gl.glBindTexture( GL2.GL_TEXTURE_3D, textureName );
-        reportError( "setupTexture glBindTexture", gl );
+        reportError( "setupTexture glBindTexture", gl, textureName );
         gl.glTexParameteri(GL2.GL_TEXTURE_3D, GL2.GL_TEXTURE_MIN_FILTER, textureData.getInterpolationMethod() );
-        reportError( "setupTexture glTexParam MIN FILTER", gl );
+        reportError( "setupTexture glTexParam MIN FILTER", gl, textureName );
         gl.glTexParameteri(GL2.GL_TEXTURE_3D, GL2.GL_TEXTURE_MAG_FILTER, textureData.getInterpolationMethod() );
-        reportError( "setupTexture glTexParam MAG_FILTER", gl );
+        reportError( "setupTexture glTexParam MAG_FILTER", gl, textureName );
         gl.glTexParameteri(GL2.GL_TEXTURE_3D, GL2.GL_TEXTURE_WRAP_R, GL2.GL_CLAMP_TO_BORDER);
-        reportError( "setupTexture glTexParam TEX-WRAP-R", gl );
+        reportError( "setupTexture glTexParam TEX-WRAP-R", gl, textureName );
         gl.glTexParameteri(GL2.GL_TEXTURE_3D, GL2.GL_TEXTURE_WRAP_S, GL2.GL_CLAMP_TO_BORDER);
-        reportError( "setupTexture glTexParam TEX-WRAP-S", gl );
+        reportError( "setupTexture glTexParam TEX-WRAP-S", gl, textureName );
         gl.glTexParameteri(GL2.GL_TEXTURE_3D, GL2.GL_TEXTURE_WRAP_T, GL2.GL_CLAMP_TO_BORDER);
-        reportError( "setupTexture glTexParam TEX-WRAP-T", gl );
+        reportError( "setupTexture glTexParam TEX-WRAP-T", gl, textureName );
 
     }
 
@@ -340,9 +355,9 @@ public class TextureMediator {
     @SuppressWarnings("unused")
     public void testTextureContents( GL2 gl ) {
         gl.glActiveTexture( textureSymbolicId );
-        reportError( "testTextureContents glActiveTexture", gl );
+        reportError( "testTextureContents glActiveTexture", gl, textureName );
         gl.glBindTexture( GL2.GL_TEXTURE_3D, textureName );
-        reportError( "testTextureContents glBindTexture", gl );
+        reportError( "testTextureContents glBindTexture", gl, textureName );
 
         int pixelByteCount = textureData.getPixelByteCount();
         int bufferSize = textureData.getSx() * textureData.getSy() * textureData.getSz() *
@@ -351,7 +366,7 @@ public class TextureMediator {
         byte[] rawBuffer = new byte[ bufferSize ];
         ByteBuffer buffer = ByteBuffer.wrap(rawBuffer);
         gl.glGetTexImage( GL2.GL_TEXTURE_3D, 0, getVoxelComponentOrder(), getVoxelComponentType(), buffer );
-        reportError( "TEST: Getting texture for testing", gl );
+        reportError( "TEST: Getting texture for testing", gl, textureName );
 
         buffer.rewind();
 
@@ -369,21 +384,14 @@ public class TextureMediator {
         if ( orderId == GL2.GL_BGRA ) {
             return 4;
         }
+        else if ( orderId == GL2.GL_LUMINANCE16_ALPHA16 ) {
+            return 4;
+        }
         else {
             return 1;
         }
     }
 
-    private void reportError( String operation, GL2 gl ) {
-        int errorNum = gl.glGetError();
-        String hexErrorNum = Integer.toHexString( errorNum );
-        if ( errorNum > 0 ) {
-            logger.error( "Error " + errorNum + "/x0" + hexErrorNum + " during " + operation +
-                          " on texture (by 'name' id) " + textureName );
-            //new Exception().printStackTrace(); // *** DEBUG ***
-        }
-
-    }
     //--------------------------- Helpers for glTexImage3D
     // NOTES on these helpers:
     //  -  It is often the case that "format" and "internal format" can and should be the same value.
@@ -475,7 +483,7 @@ public class TextureMediator {
     //--------------------------- End: Helpers for glTexImage3D
 
     private void testRawBufferContents(int pixelByteCount, byte[] rawBuffer) {
-        Map<Integer,Integer> allFoundFrequencies = new HashMap<Integer,Integer>();
+        Map<Integer,Integer> allFoundFrequencies = new HashMap<>();
 
         int nonZeroCount = 0;
         for (byte aRawBuffer : rawBuffer) {
@@ -534,22 +542,52 @@ public class TextureMediator {
         }
         logger.info("End: Texture Values Dump---------------------");
     }
+    
+    public static void dumpGlTexImageCall(
+            int texImgType,
+            int mipMapLevel,
+            int internalFormat,
+            int sx,
+            int sy,
+            int sz,
+            int border,
+            int voxCompOrder,
+            int voxCompType
+    ) {
+        System.out.println(
+                "glTexImage params:  texImgType=" + getConstantName( texImgType )+
+                ", mipMapLevel=" + mipMapLevel +
+                ", internalFormat=" + getConstantName( internalFormat ) +
+                ", border=" + border +
+                ", sx= " + sx + ", sy=" + sy + ", sz=" + sz +
+                ", componentOrder=" + getConstantName( voxCompOrder ) +
+                ". componentType=" + getConstantName( voxCompType )
+        );
+    }
 
     /** Gets a string name of an OpenGL constant used in this class.  For debugging purposes. */
     public static String getConstantName( Integer openGlEnumConstant ) {
         String rtnVal;
         if ( glConstantToName == null ) {
-            glConstantToName = new HashMap<Integer,String>();
+            glConstantToName = new HashMap<>();
+            glConstantToName.put( GL2.GL_TEXTURE_3D, "GL2.GL_TEXTURE_3D" );
+            glConstantToName.put( GL2.GL_TEXTURE_2D, "GL2.GL_TEXTURE_2D" );
+            glConstantToName.put( GL2.GL_TEXTURE_1D, "GL2.GL_TEXTURE_1D" );
             glConstantToName.put( GL2.GL_UNSIGNED_INT_8_8_8_8_REV, "GL2.GL_UNSIGNED_INT_8_8_8_8_REV" );
             glConstantToName.put( GL2.GL_UNSIGNED_INT_8_8_8_8, "GL2.GL_UNSIGNED_INT_8_8_8_8" );
             glConstantToName.put( GL2.GL_UNSIGNED_BYTE, "GL2.GL_UNSIGNED_BYTE" );
             glConstantToName.put( GL2.GL_UNSIGNED_SHORT, "GL2.GL_UNSIGNED_SHORT" );
 
             glConstantToName.put( GL2.GL_LUMINANCE, "GL2.GL_LUMINANCE" );
+            glConstantToName.put( GL2.GL_LUMINANCE_ALPHA, "GL2.GL_LUMINANCE_ALPHA" );
             glConstantToName.put( GL2.GL_SRGB8_ALPHA8, "GL2.GL_SRGB8_ALPHA8" );
             glConstantToName.put( GL2.GL_LUMINANCE16, "GL2.GL_LUMINANCE16" );
             glConstantToName.put( GL2.GL_RGBA, "GL2.GL_RGBA" );
             glConstantToName.put( GL2.GL_RGB, "GL2.GL_RGB" );
+            glConstantToName.put( GL2.GL_RG, "GL2.GL_RG" );
+            glConstantToName.put( GL2.GL_RED, "GL2.GL_RED" );
+            glConstantToName.put( GL2.GL_BGRA, "GL2.GL_BGRA" );
+            glConstantToName.put( GL2.GL_RGBA16, "GL2.GL_RGBA16");
 
             glConstantToName.put( GL2.GL_LINEAR, "GL2.GL_LINEAR" );
             glConstantToName.put( GL2.GL_NEAREST, "GL2.GL_NEAREST" );
@@ -563,9 +601,11 @@ public class TextureMediator {
             glConstantToName.put( GL2.GL_SHORT, "GL2.GL_SHORT" );
             glConstantToName.put( GL2.GL_UNSIGNED_BYTE, "GL2.GL_UNSIGNED_BYTE" );
             glConstantToName.put( GL2.GL_UNSIGNED_SHORT, "GL2.GL_UNSIGNED_SHORT" );
+            glConstantToName.put( GL2.GL_LUMINANCE16_ALPHA16, "GL2.GL_LUMINANCE16_ALPHA16");
 
-            glConstantToName.put( GL2.GL_BGRA, "GL2.GL_BGRA" );
-            glConstantToName.put( GL2.GL_RGBA16, "GL2.GL_RGBA16");
+            glConstantToName.put( javax.media.opengl.GL2GL3.GL_BGRA, "GL2GL3.GL_BGRA" );
+            glConstantToName.put( javax.media.opengl.GL2GL3.GL_RGB, "GL2GL3.GL_RGB" );
+            glConstantToName.put( javax.media.opengl.GL2GL3.GL_UNSIGNED_SHORT, "GL2GL3.GL_UNSIGNED_SHORT" );
 
         }
         rtnVal = glConstantToName.get( openGlEnumConstant );

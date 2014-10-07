@@ -5,6 +5,7 @@ import org.janelia.it.workstation.gui.camera.BasicCamera3d;
 import org.janelia.it.workstation.gui.camera.Camera3d;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 
 /**
@@ -20,21 +21,29 @@ public class VolumeModel {
     public static final float DEFAULT_GAMMA_ADJUSTMENT = 1.0f;
     public static final Vec3 DEFAULT_FOCUS_IN_GROUND = new Vec3(0, 0, 0);
     public static final float[] DEFAULT_COLOR_MASK = {1.0f, 1.0f, 1.0f};
+    public static final int COLOR_MASK_ARR_SIZE = DEFAULT_COLOR_MASK.length;
+    // The "normal" background color should be black. The only alternative
+    // supported as of this time is white.
+    public static final float[] DEFAULT_BACKGROUND_COLOR = {0.0f, 0.0f, 0.0f};    
+    public static final float[] ALT_BACKGROUND_COLOR = {1.0f, 1.0f, 1.0f};    
     public static final float DEFAULT_CROPOUT = 0.25f;
     public static final boolean DEFAULT_SAVE_BRIGHTNESS = true;
+    public static final boolean DEFAULT_SHOWING_AXES = true;
     public static final float STANDARDIZED_GAMMA_MULTIPLIER = 0.46f;
 
     private CropCoordSet cropCoordSet = CropCoordSet.getDefaultCropCoordSet();
     private float gammaAdjustment = DEFAULT_GAMMA_ADJUSTMENT;
     private float cropOutLevel = DEFAULT_CROPOUT;
     private Vec3 cameraDepth;
-    private boolean colorSaveBrightness = true;
+    private boolean colorSaveBrightness = DEFAULT_SAVE_BRIGHTNESS;
     private Camera3d camera3d;
+    private float[] backgroundColor = DEFAULT_BACKGROUND_COLOR;
     private float[] colorMask = DEFAULT_COLOR_MASK;
     private float[] voxelMicrometers;
     private int[] voxelDimensions;
+    private boolean showAxes = DEFAULT_SHOWING_AXES;
 
-    private Collection<UpdateListener> listeners = new ArrayList<UpdateListener>();
+    private Collection<UpdateListener> listeners = new ArrayList<>();
 
     /** This may be useful for situations like the HUD, which retains a reference to
      * the volume model across invocations.  Call this prior to reset.
@@ -82,7 +91,7 @@ public class VolumeModel {
     public void setVolumeUpdate() {
         Collection<UpdateListener> currentListeners;
         synchronized (this) {
-            currentListeners = new ArrayList<UpdateListener>( listeners );
+            currentListeners = new ArrayList<>( listeners );
         }
         for ( UpdateListener listener: currentListeners ) {
             listener.updateVolume();
@@ -93,7 +102,7 @@ public class VolumeModel {
     public void setRenderUpdate() {
         Collection<UpdateListener> currentListeners;
         synchronized (this) {
-            currentListeners = new ArrayList<UpdateListener>( listeners );
+            currentListeners = new ArrayList<>( listeners );
         }
         for ( UpdateListener listener: currentListeners ) {
             listener.updateRendering();
@@ -170,6 +179,48 @@ public class VolumeModel {
 
     public void setColorSaveBrightness(boolean colorSaveBrightness) {
         this.colorSaveBrightness = colorSaveBrightness;
+    }
+
+    /**
+     * @return the backgroundColor
+     */
+    public float[] getBackgroundColorFArr() {
+        return backgroundColor;
+    }
+    
+    /**
+     * @param whiteBackgroundFlag tells whether to set color white or black.
+     */
+    public void setWhiteBackground( boolean whiteBackgroundFlag ) {
+        setBackgroundColor(
+                whiteBackgroundFlag ?
+                        VolumeModel.ALT_BACKGROUND_COLOR :
+                        VolumeModel.DEFAULT_BACKGROUND_COLOR 
+        );
+    }
+    
+    public boolean isWhiteBackground() {
+        return Arrays.equals( backgroundColor, VolumeModel.ALT_BACKGROUND_COLOR );
+    }
+
+    /**
+     * @param backgroundColor the backgroundColor to set
+     */
+    public void setBackgroundColor(float[] backgroundColor) {
+        this.backgroundColor = backgroundColor;
+    }
+
+    public boolean isShowAxes() {
+        return showAxes;
+    }
+
+    /**
+     * Setting this true allows axes to be visible; false hides them.
+     * 
+     * @param showAxes the showAxes to set
+     */
+    public void setShowAxes(boolean showAxes) {
+        this.showAxes = showAxes;
     }
 
     public static interface UpdateListener {

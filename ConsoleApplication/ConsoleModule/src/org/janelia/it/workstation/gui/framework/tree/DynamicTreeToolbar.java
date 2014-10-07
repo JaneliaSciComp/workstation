@@ -121,7 +121,7 @@ public class DynamicTreeToolbar extends JPanel {
                 prevMatch(true);
             }
         });
-        prevButton.setToolTipText("Find the previous occurence of the search terms");
+        prevButton.setToolTipText("Find the previous occurrence of the search terms");
         toolBar.add(prevButton);
         
         JButton nextButton = new JButton();
@@ -132,7 +132,7 @@ public class DynamicTreeToolbar extends JPanel {
                 nextMatch(true);
             }
         });
-        nextButton.setToolTipText("Find the next occurence of the search terms");
+        nextButton.setToolTipText("Find the next occurrence of the search terms");
         toolBar.add(nextButton);
         
         add(toolBar, BorderLayout.PAGE_START);

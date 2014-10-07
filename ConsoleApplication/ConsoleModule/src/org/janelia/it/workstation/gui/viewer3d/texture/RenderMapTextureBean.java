@@ -1,5 +1,6 @@
 package org.janelia.it.workstation.gui.viewer3d.texture;
 
+import java.awt.Color;
 import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.workstation.gui.viewer3d.VolumeModel;
 import org.janelia.it.workstation.gui.viewer3d.masking.VolumeDataI;
@@ -10,6 +11,7 @@ import org.janelia.it.workstation.gui.viewer3d.VolumeDataAcceptor;
 
 import javax.media.opengl.GL2;
 import java.nio.ByteOrder;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Map;
 
@@ -76,11 +78,26 @@ public class RenderMapTextureBean implements TextureDataI {
             throw new IllegalArgumentException("Invalid inputs for render mapping");
         }
 
+        // A light background requirs subtractive colors.
+        boolean subtractiveColors = false;
+        float[] background = volumeModel.getBackgroundColorFArr();
+        if ( ! Arrays.equals( background, VolumeModel.DEFAULT_BACKGROUND_COLOR ) ) {
+            // Need to change colors to suit the background.
+            subtractiveColors = true;
+        }
+        
         byte[] rawMap = new byte[ getRawBufferSize() ];
         for ( Integer maskNumber: renderingMap.keySet() ) {
             byte[] rendition = renderingMap.get( maskNumber );
             if ( rendition.length != 4 ) {
                 throw new IllegalArgumentException( "Invalid size of RGB color map target.  Must be 4." );
+            }
+            if ( subtractiveColors ) {
+                Color color = new Color( unsigned( rendition[ 0 ] ), unsigned( rendition[ 1 ] ), unsigned( rendition[ 2 ] ) );
+                Color adjustedColor = new Color( color.getRed(), color.getGreen(), color.getBlue(), 255 - color.getAlpha() );
+                rendition[ 0 ] = (byte)adjustedColor.getRed();
+                rendition[ 1 ] = (byte)adjustedColor.getGreen();
+                rendition[ 2 ] = (byte)adjustedColor.getBlue();
             }
             int entryOffset = maskNumber * BYTES_PER_ENTRY;
             System.arraycopy( rendition, 0, rawMap, entryOffset, BYTES_PER_ENTRY );
@@ -319,6 +336,14 @@ public class RenderMapTextureBean implements TextureDataI {
             System.out.println("Returning round-up of " + (((value / DIVISIBILITY_VALUE) + 1) * DIVISIBILITY_VALUE));
             return ((value / DIVISIBILITY_VALUE) + 1) * DIVISIBILITY_VALUE;
         }
+    }
+    
+    /** 
+     * Return the unsigned-int version of the input byte. That is,
+     * re-interpret the sign bit w.r.t. a one-byte value, as a high-bit.
+     */
+    private int unsigned( byte inval ) {
+        return inval < 0 ? (256 + inval) : inval;
     }
 }
 

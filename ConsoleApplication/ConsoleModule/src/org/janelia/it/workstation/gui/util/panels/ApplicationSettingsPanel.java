@@ -8,20 +8,18 @@ import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.workstation.gui.framework.session_mgr.SessionModelListener;
 import org.janelia.it.workstation.shared.util.RendererType2D;
 
-import java.awt.BorderLayout;
-import java.awt.Dimension;
-import java.awt.Rectangle;
+import javax.swing.*;
+import javax.swing.border.TitledBorder;
+import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.util.HashMap;
 import java.util.Map;
 
-import javax.swing.*;
-import javax.swing.border.TitledBorder;
-
 public class ApplicationSettingsPanel extends JPanel implements PrefEditor {
     private boolean settingsChanged = false;
     private static final String SUBVIEW_FOCUS = "FocusSubviewsUponNavigation";
+    private MemorySettingPanel pnlMemorySetting;
     JCheckBox subviewFocusCheckBox = new JCheckBox();
     JCheckBox subEditors = new JCheckBox();
     JCheckBox memoryUsage = new JCheckBox();
@@ -128,6 +126,24 @@ public class ApplicationSettingsPanel extends JPanel implements PrefEditor {
         popupPanel.add(Box.createVerticalStrut(5));
         mainPanel.add(Box.createVerticalStrut(20));
         mainPanel.add(popupPanel);
+
+        // ------------------------------------------------------------------------------------------------------------
+        // Memory Settings
+        // ------------------------------------------------------------------------------------------------------------
+
+        pnlMemorySetting = new MemorySettingPanel();
+        pnlMemorySetting.setBorder(new TitledBorder("Max Memory (GB)"));
+        pnlMemorySetting.setSettingListener(
+                new MemorySettingPanel.SettingListener() {
+                    @Override
+                    public void settingChanged() {                        
+                        settingsChanged = true;
+                    }
+                }
+        );
+        mainPanel.add(Box.createVerticalStrut(20));        
+        
+        mainPanel.add(pnlMemorySetting);
 
         // ------------------------------------------------------------------------------------------------------------
         // Look and Feel
@@ -262,6 +278,9 @@ public class ApplicationSettingsPanel extends JPanel implements PrefEditor {
         }
         if (subviewFocusCheckBox.isSelected() != (Boolean) sessionMgr.getModelProperty(SUBVIEW_FOCUS)) {
             sessionMgr.setModelProperty(SUBVIEW_FOCUS, subviewFocusCheckBox.isSelected());
+        }
+        if (pnlMemorySetting.isChanged()) {
+            pnlMemorySetting.saveSettings();
         }
         AutoNavigationMgr.getAutoNavigationMgr().showNavigationCompleteMsgs(navComplete.isSelected());
 

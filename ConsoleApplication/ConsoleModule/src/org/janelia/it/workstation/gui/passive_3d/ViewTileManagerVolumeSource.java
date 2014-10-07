@@ -1,24 +1,22 @@
 package org.janelia.it.workstation.gui.passive_3d;
 
 import org.janelia.it.workstation.geom.CoordinateAxis;
-import org.janelia.it.workstation.geom.Rotation3d;
 import org.janelia.it.workstation.geom.Vec3;
 import org.janelia.it.workstation.gui.camera.BasicObservableCamera3d;
 import org.janelia.it.workstation.gui.camera.Camera3d;
 import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
-import org.janelia.it.workstation.gui.slice_viewer.BlockTiffOctreeLoadAdapter;
-import org.janelia.it.workstation.gui.slice_viewer.TextureData2dGL;
-import org.janelia.it.workstation.gui.slice_viewer.TileFormat;
-import org.janelia.it.workstation.gui.slice_viewer.TileIndex;
-import org.janelia.it.workstation.gui.viewer3d.interfaces.Viewport;
+import org.janelia.it.workstation.gui.large_volume_viewer.BlockTiffOctreeLoadAdapter;
+import org.janelia.it.workstation.gui.large_volume_viewer.TextureData2dGL;
+import org.janelia.it.workstation.gui.large_volume_viewer.TileFormat;
+import org.janelia.it.workstation.gui.large_volume_viewer.TileIndex;
 import org.janelia.it.workstation.gui.viewer3d.texture.TextureDataBean;
 import org.janelia.it.workstation.gui.viewer3d.texture.TextureDataI;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.File;
-import java.io.FileWriter;
-import java.io.PrintWriter;
+import java.io.IOException;
+import java.net.URISyntaxException;
 import java.net.URL;
 import java.nio.ByteBuffer;
 import java.util.Map;
@@ -27,6 +25,11 @@ import java.util.HashMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
+import javax.media.opengl.GL2;
+import org.janelia.it.workstation.gui.large_volume_viewer.Subvolume;
+import org.janelia.it.workstation.gui.large_volume_viewer.SubvolumeProvider;
+import org.janelia.it.workstation.gui.viewer3d.VolumeDataAcceptor;
+import org.janelia.it.workstation.shared.workers.IndeterminateNoteProgressMonitor;
 
 /**
  * Created with IntelliJ IDEA.
@@ -38,247 +41,155 @@ import java.util.concurrent.TimeUnit;
  * implements by fetching data out of a view tile manager, focused on the viewport/camera/axis and relative position
  * given.
  */
-public class ViewTileManagerVolumeSource implements VolumeSource {
-    public static final int BRICK_WIDTH = 512;
-    public static final int BRICK_HEIGHT = 512;
-    public static final int BRICK_DEPTH = 512;
+public class ViewTileManagerVolumeSource implements MonitoredVolumeSource {
+    private static final int DEFAULT_BRICK_CUBIC_DIMENSION = 512;
+    
     private Camera3d camera;
-    private Viewport viewport;
-    private CoordinateAxis sliceAxis;
-    private Rotation3d viewerInGround;
+    private CoordinateAxis sliceAxis;   //@deprecated
+    private SubvolumeProvider subvolumeProvider;
     private URL dataUrl;
     private byte[] dataVolume;
-
-    private int absoluteReqVolStartX;
-    private int absoluteReqVolEndX;
-    private int absoluteReqVolStartY;
-    private int absoluteReqVolEndY;
-    private int absoluteReqVolStartZ;
-    private int absoluteReqVolEndZ;
+    
+    private int brickCubicDimension = DEFAULT_BRICK_CUBIC_DIMENSION;
 
     private VolumeAcceptor volumeAcceptor;
+    private TextureDataI textureDataFor3D;
+    private IndeterminateNoteProgressMonitor progressMonitor;
 
     private BlockTiffOctreeLoadAdapter dataAdapter;
 
-    private Logger logger = LoggerFactory.getLogger( ViewTileManagerVolumeSource.class );
-    private PrintWriter sliceRecorder; //*** TEMP ***
+    private final Logger logger = LoggerFactory.getLogger( ViewTileManagerVolumeSource.class );
 
     public ViewTileManagerVolumeSource(Camera3d camera,
-                                       Viewport viewport,
                                        CoordinateAxis sliceAxis,
-                                       Rotation3d viewerInGround,
+                                       int cubicDimension,
+                                       SubvolumeProvider subvolumeProvider,
                                        URL dataUrl) throws Exception {
-        this.camera = camera;
-        this.viewport = viewport;
-        this.viewerInGround = viewerInGround;
-        this.sliceAxis = sliceAxis;
-        this.dataUrl = dataUrl;
-
-        dataAdapter = new BlockTiffOctreeLoadAdapter();
-    }
-
-    @Override
-    public void getVolume( VolumeAcceptor volumeListener ) throws Exception {
-        this.volumeAcceptor = volumeListener;
-        requestTextureData();
-    }
-
-    private void requestTextureData() throws Exception {
-        sliceRecorder = new PrintWriter( new FileWriter( new File("/Users/fosterl/slice_log.txt") ) ); //*** TEMP ***
-        dataAdapter.setTopFolder( new File( dataUrl.toURI() ) );
-
+        
         // Cloning the camera, to leave the original as was found.
         Camera3d iterationCamera = new BasicObservableCamera3d();
         iterationCamera.setFocus(camera.getFocus());
         iterationCamera.setPixelsPerSceneUnit(camera.getPixelsPerSceneUnit());
         iterationCamera.setRotation(camera.getRotation());
-
-        TextureDataI textureDataFor3D = null;
-        TileFormat tileFormat = dataAdapter.getTileFormat();
-
-        logger.info("Absolute start/end Y are {}..{}.", absoluteReqVolStartY, absoluteReqVolEndY );
-
-        // NOTE: need to take zoom level into account for the expected return values.
-        int zoomFactor = (int)Math.pow( 2.0, tileFormat.zoomLevelForCameraZoom( camera.getPixelsPerSceneUnit()) );
-        // NOTE: camera has micrometer units.  TileIndex requires voxel units.  Hence need a conversion for x,y
-        int startTileNumX = (int)Math.floor((camera.getFocus().getX() - BRICK_WIDTH/2/zoomFactor) / tileFormat.getVoxelMicrometers()[ 0 ] / tileFormat.getTileSize()[ 0 ] );
-        int startTileNumY = (int)Math.floor((camera.getFocus().getY() - BRICK_HEIGHT/2/zoomFactor) / tileFormat.getVoxelMicrometers()[ 1 ] / tileFormat.getTileSize()[ 1 ] );
-        int startTileNumZ = (int)Math.floor((camera.getFocus().getZ()) / tileFormat.getVoxelMicrometers()[ 2 ] / tileFormat.getTileSize()[ 2 ] );
-        logger.info("Starting tile coords=(" + startTileNumX + "," + startTileNumY + "," + startTileNumZ + ")");
-
-        // Cover leftward/bottomward/inward by half brick dimension including 0.  Cover rightward/upward/outward
-        // half brick dimension beyond start point.
-        //  Total coverage full brick dimension.
-        //    Dimensions expected to be divisible by 2.
-        startTileNumX = Math.max( 0, startTileNumX );
-        startTileNumY = Math.max( 0, startTileNumY );
-        startTileNumZ = Math.max( 0, startTileNumZ );
-        int endTileNumX = (int)Math.ceil( startTileNumX + ( (BRICK_WIDTH / 2 - 1) / tileFormat.getVoxelMicrometers()[ 0 ] / tileFormat.getTileSize()[ 0 ] ) );
-        int endTileNumY = (int)Math.ceil( startTileNumY + ( (BRICK_HEIGHT / 2 - 1) / tileFormat.getVoxelMicrometers()[ 1 ] / tileFormat.getTileSize()[ 1 ] ) );
-        // Subtracting 1 from ending-tile Z since (N-m)..(N+m) inclusive, covers 2m+1 distinct values.
-        int endTileNumZ = (startTileNumZ + BRICK_DEPTH / (int)tileFormat.getVoxelMicrometers()[ 2 ] / tileFormat.getTileSize()[ 2 ]) - 1;
-        logger.info("Ending tile coords=(" + endTileNumX + "," + endTileNumY + "," + endTileNumZ + ")");
-
-        absoluteReqVolStartX = zoomFactor *
-                (int) Math.floor((camera.getFocus().getX() - BRICK_WIDTH/2/zoomFactor) / tileFormat.getVoxelMicrometers()[ 0 ]);
-        absoluteReqVolStartY = zoomFactor *
-                (int) Math.floor((camera.getFocus().getY() - BRICK_HEIGHT/2/zoomFactor) / tileFormat.getVoxelMicrometers()[ 1 ]);
-        absoluteReqVolStartZ = zoomFactor *
-                (int) Math.floor((camera.getFocus().getZ() - BRICK_DEPTH/2/zoomFactor) / tileFormat.getVoxelMicrometers()[ 2 ]);
-
-        if ( absoluteReqVolStartZ < 0 )
-            absoluteReqVolStartZ = 0;
-
-        absoluteReqVolEndX = absoluteReqVolStartX + BRICK_WIDTH - 1;
-        absoluteReqVolEndY = absoluteReqVolStartY + BRICK_HEIGHT - 1;
-        absoluteReqVolEndZ = absoluteReqVolStartZ + BRICK_DEPTH - 1;
-
-        TileIndexFinder indexFinder = new TileIndexFinder( tileFormat, camera, sliceAxis );
-        Collection<TileIndex> indices = indexFinder.executeForTileCoords(
-                startTileNumX, startTileNumY, startTileNumZ,
-                endTileNumX, endTileNumY, endTileNumZ // Assume: takes care of maxima on its own.
-        );
-
-        int stdByteCount = 0;
-        int stdChannelCount = 0;
-        int stdInternalFormat = 0;
-        int stdType = 0;
-
-        // Executing loads through a queue. Await queue rundown, then iterate over the results to standardize values.
-        ExecutorService threadPool = Executors.newFixedThreadPool( 5 );
-        Map<TileIndex, TextureData2dGL> dataCollection = new HashMap<TileIndex, TextureData2dGL>();
-        for ( TileIndex index: indices ) {
-            LoadToRamRunnable runnable = new LoadToRamRunnable( index, dataCollection );
-            threadPool.execute( runnable );
-        }
-        threadPool.shutdown();
-        try {
-            threadPool.awaitTermination( 300, TimeUnit.SECONDS );
-        } catch ( InterruptedException ie ) {
-            ie.printStackTrace();
-            SessionMgr.getSessionMgr().handleException( ie );
+        
+        this.camera = iterationCamera;
+        this.sliceAxis = sliceAxis;
+        this.subvolumeProvider = subvolumeProvider; 
+        if ( cubicDimension > 0 ) {
+            brickCubicDimension = cubicDimension;
         }
 
-        for ( TileIndex index: dataCollection.keySet() ) {
-            TextureData2dGL data = dataCollection.get( index );
-            stdByteCount = setAndStandardize( stdByteCount, data.getBitDepth()/8, "Byte Count" );
-            stdChannelCount = setAndStandardize( stdChannelCount, data.getChannelCount(), "Channel Count" );
-            stdInternalFormat = setAndStandardize( stdInternalFormat, data.getInternalFormat(), "Internal Format" );
-            stdType = setAndStandardize( stdType, data.getType(), "Type" );
+        dataAdapter = new BlockTiffOctreeLoadAdapter();
+        this.dataUrl = dataUrl;
+    }
 
-            if ( dataVolume == null ) {
-                dataVolume = new byte[ BRICK_WIDTH * BRICK_HEIGHT * BRICK_DEPTH * stdByteCount * stdChannelCount ];
-            }
-            acceptTileData( data.getPixels(), index, stdByteCount, stdChannelCount );
+    @Override
+    public void getVolume(VolumeAcceptor volumeListener) throws Exception {
+        this.volumeAcceptor = volumeListener;
+        requestTextureData();
+        volumeAcceptor.accept(textureDataFor3D);
+    }
+    
+    @Override
+    public String getInfo() {
+        return String.format(COORDS_FORMAT,
+                camera.getFocus().getX(),
+                camera.getFocus().getY(),
+                camera.getFocus().getZ()
+            );
+    }
+    
+    @Override
+    public void setProgressMonitor( IndeterminateNoteProgressMonitor monitor ) {
+        this.progressMonitor = monitor;
+    }
 
-        }
+    /**
+     * @return the dataUrl
+     */
+    public URL getDataUrl() {
+        return dataUrl;
+    }
+
+    private void requestTextureData() throws Exception {
+        StandardizedValues stdVals = new StandardizedValues();
+        //fetchTextureData(stdVals, false);
+        dataVolume = fetchTextureData(stdVals);
 
         // Now build the data volume.  The data volume bytes will be filled in later.
         textureDataFor3D = new TextureDataBean(
-                new VolumeDataBean( dataVolume, BRICK_WIDTH, BRICK_HEIGHT, BRICK_DEPTH ), BRICK_WIDTH, BRICK_HEIGHT, BRICK_DEPTH
+                new VolumeDataBean( dataVolume, brickCubicDimension, brickCubicDimension, brickCubicDimension ), brickCubicDimension, brickCubicDimension, brickCubicDimension
         );
         textureDataFor3D.setVoxelMicrometers(new Double[]{1.0, 1.0, 1.0});
-        textureDataFor3D.setChannelCount(stdChannelCount);
-        textureDataFor3D.setExplicitInternalFormat(stdInternalFormat);
-        textureDataFor3D.setExplicitVoxelComponentType(stdType);
-        textureDataFor3D.setPixelByteCount(stdByteCount);
+        textureDataFor3D.setChannelCount(stdVals.stdChannelCount);
+        textureDataFor3D.setExplicitInternalFormat(stdVals.stdInternalFormat);
+        textureDataFor3D.setExplicitVoxelComponentOrder(stdVals.stdFormat);
+        textureDataFor3D.setExplicitVoxelComponentType(stdVals.stdType);
+        textureDataFor3D.setPixelByteCount(stdVals.stdByteCount);
+        textureDataFor3D.setInterpolationMethod( GL2.GL_LINEAR );
+        textureDataFor3D.setColorSpace(VolumeDataAcceptor.TextureColorSpace.COLOR_SPACE_LINEAR);
 
-        sliceRecorder.close(); //***TEMP***
-
-        volumeAcceptor.accept( textureDataFor3D );
+    }
+    
+    private int applyZoomFactor(int zoomFactor) {
+        return brickCubicDimension / (int)Math.pow(2.0, zoomFactor);
     }
 
-    private void acceptTileData(ByteBuffer pixels, TileIndex tileIndex, int byteCount, int channelCount) {
-        int stdTileSize = BRICK_WIDTH * BRICK_HEIGHT;
+    /**
+     * Fetching against a sub-volume.
+     * 
+     * @param stdVals checked for consistency.
+     */
+    private byte[] fetchTextureData(StandardizedValues stdVals) throws URISyntaxException, IOException {
+        progressMonitor.setNote("Fetching texture data...");
+        dataAdapter.setTopFolder( new File( dataUrl.toURI() ) ); //        
         TileFormat tileFormat = dataAdapter.getTileFormat();
-
-        // Dealing with tile indices, need to be able to convert tile index back to absolute coordinates,
-        // to figure out where the tile is placed within the slice.
-        Vec3[] corners = tileFormat.cornersForTileIndex( tileIndex );
-
-        // Adjust for the inversion of Y between tile set and screen.
-        FragmentLoadParmBean paramBean = new FragmentLoadParmBean();
-        paramBean.yTileAbsStart = (int)corners[ 0 ].y();
-        paramBean.yTileAbsEnd = (int)corners[ 3 ].y();
-
-        paramBean.xTileAbsStart = (int)corners[ 0 ].x();
-        paramBean.xTileAbsEnd = (int)corners[ 3 ].x();
-        paramBean.corners = corners;
-
-        int zTile = (int)corners[ 0 ].z();
-
-        if ( paramBean.yTileAbsStart > paramBean.yTileAbsEnd ) {
-            logger.error("Start must be < end. Ignoring this tile [{},{}].", tileIndex.getX(), tileIndex.getY() );
-            logger.info("Ignored tile top-left={}.  bottom-right={}." + corners[0], corners[3]);
-            return;
-        }
-
-        // Check for non-overlap of ranges.  If the ranges do not overlap, assume this is not a relevant tile.
-        if ( ( paramBean.yTileAbsStart > absoluteReqVolEndY  ||  paramBean.yTileAbsEnd < absoluteReqVolStartY ) ||
-             ( paramBean.xTileAbsStart > absoluteReqVolEndX || paramBean.xTileAbsEnd < absoluteReqVolStartX ) ) {
-            logger.warn("Tile range not relevant to request: " + paramBean.xTileAbsStart+":"+paramBean.xTileAbsEnd + "; " + paramBean.yTileAbsStart+":"+paramBean.yTileAbsEnd +
-                               ", requested was " + absoluteReqVolStartX+":"+absoluteReqVolEndX + "; " + absoluteReqVolStartY+":"+absoluteReqVolEndY );
-            return;
-        }
-
-        if ( absoluteReqVolStartZ > zTile || absoluteReqVolEndZ < zTile ) {
-            logger.warn("Tile Z value {} not relevant to request {}.", zTile, absoluteReqVolEndZ );
-            return;
-        }
-
-        byte[] pixelArr = new byte[ pixels.capacity() ];
-        pixels.rewind();
-        pixels.get( pixelArr );
-
-        // First, relevant start-x, y, z within tile and within the target volume.
-        //  Recall that the tile has 512-voxel lines along X, and 512 of such lines to make Y.
-        //  The "in-volume" coords are really relative, rather than being based at 0 for whole world of tiles.
-        // "VolStart" and "VolEnd" refer to the 1D array containing the 3D texture we are building.
-        paramBean.inVolStartX = calcInVolStart( paramBean.xTileAbsStart, absoluteReqVolStartX );
-        paramBean.inVolStartY = calcInVolStart( paramBean.yTileAbsStart, absoluteReqVolStartY );
-
-        paramBean.inVolEndX = calcInVolEnd( absoluteReqVolEndX, absoluteReqVolStartX, paramBean.xTileAbsEnd, BRICK_WIDTH );
-        paramBean.inVolEndY = calcInVolEnd( absoluteReqVolEndY, absoluteReqVolStartY, paramBean.yTileAbsStart, BRICK_HEIGHT );
-
-        paramBean.inTileStartX = calcInTileStart( paramBean.xTileAbsStart, absoluteReqVolStartX );
-        paramBean.inTileStartY = calcInTileStart( paramBean.yTileAbsStart, absoluteReqVolStartY );
-
-        logger.info("absolute request X=(" + absoluteReqVolStartX +
-                "," + absoluteReqVolEndX +
-                "), absolute tile X=(" + paramBean.xTileAbsStart +
-                "," + paramBean.xTileAbsEnd +
-                "), extent of volume, in X=" + tileFormat.getVolumeSize()[ 0 ] +
-                "; in-tile coords X start=" + paramBean.inTileStartX
+        //TEMP int zoomFactor = tileFormat.zoomLevelForCameraZoom( camera.getPixelsPerSceneUnit());
+        int zoomFactor = 0; // TEMP
+        double lowX = getCameraLowerBound(0);
+        double lowY = getCameraLowerBound(1);
+        double lowZ = getCameraLowerBound(2);
+        Vec3 corner1 = new Vec3( lowX, lowY, lowZ );
+        Vec3 corner2 = new Vec3( 
+                SubvolumeProvider.findUpperBound(lowX, brickCubicDimension),
+                SubvolumeProvider.findUpperBound(lowY, brickCubicDimension),
+                SubvolumeProvider.findUpperBound(lowZ, brickCubicDimension)
         );
-        logger.info("in-vol-X=(" + paramBean.inVolStartX + "," + paramBean.inVolEndX + ")");
 
-        logger.info("absolute request Y=(" + absoluteReqVolStartY +
-                "," + absoluteReqVolEndY + "), absolute tile Y=(" + paramBean.yTileAbsStart +
-                "," + paramBean.yTileAbsEnd + "), extent of volume, in Y=" + tileFormat.getVolumeSize()[ 1 ] +
-                "; in-tile coords Y start=" + paramBean.inTileStartY
-        );
-        logger.info("in-vol-Y=(" + paramBean.inVolStartY + "," + paramBean.inVolEndY + ")");
+        logger.info( "Fetching centered at {}, at zoom {}.", camera.getFocus(), zoomFactor );
+        int[] extent = new int[] {
+            brickCubicDimension,
+            brickCubicDimension,
+            brickCubicDimension
+        };
+        Subvolume fetchedSubvolume = subvolumeProvider.getSubvolume( camera.getFocus(), extent, zoomFactor, progressMonitor );
+//        Subvolume fetchedSubvolume = subvolumeProvider.getSubvolume( corner1, corner2, zoomFactor, progressMonitor );
+        stdVals.stdChannelCount = fetchedSubvolume.getChannelCount();
+        stdVals.stdInternalFormat = GL2.GL_LUMINANCE16_ALPHA16;
+        stdVals.stdType = GL2.GL_UNSIGNED_SHORT;
+        stdVals.stdFormat = GL2.GL_LUMINANCE_ALPHA;
+        stdVals.stdByteCount = fetchedSubvolume.getBytesPerIntensity();
 
-        // Now add to the growing volume.
-        int zOutputOffset = (zTile - absoluteReqVolStartZ) * stdTileSize * byteCount * channelCount;
-        paramBean.tileWidth = paramBean.xTileAbsEnd - paramBean.xTileAbsStart;
-//        ExecutorService threadPool = Executors.newFixedThreadPool( 5 );
-        for ( int yCounter = 0; yCounter < (paramBean.inVolEndY - paramBean.inVolStartY) - 1; yCounter++ ) {
-
-            Runnable sliceLoadRunnable = new LineFragmentLoader(byteCount, channelCount, pixelArr, paramBean, zOutputOffset, yCounter);
-            sliceLoadRunnable.run(); // TEMP: avoid clutter in output messages.
-//            threadPool.execute( sliceLoadRunnable );
-
-        }
-//        threadPool.shutdown();
-//        try {
-//            threadPool.awaitTermination( 120, TimeUnit.SECONDS );
-//        } catch ( InterruptedException ie ) {
-//            SessionMgr.getSessionMgr().handleException( ie );
-//            ie.printStackTrace();
-//        }
+        final ByteBuffer byteBuffer = fetchedSubvolume.getByteBuffer();
+        byteBuffer.rewind();
+        byte[] transferredBytes = new byte[ byteBuffer.capacity() ];
+        byteBuffer.get(transferredBytes);
+        return transferredBytes;
     }
 
+    private double getCameraLowerBound( int index ) {
+        double focusVal = camera.getFocus().get( index );
+        return SubvolumeProvider.findLowerBound( focusVal, brickCubicDimension );
+    }
+    
+    private class StandardizedValues {
+        public int stdByteCount;
+        public int stdChannelCount;
+        public int stdInternalFormat;
+        public int stdFormat;
+        public int stdType;
+    }
+    
     /**
      * inVolStartX starting X to _put_ the 1st line fragment
      * inVolStartY starting Y to _put_ the 1st line fragment
@@ -340,25 +251,6 @@ public class ViewTileManagerVolumeSource implements VolumeSource {
     }
 
     //----------------------------------------------------------INNER CLASSES
-    private class LoadToRamRunnable implements Runnable {
-        private TileIndex index;
-        private Map<TileIndex, TextureData2dGL> indexToTexData;
-        public LoadToRamRunnable( TileIndex index, Map<TileIndex, TextureData2dGL> indexToTexData ) {
-            this.index = index;
-            this.indexToTexData = indexToTexData;
-        }
-
-        public void run() {
-            try {
-                TextureData2dGL data = dataAdapter.loadToRam( index );
-                indexToTexData.put( index, data );
-            } catch ( Exception ex ) {
-                ex.printStackTrace();
-
-            }
-        }
-    }
-
     private class LineFragmentLoader implements Runnable {
         private int bytesPerVoxel;
         private int channelsPerVoxel;
@@ -388,19 +280,12 @@ public class ViewTileManagerVolumeSource implements VolumeSource {
         }
 
         public void run() {
-            int yOutputOffset = (yCounter + paramBean.inVolStartY) * BRICK_WIDTH * bytesPerVoxel * channelsPerVoxel;
+            int yOutputOffset = (yCounter + paramBean.inVolStartY) * brickCubicDimension * bytesPerVoxel * channelsPerVoxel;
             int yInputOffset = (yCounter + paramBean.inTileStartY) * paramBean.tileWidth * bytesPerVoxel * channelsPerVoxel;
 
             int sourceStart = yInputOffset + (paramBean.inTileStartX * bytesPerVoxel * channelsPerVoxel);
             int destStart = zOutputOffset + yOutputOffset + (paramBean.inVolStartX * bytesPerVoxel * channelsPerVoxel);
             int copyLength = (paramBean.inVolEndX - paramBean.inVolStartX) * bytesPerVoxel * channelsPerVoxel;
-
-            sliceRecorder.println("X=" + paramBean.inVolStartX + ". Y=" + paramBean.inVolStartY + ". Number of voxels="
-                    + (paramBean.inVolEndX - paramBean.inVolStartX) + " at array-copy. y-InputOffset=" + yInputOffset
-                    + ".  y-OutputOffset=" + yOutputOffset + ".  copying IN: " + sourceStart + "to OUT:" + destStart
-                    + "." + "  Output Z-Offset:" + zOutputOffset
-                    + ".  Tile corner 0 is : " + paramBean.corners[ 0 ] + ", corner 3 is : " + paramBean.corners[ 3 ]
-            );
 
             try {
             System.arraycopy(

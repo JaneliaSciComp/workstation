@@ -5,6 +5,8 @@ import java.awt.Component;
 import java.awt.Dimension;
 import java.awt.FlowLayout;
 import java.awt.Point;
+import java.util.Collection;
+import java.util.List;
 
 import javax.media.opengl.GLCapabilities;
 import javax.media.opengl.GLProfile;
@@ -50,11 +52,13 @@ import org.janelia.it.workstation.model.viewer.AlignmentBoardContext;
 import org.janelia.it.workstation.shared.workers.IndeterminateNoteProgressMonitor;
 import org.janelia.it.workstation.shared.workers.SimpleWorker;
 import org.janelia.it.jacs.model.entity.Entity;
+import org.janelia.it.workstation.gui.alignment_board_viewer.renderable.MaskChanRenderableData;
 import org.janelia.it.workstation.gui.viewer3d.events.AlignmentBoardItemChangeEvent;
 import org.janelia.it.workstation.gui.viewer3d.events.AlignmentBoardOpenEvent;
 import org.janelia.it.workstation.gui.util.WindowLocator;
 import org.janelia.it.workstation.gui.viewer3d.BoundingBox3d;
 import org.janelia.it.workstation.model.domain.AlignmentContext;
+import org.janelia.it.workstation.model.viewer.AlignedItem;
 import org.openide.util.lookup.InstanceContent;
 import org.openide.util.lookup.ServiceProvider;
 
@@ -69,7 +73,7 @@ import org.openide.util.lookup.ServiceProvider;
 @ServiceProvider(service = AlignmentBoardCtrlPnlSvc.class)
 public class AlignmentBoardPanel extends JPanel implements AlignmentBoardControllable, AlignmentBoardCtrlPnlSvc {
 
-    private static final String SETTINGS_LAUNCH_BTN_NAME = "AlignmentBoard::SettingsLaunchButton";
+    private static final String WHITE_BACKGROUND_BTN_NAME = "AlignmentBoard::WhiteBackgroundButton";
     private static final String COLOR_SAVE_BTN_NAME = "AlignmentBoard::ColorSaveButton";
     private static final String SEARCH_SAVE_BTN_NAME = "AlignmentBoard::SearchSaveButton";
     private static final String SCREEN_SHOT_BTN_NAME = "AlignmentBoard::ScreenShotButton";
@@ -83,14 +87,14 @@ public class AlignmentBoardPanel extends JPanel implements AlignmentBoardControl
     private RenderablesLoadWorker loadWorker;
     private JPanel wrapperPanel;
 
-    private RenderMappingI renderMapping;
-    private MultiMaskTracker multiMaskTracker;
+    private final RenderMappingI renderMapping;
+    private final MultiMaskTracker multiMaskTracker;
     @SuppressWarnings("unused")
     private BrainGlow brainGlow;
     private AlignmentBoardControlsPanel settingsPanel;
     private AlignmentBoardControlsDialog settingsDialog;
     private AlignmentBoardControls controls;
-    private Logger logger = LoggerFactory.getLogger(AlignmentBoardPanel.class);
+    private final Logger logger = LoggerFactory.getLogger(AlignmentBoardPanel.class);
 
     private boolean loadingInProgress = false;
     private boolean outstandingLoadRequest = false;
@@ -103,14 +107,12 @@ public class AlignmentBoardPanel extends JPanel implements AlignmentBoardControl
     private boolean boardOpen = false;
     private boolean connectEditEvents = true;
 
-    private AlignmentBoardSettings settingsData;
-    private ShutdownListener shutdownListener;
+    private final AlignmentBoardSettings settingsData;
+    private final ShutdownListener shutdownListener;
     private JToolBar toolbar;
     private ABContextDataSource dataSource;
-    private FileStats fileStats;
+    private final FileStats fileStats;
     
-    private InstanceContent content = new InstanceContent();
-
     public AlignmentBoardPanel() {
         logger.info( "C'tor" );
         settingsData = new AlignmentBoardSettings();
@@ -150,7 +152,7 @@ public class AlignmentBoardPanel extends JPanel implements AlignmentBoardControl
         AlignmentBoardContext alignmentBoardContext = layersPanel.getAlignmentBoardContext();
         if ( alignmentBoardContext == null ) {
             return null;
-        };
+        }
         return alignmentBoardContext.getInternalRootedEntity();
 	}
 	
@@ -218,6 +220,45 @@ public class AlignmentBoardPanel extends JPanel implements AlignmentBoardControl
                 this.updateRendering( abContext );
 
             }
+            else if ( AlignmentBoardItemChangeEvent.ChangeType.OverlapFilter.equals( event.getChangeType() ) ) {
+                
+                // Need to turn off all the items which do not stack in
+                // same space as the indicated value.
+                AlignedItem overlapGuide = event.getAlignedItem();
+                Collection<MaskChanRenderableData> renderableDatas = this.dataSource.getRenderableDatas();
+                
+                Collection<Integer> overlappingMasks = null;
+                for ( MaskChanRenderableData renderableData: renderableDatas ) {
+                    if ( renderableData.getBean() != null  &&
+                         renderableData.getBean().getAlignedItem() != null  &&
+                         renderableData.getBean().getAlignedItem().getId() == overlapGuide.getId() ) {
+                        overlappingMasks = multiMaskTracker.getOverlappingMasks( renderableData.getBean().getTranslatedNum() );
+                    }
+                    else {
+                        if ( renderableData.getBean() == null ) {
+                            logger.error("Renderable " + renderableData.getChannelPath() + " has no renderable data.");
+                        }
+                        if ( renderableData.getBean().getRenderableEntity() == null ) {
+                            logger.error("Bean " + renderableData.getBean().getTranslatedNum() + " "+renderableData.getChannelPath() + " has no renderable entity.");
+                        }
+                    }
+                }
+                if ( overlappingMasks != null ) {
+                    for ( MaskChanRenderableData renderableData: renderableDatas ) {
+                        try {
+                            AlignedItem ai = renderableData.getBean().getAlignedItem();
+                            if ( ai != null ) {
+                                ai.setIsVisible( overlappingMasks.contains( renderableData.getBean().getTranslatedNum() ) );
+                            }
+                        } catch ( Exception ex ) {
+                            ModelMgr.getModelMgr().handleException(ex);
+                        }
+                    }
+                }
+                
+                // Changing the render mapping values.
+                this.updateRendering( abContext );
+            }
             else if ( ! AlignmentBoardItemChangeEvent.ChangeType.FilterLevelChange.equals( event.getChangeType() ) ) {
                 logger.info( "Change type {}.", event.getChangeType() );
                 SimpleWorker updateContentsWorker = new SimpleWorker() {
@@ -273,7 +314,8 @@ public class AlignmentBoardPanel extends JPanel implements AlignmentBoardControl
             }
             GLActor axesActor = actorBuilder.buildAxesActor(
                     volumeBrickActor.getBoundingBox3d(), 
-                    settingsData.getAcceptedDownsampleRate()
+                    settingsData.getAcceptedDownsampleRate(),
+                    mip3d.getVolumeModel()
             );
             if ( axesActor != null ) {
                 mip3d.addActor( axesActor );
@@ -776,7 +818,6 @@ public class AlignmentBoardPanel extends JPanel implements AlignmentBoardControl
         configureButton(controls.getColorSave(), COLOR_SAVE_BTN_NAME);
         configureButton(controls.getSearchSave(), SEARCH_SAVE_BTN_NAME);
         configureButton(controls.getScreenShot(), SCREEN_SHOT_BTN_NAME);
-        //configureButton(launchSettingsButton, SETTINGS_LAUNCH_BTN_NAME);
 
         toolbar.add(controls.getColorSave());
         toolbar.add(controls.getSearchSave());
@@ -786,8 +827,9 @@ public class AlignmentBoardPanel extends JPanel implements AlignmentBoardControl
 
         toolbar.add(controls.getBlackout());
         toolbar.add(controls.getColorSaveBrightness());
-        toolbar.add(controls.getConnectEvents()); // NOTE: can omit this control, here.
-        //toolbar.add(launchSettingsButton);
+        toolbar.add(controls.getConnectEvents());
+        toolbar.add(controls.getWhiteBackground());
+        toolbar.add(controls.getShowingAxes());
 
         add(toolbar, BorderLayout.PAGE_START);
 
@@ -936,6 +978,13 @@ public class AlignmentBoardPanel extends JPanel implements AlignmentBoardControl
         public void setCropBlackout( boolean blackout ) {
             viewer.mip3d.setCropOutLevel(blackout ? 0.0f : VolumeModel.DEFAULT_CROPOUT);
         }
+        
+        @Override
+        public void forceRenderRefresh() {
+            viewer.serializeInWorker();
+            AlignmentBoardContext ctx = AlignmentBoardMgr.getInstance().getLayersPanel().getAlignmentBoardContext();
+            viewer.updateRendering(ctx);
+        }
 
         @Override
         public void setConnectEditEvents( boolean connectEditEvents ) {
@@ -992,7 +1041,7 @@ public class AlignmentBoardPanel extends JPanel implements AlignmentBoardControl
             serializeInWorker();
         }
 
-        //@Override
+        @Override
         public void modelPropertyChanged(Object key, Object oldValue, Object newValue) {
         }
 

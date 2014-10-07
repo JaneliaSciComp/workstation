@@ -1,8 +1,8 @@
 package org.janelia.it.workstation.tracing;
 
 import org.janelia.it.workstation.geom.Vec3;
-import org.janelia.it.workstation.gui.slice_viewer.SharedVolumeImage;
-import org.janelia.it.workstation.gui.slice_viewer.TextureCache;
+import org.janelia.it.workstation.gui.large_volume_viewer.SharedVolumeImage;
+import org.janelia.it.workstation.gui.large_volume_viewer.TextureCache;
 
 /**
  * this class encapsulates a request for a path to be traced from an
@@ -25,7 +25,7 @@ public class PathTraceToParentRequest {
     private Long anchorGuid2;
     private SegmentIndex segmentIndex; // for hashing
 
-    private SharedVolumeImage imageVolme;
+    private SharedVolumeImage imageVolume;
     private TextureCache textureCache;
 
 
@@ -91,12 +91,12 @@ public class PathTraceToParentRequest {
         this.anchorGuid2 = anchorGuid2;
     }
 
-    public SharedVolumeImage getImageVolme() {
-        return imageVolme;
+    public SharedVolumeImage getImageVolume() {
+        return imageVolume;
     }
 
-    public void setImageVolme(SharedVolumeImage imageVolme) {
-        this.imageVolme = imageVolme;
+    public void setImageVolume(SharedVolumeImage imageVolme) {
+        this.imageVolume = imageVolme;
     }
 
     public TextureCache getTextureCache() {

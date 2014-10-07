@@ -7,11 +7,12 @@
             <suite-component/>
             <module-dependencies>
                 <dependency>
-                    <code-name-base>org.janalia.it.jacs.shared</code-name-base>
+                    <code-name-base>org.janelia.it.jacs.shared</code-name-base>
                     <build-prerequisite/>
                     <compile-dependency/>
                     <run-dependency>
-                        <specification-version>1.0</specification-version>
+                        <release-version>1</release-version>
+                        <specification-version>1.1</specification-version>
                     </run-dependency>
                 </dependency>
                 <dependency>
@@ -19,7 +20,14 @@
                     <build-prerequisite/>
                     <compile-dependency/>
                     <run-dependency>
-                        <specification-version>1.0</specification-version>
+                        <release-version>1</release-version>
+                        <specification-version>1.1</specification-version>
+                    </run-dependency>
+                </dependency>
+                <dependency>
+                    <code-name-base>org.netbeans.modules.autoupdate.services</code-name-base>
+                    <run-dependency>
+                        <specification-version>1.42.2</specification-version>
                     </run-dependency>
                 </dependency>
                 <dependency>
@@ -139,7 +147,6 @@
                 <package>org.janelia.it.workstation.gui.application</package>
                 <package>org.janelia.it.workstation.gui.application.video</package>
                 <package>org.janelia.it.workstation.gui.camera</package>
-                <package>org.janelia.it.workstation.gui.dataview</package>
                 <package>org.janelia.it.workstation.gui.dialogs</package>
                 <package>org.janelia.it.workstation.gui.dialogs.choose</package>
                 <package>org.janelia.it.workstation.gui.dialogs.search</package>
@@ -166,19 +173,19 @@
                 <package>org.janelia.it.workstation.gui.framework.viewer</package>
                 <package>org.janelia.it.workstation.gui.framework.viewer.baseball_card</package>
                 <package>org.janelia.it.workstation.gui.framework.viewer.search</package>
+                <package>org.janelia.it.workstation.gui.large_volume_viewer</package>
+                <package>org.janelia.it.workstation.gui.large_volume_viewer.action</package>
+                <package>org.janelia.it.workstation.gui.large_volume_viewer.annotation</package>
+                <package>org.janelia.it.workstation.gui.large_volume_viewer.color_slider</package>
+                <package>org.janelia.it.workstation.gui.large_volume_viewer.generator</package>
+                <package>org.janelia.it.workstation.gui.large_volume_viewer.shader</package>
+                <package>org.janelia.it.workstation.gui.large_volume_viewer.skeleton</package>
                 <package>org.janelia.it.workstation.gui.ontology</package>
                 <package>org.janelia.it.workstation.gui.opengl</package>
                 <package>org.janelia.it.workstation.gui.opengl.demo</package>
                 <package>org.janelia.it.workstation.gui.opengl.shader</package>
                 <package>org.janelia.it.workstation.gui.opengl.stereo3d</package>
                 <package>org.janelia.it.workstation.gui.passive_3d</package>
-                <package>org.janelia.it.workstation.gui.slice_viewer</package>
-                <package>org.janelia.it.workstation.gui.slice_viewer.action</package>
-                <package>org.janelia.it.workstation.gui.slice_viewer.annotation</package>
-                <package>org.janelia.it.workstation.gui.slice_viewer.color_slider</package>
-                <package>org.janelia.it.workstation.gui.slice_viewer.generator</package>
-                <package>org.janelia.it.workstation.gui.slice_viewer.shader</package>
-                <package>org.janelia.it.workstation.gui.slice_viewer.skeleton</package>
                 <package>org.janelia.it.workstation.gui.static_view</package>
                 <package>org.janelia.it.workstation.gui.static_view.shader</package>
                 <package>org.janelia.it.workstation.gui.top_component</package>
@@ -224,10 +231,17 @@
                 <package>org.janelia.it.workstation.units</package>
                 <package>org.janelia.it.workstation.web</package>
                 <package>org.janelia.it.workstation.ws</package>
+                <package>org.jnp.interfaces</package>
+                <package>org.jnp.interfaces.java</package>
+                <package>org.jnp.interfaces.jnp</package>
             </public-packages>
             <class-path-extension>
                 <runtime-relative-path>ext/junit-4.11.jar</runtime-relative-path>
                 <binary-origin>release/modules/ext/junit-4.11.jar</binary-origin>
+            </class-path-extension>
+            <class-path-extension>
+                <runtime-relative-path>ext/jbossall-client.jar</runtime-relative-path>
+                <binary-origin>release/modules/ext/jbossall-client.jar</binary-origin>
             </class-path-extension>
         </data>
     </configuration>

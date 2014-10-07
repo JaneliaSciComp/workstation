@@ -2,15 +2,25 @@ package org.janelia.it.workstation.gui.passive_3d;
 
 import org.janelia.it.workstation.gui.dialogs.ModalDialog;
 import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
-import org.janelia.it.workstation.gui.opengl.GLActor;
-import org.janelia.it.workstation.gui.static_view.RGBExcludableVolumeBrick;
 import org.janelia.it.workstation.gui.viewer3d.*;
 import org.janelia.it.workstation.gui.viewer3d.texture.TextureDataI;
 import org.janelia.it.workstation.shared.workers.SimpleWorker;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.awt.*;
+import java.beans.PropertyChangeEvent;
+import java.util.Observable;
+import java.util.Observer;
+import java.util.Collection;
+import java.util.ArrayList;
+import java.awt.Dimension;
+import java.awt.Component;
+import java.awt.BorderLayout;
+import java.util.Collections;
+import java.util.Comparator;
+import javax.swing.JLabel;
+import org.janelia.it.workstation.gui.large_volume_viewer.ImageColorModel;
+import org.janelia.it.workstation.shared.workers.IndeterminateNoteProgressMonitor;
 
 /**
  * Created with IntelliJ IDEA.
@@ -18,78 +28,158 @@ import java.awt.*;
  * Date: 7/31/13
  * Time: 3:25 PM
  *
- * This popup will give users a snapshot volume.  Very simply viewer, relatively speaking.
+ * This popup will give users a snapshot volume.  Very simple viewer, relatively speaking.
  */
 public class Snapshot3d extends ModalDialog {
-    private Dimension size = new Dimension( 600, 600 );
+    // Choosing initial width > height as workaround to the reset-focus problem.
+    private static final Dimension WIDGET_SIZE = new Dimension( 650, 600 );
     private VolumeSource.VolumeAcceptor volumeAcceptor;
-    private Logger logger = LoggerFactory.getLogger(Snapshot3d.class);
+    private Collection<Component> locallyAddedComponents = new ArrayList<>();
+    private ImageColorModel imageColorModel;
+    private IndeterminateNoteProgressMonitor monitor;
+    private String labelText;
 
-    public Snapshot3d() {
+    private static Snapshot3d snapshotInstance;
+    private final Logger logger = LoggerFactory.getLogger(Snapshot3d.class);
+    
+    public static Snapshot3d getInstance() {
+        if ( snapshotInstance == null ) {
+            snapshotInstance = new Snapshot3d();
+        }
+        return snapshotInstance;
+    }
+    
+    private Snapshot3d() {
         super();
+        super.setModal( false );
     }
 
+    public void setImageColorModel( ImageColorModel imageColorModel ) {
+        this.imageColorModel = imageColorModel;
+        this.imageColorModel.getColorModelChangedSignal().addObserver(
+                new Observer() {
+                    public void update( Observable target, Object obj ) {
+                        Snapshot3d.this.validate();
+                        Snapshot3d.this.repaint();
+                    }
+                }
+        );
+    }
+    
+    public void setLoadProgressMonitor( IndeterminateNoteProgressMonitor monitor ) {
+        this.monitor = monitor;
+    }
+
+    public void setLabelText( String labelText ) {
+        this.labelText = labelText;
+    }
+    
+    public IndeterminateNoteProgressMonitor getMonitor() {
+        return monitor;
+    }
+    
     /**
      * Launching consists of making a load worker, and then executing that.
      *
      * @param volumeSource for getting the data.
      */
-    public void launch( VolumeSource volumeSource) {
+    public void launch( MonitoredVolumeSource volumeSource ) {
         SnapshotWorker loadWorker = new SnapshotWorker( volumeSource );
+        if ( getMonitor() == null ) {
+            setLoadProgressMonitor( new IndeterminateNoteProgressMonitor(SessionMgr.getMainFrame(), "Fetching tiles", volumeSource.getInfo()) );
+        }
+        loadWorker.setProgressMonitor( getMonitor() );
+        volumeSource.setProgressMonitor( getMonitor() );        
         loadWorker.execute();
     }
 
-    private void launch( TextureDataI textureData ) {
+    private void launch( Collection<TextureDataI> textureDatas ) {
+        cleanup();
+
         Mip3d mip3d = new Mip3d();
         mip3d.clear();
-        VolumeBrickFactory factory = new VolumeBrickFactory() {
+                
+        Comparator<TextureDataI> comparator = new Comparator<TextureDataI>() {
             @Override
-            public VolumeBrickI getVolumeBrick(VolumeModel model) {
-                return new RGBExcludableVolumeBrick( model );
-            }
-            @Override
-            public VolumeBrickI getVolumeBrick(VolumeModel model, TextureDataI maskTextureData, TextureDataI renderMapTextureData ) {
-                return null; // Trivial case.
-            }
+            public int compare(TextureDataI o1, TextureDataI o2) {
+                return o1.getHeader().compareTo(o2.getHeader());
+            }            
         };
+        Collections.sort( new ArrayList(textureDatas), comparator );
 
-        VolumeBrickActorBuilder actorBuilder = new VolumeBrickActorBuilder();
-        GLActor actor = actorBuilder.buildVolumeBrickActor(mip3d.getVolumeModel(), factory, textureData);
-        if ( actor != null ) {
-            mip3d.addActor(actor);
+        VolumeModel volumeModel = mip3d.getVolumeModel();
+        volumeModel.removeAllListeners();
+        volumeModel.resetToDefaults();
+        SnapshotVolumeBrick brick = new SnapshotVolumeBrick( volumeModel );
+        brick.setImageColorModel( imageColorModel );
+        if ( textureDatas.size() == 1 ) {
+            brick.setPrimaryTextureData(textureDatas.iterator().next());
         }
         else {
-            logger.error("Failed to create volume brick for {}.", textureData.getFilename());
+            brick.setTextureDatas(textureDatas);
         }
-
-        this.setPreferredSize( size );
-        this.setMinimumSize( size );
+        mip3d.addActor( brick );
+        
+        locallyAddedComponents.add( mip3d );
+        this.setPreferredSize( WIDGET_SIZE );
+        this.setMinimumSize( WIDGET_SIZE );
         this.setLayout(new BorderLayout());
+        if ( labelText != null ) {
+            final JLabel label = new JLabel( labelText );
+            locallyAddedComponents.add( label );
+            this.add( label, BorderLayout.SOUTH );
+        }
         this.add( mip3d, BorderLayout.CENTER );
 
         packAndShow();
     }
 
+    private void cleanup() {
+        // Cleanup old widgets.
+        for ( Component c: locallyAddedComponents ) {
+            this.remove( c );
+        }
+        locallyAddedComponents.clear();
+    }
+
     private class SnapshotWorker extends SimpleWorker {
-        private VolumeSource volumeSource;
+        private final VolumeSource volumeSource;
+        private Collection<TextureDataI> textureDatas;
 
         public SnapshotWorker( VolumeSource collector ) {
             this.volumeSource = collector;
+            textureDatas = Collections.<TextureDataI>synchronizedCollection( new ArrayList<TextureDataI>() );
         }
 
         @Override
         protected void doStuff() throws Exception {
             volumeAcceptor = new VolumeSource.VolumeAcceptor() {
                 @Override
-                public void accept(TextureDataI textureData) {
-                    launch( textureData );
+                public void accept(TextureDataI textureData) {                    
+                    SnapshotWorker.this.textureDatas.add( textureData );
                 }
             };
             volumeSource.getVolume( volumeAcceptor );
         }
 
         @Override
+        public void propertyChange(PropertyChangeEvent e) {
+            if (progressMonitor == null) {
+                return;
+            }
+            if ("progress".equals(e.getPropertyName())) {
+                int progress = (Integer) e.getNewValue();
+                progressMonitor.setProgress(progress);
+                if (progressMonitor.isCanceled()) {
+                    super.cancel(true);
+                }
+            }
+        }
+
+        @Override
         protected void hadSuccess() {
+            progressMonitor.setNote( "Launching viewer." );
+            launch( textureDatas );
         }
 
         @Override

@@ -5,6 +5,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import com.jogamp.common.nio.Buffers;
+import java.util.Arrays;
 
 import org.janelia.it.workstation.geom.CoordinateAxis;
 import org.janelia.it.workstation.geom.Vec3;
@@ -16,11 +17,13 @@ import org.janelia.it.workstation.gui.viewer3d.VolumeModel;
 import org.janelia.it.workstation.gui.viewer3d.buffering.VtxCoordBufMgr;
 import org.janelia.it.workstation.gui.viewer3d.texture.TextureDataI;
 import org.janelia.it.workstation.gui.viewer3d.texture.TextureMediator;
+import static org.janelia.it.workstation.gui.viewer3d.OpenGLUtils.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.media.opengl.*;
 import javax.swing.*;
+import org.janelia.it.workstation.gui.viewer3d.shader.AbstractShader.ShaderCreationException;
 
 /**
  * Class draws a transparent rectangular volume with a 3D opengl texture
@@ -34,11 +37,11 @@ public class MultiTexVolumeBrick implements VolumeBrickI
     private TextureMediator signalTextureMediator;
     private TextureMediator maskTextureMediator;
     private TextureMediator colorMapTextureMediator;
-    private List<TextureMediator> textureMediators = new ArrayList<TextureMediator>();
+    private final List<TextureMediator> textureMediators = new ArrayList<>();
 
     // Vary these parameters to taste
 	// Rendering variables
-	private RenderMethod renderMethod = 
+	private final RenderMethod renderMethod = 
 		// RenderMethod.ALPHA_BLENDING;
 		RenderMethod.MAXIMUM_INTENSITY; // MIP
     private boolean bUseShader = true; // Controls whether to load and use shader program(s).
@@ -50,27 +53,28 @@ public class MultiTexVolumeBrick implements VolumeBrickI
      * to reach a multiple of 8
      */
     // OpenGL state
-    private int[] signalTextureVoxels = {8,8,8};
-	private IntBuffer signalData = Buffers.newDirectIntBuffer(signalTextureVoxels[0]* signalTextureVoxels[1]* signalTextureVoxels[2]);
+    private final int[] signalTextureVoxels = {8,8,8};
+	private final IntBuffer signalData = Buffers.newDirectIntBuffer(signalTextureVoxels[0]* signalTextureVoxels[1]* signalTextureVoxels[2]);
     private boolean bSignalTextureNeedsUpload = false;
     private boolean bMaskTextureNeedsUpload = false;
     private boolean bColorMapTextureNeedsUpload = false;
     private boolean bBuffersNeedUpload = true;
 
-    private MultiTexVolumeBrickShader volumeBrickShader = new MultiTexVolumeBrickShader();
+    private final MultiTexVolumeBrickShader volumeBrickShader = new MultiTexVolumeBrickShader();
 
     private boolean bIsInitialized;
     @SuppressWarnings("ALL")
-    private boolean bUseSyntheticData = false;
+    private final boolean bUseSyntheticData = false;
 
-    private VtxCoordBufMgr bufferManager;
+    private final VtxCoordBufMgr bufferManager;
     private VolumeModel volumeModel;
 
-    private static Logger logger = LoggerFactory.getLogger( MultiTexVolumeBrick.class );
+    private static final Logger logger = LoggerFactory.getLogger( MultiTexVolumeBrick.class );
 
     static {
         try {
             SwingUtilities.invokeLater(new Runnable() {
+                @Override
                 public void run() {
 // 3rd
 //                    GLProfile profile = GLProfile.get(GLProfile.GL3);
@@ -109,8 +113,8 @@ public class MultiTexVolumeBrick implements VolumeBrickI
 
     //---------------------------------------IMPLEMEMNTS GLActor
     @Override
+    @SuppressWarnings("CallToThreadDumpStack")
 	public void init(GLAutoDrawable glDrawable) {
-
         // Avoid carrying out any operations if there is no real data.
         if ( signalTextureMediator == null  &&  maskTextureMediator == null ) {
             logger.warn("No textures for volume brick.");
@@ -147,7 +151,7 @@ public class MultiTexVolumeBrick implements VolumeBrickI
                 );
                 volumeBrickShader.init(gl);
                 reportError( gl, "init mux brick - shader" );
-            } catch ( Exception ex ) {
+            } catch ( ShaderCreationException ex ) {
                 ex.printStackTrace();
                 bUseShader = false;
             }
@@ -215,9 +219,16 @@ public class MultiTexVolumeBrick implements VolumeBrickI
             reportError( gl, "display mux brick - alpha" );
         }
         else if (renderMethod == RenderMethod.MAXIMUM_INTENSITY) {
-            gl.glBlendEquation(GL2.GL_MAX);
-            gl.glBlendFunc(GL2.GL_ONE, GL2.GL_DST_ALPHA);
             // gl.glBlendFunc(GL2.GL_ONE_MINUS_DST_COLOR, GL2.GL_ZERO); // inverted?  http://stackoverflow.com/questions/2656905/opengl-invert-framebuffer-pixels
+            if ( Arrays.equals( volumeModel.getBackgroundColorFArr(), VolumeModel.DEFAULT_BACKGROUND_COLOR ) ) {
+                gl.glBlendEquation(GL2.GL_MAX);
+                gl.glBlendFunc( GL2.GL_ONE, GL2.GL_DST_ALPHA );
+            }
+            else {
+//                gl.glBlendEquation(GL2.GL_FUNC_SUBTRACT);
+                gl.glBlendEquation(GL2.GL_MIN);
+                gl.glBlendFunc( GL2.GL_ONE, GL2.GL_DST_ALPHA );
+            }
             reportError( gl, "display mux brick - max intensity" );
         }
         if (bUseShader) {
@@ -227,6 +238,7 @@ public class MultiTexVolumeBrick implements VolumeBrickI
             volumeBrickShader.setGammaAdjustment( volumeModel.getGammaAdjustment() );
             volumeBrickShader.setCropOutLevel( volumeModel.getCropOutLevel() );
             volumeBrickShader.setCropCoords( volumeModel.getCropCoords() );
+            volumeBrickShader.setWhiteBackground(volumeModel.isWhiteBackground());            
             volumeBrickShader.load(gl);
             int vertexAttribLoc = volumeBrickShader.getVertexAttribLoc();
             int texCoordAttribLoc = volumeBrickShader.getTexCoordAttribLoc();
@@ -278,7 +290,7 @@ public class MultiTexVolumeBrick implements VolumeBrickI
 
     //---------------------------------------IMPLEMENT VolumeDataAcceptor
     @Override
-    public void setTextureData(TextureDataI textureData) {
+    public void setPrimaryTextureData(TextureDataI textureData) {
         if ( signalTextureMediator == null ) {
             signalTextureMediator = new TextureMediator();
             textureMediators.add( signalTextureMediator );
@@ -286,6 +298,18 @@ public class MultiTexVolumeBrick implements VolumeBrickI
         signalTextureMediator.setTextureData( textureData );
         bSignalTextureNeedsUpload = true;
         bufferManager.setTextureMediator( signalTextureMediator );
+    }
+    
+    /**
+     * This one merely sets the primary one.  Do not call this for
+     * mask or color map.
+     * 
+     * @See #setPrimaryTextureData
+     * @param textureData 
+     */
+    @Override
+    public void addTextureData(TextureDataI textureData) {
+        setPrimaryTextureData(textureData);
     }
 
     //----------------------------------------END IMPLEMENTATION VolumeDataAcceptor
@@ -477,16 +501,6 @@ public class MultiTexVolumeBrick implements VolumeBrickI
         logger.info(String.format(
                 "%s [%s, %s, %s]", type, Double.toString(p[0]), Double.toString(p[1]), Double.toString(p[2]))
         );
-    }
-
-    private void reportError(GL2 gl, String source) {
-        int errNum = gl.glGetError();
-        if ( errNum > 0 ) {
-            logger.warn(
-                    "Error {}/0x0{} encountered in " + source,
-                    errNum, Integer.toHexString(errNum)
-            );
-        }
     }
 
 }

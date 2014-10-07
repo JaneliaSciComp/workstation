@@ -5,10 +5,9 @@ import static org.junit.Assert.*;
 import java.io.File;
 import java.net.MalformedURLException;
 
-import org.janelia.it.workstation.gui.slice_viewer.SharedVolumeImage;
-import org.janelia.it.workstation.gui.slice_viewer.Subvolume;
+import org.janelia.it.workstation.gui.large_volume_viewer.SharedVolumeImage;
+import org.janelia.it.workstation.gui.large_volume_viewer.Subvolume;
 import org.janelia.it.jacs.model.TestCategories;
-import org.janelia.it.workstation.octree.ZoomLevel;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 

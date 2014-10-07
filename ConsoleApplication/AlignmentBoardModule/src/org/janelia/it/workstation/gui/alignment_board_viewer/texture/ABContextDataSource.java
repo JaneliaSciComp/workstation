@@ -51,7 +51,7 @@ public class ABContextDataSource implements RenderableDataSourceI {
     @Override
     public Collection<MaskChanRenderableData> getRenderableDatas() {
         logger.debug( "Getting renderable datas." );
-        Collection<MaskChanRenderableData> rtnVal = new ArrayList<MaskChanRenderableData>();
+        Collection<MaskChanRenderableData> rtnVal = new ArrayList<>();
 
         int nextTranslatedNum = 1;
 
@@ -174,6 +174,7 @@ public class ABContextDataSource implements RenderableDataSourceI {
         MaskChanRenderableData nfRenderable = new MaskChanRenderableData();
         nfRenderable.setBean( renderableBean );
         nfRenderable.setCompartment( isCompartment );
+        renderableBean.setAlignedItem( item );
 
         Masked3d masked = (Masked3d)item.getItemWrapper();
         String maskPath = getMaskPath(masked);
@@ -201,6 +202,7 @@ public class ABContextDataSource implements RenderableDataSourceI {
         renderableBean.setTranslatedNum(nextTranslatedNum);
         renderableBean.setType("Reference");     //todo move this to EntityConstants
         renderableBean.setRenderableEntity( volumeImage.getInternalEntity() );
+        renderableBean.setAlignedItem( item );
         setAppearance( false, item, renderableBean );
         MaskChanRenderableData data = new MaskChanRenderableData();
         data.setBean( renderableBean );
@@ -271,6 +273,7 @@ public class ABContextDataSource implements RenderableDataSourceI {
         renderableBean.setTranslatedNum(translatedNum);
         renderableBean.setRenderableEntity(internalEntity);
         renderableBean.setAlignedItemId(item.getId());
+        renderableBean.setAlignedItem(item);
         if ( isCompartment ) {
             renderableBean.setInvertedY( false );
             renderableBean.setType(EntityConstants.TYPE_COMPARTMENT );

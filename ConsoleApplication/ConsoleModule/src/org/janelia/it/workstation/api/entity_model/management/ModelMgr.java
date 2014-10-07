@@ -542,7 +542,7 @@ public final class ModelMgr {
         return entityModel.getEntityById(entityId);
     }
 
-    public List<Entity> getEntityByIds(List<Long> entityIds) throws Exception {
+    public List<Entity> getEntitiesByIds(List<Long> entityIds) throws Exception {
         return entityModel.getEntitiesById(entityIds);
     }
 
@@ -672,6 +672,22 @@ public final class ModelMgr {
         notifyAnnotationsChanged(annotation.getTargetEntityId());
     }
 
+    public void acceptComputationAnnotation(Long entityId, List<OntologyAnnotation> entityAnnotations) throws Exception {
+        for(OntologyAnnotation annotation : entityAnnotations) {
+        	if (annotation.isComputation()) {
+                Entity annotationEntity = annotation.getEntity();
+                if (annotationEntity == null || annotationEntity.getId() == null) {
+                    return;
+                }
+                EntityData computationalEd = annotationEntity.getEntityDataByAttributeName(EntityConstants.ATTRIBUTE_ANNOTATION_IS_COMPUTATIONAL);
+                if (annotationEntity!=null) {
+                	entityModel.deleteEntityData(computationalEd);
+                }
+        	}
+        }
+        notifyAnnotationsChanged(entityId);
+    }
+    
     public Entity getOntologyTree(Long rootId) throws Exception {
         return FacadeManager.getFacadeManager().getOntologyFacade().getOntologyTree(rootId);
     }
@@ -701,17 +717,13 @@ public final class ModelMgr {
     
     public void invalidateCache() {
         entityModel.invalidateAll();
-    }
-
-    public void invalidateCache(Collection<Entity> entities, boolean recurse) {
-        entityModel.invalidate(entities, recurse);
-    }
-
-    public void invalidate(Collection<Long> entityIds) {
-        entityModel.invalidate(entityIds);
+        this.currWorkspaceId = null;
     }
 
     public void invalidateCache(Entity entity, boolean recurse) {
+        if (entity.getId().equals(currWorkspaceId)) {
+            this.currWorkspaceId = null;
+        }
         entityModel.invalidate(entity, recurse);
     }
 
@@ -737,7 +749,7 @@ public final class ModelMgr {
             }
         }
         Entity curr = entityModel.getEntityById(currWorkspaceId);
-        log.info("Got current workspace {} as {}",currWorkspaceId,curr);
+        log.debug("Got current workspace {} as {}",currWorkspaceId,curr);
         return curr;
     }
 
@@ -1217,4 +1229,9 @@ public final class ModelMgr {
     public void deleteAnchoredPath(Long pathID) throws Exception {
         FacadeManager.getFacadeManager().getEntityFacade().deleteAnchoredPath(pathID);
     }
+
+    public RawFileInfo getNearestFileInfo(String basePath, int[] viewerCoord) throws Exception {
+        return FacadeManager.getFacadeManager().getEntityFacade().getNearestFileInfo(basePath, viewerCoord);
+    }
+
 }

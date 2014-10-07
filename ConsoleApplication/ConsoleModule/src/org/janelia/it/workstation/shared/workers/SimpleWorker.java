@@ -2,6 +2,7 @@ package org.janelia.it.workstation.shared.workers;
 
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
+import java.util.concurrent.CancellationException;
 
 import javax.swing.ProgressMonitor;
 import javax.swing.SwingWorker;
@@ -136,6 +137,16 @@ public abstract class SimpleWorker extends SwingWorker<Void, Void> implements Pr
             if (progressMonitor.isCanceled()) {
                 cancel(true);
             }
+        }
+    }
+
+    /**
+     * @throws CancellationException
+     *   if this task was cancelled before it completed.
+     */
+    public void throwExceptionIfCancelled() throws CancellationException {
+        if (isCancelled()) {
+            throw new CancellationException();
         }
     }
 }

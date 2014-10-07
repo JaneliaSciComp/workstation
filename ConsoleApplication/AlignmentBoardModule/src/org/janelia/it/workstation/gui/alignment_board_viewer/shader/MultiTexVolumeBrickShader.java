@@ -13,6 +13,7 @@ import javax.media.opengl.GL2;
 import java.nio.IntBuffer;
 
 public class MultiTexVolumeBrickShader extends AbstractShader {
+    public static final String SIGNAL_TEXTURE_NAME = "signalTexture";
     // Shader GLSL source is expected to be in the same package as this class.  Otherwise,
     // a prefix of the relative path could be given, as in "shader_sub_pkg/AShader.glsl"
     public static final String VERTEX_SHADER = "VolumeBrickVtx.glsl";
@@ -28,6 +29,8 @@ public class MultiTexVolumeBrickShader extends AbstractShader {
     private int texCoordAttribLoc = -1;
 
     private boolean volumeMaskApplied = false;
+    private boolean whiteBackground = false;
+    
     private float gammaAdjustment = 1.0f;
     private float cropOutLevel = VolumeModel.DEFAULT_CROPOUT;
     private CropCoordSet cropCoordSet = CropCoordSet.getDefaultCropCoordSet();
@@ -53,6 +56,7 @@ public class MultiTexVolumeBrickShader extends AbstractShader {
 
         pushMaskUniform( gl, shaderProgram );
         pushGammaUniform( gl, shaderProgram );
+        pushBackgroundColorUniform( gl, shaderProgram );
         pushCropUniforms( gl, shaderProgram );
 
         setTextureUniforms( gl );
@@ -87,6 +91,11 @@ public class MultiTexVolumeBrickShader extends AbstractShader {
     /** Calling this implies that all steps for setting up this special texture have been carried out. */
     public void setVolumeMaskApplied() {
         volumeMaskApplied = true;
+    }
+    
+    /** Signals to the shader, that it must act appropriately for white surrounding, rather than black. */
+    public void setWhiteBackground(boolean whiteBackground) {
+        this.whiteBackground = whiteBackground;
     }
 
     /**
@@ -136,7 +145,7 @@ public class MultiTexVolumeBrickShader extends AbstractShader {
     }
 
     private void setTextureUniforms(GL2 gl) {
-        setTextureUniform(gl, "signalTexture", signalTextureMediator);
+        setTextureUniform(gl, MultiTexVolumeBrickShader.SIGNAL_TEXTURE_NAME, signalTextureMediator);
         //  This did not work.  GL.GL_TEXTURE0 ); //textureIds[ 0 ] );
 
         if ( volumeMaskApplied ) {
@@ -170,6 +179,14 @@ public class MultiTexVolumeBrickShader extends AbstractShader {
             throw new RuntimeException( "Failed to find gamma adjustment setting location." );
         }
         gl.glUniform1f(gammaAdjustmentLoc, gammaAdjustment * VolumeModel.STANDARDIZED_GAMMA_MULTIPLIER);
+    }
+    
+    private void pushBackgroundColorUniform( GL2 gl, int shaderProgram ) {
+        int whiteBackgroundLoc = gl.glGetUniformLocation(shaderProgram, "whiteBackground");
+        if ( whiteBackgroundLoc == -1 ) {
+            throw new RuntimeException( "Failed to find white background flag location." );
+        }
+        gl.glUniform1i( whiteBackgroundLoc, whiteBackground ? 1 : 0 );
     }
 
     /** Upload all cropping starts/ends to GPU. */

@@ -8,7 +8,7 @@ package org.janelia.it.workstation.gui.framework.console;
 public enum Perspective {
     
     ImageBrowser("Image Browsing"),
-    SliceViewer("Slice Viewer"),
+    LargeVolumeViewer("Large Volume Viewer"),
     TaskMonitoring("Task Monitoring");
     
     private String name;

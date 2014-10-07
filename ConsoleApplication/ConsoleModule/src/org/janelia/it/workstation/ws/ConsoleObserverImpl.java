@@ -16,7 +16,7 @@ import javax.jws.WebService;
  *
  * @author <a href="mailto:rokickik@janelia.hhmi.org">Konrad Rokicki</a>
  */
-@WebService(endpointInterface = "org.janelia.it.workstation.ws.ConsoleObserver",
+@WebService(endpointInterface = "org.janelia.it.FlyWorkstation.ws.ConsoleObserver",
         serviceName = "ConsoleObserver",
         portName = "ObsPort")
 public class ConsoleObserverImpl implements ModelMgrObserver {

@@ -45,13 +45,6 @@ class Bundle {
         return org.openide.util.NbBundle.getMessage(Bundle.class, "CTL_ImportAction");
     }
     /**
-     * @return <i>MAA Screen Search</i>
-     * @see MaaSearchAction
-     */
-    static String CTL_MaaSearchAction() {
-        return org.openide.util.NbBundle.getMessage(Bundle.class, "CTL_MaaSearchAction");
-    }
-    /**
      * @return <i>Neuron Separation Service</i>
      * @see NeuronSeparationService
      */
@@ -122,7 +115,7 @@ class Bundle {
         return org.openide.util.NbBundle.getMessage(Bundle.class, "CTL_ToolConfigurationAction");
     }
     /**
-     * @return <i>Configured Tools</i>
+     * @return <i>Tools</i>
      * @see ToolsMenuAction
      */
     static String CTL_ToolsMenuAction() {

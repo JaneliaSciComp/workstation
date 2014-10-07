@@ -1,47 +1,42 @@
 package org.janelia.it.workstation.shared.util;
 
+import loci.formats.FormatException;
+import loci.formats.IFormatReader;
+import loci.formats.gui.BufferedImageReader;
+import loci.formats.in.*;
+import org.apache.commons.compress.compressors.bzip2.BZip2CompressorInputStream;
+import org.apache.commons.httpclient.HttpClient;
+import org.apache.commons.httpclient.methods.GetMethod;
+import org.apache.commons.io.IOUtils;
+import org.janelia.it.jacs.model.entity.Entity;
+import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
+import org.janelia.it.workstation.shared.filestore.PathTranslator;
+import org.janelia.it.workstation.shared.workers.BackgroundWorker;
+import org.janelia.it.workstation.shared.workers.IndeterminateProgressMonitor;
+import org.janelia.it.workstation.shared.workers.SimpleWorker;
+import org.perf4j.LoggingStopWatch;
+import org.perf4j.StopWatch;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import javax.imageio.ImageIO;
+import javax.swing.*;
+import javax.swing.table.DefaultTableCellRenderer;
+import javax.swing.table.DefaultTableColumnModel;
+import javax.swing.table.TableCellRenderer;
+import javax.swing.table.TableColumn;
 import java.awt.*;
 import java.awt.image.BufferedImage;
 import java.awt.image.ColorModel;
 import java.awt.image.PixelGrabber;
 import java.io.*;
-import java.net.MalformedURLException;
+import java.math.BigDecimal;
 import java.net.URL;
 import java.nio.ByteBuffer;
 import java.nio.channels.Channels;
 import java.nio.channels.ReadableByteChannel;
 import java.nio.channels.WritableByteChannel;
-import java.util.List;
-import java.util.concurrent.CancellationException;
-
-import javax.imageio.ImageIO;
-import javax.media.jai.operator.InvertDescriptor;
-import javax.swing.ImageIcon;
-import javax.swing.JOptionPane;
-import javax.swing.JTable;
-import javax.swing.SwingConstants;
-import javax.swing.table.DefaultTableCellRenderer;
-import javax.swing.table.DefaultTableColumnModel;
-import javax.swing.table.TableCellRenderer;
-import javax.swing.table.TableColumn;
-
-import loci.formats.FormatException;
-import loci.formats.IFormatReader;
-import loci.formats.gui.BufferedImageReader;
-import loci.formats.in.*;
-
-import org.apache.commons.httpclient.HttpClient;
-import org.apache.commons.httpclient.methods.GetMethod;
-import org.apache.commons.io.IOUtils;
-import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
-import org.janelia.it.workstation.shared.filestore.PathTranslator;
-import org.janelia.it.workstation.shared.workers.IndeterminateProgressMonitor;
-import org.janelia.it.workstation.shared.workers.SimpleWorker;
-import org.janelia.it.jacs.model.entity.Entity;
-import org.perf4j.LoggingStopWatch;
-import org.perf4j.StopWatch;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import java.nio.file.Files;
 
 /**
  * Common utilities for loading images, copying files, testing strings, etc.
@@ -50,12 +45,21 @@ import org.slf4j.LoggerFactory;
  */
 public class Utils {
 
+    public static final String EXTENSION_LSM = "lsm";
+    public static final String EXTENSION_BZ2 = "bz2";
+    public static final String EXTENSION_LSM_BZ2 = EXTENSION_LSM + '.' + EXTENSION_BZ2;
+
     private static final Logger log = LoggerFactory.getLogger(Utils.class);
-    
+
     private static final boolean TIMER = log.isDebugEnabled();
-    
-    private static final int DEFAULT_BUFFER_SIZE = 1024;
-    
+
+    private static final int ONE_KILOBYTE = 1024;
+    private static final int ONE_MEGABYTE = 1024 * ONE_KILOBYTE;
+    private static final int TEN_MEGABYTES = 10 * ONE_MEGABYTE;
+    private static final int ONE_GIGABYTE = 1024 * ONE_MEGABYTE;
+
+    private static final int DEFAULT_BUFFER_SIZE = 8 * ONE_KILOBYTE;
+
     public static ImageIcon grabOpenedIcon;
     public static ImageIcon grabClosedIcon;
 
@@ -68,50 +72,43 @@ public class Utils {
             e.printStackTrace();
         }
     }
-    
+
     public static boolean areSame(Object obj1, Object obj2) {
-    	return (obj1 == obj2) || (obj1!=null && obj2!=null && obj1.equals(obj2));
+        return (obj1 == obj2) || (obj1 != null && obj2 != null && obj1.equals(obj2));
     }
-    
+
     public static boolean areSameEntity(Entity entity1, Entity entity2) {
-    	return areSame(entity1, entity2) || (entity1!=null && entity2!=null && entity1.getId().equals(entity2.getId()));
+        return areSame(entity1, entity2) || (entity1 != null && entity2 != null && entity1.getId().equals(entity2.getId()));
     }
-    
-    public static String join(List list, String delim) {
-    	StringBuffer buf = new StringBuffer();
-    	for(Object obj : list) {
-    		if (buf.length()>0) buf.append(delim);
-    		buf.append(obj.toString());
-    	}	
-    	return buf.toString();
-    }
-    
+
     public static Long getEntityIdFromUniqueId(String uniqueId) {
-    	String[] ids = uniqueId.split("/");
-    	String lastId = ids[ids.length-1];
-    	if (!lastId.startsWith("e_")) {
-    		throw new IllegalStateException("uniqueId must end with entity id starting with 'e_': "+uniqueId);
-    	}
-    	return Long.parseLong(lastId.substring(2));
+        String[] ids = uniqueId.split("/");
+        String lastId = ids[ids.length - 1];
+        if (!lastId.startsWith("e_")) {
+            throw new IllegalStateException("uniqueId must end with entity id starting with 'e_': " + uniqueId);
+        }
+        return Long.parseLong(lastId.substring(2));
     }
 
     public static String getParentIdFromUniqueId(String uniqueId) {
-    	if (uniqueId==null) return null;
-    	String[] ids = uniqueId.split("/");
-    	StringBuffer parentUniqueId = new StringBuffer();
-    	try {
-        	for(int i=1; i<ids.length-2; i++) {
-        		parentUniqueId.append("/");
-        		parentUniqueId.append(ids[i]);
-        	}	
-    	}
-    	catch (Exception e) {
-    		e.printStackTrace();
-    		return null;
-    	}
-    	return parentUniqueId.toString();
+        if (uniqueId == null) {
+            return null;
+        }
+        String[] ids = uniqueId.split("/");
+        StringBuilder parentUniqueId = new StringBuilder();
+        try {
+            for (int i = 1; i < ids.length - 2; i++) {
+                parentUniqueId.append("/");
+                parentUniqueId.append(ids[i]);
+            }
+        }
+        catch (Exception e) {
+            e.printStackTrace();
+            return null;
+        }
+        return parentUniqueId.toString();
     }
-    
+
     /**
      * Borrowed from http://www.pikopong.com/blog/2008/08/13/auto-resize-jtable-column-width/
      *
@@ -132,7 +129,9 @@ public class Utils {
 
             // Get width of column header
             TableCellRenderer renderer = col.getHeaderRenderer();
-            if (renderer == null) renderer = defaultRenderer;
+            if (renderer == null) {
+                renderer = defaultRenderer;
+            }
 
             Component comp = renderer.getTableCellRendererComponent(table, col.getHeaderValue(), false, false, 0, 0);
             width = comp.getPreferredSize().width;
@@ -150,13 +149,9 @@ public class Utils {
 
         defaultRenderer.setHorizontalAlignment(SwingConstants.LEFT);
     }
-    
+
     /**
      * Load an image that is found in the /images directory within the classpath.
-     *
-     * @param filename
-     * @return
-     * @throws FileNotFoundException
      */
     public static ImageIcon getClasspathImage(String filename) throws FileNotFoundException {
         try {
@@ -170,131 +165,123 @@ public class Utils {
 
     /**
      * Read an image using the ImageIO API. Currently supports TIFFs, PNGs and JPEGs.
-     * 
-     * @param path
-     * @return
-     * @throws MalformedURLException
      */
     public static BufferedImage readImage(String path) throws Exception {
         try {
             String selectedRenderer = (String) SessionMgr.getSessionMgr().getModelProperty(SessionMgr.DISPLAY_RENDERER_2D);
-            
-            RendererType2D renderer = selectedRenderer==null ? RendererType2D.LOCI : RendererType2D.valueOf(selectedRenderer);
+
+            RendererType2D renderer = selectedRenderer == null ? RendererType2D.LOCI : RendererType2D.valueOf(selectedRenderer);
             BufferedImage image = null;
-            
-            if (renderer==RendererType2D.IMAGE_IO) {
+
+            if (renderer == RendererType2D.IMAGE_IO) {
 
                 InputStream stream = null;
                 GetMethod get = null;
                 try {
-                    
+
                     if (path.startsWith("http://")) {
                         HttpClient client = SessionMgr.getSessionMgr().getWebDavClient().getHttpClient();
                         get = new GetMethod(path);
                         int responseCode = client.executeMethod(get);
-                        log.trace("readImage: GET "+responseCode+", path="+path);
-                        if (responseCode!=200) {
+                        log.trace("readImage: GET " + responseCode + ", path=" + path);
+                        if (responseCode != 200) {
                             throw new FileNotFoundException();
                         }
                         stream = get.getResponseBodyAsStream();
                     }
                     else {
-                        log.trace("readImage: FileInputStream path="+path);
+                        log.trace("readImage: FileInputStream path=" + path);
                         stream = new FileInputStream(new File(path));
                     }
-                    
+
                     // Supports GIF, PNG, JPEG, BMP, and WBMP 
                     image = ImageIO.read(stream);
                 }
                 finally {
-                    if (get!=null) {
+                    if (get != null) {
                         get.releaseConnection();
                     }
                     if (stream != null) {
                         try {
                             stream.close();
-                        } catch (IOException e) {
+                        }
+                        catch (IOException e) {
                             log.warn("readImage: failed to close {}", path, e);
                         }
                     }
                 }
             }
             else {
-                String format = path.substring(path.lastIndexOf(".")+1);
-                IFormatReader reader = null;
-                if (format.equals("tif") || format.equals("tiff")) {
-                    reader = new TiffReader();
-                }
-                else if (format.equals("png")) {
-                    reader = new APNGReader();
-                }
-                else if (format.equals("jpg")||format.equals("jpeg")){
-                    reader = new JPEGReader();
-                }
-                else if (format.equals("bmp")){
-                    reader = new BMPReader();
-                }
-                else if (format.equals("gif")){
-                    reader = new GIFReader();
-                }
-                else {
-                    throw new FormatException("File format is not supported: "+format);
+                String format = path.substring(path.lastIndexOf(".") + 1);
+                IFormatReader reader;
+                switch (format) {
+                    case "tif":
+                    case "tiff":
+                        reader = new TiffReader();
+                        break;
+                    case "png":
+                        reader = new APNGReader();
+                        break;
+                    case "jpg":
+                    case "jpeg":
+                        reader = new JPEGReader();
+                        break;
+                    case "bmp":
+                        reader = new BMPReader();
+                        break;
+                    case "gif":
+                        reader = new GIFReader();
+                        break;
+                    default:
+                        throw new FormatException("File format is not supported: " + format);
                 }
                 BufferedImageReader in = new BufferedImageReader(reader);
                 in.setId(path);
                 image = in.openImage(0);
                 in.close();
             }
-            
+
             return image;
         }
         catch (Exception e) {
-            if (e instanceof IOException) throw (IOException) e;
-            throw new IOException("Error reading image: "+path, e);
+            if (e instanceof IOException) {
+                throw e;
+            } else {
+                throw new IOException("Error reading image: " + path, e);
+            }
         }
     }
 
     /**
      * Read an image from a URL using the ImageIO API. Currently supports TIFFs, PNGs and JPEGs.
-     * 
-     * @param path
-     * @return
-     * @throws MalformedURLException
      */
     public static BufferedImage readImage(URL url) throws Exception {
-        BufferedImage image = null;
+        BufferedImage image;
         StopWatch stopWatch = TIMER ? new LoggingStopWatch() : null;
         // Some extra finagling is required because LOCI libraries do not like the file protocol for some reason
         if (url.getProtocol().equals("file")) {
-            String localFilepath = url.toString().replace("file:","");
+            String localFilepath = url.toString().replace("file:", "");
             log.trace("Loading cached file: {}", localFilepath);
             image = Utils.readImage(localFilepath);
-            if (TIMER) stopWatch.stop("readCachedImage");
+            if (TIMER) {
+                stopWatch.stop("readCachedImage");
+            }
         }
         else {
             log.trace("Loading url: {}", url);
             image = Utils.readImage(url.toString());
-            if (TIMER) stopWatch.stop("readRemoteImage");
+            if (TIMER) {
+                stopWatch.stop("readRemoteImage");
+            }
         }
         return image;
-    }
-    
-    /**
-     * Returns a color inverted version of the given image.
-     *
-     * @param image
-     * @return
-     */
-    public static BufferedImage invertImage(BufferedImage image) {
-        RenderingHints hints = new RenderingHints(null);
-        return InvertDescriptor.create(image, hints).getAsBufferedImage();
     }
 
     /**
      * Create an image from the source image, scaled at the given percentage.
      *
      * @param sourceImage image to work against
-     * @param scale       percentage to change the image
+     * @param scale percentage to change the image
      * @return returns a BufferedImage to work with
      */
     public static BufferedImage getScaledImage(BufferedImage sourceImage, double scale) {
@@ -329,51 +316,53 @@ public class Utils {
     /**
      * Create an image from the source image, scaled by the width.
      *
-     * @param sourceImage image to work against
-     * @param size pixel size that the larger dimension should be
-     * @return returns a BufferedImage to work with
+     * @param  sourceImage  image to work against
+     * @param  width        pixel size that the larger dimension should be
+     * @return a BufferedImage to work with
      */
     public static BufferedImage getScaledImageByWidth(BufferedImage sourceImage, int width) {
         double scaledScale = (double) width / (double) sourceImage.getWidth();
         int newScaledHeight = (int) Math.round(scaledScale * sourceImage.getHeight());
         return Utils.getScaledImage(sourceImage, width, newScaledHeight);
     }
-    
+
     /**
      * Resizes an image using a Graphics2D object backed by a BufferedImage.
      *
      * @param sourceImage - source image to scale
-     * @param w           - desired width
-     * @param h           - desired height
+     * @param w - desired width
+     * @param h - desired height
      * @return - the new resized image
      */
     public static BufferedImage getScaledImage(BufferedImage sourceImage, int w, int h) {
         StopWatch stopWatch = TIMER ? new LoggingStopWatch() : null;
-        
-    	int type = sourceImage.getType();
 
-    	if (type==0) {
-    		type = BufferedImage.TYPE_INT_ARGB;
-    	}
-    	
-    	if (type==BufferedImage.TYPE_BYTE_INDEXED || type==BufferedImage.TYPE_BYTE_BINARY) {
-    		// Force the type to RGB in order to correctly display bitmapped images. This is strange, but it works.
-    		type = BufferedImage.TYPE_INT_RGB;	
-    	}
-    	
-        BufferedImage resizedImg = new BufferedImage(w, h, type);        
+        int type = sourceImage.getType();
+
+        if (type == 0) {
+            type = BufferedImage.TYPE_INT_ARGB;
+        }
+
+        if (type == BufferedImage.TYPE_BYTE_INDEXED || type == BufferedImage.TYPE_BYTE_BINARY) {
+            // Force the type to RGB in order to correctly display bitmapped images. This is strange, but it works.
+            type = BufferedImage.TYPE_INT_RGB;
+        }
+
+        BufferedImage resizedImg = new BufferedImage(w, h, type);
         Graphics2D g2 = resizedImg.createGraphics();
 
 //    	if (((double)sourceImage.getHeight()/(double)h > 2) || ((double)sourceImage.getWidth()/(double)w > 2)) {
-    		g2.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_BILINEAR);
+        g2.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_BILINEAR);
 //    	}
 
         g2.drawImage(sourceImage, 0, 0, w, h, null);
         g2.dispose();
-        if (TIMER) stopWatch.stop("getScaledImage");
+        if (TIMER) {
+            stopWatch.stop("getScaledImage");
+        }
         return resizedImg;
     }
-    
+
     /**
      * This method returns true if the specified image has transparent pixels.
      * From http://www.exampledepot.com/egs/java.awt.image/HasAlpha.html
@@ -381,7 +370,7 @@ public class Utils {
     public static boolean hasAlpha(Image image) {
         // If buffered image, the color model is readily available
         if (image instanceof BufferedImage) {
-            BufferedImage bimage = (BufferedImage)image;
+            BufferedImage bimage = (BufferedImage) image;
             return bimage.getColorModel().hasAlpha();
         }
 
@@ -390,22 +379,22 @@ public class Utils {
         PixelGrabber pg = new PixelGrabber(image, 0, 0, 1, 1, false);
         try {
             pg.grabPixels();
-        } 
-        catch (InterruptedException e) {
+        } catch (InterruptedException e) {
+            log.warn("failed to grab pixels for " + image, e);
         }
 
         // Get the image's color model
         ColorModel cm = pg.getColorModel();
         return cm.hasAlpha();
     }
-    
+
     /**
      * This method returns a buffered image with the contents of an image.
      * From http://www.exampledepot.com/egs/java.awt.image/Image2Buf.html
      */
     public static BufferedImage toBufferedImage(Image image) {
         if (image instanceof BufferedImage) {
-            return (BufferedImage)image;
+            return (BufferedImage) image;
         }
 
         // This code ensures that all the pixels in the image are loaded
@@ -424,13 +413,14 @@ public class Utils {
             if (hasAlpha) {
                 transparency = Transparency.BITMASK;
             }
-            
+
             // Create the buffered image
             GraphicsDevice gs = ge.getDefaultScreenDevice();
             GraphicsConfiguration gc = gs.getDefaultConfiguration();
             bimage = gc.createCompatibleImage(
-                image.getWidth(null), image.getHeight(null), transparency);
-        } catch (HeadlessException e) {
+                    image.getWidth(null), image.getHeight(null), transparency);
+        }
+        catch (HeadlessException e) {
             // The system does not have a screen
         }
 
@@ -452,7 +442,7 @@ public class Utils {
 
         return bimage;
     }
-    
+
     public static void setWaitingCursor(Component component) {
         component.setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
     }
@@ -461,94 +451,71 @@ public class Utils {
         component.setCursor(Cursor.getDefaultCursor());
     }
 
-    public static void setOpenedHandCursor(Component component) {
-        Cursor grabClosedCursor = Toolkit.getDefaultToolkit().createCustomCursor(grabOpenedIcon.getImage(), new Point(0, 0), "img");
-        component.setCursor(grabClosedCursor);
-    }
-
-    public static void setClosedHandCursor(Component component) {
-        Cursor grabClosedCursor = Toolkit.getDefaultToolkit().createCustomCursor(grabClosedIcon.getImage(), new Point(0, 0), "img");
-        component.setCursor(grabClosedCursor);
-    }
-    
     /**
-     * Copy the input stream to the output stream, using a buffer of the given size. This method uses the old-style 
+     * Copy the input stream to the output stream, using a buffer of the given size. This method uses the old-style
      * java.io calls.
-     * @param input
-     * @param output
-     * @param bufferSize
-     * @throws IOException
      */
-	public static void copy(InputStream input, OutputStream output, int bufferSize) throws IOException {
-		byte[] buf = new byte[bufferSize];
-		int bytesRead = input.read(buf);
-		while (bytesRead != -1) {
-			output.write(buf, 0, bytesRead);
-			bytesRead = input.read(buf);
-		}
-		output.flush();
-	}
+    public static void copy(InputStream input, OutputStream output, int bufferSize) throws IOException {
+        byte[] buf = new byte[bufferSize];
+        int bytesRead = input.read(buf);
+        while (bytesRead != -1) {
+            output.write(buf, 0, bytesRead);
+            bytesRead = input.read(buf);
+        }
+        output.flush();
+    }
 
-	/**
-	 * Copy the input stream to the output stream, using a buffer of the given size. This method uses the new-style 
+    /**
+     * Copy the input stream to the output stream, using a buffer of the given size. This method uses the new-style
      * java.nio calls, and should be faster than copy(), in theory.
-	 * @param input
-	 * @param output
-	 * @param bufferSize
-	 * @throws IOException
-	 */
+     */
     public static void copyNio(InputStream input, OutputStream output, int bufferSize) throws IOException {
-		final ReadableByteChannel inputChannel = Channels.newChannel(input);
-		final WritableByteChannel outputChannel = Channels.newChannel(output);
-		fastChannelCopy(inputChannel, outputChannel, bufferSize);
-		inputChannel.close();
-		outputChannel.close();
-	}
+        final ReadableByteChannel inputChannel = Channels.newChannel(input);
+        final WritableByteChannel outputChannel = Channels.newChannel(output);
+        fastChannelCopy(inputChannel, outputChannel, bufferSize);
+        inputChannel.close();
+        outputChannel.close();
+    }
 
-	/**
-	 * Adapted from http://thomaswabner.wordpress.com/2007/10/09/fast-stream-copy-using-javanio-channels/
-	 * @param src
-	 * @param dest
-	 * @throws IOException
-	 */
+    /**
+     * Adapted from http://thomaswabner.wordpress.com/2007/10/09/fast-stream-copy-using-javanio-channels/
+     */
     public static void fastChannelCopy(final ReadableByteChannel src, final WritableByteChannel dest, int bufferSize) throws IOException {
-		final ByteBuffer buffer = ByteBuffer.allocateDirect(bufferSize);
-		while (src.read(buffer) != -1) {
-			// prepare the buffer to be drained
-			buffer.flip();
-			// write to the channel, may block
-			dest.write(buffer);
+        final ByteBuffer buffer = ByteBuffer.allocateDirect(bufferSize);
+        while (src.read(buffer) != -1) {
+            // prepare the buffer to be drained
+            buffer.flip();
+            // write to the channel, may block
+            dest.write(buffer);
 			// If partial transfer, shift remainder down
-			// If buffer is empty, same as doing clear()
-			buffer.compact();
-		}
-		// EOF will leave buffer in fill state
-		buffer.flip();
-		// make sure the buffer is fully drained.
-		while (buffer.hasRemaining()) {
-			dest.write(buffer);
-		}
-	}
-    
+            // If buffer is empty, same as doing clear()
+            buffer.compact();
+        }
+        // EOF will leave buffer in fill state
+        buffer.flip();
+        // make sure the buffer is fully drained.
+        while (buffer.hasRemaining()) {
+            dest.write(buffer);
+        }
+    }
+
     /**
      * Cache the given file and then execute the callback once the file is available.
-     * @param filePath
-     * @param callback
      */
     private static void cacheAndProcessFileAsync(final String filePath, final FileCallable callback) {
         SimpleWorker worker = new SimpleWorker() {
-            
+
             private File file;
-            
+
             @Override
             protected void doStuff() throws Exception {
                 file = SessionMgr.getCachedFile(filePath, false);
             }
-            
+
             @Override
             protected void hadSuccess() {
                 try {
-                    if (callback!=null) {
+                    if (callback != null) {
                         callback.setParam(file);
                         callback.call();
                     }
@@ -557,7 +524,7 @@ public class Utils {
                     hadError(e);
                 }
             }
-            
+
             @Override
             protected void hadError(Throwable error) {
                 SessionMgr.getSessionMgr().handleException(error);
@@ -566,12 +533,10 @@ public class Utils {
         worker.setProgressMonitor(new IndeterminateProgressMonitor(SessionMgr.getMainFrame(), "Retrieving file...", ""));
         worker.execute();
     }
-    
+
     /**
      * Run the FileCallable processing callback on the given file, either on the remote file directly, if the
      * remote file system is mounted, or after caching the file locally.
-     * @param filePath
-     * @param callback
      */
     public static void processStandardFilepath(final String filePath, final FileCallable callback) {
 
@@ -588,7 +553,7 @@ public class Utils {
             Utils.cacheAndProcessFileAsync(filePath, new FileCallable() {
                 @Override
                 public void call(File file) throws Exception {
-                    if (file==null) {
+                    if (file == null) {
                         JOptionPane.showMessageDialog(SessionMgr.getMainFrame(),
                                 "Could not open file path", "Error", JOptionPane.ERROR_MESSAGE);
                     }
@@ -602,73 +567,150 @@ public class Utils {
 
     public static void copyURLToFile(String standardPath, File destination, SimpleWorker worker) throws Exception {
 
-        log.info("standardPath: "+standardPath);
-        log.info("destination: "+destination);
-        
-        //does destination directory exist ?
-        if (destination.getParentFile() != null
-            && !destination.getParentFile().exists()) {
-            destination.getParentFile().mkdirs();
+        log.info("copyURLToFile: entry, standardPath={}, destination={}", standardPath, destination);
+
+        final File destinationDir = destination.getParentFile();
+        if ((destinationDir != null) && (! destinationDir.exists())) {
+            Files.createDirectories(destinationDir.toPath());
         }
 
         //make sure we can write to destination
         if (destination.exists() && !destination.canWrite()) {
-            String message =
-                "Unable to open file " + destination + " for writing.";
-            throw new IOException(message);
+            throw new IOException("Unable to open " + destination.getAbsolutePath() + " for writing.");
         }
 
-        WorkstationFile wfile = null;
-            
+        @SuppressWarnings("UnusedAssignment") InputStream input = null;
+
+        WorkstationFile wfile = new WorkstationFile(standardPath);
+
         try {
-            wfile = new WorkstationFile(standardPath);
             wfile.get();
-            
-            InputStream input = wfile.getStream();
+
+            input = wfile.getStream();
             long length = wfile.getLength();
-            
-            log.info("Effective URL: "+wfile.getEffectiveURL());
-            log.info("Length: "+length);
-            
-            if (length==0) {
-                throw new Exception("Length of file was 0");
+
+            log.info("copyURLToFile: length={}, effectiveURL={}", length, wfile.getEffectiveURL());
+
+            if (length == 0) {
+                throw new IOException("length of " + wfile.getEffectiveURL() + " is 0");
             }
-            
-            if (wfile.getStatusCode()!=200) {
-                throw new Exception("Status code was "+wfile.getStatusCode());
+
+            if (wfile.getStatusCode() != 200) {
+                throw new IOException("status code for " + wfile.getEffectiveURL() + " is " + wfile.getStatusCode());
             }
-        
+
+            int estimatedCompressionFactor = 1;
+            if (standardPath.endsWith(EXTENSION_BZ2) &&
+                    (! destination.getName().endsWith(EXTENSION_BZ2))) {
+                input = new BZip2CompressorInputStream(input);
+                estimatedCompressionFactor = 3;
+            }
+
             FileOutputStream output = new FileOutputStream(destination);
             try {
-                int copied = copy(input, output, length, worker);
-                if (copied != length) {
-                    throw new IOException("Bytes copied does not equal file length: "+copied+"!="+length);
+                final long totalBytesWritten = copy(input, output, length, worker, estimatedCompressionFactor);
+                if (totalBytesWritten < length) {
+                    throw new IOException("bytes written (" + totalBytesWritten + ") for " + wfile.getEffectiveURL() +
+                                          " is less than source length (" + length + ")");
                 }
-            } 
-            finally {
+            } finally {
+                IOUtils.closeQuietly(input); // close input here to ensure bzip stream is properly closed
                 IOUtils.closeQuietly(output);
             }
-        } 
-        finally {
+        } finally {
             wfile.close();
         }
     }
 
     /**
-     * Copied from Apache's commons-io, so that we could add progress indication
+     * Adapted from Apache's commons-io, so that we could add progress percentage and status.
      */
-    public static int copy(InputStream input, OutputStream output, long length, SimpleWorker worker) throws IOException {
-        byte[] buffer = new byte[DEFAULT_BUFFER_SIZE];
-        int count = 0;
-        int n = 0;
-        while (-1 != (n = input.read(buffer))) {
-            output.write(buffer, 0, n);
-            count += n;
-            if (worker!=null) {
-                worker.setProgress(count, length);
-                if (worker.isCancelled()) throw new CancellationException();
+    private static long copy(InputStream input,
+                             OutputStream output,
+                             long length,
+                             SimpleWorker worker,
+                             int estimatedCompressionFactor) throws IOException {
+
+        BackgroundWorker backgroundWorker = null;
+        String backgroundStatus = null;
+        if (worker instanceof BackgroundWorker) {
+            backgroundWorker = (BackgroundWorker) worker;
+            backgroundStatus = backgroundWorker.getStatus();
+            if (backgroundStatus == null) {
+                backgroundStatus = "copying file (";
+            } else {
+                backgroundStatus = backgroundStatus + " (";
             }
         }
-        return count;
+
+        final long startTime = System.currentTimeMillis();
+        final long estimatedLength = estimatedCompressionFactor * length;
+
+        byte[] buffer = new byte[DEFAULT_BUFFER_SIZE];
+        int bytesRead;
+        long totalBytesWritten = 0;
+        long totalBytesWrittenAtLastStatusUpdate = totalBytesWritten;
+        long totalMegabytesWritten;
+        while (-1 != (bytesRead = input.read(buffer))) {
+
+            output.write(buffer, 0, bytesRead);
+            totalBytesWritten += bytesRead;
+
+            if (worker != null) {
+
+                worker.throwExceptionIfCancelled();
+
+                if ((totalBytesWritten - totalBytesWrittenAtLastStatusUpdate) > TEN_MEGABYTES) {
+
+                    totalBytesWrittenAtLastStatusUpdate = totalBytesWritten;
+
+                    if (totalBytesWritten < estimatedLength) {
+                        worker.setProgress(totalBytesWritten, estimatedLength);
+                    }
+
+                    if (backgroundWorker != null) {
+                        totalMegabytesWritten = totalBytesWritten / ONE_MEGABYTE;
+                        backgroundWorker.setStatus(backgroundStatus + totalMegabytesWritten + " Mb written)");
+                    }
+                }
+            }
+        }
+
+        if (worker != null) {
+
+            worker.setProgress(totalBytesWritten, totalBytesWritten);
+
+            if (backgroundWorker != null) {
+                totalMegabytesWritten = totalBytesWritten / ONE_MEGABYTE;
+                backgroundWorker.setStatus(backgroundStatus + totalMegabytesWritten + " Mb written)");
+            }
+        }
+
+        final long elapsedTime = System.currentTimeMillis() - startTime;
+
+        if (log.isInfoEnabled()) {
+            final BigDecimal elapsedSeconds = divideAndScale(elapsedTime, 1000, 1);
+            BigDecimal amountWritten;
+            String amountUnits;
+            if (totalBytesWritten > ONE_GIGABYTE) {
+                amountWritten = divideAndScale(totalBytesWritten, ONE_GIGABYTE, 1);
+                amountUnits = " gigabytes in ";
+            } else if (totalBytesWritten > ONE_MEGABYTE) {
+                amountWritten = divideAndScale(totalBytesWritten, ONE_MEGABYTE, 1);
+                amountUnits = " megabytes in ";
+            } else {
+                amountWritten = divideAndScale(totalBytesWritten, ONE_KILOBYTE, 1);
+                amountUnits = " kilobytes in ";
+            }
+            log.info("copy: wrote " + amountWritten + amountUnits + elapsedSeconds + " seconds");
+        }
+
+        return totalBytesWritten;
+    }
+
+    private static BigDecimal divideAndScale(double numerator,
+                                             double denominator,
+                                             int scale) {
+        return new BigDecimal(numerator / denominator).setScale(scale, BigDecimal.ROUND_HALF_UP);
     }
 }

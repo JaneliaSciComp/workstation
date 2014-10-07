@@ -5,10 +5,26 @@ and those of the NetBeans system can be properly negotiated.  This is a sort
 of adapter.
 -->
 <project name="run-console-build" default="build">
-
+    <property environment="env"/>
     <target name="build" description="Build using ant target" depends="prop-copy,internal-jar-copy">
         <echoproperties/>
         <ant antfile="build.xml" target="build">
+            <property name="nbplatform.default.netbeans.dest.dir" value="${basedir}" />
+            <property name="nbplatform.default.harness.dir" value="${basedir}/harness" />
+        </ant>
+    </target>
+
+    <target name="nbms" description="Target to build modules locally.  Assumes no install of NetBeans IDE">
+        <!--<echoproperties/>-->
+        <ant antfile="build.xml" target="nbms">
+            <property name="nbplatform.default.netbeans.dest.dir" value="${basedir}" />
+            <property name="nbplatform.default.harness.dir" value="${basedir}/harness" />
+        </ant>
+    </target>
+
+    <target name="create-platform" description="Target to build platform locally">
+        <!--<echoproperties/>-->
+        <ant antfile="build.xml" target="create-platform">
             <property name="nbplatform.default.netbeans.dest.dir" value="${basedir}" />
             <property name="nbplatform.default.harness.dir" value="${basedir}/harness" />
         </ant>
@@ -44,15 +60,18 @@ of adapter.
 
     <target name="debug" description="Debug application">
         <ant antfile="build.xml" target="run">
-            <property name="run.args.extra" value="-J-Xmx16000m -J-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=5005"/>
+            <property name="nbplatform.default.netbeans.dest.dir" value="${basedir}" />
+            <property name="nbplatform.default.harness.dir" value="${basedir}/harness" />
+            <property name="run.args.extra" value="-J-Xmx16000m -J-agentlib:jdwp=transport=dt_socket,server=y,suspend=y,address=5005"/>
         </ant>
     </target>
 
     <macrodef name="exec-target" description="Carry Out Target via Exec">
         <attribute name="target"/>
+
         <sequential>
             <!-- NOTE: failonerror is possible, here, but it hides the error text. -->
-            <exec executable="${antexec}" outputproperty="antout">
+            <exec executable="${env.antexec}" outputproperty="antout">
                 <arg value="-Dnbplatform.default.netbeans.dest.dir=${basedir}"/>
                 <arg value="-Dnbplatform.default.harness.dir=${basedir}/harness" />
                 <arg value="-f"/>
@@ -100,15 +119,15 @@ of adapter.
              -Dsuite.location=/Users/fosterl/NetBeansProjects/alignment_board_LLF/janelia-workstation/ConsoleApplication
              "-Dgenerate.installer.for.platforms=windows linux macosx"
              "-Dnbi.ant.tasks.jar=/Applications/NetBeans/NetBeans 7.4.app/Contents/Resources/NetBeans/harness/modules/ext/nbi-ant-tasks.jar"
-             -Dgenerator-jdk-location-forward-slashes=/Library/Java/JavaVirtualMachines/jdk1.7.0_51.jdk/Contents/Home
+             -Dgenerator-jdk-location-forward-slashes=/Library/Java/JavaVirtualMachines/jdk1.7.0_67.jdk/Contents/Home
              "-Dnbi.dock.icon.file=/Applications/NetBeans/NetBeans 7.4.app/Contents/Resources/NetBeans/harness/etc/applicationIcon.icns"
              -Dpack200.enabled=false "-Dnbi.registries.management.jar=/Applications/NetBeans/NetBeans 7.4.app/Contents/Resources/NetBeans/harness/modules/ext/nbi-registries-management.jar"
               build
         -->
         <echo message="This target still requires presetting antexec."/>
-        <exec executable="${antexec}" outputproperty="antout">
+        <exec executable="${env.antexec}" outputproperty="antout">
             <!-- First arg is used explicitly in NetBeans, but found unneeded and difficult to set, here. -->
-            <!--<arg value="-Dgenerator-jdk-location-forward-slashes=/Library/Java/JavaVirtualMachines/jdk1.7.0_51.jdk/Contents/Home "-->
+            <!--<arg value="-Dgenerator-jdk-location-forward-slashes=/Library/Java/JavaVirtualMachines/jdk1.7.0_67.jdk/Contents/Home "-->
             <arg value="-Dnbplatform.default.netbeans.dest.dir=${basedir}"/>
             <arg value="-Dnbplatform.default.harness.dir=${basedir}/harness" />
             <arg value="-Dgenerate.installer.for.platforms=windows linux macosx"/>
@@ -118,9 +137,9 @@ of adapter.
             <arg value="-Dnbi.stub.location=${basedir}/harness/nbi/stub"/>
             <arg value="-Dnbi.engine.jar=${basedir}/harness/modules/ext/nbi-engine.jar"/>
             <arg value="-Dnbi.stub.common.location=${basedir}/harness/nbi/.common"/>
-            <arg value="-Dnbi.icon.file=${basedir}/branding/core/core.jar/org/netbeans/core/startup/frame48.gif"/>
+            <arg value="-Dnbi.icon.file=${basedir}/janeliaws.icns"/>
             <arg value="-Dnbi.ant.tasks.jar=${basedir}/harness/modules/ext/nbi-ant-tasks.jar"/>
-            <arg value="-Dnbi.dock.icon.file=${basedir}/harness/etc/applicationIcon.icns"/>
+            <arg value="-Dnbi.dock.icon.file=${basedir}/janeliaws.icns"/>
             <arg value="-Dnbi.registries.management.jar=${basedir}/harness/modules/ext/nbi-registries-management.jar" />
             <arg value="-f"/>
             <arg value="${basedir}/harness/nbi/stub/template.xml"/>

@@ -92,7 +92,7 @@ public interface TextureDataI {
     void setExplicitVoxelComponentType(int format);
 
     /**
-     * The "internal format" is used at "glTexImage*D" (3D in our case) calls.  Speicficially,
+     * The "internal format" is used at "glTexImage*D" (3D in our case) calls.  Specifically,
      * the GLEnum "format" parameter.   This may be omitted if the rules for deducing it are in place and working for
      * this texture.  However, this explicit override may be used otherwise.  Here's the blurb from OpenGL docs:
      * internalFormat
@@ -159,7 +159,11 @@ public interface TextureDataI {
     void setExplicitInternalFormat( Integer format );
 
     /**
-     *
+     * Returns one of these values, which specifies how to 
+     * interpret the bytes of the voxel value stored in the texture.
+     * 
+     * GL_RGBA, GL_BGRA, GL_RED, GL_RG, GL_RGB, GL_BGR
+     * 
      * @return
      */
     Integer getExplicitVoxelComponentOrder();

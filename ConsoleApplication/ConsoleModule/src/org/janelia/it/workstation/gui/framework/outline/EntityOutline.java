@@ -192,29 +192,6 @@ public abstract class EntityOutline extends EntityTree implements Refreshable, A
             titleMenuItem.setEnabled(false);
             return titleMenuItem;
         }
-
-        protected JMenuItem getSetSortCriteriaItem() {
-
-            if (multiple) {
-                return null;
-            }
-
-            JMenuItem sortItem = new JMenuItem("  Set Sorting Criteria");
-
-            sortItem.addActionListener(new ActionListener() {
-                public void actionPerformed(ActionEvent actionEvent) {
-                    try {
-                        SetSortCriteriaDialog dialog = new SetSortCriteriaDialog();
-                        dialog.showForEntity(getRootEntity());
-                    } 
-                    catch (Exception e) {
-                        SessionMgr.getSessionMgr().handleException(e);
-                    }
-                }
-            });
-
-            return sortItem;
-        }
         
         private JMenuItem getNewRootFolderItem() {
             if (multiple) {
@@ -297,7 +274,6 @@ public abstract class EntityOutline extends EntityTree implements Refreshable, A
         // Create context menu
         final EntityOutlineContextMenu popupMenu = new EntityOutlineContextMenu(nodes);
         if (nodes.isEmpty()) { 
-            ModelMgr.getModelMgr().getEntitySelectionModel().selectEntity(EntitySelectionModel.CATEGORY_OUTLINE, getRootUniqueId(), true);
             popupMenu.addRootMenuItems();
         }
         else {
@@ -311,14 +287,6 @@ public abstract class EntityOutline extends EntityTree implements Refreshable, A
     protected void nodeClicked(MouseEvent e) {
         this.currUniqueId = null;
         selectNode(selectedTree.getCurrentNode());
-    }
-
-    @Override
-    protected void backgroundClicked(MouseEvent e) {
-        this.currUniqueId = null;
-        if (!StringUtils.isEmpty(getRootUniqueId())) {
-            ModelMgr.getModelMgr().getEntitySelectionModel().selectEntity(EntitySelectionModel.CATEGORY_OUTLINE, getRootUniqueId(), true);
-        }
     }
 
     @Override
@@ -347,6 +315,7 @@ public abstract class EntityOutline extends EntityTree implements Refreshable, A
     @Subscribe
     public void entityCreated(EntityCreateEvent event) {
         Entity entity = event.getEntity();
+        
         if (entity.getValueByAttributeName(EntityConstants.ATTRIBUTE_COMMON_ROOT) != null) {
             log.debug("New common root detected: {}", EntityUtils.identify(entity));
 
@@ -365,35 +334,6 @@ public abstract class EntityOutline extends EntityTree implements Refreshable, A
             }
             else {
                 addNodes(getDynamicTree().getRootNode(), newEd, i);
-            }
-        }
-    }
-
-    @Subscribe
-    @Override
-    public void entityChanged(EntityChangeEvent event) {
-        super.entityChanged(event);
-        Entity entity = event.getEntity();
-
-        Set<Entity> toRemove = new HashSet<Entity>();
-
-        for (Entity commonRoot : ModelMgrUtils.getAccessibleChildren(root)) {
-            if (commonRoot.getId().equals(entity.getId())) {
-                // A common root has changed
-                if (entity.getValueByAttributeName(EntityConstants.ATTRIBUTE_COMMON_ROOT) == null) {
-                    log.debug("No longer a common root: {}", EntityUtils.identify(entity));
-                    // It is no longer a common root!
-                    toRemove.add(commonRoot);
-                }
-            }
-        }
-
-        for (Entity entityRoot : toRemove) {
-            log.debug("Removing entity root: {}", EntityUtils.identify(entityRoot));
-            for (DefaultMutableTreeNode node : getNodesByEntityId(entityRoot.getId())) {
-                if (node.getParent().equals(getTree().getModel().getRoot())) {
-                    removeNode(node);
-                }
             }
         }
     }
