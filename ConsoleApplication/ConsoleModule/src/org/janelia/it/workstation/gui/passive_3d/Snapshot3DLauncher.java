@@ -81,11 +81,11 @@ public class Snapshot3DLauncher {
         });
         snapShot3dSubMenu.add( item );
 
-        item = new JMenuItem( "Abbreviated Raw: " + RawTiffVolumeSource.DEPT_STD_GRAPH_CARD_MAX_DEPTH + " Planes" );
+        item = new JMenuItem( "Abbreviated Raw: " + RawTiffVolumeSource.USER_SUGGESTED_DEPTH + " Planes" );
         item.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent ae) {
-                launchRaw3dViewer( RawTiffVolumeSource.DEPT_STD_GRAPH_CARD_MAX_DEPTH );
+                launchRaw3dViewer( RawTiffVolumeSource.USER_SUGGESTED_DEPTH );
             }
         });
         snapShot3dSubMenu.add( item );

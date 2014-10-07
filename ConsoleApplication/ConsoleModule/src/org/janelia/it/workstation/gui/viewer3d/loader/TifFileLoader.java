@@ -37,15 +37,21 @@ public class TifFileLoader extends TextureDataBuilder implements VolumeFileLoade
 
     public static final int BOUNDARY_MULTIPLE = 4;
     private int depthLimit = -1;
+    private int startingDepth = 0;
+    private int cameraToCentroidDistance = 0;
     private int sheetCountFromFile = -1;
     
     /**
-     * This setter can be used for testing, on systems not powerful
-     * enough to handle the whole rectangular solid.
-     * @param depthLimit 
+     * Sets maximum page (or z-slice) depth to add to outgoing image.
+     * 
+     * @param depthLimit when to stop.
      */
     public void setDepthLimit( int depthLimit ) {
         this.depthLimit = depthLimit;
+    }
+    
+    public void setCameraToCentroidDistance( int distance ) {
+        this.cameraToCentroidDistance = distance; 
     }
     
     @Override
@@ -73,7 +79,7 @@ public class TifFileLoader extends TextureDataBuilder implements VolumeFileLoade
         int sheetSize = -1;
         for ( BufferedImage zSlice: allImages ) {            
             if ( sx == -1 ) {
-                sheetSize = captureAndUsePageDimensions(zSlice, allImages, file);
+                sheetSize = captureAndUsePageDimensions(zSlice, allImages.size(), file);
             }
             else {
                 if ( sx != zSlice.getWidth()  ||  sy != zSlice.getHeight() ) {
@@ -86,7 +92,7 @@ public class TifFileLoader extends TextureDataBuilder implements VolumeFileLoade
             zOffset ++;
         }
     }
-
+    
     private void storeToBuffer(int zOffset, int sheetSize, BufferedImage zSlice) {
         final int outputBufferOffset = zOffset * sheetSize;
         if ( pixelBytes == 1 ) {
@@ -118,16 +124,22 @@ public class TifFileLoader extends TextureDataBuilder implements VolumeFileLoade
         }
     }
 
-    private int captureAndUsePageDimensions(BufferedImage zSlice, Collection<BufferedImage> allImages, final File file) {
+    private int captureAndUsePageDimensions(BufferedImage zSlice, final int zCount, final File file) {
         sx = zSlice.getWidth();
         sy = zSlice.getHeight();
-        int szMod = depthLimit % BOUNDARY_MULTIPLE;
-        // Force z dimension to a multiple of 16.
+        
+        // Depth Limit is originally expressed as a part-stack size, based at 0.
+        int halfDepth = depthLimit / 2;
+        startingDepth = clamp( 0, zCount - halfDepth, zCount / 2 + cameraToCentroidDistance );
+        depthLimit = startingDepth + depthLimit;
+        
+        int szMod = (depthLimit - startingDepth) % BOUNDARY_MULTIPLE;
+        // Force z dimension to a given multiple.
         if ( szMod != 0 ) {
-            sz = ((depthLimit / BOUNDARY_MULTIPLE) + 1 ) * BOUNDARY_MULTIPLE;
+            sz = (((depthLimit - startingDepth) / BOUNDARY_MULTIPLE) + 1 ) * BOUNDARY_MULTIPLE;
         }
         else {
-            sz = depthLimit;
+            sz = (depthLimit - startingDepth);
         }
         int sheetSize = sx * sy;
         final int totalVoxels = sheetSize * sz;
@@ -139,6 +151,16 @@ public class TifFileLoader extends TextureDataBuilder implements VolumeFileLoade
             argbTextureIntArray = new int[totalVoxels];
         }
         return sheetSize;
+    }
+    
+    private int clamp( int min, int max, int startingValue ) {
+        if ( startingValue < min ) {
+            return min;
+        }
+        else if ( startingValue > max ) {
+            return max;
+        }
+        return startingValue;
     }
     
     /**
@@ -160,14 +182,14 @@ public class TifFileLoader extends TextureDataBuilder implements VolumeFileLoade
             
             TIFFDecodeParam param = null;
             ImageDecoder dec = ImageCodec.createImageDecoder("tiff", s, param);
-            int numPages = dec.getNumPages();
-            sheetCountFromFile = numPages;
+            int maxPage = dec.getNumPages();
+            sheetCountFromFile = maxPage;
             if ( depthLimit == -1 ) {
                 depthLimit = sheetCountFromFile;
             }
-            numPages = depthLimit; // TEMP: making a shallow volume to test load.
+            maxPage = depthLimit; // TEMP: making a shallow volume to test load.
             
-            for (int imageToLoad = 0; imageToLoad < numPages; imageToLoad++) {
+            for (int imageToLoad = startingDepth; imageToLoad < maxPage; imageToLoad++) {
                 RenderedImage op
                         = new NullOpImage(dec.decodeAsRenderedImage(imageToLoad),
                                 null,

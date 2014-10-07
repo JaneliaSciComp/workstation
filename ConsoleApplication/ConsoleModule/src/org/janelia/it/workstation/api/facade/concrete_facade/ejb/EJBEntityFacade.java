@@ -350,14 +350,14 @@ public class EJBEntityFacade implements EntityFacade {
     }
 
     @Override
-    public List<String> getTiffTilePaths(String basePath, int[] viewerCoord) throws Exception {
-        List<String> tiffPaths = null;
+    public RawFileInfo getNearestFileInfo(String basePath, int[] viewerCoord) throws Exception {
+        RawFileInfo rawInfo = null;
         final TiledMicroscopeBeanRemote remoteTiledMicroscopeBean = EJBFactory.getRemoteTiledMicroscopeBean();
         if ( remoteTiledMicroscopeBean != null ) {
-            tiffPaths = remoteTiledMicroscopeBean.getTiffTilePaths(basePath, viewerCoord);
+            rawInfo = remoteTiledMicroscopeBean.getNearestFileInfo(basePath, viewerCoord);
         }
         
-        return tiffPaths;
+        return rawInfo;
     }
 
 }

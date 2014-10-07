@@ -6,8 +6,11 @@
 
 package org.janelia.it.workstation.gui.passive_3d;
 
+import java.io.File;
 import java.util.List;
 import javax.media.opengl.GL2;
+
+import org.janelia.it.jacs.model.user_data.tiledMicroscope.RawFileInfo;
 import org.janelia.it.workstation.api.entity_model.management.ModelMgr;
 import org.janelia.it.workstation.gui.camera.BasicObservableCamera3d;
 import org.janelia.it.workstation.gui.camera.Camera3d;
@@ -25,6 +28,7 @@ import org.slf4j.LoggerFactory;
  */
 public class RawTiffVolumeSource implements MonitoredVolumeSource {
     public static final int DEPT_STD_GRAPH_CARD_MAX_DEPTH = 172;
+    public static final int USER_SUGGESTED_DEPTH = 64;
 
     private Camera3d camera;
     private String baseDirectoryPath;
@@ -66,41 +70,23 @@ public class RawTiffVolumeSource implements MonitoredVolumeSource {
         };
         
         progressMonitor.setNote("Fetching tiff file paths.");
-        List<String> tiffFiles =
-                ModelMgr.getModelMgr().getTiffTilePaths(baseDirectoryPath, viewerCoord);
-        if ( tiffFiles == null ) {
+        RawFileInfo rawFileInfo =
+                ModelMgr.getModelMgr().getNearestFileInfo(baseDirectoryPath, viewerCoord);
+        if ( rawFileInfo == null ) {
             throw new Exception("Failed to find any tiff files in " + baseDirectoryPath + "." );
-        }
-        if ( tiffFiles.size() < 2 ) {
-            throw new Exception("Failed to find enough tiff files in " + baseDirectoryPath + ".  Found only " + tiffFiles.size());
         }
         progressMonitor.setNote("Loading volume data.");
         TifFileLoader tifFileLoader = new TifFileLoader();
         if ( maxDrawPlanes > -1 ) {
             tifFileLoader.setDepthLimit( maxDrawPlanes );
+            int cameraToCentroidDistance = (int)(camera.getFocus().getZ() - rawFileInfo.getCentroid().get(2));
+            tifFileLoader.setCameraToCentroidDistance( cameraToCentroidDistance );
         }
         FileResolver resolver = new CacheFileResolver();
 
-        for ( int i = 0; i < 2; i++ ) {
-            progressMonitor.setNote("Starting loadVolumeFile");        
-            
-            int displayNum = i + 1;
-            TextureDataI textureData;
-            progressMonitor.setNote("Caching file " + displayNum);        
-            String resolvedFilename = resolver.getResolvedFilename(tiffFiles.get( i ));
-            progressMonitor.setNote("Loading tiff " + displayNum);        
-            tifFileLoader.loadVolumeFile( resolvedFilename );
-            progressMonitor.setNote("Building texture data from tiff " + displayNum);
-            logger.info("Loading" + tiffFiles.get(i) + " as " + resolvedFilename);
-            textureData = tifFileLoader.buildTextureData(true);
-            // Presets known to work with this data type.
-            textureData.setExplicitInternalFormat(GL2.GL_LUMINANCE16);
-            textureData.setExplicitVoxelComponentOrder(GL2.GL_LUMINANCE);
-            textureData.setExplicitVoxelComponentType(GL2.GL_UNSIGNED_SHORT);
-            textureData.setPixelByteCount(2);
-            volumeListener.accept(textureData);
-            progressMonitor.setNote("Ending load for raw tiff " + displayNum);
-        }
+        progressMonitor.setNote("Starting data load...");                    
+        loadChannel(1, resolver, rawFileInfo.getChannel0(), tifFileLoader, volumeListener);
+        loadChannel(2, resolver, rawFileInfo.getChannel1(), tifFileLoader, volumeListener);
 
         progressMonitor.setNote("Launching viewer.");
     }
@@ -116,6 +102,24 @@ public class RawTiffVolumeSource implements MonitoredVolumeSource {
     
     public void setMaxDrawPlanes( int drawPlanes ) {
         this.maxDrawPlanes = drawPlanes;
+    }
+
+    private void loadChannel(int displayNum, FileResolver resolver, File rawFile, TifFileLoader tifFileLoader, VolumeAcceptor volumeListener) throws Exception {
+        TextureDataI textureData;
+        progressMonitor.setNote("Caching channel " + displayNum);
+        String resolvedFilename = resolver.getResolvedFilename(rawFile.getAbsolutePath());
+        progressMonitor.setNote("Loading channel " + displayNum);
+        tifFileLoader.loadVolumeFile(resolvedFilename);
+        progressMonitor.setNote("Building texture data from channel " + displayNum);
+        logger.info("Loading" + rawFile + " as " + resolvedFilename);
+        textureData = tifFileLoader.buildTextureData(true);
+        // Presets known to work with this data type.
+        textureData.setExplicitInternalFormat(GL2.GL_LUMINANCE16);
+        textureData.setExplicitVoxelComponentOrder(GL2.GL_LUMINANCE);
+        textureData.setExplicitVoxelComponentType(GL2.GL_UNSIGNED_SHORT);
+        textureData.setPixelByteCount(2);
+        volumeListener.accept(textureData);
+        progressMonitor.setNote("Ending load for raw tiff " + displayNum);
     }
 
 }
