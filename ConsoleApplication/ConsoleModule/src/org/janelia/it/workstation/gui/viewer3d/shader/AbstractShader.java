@@ -157,6 +157,9 @@ public abstract class AbstractShader {
     }
 
     public boolean setUniform2fv(GL2GL3 gl, String varName, int vecCount, float[] data) {
+        if ( data == null ) {
+            throw new IllegalArgumentException("Null data pushed to uniform.");
+        }
         int uniformLoc = gl.glGetUniformLocation( getShaderProgram(), varName );
         if ( uniformLoc < 0 )
             return false;
@@ -165,6 +168,9 @@ public abstract class AbstractShader {
     }
 
     public boolean setUniform3v(GL2GL3 gl, String varName, int vecCount, float[] data) {
+        if ( data == null ) {
+            throw new IllegalArgumentException("Null data pushed to uniform.");
+        }
         int uniformLoc = gl.glGetUniformLocation( getShaderProgram(), varName );
         if ( uniformLoc < 0 )
             return false;
@@ -173,6 +179,9 @@ public abstract class AbstractShader {
     }
 
     public boolean setUniform4v(GL2GL3 gl, String varName, int vecCount, float[] data) {
+        if ( data == null ) {
+            throw new IllegalArgumentException("Null data pushed to uniform.");
+        }
         int uniformLoc = gl.glGetUniformLocation( getShaderProgram(), varName );
         if ( uniformLoc < 0 )
             return false;
@@ -181,6 +190,9 @@ public abstract class AbstractShader {
     }
 
     public boolean setUniformMatrix2fv(GL2GL3 gl, String varName, boolean transpose, float[] data) {
+        if ( data == null ) {
+            throw new IllegalArgumentException("Null data pushed to uniform.");
+        }
         int uniformLoc = gl.glGetUniformLocation( getShaderProgram(), varName );
         if ( uniformLoc < 0 )
             return false;
@@ -189,6 +201,9 @@ public abstract class AbstractShader {
     }
 
     public boolean setUniformMatrix4v(GL2GL3 gl, String varName, boolean transpose, float[] data) {
+        if ( data == null ) {
+            throw new IllegalArgumentException("Null data pushed to uniform.");
+        }
         int uniformLoc = gl.glGetUniformLocation( getShaderProgram(), varName );
         if ( uniformLoc < 0 )
             return false;

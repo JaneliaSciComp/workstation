@@ -135,7 +135,7 @@
                 <package>org.janelia.it.jacs.shared.lucene.data_retrievers</package>
                 <package>org.janelia.it.jacs.shared.lucene.searchers</package>
                 <package>org.janelia.it.jacs.shared.masking</package>
-                <package>org.janelia.it.jacs.shared.mesh</package>
+                <package>org.janelia.it.jacs.shared.loader.mesh</package>
                 <package>org.janelia.it.jacs.shared.node</package>
                 <package>org.janelia.it.jacs.shared.perf</package>
                 <package>org.janelia.it.jacs.shared.processors.recruitment</package>
