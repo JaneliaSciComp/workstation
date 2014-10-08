@@ -33,23 +33,6 @@ public class MeshDrawActor implements GLActor {
 
     private static Logger logger = LoggerFactory.getLogger( MeshDrawActor.class );
 
-    static {
-        try {
-            GLProfile profile = GLProfile.get(GLProfile.GL3);
-            final GLCapabilities capabilities = new GLCapabilities(profile);
-            capabilities.setGLProfile( profile );
-            // KEEPING this for use of GL3 under MAC.  So far, unneeded, and not debugged.
-            //        SwingUtilities.invokeLater(new Runnable() {
-            //            public void run() {
-            //                new JOCLSimpleGL3(capabilities);
-            //            }
-            //        });
-        } catch ( Throwable th ) {
-            logger.error( "No GL3 profile available" );
-        }
-
-    }
-
     private boolean bBuffersNeedUpload = true;
     private boolean bIsInitialized;
     private int inxBufferHandle;
