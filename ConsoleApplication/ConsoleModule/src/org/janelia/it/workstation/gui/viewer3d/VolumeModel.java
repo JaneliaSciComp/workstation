@@ -43,7 +43,10 @@ public class VolumeModel {
     private int[] voxelDimensions;
     private boolean showAxes = DEFAULT_SHOWING_AXES;
 
-    private Collection<UpdateListener> listeners = new ArrayList<>();
+    private float[] perspectiveMatrix;
+    private float[] modelViewMatrix;
+
+    private Collection<UpdateListener> listeners = new ArrayList<UpdateListener>();
 
     /** This may be useful for situations like the HUD, which retains a reference to
      * the volume model across invocations.  Call this prior to reset.
@@ -179,6 +182,22 @@ public class VolumeModel {
 
     public void setColorSaveBrightness(boolean colorSaveBrightness) {
         this.colorSaveBrightness = colorSaveBrightness;
+    }
+
+    public float[] getPerspectiveMatrix() {
+        return perspectiveMatrix;
+    }
+
+    public void setPerspectiveMatrix(float[] perspectiveMatrix) {
+        this.perspectiveMatrix = perspectiveMatrix;
+    }
+
+    public float[] getModelViewMatrix() {
+        return modelViewMatrix;
+    }
+
+    public void setModelViewMatrix(float[] modelViewMatrix) {
+        this.modelViewMatrix = modelViewMatrix;
     }
 
     /**

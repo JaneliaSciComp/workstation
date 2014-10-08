@@ -1,4 +1,4 @@
-package org.janelia.it.FlyWorkstation.publication_quality.mesh;
+package org.janelia.it.workstation.publication_quality.mesh;
 
 import org.janelia.it.jacs.model.TestCategories;
 import org.janelia.it.jacs.shared.loader.mesh.*;
@@ -10,7 +10,7 @@ import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
 import java.util.List;
-import static org.janelia.it.FlyWorkstation.gui.TestingConstants.*;
+import static org.janelia.it.workstation.gui.TestingConstants.*;
 
 /**
  * Created by fosterl on 4/11/14.

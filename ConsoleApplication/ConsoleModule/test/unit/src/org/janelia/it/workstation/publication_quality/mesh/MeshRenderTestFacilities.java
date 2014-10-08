@@ -1,4 +1,4 @@
-package org.janelia.it.FlyWorkstation.publication_quality.mesh;
+package org.janelia.it.workstation.publication_quality.mesh;
 
 import org.janelia.it.jacs.shared.loader.renderable.MaskChanRenderableData;
 import org.janelia.it.jacs.shared.loader.renderable.RenderableBean;
@@ -6,7 +6,7 @@ import org.janelia.it.jacs.shared.loader.renderable.RenderableBean;
 import java.util.ArrayList;
 import java.util.List;
 
-import static org.janelia.it.FlyWorkstation.gui.TestingConstants.*;
+import static org.janelia.it.workstation.gui.TestingConstants.*;
 
 /**
  * Created by fosterl on 4/14/14.

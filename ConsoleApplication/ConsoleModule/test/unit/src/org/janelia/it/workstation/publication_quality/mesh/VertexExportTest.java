@@ -1,4 +1,4 @@
-package org.janelia.it.FlyWorkstation.publication_quality.mesh;
+package org.janelia.it.workstation.publication_quality.mesh;
 
 import org.janelia.it.jacs.model.TestCategories;
 import org.janelia.it.jacs.shared.loader.wavefront_obj.OBJWriter;

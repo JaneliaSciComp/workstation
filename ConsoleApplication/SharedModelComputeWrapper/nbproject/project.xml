@@ -71,6 +71,7 @@
                 <package>org.janelia.it.jacs.model.tasks.tic</package>
                 <package>org.janelia.it.jacs.model.tasks.tools</package>
                 <package>org.janelia.it.jacs.model.tasks.utility</package>
+                <package>org.janelia.it.jacs.model.tasks.validation</package>
                 <package>org.janelia.it.jacs.model.tasks.zlatic</package>
                 <package>org.janelia.it.jacs.model.user_data</package>
                 <package>org.janelia.it.jacs.model.user_data.ap16s</package>
@@ -104,6 +105,7 @@
                 <package>org.janelia.it.jacs.model.user_data.tic</package>
                 <package>org.janelia.it.jacs.model.user_data.tiledMicroscope</package>
                 <package>org.janelia.it.jacs.model.user_data.tools</package>
+                <package>org.janelia.it.jacs.model.user_data.validation</package>
                 <package>org.janelia.it.jacs.model.user_data.zlatic</package>
                 <package>org.janelia.it.jacs.model.util</package>
                 <package>org.janelia.it.jacs.model.vo</package>
@@ -114,22 +116,43 @@
                 <package>org.janelia.it.jacs.shared.export</package>
                 <package>org.janelia.it.jacs.shared.fasta</package>
                 <package>org.janelia.it.jacs.shared.file_chooser</package>
+                <package>org.janelia.it.jacs.shared.file_resolver</package>
                 <package>org.janelia.it.jacs.shared.genomics</package>
                 <package>org.janelia.it.jacs.shared.geometric_search</package>
                 <package>org.janelia.it.jacs.shared.hibernate</package>
+                <package>org.janelia.it.jacs.shared.loader</package>
+                <package>org.janelia.it.jacs.shared.loader.file_resolver</package>
+                <package>org.janelia.it.jacs.shared.loader.masking</package>
+                <package>org.janelia.it.jacs.shared.loader.mesh</package>
+                <package>org.janelia.it.jacs.shared.loader.renderable</package>
+                <package>org.janelia.it.jacs.shared.loader.stream</package>
+                <package>org.janelia.it.jacs.shared.loader.stream_source</package>
+                <package>org.janelia.it.jacs.shared.loader.texture</package>
+                <package>org.janelia.it.jacs.shared.loader.volume</package>
+                <package>org.janelia.it.jacs.shared.loader.volume_builder</package>
+                <package>org.janelia.it.jacs.shared.loader.wavefront_obj</package>
                 <package>org.janelia.it.jacs.shared.lucene</package>
                 <package>org.janelia.it.jacs.shared.lucene.data_retrievers</package>
                 <package>org.janelia.it.jacs.shared.lucene.searchers</package>
+                <package>org.janelia.it.jacs.shared.masking</package>
+                <package>org.janelia.it.jacs.shared.mesh</package>
                 <package>org.janelia.it.jacs.shared.node</package>
                 <package>org.janelia.it.jacs.shared.perf</package>
                 <package>org.janelia.it.jacs.shared.processors.recruitment</package>
+                <package>org.janelia.it.jacs.shared.renderable</package>
                 <package>org.janelia.it.jacs.shared.screen</package>
                 <package>org.janelia.it.jacs.shared.solr</package>
+                <package>org.janelia.it.jacs.shared.stream</package>
+                <package>org.janelia.it.jacs.shared.stream_source</package>
                 <package>org.janelia.it.jacs.shared.tasks</package>
+                <package>org.janelia.it.jacs.shared.texture</package>
                 <package>org.janelia.it.jacs.shared.utils</package>
                 <package>org.janelia.it.jacs.shared.utils.entity</package>
                 <package>org.janelia.it.jacs.shared.utils.genbank</package>
                 <package>org.janelia.it.jacs.shared.utils.zeiss</package>
+                <package>org.janelia.it.jacs.shared.volume</package>
+                <package>org.janelia.it.jacs.shared.volume_builder</package>
+                <package>org.janelia.it.jacs.shared.wavefront_obj</package>
             </public-packages>
             <class-path-extension>
                 <runtime-relative-path>ext/jacs-shared.jar</runtime-relative-path>

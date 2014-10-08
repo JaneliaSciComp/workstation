@@ -1,13 +1,12 @@
-package org.janelia.it.FlyWorkstation.publication_quality.mesh;
+package org.janelia.it.workstation.publication_quality.mesh;
 
-import org.janelia.it.FlyWorkstation.geom.Rotation3d;
-import org.janelia.it.FlyWorkstation.geom.Vec3;
-import org.janelia.it.FlyWorkstation.gui.WorkstationEnvironment;
-import org.janelia.it.FlyWorkstation.gui.framework.viewer.alignment_board.AlignmentBoardSettings;
-import org.janelia.it.FlyWorkstation.gui.viewer3d.Mip3d;
-import org.janelia.it.FlyWorkstation.gui.viewer3d.matrix_support.ViewMatrixSupport;
-import org.janelia.it.FlyWorkstation.publication_quality.mesh.actor.MeshDrawActor;
-import org.janelia.it.FlyWorkstation.shared.workers.SimpleWorker;
+import org.janelia.it.workstation.geom.Rotation3d;
+import org.janelia.it.workstation.geom.Vec3;
+import org.janelia.it.workstation.gui.WorkstationEnvironment;
+import org.janelia.it.workstation.gui.viewer3d.Mip3d;
+import org.janelia.it.workstation.gui.viewer3d.matrix_support.ViewMatrixSupport;
+import org.janelia.it.workstation.publication_quality.mesh.actor.MeshDrawActor;
+import org.janelia.it.workstation.shared.workers.SimpleWorker;
 import org.janelia.it.jacs.model.TestCategories;
 import org.janelia.it.jacs.shared.loader.mesh.VertexAttributeManagerI;
 import org.janelia.it.jacs.shared.loader.mesh.VtxAttribMgr;
@@ -59,7 +58,7 @@ public class TestMeshRender {
 
             };
             mipWidget.addMenuAction(dumpAction);
-            mipWidget.getVolumeModel().setGammaAdjustment( (float) AlignmentBoardSettings.DEFAULT_GAMMA );
+            mipWidget.getVolumeModel().setGammaAdjustment( 1.0f );
             mipWidget.getVolumeModel().setCameraDepth( new Vec3( 0.0, 0.0, 0.0 ) );
 
         }

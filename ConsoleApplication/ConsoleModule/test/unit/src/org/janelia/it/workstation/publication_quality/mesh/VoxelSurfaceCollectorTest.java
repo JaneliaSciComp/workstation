@@ -1,7 +1,6 @@
-package org.janelia.it.FlyWorkstation.publication_quality.mesh;
+package org.janelia.it.workstation.publication_quality.mesh;
 
-import org.janelia.it.FlyWorkstation.gui.framework.viewer.alignment_board.AlignmentBoardSettings;
-import static org.janelia.it.FlyWorkstation.gui.TestingConstants.*;
+import static org.janelia.it.workstation.gui.TestingConstants.*;
 
 import org.janelia.it.jacs.model.TestCategories;
 import org.janelia.it.jacs.shared.loader.MaskChanDataAcceptorI;
@@ -125,11 +124,6 @@ public class VoxelSurfaceCollectorTest {
         bean.setTranslatedNum( 1 );
 
         MaskChanMultiFileLoader loader = new MaskChanMultiFileLoader();
-
-        AlignmentBoardSettings settings = new AlignmentBoardSettings();
-        settings.setShowChannelData( true );
-        settings.setGammaFactor( AlignmentBoardSettings.DEFAULT_GAMMA );
-        settings.setChosenDownSampleRate(AlignmentBoardSettings.UNSELECTED_DOWNSAMPLE_RATE);
 
         VoxelSurfaceCollector voxelAcceptor = new VoxelSurfaceCollector();
 

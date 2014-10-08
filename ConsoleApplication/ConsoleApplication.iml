@@ -11,6 +11,7 @@
       <sourceFolder url="file://$MODULE_DIR$/SplitPickingModule/src" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/GeometricSearchModule/src" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/generated" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/SharedModelComputeWrapper/src" isTestSource="false" />
     </content>
     <orderEntry type="inheritedJdk" />
     <orderEntry type="sourceFolder" forTests="false" />
