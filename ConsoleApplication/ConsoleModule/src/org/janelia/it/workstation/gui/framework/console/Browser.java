@@ -511,7 +511,7 @@ public class Browser implements Cloneable {
 
     private void openOntologyComponent() {
         TopComponent win = WindowLocator.getByName(OntologyOutline.ONTOLOGY_COMPONENT_NAME);
-        if (!win.isOpened()) {
+        if (win != null && !win.isOpened()) {
             Mode propertiesMode = WindowManager.getDefault().findMode("properties");
             if (propertiesMode != null) {
                 propertiesMode.dockInto(win);
