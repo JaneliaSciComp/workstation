@@ -19,6 +19,7 @@ import java.awt.BorderLayout;
 import java.util.Collections;
 import java.util.Comparator;
 import javax.swing.JLabel;
+import javax.swing.JPanel;
 import org.janelia.it.workstation.gui.large_volume_viewer.ImageColorModel;
 import org.janelia.it.workstation.shared.workers.IndeterminateNoteProgressMonitor;
 
@@ -30,7 +31,7 @@ import org.janelia.it.workstation.shared.workers.IndeterminateNoteProgressMonito
  *
  * This popup will give users a snapshot volume.  Very simple viewer, relatively speaking.
  */
-public class Snapshot3d extends ModalDialog {
+public class Snapshot3d extends JPanel {
     // Choosing initial width > height as workaround to the reset-focus problem.
     private static final Dimension WIDGET_SIZE = new Dimension( 650, 600 );
     private VolumeSource.VolumeAcceptor volumeAcceptor;
@@ -51,7 +52,6 @@ public class Snapshot3d extends ModalDialog {
     
     private Snapshot3d() {
         super();
-        super.setModal( false );
     }
 
     public void setImageColorModel( ImageColorModel imageColorModel ) {
@@ -130,8 +130,6 @@ public class Snapshot3d extends ModalDialog {
             this.add( label, BorderLayout.SOUTH );
         }
         this.add( mip3d, BorderLayout.CENTER );
-
-        packAndShow();
     }
 
     private void cleanup() {

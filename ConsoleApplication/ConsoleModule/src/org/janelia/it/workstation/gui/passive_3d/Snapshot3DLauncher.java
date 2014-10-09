@@ -19,7 +19,10 @@ import org.janelia.it.workstation.gui.camera.ObservableCamera3d;
 import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.workstation.gui.large_volume_viewer.ImageColorModel;
 import org.janelia.it.workstation.gui.large_volume_viewer.SubvolumeProvider;
+import org.janelia.it.workstation.gui.passive_3d.top_component.Snapshot3dTopComponent;
 import org.janelia.it.workstation.shared.workers.IndeterminateNoteProgressMonitor;
+import org.openide.windows.TopComponent;
+import org.openide.windows.WindowManager;
 
 /**
  * Sources menu items for presenting the user with their 3D viewer.
@@ -109,6 +112,7 @@ public class Snapshot3DLauncher {
             snapshotViewer.setImageColorModel( imageColorModel );
             snapshotViewer.setLabelText( labelTextFor3d() );
             snapshotViewer.launch( collector );
+            makeViewerVisible(snapshotViewer);
 
         } catch ( Exception ex ) {
             System.err.println("Failed to launch viewer: " + ex.getMessage());
@@ -134,10 +138,29 @@ public class Snapshot3DLauncher {
             snapshotViewer.setImageColorModel( imageColorModel );
             snapshotViewer.setLabelText( labelTextFor3d(cubicDimension) );
             snapshotViewer.launch( collector );
+            makeViewerVisible(snapshotViewer);
 
         } catch ( Exception ex ) {
             System.err.println("Failed to launch viewer: " + ex.getMessage());
             ex.printStackTrace();
+        }
+    }
+
+    private void makeViewerVisible(Snapshot3d snapshotViewer) {
+        Snapshot3dTopComponent snapshotTopComponent =
+                (Snapshot3dTopComponent)WindowManager.getDefault()
+                        .findTopComponent(
+                                Snapshot3dTopComponent.SNAPSHOT3D_TOP_COMPONENT_PREFERRED_ID
+                        );
+        if ( snapshotTopComponent != null ) {
+            if ( ! snapshotTopComponent.isOpened() ) {
+                snapshotTopComponent.open();
+            }
+            if ( snapshotTopComponent.isOpened() ) {
+                snapshotTopComponent.requestActive();
+            }
+            snapshotTopComponent.setSnapshotComponent(snapshotViewer);
+            snapshotTopComponent.setVisible(true);
         }
     }
 
