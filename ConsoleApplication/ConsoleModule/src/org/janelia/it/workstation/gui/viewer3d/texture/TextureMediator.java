@@ -379,6 +379,23 @@ public class TextureMediator {
         this.textureData = textureData;
     }
 
+    /**
+     * If this has been set, it will be used to transform every point in the coordinate set.
+     * 
+     * @param transformMatrix applied to all points.
+     */
+    public void setTransformMatrix(float[] transformMatrix) {        
+        textureData.setTransformMatrix(transformMatrix);
+    }
+    
+    /**
+     * Convenience pass-through method to get coord transform matrix.
+     * @return 
+     */
+    public float[] getTransformMatrix() {
+        return textureData.getTransformMatrix();
+    }
+
     private int getStorageFormatMultiplier() {
         int orderId =  getVoxelComponentOrder();
         if ( orderId == GL2.GL_BGRA ) {

@@ -29,6 +29,12 @@ import org.slf4j.LoggerFactory;
 public class RawTiffVolumeSource implements MonitoredVolumeSource {
     public static final int DEPT_STD_GRAPH_CARD_MAX_DEPTH = 172;
     public static final int USER_SUGGESTED_DEPTH = 64;
+    private static final Double[] SPIN_ABOUT_Z = new Double[] {
+        -1.0,    0.0,    0.0,
+        0.0,    -1.0,    0.0,
+        0.0,     0.0,    1.0,
+    };
+    private static final int MATRIX_SQUARE_DIM = 3; //5, if from yaml
 
     private Camera3d camera;
     private String baseDirectoryPath;
@@ -84,9 +90,10 @@ public class RawTiffVolumeSource implements MonitoredVolumeSource {
         }
         FileResolver resolver = new CacheFileResolver();
 
-        progressMonitor.setNote("Starting data load...");                    
-        loadChannel(1, resolver, rawFileInfo.getChannel0(), tifFileLoader, volumeListener);
-        loadChannel(2, resolver, rawFileInfo.getChannel1(), tifFileLoader, volumeListener);
+        progressMonitor.setNote("Starting data load...");
+        Double[] spinAboutZTransform = SPIN_ABOUT_Z;
+        loadChannel(1, resolver, rawFileInfo.getChannel0(), spinAboutZTransform, /*rawFileInfo.getTransformMatrix(),*/ tifFileLoader, volumeListener);
+        loadChannel(2, resolver, rawFileInfo.getChannel1(), spinAboutZTransform, /*rawFileInfo.getTransformMatrix(),*/ tifFileLoader, volumeListener);
 
         progressMonitor.setNote("Launching viewer.");
     }
@@ -104,7 +111,7 @@ public class RawTiffVolumeSource implements MonitoredVolumeSource {
         this.maxDrawPlanes = drawPlanes;
     }
 
-    private void loadChannel(int displayNum, FileResolver resolver, File rawFile, TifFileLoader tifFileLoader, VolumeAcceptor volumeListener) throws Exception {
+    private void loadChannel(int displayNum, FileResolver resolver, File rawFile, Double[] transformMatrix, TifFileLoader tifFileLoader, VolumeAcceptor volumeListener) throws Exception {
         TextureDataI textureData;
         progressMonitor.setNote("Caching channel " + displayNum);
         String resolvedFilename = resolver.getResolvedFilename(rawFile.getAbsolutePath());
@@ -118,8 +125,31 @@ public class RawTiffVolumeSource implements MonitoredVolumeSource {
         textureData.setExplicitVoxelComponentOrder(GL2.GL_LUMINANCE);
         textureData.setExplicitVoxelComponentType(GL2.GL_UNSIGNED_SHORT);
         textureData.setPixelByteCount(2);
+        if ( transformMatrix != null ) {
+            setTransformMatrix(transformMatrix, MATRIX_SQUARE_DIM, textureData);
+        }
         volumeListener.accept(textureData);
         progressMonitor.setNote("Ending load for raw tiff " + displayNum);
     }
 
+    /**
+     * If this has been set, it will be used to transform every point in the coordinate set.
+     * 
+     * @param transformMatrix applied to all points.
+     * @param squareDim the transform matrix must be of size squareDim^2.
+     */
+    private void setTransformMatrix(Double[] transformMatrix, int squareDim, TextureDataI textureData) {        
+        if ( transformMatrix.length != squareDim * squareDim ) {
+            String message = String.format("The transform matrix must be of size %1$d * %1$d. Matrix size is %2$d. Transform not applied.", squareDim, transformMatrix.length);
+            logger.error( message );
+        }
+        else {
+            float[] coordTransformMatrix = new float[ transformMatrix.length ];
+            for ( int i = 0; i < transformMatrix.length; i++ ) {
+                coordTransformMatrix[ i ] = transformMatrix[ i ].floatValue();
+            }
+            textureData.setTransformMatrix(coordTransformMatrix);
+        }
+    }
+    
 }
