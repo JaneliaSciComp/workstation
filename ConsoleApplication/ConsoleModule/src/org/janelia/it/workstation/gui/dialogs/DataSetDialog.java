@@ -27,7 +27,6 @@ import javax.swing.text.JTextComponent;
 
 import net.miginfocom.swing.MigLayout;
 
-import org.janelia.it.jacs.model.lsm.FileStoragePathPattern;
 import org.janelia.it.workstation.api.entity_model.management.ModelMgr;
 import org.janelia.it.workstation.gui.framework.access.Accessibility;
 import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
@@ -57,7 +56,6 @@ public class DataSetDialog extends ModalDialog implements Accessibility {
     private JPanel attrPanel;
     private JTextField nameInput;
     private JTextField identifierInput;
-    private JTextField lsmStoragePathPatternInput;
     private JTextField sampleNamePatternInput;
     private JComboBox<SampleImageType> sampleImageInput;
     private JCheckBox sageSyncCheckbox;
@@ -156,12 +154,6 @@ public class DataSetDialog extends ModalDialog implements Accessibility {
         attrPanel.add(identifierLabel, "gap para");
         attrPanel.add(identifierInput);
 
-        final JLabel lsmStoragePathPatternLabel = new JLabel("LSM Storage Path Pattern: ");
-        lsmStoragePathPatternInput = new JTextField(40);
-        lsmStoragePathPatternLabel.setLabelFor(lsmStoragePathPatternInput);
-        attrPanel.add(lsmStoragePathPatternLabel, "gap para");
-        attrPanel.add(lsmStoragePathPatternInput);
-
         final JLabel sampleNamePatternLabel = new JLabel("Sample Name Pattern: ");
         sampleNamePatternInput = new JTextField(40);
         sampleNamePatternInput.setText(DEFAULT_SAMPLE_NAME_PATTERN);
@@ -194,7 +186,6 @@ public class DataSetDialog extends ModalDialog implements Accessibility {
             nameInput.setText(dataSetEntity.getName());
 
             setDataSetAttributeText(identifierInput, EntityConstants.ATTRIBUTE_DATA_SET_IDENTIFIER);
-            setDataSetAttributeText(lsmStoragePathPatternInput, EntityConstants.ATTRIBUTE_LSM_STORAGE_PATTERN);
             setDataSetAttributeText(sampleNamePatternInput, EntityConstants.ATTRIBUTE_SAMPLE_NAME_PATTERN);
 
             String sampleImageType = dataSetEntity.getValueByAttributeName(EntityConstants.ATTRIBUTE_SAMPLE_IMAGE_TYPE);
@@ -225,18 +216,6 @@ public class DataSetDialog extends ModalDialog implements Accessibility {
 
         Utils.setWaitingCursor(DataSetDialog.this);
 
-        final String lsmStoragePathPattern = lsmStoragePathPatternInput.getText();
-        try {
-            new FileStoragePathPattern(lsmStoragePathPattern);
-        } catch (IllegalArgumentException e) {
-            JOptionPane.showMessageDialog(this,
-                                          e.getMessage(),
-                                          "Invalid LSM Storage Path Pattern",
-                                          JOptionPane.ERROR_MESSAGE);
-            lsmStoragePathPatternInput.requestFocus();
-            return;
-        }
-
         final String sampleNamePattern = sampleNamePatternInput.getText();
         if (!sampleNamePattern.contains(SLIDE_CODE_PATTERN)) {
             JOptionPane.showMessageDialog(this,
@@ -262,7 +241,6 @@ public class DataSetDialog extends ModalDialog implements Accessibility {
                     dataSetEntity.setName(nameInput.getText());
                 }
 
-                updateDataSetAttribute(lsmStoragePathPattern, EntityConstants.ATTRIBUTE_LSM_STORAGE_PATTERN);
                 updateDataSetAttribute(sampleNamePattern, EntityConstants.ATTRIBUTE_SAMPLE_NAME_PATTERN);
                 updateDataSetAttribute(sampleImageType, EntityConstants.ATTRIBUTE_SAMPLE_IMAGE_TYPE);
 
