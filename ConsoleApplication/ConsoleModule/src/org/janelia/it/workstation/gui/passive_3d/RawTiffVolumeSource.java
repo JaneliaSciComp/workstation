@@ -7,7 +7,6 @@
 package org.janelia.it.workstation.gui.passive_3d;
 
 import java.io.File;
-import java.util.List;
 import javax.media.opengl.GL2;
 
 import org.janelia.it.jacs.model.user_data.tiledMicroscope.RawFileInfo;
