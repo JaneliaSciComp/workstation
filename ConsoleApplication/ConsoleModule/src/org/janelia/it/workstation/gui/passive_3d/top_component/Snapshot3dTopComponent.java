@@ -58,26 +58,32 @@ public final class Snapshot3dTopComponent extends TopComponent {
     private void initComponents() {
 
         jPanel1 = new javax.swing.JPanel();
+        containerPanel = new javax.swing.JPanel();
 
         jPanel1.setLayout(new java.awt.BorderLayout());
+
+        containerPanel.setLayout(new java.awt.BorderLayout());
 
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(this);
         this.setLayout(layout);
         layout.setHorizontalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(layout.createSequentialGroup()
-                .addComponent(jPanel1, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addGap(0, 0, Short.MAX_VALUE))
+                .addComponent(containerPanel, javax.swing.GroupLayout.DEFAULT_SIZE, 286, Short.MAX_VALUE)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addComponent(jPanel1, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
         );
         layout.setVerticalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(layout.createSequentialGroup()
                 .addComponent(jPanel1, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addGap(0, 0, Short.MAX_VALUE))
+                .addGap(0, 398, Short.MAX_VALUE))
+            .addComponent(containerPanel, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
         );
     }// </editor-fold>//GEN-END:initComponents
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
+    private javax.swing.JPanel containerPanel;
     private javax.swing.JPanel jPanel1;
     // End of variables declaration//GEN-END:variables
     @Override
@@ -88,14 +94,15 @@ public final class Snapshot3dTopComponent extends TopComponent {
     @Override
     public void componentClosed() {
         if ( externallySuppliedComponent != null ) {
-            jPanel1.remove( externallySuppliedComponent );
+            containerPanel.remove( externallySuppliedComponent );
             externallySuppliedComponent = null;
         }
     }
     
     public void setSnapshotComponent( JComponent component ) {
         externallySuppliedComponent = component;
-        jPanel1.add( component, BorderLayout.CENTER );
+        containerPanel.add( component, BorderLayout.CENTER );
+        //jPanel1.add( component, BorderLayout.CENTER );
     }
 
     void writeProperties(java.util.Properties p) {
