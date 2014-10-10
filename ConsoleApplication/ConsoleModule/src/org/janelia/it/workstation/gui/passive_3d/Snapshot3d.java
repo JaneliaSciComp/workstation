@@ -131,7 +131,6 @@ public class Snapshot3d extends JPanel {
             this.add( label, BorderLayout.SOUTH );
         }
         this.add( mip3d, BorderLayout.CENTER );
-        pack();
     }
 
     private void cleanup() {
@@ -142,11 +141,6 @@ public class Snapshot3d extends JPanel {
         locallyAddedComponents.clear();
     }
     
-    private void pack() {
-        SwingUtilities.updateComponentTreeUI(this);
-        pack();
-    }
-
     private class SnapshotWorker extends SimpleWorker {
         private final VolumeSource volumeSource;
         private Collection<TextureDataI> textureDatas;
