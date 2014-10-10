@@ -20,6 +20,7 @@ import java.util.Collections;
 import java.util.Comparator;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
+import javax.swing.SwingUtilities;
 import org.janelia.it.workstation.gui.large_volume_viewer.ImageColorModel;
 import org.janelia.it.workstation.shared.workers.IndeterminateNoteProgressMonitor;
 
@@ -122,7 +123,7 @@ public class Snapshot3d extends JPanel {
         
         locallyAddedComponents.add( mip3d );
         this.setPreferredSize( WIDGET_SIZE );
-        //this.setMinimumSize( WIDGET_SIZE );
+        this.setMinimumSize( WIDGET_SIZE );
         this.setLayout(new BorderLayout());
         if ( labelText != null ) {
             final JLabel label = new JLabel( labelText );
@@ -130,6 +131,7 @@ public class Snapshot3d extends JPanel {
             this.add( label, BorderLayout.SOUTH );
         }
         this.add( mip3d, BorderLayout.CENTER );
+        pack();
     }
 
     private void cleanup() {
@@ -138,6 +140,11 @@ public class Snapshot3d extends JPanel {
             this.remove( c );
         }
         locallyAddedComponents.clear();
+    }
+    
+    private void pack() {
+        SwingUtilities.updateComponentTreeUI(this);
+        pack();
     }
 
     private class SnapshotWorker extends SimpleWorker {
