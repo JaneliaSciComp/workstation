@@ -32,8 +32,8 @@ import org.janelia.it.workstation.shared.workers.IndeterminateNoteProgressMonito
  * This popup will give users a snapshot volume.  Very simple viewer, relatively speaking.
  */
 public class Snapshot3d extends JPanel {
-    // Choosing initial width > height as workaround to the reset-focus problem.
-    private static final Dimension WIDGET_SIZE = new Dimension( 650, 600 );
+    // Chosing dimensions of same aspect ratio as expected data.
+    private static final Dimension WIDGET_SIZE = new Dimension( 400, 800 );
     private VolumeSource.VolumeAcceptor volumeAcceptor;
     private Collection<Component> locallyAddedComponents = new ArrayList<>();
     private ImageColorModel imageColorModel;
@@ -122,7 +122,7 @@ public class Snapshot3d extends JPanel {
         
         locallyAddedComponents.add( mip3d );
         this.setPreferredSize( WIDGET_SIZE );
-        this.setMinimumSize( WIDGET_SIZE );
+        //this.setMinimumSize( WIDGET_SIZE );
         this.setLayout(new BorderLayout());
         if ( labelText != null ) {
             final JLabel label = new JLabel( labelText );
@@ -157,7 +157,11 @@ public class Snapshot3d extends JPanel {
                     SnapshotWorker.this.textureDatas.add( textureData );
                 }
             };
-            volumeSource.getVolume( volumeAcceptor );
+            try {
+                volumeSource.getVolume( volumeAcceptor );
+            } catch ( RuntimeException rte ) {
+                throw new Exception(rte);
+            }
         }
 
         @Override
