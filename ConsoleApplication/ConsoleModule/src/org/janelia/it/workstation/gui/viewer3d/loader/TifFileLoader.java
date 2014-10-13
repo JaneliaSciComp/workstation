@@ -36,21 +36,21 @@ import org.janelia.it.workstation.gui.viewer3d.texture.TextureDataI;
 public class TifFileLoader extends TextureDataBuilder implements VolumeFileLoaderI {
 
     public static final int BOUNDARY_MULTIPLE = 4;
-    private int depthLimit = -1;
-    private int startingDepth = 0;
-    private int cameraToCentroidDistance = 0;
+    private int[] boundingBox = new int[6];
+    private int cubicOutputDimension = -1;
+    private int[] cameraToCentroidDistance;
     private int sheetCountFromFile = -1;
     
     /**
-     * Sets maximum page (or z-slice) depth to add to outgoing image.
+     * Sets maximum size in all dimensions, to add to outgoing image.
      * 
-     * @param depthLimit when to stop.
+     * @param cubicOutputDimension how many voxels to use.
      */
-    public void setDepthLimit( int depthLimit ) {
-        this.depthLimit = depthLimit;
+    public void setCubicOutputDimension( int cubicOutputDimension ) {
+        this.cubicOutputDimension = cubicOutputDimension;
     }
     
-    public void setCameraToCentroidDistance( int distance ) {
+    public void setCameraToCentroidDistance( int[] distance ) {
         this.cameraToCentroidDistance = distance; 
     }
     
@@ -78,6 +78,7 @@ public class TifFileLoader extends TextureDataBuilder implements VolumeFileLoade
         int zOffset = 0;
         int sheetSize = -1;
         int targetOffset = 0;
+        int i = 2;
         for ( BufferedImage zSlice: allImages ) {
             if ( sx == -1 ) {
                 sheetSize = captureAndUsePageDimensions(zSlice, allImages.size(), file);
@@ -90,7 +91,7 @@ public class TifFileLoader extends TextureDataBuilder implements VolumeFileLoade
                 }
             }
             // Store only things that are within the targetted depth.
-            if ( zOffset >= startingDepth && zOffset < depthLimit ) {
+            if ( zOffset >= boundingBox[i] && zOffset < boundingBox[i+3] ) {
                 storeToBuffer(targetOffset++, sheetSize, zSlice);
             }
             zOffset ++;
@@ -133,19 +134,17 @@ public class TifFileLoader extends TextureDataBuilder implements VolumeFileLoade
         sy = zSlice.getHeight();
         
         // Depth Limit is originally expressed as a part-stack size, based at 0.
-//        int halfDepth = depthLimit / 2;
-//        int middleSlice = zCount / 2;        
-        startingDepth = clamp( 0, zCount - depthLimit, (zCount - depthLimit + cameraToCentroidDistance) / 2 );
-                //middleSlice - halfDepth + cameraToCentroidDistance/2 );
-        depthLimit = startingDepth + depthLimit;
+        int i = 2; // In lieu of loop.
+        boundingBox[i] = clamp( 0, zCount - cubicOutputDimension, (zCount - cubicOutputDimension + cameraToCentroidDistance[i]) / 2 );
+        boundingBox[i + 3] = boundingBox[i] + cubicOutputDimension;
         
-        int szMod = (depthLimit - startingDepth) % BOUNDARY_MULTIPLE;
+        int szMod = (cubicOutputDimension) % BOUNDARY_MULTIPLE;
         // Force z dimension to a given multiple.
         if ( szMod != 0 ) {
-            sz = (((depthLimit - startingDepth) / BOUNDARY_MULTIPLE) + 1 ) * BOUNDARY_MULTIPLE;
+            sz = (((cubicOutputDimension) / BOUNDARY_MULTIPLE) + 1 ) * BOUNDARY_MULTIPLE;
         }
         else {
-            sz = (depthLimit - startingDepth);
+            sz = cubicOutputDimension;
         }
         int sheetSize = sx * sy;
         final int totalVoxels = sheetSize * sz;

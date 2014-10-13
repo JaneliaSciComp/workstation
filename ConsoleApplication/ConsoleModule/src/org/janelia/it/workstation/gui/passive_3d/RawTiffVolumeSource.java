@@ -83,8 +83,11 @@ public class RawTiffVolumeSource implements MonitoredVolumeSource {
         progressMonitor.setNote("Loading volume data.");
         TifFileLoader tifFileLoader = new TifFileLoader();
         if ( maxDrawPlanes > -1 ) {
-            tifFileLoader.setDepthLimit( maxDrawPlanes );
-            int cameraToCentroidDistance = (int)((rawFileInfo.getQueryMicroscopeCoords().get(2) - rawFileInfo.getCentroid().get(2)) / rawFileInfo.getScale()[ 2 ]);
+            tifFileLoader.setCubicOutputDimension( maxDrawPlanes );
+            int[] cameraToCentroidDistance = new int[3];
+            for ( int i = 0; i < 3; i++ ) {
+                cameraToCentroidDistance[i] = (int)((rawFileInfo.getQueryMicroscopeCoords().get(i) - rawFileInfo.getCentroid().get(i)) / rawFileInfo.getScale()[ i ]);
+            }
             tifFileLoader.setCameraToCentroidDistance( cameraToCentroidDistance );
         }
         FileResolver resolver = new CacheFileResolver();
