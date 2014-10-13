@@ -31,6 +31,10 @@ public class CoordCropper3D {
     }
 
     public float[] getCropCoords( RangeSlider[] sliders, double downSampleRate ) {
+        // A downsample rate of 0 implies no downsample.  Effectively same as 1
+        if ( downSampleRate < 1.0 ) {
+            downSampleRate = 1.0;
+        }
         float[] cropCoords = new float[ 6 ];
         for ( int i = 0; i < 3; i++ ) {
             cropCoords[ i * 2 ] = (float)sliders[ i ].getValue() * (float)downSampleRate;

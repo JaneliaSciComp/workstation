@@ -112,7 +112,8 @@ public class TextureMediator {
                         null
                 );
                 
-                dumpGlTexImageCall(
+                if ( logger.isDebugEnabled() ) {
+                    dumpGlTexImageCall(
                         GL2.GL_TEXTURE_3D,
                         0, // mipmap level
                         getInternalFormat(), // as stored INTO graphics hardware, w/ srgb info (GLint internal format)
@@ -122,7 +123,8 @@ public class TextureMediator {
                         0, // border
                         getVoxelComponentOrder(), // voxel component order (GLenum format)
                         getVoxelComponentType() // voxel component type=packed RGBA values(GLenum type)
-                );
+                    );
+                }
 
                 int expectedRemaining = textureData.getSx() * textureData.getSy() * textureData.getSz()
                         * textureData.getPixelByteCount() * textureData.getChannelCount();
