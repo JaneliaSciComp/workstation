@@ -84,14 +84,14 @@ public class Snapshot3DLauncher {
         });
         snapShot3dSubMenu.add( item );
 
-//        item = new JMenuItem( "Abbreviated Raw: " + RawTiffVolumeSource.USER_SUGGESTED_DEPTH + " Planes" );
-//        item.addActionListener(new ActionListener() {
-//            @Override
-//            public void actionPerformed(ActionEvent ae) {
-//                launchRaw3dViewer( RawTiffVolumeSource.USER_SUGGESTED_DEPTH );
-//            }
-//        });
-//        snapShot3dSubMenu.add( item );
+        item = new JMenuItem( "Abbreviated Raw: " + RawTiffVolumeSource.USER_SUGGESTED_DEPTH + " Planes" );
+        item.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent ae) {
+                launchRaw3dViewer( RawTiffVolumeSource.USER_SUGGESTED_DEPTH );
+            }
+        });
+        snapShot3dSubMenu.add( item );
         
         rtnVal.add( snapShot3dSubMenu );
 
