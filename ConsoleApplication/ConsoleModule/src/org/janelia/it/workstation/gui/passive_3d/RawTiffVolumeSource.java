@@ -84,7 +84,7 @@ public class RawTiffVolumeSource implements MonitoredVolumeSource {
         TifFileLoader tifFileLoader = new TifFileLoader();
         if ( maxDrawPlanes > -1 ) {
             tifFileLoader.setDepthLimit( maxDrawPlanes );
-            int cameraToCentroidDistance = (int)(camera.getFocus().getZ() - rawFileInfo.getCentroid().get(2));
+            int cameraToCentroidDistance = (int)((rawFileInfo.getQueryMicroscopeCoords().get(2) - rawFileInfo.getCentroid().get(2)) / rawFileInfo.getScale()[ 2 ]);
             tifFileLoader.setCameraToCentroidDistance( cameraToCentroidDistance );
         }
         FileResolver resolver = new CacheFileResolver();
