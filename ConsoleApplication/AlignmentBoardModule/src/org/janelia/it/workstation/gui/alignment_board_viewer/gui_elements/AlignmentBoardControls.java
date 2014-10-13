@@ -841,7 +841,7 @@ public class AlignmentBoardControls {
             @Override
             public void actionPerformed(ActionEvent ae) {
                 CropCoordSet cropCoordSet = volumeModel.getCropCoords();
-                cropCoordSet.acceptCurrentCoordinates();
+                cropCoordSet.acceptCurrentNormalizedCoordinates();
                 fireCropEvent();
             }
         });
