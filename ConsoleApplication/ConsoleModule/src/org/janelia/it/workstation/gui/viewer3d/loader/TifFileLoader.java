@@ -91,7 +91,7 @@ public class TifFileLoader extends TextureDataBuilder implements VolumeFileLoade
                 }
             }
             // Store only things that are within the targetted depth.
-            if ( zOffset >= boundingBox[i] && zOffset < boundingBox[i+3] ) {
+            if ( cubicOutputDimension == -1 || (zOffset >= boundingBox[i] && zOffset < boundingBox[i+3]) ) {
                 storeToBuffer(targetOffset++, sheetSize, zSlice);
             }
             zOffset ++;
@@ -134,18 +134,24 @@ public class TifFileLoader extends TextureDataBuilder implements VolumeFileLoade
         sy = zSlice.getHeight();
         
         // Depth Limit is originally expressed as a part-stack size, based at 0.
-        int i = 2; // In lieu of loop.
-        boundingBox[i] = clamp( 0, zCount - cubicOutputDimension, (zCount - cubicOutputDimension + cameraToCentroidDistance[i]) / 2 );
-        boundingBox[i + 3] = boundingBox[i] + cubicOutputDimension;
-        
-        int szMod = (cubicOutputDimension) % BOUNDARY_MULTIPLE;
-        // Force z dimension to a given multiple.
-        if ( szMod != 0 ) {
-            sz = (((cubicOutputDimension) / BOUNDARY_MULTIPLE) + 1 ) * BOUNDARY_MULTIPLE;
+        if ( cameraToCentroidDistance != null ) {
+            for ( int i = 0; i < 3; i++ ) {
+                boundingBox[i] = clamp( 0, zCount - cubicOutputDimension, (zCount - cubicOutputDimension + cameraToCentroidDistance[i]) / 2 );
+                boundingBox[i + 3] = boundingBox[i] + cubicOutputDimension;
+            }
+            int szMod = (cubicOutputDimension) % BOUNDARY_MULTIPLE;
+            // Force z dimension to a given multiple.
+            if ( szMod != 0 ) {
+                sz = (((cubicOutputDimension) / BOUNDARY_MULTIPLE) + 1 ) * BOUNDARY_MULTIPLE;
+            }
+            else {
+                sz = cubicOutputDimension;
+            }
         }
         else {
-            sz = cubicOutputDimension;
+            sz = zCount;
         }
+        
         int sheetSize = sx * sy;
         final int totalVoxels = sheetSize * sz;
         pixelBytes = (int)Math.floor( file.length() / (sheetSize * sheetCountFromFile) );
