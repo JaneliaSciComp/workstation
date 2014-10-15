@@ -112,7 +112,7 @@ public class TextureMediator {
                         null
                 );
                 
-                if ( logger.isDebugEnabled() ) {
+                if ( 1==1 || logger.isDebugEnabled() ) {
                     dumpGlTexImageCall(
                         GL2.GL_TEXTURE_3D,
                         0, // mipmap level

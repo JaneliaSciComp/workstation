@@ -1,6 +1,5 @@
 package org.janelia.it.workstation.gui.passive_3d;
 
-import org.janelia.it.workstation.gui.dialogs.ModalDialog;
 import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.workstation.gui.viewer3d.*;
 import org.janelia.it.workstation.gui.viewer3d.texture.TextureDataI;
@@ -20,7 +19,6 @@ import java.util.Collections;
 import java.util.Comparator;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
-import javax.swing.SwingUtilities;
 import org.janelia.it.workstation.gui.large_volume_viewer.ImageColorModel;
 import org.janelia.it.workstation.shared.workers.IndeterminateNoteProgressMonitor;
 
@@ -137,8 +135,15 @@ public class Snapshot3d extends JPanel {
         // Cleanup old widgets.
         for ( Component c: locallyAddedComponents ) {
             this.remove( c );
+            if ( c instanceof Mip3d ) {
+                Mip3d mip3d = (Mip3d)c;
+                mip3d.setVisible(false);
+                mip3d.clear();
+            }
         }
         locallyAddedComponents.clear();
+        validate();
+        repaint();
     }
     
     private class SnapshotWorker extends SimpleWorker {
