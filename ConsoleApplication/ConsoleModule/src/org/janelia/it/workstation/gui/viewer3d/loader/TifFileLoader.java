@@ -190,10 +190,11 @@ public class TifFileLoader extends TextureDataBuilder implements VolumeFileLoade
      * @param dataMover specific to pixel bytes count.
      */
     private void transferSubset(int destZ, int destSheetSize, DataMover dataMover) {
-        int sourcePixelsWidth = pixelBytes * sourceWidth;
-        int destOffset = ((destZ * destSheetSize) * pixelBytes);// + (boundingBox[ START_Y_INX ] * sx) + boundingBox[ START_X_INX ]) * pixelBytes;
+        // The source will be organized into one-voxel-per-array-entry.  That is
+        // the source will be in bytes, words, ints, etc.
+        int destOffset = ((destZ * destSheetSize) * pixelBytes);
         for ( int sourceY = boundingBox[ START_Y_INX ]; sourceY < boundingBox[ END_Y_INX ]; sourceY++ ) {
-            int sourceOffset = (sourcePixelsWidth * sourceY) + (boundingBox[ START_X_INX ] * pixelBytes);
+            int sourceOffset = (sourceWidth * sourceY) + boundingBox[ START_X_INX ];
             for ( int sourceX = boundingBox[ START_X_INX ]; sourceX < boundingBox[ END_X_INX ]; sourceX++ ) {
                 // move pixelbytes worth of data from source to destination.
                 dataMover.moveData(sourceOffset, destOffset);
@@ -215,12 +216,27 @@ public class TifFileLoader extends TextureDataBuilder implements VolumeFileLoade
             // Z bounding box constraints are based on sheet depth.
             boundingBox[START_Z_INX] = clamp( 0, zCount - cubicOutputDimension, (zCount - cubicOutputDimension + cameraToCentroidDistance[START_Z_INX]) / 2 );
             boundingBox[END_Z_INX] = boundingBox[START_Z_INX] + cubicOutputDimension;
-            // Other two are based on x and y dimensions.
-            boundingBox[START_X_INX] = clamp( 0, sourceWidth - cubicOutputDimension, (sourceWidth - cubicOutputDimension + cameraToCentroidDistance[START_X_INX]) / 2 );
-            boundingBox[END_X_INX] = boundingBox[START_X_INX] + cubicOutputDimension;
             
-            boundingBox[START_Y_INX] = clamp( 0, sourceHeight - cubicOutputDimension, (sourceHeight - cubicOutputDimension + cameraToCentroidDistance[START_Y_INX]) / 2 );
-            boundingBox[END_Y_INX] = boundingBox[START_Y_INX] + cubicOutputDimension;
+            // Other two are based on x and y dimensions.
+            int blockCenterX = sourceWidth / 2 + cameraToCentroidDistance[START_X_INX];
+            boundingBox[START_X_INX] = clamp( 0, sourceWidth - cubicOutputDimension, blockCenterX - (cubicOutputDimension / 2) );
+            boundingBox[END_X_INX] = boundingBox[START_X_INX] + cubicOutputDimension;
+
+            // Now, we must invert these numbers, WRT the width.
+            int tempStart = sourceWidth - boundingBox[END_X_INX];
+            int tempEnd = sourceWidth - boundingBox[START_X_INX];
+            boundingBox[START_X_INX] = tempStart;
+            boundingBox[END_X_INX] = tempEnd;
+            
+            int blockCenterY = sourceHeight / 2 + cameraToCentroidDistance[START_Y_INX];
+            boundingBox[START_Y_INX] = clamp( 0, sourceHeight - cubicOutputDimension, blockCenterY - (cubicOutputDimension / 2) );
+            boundingBox[END_Y_INX] = boundingBox[START_Y_INX] + cubicOutputDimension;            
+
+            // Now, we must again invert these numbers, WRT the height.
+            tempStart = sourceHeight - boundingBox[END_Y_INX];
+            tempEnd = sourceHeight - boundingBox[START_Y_INX];
+            boundingBox[START_Y_INX] = tempStart;
+            boundingBox[END_Y_INX] = tempEnd;
             
             int szMod = (cubicOutputDimension) % BOUNDARY_MULTIPLE;
             // Force z dimension to a given multiple.
