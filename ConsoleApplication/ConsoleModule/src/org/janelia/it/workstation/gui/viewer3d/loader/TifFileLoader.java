@@ -34,24 +34,11 @@ import org.janelia.it.workstation.gui.viewer3d.texture.TextureDataI;
  * Handles TIFF via Loci reading capability.
  */
 public class TifFileLoader extends TextureDataBuilder implements VolumeFileLoaderI {
-
-    private static final int SPACE_N = 3;
-    private static final int START_X_INX = 0;
-    private static final int END_X_INX = START_X_INX + SPACE_N;
-    private static final int START_Y_INX = 1;
-    private static final int END_Y_INX = START_Y_INX + SPACE_N;
-    private static final int START_Z_INX = 2;
-    private static final int END_Z_INX = START_Z_INX + SPACE_N;
     
     public static final int BOUNDARY_MULTIPLE = 4;
-    private int[] boundingBox = new int[6];
-    private int cubicOutputDimension = -1;
-    private int[] cameraToCentroidDistance;
     private int sheetCountFromFile = -1;
-    private int[] tempIntBuffer;
     
-    private int sourceWidth;
-    private int sourceHeight;
+    private TifLoaderSubsetHelper subsetHelper = new TifLoaderSubsetHelper();
     
     /**
      * Sets maximum size in all dimensions, to add to outgoing image.
@@ -59,17 +46,17 @@ public class TifFileLoader extends TextureDataBuilder implements VolumeFileLoade
      * @param cubicOutputDimension how many voxels to use.
      */
     public void setCubicOutputDimension( int cubicOutputDimension ) {
-        this.cubicOutputDimension = cubicOutputDimension;
+        subsetHelper.setCubicOutputDimension(cubicOutputDimension);
     }
     
     public void setCameraToCentroidDistance( int[] distance ) {
-        this.cameraToCentroidDistance = distance; 
+        subsetHelper.setCameraToCentroidDistance(distance);
     }
     
     @Override
     public TextureDataI createTextureDataBean() {
         TextureDataBean textureDataBean;
-        if ( pixelBytes < 4  ||  cubicOutputDimension != -1 ) {
+        if ( pixelBytes < 4  ||  subsetHelper.getCubicOutputDimension() != -1 ) {
             textureDataBean = new TextureDataBean( textureByteArray, sx, sy, sz );
         }
         else {
@@ -93,24 +80,28 @@ public class TifFileLoader extends TextureDataBuilder implements VolumeFileLoade
         int i = 2;
         for ( BufferedImage zSlice: allImages ) {
             if ( sx == -1 ) {
-                sheetSize = captureAndUsePageDimensions(zSlice, allImages.size(), file);
+                sheetSize = subsetHelper.captureAndUsePageDimensions(zSlice, allImages.size(), file);
+                sx = subsetHelper.getSx();
+                sy = subsetHelper.getSy();
+                sz = subsetHelper.getSz();
+                argbTextureIntArray = subsetHelper.getArgbTextureIntArray();
+                textureByteArray = subsetHelper.getTextureByteArray();
+                pixelBytes = subsetHelper.getPixelBytes();
             }
             else {
-                if ( sourceWidth != zSlice.getWidth()  ||  sourceHeight != zSlice.getHeight() ) {
+                if ( subsetHelper.getSourceWidth() != zSlice.getWidth()  ||  subsetHelper.getSourceHeight() != zSlice.getHeight() ) {
                     throw new IllegalStateException( "Image number " + zOffset +
                             " with HEIGHT=" + zSlice.getHeight() + " and WIDTH=" + 
-                            zSlice.getWidth() + " has dimensions which do not match previous width * height of " + sourceWidth + " * " + sourceHeight );
+                            zSlice.getWidth() + " has dimensions which do not match previous width * height of " + subsetHelper.getSourceWidth() + " * " + subsetHelper.getSourceHeight() );
                 }
             }
+            
             // Store only things that are within the targetted depth.
-            if ( cubicOutputDimension == -1 ) {
-                if ( tempIntBuffer == null ) {
-                    tempIntBuffer = new int[ sourceWidth * sourceHeight ];
-                }
+            if ( ! subsetHelper.isTakingSubset() ) {
                 storeToBuffer(targetOffset++, sheetSize, zSlice);
             }
-            else if (zOffset >= boundingBox[i] && zOffset < boundingBox[i+3]) {
-                storeSubsetToBuffer(targetOffset++, sheetSize, zSlice);
+            else if (subsetHelper.inZSubset( zOffset )) {
+                subsetHelper.storeSubsetToBuffer(targetOffset++, sheetSize, zSlice);
             }
             zOffset ++;
         }
@@ -148,145 +139,6 @@ public class TifFileLoader extends TextureDataBuilder implements VolumeFileLoade
     }
 
     /**
-     * If this read is meant to take only a subset of the input and push that
-     * to the output buffer, this method will carve out that chunk, and place
-     * it into a buffer of the exact size needed.
-     * 
-     * @param destZ where in the output buffer to place this "sheet".
-     * @param destSheetSize size of sheet: dest X * dest Y
-     * @param zSlice a buffered image from which to extract a partial sheet.
-     */
-    private void storeSubsetToBuffer(int destZ, int destSheetSize, BufferedImage zSlice) {
-        DataMover dataMover;
-        if ( pixelBytes == 1 ) {
-            DataBufferByte db = ((DataBufferByte)zSlice.getTile(0, 0).getDataBuffer());
-            byte[] pixels = db.getData();
-            dataMover = new ByteDataMover( pixels );
-        }
-        else if ( pixelBytes == 2 ) {
-            DataBufferUShort db = ((DataBufferUShort)zSlice.getTile(0, 0).getDataBuffer());
-            short[] pixels = db.getData();
-            dataMover = new ShortDataMover( pixels );
-        }
-        else if ( pixelBytes == 4 ) {            
-            zSlice.getRGB(0, 0,
-                    sx, sy,
-                    tempIntBuffer, 0,
-                    sx);
-            dataMover = new IntDataMover( tempIntBuffer );
-        }
-        else {
-            throw new IllegalStateException( "Unexpected pixelBytes count == " + pixelBytes );
-        }
-        transferSubset(destZ, destSheetSize, dataMover);
-    }
-
-    /**
-     * Convenience method encapsulating common functionality, to all widths
-     * of data that will be transferred.
-     * 
-     * @param destZ how far along in output.
-     * @param destSheetSize size of one x * y of data.
-     * @param dataMover specific to pixel bytes count.
-     */
-    private void transferSubset(int destZ, int destSheetSize, DataMover dataMover) {
-        // The source will be organized into one-voxel-per-array-entry.  That is
-        // the source will be in bytes, words, ints, etc.
-        int destOffset = ((destZ * destSheetSize) * pixelBytes);
-        for ( int sourceY = boundingBox[ START_Y_INX ]; sourceY < boundingBox[ END_Y_INX ]; sourceY++ ) {
-            int sourceOffset = (sourceWidth * sourceY) + boundingBox[ START_X_INX ];
-            for ( int sourceX = boundingBox[ START_X_INX ]; sourceX < boundingBox[ END_X_INX ]; sourceX++ ) {
-                // move pixelbytes worth of data from source to destination.
-                dataMover.moveData(sourceOffset, destOffset);
-                destOffset += pixelBytes;
-                sourceOffset += pixelBytes;
-            }
-        }
-        
-    }
-
-    private int captureAndUsePageDimensions(BufferedImage zSlice, final int zCount, final File file) {
-        sx = zSlice.getWidth();
-        sy = zSlice.getHeight();
-        sourceWidth = sx;
-        sourceHeight = sy;
-        
-        // Depth Limit is originally expressed as a part-stack size, based at 0.
-        if ( cameraToCentroidDistance != null ) {
-            // Z bounding box constraints are based on sheet depth.
-            boundingBox[START_Z_INX] = clamp( 0, zCount - cubicOutputDimension, (zCount - cubicOutputDimension + cameraToCentroidDistance[START_Z_INX]) / 2 );
-            boundingBox[END_Z_INX] = boundingBox[START_Z_INX] + cubicOutputDimension;
-            
-            // Other two are based on x and y dimensions.
-            int blockCenterX = sourceWidth / 2 + cameraToCentroidDistance[START_X_INX];
-            boundingBox[START_X_INX] = clamp( 0, sourceWidth - cubicOutputDimension, blockCenterX - (cubicOutputDimension / 2) );
-            boundingBox[END_X_INX] = boundingBox[START_X_INX] + cubicOutputDimension;
-
-            // Now, we must invert these numbers, WRT the width.
-            int tempStart = sourceWidth - boundingBox[END_X_INX];
-            int tempEnd = sourceWidth - boundingBox[START_X_INX];
-            boundingBox[START_X_INX] = tempStart;
-            boundingBox[END_X_INX] = tempEnd;
-            
-            int blockCenterY = sourceHeight / 2 + cameraToCentroidDistance[START_Y_INX];
-            boundingBox[START_Y_INX] = clamp( 0, sourceHeight - cubicOutputDimension, blockCenterY - (cubicOutputDimension / 2) );
-            boundingBox[END_Y_INX] = boundingBox[START_Y_INX] + cubicOutputDimension;            
-
-            // Now, we must again invert these numbers, WRT the height.
-            tempStart = sourceHeight - boundingBox[END_Y_INX];
-            tempEnd = sourceHeight - boundingBox[START_Y_INX];
-            boundingBox[START_Y_INX] = tempStart;
-            boundingBox[END_Y_INX] = tempEnd;
-            
-            int szMod = (cubicOutputDimension) % BOUNDARY_MULTIPLE;
-            // Force z dimension to a given multiple.
-            if ( szMod != 0 ) {
-                sz = (((cubicOutputDimension) / BOUNDARY_MULTIPLE) + 1 ) * BOUNDARY_MULTIPLE;
-            }
-            else {
-                sz = cubicOutputDimension;
-            }
-            
-            // Adjust the x and y dimensions, to adjust the subsetting requirement.
-            sx = boundingBox[ END_X_INX ] - boundingBox[ START_X_INX ];
-            sy = boundingBox[ END_Y_INX ] - boundingBox[ START_Y_INX ];
-        }
-        else {
-            sz = zCount;
-        }
-        
-        int sheetSize = sx * sy;
-        final int totalVoxels = sheetSize * sz;
-        pixelBytes = (int)Math.floor( file.length() / ((sourceWidth*sourceHeight) * sheetCountFromFile) );
-        //System.out.println("File size is " + file.length());
-        //System.out.println("Expected number of voxels = " + (sourceWidth*sourceHeight) * sheetCountFromFile );
-        if ( pixelBytes < 4  ||  cubicOutputDimension != -1 ) {
-            textureByteArray = new byte[totalVoxels * pixelBytes];
-        }
-        else {
-            argbTextureIntArray = new int[totalVoxels];
-        }
-
-        // DEBUG CODE>
-        for ( int i = 0; i < 3; i++ ) {
-            System.out.println( "Bounding Box offset=" + i + " value=" + boundingBox[i] );
-            System.out.println( "Bounding Box offset=" + (i+3) + " value=" + boundingBox[i+3] );
-            System.out.println();
-        }
-        return sheetSize;
-    }
-    
-    private int clamp( int min, int max, int startingValue ) {
-        if ( startingValue < min ) {
-            return min;
-        }
-        else if ( startingValue > max ) {
-            return max;
-        }
-        return startingValue;
-    }
-    
-    /**
      * Load specified tiff page and return as buffered zSlice.
      * From: http://opencapture.googlecode.com/svn/0.0.2/OpenCapture/src/net/filterlogic/util/imaging/ToTIFF.java
      * 
@@ -307,6 +159,7 @@ public class TifFileLoader extends TextureDataBuilder implements VolumeFileLoade
             ImageDecoder dec = ImageCodec.createImageDecoder("tiff", s, param);
             int maxPage = dec.getNumPages();
             sheetCountFromFile = maxPage;
+            subsetHelper.setSourceDepth( sheetCountFromFile );
             
             for (int imageToLoad = 0; imageToLoad < maxPage; imageToLoad++) {
                 RenderedImage op
@@ -455,64 +308,5 @@ public class TifFileLoader extends TextureDataBuilder implements VolumeFileLoade
         }
 
     }
-    
-    private interface DataMover {
-        void moveData(int sourceOffset, int destOffset);
-    }
-    
-    private class ByteDataMover implements DataMover {
-        private final byte[] pixels;
         
-        public ByteDataMover(byte[] pixels) {
-            this.pixels = pixels;
-        }
-        
-        @Override
-        public void moveData( int sourceOffset, int destOffset ) {
-            System.arraycopy(pixels, sourceOffset, textureByteArray, destOffset, pixelBytes);            
-        }
-    }
-    
-    private class ShortDataMover implements DataMover {
-        private final short[] pixels;
-        
-        public ShortDataMover(short[] pixels) {
-            this.pixels = pixels;
-        }
-        
-        @Override
-        public void moveData( int sourceOffset, int destOffset ) {            
-            // Changing the order.
-            int unsignedPixelVal = pixels[ sourceOffset ];
-            if (unsignedPixelVal < 0) {
-                unsignedPixelVal += 65536;
-            }
-            byte byteVal = (byte) ((unsignedPixelVal & 0x0000ff00) >> 8);
-            textureByteArray[ destOffset + 1 ] = byteVal;
-            byteVal = (byte) (unsignedPixelVal & 0x000000ff);
-            textureByteArray[ destOffset ] = byteVal;
-        }
-    }
-    
-    private class IntDataMover implements DataMover {
-        private final int[] pixels;
-        
-        public IntDataMover(int[] pixels) {
-            this.pixels = pixels;
-        }
-        
-        @Override
-        public void moveData( int sourceOffset, int destOffset ) {
-            // Changing the order.
-            long value = pixels[sourceOffset];
-            if ( value < 0 ) {
-                value += Integer.MAX_VALUE;
-            }
-            for (int pi = 0; pi < pixelBytes; pi++) {
-                byte piByte = (byte) (value >>> (pi * 8) & 0x000000ff);
-                textureByteArray[ destOffset + pi ] = piByte;
-            }
-        }
-    }
-    
 }
