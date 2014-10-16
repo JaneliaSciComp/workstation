@@ -41,7 +41,6 @@ public class LoaderSubsetHelper {
     private int[] tempIntBuffer;
     
     private int pixelBytes;
-    private boolean takingSubset = false;
 
     public void setCameraToCentroidDistance( int[] distance ) {
         this.cameraToCentroidDistance = distance; 
@@ -49,9 +48,6 @@ public class LoaderSubsetHelper {
     
     public void setCubicOutputDimension( int dimension ) {
         this.cubicOutputDimension = dimension;
-        if ( cubicOutputDimension > 0 ) {
-            takingSubset = true;
-        }
     }
     
     /**
@@ -177,20 +173,6 @@ public class LoaderSubsetHelper {
         this.pixelBytes = pixelBytes;
     }
     
-    /**
-     * @return the takingSubset
-     */
-    public boolean isTakingSubset() {
-        return takingSubset;
-    }
-
-    /**
-     * @param takingSubset the takingSubset to set
-     */
-    public void setTakingSubset(boolean takingSubset) {
-        this.takingSubset = takingSubset;
-    }
-
     public int captureAndUsePageDimensions(final int zCount, final long fileLength) {
         
         // Depth Limit is originally expressed as a part-stack size, based at 0.
