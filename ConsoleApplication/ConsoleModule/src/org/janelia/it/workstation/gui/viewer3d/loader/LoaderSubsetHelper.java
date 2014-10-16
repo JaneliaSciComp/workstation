@@ -9,8 +9,6 @@ package org.janelia.it.workstation.gui.viewer3d.loader;
 import java.awt.image.BufferedImage;
 import java.awt.image.DataBufferByte;
 import java.awt.image.DataBufferUShort;
-import java.io.File;
-import static org.janelia.it.workstation.gui.viewer3d.loader.TifFileLoader.BOUNDARY_MULTIPLE;
 
 /**
  *
@@ -193,7 +191,7 @@ public class LoaderSubsetHelper {
         this.takingSubset = takingSubset;
     }
 
-    public int captureAndUsePageDimensions(final int zCount, final File file) {
+    public int captureAndUsePageDimensions(final int zCount, final long fileLength) {
         
         // Depth Limit is originally expressed as a part-stack size, based at 0.
         if ( cameraToCentroidDistance != null ) {
@@ -220,20 +218,12 @@ public class LoaderSubsetHelper {
             tempStart = getSourceHeight() - boundingBox[END_Y_INX];
             tempEnd = getSourceHeight() - boundingBox[START_Y_INX];
             boundingBox[START_Y_INX] = tempStart;
-            boundingBox[END_Y_INX] = tempEnd;
+            boundingBox[END_Y_INX] = tempEnd;            
             
-            int szMod = (getCubicOutputDimension()) % BOUNDARY_MULTIPLE;
-            // Force z dimension to a given multiple.
-            if ( szMod != 0 ) {
-                setSz((((getCubicOutputDimension()) / BOUNDARY_MULTIPLE) + 1 ) * BOUNDARY_MULTIPLE);
-            }
-            else {
-                setSz(getCubicOutputDimension());
-            }
-            
-            // Adjust the x and y dimensions, to adjust the subsetting requirement.
+            // Adjust the dimensions, to adjust the subsetting requirement.
             setSx(boundingBox[ END_X_INX ] - boundingBox[ START_X_INX ]);
             setSy(boundingBox[ END_Y_INX ] - boundingBox[ START_Y_INX ]);
+            setSz(boundingBox[ END_Z_INX ] - boundingBox[ START_Z_INX ]);
 
         }
         else {
@@ -242,7 +232,7 @@ public class LoaderSubsetHelper {
         
         int sheetSize = getSx() * getSy();
         final int totalVoxels = sheetSize * getSz();
-        setPixelBytes((int)Math.floor( file.length() / ((getSourceWidth()*getSourceHeight()) * sourceDepth) ));
+        setPixelBytes((int)Math.floor( fileLength / ((getSourceWidth()*getSourceHeight()) * sourceDepth) ));
         //System.out.println("File size is " + file.length());
         //System.out.println("Expected number of voxels = " + (sourceWidth*sourceHeight) * sheetCountFromFile );
         if ( getPixelBytes() < 4  ||  getCubicOutputDimension() != -1 ) {

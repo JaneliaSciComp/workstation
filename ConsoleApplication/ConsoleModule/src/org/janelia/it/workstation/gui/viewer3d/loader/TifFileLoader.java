@@ -35,7 +35,6 @@ import org.janelia.it.workstation.gui.viewer3d.texture.TextureDataI;
  */
 public class TifFileLoader extends TextureDataBuilder implements VolumeFileLoaderI {
     
-    public static final int BOUNDARY_MULTIPLE = 4;
     private int sheetCountFromFile = -1;
     
     private LoaderSubsetHelper subsetHelper;
@@ -97,7 +96,7 @@ public class TifFileLoader extends TextureDataBuilder implements VolumeFileLoade
                     subsetHelper.setSy(zSlice.getHeight());
                     subsetHelper.setSourceWidth(sx);
                     subsetHelper.setSourceHeight(sy);
-                    sheetSize = subsetHelper.captureAndUsePageDimensions(allImages.size(), file);
+                    sheetSize = subsetHelper.captureAndUsePageDimensions(allImages.size(), file.length());
                     sx = subsetHelper.getSx();
                     sy = subsetHelper.getSy();
                     sz = subsetHelper.getSz();
@@ -108,7 +107,7 @@ public class TifFileLoader extends TextureDataBuilder implements VolumeFileLoade
                     expectedHeight = subsetHelper.getSourceHeight();
                 }
                 else {
-                    sheetSize = captureAndUsePageDimensions( allImages.size(), file );
+                    sheetSize = captureAndUsePageDimensions( allImages.size(), file.length() );
                     expectedWidth = sx;
                     expectedHeight = sy;
                 }
@@ -132,8 +131,8 @@ public class TifFileLoader extends TextureDataBuilder implements VolumeFileLoade
         }
     }
     
-    public int captureAndUsePageDimensions(final int zCount, final File file) {
-        pixelBytes = (int)Math.floor( file.length() / ((sx*sy) * sz) );
+    public int captureAndUsePageDimensions(final int zCount, final long fileLength) {
+        pixelBytes = (int)Math.floor( fileLength / ((sx*sy) * sz) );
         if ( pixelBytes == 4 ) {
             argbTextureIntArray = new int[ sx * sy * sz ];
         }
