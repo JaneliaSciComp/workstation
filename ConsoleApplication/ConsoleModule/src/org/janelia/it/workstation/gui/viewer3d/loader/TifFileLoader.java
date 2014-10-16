@@ -60,6 +60,13 @@ public class TifFileLoader extends TextureDataBuilder implements VolumeFileLoade
         subsetHelper.setCameraToCentroidDistance(distance);
     }
     
+    public void setConversionCharacteristics( double[][] transform, int[] minCorner, int[] extent, int[] queryCoords ) {
+        if ( subsetHelper == null ) {
+            subsetHelper = new LoaderSubsetHelper();            
+        }
+        subsetHelper.setTransformCharacteristics(transform, minCorner, extent, queryCoords);
+    }
+    
     @Override
     public TextureDataI createTextureDataBean() {
         TextureDataBean textureDataBean;

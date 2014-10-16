@@ -32,6 +32,10 @@ public class LoaderSubsetHelper {
     private int sourceHeight;
     private int sourceDepth;
 
+    private int[] minCorner;
+    private int[] extent;
+    private double[][] stageToLVV;
+    private int[] queryCoords;
     private int[] cameraToCentroidDistance;
     private int cubicOutputDimension = -1;
     private final int[] boundingBox = new int[6];
@@ -48,6 +52,13 @@ public class LoaderSubsetHelper {
     
     public void setCubicOutputDimension( int dimension ) {
         this.cubicOutputDimension = dimension;
+    }
+    
+    public void setTransformCharacteristics(double[][] stageToLVV, int[] minCorner, int[] extent, int[] queryCoords) {
+        this.stageToLVV = stageToLVV;
+        this.minCorner = minCorner;
+        this.extent = extent;
+        this.queryCoords = queryCoords;
     }
     
     /**
@@ -174,6 +185,8 @@ public class LoaderSubsetHelper {
     }
     
     public int captureAndUsePageDimensions(final int zCount, final long fileLength) {
+        // Experiment time!
+        System.out.println( this.queryCoords[0] + "," + this.queryCoords[1] + "," + this.queryCoords[2] );
         
         // Depth Limit is originally expressed as a part-stack size, based at 0.
         if ( cameraToCentroidDistance != null ) {

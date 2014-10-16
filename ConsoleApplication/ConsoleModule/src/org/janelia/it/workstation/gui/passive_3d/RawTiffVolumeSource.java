@@ -7,6 +7,8 @@
 package org.janelia.it.workstation.gui.passive_3d;
 
 import java.io.File;
+import java.util.HashMap;
+import java.util.Map;
 import javax.media.opengl.GL2;
 
 import org.janelia.it.jacs.model.user_data.tiledMicroscope.RawFileInfo;
@@ -40,7 +42,7 @@ public class RawTiffVolumeSource implements MonitoredVolumeSource {
     private IndeterminateNoteProgressMonitor progressMonitor;
     private final Logger logger = LoggerFactory.getLogger( RawTiffVolumeSource.class );
     private int maxDrawPlanes = -1;
-
+    
     /**
      * Seed this object with all it needs to fetch the volume.
      * 
@@ -84,11 +86,14 @@ public class RawTiffVolumeSource implements MonitoredVolumeSource {
         TifFileLoader tifFileLoader = new TifFileLoader();
         if ( maxDrawPlanes > -1 ) {
             tifFileLoader.setCubicOutputDimension( maxDrawPlanes );
+            //todo eliminate camera-to-centroid-distance setter, etc.
             int[] cameraToCentroidDistance = new int[3];
             for ( int i = 0; i < 3; i++ ) {
                 cameraToCentroidDistance[i] = (int)((rawFileInfo.getQueryMicroscopeCoords().get(i) - rawFileInfo.getCentroid().get(i)) / rawFileInfo.getScale()[ i ]);
             }
             tifFileLoader.setCameraToCentroidDistance( cameraToCentroidDistance );
+            
+            tifFileLoader.setConversionCharacteristics( rawFileInfo.getInvertedTransform(), rawFileInfo.getMinCorner(), rawFileInfo.getExtent(), viewerCoord );
         }
         FileResolver resolver = new CacheFileResolver();
 
