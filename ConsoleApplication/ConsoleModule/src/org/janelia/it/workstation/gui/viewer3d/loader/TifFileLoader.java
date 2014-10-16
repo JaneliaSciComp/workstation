@@ -38,7 +38,7 @@ public class TifFileLoader extends TextureDataBuilder implements VolumeFileLoade
     public static final int BOUNDARY_MULTIPLE = 4;
     private int sheetCountFromFile = -1;
     
-    private TifLoaderSubsetHelper subsetHelper = new TifLoaderSubsetHelper();
+    private LoaderSubsetHelper subsetHelper;
     
     /**
      * Sets maximum size in all dimensions, to add to outgoing image.
@@ -46,17 +46,25 @@ public class TifFileLoader extends TextureDataBuilder implements VolumeFileLoade
      * @param cubicOutputDimension how many voxels to use.
      */
     public void setCubicOutputDimension( int cubicOutputDimension ) {
+        if ( subsetHelper == null )
+            subsetHelper = new LoaderSubsetHelper();
         subsetHelper.setCubicOutputDimension(cubicOutputDimension);
     }
     
+    /**
+     * Tell camera proximity for sake of bounding box calculation.
+     * @param distance 
+     */
     public void setCameraToCentroidDistance( int[] distance ) {
+        if ( subsetHelper == null )
+            subsetHelper = new LoaderSubsetHelper();
         subsetHelper.setCameraToCentroidDistance(distance);
     }
     
     @Override
     public TextureDataI createTextureDataBean() {
         TextureDataBean textureDataBean;
-        if ( pixelBytes < 4  ||  subsetHelper.getCubicOutputDimension() != -1 ) {
+        if ( pixelBytes < 4  ||  subsetHelper != null ) {
             textureDataBean = new TextureDataBean( textureByteArray, sx, sy, sz );
         }
         else {
@@ -77,27 +85,44 @@ public class TifFileLoader extends TextureDataBuilder implements VolumeFileLoade
         int zOffset = 0;
         int sheetSize = -1;
         int targetOffset = 0;
-        int i = 2;
+        int expectedWidth = 0;
+        int expectedHeight = 0;
         for ( BufferedImage zSlice: allImages ) {
             if ( sx == -1 ) {
-                sheetSize = subsetHelper.captureAndUsePageDimensions(zSlice, allImages.size(), file);
-                sx = subsetHelper.getSx();
-                sy = subsetHelper.getSy();
-                sz = subsetHelper.getSz();
-                argbTextureIntArray = subsetHelper.getArgbTextureIntArray();
-                textureByteArray = subsetHelper.getTextureByteArray();
-                pixelBytes = subsetHelper.getPixelBytes();
+                sx = zSlice.getWidth();
+                sy = zSlice.getHeight();
+                sz = allImages.size();
+                if ( subsetHelper != null ) {
+                    subsetHelper.setSx(zSlice.getWidth());
+                    subsetHelper.setSy(zSlice.getHeight());
+                    subsetHelper.setSourceWidth(sx);
+                    subsetHelper.setSourceHeight(sy);
+                    sheetSize = subsetHelper.captureAndUsePageDimensions(allImages.size(), file);
+                    sx = subsetHelper.getSx();
+                    sy = subsetHelper.getSy();
+                    sz = subsetHelper.getSz();
+                    pixelBytes = subsetHelper.getPixelBytes();
+                    argbTextureIntArray = subsetHelper.getArgbTextureIntArray();
+                    textureByteArray = subsetHelper.getTextureByteArray();
+                    expectedWidth = subsetHelper.getSourceWidth();
+                    expectedHeight = subsetHelper.getSourceHeight();
+                }
+                else {
+                    sheetSize = captureAndUsePageDimensions( allImages.size(), file );
+                    expectedWidth = sx;
+                    expectedHeight = sy;
+                }
             }
             else {
-                if ( subsetHelper.getSourceWidth() != zSlice.getWidth()  ||  subsetHelper.getSourceHeight() != zSlice.getHeight() ) {
+                if ( expectedWidth != zSlice.getWidth()  ||  expectedHeight != zSlice.getHeight() ) {
                     throw new IllegalStateException( "Image number " + zOffset +
                             " with HEIGHT=" + zSlice.getHeight() + " and WIDTH=" + 
-                            zSlice.getWidth() + " has dimensions which do not match previous width * height of " + subsetHelper.getSourceWidth() + " * " + subsetHelper.getSourceHeight() );
+                            zSlice.getWidth() + " has dimensions which do not match previous width * height of " + expectedWidth + " * " + expectedHeight );
                 }
             }
             
             // Store only things that are within the targetted depth.
-            if ( ! subsetHelper.isTakingSubset() ) {
+            if ( subsetHelper == null ) {
                 storeToBuffer(targetOffset++, sheetSize, zSlice);
             }
             else if (subsetHelper.inZSubset( zOffset )) {
@@ -105,6 +130,17 @@ public class TifFileLoader extends TextureDataBuilder implements VolumeFileLoade
             }
             zOffset ++;
         }
+    }
+    
+    public int captureAndUsePageDimensions(final int zCount, final File file) {
+        pixelBytes = (int)Math.floor( file.length() / ((sx*sy) * sz) );
+        if ( pixelBytes == 4 ) {
+            argbTextureIntArray = new int[ sx * sy * sz ];
+        }
+        else {
+            textureByteArray = new byte[ sx * sy * sz * pixelBytes ];
+        }
+        return sx * sy;
     }
     
     private void storeToBuffer(int zOffset, int sheetSize, BufferedImage zSlice) {
@@ -159,7 +195,8 @@ public class TifFileLoader extends TextureDataBuilder implements VolumeFileLoade
             ImageDecoder dec = ImageCodec.createImageDecoder("tiff", s, param);
             int maxPage = dec.getNumPages();
             sheetCountFromFile = maxPage;
-            subsetHelper.setSourceDepth( sheetCountFromFile );
+            if ( subsetHelper != null )
+                subsetHelper.setSourceDepth( sheetCountFromFile );
             
             for (int imageToLoad = 0; imageToLoad < maxPage; imageToLoad++) {
                 RenderedImage op

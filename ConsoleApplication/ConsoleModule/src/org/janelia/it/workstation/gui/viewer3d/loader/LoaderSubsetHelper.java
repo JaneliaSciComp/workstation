@@ -16,7 +16,7 @@ import static org.janelia.it.workstation.gui.viewer3d.loader.TifFileLoader.BOUND
  *
  * @author fosterl
  */
-public class TifLoaderSubsetHelper {
+public class LoaderSubsetHelper {
     
     private static final int SPACE_N = 3;
     private static final int START_X_INX = 0;
@@ -178,7 +178,7 @@ public class TifLoaderSubsetHelper {
     public void setPixelBytes(int pixelBytes) {
         this.pixelBytes = pixelBytes;
     }
-
+    
     /**
      * @return the takingSubset
      */
@@ -193,11 +193,7 @@ public class TifLoaderSubsetHelper {
         this.takingSubset = takingSubset;
     }
 
-    public int captureAndUsePageDimensions(BufferedImage zSlice, final int zCount, final File file) {
-        setSx(zSlice.getWidth());
-        setSy(zSlice.getHeight());
-        setSourceWidth(getSx());
-        setSourceHeight(getSy());
+    public int captureAndUsePageDimensions(final int zCount, final File file) {
         
         // Depth Limit is originally expressed as a part-stack size, based at 0.
         if ( cameraToCentroidDistance != null ) {
