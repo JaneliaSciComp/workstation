@@ -43,9 +43,8 @@ public class SearchResultContextMenu extends AbstractContextMenu<Entity> {
 
     @Override
     protected void addSingleSelectionItems() {
-        Entity entity = getSelectedElement();
-        add(getTitleItem("Entity '" + entity.getName() + "'"));
         add(getDetailsItem());
+        add(getNavigationItem());
         setNextAddRequiresSeparator(true);
         add(getRelativesItem());
     }
@@ -228,6 +227,155 @@ public class SearchResultContextMenu extends AbstractContextMenu<Entity> {
         return detailsMenuItem;
     }
 
+    protected JMenuItem getNavigationItem() {
+        final Entity entity = getSelectedElement();
+        JMenuItem detailsMenuItem = new JMenuItem("  View In Data Explorer...");
+        detailsMenuItem.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+
+                Utils.setWaitingCursor(searchResultsPanel);
+
+                SimpleWorker worker = new SimpleWorker() {
+
+                    List<List<Object>> paths = new ArrayList<List<Object>>();
+                    MultiTreeEntityChooser entityChooser;
+
+                    @Override
+                    protected void doStuff() throws Exception {
+                        List<List<Object>> allPaths = getRootPaths(entity, new HashSet<Long>());
+                        for (List<Object> path : allPaths) {
+                            if (!path.isEmpty()) {
+                                paths.add(path);
+                            }
+                        }
+                        if (paths.isEmpty()) {
+                            throw new Exception("No access to a root for this entity");
+                        }
+                        Collections.sort(paths, new Comparator<List<Object>>() {
+                            @Override
+                            public int compare(List<Object> o1, List<Object> o2) {
+                                Entity root1 = (Entity) o1.get(0);
+                                Entity root2 = (Entity) o2.get(0);
+                                // Order by id to get oldest entities first
+                                return root1.getId().compareTo(root2.getId());
+                            }
+                        });
+                    }
+
+                    @Override
+                    protected void hadSuccess() {
+
+                        final List<EntityTree> trees = new ArrayList<EntityTree>();
+                        final Map<EntityTree, String> startingPaths = new HashMap<EntityTree, String>();
+                        final Set<Future<Boolean>> futures = new HashSet<Future<Boolean>>();
+
+                        PATH_LOOP:
+                        for (List<Object> path : paths) {
+                            ExpansionState expansion = new ExpansionState();
+                            expansion.addExpandedUniqueId("/");
+
+                            StringBuilder sb = new StringBuilder();
+                            for (Object p : path) {
+                                sb.append("/");
+                                if (p instanceof Entity) {
+                                    sb.append("e_");
+                                    sb.append(((Entity) p).getId());
+                                }
+                                else {
+                                    EntityData ed = (EntityData) p;
+                                    sb.append("ed_");
+                                    sb.append(ed.getId());
+                                }
+
+                                expansion.addExpandedUniqueId(sb.toString());
+                            }
+
+                            String selected = sb.toString();
+                            log.debug("Wil select " + selected);
+                            expansion.setSelectedUniqueId(selected);
+
+                            EntityTree tree = new EntityTree();
+                            tree.initializeTree((Entity) path.get(0));
+                            tree.getDynamicTree().setCellRenderer(new EntityTreeCellRenderer() {
+                                @Override
+                                protected boolean isHighlighted(Entity entity2) {
+                                    return entity2.getId().equals(entity.getId());
+                                }
+
+                            });
+                            futures.add(expansion.restoreExpansionState(tree.getDynamicTree(), true));
+                            tree.activate();
+                            trees.add(tree);
+                            startingPaths.put(tree, selected);
+                        }
+
+                        if (trees.isEmpty()) {
+                            hadError(new Exception("Could not find any rooted paths"));
+                        }
+
+                        log.debug("Waiting for trees to expand");
+
+                        SimpleWorker worker2 = new SimpleWorker() {
+
+                            @Override
+                            protected void doStuff() throws Exception {
+                                for (Future<Boolean> future : futures) {
+                                    try {
+                                        future.get();
+                                    }
+                                    catch (Exception e) {
+                                        log.error("Exception encountered while waiting for tree to expand", e);
+                                    }
+                                }
+                            }
+
+                            @Override
+                            protected void hadSuccess() {
+                                log.debug("All trees expanded");
+                                Utils.setDefaultCursor(searchResultsPanel);
+
+                                entityChooser = new MultiTreeEntityChooser("Select Tree", trees);
+
+                                int returnVal = entityChooser.showDialog(null);
+
+                                // Dialog has closed, so we need to clean up subscriptions
+                                for (EntityTree entityTree : trees) {
+                                    entityTree.deactivate();
+                                }
+
+                                if (returnVal != EntityChooser.CHOOSE_OPTION) {
+                                    return;
+                                }
+
+                                EntityTree selectedTree = entityChooser.getSelectedTree();
+                                String startingPath = startingPaths.get(selectedTree);
+                                SessionMgr.getBrowser().getEntityOutline().selectEntityByUniqueId(startingPath);
+                                SessionMgr.getBrowser().getGeneralSearchDialog().setVisible(false);
+                            }
+
+                            @Override
+                            protected void hadError(Throwable error) {
+                                Utils.setDefaultCursor(searchResultsPanel);
+                                SessionMgr.getSessionMgr().handleException(error);
+                            }
+                        };
+
+                        worker2.execute();
+                    }
+
+                    @Override
+                    protected void hadError(Throwable error) {
+                        Utils.setDefaultCursor(searchResultsPanel);
+                        SessionMgr.getSessionMgr().handleException(error);
+                    }
+                };
+
+                worker.execute();
+            }
+        });
+        return detailsMenuItem;
+    }
     private List<List<Object>> getRootPaths(Entity entity, Set<Long> visited) throws Exception {
 
         List<List<Object>> rootPaths = new ArrayList<List<Object>>();

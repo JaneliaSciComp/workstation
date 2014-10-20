@@ -9,10 +9,11 @@ package org.janelia.it.workstation.gui.viewer3d.shader;
 import org.janelia.it.workstation.gui.viewer3d.texture.TextureMediator;
 
 /**
- * This type of shader takes a signal texture mediator.
+ * This type of shader takes at least one texture mediator.
  * 
  * @author fosterl
  */
-public abstract class SignalShader extends AbstractShader {
-    public abstract void setSignalTextureMediator( TextureMediator textureMediator );
+public abstract class TexturedShader extends AbstractShader {
+    public static final String SIGNAL_TEXTURE_NAME = "signalTexture";
+    public abstract void addTextureMediator( TextureMediator textureMediator, String name );
 }

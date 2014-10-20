@@ -7,6 +7,7 @@
 package org.janelia.it.workstation.gui.passive_3d;
 
 import java.util.List;
+import javax.media.opengl.GL2;
 import org.janelia.it.workstation.api.entity_model.management.ModelMgr;
 import org.janelia.it.workstation.gui.camera.BasicObservableCamera3d;
 import org.janelia.it.workstation.gui.camera.Camera3d;
@@ -77,19 +78,17 @@ public class RawTiffVolumeSource implements MonitoredVolumeSource {
 
         for ( int i = 0; i < 2; i++ ) {
             TextureDataI textureData;
-            tifFileLoader.loadVolumeFile( resolver.getResolvedFilename(tiffFiles.get( 0 )) );
-            System.out.println("Loading " + tiffFiles.get(0));
+            String resolvedFilename = resolver.getResolvedFilename(tiffFiles.get( i ));
+            tifFileLoader.loadVolumeFile( resolvedFilename );
+            System.out.println("Loading " + tiffFiles.get(i) + " as " + resolvedFilename);
             textureData = tifFileLoader.buildTextureData(true);
+            // Presets known to work with this data type.
+            textureData.setExplicitInternalFormat(GL2.GL_LUMINANCE16);
+            textureData.setExplicitVoxelComponentOrder(GL2.GL_LUMINANCE);
+            textureData.setExplicitVoxelComponentType(GL2.GL_UNSIGNED_SHORT);
+            textureData.setPixelByteCount(2);
             volumeListener.accept(textureData);
         }
-        
-        /*
-        TODO: blend data0 and data1, voxel-wise.
-        
-        tifFileLoader = new TifFileLoader();
-        tifFileLoader.loadVolumeFile( tiffFiles.get( 1 ) );
-        TextureDataI textureData1 = tifFileLoader.buildTextureData(true);
-         */
         
         progressMonitor.setNote("Launching viewer.");
     }

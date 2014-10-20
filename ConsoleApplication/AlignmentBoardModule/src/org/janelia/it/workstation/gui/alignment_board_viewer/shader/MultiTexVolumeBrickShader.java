@@ -13,6 +13,7 @@ import javax.media.opengl.GL2;
 import java.nio.IntBuffer;
 
 public class MultiTexVolumeBrickShader extends AbstractShader {
+    public static final String SIGNAL_TEXTURE_NAME = "signalTexture";
     // Shader GLSL source is expected to be in the same package as this class.  Otherwise,
     // a prefix of the relative path could be given, as in "shader_sub_pkg/AShader.glsl"
     public static final String VERTEX_SHADER = "VolumeBrickVtx.glsl";
@@ -144,7 +145,7 @@ public class MultiTexVolumeBrickShader extends AbstractShader {
     }
 
     private void setTextureUniforms(GL2 gl) {
-        setTextureUniform(gl, "signalTexture", signalTextureMediator);
+        setTextureUniform(gl, MultiTexVolumeBrickShader.SIGNAL_TEXTURE_NAME, signalTextureMediator);
         //  This did not work.  GL.GL_TEXTURE0 ); //textureIds[ 0 ] );
 
         if ( volumeMaskApplied ) {

@@ -18,8 +18,9 @@ import javax.media.opengl.GLAutoDrawable;
 import javax.media.opengl.GLCapabilities;
 import javax.media.opengl.GLProfile;
 import java.util.ArrayList;
-import java.util.List;
-import org.janelia.it.workstation.gui.viewer3d.shader.SignalShader;
+import java.util.Collection;
+import java.util.Iterator;
+import org.janelia.it.workstation.gui.viewer3d.shader.TexturedShader;
 
 /**
  * VolumeTexture class draws a transparent rectangular volume with a 3D opengl texture
@@ -31,10 +32,10 @@ public abstract class AbstractVolumeBrick implements VolumeBrickI
 
     public enum RenderMethod {MAXIMUM_INTENSITY, ALPHA_BLENDING}
 
-    private TextureMediator signalTextureMediator;
-    protected List<TextureMediator> textureMediators = new ArrayList<>();
+    private TextureMediator primaryTextureMediator;
+    protected Collection<TextureMediator> textureMediators = new ArrayList<>();
 
-    private SignalShader shader;
+    private TexturedShader shader;
     
     // Vary these parameters to taste
 	// Rendering variables
@@ -49,7 +50,7 @@ public abstract class AbstractVolumeBrick implements VolumeBrickI
      * to reach a multiple of 8
      */
     // OpenGL state
-    private boolean bSignalTextureNeedsUpload = false;
+    protected boolean bTexturesNeedUploaded = false;
     private boolean bBuffersNeedUpload = true;
 
     //private RGBExcludableShader shader = new RGBExcludableShader();
@@ -86,14 +87,14 @@ public abstract class AbstractVolumeBrick implements VolumeBrickI
     /**
      * @return the shader
      */
-    public SignalShader getShader() {
+    public TexturedShader getShader() {
         return shader;
     }
 
     /**
      * @param shader the shader to set
      */
-    public void setShader(SignalShader shader) {
+    public void setShader(TexturedShader shader) {
         this.shader = shader;
     }
 
@@ -101,7 +102,7 @@ public abstract class AbstractVolumeBrick implements VolumeBrickI
 	public void init(GLAutoDrawable glDrawable) {
 
         // Avoid carrying out any operations if there is no real data.
-        if ( getSignalTextureMediator() == null ) {
+        if ( ! hasTextures() ) {
             logger.warn("No textures for volume brick.");
             return;
         }
@@ -111,12 +112,12 @@ public abstract class AbstractVolumeBrick implements VolumeBrickI
 
 		//gl.glPushAttrib(GL2.GL_TEXTURE_BIT | GL2.GL_ENABLE_BIT);
 
-        if (bSignalTextureNeedsUpload) {
-            uploadSignalTexture(gl);
+        if (bTexturesNeedUploaded) {            
+            uploadAllTextures(gl);
         }
 		if (bUseShader) {
             try {
-                getShader().setSignalTextureMediator(getSignalTextureMediator());
+                getShader().addTextureMediator(getPrimaryTextureMediator(), TexturedShader.SIGNAL_TEXTURE_NAME);
                 getShader().init(gl);
             } catch ( Exception ex ) {
                 ex.printStackTrace();
@@ -167,7 +168,7 @@ public abstract class AbstractVolumeBrick implements VolumeBrickI
 		if ( Math.abs(vv.z()) > Math.abs(vv.get(a1.index())) )
 			a1 = CoordinateAxis.Z; // Alright, it's definitely Z principal.
         
-        setupSignalTexture(gl);
+        setupTextures(gl);
 
 		// If principal axis points away from viewer, draw slices front to back,
 		// instead of back to front.
@@ -188,7 +189,7 @@ public abstract class AbstractVolumeBrick implements VolumeBrickI
 		// Retarded JOGL GLJPanel frequently reallocates the GL context
 		// during resize. So we need to be ready to reinitialize everything.
         textureIds = null;
-		bSignalTextureNeedsUpload = true;
+		bTexturesNeedUploaded = true;
         bIsInitialized = false;
 
         getBufferManager().releaseBuffers(gl);
@@ -200,24 +201,25 @@ public abstract class AbstractVolumeBrick implements VolumeBrickI
 		BoundingBox3d result = new BoundingBox3d();
 		Vec3 half = new Vec3(0,0,0);
 		for (int i = 0; i < 3; ++i)
-			half.set(i, 0.5 * getSignalTextureMediator().getVolumeMicrometers()[i]);
+			half.set(i, 0.5 * getPrimaryTextureMediator().getVolumeMicrometers()[i]);
 		result.include(half.minus());
 		result.include(half);
 		return result;
 	}
 
-    /**
-     * @return the signalTextureMediator
-     */
-    public TextureMediator getSignalTextureMediator() {
-        return signalTextureMediator;
+    public boolean hasTextures() {
+        return textureMediators != null  &&  textureMediators.size() > 0;
     }
-
+    
     /**
-     * @param signalTextureMediator the signalTextureMediator to set
+     * @return the primaryTextureMediator
      */
-    public void setSignalTextureMediator(TextureMediator signalTextureMediator) {
-        this.signalTextureMediator = signalTextureMediator;
+    public TextureMediator getPrimaryTextureMediator() {
+        return primaryTextureMediator;
+    }
+    
+    public Collection<TextureMediator> getTextureMediators() {
+        return textureMediators;
     }
 
     /**
@@ -235,22 +237,47 @@ public abstract class AbstractVolumeBrick implements VolumeBrickI
     }
 
     //---------------------------------IMPLEMENT VolumeDataAcceptor
+    /**
+     * Set the primary texture data.  Note that if a primary texture mediator
+     * already exists, this texture data will be given to it.
+     * 
+     * @param textureData 
+     */
     @Override
-    public void setTextureData(TextureDataI textureData) {
-        if ( getSignalTextureMediator() == null ) {
-            setSignalTextureMediator(new TextureMediator());
-            textureMediators.add( getSignalTextureMediator());
+    public void setPrimaryTextureData(TextureDataI textureData) {
+        if ( getPrimaryTextureMediator() == null ) {
+            this.primaryTextureMediator = new TextureMediator();
+            textureMediators.add( primaryTextureMediator );
         }
-        getSignalTextureMediator().setTextureData( textureData );
-        bSignalTextureNeedsUpload = true;
-        getBufferManager().setTextureMediator( getSignalTextureMediator());
+        getPrimaryTextureMediator().setTextureData( textureData );
+        bTexturesNeedUploaded = true;
+        getBufferManager().setTextureMediator( getPrimaryTextureMediator());
     }
-
+    
+    /**
+     * Add a texture data to those available to this volume. Will not set this
+     * texture data, on any existing texture mediator, but will always make
+     * a new one.
+     * 
+     * @param textureData 
+     */
+    @Override
+    public void addTextureData(TextureDataI textureData) {
+        TextureMediator textureMediator = new TextureMediator();
+        textureMediator.setTextureData( textureData );
+        textureMediators.add( textureMediator );
+        if ( getPrimaryTextureMediator() == null ) {
+            this.primaryTextureMediator = textureMediator;
+            getBufferManager().setTextureMediator( getPrimaryTextureMediator() );
+        }
+        bTexturesNeedUploaded = true;
+    }
+    
     //---------------------------------END: IMPLEMENT VolumeDataAcceptor
 
     /** Call this when the brick is to be re-shown after an absence. */
     public void refresh() {
-        bSignalTextureNeedsUpload = true;
+        bTexturesNeedUploaded = true;
     }
 
     /** This is a constructor-helper.  It has the listener setup required to properly use the volume model. */
@@ -271,23 +298,25 @@ public abstract class AbstractVolumeBrick implements VolumeBrickI
 
     protected void initMediators( GL2 gl ) {
         textureIds = TextureMediator.genTextureIds( gl, textureMediators.size() );
-        if ( getSignalTextureMediator() != null ) {
-            getSignalTextureMediator().init( textureIds[ 0 ], TextureMediator.SIGNAL_TEXTURE_OFFSET );
+        Iterator<TextureMediator> iter = textureMediators.iterator();
+        for ( int i = 0; i < textureMediators.size() ; i++ ) {
+            TextureMediator tm = iter.next();
+            tm.init( textureIds[ i ], TextureMediator.SIGNAL_TEXTURE_OFFSET+i );
         }
     }
 
-    /** Uploading the signal texture. */
-    protected void uploadSignalTexture(GL2 gl) {
-        if ( getSignalTextureMediator() != null ) {
-            getSignalTextureMediator().deleteTexture( gl );
-            getSignalTextureMediator().uploadTexture( gl );
+    /** Push all textures to the GPU, which have been added to the list. */
+    protected void uploadAllTextures(GL2 gl) {
+        for ( TextureMediator textureMediator: textureMediators ) {
+            textureMediator.deleteTexture( gl );
+            textureMediator.uploadTexture( gl );
         }
-        bSignalTextureNeedsUpload = false;
+        bTexturesNeedUploaded = false;
     }
 
-    protected void setupSignalTexture(GL2 gl) {
-        if ( getSignalTextureMediator() != null ) {
-            getSignalTextureMediator().setupTexture( gl );
+    protected void setupTextures(GL2 gl) {
+        for ( TextureMediator textureMediator: textureMediators ) {
+            textureMediator.setupTexture(gl);
         }
     }
 
@@ -301,4 +330,7 @@ public abstract class AbstractVolumeBrick implements VolumeBrickI
         }
     }
 
+    protected int[] getTextureIds() {
+        return textureIds;
+    }
 }

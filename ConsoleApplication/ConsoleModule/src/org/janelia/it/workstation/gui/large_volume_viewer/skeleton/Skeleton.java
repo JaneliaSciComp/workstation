@@ -127,13 +127,13 @@ public class Skeleton {
         @Override
         public void execute(TmGeoAnnotation annotation) {
             Anchor anchor = anchorsByGuid.get(annotation.getId());
-            HashSet<Long> annotationNeighbors = new HashSet<Long>(annotation.getChildren().size() + 1);
-            for (TmGeoAnnotation child: annotation.getChildren()) {
-                annotationNeighbors.add(child.getId());
+            HashSet<Long> annotationNeighbors = new HashSet<Long>(annotation.getChildIds().size() + 1);
+            for (Long childId: annotation.getChildIds()) {
+                annotationNeighbors.add(childId);
             }
             // might be reparented to have no parent:
-            if (annotation.getParent() != null) {
-                annotationNeighbors.add(annotation.getParent().getId());
+            if (!annotation.isRoot()) {
+                annotationNeighbors.add(annotation.getParentId());
             }
 
             updateNeighbors(anchor, annotationNeighbors);

@@ -34,8 +34,8 @@ public class SWCDataConverter {
         int segmentType;
         int parentIndex;
         for (TmGeoAnnotation root: neuron.getRootAnnotations()) {
-            for (TmGeoAnnotation ann: root.getSubTreeList()) {
-                if (ann.getParent() == null) {
+            for (TmGeoAnnotation ann: neuron.getSubTreeList(root)) {
+                if (ann.isRoot()) {
                     parentIndex = -1;
                 } else {
                     parentIndex = annMap.get(ann.getParentId());
@@ -43,10 +43,10 @@ public class SWCDataConverter {
 
                 // only marking "fork" and "end, as that's
                 //  all we can surmise from geometry
-                if (ann.getChildren().size() == 0) {
-                    segmentType = 5;
-                } else if (ann.getChildren().size() > 1) {
+                if (ann.getChildIds().size() == 0) {
                     segmentType = 6;
+                } else if (ann.getChildIds().size() > 1) {
+                    segmentType = 5;
                 } else {
                     segmentType = 0;
                 }

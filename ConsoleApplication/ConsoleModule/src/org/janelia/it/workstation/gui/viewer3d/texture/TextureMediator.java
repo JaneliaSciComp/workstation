@@ -111,6 +111,18 @@ public class TextureMediator {
                         getVoxelComponentType(), // voxel component type=packed RGBA values(GLenum type)
                         null
                 );
+                
+                dumpGlTexImageCall(
+                        GL2.GL_TEXTURE_3D,
+                        0, // mipmap level
+                        getInternalFormat(), // as stored INTO graphics hardware, w/ srgb info (GLint internal format)
+                        textureData.getSx(), // width
+                        textureData.getSy(), // height
+                        textureData.getSz(), // depth
+                        0, // border
+                        getVoxelComponentOrder(), // voxel component order (GLenum format)
+                        getVoxelComponentType() // voxel component type=packed RGBA values(GLenum type)
+                );
 
                 int expectedRemaining = textureData.getSx() * textureData.getSy() * textureData.getSz()
                         * textureData.getPixelByteCount() * textureData.getChannelCount();
@@ -166,7 +178,7 @@ public class TextureMediator {
 
             // DEBUG
             //if ( expectedRemaining < 1000000 )
-            //    testTextureContents(gl);
+            //    testTextureContents(gl); // Did NOT work for TIF!
         }
 
     }

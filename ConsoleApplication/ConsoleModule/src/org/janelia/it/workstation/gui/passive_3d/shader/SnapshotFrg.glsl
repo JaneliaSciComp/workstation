@@ -14,9 +14,8 @@ uniform int interleave_flag;
 vec4 chooseColor() 
 {
     vec4 in_color = texture3D(signalTexture, gl_TexCoord[0].xyz);
+//in_color = vec4(0,0,0,1); // TEMP
 
-    // Two color images are loaded as luminance/alpha, so look in alpha
-    // for second intensity, not in green.
     if (channel_count == 2)
     {
         if (interleave_flag == 0)
@@ -25,12 +24,10 @@ vec4 chooseColor()
         }
         else
         {
-            in_color.g = texture3D(interleavedTexture, gl_TexCoord[1].xyz).r;
+            // Verified: this code is used when 2 channels/separate tifs avail.
+            in_color.g = texture3D(interleavedTexture, gl_TexCoord[0].xyz).r;
+//in_color.g = 0; // TEMP
         }
-    }
-    else
-    {
-        in_color.g = in_color.a;
     }
 
     vec3 out_color = vec3(0, 0, 0);
