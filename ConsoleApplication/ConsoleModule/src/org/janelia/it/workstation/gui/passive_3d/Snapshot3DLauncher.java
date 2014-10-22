@@ -60,12 +60,26 @@ public class Snapshot3DLauncher {
         JMenu snapShot3dSubMenu = new JMenu("3D Snapshot");
 
         List<JMenuItem> rtnVal = new ArrayList<>();
+
         int[] extents = new int[] {
+            64, 128
+        };
+        for (final int extent : extents) {
+            JMenuItem item = new JMenuItem("Raw sub-volume: " + extent + " cubic voxels");
+            item.addActionListener(new ActionListener() {
+                @Override
+                public void actionPerformed(ActionEvent ae) {
+                    launchRaw3dViewer(extent);
+                }
+            });
+            snapShot3dSubMenu.add(item);
+        }
+
+        extents = new int[] {
             64, 128, 512
         };
-
         for (final int extent : extents) {
-            JMenuItem item = new JMenuItem( extent + " cubed" );
+            JMenuItem item = new JMenuItem( "Rendered sub-volume: " + extent + " cubed" );
             item.addActionListener(new ActionListener() {
                 @Override
                 public void actionPerformed(ActionEvent ae) {
@@ -75,7 +89,8 @@ public class Snapshot3DLauncher {
             });
             snapShot3dSubMenu.add( item );
         }
-        JMenuItem item = new JMenuItem( "Raw" );
+
+        JMenuItem item = new JMenuItem( "Full raw" );
         item.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent ae) {
@@ -84,14 +99,6 @@ public class Snapshot3DLauncher {
         });
         snapShot3dSubMenu.add( item );
 
-        item = new JMenuItem( "Raw Sub-Volume: " + RawTiffVolumeSource.USER_SUGGESTED_CUBIC_DIMENSION + " Voxels" );
-        item.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent ae) {
-                launchRaw3dViewer( RawTiffVolumeSource.USER_SUGGESTED_CUBIC_DIMENSION );
-            }
-        });
-        snapShot3dSubMenu.add( item );
         
         rtnVal.add( snapShot3dSubMenu );
 

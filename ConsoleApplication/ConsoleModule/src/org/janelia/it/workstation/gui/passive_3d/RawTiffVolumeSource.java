@@ -27,7 +27,6 @@ import org.slf4j.LoggerFactory;
  */
 public class RawTiffVolumeSource implements MonitoredVolumeSource {
     public static final int DEPT_STD_GRAPH_CARD_MAX_DEPTH = 172;
-    public static final int USER_SUGGESTED_CUBIC_DIMENSION = 128;//TEMP 64
     private static final Double[] SPIN_ABOUT_Z = new Double[] {
         -1.0,    0.0,    0.0,
         0.0,    -1.0,    0.0,
