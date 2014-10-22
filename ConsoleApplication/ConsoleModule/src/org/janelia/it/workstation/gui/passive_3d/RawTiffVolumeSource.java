@@ -7,8 +7,6 @@
 package org.janelia.it.workstation.gui.passive_3d;
 
 import java.io.File;
-import java.util.HashMap;
-import java.util.Map;
 import javax.media.opengl.GL2;
 
 import org.janelia.it.jacs.model.user_data.tiledMicroscope.RawFileInfo;
@@ -29,7 +27,7 @@ import org.slf4j.LoggerFactory;
  */
 public class RawTiffVolumeSource implements MonitoredVolumeSource {
     public static final int DEPT_STD_GRAPH_CARD_MAX_DEPTH = 172;
-    public static final int USER_SUGGESTED_DEPTH = 128;//TEMP 64
+    public static final int USER_SUGGESTED_CUBIC_DIMENSION = 128;//TEMP 64
     private static final Double[] SPIN_ABOUT_Z = new Double[] {
         -1.0,    0.0,    0.0,
         0.0,    -1.0,    0.0,
@@ -37,11 +35,11 @@ public class RawTiffVolumeSource implements MonitoredVolumeSource {
     };
     private static final int MATRIX_SQUARE_DIM = 3; //5, if from yaml
 
-    private Camera3d camera;
-    private String baseDirectoryPath;
+    private final Camera3d camera;
+    private final String baseDirectoryPath;
     private IndeterminateNoteProgressMonitor progressMonitor;
     private final Logger logger = LoggerFactory.getLogger( RawTiffVolumeSource.class );
-    private int maxDrawPlanes = -1;
+    private int cubicDimension = -1;
     
     /**
      * Seed this object with all it needs to fetch the volume.
@@ -76,7 +74,7 @@ public class RawTiffVolumeSource implements MonitoredVolumeSource {
             (int)camera.getFocus().getZ()
         };
         
-        progressMonitor.setNote("Fetching tiff file paths.");
+        progressMonitor.setNote("Fetching raw file paths.");
         RawFileInfo rawFileInfo =
                 ModelMgr.getModelMgr().getNearestFileInfo(baseDirectoryPath, viewerCoord);
         if ( rawFileInfo == null ) {
@@ -84,23 +82,16 @@ public class RawTiffVolumeSource implements MonitoredVolumeSource {
         }
         progressMonitor.setNote("Loading volume data.");
         TifFileLoader tifFileLoader = new TifFileLoader();
-        if ( maxDrawPlanes > -1 ) {
-            tifFileLoader.setCubicOutputDimension( maxDrawPlanes );
-            //todo eliminate camera-to-centroid-distance setter, etc.
-            int[] cameraToCentroidDistance = new int[3];
-            for ( int i = 0; i < 3; i++ ) {
-                cameraToCentroidDistance[i] = (int)((rawFileInfo.getQueryMicroscopeCoords().get(i) - rawFileInfo.getCentroid().get(i)) / rawFileInfo.getScale()[ i ]);
-            }
-            tifFileLoader.setCameraToCentroidDistance( cameraToCentroidDistance );
-            
+        if ( cubicDimension > -1 ) {
+            tifFileLoader.setCubicOutputDimension( cubicDimension );
             tifFileLoader.setConversionCharacteristics( rawFileInfo.getTransformMatrix(), rawFileInfo.getInvertedTransform(), rawFileInfo.getMinCorner(), rawFileInfo.getExtent(), rawFileInfo.getQueryMicroscopeCoords() );
         }
         FileResolver resolver = new CacheFileResolver();
 
         progressMonitor.setNote("Starting data load...");
         Double[] spinAboutZTransform = SPIN_ABOUT_Z;
-        loadChannel(1, resolver, rawFileInfo.getChannel0(), spinAboutZTransform, /*rawFileInfo.getTransformMatrix(),*/ tifFileLoader, volumeListener);
-        loadChannel(2, resolver, rawFileInfo.getChannel1(), spinAboutZTransform, /*rawFileInfo.getTransformMatrix(),*/ tifFileLoader, volumeListener);
+        loadChannel(1, resolver, rawFileInfo.getChannel0(), spinAboutZTransform, tifFileLoader, volumeListener);
+        loadChannel(2, resolver, rawFileInfo.getChannel1(), spinAboutZTransform, tifFileLoader, volumeListener);
 
         progressMonitor.setNote("Launching viewer.");
     }
@@ -114,8 +105,8 @@ public class RawTiffVolumeSource implements MonitoredVolumeSource {
             );
     }
     
-    public void setMaxDrawPlanes( int drawPlanes ) {
-        this.maxDrawPlanes = drawPlanes;
+    public void setCubicDimension( int cubicDimension ) {
+        this.cubicDimension = cubicDimension;
     }
 
     private void loadChannel(int displayNum, FileResolver resolver, File rawFile, Double[] transformMatrix, TifFileLoader tifFileLoader, VolumeAcceptor volumeListener) throws Exception {
@@ -136,7 +127,7 @@ public class RawTiffVolumeSource implements MonitoredVolumeSource {
             setTransformMatrix(transformMatrix, MATRIX_SQUARE_DIM, textureData);
         }
         volumeListener.accept(textureData);
-        progressMonitor.setNote("Ending load for raw tiff " + displayNum);
+        progressMonitor.setNote("Ending load for raw file " + displayNum);
     }
 
     /**

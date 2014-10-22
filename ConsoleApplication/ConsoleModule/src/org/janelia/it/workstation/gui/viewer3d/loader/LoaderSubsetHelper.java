@@ -40,7 +40,6 @@ public class LoaderSubsetHelper {
     private double[][] stageToTile;
     private double[][] tileToStage;
     private double[] queryCoords;
-    private int[] cameraToCentroidDistance;
     private int cubicOutputDimension = -1;
     private final int[] boundingBox = new int[6];
     
@@ -50,10 +49,6 @@ public class LoaderSubsetHelper {
     
     private int pixelBytes;
 
-    public void setCameraToCentroidDistance( int[] distance ) {
-        this.cameraToCentroidDistance = distance; 
-    }
-    
     public void setCubicOutputDimension( int dimension ) {
         this.cubicOutputDimension = dimension;
     }

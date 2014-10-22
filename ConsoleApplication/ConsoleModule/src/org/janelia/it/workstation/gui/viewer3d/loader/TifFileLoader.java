@@ -51,16 +51,6 @@ public class TifFileLoader extends TextureDataBuilder implements VolumeFileLoade
         subsetHelper.setCubicOutputDimension(cubicOutputDimension);
     }
     
-    /**
-     * Tell camera proximity for sake of bounding box calculation.
-     * @param distance 
-     */
-    public void setCameraToCentroidDistance( int[] distance ) {
-        if ( subsetHelper == null )
-            subsetHelper = new LoaderSubsetHelper();
-        subsetHelper.setCameraToCentroidDistance(distance);
-    }
-    
     public void setConversionCharacteristics( double[][] fwdTransform, double[][] invTransform, int[] minCorner, int[] extent, List<Integer> queryCoords ) {
         if ( subsetHelper == null ) {
             subsetHelper = new LoaderSubsetHelper();            
@@ -268,7 +258,7 @@ public class TifFileLoader extends TextureDataBuilder implements VolumeFileLoade
             for ( ImageLoadRunnable runnable: runnables ) {
                 if ( runnable.getThrownException() != null ) {
                     throw new RuntimeException(
-                      "One or more pages from Tiff " + file + " failed to load."
+                      "One or more pages from raw " + file + " failed to load."
                     );
                 }
             }

@@ -84,11 +84,11 @@ public class Snapshot3DLauncher {
         });
         snapShot3dSubMenu.add( item );
 
-        item = new JMenuItem( "Abbreviated Raw: " + RawTiffVolumeSource.USER_SUGGESTED_DEPTH + " Planes" );
+        item = new JMenuItem( "Raw Sub-Volume: " + RawTiffVolumeSource.USER_SUGGESTED_CUBIC_DIMENSION + " Voxels" );
         item.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent ae) {
-                launchRaw3dViewer( RawTiffVolumeSource.USER_SUGGESTED_DEPTH );
+                launchRaw3dViewer( RawTiffVolumeSource.USER_SUGGESTED_CUBIC_DIMENSION );
             }
         });
         snapShot3dSubMenu.add( item );
@@ -99,11 +99,11 @@ public class Snapshot3DLauncher {
     }    
 
     /** Launches a 3D popup containing raw data represented by camera position. */
-    public void launchRaw3dViewer( int maxDrawPlanes ) {
+    public void launchRaw3dViewer( int cubicDimension ) {
         try {            
             RawTiffVolumeSource collector = new RawTiffVolumeSource( camera, basePath );
-            if ( maxDrawPlanes > -1 ) {
-                collector.setMaxDrawPlanes( maxDrawPlanes );
+            if ( cubicDimension > -1 ) {
+                collector.setCubicDimension( cubicDimension );
             }
             Snapshot3d snapshotViewer = Snapshot3d.getInstance();
             IndeterminateNoteProgressMonitor monitor = 
