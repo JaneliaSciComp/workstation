@@ -93,7 +93,7 @@ public class RawTiffVolumeSource implements MonitoredVolumeSource {
             }
             tifFileLoader.setCameraToCentroidDistance( cameraToCentroidDistance );
             
-            tifFileLoader.setConversionCharacteristics( rawFileInfo.getInvertedTransform(), rawFileInfo.getMinCorner(), rawFileInfo.getExtent(), viewerCoord );
+            tifFileLoader.setConversionCharacteristics( rawFileInfo.getTransformMatrix(), rawFileInfo.getInvertedTransform(), rawFileInfo.getMinCorner(), rawFileInfo.getExtent(), rawFileInfo.getQueryMicroscopeCoords() );
         }
         FileResolver resolver = new CacheFileResolver();
 

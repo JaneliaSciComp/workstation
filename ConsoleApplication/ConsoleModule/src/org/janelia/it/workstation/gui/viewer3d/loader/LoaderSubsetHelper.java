@@ -10,6 +10,9 @@ import java.awt.image.BufferedImage;
 import java.awt.image.DataBufferByte;
 import java.awt.image.DataBufferUShort;
 
+import Jama.Matrix;
+import java.util.List;
+
 /**
  *
  * @author fosterl
@@ -34,8 +37,9 @@ public class LoaderSubsetHelper {
 
     private int[] minCorner;
     private int[] extent;
-    private double[][] stageToLVV;
-    private int[] queryCoords;
+    private double[][] stageToTile;
+    private double[][] tileToStage;
+    private double[] queryCoords;
     private int[] cameraToCentroidDistance;
     private int cubicOutputDimension = -1;
     private final int[] boundingBox = new int[6];
@@ -54,11 +58,12 @@ public class LoaderSubsetHelper {
         this.cubicOutputDimension = dimension;
     }
     
-    public void setTransformCharacteristics(double[][] stageToLVV, int[] minCorner, int[] extent, int[] queryCoords) {
-        this.stageToLVV = stageToLVV;
+    public void setTransformCharacteristics(double[][] tileToStage, double[][] stageToTile, int[] minCorner, int[] extent, List<Integer> queryCoords) {
+        this.tileToStage = tileToStage;
+        this.stageToTile = stageToTile;
         this.minCorner = minCorner;
         this.extent = extent;
-        this.queryCoords = queryCoords;
+        this.queryCoords = convert(queryCoords, 4);
     }
     
     /**
@@ -184,47 +189,62 @@ public class LoaderSubsetHelper {
         this.pixelBytes = pixelBytes;
     }
     
+    private double[] convert( List<Integer> intList, int pointDim ) {
+        // Need to have a 1x4 matrix, to account for translation column.
+        double[] rtnVal = new double[ pointDim ];
+        for ( int i = 0; i < intList.size(); i++ ) {
+            rtnVal[ i ] = intList.get(i);
+        }
+        // Pad the end with 1's.
+        for ( int i = intList.size(); i < pointDim; i++ ) {
+            rtnVal[ i ] = 1.0;
+        }
+        return rtnVal;
+    }
+    
+    private double[] convert( int[] intArr, int pointDim ) {
+        // Need to have a 1x4 matrix, to account for translation column.
+        double[] rtnVal = new double[ pointDim ];
+        for ( int i = 0; i < intArr.length; i++ ) {
+            rtnVal[ i ] = intArr[ i ];
+        }
+        // Pad the end with 1's.
+        for ( int i = intArr.length; i < pointDim; i++ ) {
+            rtnVal[ i ] = 1.0;
+        }
+        return rtnVal;
+    }
+    
     public int captureAndUsePageDimensions(final int zCount, final long fileLength) {
+        int pointDim = 4;
         // Experiment time!
         System.out.println( this.queryCoords[0] + "," + this.queryCoords[1] + "," + this.queryCoords[2] );
+        Matrix transform = new Matrix( stageToTile );
+        Matrix pointMatrix = new Matrix( queryCoords, pointDim );
+        // This should yield the point in TIFF coordinates, 0..MaxX, 0..MaxY, 0..MaxZ.
+        Matrix newPoint = transform.times( pointMatrix );
+
+        /*
+        DEBUG: if doubts should arise, uncomment this, and check results.
+        Matrix newMin = transform.times( new Matrix( new double[]{ minCorner[0], minCorner[1], minCorner[2], 1.0 }, 4 ) );        
+        Matrix forwardTransform = new Matrix( tileToStage );
+        Matrix testMin = transform.times( new Matrix( new double[] {0,0,0,1}, 4 ) );
+        */
         
-        // Depth Limit is originally expressed as a part-stack size, based at 0.
-        if ( cameraToCentroidDistance != null ) {
-            // Z bounding box constraints are based on sheet depth.
-            boundingBox[START_Z_INX] = clamp( 0, zCount - getCubicOutputDimension(), (zCount - getCubicOutputDimension() + cameraToCentroidDistance[START_Z_INX])) / 2;
-            boundingBox[END_Z_INX] = boundingBox[START_Z_INX] + getCubicOutputDimension();
-            
-            // Other two are based on x and y dimensions.
-            int blockCenterX = getSourceWidth() / 2 + cameraToCentroidDistance[START_X_INX];
-            boundingBox[START_X_INX] = clamp( 0, getSourceWidth() - getCubicOutputDimension(), blockCenterX - (getCubicOutputDimension() / 2) );
-            boundingBox[END_X_INX] = boundingBox[START_X_INX] + getCubicOutputDimension();
+        final int halfCubeDim = getCubicOutputDimension() / 2;
+        boundingBox[START_X_INX] = clamp( 0, getSourceWidth() - getCubicOutputDimension(), (int)newPoint.getArray()[ 0 ][ 0 ] - halfCubeDim );
+        boundingBox[START_Y_INX] = clamp( 0, getSourceHeight() - getCubicOutputDimension(), (int)newPoint.getArray()[ 1 ][ 0 ] - halfCubeDim );
+        boundingBox[START_Z_INX] = clamp( 0, zCount - getCubicOutputDimension(), (int)newPoint.getArray()[ 2 ][ 0 ] - halfCubeDim );
 
-            // Now, we must invert these numbers, WRT the width.
-            int tempStart = getSourceWidth() - boundingBox[END_X_INX];
-            int tempEnd = getSourceWidth() - boundingBox[START_X_INX];
-            boundingBox[START_X_INX] = tempStart;
-            boundingBox[END_X_INX] = tempEnd;
-            
-            int blockCenterY = getSourceHeight() / 2 + cameraToCentroidDistance[START_Y_INX];
-            boundingBox[START_Y_INX] = clamp( 0, getSourceHeight() - getCubicOutputDimension(), blockCenterY - (getCubicOutputDimension() / 2) );
-            boundingBox[END_Y_INX] = boundingBox[START_Y_INX] + getCubicOutputDimension();            
-
-            // Now, we must again invert these numbers, WRT the height.
-            tempStart = getSourceHeight() - boundingBox[END_Y_INX];
-            tempEnd = getSourceHeight() - boundingBox[START_Y_INX];
-            boundingBox[START_Y_INX] = tempStart;
-            boundingBox[END_Y_INX] = tempEnd;            
-            
-            // Adjust the dimensions, to adjust the subsetting requirement.
-            setSx(boundingBox[ END_X_INX ] - boundingBox[ START_X_INX ]);
-            setSy(boundingBox[ END_Y_INX ] - boundingBox[ START_Y_INX ]);
-            setSz(boundingBox[ END_Z_INX ] - boundingBox[ START_Z_INX ]);
-
-        }
-        else {
-            setSz(zCount);
-        }
+        boundingBox[END_X_INX] = boundingBox[START_X_INX] + getCubicOutputDimension();
+        boundingBox[END_Y_INX] = boundingBox[START_Y_INX] + getCubicOutputDimension();
+        boundingBox[END_Z_INX] = boundingBox[START_Z_INX] + getCubicOutputDimension();
         
+        // Adjust the dimensions, to adjust the subsetting requirement.
+        setSx(boundingBox[ END_X_INX ] - boundingBox[ START_X_INX ]);
+        setSy(boundingBox[ END_Y_INX ] - boundingBox[ START_Y_INX ]);
+        setSz(boundingBox[ END_Z_INX ] - boundingBox[ START_Z_INX ]);
+
         int sheetSize = getSx() * getSy();
         final int totalVoxels = sheetSize * getSz();
         setPixelBytes((int)Math.floor( fileLength / ((getSourceWidth()*getSourceHeight()) * sourceDepth) ));

@@ -16,6 +16,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
@@ -60,11 +61,11 @@ public class TifFileLoader extends TextureDataBuilder implements VolumeFileLoade
         subsetHelper.setCameraToCentroidDistance(distance);
     }
     
-    public void setConversionCharacteristics( double[][] transform, int[] minCorner, int[] extent, int[] queryCoords ) {
+    public void setConversionCharacteristics( double[][] fwdTransform, double[][] invTransform, int[] minCorner, int[] extent, List<Integer> queryCoords ) {
         if ( subsetHelper == null ) {
             subsetHelper = new LoaderSubsetHelper();            
         }
-        subsetHelper.setTransformCharacteristics(transform, minCorner, extent, queryCoords);
+        subsetHelper.setTransformCharacteristics(fwdTransform, invTransform, minCorner, extent, queryCoords);
     }
     
     @Override

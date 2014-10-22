@@ -48,6 +48,10 @@
                 </dependency>
             </module-dependencies>
             <public-packages>
+                <package>Jama</package>
+                <package>Jama.examples</package>
+                <package>Jama.test</package>
+                <package>Jama.util</package>
                 <package>adt</package>
                 <package>amira</package>
                 <package>antlr</package>
@@ -2271,6 +2275,10 @@
             <class-path-extension>
                 <runtime-relative-path>ext/ome-io.jar</runtime-relative-path>
                 <binary-origin>release/modules/ext/ome-io.jar</binary-origin>
+            </class-path-extension>
+            <class-path-extension>
+                <runtime-relative-path>ext/Jama-1.0.3.jar</runtime-relative-path>
+                <binary-origin>release/modules/ext/Jama-1.0.3.jar</binary-origin>
             </class-path-extension>
             <class-path-extension>
                 <runtime-relative-path>ext/axis2-corba-1.5.5.jar</runtime-relative-path>
