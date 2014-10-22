@@ -330,13 +330,16 @@ public class LoaderSubsetHelper {
     }
     
     private int clamp( int min, int max, int startingValue ) {
+        int rtnVal = startingValue;
+        System.out.print("StartingValue=" + startingValue);
         if ( startingValue < min ) {
-            return min;
+            rtnVal = min;
         }
         else if ( startingValue > max ) {
-            return max;
+            rtnVal = max;
         }
-        return startingValue;
+        System.out.println(", clamped to " + rtnVal);
+        return rtnVal;
     }
 
     private interface DataMover {
