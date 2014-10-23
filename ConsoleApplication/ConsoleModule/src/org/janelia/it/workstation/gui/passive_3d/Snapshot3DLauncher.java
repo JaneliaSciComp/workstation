@@ -29,8 +29,8 @@ import org.openide.windows.WindowManager;
  * @author fosterl
  */
 public class Snapshot3DLauncher {
-    private static final String CENTERED_POINT_FORMAT = "Centered at [%3.1f,%3.1f,%3.1f].  %4$dx%4$dx%4$d.";
-    private final static String CONTAINS_POINT_FORMAT = "Contains point [%3.1f,%3.1f,%3.1f].  Raw Data.";
+    private static final String RENDERED_VOLUME_TEXT_FORMAT = "Contains point [%3.1f,%3.1f,%3.1f].  %4$dx%4$dx%4$d.  Rendered Data.";
+    private final static String RAW_VOLUME_TEXT_FORMAT = "Contains point [%3.1f,%3.1f,%3.1f].  %4$dx%4$dx%4$d.  Raw Data.";
 
     private CoordinateAxis sliceAxis;
     private SubvolumeProvider subvolumeProvider;
@@ -146,7 +146,7 @@ public class Snapshot3DLauncher {
                     new IndeterminateNoteProgressMonitor(SessionMgr.getMainFrame(), "Fetching raw data", collector.getInfo());
             snapshotViewer.setLoadProgressMonitor( monitor );
             establishColorControls( snapshotViewer );
-            snapshotViewer.setLabelText( labelTextFor3d() );
+            snapshotViewer.setLabelText( labelTextForRaw3d( cubicDimension ) );
             snapshotViewer.launch( collector );
             makeViewerVisible(snapshotViewer);
 
@@ -190,7 +190,8 @@ public class Snapshot3DLauncher {
     private void establishColorControls( Snapshot3d snapshotViewer ) {
         ImageColorModel independentCM = new ImageColorModel(getMaxIntensity(), getNumberOfChannels());
         snapshotViewer.setImageColorModel( independentCM );        
-//        snapshotViewer.setImageColorModel( imageColorModel );        
+        // TODO: find way to use either new or parent-sourced image color model.
+        //        snapshotViewer.setImageColorModel( imageColorModel );        
     }
     
     private void makeViewerVisible(Snapshot3d snapshotViewer) {
@@ -212,13 +213,16 @@ public class Snapshot3DLauncher {
     }
 
     private String labelTextFor3d(int cubicDimension) {
-        final Vec3 focus = camera.getFocus();
-        return String.format( CENTERED_POINT_FORMAT, focus.getX(), focus.getY(), focus.getZ(), cubicDimension );
+        return getLabelText( cubicDimension, RENDERED_VOLUME_TEXT_FORMAT );
     }
 
-    private String labelTextFor3d() {
+    private String labelTextForRaw3d(int cubicDimension) {
+        return getLabelText( cubicDimension, RAW_VOLUME_TEXT_FORMAT );
+    }
+
+    private String getLabelText(int cubicDimension, String format ) {
         final Vec3 focus = camera.getFocus();
-        return String.format( CONTAINS_POINT_FORMAT, focus.getX(), focus.getY(), focus.getZ() );
+        return String.format( format, focus.getX(), focus.getY(), focus.getZ(), cubicDimension );
     }
 
 }
