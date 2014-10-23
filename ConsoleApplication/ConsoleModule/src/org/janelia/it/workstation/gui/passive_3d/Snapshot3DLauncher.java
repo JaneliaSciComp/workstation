@@ -21,7 +21,6 @@ import org.janelia.it.workstation.gui.large_volume_viewer.ImageColorModel;
 import org.janelia.it.workstation.gui.large_volume_viewer.SubvolumeProvider;
 import org.janelia.it.workstation.gui.passive_3d.top_component.Snapshot3dTopComponent;
 import org.janelia.it.workstation.shared.workers.IndeterminateNoteProgressMonitor;
-import org.openide.windows.TopComponent;
 import org.openide.windows.WindowManager;
 
 /**
@@ -39,6 +38,8 @@ public class Snapshot3DLauncher {
     private URL dataUrl;
     private String basePath;
     private ImageColorModel imageColorModel;
+    private Integer maxIntensity;
+    private Integer numberOfChannels;
     
     public Snapshot3DLauncher(
             CoordinateAxis sliceAxis,
@@ -56,6 +57,34 @@ public class Snapshot3DLauncher {
         this.camera = camera;
     }
     
+    /**
+     * @return the maxIntensity
+     */
+    public Integer getMaxIntensity() {
+        return maxIntensity;
+    }
+
+    /**
+     * @param maxIntensity the maxIntensity to set
+     */
+    public void setMaxIntensity(Integer maxIntensity) {
+        this.maxIntensity = maxIntensity;
+    }
+
+    /**
+     * @return the numberOfChannels
+     */
+    public Integer getNumberOfChannels() {
+        return numberOfChannels;
+    }
+
+    /**
+     * @param numberOfChannels the numberOfChannels to set
+     */
+    public void setNumberOfChannels(Integer numberOfChannels) {
+        this.numberOfChannels = numberOfChannels;
+    }
+
     public List<JMenuItem> getSnapshotMenuItems() {
         JMenu snapShot3dSubMenu = new JMenu("3D Snapshot");
 
@@ -116,7 +145,7 @@ public class Snapshot3DLauncher {
             IndeterminateNoteProgressMonitor monitor = 
                     new IndeterminateNoteProgressMonitor(SessionMgr.getMainFrame(), "Fetching raw data", collector.getInfo());
             snapshotViewer.setLoadProgressMonitor( monitor );
-            snapshotViewer.setImageColorModel( imageColorModel );
+            establishColorControls( snapshotViewer );
             snapshotViewer.setLabelText( labelTextFor3d() );
             snapshotViewer.launch( collector );
             makeViewerVisible(snapshotViewer);
@@ -142,7 +171,7 @@ public class Snapshot3DLauncher {
             IndeterminateNoteProgressMonitor monitor = 
                     new IndeterminateNoteProgressMonitor(SessionMgr.getMainFrame(), "Fetching tiles", collector.getInfo());
             snapshotViewer.setLoadProgressMonitor( monitor );
-            snapshotViewer.setImageColorModel( imageColorModel );
+            establishColorControls( snapshotViewer );
             snapshotViewer.setLabelText( labelTextFor3d(cubicDimension) );
             snapshotViewer.launch( collector );
             makeViewerVisible(snapshotViewer);
@@ -153,6 +182,17 @@ public class Snapshot3DLauncher {
         }
     }
 
+    /**
+     * Give ourselves a separate set of color adjustements.
+     * 
+     * @param snapshotViewer will be given a color model.
+     */
+    private void establishColorControls( Snapshot3d snapshotViewer ) {
+        ImageColorModel independentCM = new ImageColorModel(getMaxIntensity(), getNumberOfChannels());
+        snapshotViewer.setImageColorModel( independentCM );        
+//        snapshotViewer.setImageColorModel( imageColorModel );        
+    }
+    
     private void makeViewerVisible(Snapshot3d snapshotViewer) {
         Snapshot3dTopComponent snapshotTopComponent =
                 (Snapshot3dTopComponent)WindowManager.getDefault()

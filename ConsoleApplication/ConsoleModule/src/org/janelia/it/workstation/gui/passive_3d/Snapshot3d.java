@@ -20,6 +20,7 @@ import java.util.Comparator;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import org.janelia.it.workstation.gui.large_volume_viewer.ImageColorModel;
+import org.janelia.it.workstation.gui.large_volume_viewer.SliderPanel;
 import org.janelia.it.workstation.shared.workers.IndeterminateNoteProgressMonitor;
 
 /**
@@ -123,11 +124,21 @@ public class Snapshot3d extends JPanel {
         this.setPreferredSize( WIDGET_SIZE );
         this.setMinimumSize( WIDGET_SIZE );
         this.setLayout(new BorderLayout());
-        if ( labelText != null ) {
+        JPanel southPanel = new JPanel();
+        southPanel.setLayout(new BorderLayout());
+        SliderPanel sliderPanel = new SliderPanel( imageColorModel );
+        locallyAddedComponents.add( sliderPanel );
+        if ( labelText != null ) {            
             final JLabel label = new JLabel( labelText );
             locallyAddedComponents.add( label );
-            this.add( label, BorderLayout.SOUTH );
+            southPanel.add( label, BorderLayout.SOUTH );
         }
+        southPanel.add( sliderPanel, BorderLayout.CENTER );
+        sliderPanel.guiInit();
+        sliderPanel.updateLockButtons();
+        sliderPanel.setVisible(true);
+        locallyAddedComponents.add( southPanel );
+        this.add( southPanel, BorderLayout.SOUTH );
         this.add( mip3d, BorderLayout.CENTER );
     }
 

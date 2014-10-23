@@ -77,8 +77,8 @@ public class QuadViewUi extends JPanel
 
 	// TODO - promote volumeImage, colorModel out of sliceviewer
 	TileServer tileServer = largeVolumeViewer.getTileServer();
-	private SharedVolumeImage volumeImage = tileServer.getSharedVolumeImage(); // TODO - volume does not belong down there!
-	private ImageColorModel imageColorModel = new ImageColorModel(volumeImage);
+	private SharedVolumeImage volumeImage = tileServer.getSharedVolumeImage();
+	private ImageColorModel imageColorModel = new ImageColorModel(volumeImage.getMaximumIntensity(), volumeImage.getNumberOfChannels());
 
 	// Four quadrants for orthogonal views
 	OrthogonalPanel neViewer = new OrthogonalPanel(CoordinateAxis.X, orthoViewContextSharer);
@@ -103,24 +103,11 @@ public class QuadViewUi extends JPanel
 	private JSpinner zScanSpinner = new JSpinner();
 	private JSlider zoomSlider = new JSlider(SwingConstants.VERTICAL, 0, 1000, 500);
 	
-	private JPanel colorPanel = new JPanel();
-	private JPanel colorLockPanel = new JPanel();
+	//private JPanel colorPanel = new JPanel();
     private JMenuBar menuBar = new JMenuBar();
     private JPanel toolBarPanel = new JPanel();
-	private JSplitPane splitPane = new JSplitPane();
-	private ColorChannelWidget colorChannelWidget_0 = new ColorChannelWidget(0, imageColorModel);
-	private ColorChannelWidget colorChannelWidget_1 = new ColorChannelWidget(1, imageColorModel);
-	private ColorChannelWidget colorChannelWidget_2 = new ColorChannelWidget(2, imageColorModel);
-	private ColorChannelWidget colorChannelWidget_3 = new ColorChannelWidget(3, imageColorModel);
-	private final ColorChannelWidget colorWidgets[]  = {
-		colorChannelWidget_0, 
-		colorChannelWidget_1, 
-		colorChannelWidget_2, 
-		colorChannelWidget_3
-	};
-    private JToggleButton lockBlackButton;
-    private JToggleButton lockGrayButton;
-    private JToggleButton lockWhiteButton;
+	private JSplitPane splitPane = new JSplitPane();    
+    private SliderPanel sliderPanel = new SliderPanel(imageColorModel);
 
 	private JLabel statusLabel = new JLabel("status area");
 	private LoadStatusLabel loadStatusLabel = new LoadStatusLabel();
@@ -287,6 +274,9 @@ public class QuadViewUi extends JPanel
 				zoomScrollModeAction.actionPerformed(new ActionEvent(this, 0, ""));
 				zScanScrollModeAction.setEnabled(false);
 			}
+            
+            snapshot3dLauncher.setMaxIntensity(volumeImage.getMaximumIntensity());
+            snapshot3dLauncher.setNumberOfChannels(volumeImage.getNumberOfChannels());
 		}
 		// TODO update zoom range too?
 	};
@@ -344,9 +334,7 @@ public class QuadViewUi extends JPanel
     public Slot colorModelUpdatedSlot = new Slot() {
         @Override
         public void execute() {
-            lockBlackButton.setSelected(imageColorModel.isBlackSynchronized());
-            lockGrayButton.setSelected(imageColorModel.isGammaSynchronized());
-            lockWhiteButton.setSelected(imageColorModel.isWhiteSynchronized());
+            sliderPanel.updateLockButtons();
         }
     };
 
@@ -360,11 +348,8 @@ public class QuadViewUi extends JPanel
 		largeVolumeViewer.setImageColorModel(imageColorModel);
 		camera.getViewChangedSignal().connect(tileServer.refreshCurrentTileSetSlot);
 		tileServer.loadStatusChangedSignal.connect(onLoadStatusChangedSlot);
-		
-		colorChannelWidget_3.setVisible(false);
-		colorChannelWidget_2.setVisible(false);
-		colorChannelWidget_1.setVisible(false);
-		colorChannelWidget_0.setVisible(false);
+		sliderPanel.setVisible(false);
+        
 		setupUi(parentFrame, overrideFrameMenuBar);
         interceptModifierKeyPresses();
         interceptModeChangeGestures();
@@ -564,109 +549,17 @@ public class QuadViewUi extends JPanel
 		splitPane.setOrientation(JSplitPane.VERTICAL_SPLIT);
 		toolBarPanel.add(splitPane, BorderLayout.CENTER);
 		
-		// JPanel colorPanel = new JPanel();
-		splitPane.setRightComponent(colorPanel);
-		colorPanel.setLayout(new BoxLayout(colorPanel, BoxLayout.Y_AXIS));
-		
-		// Avoid loop to add color widgets, so WindowBuilder can parse this.
-		colorPanel.add(colorWidgets[0]);
-		colorPanel.add(colorWidgets[1]);
-		colorPanel.add(colorWidgets[2]);
-		colorPanel.add(colorWidgets[3]);
-		
-		// JPanel colorLockPanel = new JPanel();
-		colorLockPanel.setVisible(false);
-		colorPanel.add(colorLockPanel);
-		colorLockPanel.setLayout(new BoxLayout(colorLockPanel, BoxLayout.X_AXIS));
-		
-		colorLockPanel.add(Box.createHorizontalStrut(30));
-		
-		lockBlackButton = new JToggleButton("");
-		lockBlackButton.setToolTipText("Synchronize channel black levels");
-		lockBlackButton.setMargin(new Insets(0, 0, 0, 0));
-		lockBlackButton.setRolloverIcon(new ImageIcon(QuadViewUi.class.getResource("/images/lock_unlock.png")));
-		lockBlackButton.setRolloverSelectedIcon(new ImageIcon(QuadViewUi.class.getResource("/images/lock.png")));
-		lockBlackButton.setIcon(new ImageIcon(QuadViewUi.class.getResource("/images/lock_unlock.png")));
-		lockBlackButton.setSelectedIcon(new ImageIcon(QuadViewUi.class.getResource("/images/lock.png")));
-		lockBlackButton.setSelected(true);
-		colorLockPanel.add(lockBlackButton);
-		lockBlackButton.addChangeListener(new ChangeListener() {
-			@Override
-			public void stateChanged(ChangeEvent event) {
-				ImageColorModel colorModel = imageColorModel;
-				if (colorModel == null)
-					return;
-				AbstractButton button = (AbstractButton)event.getSource();
-				colorModel.setBlackSynchronized(button.isSelected());
-			}
-		});
-		
-		colorLockPanel.add(Box.createHorizontalGlue());
-
-		lockGrayButton = new JToggleButton("");
-		lockGrayButton.setToolTipText("Synchronize channel gray levels");
-		lockGrayButton.setMargin(new Insets(0, 0, 0, 0));
-		lockGrayButton.setRolloverIcon(new ImageIcon(QuadViewUi.class.getResource("/images/lock_unlock.png")));
-		lockGrayButton.setRolloverSelectedIcon(new ImageIcon(QuadViewUi.class.getResource("/images/lock.png")));
-		lockGrayButton.setIcon(new ImageIcon(QuadViewUi.class.getResource("/images/lock_unlock.png")));
-		lockGrayButton.setSelectedIcon(new ImageIcon(QuadViewUi.class.getResource("/images/lock.png")));
-		lockGrayButton.setSelected(true);
-		colorLockPanel.add(lockGrayButton);
-		lockGrayButton.addChangeListener(new ChangeListener() {
-			@Override
-			public void stateChanged(ChangeEvent event) {
-				ImageColorModel colorModel = imageColorModel;
-				if (colorModel == null)
-					return;
-				AbstractButton button = (AbstractButton)event.getSource();
-				colorModel.setGammaSynchronized(button.isSelected());
-			}
-		});
-		
-		colorLockPanel.add(Box.createHorizontalGlue());
-
-		lockWhiteButton = new JToggleButton("");
-		lockWhiteButton.setToolTipText("Synchronize channel white levels");
-		lockWhiteButton.setMargin(new Insets(0, 0, 0, 0));
-		lockWhiteButton.setRolloverIcon(new ImageIcon(QuadViewUi.class.getResource("/images/lock_unlock.png")));
-		lockWhiteButton.setRolloverSelectedIcon(new ImageIcon(QuadViewUi.class.getResource("/images/lock.png")));
-		lockWhiteButton.setIcon(new ImageIcon(QuadViewUi.class.getResource("/images/lock_unlock.png")));
-		lockWhiteButton.setSelectedIcon(new ImageIcon(QuadViewUi.class.getResource("/images/lock.png")));
-		lockWhiteButton.setSelected(true);
-		colorLockPanel.add(lockWhiteButton);
-		lockWhiteButton.addChangeListener(new ChangeListener() {
-			@Override
-			public void stateChanged(ChangeEvent event) {
-				ImageColorModel colorModel = imageColorModel;
-				if (colorModel == null)
-					return;
-				AbstractButton button = (AbstractButton)event.getSource();
-				colorModel.setWhiteSynchronized(button.isSelected());
-			}
-		});
-		
-		colorLockPanel.add(Box.createHorizontalStrut(30));
-
-		imageColorModel.getColorModelInitializedSignal().connect(new Slot() {
+		splitPane.setRightComponent(sliderPanel);
+        imageColorModel.getColorModelInitializedSignal().connect(new org.janelia.it.workstation.signal.Slot() {
 			@Override
 			public void execute() {
-				// System.out.println("Updating slider visibility");
-				int sc = imageColorModel.getChannelCount();
-				colorPanel.setVisible(sc > 0);
-				int c = 0;
-				for (ColorChannelWidget w : colorWidgets) {
-					w.setVisible(c < sc);
-					c += 1;
-				}
-				colorLockPanel.setVisible(sc > 1);
 				splitPane.resetToPreferredSizes();
-				// TODO Trying without success to get sliders to initially paint correctly
-				colorPanel.validate();
-				colorPanel.repaint();
 			}
 		});
-		
-		JSplitPane splitPane_1 = new JSplitPane();
+
+        sliderPanel.guiInit();
+        
+        JSplitPane splitPane_1 = new JSplitPane();
 		splitPane_1.setResizeWeight(1.00);
 		splitPane.setLeftComponent(splitPane_1);
 
@@ -1290,7 +1183,7 @@ public class QuadViewUi extends JPanel
 		@Override
 		public void execute(URL url) {
 			recentFileList.add(url);
-			imageColorModel.reset(volumeImage);
+			imageColorModel.reset(volumeImage.getMaximumIntensity(), volumeImage.getNumberOfChannels());
 			resetViewAction.actionPerformed(null);
 
             getSkeletonActor().setTileFormat(
