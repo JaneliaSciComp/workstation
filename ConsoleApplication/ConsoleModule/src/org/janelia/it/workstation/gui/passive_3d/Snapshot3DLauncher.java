@@ -13,6 +13,7 @@ import java.util.ArrayList;
 import java.util.List;
 import javax.swing.JMenu;
 import javax.swing.JMenuItem;
+import javax.swing.JSeparator;
 import org.janelia.it.workstation.geom.CoordinateAxis;
 import org.janelia.it.workstation.geom.Vec3;
 import org.janelia.it.workstation.gui.camera.ObservableCamera3d;
@@ -103,9 +104,10 @@ public class Snapshot3DLauncher {
             });
             snapShot3dSubMenu.add(item);
         }
+        snapShot3dSubMenu.add(new JSeparator());
 
         extents = new int[] {
-            64, 128, 512
+            64, 128
         };
         for (final int extent : extents) {
             JMenuItem item = new JMenuItem( "Rendered sub-volume: " + extent + " cubed" );
@@ -119,6 +121,7 @@ public class Snapshot3DLauncher {
             snapShot3dSubMenu.add( item );
         }
 
+        /*
         JMenuItem item = new JMenuItem( "Full raw" );
         item.addActionListener(new ActionListener() {
             @Override
@@ -127,7 +130,7 @@ public class Snapshot3DLauncher {
             }
         });
         snapShot3dSubMenu.add( item );
-
+        */
         
         rtnVal.add( snapShot3dSubMenu );
 
