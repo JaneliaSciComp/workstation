@@ -15,5 +15,6 @@
 	<classpathentry kind="con" path="org.eclipse.jdt.USER_LIBRARY/JUnit"/>
 	<classpathentry kind="con" path="org.eclipse.jdt.USER_LIBRARY/NetBeansRCP"/>
 	<classpathentry kind="lib" path="ConsoleModule/release/modules/ext/jbossall-client.jar"/>
+	<classpathentry kind="lib" path="ConsoleWrapper/release/modules/ext/Jama-1.0.3.jar"/>
 	<classpathentry kind="output" path="build_eclipse"/>
 </classpath>

@@ -1230,6 +1230,21 @@ public final class ModelMgr {
         FacadeManager.getFacadeManager().getEntityFacade().deleteAnchoredPath(pathID);
     }
 
+    public TmStructuredTextAnnotation addStructuredTextAnnotation(Long neuronID,
+        Long parentID, int parentType, int formatVersion, String data) throws Exception {
+        return FacadeManager.getFacadeManager().getEntityFacade().addStructuredTextAnnotation(neuronID,
+            parentID, parentType, formatVersion, data);
+    }
+
+    public void updateStructuredTextAnnotation(TmStructuredTextAnnotation textAnnotation,
+        String data) throws Exception {
+        FacadeManager.getFacadeManager().getEntityFacade().updateStructuredTextAnnotation(textAnnotation, data);
+    }
+
+    public void deleteStructuredTextAnnotation(Long annID) throws Exception {
+        FacadeManager.getFacadeManager().getEntityFacade().deleteStructuredTextAnnotation(annID);
+    }
+
     public RawFileInfo getNearestFileInfo(String basePath, int[] viewerCoord) throws Exception {
         return FacadeManager.getFacadeManager().getEntityFacade().getNearestFileInfo(basePath, viewerCoord);
     }

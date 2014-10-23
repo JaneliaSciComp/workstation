@@ -1,5 +1,6 @@
 package org.janelia.it.workstation.gui.large_volume_viewer.annotation;
 
+import com.fasterxml.jackson.databind.JsonNode;
 import com.google.common.base.Stopwatch;
 import org.janelia.it.workstation.api.entity_model.management.ModelMgr;
 import org.janelia.it.workstation.geom.Vec3;
@@ -181,6 +182,13 @@ public class AnnotationManager
                 }
                 addAnchoredPath(endpoints, pointList);
             }
+        }
+    };
+
+    public Slot1<Anchor> addEditNoteRequestedSlot = new Slot1<Anchor>() {
+        @Override
+        public void execute(Anchor anchor) {
+            addEditNote(anchor.getGuid());
         }
     };
 
@@ -686,6 +694,101 @@ public class AnnotationManager
             }
         };
         adder.execute();
+    }
+
+    /**
+     * pop a dialog to add, edit, or delete note at the given annotation
+     */
+    public void addEditNote(final Long annotationID) {
+        TmNeuron neuron = annotationModel.getNeuronFromAnnotationID(annotationID);
+
+        // get annotation if it exists, and its note value, if it exists
+        final TmStructuredTextAnnotation textAnnotation = neuron.getStructuredTextAnnotationMap().get(annotationID);
+        String noteText = new String("");
+        if (textAnnotation != null) {
+            JsonNode rootNode = textAnnotation.getData();
+            JsonNode noteNode = rootNode.path("note");
+            if (!noteNode.isMissingNode()) {
+                noteText = noteNode.asText();
+            }
+        }
+
+        // pop dialog, with (possibly) pre-existing text
+        Object[] options = {"Set note",
+                "Delete note",
+                "Cancel"};
+        JPanel panel = new JPanel();
+        panel.add(new JLabel("Enter note text:"));
+        JTextField textField = new JTextField(40);
+        textField.setText(noteText);
+        panel.add(textField);
+        int ans = JOptionPane.showOptionDialog(null,
+                panel,
+                "Add, edit, or delete note",
+                JOptionPane.YES_NO_CANCEL_OPTION,
+                JOptionPane.PLAIN_MESSAGE,
+                null,
+                options,
+                options[2]);
+
+        if (ans == JOptionPane.CANCEL_OPTION) {
+            return;
+        } else if (ans == JOptionPane.NO_OPTION) {
+            // no option = delete note, which we signal by empty note text
+            noteText = "";
+        } else {
+            noteText = textField.getText().trim();
+        }
+
+        if (noteText.length() > 0) {
+
+            final String setText = noteText;
+            SimpleWorker setter = new SimpleWorker() {
+                @Override
+                protected void doStuff() throws Exception {
+                    annotationModel.setNote(annotationModel.getGeoAnnotationFromID(annotationID), setText);
+                }
+
+                @Override
+                protected void hadSuccess() {
+                    // nothing here
+                }
+
+                @Override
+                protected void hadError(Throwable error) {
+                    JOptionPane.showMessageDialog(null,
+                            "Could not set note!",
+                            "Error",
+                            JOptionPane.ERROR_MESSAGE);
+                }
+            };
+            setter.execute();
+
+        } else {
+            if (textAnnotation != null) {
+                SimpleWorker deleter = new SimpleWorker() {
+                    @Override
+                    protected void doStuff() throws Exception {
+                        annotationModel.removeNote(textAnnotation);
+                    }
+
+                    @Override
+                    protected void hadSuccess() {
+                        // nothing to see
+                    }
+
+                    @Override
+                    protected void hadError(Throwable error) {
+                        JOptionPane.showMessageDialog(null,
+                                "Could not remove note!",
+                                "Error",
+                                JOptionPane.ERROR_MESSAGE);
+                    }
+                };
+                deleter.execute();
+            }
+        }
+
     }
 
     /**

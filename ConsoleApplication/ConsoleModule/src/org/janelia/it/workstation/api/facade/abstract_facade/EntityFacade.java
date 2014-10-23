@@ -146,6 +146,14 @@ public interface EntityFacade {
 
     public void deleteAnchoredPath(Long pathID) throws Exception;
 
+    public TmStructuredTextAnnotation addStructuredTextAnnotation(Long neuronID,
+        Long parentID, int parentType, int formatVersion, String Data) throws Exception;
+
+    public void updateStructuredTextAnnotation(TmStructuredTextAnnotation textAnnotation, String data)
+        throws Exception;
+
+    public void deleteStructuredTextAnnotation(Long annID) throws Exception;
+
     public RawFileInfo getNearestFileInfo(String basePath, int[] viewerCoord) throws Exception;
 
 }

@@ -370,6 +370,7 @@ public class QuadViewUi extends JPanel
         skeleton.pathTraceRequestedSignal.connect(tracePathSegmentSlot);
         annotationModel.pathTraceRequestedSignal.connect(tracePathSegmentSlot);
         addAnchoredPathRequestSignal.connect(annotationMgr.addPathRequestedSlot);
+        skeleton.addEditNoteRequestedSignal.connect(annotationMgr.addEditNoteRequestedSlot);
 
         // Toggle skeleton actor with v key
         InputMap inputMap = getInputMap(JComponent.WHEN_ANCESTOR_OF_FOCUSED_COMPONENT);

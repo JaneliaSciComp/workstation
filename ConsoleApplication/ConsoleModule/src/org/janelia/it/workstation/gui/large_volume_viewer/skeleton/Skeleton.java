@@ -56,6 +56,7 @@ public class Skeleton {
 
 	public Signal skeletonChangedSignal = new Signal();
 	public Signal1<Long> pathTraceRequestedSignal = new Signal1<Long>();
+    public Signal1<Anchor> addEditNoteRequestedSignal = new Signal1<>();
 
 	// API for synchronizing with back end database
 	// after discussion with Don Olbris July 8, 2013
@@ -290,6 +291,10 @@ public class Skeleton {
 
     public void rerootNeuriteRequest(Anchor anchor) {
         rerootNeuriteRequestedSignal.emit(anchor);
+    }
+
+    public void addEditNoteRequest(Anchor anchor) {
+        addEditNoteRequestedSignal.emit(anchor);
     }
 
     public void splitNeuriteRequest(Anchor anchor) {
