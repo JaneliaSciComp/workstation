@@ -2,8 +2,6 @@ package org.janelia.it.workstation.signal;
 
 import java.util.Observable;
 
-import org.janelia.it.workstation.gui.large_volume_viewer.BasicSignalSlot;
-
 public abstract class Slot
 implements BasicSignalSlot
 {
