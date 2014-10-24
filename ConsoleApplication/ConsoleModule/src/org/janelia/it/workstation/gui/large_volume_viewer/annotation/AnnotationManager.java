@@ -729,7 +729,7 @@ public class AnnotationManager
                 JOptionPane.PLAIN_MESSAGE,
                 null,
                 options,
-                options[2]);
+                options[0]);
 
         if (ans == JOptionPane.CANCEL_OPTION) {
             return;
