@@ -36,9 +36,9 @@ public class ImageColorModel
 	}
 	**/
 	
-	public ImageColorModel(VolumeImage3d volumeImage)
+	public ImageColorModel(Integer maxIntensity, Integer numberOfChannels)
 	{
-		reset(volumeImage);
+		reset(maxIntensity, numberOfChannels);
 	}
 
     /**
@@ -210,17 +210,16 @@ public class ImageColorModel
 		colorModelInitializedSignal.emit();
 	}
 	
-	public void reset(VolumeImage3d volumeImage)
+	public void reset(Integer maxI, Integer numberOfChannels)
 	{
-		if (volumeImage == null)
+		if (maxI == null)
 			return;
-		int maxI = volumeImage.getMaximumIntensity();
 		assert maxI <= 65535;
 		int bitDepth = 8;
 		if (maxI > 255)
 			bitDepth = 16;
 		int hardMax = (int)Math.pow(2.0, bitDepth) - 1;
-		init(volumeImage.getNumberOfChannels(), bitDepth);
+		init(numberOfChannels, bitDepth);
 		if (hardMax != maxI) {
 			for (ChannelColorModel ccm : channels) {
 				ccm.setWhiteLevel(maxI);

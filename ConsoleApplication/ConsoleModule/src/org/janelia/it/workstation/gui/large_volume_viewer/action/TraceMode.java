@@ -407,12 +407,14 @@ implements MouseMode, KeyListener
                                 skeleton.rerootNeuriteRequest(getHoverAnchor());
                             }
                         }));
+                        result.add(null); // separator
                         result.add(new JMenuItem(new AbstractAction("Add, edit, delete note...") {
                             @Override
                             public void actionPerformed(ActionEvent e) {
                                 skeleton.addEditNoteRequest(getHoverAnchor());
                             }
                         }));
+                        result.add(null); // separator
                     }
                     if (parent != null) {
                     	if (parent != hover) {

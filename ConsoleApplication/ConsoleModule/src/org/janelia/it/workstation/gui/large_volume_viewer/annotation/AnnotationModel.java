@@ -73,6 +73,8 @@ that need to respond to changing data.
 
     public Signal1<Color> globalAnnotationColorChangedSignal = new Signal1<Color>();
 
+    public Signal1<TmWorkspace> notesUpdatedSignal = new Signal1<>();
+
     // ----- slots
     public Slot1<TmNeuron> neuronClickedSlot = new Slot1<TmNeuron>() {
         @Override
@@ -887,10 +889,19 @@ that need to respond to changing data.
                     TmStructuredTextAnnotation.GEOMETRIC_ANNOTATION, TmStructuredTextAnnotation.FORMAT_VERSION,
                     mapper.writeValueAsString(rootNode));
         }
+
+        // updates
+        updateCurrentWorkspace();
+        notesUpdatedSignal.emit(getCurrentWorkspace());
+
     }
 
     public void removeNote(TmStructuredTextAnnotation textAnnotation) throws Exception {
         modelMgr.deleteStructuredTextAnnotation(textAnnotation.getId());
+
+        // updates
+        updateCurrentWorkspace();
+        notesUpdatedSignal.emit(getCurrentWorkspace());
     }
 
     public void setGlobalAnnotationColor(Color color) {
