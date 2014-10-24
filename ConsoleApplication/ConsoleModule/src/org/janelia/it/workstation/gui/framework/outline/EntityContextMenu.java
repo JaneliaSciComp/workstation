@@ -141,7 +141,6 @@ public class EntityContextMenu extends JPopupMenu {
         add(getLsmDownloadMenu());
         add(getDownloadMenu());
         add(getImportItem());
-//        add(getCreateSessionItem());
 
         setNextAddRequiresSeparator(true);
         add(getHudMenuItem());
@@ -149,7 +148,6 @@ public class EntityContextMenu extends JPopupMenu {
             add(item);
         }
         add(getWrapEntityItem());
-//        add(getOpenLargeVolumeViewerItem());
 
         if ((SessionMgr.getSubjectKey().equals("user:simpsonj") || SessionMgr.getSubjectKey()
                 .equals("group:simpsonlab")) && !this.multiple) {
@@ -455,26 +453,6 @@ public class EntityContextMenu extends JPopupMenu {
         return new WrapperCreatorItemFactory().makeEntityWrapperCreatorItem( rootedEntity );
     }
        
-//    public JMenuItem getOpenLargeVolumeViewerItem() {
-//        JMenuItem sliceVwItem = null;
-//        if (rootedEntity != null && rootedEntity.getEntityData() != null) {
-//            Entity entity = rootedEntity.getEntity();
-//            if (entity.getEntityTypeName().equals(EntityConstants.TYPE_3D_TILE_MICROSCOPE_SAMPLE) || 
-//                entity.getEntityTypeName().equals(EntityConstants.TYPE_TILE_MICROSCOPE_WORKSPACE)) {
-//                sliceVwItem = new JMenuItem("  Open in Large Volume Viewer");
-//                sliceVwItem.addActionListener(new ActionListener() {
-//                    @Override
-//                    public void actionPerformed(ActionEvent e) {
-//                        browser.setPerspective(Perspective.LargeVolumeViewer);
-//                        browser.getViewerManager().getActiveViewer().loadEntity(rootedEntity);
-//                    }
-//                });
-//            }
-//        }
-//
-//        return sliceVwItem;
-//    }
-//
     private class EntityDataPath {
         private List<EntityData> path;
         private String rootOwner;
