@@ -4,35 +4,27 @@ import org.janelia.it.workstation.api.entity_model.access.ModelMgrAdapter;
 import org.janelia.it.workstation.api.entity_model.access.ModelMgrObserver;
 import org.janelia.it.workstation.api.entity_model.management.ModelMgr;
 import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
-import org.janelia.it.workstation.gui.framework.viewer.Viewer;
-import org.janelia.it.workstation.gui.framework.viewer.ViewerPane;
 import org.janelia.it.workstation.gui.util.Icons;
 import org.janelia.it.workstation.model.entity.RootedEntity;
 import org.janelia.it.jacs.model.entity.Entity;
 import org.janelia.it.jacs.model.entity.EntityConstants;
-import org.janelia.it.workstation.gui.framework.outline.EntityViewerState;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.swing.*;
 import java.awt.*;
 import java.net.MalformedURLException;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
 import java.util.concurrent.Callable;
 
 /**
  * Created with IntelliJ IDEA.
- * User: fosterl
+ * User: fosterl migrated from older implementation by olbrisd and bruns
  * Date: 1/3/13
  * Time: 4:42 PM
  *
  * Shows Confocal Blocks data.
  */
-public class LargeVolumeViewViewer extends Viewer {
+public class LargeVolumeViewViewer extends JPanel {
     private Entity sliceSample;
     private Entity initialEntity;
 
@@ -42,17 +34,15 @@ public class LargeVolumeViewViewer extends Viewer {
     private ModelMgrObserver modelMgrObserver;
     private Logger logger = LoggerFactory.getLogger(LargeVolumeViewViewer.class);
 
-    public LargeVolumeViewViewer(ViewerPane viewerPane) {
-        super(viewerPane);
+    public LargeVolumeViewViewer() {
+        super();
         setLayout(new BorderLayout());
     }
 
-    @Override
     public void clear() {
         clearObserver();
     }
 
-    @Override
     public void showLoadingIndicator() {
         removeAll();
         add(new JLabel(Icons.getLoadingIcon()));
@@ -60,7 +50,6 @@ public class LargeVolumeViewViewer extends Viewer {
         repaint();
     }
 
-    @Override
     public void loadEntity(RootedEntity rootedEntity) {
         // don't reload if user tries to reload the same entity (is that a
         //  good idea?  not clear)
@@ -111,7 +100,6 @@ public class LargeVolumeViewViewer extends Viewer {
         establishObserver();
     }
 
-    @Override
     public void loadEntity(RootedEntity rootedEntity, Callable<Void> success) {
         loadEntity(rootedEntity);
         try {
@@ -126,29 +114,12 @@ public class LargeVolumeViewViewer extends Viewer {
 		return slcRootedEntity;
 	}
 	
-    @Override
-    public List<RootedEntity> getRootedEntities() {
-        return Arrays.asList(slcRootedEntity);
-    }
-
-    @Override
-    public List<RootedEntity> getSelectedEntities() {
-        return Collections.EMPTY_LIST;
-    }
-
-    @Override
-    public RootedEntity getRootedEntityById(String uniqueId) {
-        return slcRootedEntity;
-    }
-    
-    @Override
     public void close() {
         logger.info("Closing");
         ModelMgr.getModelMgr().unregisterOnEventBus(this);
         deleteAll();
     }
 
-    @Override
     public void refresh() {
         // logger.info("Refresh called.");
 
@@ -166,7 +137,6 @@ public class LargeVolumeViewViewer extends Viewer {
         }
     }
 
-    @Override
     public void totalRefresh() {
         refresh();
     }
@@ -211,22 +181,4 @@ public class LargeVolumeViewViewer extends Viewer {
         }
     }
     
-    @Override
-    public EntityViewerState saveViewerState() {
-        Set<String> selectedIds = new HashSet<String>(ModelMgr.getModelMgr().getEntitySelectionModel().getSelectedEntitiesIds(getSelectionCategory()));
-        return new EntityViewerState(getClass(), slcRootedEntity, selectedIds);
-    }
-    
-    @Override
-    public void restoreViewerState(final EntityViewerState state) {
-        loadEntity(state.getContextRootedEntity(), new Callable<Void>() {
-            @Override
-            public Void call() throws Exception {
-                // TODO: reselect the entities from state.getSelectedIds()
-                return null;
-            }
-        }
-        );
-        
-    }
 }

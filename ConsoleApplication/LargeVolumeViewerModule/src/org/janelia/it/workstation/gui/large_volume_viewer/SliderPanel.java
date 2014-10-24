@@ -10,18 +10,21 @@ import java.awt.Insets;
 import javax.swing.AbstractButton;
 import javax.swing.Box;
 import javax.swing.BoxLayout;
-import javax.swing.ImageIcon;
 import javax.swing.JPanel;
 import javax.swing.JToggleButton;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
+import org.janelia.it.workstation.gui.util.Icons;
 
 /**
  * Encapsulates all multi-slider functionality for reuse.
  * @author fosterl
  */
 public class SliderPanel extends JPanel {
-	private ColorChannelWidget colorChannelWidget_0;
+    private static final String IMAGES_LOCK = "lock.png";
+    private static final String IMAGES_LOCK_UNLOCK = "lock_unlock.png";
+
+    private ColorChannelWidget colorChannelWidget_0;
 	private ColorChannelWidget colorChannelWidget_1;
 	private ColorChannelWidget colorChannelWidget_2;
 	private ColorChannelWidget colorChannelWidget_3;
@@ -86,10 +89,10 @@ public class SliderPanel extends JPanel {
 		lockBlackButton = new JToggleButton("");
 		lockBlackButton.setToolTipText("Synchronize channel black levels");
 		lockBlackButton.setMargin(new Insets(0, 0, 0, 0));
-		lockBlackButton.setRolloverIcon(new ImageIcon(QuadViewUi.class.getResource("/images/lock_unlock.png")));
-		lockBlackButton.setRolloverSelectedIcon(new ImageIcon(QuadViewUi.class.getResource("/images/lock.png")));
-		lockBlackButton.setIcon(new ImageIcon(QuadViewUi.class.getResource("/images/lock_unlock.png")));
-		lockBlackButton.setSelectedIcon(new ImageIcon(QuadViewUi.class.getResource("/images/lock.png")));
+		lockBlackButton.setRolloverIcon(Icons.getIcon(IMAGES_LOCK_UNLOCK));
+		lockBlackButton.setRolloverSelectedIcon(Icons.getIcon(IMAGES_LOCK));
+		lockBlackButton.setIcon(Icons.getIcon(IMAGES_LOCK_UNLOCK));
+		lockBlackButton.setSelectedIcon(Icons.getIcon(IMAGES_LOCK));
 		lockBlackButton.setSelected(true);
 		colorLockPanel.add(lockBlackButton);
 		lockBlackButton.addChangeListener(new ChangeListener() {
@@ -108,10 +111,10 @@ public class SliderPanel extends JPanel {
 		lockGrayButton = new JToggleButton("");
 		lockGrayButton.setToolTipText("Synchronize channel gray levels");
 		lockGrayButton.setMargin(new Insets(0, 0, 0, 0));
-		lockGrayButton.setRolloverIcon(new ImageIcon(QuadViewUi.class.getResource("/images/lock_unlock.png")));
-		lockGrayButton.setRolloverSelectedIcon(new ImageIcon(QuadViewUi.class.getResource("/images/lock.png")));
-		lockGrayButton.setIcon(new ImageIcon(QuadViewUi.class.getResource("/images/lock_unlock.png")));
-		lockGrayButton.setSelectedIcon(new ImageIcon(QuadViewUi.class.getResource("/images/lock.png")));
+		lockGrayButton.setRolloverIcon(Icons.getIcon(IMAGES_LOCK_UNLOCK));
+		lockGrayButton.setRolloverSelectedIcon(Icons.getIcon(IMAGES_LOCK));
+		lockGrayButton.setIcon(Icons.getIcon(IMAGES_LOCK_UNLOCK));
+		lockGrayButton.setSelectedIcon(Icons.getIcon(IMAGES_LOCK));
 		lockGrayButton.setSelected(true);
 		colorLockPanel.add(lockGrayButton);
 		lockGrayButton.addChangeListener(new ChangeListener() {
@@ -130,10 +133,10 @@ public class SliderPanel extends JPanel {
 		lockWhiteButton = new JToggleButton("");
 		lockWhiteButton.setToolTipText("Synchronize channel white levels");
 		lockWhiteButton.setMargin(new Insets(0, 0, 0, 0));
-		lockWhiteButton.setRolloverIcon(new ImageIcon(QuadViewUi.class.getResource("/images/lock_unlock.png")));
-		lockWhiteButton.setRolloverSelectedIcon(new ImageIcon(QuadViewUi.class.getResource("/images/lock.png")));
-		lockWhiteButton.setIcon(new ImageIcon(QuadViewUi.class.getResource("/images/lock_unlock.png")));
-		lockWhiteButton.setSelectedIcon(new ImageIcon(QuadViewUi.class.getResource("/images/lock.png")));
+		lockWhiteButton.setRolloverIcon(Icons.getIcon(IMAGES_LOCK_UNLOCK));
+		lockWhiteButton.setRolloverSelectedIcon(Icons.getIcon(IMAGES_LOCK));
+		lockWhiteButton.setIcon(Icons.getIcon(IMAGES_LOCK_UNLOCK));
+		lockWhiteButton.setSelectedIcon(Icons.getIcon(IMAGES_LOCK));
 		lockWhiteButton.setSelected(true);
 		colorLockPanel.add(lockWhiteButton);
 		lockWhiteButton.addChangeListener(new ChangeListener() {

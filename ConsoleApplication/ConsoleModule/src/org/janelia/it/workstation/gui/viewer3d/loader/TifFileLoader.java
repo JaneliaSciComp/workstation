@@ -25,6 +25,8 @@ import javax.media.jai.OpImage;
 import javax.media.jai.RenderedImageAdapter;
 import org.janelia.it.workstation.gui.viewer3d.texture.TextureDataBean;
 import org.janelia.it.workstation.gui.viewer3d.texture.TextureDataI;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Created with IntelliJ IDEA.
@@ -39,6 +41,7 @@ public class TifFileLoader extends TextureDataBuilder implements VolumeFileLoade
     private int sheetCountFromFile = -1;
     
     private LoaderSubsetHelper subsetHelper;
+    private Logger logger = LoggerFactory.getLogger( TifFileLoader.class );
     
     /**
      * Sets maximum size in all dimensions, to add to outgoing image.
@@ -78,6 +81,9 @@ public class TifFileLoader extends TextureDataBuilder implements VolumeFileLoade
         
         final File file = new File(fileName);
         Collection<BufferedImage> allImages = loadTIFF( file );
+        if ( allImages == null ) {
+            throw new Exception("Failed to read data from " + fileName + ".");
+        }
         pixelBytes = -1;
         int zOffset = 0;
         int sheetSize = -1;
@@ -211,7 +217,7 @@ public class TifFileLoader extends TextureDataBuilder implements VolumeFileLoade
 
 
         } catch (IOException e) {
-            System.out.println(e.toString());
+            logger.error(e.toString());
 
             return null;
         }
@@ -267,19 +273,17 @@ public class TifFileLoader extends TextureDataBuilder implements VolumeFileLoade
 
 
         } catch (IOException e) {
-            System.out.println(e.toString());
+            logger.error(e.toString());
 
             return null;
         }
 
     }
 
-    private byte[] readBytes(File file) throws RuntimeException {
+    private byte[] readBytes(File file) throws IOException {
         byte[] bytes = new byte[ (int)file.length() ];
         try (FileInputStream fis = new FileInputStream( file )) {
             fis.read(bytes);
-        } catch ( IOException ioe ) {
-            throw new RuntimeException(ioe);
         }
         return bytes;
     }

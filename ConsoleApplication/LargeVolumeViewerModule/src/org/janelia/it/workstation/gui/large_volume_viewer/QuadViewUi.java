@@ -45,6 +45,7 @@ import java.util.Arrays;
 import java.util.Vector;
 import java.util.List;
 import org.janelia.it.workstation.gui.passive_3d.Snapshot3DLauncher;
+import org.janelia.it.workstation.gui.util.Icons;
 
 /** 
  * Main window for QuadView application.
@@ -59,8 +60,13 @@ public class QuadViewUi extends JPanel
 	@SuppressWarnings("unused")
 	private static final Logger log = LoggerFactory.getLogger(QuadViewUi.class);
 	
-	public static GLProfile glProfile = GLProfile.get(GLProfile.GL2);
-	// private static final Logger log = LoggerFactory.getLogger(QuadViewUi.class);
+    private static final String IMAGES_FOLDER_OPEN = "folder_open.png";
+    private static final String IMAGES_GREEN_CHECK = "Green_check.png";
+    private static final String IMAGES_SPINNER = "spinner.gif";
+    private static final String IMAGES_MOUSE_SCROLL = "mouse_scroll.png";
+    private static final String IMAGES_MOUSE_LEFT = "mouse_left.png";
+    
+    public static GLProfile glProfile = GLProfile.get(GLProfile.GL2);
 
 	private boolean bAllowOrthoView = true; // false until ready for release
 	
@@ -849,7 +855,7 @@ public class QuadViewUi extends JPanel
 		JLabel lblNewLabel_1 = new JLabel("");
 		lblNewLabel_1.setToolTipText("Mouse Mode:");
 		lblNewLabel_1.setFocusable(false);
-		lblNewLabel_1.setIcon(new ImageIcon(QuadViewUi.class.getResource("/images/mouse_left.png")));
+		lblNewLabel_1.setIcon(Icons.getIcon(IMAGES_MOUSE_LEFT));
 		toolBar.add(lblNewLabel_1);
 
 		// TODO - create a shared base class for these mode buttons
@@ -881,7 +887,7 @@ public class QuadViewUi extends JPanel
 		toolBar.addSeparator();
 		
 		JLabel scrollModeLabel = new JLabel("");
-		scrollModeLabel.setIcon(new ImageIcon(QuadViewUi.class.getResource("/images/mouse_scroll.png")));
+		scrollModeLabel.setIcon(Icons.getIcon(IMAGES_MOUSE_SCROLL));
 		scrollModeLabel.setFocusable(false);
 		toolBar.add(scrollModeLabel);
 		
@@ -972,7 +978,7 @@ public class QuadViewUi extends JPanel
         menuBar.add(mnView);
 
         JMenu mnMouseMode = new JMenu("Mouse Mode");
-        mnMouseMode.setIcon(new ImageIcon(QuadViewUi.class.getResource("/images/mouse_left.png")));
+        mnMouseMode.setIcon(Icons.getIcon(IMAGES_MOUSE_LEFT));
         mnView.add(mnMouseMode);
 
         JRadioButtonMenuItem panModeItem = new JRadioButtonMenuItem("New radio item");
@@ -989,7 +995,7 @@ public class QuadViewUi extends JPanel
         mnMouseMode.add(traceMouseModeItem);
         
         JMenu mnScrollMode = new JMenu("Scroll Mode");
-        mnScrollMode.setIcon(new ImageIcon(QuadViewUi.class.getResource("/images/mouse_scroll.png")));
+        mnScrollMode.setIcon(Icons.getIcon(IMAGES_MOUSE_SCROLL));
         mnView.add(mnScrollMode);
 
         JRadioButtonMenuItem rdbtnmntmNewRadioItem = new JRadioButtonMenuItem("New radio item");
@@ -1208,9 +1214,9 @@ public class QuadViewUi extends JPanel
     	private ImageIcon emptyIcon;
     	
     	LoadStatusLabel() {
-    		this.busyIcon = new ImageIcon(QuadViewUi.class.getResource("/images/spinner.gif"));
-    		this.checkIcon = new ImageIcon(QuadViewUi.class.getResource("/images/Green_check.png"));
-    		this.emptyIcon = new ImageIcon(QuadViewUi.class.getResource("/images/folder_open.png"));
+    		this.busyIcon = Icons.getIcon(IMAGES_SPINNER);
+    		this.checkIcon = Icons.getIcon(IMAGES_GREEN_CHECK);
+    		this.emptyIcon = Icons.getIcon(IMAGES_FOLDER_OPEN);
     		// Place text over icon
     		setHorizontalTextPosition(JLabel.CENTER);
     		setVerticalTextPosition(JLabel.CENTER);
