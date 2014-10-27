@@ -481,20 +481,25 @@ public class Subvolume {
 //                dstZ /= tileIx.getDeltaSlice(); //TEMP
                 // Y
                 int startY = Math.max(origin.getY(), tileOrigin.getY());
-                int endY = Math.min(farCorner.getY(), tileOrigin.getY() + tileData.getHeight() - 1);
-                int overlapY = endY - startY + 1;
+                int endY = Math.min(farCorner.getY(), tileOrigin.getY() + tileData.getHeight()); //-1
+                int overlapY = endY - startY;
                 // X
                 int startX = Math.max(origin.getX(), tileOrigin.getX());
-                int endX = Math.min(farCorner.getX(), tileOrigin.getX() + tileData.getUsedWidth() - 1);
-                int overlapX = endX - startX + 1;
+                int endX = Math.min(farCorner.getX(), tileOrigin.getX() + tileData.getUsedWidth());// -1
+                int overlapX = endX - startX;
                 // byte array offsets
                 int pixelBytes = channelCount * bytesPerIntensity;
                 int tileLineBytes = pixelBytes * tileData.getWidth();
                 int subvolumeLineBytes = pixelBytes * extent.getX();
                 // Where to start putting bytes into subvolume?
+                // Probable source of bug: may not be getting proper start location in "subsequent" volume, and/or wrong overlap values.
                 int dstOffset = dstZ * subvolumeLineBytes * extent.getY() // z plane offset
                         + (startY - origin.getY()) * subvolumeLineBytes // y scan-line offset
                         + (startX - origin.getX()) * pixelBytes;
+//                System.out.println("Destination offset=" + dstOffset);
+//                if ( 1038080 == dstOffset ) {
+//                    System.out.println("Got 63rd plane.");
+//                }
                 int srcOffset = (startY - tileOrigin.getY()) * tileLineBytes // y scan-line offset
                         + (startX - tileOrigin.getX()) * pixelBytes;
                 // Copy one scan line at a time
