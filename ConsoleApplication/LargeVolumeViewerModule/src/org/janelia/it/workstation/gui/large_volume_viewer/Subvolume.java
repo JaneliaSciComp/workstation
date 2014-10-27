@@ -498,35 +498,35 @@ public class Subvolume {
                 int srcOffset = (startY - tileOrigin.getY()) * tileLineBytes // y scan-line offset
                         + (startX - tileOrigin.getX()) * pixelBytes;
                 // Copy one scan line at a time
+OVERFLOW_LABEL:
                 for (int y = 0; y < overlapY; ++y) {
                     for (int x = 0; x < overlapX; ++x) {
                         // TODO faster copy
                         for (int b = 0; b < pixelBytes; ++b) {
                             int d = dstOffset + x * pixelBytes + b;
                             int s = srcOffset + x * pixelBytes + b;
-                            /* for debugging */
-                            if (d >= bytes.capacity()) {
-                                logger.info("overflow destination: {} vs {}.", d, bytes.capacity());
-                                logger.info( "dstOffset={}; dstZ={}; extent-Y={}; subvolumeLineBytes={}", dstOffset, dstZ, extent.getY(), subvolumeLineBytes );
-                                logger.info("dstZ=tileOrigin.getZ() - origin.getZ(); tileOrigin.getZ()={}; origin.getZ()={}.", tileOrigin.getZ(), origin.getZ());
+                            try {
+                                bytes.put(d, tileData.getPixels().get(s));
+                            } catch (Exception ex) {
+                                logger.error("Failed to copy data into pixels buffer: " + ex.getMessage() + ".  Skipping remainder.");
+                                /* for debugging */
+                                if (logger.isDebugEnabled() && d >= bytes.capacity()) {
+                                    logger.debug("overflow destination: {} vs {}.", d, bytes.capacity());
+                                    logger.debug("dstOffset={}; dstZ={}; extent-Y={}; subvolumeLineBytes={}", dstOffset, dstZ, extent.getY(), subvolumeLineBytes);
+                                    logger.debug("dstZ=tileOrigin.getZ() - origin.getZ(); tileOrigin.getZ()={}; origin.getZ()={}.", tileOrigin.getZ(), origin.getZ());
+                                    logger.debug("startX={}. endX={}. startY={}. endY={}", startX, endX, startY, endY);
+                                }
+                                if (s >= tileData.getPixels().capacity()) {
+                                    logger.info("overflow source: {} vs {}.", s, bytes.capacity());
+                                }
+                                if (s < 0) {
+                                    logger.info("Underflow source: {} vs {}.", s, bytes.capacity());
+                                }
+                                if (d < 0) {
+                                    logger.info("underflow destination: {} vs {}.", d, bytes.capacity());
+                                }
+                                break OVERFLOW_LABEL;
                             }
-                            if (s >= tileData.getPixels().capacity()) {
-                                logger.info("overflow source: {} vs {}.", s, bytes.capacity());
-                            }
-                            if (s < 0) {
-                                logger.info("Underflow source: {} vs {}.", s, bytes.capacity());
-                            }
-                            if (d < 0) {
-                                logger.info("underflow destination: {} vs {}.", d, bytes.capacity());
-                            }
-//                             if (bytesPerIntensity == 2) {
-//                             int value = sourceShorts.get(s/2) & 0xffff;
-//                             if (value > 40370) {
-//                             System.out.println("large value");
-//                             }
-//                             }
-//                             */
-                            bytes.put(d, tileData.getPixels().get(s));
                         }
                     }
                     dstOffset += subvolumeLineBytes;
