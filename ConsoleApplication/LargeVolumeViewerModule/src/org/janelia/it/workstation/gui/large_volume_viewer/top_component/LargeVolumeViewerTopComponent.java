@@ -6,6 +6,7 @@
 package org.janelia.it.workstation.gui.large_volume_viewer.top_component;
 
 import java.awt.BorderLayout;
+import javax.swing.SwingUtilities;
 import org.janelia.it.workstation.api.entity_model.management.ModelMgr;
 import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.workstation.gui.large_volume_viewer.LargeVolumeViewViewer;
@@ -15,6 +16,10 @@ import org.openide.awt.ActionID;
 import org.openide.awt.ActionReference;
 import org.openide.windows.TopComponent;
 import org.openide.util.NbBundle.Messages;
+import org.openide.windows.TopComponentGroup;
+import org.openide.windows.WindowManager;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Top component which displays something.
@@ -43,9 +48,13 @@ import org.openide.util.NbBundle.Messages;
 public final class LargeVolumeViewerTopComponent extends TopComponent {
     
     public static final String LVV_PREFERRED_ID = "LargeVolumeViewerTopComponent";
+    
+    private LargeVolumeViewViewer lvvv;
+    private Logger logger = LoggerFactory.getLogger( LargeVolumeViewerTopComponent.class );
 
     public LargeVolumeViewerTopComponent() {
         initComponents();
+        lvvv = new LargeVolumeViewViewer();
         setName(Bundle.CTL_LargeVolumeViewerTopComponent());
         setToolTipText(Bundle.HINT_LargeVolumeViewerTopComponent());
 
@@ -53,12 +62,10 @@ public final class LargeVolumeViewerTopComponent extends TopComponent {
 
     public void openLargeVolumeViewer( Long entityId ) {
         try {
-            LargeVolumeViewViewer lvvv = new LargeVolumeViewViewer();
             RootedEntity rootedEntity = new RootedEntity(
                 ModelMgr.getModelMgr().getEntityById(entityId)
             );
             lvvv.loadEntity( rootedEntity );
-            jPanel1.add( lvvv, BorderLayout.CENTER );
         } catch ( Exception ex ) {
             SessionMgr.getSessionMgr().handleException( ex );
         }
@@ -93,12 +100,33 @@ public final class LargeVolumeViewerTopComponent extends TopComponent {
     // End of variables declaration//GEN-END:variables
     @Override
     public void componentOpened() {
-        // TODO add custom code on component opening
+        jPanel1.add( lvvv, BorderLayout.CENTER );
     }
 
     @Override
     public void componentClosed() {
-        // TODO add custom code on component closing
+        jPanel1.remove( lvvv );
+        Runnable runnable = new Runnable() {
+            public void run() {
+                TopComponentGroup tcg = WindowManager.getDefault().findTopComponentGroup(
+                        "large_volume_viewer_plugin"
+                );
+                if (tcg != null) {
+                    tcg.close();
+                }
+            }
+        };
+        if ( SwingUtilities.isEventDispatchThread() ) {
+            runnable.run();
+        }
+        else {
+            try {
+                SwingUtilities.invokeAndWait( runnable );
+            } catch ( Exception ex ) {
+                logger.error(ex.getMessage());
+                ex.printStackTrace();
+            }
+        }
     }
 
     void writeProperties(java.util.Properties p) {
