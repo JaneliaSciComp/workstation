@@ -112,7 +112,8 @@ public class TextureMediator {
                         null
                 );
                 
-                dumpGlTexImageCall(
+                if ( 1==1 || logger.isDebugEnabled() ) {
+                    dumpGlTexImageCall(
                         GL2.GL_TEXTURE_3D,
                         0, // mipmap level
                         getInternalFormat(), // as stored INTO graphics hardware, w/ srgb info (GLint internal format)
@@ -122,7 +123,8 @@ public class TextureMediator {
                         0, // border
                         getVoxelComponentOrder(), // voxel component order (GLenum format)
                         getVoxelComponentType() // voxel component type=packed RGBA values(GLenum type)
-                );
+                    );
+                }
 
                 int expectedRemaining = textureData.getSx() * textureData.getSy() * textureData.getSz()
                         * textureData.getPixelByteCount() * textureData.getChannelCount();
@@ -377,6 +379,23 @@ public class TextureMediator {
     /** This should be called immediately after some openGL call, to check error status. */
     public void setTextureData( TextureDataI textureData ) {
         this.textureData = textureData;
+    }
+
+    /**
+     * If this has been set, it will be used to transform every point in the coordinate set.
+     * 
+     * @param transformMatrix applied to all points.
+     */
+    public void setTransformMatrix(float[] transformMatrix) {        
+        textureData.setTransformMatrix(transformMatrix);
+    }
+    
+    /**
+     * Convenience pass-through method to get coord transform matrix.
+     * @return 
+     */
+    public float[] getTransformMatrix() {
+        return textureData.getTransformMatrix();
     }
 
     private int getStorageFormatMultiplier() {

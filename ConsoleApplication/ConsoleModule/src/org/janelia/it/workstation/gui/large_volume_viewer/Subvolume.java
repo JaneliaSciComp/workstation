@@ -273,12 +273,25 @@ public class Subvolume {
         try {
             executorService.awaitTermination(5, TimeUnit.MINUTES);
             for (Future<Boolean> result : followUps) {
-                if (result == null || !result.get()) {
-                    logger.info("Request for {}..{} had tile gaps.", origin, extent);
-                    break;
+                logger.debug("DEBUG: checking a follow-up.");
+                boolean failureOnResult = false;
+                try {
+                    if (result == null || !result.get()) {
+                        failureOnResult = true;
+                    }
+                } catch ( ExecutionException | RuntimeException rte ) {
+                    logger.error(
+                            "Exception during subvolume fetch.  Request {}..{}.  Exception report follows.",
+                            origin, extent
+                    );
+                    rte.printStackTrace();
+                    failureOnResult = true;
                 }
-            }
-        } catch ( InterruptedException | ExecutionException ex ) {
+                if ( failureOnResult ) {
+                    logger.info("Request for {}..{} had tile gaps.", origin, extent);
+                }
+            }            
+        } catch ( InterruptedException ex ) {
             if ( progressMonitor != null ) {
                 progressMonitor.close();
             }

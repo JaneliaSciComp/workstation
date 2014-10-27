@@ -36,12 +36,6 @@ public class SnapshotVolumeBrick extends AbstractVolumeBrick
 		RenderMethod.MAXIMUM_INTENSITY; // MIP
     private boolean bUseShader = true; // Controls whether to load and use shader program(s).
 
-    /**
-     * Size of our opengl texture, which might be padded with extra voxels
-     * to reach a multiple of 8
-     */
-    private boolean bIsInitialized;    
-
     private static final Logger logger = LoggerFactory.getLogger( SnapshotVolumeBrick.class );
 
     public SnapshotVolumeBrick(VolumeModel volumeModel) {
@@ -54,6 +48,8 @@ public class SnapshotVolumeBrick extends AbstractVolumeBrick
     }
     
     public void setTextureDatas(Collection<TextureDataI> textureDatas) {
+        super.bTexturesNeedUploaded = true;
+        super.bIsInitialized = false;
         if ( textureDatas == null ) {
             return;
         }
@@ -74,7 +70,7 @@ public class SnapshotVolumeBrick extends AbstractVolumeBrick
     public void init( GLAutoDrawable glDrawable ) {
         logger.info("Ensuring initialization takes place....");
         super.init( glDrawable );
-        bIsInitialized = true;
+        super.bIsInitialized = true;
     }
 
     @Override

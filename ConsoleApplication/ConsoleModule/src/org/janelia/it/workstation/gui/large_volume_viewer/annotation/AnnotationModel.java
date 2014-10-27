@@ -3,6 +3,9 @@ package org.janelia.it.workstation.gui.large_volume_viewer.annotation;
 
 // workstation imports
 
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import org.janelia.it.workstation.geom.Vec3;
 import org.janelia.it.workstation.geom.ParametrizedLine;
 import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
@@ -69,6 +72,8 @@ that need to respond to changing data.
     public Signal1<Long> pathTraceRequestedSignal = new Signal1<Long>();
 
     public Signal1<Color> globalAnnotationColorChangedSignal = new Signal1<Color>();
+
+    public Signal1<TmWorkspace> notesUpdatedSignal = new Signal1<>();
 
     // ----- slots
     public Slot1<TmNeuron> neuronClickedSlot = new Slot1<TmNeuron>() {
@@ -853,6 +858,50 @@ that need to respond to changing data.
         if (neuron1.getAnchoredPathMap().containsKey(endpoints)) {
             removeAnchoredPath(neuron1.getAnchoredPathMap().get(endpoints));
         }
+    }
+
+    /**
+     * add or update a note on a geomentric annotation
+     */
+    public void setNote(TmGeoAnnotation geoAnnotation, String noteString) throws Exception {
+        TmNeuron neuron = getNeuronFromAnnotationID(geoAnnotation.getId());
+        if (neuron == null) {
+            throw new Exception("can't find neuron for annotation with ID " + geoAnnotation.getId());
+        }
+
+        // if it's got a structured text annotation already:
+        TmStructuredTextAnnotation textAnnotation = neuron.getStructuredTextAnnotationMap().get(geoAnnotation.getId());
+        ObjectMapper mapper = new ObjectMapper();
+        if (textAnnotation != null) {
+            // if you've got one, use it; for now, you only get one
+            JsonNode rootNode = textAnnotation.getData();
+            ((ObjectNode) rootNode).put("note", noteString);
+
+            // modelmgr.update(old ann, node.write string)
+            modelMgr.updateStructuredTextAnnotation(textAnnotation, mapper.writeValueAsString(rootNode));
+
+        } else {
+            // it doesn't exist
+            ObjectNode rootNode = mapper.createObjectNode();
+            rootNode.put("note", noteString);
+
+            modelMgr.addStructuredTextAnnotation(neuron.getId(), geoAnnotation.getId(),
+                    TmStructuredTextAnnotation.GEOMETRIC_ANNOTATION, TmStructuredTextAnnotation.FORMAT_VERSION,
+                    mapper.writeValueAsString(rootNode));
+        }
+
+        // updates
+        updateCurrentWorkspace();
+        notesUpdatedSignal.emit(getCurrentWorkspace());
+
+    }
+
+    public void removeNote(TmStructuredTextAnnotation textAnnotation) throws Exception {
+        modelMgr.deleteStructuredTextAnnotation(textAnnotation.getId());
+
+        // updates
+        updateCurrentWorkspace();
+        notesUpdatedSignal.emit(getCurrentWorkspace());
     }
 
     public void setGlobalAnnotationColor(Color color) {

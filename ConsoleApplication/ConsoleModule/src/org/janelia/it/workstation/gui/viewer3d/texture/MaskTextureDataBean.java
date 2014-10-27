@@ -44,6 +44,7 @@ public class MaskTextureDataBean implements TextureDataI {
     private Integer explicitVoxelComponentOrder = TextureDataI.UNSET_VALUE;
 
     private boolean inverted = true; // Most tested masks were inverted.
+    private float[] transformMatrix;
 
     public MaskTextureDataBean() {
         super();
@@ -250,6 +251,22 @@ public class MaskTextureDataBean implements TextureDataI {
     @Override
     public void setExplicitVoxelComponentOrder(Integer explicitVoxelComponentOrder) {
         this.explicitVoxelComponentOrder = explicitVoxelComponentOrder;
+    }
+
+    /**
+     * @return the transformMatrix
+     */
+    @Override
+    public float[] getTransformMatrix() {
+        return transformMatrix;
+    }
+
+    /**
+     * @param transformMatrix the transformMatrix to set
+     */
+    @Override
+    public void setTransformMatrix(float[] transformMatrix) {
+        this.transformMatrix = transformMatrix;
     }
 }
 

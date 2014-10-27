@@ -1,6 +1,5 @@
 package org.janelia.it.workstation.gui.passive_3d;
 
-import org.janelia.it.workstation.gui.dialogs.ModalDialog;
 import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.workstation.gui.viewer3d.*;
 import org.janelia.it.workstation.gui.viewer3d.texture.TextureDataI;
@@ -19,7 +18,9 @@ import java.awt.BorderLayout;
 import java.util.Collections;
 import java.util.Comparator;
 import javax.swing.JLabel;
+import javax.swing.JPanel;
 import org.janelia.it.workstation.gui.large_volume_viewer.ImageColorModel;
+import org.janelia.it.workstation.gui.large_volume_viewer.SliderPanel;
 import org.janelia.it.workstation.shared.workers.IndeterminateNoteProgressMonitor;
 
 /**
@@ -30,9 +31,9 @@ import org.janelia.it.workstation.shared.workers.IndeterminateNoteProgressMonito
  *
  * This popup will give users a snapshot volume.  Very simple viewer, relatively speaking.
  */
-public class Snapshot3d extends ModalDialog {
-    // Choosing initial width > height as workaround to the reset-focus problem.
-    private static final Dimension WIDGET_SIZE = new Dimension( 650, 600 );
+public class Snapshot3d extends JPanel {
+    // Chosing dimensions of same aspect ratio as expected data.
+    private static final Dimension WIDGET_SIZE = new Dimension( 400, 800 );
     private VolumeSource.VolumeAcceptor volumeAcceptor;
     private Collection<Component> locallyAddedComponents = new ArrayList<>();
     private ImageColorModel imageColorModel;
@@ -51,7 +52,6 @@ public class Snapshot3d extends ModalDialog {
     
     private Snapshot3d() {
         super();
-        super.setModal( false );
     }
 
     public void setImageColorModel( ImageColorModel imageColorModel ) {
@@ -124,24 +124,39 @@ public class Snapshot3d extends ModalDialog {
         this.setPreferredSize( WIDGET_SIZE );
         this.setMinimumSize( WIDGET_SIZE );
         this.setLayout(new BorderLayout());
-        if ( labelText != null ) {
+        JPanel southPanel = new JPanel();
+        southPanel.setLayout(new BorderLayout());
+        SliderPanel sliderPanel = new SliderPanel( imageColorModel );
+        locallyAddedComponents.add( sliderPanel );
+        if ( labelText != null ) {            
             final JLabel label = new JLabel( labelText );
             locallyAddedComponents.add( label );
-            this.add( label, BorderLayout.SOUTH );
+            southPanel.add( label, BorderLayout.SOUTH );
         }
+        southPanel.add( sliderPanel, BorderLayout.CENTER );
+        sliderPanel.guiInit();
+        sliderPanel.updateLockButtons();
+        sliderPanel.setVisible(true);
+        locallyAddedComponents.add( southPanel );
+        this.add( southPanel, BorderLayout.SOUTH );
         this.add( mip3d, BorderLayout.CENTER );
-
-        packAndShow();
     }
 
     private void cleanup() {
         // Cleanup old widgets.
         for ( Component c: locallyAddedComponents ) {
             this.remove( c );
+            if ( c instanceof Mip3d ) {
+                Mip3d mip3d = (Mip3d)c;
+                mip3d.setVisible(false);
+                mip3d.clear();
+            }
         }
         locallyAddedComponents.clear();
+        validate();
+        repaint();
     }
-
+    
     private class SnapshotWorker extends SimpleWorker {
         private final VolumeSource volumeSource;
         private Collection<TextureDataI> textureDatas;
@@ -159,7 +174,11 @@ public class Snapshot3d extends ModalDialog {
                     SnapshotWorker.this.textureDatas.add( textureData );
                 }
             };
-            volumeSource.getVolume( volumeAcceptor );
+            try {
+                volumeSource.getVolume( volumeAcceptor );
+            } catch ( RuntimeException rte ) {
+                throw new Exception(rte);
+            }
         }
 
         @Override

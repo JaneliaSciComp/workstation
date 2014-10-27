@@ -6,8 +6,10 @@
 
 package org.janelia.it.workstation.gui.passive_3d;
 
-import java.util.List;
+import java.io.File;
 import javax.media.opengl.GL2;
+
+import org.janelia.it.jacs.model.user_data.tiledMicroscope.RawFileInfo;
 import org.janelia.it.workstation.api.entity_model.management.ModelMgr;
 import org.janelia.it.workstation.gui.camera.BasicObservableCamera3d;
 import org.janelia.it.workstation.gui.camera.Camera3d;
@@ -24,12 +26,20 @@ import org.slf4j.LoggerFactory;
  * @author fosterl
  */
 public class RawTiffVolumeSource implements MonitoredVolumeSource {
+    public static final int DEPT_STD_GRAPH_CARD_MAX_DEPTH = 172;
+    private static final Double[] SPIN_ABOUT_Z = new Double[] {
+        -1.0,    0.0,    0.0,
+        0.0,    -1.0,    0.0,
+        0.0,     0.0,    1.0,
+    };
+    private static final int MATRIX_SQUARE_DIM = 3; //5, if from yaml
 
-    private Camera3d camera;
-    private String baseDirectoryPath;
+    private final Camera3d camera;
+    private final String baseDirectoryPath;
     private IndeterminateNoteProgressMonitor progressMonitor;
     private final Logger logger = LoggerFactory.getLogger( RawTiffVolumeSource.class );
-
+    private int cubicDimension = -1;
+    
     /**
      * Seed this object with all it needs to fetch the volume.
      * 
@@ -63,33 +73,25 @@ public class RawTiffVolumeSource implements MonitoredVolumeSource {
             (int)camera.getFocus().getZ()
         };
         
-        progressMonitor.setNote("Fetching tiff file paths.");
-        List<String> tiffFiles =
-                ModelMgr.getModelMgr().getTiffTilePaths(baseDirectoryPath, viewerCoord);
-        if ( tiffFiles == null ) {
+        progressMonitor.setNote("Fetching raw file paths.");
+        RawFileInfo rawFileInfo =
+                ModelMgr.getModelMgr().getNearestFileInfo(baseDirectoryPath, viewerCoord);
+        if ( rawFileInfo == null ) {
             throw new Exception("Failed to find any tiff files in " + baseDirectoryPath + "." );
-        }
-        if ( tiffFiles.size() < 2 ) {
-            throw new Exception("Failed to find enough tiff files in " + baseDirectoryPath + ".  Found only " + tiffFiles.size());
         }
         progressMonitor.setNote("Loading volume data.");
         TifFileLoader tifFileLoader = new TifFileLoader();
+        if ( cubicDimension > -1 ) {
+            tifFileLoader.setCubicOutputDimension( cubicDimension );
+            tifFileLoader.setConversionCharacteristics( rawFileInfo.getTransformMatrix(), rawFileInfo.getInvertedTransform(), rawFileInfo.getMinCorner(), rawFileInfo.getExtent(), rawFileInfo.getQueryMicroscopeCoords() );
+        }
         FileResolver resolver = new CacheFileResolver();
 
-        for ( int i = 0; i < 2; i++ ) {
-            TextureDataI textureData;
-            String resolvedFilename = resolver.getResolvedFilename(tiffFiles.get( i ));
-            tifFileLoader.loadVolumeFile( resolvedFilename );
-            System.out.println("Loading " + tiffFiles.get(i) + " as " + resolvedFilename);
-            textureData = tifFileLoader.buildTextureData(true);
-            // Presets known to work with this data type.
-            textureData.setExplicitInternalFormat(GL2.GL_LUMINANCE16);
-            textureData.setExplicitVoxelComponentOrder(GL2.GL_LUMINANCE);
-            textureData.setExplicitVoxelComponentType(GL2.GL_UNSIGNED_SHORT);
-            textureData.setPixelByteCount(2);
-            volumeListener.accept(textureData);
-        }
-        
+        progressMonitor.setNote("Starting data load...");
+        Double[] spinAboutZTransform = SPIN_ABOUT_Z;
+        loadChannel(1, resolver, rawFileInfo.getChannel0(), spinAboutZTransform, tifFileLoader, volumeListener);
+        loadChannel(2, resolver, rawFileInfo.getChannel1(), spinAboutZTransform, tifFileLoader, volumeListener);
+
         progressMonitor.setNote("Launching viewer.");
     }
 
@@ -101,5 +103,50 @@ public class RawTiffVolumeSource implements MonitoredVolumeSource {
                 camera.getFocus().getZ()
             );
     }
+    
+    public void setCubicDimension( int cubicDimension ) {
+        this.cubicDimension = cubicDimension;
+    }
 
+    private void loadChannel(int displayNum, FileResolver resolver, File rawFile, Double[] transformMatrix, TifFileLoader tifFileLoader, VolumeAcceptor volumeListener) throws Exception {
+        TextureDataI textureData;
+        progressMonitor.setNote("Caching channel " + displayNum);
+        String resolvedFilename = resolver.getResolvedFilename(rawFile.getAbsolutePath());
+        progressMonitor.setNote("Loading channel " + displayNum);
+        tifFileLoader.loadVolumeFile(resolvedFilename);
+        progressMonitor.setNote("Building texture data from channel " + displayNum);
+        logger.info("Loading" + rawFile + " as " + resolvedFilename);
+        textureData = tifFileLoader.buildTextureData(true);
+        // Presets known to work with this data type.
+        textureData.setExplicitInternalFormat(GL2.GL_LUMINANCE16);
+        textureData.setExplicitVoxelComponentOrder(GL2.GL_LUMINANCE);
+        textureData.setExplicitVoxelComponentType(GL2.GL_UNSIGNED_SHORT);
+        textureData.setPixelByteCount(2);
+        if ( transformMatrix != null ) {
+            setTransformMatrix(transformMatrix, MATRIX_SQUARE_DIM, textureData);
+        }
+        volumeListener.accept(textureData);
+        progressMonitor.setNote("Ending load for raw file " + displayNum);
+    }
+
+    /**
+     * If this has been set, it will be used to transform every point in the coordinate set.
+     * 
+     * @param transformMatrix applied to all points.
+     * @param squareDim the transform matrix must be of size squareDim^2.
+     */
+    private void setTransformMatrix(Double[] transformMatrix, int squareDim, TextureDataI textureData) {        
+        if ( transformMatrix.length != squareDim * squareDim ) {
+            String message = String.format("The transform matrix must be of size %1$d * %1$d. Matrix size is %2$d. Transform not applied.", squareDim, transformMatrix.length);
+            logger.error( message );
+        }
+        else {
+            float[] coordTransformMatrix = new float[ transformMatrix.length ];
+            for ( int i = 0; i < transformMatrix.length; i++ ) {
+                coordTransformMatrix[ i ] = transformMatrix[ i ].floatValue();
+            }
+            textureData.setTransformMatrix(coordTransformMatrix);
+        }
+    }
+    
 }

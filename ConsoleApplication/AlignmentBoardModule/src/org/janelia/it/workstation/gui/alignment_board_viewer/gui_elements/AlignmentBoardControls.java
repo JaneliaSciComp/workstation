@@ -236,6 +236,15 @@ public class AlignmentBoardControls {
         return rtnVal;
     }
 
+    /** Use this to get a downsample rate suitable for calculations */
+    private double getNonZeroDownsampleRate() {
+        double rtnVal = getDownsampleRate();
+        if ( rtnVal < 1.0 ) {
+            rtnVal = settings.getAcceptedDownsampleRate();
+        }
+        return rtnVal;
+    }
+    
     /** These getters may be called after successful launch. */
     private double getDownsampleRate() {
         if ( ! isReadyForOutput() )
@@ -683,7 +692,7 @@ public class AlignmentBoardControls {
                     }
                 };
 
-                Collection<float[]> acceptedCords = getCombinedCropCoords(getDownsampleRate());
+                Collection<float[]> acceptedCords = getCombinedCropCoords(getNonZeroDownsampleRate());
                 SavebackEvent event = new SavebackEvent();
                 event.setAbsoluteCoords(acceptedCords);
                 event.setCompletionListener(buttonEnableListener);
@@ -707,7 +716,7 @@ public class AlignmentBoardControls {
             @Override
             public void actionPerformed(ActionEvent ae) {
                 setButtonBusy(colorSave);
-                Collection<float[]> acceptedCords = getCombinedCropCoords(getDownsampleRate());
+                Collection<float[]> acceptedCords = getCombinedCropCoords(getNonZeroDownsampleRate());
                 SavebackEvent event = new SavebackEvent();
                 event.setAbsoluteCoords(acceptedCords);
                 event.setCompletionListener(buttonEnableListener);
@@ -832,7 +841,7 @@ public class AlignmentBoardControls {
             @Override
             public void actionPerformed(ActionEvent ae) {
                 CropCoordSet cropCoordSet = volumeModel.getCropCoords();
-                cropCoordSet.acceptCurrentCoordinates();
+                cropCoordSet.acceptCurrentNormalizedCoordinates();
                 fireCropEvent();
             }
         });
