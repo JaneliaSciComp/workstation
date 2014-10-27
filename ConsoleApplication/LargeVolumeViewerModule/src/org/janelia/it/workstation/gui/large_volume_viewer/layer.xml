@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE filesystem PUBLIC "-//NetBeans//DTD Filesystem 1.2//EN" "http://www.netbeans.org/dtds/filesystem-1_2.dtd">
+<filesystem>
+    <folder name="Windows2">
+        <folder name="Groups">
+            <file name="large_volume_viewer_plugin.wsgrp" url="Groups/large_volume_viewer_plugin.wsgrp"/>
+            <folder name="large_volume_viewer_plugin">
+                <file name="LargeVolumeViewerTopComponent.wstcgrp" url="Groups/large_volume_viewer_plugin/LargeVolumeViewerTopComponent.wstcgrp"/>
+                <file name="Snapshot3dTopComponent.wstcgrp" url="Groups/large_volume_viewer_plugin/Snapshot3dTopComponent.wstcgrp"/>
+            </folder>
+        </folder>
+    </folder>
+</filesystem>
