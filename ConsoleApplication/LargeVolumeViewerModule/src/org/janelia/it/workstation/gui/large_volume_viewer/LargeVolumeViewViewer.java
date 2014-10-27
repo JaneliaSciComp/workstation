@@ -15,6 +15,7 @@ import javax.swing.*;
 import java.awt.*;
 import java.net.MalformedURLException;
 import java.util.concurrent.Callable;
+import org.janelia.it.workstation.shared.workers.SimpleWorker;
 
 /**
  * Created with IntelliJ IDEA.
@@ -50,54 +51,70 @@ public class LargeVolumeViewViewer extends JPanel {
         repaint();
     }
 
-    public void loadEntity(RootedEntity rootedEntity) {
-        // don't reload if user tries to reload the same entity (is that a
-        //  good idea?  not clear)
-        if (initialEntity != null && rootedEntity.getEntity().getId() != initialEntity.getId()) {
-            deleteAll();
-        }
-        initialEntity = rootedEntity.getEntity();
+    public void loadEntity(final RootedEntity rootedEntity) {
+        SimpleWorker worker = new SimpleWorker() {
 
-        // intial rooted entity should be a brain sample or a workspace; the QuadViewUI wants
-        //  the intial entity, but we need the sample either way to be able to open it:
-        if (initialEntity.getEntityTypeName().equals(EntityConstants.TYPE_3D_TILE_MICROSCOPE_SAMPLE)) {
-            sliceSample = initialEntity;
-        } else if (initialEntity.getEntityTypeName().equals(EntityConstants.TYPE_TILE_MICROSCOPE_WORKSPACE)) {
-            String sampleID = initialEntity.getValueByAttributeName(EntityConstants.ATTRIBUTE_WORKSPACE_SAMPLE_IDS);
-            try {
-                sliceSample = ModelMgr.getModelMgr().getEntityById(sampleID);
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
-            if (sliceSample == null) {
-                JOptionPane.showMessageDialog(this.getParent(),
-                        "Could not find sample entity for this workspace!",
-                        "Could not open workspace",
-                        JOptionPane.ERROR_MESSAGE);
-                return;
-            }
-
-        }
-        
-        refresh();
-
-        // be sure we've successfully gotten the sample before loading it!
-        if (sliceSample.getEntityTypeName().equals(EntityConstants.TYPE_3D_TILE_MICROSCOPE_SAMPLE)) {
-            try {
-                if (!viewUI.loadFile(sliceSample.getValueByAttributeName(EntityConstants.ATTRIBUTE_FILE_PATH))) {
-                    JOptionPane.showMessageDialog(this.getParent(),
-                            "Could not open sample entity for this workspace!",
-                            "Could not open workspace",
-                            JOptionPane.ERROR_MESSAGE);
+            @Override
+            protected void doStuff() throws Exception {
+                // don't reload if user tries to reload the same entity (is that a
+                //  good idea?  not clear)
+                if (initialEntity != null && rootedEntity.getEntity().getId() != initialEntity.getId()) {
+                    deleteAll();
                 }
-                return;
+                initialEntity = rootedEntity.getEntity();
+
+                // intial rooted entity should be a brain sample or a workspace; the QuadViewUI wants
+                //  the intial entity, but we need the sample either way to be able to open it:
+                if (initialEntity.getEntityTypeName().equals(EntityConstants.TYPE_3D_TILE_MICROSCOPE_SAMPLE)) {
+                    sliceSample = initialEntity;
+                } else if (initialEntity.getEntityTypeName().equals(EntityConstants.TYPE_TILE_MICROSCOPE_WORKSPACE)) {
+                    String sampleID = initialEntity.getValueByAttributeName(EntityConstants.ATTRIBUTE_WORKSPACE_SAMPLE_IDS);
+                    try {
+                        sliceSample = ModelMgr.getModelMgr().getEntityById(sampleID);
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                    }
+                    if (sliceSample == null) {
+                        JOptionPane.showMessageDialog(LargeVolumeViewViewer.this.getParent(),
+                                "Could not find sample entity for this workspace!",
+                                "Could not open workspace",
+                                JOptionPane.ERROR_MESSAGE);
+                    }
+
+                }
+        
             }
-            catch (MalformedURLException e) {
-                SessionMgr.getSessionMgr().handleException(e);
+
+            @Override
+            protected void hadSuccess() {
+                refresh();
+
+                // be sure we've successfully gotten the sample before loading it!
+                if (sliceSample.getEntityTypeName().equals(EntityConstants.TYPE_3D_TILE_MICROSCOPE_SAMPLE)) {
+                    try {
+                        if (!viewUI.loadFile(sliceSample.getValueByAttributeName(EntityConstants.ATTRIBUTE_FILE_PATH))) {
+                            JOptionPane.showMessageDialog(LargeVolumeViewViewer.this.getParent(),
+                                    "Could not open sample entity for this workspace!",
+                                    "Could not open workspace",
+                                    JOptionPane.ERROR_MESSAGE);
+                        }
+                    } catch (MalformedURLException e) {
+                        SessionMgr.getSessionMgr().handleException(e);
+                    }
+                }
+
+                // Listen for further changes, so can refresh again later.
+                establishObserver();
             }
-        }
-        // Listen for further changes, so can refresh again later.
-        establishObserver();
+
+            @Override
+            protected void hadError(Throwable error) {
+                SessionMgr.getSessionMgr().handleException(error);
+            }
+
+        };
+        worker.execute();
+
     }
 
     public void loadEntity(RootedEntity rootedEntity, Callable<Void> success) {

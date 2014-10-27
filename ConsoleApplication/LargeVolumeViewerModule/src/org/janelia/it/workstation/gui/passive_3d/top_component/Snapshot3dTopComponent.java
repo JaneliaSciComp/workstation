@@ -88,17 +88,15 @@ public final class Snapshot3dTopComponent extends TopComponent {
     // End of variables declaration//GEN-END:variables
     @Override
     public void componentOpened() {
-        // TODO add custom code on component opening
+        // Must use this opportunity for cleanup of any lingering viewer.
+        cleanupContent();
     }
 
     @Override
     public void componentClosed() {
-        if ( externallySuppliedComponent != null ) {
-            containerPanel.remove( externallySuppliedComponent );
-            externallySuppliedComponent = null;
-        }
+        cleanupContent();
     }
-    
+
     public void setSnapshotComponent( JComponent component ) {
         externallySuppliedComponent = component;
         containerPanel.add( component, BorderLayout.CENTER );
@@ -116,4 +114,12 @@ public final class Snapshot3dTopComponent extends TopComponent {
         String version = p.getProperty("version");
         // TODO read your settings according to their version
     }
+
+    private void cleanupContent() {
+        if ( externallySuppliedComponent != null ) {
+            containerPanel.remove( externallySuppliedComponent );
+            externallySuppliedComponent = null;
+        }
+    }
+    
 }

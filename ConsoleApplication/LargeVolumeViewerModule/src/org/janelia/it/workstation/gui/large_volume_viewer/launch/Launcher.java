@@ -22,7 +22,7 @@ public class Launcher implements EntityAcceptor  {
     public Launcher() {
     }
 
-    public void launch( long entityId ) {
+    public void launch( final long entityId ) {
         TopComponentGroup group = 
                 WindowManager.getDefault().findTopComponentGroup(
                         "large_volume_viewer_plugin"
@@ -40,7 +40,7 @@ public class Launcher implements EntityAcceptor  {
 
             // Make the editor one active.  This one is not allowed to be
             // arbitrarily left closed at user whim.
-            LargeVolumeViewerTopComponent win = (LargeVolumeViewerTopComponent)WindowManager.getDefault().findTopComponent(LargeVolumeViewerTopComponent.LVV_PREFERRED_ID);
+            final LargeVolumeViewerTopComponent win = (LargeVolumeViewerTopComponent)WindowManager.getDefault().findTopComponent(LargeVolumeViewerTopComponent.LVV_PREFERRED_ID);
             if ( win != null ) {
                 if ( ! win.isOpened() ) {
                     win.open();
