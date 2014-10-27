@@ -184,6 +184,14 @@ public class Snapshot3DLauncher {
             ex.printStackTrace();
         }
     }
+    
+    public static void removeStaleViewer() {
+        Snapshot3dTopComponent snapshotTopComponent =
+                findComponent();
+        if ( snapshotTopComponent != null ) {
+            snapshotTopComponent.cleanupContent();
+        }
+    }
 
     /**
      * Give ourselves a separate set of color adjustements.
@@ -199,10 +207,7 @@ public class Snapshot3DLauncher {
     
     private void makeViewerVisible(Snapshot3d snapshotViewer) {
         Snapshot3dTopComponent snapshotTopComponent =
-                (Snapshot3dTopComponent)WindowManager.getDefault()
-                        .findTopComponent(
-                                Snapshot3dTopComponent.SNAPSHOT3D_TOP_COMPONENT_PREFERRED_ID
-                        );
+                findComponent();
         if ( snapshotTopComponent != null ) {
             if ( ! snapshotTopComponent.isOpened() ) {
                 snapshotTopComponent.open();
@@ -213,6 +218,15 @@ public class Snapshot3DLauncher {
             snapshotTopComponent.setSnapshotComponent(snapshotViewer);
             snapshotTopComponent.setVisible(true);
         }
+    }
+
+    private static Snapshot3dTopComponent findComponent() {
+        Snapshot3dTopComponent snapshotTopComponent =
+                (Snapshot3dTopComponent)WindowManager.getDefault()
+                        .findTopComponent(
+                                Snapshot3dTopComponent.SNAPSHOT3D_TOP_COMPONENT_PREFERRED_ID
+                        );
+        return snapshotTopComponent;
     }
 
     private String labelTextFor3d(int cubicDimension) {

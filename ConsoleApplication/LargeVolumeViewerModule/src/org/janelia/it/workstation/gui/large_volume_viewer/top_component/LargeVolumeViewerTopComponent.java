@@ -10,6 +10,7 @@ import javax.swing.SwingUtilities;
 import org.janelia.it.workstation.api.entity_model.management.ModelMgr;
 import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.workstation.gui.large_volume_viewer.LargeVolumeViewViewer;
+import org.janelia.it.workstation.gui.passive_3d.Snapshot3DLauncher;
 import org.janelia.it.workstation.model.entity.RootedEntity;
 import org.netbeans.api.settings.ConvertAsProperties;
 import org.openide.awt.ActionID;
@@ -62,6 +63,7 @@ public final class LargeVolumeViewerTopComponent extends TopComponent {
 
     public void openLargeVolumeViewer( Long entityId ) {
         try {
+            Snapshot3DLauncher.removeStaleViewer();
             RootedEntity rootedEntity = new RootedEntity(
                 ModelMgr.getModelMgr().getEntityById(entityId)
             );

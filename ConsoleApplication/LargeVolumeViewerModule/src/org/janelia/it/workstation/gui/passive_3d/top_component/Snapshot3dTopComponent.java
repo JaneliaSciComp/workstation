@@ -97,6 +97,13 @@ public final class Snapshot3dTopComponent extends TopComponent {
         cleanupContent();
     }
 
+    public void cleanupContent() {
+        if ( externallySuppliedComponent != null ) {
+            containerPanel.remove( externallySuppliedComponent );
+            externallySuppliedComponent = null;
+        }
+    }
+
     public void setSnapshotComponent( JComponent component ) {
         externallySuppliedComponent = component;
         containerPanel.add( component, BorderLayout.CENTER );
@@ -113,13 +120,6 @@ public final class Snapshot3dTopComponent extends TopComponent {
     void readProperties(java.util.Properties p) {
         String version = p.getProperty("version");
         // TODO read your settings according to their version
-    }
-
-    private void cleanupContent() {
-        if ( externallySuppliedComponent != null ) {
-            containerPanel.remove( externallySuppliedComponent );
-            externallySuppliedComponent = null;
-        }
     }
     
 }
