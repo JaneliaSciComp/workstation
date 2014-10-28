@@ -40,6 +40,7 @@ public class AnnotationPanel extends JPanel
     private WorkspaceNeuronList workspaceNeuronList;
     private JCheckBoxMenuItem automaticTracingMenuItem;
     private JCheckBoxMenuItem automaticRefinementMenuItem;
+    private NoteListPanel noteListPanel;
 
     // other UI stuff
     private static final int width = 250;
@@ -129,6 +130,8 @@ public class AnnotationPanel extends JPanel
         annotationModel.workspaceLoadedSignal.connect(workspaceLoadedSlot);
         annotationModel.workspaceLoadedSignal.connect(workspaceInfoPanel.workspaceLoadedSlot);
         annotationModel.workspaceLoadedSignal.connect(workspaceNeuronList.workspaceLoadedSlot);
+        annotationModel.workspaceLoadedSignal.connect(noteListPanel.workspaceLoadedSlot);
+        annotationModel.notesUpdatedSignal.connect(noteListPanel.notesUpdatedSlot);
 
         // us to model:
         workspaceNeuronList.neuronClickedSignal.connect(annotationModel.neuronClickedSlot);
@@ -137,6 +140,7 @@ public class AnnotationPanel extends JPanel
         neuriteTreePanel.cameraPanToSignal.connect(largeVolumeViewerTranslator.cameraPanToSlot);
         neuriteTreePanel.annotationClickedSignal.connect(largeVolumeViewerTranslator.annotationClickedSlot);
         workspaceNeuronList.cameraPanToSignal.connect(largeVolumeViewerTranslator.cameraPanToSlot);
+        noteListPanel.cameraPanToSignal.connect(largeVolumeViewerTranslator.cameraPanToSlot);
 
     }
 
@@ -336,6 +340,11 @@ public class AnnotationPanel extends JPanel
         centerAnnotationButton.setHideActionText(true);
         neuriteButtonsPanel.add(centerAnnotationButton);
 
+
+        // ----- notes: simple panel to show notes
+        add(Box.createRigidArea(new Dimension(0, 20)), cVert);
+        noteListPanel = new NoteListPanel(width);
+        add(noteListPanel, cVert);
 
 
         // the bilge...
