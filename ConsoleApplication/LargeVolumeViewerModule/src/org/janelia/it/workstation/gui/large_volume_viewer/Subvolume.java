@@ -168,14 +168,16 @@ public class Subvolume {
 	        shorts = bytes.asShortBuffer();
 
         Set<TileIndex> neededTiles = getNeededTileSet(tileFormat, farCorner, zoom);
-        StringBuilder bldr = new StringBuilder();
-        for ( TileIndex tx: neededTiles ) {            
-            bldr.append( "[" )
-                    .append(new Double(tx.getX()).intValue() ).append(",")
-                    .append(new Double(tx.getY()).intValue() ).append( "," )
-                    .append(new Double(tx.getZ()).intValue() ).append("]");
+        if (logger.isDebugEnabled()) {
+            StringBuilder bldr = new StringBuilder();
+            for (TileIndex tx : neededTiles) {
+                bldr.append("[")
+                        .append(new Double(tx.getX()).intValue()).append(",")
+                        .append(new Double(tx.getY()).intValue()).append(",")
+                        .append(new Double(tx.getZ()).intValue()).append("]");
+            }
+            logger.info("Requesting\n" + bldr);
         }
-        logger.info("Requesting\n" + bldr);
         ExecutorService executorService = Executors.newFixedThreadPool( N_THREADS );
         List<Future<Boolean>> followUps = new ArrayList<>();
         totalTiles = neededTiles.size();
@@ -253,9 +255,9 @@ public class Subvolume {
         
         final ZoomedVoxelIndex farCorner = new ZoomedVoxelIndex(
                 zoom,
-                origin.getX() + 1 + dimensions[0],
-                origin.getY() + 1 + dimensions[1],
-                origin.getZ() + 1 + dimensions[2]
+                origin.getX() + dimensions[0],
+                origin.getY() + dimensions[1],
+                origin.getZ() + dimensions[2]
         );
         for (final TileIndex tileIx : neededTiles) {
             Callable<Boolean> fetchTask = new Callable<Boolean>() {
@@ -478,14 +480,13 @@ public class Subvolume {
                         tileXyz, zoom, tileIx.getSliceAxis());
                 // One Z-tile goes to one destination Z coordinate in this subvolume.
                 int dstZ = tileOrigin.getZ() - origin.getZ(); // local Z coordinate
-//                dstZ /= tileIx.getDeltaSlice(); //TEMP
                 // Y
                 int startY = Math.max(origin.getY(), tileOrigin.getY());
-                int endY = Math.min(farCorner.getY(), tileOrigin.getY() + tileData.getHeight()); //-1
+                int endY = Math.min(farCorner.getY(), tileOrigin.getY() + tileData.getHeight());
                 int overlapY = endY - startY;
                 // X
                 int startX = Math.max(origin.getX(), tileOrigin.getX());
-                int endX = Math.min(farCorner.getX(), tileOrigin.getX() + tileData.getUsedWidth());// -1
+                int endX = Math.min(farCorner.getX(), tileOrigin.getX() + tileData.getUsedWidth());
                 int overlapX = endX - startX;
                 // byte array offsets
                 int pixelBytes = channelCount * bytesPerIntensity;
@@ -496,10 +497,6 @@ public class Subvolume {
                 int dstOffset = dstZ * subvolumeLineBytes * extent.getY() // z plane offset
                         + (startY - origin.getY()) * subvolumeLineBytes // y scan-line offset
                         + (startX - origin.getX()) * pixelBytes;
-//                System.out.println("Destination offset=" + dstOffset);
-//                if ( 1038080 == dstOffset ) {
-//                    System.out.println("Got 63rd plane.");
-//                }
                 int srcOffset = (startY - tileOrigin.getY()) * tileLineBytes // y scan-line offset
                         + (startX - tileOrigin.getX()) * pixelBytes;
                 // Copy one scan line at a time
@@ -515,11 +512,13 @@ OVERFLOW_LABEL:
                             } catch (Exception ex) {
                                 logger.error("Failed to copy data into pixels buffer: " + ex.getMessage() + ".  Skipping remainder.");
                                 /* for debugging */
-                                if (logger.isDebugEnabled() && d >= bytes.capacity()) {
-                                    logger.debug("overflow destination: {} vs {}.", d, bytes.capacity());
-                                    logger.debug("dstOffset={}; dstZ={}; extent-Y={}; subvolumeLineBytes={}", dstOffset, dstZ, extent.getY(), subvolumeLineBytes);
-                                    logger.debug("dstZ=tileOrigin.getZ() - origin.getZ(); tileOrigin.getZ()={}; origin.getZ()={}.", tileOrigin.getZ(), origin.getZ());
-                                    logger.debug("startX={}. endX={}. startY={}. endY={}", startX, endX, startY, endY);
+                                if (logger.isDebugEnabled()  &&  d >= bytes.capacity()) {
+                                    logger.info("overflow destination: {} vs {}.", d, bytes.capacity());
+                                    logger.info("dstOffset={}; dstZ={}; extent-Y={}; subvolumeLineBytes={}", dstOffset, dstZ, extent.getY(), subvolumeLineBytes);
+                                    logger.info("dstZ=tileOrigin.getZ() - origin.getZ(); tileOrigin.getZ()={}; origin.getZ()={}.", tileOrigin.getZ(), origin.getZ());
+                                    logger.info("startX={}. endX={}. startY={}. endY={}", startX, endX, startY, endY);
+                                    logger.info("Destination X={}, Y={}, dstZ={}. srcOffset={}.", x, y, dstZ, srcOffset);
+                                    logger.info("overlapX={}, overlapY={}.   tileLineBytes={}.", overlapX, overlapY, tileLineBytes );
                                 }
                                 if (s >= tileData.getPixels().capacity()) {
                                     logger.info("overflow source: {} vs {}.", s, bytes.capacity());
@@ -666,7 +665,7 @@ OVERFLOW_LABEL:
                     }
                     totalPlanes++;
                 }
-                logger.info("Center forward found " + totalPlanes + " planes.");
+                logger.debug("Center forward found " + totalPlanes + " planes.");
 
                 // Find the center backward in z.
                 nextSlice = centerTileIndex;
@@ -681,10 +680,10 @@ OVERFLOW_LABEL:
                     }
                     totalPlanes++;
                 }
-                logger.info("Center forward + center + center backward, found " + totalPlanes + " planes.");
+                logger.debug("Center forward + center + center backward, found " + totalPlanes + " planes.");
 
             }
-            logger.info("Total tile set size is " + neededTiles.size());
+            logger.debug("Total tile set size is " + neededTiles.size());
 
             // Side Effect:  These values must be computed here, but they
             // are being used by other code at caller level.

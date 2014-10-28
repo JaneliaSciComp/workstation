@@ -194,7 +194,7 @@ public class Snapshot3DLauncher {
     }
 
     /**
-     * Give ourselves a separate set of color adjustements.
+     * Give ourselves a separate set of color adjustments.
      * 
      * @param snapshotViewer will be given a color model.
      */
