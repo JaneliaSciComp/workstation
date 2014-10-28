@@ -26,6 +26,8 @@ import java.io.File;
  */
 public class AnnotationPanel extends JPanel
 {
+    public static final int SUBPANEL_STD_SIZE = 200;
+    
     // things we get data from
     // not clear these belong here!  should all info be shuffled through signals and actions?
     // on the other hand, even if so, we still need them just to hook everything up

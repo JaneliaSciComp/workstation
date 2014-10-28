@@ -28,7 +28,7 @@ public class WorkspaceNeuronList extends JPanel {
     private DefaultListModel neuronListModel;
 
     private int width;
-    private static final int height = 250;
+    private static final int height = AnnotationPanel.SUBPANEL_STD_SIZE;
 
     // to add new sort order: add to enum here, add menu in AnnotationPanel.java,
     //  and implement the sort in sortNeuronList below

@@ -34,7 +34,7 @@ public class NeuriteTreePanel extends JPanel
     private HashBiMap<String, TmGeoAnnotation> labelToAnnotationMap;
 
     private int width;
-    private static final int height = 250;
+    private static final int height = AnnotationPanel.SUBPANEL_STD_SIZE;
 
     // ----- slots
     public Slot1<TmNeuron> neuronSelectedSlot = new Slot1<TmNeuron>() {
