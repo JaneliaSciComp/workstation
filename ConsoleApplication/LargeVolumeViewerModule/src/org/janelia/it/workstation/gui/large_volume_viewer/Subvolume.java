@@ -169,14 +169,7 @@ public class Subvolume {
 
         Set<TileIndex> neededTiles = getNeededTileSet(tileFormat, farCorner, zoom);
         if (logger.isDebugEnabled()) {
-            StringBuilder bldr = new StringBuilder();
-            for (TileIndex tx : neededTiles) {
-                bldr.append("[")
-                        .append(new Double(tx.getX()).intValue()).append(",")
-                        .append(new Double(tx.getY()).intValue()).append(",")
-                        .append(new Double(tx.getZ()).intValue()).append("]");
-            }
-            logger.info("Requesting\n" + bldr);
+            logTileRequest(neededTiles);
         }
         ExecutorService executorService = Executors.newFixedThreadPool( N_THREADS );
         List<Future<Boolean>> followUps = new ArrayList<>();
@@ -239,14 +232,9 @@ public class Subvolume {
 	        shorts = bytes.asShortBuffer();
 
         Set<TileIndex> neededTiles = getCenteredTileSet(tileFormat, center, dimensions, zoom);
-        StringBuilder bldr = new StringBuilder();
-        for ( TileIndex tx: neededTiles ) {            
-            bldr.append( "[" )
-                    .append(new Double(tx.getX()).intValue() ).append(",")
-                    .append(new Double(tx.getY()).intValue() ).append( "," )
-                    .append(new Double(tx.getZ()).intValue() ).append("]");
+        if (logger.isDebugEnabled()) {
+            logTileRequest(neededTiles);
         }
-        logger.info("Requesting\n" + bldr);
         ExecutorService executorService = Executors.newFixedThreadPool( N_THREADS );
         List<Future<Boolean>> followUps = new ArrayList<>();
         totalTiles = neededTiles.size();
@@ -447,6 +435,17 @@ public class Subvolume {
         if ( progressMonitor != null ) {
             progressMonitor.setNote( String.format( PROGRESS_REPORT_FORMAT, remaining, total ) );
         }
+    }
+
+    private void logTileRequest(Set<TileIndex> neededTiles) {
+        StringBuilder bldr = new StringBuilder();
+        for ( TileIndex tx: neededTiles ) {
+            bldr.append( "[" )
+                    .append(new Double(tx.getX()).intValue() ).append(",")
+                    .append(new Double(tx.getY()).intValue() ).append( "," )
+                    .append(new Double(tx.getZ()).intValue() ).append("]");
+        }
+        logger.info("Requesting\n" + bldr);
     }
 
     private boolean fetchTileData(TextureCache textureCache, TileIndex tileIx, AbstractTextureLoadAdapter loadAdapter, TileFormat tileFormat, ZoomLevel zoom, ZoomedVoxelIndex farCorner) {

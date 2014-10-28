@@ -253,11 +253,11 @@ public class LoaderSubsetHelper {
         }
 
         // DEBUG CODE>
-        for ( int i = 0; i < 3; i++ ) {
-            System.out.println( "Bounding Box offset=" + i + " value=" + boundingBox[i] );
-            System.out.println( "Bounding Box offset=" + (i+3) + " value=" + boundingBox[i+3] );
-            System.out.println();
-        }
+        //for ( int i = 0; i < 3; i++ ) {
+        //    System.out.println( "Bounding Box offset=" + i + " value=" + boundingBox[i] );
+        //    System.out.println( "Bounding Box offset=" + (i+3) + " value=" + boundingBox[i+3] );
+        //    System.out.println();
+        //}
         return sheetSize;
     }
     
@@ -326,14 +326,12 @@ public class LoaderSubsetHelper {
     
     private int clamp( int min, int max, int startingValue ) {
         int rtnVal = startingValue;
-        System.out.print("StartingValue=" + startingValue);
         if ( startingValue < min ) {
             rtnVal = min;
         }
         else if ( startingValue > max ) {
             rtnVal = max;
         }
-        System.out.println(", clamped to " + rtnVal);
         return rtnVal;
     }
 
