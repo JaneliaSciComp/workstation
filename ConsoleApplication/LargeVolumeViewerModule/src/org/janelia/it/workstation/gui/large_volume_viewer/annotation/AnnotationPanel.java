@@ -247,7 +247,7 @@ public class AnnotationPanel extends JPanel
 
         // list of neurons in workspace
         workspaceNeuronList = new WorkspaceNeuronList(width);
-        add(workspaceNeuronList, cVert);
+//        add(workspaceNeuronList, cVert);
 
         // neuron tool pop-up menu (triggered by button, below)
         final JPopupMenu neuronToolMenu = new JPopupMenu();
@@ -346,7 +346,7 @@ public class AnnotationPanel extends JPanel
         // ----- notes: simple panel to show notes
         add(Box.createRigidArea(new Dimension(0, 20)), cVert);
         noteListPanel = new NoteListPanel(width);
-        add(noteListPanel, cVert);
+//        add(noteListPanel, cVert);
 
 
         // the bilge...

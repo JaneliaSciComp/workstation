@@ -9,7 +9,6 @@ import java.awt.BorderLayout;
 import javax.swing.SwingUtilities;
 import org.janelia.it.workstation.api.entity_model.management.ModelMgr;
 import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
-import org.janelia.it.workstation.gui.large_volume_viewer.LargeVolumeViewViewer;
 import org.janelia.it.workstation.gui.passive_3d.Snapshot3DLauncher;
 import org.janelia.it.workstation.model.entity.RootedEntity;
 import org.netbeans.api.settings.ConvertAsProperties;
@@ -19,8 +18,7 @@ import org.openide.windows.TopComponent;
 import org.openide.util.NbBundle.Messages;
 import org.openide.windows.TopComponentGroup;
 import org.openide.windows.WindowManager;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import static org.janelia.it.workstation.gui.large_volume_viewer.top_component.LargeVolumeViewerTopComponentDynamic.*;
 
 /**
  * Top component which displays something.
@@ -30,7 +28,7 @@ import org.slf4j.LoggerFactory;
         autostore = false
 )
 @TopComponent.Description(
-        preferredID = LargeVolumeViewerTopComponent.LVV_PREFERRED_ID,
+        preferredID = LargeVolumeViewerTopComponentDynamic.LVV_PREFERRED_ID,
         //iconBase="SET/PATH/TO/ICON/HERE", 
         persistenceType = TopComponent.PERSISTENCE_ALWAYS
 )
@@ -39,38 +37,26 @@ import org.slf4j.LoggerFactory;
 @ActionReference(path = "Menu/Window" /*, position = 333 */)
 @TopComponent.OpenActionRegistration(
         displayName = "#CTL_LargeVolumeViewerAction",
-        preferredID = LargeVolumeViewerTopComponent.LVV_PREFERRED_ID
+        preferredID = LargeVolumeViewerTopComponentDynamic.LVV_PREFERRED_ID
 )
 @Messages({
-    "CTL_LargeVolumeViewerAction=LargeVolumeViewer",
-    "CTL_LargeVolumeViewerTopComponent=LargeVolumeViewer Window",
-    "HINT_LargeVolumeViewerTopComponent=This is a LargeVolumeViewer window"
+    ACTION,
+    WINDOW_NAMER,
+    HINT
 })
 public final class LargeVolumeViewerTopComponent extends TopComponent {
     
-    public static final String LVV_PREFERRED_ID = "LargeVolumeViewerTopComponent";
+    private final LargeVolumeViewerTopComponentDynamic state = new LargeVolumeViewerTopComponentDynamic();
     
-    private LargeVolumeViewViewer lvvv;
-    private Logger logger = LoggerFactory.getLogger( LargeVolumeViewerTopComponent.class );
-
     public LargeVolumeViewerTopComponent() {
         initComponents();
-        lvvv = new LargeVolumeViewViewer();
         setName(Bundle.CTL_LargeVolumeViewerTopComponent());
         setToolTipText(Bundle.HINT_LargeVolumeViewerTopComponent());
 
     }
 
-    public void openLargeVolumeViewer( Long entityId ) {
-        try {
-            Snapshot3DLauncher.removeStaleViewer();
-            RootedEntity rootedEntity = new RootedEntity(
-                ModelMgr.getModelMgr().getEntityById(entityId)
-            );
-            lvvv.loadEntity( rootedEntity );
-        } catch ( Exception ex ) {
-            SessionMgr.getSessionMgr().handleException( ex );
-        }
+    public void openLargeVolumeViewer( Long entityId ) throws Exception {
+        state.load( entityId );
     }
     
     /**
@@ -102,33 +88,13 @@ public final class LargeVolumeViewerTopComponent extends TopComponent {
     // End of variables declaration//GEN-END:variables
     @Override
     public void componentOpened() {
-        jPanel1.add( lvvv, BorderLayout.CENTER );
+        jPanel1.add( state.getLvvv(), BorderLayout.CENTER );
     }
 
     @Override
     public void componentClosed() {
-        jPanel1.remove( lvvv );
-        Runnable runnable = new Runnable() {
-            public void run() {
-                TopComponentGroup tcg = WindowManager.getDefault().findTopComponentGroup(
-                        "large_volume_viewer_plugin"
-                );
-                if (tcg != null) {
-                    tcg.close();
-                }
-            }
-        };
-        if ( SwingUtilities.isEventDispatchThread() ) {
-            runnable.run();
-        }
-        else {
-            try {
-                SwingUtilities.invokeAndWait( runnable );
-            } catch ( Exception ex ) {
-                logger.error(ex.getMessage());
-                ex.printStackTrace();
-            }
-        }
+        jPanel1.remove( state.getLvvv() );
+        state.close();
     }
 
     void writeProperties(java.util.Properties p) {
