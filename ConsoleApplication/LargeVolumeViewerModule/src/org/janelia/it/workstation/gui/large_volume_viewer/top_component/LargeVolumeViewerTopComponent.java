@@ -6,18 +6,11 @@
 package org.janelia.it.workstation.gui.large_volume_viewer.top_component;
 
 import java.awt.BorderLayout;
-import javax.swing.SwingUtilities;
-import org.janelia.it.workstation.api.entity_model.management.ModelMgr;
-import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
-import org.janelia.it.workstation.gui.passive_3d.Snapshot3DLauncher;
-import org.janelia.it.workstation.model.entity.RootedEntity;
 import org.netbeans.api.settings.ConvertAsProperties;
 import org.openide.awt.ActionID;
 import org.openide.awt.ActionReference;
 import org.openide.windows.TopComponent;
 import org.openide.util.NbBundle.Messages;
-import org.openide.windows.TopComponentGroup;
-import org.openide.windows.WindowManager;
 import static org.janelia.it.workstation.gui.large_volume_viewer.top_component.LargeVolumeViewerTopComponentDynamic.*;
 
 /**
@@ -28,7 +21,7 @@ import static org.janelia.it.workstation.gui.large_volume_viewer.top_component.L
         autostore = false
 )
 @TopComponent.Description(
-        preferredID = LargeVolumeViewerTopComponentDynamic.LVV_PREFERRED_ID,
+        preferredID = LVV_PREFERRED_ID,
         //iconBase="SET/PATH/TO/ICON/HERE", 
         persistenceType = TopComponent.PERSISTENCE_ALWAYS
 )
@@ -37,7 +30,7 @@ import static org.janelia.it.workstation.gui.large_volume_viewer.top_component.L
 @ActionReference(path = "Menu/Window" /*, position = 333 */)
 @TopComponent.OpenActionRegistration(
         displayName = "#CTL_LargeVolumeViewerAction",
-        preferredID = LargeVolumeViewerTopComponentDynamic.LVV_PREFERRED_ID
+        preferredID = LVV_PREFERRED_ID
 )
 @Messages({
     ACTION,
