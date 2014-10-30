@@ -17,7 +17,11 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- *
+ * The actual "state" of the top component.  Delegate things to here, so that
+ * the Design Editor can be free to start over completely, should that prove
+ * necessary.  Put differently: this class allows the Top Component's design
+ * to vary independently of its object state/behavior.
+ * 
  * @author fosterl
  */
 public class LargeVolumeViewerTopComponentDynamic {
