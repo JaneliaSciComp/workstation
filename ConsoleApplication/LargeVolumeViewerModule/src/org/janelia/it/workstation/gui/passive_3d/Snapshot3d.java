@@ -15,6 +15,7 @@ import java.util.ArrayList;
 import java.awt.Dimension;
 import java.awt.Component;
 import java.awt.BorderLayout;
+import java.awt.Container;
 import java.util.Collections;
 import java.util.Comparator;
 import javax.swing.JLabel;
@@ -39,6 +40,7 @@ public class Snapshot3d extends JPanel {
     private ImageColorModel imageColorModel;
     private IndeterminateNoteProgressMonitor monitor;
     private String labelText;
+    private Snapshot3dControls controls;
 
     private static Snapshot3d snapshotInstance;
     private final Logger logger = LoggerFactory.getLogger(Snapshot3d.class);
@@ -98,6 +100,8 @@ public class Snapshot3d extends JPanel {
 
         Mip3d mip3d = new Mip3d();
         mip3d.clear();
+        
+        controls = new Snapshot3dControls( imageColorModel );
                 
         Comparator<TextureDataI> comparator = new Comparator<TextureDataI>() {
             @Override
@@ -126,17 +130,13 @@ public class Snapshot3d extends JPanel {
         this.setLayout(new BorderLayout());
         JPanel southPanel = new JPanel();
         southPanel.setLayout(new BorderLayout());
-        SliderPanel sliderPanel = new SliderPanel( imageColorModel );
-        locallyAddedComponents.add( sliderPanel );
+        Component sliderPanel = controls.getSliderPanel();
         if ( labelText != null ) {            
             final JLabel label = new JLabel( labelText );
             locallyAddedComponents.add( label );
             southPanel.add( label, BorderLayout.SOUTH );
         }
         southPanel.add( sliderPanel, BorderLayout.CENTER );
-        sliderPanel.guiInit();
-        sliderPanel.updateLockButtons();
-        sliderPanel.setVisible(true);
         locallyAddedComponents.add( southPanel );
         this.add( southPanel, BorderLayout.SOUTH );
         this.add( mip3d, BorderLayout.CENTER );
@@ -145,14 +145,18 @@ public class Snapshot3d extends JPanel {
     private void cleanup() {
         // Cleanup old widgets.
         for ( Component c: locallyAddedComponents ) {
-            this.remove( c );
+            Container parent = c.getParent();
+            parent.remove( c );
             if ( c instanceof Mip3d ) {
                 Mip3d mip3d = (Mip3d)c;
                 mip3d.setVisible(false);
                 mip3d.clear();
             }
-        }
+        }        
         locallyAddedComponents.clear();
+        if ( controls != null )
+            controls.cleanup();
+        controls = null;
         validate();
         repaint();
     }
