@@ -5,12 +5,13 @@
  */
 package org.janelia.it.workstation.gui.framework.console.nb_action;
 
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
 import org.openide.awt.ActionID;
 import org.openide.awt.ActionReference;
 import org.openide.awt.ActionRegistration;
 import org.openide.util.NbBundle.Messages;
+
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 
 @ActionID(
         category = "Search",
@@ -25,6 +26,6 @@ public final class PatternMaskSearchAction implements ActionListener {
 
     @Override
     public void actionPerformed(ActionEvent e) {
-        new SearchActionDelegate().patternSearch();
+        new SearchActionDelegate().maskSearch();
     }
 }

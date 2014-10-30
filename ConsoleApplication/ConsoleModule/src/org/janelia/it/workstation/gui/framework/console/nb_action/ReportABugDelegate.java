@@ -6,19 +6,19 @@
 
 package org.janelia.it.workstation.gui.framework.console.nb_action;
 
-import javax.swing.JFrame;
-
 import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.workstation.gui.util.MailDialogueBox;
 import org.janelia.it.workstation.gui.util.WindowLocator;
+
+import javax.swing.*;
 
 /**
  *
  * @author fosterl
  */
-public class CallDeveloperDelegate {
+public class ReportABugDelegate {
     public void actOnCallDeveloper() {
-        JFrame parentFrame = (JFrame) WindowLocator.getMainFrame();
+        JFrame parentFrame = WindowLocator.getMainFrame();
         MailDialogueBox popup = new MailDialogueBox(parentFrame,
                 (String) SessionMgr.getSessionMgr().getModelProperty(SessionMgr.USER_EMAIL),
                 "Bug report");
