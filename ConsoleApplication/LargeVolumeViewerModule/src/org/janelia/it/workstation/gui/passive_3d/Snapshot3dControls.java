@@ -50,6 +50,7 @@ public class Snapshot3dControls {
         for ( int i = 0; i < colorModel.getChannelCount(); i++ ) {
             addSubButtons[ i ] = new JCheckBox("+");
             addSubButtons[ i ].setToolTipText( "Checked means add this color;\nunchecked will subtract." );
+            addSubButtons[ i ].setSelected( true );
         }
     }
 
