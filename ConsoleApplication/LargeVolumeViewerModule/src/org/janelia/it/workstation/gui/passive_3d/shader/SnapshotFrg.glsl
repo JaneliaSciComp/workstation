@@ -10,6 +10,7 @@ uniform vec4 channel_min;
 uniform vec4 channel_scale;
 uniform int channel_count;
 uniform int interleave_flag;
+uniform vec4 sign_op = vec4(1, -1, 0, 0);
 
 float getIntensity(vec4 in_color, int c)
 {
@@ -64,7 +65,11 @@ vec4 subtractColor()
         vec4 in_color_1 = texture3D(interleavedTexture, gl_TexCoord[0].xyz);
         float ch0Intensity = getIntensity(in_color_0, 0);
         float ch1Intensity = getIntensity(in_color_1, 1);
-        out_color = getSrgb((ch0Intensity - ch1Intensity) * channel_color[0]);
+        out_color = getSrgb(
+            clamp(
+                (ch0Intensity * channel_color[0] * sign_op[0]) + (ch1Intensity * channel_color[1] * sign_op[1]),
+                0, 1)
+        );
     }
     else
     {

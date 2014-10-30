@@ -16,12 +16,15 @@ import java.awt.Dimension;
 import java.awt.Component;
 import java.awt.BorderLayout;
 import java.awt.Container;
+import java.awt.GridLayout;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 import java.util.Collections;
 import java.util.Comparator;
+import javax.swing.AbstractButton;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import org.janelia.it.workstation.gui.large_volume_viewer.ImageColorModel;
-import org.janelia.it.workstation.gui.large_volume_viewer.SliderPanel;
 import org.janelia.it.workstation.shared.workers.IndeterminateNoteProgressMonitor;
 
 /**
@@ -60,6 +63,7 @@ public class Snapshot3d extends JPanel {
         this.imageColorModel = imageColorModel;
         this.imageColorModel.getColorModelChangedSignal().addObserver(
                 new Observer() {
+                    @Override
                     public void update( Observable target, Object obj ) {
                         Snapshot3d.this.validate();
                         Snapshot3d.this.repaint();
@@ -122,6 +126,7 @@ public class Snapshot3d extends JPanel {
         else {
             brick.setTextureDatas(textureDatas);
         }
+        brick.setControls( controls );
         mip3d.addActor( brick );
         
         locallyAddedComponents.add( mip3d );
@@ -136,7 +141,22 @@ public class Snapshot3d extends JPanel {
             locallyAddedComponents.add( label );
             southPanel.add( label, BorderLayout.SOUTH );
         }
+        JPanel southWestPanel = new JPanel();
+        AbstractButton[] addsubs = controls.getAddSubButton();
+        southWestPanel.setLayout( new GridLayout( addsubs.length + 1, 1 ) );
+        ActionListener al = new ActionListener() {
+            @Override
+            public void actionPerformed( ActionEvent ae ) {
+                Snapshot3d.this.validate();
+                Snapshot3d.this.repaint();
+            }
+        };
+        for ( AbstractButton c: addsubs ) {
+            southWestPanel.add( c );
+            c.addActionListener( al );
+        }
         southPanel.add( sliderPanel, BorderLayout.CENTER );
+        southPanel.add( southWestPanel, BorderLayout.EAST );
         locallyAddedComponents.add( southPanel );
         this.add( southPanel, BorderLayout.SOUTH );
         this.add( mip3d, BorderLayout.CENTER );

@@ -9,6 +9,8 @@ package org.janelia.it.workstation.gui.passive_3d;
 import java.awt.Container;
 import java.util.ArrayList;
 import java.util.List;
+import javax.swing.AbstractButton;
+import javax.swing.JCheckBox;
 import javax.swing.JComponent;
 import org.janelia.it.workstation.gui.large_volume_viewer.ImageColorModel;
 import org.janelia.it.workstation.gui.large_volume_viewer.SliderPanel;
@@ -23,6 +25,7 @@ import org.janelia.it.workstation.gui.large_volume_viewer.SliderPanel;
 public class Snapshot3dControls {
     private SliderPanel sliderPanel;
     private List<JComponent> components;
+    private AbstractButton[] addSubButtons;
     
     public Snapshot3dControls( ImageColorModel colorModel ) {
         initComponents(colorModel);
@@ -42,6 +45,12 @@ public class Snapshot3dControls {
         getSliderPanel().guiInit();
         getSliderPanel().updateLockButtons();
         getSliderPanel().setVisible(true);
+        
+        addSubButtons = new JCheckBox[ colorModel.getChannelCount() ];
+        for ( int i = 0; i < colorModel.getChannelCount(); i++ ) {
+            addSubButtons[ i ] = new JCheckBox("+");
+            addSubButtons[ i ].setToolTipText( "Checked means add this color;\nunchecked will subtract." );
+        }
     }
 
     /**
@@ -49,6 +58,23 @@ public class Snapshot3dControls {
      */
     public SliderPanel getSliderPanel() {
         return sliderPanel;
+    }
+
+    /**
+     * Fetch-back the buttons which make it possible to place them.
+     * 
+     * @return the addSubButton
+     */
+    public AbstractButton[] getAddSubButton() {
+        return addSubButtons;
+    }
+    
+    public boolean[] getAddSubChoices() {
+        boolean[] rtnVal = new boolean[ addSubButtons.length ];
+        for ( int i = 0; i < addSubButtons.length; i++ ) {
+            rtnVal[ i ] = addSubButtons[ i ].isSelected();
+        }
+        return rtnVal;
     }
     
 }

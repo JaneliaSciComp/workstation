@@ -35,6 +35,7 @@ public class SnapshotShader extends TexturedShader {
     private int channelScaleLoc;
     private int channelCountLoc;
     private int interleaveFlagLoc;
+    private int signOpLoc;
     
     private final Map<String, TextureMediator> mediatorMap = new HashMap<>();
     
@@ -67,6 +68,7 @@ public class SnapshotShader extends TexturedShader {
         channelScaleLoc   = gl.glGetUniformLocation( shaderProgram, "channel_scale" );
         channelCountLoc   = gl.glGetUniformLocation( shaderProgram, "channel_count" );
         interleaveFlagLoc = gl.glGetUniformLocation( shaderProgram, "interleave_flag" );
+        signOpLoc = gl.glGetUniformLocation( shaderProgram, "sign_op" );
     }
 
     public int getVertexAttribLoc() {
@@ -118,6 +120,21 @@ public class SnapshotShader extends TexturedShader {
     
     public void setChannelCount( GL2 gl, int count ) {
         gl.glUniform1i( channelCountLoc, count );
+    }
+    
+    public void setAddSubChoices( GL2 gl, boolean[] addSubChoices ) {
+        float[] texPushValues = new float[ 4 ];
+        if ( addSubChoices.length < 4 ) {
+            for ( int i = 0; i < 4; i++ ) {
+                if ( i < addSubChoices.length) {
+                    texPushValues[ i ] = addSubChoices[ i ] ? 1.0f : -1.0f;
+                }
+                else {
+                    texPushValues[ i ] = 0.0f;
+                }
+            }
+        }
+        gl.glUniform4fv( signOpLoc, 1, texPushValues, 0 );
     }
     
     /** This flag should be set, if the texture is broken into two interleaved parts. */

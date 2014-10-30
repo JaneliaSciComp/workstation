@@ -10,7 +10,6 @@ import javax.media.opengl.GL2;
 import javax.media.opengl.GLAutoDrawable;
 
 import java.awt.Color;
-import java.nio.ByteOrder;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -31,8 +30,8 @@ public class SnapshotVolumeBrick extends AbstractVolumeBrick
     public enum RenderMethod {MAXIMUM_INTENSITY, ALPHA_BLENDING}
 
 	private ImageColorModel imageColorModel;
+    private Snapshot3dControls snapshotControls;
     private boolean explicitInterleave = false;
-    private Map<Integer,int[]> textureNumToValueRange;
     
     // Vary these parameters to taste
 	// Rendering variables
@@ -51,8 +50,11 @@ public class SnapshotVolumeBrick extends AbstractVolumeBrick
         this.imageColorModel = imageColorModel;
     }
     
+    public void setControls(Snapshot3dControls snapshotControls) {
+        this.snapshotControls = snapshotControls;
+    }
+    
     public void setTextureDatas(Collection<TextureDataI> textureDatas) {
-        textureNumToValueRange = new HashMap<>();
         super.bTexturesNeedUploaded = true;
         super.bIsInitialized = false;
         if ( textureDatas == null ) {
@@ -170,46 +172,8 @@ public class SnapshotVolumeBrick extends AbstractVolumeBrick
         reportError(gl, "after setting channel scale");
         snapshotShader.setChannelColor( gl, channelColor );
         reportError(gl, "after setting shader values");
+        
+        snapshotShader.setAddSubChoices(gl, snapshotControls.getAddSubChoices());
     }
     
-    /**
-     * Finds the min/max of all words in the texture.  This method is limited
-     * to only 2-byte values.
-     * 
-     * @param textureData containing data to be examined.
-     * @return array of int of size 2.  1st int is lowest, 2nd int is highest.
-     *
-    private int[] calculate2ByteValueRange( TextureDataI textureData ) {
-        int[] rtnVal = new int[] {
-            Integer.MAX_VALUE, Integer.MIN_VALUE
-        };
-        int bytesPerPixel = textureData.getPixelByteCount();
-        if ( bytesPerPixel != 2 ) {
-            throw new IllegalArgumentException( "Cannot use anything here except two-byte pixel/voxels." );
-        }
-        int totalVoxels = textureData.getSx() * textureData.getSy() * textureData.getSz();        
-        for ( int i = 0; i < totalVoxels; i++ ) {
-            int pos = i * bytesPerPixel;
-            byte smallestAddressedByte = textureData.getTextureData().getValueAt(pos);
-            byte biggestAddressedByte = textureData.getTextureData().getValueAt(pos + 1);
-
-            int value = 0;
-            if ( textureData.getByteOrder() == ByteOrder.BIG_ENDIAN ) {
-                value = smallestAddressedByte + (256 * biggestAddressedByte);
-            }
-            else {
-                value = biggestAddressedByte + (256 * smallestAddressedByte);
-            }
-            if ( value < rtnVal[ 0 ] ) {
-                rtnVal[ 0 ] = value;
-            }
-            if ( value > rtnVal[ 1 ] ) {
-                rtnVal[ 1 ] = value;
-            }
-        }
-        
-        return rtnVal;
-    }
-    */
-
 }
