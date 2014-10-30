@@ -14,7 +14,9 @@ import Jama.Matrix;
 import java.util.List;
 
 /**
- *
+ * This class has been extracted to offload some functionality from its caller.
+ * It carries out utility functions having to do with taking a subset.
+ * 
  * @author fosterl
  */
 public class LoaderSubsetHelper {

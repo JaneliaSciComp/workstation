@@ -46,7 +46,7 @@ public class LargeVolumeViewViewer extends JPanel {
 
     public void showLoadingIndicator() {
         removeAll();
-        add(new JLabel(Icons.getLoadingIcon()));
+        add(new JLabel(Icons.getLoadingIcon()), BorderLayout.CENTER);
         revalidate();
         repaint();
     }

@@ -26,7 +26,7 @@ import java.io.File;
  */
 public class AnnotationPanel extends JPanel
 {
-    public static final int SUBPANEL_STD_SIZE = 50;
+    public static final int SUBPANEL_STD_SIZE = 150;
     
     // things we get data from
     // not clear these belong here!  should all info be shuffled through signals and actions?
@@ -123,7 +123,7 @@ public class AnnotationPanel extends JPanel
     public Dimension getPreferredSize() {
         return new Dimension(width, 0);
     }
-
+    
     private void setupSignals() {
         // outgoing from the model:
         annotationModel.neuronSelectedSignal.connect(neuriteTreePanel.neuronSelectedSlot);
