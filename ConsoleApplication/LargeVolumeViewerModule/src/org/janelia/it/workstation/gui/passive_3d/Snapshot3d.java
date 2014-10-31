@@ -17,8 +17,6 @@ import java.awt.Component;
 import java.awt.BorderLayout;
 import java.awt.Container;
 import java.awt.GridLayout;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
 import java.util.Collections;
 import java.util.Comparator;
 import javax.swing.AbstractButton;
@@ -40,7 +38,8 @@ public class Snapshot3d extends JPanel {
     private static final Dimension WIDGET_SIZE = new Dimension( 400, 800 );
     private VolumeSource.VolumeAcceptor volumeAcceptor;
     private Collection<Component> locallyAddedComponents = new ArrayList<>();
-    private ImageColorModel imageColorModel;
+    private ImageColorModel independentImageColorModel;
+    private ImageColorModel sharedImageColorModel;
     private IndeterminateNoteProgressMonitor monitor;
     private String labelText;
     private Snapshot3dControls controls;
@@ -59,17 +58,12 @@ public class Snapshot3d extends JPanel {
         super();
     }
 
-    public void setImageColorModel( ImageColorModel imageColorModel ) {
-        this.imageColorModel = imageColorModel;
-        this.imageColorModel.getColorModelChangedSignal().addObserver(
-                new Observer() {
-                    @Override
-                    public void update( Observable target, Object obj ) {
-                        Snapshot3d.this.validate();
-                        Snapshot3d.this.repaint();
-                    }
-                }
-        );
+    public void setIndependentImageColorModel( ImageColorModel imageColorModel ) {
+        this.independentImageColorModel = imageColorModel;
+    }
+    
+    public void setSharedImageColorModel( ImageColorModel imageColorModel ) {
+        this.sharedImageColorModel = imageColorModel;
     }
     
     public void setLoadProgressMonitor( IndeterminateNoteProgressMonitor monitor ) {
@@ -104,9 +98,7 @@ public class Snapshot3d extends JPanel {
 
         Mip3d mip3d = new Mip3d();
         mip3d.clear();
-        
-        controls = new Snapshot3dControls( imageColorModel );
-                
+                        
         Comparator<TextureDataI> comparator = new Comparator<TextureDataI>() {
             @Override
             public int compare(TextureDataI o1, TextureDataI o2) {
@@ -119,14 +111,13 @@ public class Snapshot3d extends JPanel {
         volumeModel.removeAllListeners();
         volumeModel.resetToDefaults();
         SnapshotVolumeBrick brick = new SnapshotVolumeBrick( volumeModel );
-        brick.setImageColorModel( imageColorModel );
+        controls = new Snapshot3dControls( independentImageColorModel, sharedImageColorModel, this, brick );
         if ( textureDatas.size() == 1 ) {
             brick.setPrimaryTextureData(textureDatas.iterator().next());
         }
         else {
             brick.setTextureDatas(textureDatas);
         }
-        brick.setControls( controls );
         mip3d.addActor( brick );
         
         locallyAddedComponents.add( mip3d );
@@ -144,17 +135,14 @@ public class Snapshot3d extends JPanel {
         JPanel southWestPanel = new JPanel();
         AbstractButton[] addsubs = controls.getAddSubButton();
         southWestPanel.setLayout( new GridLayout( addsubs.length + 1, 1 ) );
-        ActionListener al = new ActionListener() {
-            @Override
-            public void actionPerformed( ActionEvent ae ) {
-                Snapshot3d.this.validate();
-                Snapshot3d.this.repaint();
-            }
-        };
         for ( AbstractButton c: addsubs ) {
             southWestPanel.add( c );
-            c.addActionListener( al );
         }
+
+        // One more button to allow the user to 'synchronize' the two color
+        // models.
+        southWestPanel.add( controls.getSharedColorModelButton() );
+        
         southPanel.add( sliderPanel, BorderLayout.CENTER );
         southPanel.add( southWestPanel, BorderLayout.EAST );
         locallyAddedComponents.add( southPanel );

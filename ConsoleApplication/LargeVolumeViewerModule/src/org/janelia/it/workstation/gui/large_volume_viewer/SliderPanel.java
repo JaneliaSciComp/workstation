@@ -34,6 +34,7 @@ public class SliderPanel extends JPanel {
     private JToggleButton lockWhiteButton;
 	private JPanel colorLockPanel = new JPanel();
     private ImageColorModel imageColorModel;
+    private org.janelia.it.workstation.signal.Slot visibilityListenerSlot;
 
     public SliderPanel( ImageColorModel imageColorModel ) {
         colorChannelWidget_0 = new ColorChannelWidget(0, imageColorModel);
@@ -46,7 +47,17 @@ public class SliderPanel extends JPanel {
             colorChannelWidget_2, 
             colorChannelWidget_3
         };
-        this.imageColorModel = imageColorModel;
+        setImageColorModel( imageColorModel );
+    }
+    
+    public final void setImageColorModel( ImageColorModel model ) {
+        if ( visibilityListenerSlot != null && imageColorModel != null ) {
+            imageColorModel.getColorModelChangedSignal().deleteObserver(visibilityListenerSlot);
+        }
+        this.imageColorModel = model;
+        guiInit();
+        updateLockButtons();
+        setVisible(true);
     }
 
     @Override
@@ -64,12 +75,18 @@ public class SliderPanel extends JPanel {
     }
     
     public void updateLockButtons() {
-        lockBlackButton.setSelected(imageColorModel.isBlackSynchronized());
-        lockGrayButton.setSelected(imageColorModel.isGammaSynchronized());
-        lockWhiteButton.setSelected(imageColorModel.isWhiteSynchronized());
+        if ( lockBlackButton != null ) {
+            lockBlackButton.setSelected(imageColorModel.isBlackSynchronized());
+            lockGrayButton.setSelected(imageColorModel.isGammaSynchronized());
+            lockWhiteButton.setSelected(imageColorModel.isWhiteSynchronized());
+        }
     }
     
     public void guiInit() {
+        if ( colorLockPanel == null ) {
+            return;
+        }
+        
 		this.setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
 
         // Must add all widgets up front, because number of channels is a
@@ -81,6 +98,8 @@ public class SliderPanel extends JPanel {
 		
 		// JPanel colorLockPanel = new JPanel();
 		colorLockPanel.setVisible(false);
+        colorLockPanel.removeAll();
+        this.remove(colorLockPanel);
 		this.add(colorLockPanel);
 		colorLockPanel.setLayout(new BoxLayout(colorLockPanel, BoxLayout.X_AXIS));
 		
@@ -151,13 +170,16 @@ public class SliderPanel extends JPanel {
 		});
 		
 		colorLockPanel.add(Box.createHorizontalStrut(30));
+        if ( visibilityListenerSlot == null ) {
+            visibilityListenerSlot = new org.janelia.it.workstation.signal.Slot() {
+                @Override
+                public void execute() {
+                    setVisible(imageColorModel.getChannelCount() > 0);
+                }
+            };
+        }
 
-		imageColorModel.getColorModelInitializedSignal().connect(new org.janelia.it.workstation.signal.Slot() {
-			@Override
-			public void execute() {
-				setVisible(imageColorModel.getChannelCount() > 0);
-			}
-		});
+		imageColorModel.getColorModelInitializedSignal().connect(visibilityListenerSlot);
 		
     }
 

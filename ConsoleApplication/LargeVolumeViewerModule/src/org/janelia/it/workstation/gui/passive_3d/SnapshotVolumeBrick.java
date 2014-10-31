@@ -29,7 +29,6 @@ public class SnapshotVolumeBrick extends AbstractVolumeBrick
 {
     public enum RenderMethod {MAXIMUM_INTENSITY, ALPHA_BLENDING}
 
-	private ImageColorModel imageColorModel;
     private Snapshot3dControls snapshotControls;
     private boolean explicitInterleave = false;
     
@@ -44,10 +43,6 @@ public class SnapshotVolumeBrick extends AbstractVolumeBrick
     public SnapshotVolumeBrick(VolumeModel volumeModel) {
         super( volumeModel );
         super.setShader( new SnapshotShader() );
-    }
-    
-    public void setImageColorModel( ImageColorModel imageColorModel ) {
-        this.imageColorModel = imageColorModel;
     }
     
     public void setControls(Snapshot3dControls snapshotControls) {
@@ -129,7 +124,7 @@ public class SnapshotVolumeBrick extends AbstractVolumeBrick
 	}
     
     private void pushValuesToShader(GL2 gl, SnapshotShader snapshotShader) {
-		int sc = imageColorModel.getChannelCount();
+		int sc = snapshotControls.getActiveColorModel().getChannelCount();
 
         float[] channelColor
                 = {0, 0, 0,
@@ -141,7 +136,7 @@ public class SnapshotVolumeBrick extends AbstractVolumeBrick
         float[] channelScale = {1, 1, 1, 1};
         for (int c = 0; c < sc; ++c) {
             int offset = 3 * c;
-            ChannelColorModel ccm = imageColorModel.getChannel(c);
+            ChannelColorModel ccm = snapshotControls.getActiveColorModel().getChannel(c);
             Color col = ccm.getColor();
             channelColor[offset + 0] = col.getRed() / 255.0f;
             channelColor[offset + 1] = col.getGreen() / 255.0f;

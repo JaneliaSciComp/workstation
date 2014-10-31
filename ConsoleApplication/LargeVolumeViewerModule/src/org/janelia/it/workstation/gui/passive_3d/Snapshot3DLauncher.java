@@ -38,7 +38,7 @@ public class Snapshot3DLauncher {
     private ObservableCamera3d camera;
     private URL dataUrl;
     private String basePath;
-    private ImageColorModel imageColorModel;
+    private ImageColorModel sharedImageColorModel;
     private Integer maxIntensity;
     private Integer numberOfChannels;
     
@@ -52,7 +52,7 @@ public class Snapshot3DLauncher {
     ) {
         this.sliceAxis = sliceAxis;
         this.subvolumeProvider = subvolumeProvider;
-        this.imageColorModel = imageColorModel;
+        this.sharedImageColorModel = imageColorModel;
         this.basePath = basePath;
         this.dataUrl = dataUrl;
         this.camera = camera;
@@ -200,9 +200,8 @@ public class Snapshot3DLauncher {
      */
     private void establishColorControls( Snapshot3d snapshotViewer ) {
         ImageColorModel independentCM = new ImageColorModel(getMaxIntensity(), getNumberOfChannels());
-        snapshotViewer.setImageColorModel( independentCM );        
-        // TODO: find way to use either new or parent-sourced image color model.
-        //        snapshotViewer.setImageColorModel( imageColorModel );        
+        snapshotViewer.setIndependentImageColorModel( independentCM ); 
+        snapshotViewer.setSharedImageColorModel( sharedImageColorModel );
     }
     
     private void makeViewerVisible(Snapshot3d snapshotViewer) {
