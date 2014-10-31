@@ -20,6 +20,7 @@ import java.awt.*;
 import java.awt.event.*;
 import java.util.*;
 import java.util.List;
+import org.janelia.it.workstation.gui.util.StateDrivenIconToggleButton;
 
 /**
  * Created with IntelliJ IDEA.
@@ -236,6 +237,15 @@ public class AlignmentBoardControls {
         return rtnVal;
     }
 
+    /** Use this to get a downsample rate suitable for calculations */
+    private double getNonZeroDownsampleRate() {
+        double rtnVal = getDownsampleRate();
+        if ( rtnVal < 1.0 ) {
+            rtnVal = settings.getAcceptedDownsampleRate();
+        }
+        return rtnVal;
+    }
+    
     /** These getters may be called after successful launch. */
     private double getDownsampleRate() {
         if ( ! isReadyForOutput() )
@@ -683,7 +693,7 @@ public class AlignmentBoardControls {
                     }
                 };
 
-                Collection<float[]> acceptedCords = getCombinedCropCoords(getDownsampleRate());
+                Collection<float[]> acceptedCords = getCombinedCropCoords(getNonZeroDownsampleRate());
                 SavebackEvent event = new SavebackEvent();
                 event.setAbsoluteCoords(acceptedCords);
                 event.setCompletionListener(buttonEnableListener);
@@ -707,7 +717,7 @@ public class AlignmentBoardControls {
             @Override
             public void actionPerformed(ActionEvent ae) {
                 setButtonBusy(colorSave);
-                Collection<float[]> acceptedCords = getCombinedCropCoords(getDownsampleRate());
+                Collection<float[]> acceptedCords = getCombinedCropCoords(getNonZeroDownsampleRate());
                 SavebackEvent event = new SavebackEvent();
                 event.setAbsoluteCoords(acceptedCords);
                 event.setCompletionListener(buttonEnableListener);
@@ -832,7 +842,7 @@ public class AlignmentBoardControls {
             @Override
             public void actionPerformed(ActionEvent ae) {
                 CropCoordSet cropCoordSet = volumeModel.getCropCoords();
-                cropCoordSet.acceptCurrentCoordinates();
+                cropCoordSet.acceptCurrentNormalizedCoordinates();
                 fireCropEvent();
             }
         });
@@ -1056,26 +1066,6 @@ public class AlignmentBoardControls {
     }
 
     //-------------------------------------------------INNER CLASSES/INTERFACES
-
-    class StateDrivenIconToggleButton extends JToggleButton {
-        private final Icon setIcon;
-        private final Icon unsetIcon;
-        public StateDrivenIconToggleButton( Icon setIcon, Icon unsetIcon ) {
-            this.setIcon = setIcon;
-            this.unsetIcon = unsetIcon;
-        }
-
-        @Override
-        public Icon getIcon() {
-            if ( this.isSelected() ) {
-                return setIcon;
-            }
-            else {
-                return unsetIcon;
-            }
-        }
-    }
-
     /** Simple list-and-map-driven combo box model. */
     class ABSDComboBoxModel implements ComboBoxModel {
 

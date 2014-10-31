@@ -172,4 +172,10 @@ public interface TextureDataI {
     void setRenderables( Collection<RenderableBean> renderables );
     Collection<RenderableBean> getRenderables();
 
+    /**
+     * Transforms may be required against the coordinates, to use them properly.
+     * @param transformMatrix to multiply by each vertex coordinate.
+     */
+    void setTransformMatrix( float[] transformMatrix );
+    float[] getTransformMatrix();
 }

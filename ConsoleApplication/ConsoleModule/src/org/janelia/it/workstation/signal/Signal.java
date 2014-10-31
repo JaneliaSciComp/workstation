@@ -1,7 +1,5 @@
 package org.janelia.it.workstation.signal;
 
-import org.janelia.it.workstation.gui.large_volume_viewer.BasicSignalSlot;
-
 import java.util.Observable;
 
 

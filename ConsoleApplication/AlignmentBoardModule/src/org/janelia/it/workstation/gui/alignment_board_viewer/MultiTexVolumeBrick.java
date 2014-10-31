@@ -290,7 +290,7 @@ public class MultiTexVolumeBrick implements VolumeBrickI
 
     //---------------------------------------IMPLEMENT VolumeDataAcceptor
     @Override
-    public void setTextureData(TextureDataI textureData) {
+    public void setPrimaryTextureData(TextureDataI textureData) {
         if ( signalTextureMediator == null ) {
             signalTextureMediator = new TextureMediator();
             textureMediators.add( signalTextureMediator );
@@ -298,6 +298,18 @@ public class MultiTexVolumeBrick implements VolumeBrickI
         signalTextureMediator.setTextureData( textureData );
         bSignalTextureNeedsUpload = true;
         bufferManager.setTextureMediator( signalTextureMediator );
+    }
+    
+    /**
+     * This one merely sets the primary one.  Do not call this for
+     * mask or color map.
+     * 
+     * @See #setPrimaryTextureData
+     * @param textureData 
+     */
+    @Override
+    public void addTextureData(TextureDataI textureData) {
+        setPrimaryTextureData(textureData);
     }
 
     //----------------------------------------END IMPLEMENTATION VolumeDataAcceptor

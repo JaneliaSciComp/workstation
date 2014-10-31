@@ -101,8 +101,8 @@ class MipRenderer
             glDrawable.setGL(debugGl2);
         }
 
-        List<GLActor> localActors = new ArrayList<GLActor>( actors );
-        for (GLActor actor : localActors)
+        // Copy member list of actors local for independent iteration.
+        for (GLActor actor : new ArrayList<>( actors ))
             actor.display(glDrawable);
 
         gl.glMatrixMode(GL2Adapter.MatrixMode.GL_PROJECTION);
@@ -263,8 +263,12 @@ class MipRenderer
         if ( heightRatioFactor < 0.5 ) {
             heightRatioFactor *= (1.75 - heightRatioFactor) * (1.75 - heightRatioFactor);
         }
+        else if ( heightRatioFactor > 1.5 ) {
+            heightRatioFactor = 1.0;
+        }
         double newFocusDistance = finalAspectRatio * 1.05 * DISTANCE_TO_SCREEN_IN_PIXELS * heightRatioFactor;
-        volumeModel.setCameraDepth( new Vec3( 0.0, 0.0, -newFocusDistance ) );
+        logger.debug("Setting camera depth to " + (-newFocusDistance) + " for finalAspectRatio of " + finalAspectRatio + " and hgithRatioFactor of " + heightRatioFactor);        
+        volumeModel.setCameraDepth( new Vec3( 0.0, 0.0, -newFocusDistance ) );        
         getVolumeModel().setCameraPixelsPerSceneUnit(DISTANCE_TO_SCREEN_IN_PIXELS, getVolumeModel().getCameraFocusDistance());
     }
 

@@ -48,6 +48,7 @@ public class TextureDataBean implements TextureDataI {
     private Integer voxelComponentOrder = UNSET_VALUE;
 
     private int interpolationMethod = GL2.GL_LINEAR;
+    private float[] transformMatrix;
 
     private Collection<RenderableBean> renderables;
 
@@ -65,6 +66,13 @@ public class TextureDataBean implements TextureDataI {
         intBuffer.put( argbData );
         byte[] array = intermediate.array();
         textureData = new VolumeDataBean( array, sx, sy, sz );
+        setSx( sx );
+        setSy( sy );
+        setSz( sz );
+    }
+
+    public TextureDataBean(byte[] byteData, int sx, int sy, int sz) {
+        textureData = new VolumeDataBean( byteData, sx, sy, sz );
         setSx( sx );
         setSy( sy );
         setSz( sz );
@@ -265,6 +273,16 @@ public class TextureDataBean implements TextureDataI {
     @Override
     public void setExplicitVoxelComponentOrder(Integer voxelComponentOrder) {
         this.voxelComponentOrder = voxelComponentOrder;
+    }
+
+    @Override
+    public void setTransformMatrix(float[] transformMatrix) {
+        this.transformMatrix = transformMatrix;
+    }
+
+    @Override
+    public float[] getTransformMatrix() {
+        return transformMatrix;
     }
 }
 

@@ -11,6 +11,7 @@ import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import org.janelia.it.jacs.compute.api.TiledMicroscopeBeanRemote;
 
 /**
  * Created by IntelliJ IDEA.
@@ -346,6 +347,35 @@ public class EJBEntityFacade implements EntityFacade {
     @Override
     public void deleteAnchoredPath(Long pathID) throws Exception {
         EJBFactory.getRemoteTiledMicroscopeBean().deleteAnchoredPath(pathID);
+    }
+
+    @Override
+    public TmStructuredTextAnnotation addStructuredTextAnnotation(Long neuronID,
+        Long parentID, int parentType, int formatVersion, String data) throws Exception {
+        return EJBFactory.getRemoteTiledMicroscopeBean().addStructuredTextAnnotation(neuronID,
+            parentID, parentType, formatVersion, data);
+    }
+
+    @Override
+    public void updateStructuredTextAnnotation(TmStructuredTextAnnotation textAnnotation,
+        String data) throws Exception {
+        EJBFactory.getRemoteTiledMicroscopeBean().updateStructuredTextAnnotation(textAnnotation, data);
+    }
+
+    @Override
+    public void deleteStructuredTextAnnotation(Long annID) throws Exception {
+        EJBFactory.getRemoteTiledMicroscopeBean().deleteStructuredTextAnnotation(annID);
+    }
+
+    @Override
+    public RawFileInfo getNearestFileInfo(String basePath, int[] viewerCoord) throws Exception {
+        RawFileInfo rawInfo = null;
+        final TiledMicroscopeBeanRemote remoteTiledMicroscopeBean = EJBFactory.getRemoteTiledMicroscopeBean();
+        if ( remoteTiledMicroscopeBean != null ) {
+            rawInfo = remoteTiledMicroscopeBean.getNearestFileInfo(basePath, viewerCoord);
+        }
+        
+        return rawInfo;
     }
 
 }

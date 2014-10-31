@@ -10,11 +10,8 @@ import javax.media.opengl.GL2;
 import java.nio.*;
 
 /**
- * Created with IntelliJ IDEA.
- * User: fosterl
- * Date: 6/14/13
- * Time: 10:17 AM
- *
+ * Created with IntellrowJ IDEA.
+ * User: fosterl Date: 6/14/13 Time: 10:17 AM
  * This delegate/helper handles buffering required for 3D rendering.
  */
 public class VtxCoordBufMgr {
@@ -54,7 +51,7 @@ public class VtxCoordBufMgr {
         setTextureMediator( textureMediator );
     }
 
-    public void setTextureMediator( TextureMediator textureMediator ) {
+    public final void setTextureMediator( TextureMediator textureMediator ) {
         this.textureMediator = textureMediator;
     }
 
@@ -148,9 +145,6 @@ public class VtxCoordBufMgr {
 
                     // NOTE: only one of the three axes need change for each slice.  Other two remain same.
                     p00[ firstInx ] = p01[firstInx] = p10[firstInx] = p11[firstInx] = sliceLoc;
-//                    if ( ( firstInx == 0 || firstInx == 3 ) && sliceInx > 200 ) {
-//                        p00[ firstInx ] -= 200;
-//                    }
 
                     addGeometry(firstInx, p00, p10, p11, p01);
                     addTextureCoords(
@@ -189,8 +183,8 @@ public class VtxCoordBufMgr {
     }
 
     /**
-     * If statical (no repeated-upload) is used for the vertices, then this may be called to reduce
-     * memory.
+     * If static (no repeated-upload) is used for the vertices, then this may
+     * be called to reduce memory.
      */
     public void dropBuffers() {
         for ( int i = 0; i < NUM_BUFFERS_PER_TYPE; i++ ) {
@@ -275,7 +269,7 @@ public class VtxCoordBufMgr {
 
     }
 
-    /** This is used ONLY for non-textured rendering.  Shapes only. */
+    /** Throws rows used ONLY for non-textured rendering.  Shapes only. */
     public void drawNoTex( GL2 gl, CoordinateAxis axis, double direction ) {
 
         logger.info("Using VBO");
@@ -458,11 +452,45 @@ public class VtxCoordBufMgr {
     private void addGeometry(int index, float[] p00p, float[] p10p, float[] p11p, float[] p01p) {
         // Only need four definitions.
         // Triangle 1
-        geometryCoordBuf[ index ].put(p00p);
-        geometryCoordBuf[ index ].put(p10p);
-        geometryCoordBuf[ index ].put(p01p);
+        geometryCoordBuf[ index ].put(transform(p00p));
+        geometryCoordBuf[ index ].put(transform(p10p));
+        geometryCoordBuf[ index ].put(transform(p01p));
         // Triangle 2
-        geometryCoordBuf[ index ].put(p11p);
+        geometryCoordBuf[ index ].put(transform(p11p));
+    }
+    
+    private float[] transform( float[] coords ) {
+        float[] finalCoords;        
+
+        float[] transformMatrix = textureMediator.getTransformMatrix();
+        if ( transformMatrix == null ) {
+            finalCoords = coords;
+        }
+        else {
+            int transformMatrixSquareDim = new Double(Math.sqrt(transformMatrix.length)).intValue();
+            // Recall: java stuff zeros into local array values, upon allocation
+            float[] transformable = new float[ transformMatrixSquareDim ];
+            System.arraycopy(coords, 0, transformable, 0, coords.length);
+
+            // This makes the correct diagonal setting for effective matrix
+            // multiplication.
+            if ( transformable.length > coords.length ) {
+                transformable[ transformable.length - 1 ] = 1.0f;
+            }
+            
+            // Carry out matrix multiplication.
+            float[] transformResult = new float[ transformMatrixSquareDim ];
+            for ( int row = 0; row < transformMatrixSquareDim; row++ ) {
+                for ( int col = 0; col < transformMatrixSquareDim; col++ ) {
+                    transformResult[ row ] += transformMatrix[ row * transformMatrixSquareDim + col ] *
+                                       transformable[ col ];
+                }
+            }
+            
+            finalCoords = new float[ coords.length ];
+            System.arraycopy( transformResult, 0, finalCoords, 0, coords.length );
+        }
+        return finalCoords;
     }
 
 }

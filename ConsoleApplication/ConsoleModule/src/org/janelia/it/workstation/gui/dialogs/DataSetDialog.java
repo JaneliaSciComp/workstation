@@ -23,6 +23,7 @@ import javax.swing.JTextField;
 import javax.swing.SwingConstants;
 import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
+import javax.swing.text.JTextComponent;
 
 import net.miginfocom.swing.MigLayout;
 
@@ -53,16 +54,12 @@ public class DataSetDialog extends ModalDialog implements Accessibility {
     private DataSetListDialog parentDialog;
 	
     private JPanel attrPanel;
-    private JLabel nameLabel;
     private JTextField nameInput;
-    private JLabel identifierLabel;
     private JTextField identifierInput;
-    private JLabel sampleNamePatternLabel;
     private JTextField sampleNamePatternInput;
-    private JLabel sampleImageLabel;
-    private JComboBox sampleImageInput;
+    private JComboBox<SampleImageType> sampleImageInput;
     private JCheckBox sageSyncCheckbox;
-    private HashMap<String,JCheckBox> processCheckboxes = new LinkedHashMap<String,JCheckBox>();
+    private HashMap<String,JCheckBox> processCheckboxes = new LinkedHashMap<>();
     
     private Entity dataSetEntity;
    
@@ -125,47 +122,47 @@ public class DataSetDialog extends ModalDialog implements Accessibility {
     
     public void showForDataSet(final Entity dataSetEntity) {
 
-    	this.dataSetEntity = dataSetEntity;
+        this.dataSetEntity = dataSetEntity;
 
-    	attrPanel.removeAll();
-    	
-    	addSeparator(attrPanel, "Data Set Attributes", true);
-    	
-        nameLabel = new JLabel("Data Set Name: ");
+        attrPanel.removeAll();
+
+        addSeparator(attrPanel, "Data Set Attributes", true);
+
+        final JLabel nameLabel = new JLabel("Data Set Name: ");
         nameInput = new JTextField(40);
         
         nameInput.getDocument().addDocumentListener(new DocumentListener() {
-        	  public void changedUpdate(DocumentEvent e) {
-        		  updateDataSetIdentifier();
-        	  }
-        	  public void removeUpdate(DocumentEvent e) {
-        		  updateDataSetIdentifier();
-        	  }
-        	  public void insertUpdate(DocumentEvent e) {
-        		  updateDataSetIdentifier();
-        	  }
+            public void changedUpdate(DocumentEvent e) {
+                updateDataSetIdentifier();
+            }
+            public void removeUpdate(DocumentEvent e) {
+                updateDataSetIdentifier();
+            }
+            public void insertUpdate(DocumentEvent e) {
+                updateDataSetIdentifier();
+            }
         });
         
         nameLabel.setLabelFor(nameInput);
         attrPanel.add(nameLabel, "gap para");
         attrPanel.add(nameInput);
 
-        identifierLabel = new JLabel("Data Set Identifier: ");
+        final JLabel identifierLabel = new JLabel("Data Set Identifier: ");
         identifierInput = new JTextField(40);
         identifierInput.setEditable(false);
         identifierLabel.setLabelFor(identifierInput);
         attrPanel.add(identifierLabel, "gap para");
         attrPanel.add(identifierInput);
 
-        sampleNamePatternLabel = new JLabel("Sample Name Pattern: ");
+        final JLabel sampleNamePatternLabel = new JLabel("Sample Name Pattern: ");
         sampleNamePatternInput = new JTextField(40);
         sampleNamePatternInput.setText(DEFAULT_SAMPLE_NAME_PATTERN);
         sampleNamePatternLabel.setLabelFor(sampleNamePatternInput);
         attrPanel.add(sampleNamePatternLabel, "gap para");
         attrPanel.add(sampleNamePatternInput);
 
-        sampleImageLabel = new JLabel("Sample Image: ");
-        sampleImageInput = new JComboBox(SampleImageType.values());
+        final JLabel sampleImageLabel = new JLabel("Sample Image: ");
+        sampleImageInput = new JComboBox<>(SampleImageType.values());
         sampleImageLabel.setLabelFor(sampleImageInput);
         attrPanel.add(sampleImageLabel, "gap para");
         attrPanel.add(sampleImageInput);
@@ -175,7 +172,7 @@ public class DataSetDialog extends ModalDialog implements Accessibility {
         
         JPanel pipelinesPanel = new JPanel();
         pipelinesPanel.setLayout(new BoxLayout(pipelinesPanel, BoxLayout.PAGE_AXIS));
-        addCheckboxes("Pipelines", PipelineProcess.values(), processCheckboxes, pipelinesPanel);
+        addCheckboxes(PipelineProcess.values(), processCheckboxes, pipelinesPanel);
         
         JScrollPane scrollPane = new JScrollPane();
         scrollPane.setViewportView(pipelinesPanel);
@@ -183,113 +180,115 @@ public class DataSetDialog extends ModalDialog implements Accessibility {
         
         addSeparator(attrPanel, "Pipelines", false);
         attrPanel.add(scrollPane, "span 2, growx");
-        
-        if (dataSetEntity!=null) {
-        	nameInput.setText(dataSetEntity.getName());
-        	String dataSetIdentifier = dataSetEntity.getValueByAttributeName(EntityConstants.ATTRIBUTE_DATA_SET_IDENTIFIER);
-			if (dataSetIdentifier!=null) {
-				identifierInput.setText(dataSetIdentifier);
-	    	}		
-			String sampleNamePattern = dataSetEntity.getValueByAttributeName(EntityConstants.ATTRIBUTE_SAMPLE_NAME_PATTERN);
-            if (sampleNamePattern!=null) {
-                sampleNamePatternInput.setText(sampleNamePattern);
-            }   
+
+        if (dataSetEntity != null) {
+
+            nameInput.setText(dataSetEntity.getName());
+
+            setDataSetAttributeText(identifierInput, EntityConstants.ATTRIBUTE_DATA_SET_IDENTIFIER);
+            setDataSetAttributeText(sampleNamePatternInput, EntityConstants.ATTRIBUTE_SAMPLE_NAME_PATTERN);
+
             String sampleImageType = dataSetEntity.getValueByAttributeName(EntityConstants.ATTRIBUTE_SAMPLE_IMAGE_TYPE);
-            if (sampleImageType!=null) {
+            if (sampleImageType != null) {
                 sampleImageInput.setSelectedItem(SampleImageType.valueOf(sampleImageType));
-            }   
-        	if (dataSetEntity.getEntityDataByAttributeName(EntityConstants.ATTRIBUTE_SAGE_SYNC)!=null) {
-        		sageSyncCheckbox.setSelected(true);
-        	}
+            }
+            if (dataSetEntity.getEntityDataByAttributeName(EntityConstants.ATTRIBUTE_SAGE_SYNC) != null) {
+                sageSyncCheckbox.setSelected(true);
+            }
             applyCheckboxValues(processCheckboxes, dataSetEntity.getValueByAttributeName(EntityConstants.ATTRIBUTE_PIPELINE_PROCESS));
-        }
-        else {
-        	nameInput.setText("");
+        } else {
+            nameInput.setText("");
             applyCheckboxValues(processCheckboxes, PipelineProcess.FlyLightUnaligned.toString());
         }
         
         packAndShow();
     }
-    
+
+    private void setDataSetAttributeText(JTextComponent component,
+                                         String attribute) {
+        String value = dataSetEntity.getValueByAttributeName(attribute);
+        if (value != null) {
+            component.setText(value);
+        }
+    }
+
     private void saveAndClose() {
-    	
-    	Utils.setWaitingCursor(DataSetDialog.this);
+
+        Utils.setWaitingCursor(DataSetDialog.this);
 
         final String sampleNamePattern = sampleNamePatternInput.getText();
         if (!sampleNamePattern.contains(SLIDE_CODE_PATTERN)) {
-            JOptionPane.showMessageDialog(SessionMgr.getMainFrame(),
-                    "Sample name pattern must contain the unique identifier \""+SLIDE_CODE_PATTERN+"\"", "Invalid Sample Name Pattern", JOptionPane.ERROR_MESSAGE);
+            JOptionPane.showMessageDialog(this,
+                                          "Sample name pattern must contain the unique identifier \""+SLIDE_CODE_PATTERN+"\"",
+                                          "Invalid Sample Name Pattern",
+                                          JOptionPane.ERROR_MESSAGE);
+            sampleNamePatternInput.requestFocus();
             return;
         }
 
         final String sampleImageType = ((SampleImageType)sampleImageInput.getSelectedItem()).name();
-        
+
         SimpleWorker worker = new SimpleWorker() {
 
-			@Override
-			protected void doStuff() throws Exception {
-				
-				if (dataSetEntity==null) {
-					dataSetEntity = ModelMgr.getModelMgr().createDataSet(nameInput.getText());
-				}
-				else {
-					dataSetEntity.setName(nameInput.getText());	
-				}
-				
-				if (!StringUtils.isEmpty(sampleNamePattern)) {
-				    ModelMgr.getModelMgr().setOrUpdateValue(dataSetEntity, EntityConstants.ATTRIBUTE_SAMPLE_NAME_PATTERN, sampleNamePattern);
-				}
-				else {
-                    EntityData patternEd = dataSetEntity.getEntityDataByAttributeName(EntityConstants.ATTRIBUTE_SAMPLE_NAME_PATTERN);
-                    if (patternEd!=null) {
-                        dataSetEntity.getEntityData().remove(patternEd);
-                        ModelMgr.getModelMgr().removeEntityData(patternEd);
-                    }
-				}
+            private ModelMgr modelMgr = ModelMgr.getModelMgr();
 
-                if (!StringUtils.isEmpty(sampleImageType)) {
-                    ModelMgr.getModelMgr().setOrUpdateValue(dataSetEntity, EntityConstants.ATTRIBUTE_SAMPLE_IMAGE_TYPE, sampleImageType);
+            @Override
+            protected void doStuff() throws Exception {
+
+                if (dataSetEntity == null) {
+                    dataSetEntity = modelMgr.createDataSet(nameInput.getText());
+                } else {
+                    dataSetEntity.setName(nameInput.getText());
                 }
-                else {
-                    EntityData typeEd = dataSetEntity.getEntityDataByAttributeName(EntityConstants.ATTRIBUTE_SAMPLE_IMAGE_TYPE);
-                    if (typeEd!=null) {
-                        dataSetEntity.getEntityData().remove(typeEd);
-                        ModelMgr.getModelMgr().removeEntityData(typeEd);
-                    }
+
+                updateDataSetAttribute(sampleNamePattern, EntityConstants.ATTRIBUTE_SAMPLE_NAME_PATTERN);
+                updateDataSetAttribute(sampleImageType, EntityConstants.ATTRIBUTE_SAMPLE_IMAGE_TYPE);
+
+                modelMgr.setOrUpdateValue(dataSetEntity, EntityConstants.ATTRIBUTE_PIPELINE_PROCESS, getCheckboxValues(processCheckboxes));
+
+                if (sageSyncCheckbox.isSelected()) {
+                    ModelMgr.getModelMgr().setAttributeAsTag(dataSetEntity, EntityConstants.ATTRIBUTE_SAGE_SYNC);
+                } else {
+                    removeDataSetAttribute(EntityConstants.ATTRIBUTE_SAGE_SYNC);
                 }
-                
-				ModelMgr.getModelMgr().setOrUpdateValue(dataSetEntity, EntityConstants.ATTRIBUTE_PIPELINE_PROCESS, getCheckboxValues(processCheckboxes));
-				
-				if (sageSyncCheckbox.isSelected()) {
-					ModelMgr.getModelMgr().setAttributeAsTag(dataSetEntity, EntityConstants.ATTRIBUTE_SAGE_SYNC);
-				}
-				else {
-					EntityData sageSyncEd = dataSetEntity.getEntityDataByAttributeName(EntityConstants.ATTRIBUTE_SAGE_SYNC);
-					if (sageSyncEd!=null) {
-					    dataSetEntity.getEntityData().remove(sageSyncEd);
-					    ModelMgr.getModelMgr().removeEntityData(sageSyncEd);
-					}
-				}
-			}
-			
-			@Override
-			protected void hadSuccess() {	
-				parentDialog.refresh();
-				Utils.setDefaultCursor(DataSetDialog.this);
-		    	setVisible(false);
-			}
-			
-			@Override
-			protected void hadError(Throwable error) {
-				SessionMgr.getSessionMgr().handleException(error);
-				Utils.setDefaultCursor(DataSetDialog.this);
-		    	setVisible(false);
-			}
-		};
-		worker.execute();
+            }
+
+            @Override
+            protected void hadSuccess() {
+                parentDialog.refresh();
+                Utils.setDefaultCursor(DataSetDialog.this);
+                setVisible(false);
+            }
+
+            @Override
+            protected void hadError(Throwable error) {
+                SessionMgr.getSessionMgr().handleException(error);
+                Utils.setDefaultCursor(DataSetDialog.this);
+                setVisible(false);
+            }
+
+            private void removeDataSetAttribute(String attributeType) throws Exception {
+                final EntityData typeEd = dataSetEntity.getEntityDataByAttributeName(attributeType);
+                if (typeEd != null) {
+                    dataSetEntity.getEntityData().remove(typeEd);
+                    modelMgr.removeEntityData(typeEd);
+                }
+            }
+
+            private void updateDataSetAttribute(String value,
+                                                String attributeType) throws Exception {
+                if (!StringUtils.isEmpty(value)) {
+                    modelMgr.setOrUpdateValue(dataSetEntity, attributeType, value);
+                } else {
+                    removeDataSetAttribute(attributeType);
+                }
+            }
+        };
+
+        worker.execute();
     }
 
-    private void addCheckboxes(final String title, final Object[] choices, final HashMap<String,JCheckBox> checkboxes, final JPanel panel) {
+    private void addCheckboxes(final Object[] choices, final HashMap<String,JCheckBox> checkboxes, final JPanel panel) {
     	for(Object choice : choices) {
     		NamedEnum namedEnum = ((NamedEnum)choice);
     		JCheckBox checkBox = new JCheckBox(namedEnum.getName());
@@ -316,7 +315,7 @@ public class DataSetDialog extends ModalDialog implements Accessibility {
     
     private String getCheckboxValues(final HashMap<String,JCheckBox> checkboxes) {
 
-    	StringBuffer sb = new StringBuffer();
+    	StringBuilder sb = new StringBuilder();
     	for(String key : checkboxes.keySet()) {
     		JCheckBox checkbox = checkboxes.get(key);
     		if (checkbox!=null && checkbox.isSelected()) {

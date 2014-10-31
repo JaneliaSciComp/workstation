@@ -42,6 +42,12 @@ public class CropCoordSet {
         }
     }
 
+    public void acceptCurrentNormalizedCoordinates() {
+        if ( currentCoordinates != null  &&  ! alreadyAcceptedNormalized( getAcceptedCoordinates(), getCurrentCoordinates() ) ) {
+            acceptedCoordinates.add( currentCoordinates );
+        }
+    }
+
     /** These have already been accepted as part of the finished selection, by the user. */
     public Collection<float[]> getAcceptedCoordinates() {
         return acceptedCoordinates;
@@ -77,6 +83,28 @@ public class CropCoordSet {
             boolean comparesSame = true;
             for ( int i = 0; i < nextAccepted.length  &&  comparesSame; i++ ) {
                 if ( Math.round(nextAccepted[ i ]) != Math.round(currentCoordinates[ i ]) ) {
+                    comparesSame = false;
+                }
+            }
+
+            // If any matches all coords, this one is already in.
+            if ( comparesSame ) {
+                rtnVal = true;
+                break;
+            }
+        }
+
+        return rtnVal;
+    }
+
+    /** It is possible for the current coord to have already been accepted.  Expect coords to be 0..1 */
+    public static boolean alreadyAcceptedNormalized( Collection<float[]> acceptedCoordinates, float[] currentCoordinates ) {
+        boolean rtnVal = false;
+        for ( float[] nextAccepted: acceptedCoordinates ) {
+            // See if any of the accepted ones is the same.
+            boolean comparesSame = true;
+            for ( int i = 0; i < nextAccepted.length  &&  comparesSame; i++ ) {
+                if ( Math.abs( nextAccepted[ i ] - currentCoordinates[ i ] ) > 0.001 ) {
                     comparesSame = false;
                 }
             }

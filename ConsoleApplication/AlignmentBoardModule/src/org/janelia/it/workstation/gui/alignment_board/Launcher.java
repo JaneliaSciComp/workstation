@@ -24,6 +24,8 @@ import org.openide.windows.WindowManager;
 @ServiceProvider(service = EntityAcceptor.class, path=EntityAcceptor.PERSPECTIVE_CHANGE_LOOKUP_PATH)
 public class Launcher implements EntityAcceptor  {
     
+    private static final int MENU_ORDER = 200;
+    
     public Launcher() {
     }
 
@@ -79,7 +81,7 @@ public class Launcher implements EntityAcceptor  {
     
     @Override
     public Integer getOrder() {
-        return 200;
+        return MENU_ORDER;
     }
 
     @Override

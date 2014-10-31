@@ -71,19 +71,20 @@ public class MemorySettingPanel extends JPanel {
                 // and subsequently do so.
                 JOptionPane.showMessageDialog(
                         WindowLocator.getMainFrame(),
-                        "In order to complete this change, the client must be restarted.\nRestarting now.",
-                        "Restarting Now",
+                        "In order to complete this change, the client must be restarted.",
+                        "Please Restart for Updated Setting",
                         JOptionPane.INFORMATION_MESSAGE,
                         null
                 );
-                // Force exit.
-                LifecycleManager.getDefault().markForRestart();
-                LifecycleManager.getDefault().exit();
+                // Forced exit does not pickup new setting!
+                //LifecycleManager.getDefault().markForRestart();
+                //LifecycleManager.getDefault().exit();
             }
         } catch (IOException ioe) {
             logger.error("IOException " + ioe + " while pushing memory setting.");
             SessionMgr.getSessionMgr().handleException(ioe);
         } catch (NullPointerException | NumberFormatException npe_nfe) {
+            npe_nfe.printStackTrace();
             JOptionPane.showMessageDialog(
                     WindowLocator.getMainFrame(),
                     "Unacceptable value " + memorySettingStr + ".  Integer required.",
