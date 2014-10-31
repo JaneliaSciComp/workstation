@@ -28,7 +28,7 @@ public class SliderPanel extends JPanel {
 	private ColorChannelWidget colorChannelWidget_1;
 	private ColorChannelWidget colorChannelWidget_2;
 	private ColorChannelWidget colorChannelWidget_3;
-	private final ColorChannelWidget[] colorWidgets;
+	private ColorChannelWidget[] colorWidgets;
     private JToggleButton lockBlackButton;
     private JToggleButton lockGrayButton;
     private JToggleButton lockWhiteButton;
@@ -37,6 +37,15 @@ public class SliderPanel extends JPanel {
     private org.janelia.it.workstation.signal.Slot visibilityListenerSlot;
 
     public SliderPanel( ImageColorModel imageColorModel ) {
+        setImageColorModel( imageColorModel );
+    }
+    
+    public final void setImageColorModel( ImageColorModel imageColorModel ) {
+        if ( colorWidgets != null ) {
+            for ( ColorChannelWidget ccw: colorWidgets ) {
+                this.remove( ccw );
+            }
+        }
         colorChannelWidget_0 = new ColorChannelWidget(0, imageColorModel);
         colorChannelWidget_1 = new ColorChannelWidget(1, imageColorModel);
         colorChannelWidget_2 = new ColorChannelWidget(2, imageColorModel);
@@ -47,14 +56,10 @@ public class SliderPanel extends JPanel {
             colorChannelWidget_2, 
             colorChannelWidget_3
         };
-        setImageColorModel( imageColorModel );
-    }
-    
-    public final void setImageColorModel( ImageColorModel model ) {
         if ( visibilityListenerSlot != null && imageColorModel != null ) {
             imageColorModel.getColorModelChangedSignal().deleteObserver(visibilityListenerSlot);
         }
-        this.imageColorModel = model;
+        this.imageColorModel = imageColorModel;
         guiInit();
         updateLockButtons();
         setVisible(true);
