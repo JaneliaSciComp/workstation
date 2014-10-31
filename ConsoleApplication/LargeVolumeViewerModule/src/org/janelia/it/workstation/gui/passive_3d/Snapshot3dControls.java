@@ -115,6 +115,8 @@ public class Snapshot3dControls {
         if ( getSliderPanel() != null ) {
             getSliderPanel().setImageColorModel( activeColorModel );
         }
+        view.validate();
+        view.repaint();
     }
     
     public boolean isIndendentColorModel() {
