@@ -10,16 +10,20 @@ import java.awt.Container;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 import java.util.Observable;
 import java.util.Observer;
+import javax.swing.AbstractAction;
 import javax.swing.AbstractButton;
+import javax.swing.Action;
 import javax.swing.JCheckBox;
 import javax.swing.JComponent;
 import org.janelia.it.workstation.gui.large_volume_viewer.ImageColorModel;
 import org.janelia.it.workstation.gui.large_volume_viewer.SliderPanel;
 import org.janelia.it.workstation.gui.util.Icons;
 import org.janelia.it.workstation.gui.util.StateDrivenIconToggleButton;
+import org.janelia.it.workstation.gui.viewer3d.texture.TextureDataI;
 
 /**
  * Represents the group of controls.  Actions against controls are encapsulated
@@ -30,6 +34,7 @@ import org.janelia.it.workstation.gui.util.StateDrivenIconToggleButton;
  */
 public class Snapshot3dControls {
     private SliderPanel sliderPanel;
+    private Collection<TextureDataI> textureDatas;
     private List<JComponent> components;
     private AbstractButton[] addSubButtons;
     private AbstractButton sharedColorModelButton;
@@ -38,14 +43,17 @@ public class Snapshot3dControls {
     private ImageColorModel independentColorModel;
     private ImageColorModel sharedColorModel;
     private ImageColorModel activeColorModel;
+    private List<Action> filterActions;
     private ViewUpdateListener viewUpdateListener;
     
     public Snapshot3dControls(
+            Collection<TextureDataI> textureDatas,
             ImageColorModel independentColorModel,
             ImageColorModel sharedColorModel,
             Snapshot3d view,
             SnapshotVolumeBrick brick 
     ) {
+        this.textureDatas = textureDatas;
         this.view = view;
         this.brick = brick;
         this.independentColorModel = independentColorModel;
@@ -130,6 +138,13 @@ public class Snapshot3dControls {
         this.activeColorModel = activeColorModel;
     }
     
+    /**
+     * @return the filterActions
+     */
+    public List<Action> getFilterActions() {
+        return filterActions;
+    }
+    
     private void initComponents() {
         brick.setControls( this );
 
@@ -161,6 +176,24 @@ public class Snapshot3dControls {
         
         activeColorModel.getColorModelChangedSignal().addObserver( viewUpdateListener );
         
+        filterActions = new ArrayList<>();
+        // LATER: getFilterActions().add( new FilterMatrixAction( textureDatas, view ) );
+    }
+
+    private static class FilterMatrixAction extends AbstractAction {
+        private Collection<TextureDataI> textureDatas;
+        private Snapshot3d view;
+        public FilterMatrixAction( Collection<TextureDataI> textureDatas, Snapshot3d view ) {
+            this.textureDatas = textureDatas;
+            this.view = view;
+            putValue(Action.NAME, "Apply Filter 5x5 Average");            
+        }
+        public void actionPerformed( ActionEvent ae ) {
+            // Need to apply a filter to each texture.
+            view.validate();
+            view.repaint();
+        } 
+
     }
 
     private static class ViewUpdateListener implements ActionListener, Observer {
