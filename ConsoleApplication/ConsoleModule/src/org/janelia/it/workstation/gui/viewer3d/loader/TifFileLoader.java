@@ -16,6 +16,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
@@ -24,6 +25,8 @@ import javax.media.jai.OpImage;
 import javax.media.jai.RenderedImageAdapter;
 import org.janelia.it.workstation.gui.viewer3d.texture.TextureDataBean;
 import org.janelia.it.workstation.gui.viewer3d.texture.TextureDataI;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Created with IntelliJ IDEA.
@@ -34,15 +37,34 @@ import org.janelia.it.workstation.gui.viewer3d.texture.TextureDataI;
  * Handles TIFF via Loci reading capability.
  */
 public class TifFileLoader extends TextureDataBuilder implements VolumeFileLoaderI {
-
-    public static final int BOUNDARY_MULTIPLE = 16;
-    private int depthLimit = 128;
+    
     private int sheetCountFromFile = -1;
+    
+    private LoaderSubsetHelper subsetHelper;
+    private Logger logger = LoggerFactory.getLogger( TifFileLoader.class );
+    
+    /**
+     * Sets maximum size in all dimensions, to add to outgoing image.
+     * 
+     * @param cubicOutputDimension how many voxels to use.
+     */
+    public void setCubicOutputDimension( int cubicOutputDimension ) {
+        if ( subsetHelper == null )
+            subsetHelper = new LoaderSubsetHelper();
+        subsetHelper.setCubicOutputDimension(cubicOutputDimension);
+    }
+    
+    public void setConversionCharacteristics( double[][] fwdTransform, double[][] invTransform, int[] minCorner, int[] extent, List<Integer> queryCoords ) {
+        if ( subsetHelper == null ) {
+            subsetHelper = new LoaderSubsetHelper();            
+        }
+        subsetHelper.setTransformCharacteristics(fwdTransform, invTransform, minCorner, extent, queryCoords);
+    }
     
     @Override
     public TextureDataI createTextureDataBean() {
         TextureDataBean textureDataBean;
-        if ( pixelBytes < 4 ) {
+        if ( pixelBytes < 4  ||  subsetHelper != null ) {
             textureDataBean = new TextureDataBean( textureByteArray, sx, sy, sz );
         }
         else {
@@ -59,25 +81,71 @@ public class TifFileLoader extends TextureDataBuilder implements VolumeFileLoade
         
         final File file = new File(fileName);
         Collection<BufferedImage> allImages = loadTIFF( file );
+        if ( allImages == null ) {
+            throw new Exception("Failed to read data from " + fileName + ".");
+        }
         pixelBytes = -1;
         int zOffset = 0;
         int sheetSize = -1;
-        for ( BufferedImage zSlice: allImages ) {            
+        int targetOffset = 0;
+        int expectedWidth = 0;
+        int expectedHeight = 0;
+        for ( BufferedImage zSlice: allImages ) {
             if ( sx == -1 ) {
-                sheetSize = captureAndUsePageDimensions(zSlice, allImages, file);
-            }
-            else {
-                if ( sx != zSlice.getWidth()  ||  sy != zSlice.getHeight() ) {
-                    throw new IllegalStateException( "Image number " + zOffset +
-                            " with HEIGHT=" + zSlice.getHeight() + " and WIDTH=" + 
-                            zSlice.getWidth() + " has dimensions which do not match previous width * height of " + sx + " * " + sy );
+                sx = zSlice.getWidth();
+                sy = zSlice.getHeight();
+                sz = allImages.size();
+                if ( subsetHelper != null ) {
+                    subsetHelper.setSx(zSlice.getWidth());
+                    subsetHelper.setSy(zSlice.getHeight());
+                    subsetHelper.setSourceWidth(sx);
+                    subsetHelper.setSourceHeight(sy);
+                    sheetSize = subsetHelper.captureAndUsePageDimensions(allImages.size(), file.length());
+                    sx = subsetHelper.getSx();
+                    sy = subsetHelper.getSy();
+                    sz = subsetHelper.getSz();
+                    pixelBytes = subsetHelper.getPixelBytes();
+                    argbTextureIntArray = subsetHelper.getArgbTextureIntArray();
+                    textureByteArray = subsetHelper.getTextureByteArray();
+                    expectedWidth = subsetHelper.getSourceWidth();
+                    expectedHeight = subsetHelper.getSourceHeight();
+                }
+                else {
+                    sheetSize = captureAndUsePageDimensions( allImages.size(), file.length() );
+                    expectedWidth = sx;
+                    expectedHeight = sy;
                 }
             }
-            storeToBuffer(zOffset, sheetSize, zSlice);
+            else {
+                if ( expectedWidth != zSlice.getWidth()  ||  expectedHeight != zSlice.getHeight() ) {
+                    throw new IllegalStateException( "Image number " + zOffset +
+                            " with HEIGHT=" + zSlice.getHeight() + " and WIDTH=" + 
+                            zSlice.getWidth() + " has dimensions which do not match previous width * height of " + expectedWidth + " * " + expectedHeight );
+                }
+            }
+            
+            // Store only things that are within the targetted depth.
+            if ( subsetHelper == null ) {
+                storeToBuffer(targetOffset++, sheetSize, zSlice);
+            }
+            else if (subsetHelper.inZSubset( zOffset )) {
+                subsetHelper.storeSubsetToBuffer(targetOffset++, sheetSize, zSlice);
+            }
             zOffset ++;
         }
     }
-
+    
+    public int captureAndUsePageDimensions(final int zCount, final long fileLength) {
+        pixelBytes = (int)Math.floor( fileLength / ((sx*sy) * sz) );
+        if ( pixelBytes == 4 ) {
+            argbTextureIntArray = new int[ sx * sy * sz ];
+        }
+        else {
+            textureByteArray = new byte[ sx * sy * sz * pixelBytes ];
+        }
+        return sx * sy;
+    }
+    
     private void storeToBuffer(int zOffset, int sheetSize, BufferedImage zSlice) {
         final int outputBufferOffset = zOffset * sheetSize;
         if ( pixelBytes == 1 ) {
@@ -109,29 +177,6 @@ public class TifFileLoader extends TextureDataBuilder implements VolumeFileLoade
         }
     }
 
-    private int captureAndUsePageDimensions(BufferedImage zSlice, Collection<BufferedImage> allImages, final File file) {
-        sx = zSlice.getWidth();
-        sy = zSlice.getHeight();
-        int szMod = depthLimit % BOUNDARY_MULTIPLE;
-        // Force z dimension to a multiple of 16.
-        if ( szMod != 0 ) {
-            sz = ((depthLimit / BOUNDARY_MULTIPLE) + 1 ) * BOUNDARY_MULTIPLE;
-        }
-        else {
-            sz = depthLimit;
-        }
-        int sheetSize = sx * sy;
-        final int totalVoxels = sheetSize * sz;
-        pixelBytes = (int)Math.floor( file.length() / (sheetSize * sheetCountFromFile) );
-        if ( pixelBytes < 4 ) {
-            textureByteArray = new byte[totalVoxels * pixelBytes];
-        }
-        else {
-            argbTextureIntArray = new int[totalVoxels];
-        }
-        return sheetSize;
-    }
-    
     /**
      * Load specified tiff page and return as buffered zSlice.
      * From: http://opencapture.googlecode.com/svn/0.0.2/OpenCapture/src/net/filterlogic/util/imaging/ToTIFF.java
@@ -151,14 +196,12 @@ public class TifFileLoader extends TextureDataBuilder implements VolumeFileLoade
             
             TIFFDecodeParam param = null;
             ImageDecoder dec = ImageCodec.createImageDecoder("tiff", s, param);
-            int numPages = dec.getNumPages();
-            sheetCountFromFile = numPages;
-            if ( depthLimit == -1 ) {
-                depthLimit = sheetCountFromFile;
-            }
-            numPages = depthLimit; // TEMP: making a shallow volume to test load.
+            int maxPage = dec.getNumPages();
+            sheetCountFromFile = maxPage;
+            if ( subsetHelper != null )
+                subsetHelper.setSourceDepth( sheetCountFromFile );
             
-            for (int imageToLoad = 0; imageToLoad < numPages; imageToLoad++) {
+            for (int imageToLoad = 0; imageToLoad < maxPage; imageToLoad++) {
                 RenderedImage op
                         = new NullOpImage(dec.decodeAsRenderedImage(imageToLoad),
                                 null,
@@ -174,7 +217,7 @@ public class TifFileLoader extends TextureDataBuilder implements VolumeFileLoade
 
 
         } catch (IOException e) {
-            System.out.println(e.toString());
+            logger.error(e.toString());
 
             return null;
         }
@@ -195,7 +238,6 @@ public class TifFileLoader extends TextureDataBuilder implements VolumeFileLoade
             byte[] bytes = readBytes(file);
             
             SeekableStream s = new MemoryCacheSeekableStream( new ByteArrayInputStream( bytes ) );
-//                    new FileSeekableStream(file);
             TIFFDecodeParam param = null;
             ImageDecoder dec = ImageCodec.createImageDecoder("tiff", s, param);
             final int numPages = dec.getNumPages();
@@ -222,7 +264,7 @@ public class TifFileLoader extends TextureDataBuilder implements VolumeFileLoade
             for ( ImageLoadRunnable runnable: runnables ) {
                 if ( runnable.getThrownException() != null ) {
                     throw new RuntimeException(
-                      "One or more pages from Tiff " + file + " failed to load."
+                      "One or more pages from raw " + file + " failed to load."
                     );
                 }
             }
@@ -231,19 +273,17 @@ public class TifFileLoader extends TextureDataBuilder implements VolumeFileLoade
 
 
         } catch (IOException e) {
-            System.out.println(e.toString());
+            logger.error(e.toString());
 
             return null;
         }
 
     }
 
-    private byte[] readBytes(File file) throws RuntimeException {
+    private byte[] readBytes(File file) throws IOException {
         byte[] bytes = new byte[ (int)file.length() ];
         try (FileInputStream fis = new FileInputStream( file )) {
             fis.read(bytes);
-        } catch ( IOException ioe ) {
-            throw new RuntimeException(ioe);
         }
         return bytes;
     }
@@ -306,4 +346,5 @@ public class TifFileLoader extends TextureDataBuilder implements VolumeFileLoade
         }
 
     }
+        
 }

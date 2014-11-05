@@ -321,6 +321,16 @@ public class RenderMapTextureBean implements TextureDataI {
     public void setExplicitVoxelComponentOrder(Integer voxelComponentOrder) {
         this.voxelComponentOrder = voxelComponentOrder;
     }
+    
+    @Override
+    public void setTransformMatrix(float[] unused) {
+        throw new UnsupportedOperationException();
+    }
+    
+    @Override
+    public float[] getTransformMatrix() {
+        return null;
+    }
 
     private int getRawBufferSize() {
         //System.out.println("Returning raw buffer size of " + (MAP_SIZE * BYTES_PER_ENTRY + roundUp256( MAX_COORD_SETS * ENTRIES_PER_COORD_SET * BYTES_PER_ENTRY )));

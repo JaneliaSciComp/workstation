@@ -44,9 +44,9 @@ public class SWCDataConverter {
                 // only marking "fork" and "end, as that's
                 //  all we can surmise from geometry
                 if (ann.getChildIds().size() == 0) {
-                    segmentType = 5;
-                } else if (ann.getChildIds().size() > 1) {
                     segmentType = 6;
+                } else if (ann.getChildIds().size() > 1) {
+                    segmentType = 5;
                 } else {
                     segmentType = 0;
                 }

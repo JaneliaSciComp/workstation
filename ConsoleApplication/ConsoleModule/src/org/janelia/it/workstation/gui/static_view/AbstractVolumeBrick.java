@@ -55,7 +55,7 @@ public abstract class AbstractVolumeBrick implements VolumeBrickI
 
     //private RGBExcludableShader shader = new RGBExcludableShader();
 
-    private boolean bIsInitialized;
+    protected boolean bIsInitialized;
 
     private VtxCoordBufMgr bufferManager;
     private VolumeModel volumeModel;
