@@ -148,20 +148,24 @@ public class MatrixFilter3D {
         param.setChannelCount(channelCount);
         param.setVolumeData(inputBytes);
         
-        int lineSize = sx * bytesPerCell * channelCount;
+        int lineSize = sx * param.getStride();
         int sheetSize = sy * lineSize;
-        for ( int z = 0; z < sz; z++ ) {
-            for ( int y = 0; y < sy; y++ ) {
-                for ( int x = 0; x < sx; x++ ) {
-                    long[] neighborhood = getNeighborhood( param, x, y, z );
-                    long filtered = applyFilter( neighborhood );
-                    byte[] value = getArrayEquiv( filtered, bytesPerCell );
-                    for ( int voxByte = 0; voxByte < bytesPerCell; voxByte++ ) {
-                        outputBytes[ z * sheetSize + y * lineSize + (x * bytesPerCell * channelCount) + voxByte ] = value[ voxByte ];
+        
+        for (int ch = 0; ch < channelCount; ch++) {
+            for (int z = 0; z < sz; z++) {
+                for (int y = 0; y < sy; y++) {
+                    for (int x = 0; x < sx; x++) {
+                        long[] neighborhood = getNeighborhood(param, x, y, z, ch);
+                        long filtered = applyFilter(neighborhood);
+                        byte[] value = getArrayEquiv(filtered, bytesPerCell);
+                        for (int voxByte = 0; voxByte < bytesPerCell; voxByte++) {
+                            outputBytes[ z * sheetSize + y * lineSize + (x * param.getStride()) + (ch * param.getVoxelBytes()) + voxByte ] = value[ voxByte ];
+                        }
                     }
                 }
             }
         }
+
         return outputBytes;
     }
     
@@ -189,10 +193,11 @@ public class MatrixFilter3D {
      * @param y input location under study.
      * @param x input location under study.
      * @param z input location under study.
+     * @param channel channel number under study.
      * @return computed value: all bytes of the voxel.
      */
     private long[] getNeighborhood(
-            FilteringParameter fparam, int x, int y, int z
+            FilteringParameter fparam, int x, int y, int z, int channel
     ) {
 
         // Neighborhood starts at the x,y,z values of the loops.  There will be one
@@ -225,7 +230,7 @@ public class MatrixFilter3D {
                         continue;
                     }
                     byte[] voxelVal = new byte[ fparam.getVoxelBytes() ];
-                    long arrayCopyLoc = nbhYOffset + (xNbh * fparam.getStride());
+                    long arrayCopyLoc = nbhYOffset + (xNbh * fparam.getStride()) + channel * fparam.getVoxelBytes();
                     try {
                         byte[] volume = fparam.getVolume();
                         for ( int i = 0; i < (fparam.getVoxelBytes()); i++ ) {
