@@ -34,6 +34,51 @@ public class MatrixFilter3D {
         AVG_VAL, AVG_VAL, AVG_VAL,
     };
     
+    private static final double ROUND_VAL = 1.0/3.0;
+    public static double[] ROUND_MATRIX_3_3_3 = new double[] {
+        0,         0,         0,
+        0,         ROUND_VAL/3, 0,
+        0,         0,         0,
+
+        0,         ROUND_VAL/3, 0,
+        ROUND_VAL/3, ROUND_VAL, ROUND_VAL/3,
+        0,         ROUND_VAL/3, 0,
+
+        0,         0,         0,
+        0,         ROUND_VAL/3, 0,
+        0,         0,         0,
+    };
+    
+    public static double[] TRIVIAL_3_3_3 = new double[] {
+        0,         0,         0,
+        0,         0,         0,
+        0,         0,         0,
+
+        0,         0,         0,
+        0,         1,         0,
+        0,         0,         0,
+
+        
+        0,         0,         0,
+        0,         0,         0,
+        0,         0,         0,
+    };
+    
+    public static double[] TEMP_3_3_3 = new double[] {
+        0,         0,         0,
+        0,         1/3,       0,
+        0,         0,         0,
+
+        0,         1/3,       0,
+        1/3,       1/3,       1/3,
+        0,         1/3,       0,
+
+        
+        0,         0,         0,
+        0,         1/3,       0,
+        0,         0,         0,
+    };
+    
     private double[] matrix;
     private int matrixCubicDim;
     
@@ -43,7 +88,7 @@ public class MatrixFilter3D {
         this.matrix = matrix;
         matrixCubicDim = (int)Math.pow( matrix.length, 1.0/3.0 );
         if ( matrixCubicDim * matrixCubicDim * matrixCubicDim != matrix.length ) {
-            throw new IllegalArgumentException( "Matrix size not a square." );
+            throw new IllegalArgumentException( "Matrix size not a cube." );
         }
     }
     
@@ -201,8 +246,13 @@ public class MatrixFilter3D {
         long rtnVal = 0;
         int arrLen = voxelValue.length;
         for ( int i = 0; i < arrLen; i++ ) {
-            //finalVal += startingArray[ j ] << (8 * (arrLen - j - 1));
-            rtnVal += (voxelValue[ i ] << (8 * (arrLen - i - 1)));
+            int inVal = voxelValue[ i ];
+            if ( inVal < 0 ) {
+                inVal += 256;
+            }
+//            final int shiftDistance = 8 * (arrLen - i - 1);
+            final int shiftDistance = 8 * (i);
+            rtnVal += (inVal << shiftDistance);
         }
         return rtnVal;
     }
@@ -210,9 +260,10 @@ public class MatrixFilter3D {
     private byte[] getArrayEquiv( long voxelValue, int arrLen ) {
         byte[] rtnVal = new byte[ arrLen ];
         for (int i = 0; i < arrLen; i++) {
+            final int shiftDistance = 8 * (i);
             rtnVal[ i ] = 
             (byte)(
-                    (voxelValue >> (8 * (arrLen - i - 1)))
+                    (voxelValue >> shiftDistance)
                     & 0xFF
             );
         }

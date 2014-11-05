@@ -19,11 +19,16 @@ import javax.swing.AbstractButton;
 import javax.swing.Action;
 import javax.swing.JCheckBox;
 import javax.swing.JComponent;
+import javax.swing.JMenuItem;
+import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.workstation.gui.large_volume_viewer.ImageColorModel;
 import org.janelia.it.workstation.gui.large_volume_viewer.SliderPanel;
+import org.janelia.it.workstation.gui.passive_3d.filter.MatrixFilter3D;
 import org.janelia.it.workstation.gui.util.Icons;
 import org.janelia.it.workstation.gui.util.StateDrivenIconToggleButton;
 import org.janelia.it.workstation.gui.viewer3d.texture.TextureDataI;
+import org.janelia.it.workstation.gui.viewer3d.volume_builder.VolumeDataChunk;
+import org.janelia.it.workstation.shared.workers.SimpleWorker;
 
 /**
  * Represents the group of controls.  Actions against controls are encapsulated
@@ -177,7 +182,7 @@ public class Snapshot3dControls {
         activeColorModel.getColorModelChangedSignal().addObserver( viewUpdateListener );
         
         filterActions = new ArrayList<>();
-        // LATER: getFilterActions().add( new FilterMatrixAction( textureDatas, view ) );
+        getFilterActions().add( new FilterMatrixAction( textureDatas, view ) );
     }
 
     private static class FilterMatrixAction extends AbstractAction {
@@ -186,14 +191,56 @@ public class Snapshot3dControls {
         public FilterMatrixAction( Collection<TextureDataI> textureDatas, Snapshot3d view ) {
             this.textureDatas = textureDatas;
             this.view = view;
-            putValue(Action.NAME, "Apply Filter 5x5 Average");            
+            putValue(Action.NAME, "Apply Filter 3x3 Round");            
         }
-        public void actionPerformed( ActionEvent ae ) {
+        
+        @Override
+        public void actionPerformed( final ActionEvent ae ) {
             // Need to apply a filter to each texture.
-            view.validate();
-            view.repaint();
+            //       Pop out the byte array, pass that into the filtering
+            //       apparatus, run the filter, and pop it back in.
+            SimpleWorker sw = new SimpleWorker() {
+
+                @Override
+                protected void doStuff() throws Exception {
+                    filterTextureDatas();
+                }
+
+                @Override
+                protected void hadSuccess() {
+                    view.reLaunch( textureDatas );
+                    Object src = ae.getSource();
+                    if ( src instanceof JMenuItem ) {
+                        JMenuItem mi = (JMenuItem)src;
+                        mi.setEnabled( false );    // One-shot deal.
+                    }
+                    view.validate();
+                    view.repaint();
+                }
+
+                @Override
+                protected void hadError(Throwable error) {
+                    SessionMgr.getSessionMgr().handleException(error);
+                }
+                
+            };
+            sw.execute();
         } 
 
+        private void filterTextureDatas() throws IllegalArgumentException {
+            for (TextureDataI textureData : textureDatas) {
+                if (textureData.getTextureData().getVolumeChunks().length > 1) {
+                    throw new IllegalArgumentException("Filtering algorithm can handle only a single chunk.");
+                }
+                for (VolumeDataChunk chunk : textureData.getTextureData().getVolumeChunks()) {
+                    byte[] data = chunk.getData();
+                    MatrixFilter3D filter = new MatrixFilter3D(MatrixFilter3D.AVG_MATRIX_3_3_3);
+                    byte[] newBytes
+                            = filter.filter(data, textureData.getPixelByteCount(), textureData.getSx(), textureData.getSy(), textureData.getSz());
+                    chunk.setData(newBytes);
+                }
+            }
+        }
     }
 
     private static class ViewUpdateListener implements ActionListener, Observer {

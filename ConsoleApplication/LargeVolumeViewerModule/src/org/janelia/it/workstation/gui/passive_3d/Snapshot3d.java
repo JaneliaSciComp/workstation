@@ -90,6 +90,10 @@ public class Snapshot3d extends JPanel {
         volumeSource.setProgressMonitor(getMonitor());
         loadWorker.execute();
     }
+    
+    public void reLaunch(Collection<TextureDataI> textureDatas) {
+        launch( textureDatas );
+    }
 
     private void launch(Collection<TextureDataI> textureDatas) {
         cleanup();

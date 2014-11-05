@@ -17,7 +17,7 @@ import org.junit.experimental.categories.Category;
 public class MatrixFilter3DTest {
     /*
     NOTE:  The matrix cell values below, are all multiples of 27.
-           The averaging function is 1/27, in the default matrix.
+           The averaging function is 1/27, in the smoothing matrix.
            Therefore, once the calculations are complete, the
            centermost value will be identical to ALL values of the
            input matrix.
