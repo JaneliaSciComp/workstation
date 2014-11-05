@@ -261,14 +261,7 @@ public class MatrixFilter3D {
                     returnValue[ outputOffset ] = equivalentValue;
                 }
             }
-        }
-if (x==0&&y==0&&z==0){
-System.out.println(fparam.getStride() + " is stride.");    
-for (int i = 0; i < returnValue.length; i++){
-System.out.print(returnValue[i] + " ");
-}
-System.out.println();
-}        
+        }       
         return returnValue;
     }
     

@@ -56,6 +56,18 @@ vec4 chooseColor()
     return getSrgb(out_color);
 }
 
+vec4 subtractColors(vec4 in_color_0, vec4 in_color_1)
+{
+    float ch0Intensity = getIntensity(in_color_0, 0);
+    float ch1Intensity = getIntensity(in_color_1, 1);
+    vec4 out_color = getSrgb(
+        clamp(
+            (ch0Intensity * channel_color[0] * sign_op[0]) + (ch1Intensity * channel_color[1] * sign_op[1]),
+            0, 1)
+    );
+    return out_color;
+}
+
 vec4 subtractColor() 
 {
     vec4 out_color = vec4(0,0,0,0);
@@ -63,13 +75,15 @@ vec4 subtractColor()
     {
         vec4 in_color_0 = texture3D(signalTexture, gl_TexCoord[0].xyz);
         vec4 in_color_1 = texture3D(interleavedTexture, gl_TexCoord[0].xyz);
-        float ch0Intensity = getIntensity(in_color_0, 0);
-        float ch1Intensity = getIntensity(in_color_1, 1);
-        out_color = getSrgb(
-            clamp(
-                (ch0Intensity * channel_color[0] * sign_op[0]) + (ch1Intensity * channel_color[1] * sign_op[1]),
-                0, 1)
-        );
+
+        out_color = subtractColors( in_color_0, in_color_1 );
+    }
+    else if (channel_count == 2  &&  interleave_flag == 0)
+    {
+        vec4 in_color = texture3D(signalTexture, gl_TexCoord[0].xyz);
+        in_color.g = in_color.a;
+
+        out_color = subtractColors( in_color, in_color );
     }
     else
     {
