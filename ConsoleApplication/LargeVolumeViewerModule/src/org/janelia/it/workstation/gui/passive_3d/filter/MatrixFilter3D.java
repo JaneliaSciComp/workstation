@@ -6,6 +6,7 @@
 
 package org.janelia.it.workstation.gui.passive_3d.filter;
 
+import java.nio.ByteOrder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -81,15 +82,18 @@ public class MatrixFilter3D {
     
     private double[] matrix;
     private int matrixCubicDim;
+    private ByteOrder byteOrder;
+    private int[] shiftDistance;
     
     private static final Logger logger = LoggerFactory.getLogger( MatrixFilter3D.class );
     
-    public MatrixFilter3D( double[] matrix ) {
+    public MatrixFilter3D( double[] matrix, ByteOrder byteOrder ) {
         this.matrix = matrix;
         matrixCubicDim = (int)Math.pow( matrix.length, 1.0/3.0 );
         if ( matrixCubicDim * matrixCubicDim * matrixCubicDim != matrix.length ) {
             throw new IllegalArgumentException( "Matrix size not a cube." );
         }
+        this.byteOrder = byteOrder;
     }
     
     /**
@@ -103,6 +107,18 @@ public class MatrixFilter3D {
      * @return filtered version of original.
      */
     public byte[] filter( byte[] inputBytes, int bytesPerCell, int sx, int sy, int sz ) {
+        shiftDistance = new int[ bytesPerCell ];
+        if ( byteOrder == ByteOrder.BIG_ENDIAN ) {
+            for ( int i = 0; i < bytesPerCell; i++ ) {
+                shiftDistance[ i ] = 8 * (bytesPerCell - i - 1);
+            }
+        }
+        else if ( byteOrder == ByteOrder.LITTLE_ENDIAN ) {
+            for ( int i = 0; i < bytesPerCell; i++ ) {
+                shiftDistance[ i ] = 8 * i;
+            }
+        }
+
         byte[] outputBytes = new byte[ inputBytes.length ];
         FilteringParameter param = new FilteringParameter();
         param.setExtentX(matrixCubicDim);
@@ -250,9 +266,7 @@ public class MatrixFilter3D {
             if ( inVal < 0 ) {
                 inVal += 256;
             }
-//            final int shiftDistance = 8 * (arrLen - i - 1);
-            final int shiftDistance = 8 * (i);
-            rtnVal += (inVal << shiftDistance);
+            rtnVal += (inVal << shiftDistance[ i ]);
         }
         return rtnVal;
     }
@@ -260,10 +274,9 @@ public class MatrixFilter3D {
     private byte[] getArrayEquiv( long voxelValue, int arrLen ) {
         byte[] rtnVal = new byte[ arrLen ];
         for (int i = 0; i < arrLen; i++) {
-            final int shiftDistance = 8 * (i);
             rtnVal[ i ] = 
             (byte)(
-                    (voxelValue >> shiftDistance)
+                    (voxelValue >> shiftDistance[ i ])
                     & 0xFF
             );
         }

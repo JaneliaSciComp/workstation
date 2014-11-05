@@ -234,7 +234,7 @@ public class Snapshot3dControls {
                 }
                 for (VolumeDataChunk chunk : textureData.getTextureData().getVolumeChunks()) {
                     byte[] data = chunk.getData();
-                    MatrixFilter3D filter = new MatrixFilter3D(MatrixFilter3D.AVG_MATRIX_3_3_3);
+                    MatrixFilter3D filter = new MatrixFilter3D(MatrixFilter3D.AVG_MATRIX_3_3_3, textureData.getByteOrder());
                     byte[] newBytes
                             = filter.filter(data, textureData.getPixelByteCount(), textureData.getSx(), textureData.getSy(), textureData.getSz());
                     chunk.setData(newBytes);
