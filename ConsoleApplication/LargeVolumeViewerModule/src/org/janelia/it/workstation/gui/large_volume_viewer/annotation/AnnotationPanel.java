@@ -123,7 +123,7 @@ public class AnnotationPanel extends JPanel
     public Dimension getPreferredSize() {
         return new Dimension(width, 0);
     }
-    
+
     private void setupSignals() {
         // outgoing from the model:
         annotationModel.neuronSelectedSignal.connect(neuriteTreePanel.neuronSelectedSlot);
@@ -160,6 +160,9 @@ public class AnnotationPanel extends JPanel
         cTop.weighty = 0.0;
         add(workspaceInfoPanel, cTop);
 
+        // testing
+        // showOutline(workspaceInfoPanel, Color.red);
+
         // I want the rest of the components to stack vertically;
         //  components should fill or align left as appropriate
         GridBagConstraints cVert = new GridBagConstraints();
@@ -173,6 +176,9 @@ public class AnnotationPanel extends JPanel
         JPanel workspaceButtonsPanel = new JPanel();
         workspaceButtonsPanel.setLayout(new BoxLayout(workspaceButtonsPanel, BoxLayout.LINE_AXIS));
         add(workspaceButtonsPanel, cVert);
+
+        // testing
+        // showOutline(workspaceButtonsPanel, Color.green);
 
         JButton createWorkspaceButtonPlus = new JButton("+");
         workspaceButtonsPanel.add(createWorkspaceButtonPlus);
@@ -248,6 +254,9 @@ public class AnnotationPanel extends JPanel
         // list of neurons in workspace
         workspaceNeuronList = new WorkspaceNeuronList(width);
         add(workspaceNeuronList, cVert);
+
+        // testing
+        // showOutline(workspaceNeuronList, Color.blue);
 
         // neuron tool pop-up menu (triggered by button, below)
         final JPopupMenu neuronToolMenu = new JPopupMenu();
@@ -347,6 +356,9 @@ public class AnnotationPanel extends JPanel
         add(Box.createRigidArea(new Dimension(0, 20)), cVert);
         noteListPanel = new NoteListPanel(width);
         add(noteListPanel, cVert);
+
+        // testing
+        // showOutline(noteListPanel, Color.orange);
 
 
         // the bilge...
