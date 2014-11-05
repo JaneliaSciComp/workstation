@@ -150,6 +150,13 @@ public class Snapshot3dControls {
         return filterActions;
     }
     
+    /** After a filter has been run, use this method to avoid further such changes. */
+    public void deactivateFiltering() {
+        for ( Action action: filterActions ) {
+            action.setEnabled( false );
+        }
+    }
+    
     private void initComponents() {
         brick.setControls( this );
 
@@ -182,16 +189,20 @@ public class Snapshot3dControls {
         activeColorModel.getColorModelChangedSignal().addObserver( viewUpdateListener );
         
         filterActions = new ArrayList<>();
-        getFilterActions().add( new FilterMatrixAction( textureDatas, view ) );
+        getFilterActions().add( new FilterMatrixAction( textureDatas, view, MatrixFilter3D.SPHERE_3_3_3, "Apply Filter 3x3 Round" ) );
+        getFilterActions().add( new FilterMatrixAction( textureDatas, view, MatrixFilter3D.AVG_MATRIX_3_3_3, "Apply Filter 3x3 Averaging" ) );
+        getFilterActions().add( new FilterMatrixAction( textureDatas, view, MatrixFilter3D.ANULUS_3_3_3, "Apply Filter 3x3 Inverted Sphere" ) );
     }
 
     private static class FilterMatrixAction extends AbstractAction {
         private Collection<TextureDataI> textureDatas;
         private Snapshot3d view;
-        public FilterMatrixAction( Collection<TextureDataI> textureDatas, Snapshot3d view ) {
+        private double[] matrix;
+        public FilterMatrixAction( Collection<TextureDataI> textureDatas, Snapshot3d view, double[] matrix, String actionName ) {
             this.textureDatas = textureDatas;
             this.view = view;
-            putValue(Action.NAME, "Apply Filter 3x3 Round");            
+            putValue(Action.NAME, actionName);    
+            this.matrix = matrix;
         }
         
         @Override
@@ -209,11 +220,6 @@ public class Snapshot3dControls {
                 @Override
                 protected void hadSuccess() {
                     view.reLaunch( textureDatas );
-                    Object src = ae.getSource();
-                    if ( src instanceof JMenuItem ) {
-                        JMenuItem mi = (JMenuItem)src;
-                        mi.setEnabled( false );    // One-shot deal.
-                    }
                     view.validate();
                     view.repaint();
                 }
@@ -234,9 +240,16 @@ public class Snapshot3dControls {
                 }
                 for (VolumeDataChunk chunk : textureData.getTextureData().getVolumeChunks()) {
                     byte[] data = chunk.getData();
-                    MatrixFilter3D filter = new MatrixFilter3D(MatrixFilter3D.AVG_MATRIX_3_3_3, textureData.getByteOrder());
+                    MatrixFilter3D filter = new MatrixFilter3D(matrix, textureData.getByteOrder());
                     byte[] newBytes
-                            = filter.filter(data, textureData.getPixelByteCount(), textureData.getSx(), textureData.getSy(), textureData.getSz());
+                            = filter.filter(
+                                    data, 
+                                    textureData.getPixelByteCount(),
+                                    textureData.getChannelCount(),
+                                    textureData.getSx(),
+                                    textureData.getSy(),
+                                    textureData.getSz()
+                            );
                     chunk.setData(newBytes);
                 }
             }

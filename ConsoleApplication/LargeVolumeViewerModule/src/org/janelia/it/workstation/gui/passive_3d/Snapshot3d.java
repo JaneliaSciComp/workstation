@@ -93,6 +93,7 @@ public class Snapshot3d extends JPanel {
     
     public void reLaunch(Collection<TextureDataI> textureDatas) {
         launch( textureDatas );
+        controls.deactivateFiltering();
     }
 
     private void launch(Collection<TextureDataI> textureDatas) {

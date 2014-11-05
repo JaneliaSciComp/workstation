@@ -65,23 +65,38 @@ public class MatrixFilter3D {
         0,         0,         0,
     };
     
-    public static double[] TEMP_3_3_3 = new double[] {
-        0,         0,         0,
-        0,         1/3,       0,
-        0,         0,         0,
+    private static final double ROUND_DIVISOR = 82.0;
+    public static double[] SPHERE_3_3_3 = new double[] {
+        1/ROUND_DIVISOR, 3/ROUND_DIVISOR,  1/ROUND_DIVISOR,
+        3/ROUND_DIVISOR, 5/ROUND_DIVISOR,  3/ROUND_DIVISOR,
+        1/ROUND_DIVISOR, 3/ROUND_DIVISOR,  1/ROUND_DIVISOR,
 
-        0,         1/3,       0,
-        1/3,       1/3,       1/3,
-        0,         1/3,       0,
+        3/ROUND_DIVISOR, 5/ROUND_DIVISOR,  3/ROUND_DIVISOR,
+        5/ROUND_DIVISOR, 8/ROUND_DIVISOR,  5/ROUND_DIVISOR,
+        3/ROUND_DIVISOR, 5/ROUND_DIVISOR,  3/ROUND_DIVISOR,
 
-        
-        0,         0,         0,
-        0,         1/3,       0,
-        0,         0,         0,
+        1/ROUND_DIVISOR, 3/ROUND_DIVISOR,  1/ROUND_DIVISOR,
+        3/ROUND_DIVISOR, 5/ROUND_DIVISOR,  3/ROUND_DIVISOR,
+        1/ROUND_DIVISOR, 3/ROUND_DIVISOR,  1/ROUND_DIVISOR,
     };
     
-    private double[] matrix;
-    private int matrixCubicDim;
+    private static final double ANULAR_DIVISOR = 131.0;
+    public static double[] ANULUS_3_3_3 = new double[] {
+        8/ANULAR_DIVISOR, 3/ANULAR_DIVISOR,  8/ANULAR_DIVISOR,
+        3/ANULAR_DIVISOR, 5/ANULAR_DIVISOR,  3/ANULAR_DIVISOR,
+        8/ANULAR_DIVISOR, 3/ANULAR_DIVISOR,  8/ANULAR_DIVISOR,
+
+        3/ANULAR_DIVISOR, 5/ANULAR_DIVISOR,  3/ANULAR_DIVISOR,
+        5/ANULAR_DIVISOR, 1/ANULAR_DIVISOR,  5/ANULAR_DIVISOR,
+        3/ANULAR_DIVISOR, 5/ANULAR_DIVISOR,  3/ANULAR_DIVISOR,
+
+        8/ANULAR_DIVISOR, 3/ANULAR_DIVISOR,  8/ANULAR_DIVISOR,
+        3/ANULAR_DIVISOR, 5/ANULAR_DIVISOR,  3/ANULAR_DIVISOR,
+        8/ANULAR_DIVISOR, 3/ANULAR_DIVISOR,  8/ANULAR_DIVISOR,
+    };
+    
+    private final double[] matrix;
+    private final int matrixCubicDim;
     private ByteOrder byteOrder;
     private int[] shiftDistance;
     
@@ -101,12 +116,14 @@ public class MatrixFilter3D {
      * 
      * @param inputBytes bytes of input data
      * @param bytesPerCell how many bytes make up the integer cell value (1..4)
+     * @param channelCount how many separate channels in data (1..4)
      * @param sx length of x.
      * @param sy length of y.
      * @param sz length of z.
      * @return filtered version of original.
      */
-    public byte[] filter( byte[] inputBytes, int bytesPerCell, int sx, int sy, int sz ) {
+    public byte[] filter( byte[] inputBytes, int bytesPerCell, int channelCount, int sx, int sy, int sz ) {
+        // one-time precalculate some values used in filtering operation.
         shiftDistance = new int[ bytesPerCell ];
         if ( byteOrder == ByteOrder.BIG_ENDIAN ) {
             for ( int i = 0; i < bytesPerCell; i++ ) {
@@ -128,9 +145,10 @@ public class MatrixFilter3D {
         param.setSy(sy);
         param.setSz(sz);
         param.setVoxelBytes(bytesPerCell);
+        param.setChannelCount(channelCount);
         param.setVolumeData(inputBytes);
         
-        int lineSize = sx * bytesPerCell;
+        int lineSize = sx * bytesPerCell * channelCount;
         int sheetSize = sy * lineSize;
         for ( int z = 0; z < sz; z++ ) {
             for ( int y = 0; y < sy; y++ ) {
@@ -139,7 +157,7 @@ public class MatrixFilter3D {
                     long filtered = applyFilter( neighborhood );
                     byte[] value = getArrayEquiv( filtered, bytesPerCell );
                     for ( int voxByte = 0; voxByte < bytesPerCell; voxByte++ ) {
-                        outputBytes[ z * sheetSize + y * lineSize + (x * bytesPerCell) + voxByte ] = value[ voxByte ];
+                        outputBytes[ z * sheetSize + y * lineSize + (x * bytesPerCell * channelCount) + voxByte ] = value[ voxByte ];
                     }
                 }
             }
@@ -194,23 +212,23 @@ public class MatrixFilter3D {
             if (zNbh < 0) {// Edge case: at beginning->partial neighborhood.
                 continue;
             }
-            long nbhZOffset = (sy * sx * zNbh) * fparam.getVoxelBytes();
+            long nbhZOffset = (sy * sx * zNbh) * fparam.getStride();
 
             for ( int yNbh = startY; yNbh < startY + extentY && yNbh < sy; yNbh ++ ) {
                 if (yNbh < 0) {// Edge case: at beginning->partial neighborhood.
                     continue;
                 }
-                long nbhYOffset = nbhZOffset + (sx * yNbh * fparam.getVoxelBytes() );
+                long nbhYOffset = nbhZOffset + (sx * yNbh * fparam.getStride());
 
                 for ( int xNbh = startX; xNbh < startX + extentX && xNbh < sx; xNbh++ ) {
                     if (xNbh < 0) {// Edge case: at beginning->partial neighborhood.
                         continue;
                     }
                     byte[] voxelVal = new byte[ fparam.getVoxelBytes() ];
-                    long arrayCopyLoc = nbhYOffset + (xNbh * fparam.getVoxelBytes());
+                    long arrayCopyLoc = nbhYOffset + (xNbh * fparam.getStride());
                     try {
                         byte[] volume = fparam.getVolume();
-                        for ( int i = 0; i < (fparam.getVoxelBytes() ); i++ ) {
+                        for ( int i = 0; i < (fparam.getVoxelBytes()); i++ ) {
                             voxelVal[ i ] = volume[ (int)(i + arrayCopyLoc) ];
                         }
                     } catch ( Exception ex ) {
@@ -239,6 +257,13 @@ public class MatrixFilter3D {
                 }
             }
         }
+if (x==0&&y==0&&z==0){
+System.out.println(fparam.getStride() + " is stride.");    
+for (int i = 0; i < returnValue.length; i++){
+System.out.print(returnValue[i] + " ");
+}
+System.out.println();
+}        
         return returnValue;
     }
     
@@ -308,6 +333,9 @@ public class MatrixFilter3D {
         
         // How many bytes make one voxel?
         private int voxelBytes;
+        
+        // How many channels;
+        private int channelCount;
         
         private byte[] volumeData;
 
@@ -409,12 +437,35 @@ public class MatrixFilter3D {
         public int getVoxelBytes() {
             return voxelBytes;
         }
+        
+        /**
+         * Logical locations of subsequent/progressive cells, may be separated
+         * by number of channels in the volume, times the width of each channel.
+         * @return distance between subsequent cells.
+         */
+        public int getStride() {
+            return voxelBytes * channelCount;
+        }
 
         /**
          * @param voxelBytes the voxelBytes to set
          */
         public void setVoxelBytes(int voxelBytes) {
             this.voxelBytes = voxelBytes;
+        }
+
+        /**
+         * @return the channelCount
+         */
+        public int getChannelCount() {
+            return channelCount;
+        }
+
+        /**
+         * @param channelCount the channelCount to set
+         */
+        public void setChannelCount(int channelCount) {
+            this.channelCount = channelCount;
         }
     }
 

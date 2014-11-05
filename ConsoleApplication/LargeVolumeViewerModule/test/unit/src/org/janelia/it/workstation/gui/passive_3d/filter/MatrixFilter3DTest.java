@@ -70,7 +70,7 @@ public class MatrixFilter3DTest {
     public void filter1b() {
         int bytesPerVoxel = 1;
         MatrixFilter3D matrixFilter = new MatrixFilter3D( MatrixFilter3D.AVG_MATRIX_3_3_3, ByteOrder.BIG_ENDIAN );
-        byte[] result = matrixFilter.filter(TEST_INPUT_1B_3_3_3, bytesPerVoxel, 3, 3, 3);
+        byte[] result = matrixFilter.filter(TEST_INPUT_1B_3_3_3, bytesPerVoxel, 1, 3, 3, 3);
         System.out.println(testDump( result, bytesPerVoxel ));
         assert result[ result.length / 2 ] == TEST_INPUT_1B_3_3_3[ 0 ] : "Failed to find expected center value.";
     }
@@ -80,7 +80,7 @@ public class MatrixFilter3DTest {
     public void filter2b() {
         int bytesPerVoxel = 2;
         MatrixFilter3D matrixFilter = new MatrixFilter3D( MatrixFilter3D.AVG_MATRIX_3_3_3, ByteOrder.BIG_ENDIAN );
-        byte[] result = matrixFilter.filter(TEST_INPUT_2B_3_3_3, bytesPerVoxel, 3, 3, 3);
+        byte[] result = matrixFilter.filter(TEST_INPUT_2B_3_3_3, bytesPerVoxel, 1, 3, 3, 3);
         System.out.println(testDump( result, bytesPerVoxel ));
         assert result[ result.length / 2 ] == TEST_INPUT_2B_3_3_3[ 1 ] : "Failed to find expected center value.";
     }
@@ -90,7 +90,7 @@ public class MatrixFilter3DTest {
     public void filter2bLarge() {
         int bytesPerVoxel = 2;
         MatrixFilter3D matrixFilter = new MatrixFilter3D( MatrixFilter3D.AVG_MATRIX_3_3_3, ByteOrder.BIG_ENDIAN );
-        byte[] result = matrixFilter.filter(TEST_INPUT_2BLARGE_3_3_3, bytesPerVoxel, 3, 3, 3);
+        byte[] result = matrixFilter.filter(TEST_INPUT_2BLARGE_3_3_3, bytesPerVoxel, 1, 3, 3, 3);
         System.out.println(testDump( result, bytesPerVoxel ));
         assert result[ result.length / 2 ] == TEST_INPUT_2BLARGE_3_3_3[ 1 ] : "Failed to find expected center value.";
     }
