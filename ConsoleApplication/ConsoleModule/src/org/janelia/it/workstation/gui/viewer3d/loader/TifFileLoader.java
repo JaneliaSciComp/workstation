@@ -100,7 +100,8 @@ public class TifFileLoader extends TextureDataBuilder implements VolumeFileLoade
                     subsetHelper.setSy(zSlice.getHeight());
                     subsetHelper.setSourceWidth(sx);
                     subsetHelper.setSourceHeight(sy);
-                    sheetSize = subsetHelper.captureAndUsePageDimensions(allImages.size(), file.length());
+                    subsetHelper.calculateBoundingBox(sheetCountFromFile);
+                    sheetSize = subsetHelper.initializeStorage(file.length());
                     sx = subsetHelper.getSx();
                     sy = subsetHelper.getSy();
                     sz = subsetHelper.getSz();
@@ -128,7 +129,7 @@ public class TifFileLoader extends TextureDataBuilder implements VolumeFileLoade
             if ( subsetHelper == null ) {
                 storeToBuffer(targetOffset++, sheetSize, zSlice);
             }
-            else if (subsetHelper.inZSubset( zOffset )) {
+            else {
                 subsetHelper.storeSubsetToBuffer(targetOffset++, sheetSize, zSlice);
             }
             zOffset ++;
@@ -197,20 +198,22 @@ public class TifFileLoader extends TextureDataBuilder implements VolumeFileLoade
             TIFFDecodeParam param = null;
             ImageDecoder dec = ImageCodec.createImageDecoder("tiff", s, param);
             int maxPage = dec.getNumPages();
-            sheetCountFromFile = maxPage;
-            if ( subsetHelper != null )
+            sheetCountFromFile = maxPage;            
+            if ( subsetHelper != null ) {
                 subsetHelper.setSourceDepth( sheetCountFromFile );
+                subsetHelper.calculateBoundingZ( sheetCountFromFile );
+            }
             
             for (int imageToLoad = 0; imageToLoad < maxPage; imageToLoad++) {
-                RenderedImage op
+                if ( subsetHelper == null  ||  subsetHelper.inZSubset( imageToLoad ) ) {
+                    RenderedImage op
                         = new NullOpImage(dec.decodeAsRenderedImage(imageToLoad),
                                 null,
                                 OpImage.OP_IO_BOUND,
                                 null);
-
-                wholeImage = renderedToBuffered(op);
-
-                imageCollection.add(wholeImage);
+                    wholeImage = renderedToBuffered(op);
+                    imageCollection.add(wholeImage);
+                }
             }
             
             return imageCollection;

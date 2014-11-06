@@ -116,7 +116,7 @@ public class RawTiffVolumeSource implements MonitoredVolumeSource {
         tifFileLoader.loadVolumeFile(resolvedFilename);
         progressMonitor.setNote("Building texture data from channel " + displayNum);
         logger.info("Loading" + rawFile + " as " + resolvedFilename);
-        textureData = tifFileLoader.buildTextureData(true);
+        textureData = tifFileLoader.buildTextureData(true);        
         // Presets known to work with this data type.
         textureData.setExplicitInternalFormat(GL2.GL_LUMINANCE16);
         textureData.setExplicitVoxelComponentOrder(GL2.GL_LUMINANCE);

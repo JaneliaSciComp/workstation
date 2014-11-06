@@ -144,6 +144,11 @@ public class LoaderSubsetHelper {
         this.sz = sz;
     }
     
+    /** What is the offset number of the first applicable plane? */
+    public int getStartingZ() {
+        return boundingBox[START_Z_INX];
+    }
+    
     /**
      * @return the textureByteArray
      */
@@ -212,10 +217,31 @@ public class LoaderSubsetHelper {
         return rtnVal;
     }
     
-    public int captureAndUsePageDimensions(final int zCount, final long fileLength) {
+    public int initializeStorage(final long fileLength) {
+        int sheetSize = getSx() * getSy();
+        final int totalVoxels = sheetSize * getSz();
+        setPixelBytes((int)Math.floor( fileLength / ((getSourceWidth()*getSourceHeight()) * sourceDepth) ));
+        //System.out.println("File size is " + file.length());
+        //System.out.println("Expected number of voxels = " + (sourceWidth*sourceHeight) * sheetCountFromFile );
+        if ( getPixelBytes() < 4  ||  getCubicOutputDimension() != -1 ) {
+            setTextureByteArray(new byte[totalVoxels * getPixelBytes()]);
+        }
+        else {
+            setArgbTextureIntArray(new int[totalVoxels]);
+        }
+
+        return sheetSize;
+    }
+
+    public void calculateBoundingBox(final int zCount) {
+        // DEBUG CODE>
+        //for ( int i = 0; i < 3; i++ ) {
+        //    System.out.println( "Bounding Box offset=" + i + " value=" + boundingBox[i] );
+        //    System.out.println( "Bounding Box offset=" + (i+3) + " value=" + boundingBox[i+3] );
+        //    System.out.println();
+        //}
         int pointDim = 4;
-        // Experiment time!
-        System.out.println( this.queryCoords[0] + "," + this.queryCoords[1] + "," + this.queryCoords[2] );
+        
         Matrix transform = new Matrix( stageToTile );
         Matrix pointMatrix = new Matrix( queryCoords, pointDim );
         // This should yield the point in TIFF coordinates, 0..MaxX, 0..MaxY, 0..MaxZ.
@@ -241,26 +267,27 @@ public class LoaderSubsetHelper {
         setSx(boundingBox[ END_X_INX ] - boundingBox[ START_X_INX ]);
         setSy(boundingBox[ END_Y_INX ] - boundingBox[ START_Y_INX ]);
         setSz(boundingBox[ END_Z_INX ] - boundingBox[ START_Z_INX ]);
+    }
+    
+    /**
+     * WARNING: order dependency: The Z-bounds are needed earlier than the
+     * x and y bounds.  This is so that they can be used during slice loads.
+     */
+    public void calculateBoundingZ(final int zCount) {
+        int pointDim = 4;
+        
+        Matrix transform = new Matrix( stageToTile );
+        Matrix pointMatrix = new Matrix( queryCoords, pointDim );
+        // This should yield the point in TIFF coordinates, 0..MaxX, 0..MaxY, 0..MaxZ.
+        Matrix newPoint = transform.times( pointMatrix );
 
-        int sheetSize = getSx() * getSy();
-        final int totalVoxels = sheetSize * getSz();
-        setPixelBytes((int)Math.floor( fileLength / ((getSourceWidth()*getSourceHeight()) * sourceDepth) ));
-        //System.out.println("File size is " + file.length());
-        //System.out.println("Expected number of voxels = " + (sourceWidth*sourceHeight) * sheetCountFromFile );
-        if ( getPixelBytes() < 4  ||  getCubicOutputDimension() != -1 ) {
-            setTextureByteArray(new byte[totalVoxels * getPixelBytes()]);
-        }
-        else {
-            setArgbTextureIntArray(new int[totalVoxels]);
-        }
+        final int halfCubeDim = getCubicOutputDimension() / 2;
+        boundingBox[START_Z_INX] = clamp( 0, zCount - getCubicOutputDimension(), (int)newPoint.getArray()[ 2 ][ 0 ] - halfCubeDim );
 
-        // DEBUG CODE>
-        //for ( int i = 0; i < 3; i++ ) {
-        //    System.out.println( "Bounding Box offset=" + i + " value=" + boundingBox[i] );
-        //    System.out.println( "Bounding Box offset=" + (i+3) + " value=" + boundingBox[i+3] );
-        //    System.out.println();
-        //}
-        return sheetSize;
+        boundingBox[END_Z_INX] = boundingBox[START_Z_INX] + getCubicOutputDimension();
+        
+        // Adjust the dimensions, to adjust the subsetting requirement.
+        setSz(boundingBox[ END_Z_INX ] - boundingBox[ START_Z_INX ]);
     }
     
     /**
@@ -369,6 +396,9 @@ public class LoaderSubsetHelper {
                 unsignedPixelVal += 65536;
             }
             byte byteVal = (byte) ((unsignedPixelVal & 0x0000ff00) >> 8);
+            if ( destOffset == getTextureByteArray().length ) {
+                System.out.println("Overflow.");
+            }
             getTextureByteArray()[ destOffset + 1 ] = byteVal;
             byteVal = (byte) (unsignedPixelVal & 0x000000ff);
             getTextureByteArray()[ destOffset ] = byteVal;
