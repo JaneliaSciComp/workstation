@@ -19,9 +19,9 @@ public class GaussianMatrixBuilderTest {
     @Test
     public void sigma3D() {
         GaussianMatrixBuilder bldr = new GaussianMatrixBuilder();
-        double sigmaX = 0.4;
-        double sigmaY = 0.4;
-        double sigmaZ = 0.75;
+        double sigmaX = 0.65;
+        double sigmaY = 0.85;
+        double sigmaZ = 0.85;
         double[] filterMatrix = bldr.getGaussianMatrix(sigmaX, sigmaY, sigmaZ, 5);
         
         String matrixDump = dumpFilterMatrix( filterMatrix, 5, String.format( SIGMA_DUMP_FMT, sigmaX, sigmaY, sigmaZ) );
