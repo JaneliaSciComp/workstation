@@ -20,7 +20,7 @@ public class GaussianMatrixBuilder {
      * cubicDimension value of 3).  This is to be the size of the resulting
      * matrix: any given cell may be set to zero.
      * 
-     * @deprecated this has never been debugged for accuracy of the output.
+     * @deprecated this has never been used. Begun for FW-2812. Using hard-coded matrixes instead.
      * @param sigmaX parameter to the classic sigma (bell curve) function in X
      * @param sigmaY in Y
      * @param sigmaZ in Z
@@ -29,24 +29,40 @@ public class GaussianMatrixBuilder {
      */
     public double[] getGaussianMatrix( double sigmaX, double sigmaY, double sigmaZ, int cubicDimension ) {
         double[] rtnVal = new double[ cubicDimension * cubicDimension * cubicDimension ];
-        final double sigmaFactor = 2.0 * sigmaX * sigmaY * sigmaZ; 
-        double normalizer = 1.0 / (sigmaX * sigmaY * sigmaZ * Math.pow(2.0 * Math.PI, 3.0/2.0));
+        final double sigmaFactorX = 2.0 * sigmaX * sigmaX; 
+        final double sigmaFactorY = 2.0 * sigmaY * sigmaY; 
+        final double sigmaFactorZ = 2.0 * sigmaZ * sigmaZ; 
         // DEBUG: normalizer = 1.0; With this in place, center-value is 1.0
         int dimSubtractor = cubicDimension / 2;  // Center all values around 0-as-midpoint.
         DimensionConvertor dcon = new DimensionConvertor( cubicDimension );
+        double sum = 0.0;
         for ( int z = 0; z < cubicDimension; z++ ) {
             for ( int y = 0; y < cubicDimension; y++ ) {
                 for ( int x = 0; x < cubicDimension; x++ ) {
-                    rtnVal[ dcon.getLinearDimension(x, y, z) ] = 
-                            normalizer * Math.exp(
+                    double xPart = Math.exp(
                                 -(
-                                    (x-dimSubtractor)*(x-dimSubtractor) +
-                                    (y-dimSubtractor)*(y-dimSubtractor) +
+                                    (x-dimSubtractor)*(x-dimSubtractor)
+                                  / sigmaFactorX ) );
+                    
+                    double yPart = Math.exp(
+                                -(
+                                    (y-dimSubtractor)*(y-dimSubtractor)
+                                  / sigmaFactorY ) );
+                    
+                    double zPart = Math.exp(
+                                -(
                                     (z-dimSubtractor)*(z-dimSubtractor)
-                                 ) / sigmaFactor 
-                     ); 
+                                  / sigmaFactorZ ) ); 
+                    final double value = xPart + yPart + zPart;
+                    
+                    rtnVal[ dcon.getLinearDimension(x, y, z) ] = value;
+                    sum += value;
                 }
             }
+        }
+        // Normalize.
+        for ( int i = 0; i < rtnVal.length; i++ ) {
+            rtnVal[ i ] = rtnVal[ i ] / sum;
         }
         return rtnVal;
     }
