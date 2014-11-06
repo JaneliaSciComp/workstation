@@ -191,7 +191,7 @@ public class Snapshot3dControls {
         filterActions = new ArrayList<>();
         getFilterActions().add( new FilterMatrixAction( textureDatas, view, MatrixFilter3D.SPHERE_3_3_3, "Apply Filter 3x3x3 Round" ) );
         getFilterActions().add( new FilterMatrixAction( textureDatas, view, MatrixFilter3D.AVG_MATRIX_3_3_3, "Apply Filter 3x3x3 Averaging" ) );
-        getFilterActions().add( new FilterMatrixAction( textureDatas, view, MatrixFilter3D.ANULUS_3_3_3, "Apply Filter 3x3x3 Inverted Sphere" ) );
+        getFilterActions().add( new FilterMatrixAction( textureDatas, view, MatrixFilter3D.GAUSS_65_85_85, "Apply Filter 5x5x5 Sigmas = (0.65,0.85,0.85)" ) );
         getFilterActions().add( new FilterMatrixAction( textureDatas, view, MatrixFilter3D.GAUSS_5_5_5, "Apply Filter 5x5x5 Gauss" ) );
         
     }
