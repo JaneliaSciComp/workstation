@@ -20,6 +20,7 @@ public class GaussianMatrixBuilder {
      * cubicDimension value of 3).  This is to be the size of the resulting
      * matrix: any given cell may be set to zero.
      * 
+     * @deprecated this has never been debugged for accuracy of the output.
      * @param sigmaX parameter to the classic sigma (bell curve) function in X
      * @param sigmaY in Y
      * @param sigmaZ in Z
