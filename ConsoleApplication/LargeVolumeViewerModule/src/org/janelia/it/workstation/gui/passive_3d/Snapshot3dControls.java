@@ -19,7 +19,6 @@ import javax.swing.AbstractButton;
 import javax.swing.Action;
 import javax.swing.JCheckBox;
 import javax.swing.JComponent;
-import javax.swing.JMenuItem;
 import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.workstation.gui.large_volume_viewer.ImageColorModel;
 import org.janelia.it.workstation.gui.large_volume_viewer.SliderPanel;
