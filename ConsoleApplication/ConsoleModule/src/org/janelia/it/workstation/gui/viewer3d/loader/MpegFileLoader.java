@@ -18,7 +18,7 @@ import java.awt.image.BufferedImage;
  * Date: 2/6/13
  * Time: 3:33 PM
  *
- *
+ * Pull MPEG / MP4 file contents inot memory.
  */
 public class MpegFileLoader extends LociFileLoader {
     @Override

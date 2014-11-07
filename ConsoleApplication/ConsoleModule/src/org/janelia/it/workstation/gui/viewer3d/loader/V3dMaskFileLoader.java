@@ -1,8 +1,6 @@
 package org.janelia.it.workstation.gui.viewer3d.loader;
 
 import org.janelia.it.workstation.gui.viewer3d.stream.V3dRawImageStream;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.io.BufferedInputStream;
 import java.io.FileInputStream;
@@ -13,6 +11,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.TreeSet;
 import java.util.zip.DataFormatException;
+import org.apache.log4j.Logger;
 
 /**
  * Created with IntelliJ IDEA.
@@ -28,7 +27,7 @@ public class V3dMaskFileLoader extends LociFileLoader {
     public static final String CONSOLIDATED_LABEL_MASK = "ConsolidatedLabel";
 
     private int[][][] maskVolume;
-    private Logger logger = LoggerFactory.getLogger( V3dMaskFileLoader.class );
+    private Logger logger = Logger.getLogger( V3dMaskFileLoader.class );
 
     @Override
     public void loadVolumeFile( String fileName ) throws Exception {
@@ -69,7 +68,7 @@ public class V3dMaskFileLoader extends LociFileLoader {
         long rawRequired = (long)(sx * sy * sz) * (long)pixelBytes;
 
         if ( rawRequired > Integer.MAX_VALUE ) {
-            logger.info( "Downsampling {}.", getUnCachedFileName() );
+            logger.info( "Downsampling " + getUnCachedFileName() );
             values = readDownSampled(sliceStream);
         }
         else {
@@ -78,10 +77,6 @@ public class V3dMaskFileLoader extends LociFileLoader {
             setTextureByteArray(byteReader.getTextureBytes());
         }
 
-        for ( Integer value: values ) {
-            System.out.print( value + "," );
-        }
-        System.out.println();
         setHeader( sliceStream.getHeaderKey() );
     }
 

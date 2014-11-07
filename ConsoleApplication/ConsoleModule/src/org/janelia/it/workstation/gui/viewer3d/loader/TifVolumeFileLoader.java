@@ -32,7 +32,7 @@ import java.util.List;
 import org.apache.log4j.Logger;
 
 /**
- *
+ * Pull Tif file into memory.
  * @author fosterl
  */
 public class TifVolumeFileLoader extends AbstractVolumeFileLoader {
@@ -222,63 +222,6 @@ public class TifVolumeFileLoader extends AbstractVolumeFileLoader {
 
     }    
 
-    /**
-     * Load specified tiff page and return as buffered zSlice.
-     * From: http://opencapture.googlecode.com/svn/0.0.2/OpenCapture/src/net/filterlogic/util/imaging/ToTIFF.java
-     * 
-     * @param file
-     * @param imageToLoad Page to load
-     * @return BufferedImage
-     *
-    private Collection<BufferedImage> loadTIFFParallel(File file) {
-        final Collection<BufferedImage> imageCollection = Collections.<BufferedImage>synchronizedCollection(new ArrayList<BufferedImage>());
-        try {
-            byte[] bytes = readBytes(file);
-            
-            SeekableStream s = new MemoryCacheSeekableStream( new ByteArrayInputStream( bytes ) );
-            TIFFDecodeParam param = null;
-            ImageDecoder dec = ImageCodec.createImageDecoder("tiff", s, param);
-            final int numPages = dec.getNumPages();
-
-            //NOTE: level of redundancy, here, suggests, may not be saving any
-            // real time doing this load.
-            final Collection<ImageLoadRunnable> runnables = new ArrayList<>();
-            ExecutorService executorService = Executors.newFixedThreadPool( 20 );           
-            for (int imageToLoad = 0; imageToLoad < numPages; imageToLoad++) {
-                SeekableStream pageS = new MemoryCacheSeekableStream( new ByteArrayInputStream( bytes ) );
-                ImageDecoder pageDec = ImageCodec.createImageDecoder("tiff", pageS, null);
-                ImageLoadRunnable runnable = new ImageLoadRunnable( imageToLoad, pageDec, imageCollection, TifVolumeFileLoader.this );
-                runnables.add( runnable );
-                executorService.execute( runnable );
-            }
-            
-            executorService.shutdown();
-            try {
-                executorService.awaitTermination( 10, TimeUnit.MINUTES );
-            } catch ( InterruptedException ie ) {
-                throw new RuntimeException( "Interrupted while awaiting complestion of load of " + file, ie );
-            }
-            
-            for ( ImageLoadRunnable runnable: runnables ) {
-                if ( runnable.getThrownException() != null ) {
-                    throw new RuntimeException(
-                      "One or more pages from raw " + file + " failed to load."
-                    );
-                }
-            }
-            
-            return imageCollection;
-
-
-        } catch (IOException e) {
-            logger.error(e.toString());
-
-            return null;
-        }
-
-    }
-    */
-
     private byte[] readBytes(File file) throws IOException {
         byte[] bytes = new byte[ (int)file.length() ];
         try (FileInputStream fis = new FileInputStream( file )) {
@@ -313,40 +256,5 @@ public class TifVolumeFileLoader extends AbstractVolumeFileLoader {
         BufferedImage wholeImage = renderedToBuffered(op);
         imageCollection.add(wholeImage);
     }
-
-    /*
-    private static class ImageLoadRunnable implements Runnable {
-        private Exception thrownException;
-        private int imageToLoad;
-        private ImageDecoder dec;
-        private Collection<BufferedImage> imageCollection;
-        private TifTextureBuilder loader;
-        
-        public ImageLoadRunnable(int imageToLoad, ImageDecoder dec, Collection<BufferedImage> imageCollection, TifTextureBuilder loader) {
-            this.imageToLoad = imageToLoad;
-            this.dec = dec;
-            this.imageCollection = imageCollection;
-            this.loader = loader;
-        }
-        
-        @Override
-        public void run() {
-            try {
-                loader.getImage( dec, imageToLoad, imageCollection );
-            } catch (IOException ex) {
-                this.thrownException = ex;
-            }
-        }
-
-        /**
-         * @return the thrownException
-         *
-        public Exception getThrownException() {
-            return thrownException;
-        }
-
-    }
-    */
-        
 
 }
