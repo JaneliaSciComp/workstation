@@ -202,6 +202,7 @@ public class Snapshot3DLauncher {
         ImageColorModel independentCM = new ImageColorModel(getMaxIntensity(), getNumberOfChannels());
         snapshotViewer.setIndependentImageColorModel( independentCM ); 
         snapshotViewer.setSharedImageColorModel( sharedImageColorModel );
+        independentCM.fromString(sharedImageColorModel.asString());
     }
     
     private void makeViewerVisible(Snapshot3d snapshotViewer) {
