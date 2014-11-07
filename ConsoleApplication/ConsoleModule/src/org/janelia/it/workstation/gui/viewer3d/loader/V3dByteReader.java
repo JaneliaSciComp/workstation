@@ -70,7 +70,7 @@ public class V3dByteReader {
             throws IOException {
         textureByteArray = new byte[(sx * sy * sz)];
 
-        Set<Integer> values = new TreeSet<Integer>();
+        Set<Integer> values = new TreeSet<>();
         for (int z = 0; z < sz; z ++ ) {
             int zOffset = z * sx * sy;
             sliceStream.loadNextSlice();
