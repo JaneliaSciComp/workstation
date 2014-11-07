@@ -3,8 +3,6 @@ package org.janelia.it.workstation.gui.viewer3d.loader;
 import loci.formats.FormatException;
 import loci.formats.IFormatReader;
 import loci.formats.gui.BufferedImageReader;
-import org.janelia.it.workstation.gui.viewer3d.texture.TextureDataBean;
-import org.janelia.it.workstation.gui.viewer3d.texture.TextureDataI;
 
 import java.awt.image.BufferedImage;
 import java.io.IOException;
@@ -17,35 +15,30 @@ import java.io.IOException;
  *
  * This may be extended for any data builder that needs a loci read method.
  */
-public abstract class LociFileLoader extends TextureDataBuilder implements VolumeFileLoaderI {
-
-    @Override
-    public TextureDataI createTextureDataBean() {
-        return new TextureDataBean(argbTextureIntArray, sx, sy, sz );
-    }
+public abstract class LociFileLoader extends AbstractVolumeFileLoader {
 
     /** A facility for loci reader users. */
     protected void loadLociReader(IFormatReader reader) throws FormatException, IOException {
         BufferedImageReader in = new BufferedImageReader(reader);
-        in.setId(unCachedFileName);
+        in.setId(getUnCachedFileName());
         loadLociReader(in);
     }
 
     protected boolean loadLociReader(BufferedImageReader in)
             throws IOException, FormatException
     {
-        sx = in.getSizeX();
-        sy = in.getSizeY();
-        sz = in.getSizeZ();
-        argbTextureIntArray = new int[sx*sy*sz];
-        int scanLineStride = sx;
-        for (int z = 0; z < sz; z++) {
+        setSx(in.getSizeX());
+        setSy(in.getSizeY());
+        setSz(in.getSizeZ());
+        setArgbTextureIntArray(new int[in.getSizeX()*in.getSizeY()*in.getSizeZ()]);
+        int scanLineStride = in.getSizeX();
+        for (int z = 0; z < in.getSizeZ(); z++) {
             BufferedImage zSlice = in.openImage(z);
-            int zOffset = z * sx * sy;
+            int zOffset = z * in.getSizeX() * in.getSizeY();
             // int[] pixels = ((DataBufferInt)zSlice.getData().getDataBuffer()).getData();
             zSlice.getRGB(0, 0,
-                    sx, sy,
-                    argbTextureIntArray,
+                    in.getSizeX(), in.getSizeY(),
+                    getArgbTextureIntArray(),
                     zOffset,
                     scanLineStride);
         }

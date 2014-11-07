@@ -4,7 +4,6 @@ import org.janelia.it.workstation.gui.viewer3d.VolumeDataAcceptor;
 import org.janelia.it.workstation.gui.viewer3d.texture.TextureDataI;
 
 import javax.media.opengl.GL2;
-import java.nio.ByteOrder;
 
 /**
  * Created with IntelliJ IDEA.
@@ -16,16 +15,17 @@ import java.nio.ByteOrder;
  */
 public abstract class TextureDataBuilder {
 
-    protected int[] argbTextureIntArray;
-    protected byte[] textureByteArray;
-    protected int sx, sy, sz;
-    protected int channelCount = 1; // Default for non-data-bearing file formats.
     protected VolumeDataAcceptor.TextureColorSpace colorSpace =
             VolumeDataAcceptor.TextureColorSpace.COLOR_SPACE_LINEAR;
-    protected String header = null;
-    protected int pixelBytes = 1;
-    protected ByteOrder pixelByteOrder = ByteOrder.LITTLE_ENDIAN;
-    protected String unCachedFileName;
+    private AbstractVolumeFileLoader volumeFileLoader;
+
+    public void setVolumeFileLoader( AbstractVolumeFileLoader volumeFileLoader ) {
+        this.volumeFileLoader = volumeFileLoader;
+    }
+    
+    public AbstractVolumeFileLoader getVolumeFileLoader() {
+        return volumeFileLoader;
+    }
 
     public void setColorSpace( VolumeDataAcceptor.TextureColorSpace colorSpace ) {
         this.colorSpace = colorSpace;
@@ -33,28 +33,31 @@ public abstract class TextureDataBuilder {
 
     public TextureDataI buildTextureData( boolean isLuminance ) {
         TextureDataI textureData = createTextureDataBean();
+        if ( textureData == null ) {
+            throw new IllegalArgumentException("Failed to create texture data bean.");
+        }
 
-        textureData.setSx(sx);
-        textureData.setSy(sy);
-        textureData.setSz(sz);
+        textureData.setSx(volumeFileLoader.getSx());
+        textureData.setSy(volumeFileLoader.getSy());
+        textureData.setSz(volumeFileLoader.getSz());
 
         textureData.setColorSpace(colorSpace);
-        textureData.setVolumeMicrometers(new Double[]{(double) sx, (double) sy, (double) sz});
+        textureData.setVolumeMicrometers(new Double[]{(double) volumeFileLoader.getSx(), (double) volumeFileLoader.getSy(), (double) volumeFileLoader.getSz()});
         textureData.setVoxelMicrometers(new Double[]{1.0, 1.0, 1.0});
-        if ( header != null ) {
-            textureData.setHeader(header);
+        if ( volumeFileLoader.getHeader() != null ) {
+            textureData.setHeader( volumeFileLoader.getHeader() );
         }
-        textureData.setByteOrder(pixelByteOrder);
-        if ( textureData.getPixelByteCount() <= 0  ||  textureData.getPixelByteCount() < pixelBytes ) {
-            textureData.setPixelByteCount(pixelBytes);
+        textureData.setByteOrder(volumeFileLoader.getPixelByteOrder());
+        if ( textureData.getPixelByteCount() <= 0  ||  textureData.getPixelByteCount() < volumeFileLoader.getPixelBytes() ) {
+            textureData.setPixelByteCount(volumeFileLoader.getPixelBytes());
         }
         else {
-            pixelBytes = textureData.getPixelByteCount();
+            volumeFileLoader.setPixelBytes(textureData.getPixelByteCount());
         }
-        textureData.setFilename(unCachedFileName);
-        textureData.setChannelCount(channelCount);
+        textureData.setFilename(volumeFileLoader.getUnCachedFileName());
+        textureData.setChannelCount(volumeFileLoader.getChannelCount());
 
-        if (! isLuminance  &&  (channelCount == 4)  &&  argbTextureIntArray != null ) {
+        if (! isLuminance  &&  (volumeFileLoader.getChannelCount() == 4)  &&  volumeFileLoader.getArgbTextureIntArray() != null ) {
             setAlphaToSaturateColors( colorSpace );
 
             textureData.setExplicitVoxelComponentOrder( GL2.GL_RGBA );
@@ -62,7 +65,7 @@ public abstract class TextureDataBuilder {
             textureData.setExplicitVoxelComponentType( GL2.GL_UNSIGNED_INT_8_8_8_8_REV );
         }
         else {
-            if ( unCachedFileName.contains( V3dMaskFileLoader.COMPARTMENT_MASK_INDEX ) ) {
+            if ( volumeFileLoader.getUnCachedFileName().contains( V3dMaskFileLoader.COMPARTMENT_MASK_INDEX ) ) {
                 textureData.setInverted( false );  // Do not invert the compartment mask.
             }
         }
@@ -89,16 +92,17 @@ public abstract class TextureDataBuilder {
             double i1 = Math.pow(i0, exponent);
             alphaMap[i] = (int)(i1 * 255.0 + 0.5);
         }
-        int numVoxels = argbTextureIntArray.length;
+        int[] argbTexIntArr = volumeFileLoader.getArgbTextureIntArray();
+        int numVoxels = argbTexIntArr.length;
         for (int v = 0; v < numVoxels; ++v) {
-            int argb = argbTextureIntArray[v];
+            int argb = argbTexIntArr[v];
             int red   = (argb & 0x00ff0000) >>> 16;
             int green = (argb & 0x0000ff00) >>> 8;
             int blue  = (argb & 0x000000ff);
             int alpha = Math.max(red, Math.max(green, blue));
             alpha = alphaMap[alpha];
             argb = (argb & 0x00ffffff) | (alpha << 24);
-            argbTextureIntArray[v] = argb;
+            argbTexIntArr[v] = argb;
         }
     }
 

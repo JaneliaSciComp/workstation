@@ -1,3 +1,9 @@
+/*
+ * To change this license header, choose License Headers in Project Properties.
+ * To change this template file, choose Tools | Templates
+ * and open the template in the editor.
+ */
+
 package org.janelia.it.workstation.gui.viewer3d.loader;
 
 import com.sun.media.jai.codec.ImageCodec;
@@ -5,52 +11,47 @@ import com.sun.media.jai.codec.ImageDecoder;
 import com.sun.media.jai.codec.MemoryCacheSeekableStream;
 import com.sun.media.jai.codec.SeekableStream;
 import com.sun.media.jai.codec.TIFFDecodeParam;
+
+import javax.media.jai.NullOpImage;
+import javax.media.jai.OpImage;
+import javax.media.jai.RenderedImageAdapter;
+
 import java.awt.image.BufferedImage;
 import java.awt.image.DataBufferByte;
 import java.awt.image.DataBufferUShort;
 import java.awt.image.RenderedImage;
+
 import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.List;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.TimeUnit;
-import javax.media.jai.NullOpImage;
-import javax.media.jai.OpImage;
-import javax.media.jai.RenderedImageAdapter;
-import org.janelia.it.workstation.gui.viewer3d.texture.TextureDataBean;
-import org.janelia.it.workstation.gui.viewer3d.texture.TextureDataI;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+
+import org.apache.log4j.Logger;
 
 /**
- * Created with IntelliJ IDEA.
- * User: fosterl
- * Date: 2/6/13
- * Time: 3:33 PM
  *
- * Handles TIFF via Loci reading capability.
+ * @author fosterl
  */
-public class TifFileLoader extends TextureDataBuilder implements VolumeFileLoaderI {
-    
-    private int sheetCountFromFile = -1;
-    
+public class TifVolumeFileLoader extends AbstractVolumeFileLoader {
+    public static final int SENTINAL_INT_VAL = -1;
+
     private LoaderSubsetHelper subsetHelper;
-    private Logger logger = LoggerFactory.getLogger( TifFileLoader.class );
+    private int sheetCountFromFile;
     
+    private static final Logger logger = Logger.getLogger(TifVolumeFileLoader.class);
+
     /**
      * Sets maximum size in all dimensions, to add to outgoing image.
      * 
      * @param cubicOutputDimension how many voxels to use.
      */
     public void setCubicOutputDimension( int cubicOutputDimension ) {
-        if ( subsetHelper == null )
+        if ( subsetHelper == null ) {
             subsetHelper = new LoaderSubsetHelper();
+        }
         subsetHelper.setCubicOutputDimension(cubicOutputDimension);
     }
     
@@ -62,59 +63,53 @@ public class TifFileLoader extends TextureDataBuilder implements VolumeFileLoade
     }
     
     @Override
-    public TextureDataI createTextureDataBean() {
-        TextureDataBean textureDataBean;
-        if ( pixelBytes < 4  ||  subsetHelper != null ) {
-            textureDataBean = new TextureDataBean( textureByteArray, sx, sy, sz );
-        }
-        else {
-            textureDataBean = new TextureDataBean( argbTextureIntArray, sx, sy, sz );
-        }
-        textureDataBean.setPixelByteCount(pixelBytes);
-        return textureDataBean;
-    }
-
-    @Override
     public void loadVolumeFile( String fileName ) throws Exception {
-        this.unCachedFileName = fileName;
-        sx = -1;
+        setUnCachedFileName(fileName);
         
         final File file = new File(fileName);
         Collection<BufferedImage> allImages = loadTIFF( file );
         if ( allImages == null ) {
             throw new Exception("Failed to read data from " + fileName + ".");
         }
-        pixelBytes = -1;
+
+        // Sentinal values.
+        setSx(SENTINAL_INT_VAL);
+        setSy(SENTINAL_INT_VAL);
+        setSz(SENTINAL_INT_VAL);
+        setPixelBytes(SENTINAL_INT_VAL);
+        int sheetSize = SENTINAL_INT_VAL;
+        int expectedWidth = SENTINAL_INT_VAL;
+        int expectedHeight = SENTINAL_INT_VAL;
+
+        // Initial values.
         int zOffset = 0;
-        int sheetSize = -1;
         int targetOffset = 0;
-        int expectedWidth = 0;
-        int expectedHeight = 0;
         for ( BufferedImage zSlice: allImages ) {
-            if ( sx == -1 ) {
-                sx = zSlice.getWidth();
-                sy = zSlice.getHeight();
-                sz = allImages.size();
+            if ( expectedWidth == SENTINAL_INT_VAL ) {
+                expectedWidth = zSlice.getWidth();
+                expectedHeight = zSlice.getHeight();
+            }
+            if ( getSy() == SENTINAL_INT_VAL ) {
                 if ( subsetHelper != null ) {
-                    subsetHelper.setSx(zSlice.getWidth());
-                    subsetHelper.setSy(zSlice.getHeight());
-                    subsetHelper.setSourceWidth(sx);
-                    subsetHelper.setSourceHeight(sy);
+                    subsetHelper.setSourceWidth(zSlice.getWidth());
+                    subsetHelper.setSourceHeight(zSlice.getHeight());
                     subsetHelper.calculateBoundingBox(sheetCountFromFile);
+
+                    // Apply volume characteristics 'learned' from subset helper.
+                    setSx(subsetHelper.getSx());
+                    setSy(subsetHelper.getSy());
+                    setSz(subsetHelper.getSz());
+                
                     sheetSize = subsetHelper.initializeStorage(file.length());
-                    sx = subsetHelper.getSx();
-                    sy = subsetHelper.getSy();
-                    sz = subsetHelper.getSz();
-                    pixelBytes = subsetHelper.getPixelBytes();
-                    argbTextureIntArray = subsetHelper.getArgbTextureIntArray();
-                    textureByteArray = subsetHelper.getTextureByteArray();
-                    expectedWidth = subsetHelper.getSourceWidth();
-                    expectedHeight = subsetHelper.getSourceHeight();
+                    setPixelBytes( subsetHelper.getPixelBytes() );
+                    setArgbTextureIntArray(subsetHelper.getArgbTextureIntArray());
+                    setTextureByteArray(subsetHelper.getTextureByteArray());
                 }
                 else {
+                    setSx( zSlice.getWidth() );
+                    setSy( zSlice.getHeight() );
+                    setSz( allImages.size() );
                     sheetSize = captureAndUsePageDimensions( allImages.size(), file.length() );
-                    expectedWidth = sx;
-                    expectedHeight = sy;
                 }
             }
             else {
@@ -137,27 +132,27 @@ public class TifFileLoader extends TextureDataBuilder implements VolumeFileLoade
     }
     
     public int captureAndUsePageDimensions(final int zCount, final long fileLength) {
-        pixelBytes = (int)Math.floor( fileLength / ((sx*sy) * sz) );
-        if ( pixelBytes == 4 ) {
-            argbTextureIntArray = new int[ sx * sy * sz ];
+        setPixelBytes((int)Math.floor( fileLength / ((getSx()*getSy()) * getSz()) ));
+        if ( getPixelBytes() == 4 ) {
+            setArgbTextureIntArray(new int[ getSx() * getSy() * getSz() ]);
         }
         else {
-            textureByteArray = new byte[ sx * sy * sz * pixelBytes ];
+            setTextureByteArray(new byte[ getSx() * getSy() * getSz() * getPixelBytes() ]);
         }
-        return sx * sy;
+        return getSx() * getSy();
     }
     
     private void storeToBuffer(int zOffset, int sheetSize, BufferedImage zSlice) {
         final int outputBufferOffset = zOffset * sheetSize;
-        if ( pixelBytes == 1 ) {
+        if ( getPixelBytes() == 1 ) {
             DataBufferByte db = ((DataBufferByte)zSlice.getTile(0, 0).getDataBuffer());
             byte[] pixels = db.getData();
-            System.arraycopy(pixels, 0, textureByteArray, outputBufferOffset, sheetSize);
+            System.arraycopy(pixels, 0, getTextureByteArray(), outputBufferOffset, sheetSize);
         }
-        else if ( pixelBytes == 2 ) {
+        else if ( getPixelBytes() == 2 ) {
             DataBufferUShort db = ((DataBufferUShort)zSlice.getTile(0, 0).getDataBuffer());
             short[] pixels = db.getData();
-            int shortOffset = pixelBytes * outputBufferOffset;
+            int shortOffset = getPixelBytes() * outputBufferOffset;
             for ( int i = 0; i < pixels.length; i++ ) {
                 // Changing the order.
                 int unsignedPixelVal = pixels[ i ];
@@ -165,16 +160,16 @@ public class TifFileLoader extends TextureDataBuilder implements VolumeFileLoade
                     unsignedPixelVal += 65536;
                 }
                 byte byteVal = (byte)((unsignedPixelVal & 0x0000ff00) >> 8);
-                textureByteArray[ i * pixelBytes + shortOffset + 1 ] = byteVal;
+                getTextureByteArray()[ i * getPixelBytes() + shortOffset + 1 ] = byteVal;
                 byteVal = (byte)(unsignedPixelVal & 0x000000ff);
-                textureByteArray[ i * pixelBytes + shortOffset ] = byteVal;
+                getTextureByteArray()[ i * getPixelBytes() + shortOffset ] = byteVal;
             }
         }
-        else if ( pixelBytes == 4 ) {
+        else if ( getPixelBytes() == 4 ) {
             zSlice.getRGB(0, 0,
-                    sx, sy,
-                    argbTextureIntArray, outputBufferOffset,
-                    sx);
+                    getSx(), getSy(),
+                    getArgbTextureIntArray(), outputBufferOffset,
+                    getSx());
         }
     }
 
@@ -234,7 +229,7 @@ public class TifFileLoader extends TextureDataBuilder implements VolumeFileLoade
      * @param file
      * @param imageToLoad Page to load
      * @return BufferedImage
-     */
+     *
     private Collection<BufferedImage> loadTIFFParallel(File file) {
         final Collection<BufferedImage> imageCollection = Collections.<BufferedImage>synchronizedCollection(new ArrayList<BufferedImage>());
         try {
@@ -252,7 +247,7 @@ public class TifFileLoader extends TextureDataBuilder implements VolumeFileLoade
             for (int imageToLoad = 0; imageToLoad < numPages; imageToLoad++) {
                 SeekableStream pageS = new MemoryCacheSeekableStream( new ByteArrayInputStream( bytes ) );
                 ImageDecoder pageDec = ImageCodec.createImageDecoder("tiff", pageS, null);
-                ImageLoadRunnable runnable = new ImageLoadRunnable( imageToLoad, pageDec, imageCollection, TifFileLoader.this );
+                ImageLoadRunnable runnable = new ImageLoadRunnable( imageToLoad, pageDec, imageCollection, TifVolumeFileLoader.this );
                 runnables.add( runnable );
                 executorService.execute( runnable );
             }
@@ -282,6 +277,7 @@ public class TifFileLoader extends TextureDataBuilder implements VolumeFileLoade
         }
 
     }
+    */
 
     private byte[] readBytes(File file) throws IOException {
         byte[] bytes = new byte[ (int)file.length() ];
@@ -317,15 +313,16 @@ public class TifFileLoader extends TextureDataBuilder implements VolumeFileLoade
         BufferedImage wholeImage = renderedToBuffered(op);
         imageCollection.add(wholeImage);
     }
-    
+
+    /*
     private static class ImageLoadRunnable implements Runnable {
         private Exception thrownException;
         private int imageToLoad;
         private ImageDecoder dec;
         private Collection<BufferedImage> imageCollection;
-        private TifFileLoader loader;
+        private TifTextureBuilder loader;
         
-        public ImageLoadRunnable(int imageToLoad, ImageDecoder dec, Collection<BufferedImage> imageCollection, TifFileLoader loader) {
+        public ImageLoadRunnable(int imageToLoad, ImageDecoder dec, Collection<BufferedImage> imageCollection, TifTextureBuilder loader) {
             this.imageToLoad = imageToLoad;
             this.dec = dec;
             this.imageCollection = imageCollection;
@@ -343,11 +340,13 @@ public class TifFileLoader extends TextureDataBuilder implements VolumeFileLoade
 
         /**
          * @return the thrownException
-         */
+         *
         public Exception getThrownException() {
             return thrownException;
         }
 
     }
+    */
         
+
 }

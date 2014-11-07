@@ -1,11 +1,7 @@
 package org.janelia.it.workstation.gui.viewer3d.loader;
 
 import org.janelia.it.workstation.gui.viewer3d.stream.V3dRawImageStream;
-import org.janelia.it.workstation.gui.viewer3d.texture.TextureDataBean;
-import org.janelia.it.workstation.gui.viewer3d.texture.TextureDataI;
-import org.janelia.it.workstation.gui.viewer3d.volume_builder.VolumeDataBean;
 
-import javax.media.opengl.GL;
 import java.io.BufferedInputStream;
 import java.io.FileInputStream;
 import java.io.IOException;
@@ -20,50 +16,35 @@ import java.util.zip.DataFormatException;
  *
  * Loader of signal data, from v3dpbd format input file.
  */
-public class V3dSignalFileLoader extends TextureDataBuilder implements VolumeFileLoaderI {
-
-    @Override
-    protected TextureDataI createTextureDataBean() {
-        int interpolationMethod = GL.GL_LINEAR;
-        if ( channelCount >= 3 ) {
-            TextureDataBean textureDataBean = new TextureDataBean(argbTextureIntArray, sx, sy, sz);
-            textureDataBean.setInterpolationMethod( interpolationMethod );
-            return textureDataBean;
-        }
-        else {
-            TextureDataBean textureDataBean = new TextureDataBean(new VolumeDataBean( textureByteArray, sx, sy, sz ), sx, sy, sz);
-            textureDataBean.setInterpolationMethod( interpolationMethod );
-            return textureDataBean;
-        }
-    }
+public class V3dSignalFileLoader extends LociFileLoader {
 
     @Override
     public void loadVolumeFile( String fileName ) throws Exception {
-        unCachedFileName = fileName;
+        setUnCachedFileName( fileName );
 
         loadV3dRaw(new BufferedInputStream(
-                new FileInputStream(unCachedFileName)));
+                new FileInputStream(fileName)));
 
     }
 
     private void loadV3dRaw(InputStream inputStream) throws IOException, DataFormatException {
         V3dRawImageStream sliceStream = new V3dRawImageStream(inputStream);
-        sx = sliceStream.getDimension(0);
-        sy = sliceStream.getDimension(1);
-        sz = sliceStream.getDimension(2);
-        pixelBytes = sliceStream.getPixelBytes();
+        setSx(sliceStream.getDimension(0));
+        setSy(sliceStream.getDimension(1));
+        setSz(sliceStream.getDimension(2));
+        setPixelBytes(sliceStream.getPixelBytes());
         int sc = sliceStream.getDimension(3);
-        channelCount = sc;
-        pixelByteOrder = sliceStream.getEndian();
+        setChannelCount(sc);
+        setPixelByteOrder(sliceStream.getEndian());
 
-        if ( channelCount >= 3 ) {
+        if ( sc >= 3 ) {
             loadV3dIntRaw( sliceStream, sc );
         }
-        else if ( pixelBytes == 1 ) {
+        else if ( sliceStream.getPixelBytes() == 1 ) {
             loadV3dByteRaw( sliceStream );
         }
         else {
-            throw new IOException("Unexpected pixelbytes count of " + pixelBytes);
+            throw new IOException("Unexpected pixelbytes count of " + sliceStream.getPixelBytes());
         }
     }
 
@@ -74,7 +55,11 @@ public class V3dSignalFileLoader extends TextureDataBuilder implements VolumeFil
         if (sliceStream.getPixelBytes() > 1)
             scale = 255.0 / 4095.0; // assume it's 12 bits
 
-        argbTextureIntArray = new int[sx*sy*sz];
+        int sx = getSx();
+        int sy = getSy();
+        int sz = getSz();
+        initArgbTextureIntArray();
+        int[] argbTextureIntArray = getArgbTextureIntArray();
         for (int c = 0; c < sc; ++c) {
             // create a mask to manipulate one color byte of a 32-bit ARGB int
             int bitShift = 8 * (c + 2);
@@ -102,7 +87,7 @@ public class V3dSignalFileLoader extends TextureDataBuilder implements VolumeFil
             }
         }
 
-        header = sliceStream.getHeaderKey();
+        setHeader(sliceStream.getHeaderKey());
     }
 
     private void loadV3dByteRaw(V3dRawImageStream sliceStream)
@@ -111,9 +96,9 @@ public class V3dSignalFileLoader extends TextureDataBuilder implements VolumeFil
         V3dByteReader byteReader = new V3dByteReader();
         byteReader.setInvertedY( false );
         // Bypass some bytes.
-        byteReader.readBytes( sliceStream, sx, sy, sz, pixelBytes );
-        textureByteArray = byteReader.getTextureBytes();
-        header = sliceStream.getHeaderKey();
+        byteReader.readBytes( sliceStream, getSx(), getSy(), getSz(), getPixelBytes() );
+        setTextureByteArray(byteReader.getTextureBytes());
+        setHeader(sliceStream.getHeaderKey());
     }
 
 }

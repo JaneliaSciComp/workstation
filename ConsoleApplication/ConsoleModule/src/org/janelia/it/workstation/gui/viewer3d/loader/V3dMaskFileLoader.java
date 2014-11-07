@@ -1,9 +1,6 @@
 package org.janelia.it.workstation.gui.viewer3d.loader;
 
-import org.janelia.it.workstation.gui.viewer3d.texture.MaskTextureDataBean;
-import org.janelia.it.workstation.gui.viewer3d.volume_builder.VolumeDataBean;
 import org.janelia.it.workstation.gui.viewer3d.stream.V3dRawImageStream;
-import org.janelia.it.workstation.gui.viewer3d.texture.TextureDataI;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -26,7 +23,7 @@ import java.util.zip.DataFormatException;
  * Invoke this to build a mask-specific file from v3d file types.  Such files will contain "labels", rather than
  * color data, which are treated in transit-to-GPU as luminance values.
  */
-public class V3dMaskFileLoader extends TextureDataBuilder implements VolumeFileLoaderI {
+public class V3dMaskFileLoader extends LociFileLoader {
     public static final String COMPARTMENT_MASK_INDEX = "maskIndex";
     public static final String CONSOLIDATED_LABEL_MASK = "ConsolidatedLabel";
 
@@ -34,16 +31,11 @@ public class V3dMaskFileLoader extends TextureDataBuilder implements VolumeFileL
     private Logger logger = LoggerFactory.getLogger( V3dMaskFileLoader.class );
 
     @Override
-    protected TextureDataI createTextureDataBean() {
-        return new MaskTextureDataBean(new VolumeDataBean( textureByteArray, sx, sy, sz ), sx, sy, sz );
-    }
-
-    @Override
     public void loadVolumeFile( String fileName ) throws Exception {
-        unCachedFileName = fileName;
+        setUnCachedFileName(fileName);
         loadV3dMask(
                 new BufferedInputStream(
-                    new FileInputStream(unCachedFileName)
+                    new FileInputStream(fileName)
                 )
         );
     }
@@ -53,13 +45,13 @@ public class V3dMaskFileLoader extends TextureDataBuilder implements VolumeFileL
         //isMask = true;
 
         V3dRawImageStream sliceStream = new V3dRawImageStream(inputStream);
-        sx = sliceStream.getDimension(0);
-        sy = sliceStream.getDimension(1);
-        sz = sliceStream.getDimension(2);
-        pixelBytes = sliceStream.getPixelBytes();
+        setSx(sliceStream.getDimension(0));
+        setSy(sliceStream.getDimension(1));
+        setSz(sliceStream.getDimension(2));
+        setPixelBytes(sliceStream.getPixelBytes());
         int sc = sliceStream.getDimension(3);
-        channelCount = sc;
-        pixelByteOrder = sliceStream.getEndian();
+        setChannelCount(sc);
+        setPixelByteOrder(sliceStream.getEndian());
 
         if ( sc > 1 ) {
             throw new RuntimeException( "Unexpected multi-channel mask file." );
@@ -69,24 +61,28 @@ public class V3dMaskFileLoader extends TextureDataBuilder implements VolumeFileL
             throw new RuntimeException( "Unexpected zero channel count mask file." );
         }
 
+        int sx = getSx();
+        int sy = getSy();
+        int sz = getSz();
+        int pixelBytes = getPixelBytes();
         Set<Integer> values = null;
         long rawRequired = (long)(sx * sy * sz) * (long)pixelBytes;
 
         if ( rawRequired > Integer.MAX_VALUE ) {
-            logger.info( "Downsampling {}.", unCachedFileName );
+            logger.info( "Downsampling {}.", getUnCachedFileName() );
             values = readDownSampled(sliceStream);
         }
         else {
             V3dByteReader byteReader = new V3dByteReader();
-            values = byteReader.readBytes( sliceStream, sx, sy, sz, pixelBytes );
-            textureByteArray = byteReader.getTextureBytes();
+            values = byteReader.readBytes( sliceStream, sx, sy, sz, pixelBytes );            
+            setTextureByteArray(byteReader.getTextureBytes());
         }
 
         for ( Integer value: values ) {
             System.out.print( value + "," );
         }
         System.out.println();
-        header = sliceStream.getHeaderKey();
+        setHeader( sliceStream.getHeaderKey() );
     }
 
     /**
@@ -98,6 +94,9 @@ public class V3dMaskFileLoader extends TextureDataBuilder implements VolumeFileL
      * @throws IOException thrown by called methods.
      */
     private Set<Integer> readDownSampled(V3dRawImageStream sliceStream) throws IOException {
+        int sx = getSx();
+        int sy = getSy();
+        int sz = getSz();
         maskVolume = new int[ sx ][ sy ][ sz ];
 
         // Temporary values, subject to change, by use of metadata file accompanying linked downsample.
@@ -125,10 +124,12 @@ public class V3dMaskFileLoader extends TextureDataBuilder implements VolumeFileL
                 }
             }
         }
+        
+        final int pixelBytes = getPixelBytes();
 
         // Here, sample the neighborhoods (or _output_ voxels).
         // Java implicitly sets newly-allocated byte arrays to all zeros.
-        textureByteArray = new byte[(outSx * outSy * outSz) * pixelBytes];
+        setTextureByteArray( new byte[(outSx * outSy * outSz) * pixelBytes] );
 
         int outZ = 0;
         for ( int z = 0; z < sz-zScale; z += zScale ) {
@@ -166,6 +167,7 @@ public class V3dMaskFileLoader extends TextureDataBuilder implements VolumeFileL
                     }
 
                     // Store the value into the output array.
+                    final byte[] textureByteArray = getTextureByteArray();
                     for ( int pi = 0; pi < pixelBytes; pi ++ ) {
                         byte piByte = (byte)(value >>> (pi * 8) & 0x000000ff);
                         textureByteArray[(yOffset * pixelBytes) + (outX * pixelBytes) + (pi)] = piByte;
@@ -183,9 +185,9 @@ public class V3dMaskFileLoader extends TextureDataBuilder implements VolumeFileL
         maskVolume = null; // Discard this and allow GC to take its course.
 
         // Post-adjust the x,y,z sizes to fit the target down-sampled array.
-        sx = outSx;
-        sy = outSy;
-        sz = outSz;
+        setSx(outSx);
+        setSy(outSy);
+        setSz(outSz);
         return values;
     }
 

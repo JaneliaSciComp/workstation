@@ -13,7 +13,8 @@ import org.janelia.it.jacs.model.user_data.tiledMicroscope.RawFileInfo;
 import org.janelia.it.workstation.api.entity_model.management.ModelMgr;
 import org.janelia.it.workstation.gui.camera.BasicObservableCamera3d;
 import org.janelia.it.workstation.gui.camera.Camera3d;
-import org.janelia.it.workstation.gui.viewer3d.loader.TifFileLoader;
+import org.janelia.it.workstation.gui.viewer3d.loader.TifTextureBuilder;
+import org.janelia.it.workstation.gui.viewer3d.loader.TifVolumeFileLoader;
 import org.janelia.it.workstation.gui.viewer3d.resolver.CacheFileResolver;
 import org.janelia.it.workstation.gui.viewer3d.resolver.FileResolver;
 import org.janelia.it.workstation.gui.viewer3d.texture.TextureDataI;
@@ -80,17 +81,19 @@ public class RawTiffVolumeSource implements MonitoredVolumeSource {
             throw new Exception("Failed to find any tiff files in " + baseDirectoryPath + "." );
         }
         progressMonitor.setNote("Loading volume data.");
-        TifFileLoader tifFileLoader = new TifFileLoader();
+        TifTextureBuilder tifTextureBuilder = new TifTextureBuilder();
+        final TifVolumeFileLoader tifVolumeFileLoader = new TifVolumeFileLoader();
         if ( cubicDimension > -1 ) {
-            tifFileLoader.setCubicOutputDimension( cubicDimension );
-            tifFileLoader.setConversionCharacteristics( rawFileInfo.getTransformMatrix(), rawFileInfo.getInvertedTransform(), rawFileInfo.getMinCorner(), rawFileInfo.getExtent(), rawFileInfo.getQueryMicroscopeCoords() );
+            tifVolumeFileLoader.setCubicOutputDimension( cubicDimension );
+            tifVolumeFileLoader.setConversionCharacteristics( rawFileInfo.getTransformMatrix(), rawFileInfo.getInvertedTransform(), rawFileInfo.getMinCorner(), rawFileInfo.getExtent(), rawFileInfo.getQueryMicroscopeCoords() );
+            tifTextureBuilder.setVolumeFileLoader( tifVolumeFileLoader );
         }
         FileResolver resolver = new CacheFileResolver();
 
         progressMonitor.setNote("Starting data load...");
         Double[] spinAboutZTransform = SPIN_ABOUT_Z;
-        loadChannel(1, resolver, rawFileInfo.getChannel0(), spinAboutZTransform, tifFileLoader, volumeListener);
-        loadChannel(2, resolver, rawFileInfo.getChannel1(), spinAboutZTransform, tifFileLoader, volumeListener);
+        loadChannel(1, resolver, rawFileInfo.getChannel0(), spinAboutZTransform, tifTextureBuilder, volumeListener);
+        loadChannel(2, resolver, rawFileInfo.getChannel1(), spinAboutZTransform, tifTextureBuilder, volumeListener);
 
         progressMonitor.setNote("Launching viewer.");
     }
@@ -108,15 +111,15 @@ public class RawTiffVolumeSource implements MonitoredVolumeSource {
         this.cubicDimension = cubicDimension;
     }
 
-    private void loadChannel(int displayNum, FileResolver resolver, File rawFile, Double[] transformMatrix, TifFileLoader tifFileLoader, VolumeAcceptor volumeListener) throws Exception {
+    private void loadChannel(int displayNum, FileResolver resolver, File rawFile, Double[] transformMatrix, TifTextureBuilder textureBuilder, VolumeAcceptor volumeListener) throws Exception {
         TextureDataI textureData;
         progressMonitor.setNote("Caching channel " + displayNum);
         String resolvedFilename = resolver.getResolvedFilename(rawFile.getAbsolutePath());
         progressMonitor.setNote("Loading channel " + displayNum);
-        tifFileLoader.loadVolumeFile(resolvedFilename);
+        textureBuilder.loadVolumeFile(resolvedFilename);
         progressMonitor.setNote("Building texture data from channel " + displayNum);
         logger.info("Loading" + rawFile + " as " + resolvedFilename);
-        textureData = tifFileLoader.buildTextureData(true);        
+        textureData = textureBuilder.buildTextureData(true);        
         // Presets known to work with this data type.
         textureData.setExplicitInternalFormat(GL2.GL_LUMINANCE16);
         textureData.setExplicitVoxelComponentOrder(GL2.GL_LUMINANCE);

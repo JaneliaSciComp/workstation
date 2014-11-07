@@ -13,7 +13,7 @@ import loci.formats.in.ZeissLSMReader;
 public class LsmFileLoader extends LociFileLoader {
     @Override
     public void loadVolumeFile( String volumeFileName ) throws Exception {
-        this.unCachedFileName = volumeFileName;
+        this.setUnCachedFileName(volumeFileName);
         super.loadLociReader( new ZeissLSMReader() );
     }
 }
