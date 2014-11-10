@@ -85,13 +85,13 @@ public class RawTiffVolumeSource implements MonitoredVolumeSource {
         final TifVolumeFileLoader tifVolumeFileLoader = new TifVolumeFileLoader();
         if ( cubicDimension > -1 ) {
             tifVolumeFileLoader.setCubicOutputDimension( cubicDimension );
-            tifVolumeFileLoader.setConversionCharacteristics( rawFileInfo.getTransformMatrix(), rawFileInfo.getInvertedTransform(), rawFileInfo.getMinCorner(), rawFileInfo.getExtent(), rawFileInfo.getQueryMicroscopeCoords() );
-            tifTextureBuilder.setVolumeFileLoader( tifVolumeFileLoader );
         }
-        FileResolver resolver = new CacheFileResolver();
+        tifVolumeFileLoader.setConversionCharacteristics( rawFileInfo.getTransformMatrix(), rawFileInfo.getInvertedTransform(), rawFileInfo.getMinCorner(), rawFileInfo.getExtent(), rawFileInfo.getQueryMicroscopeCoords() );
 
         progressMonitor.setNote("Starting data load...");
         Double[] spinAboutZTransform = SPIN_ABOUT_Z;
+        FileResolver resolver = new CacheFileResolver();
+        tifTextureBuilder.setVolumeFileLoader( tifVolumeFileLoader );
         loadChannel(1, resolver, rawFileInfo.getChannel0(), spinAboutZTransform, tifTextureBuilder, volumeListener);
         loadChannel(2, resolver, rawFileInfo.getChannel1(), spinAboutZTransform, tifTextureBuilder, volumeListener);
 
