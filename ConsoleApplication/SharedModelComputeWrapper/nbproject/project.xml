@@ -117,6 +117,8 @@
                 <package>org.janelia.it.jacs.shared.genomics</package>
                 <package>org.janelia.it.jacs.shared.geometric_search</package>
                 <package>org.janelia.it.jacs.shared.hibernate</package>
+                <package>org.janelia.it.jacs.shared.image.stream</package>
+                <package>org.janelia.it.jacs.shared.img_3d_loader</package>
                 <package>org.janelia.it.jacs.shared.lucene</package>
                 <package>org.janelia.it.jacs.shared.lucene.data_retrievers</package>
                 <package>org.janelia.it.jacs.shared.lucene.searchers</package>

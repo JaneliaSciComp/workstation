@@ -14,7 +14,7 @@ import org.janelia.it.workstation.api.entity_model.management.ModelMgr;
 import org.janelia.it.workstation.gui.camera.BasicObservableCamera3d;
 import org.janelia.it.workstation.gui.camera.Camera3d;
 import org.janelia.it.workstation.gui.viewer3d.loader.TifTextureBuilder;
-import org.janelia.it.workstation.gui.viewer3d.loader.TifVolumeFileLoader;
+import org.janelia.it.jacs.shared.img_3d_loader.TifVolumeFileLoader;
 import org.janelia.it.workstation.gui.viewer3d.resolver.CacheFileResolver;
 import org.janelia.it.workstation.gui.viewer3d.resolver.FileResolver;
 import org.janelia.it.workstation.gui.viewer3d.texture.TextureDataI;

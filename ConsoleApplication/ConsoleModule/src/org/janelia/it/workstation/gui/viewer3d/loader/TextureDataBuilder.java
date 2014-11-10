@@ -1,5 +1,7 @@
 package org.janelia.it.workstation.gui.viewer3d.loader;
 
+import org.janelia.it.jacs.shared.img_3d_loader.V3dMaskFileLoader;
+import org.janelia.it.jacs.shared.img_3d_loader.AbstractVolumeFileLoader;
 import org.janelia.it.workstation.gui.viewer3d.VolumeDataAcceptor;
 import org.janelia.it.workstation.gui.viewer3d.texture.TextureDataI;
 

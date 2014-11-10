@@ -1,14 +1,14 @@
 package org.janelia.it.workstation.gui.viewer3d;
 
-import org.janelia.it.workstation.gui.viewer3d.loader.MpegFileLoader;
-import org.janelia.it.workstation.gui.viewer3d.loader.LsmFileLoader;
+import org.janelia.it.jacs.shared.img_3d_loader.MpegFileLoader;
+import org.janelia.it.jacs.shared.img_3d_loader.LsmFileLoader;
 import org.janelia.it.workstation.gui.viewer3d.loader.TifTextureBuilder;
 import org.janelia.it.workstation.gui.viewer3d.loader.TextureDataBuilder;
-import org.janelia.it.workstation.gui.viewer3d.loader.V3dSignalFileLoader;
-import org.janelia.it.workstation.gui.viewer3d.loader.V3dMaskFileLoader;
+import org.janelia.it.jacs.shared.img_3d_loader.V3dSignalFileLoader;
+import org.janelia.it.jacs.shared.img_3d_loader.V3dMaskFileLoader;
 import org.apache.commons.io.FilenameUtils;
 import org.janelia.it.workstation.gui.viewer3d.VolumeDataAcceptor.TextureColorSpace;
-import org.janelia.it.workstation.gui.viewer3d.loader.VolumeFileLoaderI;
+import org.janelia.it.jacs.shared.img_3d_loader.VolumeFileLoaderI;
 import org.janelia.it.workstation.gui.viewer3d.loader.VolumeLoaderI;
 import org.janelia.it.workstation.gui.viewer3d.resolver.FileResolver;
 import org.janelia.it.workstation.gui.viewer3d.texture.TextureDataI;
@@ -18,7 +18,7 @@ import org.slf4j.LoggerFactory;
 import java.io.IOException;
 import javax.media.opengl.GL2;
 import org.janelia.it.workstation.gui.viewer3d.loader.LociTextureBuilder;
-import org.janelia.it.workstation.gui.viewer3d.loader.TifVolumeFileLoader;
+import org.janelia.it.jacs.shared.img_3d_loader.TifVolumeFileLoader;
 
 public class VolumeLoader implements VolumeLoaderI {
 
