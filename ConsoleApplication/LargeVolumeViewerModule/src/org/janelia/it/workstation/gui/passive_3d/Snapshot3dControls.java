@@ -27,6 +27,7 @@ import org.janelia.it.workstation.gui.util.Icons;
 import org.janelia.it.workstation.gui.util.StateDrivenIconToggleButton;
 import org.janelia.it.workstation.gui.viewer3d.texture.TextureDataI;
 import org.janelia.it.workstation.gui.viewer3d.volume_builder.VolumeDataChunk;
+import org.janelia.it.workstation.shared.workers.IndeterminateProgressMonitor;
 import org.janelia.it.workstation.shared.workers.SimpleWorker;
 
 /**
@@ -231,6 +232,7 @@ public class Snapshot3dControls {
                 }
                 
             };
+            sw.setProgressMonitor(new IndeterminateProgressMonitor(view, getValue(Action.NAME), "Smoothing data..."));
             sw.execute();
         } 
 
