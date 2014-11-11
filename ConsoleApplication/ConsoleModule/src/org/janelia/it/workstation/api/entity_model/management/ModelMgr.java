@@ -1249,4 +1249,8 @@ public final class ModelMgr {
         return FacadeManager.getFacadeManager().getEntityFacade().getNearestFileInfo(basePath, viewerCoord);
     }
 
+    public Map<Integer,byte[]> getTextureBytes( String basePath, int[] viewerCoord, int cubicDim ) throws Exception {
+        return FacadeManager.getFacadeManager().getEntityFacade().getTextureBytes(basePath, viewerCoord, cubicDim);
+    }
+
 }
