@@ -186,6 +186,7 @@ public class DownSampler {
      * @param sliceParameter metadata about the slice being calculated.
      * @param y input location under study.
      * @param x input location under study.
+     * @param z input location under study.
      * @return computed value: all bytes of the voxel.
      */
     private byte[] getNeighborHoodDownSampling(
@@ -194,8 +195,7 @@ public class DownSampler {
 
         byte[] value = null;
 
-        Map<Long,Integer> frequencies =
-                new HashMap<Long,Integer>();
+        Map<Long,Integer> frequencies = new HashMap<>();
 
         // Neighborhood starts at the x,y,z values of the loops.  There will be one
         // such neighborhood for each of these down-sampled coord sets: x,y,z

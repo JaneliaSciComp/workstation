@@ -39,37 +39,50 @@ public class TestMip3d {
                     //      String fn = "/Users/fosterl/Documents/LSM_3D/FLFL_20121001154228067_25581.lsm";
                     //String fn = "/Volumes/flylight/RJ/For Les Foster/B01_T01_20121023_PMB1_MB057B_20X_R1_L01.lsm";
                     //                    String fn = "/Volumes/jacsData/filestore/MaskResources/GiantFiber/guide/EPA_R.v3dpbd";
-                    //String fn = "/Volumes/jacsData/filestore/MaskResources/GiantFiber/guide/LAL_L.v3dpbd";
-                    //String fn = "/Volumes/jacsData/filestore/system/Separation/296/418/1778029752666296418/separate/fastload/Reference2_50.mp4";
-                    String fileBase = "/Users/fosterl/Documents/alignment_board/samples/";
+                    // Checked 11/7/2014.
+                    //String fn = "/Volumes/nobackup/jacs/jacsData/filestore/MaskResources/GiantFiber/guide/LAL_L.v3dpbd";
+                    // Checked 11/7/2014.
+                    //String fn = "/Volumes/nobackup/jacs/jacsData/filestore/system/Separation/296/418/1778029752666296418/separate/fastload/Reference2_50.mp4";
+                    //String fileBase = "/Users/fosterl/Documents/alignment_board/samples/";
                     //String fn = fileBase + "1735579170638921826/ConsolidatedSignal2_25.mp4";
-                    //String fn = "/Volumes/jacsData/filestore/system/Separation/951/842/1742124964321951842/separate/ConsolidatedLabel.v3dpbd";
-                    //String fn = "/Volumes/jacsData/filestore/system/Separation/294/370/1742138165818294370/separate/fastLoad/ConsolidatedSignal2_25.mp4";
+                    // Black as of 11/7/2014.
+                    //String fn = "/Volumes/nobackup/jacs/jacsData/filestore/system/Separation/951/842/1742124964321951842/separate/ConsolidatedLabel.v3dpbd";
+                    // Checked 11/7/2014.
+                    //String fn = "/Volumes/nobackup/jacs/jacsData/filestore/system/Separation/294/370/1742138165818294370/separate/fastLoad/ConsolidatedSignal2_25.mp4";
 
                     // WORKING:
                     // Compartment masks.
+                    // Checked 11/7/2014 (all).
                     String guideBase = "/Volumes/nobackup/jacs/jacsData/filestore/MaskResources/Compartment/guide/";
-                    //String fn = guideBase + "LOP_R.v3dpbd";
+                    String fn = guideBase + "LOP_R.v3dpbd";
                     //String fn = guideBase + "Mask.v3dpbd";
                     //String fn = guideBase + "../maskIndex.v3dpbd";
 
-                    //String fn = "/Users/fosterl/.JaneliaWorkstationSuite/Console/.jacs-file-cache/active/WebDAV/nobackup/jacs/jacsData/filestore/leetlab/Separation/956/258/1834565641604956258/separate/fastLoad/ConsolidatedSignal2_25.mp4";
-
+                    // White box as of 11/7/2014.
                     //String fn = "/Users/fosterl/Whitebackground_color.tif";
+                    // Checked 11/7/2014.
                     //String fn = "/Users/fosterl/Erasmus_Color.tiff";
+                    // Checked 11/7/2014.
                     //String fn = "/Users/fosterl/Regression_12032013a_color_blocks.tiff";
+                    // Checked 11/7/2014.
                     //String fn = "/Users/fosterl/Documents/tiff_mousebrain/00297-ngc.0.tif";
-//                    String fn = "/Users/fosterl/Documents/tiff_mousebrain/00138-ngc.0.tif";
-                    String fn = "/Users/fosterl/Documents/tiff_mousebrain/01494-ngc.0.tif";
+                    // Checked 11/7/2014.
+                    //String fn = "/Users/fosterl/Documents/tiff_mousebrain/00138-ngc.0.tif";
+                    // All assumed OK 11/7/2014.
+                    //String fn = "/Users/fosterl/Documents/tiff_mousebrain/01494-ngc.0.tif";
                     //String fn = "/Users/fosterl/Documents/tiff_mousebrain/00507-ngc.1.tif";
                     //String fn = "/Users/fosterl/Documents/tiff_mousebrain/00507-ngc.0.tif";
 
+                    // Black as of 11/7/2014.
                     //String fn = "/Volumes/nobackup/jacs/jacsData/filestore/system/Separation/296/418/1778029752666296418/separate/ConsolidatedLabel.v3dpbd";
-                    // WORKING:
+                    // Checked 11/7/2014.
                     //String fn = "/Volumes/nobackup/jacs/jacsData/filestore/system/Separation/143/266/1696292257579143266/separate/ConsolidatedLabel.v3dpbd";
-                    // WORKING:
+                    // Checked 11/7/2014.
                     //String fn = "/Volumes/nobackup/jacs/jacsData/filestore/simpsonlab/Separation/424/805/2018719198523424805/separate/fastLoad/ConsolidatedSignal2_25.mp4";
 
+                    // White vertical stripes as of 11/7/2014.
+                    //String fn = "/Users/fosterl/Documents/alignment_board/lsm/FLCO_20111215135504421_540.lsm";
+                    
                     // All black.  String fn = "/Volumes/jacsData/filestore/MaskResources/Compartment/maskRGB.v3dpbd";
                     if ( args.length > 0 ) {
                         fn = args[ 0 ];

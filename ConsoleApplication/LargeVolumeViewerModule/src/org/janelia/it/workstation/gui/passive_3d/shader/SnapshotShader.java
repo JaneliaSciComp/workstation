@@ -24,7 +24,6 @@ public class SnapshotShader extends TexturedShader {
     };
 
     private int previousShader = 0;
-    private float[] rgb;
 
     private int vertexAttribLoc = -1;
     private int texCoordAttribLoc = -1;
@@ -93,6 +92,10 @@ public class SnapshotShader extends TexturedShader {
      */
     @Override
     public void addTextureMediator(TextureMediator textureMediator, String name) {
+        // Explicitly remove old mediator.
+        if ( mediatorMap.containsKey( name ) ) {
+            mediatorMap.remove( name );
+        }
         mediatorMap.put( name, textureMediator );
     }
 

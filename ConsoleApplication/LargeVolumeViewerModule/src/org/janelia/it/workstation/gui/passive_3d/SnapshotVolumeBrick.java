@@ -11,11 +11,8 @@ import javax.media.opengl.GLAutoDrawable;
 
 import java.awt.Color;
 import java.util.Collection;
-import java.util.HashMap;
 import java.util.Iterator;
-import java.util.Map;
 import org.janelia.it.workstation.gui.large_volume_viewer.ChannelColorModel;
-import org.janelia.it.workstation.gui.large_volume_viewer.ImageColorModel;
 import org.janelia.it.workstation.gui.viewer3d.shader.TexturedShader;
 import org.janelia.it.workstation.gui.viewer3d.texture.TextureDataI;
 import org.janelia.it.workstation.gui.viewer3d.texture.TextureMediator;
@@ -33,8 +30,8 @@ public class SnapshotVolumeBrick extends AbstractVolumeBrick
     private boolean explicitInterleave = false;
     
     // Vary these parameters to taste
-	// Rendering variables
-	private final RenderMethod renderMethod =
+    // Rendering variables
+    private final RenderMethod renderMethod =
 		RenderMethod.MAXIMUM_INTENSITY; // MIP
     private boolean bUseShader = true; // Controls whether to load and use shader program(s).
 
@@ -55,8 +52,8 @@ public class SnapshotVolumeBrick extends AbstractVolumeBrick
         if ( textureDatas == null ) {
             return;
         }
-        int texNum = 0;
         for ( TextureDataI textureData: textureDatas ) {
+            //textureData.setInterpolationMethod(GL2.GL_LINEAR);
             addTextureData( textureData );
             //int[] range = calculate2ByteValueRange(textureData);
             logger.info( "Texture from " + textureData.getFilename() );            
@@ -78,28 +75,29 @@ public class SnapshotVolumeBrick extends AbstractVolumeBrick
     }
 
     @Override
-	public void display(GLAutoDrawable glDrawable) {
+    public void display(GLAutoDrawable glDrawable) {
         // Avoid carrying out operations if there is no data.
-        if ( ! hasTextures() ) {
-            logger.warn( "No texture for volume brick." );
+        if (!hasTextures()) {
+            logger.warn("No texture for volume brick.");
             return;
         }
 
-		if (! bIsInitialized)
-			init(glDrawable);
+        if (!bIsInitialized) {
+            init(glDrawable);
+        }
 
         GL2 gl = glDrawable.getGL().getGL2();
         if (bUseShader) {
             SnapshotShader snapshotShader = (SnapshotShader) getShader();
             snapshotShader.load(gl);
-            pushValuesToShader( gl, snapshotShader );
+            pushValuesToShader(gl, snapshotShader);
 
             int vertexAttribLoc = snapshotShader.getVertexAttribLoc();
             int texCoordAttribLoc = snapshotShader.getTexCoordAttribLoc();
             getBufferManager().setCoordAttributeLocations(vertexAttribLoc, texCoordAttribLoc);
         }
 
-		gl.glShadeModel(GL2.GL_FLAT);
+        gl.glShadeModel(GL2.GL_FLAT);
         gl.glDisable(GL2.GL_LIGHTING);
         gl.glEnable(GL2.GL_TEXTURE_3D);
 
@@ -109,19 +107,18 @@ public class SnapshotVolumeBrick extends AbstractVolumeBrick
             gl.glBlendEquation(GL2.GL_FUNC_ADD);
             // Weight source by GL_ONE because we are using premultiplied alpha.
             gl.glBlendFunc(GL2.GL_ONE, GL2.GL_ONE_MINUS_SRC_ALPHA);
-        }
-        else if (renderMethod == RenderMethod.MAXIMUM_INTENSITY) {
+        } else if (renderMethod == RenderMethod.MAXIMUM_INTENSITY) {
             gl.glBlendEquation(GL2.GL_MAX);
             gl.glBlendFunc(GL2.GL_ONE, GL2.GL_DST_ALPHA);
         }
         displayVolumeSlices(gl);
-		if (bUseShader) {
+        if (bUseShader) {
             getShader().unload(gl);
         }
 
-        gl.glDisable( GL2.GL_TEXTURE_3D );
-        gl.glDisable( GL2.GL_BLEND );
-	}
+        gl.glDisable(GL2.GL_TEXTURE_3D);
+        gl.glDisable(GL2.GL_BLEND);
+    }
     
     private void pushValuesToShader(GL2 gl, SnapshotShader snapshotShader) {
 		int sc = snapshotControls.getActiveColorModel().getChannelCount();

@@ -6,11 +6,8 @@ import org.janelia.it.jacs.model.user_data.tiledMicroscope.*;
 import org.janelia.it.workstation.api.facade.abstract_facade.EntityFacade;
 import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
+
 import org.janelia.it.jacs.compute.api.TiledMicroscopeBeanRemote;
 
 /**
@@ -376,6 +373,16 @@ public class EJBEntityFacade implements EntityFacade {
         }
         
         return rawInfo;
+    }
+
+    @Override
+    public Map<Integer,byte[]> getTextureBytes( String basePath, int[] viewerCoord, int cubicDim ) throws Exception {
+        Map<Integer,byte[]> rtnVal = null;
+        final TiledMicroscopeBeanRemote remoteTiledMicroscopeBean = EJBFactory.getRemoteTiledMicroscopeBean();
+        if ( remoteTiledMicroscopeBean != null ) {
+            rtnVal = remoteTiledMicroscopeBean.getTextureBytes( basePath, viewerCoord, cubicDim );
+        }
+        return rtnVal;
     }
 
 }
