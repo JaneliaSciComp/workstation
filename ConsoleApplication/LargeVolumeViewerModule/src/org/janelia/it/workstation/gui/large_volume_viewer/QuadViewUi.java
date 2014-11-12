@@ -553,9 +553,12 @@ public class QuadViewUi extends JPanel
 		
 		// JSplitPane splitPane = new JSplitPane();
 		splitPane.setResizeWeight(1.00);
+        // FW-2805: specify min size explicitly, or it'll grab a large
+        //  default minimum from who knows where and blow the vertical extent way up:
+        splitPane.setMinimumSize(new Dimension(0, 10));
 		splitPane.setOrientation(JSplitPane.VERTICAL_SPLIT);
 		toolBarPanel.add(splitPane, BorderLayout.CENTER);
-		
+
 		splitPane.setRightComponent(sliderPanel);
         imageColorModel.getColorModelInitializedSignal().connect(new org.janelia.it.workstation.signal.Slot() {
 			@Override
