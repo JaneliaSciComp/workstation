@@ -28,6 +28,7 @@ public class ColorButtonPanel extends JPanel {
     private List<JCheckBox> checkboxes = new ArrayList<>();
     private List<AbstractButton> bottomControls = new ArrayList<>();
     private int verticalSpacer;
+    private Observer icmInitObserver;
     
     public ColorButtonPanel( ImageColorModel imageColorModel, int verticalSpacer ) {
         super();
@@ -41,22 +42,25 @@ public class ColorButtonPanel extends JPanel {
 
     public final void setImageColorModel( ImageColorModel imageColorModel ) {
         clearCheckboxes();
+        cleanupObserver();
         this.imageColorModel = imageColorModel;        
 
         // Must initialize GUI as needed.        
         if ( imageColorModel.getChannelCount() > 0 ) {
             initGui();
         }
-
-        imageColorModel.getColorModelInitializedSignal().addObserver(new Observer() {
+        
+        icmInitObserver = new Observer() {
             @Override
             public void update(Observable o, Object arg) {
                 initGui();
             }
             
-        });
+        };
+
+        imageColorModel.getColorModelInitializedSignal().addObserver(icmInitObserver);
     }
-    
+
     public void addButton( AbstractButton btn ) {
         bottomControls.add( btn );
         this.add(btn);
@@ -80,9 +84,16 @@ public class ColorButtonPanel extends JPanel {
 
     private void clearCheckboxes() {
         for (JCheckBox checkbox : checkboxes) {
+            ((ChannelColorButtonModel)checkbox.getModel()).dispose();
             this.remove(checkbox);
         }
         checkboxes.clear();
+    }
+    
+    private void cleanupObserver() {
+        if ( this.imageColorModel != null  &&  icmInitObserver != null ) {
+            this.imageColorModel.getColorModelInitializedSignal().deleteObserver(icmInitObserver);
+        }
     }
     
     /**
@@ -137,9 +148,21 @@ public class ColorButtonPanel extends JPanel {
     private static class ChannelColorButtonModel extends DefaultButtonModel {
 
         private ChannelColorModel ccm;
+        private AbstractButton btn;
+        private final Observer reflectCheckedStateObserver;
+
         public ChannelColorButtonModel(ChannelColorModel ccm, AbstractButton btn) {
             this.ccm = ccm;
-        } 
+            this.btn = btn;
+            reflectCheckedStateObserver = new Observer(){
+                @Override
+                public void update(Observable o, Object arg) {
+                    ChannelColorButtonModel.this.fireStateChanged();
+                }
+            };
+            // Feed back to second checkbox which have may similar model.
+            ccm.getColorChangedSignal().addObserver(reflectCheckedStateObserver);
+        }
         
         @Override
         public boolean isSelected() {
@@ -150,6 +173,12 @@ public class ColorButtonPanel extends JPanel {
         public void setSelected(boolean selected) {
             ccm.setCombiningConstant( selected ? 1.0f : -1.0f );
             super.setSelected(selected);
+        }
+        
+        public void dispose() {
+            ccm.getColorChangedSignal().deleteObserver(reflectCheckedStateObserver);
+            ccm = null;
+            btn = null;            
         }
 
     }
