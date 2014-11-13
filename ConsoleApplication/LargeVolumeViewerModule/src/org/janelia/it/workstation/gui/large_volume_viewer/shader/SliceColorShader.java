@@ -66,7 +66,7 @@ public class SliceColorShader extends PassThroughTextureShader
 		setUniform4v(gl, "channel_gamma", 1, channel_gamma);
 		setUniform4v(gl, "channel_min", 1, channel_min);
 		setUniform4v(gl, "channel_scale", 1, channel_scale);
-        setUniform4v(gl, "sign_op", 4, sign_op);
+        setUniform4v(gl, "sign_op", 1, sign_op);
 	}
 	
 	public void setImageColorModel(ImageColorModel imageColorModel) {
