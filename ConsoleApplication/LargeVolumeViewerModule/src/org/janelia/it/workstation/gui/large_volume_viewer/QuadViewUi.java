@@ -559,7 +559,12 @@ public class QuadViewUi extends JPanel
 		splitPane.setOrientation(JSplitPane.VERTICAL_SPLIT);
 		toolBarPanel.add(splitPane, BorderLayout.CENTER);
 
-		splitPane.setRightComponent(sliderPanel);
+        JPanel rightComponentPanel = new JPanel();
+        rightComponentPanel.setLayout( new BorderLayout() );
+        rightComponentPanel.add( sliderPanel, BorderLayout.CENTER );
+        ColorButtonPanel colorButtonPanel = new ColorButtonPanel( imageColorModel, 1 );
+        rightComponentPanel.add( colorButtonPanel, BorderLayout.EAST );
+		splitPane.setRightComponent(rightComponentPanel);
         imageColorModel.getColorModelInitializedSignal().connect(new org.janelia.it.workstation.signal.Slot() {
 			@Override
 			public void execute() {

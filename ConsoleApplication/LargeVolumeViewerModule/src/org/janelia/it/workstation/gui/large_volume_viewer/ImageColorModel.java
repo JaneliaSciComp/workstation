@@ -5,7 +5,6 @@ import java.util.Arrays;
 import java.util.Vector;
 
 import com.google.common.base.Joiner;
-import org.janelia.it.workstation.gui.viewer3d.interfaces.VolumeImage3d;
 import org.janelia.it.workstation.signal.Signal;
 import org.janelia.it.workstation.signal.Slot1;
 
@@ -60,7 +59,7 @@ public class ImageColorModel
             builder.append(":");
             builder.append(ch.asString());
         }
-
+        
         return builder.toString();
     }
 
@@ -77,17 +76,17 @@ public class ImageColorModel
 
         // debug:
         // System.out.println("color model string in: " + modelString);
-
-        if (getChannelCount() != Integer.parseInt(items[0])) {
+        int itemNo = 0;
+        if (getChannelCount() != Integer.parseInt(items[itemNo++])) {
             // must be same number of channels!
             return;
         }
 
         // do syncs first, so later sets don't get unset if they
         //  shouldn't be
-        setBlackSynchronized(Boolean.parseBoolean(items[1]));
-        setGammaSynchronized(Boolean.parseBoolean(items[2]));
-        setWhiteSynchronized(Boolean.parseBoolean(items[3]));
+        setBlackSynchronized(Boolean.parseBoolean(items[itemNo++]));
+        setGammaSynchronized(Boolean.parseBoolean(items[itemNo++]));
+        setWhiteSynchronized(Boolean.parseBoolean(items[itemNo++]));
 
         // in principle I could pass the post-split array,
         //  but I like having both fromString() methods look the same;
@@ -96,8 +95,9 @@ public class ImageColorModel
             // thankfully we have Guava, or this would be ugly;
             //  I can't believe Java doesn't have a string joiner in
             //  the standard lib!  or array slices!
-            Joiner joiner = Joiner.on(":");
-            String s = joiner.join(Arrays.copyOfRange(items, 4 + 8 * i, 4 + 8 * i + 8));
+            Joiner joiner = Joiner.on(":");            
+            int itemCount = channels.get(i).getNumSerializedItems();
+            String s = joiner.join(Arrays.copyOfRange(items, 4 + itemCount * i, 4 + itemCount * i + itemCount));
             channels.get(i).fromString(s);
         }
 
