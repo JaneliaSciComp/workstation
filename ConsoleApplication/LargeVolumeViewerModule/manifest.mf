@@ -1,5 +1,5 @@
 Manifest-Version: 1.0
-OpenIDE-Module: org.janelia.it.workstation.gui.large_volume_viewer
+OpenIDE-Module: org.janelia.it.workstation.gui.large_volume_viewer/1
 OpenIDE-Module-Layer: org/janelia/it/workstation/gui/large_volume_viewer/layer.xml
 OpenIDE-Module-Localizing-Bundle: org/janelia/it/workstation/gui/large_volume_viewer/Bundle.properties
 OpenIDE-Module-Requires: org.openide.windows.WindowManager
