@@ -91,12 +91,12 @@ public class ImageColorModel
         // in principle I could pass the post-split array,
         //  but I like having both fromString() methods look the same;
         //  so I reconstitute the delimited string and pass it down
+        int itemCount = (items.length - 4) / getChannelCount();
         for (int i=0; i<getChannelCount(); i++) {
             // thankfully we have Guava, or this would be ugly;
             //  I can't believe Java doesn't have a string joiner in
             //  the standard lib!  or array slices!
-            Joiner joiner = Joiner.on(":");            
-            int itemCount = channels.get(i).getNumSerializedItems();
+            Joiner joiner = Joiner.on(":");             
             String s = joiner.join(Arrays.copyOfRange(items, 4 + itemCount * i, 4 + itemCount * i + itemCount));
             channels.get(i).fromString(s);
         }
