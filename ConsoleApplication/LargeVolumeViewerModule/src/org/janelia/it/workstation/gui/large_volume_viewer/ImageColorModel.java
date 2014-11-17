@@ -97,8 +97,6 @@ public class ImageColorModel
             //  I can't believe Java doesn't have a string joiner in
             //  the standard lib!  or array slices!
             Joiner joiner = Joiner.on(":");             
-            //int itemCount = channels.get(i).getNumSerializedItems();
-            //itemCount = items.length / getChannelCount();
             String s = joiner.join(Arrays.copyOfRange(items, 4 + itemCount * i, 4 + itemCount * i + itemCount));
             channels.get(i).fromString(s);
         }

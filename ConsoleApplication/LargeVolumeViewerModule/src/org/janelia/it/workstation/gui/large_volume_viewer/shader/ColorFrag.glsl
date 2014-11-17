@@ -77,18 +77,5 @@ vec4 combineColor()
 void main()
 {
     vec4 in_color = texture2D(tileTexture, gl_TexCoord[0].xy);
-    // Two color images are loaded as luminance/alpha, so look in alpha
-    // for second intensity, not in green.
-//    if (channel_count == 2)
-//        in_color.g = in_color.a;
-//    vec3 out_color = vec3(0, 0, 0);
-//    vec4 channel_intensity = vec4(0,0,0,0);
-//    for (int c = 0; c < channel_count; ++c) {
-//        channel_intensity[c] = getIntensity(in_color[c], c);
-//        out_color = max(out_color, channel_intensity[c] * channel_color[c]); // apply channel color
-//    }
-    // Final sRGB color correction, because JOGL 2.1 won't do it.
-//    vec3 srgb = vec3(pow(out_color.r, 0.46), pow(out_color.g, 0.46), pow(out_color.b, 0.46));
-//    gl_FragColor = vec4(srgb, 1.0);
     gl_FragColor = combineColor();
 }
