@@ -4,6 +4,7 @@ package org.janelia.it.workstation.gui.large_volume_viewer.annotation;
 // std lib imports
 
 import org.janelia.it.jacs.model.user_data.tiledMicroscope.TmWorkspace;
+import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.workstation.gui.util.Icons;
 import org.janelia.it.workstation.signal.Signal;
 import org.janelia.it.workstation.signal.Slot1;
@@ -43,6 +44,7 @@ public class AnnotationPanel extends JPanel
     private JCheckBoxMenuItem automaticTracingMenuItem;
     private JCheckBoxMenuItem automaticRefinementMenuItem;
     private NoteListPanel noteListPanel;
+    private LVVDevPanel lvvDevPanel;
 
     // other UI stuff
     private static final int width = 250;
@@ -359,6 +361,12 @@ public class AnnotationPanel extends JPanel
 
         // testing
         // showOutline(noteListPanel, Color.orange);
+
+        // developer panel, only shown to me; used for various testing things
+        if (SessionMgr.getSessionMgr().getSubject().getName().equals("olbrisd")) {
+            lvvDevPanel = new LVVDevPanel(annotationMgr, annotationModel, largeVolumeViewerTranslator);
+            add(lvvDevPanel, cVert);
+        }
 
 
         // the bilge...
