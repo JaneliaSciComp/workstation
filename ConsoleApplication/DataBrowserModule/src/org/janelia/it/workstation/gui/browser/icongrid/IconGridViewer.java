@@ -1378,7 +1378,7 @@ public abstract class IconGridViewer<T> extends IconPanel<T> {
         populateImageRoles(imageObjects);
         iconDemoToolbar.getImageRoleButton().setEnabled(!allImageRoles.isEmpty());
         if (!allImageRoles.contains(getCurrImageRole())) {
-            setCurrImageRole(FileType.Mip.toString());
+            setCurrImageRole(FileType.SignalMip.toString());
         }
     }
 

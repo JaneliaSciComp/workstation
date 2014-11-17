@@ -11,6 +11,7 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import javax.swing.Action;
+import org.janelia.it.workstation.gui.browser.api.DomainUtils;
 import org.janelia.it.workstation.gui.browser.components.DatePropertyEditor;
 import org.janelia.it.workstation.gui.util.Icons;
 import org.openide.ErrorManager;
@@ -28,7 +29,7 @@ import org.slf4j.LoggerFactory;
  *
  * @author <a href="mailto:rokickik@janelia.hhmi.org">Konrad Rokicki</a>
  */
-public class InternalNode<T> extends AbstractNode implements HasUniqueId {
+public class InternalNode<T> extends AbstractNode implements HasUniqueId, Has2dRepresentation {
     
     private long uniqueId;
     
@@ -139,7 +140,7 @@ public class InternalNode<T> extends AbstractNode implements HasUniqueId {
                 Method setter = propertyDescriptor.getWriteMethod();
                 PropertySupport.Reflection prop = 
                         new PropertySupport.Reflection(obj, getter.getReturnType(), getter, setter);
-                prop.setName(unCamelCase(getter.getName().replaceFirst("get", "")));
+                prop.setName(DomainUtils.unCamelCase(getter.getName().replaceFirst("get", "")));
                 set.put(prop);
                 
                 if (getter.getReturnType().isAssignableFrom(Date.class)) {
@@ -155,7 +156,8 @@ public class InternalNode<T> extends AbstractNode implements HasUniqueId {
         return sheet;
     }
 
-    public static String unCamelCase(String s) {
-        return s.replaceAll("(?<=\\p{Ll})(?=\\p{Lu})|(?<=\\p{L})(?=\\p{Lu}\\p{Ll})", " ");
+    @Override
+    public String get2dImageFilepath(String role) {
+        return null;
     }
 }

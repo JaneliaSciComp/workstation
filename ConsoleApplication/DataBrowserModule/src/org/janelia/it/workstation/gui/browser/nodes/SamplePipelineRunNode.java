@@ -1,6 +1,9 @@
 package org.janelia.it.workstation.gui.browser.nodes;
 
 import java.lang.ref.WeakReference;
+import org.janelia.it.jacs.model.domain.interfaces.HasFiles;
+import org.janelia.it.jacs.model.domain.sample.ObjectiveSample;
+import org.janelia.it.jacs.model.domain.sample.PipelineResult;
 
 import org.janelia.it.jacs.model.domain.sample.Sample;
 import org.janelia.it.jacs.model.domain.sample.SamplePipelineRun;
@@ -29,5 +32,20 @@ public class SamplePipelineRunNode extends InternalNode<SamplePipelineRun> {
     @Override
     public String getSecondaryLabel() {
         return getSamplePipelineRun().getCreationDate()+"";
+    }
+    
+    @Override
+    public String get2dImageFilepath(String role) {
+        SamplePipelineRun run = getSamplePipelineRun();
+        HasFiles lastResult = null;
+        for(PipelineResult result : run.getResults()) {
+            if (result instanceof HasFiles) {
+                lastResult = (HasFiles)result;
+            }
+        }
+        if (lastResult!=null) {
+            return DomainUtils.get2dImageFilepath(lastResult, role);
+        }
+        return null;
     }
 }

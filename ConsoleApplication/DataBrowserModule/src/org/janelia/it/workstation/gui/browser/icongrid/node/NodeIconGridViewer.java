@@ -3,7 +3,6 @@ package org.janelia.it.workstation.gui.browser.icongrid.node;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 import java.beans.PropertyVetoException;
-import java.beans.VetoableChangeListener;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashSet;
@@ -12,12 +11,12 @@ import java.util.Set;
 import java.util.concurrent.atomic.AtomicBoolean;
 import org.janelia.it.jacs.model.domain.DomainObject;
 import org.janelia.it.jacs.model.domain.enums.FileType;
-import org.janelia.it.jacs.model.domain.interfaces.HasFilepath;
 import org.janelia.it.jacs.model.domain.interfaces.HasFiles;
 import org.janelia.it.workstation.gui.browser.components.DomainExplorerTopComponent;
 import org.janelia.it.workstation.gui.browser.icongrid.AnnotatedImageButton;
 import org.janelia.it.workstation.gui.browser.icongrid.IconGridViewer;
 import org.janelia.it.workstation.gui.browser.nodes.DomainObjectNode;
+import org.janelia.it.workstation.gui.browser.nodes.Has2dRepresentation;
 import org.janelia.it.workstation.gui.browser.nodes.InternalNode;
 import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.workstation.gui.util.WindowLocator;
@@ -36,9 +35,10 @@ public class NodeIconGridViewer extends IconGridViewer<Node> {
     
     private static final Logger log = LoggerFactory.getLogger(NodeIconGridViewer.class);
     
-    /** Explorer manager to work with. Is not null only if the component is showing
-    * in components hierarchy
-    */
+    /** 
+     * Explorer manager to work with. Is not null only if the component is showing
+     * in components hierarchy
+     */
     private transient ExplorerManager manager;
     
     /** Listener to nearly everything */
@@ -111,7 +111,15 @@ public class NodeIconGridViewer extends IconGridViewer<Node> {
     
     @Override
     public void setContextObject(Node contextNode) {
-        if (manager.getExploredContext()!=null && manager.getExploredContext().equals(contextNode)) return;
+        log.trace("setContextObject");
+        log.trace("    Old: "+manager.getExploredContext());
+        log.trace("    New: "+contextNode);
+        if (manager.getExploredContext()!=null) {
+            if (manager.getExploredContext()!=null && manager.getExploredContext().equals(contextNode)) {
+                return;
+            }
+        }
+        
         try {
             manager.setExploredContextAndSelection(contextNode, new Node[0]);
         }
@@ -164,34 +172,10 @@ public class NodeIconGridViewer extends IconGridViewer<Node> {
 
     @Override
     public String getImageFilepath(Node node, String role) {
-        if (node instanceof DomainObjectNode) {
-            DomainObjectNode domainObjectNode = (DomainObjectNode)node;
-            DomainObject domainObject = domainObjectNode.getDomainObject();
-            StringBuilder urlSb = new StringBuilder();
-            
-            if (domainObject instanceof HasFiles) {
-                if (domainObject instanceof HasFilepath) {
-                    String rootPath = ((HasFilepath)domainObject).getFilepath();
-                    if (rootPath!=null) {
-                        urlSb.append(rootPath);
-                    }
-                }
-                HasFiles hasFiles = (HasFiles)domainObject;
-                FileType fileType = FileType.valueOf(role);
-                String filepath = hasFiles.getFiles().get(fileType);
-                if (filepath!=null) {
-                    if (urlSb.length()>0) urlSb.append("/");
-                    urlSb.append(filepath);
-                }
-                else {
-                    // Clear the URL if there is no filepath for the given role
-                    urlSb = new StringBuilder();
-                }
-            }
-            
-            return urlSb.length()>0 ? urlSb.toString() : null;
+        if (node instanceof Has2dRepresentation) {
+            Has2dRepresentation node2d = (Has2dRepresentation)node;
+            return node2d.get2dImageFilepath(role);
         }
-        
         return null;
     }
 
@@ -306,13 +290,13 @@ public class NodeIconGridViewer extends IconGridViewer<Node> {
             protected void hadSuccess() {
                 
                 if (node==null) {
-                    setContextObject(null);
+                    //setContextObject(null);
                     clear();
                     return;
                 }
                 else {
                     List<Node> nodes = Arrays.asList(children);
-                    setContextObject(node);
+                    //setContextObject(node);
                     showImageObjects(nodes);
                 }
             
@@ -335,6 +319,7 @@ public class NodeIconGridViewer extends IconGridViewer<Node> {
                 updateSelection();
             }
             else if (ExplorerManager.PROP_EXPLORED_CONTEXT.equals(evt.getPropertyName())) {
+                log.info("Heard property change: "+evt.getPropertyName()+" "+evt.getOldValue()+"->"+evt.getNewValue());
                 loadNode(manager.getExploredContext());
             }
         }

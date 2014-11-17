@@ -1,6 +1,7 @@
 package org.janelia.it.workstation.gui.browser.nodes;
 
 import java.lang.ref.WeakReference;
+import org.janelia.it.jacs.model.domain.interfaces.HasFiles;
 
 import org.janelia.it.jacs.model.domain.sample.NeuronSeparation;
 import org.janelia.it.jacs.model.domain.sample.PipelineResult;
@@ -9,6 +10,7 @@ import org.janelia.it.jacs.model.domain.sample.SampleAlignmentResult;
 import org.janelia.it.jacs.model.domain.sample.SampleCellCountingResult;
 import org.janelia.it.jacs.model.domain.sample.SamplePipelineRun;
 import org.janelia.it.jacs.model.domain.sample.SampleProcessingResult;
+import org.janelia.it.workstation.gui.browser.api.DomainUtils;
 import org.janelia.it.workstation.gui.browser.nodes.children.NeuronNodeFactory;
 import org.janelia.it.workstation.gui.browser.nodes.children.ResultChildFactory;
 import org.openide.nodes.Children;
@@ -65,5 +67,25 @@ public class PipelineResultNode extends InternalNode<PipelineResult> {
     @Override
     public String getSecondaryLabel() {
         return getObject().getCreationDate()+"";
+    }
+    
+    @Override
+    public String get2dImageFilepath(String role) {
+        PipelineResult result = getPipelineResult();
+        if (result instanceof HasFiles) {
+            return DomainUtils.get2dImageFilepath((HasFiles)result, role);
+        }
+        else if (result instanceof SamplePipelineRun) {
+            HasFiles lastResult = null;
+            for(PipelineResult subResult : ((SamplePipelineRun)result).getResults()) {
+                if (subResult instanceof HasFiles) {
+                    lastResult = (HasFiles)subResult;
+                }
+            }
+            if (lastResult!=null) {
+                return DomainUtils.get2dImageFilepath(lastResult, role);
+            }
+        }
+        return null;
     }
 }
