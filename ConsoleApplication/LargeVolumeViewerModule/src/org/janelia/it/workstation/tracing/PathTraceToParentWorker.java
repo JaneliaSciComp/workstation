@@ -26,7 +26,7 @@ public class PathTraceToParentWorker extends BackgroundWorker {
     private double timeout = 10.0;
 
     // public Signal1<TracedPathSegment> pathTracedSignal = new Signal1<TracedPathSegment>();
-    public Signal1<AnchoredVoxelPath> pathTracedSignal = new Signal1<AnchoredVoxelPath>();
+    public Signal1<AnchoredVoxelPath> pathTracedSignal = new Signal1<>();
 
     public PathTraceToParentWorker(PathTraceToParentRequest request) {
         this.request = request;
@@ -85,7 +85,7 @@ public class PathTraceToParentWorker extends BackgroundWorker {
             // we don't do anything if we fail (would be nice to visually indicated it)
             setStatus("Timed out");
         } else {
-            List<Integer> intensities = new Vector<Integer>();
+            List<Integer> intensities = new Vector<>();
             for (ZoomedVoxelIndex p : path) {
                 int intensity = subvolume.getIntensityGlobal(p, 0);
                 intensities.add(intensity);
