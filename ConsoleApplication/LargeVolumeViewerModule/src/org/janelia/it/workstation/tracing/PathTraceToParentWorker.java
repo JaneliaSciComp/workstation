@@ -1,5 +1,7 @@
 package org.janelia.it.workstation.tracing;
 
+import java.util.Collection;
+import java.util.HashSet;
 import org.janelia.it.workstation.geom.CoordinateAxis;
 import org.janelia.it.workstation.geom.Vec3;
 import org.janelia.it.workstation.gui.large_volume_viewer.Subvolume;
@@ -85,8 +87,9 @@ public class PathTraceToParentWorker extends BackgroundWorker {
             // we don't do anything if we fail (would be nice to visually indicated it)
             setStatus("Timed out");
         } else {
+            Collection<ZoomedVoxelIndex> reducedPath = simplifyPath(path);
             List<Integer> intensities = new Vector<>();
-            for (ZoomedVoxelIndex p : path) {
+            for (ZoomedVoxelIndex p : reducedPath) {
                 int intensity = subvolume.getIntensityGlobal(p, 0);
                 intensities.add(intensity);
             }
@@ -101,6 +104,45 @@ public class PathTraceToParentWorker extends BackgroundWorker {
 
             setStatus("Done");
         }
+    }
+    
+    private Collection<ZoomedVoxelIndex> simplifyPath(Collection<ZoomedVoxelIndex> path) {
+        Collection<ZoomedVoxelIndex> rtnVal = new HashSet<>();
+        
+        // Doing checks: along same lines?
+        Vec3 prevNormal = null;
+        ZoomedVoxelIndex prevIndex = null;
+        for ( ZoomedVoxelIndex index: path ) {
+            if ( prevIndex != null ) {
+                Vec3 normal = calcNormal( prevIndex, index );
+                if ( prevNormal == null  ||  !prevNormal.equals( normal ) ) {
+                    rtnVal.add(index);
+                }
+                prevNormal = normal;
+            }
+            prevIndex = index;
+        }
+        rtnVal.add(prevIndex); // Ensure that end point is in the return.
+        
+        return rtnVal;
+    }
+    
+    private Vec3 calcNormal(ZoomedVoxelIndex prev, ZoomedVoxelIndex curr) {
+        double magnitude = 0;
+        Vec3 prevVec = new Vec3( prev.getX(), prev.getY(), prev.getZ() );
+        Vec3 currVec = new Vec3( curr.getX(), curr.getY(), curr.getZ() );
+        Vec3 diff = prevVec.minus(currVec);
+        magnitude = Math.sqrt(
+                diff.getX() * diff.getX() + 
+                diff.getY() * diff.getY() +
+                diff.getZ() * diff.getZ() 
+        );
+        Vec3 diffNorm = new Vec3( 
+                diff.getX() / magnitude,
+                diff.getY() / magnitude,
+                diff.getZ() / magnitude 
+        );
+        return diffNorm;
     }
 
 }
