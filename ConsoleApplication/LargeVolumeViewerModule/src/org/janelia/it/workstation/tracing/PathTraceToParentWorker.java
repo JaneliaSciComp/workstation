@@ -90,7 +90,7 @@ public class PathTraceToParentWorker extends BackgroundWorker {
             // we don't do anything if we fail (would be nice to visually indicated it)
             setStatus("Timed out");
         } else {
-            System.out.println("Original path length: " + path.size());
+            //DEBUG System.out.println("Original path length: " + path.size());
             final List<ZoomedVoxelIndex> reducedPath = simplifyPath(path);
             if ( ! reducedPath.contains( path.get(0) ) ) {
                 reducedPath.add( 0, path.get(0) ); 
@@ -98,14 +98,14 @@ public class PathTraceToParentWorker extends BackgroundWorker {
             if ( ! reducedPath.contains( path.get(path.size()-1) ) ) {
                 reducedPath.add( path.get(path.size()-1) );
             }
-            System.out.println("Simplified path length: " + reducedPath.size());
+            //DEBUG System.out.println("Simplified path length: " + reducedPath.size());
             List<Integer> intensities = new Vector<>();
             for (ZoomedVoxelIndex p : reducedPath) {
                 int intensity = subvolume.getIntensityGlobal(p, 0);
                 intensities.add(intensity);
             }
 
-            dumpFullAndSimplified( path, reducedPath );
+            //DEBUG dumpFullAndSimplified( path, reducedPath );
             setStatus("Finishing");
 
             // launder the request down to a more generic request
@@ -118,6 +118,7 @@ public class PathTraceToParentWorker extends BackgroundWorker {
         }
     }
     
+    @SuppressWarnings("Unused")
     private void dumpFullAndSimplified( List<ZoomedVoxelIndex> path, List<ZoomedVoxelIndex> reducedPath ) {
         System.out.println("Full Path, prior to trimming:::");
         for ( ZoomedVoxelIndex inx: path ) {
