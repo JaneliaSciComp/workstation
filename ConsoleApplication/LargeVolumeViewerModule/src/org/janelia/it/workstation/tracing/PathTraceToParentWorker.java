@@ -22,6 +22,7 @@ import java.util.Vector;
  */
 public class PathTraceToParentWorker extends BackgroundWorker {
 
+    private static final double SECONDARY_SLOPE_TOLERANCE = 0.0;
     private PathTraceToParentRequest request;
 
     // timeout in seconds
@@ -87,7 +88,9 @@ public class PathTraceToParentWorker extends BackgroundWorker {
             // we don't do anything if we fail (would be nice to visually indicated it)
             setStatus("Timed out");
         } else {
+            System.out.println("Original path length: " + path.size());
             Collection<ZoomedVoxelIndex> reducedPath = simplifyPath(path);
+            System.out.println("Simplified path length: " + reducedPath.size());
             List<Integer> intensities = new Vector<>();
             for (ZoomedVoxelIndex p : reducedPath) {
                 int intensity = subvolume.getIntensityGlobal(p, 0);
@@ -111,19 +114,42 @@ public class PathTraceToParentWorker extends BackgroundWorker {
         
         // Doing checks: along same lines?
         Vec3 prevNormal = null;
-        ZoomedVoxelIndex prevIndex = null;
+        Vec3 grandNormal = null;
+        ZoomedVoxelIndex prevIndex = null;        
         for ( ZoomedVoxelIndex index: path ) {
             if ( prevIndex != null ) {
                 Vec3 normal = calcNormal( prevIndex, index );
-                if ( prevNormal == null  ||  !prevNormal.equals( normal ) ) {
+                if ( outOfTolerance( grandNormal, prevNormal, normal ) ) {
                     rtnVal.add(index);
                 }
+                grandNormal = prevNormal;
                 prevNormal = normal;
             }
             prevIndex = index;
         }
         rtnVal.add(prevIndex); // Ensure that end point is in the return.
         
+        return rtnVal;
+    }
+    
+    private boolean outOfTolerance( Vec3 grandNormal, Vec3 prevNormal, Vec3 normal ) {
+        boolean rtnVal = true;
+        if (prevNormal == null) {
+            rtnVal = true;
+        }
+        else if (prevNormal.equals(normal)) {
+            rtnVal = false;
+        }
+        else if (grandNormal != null  &&  grandNormal.equals(normal)) {
+            rtnVal = false;
+        }
+                
+//        else if (grandNormal != null) {
+//            double combinedVariance = Math.abs(grandNormal.getX() - normal.getX()) +
+//                   Math.abs(grandNormal.getY() - normal.getY()) +
+//                   Math.abs(grandNormal.getZ() - normal.getZ());
+//            rtnVal = combinedVariance > SECONDARY_SLOPE_TOLERANCE;
+//        }
         return rtnVal;
     }
     
