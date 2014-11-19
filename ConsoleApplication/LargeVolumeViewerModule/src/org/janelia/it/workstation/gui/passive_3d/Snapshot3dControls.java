@@ -20,6 +20,7 @@ import javax.swing.Action;
 import javax.swing.JCheckBox;
 import javax.swing.JComponent;
 import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
+import org.janelia.it.workstation.gui.large_volume_viewer.ColorButtonPanel;
 import org.janelia.it.workstation.gui.large_volume_viewer.ImageColorModel;
 import org.janelia.it.workstation.gui.large_volume_viewer.SliderPanel;
 import org.janelia.it.workstation.gui.passive_3d.filter.MatrixFilter3D;
@@ -39,9 +40,9 @@ import org.janelia.it.workstation.shared.workers.SimpleWorker;
  */
 public class Snapshot3dControls {
     private SliderPanel sliderPanel;
+    private ColorButtonPanel colorButtonPanel;
     private Collection<TextureDataI> textureDatas;
     private List<JComponent> components;
-    private AbstractButton[] addSubButtons;
     private AbstractButton sharedColorModelButton;
     private Snapshot3d view;
     private SnapshotVolumeBrick brick;
@@ -83,18 +84,19 @@ public class Snapshot3dControls {
     }
 
     /**
-     * Fetch-back the buttons which make it possible to place them.
+     * Fetch-back the buttons for controlling colors.  Can place that as needed.
      * 
      * @return the addSubButton
      */
-    public AbstractButton[] getAddSubButton() {
-        return addSubButtons;
+    public ColorButtonPanel getColorButtonPanel() {
+        return colorButtonPanel;
     }
     
-    public boolean[] getAddSubChoices() {
-        boolean[] rtnVal = new boolean[ addSubButtons.length ];
-        for ( int i = 0; i < addSubButtons.length; i++ ) {
-            rtnVal[ i ] = addSubButtons[ i ].isSelected();
+    public boolean[] getAddSubChoices() {        
+        boolean[] rtnVal = new boolean[ activeColorModel.getChannelCount() ];
+        int i = 0;
+        for ( JCheckBox checkbox: colorButtonPanel.getCheckboxes() ) {
+            rtnVal[ i++ ] = checkbox.isSelected();
         }
         return rtnVal;
     }
@@ -127,6 +129,9 @@ public class Snapshot3dControls {
         }
         if ( getSliderPanel() != null ) {
             getSliderPanel().setImageColorModel( activeColorModel );
+        }
+        if ( getColorButtonPanel() != null ) {
+            getColorButtonPanel().setImageColorModel( activeColorModel );
         }
         view.validate();
         view.repaint();
@@ -162,21 +167,17 @@ public class Snapshot3dControls {
 
         this.components = new ArrayList<>();
         this.sliderPanel = new SliderPanel( activeColorModel );
+        colorButtonPanel = new ColorButtonPanel( activeColorModel, 1 );
         this.components.add( getSliderPanel());
+        this.components.add( getColorButtonPanel() );
         getSliderPanel().guiInit();
         getSliderPanel().updateLockButtons();
         getSliderPanel().setVisible(true);
         
-        addSubButtons = new JCheckBox[ activeColorModel.getChannelCount() ];
         viewUpdateListener = new ViewUpdateListener( view );
-        for ( int i = 0; i < activeColorModel.getChannelCount(); i++ ) {
-            addSubButtons[ i ] = new JCheckBox("+");
-            addSubButtons[ i ].setToolTipText( "Checked means add this color;\nunchecked will subtract." );
-            addSubButtons[ i ].setSelected( true );
-            addSubButtons[ i ].addActionListener( viewUpdateListener );
-            components.add( addSubButtons[ i ]);
-        }
         
+        // One more button to allow the user to 'synchronize' the two color
+        // models.
         StateDrivenIconToggleButton localSharedColorModelBtn = new StateDrivenIconToggleButton( Icons.getIcon( "link.png" ), Icons.getIcon( "link_break.png" ) );
         localSharedColorModelBtn.setToolTipText( "Share main viewer color controls." );  
         localSharedColorModelBtn.setSelected( false );
@@ -184,8 +185,9 @@ public class Snapshot3dControls {
         sharedColorModelButton.addActionListener(
                 new ColorModelSwapListener( this, viewUpdateListener )
         );
-        components.add( sharedColorModelButton );
-        
+        components.add( sharedColorModelButton );        
+        getColorButtonPanel().add(sharedColorModelButton);
+
         activeColorModel.getColorModelChangedSignal().addObserver( viewUpdateListener );
         
         filterActions = new ArrayList<>();
@@ -193,7 +195,6 @@ public class Snapshot3dControls {
         getFilterActions().add( new FilterMatrixAction( textureDatas, view, MatrixFilter3D.AVG_MATRIX_3_3_3, "Filter 3x3x3 Averaging" ) );
         getFilterActions().add( new FilterMatrixAction( textureDatas, view, MatrixFilter3D.GAUSS_65_85_85, "Filter Gauss 5x5x5 Sigmas = (0.65,0.85,0.85)" ) );
         //getFilterActions().add( new FilterMatrixAction( textureDatas, view, MatrixFilter3D.GAUSS_5_5_5, "Filter 5x5x5 Gauss" ) );
-        
     }
 
     private static class FilterMatrixAction extends AbstractAction {

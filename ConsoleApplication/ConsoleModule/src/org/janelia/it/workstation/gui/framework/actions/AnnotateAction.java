@@ -1,11 +1,12 @@
 package org.janelia.it.workstation.gui.framework.actions;
 
-import java.util.List;
-import java.util.concurrent.Callable;
-
-import javax.swing.JOptionPane;
-import javax.swing.ProgressMonitor;
-
+import org.janelia.it.jacs.model.entity.Entity;
+import org.janelia.it.jacs.model.entity.EntityData;
+import org.janelia.it.jacs.model.ontology.OntologyAnnotation;
+import org.janelia.it.jacs.model.ontology.OntologyElement;
+import org.janelia.it.jacs.model.ontology.types.*;
+import org.janelia.it.jacs.model.ontology.types.Enum;
+import org.janelia.it.jacs.shared.utils.StringUtils;
 import org.janelia.it.workstation.api.entity_model.management.ModelMgr;
 import org.janelia.it.workstation.gui.dialogs.AnnotationBuilderDialog;
 import org.janelia.it.workstation.gui.framework.outline.OntologyOutline;
@@ -14,20 +15,12 @@ import org.janelia.it.workstation.model.entity.RootedEntity;
 import org.janelia.it.workstation.model.utils.AnnotationSession;
 import org.janelia.it.workstation.shared.util.ConcurrentUtils;
 import org.janelia.it.workstation.shared.workers.SimpleWorker;
-import org.janelia.it.jacs.model.entity.Entity;
-import org.janelia.it.jacs.model.entity.EntityData;
-import org.janelia.it.jacs.model.ontology.OntologyAnnotation;
-import org.janelia.it.jacs.model.ontology.OntologyElement;
-import org.janelia.it.jacs.model.ontology.types.Category;
-import org.janelia.it.jacs.model.ontology.types.Enum;
-import org.janelia.it.jacs.model.ontology.types.EnumItem;
-import org.janelia.it.jacs.model.ontology.types.EnumText;
-import org.janelia.it.jacs.model.ontology.types.Interval;
-import org.janelia.it.jacs.model.ontology.types.OntologyElementType;
-import org.janelia.it.jacs.model.ontology.types.Text;
-import org.janelia.it.jacs.shared.utils.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import javax.swing.*;
+import java.util.List;
+import java.util.concurrent.Callable;
 
 /**
  * This action creates and saves an annotation, and adds a corresponding tag to the currently selected item in an IconDemoPanel.

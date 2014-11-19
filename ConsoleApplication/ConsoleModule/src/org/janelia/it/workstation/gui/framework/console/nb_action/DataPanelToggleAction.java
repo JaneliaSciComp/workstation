@@ -5,7 +5,6 @@
  */
 package org.janelia.it.workstation.gui.framework.console.nb_action;
 
-import java.awt.event.ActionEvent;
 import org.openide.awt.ActionID;
 import org.openide.awt.ActionReference;
 import org.openide.awt.ActionReferences;
@@ -13,6 +12,8 @@ import org.openide.awt.ActionRegistration;
 import org.openide.util.HelpCtx;
 import org.openide.util.NbBundle.Messages;
 import org.openide.util.actions.BooleanStateAction;
+
+import java.awt.event.ActionEvent;
 
 @ActionID(
         category = "View",
@@ -27,7 +28,7 @@ import org.openide.util.actions.BooleanStateAction;
 })
 @Messages("CTL_DataPanelToggleAction=Data Panel")
 public final class DataPanelToggleAction extends BooleanStateAction {
-    public static final String DATA_PANEL_SHOWN = "DataPanelShown";
+    public static final String DATA_PANEL_SHOWN = "Data Explorer Show/Hide";
 
     public DataPanelToggleAction() {
         setBooleanState( true );

@@ -24,7 +24,6 @@ import org.janelia.it.workstation.gui.dialogs.TaskDetailsDialog;
 import org.janelia.it.workstation.gui.framework.actions.Action;
 import org.janelia.it.workstation.gui.framework.actions.*;
 import org.janelia.it.workstation.gui.framework.console.Browser;
-import org.janelia.it.workstation.gui.framework.console.Perspective;
 import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.workstation.gui.framework.tool_manager.ToolMgr;
 import org.janelia.it.workstation.gui.framework.viewer.Hud;
@@ -35,7 +34,8 @@ import org.janelia.it.workstation.nb_action.EntityAcceptor;
 import org.janelia.it.workstation.nb_action.ServiceAcceptorHelper;
 import org.janelia.it.workstation.shared.util.ConsoleProperties;
 import org.janelia.it.workstation.shared.util.Utils;
-import org.janelia.it.workstation.shared.workers.*;
+import org.janelia.it.workstation.shared.workers.SimpleWorker;
+import org.janelia.it.workstation.shared.workers.TaskMonitoringWorker;
 import org.janelia.it.workstation.ws.ExternalClient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -216,7 +216,15 @@ public class EntityContextMenu extends JPopupMenu {
 
                         AnnotateAction action = new AnnotateAction(doSuccess);
                         action.init(element);
-                        action.doAction();
+                        String value = (String)JOptionPane.showInputDialog(mainFrame,
+                          		"Please provide details:\n", element.getName(), JOptionPane.PLAIN_MESSAGE, null, null, null);
+                        if (value==null || value.equals("")) return;
+                        try {
+                            action.doAnnotation(rootedEntity.getEntity(), element, value);
+                        }
+                        catch (Exception e1) {
+                            SessionMgr.getSessionMgr().handleException(e1);
+                        }
                     }
                 });
 
