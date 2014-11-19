@@ -36,6 +36,7 @@ import com.mongodb.DB;
 import com.mongodb.MongoClient;
 import com.mongodb.WriteConcern;
 import com.mongodb.WriteResult;
+import java.util.Date;
 
 /**
  * The main domain-object DAO for the JACS system.
@@ -417,7 +418,7 @@ public class DomainDAO {
     public void updateProperty(String subjectKey, DomainObject domainObject, String propName, String propValue) {
         String type = getType(domainObject);
         MongoCollection collection = getCollection(type);
-        WriteResult wr = collection.update("{_id:#,writers:#}",domainObject.getId(),subjectKey).with("{"+propName+":#,$currentDate:{updatedDate:true}}",propValue);
+        WriteResult wr = collection.update("{_id:#,writers:#}",domainObject.getId(),subjectKey).with("{"+propName+":#,updatedDate:#}",propValue,new Date());
         if (wr.getN()!=1) {
             log.warn("Could not update "+type+"#"+domainObject.getId()+"."+propName+": "+wr.getError());
         }
