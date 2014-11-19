@@ -27,7 +27,7 @@ import org.slf4j.LoggerFactory;
 public class LargeVolumeViewerTopComponentDynamic {
     public static final String LVV_PREFERRED_ID = "LargeVolumeViewerTopComponent";
 
-    protected static final String ACTION = "CTL_LargeVolumeViewerAction=LargeVolumeViewer";
+    protected static final String ACTION = "CTL_LargeVolumeViewerAction=Large Volume Viewer";
     protected static final String WINDOW_NAMER = "CTL_LargeVolumeViewerTopComponent=Large Volume Viewer Tool";
     protected static final String HINT = "HINT_LargeVolumeViewerTopComponent=Examine multi-tile brains.";
     
