@@ -56,7 +56,7 @@ public class SampleNode extends DomainObjectNode {
         if (objSample==null) return null;
         SamplePipelineRun run = objSample.getLatestRun();
         HasFiles lastResult = null;
-        if (run==null) return null;
+        if (run==null || run.getResults()==null) return null;
         for(PipelineResult result : run.getResults()) {
             if (result instanceof HasFiles) {
                 lastResult = (HasFiles)result;
