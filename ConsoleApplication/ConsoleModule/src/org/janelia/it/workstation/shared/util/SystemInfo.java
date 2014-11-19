@@ -1,6 +1,5 @@
 package org.janelia.it.workstation.shared.util;
 
-import de.javasoft.io.FileUtils;
 import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
 import org.openide.modules.InstalledFileLocator;
 import org.slf4j.Logger;
@@ -25,29 +24,33 @@ public class SystemInfo {
     public static final String DEFAULT_OPTIONS_PROP = "default_options";
     public static final String ETC_SUBPATH = "etc";
 
-    public static final String OS_NAME = System.getProperty("os.name").toLowerCase();
-    public static final String OS_VERSION = System.getProperty("os.version").toLowerCase();
+    public static final String OS_NAME = System.getProperty("os.name");
+    public static final String OS_VERSION = System.getProperty("os.version");
+    public static final String OS_NAME_LC = OS_NAME.toLowerCase();
+    public static final String OS_VERSION_LC = OS_VERSION.toLowerCase();
     public static final String OS_ARCH = System.getProperty("os.arch");
-    public static final String JAVA_VERSION = System.getProperty("java.version");
-    public static final String JAVA_RUNTIME_VERSION = System.getProperty("java.runtime.version");
+    public static final String JAVA_NAME = System.getProperty("java.name", "Java");
+    public static final String JAVA_VERSION = System.getProperty("java.version", "unknown");
+    public static final String JAVA_RUNTIME_NAME = System.getProperty("java.runtime.name", "Java");
+    public static final String JAVA_RUNTIME_VERSION = System.getProperty("java.runtime.version", "unknown");
     public static final String ARCH_DATA_MODEL = System.getProperty("sun.arch.data.model");
     public static final String SUN_DESKTOP = System.getProperty("sun.desktop");
-
+    
     public static final String DOWNLOADS_FINAL_PATH_DIR = "Downloads/";
     public static final String USERHOME_SYSPROP_NAME = "user.home";
 
-    public static final boolean isWindows = OS_NAME.startsWith("windows");
-    public static final boolean isWindowsNT = OS_NAME.startsWith("windows nt");
-    public static final boolean isWindows2000 = OS_NAME.startsWith("windows 2000");
-    public static final boolean isWindows2003 = OS_NAME.startsWith("windows 2003");
-    public static final boolean isWindowsXP = OS_NAME.startsWith("windows xp");
-    public static final boolean isWindowsVista = OS_NAME.startsWith("windows vista");
-    public static final boolean isWindows7 = OS_NAME.startsWith("windows 7");
-    public static final boolean isWindows9x = OS_NAME.startsWith("windows 9") || OS_NAME.startsWith("windows me");
-    public static final boolean isOS2 = OS_NAME.startsWith("os/2") || OS_NAME.startsWith("os2");
-    public static final boolean isMac = OS_NAME.startsWith("mac");
-    public static final boolean isFreeBSD = OS_NAME.startsWith("freebsd");
-    public static final boolean isLinux = OS_NAME.startsWith("linux");
+    public static final boolean isWindows = OS_NAME_LC.startsWith("windows");
+    public static final boolean isWindowsNT = OS_NAME_LC.startsWith("windows nt");
+    public static final boolean isWindows2000 = OS_NAME_LC.startsWith("windows 2000");
+    public static final boolean isWindows2003 = OS_NAME_LC.startsWith("windows 2003");
+    public static final boolean isWindowsXP = OS_NAME_LC.startsWith("windows xp");
+    public static final boolean isWindowsVista = OS_NAME_LC.startsWith("windows vista");
+    public static final boolean isWindows7 = OS_NAME_LC.startsWith("windows 7");
+    public static final boolean isWindows9x = OS_NAME_LC.startsWith("windows 9") || OS_NAME_LC.startsWith("windows me");
+    public static final boolean isOS2 = OS_NAME_LC.startsWith("os/2") || OS_NAME_LC.startsWith("os2");
+    public static final boolean isMac = OS_NAME_LC.startsWith("mac");
+    public static final boolean isFreeBSD = OS_NAME_LC.startsWith("freebsd");
+    public static final boolean isLinux = OS_NAME_LC.startsWith("linux");
     public static final boolean isUnix = !isWindows && !isOS2;
 
     public static final boolean isKDE = SUN_DESKTOP != null && SUN_DESKTOP.toLowerCase().contains("kde");
@@ -103,7 +106,7 @@ public class SystemInfo {
     public static boolean X11PasteEnabledSystem = isUnix && !isMac;
 
     private static boolean isTiger() {
-        return isMac && !OS_VERSION.startsWith("10.0") && !OS_VERSION.startsWith("10.1") && !OS_VERSION.startsWith("10.2") && !OS_VERSION.startsWith("10.3");
+        return isMac && !OS_VERSION_LC.startsWith("10.0") && !OS_VERSION_LC.startsWith("10.1") && !OS_VERSION_LC.startsWith("10.2") && !OS_VERSION_LC.startsWith("10.3");
     }
 
     private static boolean isIntelMac() {
@@ -111,11 +114,11 @@ public class SystemInfo {
     }
 
     private static boolean isLeopard() {
-        return isMac && isTiger() && !OS_VERSION.startsWith("10.4");
+        return isMac && isTiger() && !OS_VERSION_LC.startsWith("10.4");
     }
 
     private static boolean isSnowLeopard() {
-        return isMac && isLeopard() && !OS_VERSION.startsWith("10.5");
+        return isMac && isLeopard() && !OS_VERSION_LC.startsWith("10.5");
     }
     
     public static void setDownloadsDir(String downloadsDir) {
@@ -146,7 +149,7 @@ public class SystemInfo {
                 downloadsDirFile = new File(System.getProperty(USERHOME_SYSPROP_NAME), DOWNLOADS_FINAL_PATH_DIR);
             }
             else {
-                throw new IllegalStateException("Operation system not supported: "+SystemInfo.OS_NAME);
+                throw new IllegalStateException("Operation system not supported: "+SystemInfo.OS_NAME_LC);
             }
             setDownloadsDir(downloadsDirFile.getAbsolutePath());
         }
@@ -337,5 +340,22 @@ public class SystemInfo {
             throw ioe;
         }
     }
+        
+    public static String getOSInfo() {
+        StringBuilder sb = new StringBuilder();
+        sb.append(OS_NAME).append(" ").append(OS_VERSION).append(" (").append(OS_ARCH).append(")");
+        return sb.toString();
+    }
     
+    public static String getJavaInfo() {
+        StringBuilder sb = new StringBuilder();
+        sb.append(JAVA_NAME).append(" ").append(JAVA_VERSION);
+        return sb.toString();
+    }
+
+    public static String getRuntimeJavaInfo() {
+        StringBuilder sb = new StringBuilder();
+        sb.append(JAVA_RUNTIME_NAME).append(" ").append(JAVA_RUNTIME_VERSION);
+        return sb.toString();
+    }
 }
