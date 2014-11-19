@@ -177,9 +177,9 @@ public final class DomainExplorerTopComponent extends TopComponent implements Ex
         viewToggleButton.setFocusable(false);
         viewToggleButton.setHorizontalTextPosition(javax.swing.SwingConstants.CENTER);
         viewToggleButton.setVerticalTextPosition(javax.swing.SwingConstants.BOTTOM);
-        viewToggleButton.addChangeListener(new javax.swing.event.ChangeListener() {
-            public void stateChanged(javax.swing.event.ChangeEvent evt) {
-                viewToggleButtonStateChanged(evt);
+        viewToggleButton.addItemListener(new java.awt.event.ItemListener() {
+            public void itemStateChanged(java.awt.event.ItemEvent evt) {
+                viewToggleButtonItemStateChanged(evt);
             }
         });
         toolBar.add(viewToggleButton);
@@ -222,8 +222,7 @@ public final class DomainExplorerTopComponent extends TopComponent implements Ex
         loadWorkspaces();
     }//GEN-LAST:event_refreshButtonActionPerformed
 
-    private void viewToggleButtonStateChanged(javax.swing.event.ChangeEvent evt) {//GEN-FIRST:event_viewToggleButtonStateChanged
-
+    private void viewToggleButtonItemStateChanged(java.awt.event.ItemEvent evt) {//GEN-FIRST:event_viewToggleButtonItemStateChanged
         try {
             if (showNeuronView != viewToggleButton.isSelected()) {
                 showNeuronView = viewToggleButton.isSelected();
@@ -233,7 +232,7 @@ public final class DomainExplorerTopComponent extends TopComponent implements Ex
         catch (Exception e) {
             log.error("Error changing view", e);
         }
-    }//GEN-LAST:event_viewToggleButtonStateChanged
+    }//GEN-LAST:event_viewToggleButtonItemStateChanged
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private org.openide.explorer.view.BeanTreeView beanTreeView;

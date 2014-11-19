@@ -1,15 +1,11 @@
 package org.janelia.it.workstation.gui.browser.components;
 
 import java.awt.BorderLayout;
-import java.util.Arrays;
 import java.util.Collection;
-import java.util.List;
 import javax.swing.ActionMap;
 import javax.swing.text.DefaultEditorKit;
 import org.janelia.it.workstation.gui.browser.icongrid.node.NodeIconGridViewer;
-import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.workstation.gui.util.WindowLocator;
-import org.janelia.it.workstation.shared.workers.SimpleWorker;
 import org.netbeans.api.settings.ConvertAsProperties;
 import org.openide.awt.ActionID;
 import org.openide.awt.ActionReference;

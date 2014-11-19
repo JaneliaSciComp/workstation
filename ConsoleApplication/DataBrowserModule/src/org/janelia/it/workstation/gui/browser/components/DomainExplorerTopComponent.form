@@ -82,7 +82,7 @@
             <Property name="verticalTextPosition" type="int" value="3"/>
           </Properties>
           <Events>
-            <EventHandler event="stateChanged" listener="javax.swing.event.ChangeListener" parameters="javax.swing.event.ChangeEvent" handler="viewToggleButtonStateChanged"/>
+            <EventHandler event="itemStateChanged" listener="java.awt.event.ItemListener" parameters="java.awt.event.ItemEvent" handler="viewToggleButtonItemStateChanged"/>
           </Events>
         </Component>
         <Component class="javax.swing.Box$Filler" name="filler1">
