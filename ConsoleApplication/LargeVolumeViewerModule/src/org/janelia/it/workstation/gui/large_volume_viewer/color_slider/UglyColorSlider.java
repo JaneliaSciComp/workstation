@@ -47,7 +47,10 @@ public class UglyColorSlider extends JSlider
 	}
 
 	public int getBlackLevel() {
-		return getValue();
+		if (rangeModel == null)
+    		return getValue();
+        else
+            return rangeModel.getBlackLevel();
 	}
 
 	public int getGrayLevel() {
@@ -58,7 +61,10 @@ public class UglyColorSlider extends JSlider
 	}
 
 	public int getWhiteLevel() {
-		return getValue() + getExtent();
+        if (rangeModel == null)
+            return getValue() + getExtent();
+        else
+            return rangeModel.getWhiteLevel();
 	}
 
 	private void initSlider() {
@@ -66,8 +72,8 @@ public class UglyColorSlider extends JSlider
 	}
 
 	public void setBlackLevel(int level) {
-		setValue(level);
-	}
+        rangeModel.setBlackLevel(level);
+    }
 
 	public void setGrayLevel(int level) {
 		rangeModel.setGrayLevel(level);
@@ -88,6 +94,7 @@ public class UglyColorSlider extends JSlider
 		setMaximum(ccm.getDataMax()); // right edge of slider widget
 		setBlackLevel(ccm.getBlackLevel());
 		setWhiteLevel(ccm.getWhiteLevel());
+        setValue(ccm.getBlackLevel());
 		// convert gamma to gray level
 		// first compute ratio between white and black
 		float grayLevel = (float)Math.pow(0.5, 1.0/ccm.getGamma());

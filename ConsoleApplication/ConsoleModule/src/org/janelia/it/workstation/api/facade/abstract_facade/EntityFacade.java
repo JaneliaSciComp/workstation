@@ -7,6 +7,7 @@ import org.janelia.it.jacs.model.entity.*;
 import org.janelia.it.jacs.model.user_data.tiledMicroscope.*;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 /**
@@ -155,5 +156,7 @@ public interface EntityFacade {
     public void deleteStructuredTextAnnotation(Long annID) throws Exception;
 
     public RawFileInfo getNearestFileInfo(String basePath, int[] viewerCoord) throws Exception;
+
+    Map<Integer,byte[]> getTextureBytes( String basePath, int[] viewerCoord, int cubicDim ) throws Exception;
 
 }

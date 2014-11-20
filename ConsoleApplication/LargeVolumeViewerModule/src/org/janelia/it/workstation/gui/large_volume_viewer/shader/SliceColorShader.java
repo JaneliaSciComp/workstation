@@ -36,6 +36,7 @@ public class SliceColorShader extends PassThroughTextureShader
 		float channel_gamma[] = {1,1,1,1};
 		float channel_min[] = {0,0,0,0};
 		float channel_scale[] = {1,1,1,1};
+        float sign_op[] = {1,1,1,1};
 		for (int c = 0; c < sc; ++c) {
 			int offset = 3 * c;
 			ChannelColorModel ccm = imageColorModel.getChannel(c);
@@ -54,6 +55,7 @@ public class SliceColorShader extends PassThroughTextureShader
 				channel_scale[c] = 0f;
 			}
 			channel_gamma[c] = (float)ccm.getGamma();
+            sign_op[c] = ccm.getCombiningConstant();
 			/*
 			System.out.println(
 					"Channel "+c+", "+channel_min[c]+", "+channel_gamma[c]+", "+channel_scale[c]
@@ -64,6 +66,7 @@ public class SliceColorShader extends PassThroughTextureShader
 		setUniform4v(gl, "channel_gamma", 1, channel_gamma);
 		setUniform4v(gl, "channel_min", 1, channel_min);
 		setUniform4v(gl, "channel_scale", 1, channel_scale);
+        setUniform4v(gl, "sign_op", 1, sign_op);
 	}
 	
 	public void setImageColorModel(ImageColorModel imageColorModel) {

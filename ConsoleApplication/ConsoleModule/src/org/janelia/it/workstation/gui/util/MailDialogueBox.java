@@ -5,6 +5,8 @@ import org.janelia.it.workstation.shared.util.text_component.StandardTextArea;
 import org.janelia.it.jacs.shared.utils.MailHelper;
 
 import javax.swing.*;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Created with IntelliJ IDEA.
@@ -14,6 +16,9 @@ import javax.swing.*;
  */
 public class MailDialogueBox {
 
+    private Logger log = LoggerFactory.getLogger(MailDialogueBox.class);
+    
+    private final String toEmail = ConsoleProperties.getString("console.HelpEmail");
     private String fromEmail;
     private String subject = "";
     private String messagePrefix = "";
@@ -48,10 +53,9 @@ public class MailDialogueBox {
             desc = messagePrefix + textArea.getText() +"\n";
         }
         desc+=messageSuffix;
-        ConsoleProperties.getString("console.HelpEmail");
         MailHelper helper = new MailHelper();
-        helper.sendEmail(fromEmail, ConsoleProperties.getString("console.HelpEmail"),
-                subject, desc);
+        log.info("Sending email from "+fromEmail+" to "+toEmail);
+        helper.sendEmail(fromEmail, toEmail, subject, desc);
     }
 
     private JOptionPane getOptionPane() {

@@ -1,14 +1,14 @@
 package org.janelia.it.workstation.gui.viewer3d;
 
-import org.janelia.it.workstation.gui.viewer3d.loader.MpegFileLoader;
-import org.janelia.it.workstation.gui.viewer3d.loader.LsmFileLoader;
-import org.janelia.it.workstation.gui.viewer3d.loader.TifFileLoader;
+import org.janelia.it.jacs.shared.img_3d_loader.MpegFileLoader;
+import org.janelia.it.jacs.shared.img_3d_loader.LsmFileLoader;
+import org.janelia.it.workstation.gui.viewer3d.loader.TifTextureBuilder;
 import org.janelia.it.workstation.gui.viewer3d.loader.TextureDataBuilder;
-import org.janelia.it.workstation.gui.viewer3d.loader.V3dSignalFileLoader;
-import org.janelia.it.workstation.gui.viewer3d.loader.V3dMaskFileLoader;
+import org.janelia.it.jacs.shared.img_3d_loader.V3dSignalFileLoader;
+import org.janelia.it.jacs.shared.img_3d_loader.V3dMaskFileLoader;
 import org.apache.commons.io.FilenameUtils;
 import org.janelia.it.workstation.gui.viewer3d.VolumeDataAcceptor.TextureColorSpace;
-import org.janelia.it.workstation.gui.viewer3d.loader.VolumeFileLoaderI;
+import org.janelia.it.jacs.shared.img_3d_loader.VolumeFileLoaderI;
 import org.janelia.it.workstation.gui.viewer3d.loader.VolumeLoaderI;
 import org.janelia.it.workstation.gui.viewer3d.resolver.FileResolver;
 import org.janelia.it.workstation.gui.viewer3d.texture.TextureDataI;
@@ -17,6 +17,8 @@ import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import javax.media.opengl.GL2;
+import org.janelia.it.workstation.gui.viewer3d.loader.LociTextureBuilder;
+import org.janelia.it.jacs.shared.img_3d_loader.TifVolumeFileLoader;
 
 public class VolumeLoader implements VolumeLoaderI {
 
@@ -51,37 +53,43 @@ public class VolumeLoader implements VolumeLoaderI {
             TextureDataBuilder textureDataBuilder = null;
             switch ( getFileType( localFileName, baseName, extension ) ) {
                 case TIF:
-                    TifFileLoader tifFileLoader = new TifFileLoader();
-                    fileLoader = tifFileLoader;
-                    textureDataBuilder = tifFileLoader;
+                    TifTextureBuilder tifTextureBuilder = new TifTextureBuilder();
+                    TifVolumeFileLoader tifVolumeFileLoader = new TifVolumeFileLoader();
+                    tifTextureBuilder.setVolumeFileLoader(tifVolumeFileLoader);
+                    fileLoader = tifVolumeFileLoader;
+                    textureDataBuilder = tifTextureBuilder;
                     break;
                 case LSM:
                     LsmFileLoader lsmFileLoader = new LsmFileLoader();
                     fileLoader = lsmFileLoader;
-                    textureDataBuilder = lsmFileLoader;
+                    textureDataBuilder = new LociTextureBuilder();
+                    textureDataBuilder.setVolumeFileLoader(lsmFileLoader);
                     break;
                 case V3DSIGNAL:
                     V3dSignalFileLoader v3dFileLoader = new V3dSignalFileLoader();
                     fileLoader = v3dFileLoader;
-                    textureDataBuilder = v3dFileLoader;
+                    textureDataBuilder = new LociTextureBuilder();
+                    textureDataBuilder.setVolumeFileLoader(v3dFileLoader);
                     break;
                 case V3DMASK:
                     V3dMaskFileLoader maskFileLoader = new V3dMaskFileLoader();
                     fileLoader = maskFileLoader;
-                    textureDataBuilder = maskFileLoader;
+                    textureDataBuilder = new LociTextureBuilder();
+                    textureDataBuilder.setVolumeFileLoader(maskFileLoader);
                     isLuminance = true;
                     break;
                 case MP4:
                     MpegFileLoader mpegFileLoader = new MpegFileLoader();
                     fileLoader = mpegFileLoader;
-                    textureDataBuilder = mpegFileLoader;
+                    textureDataBuilder = new LociTextureBuilder();
+                    textureDataBuilder.setVolumeFileLoader(mpegFileLoader);
                     break;
                 default:
                     break;
                     //throw new IllegalArgumentException("Unknown filename/extension combination " + baseName + "/" + extension);
             }
 
-            if ( textureDataBuilder != null ) {
+            if ( textureDataBuilder != null  &&  fileLoader != null ) {
                 textureDataBuilder.setColorSpace( resolveColorSpace(baseName, extension) );
             }
             else {

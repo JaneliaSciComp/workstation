@@ -30,7 +30,7 @@ public class NoteListPanel extends JPanel {
     private DefaultListModel noteListModel;
 
     private int width;
-    private static final int height = AnnotationPanel.SUBPANEL_STD_SIZE;
+    private static final int height = AnnotationPanel.SUBPANEL_STD_HEIGHT;
 
     // ----- slots
     public Slot1<TmWorkspace> workspaceLoadedSlot = new Slot1<TmWorkspace>() {

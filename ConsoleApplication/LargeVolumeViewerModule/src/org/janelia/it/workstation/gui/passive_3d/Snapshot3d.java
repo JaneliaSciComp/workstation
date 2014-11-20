@@ -21,6 +21,7 @@ import javax.swing.AbstractButton;
 import javax.swing.Action;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
+import org.janelia.it.workstation.gui.large_volume_viewer.ColorButtonPanel;
 import org.janelia.it.workstation.gui.large_volume_viewer.ImageColorModel;
 import org.janelia.it.workstation.shared.workers.IndeterminateNoteProgressMonitor;
 
@@ -90,6 +91,11 @@ public class Snapshot3d extends JPanel {
         volumeSource.setProgressMonitor(getMonitor());
         loadWorker.execute();
     }
+    
+    public void reLaunch(Collection<TextureDataI> textureDatas) {
+        launch( textureDatas );
+        controls.deactivateFiltering();
+    }
 
     private void launch(Collection<TextureDataI> textureDatas) {
         cleanup();
@@ -135,15 +141,12 @@ public class Snapshot3d extends JPanel {
             southPanel.add(label, BorderLayout.SOUTH);
         }
         JPanel southWestPanel = new JPanel();
-        AbstractButton[] addsubs = controls.getAddSubButton();
-        southWestPanel.setLayout(new GridLayout(addsubs.length + 1, 1));
-        for (AbstractButton c : addsubs) {
-            southWestPanel.add(c);
-        }
-
+        ColorButtonPanel addsubs = controls.getColorButtonPanel();
         // One more button to allow the user to 'synchronize' the two color
         // models.
-        southWestPanel.add(controls.getSharedColorModelButton());
+        addsubs.addButton(controls.getSharedColorModelButton());
+        southWestPanel.setLayout(new BorderLayout());        
+        southWestPanel.add(addsubs, BorderLayout.CENTER);
 
         southPanel.add(sliderPanel, BorderLayout.CENTER);
         southPanel.add(southWestPanel, BorderLayout.EAST);

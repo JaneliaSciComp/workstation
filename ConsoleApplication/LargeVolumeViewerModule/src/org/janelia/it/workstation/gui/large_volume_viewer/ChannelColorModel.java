@@ -5,13 +5,14 @@ import java.awt.Color;
 import org.janelia.it.workstation.signal.Signal1;
 
 public class ChannelColorModel 
-{
+{    
 	private Color color;
 	private int blackLevel; // All intensities below blackLevel will be black
 	private double gamma; // gamma exponent between black and white
 	private int whiteLevel; // All intensities above whiteLevel will be saturated
 	private int dataMax; // Actual maximum value of data, e.g. 4095 for 12-bit in 16-bit container
 	private int bitDepth; // log of maximum storable value, e.g. 8 or 16
+    private float combiningConstant = 1.0f; // Constant used in making linear combinations of channels.
 	private boolean visible = true;
 	private int index; // e.g. first channel red is zero, second green is one, etc.
 
@@ -21,6 +22,8 @@ public class ChannelColorModel
 	private Signal1<Double> gammaChangedSignal = new Signal1<Double>();
 	private Signal1<Integer> whiteLevelChangedSignal = new Signal1<Integer>();
 	private Signal1<Boolean> visibilityChangedSignal = new Signal1<Boolean>();
+    
+    private final int NUM_SERIALIZED_ITEMS = 9;
 	
 	public ChannelColorModel(int index, Color color, int bitDepth) {
 		this.index = index;
@@ -55,6 +58,9 @@ public class ChannelColorModel
         builder.append(":");
 
         builder.append(isVisible());
+        
+        builder.append(":");
+        builder.append(getCombiningConstant());
 
         return builder.toString();
     }
@@ -67,20 +73,29 @@ public class ChannelColorModel
         String [] items = modelString.split(":");
 
         // should be 8 items, not that we're checking
-        setBlackLevel(Integer.parseInt(items[0]));
-        setGamma(Double.parseDouble(items[1]));
-        setWhiteLevel(Integer.parseInt(items[2]));
+        int inx = 0;
+        setBlackLevel(Integer.parseInt(items[inx++]));
+        setGamma(Double.parseDouble(items[inx++]));
+        setWhiteLevel(Integer.parseInt(items[inx++]));
 
         Color savedColor = new Color(
-            Integer.parseInt(items[3]),
-            Integer.parseInt(items[4]),
-            Integer.parseInt(items[5]),
-            Integer.parseInt(items[6])
+            Integer.parseInt(items[inx++]),
+            Integer.parseInt(items[inx++]),
+            Integer.parseInt(items[inx++]),
+            Integer.parseInt(items[inx++])
             );
         setColor(savedColor);
+        
+        setVisible(Boolean.parseBoolean(items[inx++]));
 
-        setVisible(Boolean.parseBoolean(items[7]));
+        // Make this flexible to avoid failing on serialized data from before adding this value.
+        if ( items.length > inx ) {
+            setCombiningConstant( Float.parseFloat( items[ inx++ ] ) );
+        }
 
+        if ( inx > NUM_SERIALIZED_ITEMS ) {
+            throw new IllegalStateException("Need to update the number of serialized items.");
+        }
     }
 
 	public int getBitDepth() {
@@ -189,5 +204,31 @@ public class ChannelColorModel
 		// System.out.println("white level = "+whiteLevel);
 		whiteLevelChangedSignal.emit(this.whiteLevel);
 	}
+
+    /**
+     * Use this when combining channels into a linear combination.
+     * 
+     * @return tells what to multiply by the channel when summing.
+     */
+    public float getCombiningConstant() {
+        return combiningConstant;
+    }
+
+    /**
+     * Sets the constant to be used in linear combinations with other channels.
+     * At present, only 1, -1 are useful.
+     * 
+     * @param combiningConstant multiply by this, when summing.
+     */
+    public void setCombiningConstant(float combiningConstant) {
+        this.combiningConstant = combiningConstant;
+    }
+
+    /**
+     * @return the numSerializedItems
+     */
+    public int getNumSerializedItems() {
+        return NUM_SERIALIZED_ITEMS;
+    }
 
 }
