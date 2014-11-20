@@ -84,10 +84,17 @@ public class LVVDevPanel extends JPanel {
                         //  I hope Entities and EntityDatas feel no pain...
                         ModelMgr modelMgr = ModelMgr.getModelMgr();
                             Entity neuronEntity = modelMgr.getEntityById(neuron.getId());
+                            // avoid a concurrant modification error:
+                            EntityData found = null;
                             for (EntityData ed: neuronEntity.getEntityData()) {
                                 if (ed.getId().equals(childID)) {
-                                    modelMgr.removeEntityData(ed);
+                                    found = ed;
                                 }
+                            }
+                            if (found != null) {
+                                modelMgr.removeEntityData(found);
+                            } else {
+                                System.out.println("couldn't find right entity data to remove");
                             }
                     }
 
