@@ -4,6 +4,8 @@ import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.io.OutputStreamWriter;
+import java.io.Writer;
 import java.nio.charset.Charset;
 import java.nio.file.Files;
 import java.util.ArrayList;
@@ -41,8 +43,8 @@ public class SWCData {
 
     private File swcFile;
 
-    private List<SWCNode> nodeList = new ArrayList<SWCNode>();
-    private List<String> headerList = new ArrayList<String>();
+    private List<SWCNode> nodeList = new ArrayList<>();
+    private List<String> headerList = new ArrayList<>();
 
     private String invalidReason = null;
 
@@ -62,8 +64,8 @@ public class SWCData {
 
     public void clear() {
         swcFile = null;
-        nodeList = new ArrayList<SWCNode>();
-        headerList = new ArrayList<String>();
+        nodeList = new ArrayList<>();
+        headerList = new ArrayList<>();
         invalidReason = null;
     }
 
@@ -92,31 +94,24 @@ public class SWCData {
         }
     }
 
+    /**
+     * Validate file contents and write back to target.
+     * 
+     * @param swcFile target file.
+     * @throws Exception thrown by called methods.
+     */
     public void write(File swcFile) throws Exception {
-        // this routine is fairly dumb; it just has to write the lines,
-        //  since the hard work is done in generating the input data (eg, nodes)
-
-        if (!isValid()) {
+        if (isValid()) {
+            FileWriter writer = new FileWriter(swcFile);
+            writeSwcFile(writer);
+            this.swcFile = swcFile;
+        }
+        else {
+            writeSwcFile(new OutputStreamWriter(System.err));
             throw new IllegalStateException(String.format("can't write SWC data; invalid for reason: %s",
                     getInvalidReason()));
         }
 
-        FileWriter writer = new FileWriter(swcFile);
-        BufferedWriter bufferedWriter = new BufferedWriter(writer);
-
-        for (String line: getHeaderList()) {
-            bufferedWriter.write(line);
-            bufferedWriter.newLine();
-        }
-
-        for (SWCNode node: getNodeList()) {
-            bufferedWriter.write(node.toSWCline());
-            bufferedWriter.newLine();
-        }
-
-        bufferedWriter.close();
-
-        this.swcFile = swcFile;
     }
 
     /**
@@ -134,7 +129,7 @@ public class SWCData {
         }
 
         int nRoots = 0;
-        Set<Integer> possibleParents = new HashSet<Integer>();
+        Set<Integer> possibleParents = new HashSet<>();
         // -1 (no parent) is valid:
         possibleParents.add(-1);
 
@@ -224,4 +219,27 @@ public class SWCData {
     public String getInvalidReason() {
         return invalidReason;
     }
+
+    /**
+     * this routine is fairly dumb; it just has to write the lines,
+     * since the hard work is done in generating the input data (eg, nodes)
+     *
+     * @param writer accepts the output
+     * @throws IOException thrown by called methods.
+     */
+    private void writeSwcFile(Writer writer) throws IOException {
+        try (BufferedWriter bufferedWriter = new BufferedWriter(writer)) {
+            for (String line: getHeaderList()) {
+                bufferedWriter.write(line);
+                bufferedWriter.newLine();
+            }
+            
+            for (SWCNode node: getNodeList()) {
+                bufferedWriter.write(node.toSWCline());
+                bufferedWriter.newLine();
+            }
+        }
+
+    }
+
 }

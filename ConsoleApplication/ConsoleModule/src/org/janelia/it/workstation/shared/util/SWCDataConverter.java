@@ -5,9 +5,13 @@ import org.janelia.it.jacs.model.user_data.tiledMicroscope.TmNeuron;
 import org.janelia.it.workstation.geom.Vec3;
 
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import org.janelia.it.jacs.model.user_data.tiledMicroscope.TmAnchoredPath;
+import org.janelia.it.jacs.model.user_data.tiledMicroscope.TmAnchoredPathEndpoints;
 
 /**
  * this class handles the details of translating TmNeurons into SWCData
@@ -20,64 +24,29 @@ public class SWCDataConverter {
 
     public static SWCData fromTmNeuron(TmNeuron neuron, Vec3 center) {
 
-        List<SWCNode> nodeList = new ArrayList<SWCNode>();
-        List<String> headerList = new ArrayList<String>();
-
-        // map the annotation IDs to the indices to be used in the swc file
-        Map<Long, Integer> annMap = new HashMap<Long, Integer>();
+        List<String> headerList = new ArrayList<>();
 
         double xcenter = center.getX();
         double ycenter = center.getY();
         double zcenter = center.getZ();
+        List<SWCNode> nodeList = nodesFromSubtrees(neuron, xcenter, ycenter, zcenter);
 
-        int currentIndex = 1;
-        int segmentType;
-        int parentIndex;
-        for (TmGeoAnnotation root: neuron.getRootAnnotations()) {
-            for (TmGeoAnnotation ann: neuron.getSubTreeList(root)) {
-                if (ann.isRoot()) {
-                    parentIndex = -1;
-                } else {
-                    parentIndex = annMap.get(ann.getParentId());
-                }
-
-                // only marking "fork" and "end, as that's
-                //  all we can surmise from geometry
-                if (ann.getChildIds().size() == 0) {
-                    segmentType = 6;
-                } else if (ann.getChildIds().size() > 1) {
-                    segmentType = 5;
-                } else {
-                    segmentType = 0;
-                }
-
-                nodeList.add(new SWCNode(
-                    currentIndex,
-                    segmentType,
-                    ann.getX() - xcenter,
-                    ann.getY() - ycenter,
-                    ann.getZ() - zcenter,
-                    1.0,    // radius, which we don't have right now
-                    parentIndex
-                ));
-                annMap.put(ann.getId(), currentIndex);
-                currentIndex++;
-            }
-        }
-
+        List<SWCNode> altNodeList = nodesFromAnchoredPath(neuron, xcenter, ycenter, zcenter);
+        
         // headers: I'm not going to put in all the fields I
         //  saw in the "specification" unless I have to; we only
         //  use the OFFSET field
         headerList.add("# ORIGINAL_SOURCE Janelia Workstation Large Volume Viewer");
         headerList.add(String.format("# OFFSET %f %f %f", xcenter, ycenter, zcenter));
 
-        return new SWCData(nodeList, headerList);
+//        return new SWCData(nodeList, headerList);
+        return new SWCData(altNodeList, headerList);
     }
 
     public static SWCData fromTmNeuron(List<TmNeuron> neuronList) {
         Vec3 com = neuronCenterOfMass(neuronList);
 
-        List<SWCData> dataList = new ArrayList<SWCData>();
+        List<SWCData> dataList = new ArrayList<>();
         for (TmNeuron neuron: neuronList) {
             if (neuron != null && neuron.getGeoAnnotationMap().size() > 0) {
                 dataList.add(fromTmNeuron(neuron, com));
@@ -151,6 +120,228 @@ public class SWCDataConverter {
         }
         // note that if totalNodes is zero, sum is also all zeros
         return sum;
+    }
+
+    private static List<SWCNode> nodesFromAnchoredPath(TmNeuron neuron, double xcenter, double ycenter, double zcenter) {
+        List<SWCNode> nodeList = new ArrayList<>();
+        // map the annotation IDs to the indices to be used in the swc file
+        Map<Long, Integer> annoToIndex = new HashMap<>();
+
+        Map<TmAnchoredPathEndpoints, TmAnchoredPath> map = neuron.getAnchoredPathMap();
+        int currentIndex = 1;
+        int parentIndex = -1;
+        List<Long> branchIds = new ArrayList<>();
+        List<Long> rootIds = new ArrayList<>();
+        Map<Long,Long> annoToParent = new HashMap<>();
+        // Go through annotations to find linkage relationships.
+        for (TmGeoAnnotation annotation : neuron.getRootAnnotations()) {
+            for (TmGeoAnnotation subAnn : neuron.getSubTreeList(annotation)) {
+                if (subAnn.isBranch()) {
+                    branchIds.add(subAnn.getId());
+                    annoToParent.put(subAnn.getId(), subAnn.getParentId());
+                    annoToIndex.put(subAnn.getId(), currentIndex);
+                    currentIndex ++;
+                }
+                if (subAnn.isRoot()) {
+                    rootIds.add(subAnn.getId());
+                    annoToParent.put(subAnn.getId(), subAnn.getParentId());
+                    annoToIndex.put(subAnn.getId(), currentIndex);
+                    currentIndex ++;
+                }
+            }
+        }
+        
+//        for ( TmAnchoredPathEndpoints endPoints: map.keySet() ) {
+//            // Reserve slots for all the end points, which are parents.
+//            Long endPointId = endPoints.getAnnotationID2();
+//            if ( branchIds.contains( endPointId )  ||  rootIds.contains( endPointId ) ) {
+//                continue;
+//            }
+//            annoToIndex.put(endPointId, currentIndex);
+//            currentIndex++;
+//        }
+        
+        for (TmGeoAnnotation annotation : neuron.getRootAnnotations()) {
+            for (TmGeoAnnotation subAnn : neuron.getSubTreeList(annotation)) {
+                if (subAnn.isBranch()) {
+                    parentIndex = -1;
+                    Integer parentIdInteger = annoToIndex.get(subAnn.getParentId());
+                    if ( parentIdInteger != null ) {
+                        parentIndex = parentIdInteger;
+                    }
+                    else {
+                        System.err.println("No parent index found for " + subAnn.getId());
+                    }
+                    nodeList.add(
+                        createSWCNode(
+                                annoToIndex.get(subAnn.getId()),
+                                SWCNode.SegmentType.fork_point,
+                                subAnn.getX(),
+                                subAnn.getY(),
+                                subAnn.getZ(),
+                                xcenter,
+                                ycenter, 
+                                zcenter,
+                                parentIndex
+                        )
+                    );
+                }
+                if (subAnn.isRoot()) {
+                    rootIds.add(subAnn.getId());
+                    nodeList.add(
+                        createSWCNode(
+                                annoToIndex.get(subAnn.getId()),
+                                SWCNode.SegmentType.custom,
+                                subAnn.getX(),
+                                subAnn.getY(),
+                                subAnn.getZ(),
+                                xcenter,
+                                ycenter, 
+                                zcenter,
+                                -1
+                        )
+                    );
+                }
+            }
+        }
+        
+        for ( TmAnchoredPathEndpoints endPoints: map.keySet() ) {
+            // Make a node for each path member.
+            TmAnchoredPath anchoredPath = map.get( endPoints );
+            int inListNodeNum = 0;
+            for (List<Integer> point: anchoredPath.getPointList()) {
+                SWCNode.SegmentType segmentType = null;
+                segmentType = SWCNode.SegmentType.custom;
+                Integer parentIndexInteger = annoToIndex.get( endPoints.getAnnotationID2() );
+                if ( parentIndexInteger != null ) {
+                    parentIndex = parentIndexInteger;
+                }
+                
+                // Starting the list is the Anno-1 ID.
+                if (inListNodeNum == 0) {
+                    final Long annotationId = endPoints.getAnnotationID1();
+                    // Starting the list is the Anno-1 ID.
+                    if ( branchIds.contains( endPoints.getAnnotationID1() ) ) {
+                        continue;
+                    }
+                    else if ( rootIds.contains( annotationId) ) {
+                        continue;
+                    }
+                }
+                else if (inListNodeNum == anchoredPath.getPointList().size() - 1) {
+                    final Long annotationId = endPoints.getAnnotationID2();
+                    // And ending the list is the Anno-2 ID.
+                    if ( rootIds.contains( annotationId) ) {
+                        continue;
+                    }
+                    else if ( branchIds.contains( endPoints.getAnnotationID2() ) ) {
+                        continue;
+                    }
+                }
+
+                nodeList.add(
+                        createSWCNode(
+                                currentIndex,
+                                segmentType,
+                                point.get(0),
+                                point.get(1),
+                                point.get(2),
+                                xcenter,
+                                ycenter, 
+                                zcenter,
+                                parentIndex
+                        )
+                );
+
+                currentIndex ++;
+
+                inListNodeNum ++;
+            }
+        }
+        Comparator<SWCNode> indexComparator = new Comparator<SWCNode>() {
+            @Override
+            public int compare(SWCNode o1, SWCNode o2) {
+                return o1.getIndex() - o2.getIndex();
+            }            
+        };
+        Collections.sort(nodeList, indexComparator);
+        return nodeList;
+    }
+    
+    private static List<SWCNode> nodesFromSubtrees(TmNeuron neuron, double xcenter, double ycenter, double zcenter) {
+        List<SWCNode> nodeList = new ArrayList<>();
+        // map the annotation IDs to the indices to be used in the swc file
+        Map<Long, Integer> annMap = new HashMap<>();
+
+        int currentIndex = 1;
+        int parentIndex;
+        for (TmGeoAnnotation root: neuron.getRootAnnotations()) {
+            for (TmGeoAnnotation ann: neuron.getSubTreeList(root)) {
+                if (ann.isRoot()) {
+                    parentIndex = -1;
+                } else {
+                    parentIndex = annMap.get(ann.getParentId());
+                }
+                SWCNode.SegmentType segmentType = getSegmentType(ann);
+
+                nodeList.add(
+                        createSWCNode(
+                                currentIndex,
+                                segmentType,
+                                ann.getX(),
+                                ann.getY(),
+                                ann.getZ(),
+                                xcenter,
+                                ycenter, 
+                                zcenter,
+                                parentIndex
+                        )
+                );
+                annMap.put(ann.getId(), currentIndex);
+                currentIndex++;
+            }
+        }
+        return nodeList;
+    }
+
+    private static SWCNode.SegmentType getSegmentType(TmGeoAnnotation ann) {
+        SWCNode.SegmentType segmentType;
+        // only marking "fork" and "end, as that's
+        //  all we can surmise from geometry
+        if (ann.getChildIds().size() == 0) {
+            segmentType = SWCNode.SegmentType.end_point;
+        } else if (ann.getChildIds().size() > 1) {
+            segmentType = SWCNode.SegmentType.fork_point;
+        } else {
+            segmentType = SWCNode.SegmentType.undefined;
+        }
+        return segmentType;
+    }
+
+    /**
+     * Factory method to encapsulate how to make a node, including the details
+     * of relative position.
+     * @return properly spec'd node.
+     */
+    private static SWCNode createSWCNode(
+            int currentIndex,
+            SWCNode.SegmentType segmentType,
+            double xAnno,
+            double yAnno,
+            double zAnno,
+            double xcenter,
+            double ycenter,
+            double zcenter,
+            int parentIndex) {
+        return new SWCNode(
+                currentIndex,
+                segmentType,
+                xAnno - xcenter,
+                yAnno - ycenter,
+                zAnno - zcenter,
+                1.0,    // radius, which we don't have right now
+                parentIndex
+        );
     }
 
 }

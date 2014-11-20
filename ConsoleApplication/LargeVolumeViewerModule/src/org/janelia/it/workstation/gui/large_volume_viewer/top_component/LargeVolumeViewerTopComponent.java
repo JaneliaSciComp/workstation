@@ -6,12 +6,14 @@
 package org.janelia.it.workstation.gui.large_volume_viewer.top_component;
 
 import java.awt.BorderLayout;
+import javax.swing.JComponent;
 import org.netbeans.api.settings.ConvertAsProperties;
 import org.openide.awt.ActionID;
 import org.openide.awt.ActionReference;
 import org.openide.windows.TopComponent;
 import org.openide.util.NbBundle.Messages;
 import static org.janelia.it.workstation.gui.large_volume_viewer.top_component.LargeVolumeViewerTopComponentDynamic.*;
+import org.openide.windows.WindowManager;
 
 /**
  * Top component which displays something.
@@ -88,6 +90,10 @@ public final class LargeVolumeViewerTopComponent extends TopComponent {
     public void componentClosed() {
         jPanel1.remove( state.getLvvv() );
         state.close();
+    }
+    
+    public static JComponent findThisComponent() {
+        return WindowManager.getDefault().findTopComponent(LargeVolumeViewerTopComponentDynamic.LVV_PREFERRED_ID);
     }
 
     void writeProperties(java.util.Properties p) {
