@@ -162,7 +162,7 @@ public class DomainDAO {
         
         for(String type : referenceMap.keySet()) {
             List<DomainObject> objs = getDomainObjects(subjectKey, type, referenceMap.get(type));
-            log.info("Found {} results for {}",type,objs.size());
+            //log.info("Found {} objects of type {}",objs.size(),type);
             domainObjects.addAll(objs);
         }
         
@@ -176,6 +176,7 @@ public class DomainDAO {
         // TODO: remove this after the next db load fixes it
         if ("workspace".equals(type)) type = "treeNode"; 
         
+        long start = System.currentTimeMillis();
         log.info("getDomainObjects(subjectKey={},type={},ids.size={})",subjectKey,type,ids.size());
 
         Set<String> subjects = getSubjectSet(subjectKey);
@@ -185,7 +186,9 @@ public class DomainDAO {
             log.error("No object type for "+type);
             return new ArrayList<DomainObject>();
         }
-        return toList(getCollection(type).find("{_id:{$in:#},readers:{$in:#}}", ids, subjects).as(clazz), ids);
+        List<DomainObject> list = toList(getCollection(type).find("{_id:{$in:#},readers:{$in:#}}", ids, subjects).as(clazz), ids);
+        log.info("Getting "+list.size()+" "+type+" objects took "+(System.currentTimeMillis()-start)+" ms");
+        return list;
     }
 
     public List<DomainObject> getDomainObjects(String subjectKey, ReverseReference reverseRef) {
@@ -418,7 +421,7 @@ public class DomainDAO {
     public void updateProperty(String subjectKey, DomainObject domainObject, String propName, String propValue) {
         String type = getType(domainObject);
         MongoCollection collection = getCollection(type);
-        WriteResult wr = collection.update("{_id:#,writers:#}",domainObject.getId(),subjectKey).with("{"+propName+":#,updatedDate:#}",propValue,new Date());
+        WriteResult wr = collection.update("{_id:#,writers:#}",domainObject.getId(),subjectKey).with("{$set: {"+propName+":#, updatedDate:#}}",propValue,new Date());
         if (wr.getN()!=1) {
             log.warn("Could not update "+type+"#"+domainObject.getId()+"."+propName+": "+wr.getError());
         }

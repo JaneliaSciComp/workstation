@@ -90,7 +90,8 @@ public abstract class EntityTransferHandler extends TransferHandler {
 //            return null;
 //        }
         else {
-            throw new IllegalStateException("Unsupported component type for transfer: " + sourceComponent.getClass().getName());
+            log.warn("Unsupported component type for transfer: " + sourceComponent.getClass().getName());
+            return null;
         }
     }
 

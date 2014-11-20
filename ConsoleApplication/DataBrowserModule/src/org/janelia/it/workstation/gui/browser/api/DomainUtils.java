@@ -34,6 +34,8 @@ public class DomainUtils {
         
         FileType fileType = FileType.valueOf(role);
         Map<FileType,String> files = hasFiles.getFiles();
+        if (files==null) return null;
+
         String filepath = files.get(fileType);
         if (filepath==null) {
             for(FileType subFileType : FileType.values()) {
@@ -44,15 +46,10 @@ public class DomainUtils {
             }
         }
         
-        if (filepath!=null) {
-            if (urlSb.length()>0) urlSb.append("/");
-            urlSb.append(filepath);
-        }
-        else {
-            // There is no filepath for the given role
-            return null;
-        }
-
+        if (filepath==null) return null;
+        
+        if (urlSb.length()>0) urlSb.append("/");
+        urlSb.append(filepath);
         return urlSb.length()>0 ? urlSb.toString() : null;
     }
 

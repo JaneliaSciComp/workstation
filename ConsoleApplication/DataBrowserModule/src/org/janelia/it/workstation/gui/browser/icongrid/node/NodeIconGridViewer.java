@@ -282,7 +282,9 @@ public class NodeIconGridViewer extends IconGridViewer<Node> {
             @Override
             protected void doStuff() throws Exception {
                 if (node!=null) {
+                    log.info("Waiting for child nodes..");
                     children = node.getChildren().getNodes(true);
+                    log.info("Got "+children.length+" children");
                 }
             }
 

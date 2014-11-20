@@ -171,7 +171,7 @@ public class OntologyNode extends DomainObjectNode {
                 }
             };
         } else {
-            log.warn("Transfer does not support domain object flavor. It supports: "+t.getTransferDataFlavors());
+            log.trace("Transfer does not support domain object flavor.");
             return null;
         }
     }

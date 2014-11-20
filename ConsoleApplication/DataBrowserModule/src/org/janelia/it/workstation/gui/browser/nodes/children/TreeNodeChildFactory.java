@@ -1,6 +1,7 @@
 package org.janelia.it.workstation.gui.browser.nodes.children;
 
 import java.lang.ref.WeakReference;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -63,18 +64,20 @@ public class TreeNodeChildFactory extends ChildFactory<DomainObject> {
             map.put(obj.getId(), obj);
         }
         
+        List<DomainObject> temp = new ArrayList<DomainObject>();
         if (treeNode.getChildren()!=null) {
             for(Reference reference : treeNode.getChildren()) {
                 DomainObject obj = map.get(reference.getTargetId());
                 if (obj!=null) {
-                    list.add(obj);
+                    temp.add(obj);
                 }
                 else {
-                    list.add(new DeadReference(reference));
+                    temp.add(new DeadReference(reference));
                 }
             }
         }
         
+        list.addAll(temp);
         return true;
     }
 
