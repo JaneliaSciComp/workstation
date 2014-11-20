@@ -64,6 +64,10 @@ public class LVVDevPanel extends JPanel {
                         //  delete second annotation in first neurite; that's the
                         //  first child of the root
                         TmNeuron neuron = annotationModel.getCurrentNeuron();
+                        if (neuron == null) {
+                            System.out.println("no selected neuron");
+                            return;
+                        }
                         if (neuron.getRootAnnotations().size() == 0) {
                             System.out.println("no annotations");
                             return;
@@ -76,8 +80,8 @@ public class LVVDevPanel extends JPanel {
                         Long childID = root.getChildIds().get(0);
 
                         // now we do surgery--horrific, brutal surgery that is an
-                        //  offense against man and God and the ethics board; I
-                        //  hope Entities and EntityDatas feel no pain...
+                        //  offense against man and God and the ethics board;
+                        //  I hope Entities and EntityDatas feel no pain...
                         ModelMgr modelMgr = ModelMgr.getModelMgr();
                             Entity neuronEntity = modelMgr.getEntityById(neuron.getId());
                             for (EntityData ed: neuronEntity.getEntityData()) {
@@ -89,12 +93,12 @@ public class LVVDevPanel extends JPanel {
 
                     @Override
                     protected void hadSuccess() {
-                        // blah, blah
+                        System.out.println("break connectivity had no exceptions");
                     }
 
                     @Override
                     protected void hadError(Throwable error) {
-                        System.out.println("connectivity breaking failed!");
+                        System.out.println("connectivity breaking reported exception");
                         error.printStackTrace();
                     }
                 };
