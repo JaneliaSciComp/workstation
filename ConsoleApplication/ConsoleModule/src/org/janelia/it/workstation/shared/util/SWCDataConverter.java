@@ -148,7 +148,14 @@ public class SWCDataConverter {
                     annoToIndex.put(subAnn.getId(), currentIndex);
                     currentIndex ++;
                 }
+                
+if (subAnn.getId() == 2075053714137153704L){
+System.out.println("Found the missing subannotation.");                    
+}
             }
+if (annotation.getId() == 2075053714137153704L){
+System.out.println("Found the missing annotation.");                    
+}
         }
         
 //        for ( TmAnchoredPathEndpoints endPoints: map.keySet() ) {
@@ -171,6 +178,7 @@ public class SWCDataConverter {
                     }
                     else {
                         System.err.println("No parent index found for " + subAnn.getId());
+                        System.err.println("Annotation's index is " + annoToIndex.get(subAnn.getId()));
                     }
                     nodeList.add(
                         createSWCNode(
@@ -212,7 +220,11 @@ public class SWCDataConverter {
             for (List<Integer> point: anchoredPath.getPointList()) {
                 SWCNode.SegmentType segmentType = null;
                 segmentType = SWCNode.SegmentType.custom;
-                Integer parentIndexInteger = annoToIndex.get( endPoints.getAnnotationID2() );
+                // Try both ends of the end-points, to find a parent.
+                Integer parentIndexInteger = annoToIndex.get( endPoints.getAnnotationID1() );
+                if ( parentIndexInteger == null ) {
+                    parentIndexInteger = annoToIndex.get( endPoints.getAnnotationID2() );
+                }
                 if ( parentIndexInteger != null ) {
                     parentIndex = parentIndexInteger;
                 }
