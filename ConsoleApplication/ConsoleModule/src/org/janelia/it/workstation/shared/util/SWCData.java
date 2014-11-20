@@ -135,6 +135,9 @@ public class SWCData {
 
         int lastIndex = 0;
         for (SWCNode node: getNodeList()) {
+            possibleParents.add(node.getIndex());
+        }
+        for (SWCNode node: getNodeList()) {
             // node indices should increment by one each line
             if (node.getIndex() != lastIndex + 1) {
                 invalidReason = String.format("index %d out of order", node.getIndex());
@@ -158,7 +161,7 @@ public class SWCData {
                 invalidReason = String.format("node with invalid parent index %d", node.getParentIndex());
                 return false;
             }
-            possibleParents.add(node.getIndex());
+            //possibleParents.add(node.getIndex());
         }
 
         // at least one root

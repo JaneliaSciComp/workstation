@@ -148,51 +148,38 @@ public class SWCDataConverter {
                     annoToIndex.put(subAnn.getId(), currentIndex);
                     currentIndex ++;
                 }
-                
-if (subAnn.getId() == 2075053714137153704L){
-System.out.println("Found the missing subannotation.");                    
-}
             }
-if (annotation.getId() == 2075053714137153704L){
-System.out.println("Found the missing annotation.");                    
-}
         }
         
-//        for ( TmAnchoredPathEndpoints endPoints: map.keySet() ) {
-//            // Reserve slots for all the end points, which are parents.
-//            Long endPointId = endPoints.getAnnotationID2();
-//            if ( branchIds.contains( endPointId )  ||  rootIds.contains( endPointId ) ) {
-//                continue;
-//            }
-//            annoToIndex.put(endPointId, currentIndex);
-//            currentIndex++;
-//        }
-        
+        Map<Long,SWCNode> parentCleanupMap = new HashMap<>();
         for (TmGeoAnnotation annotation : neuron.getRootAnnotations()) {
             for (TmGeoAnnotation subAnn : neuron.getSubTreeList(annotation)) {
                 if (subAnn.isBranch()) {
                     parentIndex = -1;
                     Integer parentIdInteger = annoToIndex.get(subAnn.getParentId());
+                    boolean flagForCleanup = false;
                     if ( parentIdInteger != null ) {
                         parentIndex = parentIdInteger;
                     }
                     else {
-                        System.err.println("No parent index found for " + subAnn.getId());
-                        System.err.println("Annotation's index is " + annoToIndex.get(subAnn.getId()));
+                        System.err.println( "No parent index found for " + subAnn.getId() + ", with parent id of " + subAnn.getParentId() + ", as index " + annoToIndex.get(subAnn.getId()) );
+                        flagForCleanup = true;
                     }
-                    nodeList.add(
-                        createSWCNode(
-                                annoToIndex.get(subAnn.getId()),
-                                SWCNode.SegmentType.fork_point,
-                                subAnn.getX(),
-                                subAnn.getY(),
-                                subAnn.getZ(),
-                                xcenter,
-                                ycenter, 
-                                zcenter,
-                                parentIndex
-                        )
+                    final SWCNode swcNode = createSWCNode(
+                            annoToIndex.get(subAnn.getId()),
+                            SWCNode.SegmentType.fork_point,
+                            subAnn.getX(),
+                            subAnn.getY(),
+                            subAnn.getZ(),
+                            xcenter,
+                            ycenter,
+                            zcenter,
+                            parentIndex
                     );
+                    nodeList.add( swcNode );
+                    if ( flagForCleanup ) {
+                        parentCleanupMap.put( subAnn.getParentId(), swcNode );
+                    }
                 }
                 if (subAnn.isRoot()) {
                     rootIds.add(subAnn.getId());
@@ -228,6 +215,12 @@ System.out.println("Found the missing annotation.");
                 if ( parentIndexInteger != null ) {
                     parentIndex = parentIndexInteger;
                 }
+                // Will need this to correct later
+//                if ( ( annoToIndex.get( endPoints.getAnnotationID1() ) == null ) ||
+//                     ( annoToIndex.get( endPoints.getAnnotationID2() ) == null ) ) {
+//                    System.err.println( "No annotation made for ids " + endPoints.getAnnotationID1() + ", " + endPoints.getAnnotationID2() );
+//                    System.err.println("Is it in the geo path? " + neuron.getGeoAnnotationMap().get(endPoints.getAnnotationID2()));
+//                }
                 
                 // Starting the list is the Anno-1 ID.
                 if (inListNodeNum == 0) {
@@ -270,6 +263,37 @@ System.out.println("Found the missing annotation.");
                 inListNodeNum ++;
             }
         }
+        
+        // Correct previously-unavailable parent ids.
+        for ( Long parentId: parentCleanupMap.keySet() ) {
+            // Try and correct any oddball parents.
+            SWCNode node = parentCleanupMap.get( parentId );
+            Integer index = annoToIndex.get( parentId );
+            if ( index != null ) {
+                node.setParentIndex( index );
+            }
+            else {
+                // Must make the new node.
+                TmGeoAnnotation geoAnn = neuron.getGeoAnnotationMap().get( parentId );
+                int geoParentIndex = annoToIndex.get( geoAnn.getParentId() );
+                nodeList.add(
+                        createSWCNode(
+                                currentIndex,
+                                SWCNode.SegmentType.end_point,
+                                geoAnn.getX(),
+                                geoAnn.getY(),
+                                geoAnn.getZ(),
+                                xcenter,
+                                ycenter, 
+                                zcenter,
+                                geoParentIndex
+                        )
+                );
+                node.setParentIndex( currentIndex );
+                currentIndex ++;
+            }
+        }
+        
         Comparator<SWCNode> indexComparator = new Comparator<SWCNode>() {
             @Override
             public int compare(SWCNode o1, SWCNode o2) {
