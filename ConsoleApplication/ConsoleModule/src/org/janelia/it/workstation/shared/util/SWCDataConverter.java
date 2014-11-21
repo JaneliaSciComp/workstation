@@ -29,7 +29,7 @@ public class SWCDataConverter {
         double xcenter = center.getX();
         double ycenter = center.getY();
         double zcenter = center.getZ();
-        List<SWCNode> nodeList = nodesFromSubtrees(neuron, xcenter, ycenter, zcenter);
+        //List<SWCNode> nodeList = nodesFromSubtrees(neuron, xcenter, ycenter, zcenter);
 
         List<SWCNode> altNodeList = nodesFromAnchoredPath(neuron, xcenter, ycenter, zcenter);
         
@@ -136,67 +136,43 @@ public class SWCDataConverter {
         // Go through annotations to find linkage relationships.
         for (TmGeoAnnotation annotation : neuron.getRootAnnotations()) {
             for (TmGeoAnnotation subAnn : neuron.getSubTreeList(annotation)) {
+                annoToParent.put(subAnn.getId(), subAnn.getParentId());
+                annoToIndex.put(subAnn.getId(), currentIndex);
+                currentIndex++;
                 if (subAnn.isBranch()) {
                     branchIds.add(subAnn.getId());
-                    annoToParent.put(subAnn.getId(), subAnn.getParentId());
-                    annoToIndex.put(subAnn.getId(), currentIndex);
-                    currentIndex ++;
                 }
                 if (subAnn.isRoot()) {
                     rootIds.add(subAnn.getId());
-                    annoToParent.put(subAnn.getId(), subAnn.getParentId());
-                    annoToIndex.put(subAnn.getId(), currentIndex);
-                    currentIndex ++;
                 }
             }
         }
         
-        Map<Long,SWCNode> parentCleanupMap = new HashMap<>();
         for (TmGeoAnnotation annotation : neuron.getRootAnnotations()) {
             for (TmGeoAnnotation subAnn : neuron.getSubTreeList(annotation)) {
-                if (subAnn.isBranch()) {
-                    parentIndex = -1;
-                    Integer parentIdInteger = annoToIndex.get(subAnn.getParentId());
-                    boolean flagForCleanup = false;
-                    if ( parentIdInteger != null ) {
-                        parentIndex = parentIdInteger;
-                    }
-                    else {
-                        System.err.println( "No parent index found for " + subAnn.getId() + ", with parent id of " + subAnn.getParentId() + ", as index " + annoToIndex.get(subAnn.getId()) );
-                        flagForCleanup = true;
-                    }
-                    final SWCNode swcNode = createSWCNode(
-                            annoToIndex.get(subAnn.getId()),
-                            SWCNode.SegmentType.fork_point,
-                            subAnn.getX(),
-                            subAnn.getY(),
-                            subAnn.getZ(),
-                            xcenter,
-                            ycenter,
-                            zcenter,
-                            parentIndex
-                    );
-                    nodeList.add( swcNode );
-                    if ( flagForCleanup ) {
-                        parentCleanupMap.put( subAnn.getParentId(), swcNode );
-                    }
+                Integer parentIdInteger = annoToIndex.get(subAnn.getParentId());
+                if (parentIdInteger != null) {
+                    parentIndex = parentIdInteger;
                 }
+
                 if (subAnn.isRoot()) {
-                    rootIds.add(subAnn.getId());
-                    nodeList.add(
-                        createSWCNode(
-                                annoToIndex.get(subAnn.getId()),
-                                SWCNode.SegmentType.custom,
-                                subAnn.getX(),
-                                subAnn.getY(),
-                                subAnn.getZ(),
-                                xcenter,
-                                ycenter, 
-                                zcenter,
-                                -1
-                        )
-                    );
+                    parentIndex = -1;
                 }
+                
+                final Integer index = annoToIndex.get(subAnn.getId());
+                SWCNode swcNode = createSWCNode(
+                        index,
+                        getSegmentType(subAnn),
+                        subAnn.getX(),
+                        subAnn.getY(),
+                        subAnn.getZ(),
+                        xcenter,
+                        ycenter,
+                        zcenter,
+                        parentIndex
+                );
+                nodeList.add( swcNode );
+                parentIndex = index;
             }
         }
         
@@ -204,25 +180,22 @@ public class SWCDataConverter {
             // Make a node for each path member.
             TmAnchoredPath anchoredPath = map.get( endPoints );
             int inListNodeNum = 0;
+            parentIndex = -1;
             for (List<Integer> point: anchoredPath.getPointList()) {
                 SWCNode.SegmentType segmentType = null;
-                segmentType = SWCNode.SegmentType.custom;
+                segmentType = SWCNode.SegmentType.undefined;
                 // Try both ends of the end-points, to find a parent.
-                Integer parentIndexInteger = annoToIndex.get( endPoints.getAnnotationID1() );
-                if ( parentIndexInteger == null ) {
-                    parentIndexInteger = annoToIndex.get( endPoints.getAnnotationID2() );
+                if (parentIndex == -1) {
+                    Integer parentIndexInteger = annoToIndex.get(endPoints.getAnnotationID1());
+                    if (parentIndexInteger == null) {
+                        parentIndexInteger = annoToIndex.get(endPoints.getAnnotationID2());
+                    }
+                    if (parentIndexInteger != null) {
+                        parentIndex = parentIndexInteger;
+                    }
                 }
-                if ( parentIndexInteger != null ) {
-                    parentIndex = parentIndexInteger;
-                }
-                // Will need this to correct later
-//                if ( ( annoToIndex.get( endPoints.getAnnotationID1() ) == null ) ||
-//                     ( annoToIndex.get( endPoints.getAnnotationID2() ) == null ) ) {
-//                    System.err.println( "No annotation made for ids " + endPoints.getAnnotationID1() + ", " + endPoints.getAnnotationID2() );
-//                    System.err.println("Is it in the geo path? " + neuron.getGeoAnnotationMap().get(endPoints.getAnnotationID2()));
-//                }
                 
-                // Starting the list is the Anno-1 ID.
+                // Do not re-create any root or branch nodes.
                 if (inListNodeNum == 0) {
                     final Long annotationId = endPoints.getAnnotationID1();
                     // Starting the list is the Anno-1 ID.
@@ -257,40 +230,11 @@ public class SWCDataConverter {
                                 parentIndex
                         )
                 );
-
+                parentIndex = currentIndex;
+                
                 currentIndex ++;
 
                 inListNodeNum ++;
-            }
-        }
-        
-        // Correct previously-unavailable parent ids.
-        for ( Long parentId: parentCleanupMap.keySet() ) {
-            // Try and correct any oddball parents.
-            SWCNode node = parentCleanupMap.get( parentId );
-            Integer index = annoToIndex.get( parentId );
-            if ( index != null ) {
-                node.setParentIndex( index );
-            }
-            else {
-                // Must make the new node.
-                TmGeoAnnotation geoAnn = neuron.getGeoAnnotationMap().get( parentId );
-                int geoParentIndex = annoToIndex.get( geoAnn.getParentId() );
-                nodeList.add(
-                        createSWCNode(
-                                currentIndex,
-                                SWCNode.SegmentType.end_point,
-                                geoAnn.getX(),
-                                geoAnn.getY(),
-                                geoAnn.getZ(),
-                                xcenter,
-                                ycenter, 
-                                zcenter,
-                                geoParentIndex
-                        )
-                );
-                node.setParentIndex( currentIndex );
-                currentIndex ++;
             }
         }
         
