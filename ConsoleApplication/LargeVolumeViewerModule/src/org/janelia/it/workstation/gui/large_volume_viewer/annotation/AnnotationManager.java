@@ -1138,8 +1138,8 @@ public class AnnotationManager
 
     }
 
-    public void exportAllNeuronsAsSWC(final File swcFile) {
-        final List<Long> neuronIDList = new ArrayList<Long>();
+    public void exportAllNeuronsAsSWC(final File swcFile, final int downsampleModulo) {
+        final List<Long> neuronIDList = new ArrayList<>();
         for (TmNeuron neuron: annotationModel.getCurrentWorkspace().getNeuronList()) {
             neuronIDList.add(neuron.getId());
         }
@@ -1147,7 +1147,7 @@ public class AnnotationManager
         SimpleWorker saver = new SimpleWorker() {
             @Override
             protected void doStuff() throws Exception {
-                annotationModel.exportSWCData(swcFile, neuronIDList);
+                annotationModel.exportSWCData(swcFile, neuronIDList, downsampleModulo);
             }
 
             @Override
@@ -1163,13 +1163,13 @@ public class AnnotationManager
         saver.execute();
     }
 
-    public void exportCurrentNeuronAsSWC(final File swcFile) {
+    public void exportCurrentNeuronAsSWC(final File swcFile, final int downsampleModulo) {
         final Long neuronID = annotationModel.getCurrentNeuron().getId();
 
         SimpleWorker saver = new SimpleWorker() {
             @Override
             protected void doStuff() throws Exception {
-                annotationModel.exportSWCData(swcFile, Arrays.asList(neuronID));
+                annotationModel.exportSWCData(swcFile, Arrays.asList(neuronID), downsampleModulo);
             }
 
             @Override
@@ -1234,7 +1234,7 @@ public class AnnotationManager
      * @param title passed as title param.
      * @throws HeadlessException by called methods.
      */
-    private void presentError(String message, String title) throws HeadlessException {
+    public void presentError(String message, String title) throws HeadlessException {
         JOptionPane.showMessageDialog(
                 ComponentUtil.getLVVMainWindow(),
                 message,

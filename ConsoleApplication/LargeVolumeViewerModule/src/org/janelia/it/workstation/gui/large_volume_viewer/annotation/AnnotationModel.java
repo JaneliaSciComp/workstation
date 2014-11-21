@@ -57,21 +57,21 @@ that need to respond to changing data.
     private TmNeuron currentNeuron;
 
     // ----- signals
-    public Signal1<TmWorkspace> workspaceLoadedSignal = new Signal1<TmWorkspace>();
+    public Signal1<TmWorkspace> workspaceLoadedSignal = new Signal1<>();
 
-    public Signal1<TmNeuron> neuronSelectedSignal = new Signal1<TmNeuron>();
+    public Signal1<TmNeuron> neuronSelectedSignal = new Signal1<>();
 
-    public Signal1<TmGeoAnnotation> annotationAddedSignal = new Signal1<TmGeoAnnotation>();
-    public Signal1<List<TmGeoAnnotation>> annotationsDeletedSignal = new Signal1<List<TmGeoAnnotation>>();
-    public Signal1<TmGeoAnnotation> annotationReparentedSignal = new Signal1<TmGeoAnnotation>();
-    public Signal1<TmGeoAnnotation> annotationNotMovedSignal = new Signal1<TmGeoAnnotation>();
+    public Signal1<TmGeoAnnotation> annotationAddedSignal = new Signal1<>();
+    public Signal1<List<TmGeoAnnotation>> annotationsDeletedSignal = new Signal1<>();
+    public Signal1<TmGeoAnnotation> annotationReparentedSignal = new Signal1<>();
+    public Signal1<TmGeoAnnotation> annotationNotMovedSignal = new Signal1<>();
 
-    public Signal1<TmAnchoredPath> anchoredPathAddedSignal = new Signal1<TmAnchoredPath>();
-    public Signal1<List<TmAnchoredPath>> anchoredPathsRemovedSignal = new Signal1<List<TmAnchoredPath>>();
+    public Signal1<TmAnchoredPath> anchoredPathAddedSignal = new Signal1<>();
+    public Signal1<List<TmAnchoredPath>> anchoredPathsRemovedSignal = new Signal1<>();
 
-    public Signal1<Long> pathTraceRequestedSignal = new Signal1<Long>();
+    public Signal1<Long> pathTraceRequestedSignal = new Signal1<>();
 
-    public Signal1<Color> globalAnnotationColorChangedSignal = new Signal1<Color>();
+    public Signal1<Color> globalAnnotationColorChangedSignal = new Signal1<>();
 
     public Signal1<TmWorkspace> notesUpdatedSignal = new Signal1<>();
 
@@ -301,11 +301,11 @@ that need to respond to changing data.
         modelMgr.deleteEntityTree(getCurrentNeuron().getId());
 
         // delete anchor signals
-        ArrayList<TmGeoAnnotation> tempAnnotationList = new ArrayList<TmGeoAnnotation>(deletedNeuron.getGeoAnnotationMap().values());
+        ArrayList<TmGeoAnnotation> tempAnnotationList = new ArrayList<>(deletedNeuron.getGeoAnnotationMap().values());
         annotationsDeletedSignal.emit(tempAnnotationList);
 
         // delete path signals
-        ArrayList<TmAnchoredPath> tempPathList = new ArrayList<TmAnchoredPath>(deletedNeuron.getAnchoredPathMap().values());
+        ArrayList<TmAnchoredPath> tempPathList = new ArrayList<>(deletedNeuron.getAnchoredPathMap().values());
         anchoredPathsRemovedSignal.emit(tempPathList);
 
         updateCurrentWorkspace();
@@ -506,7 +506,7 @@ that need to respond to changing data.
         }
 
         // undraw deleted annotation
-        List<TmGeoAnnotation> deleteList = new ArrayList<TmGeoAnnotation>();
+        List<TmGeoAnnotation> deleteList = new ArrayList<>();
         deleteList.add(sourceAnnotation);
         annotationsDeletedSignal.emit(deleteList);
 
@@ -567,7 +567,7 @@ that need to respond to changing data.
         // need to delete an anchor (which does undraw it); but then
         //  need to redraw the neurite, because we need the link
         //  from the reparenting to appear
-        List<TmGeoAnnotation> deleteList = new ArrayList<TmGeoAnnotation>(1);
+        List<TmGeoAnnotation> deleteList = new ArrayList<>(1);
         deleteList.add(link);
         annotationsDeletedSignal.emit(deleteList);
 
@@ -833,7 +833,7 @@ that need to respond to changing data.
     private void removeAnchoredPath(TmAnchoredPath path) throws  Exception {
         modelMgr.deleteAnchoredPath(path.getId());
 
-        ArrayList<TmAnchoredPath> pathList = new ArrayList<TmAnchoredPath>();
+        ArrayList<TmAnchoredPath> pathList = new ArrayList<>();
         pathList.add(path);
 
         anchoredPathsRemovedSignal.emit(pathList);
@@ -935,7 +935,7 @@ that need to respond to changing data.
      * export the neurons in the input list into the given file, in swc format;
      * all neurons (and all their neurites!) are crammed into a single file
      */
-    public void exportSWCData(File swcFile, List<Long> neuronIDList) throws Exception {
+    public void exportSWCData(File swcFile, List<Long> neuronIDList, int downsampleModulo) throws Exception {
 
         // get fresh neuron objects from ID list
         ArrayList<TmNeuron> neuronList = new ArrayList<>();
@@ -954,7 +954,7 @@ that need to respond to changing data.
         }
 
         // get swcdata via converter, then write
-        SWCData swcData = SWCDataConverter.fromTmNeuron(neuronList);
+        SWCData swcData = SWCDataConverter.fromTmNeuron(neuronList, downsampleModulo);
         // Local validity check.  Redundant points?
         /* DEBUG CODE:  --found that these were coincidences of running
            the point-creating algorithm near branch point.
@@ -1029,7 +1029,7 @@ that need to respond to changing data.
             worker.setProgress(0L, totalLength);
         }
 
-        Map<Integer, TmGeoAnnotation> annotations = new HashMap<Integer, TmGeoAnnotation>();
+        Map<Integer, TmGeoAnnotation> annotations = new HashMap<>();
         TmGeoAnnotation annotation;
         for (SWCNode node: swcData.getNodeList()) {
             if (node.getParentIndex() == -1) {

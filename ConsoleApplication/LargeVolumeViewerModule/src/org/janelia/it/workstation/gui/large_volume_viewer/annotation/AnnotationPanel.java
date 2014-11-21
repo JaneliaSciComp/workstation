@@ -15,7 +15,10 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.ItemEvent;
 import java.awt.event.ItemListener;
+import java.awt.event.KeyAdapter;
+import java.awt.event.KeyEvent;
 import java.io.File;
+import javax.swing.border.TitledBorder;
 
 
 /**
@@ -382,10 +385,61 @@ public class AnnotationPanel extends JPanel
 
     }
 
+    /** Somewhat complex interaction with file chooser. */
+    private ExportParameters getExportParameters( String seedName ) throws HeadlessException {
+        JFileChooser chooser = new JFileChooser();
+        chooser.setDialogTitle("Save swc file");
+        chooser.setSelectedFile(new File(seedName + ".swc"));
+        JTextField downsampleModuloField = new JTextField("10");
+        downsampleModuloField.setBorder(new TitledBorder("Downsample Modulus"));
+        downsampleModuloField.setToolTipText("Only every Nth autocomputed point will be exported.");
+        downsampleModuloField.addKeyListener(new KeyAdapter() {
+            @Override
+            public void keyTyped(KeyEvent ke) {
+                if (!Character.isDigit(ke.getKeyChar())) {
+                    // Eliminate non-numeric characters, including signs.
+                    ke.consume();
+                }
+            }
+        });
+        chooser.setAccessory(downsampleModuloField);
+        int returnValue = chooser.showSaveDialog(AnnotationPanel.this);
+        final String textInput = downsampleModuloField.getText().trim();
+        
+        ExportParameters rtnVal = null;
+        try {
+            int downsampleModulo = Integer.parseInt(textInput);
+            if (returnValue == JFileChooser.APPROVE_OPTION) {
+                rtnVal = new ExportParameters();
+                rtnVal.setDownsampleModulo(downsampleModulo);
+                rtnVal.setSelectedFile(chooser.getSelectedFile());
+            }
+        } catch (NumberFormatException nfe) {
+            annotationMgr.presentError("Failed to parse input text as number: " + textInput, "Invalid Downsample");
+            JOptionPane.showMessageDialog(AnnotationPanel.this, nfe);
+        }
+        return rtnVal;
+    }
+
     private void showOutline(JPanel panel, Color color) {
         panel.setBorder(BorderFactory.createCompoundBorder(BorderFactory.createLineBorder(color), getBorder()));
     }
 
+    class ExportParameters {
+        private File selectedFile;
+        private int downsampleModulo;
+
+        public File getSelectedFile() { return selectedFile; }
+        public void setSelectedFile(File selectedFile) {
+            this.selectedFile = selectedFile;
+        }
+
+        public int getDownsampleModulo() { return downsampleModulo; }
+        public void setDownsampleModulo(int downsampleModulo) {
+            this.downsampleModulo = downsampleModulo;
+        }
+    }
+    
     class ChooseAnnotationColorAction extends AbstractAction {
         // adapted from ChannelColorAction in ColorChannelWidget
 
@@ -436,27 +490,20 @@ public class AnnotationPanel extends JPanel
     class ExportAllSWCAction extends AbstractAction {
         @Override
         public void actionPerformed(ActionEvent e) {
-            JFileChooser chooser = new JFileChooser();
-            chooser.setDialogTitle("Save swc file");
-            chooser.setSelectedFile(new File(annotationModel.getCurrentWorkspace().getName() + ".swc"));
-            int returnValue = chooser.showSaveDialog(AnnotationPanel.this);
-            if (returnValue == JFileChooser.APPROVE_OPTION) {
-                annotationMgr.exportAllNeuronsAsSWC(chooser.getSelectedFile());
+            ExportParameters params = getExportParameters(annotationModel.getCurrentWorkspace().getName());
+            if ( params != null ) {
+                annotationMgr.exportAllNeuronsAsSWC(params.getSelectedFile(), params.getDownsampleModulo());
             }
         }
+
     }
 
     class ExportCurrentSWCAction extends AbstractAction {
         @Override
         public void actionPerformed(ActionEvent e) {
-            if (annotationModel.getCurrentNeuron() != null) {
-                JFileChooser chooser = new JFileChooser();
-                chooser.setDialogTitle("Save swc file");
-                chooser.setSelectedFile(new File(annotationModel.getCurrentNeuron().getName() + ".swc"));
-                int returnValue = chooser.showSaveDialog(AnnotationPanel.this);
-                if (returnValue == JFileChooser.APPROVE_OPTION) {
-                    annotationMgr.exportCurrentNeuronAsSWC(chooser.getSelectedFile());
-                }
+            ExportParameters params = getExportParameters(annotationModel.getCurrentNeuron().getName());
+            if ( params != null ) {
+                annotationMgr.exportCurrentNeuronAsSWC(params.getSelectedFile(), params.getDownsampleModulo());
             }
         }
     }
