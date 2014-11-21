@@ -115,7 +115,7 @@ public class SWCData {
             );
             Logger logger = LoggerFactory.getLogger(SWCData.class);
             logger.error(message);
-            if ( logger.isDebugEnabled()  ||  0 == 0 ) {
+            if ( logger.isDebugEnabled() ) {
                 writeSwcFile(new OutputStreamWriter(System.err));
             }
             throw new IllegalStateException(message);
@@ -142,6 +142,10 @@ public class SWCData {
         // -1 (no parent) is valid:
         possibleParents.add(-1);
 
+        for (SWCNode node: getNodeList()) {
+            possibleParents.add(node.getIndex());
+        }
+        
         int lastIndex = 0;
         for (SWCNode node: getNodeList()) {
             // node indices should increment by one each line
@@ -167,7 +171,6 @@ public class SWCData {
                 invalidReason = String.format("node with invalid parent index %d", node.getParentIndex());
                 return false;
             }
-            possibleParents.add(node.getIndex());
         }
 
         // at least one root

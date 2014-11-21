@@ -182,51 +182,45 @@ public class SWCDataConverter {
         for ( TmAnchoredPathEndpoints endPoints: map.keySet() ) {
             // Make a node for each path member.
             TmAnchoredPath anchoredPath = map.get( endPoints );
-            int inListNodeNum = 0;
-            parentIndex = -1;
-            for (List<Integer> point: anchoredPath.getPointList()) {
-                SWCNode.SegmentType segmentType = null;
-                segmentType = SWCNode.SegmentType.undefined;
-                // Try both ends of the end-points, to find a parent.
-                if (parentIndex == -1) {
-                    Integer parentIndexInteger = annoToIndex.get(endPoints.getAnnotationID1());
-                    if (parentIndexInteger == null) {
-                        parentIndexInteger = annoToIndex.get(endPoints.getAnnotationID2());
-                    }
-                    if (parentIndexInteger != null) {
-                        parentIndex = parentIndexInteger;
-                    }
-                }
-                
-                // Do not re-create any root or branch nodes.
-                if (inListNodeNum > 0  &&  inListNodeNum < anchoredPath.getPointList().size() - 1) {
-                    nodeList.add(
-                            createSWCNode(
-                                    currentIndex,
-                                    segmentType,
-                                    point.get(0),
-                                    point.get(1),
-                                    point.get(2),
-                                    xcenter,
-                                    ycenter,
-                                    zcenter,
-                                    parentIndex
-                            )
-                    );
-                    parentIndex = currentIndex;
-                    currentIndex++;
-                }
-                else if (inListNodeNum == anchoredPath.getPointList().size() - 1) {
-                    // Change the parentage of the end-point node, to follow
-                    // the end of the anchored path.
-                    SWCNode manualNode = manualIdToNode.get(endPoints.getAnnotationID2());
-                    manualNode.setParentIndex(currentIndex - 1);
-                }
+            parentIndex = currentIndex - 1;
+            
+            int firstIndex = -1;
+            SWCNode lastNode;
+            SWCNode swcNode = null;
+            
+            for (int inListNodeNum = 1; inListNodeNum < anchoredPath.getPointList().size() - 1; inListNodeNum++) {
+                List<Integer> point = anchoredPath.getPointList().get(inListNodeNum);
+                swcNode = createSWCNode(
+                        currentIndex,
+                        SWCNode.SegmentType.undefined,
+                        point.get(0),
+                        point.get(1),
+                        point.get(2),
+                        xcenter,
+                        ycenter,
+                        zcenter,
+                        parentIndex
+                );
 
-                inListNodeNum ++;
+                nodeList.add( swcNode );
+                if ( firstIndex == -1 ) {
+                    firstIndex = currentIndex;
+                }
+                parentIndex = currentIndex;
+                currentIndex++;
+            }
+            lastNode = swcNode;
+            
+            // Establish link-arounds.
+            SWCNode manualNode = manualIdToNode.get(endPoints.getAnnotationID2());
+            manualNode.setParentIndex(firstIndex);
+            
+            if ( lastNode != null ) {
+                manualNode = manualIdToNode.get(endPoints.getAnnotationID1());
+                lastNode.setParentIndex(manualNode.getIndex());
             }
         }
-        
+
         Comparator<SWCNode> indexComparator = new Comparator<SWCNode>() {
             @Override
             public int compare(SWCNode o1, SWCNode o2) {
