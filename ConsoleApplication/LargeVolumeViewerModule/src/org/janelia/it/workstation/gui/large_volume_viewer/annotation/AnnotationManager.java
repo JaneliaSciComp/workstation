@@ -163,19 +163,17 @@ public class AnnotationManager
                 TmAnchoredPathEndpoints endpoints = new TmAnchoredPathEndpoints(
                         voxelPath.getSegmentIndex().getAnchor1Guid(),
                         voxelPath.getSegmentIndex().getAnchor2Guid());
-                List<List<Integer>> pointList = new ArrayList<List<Integer>>();
+                List<List<Integer>> pointList = new ArrayList<>();
                 for (ZoomedVoxelIndex zvi: voxelPath.getPath()) {
                     if (zvi.getZoomLevel().getZoomOutFactor() != 1) {
                         // compromise between me and CB: I don't want zoom levels in db, so 
                         //  if I get one that's not unzoomed, I don't have to handle it
-                        JOptionPane.showMessageDialog(
-                            ComponentUtil.getLVVMainWindow(),
+                        presentError(
                             "Unexpected zoom level found; path not displayed.",
-                            "Unexpected zoom!",
-                            JOptionPane.ERROR_MESSAGE);
+                            "Unexpected zoom!");
                         return;
                     }
-                    List<Integer> tempList = new ArrayList<Integer>();
+                    List<Integer> tempList = new ArrayList<>();
                     tempList.add(zvi.getX());
                     tempList.add(zvi.getY());
                     tempList.add(zvi.getZ());
@@ -285,21 +283,17 @@ public class AnnotationManager
      */
     public void addAnnotation(final Vec3 xyz, final Long parentID) {
         if (annotationModel.getCurrentWorkspace() == null) {
-            JOptionPane.showMessageDialog(
-                ComponentUtil.getLVVMainWindow(),
+            presentError(
                 "You must load a workspace before beginning annotation!",
-                "No workspace!",
-                JOptionPane.ERROR_MESSAGE);
+                "No workspace!");
             return;
         }
 
         final TmNeuron currentNeuron = annotationModel.getCurrentNeuron();
         if (currentNeuron == null) {
-            JOptionPane.showMessageDialog(
-                ComponentUtil.getLVVMainWindow(),
+            presentError(
                 "You must select a neuron before beginning annotation!",
-                "No neuron!",
-                JOptionPane.ERROR_MESSAGE);
+                "No neuron!");
             return;
         }
 
@@ -307,11 +301,9 @@ public class AnnotationManager
         //  this is probably no longer needed, as the neuron ought to be selected
         //  when the parent annotation is selected
         if (parentID != null && !currentNeuron.getGeoAnnotationMap().containsKey(parentID)) {
-            JOptionPane.showMessageDialog(
-                    ComponentUtil.getLVVMainWindow(),
+            presentError(
                     "Current neuron does not contain selected root annotation!",
-                    "Wrong neuron!",
-                    JOptionPane.ERROR_MESSAGE);
+                    "Wrong neuron!");
             return;
         }
 
@@ -373,11 +365,9 @@ public class AnnotationManager
             // verify it's a link and not a root or branch:
             TmGeoAnnotation annotation = annotationModel.getGeoAnnotationFromID(annotationID);
             if (annotation.isRoot() || annotation.getChildIds().size() > 1) {
-                JOptionPane.showMessageDialog(
-                        ComponentUtil.getLVVMainWindow(),
+                presentError(
                         "This annotation is either a root (no parent) or branch (many children), not a link!",
-                        "Not a link!",
-                        JOptionPane.ERROR_MESSAGE);
+                        "Not a link!");
                 return;
             }
 
@@ -516,11 +506,9 @@ public class AnnotationManager
         // this should already be filtered out, but it's important enough to check twice
         if (annotationModel.getNeuriteRootAnnotation(sourceAnnotation).getId().equals(
                 annotationModel.getNeuriteRootAnnotation(targetAnnotation).getId())) {
-            JOptionPane.showMessageDialog(
-                    ComponentUtil.getLVVMainWindow(),
+            presentError(
                     "You can't merge a neurite with itself!",
-                    "Can't merge!!",
-                    JOptionPane.ERROR_MESSAGE);
+                    "Can't merge!!");
             annotationModel.annotationNotMovedSignal.emit(sourceAnnotation);
             return;
         }
@@ -576,12 +564,9 @@ public class AnnotationManager
         // can't split a root if it has multiple children (ambiguous):
         final TmGeoAnnotation annotation = annotationModel.getGeoAnnotationFromID(annotationID);
         if (annotation.isRoot() && annotation.getChildIds().size() != 1) {
-            JOptionPane.showMessageDialog(
-                    ComponentUtil.getLVVMainWindow(),
+            presentError(
                     "Cannot split root annotation with multiple children (ambiguous)!",
-                    "Error",
-                    JOptionPane.ERROR_MESSAGE
-            );
+                    "Error");
             return;
         }
 
@@ -598,11 +583,9 @@ public class AnnotationManager
 
             @Override
             protected void hadError(Throwable error) {
-                JOptionPane.showMessageDialog(
-                        ComponentUtil.getLVVMainWindow(),
+                presentError(
                         "Could not split anchor!",
-                        "Error",
-                        JOptionPane.ERROR_MESSAGE);
+                        "Error");
             }
         };
         splitter.execute();
@@ -626,11 +609,9 @@ public class AnnotationManager
 
             @Override
             protected void hadError(Throwable error) {
-                JOptionPane.showMessageDialog(
-                        ComponentUtil.getLVVMainWindow(),
+                presentError(
                         "Could not reroot neurite!",
-                        "Error",
-                        JOptionPane.ERROR_MESSAGE);
+                        "Error");
             }
         };
         rerooter.execute();
@@ -644,12 +625,9 @@ public class AnnotationManager
         // if it's already the root, can't split
         final TmGeoAnnotation annotation = annotationModel.getGeoAnnotationFromID(newRootAnnotationID);
         if (annotation.isRoot()) {
-            JOptionPane.showMessageDialog(
-                    ComponentUtil.getLVVMainWindow(),
+            presentError(
                     "Cannot split neurite at its root annotation!",
-                    "Error",
-                    JOptionPane.ERROR_MESSAGE
-            );
+                    "Error");
             return;
         }
 
@@ -666,11 +644,9 @@ public class AnnotationManager
 
             @Override
             protected void hadError(Throwable error) {
-                JOptionPane.showMessageDialog(
-                        ComponentUtil.getLVVMainWindow(),
+                presentError(
                         "Could not split neurite!",
-                        "Error",
-                        JOptionPane.ERROR_MESSAGE);
+                        "Error");
             }
         };
         splitter.execute();
@@ -700,11 +676,9 @@ public class AnnotationManager
 
             @Override
             protected void hadError(Throwable error) {
-                JOptionPane.showMessageDialog(
-                        ComponentUtil.getLVVMainWindow(),
+                presentError(
                         "Could not add anchored path!",
-                        "Error",
-                        JOptionPane.ERROR_MESSAGE);
+                        "Error");
             }
         };
         adder.execute();
@@ -771,11 +745,9 @@ public class AnnotationManager
 
                 @Override
                 protected void hadError(Throwable error) {
-                    JOptionPane.showMessageDialog(
-                            ComponentUtil.getLVVMainWindow(),
+                    presentError(
                             "Could not set note!",
-                            "Error",
-                            JOptionPane.ERROR_MESSAGE);
+                            "Error");
                 }
             };
             setter.execute();
@@ -795,11 +767,9 @@ public class AnnotationManager
 
                     @Override
                     protected void hadError(Throwable error) {
-                        JOptionPane.showMessageDialog(
-                                ComponentUtil.getLVVMainWindow(),
+                        presentError(
                                 "Could not remove note!",
-                                "Error",
-                                JOptionPane.ERROR_MESSAGE);
+                                "Error");
                     }
                 };
                 deleter.execute();
@@ -834,11 +804,9 @@ public class AnnotationManager
 
             @Override
             protected void hadError(Throwable error) {
-                JOptionPane.showMessageDialog(
-                        ComponentUtil.getLVVMainWindow(),
+                presentError(
                         "Could not create neuron!",
-                        "Error",
-                        JOptionPane.ERROR_MESSAGE);
+                        "Error");
             }
         };
         creator.execute();
@@ -870,11 +838,9 @@ public class AnnotationManager
 
                 @Override
                 protected void hadError(Throwable error) {
-                    JOptionPane.showMessageDialog(
-                            ComponentUtil.getLVVMainWindow(),
+                    presentError(
                             "Could not delete current neuron!",
-                            "Error",
-                            JOptionPane.ERROR_MESSAGE);
+                            "Error");
                 }
             };
             deleter.execute();
@@ -888,11 +854,9 @@ public class AnnotationManager
     public void renameNeuron() {
         final TmNeuron neuron = annotationModel.getCurrentNeuron();
         if (neuron == null) {
-            JOptionPane.showMessageDialog(
-                    ComponentUtil.getLVVMainWindow(),
+            presentError(
                     "No selected neuron!",
-                    "No neuron!",
-                    JOptionPane.ERROR_MESSAGE);
+                    "No neuron!");
             return;
         }
 
@@ -923,11 +887,9 @@ public class AnnotationManager
 
             @Override
             protected void hadError(Throwable error) {
-                JOptionPane.showMessageDialog(
-                        ComponentUtil.getLVVMainWindow(),
+                presentError(
                         "Could not rename neuron!",
-                        "Error",
-                        JOptionPane.ERROR_MESSAGE);
+                        "Error");
             }
         };
         renamer.execute();
@@ -984,11 +946,9 @@ public class AnnotationManager
     public void createWorkspace() {
         // if no sample loaded, error
         if (initialEntity == null) {
-            JOptionPane.showMessageDialog(
-                    ComponentUtil.getLVVMainWindow(),
+            presentError(
                     "You must load a brain sample entity before creating a workspace!",
-                    "No brain sample!",
-                    JOptionPane.ERROR_MESSAGE);
+                    "No brain sample!");
             return;
         }
 
@@ -999,11 +959,9 @@ public class AnnotationManager
         } else if (initialEntity.getEntityTypeName().equals(EntityConstants.TYPE_TILE_MICROSCOPE_WORKSPACE)) {
             sampleID = annotationModel.getCurrentWorkspace().getSampleID();
         } else {
-            JOptionPane.showMessageDialog(
-                    ComponentUtil.getLVVMainWindow(),
+            presentError(
                     "You must load a brain sample before creating a workspace!",
-                    "No brain sample!",
-                    JOptionPane.ERROR_MESSAGE);
+                    "No brain sample!");
             return;
         }
 
@@ -1234,11 +1192,9 @@ public class AnnotationManager
         }
 
         if (!swcFile.exists()) {
-            JOptionPane.showMessageDialog(
-                    ComponentUtil.getLVVMainWindow(),
+            presentError(
                     "SWC file " + swcFile.getName() + " does not exist!",
-                    "No SWC file!",
-                    JOptionPane.ERROR_MESSAGE);
+                    "No SWC file!");
         } else {
 
             // note for the future: at this point, we could pop another dialog with:
@@ -1269,6 +1225,21 @@ public class AnnotationManager
             };
             importer.executeWithEvents();
         }
+    }
+
+    /**
+     * Convenience method, to cut down on redundant code.
+     * 
+     * @param message passed as message param
+     * @param title passed as title param.
+     * @throws HeadlessException by called methods.
+     */
+    private void presentError(String message, String title) throws HeadlessException {
+        JOptionPane.showMessageDialog(
+                ComponentUtil.getLVVMainWindow(),
+                message,
+                title,
+                JOptionPane.ERROR_MESSAGE);
     }
 
 }

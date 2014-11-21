@@ -133,6 +133,8 @@ public class SWCDataConverter {
         List<Long> branchIds = new ArrayList<>();
         List<Long> rootIds = new ArrayList<>();
         Map<Long,Long> annoToParent = new HashMap<>();
+        Map<Long, SWCNode> manualIdToNode = new HashMap<>();
+        
         // Go through annotations to find linkage relationships.
         for (TmGeoAnnotation annotation : neuron.getRootAnnotations()) {
             for (TmGeoAnnotation subAnn : neuron.getSubTreeList(annotation)) {
@@ -149,7 +151,7 @@ public class SWCDataConverter {
         }
         
         for (TmGeoAnnotation annotation : neuron.getRootAnnotations()) {
-            for (TmGeoAnnotation subAnn : neuron.getSubTreeList(annotation)) {
+            for (TmGeoAnnotation subAnn : neuron.getSubTreeList(annotation)) {                
                 Integer parentIdInteger = annoToIndex.get(subAnn.getParentId());
                 if (parentIdInteger != null) {
                     parentIndex = parentIdInteger;
@@ -172,6 +174,7 @@ public class SWCDataConverter {
                         parentIndex
                 );
                 nodeList.add( swcNode );
+                manualIdToNode.put( subAnn.getId(), swcNode );
                 parentIndex = index;
             }
         }
@@ -196,43 +199,29 @@ public class SWCDataConverter {
                 }
                 
                 // Do not re-create any root or branch nodes.
-                if (inListNodeNum == 0) {
-                    final Long annotationId = endPoints.getAnnotationID1();
-                    // Starting the list is the Anno-1 ID.
-                    if ( branchIds.contains( endPoints.getAnnotationID1() ) ) {
-                        continue;
-                    }
-                    else if ( rootIds.contains( annotationId) ) {
-                        continue;
-                    }
+                if (inListNodeNum > 0  &&  inListNodeNum < anchoredPath.getPointList().size() - 1) {
+                    nodeList.add(
+                            createSWCNode(
+                                    currentIndex,
+                                    segmentType,
+                                    point.get(0),
+                                    point.get(1),
+                                    point.get(2),
+                                    xcenter,
+                                    ycenter,
+                                    zcenter,
+                                    parentIndex
+                            )
+                    );
+                    parentIndex = currentIndex;
+                    currentIndex++;
                 }
                 else if (inListNodeNum == anchoredPath.getPointList().size() - 1) {
-                    final Long annotationId = endPoints.getAnnotationID2();
-                    // And ending the list is the Anno-2 ID.
-                    if ( rootIds.contains( annotationId) ) {
-                        continue;
-                    }
-                    else if ( branchIds.contains( endPoints.getAnnotationID2() ) ) {
-                        continue;
-                    }
+                    // Change the parentage of the end-point node, to follow
+                    // the end of the anchored path.
+                    SWCNode manualNode = manualIdToNode.get(endPoints.getAnnotationID2());
+                    manualNode.setParentIndex(currentIndex - 1);
                 }
-
-                nodeList.add(
-                        createSWCNode(
-                                currentIndex,
-                                segmentType,
-                                point.get(0),
-                                point.get(1),
-                                point.get(2),
-                                xcenter,
-                                ycenter, 
-                                zcenter,
-                                parentIndex
-                        )
-                );
-                parentIndex = currentIndex;
-                
-                currentIndex ++;
 
                 inListNodeNum ++;
             }
@@ -277,7 +266,7 @@ public class SWCDataConverter {
                                 parentIndex
                         )
                 );
-                annMap.put(ann.getId(), currentIndex);
+                annMap.put(ann.getId(), currentIndex );
                 currentIndex++;
             }
         }

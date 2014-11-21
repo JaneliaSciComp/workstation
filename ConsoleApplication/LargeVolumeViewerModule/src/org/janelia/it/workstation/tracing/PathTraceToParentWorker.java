@@ -2,7 +2,6 @@ package org.janelia.it.workstation.tracing;
 
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.HashSet;
 import java.util.Iterator;
 import org.janelia.it.workstation.geom.CoordinateAxis;
 import org.janelia.it.workstation.geom.Vec3;
@@ -24,7 +23,6 @@ import java.util.Vector;
  */
 public class PathTraceToParentWorker extends BackgroundWorker {
 
-    private static final double SECONDARY_SLOPE_TOLERANCE = 0.0;
     private PathTraceToParentRequest request;
 
     // timeout in seconds
@@ -42,6 +40,7 @@ public class PathTraceToParentWorker extends BackgroundWorker {
         this.timeout = timeout;
     }
 
+    @Override
     public String getName() {
         return "trace path to parent of anchor";
     }

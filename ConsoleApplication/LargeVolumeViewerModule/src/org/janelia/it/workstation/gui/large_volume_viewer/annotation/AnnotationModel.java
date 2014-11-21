@@ -938,7 +938,7 @@ that need to respond to changing data.
     public void exportSWCData(File swcFile, List<Long> neuronIDList) throws Exception {
 
         // get fresh neuron objects from ID list
-        ArrayList<TmNeuron> neuronList = new ArrayList<TmNeuron>();
+        ArrayList<TmNeuron> neuronList = new ArrayList<>();
         for (Long ID: neuronIDList) {
             if (ID != null) {
                 TmNeuron foundNeuron = null;
@@ -955,6 +955,19 @@ that need to respond to changing data.
 
         // get swcdata via converter, then write
         SWCData swcData = SWCDataConverter.fromTmNeuron(neuronList);
+        // Local validity check.  Redundant points?
+        Map<Vec3,SWCNode> nodePoints = new HashMap<>();
+        for ( SWCNode node: swcData.getNodeList() ) {
+            Vec3 nextVec = new Vec3( node.getX(), node.getY(), node.getZ() );
+            if ( nodePoints.keySet().contains( nextVec ) ) {
+                System.err.println( 
+                        String.format("ERROR: found same point %f,%f,%f for node <<%s>> and <<%s>>.", nextVec.getX(), nextVec.getY(), nextVec.getZ(), node.toSWCline(), nodePoints.get(nextVec).toSWCline() )
+                );
+            }
+            else {
+                nodePoints.put( nextVec, node );
+            }
+        }
         swcData.write(swcFile);
     }
 

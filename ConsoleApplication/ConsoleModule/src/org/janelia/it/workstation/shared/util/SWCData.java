@@ -12,6 +12,8 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * this class holds data from a file using the .swc format, which is
@@ -107,9 +109,16 @@ public class SWCData {
             this.swcFile = swcFile;
         }
         else {
-            writeSwcFile(new OutputStreamWriter(System.err));
-            throw new IllegalStateException(String.format("can't write SWC data; invalid for reason: %s",
-                    getInvalidReason()));
+            final String message = String.format(
+                    "can't write SWC data; invalid for reason: %s",
+                    getInvalidReason()
+            );
+            Logger logger = LoggerFactory.getLogger(SWCData.class);
+            logger.error(message);
+            if ( logger.isDebugEnabled()  ||  0 == 0 ) {
+                writeSwcFile(new OutputStreamWriter(System.err));
+            }
+            throw new IllegalStateException(message);
         }
 
     }
