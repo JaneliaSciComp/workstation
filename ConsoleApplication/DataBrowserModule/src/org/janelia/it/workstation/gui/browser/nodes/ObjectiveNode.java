@@ -94,16 +94,8 @@ public class ObjectiveNode extends InternalNode<String> implements Has2dRepresen
         ObjectiveSample objSample = sample.getObjectives().get(getObjective());
         if (objSample==null) return null;
         SamplePipelineRun run = objSample.getLatestRun();
-        HasFiles lastResult = null;
-        if (run==null) return null;
-        for(PipelineResult result : run.getResults()) {
-            if (result instanceof HasFiles) {
-                lastResult = (HasFiles)result;
-            }
-        }
-        if (lastResult!=null) {
-            return DomainUtils.get2dImageFilepath(lastResult, role);
-        }
-        return null;
+        HasFiles lastResult = run.getLatestResultWithFiles();
+        if (lastResult==null) return null;
+        return DomainUtils.get2dImageFilepath(lastResult, role);
     }
 }

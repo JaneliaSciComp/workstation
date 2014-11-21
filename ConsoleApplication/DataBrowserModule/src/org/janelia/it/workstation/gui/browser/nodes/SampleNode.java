@@ -48,23 +48,15 @@ public class SampleNode extends DomainObjectNode {
     @Override
     public String get2dImageFilepath(String role) {
         Sample sample = getSample();
-        List<String> objectives = new ArrayList<String>(sample.getObjectives().keySet());
-        if (objectives.isEmpty()) return null;
-        Collections.sort(objectives);
-        String largestObjective = objectives.get(objectives.size()-1);
-        ObjectiveSample objSample = sample.getObjectives().get(largestObjective);
+        if (sample==null) return null;
+        List<String> objectives = sample.getOrderedObjectives();
+        if (objectives==null) return null;
+        ObjectiveSample objSample = sample.getObjectiveSample(objectives.get(objectives.size()-1));
         if (objSample==null) return null;
         SamplePipelineRun run = objSample.getLatestRun();
-        HasFiles lastResult = null;
-        if (run==null || run.getResults()==null) return null;
-        for(PipelineResult result : run.getResults()) {
-            if (result instanceof HasFiles) {
-                lastResult = (HasFiles)result;
-            }
-        }
-        if (lastResult!=null) {
-            return DomainUtils.get2dImageFilepath(lastResult, role);
-        }
-        return null;
+        if (run==null) return null;
+        HasFiles lastResult = run.getLatestResultWithFiles();
+        if (lastResult==null) return null;
+        return DomainUtils.get2dImageFilepath(lastResult, role);
     }
 }

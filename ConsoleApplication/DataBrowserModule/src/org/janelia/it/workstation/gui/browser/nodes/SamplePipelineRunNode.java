@@ -37,15 +37,9 @@ public class SamplePipelineRunNode extends InternalNode<SamplePipelineRun> {
     @Override
     public String get2dImageFilepath(String role) {
         SamplePipelineRun run = getSamplePipelineRun();
-        HasFiles lastResult = null;
-        for(PipelineResult result : run.getResults()) {
-            if (result instanceof HasFiles) {
-                lastResult = (HasFiles)result;
-            }
-        }
-        if (lastResult!=null) {
-            return DomainUtils.get2dImageFilepath(lastResult, role);
-        }
-        return null;
+        if (run==null) return null;
+        HasFiles lastResult = run.getLatestResultWithFiles();
+        if (lastResult==null) return null;
+        return DomainUtils.get2dImageFilepath(lastResult, role);
     }
 }

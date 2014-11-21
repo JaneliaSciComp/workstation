@@ -99,15 +99,9 @@ public class PipelineResultNode extends InternalNode<PipelineResult> {
             return DomainUtils.get2dImageFilepath((HasFiles)result, role);
         }
         else if (result instanceof SamplePipelineRun) {
-            HasFiles lastResult = null;
-            for(PipelineResult subResult : ((SamplePipelineRun)result).getResults()) {
-                if (subResult instanceof HasFiles) {
-                    lastResult = (HasFiles)subResult;
-                }
-            }
-            if (lastResult!=null) {
-                return DomainUtils.get2dImageFilepath(lastResult, role);
-            }
+            HasFiles lastResult = result.getLatestResultWithFiles();
+            if (lastResult==null) return null;
+            return DomainUtils.get2dImageFilepath(lastResult, role);
         }
         return null;
     }
