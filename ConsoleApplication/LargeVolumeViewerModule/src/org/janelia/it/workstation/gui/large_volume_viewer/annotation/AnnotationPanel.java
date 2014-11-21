@@ -18,6 +18,8 @@ import java.awt.event.ItemListener;
 import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
 import java.io.File;
+import javax.swing.border.EmptyBorder;
+import javax.swing.border.LineBorder;
 import javax.swing.border.TitledBorder;
 
 
@@ -390,8 +392,20 @@ public class AnnotationPanel extends JPanel
         JFileChooser chooser = new JFileChooser();
         chooser.setDialogTitle("Save swc file");
         chooser.setSelectedFile(new File(seedName + ".swc"));
+        JPanel layoutPanel = new JPanel();
+        layoutPanel.setLayout(new BorderLayout());
+        // Force-out to desired size.
         JTextField downsampleModuloField = new JTextField("10");
-        downsampleModuloField.setBorder(new TitledBorder("Downsample Modulus"));
+        final Dimension dimension = new Dimension(80, 40);
+        downsampleModuloField.setMinimumSize( dimension );
+        downsampleModuloField.setSize( dimension );
+        downsampleModuloField.setPreferredSize( dimension );
+        layoutPanel.add( downsampleModuloField, BorderLayout.SOUTH );
+
+        final TitledBorder titledBorder = new TitledBorder( 
+                new EmptyBorder(8, 2, 0, 0), "Density", TitledBorder.LEADING, TitledBorder.DEFAULT_POSITION, getFont().deriveFont(8)
+        );
+        downsampleModuloField.setBorder(titledBorder);
         downsampleModuloField.setToolTipText("Only every Nth autocomputed point will be exported.");
         downsampleModuloField.addKeyListener(new KeyAdapter() {
             @Override
@@ -402,7 +416,7 @@ public class AnnotationPanel extends JPanel
                 }
             }
         });
-        chooser.setAccessory(downsampleModuloField);
+        chooser.setAccessory(layoutPanel);
         int returnValue = chooser.showSaveDialog(AnnotationPanel.this);
         final String textInput = downsampleModuloField.getText().trim();
         
@@ -495,15 +509,19 @@ public class AnnotationPanel extends JPanel
                 annotationMgr.exportAllNeuronsAsSWC(params.getSelectedFile(), params.getDownsampleModulo());
             }
         }
-
     }
 
     class ExportCurrentSWCAction extends AbstractAction {
         @Override
         public void actionPerformed(ActionEvent e) {
-            ExportParameters params = getExportParameters(annotationModel.getCurrentNeuron().getName());
-            if ( params != null ) {
-                annotationMgr.exportCurrentNeuronAsSWC(params.getSelectedFile(), params.getDownsampleModulo());
+            if (annotationModel.getCurrentNeuron() == null) {
+                annotationMgr.presentError("You must select a neuron prior to performing this action.", "No neuron selected");
+            }
+            else {
+                ExportParameters params = getExportParameters(annotationModel.getCurrentNeuron().getName());
+                if ( params != null ) {
+                    annotationMgr.exportCurrentNeuronAsSWC(params.getSelectedFile(), params.getDownsampleModulo());
+                }
             }
         }
     }
