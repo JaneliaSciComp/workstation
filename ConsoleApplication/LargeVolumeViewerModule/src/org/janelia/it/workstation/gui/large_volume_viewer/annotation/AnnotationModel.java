@@ -956,6 +956,8 @@ that need to respond to changing data.
         // get swcdata via converter, then write
         SWCData swcData = SWCDataConverter.fromTmNeuron(neuronList);
         // Local validity check.  Redundant points?
+        /* DEBUG CODE:  --found that these were coincidences of running
+           the point-creating algorithm near branch point.
         Map<Vec3,SWCNode> nodePoints = new HashMap<>();
         for ( SWCNode node: swcData.getNodeList() ) {
             Vec3 nextVec = new Vec3( node.getX(), node.getY(), node.getZ() );
@@ -968,6 +970,7 @@ that need to respond to changing data.
                 nodePoints.put( nextVec, node );
             }
         }
+        */
         swcData.write(swcFile);
     }
 
