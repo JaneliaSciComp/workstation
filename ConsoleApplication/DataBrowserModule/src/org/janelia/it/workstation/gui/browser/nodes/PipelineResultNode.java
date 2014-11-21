@@ -1,5 +1,6 @@
 package org.janelia.it.workstation.gui.browser.nodes;
 
+import java.awt.Image;
 import java.lang.ref.WeakReference;
 import org.janelia.it.jacs.model.domain.interfaces.HasFiles;
 
@@ -13,6 +14,7 @@ import org.janelia.it.jacs.model.domain.sample.SampleProcessingResult;
 import org.janelia.it.workstation.gui.browser.api.DomainUtils;
 import org.janelia.it.workstation.gui.browser.nodes.children.NeuronNodeFactory;
 import org.janelia.it.workstation.gui.browser.nodes.children.ResultChildFactory;
+import org.janelia.it.workstation.gui.util.Icons;
 import org.openide.nodes.Children;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -32,6 +34,27 @@ public class PipelineResultNode extends InternalNode<PipelineResult> {
     
     private PipelineResult getPipelineResult() {
         return (PipelineResult)getObject();
+    }
+    
+    @Override
+    public Image getIcon(int type) {
+        PipelineResult result = getPipelineResult();
+        if (result instanceof SamplePipelineRun) {
+            return Icons.getIcon("folder_go.png").getImage();
+        }
+        else if (result instanceof SampleProcessingResult) {
+            return Icons.getIcon("folder_image.png").getImage();
+        }
+        else if (result instanceof SampleAlignmentResult) {
+            return Icons.getIcon("folder_image.png").getImage();
+        }
+        else if (result instanceof SampleCellCountingResult) {
+            return Icons.getIcon("folder_image.png").getImage();
+        }
+        else if (result instanceof NeuronSeparation) {
+            return Icons.getIcon("bricks.png").getImage();
+        }
+        return Icons.getIcon("folder_image.png").getImage();
     }
     
     @Override

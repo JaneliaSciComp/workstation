@@ -1,5 +1,6 @@
 package org.janelia.it.workstation.gui.browser.nodes;
 
+import java.awt.Image;
 import java.lang.ref.WeakReference;
 import java.util.List;
 import org.janelia.it.jacs.model.domain.DomainObject;
@@ -10,6 +11,7 @@ import org.janelia.it.jacs.model.domain.sample.SampleTile;
 import org.janelia.it.workstation.gui.browser.api.DomainDAO;
 import org.janelia.it.workstation.gui.browser.components.DomainExplorerTopComponent;
 import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
+import org.janelia.it.workstation.gui.util.Icons;
 import org.openide.nodes.ChildFactory;
 import org.openide.nodes.Children;
 import org.openide.nodes.Node;
@@ -34,6 +36,11 @@ public class ObjectiveTileNode extends InternalNode<SampleTile> {
     @Override
     public String getPrimaryLabel() {
         return getSampleTile().getName();
+    }
+    
+    @Override
+    public Image getIcon(int type) {
+        return Icons.getIcon("plugin.png").getImage();
     }
     
     static class MyChildFactory extends ChildFactory<LSMImage> {

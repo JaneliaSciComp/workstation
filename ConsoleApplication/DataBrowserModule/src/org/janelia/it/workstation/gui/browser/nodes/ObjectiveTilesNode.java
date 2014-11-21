@@ -1,11 +1,13 @@
 package org.janelia.it.workstation.gui.browser.nodes;
 
+import java.awt.Image;
 import java.lang.ref.WeakReference;
 import java.util.List;
 
 import org.janelia.it.jacs.model.domain.sample.ObjectiveSample;
 import org.janelia.it.jacs.model.domain.sample.Sample;
 import org.janelia.it.jacs.model.domain.sample.SampleTile;
+import org.janelia.it.workstation.gui.util.Icons;
 import org.openide.nodes.ChildFactory;
 import org.openide.nodes.Children;
 import org.openide.nodes.Node;
@@ -30,6 +32,11 @@ public class ObjectiveTilesNode extends InternalNode<String> {
     @Override
     public String getPrimaryLabel() {
         return "Tiles";
+    }
+    
+    @Override
+    public Image getIcon(int type) {
+        return Icons.getIcon("folder_page.png").getImage();
     }
     
     static class MyChildFactory extends ChildFactory<SampleTile> {

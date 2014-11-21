@@ -1,10 +1,12 @@
 package org.janelia.it.workstation.gui.browser.nodes;
 
+import java.awt.Image;
 import java.lang.ref.WeakReference;
 import java.util.List;
 import org.janelia.it.jacs.model.domain.compartments.Compartment;
 import org.janelia.it.jacs.model.domain.compartments.CompartmentSet;
 import org.janelia.it.workstation.gui.browser.nodes.children.TreeNodeChildFactory;
+import org.janelia.it.workstation.gui.util.Icons;
 
 import org.openide.nodes.ChildFactory;
 import org.openide.nodes.Children;
@@ -22,6 +24,11 @@ public class CompartmentSetNode extends DomainObjectNode {
     
     public CompartmentSet getCompartmentSet() {
         return (CompartmentSet)getDomainObject();
+    }
+    
+    @Override
+    public Image getIcon(int type) {
+        return Icons.getIcon("matrix.png").getImage();
     }
     
     @Override

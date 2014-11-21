@@ -31,7 +31,7 @@ import org.slf4j.LoggerFactory;
  */
 public class InternalNode<T> extends AbstractNode implements HasUniqueId, Has2dRepresentation {
     
-    private long uniqueId;
+    private final long uniqueId;
     
     private final static Logger log = LoggerFactory.getLogger(InternalNode.class);
     
@@ -40,6 +40,7 @@ public class InternalNode<T> extends AbstractNode implements HasUniqueId, Has2dR
         this.uniqueId = IdGenerator.getNextId();
     }
     
+    @Override
     public Long getUniqueId() {
         return uniqueId;
     }
