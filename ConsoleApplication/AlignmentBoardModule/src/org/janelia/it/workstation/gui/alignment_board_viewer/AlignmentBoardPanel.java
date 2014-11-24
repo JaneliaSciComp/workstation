@@ -307,7 +307,7 @@ public class AlignmentBoardPanel extends JPanel implements AlignmentBoardControl
             //throw new RuntimeException( msg );
         }
         else {
-            boolean isMac = SystemInfo.OS_NAME.contains("mac");
+            boolean isMac = SystemInfo.OS_NAME_LC.contains("mac");
             if ( isMac ) {
                 // Enforce opaque, transparent ordering of actors.
                 mip3d.addActor( volumeBrickActor );
