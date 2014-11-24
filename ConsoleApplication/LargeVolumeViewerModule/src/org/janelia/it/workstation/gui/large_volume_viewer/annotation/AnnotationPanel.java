@@ -61,8 +61,6 @@ public class AnnotationPanel extends JPanel
         @Override
         public void actionPerformed(ActionEvent e) {
                 annotationMgr.createNeuron();
-                // Auto-popup: give the user a chance to immediately rename.
-                annotationMgr.renameNeuron();
 
             }
         };

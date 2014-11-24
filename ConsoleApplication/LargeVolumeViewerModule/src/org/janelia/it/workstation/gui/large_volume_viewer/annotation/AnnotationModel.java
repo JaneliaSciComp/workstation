@@ -265,7 +265,7 @@ that need to respond to changing data.
         TmNeuron neuron = modelMgr.createTiledMicroscopeNeuron(getCurrentWorkspace().getId(), name);
 
         updateCurrentWorkspace();
-        workspaceLoadedSignal.emit(getCurrentWorkspace());
+        workspaceLoadedSignal.emit(getCurrentWorkspace());        
 
         setCurrentNeuron(neuron);
     }

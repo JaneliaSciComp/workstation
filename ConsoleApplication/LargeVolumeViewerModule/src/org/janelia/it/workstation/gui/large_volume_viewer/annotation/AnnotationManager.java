@@ -795,6 +795,8 @@ public class AnnotationManager
             @Override
             protected void doStuff() throws Exception {
                 annotationModel.createNeuron(neuronName);
+                // Renaming neuron here, after selection is done.
+                renameNeuron();                
             }
 
             @Override
