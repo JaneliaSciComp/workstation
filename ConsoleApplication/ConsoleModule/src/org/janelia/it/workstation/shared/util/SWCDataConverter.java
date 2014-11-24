@@ -155,7 +155,7 @@ public class SWCDataConverter {
                         parentIndex = subAnnIdToIndex.get( endpoints.getAnnotationID1() );
                     }
 
-                    for (int inListNodeNum = 1; inListNodeNum < anchoredPath.getPointList().size() - 1; inListNodeNum++) {
+                    for (int inListNodeNum = anchoredPath.getPointList().size() - 2; inListNodeNum > 0 ; inListNodeNum--) {
                         if (inListNodeNum % downsampleModulo != 0) {
                             continue;
                         }
