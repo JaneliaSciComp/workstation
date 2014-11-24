@@ -7,6 +7,8 @@
 package org.janelia.it.workstation.gui.large_volume_viewer;
 
 import javax.swing.JComponent;
+import javax.swing.SwingUtilities;
+import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.workstation.gui.large_volume_viewer.top_component.LargeVolumeViewerTopComponent;
 
 /**
@@ -15,7 +17,29 @@ import org.janelia.it.workstation.gui.large_volume_viewer.top_component.LargeVol
  * @author fosterl
  */
 public class ComponentUtil {
+    private static JComponent mainLvvWindow;
+    
     public static JComponent getLVVMainWindow() {
-        return LargeVolumeViewerTopComponent.findThisComponent();
+        if ( mainLvvWindow == null ) {
+            popuplateMainWin();
+        }
+        return mainLvvWindow;
+    }
+
+    private static void popuplateMainWin() {
+        try {
+            Runnable runnable = new Runnable() {
+                public void run() {
+                    mainLvvWindow = LargeVolumeViewerTopComponent.findThisComponent();
+                }
+            };
+            if (SwingUtilities.isEventDispatchThread()) {
+                runnable.run();
+            } else {
+                SwingUtilities.invokeAndWait(runnable);
+            }
+        } catch (Exception ex) {
+            SessionMgr.getSessionMgr().handleException(ex);
+        }
     }
 }
