@@ -171,8 +171,6 @@ public class SWCDataConverter {
                                 zcenter,
                                 parentIndex
                         );
-System.out.println("Just constructed auto-node with parent of " + autoNode.getParentIndex() + " and actual index of " + autoNode.getIndex()); 
-
                         nodeList.add(autoNode);
                         parentIndex = currentIndex;
                         currentIndex++;
@@ -180,11 +178,6 @@ System.out.println("Just constructed auto-node with parent of " + autoNode.getPa
 
                 }
                 
-//                if (subAnnIdToIndex.get(subAnn.getParentId()) != null) {
-//                    parentIndex = subAnnIdToIndex.get(subAnn.getParentId());
-//System.out.println("Fetched parent index of " + parentIndex + " for sub-annotation " + subAnn.getId() + " with parent id of " + subAnn.getParentId());
-//                }
-
                 // Make the node for manual reference now.                
                 SWCNode manualNode = createSWCNode(
                         currentIndex++,
@@ -201,7 +194,6 @@ System.out.println("Just constructed auto-node with parent of " + autoNode.getPa
                 subAnnIdToIndex.put( subAnn.getId(), manualNode.getIndex() );
                 parentIndex = manualNode.getIndex();
 
-System.out.println("Just constructed manual-node with parent of " + manualNode.getParentIndex() + " and actual index of " + manualNode.getIndex()); 
             }
         }
 
@@ -214,113 +206,7 @@ System.out.println("Just constructed manual-node with parent of " + manualNode.g
         Collections.sort(nodeList, indexComparator);
         return nodeList;
     }
-    
 
-    
-    private static List<SWCNode> nodesFromAnchoredPath(TmNeuron neuron, double xcenter, double ycenter, double zcenter, int downsampleModulo) {
-        List<SWCNode> nodeList = new ArrayList<>();
-        // map the annotation IDs to the indices to be used in the swc file
-        Map<Long, Integer> annoToIndex = new HashMap<>();
-
-        Map<TmAnchoredPathEndpoints, TmAnchoredPath> map = neuron.getAnchoredPathMap();
-        int currentIndex = 1;
-        int parentIndex = -1;
-        Map<Long,Long> annoToParent = new HashMap<>();
-        Map<Long, SWCNode> manualIdToNode = new HashMap<>();
-        
-        // Go through annotations to find linkage relationships.
-        for (TmGeoAnnotation annotation : neuron.getRootAnnotations()) {
-            for (TmGeoAnnotation subAnn : neuron.getSubTreeList(annotation)) {
-                annoToParent.put(subAnn.getId(), subAnn.getParentId());
-                annoToIndex.put(subAnn.getId(), currentIndex);
-                currentIndex++;
-            }
-        }
-        
-        for (TmGeoAnnotation annotation : neuron.getRootAnnotations()) {
-            for (TmGeoAnnotation subAnn : neuron.getSubTreeList(annotation)) {
-                Integer parentIdInteger = annoToIndex.get(subAnn.getParentId());
-                if (parentIdInteger != null) {
-                    parentIndex = parentIdInteger;
-                }
-
-                if (subAnn.isRoot()) {
-                    parentIndex = -1;
-                }
-
-                final Integer index = annoToIndex.get(subAnn.getId());
-                SWCNode swcNode = createSWCNode(
-                        index,
-                        getSegmentType(subAnn),
-                        subAnn.getX(),
-                        subAnn.getY(),
-                        subAnn.getZ(),
-                        xcenter,
-                        ycenter,
-                        zcenter,
-                        parentIndex
-                );                
-                nodeList.add(swcNode);
-                manualIdToNode.put(subAnn.getId(), swcNode);
-                parentIndex = index;
-            }
-        }
-
-        for (TmAnchoredPathEndpoints endPoints : map.keySet()) {
-            // Make a node for each path member.
-            TmAnchoredPath anchoredPath = map.get(endPoints);
-            parentIndex = currentIndex - 1;
-
-            int firstIndex = -1;
-            SWCNode lastNode;
-            SWCNode swcNode = null;
-
-            for (int inListNodeNum = 1; inListNodeNum < anchoredPath.getPointList().size() - 1; inListNodeNum++) {
-                if (inListNodeNum % downsampleModulo != 0) {
-                    continue;
-                }
-                List<Integer> point = anchoredPath.getPointList().get(inListNodeNum);
-                swcNode = createSWCNode(
-                        currentIndex,
-                        SWCNode.SegmentType.undefined,
-                        point.get(0),
-                        point.get(1),
-                        point.get(2),
-                        xcenter,
-                        ycenter,
-                        zcenter,
-                        parentIndex
-                );
-
-                nodeList.add(swcNode);
-                if (firstIndex == -1) {
-                    firstIndex = currentIndex;
-                }
-                parentIndex = currentIndex;
-                currentIndex++;
-            }
-            lastNode = swcNode;
-
-            // Establish link-arounds.
-            SWCNode manualNode = manualIdToNode.get(endPoints.getAnnotationID2());
-            manualNode.setParentIndex(firstIndex);
-
-            if (lastNode != null) {
-                manualNode = manualIdToNode.get(endPoints.getAnnotationID1());
-                lastNode.setParentIndex(manualNode.getIndex());
-            }
-        }
-
-        Comparator<SWCNode> indexComparator = new Comparator<SWCNode>() {
-            @Override
-            public int compare(SWCNode o1, SWCNode o2) {
-                return o1.getIndex() - o2.getIndex();
-            }            
-        };        
-        Collections.sort(nodeList, indexComparator);
-        return nodeList;
-    }
-    
     private static List<SWCNode> nodesFromSubtrees(TmNeuron neuron, double xcenter, double ycenter, double zcenter) {
         List<SWCNode> nodeList = new ArrayList<>();
         // map the annotation IDs to the indices to be used in the swc file
