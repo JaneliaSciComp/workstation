@@ -33,9 +33,13 @@ public class SWCDataConverter {
         double xcenter = center.getX();
         double ycenter = center.getY();
         double zcenter = center.getZ();
-        //List<SWCNode> nodeList = nodesFromSubtrees(neuron, xcenter, ycenter, zcenter);
-
-        List<SWCNode> altNodeList = nodesFromAnchoredPath(neuron, xcenter, ycenter, zcenter, downsampleModulo);
+        List<SWCNode> nodeList = null;
+        if (downsampleModulo == 0) {
+            nodeList = nodesFromSubtrees(neuron, xcenter, ycenter, zcenter);
+        }        
+        else {
+            nodeList = nodesFromCombinedPath(neuron, xcenter, ycenter, zcenter, downsampleModulo);
+        }
         
         // headers: I'm not going to put in all the fields I
         //  saw in the "specification" unless I have to; we only
@@ -43,8 +47,7 @@ public class SWCDataConverter {
         headerList.add("# ORIGINAL_SOURCE Janelia Workstation Large Volume Viewer");
         headerList.add(String.format("# OFFSET %f %f %f", xcenter, ycenter, zcenter));
 
-        //        return new SWCData(nodeList, headerList);
-        return new SWCData(altNodeList, headerList);
+        return new SWCData(nodeList, headerList);
     }
 
     public static SWCData fromTmNeuron(List<TmNeuron> neuronList, int downsampleModulo) {
@@ -126,6 +129,94 @@ public class SWCDataConverter {
         return sum;
     }
 
+    private static List<SWCNode> nodesFromCombinedPath(TmNeuron neuron, double xcenter, double ycenter, double zcenter, int downsampleModulo) {
+        List<SWCNode> nodeList = new ArrayList<>();
+        
+        // Find the links back to the auto-generated points lists, from the
+        // manual-added points.
+        Map<TmAnchoredPathEndpoints, TmAnchoredPath> map = neuron.getAnchoredPathMap();
+        Map<Long,TmAnchoredPathEndpoints> startToEndPoints = new HashMap<>();
+        Map<Long,Integer> subAnnIdToIndex = new HashMap<>();
+        for (TmAnchoredPathEndpoints endPoints : map.keySet()) {
+            startToEndPoints.put(endPoints.getAnnotationID2(), endPoints);
+        }
+
+        int currentIndex = 1;
+        int parentIndex = -1;
+        
+        for (TmGeoAnnotation annotation : neuron.getRootAnnotations()) {
+            for (TmGeoAnnotation subAnn : neuron.getSubTreeList(annotation)) {
+                // Traverse any "parent points" to this end-point.
+                if ( startToEndPoints.get( subAnn.getId() ) != null ) {
+                    final TmAnchoredPathEndpoints endpoints = startToEndPoints.get( subAnn.getId() );
+                    // Make a node for each path member.
+                    TmAnchoredPath anchoredPath = map.get( endpoints );                    
+                    if ( subAnnIdToIndex.get( endpoints.getAnnotationID1() ) != null ) {
+                        parentIndex = subAnnIdToIndex.get( endpoints.getAnnotationID1() );
+                    }
+
+                    for (int inListNodeNum = 1; inListNodeNum < anchoredPath.getPointList().size() - 1; inListNodeNum++) {
+                        if (inListNodeNum % downsampleModulo != 0) {
+                            continue;
+                        }
+                        List<Integer> point = anchoredPath.getPointList().get(inListNodeNum);
+                        SWCNode autoNode = createSWCNode(
+                                currentIndex,
+                                SWCNode.SegmentType.undefined,
+                                point.get(0),
+                                point.get(1),
+                                point.get(2),
+                                xcenter,
+                                ycenter,
+                                zcenter,
+                                parentIndex
+                        );
+System.out.println("Just constructed auto-node with parent of " + autoNode.getParentIndex() + " and actual index of " + autoNode.getIndex()); 
+
+                        nodeList.add(autoNode);
+                        parentIndex = currentIndex;
+                        currentIndex++;
+                    }
+
+                }
+                
+//                if (subAnnIdToIndex.get(subAnn.getParentId()) != null) {
+//                    parentIndex = subAnnIdToIndex.get(subAnn.getParentId());
+//System.out.println("Fetched parent index of " + parentIndex + " for sub-annotation " + subAnn.getId() + " with parent id of " + subAnn.getParentId());
+//                }
+
+                // Make the node for manual reference now.                
+                SWCNode manualNode = createSWCNode(
+                        currentIndex++,
+                        getSegmentType(subAnn),
+                        subAnn.getX(),
+                        subAnn.getY(),
+                        subAnn.getZ(),
+                        xcenter,
+                        ycenter,
+                        zcenter,
+                        parentIndex
+                );
+                nodeList.add(manualNode);                
+                subAnnIdToIndex.put( subAnn.getId(), manualNode.getIndex() );
+                parentIndex = manualNode.getIndex();
+
+System.out.println("Just constructed manual-node with parent of " + manualNode.getParentIndex() + " and actual index of " + manualNode.getIndex()); 
+            }
+        }
+
+        Comparator<SWCNode> indexComparator = new Comparator<SWCNode>() {
+            @Override
+            public int compare(SWCNode o1, SWCNode o2) {
+                return o1.getIndex() - o2.getIndex();
+            }            
+        };        
+        Collections.sort(nodeList, indexComparator);
+        return nodeList;
+    }
+    
+
+    
     private static List<SWCNode> nodesFromAnchoredPath(TmNeuron neuron, double xcenter, double ycenter, double zcenter, int downsampleModulo) {
         List<SWCNode> nodeList = new ArrayList<>();
         // map the annotation IDs to the indices to be used in the swc file
@@ -168,57 +259,55 @@ public class SWCDataConverter {
                         ycenter,
                         zcenter,
                         parentIndex
-                );
+                );                
                 nodeList.add(swcNode);
                 manualIdToNode.put(subAnn.getId(), swcNode);
                 parentIndex = index;
             }
         }
 
-        if (downsampleModulo > 0) {
-            for (TmAnchoredPathEndpoints endPoints : map.keySet()) {
-                // Make a node for each path member.
-                TmAnchoredPath anchoredPath = map.get(endPoints);
-                parentIndex = currentIndex - 1;
+        for (TmAnchoredPathEndpoints endPoints : map.keySet()) {
+            // Make a node for each path member.
+            TmAnchoredPath anchoredPath = map.get(endPoints);
+            parentIndex = currentIndex - 1;
 
-                int firstIndex = -1;
-                SWCNode lastNode;
-                SWCNode swcNode = null;
+            int firstIndex = -1;
+            SWCNode lastNode;
+            SWCNode swcNode = null;
 
-                for (int inListNodeNum = 1; inListNodeNum < anchoredPath.getPointList().size() - 1; inListNodeNum++) {
-                    if (inListNodeNum % downsampleModulo != 0) {
-                        continue;
-                    }
-                    List<Integer> point = anchoredPath.getPointList().get(inListNodeNum);
-                    swcNode = createSWCNode(
-                            currentIndex,
-                            SWCNode.SegmentType.undefined,
-                            point.get(0),
-                            point.get(1),
-                            point.get(2),
-                            xcenter,
-                            ycenter,
-                            zcenter,
-                            parentIndex
-                    );
-
-                    nodeList.add(swcNode);
-                    if (firstIndex == -1) {
-                        firstIndex = currentIndex;
-                    }
-                    parentIndex = currentIndex;
-                    currentIndex++;
+            for (int inListNodeNum = 1; inListNodeNum < anchoredPath.getPointList().size() - 1; inListNodeNum++) {
+                if (inListNodeNum % downsampleModulo != 0) {
+                    continue;
                 }
-                lastNode = swcNode;
+                List<Integer> point = anchoredPath.getPointList().get(inListNodeNum);
+                swcNode = createSWCNode(
+                        currentIndex,
+                        SWCNode.SegmentType.undefined,
+                        point.get(0),
+                        point.get(1),
+                        point.get(2),
+                        xcenter,
+                        ycenter,
+                        zcenter,
+                        parentIndex
+                );
 
-                // Establish link-arounds.
-                SWCNode manualNode = manualIdToNode.get(endPoints.getAnnotationID2());
-                manualNode.setParentIndex(firstIndex);
-
-                if (lastNode != null) {
-                    manualNode = manualIdToNode.get(endPoints.getAnnotationID1());
-                    lastNode.setParentIndex(manualNode.getIndex());
+                nodeList.add(swcNode);
+                if (firstIndex == -1) {
+                    firstIndex = currentIndex;
                 }
+                parentIndex = currentIndex;
+                currentIndex++;
+            }
+            lastNode = swcNode;
+
+            // Establish link-arounds.
+            SWCNode manualNode = manualIdToNode.get(endPoints.getAnnotationID2());
+            manualNode.setParentIndex(firstIndex);
+
+            if (lastNode != null) {
+                manualNode = manualIdToNode.get(endPoints.getAnnotationID1());
+                lastNode.setParentIndex(manualNode.getIndex());
             }
         }
 
@@ -227,7 +316,7 @@ public class SWCDataConverter {
             public int compare(SWCNode o1, SWCNode o2) {
                 return o1.getIndex() - o2.getIndex();
             }            
-        };
+        };        
         Collections.sort(nodeList, indexComparator);
         return nodeList;
     }
