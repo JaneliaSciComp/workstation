@@ -170,7 +170,7 @@ implements MouseMode, KeyListener
 		double minDist2 = 10 * cutoff; // start too big
 		Anchor closest = null;
         // Copy the collection to avoid concurrent modification exception.
-        final Set<Anchor> anchors = new HashSet<>(skeleton.getAnchors());
+        final Anchor[] anchors = skeleton.getAnchors().toArray( new Anchor[0] );
 		for (Anchor a : anchors) {
 			double dz = Math.abs(2.0 * (xyz.getZ() - a.getLocation().getZ()) * camera.getPixelsPerSceneUnit());
 			if (dz >= 0.95 * viewport.getDepth())
