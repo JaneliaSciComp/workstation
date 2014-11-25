@@ -20,8 +20,8 @@ import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
 import java.io.File;
 import javax.swing.border.EmptyBorder;
-import javax.swing.border.LineBorder;
 import javax.swing.border.TitledBorder;
+import javax.swing.filechooser.FileFilter;
 
 
 /**
@@ -33,6 +33,7 @@ import javax.swing.border.TitledBorder;
 public class AnnotationPanel extends JPanel
 {
     public static final int SUBPANEL_STD_HEIGHT = 150;
+    public static final String STD_SWC_EXTENSION = ".swc";
     
     // things we get data from
     // not clear these belong here!  should all info be shuffled through signals and actions?
@@ -397,7 +398,7 @@ public class AnnotationPanel extends JPanel
     private ExportParameters getExportParameters( String seedName ) throws HeadlessException {
         JFileChooser chooser = new JFileChooser();
         chooser.setDialogTitle("Save swc file");
-        chooser.setSelectedFile(new File(seedName + ".swc"));
+        chooser.setSelectedFile(new File(seedName + STD_SWC_EXTENSION));
         JPanel layoutPanel = new JPanel();
         layoutPanel.setLayout(new BorderLayout());
         // Force-out to desired size.
@@ -543,6 +544,17 @@ public class AnnotationPanel extends JPanel
             // could specify a dir to open in, but not sure what to choose
             JFileChooser chooser = new JFileChooser();
             chooser.setDialogTitle("Choose swc file");
+            chooser.setFileFilter(new FileFilter() {
+                @Override
+                public boolean accept( File f ) {
+                    return f.getName().endsWith(STD_SWC_EXTENSION) || f.isDirectory();                    
+                }
+
+                @Override
+                public String getDescription() {
+                    return "*" + STD_SWC_EXTENSION;
+                }
+            });
             int returnValue = chooser.showOpenDialog(AnnotationPanel.this);
             if (returnValue == JFileChooser.APPROVE_OPTION) {
                 annotationMgr.importSWCFile(chooser.getSelectedFile());
