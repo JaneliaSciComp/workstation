@@ -33,8 +33,8 @@ public class SWCDataConverter {
         double xcenter = center.getX();
         double ycenter = center.getY();
         double zcenter = center.getZ();
-        List<SWCNode> nodeList = null;
-        if (downsampleModulo == 0) {
+        List<SWCNode> nodeList;
+        if (downsampleModulo == 0 || neuron.getAnchoredPathMap().isEmpty()) {
             nodeList = nodesFromSubtrees(neuron, xcenter, ycenter, zcenter);
         }        
         else {
