@@ -78,7 +78,7 @@ public class TreeNodeNode extends DomainObjectNode {
         }
     }
     
-    private TreeNode getTreeNode() {
+    public TreeNode getTreeNode() {
         return (TreeNode)getDomainObject();
     }
     
@@ -117,11 +117,6 @@ public class TreeNodeNode extends DomainObjectNode {
     }
     
     @Override
-    public boolean canRename() {
-        return true;
-    }
-    
-    @Override
     public boolean canDestroy() {
         if (getDomainObject() instanceof MaterializedView) {
             return false;
@@ -129,40 +124,40 @@ public class TreeNodeNode extends DomainObjectNode {
         return true;
     }
     
-    @Override
-    public Action[] getActions(boolean context) {
-        Action[] superActions = super.getActions(context);
-        List<Action> actions = new ArrayList<Action>();
-        actions.add(RenameAction.get(RenameAction.class));
-        actions.addAll(Lists.newArrayList(superActions));
-        return actions.toArray(new Action[0]);
-    }
+//    @Override
+//    public Action[] getActions(boolean context) {
+//        Action[] superActions = super.getActions(context);
+//        List<Action> actions = new ArrayList<Action>();
+//        actions.add(RenameAction.get(RenameAction.class));
+//        actions.addAll(Lists.newArrayList(superActions));
+//        return actions.toArray(new Action[0]);
+//    }
     
-    @Override
-    public void setName(final String newName) {
-        final TreeNode treeNode = getTreeNode();
-        final String oldName = treeNode.getName();
-        treeNode.setName(newName);
-
-        SimpleWorker worker = new SimpleWorker() {
-            @Override
-            protected void doStuff() throws Exception {
-                log.trace("Changing name from " + oldName + " to: " + newName);
-                DomainDAO dao = DomainExplorerTopComponent.getDao();
-                dao.updateProperty(SessionMgr.getSubjectKey(), treeNode, "name", newName);
-            }
-            @Override
-            protected void hadSuccess() {
-                log.trace("Fire name change from" + oldName + " to: " + newName);
-                fireDisplayNameChange(oldName, newName); 
-            }
-            @Override
-            protected void hadError(Throwable error) {
-                SessionMgr.getSessionMgr().handleException(error);
-            }
-        };
-        worker.execute();
-    }
+//    @Override
+//    public void setName(final String newName) {
+//        final TreeNode treeNode = getTreeNode();
+//        final String oldName = treeNode.getName();
+//        treeNode.setName(newName);
+//
+//        SimpleWorker worker = new SimpleWorker() {
+//            @Override
+//            protected void doStuff() throws Exception {
+//                log.trace("Changing name from " + oldName + " to: " + newName);
+//                DomainDAO dao = DomainExplorerTopComponent.getDao();
+//                dao.updateProperty(SessionMgr.getSubjectKey(), treeNode, "name", newName);
+//            }
+//            @Override
+//            protected void hadSuccess() {
+//                log.trace("Fire name change from" + oldName + " to: " + newName);
+//                fireDisplayNameChange(oldName, newName); 
+//            }
+//            @Override
+//            protected void hadError(Throwable error) {
+//                SessionMgr.getSessionMgr().handleException(error);
+//            }
+//        };
+//        worker.execute();
+//    }
 
     @Override
     public PasteType getDropType(final Transferable t, int action, int index) {

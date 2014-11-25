@@ -1,12 +1,9 @@
 package org.janelia.it.workstation.gui.browser.nodes;
 
 import java.awt.Image;
-import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import org.janelia.it.jacs.model.domain.interfaces.HasFiles;
 import org.janelia.it.jacs.model.domain.sample.ObjectiveSample;
-import org.janelia.it.jacs.model.domain.sample.PipelineResult;
 
 import org.janelia.it.jacs.model.domain.sample.Sample;
 import org.janelia.it.jacs.model.domain.sample.SamplePipelineRun;

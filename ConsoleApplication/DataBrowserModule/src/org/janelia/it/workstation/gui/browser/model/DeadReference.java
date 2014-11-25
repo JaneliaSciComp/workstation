@@ -28,6 +28,13 @@ public class DeadReference implements DomainObject {
     
     public void setId(Long id) {
     }
+    
+    public String getName() {
+        return getType()+"#"+getId();
+    }
+    
+    public void setName(String name) {
+    }
 
     public String getType() {
         return reference.getTargetType();

@@ -137,7 +137,7 @@ public final class DomainBrowserTopComponent extends TopComponent implements Loo
         Collection<? extends AbstractNode> allNodes = result.allInstances();
         if (!allNodes.isEmpty()) {
             final Node obj = allNodes.iterator().next();
-            log.info("Setting context object on IconGridViewer to "+obj.getDisplayName());
+            log.trace("Setting context object on IconGridViewer to "+obj.getDisplayName());
             iconGridViewer.setContextObject(obj);
         } 
         else {

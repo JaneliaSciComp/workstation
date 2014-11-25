@@ -1,8 +1,11 @@
 package org.janelia.it.workstation.gui.browser.nodes;
 
 import java.awt.Image;
+import java.awt.Toolkit;
 import java.awt.datatransfer.DataFlavor;
+import java.awt.datatransfer.StringSelection;
 import java.awt.datatransfer.Transferable;
+import java.awt.event.ActionEvent;
 import java.beans.Introspector;
 import java.beans.PropertyDescriptor;
 import java.io.IOException;
@@ -10,11 +13,13 @@ import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+import javax.swing.AbstractAction;
 import javax.swing.Action;
+import static javax.swing.Action.NAME;
 import org.janelia.it.workstation.gui.browser.api.DomainUtils;
 import org.janelia.it.workstation.gui.browser.components.DatePropertyEditor;
+import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.workstation.gui.util.Icons;
-import org.openide.ErrorManager;
 import org.openide.actions.CopyAction;
 import org.openide.nodes.AbstractNode;
 import org.openide.nodes.Children;
@@ -75,8 +80,8 @@ public class InternalNode<T> extends AbstractNode implements HasUniqueId, Has2dR
     @Override
     public Action[] getActions(boolean context) {
         List<Action> actions = new ArrayList<Action>();
-        actions.add(CopyAction.get(CopyAction.class));
-        return actions.toArray(new Action[0]);
+        actions.add(new CopyNameAction());
+        return actions.toArray(new Action[actions.size()]);
     }
     
     @Override
@@ -150,7 +155,7 @@ public class InternalNode<T> extends AbstractNode implements HasUniqueId, Has2dR
             }
 
         } catch (Exception ex) {
-            ErrorManager.getDefault();
+            SessionMgr.getSessionMgr().handleException(ex);
         }
 
         sheet.put(set);
@@ -160,5 +165,18 @@ public class InternalNode<T> extends AbstractNode implements HasUniqueId, Has2dR
     @Override
     public String get2dImageFilepath(String role) {
         return null;
+    }
+    
+    private final class CopyNameAction extends AbstractAction {
+
+        public CopyNameAction() {
+            putValue (NAME, "Copy Name To Clipboard");
+        }
+
+        @Override
+        public void actionPerformed(ActionEvent e) {
+            Transferable t = new StringSelection(getDisplayName());
+            Toolkit.getDefaultToolkit().getSystemClipboard().setContents(t, null);
+        }
     }
 }
