@@ -7,7 +7,9 @@ import java.awt.event.InputEvent;
 import java.awt.event.KeyEvent;
 import java.awt.event.MouseEvent;
 import java.awt.event.KeyListener;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.Vector;
 
 import javax.swing.AbstractAction;
@@ -167,7 +169,9 @@ implements MouseMode, KeyListener
 		double cutoff = worldRadius * worldRadius;
 		double minDist2 = 10 * cutoff; // start too big
 		Anchor closest = null;
-		for (Anchor a : skeleton.getAnchors()) {
+        // Copy the collection to avoid concurrent modification exception.
+        final Set<Anchor> anchors = new HashSet<>(skeleton.getAnchors());
+		for (Anchor a : anchors) {
 			double dz = Math.abs(2.0 * (xyz.getZ() - a.getLocation().getZ()) * camera.getPixelsPerSceneUnit());
 			if (dz >= 0.95 * viewport.getDepth())
 				continue; // outside of Z (most of) range
@@ -187,7 +191,7 @@ implements MouseMode, KeyListener
 		int ix = -1;
 		if ((closest != null) && (skeletonActor != null))
 			ix = skeletonActor.getIndexForAnchor(closest);
-		if (ix != currentHover) {
+		if (ix != -1  &&  ix != currentHover) {
 			if (ix >= 0) {
 				// System.out.println("Hover anchor "+ix);
 			}
