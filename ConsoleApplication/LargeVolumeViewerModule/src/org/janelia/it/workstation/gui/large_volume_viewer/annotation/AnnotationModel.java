@@ -956,22 +956,6 @@ that need to respond to changing data.
 
         // get swcdata via converter, then write
         SWCData swcData = SWCDataConverter.fromTmNeuron(neuronList, downsampleModulo);
-        // Local validity check.  Redundant points?
-        /* DEBUG CODE:  --found that these were coincidences of running
-           the point-creating algorithm near branch point.
-        Map<Vec3,SWCNode> nodePoints = new HashMap<>();
-        for ( SWCNode node: swcData.getNodeList() ) {
-            Vec3 nextVec = new Vec3( node.getX(), node.getY(), node.getZ() );
-            if ( nodePoints.keySet().contains( nextVec ) ) {
-                System.err.println( 
-                        String.format("ERROR: found same point %f,%f,%f for node <<%s>> and <<%s>>.", nextVec.getX(), nextVec.getY(), nextVec.getZ(), node.toSWCline(), nodePoints.get(nextVec).toSWCline() )
-                );
-            }
-            else {
-                nodePoints.put( nextVec, node );
-            }
-        }
-        */
         swcData.write(swcFile);
     }
 
