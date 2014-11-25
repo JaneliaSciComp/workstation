@@ -34,7 +34,7 @@ public class SWCDataConverter {
         double ycenter = center.getY();
         double zcenter = center.getZ();
         List<SWCNode> nodeList;
-        if (downsampleModulo == 0 || neuron.getAnchoredPathMap().isEmpty()) {
+        if (downsampleModulo == 0 ) { //|| neuron.getAnchoredPathMap().isEmpty()) {
             nodeList = nodesFromSubtrees(neuron, xcenter, ycenter, zcenter);
         }        
         else {
@@ -176,6 +176,13 @@ public class SWCDataConverter {
                         currentIndex++;
                     }
 
+                }
+                else {
+                    // See if parent can be found from manually-created node.
+                    Integer parentIndexPutative = subAnnIdToIndex.get( subAnn.getParentId());
+                    if ( parentIndexPutative != null ) {
+                        parentIndex = parentIndexPutative;
+                    }
                 }
                 
                 // Make the node for manual reference now.                
