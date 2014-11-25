@@ -170,6 +170,8 @@ public class NeuriteTreePanel extends JPanel
         // use Guava BiMap for this? will want both mappings for selection management purposes
 
         // brute force recreate for now
+
+        neuriteTree.setVisible(false); // Hide tree to avoid bug FW-2847
         neuronRootNode.removeAllChildren();
         labelToAnnotationMap.clear();
 
@@ -194,6 +196,7 @@ public class NeuriteTreePanel extends JPanel
         for (int i = 0; i < neuriteTree.getRowCount(); i++) {
             neuriteTree.expandRow(i);
         }
+        neuriteTree.setVisible(true);
     }
 
     private void populateNeuriteTreeNodeTagged(TmGeoAnnotation parentAnnotation, TmNeuron neuron, DefaultMutableTreeNode rootNode) {
