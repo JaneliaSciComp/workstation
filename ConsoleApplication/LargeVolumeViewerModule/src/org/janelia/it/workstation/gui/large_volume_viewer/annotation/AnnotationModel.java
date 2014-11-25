@@ -49,6 +49,8 @@ UI elements that select, and its signals are connected with a variety of UI elem
 that need to respond to changing data.
 */
 {
+    public static final String STD_SWC_EXTENSION = ".swc";
+
     private ModelMgr modelMgr;
     private SessionMgr sessionMgr;
 
@@ -296,9 +298,10 @@ that need to respond to changing data.
 
         // keep a copy so we know what visuals to remove:
         TmNeuron deletedNeuron = getCurrentNeuron();
+        setCurrentNeuron(null);
 
         // delete
-        modelMgr.deleteEntityTree(getCurrentNeuron().getId());
+        modelMgr.deleteEntityTree(deletedNeuron.getId());
 
         // delete anchor signals
         ArrayList<TmGeoAnnotation> tempAnnotationList = new ArrayList<>(deletedNeuron.getGeoAnnotationMap().values());
@@ -310,8 +313,6 @@ that need to respond to changing data.
 
         updateCurrentWorkspace();
         workspaceLoadedSignal.emit(getCurrentWorkspace());
-
-        setCurrentNeuron(null);
     }
 
     /**
@@ -979,6 +980,7 @@ that need to respond to changing data.
     }
 
     public void importSWCData(File swcFile, SimpleWorker worker) throws Exception {
+        setCurrentNeuron(null);
 
         // the constructor also triggers the parsing, but not the validation
         SWCData swcData = SWCData.read(swcFile);
@@ -1009,8 +1011,8 @@ that need to respond to changing data.
 
         // create one neuron for the file; take name from the filename (strip extension)
         String neuronName = swcFile.getName();
-        if (neuronName.endsWith(".swc")) {
-            neuronName = neuronName.substring(0, neuronName.length() - 4);
+        if (neuronName.endsWith(STD_SWC_EXTENSION)) {
+            neuronName = neuronName.substring(0, neuronName.length() - STD_SWC_EXTENSION.length());
         }
         TmNeuron neuron = modelMgr.createTiledMicroscopeNeuron(getCurrentWorkspace().getId(), neuronName);
 

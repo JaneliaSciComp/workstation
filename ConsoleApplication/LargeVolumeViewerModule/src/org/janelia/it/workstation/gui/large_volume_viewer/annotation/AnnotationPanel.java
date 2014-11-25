@@ -33,7 +33,6 @@ import javax.swing.filechooser.FileFilter;
 public class AnnotationPanel extends JPanel
 {
     public static final int SUBPANEL_STD_HEIGHT = 150;
-    public static final String STD_SWC_EXTENSION = ".swc";
     
     // things we get data from
     // not clear these belong here!  should all info be shuffled through signals and actions?
@@ -398,7 +397,7 @@ public class AnnotationPanel extends JPanel
     private ExportParameters getExportParameters( String seedName ) throws HeadlessException {
         JFileChooser chooser = new JFileChooser();
         chooser.setDialogTitle("Save swc file");
-        chooser.setSelectedFile(new File(seedName + STD_SWC_EXTENSION));
+        chooser.setSelectedFile(new File(seedName + AnnotationModel.STD_SWC_EXTENSION));
         JPanel layoutPanel = new JPanel();
         layoutPanel.setLayout(new BorderLayout());
         // Force-out to desired size.
@@ -547,12 +546,12 @@ public class AnnotationPanel extends JPanel
             chooser.setFileFilter(new FileFilter() {
                 @Override
                 public boolean accept( File f ) {
-                    return f.getName().endsWith(STD_SWC_EXTENSION) || f.isDirectory();                    
+                    return f.getName().endsWith(AnnotationModel.STD_SWC_EXTENSION) || f.isDirectory();                    
                 }
 
                 @Override
                 public String getDescription() {
-                    return "*" + STD_SWC_EXTENSION;
+                    return "*" + AnnotationModel.STD_SWC_EXTENSION;
                 }
             });
             int returnValue = chooser.showOpenDialog(AnnotationPanel.this);
