@@ -76,6 +76,8 @@ public final class DomainExplorerTopComponent extends TopComponent implements Ex
         map.put(DefaultEditorKit.pasteAction, ExplorerUtils.actionPaste(mgr));
         map.put("delete", ExplorerUtils.actionDelete(mgr, true)); 
 
+//        bindKeys();
+
         RequestProcessor.getDefault().post(new Runnable() {
             @Override
             public void run() {
@@ -84,6 +86,23 @@ public final class DomainExplorerTopComponent extends TopComponent implements Ex
         });
     }
 
+//    private void bindKeys() {
+//        
+//        CutAction cutAction = SystemAction.get(CutAction.class);
+//        PasteAction pasteAction = SystemAction.get(PasteAction.class);
+//        InputMap keys = getInputMap(JComponent.WHEN_ANCESTOR_OF_FOCUSED_COMPONENT);
+//        KeyStroke keyCut = (KeyStroke) cutAction.getValue(Action.ACCELERATOR_KEY);
+//        if (keyCut==null) {
+//            keyCut = KeyStroke.getKeyStroke("D-X");
+//        }
+//        keys.put(keyCut, cutAction);
+//        KeyStroke keyPaste = (KeyStroke) pasteAction.getValue(Action.ACCELERATOR_KEY);
+//        if (keyPaste==null) {
+//            keyPaste = KeyStroke.getKeyStroke("D-V");
+//        }
+//        keys.put(keyPaste, pasteAction);
+//    }
+    
     private static DomainDAO dao;
 
     public static DomainDAO getDao() {

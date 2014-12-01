@@ -56,7 +56,7 @@ public class TreeNodeChildFactory extends ChildFactory<DomainObject> {
         DomainDAO dao = DomainExplorerTopComponent.getDao();
         List<DomainObject> children = dao.getDomainObjects(SessionMgr.getSubjectKey(), treeNode.getChildren());
         if (children.size()!=treeNode.getNumChildren()) {
-            log.info("Did not get all children: {}!={}",children.size(),treeNode.getNumChildren());   
+            log.info("Got {} children but expected {}",children.size(),treeNode.getNumChildren());   
         }
         
         Map<Long,DomainObject> map = new HashMap<Long,DomainObject>();
@@ -131,25 +131,33 @@ public class TreeNodeChildFactory extends ChildFactory<DomainObject> {
         if (treeNode==null) {
             log.warn("Cannot add child to unloaded treeNode");
             return;
+        }   
+        log.info("Adding child {} to {}",domainObject.getId(),treeNode.getName());
+        
+        DomainDAO dao = DomainExplorerTopComponent.getDao();
+        try {
+            dao.addChild(SessionMgr.getSubjectKey(), treeNode, domainObject);
         }
-        SimpleWorker worker = new SimpleWorker() {
-            @Override
-            protected void doStuff() throws Exception {
-                log.warn("adding child {} to {}",domainObject.getId(),treeNode.getName());
-                DomainDAO dao = DomainExplorerTopComponent.getDao();
-                dao.addChild(SessionMgr.getSubjectKey(), treeNode, domainObject);
-            }
-            @Override
-            protected void hadSuccess() {
-                log.info("refreshing view after adding child");
-                refresh();
-            }
-            @Override
-            protected void hadError(Throwable error) {
-                SessionMgr.getSessionMgr().handleException(error);
-            }
-        };
-        worker.execute();
+        catch (Exception e) {
+            SessionMgr.getSessionMgr().handleException(e);
+        }
+        
+        refresh();
+
+//            SimpleWorker worker = new SimpleWorker() {
+//                @Override
+//                protected void doStuff() throws Exception {
+//                }
+//                @Override
+//                protected void hadSuccess() {
+//                    refresh();
+//                }
+//                @Override
+//                protected void hadError(Throwable error) {
+//                    SessionMgr.getSessionMgr().handleException(error);
+//                }
+//            };
+//            worker.execute();
     }
 
     public void removeChild(final DomainObject domainObject) {
@@ -158,29 +166,38 @@ public class TreeNodeChildFactory extends ChildFactory<DomainObject> {
             log.warn("Cannot remove child from unloaded treeNode");
             return;
         }
-        SimpleWorker worker = new SimpleWorker() {
-            @Override
-            protected void doStuff() throws Exception {
-                log.warn("removing child {} from {}",domainObject.getId(),treeNode.getName());
-                DomainDAO dao = DomainExplorerTopComponent.getDao();
-                if (domainObject instanceof DeadReference) {
-                    dao.removeReference(SessionMgr.getSubjectKey(), treeNode, ((DeadReference)domainObject).getReference());
-                }
-                else {
-                    dao.removeChild(SessionMgr.getSubjectKey(), treeNode, domainObject);
-                }
+        
+        try {
+            log.info("removing child {} from {}", domainObject.getId(), treeNode.getName());
+            DomainDAO dao = DomainExplorerTopComponent.getDao();
+            if (domainObject instanceof DeadReference) {
+                dao.removeReference(SessionMgr.getSubjectKey(), treeNode, ((DeadReference) domainObject).getReference());
             }
-            @Override
-            protected void hadSuccess() {
-                log.info("refreshing view after removing child");
-                refresh();
+            else {
+                dao.removeChild(SessionMgr.getSubjectKey(), treeNode, domainObject);
             }
-            @Override
-            protected void hadError(Throwable error) {
-                SessionMgr.getSessionMgr().handleException(error);
-            }
-        };
-        worker.execute();
+        }
+        catch (Exception e) {
+            SessionMgr.getSessionMgr().handleException(e);
+        }
+        
+        refresh();
+                
+//        SimpleWorker worker = new SimpleWorker() {
+//            @Override
+//            protected void doStuff() throws Exception {
+//            }
+//            @Override
+//            protected void hadSuccess() {
+//                log.info("refreshing view after removing child");
+//                refresh();
+//            }
+//            @Override
+//            protected void hadError(Throwable error) {
+//                SessionMgr.getSessionMgr().handleException(error);
+//            }
+//        };
+//        worker.execute();
     }
 
 

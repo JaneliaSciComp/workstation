@@ -39,6 +39,7 @@ import org.janelia.it.workstation.gui.util.Icons;
 import org.janelia.it.workstation.gui.util.JScrollMenu;
 import org.janelia.it.workstation.gui.util.WindowLocator;
 import org.janelia.it.workstation.shared.workers.SimpleWorker;
+import org.openide.actions.CopyAction;
 import org.openide.nodes.AbstractNode;
 import org.openide.nodes.ChildFactory;
 import org.openide.nodes.Children;
@@ -220,7 +221,7 @@ public class DomainObjectNode extends AbstractNode implements HasUniqueId, Has2d
         });
         return added;
     }
-
+    
     @Override
     public void destroy() throws IOException {
         if (parentChildFactory==null) {

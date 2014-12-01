@@ -149,7 +149,7 @@ public class DomainDAO {
         List<DomainObject> domainObjects = new ArrayList<DomainObject>();
         if (references==null || references.isEmpty()) return domainObjects;
               
-        log.info("getDomainObjects(subjectKey={},references.size={})",subjectKey,references.size());
+        log.trace("getDomainObjects(subjectKey={},references.size={})",subjectKey,references.size());
   
         Multimap<String,Long> referenceMap = ArrayListMultimap.<String,Long>create();
         for(Reference reference : references) {
@@ -177,7 +177,7 @@ public class DomainDAO {
         if ("workspace".equals(type)) type = "treeNode"; 
         
         long start = System.currentTimeMillis();
-        log.info("getDomainObjects(subjectKey={},type={},ids.size={})",subjectKey,type,ids.size());
+        log.trace("getDomainObjects(subjectKey={},type={},ids.size={})",subjectKey,type,ids.size());
 
         Set<String> subjects = getSubjectSet(subjectKey);
 
@@ -187,7 +187,7 @@ public class DomainDAO {
             return new ArrayList<DomainObject>();
         }
         List<DomainObject> list = toList(getCollection(type).find("{_id:{$in:#},readers:{$in:#}}", ids, subjects).as(clazz), ids);
-        log.info("Getting "+list.size()+" "+type+" objects took "+(System.currentTimeMillis()-start)+" ms");
+        log.trace("Getting "+list.size()+" "+type+" objects took "+(System.currentTimeMillis()-start)+" ms");
         return list;
     }
 
@@ -345,6 +345,7 @@ public class DomainDAO {
     public void save(String subjectKey, DomainObject domainObject) throws Exception {
         String type = getType(domainObject);
         MongoCollection collection = getCollection(type);
+        log.info("Saving {}#{}",domainObject.getClass().getName(),domainObject.getId());
         WriteResult wr = collection.update("{_id:#,writers:#,updatedDate:#}",domainObject.getId(),subjectKey,domainObject.getUpdatedDate()).with(domainObject);
         if (wr.getN()!=1) {
             throw new Exception("Error saving object "+domainObject.getId()+": "+wr.getError());

@@ -4,7 +4,6 @@ import org.janelia.it.workstation.gui.application.ConsoleApp;
 import org.openide.modules.OnStart;
 
 import java.security.ProtectionDomain;
-import java.util.logging.Handler;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -36,7 +35,7 @@ public class Startup implements Runnable {
 //                           ConsoleProperties.getString("console.Title"));
         System.setProperty("apple.eawt.quitStrategy", "CLOSE_ALL_WINDOWS");
     }
-
+    
     public void run() {
         java.util.logging.Logger.getLogger("").addHandler(new NBExceptionHandler());
         ConsoleApp.newBrowser();

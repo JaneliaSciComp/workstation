@@ -7,12 +7,14 @@
             <file name="org-netbeans-modules-quicksearch-QuickSearchAction.instance_hidden"/>
             <file name="org-netbeans-modules-search-FindInFilesAction.instance_hidden"/>
             <file name="org-netbeans-modules-search-ReplaceInFilesAction.instance_hidden"/>
+            <!--
             <file name="org-openide-actions-CopyAction.instance_hidden"/>
             <file name="org-openide-actions-CutAction.instance_hidden"/>
+            <file name="org-openide-actions-PasteAction.instance_hidden"/>
+            -->
             <file name="org-openide-actions-DeleteAction.instance_hidden"/>
             <file name="org-openide-actions-FindAction.instance_hidden"/>
             <file name="org-openide-actions-GotoAction.instance_hidden"/>
-            <file name="org-openide-actions-PasteAction.instance_hidden"/>
             <file name="org-openide-actions-RedoAction.instance_hidden"/>
             <file name="org-openide-actions-ReplaceAction.instance_hidden"/>
             <file name="org-openide-actions-UndoAction.instance_hidden"/>

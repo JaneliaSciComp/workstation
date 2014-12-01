@@ -1,15 +1,12 @@
 package org.janelia.it.workstation.gui.browser.nodes;
 
-import com.google.common.collect.Lists;
 
 import java.awt.Image;
 import java.awt.datatransfer.Transferable;
 import java.awt.datatransfer.UnsupportedFlavorException;
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.List;
 
-import javax.swing.Action;
 
 import org.janelia.it.jacs.model.domain.DomainObject;
 import org.janelia.it.jacs.model.domain.workspace.MaterializedView;
@@ -23,7 +20,6 @@ import org.janelia.it.workstation.gui.browser.flavors.DomainObjectFlavor;
 import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.workstation.gui.util.Icons;
 import org.janelia.it.workstation.shared.workers.SimpleWorker;
-import org.openide.actions.RenameAction;
 import org.openide.nodes.Children;
 import org.openide.nodes.Index;
 import org.openide.nodes.Node;
@@ -161,8 +157,15 @@ public class TreeNodeNode extends DomainObjectNode {
 
     @Override
     public PasteType getDropType(final Transferable t, int action, int index) {
-        final TreeNode treeNode = getTreeNode();
+        final TreeNode treeNode = getTreeNode();                
         if (t.isDataFlavorSupported(DomainObjectFlavor.DOMAIN_OBJECT_FLAVOR)) {
+            try {
+                DomainObject domainObject = (DomainObject) t.getTransferData(DomainObjectFlavor.DOMAIN_OBJECT_FLAVOR);
+                log.info("Will paste {} on {}", domainObject.getId(), treeNode.getName());
+            }
+            catch (Exception ex) {
+                log.error("WTF", ex);
+            }
             return new PasteType() {
                 @Override
                 public Transferable paste() throws IOException {
@@ -171,9 +174,10 @@ public class TreeNodeNode extends DomainObjectNode {
                         log.info("Pasting {} on {}",domainObject.getId(),treeNode.getName());
                         if (DomainUtils.hasChild(treeNode, domainObject)) {
                             log.info("Child already exists. TODO: should reorder it to the end");
-                            return null;
                         }
-                        childFactory.addChild(domainObject);
+                        else {
+                            childFactory.addChild(domainObject);    
+                        }
                         final Node node = NodeTransfer.node(t, NodeTransfer.DND_MOVE + NodeTransfer.CLIPBOARD_CUT);
                         if (node != null) {
                             log.info("Original node was moved or cut, so we presume it was pasted, and will destroy node");
