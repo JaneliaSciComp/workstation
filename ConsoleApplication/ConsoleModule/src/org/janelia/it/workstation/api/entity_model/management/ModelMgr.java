@@ -1248,6 +1248,10 @@ public final class ModelMgr {
     public RawFileInfo getNearestFileInfo(String basePath, int[] viewerCoord) throws Exception {
         return FacadeManager.getFacadeManager().getEntityFacade().getNearestFileInfo(basePath, viewerCoord);
     }
+    
+    public CoordinateToRawTransform getTransform(String basePath) throws Exception {
+        return FacadeManager.getFacadeManager().getEntityFacade().getLvvCoordToRawTransform(basePath);
+    }
 
     public Map<Integer,byte[]> getTextureBytes( String basePath, int[] viewerCoord, int cubicDim ) throws Exception {
         return FacadeManager.getFacadeManager().getEntityFacade().getTextureBytes(basePath, viewerCoord, cubicDim);

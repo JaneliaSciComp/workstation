@@ -385,4 +385,13 @@ public class EJBEntityFacade implements EntityFacade {
         return rtnVal;
     }
 
+    @Override
+    public CoordinateToRawTransform getLvvCoordToRawTransform( String basePath ) throws Exception {
+        CoordinateToRawTransform rtnVal = null;
+        final TiledMicroscopeBeanRemote remoteTiledMicroscopeBean = EJBFactory.getRemoteTiledMicroscopeBean();
+        if ( remoteTiledMicroscopeBean != null ) {
+            rtnVal = remoteTiledMicroscopeBean.getTransform(basePath);
+        }
+        return rtnVal;
+    }
 }
