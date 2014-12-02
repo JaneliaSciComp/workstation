@@ -104,7 +104,9 @@ public class NoteListPanel extends JPanel {
                                 }
                                 if (foundNeuron != null) {
                                     TmGeoAnnotation ann = foundNeuron.getGeoAnnotationMap().get(selectedNote.parentID);
-                                    cameraPanToSignal.emit(new Vec3(ann.getX(), ann.getY(), ann.getZ()));
+                                    if (ann != null) {
+                                        cameraPanToSignal.emit(new Vec3(ann.getX(), ann.getY(), ann.getZ()));
+                                    }
                                 }
                             }
                         }
