@@ -72,22 +72,11 @@ public class RawTiffVolumeSource implements MonitoredVolumeSource {
             (int)camera.getFocus().getZ()
         };
         
-//        progressMonitor.setNote("Fetching raw file paths.");
-//        RawFileInfo rawFileInfo =
-//                ModelMgr.getModelMgr().getNearestFileInfo(baseDirectoryPath, viewerCoord);
-//        if ( rawFileInfo == null ) {
-//            throw new Exception("Failed to find any tiff files in " + baseDirectoryPath + "." );
-//        }
         progressMonitor.setNote("Reading volume data.");
         Map<Integer,byte[]> byteBuffers = ModelMgr.getModelMgr().getTextureBytes(baseDirectoryPath, viewerCoord, cubicDimension);
         
         progressMonitor.setNote("Loading volume data.");        
         TifTextureBuilder tifTextureBuilder = new TifTextureBuilder();
-//        final TifVolumeFileLoader tifVolumeFileLoader = new TifVolumeFileLoader();
-//        if ( cubicDimension > -1 ) {
-//            tifVolumeFileLoader.setCubicOutputDimension( cubicDimension );
-//        }
-//        tifVolumeFileLoader.setConversionCharacteristics( rawFileInfo.getTransformMatrix(), rawFileInfo.getInvertedTransform(), rawFileInfo.getMinCorner(), rawFileInfo.getExtent(), rawFileInfo.getQueryMicroscopeCoords() );
 
         progressMonitor.setNote("Starting data load...");
         Double[] spinAboutZTransform = SPIN_ABOUT_Z;

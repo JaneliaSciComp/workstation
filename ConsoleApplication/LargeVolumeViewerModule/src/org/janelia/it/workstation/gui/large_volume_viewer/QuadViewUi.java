@@ -1157,6 +1157,7 @@ public class QuadViewUi extends JPanel
                 url,
                 imageColorModel
         );
+        volumeImage.setRemoteBasePath(pathToFile);
         return loadURL(url);
     }
 

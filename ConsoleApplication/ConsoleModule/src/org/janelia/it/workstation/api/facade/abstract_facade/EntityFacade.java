@@ -155,8 +155,6 @@ public interface EntityFacade {
 
     public void deleteStructuredTextAnnotation(Long annID) throws Exception;
 
-    RawFileInfo getNearestFileInfo(String basePath, int[] viewerCoord) throws Exception;
-    
     CoordinateToRawTransform getLvvCoordToRawTransform( String basePath ) throws Exception;
 
     Map<Integer,byte[]> getTextureBytes( String basePath, int[] viewerCoord, int cubicDim ) throws Exception;

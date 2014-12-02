@@ -180,7 +180,7 @@ implements GLActor
         GL2 gl = glDrawable.getGL().getGL2();
 		bestTexture.init(gl);
 		PyramidTexture texture = bestTexture.getTexture();
-		assert(texture != null);
+//		assert(texture != null);
 		if (texture == null)
 			return;
 		if (! bestTexture.getIndex().equals(getIndex())) {
