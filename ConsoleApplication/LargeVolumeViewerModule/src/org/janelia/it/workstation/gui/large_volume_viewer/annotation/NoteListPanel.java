@@ -10,9 +10,9 @@ import org.janelia.it.workstation.signal.Signal1;
 import org.janelia.it.workstation.signal.Slot1;
 
 import javax.swing.*;
-import javax.swing.event.ListSelectionEvent;
-import javax.swing.event.ListSelectionListener;
 import java.awt.*;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
@@ -87,32 +87,32 @@ public class NoteListPanel extends JPanel {
         JScrollPane noteScrollPane = new JScrollPane(noteListBox);
         noteListBox.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
 
-        noteListBox.getSelectionModel().addListSelectionListener(
-                new ListSelectionListener() {
-                    @Override
-                    public void valueChanged(ListSelectionEvent listSelectionEvent) {
-                        if (!listSelectionEvent.getValueIsAdjusting()) {
-                            int index = noteListBox.getSelectedIndex();
-                            NoteProxy selectedNote;
-                            if (index >= 0) {
-                                selectedNote = (NoteProxy) noteListModel.getElementAt(index);
-                                TmNeuron foundNeuron = null;
-                                for (TmNeuron neuron: workspace.getNeuronList()) {
-                                    if (neuron.getId().equals(selectedNote.neuronID)) {
-                                        foundNeuron = neuron;
-                                    }
-                                }
-                                if (foundNeuron != null) {
-                                    TmGeoAnnotation ann = foundNeuron.getGeoAnnotationMap().get(selectedNote.parentID);
-                                    if (ann != null) {
-                                        cameraPanToSignal.emit(new Vec3(ann.getX(), ann.getY(), ann.getZ()));
-                                    }
-                                }
+        // listen to clicks, not selection changes!
+        noteListBox.addMouseListener(new MouseAdapter() {
+            @Override
+            public void mouseClicked(MouseEvent evt) {
+                JList list = (JList) evt.getSource();
+                if (evt.getClickCount() == 1) {
+                    int index = list.locationToIndex(evt.getPoint());
+                    NoteProxy selectedNote;
+                    if (index >= 0) {
+                        selectedNote = (NoteProxy) noteListModel.getElementAt(index);
+                        TmNeuron foundNeuron = null;
+                        for (TmNeuron neuron: workspace.getNeuronList()) {
+                            if (neuron.getId().equals(selectedNote.neuronID)) {
+                                foundNeuron = neuron;
+                            }
+                        }
+                        if (foundNeuron != null) {
+                            TmGeoAnnotation ann = foundNeuron.getGeoAnnotationMap().get(selectedNote.parentID);
+                            if (ann != null) {
+                                cameraPanToSignal.emit(new Vec3(ann.getX(), ann.getY(), ann.getZ()));
                             }
                         }
                     }
                 }
-        );
+            }
+        });
 
         GridBagConstraints c2 = new GridBagConstraints();
         c2.gridx = 0;
