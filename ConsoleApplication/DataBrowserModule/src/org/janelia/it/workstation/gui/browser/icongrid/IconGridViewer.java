@@ -406,50 +406,6 @@ public abstract class IconGridViewer<T> extends IconPanel<T> {
 
 //        addKeyListener(keyListener);
 
-//        imagesPanel.addMouseListener(new MouseHandler() {
-//            @Override
-//            protected void popupTriggered(MouseEvent e) {
-//                if (contextRootedEntity == null) {
-//                    return;
-//                }
-//                JPopupMenu popupMenu = new JPopupMenu();
-//                JMenuItem titleItem = new JMenuItem("" + contextRootedEntity.getEntity().getName());
-//                titleItem.setEnabled(false);
-//                popupMenu.add(titleItem);
-//
-//                JMenuItem newFolderItem = new JMenuItem("  Create New Folder");
-//                newFolderItem.addActionListener(new ActionListener() {
-//                    public void actionPerformed(ActionEvent actionEvent) {
-//
-//                        // Add button clicked
-//                        String folderName = (String) JOptionPane.showInputDialog(IconGridViewer.this, "Folder Name:\n",
-//                                "Create folder under " + contextRootedEntity.getEntity().getName(), JOptionPane.PLAIN_MESSAGE, null, null, null);
-//                        if ((folderName == null) || (folderName.length() <= 0)) {
-//                            return;
-//                        }
-//
-//                        try {
-//                            // Update database
-//                            Entity parentFolder = contextRootedEntity.getEntity();
-//                            Entity newFolder = ModelMgr.getModelMgr().createEntity(EntityConstants.TYPE_FOLDER, folderName);
-//                            ModelMgr.getModelMgr().addEntityToParent(parentFolder, newFolder);
-//                        }
-//                        catch (Exception ex) {
-//                            SessionMgr.getSessionMgr().handleException(ex);
-//                        }
-//                    }
-//                });
-//
-//                if (!contextRootedEntity.getEntity().getEntityTypeName().equals(EntityConstants.TYPE_FOLDER)
-//                        || !contextRootedEntity.getEntity().getOwnerKey().equals(SessionMgr.getSubjectKey())) {
-//                    newFolderItem.setEnabled(false);
-//                }
-//
-//                popupMenu.add(newFolderItem);
-//                popupMenu.show(imagesPanel, e.getX(), e.getY());
-//            }
-//        });
-
         modelMgrObserver = new ModelMgrAdapter() {
 
 //            @Override

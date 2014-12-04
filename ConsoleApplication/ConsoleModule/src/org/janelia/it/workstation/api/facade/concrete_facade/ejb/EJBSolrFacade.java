@@ -15,6 +15,10 @@ import java.util.Map;
  */
 public class EJBSolrFacade extends EJBEntityFacade implements SolrFacade {
 
+	public SolrResults searchSolr(SolrQuery query, boolean mapToEntities) throws Exception {
+		return EJBFactory.getRemoteSolrBean().search(SessionMgr.getSubjectKey(), query, mapToEntities);
+	}
+        
 	public SolrResults searchSolr(SolrQuery query) throws Exception {
 		return EJBFactory.getRemoteSolrBean().search(SessionMgr.getSubjectKey(), query, true);
 	}

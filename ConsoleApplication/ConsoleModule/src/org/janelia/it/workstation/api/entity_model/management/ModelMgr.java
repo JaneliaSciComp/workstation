@@ -1010,6 +1010,11 @@ public final class ModelMgr {
         return FacadeManager.getFacadeManager().getSolrFacade().searchSolr(query);
     }
 
+    public SolrResults searchSolr(SolrQuery query, boolean mapToEntities) throws Exception {
+        log.debug("Searching SOLR: " + query.getQuery() + " start=" + query.getStart() + " rows=" + query.getRows());
+        return FacadeManager.getFacadeManager().getSolrFacade().searchSolr(query, mapToEntities);
+    }
+    
     //todo "Flylight"? Maybe we can refctor out this explicit project knowledge?  Is there a nice, clean abstraction for this?
     public Map<String, SageTerm> getFlyLightVocabulary() throws Exception {
         return FacadeManager.getFacadeManager().getSolrFacade().getFlyLightVocabulary();

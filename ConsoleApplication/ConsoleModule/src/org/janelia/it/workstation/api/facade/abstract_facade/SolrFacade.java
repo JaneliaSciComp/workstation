@@ -8,13 +8,15 @@ import org.janelia.it.jacs.shared.solr.SolrResults;
 
 /**
  * Facade interface for SOLR searching.
- * 
+ *
  * @author <a href="mailto:rokickik@janelia.hhmi.org">Konrad Rokicki</a>
  */
 public interface SolrFacade {
 
-	public SolrResults searchSolr(SolrQuery query) throws Exception;
-	
-	public Map<String, SageTerm> getFlyLightVocabulary() throws Exception;
-	
+    public SolrResults searchSolr(SolrQuery query, boolean mapToEntities) throws Exception;
+
+    public SolrResults searchSolr(SolrQuery query) throws Exception;
+
+    public Map<String, SageTerm> getFlyLightVocabulary() throws Exception;
+
 }
