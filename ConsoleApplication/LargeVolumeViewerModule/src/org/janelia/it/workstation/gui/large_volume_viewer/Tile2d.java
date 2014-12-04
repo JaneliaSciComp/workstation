@@ -315,7 +315,7 @@ implements GLActor
         // double z = 0.0; // As far as OpenGL is concerned, all Z's are zero
 		// Z index does not change with scale; XY do
         double z = (getIndex().getCoordinate(whdToXyz[2])+0.5) * tileFormat.getVoxelMicrometers()[whdToXyz[2]];
-        double x0 = getIndex().getCoordinate(whdToXyz[0]) * tileFormat.getTileSize()[whdToXyz[0]] * zoomScale * tileFormat.getVoxelMicrometers()[whdToXyz[0]];
+        double x0 = calculateCoord(whdToXyz, 0, zoomScale);
         double x1 = x0 + tileWidth;
         if ((whdToXyz[0] == 1) && (yMax != 0)) {
         	x0 = yMax - x0;
@@ -323,7 +323,7 @@ implements GLActor
         }
         // Raveler tile index has origin at BOTTOM left, unlike TOP left for images and
         // our coordinate system
-        double y0 = getIndex().getCoordinate(whdToXyz[1]) * tileFormat.getTileSize()[whdToXyz[1]] * zoomScale * tileFormat.getVoxelMicrometers()[whdToXyz[1]];
+        double y0 = calculateCoord(whdToXyz, 1, zoomScale);
         double y1 = y0 + tileHeight; // y inverted in OpenGL relative to image convention
         if ((whdToXyz[1] == 1) && (yMax != 0)) {
         	y0 = yMax - y0;
@@ -336,6 +336,12 @@ implements GLActor
         result.include(permutedVertex3d(x1, y1, z+dz, whdToXyz));
 		return result;
 	}
+
+    private double calculateCoord(int[] whdToXyz, int coordNum, int zoomScale) {
+        final int offset = whdToXyz[coordNum];
+        final double coord = getIndex().getCoordinate(offset) * tileFormat.getTileSize()[offset] * zoomScale * tileFormat.getVoxelMicrometers()[offset];
+        return coord;
+    }
 	
 	private Vec3[] computeCornerPositions(Camera3d camera) {
 		// Permute coordinates for tiles that have non-Z orientations.

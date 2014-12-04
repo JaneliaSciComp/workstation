@@ -24,6 +24,8 @@ import org.janelia.it.workstation.gui.large_volume_viewer.skeleton.SkeletonActor
 import org.janelia.it.workstation.gui.viewer3d.BoundingBox3d;
 import org.janelia.it.workstation.gui.viewer3d.interfaces.Viewport;
 import org.janelia.it.workstation.signal.Slot1;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class TraceMode extends BasicMouseMode 
 implements MouseMode, KeyListener
@@ -97,8 +99,14 @@ implements MouseMode, KeyListener
 		if (event.getClickCount() == 2) {
             if (currentHover >= 0) {
                 Anchor hoverAnchor = skeletonActor.getAnchorAtIndex(currentHover);
-                camera.setFocus(hoverAnchor.getLocation());
-                skeleton.getHistory().push(hoverAnchor);
+                if (hoverAnchor != null) {
+                    camera.setFocus(hoverAnchor.getLocation());
+                    skeleton.getHistory().push(hoverAnchor);
+                }
+                else {
+                    Logger logger = LoggerFactory.getLogger(TraceMode.class);
+                    logger.error("No anchor found at index " + currentHover);
+                }
             }
             else {
 				// center on slice point

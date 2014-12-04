@@ -111,6 +111,10 @@ public class PathTraceToParentWorker extends BackgroundWorker {
             PathTraceRequest simpleRequest = new PathTraceRequest(request.getXyz1(),
                     request.getXyz2(), request.getAnchorGuid1(), request.getAnchorGuid2());
             TracedPathSegment result = new TracedPathSegment(simpleRequest, reducedPath, intensities);
+            // This is necessary, because starting locations need to be
+            // single-stepped, and are based on the screen, with its 1x1x1
+            // assumptions.  Best NOT to disturb AStar.
+            result = refitResultToWorkspace(result);
             pathTracedSignal.emit(result);
 
             setStatus("Done");
@@ -127,6 +131,29 @@ public class PathTraceToParentWorker extends BackgroundWorker {
         for ( ZoomedVoxelIndex inx: reducedPath ) {
             System.out.println( "\t" + inx.getX() + "," + inx.getY() + "," + inx.getZ() );
         }
+    }
+    
+    private TracedPathSegment refitResultToWorkspace( TracedPathSegment segment ) {
+        double xRes = request.getImageVolume().getXResolution();
+        double yRes = request.getImageVolume().getYResolution();
+        double zRes = request.getImageVolume().getZResolution();
+        int[] origin = request.getImageVolume().getOrigin();
+        List<ZoomedVoxelIndex> newPath = new ArrayList<>();
+        for ( ZoomedVoxelIndex index: segment.getPath() ) {
+            ZoomedVoxelIndex newIndex = new ZoomedVoxelIndex( 
+                    index.getZoomLevel(),
+                    origin[0] + (int)(index.getX() * xRes), 
+                    origin[1] + (int)(index.getY() * yRes),
+                    origin[2] + (int)(index.getZ() * zRes) 
+            );
+            newPath.add(newIndex);
+        }
+        TracedPathSegment newSegment = new TracedPathSegment(
+                segment.getRequest(),
+                newPath,
+                segment.getIntensities()
+        );
+        return newSegment;
     }
     
     private List<ZoomedVoxelIndex> simplifyPath(Collection<ZoomedVoxelIndex> path) {

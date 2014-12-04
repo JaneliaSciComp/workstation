@@ -403,5 +403,5 @@ public class ViewTileManager {
 	public Set<TileIndex> getNeededTextures() {
 		return neededTextures;
 	}
-	
-}
+    
+    }

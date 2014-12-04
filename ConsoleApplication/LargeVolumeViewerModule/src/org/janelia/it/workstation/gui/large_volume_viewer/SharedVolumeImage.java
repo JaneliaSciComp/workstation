@@ -39,10 +39,11 @@ implements VolumeImage3d
 	public Vec3 getVoxelCenter() {
 	    Vec3 result = new Vec3();
 	    for (int i = 0; i < 3; ++i) {
-	        double range = getBoundingBox3d().getMax().get(i) - getBoundingBox3d().getMin().get(i);
+            final Double boundingMin = getBoundingBox3d().getMin().get(i);
+	        double range = getBoundingBox3d().getMax().get(i) - boundingMin;
 	        int voxelCount = (int)Math.round(range/getResolution(i));
 	        int midVoxel = voxelCount/2;
-	        double center = (midVoxel+0.5)*getResolution(i);
+	        double center = (midVoxel+boundingMin+0.5)*getResolution(i);
 	        result.set(i, center);
 	    }
 	    return result;
@@ -68,6 +69,16 @@ implements VolumeImage3d
 			return 0;
 		return getLoadAdapter().getTileFormat().getVoxelMicrometers()[2];
 	}
+    
+    public int[] getOrigin() {
+		if (getLoadAdapter() == null) {
+			return new int[]{0,0,0};
+        }
+        else {
+            return getLoadAdapter().getTileFormat().getOrigin();
+        }
+        
+    }
 
 	@Override
 	public int getNumberOfChannels() {

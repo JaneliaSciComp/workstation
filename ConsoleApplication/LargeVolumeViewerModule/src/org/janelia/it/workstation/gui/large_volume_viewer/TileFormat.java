@@ -72,7 +72,7 @@ public class TileFormat
     }
 
 	public BoundingBox3d calcBoundingBox() {
-		double sv[] = getVoxelMicrometers();
+        double sv[] = getVoxelMicrometers();
 		int s0[] = getOrigin();
 		int s1[] = getVolumeSize();
 		Vec3 b0 = new Vec3(sv[0]*s0[0], sv[1]*s0[1], sv[2]*s0[2]);

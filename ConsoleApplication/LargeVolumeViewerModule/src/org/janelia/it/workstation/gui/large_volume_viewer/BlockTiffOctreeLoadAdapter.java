@@ -5,8 +5,6 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URL;
-import java.util.List;
-import java.util.Vector;
 
 import javax.media.jai.JAI;
 import javax.media.jai.ParameterBlockJAI;
@@ -75,51 +73,6 @@ extends AbstractTextureLoadAdapter
 		// That must occur AFTER volume initialized signal is sent.
 	}
 
-	protected List<Integer> getOctreePath(TileIndex tileIndex) 
-	{
-		Vector<Integer> result = new Vector<Integer>();
-
-		int octreeDepth = tileFormat.getZoomLevelCount();
-		int depth = octreeDepth - tileIndex.getZoom();
-		assert(depth >= 0);
-		assert(depth <= octreeDepth);
-		// x and y are already corrected for tile size
-		int xyz[] = {tileIndex.getX(), tileIndex.getY(), tileIndex.getZ()};
-		// Correct view axis index for tile size
-		// ***NOTE Raveler Z is slice count, not tile count***
-		// Different X/Y/Z orthogonal views must be corrected differently
-		int viewIx = tileIndex.getSliceAxis().index();
-		xyz[viewIx] = xyz[viewIx] / tileFormat.getTileSize()[viewIx];
-		// start at lowest zoom to build up octree coordinates
-		for (int d = 0; d < (depth - 1); ++d) {
-			// How many Raveler tiles per octant at this zoom?
-			int scale = (int)(Math.pow(2, d)+0.1);
-			int dx = xyz[0] / scale;
-			int dy = xyz[1] / scale;
-			int dz = xyz[2] / scale;
-			// Each dimension makes a binary contribution to the 
-			// octree index.
-			assert(dx >= 0);
-			assert(dy >= 0);
-			assert(dz >= 0);
-			assert(dx <= 1);
-			assert(dy <= 1);
-			assert(dz <= 1);
-			// offset x/y/z for next deepest level
-			xyz[0] = xyz[0] % scale;
-			xyz[1] = xyz[1] % scale;
-			xyz[2] = xyz[2] % scale;
-			// Octree coordinates are in z-order
-			int octreeCoord = 1 + dx 
-					// TODO - investigate possible ragged edge problems
-					+ 2*(1 - dy) // Raveler Y is at bottom; octree Y is at top
-					+ 4*dz;
-			result.add(octreeCoord);
-		}
-		
-		return result;
-	}
-	
 	/*
 	 * Return path to tiff file containing a particular slice
 	 */
@@ -127,9 +80,9 @@ extends AbstractTextureLoadAdapter
 	{
 		File path = new File("");
 		int octreeDepth = tileFormat.getZoomLevelCount();
-		int depth = octreeDepth - tileIndex.getZoom();
+		int depth = computeDepth(octreeDepth, tileIndex);
         if (depth < 0 || depth > octreeDepth) {
-            // This situation can happen in production, owning to missing tiles.
+            // This situation can happen in production, owing to missing tiles.
             return null;
         }
 		// x and y are already corrected for tile size and zoom level
@@ -140,16 +93,7 @@ extends AbstractTextureLoadAdapter
 		xyz[axIx] = xyz[axIx] / tileFormat.getTileSize()[axIx];
 		// and divide by zoom scale
 		xyz[axIx] = xyz[axIx] / (int)Math.pow(2, tileIndex.getZoom());
-		
-		/*
-		int x = tileIndex.getX();
-		int y = tileIndex.getY();
-		// ***NOTE Raveler Z is slice count, not tile count***
-		// so divide by tile Z dimension, to make z act like x and y
-		int z = tileIndex.getZ() / tileFormat.getTileSize()[2];
-		// and divide by zoom scale
-		z = z / (int)Math.pow(2, tileIndex.getZoom());
-		*/
+        
 		// start at lowest zoom to build up octree coordinates
 		for (int d = 0; d < (depth - 1); ++d) {
 			// How many Raveler tiles per octant at this zoom?
@@ -158,12 +102,8 @@ extends AbstractTextureLoadAdapter
 					xyz[0]/scale,
 					xyz[1]/scale,
 					xyz[2]/scale};
-			/*
-			int dx = x / scale;
-			int dy = y / scale;
-			int dz = z / scale;
-			*/
-			// Each dimension makes a binary contribution to the 
+
+            // Each dimension makes a binary contribution to the 
 			// octree index.
 			// Watch for illegal values
 			// int ds[] = {dx, dy, dz};
@@ -181,12 +121,8 @@ extends AbstractTextureLoadAdapter
 			// offset x/y/z for next deepest level
 			for (int i = 0; i < 3; ++i)
 				xyz[i] = xyz[i] % scale;
-			/*
-			x = x % scale;
-			y = y % scale;
-			z = z % scale;
-			*/
-			// Octree coordinates are in z-order
+
+            // Octree coordinates are in z-order
 			int octreeCoord = 1 + ds[0]
 					// TODO - investigate possible ragged edge problems
 					+ 2*(1 - ds[1]) // Raveler Y is at bottom; octree Y is at top
@@ -239,7 +175,7 @@ extends AbstractTextureLoadAdapter
 
 	public TextureData2dGL loadSlice(int relativeZ, ImageDecoder[] decoders) 
 	throws TileLoadError 
-	{
+    {
 		int sc = tileFormat.getChannelCount();
 		// 2 - decode image
 		RenderedImage channels[] = new RenderedImage[sc];
@@ -423,8 +359,19 @@ extends AbstractTextureLoadAdapter
                     ModelMgr.getModelMgr().getCoordToRawTransform(remoteBasePath);
                 int[] origin = transform.getOrigin();
                 double[] scale = transform.getScale();
+                
+                // Scale must be converted to micrometers.
+                for ( int i = 0; i < scale.length; i++ ) {
+                    scale[ i ] /= 1000;
+                }
+                // Origin must be divided by 1000, to convert to micrometers.
+                for ( int i = 0; i < origin.length; i++ ) {
+                    origin[ i ] /= 1000;
+                    origin[ i ] /= scale[ i ];
+                }
+                
                 tileFormat.setVoxelMicrometers(scale);
-//                tileFormat.setOrigin(origin);
+// TEMP                tileFormat.setOrigin(origin);
             }
     		// TODO - actual max intensity
         
@@ -435,4 +382,8 @@ extends AbstractTextureLoadAdapter
         }
 	}
 
+    private static int computeDepth(int octreeDepth, TileIndex tileIndex) {
+        return octreeDepth - tileIndex.getZoom();
+    }
+	
 }
