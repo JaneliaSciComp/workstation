@@ -17,7 +17,9 @@ import org.janelia.it.jacs.model.user_data.tiledMicroscope.*;
 import java.awt.*;
 import java.util.ArrayList;
 import java.util.List;
+import org.janelia.it.workstation.geom.CoordinateAxis;
 import org.janelia.it.workstation.gui.large_volume_viewer.TileFormat;
+import org.janelia.it.workstation.gui.large_volume_viewer.TileFormat.VoxelXyz;
 
 
 /**
@@ -323,16 +325,19 @@ public class LargeVolumeViewerTranslator {
 
         final ArrayList<ZoomedVoxelIndex> inputPath = new ArrayList<>();
         TileFormat tileFormat = largeVolumeViewer.getTileServer().getLoadAdapter().getTileFormat();
-        int[] origin = tileFormat.getOrigin();
-        double[] scale = tileFormat.getVoxelMicrometers();
+        final ZoomLevel zoomLevel = new ZoomLevel(0);
+        final CoordinateAxis axis = CoordinateAxis.Z;
+        final int depthAxis = axis.index();
+        final int heightAxis = axis.index() - 1 % 3;
+        final int widthAxis = axis.index() - 2 % 3;
         for (List<Integer> point: path.getPointList()) {
+            VoxelXyz voxelCoords = tileFormat.voxelXyzForMicrometerXyz(
+                    new TileFormat.MicrometerXyz(
+                            point.get(widthAxis),point.get(heightAxis),point.get(depthAxis)
+                    )
+            );
             inputPath.add(
-                new ZoomedVoxelIndex(
-                    new ZoomLevel(0),
-                    (int)(point.get(0)/scale[0])-origin[0],
-                    (int)(point.get(1)/scale[1])-origin[1],
-                    (int)(point.get(2)/scale[2])-origin[2]   //LLF-MARKED: Consider oddball use of Z
-                )
+                tileFormat.zoomedVoxelIndexForVoxelXyz(voxelCoords, zoomLevel, axis)
             );
         }
 
