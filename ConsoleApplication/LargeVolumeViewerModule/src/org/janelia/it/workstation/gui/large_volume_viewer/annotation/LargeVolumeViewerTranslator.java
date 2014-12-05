@@ -17,6 +17,7 @@ import org.janelia.it.jacs.model.user_data.tiledMicroscope.*;
 import java.awt.*;
 import java.util.ArrayList;
 import java.util.List;
+import org.janelia.it.workstation.gui.large_volume_viewer.TileFormat;
 
 
 /**
@@ -120,22 +121,22 @@ public class LargeVolumeViewerTranslator {
     };
 
     // ----- signals
-    public Signal1<Vec3> cameraPanToSignal = new Signal1<Vec3>();
+    public Signal1<Vec3> cameraPanToSignal = new Signal1<>();
 
-    public Signal1<TmGeoAnnotation> anchorAddedSignal = new Signal1<TmGeoAnnotation>();
+    public Signal1<TmGeoAnnotation> anchorAddedSignal = new Signal1<>();
     public Signal1<List<TmGeoAnnotation>> anchorsAddedSignal = new Signal1<List<TmGeoAnnotation>>();
-    public Signal1<TmGeoAnnotation> anchorDeletedSignal = new Signal1<TmGeoAnnotation>();
-    public Signal1<TmGeoAnnotation> anchorReparentedSignal = new Signal1<TmGeoAnnotation>();
-    public Signal1<TmGeoAnnotation> anchorMovedBackSignal = new Signal1<TmGeoAnnotation>();
+    public Signal1<TmGeoAnnotation> anchorDeletedSignal = new Signal1<>();
+    public Signal1<TmGeoAnnotation> anchorReparentedSignal = new Signal1<>();
+    public Signal1<TmGeoAnnotation> anchorMovedBackSignal = new Signal1<>();
     public Signal clearSkeletonSignal = new Signal();
-    public Signal1<Long> setNextParentSignal = new Signal1<Long>();
+    public Signal1<Long> setNextParentSignal = new Signal1<>();
 
-    public Signal1<AnchoredVoxelPath> anchoredPathAddedSignal = new Signal1<AnchoredVoxelPath>();
+    public Signal1<AnchoredVoxelPath> anchoredPathAddedSignal = new Signal1<>();
     public Signal1<List<AnchoredVoxelPath>> anchoredPathsAddedSignal = new Signal1<List<AnchoredVoxelPath>>();
-    public Signal1<AnchoredVoxelPath> anchoredPathRemovedSignal = new Signal1<AnchoredVoxelPath>();
+    public Signal1<AnchoredVoxelPath> anchoredPathRemovedSignal = new Signal1<>();
 
-    public Signal1<Color> changeGlobalColorSignal = new Signal1<Color>();
-    public Signal1<String> loadColorModelSignal = new Signal1<String>();
+    public Signal1<Color> changeGlobalColorSignal = new Signal1<>();
+    public Signal1<String> loadColorModelSignal = new Signal1<>();
 
     public LargeVolumeViewerTranslator(AnnotationModel annModel, LargeVolumeViewer largeVolumeViewer) {
         this.annModel = annModel;
@@ -250,7 +251,7 @@ public class LargeVolumeViewerTranslator {
     }
 
     public void addAnchoredPaths(List<TmAnchoredPath> pathList) {
-        List<AnchoredVoxelPath> voxelPathList = new ArrayList<AnchoredVoxelPath>();
+        List<AnchoredVoxelPath> voxelPathList = new ArrayList<>();
         for (TmAnchoredPath path: pathList) {
             voxelPathList.add(TAP2AVP(path));
         }
@@ -298,7 +299,7 @@ public class LargeVolumeViewerTranslator {
             }
 
             // draw anchored paths, too, after all the anchors are drawn
-            List<TmAnchoredPath> annList = new ArrayList<TmAnchoredPath>();
+            List<TmAnchoredPath> annList = new ArrayList<>();
             for (TmNeuron neuron: workspace.getNeuronList()) {
                 for (TmAnchoredPath path: neuron.getAnchoredPathMap().values()) {
                     annList.add(path);
@@ -320,9 +321,12 @@ public class LargeVolumeViewerTranslator {
         final SegmentIndex inputSegmentIndex = new SegmentIndex(endpoints.getAnnotationID1(),
                 endpoints.getAnnotationID2());
 
-        final ArrayList<ZoomedVoxelIndex> inputPath = new ArrayList<ZoomedVoxelIndex>();
+        final ArrayList<ZoomedVoxelIndex> inputPath = new ArrayList<>();
+        TileFormat tileFormat = largeVolumeViewer.getTileServer().getLoadAdapter().getTileFormat();
+        //int[] origin = tileFormat.getOrigin();  - May need this later. LLF
+        double[] scale = tileFormat.getVoxelMicrometers();
         for (List<Integer> point: path.getPointList()) {
-            inputPath.add(new ZoomedVoxelIndex(new ZoomLevel(0), point.get(0), point.get(1), point.get(2)));
+            inputPath.add(new ZoomedVoxelIndex(new ZoomLevel(0), (int)(point.get(0)/scale[0]), (int)(point.get(1)/scale[1]), (int)(point.get(2)/scale[2])));
         }
 
         // do a quick implementation of the interface:
