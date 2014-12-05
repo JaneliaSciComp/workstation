@@ -323,10 +323,17 @@ public class LargeVolumeViewerTranslator {
 
         final ArrayList<ZoomedVoxelIndex> inputPath = new ArrayList<>();
         TileFormat tileFormat = largeVolumeViewer.getTileServer().getLoadAdapter().getTileFormat();
-        //int[] origin = tileFormat.getOrigin();  - May need this later. LLF
+        int[] origin = tileFormat.getOrigin();
         double[] scale = tileFormat.getVoxelMicrometers();
         for (List<Integer> point: path.getPointList()) {
-            inputPath.add(new ZoomedVoxelIndex(new ZoomLevel(0), (int)(point.get(0)/scale[0]), (int)(point.get(1)/scale[1]), (int)(point.get(2)/scale[2])));
+            inputPath.add(
+                new ZoomedVoxelIndex(
+                    new ZoomLevel(0),
+                    (int)(point.get(0)/scale[0])-origin[0],
+                    (int)(point.get(1)/scale[1])-origin[1],
+                    (int)(point.get(2)/scale[2])-origin[2]   //LLF-MARKED: Consider oddball use of Z
+                )
+            );
         }
 
         // do a quick implementation of the interface:
