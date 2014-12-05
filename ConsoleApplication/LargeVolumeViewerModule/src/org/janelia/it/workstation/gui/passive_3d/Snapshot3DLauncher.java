@@ -20,6 +20,8 @@ import org.janelia.it.workstation.gui.camera.ObservableCamera3d;
 import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.workstation.gui.large_volume_viewer.ImageColorModel;
 import org.janelia.it.workstation.gui.large_volume_viewer.SubvolumeProvider;
+import org.janelia.it.workstation.gui.large_volume_viewer.TileFormat;
+import org.janelia.it.workstation.gui.large_volume_viewer.TileServer;
 import org.janelia.it.workstation.gui.passive_3d.top_component.Snapshot3dTopComponent;
 import org.janelia.it.workstation.shared.workers.IndeterminateNoteProgressMonitor;
 import org.openide.windows.WindowManager;
@@ -34,6 +36,7 @@ public class Snapshot3DLauncher {
     private final static String RAW_VOLUME_TEXT_FORMAT = "Contains point [%3.1f,%3.1f,%3.1f].  %4$dx%4$dx%4$d.  Raw Data.";
 
     private CoordinateAxis sliceAxis;
+    private TileServer tileServer;
     private SubvolumeProvider subvolumeProvider;
     private ObservableCamera3d camera;
     private URL dataUrl;
@@ -43,6 +46,7 @@ public class Snapshot3DLauncher {
     private Integer numberOfChannels;
     
     public Snapshot3DLauncher(
+            TileServer tileServer,
             CoordinateAxis sliceAxis,
             ObservableCamera3d camera,
             SubvolumeProvider subvolumeProvider,
@@ -50,6 +54,7 @@ public class Snapshot3DLauncher {
             URL dataUrl,
             ImageColorModel imageColorModel
     ) {
+        this.tileServer = tileServer;
         this.sliceAxis = sliceAxis;
         this.subvolumeProvider = subvolumeProvider;
         this.sharedImageColorModel = imageColorModel;
@@ -140,7 +145,9 @@ public class Snapshot3DLauncher {
     /** Launches a 3D popup containing raw data represented by camera position. */
     public void launchRaw3dViewer( int cubicDimension ) {
         try {            
-            RawTiffVolumeSource collector = new RawTiffVolumeSource( camera, basePath );
+            RawTiffVolumeSource collector = new RawTiffVolumeSource( 
+                    tileServer.getLoadAdapter().getTileFormat(), camera, basePath 
+            );
             if ( cubicDimension > -1 ) {
                 collector.setCubicDimension( cubicDimension );
             }

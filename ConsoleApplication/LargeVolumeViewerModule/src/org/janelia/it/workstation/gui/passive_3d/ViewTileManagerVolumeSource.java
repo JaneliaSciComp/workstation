@@ -28,6 +28,8 @@ import java.util.concurrent.TimeUnit;
 import javax.media.opengl.GL2;
 import org.janelia.it.workstation.gui.large_volume_viewer.Subvolume;
 import org.janelia.it.workstation.gui.large_volume_viewer.SubvolumeProvider;
+import org.janelia.it.workstation.gui.large_volume_viewer.TileFormat.MicrometerXyz;
+import org.janelia.it.workstation.gui.large_volume_viewer.TileFormat.VoxelXyz;
 import org.janelia.it.workstation.gui.large_volume_viewer.exception.DataSourceInitializeException;
 import org.janelia.it.workstation.gui.viewer3d.VolumeDataAcceptor;
 import org.janelia.it.workstation.shared.workers.IndeterminateNoteProgressMonitor;
@@ -144,18 +146,7 @@ public class ViewTileManagerVolumeSource implements MonitoredVolumeSource {
     private byte[] fetchTextureData(StandardizedValues stdVals) throws URISyntaxException, IOException, DataSourceInitializeException {
         progressMonitor.setNote("Fetching texture data...");
         dataAdapter.setTopFolder( new File( dataUrl.toURI() ) ); //        
-        //TileFormat tileFormat = dataAdapter.getTileFormat();
-        //TEMP int zoomFactor = tileFormat.zoomLevelForCameraZoom( camera.getPixelsPerSceneUnit());
         int zoomFactor = 0; // TEMP
-        double lowX = getCameraLowerBound(0);
-        double lowY = getCameraLowerBound(1);
-        double lowZ = getCameraLowerBound(2);
-        Vec3 corner1 = new Vec3( lowX, lowY, lowZ );
-        Vec3 corner2 = new Vec3( 
-                SubvolumeProvider.findUpperBound(lowX, brickCubicDimension),
-                SubvolumeProvider.findUpperBound(lowY, brickCubicDimension),
-                SubvolumeProvider.findUpperBound(lowZ, brickCubicDimension)
-        );
 
         logger.info( "Fetching centered at {}, at zoom {}.", camera.getFocus(), zoomFactor );
         int[] extent = new int[] {

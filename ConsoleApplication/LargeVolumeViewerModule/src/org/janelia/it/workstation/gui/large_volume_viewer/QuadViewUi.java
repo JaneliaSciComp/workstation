@@ -1150,6 +1150,7 @@ public class QuadViewUi extends JPanel
         // July 1, 2013 elevate url loading from LargeVolumeViewer to QuadViewUi.
         URL url = tmpFile.toURI().toURL();
         snapshot3dLauncher = new Snapshot3DLauncher(
+                largeVolumeViewer.getTileServer(),
                 largeVolumeViewer.getSliceAxis(),
                 camera,
                 getSubvolumeProvider(),

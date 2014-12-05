@@ -12,8 +12,10 @@ import javax.media.opengl.GL2;
 import org.janelia.it.jacs.shared.img_3d_loader.AbstractVolumeFileLoader;
 import org.janelia.it.jacs.shared.img_3d_loader.ByteArrayLoader;
 import org.janelia.it.workstation.api.entity_model.management.ModelMgr;
+import org.janelia.it.workstation.geom.Vec3;
 import org.janelia.it.workstation.gui.camera.BasicObservableCamera3d;
 import org.janelia.it.workstation.gui.camera.Camera3d;
+import org.janelia.it.workstation.gui.large_volume_viewer.TileFormat;
 import org.janelia.it.workstation.gui.viewer3d.loader.TifTextureBuilder;
 import org.janelia.it.workstation.gui.viewer3d.texture.TextureDataI;
 import org.janelia.it.workstation.shared.workers.IndeterminateNoteProgressMonitor;
@@ -33,6 +35,7 @@ public class RawTiffVolumeSource implements MonitoredVolumeSource {
     };
     private static final int MATRIX_SQUARE_DIM = 3; //5, if from yaml
 
+    private TileFormat tileFormat;
     private final Camera3d camera;
     private final String baseDirectoryPath;
     private IndeterminateNoteProgressMonitor progressMonitor;
@@ -46,6 +49,7 @@ public class RawTiffVolumeSource implements MonitoredVolumeSource {
      * @param baseDirectoryPath info for finding specific data set.
      */
     public RawTiffVolumeSource(
+            TileFormat tileFormat,
             Camera3d camera,
             String baseDirectoryPath
     ) {
@@ -55,6 +59,7 @@ public class RawTiffVolumeSource implements MonitoredVolumeSource {
         iterationCamera.setPixelsPerSceneUnit(camera.getPixelsPerSceneUnit());
         iterationCamera.setRotation(camera.getRotation());
         
+        this.tileFormat = tileFormat;
         this.camera = iterationCamera;
         this.baseDirectoryPath = baseDirectoryPath;
     }
@@ -66,14 +71,22 @@ public class RawTiffVolumeSource implements MonitoredVolumeSource {
 
     @Override
     public void getVolume(VolumeAcceptor volumeListener) throws Exception {
-        int[] viewerCoord = {
-            (int)camera.getFocus().getX(),
-            (int)camera.getFocus().getY(),
-            (int)camera.getFocus().getZ()
-        };
+        TileFormat.VoxelXyz voxelCoords =
+                tileFormat.voxelXyzForMicrometerXyz(
+                        new TileFormat.MicrometerXyz(
+                                camera.getFocus().getX(), 
+                                camera.getFocus().getY(),
+                                camera.getFocus().getZ()
+                        )
+                );
+        int[] voxelizedCoords = {
+            voxelCoords.getX(),
+            voxelCoords.getY(),
+            voxelCoords.getZ()
+        };        
         
         progressMonitor.setNote("Reading volume data.");
-        Map<Integer,byte[]> byteBuffers = ModelMgr.getModelMgr().getTextureBytes(baseDirectoryPath, viewerCoord, cubicDimension);
+        Map<Integer,byte[]> byteBuffers = ModelMgr.getModelMgr().getTextureBytes(baseDirectoryPath, voxelizedCoords, cubicDimension);
         
         progressMonitor.setNote("Loading volume data.");        
         TifTextureBuilder tifTextureBuilder = new TifTextureBuilder();
