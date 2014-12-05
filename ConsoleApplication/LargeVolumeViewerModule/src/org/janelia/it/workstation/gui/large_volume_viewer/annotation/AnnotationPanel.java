@@ -151,6 +151,7 @@ public class AnnotationPanel extends JPanel
         neuriteTreePanel.annotationClickedSignal.connect(largeVolumeViewerTranslator.annotationClickedSlot);
         workspaceNeuronList.cameraPanToSignal.connect(largeVolumeViewerTranslator.cameraPanToSlot);
         noteListPanel.cameraPanToSignal.connect(largeVolumeViewerTranslator.cameraPanToSlot);
+        noteListPanel.editNoteRequestedSignal.connect(annotationMgr.editNoteRequestedSlot);
 
     }
 

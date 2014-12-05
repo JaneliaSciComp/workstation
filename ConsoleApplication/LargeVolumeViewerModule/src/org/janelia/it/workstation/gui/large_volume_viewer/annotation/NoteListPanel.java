@@ -49,7 +49,7 @@ public class NoteListPanel extends JPanel {
 
     // ----- signals
     public Signal1<Vec3> cameraPanToSignal = new Signal1<>();
-
+    public Signal1<TmGeoAnnotation> editNoteRequestedSignal = new Signal1<>();
 
 
     public NoteListPanel(int width) {
@@ -88,26 +88,33 @@ public class NoteListPanel extends JPanel {
         noteListBox.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
 
         // listen to clicks, not selection changes!
+        // single-click = go to
+        // double-click = edit/delete dialog
         noteListBox.addMouseListener(new MouseAdapter() {
             @Override
             public void mouseClicked(MouseEvent evt) {
                 JList list = (JList) evt.getSource();
-                if (evt.getClickCount() == 1) {
-                    int index = list.locationToIndex(evt.getPoint());
-                    NoteProxy selectedNote;
-                    if (index >= 0) {
-                        selectedNote = (NoteProxy) noteListModel.getElementAt(index);
-                        TmNeuron foundNeuron = null;
-                        for (TmNeuron neuron: workspace.getNeuronList()) {
-                            if (neuron.getId().equals(selectedNote.neuronID)) {
-                                foundNeuron = neuron;
-                            }
+                int index = list.locationToIndex(evt.getPoint());
+                NoteProxy selectedNote;
+                if (index >= 0) {
+                    selectedNote = (NoteProxy) noteListModel.getElementAt(index);
+                    TmNeuron foundNeuron = null;
+                    for (TmNeuron neuron: workspace.getNeuronList()) {
+                        if (neuron.getId().equals(selectedNote.neuronID)) {
+                            foundNeuron = neuron;
                         }
-                        if (foundNeuron != null) {
-                            TmGeoAnnotation ann = foundNeuron.getGeoAnnotationMap().get(selectedNote.parentID);
-                            if (ann != null) {
-                                cameraPanToSignal.emit(new Vec3(ann.getX(), ann.getY(), ann.getZ()));
-                            }
+                    }
+                    TmGeoAnnotation ann = null;
+                    if (foundNeuron != null) {
+                        ann = foundNeuron.getGeoAnnotationMap().get(selectedNote.parentID);
+                    }
+                    if (evt.getClickCount() == 1) {
+                        if (ann != null) {
+                            cameraPanToSignal.emit(new Vec3(ann.getX(), ann.getY(), ann.getZ()));
+                        }
+                    } else if (evt.getClickCount() == 2) {
+                        if (ann != null) {
+                            editNoteRequestedSignal.emit(ann);
                         }
                     }
                 }

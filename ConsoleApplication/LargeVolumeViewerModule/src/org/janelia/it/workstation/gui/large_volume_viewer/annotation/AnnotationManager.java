@@ -191,6 +191,13 @@ public class AnnotationManager
         }
     };
 
+    public Slot1<TmGeoAnnotation> editNoteRequestedSlot = new Slot1<TmGeoAnnotation>() {
+        @Override
+        public void execute(TmGeoAnnotation ann) {
+            addEditNote(ann.getId());
+        }
+    };
+
     public Slot closeWorkspaceRequestedSlot = new Slot() {
         @Override
         public void execute() {
