@@ -113,7 +113,8 @@ public class LVVDevPanel extends JPanel {
 
             }
         });
-        add(testButton1);
+        // disabled; testing is over
+        // add(testButton1);
 
 
         /*
