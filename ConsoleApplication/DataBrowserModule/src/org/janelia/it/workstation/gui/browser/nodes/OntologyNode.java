@@ -1,7 +1,5 @@
 package org.janelia.it.workstation.gui.browser.nodes;
 
-import com.google.common.collect.Lists;
-
 import java.awt.Image;
 import java.awt.datatransfer.Transferable;
 import java.io.IOException;
@@ -11,7 +9,6 @@ import java.util.List;
 import javax.swing.Action;
 
 import org.janelia.it.jacs.model.domain.ontology.Ontology;
-import org.janelia.it.jacs.model.domain.workspace.MaterializedView;
 import org.janelia.it.workstation.gui.browser.api.DomainDAO;
 import org.janelia.it.workstation.gui.browser.api.DomainUtils;
 import org.janelia.it.workstation.gui.browser.components.DomainExplorerTopComponent;
@@ -28,6 +25,8 @@ import org.openide.nodes.Node;
 import org.openide.util.datatransfer.PasteType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import com.google.common.collect.Lists;
 
 public class OntologyNode extends DomainObjectNode {
     
@@ -104,9 +103,6 @@ public class OntologyNode extends DomainObjectNode {
     
     @Override
     public boolean canDestroy() {
-        if (getDomainObject() instanceof MaterializedView) {
-            return false;
-        }
         return true;
     }
     

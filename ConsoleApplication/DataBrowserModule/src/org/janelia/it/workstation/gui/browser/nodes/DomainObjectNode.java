@@ -14,32 +14,28 @@ import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
-import javax.swing.AbstractAction;
 
+import javax.swing.AbstractAction;
 import javax.swing.Action;
-import static javax.swing.Action.NAME;
 import javax.swing.JMenu;
 import javax.swing.JMenuItem;
 import javax.swing.JOptionPane;
 
 import org.janelia.it.jacs.model.domain.DomainObject;
 import org.janelia.it.jacs.model.domain.interfaces.HasFiles;
-import org.janelia.it.jacs.model.domain.workspace.Folder;
-import org.janelia.it.jacs.model.domain.workspace.MaterializedView;
 import org.janelia.it.jacs.model.domain.workspace.TreeNode;
 import org.janelia.it.workstation.gui.browser.actions.RemoveAction;
 import org.janelia.it.workstation.gui.browser.api.DomainDAO;
 import org.janelia.it.workstation.gui.browser.api.DomainUtils;
 import org.janelia.it.workstation.gui.browser.components.DatePropertyEditor;
 import org.janelia.it.workstation.gui.browser.components.DomainExplorerTopComponent;
-import org.janelia.it.workstation.gui.browser.nodes.children.TreeNodeChildFactory;
 import org.janelia.it.workstation.gui.browser.flavors.DomainObjectFlavor;
+import org.janelia.it.workstation.gui.browser.nodes.children.TreeNodeChildFactory;
 import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.workstation.gui.util.Icons;
 import org.janelia.it.workstation.gui.util.JScrollMenu;
 import org.janelia.it.workstation.gui.util.WindowLocator;
 import org.janelia.it.workstation.shared.workers.SimpleWorker;
-import org.openide.actions.CopyAction;
 import org.openide.nodes.AbstractNode;
 import org.openide.nodes.ChildFactory;
 import org.openide.nodes.Children;
@@ -119,9 +115,6 @@ public class DomainObjectNode extends AbstractNode implements HasUniqueId, Has2d
 
     @Override
     public boolean canDestroy() {
-        if (getDomainObject() instanceof MaterializedView) {
-            return false;
-        }
         return true;
     }
 
@@ -376,11 +369,7 @@ public class DomainObjectNode extends AbstractNode implements HasUniqueId, Has2d
                 
                 TreeNodeNode treeNodeNode = (TreeNodeNode)node;
                 TreeNode treeNode = treeNodeNode.getTreeNode();
-                
-                if (!(treeNode instanceof Folder)) {
-                    continue;
-                }
-                
+                                
                 if (!DomainUtils.hasWriteAccess(treeNode)) {
                     continue;
                 }
@@ -450,7 +439,7 @@ public class DomainObjectNode extends AbstractNode implements HasUniqueId, Has2d
         @Override
         public boolean isEnabled() {
             DomainObject domainObject = getLookup().lookup(DomainObject.class);
-            return (domainObject instanceof Folder) && DomainUtils.hasWriteAccess(domainObject);
+            return DomainUtils.hasWriteAccess(domainObject);
         }
     }
 

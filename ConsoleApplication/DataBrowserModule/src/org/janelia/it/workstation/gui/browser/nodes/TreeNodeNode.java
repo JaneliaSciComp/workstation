@@ -7,16 +7,14 @@ import java.awt.datatransfer.UnsupportedFlavorException;
 import java.io.IOException;
 import java.util.List;
 
-
 import org.janelia.it.jacs.model.domain.DomainObject;
-import org.janelia.it.jacs.model.domain.workspace.MaterializedView;
 import org.janelia.it.jacs.model.domain.workspace.TreeNode;
 import org.janelia.it.jacs.model.entity.EntityConstants;
 import org.janelia.it.workstation.gui.browser.api.DomainDAO;
-import org.janelia.it.workstation.gui.browser.components.DomainExplorerTopComponent;
 import org.janelia.it.workstation.gui.browser.api.DomainUtils;
-import org.janelia.it.workstation.gui.browser.nodes.children.TreeNodeChildFactory;
+import org.janelia.it.workstation.gui.browser.components.DomainExplorerTopComponent;
 import org.janelia.it.workstation.gui.browser.flavors.DomainObjectFlavor;
+import org.janelia.it.workstation.gui.browser.nodes.children.TreeNodeChildFactory;
 import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.workstation.gui.util.Icons;
 import org.janelia.it.workstation.shared.workers.SimpleWorker;
@@ -87,16 +85,14 @@ public class TreeNodeNode extends DomainObjectNode {
     public Image getIcon(int type) {
 
         String typeSuffix = "";
-        if (getTreeNode() instanceof MaterializedView) {
-            if (getTreeNode().getName().equals(EntityConstants.NAME_DATA_SETS)) {
-                typeSuffix = "_database";
-            }
-            else if (getTreeNode().getName().equals(EntityConstants.NAME_SHARED_DATA)) {
-                typeSuffix = "_user";
-            }
-            else {
-                typeSuffix = "_key";
-            }
+        if (getTreeNode().getName().equals(EntityConstants.NAME_DATA_SETS)) {
+            typeSuffix = "_database";
+        }
+        else if (getTreeNode().getName().equals(EntityConstants.NAME_SHARED_DATA)) {
+            typeSuffix = "_user";
+        }
+        else {
+            typeSuffix = "_key";
         }
 
         if (!getTreeNode().getOwnerKey().equals(SessionMgr.getSubjectKey())) {
@@ -114,9 +110,6 @@ public class TreeNodeNode extends DomainObjectNode {
     
     @Override
     public boolean canDestroy() {
-        if (getDomainObject() instanceof MaterializedView) {
-            return false;
-        }
         return true;
     }
     

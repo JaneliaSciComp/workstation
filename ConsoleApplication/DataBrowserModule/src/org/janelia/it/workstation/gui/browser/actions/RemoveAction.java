@@ -2,12 +2,9 @@ package org.janelia.it.workstation.gui.browser.actions;
 
 import java.util.ArrayList;
 import java.util.List;
-import static javax.swing.Action.NAME;
+
 import org.janelia.it.jacs.model.domain.DomainObject;
-import org.janelia.it.jacs.model.domain.workspace.Folder;
-import org.janelia.it.jacs.model.domain.workspace.MaterializedView;
 import org.janelia.it.jacs.model.domain.workspace.TreeNode;
-import org.janelia.it.jacs.model.domain.workspace.Workspace;
 import org.janelia.it.workstation.gui.browser.api.DomainUtils;
 import org.janelia.it.workstation.gui.browser.nodes.DomainObjectNode;
 import org.janelia.it.workstation.gui.browser.nodes.TreeNodeNode;
@@ -74,10 +71,6 @@ public final class RemoveAction extends NodeAction {
             if (parentNode instanceof TreeNodeNode) {
                 TreeNodeNode parentTreeNodeNode = (TreeNodeNode)parentNode;
                 TreeNode parentTreeNode = parentTreeNodeNode.getTreeNode();
-                // Parent node must be a folder or workspace
-                if (!(parentTreeNode instanceof Folder) && !(parentTreeNode instanceof Workspace)) {
-                    included = false;
-                }
                 // Must have write access to parent
                 if (!DomainUtils.hasWriteAccess(parentTreeNode)) {
                     included = false;
@@ -90,9 +83,6 @@ public final class RemoveAction extends NodeAction {
             if (node instanceof DomainObjectNode) {
                 DomainObjectNode domainObjectNode = (DomainObjectNode)node;
                 DomainObject domainObject = domainObjectNode.getDomainObject();
-                if (domainObject instanceof MaterializedView) {
-                    included = false;
-                }
             }
             else {
                 included = false;
