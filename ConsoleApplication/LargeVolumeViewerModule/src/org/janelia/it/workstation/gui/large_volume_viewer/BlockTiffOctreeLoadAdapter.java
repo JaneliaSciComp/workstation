@@ -154,7 +154,7 @@ extends AbstractTextureLoadAdapter
 		int zoomScale = (int)Math.pow(2, tileIndex.getZoom());
 		int axisIx = tileIndex.getSliceAxis().index();
 		int tileDepth = tileFormat.getTileSize()[axisIx];
-		int absoluteSlice = tileIndex.getCoordinate(axisIx) / zoomScale;
+		int absoluteSlice = (tileIndex.getCoordinate(axisIx) - tileFormat.getOrigin()[axisIx] - 1) / zoomScale;
 		int relativeSlice = absoluteSlice % tileDepth;
 		// Raveller y is flipped so flip when slicing in Y (right?)
 		if (axisIx == 1)
@@ -165,7 +165,6 @@ extends AbstractTextureLoadAdapter
 		ImageDecoder[] decoders = createImageDecoders(folder, tileIndex.getSliceAxis(), true);
 		
 		// log.info(tileIndex + "" + folder + " : " + relativeSlice);
-		
 		TextureData2dGL result = loadSlice(relativeSlice, decoders);
 		localLoadTimer.mark("finished slice load");
 
@@ -371,6 +370,13 @@ extends AbstractTextureLoadAdapter
                 }
                 
                 tileFormat.setVoxelMicrometers(scale);
+                // Shifting everything by ten voxels to the right.
+                int[] mockOrigin = new int[] {
+                    0,
+                    origin[1],
+                    origin[2]
+                };
+                tileFormat.setOrigin(mockOrigin);
 // TEMP                tileFormat.setOrigin(origin);
             }
     		// TODO - actual max intensity
