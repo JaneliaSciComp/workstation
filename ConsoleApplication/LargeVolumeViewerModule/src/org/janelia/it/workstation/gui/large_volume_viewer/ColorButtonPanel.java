@@ -106,6 +106,7 @@ public class ColorButtonPanel extends JPanel {
         for ( AbstractButton ctrl: bottomControls ) {
             this.remove( ctrl );
         }
+        clearCheckboxes();
         setLayout( new GridLayout( imageColorModel.getChannelCount() + verticalSpacer, 1 ) );
         for ( int i = 0; i < imageColorModel.getChannelCount(); i++ ) {
             JCheckBox btn = new JCheckBox("+");
@@ -166,18 +167,23 @@ public class ColorButtonPanel extends JPanel {
         
         @Override
         public boolean isSelected() {
-            return ccm.getCombiningConstant() > 0.0;
+            return ccm != null && ccm.getCombiningConstant() > 0.0;
         }
 
         @Override
         public void setSelected(boolean selected) {
+            if ( ccm == null ) {
+                return;
+            }
             ccm.setCombiningConstant( selected ? 1.0f : -1.0f );
             super.setSelected(selected);
         }
         
         public void dispose() {
-            ccm.getColorChangedSignal().deleteObserver(reflectCheckedStateObserver);
-            ccm = null;
+            if ( ccm != null ) {
+                ccm.getColorChangedSignal().deleteObserver(reflectCheckedStateObserver);
+                ccm = null;
+            }
             btn = null;            
         }
 
