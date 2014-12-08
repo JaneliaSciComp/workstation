@@ -78,6 +78,19 @@ extends AbstractTextureLoadAdapter
 	 */
 	public static File getOctreeFilePath(TileIndex tileIndex, TileFormat tileFormat) 
 	{
+//		int zoomScale = (int)Math.pow(2, tileIndex.getZoom());
+//		int axisIx = tileIndex.getSliceAxis().index();
+//        // Bias the tile index in X axis, to accommodate the origin.
+//        tileIndex = new TileIndex(
+//                        tileIndex.getX() - ((tileFormat.getOrigin()[(axisIx + 1) % 3]) / zoomScale ),
+//                        tileIndex.getY(),
+//                        tileIndex.getZ() - ((tileFormat.getOrigin()[(axisIx) % 3]) / zoomScale ),
+//						tileIndex.getZoom(), 
+//						tileIndex.getMaxZoom(),
+//                        tileIndex.getIndexStyle(),
+//                        tileIndex.getSliceAxis()
+//        );
+//        
 		File path = new File("");
 		int octreeDepth = tileFormat.getZoomLevelCount();
 		int depth = computeDepth(octreeDepth, tileIndex);
@@ -140,7 +153,7 @@ extends AbstractTextureLoadAdapter
 		// Create a local load timer to measure timings just in this thread
 		LoadTimer localLoadTimer = new LoadTimer();
 		localLoadTimer.mark("starting slice load");
-        final File octreeFilePath = getOctreeFilePath(tileIndex, tileFormat);
+        final File octreeFilePath = getOctreeFilePath(tileIndex, tileFormat);        
         if (octreeFilePath == null) {
             return null;
         }
@@ -154,7 +167,11 @@ extends AbstractTextureLoadAdapter
 		int zoomScale = (int)Math.pow(2, tileIndex.getZoom());
 		int axisIx = tileIndex.getSliceAxis().index();
 		int tileDepth = tileFormat.getTileSize()[axisIx];
-		int absoluteSlice = (tileIndex.getCoordinate(axisIx) - tileFormat.getOrigin()[axisIx] - 1) / zoomScale;
+        int axisOrigin = tileFormat.getOrigin()[axisIx];
+        if (axisOrigin != 0) {
+            axisOrigin += 1;
+        }
+		int absoluteSlice = (tileIndex.getCoordinate(axisIx) - axisOrigin) / zoomScale;
 		int relativeSlice = absoluteSlice % tileDepth;
 		// Raveller y is flipped so flip when slicing in Y (right?)
 		if (axisIx == 1)
@@ -373,7 +390,7 @@ extends AbstractTextureLoadAdapter
                 // Shifting everything by ten voxels to the right.
                 int[] mockOrigin = new int[] {
                     0,
-                    origin[1],
+                    0, //origin[1],
                     origin[2]
                 };
                 tileFormat.setOrigin(mockOrigin);
