@@ -78,19 +78,18 @@ extends AbstractTextureLoadAdapter
 	 */
 	public static File getOctreeFilePath(TileIndex tileIndex, TileFormat tileFormat) 
 	{
-//		int zoomScale = (int)Math.pow(2, tileIndex.getZoom());
-//		int axisIx = tileIndex.getSliceAxis().index();
+		int axisIx = tileIndex.getSliceAxis().index();
 //        // Bias the tile index in X axis, to accommodate the origin.
 //        tileIndex = new TileIndex(
-//                        tileIndex.getX() - ((tileFormat.getOrigin()[(axisIx + 1) % 3]) / zoomScale ),
-//                        tileIndex.getY(),
-//                        tileIndex.getZ() - ((tileFormat.getOrigin()[(axisIx) % 3]) / zoomScale ),
+//                        tileIndex.getX(),// - ((tileFormat.getOrigin()[(axisIx + 1) % 3]) ),
+//                        tileIndex.getY(),// - ((tileFormat.getOrigin()[(axisIx + 2) % 3]) ),
+//                        tileIndex.getZ() - ((tileFormat.getOrigin()[axisIx]) ),
 //						tileIndex.getZoom(), 
 //						tileIndex.getMaxZoom(),
 //                        tileIndex.getIndexStyle(),
 //                        tileIndex.getSliceAxis()
 //        );
-//        
+        
 		File path = new File("");
 		int octreeDepth = tileFormat.getZoomLevelCount();
 		int depth = computeDepth(octreeDepth, tileIndex);
@@ -99,7 +98,7 @@ extends AbstractTextureLoadAdapter
             return null;
         }
 		// x and y are already corrected for tile size and zoom level
-		int xyz[] = {tileIndex.getX(), tileIndex.getY(), tileIndex.getZ()};
+		int xyz[] = {tileIndex.getX(), tileIndex.getY(), tileIndex.getZ() - tileFormat.getOrigin()[axisIx]};
 		int axIx = tileIndex.getSliceAxis().index(); // slice axis index
 		// ***NOTE Raveler Z is slice count, not tile count***
 		// so divide by tile Z dimension, to make z act like x and y
@@ -390,11 +389,11 @@ extends AbstractTextureLoadAdapter
                 // Shifting everything by ten voxels to the right.
                 int[] mockOrigin = new int[] {
                     0,
-                    0, //origin[1],
+                    origin[1],
                     origin[2]
                 };
                 tileFormat.setOrigin(mockOrigin);
-// TEMP                tileFormat.setOrigin(origin);
+//                tileFormat.setOrigin(origin);
             }
     		// TODO - actual max intensity
         
