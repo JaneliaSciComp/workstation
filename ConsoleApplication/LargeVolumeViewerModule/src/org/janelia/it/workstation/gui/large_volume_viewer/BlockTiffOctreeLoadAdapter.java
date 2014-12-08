@@ -87,7 +87,8 @@ extends AbstractTextureLoadAdapter
             // This situation can happen in production, owing to missing tiles.
             return null;
         }
-		// x and y are already corrected for tile size and zoom level
+		// x and y are already corrected for tile size and zoom level.
+        //   Also correct for origin.
 		int xyz[] = {tileIndex.getX(), tileIndex.getY(), tileIndex.getZ() - tileFormat.getOrigin()[axIx]};
 		// ***NOTE Raveler Z is slice count, not tile count***
 		// so divide by tile Z dimension, to make z act like x and y
