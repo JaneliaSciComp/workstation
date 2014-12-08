@@ -106,6 +106,7 @@ public class ColorButtonPanel extends JPanel {
         for ( AbstractButton ctrl: bottomControls ) {
             this.remove( ctrl );
         }
+        clearCheckboxes();
         setLayout( new GridLayout( imageColorModel.getChannelCount() + verticalSpacer, 1 ) );
         for ( int i = 0; i < imageColorModel.getChannelCount(); i++ ) {
             JCheckBox btn = new JCheckBox("+");
