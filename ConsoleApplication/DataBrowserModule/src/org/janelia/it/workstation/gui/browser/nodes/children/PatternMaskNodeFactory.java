@@ -51,8 +51,8 @@ public class PatternMaskNodeFactory extends ChildFactory<PatternMask> {
         if (screenSample==null) return false;
         
         DomainDAO dao = DomainExplorerTopComponent.getDao();
-        if (screenSample.getMasks() != null) {
-            List<DomainObject> masks = dao.getDomainObjects(SessionMgr.getSubjectKey(), screenSample.getMasks());
+        if (screenSample.getPatternMasks() != null) {
+            List<DomainObject> masks = dao.getDomainObjects(SessionMgr.getSubjectKey(), screenSample.getPatternMasks());
             for(DomainObject mask : masks) {
                 if (mask instanceof PatternMask) {
                     list.add((PatternMask)mask);

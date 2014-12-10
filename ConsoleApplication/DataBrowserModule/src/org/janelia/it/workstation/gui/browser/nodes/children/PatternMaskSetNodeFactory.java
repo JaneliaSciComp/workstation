@@ -40,9 +40,9 @@ public class PatternMaskSetNodeFactory extends ChildFactory<PatternMaskSet> {
         if (screenSample==null) return false;
         
         DomainDAO dao = DomainExplorerTopComponent.getDao();
-        if (screenSample.getMasks() != null) {
+        if (screenSample.getPatternMasks() != null) {
             
-            List<DomainObject> masks = dao.getDomainObjects(SessionMgr.getSubjectKey(), screenSample.getMasks());
+            List<DomainObject> masks = dao.getDomainObjects(SessionMgr.getSubjectKey(), screenSample.getPatternMasks());
             
             Map<String,PatternMaskSet> groups = new LinkedHashMap<String,PatternMaskSet>();
             
