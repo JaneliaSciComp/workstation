@@ -114,7 +114,7 @@ public class PathTraceToParentWorker extends BackgroundWorker {
             // This is necessary, because starting locations need to be
             // single-stepped, and are based on the screen, with its 1x1x1
             // assumptions.  Best NOT to disturb AStar.
-            result = refitResultToWorkspace(result);
+//            result = refitResultToWorkspace(result);
             pathTracedSignal.emit(result);
 
             setStatus("Done");

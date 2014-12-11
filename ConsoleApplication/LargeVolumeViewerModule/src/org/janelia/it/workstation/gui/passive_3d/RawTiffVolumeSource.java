@@ -12,7 +12,7 @@ import javax.media.opengl.GL2;
 import org.janelia.it.jacs.shared.img_3d_loader.AbstractVolumeFileLoader;
 import org.janelia.it.jacs.shared.img_3d_loader.ByteArrayLoader;
 import org.janelia.it.workstation.api.entity_model.management.ModelMgr;
-import org.janelia.it.workstation.geom.Vec3;
+
 import org.janelia.it.workstation.gui.camera.BasicObservableCamera3d;
 import org.janelia.it.workstation.gui.camera.Camera3d;
 import org.janelia.it.workstation.gui.large_volume_viewer.TileFormat;

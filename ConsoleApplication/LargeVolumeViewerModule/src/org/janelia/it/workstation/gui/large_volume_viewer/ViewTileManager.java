@@ -194,19 +194,19 @@ public class ViewTileManager {
 		// In scene units
 		// Clip to screen space
         int xOrigin = tileFormat.getOrigin()[xyzFromWhd[0]];
-        double xOriginAdj = xOrigin * tileFormat.getVoxelMicrometers()[xyzFromWhd[0]];
+        double xOriginAdj = 0;//xOrigin * tileFormat.getVoxelMicrometers()[xyzFromWhd[0]];
 
-		double wFMin = focus.get(xyzFromWhd[0]) - 0.5*viewport.getWidth()/camera.getPixelsPerSceneUnit();
-		double wFMax = focus.get(xyzFromWhd[0]) + 0.5*viewport.getWidth()/camera.getPixelsPerSceneUnit();
+		double wFMin = focus.get(xyzFromWhd[0]) - xOriginAdj - 0.5*viewport.getWidth()/camera.getPixelsPerSceneUnit();
+		double wFMax = focus.get(xyzFromWhd[0]) - xOriginAdj + 0.5*viewport.getWidth()/camera.getPixelsPerSceneUnit();
 		double hFMin = focus.get(xyzFromWhd[1]) - 0.5*viewport.getHeight()/camera.getPixelsPerSceneUnit();
 		double hFMax = focus.get(xyzFromWhd[1]) + 0.5*viewport.getHeight()/camera.getPixelsPerSceneUnit();
 		// Clip to volume space
 		// Subtract one half pixel to avoid loading an extra layer of tiles
 		double dw = 0.25 * tileFormat.getVoxelMicrometers()[xyzFromWhd[0]];
 		double dh = 0.25 * tileFormat.getVoxelMicrometers()[xyzFromWhd[1]];
-		wFMin = Math.max(wFMin, bb.getMin().get(xyzFromWhd[0]) - xOriginAdj + dw);
+		wFMin = Math.max(wFMin, bb.getMin().get(xyzFromWhd[0]) + dw);
 		hFMin = Math.max(hFMin, bb.getMin().get(xyzFromWhd[1]) + dh);
-		wFMax = Math.min(wFMax, bb.getMax().get(xyzFromWhd[0]) - xOriginAdj - dw);
+		wFMax = Math.min(wFMax, bb.getMax().get(xyzFromWhd[0]) - dw);
 		hFMax = Math.min(hFMax, bb.getMax().get(xyzFromWhd[1]) - dh);
 		double zoomFactor = Math.pow(2.0, zoom);
 		// get tile pixel size 1024 from loadAdapter
@@ -230,9 +230,9 @@ public class ViewTileManager {
 			// TODO - invert slice axis? (already inverted above)
 		}
         
-		// In tile units
-		int wMin = (int)Math.floor(wFMin / tileWidth);
-		int wMax = (int)Math.floor(wFMax / tileWidth);
+		// In tile units        
+		int wMin = (int)Math.floor((wFMin - xOrigin) / tileWidth);
+		int wMax = (int)Math.floor((wFMax - xOrigin) / tileWidth);
 
 		int hMin = (int)Math.floor(hFMin / tileHeight);
 		int hMax = (int)Math.floor(hFMax / tileHeight);

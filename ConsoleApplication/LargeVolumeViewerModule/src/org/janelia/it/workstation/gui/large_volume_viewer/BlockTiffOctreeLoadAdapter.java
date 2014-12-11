@@ -378,12 +378,12 @@ extends AbstractTextureLoadAdapter
                 tileFormat.setVoxelMicrometers(scale);
                 // Shifting everything by ten voxels to the right.
                 int[] mockOrigin = new int[] {
-                    2500,
+                    0,
                     origin[1],
                     origin[2]
                 };
-                tileFormat.setOrigin(mockOrigin);
-//                tileFormat.setOrigin(origin);
+//                tileFormat.setOrigin(mockOrigin);
+                tileFormat.setOrigin(origin);
             }
     		// TODO - actual max intensity
         

@@ -75,8 +75,11 @@ public class TileFormat
         double sv[] = getVoxelMicrometers();
 		int s0[] = getOrigin();
 		int s1[] = getVolumeSize();
-		Vec3 b0 = new Vec3(sv[0]*s0[0], sv[1]*s0[1], sv[2]*s0[2]);
-		Vec3 b1 = new Vec3(sv[0]*(s0[0]+s1[0]), sv[1]*(s0[1]+s1[1]), sv[2]*(s0[2]+s1[2]));
+        
+        // Eliminating voxel size multiplication from X coord: offset already
+        // in voxel coordinates.
+		Vec3 b0 = new Vec3(s0[0], sv[1]*s0[1], sv[2]*s0[2]);
+		Vec3 b1 = new Vec3(s0[0]+(sv[0]*s1[0]), sv[1]*(s0[1]+s1[1]), sv[2]*(s0[2]+s1[2]));
 		BoundingBox3d result = new BoundingBox3d();
 		result.setMin(b0);
 		result.setMax(b1);
