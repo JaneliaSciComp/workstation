@@ -1,5 +1,8 @@
 package org.janelia.it.workstation.tracing;
 
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Iterator;
 import org.janelia.it.workstation.geom.CoordinateAxis;
 import org.janelia.it.workstation.geom.Vec3;
 import org.janelia.it.workstation.gui.large_volume_viewer.Subvolume;
@@ -26,7 +29,7 @@ public class PathTraceToParentWorker extends BackgroundWorker {
     private double timeout = 10.0;
 
     // public Signal1<TracedPathSegment> pathTracedSignal = new Signal1<TracedPathSegment>();
-    public Signal1<AnchoredVoxelPath> pathTracedSignal = new Signal1<AnchoredVoxelPath>();
+    public Signal1<AnchoredVoxelPath> pathTracedSignal = new Signal1<>();
 
     public PathTraceToParentWorker(PathTraceToParentRequest request) {
         this.request = request;
@@ -37,6 +40,7 @@ public class PathTraceToParentWorker extends BackgroundWorker {
         this.timeout = timeout;
     }
 
+    @Override
     public String getName() {
         return "trace path to parent of anchor";
     }
@@ -85,22 +89,97 @@ public class PathTraceToParentWorker extends BackgroundWorker {
             // we don't do anything if we fail (would be nice to visually indicated it)
             setStatus("Timed out");
         } else {
-            List<Integer> intensities = new Vector<Integer>();
-            for (ZoomedVoxelIndex p : path) {
+            //DEBUG System.out.println("Original path length: " + path.size());
+            final List<ZoomedVoxelIndex> reducedPath = simplifyPath(path);
+            if ( ! reducedPath.contains( path.get(0) ) ) {
+                reducedPath.add( 0, path.get(0) ); 
+            }
+            if ( ! reducedPath.contains( path.get(path.size()-1) ) ) {
+                reducedPath.add( path.get(path.size()-1) );
+            }
+            //DEBUG System.out.println("Simplified path length: " + reducedPath.size());
+            List<Integer> intensities = new Vector<>();
+            for (ZoomedVoxelIndex p : reducedPath) {
                 int intensity = subvolume.getIntensityGlobal(p, 0);
                 intensities.add(intensity);
             }
 
+            //DEBUG dumpFullAndSimplified( path, reducedPath );
             setStatus("Finishing");
 
             // launder the request down to a more generic request
             PathTraceRequest simpleRequest = new PathTraceRequest(request.getXyz1(),
                     request.getXyz2(), request.getAnchorGuid1(), request.getAnchorGuid2());
-            TracedPathSegment result = new TracedPathSegment(simpleRequest, path, intensities);
+            TracedPathSegment result = new TracedPathSegment(simpleRequest, reducedPath, intensities);
             pathTracedSignal.emit(result);
 
             setStatus("Done");
         }
+    }
+    
+    @SuppressWarnings("Unused")
+    private void dumpFullAndSimplified( List<ZoomedVoxelIndex> path, List<ZoomedVoxelIndex> reducedPath ) {
+        System.out.println("Full Path, prior to trimming:::");
+        for ( ZoomedVoxelIndex inx: path ) {
+            System.out.println( "\t" + inx.getX() + "," + inx.getY() + "," + inx.getZ() );
+        }
+        System.out.println("Post-trimming::");
+        for ( ZoomedVoxelIndex inx: reducedPath ) {
+            System.out.println( "\t" + inx.getX() + "," + inx.getY() + "," + inx.getZ() );
+        }
+    }
+    
+    private List<ZoomedVoxelIndex> simplifyPath(Collection<ZoomedVoxelIndex> path) {
+        List<ZoomedVoxelIndex> rtnVal = new ArrayList<>();
+        
+        // Doing checks: along same lines?
+        Vec3 prevNormal = null;
+        ZoomedVoxelIndex prevIndex = null;
+        Iterator<ZoomedVoxelIndex> iter = path.iterator();
+        for ( int i = 0; i < path.size(); i++ ) {
+            ZoomedVoxelIndex index = iter.next();
+            if ( prevIndex != null ) {
+                Vec3 normal = calcNormal( prevIndex, index );
+                if ( sameLine( prevNormal, normal ) ) {
+                    rtnVal.remove(prevIndex);
+                }
+                prevNormal = normal;
+            }
+            rtnVal.add(index);            
+            prevIndex = index;
+        }
+        rtnVal.add(prevIndex); // Ensure that end point is in the return.
+        
+        return rtnVal;
+    }
+    
+    private boolean sameLine( Vec3 prevNormal, Vec3 normal ) {
+        boolean rtnVal = false;
+        if (prevNormal == null) {
+            rtnVal = false;
+        }
+        else if (prevNormal.equals(normal)) {
+            rtnVal = true;
+        }
+        return rtnVal;
+    }
+    
+    private Vec3 calcNormal(ZoomedVoxelIndex prev, ZoomedVoxelIndex curr) {
+        double magnitude = 0;
+        Vec3 prevVec = new Vec3( prev.getX(), prev.getY(), prev.getZ() );
+        Vec3 currVec = new Vec3( curr.getX(), curr.getY(), curr.getZ() );
+        Vec3 diff = prevVec.minus(currVec);
+        magnitude = Math.sqrt(
+                diff.getX() * diff.getX() + 
+                diff.getY() * diff.getY() +
+                diff.getZ() * diff.getZ() 
+        );
+        Vec3 diffNorm = new Vec3( 
+                diff.getX() / magnitude,
+                diff.getY() / magnitude,
+                diff.getZ() / magnitude 
+        );
+        return diffNorm;
     }
 
 }

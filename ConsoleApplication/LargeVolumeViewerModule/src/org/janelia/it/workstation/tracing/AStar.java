@@ -194,7 +194,7 @@ public class AStar {
             if (center.getX() < volume.getExtent().getZ() - 1)
                 result.add(new VoxelIndex(center.getX(), center.getY(), center.getZ()+1));
         }
-        else if (neighborClass == NeighborClass.TWENTYSIX_CONNECTED) {
+        else if (neighborClass == NeighborClass.TWENTYSIX_CONNECTED) {            
             for (int dx = -1; dx <= 1; ++dx) {
                 int x = center.getX() + dx;
                 if (x < 0) continue;

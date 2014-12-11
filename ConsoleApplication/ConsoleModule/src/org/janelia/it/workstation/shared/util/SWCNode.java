@@ -11,26 +11,35 @@ import java.util.Map;
  */
 public class SWCNode {
 
+    private static final Map<Integer,SegmentType> decodeToSegment = new HashMap<>();
+    public static enum SegmentType {
+        undefined(0), soma(1), axon(2), dendrite(3), apical_dendrite(4), fork_point(5), end_point(6), custom(7);
+
+        private int decodeNum;
+        public static SegmentType getSegmentType( String typeName ) {
+            return SegmentType.valueOf(typeName.replaceAll(" ","_"));
+        }
+        
+        private SegmentType( int decodeNum ) {
+            this.decodeNum = decodeNum;
+            decodeToSegment.put( decodeNum, this );
+        }
+       
+        public int decode() {
+            return decodeNum;
+        }
+        
+        @Override
+        public String toString() {
+            return this.name().replaceAll("_"," ");
+        }
+    }
+    
     private int index;
-    private int segmentType;
+    private SegmentType segmentType;
     private double x, y, z;
     private double radius;
     private int parentIndex;
-
-    // these defs are from the above website; I'm tempted to build the inverse map,
-    //  plus maybe an enum to hold constants mapping to the strings below, but I'll
-    //  wait until I really need it
-    public static final Map<Integer, String> SEGMENT_TYPES = new HashMap<Integer, String>();
-    static {
-        SEGMENT_TYPES.put(0, "undefined");
-        SEGMENT_TYPES.put(1, "soma");
-        SEGMENT_TYPES.put(2, "axon");
-        SEGMENT_TYPES.put(3, "dendrite");
-        SEGMENT_TYPES.put(4, "apical dendrite");
-        SEGMENT_TYPES.put(5, "fork point");
-        SEGMENT_TYPES.put(6, "end point");
-        SEGMENT_TYPES.put(7, "custom");
-    }
 
     /**
      * create a node from a line of a swc file; null if it fails
@@ -47,7 +56,7 @@ public class SWCNode {
 
         return new SWCNode(
                 Integer.parseInt(items[0]),
-                Integer.parseInt(items[1]),
+                decodeToSegment.get(Integer.parseInt(items[1])),
                 Double.parseDouble(items[2]),
                 Double.parseDouble(items[3]),
                 Double.parseDouble(items[4]),
@@ -63,7 +72,7 @@ public class SWCNode {
      * @param radius = radius at node
      * @param parentIndex = index of parent node (-1 = no parent)
      */
-    public SWCNode(int index, int segmentType, double x, double y, double z,
+    public SWCNode(int index, SegmentType segmentType, double x, double y, double z,
         double radius, int parentIndex) {
 
         this.index = index;
@@ -84,9 +93,6 @@ public class SWCNode {
         if (radius <= 0.0) {
             return false;
         }
-        if (!SEGMENT_TYPES.containsKey(segmentType)) {
-            return false;
-        }
         return true;
     }
 
@@ -97,7 +103,7 @@ public class SWCNode {
     public String toSWCline () {
         return String.format("%d\t%d\t%f\t%f\t%f\t%f\t%d",
                 index,
-                segmentType,
+                segmentType.decode(),
                 x, y, z,
                 radius,
                 parentIndex);
@@ -111,16 +117,16 @@ public class SWCNode {
         this.index = index;
     }
 
-    public int getSegmentType() {
+    public SegmentType getSegmentType() {
         return segmentType;
     }
 
-    public void setSegmentType(int segmentType) {
+    public void setSegmentType(SegmentType segmentType) {
         this.segmentType = segmentType;
     }
 
     public String getSegmentTypeString() {
-        return SEGMENT_TYPES.get(segmentType);
+        return segmentType.toString();
     }
 
     public double getX() {

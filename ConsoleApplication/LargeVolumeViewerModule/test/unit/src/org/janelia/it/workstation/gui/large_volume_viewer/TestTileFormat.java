@@ -6,6 +6,8 @@ import static org.junit.Assert.*;
 import org.janelia.it.workstation.geom.CoordinateAxis;
 import org.janelia.it.workstation.geom.Vec3;
 import org.janelia.it.jacs.model.TestCategories;
+import org.janelia.it.workstation.octree.ZoomLevel;
+import org.janelia.it.workstation.octree.ZoomedVoxelIndex;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
@@ -25,7 +27,7 @@ public class TestTileFormat {
 	// xyz->TileIndex->cornerXyz sanity check
 	private void sanityCheckXyz(Vec3 xyz, TileFormat format, int zoom) {
 		TileIndex ix = format.tileIndexForXyz(xyz, zoom, CoordinateAxis.Z);
-		Vec3 corners[] = format.cornersForTileIndex(ix);
+		Vec3 corners[] = cornersForTileIndex(ix, format);
 		// Verify that the tile corners bound the seed point xyz
 		double epsilon = 1e-6; // roundoff error tolerance
 		assertTrue(xyz.getX() >= corners[0].getX() - epsilon);
@@ -44,7 +46,7 @@ public class TestTileFormat {
 				ix.getZoom(), ix.getMaxZoom(), 
 				ix.getIndexStyle(),
 				ix.getSliceAxis());
-		Vec3 cornersDiag[] = format.cornersForTileIndex(ixDiag);
+		Vec3 cornersDiag[] = cornersForTileIndex(ixDiag, format);
 		assertEquals(corners[3].getX(), cornersDiag[0].getX(), epsilon);
 		assertEquals(corners[3].getY(), cornersDiag[0].getY(), epsilon);
 		assertEquals(corners[3].getZ(), cornersDiag[0].getZ(), epsilon);
@@ -93,7 +95,7 @@ public class TestTileFormat {
 				0, 0, 
 				TileIndex.IndexStyle.OCTREE,
 				CoordinateAxis.Z);
-		Vec3 corners[] = tileFormat.cornersForTileIndex(ix1);
+		Vec3 corners[] = cornersForTileIndex(ix1, tileFormat);
 		// Order of corners should be like this:
 		//  0 --- 1
 		//  |     |
@@ -118,4 +120,57 @@ public class TestTileFormat {
 		assertEquals(0.5, corners[3].getZ(), epsilon);
 	}
 
+	/**
+	 * Returns four corner locations in units of micrometers, relative to
+	 * the full parent volume, in Z order:
+	 * <pre>
+	 *   0-----1       x--->
+	 *   |     |    y
+	 *   |     |    |
+	 *   2-----3    v
+	 * </pre>
+	 * 
+	 * NOTE: The behavior of this method for non-Z slices probably requires more
+	 * thought and testing.
+	 * 
+	 * @param index
+	 * @return
+	 */
+	public Vec3[] cornersForTileIndex(TileIndex index, TileFormat format) {
+		// New way
+		// upper left front corner of tile
+	    ZoomLevel zoomLevel = new ZoomLevel(index.getZoom());
+		TileFormat.TileXyz tileXyz = new TileFormat.TileXyz(index.getX(), index.getY(), index.getZ());
+		ZoomedVoxelIndex zvox = format.zoomedVoxelIndexForTileXyz(tileXyz, zoomLevel, index.getSliceAxis());
+		TileFormat.VoxelXyz vox = format.voxelXyzForZoomedVoxelIndex(zvox, index.getSliceAxis());
+		TileFormat.MicrometerXyz ulfCorner = format.micrometerXyzForVoxelXyz(vox, index.getSliceAxis());
+		// lower right back corner
+		int dt[] = {1, -1, 1}; // shift by one tile to get opposite corner
+		int depthAxis = index.getSliceAxis().index();
+		dt[depthAxis] = 0; // but no shift in slice direction
+		TileFormat.TileXyz tileLrb = new TileFormat.TileXyz(index.getX() + dt[0], index.getY() + dt[1], index.getZ() + dt[2]);
+		ZoomedVoxelIndex zVoxLrb = format.zoomedVoxelIndexForTileXyz(tileLrb, zoomLevel, index.getSliceAxis());
+		TileFormat.VoxelXyz voxLrb = format.voxelXyzForZoomedVoxelIndex(zVoxLrb, index.getSliceAxis());
+		TileFormat.MicrometerXyz lrbCorner = format.micrometerXyzForVoxelXyz(voxLrb, index.getSliceAxis());
+
+        Vec3 ulf = new Vec3(ulfCorner.getX(), ulfCorner.getY(), ulfCorner.getZ());
+		Vec3 lrb = new Vec3(lrbCorner.getX(), lrbCorner.getY(), lrbCorner.getZ());
+		Vec3 dv = lrb.minus(ulf);
+		// To generalize Raveler format, invert vertical tile dimension
+		int verticalAxis = (depthAxis + 2) % 3;
+		int horizontalAxis = (depthAxis + 1) % 3;
+		Vec3 dw = new Vec3(0,0,0);
+		dw.set(horizontalAxis, dv.get(horizontalAxis));
+		Vec3 dh = new Vec3(0,0,0);
+		dh.set(verticalAxis, dv.get(verticalAxis));
+
+		Vec3[] result = new Vec3[4];
+		result[0] = ulf;
+		result[1] = ulf.plus(dw);
+		result[2] = ulf.plus(dh);
+		result[3] = ulf.plus(dh).plus(dw);
+		
+		return result;
+	}
+	
 }

@@ -49,6 +49,8 @@ UI elements that select, and its signals are connected with a variety of UI elem
 that need to respond to changing data.
 */
 {
+    public static final String STD_SWC_EXTENSION = ".swc";
+
     private ModelMgr modelMgr;
     private SessionMgr sessionMgr;
 
@@ -57,21 +59,21 @@ that need to respond to changing data.
     private TmNeuron currentNeuron;
 
     // ----- signals
-    public Signal1<TmWorkspace> workspaceLoadedSignal = new Signal1<TmWorkspace>();
+    public Signal1<TmWorkspace> workspaceLoadedSignal = new Signal1<>();
 
-    public Signal1<TmNeuron> neuronSelectedSignal = new Signal1<TmNeuron>();
+    public Signal1<TmNeuron> neuronSelectedSignal = new Signal1<>();
 
-    public Signal1<TmGeoAnnotation> annotationAddedSignal = new Signal1<TmGeoAnnotation>();
-    public Signal1<List<TmGeoAnnotation>> annotationsDeletedSignal = new Signal1<List<TmGeoAnnotation>>();
-    public Signal1<TmGeoAnnotation> annotationReparentedSignal = new Signal1<TmGeoAnnotation>();
-    public Signal1<TmGeoAnnotation> annotationNotMovedSignal = new Signal1<TmGeoAnnotation>();
+    public Signal1<TmGeoAnnotation> annotationAddedSignal = new Signal1<>();
+    public Signal1<List<TmGeoAnnotation>> annotationsDeletedSignal = new Signal1<>();
+    public Signal1<TmGeoAnnotation> annotationReparentedSignal = new Signal1<>();
+    public Signal1<TmGeoAnnotation> annotationNotMovedSignal = new Signal1<>();
 
-    public Signal1<TmAnchoredPath> anchoredPathAddedSignal = new Signal1<TmAnchoredPath>();
-    public Signal1<List<TmAnchoredPath>> anchoredPathsRemovedSignal = new Signal1<List<TmAnchoredPath>>();
+    public Signal1<TmAnchoredPath> anchoredPathAddedSignal = new Signal1<>();
+    public Signal1<List<TmAnchoredPath>> anchoredPathsRemovedSignal = new Signal1<>();
 
-    public Signal1<Long> pathTraceRequestedSignal = new Signal1<Long>();
+    public Signal1<Long> pathTraceRequestedSignal = new Signal1<>();
 
-    public Signal1<Color> globalAnnotationColorChangedSignal = new Signal1<Color>();
+    public Signal1<Color> globalAnnotationColorChangedSignal = new Signal1<>();
 
     public Signal1<TmWorkspace> notesUpdatedSignal = new Signal1<>();
 
@@ -265,7 +267,7 @@ that need to respond to changing data.
         TmNeuron neuron = modelMgr.createTiledMicroscopeNeuron(getCurrentWorkspace().getId(), name);
 
         updateCurrentWorkspace();
-        workspaceLoadedSignal.emit(getCurrentWorkspace());
+        workspaceLoadedSignal.emit(getCurrentWorkspace());        
 
         setCurrentNeuron(neuron);
     }
@@ -296,22 +298,21 @@ that need to respond to changing data.
 
         // keep a copy so we know what visuals to remove:
         TmNeuron deletedNeuron = getCurrentNeuron();
+        setCurrentNeuron(null);
 
         // delete
-        modelMgr.deleteEntityTree(getCurrentNeuron().getId());
+        modelMgr.deleteEntityTree(deletedNeuron.getId());
 
         // delete anchor signals
-        ArrayList<TmGeoAnnotation> tempAnnotationList = new ArrayList<TmGeoAnnotation>(deletedNeuron.getGeoAnnotationMap().values());
+        ArrayList<TmGeoAnnotation> tempAnnotationList = new ArrayList<>(deletedNeuron.getGeoAnnotationMap().values());
         annotationsDeletedSignal.emit(tempAnnotationList);
 
         // delete path signals
-        ArrayList<TmAnchoredPath> tempPathList = new ArrayList<TmAnchoredPath>(deletedNeuron.getAnchoredPathMap().values());
+        ArrayList<TmAnchoredPath> tempPathList = new ArrayList<>(deletedNeuron.getAnchoredPathMap().values());
         anchoredPathsRemovedSignal.emit(tempPathList);
 
         updateCurrentWorkspace();
         workspaceLoadedSignal.emit(getCurrentWorkspace());
-
-        setCurrentNeuron(null);
     }
 
     /**
@@ -429,6 +430,7 @@ that need to respond to changing data.
         }
 
         updateCurrentWorkspace();
+        notesUpdatedSignal.emit(getCurrentWorkspace());
         updateCurrentNeuron();
 
         // must come after workspace and neuron are updated:
@@ -487,11 +489,45 @@ that need to respond to changing data.
             removeAnchoredPath(child, sourceAnnotation);
         }
 
+        // if the source ann has a note, move it to or append it to the target ann:
+        TmStructuredTextAnnotation sourceNote = sourceNeuron.getStructuredTextAnnotationMap().get(sourceAnnotationID);
+        if (sourceNote != null) {
+            TmStructuredTextAnnotation targetNote = targetNeuron.getStructuredTextAnnotationMap().get(targetAnnotationID);
+            String sourceNoteText = new String("");
+            JsonNode rootNode = sourceNote.getData();
+            JsonNode noteNode = rootNode.path("note");
+            if (!noteNode.isMissingNode()) {
+                sourceNoteText = noteNode.asText();
+            }
+            if (sourceNoteText.length() > 0) {
+                if (targetNote == null) {
+                    // add old note to target
+                    setNote(getGeoAnnotationFromID(targetAnnotationID), sourceNoteText);
+                } else {
+                    // merge notes
+                    String targetNoteText = new String("");
+                    rootNode = targetNote.getData();
+                    noteNode = rootNode.path("note");
+                    if (!noteNode.isMissingNode()) {
+                        targetNoteText = noteNode.asText();
+                    }
+                    if (targetNoteText.length() > 0) {
+                        setNote(getGeoAnnotationFromID(targetAnnotationID),
+                            String.format("%s %s", targetNoteText, sourceNoteText));
+                    }
+                }
+            }
+        }
+
         // finally, delete source ann
+        if (sourceNote != null) {
+            modelMgr.deleteStructuredTextAnnotation(sourceNote.getId());
+        }
         modelMgr.deleteGeometricAnnotation(sourceAnnotationID);
 
         // update objects *again*, last time:
         updateCurrentWorkspace();
+        notesUpdatedSignal.emit(getCurrentWorkspace());
         targetNeuron = getNeuronFromAnnotationID(targetAnnotationID);
         setCurrentNeuron(targetNeuron);
 
@@ -506,7 +542,7 @@ that need to respond to changing data.
         }
 
         // undraw deleted annotation
-        List<TmGeoAnnotation> deleteList = new ArrayList<TmGeoAnnotation>();
+        List<TmGeoAnnotation> deleteList = new ArrayList<>();
         deleteList.add(sourceAnnotation);
         annotationsDeletedSignal.emit(deleteList);
 
@@ -548,13 +584,19 @@ that need to respond to changing data.
             // if segment to child had a trace, remove it
             removeAnchoredPath(link, child);
         }
-        // delete the deleted annotation that is to be deleted:
+        // delete the deleted annotation that is to be deleted (and its note, too):
+        TmStructuredTextAnnotation note = neuron.getStructuredTextAnnotationMap().get(link.getId());
+        if (note != null) {
+            // don't use removeNote(); it triggers updates we don't want yet
+            modelMgr.deleteStructuredTextAnnotation(note.getId());
+        }
         modelMgr.deleteGeometricAnnotation(link.getId());
 
         // if segment to parent had a trace, remove it
         removeAnchoredPath(link, parent);
 
         updateCurrentWorkspace();
+        notesUpdatedSignal.emit(getCurrentWorkspace());
         updateCurrentNeuron();
 
         // if we're tracing, retrace if there's a new connection
@@ -567,7 +609,7 @@ that need to respond to changing data.
         // need to delete an anchor (which does undraw it); but then
         //  need to redraw the neurite, because we need the link
         //  from the reparenting to appear
-        List<TmGeoAnnotation> deleteList = new ArrayList<TmGeoAnnotation>(1);
+        List<TmGeoAnnotation> deleteList = new ArrayList<>(1);
         deleteList.add(link);
         annotationsDeletedSignal.emit(deleteList);
 
@@ -608,6 +650,7 @@ that need to respond to changing data.
         TmGeoAnnotation rootParent = neuron.getParentOf(rootAnnotation);
 
         List<TmGeoAnnotation> deleteList = neuron.getSubTreeList(rootAnnotation);
+        TmStructuredTextAnnotation note;
         for (TmGeoAnnotation annotation: deleteList) {
             // for each annotation, delete any paths traced to its children;
             //  do before the deletion!
@@ -615,6 +658,11 @@ that need to respond to changing data.
                 removeAnchoredPath(annotation, child);
             }
 
+            note = neuron.getStructuredTextAnnotationMap().get(annotation.getId());
+            if (note != null) {
+                // don't use removeNote(); it triggers updates we don't want yet
+                modelMgr.deleteStructuredTextAnnotation(note.getId());
+            }
             modelMgr.deleteGeometricAnnotation(annotation.getId());
         }
         // for the root annotation, also delete any traced paths to the parent, if it exists
@@ -624,6 +672,7 @@ that need to respond to changing data.
 
 
         updateCurrentWorkspace();
+        notesUpdatedSignal.emit(getCurrentWorkspace());
         updateCurrentNeuron();
 
         // notify the public; "neuronSelected" will update the neurite tree
@@ -833,7 +882,7 @@ that need to respond to changing data.
     private void removeAnchoredPath(TmAnchoredPath path) throws  Exception {
         modelMgr.deleteAnchoredPath(path.getId());
 
-        ArrayList<TmAnchoredPath> pathList = new ArrayList<TmAnchoredPath>();
+        ArrayList<TmAnchoredPath> pathList = new ArrayList<>();
         pathList.add(path);
 
         anchoredPathsRemovedSignal.emit(pathList);
@@ -877,7 +926,6 @@ that need to respond to changing data.
             JsonNode rootNode = textAnnotation.getData();
             ((ObjectNode) rootNode).put("note", noteString);
 
-            // modelmgr.update(old ann, node.write string)
             modelMgr.updateStructuredTextAnnotation(textAnnotation, mapper.writeValueAsString(rootNode));
 
         } else {
@@ -935,10 +983,10 @@ that need to respond to changing data.
      * export the neurons in the input list into the given file, in swc format;
      * all neurons (and all their neurites!) are crammed into a single file
      */
-    public void exportSWCData(File swcFile, List<Long> neuronIDList) throws Exception {
+    public void exportSWCData(File swcFile, List<Long> neuronIDList, int downsampleModulo) throws Exception {
 
         // get fresh neuron objects from ID list
-        ArrayList<TmNeuron> neuronList = new ArrayList<TmNeuron>();
+        ArrayList<TmNeuron> neuronList = new ArrayList<>();
         for (Long ID: neuronIDList) {
             if (ID != null) {
                 TmNeuron foundNeuron = null;
@@ -954,7 +1002,7 @@ that need to respond to changing data.
         }
 
         // get swcdata via converter, then write
-        SWCData swcData = SWCDataConverter.fromTmNeuron(neuronList);
+        SWCData swcData = SWCDataConverter.fromTmNeuron(neuronList, downsampleModulo);
         swcData.write(swcFile);
     }
 
@@ -963,6 +1011,7 @@ that need to respond to changing data.
     }
 
     public void importSWCData(File swcFile, SimpleWorker worker) throws Exception {
+        setCurrentNeuron(null);
 
         // the constructor also triggers the parsing, but not the validation
         SWCData swcData = SWCData.read(swcFile);
@@ -993,8 +1042,8 @@ that need to respond to changing data.
 
         // create one neuron for the file; take name from the filename (strip extension)
         String neuronName = swcFile.getName();
-        if (neuronName.endsWith(".swc")) {
-            neuronName = neuronName.substring(0, neuronName.length() - 4);
+        if (neuronName.endsWith(STD_SWC_EXTENSION)) {
+            neuronName = neuronName.substring(0, neuronName.length() - STD_SWC_EXTENSION.length());
         }
         TmNeuron neuron = modelMgr.createTiledMicroscopeNeuron(getCurrentWorkspace().getId(), neuronName);
 
@@ -1013,7 +1062,7 @@ that need to respond to changing data.
             worker.setProgress(0L, totalLength);
         }
 
-        Map<Integer, TmGeoAnnotation> annotations = new HashMap<Integer, TmGeoAnnotation>();
+        Map<Integer, TmGeoAnnotation> annotations = new HashMap<>();
         TmGeoAnnotation annotation;
         for (SWCNode node: swcData.getNodeList()) {
             if (node.getParentIndex() == -1) {

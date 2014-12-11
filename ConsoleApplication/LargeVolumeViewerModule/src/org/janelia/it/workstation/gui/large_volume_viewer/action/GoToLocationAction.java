@@ -6,6 +6,7 @@ import org.janelia.it.workstation.signal.Signal1;
 
 import javax.swing.*;
 import java.awt.event.ActionEvent;
+import org.janelia.it.workstation.gui.large_volume_viewer.ComponentUtil;
 
 /**
  * this action lets the user navigate to a specific location
@@ -30,7 +31,7 @@ public class GoToLocationAction extends AbstractAction {
     @Override
     public void actionPerformed(ActionEvent event) {
         String input = (String)JOptionPane.showInputDialog(
-                null,
+                ComponentUtil.getLVVMainWindow(),
                 "Enter an x, y, z or x, y location (commas optional):",
                 "Go to location",
                 JOptionPane.PLAIN_MESSAGE,

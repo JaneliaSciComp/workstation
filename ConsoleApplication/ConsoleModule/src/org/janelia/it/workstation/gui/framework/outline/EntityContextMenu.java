@@ -32,6 +32,7 @@ import org.janelia.it.workstation.model.entity.RootedEntity;
 import org.janelia.it.workstation.model.utils.AnnotationSession;
 import org.janelia.it.workstation.nb_action.EntityAcceptor;
 import org.janelia.it.workstation.nb_action.ServiceAcceptorHelper;
+import org.janelia.it.workstation.shared.util.ConcurrentUtils;
 import org.janelia.it.workstation.shared.util.ConsoleProperties;
 import org.janelia.it.workstation.shared.util.Utils;
 import org.janelia.it.workstation.shared.workers.SimpleWorker;
@@ -221,6 +222,7 @@ public class EntityContextMenu extends JPopupMenu {
                         if (value==null || value.equals("")) return;
                         try {
                             action.doAnnotation(rootedEntity.getEntity(), element, value);
+                            ConcurrentUtils.invokeAndHandleExceptions(doSuccess);
                         }
                         catch (Exception e1) {
                             SessionMgr.getSessionMgr().handleException(e1);
