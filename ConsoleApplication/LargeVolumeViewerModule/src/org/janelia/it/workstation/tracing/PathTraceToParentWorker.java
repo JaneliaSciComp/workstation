@@ -60,6 +60,15 @@ public class PathTraceToParentWorker extends BackgroundWorker {
         TileFormat.MicrometerXyz um2 = new TileFormat.MicrometerXyz(vec3_2.getX(), vec3_2.getY(), vec3_2.getZ());
         TileFormat.VoxelXyz vox1 = tileFormat.voxelXyzForMicrometerXyz(um1);
         TileFormat.VoxelXyz vox2 = tileFormat.voxelXyzForMicrometerXyz(um2);
+        // NOTE: modified X-coordinate handling.
+        // Other two coords first divide by microns, and then subtract origin.
+        // Not so for the x: opposite order of operations: first subtracting
+        // origin, and then dividing by micrometers.
+        // (int)((camera.getFocus().getX() - tileFormat.getOrigin()[0]) / tileFormat.getVoxelMicrometers()[0]),
+        // vox1 = new TileFormat.VoxelXyz( (int)((vox1.getX() - tileFormat.getOrigin()[0]) * tileFormat.getVoxelMicrometers()[0]), vox1.getY(), vox1.getZ());
+        // vox2 = new TileFormat.VoxelXyz( (int)((vox2.getX() - tileFormat.getOrigin()[0]) * tileFormat.getVoxelMicrometers()[0]), vox2.getY(), vox2.getZ());
+//        vox1 = new TileFormat.VoxelXyz( (int)(um1.getX() * tileFormat.getVoxelMicrometers()[0]), vox1.getY(), vox1.getZ());
+//        vox2 = new TileFormat.VoxelXyz( (int)(um2.getX() * tileFormat.getVoxelMicrometers()[0]), vox2.getY(), vox2.getZ());
         ZoomLevel zoomLevel = new ZoomLevel(0);
         ZoomedVoxelIndex zv1 = tileFormat.zoomedVoxelIndexForVoxelXyz(
                 vox1, zoomLevel, CoordinateAxis.Z);
@@ -114,7 +123,7 @@ public class PathTraceToParentWorker extends BackgroundWorker {
             // This is necessary, because starting locations need to be
             // single-stepped, and are based on the screen, with its 1x1x1
             // assumptions.  Best NOT to disturb AStar.
-//            result = refitResultToWorkspace(result);
+            result = refitResultToWorkspace(result);
             pathTracedSignal.emit(result);
 
             setStatus("Done");
