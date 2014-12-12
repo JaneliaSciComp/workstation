@@ -236,9 +236,11 @@ public class ViewTileManager {
 		int hMax = (int)Math.floor(hFMax / tileHeight);
 
 		TileIndex.IndexStyle indexStyle = tileFormat.getIndexStyle();
+        // Must adjust the depth tile value relative to origin.
+        int tileD = d - tileFormat.getOrigin()[xyzFromWhd[2]];
 		for (int w = wMin; w <= wMax; ++w) {
 			for (int h = hMin; h <= hMax; ++h) {
-				int whd[] = {w, h, d};
+				int whd[] = {w, h, tileD};
 				TileIndex key = new TileIndex(
 						whd[xyzFromWhd[0]], 
 						whd[xyzFromWhd[1]], 

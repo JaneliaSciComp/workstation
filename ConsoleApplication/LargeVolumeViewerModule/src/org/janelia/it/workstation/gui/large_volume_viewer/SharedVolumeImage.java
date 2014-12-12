@@ -44,9 +44,9 @@ implements VolumeImage3d
 	        int voxelCount = (int)Math.round(range/getResolution(i));
 	        int midVoxel = voxelCount/2;
             double center = 0.0;
-            if (i == 2)
-                center = (midVoxel+boundingMin+0.5)*getResolution(i);
-            else
+//            if (i == 2)
+//                center = (midVoxel+boundingMin+0.5)*getResolution(i);
+//            else
                 center = (midVoxel+0.5)*getResolution(i) + boundingMin;
 	        result.set(i, center);
 	    }

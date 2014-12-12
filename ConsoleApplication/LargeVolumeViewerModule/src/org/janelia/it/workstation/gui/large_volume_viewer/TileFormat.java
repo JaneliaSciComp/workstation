@@ -385,13 +385,6 @@ public class TileFormat
 				(int)Math.floor(m.getZ() / getVoxelMicrometers()[2]) - origin[2]);
 	}
 	
-	public VoxelXyz voxelXyzForMicrometerXyz__2(MicrometerXyz m) {
-		return new VoxelXyz(
-				(int)Math.floor((m.getX() - origin[0]) / getVoxelMicrometers()[0]),
-				(int)Math.floor((m.getY() - origin[1]) / getVoxelMicrometers()[1]),
-				(int)Math.floor((m.getZ() - origin[2]) / getVoxelMicrometers()[2]));
-	}
-	
 	public VoxelXyz voxelXyzForZoomedVoxelIndex(ZoomedVoxelIndex z, CoordinateAxis sliceAxis) {
 		int zoomFactor = z.getZoomLevel().getZoomOutFactor();
 		int xyz[] = {z.getX(), z.getY(), z.getZ()};
