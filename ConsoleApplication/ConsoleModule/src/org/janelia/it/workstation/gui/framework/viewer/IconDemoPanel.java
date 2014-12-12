@@ -1191,6 +1191,14 @@ public class IconDemoPanel extends IconPanel {
 
                 // Finally, we're done, we can call the success callback
                 ConcurrentUtils.invokeAndHandleExceptions(success);
+                
+                SwingUtilities.invokeLater(new Runnable() {
+                    @Override
+                    public void run() {
+                    	// Fix FW-2859: Recalculate one more time, to pack buttons correctly when they have long annotations. 
+                        imagesPanel.recalculateGrid();
+                    }
+                });
             }
         });
     }
