@@ -75,13 +75,39 @@ public class TileFormat
         double sv[] = getVoxelMicrometers();
 		int s0[] = getOrigin();
 		int s1[] = getVolumeSize();
-		Vec3 b0 = new Vec3(sv[0]*s0[0], sv[1]*s0[1], sv[2]*s0[2]);
-		Vec3 b1 = new Vec3(sv[0]*(s0[0]+s1[0]), sv[1]*(s0[1]+s1[1]), sv[2]*(s0[2]+s1[2]));
+        
+        // Eliminating voxel size multiplication from X coord: offset already
+        // in voxel coordinates.
+		Vec3 b0 = new Vec3(s0[0], sv[1]*s0[1], sv[2]*s0[2]);
+		Vec3 b1 = new Vec3(s0[0]+(sv[0]*s1[0]), sv[1]*(s0[1]+s1[1]), sv[2]*(s0[2]+s1[2]));
 		BoundingBox3d result = new BoundingBox3d();
 		result.setMin(b0);
 		result.setMax(b1);
 		return result;
 	}
+    
+// Refactored for standard calculations.    
+//    public BoundingBox3d calcBoundingBox() {
+//        double sv[] = getVoxelMicrometers();
+//		int s0[] = getOrigin();
+//		int s1[] = getVolumeSize();
+//        
+//        MicrometerXyz mmxMin = micrometerXyzForVoxelXyz(
+//                new VoxelXyz(s0), CoordinateAxis.Z
+//        );
+//		MicrometerXyz mmxMax = micrometerXyzForVoxelXyz(
+//                new VoxelXyz(
+//                        s0[0] + s1[0],
+//                        s0[1] + s1[1],
+//                        s0[2] + s1[2]
+//                ),
+//                CoordinateAxis.Z
+//        );
+//		BoundingBox3d result = new BoundingBox3d();
+//		result.setMin(mmxMin.getX(), mmxMin.getY(), mmxMin.getZ());
+//		result.setMax(mmxMax.getX(), mmxMax.getY(), mmxMax.getZ());
+//		return result;
+//	}
 	
 	public int zoomLevelForCameraZoom(double pixelsPerSceneUnit) 
 	{
@@ -206,11 +232,27 @@ public class TileFormat
 	}
 
 	public void setVolumeSize(int[] volumeSize) {
+        // In case somewhere, the original array is being passed around
+        // and used directly, prior to having been reset from defaults.
+        if (this.volumeSize != null) {
+            for (int i = 0; i < volumeSize.length; i++) {
+                this.volumeSize[i] = volumeSize[i];
+            }
+        }
 		this.volumeSize = volumeSize;
 	}
 
 	public void setTileSize(int[] tileSize) {
-		this.tileSize = tileSize;
+        // In case somewhere, the original array is being passed around
+        // and used directly, prior to having been reset from defaults.
+        if (this.tileSize != null) {
+            for (int i = 0; i < tileSize.length; i++) {
+                this.tileSize[i] = tileSize[i];
+            }
+        }
+        else {
+    		this.tileSize = tileSize;
+        }
 	}
 
 	public void setVoxelMicrometers(double[] voxelMicrometers) {
@@ -343,6 +385,13 @@ public class TileFormat
 				(int)Math.floor(m.getZ() / getVoxelMicrometers()[2]) - origin[2]);
 	}
 	
+	public VoxelXyz voxelXyzForMicrometerXyz__2(MicrometerXyz m) {
+		return new VoxelXyz(
+				(int)Math.floor((m.getX() - origin[0]) / getVoxelMicrometers()[0]),
+				(int)Math.floor((m.getY() - origin[1]) / getVoxelMicrometers()[1]),
+				(int)Math.floor((m.getZ() - origin[2]) / getVoxelMicrometers()[2]));
+	}
+	
 	public VoxelXyz voxelXyzForZoomedVoxelIndex(ZoomedVoxelIndex z, CoordinateAxis sliceAxis) {
 		int zoomFactor = z.getZoomLevel().getZoomOutFactor();
 		int xyz[] = {z.getX(), z.getY(), z.getZ()};
@@ -471,6 +520,7 @@ public class TileFormat
 	public static class VoxelXyz extends UnittedVec3Int<VoxelUnit> 
 	{
 		public VoxelXyz(int x, int y, int z) {super(x, y, z);}
+        public VoxelXyz(int[] xyz) {super(xyz[0], xyz[1], xyz[2]);}
 	}; // 2
 	
 	/* OBSOLETED in favor of ...octree.ZoomedVoxelIndex

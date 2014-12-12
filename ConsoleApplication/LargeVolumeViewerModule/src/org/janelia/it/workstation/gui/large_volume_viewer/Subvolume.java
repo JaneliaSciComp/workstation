@@ -463,7 +463,12 @@ public class Subvolume {
             }
             // ... if that fails, load the data right now.
             if (tileData == null) {
-                tileData = loadAdapter.loadToRam(tileIx);
+                if (loadAdapter instanceof BlockTiffOctreeLoadAdapter) {
+                    tileData = ((BlockTiffOctreeLoadAdapter)loadAdapter).loadToRam(tileIx, false);
+                }
+                else {
+                    tileData = loadAdapter.loadToRam(tileIx);
+                }
             }
             if (tileData == null) {
                 logger.info("Found no tile data for " + tileIx);

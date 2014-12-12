@@ -196,6 +196,7 @@ implements GLActor
 			// draw quad
 	        Vec3 corners[] = computeCornerPositions(camera);
 	        Point2D texCoords[] = computeTextureCoordinates();
+            //dumpPoints(corners, texCoords, camera);            
 	        int cornerOrder[] = {0, 1, 2, 3};
 	        for (int c : cornerOrder) {
 		        gl.glTexCoord2d(texCoords[c].getX(), texCoords[c].getY());
@@ -315,7 +316,7 @@ implements GLActor
         // double z = 0.0; // As far as OpenGL is concerned, all Z's are zero
 		// Z index does not change with scale; XY do
         double z = (getIndex().getCoordinate(whdToXyz[2])+0.5) * tileFormat.getVoxelMicrometers()[whdToXyz[2]];
-        double x0 = calculateCoord(whdToXyz, 0, zoomScale);
+        double x0 = calcOriAdjCoord(whdToXyz, 0, zoomScale);
         double x1 = x0 + tileWidth;
         if ((whdToXyz[0] == 1) && (yMax != 0)) {
         	x0 = yMax - x0;
@@ -341,6 +342,14 @@ implements GLActor
         final int offset = whdToXyz[coordNum];
         final double coord = getIndex().getCoordinate(offset) * tileFormat.getTileSize()[offset] * zoomScale * tileFormat.getVoxelMicrometers()[offset];
         return coord;
+    }
+	
+    private double calcOriAdjCoord(int[] whdToXyz, int coordNum, int zoomScale) {
+        final double coord = calculateCoord(whdToXyz, coordNum, zoomScale);
+        final int offset = whdToXyz[coordNum];
+        int origin = tileFormat.getOrigin()[offset];
+        //Avoid multiplying by micrometers, or screen coords will display wrong.
+        return coord + origin; 
     }
 	
 	private Vec3[] computeCornerPositions(Camera3d camera) {
@@ -406,5 +415,29 @@ implements GLActor
 			return null;
 		return bestTexture.getBrightnessStats();
 	}
+
+    @SuppressWarnings("unused")
+    private void dumpPoints(Vec3[] corners, Point2D[] tex, Camera3d camera) {
+        System.out.println("======================================");
+        System.out.println("Tile2D ID=" + System.identityHashCode(this));
+        System.out.println("Vertex Coordinates");
+        System.out.println("Camera Focus: " + camera.getFocus());
+        System.out.println("--------------------------------------");
+        System.out.println("Top-Left: " + corners[0]);
+        System.out.println("Top-Right: " + corners[1]);
+        System.out.println("Bottom-Right: " + corners[2]);
+        System.out.println("Bottom-Left: " + corners[3]);
+        System.out.println();
+        System.out.println("Texture Coordinates");
+        System.out.println("Camera Focus: " + camera.getFocus());
+        System.out.println("--------------------------------------");
+        System.out.println("Top-Left: " + tex[0]);
+        System.out.println("Top-Right: " + tex[1]);
+        System.out.println("Bottom-Right: " + tex[2]);
+        System.out.println("Bottom-Left: " + tex[3]);
+        System.out.println();
+        System.out.println("Tile Index: " + index);
+    }
+
 
 }

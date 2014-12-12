@@ -59,8 +59,6 @@ public class ViewTileManagerVolumeSource implements MonitoredVolumeSource {
     private TextureDataI textureDataFor3D;
     private IndeterminateNoteProgressMonitor progressMonitor;
 
-    private BlockTiffOctreeLoadAdapter dataAdapter;
-
     private final Logger logger = LoggerFactory.getLogger( ViewTileManagerVolumeSource.class );
 
     public ViewTileManagerVolumeSource(Camera3d camera,
@@ -82,7 +80,6 @@ public class ViewTileManagerVolumeSource implements MonitoredVolumeSource {
             brickCubicDimension = cubicDimension;
         }
 
-        dataAdapter = new BlockTiffOctreeLoadAdapter();
         this.dataUrl = dataUrl;
     }
 
@@ -145,7 +142,6 @@ public class ViewTileManagerVolumeSource implements MonitoredVolumeSource {
      */
     private byte[] fetchTextureData(StandardizedValues stdVals) throws URISyntaxException, IOException, DataSourceInitializeException {
         progressMonitor.setNote("Fetching texture data...");
-        dataAdapter.setTopFolder( new File( dataUrl.toURI() ) ); //        
         int zoomFactor = 0; // TEMP
 
         logger.info( "Fetching centered at {}, at zoom {}.", camera.getFocus(), zoomFactor );

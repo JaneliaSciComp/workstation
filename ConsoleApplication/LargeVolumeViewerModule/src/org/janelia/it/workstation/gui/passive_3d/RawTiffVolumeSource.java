@@ -12,7 +12,7 @@ import javax.media.opengl.GL2;
 import org.janelia.it.jacs.shared.img_3d_loader.AbstractVolumeFileLoader;
 import org.janelia.it.jacs.shared.img_3d_loader.ByteArrayLoader;
 import org.janelia.it.workstation.api.entity_model.management.ModelMgr;
-import org.janelia.it.workstation.geom.Vec3;
+
 import org.janelia.it.workstation.gui.camera.BasicObservableCamera3d;
 import org.janelia.it.workstation.gui.camera.Camera3d;
 import org.janelia.it.workstation.gui.large_volume_viewer.TileFormat;
@@ -79,8 +79,13 @@ public class RawTiffVolumeSource implements MonitoredVolumeSource {
                                 camera.getFocus().getZ()
                         )
                 );
+
+        // NOTE: modified X-coordinate handling.
+        // Other two coords first divide by microns, and then subtract origin.
+        // Not so for the x: opposite order of operations: first subtracting
+        // origin, and then dividing by micrometers.
         int[] voxelizedCoords = {
-            voxelCoords.getX(),
+            (int)((camera.getFocus().getX() - tileFormat.getOrigin()[0]) / tileFormat.getVoxelMicrometers()[0]),
             voxelCoords.getY(),
             voxelCoords.getZ()
         };        

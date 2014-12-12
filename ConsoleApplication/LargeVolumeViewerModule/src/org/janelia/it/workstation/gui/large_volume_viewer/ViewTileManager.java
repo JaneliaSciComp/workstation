@@ -193,6 +193,7 @@ public class ViewTileManager {
 		
 		// In scene units
 		// Clip to screen space
+        int xOrigin = tileFormat.getOrigin()[xyzFromWhd[0]];
 		double wFMin = focus.get(xyzFromWhd[0]) - 0.5*viewport.getWidth()/camera.getPixelsPerSceneUnit();
 		double wFMax = focus.get(xyzFromWhd[0]) + 0.5*viewport.getWidth()/camera.getPixelsPerSceneUnit();
 		double hFMin = focus.get(xyzFromWhd[1]) - 0.5*viewport.getHeight()/camera.getPixelsPerSceneUnit();
@@ -226,10 +227,10 @@ public class ViewTileManager {
 		else {
 			// TODO - invert slice axis? (already inverted above)
 		}
-
-		// In tile units
-		int wMin = (int)Math.floor(wFMin / tileWidth);
-		int wMax = (int)Math.floor(wFMax / tileWidth);
+        
+		// In tile units        
+		int wMin = (int)Math.floor((wFMin - xOrigin) / tileWidth);
+		int wMax = (int)Math.floor((wFMax - xOrigin) / tileWidth);
 
 		int hMin = (int)Math.floor(hFMin / tileHeight);
 		int hMax = (int)Math.floor(hFMax / tileHeight);

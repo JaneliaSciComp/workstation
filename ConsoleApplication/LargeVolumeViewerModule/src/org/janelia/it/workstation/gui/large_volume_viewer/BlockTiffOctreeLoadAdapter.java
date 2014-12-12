@@ -43,7 +43,7 @@ extends AbstractTextureLoadAdapter
     // Metadata: file location required for remote system.
     private String remoteBasePath;
 	public LoadTimer loadTimer = new LoadTimer();
-	
+    
 	public BlockTiffOctreeLoadAdapter()
 	{
 		tileFormat.setIndexStyle(TileIndex.IndexStyle.OCTREE);
@@ -72,12 +72,14 @@ extends AbstractTextureLoadAdapter
 		// Don't launch pre-fetch yet.
 		// That must occur AFTER volume initialized signal is sent.
 	}
-
+    
 	/*
 	 * Return path to tiff file containing a particular slice
 	 */
-	public static File getOctreeFilePath(TileIndex tileIndex, TileFormat tileFormat) 
+	public static File getOctreeFilePath(TileIndex tileIndex, TileFormat tileFormat, boolean zOriginNegativeShift) 
 	{
+		int axIx = tileIndex.getSliceAxis().index();
+        
 		File path = new File("");
 		int octreeDepth = tileFormat.getZoomLevelCount();
 		int depth = computeDepth(octreeDepth, tileIndex);
@@ -85,16 +87,22 @@ extends AbstractTextureLoadAdapter
             // This situation can happen in production, owing to missing tiles.
             return null;
         }
-		// x and y are already corrected for tile size and zoom level
-		int xyz[] = {tileIndex.getX(), tileIndex.getY(), tileIndex.getZ()};
-		int axIx = tileIndex.getSliceAxis().index(); // slice axis index
-		// ***NOTE Raveler Z is slice count, not tile count***
-		// so divide by tile Z dimension, to make z act like x and y
-		xyz[axIx] = xyz[axIx] / tileFormat.getTileSize()[axIx];
-		// and divide by zoom scale
-		xyz[axIx] = xyz[axIx] / (int)Math.pow(2, tileIndex.getZoom());
+        int[] xyz = null;
+        if (zOriginNegativeShift) {
+    		xyz = new int[] {tileIndex.getX(), tileIndex.getY(), tileIndex.getZ() - tileFormat.getOrigin()[axIx]};
+        }
+        else {
+    		xyz = new int[] {tileIndex.getX(), tileIndex.getY(), tileIndex.getZ()};
+        }
         
-		// start at lowest zoom to build up octree coordinates
+    		// ***NOTE Raveler Z is slice count, not tile count***
+        // so divide by tile Z dimension, to make z act like x and y
+        xyz[axIx] = xyz[axIx] / tileFormat.getTileSize()[axIx];
+        // and divide by zoom scale
+        xyz[axIx] = xyz[axIx] / (int) Math.pow(2, tileIndex.getZoom());
+        System.out.println("BTOLA: getOctreePath fetching TileInx " + xyz[0] + "," + xyz[1] + "," + xyz[2]);
+
+        // start at lowest zoom to build up octree coordinates
 		for (int d = 0; d < (depth - 1); ++d) {
 			// How many Raveler tiles per octant at this zoom?
 			int scale = (int)(Math.pow(2, depth - 2 - d)+0.1);
@@ -137,10 +145,16 @@ extends AbstractTextureLoadAdapter
 	public TextureData2dGL loadToRam(TileIndex tileIndex)
 			throws TileLoadError, MissingTileException 
 	{
+        return loadToRam(tileIndex, true);
+	}
+
+	public TextureData2dGL loadToRam(TileIndex tileIndex, boolean zOriginNegativeShift)
+			throws TileLoadError, MissingTileException 
+	{
 		// Create a local load timer to measure timings just in this thread
 		LoadTimer localLoadTimer = new LoadTimer();
 		localLoadTimer.mark("starting slice load");
-        final File octreeFilePath = getOctreeFilePath(tileIndex, tileFormat);
+        final File octreeFilePath = getOctreeFilePath(tileIndex, tileFormat, zOriginNegativeShift);        
         if (octreeFilePath == null) {
             return null;
         }
@@ -154,7 +168,11 @@ extends AbstractTextureLoadAdapter
 		int zoomScale = (int)Math.pow(2, tileIndex.getZoom());
 		int axisIx = tileIndex.getSliceAxis().index();
 		int tileDepth = tileFormat.getTileSize()[axisIx];
-		int absoluteSlice = tileIndex.getCoordinate(axisIx) / zoomScale;
+        int axisOrigin = tileFormat.getOrigin()[axisIx];
+        if (axisOrigin != 0) {
+            axisOrigin += 1;
+        }
+		int absoluteSlice = (tileIndex.getCoordinate(axisIx) - axisOrigin) / zoomScale;
 		int relativeSlice = absoluteSlice % tileDepth;
 		// Raveller y is flipped so flip when slicing in Y (right?)
 		if (axisIx == 1)
@@ -165,7 +183,6 @@ extends AbstractTextureLoadAdapter
 		ImageDecoder[] decoders = createImageDecoders(folder, tileIndex.getSliceAxis(), true);
 		
 		// log.info(tileIndex + "" + folder + " : " + relativeSlice);
-		
 		TextureData2dGL result = loadSlice(relativeSlice, decoders);
 		localLoadTimer.mark("finished slice load");
 
@@ -330,22 +347,27 @@ extends AbstractTextureLoadAdapter
             ImageDecoder decoder = ImageCodec.createImageDecoder("tiff", s, null);
             // Z dimension is related to number of tiff pages
             int sz = decoder.getNumPages();
-            // Full volume could be much larger than this downsampled tile
-            tileFormat.getVolumeSize()[2] = zoomFactor * sz;
-            tileFormat.getTileSize()[2] = sz;
-            if (sz < 1) {
-                return;
-            }
 
             // Get X/Y dimensions from first image
             RenderedImageAdapter ria = new RenderedImageAdapter(
                     decoder.decodeAsRenderedImage(0));
             int sx = ria.getWidth();
             int sy = ria.getHeight();
-            tileFormat.getVolumeSize()[0] = zoomFactor * sx;
-            tileFormat.getVolumeSize()[1] = zoomFactor * sy;
-            tileFormat.getTileSize()[0] = sx;
-            tileFormat.getTileSize()[1] = sy;
+            // Full volume could be much larger than this downsampled tile
+            int[] tileSize = new int[3];
+            tileSize[2] = sz;
+            if (sz < 1) {
+                return;
+            }
+            tileSize[0] = sx;
+            tileSize[1] = sy;
+            tileFormat.setTileSize( tileSize );
+
+            int[] volumeSize = new int[3];
+            volumeSize[2] = zoomFactor * sz;
+            volumeSize[0] = zoomFactor * sx;
+            volumeSize[1] = zoomFactor * sy;
+            tileFormat.setVolumeSize( volumeSize );
 
             int bitDepth = ria.getColorModel().getPixelSize();
             tileFormat.setBitDepth(bitDepth);
@@ -371,7 +393,19 @@ extends AbstractTextureLoadAdapter
                 }
                 
                 tileFormat.setVoxelMicrometers(scale);
-// TEMP                tileFormat.setOrigin(origin);
+                // Shifting everything by ten voxels to the right.
+                int[] mockOrigin = new int[] {
+                    0,
+                    0,//origin[1],
+                    origin[2]
+                };
+                tileFormat.setOrigin(mockOrigin);
+//                tileFormat.setOrigin(origin);
+
+//                volumeSize[0] = (int)(zoomFactor * sx * tileFormat.getVoxelMicrometers()[0]);
+//                volumeSize[1] = (int)(zoomFactor * sy * tileFormat.getVoxelMicrometers()[1]);
+//                volumeSize[2] = (int)(zoomFactor * sz * tileFormat.getVoxelMicrometers()[2]);
+//                tileFormat.setVolumeSize( volumeSize );
             }
     		// TODO - actual max intensity
         
