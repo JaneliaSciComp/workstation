@@ -88,14 +88,9 @@ extends AbstractTextureLoadAdapter
             return null;
         }
         int[] xyz = null;
-//        if (zOriginNegativeShift) {
-//    		xyz = new int[] {tileIndex.getX(), tileIndex.getY(), tileIndex.getZ() - tileFormat.getOrigin()[axIx]};
-//        }
-//        else {
-    		xyz = new int[] {tileIndex.getX(), tileIndex.getY(), tileIndex.getZ()};
-//        }
+		xyz = new int[] {tileIndex.getX(), tileIndex.getY(), tileIndex.getZ()};
         
-    		// ***NOTE Raveler Z is slice count, not tile count***
+		// ***NOTE Raveler Z is slice count, not tile count***
         // so divide by tile Z dimension, to make z act like x and y
         xyz[axIx] = xyz[axIx] / tileFormat.getTileSize()[axIx];
         // and divide by zoom scale
@@ -168,11 +163,7 @@ extends AbstractTextureLoadAdapter
 		int zoomScale = (int)Math.pow(2, tileIndex.getZoom());
 		int axisIx = tileIndex.getSliceAxis().index();
 		int tileDepth = tileFormat.getTileSize()[axisIx];
-//        int axisOrigin = tileFormat.getOrigin()[axisIx];
-//        if (axisOrigin != 0) {
-//            axisOrigin += 1;
-//        }
-		int absoluteSlice = (tileIndex.getCoordinate(axisIx) /* - axisOrigin*/) / zoomScale;
+		int absoluteSlice = (tileIndex.getCoordinate(axisIx)) / zoomScale;
 		int relativeSlice = absoluteSlice % tileDepth;
 		// Raveller y is flipped so flip when slicing in Y (right?)
 		if (axisIx == 1)
@@ -399,13 +390,8 @@ extends AbstractTextureLoadAdapter
                     origin[1],
                     0
                 };
-//                tileFormat.setOrigin(mockOrigin);
                 tileFormat.setOrigin(origin);
 
-//                volumeSize[0] = (int)(zoomFactor * sx * tileFormat.getVoxelMicrometers()[0]);
-//                volumeSize[1] = (int)(zoomFactor * sy * tileFormat.getVoxelMicrometers()[1]);
-//                volumeSize[2] = (int)(zoomFactor * sz * tileFormat.getVoxelMicrometers()[2]);
-//                tileFormat.setVolumeSize( volumeSize );
             }
     		// TODO - actual max intensity
         
