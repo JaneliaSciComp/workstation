@@ -95,7 +95,6 @@ extends AbstractTextureLoadAdapter
         xyz[axIx] = xyz[axIx] / tileFormat.getTileSize()[axIx];
         // and divide by zoom scale
         xyz[axIx] = xyz[axIx] / (int) Math.pow(2, tileIndex.getZoom());
-        System.out.println("BTOLA: getOctreePath fetching TileInx " + xyz[0] + "," + xyz[1] + "," + xyz[2]);
 
         // start at lowest zoom to build up octree coordinates
 		for (int d = 0; d < (depth - 1); ++d) {
@@ -386,9 +385,9 @@ extends AbstractTextureLoadAdapter
                 tileFormat.setVoxelMicrometers(scale);
                 // Shifting everything by ten voxels to the right.
                 int[] mockOrigin = new int[] {
-                    origin[0],
+                    0,//origin[0],
                     origin[1],
-                    0
+                    origin[2]
                 };
                 tileFormat.setOrigin(origin);
 
