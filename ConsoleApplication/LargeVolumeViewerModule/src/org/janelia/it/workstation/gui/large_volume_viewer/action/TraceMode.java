@@ -191,7 +191,7 @@ implements MouseMode, KeyListener
 		int ix = -1;
 		if ((closest != null) && (skeletonActor != null))
 			ix = skeletonActor.getIndexForAnchor(closest);
-		if (ix != -1  &&  ix != currentHover) {
+		if (ix != currentHover) {
 			if (ix >= 0) {
 				// System.out.println("Hover anchor "+ix);
 			}
