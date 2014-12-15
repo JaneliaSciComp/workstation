@@ -34,8 +34,9 @@ public class SubvolumeProvider {
 
         // A series of conversions to get to ZoomedVoxelIndex
         TileFormat tileFormat = volumeImage.getLoadAdapter().getTileFormat();
-        TileFormat.MicrometerXyz um1 = new TileFormat.MicrometerXyz(corner1.getX(), corner1.getY(), corner1.getZ());
-        TileFormat.MicrometerXyz um2 = new TileFormat.MicrometerXyz(corner2.getX(), corner2.getY(), corner2.getZ());
+//        int xOriginMicrometers = (int)(tileFormat.getOrigin()[0] * tileFormat.getVoxelMicrometers()[0]);
+        TileFormat.MicrometerXyz um1 = new TileFormat.MicrometerXyz(corner1.getX()/* - xOriginMicrometers*/, corner1.getY(), corner1.getZ());
+        TileFormat.MicrometerXyz um2 = new TileFormat.MicrometerXyz(corner2.getX()/* - xOriginMicrometers*/, corner2.getY(), corner2.getZ());
         TileFormat.VoxelXyz vox1 = tileFormat.voxelXyzForMicrometerXyz(um1);
         TileFormat.VoxelXyz vox2 = tileFormat.voxelXyzForMicrometerXyz(um2);
         ZoomLevel zoomLevel = new ZoomLevel(0);
@@ -64,7 +65,9 @@ public class SubvolumeProvider {
 
         // A series of conversions to get to ZoomedVoxelIndex
         TileFormat tileFormat = volumeImage.getLoadAdapter().getTileFormat();
-        TileFormat.MicrometerXyz um = new TileFormat.MicrometerXyz(center.getX(), center.getY(), center.getZ());
+        // NOTE: have to pre-compensate "fat x" value. LLF
+        int xOriginMicrometers = (int)(tileFormat.getVoxelMicrometers()[0] * tileFormat.getOrigin()[0]);
+        TileFormat.MicrometerXyz um = new TileFormat.MicrometerXyz((center.getX() - xOriginMicrometers)*tileFormat.getVoxelMicrometers()[0], center.getY(), center.getZ());
         TileFormat.VoxelXyz vox = tileFormat.voxelXyzForMicrometerXyz(um);
 
         ZoomLevel zoomLevel = new ZoomLevel(zoomIndex);

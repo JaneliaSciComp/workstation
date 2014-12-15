@@ -308,12 +308,14 @@ public class Subvolume {
         ZoomLevel zoomLevel = new ZoomLevel(zoom);
         // Compute extreme tile indices
         //
+        // NOTE: have to pre-compensate "fat x" value. LLF
+//        int xOriginMicrometers = (int)(tileFormat.getOrigin()[0] * tileFormat.getVoxelMicrometers()[0]);
         TileFormat.VoxelXyz vix1 = tileFormat.voxelXyzForMicrometerXyz(
                 new TileFormat.MicrometerXyz(
-                        corner1.getX(), corner1.getY(), corner1.getZ()));
+                        (corner1.getX()) /*- xOriginMicrometers)*tileFormat.getVoxelMicrometers()[0]*/, corner1.getY(), corner1.getZ()));
         TileFormat.VoxelXyz vix2 = tileFormat.voxelXyzForMicrometerXyz(
                 new TileFormat.MicrometerXyz(
-                        corner2.getX(), corner2.getY(), corner2.getZ()));
+                        (corner2.getX()) /*- xOriginMicrometers)*tileFormat.getVoxelMicrometers()[0]*/, corner2.getY(), corner2.getZ()));
         //
         ZoomedVoxelIndex zvix1 = tileFormat.zoomedVoxelIndexForVoxelXyz(
                 vix1, 
