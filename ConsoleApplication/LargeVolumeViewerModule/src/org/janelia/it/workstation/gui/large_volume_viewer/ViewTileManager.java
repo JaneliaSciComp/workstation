@@ -117,13 +117,11 @@ public class ViewTileManager {
 			lastGoodTiles.clear();
 	}
 	
-	public TileSet createLatestTiles()
-	{
+	public TileSet createLatestTiles() {
 		return createLatestTiles(tileConsumer);
 	}
 	
-	protected TileSet createLatestTiles(TileConsumer tileConsumer)
-	{
+	protected TileSet createLatestTiles(TileConsumer tileConsumer) {
 		return createLatestTiles(tileConsumer.getCamera(), 
 				tileConsumer.getViewport(),
 				tileConsumer.getSliceAxis(),
@@ -132,8 +130,7 @@ public class ViewTileManager {
 	
 	// June 20, 2013 Generalized for non-Z axes
 	public TileSet createLatestTiles(Camera3d camera, Viewport viewport,
-			CoordinateAxis sliceAxis, Rotation3d viewerInGround)
-	{
+			CoordinateAxis sliceAxis, Rotation3d viewerInGround) {
 		TileSet result = new TileSet();
 		if (volumeImage.getLoadAdapter() == null)
 			return result;
@@ -152,21 +149,7 @@ public class ViewTileManager {
 		int zoomMax = tileFormat.getZoomLevelCount() - 1;
 
 		int xyzFromWhd[] = {0,1,2}; 
-		// Rearrange from rotation matrix
-		// Which axis (x,y,z) corresponds to width, height, and depth?
-		for (int whd = 0; whd < 3; ++whd) {
-			Vec3 vWhd = new Vec3(0,0,0);
-			vWhd.set(whd, 1.0);
-			Vec3 vXyz = viewerInGround.times(vWhd);
-			double max = 0.0;
-			for (int xyz = 0; xyz < 3; ++xyz) {
-				double test = Math.abs(vXyz.get(xyz));
-				if (test > max) {
-					xyzFromWhd[whd] = xyz;
-					max = test;
-				}
-			}
-		}
+        rearrangeFromRotationAxis(viewerInGround, xyzFromWhd);
 		
 		// 2) z or other slice axisIndex (d: depth)
 		Vec3 focus = camera.getFocus();
@@ -178,69 +161,16 @@ public class ViewTileManager {
 		if (xyzFromWhd[2] == 1) {
 			fD = bottomY - fD - 0.5; // bounding box extends 0.5 voxels past final slice
 		}
-		// Bounding box is actually 0.5 voxels bigger than number of slices at each end
-		int dMin = (int)(bb.getMin().get(xyzFromWhd[2])/volumeImage.getResolution(xyzFromWhd[2]) + 0.5);
-		int dMax = (int)(bb.getMax().get(xyzFromWhd[2])/volumeImage.getResolution(xyzFromWhd[2]) - 0.5);
-		int d = (int)Math.round(fD / volumeImage.getResolution(xyzFromWhd[2]) - 0.5);
-		d = Math.max(d, dMin);
-		d = Math.min(d, dMax);
-		/*
-		if (sliceAxis == CoordinateAxis.Y)
-			log.info("Y slice "+d);
-			*/
+        int relativeTileDepth = calcRelativeTileDepth(xyzFromWhd, fD);
 		
 		// 3) x and y tile index range
-		
-		// In scene units
-		// Clip to screen space
-		double wFMin = focus.get(xyzFromWhd[0]) - 0.5*viewport.getWidth()/camera.getPixelsPerSceneUnit();
-		double wFMax = focus.get(xyzFromWhd[0]) + 0.5*viewport.getWidth()/camera.getPixelsPerSceneUnit();
-		double hFMin = focus.get(xyzFromWhd[1]) - 0.5*viewport.getHeight()/camera.getPixelsPerSceneUnit();
-		double hFMax = focus.get(xyzFromWhd[1]) + 0.5*viewport.getHeight()/camera.getPixelsPerSceneUnit();
-		// Clip to volume space
-		// Subtract one half pixel to avoid loading an extra layer of tiles
-		double dw = 0.25 * tileFormat.getVoxelMicrometers()[xyzFromWhd[0]];
-		double dh = 0.25 * tileFormat.getVoxelMicrometers()[xyzFromWhd[1]];
-		wFMin = Math.max(wFMin, bb.getMin().get(xyzFromWhd[0]) + dw);
-		hFMin = Math.max(hFMin, bb.getMin().get(xyzFromWhd[1]) + dh);
-		wFMax = Math.min(wFMax, bb.getMax().get(xyzFromWhd[0]) - dw);
-		hFMax = Math.min(hFMax, bb.getMax().get(xyzFromWhd[1]) - dh);
-		double zoomFactor = Math.pow(2.0, zoom);
-		// get tile pixel size 1024 from loadAdapter
-		int tileSize[] = tileFormat.getTileSize();
-		double tileWidth = tileSize[xyzFromWhd[0]] * zoomFactor * volumeImage.getResolution(xyzFromWhd[0]);
-		double tileHeight = tileSize[xyzFromWhd[1]] * zoomFactor * volumeImage.getResolution(xyzFromWhd[1]);
-
-		// Correct for bottom Y origin of Raveler tile coordinate system
-		// (everything else is top Y origin: image, our OpenGL, user facing coordinate system)
-		if (xyzFromWhd[0] == 1) { // Y axis left-right
-			double temp = wFMin;
-			wFMin = bottomY - wFMax;
-			wFMax = bottomY - temp;
-		}
-		else if (xyzFromWhd[1] == 1) { // Y axis top-bottom
-			double temp = hFMin;
-			hFMin = bottomY - hFMax;
-			hFMax = bottomY - temp;
-		}
-		else {
-			// TODO - invert slice axis? (already inverted above)
-		}
-        
-		// In tile units        
-        int xOrigin = tileFormat.getOrigin()[xyzFromWhd[0]];
-		int wMin = (int)Math.floor((wFMin - xOrigin) / tileWidth);
-		int wMax = (int)Math.floor((wFMax - xOrigin) / tileWidth);
-
-		int hMin = (int)Math.floor(hFMin / tileHeight);
-		int hMax = (int)Math.floor(hFMax / tileHeight);
+        TileBoundingBox tileUnits = convertToTileUnits( viewport, camera, xyzFromWhd, zoom );
 
 		TileIndex.IndexStyle indexStyle = tileFormat.getIndexStyle();
         // Must adjust the depth tile value relative to origin.
-        int tileD = d - tileFormat.getOrigin()[xyzFromWhd[2]];
-		for (int w = wMin; w <= wMax; ++w) {
-			for (int h = hMin; h <= hMax; ++h) {
-				int whd[] = {w, h, tileD};
+		for (int w = tileUnits.getwMin(); w <= tileUnits.getwMax(); ++w) {
+			for (int h = tileUnits.gethMin(); h <= tileUnits.gethMax(); ++h) {
+				int whd[] = {w, h, relativeTileDepth};
 				TileIndex key = new TileIndex(
 						whd[xyzFromWhd[0]], 
 						whd[xyzFromWhd[1]], 
@@ -288,8 +218,7 @@ public class ViewTileManager {
 	}
 
 	// Produce a list of renderable tiles to complete this view
-	public TileSet updateDisplayTiles()
-	{
+	public TileSet updateDisplayTiles() {
 		// Update latest tile set
 		latestTiles = createLatestTiles();
 		latestTiles.assignTextures(textureCache);
@@ -407,4 +336,112 @@ public class ViewTileManager {
 		return neededTextures;
 	}
     
+    private ScreenBoundingBox convertToScreenBoundaries( Viewport viewport, Camera3d camera, int[] xyzFromWhd) {
+        Vec3 focus = camera.getFocus();
+        BoundingBox3d bb = volumeImage.getBoundingBox3d();
+        TileFormat tileFormat = volumeImage.getLoadAdapter().getTileFormat();
+        
+		double bottomY = bb.getMax().getY();
+
+        // In scene units
+		// Clip to screen space
+		double wFMin = focus.get(xyzFromWhd[0]) - 0.5*viewport.getWidth()/camera.getPixelsPerSceneUnit();
+		double wFMax = focus.get(xyzFromWhd[0]) + 0.5*viewport.getWidth()/camera.getPixelsPerSceneUnit();
+		double hFMin = focus.get(xyzFromWhd[1]) - 0.5*viewport.getHeight()/camera.getPixelsPerSceneUnit();
+		double hFMax = focus.get(xyzFromWhd[1]) + 0.5*viewport.getHeight()/camera.getPixelsPerSceneUnit();
+		// Clip to volume space
+		// Subtract one half pixel to avoid loading an extra layer of tiles
+		double dw = 0.25 * tileFormat.getVoxelMicrometers()[xyzFromWhd[0]];
+		double dh = 0.25 * tileFormat.getVoxelMicrometers()[xyzFromWhd[1]];
+		wFMin = Math.max(wFMin, bb.getMin().get(xyzFromWhd[0]) + dw);
+		hFMin = Math.max(hFMin, bb.getMin().get(xyzFromWhd[1]) + dh);
+		wFMax = Math.min(wFMax, bb.getMax().get(xyzFromWhd[0]) - dw);
+		hFMax = Math.min(hFMax, bb.getMax().get(xyzFromWhd[1]) - dh);
+        
+		// Correct for bottom Y origin of Raveler tile coordinate system
+		// (everything else is top Y origin: image, our OpenGL, user facing coordinate system)
+		if (xyzFromWhd[0] == 1) { // Y axis left-right
+			double temp = wFMin;
+			wFMin = bottomY - wFMax;
+			wFMax = bottomY - temp;
+		}
+		else if (xyzFromWhd[1] == 1) { // Y axis top-bottom
+			double temp = hFMin;
+			hFMin = bottomY - hFMax;
+			hFMax = bottomY - temp;
+		}
+		else {
+			// TODO - invert slice axis? (already inverted above)
+		}
+        
+        ScreenBoundingBox screenBoundaries = new ScreenBoundingBox();
+        screenBoundaries.sethFMax(hFMax);
+        screenBoundaries.sethFMin(hFMin);
+        
+        screenBoundaries.setwFMax(wFMax);
+        screenBoundaries.setwFMin(wFMin);
+        
+        return screenBoundaries;
     }
+    
+    private TileBoundingBox convertToTileUnits( Viewport viewport, Camera3d camera, int[] xyzFromWhd, int zoom) {
+        ScreenBoundingBox screenBounds = convertToScreenBoundaries( viewport, camera, xyzFromWhd );
+
+        TileFormat tileFormat = volumeImage.getLoadAdapter().getTileFormat();
+        double zoomFactor = Math.pow(2.0, zoom);
+		// get tile pixel size 1024 from loadAdapter
+		int tileSize[] = tileFormat.getTileSize();
+		double tileWidth = tileSize[xyzFromWhd[0]] * zoomFactor * volumeImage.getResolution(xyzFromWhd[0]);
+		double tileHeight = tileSize[xyzFromWhd[1]] * zoomFactor * volumeImage.getResolution(xyzFromWhd[1]);
+
+        int xOrigin = tileFormat.getOrigin()[xyzFromWhd[0]];
+		int wMin = (int)Math.floor((screenBounds.getwFMin() - xOrigin) / tileWidth);
+		int wMax = (int)Math.floor((screenBounds.getwFMax() - xOrigin) / tileWidth);
+
+		int hMin = (int)Math.floor(screenBounds.gethFMin() / tileHeight);
+		int hMax = (int)Math.floor(screenBounds.gethFMax() / tileHeight);
+        
+        TileBoundingBox tileUnits = new TileBoundingBox();
+        tileUnits.sethMax(hMax);
+        tileUnits.sethMin(hMin);
+        tileUnits.setwMax(wMax);
+        tileUnits.setwMin(wMin);
+        
+        return tileUnits;
+    }
+    
+    private int calcRelativeTileDepth(int[] xyzFromWhd, double fD) {
+		BoundingBox3d bb = volumeImage.getBoundingBox3d();
+        TileFormat tileFormat = volumeImage.getLoadAdapter().getTileFormat();
+        // Bounding box is actually 0.5 voxels bigger than number of slices at each end
+        int dMin = (int)(bb.getMin().get(xyzFromWhd[2])/volumeImage.getResolution(xyzFromWhd[2]) + 0.5);
+        int dMax = (int)(bb.getMax().get(xyzFromWhd[2])/volumeImage.getResolution(xyzFromWhd[2]) - 0.5);
+        int absoluteTileDepth = (int)Math.round(fD / volumeImage.getResolution(xyzFromWhd[2]) - 0.5);
+        absoluteTileDepth = Math.max(absoluteTileDepth, dMin);
+        absoluteTileDepth = Math.min(absoluteTileDepth, dMax);
+        /*
+        if (sliceAxis == CoordinateAxis.Y)
+        log.info("Y slice "+d);
+        */
+        int relativeTileDepth = absoluteTileDepth - tileFormat.getOrigin()[xyzFromWhd[2]];
+        return relativeTileDepth;
+    }
+
+    private void rearrangeFromRotationAxis(Rotation3d viewerInGround, int[] xyzFromWhd) {
+        // Rearrange from rotation matrix
+        // Which axis (x,y,z) corresponds to width, height, and depth?
+        for (int whd = 0; whd < 3; ++whd) {
+            Vec3 vWhd = new Vec3(0,0,0);
+            vWhd.set(whd, 1.0);
+            Vec3 vXyz = viewerInGround.times(vWhd);
+            double max = 0.0;
+            for (int xyz = 0; xyz < 3; ++xyz) {
+                double test = Math.abs(vXyz.get(xyz));
+                if (test > max) {
+                    xyzFromWhd[whd] = xyz;
+                    max = test;
+                }
+            }
+        }
+    }
+}
