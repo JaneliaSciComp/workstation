@@ -164,7 +164,8 @@ public class ViewTileManager {
         int relativeTileDepth = calcRelativeTileDepth(xyzFromWhd, fD);
 		
 		// 3) x and y tile index range
-        TileBoundingBox tileUnits = convertToTileUnits( viewport, camera, xyzFromWhd, zoom );
+        ScreenBoundingBox screenBounds = convertToScreenBoundaries( viewport, camera, xyzFromWhd );
+        TileBoundingBox tileUnits = convertToTileUnits( tileFormat, xyzFromWhd, screenBounds, zoom );
 
 		TileIndex.IndexStyle indexStyle = tileFormat.getIndexStyle();
         // Must adjust the depth tile value relative to origin.
@@ -336,7 +337,7 @@ public class ViewTileManager {
 		return neededTextures;
 	}
     
-    private ScreenBoundingBox convertToScreenBoundaries( Viewport viewport, Camera3d camera, int[] xyzFromWhd) {
+    private ScreenBoundingBox convertToScreenBoundaries( Viewport viewport, Camera3d camera, int[] xyzFromWhd ) {
         Vec3 focus = camera.getFocus();
         BoundingBox3d bb = volumeImage.getBoundingBox3d();
         TileFormat tileFormat = volumeImage.getLoadAdapter().getTileFormat();
@@ -384,15 +385,15 @@ public class ViewTileManager {
         return screenBoundaries;
     }
     
-    private TileBoundingBox convertToTileUnits( Viewport viewport, Camera3d camera, int[] xyzFromWhd, int zoom) {
-        ScreenBoundingBox screenBounds = convertToScreenBoundaries( viewport, camera, xyzFromWhd );
+    private TileBoundingBox convertToTileUnits(TileFormat tileFormat, int[] xyzFromWhd, ScreenBoundingBox screenBounds, int zoom) {
 
-        TileFormat tileFormat = volumeImage.getLoadAdapter().getTileFormat();
         double zoomFactor = Math.pow(2.0, zoom);
 		// get tile pixel size 1024 from loadAdapter
 		int tileSize[] = tileFormat.getTileSize();
-		double tileWidth = tileSize[xyzFromWhd[0]] * zoomFactor * volumeImage.getResolution(xyzFromWhd[0]);
-		double tileHeight = tileSize[xyzFromWhd[1]] * zoomFactor * volumeImage.getResolution(xyzFromWhd[1]);
+        double resolution0 = tileFormat.getVoxelMicrometers()[xyzFromWhd[0]];
+        double resolution1 = tileFormat.getVoxelMicrometers()[xyzFromWhd[1]];
+		double tileWidth = tileSize[xyzFromWhd[0]] * zoomFactor * resolution0;
+		double tileHeight = tileSize[xyzFromWhd[1]] * zoomFactor * resolution1;
 
         int xOrigin = tileFormat.getOrigin()[xyzFromWhd[0]];
 		int wMin = (int)Math.floor((screenBounds.getwFMin() - xOrigin) / tileWidth);
