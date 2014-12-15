@@ -276,7 +276,7 @@ public class ViewTileManager {
 		}
 		
 		// Keep working on loading both emergency and latest tiles only.
-		Set<TileIndex> newNeededTextures = new LinkedHashSet<TileIndex>();
+		Set<TileIndex> newNeededTextures = new LinkedHashSet<>();
 		newNeededTextures.addAll(emergencyTiles.getFastNeededTextures());
 		// Decide whether to load fastest textures or best textures
 		Tile2d.LoadStatus stage = latestTiles.getMinStage();
