@@ -112,7 +112,8 @@ public class Subvolume {
 	/**
 	 * You probably want to run this constructor in a worker
 	 * thread, because it can take a while to load its
-	 * raster data over the network.
+	 * raster data over the network.  This is called only from the
+     * 3D viewer feed path.
 	 * 
 	 * @param center volume around here, in 3D
 	 * @param wholeImage 
@@ -128,89 +129,18 @@ public class Subvolume {
             IndeterminateNoteProgressMonitor progressMonitor)
     {
         this.progressMonitor = progressMonitor;
-        initialize(center, dimensions, wholeImage, textureCache);
+        initializeFor3D(center, dimensions, wholeImage, textureCache);
     }
     
-	private void initialize(ZoomedVoxelIndex corner1,
-            ZoomedVoxelIndex corner2,
-            SharedVolumeImage wholeImage,
-            final TextureCache textureCache)
-	{
-	    // Both corners must be the same zoom resolution
-	    assert(corner1.getZoomLevel().equals(corner2.getZoomLevel()));
-	    // Populate data fields
-	    final ZoomLevel zoom = corner1.getZoomLevel();
-	    origin = new ZoomedVoxelIndex(
-	            zoom,
-	            Math.min(corner1.getX(), corner2.getX()),
-                Math.min(corner1.getY(), corner2.getY()),
-                Math.min(corner1.getZ(), corner2.getZ()));
-	    final ZoomedVoxelIndex farCorner = new ZoomedVoxelIndex(
-                zoom,
-                Math.max(corner1.getX(), corner2.getX()),
-                Math.max(corner1.getY(), corner2.getY()),
-                Math.max(corner1.getZ(), corner2.getZ()));
-	    extent = new VoxelIndex(
-	            farCorner.getX() - origin.getX() + 1,
-                farCorner.getY() - origin.getY() + 1,
-                farCorner.getZ() - origin.getZ() + 1);
-	    // Allocate raster memory
-	    final AbstractTextureLoadAdapter loadAdapter = wholeImage.getLoadAdapter();
-	    final TileFormat tileFormat = loadAdapter.getTileFormat();
-	    bytesPerIntensity = tileFormat.getBitDepth()/8;
-	    channelCount = tileFormat.getChannelCount();
-	    int totalBytes = bytesPerIntensity 
-	            * channelCount
-	            * extent.getX() * extent.getY() * extent.getZ();
-	    bytes = ByteBuffer.allocateDirect(totalBytes);
-	    bytes.order(ByteOrder.nativeOrder());
-	    if (bytesPerIntensity == 2)
-	        shorts = bytes.asShortBuffer();
-
-        Set<TileIndex> neededTiles = getNeededTileSet(tileFormat, farCorner, zoom);
-        if (logger.isDebugEnabled()) {
-            logTileRequest(neededTiles);
-        }
-        ExecutorService executorService = Executors.newFixedThreadPool( N_THREADS );
-        List<Future<Boolean>> followUps = new ArrayList<>();
-        totalTiles = neededTiles.size();
-        remainingTiles = neededTiles.size();
-        reportProgress( totalTiles, totalTiles );
-        
-        for (final TileIndex tileIx : neededTiles) {
-            Callable<Boolean> fetchTask = new Callable<Boolean>() {
-                @Override
-                public Boolean call() throws Exception {
-                    return fetchTileData(
-                            textureCache, tileIx, loadAdapter, tileFormat, zoom, farCorner
-                    );
-                }
-            };
-            followUps.add( executorService.submit( fetchTask ) );
-        }
-        executorService.shutdown();
-        
-        try {
-            executorService.awaitTermination(5, TimeUnit.MINUTES);
-            for (Future<Boolean> result : followUps) {
-                if (!result.get()) {
-                    logger.info("Request for {}..{} had tile gaps.", origin, extent);
-                    break;
-                }
-            }
-        } catch ( InterruptedException | ExecutionException ex ) {
-            if ( progressMonitor != null ) {
-                progressMonitor.close();
-            }
-            logger.error(
-                    "Failure awaiting completion of fetch threads for request {}..{}.  Exception report follows.",
-                    origin, extent
-            );
-            ex.printStackTrace();
-        }
-	}
-
-	private void initialize(ZoomedVoxelIndex center,
+    /**
+     * Initializes the sub volume for 3 dimensional fetching of texture data.
+     * 
+     * @param center middle point.
+     * @param dimensions how large a chunk to return.
+     * @param wholeImage whole volume's 'image'
+     * @param textureCache existing fetches live here.
+     */
+	private void initializeFor3D(ZoomedVoxelIndex center,
             int[] dimensions,
             SharedVolumeImage wholeImage,
             final TextureCache textureCache)
@@ -326,6 +256,85 @@ public class Subvolume {
         //
         initialize(zvix1, zvix2, wholeImage, null);
     }
+
+	private void initialize(ZoomedVoxelIndex corner1,
+            ZoomedVoxelIndex corner2,
+            SharedVolumeImage wholeImage,
+            final TextureCache textureCache)
+	{
+	    // Both corners must be the same zoom resolution
+	    assert(corner1.getZoomLevel().equals(corner2.getZoomLevel()));
+	    // Populate data fields
+	    final ZoomLevel zoom = corner1.getZoomLevel();
+	    origin = new ZoomedVoxelIndex(
+	            zoom,
+	            Math.min(corner1.getX(), corner2.getX()),
+                Math.min(corner1.getY(), corner2.getY()),
+                Math.min(corner1.getZ(), corner2.getZ()));
+	    final ZoomedVoxelIndex farCorner = new ZoomedVoxelIndex(
+                zoom,
+                Math.max(corner1.getX(), corner2.getX()),
+                Math.max(corner1.getY(), corner2.getY()),
+                Math.max(corner1.getZ(), corner2.getZ()));
+	    extent = new VoxelIndex(
+	            farCorner.getX() - origin.getX() + 1,
+                farCorner.getY() - origin.getY() + 1,
+                farCorner.getZ() - origin.getZ() + 1);
+	    // Allocate raster memory
+	    final AbstractTextureLoadAdapter loadAdapter = wholeImage.getLoadAdapter();
+	    final TileFormat tileFormat = loadAdapter.getTileFormat();
+	    bytesPerIntensity = tileFormat.getBitDepth()/8;
+	    channelCount = tileFormat.getChannelCount();
+	    int totalBytes = bytesPerIntensity 
+	            * channelCount
+	            * extent.getX() * extent.getY() * extent.getZ();
+	    bytes = ByteBuffer.allocateDirect(totalBytes);
+	    bytes.order(ByteOrder.nativeOrder());
+	    if (bytesPerIntensity == 2)
+	        shorts = bytes.asShortBuffer();
+
+        Set<TileIndex> neededTiles = getNeededTileSet(tileFormat, farCorner, zoom);
+        if (logger.isDebugEnabled()) {
+            logTileRequest(neededTiles);
+        }
+        ExecutorService executorService = Executors.newFixedThreadPool( N_THREADS );
+        List<Future<Boolean>> followUps = new ArrayList<>();
+        totalTiles = neededTiles.size();
+        remainingTiles = neededTiles.size();
+        reportProgress( totalTiles, totalTiles );
+        
+        for (final TileIndex tileIx : neededTiles) {
+            Callable<Boolean> fetchTask = new Callable<Boolean>() {
+                @Override
+                public Boolean call() throws Exception {
+                    return fetchTileData(
+                            textureCache, tileIx, loadAdapter, tileFormat, zoom, farCorner
+                    );
+                }
+            };
+            followUps.add( executorService.submit( fetchTask ) );
+        }
+        executorService.shutdown();
+        
+        try {
+            executorService.awaitTermination(5, TimeUnit.MINUTES);
+            for (Future<Boolean> result : followUps) {
+                if (!result.get()) {
+                    logger.info("Request for {}..{} had tile gaps.", origin, extent);
+                    break;
+                }
+            }
+        } catch ( InterruptedException | ExecutionException ex ) {
+            if ( progressMonitor != null ) {
+                progressMonitor.close();
+            }
+            logger.error(
+                    "Failure awaiting completion of fetch threads for request {}..{}.  Exception report follows.",
+                    origin, extent
+            );
+            ex.printStackTrace();
+        }
+	}
 
     public BufferedImage[] getAsBufferedImages() {
 		int sx = extent.getX();

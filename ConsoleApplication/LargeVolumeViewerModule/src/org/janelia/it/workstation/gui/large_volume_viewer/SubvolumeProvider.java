@@ -59,7 +59,7 @@ public class SubvolumeProvider {
      * @param monitor feeds back progress.
      * @return R/O sub volume centered at center, extending extent-sub-i div by 2 all directions.
      */
-    public Subvolume getSubvolume(Vec3 center, int[] extent, int zoomIndex, IndeterminateNoteProgressMonitor monitor) {
+    public Subvolume getSubvolumeFor3D(Vec3 center, int[] extent, int zoomIndex, IndeterminateNoteProgressMonitor monitor) {
         // all this coordinate stuff is taken from something Christopher
         //  wrote in support of the path tracing code he wrote
 

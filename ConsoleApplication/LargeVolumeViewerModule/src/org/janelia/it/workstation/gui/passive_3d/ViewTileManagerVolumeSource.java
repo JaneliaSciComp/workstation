@@ -136,7 +136,7 @@ public class ViewTileManagerVolumeSource implements MonitoredVolumeSource {
             brickCubicDimension,
             brickCubicDimension
         };
-        Subvolume fetchedSubvolume = subvolumeProvider.getSubvolume( camera.getFocus(), extent, zoomFactor, progressMonitor );
+        Subvolume fetchedSubvolume = subvolumeProvider.getSubvolumeFor3D( camera.getFocus(), extent, zoomFactor, progressMonitor );
         stdVals.stdChannelCount = fetchedSubvolume.getChannelCount();
         stdVals.stdInternalFormat = GL2.GL_LUMINANCE16_ALPHA16;
         stdVals.stdType = GL2.GL_UNSIGNED_SHORT;
