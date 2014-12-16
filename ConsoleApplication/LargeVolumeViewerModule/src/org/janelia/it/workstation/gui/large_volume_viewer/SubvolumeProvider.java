@@ -2,6 +2,7 @@ package org.janelia.it.workstation.gui.large_volume_viewer;
 
 import org.janelia.it.workstation.geom.CoordinateAxis;
 import org.janelia.it.workstation.geom.Vec3;
+import org.janelia.it.workstation.gui.viewer3d.BoundingBox3d;
 import org.janelia.it.workstation.octree.ZoomLevel;
 import org.janelia.it.workstation.octree.ZoomedVoxelIndex;
 import org.janelia.it.workstation.shared.workers.IndeterminateNoteProgressMonitor;
@@ -59,22 +60,9 @@ public class SubvolumeProvider {
      * @param monitor feeds back progress.
      * @return R/O sub volume centered at center, extending extent-sub-i div by 2 all directions.
      */
-    public Subvolume getSubvolumeFor3D(Vec3 center, int[] extent, int zoomIndex, IndeterminateNoteProgressMonitor monitor) {
-        // all this coordinate stuff is taken from something Christopher
-        //  wrote in support of the path tracing code he wrote
-
-        // A series of conversions to get to ZoomedVoxelIndex
-        TileFormat tileFormat = volumeImage.getLoadAdapter().getTileFormat();
-        // NOTE: have to pre-compensate "fat x" value. LLF
-        int xOriginMicrometers = (int)(tileFormat.getVoxelMicrometers()[0] * tileFormat.getOrigin()[0]);
-        TileFormat.MicrometerXyz um = new TileFormat.MicrometerXyz((center.getX() - xOriginMicrometers)*tileFormat.getVoxelMicrometers()[0], center.getY(), center.getZ());
-        TileFormat.VoxelXyz vox = tileFormat.voxelXyzForMicrometerXyz(um);
-
+    public Subvolume getSubvolumeFor3D(Vec3 center, double pixelsPerSceneUnit, BoundingBox3d bb, int[] extent, int zoomIndex, IndeterminateNoteProgressMonitor monitor) {
         ZoomLevel zoomLevel = new ZoomLevel(zoomIndex);
-        ZoomedVoxelIndex zv = tileFormat.zoomedVoxelIndexForVoxelXyz(
-                vox, zoomLevel, CoordinateAxis.Z);
-
-        return new Subvolume(zv, volumeImage, extent, tileServer.getTextureCache(), monitor);
+        return new Subvolume(center, volumeImage, pixelsPerSceneUnit, bb, zoomLevel, extent, tileServer.getTextureCache(), monitor);
     }
 
     public Subvolume getSubvolume(ZoomedVoxelIndex zv1, ZoomedVoxelIndex zv2) {

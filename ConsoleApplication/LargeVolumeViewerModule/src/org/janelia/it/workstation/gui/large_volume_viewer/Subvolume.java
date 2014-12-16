@@ -29,6 +29,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
+import org.janelia.it.workstation.gui.viewer3d.BoundingBox3d;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -117,19 +118,23 @@ public class Subvolume {
 	 * 
 	 * @param center volume around here, in 3D
 	 * @param wholeImage 
+     * @param pixelsPerSceneUnit as might be supplied by a camera.
      * @param dimensions how large to make the volume.
 	 * @param textureCache
      * @param progressMonitor for reporting relative completion.
 	 */
     public Subvolume(
-            ZoomedVoxelIndex center,
+            Vec3 center,
             SharedVolumeImage wholeImage,
+            double pixelsPerSceneUnit,
+            BoundingBox3d bb,
+            ZoomLevel zoom,
             int[] dimensions,
             TextureCache textureCache,
             IndeterminateNoteProgressMonitor progressMonitor)
     {
         this.progressMonitor = progressMonitor;
-        initializeFor3D(center, dimensions, wholeImage, textureCache);
+        initializeFor3D(center, pixelsPerSceneUnit, bb, zoom, dimensions, wholeImage, textureCache);
     }
     
     /**
@@ -140,28 +145,20 @@ public class Subvolume {
      * @param wholeImage whole volume's 'image'
      * @param textureCache existing fetches live here.
      */
-	private void initializeFor3D(ZoomedVoxelIndex center,
+	private void initializeFor3D(Vec3 center,
+            double pixelsPerSceneUnit,
+            BoundingBox3d bb,
+            final ZoomLevel zoom,
             int[] dimensions,
             SharedVolumeImage wholeImage,
             final TextureCache textureCache)
 	{
-	    // Populate data fields
-	    final ZoomLevel zoom = center.getZoomLevel();
-
-        // Allocate raster memory
+                
 	    final AbstractTextureLoadAdapter loadAdapter = wholeImage.getLoadAdapter();
 	    final TileFormat tileFormat = loadAdapter.getTileFormat();
-	    bytesPerIntensity = tileFormat.getBitDepth()/8;
-	    channelCount = tileFormat.getChannelCount();
-	    int totalBytes = bytesPerIntensity 
-	            * channelCount
-	            * dimensions[0] * dimensions[1] * dimensions[2];
-	    bytes = ByteBuffer.allocateDirect(totalBytes);
-	    bytes.order(ByteOrder.nativeOrder());
-	    if (bytesPerIntensity == 2)
-	        shorts = bytes.asShortBuffer();
+        allocateRasterMemory(tileFormat, dimensions);
 
-        Set<TileIndex> neededTiles = getCenteredTileSet(tileFormat, center, dimensions, zoom);
+        Set<TileIndex> neededTiles = getCenteredTileSet2(tileFormat, center, pixelsPerSceneUnit, bb, dimensions, zoom);
         if (logger.isDebugEnabled()) {
             logTileRequest(neededTiles);
         }
@@ -280,18 +277,11 @@ public class Subvolume {
 	            farCorner.getX() - origin.getX() + 1,
                 farCorner.getY() - origin.getY() + 1,
                 farCorner.getZ() - origin.getZ() + 1);
-	    // Allocate raster memory
-	    final AbstractTextureLoadAdapter loadAdapter = wholeImage.getLoadAdapter();
-	    final TileFormat tileFormat = loadAdapter.getTileFormat();
-	    bytesPerIntensity = tileFormat.getBitDepth()/8;
-	    channelCount = tileFormat.getChannelCount();
-	    int totalBytes = bytesPerIntensity 
-	            * channelCount
-	            * extent.getX() * extent.getY() * extent.getZ();
-	    bytes = ByteBuffer.allocateDirect(totalBytes);
-	    bytes.order(ByteOrder.nativeOrder());
-	    if (bytesPerIntensity == 2)
-	        shorts = bytes.asShortBuffer();
+
+        final AbstractTextureLoadAdapter loadAdapter = wholeImage.getLoadAdapter();
+	    final TileFormat tileFormat = loadAdapter.getTileFormat();        
+        
+        allocateRasterMemory(tileFormat);
 
         Set<TileIndex> neededTiles = getNeededTileSet(tileFormat, farCorner, zoom);
         if (logger.isDebugEnabled()) {
@@ -570,6 +560,26 @@ OVERFLOW_LABEL:
         return filledToEnd;
     }
 
+    private void allocateRasterMemory(final TileFormat tileFormat) {
+        int[] dimensions = new int[3];
+        dimensions[0] = extent.getX();
+        dimensions[1] = extent.getY();
+        dimensions[2] = extent.getZ();
+        allocateRasterMemory(tileFormat, dimensions);
+    }
+    
+    private void allocateRasterMemory(final TileFormat tileFormat, int[] dimensions) {
+        bytesPerIntensity = tileFormat.getBitDepth()/8;
+        channelCount = tileFormat.getChannelCount();
+        int totalBytes = bytesPerIntensity
+                * channelCount
+                * dimensions[0] * dimensions[1] * dimensions[2];
+        bytes = ByteBuffer.allocateDirect(totalBytes);
+        bytes.order(ByteOrder.nativeOrder());
+        if (bytesPerIntensity == 2)
+            shorts = bytes.asShortBuffer();
+    }
+
     private Set<TileIndex> getNeededTileSet(TileFormat tileFormat, ZoomedVoxelIndex farCorner, ZoomLevel zoom) {
         Set<TileIndex> neededTiles = new LinkedHashSet<>();
         // Load tiles from volume representation
@@ -609,6 +619,7 @@ OVERFLOW_LABEL:
         return neededTiles;
     }
 
+    /** Called from 3d feed. */
     private Set<TileIndex> getCenteredTileSet(TileFormat tileFormat, ZoomedVoxelIndex center, int[] dimensions, ZoomLevel zoom) {
         assert(dimensions[0] % 2 == 0) : "Dimension X must be divisible by 2";
         assert(dimensions[1] % 2 == 0) : "Dimension Y must be divisible by 2";
@@ -714,5 +725,84 @@ OVERFLOW_LABEL:
         }
         
         return neededTiles;
+    }
+
+    /** Called from 3D feed. */
+    private Set<TileIndex> getCenteredTileSet2(TileFormat tileFormat, Vec3 center, double pixelsPerSceneUnit, BoundingBox3d bb, int[] dimensions, ZoomLevel zoomLevel) {
+        assert(dimensions[0] % 2 == 0) : "Dimension X must be divisible by 2";
+        assert(dimensions[1] % 2 == 0) : "Dimension Y must be divisible by 2";
+        assert(dimensions[2] % 2 == 0) : "Dimension Z must be divisible by 2";
+        Set<TileIndex> neededTiles = new LinkedHashSet<>();
+
+        int[] xyzFromWhd = new int[] { 0, 1, 2 };
+        CoordinateAxis sliceAxis = CoordinateAxis.Z;
+        ScreenBoundingBox screenBounds = tileFormat.boundingBoxToScreenBounds(
+                bb, dimensions[0], dimensions[1], center, pixelsPerSceneUnit, xyzFromWhd
+        );
+        TileBoundingBox tileBoundingBox = tileFormat.screenBoundsToTileBounds(xyzFromWhd, screenBounds, zoomLevel.getLog2ZoomOutFactor() ); // To Check: right method from zoom?
+
+        // Now I have the tile outline.  Can just iterate over that, and for all
+        // required depth.
+        TileIndex.IndexStyle indexStyle = tileFormat.getIndexStyle();
+        int zoomMax = tileFormat.getZoomLevelCount() - 1;
+
+        double halfDepth = dimensions[2] / 2.0;
+        int maxDepth = this.calcZCoord(bb, xyzFromWhd, tileFormat, (int)(center.getZ() + halfDepth));
+        int minDepth = maxDepth - dimensions[xyzFromWhd[2]];
+
+        for (int d = minDepth; d < maxDepth; d++) {
+            for (int w = tileBoundingBox.getwMin(); w <= tileBoundingBox.getwMax(); ++w) {
+                for (int h = tileBoundingBox.gethMin(); h <= tileBoundingBox.gethMax(); ++h) {
+                    int whd[] = {w, h, d};
+                    TileIndex key = new TileIndex(
+                            whd[xyzFromWhd[0]],
+                            whd[xyzFromWhd[1]],
+                            whd[xyzFromWhd[2]],
+                            zoomLevel.getLog2ZoomOutFactor(),
+                            zoomMax, indexStyle, sliceAxis);
+                    neededTiles.add(key);
+                    
+                }
+            }
+        }
+
+        // Side Effect:  These values must be computed here, but they
+        // are being used by other code at caller level.
+        //TileFormat.TileXyz lowestTile = new TileFormat.TileXyz(lowX, lowY, lowZ);
+        TileFormat.VoxelXyz vox = tileFormat.voxelXyzForMicrometerXyz(
+                new TileFormat.MicrometerXyz(
+                        (int)(center.getX()), 
+                        (int)(center.getY()),
+                        (int)(center.getZ())
+                )
+        );
+        // NOTE: modified X-coordinate handling.
+        // Other two coords first divide by microns, and then subtract origin.
+        // Not so for the x: opposite order of operations: first subtracting
+        // origin, and then dividing by micrometers.
+        final int adjustedCenterX = (int)(center.getX() - tileFormat.getOrigin()[xyzFromWhd[0]]);
+        int[] voxelizedCoords = {
+            (int)((adjustedCenterX / tileFormat.getVoxelMicrometers()[xyzFromWhd[0]]) - dimensions[xyzFromWhd[0]]/2),
+            vox.getY() - dimensions[xyzFromWhd[1]]/2,
+            minDepth
+        };
+        vox = new TileFormat.VoxelXyz(voxelizedCoords);
+        origin = tileFormat.zoomedVoxelIndexForVoxelXyz(vox, zoomLevel, sliceAxis);
+        extent = new VoxelIndex(
+                dimensions[0],
+                dimensions[1],
+                dimensions[2]);
+		        
+        return neededTiles;
+    }
+
+    private int calcZCoord(BoundingBox3d bb, int[] xyzFromWhd, TileFormat tileFormat, int focusDepth) {
+        double zVoxMicrons = tileFormat.getVoxelMicrometers()[xyzFromWhd[2]];
+        int dMin = (int)(bb.getMin().get(xyzFromWhd[2])/zVoxMicrons + 0.5);
+        int dMax = (int)(bb.getMax().get(xyzFromWhd[2])/zVoxMicrons - 0.5);
+        int absoluteTileDepth = (int)Math.round(focusDepth / zVoxMicrons - 0.5);
+        absoluteTileDepth = Math.max(absoluteTileDepth, dMin);
+        absoluteTileDepth = Math.min(absoluteTileDepth, dMax);
+        return absoluteTileDepth - tileFormat.getOrigin()[xyzFromWhd[2]];
     }
 }

@@ -201,6 +201,17 @@ public class TileFormat
         return screenBoundaries;
     }
     
+    public int calcRelativeTileDepth(int[] xyzFromWhd, double focusDepth, BoundingBox3d bb) {
+        // Bounding box is actually 0.5 voxels bigger than number of slices at each end
+        int dMin = (int)(bb.getMin().get(xyzFromWhd[2])/getVoxelMicrometers()[xyzFromWhd[2]] + 0.5);
+        int dMax = (int)(bb.getMax().get(xyzFromWhd[2])/getVoxelMicrometers()[xyzFromWhd[2]] - 0.5);
+        int absoluteTileDepth = (int)Math.round(focusDepth / getVoxelMicrometers()[xyzFromWhd[2]] - 0.5);
+        absoluteTileDepth = Math.max(absoluteTileDepth, dMin);
+        absoluteTileDepth = Math.min(absoluteTileDepth, dMax);
+        int relativeTileDepth = absoluteTileDepth - getOrigin()[xyzFromWhd[2]];
+        return relativeTileDepth;
+    }
+
 	public TileIndex.IndexStyle getIndexStyle() {
 		return indexStyle;
 	}
