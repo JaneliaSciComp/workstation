@@ -158,7 +158,7 @@ public class Subvolume {
 	    final TileFormat tileFormat = loadAdapter.getTileFormat();
         allocateRasterMemory(tileFormat, dimensions);
 
-        Set<TileIndex> neededTiles = getCenteredTileSet2(tileFormat, center, pixelsPerSceneUnit, bb, dimensions, zoom);
+        Set<TileIndex> neededTiles = getCenteredTileSet(tileFormat, center, pixelsPerSceneUnit, bb, dimensions, zoom);
         if (logger.isDebugEnabled()) {
             logTileRequest(neededTiles);
         }
@@ -233,16 +233,20 @@ public class Subvolume {
         // Compute correct zoom level based on requested resolution
         int zoom = tileFormat.zoomLevelForCameraZoom(1.0/micrometerResolution);
         ZoomLevel zoomLevel = new ZoomLevel(zoom);
+
         // Compute extreme tile indices
         //
-        // NOTE: have to pre-compensate "fat x" value. LLF
-//        int xOriginMicrometers = (int)(tileFormat.getOrigin()[0] * tileFormat.getVoxelMicrometers()[0]);
         TileFormat.VoxelXyz vix1 = tileFormat.voxelXyzForMicrometerXyz(
                 new TileFormat.MicrometerXyz(
-                        (corner1.getX()) /*- xOriginMicrometers)*tileFormat.getVoxelMicrometers()[0]*/, corner1.getY(), corner1.getZ()));
+                        corner1.getX(), corner1.getY(), corner1.getZ()
+                )
+        );
         TileFormat.VoxelXyz vix2 = tileFormat.voxelXyzForMicrometerXyz(
                 new TileFormat.MicrometerXyz(
-                        (corner2.getX()) /*- xOriginMicrometers)*tileFormat.getVoxelMicrometers()[0]*/, corner2.getY(), corner2.getZ()));
+                        corner2.getX(), corner2.getY(), corner2.getZ()
+                )
+        );
+        
         //
         ZoomedVoxelIndex zvix1 = tileFormat.zoomedVoxelIndexForVoxelXyz(
                 vix1, 
@@ -619,116 +623,8 @@ OVERFLOW_LABEL:
         return neededTiles;
     }
 
-    /** Called from 3d feed. */
-    private Set<TileIndex> getCenteredTileSet(TileFormat tileFormat, ZoomedVoxelIndex center, int[] dimensions, ZoomLevel zoom) {
-        assert(dimensions[0] % 2 == 0) : "Dimension X must be divisible by 2";
-        assert(dimensions[1] % 2 == 0) : "Dimension Y must be divisible by 2";
-        assert(dimensions[2] % 2 == 0) : "Dimension Z must be divisible by 2";
-        Set<TileIndex> neededTiles = new LinkedHashSet<>();
-        // Load tiles from volume representation
-	    ZoomedVoxelIndex centerTileMinVI = new ZoomedVoxelIndex(
-	            zoom,
-	            Math.min(center.getX() - dimensions[0]/2, center.getX() + dimensions[0]/2 + 1),
-                Math.min(center.getY() - dimensions[1]/2, center.getY() + dimensions[1]/2 + 1),
-                center.getZ());
-
-        // Load tiles from volume representation
-	    ZoomedVoxelIndex centerTileMaxVI = new ZoomedVoxelIndex(
-	            zoom,
-	            Math.max(center.getX() - dimensions[0]/2, center.getX() + dimensions[0]/2 + 1),
-                Math.max(center.getY() - dimensions[1]/2, center.getY() + dimensions[1]/2 + 1),
-                center.getZ());
-
-        TileIndex tileMinCtrZ0 = tileFormat.tileIndexForZoomedVoxelIndex(centerTileMinVI, CoordinateAxis.Z);
-        TileIndex tileMaxCtrZ0 = tileFormat.tileIndexForZoomedVoxelIndex(centerTileMaxVI, CoordinateAxis.Z);
-        
-        // Guard against y-flip. Make it so general it could find some other future situation too.
-        // Enforce that tileMinCtrZ x/y/z are no larger than tileMaxCtrZ x/y/z
-        // tileMinCtrZ is the minimum xy value for the tile at the center-z point.
-        TileIndex tileMinCtrZ = new TileIndex(
-                Math.min(tileMinCtrZ0.getX(), tileMaxCtrZ0.getX()),
-                Math.min(tileMinCtrZ0.getY(), tileMaxCtrZ0.getY()),
-                Math.min(tileMinCtrZ0.getZ(), tileMaxCtrZ0.getZ()),
-                tileMinCtrZ0.getZoom(),
-                tileMinCtrZ0.getMaxZoom(),
-                tileMinCtrZ0.getIndexStyle(),
-                tileMinCtrZ0.getSliceAxis());
-        TileIndex tileMaxCtrZ = new TileIndex(
-                Math.max(tileMinCtrZ0.getX(), tileMaxCtrZ0.getX()),
-                Math.max(tileMinCtrZ0.getY(), tileMaxCtrZ0.getY()),
-                Math.max(tileMinCtrZ0.getZ(), tileMaxCtrZ0.getZ()),
-                tileMaxCtrZ0.getZoom(),
-                tileMaxCtrZ0.getMaxZoom(),
-                tileMaxCtrZ0.getIndexStyle(),
-                tileMaxCtrZ0.getSliceAxis());
-
-        int minZ = Integer.MAX_VALUE; // Seminal value.
-        int maxZ = Integer.MIN_VALUE;
-        
-        for (int x = tileMinCtrZ.getX(); x <= tileMaxCtrZ.getX(); ++x) {
-            for (int y = tileMinCtrZ.getY(); y <= tileMaxCtrZ.getY(); ++y) {
-                TileIndex centerTileIndex = new TileIndex(
-                        x,y,center.getZ(),
-                            zoom.getLog2ZoomOutFactor(),
-                            tileMinCtrZ.getMaxZoom(),
-                            tileMinCtrZ.getIndexStyle(),
-                            tileMinCtrZ.getSliceAxis()
-                );
-                
-                neededTiles.add( centerTileIndex );
-                TileIndex nextSlice = centerTileIndex;
-                
-                // Find the center forward in z.
-                int totalPlanes = 0;
-                for (int z = 0; z < dimensions[2]/2 - 1; ++z) {
-                    nextSlice = nextSlice.nextSlice();
-                    neededTiles.add( nextSlice );
-                    if ( nextSlice.getZ() < minZ ) {
-                        minZ = nextSlice.getZ();
-                    }
-                    if ( nextSlice.getZ() > maxZ ) {
-                        maxZ = nextSlice.getZ();
-                    }
-                    totalPlanes++;
-                }
-                logger.debug("Center forward found " + totalPlanes + " planes.");
-
-                // Find the center backward in z.
-                nextSlice = centerTileIndex;
-                for (int z = 0; z < dimensions[2]/2; ++z) {
-                    nextSlice = nextSlice.previousSlice();
-                    neededTiles.add( nextSlice );
-                    if ( nextSlice.getZ() < minZ ) {
-                        minZ = nextSlice.getZ();
-                    }
-                    if ( nextSlice.getZ() > maxZ ) {
-                        maxZ = nextSlice.getZ();
-                    }
-                    totalPlanes++;
-                }
-                logger.debug("Center forward + center + center backward, found " + totalPlanes + " planes.");
-
-            }
-            logger.debug("Total tile set size is " + neededTiles.size());
-
-            // Side Effect:  These values must be computed here, but they
-            // are being used by other code at caller level.
-            origin = new ZoomedVoxelIndex(
-                    zoom,
-                    center.getX() - dimensions[0]/2,
-                    center.getY() - dimensions[1]/2,
-                    Math.min(minZ, maxZ));
-            extent = new VoxelIndex(
-                    dimensions[0],
-                    dimensions[1],
-                    dimensions[2]);
-        }
-        
-        return neededTiles;
-    }
-
     /** Called from 3D feed. */
-    private Set<TileIndex> getCenteredTileSet2(TileFormat tileFormat, Vec3 center, double pixelsPerSceneUnit, BoundingBox3d bb, int[] dimensions, ZoomLevel zoomLevel) {
+    private Set<TileIndex> getCenteredTileSet(TileFormat tileFormat, Vec3 center, double pixelsPerSceneUnit, BoundingBox3d bb, int[] dimensions, ZoomLevel zoomLevel) {
         assert(dimensions[0] % 2 == 0) : "Dimension X must be divisible by 2";
         assert(dimensions[1] % 2 == 0) : "Dimension Y must be divisible by 2";
         assert(dimensions[2] % 2 == 0) : "Dimension Z must be divisible by 2";
@@ -765,10 +661,21 @@ OVERFLOW_LABEL:
                 }
             }
         }
-
+        
         // Side Effect:  These values must be computed here, but they
         // are being used by other code at caller level.
         //TileFormat.TileXyz lowestTile = new TileFormat.TileXyz(lowX, lowY, lowZ);
+        TileFormat.VoxelXyz vox = modifyCoordsForStage(center, tileFormat, xyzFromWhd, dimensions, minDepth);
+        origin = tileFormat.zoomedVoxelIndexForVoxelXyz(vox, zoomLevel, sliceAxis);
+        extent = new VoxelIndex(
+                dimensions[0],
+                dimensions[1],
+                dimensions[2]);
+		        
+        return neededTiles;
+    }
+
+    private TileFormat.VoxelXyz modifyCoordsForStage(Vec3 center, TileFormat tileFormat, int[] xyzFromWhd, int[] dimensions, int minDepth) {
         TileFormat.VoxelXyz vox = tileFormat.voxelXyzForMicrometerXyz(
                 new TileFormat.MicrometerXyz(
                         (int)(center.getX()), 
@@ -776,7 +683,7 @@ OVERFLOW_LABEL:
                         (int)(center.getZ())
                 )
         );
-        // NOTE: modified X-coordinate handling.
+        // NOTE: modified coordinate handling.
         // Other two coords first divide by microns, and then subtract origin.
         // Not so for the x: opposite order of operations: first subtracting
         // origin, and then dividing by micrometers.
@@ -787,13 +694,7 @@ OVERFLOW_LABEL:
             minDepth
         };
         vox = new TileFormat.VoxelXyz(voxelizedCoords);
-        origin = tileFormat.zoomedVoxelIndexForVoxelXyz(vox, zoomLevel, sliceAxis);
-        extent = new VoxelIndex(
-                dimensions[0],
-                dimensions[1],
-                dimensions[2]);
-		        
-        return neededTiles;
+        return vox;
     }
 
     private int calcZCoord(BoundingBox3d bb, int[] xyzFromWhd, TileFormat tileFormat, int focusDepth) {
