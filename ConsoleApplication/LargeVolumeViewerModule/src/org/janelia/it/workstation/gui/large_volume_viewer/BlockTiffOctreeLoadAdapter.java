@@ -379,7 +379,7 @@ extends AbstractTextureLoadAdapter
                 // Origin must be divided by 1000, to convert to micrometers.
                 for ( int i = 0; i < origin.length; i++ ) {
                     origin[ i ] /= 1000;
-                    origin[ i ] *= scale[ i ];
+                    origin[ i ] /= scale[ i ];
                 }
                 
                 tileFormat.setVoxelMicrometers(scale);
