@@ -56,19 +56,11 @@ public class PathTraceToParentWorker extends BackgroundWorker {
         // A series of conversions to get to ZoomedVoxelIndex
         Vec3 vec3_1 = request.getXyz1();
         Vec3 vec3_2 = request.getXyz2();
-        TileFormat.MicrometerXyz um1 = new TileFormat.MicrometerXyz(vec3_1.getX(), vec3_1.getY(), vec3_1.getZ());
-        TileFormat.MicrometerXyz um2 = new TileFormat.MicrometerXyz(vec3_2.getX(), vec3_2.getY(), vec3_2.getZ());
+        // X coordinate must be handled differently.
+        TileFormat.MicrometerXyz um1 = new TileFormat.MicrometerXyz(vec3_1.getX() * tileFormat.getVoxelMicrometers()[0], vec3_1.getY(), vec3_1.getZ());
+        TileFormat.MicrometerXyz um2 = new TileFormat.MicrometerXyz(vec3_2.getX() * tileFormat.getVoxelMicrometers()[0], vec3_2.getY(), vec3_2.getZ());
         TileFormat.VoxelXyz vox1 = tileFormat.voxelXyzForMicrometerXyz(um1);
         TileFormat.VoxelXyz vox2 = tileFormat.voxelXyzForMicrometerXyz(um2);
-        // NOTE: modified X-coordinate handling.
-        // Other two coords first divide by microns, and then subtract origin.
-        // Not so for the x: opposite order of operations: first subtracting
-        // origin, and then dividing by micrometers.
-        // (int)((camera.getFocus().getX() - tileFormat.getOrigin()[0]) / tileFormat.getVoxelMicrometers()[0]),
-        // vox1 = new TileFormat.VoxelXyz( (int)((vox1.getX() - tileFormat.getOrigin()[0]) * tileFormat.getVoxelMicrometers()[0]), vox1.getY(), vox1.getZ());
-        // vox2 = new TileFormat.VoxelXyz( (int)((vox2.getX() - tileFormat.getOrigin()[0]) * tileFormat.getVoxelMicrometers()[0]), vox2.getY(), vox2.getZ());
-//        vox1 = new TileFormat.VoxelXyz( (int)(um1.getX() * tileFormat.getVoxelMicrometers()[0]), vox1.getY(), vox1.getZ());
-//        vox2 = new TileFormat.VoxelXyz( (int)(um2.getX() * tileFormat.getVoxelMicrometers()[0]), vox2.getY(), vox2.getZ());
         ZoomLevel zoomLevel = new ZoomLevel(0);
         ZoomedVoxelIndex zv1 = tileFormat.zoomedVoxelIndexForVoxelXyz(
                 vox1, zoomLevel, CoordinateAxis.Z);

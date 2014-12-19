@@ -35,9 +35,8 @@ public class SubvolumeProvider {
 
         // A series of conversions to get to ZoomedVoxelIndex
         TileFormat tileFormat = volumeImage.getLoadAdapter().getTileFormat();
-//        int xOriginMicrometers = (int)(tileFormat.getOrigin()[0] * tileFormat.getVoxelMicrometers()[0]);
-        TileFormat.MicrometerXyz um1 = new TileFormat.MicrometerXyz(corner1.getX()/* - xOriginMicrometers*/, corner1.getY(), corner1.getZ());
-        TileFormat.MicrometerXyz um2 = new TileFormat.MicrometerXyz(corner2.getX()/* - xOriginMicrometers*/, corner2.getY(), corner2.getZ());
+        TileFormat.MicrometerXyz um1 = new TileFormat.MicrometerXyz(corner1.getX() * tileFormat.getVoxelMicrometers()[0], corner1.getY(), corner1.getZ());
+        TileFormat.MicrometerXyz um2 = new TileFormat.MicrometerXyz(corner2.getX() * tileFormat.getVoxelMicrometers()[0], corner2.getY(), corner2.getZ());
         TileFormat.VoxelXyz vox1 = tileFormat.voxelXyzForMicrometerXyz(um1);
         TileFormat.VoxelXyz vox2 = tileFormat.voxelXyzForMicrometerXyz(um2);
         ZoomLevel zoomLevel = new ZoomLevel(0);

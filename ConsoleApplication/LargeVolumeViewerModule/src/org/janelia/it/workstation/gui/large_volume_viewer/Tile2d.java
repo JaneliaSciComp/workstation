@@ -316,7 +316,7 @@ implements GLActor
         // double z = 0.0; // As far as OpenGL is concerned, all Z's are zero
 		// Z index does not change with scale; XY do
         double z = (getIndex().getCoordinate(whdToXyz[2])+0.5) * tileFormat.getVoxelMicrometers()[whdToXyz[2]];
-        double x0 = calcOriAdjCoord(whdToXyz, 0, zoomScale);
+        double x0 = calculateCoord(whdToXyz, 0, zoomScale);
         double x1 = x0 + tileWidth;
         if ((whdToXyz[0] == 1) && (yMax != 0)) {
         	x0 = yMax - x0;

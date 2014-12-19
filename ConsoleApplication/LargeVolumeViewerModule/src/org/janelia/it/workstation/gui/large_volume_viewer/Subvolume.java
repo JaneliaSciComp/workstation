@@ -557,8 +557,11 @@ OVERFLOW_LABEL:
     private Set<TileIndex> getNeededTileSet(TileFormat tileFormat, ZoomedVoxelIndex farCorner, ZoomLevel zoom) {
         // Load tiles from volume representation
         final CoordinateAxis sliceAxis = CoordinateAxis.Z;
+        
         TileIndex tileMin0 = tileFormat.tileIndexForZoomedVoxelIndex(origin, sliceAxis);
         TileIndex tileMax0 = tileFormat.tileIndexForZoomedVoxelIndex(farCorner, sliceAxis);
+//        TileIndex tileMin0 = tileIndexForZoomedVoxelIndex(tileFormat, origin, sliceAxis);
+//        TileIndex tileMax0 = tileIndexForZoomedVoxelIndex(tileFormat, farCorner, sliceAxis);
         
         // Guard against y-flip. Make it so general it could find some other future situation too.
         // Enforce that tileMinCtrZ x/y/z are no larger than tileMaxCtrZ x/y/z
@@ -616,6 +619,50 @@ OVERFLOW_LABEL:
         
     }
     
+    private TileIndex tileIndexForZoomedVoxelIndex(
+            TileFormat tileFormat,
+            ZoomedVoxelIndex ix,
+            CoordinateAxis sliceDirection) 
+    {
+        int zoom = ix.getZoomLevel().getLog2ZoomOutFactor();
+        TileFormat.TileXyz tileXyz = tileXyzForZoomedVoxelIndex(
+                ix, 
+                sliceDirection,
+                tileFormat);
+        int zoomMax = tileFormat.getZoomLevelCount() - 1;
+        return new TileIndex(
+                tileXyz.getX(), tileXyz.getY(), tileXyz.getZ(),
+                zoom, zoomMax, tileFormat.getIndexStyle(), sliceDirection);
+    }
+
+	/**
+	 * TileIndex xyz containing ZoomedVoxel. BORROWED from TilFormat.
+	 * @param z
+	 * @param zoomLevel
+	 * @param sliceAxis
+	 * @return
+	 */
+	private TileFormat.TileXyz tileXyzForZoomedVoxelIndex(ZoomedVoxelIndex z, CoordinateAxis sliceAxis, TileFormat tileFormat) {
+		int xyz[] = {z.getX(), z.getY(), z.getZ()};
+		// Invert Y axis to convert to Raveler convention from image convention.
+        int[] volumeSize = tileFormat.getVolumeSize();
+        int[] tileSize = tileFormat.getTileSize();
+		int zoomFactor = z.getZoomLevel().getZoomOutFactor();
+		int maxZoomVoxelY = volumeSize[1] / zoomFactor - 1;
+		xyz[1] = maxZoomVoxelY - xyz[1];
+		int depthAxis = sliceAxis.index();
+		for (int i = 0; i < 3; ++i) {
+			if (i == depthAxis)
+				continue; // Don't scale depth axis
+            else if (i == (depthAxis + 1) % 3) {
+				xyz[i] = (xyz[i] - tileFormat.getOrigin()[i])/tileSize[i]; // scale horizontal                
+            }
+			else
+				xyz[i] = xyz[i]/tileSize[i]; // scale vertical
+		}
+		return new TileFormat.TileXyz(xyz[0], xyz[1], xyz[2]);
+	}
+
     /** Called from 3D feed. */
     private Set<TileIndex> getCenteredTileSet(TileFormat tileFormat, Vec3 center, double pixelsPerSceneUnit, BoundingBox3d bb, int[] dimensions, ZoomLevel zoomLevel) {
         assert(dimensions[0] % 2 == 0) : "Dimension X must be divisible by 2";

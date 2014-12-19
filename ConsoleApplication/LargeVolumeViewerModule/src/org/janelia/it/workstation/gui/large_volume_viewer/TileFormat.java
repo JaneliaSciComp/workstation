@@ -78,8 +78,8 @@ public class TileFormat
         
         // Eliminating voxel size multiplication from X coord: offset already
         // in voxel coordinates.
-		Vec3 b0 = new Vec3(s0[0], sv[1]*s0[1], sv[2]*s0[2]);
-		Vec3 b1 = new Vec3(s0[0]+(sv[0]*s1[0]), sv[1]*(s0[1]+s1[1]), sv[2]*(s0[2]+s1[2]));
+		Vec3 b0 = new Vec3(sv[0]*s0[0], sv[1]*s0[1], sv[2]*s0[2]);
+		Vec3 b1 = new Vec3(sv[0]*(s0[0]+s1[0]), sv[1]*(s0[1]+s1[1]), sv[2]*(s0[2]+s1[2]));
 		BoundingBox3d result = new BoundingBox3d();
 		result.setMin(b0);
 		result.setMax(b1);
@@ -138,9 +138,9 @@ public class TileFormat
 		double tileWidth = tileSize[xyzFromWhd[0]] * zoomFactor * resolution0;
 		double tileHeight = tileSize[xyzFromWhd[1]] * zoomFactor * resolution1;
 
-        int xOrigin = getOrigin()[xyzFromWhd[0]];
-		int wMin = (int)Math.floor((screenBounds.getwFMin() - xOrigin) / tileWidth);
-		int wMax = (int)Math.floor((screenBounds.getwFMax() - xOrigin) / tileWidth);
+        //int xOrigin = getOrigin()[xyzFromWhd[0]];
+		int wMin = (int)Math.floor((screenBounds.getwFMin()/* - xOrigin*/) / tileWidth);
+		int wMax = (int)Math.floor((screenBounds.getwFMax()/* - xOrigin*/) / tileWidth);
 
 		int hMin = (int)Math.floor(screenBounds.gethFMin() / tileHeight);
 		int hMax = (int)Math.floor(screenBounds.gethFMax() / tileHeight);
@@ -177,15 +177,16 @@ public class TileFormat
         
 		// Correct for bottom Y origin of Raveler tile coordinate system
 		// (everything else is top Y origin: image, our OpenGL, user facing coordinate system)
+        final double bbMinY = bb.getMin().getY();
 		if (xyzFromWhd[0] == 1) { // Y axis left-right
 			double temp = wFMin;
-			wFMin = bottomY - wFMax;
-			wFMax = bottomY - temp;
+			wFMin = bottomY - wFMax + bbMinY;
+			wFMax = bottomY - temp + bbMinY;
 		}
 		else if (xyzFromWhd[1] == 1) { // Y axis top-bottom
 			double temp = hFMin;
-			hFMin = bottomY - hFMax;
-			hFMax = bottomY - temp;
+			hFMin = bottomY - hFMax + bbMinY;
+			hFMax = bottomY - temp + bbMinY;
 		}
 		else {
 			// TODO - invert slice axis? (already inverted above)
