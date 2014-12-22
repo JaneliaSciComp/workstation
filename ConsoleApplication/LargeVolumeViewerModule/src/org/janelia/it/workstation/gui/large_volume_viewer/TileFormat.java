@@ -157,47 +157,47 @@ public class TileFormat
     public ScreenBoundingBox boundingBoxToScreenBounds(
             BoundingBox3d bb, int viewWidth, int viewHeight, Vec3 focus, double pixelsPerSceneUnit, int[] xyzFromWhd 
     ) {
-        
+        // The y-flip correction is wrong when the origin is not at zero. I think I got that corrected by adding the minimum Y value during the flip:
 		double bottomY = bb.getMax().getY();
 
         // In scene units
 		// Clip to screen space
-		double wFMin = focus.get(xyzFromWhd[0]) - 0.5*viewWidth/pixelsPerSceneUnit;
-		double wFMax = focus.get(xyzFromWhd[0]) + 0.5*viewWidth/pixelsPerSceneUnit;
-		double hFMin = focus.get(xyzFromWhd[1]) - 0.5*viewHeight/pixelsPerSceneUnit;
-		double hFMax = focus.get(xyzFromWhd[1]) + 0.5*viewHeight/pixelsPerSceneUnit;
+		double xMinSceneUnit = focus.get(xyzFromWhd[0]) - 0.5*viewWidth/pixelsPerSceneUnit;
+		double xMaxSceneUnit = focus.get(xyzFromWhd[0]) + 0.5*viewWidth/pixelsPerSceneUnit;
+		double yMinSceneUnit = focus.get(xyzFromWhd[1]) - 0.5*viewHeight/pixelsPerSceneUnit;
+		double yMaxSceneUnit = focus.get(xyzFromWhd[1]) + 0.5*viewHeight/pixelsPerSceneUnit;
 		// Clip to volume space
 		// Subtract one half pixel to avoid loading an extra layer of tiles
 		double dw = 0.25 * getVoxelMicrometers()[xyzFromWhd[0]];
 		double dh = 0.25 * getVoxelMicrometers()[xyzFromWhd[1]];
-		wFMin = Math.max(wFMin, bb.getMin().get(xyzFromWhd[0]) + dw);
-		hFMin = Math.max(hFMin, bb.getMin().get(xyzFromWhd[1]) + dh);
-		wFMax = Math.min(wFMax, bb.getMax().get(xyzFromWhd[0]) - dw);
-		hFMax = Math.min(hFMax, bb.getMax().get(xyzFromWhd[1]) - dh);
+		xMinSceneUnit = Math.max(xMinSceneUnit, bb.getMin().get(xyzFromWhd[0]) + dw);
+		yMinSceneUnit = Math.max(yMinSceneUnit, bb.getMin().get(xyzFromWhd[1]) + dh);
+		xMaxSceneUnit = Math.min(xMaxSceneUnit, bb.getMax().get(xyzFromWhd[0]) - dw);
+		yMaxSceneUnit = Math.min(yMaxSceneUnit, bb.getMax().get(xyzFromWhd[1]) - dh);
         
 		// Correct for bottom Y origin of Raveler tile coordinate system
 		// (everything else is top Y origin: image, our OpenGL, user facing coordinate system)
         final double bbMinY = bb.getMin().getY();
 		if (xyzFromWhd[0] == 1) { // Y axis left-right
-			double temp = wFMin;
-			wFMin = bottomY - wFMax + bbMinY;
-			wFMax = bottomY - temp + bbMinY;
+			double temp = xMinSceneUnit;
+			xMinSceneUnit = bottomY - xMaxSceneUnit + bbMinY;
+			xMaxSceneUnit = bottomY - temp + bbMinY;
 		}
 		else if (xyzFromWhd[1] == 1) { // Y axis top-bottom
-			double temp = hFMin;
-			hFMin = bottomY - hFMax + bbMinY;
-			hFMax = bottomY - temp + bbMinY;
+			double temp = yMinSceneUnit;
+			yMinSceneUnit = bottomY - yMaxSceneUnit + bbMinY;
+			yMaxSceneUnit = bottomY - temp + bbMinY;
 		}
 		else {
 			// TODO - invert slice axis? (already inverted above)
 		}
         
         ScreenBoundingBox screenBoundaries = new ScreenBoundingBox();
-        screenBoundaries.sethFMax(hFMax);
-        screenBoundaries.sethFMin(hFMin);
+        screenBoundaries.sethFMax(yMaxSceneUnit);
+        screenBoundaries.sethFMin(yMinSceneUnit);
         
-        screenBoundaries.setwFMax(wFMax);
-        screenBoundaries.setwFMin(wFMin);
+        screenBoundaries.setwFMax(xMaxSceneUnit);
+        screenBoundaries.setwFMin(xMinSceneUnit);
         
         return screenBoundaries;
     }
