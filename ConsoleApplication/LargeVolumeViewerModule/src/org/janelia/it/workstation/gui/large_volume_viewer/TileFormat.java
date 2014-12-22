@@ -157,8 +157,6 @@ public class TileFormat
     public ScreenBoundingBox boundingBoxToScreenBounds(
             BoundingBox3d bb, int viewWidth, int viewHeight, Vec3 focus, double pixelsPerSceneUnit, int[] xyzFromWhd 
     ) {
-        // The y-flip correction is wrong when the origin is not at zero. I think I got that corrected by adding the minimum Y value during the flip:
-		double bottomY = bb.getMax().getY();
 
         // In scene units
 		// Clip to screen space
@@ -175,18 +173,21 @@ public class TileFormat
 		xMaxSceneUnit = Math.min(xMaxSceneUnit, bb.getMax().get(xyzFromWhd[0]) - dw);
 		yMaxSceneUnit = Math.min(yMaxSceneUnit, bb.getMax().get(xyzFromWhd[1]) - dh);
         
+        // The y-flip correction is wrong when the origin is not at zero. 
+        // I think I got that corrected by adding the minimum Y value during the flip:
+        //   Editor correction: bottomY is same thing.
 		// Correct for bottom Y origin of Raveler tile coordinate system
 		// (everything else is top Y origin: image, our OpenGL, user facing coordinate system)
-        final double bbMinY = bb.getMin().getY();
+		double bottomY = bb.getMax().getY();
 		if (xyzFromWhd[0] == 1) { // Y axis left-right
 			double temp = xMinSceneUnit;
-			xMinSceneUnit = bottomY - xMaxSceneUnit + bbMinY;
-			xMaxSceneUnit = bottomY - temp + bbMinY;
+			xMinSceneUnit = bottomY - xMaxSceneUnit;
+			xMaxSceneUnit = bottomY - temp;
 		}
 		else if (xyzFromWhd[1] == 1) { // Y axis top-bottom
 			double temp = yMinSceneUnit;
-			yMinSceneUnit = bottomY - yMaxSceneUnit + bbMinY;
-			yMaxSceneUnit = bottomY - temp + bbMinY;
+			yMinSceneUnit = bottomY - yMaxSceneUnit;
+			yMaxSceneUnit = bottomY - temp;
 		}
 		else {
 			// TODO - invert slice axis? (already inverted above)
