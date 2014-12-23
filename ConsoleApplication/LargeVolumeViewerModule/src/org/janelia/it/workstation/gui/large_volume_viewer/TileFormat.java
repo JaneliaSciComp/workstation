@@ -160,6 +160,9 @@ public class TileFormat
             BoundingBox3d bb, int viewWidth, int viewHeight, Vec3 focus, double pixelsPerSceneUnit, int[] xyzFromWhd 
     ) {
 
+        bb = originAdjustBoundingBox(bb, xyzFromWhd);
+        focus = originAdjustCameraFocus(focus, xyzFromWhd);
+        
         // In scene units
 		// Clip to screen space  
         double xMinView = focus.get(xyzFromWhd[X_OFFS]) - 0.5*viewWidth/pixelsPerSceneUnit;
@@ -174,10 +177,7 @@ public class TileFormat
 		double dh = 0.25 * getVoxelMicrometers()[xyzFromWhd[1]];
 
         // Compute 'biases' against the origin.
-        double rightMost = //this.getOrigin()[xyzFromWhd[X_OFFS]] * this.getVoxelMicrometers()[xyzFromWhd[X_OFFS]];
-                bb.getMax().getX();
-		double bottomY = //this.getOrigin()[xyzFromWhd[Y_OFFS]] * this.getVoxelMicrometers()[xyzFromWhd[Y_OFFS]];
-                bb.getMax().getY();
+		double bottomY = bb.getMax().getY();
         
         double xMinSceneUnit = Math.max(xMinView, bb.getMin().get(xyzFromWhd[X_OFFS]) + dw);
 		double yMinSceneUnit = bottomY - Math.max(yMinView, bb.getMin().get(xyzFromWhd[Y_OFFS]) + dh);
@@ -210,10 +210,10 @@ public class TileFormat
         
         screenBoundaries.setwFMax(xMaxSceneUnit);
         screenBoundaries.setwFMin(xMinSceneUnit);
-        bbToScreenScenarioDump( screenBoundaries , bb);
+        //( screenBoundaries , bb, viewWidth, viewHeight );
         return screenBoundaries;
     }
-
+    
     public int calcRelativeTileDepth(int[] xyzFromWhd, double focusDepth, BoundingBox3d bb) {
         // Bounding box is actually 0.5 voxels bigger than number of slices at each end
         int dMin = (int)(bb.getMin().get(xyzFromWhd[2])/getVoxelMicrometers()[xyzFromWhd[2]] + 0.5);
@@ -624,11 +624,43 @@ public class TileFormat
 		public TileXyz(int x, int y, int z) {super(x, y, z);}		
 	} // 4
 
-    private void bbToScreenScenarioDump(ScreenBoundingBox screenBoundaries, BoundingBox3d bb) {
+    @SuppressWarnings("unused")
+    private void bbToScreenScenarioDump(ScreenBoundingBox screenBoundaries, BoundingBox3d bb, int viewWidth, int viewHeight) {
         System.out.println("================================================");
         System.out.println("SCENARIO: TileFormat.boundingBoxToScreenBounds()");
+        System.out.println("View width=" + viewWidth + ", View Height=" + viewHeight);
         System.out.println( screenBoundaries );
         System.out.println( bb.toString() );
     }
     
+    /**
+     * This method will remove origin offset from the bounding box, to make
+     * it more convenient.
+     * @param bb some origin-based bounding box.
+     * @return offset to the 0 of the screen (as if ori=0,0,0).
+     */
+    private BoundingBox3d originAdjustBoundingBox( BoundingBox3d bb, int[] xyzFromWhd ) {
+        BoundingBox3d rtnVal = new BoundingBox3d();
+        final Vec3 originVec = new Vec3(
+                origin[xyzFromWhd[0]] * voxelMicrometers[xyzFromWhd[0]],
+                0,
+                0
+        );
+        Vec3 min = bb.getMin().minus(originVec);
+        Vec3 max = bb.getMax().minus(originVec);
+        rtnVal.setMin(min);
+        rtnVal.setMax(max);
+        return rtnVal;
+    }
+    
+    private Vec3 originAdjustCameraFocus( Vec3 focus, int[] xyzFromWhd ) {
+        Vec3 rtnVal = new Vec3(
+            focus.get(xyzFromWhd[X_OFFS]) - origin[xyzFromWhd[0]]*voxelMicrometers[xyzFromWhd[X_OFFS]],
+            focus.get(xyzFromWhd[Y_OFFS]),
+            focus.get(xyzFromWhd[Z_OFFS])
+        );
+            
+        return rtnVal;
+    }
+
 }

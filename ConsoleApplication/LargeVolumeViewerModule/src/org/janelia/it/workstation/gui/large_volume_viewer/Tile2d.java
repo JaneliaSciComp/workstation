@@ -340,7 +340,17 @@ implements GLActor
 
     private double calculateCoord(int[] whdToXyz, int coordNum, int zoomScale) {
         final int offset = whdToXyz[coordNum];
-        final double coord = getIndex().getCoordinate(offset) * tileFormat.getTileSize()[offset] * zoomScale * tileFormat.getVoxelMicrometers()[offset];
+//        final double coord = getIndex().getCoordinate(offset) * tileFormat.getTileSize()[offset] * zoomScale * tileFormat.getVoxelMicrometers()[offset];
+//        ZoomedVoxelXyz zvxyz = tileFormat.zoomedVoxelIndexForTileXyz(
+//                new TileXyz(), null, CoordinateAxis.X
+//        );
+        double coordAddend = 0.0;
+        if (offset == 0) {
+            coordAddend = (tileFormat.getOrigin()[offset] * tileFormat.getVoxelMicrometers()[offset]);
+        }
+        final double coord = 
+                getIndex().getCoordinate(offset) * tileFormat.getTileSize()[offset] * zoomScale * tileFormat.getVoxelMicrometers()[offset] +
+                coordAddend;
         return coord;
     }
 	
