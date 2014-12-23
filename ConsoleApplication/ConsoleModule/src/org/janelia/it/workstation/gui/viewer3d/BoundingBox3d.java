@@ -117,5 +117,10 @@ public class BoundingBox3d
 	public void setMin(Vec3 min) {
 		this.min = min;
 	}
+    
+    @Override
+    public String toString() {
+        return "BoundingBox: [" + min.toString() + max.toString() + "]";
+    }
 
 }

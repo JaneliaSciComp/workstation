@@ -11,7 +11,10 @@ import org.janelia.it.workstation.octree.ZoomedVoxelIndex;
  */
 public class TileFormat 
 {
-
+    private static final int X_OFFS = 0;
+    private static final int Y_OFFS = 1;
+    private static final int Z_OFFS = 2;
+    
 	private int[] origin = {0,0,0}; // in voxel
 	private int[] volumeSize = {0,0,0}; // in voxels
 	private int[] tileSize = {1024, 1024, 1}; // in voxels (possibly)
@@ -138,9 +141,8 @@ public class TileFormat
 		double tileWidth = tileSize[xyzFromWhd[0]] * zoomFactor * resolution0;
 		double tileHeight = tileSize[xyzFromWhd[1]] * zoomFactor * resolution1;
 
-        //int xOrigin = getOrigin()[xyzFromWhd[0]];
-		int wMin = (int)Math.floor((screenBounds.getwFMin()/* - xOrigin*/) / tileWidth);
-		int wMax = (int)Math.floor((screenBounds.getwFMax()/* - xOrigin*/) / tileWidth);
+		int wMin = (int)Math.floor(screenBounds.getwFMin() / tileWidth);
+		int wMax = (int)Math.floor(screenBounds.getwFMax() / tileWidth);
 
 		int hMin = (int)Math.floor(screenBounds.gethFMin() / tileHeight);
 		int hMax = (int)Math.floor(screenBounds.gethFMax() / tileHeight);
@@ -159,35 +161,44 @@ public class TileFormat
     ) {
 
         // In scene units
-		// Clip to screen space
-		double xMinSceneUnit = focus.get(xyzFromWhd[0]) - 0.5*viewWidth/pixelsPerSceneUnit;
-		double xMaxSceneUnit = focus.get(xyzFromWhd[0]) + 0.5*viewWidth/pixelsPerSceneUnit;
-		double yMinSceneUnit = focus.get(xyzFromWhd[1]) - 0.5*viewHeight/pixelsPerSceneUnit;
-		double yMaxSceneUnit = focus.get(xyzFromWhd[1]) + 0.5*viewHeight/pixelsPerSceneUnit;
-		// Clip to volume space
+		// Clip to screen space  
+        double xMinView = focus.get(xyzFromWhd[X_OFFS]) - 0.5*viewWidth/pixelsPerSceneUnit;
+        double xMaxView = focus.get(xyzFromWhd[X_OFFS]) + 0.5*viewWidth/pixelsPerSceneUnit;
+        
+		double yMinView = focus.get(xyzFromWhd[Y_OFFS]) - 0.5*viewHeight/pixelsPerSceneUnit;
+		double yMaxView = focus.get(xyzFromWhd[Y_OFFS]) + 0.5*viewHeight/pixelsPerSceneUnit;
+
+        // Clip to volume space
 		// Subtract one half pixel to avoid loading an extra layer of tiles
 		double dw = 0.25 * getVoxelMicrometers()[xyzFromWhd[0]];
 		double dh = 0.25 * getVoxelMicrometers()[xyzFromWhd[1]];
-		xMinSceneUnit = Math.max(xMinSceneUnit, bb.getMin().get(xyzFromWhd[0]) + dw);
-		yMinSceneUnit = Math.max(yMinSceneUnit, bb.getMin().get(xyzFromWhd[1]) + dh);
-		xMaxSceneUnit = Math.min(xMaxSceneUnit, bb.getMax().get(xyzFromWhd[0]) - dw);
-		yMaxSceneUnit = Math.min(yMaxSceneUnit, bb.getMax().get(xyzFromWhd[1]) - dh);
+
+        // Compute 'biases' against the origin.
+        double rightMost = //this.getOrigin()[xyzFromWhd[X_OFFS]] * this.getVoxelMicrometers()[xyzFromWhd[X_OFFS]];
+                bb.getMax().getX();
+		double bottomY = //this.getOrigin()[xyzFromWhd[Y_OFFS]] * this.getVoxelMicrometers()[xyzFromWhd[Y_OFFS]];
+                bb.getMax().getY();
+        
+        double xMinSceneUnit = Math.max(xMinView, bb.getMin().get(xyzFromWhd[X_OFFS]) + dw);
+		double yMinSceneUnit = bottomY - Math.max(yMinView, bb.getMin().get(xyzFromWhd[Y_OFFS]) + dh);
+        
+		double xMaxSceneUnit = Math.min(xMaxView, bb.getMax().get(xyzFromWhd[X_OFFS]) - dw);
+		double yMaxSceneUnit = bottomY - Math.min(yMaxView, bb.getMax().get(xyzFromWhd[Y_OFFS]) - dh);
         
         // The y-flip correction is wrong when the origin is not at zero. 
         // I think I got that corrected by adding the minimum Y value during the flip:
         //   Editor correction: bottomY is same thing.
 		// Correct for bottom Y origin of Raveler tile coordinate system
 		// (everything else is top Y origin: image, our OpenGL, user facing coordinate system)
-		double bottomY = bb.getMax().getY();
-		if (xyzFromWhd[0] == 1) { // Y axis left-right
+		if (xyzFromWhd[X_OFFS] == Y_OFFS) { // Y axis left-right
 			double temp = xMinSceneUnit;
-			xMinSceneUnit = bottomY - xMaxSceneUnit;
-			xMaxSceneUnit = bottomY - temp;
+			xMinSceneUnit = xMaxSceneUnit;
+			xMaxSceneUnit = temp;
 		}
-		else if (xyzFromWhd[1] == 1) { // Y axis top-bottom
+		else if (xyzFromWhd[Y_OFFS] == Y_OFFS) { // Y axis top-bottom
 			double temp = yMinSceneUnit;
-			yMinSceneUnit = bottomY - yMaxSceneUnit;
-			yMaxSceneUnit = bottomY - temp;
+			yMinSceneUnit = yMaxSceneUnit;
+			yMaxSceneUnit = temp;
 		}
 		else {
 			// TODO - invert slice axis? (already inverted above)
@@ -199,10 +210,10 @@ public class TileFormat
         
         screenBoundaries.setwFMax(xMaxSceneUnit);
         screenBoundaries.setwFMin(xMinSceneUnit);
-        
+        bbToScreenScenarioDump( screenBoundaries , bb);
         return screenBoundaries;
     }
-    
+
     public int calcRelativeTileDepth(int[] xyzFromWhd, double focusDepth, BoundingBox3d bb) {
         // Bounding box is actually 0.5 voxels bigger than number of slices at each end
         int dMin = (int)(bb.getMin().get(xyzFromWhd[2])/getVoxelMicrometers()[xyzFromWhd[2]] + 0.5);
@@ -613,4 +624,11 @@ public class TileFormat
 		public TileXyz(int x, int y, int z) {super(x, y, z);}		
 	} // 4
 
+    private void bbToScreenScenarioDump(ScreenBoundingBox screenBoundaries, BoundingBox3d bb) {
+        System.out.println("================================================");
+        System.out.println("SCENARIO: TileFormat.boundingBoxToScreenBounds()");
+        System.out.println( screenBoundaries );
+        System.out.println( bb.toString() );
+    }
+    
 }

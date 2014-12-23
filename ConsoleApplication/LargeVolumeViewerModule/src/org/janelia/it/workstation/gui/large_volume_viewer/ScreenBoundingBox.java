@@ -73,4 +73,11 @@ public class ScreenBoundingBox {
     public void sethFMax(double hFMax) {
         this.hFMax = hFMax;
     }
+    
+    public String toString() {
+        return String.format(
+                "ScreenBoundingBox[ wFMin=%s, wFMax=%s, hFMin=%s, hFMax=%s ]",
+                wFMin, wFMax, hFMin, hFMax 
+        );
+    }
 }

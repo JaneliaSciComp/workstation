@@ -389,6 +389,7 @@ extends AbstractTextureLoadAdapter
                     origin[1],
                     origin[2]
                 };
+//                tileFormat.setOrigin(mockOrigin);
                 tileFormat.setOrigin(origin);
 
             }

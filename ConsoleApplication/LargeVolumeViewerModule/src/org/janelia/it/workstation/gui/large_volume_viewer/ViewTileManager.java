@@ -184,9 +184,9 @@ public class ViewTileManager {
 				Tile2d tile = new Tile2d(key, tileFormat);
 				tile.setYMax(bb.getMax().getY()); // To help flip y; Always actual Y! (right?)
 				result.add(tile);
+                dumpTileIndex(tile);
 			}
 		}
-		
 		return result;
 	}
 	
@@ -339,6 +339,16 @@ public class ViewTileManager {
 	public Set<TileIndex> getNeededTextures() {
 		return neededTextures;
 	}
+
+    private void dumpTileIndex(Tile2d tile) {
+        if (tile.getIndex().getX() == 7 && tile.getIndex().getY() == 0) {
+            System.out.println("Target Tile");
+        }
+        System.out.println("From VTM: Tile Info");
+        System.out.println("       Tile Index==" + tile.getIndex().getX()+ ":" + tile.getIndex().getY() + ":" + tile.getIndex().getZ());
+        System.out.println("Tile Bounding Box==" + tile.getBoundingBox3d().getMin() + ":" + tile.getBoundingBox3d().getMax());
+        System.out.println("Zooom level is: " + tile.getIndex().getZoom() + "\n");
+    }
     
     private void rearrangeFromRotationAxis(Rotation3d viewerInGround, int[] xyzFromWhd) {
         // Rearrange from rotation matrix
