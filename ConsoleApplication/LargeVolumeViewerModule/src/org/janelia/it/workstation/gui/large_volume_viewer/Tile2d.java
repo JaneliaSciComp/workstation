@@ -340,10 +340,6 @@ implements GLActor
 
     private double calculateCoord(int[] whdToXyz, int coordNum, int zoomScale) {
         final int offset = whdToXyz[coordNum];
-//        final double coord = getIndex().getCoordinate(offset) * tileFormat.getTileSize()[offset] * zoomScale * tileFormat.getVoxelMicrometers()[offset];
-//        ZoomedVoxelXyz zvxyz = tileFormat.zoomedVoxelIndexForTileXyz(
-//                new TileXyz(), null, CoordinateAxis.X
-//        );
         double coordAddend = 0.0;
         if (offset == 0) {
             coordAddend = (tileFormat.getOrigin()[offset] * tileFormat.getVoxelMicrometers()[offset]);
@@ -352,14 +348,6 @@ implements GLActor
                 getIndex().getCoordinate(offset) * tileFormat.getTileSize()[offset] * zoomScale * tileFormat.getVoxelMicrometers()[offset] +
                 coordAddend;
         return coord;
-    }
-	
-    private double calcOriAdjCoord(int[] whdToXyz, int coordNum, int zoomScale) {
-        final double coord = calculateCoord(whdToXyz, coordNum, zoomScale);
-        final int offset = whdToXyz[coordNum];
-        int origin = tileFormat.getOrigin()[offset];
-        //Avoid multiplying by micrometers, or screen coords will display wrong.
-        return coord + origin; 
     }
 	
 	private Vec3[] computeCornerPositions(Camera3d camera) {

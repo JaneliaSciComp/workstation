@@ -184,7 +184,7 @@ public class ViewTileManager {
 				Tile2d tile = new Tile2d(key, tileFormat);
 				tile.setYMax(bb.getMax().getY()); // To help flip y; Always actual Y! (right?)
 				result.add(tile);
-                dumpTileIndex(tile);
+                //dumpTileIndex(tile);
 			}
 		}
 		return result;
@@ -340,6 +340,7 @@ public class ViewTileManager {
 		return neededTextures;
 	}
 
+    @SuppressWarnings("unused")
     private void dumpTileIndex(Tile2d tile) {
         if (tile.getIndex().getX() == 7 && tile.getIndex().getY() == 0) {
             System.out.println("Target Tile");

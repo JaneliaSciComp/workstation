@@ -688,7 +688,7 @@ OVERFLOW_LABEL:
         // Side Effect:  These values must be computed here, but they
         // are being used by other code at caller level.
         //TileFormat.TileXyz lowestTile = new TileFormat.TileXyz(lowX, lowY, lowZ);
-        TileFormat.VoxelXyz vox = modifyCoordsForStage(center, tileFormat, xyzFromWhd, dimensions, minDepth);
+        TileFormat.VoxelXyz vox = getVoxCoords(center, tileFormat, xyzFromWhd, dimensions, minDepth);
         origin = tileFormat.zoomedVoxelIndexForVoxelXyz(vox, zoomLevel, sliceAxis);
         extent = new VoxelIndex(
                 dimensions[0],
@@ -739,7 +739,7 @@ OVERFLOW_LABEL:
         return neededTiles;
     }
 
-    private TileFormat.VoxelXyz modifyCoordsForStage(Vec3 center, TileFormat tileFormat, int[] xyzFromWhd, int[] dimensions, int minDepth) {
+    private TileFormat.VoxelXyz getVoxCoords(Vec3 center, TileFormat tileFormat, int[] xyzFromWhd, int[] dimensions, int minDepth) {
         TileFormat.VoxelXyz vox = tileFormat.voxelXyzForMicrometerXyz(
                 new TileFormat.MicrometerXyz(
                         (int)(center.getX()), 
@@ -751,13 +751,13 @@ OVERFLOW_LABEL:
         // Other two coords first divide by microns, and then subtract origin.
         // Not so for the x: opposite order of operations: first subtracting
         // origin, and then dividing by micrometers.
-        final int adjustedCenterX = (int)(center.getX() - tileFormat.getOrigin()[xyzFromWhd[0]]);
-        int[] voxelizedCoords = {
-            (int)((adjustedCenterX / tileFormat.getVoxelMicrometers()[xyzFromWhd[0]]) - dimensions[xyzFromWhd[0]]/2),
-            vox.getY() - dimensions[xyzFromWhd[1]]/2,
-            minDepth
-        };
-        vox = new TileFormat.VoxelXyz(voxelizedCoords);
+//        final int adjustedCenterX = (int)(center.getX() - tileFormat.getOrigin()[xyzFromWhd[0]]);
+//        int[] voxelizedCoords = {
+//            (int)((adjustedCenterX / tileFormat.getVoxelMicrometers()[xyzFromWhd[0]]) - dimensions[xyzFromWhd[0]]/2),
+//            vox.getY() - dimensions[xyzFromWhd[1]]/2,
+//            minDepth
+//        };
+//        vox = new TileFormat.VoxelXyz(voxelizedCoords);
         return vox;
     }
 
