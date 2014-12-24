@@ -75,14 +75,8 @@ public class TileFormat
     }
 
 	public BoundingBox3d calcBoundingBox() {
-        double sv[] = getVoxelMicrometers();
-		int s0[] = getOrigin();
-		int s1[] = getVolumeSize();
-        
-        // Eliminating voxel size multiplication from X coord: offset already
-        // in voxel coordinates.
-		Vec3 b0 = new Vec3(sv[0]*s0[0], sv[1]*s0[1], sv[2]*s0[2]);
-		Vec3 b1 = new Vec3(sv[0]*(s0[0]+s1[0]), sv[1]*(s0[1]+s1[1]), sv[2]*(s0[2]+s1[2]));
+		Vec3 b0 = new Vec3(calcLowerBBCoord(0), calcLowerBBCoord(1), calcLowerBBCoord(2));
+		Vec3 b1 = new Vec3(calcUpperBBCoord(0), calcUpperBBCoord(1), calcUpperBBCoord(2));
 		BoundingBox3d result = new BoundingBox3d();
 		result.setMin(b0);
 		result.setMax(b1);
@@ -663,4 +657,17 @@ public class TileFormat
         return rtnVal;
     }
 
+    private double calcLowerBBCoord(int index) {
+        //sv[1]*s0[1]
+        return getVoxelMicrometers()[index] * getOrigin()[index];
+    }
+    
+    private double calcUpperBBCoord(int index) {
+        //double sv[] = getVoxelMicrometers();
+		//int s0[] = getOrigin();
+		//int s1[] = getVolumeSize();
+        //sv[1]*(s0[1]+s1[1])
+        return getVoxelMicrometers()[index] * (getOrigin()[index] + getVolumeSize()[index]);
+    }
+    
 }

@@ -159,9 +159,9 @@ public class Subvolume {
         allocateRasterMemory(tileFormat, dimensions);
 
         Set<TileIndex> neededTiles = getCenteredTileSet(tileFormat, center, pixelsPerSceneUnit, bb, dimensions, zoom);
-        if (logger.isDebugEnabled()) {
+//        if (logger.isDebugEnabled()) {
             logTileRequest(neededTiles);
-        }
+//        }
         
         final ZoomedVoxelIndex farCorner = new ZoomedVoxelIndex(
                 zoom,
@@ -240,9 +240,9 @@ public class Subvolume {
         allocateRasterMemory(tileFormat);
 
         Set<TileIndex> neededTiles = getNeededTileSet(tileFormat, farCorner, zoom);
-        if (logger.isDebugEnabled()) {
+//        if (logger.isDebugEnabled()) {
             logTileRequest(neededTiles);
-        }
+//        }
         multiThreadedFetch(neededTiles, textureCache, loadAdapter, tileFormat, zoom, farCorner);
         
 	}
@@ -367,7 +367,7 @@ public class Subvolume {
                     .append(new Double(tx.getY()).intValue() ).append( "," )
                     .append(new Double(tx.getZ()).intValue() ).append("]");
         }
-        logger.info("Requesting\n" + bldr);
+        logger.info("===SubVolume:: Requesting: " + bldr);
     }
 
     private void multiThreadedFetch(Set<TileIndex> neededTiles, final TextureCache textureCache, final AbstractTextureLoadAdapter loadAdapter, final TileFormat tileFormat, final ZoomLevel zoom, final ZoomedVoxelIndex farCorner) {
@@ -603,20 +603,7 @@ OVERFLOW_LABEL:
                 tileMin.getIndexStyle(),
                 sliceAxis
         );
-        
-//        for (int x = tileMin.getX(); x <= maxWidth; ++x) {
-//            for (int y = minHeight; y <= maxHeight; ++y) {
-//                for (int z = minDepth; z <= maxDepth; ++z) {
-//                    neededTiles.add(new TileIndex(
-//                            x, y, z,
-//                        zoom.getLog2ZoomOutFactor(),
-//                        tileMin.getMaxZoom(),
-//                        tileMin.getIndexStyle(),
-//                        tileMin.getSliceAxis()));
-//                }
-//            }
-//        }
-        
+                
     }
     
     private TileIndex tileIndexForZoomedVoxelIndex(
@@ -751,13 +738,15 @@ OVERFLOW_LABEL:
         // Other two coords first divide by microns, and then subtract origin.
         // Not so for the x: opposite order of operations: first subtracting
         // origin, and then dividing by micrometers.
-//        final int adjustedCenterX = (int)(center.getX() - tileFormat.getOrigin()[xyzFromWhd[0]]);
-//        int[] voxelizedCoords = {
+//        final int adjustedCenterX = (int)(center.getX() -
+//                tileFormat.getOrigin()[xyzFromWhd[0]] * tileFormat.getVoxelMicrometers()[0]);
+        int[] voxelizedCoords = {
+            vox.getX() - dimensions[xyzFromWhd[0]]/2,
 //            (int)((adjustedCenterX / tileFormat.getVoxelMicrometers()[xyzFromWhd[0]]) - dimensions[xyzFromWhd[0]]/2),
-//            vox.getY() - dimensions[xyzFromWhd[1]]/2,
-//            minDepth
-//        };
-//        vox = new TileFormat.VoxelXyz(voxelizedCoords);
+            vox.getY() - dimensions[xyzFromWhd[1]]/2,
+            minDepth
+        };
+        vox = new TileFormat.VoxelXyz(voxelizedCoords);
         return vox;
     }
 

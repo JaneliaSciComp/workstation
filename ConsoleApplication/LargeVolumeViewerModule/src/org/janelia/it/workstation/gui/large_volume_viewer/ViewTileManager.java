@@ -82,8 +82,8 @@ public class ViewTileManager {
 	// LastGoodTiles always hold a displayable tile set, even when emergency
 	// tiles are loading.
 	private TileSet lastGoodTiles;
-	private Set<TileIndex> neededTextures = new HashSet<TileIndex>();
-	private Set<TileIndex> displayableTextures = new HashSet<TileIndex>();
+	private Set<TileIndex> neededTextures = new HashSet<>();
+	private Set<TileIndex> displayableTextures = new HashSet<>();
 
 	// private double zoomOffset = 0.5; // tradeoff between optimal resolution (0.0) and speed.
 	private TileSet previousTiles;
@@ -184,7 +184,7 @@ public class ViewTileManager {
 				Tile2d tile = new Tile2d(key, tileFormat);
 				tile.setYMax(bb.getMax().getY()); // To help flip y; Always actual Y! (right?)
 				result.add(tile);
-                //dumpTileIndex(tile);
+                dumpTileIndex(tile);
 			}
 		}
 		return result;
@@ -342,13 +342,12 @@ public class ViewTileManager {
 
     @SuppressWarnings("unused")
     private void dumpTileIndex(Tile2d tile) {
-        if (tile.getIndex().getX() == 7 && tile.getIndex().getY() == 0) {
-            System.out.println("Target Tile");
-        }
-        System.out.println("From VTM: Tile Info");
-        System.out.println("       Tile Index==" + tile.getIndex().getX()+ ":" + tile.getIndex().getY() + ":" + tile.getIndex().getZ());
-        System.out.println("Tile Bounding Box==" + tile.getBoundingBox3d().getMin() + ":" + tile.getBoundingBox3d().getMax());
-        System.out.println("Zooom level is: " + tile.getIndex().getZoom() + "\n");
+        StringBuilder bldr = new StringBuilder();
+        bldr.append("====From VTM: Tile Info: ");
+        bldr.append("TileInx=[" + tile.getIndex().getX()+ ":" + tile.getIndex().getY() + ":" + tile.getIndex().getZ()+"]");
+        bldr.append(" TileBB=[" + tile.getBoundingBox3d().getMin() + ":" + tile.getBoundingBox3d().getMax()+"]");
+        bldr.append(" ZoomLevel=[" + tile.getIndex().getZoom()+"]");
+        log.info(bldr.toString());
     }
     
     private void rearrangeFromRotationAxis(Rotation3d viewerInGround, int[] xyzFromWhd) {

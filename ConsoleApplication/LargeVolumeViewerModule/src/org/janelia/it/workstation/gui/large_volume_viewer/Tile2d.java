@@ -196,7 +196,7 @@ implements GLActor
 			// draw quad
 	        Vec3 corners[] = computeCornerPositions(camera);
 	        Point2D texCoords[] = computeTextureCoordinates();
-            dumpPoints(corners, texCoords, camera);            
+            //dumpPoints(corners, texCoords, camera);            
 	        int cornerOrder[] = {0, 1, 2, 3};
 	        for (int c : cornerOrder) {
 		        gl.glTexCoord2d(texCoords[c].getX(), texCoords[c].getY());
