@@ -184,7 +184,7 @@ public class ViewTileManager {
 				Tile2d tile = new Tile2d(key, tileFormat);
 				tile.setYMax(bb.getMax().getY()); // To help flip y; Always actual Y! (right?)
 				result.add(tile);
-                dumpTileIndex(tile);
+                //dumpTileIndex(tile);
 			}
 		}
 		return result;

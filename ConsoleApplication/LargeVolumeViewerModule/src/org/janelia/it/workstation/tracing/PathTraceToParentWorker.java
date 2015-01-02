@@ -84,6 +84,7 @@ public class PathTraceToParentWorker extends BackgroundWorker {
         Subvolume subvolume = new Subvolume(v1pad, v2pad, request.getImageVolume(),
                 request.getTextureCache());
         AStar astar = new AStar(subvolume);
+        astar.setVoxelSizes(tileFormat.getVoxelMicrometers());
 
         setStatus("Tracing");
         List<ZoomedVoxelIndex> path = astar.trace(zv1, zv2, timeout); // This is the slow part
@@ -141,9 +142,11 @@ public class PathTraceToParentWorker extends BackgroundWorker {
         double yRes = request.getImageVolume().getYResolution();
         double zRes = request.getImageVolume().getZResolution();
         int[] origin = request.getImageVolume().getOrigin();
+        // Tried to change this to zoomed voxel for micrometer xyz.  Did
+        // not work.  Produced negative x, y values.
         List<ZoomedVoxelIndex> newPath = new ArrayList<>();
         for ( ZoomedVoxelIndex index: segment.getPath() ) {
-            ZoomedVoxelIndex newIndex = new ZoomedVoxelIndex( 
+            ZoomedVoxelIndex newIndex = new ZoomedVoxelIndex(
                     index.getZoomLevel(),
                     origin[0] + (int)(index.getX() * xRes), 
                     origin[1] + (int)(index.getY() * yRes),

@@ -159,9 +159,9 @@ public class Subvolume {
         allocateRasterMemory(tileFormat, dimensions);
 
         Set<TileIndex> neededTiles = getCenteredTileSet(tileFormat, center, pixelsPerSceneUnit, bb, dimensions, zoom);
-//        if (logger.isDebugEnabled()) {
+        if (logger.isDebugEnabled()) {
             logTileRequest(neededTiles);
-//        }
+        }
         
         final ZoomedVoxelIndex farCorner = new ZoomedVoxelIndex(
                 zoom,
@@ -560,8 +560,6 @@ OVERFLOW_LABEL:
         
         TileIndex tileMin0 = tileFormat.tileIndexForZoomedVoxelIndex(origin, sliceAxis);
         TileIndex tileMax0 = tileFormat.tileIndexForZoomedVoxelIndex(farCorner, sliceAxis);
-//        TileIndex tileMin0 = tileIndexForZoomedVoxelIndex(tileFormat, origin, sliceAxis);
-//        TileIndex tileMax0 = tileIndexForZoomedVoxelIndex(tileFormat, farCorner, sliceAxis);
         
         // Guard against y-flip. Make it so general it could find some other future situation too.
         // Enforce that tileMinCtrZ x/y/z are no larger than tileMaxCtrZ x/y/z
@@ -738,11 +736,8 @@ OVERFLOW_LABEL:
         // Other two coords first divide by microns, and then subtract origin.
         // Not so for the x: opposite order of operations: first subtracting
         // origin, and then dividing by micrometers.
-//        final int adjustedCenterX = (int)(center.getX() -
-//                tileFormat.getOrigin()[xyzFromWhd[0]] * tileFormat.getVoxelMicrometers()[0]);
         int[] voxelizedCoords = {
             vox.getX() - dimensions[xyzFromWhd[0]]/2,
-//            (int)((adjustedCenterX / tileFormat.getVoxelMicrometers()[xyzFromWhd[0]]) - dimensions[xyzFromWhd[0]]/2),
             vox.getY() - dimensions[xyzFromWhd[1]]/2,
             minDepth
         };

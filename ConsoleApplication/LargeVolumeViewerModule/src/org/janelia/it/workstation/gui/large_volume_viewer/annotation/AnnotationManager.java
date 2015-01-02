@@ -29,7 +29,10 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import org.janelia.it.workstation.geom.CoordinateAxis;
 import org.janelia.it.workstation.gui.large_volume_viewer.ComponentUtil;
+import org.janelia.it.workstation.gui.large_volume_viewer.TileFormat;
+import org.janelia.it.workstation.gui.large_volume_viewer.TileServer;
 
 
 public class AnnotationManager
@@ -55,6 +58,8 @@ public class AnnotationManager
     private QuadViewUi quadViewUi;
 
     private Entity initialEntity;
+    
+    private TileServer tileServer;
 
     // ----- constants
     // AUTOMATIC_TRACING_TIMEOUT for automatic tracing in seconds
@@ -165,6 +170,14 @@ public class AnnotationManager
                         voxelPath.getSegmentIndex().getAnchor2Guid());
                 List<List<Integer>> pointList = new ArrayList<>();
                 for (ZoomedVoxelIndex zvi: voxelPath.getPath()) {
+                    /*
+                    The conversion into zvi.
+                    
+                    origin[0] + (int)(index.getX() * xRes), 
+                    origin[1] + (int)(index.getY() * yRes),
+                    origin[2] + (int)(index.getZ() * zRes) 
+
+                    */
                     if (zvi.getZoomLevel().getZoomOutFactor() != 1) {
                         // compromise between me and CB: I don't want zoom levels in db, so 
                         //  if I get one that's not unzoomed, I don't have to handle it
@@ -173,10 +186,27 @@ public class AnnotationManager
                             "Unexpected zoom!");
                         return;
                     }
+                    TileFormat tileFormat = 
+                            AnnotationManager.this.tileServer.getLoadAdapter().getTileFormat();
+                    /*
+                    TileFormat.MicrometerXyz microns = tileFormat.micrometerXyzForVoxelXyz(
+                            tileFormat.voxelXyzForZoomedVoxelIndex(zvi, CoordinateAxis.Z), 
+                            CoordinateAxis.Z);
+                    tempList.add((int)microns.getX());
+                    tempList.add((int)microns.getY());
+                    tempList.add((int)microns.getZ());
+                    */
                     List<Integer> tempList = new ArrayList<>();
-                    tempList.add(zvi.getX());
-                    tempList.add(zvi.getY());
-                    tempList.add(zvi.getZ());
+                    final int[] origin = tileFormat.getOrigin();
+                    final double[] voxelMicrometers = tileFormat.getVoxelMicrometers();
+                    // CONVINCED: the first part of each raw calc is proper
+                    // for undo-ing the conversion into zvi, above.
+                    final double rawX = ((zvi.getX() - origin[0]) / voxelMicrometers[0]) + origin[0] * voxelMicrometers[0];
+                    tempList.add((int)rawX);
+                    final double rawY = ((zvi.getY() - origin[1]) / voxelMicrometers[1]) + origin[1] * voxelMicrometers[1];
+                    tempList.add((int)rawY);
+                    final double rawZ = ((zvi.getZ() - origin[2]) / voxelMicrometers[2]) + origin[2] * voxelMicrometers[2];
+                    tempList.add((int)rawZ);
                     pointList.add(tempList);
                 }
                 addAnchoredPath(endpoints, pointList);
@@ -205,9 +235,10 @@ public class AnnotationManager
         }
     };
 
-    public AnnotationManager(AnnotationModel annotationModel, QuadViewUi quadViewUi) {
+    public AnnotationManager(AnnotationModel annotationModel, QuadViewUi quadViewUi, TileServer tileServer) {
         this.annotationModel = annotationModel;
         this.quadViewUi = quadViewUi;
+        this.tileServer = tileServer;
         modelMgr = ModelMgr.getModelMgr();
     }
 

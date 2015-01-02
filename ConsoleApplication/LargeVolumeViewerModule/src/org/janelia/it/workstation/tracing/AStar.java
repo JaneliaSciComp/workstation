@@ -66,6 +66,15 @@ public class AStar {
         computeIntensityStats();
     }
     
+    public void setVoxelSizes(double[] sizes) {
+        setVoxelSizes(sizes[0], sizes[1], sizes[2]);
+    }
+    public void setVoxelSizes(double xSize, double ySize, double zSize) {
+        voxelSizeX = xSize;
+        voxelSizeY = ySize;
+        voxelSizeZ = zSize;
+    }
+    
     public List<ZoomedVoxelIndex> trace(
             ZoomedVoxelIndex start0,
             ZoomedVoxelIndex goal0,

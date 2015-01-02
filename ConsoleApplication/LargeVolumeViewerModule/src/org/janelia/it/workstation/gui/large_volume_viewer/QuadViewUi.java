@@ -123,7 +123,7 @@ public class QuadViewUi extends JPanel
 	// annotation things
     private AnnotationPanel annotationPanel;
 	private AnnotationModel annotationModel = new AnnotationModel();
-	private AnnotationManager annotationMgr = new AnnotationManager(annotationModel, this);
+	private AnnotationManager annotationMgr = new AnnotationManager(annotationModel, this, tileServer);
     private LargeVolumeViewerTranslator largeVolumeViewerTranslator = new LargeVolumeViewerTranslator(annotationModel, largeVolumeViewer);
 
 	// Actions
