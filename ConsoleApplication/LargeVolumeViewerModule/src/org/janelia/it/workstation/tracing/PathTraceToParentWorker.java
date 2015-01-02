@@ -56,9 +56,6 @@ public class PathTraceToParentWorker extends BackgroundWorker {
         // A series of conversions to get to ZoomedVoxelIndex
         Vec3 vec3_1 = request.getXyz1();
         Vec3 vec3_2 = request.getXyz2();
-        // X coordinate must be handled differently.
-//        TileFormat.MicrometerXyz um1 = new TileFormat.MicrometerXyz(vec3_1.getX() * tileFormat.getVoxelMicrometers()[0], vec3_1.getY(), vec3_1.getZ());
-//        TileFormat.MicrometerXyz um2 = new TileFormat.MicrometerXyz(vec3_2.getX() * tileFormat.getVoxelMicrometers()[0], vec3_2.getY(), vec3_2.getZ());
         TileFormat.MicrometerXyz um1 = new TileFormat.MicrometerXyz(vec3_1.getX(), vec3_1.getY(), vec3_1.getZ());
         TileFormat.MicrometerXyz um2 = new TileFormat.MicrometerXyz(vec3_2.getX(), vec3_2.getY(), vec3_2.getZ());
         TileFormat.VoxelXyz vox1 = tileFormat.voxelXyzForMicrometerXyz(um1);

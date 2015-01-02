@@ -170,14 +170,6 @@ public class AnnotationManager
                         voxelPath.getSegmentIndex().getAnchor2Guid());
                 List<List<Integer>> pointList = new ArrayList<>();
                 for (ZoomedVoxelIndex zvi: voxelPath.getPath()) {
-                    /*
-                    The conversion into zvi.
-                    
-                    origin[0] + (int)(index.getX() * xRes), 
-                    origin[1] + (int)(index.getY() * yRes),
-                    origin[2] + (int)(index.getZ() * zRes) 
-
-                    */
                     if (zvi.getZoomLevel().getZoomOutFactor() != 1) {
                         // compromise between me and CB: I don't want zoom levels in db, so 
                         //  if I get one that's not unzoomed, I don't have to handle it
@@ -188,7 +180,19 @@ public class AnnotationManager
                     }
                     TileFormat tileFormat = 
                             AnnotationManager.this.tileServer.getLoadAdapter().getTileFormat();
+                    List<Integer> tempList = new ArrayList<>();
+                    final int[] origin = tileFormat.getOrigin();
+                    final double[] voxelMicrometers = tileFormat.getVoxelMicrometers();
                     /*
+                       This calculation was made against the path elements, to 
+                       convert them into ZoomedVoxelIndex format.
+                    
+                    origin[0] + (int)(index.getX() * xRes), 
+                    origin[1] + (int)(index.getY() * yRes),
+                    origin[2] + (int)(index.getZ() * zRes) 
+
+                       This was an attempt to back-convert, which failed.
+                    
                     TileFormat.MicrometerXyz microns = tileFormat.micrometerXyzForVoxelXyz(
                             tileFormat.voxelXyzForZoomedVoxelIndex(zvi, CoordinateAxis.Z), 
                             CoordinateAxis.Z);
@@ -196,17 +200,27 @@ public class AnnotationManager
                     tempList.add((int)microns.getY());
                     tempList.add((int)microns.getZ());
                     */
-                    List<Integer> tempList = new ArrayList<>();
-                    final int[] origin = tileFormat.getOrigin();
-                    final double[] voxelMicrometers = tileFormat.getVoxelMicrometers();
-                    // CONVINCED: the first part of each raw calc is proper
-                    // for undo-ing the conversion into zvi, above.
-                    final double rawX = ((zvi.getX() - origin[0]) / voxelMicrometers[0]) + origin[0] * voxelMicrometers[0];
-                    tempList.add((int)rawX);
-                    final double rawY = ((zvi.getY() - origin[1]) / voxelMicrometers[1]) + origin[1] * voxelMicrometers[1];
-                    tempList.add((int)rawY);
-                    final double rawZ = ((zvi.getZ() - origin[2]) / voxelMicrometers[2]) + origin[2] * voxelMicrometers[2];
-                    tempList.add((int)rawZ);
+                    
+                    // The "undo" for the conversion above, would also include
+                    // dividing by the voxel micrometers.  However, all the
+                    // calculations in the a-star algorithm included multiplying
+                    // by the voxel micrometers.  So, we will default-apply
+                    // that here.
+                    final double traceResultX = (zvi.getX() - origin[0]);
+                    final double traceResultY = (zvi.getY() - origin[1]);
+                    final double traceResultZ = (zvi.getZ() - origin[2]);
+
+                    final double correctionX = origin[0] * voxelMicrometers[0];
+                    final double correctionY = origin[1] * voxelMicrometers[1];
+                    final double correctionZ = origin[2] * voxelMicrometers[2];
+
+                    final double micronX = traceResultX + correctionX;
+                    final double micronY = traceResultY + correctionY;
+                    final double micronZ = traceResultZ + correctionZ;
+
+                    tempList.add((int)micronX);
+                    tempList.add((int)micronY);
+                    tempList.add((int)micronZ);
                     pointList.add(tempList);
                 }
                 addAnchoredPath(endpoints, pointList);
@@ -402,6 +416,11 @@ public class AnnotationManager
         } else {
             // verify it's a link and not a root or branch:
             TmGeoAnnotation annotation = annotationModel.getGeoAnnotationFromID(annotationID);
+            if (annotation == null) {
+                presentError(
+                        "No annotation to delete.",
+                        "No such annotation");
+            }
             if (annotation.isRoot() || annotation.getChildIds().size() > 1) {
                 presentError(
                         "This annotation is either a root (no parent) or branch (many children), not a link!",

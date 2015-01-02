@@ -870,9 +870,9 @@ that need to respond to changing data.
      */
     private boolean annotationAtPoint(TmGeoAnnotation annotation, List<Integer> pointList) {
         //TODO retrieve TileFormat's origin, instead of this large assumption.
-        return Math.abs( annotation.getX().intValue() - pointList.get(0) ) < 20000 &&
-                Math.abs( annotation.getY().intValue() - pointList.get(1) ) < 20000 &&
-                Math.abs( annotation.getZ().intValue() - pointList.get(2) ) < 20000;
+        return Math.abs( annotation.getX().intValue() - pointList.get(0) ) < 5000 &&
+                Math.abs( annotation.getY().intValue() - pointList.get(1) ) < 5000 &&
+                Math.abs( annotation.getZ().intValue() - pointList.get(2) ) < 5000;
     }
 
     /**
