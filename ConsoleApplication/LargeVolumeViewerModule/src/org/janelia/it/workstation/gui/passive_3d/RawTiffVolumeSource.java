@@ -80,12 +80,8 @@ public class RawTiffVolumeSource implements MonitoredVolumeSource {
                         )
                 );
 
-        // NOTE: modified X-coordinate handling.
-        // Other two coords first divide by microns, and then subtract origin.
-        // Not so for the x: opposite order of operations: first subtracting
-        // origin, and then dividing by micrometers.
         int[] voxelizedCoords = {
-            (int)((camera.getFocus().getX() - tileFormat.getOrigin()[0]) / tileFormat.getVoxelMicrometers()[0]),
+            voxelCoords.getX(),
             voxelCoords.getY(),
             voxelCoords.getZ()
         };        
