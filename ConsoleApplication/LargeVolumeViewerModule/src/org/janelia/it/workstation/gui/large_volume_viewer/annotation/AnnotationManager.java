@@ -187,9 +187,9 @@ public class AnnotationManager
                        This calculation was made against the path elements, to 
                        convert them into ZoomedVoxelIndex format.
                     
-                    origin[0] + (int)(index.getX() * xRes), 
-                    origin[1] + (int)(index.getY() * yRes),
-                    origin[2] + (int)(index.getZ() * zRes) 
+                    origin[0] + (int)(index.getX()), 
+                    origin[1] + (int)(index.getY()),
+                    origin[2] + (int)(index.getZ()) 
 
                        This was an attempt to back-convert, which failed.
                     
@@ -206,9 +206,9 @@ public class AnnotationManager
                     // calculations in the a-star algorithm included multiplying
                     // by the voxel micrometers.  So, we will default-apply
                     // that here.
-                    final double traceResultX = (zvi.getX() - origin[0]);
-                    final double traceResultY = (zvi.getY() - origin[1]);
-                    final double traceResultZ = (zvi.getZ() - origin[2]);
+                    final double traceResultX = (zvi.getX() - origin[0]) * voxelMicrometers[0];
+                    final double traceResultY = (zvi.getY() - origin[1]) * voxelMicrometers[1];
+                    final double traceResultZ = (zvi.getZ() - origin[2]) * voxelMicrometers[2];
 
                     final double correctionX = origin[0] * voxelMicrometers[0];
                     final double correctionY = origin[1] * voxelMicrometers[1];

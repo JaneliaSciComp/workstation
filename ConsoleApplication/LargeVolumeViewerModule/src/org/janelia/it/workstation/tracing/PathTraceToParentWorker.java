@@ -145,9 +145,9 @@ public class PathTraceToParentWorker extends BackgroundWorker {
         for ( ZoomedVoxelIndex index: segment.getPath() ) {
             ZoomedVoxelIndex newIndex = new ZoomedVoxelIndex(
                     index.getZoomLevel(),
-                    origin[0] + (int)(index.getX() * xRes), 
-                    origin[1] + (int)(index.getY() * yRes),
-                    origin[2] + (int)(index.getZ() * zRes) 
+                    origin[0] + (int)(index.getX()), 
+                    origin[1] + (int)(index.getY()),
+                    origin[2] + (int)(index.getZ()) 
             );
             newPath.add(newIndex);
         }
