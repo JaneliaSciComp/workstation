@@ -157,6 +157,6 @@ public interface EntityFacade {
 
     CoordinateToRawTransform getLvvCoordToRawTransform( String basePath ) throws Exception;
 
-    Map<Integer,byte[]> getTextureBytes( String basePath, int[] viewerCoord, int cubicDim ) throws Exception;
+    Map<Integer,byte[]> getTextureBytes( String basePath, int[] viewerCoord, int[] dimensions ) throws Exception;
 
 }

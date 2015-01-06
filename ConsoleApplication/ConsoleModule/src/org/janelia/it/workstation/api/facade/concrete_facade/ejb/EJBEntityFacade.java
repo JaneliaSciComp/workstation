@@ -365,11 +365,11 @@ public class EJBEntityFacade implements EntityFacade {
     }
 
     @Override
-    public Map<Integer,byte[]> getTextureBytes( String basePath, int[] viewerCoord, int cubicDim ) throws Exception {
+    public Map<Integer,byte[]> getTextureBytes( String basePath, int[] viewerCoord, int[] dimensions ) throws Exception {
         Map<Integer,byte[]> rtnVal = null;
         final TiledMicroscopeBeanRemote remoteTiledMicroscopeBean = EJBFactory.getRemoteTiledMicroscopeBean();
         if ( remoteTiledMicroscopeBean != null ) {
-            rtnVal = remoteTiledMicroscopeBean.getTextureBytes( basePath, viewerCoord, cubicDim );
+            rtnVal = remoteTiledMicroscopeBean.getTextureBytes( basePath, viewerCoord, dimensions );
         }
         return rtnVal;
     }

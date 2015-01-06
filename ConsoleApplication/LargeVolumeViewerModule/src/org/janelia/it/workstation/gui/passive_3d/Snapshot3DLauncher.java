@@ -20,7 +20,6 @@ import org.janelia.it.workstation.gui.camera.ObservableCamera3d;
 import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.workstation.gui.large_volume_viewer.ImageColorModel;
 import org.janelia.it.workstation.gui.large_volume_viewer.SubvolumeProvider;
-import org.janelia.it.workstation.gui.large_volume_viewer.TileFormat;
 import org.janelia.it.workstation.gui.large_volume_viewer.TileServer;
 import org.janelia.it.workstation.gui.passive_3d.top_component.Snapshot3dTopComponent;
 import org.janelia.it.workstation.gui.viewer3d.BoundingBox3d;
@@ -33,8 +32,8 @@ import org.openide.windows.WindowManager;
  * @author fosterl
  */
 public class Snapshot3DLauncher {
-    private static final String RENDERED_VOLUME_TEXT_FORMAT = "Contains point [%3.1f,%3.1f,%3.1f].  %4$dx%4$dx%4$d.  Rendered Data.";
-    private final static String RAW_VOLUME_TEXT_FORMAT = "Contains point [%3.1f,%3.1f,%3.1f].  %4$dx%4$dx%4$d.  Raw Data.";
+    private static final String RENDERED_VOLUME_TEXT_FORMAT = "Contains point [%3.1f,%3.1f,%3.1f].  %4$dx%5$dx%6$d.  Rendered Data.";
+    private final static String RAW_VOLUME_TEXT_FORMAT = "Contains point [%3.1f,%3.1f,%3.1f].  %4$dx%5$dx%6$d.  Raw Data.";
 
     private CoordinateAxis sliceAxis;
     private TileServer tileServer;
@@ -145,49 +144,57 @@ public class Snapshot3DLauncher {
 
     /** Launches a 3D popup containing raw data represented by camera position. */
     public void launchRaw3dViewer( int cubicDimension ) {
+        int[] dimensions = new int[] { cubicDimension, cubicDimension, cubicDimension };
+        launchRaw3dViewer( dimensions );
+    }
+    
+    /** Launches a 3D popup containing raw data represented by camera position. */
+    public void launchRaw3dViewer( int[] dimensions ) {
         try {            
             RawTiffVolumeSource collector = new RawTiffVolumeSource( 
                     tileServer.getLoadAdapter().getTileFormat(), camera, basePath 
             );
-            if ( cubicDimension > -1 ) {
-                collector.setCubicDimension( cubicDimension );
+            if ( dimensions != null ) {
+                collector.setDimensions(dimensions);
             }
-            Snapshot3d snapshotViewer = Snapshot3d.getInstance();
-            IndeterminateNoteProgressMonitor monitor = 
-                    new IndeterminateNoteProgressMonitor(SessionMgr.getMainFrame(), "Fetching raw data", collector.getInfo());
-            snapshotViewer.setLoadProgressMonitor( monitor );
-            establishColorControls( snapshotViewer );
-            snapshotViewer.setLabelText( labelTextForRaw3d( cubicDimension ) );
-            snapshotViewer.launch( collector );
-            makeViewerVisible(snapshotViewer);
+            final String labelText = labelTextForRaw3d( dimensions );
+            final String frameTitle = "Fetching raw data";
+            makeAndLaunch(frameTitle, collector, labelText);
 
         } catch ( Exception ex ) {
             System.err.println("Failed to launch viewer: " + ex.getMessage());
             ex.printStackTrace();
         }
     }
+
+    public void launch3dViewer( int cubicDimension ) {
+        int[] dimensions = new int[] { cubicDimension, cubicDimension, cubicDimension };
+        launch3dViewer( dimensions );
+    }
     
     /** Launches a 3D popup static-block viewer. */
-    public void launch3dViewer( int cubicDimension ) {
+    public void launch3dViewer( int[] dimensions ) {
         try {         
             BoundingBox3d bb = tileServer.getLoadAdapter().getTileFormat().calcBoundingBox();
+            final String labelText = labelTextFor3d(dimensions);
+            final String frameTitle = "Fetching tiles";
             MonitoredVolumeSource collector = new ViewTileManagerVolumeSource(
                     camera,
                     bb,
-                    sliceAxis,
-                    cubicDimension,
+                    dimensions,
                     subvolumeProvider,
                     dataUrl
             );            
 
-            Snapshot3d snapshotViewer = Snapshot3d.getInstance();
-            IndeterminateNoteProgressMonitor monitor = 
-                    new IndeterminateNoteProgressMonitor(SessionMgr.getMainFrame(), "Fetching tiles", collector.getInfo());
-            snapshotViewer.setLoadProgressMonitor( monitor );
-            establishColorControls( snapshotViewer );
-            snapshotViewer.setLabelText( labelTextFor3d(cubicDimension) );
-            snapshotViewer.launch( collector );
-            makeViewerVisible(snapshotViewer);
+            makeAndLaunch(frameTitle, collector, labelText);
+//            Snapshot3d snapshotViewer = Snapshot3d.getInstance();
+//            IndeterminateNoteProgressMonitor monitor = 
+//                    new IndeterminateNoteProgressMonitor(SessionMgr.getMainFrame(), frameTitle, collector.getInfo());
+//            snapshotViewer.setLoadProgressMonitor( monitor );
+//            establishColorControls( snapshotViewer );
+//            snapshotViewer.setLabelText( labelText);
+//            snapshotViewer.launch( collector );
+//            makeViewerVisible(snapshotViewer);
 
         } catch ( Exception ex ) {
             System.err.println("Failed to launch viewer: " + ex.getMessage());
@@ -203,6 +210,24 @@ public class Snapshot3DLauncher {
         }
     }
 
+    /**
+     * Common code for launching the viewer.
+     * 
+     * @param frameTitle over the viewer
+     * @param collector for getting data.
+     * @param labelText specific to input data.
+     */
+    private void makeAndLaunch(final String frameTitle, MonitoredVolumeSource collector, final String labelText) {
+        Snapshot3d snapshotViewer = Snapshot3d.getInstance();
+        IndeterminateNoteProgressMonitor monitor =
+                new IndeterminateNoteProgressMonitor(SessionMgr.getMainFrame(), frameTitle, collector.getInfo());
+        snapshotViewer.setLoadProgressMonitor( monitor );
+        establishColorControls( snapshotViewer );
+        snapshotViewer.setLabelText( labelText);
+        snapshotViewer.launch( collector );
+        makeViewerVisible(snapshotViewer);
+    }
+    
     /**
      * Give ourselves a separate set of color adjustments.
      * 
@@ -239,17 +264,17 @@ public class Snapshot3DLauncher {
         return snapshotTopComponent;
     }
 
-    private String labelTextFor3d(int cubicDimension) {
-        return getLabelText( cubicDimension, RENDERED_VOLUME_TEXT_FORMAT );
+    private String labelTextFor3d(int[] dimensions) {
+        return getLabelText( dimensions, RENDERED_VOLUME_TEXT_FORMAT );
     }
 
-    private String labelTextForRaw3d(int cubicDimension) {
-        return getLabelText( cubicDimension, RAW_VOLUME_TEXT_FORMAT );
+    private String labelTextForRaw3d(int[] dimensions) {
+        return getLabelText( dimensions, RAW_VOLUME_TEXT_FORMAT );
     }
 
-    private String getLabelText(int cubicDimension, String format ) {
+    private String getLabelText(int[] dimensions, String format ) {
         final Vec3 focus = camera.getFocus();
-        return String.format( format, focus.getX(), focus.getY(), focus.getZ(), cubicDimension );
+        return String.format( format, focus.getX(), focus.getY(), focus.getZ(), dimensions[0], dimensions[1], dimensions[2] );
     }
 
 }

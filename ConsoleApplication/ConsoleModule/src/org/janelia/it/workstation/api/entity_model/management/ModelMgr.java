@@ -1249,8 +1249,8 @@ public final class ModelMgr {
         return FacadeManager.getFacadeManager().getEntityFacade().getLvvCoordToRawTransform(basePath);
     }
 
-    public Map<Integer,byte[]> getTextureBytes( String basePath, int[] viewerCoord, int cubicDim ) throws Exception {
-        return FacadeManager.getFacadeManager().getEntityFacade().getTextureBytes(basePath, viewerCoord, cubicDim);
+    public Map<Integer,byte[]> getTextureBytes( String basePath, int[] viewerCoord, int[] dimensions ) throws Exception {
+        return FacadeManager.getFacadeManager().getEntityFacade().getTextureBytes(basePath, viewerCoord, dimensions);
     }
 
 }

@@ -36,12 +36,11 @@ public class ViewTileManagerVolumeSource implements MonitoredVolumeSource {
     
     private Camera3d camera;
     private BoundingBox3d bb;
-    private CoordinateAxis sliceAxis;   //@deprecated
     private SubvolumeProvider subvolumeProvider;
     private URL dataUrl;
     private byte[] dataVolume;
     
-    private int brickCubicDimension = DEFAULT_BRICK_CUBIC_DIMENSION;
+    private int[] brickDimensions = new int[] { DEFAULT_BRICK_CUBIC_DIMENSION, DEFAULT_BRICK_CUBIC_DIMENSION, DEFAULT_BRICK_CUBIC_DIMENSION,  };
 
     private VolumeAcceptor volumeAcceptor;
     private TextureDataI textureDataFor3D;
@@ -51,26 +50,25 @@ public class ViewTileManagerVolumeSource implements MonitoredVolumeSource {
 
     public ViewTileManagerVolumeSource(Camera3d camera,
                                        BoundingBox3d bb,
-                                       CoordinateAxis sliceAxis,
                                        int cubicDimension,
                                        SubvolumeProvider subvolumeProvider,
                                        URL dataUrl) throws Exception {
-        
-        // Cloning the camera, to leave the original as was found.
-        Camera3d iterationCamera = new BasicObservableCamera3d();
-        iterationCamera.setFocus(camera.getFocus());
-        iterationCamera.setPixelsPerSceneUnit(camera.getPixelsPerSceneUnit());
-        iterationCamera.setRotation(camera.getRotation());
-        
-        this.camera = iterationCamera;
-        this.bb = bb;
-        this.sliceAxis = sliceAxis;
-        this.subvolumeProvider = subvolumeProvider; 
+        int[] dimensions = new int[3];
         if ( cubicDimension > 0 ) {
-            brickCubicDimension = cubicDimension;
+            for ( int i = 0; i < dimensions.length; i++ ) {
+                dimensions[i] = cubicDimension;
+            }
         }
+        init(camera, bb, subvolumeProvider, dimensions, dataUrl);
+    }
 
-        this.dataUrl = dataUrl;
+    public ViewTileManagerVolumeSource(Camera3d camera,
+                                       BoundingBox3d bb,
+                                       int[] dimensions,
+                                       SubvolumeProvider subvolumeProvider,
+                                       URL dataUrl) throws Exception {
+
+        init(camera, bb, subvolumeProvider, dimensions, dataUrl);
     }
 
     @Override
@@ -101,6 +99,27 @@ public class ViewTileManagerVolumeSource implements MonitoredVolumeSource {
         return dataUrl;
     }
 
+    private void init(
+            Camera3d camera, 
+            BoundingBox3d bb, 
+            SubvolumeProvider subvolumeProvider, 
+            int[] dimensions, 
+            URL dataUrl) {
+        
+        // Cloning the camera, to leave the original as was found.
+        Camera3d iterationCamera = new BasicObservableCamera3d();
+        iterationCamera.setFocus(camera.getFocus());
+        iterationCamera.setPixelsPerSceneUnit(camera.getPixelsPerSceneUnit());
+        iterationCamera.setRotation(camera.getRotation());
+        
+        this.camera = iterationCamera;
+        this.bb = bb;
+        this.subvolumeProvider = subvolumeProvider;
+        this.brickDimensions = dimensions;
+        
+        this.dataUrl = dataUrl;
+    }
+        
     private void requestTextureData() throws Exception {
         StandardizedValues stdVals = new StandardizedValues();
         //fetchTextureData(stdVals, false);
@@ -108,7 +127,10 @@ public class ViewTileManagerVolumeSource implements MonitoredVolumeSource {
 
         // Now build the data volume.  The data volume bytes will be filled in later.
         textureDataFor3D = new TextureDataBean(
-                new VolumeDataBean( dataVolume, brickCubicDimension, brickCubicDimension, brickCubicDimension ), brickCubicDimension, brickCubicDimension, brickCubicDimension
+                new VolumeDataBean(
+                        dataVolume, brickDimensions[0], brickDimensions[1], brickDimensions[2] 
+                ), 
+                brickDimensions[0], brickDimensions[1], brickDimensions[2]
         );
         textureDataFor3D.setVoxelMicrometers(new Double[]{1.0, 1.0, 1.0});
         textureDataFor3D.setChannelCount(stdVals.stdChannelCount);
@@ -131,12 +153,7 @@ public class ViewTileManagerVolumeSource implements MonitoredVolumeSource {
         int zoomFactor = 0; // TEMP
 
         logger.info( "Fetching centered at {}, at zoom {}.", camera.getFocus(), zoomFactor );
-        int[] extent = new int[] {
-            brickCubicDimension,
-            brickCubicDimension,
-            brickCubicDimension
-        };
-        Subvolume fetchedSubvolume = subvolumeProvider.getSubvolumeFor3D( camera.getFocus(), camera.getPixelsPerSceneUnit(), bb, extent, zoomFactor, progressMonitor );
+        Subvolume fetchedSubvolume = subvolumeProvider.getSubvolumeFor3D( camera.getFocus(), camera.getPixelsPerSceneUnit(), bb, brickDimensions, zoomFactor, progressMonitor );
         stdVals.stdChannelCount = fetchedSubvolume.getChannelCount();
         stdVals.stdInternalFormat = GL2.GL_LUMINANCE16_ALPHA16;
         stdVals.stdType = GL2.GL_UNSIGNED_SHORT;
