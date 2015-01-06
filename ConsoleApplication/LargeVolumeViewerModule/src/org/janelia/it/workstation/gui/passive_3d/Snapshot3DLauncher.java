@@ -96,11 +96,12 @@ public class Snapshot3DLauncher {
 
         List<JMenuItem> rtnVal = new ArrayList<>();
 
-        int[] extents = new int[] {
-            64, 128
+        int[][] extents = new int[][] {
+            new int[] {64, 64, 64},
+            new int[] {512, 512, 128}
         };
-        for (final int extent : extents) {
-            JMenuItem item = new JMenuItem("Raw sub-volume: " + extent + " cubic voxels");
+        for (final int[] extent : extents) {
+            JMenuItem item = new JMenuItem("Raw sub-volume: " + getDimString(extent) + " voxels");
             item.addActionListener(new ActionListener() {
                 @Override
                 public void actionPerformed(ActionEvent ae) {
@@ -111,11 +112,8 @@ public class Snapshot3DLauncher {
         }
         snapShot3dSubMenu.add(new JSeparator());
 
-        extents = new int[] {
-            64, 128
-        };
-        for (final int extent : extents) {
-            JMenuItem item = new JMenuItem( "Rendered sub-volume: " + extent + " cubed" );
+        for (final int[] extent : extents) {
+            JMenuItem item = new JMenuItem( "Rendered sub-volume: " + getDimString(extent) + " voxels" );
             item.addActionListener(new ActionListener() {
                 @Override
                 public void actionPerformed(ActionEvent ae) {
@@ -141,6 +139,17 @@ public class Snapshot3DLauncher {
 
         return rtnVal;
     }    
+    
+    private String getDimString( int[] dims ) {
+        StringBuilder bldr = new StringBuilder();
+        for (int i : dims) {
+            if (bldr.length() > 0) {
+                bldr.append("x");
+            }
+            bldr.append(i);
+        }
+        return bldr.toString();
+    }
 
     /** Launches a 3D popup containing raw data represented by camera position. */
     public void launchRaw3dViewer( int cubicDimension ) {
