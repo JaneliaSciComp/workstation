@@ -196,14 +196,6 @@ public class Snapshot3DLauncher {
             );            
 
             makeAndLaunch(frameTitle, collector, labelText);
-//            Snapshot3d snapshotViewer = Snapshot3d.getInstance();
-//            IndeterminateNoteProgressMonitor monitor = 
-//                    new IndeterminateNoteProgressMonitor(SessionMgr.getMainFrame(), frameTitle, collector.getInfo());
-//            snapshotViewer.setLoadProgressMonitor( monitor );
-//            establishColorControls( snapshotViewer );
-//            snapshotViewer.setLabelText( labelText);
-//            snapshotViewer.launch( collector );
-//            makeViewerVisible(snapshotViewer);
 
         } catch ( Exception ex ) {
             System.err.println("Failed to launch viewer: " + ex.getMessage());
