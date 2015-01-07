@@ -658,10 +658,10 @@ OVERFLOW_LABEL:
 
         int[] xyzFromWhd = new int[] { 0, 1, 2 };
         CoordinateAxis sliceAxis = CoordinateAxis.Z;
-        ViewBoundingBox voxelBounds = tileFormat.boundingBoxToViewBounds(
-                bb, dimensions[0], dimensions[1], center, micrometerVoxels, xyzFromWhd
+        ViewBoundingBox voxelBounds = tileFormat.findViewBounds(
+                dimensions[0], dimensions[1], center, micrometerVoxels, xyzFromWhd
         );
-        TileBoundingBox tileBoundingBox = tileFormat.viewBoundsToTileBounds(xyzFromWhd, voxelBounds, zoomLevel.getLog2ZoomOutFactor() ); // To Check: right method from zoom?
+        TileBoundingBox tileBoundingBox = tileFormat.viewBoundsToTileBounds(xyzFromWhd, voxelBounds, zoomLevel.getLog2ZoomOutFactor() );
 
         // Now I have the tile outline.  Can just iterate over that, and for all
         // required depth.
@@ -672,10 +672,9 @@ OVERFLOW_LABEL:
         int maxDepth = this.calcZCoord(bb, xyzFromWhd, tileFormat, (int)(center.getZ() + halfDepth));
         int minDepth = maxDepth - dimensions[xyzFromWhd[2]];
 
-        // Side Effect:  These values must be computed here, but they
+        // Side Effect:  origin and extent must be computed here, but they
         // are being used by other code at caller level.
-        //TileFormat.TileXyz lowestTile = new TileFormat.TileXyz(lowX, lowY, lowZ);
-        TileFormat.VoxelXyz vox = getVoxCoords(center, tileFormat, xyzFromWhd, dimensions, minDepth);
+        TileFormat.VoxelXyz vox = calcLeastCorner(center, tileFormat, xyzFromWhd, dimensions, minDepth);
         origin = tileFormat.zoomedVoxelIndexForVoxelXyz(vox, zoomLevel, sliceAxis);
         extent = new VoxelIndex(
                 dimensions[0],
@@ -725,8 +724,19 @@ OVERFLOW_LABEL:
         }
         return neededTiles;
     }
-
-    private TileFormat.VoxelXyz getVoxCoords(Vec3 center, TileFormat tileFormat, int[] xyzFromWhd, int[] dimensions, int minDepth) {
+    
+    /**
+     * Find the least corner containing the center vec, and within the
+     * size of rectangular solid dictated by the dimensions given.
+     * 
+     * @param center ideal middle of rect solid.
+     * @param tileFormat for convenience methods.
+     * @param xyzFromWhd indirection for axial indices.
+     * @param dimensions sizes for two axes of the rect solid.
+     * @param minDepth size for depth axis of rect solid.
+     * @return least corner.
+     */
+    private TileFormat.VoxelXyz calcLeastCorner(Vec3 center, TileFormat tileFormat, int[] xyzFromWhd, int[] dimensions, int minDepth) {
         TileFormat.VoxelXyz vox = tileFormat.voxelXyzForMicrometerXyz(
                 new TileFormat.MicrometerXyz(
                         (int)(center.getX()), 

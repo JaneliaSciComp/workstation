@@ -150,27 +150,40 @@ public class TileFormat
         return tileUnits;
     }
     
-    public ViewBoundingBox boundingBoxToViewBounds(
-            BoundingBox3d bb, int viewWidth, int viewHeight, Vec3 focus, double pixelsPerViewUnit, int[] xyzFromWhd 
+    /**
+     * This will use the meaningful intersection of the bounding box and
+     * the view, and take 1/2-unit-over-boundary into consideration.  It will
+     * produce a set of width and height bounds that contain the focus
+     * point, within the stated width and height.
+     * Output includes view-width and view-height sized rectangle, with focus as
+     * near to center as possible
+     * 
+     * @param viewWidth how wide to make surrounding view in wide axis.
+     * @param viewHeight how wide to make surrounding view in high axis.
+     * @param focus output must include (ideally, centered) this point.
+     * @param pixelsPerViewUnit used for calculating surrounding rectangle.
+     * @param xyzFromWhd indirection for axial sequence numbers.
+     * @return min/max-delimiting box.
+     */
+    public ViewBoundingBox findViewBounds(
+            int viewWidth, int viewHeight, Vec3 focus, double pixelsPerViewUnit, int[] xyzFromWhd 
     ) {
-
+        BoundingBox3d bb = calcBoundingBox();
         bb = originAdjustBoundingBox(bb, xyzFromWhd);
         focus = originAdjustCameraFocus(focus, xyzFromWhd);
         
-        // In scene units
-		// Clip to screen space  
+		// Clip to bounded space  
         double xMinView = focus.get(xyzFromWhd[X_OFFS]) - 0.5*viewWidth/pixelsPerViewUnit;
         double xMaxView = focus.get(xyzFromWhd[X_OFFS]) + 0.5*viewWidth/pixelsPerViewUnit;
         
 		double yMinView = focus.get(xyzFromWhd[Y_OFFS]) - 0.5*viewHeight/pixelsPerViewUnit;
 		double yMaxView = focus.get(xyzFromWhd[Y_OFFS]) + 0.5*viewHeight/pixelsPerViewUnit;
 
-        // Clip to volume space
 		// Subtract one half pixel to avoid loading an extra layer of tiles
 		double dw = 0.25 * getVoxelMicrometers()[xyzFromWhd[X_OFFS]];
 		double dh = 0.25 * getVoxelMicrometers()[xyzFromWhd[Y_OFFS]];
 
-        // Compute 'biases' against the origin.
+        // Invert Y for target coordinate system.
 		double bottomY = bb.getMax().getY();
         
         double xMinViewUnit = Math.max(xMinView, bb.getMin().get(xyzFromWhd[X_OFFS]) + dw);
