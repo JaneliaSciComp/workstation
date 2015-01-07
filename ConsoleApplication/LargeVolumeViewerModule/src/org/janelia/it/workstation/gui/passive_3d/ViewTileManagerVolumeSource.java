@@ -35,7 +35,6 @@ public class ViewTileManagerVolumeSource implements MonitoredVolumeSource {
     private static final int DEFAULT_BRICK_CUBIC_DIMENSION = 512;
     
     private Camera3d camera;
-    private BoundingBox3d bb;
     private SubvolumeProvider subvolumeProvider;
     private URL dataUrl;
     private byte[] dataVolume;
@@ -50,13 +49,12 @@ public class ViewTileManagerVolumeSource implements MonitoredVolumeSource {
     private final Logger logger = LoggerFactory.getLogger( ViewTileManagerVolumeSource.class );
 
     public ViewTileManagerVolumeSource(Camera3d camera,
-                                       BoundingBox3d bb,
                                        int[] dimensions,
                                        SubvolumeProvider subvolumeProvider,
                                        double[] voxelMicrometers,
                                        URL dataUrl) throws Exception {
 
-        init(camera, bb, subvolumeProvider, dimensions, voxelMicrometers, dataUrl);
+        init(camera, subvolumeProvider, dimensions, voxelMicrometers, dataUrl);
     }
 
     @Override
@@ -89,7 +87,6 @@ public class ViewTileManagerVolumeSource implements MonitoredVolumeSource {
 
     private void init(
             Camera3d camera, 
-            BoundingBox3d bb, 
             SubvolumeProvider subvolumeProvider, 
             int[] dimensions, 
             double[] voxelMicrometers,
@@ -102,7 +99,6 @@ public class ViewTileManagerVolumeSource implements MonitoredVolumeSource {
         iterationCamera.setRotation(camera.getRotation());
         
         this.camera = iterationCamera;
-        this.bb = bb;
         this.subvolumeProvider = subvolumeProvider;
         this.voxelMicrometers = voxelMicrometers;
         this.brickDimensions = dimensions;
@@ -113,7 +109,7 @@ public class ViewTileManagerVolumeSource implements MonitoredVolumeSource {
     private void requestTextureData() throws Exception {
         StandardizedValues stdVals = new StandardizedValues();
         //fetchTextureData(stdVals, false);
-        dataVolume = fetchTextureData(stdVals, bb);
+        dataVolume = fetchTextureData(stdVals);
 
         // Now build the data volume.  The data volume bytes will be filled in later.
         textureDataFor3D = new TextureDataBean(
@@ -138,7 +134,7 @@ public class ViewTileManagerVolumeSource implements MonitoredVolumeSource {
      * 
      * @param stdVals checked for consistency.
      */
-    private byte[] fetchTextureData(StandardizedValues stdVals, BoundingBox3d bb) throws URISyntaxException, IOException, DataSourceInitializeException {
+    private byte[] fetchTextureData(StandardizedValues stdVals) throws URISyntaxException, IOException, DataSourceInitializeException {
         progressMonitor.setNote("Fetching texture data...");
         int zoomFactor = 0; // TEMP
 
@@ -149,7 +145,7 @@ public class ViewTileManagerVolumeSource implements MonitoredVolumeSource {
                 minVoxelMicron = voxelMicrometer;
             }
         }
-        Subvolume fetchedSubvolume = subvolumeProvider.getSubvolumeFor3D( camera.getFocus(), 1.0 / minVoxelMicron, bb, brickDimensions, zoomFactor, progressMonitor );
+        Subvolume fetchedSubvolume = subvolumeProvider.getSubvolumeFor3D( camera.getFocus(), 1.0 / minVoxelMicron, brickDimensions, zoomFactor, progressMonitor );
         stdVals.stdChannelCount = fetchedSubvolume.getChannelCount();
         stdVals.stdInternalFormat = GL2.GL_LUMINANCE16_ALPHA16;
         stdVals.stdType = GL2.GL_UNSIGNED_SHORT;

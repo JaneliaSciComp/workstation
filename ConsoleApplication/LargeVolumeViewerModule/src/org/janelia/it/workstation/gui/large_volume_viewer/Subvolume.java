@@ -127,14 +127,13 @@ public class Subvolume {
             Vec3 center,
             SharedVolumeImage wholeImage,
             double micrometerVoxels,
-            BoundingBox3d bb,
             ZoomLevel zoom,
             int[] dimensions,
             TextureCache textureCache,
             IndeterminateNoteProgressMonitor progressMonitor)
     {
         this.progressMonitor = progressMonitor;
-        initializeFor3D(center, micrometerVoxels, bb, zoom, dimensions, wholeImage, textureCache);
+        initializeFor3D(center, micrometerVoxels, zoom, dimensions, wholeImage, textureCache);
     }
     
     /**
@@ -147,7 +146,6 @@ public class Subvolume {
      */
 	private void initializeFor3D(Vec3 center,
             double micrometerVoxels,
-            BoundingBox3d bb,
             final ZoomLevel zoom,
             int[] dimensions,
             SharedVolumeImage wholeImage,
@@ -158,7 +156,7 @@ public class Subvolume {
 	    final TileFormat tileFormat = loadAdapter.getTileFormat();
         allocateRasterMemory(tileFormat, dimensions);
 
-        Set<TileIndex> neededTiles = getCenteredTileSet(tileFormat, center, micrometerVoxels, bb, dimensions, zoom);
+        Set<TileIndex> neededTiles = getCenteredTileSet(tileFormat, center, micrometerVoxels, dimensions, zoom);
         if (logger.isDebugEnabled()) {
             logTileRequest(neededTiles);
         }
@@ -169,7 +167,6 @@ public class Subvolume {
                 origin.getY() + dimensions[1],
                 origin.getZ() + dimensions[2]
         );
-System.out.println("Conducting multithreaded fetch of " + bb);        
         multiThreadedFetch(neededTiles, textureCache, loadAdapter, tileFormat, zoom, farCorner);
 	}
 
@@ -651,7 +648,7 @@ OVERFLOW_LABEL:
 	}
 
     /** Called from 3D feed. */
-    private Set<TileIndex> getCenteredTileSet(TileFormat tileFormat, Vec3 center, double micrometerVoxels, BoundingBox3d bb, int[] dimensions, ZoomLevel zoomLevel) {
+    private Set<TileIndex> getCenteredTileSet(TileFormat tileFormat, Vec3 center, double micrometerVoxels, int[] dimensions, ZoomLevel zoomLevel) {
         assert(dimensions[0] % 2 == 0) : "Dimension X must be divisible by 2";
         assert(dimensions[1] % 2 == 0) : "Dimension Y must be divisible by 2";
         assert(dimensions[2] % 2 == 0) : "Dimension Z must be divisible by 2";
@@ -669,6 +666,7 @@ OVERFLOW_LABEL:
         int zoomMax = tileFormat.getZoomLevelCount() - 1;
 
         double halfDepth = dimensions[2] / 2.0;
+        BoundingBox3d bb = tileFormat.calcBoundingBox();
         int maxDepth = this.calcZCoord(bb, xyzFromWhd, tileFormat, (int)(center.getZ() + halfDepth));
         int minDepth = maxDepth - dimensions[xyzFromWhd[2]];
 

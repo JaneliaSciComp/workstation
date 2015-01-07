@@ -186,12 +186,10 @@ public class Snapshot3DLauncher {
     public void launch3dViewer( int[] dimensions ) {
         try {         
             final TileFormat tileFormat = tileServer.getLoadAdapter().getTileFormat();
-            BoundingBox3d bb = tileFormat.calcBoundingBox();
             final String labelText = labelTextFor3d(dimensions);
             final String frameTitle = "Fetching tiles";
             MonitoredVolumeSource collector = new ViewTileManagerVolumeSource(
                     camera,
-                    bb,
                     dimensions,
                     subvolumeProvider,
                     tileFormat.getVoxelMicrometers(),
