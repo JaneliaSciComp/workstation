@@ -75,8 +75,8 @@ public class TileFormat
     }
 
 	public BoundingBox3d calcBoundingBox() {
-		Vec3 b0 = new Vec3(calcLowerBBCoord(0), calcLowerBBCoord(1), calcLowerBBCoord(2));
-		Vec3 b1 = new Vec3(calcUpperBBCoord(0), calcUpperBBCoord(1), calcUpperBBCoord(2));
+		Vec3 b0 = new Vec3(calcLowerBBCoord(X_OFFS), calcLowerBBCoord(Y_OFFS), calcLowerBBCoord(Z_OFFS));
+		Vec3 b1 = new Vec3(calcUpperBBCoord(X_OFFS), calcUpperBBCoord(Y_OFFS), calcUpperBBCoord(Z_OFFS));
 		BoundingBox3d result = new BoundingBox3d();
 		result.setMin(b0);
 		result.setMax(b1);
@@ -112,7 +112,7 @@ public class TileFormat
 		final double zoomOffset = 0.5;
 		// 
 		double[] vm = getVoxelMicrometers();
-		double maxRes = Math.min(vm[0], Math.min(vm[1], vm[2]));
+		double maxRes = Math.min(vm[X_OFFS], Math.min(vm[Y_OFFS], vm[Z_OFFS]));
 		double voxelsPerPixel = 1.0 / (pixelsPerSceneUnit * maxRes);
 		int zoomMax = getZoomLevelCount() - 1;
 		int zoom = zoomMax; // default to very coarse zoom
@@ -210,12 +210,12 @@ public class TileFormat
     
     public int calcRelativeTileDepth(int[] xyzFromWhd, double focusDepth, BoundingBox3d bb) {
         // Bounding box is actually 0.5 voxels bigger than number of slices at each end
-        int dMin = (int)(bb.getMin().get(xyzFromWhd[2])/getVoxelMicrometers()[xyzFromWhd[2]] + 0.5);
-        int dMax = (int)(bb.getMax().get(xyzFromWhd[2])/getVoxelMicrometers()[xyzFromWhd[2]] - 0.5);
-        int absoluteTileDepth = (int)Math.round(focusDepth / getVoxelMicrometers()[xyzFromWhd[2]] - 0.5);
+        int dMin = (int)(bb.getMin().get(xyzFromWhd[2])/getVoxelMicrometers()[xyzFromWhd[Z_OFFS]] + 0.5);
+        int dMax = (int)(bb.getMax().get(xyzFromWhd[2])/getVoxelMicrometers()[xyzFromWhd[Z_OFFS]] - 0.5);
+        int absoluteTileDepth = (int)Math.round(focusDepth / getVoxelMicrometers()[xyzFromWhd[Z_OFFS]] - 0.5);
         absoluteTileDepth = Math.max(absoluteTileDepth, dMin);
         absoluteTileDepth = Math.min(absoluteTileDepth, dMax);
-        int relativeTileDepth = absoluteTileDepth - getOrigin()[xyzFromWhd[2]];
+        int relativeTileDepth = absoluteTileDepth - getOrigin()[xyzFromWhd[Z_OFFS]];
         return relativeTileDepth;
     }
 
@@ -394,7 +394,7 @@ public class TileFormat
 			tileSize[i] = 512; // X, Y, but not Z...
 			voxelMicrometers[i] = 1.0;
 		}
-		tileSize[2] = 1; // tiles are 512x512x1
+		tileSize[Z_OFFS] = 1; // tiles are 512x512x1
 		setZoomLevelCount(1); // like small images
 		bitDepth = 8;
 		channelCount = 3; // rgb
@@ -411,8 +411,8 @@ public class TileFormat
 	}
 
 	public int getTileBytes() {
-		int w = getTileSize()[0];
-		int h = getTileSize()[1];
+		int w = getTileSize()[X_OFFS];
+		int h = getTileSize()[Y_OFFS];
 		int bpp = getChannelCount() * getBitDepth() / 8;
 		return w * h * bpp;
 	}
@@ -458,21 +458,21 @@ public class TileFormat
 	public MicrometerXyz micrometerXyzForVoxelXyz(VoxelXyz v, CoordinateAxis sliceDirection) {
 		// return point at upper-left corner of voxel, but centered in slice direction
 		double xyz[] = {
-				v.getX() + origin[0],
-				v.getY() + origin[1],
-				v.getZ() + origin[2],
+				v.getX() + origin[X_OFFS],
+				v.getY() + origin[Y_OFFS],
+				v.getZ() + origin[Z_OFFS],
 		};
 		xyz[sliceDirection.index()] += 0.5;
 		return new MicrometerXyz(
-				xyz[0] * getVoxelMicrometers()[0],
-				xyz[1]  * getVoxelMicrometers()[1],				
-				xyz[2]  * getVoxelMicrometers()[2]);
+				xyz[0] * getVoxelMicrometers()[X_OFFS],
+				xyz[1]  * getVoxelMicrometers()[Y_OFFS],				
+				xyz[2]  * getVoxelMicrometers()[Z_OFFS]);
 	}
 	public VoxelXyz voxelXyzForMicrometerXyz(MicrometerXyz m) {
 		return new VoxelXyz(
-				(int)Math.floor(m.getX() / getVoxelMicrometers()[0]) - origin[0],
-				(int)Math.floor(m.getY() / getVoxelMicrometers()[1]) - origin[1],
-				(int)Math.floor(m.getZ() / getVoxelMicrometers()[2]) - origin[2]);
+				(int)Math.floor(m.getX() / getVoxelMicrometers()[X_OFFS]) - origin[X_OFFS],
+				(int)Math.floor(m.getY() / getVoxelMicrometers()[Y_OFFS]) - origin[Y_OFFS],
+				(int)Math.floor(m.getZ() / getVoxelMicrometers()[Z_OFFS]) - origin[Z_OFFS]);
 	}
 	
 	public VoxelXyz voxelXyzForZoomedVoxelIndex(ZoomedVoxelIndex z, CoordinateAxis sliceAxis) {
@@ -484,7 +484,7 @@ public class TileFormat
 				continue; // don't zoom on slice axis in quadtree mode
 			xyz[i] *= zoomFactor;
 		}
-		return new VoxelXyz(xyz[0], xyz[1], xyz[2]);
+		return new VoxelXyz(xyz[X_OFFS], xyz[Y_OFFS], xyz[Z_OFFS]);
 	}
 	public ZoomedVoxelIndex zoomedVoxelIndexForVoxelXyz(VoxelXyz v, ZoomLevel zoomLevel, CoordinateAxis sliceAxis) 
 	{
@@ -496,7 +496,7 @@ public class TileFormat
 				continue; // don't zoom on slice axis in quadtree mode
 			xyz[i] /= zoomFactor;
 		}
-		return new ZoomedVoxelIndex(zoomLevel, xyz[0], xyz[1], xyz[2]);
+		return new ZoomedVoxelIndex(zoomLevel, xyz[X_OFFS], xyz[Y_OFFS], xyz[Z_OFFS]);
 	}
 	
 	/**
@@ -516,10 +516,10 @@ public class TileFormat
 		}
 		// Invert Y axis to convert to Raveler convention from image convention.
 		int zoomFactor = zoomLevel.getZoomOutFactor();
-		int maxZoomVoxelY = volumeSize[1] / zoomFactor;
-		xyz[1] = maxZoomVoxelY - xyz[1] - getTileSize()[1];
+		int maxZoomVoxelY = volumeSize[Y_OFFS] / zoomFactor;
+		xyz[1] = maxZoomVoxelY - xyz[Y_OFFS] - getTileSize()[Y_OFFS];
 		//
-		return new ZoomedVoxelIndex(zoomLevel, xyz[0], xyz[1], xyz[2]);
+		return new ZoomedVoxelIndex(zoomLevel, xyz[X_OFFS], xyz[Y_OFFS], xyz[Z_OFFS]);
 	}
 	/**
 	 * TileIndex xyz containing ZoomedVoxel
@@ -532,7 +532,7 @@ public class TileFormat
 		int xyz[] = {z.getX(), z.getY(), z.getZ()};
 		// Invert Y axis to convert to Raveler convention from image convention.
 		int zoomFactor = z.getZoomLevel().getZoomOutFactor();
-		int maxZoomVoxelY = volumeSize[1] / zoomFactor - 1;
+		int maxZoomVoxelY = volumeSize[Y_OFFS] / zoomFactor - 1;
 		xyz[1] = maxZoomVoxelY - xyz[1];
 		int depthAxis = sliceAxis.index();
 		for (int i = 0; i < 3; ++i) {
@@ -541,7 +541,7 @@ public class TileFormat
 			else
 				xyz[i] = xyz[i]/getTileSize()[i]; // scale horizontal and vertical
 		}
-		return new TileXyz(xyz[0], xyz[1], xyz[2]);
+		return new TileXyz(xyz[X_OFFS], xyz[Y_OFFS], xyz[Z_OFFS]);
 	}
 	
 	// Volume units can be one of 4 interconvertible types
