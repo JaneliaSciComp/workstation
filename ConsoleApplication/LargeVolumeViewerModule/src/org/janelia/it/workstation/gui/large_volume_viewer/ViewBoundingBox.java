@@ -7,11 +7,13 @@
 package org.janelia.it.workstation.gui.large_volume_viewer;
 
 /**
- * This delineates some 3D region in screen coordinates.
+ * This delineates some 2D region in micrometers.  Convenience holder
+ * object for working with 2D pieces, when the third axis is handled separately.
+ * LLF
  * 
  * @author fosterl
  */
-public class ScreenBoundingBox {
+public class ViewBoundingBox {
 
     private double wFMin;
     private double wFMax;

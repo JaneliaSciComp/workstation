@@ -59,9 +59,9 @@ public class SubvolumeProvider {
      * @param monitor feeds back progress.
      * @return R/O sub volume centered at center, extending extent-sub-i div by 2 all directions.
      */
-    public Subvolume getSubvolumeFor3D(Vec3 center, double pixelsPerSceneUnit, BoundingBox3d bb, int[] extent, int zoomIndex, IndeterminateNoteProgressMonitor monitor) {
+    public Subvolume getSubvolumeFor3D(Vec3 center, double micrometerVoxels, BoundingBox3d bb, int[] extent, int zoomIndex, IndeterminateNoteProgressMonitor monitor) {
         ZoomLevel zoomLevel = new ZoomLevel(zoomIndex);
-        return new Subvolume(center, volumeImage, pixelsPerSceneUnit, bb, zoomLevel, extent, tileServer.getTextureCache(), monitor);
+        return new Subvolume(center, volumeImage, micrometerVoxels, bb, zoomLevel, extent, tileServer.getTextureCache(), monitor);
     }
 
     public Subvolume getSubvolume(ZoomedVoxelIndex zv1, ZoomedVoxelIndex zv2) {

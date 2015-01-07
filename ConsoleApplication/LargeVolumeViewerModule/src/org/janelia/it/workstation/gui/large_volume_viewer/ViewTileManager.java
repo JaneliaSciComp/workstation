@@ -164,11 +164,11 @@ public class ViewTileManager {
         int relativeTileDepth = tileFormat.calcRelativeTileDepth(xyzFromWhd, fD, bb);
 		
 		// 3) x and y tile index range
-        ScreenBoundingBox screenBounds =
-                tileFormat.boundingBoxToScreenBounds(
+        ViewBoundingBox screenBounds =
+                tileFormat.boundingBoxToViewBounds(
                         bb, viewport.getWidth(), viewport.getHeight(), focus, camera.getPixelsPerSceneUnit(), xyzFromWhd
                 );
-        TileBoundingBox tileUnits = tileFormat.screenBoundsToTileBounds(xyzFromWhd, screenBounds, zoom );
+        TileBoundingBox tileUnits = tileFormat.viewBoundsToTileBounds(xyzFromWhd, screenBounds, zoom );
 
 		TileIndex.IndexStyle indexStyle = tileFormat.getIndexStyle();
         // Must adjust the depth tile value relative to origin.

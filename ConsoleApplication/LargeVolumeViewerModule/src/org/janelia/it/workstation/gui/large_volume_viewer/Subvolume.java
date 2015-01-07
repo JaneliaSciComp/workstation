@@ -118,7 +118,7 @@ public class Subvolume {
 	 * 
 	 * @param center volume around here, in 3D
 	 * @param wholeImage 
-     * @param pixelsPerSceneUnit as might be supplied by a camera.
+     * @param micrometerVoxels as might be supplied by tile format, 1/min-voxelMicrometers.
      * @param dimensions how large to make the volume.
 	 * @param textureCache
      * @param progressMonitor for reporting relative completion.
@@ -126,7 +126,7 @@ public class Subvolume {
     public Subvolume(
             Vec3 center,
             SharedVolumeImage wholeImage,
-            double pixelsPerSceneUnit,
+            double micrometerVoxels,
             BoundingBox3d bb,
             ZoomLevel zoom,
             int[] dimensions,
@@ -134,7 +134,7 @@ public class Subvolume {
             IndeterminateNoteProgressMonitor progressMonitor)
     {
         this.progressMonitor = progressMonitor;
-        initializeFor3D(center, pixelsPerSceneUnit, bb, zoom, dimensions, wholeImage, textureCache);
+        initializeFor3D(center, micrometerVoxels, bb, zoom, dimensions, wholeImage, textureCache);
     }
     
     /**
@@ -146,7 +146,7 @@ public class Subvolume {
      * @param textureCache existing fetches live here.
      */
 	private void initializeFor3D(Vec3 center,
-            double pixelsPerSceneUnit,
+            double micrometerVoxels,
             BoundingBox3d bb,
             final ZoomLevel zoom,
             int[] dimensions,
@@ -158,7 +158,7 @@ public class Subvolume {
 	    final TileFormat tileFormat = loadAdapter.getTileFormat();
         allocateRasterMemory(tileFormat, dimensions);
 
-        Set<TileIndex> neededTiles = getCenteredTileSet(tileFormat, center, pixelsPerSceneUnit, bb, dimensions, zoom);
+        Set<TileIndex> neededTiles = getCenteredTileSet(tileFormat, center, micrometerVoxels, bb, dimensions, zoom);
         if (logger.isDebugEnabled()) {
             logTileRequest(neededTiles);
         }
@@ -651,17 +651,17 @@ OVERFLOW_LABEL:
 	}
 
     /** Called from 3D feed. */
-    private Set<TileIndex> getCenteredTileSet(TileFormat tileFormat, Vec3 center, double pixelsPerSceneUnit, BoundingBox3d bb, int[] dimensions, ZoomLevel zoomLevel) {
+    private Set<TileIndex> getCenteredTileSet(TileFormat tileFormat, Vec3 center, double micrometerVoxels, BoundingBox3d bb, int[] dimensions, ZoomLevel zoomLevel) {
         assert(dimensions[0] % 2 == 0) : "Dimension X must be divisible by 2";
         assert(dimensions[1] % 2 == 0) : "Dimension Y must be divisible by 2";
         assert(dimensions[2] % 2 == 0) : "Dimension Z must be divisible by 2";
 
         int[] xyzFromWhd = new int[] { 0, 1, 2 };
         CoordinateAxis sliceAxis = CoordinateAxis.Z;
-        ScreenBoundingBox screenBounds = tileFormat.boundingBoxToScreenBounds(
-                bb, dimensions[0], dimensions[1], center, pixelsPerSceneUnit, xyzFromWhd
+        ViewBoundingBox voxelBounds = tileFormat.boundingBoxToViewBounds(
+                bb, dimensions[0], dimensions[1], center, micrometerVoxels, xyzFromWhd
         );
-        TileBoundingBox tileBoundingBox = tileFormat.screenBoundsToTileBounds(xyzFromWhd, screenBounds, zoomLevel.getLog2ZoomOutFactor() ); // To Check: right method from zoom?
+        TileBoundingBox tileBoundingBox = tileFormat.viewBoundsToTileBounds(xyzFromWhd, voxelBounds, zoomLevel.getLog2ZoomOutFactor() ); // To Check: right method from zoom?
 
         // Now I have the tile outline.  Can just iterate over that, and for all
         // required depth.

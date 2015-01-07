@@ -126,7 +126,7 @@ public class TileFormat
 		return zoom;
 	}
 	
-    public TileBoundingBox screenBoundsToTileBounds(int[] xyzFromWhd, ScreenBoundingBox screenBounds, int zoom) {
+    public TileBoundingBox viewBoundsToTileBounds(int[] xyzFromWhd, ViewBoundingBox screenBounds, int zoom) {
 
         double zoomFactor = Math.pow(2.0, zoom);
 		// get tile pixel size 1024 from loadAdapter
@@ -150,8 +150,8 @@ public class TileFormat
         return tileUnits;
     }
     
-    public ScreenBoundingBox boundingBoxToScreenBounds(
-            BoundingBox3d bb, int viewWidth, int viewHeight, Vec3 focus, double pixelsPerSceneUnit, int[] xyzFromWhd 
+    public ViewBoundingBox boundingBoxToViewBounds(
+            BoundingBox3d bb, int viewWidth, int viewHeight, Vec3 focus, double pixelsPerViewUnit, int[] xyzFromWhd 
     ) {
 
         bb = originAdjustBoundingBox(bb, xyzFromWhd);
@@ -159,25 +159,25 @@ public class TileFormat
         
         // In scene units
 		// Clip to screen space  
-        double xMinView = focus.get(xyzFromWhd[X_OFFS]) - 0.5*viewWidth/pixelsPerSceneUnit;
-        double xMaxView = focus.get(xyzFromWhd[X_OFFS]) + 0.5*viewWidth/pixelsPerSceneUnit;
+        double xMinView = focus.get(xyzFromWhd[X_OFFS]) - 0.5*viewWidth/pixelsPerViewUnit;
+        double xMaxView = focus.get(xyzFromWhd[X_OFFS]) + 0.5*viewWidth/pixelsPerViewUnit;
         
-		double yMinView = focus.get(xyzFromWhd[Y_OFFS]) - 0.5*viewHeight/pixelsPerSceneUnit;
-		double yMaxView = focus.get(xyzFromWhd[Y_OFFS]) + 0.5*viewHeight/pixelsPerSceneUnit;
+		double yMinView = focus.get(xyzFromWhd[Y_OFFS]) - 0.5*viewHeight/pixelsPerViewUnit;
+		double yMaxView = focus.get(xyzFromWhd[Y_OFFS]) + 0.5*viewHeight/pixelsPerViewUnit;
 
         // Clip to volume space
 		// Subtract one half pixel to avoid loading an extra layer of tiles
-		double dw = 0.25 * getVoxelMicrometers()[xyzFromWhd[0]];
-		double dh = 0.25 * getVoxelMicrometers()[xyzFromWhd[1]];
+		double dw = 0.25 * getVoxelMicrometers()[xyzFromWhd[X_OFFS]];
+		double dh = 0.25 * getVoxelMicrometers()[xyzFromWhd[Y_OFFS]];
 
         // Compute 'biases' against the origin.
 		double bottomY = bb.getMax().getY();
         
-        double xMinSceneUnit = Math.max(xMinView, bb.getMin().get(xyzFromWhd[X_OFFS]) + dw);
-		double yMinSceneUnit = bottomY - Math.max(yMinView, bb.getMin().get(xyzFromWhd[Y_OFFS]) + dh);
+        double xMinViewUnit = Math.max(xMinView, bb.getMin().get(xyzFromWhd[X_OFFS]) + dw);
+		double yMinViewUnit = bottomY - Math.max(yMinView, bb.getMin().get(xyzFromWhd[Y_OFFS]) + dh);
         
-		double xMaxSceneUnit = Math.min(xMaxView, bb.getMax().get(xyzFromWhd[X_OFFS]) - dw);
-		double yMaxSceneUnit = bottomY - Math.min(yMaxView, bb.getMax().get(xyzFromWhd[Y_OFFS]) - dh);
+		double xMaxViewUnit = Math.min(xMaxView, bb.getMax().get(xyzFromWhd[X_OFFS]) - dw);
+		double yMaxViewUnit = bottomY - Math.min(yMaxView, bb.getMax().get(xyzFromWhd[Y_OFFS]) - dh);
         
         // The y-flip correction is wrong when the origin is not at zero. 
         // I think I got that corrected by adding the minimum Y value during the flip:
@@ -185,33 +185,32 @@ public class TileFormat
 		// Correct for bottom Y origin of Raveler tile coordinate system
 		// (everything else is top Y origin: image, our OpenGL, user facing coordinate system)
 		if (xyzFromWhd[X_OFFS] == Y_OFFS) { // Y axis left-right
-			double temp = xMinSceneUnit;
-			xMinSceneUnit = xMaxSceneUnit;
-			xMaxSceneUnit = temp;
+			double temp = xMinViewUnit;
+			xMinViewUnit = xMaxViewUnit;
+			xMaxViewUnit = temp;
 		}
 		else if (xyzFromWhd[Y_OFFS] == Y_OFFS) { // Y axis top-bottom
-			double temp = yMinSceneUnit;
-			yMinSceneUnit = yMaxSceneUnit;
-			yMaxSceneUnit = temp;
+			double temp = yMinViewUnit;
+			yMinViewUnit = yMaxViewUnit;
+			yMaxViewUnit = temp;
 		}
 		else {
 			// TODO - invert slice axis? (already inverted above)
 		}
         
-        ScreenBoundingBox screenBoundaries = new ScreenBoundingBox();
-        screenBoundaries.sethFMax(yMaxSceneUnit);
-        screenBoundaries.sethFMin(yMinSceneUnit);
+        ViewBoundingBox viewBoundaries = new ViewBoundingBox();
+        viewBoundaries.sethFMax(yMaxViewUnit);
+        viewBoundaries.sethFMin(yMinViewUnit);
         
-        screenBoundaries.setwFMax(xMaxSceneUnit);
-        screenBoundaries.setwFMin(xMinSceneUnit);
-        //( screenBoundaries , bb, viewWidth, viewHeight );
-        return screenBoundaries;
+        viewBoundaries.setwFMax(xMaxViewUnit);
+        viewBoundaries.setwFMin(xMinViewUnit);
+        return viewBoundaries;
     }
     
     public int calcRelativeTileDepth(int[] xyzFromWhd, double focusDepth, BoundingBox3d bb) {
         // Bounding box is actually 0.5 voxels bigger than number of slices at each end
-        int dMin = (int)(bb.getMin().get(xyzFromWhd[2])/getVoxelMicrometers()[xyzFromWhd[Z_OFFS]] + 0.5);
-        int dMax = (int)(bb.getMax().get(xyzFromWhd[2])/getVoxelMicrometers()[xyzFromWhd[Z_OFFS]] - 0.5);
+        int dMin = (int)(bb.getMin().get(xyzFromWhd[Z_OFFS])/getVoxelMicrometers()[xyzFromWhd[Z_OFFS]] + 0.5);
+        int dMax = (int)(bb.getMax().get(xyzFromWhd[Z_OFFS])/getVoxelMicrometers()[xyzFromWhd[Z_OFFS]] - 0.5);
         int absoluteTileDepth = (int)Math.round(focusDepth / getVoxelMicrometers()[xyzFromWhd[Z_OFFS]] - 0.5);
         absoluteTileDepth = Math.max(absoluteTileDepth, dMin);
         absoluteTileDepth = Math.min(absoluteTileDepth, dMax);
@@ -558,19 +557,19 @@ public class TileFormat
 		private int data[] = new int[3];
 		
 		public UnittedVec3Int(int x, int y, int z) {
-			data[0] = x;
-			data[1] = y;
-			data[2] = z;
+			data[X_OFFS] = x;
+			data[Y_OFFS] = y;
+			data[Z_OFFS] = z;
 		}
 		
 		@Override
 		public UnittedVec3Int<U> clone() {
-			return new UnittedVec3Int<U>(data[0], data[1], data[2]);
+			return new UnittedVec3Int<U>(data[X_OFFS], data[1], data[2]);
 		}
 		
-		public int getX() {return data[0];}
-		public int getY() {return data[1];}
-		public int getZ() {return data[2];}
+		public int getX() {return data[X_OFFS];}
+		public int getY() {return data[Y_OFFS];}
+		public int getZ() {return data[Z_OFFS];}
 	}; 
 	
 	public static class UnittedVec3Double<U extends Unit> 
@@ -579,19 +578,19 @@ public class TileFormat
 		private double data[] = new double[3];
 		
 		public UnittedVec3Double(double x, double y, double z) {
-			data[0] = x;
-			data[1] = y;
-			data[2] = z;
+			data[X_OFFS] = x;
+			data[Y_OFFS] = y;
+			data[Z_OFFS] = z;
 		}
 		
 		@Override
 		public UnittedVec3Double<U> clone() {
-			return new UnittedVec3Double<U>(data[0], data[1], data[2]);
+			return new UnittedVec3Double<U>(data[X_OFFS], data[Y_OFFS], data[Z_OFFS]);
 		}
 		
-		public double getX() {return data[0];}
-		public double getY() {return data[1];}
-		public double getZ() {return data[2];}
+		public double getX() {return data[X_OFFS];}
+		public double getY() {return data[Y_OFFS];}
+		public double getZ() {return data[Z_OFFS];}
 	}; 
 	
 	// Base
@@ -603,7 +602,7 @@ public class TileFormat
 	public static class VoxelXyz extends UnittedVec3Int<VoxelUnit> 
 	{
 		public VoxelXyz(int x, int y, int z) {super(x, y, z);}
-        public VoxelXyz(int[] xyz) {super(xyz[0], xyz[1], xyz[2]);}
+        public VoxelXyz(int[] xyz) {super(xyz[X_OFFS], xyz[Y_OFFS], xyz[Z_OFFS]);}
 	}; // 2
 	
 	/* OBSOLETED in favor of ...octree.ZoomedVoxelIndex
@@ -619,7 +618,7 @@ public class TileFormat
 	} // 4
 
     @SuppressWarnings("unused")
-    private void bbToScreenScenarioDump(ScreenBoundingBox screenBoundaries, BoundingBox3d bb, int viewWidth, int viewHeight) {
+    private void bbToScreenScenarioDump(ViewBoundingBox screenBoundaries, BoundingBox3d bb, int viewWidth, int viewHeight) {
         System.out.println("================================================");
         System.out.println("SCENARIO: TileFormat.boundingBoxToScreenBounds()");
         System.out.println("View width=" + viewWidth + ", View Height=" + viewHeight);
