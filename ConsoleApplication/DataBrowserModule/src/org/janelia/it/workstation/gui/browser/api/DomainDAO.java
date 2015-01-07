@@ -2,6 +2,7 @@ package org.janelia.it.workstation.gui.browser.api;
 
 import java.net.UnknownHostException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Date;
 import java.util.HashMap;
@@ -15,34 +16,39 @@ import org.janelia.it.jacs.model.domain.DomainObject;
 import org.janelia.it.jacs.model.domain.Reference;
 import org.janelia.it.jacs.model.domain.ReverseReference;
 import org.janelia.it.jacs.model.domain.Subject;
+import org.janelia.it.jacs.model.domain.compartments.CompartmentSet;
+import org.janelia.it.jacs.model.domain.gui.alignment_board.AlignmentBoard;
 import org.janelia.it.jacs.model.domain.ontology.Annotation;
 import org.janelia.it.jacs.model.domain.ontology.Ontology;
+import org.janelia.it.jacs.model.domain.sample.DataSet;
+import org.janelia.it.jacs.model.domain.sample.Image;
 import org.janelia.it.jacs.model.domain.sample.LSMImage;
 import org.janelia.it.jacs.model.domain.sample.NeuronFragment;
+import org.janelia.it.jacs.model.domain.sample.Sample;
+import org.janelia.it.jacs.model.domain.screen.FlyLine;
 import org.janelia.it.jacs.model.domain.screen.PatternMask;
 import org.janelia.it.jacs.model.domain.screen.ScreenSample;
 import org.janelia.it.jacs.model.domain.support.MongoUtils;
+import org.janelia.it.jacs.model.domain.workspace.ObjectSet;
 import org.janelia.it.jacs.model.domain.workspace.TreeNode;
 import org.janelia.it.jacs.model.domain.workspace.Workspace;
 import org.jongo.Jongo;
 import org.jongo.MongoCollection;
-import org.jongo.RawResultHandler;
+import org.jongo.MongoCursor;
 import org.jongo.marshall.jackson.JacksonMapper;
 
 import com.fasterxml.jackson.databind.MapperFeature;
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.HashMultimap;
 import com.google.common.collect.Multimap;
-import com.mongodb.DB;
-import com.mongodb.DBObject;
 import com.mongodb.MongoClient;
+import com.mongodb.MongoCredential;
+import com.mongodb.ServerAddress;
 import com.mongodb.WriteConcern;
 import com.mongodb.WriteResult;
 
 /**
  * The main domain-object DAO for the JACS system.
- * 
- * TODO: COPYING THIS CLASS FROM COMPUTE IS JUST A TEMPORARY HACK, IN THE FUTURE WE'LL HAVE A REAL API 
  * 
  * @author <a href="mailto:rokickik@janelia.hhmi.org">Konrad Rokicki</a>
  */
@@ -51,41 +57,67 @@ public class DomainDAO {
     private static final Logger log = Logger.getLogger(DomainDAO.class);
     
     protected MongoClient m;
-    protected DB db;
     protected Jongo jongo;
-    protected MongoCollection subjectCollection;
-    protected MongoCollection treeNodeCollection;
+
+    protected MongoCollection alignmentBoardCollection;
+    protected MongoCollection annotationCollection;
+    protected MongoCollection compartmentSetCollection;
+    protected MongoCollection dataSetCollection;
+    protected MongoCollection flyLineCollection;
+    protected MongoCollection fragmentCollection;
+    protected MongoCollection imageCollection;
+    protected MongoCollection objectSetCollection;
+    protected MongoCollection ontologyCollection;
+    protected MongoCollection patternMaskCollection;
     protected MongoCollection sampleCollection;
     protected MongoCollection screenSampleCollection;
-    protected MongoCollection patternMaskCollection;
-    protected MongoCollection imageCollection;
-    protected MongoCollection fragmentCollection;
-    protected MongoCollection annotationCollection;
-    protected MongoCollection ontologyCollection;
+    protected MongoCollection subjectCollection;
+    protected MongoCollection treeNodeCollection;
     
     public DomainDAO(String serverUrl, String databaseName) throws UnknownHostException {
-        m = new MongoClient(serverUrl);
+    	this(serverUrl, databaseName, null, null);	
+    }
+    
+    public DomainDAO(String serverUrl, String databaseName, String username, String password) throws UnknownHostException {
+    	    	
+    	if (username!=null && password!=null) {
+	    	MongoCredential credential = MongoCredential.createMongoCRCredential(username, databaseName, password.toCharArray());
+	    	this.m = new MongoClient(new ServerAddress(serverUrl), Arrays.asList(credential));
+	    	log.info("Connected to MongoDB ("+databaseName+"@"+serverUrl+") as user "+username);
+    	}
+    	else {
+    		this.m = new MongoClient(serverUrl);
+	    	log.info("Connected to MongoDB ("+databaseName+"@"+serverUrl+")");
+    	}
+    	
         m.setWriteConcern(WriteConcern.JOURNALED);
-        //m.setWriteConcern(WriteConcern.UNACKNOWLEDGED);
-        db = m.getDB(databaseName);
-        jongo = new Jongo(db, 
+        this.jongo = new Jongo(m.getDB(databaseName), 
                 new JacksonMapper.Builder()
                     .enable(MapperFeature.AUTO_DETECT_GETTERS)
                     .enable(MapperFeature.AUTO_DETECT_SETTERS)
                     .build());
-        subjectCollection = jongo.getCollection("subject");
-        treeNodeCollection = jongo.getCollection("treeNode");
-        sampleCollection = jongo.getCollection("sample");
-        screenSampleCollection = jongo.getCollection("screenSample");
-        patternMaskCollection = jongo.getCollection("patternMask");
-        imageCollection = jongo.getCollection("image");
-        fragmentCollection = jongo.getCollection("fragment");
-        annotationCollection = jongo.getCollection("annotation");
-        ontologyCollection = jongo.getCollection("ontology");
+        this.alignmentBoardCollection = getCollectionByClass(AlignmentBoard.class);
+        this.annotationCollection = getCollectionByClass(Annotation.class);
+        this.compartmentSetCollection = getCollectionByClass(CompartmentSet.class);
+        this.dataSetCollection = getCollectionByClass(DataSet.class);
+        this.flyLineCollection = getCollectionByClass(FlyLine.class);
+        this.fragmentCollection = getCollectionByClass(NeuronFragment.class);
+        this.imageCollection = getCollectionByClass(Image.class);
+        this.objectSetCollection = getCollectionByClass(ObjectSet.class);
+        this.ontologyCollection = getCollectionByClass(Ontology.class);
+        this.patternMaskCollection = getCollectionByClass(PatternMask.class);
+        this.sampleCollection = getCollectionByClass(Sample.class);
+        this.screenSampleCollection = getCollectionByClass(ScreenSample.class);
+    	this.subjectCollection = getCollectionByClass(Subject.class);
+    	this.treeNodeCollection = getCollectionByClass(TreeNode.class);
     }
     
     public Jongo getJongo() {
         return jongo;
+    }
+    
+    public MongoClient getMongo() {
+    	return m;
     }
     
     public void setWriteConcern(WriteConcern writeConcern) {
@@ -126,9 +158,9 @@ public class DomainDAO {
     /**
      * Create a list of the result set in iteration order.
      */
-    private <T> List<T> toList(Iterable<? extends T> iterable) {
+    private <T> List<T> toList(MongoCursor<? extends T> cursor) {
         List<T> list = new ArrayList<T>();
-        for(T item : iterable) {
+        for(T item : cursor) {
             list.add(item);
         }
         return list;
@@ -137,10 +169,10 @@ public class DomainDAO {
     /**
      * Create a list of the result set in the order of the given id list.
      */
-    private List<DomainObject> toList(Iterable<? extends DomainObject> iterable, Collection<Long> ids) {
+    private List<DomainObject> toList(MongoCursor<? extends DomainObject> cursor, Collection<Long> ids) {
         List<DomainObject> list = new ArrayList<DomainObject>(ids.size());
         Map<Long,DomainObject> map = new HashMap<Long,DomainObject>(ids.size());
-        for(DomainObject item : iterable) {
+        for(DomainObject item : cursor) {
             map.put(item.getId(), item);
         }
         for(Long id : ids) {
@@ -207,20 +239,19 @@ public class DomainDAO {
 
         Class<? extends DomainObject> clazz = getObjectClass(type);
         if (clazz==null) {
-        	log.error("No object type for "+type);
-        	return new ArrayList<DomainObject>();
+            throw new IllegalArgumentException("No object type for "+type);
         }
         
-        Iterable<? extends DomainObject> iterable = null;
+        MongoCursor<? extends DomainObject> cursor = null;
         if (subjects==null) {
-        	iterable = getCollectionByName(type).find("{_id:{$in:#}}", ids).as(clazz);
+        	cursor = getCollectionByName(type).find("{_id:{$in:#}}", ids).as(clazz);
         }
         else {
-        	iterable = getCollectionByName(type).find("{_id:{$in:#},readers:{$in:#}}", ids, subjects).as(clazz);	
+        	cursor = getCollectionByName(type).find("{_id:{$in:#},readers:{$in:#}}", ids, subjects).as(clazz);	
         }
         
         
-        List<DomainObject> list = toList(iterable, ids);
+        List<DomainObject> list = toList(cursor, ids);
         log.trace("Getting "+list.size()+" "+type+" objects took "+(System.currentTimeMillis()-start)+" ms");
         return list;
     }
@@ -229,15 +260,15 @@ public class DomainDAO {
         Set<String> subjects = subjectKey==null?null:getSubjectSet(subjectKey);
         String type = reverseRef.getReferringType();
 
-        Iterable<? extends DomainObject> iterable = null;
+        MongoCursor<? extends DomainObject> cursor = null;
         if (subjects==null) {
-        	iterable = getCollectionByName(type).find("{"+reverseRef.getReferenceAttr()+":#}", reverseRef.getReferenceId()).as(getObjectClass(type));
+        	cursor = getCollectionByName(type).find("{'"+reverseRef.getReferenceAttr()+"':#}", reverseRef.getReferenceId()).as(getObjectClass(type));
         }
         else {
-        	iterable = getCollectionByName(type).find("{"+reverseRef.getReferenceAttr()+":#,readers:{$in:#}}", reverseRef.getReferenceId(), subjects).as(getObjectClass(type));
+        	cursor = getCollectionByName(type).find("{'"+reverseRef.getReferenceAttr()+"':#,readers:{$in:#}}", reverseRef.getReferenceId(), subjects).as(getObjectClass(type));
         }
         
-        List<DomainObject> list = toList(iterable);
+        List<DomainObject> list = toList(cursor);
         if (list.size()!=reverseRef.getCount()) {
             log.warn("Reverse reference ("+reverseRef.getReferringType()+":"+reverseRef.getReferenceAttr()+":"+reverseRef.getReferenceId()+
                     ") denormalized count ("+reverseRef.getCount()+") does not match actual count ("+list.size()+")");
@@ -248,15 +279,15 @@ public class DomainDAO {
     public List<Annotation> getAnnotations(String subjectKey, Long targetId) {
         Set<String> subjects = subjectKey==null?null:getSubjectSet(subjectKey);
 
-        Iterable<Annotation> iterable = null;
+        MongoCursor<Annotation> cursor = null;
         if (subjects==null) {
-        	iterable = annotationCollection.find("{targetId:#}",targetId).as(Annotation.class);
+        	cursor = annotationCollection.find("{targetId:#}",targetId).as(Annotation.class);
         }
         else {
-        	iterable = annotationCollection.find("{targetId:#,readers:{$in:#}}",targetId,subjects).as(Annotation.class);
+        	cursor = annotationCollection.find("{targetId:#,readers:{$in:#}}",targetId,subjects).as(Annotation.class);
         }
         
-        return toList(iterable);
+        return toList(cursor);
     }
     
     public List<Annotation> getAnnotations(String subjectKey, Collection<Long> targetIds) {
@@ -393,7 +424,6 @@ public class DomainDAO {
             patternMaskCollection.update("{screenSampleId:{$in:#},writers:#}",ids,subjectKey).multi().with("{$"+op+":{"+attr+":#}}}",granteeKey);
         }
     }
-    
 
     public void save(String subjectKey, DomainObject domainObject) throws Exception {
         String type = getCollectionName(domainObject);
@@ -488,29 +518,28 @@ public class DomainDAO {
     /**
      * Get the domain objects of the given type 
      */
-    public <T extends DomainObject> Iterable<T> getDomainObjects(Class<T> domainClass) { 
+    public <T extends DomainObject> MongoCursor<T> getDomainObjects(Class<T> domainClass) {
         return getCollectionByClass(domainClass).find().as(domainClass);
     }
     
     /**
      * Get the domain objects of the given type 
      */
-    public Iterable<? extends DomainObject> getDomainObjects(String type) {
-        Class<? extends DomainObject> clazz = getObjectClass(type);
-        if (clazz==null) {
-        	log.error("No object type for "+type);
-        	return new ArrayList<DomainObject>();
-        }
-
-        return getCollectionByName(type).find().as(clazz);
-    }
+//    public MongoCursor<? extends DomainObject> getDomainObjects(String type) {
+//        Class<? extends DomainObject> clazz = getObjectClass(type);
+//        if (clazz==null) {
+//        	throw new IllegalArgumentException("No object type for "+type);
+//        }
+//
+//        return getCollectionByName(type).find().as(clazz);
+//    }
 
     /**
      * Get the raw domain objects of the given type 
      */
-    public Iterable<DBObject> getRawObjects(String type) {
-        return getCollectionByName(type).find().map(new RawResultHandler<DBObject>());
-    }
+//    public MongoCursor<DBObject> getRawObjects(String type) {
+//        return getCollectionByName(type).find().map(new RawResultHandler<DBObject>());
+//    }
     
     public static void main(String[] args) throws Exception {
         

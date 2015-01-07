@@ -505,6 +505,7 @@
                 <package>de.javasoft.util</package>
                 <package>de.javasoft.util.java2d</package>
                 <package>de.undercouch.bson4jackson</package>
+                <package>de.undercouch.bson4jackson.deserializers</package>
                 <package>de.undercouch.bson4jackson.io</package>
                 <package>de.undercouch.bson4jackson.serializers</package>
                 <package>de.undercouch.bson4jackson.types</package>
@@ -2007,6 +2008,10 @@
                 <binary-origin>release/modules/ext/jetty-io-8.1.8.v20121106.jar</binary-origin>
             </class-path-extension>
             <class-path-extension>
+                <runtime-relative-path>ext/jackson-core-2.4.1.jar</runtime-relative-path>
+                <binary-origin>release/modules/ext/jackson-core-2.4.1.jar</binary-origin>
+            </class-path-extension>
+            <class-path-extension>
                 <runtime-relative-path>ext/neethi-2.0.5.jar</runtime-relative-path>
                 <binary-origin>release/modules/ext/neethi-2.0.5.jar</binary-origin>
             </class-path-extension>
@@ -2025,10 +2030,6 @@
             <class-path-extension>
                 <runtime-relative-path>ext/axiom-api-1.2.11.jar</runtime-relative-path>
                 <binary-origin>release/modules/ext/axiom-api-1.2.11.jar</binary-origin>
-            </class-path-extension>
-            <class-path-extension>
-                <runtime-relative-path>ext/mongo-java-driver-2.11.3.jar</runtime-relative-path>
-                <binary-origin>release/modules/ext/mongo-java-driver-2.11.3.jar</binary-origin>
             </class-path-extension>
             <class-path-extension>
                 <runtime-relative-path>ext/syntheticaBlackMoon.jar</runtime-relative-path>
@@ -2135,6 +2136,10 @@
                 <binary-origin>release/modules/ext/wsdl4j-1.6.2.jar</binary-origin>
             </class-path-extension>
             <class-path-extension>
+                <runtime-relative-path>ext/bson4jackson-2.4.0.jar</runtime-relative-path>
+                <binary-origin>release/modules/ext/bson4jackson-2.4.0.jar</binary-origin>
+            </class-path-extension>
+            <class-path-extension>
                 <runtime-relative-path>ext/logback-classic-1.0.13.jar</runtime-relative-path>
                 <binary-origin>release/modules/ext/logback-classic-1.0.13.jar</binary-origin>
             </class-path-extension>
@@ -2167,10 +2172,6 @@
                 <binary-origin>release/modules/ext/jalopy-1.5rc3.jar</binary-origin>
             </class-path-extension>
             <class-path-extension>
-                <runtime-relative-path>ext/bson4jackson-2.2.3.jar</runtime-relative-path>
-                <binary-origin>release/modules/ext/bson4jackson-2.2.3.jar</binary-origin>
-            </class-path-extension>
-            <class-path-extension>
                 <runtime-relative-path>ext/perf4j-0.9.16-logbackonly.jar</runtime-relative-path>
                 <binary-origin>release/modules/ext/perf4j-0.9.16-logbackonly.jar</binary-origin>
             </class-path-extension>
@@ -2181,6 +2182,10 @@
             <class-path-extension>
                 <runtime-relative-path>ext/vecmath.jar</runtime-relative-path>
                 <binary-origin>release/modules/ext/vecmath.jar</binary-origin>
+            </class-path-extension>
+            <class-path-extension>
+                <runtime-relative-path>ext/mongo-java-driver-2.12.4.jar</runtime-relative-path>
+                <binary-origin>release/modules/ext/mongo-java-driver-2.12.4.jar</binary-origin>
             </class-path-extension>
             <class-path-extension>
                 <runtime-relative-path>ext/wstx-asl-3.2.7.jar</runtime-relative-path>
@@ -2199,10 +2204,6 @@
                 <binary-origin>release/modules/ext/lz4-1.1.1.jar</binary-origin>
             </class-path-extension>
             <class-path-extension>
-                <runtime-relative-path>ext/jongo-1.0.jar</runtime-relative-path>
-                <binary-origin>release/modules/ext/jongo-1.0.jar</binary-origin>
-            </class-path-extension>
-            <class-path-extension>
                 <runtime-relative-path>ext/logback-core-1.0.13.jar</runtime-relative-path>
                 <binary-origin>release/modules/ext/logback-core-1.0.13.jar</binary-origin>
             </class-path-extension>
@@ -2213,10 +2214,6 @@
             <class-path-extension>
                 <runtime-relative-path>ext/vlcj-1.3.0-b1.jar</runtime-relative-path>
                 <binary-origin>release/modules/ext/vlcj-1.3.0-b1.jar</binary-origin>
-            </class-path-extension>
-            <class-path-extension>
-                <runtime-relative-path>ext/jackson-core-2.2.3.jar</runtime-relative-path>
-                <binary-origin>release/modules/ext/jackson-core-2.2.3.jar</binary-origin>
             </class-path-extension>
             <class-path-extension>
                 <runtime-relative-path>ext/mac_widgets-0.9.5.jar</runtime-relative-path>
@@ -2295,12 +2292,12 @@
                 <binary-origin>release/modules/ext/ehcache-core-2.5.1.jar</binary-origin>
             </class-path-extension>
             <class-path-extension>
-                <runtime-relative-path>ext/axis2-kernel-1.5.5.jar</runtime-relative-path>
-                <binary-origin>release/modules/ext/axis2-kernel-1.5.5.jar</binary-origin>
-            </class-path-extension>
-            <class-path-extension>
                 <runtime-relative-path>ext/geronimo-saaj_1.3_spec-1.0.1.jar</runtime-relative-path>
                 <binary-origin>release/modules/ext/geronimo-saaj_1.3_spec-1.0.1.jar</binary-origin>
+            </class-path-extension>
+            <class-path-extension>
+                <runtime-relative-path>ext/axis2-kernel-1.5.5.jar</runtime-relative-path>
+                <binary-origin>release/modules/ext/axis2-kernel-1.5.5.jar</binary-origin>
             </class-path-extension>
             <class-path-extension>
                 <runtime-relative-path>ext/miglayout-4.0-swing.jar</runtime-relative-path>
@@ -2327,6 +2324,10 @@
                 <binary-origin>release/modules/ext/regexp-1.2.jar</binary-origin>
             </class-path-extension>
             <class-path-extension>
+                <runtime-relative-path>ext/jackson-annotations-2.4.1.jar</runtime-relative-path>
+                <binary-origin>release/modules/ext/jackson-annotations-2.4.1.jar</binary-origin>
+            </class-path-extension>
+            <class-path-extension>
                 <runtime-relative-path>ext/saaj-impl-1.3.2.jar</runtime-relative-path>
                 <binary-origin>release/modules/ext/saaj-impl-1.3.2.jar</binary-origin>
             </class-path-extension>
@@ -2341,6 +2342,10 @@
             <class-path-extension>
                 <runtime-relative-path>ext/jywidgets.jar</runtime-relative-path>
                 <binary-origin>release/modules/ext/jywidgets.jar</binary-origin>
+            </class-path-extension>
+            <class-path-extension>
+                <runtime-relative-path>ext/jackson-databind-2.4.1.jar</runtime-relative-path>
+                <binary-origin>release/modules/ext/jackson-databind-2.4.1.jar</binary-origin>
             </class-path-extension>
             <class-path-extension>
                 <runtime-relative-path>ext/org-netbeans-swing-outline.jar</runtime-relative-path>
@@ -2435,6 +2440,10 @@
                 <binary-origin>release/modules/ext/loci-common.jar</binary-origin>
             </class-path-extension>
             <class-path-extension>
+                <runtime-relative-path>ext/jongo-1.1.jar</runtime-relative-path>
+                <binary-origin>release/modules/ext/jongo-1.1.jar</binary-origin>
+            </class-path-extension>
+            <class-path-extension>
                 <runtime-relative-path>ext/slf4j-api-1.7.5.jar</runtime-relative-path>
                 <binary-origin>release/modules/ext/slf4j-api-1.7.5.jar</binary-origin>
             </class-path-extension>
@@ -2449,10 +2458,6 @@
             <class-path-extension>
                 <runtime-relative-path>ext/axis2-json-1.5.5.jar</runtime-relative-path>
                 <binary-origin>release/modules/ext/axis2-json-1.5.5.jar</binary-origin>
-            </class-path-extension>
-            <class-path-extension>
-                <runtime-relative-path>ext/jackson-annotations-2.2.3.jar</runtime-relative-path>
-                <binary-origin>release/modules/ext/jackson-annotations-2.2.3.jar</binary-origin>
             </class-path-extension>
             <class-path-extension>
                 <runtime-relative-path>ext/axis2-adb-1.5.5.jar</runtime-relative-path>
@@ -2501,10 +2506,6 @@
             <class-path-extension>
                 <runtime-relative-path>ext/gluegen-rt.jar</runtime-relative-path>
                 <binary-origin>release/modules/ext/gluegen-rt.jar</binary-origin>
-            </class-path-extension>
-            <class-path-extension>
-                <runtime-relative-path>ext/jackson-databind-2.2.3.jar</runtime-relative-path>
-                <binary-origin>release/modules/ext/jackson-databind-2.2.3.jar</binary-origin>
             </class-path-extension>
             <class-path-extension>
                 <runtime-relative-path>ext/axis2-xmlbeans-1.5.5.jar</runtime-relative-path>

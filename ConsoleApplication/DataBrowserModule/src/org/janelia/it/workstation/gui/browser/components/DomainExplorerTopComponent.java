@@ -57,8 +57,10 @@ public final class DomainExplorerTopComponent extends TopComponent implements Ex
     
     private Logger log = LoggerFactory.getLogger(DomainExplorerTopComponent.class);
 
-    protected static final String MONGO_SERVER_URL = "rokicki-ws";
+    protected static final String MONGO_SERVER_URL = "mongo-db";
     protected static final String MONGO_DATABASE = "jacs";
+    protected static final String MONGO_USERNAME = "flyportal";
+    protected static final String MONGO_PASSWORD = "flyportal";
 
     private final ExplorerManager mgr = new ExplorerManager();
 
@@ -108,7 +110,7 @@ public final class DomainExplorerTopComponent extends TopComponent implements Ex
     public static DomainDAO getDao() {
         if (dao == null) {
             try {
-                dao = new DomainDAO(MONGO_SERVER_URL, MONGO_DATABASE);
+                dao = new DomainDAO(MONGO_SERVER_URL, MONGO_DATABASE, MONGO_USERNAME, MONGO_PASSWORD);
             }
             catch (Exception e) {
                 SessionMgr.getSessionMgr().handleException(e);
