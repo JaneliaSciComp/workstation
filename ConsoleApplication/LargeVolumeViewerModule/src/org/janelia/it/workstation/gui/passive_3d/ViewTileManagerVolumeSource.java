@@ -39,6 +39,7 @@ public class ViewTileManagerVolumeSource implements MonitoredVolumeSource {
     private SubvolumeProvider subvolumeProvider;
     private URL dataUrl;
     private byte[] dataVolume;
+    private double[] voxelMicrometers;
     
     private int[] brickDimensions = new int[] { DEFAULT_BRICK_CUBIC_DIMENSION, DEFAULT_BRICK_CUBIC_DIMENSION, DEFAULT_BRICK_CUBIC_DIMENSION,  };
 
@@ -50,25 +51,12 @@ public class ViewTileManagerVolumeSource implements MonitoredVolumeSource {
 
     public ViewTileManagerVolumeSource(Camera3d camera,
                                        BoundingBox3d bb,
-                                       int cubicDimension,
-                                       SubvolumeProvider subvolumeProvider,
-                                       URL dataUrl) throws Exception {
-        int[] dimensions = new int[3];
-        if ( cubicDimension > 0 ) {
-            for ( int i = 0; i < dimensions.length; i++ ) {
-                dimensions[i] = cubicDimension;
-            }
-        }
-        init(camera, bb, subvolumeProvider, dimensions, dataUrl);
-    }
-
-    public ViewTileManagerVolumeSource(Camera3d camera,
-                                       BoundingBox3d bb,
                                        int[] dimensions,
                                        SubvolumeProvider subvolumeProvider,
+                                       double[] voxelMicrometers,
                                        URL dataUrl) throws Exception {
 
-        init(camera, bb, subvolumeProvider, dimensions, dataUrl);
+        init(camera, bb, subvolumeProvider, dimensions, voxelMicrometers, dataUrl);
     }
 
     @Override
@@ -104,6 +92,7 @@ public class ViewTileManagerVolumeSource implements MonitoredVolumeSource {
             BoundingBox3d bb, 
             SubvolumeProvider subvolumeProvider, 
             int[] dimensions, 
+            double[] voxelMicrometers,
             URL dataUrl) {
         
         // Cloning the camera, to leave the original as was found.
@@ -115,6 +104,7 @@ public class ViewTileManagerVolumeSource implements MonitoredVolumeSource {
         this.camera = iterationCamera;
         this.bb = bb;
         this.subvolumeProvider = subvolumeProvider;
+        this.voxelMicrometers = voxelMicrometers;
         this.brickDimensions = dimensions;
         
         this.dataUrl = dataUrl;
@@ -153,7 +143,13 @@ public class ViewTileManagerVolumeSource implements MonitoredVolumeSource {
         int zoomFactor = 0; // TEMP
 
         logger.info( "Fetching centered at {}, at zoom {}.", camera.getFocus(), zoomFactor );
-        Subvolume fetchedSubvolume = subvolumeProvider.getSubvolumeFor3D( camera.getFocus(), camera.getPixelsPerSceneUnit() / 2.0, bb, brickDimensions, zoomFactor, progressMonitor );
+        double minVoxelMicron = Double.MAX_VALUE;
+        for ( double voxelMicrometer: voxelMicrometers ) {
+            if ( voxelMicrometer < minVoxelMicron ) {
+                minVoxelMicron = voxelMicrometer;
+            }
+        }
+        Subvolume fetchedSubvolume = subvolumeProvider.getSubvolumeFor3D( camera.getFocus(), 1.0 / minVoxelMicron, bb, brickDimensions, zoomFactor, progressMonitor );
         stdVals.stdChannelCount = fetchedSubvolume.getChannelCount();
         stdVals.stdInternalFormat = GL2.GL_LUMINANCE16_ALPHA16;
         stdVals.stdType = GL2.GL_UNSIGNED_SHORT;

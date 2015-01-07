@@ -20,6 +20,7 @@ import org.janelia.it.workstation.gui.camera.ObservableCamera3d;
 import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.workstation.gui.large_volume_viewer.ImageColorModel;
 import org.janelia.it.workstation.gui.large_volume_viewer.SubvolumeProvider;
+import org.janelia.it.workstation.gui.large_volume_viewer.TileFormat;
 import org.janelia.it.workstation.gui.large_volume_viewer.TileServer;
 import org.janelia.it.workstation.gui.passive_3d.top_component.Snapshot3dTopComponent;
 import org.janelia.it.workstation.gui.viewer3d.BoundingBox3d;
@@ -184,7 +185,8 @@ public class Snapshot3DLauncher {
     /** Launches a 3D popup static-block viewer. */
     public void launch3dViewer( int[] dimensions ) {
         try {         
-            BoundingBox3d bb = tileServer.getLoadAdapter().getTileFormat().calcBoundingBox();
+            final TileFormat tileFormat = tileServer.getLoadAdapter().getTileFormat();
+            BoundingBox3d bb = tileFormat.calcBoundingBox();
             final String labelText = labelTextFor3d(dimensions);
             final String frameTitle = "Fetching tiles";
             MonitoredVolumeSource collector = new ViewTileManagerVolumeSource(
@@ -192,6 +194,7 @@ public class Snapshot3DLauncher {
                     bb,
                     dimensions,
                     subvolumeProvider,
+                    tileFormat.getVoxelMicrometers(),
                     dataUrl
             );            
 
