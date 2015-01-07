@@ -169,6 +169,7 @@ public class Subvolume {
                 origin.getY() + dimensions[1],
                 origin.getZ() + dimensions[2]
         );
+System.out.println("Conducting multithreaded fetch of " + bb);        
         multiThreadedFetch(neededTiles, textureCache, loadAdapter, tileFormat, zoom, farCorner);
 	}
 
@@ -463,6 +464,7 @@ public class Subvolume {
                 int startY = Math.max(origin.getY(), tileOrigin.getY());
                 int endY = Math.min(farCorner.getY(), tileOrigin.getY() + tileData.getHeight());
                 int overlapY = endY - startY;
+System.out.println("TileXyz=" + tileXyz.getX() + "," + tileXyz.getY() + "," + tileXyz.getZ() + ". Start Y=" + startY + ", End Y=" + endY + ", overlapY=" + overlapY);
                 // X
                 int startX = Math.max(origin.getX(), tileOrigin.getX());
                 int endX = Math.min(farCorner.getX(), tileOrigin.getX() + tileData.getUsedWidth());

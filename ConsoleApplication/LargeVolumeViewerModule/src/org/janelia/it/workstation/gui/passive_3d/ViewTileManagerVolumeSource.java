@@ -153,7 +153,7 @@ public class ViewTileManagerVolumeSource implements MonitoredVolumeSource {
         int zoomFactor = 0; // TEMP
 
         logger.info( "Fetching centered at {}, at zoom {}.", camera.getFocus(), zoomFactor );
-        Subvolume fetchedSubvolume = subvolumeProvider.getSubvolumeFor3D( camera.getFocus(), camera.getPixelsPerSceneUnit(), bb, brickDimensions, zoomFactor, progressMonitor );
+        Subvolume fetchedSubvolume = subvolumeProvider.getSubvolumeFor3D( camera.getFocus(), camera.getPixelsPerSceneUnit() / 2.0, bb, brickDimensions, zoomFactor, progressMonitor );
         stdVals.stdChannelCount = fetchedSubvolume.getChannelCount();
         stdVals.stdInternalFormat = GL2.GL_LUMINANCE16_ALPHA16;
         stdVals.stdType = GL2.GL_UNSIGNED_SHORT;
