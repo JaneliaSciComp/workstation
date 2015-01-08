@@ -54,17 +54,16 @@ public class PathTraceToParentWorker extends BackgroundWorker {
         setStatus("Retrieving data");
         TileFormat tileFormat = request.getImageVolume().getLoadAdapter().getTileFormat();
         // A series of conversions to get to ZoomedVoxelIndex
-        Vec3 vec3_1 = request.getXyz1();
-        Vec3 vec3_2 = request.getXyz2();
-        TileFormat.MicrometerXyz um1 = new TileFormat.MicrometerXyz(vec3_1.getX(), vec3_1.getY(), vec3_1.getZ());
-        TileFormat.MicrometerXyz um2 = new TileFormat.MicrometerXyz(vec3_2.getX(), vec3_2.getY(), vec3_2.getZ());
-        TileFormat.VoxelXyz vox1 = tileFormat.voxelXyzForMicrometerXyz(um1);
-        TileFormat.VoxelXyz vox2 = tileFormat.voxelXyzForMicrometerXyz(um2);
+        
         ZoomLevel zoomLevel = new ZoomLevel(0);
-        ZoomedVoxelIndex zv1 = tileFormat.zoomedVoxelIndexForVoxelXyz(
-                vox1, zoomLevel, CoordinateAxis.Z);
-        ZoomedVoxelIndex zv2 = tileFormat.zoomedVoxelIndexForVoxelXyz(
-                vox2, zoomLevel, CoordinateAxis.Z);
+        Vec3 vec3_1 = request.getXyz1();
+        ZoomedVoxelIndex zv1 = zoomedVoxelIndexForMicrometerVec3(
+                vec3_1, tileFormat, zoomLevel);
+
+        Vec3 vec3_2 = request.getXyz2();
+        ZoomedVoxelIndex zv2 = zoomedVoxelIndexForMicrometerVec3(
+                vec3_2, tileFormat, zoomLevel);
+
         // Create some padding around the neurite ends.
         final int padPixels = 10;
         ZoomedVoxelIndex v1pad = new ZoomedVoxelIndex(
@@ -91,7 +90,7 @@ public class PathTraceToParentWorker extends BackgroundWorker {
             setStatus("Timed out");
         } else {
             //DEBUG System.out.println("Original path length: " + path.size());
-            final List<ZoomedVoxelIndex> reducedPath = simplifyPath(path);
+            final List<ZoomedVoxelIndex> reducedPath = path;// simplifyPath(path);
             if ( ! reducedPath.contains( path.get(0) ) ) {
                 reducedPath.add( 0, path.get(0) ); 
             }
@@ -121,6 +120,14 @@ public class PathTraceToParentWorker extends BackgroundWorker {
             setStatus("Done");
         }
     }
+
+    private ZoomedVoxelIndex zoomedVoxelIndexForMicrometerVec3(Vec3 vec3, TileFormat tileFormat, ZoomLevel zoomLevel) {
+        TileFormat.MicrometerXyz um = new TileFormat.MicrometerXyz(vec3.getX(), vec3.getY(), vec3.getZ());
+        TileFormat.VoxelXyz vox = tileFormat.voxelXyzForMicrometerXyz(um);
+        ZoomedVoxelIndex zv = tileFormat.zoomedVoxelIndexForVoxelXyz(
+                vox, zoomLevel, CoordinateAxis.Z);
+        return zv;
+    }
     
     @SuppressWarnings("Unused")
     private void dumpFullAndSimplified( List<ZoomedVoxelIndex> path, List<ZoomedVoxelIndex> reducedPath ) {
@@ -135,19 +142,18 @@ public class PathTraceToParentWorker extends BackgroundWorker {
     }
     
     private TracedPathSegment refitResultToWorkspace( TracedPathSegment segment ) {
-        double xRes = request.getImageVolume().getXResolution();
-        double yRes = request.getImageVolume().getYResolution();
-        double zRes = request.getImageVolume().getZResolution();
-        int[] origin = request.getImageVolume().getOrigin();
+        TileFormat tileFormat = request.getImageVolume().getLoadAdapter().getTileFormat();
         // Tried to change this to zoomed voxel for micrometer xyz.  Did
         // not work.  Produced negative x, y values.
         List<ZoomedVoxelIndex> newPath = new ArrayList<>();
         for ( ZoomedVoxelIndex index: segment.getPath() ) {
+            TileFormat.VoxelXyz vox = new TileFormat.VoxelXyz(index.getX(), index.getY(), index.getZ());
+            TileFormat.MicrometerXyz micrometers = tileFormat.micrometerXyzForVoxelXyz(vox, CoordinateAxis.X);            
             ZoomedVoxelIndex newIndex = new ZoomedVoxelIndex(
                     index.getZoomLevel(),
-                    origin[0] + (int)(index.getX()), 
-                    origin[1] + (int)(index.getY()),
-                    origin[2] + (int)(index.getZ()) 
+                    (int)micrometers.getX(), 
+                    (int)micrometers.getY(),
+                    (int)micrometers.getZ()
             );
             newPath.add(newIndex);
         }

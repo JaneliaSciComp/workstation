@@ -169,6 +169,10 @@ public class AnnotationManager
                         voxelPath.getSegmentIndex().getAnchor1Guid(),
                         voxelPath.getSegmentIndex().getAnchor2Guid());
                 List<List<Integer>> pointList = new ArrayList<>();
+                TileFormat tileFormat = 
+                        AnnotationManager.this.tileServer.getLoadAdapter().getTileFormat();
+                final int[] origin = tileFormat.getOrigin();
+                final double[] voxelMicrometers = tileFormat.getVoxelMicrometers();
                 for (ZoomedVoxelIndex zvi: voxelPath.getPath()) {
                     if (zvi.getZoomLevel().getZoomOutFactor() != 1) {
                         // compromise between me and CB: I don't want zoom levels in db, so 
@@ -178,11 +182,7 @@ public class AnnotationManager
                             "Unexpected zoom!");
                         return;
                     }
-                    TileFormat tileFormat = 
-                            AnnotationManager.this.tileServer.getLoadAdapter().getTileFormat();
                     List<Integer> tempList = new ArrayList<>();
-                    final int[] origin = tileFormat.getOrigin();
-                    final double[] voxelMicrometers = tileFormat.getVoxelMicrometers();
                     /*
                        This calculation was made against the path elements, to 
                        convert them into ZoomedVoxelIndex format.
@@ -218,9 +218,12 @@ public class AnnotationManager
                     final double micronY = traceResultY + correctionY;
                     final double micronZ = traceResultZ + correctionZ;
 
-                    tempList.add((int)micronX);
-                    tempList.add((int)micronY);
-                    tempList.add((int)micronZ);
+//                    tempList.add((int)micronX);
+//                    tempList.add((int)micronY);
+//                    tempList.add((int)micronZ);
+                    tempList.add(zvi.getX());
+                    tempList.add(zvi.getY());
+                    tempList.add(zvi.getZ());
                     pointList.add(tempList);
                 }
                 addAnchoredPath(endpoints, pointList);
