@@ -90,7 +90,7 @@ public class PathTraceToParentWorker extends BackgroundWorker {
             setStatus("Timed out");
         } else {
             //DEBUG System.out.println("Original path length: " + path.size());
-            final List<ZoomedVoxelIndex> reducedPath = path;// simplifyPath(path);
+            final List<ZoomedVoxelIndex> reducedPath = simplifyPath(path);
             if ( ! reducedPath.contains( path.get(0) ) ) {
                 reducedPath.add( 0, path.get(0) ); 
             }

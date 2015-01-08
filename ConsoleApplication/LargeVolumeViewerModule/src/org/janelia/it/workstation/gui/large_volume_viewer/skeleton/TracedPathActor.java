@@ -71,9 +71,9 @@ implements GLActor
             TileFormat.MicrometerXyz umXyz = tileFormat.micrometerXyzForVoxelXyz(vx, CoordinateAxis.Z);
             Vec3 v = new Vec3(
                     // Translate from upper left front corner of voxel to center of voxel
-                    umXyz.getX() + 0.5 * tileFormat.getVoxelMicrometers()[0],
-                    umXyz.getY() + 0.5 * tileFormat.getVoxelMicrometers()[1],
-                    umXyz.getZ() - 0.5 * tileFormat.getVoxelMicrometers()[2]); // Minus? Really? TODO
+                    umXyz.getX() + 0.5,// * tileFormat.getVoxelMicrometers()[0],
+                    umXyz.getY() + 0.5, // * tileFormat.getVoxelMicrometers()[1],
+                    umXyz.getZ() - 0.5); // * tileFormat.getVoxelMicrometers()[2]); // Minus? Really? TODO
             boundingBox.include(v);
             vertices.put((float)v.getX());
             vertices.put((float)v.getY());
