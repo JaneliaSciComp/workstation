@@ -214,7 +214,7 @@ that need to respond to changing data.
     }
 
     /**
-     * find the annotation closest to the input location, exluding
+     * find the annotation closest to the input location, excluding
      * the input annotation (null = don't exclude any)
      */
     public TmGeoAnnotation getClosestAnnotation(Vec3 location, TmGeoAnnotation excludedAnnotation) {
