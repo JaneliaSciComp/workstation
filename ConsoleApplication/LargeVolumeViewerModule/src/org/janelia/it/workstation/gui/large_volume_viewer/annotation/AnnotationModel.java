@@ -1024,22 +1024,7 @@ that need to respond to changing data.
         // note from CB, July 2013: Vaa3d can't handle large coordinates in swc files,
         //  so he added an OFFSET header and recentered on zero when exporting
         // therefore, if that header is present, respect it
-        double offsetx = 0.0;
-        double offsety = 0.0;
-        double offsetz = 0.0;
-        String offsetHeader = swcData.findHeaderLine("OFFSET");
-        if (offsetHeader != null) {
-            String [] items = offsetHeader.split("\\s+");
-            // expect # OFFSET x y z
-            if (items.length == 5) {
-                offsetx = Double.parseDouble(items[2]);
-                offsety = Double.parseDouble(items[3]);
-                offsetz = Double.parseDouble(items[4]);
-            } else {
-                // ignore the line if we can't parse it
-            }
-        }
-
+        double[] offset = swcData.parseOffset();
 
         // create one neuron for the file; take name from the filename (strip extension)
         String neuronName = swcFile.getName();
@@ -1068,13 +1053,13 @@ that need to respond to changing data.
         for (SWCNode node: swcData.getNodeList()) {
             if (node.getParentIndex() == -1) {
                 annotation = modelMgr.addGeometricAnnotation(neuron.getId(),
-                    null, 0, node.getX() + offsetx, node.getY() + offsety,
-                    node.getZ() + offsetz, "");
+                    null, 0, node.getX() + offset[0], node.getY() + offset[1],
+                    node.getZ() + offset[2], "");
             } else {
                 annotation = modelMgr.addGeometricAnnotation(neuron.getId(),
                     annotations.get(node.getParentIndex()).getId(),
-                    0, node.getX() + offsetx, node.getY() + offsety,
-                    node.getZ() + offsetz, "");
+                    0, node.getX() + offset[0], node.getY() + offset[1],
+                    node.getZ() + offset[2], "");
             }
             annotations.put(node.getIndex(), annotation);
             if (worker != null && (node.getIndex() % updateFrequency) == 0) {

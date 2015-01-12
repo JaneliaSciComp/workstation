@@ -44,8 +44,8 @@ public class SWCComparison {
         SWCData data1 = SWCData.read(file1);
         SWCData data2 = SWCData.read(file2);
         
-        double[] offset1 = parseOffset(data1);
-        double[] offset2 = parseOffset(data2);
+        double[] offset1 = data1.parseOffset();
+        double[] offset2 = data2.parseOffset();
 
         Iterator<SWCNode> data2Nodes = data2.getNodeList().iterator();
         int iteration = 1;
@@ -70,31 +70,4 @@ public class SWCComparison {
             
     }
 
-    /**
-     * THIS was copied form AnnotationModel.  TODO consider refactoring.
-     * note from CB, July 2013: Vaa3d can't handle large coordinates in swc files,
-     * so he added an OFFSET header and recentered on zero when exporting
-     * therefore, if that header is present, respect it
-     *
-     * @param data to extract headers.
-     * @return array of offset.
-     * @throws NumberFormatException 
-     */
-    private static double[] parseOffset(SWCData data) throws NumberFormatException {
-        double[] offset = new double[3];
-        String offsetHeader = data.findHeaderLine("OFFSET");
-        if (offsetHeader != null) {
-            String [] items = offsetHeader.split("\\s+");
-            // expect # OFFSET x y z
-            if (items.length == 5) {
-                offset[0] = Double.parseDouble(items[2]);
-                offset[1] = Double.parseDouble(items[3]);
-                offset[2] = Double.parseDouble(items[4]);
-            } else {
-                // ignore the line if we can't parse it
-            }
-        }
-        return offset;
-    }
-    
 }
