@@ -7,6 +7,7 @@
 package org.janelia.it.workstation.gui.passive_3d.filter;
 
 import java.nio.ByteOrder;
+import javax.swing.ProgressMonitor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -166,6 +167,7 @@ public class MatrixFilter3D {
     private final int matrixCubicDim;
     private ByteOrder byteOrder;
     private int[] shiftDistance;
+    private ProgressMonitor progressMonitor;
     
     private static final Logger logger = LoggerFactory.getLogger( MatrixFilter3D.class );
     
@@ -176,6 +178,10 @@ public class MatrixFilter3D {
             throw new IllegalArgumentException( "Matrix size not a cube." );
         }
         this.byteOrder = byteOrder;
+    }
+    
+    public void setProgressMonitor( ProgressMonitor progressMonitor ) {
+        this.progressMonitor = progressMonitor;
     }
     
     /**
@@ -219,17 +225,24 @@ public class MatrixFilter3D {
         int lineSize = sx * param.getStride();
         int sheetSize = sy * lineSize;
         
+        // First, let's change the bytes going into the neighborhoods, to
+        // all long values.  One pass, rather than repeating that operation.
+        long[] inputLongs = convertToLong( param );
+        
         for (int ch = 0; ch < channelCount; ch++) {
             for (int z = 0; z < sz; z++) {
                 for (int y = 0; y < sy; y++) {
                     for (int x = 0; x < sx; x++) {
-                        long[] neighborhood = getNeighborhood(param, x, y, z, ch);
+                        long[] neighborhood = getNeighborhood(param, inputLongs, x, y, z, ch);
                         long filtered = applyFilter(neighborhood);
                         byte[] value = getArrayEquiv(filtered, bytesPerCell);
                         for (int voxByte = 0; voxByte < bytesPerCell; voxByte++) {
                             outputBytes[ z * sheetSize + y * lineSize + (x * param.getStride()) + (ch * param.getVoxelBytes()) + voxByte ] = value[ voxByte ];
                         }
                     }
+                }
+                if (progressMonitor != null  &&  progressMonitor.isCanceled() ) {
+                    return inputBytes;
                 }
             }
         }
@@ -250,6 +263,28 @@ public class MatrixFilter3D {
             }
         }
         return rtnVal;
+    }
+    
+    /**
+     * Turns the entire byte array into a long array of equivalent values.
+     * 
+     * @param fparam all info required.
+     * @return array of longs, to hold volume specified in fparam.
+     */
+    private long[] convertToLong(FilteringParameter fparam) {
+        long[] returnValue = new long[ fparam.getSx() * fparam.getSy() * fparam.getSz() * fparam.getChannelCount() ];
+
+        byte[] byteVolume = fparam.getVolume();
+        byte[] voxelVal = new byte[fparam.getVoxelBytes()];
+        int k = 0;
+        for ( int i = 0; i < byteVolume.length; i += fparam.getVoxelBytes() ) {
+            for ( int j = 0; j < fparam.getVoxelBytes(); j++ ) {
+                voxelVal[ j ] = byteVolume[ i + j ];
+            }
+            long equivalentValue = getIntEquiv(voxelVal);
+            returnValue[ k++ ] = equivalentValue;
+        }
+        return returnValue;
     }
 
     /**
@@ -324,6 +359,73 @@ public class MatrixFilter3D {
                         logger.debug("Output location for " + xNbh + "," + yNbh + "," + zNbh + " is " + outputOffset);
                     }
                     if (outputOffset > returnValue.length) {
+                        logger.error("Out of bounds.");
+                    }
+                    returnValue[ outputOffset ] = equivalentValue;
+                }
+            }
+        }       
+        return returnValue;
+    }
+    
+    /**
+     * Finds the neighborhood surrounding the input point (x,y,z), as unsigned
+     * integer array.  All edge cases (near end, near beginning) are handled
+     * by using only partial neighborhoods which are truncated there.
+     *
+     * @param fparam metadata about the slice being calculated.
+     * @param y input location under study.
+     * @param x input location under study.
+     * @param z input location under study.
+     * @param channel channel number under study.
+     * @return computed value: all bytes of the voxel.
+     */
+    private long[] getNeighborhood(
+            FilteringParameter fparam, long[] inputVol, int x, int y, int z, int channel
+    ) {
+
+        // Neighborhood starts at the x,y,z values of the loops.  There will be one
+        // such neighborhood for each of these sets: x,y,z
+        final int sz = fparam.getSz();
+        final int sy = fparam.getSy();
+        final int sx = fparam.getSx();
+        final int extentX = fparam.getExtentX();
+        final int extentY = fparam.getExtentY();
+        final int extentZ = fparam.getExtentZ();
+        
+        long[] returnValue = new long[ extentX * extentY * extentZ ];
+        int startX = neighborhoodStart(x, extentX);
+        int startY = neighborhoodStart(y, extentY);
+        int startZ = neighborhoodStart(z, extentZ);
+        for ( int zNbh = startZ; zNbh < startZ + extentZ && zNbh < sz; zNbh ++ ) {
+            if (zNbh < 0) {// Edge case: at beginning->partial neighborhood.
+                continue;
+            }
+            long nbhZOffset = (sy * sx * zNbh) * fparam.getChannelCount();
+
+            for ( int yNbh = startY; yNbh < startY + extentY && yNbh < sy; yNbh ++ ) {
+                if (yNbh < 0) {// Edge case: at beginning->partial neighborhood.
+                    continue;
+                }
+                long nbhYOutOffs = nbhZOffset + (sx * yNbh * fparam.getChannelCount());
+
+                for ( int xNbh = startX; xNbh < startX + extentX && xNbh < sx; xNbh++ ) {
+                    if (xNbh < 0) {// Edge case: at beginning->partial neighborhood.
+                        continue;
+                    }
+                    // No need of the full stride, which includes the voxel bytes, against the input long array.
+                    int arrayCopyLoc = (int)( nbhYOutOffs + ( xNbh * fparam.getChannelCount() ) + channel );
+                    if (arrayCopyLoc >= inputVol.length) {
+                        logger.error("Out of bounds.");
+                    }
+
+                    long equivalentValue = inputVol[ arrayCopyLoc ];
+                    
+                    final int outputOffset = (zNbh-startZ)*(extentY*extentX) + (yNbh-startY) * extentX + (xNbh-startX);
+                    if (logger.isDebugEnabled()) {
+                        logger.debug("Output location for " + xNbh + "," + yNbh + "," + zNbh + " is " + outputOffset);
+                    }
+                    if (outputOffset >= returnValue.length) {
                         logger.error("Out of bounds.");
                     }
                     returnValue[ outputOffset ] = equivalentValue;

@@ -19,6 +19,7 @@ import javax.swing.AbstractButton;
 import javax.swing.Action;
 import javax.swing.JCheckBox;
 import javax.swing.JComponent;
+import javax.swing.ProgressMonitor;
 import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.workstation.gui.large_volume_viewer.ColorButtonPanel;
 import org.janelia.it.workstation.gui.large_volume_viewer.ImageColorModel;
@@ -51,6 +52,7 @@ public class Snapshot3dControls {
     private ImageColorModel activeColorModel;
     private List<Action> filterActions;
     private ViewUpdateListener viewUpdateListener;
+    private boolean hasBeenFiltered = false;
     
     public Snapshot3dControls(
             Collection<TextureDataI> textureDatas,
@@ -69,6 +71,14 @@ public class Snapshot3dControls {
         initComponents();
     }
 
+    public boolean hasBeenFiltered() {
+        return hasBeenFiltered;
+    }
+    
+    public void setHasBeenFiltered( boolean filtered ) {
+        hasBeenFiltered = filtered;
+    }
+    
     public void cleanup() {
         for ( JComponent component: components ) {
             Container parent = component.getParent();
@@ -156,9 +166,9 @@ public class Snapshot3dControls {
     }
     
     /** After a filter has been run, use this method to avoid further such changes. */
-    public void deactivateFiltering() {
+    public void deactivateFiltering() {        
         for ( Action action: filterActions ) {
-            action.setEnabled( false );
+            action.setEnabled( ! hasBeenFiltered );
         }
     }
     
@@ -191,21 +201,23 @@ public class Snapshot3dControls {
         activeColorModel.getColorModelChangedSignal().addObserver( viewUpdateListener );
         
         filterActions = new ArrayList<>();
-        getFilterActions().add( new FilterMatrixAction( textureDatas, view, MatrixFilter3D.SPHERE_3_3_3, "Filter 3x3x3 Round" ) );
-        getFilterActions().add( new FilterMatrixAction( textureDatas, view, MatrixFilter3D.AVG_MATRIX_3_3_3, "Filter 3x3x3 Averaging" ) );
-        getFilterActions().add( new FilterMatrixAction( textureDatas, view, MatrixFilter3D.GAUSS_65_85_85, "Filter Gauss 5x5x5 Sigmas = (0.65,0.85,0.85)" ) );
+        getFilterActions().add( new FilterMatrixAction( textureDatas, view, MatrixFilter3D.SPHERE_3_3_3, "Filter 3x3x3 Round", this ) );
+        getFilterActions().add( new FilterMatrixAction( textureDatas, view, MatrixFilter3D.AVG_MATRIX_3_3_3, "Filter 3x3x3 Averaging", this ) );
+        getFilterActions().add( new FilterMatrixAction( textureDatas, view, MatrixFilter3D.GAUSS_65_85_85, "Filter Gauss 5x5x5 Sigmas = (0.65,0.85,0.85)", this ) );
         //getFilterActions().add( new FilterMatrixAction( textureDatas, view, MatrixFilter3D.GAUSS_5_5_5, "Filter 5x5x5 Gauss" ) );
     }
-
+    
     private static class FilterMatrixAction extends AbstractAction {
         private Collection<TextureDataI> textureDatas;
         private Snapshot3d view;
         private double[] matrix;
-        public FilterMatrixAction( Collection<TextureDataI> textureDatas, Snapshot3d view, double[] matrix, String actionName ) {
+        private Snapshot3dControls filterState;
+        public FilterMatrixAction( Collection<TextureDataI> textureDatas, Snapshot3d view, double[] matrix, String actionName, Snapshot3dControls filterState ) {
             this.textureDatas = textureDatas;
             this.view = view;
             putValue(Action.NAME, actionName);    
             this.matrix = matrix;
+            this.filterState = filterState;
         }
         
         @Override
@@ -213,11 +225,15 @@ public class Snapshot3dControls {
             // Need to apply a filter to each texture.
             //       Pop out the byte array, pass that into the filtering
             //       apparatus, run the filter, and pop it back in.
+            final IndeterminateProgressMonitor progressMonitor = 
+                    new IndeterminateProgressMonitor(
+                            view, getValue(Action.NAME), "Smoothing data..."
+                    );
             SimpleWorker sw = new SimpleWorker() {
 
                 @Override
                 protected void doStuff() throws Exception {
-                    filterTextureDatas();
+                    filterTextureDatas( progressMonitor );
                 }
 
                 @Override
@@ -225,6 +241,7 @@ public class Snapshot3dControls {
                     view.reLaunch( textureDatas );
                     view.validate();
                     view.repaint();
+                    filterState.setHasBeenFiltered(true);
                 }
 
                 @Override
@@ -233,11 +250,11 @@ public class Snapshot3dControls {
                 }
                 
             };
-            sw.setProgressMonitor(new IndeterminateProgressMonitor(view, getValue(Action.NAME), "Smoothing data..."));
+            sw.setProgressMonitor(progressMonitor);
             sw.execute();
         } 
 
-        private void filterTextureDatas() throws IllegalArgumentException {
+        private void filterTextureDatas(final ProgressMonitor progressMonitor) throws IllegalArgumentException {
             for (TextureDataI textureData : textureDatas) {
                 if (textureData.getTextureData().getVolumeChunks().length > 1) {
                     throw new IllegalArgumentException("Filtering algorithm can handle only a single chunk.");
@@ -245,6 +262,7 @@ public class Snapshot3dControls {
                 for (VolumeDataChunk chunk : textureData.getTextureData().getVolumeChunks()) {
                     byte[] data = chunk.getData();
                     MatrixFilter3D filter = new MatrixFilter3D(matrix, textureData.getByteOrder());
+                    filter.setProgressMonitor(progressMonitor);
                     byte[] newBytes
                             = filter.filter(
                                     data, 
