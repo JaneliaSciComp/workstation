@@ -190,6 +190,7 @@ public class MatrixFilter3D {
      * @return filtered version of original.
      */
     public byte[] filter( byte[] inputBytes, int bytesPerCell, int channelCount, int sx, int sy, int sz ) {
+        logger.info("Starting the filter run.");
         // one-time precalculate some values used in filtering operation.
         shiftDistance = new int[ bytesPerCell ];
         if ( byteOrder == ByteOrder.BIG_ENDIAN ) {
@@ -232,7 +233,7 @@ public class MatrixFilter3D {
                 }
             }
         }
-
+        logger.info("Ending the filter run.");
         return outputBytes;
     }
     
