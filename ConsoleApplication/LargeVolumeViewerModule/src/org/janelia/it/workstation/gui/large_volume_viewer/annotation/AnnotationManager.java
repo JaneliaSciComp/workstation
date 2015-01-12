@@ -29,9 +29,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-import org.janelia.it.workstation.geom.CoordinateAxis;
 import org.janelia.it.workstation.gui.large_volume_viewer.ComponentUtil;
-import org.janelia.it.workstation.gui.large_volume_viewer.TileFormat;
 import org.janelia.it.workstation.gui.large_volume_viewer.TileServer;
 
 
@@ -169,10 +167,6 @@ public class AnnotationManager
                         voxelPath.getSegmentIndex().getAnchor1Guid(),
                         voxelPath.getSegmentIndex().getAnchor2Guid());
                 List<List<Integer>> pointList = new ArrayList<>();
-                TileFormat tileFormat = 
-                        AnnotationManager.this.tileServer.getLoadAdapter().getTileFormat();
-                final int[] origin = tileFormat.getOrigin();
-                final double[] voxelMicrometers = tileFormat.getVoxelMicrometers();
                 for (ZoomedVoxelIndex zvi: voxelPath.getPath()) {
                     if (zvi.getZoomLevel().getZoomOutFactor() != 1) {
                         // compromise between me and CB: I don't want zoom levels in db, so 
@@ -183,44 +177,6 @@ public class AnnotationManager
                         return;
                     }
                     List<Integer> tempList = new ArrayList<>();
-                    /*
-                       This calculation was made against the path elements, to 
-                       convert them into ZoomedVoxelIndex format.
-                    
-                    origin[0] + (int)(index.getX()), 
-                    origin[1] + (int)(index.getY()),
-                    origin[2] + (int)(index.getZ()) 
-
-                       This was an attempt to back-convert, which failed.
-                    
-                    TileFormat.MicrometerXyz microns = tileFormat.micrometerXyzForVoxelXyz(
-                            tileFormat.voxelXyzForZoomedVoxelIndex(zvi, CoordinateAxis.Z), 
-                            CoordinateAxis.Z);
-                    tempList.add((int)microns.getX());
-                    tempList.add((int)microns.getY());
-                    tempList.add((int)microns.getZ());
-                    */
-                    
-                    // The "undo" for the conversion above, would also include
-                    // dividing by the voxel micrometers.  However, all the
-                    // calculations in the a-star algorithm included multiplying
-                    // by the voxel micrometers.  So, we will default-apply
-                    // that here.
-                    final double traceResultX = (zvi.getX() - origin[0]) * voxelMicrometers[0];
-                    final double traceResultY = (zvi.getY() - origin[1]) * voxelMicrometers[1];
-                    final double traceResultZ = (zvi.getZ() - origin[2]) * voxelMicrometers[2];
-
-                    final double correctionX = origin[0] * voxelMicrometers[0];
-                    final double correctionY = origin[1] * voxelMicrometers[1];
-                    final double correctionZ = origin[2] * voxelMicrometers[2];
-
-                    final double micronX = traceResultX + correctionX;
-                    final double micronY = traceResultY + correctionY;
-                    final double micronZ = traceResultZ + correctionZ;
-
-//                    tempList.add((int)micronX);
-//                    tempList.add((int)micronY);
-//                    tempList.add((int)micronZ);
                     tempList.add(zvi.getX());
                     tempList.add(zvi.getY());
                     tempList.add(zvi.getZ());
