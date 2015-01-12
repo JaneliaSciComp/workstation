@@ -129,15 +129,17 @@ public class SWCDataConverter {
         return sum;
     }
 
-    private static List<SWCNode> nodesFromCombinedPath(TmNeuron neuron, double xcenter, double ycenter, double zcenter, int downsampleModulo) {
+    private static List<SWCNode> nodesFromCombinedPath(TmNeuron neuron, double xcenter, double ycenter, double zcenter,
+        int downsampleModulo) {
+
         List<SWCNode> nodeList = new ArrayList<>();
         
         // Find the links back to the auto-generated points lists, from the
         // manual-added points.
-        Map<TmAnchoredPathEndpoints, TmAnchoredPath> map = neuron.getAnchoredPathMap();
+        Map<TmAnchoredPathEndpoints, TmAnchoredPath> anchoredPathMap = neuron.getAnchoredPathMap();
         Map<Long,TmAnchoredPathEndpoints> startToEndPoints = new HashMap<>();
         Map<Long,Integer> subAnnIdToIndex = new HashMap<>();
-        for (TmAnchoredPathEndpoints endPoints : map.keySet()) {
+        for (TmAnchoredPathEndpoints endPoints : anchoredPathMap.keySet()) {
             startToEndPoints.put(endPoints.getAnnotationID2(), endPoints);
         }
 
@@ -146,11 +148,12 @@ public class SWCDataConverter {
         
         for (TmGeoAnnotation annotation : neuron.getRootAnnotations()) {
             for (TmGeoAnnotation subAnn : neuron.getSubTreeList(annotation)) {
-                // Traverse any "parent points" to this end-point.
+                // do any traced paths end at this annotation?  if so, trace that
+                //  path to this point; note this point is therefore not a root point
                 if ( startToEndPoints.get( subAnn.getId() ) != null ) {
                     final TmAnchoredPathEndpoints endpoints = startToEndPoints.get( subAnn.getId() );
                     // Make a node for each path member.
-                    TmAnchoredPath anchoredPath = map.get( endpoints );                    
+                    TmAnchoredPath anchoredPath = anchoredPathMap.get( endpoints );
                     if ( subAnnIdToIndex.get( endpoints.getAnnotationID1() ) != null ) {
                         parentIndex = subAnnIdToIndex.get( endpoints.getAnnotationID1() );
                     }
@@ -178,10 +181,21 @@ public class SWCDataConverter {
 
                 }
                 else {
-                    // See if parent can be found from manually-created node.
-                    Integer parentIndexPutative = subAnnIdToIndex.get( subAnn.getParentId());
-                    if ( parentIndexPutative != null ) {
-                        parentIndex = parentIndexPutative;
+                    // no paths end at this point; if it's a root, parent index is -1;
+                    //  if not, get it from the map
+                    if (subAnn.isRoot()) {
+                        parentIndex = -1;
+                    } else {
+                        // not sure why Les added a null check here (should never be missing),
+                        //  but I'll leave it in; I'll also make the fallback to a root
+                        //  again, rather than the previous parentIndex used (which is
+                        //  most likely wrong)
+                        Integer parentIndexPutative = subAnnIdToIndex.get(subAnn.getParentId());
+                        if (parentIndexPutative != null) {
+                            parentIndex = parentIndexPutative;
+                        } else {
+                            parentIndex = -1;
+                        }
                     }
                 }
                 
