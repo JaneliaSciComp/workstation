@@ -8,6 +8,7 @@ package org.janelia.it.workstation.gui.passive_3d.filter;
 
 import java.nio.ByteOrder;
 import org.janelia.it.jacs.model.TestCategories;
+import org.junit.Assert;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
@@ -93,6 +94,27 @@ public class MatrixFilter3DTest {
         byte[] result = matrixFilter.filter(TEST_INPUT_2BLARGE_3_3_3, bytesPerVoxel, 1, 3, 3, 3);
         System.out.println(testDump( result, bytesPerVoxel ));
         assert result[ result.length / 2 ] == TEST_INPUT_2BLARGE_3_3_3[ 1 ] : "Failed to find expected center value.";
+    }
+    
+    @Test
+    @Category(TestCategories.FastTests.class)
+    public void filter1dSet() {
+        int bytesPerVoxel = 2;
+        MatrixFilter3D matrixFilter = new MatrixFilter3D( MatrixFilter3D.AVG_MATRIX_3_3_3, ByteOrder.BIG_ENDIAN );
+        MatrixFilter3D.Dim1Matrices matrices = matrixFilter.matrix1dSelector(MatrixFilter3D.AVG_MATRIX_3_3_3, 3);
+        assert matrices != null;
+        matrixFilter = new MatrixFilter3D( MatrixFilter3D.GAUSS_65_85_85, ByteOrder.BIG_ENDIAN );
+        matrices = matrixFilter.matrix1dSelector();
+        double[] testResultMatrix = new double[] {
+            0.02951906610780948, 0.23537051469301593, 0.4702208383983492, 0.23537051469301593, 0.02951906610780948 
+        };
+        double[] deepMatrix = matrices.getDeep();
+        for ( int i = 0; i < deepMatrix.length; i++ ) {
+            if (deepMatrix[i] != testResultMatrix[i]) {
+                Assert.fail("Deep matrix from GAUSS 65,85,85 does not match.");
+            }
+        }
+        assert matrices != null;
     }
     
     private String testDump( byte[] inputValue, int byteCount ) {
