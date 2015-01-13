@@ -290,42 +290,6 @@ public class MatrixFilter3D {
     }
 
     /**
-     * Turns the entire byte array into a 3D long array of equivalent values.
-     * 
-     * @param fparam all info required.
-     * @return array of longs, to hold volume specified in fparam.
-     */
-    private long[][][][] convertTo3DLong(FilteringParameter fparam) {
-        long[][][][] returnValue = new long[ fparam.getSx() ][ fparam.getSy() ][ fparam.getSz() ][ fparam.getChannelCount() ];
-
-        byte[] byteVolume = fparam.getVolume();
-        byte[] voxelVal = new byte[fparam.getVoxelBytes()];
-
-        // For each channel, fill in the details.
-        for ( int ch = 0; ch < fparam.getChannelCount(); ch++ ) {
-            int linOffs = 0;
-            // for each sheet.
-            for (int k = 0; k < fparam.getSz(); k++) {
-                // for each row.
-                for (int j = 0; j < fparam.getSy(); j++) {
-                    // for each col.
-                    for (int i = 0; i < fparam.getSx(); i++) {
-                        for (int voxel = 0; voxel < fparam.getVoxelBytes(); voxel++) {
-                            int outputOffs = (linOffs * fparam.getStride()) + ch * fparam.getVoxelBytes() + voxel;
-                            voxelVal[ voxel ] = byteVolume[ outputOffs ];
-                        }
-                        linOffs ++;
-                        long equivalentValue = getIntEquiv(voxelVal);                        
-                        returnValue[ i ][ j ][ k ][ ch ] = equivalentValue;
-                    }
-                }
-            }
-        }
-        
-        return returnValue;
-    }
-
-    /**
      * Finds the neighborhood surrounding the input point (x,y,z), as unsigned
      * integer array.  All edge cases (near end, near beginning) are handled
      * by using only partial neighborhoods which are truncated there.
@@ -377,66 +341,6 @@ public class MatrixFilter3D {
                     }
 
                     long equivalentValue = inputVol[ arrayCopyLoc ];
-                    
-                    final int outputOffset = (zNbh-startZ)*(extentY*extentX) + (yNbh-startY) * extentX + (xNbh-startX);
-                    if (logger.isDebugEnabled()) {
-                        logger.debug("Output location for " + xNbh + "," + yNbh + "," + zNbh + " is " + outputOffset);
-                    }
-                    if (outputOffset >= returnValue.length) {
-                        logger.error("Out of bounds.");
-                    }
-                    returnValue[ outputOffset ] = equivalentValue;
-                }
-            }
-        }       
-        return returnValue;
-    }
-    
-    /**
-     * Finds the neighborhood surrounding the input point (x,y,z), as unsigned
-     * integer array.  All edge cases (near end, near beginning) are handled
-     * by using only partial neighborhoods which are truncated there.
-     *
-     * @param fparam metadata about the slice being calculated.
-     * @param y input location under study.
-     * @param x input location under study.
-     * @param z input location under study.
-     * @param channel channel number under study.
-     * @return computed value: all bytes of the voxel.
-     */
-    private long[] getNeighborhood(
-            FilteringParameter fparam, long[][][][] inputVol, int x, int y, int z, int channel
-    ) {
-
-        // Neighborhood starts at the x,y,z values of the loops.  There will be one
-        // such neighborhood for each of these sets: x,y,z
-        final int sz = fparam.getSz();
-        final int sy = fparam.getSy();
-        final int sx = fparam.getSx();
-        final int extentX = fparam.getExtentX();
-        final int extentY = fparam.getExtentY();
-        final int extentZ = fparam.getExtentZ();
-        
-        long[] returnValue = new long[ extentX * extentY * extentZ ];
-        int startX = neighborhoodStart(x, extentX);
-        int startY = neighborhoodStart(y, extentY);
-        int startZ = neighborhoodStart(z, extentZ);
-        for ( int zNbh = startZ; zNbh < startZ + extentZ && zNbh < sz; zNbh ++ ) {
-            if (zNbh < 0) {// Edge case: at beginning->partial neighborhood.
-                continue;
-            }
-
-            for ( int yNbh = startY; yNbh < startY + extentY && yNbh < sy; yNbh ++ ) {
-                if (yNbh < 0) {// Edge case: at beginning->partial neighborhood.
-                    continue;
-                }
-
-                for ( int xNbh = startX; xNbh < startX + extentX && xNbh < sx; xNbh++ ) {
-                    if (xNbh < 0) {// Edge case: at beginning->partial neighborhood.
-                        continue;
-                    }
-                    // No need of the full stride, which includes the voxel bytes, against the input long array.
-                    long equivalentValue = inputVol[ xNbh ][ yNbh ][ zNbh ][ channel ];
                     
                     final int outputOffset = (zNbh-startZ)*(extentY*extentX) + (yNbh-startY) * extentX + (xNbh-startX);
                     if (logger.isDebugEnabled()) {
