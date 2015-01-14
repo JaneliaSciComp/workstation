@@ -23,7 +23,6 @@ import org.janelia.it.workstation.gui.large_volume_viewer.SubvolumeProvider;
 import org.janelia.it.workstation.gui.large_volume_viewer.TileFormat;
 import org.janelia.it.workstation.gui.large_volume_viewer.TileServer;
 import org.janelia.it.workstation.gui.passive_3d.top_component.Snapshot3dTopComponent;
-import org.janelia.it.workstation.gui.viewer3d.BoundingBox3d;
 import org.janelia.it.workstation.shared.workers.IndeterminateNoteProgressMonitor;
 import org.openide.windows.WindowManager;
 
