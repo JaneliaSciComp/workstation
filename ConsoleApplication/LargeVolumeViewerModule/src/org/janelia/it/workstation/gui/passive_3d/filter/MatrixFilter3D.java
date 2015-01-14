@@ -161,66 +161,6 @@ public class MatrixFilter3D {
         this.progressMonitor = progressMonitor;
     }
     
-//    public Dim1Matrices matrix1dSelector() {
-//        return matrix1dSelector( matrix, matrixCubicDim );
-//    }
-//    
-//    public Dim1Matrices matrix1dSelector( double[] input, int tgtDim ) {
-//        Dim1Matrices rtnVal = new Dim1Matrices();       
-//        
-//        double[] horizontal = new double[ tgtDim ];
-//        final int preMidPoint = input.length / 2;
-//        int colCount = 0;
-//        double multiplier = 0.0;
-//        for ( int i = preMidPoint - tgtDim / 2; i <= preMidPoint + tgtDim / 2; i++ ) {
-//           horizontal[ colCount++ ] = input[ i ];
-//           multiplier += input[ i ];
-//        }
-//        
-//        multiplier = 1.0 / multiplier;
-//        for ( int i = 0; i < tgtDim; i++ ) {
-//            horizontal[ i ] *= multiplier;
-//        }
-//        
-//        double[] vertical = new double[ tgtDim ];
-//        // First find the mid-depth sheet.
-//        //  NOTE: using paren-grouping intentionally, to force rounding
-//        //  prior to rest of calculation. LLF
-//        final int centerSheetStart = tgtDim * tgtDim * (tgtDim / 2);
-//        final int midLine = tgtDim / 2;
-//        multiplier = 0.0;
-//        for ( int i = 0; i < tgtDim; i++ ) {
-//            vertical[ i ] = input[ centerSheetStart + midLine + ( i * tgtDim ) ];
-//            multiplier += vertical[ i ];
-//        }
-//                
-//        multiplier = 1.0 / multiplier;
-//        for ( int i = 0; i < tgtDim; i++ ) {
-//            vertical[ i ] *= multiplier;
-//        }
-//        
-//        double[] deep = new double[ tgtDim ];
-//        // First find mid-point of starting sheet.
-//        final int midStartSheet = tgtDim * tgtDim / 2;
-//        final int sheetSize = tgtDim * tgtDim;
-//        multiplier = 0.0;
-//        for ( int i = 0; i < tgtDim; i++ ) {
-//            deep[ i ] = input[ midStartSheet + (i * sheetSize) ];
-//            multiplier += deep[ i ];
-//        }
-//        
-//        multiplier = 1.0 / multiplier;
-//        for ( int i = 0; i < tgtDim; i++ ) {
-//            deep[ i ] *= multiplier;
-//        }
-//        
-//        rtnVal.setHorizontal(horizontal);
-//        rtnVal.setVertical(vertical);
-//        rtnVal.setDeep(deep);
-//        
-//        return rtnVal;
-//    }
-    
     /**
      * Filter the input array using the supplied matrix.
      * 
@@ -488,56 +428,6 @@ public class MatrixFilter3D {
         }
         return true;
     }
-    
-//    public static class Dim1Matrices {
-//        private double[] horizontal;
-//        private double[] vertical;
-//        private double[] deep;
-//
-//        /**
-//         * @return the horizontal
-//         */
-//        public double[] getHorizontal() {
-//            return horizontal;
-//        }
-//
-//        /**
-//         * @param horizontal the horizontal to set
-//         */
-//        public void setHorizontal(double[] horizontal) {
-//            this.horizontal = horizontal;
-//        }
-//
-//        /**
-//         * @return the vertical
-//         */
-//        public double[] getVertical() {
-//            return vertical;
-//        }
-//
-//        /**
-//         * @param vertical the vertical to set
-//         */
-//        public void setVertical(double[] vertical) {
-//            this.vertical = vertical;
-//        }
-//
-//        /**
-//         * @return the deep
-//         */
-//        public double[] getDeep() {
-//            return deep;
-//        }
-//
-//        /**
-//         * @param deep the deep to set
-//         */
-//        public void setDeep(double[] deep) {
-//            this.deep = deep;
-//        }
-//        
-//        
-//    }
     
     /**
      * Bean of information used to drive the filtering.
