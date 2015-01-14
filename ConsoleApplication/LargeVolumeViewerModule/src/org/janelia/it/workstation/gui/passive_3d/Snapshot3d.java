@@ -68,6 +68,10 @@ public class Snapshot3d extends JPanel {
         this.monitor = monitor;
     }
 
+    public String getLabelText() {
+        return this.labelText;
+    }
+    
     public void setLabelText(String labelText) {
         this.labelText = labelText;
     }

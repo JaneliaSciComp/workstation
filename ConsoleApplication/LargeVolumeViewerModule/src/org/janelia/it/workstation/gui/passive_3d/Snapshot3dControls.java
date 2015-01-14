@@ -219,10 +219,18 @@ public class Snapshot3dControls {
                             view, getValue(Action.NAME), "Smoothing data..."
                     );
             SimpleWorker sw = new SimpleWorker() {
+                private static final String FILTER_METHOD_PREFIX = " Filter";
 
                 @Override
                 protected void doStuff() throws Exception {
                     view.setHasBeenFiltered( true );
+                    String actionName = (String)getValue(Action.NAME);
+                    String oldLabelText = view.getLabelText();
+                    int filterPos = oldLabelText.indexOf(FILTER_METHOD_PREFIX);
+                    if (filterPos > -1) {
+                        oldLabelText = oldLabelText.substring(0, filterPos);
+                    }
+                    view.setLabelText(oldLabelText + " " + actionName);
                     filterTextureDatas( progressMonitor );
                 }
 
