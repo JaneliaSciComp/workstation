@@ -14,10 +14,8 @@ import java.awt.Dimension;
 import java.awt.Component;
 import java.awt.BorderLayout;
 import java.awt.Container;
-import java.awt.GridLayout;
 import java.util.Collections;
 import java.util.Comparator;
-import javax.swing.AbstractButton;
 import javax.swing.Action;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
@@ -42,6 +40,7 @@ public class Snapshot3d extends JPanel {
     private IndeterminateNoteProgressMonitor monitor;
     private String labelText;
     private Snapshot3dControls controls;
+    private boolean hasBeenFiltered = false;
 
     private static Snapshot3d snapshotInstance;
     private final Logger logger = LoggerFactory.getLogger(Snapshot3d.class);
@@ -78,11 +77,26 @@ public class Snapshot3d extends JPanel {
     }
 
     /**
+     * @return the hasBeenFiltered
+     */
+    public boolean isHasBeenFiltered() {
+        return hasBeenFiltered;
+    }
+
+    /**
+     * @param hasBeenFiltered the hasBeenFiltered to set
+     */
+    public void setHasBeenFiltered(boolean hasBeenFiltered) {
+        this.hasBeenFiltered = hasBeenFiltered;
+    }
+
+    /**
      * Launching consists of making a load worker, and then executing that.
      *
      * @param volumeSource for getting the data.
      */
     public void launch(MonitoredVolumeSource volumeSource) {
+        setHasBeenFiltered( false );
         SnapshotWorker loadWorker = new SnapshotWorker(volumeSource);
         if (getMonitor() == null) {
             setLoadProgressMonitor(new IndeterminateNoteProgressMonitor(SessionMgr.getMainFrame(), "Fetching tiles", volumeSource.getInfo()));
@@ -94,7 +108,6 @@ public class Snapshot3d extends JPanel {
     
     public void reLaunch(Collection<TextureDataI> textureDatas) {
         launch( textureDatas );        
-        controls.deactivateFiltering();
     }
 
     private void launch(Collection<TextureDataI> textureDatas) {
@@ -153,6 +166,7 @@ public class Snapshot3d extends JPanel {
         locallyAddedComponents.add(southPanel);
         this.add(southPanel, BorderLayout.SOUTH);
         this.add(mip3d, BorderLayout.CENTER);
+        controls.setFilterActiveState( hasBeenFiltered );
     }
 
     private void cleanup() {
