@@ -7,7 +7,11 @@
 package org.janelia.it.workstation.gui.passive_3d.filter;
 
 import java.nio.ByteOrder;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
 import javax.swing.ProgressMonitor;
+import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -21,6 +25,9 @@ import org.slf4j.LoggerFactory;
  * @author fosterl
  */
 public class MatrixFilter3D {
+    // On MacPro with 64Gb, seeing load of 256x taking 17s with 30 threads. 
+    // At 20 threads: 21s.  At 15 threads: 24s.  At 10 threads: 26s. LLF
+    private static final int NUM_THREADS = 30;
     private static final double AVG_VAL = 1.0/27.0; 
     public static double[] AVG_MATRIX_3_3_3 = new double[] {
         AVG_VAL, AVG_VAL, AVG_VAL,
@@ -225,7 +232,7 @@ public class MatrixFilter3D {
      * @param sz length of z.
      * @return filtered version of original.
      */
-    public byte[] filter( byte[] inputBytes, int bytesPerCell, int channelCount, int sx, int sy, int sz ) {
+    public byte[] filter( byte[] inputBytes, final int bytesPerCell, int channelCount, int sx, int sy, int sz ) {
         logger.info("Starting the filter run.");
         // one-time precalculate some values used in filtering operation.
         shiftDistance = new int[ bytesPerCell ];
@@ -240,8 +247,8 @@ public class MatrixFilter3D {
             }
         }
 
-        byte[] outputBytes = new byte[ inputBytes.length ];
-        FilteringParameter param = new FilteringParameter();
+        final byte[] outputBytes = new byte[ inputBytes.length ];
+        final FilteringParameter param = new FilteringParameter();
         param.setExtentX(matrixCubicDim);
         param.setExtentY(matrixCubicDim);
         param.setExtentZ(matrixCubicDim);
@@ -252,34 +259,80 @@ public class MatrixFilter3D {
         param.setChannelCount(channelCount);
         param.setVolumeData(inputBytes);
         
-        int lineSize = sx * param.getStride();
-        int sheetSize = sy * lineSize;
+        final int lineSize = sx * param.getStride();
+        final int sheetSize = sy * lineSize;
         
         // First, let's change the bytes going into the neighborhoods, to
         // all long values.  One pass, rather than repeating that operation.
-        long[] inputLongs = convertToLong( param );  
-        //long[][][][] input3d = convertTo3DLong( param );
-
+        final long[] inputLongs = convertToLong( param );  
+        
+        final ExecutorService executorService = Executors.newFixedThreadPool( NUM_THREADS);
         for (int ch = 0; ch < channelCount; ch++) {
             for (int z = 0; z < sz; z++) {
-                for (int y = 0; y < sy; y++) {
-                    for (int x = 0; x < sx; x++) {
-                        long[] neighborhood = getNeighborhood(param, inputLongs, x, y, z, ch);
-                        //long[] neighborhood = getNeighborhood(param, input3d, x, y, z, ch);
-                        long filtered = applyFilter(neighborhood);
-                        byte[] value = getArrayEquiv(filtered, bytesPerCell);
-                        for (int voxByte = 0; voxByte < bytesPerCell; voxByte++) {
-                            outputBytes[ z * sheetSize + y * lineSize + (x * param.getStride()) + (ch * param.getVoxelBytes()) + voxByte ] = value[ voxByte ];
+                // Need final variables to pass into worker.
+                final int zF = z;
+                final int chF = ch;
+                Runnable runnable = new Runnable() {
+                    @Override
+                    public void run() {
+                        try {
+                            filterZ(param, inputLongs, zF, chF, outputBytes, sheetSize, lineSize);
+                        } catch (Exception ex) {
+                            // Exception implies useless output.
+                            executorService.shutdownNow();
+                            SessionMgr.getSessionMgr().handleException(ex);
                         }
                     }
-                }
-                if (progressMonitor != null  &&  progressMonitor.isCanceled() ) {
+                };
+                executorService.submit(runnable);
+                
+                if (progressMonitor != null && progressMonitor.isCanceled()) {
+                    // If user bails, the executor should go away.
+                    executorService.shutdownNow();
                     return inputBytes;
                 }
             }
         }
+        try {
+            // Now that everything has been queued, can send the shutdown
+            // signal.  Then await termination, which in turn waits for all
+            // the loads to complete.
+            executorService.shutdown();
+            boolean completed = executorService.awaitTermination(5, TimeUnit.MINUTES);
+            if ( !completed ) {
+                throw new RuntimeException("Timed out while attempting to smooth data.  Original 3D data shown.");
+            }
+        } catch ( InterruptedException | RuntimeException ex ) {
+            SessionMgr.getSessionMgr().handleException(ex);
+        }
         logger.info("Ending the filter run.");
         return outputBytes;
+    }
+
+    /**
+     * Convenience method for bearing the loads for multi-threaded smoothing
+     * operation.
+     * 
+     * @param param has various things that apply to whole filter operation.
+     * @param inputLongs pre-digested long versions of raw byte array.
+     * @param z which "sheet" we will be working on.
+     * @param ch which channel we will be working on.
+     * @param outputBytes
+     * @param sheetSize
+     * @param lineSize 
+     */
+    private void filterZ(FilteringParameter param, long[] inputLongs, int z, int ch, byte[] outputBytes, int sheetSize, int lineSize) {
+        int bytesPerCell = param.getVoxelBytes();
+        for (int y = 0; y < param.getSy(); y++ ) {
+            for (int x = 0; x < param.getSx(); x++ ) {
+                long[] neighborhood = getNeighborhood(param, inputLongs, x, y, z, ch);
+                long filtered = applyFilter(neighborhood);
+                byte[] value = getArrayEquiv(filtered, bytesPerCell);
+                for (int voxByte = 0; voxByte < bytesPerCell; voxByte++) {
+                    outputBytes[ z * sheetSize + y * lineSize + (x * param.getStride()) + (ch * param.getVoxelBytes()) + voxByte] = value[ voxByte ];
+                }
+            }
+        }
     }
     
     private long applyFilter( long[] neighborhood ) {
