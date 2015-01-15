@@ -7,8 +7,8 @@ import java.util.Set;
 import java.util.concurrent.atomic.AtomicBoolean;
 import org.janelia.it.jacs.model.domain.DomainObject;
 import org.janelia.it.jacs.model.domain.enums.FileType;
-import org.janelia.it.jacs.model.domain.gui.search.SavedSearch;
 import org.janelia.it.jacs.model.domain.interfaces.HasFiles;
+import org.janelia.it.workstation.gui.browser.components.editor.DomainObjectViewer;
 import org.janelia.it.workstation.gui.browser.icongrid.AnnotatedImageButton;
 import org.janelia.it.workstation.gui.browser.icongrid.IconGridViewer;
 import org.janelia.it.workstation.gui.browser.search.SearchResults;
@@ -21,7 +21,7 @@ import org.slf4j.LoggerFactory;
  *
  * @author <a href="mailto:rokickik@janelia.hhmi.org">Konrad Rokicki</a>
  */
-public class DomainObjectIconGridViewer extends IconGridViewer<DomainObject> {
+public class DomainObjectIconGridViewer extends IconGridViewer<DomainObject> implements DomainObjectViewer {
     
     private static final Logger log = LoggerFactory.getLogger(DomainObjectIconGridViewer.class);
     
@@ -76,8 +76,8 @@ public class DomainObjectIconGridViewer extends IconGridViewer<DomainObject> {
     protected void buttonDrillDown(AnnotatedImageButton button) {
         
         DomainObject domainObject = (DomainObject)button.getImageObject();
+        
     }
-
     
     Set<DomainObject> selected = new HashSet<DomainObject>();
     private DomainObject lastSelected = null;
@@ -203,6 +203,7 @@ public class DomainObjectIconGridViewer extends IconGridViewer<DomainObject> {
     
     private SearchResults searchResults;
     
+    @Override
     public void showSearchResults(SearchResults searchResults) {
         if (this.searchResults == searchResults) {
             // Already displaying these results, might have received more pages

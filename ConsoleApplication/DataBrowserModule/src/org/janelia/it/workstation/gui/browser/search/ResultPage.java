@@ -23,6 +23,7 @@ public class ResultPage {
     private List<ResultItem> resultItems;
     
     public ResultPage(SolrResults solrResults) {
+        // TODO: only keep what we need from the SolrResults and discard it
         this.solrResults = solrResults;
     }
 
@@ -34,9 +35,9 @@ public class ResultPage {
         return solrResults.getResponse().getResults().size();
     }
     
-//    public SolrResults getSolrResults() {
-//        return solrResults;
-//    }
+    public DomainObject getDomainObject(Long id) {
+        return domainObjectById.get(id);
+    }
 
     public List<ResultItem> getResultItems() {
         if (resultItems==null) {

@@ -64,7 +64,6 @@ public class DomainFilterEditorPanel extends JPanel {
     
     // Results
     protected SearchResults searchResults = new SearchResults();
-    
 
     private enum ViewerType {
 
@@ -116,13 +115,13 @@ public class DomainFilterEditorPanel extends JPanel {
 
         this.iconGridViewer = new DomainObjectIconGridViewer();
 
-        JPanel searchResults = new JPanel();
-        searchResults.setLayout(new BorderLayout());
-        searchResults.add(iconGridViewer, BorderLayout.CENTER);
+        JPanel searchResultsPanel = new JPanel();
+        searchResultsPanel.setLayout(new BorderLayout());
+        searchResultsPanel.add(iconGridViewer, BorderLayout.CENTER);
 
         setLayout(new BorderLayout());
         add(taskPaneContainer, BorderLayout.WEST);
-        add(searchResults, BorderLayout.CENTER);
+        add(searchResultsPanel, BorderLayout.CENTER);
 
         setViewerType(ViewerType.IconViewer);
 
@@ -219,7 +218,7 @@ public class DomainFilterEditorPanel extends JPanel {
         optionsTaskPane.revalidate();
 
         // Update search
-//        executeSearch();
+        performSearch(0, true);
     }
 
     private JComponent createFilterLabel(final Filter filter) {
