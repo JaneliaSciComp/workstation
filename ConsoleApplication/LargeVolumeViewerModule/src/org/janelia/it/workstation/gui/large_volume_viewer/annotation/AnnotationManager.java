@@ -1069,32 +1069,22 @@ public class AnnotationManager
     }
 
     public void saveColorModel() {
-        SimpleWorker saver = new SimpleWorker() {
-            @Override
-            protected void doStuff() throws Exception {
-                annotationModel.setPreference(AnnotationsConstants.PREF_COLOR_MODEL, quadViewUi.imageColorModelAsString());
-            }
-
-            @Override
-            protected void hadSuccess() {
-                // nothing here
-            }
-
-            @Override
-            protected void hadError(Throwable error) {
-                SessionMgr.getSessionMgr().handleException(error);
-            }
-        };
-        saver.execute();
-
+        savePreference(AnnotationsConstants.PREF_COLOR_MODEL, quadViewUi.imageColorModelAsString());
     }
 
     public void setAutomaticRefinement(final boolean state) {
+        savePreference(AnnotationsConstants.PREF_AUTOMATIC_POINT_REFINEMENT, String.valueOf(state));
+    }
+
+    public void setAutomaticTracing(final boolean state) {
+        savePreference(AnnotationsConstants.PREF_AUTOMATIC_TRACING, String.valueOf(state));
+    }
+
+    public void savePreference( final String name, final String value ) {
         SimpleWorker saver = new SimpleWorker() {
             @Override
             protected void doStuff() throws Exception {
-                annotationModel.setPreference(AnnotationsConstants.PREF_AUTOMATIC_POINT_REFINEMENT,
-                        String.valueOf(state));
+                annotationModel.setPreference( name, value );
             }
 
             @Override
@@ -1109,26 +1099,9 @@ public class AnnotationManager
         };
         saver.execute();
     }
-
-    public void setAutomaticTracing(final boolean state) {
-        SimpleWorker saver = new SimpleWorker() {
-            @Override
-            protected void doStuff() throws Exception {
-                annotationModel.setPreference(AnnotationsConstants.PREF_AUTOMATIC_TRACING,
-                        String.valueOf(state));
-            }
-
-            @Override
-            protected void hadSuccess() {
-                // nothing here
-            }
-
-            @Override
-            protected void hadError(Throwable error) {
-                SessionMgr.getSessionMgr().handleException(error);
-            }
-        };
-        saver.execute();
+    
+    public String retreivePreference( final String name ) {
+        return annotationModel.getPreference(name);
     }
 
     private void tracePathToParent(PathTraceToParentRequest request) {

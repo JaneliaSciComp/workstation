@@ -1158,6 +1158,7 @@ public class QuadViewUi extends JPanel
                 url,
                 imageColorModel
         );
+        snapshot3dLauncher.setAnnotationManager(annotationMgr);
         volumeImage.setRemoteBasePath(pathToFile);
         return loadURL(url);
     }

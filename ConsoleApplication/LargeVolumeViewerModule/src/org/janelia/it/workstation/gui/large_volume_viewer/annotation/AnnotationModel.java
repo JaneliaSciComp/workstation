@@ -130,12 +130,27 @@ that need to respond to changing data.
     public void setPreference(String key, String value) {
         if (currentWorkspace != null) {
             try {
+                // Push to database.
                 modelMgr.createOrUpdateWorkspacePreference(currentWorkspace.getId(),
                         key, value);
+                // Push to memory as well.
+                currentWorkspace.getPreferences().setProperty(key, value);
             } catch (Exception e) {
                 e.printStackTrace();
             }
         }
+    }
+    
+    public String getPreference(String key) {
+        String rtnVal = null;
+        if (currentWorkspace != null) {
+            try {
+                rtnVal = currentWorkspace.getPreferences().getProperty(key);
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
+        return rtnVal;
     }
 
     // current neuron methods
