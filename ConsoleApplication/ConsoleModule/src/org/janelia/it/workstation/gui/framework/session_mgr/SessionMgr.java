@@ -1,6 +1,10 @@
 package org.janelia.it.workstation.gui.framework.session_mgr;
 
 import de.javasoft.plaf.synthetica.SyntheticaBlackEyeLookAndFeel;
+import org.janelia.it.jacs.model.user_data.Subject;
+import org.janelia.it.jacs.model.user_data.SubjectRelationship;
+import org.janelia.it.jacs.model.user_data.User;
+import org.janelia.it.jacs.shared.utils.StringUtils;
 import org.janelia.it.workstation.api.entity_model.management.ModelMgr;
 import org.janelia.it.workstation.api.facade.concrete_facade.ejb.EJBFactory;
 import org.janelia.it.workstation.api.facade.facade_mgr.FacadeManager;
@@ -10,36 +14,32 @@ import org.janelia.it.workstation.gui.framework.console.Browser;
 import org.janelia.it.workstation.gui.framework.external_listener.ExternalListener;
 import org.janelia.it.workstation.gui.framework.keybind.KeyBindings;
 import org.janelia.it.workstation.gui.framework.pref_controller.PrefController;
+import org.janelia.it.workstation.gui.util.WindowLocator;
 import org.janelia.it.workstation.shared.filestore.PathTranslator;
 import org.janelia.it.workstation.shared.util.ConsoleProperties;
 import org.janelia.it.workstation.shared.util.PropertyConfigurator;
 import org.janelia.it.workstation.shared.util.RendererType2D;
-import org.janelia.it.workstation.shared.util.Utils;
 import org.janelia.it.workstation.shared.util.filecache.LocalFileCache;
 import org.janelia.it.workstation.shared.util.filecache.WebDavClient;
 import org.janelia.it.workstation.web.EmbeddedWebServer;
 import org.janelia.it.workstation.ws.EmbeddedAxisServer;
-import org.janelia.it.jacs.model.user_data.Subject;
-import org.janelia.it.jacs.model.user_data.SubjectRelationship;
-import org.janelia.it.jacs.model.user_data.User;
-import org.janelia.it.jacs.shared.utils.StringUtils;
-import org.janelia.it.workstation.gui.util.WindowLocator;
 import org.janelia.it.workstation.ws.ExternalClient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.swing.*;
+import javax.swing.UIManager.LookAndFeelInfo;
 import java.awt.*;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
-import java.awt.event.WindowListener;
 import java.io.*;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.text.ParseException;
-import java.util.*;
+import java.util.ArrayList;
 import java.util.List;
-import javax.swing.UIManager.LookAndFeelInfo;
+import java.util.Map;
+import java.util.TreeMap;
 
 public class SessionMgr {
 
@@ -73,17 +73,14 @@ public class SessionMgr {
     private static SessionMgr sessionManager = new SessionMgr();
     private SessionModel sessionModel = SessionModel.getSessionModel();
     private float browserSize = .8f;
-    private String browserTitle;
     private ImageIcon browserImageIcon;
-    private Component splashPanel;
     private ExternalListener externalHttpListener;
     private EmbeddedAxisServer axisServer;
     private EmbeddedWebServer webServer;
     private File settingsFile;
     private String prefsDir = System.getProperty("user.home") + ConsoleProperties.getString("Console.Home.Path");
     private String prefsFile = prefsDir + ".JW_Settings";
-    private Map<BrowserModel, Browser> browserModelsToBrowser = new HashMap<BrowserModel, Browser>();
-    private WindowListener myBrowserWindowListener = new MyBrowserListener();
+//    private Map<BrowserModel, Browser> browserModelsToBrowser = new HashMap<>();
     private Browser activeBrowser;
     private String appName, appVersion;
     private boolean isLoggedIn;
@@ -100,16 +97,9 @@ public class SessionMgr {
 
         settingsFile = new File(prefsFile);
         try {
-            // @todo Remove this Dec 2013  :-)
-            //if you get this far, check to migrate over the old preferences
-            File oldDir = new File(System.getProperty("user.home") + "/.FlyWorkstationSuite/Console/");
-            if (oldDir.exists()) {
-                new File(System.getProperty("user.home") + "/.FlyWorkstationSuite/").renameTo(new File(System.getProperty("user.home") + "/.JaneliaWorkstationSuite/"));
-                new File(prefsDir + "/.FW_Settings").renameTo(settingsFile);
-                log.info("Renamed settings directory and files.");
-            }
-            else {
-                settingsFile.createNewFile();  //only creates if does not exist
+            boolean success = settingsFile.createNewFile();  //only creates if does not exist
+            if (success) {
+                log.info("Created a new settings file in "+settingsFile.getAbsolutePath());
             }
         }
         catch (IOException ioEx) {
@@ -117,7 +107,10 @@ public class SessionMgr {
                 log.error("Could not create prefs dir at " + prefsDir);
             }
             try {
-                settingsFile.createNewFile();  //only creates if does not exist
+                boolean success = settingsFile.createNewFile();  //only creates if does not exist
+                if (success) {
+                    log.info("Created a new settings file in "+settingsFile.getAbsolutePath());
+                }
             }
             catch (IOException e) {
                 log.error("Cannot create settings file at: " + settingsFile, e);
@@ -235,30 +228,33 @@ public class SessionMgr {
     } //Singleton enforcement
 
     private void readSettingsFile() {
-        JFrame mainFrame = new JFrame();
-        JOptionPane optionPane = new JOptionPane();
         try {
-            mainFrame.setIconImage(Utils.getClasspathImage("flyscope.jpg").getImage());
-            mainFrame.getContentPane().add(optionPane);
             if (!settingsFile.canRead()) {
-                optionPane.showMessageDialog(mainFrame, "Settings file cannot be opened.  " + "Settings were not read and recovered.", "ERROR!", JOptionPane.ERROR_MESSAGE);
-                settingsFile.renameTo(new File(prefsFile + ".old"));
-
+                JOptionPane.showMessageDialog(getMainFrame(), "Settings file cannot be opened.  " + "Settings were not read and recovered.", "ERROR!", JOptionPane.ERROR_MESSAGE);
+                boolean success = settingsFile.renameTo(new File(prefsFile + ".old"));
+                if (success) {
+                    log.info("Moved the unreadable settings file to "+settingsFile.getAbsolutePath());
+                }
             }
             ObjectInputStream istream = new ObjectInputStream(new FileInputStream(settingsFile));
             switch (istream.readInt()) {
                 case 1: {
                     try {
-
                         sessionModel.setModelProperties((TreeMap) istream.readObject());
                         istream.close();
                     }
                     catch (Exception ex) {
                         istream.close();
-                        optionPane.showMessageDialog(mainFrame, "Settings were not recovered into the session.", "ERROR!", JOptionPane.ERROR_MESSAGE);
+                        JOptionPane.showMessageDialog(getMainFrame(), "Settings were not recovered into the session.", "ERROR!", JOptionPane.ERROR_MESSAGE);
                         File oldFile = new File(prefsFile + ".old");
-                        oldFile.delete();
-                        settingsFile.renameTo(new File(prefsFile + ".old"));
+                        boolean deleteSuccess = oldFile.delete();
+                        if (!deleteSuccess) {
+                            log.error("Could not delete the old settings: "+oldFile.getAbsolutePath());
+                        }
+                        boolean renameSuccess = settingsFile.renameTo(new File(prefsFile + ".old"));
+                        if (!renameSuccess) {
+                            log.error("Could not rename new settings file to old.");
+                        }
                     }
                     break;
                 }
@@ -290,9 +286,9 @@ public class SessionMgr {
         return sessionModel.addExternalClient(newClientName);
     }
 
-    public List<ExternalClient> getExternalClients() {
-        return sessionModel.getExternalClients();
-    }
+//    public List<ExternalClient> getExternalClients() {
+//        return sessionModel.getExternalClients();
+//    }
 
     public List<ExternalClient> getExternalClientsByName(String clientName) {
         return sessionModel.getExternalClientsByName(clientName);
@@ -318,36 +314,28 @@ public class SessionMgr {
         return sessionModel.getModelProperty(key);
     }
 
-    public void removeModelProperty(Object key) {
-        sessionModel.removeModelProperty(key);
-    }
-
-    public Iterator getModelPropertyKeys() {
-        return sessionModel.getModelPropertyKeys();
-    }
-
-    public String getNewBrowserTitle() {
-        return browserTitle;
-    }
-
+//    public void removeModelProperty(Object key) {
+//        sessionModel.removeModelProperty(key);
+//    }
+//
+//    public Iterator getModelPropertyKeys() {
+//        return sessionModel.getModelPropertyKeys();
+//    }
+//
     public void registerPreferenceInterface(Object interfaceKey, Class interfaceClass) throws Exception {
         PrefController.getPrefController().registerPreferenceInterface(interfaceKey, interfaceClass);
     }
 
-    public void removePreferenceInterface(Object interfaceKey) throws Exception {
-        PrefController.getPrefController().deregisterPreferenceInterface(interfaceKey);
-    }
-
+//    public void removePreferenceInterface(Object interfaceKey) throws Exception {
+//        PrefController.getPrefController().deregisterPreferenceInterface(interfaceKey);
+//    }
+//
     public void registerExceptionHandler(ExceptionHandler handler) {
         modelManager.registerExceptionHandler(handler);
     }
 
     public void setNewBrowserSize(float screenPercent) {
         browserSize = screenPercent;
-    }
-
-    public void setNewBrowserTitle(String title) {
-        browserTitle = title;
     }
 
     public void setApplicationName(String name) {
@@ -488,31 +476,17 @@ public class SessionMgr {
         if (browserImageIcon != null) {
             browser.setBrowserImageIcon(browserImageIcon);
         }
-        browserModelsToBrowser.put(browser.getBrowserModel(), browser);
+//        browserModelsToBrowser.put(browser.getBrowserModel(), browser);
         activeBrowser = browser;
         return browser;
     }
-
-    public void removeBrowser(Browser browser) {
-        browserModelsToBrowser.remove(browser.getBrowserModel());
-        sessionModel.removeBrowserModel(browser.getBrowserModel());
-    }
-
-    public void useFreeMemoryWatcher(boolean use) {
-        this.setModelProperty("FreeMemoryViewer", use);
-//      freeMemoryWatcher=use;
-    }
-    /*
-     public boolean isUsingMemoryWatcher() {
-     return freeMemoryWatcher;
-     }
-     */
 
     public void systemExit() {
         systemExit(0);
     }
 
     public void systemExit(int errorlevel) {
+        log.info("Exiting with code "+errorlevel);
         sessionModel.systemWillExit();
         writeSettings(); // Saves user preferences.
         sessionModel.removeAllBrowserModels();
@@ -533,18 +507,6 @@ public class SessionMgr {
         sessionModel.removeSessionListener(sessionModelListener);
     }
 
-    public void setSplashPanel(Component panel) {
-        splashPanel = panel;
-    }
-
-    public Component getSplashPanel() {
-        return splashPanel;
-    }
-
-    public int getNumberOfOpenBrowsers() {
-        return sessionModel.getNumberOfBrowserModels();
-    }
-
     public void setLookAndFeel(String lookAndFeelClassName) {
         try {
             if (lookAndFeelClassName.contains("BlackEye")) {
@@ -563,7 +525,7 @@ public class SessionMgr {
             }
             else if (lookAndFeelClassName.toLowerCase().contains("jtattoo")) {
                 // setup the look and feel properties
-                Properties props = new Properties();
+//                Properties props = new Properties();
 
                 //props.put("logoString", "my company");
                 //props.put("licenseKey", "INSERT YOUR LICENSE KEY HERE");
@@ -609,10 +571,7 @@ public class SessionMgr {
 
     public boolean isUnloadImages() {
         Boolean unloadImagesBool = (Boolean) SessionMgr.getSessionMgr().getModelProperty(SessionMgr.UNLOAD_IMAGES_PROPERTY);
-        if (unloadImagesBool != null && unloadImagesBool) {
-            return true;
-        }
-        return false;
+        return unloadImagesBool != null && unloadImagesBool;
     }
 
     public boolean isDarkLook() {
@@ -664,13 +623,13 @@ public class SessionMgr {
         }
     }
 
-    public void stopExternalHttpListener() {
-        if (externalHttpListener != null) {
-            externalHttpListener.stop();
-            externalHttpListener = null;
-        }
-    }
-
+//    public void stopExternalHttpListener() {
+//        if (externalHttpListener != null) {
+//            externalHttpListener.stop();
+//            externalHttpListener = null;
+//        }
+//    }
+//
     public void startAxisServer(String url) {
         try {
             if (axisServer == null) {
@@ -683,13 +642,13 @@ public class SessionMgr {
         }
     }
 
-    public void stopAxisServer() {
-        if (axisServer != null) {
-            axisServer.stop();
-            axisServer = null;
-        }
-    }
-
+//    public void stopAxisServer() {
+//        if (axisServer != null) {
+//            axisServer.stop();
+//            axisServer = null;
+//        }
+//    }
+//
     public EmbeddedAxisServer getAxisServer() {
         return axisServer;
     }
@@ -706,33 +665,32 @@ public class SessionMgr {
         }
     }
 
-    public void stopWebServer() {
-        if (webServer != null) {
-            try {
-                webServer.stop();
-                webServer = null;
-            }
-            catch (Exception e) {
-                SessionMgr.getSessionMgr().handleException(e);
-            }
-        }
-    }
-
-    public EmbeddedWebServer getWebServer() {
-        return webServer;
-    }
-
-    public Browser getBrowserFor(BrowserModel model) {
-        return (Browser) browserModelsToBrowser.get(model);
-    }
-
+//    public void stopWebServer() {
+//        if (webServer != null) {
+//            try {
+//                webServer.stop();
+//                webServer = null;
+//            }
+//            catch (Exception e) {
+//                SessionMgr.getSessionMgr().handleException(e);
+//            }
+//        }
+//    }
+//
+//    public EmbeddedWebServer getWebServer() {
+//        return webServer;
+//    }
+//
     public void saveUserSettings() {
         writeSettings();
     }
 
     private void writeSettings() {
         try {
-            settingsFile.delete();
+            boolean success = settingsFile.delete();
+            if (!success) {
+                log.error("Unable to delete old settings file.");
+            }
             ObjectOutputStream ostream = new ObjectOutputStream(new FileOutputStream(settingsFile));
             ostream.writeInt(1);  //stream format
             ostream.writeObject(sessionModel.getModelProperties());
@@ -756,8 +714,7 @@ public class SessionMgr {
             }
 
             // Login and start the session
-            Subject tmpSubjectSubject = FacadeManager.getFacadeManager().getComputeFacade().loginSubject();
-            authenticatedSubject = tmpSubjectSubject;
+            authenticatedSubject = FacadeManager.getFacadeManager().getComputeFacade().loginSubject();
             if (null != authenticatedSubject) {
                 isLoggedIn = true;
 
@@ -850,22 +807,12 @@ public class SessionMgr {
 
     public static boolean authenticatedSubjectIsInGroup(String groupName) {
         Subject subject = SessionMgr.getSessionMgr().getAuthenticatedSubject();
-        if (subject instanceof User) {
-            return isUserInGroup((User) subject, groupName);
-        }
-        else {
-            return false;
-        }
+        return subject instanceof User && isUserInGroup((User) subject, groupName);
     }
 
     public static boolean currentUserIsInGroup(String groupName) {
         Subject subject = SessionMgr.getSessionMgr().getSubject();
-        if (subject instanceof User) {
-            return isUserInGroup((User) subject, groupName);
-        }
-        else {
-            return false;
-        }
+        return subject instanceof User && isUserInGroup((User) subject, groupName);
     }
 
     private static boolean isUserInGroup(User targetUser, String targetGroup) {
@@ -881,7 +828,7 @@ public class SessionMgr {
     }
 
     public static List<String> getSubjectKeys() {
-        List<String> subjectKeys = new ArrayList<String>();
+        List<String> subjectKeys = new ArrayList<>();
         Subject subject = SessionMgr.getSessionMgr().getSubject();
         if (subject != null) {
             subjectKeys.add(subject.getKey());
