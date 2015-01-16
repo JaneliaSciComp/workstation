@@ -239,6 +239,13 @@ public class SessionMgr {
                 File tmpEvilCachedSplashFile = new File(evilCachedSplashFile);
                 if (tmpEvilCachedSplashFile.exists()) {
                     log.info("Cached splash file "+evilCachedSplashFile+" exists.  Removing...");
+                    boolean deleteSuccess = tmpEvilCachedSplashFile.delete();
+                    if (deleteSuccess) {
+                        log.info("Successfully removed the splash.png file");
+                    }
+                    else {
+                        log.info("Could not successfully removed the splash.png file");
+                    }
                 }
                 else {
                     log.info("Did not find the cached splash file ("+evilCachedSplashFile+").  Continuing...");
