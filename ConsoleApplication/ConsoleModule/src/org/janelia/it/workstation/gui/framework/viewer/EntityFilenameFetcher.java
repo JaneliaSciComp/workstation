@@ -96,6 +96,7 @@ public class EntityFilenameFetcher {
             log.debug( "The 3D image is at " + imageFilePath);
         }
         return imageFilePath;
+        //return "/Volumes/jacs/jacsShare/H264SamplesForReview/C1-tile-2033803516857811042.v3dpbd.v3draw.avi.mp4";
     }
 
     /** If this is not called, lazy-loaded entities won't have child entities available for searching, later. */

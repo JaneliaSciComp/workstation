@@ -56,6 +56,8 @@ public class TestMip3d {
                     String guideBase = "/Volumes/nobackup/jacs/jacsData/filestore/MaskResources/Compartment/guide/";
                     String fn = guideBase + "LOP_R.v3dpbd";
                     fn = "/Volumes/jacs/jacsShare/H264SamplesForReview/C1-tile-2033803516857811042.v3dpbd.v3draw.avi.mp4";
+                    System.out.println("Has JavaCPP? " + System.getProperty("java.class.path").contains("javacpp"));
+
                     //String fn = guideBase + "Mask.v3dpbd";
                     //String fn = guideBase + "../maskIndex.v3dpbd";
 

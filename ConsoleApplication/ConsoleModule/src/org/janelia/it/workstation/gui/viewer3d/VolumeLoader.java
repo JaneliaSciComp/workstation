@@ -39,6 +39,7 @@ public class VolumeLoader implements VolumeLoaderI {
 
     public boolean loadVolume(String unCachedFileName)
     {
+        System.out.println("Start load volume: " + new java.util.Date());
         try {
             String localFileName = resolver.getResolvedFilename( unCachedFileName );
             if ( localFileName == null ) {
@@ -139,12 +140,19 @@ public class VolumeLoader implements VolumeLoaderI {
                 textureData.setExplicitVoxelComponentOrder( GL2.GL_RGBA );
                 textureData.setExplicitVoxelComponentType( GL2.GL_UNSIGNED_BYTE );
             }
+            else if ( FileType.H264.equals( getFileType( localFileName, baseName, extension ) ) ) {
+                textureData.setExplicitInternalFormat( GL2.GL_RGB );
+                textureData.setExplicitVoxelComponentOrder( GL2.GL_RGB );
+                textureData.setExplicitVoxelComponentType( GL2.GL_UNSIGNED_BYTE );
+            }
 
+            System.out.println("End load volume: " + new java.util.Date());
             return true;
         }
         catch (Exception exc) {
             exc.printStackTrace();
         }
+
         return false;
     }
 
@@ -163,11 +171,11 @@ public class VolumeLoader implements VolumeLoaderI {
         else if (extension.startsWith(VolumeFileLoaderI.LSM_EXT)) {
             return FileType.LSM;
         }
-        else if (extension.startsWith(VolumeFileLoaderI.MP4_EXT)) {
-            return FileType.MP4;
-        }
         else if (extension.startsWith(VolumeFileLoaderI.H264_EXT) || filename.contains(VolumeFileLoaderI.H264_EXT)) {
             return FileType.H264;
+        }
+        else if (extension.startsWith(VolumeFileLoaderI.MP4_EXT)) {
+            return FileType.MP4;
         }
         else if (extension.startsWith(VolumeFileLoaderI.V3D_EXT) &&
                  ( baseName.startsWith( V3dMaskFileLoader.CONSOLIDATED_LABEL_MASK ) ||
