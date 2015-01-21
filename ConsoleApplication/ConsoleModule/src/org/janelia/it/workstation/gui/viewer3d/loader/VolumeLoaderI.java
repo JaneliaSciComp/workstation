@@ -12,7 +12,7 @@ import org.janelia.it.workstation.gui.viewer3d.VolumeDataAcceptor;
  */
 public interface VolumeLoaderI {
     public enum FileType{
-        TIF, LSM, V3DMASK, V3DSIGNAL, MP4, UNKNOWN
+        TIF, LSM, V3DMASK, V3DSIGNAL, MP4, H264, UNKNOWN
     }
 
     void populateVolumeAcceptor(VolumeDataAcceptor dataAcceptor);

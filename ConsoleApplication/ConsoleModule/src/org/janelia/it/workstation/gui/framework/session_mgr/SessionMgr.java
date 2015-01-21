@@ -19,6 +19,7 @@ import org.janelia.it.workstation.shared.filestore.PathTranslator;
 import org.janelia.it.workstation.shared.util.ConsoleProperties;
 import org.janelia.it.workstation.shared.util.PropertyConfigurator;
 import org.janelia.it.workstation.shared.util.RendererType2D;
+import org.janelia.it.workstation.shared.util.SystemInfo;
 import org.janelia.it.workstation.shared.util.filecache.LocalFileCache;
 import org.janelia.it.workstation.shared.util.filecache.WebDavClient;
 import org.janelia.it.workstation.web.EmbeddedWebServer;
@@ -92,7 +93,7 @@ public class SessionMgr {
 
     private SessionMgr() {
         log.info("Initializing Session Manager");
-
+        findAndRemoveWindowsSplashFile();
         System.setProperty("winsys.stretching_view_tabs", "true");
 
         settingsFile = new File(prefsFile);
@@ -226,6 +227,35 @@ public class SessionMgr {
         }
 
     } //Singleton enforcement
+
+    /**
+     * Method to work-around a problem with the NetBeans Windows integration
+     * todo Formally submit a bug report and tell Geertjan
+     */
+    private void findAndRemoveWindowsSplashFile() {
+        try {
+            if (SystemInfo.isWindows) {
+                String evilCachedSplashFile = System.getProperty("netbeans.user")+File.separator+"var"+File.separator+"cache"+File.separator+"splash.png";
+                File tmpEvilCachedSplashFile = new File(evilCachedSplashFile);
+                if (tmpEvilCachedSplashFile.exists()) {
+                    log.info("Cached splash file "+evilCachedSplashFile+" exists.  Removing...");
+                    boolean deleteSuccess = tmpEvilCachedSplashFile.delete();
+                    if (deleteSuccess) {
+                        log.info("Successfully removed the splash.png file");
+                    }
+                    else {
+                        log.info("Could not successfully removed the splash.png file");
+                    }
+                }
+                else {
+                    log.info("Did not find the cached splash file ("+evilCachedSplashFile+").  Continuing...");
+                }
+            }
+        }
+        catch (Exception e) {
+            log.error("Error trying to exorcise the splash file on Windows.  Ignoring...");
+        }
+    }
 
     private void readSettingsFile() {
         try {
@@ -497,6 +527,7 @@ public class SessionMgr {
         modelManager.prepareForSystemExit();
         // System-exit is now handled by NetBeans framework.
         //  System.exit(errorlevel);
+        findAndRemoveWindowsSplashFile();
     }
 
     public void addSessionModelListener(SessionModelListener sessionModelListener) {
