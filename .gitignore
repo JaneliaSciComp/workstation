@@ -11,3 +11,4 @@ shared/src/org/janelia/it/jacs/shared/blast/blastxmlparser/jaxb
 /buildprocess/intellij-make/
 ConsoleApplication/SharedModelComputeWrapper/release
 jacs.iws
+/.metadata
