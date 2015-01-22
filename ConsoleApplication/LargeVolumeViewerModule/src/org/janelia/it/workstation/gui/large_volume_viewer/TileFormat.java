@@ -126,7 +126,7 @@ public class TileFormat
 		return zoom;
 	}
 	
-    public TileBoundingBox viewBoundsToTileBounds(int[] xyzFromWhd, ViewBoundingBox screenBounds, int zoom) {
+    public TileBoundingBox viewBoundsToTileBounds(int[] xyzFromWhd, ViewBoundingBox screenBounds0, int zoom) {
 
         double zoomFactor = Math.pow(2.0, zoom);
 		// get tile pixel size 1024 from loadAdapter
@@ -135,11 +135,37 @@ public class TileFormat
 		double tileWidth = tileSize[xyzFromWhd[0]] * zoomFactor * resolution0;
 		double tileHeight = tileSize[xyzFromWhd[1]] * zoomFactor * resolution1;
 
-		int wMin = (int)Math.floor(screenBounds.getwFMin() / tileWidth);
-		int wMax = (int)Math.floor(screenBounds.getwFMax() / tileWidth);
+        // Local copy of micrometer bounds before flipping
+        BoundingBox3d bb = calcBoundingBox();
+        double xMinViewUnit = screenBounds0.getwFMin() - bb.getMinX();
+        double xMaxViewUnit = screenBounds0.getwFMax() - bb.getMinX();
+        double yMinViewUnit = screenBounds0.gethFMin() - bb.getMinY();
+        double yMaxViewUnit = screenBounds0.gethFMax() - bb.getMinY();
+        
+        // Invert Y for target coordinate system.
+        double bottomY = bb.getMax().getY() - bb.getMinY();
+        
+		// Correct for bottom Y origin of Raveler tile coordinate system
+		// (everything else is top Y origin: image, our OpenGL, user facing coordinate system)
+		if (xyzFromWhd[X_OFFS] == Y_OFFS) { // Y axis left-right
+			double temp = xMinViewUnit;
+			xMinViewUnit = bottomY - xMaxViewUnit;
+			xMaxViewUnit = bottomY - temp;
+		}
+		else if (xyzFromWhd[Y_OFFS] == Y_OFFS) { // Y axis top-bottom
+			double temp = yMinViewUnit;
+			yMinViewUnit = bottomY - yMaxViewUnit;
+			yMaxViewUnit = bottomY - temp;
+		}
+		else {
+			// TODO - invert slice axis? (already inverted above)
+		}
 
-		int hMin = (int)Math.floor(screenBounds.gethFMin() / tileHeight);
-		int hMax = (int)Math.floor(screenBounds.gethFMax() / tileHeight);
+		int wMin = (int)Math.floor(xMinViewUnit / tileWidth);
+		int wMax = (int)Math.floor(xMaxViewUnit / tileWidth);
+
+		int hMin = (int)Math.floor(yMinViewUnit / tileHeight);
+		int hMax = (int)Math.floor(yMaxViewUnit / tileHeight);
         
         TileBoundingBox tileUnits = new TileBoundingBox();
         tileUnits.sethMax(hMax);
@@ -169,8 +195,8 @@ public class TileFormat
             int viewWidth, int viewHeight, Vec3 focus, double pixelsPerViewUnit, int[] xyzFromWhd 
     ) {
         BoundingBox3d bb = calcBoundingBox();
-        bb = originAdjustBoundingBox(bb, xyzFromWhd);
-        focus = originAdjustCameraFocus(focus, xyzFromWhd);
+        // bb = originAdjustBoundingBox(bb, xyzFromWhd);
+        // focus = originAdjustCameraFocus(focus, xyzFromWhd);
         
 		// Clip to bounded space  
         double xMinView = focus.get(xyzFromWhd[X_OFFS]) - 0.5*viewWidth/pixelsPerViewUnit;
@@ -183,34 +209,13 @@ public class TileFormat
 		double dw = 0.25 * getVoxelMicrometers()[xyzFromWhd[X_OFFS]];
 		double dh = 0.25 * getVoxelMicrometers()[xyzFromWhd[Y_OFFS]];
 
-        // Invert Y for target coordinate system.
-		double bottomY = bb.getMax().getY();
-        
+        // Clip to bounding box
         double xMinViewUnit = Math.max(xMinView, bb.getMin().get(xyzFromWhd[X_OFFS]) + dw);
-		double yMinViewUnit = bottomY - Math.max(yMinView, bb.getMin().get(xyzFromWhd[Y_OFFS]) + dh);
+		double yMinViewUnit = Math.max(yMinView, bb.getMin().get(xyzFromWhd[Y_OFFS]) + dh);
         
 		double xMaxViewUnit = Math.min(xMaxView, bb.getMax().get(xyzFromWhd[X_OFFS]) - dw);
-		double yMaxViewUnit = bottomY - Math.min(yMaxView, bb.getMax().get(xyzFromWhd[Y_OFFS]) - dh);
-        
-        // The y-flip correction is wrong when the origin is not at zero. 
-        // I think I got that corrected by adding the minimum Y value during the flip:
-        //   Editor correction: bottomY is same thing.
-		// Correct for bottom Y origin of Raveler tile coordinate system
-		// (everything else is top Y origin: image, our OpenGL, user facing coordinate system)
-		if (xyzFromWhd[X_OFFS] == Y_OFFS) { // Y axis left-right
-			double temp = xMinViewUnit;
-			xMinViewUnit = xMaxViewUnit;
-			xMaxViewUnit = temp;
-		}
-		else if (xyzFromWhd[Y_OFFS] == Y_OFFS) { // Y axis top-bottom
-			double temp = yMinViewUnit;
-			yMinViewUnit = yMaxViewUnit;
-			yMaxViewUnit = temp;
-		}
-		else {
-			// TODO - invert slice axis? (already inverted above)
-		}
-        
+		double yMaxViewUnit = Math.min(yMaxView, bb.getMax().get(xyzFromWhd[Y_OFFS]) - dh);
+
         ViewBoundingBox viewBoundaries = new ViewBoundingBox();
         viewBoundaries.sethFMax(yMaxViewUnit);
         viewBoundaries.sethFMin(yMinViewUnit);
@@ -219,6 +224,7 @@ public class TileFormat
         viewBoundaries.setwFMin(xMinViewUnit);
         return viewBoundaries;
     }
+    
     
     public int calcRelativeTileDepth(int[] xyzFromWhd, double focusDepth, BoundingBox3d bb) {
         // Bounding box is actually 0.5 voxels bigger than number of slices at each end
@@ -639,36 +645,6 @@ public class TileFormat
         System.out.println( bb.toString() );
     }
     
-    /**
-     * This method will remove origin offset from the bounding box, to make
-     * it more convenient.
-     * @param bb some origin-based bounding box.
-     * @return offset to the 0 of the screen (as if ori=0,0,0).
-     */
-    private BoundingBox3d originAdjustBoundingBox( BoundingBox3d bb, int[] xyzFromWhd ) {
-        BoundingBox3d rtnVal = new BoundingBox3d();
-        final Vec3 originVec = new Vec3(
-                origin[xyzFromWhd[0]] * voxelMicrometers[xyzFromWhd[0]],
-                0,
-                0
-        );
-        Vec3 min = bb.getMin().minus(originVec);
-        Vec3 max = bb.getMax().minus(originVec);
-        rtnVal.setMin(min);
-        rtnVal.setMax(max);
-        return rtnVal;
-    }
-    
-    private Vec3 originAdjustCameraFocus( Vec3 focus, int[] xyzFromWhd ) {
-        Vec3 rtnVal = new Vec3(
-            focus.get(xyzFromWhd[X_OFFS]) - origin[xyzFromWhd[0]]*voxelMicrometers[xyzFromWhd[X_OFFS]],
-            focus.get(xyzFromWhd[Y_OFFS]),
-            focus.get(xyzFromWhd[Z_OFFS])
-        );
-            
-        return rtnVal;
-    }
-
     private double calcLowerBBCoord(int index) {
         //sv[1]*s0[1]
         return getVoxelMicrometers()[index] * getOrigin()[index];
