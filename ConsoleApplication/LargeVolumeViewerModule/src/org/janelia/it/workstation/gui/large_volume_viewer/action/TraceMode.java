@@ -132,6 +132,9 @@ implements MouseMode, KeyListener
 			// Place new anchor
 			Vec3 xyz = worldFromPixel(event.getPoint());
 			// System.out.println("Trace click "+xyz);
+            
+            // TODO - nudge location to voxel center
+            
 			appendAnchor(xyz);
 		}
 		else if (event.getButton() == MouseEvent.BUTTON1) {
