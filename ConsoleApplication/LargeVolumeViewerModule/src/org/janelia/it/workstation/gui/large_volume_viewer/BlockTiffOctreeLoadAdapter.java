@@ -299,8 +299,12 @@ extends AbstractTextureLoadAdapter
         File testFile = new File(linuxPath);
         if (testFile.exists()) return testFile; // If the folder exists, use it
         Map<String, String> prefixMappings = new HashMap<>();
+        
         // TODO - need more mappings
         prefixMappings.put("/nobackup/", "//fxt/nobackup/"); // Windows
+        prefixMappings.put("/tier2/", "//tier2/"); // Windows
+        prefixMappings.put("/groups/mousebrainmicro/mousebrainmicro/", "//dm11/mousebrainmicro/"); // Windows
+        
         for (String linuxPrefix : prefixMappings.keySet()) {
             if (linuxPath.startsWith(linuxPrefix)) {
                 String testPath = linuxPath.replace(linuxPrefix, prefixMappings.get(linuxPrefix));
@@ -329,26 +333,34 @@ extends AbstractTextureLoadAdapter
                 if (m.matches()) {
                     String key = m.group(1);
                     String value = m.group(2);
-                    if (key.equals("ox"))
-                        origin[0] = Integer.parseInt(value);
-                    else if (key.equals("oy"))
-                        origin[1] = Integer.parseInt(value);
-                    else if (key.equals("oz"))
-                        origin[2] = Integer.parseInt(value);
-                    else if (key.equals("sx"))
-                        scale[0] = Double.parseDouble(value) * scaleScale;
-                    else if (key.equals("sy"))
-                        scale[1] = Double.parseDouble(value) * scaleScale;
-                    else if (key.equals("sz"))
-                        scale[2] = Double.parseDouble(value) * scaleScale;
-                    else {} // ?
+                    switch (key) {
+                        case "ox":
+                            origin[0] = Integer.parseInt(value);
+                            break;
+                        case "oy":
+                            origin[1] = Integer.parseInt(value);
+                            break;
+                        case "oz":
+                            origin[2] = Integer.parseInt(value);
+                            break;
+                        case "sx":
+                            scale[0] = Double.parseDouble(value) * scaleScale;
+                            break;
+                        case "sy":
+                            scale[1] = Double.parseDouble(value) * scaleScale;
+                            break;
+                        case "sz":
+                            scale[2] = Double.parseDouble(value) * scaleScale;
+                            break;
+                        default:
+                            break;
+                    }
                 }
             }
             // TODO 
             return true;
         } 
         catch (FileNotFoundException ex) {} 
-        catch (IOException ex) {}
         
         return false;
     }
