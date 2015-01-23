@@ -1149,8 +1149,13 @@ public class AnnotationManager
 
     public void exportAllNeuronsAsSWC(final File swcFile, final int downsampleModulo) {
         final List<Long> neuronIDList = new ArrayList<>();
+        int nannotations = 0;
         for (TmNeuron neuron: annotationModel.getCurrentWorkspace().getNeuronList()) {
+            nannotations += neuron.getGeoAnnotationMap().size();
             neuronIDList.add(neuron.getId());
+        }
+        if (nannotations == 0) {
+            presentError("No points in any neuron!", "Export error");
         }
 
         SimpleWorker saver = new SimpleWorker() {
@@ -1173,8 +1178,11 @@ public class AnnotationManager
     }
 
     public void exportCurrentNeuronAsSWC(final File swcFile, final int downsampleModulo) {
-        final Long neuronID = annotationModel.getCurrentNeuron().getId();
+        if (annotationModel.getCurrentNeuron().getGeoAnnotationMap().size() == 0) {
+            presentError("Neuron has no points!", "Export error");
+        }
 
+        final Long neuronID = annotationModel.getCurrentNeuron().getId();
         SimpleWorker saver = new SimpleWorker() {
             @Override
             protected void doStuff() throws Exception {
