@@ -263,7 +263,7 @@ public class LargeVolumeViewerTranslator {
 
     public void removeAnchoredPaths(List<TmAnchoredPath> pathList) {
         for (TmAnchoredPath path: pathList) {
-        anchoredPathRemovedSignal.emit(TAP2AVP(path));
+            anchoredPathRemovedSignal.emit(TAP2AVP(path));
         }
     }
 
@@ -326,7 +326,6 @@ public class LargeVolumeViewerTranslator {
 
         final ArrayList<VoxelPosition> inputPath = new ArrayList<>();
         TileFormat tileFormat = largeVolumeViewer.getTileServer().getLoadAdapter().getTileFormat();
-        final ZoomLevel zoomLevel = new ZoomLevel(0);
         final CoordinateAxis axis = CoordinateAxis.Z;
         final int depthAxis = axis.index();
         final int heightAxis = axis.index() - 1 % 3;

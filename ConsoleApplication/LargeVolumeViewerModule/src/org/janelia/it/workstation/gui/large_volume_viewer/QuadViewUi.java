@@ -274,6 +274,7 @@ public class QuadViewUi extends JPanel
 				previousZSliceAction.setTileFormat(tileFormat);
 				advanceZSlicesAction.setTileFormat(tileFormat);
 				goBackZSlicesAction.setTileFormat(tileFormat);
+                skeleton.setTileFormat(tileFormat);
 			}
 			else { // no Z scan
 				zScanPanel.setVisible(false);
