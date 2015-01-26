@@ -43,22 +43,7 @@ public class ConsoleApp {
         System.setProperty("apple.eawt.quitStrategy", "CLOSE_ALL_WINDOWS");
     }
 
-    public static void main(final String[] args) {
-//    	Toolkit.getDefaultToolkit().getSystemEventQueue().push(new TimedEventQueue());
-    	SwingUtilities.invokeLater(new Runnable() {
-			@Override
-			public void run() {
-		        newBrowser();
-			}
-		});
-    }
-
     public static void newBrowser() {
-        
-        final SplashScreen splash = SplashScreen.getSplashScreen();
-        if (splash == null) {
-            log.warn("No splash screen image configured");
-        }
         
         // Prime the tool-specific properties before the Session is invoked
         ConsoleProperties.load();
@@ -72,7 +57,6 @@ public class ConsoleApp {
             final String versionString = ConsoleProperties.getString("console.versionNumber");
             final boolean internal = (versionString != null) && (versionString.toLowerCase().contains("internal"));
 
-            sessionMgr.setNewBrowserTitle(ConsoleProperties.getString("console.Title") + " " + ConsoleProperties.getString("console.versionNumber"));
             sessionMgr.setApplicationName(ConsoleProperties.getString("console.Title"));
             sessionMgr.setApplicationVersion(ConsoleProperties.getString("console.versionNumber"));
             sessionMgr.setNewBrowserImageIcon(Utils.getClasspathImage("workstation_128_icon.png"));
@@ -174,8 +158,6 @@ public class ConsoleApp {
             modelMgr.initErrorOntology();
             modelMgr.addModelMgrObserver(sessionMgr.getAxisServer());
                         
-            if (splash!=null) splash.close();
-            
             Component mainFrame = SessionMgr.getMainFrame();
             sessionMgr.newBrowser();
             mainFrame.setVisible(true);

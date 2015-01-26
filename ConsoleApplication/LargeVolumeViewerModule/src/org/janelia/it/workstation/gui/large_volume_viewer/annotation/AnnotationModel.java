@@ -1019,7 +1019,9 @@ that need to respond to changing data.
 
         // get swcdata via converter, then write
         SWCData swcData = SWCDataConverter.fromTmNeuron(neuronList, downsampleModulo);
-        swcData.write(swcFile);
+        if (swcData != null) {
+            swcData.write(swcFile);
+        }
     }
 
     public void importSWCData(File swcFile) throws Exception {
