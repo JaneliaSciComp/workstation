@@ -1,11 +1,9 @@
 package org.janelia.it.workstation.gui.framework.session_mgr;
 
-import org.janelia.it.workstation.shared.util.EmptyIterator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.TreeMap;
 
 /**
@@ -20,28 +18,28 @@ public abstract class GenericModel {
     
     private static final Logger log = LoggerFactory.getLogger(GenericModel.class);
     
-    protected ArrayList<GenericModelListener> modelListeners = new ArrayList<GenericModelListener>();
-    protected TreeMap modelProperties;
+    protected ArrayList<GenericModelListener> modelListeners = new ArrayList<>();
+    protected TreeMap<Object, Object> modelProperties;
 
     public GenericModel() {
-        modelProperties = new TreeMap();
-        modelListeners = new ArrayList<GenericModelListener>();
+        modelProperties = new TreeMap<>();
+        modelListeners = new ArrayList<>();
     }  //Constructor can only be called within the package
 
 
-    public void addModelListener(GenericModelListener modelListener) {
-        if (!modelListeners.contains(modelListener)) modelListeners.add(modelListener);
-    }
-
-    public void removeModelListener(GenericModelListener modelListener) {
-        modelListeners.remove(modelListener);
-    }
-
+//    public void addModelListener(GenericModelListener modelListener) {
+//        if (!modelListeners.contains(modelListener)) modelListeners.add(modelListener);
+//    }
+//
+//    public void removeModelListener(GenericModelListener modelListener) {
+//        modelListeners.remove(modelListener);
+//    }
+//
     /**
      * @return The previous value of the this key or null
      */
     public Object setModelProperty(Object key, Object newValue) {
-        if (modelProperties == null) modelProperties = new TreeMap();
+        if (modelProperties == null) modelProperties = new TreeMap<>();
         Object oldValue = modelProperties.put(key, newValue);
         fireModelPropertyChangeEvent(key, oldValue, newValue);
         return oldValue;
@@ -52,26 +50,26 @@ public abstract class GenericModel {
         return modelProperties.get(key);
     }
 
-    public void removeModelProperty(Object key){
-        modelProperties.remove(key);
-        fireModelPropertyChangeEvent(key, null, null);
-    }
-
-    int sizeofProperties() {
-        if (!modelProperties.isEmpty()) return modelProperties.size();
-        else return 0;
-    }
-
-    public Iterator getModelPropertyKeys() {
-        if (modelProperties == null) return new EmptyIterator();
-        return modelProperties.keySet().iterator();
-    }
-
+//    public void removeModelProperty(Object key){
+//        modelProperties.remove(key);
+//        fireModelPropertyChangeEvent(key, null, null);
+//    }
+//
+//    int sizeofProperties() {
+//        if (!modelProperties.isEmpty()) return modelProperties.size();
+//        else return 0;
+//    }
+//
+//    public Iterator getModelPropertyKeys() {
+//        if (modelProperties == null) return new EmptyIterator();
+//        return modelProperties.keySet().iterator();
+//    }
+//
     public TreeMap getModelProperties() {
         return modelProperties;
     }
 
-    protected void setModelProperties(TreeMap modelProperties) {
+    protected void setModelProperties(TreeMap<Object,Object> modelProperties) {
         this.modelProperties = modelProperties;
     }
 

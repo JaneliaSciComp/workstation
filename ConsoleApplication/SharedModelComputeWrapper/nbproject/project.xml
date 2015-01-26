@@ -12,7 +12,7 @@
                     <compile-dependency/>
                     <run-dependency>
                         <release-version>1</release-version>
-                        <specification-version>1.5</specification-version>
+                        <specification-version>1.6</specification-version>
                     </run-dependency>
                 </dependency>
             </module-dependencies>
@@ -125,6 +125,7 @@
                 <package>org.janelia.it.jacs.shared.blast.blastxmlparser.jaxb</package>
                 <package>org.janelia.it.jacs.shared.export</package>
                 <package>org.janelia.it.jacs.shared.fasta</package>
+                <package>org.janelia.it.jacs.shared.ffmpeg</package>
                 <package>org.janelia.it.jacs.shared.file_chooser</package>
                 <package>org.janelia.it.jacs.shared.genomics</package>
                 <package>org.janelia.it.jacs.shared.geometric_search</package>

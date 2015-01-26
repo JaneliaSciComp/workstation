@@ -1384,6 +1384,11 @@
                 <package>org.bson.types</package>
                 <package>org.bson.util</package>
                 <package>org.bson.util.annotations</package>
+                <package>org.bytedeco.javacpp</package>
+                <package>org.bytedeco.javacpp.annotation</package>
+                <package>org.bytedeco.javacpp.indexer</package>
+                <package>org.bytedeco.javacpp.presets</package>
+                <package>org.bytedeco.javacpp.tools</package>
                 <package>org.codehaus.groovy</package>
                 <package>org.codehaus.groovy.ant</package>
                 <package>org.codehaus.groovy.antlr</package>
@@ -1928,12 +1933,12 @@
                 <binary-origin>release/modules/ext/loci_plugins.jar</binary-origin>
             </class-path-extension>
             <class-path-extension>
-                <runtime-relative-path>ext/jai_codec.jar</runtime-relative-path>
-                <binary-origin>release/modules/ext/jai_codec.jar</binary-origin>
-            </class-path-extension>
-            <class-path-extension>
                 <runtime-relative-path>ext/jogl-all-natives-windows-i586.jar</runtime-relative-path>
                 <binary-origin>release/modules/ext/jogl-all-natives-windows-i586.jar</binary-origin>
+            </class-path-extension>
+            <class-path-extension>
+                <runtime-relative-path>ext/jai_codec.jar</runtime-relative-path>
+                <binary-origin>release/modules/ext/jai_codec.jar</binary-origin>
             </class-path-extension>
             <class-path-extension>
                 <runtime-relative-path>ext/syntheticaClassy.jar</runtime-relative-path>
@@ -1952,12 +1957,12 @@
                 <binary-origin>release/modules/ext/wstx-asl-3.2.9.jar</binary-origin>
             </class-path-extension>
             <class-path-extension>
-                <runtime-relative-path>ext/jdatepicker-1.3.2.jar</runtime-relative-path>
-                <binary-origin>release/modules/ext/jdatepicker-1.3.2.jar</binary-origin>
-            </class-path-extension>
-            <class-path-extension>
                 <runtime-relative-path>ext/syntheticaBlackStar.jar</runtime-relative-path>
                 <binary-origin>release/modules/ext/syntheticaBlackStar.jar</binary-origin>
+            </class-path-extension>
+            <class-path-extension>
+                <runtime-relative-path>ext/jdatepicker-1.3.2.jar</runtime-relative-path>
+                <binary-origin>release/modules/ext/jdatepicker-1.3.2.jar</binary-origin>
             </class-path-extension>
             <class-path-extension>
                 <runtime-relative-path>ext/axis2-mtompolicy-1.5.5.jar</runtime-relative-path>
@@ -1972,6 +1977,10 @@
                 <binary-origin>release/modules/ext/axis2-clustering-1.5.5.jar</binary-origin>
             </class-path-extension>
             <class-path-extension>
+                <runtime-relative-path>ext/antlr-2.7.7.jar</runtime-relative-path>
+                <binary-origin>release/modules/ext/antlr-2.7.7.jar</binary-origin>
+            </class-path-extension>
+            <class-path-extension>
                 <runtime-relative-path>ext/owlapi-bin.jar</runtime-relative-path>
                 <binary-origin>release/modules/ext/owlapi-bin.jar</binary-origin>
             </class-path-extension>
@@ -1980,28 +1989,24 @@
                 <binary-origin>release/modules/ext/axis2-ant-plugin-1.5.5.jar</binary-origin>
             </class-path-extension>
             <class-path-extension>
-                <runtime-relative-path>ext/antlr-2.7.7.jar</runtime-relative-path>
-                <binary-origin>release/modules/ext/antlr-2.7.7.jar</binary-origin>
-            </class-path-extension>
-            <class-path-extension>
                 <runtime-relative-path>ext/tribes-6.0.16.jar</runtime-relative-path>
                 <binary-origin>release/modules/ext/tribes-6.0.16.jar</binary-origin>
-            </class-path-extension>
-            <class-path-extension>
-                <runtime-relative-path>ext/MagicApplet.jar</runtime-relative-path>
-                <binary-origin>release/modules/ext/MagicApplet.jar</binary-origin>
             </class-path-extension>
             <class-path-extension>
                 <runtime-relative-path>ext/axis2-jibx-1.5.5.jar</runtime-relative-path>
                 <binary-origin>release/modules/ext/axis2-jibx-1.5.5.jar</binary-origin>
             </class-path-extension>
             <class-path-extension>
-                <runtime-relative-path>ext/snakeyaml-1.11-sources.jar</runtime-relative-path>
-                <binary-origin>release/modules/ext/snakeyaml-1.11-sources.jar</binary-origin>
+                <runtime-relative-path>ext/MagicApplet.jar</runtime-relative-path>
+                <binary-origin>release/modules/ext/MagicApplet.jar</binary-origin>
             </class-path-extension>
             <class-path-extension>
                 <runtime-relative-path>ext/geronimo-jta_1.1_spec-1.1.jar</runtime-relative-path>
                 <binary-origin>release/modules/ext/geronimo-jta_1.1_spec-1.1.jar</binary-origin>
+            </class-path-extension>
+            <class-path-extension>
+                <runtime-relative-path>ext/snakeyaml-1.11-sources.jar</runtime-relative-path>
+                <binary-origin>release/modules/ext/snakeyaml-1.11-sources.jar</binary-origin>
             </class-path-extension>
             <class-path-extension>
                 <runtime-relative-path>ext/jetty-io-8.1.8.v20121106.jar</runtime-relative-path>
@@ -2060,6 +2065,10 @@
                 <binary-origin>release/modules/ext/commons-codec-1.5.jar</binary-origin>
             </class-path-extension>
             <class-path-extension>
+                <runtime-relative-path>ext/ffmpeg-linux-x86_64.jar</runtime-relative-path>
+                <binary-origin>release/modules/ext/ffmpeg-linux-x86_64.jar</binary-origin>
+            </class-path-extension>
+            <class-path-extension>
                 <runtime-relative-path>ext/Simple_Neurite_Tracer-2.0.2-SNAPSHOT.jar</runtime-relative-path>
                 <binary-origin>release/modules/ext/Simple_Neurite_Tracer-2.0.2-SNAPSHOT.jar</binary-origin>
             </class-path-extension>
@@ -2096,20 +2105,24 @@
                 <binary-origin>release/modules/ext/jetty-continuation-8.1.8.v20121106.jar</binary-origin>
             </class-path-extension>
             <class-path-extension>
+                <runtime-relative-path>ext/syntheticaBlueMoon.jar</runtime-relative-path>
+                <binary-origin>release/modules/ext/syntheticaBlueMoon.jar</binary-origin>
+            </class-path-extension>
+            <class-path-extension>
                 <runtime-relative-path>ext/syntheticaAluOxide.jar</runtime-relative-path>
                 <binary-origin>release/modules/ext/syntheticaAluOxide.jar</binary-origin>
             </class-path-extension>
             <class-path-extension>
-                <runtime-relative-path>ext/syntheticaBlueMoon.jar</runtime-relative-path>
-                <binary-origin>release/modules/ext/syntheticaBlueMoon.jar</binary-origin>
+                <runtime-relative-path>ext/commons-logging-1.1.1.jar</runtime-relative-path>
+                <binary-origin>release/modules/ext/commons-logging-1.1.1.jar</binary-origin>
             </class-path-extension>
             <class-path-extension>
                 <runtime-relative-path>ext/geronimo-ws-metadata_2.0_spec-1.1.2.jar</runtime-relative-path>
                 <binary-origin>release/modules/ext/geronimo-ws-metadata_2.0_spec-1.1.2.jar</binary-origin>
             </class-path-extension>
             <class-path-extension>
-                <runtime-relative-path>ext/commons-logging-1.1.1.jar</runtime-relative-path>
-                <binary-origin>release/modules/ext/commons-logging-1.1.1.jar</binary-origin>
+                <runtime-relative-path>ext/ffmpeg.jar</runtime-relative-path>
+                <binary-origin>release/modules/ext/ffmpeg.jar</binary-origin>
             </class-path-extension>
             <class-path-extension>
                 <runtime-relative-path>ext/jogl-all-natives-linux-amd64.jar</runtime-relative-path>
@@ -2146,6 +2159,10 @@
             <class-path-extension>
                 <runtime-relative-path>ext/xalan-2.7.0.jar</runtime-relative-path>
                 <binary-origin>release/modules/ext/xalan-2.7.0.jar</binary-origin>
+            </class-path-extension>
+            <class-path-extension>
+                <runtime-relative-path>ext/ffmpeg-linux-x86.jar</runtime-relative-path>
+                <binary-origin>release/modules/ext/ffmpeg-linux-x86.jar</binary-origin>
             </class-path-extension>
             <class-path-extension>
                 <runtime-relative-path>ext/httpcore-4.0.jar</runtime-relative-path>
@@ -2204,6 +2221,10 @@
                 <binary-origin>release/modules/ext/lz4-1.1.1.jar</binary-origin>
             </class-path-extension>
             <class-path-extension>
+                <runtime-relative-path>ext/javacpp.jar</runtime-relative-path>
+                <binary-origin>release/modules/ext/javacpp.jar</binary-origin>
+            </class-path-extension>
+            <class-path-extension>
                 <runtime-relative-path>ext/logback-core-1.0.13.jar</runtime-relative-path>
                 <binary-origin>release/modules/ext/logback-core-1.0.13.jar</binary-origin>
             </class-path-extension>
@@ -2246,6 +2267,10 @@
             <class-path-extension>
                 <runtime-relative-path>ext/snappy-java-1.0.5-M3.jar</runtime-relative-path>
                 <binary-origin>release/modules/ext/snappy-java-1.0.5-M3.jar</binary-origin>
+            </class-path-extension>
+            <class-path-extension>
+                <runtime-relative-path>ext/ffmpeg-windows-x86_64.jar</runtime-relative-path>
+                <binary-origin>release/modules/ext/ffmpeg-windows-x86_64.jar</binary-origin>
             </class-path-extension>
             <class-path-extension>
                 <runtime-relative-path>ext/syntheticaAddonsWithThemes.jar</runtime-relative-path>
@@ -2306,6 +2331,10 @@
             <class-path-extension>
                 <runtime-relative-path>ext/syntheticaSilverMoon.jar</runtime-relative-path>
                 <binary-origin>release/modules/ext/syntheticaSilverMoon.jar</binary-origin>
+            </class-path-extension>
+            <class-path-extension>
+                <runtime-relative-path>ext/ffmpeg-windows-x86.jar</runtime-relative-path>
+                <binary-origin>release/modules/ext/ffmpeg-windows-x86.jar</binary-origin>
             </class-path-extension>
             <class-path-extension>
                 <runtime-relative-path>ext/syntheticaBlueLight.jar</runtime-relative-path>
@@ -2414,6 +2443,10 @@
             <class-path-extension>
                 <runtime-relative-path>ext/jna.jar</runtime-relative-path>
                 <binary-origin>release/modules/ext/jna.jar</binary-origin>
+            </class-path-extension>
+            <class-path-extension>
+                <runtime-relative-path>ext/ffmpeg-macosx-x86_64.jar</runtime-relative-path>
+                <binary-origin>release/modules/ext/ffmpeg-macosx-x86_64.jar</binary-origin>
             </class-path-extension>
             <class-path-extension>
                 <runtime-relative-path>ext/geronimo-annotation_1.0_spec-1.1.jar</runtime-relative-path>
