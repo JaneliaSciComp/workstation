@@ -17,6 +17,7 @@ import org.janelia.it.workstation.gui.viewer3d.BoundingBox3d;
 import org.janelia.it.workstation.octree.ZoomedVoxelIndex;
 import org.janelia.it.workstation.tracing.AnchoredVoxelPath;
 import org.janelia.it.workstation.tracing.SegmentIndex;
+import org.janelia.it.workstation.tracing.VoxelPosition;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -66,13 +67,12 @@ implements GLActor
         vertexByteBuffer.order(ByteOrder.nativeOrder());
         FloatBuffer vertices = vertexByteBuffer.asFloatBuffer();
         vertices.rewind();
-        for (ZoomedVoxelIndex zv : segment.getPath()) {
-            TileFormat.MicrometerXyz umXyz = tileFormat.micrometerXyzForZoomedVoxelIndex(zv, CoordinateAxis.Z);
+        for (VoxelPosition zv : segment.getPath()) {
             Vec3 v = new Vec3(
                     // Translate from upper left front corner of voxel to center of voxel
-                    umXyz.getX() + 0.5,// * tileFormat.getVoxelMicrometers()[0],
-                    umXyz.getY() + 0.5, // * tileFormat.getVoxelMicrometers()[1],
-                    umXyz.getZ() - 0.5); // * tileFormat.getVoxelMicrometers()[2]); // Minus? Really? TODO
+                    zv.getX() + 0.5,
+                    zv.getY() + 0.5,
+                    zv.getZ() - 0.5); // Minus? Really? TODO
             boundingBox.include(v);
             vertices.put((float)v.getX());
             vertices.put((float)v.getY());

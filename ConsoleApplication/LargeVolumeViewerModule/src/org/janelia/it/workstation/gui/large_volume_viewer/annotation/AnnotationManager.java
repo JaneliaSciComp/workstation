@@ -31,6 +31,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import org.janelia.it.workstation.gui.large_volume_viewer.ComponentUtil;
 import org.janelia.it.workstation.gui.large_volume_viewer.TileServer;
+import org.janelia.it.workstation.tracing.VoxelPosition;
 
 
 public class AnnotationManager
@@ -167,19 +168,11 @@ public class AnnotationManager
                         voxelPath.getSegmentIndex().getAnchor1Guid(),
                         voxelPath.getSegmentIndex().getAnchor2Guid());
                 List<List<Integer>> pointList = new ArrayList<>();
-                for (ZoomedVoxelIndex zvi: voxelPath.getPath()) {
-                    if (zvi.getZoomLevel().getZoomOutFactor() != 1) {
-                        // compromise between me and CB: I don't want zoom levels in db, so 
-                        //  if I get one that's not unzoomed, I don't have to handle it
-                        presentError(
-                            "Unexpected zoom level found; path not displayed.",
-                            "Unexpected zoom!");
-                        return;
-                    }
+                for (VoxelPosition vp: voxelPath.getPath()) {
                     List<Integer> tempList = new ArrayList<>();
-                    tempList.add(zvi.getX());
-                    tempList.add(zvi.getY());
-                    tempList.add(zvi.getZ());
+                    tempList.add(vp.getX());
+                    tempList.add(vp.getY());
+                    tempList.add(vp.getZ());
                     pointList.add(tempList);
                 }
                 addAnchoredPath(endpoints, pointList);

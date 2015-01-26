@@ -20,6 +20,7 @@ import java.util.List;
 import org.janelia.it.workstation.geom.CoordinateAxis;
 import org.janelia.it.workstation.gui.large_volume_viewer.TileFormat;
 import org.janelia.it.workstation.gui.large_volume_viewer.TileFormat.VoxelXyz;
+import org.janelia.it.workstation.tracing.VoxelPosition;
 
 
 /**
@@ -323,7 +324,7 @@ public class LargeVolumeViewerTranslator {
         final SegmentIndex inputSegmentIndex = new SegmentIndex(endpoints.getAnnotationID1(),
                 endpoints.getAnnotationID2());
 
-        final ArrayList<ZoomedVoxelIndex> inputPath = new ArrayList<>();
+        final ArrayList<VoxelPosition> inputPath = new ArrayList<>();
         TileFormat tileFormat = largeVolumeViewer.getTileServer().getLoadAdapter().getTileFormat();
         final ZoomLevel zoomLevel = new ZoomLevel(0);
         final CoordinateAxis axis = CoordinateAxis.Z;
@@ -337,14 +338,14 @@ public class LargeVolumeViewerTranslator {
                     )
             );
             inputPath.add(
-                tileFormat.zoomedVoxelIndexForVoxelXyz(voxelCoords, zoomLevel, axis)
+                new VoxelPosition(voxelCoords.getX(), voxelCoords.getY(), voxelCoords.getZ())
             );
         }
 
         // do a quick implementation of the interface:
         AnchoredVoxelPath voxelPath = new AnchoredVoxelPath() {
             SegmentIndex segmentIndex;
-            List<ZoomedVoxelIndex> path;
+            List<VoxelPosition> path;
 
             {
                 this.segmentIndex = inputSegmentIndex;
@@ -357,7 +358,7 @@ public class LargeVolumeViewerTranslator {
             }
 
             @Override
-            public List<ZoomedVoxelIndex> getPath() {
+            public List<VoxelPosition> getPath() {
                 return path;
             }
         };

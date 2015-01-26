@@ -30,6 +30,7 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import org.janelia.it.workstation.gui.viewer3d.BoundingBox3d;
+import org.janelia.it.workstation.tracing.VoxelPosition;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -305,12 +306,23 @@ public class Subvolume {
         return extent;
     }
 
+    public int getIntensityGlobal(VoxelPosition p, int channelIndex)
+    {
+        return getIntensityGlobal(p.getX(), p.getY(), p.getZ(), channelIndex);
+    }
     public int getIntensityGlobal(ZoomedVoxelIndex v1, int channelIndex)
     {
+        return getIntensityGlobal(
+                v1.getX(), v1.getY(), v1.getZ(),
+            channelIndex);
+    }
+
+    public int getIntensityGlobal(Integer x, Integer y, Integer z, int channelIndex)
+    {
         return getIntensityLocal(new VoxelIndex(
-            v1.getX() - origin.getX(),
-            v1.getY() - origin.getY(),
-            v1.getZ() - origin.getZ()),
+            x - origin.getX(),
+            y - origin.getY(),
+            z - origin.getZ()),
             channelIndex);
     }
 
