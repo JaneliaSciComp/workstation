@@ -148,7 +148,7 @@ public class PathTraceToParentWorker extends BackgroundWorker {
         List<ZoomedVoxelIndex> newPath = new ArrayList<>();
         for ( ZoomedVoxelIndex index: segment.getPath() ) {
             TileFormat.VoxelXyz vox = new TileFormat.VoxelXyz(index.getX(), index.getY(), index.getZ());
-            TileFormat.MicrometerXyz micrometers = tileFormat.micrometerXyzForVoxelXyz(vox, CoordinateAxis.X);            
+            TileFormat.MicrometerXyz micrometers = tileFormat.micrometerXyzForVoxelXyz(vox, CoordinateAxis.Z);            
             ZoomedVoxelIndex newIndex = new ZoomedVoxelIndex(
                     index.getZoomLevel(),
                     (int)micrometers.getX(), 

@@ -498,6 +498,12 @@ public class TileFormat
 		}
 		return new VoxelXyz(xyz[X_OFFS], xyz[Y_OFFS], xyz[Z_OFFS]);
 	}
+    
+    public TileFormat.MicrometerXyz micrometerXyzForZoomedVoxelIndex( ZoomedVoxelIndex zv, CoordinateAxis axis ) {
+        TileFormat.VoxelXyz vx = voxelXyzForZoomedVoxelIndex(zv, axis);
+        return micrometerXyzForVoxelXyz(vx, axis);
+    }
+    
 	public ZoomedVoxelIndex zoomedVoxelIndexForVoxelXyz(VoxelXyz v, ZoomLevel zoomLevel, CoordinateAxis sliceAxis) 
 	{
 		int zoomFactor = zoomLevel.getZoomOutFactor();
@@ -555,7 +561,7 @@ public class TileFormat
 		}
 		return new TileXyz(xyz[X_OFFS], xyz[Y_OFFS], xyz[Z_OFFS]);
 	}
-	
+    
 	// Volume units can be one of 4 interconvertible types
 	// These classes are intended to enforce type safety between different unit types
 	public static interface Unit {}; // Base unit

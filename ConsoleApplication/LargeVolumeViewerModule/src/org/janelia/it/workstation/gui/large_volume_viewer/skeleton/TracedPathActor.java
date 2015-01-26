@@ -67,8 +67,7 @@ implements GLActor
         FloatBuffer vertices = vertexByteBuffer.asFloatBuffer();
         vertices.rewind();
         for (ZoomedVoxelIndex zv : segment.getPath()) {
-            TileFormat.VoxelXyz vx = tileFormat.voxelXyzForZoomedVoxelIndex(zv, CoordinateAxis.Z);
-            TileFormat.MicrometerXyz umXyz = tileFormat.micrometerXyzForVoxelXyz(vx, CoordinateAxis.Z);
+            TileFormat.MicrometerXyz umXyz = tileFormat.micrometerXyzForZoomedVoxelIndex(zv, CoordinateAxis.Z);
             Vec3 v = new Vec3(
                     // Translate from upper left front corner of voxel to center of voxel
                     umXyz.getX() + 0.5,// * tileFormat.getVoxelMicrometers()[0],
