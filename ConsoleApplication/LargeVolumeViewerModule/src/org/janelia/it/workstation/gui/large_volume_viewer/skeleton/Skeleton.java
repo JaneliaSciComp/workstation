@@ -12,6 +12,7 @@ import org.janelia.it.workstation.signal.Slot1;
 import org.janelia.it.workstation.tracing.AnchoredVoxelPath;
 import org.janelia.it.workstation.tracing.SegmentIndex;
 import org.janelia.it.jacs.model.user_data.tiledMicroscope.TmGeoAnnotation;
+import org.janelia.it.workstation.gui.large_volume_viewer.TileFormat;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -46,6 +47,7 @@ public class Skeleton {
 	};
 	
 	private Set<Anchor> anchors = new LinkedHashSet<Anchor>();
+    private TileFormat tileFormat;
 	
 	private Map<SegmentIndex, AnchoredVoxelPath> tracedSegments =
 			new ConcurrentHashMap<SegmentIndex, AnchoredVoxelPath>();
@@ -251,7 +253,7 @@ public class Skeleton {
         anchorAddedSignal.emit(anchorList.get(0));
 	}
 
-	public void addAnchorAtXyz(Vec3 xyz, Anchor parent) {
+	public void addAnchorAtXyz(Vec3 xyz, Anchor parent) {        
 		addAnchorRequestedSignal.emit(new AnchorSeed(xyz, parent));
 	}
 
