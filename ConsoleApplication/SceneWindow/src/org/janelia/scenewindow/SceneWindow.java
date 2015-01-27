@@ -1,0 +1,191 @@
+/* 
+ * Licensed under the Janelia Farm Research Campus Software Copyright 1.1
+ * 
+ * Copyright (c) 2014, Howard Hughes Medical Institute, All rights reserved.
+ * 
+ * Redistribution and use in source and binary forms, with or without 
+ * modification, are permitted provided that the following conditions are met:
+ * 
+ *     1. Redistributions of source code must retain the above copyright notice, 
+ *        this list of conditions and the following disclaimer.
+ *     2. Redistributions in binary form must reproduce the above copyright 
+ *        notice, this list of conditions and the following disclaimer in the 
+ *        documentation and/or other materials provided with the distribution.
+ *     3. Neither the name of the Howard Hughes Medical Institute nor the names 
+ *        of its contributors may be used to endorse or promote products derived 
+ *        from this software without specific prior written permission.
+ * 
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" 
+ * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, ANY 
+ * IMPLIED WARRANTIES OF MERCHANTABILITY, NON-INFRINGEMENT, OR FITNESS FOR A 
+ * PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR 
+ * CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, 
+ * EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, 
+ * PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; 
+ * REASONABLE ROYALTIES; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY 
+ * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT 
+ * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS 
+ * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ */
+package org.janelia.scenewindow;
+
+import java.awt.Color;
+import java.awt.Component;
+import java.util.Collection;
+import java.util.Observable;
+import java.util.Observer;
+import javax.media.opengl.GLAutoDrawable;
+import javax.media.opengl.GLCapabilities;
+import javax.media.opengl.GLProfile;
+import javax.swing.JComponent;
+import org.janelia.geometry3d.AbstractCamera;
+import org.janelia.geometry3d.Matrix4;
+import org.janelia.geometry3d.Object3D;
+import org.janelia.geometry3d.Vantage;
+import org.janelia.geometry3d.Viewport;
+import org.janelia.scenewindow.SceneRenderer.CameraType;
+
+/**
+ *
+ * @author cmbruns
+ */
+public class SceneWindow implements GLJComponent, Scene {
+    
+    // private AbstractCamera camera;
+    private final Viewport viewport = new Viewport();
+    // private final Vantage vantage;
+    private GLJComponent glCanvas;
+    private final SceneRenderer renderer;
+    private final BasicScene scene;
+    // private CameraType cameraType = null;
+    // private Scene scene;
+    
+    public SceneWindow(Vantage vantage, CameraType cameraType) {
+        scene = new BasicScene(vantage);
+        GLProfile profile = GLProfile.get(GLProfile.GL3);
+        GLCapabilities caps = new GLCapabilities(profile);
+        caps.setStereo(true);
+        glCanvas = GLJComponentFactory.createGLJComponent(caps);
+        renderer = new SceneRenderer(vantage, viewport, cameraType);
+        glCanvas.getGLAutoDrawable().addGLEventListener(renderer);
+        //
+        
+        // Repaint window when camera viewpoint changes
+        renderer.getCamera().getChangeObservable().addObserver(new Observer() {
+            @Override
+            public void update(Observable o, Object arg) {
+                // System.out.println("Camera changed");
+                glCanvas.getInnerComponent().repaint();
+            }
+        });
+    }
+    
+    @Override
+    public JComponent getOuterComponent() {
+        return glCanvas.getOuterComponent();
+    }
+
+    @Override
+    public Component getInnerComponent() {
+        return glCanvas.getInnerComponent();
+    }
+
+    @Override
+    public GLAutoDrawable getGLAutoDrawable() {
+        return glCanvas.getGLAutoDrawable();
+    }
+
+    public AbstractCamera getCamera() {
+        return renderer.getCamera();
+    }
+
+    public SceneRenderer getRenderer() {
+        return renderer;
+    }   
+
+    public void setBackgroundColor(Color backgroundColor) {
+        renderer.setBackgroundColor(backgroundColor);
+    }
+
+    @Override
+    public Collection<? extends Light> getLights() {
+        return scene.getLights();
+    }
+
+    @Override
+    public Collection<? extends Vantage> getCameras() {
+        return scene.getCameras();
+    }
+
+    @Override
+    public Scene add(Light light) {
+        scene.add(light);
+        return this;
+    }
+
+    @Override
+    public Scene add(Vantage camera) {
+        scene.add(camera);
+        return this;
+    }
+
+    @Override
+    public Object3D addChild(Object3D child) {
+        scene.addChild(child);
+        return this;
+    }
+
+    @Override
+    public Vantage getVantage() {
+        return scene.getVantage();
+    }
+
+    @Override
+    public Object3D getParent() {
+        return scene.getParent();
+    }
+
+    @Override
+    public Object3D setParent(Object3D parent) {
+        scene.setParent(parent);
+        return this;
+    }
+
+    @Override
+    public Collection<? extends Object3D> getChildren() {
+        return scene.getChildren();
+    }
+
+    @Override
+    public Matrix4 getTransformInWorld() {
+        return scene.getTransformInWorld();
+    }
+
+    @Override
+    public Matrix4 getTransformInParent() {
+        return scene.getTransformInParent();
+    }
+
+    @Override
+    public boolean isVisible() {
+        return scene.isVisible();
+    }
+
+    @Override
+    public Object3D setVisible(boolean isVisible) {
+        scene.setVisible(isVisible);
+        return this;
+    }
+
+    @Override
+    public String getName() {
+        return scene.getName();
+    }
+
+    @Override
+    public Object3D setName(String name) {
+        scene.setName(name);
+        return this;
+    }
+
+}
