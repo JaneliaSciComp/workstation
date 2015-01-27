@@ -30,6 +30,7 @@ import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import org.janelia.it.workstation.gui.large_volume_viewer.ComponentUtil;
+import org.janelia.it.workstation.gui.large_volume_viewer.TileFormat;
 import org.janelia.it.workstation.gui.large_volume_viewer.TileServer;
 import org.janelia.it.workstation.tracing.VoxelPosition;
 
@@ -208,6 +209,10 @@ public class AnnotationManager
         modelMgr = ModelMgr.getModelMgr();
     }
 
+    public TileFormat getTileFormat() {
+        return tileServer.getLoadAdapter().getTileFormat();
+    }
+    
     public Entity getInitialEntity() {
         return initialEntity;
     }

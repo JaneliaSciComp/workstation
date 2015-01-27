@@ -19,6 +19,7 @@ import org.janelia.it.workstation.signal.Slot1;
 import org.janelia.it.jacs.model.user_data.tiledMicroscope.*;
 
 import com.google.common.collect.HashBiMap;
+import org.janelia.it.workstation.gui.large_volume_viewer.TileFormat;
 
 
 /**
@@ -31,6 +32,7 @@ public class NeuriteTreePanel extends JPanel
     private JTree neuriteTree;
     private DefaultTreeModel neuriteModel;
     private DefaultMutableTreeNode neuronRootNode;
+    private AnnotationManager annotationMgr;
     private HashBiMap<String, TmGeoAnnotation> labelToAnnotationMap;
 
     private int width;
@@ -54,6 +56,10 @@ public class NeuriteTreePanel extends JPanel
         setupUI();
     }
 
+    public void setAnnotationManager( AnnotationManager annotationMgr ) {
+        this.annotationMgr = annotationMgr;
+    }
+    
     @Override
     public Dimension getMinimumSize() {
         return new Dimension(width, height);
@@ -235,7 +241,21 @@ public class NeuriteTreePanel extends JPanel
     }
 
     private String getTreeString(TmGeoAnnotation annotation) {
-        return getNodeTypeLabel(annotation) + ": " + annotation.toString();
+        String annotationString;
+        if (annotationMgr != null) {
+            TileFormat tileFormat = annotationMgr.getTileFormat();
+            Vec3 voxelVec3 = tileFormat.micronVec3ForVoxelVec3(
+                    new Vec3(annotation.getX(), annotation.getY(), annotation.getZ())
+            );
+            annotationString
+                    = String.format(
+                            "%.2f, %.2f, %.2f", 
+                            voxelVec3.getX(), voxelVec3.getY(), voxelVec3.getZ()
+                    );
+        } else {
+            annotationString = annotation.toString();
+        }
+        return getNodeTypeLabel(annotation) + ": " + annotationString;
     }
 
     public void loadNeuron(TmNeuron neuron) {
