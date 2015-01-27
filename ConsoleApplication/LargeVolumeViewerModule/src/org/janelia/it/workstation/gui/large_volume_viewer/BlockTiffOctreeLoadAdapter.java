@@ -217,11 +217,16 @@ extends AbstractTextureLoadAdapter
             // Combine channels into one image
             RenderedImage composite = channels[0];
             if (sc > 1) {
+                try {
                 ParameterBlockJAI pb = new ParameterBlockJAI("bandmerge");
                 for (int c = 0; c < sc; ++c) {
                     pb.addSource(channels[c]);
                 }
                 composite = JAI.create("bandmerge", pb);
+                } catch (NoClassDefFoundError exc) {
+                    exc.printStackTrace();
+                    return null;
+                }
                 // localLoadTimer.mark("merged channels");
             }
 

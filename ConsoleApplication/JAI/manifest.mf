@@ -1,0 +1,5 @@
+Manifest-Version: 1.0
+OpenIDE-Module: org.janeila.jai
+OpenIDE-Module-Localizing-Bundle: org/janeila/jai/Bundle.properties
+OpenIDE-Module-Specification-Version: 1.0
+

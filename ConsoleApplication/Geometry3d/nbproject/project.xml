@@ -15,12 +15,11 @@
                     </run-dependency>
                 </dependency>
                 <dependency>
-                    <code-name-base>org.janelia.it.workstation</code-name-base>
+                    <code-name-base>org.janelia.jama</code-name-base>
                     <build-prerequisite/>
                     <compile-dependency/>
                     <run-dependency>
-                        <release-version>1</release-version>
-                        <specification-version>1.5</specification-version>
+                        <specification-version>1.0</specification-version>
                     </run-dependency>
                 </dependency>
             </module-dependencies>
@@ -39,7 +38,7 @@
                 </test-type>
             </test-dependencies>
             <public-packages>
-                <package>org.janelia.brunsc.util</package>
+                <package>org.janelia.geometry.util</package>
                 <package>org.janelia.geometry3d</package>
             </public-packages>
         </data>

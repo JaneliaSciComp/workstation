@@ -1,0 +1,5 @@
+Manifest-Version: 1.0
+OpenIDE-Module: org.janelia.jama
+OpenIDE-Module-Localizing-Bundle: org/janelia/jama/Bundle.properties
+OpenIDE-Module-Specification-Version: 1.0
+
