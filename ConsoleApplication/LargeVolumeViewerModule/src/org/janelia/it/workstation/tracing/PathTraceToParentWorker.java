@@ -57,11 +57,11 @@ public class PathTraceToParentWorker extends BackgroundWorker {
         
         ZoomLevel zoomLevel = new ZoomLevel(0);
         Vec3 vec3_1 = request.getXyz1();
-        ZoomedVoxelIndex zv1 = zoomedVoxelIndexForMicrometerVec3(
+        ZoomedVoxelIndex zv1 = zoomedVoxelIndexForVoxelVec3(
                 vec3_1, tileFormat, zoomLevel);
 
         Vec3 vec3_2 = request.getXyz2();
-        ZoomedVoxelIndex zv2 = zoomedVoxelIndexForMicrometerVec3(
+        ZoomedVoxelIndex zv2 = zoomedVoxelIndexForVoxelVec3(
                 vec3_2, tileFormat, zoomLevel);
 
         // Create some padding around the neurite ends.
@@ -117,9 +117,8 @@ public class PathTraceToParentWorker extends BackgroundWorker {
         }
     }
 
-    private ZoomedVoxelIndex zoomedVoxelIndexForMicrometerVec3(Vec3 vec3, TileFormat tileFormat, ZoomLevel zoomLevel) {
-        TileFormat.MicrometerXyz um = new TileFormat.MicrometerXyz(vec3.getX(), vec3.getY(), vec3.getZ());
-        TileFormat.VoxelXyz vox = tileFormat.voxelXyzForMicrometerXyz(um);
+    private ZoomedVoxelIndex zoomedVoxelIndexForVoxelVec3(Vec3 vec3, TileFormat tileFormat, ZoomLevel zoomLevel) {
+        TileFormat.VoxelXyz vox = new TileFormat.VoxelXyz(vec3);
         ZoomedVoxelIndex zv = tileFormat.zoomedVoxelIndexForVoxelXyz(
                 vox, zoomLevel, CoordinateAxis.Z);
         return zv;
@@ -135,22 +134,6 @@ public class PathTraceToParentWorker extends BackgroundWorker {
         for ( ZoomedVoxelIndex inx: reducedPath ) {
             System.out.println( "\t" + inx.getX() + "," + inx.getY() + "," + inx.getZ() );
         }
-    }
-    
-    private TracedPathSegment remarshallResult( TracedPathSegment segment ) {
-        // Tried to change this to zoomed voxel for micrometer xyz.  Did
-        // not work.  Produced negative x, y values.
-        List<VoxelPosition> newPath = new ArrayList<>();
-        for ( VoxelPosition index: segment.getPath() ) {
-            VoxelPosition vox = new VoxelPosition(index.getX(), index.getY(), index.getZ());
-            newPath.add(vox);
-        }
-        TracedPathSegment newSegment = new TracedPathSegment(
-                segment.getRequest(),
-                newPath,
-                segment.getIntensities()
-        );
-        return newSegment;
     }
     
     private List<VoxelPosition> simplifyPath(Collection<ZoomedVoxelIndex> path) {

@@ -332,13 +332,8 @@ public class LargeVolumeViewerTranslator {
         final int heightAxis = axis.index() - 1 % 3;
         final int widthAxis = axis.index() - 2 % 3;
         for (List<Integer> point: path.getPointList()) {
-            VoxelXyz voxelCoords = tileFormat.voxelXyzForMicrometerXyz(
-                    new TileFormat.MicrometerXyz(
-                            point.get(widthAxis),point.get(heightAxis),point.get(depthAxis)
-                    )
-            );
             inputPath.add(
-                new VoxelPosition(voxelCoords.getX(), voxelCoords.getY(), voxelCoords.getZ())
+                new VoxelPosition(point.get(widthAxis),point.get(heightAxis),point.get(depthAxis))
             );
         }
 
