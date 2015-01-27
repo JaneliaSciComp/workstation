@@ -5,8 +5,6 @@ import org.janelia.it.workstation.geom.Vec3;
 import org.janelia.it.workstation.gui.large_volume_viewer.LargeVolumeViewer;
 import org.janelia.it.workstation.gui.large_volume_viewer.skeleton.Anchor;
 import org.janelia.it.workstation.gui.large_volume_viewer.skeleton.Skeleton;
-import org.janelia.it.workstation.octree.ZoomLevel;
-import org.janelia.it.workstation.octree.ZoomedVoxelIndex;
 import org.janelia.it.workstation.signal.Signal;
 import org.janelia.it.workstation.signal.Signal1;
 import org.janelia.it.workstation.signal.Slot1;
@@ -111,7 +109,10 @@ public class LargeVolumeViewerTranslator {
     public Slot1<Vec3> cameraPanToSlot = new Slot1<Vec3>() {
         @Override
         public void execute(Vec3 location) {
-            cameraPanToSignal.emit(location);
+            TileFormat tileFormat = largeVolumeViewer.getTileServer().getLoadAdapter().getTileFormat();
+            cameraPanToSignal.emit(
+                    tileFormat.micronVec3ForVoxelVec3(location)
+            );
         }
     };
 

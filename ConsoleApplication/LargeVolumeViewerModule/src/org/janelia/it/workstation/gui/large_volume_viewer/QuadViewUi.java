@@ -157,6 +157,7 @@ public class QuadViewUi extends JPanel
 
 	// annotation-related
     private final CenterNextParentAction centerNextParentAction = new CenterNextParentAction();
+    private TileFormat tileFormat;
     
     private Snapshot3DLauncher snapshot3dLauncher;
 
@@ -268,7 +269,7 @@ public class QuadViewUi extends JPanel
 				zScanSlider.setValue(z);
 				zScanSpinner.setModel(new SpinnerNumberModel(z, z0, z1, 1));
 				// Allow octree zsteps to depend on zoom
-				TileFormat tileFormat = tileServer.getLoadAdapter().getTileFormat();
+				tileFormat = tileServer.getLoadAdapter().getTileFormat();
 				zScanMode.setTileFormat(tileFormat);
 				nextZSliceAction.setTileFormat(tileFormat);
 				previousZSliceAction.setTileFormat(tileFormat);
@@ -308,7 +309,9 @@ public class QuadViewUi extends JPanel
         public void execute() {
             Anchor anchor = getSkeletonActor().getNextParent();
             if (anchor != null) {
-                setCameraFocusSlot.execute(anchor.getLocation());
+                setCameraFocusSlot.execute(
+                        tileFormat.micronVec3ForVoxelVec3(anchor.getLocation())
+                );
             }
         }
     };

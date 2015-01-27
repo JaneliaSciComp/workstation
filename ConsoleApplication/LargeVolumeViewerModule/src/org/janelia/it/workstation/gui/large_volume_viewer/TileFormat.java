@@ -504,6 +504,13 @@ public class TileFormat
         return micrometerXyzForVoxelXyz(vx, axis);
     }
     
+    /** Convenience method for conversion. */
+    public Vec3 micronVec3ForVoxelVec3( Vec3 voxelVec3 ) {
+        TileFormat.VoxelXyz vox = new TileFormat.VoxelXyz(voxelVec3);
+        TileFormat.MicrometerXyz micron = micrometerXyzForVoxelXyz(vox, CoordinateAxis.Z);
+        return new Vec3( micron.getX(), micron.getY(), micron.getZ() );
+    }
+    
 	public ZoomedVoxelIndex zoomedVoxelIndexForVoxelXyz(VoxelXyz v, ZoomLevel zoomLevel, CoordinateAxis sliceAxis) 
 	{
 		int zoomFactor = zoomLevel.getZoomOutFactor();
@@ -620,6 +627,7 @@ public class TileFormat
 	
 	public static class VoxelXyz extends UnittedVec3Int<VoxelUnit> 
 	{
+		public VoxelXyz(Vec3 coords) {super((int)coords.getX(), (int)coords.getY(), (int)coords.getZ());}
 		public VoxelXyz(int x, int y, int z) {super(x, y, z);}
         public VoxelXyz(int[] xyz) {super(xyz[X_OFFS], xyz[Y_OFFS], xyz[Z_OFFS]);}
 	}; // 2
