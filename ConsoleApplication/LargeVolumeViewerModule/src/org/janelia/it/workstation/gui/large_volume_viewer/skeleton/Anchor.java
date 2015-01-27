@@ -55,7 +55,7 @@ public class Anchor {
                 CoordinateAxis.Z
         );
         Vec3 locationInMicrometer = new Vec3(
-                vox.getX(), vox.getY(), vox.getZ()
+                vox.getX() + 0.5, vox.getY() + 0.5, vox.getZ() - 0.5
         );
 		this.location = locationInMicrometer;
 		addNeighbor(parent);
