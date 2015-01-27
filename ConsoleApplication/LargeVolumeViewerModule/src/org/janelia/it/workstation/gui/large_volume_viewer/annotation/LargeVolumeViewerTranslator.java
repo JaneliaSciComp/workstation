@@ -17,7 +17,6 @@ import java.util.ArrayList;
 import java.util.List;
 import org.janelia.it.workstation.geom.CoordinateAxis;
 import org.janelia.it.workstation.gui.large_volume_viewer.TileFormat;
-import org.janelia.it.workstation.gui.large_volume_viewer.TileFormat.VoxelXyz;
 import org.janelia.it.workstation.tracing.VoxelPosition;
 
 

@@ -486,6 +486,19 @@ public class TileFormat
 				(int)Math.floor(m.getY() / getVoxelMicrometers()[Y_OFFS]) - origin[Y_OFFS],
 				(int)Math.floor(m.getZ() / getVoxelMicrometers()[Z_OFFS]) - origin[Z_OFFS]);
 	}
+
+    /** 
+     * convenience: return a centered-up version of the micrometer value.
+     * Use this whenever micrometer values need to be pushed onto the screen.
+     */
+    public Vec3 centerJustifyMicrometerCoordsAsVec3(MicrometerXyz microns) {
+        Vec3 v = new Vec3(
+                // Translate from upper left front corner of voxel to center of voxel
+                microns.getX() + 0.5 * voxelMicrometers[0],
+                microns.getY() + 0.5 * voxelMicrometers[1],
+                microns.getZ() - 0.5 * voxelMicrometers[2]);
+        return v;
+    }
 	
 	public VoxelXyz voxelXyzForZoomedVoxelIndex(ZoomedVoxelIndex z, CoordinateAxis sliceAxis) {
 		int zoomFactor = z.getZoomLevel().getZoomOutFactor();

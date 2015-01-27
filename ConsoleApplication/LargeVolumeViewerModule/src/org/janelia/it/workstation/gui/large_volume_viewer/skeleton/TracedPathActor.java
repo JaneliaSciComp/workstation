@@ -66,16 +66,13 @@ implements GLActor
         vertexByteBuffer.order(ByteOrder.nativeOrder());
         FloatBuffer vertices = vertexByteBuffer.asFloatBuffer();
         vertices.rewind();
+        double[] voxelMicrons = tileFormat.getVoxelMicrometers();
         for (VoxelPosition vp : segment.getPath()) {
             TileFormat.MicrometerXyz microns = tileFormat.micrometerXyzForVoxelXyz(
                     new TileFormat.VoxelXyz(vp.getX(), vp.getY(), vp.getZ()),
                     CoordinateAxis.Z
             );
-            Vec3 v = new Vec3(
-                    // Translate from upper left front corner of voxel to center of voxel
-                    microns.getX() + 0.5,
-                    microns.getY() + 0.5,
-                    microns.getZ() - 0.5); // Minus? Really? TODO
+            Vec3 v = tileFormat.centerJustifyMicrometerCoordsAsVec3(microns);
             boundingBox.include(v);
             vertices.put((float)v.getX());
             vertices.put((float)v.getY());

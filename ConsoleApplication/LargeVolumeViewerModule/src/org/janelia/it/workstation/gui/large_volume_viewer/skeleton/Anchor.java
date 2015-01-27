@@ -46,7 +46,7 @@ public class Anchor {
      * @param tileFormat for translations.
      */
 	public Anchor(Vec3 locationInVoxel, Anchor parent, TileFormat tileFormat) {
-        TileFormat.MicrometerXyz vox = tileFormat.micrometerXyzForVoxelXyz(
+        TileFormat.MicrometerXyz micron = tileFormat.micrometerXyzForVoxelXyz(
                 new TileFormat.VoxelXyz(
                         (int)locationInVoxel.getX(),
                         (int)locationInVoxel.getY(),
@@ -54,10 +54,8 @@ public class Anchor {
                 ), 
                 CoordinateAxis.Z
         );
-        Vec3 locationInMicrometer = new Vec3(
-                vox.getX() + 0.5, vox.getY() + 0.5, vox.getZ() - 0.5
-        );
-		this.location = locationInMicrometer;
+        // Need to bias the position towards the center of the voxel.
+		this.location = tileFormat.centerJustifyMicrometerCoordsAsVec3(micron);
 		addNeighbor(parent);
 	}
 	
