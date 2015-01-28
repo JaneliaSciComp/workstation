@@ -743,6 +743,13 @@ public class TileFormat
     /** Lazily initialize matrices to move between voxel and stage/micron. */
     private void establishConversionMatrices() {
         if (micronToVoxMatrix == null) {
+            double[][] voxToMicronArr = new double[][] {
+                {voxelMicrometers[X_OFFS], 0.0, 0.0, origin[X_OFFS] * voxelMicrometers[X_OFFS]},
+                {0.0, voxelMicrometers[Y_OFFS], 0.0, origin[Y_OFFS] * voxelMicrometers[Y_OFFS]},
+                {0.0, 0.0, voxelMicrometers[Z_OFFS], origin[Z_OFFS] * voxelMicrometers[Z_OFFS]},
+                {0.0, 0.0, 0.0, 1.0}
+            };
+            voxToMicronMatrix = new Matrix(voxToMicronArr);
             double[][] micronToVoxArr = new double[][]{
                 {1.0 / voxelMicrometers[X_OFFS], 0.0, 0.0, -origin[X_OFFS]},
                 {0.0, 1.0 / voxelMicrometers[Y_OFFS], 0.0, -origin[Y_OFFS]},
@@ -750,10 +757,6 @@ public class TileFormat
                 {0.0, 0.0, 0.0, 1.0}
             };
             micronToVoxMatrix = new Matrix(micronToVoxArr);
-            voxToMicronMatrix = micronToVoxMatrix.inverse();
-            if (voxToMicronMatrix == null) {
-                throw new RuntimeException("Failed to invert the matrix.");
-            }
         }
     }
 }
