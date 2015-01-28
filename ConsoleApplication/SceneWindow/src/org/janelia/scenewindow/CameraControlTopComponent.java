@@ -159,6 +159,7 @@ implements LookupListener
         focusPanel.setBorder(javax.swing.BorderFactory.createTitledBorder(org.openide.util.NbBundle.getMessage(CameraControlTopComponent.class, "CameraControlTopComponent.focusPanel.border.title"))); // NOI18N
 
         focusXSpinner.setModel(focusXSpinnerModel);
+        focusXSpinner.setMinimumSize(new java.awt.Dimension(6, 20));
         focusXSpinner.addChangeListener(new javax.swing.event.ChangeListener()
         {
             public void stateChanged(javax.swing.event.ChangeEvent evt)
@@ -174,6 +175,7 @@ implements LookupListener
         org.openide.awt.Mnemonics.setLocalizedText(focusYLabel, org.openide.util.NbBundle.getMessage(CameraControlTopComponent.class, "CameraControlTopComponent.focusYLabel.text")); // NOI18N
 
         focusYSpinner.setModel(focusYSpinnerModel);
+        focusYSpinner.setMinimumSize(new java.awt.Dimension(6, 20));
         focusYSpinner.addChangeListener(new javax.swing.event.ChangeListener()
         {
             public void stateChanged(javax.swing.event.ChangeEvent evt)
@@ -186,6 +188,7 @@ implements LookupListener
         org.openide.awt.Mnemonics.setLocalizedText(focusZLabel, org.openide.util.NbBundle.getMessage(CameraControlTopComponent.class, "CameraControlTopComponent.focusZLabel.text")); // NOI18N
 
         focusZSpinner.setModel(focusZSpinnerModel);
+        focusZSpinner.setMinimumSize(new java.awt.Dimension(6, 20));
         focusZSpinner.addChangeListener(new javax.swing.event.ChangeListener()
         {
             public void stateChanged(javax.swing.event.ChangeEvent evt)
@@ -220,21 +223,20 @@ implements LookupListener
                             .addGroup(focusPanelLayout.createSequentialGroup()
                                 .addComponent(focusXLabel)
                                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                                .addComponent(focusXSpinner, javax.swing.GroupLayout.DEFAULT_SIZE, 261, Short.MAX_VALUE))
+                                .addComponent(focusXSpinner, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
                             .addGroup(focusPanelLayout.createSequentialGroup()
                                 .addComponent(focusYLabel)
                                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                                .addComponent(focusYSpinner))
+                                .addComponent(focusYSpinner, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
                             .addGroup(focusPanelLayout.createSequentialGroup()
                                 .addComponent(focusZLabel)
                                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                                .addComponent(focusZSpinner)))
+                                .addComponent(focusZSpinner, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)))
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addGroup(focusPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                            .addGroup(focusPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                                .addComponent(jLabel1)
-                                .addComponent(jLabel2, javax.swing.GroupLayout.Alignment.TRAILING))
-                            .addComponent(jLabel3)))
+                        .addGroup(focusPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
+                            .addComponent(jLabel2)
+                            .addComponent(jLabel3)
+                            .addComponent(jLabel1)))
                     .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, focusPanelLayout.createSequentialGroup()
                         .addGap(0, 0, Short.MAX_VALUE)
                         .addComponent(resetFocusButton)))
@@ -265,6 +267,7 @@ implements LookupListener
 
         rotXSpinner.setModel(new javax.swing.SpinnerNumberModel(Float.valueOf(0.0f), Float.valueOf(-360.0f), Float.valueOf(360.0f), Float.valueOf(1.0f)));
         rotXSpinner.setToolTipText(org.openide.util.NbBundle.getMessage(CameraControlTopComponent.class, "CameraControlTopComponent.rotXSpinner.toolTipText")); // NOI18N
+        rotXSpinner.setMinimumSize(new java.awt.Dimension(6, 20));
         rotXSpinner.addChangeListener(new javax.swing.event.ChangeListener()
         {
             public void stateChanged(javax.swing.event.ChangeEvent evt)
@@ -275,6 +278,7 @@ implements LookupListener
 
         rotYSpinner.setModel(new javax.swing.SpinnerNumberModel(Float.valueOf(0.0f), Float.valueOf(-360.0f), Float.valueOf(360.0f), Float.valueOf(1.0f)));
         rotYSpinner.setToolTipText(org.openide.util.NbBundle.getMessage(CameraControlTopComponent.class, "CameraControlTopComponent.rotYSpinner.toolTipText")); // NOI18N
+        rotYSpinner.setMinimumSize(new java.awt.Dimension(6, 20));
         rotYSpinner.addChangeListener(new javax.swing.event.ChangeListener()
         {
             public void stateChanged(javax.swing.event.ChangeEvent evt)
@@ -285,6 +289,7 @@ implements LookupListener
 
         rotZSpinner.setModel(new javax.swing.SpinnerNumberModel(Float.valueOf(0.0f), Float.valueOf(-360.0f), Float.valueOf(360.0f), Float.valueOf(1.0f)));
         rotZSpinner.setToolTipText(org.openide.util.NbBundle.getMessage(CameraControlTopComponent.class, "CameraControlTopComponent.rotZSpinner.toolTipText")); // NOI18N
+        rotZSpinner.setMinimumSize(new java.awt.Dimension(6, 20));
         rotZSpinner.addChangeListener(new javax.swing.event.ChangeListener()
         {
             public void stateChanged(javax.swing.event.ChangeEvent evt)
@@ -389,9 +394,9 @@ implements LookupListener
                             .addComponent(rotZLabel))
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                         .addGroup(rotationPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                            .addComponent(rotYSpinner)
-                            .addComponent(rotXSpinner)
-                            .addComponent(rotZSpinner))
+                            .addComponent(rotYSpinner, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                            .addComponent(rotXSpinner, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                            .addComponent(rotZSpinner, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                         .addGroup(rotationPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                             .addGroup(rotationPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
@@ -439,6 +444,7 @@ implements LookupListener
         });
 
         zoomSpinner.setModel(zoomSpinnerModel);
+        zoomSpinner.setMinimumSize(new java.awt.Dimension(6, 20));
         zoomSpinner.addChangeListener(new javax.swing.event.ChangeListener()
         {
             public void stateChanged(javax.swing.event.ChangeEvent evt)
@@ -457,7 +463,7 @@ implements LookupListener
             .addGroup(zoomPanlLayout.createSequentialGroup()
                 .addGroup(zoomPanlLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                     .addGroup(zoomPanlLayout.createSequentialGroup()
-                        .addComponent(zoomSpinner, javax.swing.GroupLayout.DEFAULT_SIZE, 275, Short.MAX_VALUE)
+                        .addComponent(zoomSpinner, javax.swing.GroupLayout.DEFAULT_SIZE, 65, Short.MAX_VALUE)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                         .addComponent(jLabel7))
                     .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, zoomPanlLayout.createSequentialGroup()
