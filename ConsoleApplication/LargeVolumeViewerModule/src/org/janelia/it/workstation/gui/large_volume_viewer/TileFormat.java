@@ -1,5 +1,6 @@
 package org.janelia.it.workstation.gui.large_volume_viewer;
 
+import Jama.Matrix;
 import org.janelia.it.workstation.geom.CoordinateAxis;
 import org.janelia.it.workstation.geom.Vec3;
 import org.janelia.it.workstation.gui.viewer3d.BoundingBox3d;
@@ -480,12 +481,28 @@ public class TileFormat
 				xyz[1]  * getVoxelMicrometers()[Y_OFFS],				
 				xyz[2]  * getVoxelMicrometers()[Z_OFFS]);
 	}
-	public VoxelXyz voxelXyzForMicrometerXyz(MicrometerXyz m) {
+	public VoxelXyz voxelXyzForMicrometerXyz(MicrometerXyz m) {        
 		return new VoxelXyz(
 				(int)Math.floor(m.getX() / getVoxelMicrometers()[X_OFFS]) - origin[X_OFFS],
 				(int)Math.floor(m.getY() / getVoxelMicrometers()[Y_OFFS]) - origin[Y_OFFS],
 				(int)Math.floor(m.getZ() / getVoxelMicrometers()[Z_OFFS]) - origin[Z_OFFS]);
 	}
+    
+    public VoxelXyz voxelXyzForMicrometerXyzMatrix(MicrometerXyz m) {
+        double[][] rawValues = new double[][] {
+            { 1.0 / voxelMicrometers[X_OFFS],  0.0,  0.0, -origin[X_OFFS] },
+            { 0.0,  1.0 / voxelMicrometers[Y_OFFS],  0.0, -origin[Y_OFFS] },
+            { 0.0,  0.0,  1.0 / voxelMicrometers[Z_OFFS], -origin[Z_OFFS] },
+            { 0.0,  0.0,  0.0,                                     1.0    }
+        };
+        Matrix micronToVox = new Matrix(rawValues);
+        double[] rawMicrons = new double[] {
+            m.getX(), m.getY(), m.getZ(), 1.0
+        };
+        Matrix microns = new Matrix(rawMicrons, 4);
+        Matrix result = micronToVox.times(microns);
+        return new VoxelXyz( (int)result.get(0, 0), (int)result.get(1, 0), (int)result.get(2, 0) );
+    }
 
     /** 
      * convenience: return a centered-up version of the micrometer value.

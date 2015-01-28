@@ -92,6 +92,18 @@ public class TestTileFormat {
 		testCorners(tileFormat);
 	}
 
+    @Test
+    @Category(TestCategories.FastTests.class)
+    public void testMatrixConvVoxelForMicron() {
+		TileFormat tileFormat = createAavFormat();
+        TileFormat.MicrometerXyz startingValue = new TileFormat.MicrometerXyz( 2000, 1500, 500 );
+        TileFormat.VoxelXyz firstConv = tileFormat.voxelXyzForMicrometerXyz(startingValue);
+        TileFormat.VoxelXyz secondConv = tileFormat.voxelXyzForMicrometerXyzMatrix(startingValue);
+        
+        assertEquals("X not equal", firstConv.getX(), secondConv.getX());
+        assertEquals("Y not equal", firstConv.getY(), secondConv.getY());
+        assertEquals("Z not equal", firstConv.getZ(), secondConv.getZ());
+    }
 	/**
 	 * Returns four corner locations in units of micrometers, relative to
 	 * the full parent volume, in Z order:
