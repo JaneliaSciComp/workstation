@@ -123,9 +123,12 @@ implements GLEventListener
 
     @Override
     public void dispose(GLAutoDrawable glad) {
+        // System.out.println("dispose");
         GL3 gl = new DebugGL3(glad.getGL().getGL3());
         for(GL3Resource actor : resources)
             actor.dispose(gl);
+        for(MultipassRenderer renderer : multipassRenderers)
+            renderer.dispose(gl);
     }
 
     private long displayEndTime = System.nanoTime();

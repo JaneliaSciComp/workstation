@@ -129,8 +129,8 @@ import org.openide.util.lookup.Lookups;
         preferredID = "NeuronTracerTopComponent"
 )
 @Messages({
-    "CTL_NeuronTracerAction=HortaTracer",
-    "CTL_NeuronTracerTopComponent=HortaTracer",
+    "CTL_NeuronTracerAction=Horta Tracer",
+    "CTL_NeuronTracerTopComponent=Horta Tracer",
     "HINT_NeuronTracerTopComponent=Horta Neuron Tracer window"
 })
 public final class NeuronTracerTopComponent extends TopComponent
