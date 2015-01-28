@@ -79,7 +79,7 @@ public class TestTileFormat {
             new Vec3(2208, 2232, 0.05),
             new Vec3(2720, 2232, 0.05)
         };
-        final int[] ixComparison1 = new int[]{ -195, 200, -19000 };
+        final int[] ixComparison1 = new int[] {-195, 200, -19000};
         final int[] ixComparison2 = new int[] {-136, 103, -6565};
 
 		sanityTest(tileFormat, ixComparison1, ixComparison2, vecComparison);		
@@ -104,7 +104,21 @@ public class TestTileFormat {
         assertEquals("Y not equal", firstConv.getY(), secondConv.getY());
         assertEquals("Z not equal", firstConv.getZ(), secondConv.getZ());
     }
-	/**
+
+    @Test
+    @Category(TestCategories.FastTests.class)
+    public void testMatrixConvMicronForVoxel() {
+		TileFormat tileFormat = createAavFormat();
+        TileFormat.VoxelXyz startingValue = new TileFormat.VoxelXyz( 2000, 1500, 500 );
+        TileFormat.MicrometerXyz firstConv = tileFormat.micrometerXyzForVoxelXyz(startingValue, CoordinateAxis.Z);
+        TileFormat.MicrometerXyz secondConv = tileFormat.micrometerXyzForVoxelXyzMatrix(startingValue, CoordinateAxis.Z);
+        
+        assertEquals("X not equal", firstConv.getX(), secondConv.getX(), 0.00001);
+        assertEquals("Y not equal", firstConv.getY(), secondConv.getY(), 0.00001);
+        assertEquals("Z not equal", firstConv.getZ(), secondConv.getZ(), 0.00001);
+    }
+
+    /**
 	 * Returns four corner locations in units of micrometers, relative to
 	 * the full parent volume, in Z order:
 	 * <pre>
