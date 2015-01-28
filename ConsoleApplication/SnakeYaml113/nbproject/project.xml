@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://www.netbeans.org/ns/project/1">
+    <type>org.netbeans.modules.apisupport.project</type>
+    <configuration>
+        <data xmlns="http://www.netbeans.org/ns/nb-module-project/3">
+            <code-name-base>org.janelia.snakeyaml</code-name-base>
+            <suite-component/>
+            <module-dependencies/>
+            <public-packages>
+                <package>org.yaml.snakeyaml</package>
+                <package>org.yaml.snakeyaml.composer</package>
+                <package>org.yaml.snakeyaml.constructor</package>
+                <package>org.yaml.snakeyaml.emitter</package>
+                <package>org.yaml.snakeyaml.error</package>
+                <package>org.yaml.snakeyaml.events</package>
+                <package>org.yaml.snakeyaml.extensions.compactnotation</package>
+                <package>org.yaml.snakeyaml.external.biz.base64Coder</package>
+                <package>org.yaml.snakeyaml.external.com.google.gdata.util.common.base</package>
+                <package>org.yaml.snakeyaml.introspector</package>
+                <package>org.yaml.snakeyaml.nodes</package>
+                <package>org.yaml.snakeyaml.parser</package>
+                <package>org.yaml.snakeyaml.reader</package>
+                <package>org.yaml.snakeyaml.representer</package>
+                <package>org.yaml.snakeyaml.resolver</package>
+                <package>org.yaml.snakeyaml.scanner</package>
+                <package>org.yaml.snakeyaml.serializer</package>
+                <package>org.yaml.snakeyaml.tokens</package>
+                <package>org.yaml.snakeyaml.util</package>
+            </public-packages>
+            <class-path-extension>
+                <runtime-relative-path>ext/snakeyaml-1.13.jar</runtime-relative-path>
+                <binary-origin>release/modules/ext/snakeyaml-1.13.jar</binary-origin>
+            </class-path-extension>
+        </data>
+    </configuration>
+</project>
