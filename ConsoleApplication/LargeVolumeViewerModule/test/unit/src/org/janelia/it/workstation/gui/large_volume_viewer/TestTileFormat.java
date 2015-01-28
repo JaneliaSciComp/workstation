@@ -94,8 +94,10 @@ public class TestTileFormat {
 
     @Test
     @Category(TestCategories.FastTests.class)
-    public void testMatrixConvVoxelForMicron() {
+    public void testMatrixConvVoxelForMicron() {        
 		TileFormat tileFormat = createAavFormat();
+        tileFormat.setOrigin(new int[] { 25, 50, 75 });
+        tileFormat.setVoxelMicrometers(new double[] { 0.3, 0.33, 1.1 });
         TileFormat.MicrometerXyz startingValue = new TileFormat.MicrometerXyz( 2000, 1500, 500 );
         TileFormat.VoxelXyz firstConv = tileFormat.voxelXyzForMicrometerXyz(startingValue);
         TileFormat.VoxelXyz secondConv = tileFormat.voxelXyzForMicrometerXyzMatrix(startingValue);
@@ -109,6 +111,8 @@ public class TestTileFormat {
     @Category(TestCategories.FastTests.class)
     public void testMatrixConvMicronForVoxel() {
 		TileFormat tileFormat = createAavFormat();
+        tileFormat.setOrigin(new int[] { 17, 31, 41 });
+        tileFormat.setVoxelMicrometers(new double[] { 1.7, 2.1, 0.61 });
         TileFormat.VoxelXyz startingValue = new TileFormat.VoxelXyz( 2000, 1500, 500 );
         TileFormat.MicrometerXyz firstConv = tileFormat.micrometerXyzForVoxelXyz(startingValue, CoordinateAxis.Z);
         TileFormat.MicrometerXyz secondConv = tileFormat.micrometerXyzForVoxelXyzMatrix(startingValue, CoordinateAxis.Z);

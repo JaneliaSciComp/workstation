@@ -489,10 +489,10 @@ public class TileFormat
         double[] rawVoxels = new double[] {
             v.getX(), v.getY(), v.getZ(), 1.0
         };
+        rawVoxels[sliceDirection.index()] += 0.5;
         Matrix voxels = new Matrix(rawVoxels, 4);
         Matrix result = voxToMicronMatrix.times(voxels);
         double[][] resultArr = result.getArray();
-        resultArr[sliceDirection.index()][0] += 0.5;
         MicrometerXyz m = new MicrometerXyz( 
                 resultArr[X_OFFS][0],
                 resultArr[Y_OFFS][0], 
