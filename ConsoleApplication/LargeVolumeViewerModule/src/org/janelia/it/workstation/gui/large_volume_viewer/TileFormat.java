@@ -347,6 +347,36 @@ public class TileFormat
 		this.volumeSize = volumeSize;
 	}
 
+    /**
+     * @return the micronToVoxMatrix
+     */
+    public Matrix getMicronToVoxMatrix() {
+        establishConversionMatrices();
+        return micronToVoxMatrix;
+    }
+
+    /**
+     * @param micronToVoxMatrix the micronToVoxMatrix to set
+     */
+    public void setMicronToVoxMatrix(Matrix micronToVoxMatrix) {
+        this.micronToVoxMatrix = micronToVoxMatrix;
+    }
+
+    /**
+     * @return the voxToMicronMatrix
+     */
+    public Matrix getVoxToMicronMatrix() {
+        establishConversionMatrices();
+        return voxToMicronMatrix;
+    }
+
+    /**
+     * @param voxToMicronMatrix the voxToMicronMatrix to set
+     */
+    public void setVoxToMicronMatrix(Matrix voxToMicronMatrix) {
+        this.voxToMicronMatrix = voxToMicronMatrix;
+    }
+	
 	public void setTileSize(int[] tileSize) {
         // In case somewhere, the original array is being passed around
         // and used directly, prior to having been reset from defaults.
@@ -491,7 +521,7 @@ public class TileFormat
         };
         rawVoxels[sliceDirection.index()] += 0.5;
         Matrix voxels = new Matrix(rawVoxels, 4);
-        Matrix result = voxToMicronMatrix.times(voxels);
+        Matrix result = getVoxToMicronMatrix().times(voxels);
         double[][] resultArr = result.getArray();
         MicrometerXyz m = new MicrometerXyz( 
                 resultArr[X_OFFS][0],
@@ -514,7 +544,7 @@ public class TileFormat
             m.getX(), m.getY(), m.getZ(), 1.0
         };
         Matrix microns = new Matrix(rawMicrons, 4);
-        Matrix result = micronToVoxMatrix.times(microns);
+        Matrix result = getMicronToVoxMatrix().times(microns);
         return new VoxelXyz( (int)result.get(0, 0), (int)result.get(1, 0), (int)result.get(2, 0) );
     }
     
@@ -612,7 +642,7 @@ public class TileFormat
                 microns.getZ() - 0.5 * voxelMicrometers[2]);
         return v;
     }
-	
+
 	// Volume units can be one of 4 interconvertible types
 	// These classes are intended to enforce type safety between different unit types
 	public static interface Unit {}; // Base unit
@@ -742,21 +772,21 @@ public class TileFormat
     
     /** Lazily initialize matrices to move between voxel and stage/micron. */
     private void establishConversionMatrices() {
-        if (micronToVoxMatrix == null) {
+        if (this.micronToVoxMatrix == null) {
             double[][] voxToMicronArr = new double[][] {
                 {voxelMicrometers[X_OFFS], 0.0, 0.0, origin[X_OFFS] * voxelMicrometers[X_OFFS]},
                 {0.0, voxelMicrometers[Y_OFFS], 0.0, origin[Y_OFFS] * voxelMicrometers[Y_OFFS]},
                 {0.0, 0.0, voxelMicrometers[Z_OFFS], origin[Z_OFFS] * voxelMicrometers[Z_OFFS]},
                 {0.0, 0.0, 0.0, 1.0}
             };
-            voxToMicronMatrix = new Matrix(voxToMicronArr);
+            setVoxToMicronMatrix(new Matrix(voxToMicronArr));
             double[][] micronToVoxArr = new double[][]{
                 {1.0 / voxelMicrometers[X_OFFS], 0.0, 0.0, -origin[X_OFFS]},
                 {0.0, 1.0 / voxelMicrometers[Y_OFFS], 0.0, -origin[Y_OFFS]},
                 {0.0, 0.0, 1.0 / voxelMicrometers[Z_OFFS], -origin[Z_OFFS]},
                 {0.0, 0.0, 0.0, 1.0}
             };
-            micronToVoxMatrix = new Matrix(micronToVoxArr);
+            setMicronToVoxMatrix(new Matrix(micronToVoxArr));
         }
     }
 }

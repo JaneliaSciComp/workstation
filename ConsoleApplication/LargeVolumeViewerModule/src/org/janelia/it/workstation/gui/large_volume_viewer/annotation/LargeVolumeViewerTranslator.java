@@ -1,6 +1,6 @@
 package org.janelia.it.workstation.gui.large_volume_viewer.annotation;
 
-
+import Jama.Matrix;
 import org.janelia.it.workstation.geom.Vec3;
 import org.janelia.it.workstation.gui.large_volume_viewer.LargeVolumeViewer;
 import org.janelia.it.workstation.gui.large_volume_viewer.skeleton.Anchor;
@@ -15,6 +15,9 @@ import org.janelia.it.jacs.model.user_data.tiledMicroscope.*;
 import java.awt.*;
 import java.util.ArrayList;
 import java.util.List;
+import org.janelia.it.jacs.model.entity.Entity;
+import org.janelia.it.jacs.model.entity.EntityConstants;
+import org.janelia.it.workstation.api.entity_model.management.ModelMgr;
 import org.janelia.it.workstation.geom.CoordinateAxis;
 import org.janelia.it.workstation.gui.large_volume_viewer.TileFormat;
 import org.janelia.it.workstation.tracing.VoxelPosition;
@@ -108,7 +111,7 @@ public class LargeVolumeViewerTranslator {
     public Slot1<Vec3> cameraPanToSlot = new Slot1<Vec3>() {
         @Override
         public void execute(Vec3 location) {
-            TileFormat tileFormat = largeVolumeViewer.getTileServer().getLoadAdapter().getTileFormat();
+            TileFormat tileFormat = getTileFormat();
             cameraPanToSignal.emit(
                     tileFormat.micronVec3ForVoxelVec3(location)
             );
@@ -272,9 +275,42 @@ public class LargeVolumeViewerTranslator {
      */
     public void workspaceLoaded(TmWorkspace workspace) {
         // clear existing
-        clearSkeletonSignal.emit();
+        clearSkeletonSignal.emit();        
 
         if (workspace != null) {
+            // See about things to add to the Tile Format.
+            // These must be collected from the workspace, because they
+            // require knowledge of the sample ID, rather than file path.
+            TileFormat tileFormat = getTileFormat();
+            if (tileFormat != null) {
+                Matrix micronToVoxMatrix = workspace.getMicronToVoxMatrix();
+                Matrix voxToMicronMatrix = workspace.getVoxToMicronMatrix();
+                if (micronToVoxMatrix != null  &&  voxToMicronMatrix != null) {                    
+                    tileFormat.setMicronToVoxMatrix(micronToVoxMatrix);
+                    tileFormat.setVoxToMicronMatrix(voxToMicronMatrix);
+                }
+                else {
+                    // If null, the tile format can be used to construct its
+                    // own versions of these matrices, and saved.
+                    try {
+                        Entity sample = ModelMgr.getModelMgr().getEntityById(workspace.getSampleID());
+                        micronToVoxMatrix = tileFormat.getMicronToVoxMatrix();
+                        voxToMicronMatrix = tileFormat.getVoxToMicronMatrix();
+                        String micronToVoxString = workspace.serializeMatrix(micronToVoxMatrix, EntityConstants.ATTRIBUTE_MICRON_TO_VOXEL_MATRIX);
+                        String voxToMicronString = workspace.serializeMatrix(voxToMicronMatrix, EntityConstants.ATTRIBUTE_VOXEL_TO_MICRON_MATRIX);
+                        ModelMgr.getModelMgr().setOrUpdateValue(sample, EntityConstants.ATTRIBUTE_MICRON_TO_VOXEL_MATRIX, micronToVoxString);
+                        ModelMgr.getModelMgr().setOrUpdateValue(sample, EntityConstants.ATTRIBUTE_VOXEL_TO_MICRON_MATRIX, voxToMicronString);
+                    } catch (Exception ex) {
+                        ex.printStackTrace();
+                    }
+                }
+            }
+            
+            /*
+                    storeMatrix(voxToMicronMatrix, EntityConstants.ATTRIBUTE_MICRON_TO_VOXEL_MATRIX);
+            storeMatrix(voxToMicronMatrix, EntityConstants.ATTRIBUTE_VOXEL_TO_MICRON_MATRIX);
+
+            */
             // retrieve global color if present; if not, revert to default
             String globalColorString = workspace.getPreferences().getProperty(AnnotationsConstants.PREF_ANNOTATION_COLOR_GLOBAL);
             Color newColor;
@@ -325,7 +361,6 @@ public class LargeVolumeViewerTranslator {
                 endpoints.getAnnotationID2());
 
         final ArrayList<VoxelPosition> inputPath = new ArrayList<>();
-        TileFormat tileFormat = largeVolumeViewer.getTileServer().getLoadAdapter().getTileFormat();
         final CoordinateAxis axis = CoordinateAxis.Z;
         final int depthAxis = axis.index();
         final int heightAxis = axis.index() - 1 % 3;
@@ -368,6 +403,15 @@ public class LargeVolumeViewerTranslator {
             Integer.parseInt(items[1]),
             Integer.parseInt(items[2]),
             Integer.parseInt(items[3]));
+    }
+
+    private TileFormat getTileFormat() {
+        if (largeVolumeViewer == null ||
+            largeVolumeViewer.getTileServer() == null || 
+            largeVolumeViewer.getTileServer().getLoadAdapter() == null) {
+            return null;
+        }
+        return largeVolumeViewer.getTileServer().getLoadAdapter().getTileFormat();
     }
 
 }

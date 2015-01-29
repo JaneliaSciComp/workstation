@@ -383,13 +383,6 @@ extends AbstractTextureLoadAdapter
                 }
                 
                 tileFormat.setVoxelMicrometers(scale);
-                // Shifting everything by ten voxels to the right.
-                int[] mockOrigin = new int[] {
-                    0,//origin[0],
-                    origin[1],
-                    origin[2]
-                };
-//                tileFormat.setOrigin(mockOrigin);
                 tileFormat.setOrigin(origin);
 
             }
