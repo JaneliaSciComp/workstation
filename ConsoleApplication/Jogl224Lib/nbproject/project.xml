@@ -19,6 +19,7 @@
                 <package>javax.media.opengl</package>
                 <package>javax.media.opengl.awt</package>
                 <package>javax.media.opengl.fixedfunc</package>
+                <package>javax.media.opengl.glu</package>
                 <package>jogamp.opengl</package>
             </public-packages>
             <class-path-extension>
