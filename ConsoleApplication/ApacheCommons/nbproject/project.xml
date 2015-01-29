@@ -7,7 +7,6 @@
             <suite-component/>
             <module-dependencies/>
             <public-packages>
-                <package>org.apache.commons.io</package>
                 <package>org.apache.commons.lang3</package>
             </public-packages>
             <class-path-extension>
