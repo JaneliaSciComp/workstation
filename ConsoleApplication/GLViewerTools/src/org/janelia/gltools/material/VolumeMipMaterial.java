@@ -222,6 +222,11 @@ public class VolumeMipMaterial extends BasicMaterial
     
     @Override
     public void dispose(GL3 gl) {
+        // Destroy extra shader programs
+        for (ShaderProgram p : new ShaderProgram[] {isoShader, mipShader, occShader}) {
+            // if (p == shaderProgram) continue;
+            p.dispose(gl);
+        }
         super.dispose(gl);
         volumeTexture.dispose(gl);
     }
@@ -256,7 +261,7 @@ public class VolumeMipMaterial extends BasicMaterial
         super.unload(gl);
         volumeTexture.unbind(gl); // restore depth buffer writes
     }
-
+    
     @Override
     public boolean usesNormals() {
         return false;

@@ -68,6 +68,11 @@ public class PerspectiveCamera extends AbstractCamera
 
         viewMatrix.identity();
         viewMatrix.translate(new Vector3(vantage.getFocusPosition()).negate());
+        
+        // Hack to rescale mouse light brain images to hide anisotropic point spread function.
+        Vector3 s = vantage.getWorldScaleHack();
+        viewMatrix.scale(s.getX(), s.getY(), s.getZ());
+        
         viewMatrix.rotate(vantage.getRotationInGround());
         viewMatrix.translate(new Vector3(0, 0, -focusDistance));
     }

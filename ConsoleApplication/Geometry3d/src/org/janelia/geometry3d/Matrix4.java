@@ -308,6 +308,15 @@ public class Matrix4 {
         return this;
     }
 
+    Matrix4 scale(float sx, float sy, float sz) {
+        return multiply(new Matrix4(
+                sx, 0, 0, 0,
+                0, sy, 0, 0,
+                0, 0, sz, 0,
+                0, 0, 0, 1)
+        );        
+    }
+    
     Matrix4 translate(Vector3 t) {
         return multiply(new Matrix4(
                 1, 0, 0, 0,

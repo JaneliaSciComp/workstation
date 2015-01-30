@@ -54,6 +54,8 @@ implements Object3D, ObservableInterface
     private float defaultSceneUnitsPerViewportHeight = 100f;
     private boolean constrainedToUpDirection = false;
     private final Vector3 upInWorld = new Vector3(0, 1, 0);
+    // per-axis scale factors to meet Mouse Light customer requirement
+    private final Vector3 worldScaleHack = new Vector3(1, 1, 1);
 
     public Vantage(Object3D parent) {
         this.object3D = new BasicObject3D(parent);
@@ -157,6 +159,24 @@ implements Object3D, ObservableInterface
         return true;
     }
 
+    public Vector3 getWorldScaleHack()
+    {
+        return worldScaleHack;
+    }
+
+    public boolean setWorldScaleHack(float xScale, float yScale, float zScale) {
+        Vector3 newScale = new Vector3(xScale, yScale, zScale);
+        return setWorldScaleHack(newScale);
+    }
+    
+    public boolean setWorldScaleHack(Vector3 newScale) {
+        if (newScale.equals(worldScaleHack))
+            return false; // no change
+        worldScaleHack.copy(newScale);
+        setChanged();
+        return true;
+    }
+    
     @Override
     public Object3D addChild(Object3D child) {
         object3D.addChild(child);

@@ -49,6 +49,8 @@ import java.awt.dnd.DropTargetDropEvent;
 import java.awt.dnd.DropTargetEvent;
 import java.awt.dnd.DropTargetListener;
 import java.awt.event.ActionEvent;
+import java.awt.event.ItemEvent;
+import java.awt.event.ItemListener;
 import java.awt.event.MouseEvent;
 import java.awt.geom.Point2D;
 import java.awt.image.BufferedImage;
@@ -64,6 +66,7 @@ import javax.imageio.ImageIO;
 import javax.media.opengl.GLAutoDrawable;
 import javax.swing.AbstractAction;
 import javax.swing.Action;
+import javax.swing.JCheckBoxMenuItem;
 import javax.swing.JFileChooser;
 import javax.swing.JMenu;
 import javax.swing.JOptionPane;
@@ -157,6 +160,8 @@ public final class NeuronTracerTopComponent extends TopComponent
     private CenterCrossHairActor crossHairActor;
         
     private NeuronMPRenderer neuronMPRenderer;
+    
+    private boolean doCubifyVoxels = false;
     
     public NeuronTracerTopComponent() {
         // This block is what the wizard created
@@ -799,7 +804,7 @@ public final class NeuronTracerTopComponent extends TopComponent
                 });
 
                 // TODO - remove this temporary menu item I used to debug more general volume loading
-                menu.add(new AbstractAction("Load Mouse Light YAML file and recenter") {
+                menu.add(new AbstractAction("Load Mouse Light YAML file and recenter...") {
                     @Override
                     public void actionPerformed(ActionEvent e) {
                         // Ask user what file to open
@@ -1086,6 +1091,50 @@ public final class NeuronTracerTopComponent extends TopComponent
                     
                 }
                 
+                JCheckBoxMenuItem cubeDistortMenu = new JCheckBoxMenuItem("Compress voxels in Z", doCubifyVoxels);
+                menu.add(cubeDistortMenu);
+                cubeDistortMenu.addActionListener(new AbstractAction() {
+                    @Override
+                    public void actionPerformed(ActionEvent e)
+                    {
+                        JCheckBoxMenuItem item = (JCheckBoxMenuItem)e.getSource();
+                        if (doCubifyVoxels) {
+                            setCubifyVoxels(false);
+                        }
+                        else {
+                            setCubifyVoxels(true);
+                        }
+                        item.setSelected(doCubifyVoxels);
+                    }
+                });
+                
+                // Synchronize with LVV
+                // TODO - is LVV present?
+                menu.add(new JPopupMenu.Separator());
+                JMenu synchronizeMenu = new JMenu("Synchronize with Large Volume Viewer");
+                menu.add(synchronizeMenu);
+                synchronizeMenu.add(new AbstractAction("Synchronize now") {
+                    @Override
+                    public void actionPerformed(ActionEvent e)
+                    {
+                        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+                    }
+                });
+                synchronizeMenu.add(new AbstractAction("Synchronize always") {
+                    @Override
+                    public void actionPerformed(ActionEvent e)
+                    {
+                        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+                    }
+                });
+                synchronizeMenu.add(new AbstractAction("Desynchronize") {
+                    @Override
+                    public void actionPerformed(ActionEvent e)
+                    {
+                        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+                    }
+                });
+                
                 // Cancel/do nothing action
                 menu.add(new JPopupMenu.Separator());
                 menu.add(new AbstractAction("Close this menu [ESC]") {
@@ -1258,5 +1307,25 @@ public final class NeuronTracerTopComponent extends TopComponent
         Vantage vantage = sceneWindow.getVantage();
         Viewport viewport = sceneWindow.getCamera().getViewport();
         return viewport.getHeightPixels() / vantage.getSceneUnitsPerViewportHeight();
+    }
+    
+    public boolean setCubifyVoxels(boolean cubify) {
+        if (cubify == doCubifyVoxels)
+            return false; // no change
+        doCubifyVoxels = cubify;
+        // TODO - actually cubify
+        Vantage v = sceneWindow.getVantage();
+        if (doCubifyVoxels) {
+            v.setWorldScaleHack(1, 1, 0.4f);
+            System.out.println("distort");
+        }
+        else {
+            v.setWorldScaleHack(1, 1, 1);
+            System.out.println("undistort");
+        }
+        v.notifyObservers();
+        sceneWindow.getGLAutoDrawable().display();
+        
+        return true;
     }
 }
