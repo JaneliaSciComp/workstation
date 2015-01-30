@@ -884,7 +884,6 @@ that need to respond to changing data.
      * same as the list of integers?
      */
     private boolean annotationAtPoint(TmGeoAnnotation annotation, List<Integer> pointList) {
-        //TODO retrieve TileFormat's origin, instead of this large assumption.
         return Math.abs( annotation.getX().intValue() - pointList.get(0) ) < 5 &&
                 Math.abs( annotation.getY().intValue() - pointList.get(1) ) < 5 &&
                 Math.abs( annotation.getZ().intValue() - pointList.get(2) ) < 5;
