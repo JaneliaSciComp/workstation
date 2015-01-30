@@ -1010,6 +1010,18 @@
                 <package>org.apache.commons.io.filefilter</package>
                 <package>org.apache.commons.io.input</package>
                 <package>org.apache.commons.io.output</package>
+                <package>org.apache.commons.lang3</package>
+                <package>org.apache.commons.lang3.builder</package>
+                <package>org.apache.commons.lang3.concurrent</package>
+                <package>org.apache.commons.lang3.event</package>
+                <package>org.apache.commons.lang3.exception</package>
+                <package>org.apache.commons.lang3.math</package>
+                <package>org.apache.commons.lang3.mutable</package>
+                <package>org.apache.commons.lang3.reflect</package>
+                <package>org.apache.commons.lang3.text</package>
+                <package>org.apache.commons.lang3.text.translate</package>
+                <package>org.apache.commons.lang3.time</package>
+                <package>org.apache.commons.lang3.tuple</package>
                 <package>org.apache.commons.logging</package>
                 <package>org.apache.commons.logging.impl</package>
                 <package>org.apache.html.dom</package>
@@ -1948,6 +1960,10 @@
                 <binary-origin>release/modules/ext/commons-logging-1.1.1.jar</binary-origin>
             </class-path-extension>
             <class-path-extension>
+                <runtime-relative-path>ext/commons-lang3-3.3.2-javadoc.jar</runtime-relative-path>
+                <binary-origin>release/modules/ext/commons-lang3-3.3.2-javadoc.jar</binary-origin>
+            </class-path-extension>
+            <class-path-extension>
                 <runtime-relative-path>ext/jogl-all-natives-linux-amd64.jar</runtime-relative-path>
                 <binary-origin>release/modules/ext/jogl-all-natives-linux-amd64.jar</binary-origin>
             </class-path-extension>
@@ -2034,6 +2050,10 @@
             <class-path-extension>
                 <runtime-relative-path>ext/lz4-1.1.1.jar</runtime-relative-path>
                 <binary-origin>release/modules/ext/lz4-1.1.1.jar</binary-origin>
+            </class-path-extension>
+            <class-path-extension>
+                <runtime-relative-path>ext/commons-lang3-3.3.2.jar</runtime-relative-path>
+                <binary-origin>release/modules/ext/commons-lang3-3.3.2.jar</binary-origin>
             </class-path-extension>
             <class-path-extension>
                 <runtime-relative-path>ext/logback-core-1.0.13.jar</runtime-relative-path>
