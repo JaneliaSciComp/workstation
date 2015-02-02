@@ -19,8 +19,8 @@ public class EJBSolrFacade extends EJBEntityFacade implements SolrFacade {
 		return EJBFactory.getRemoteSolrBean().search(SessionMgr.getSubjectKey(), query, true);
 	}
 	
-	public Map<String, SageTerm> getFlyLightVocabulary() throws Exception {
-		return EJBFactory.getRemoteSolrBean().getFlyLightVocabulary();
+	public Map<String, SageTerm> getImageVocabulary() throws Exception {
+		return EJBFactory.getRemoteSolrBean().getImageVocabulary();
 	}
 	
 }
