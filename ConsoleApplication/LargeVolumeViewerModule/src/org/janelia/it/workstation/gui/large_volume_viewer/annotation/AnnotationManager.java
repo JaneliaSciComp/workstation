@@ -527,12 +527,13 @@ public class AnnotationManager
             return;
         }
 
-        // are you sure dialog; should probably provide more info, but not
-        //  clear what that would be; "merge neurite rooted at xyz with ## annotations
-        //  in neuron A with ..."?
+        // are you sure dialog
+        // message before title, why???
         int ans =  JOptionPane.showConfirmDialog(
                 ComponentUtil.getLVVMainWindow(),
-                "Merge neurites?",
+                String.format("Merge neurite from neuron %s\nto neurite in neuron %s?",
+                    annotationModel.getNeuronFromAnnotationID(sourceAnnotationID),
+                    annotationModel.getNeuronFromAnnotationID(targetAnnotationID)),
                 "Merge neurites?",
                 JOptionPane.OK_CANCEL_OPTION);
         if (ans != JOptionPane.OK_OPTION) {
