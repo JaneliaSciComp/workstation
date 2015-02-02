@@ -109,7 +109,7 @@ public class SWCDataConverter {
         for (TmGeoAnnotation ann: neuron.getGeoAnnotationMap().values()) {
             double[] externalCoords = 
                     exchanger.getExternal(
-                            new double[]{ann.getX(), ann.getY(), ann.getZ()}
+                            new double[]{ann.getX()-0.5, ann.getY()-0.5, ann.getZ()}
                     );
             for (int i = 0; i < externalCoords.length; i++) {
                 // Dividing each sum-contribution by length to avoid overlarge numbers.
