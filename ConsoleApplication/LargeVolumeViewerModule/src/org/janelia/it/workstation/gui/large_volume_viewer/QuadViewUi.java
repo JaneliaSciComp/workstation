@@ -44,8 +44,10 @@ import java.net.URL;
 import java.util.Arrays;
 import java.util.Vector;
 import java.util.List;
+import org.janelia.it.workstation.gui.large_volume_viewer.annotation.MatrixDrivenSWCExchanger;
 import org.janelia.it.workstation.gui.passive_3d.Snapshot3DLauncher;
 import org.janelia.it.workstation.gui.util.Icons;
+import org.janelia.it.workstation.shared.util.SWCDataConverter;
 
 /** 
  * Main window for QuadView application.
@@ -270,6 +272,8 @@ public class QuadViewUi extends JPanel
 				zScanSpinner.setModel(new SpinnerNumberModel(z, z0, z1, 1));
 				// Allow octree zsteps to depend on zoom
 				tileFormat = tileServer.getLoadAdapter().getTileFormat();
+                updateSWCDataConverter();
+                
 				zScanMode.setTileFormat(tileFormat);
 				nextZSliceAction.setTileFormat(tileFormat);
 				previousZSliceAction.setTileFormat(tileFormat);
@@ -288,7 +292,7 @@ public class QuadViewUi extends JPanel
 		}
 		// TODO update zoom range too?
 	};
-	
+
 	public Slot1<String> setStatusMessageSlot = new Slot1<String>() {
 		@Override
 		public void execute(String message) {
@@ -525,6 +529,14 @@ public class QuadViewUi extends JPanel
 		}
 		return result;
 	}
+	
+    private void updateSWCDataConverter() {
+        SWCDataConverter swcDataConverter = new SWCDataConverter();
+        swcDataConverter.setSWCExchanger(
+                new MatrixDrivenSWCExchanger(tileFormat)
+        );
+        annotationModel.setSWCDataConverter(swcDataConverter);
+    }
 	
 	private void setOrthogonalMode() {
 		nwViewer.setVisible(true);
@@ -1175,7 +1187,9 @@ public class QuadViewUi extends JPanel
         closeWorkspaceRequestSignal.emit();
 
         // then just go ahead and load the file
-        return loadURL(url);
+        boolean rtnVal = loadURL(url);
+        updateSWCDataConverter();
+        return rtnVal;
     }
 
     public boolean loadURL(URL url) {

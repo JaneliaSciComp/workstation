@@ -53,7 +53,7 @@ that need to respond to changing data.
 
     private ModelMgr modelMgr;
     private SessionMgr sessionMgr;
-
+    private SWCDataConverter swcDataConverter;
 
     private TmWorkspace currentWorkspace;
     private TmNeuron currentNeuron;
@@ -126,6 +126,10 @@ that need to respond to changing data.
 
     }
 
+    public void setSWCDataConverter( SWCDataConverter converter ) {
+        this.swcDataConverter = converter;
+    }
+    
     // preferences stuff
     public void setPreference(String key, String value) {
         if (currentWorkspace != null) {
@@ -1015,9 +1019,8 @@ that need to respond to changing data.
                 }
             }
         }
-
         // get swcdata via converter, then write
-        SWCData swcData = SWCDataConverter.fromTmNeuron(neuronList, downsampleModulo);
+        SWCData swcData = swcDataConverter.fromTmNeuron(neuronList, downsampleModulo);
         if (swcData != null) {
             swcData.write(swcFile);
         }
@@ -1041,6 +1044,7 @@ that need to respond to changing data.
         //  so he added an OFFSET header and recentered on zero when exporting
         // therefore, if that header is present, respect it
         double[] offset = swcData.parseOffset();
+        offset = swcDataConverter.internalFromExternal(offset);
 
         // create one neuron for the file; take name from the filename (strip extension)
         String neuronName = swcFile.getName();
@@ -1067,15 +1071,24 @@ that need to respond to changing data.
         Map<Integer, TmGeoAnnotation> annotations = new HashMap<>();
         TmGeoAnnotation annotation;
         for (SWCNode node: swcData.getNodeList()) {
+            double[] internalPoint = swcDataConverter.internalFromExternal(
+                new double[] {
+                        node.getX() + offset[0],
+                        node.getY() + offset[1],
+                        node.getZ() + offset[2],
+                }
+            );
             if (node.getParentIndex() == -1) {
                 annotation = modelMgr.addGeometricAnnotation(neuron.getId(),
-                    null, 0, node.getX() + offset[0], node.getY() + offset[1],
-                    node.getZ() + offset[2], "");
+                    null, 0, 
+                    internalPoint[0], internalPoint[1], internalPoint[2],
+                    "");
             } else {
                 annotation = modelMgr.addGeometricAnnotation(neuron.getId(),
                     annotations.get(node.getParentIndex()).getId(),
-                    0, node.getX() + offset[0], node.getY() + offset[1],
-                    node.getZ() + offset[2], "");
+                    0, 
+                    internalPoint[0], internalPoint[1], internalPoint[2],
+                    "");
             }
             annotations.put(node.getIndex(), annotation);
             if (worker != null && (node.getIndex() % updateFrequency) == 0) {

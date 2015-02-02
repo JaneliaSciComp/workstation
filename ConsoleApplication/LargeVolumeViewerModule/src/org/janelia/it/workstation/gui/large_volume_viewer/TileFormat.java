@@ -772,7 +772,7 @@ public class TileFormat
     
     /** Lazily initialize matrices to move between voxel and stage/micron. */
     private void establishConversionMatrices() {
-        if (this.micronToVoxMatrix == null) {
+        if (this.micronToVoxMatrix == null  &&  ( origin[X_OFFS] > 0.00001 )) {
             double[][] voxToMicronArr = new double[][] {
                 {voxelMicrometers[X_OFFS], 0.0, 0.0, origin[X_OFFS] * voxelMicrometers[X_OFFS]},
                 {0.0, voxelMicrometers[Y_OFFS], 0.0, origin[Y_OFFS] * voxelMicrometers[Y_OFFS]},

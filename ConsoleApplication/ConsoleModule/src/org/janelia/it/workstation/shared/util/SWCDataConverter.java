@@ -18,21 +18,31 @@ import org.janelia.it.jacs.model.user_data.tiledMicroscope.TmAnchoredPathEndpoin
  */
 public class SWCDataConverter {
 
-    public static SWCData fromTmNeuron(TmNeuron neuron) {
+    private ImportExportSWCExchanger exchanger;
+    
+    public void setSWCExchanger( ImportExportSWCExchanger exchanger ) {
+        this.exchanger = exchanger;
+    }
+    
+    public double[] internalFromExternal(double[] externalValue) {
+        return exchanger.getInternal(externalValue);
+    }
+    
+    public SWCData fromTmNeuron(TmNeuron neuron) {
         return fromTmNeuron(neuron, neuronCenterOfMass(neuron), 1);
     }
 
-    public static SWCData fromTmNeuron(TmNeuron neuron, int downsampleModulo) {
+    public SWCData fromTmNeuron(TmNeuron neuron, int downsampleModulo) {
         return fromTmNeuron(neuron, neuronCenterOfMass(neuron), downsampleModulo);
     }
 
-    public static SWCData fromTmNeuron(TmNeuron neuron, Vec3 center, int downsampleModulo) {
+    public SWCData fromTmNeuron(TmNeuron neuron, Vec3 externalizedCenter, int downsampleModulo) {
 
         List<String> headerList = new ArrayList<>();
 
-        double xcenter = center.getX();
-        double ycenter = center.getY();
-        double zcenter = center.getZ();
+        double xcenter = externalizedCenter.getX();
+        double ycenter = externalizedCenter.getY();
+        double zcenter = externalizedCenter.getZ();
         List<SWCNode> nodeList;
         if (downsampleModulo == 0 ) { //|| neuron.getAnchoredPathMap().isEmpty()) {
             nodeList = nodesFromSubtrees(neuron, xcenter, ycenter, zcenter);
@@ -45,12 +55,16 @@ public class SWCDataConverter {
         //  saw in the "specification" unless I have to; we only
         //  use the OFFSET field
         headerList.add("# ORIGINAL_SOURCE Janelia Workstation Large Volume Viewer");
-        headerList.add(String.format("# OFFSET %f %f %f", xcenter, ycenter, zcenter));
+        double[] externalPoint =
+            new double[] {
+                xcenter, ycenter, zcenter
+            };
+        headerList.add(String.format("# OFFSET %f %f %f", externalPoint[0], externalPoint[1], externalPoint[2]));
 
         return new SWCData(nodeList, headerList);
     }
 
-    public static SWCData fromTmNeuron(List<TmNeuron> neuronList, int downsampleModulo) {
+    public SWCData fromTmNeuron(List<TmNeuron> neuronList, int downsampleModulo) {
         Vec3 com = neuronCenterOfMass(neuronList);
 
         List<SWCData> dataList = new ArrayList<>();
@@ -74,33 +88,38 @@ public class SWCDataConverter {
         }
     }
 
-    public static Vec3 neuronCenterOfMass(TmNeuron neuron) {
+    public Vec3 neuronCenterOfMass(TmNeuron neuron) {
         // it is probably not strictly correct, but I'm going
-        //  to return the origin for center if the neuron
+        //  to return the offset for center if the neuron
         //  is null or has no points
-
-        double sumx = 0.0;
-        double sumy = 0.0;
-        double sumz = 0.0;
+        double[] rtnVal = new double[] { 0.0, 0.0, 0.0 };
 
         if (neuron == null) {
-            return new Vec3(sumx, sumy, sumz);
+            return calcDefaultCenterOfMass(rtnVal);
         }
 
         double length = neuron.getGeoAnnotationMap().size();
         if (length == 0) {
-            return new Vec3(sumx, sumy, sumz);
+            return calcDefaultCenterOfMass(rtnVal);
         }
 
+        //NOTE: the code below assumes that the center-of-mass calculation
+        // is made against external-going data.  That is, a conversion from
+        // the internal to the external representation of points will be made.
         for (TmGeoAnnotation ann: neuron.getGeoAnnotationMap().values()) {
-            sumx += ann.getX();
-            sumy += ann.getY();
-            sumz += ann.getZ();
+            double[] externalCoords = 
+                    exchanger.getExternal(
+                            new double[]{ann.getX(), ann.getY(), ann.getZ()}
+                    );
+            for (int i = 0; i < externalCoords.length; i++) {
+                // Dividing each sum-contribution by length to avoid overlarge numbers.
+                rtnVal[i] += externalCoords[i] / length;
+            }
         }
-        return new Vec3(sumx / length, sumy / length, sumz / length);
+        return new Vec3(rtnVal[0], rtnVal[1], rtnVal[2]);
     }
 
-    public static Vec3 neuronCenterOfMass(List<TmNeuron> neuronList) {
+    public Vec3 neuronCenterOfMass(List<TmNeuron> neuronList) {
 
         Vec3 com;
         Vec3 sum = new Vec3(0.0, 0.0, 0.0);
@@ -129,7 +148,7 @@ public class SWCDataConverter {
         return sum;
     }
 
-    private static List<SWCNode> nodesFromCombinedPath(TmNeuron neuron, double xcenter, double ycenter, double zcenter,
+    private List<SWCNode> nodesFromCombinedPath(TmNeuron neuron, double xcenter, double ycenter, double zcenter,
         int downsampleModulo) {
 
         List<SWCNode> nodeList = new ArrayList<>();
@@ -228,7 +247,7 @@ public class SWCDataConverter {
         return nodeList;
     }
 
-    private static List<SWCNode> nodesFromSubtrees(TmNeuron neuron, double xcenter, double ycenter, double zcenter) {
+    private List<SWCNode> nodesFromSubtrees(TmNeuron neuron, double xcenter, double ycenter, double zcenter) {
         List<SWCNode> nodeList = new ArrayList<>();
         // map the annotation IDs to the indices to be used in the swc file
         Map<Long, Integer> annMap = new HashMap<>();
@@ -278,12 +297,20 @@ public class SWCDataConverter {
         return segmentType;
     }
 
+    private Vec3 calcDefaultCenterOfMass(double[] rtnVal) {
+        double[] defaultCoords = exchanger.getExternal(rtnVal);
+        Vec3 defaultValue = new Vec3(
+                defaultCoords[0], defaultCoords[1], defaultCoords[2]
+        );
+        return defaultValue;
+    }
+
     /**
      * Factory method to encapsulate how to make a node, including the details
      * of relative position.
      * @return properly spec'd node.
      */
-    private static SWCNode createSWCNode(
+    private SWCNode createSWCNode(
             int currentIndex,
             SWCNode.SegmentType segmentType,
             double xAnno,
@@ -293,12 +320,29 @@ public class SWCDataConverter {
             double ycenter,
             double zcenter,
             int parentIndex) {
+        double[] externalArr = null;
+        if (exchanger != null) {
+            externalArr = exchanger.getExternal(
+                    new double[]{
+                        xAnno,
+                        yAnno,
+                        zAnno,
+                    }
+            );
+        }
+        else {
+            externalArr = new double[] {
+                        xAnno,
+                        yAnno,
+                        zAnno,
+            };
+        }
         return new SWCNode(
                 currentIndex,
                 segmentType,
-                xAnno - xcenter,
-                yAnno - ycenter,
-                zAnno - zcenter,
+                externalArr[0] - xcenter,
+                externalArr[1] - ycenter,
+                externalArr[2] - zcenter,
                 1.0,    // radius, which we don't have right now
                 parentIndex
         );
