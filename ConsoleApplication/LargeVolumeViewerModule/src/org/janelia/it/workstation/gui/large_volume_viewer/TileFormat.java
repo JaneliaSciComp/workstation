@@ -572,7 +572,7 @@ public class TileFormat
     }
     
     public Vec3 micronVec3ForVoxelVec3Centered( Vec3 voxelVec3 ) {
-        return micronVec3ForVoxelVec3Cornered( voxelVec3.plus(new Vec3( 0.5, 0.5, 0.5 ) ) );
+        return micronVec3ForVoxelVec3Cornered( voxelVec3.plus( new Vec3( 0.5/voxelMicrometers[0], 0.5/voxelMicrometers[1], 0.0 )) );//.cross(new Vec3(voxelMicrometers[0],voxelMicrometers[1],voxelMicrometers[2]))
     }
     
 	public ZoomedVoxelIndex zoomedVoxelIndexForVoxelXyz(VoxelXyz v, ZoomLevel zoomLevel, CoordinateAxis sliceAxis) 
