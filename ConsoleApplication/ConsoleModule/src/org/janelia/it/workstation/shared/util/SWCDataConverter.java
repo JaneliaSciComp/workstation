@@ -25,7 +25,11 @@ public class SWCDataConverter {
     }
     
     public double[] internalFromExternal(double[] externalValue) {
-        return exchanger.getInternal(externalValue);
+        double[] rtnVal = exchanger.getInternal(externalValue);
+        for ( int i = 0; i < rtnVal.length; i++ ) {
+            rtnVal[ i ] = Math.round( rtnVal[ i ] );
+        }
+        return rtnVal;
     }
     
     public SWCData fromTmNeuron(TmNeuron neuron) {
@@ -109,7 +113,7 @@ public class SWCDataConverter {
         for (TmGeoAnnotation ann: neuron.getGeoAnnotationMap().values()) {
             double[] externalCoords = 
                     exchanger.getExternal(
-                            new double[]{ann.getX()-0.5, ann.getY()-0.5, ann.getZ()}
+                            new double[]{ann.getX(), ann.getY(), ann.getZ()}
                     );
             for (int i = 0; i < externalCoords.length; i++) {
                 // Dividing each sum-contribution by length to avoid overlarge numbers.
@@ -337,6 +341,7 @@ public class SWCDataConverter {
                         zAnno,
             };
         }
+        dumpAtSwc(externalArr, xcenter, ycenter, zcenter);
         return new SWCNode(
                 currentIndex,
                 segmentType,
@@ -348,4 +353,9 @@ public class SWCDataConverter {
         );
     }
 
+    private void dumpAtSwc(double[] externalArr, double xcenter, double ycenter, double zcenter) {
+        System.out.println("Computed center is " + xcenter + "," + ycenter + "," + zcenter);
+        System.out.println("Represents: " + externalArr[0] + "," + externalArr[1] + "," + externalArr[2]);
+        System.out.println("Node created: " + (externalArr[0]-xcenter) + "," + (externalArr[1]-ycenter) + "," + (externalArr[2]-zcenter));
+    }
 }

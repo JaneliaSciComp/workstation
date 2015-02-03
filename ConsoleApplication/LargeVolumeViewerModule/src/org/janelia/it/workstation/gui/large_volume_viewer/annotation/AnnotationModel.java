@@ -1043,8 +1043,8 @@ that need to respond to changing data.
         // note from CB, July 2013: Vaa3d can't handle large coordinates in swc files,
         //  so he added an OFFSET header and recentered on zero when exporting
         // therefore, if that header is present, respect it
-        double[] offset = swcData.parseOffset();
-        offset = swcDataConverter.internalFromExternal(offset);
+        double[] externalOffset = swcData.parseOffset();
+        double[] internalOffset = swcDataConverter.internalFromExternal(externalOffset);
 
         // create one neuron for the file; take name from the filename (strip extension)
         String neuronName = swcFile.getName();
@@ -1071,11 +1071,13 @@ that need to respond to changing data.
         Map<Integer, TmGeoAnnotation> annotations = new HashMap<>();
         TmGeoAnnotation annotation;
         for (SWCNode node: swcData.getNodeList()) {
+            // Internal points, as seen in annotations, are same as external
+            // points in SWC: represented as voxels. --LLF
             double[] internalPoint = swcDataConverter.internalFromExternal(
                 new double[] {
-                        node.getX() + offset[0],
-                        node.getY() + offset[1],
-                        node.getZ() + offset[2],
+                        node.getX() + externalOffset[0],
+                        node.getY() + externalOffset[1],
+                        node.getZ() + externalOffset[2],
                 }
             );
             if (node.getParentIndex() == -1) {
