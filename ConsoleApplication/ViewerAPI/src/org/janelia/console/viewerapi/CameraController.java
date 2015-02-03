@@ -28,27 +28,17 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-
 package org.janelia.console.viewerapi;
 
-import java.net.URL;
-import java.util.Observer;
-
 /**
- * interface SpecimenCamera
+ *
  * @author Christopher Bruns
- * Proof-of-concept initial Janelia Workstation API for communicating between
- *  Large Volume Viewer and Horta.
- * To minimize dependencies, I aim to use only bog-standard Java types, where possible.
- * This initial version communicates only data folder, and camera center location.
- * Future versions need to also communicate:
- *         * neuron/annotation structures
- *         * color/brightness settings
- *         * more camera parameters, such as rotation and zoom
  */
-public interface SpecimenCamera extends CameraModel
+public interface CameraController
 {
-    // Read-only methods in upper section - so slave clients can follow the camera position
-
-    URL getDataPath(); // location of folder containing image data (both octree and raw-tile-yml database)
+    CameraModel getCameraModel();
+    
+    boolean resetFocus();
+    
+    boolean setDefaultFocus(float x, float y, float z);
 }

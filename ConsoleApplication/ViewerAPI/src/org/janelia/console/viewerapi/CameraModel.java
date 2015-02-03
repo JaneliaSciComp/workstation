@@ -1,4 +1,4 @@
-/*
+/* 
  * Licensed under the Janelia Farm Research Campus Software Copyright 1.1
  * 
  * Copyright (c) 2014, Howard Hughes Medical Institute, All rights reserved.
@@ -28,27 +28,37 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-
 package org.janelia.console.viewerapi;
 
-import java.net.URL;
 import java.util.Observer;
 
 /**
- * interface SpecimenCamera
+ *
  * @author Christopher Bruns
- * Proof-of-concept initial Janelia Workstation API for communicating between
- *  Large Volume Viewer and Horta.
- * To minimize dependencies, I aim to use only bog-standard Java types, where possible.
- * This initial version communicates only data folder, and camera center location.
- * Future versions need to also communicate:
- *         * neuron/annotation structures
- *         * color/brightness settings
- *         * more camera parameters, such as rotation and zoom
  */
-public interface SpecimenCamera extends CameraModel
+public interface CameraModel
 {
-    // Read-only methods in upper section - so slave clients can follow the camera position
 
-    URL getDataPath(); // location of folder containing image data (both octree and raw-tile-yml database)
+    // read-only-ish Observable API, for handling camera changes
+    void addObserver(Observer observer); // (member of Observable class)
+
+    void deleteObserver(Observer observer); // (member of Observable class)
+
+    // camera focus location
+    float getFocusXUm(); // camera focus X position, in micrometers
+
+    float getFocusYUm();
+
+    float getFocusZUm();
+
+    // mutable Observable API
+    // notifyObservers() allows fine grained control, so a large number of changes could be
+    // built up, before (possibly expensively) releasing the horses.
+    // This mechanism will obviously be more important for things like neuron structure changes.
+    void notifyObservers(); // trigger consequences of camera change, if something did change (member of Observable class)
+
+    // Mutable methods below - so peer modules can change the camera position
+    // Camera focus position
+    void setFocusUm(float x, float y, float z); // in micrometer stage coordinates
+    
 }
