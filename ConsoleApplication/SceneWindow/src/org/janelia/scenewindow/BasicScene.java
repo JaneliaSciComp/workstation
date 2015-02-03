@@ -34,7 +34,8 @@ import java.util.List;
 import java.util.Vector;
 import org.janelia.geometry3d.BasicObject3D;
 import org.janelia.geometry3d.Matrix4;
-import org.janelia.geometry3d.Object3D;
+import org.janelia.geometry3d.CompositeObject3d;
+import org.janelia.geometry3d.Object3d;
 import org.janelia.geometry3d.Vantage;
 
 /**
@@ -45,7 +46,7 @@ public class BasicScene implements Scene {
     private static int count = 0;
     
     private final int index;
-    private Object3D object3d = new BasicObject3D(null);
+    private CompositeObject3d object3d = new BasicObject3D(null);
     private List<Light> lights = new Vector<Light>();
     private List<Vantage> cameras = new Vector<Vantage>();
     
@@ -91,18 +92,18 @@ public class BasicScene implements Scene {
     }
 
     @Override
-    public Object3D addChild(Object3D child) {
+    public CompositeObject3d addChild(Object3d child) {
         object3d.addChild(child);
         return this;
     }
 
     @Override
-    public Object3D getParent() {
+    public Object3d getParent() {
         return object3d.getParent();
     }
 
     @Override
-    public Collection<? extends Object3D> getChildren() {
+    public Collection<? extends Object3d> getChildren() {
         return object3d.getChildren();
     }
 
@@ -122,7 +123,7 @@ public class BasicScene implements Scene {
     }
 
     @Override
-    public Object3D setVisible(boolean isVisible) {
+    public Object3d setVisible(boolean isVisible) {
         object3d.setVisible(isVisible);
         return this;
     }
@@ -133,13 +134,13 @@ public class BasicScene implements Scene {
     }
 
     @Override
-    public Object3D setName(String name) {
+    public Object3d setName(String name) {
         object3d.setName(name);
         return this;
     }
 
     @Override
-    public Object3D setParent(Object3D parent) {
+    public Object3d setParent(Object3d parent) {
         object3d.setParent(parent);
         return this;
     }

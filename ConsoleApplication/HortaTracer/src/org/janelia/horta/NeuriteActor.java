@@ -40,7 +40,7 @@ import javax.media.opengl.GL3;
 import org.janelia.geometry3d.AbstractCamera;
 import org.janelia.geometry3d.Matrix4;
 import org.janelia.geometry3d.MeshGeometry;
-import org.janelia.geometry3d.Object3D;
+import org.janelia.geometry3d.CompositeObject3d;
 import org.janelia.geometry3d.Vertex;
 import org.janelia.gltools.BasicGL3Actor;
 import org.janelia.gltools.MeshActor;
@@ -60,7 +60,7 @@ public class NeuriteActor extends BasicGL3Actor {
     private final MeshActor meshActor;
     private ImageParticleMaterial material;
     
-    public NeuriteActor(Object3D parent, final NeuriteModel neuriteModel) 
+    public NeuriteActor(CompositeObject3d parent, final NeuriteModel neuriteModel) 
     {
         super(parent);
         BufferedImage ringImage = null;

@@ -1,4 +1,4 @@
-/* 
+/*
  * Licensed under the Janelia Farm Research Campus Software Copyright 1.1
  * 
  * Copyright (c) 2014, Howard Hughes Medical Institute, All rights reserved.
@@ -27,24 +27,15 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS 
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package org.janelia.geometry3d;
 
-import java.util.Collection;
+package org.janelia.console.viewerapi;
 
 /**
- * Interface for scene graph objects.
- * 
- * @author Christopher Bruns <brunsc at janelia.hhmi.org>
+ *
+ * @author Christopher Bruns
  */
-public interface Object3D {
-    Object3D getParent();
-    Object3D setParent(Object3D parent);
-    Collection<? extends Object3D> getChildren();
-    Object3D addChild(Object3D child);
-    Matrix4 getTransformInWorld();
-    Matrix4 getTransformInParent();
-    boolean isVisible();
-    Object3D setVisible(boolean isVisible);
-    String getName();
-    Object3D setName(String name);
+public interface Child<E>
+{
+    E getParent();
+    E setParent(E parent);
 }

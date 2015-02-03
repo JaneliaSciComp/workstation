@@ -1,4 +1,4 @@
-/* 
+/*
  * Licensed under the Janelia Farm Research Campus Software Copyright 1.1
  * 
  * Copyright (c) 2014, Howard Hughes Medical Institute, All rights reserved.
@@ -27,27 +27,17 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS 
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package org.janelia.gltools;
 
-import javax.media.opengl.GL3;
-import org.janelia.geometry3d.AbstractCamera;
-import org.janelia.geometry3d.Matrix4;
-import org.janelia.geometry3d.CompositeObject3d;
+package org.janelia.console.viewerapi;
+
+import java.util.Collection;
 
 /**
- * Analogous to Three.js CompositeObject3d, and to VTK Actor.
- * A GL3Actor is a VIEW upon a Representation3d MODEL
- * @author brunsc
- * TODO - decompose into Actor/CompositeActor interfaces
+ *
+ * @author Christopher Bruns
  */
-public interface GL3Actor extends CompositeObject3d, GL3Resource
+public interface Parent<E>
 {
-    /**
-     * Render this actor to an openGL context
-     * 
-     * @param gl The Jogl OpenGL context to render to
-     * @param camera Camera object, to provide perspective and view transforms
-     * @param parentModelViewMatrix parent model transform. Can be null, in which case the camera view matrix is used.
-     */
-    void display(GL3 gl, AbstractCamera camera, Matrix4 parentModelViewMatrix);
+    E addChild(E child);
+    Collection<? extends E> getChildren();
 }

@@ -41,13 +41,13 @@ import java.util.Observer;
  * @author cmbruns
  */
 public class Vantage 
-implements Object3D, ObservableInterface
+implements CompositeObject3d, ObservableInterface
 {
     private float sceneUnitsPerViewportHeight; // Zoom level
     private final Vector3 focusPosition = new Vector3(0,0,0); // Location of subject in GL units
     private final Rotation rotationInGround = new Rotation(); // Orientation of camera
     private final ComposableObservable changeObservable = new ComposableObservable();
-    private final Object3D object3D; // delegate object 3D
+    private final CompositeObject3d object3D; // delegate object 3D
     
     private final Rotation defaultRotation = new Rotation();
     private final Vector3 defaultFocus = new Vector3(0, 0, 0);
@@ -57,7 +57,7 @@ implements Object3D, ObservableInterface
     // per-axis scale factors to meet Mouse Light customer requirement
     private final Vector3 worldScaleHack = new Vector3(1, 1, 1);
 
-    public Vantage(Object3D parent) {
+    public Vantage(Object3d parent) {
         this.object3D = new BasicObject3D(parent);
         this.sceneUnitsPerViewportHeight = 2.0f;
     }
@@ -178,18 +178,18 @@ implements Object3D, ObservableInterface
     }
     
     @Override
-    public Object3D addChild(Object3D child) {
+    public Object3d addChild(Object3d child) {
         object3D.addChild(child);
         return this;
     }
 
     @Override
-    public Object3D getParent() {
+    public Object3d getParent() {
         return object3D.getParent();
     }
 
     @Override
-    public Collection<? extends Object3D> getChildren() {
+    public Collection<? extends Object3d> getChildren() {
         return object3D.getChildren();
     }
 
@@ -209,7 +209,7 @@ implements Object3D, ObservableInterface
     }
 
     @Override
-    public Object3D setVisible(boolean isVisible) {
+    public Object3d setVisible(boolean isVisible) {
         object3D.setVisible(isVisible);
         return this;
     }
@@ -220,13 +220,13 @@ implements Object3D, ObservableInterface
     }
 
     @Override
-    public Object3D setName(String name) {
+    public Object3d setName(String name) {
         object3D.setName(name);
         return this;
     }
 
     @Override
-    public Object3D setParent(Object3D parent) {
+    public Object3d setParent(Object3d parent) {
         object3D.setParent(parent);
         return this;
     }

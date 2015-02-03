@@ -47,7 +47,7 @@ import javax.media.opengl.GL3;
 import org.janelia.geometry3d.AbstractCamera;
 import org.janelia.geometry3d.BasicVector;
 import org.janelia.geometry3d.ConstVector;
-import org.janelia.geometry3d.Object3D;
+import org.janelia.geometry3d.CompositeObject3d;
 import org.janelia.geometry3d.Vertex;
 import org.janelia.gltools.MeshFloatVbo.VertexAttribute;
 
@@ -80,7 +80,7 @@ public class MeshActor extends BasicGL3Actor
     private boolean geometryIsDirty = true;
     private boolean particleIndicesAreDirty = true;
     
-    public MeshActor(MeshGeometry geometry, Material material, Object3D parent) {
+    public MeshActor(MeshGeometry geometry, Material material, CompositeObject3d parent) {
         super(parent);
         this.geometry = geometry;
         this.material = material;

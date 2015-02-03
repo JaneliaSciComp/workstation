@@ -34,33 +34,34 @@ import javax.media.opengl.GL3;
 import org.janelia.geometry3d.AbstractCamera;
 import org.janelia.geometry3d.BasicObject3D;
 import org.janelia.geometry3d.Matrix4;
-import org.janelia.geometry3d.Object3D;
+import org.janelia.geometry3d.CompositeObject3d;
+import org.janelia.geometry3d.Object3d;
 
 /**
  *
  * @author Christopher Bruns <brunsc at janelia.hhmi.org>
  */
 public class BasicGL3Actor implements GL3Actor {
-    private final Object3D object3d;
+    private final CompositeObject3d object3d;
     protected boolean isInitialized = false;
     
-    public BasicGL3Actor(Object3D parent) {
+    public BasicGL3Actor(Object3d parent) {
         object3d = new BasicObject3D(parent);
     }
 
     @Override
-    public Object3D addChild(Object3D child) {
+    public Object3d addChild(Object3d child) {
         object3d.addChild(child);
         return this;
     }
 
     @Override
-    public Object3D getParent() {
+    public Object3d getParent() {
         return object3d.getParent();
     }
 
     @Override
-    public Collection<? extends Object3D> getChildren() {
+    public Collection<? extends Object3d> getChildren() {
         return object3d.getChildren();
     }
 
@@ -80,7 +81,7 @@ public class BasicGL3Actor implements GL3Actor {
     }
 
     @Override
-    public Object3D setVisible(boolean isVisible) {
+    public Object3d setVisible(boolean isVisible) {
         object3d.setVisible(isVisible);
         return this;
     }
@@ -100,7 +101,7 @@ public class BasicGL3Actor implements GL3Actor {
         Matrix4 localMatrix = getTransformInParent();
         if (localMatrix != null)
             modelViewMatrix = new Matrix4(modelViewMatrix).multiply(localMatrix);
-        for (Object3D child : getChildren()) {
+        for (Object3d child : getChildren()) {
             if (child instanceof GL3Actor) {
                 ((GL3Actor)child).display(gl, camera, modelViewMatrix);
             }
@@ -109,7 +110,7 @@ public class BasicGL3Actor implements GL3Actor {
 
     @Override
     public void dispose(GL3 gl) {
-        for (Object3D child : getChildren()) {
+        for (Object3d child : getChildren()) {
             if (child instanceof GL3Actor)
                 ((GL3Actor)child).dispose(gl);
         }
@@ -118,7 +119,7 @@ public class BasicGL3Actor implements GL3Actor {
 
     @Override
     public void init(GL3 gl) {
-        for (Object3D child : getChildren()) {
+        for (Object3d child : getChildren()) {
             if (child instanceof GL3Actor)
                 ((GL3Actor)child).init(gl);
         }
@@ -131,13 +132,13 @@ public class BasicGL3Actor implements GL3Actor {
     }
 
     @Override
-    public Object3D setName(String name) {
+    public Object3d setName(String name) {
         object3d.setName(name);
         return this;
     }
 
     @Override
-    public Object3D setParent(Object3D parent) {
+    public Object3d setParent(Object3d parent) {
         object3d.setParent(parent);
         return this;
     }

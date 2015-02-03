@@ -37,7 +37,6 @@ import java.util.Observer;
  * @author Christopher Bruns
  */
 public interface ObservableInterface {
-    // ComposableObservable getChangeObservable();
     void setChanged();
     void notifyObservers();
     void addObserver(Observer observer);

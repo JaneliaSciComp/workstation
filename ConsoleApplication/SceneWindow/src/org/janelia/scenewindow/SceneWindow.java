@@ -40,7 +40,8 @@ import javax.media.opengl.GLProfile;
 import javax.swing.JComponent;
 import org.janelia.geometry3d.AbstractCamera;
 import org.janelia.geometry3d.Matrix4;
-import org.janelia.geometry3d.Object3D;
+import org.janelia.geometry3d.CompositeObject3d;
+import org.janelia.geometry3d.Object3d;
 import org.janelia.geometry3d.Vantage;
 import org.janelia.geometry3d.Viewport;
 import org.janelia.scenewindow.SceneRenderer.CameraType;
@@ -130,7 +131,7 @@ public class SceneWindow implements GLJComponent, Scene {
     }
 
     @Override
-    public Object3D addChild(Object3D child) {
+    public CompositeObject3d addChild(Object3d child) {
         scene.addChild(child);
         return this;
     }
@@ -141,18 +142,18 @@ public class SceneWindow implements GLJComponent, Scene {
     }
 
     @Override
-    public Object3D getParent() {
+    public Object3d getParent() {
         return scene.getParent();
     }
 
     @Override
-    public Object3D setParent(Object3D parent) {
+    public Object3d setParent(Object3d parent) {
         scene.setParent(parent);
         return this;
     }
 
     @Override
-    public Collection<? extends Object3D> getChildren() {
+    public Collection<? extends Object3d> getChildren() {
         return scene.getChildren();
     }
 
@@ -172,7 +173,7 @@ public class SceneWindow implements GLJComponent, Scene {
     }
 
     @Override
-    public Object3D setVisible(boolean isVisible) {
+    public Object3d setVisible(boolean isVisible) {
         scene.setVisible(isVisible);
         return this;
     }
@@ -183,7 +184,7 @@ public class SceneWindow implements GLJComponent, Scene {
     }
 
     @Override
-    public Object3D setName(String name) {
+    public Object3d setName(String name) {
         scene.setName(name);
         return this;
     }

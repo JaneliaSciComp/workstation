@@ -38,7 +38,8 @@ import org.janelia.geometry3d.AbstractCamera;
 import org.janelia.geometry3d.BrightnessModel;
 import org.janelia.geometry3d.Matrix4;
 import org.janelia.geometry3d.MeshGeometry;
-import org.janelia.geometry3d.Object3D;
+import org.janelia.geometry3d.CompositeObject3d;
+import org.janelia.geometry3d.Object3d;
 import org.janelia.geometry3d.ScreenQuadMesh;
 import org.janelia.gltools.material.BasicMaterial;
 import org.janelia.gltools.material.Material;
@@ -130,26 +131,26 @@ public class BasicScreenBlitActor implements GL3Actor
     }
 
     @Override
-    public Object3D getParent()
+    public Object3d getParent()
     {
         return actor.getParent();
     }
 
     @Override
-    public Object3D setParent(Object3D parent)
+    public Object3d setParent(Object3d parent)
     {
         actor.setParent(parent);
         return this;
     }
 
     @Override
-    public Collection<? extends Object3D> getChildren()
+    public Collection<? extends Object3d> getChildren()
     {
         return actor.getChildren();
     }
 
     @Override
-    public Object3D addChild(Object3D child)
+    public CompositeObject3d addChild(Object3d child)
     {
         actor.addChild(child);
         return this;
@@ -174,7 +175,7 @@ public class BasicScreenBlitActor implements GL3Actor
     }
 
     @Override
-    public Object3D setVisible(boolean isVisible)
+    public Object3d setVisible(boolean isVisible)
     {
         actor.setVisible(isVisible);
         return this;
@@ -187,7 +188,7 @@ public class BasicScreenBlitActor implements GL3Actor
     }
 
     @Override
-    public Object3D setName(String name)
+    public Object3d setName(String name)
     {
         actor.setName(name);
         return this;

@@ -37,34 +37,34 @@ import java.util.List;
  *
  * @author Christopher Bruns <brunsc at janelia.hhmi.org>
  */
-public class BasicObject3D implements Object3D {
-    private Object3D parent;
-    private final List<Object3D> children;
+public class BasicObject3D implements CompositeObject3d {
+    private Object3d parent;
+    private final List<Object3d> children;
     private final Matrix4 transformInWorld;
     private final Matrix4 transformInParent;
     private boolean isVisible = true;
     private String name = "Object3D";
     
-    public BasicObject3D(Object3D parent) {
+    public BasicObject3D(Object3d parent) {
         this.parent = parent;
-        children = new LinkedList<Object3D>();
+        children = new LinkedList<Object3d>();
         transformInWorld = new Matrix4();
         transformInParent = new Matrix4();
     }
     
     @Override
-    public Object3D addChild(Object3D child) {
+    public CompositeObject3d addChild(Object3d child) {
         children.add(child);
         return this;
     }
 
     @Override
-    public Object3D getParent() {
+    public Object3d getParent() {
         return parent;
     }
 
     @Override
-    public Collection<? extends Object3D> getChildren() {
+    public Collection<? extends Object3d> getChildren() {
         return children;
     }
 
@@ -84,13 +84,13 @@ public class BasicObject3D implements Object3D {
     }
 
     @Override
-    public Object3D setVisible(boolean isVisible) {
+    public Object3d setVisible(boolean isVisible) {
         this.isVisible = isVisible;
         return this;
     }
 
     @Override
-    public Object3D setName(String name) {
+    public Object3d setName(String name) {
         this.name = name;
         return this;
     }
@@ -101,7 +101,7 @@ public class BasicObject3D implements Object3D {
     }
 
     @Override
-    public Object3D setParent(Object3D parent) {
+    public Object3d setParent(Object3d parent) {
         this.parent = parent;
         return this;
     }
