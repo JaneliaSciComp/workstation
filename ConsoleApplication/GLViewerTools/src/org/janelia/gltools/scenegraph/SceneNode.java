@@ -1,4 +1,4 @@
-/* 
+/*
  * Licensed under the Janelia Farm Research Campus Software Copyright 1.1
  * 
  * Copyright (c) 2014, Howard Hughes Medical Institute, All rights reserved.
@@ -27,14 +27,18 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS 
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package org.janelia.geometry3d;
 
-import org.janelia.console.viewerapi.Parent;
+package org.janelia.gltools.scenegraph;
+
+import org.janelia.geometry3d.Sphere;
 
 /**
- * Interface for scene graph objects.
- * 
- * @author Christopher Bruns <brunsc at janelia.hhmi.org>
+ *
+ * @author Christopher Bruns
  */
-public interface CompositeObject3d extends Parent<Object3d>, Object3d {
+public interface SceneNode
+{
+    Sphere getBoundingSphere();
+    void setBoundingSphereDirty();
+    boolean boundingSphereIsDirty();
 }
