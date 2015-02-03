@@ -244,7 +244,7 @@ public class NeuriteTreePanel extends JPanel
         String annotationString;
         if (annotationMgr != null) {
             TileFormat tileFormat = annotationMgr.getTileFormat();
-            Vec3 voxelVec3 = tileFormat.micronVec3ForVoxelVec3(
+            Vec3 voxelVec3 = tileFormat.micronVec3ForVoxelVec3Centered(
                     new Vec3(annotation.getX(), annotation.getY(), annotation.getZ())
             );
             annotationString

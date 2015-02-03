@@ -113,7 +113,7 @@ public class LargeVolumeViewerTranslator {
         public void execute(Vec3 location) {
             TileFormat tileFormat = getTileFormat();
             cameraPanToSignal.emit(
-                    tileFormat.micronVec3ForVoxelVec3(location)
+                    tileFormat.micronVec3ForVoxelVec3Centered(location)
             );
         }
     };

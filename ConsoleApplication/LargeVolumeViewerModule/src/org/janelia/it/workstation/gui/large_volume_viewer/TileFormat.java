@@ -565,11 +565,14 @@ public class TileFormat
         return micrometerXyzForVoxelXyz(vx, axis);
     }
     
-    /** Convenience method for conversion. */
-    public Vec3 micronVec3ForVoxelVec3( Vec3 voxelVec3 ) {
+    public Vec3 micronVec3ForVoxelVec3Cornered( Vec3 voxelVec3 ) {
         TileFormat.VoxelXyz vox = new TileFormat.VoxelXyz(voxelVec3);
         TileFormat.MicrometerXyz micron = micrometerXyzForVoxelXyz(vox, CoordinateAxis.Z);
         return new Vec3( micron.getX(), micron.getY(), micron.getZ() );
+    }
+    
+    public Vec3 micronVec3ForVoxelVec3Centered( Vec3 voxelVec3 ) {
+        return micronVec3ForVoxelVec3Cornered( voxelVec3.plus(new Vec3( 0.5, 0.5, 0.5 ) ) );
     }
     
 	public ZoomedVoxelIndex zoomedVoxelIndexForVoxelXyz(VoxelXyz v, ZoomLevel zoomLevel, CoordinateAxis sliceAxis) 

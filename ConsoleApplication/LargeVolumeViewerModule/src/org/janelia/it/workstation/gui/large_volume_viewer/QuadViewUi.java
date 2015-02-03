@@ -314,7 +314,7 @@ public class QuadViewUi extends JPanel
             Anchor anchor = getSkeletonActor().getNextParent();
             if (anchor != null) {
                 setCameraFocusSlot.execute(
-                        tileFormat.micronVec3ForVoxelVec3(anchor.getLocation())
+                        tileFormat.micronVec3ForVoxelVec3Cornered(anchor.getLocation())
                 );
             }
         }
