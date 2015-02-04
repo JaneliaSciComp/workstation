@@ -30,11 +30,29 @@
 
 package org.janelia.gltools.scenegraph;
 
+import javax.media.opengl.GL3;
+
 /**
  *
  * @author Christopher Bruns
  */
-public interface Drawable
+class DisposeGlVisitor implements NodeVisitor
 {
-    void draw(RenderInfo renderInfo);
+    private GL3 gl;
+
+    public DisposeGlVisitor(GL3 gl)
+    {
+        this.gl = gl;
+    }
+
+    @Override
+    public void visit(DrawableNode node)
+    {
+        node.dispose(gl);
+    }
+
+    @Override
+    public void visit(RootSceneNode node)
+    {}
+
 }

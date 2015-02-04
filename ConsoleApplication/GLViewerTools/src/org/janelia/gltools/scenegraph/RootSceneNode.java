@@ -31,12 +31,19 @@
 package org.janelia.gltools.scenegraph;
 
 import java.util.Collection;
+import org.janelia.geometry3d.Sphere;
 
 /**
  *
  * @author Christopher Bruns
  */
-public interface GroupNode extends SceneNode, Collection<SceneNode>
+public interface RootSceneNode
 {
+    Collection<? extends SceneNode> getChildren();
     
+    Sphere getBoundingSphere();
+    void setBoundingSphereDirty();
+    boolean boundingSphereIsDirty();
+    
+    void accept(NodeVisitor visitor);
 }

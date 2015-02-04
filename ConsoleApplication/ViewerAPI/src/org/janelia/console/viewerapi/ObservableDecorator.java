@@ -28,13 +28,20 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-package org.janelia.gltools.scenegraph;
+package org.janelia.console.viewerapi;
+
+import java.util.Observer;
 
 /**
  *
  * @author Christopher Bruns
+ * Intended for use as a decorator pattern, to make certain instances observable
  */
-public interface SceneNode extends RootSceneNode
+public interface ObservableDecorator<E>
 {
-    RootSceneNode getParent();
+    E getValue();
+    boolean setValue(E value);
+    void addObserver(Observer o);
+    void deleteObserver(Observer o);
+    void notifyObservers();
 }

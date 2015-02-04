@@ -30,13 +30,21 @@
 
 package org.janelia.gltools.scenegraph;
 
-import java.util.Collection;
-
 /**
  *
  * @author Christopher Bruns
  */
-public interface GeometryNode extends SceneNode, Collection<Drawable>
+public class RenderBin
 {
+    public static enum SortMode {DISTANCE, DONT_CARE};
     
+    private SortMode sortMode;
+    private int orderIndex;
+    private String name;
+
+    public RenderBin(int order, SortMode sortMode, String name) {
+        this.name = name;
+        this.orderIndex = order;
+        this.sortMode = sortMode;
+    }
 }

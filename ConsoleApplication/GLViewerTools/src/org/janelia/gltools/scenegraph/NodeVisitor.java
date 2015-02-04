@@ -34,7 +34,8 @@ package org.janelia.gltools.scenegraph;
  *
  * @author Christopher Bruns
  */
-public interface SceneNode extends RootSceneNode
+public interface NodeVisitor
 {
-    RootSceneNode getParent();
+    void visit(DrawableNode node);
+    void visit(RootSceneNode node);
 }

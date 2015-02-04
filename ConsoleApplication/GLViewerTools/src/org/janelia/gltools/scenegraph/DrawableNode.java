@@ -30,11 +30,15 @@
 
 package org.janelia.gltools.scenegraph;
 
+import javax.media.opengl.GL3;
+
 /**
  *
  * @author Christopher Bruns
  */
-public interface SceneNode extends RootSceneNode
+public interface DrawableNode
 {
-    RootSceneNode getParent();
+    void draw(RenderInfo renderInfo);
+
+    public void dispose(GL3 gl);
 }
