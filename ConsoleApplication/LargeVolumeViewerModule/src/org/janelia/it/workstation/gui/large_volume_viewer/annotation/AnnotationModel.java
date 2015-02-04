@@ -82,6 +82,7 @@ that need to respond to changing data.
         @Override
         public void execute(TmNeuron neuron) {
             setCurrentNeuron(neuron);
+            neuronSelectedSignal.emit(neuron);
         }
     };
 
@@ -143,10 +144,18 @@ that need to respond to changing data.
         return currentNeuron;
     }
 
+    // this method sets the current neuron but does not
+    //  emit the signal to update the UI
     public void setCurrentNeuron(TmNeuron neuron) {
         currentNeuron = neuron;
         updateCurrentNeuron();
-        neuronSelectedSignal.emit(currentNeuron);
+    }
+
+    // this method sets the current neuron *and*
+    //  updates the UI
+    public void selectNeuron(TmNeuron neuron) {
+        setCurrentNeuron(neuron);
+        neuronSelectedSignal.emit(neuron);
     }
 
     private void updateCurrentNeuron() {
@@ -270,6 +279,7 @@ that need to respond to changing data.
         workspaceLoadedSignal.emit(getCurrentWorkspace());        
 
         setCurrentNeuron(neuron);
+        neuronSelectedSignal.emit(neuron);       
     }
 
     /**
@@ -287,7 +297,7 @@ that need to respond to changing data.
 
         TmNeuron neuron = modelMgr.loadNeuron(currentNeuronID);
         setCurrentNeuron(neuron);
-        neuronSelectedSignal.emit(getCurrentNeuron());
+        neuronSelectedSignal.emit(neuron);
 
     }
 
@@ -299,6 +309,7 @@ that need to respond to changing data.
         // keep a copy so we know what visuals to remove:
         TmNeuron deletedNeuron = getCurrentNeuron();
         setCurrentNeuron(null);
+        neuronSelectedSignal.emit(null);
 
         // delete
         modelMgr.deleteEntityTree(deletedNeuron.getId());
@@ -530,6 +541,7 @@ that need to respond to changing data.
         notesUpdatedSignal.emit(getCurrentWorkspace());
         targetNeuron = getNeuronFromAnnotationID(targetAnnotationID);
         setCurrentNeuron(targetNeuron);
+        neuronSelectedSignal.emit(targetNeuron);       
 
         // get fresh target annotation, and redraw its children; trigger
         //  traced paths
@@ -1014,6 +1026,7 @@ that need to respond to changing data.
 
     public void importSWCData(File swcFile, SimpleWorker worker) throws Exception {
         setCurrentNeuron(null);
+        neuronSelectedSignal.emit(null);
 
         // the constructor also triggers the parsing, but not the validation
         SWCData swcData = SWCData.read(swcFile);
@@ -1088,6 +1101,7 @@ that need to respond to changing data.
         updateCurrentWorkspace();
         workspaceLoadedSignal.emit(getCurrentWorkspace());
         setCurrentNeuron(neuron);
+        neuronSelectedSignal.emit(neuron);
 
 
         // normally if automatic tracing is enabled, we'd do that here, but
