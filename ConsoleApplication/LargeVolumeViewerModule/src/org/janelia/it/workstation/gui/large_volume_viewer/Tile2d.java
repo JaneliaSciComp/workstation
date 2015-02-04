@@ -180,9 +180,12 @@ implements GLActor
         GL2 gl = glDrawable.getGL().getGL2();
 		bestTexture.init(gl);
 		PyramidTexture texture = bestTexture.getTexture();
-		assert(texture != null);
-		if (texture == null)
-			return;
+		if (texture == null) {
+            if (log.isDebugEnabled()) {
+                new Exception("Texture is null").printStackTrace();
+            }
+            return;
+        }
 		if (! bestTexture.getIndex().equals(getIndex())) {
 			// log.info("using imperfect texture "+bestTexture.getIndex()+" for tile "+getIndex());
 		}

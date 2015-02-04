@@ -59,7 +59,11 @@ public class LargeVolumeViewViewer extends JPanel {
                 // don't reload if user tries to reload the same entity (is that a
                 //  good idea?  not clear)
                 if (initialEntity != null && rootedEntity.getEntity().getId() != initialEntity.getId()) {
-                    deleteAll();
+                    SwingUtilities.invokeAndWait(new Runnable() {
+                        public void run() {
+                            deleteAll();
+                        }
+                    });
                 }
                 initialEntity = rootedEntity.getEntity();
 
