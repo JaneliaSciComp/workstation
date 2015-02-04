@@ -2,7 +2,6 @@ package org.janelia.it.workstation.gui.framework.session_mgr;
 
 import org.janelia.it.jacs.model.entity.Entity;
 
-import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -54,10 +53,10 @@ public class BrowserModel extends GenericModel implements Cloneable {
     }
 
 
-    public Entity getMasterEditorEntity() {
-        return masterEditorEntity;
-    }
-
+//    public Entity getMasterEditorEntity() {
+//        return masterEditorEntity;
+//    }
+//
     public void setMasterEditorEntity(Entity masterEditorEntity) {
         if (this.masterEditorEntity != null && this.masterEditorEntity.equals(masterEditorEntity)) return;
         this.masterEditorEntity = masterEditorEntity;
@@ -70,14 +69,14 @@ public class BrowserModel extends GenericModel implements Cloneable {
     }
 
 
-    public Object clone() {
-        BrowserModel browserModel = new BrowserModel();
-        browserModel.selection = selection;
-        browserModel.masterEditorEntity = masterEditorEntity;
-        browserModel.modelListeners = new ArrayList(); //Trash the listener list of the clone
-        return browserModel;
-    }
-
+//    public Object clone() {
+//        BrowserModel browserModel = new BrowserModel();
+//        browserModel.selection = selection;
+//        browserModel.masterEditorEntity = masterEditorEntity;
+//        browserModel.modelListeners = new ArrayList<>(); //Trash the listener list of the clone
+//        return browserModel;
+//    }
+//
     private void fireMasterEditorEntityChangeEvent() {
         BrowserModelListener browserModelListener;
         List listeners = (List) modelListeners.clone();

@@ -83,80 +83,6 @@ public class TileFormat
 		return result;
 	}
 	
-	/**
-	 * Returns four corner locations in units of micrometers, relative to
-	 * the full parent volume, in Z order:
-	 * <pre>
-	 *   0-----1       x--->
-	 *   |     |    y
-	 *   |     |    |
-	 *   2-----3    v
-	 * </pre>
-	 * 
-	 * NOTE: The behavior of this method for non-Z slices probably requires more
-	 * thought and testing.
-	 * 
-	 * @param index
-	 * @return
-	 */
-	public Vec3[] cornersForTileIndex(TileIndex index) {
-		// New way
-		// upper left front corner of tile
-	    ZoomLevel zoomLevel = new ZoomLevel(index.getZoom());
-		TileXyz tileXyz = new TileXyz(index.getX(), index.getY(), index.getZ());
-		ZoomedVoxelIndex zvox = zoomedVoxelIndexForTileXyz(tileXyz, zoomLevel, index.getSliceAxis());
-		VoxelXyz vox = voxelXyzForZoomedVoxelIndex(zvox, index.getSliceAxis());
-		MicrometerXyz ulfCorner = micrometerXyzForVoxelXyz(vox, index.getSliceAxis());
-		// lower right back corner
-		int dt[] = {1, -1, 1}; // shift by one tile to get opposite corner
-		int depthAxis = index.getSliceAxis().index();
-		dt[depthAxis] = 0; // but no shift in slice direction
-		TileXyz tileLrb = new TileXyz(index.getX() + dt[0], index.getY() + dt[1], index.getZ() + dt[2]);
-		ZoomedVoxelIndex zVoxLrb = zoomedVoxelIndexForTileXyz(tileLrb, zoomLevel, index.getSliceAxis());
-		VoxelXyz voxLrb = voxelXyzForZoomedVoxelIndex(zVoxLrb, index.getSliceAxis());
-		MicrometerXyz lrbCorner = micrometerXyzForVoxelXyz(voxLrb, index.getSliceAxis());
-		//
-// Checking in commented code. Commented to avoid breaking Chris' other changes.
-//		Vec3 dv = new Vec3(); // diagonal vector across tile block
-//		for (int i = 0; i < 3; ++i) {
-//			dv.set(i, zoomFactor * getTileSize()[i] * getVoxelMicrometers()[i]);
-//			double val = v1.get(i);
-//			// shift to center of slice
-//			if (i == depthAxis)
-//				val += 0.5;
-//			// scale by zoom level
-//			if ((i != depthAxis) || (indexStyle == TileIndex.IndexStyle.OCTREE))
-//				val *= zoomFactor;
-//			// convert tiles to voxels
-//			if (i != depthAxis)
-//				val *= getTileSize()[i];
-//			// Shift to world origin
-//			val += origin[i];
-//			// convert voxels to micrometers
-//			val *= getVoxelMicrometers()[i];
-//			//
-//			v1.set(i, val);
-//		}
-		Vec3 ulf = new Vec3(ulfCorner.getX(), ulfCorner.getY(), ulfCorner.getZ());
-		Vec3 lrb = new Vec3(lrbCorner.getX(), lrbCorner.getY(), lrbCorner.getZ());
-		Vec3 dv = lrb.minus(ulf);
-		// To generalize Raveler format, invert vertical tile dimension
-		int verticalAxis = (depthAxis + 2) % 3;
-		int horizontalAxis = (depthAxis + 1) % 3;
-		Vec3 dw = new Vec3(0,0,0);
-		dw.set(horizontalAxis, dv.get(horizontalAxis));
-		Vec3 dh = new Vec3(0,0,0);
-		dh.set(verticalAxis, dv.get(verticalAxis));
-
-		Vec3[] result = new Vec3[4];
-		result[0] = ulf;
-		result[1] = ulf.plus(dw);
-		result[2] = ulf.plus(dh);
-		result[3] = ulf.plus(dh).plus(dw);
-		
-		return result;
-	}
-	
 	public int zoomLevelForCameraZoom(double pixelsPerSceneUnit) 
 	{
 		// use slightly lower resolution in the interest of speed.
@@ -329,7 +255,7 @@ public class TileFormat
 	 *   intensityMax = 255
 	 *   sRgb = false
 	 */
-	public void setDefaultParameters() {
+	public final void setDefaultParameters() {
 		for (int i = 0; i < 3; ++i) {
 			origin[i] = 0;
 			volumeSize[i] = 512; // whatever

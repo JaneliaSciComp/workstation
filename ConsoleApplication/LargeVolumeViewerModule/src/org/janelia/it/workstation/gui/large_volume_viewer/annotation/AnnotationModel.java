@@ -430,6 +430,7 @@ that need to respond to changing data.
         }
 
         updateCurrentWorkspace();
+        notesUpdatedSignal.emit(getCurrentWorkspace());
         updateCurrentNeuron();
 
         // must come after workspace and neuron are updated:
@@ -488,11 +489,45 @@ that need to respond to changing data.
             removeAnchoredPath(child, sourceAnnotation);
         }
 
+        // if the source ann has a note, move it to or append it to the target ann:
+        TmStructuredTextAnnotation sourceNote = sourceNeuron.getStructuredTextAnnotationMap().get(sourceAnnotationID);
+        if (sourceNote != null) {
+            TmStructuredTextAnnotation targetNote = targetNeuron.getStructuredTextAnnotationMap().get(targetAnnotationID);
+            String sourceNoteText = new String("");
+            JsonNode rootNode = sourceNote.getData();
+            JsonNode noteNode = rootNode.path("note");
+            if (!noteNode.isMissingNode()) {
+                sourceNoteText = noteNode.asText();
+            }
+            if (sourceNoteText.length() > 0) {
+                if (targetNote == null) {
+                    // add old note to target
+                    setNote(getGeoAnnotationFromID(targetAnnotationID), sourceNoteText);
+                } else {
+                    // merge notes
+                    String targetNoteText = new String("");
+                    rootNode = targetNote.getData();
+                    noteNode = rootNode.path("note");
+                    if (!noteNode.isMissingNode()) {
+                        targetNoteText = noteNode.asText();
+                    }
+                    if (targetNoteText.length() > 0) {
+                        setNote(getGeoAnnotationFromID(targetAnnotationID),
+                            String.format("%s %s", targetNoteText, sourceNoteText));
+                    }
+                }
+            }
+        }
+
         // finally, delete source ann
+        if (sourceNote != null) {
+            modelMgr.deleteStructuredTextAnnotation(sourceNote.getId());
+        }
         modelMgr.deleteGeometricAnnotation(sourceAnnotationID);
 
         // update objects *again*, last time:
         updateCurrentWorkspace();
+        notesUpdatedSignal.emit(getCurrentWorkspace());
         targetNeuron = getNeuronFromAnnotationID(targetAnnotationID);
         setCurrentNeuron(targetNeuron);
 
@@ -549,13 +584,19 @@ that need to respond to changing data.
             // if segment to child had a trace, remove it
             removeAnchoredPath(link, child);
         }
-        // delete the deleted annotation that is to be deleted:
+        // delete the deleted annotation that is to be deleted (and its note, too):
+        TmStructuredTextAnnotation note = neuron.getStructuredTextAnnotationMap().get(link.getId());
+        if (note != null) {
+            // don't use removeNote(); it triggers updates we don't want yet
+            modelMgr.deleteStructuredTextAnnotation(note.getId());
+        }
         modelMgr.deleteGeometricAnnotation(link.getId());
 
         // if segment to parent had a trace, remove it
         removeAnchoredPath(link, parent);
 
         updateCurrentWorkspace();
+        notesUpdatedSignal.emit(getCurrentWorkspace());
         updateCurrentNeuron();
 
         // if we're tracing, retrace if there's a new connection
@@ -609,6 +650,7 @@ that need to respond to changing data.
         TmGeoAnnotation rootParent = neuron.getParentOf(rootAnnotation);
 
         List<TmGeoAnnotation> deleteList = neuron.getSubTreeList(rootAnnotation);
+        TmStructuredTextAnnotation note;
         for (TmGeoAnnotation annotation: deleteList) {
             // for each annotation, delete any paths traced to its children;
             //  do before the deletion!
@@ -616,6 +658,11 @@ that need to respond to changing data.
                 removeAnchoredPath(annotation, child);
             }
 
+            note = neuron.getStructuredTextAnnotationMap().get(annotation.getId());
+            if (note != null) {
+                // don't use removeNote(); it triggers updates we don't want yet
+                modelMgr.deleteStructuredTextAnnotation(note.getId());
+            }
             modelMgr.deleteGeometricAnnotation(annotation.getId());
         }
         // for the root annotation, also delete any traced paths to the parent, if it exists
@@ -625,6 +672,7 @@ that need to respond to changing data.
 
 
         updateCurrentWorkspace();
+        notesUpdatedSignal.emit(getCurrentWorkspace());
         updateCurrentNeuron();
 
         // notify the public; "neuronSelected" will update the neurite tree
@@ -878,7 +926,6 @@ that need to respond to changing data.
             JsonNode rootNode = textAnnotation.getData();
             ((ObjectNode) rootNode).put("note", noteString);
 
-            // modelmgr.update(old ann, node.write string)
             modelMgr.updateStructuredTextAnnotation(textAnnotation, mapper.writeValueAsString(rootNode));
 
         } else {
@@ -956,23 +1003,9 @@ that need to respond to changing data.
 
         // get swcdata via converter, then write
         SWCData swcData = SWCDataConverter.fromTmNeuron(neuronList, downsampleModulo);
-        // Local validity check.  Redundant points?
-        /* DEBUG CODE:  --found that these were coincidences of running
-           the point-creating algorithm near branch point.
-        Map<Vec3,SWCNode> nodePoints = new HashMap<>();
-        for ( SWCNode node: swcData.getNodeList() ) {
-            Vec3 nextVec = new Vec3( node.getX(), node.getY(), node.getZ() );
-            if ( nodePoints.keySet().contains( nextVec ) ) {
-                System.err.println( 
-                        String.format("ERROR: found same point %f,%f,%f for node <<%s>> and <<%s>>.", nextVec.getX(), nextVec.getY(), nextVec.getZ(), node.toSWCline(), nodePoints.get(nextVec).toSWCline() )
-                );
-            }
-            else {
-                nodePoints.put( nextVec, node );
-            }
+        if (swcData != null) {
+            swcData.write(swcFile);
         }
-        */
-        swcData.write(swcFile);
     }
 
     public void importSWCData(File swcFile) throws Exception {

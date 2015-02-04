@@ -462,7 +462,7 @@ public abstract class PreferenceManager {
                 Properties tmpProperties = tmpObject.getPropertyOutput();
                 for (Object o : tmpProperties.keySet()) {
                     String tmpKey = (String) o;
-                    String tmpValue = tmpProperties.getProperty(tmpKey);
+                    String tmpValue = tmpProperties.getProperty(tmpKey).replace("\\", "\\\\");
                     if (DEBUG) System.out.println("Writing out: " + tmpKey + " " + tmpValue);
                     writer.write(tmpKey + " " + tmpValue + "\n");
                 }

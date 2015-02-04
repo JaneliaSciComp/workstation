@@ -20,8 +20,8 @@ public class EntitySelectionModel {
     public static final String CATEGORY_ONTOLOGY = "ontology";
     public static final String CATEGORY_ALIGNMENT_BOARD_VIEW = "alignmentBoardViewer"; //LLF
 
-    private final Map<String, List<String>> selectionModels = new HashMap<String, List<String>>();
-    private final List<String> latestGlobalSelection = new ArrayList<String>();
+    private final Map<String, List<String>> selectionModels = new HashMap<>();
+    private final List<String> latestGlobalSelection = new ArrayList<>();
 
     public EntitySelectionModel() {
         selectionModels.put(CATEGORY_OUTLINE, new ArrayList<String>());
@@ -73,8 +73,7 @@ public class EntitySelectionModel {
     }
 
     public List<String> getSelectedEntitiesIds(String category) {
-        List<String> selected = getCategory(category);
-        return selected;
+        return getCategory(category);
     }
 
     public String getLastSelectedEntityIdByCategory(String category) {

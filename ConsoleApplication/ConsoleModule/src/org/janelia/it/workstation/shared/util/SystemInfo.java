@@ -240,7 +240,7 @@ public class SystemInfo {
      * @return 
      */
     private static File getOrCreateBrandingConfigFile() throws IOException {
-        String appnameToken ="JaneliaWorkstation";  //todo This needs o be programmatically set and retrieved
+        String appnameToken ="JaneliaWorkstation";  //todo This needs to be programmatically set and retrieved
         File userSettingsDir = new File( System.getProperty("netbeans.user") );
         if ( ! userSettingsDir.toString().contains("testuserdir") ) {
             userSettingsDir = new File( userSettingsDir.toString(), ETC_SUBPATH );

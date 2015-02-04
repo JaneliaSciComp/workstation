@@ -191,6 +191,13 @@ public class AnnotationManager
         }
     };
 
+    public Slot1<TmGeoAnnotation> editNoteRequestedSlot = new Slot1<TmGeoAnnotation>() {
+        @Override
+        public void execute(TmGeoAnnotation ann) {
+            addEditNote(ann.getId());
+        }
+    };
+
     public Slot closeWorkspaceRequestedSlot = new Slot() {
         @Override
         public void execute() {
@@ -513,12 +520,13 @@ public class AnnotationManager
             return;
         }
 
-        // are you sure dialog; should probably provide more info, but not
-        //  clear what that would be; "merge neurite rooted at xyz with ## annotations
-        //  in neuron A with ..."?
+        // are you sure dialog
+        // message before title, why???
         int ans =  JOptionPane.showConfirmDialog(
                 ComponentUtil.getLVVMainWindow(),
-                "Merge neurites?",
+                String.format("Merge neurite from neuron %s\nto neurite in neuron %s?",
+                    annotationModel.getNeuronFromAnnotationID(sourceAnnotationID),
+                    annotationModel.getNeuronFromAnnotationID(targetAnnotationID)),
                 "Merge neurites?",
                 JOptionPane.OK_CANCEL_OPTION);
         if (ans != JOptionPane.OK_OPTION) {
@@ -1142,8 +1150,13 @@ public class AnnotationManager
 
     public void exportAllNeuronsAsSWC(final File swcFile, final int downsampleModulo) {
         final List<Long> neuronIDList = new ArrayList<>();
+        int nannotations = 0;
         for (TmNeuron neuron: annotationModel.getCurrentWorkspace().getNeuronList()) {
+            nannotations += neuron.getGeoAnnotationMap().size();
             neuronIDList.add(neuron.getId());
+        }
+        if (nannotations == 0) {
+            presentError("No points in any neuron!", "Export error");
         }
 
         SimpleWorker saver = new SimpleWorker() {
@@ -1166,8 +1179,11 @@ public class AnnotationManager
     }
 
     public void exportCurrentNeuronAsSWC(final File swcFile, final int downsampleModulo) {
-        final Long neuronID = annotationModel.getCurrentNeuron().getId();
+        if (annotationModel.getCurrentNeuron().getGeoAnnotationMap().size() == 0) {
+            presentError("Neuron has no points!", "Export error");
+        }
 
+        final Long neuronID = annotationModel.getCurrentNeuron().getId();
         SimpleWorker saver = new SimpleWorker() {
             @Override
             protected void doStuff() throws Exception {

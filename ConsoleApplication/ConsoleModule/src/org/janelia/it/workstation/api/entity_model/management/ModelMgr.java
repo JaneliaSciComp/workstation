@@ -76,7 +76,7 @@ public final class ModelMgr {
 
     public Entity ERROR_ONTOLOGY = null;
 
-    private final List<ModelMgrObserver> modelMgrObservers = new ArrayList<ModelMgrObserver>();
+    private final List<ModelMgrObserver> modelMgrObservers = new ArrayList<>();
 
     private Long currWorkspaceId;
 
@@ -134,7 +134,7 @@ public final class ModelMgr {
     }
 
     public List<ModelMgrObserver> getModelMgrObservers() {
-        return new ArrayList<ModelMgrObserver>(modelMgrObservers);
+        return new ArrayList<>(modelMgrObservers);
     }
 
     public void registerExceptionHandler(ExceptionHandler handler) {
@@ -224,7 +224,7 @@ public final class ModelMgr {
     }
 
     public TreeSet<String> getOntologyTermSet(Entity ontologyRoot) {
-        TreeSet<String> ontologyElementTreeSet = new TreeSet<String>();
+        TreeSet<String> ontologyElementTreeSet = new TreeSet<>();
         List<Entity> list = ModelMgrUtils.getAccessibleChildren(ontologyRoot);
         list = ontologyWalker(list);
         for (Entity entity : list) {
@@ -234,7 +234,7 @@ public final class ModelMgr {
     }
 
     public List<Entity> ontologyWalker(List<Entity> list) {
-        List<Entity> finalList = new ArrayList<Entity>();
+        List<Entity> finalList = new ArrayList<>();
         finalList.addAll(list);
         for (Entity entity : list) {
             List<Entity> accessible = ModelMgrUtils.getAccessibleChildren(entity);
@@ -680,10 +680,8 @@ public final class ModelMgr {
                     return;
                 }
                 EntityData computationalEd = annotationEntity.getEntityDataByAttributeName(EntityConstants.ATTRIBUTE_ANNOTATION_IS_COMPUTATIONAL);
-                if (annotationEntity!=null) {
-                	entityModel.deleteEntityData(computationalEd);
-                }
-        	}
+                entityModel.deleteEntityData(computationalEd);
+            }
         }
         notifyAnnotationsChanged(entityId);
     }
@@ -948,7 +946,7 @@ public final class ModelMgr {
     }
 
     public Task submitJob(String processDefName, String displayName) throws Exception {
-        HashSet<TaskParameter> taskParameters = new HashSet<TaskParameter>();
+        HashSet<TaskParameter> taskParameters = new HashSet<>();
         return submitJob(processDefName, displayName, taskParameters);
     }
 
@@ -1010,9 +1008,8 @@ public final class ModelMgr {
         return FacadeManager.getFacadeManager().getSolrFacade().searchSolr(query);
     }
 
-    //todo "Flylight"? Maybe we can refctor out this explicit project knowledge?  Is there a nice, clean abstraction for this?
-    public Map<String, SageTerm> getFlyLightVocabulary() throws Exception {
-        return FacadeManager.getFacadeManager().getSolrFacade().getFlyLightVocabulary();
+    public Map<String, SageTerm> getImageVocabulary() throws Exception {
+        return FacadeManager.getFacadeManager().getSolrFacade().getImageVocabulary();
     }
 
     public void addChildren(Long parentId, List<Long> childrenIds, String attributeName) throws Exception {
