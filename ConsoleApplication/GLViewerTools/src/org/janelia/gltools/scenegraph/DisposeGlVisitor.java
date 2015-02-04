@@ -52,7 +52,7 @@ class DisposeGlVisitor implements NodeVisitor
     }
 
     @Override
-    public void visit(RootSceneNode node)
+    public void visit(SceneNode node)
     {}
 
 }

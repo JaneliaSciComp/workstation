@@ -37,5 +37,5 @@ package org.janelia.gltools.scenegraph;
 public interface NodeVisitor
 {
     void visit(DrawableNode node);
-    void visit(RootSceneNode node);
+    void visit(SceneNode node);
 }

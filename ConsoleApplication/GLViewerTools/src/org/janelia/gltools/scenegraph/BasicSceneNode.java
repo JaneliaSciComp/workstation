@@ -30,6 +30,7 @@
 
 package org.janelia.gltools.scenegraph;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import org.janelia.geometry3d.Sphere;
 
@@ -37,13 +38,49 @@ import org.janelia.geometry3d.Sphere;
  *
  * @author Christopher Bruns
  */
-public interface RootSceneNode
+public class BasicSceneNode implements SceneNode
 {
-    Collection<? extends SceneNode> getChildren();
+    private SceneNode parent;
+    private final Collection<? extends SceneNode> children = new ArrayList<>();
+    private boolean boundingSphereIsDirty = true;
+
+    @Override
+    public SceneNode getParent()
+    {
+        return parent;
+    }
+
+    @Override
+    public Collection<? extends SceneNode> getChildren()
+    {
+        return children;
+    }
+
+    @Override
+    public Sphere getBoundingSphere()
+    {
+        return null;
+    }
+
+    @Override
+    public void setBoundingSphereDirty()
+    {
+        boundingSphereIsDirty = true;
+    }
+
+    @Override
+    public boolean boundingSphereIsDirty()
+    {
+        return boundingSphereIsDirty;
+    }
+
+    @Override
+    public void accept(NodeVisitor visitor)
+    {
+        visitor.visit(this);
+        for (SceneNode node : children) {
+            node.accept(visitor);
+        }
+    }
     
-    Sphere getBoundingSphere();
-    void setBoundingSphereDirty();
-    boolean boundingSphereIsDirty();
-    
-    void accept(NodeVisitor visitor);
 }

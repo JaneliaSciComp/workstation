@@ -46,7 +46,7 @@ import javax.media.opengl.GLEventListener;
 public class SceneGraphRenderer implements GLEventListener
 {
     // Handle for the scene graph itself
-    private RootSceneNode rootNode;
+    private SceneNode rootNode;
     // Viewport objects: multiple, for use in stereo and minimap modes
     private List<RenderViewport> viewports = new ArrayList<RenderViewport>();
 

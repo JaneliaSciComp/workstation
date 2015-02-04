@@ -40,5 +40,5 @@ public interface DrawableNode
 {
     void draw(RenderInfo renderInfo);
 
-    public void dispose(GL3 gl);
+    void dispose(GL3 gl);
 }
