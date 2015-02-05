@@ -328,11 +328,6 @@ public class SearchConfiguration {
             else if (v instanceof Double) {
                 formattedValue = decFormat.format((Double) v);
             }
-            else {
-                if ("tiling_pattern_txt".equals(fieldName)) {
-                    formattedValue = StringUtils.underscoreToTitleCase(formattedValue);
-                }
-            }
             formattedValues.add(formattedValue);
         }
 

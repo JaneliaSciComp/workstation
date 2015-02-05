@@ -298,9 +298,11 @@ public abstract class EntityTransferHandler extends TransferHandler {
                     index = ModelMgrUtils.getNumAccessibleChildren(parentEntity);
                 }
             }
-
+                
             final DefaultMutableTreeNode finalParent = parent;
             final int finalIndex = index;
+
+            log.trace("finalParent={}, finalParent={}", finalParent, index);
 
             SimpleWorker worker = new SimpleWorker() {
                 @Override
@@ -366,6 +368,14 @@ public abstract class EntityTransferHandler extends TransferHandler {
 
             log.debug("  Adding {}", EntityUtils.identify(rootedEntity.getEntity()));
 
+            EntityData existingEd = EntityUtils.findChildEntityDataWithChildId(parentEntity, rootedEntity.getEntityId());
+            if (EntityUtils.findChildEntityDataWithChildId(parentEntity, rootedEntity.getEntityId())!=null) {
+                log.debug("Target already has this entity, just move it to the end");
+                eds.remove(existingEd);
+                eds.add(existingEd);
+                continue;
+            }
+            
             // Should we delete the sources after copying into the new location (e.g. is this a move?)
             boolean deleteSourceEds = deleteSources;
             if (!deleteSources && moveWhenReordering) {
@@ -374,12 +384,12 @@ public abstract class EntityTransferHandler extends TransferHandler {
                 while (enumeration.hasMoreElements()) {
                     DefaultMutableTreeNode childNode = (DefaultMutableTreeNode) enumeration.nextElement();
                     EntityData ed = entityTree.getEntityData(childNode);
-                    // TODO: This check is not exactly correct. If the entity already exists in the target, then this will assume we're reordering, 
-                    // when really we're copying in a duplicate. That leads to some unwanted behavior, but fixing it is a large task, and we're 
-                    // going to replace this entirely with NetBeans stuff in the future, so it's probably not worth fixing right now.
                     if (ed != null && ed.getChildEntity() != null && Utils.areSameEntity(rootedEntity.getEntity(), ed.getChildEntity())) {
-                        log.debug("  This is a reordering, so we'll delete the source: " + ed.getId());
-                        deleteSourceEds = true;
+                        Long currParentId = rootedEntity.getEntityData().getParentEntity().getId();
+                        if (currParentId.equals(parentEntity.getId())) {
+                            log.debug("  This is a reordering, so we'll delete the source: " + ed.getId());
+                            deleteSourceEds = true;
+                        }
                     }
                 }
             }
