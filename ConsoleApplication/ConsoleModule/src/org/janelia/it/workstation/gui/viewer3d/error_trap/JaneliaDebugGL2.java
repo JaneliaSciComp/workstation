@@ -10,6 +10,22 @@ import javax.media.opengl.*;
  *
  * Subclassing DebugGL2 to allow better handling of found errors.  The original is reporting errors upstream from
  * our code, throwing its exception, and hence making the technique useless.
+ * 
+ * Recommended usage of this class:
+ *     private DebugGL2 debugGl2 = null;
+ *     ...
+ * Given we have this declared, add the following to each of
+ *   init(GLAutoDrawable gLDrawable),
+ *   display(GLAutoDrawable gLDrawable) and 
+ *   dispose(GLAutoDrawable gLDrawable)
+ * for the renderer object (which is calling all
+ * actors, assuming the code is structured as usual, at time-of-writing).
+ * 
+ *         if (debugGl2 == null) {
+ *            debugGl2 = new JaneliaDebugGL2(gLDrawable);
+ *         }
+ * 
+ *         gLDrawable.setGL(debugGl2);
  */
 public class JaneliaDebugGL2 extends DebugGL2 {
     private GL2 downstreamGL2;
@@ -23,6 +39,7 @@ public class JaneliaDebugGL2 extends DebugGL2 {
         this._context = downstreamGL2.getContext();
     }
 
+    @Override
     public  void glGetIntegerv(int arg0,int[] arg1,int arg2)
     {
         if ( insideBeginEndPair )
@@ -39,16 +56,40 @@ public class JaneliaDebugGL2 extends DebugGL2 {
 
     private boolean insideBeginEndPair = false;
 
+    /** These overrides help keep track of generated/deleted textures. */
+    @Override
+    public void glGenTextures(int count, int[] arr, int offset) {
+        super.glGenTextures(count, arr, offset);
+        System.out.print("glGenTextures count " + count + " retrieved " );
+        for (int i = 0; i < arr.length; i++ ) {
+            System.out.print(arr[i] + " ");
+        }
+        System.out.println("...beginning at offset " + offset);
+    }
+    
+    @Override
+    public void glDeleteTextures(int count, int[] arr, int offset) {
+        super.glDeleteTextures(count, arr, offset);
+        System.out.print("glDeleteTextures count " + count + " including " );
+        for (int i = 0; i < arr.length; i++ ) {
+            System.out.print(arr[i] + " ");
+        }
+        System.out.println("...beginning at offset " + offset);
+        checkGLGetError("glDeleteTextures");
+    }
+    
     /**
      * Must override gl end and begin, simply to know when the process is between these two calls, and avoid
      * doing bad things.
      */
+    @Override
     public  void glEnd()
     {
         super.glEnd();
         insideBeginEndPair = false;
     }
 
+    @Override
     public  void glBegin(int arg0)
     {
         super.glBegin(arg0);

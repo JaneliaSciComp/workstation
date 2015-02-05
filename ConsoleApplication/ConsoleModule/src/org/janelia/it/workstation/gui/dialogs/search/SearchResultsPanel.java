@@ -56,7 +56,7 @@ public abstract class SearchResultsPanel extends JPanel implements SearchConfigu
     /**
      * Fields on which to calculate facet counts
      */
-    protected String[] facets = {"entity_type", "tiling_pattern_txt", "username"};
+    protected String[] facets = {"entity_type", "username"};
 
     // UI Settings
     protected Font groupFont = new Font("Sans Serif", Font.BOLD, 11);
@@ -852,10 +852,7 @@ public abstract class SearchResultsPanel extends JPanel implements SearchConfigu
      * @return
      */
     protected String getFieldLabel(String fieldName) {
-        if ("tiling_pattern_txt".equals(fieldName)) {
-            return "Tiling Pattern";
-        }
-        else if ("entity_type".equals(fieldName)) {
+        if ("entity_type".equals(fieldName)) {
             return "Result Type";
         }
         else if ("username".equals(fieldName)) {
