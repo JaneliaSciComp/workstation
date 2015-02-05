@@ -40,6 +40,7 @@ import org.janelia.geometry3d.Sphere;
 public interface SceneNode
 {
     SceneNode getParent();
+    boolean addChild(SceneNode child);
     Collection<? extends SceneNode> getChildren();
     
     Sphere getBoundingSphere();

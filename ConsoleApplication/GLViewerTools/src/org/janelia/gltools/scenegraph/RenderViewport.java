@@ -30,13 +30,14 @@
 
 package org.janelia.gltools.scenegraph;
 
+import java.util.ArrayList;
 import java.util.List;
 
 /**
  *
  * @author Christopher Bruns
  */
-class RenderViewport
+public class RenderViewport
 {
     private int widthPixels;
     private int heightPixels;
@@ -49,8 +50,10 @@ class RenderViewport
     private float originBottomRelative;
     private float widthRelative;
     private float heightRelative;
+    
+    private List<CameraNode> cameras = new ArrayList<>();
 
-    public RenderViewport() {
+    public RenderViewport(CameraNode cameraNode) {
         // Default to zero size
         this.widthPixels = 0;
         this.heightPixels = 0;
@@ -157,7 +160,7 @@ class RenderViewport
 
     List<CameraNode> getCameras()
     {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+        return cameras;
     }
     
 }

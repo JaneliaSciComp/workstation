@@ -39,6 +39,7 @@ import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
+import static org.testng.Assert.assertEquals;
 
 /**
  *
@@ -74,7 +75,14 @@ public class SceneGraphRendererTest
         offscreenDrawable = factory.createOffscreenAutoDrawable(
                 null, caps, null, 
                 10, 10);
-        renderer = new SceneGraphRenderer();
+
+        // Create a small scene graph, including a camera
+        SceneNode sceneGraph = new BasicSceneNode(null);
+        CameraNode cameraNode = new PerspectiveCameraNode(sceneGraph);
+        
+        // Create a scene graph renderer
+        RenderViewport viewport = new RenderViewport(cameraNode);
+        renderer = new SceneGraphRenderer(sceneGraph, viewport);
         offscreenDrawable.addGLEventListener(renderer);
     }
     
@@ -110,7 +118,15 @@ public class SceneGraphRendererTest
     @Test
     public void testReshape()
     {
+        offscreenDrawable.setSize(10, 10);
+        
+        assertEquals(offscreenDrawable.getHeight(), 10);
+        assertEquals(renderer.getViewports().get(0).getHeightPixels(), 10);
+        
         offscreenDrawable.setSize(5, 20);
+
+        assertEquals(offscreenDrawable.getHeight(), 20);
+        assertEquals(renderer.getViewports().get(0).getHeightPixels(), 20);
     }
     
 }
