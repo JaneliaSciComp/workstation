@@ -33,6 +33,7 @@ package org.janelia.gltools.scenegraph;
 import java.util.ArrayList;
 import java.util.List;
 import javax.media.opengl.DebugGL3;
+import javax.media.opengl.GL;
 import javax.media.opengl.GL3;
 import javax.media.opengl.GLAutoDrawable;
 import javax.media.opengl.GLEventListener;
@@ -52,7 +53,15 @@ public class SceneGraphRenderer implements GLEventListener
 
     // getGL3 delegate method, so we can turn debug on/off here
     private static GL3 getGL3(GLAutoDrawable drawable) {
-        return new DebugGL3(drawable.getGL().getGL3());
+        if (drawable == null)
+            return null;
+        GL gl = drawable.getGL();
+        if (gl == null) 
+            return null;
+        GL3 gl3 = gl.getGL3();
+        if (gl3 == null)
+            return null;
+        return new DebugGL3(gl3);
     };
     
     @Override
@@ -64,6 +73,8 @@ public class SceneGraphRenderer implements GLEventListener
     @Override
     public void dispose(GLAutoDrawable drawable)
     {
+        if (drawable == null)
+            return;
         GL3 gl = getGL3(drawable);
         // TODO - what about nodes that have been deleted previously?
         new DisposeGlVisitor(gl).visit(rootNode);

@@ -30,31 +30,87 @@
 
 package org.janelia.gltools.scenegraph;
 
-import javax.media.opengl.GL3;
+import javax.media.opengl.GLCapabilities;
+import javax.media.opengl.GLDrawableFactory;
+import javax.media.opengl.GLOffscreenAutoDrawable;
+import javax.media.opengl.GLProfile;
+import org.junit.After;
+import org.junit.AfterClass;
+import org.junit.Before;
+import org.junit.BeforeClass;
+import org.junit.Test;
 
 /**
  *
  * @author Christopher Bruns
  */
-class DisposeGlVisitor implements NodeVisitor
+public class SceneGraphRendererTest
 {
-    private GL3 gl;
-
-    public DisposeGlVisitor(GL3 gl)
+    private GLOffscreenAutoDrawable offscreenDrawable;
+    private SceneGraphRenderer renderer;
+    
+    public SceneGraphRendererTest()
     {
-        this.gl = gl;
+    }
+    
+    @BeforeClass
+    public static void setUpClass()
+    {
+    }
+    
+    @AfterClass
+    public static void tearDownClass()
+    {
+    }
+    
+    @Before
+    public void setUp()
+    {
+        // Create a small offscreen drawable buffer for rendering
+        final GLCapabilities caps = 
+                new GLCapabilities(GLProfile.get(GLProfile.GL3));
+        GLDrawableFactory factory = 
+                GLDrawableFactory.getFactory(caps.getGLProfile());
+        offscreenDrawable = factory.createOffscreenAutoDrawable(
+                null, caps, null, 
+                10, 10);
+        renderer = new SceneGraphRenderer();
+        offscreenDrawable.addGLEventListener(renderer);
+    }
+    
+    @After
+    public void tearDown()
+    {
+        renderer.dispose(offscreenDrawable);
     }
 
-    @Override
-    public void visit(DrawableNode node)
+    /**
+     * Test of init method, of class SceneGraphRenderer.
+     */
+    @Test
+    public void testInit()
     {
-        if (node == null)
-            return;
-        node.dispose(gl);
+        System.out.println("init");
+        renderer.init(offscreenDrawable);
+        // init does nothing, so this test does nothing
     }
 
-    @Override
-    public void visit(SceneNode node)
-    {}
+    /**
+     * Test of display method, of class SceneGraphRenderer.
+     */
+    @Test
+    public void testDisplay()
+    {
+        offscreenDrawable.display();
+    }
 
+    /**
+     * Test of reshape method, of class SceneGraphRenderer.
+     */
+    @Test
+    public void testReshape()
+    {
+        offscreenDrawable.setSize(5, 20);
+    }
+    
 }

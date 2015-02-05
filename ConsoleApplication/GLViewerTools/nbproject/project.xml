@@ -89,6 +89,10 @@
                         <compile-dependency/>
                     </test-dependency>
                     <test-dependency>
+                        <code-name-base>org.netbeans.libs.testng</code-name-base>
+                        <compile-dependency/>
+                    </test-dependency>
+                    <test-dependency>
                         <code-name-base>org.netbeans.modules.nbjunit</code-name-base>
                         <recursive/>
                         <compile-dependency/>
