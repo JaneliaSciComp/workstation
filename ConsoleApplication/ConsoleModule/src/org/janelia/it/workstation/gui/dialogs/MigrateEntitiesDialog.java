@@ -233,13 +233,13 @@ public class MigrateEntitiesDialog extends ModalDialog {
                                 sb.append("<li>").append(refEd.getParentEntity().getName()).append(" (").append(refType).append(")").append(issue).append("</li>");
                             }
                             if (numAlignedItemRefs>0) { 
-                                sb.append("<li><font color=red>").append(numAlignedItemRefs).append(" aligned items reference this neuron, but cannot be migrated.").append("</font></li>");
+                                sb.append("<li><font color=red>").append(numAlignedItemRefs).append(" aligned items reference this entity, but cannot be migrated.").append("</font></li>");
                             }
                             sb.append("</ul></li>"); 
                         }
                         
                         if (!migrate) {
-                            sb.append("<li><font color=red>There is nothing that can be migrated for this neuron fragment.</font></li>");
+                            sb.append("<li><font color=red>There is nothing that can be migrated for this entity.</font></li>");
                         }
                         
                         sb.append("</ul></li>"); 
@@ -295,7 +295,7 @@ public class MigrateEntitiesDialog extends ModalDialog {
                             message = "Migrated annotation "+annotation.getName();
                         }
                         catch (Exception e) {
-                            log.error("Error migrating neuron fragment annotation",e);
+                            log.error("Error migrating annotation",e);
                             message = "<font color=red>Error migrating annotation "+annotation.getName()+": "+e.getMessage()+"</font>";
                         }
                         final String html = "<li>"+message+"</li>";
@@ -304,24 +304,22 @@ public class MigrateEntitiesDialog extends ModalDialog {
 
                     for(final EntityData refEd : refLists.get(source.getId())) {
                         String refType = refEd.getParentEntity().getEntityTypeName();
-                        if (refType.equals(EntityConstants.TYPE_NEURON_FRAGMENT_COLLECTION)) {
+                        if (!refType.equals(EntityConstants.TYPE_FOLDER)) {
                             continue;
                         }
-                        if (!refType.equals(EntityConstants.TYPE_ALIGNED_ITEM)) {
-                            // migrate reference to point to a new target
-                            String message;
-                            try {
-                                refEd.setChildEntity(target);
-                                if (!DEBUG) ModelMgr.getModelMgr().saveOrUpdateEntityData(refEd);  
-                                message = "Migrated reference "+refEd.getParentEntity().getName();
-                            }
-                            catch (Exception e) {
-                                log.error("Error migrating neuron fragment reference",e);
-                                message = "<font color=red>Error migrating reference "+refEd.getParentEntity().getName()+": "+e.getMessage()+"</font>";
-                            }
-                            final String html = "<li>"+message+"</li>";
-                            sb.append(html);
+                        // migrate reference to point to a new target
+                        String message;
+                        try {
+                            refEd.setChildEntity(target);
+                            if (!DEBUG) ModelMgr.getModelMgr().saveOrUpdateEntityData(refEd);  
+                            message = "Migrated reference "+refEd.getParentEntity().getName();
                         }
+                        catch (Exception e) {
+                            log.error("Error migrating reference",e);
+                            message = "<font color=red>Error migrating reference "+refEd.getParentEntity().getName()+": "+e.getMessage()+"</font>";
+                        }
+                        final String html = "<li>"+message+"</li>";
+                        sb.append(html);
                     }
                     
                     sb.append("</ul></li>");
