@@ -10,6 +10,22 @@ import javax.media.opengl.*;
  *
  * Subclassing DebugGL2 to allow better handling of found errors.  The original is reporting errors upstream from
  * our code, throwing its exception, and hence making the technique useless.
+ * 
+ * Recommended usage of this class:
+ *     private DebugGL2 debugGl2 = null;
+ *     ...
+ * Given we have this declared, add the following to each of
+ *   init(GLAutoDrawable gLDrawable),
+ *   display(GLAutoDrawable gLDrawable) and 
+ *   dispose(GLAutoDrawable gLDrawable)
+ * for the renderer object (which is calling all
+ * actors, assuming the code is structured as usual, at time-of-writing).
+ * 
+ *         if (debugGl2 == null) {
+ *            debugGl2 = new JaneliaDebugGL2(gLDrawable);
+ *         }
+ * 
+ *         gLDrawable.setGL(debugGl2);
  */
 public class JaneliaDebugGL2 extends DebugGL2 {
     private GL2 downstreamGL2;
@@ -40,6 +56,7 @@ public class JaneliaDebugGL2 extends DebugGL2 {
 
     private boolean insideBeginEndPair = false;
 
+    /** These overrides help keep track of generated/deleted textures. */
     @Override
     public void glGenTextures(int count, int[] arr, int offset) {
         super.glGenTextures(count, arr, offset);
@@ -52,7 +69,8 @@ public class JaneliaDebugGL2 extends DebugGL2 {
     
     @Override
     public void glDeleteTextures(int count, int[] arr, int offset) {
-        System.out.print("glDeleteTextures count " + count + " retrieved " );
+        super.glDeleteTextures(count, arr, offset);
+        System.out.print("glDeleteTextures count " + count + " including " );
         for (int i = 0; i < arr.length; i++ ) {
             System.out.print(arr[i] + " ");
         }
