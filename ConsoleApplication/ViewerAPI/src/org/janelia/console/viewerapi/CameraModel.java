@@ -39,23 +39,12 @@ import java.util.Observer;
 public interface CameraModel
 {
 
-    // read-only-ish Observable API, for handling camera changes
-    void addObserver(Observer observer); // (member of Observable class)
-
-    void deleteObserver(Observer observer); // (member of Observable class)
-
     // camera focus location
     float getFocusXUm(); // camera focus X position, in micrometers
 
     float getFocusYUm();
 
     float getFocusZUm();
-
-    // mutable Observable API
-    // notifyObservers() allows fine grained control, so a large number of changes could be
-    // built up, before (possibly expensively) releasing the horses.
-    // This mechanism will obviously be more important for things like neuron structure changes.
-    void notifyObservers(); // trigger consequences of camera change, if something did change (member of Observable class)
 
     // Mutable methods below - so peer modules can change the camera position
     // Camera focus position

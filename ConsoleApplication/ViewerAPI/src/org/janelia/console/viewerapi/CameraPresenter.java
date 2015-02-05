@@ -30,15 +30,26 @@
 
 package org.janelia.console.viewerapi;
 
+import java.util.Observer;
+
 /**
  *
  * @author Christopher Bruns
  */
-public interface CameraController
+public interface CameraPresenter extends CameraModel
 {
-    CameraModel getCameraModel();
-    
     boolean resetFocus();
     
     boolean setDefaultFocus(float x, float y, float z);
+
+    // read-only-ish Observable API, for handling camera changes
+    void addObserver(Observer observer); // (member of Observable class)
+
+    void deleteObserver(Observer observer); // (member of Observable class)
+
+    // mutable Observable API
+    // notifyObservers() allows fine grained control, so a large number of changes could be
+    // built up, before (possibly expensively) releasing the horses.
+    // This mechanism will obviously be more important for things like neuron structure changes.
+    void notifyObservers(); // trigger consequences of camera change, if something did change (member of Observable class)
 }
