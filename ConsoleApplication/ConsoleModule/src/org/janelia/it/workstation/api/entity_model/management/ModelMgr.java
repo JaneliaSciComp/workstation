@@ -888,6 +888,11 @@ public final class ModelMgr {
         return newEntity;
     }
 
+    public EntityData saveOrUpdateEntityData(EntityData entityData) throws Exception {
+        EntityData newEntityData = entityModel.saveEntityData(entityData);
+        return newEntityData;
+    }
+    
     public Entity saveOrUpdateAnnotation(Entity annotatedEntity, Entity annotation) throws Exception {
         Entity newAnnotation = entityModel.saveEntity(annotation);
         if (newAnnotation != null) {

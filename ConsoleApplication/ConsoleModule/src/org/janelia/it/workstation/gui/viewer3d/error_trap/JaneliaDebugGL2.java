@@ -23,6 +23,7 @@ public class JaneliaDebugGL2 extends DebugGL2 {
         this._context = downstreamGL2.getContext();
     }
 
+    @Override
     public  void glGetIntegerv(int arg0,int[] arg1,int arg2)
     {
         if ( insideBeginEndPair )
@@ -39,16 +40,38 @@ public class JaneliaDebugGL2 extends DebugGL2 {
 
     private boolean insideBeginEndPair = false;
 
+    @Override
+    public void glGenTextures(int count, int[] arr, int offset) {
+        super.glGenTextures(count, arr, offset);
+        System.out.print("glGenTextures count " + count + " retrieved " );
+        for (int i = 0; i < arr.length; i++ ) {
+            System.out.print(arr[i] + " ");
+        }
+        System.out.println("...beginning at offset " + offset);
+    }
+    
+    @Override
+    public void glDeleteTextures(int count, int[] arr, int offset) {
+        System.out.print("glDeleteTextures count " + count + " retrieved " );
+        for (int i = 0; i < arr.length; i++ ) {
+            System.out.print(arr[i] + " ");
+        }
+        System.out.println("...beginning at offset " + offset);
+        checkGLGetError("glDeleteTextures");
+    }
+    
     /**
      * Must override gl end and begin, simply to know when the process is between these two calls, and avoid
      * doing bad things.
      */
+    @Override
     public  void glEnd()
     {
         super.glEnd();
         insideBeginEndPair = false;
     }
 
+    @Override
     public  void glBegin(int arg0)
     {
         super.glBegin(arg0);
