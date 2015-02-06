@@ -76,7 +76,7 @@ public class BookmarkMgr extends PreferenceManager {
   public void addBookmark(BookmarkInfo bookmark) {
       if (null==bookmark.getId() || 0==bookmark.getId()) {
         JOptionPane.showMessageDialog(SessionMgr.getMainFrame(),
-          "Bookmarking local entities is not allowed.",
+          "Bookmarking local items is not allowed.",
           "Unable To Create Bookmark",JOptionPane.ERROR_MESSAGE);
         return;
       }

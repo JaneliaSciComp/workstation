@@ -1,24 +1,14 @@
 package org.janelia.it.workstation.gui.dialogs.search;
 
-import java.awt.BorderLayout;
-import java.awt.Color;
-import java.awt.Dimension;
-import java.awt.Font;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
-import java.awt.event.MouseEvent;
-import java.util.*;
-import java.util.concurrent.Callable;
-
-import javax.swing.*;
-import javax.swing.event.ListSelectionEvent;
-import javax.swing.event.ListSelectionListener;
-import javax.swing.table.TableModel;
-
 import org.apache.solr.client.solrj.SolrQuery;
 import org.apache.solr.client.solrj.response.FacetField;
 import org.apache.solr.client.solrj.response.FacetField.Count;
 import org.apache.solr.client.solrj.response.QueryResponse;
+import org.janelia.it.jacs.compute.api.support.SolrQueryBuilder;
+import org.janelia.it.jacs.model.entity.Entity;
+import org.janelia.it.jacs.shared.solr.EntityDocument;
+import org.janelia.it.jacs.shared.solr.SolrResults;
+import org.janelia.it.jacs.shared.utils.StringUtils;
 import org.janelia.it.workstation.api.entity_model.management.ModelMgr;
 import org.janelia.it.workstation.gui.dialogs.search.SearchAttribute.DataStore;
 import org.janelia.it.workstation.gui.dialogs.search.SearchConfiguration.AttrGroup;
@@ -31,13 +21,20 @@ import org.janelia.it.workstation.gui.util.Icons;
 import org.janelia.it.workstation.gui.util.panels.ScrollablePanel;
 import org.janelia.it.workstation.shared.util.ConcurrentUtils;
 import org.janelia.it.workstation.shared.workers.SimpleWorker;
-import org.janelia.it.jacs.shared.solr.EntityDocument;
-import org.janelia.it.jacs.compute.api.support.SolrQueryBuilder;
-import org.janelia.it.jacs.shared.solr.SolrResults;
-import org.janelia.it.jacs.model.entity.Entity;
-import org.janelia.it.jacs.shared.utils.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import javax.swing.*;
+import javax.swing.event.ListSelectionEvent;
+import javax.swing.event.ListSelectionListener;
+import javax.swing.table.TableModel;
+import java.awt.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.awt.event.MouseEvent;
+import java.util.*;
+import java.util.List;
+import java.util.concurrent.Callable;
 
 /**
  * A general search results panel.
@@ -371,6 +368,7 @@ public abstract class SearchResultsPanel extends JPanel implements SearchConfigu
     private JPopupMenu createPopupMenu(MouseEvent e) {
 
         JTable target = (JTable) e.getSource();
+        if (null==target || 0>target.getSelectedRow() || 0>target.getSelectedColumn()) {return null;}
         final String value = target.getValueAt(target.getSelectedRow(), target.getSelectedColumn()).toString();
 
         List<Entity> selectedEntities = new ArrayList<Entity>();

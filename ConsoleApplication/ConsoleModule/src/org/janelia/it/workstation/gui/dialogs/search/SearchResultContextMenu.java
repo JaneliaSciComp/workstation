@@ -1,12 +1,9 @@
 package org.janelia.it.workstation.gui.dialogs.search;
 
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
-import java.util.*;
-import java.util.concurrent.Future;
-
-import javax.swing.JMenuItem;
-
+import org.janelia.it.jacs.model.entity.Entity;
+import org.janelia.it.jacs.model.entity.EntityConstants;
+import org.janelia.it.jacs.model.entity.EntityData;
+import org.janelia.it.jacs.shared.utils.EntityUtils;
 import org.janelia.it.workstation.api.entity_model.management.ModelMgr;
 import org.janelia.it.workstation.gui.dialogs.EntityDetailsDialog;
 import org.janelia.it.workstation.gui.dialogs.choose.EntityChooser;
@@ -16,14 +13,16 @@ import org.janelia.it.workstation.gui.framework.outline.EntityTree;
 import org.janelia.it.workstation.gui.framework.outline.EntityTreeCellRenderer;
 import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.workstation.gui.framework.tree.ExpansionState;
-import org.janelia.it.workstation.shared.workers.SimpleWorker;
-import org.janelia.it.jacs.model.entity.Entity;
-import org.janelia.it.jacs.model.entity.EntityConstants;
-import org.janelia.it.jacs.model.entity.EntityData;
-import org.janelia.it.jacs.shared.utils.EntityUtils;
 import org.janelia.it.workstation.shared.util.Utils;
+import org.janelia.it.workstation.shared.workers.SimpleWorker;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import javax.swing.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.util.*;
+import java.util.concurrent.Future;
 
 /**
  * Context menu for general search results.
@@ -68,7 +67,7 @@ public class SearchResultContextMenu extends AbstractContextMenu<Entity> {
 
     protected JMenuItem getRelativesItem() {
         final Entity entity = getSelectedElement();
-        JMenuItem detailsMenuItem = new JMenuItem("  Map All Results To Related Entities...");
+        JMenuItem detailsMenuItem = new JMenuItem("  Map All Results To Related Items...");
         detailsMenuItem.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
@@ -89,7 +88,7 @@ public class SearchResultContextMenu extends AbstractContextMenu<Entity> {
                             }
                         }
                         if (paths.isEmpty()) {
-                            throw new Exception("No access to a root for this entity");
+                            throw new Exception("No access to a root for this item");
                         }
                         Collections.sort(paths, new Comparator<List<Object>>() {
                             @Override

@@ -27,9 +27,9 @@ import java.awt.event.FocusListener;
 import java.io.File;
 import java.io.FileNotFoundException;
 
-public class DataSourceSettingsPanel extends JPanel implements PrefEditor {
+public class UserAccountSettingsPanel extends JPanel implements PrefEditor {
     
-    private static final Logger log = LoggerFactory.getLogger(DataSourceSettingsPanel.class);
+    private static final Logger log = LoggerFactory.getLogger(UserAccountSettingsPanel.class);
     
     private String userLogin = "";
     private String userPassword = "";
@@ -64,8 +64,8 @@ public class DataSourceSettingsPanel extends JPanel implements PrefEditor {
     private JLabel downloadsDirLabel = new JLabel("* Downloads Dir:");
     private JTextField downloadsDirField = new JTextField(40);
     
-    public DataSourceSettingsPanel(@SuppressWarnings("UnusedParameters")
-                                   JFrame parentFrame) {
+    public UserAccountSettingsPanel(@SuppressWarnings("UnusedParameters")
+                                    JFrame parentFrame) {
         final SessionMgr sessionMgr = SessionMgr.getSessionMgr();
         try {
             userLogin = (String) getModelProperty(SessionMgr.USER_NAME, "");
@@ -84,7 +84,7 @@ public class DataSourceSettingsPanel extends JPanel implements PrefEditor {
     }
 
     public String getName() {
-        return "Data Source Settings";
+        return "User Account Settings";
     }
 
     public String getPanelGroup() {
@@ -304,7 +304,7 @@ public class DataSourceSettingsPanel extends JPanel implements PrefEditor {
                 JFileChooser fileChooser = new JFileChooser();
                 fileChooser.setFileSelectionMode(JFileChooser.FILES_AND_DIRECTORIES);
                 fileChooser.setCurrentDirectory(currentDir);
-                int returnVal = fileChooser.showOpenDialog(DataSourceSettingsPanel.this);
+                int returnVal = fileChooser.showOpenDialog(UserAccountSettingsPanel.this);
                 if (returnVal == JFileChooser.APPROVE_OPTION) {
                     downloadsDirField.setText(fileChooser.getSelectedFile().getAbsolutePath());
                 }
