@@ -341,7 +341,7 @@ public class SWCDataConverter {
                         zAnno,
             };
         }
-        dumpAtSwc(externalArr, xcenter, ycenter, zcenter);
+        //dumpAtSwc(externalArr, xcenter, ycenter, zcenter);
         return new SWCNode(
                 currentIndex,
                 segmentType,
@@ -353,6 +353,7 @@ public class SWCDataConverter {
         );
     }
 
+    @SuppressWarnings("unused")
     private void dumpAtSwc(double[] externalArr, double xcenter, double ycenter, double zcenter) {
         System.out.println("Computed center is " + xcenter + "," + ycenter + "," + zcenter);
         System.out.println("Represents: " + externalArr[0] + "," + externalArr[1] + "," + externalArr[2]);
