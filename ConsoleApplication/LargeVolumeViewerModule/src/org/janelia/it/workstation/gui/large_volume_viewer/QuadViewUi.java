@@ -366,12 +366,6 @@ public class QuadViewUi extends JPanel
         tracePathRequestedSignal.connect(annotationMgr.tracePathRequestedSlot);
         closeWorkspaceRequestSignal.connect(annotationMgr.closeWorkspaceRequestedSlot);
 
-//        skeleton.subtreeDeleteRequestedSignal.connect(annotationMgr.deleteSubtreeRequestedSlot);
-//        skeleton.linkDeleteRequestedSignal.connect(annotationMgr.deleteLinkRequestedSlot);
-//        skeleton.splitAnchorRequestedSignal.connect(annotationMgr.splitAnchorRequestedSlot);
-//        skeleton.rerootNeuriteRequestedSignal.connect(annotationMgr.rerootNeuriteRequestedSlot);
-//        skeleton.splitNeuriteRequestedSignal.connect(annotationMgr.splitNeuriteRequestedSlot);
-
         getSkeletonActor().nextParentChangedSignal.connect(annotationMgr.selectAnnotationSlot);
                 
         skeleton.addAnchorListener(annotationMgr);
@@ -381,7 +375,6 @@ public class QuadViewUi extends JPanel
         skeleton.pathTraceRequestedSignal.connect(tracePathSegmentSlot);
         annotationModel.pathTraceRequestedSignal.connect(tracePathSegmentSlot);
         addAnchoredPathRequestSignal.connect(annotationMgr.addPathRequestedSlot);
-//        skeleton.addEditNoteRequestedSignal.connect(annotationMgr.addEditNoteRequestedSlot);
 
         // Toggle skeleton actor with v key
         InputMap inputMap = getInputMap(JComponent.WHEN_ANCESTOR_OF_FOCUSED_COMPONENT);
