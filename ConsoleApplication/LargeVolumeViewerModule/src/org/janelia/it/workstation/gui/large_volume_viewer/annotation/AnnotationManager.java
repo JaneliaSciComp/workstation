@@ -117,41 +117,6 @@ public class AnnotationManager implements AnchorListener
         }
     };
 
-//    public Slot1<Anchor> deleteLinkRequestedSlot = new Slot1<Anchor>() {
-//        @Override
-//        public void execute(Anchor anchor) {
-//            deleteLink(anchor.getGuid());
-//        }
-//    };
-//
-//    public Slot1<Anchor> deleteSubtreeRequestedSlot = new Slot1<Anchor>() {
-//        @Override
-//        public void execute(Anchor anchor) {
-//            deleteSubTree(anchor.getGuid());
-//        }
-//    };
-//
-//    public Slot1<Anchor> splitAnchorRequestedSlot = new Slot1<Anchor>() {
-//        @Override
-//        public void execute(Anchor anchor) {
-//            splitAnchor(anchor.getGuid());
-//        }
-//    };
-//
-//    public Slot1<Anchor> rerootNeuriteRequestedSlot = new Slot1<Anchor>() {
-//        @Override
-//        public void execute(Anchor anchor) {
-//            rerootNeurite(anchor.getGuid());
-//        }
-//    };
-//
-//    public Slot1<Anchor> splitNeuriteRequestedSlot = new Slot1<Anchor>() {
-//        @Override
-//        public void execute(Anchor anchor) {
-//            splitNeurite(anchor.getGuid());
-//        }
-//    };
-//
     public Slot1<Anchor> moveAnchorRequestedSlot = new Slot1<Anchor>() {
         @Override
         public void execute(Anchor anchor) {
