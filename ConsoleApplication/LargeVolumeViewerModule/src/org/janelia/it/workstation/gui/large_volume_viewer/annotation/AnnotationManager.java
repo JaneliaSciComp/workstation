@@ -30,9 +30,10 @@ import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import org.janelia.it.workstation.gui.large_volume_viewer.ComponentUtil;
+import org.janelia.it.workstation.gui.large_volume_viewer.controller.AnchorListener;
 
 
-public class AnnotationManager
+public class AnnotationManager implements AnchorListener
 /**
  * this class is the middleman between the UI and the model.  first, the UI makes naive requests 
  * (eg, add annotation).  then this class determines if the request is valid (eg, can't add
@@ -68,6 +69,38 @@ public class AnnotationManager
     private static final double DRAG_MERGE_THRESHOLD_SQUARED = 250.0;
 
 
+    //-----------------------------------IMPLEMENT AnchorListener
+    @Override
+    public void deleteSubtreeRequested(Anchor anchor) {
+        deleteSubTree(anchor.getGuid());
+    }
+
+    @Override
+    public void splitAnchorRequested(Anchor anchor) {
+        splitAnchor(anchor.getGuid());
+    }
+
+    @Override
+    public void rerootNeuriteRequested(Anchor anchor) {
+        rerootNeurite(anchor.getGuid());
+    }
+
+    @Override
+    public void splitNeuriteRequested(Anchor anchor) {
+        splitNeurite(anchor.getGuid());
+    }
+
+    @Override
+    public void deleteLinkRequested(Anchor anchor) {
+        deleteLink(anchor.getGuid());
+    }
+
+    @Override
+    public void addEditNoteRequested(Anchor anchor) {
+        addEditNote(anchor.getGuid());
+    }
+
+    
     // ----- slots
 
     public Slot1<URL> onVolumeLoadedSlot = new Slot1<URL>() {
@@ -84,41 +117,41 @@ public class AnnotationManager
         }
     };
 
-    public Slot1<Anchor> deleteLinkRequestedSlot = new Slot1<Anchor>() {
-        @Override
-        public void execute(Anchor anchor) {
-            deleteLink(anchor.getGuid());
-        }
-    };
-
-    public Slot1<Anchor> deleteSubtreeRequestedSlot = new Slot1<Anchor>() {
-        @Override
-        public void execute(Anchor anchor) {
-            deleteSubTree(anchor.getGuid());
-        }
-    };
-
-    public Slot1<Anchor> splitAnchorRequestedSlot = new Slot1<Anchor>() {
-        @Override
-        public void execute(Anchor anchor) {
-            splitAnchor(anchor.getGuid());
-        }
-    };
-
-    public Slot1<Anchor> rerootNeuriteRequestedSlot = new Slot1<Anchor>() {
-        @Override
-        public void execute(Anchor anchor) {
-            rerootNeurite(anchor.getGuid());
-        }
-    };
-
-    public Slot1<Anchor> splitNeuriteRequestedSlot = new Slot1<Anchor>() {
-        @Override
-        public void execute(Anchor anchor) {
-            splitNeurite(anchor.getGuid());
-        }
-    };
-
+//    public Slot1<Anchor> deleteLinkRequestedSlot = new Slot1<Anchor>() {
+//        @Override
+//        public void execute(Anchor anchor) {
+//            deleteLink(anchor.getGuid());
+//        }
+//    };
+//
+//    public Slot1<Anchor> deleteSubtreeRequestedSlot = new Slot1<Anchor>() {
+//        @Override
+//        public void execute(Anchor anchor) {
+//            deleteSubTree(anchor.getGuid());
+//        }
+//    };
+//
+//    public Slot1<Anchor> splitAnchorRequestedSlot = new Slot1<Anchor>() {
+//        @Override
+//        public void execute(Anchor anchor) {
+//            splitAnchor(anchor.getGuid());
+//        }
+//    };
+//
+//    public Slot1<Anchor> rerootNeuriteRequestedSlot = new Slot1<Anchor>() {
+//        @Override
+//        public void execute(Anchor anchor) {
+//            rerootNeurite(anchor.getGuid());
+//        }
+//    };
+//
+//    public Slot1<Anchor> splitNeuriteRequestedSlot = new Slot1<Anchor>() {
+//        @Override
+//        public void execute(Anchor anchor) {
+//            splitNeurite(anchor.getGuid());
+//        }
+//    };
+//
     public Slot1<Anchor> moveAnchorRequestedSlot = new Slot1<Anchor>() {
         @Override
         public void execute(Anchor anchor) {

@@ -12,6 +12,7 @@ import org.janelia.it.workstation.signal.Slot1;
 import org.janelia.it.workstation.tracing.AnchoredVoxelPath;
 import org.janelia.it.workstation.tracing.SegmentIndex;
 import org.janelia.it.jacs.model.user_data.tiledMicroscope.TmGeoAnnotation;
+import org.janelia.it.workstation.gui.large_volume_viewer.controller.AnchorListener;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -46,6 +47,7 @@ public class Skeleton {
 	};
 	
 	private Set<Anchor> anchors = new LinkedHashSet<Anchor>();
+    private Collection<AnchorListener> anchorListeners = new ArrayList<>();
 	
 	private Map<SegmentIndex, AnchoredVoxelPath> tracedSegments =
 			new ConcurrentHashMap<SegmentIndex, AnchoredVoxelPath>();
@@ -56,8 +58,16 @@ public class Skeleton {
 
 	public Signal skeletonChangedSignal = new Signal();
 	public Signal1<Long> pathTraceRequestedSignal = new Signal1<Long>();
-    public Signal1<Anchor> addEditNoteRequestedSignal = new Signal1<>();
+//    public Signal1<Anchor> addEditNoteRequestedSignal = new Signal1<>();    
 
+    public void addAnchorListener(AnchorListener listener) {
+        anchorListeners.add(listener);
+    }
+    
+    public void removeAnchorListener(AnchorListener listener) {
+        anchorListeners.remove(listener);
+    }
+    
 	// API for synchronizing with back end database
 	// after discussion with Don Olbris July 8, 2013
 	// 
@@ -112,9 +122,9 @@ public class Skeleton {
 
 	///// DELETE
 	// Anchor deletion
-    public Signal1<Anchor> linkDeleteRequestedSignal = new Signal1<Anchor>();
-	public Signal1<Anchor> subtreeDeleteRequestedSignal =
-			new Signal1<Anchor>();
+//    public Signal1<Anchor> linkDeleteRequestedSignal = new Signal1<Anchor>();
+//	public Signal1<Anchor> subtreeDeleteRequestedSignal =
+//			new Signal1<Anchor>();
 	public Slot1<TmGeoAnnotation> deleteAnchorSlot = new Slot1<TmGeoAnnotation>() {
 		@Override
 		public void execute(TmGeoAnnotation tga) {
@@ -149,13 +159,13 @@ public class Skeleton {
     public Signal1<Anchor> anchorNeighborsUpdatedSignal = new Signal1<Anchor>();
 
     ///// split anchor
-    public Signal1<Anchor> splitAnchorRequestedSignal = new Signal1<Anchor>();
+//    public Signal1<Anchor> splitAnchorRequestedSignal = new Signal1<Anchor>();
 
     ///// reroot
-    public Signal1<Anchor> rerootNeuriteRequestedSignal = new Signal1<Anchor>();
+//    public Signal1<Anchor> rerootNeuriteRequestedSignal = new Signal1<Anchor>();
 
     ///// split neurite
-    public Signal1<Anchor> splitNeuriteRequestedSignal = new Signal1<Anchor>();
+//    public Signal1<Anchor> splitNeuriteRequestedSignal = new Signal1<Anchor>();
 
 	///// CLEAR
 	public Slot clearSlot = new Slot() {
@@ -278,27 +288,45 @@ public class Skeleton {
 	}
 
     public void deleteLinkRequest(Anchor anchor) {
-        linkDeleteRequestedSignal.emit(anchor);
+        for (AnchorListener l: anchorListeners) {
+            l.deleteLinkRequested(anchor);
+        }
+//        linkDeleteRequestedSignal.emit(anchor);
     }
 
     public void deleteSubtreeRequest(Anchor anchor){
-        subtreeDeleteRequestedSignal.emit(anchor);
+        for (AnchorListener l: anchorListeners) {
+            l.deleteSubtreeRequested(anchor);
+        }
+//        subtreeDeleteRequestedSignal.emit(anchor);
     }
 
     public void splitAnchorRequest(Anchor anchor) {
-        splitAnchorRequestedSignal.emit(anchor);
+        for (AnchorListener l: anchorListeners) {
+            l.splitAnchorRequested(anchor);
+        }
+//        splitAnchorRequestedSignal.emit(anchor);
     }
 
     public void rerootNeuriteRequest(Anchor anchor) {
-        rerootNeuriteRequestedSignal.emit(anchor);
+        for (AnchorListener l: anchorListeners) {
+            l.rerootNeuriteRequested(anchor);
+        }
+//        rerootNeuriteRequestedSignal.emit(anchor);
     }
 
     public void addEditNoteRequest(Anchor anchor) {
-        addEditNoteRequestedSignal.emit(anchor);
+        for (AnchorListener l: anchorListeners) {
+            l.addEditNoteRequested(anchor);
+        }      
+//        addEditNoteRequestedSignal.emit(anchor);
     }
 
     public void splitNeuriteRequest(Anchor anchor) {
-        splitNeuriteRequestedSignal.emit(anchor);
+        for (AnchorListener l: anchorListeners) {
+            l.splitNeuriteRequested(anchor);
+        }
+//        splitNeuriteRequestedSignal.emit(anchor);
     }
 
 	public boolean delete(Anchor anchor) {
