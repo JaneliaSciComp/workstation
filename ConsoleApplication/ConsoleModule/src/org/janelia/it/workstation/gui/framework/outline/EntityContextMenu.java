@@ -56,6 +56,7 @@ import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
 import static com.google.common.base.Preconditions.checkNotNull;
+import org.janelia.it.jacs.model.TimebasedIdentifierGenerator;
 
 /**
  * Context pop up menu for entities.
@@ -111,7 +112,8 @@ public class EntityContextMenu extends JPopupMenu {
         add(getPermissionItem());
         add(getSetSortCriteriaItem());
         add(getGotoRelatedItem());
-
+        add(getShowReferencesItem());
+        
         setNextAddRequiresSeparator(true);
         add(getNewFolderItem());
         add(getAddToRootFolderItem());
@@ -539,6 +541,59 @@ public class EntityContextMenu extends JPopupMenu {
         return relatedMenu;
     }
 
+    protected JMenuItem getShowReferencesItem() {
+        if (multiple) return null;
+
+        JMenuItem copyMenuItem = new JMenuItem("  Show References");
+        copyMenuItem.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+
+                SimpleWorker worker = new SimpleWorker() {
+                    
+                    RootedEntity tempSearchRE;
+                    
+                    @Override
+                    protected void doStuff() throws Exception {
+                        List<EntityData> parentEds = ModelMgr.getModelMgr().getAllParentEntityDatas(rootedEntity.getEntityId());
+                        Entity entity = new Entity();
+                        entity.setId(TimebasedIdentifierGenerator.generateIdList(1).get(0));
+                        entity.setName("Entities referencing "+rootedEntity.getName());
+                        entity.setEntityTypeName(EntityConstants.TYPE_FOLDER);
+                        
+                        HashSet<EntityData> eds = new HashSet<>();
+                        for(EntityData parentEd : parentEds) {
+                            EntityData ed = new EntityData();
+                            ed.setEntityAttrName(EntityConstants.ATTRIBUTE_ENTITY);
+                            ed.setParentEntity(entity);
+                            Entity childEntity = ModelMgr.getModelMgr().getEntityById(parentEd.getParentEntity().getId());
+                            ed.setChildEntity(childEntity);
+                            eds.add(ed);
+                        }
+                        
+                        log.info("Setting "+eds.size()+" children");
+                        entity.setEntityData(eds);
+                        entity.setOwnerKey(SessionMgr.getSubjectKey());
+                        this.tempSearchRE = new RootedEntity(entity);
+                    }
+                    
+                    @Override
+                    protected void hadSuccess() {
+                        browser.getViewerManager().showEntityInActiveViewer(tempSearchRE);
+                    }
+                    
+                    @Override
+                    protected void hadError(Throwable error) {
+                        SessionMgr.getSessionMgr().handleException(error);
+                    }
+                };
+                
+                worker.execute();
+            }
+        });
+        return copyMenuItem;
+    }
+    
     private JMenuItem getChildEntityItem(Entity entity, String attributeName) {
         final EntityData ed = entity.getEntityDataByAttributeName(attributeName);
         if (ed == null) return null;
