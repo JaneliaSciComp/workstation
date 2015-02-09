@@ -118,14 +118,14 @@ public class SceneGraphRendererTest
     @Test
     public void testReshape()
     {
-        offscreenDrawable.setSize(10, 10);
+        offscreenDrawable.setSurfaceSize(10, 10);
         
-        assertEquals(offscreenDrawable.getHeight(), 10);
+        assertEquals(offscreenDrawable.getSurfaceHeight(), 10);
         assertEquals(renderer.getViewports().get(0).getHeightPixels(), 10);
         
-        offscreenDrawable.setSize(5, 20);
+        offscreenDrawable.setSurfaceSize(5, 20);
 
-        assertEquals(offscreenDrawable.getHeight(), 20);
+        assertEquals(offscreenDrawable.getSurfaceHeight(), 20);
         assertEquals(renderer.getViewports().get(0).getHeightPixels(), 20);
     }
     

@@ -1781,16 +1781,8 @@
                 <binary-origin>release/modules/ext/jibx-bind-1.2.1.jar</binary-origin>
             </class-path-extension>
             <class-path-extension>
-                <runtime-relative-path>ext/gluegen-rt-natives-macosx-universal.jar</runtime-relative-path>
-                <binary-origin>release/modules/ext/gluegen-rt-natives-macosx-universal.jar</binary-origin>
-            </class-path-extension>
-            <class-path-extension>
                 <runtime-relative-path>ext/loci_plugins.jar</runtime-relative-path>
                 <binary-origin>release/modules/ext/loci_plugins.jar</binary-origin>
-            </class-path-extension>
-            <class-path-extension>
-                <runtime-relative-path>ext/jogl-all-natives-windows-i586.jar</runtime-relative-path>
-                <binary-origin>release/modules/ext/jogl-all-natives-windows-i586.jar</binary-origin>
             </class-path-extension>
             <class-path-extension>
                 <runtime-relative-path>ext/jai_codec.jar</runtime-relative-path>
@@ -1803,10 +1795,6 @@
             <class-path-extension>
                 <runtime-relative-path>ext/jetty-http-8.1.8.v20121106.jar</runtime-relative-path>
                 <binary-origin>release/modules/ext/jetty-http-8.1.8.v20121106.jar</binary-origin>
-            </class-path-extension>
-            <class-path-extension>
-                <runtime-relative-path>ext/gluegen-rt-natives-linux-i586.jar</runtime-relative-path>
-                <binary-origin>release/modules/ext/gluegen-rt-natives-linux-i586.jar</binary-origin>
             </class-path-extension>
             <class-path-extension>
                 <runtime-relative-path>ext/wstx-asl-3.2.9.jar</runtime-relative-path>
@@ -1869,12 +1857,12 @@
                 <binary-origin>release/modules/ext/jetty-io-8.1.8.v20121106.jar</binary-origin>
             </class-path-extension>
             <class-path-extension>
-                <runtime-relative-path>ext/neethi-2.0.5.jar</runtime-relative-path>
-                <binary-origin>release/modules/ext/neethi-2.0.5.jar</binary-origin>
-            </class-path-extension>
-            <class-path-extension>
                 <runtime-relative-path>ext/commons-fileupload-1.2.jar</runtime-relative-path>
                 <binary-origin>release/modules/ext/commons-fileupload-1.2.jar</binary-origin>
+            </class-path-extension>
+            <class-path-extension>
+                <runtime-relative-path>ext/neethi-2.0.5.jar</runtime-relative-path>
+                <binary-origin>release/modules/ext/neethi-2.0.5.jar</binary-origin>
             </class-path-extension>
             <class-path-extension>
                 <runtime-relative-path>ext/syntheticaBlueIce.jar</runtime-relative-path>
@@ -1933,10 +1921,6 @@
                 <binary-origin>release/modules/ext/asm.jar</binary-origin>
             </class-path-extension>
             <class-path-extension>
-                <runtime-relative-path>ext/jogl-all-natives-linux-i586.jar</runtime-relative-path>
-                <binary-origin>release/modules/ext/jogl-all-natives-linux-i586.jar</binary-origin>
-            </class-path-extension>
-            <class-path-extension>
                 <runtime-relative-path>ext/de-javasoft-synthetica-netbeans.jar</runtime-relative-path>
                 <binary-origin>release/modules/ext/de-javasoft-synthetica-netbeans.jar</binary-origin>
             </class-path-extension>
@@ -1961,28 +1945,24 @@
                 <binary-origin>release/modules/ext/syntheticaAluOxide.jar</binary-origin>
             </class-path-extension>
             <class-path-extension>
-                <runtime-relative-path>ext/commons-logging-1.1.1.jar</runtime-relative-path>
-                <binary-origin>release/modules/ext/commons-logging-1.1.1.jar</binary-origin>
-            </class-path-extension>
-            <class-path-extension>
                 <runtime-relative-path>ext/geronimo-ws-metadata_2.0_spec-1.1.2.jar</runtime-relative-path>
                 <binary-origin>release/modules/ext/geronimo-ws-metadata_2.0_spec-1.1.2.jar</binary-origin>
             </class-path-extension>
             <class-path-extension>
-                <runtime-relative-path>ext/ffmpeg.jar</runtime-relative-path>
-                <binary-origin>release/modules/ext/ffmpeg.jar</binary-origin>
+                <runtime-relative-path>ext/commons-logging-1.1.1.jar</runtime-relative-path>
+                <binary-origin>release/modules/ext/commons-logging-1.1.1.jar</binary-origin>
+            </class-path-extension>
+            <class-path-extension>
+                <runtime-relative-path>ext/ome-xml.jar</runtime-relative-path>
+                <binary-origin>release/modules/ext/ome-xml.jar</binary-origin>
             </class-path-extension>
             <class-path-extension>
                 <runtime-relative-path>ext/commons-lang3-3.3.2-javadoc.jar</runtime-relative-path>
                 <binary-origin>release/modules/ext/commons-lang3-3.3.2-javadoc.jar</binary-origin>
             </class-path-extension>
             <class-path-extension>
-                <runtime-relative-path>ext/jogl-all-natives-linux-amd64.jar</runtime-relative-path>
-                <binary-origin>release/modules/ext/jogl-all-natives-linux-amd64.jar</binary-origin>
-            </class-path-extension>
-            <class-path-extension>
-                <runtime-relative-path>ext/ome-xml.jar</runtime-relative-path>
-                <binary-origin>release/modules/ext/ome-xml.jar</binary-origin>
+                <runtime-relative-path>ext/ffmpeg.jar</runtime-relative-path>
+                <binary-origin>release/modules/ext/ffmpeg.jar</binary-origin>
             </class-path-extension>
             <class-path-extension>
                 <runtime-relative-path>ext/jaxb-api-2.1.jar</runtime-relative-path>
@@ -2043,10 +2023,6 @@
             <class-path-extension>
                 <runtime-relative-path>ext/perf4j-0.9.16-logbackonly.jar</runtime-relative-path>
                 <binary-origin>release/modules/ext/perf4j-0.9.16-logbackonly.jar</binary-origin>
-            </class-path-extension>
-            <class-path-extension>
-                <runtime-relative-path>ext/gluegen-rt-natives-windows-i586.jar</runtime-relative-path>
-                <binary-origin>release/modules/ext/gluegen-rt-natives-windows-i586.jar</binary-origin>
             </class-path-extension>
             <class-path-extension>
                 <runtime-relative-path>ext/vecmath.jar</runtime-relative-path>
@@ -2173,12 +2149,12 @@
                 <binary-origin>release/modules/ext/ehcache-core-2.5.1.jar</binary-origin>
             </class-path-extension>
             <class-path-extension>
-                <runtime-relative-path>ext/geronimo-saaj_1.3_spec-1.0.1.jar</runtime-relative-path>
-                <binary-origin>release/modules/ext/geronimo-saaj_1.3_spec-1.0.1.jar</binary-origin>
-            </class-path-extension>
-            <class-path-extension>
                 <runtime-relative-path>ext/axis2-kernel-1.5.5.jar</runtime-relative-path>
                 <binary-origin>release/modules/ext/axis2-kernel-1.5.5.jar</binary-origin>
+            </class-path-extension>
+            <class-path-extension>
+                <runtime-relative-path>ext/geronimo-saaj_1.3_spec-1.0.1.jar</runtime-relative-path>
+                <binary-origin>release/modules/ext/geronimo-saaj_1.3_spec-1.0.1.jar</binary-origin>
             </class-path-extension>
             <class-path-extension>
                 <runtime-relative-path>ext/miglayout-4.0-swing.jar</runtime-relative-path>
@@ -2215,10 +2191,6 @@
             <class-path-extension>
                 <runtime-relative-path>ext/axis2-transport-local-1.5.5.jar</runtime-relative-path>
                 <binary-origin>release/modules/ext/axis2-transport-local-1.5.5.jar</binary-origin>
-            </class-path-extension>
-            <class-path-extension>
-                <runtime-relative-path>ext/gluegen-rt-natives-windows-amd64.jar</runtime-relative-path>
-                <binary-origin>release/modules/ext/gluegen-rt-natives-windows-amd64.jar</binary-origin>
             </class-path-extension>
             <class-path-extension>
                 <runtime-relative-path>ext/jywidgets.jar</runtime-relative-path>
@@ -2263,10 +2235,6 @@
             <class-path-extension>
                 <runtime-relative-path>ext/axis2-transport-http-1.5.5.jar</runtime-relative-path>
                 <binary-origin>release/modules/ext/axis2-transport-http-1.5.5.jar</binary-origin>
-            </class-path-extension>
-            <class-path-extension>
-                <runtime-relative-path>ext/jogl-all-natives-macosx-universal.jar</runtime-relative-path>
-                <binary-origin>release/modules/ext/jogl-all-natives-macosx-universal.jar</binary-origin>
             </class-path-extension>
             <class-path-extension>
                 <runtime-relative-path>ext/axis2-jaxbri-1.5.5.jar</runtime-relative-path>
@@ -2381,10 +2349,6 @@
                 <binary-origin>release/modules/ext/juli-6.0.16.jar</binary-origin>
             </class-path-extension>
             <class-path-extension>
-                <runtime-relative-path>ext/gluegen-rt.jar</runtime-relative-path>
-                <binary-origin>release/modules/ext/gluegen-rt.jar</binary-origin>
-            </class-path-extension>
-            <class-path-extension>
                 <runtime-relative-path>ext/jackson-databind-2.2.3.jar</runtime-relative-path>
                 <binary-origin>release/modules/ext/jackson-databind-2.2.3.jar</binary-origin>
             </class-path-extension>
@@ -2413,10 +2377,6 @@
                 <binary-origin>release/modules/ext/jaxen-1.1.1.jar</binary-origin>
             </class-path-extension>
             <class-path-extension>
-                <runtime-relative-path>ext/jogl-all.jar</runtime-relative-path>
-                <binary-origin>release/modules/ext/jogl-all.jar</binary-origin>
-            </class-path-extension>
-            <class-path-extension>
                 <runtime-relative-path>ext/syntheticaWhiteVision.jar</runtime-relative-path>
                 <binary-origin>release/modules/ext/syntheticaWhiteVision.jar</binary-origin>
             </class-path-extension>
@@ -2425,16 +2385,8 @@
                 <binary-origin>release/modules/ext/hibernate-annotations.jar</binary-origin>
             </class-path-extension>
             <class-path-extension>
-                <runtime-relative-path>ext/gluegen-rt-natives-linux-amd64.jar</runtime-relative-path>
-                <binary-origin>release/modules/ext/gluegen-rt-natives-linux-amd64.jar</binary-origin>
-            </class-path-extension>
-            <class-path-extension>
                 <runtime-relative-path>ext/log4j-1.2.15.jar</runtime-relative-path>
                 <binary-origin>release/modules/ext/log4j-1.2.15.jar</binary-origin>
-            </class-path-extension>
-            <class-path-extension>
-                <runtime-relative-path>ext/jogl-all-natives-windows-amd64.jar</runtime-relative-path>
-                <binary-origin>release/modules/ext/jogl-all-natives-windows-amd64.jar</binary-origin>
             </class-path-extension>
             <class-path-extension>
                 <runtime-relative-path>ext/mail-1.4.jar</runtime-relative-path>
