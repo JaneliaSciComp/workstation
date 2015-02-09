@@ -23,9 +23,11 @@ import javax.swing.*;
 import java.awt.*;
 import java.io.File;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import org.janelia.it.workstation.gui.large_volume_viewer.controller.TmGeoAnnotationModListener;
 
 
 public class AnnotationModel
@@ -65,16 +67,18 @@ SimpleWorker thread.
     private TmWorkspace currentWorkspace;
     private TmNeuron currentNeuron;
 
+    private Collection<TmGeoAnnotationModListener> tmGeoAnnoModListeners = new ArrayList<>();
+    
     // ----- signals
     public Signal1<TmWorkspace> workspaceLoadedSignal = new Signal1<>();
 
     public Signal1<TmNeuron> neuronSelectedSignal = new Signal1<>();
 
-    public Signal1<TmGeoAnnotation> annotationAddedSignal = new Signal1<>();
-    public Signal1<List<TmGeoAnnotation>> annotationsDeletedSignal = new Signal1<>();
-    public Signal1<TmGeoAnnotation> annotationReparentedSignal = new Signal1<>();
-    public Signal1<TmGeoAnnotation> annotationNotMovedSignal = new Signal1<>();
-
+//    public Signal1<TmGeoAnnotation> annotationAddedSignal = new Signal1<>();
+//    public Signal1<List<TmGeoAnnotation>> annotationsDeletedSignal = new Signal1<>();
+//    public Signal1<TmGeoAnnotation> annotationReparentedSignal = new Signal1<>();
+//    public Signal1<TmGeoAnnotation> annotationNotMovedSignal = new Signal1<>();
+    
     public Signal1<TmAnchoredPath> anchoredPathAddedSignal = new Signal1<>();
     public Signal1<List<TmAnchoredPath>> anchoredPathsRemovedSignal = new Signal1<>();
 
@@ -107,6 +111,14 @@ SimpleWorker thread.
 
     }
 
+    public void addTmGeoAnnotationModListener(TmGeoAnnotationModListener listener) {
+        tmGeoAnnoModListeners.add(listener);
+    }
+    
+    public void removeTmGeoAnnotationModListener(TmGeoAnnotationModListener listener) {
+        tmGeoAnnoModListeners.remove(listener);
+    }
+    
     // current workspace methods
     public TmWorkspace getCurrentWorkspace() {
         return currentWorkspace;
@@ -368,7 +380,8 @@ SimpleWorker thread.
             @Override
             public void run() {
                 neuronSelectedSignal.emit(null);
-                annotationsDeletedSignal.emit(tempAnnotationList);
+                fireAnnotationsDeleted(tempAnnotationList);
+//                annotationsDeletedSignal.emit(tempAnnotationList);
                 anchoredPathsRemovedSignal.emit(tempPathList);
                 workspaceLoadedSignal.emit(workspace);
             }
@@ -424,7 +437,8 @@ SimpleWorker thread.
             @Override
             public void run() {
                 neuronSelectedSignal.emit(currNeuron);
-                annotationAddedSignal.emit(annotation);
+                fireAnnotationAdded(annotation);
+//                annotationAddedSignal.emit(annotation);
             }
         });
     }
@@ -458,7 +472,8 @@ SimpleWorker thread.
             @Override
             public void run() {
                 neuronSelectedSignal.emit(neuron);
-                annotationAddedSignal.emit(annotation);
+                fireAnnotationAdded(annotation);
+//                annotationAddedSignal.emit(annotation);
             }
         });
 
@@ -487,7 +502,8 @@ SimpleWorker thread.
             SwingUtilities.invokeLater(new Runnable() {
                 @Override
                 public void run() {
-                    annotationNotMovedSignal.emit(getGeoAnnotationFromID(annotationID));
+                    fireAnnotationNotMoved(annotationID);
+//                    annotationNotMovedSignal.emit(getGeoAnnotationFromID(annotationID));
                 }
             });
             throw e;
@@ -626,11 +642,11 @@ SimpleWorker thread.
                 notesUpdatedSignal.emit(workspace);
                 neuronSelectedSignal.emit(updateTargetNeuron);
                 for (TmGeoAnnotation child : updateTargetNeuron.getChildrenOf(targetAnnotation)) {
-                    annotationReparentedSignal.emit(child);
+                    fireAnnotationNotMoved(child);
+//                    annotationReparentedSignal.emit(child);
                 }
-
-                // undraw deleted annotation
-                annotationsDeletedSignal.emit(deleteList);
+                fireAnnotationsDeleted(deleteList);
+//                annotationsDeletedSignal.emit(deleteList);
             }
         });
 
@@ -711,10 +727,12 @@ SimpleWorker thread.
                 //  from the reparenting to appear
                 List<TmGeoAnnotation> deleteList = new ArrayList<>(1);
                 deleteList.add(link);
-                annotationsDeletedSignal.emit(deleteList);
+                fireAnnotationsDeleted(deleteList);
+//                annotationsDeletedSignal.emit(deleteList);
 
                 if (updateChild != null) {
-                    annotationReparentedSignal.emit(updateChild);
+                    fireAnnotationReparented(updateChild);
+//                    annotationReparentedSignal.emit(updateChild);
                 }
 
             }
@@ -775,7 +793,8 @@ SimpleWorker thread.
             public void run() {
                 notesUpdatedSignal.emit(workspace);
                 neuronSelectedSignal.emit(updateNeuron);
-                annotationsDeletedSignal.emit(deleteList);
+                fireAnnotationsDeleted(deleteList);
+//                annotationsDeletedSignal.emit(deleteList);
             }
         });
 
@@ -864,8 +883,10 @@ SimpleWorker thread.
         SwingUtilities.invokeLater(new Runnable() {
             @Override
             public void run() {
-                annotationAddedSignal.emit(newAnnotation);
-                annotationReparentedSignal.emit(updateAnnotation);
+                fireAnnotationAdded(newAnnotation);
+//                annotationAddedSignal.emit(newAnnotation);
+                fireAnnotationReparented(updateAnnotation);
+//                annotationReparentedSignal.emit(updateAnnotation);
             }
         });
     }
@@ -919,7 +940,8 @@ SimpleWorker thread.
         SwingUtilities.invokeLater(new Runnable() {
             @Override
             public void run() {
-                annotationReparentedSignal.emit(updateNeuron.getGeoAnnotationMap().get(newRootID));
+                fireAnnotationReparented(updateNeuron.getGeoAnnotationMap().get(newRootID));
+//                annotationReparentedSignal.emit(updateNeuron.getGeoAnnotationMap().get(newRootID));
                 neuronSelectedSignal.emit(updateNeuron);
             }
         });
@@ -1233,5 +1255,34 @@ SimpleWorker thread.
         //  for bulk import, I don't think this is a good idea right now,
         //  as we have no mechanism for managing the jobs
 
+    }
+
+    public void fireAnnotationNotMoved(TmGeoAnnotation annotation) {
+        for (TmGeoAnnotationModListener l: tmGeoAnnoModListeners) {
+            l.annotationNotMoved(annotation);
+        }
+    }
+
+    private void fireAnnotationNotMoved(Long annotationID) {
+        fireAnnotationNotMoved(getGeoAnnotationFromID(annotationID));
+    }
+
+    private void fireAnnotationAdded(TmGeoAnnotation annotation) {
+        for (TmGeoAnnotationModListener l : tmGeoAnnoModListeners) {
+            l.annotationAdded(annotation);
+        }
+    }
+
+    private void fireAnnotationsDeleted(List<TmGeoAnnotation> deleteList) {
+        // undraw deleted annotation
+        for (TmGeoAnnotationModListener l : tmGeoAnnoModListeners) {
+            l.annotationsDeleted(deleteList);
+        }
+    }
+    
+    private void fireAnnotationReparented(TmGeoAnnotation annotation) {
+        for (TmGeoAnnotationModListener l : tmGeoAnnoModListeners) {
+            l.annotationReparented(annotation);
+        }
     }
 }

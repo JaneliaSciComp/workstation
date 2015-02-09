@@ -519,7 +519,8 @@ public class AnnotationManager implements AnchorListener
             presentError(
                     "You can't merge a neurite with itself!",
                     "Can't merge!!");
-            annotationModel.annotationNotMovedSignal.emit(sourceAnnotation);
+            annotationModel.fireAnnotationNotMoved(sourceAnnotation);
+//            annotationModel.annotationNotMovedSignal.emit(sourceAnnotation);
             return;
         }
 
@@ -533,7 +534,8 @@ public class AnnotationManager implements AnchorListener
                 "Merge neurites?",
                 JOptionPane.OK_CANCEL_OPTION);
         if (ans != JOptionPane.OK_OPTION) {
-            annotationModel.annotationNotMovedSignal.emit(sourceAnnotation);
+            annotationModel.fireAnnotationNotMoved(sourceAnnotation);
+//            annotationModel.annotationNotMovedSignal.emit(sourceAnnotation);
             return;
         }
 

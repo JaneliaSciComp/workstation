@@ -22,6 +22,7 @@ import org.janelia.it.jacs.model.entity.EntityConstants;
 import org.janelia.it.workstation.api.entity_model.management.ModelMgr;
 import org.janelia.it.workstation.geom.CoordinateAxis;
 import org.janelia.it.workstation.gui.large_volume_viewer.TileFormat;
+import org.janelia.it.workstation.gui.large_volume_viewer.controller.TmGeoAnnotationModListener;
 import org.janelia.it.workstation.tracing.VoxelPosition;
 
 
@@ -41,7 +42,7 @@ import org.janelia.it.workstation.tracing.VoxelPosition;
  * unfortunately, this class's comments and methods tends to use "anchor" and "annotation"
  * somewhat interchangeably, which can be confusing
  */
-public class LargeVolumeViewerTranslator {
+public class LargeVolumeViewerTranslator implements TmGeoAnnotationModListener {
 
     private AnnotationModel annModel;
     private LargeVolumeViewer largeVolumeViewer;
@@ -70,33 +71,33 @@ public class LargeVolumeViewerTranslator {
         }
     };
 
-    public Slot1<TmGeoAnnotation> addAnnotationSlot = new Slot1<TmGeoAnnotation>() {
-        @Override
-        public void execute(TmGeoAnnotation annotation) {
-            addAnnotation(annotation);
-        }
-    };
+//    public Slot1<TmGeoAnnotation> addAnnotationSlot = new Slot1<TmGeoAnnotation>() {
+//        @Override
+//        public void execute(TmGeoAnnotation annotation) {
+//            addAnnotation(annotation);
+//        }
+//    };
 
-    public Slot1<List<TmGeoAnnotation>> deleteAnnotationsSlot = new Slot1<List<TmGeoAnnotation>>() {
-        @Override
-        public void execute(List<TmGeoAnnotation> annotationList) {
-            deleteAnnotations(annotationList);
-        }
-    };
+//    public Slot1<List<TmGeoAnnotation>> deleteAnnotationsSlot = new Slot1<List<TmGeoAnnotation>>() {
+//        @Override
+//        public void execute(List<TmGeoAnnotation> annotationList) {
+//            deleteAnnotations(annotationList);
+//        }
+//    };
 
-    public Slot1<TmGeoAnnotation> reparentAnnotationSlot = new Slot1<TmGeoAnnotation>() {
-        @Override
-        public void execute(TmGeoAnnotation annotation) {
-            reparentAnnotation(annotation);
-        }
-    };
+//    public Slot1<TmGeoAnnotation> reparentAnnotationSlot = new Slot1<TmGeoAnnotation>() {
+//        @Override
+//        public void execute(TmGeoAnnotation annotation) {
+//            reparentAnnotation(annotation);
+//        }
+//    };
 
-    public Slot1<TmGeoAnnotation> unmoveAnnotationSlot = new Slot1<TmGeoAnnotation>() {
-        @Override
-        public void execute(TmGeoAnnotation annotation) {
-            unmoveAnnotation(annotation);
-        }
-    };
+//    public Slot1<TmGeoAnnotation> unmoveAnnotationSlot = new Slot1<TmGeoAnnotation>() {
+//        @Override
+//        public void execute(TmGeoAnnotation annotation) {
+//            unmoveAnnotation(annotation);
+//        }
+//    };
 
     public Slot1<TmAnchoredPath> addAnchoredPathSlot = new Slot1<TmAnchoredPath>() {
         @Override
@@ -183,12 +184,13 @@ public class LargeVolumeViewerTranslator {
     private void setupSignals() {
         annModel.workspaceLoadedSignal.connect(loadWorkspaceSlot);
         annModel.neuronSelectedSignal.connect(selectNeuronSlot);
-
-        annModel.annotationAddedSignal.connect(addAnnotationSlot);
-        annModel.annotationsDeletedSignal.connect(deleteAnnotationsSlot);
-        annModel.annotationReparentedSignal.connect(reparentAnnotationSlot);
-        annModel.annotationNotMovedSignal.connect(unmoveAnnotationSlot);
-
+        
+//        annModel.annotationAddedSignal.connect(addAnnotationSlot);
+//        annModel.annotationsDeletedSignal.connect(deleteAnnotationsSlot);
+//        annModel.annotationReparentedSignal.connect(reparentAnnotationSlot);
+//        annModel.annotationNotMovedSignal.connect(unmoveAnnotationSlot);
+        annModel.addTmGeoAnnotationModListener(this);
+        
         annModel.anchoredPathAddedSignal.connect(addAnchoredPathSlot);
         annModel.anchoredPathsRemovedSignal.connect(removeAnchoredPathsSlot);
 
@@ -367,6 +369,27 @@ public class LargeVolumeViewerTranslator {
             }
             addAnchoredPaths(annList);
         }
+    }
+
+    //--------------------------IMPLEMENTS TmGeoAnnotationModListener
+    @Override
+    public void annotationAdded(TmGeoAnnotation annotation) {
+        addAnnotation(annotation);
+    }
+
+    @Override
+    public void annotationsDeleted(List<TmGeoAnnotation> annotations) {
+        deleteAnnotations(annotations);
+    }
+
+    @Override
+    public void annotationReparented(TmGeoAnnotation annotation) {
+        reparentAnnotation(annotation);
+    }
+
+    @Override
+    public void annotationNotMoved(TmGeoAnnotation annotation) {
+        unmoveAnnotation(annotation);
     }
 
     /**

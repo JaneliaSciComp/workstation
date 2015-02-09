@@ -308,13 +308,25 @@ public class QuadViewUi extends JPanel
 		}
 	};
 
-    public Slot centerNextParentSlot = new Slot() {
+    public Slot centerNextParentVoxelSlot = new Slot() {
         @Override
         public void execute() {
             Anchor anchor = getSkeletonActor().getNextParent();
             if (anchor != null) {
                 setCameraFocusSlot.execute(
                         tileFormat.micronVec3ForVoxelVec3Cornered(anchor.getLocation())
+                );
+            }
+        }
+    };
+	
+    public Slot centerNextParentMicronSlot = new Slot() {
+        @Override
+        public void execute() {
+            Anchor anchor = getSkeletonActor().getNextParent();
+            if (anchor != null) {
+                setCameraFocusSlot.execute(
+                        anchor.getLocation()
                 );
             }
         }
@@ -451,8 +463,8 @@ public class QuadViewUi extends JPanel
         mouseModeChangedSignal.connect(largeVolumeViewer.setMouseModeSlot);
         wheelModeChangedSignal.connect(largeVolumeViewer.setWheelModeSlot);
         // annotation-related actions:
-        centerNextParentAction.centerNextParentSignal.connect(centerNextParentSlot);
-        annotationPanel.centerAnnotationSignal.connect(centerNextParentSlot);
+        centerNextParentAction.centerNextParentSignal.connect(centerNextParentVoxelSlot);
+        annotationPanel.centerAnnotationSignal.connect(centerNextParentMicronSlot);
         // go to location action
         goToLocationAction.gotoLocationSignal.connect(setCameraFocusSlot);
         // TODO other orthogonal viewers
