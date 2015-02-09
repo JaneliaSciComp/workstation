@@ -19,6 +19,7 @@ import javax.swing.AbstractButton;
 import javax.swing.Action;
 import javax.swing.JCheckBox;
 import javax.swing.JComponent;
+import javax.swing.ProgressMonitor;
 import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.workstation.gui.large_volume_viewer.ColorButtonPanel;
 import org.janelia.it.workstation.gui.large_volume_viewer.ImageColorModel;
@@ -156,9 +157,9 @@ public class Snapshot3dControls {
     }
     
     /** After a filter has been run, use this method to avoid further such changes. */
-    public void deactivateFiltering() {
+    public void setFilterActiveState( boolean hasBeenFiltered ) {        
         for ( Action action: filterActions ) {
-            action.setEnabled( false );
+            action.setEnabled( ! hasBeenFiltered );
         }
     }
     
@@ -196,7 +197,7 @@ public class Snapshot3dControls {
         getFilterActions().add( new FilterMatrixAction( textureDatas, view, MatrixFilter3D.GAUSS_65_85_85, "Filter Gauss 5x5x5 Sigmas = (0.65,0.85,0.85)" ) );
         //getFilterActions().add( new FilterMatrixAction( textureDatas, view, MatrixFilter3D.GAUSS_5_5_5, "Filter 5x5x5 Gauss" ) );
     }
-
+    
     private static class FilterMatrixAction extends AbstractAction {
         private Collection<TextureDataI> textureDatas;
         private Snapshot3d view;
@@ -213,15 +214,29 @@ public class Snapshot3dControls {
             // Need to apply a filter to each texture.
             //       Pop out the byte array, pass that into the filtering
             //       apparatus, run the filter, and pop it back in.
+            final IndeterminateProgressMonitor progressMonitor = 
+                    new IndeterminateProgressMonitor(
+                            view, getValue(Action.NAME), "Smoothing data..."
+                    );
             SimpleWorker sw = new SimpleWorker() {
+                private static final String FILTER_METHOD_PREFIX = " Filter";
 
                 @Override
                 protected void doStuff() throws Exception {
-                    filterTextureDatas();
+                    view.setHasBeenFiltered( true );
+                    String actionName = (String)getValue(Action.NAME);
+                    String oldLabelText = view.getLabelText();
+                    int filterPos = oldLabelText.indexOf(FILTER_METHOD_PREFIX);
+                    if (filterPos > -1) {
+                        oldLabelText = oldLabelText.substring(0, filterPos);
+                    }
+                    view.setLabelText(oldLabelText + " " + actionName);
+                    filterTextureDatas( progressMonitor );
                 }
 
                 @Override
                 protected void hadSuccess() {
+                    view.setHasBeenFiltered( true );
                     view.reLaunch( textureDatas );
                     view.validate();
                     view.repaint();
@@ -229,15 +244,16 @@ public class Snapshot3dControls {
 
                 @Override
                 protected void hadError(Throwable error) {
+                    view.setHasBeenFiltered( false );
                     SessionMgr.getSessionMgr().handleException(error);
                 }
                 
             };
-            sw.setProgressMonitor(new IndeterminateProgressMonitor(view, getValue(Action.NAME), "Smoothing data..."));
+            sw.setProgressMonitor(progressMonitor);
             sw.execute();
         } 
 
-        private void filterTextureDatas() throws IllegalArgumentException {
+        private void filterTextureDatas(final ProgressMonitor progressMonitor) throws IllegalArgumentException {
             for (TextureDataI textureData : textureDatas) {
                 if (textureData.getTextureData().getVolumeChunks().length > 1) {
                     throw new IllegalArgumentException("Filtering algorithm can handle only a single chunk.");
@@ -245,6 +261,7 @@ public class Snapshot3dControls {
                 for (VolumeDataChunk chunk : textureData.getTextureData().getVolumeChunks()) {
                     byte[] data = chunk.getData();
                     MatrixFilter3D filter = new MatrixFilter3D(matrix, textureData.getByteOrder());
+                    filter.setProgressMonitor(progressMonitor);
                     byte[] newBytes
                             = filter.filter(
                                     data, 

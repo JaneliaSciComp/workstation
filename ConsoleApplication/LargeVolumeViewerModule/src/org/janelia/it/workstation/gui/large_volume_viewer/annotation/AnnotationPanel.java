@@ -343,6 +343,7 @@ public class AnnotationPanel extends JPanel
         // ----- neuron information; show name, whatever attributes, list of neurites
         add(Box.createRigidArea(new Dimension(0, 20)), cVert);
         neuriteTreePanel = new NeuriteTreePanel(width);
+        neuriteTreePanel.setAnnotationManager(annotationMgr);
         add(neuriteTreePanel, cVert);
 
         // buttons for acting on annotations or neurites (which are in the list immediately above):

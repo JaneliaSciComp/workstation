@@ -21,6 +21,10 @@ public class AnnotationsConstants {
     public static final String PREF_COLOR_MODEL = "preference-colormodel";
 
 
+    // stores color model string for 3d independent model; see code or wiki for format (long and ugly)
+    public static final String PREF_3D_COLOR_MODEL = "preference-3d-colormodel";
+
+
     // trace paths automatically?
     public static final String PREF_AUTOMATIC_TRACING = "tracing-automatic-enabled";
 

@@ -60,7 +60,7 @@ SimpleWorker thread.
 
     private ModelMgr modelMgr;
     private SessionMgr sessionMgr;
-
+    private SWCDataConverter swcDataConverter;
 
     private TmWorkspace currentWorkspace;
     private TmNeuron currentNeuron;
@@ -139,16 +139,35 @@ SimpleWorker thread.
 
     }
 
+    public void setSWCDataConverter( SWCDataConverter converter ) {
+        this.swcDataConverter = converter;
+    }
+    
     // preferences stuff
     public void setPreference(String key, String value) {
         if (currentWorkspace != null) {
             try {
+                // Push to database.
                 modelMgr.createOrUpdateWorkspacePreference(currentWorkspace.getId(),
                         key, value);
+                // Push to memory as well.
+                currentWorkspace.getPreferences().setProperty(key, value);
             } catch (Exception e) {
                 e.printStackTrace();
             }
         }
+    }
+    
+    public String getPreference(String key) {
+        String rtnVal = null;
+        if (currentWorkspace != null) {
+            try {
+                rtnVal = currentWorkspace.getPreferences().getProperty(key);
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
+        return rtnVal;
     }
 
     // current neuron methods
@@ -235,7 +254,7 @@ SimpleWorker thread.
     }
 
     /**
-     * find the annotation closest to the input location, exluding
+     * find the annotation closest to the input location, excluding
      * the input annotation (null = don't exclude any)
      */
     public TmGeoAnnotation getClosestAnnotation(Vec3 location, TmGeoAnnotation excludedAnnotation) {
@@ -967,9 +986,9 @@ SimpleWorker thread.
      * same as the list of integers?
      */
     private boolean annotationAtPoint(TmGeoAnnotation annotation, List<Integer> pointList) {
-        return annotation.getX().intValue() == pointList.get(0) &&
-                annotation.getY().intValue() == pointList.get(1) &&
-                annotation.getZ().intValue() == pointList.get(2);
+        return Math.abs( annotation.getX().intValue() - pointList.get(0) ) < 5 &&
+                Math.abs( annotation.getY().intValue() - pointList.get(1) ) < 5 &&
+                Math.abs( annotation.getZ().intValue() - pointList.get(2) ) < 5;
     }
 
     /**
@@ -1117,9 +1136,8 @@ SimpleWorker thread.
                 }
             }
         }
-
         // get swcdata via converter, then write
-        SWCData swcData = SWCDataConverter.fromTmNeuron(neuronList, downsampleModulo);
+        SWCData swcData = swcDataConverter.fromTmNeuron(neuronList, downsampleModulo);
         if (swcData != null) {
             swcData.write(swcFile);
         }
@@ -1141,22 +1159,8 @@ SimpleWorker thread.
         // note from CB, July 2013: Vaa3d can't handle large coordinates in swc files,
         //  so he added an OFFSET header and recentered on zero when exporting
         // therefore, if that header is present, respect it
-        double offsetx = 0.0;
-        double offsety = 0.0;
-        double offsetz = 0.0;
-        String offsetHeader = swcData.findHeaderLine("OFFSET");
-        if (offsetHeader != null) {
-            String [] items = offsetHeader.split("\\s+");
-            // expect # OFFSET x y z
-            if (items.length == 5) {
-                offsetx = Double.parseDouble(items[2]);
-                offsety = Double.parseDouble(items[3]);
-                offsetz = Double.parseDouble(items[4]);
-            } else {
-                // ignore the line if we can't parse it
-            }
-        }
-
+        double[] externalOffset = swcData.parseOffset();
+        double[] internalOffset = swcDataConverter.internalFromExternal(externalOffset);
 
         // create one neuron for the file; take name from the filename (strip extension)
         String neuronName = swcFile.getName();
@@ -1183,15 +1187,26 @@ SimpleWorker thread.
         Map<Integer, TmGeoAnnotation> annotations = new HashMap<>();
         TmGeoAnnotation annotation;
         for (SWCNode node: swcData.getNodeList()) {
+            // Internal points, as seen in annotations, are same as external
+            // points in SWC: represented as voxels. --LLF
+            double[] internalPoint = swcDataConverter.internalFromExternal(
+                new double[] {
+                        node.getX() + externalOffset[0],
+                        node.getY() + externalOffset[1],
+                        node.getZ() + externalOffset[2],
+                }
+            );
             if (node.getParentIndex() == -1) {
                 annotation = modelMgr.addGeometricAnnotation(neuron.getId(),
-                    null, 0, node.getX() + offsetx, node.getY() + offsety,
-                    node.getZ() + offsetz, "");
+                    null, 0, 
+                    internalPoint[0], internalPoint[1], internalPoint[2],
+                    "");
             } else {
                 annotation = modelMgr.addGeometricAnnotation(neuron.getId(),
                     annotations.get(node.getParentIndex()).getId(),
-                    0, node.getX() + offsetx, node.getY() + offsety,
-                    node.getZ() + offsetz, "");
+                    0, 
+                    internalPoint[0], internalPoint[1], internalPoint[2],
+                    "");
             }
             annotations.put(node.getIndex(), annotation);
             if (worker != null && (node.getIndex() % updateFrequency) == 0) {

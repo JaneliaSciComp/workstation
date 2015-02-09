@@ -25,7 +25,7 @@ implements Iterable<TileIndex>, Iterator<TileIndex>
 		int maxZoom = tileFormat.getZoomLevelCount() - 1;
 		int xyz[] = {0,0,0};
 		int sa = sliceAxis.index();
-		sliceMin = tileFormat.getOrigin()[sa];
+		sliceMin = 0;//tileFormat.getOrigin()[sa];
 		sliceMax = sliceMin + tileFormat.getVolumeSize()[sa];
 
 		// Start at center and move out

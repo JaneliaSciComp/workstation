@@ -224,6 +224,7 @@ implements MouseModalWidget, TileConsumer
 		return bb;
 	}
 
+    @Override
 	public ObservableCamera3d getCamera() {
 		return camera;
 	}

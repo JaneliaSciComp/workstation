@@ -48,7 +48,7 @@ extends AbstractTextureLoadAdapter
 		URL folder;
 		try {
 			// second part of URL must not begin with "/", or it will be treated as absolute
-			String subFolder = BlockTiffOctreeLoadAdapter.getOctreeFilePath(tileIndex, tileFormat).toString();
+			String subFolder = BlockTiffOctreeLoadAdapter.getOctreeFilePath(tileIndex, tileFormat, false).toString();
 			subFolder = subFolder.replaceAll("\\\\", "/"); // replace backslash with slash (Windows File->URL)
 			subFolder = subFolder.replaceAll("^[/]+", ""); // remove leading slash, if present
 			if ( (subFolder.length() > 0) && (! subFolder.endsWith("/")) )

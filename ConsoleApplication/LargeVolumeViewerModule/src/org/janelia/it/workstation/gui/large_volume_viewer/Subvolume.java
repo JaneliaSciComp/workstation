@@ -29,6 +29,8 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
+import org.janelia.it.workstation.gui.viewer3d.BoundingBox3d;
+import org.janelia.it.workstation.tracing.VoxelPosition;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -112,25 +114,101 @@ public class Subvolume {
 	/**
 	 * You probably want to run this constructor in a worker
 	 * thread, because it can take a while to load its
-	 * raster data over the network.
+	 * raster data over the network.  This is called only from the
+     * 3D viewer feed path.
 	 * 
 	 * @param center volume around here, in 3D
 	 * @param wholeImage 
+     * @param micrometerVoxels as might be supplied by tile format, 1/min-voxelMicrometers.
      * @param dimensions how large to make the volume.
 	 * @param textureCache
      * @param progressMonitor for reporting relative completion.
 	 */
     public Subvolume(
-            ZoomedVoxelIndex center,
+            Vec3 center,
             SharedVolumeImage wholeImage,
+            double micrometerVoxels,
+            ZoomLevel zoom,
             int[] dimensions,
             TextureCache textureCache,
             IndeterminateNoteProgressMonitor progressMonitor)
     {
         this.progressMonitor = progressMonitor;
-        initialize(center, dimensions, wholeImage, textureCache);
+        initializeFor3D(center, micrometerVoxels, zoom, dimensions, wholeImage, textureCache);
     }
     
+    /**
+     * Initializes the sub volume for 3 dimensional fetching of texture data.
+     * 
+     * @param center middle point.
+     * @param dimensions how large a chunk to return.
+     * @param wholeImage whole volume's 'image'
+     * @param textureCache existing fetches live here.
+     */
+	private void initializeFor3D(Vec3 center,
+            double micrometerVoxels,
+            final ZoomLevel zoom,
+            int[] dimensions,
+            SharedVolumeImage wholeImage,
+            final TextureCache textureCache)
+	{
+                
+	    final AbstractTextureLoadAdapter loadAdapter = wholeImage.getLoadAdapter();
+	    final TileFormat tileFormat = loadAdapter.getTileFormat();
+        allocateRasterMemory(tileFormat, dimensions);
+
+        Set<TileIndex> neededTiles = getCenteredTileSet(tileFormat, center, micrometerVoxels, dimensions, zoom);
+        if (logger.isDebugEnabled()) {
+            logTileRequest(neededTiles);
+        }
+        
+        final ZoomedVoxelIndex farCorner = new ZoomedVoxelIndex(
+                zoom,
+                origin.getX() + dimensions[0],
+                origin.getY() + dimensions[1],
+                origin.getZ() + dimensions[2]
+        );
+        multiThreadedFetch(neededTiles, textureCache, loadAdapter, tileFormat, zoom, farCorner);
+	}
+
+    // Load an octree subvolume into memory as a dense volume block
+    public Subvolume(
+            Vec3 corner1,
+            Vec3 corner2,
+            double micrometerResolution,
+            SharedVolumeImage wholeImage)
+    {
+        // Use the TileFormat class to convert between micrometer coordinates
+        // and the arcane integer TileIndex coordinates.
+        TileFormat tileFormat = wholeImage.getLoadAdapter().getTileFormat();
+        // Compute correct zoom level based on requested resolution
+        int zoom = tileFormat.zoomLevelForCameraZoom(1.0/micrometerResolution);
+        ZoomLevel zoomLevel = new ZoomLevel(zoom);
+
+        // Compute extreme tile indices
+        //
+        TileFormat.VoxelXyz vix1 = tileFormat.voxelXyzForMicrometerXyz(
+                new TileFormat.MicrometerXyz(
+                        corner1.getX(), corner1.getY(), corner1.getZ()
+                )
+        );
+        TileFormat.VoxelXyz vix2 = tileFormat.voxelXyzForMicrometerXyz(
+                new TileFormat.MicrometerXyz(
+                        corner2.getX(), corner2.getY(), corner2.getZ()
+                )
+        );
+        
+        //
+        ZoomedVoxelIndex zvix1 = tileFormat.zoomedVoxelIndexForVoxelXyz(
+                vix1, 
+                zoomLevel, CoordinateAxis.Z);
+        ZoomedVoxelIndex zvix2 = tileFormat.zoomedVoxelIndexForVoxelXyz(
+                vix2, 
+                zoomLevel, CoordinateAxis.Z);
+        //
+        initialize(zvix1, zvix2, wholeImage, null);
+    }
+
 	private void initialize(ZoomedVoxelIndex corner1,
             ZoomedVoxelIndex corner2,
             SharedVolumeImage wholeImage,
@@ -154,176 +232,19 @@ public class Subvolume {
 	            farCorner.getX() - origin.getX() + 1,
                 farCorner.getY() - origin.getY() + 1,
                 farCorner.getZ() - origin.getZ() + 1);
-	    // Allocate raster memory
-	    final AbstractTextureLoadAdapter loadAdapter = wholeImage.getLoadAdapter();
-	    final TileFormat tileFormat = loadAdapter.getTileFormat();
-	    bytesPerIntensity = tileFormat.getBitDepth()/8;
-	    channelCount = tileFormat.getChannelCount();
-	    int totalBytes = bytesPerIntensity 
-	            * channelCount
-	            * extent.getX() * extent.getY() * extent.getZ();
-	    bytes = ByteBuffer.allocateDirect(totalBytes);
-	    bytes.order(ByteOrder.nativeOrder());
-	    if (bytesPerIntensity == 2)
-	        shorts = bytes.asShortBuffer();
+        
+        final AbstractTextureLoadAdapter loadAdapter = wholeImage.getLoadAdapter();
+	    final TileFormat tileFormat = loadAdapter.getTileFormat();        
+        
+        allocateRasterMemory(tileFormat);
 
         Set<TileIndex> neededTiles = getNeededTileSet(tileFormat, farCorner, zoom);
         if (logger.isDebugEnabled()) {
             logTileRequest(neededTiles);
         }
-        ExecutorService executorService = Executors.newFixedThreadPool( N_THREADS );
-        List<Future<Boolean>> followUps = new ArrayList<>();
-        totalTiles = neededTiles.size();
-        remainingTiles = neededTiles.size();
-        reportProgress( totalTiles, totalTiles );
+        multiThreadedFetch(neededTiles, textureCache, loadAdapter, tileFormat, zoom, farCorner);
         
-        for (final TileIndex tileIx : neededTiles) {
-            Callable<Boolean> fetchTask = new Callable<Boolean>() {
-                @Override
-                public Boolean call() throws Exception {
-                    return fetchTileData(
-                            textureCache, tileIx, loadAdapter, tileFormat, zoom, farCorner
-                    );
-                }
-            };
-            followUps.add( executorService.submit( fetchTask ) );
-        }
-        executorService.shutdown();
-        
-        try {
-            executorService.awaitTermination(5, TimeUnit.MINUTES);
-            for (Future<Boolean> result : followUps) {
-                if (!result.get()) {
-                    logger.info("Request for {}..{} had tile gaps.", origin, extent);
-                    break;
-                }
-            }
-        } catch ( InterruptedException | ExecutionException ex ) {
-            if ( progressMonitor != null ) {
-                progressMonitor.close();
-            }
-            logger.error(
-                    "Failure awaiting completion of fetch threads for request {}..{}.  Exception report follows.",
-                    origin, extent
-            );
-            ex.printStackTrace();
-        }
 	}
-
-	private void initialize(ZoomedVoxelIndex center,
-            int[] dimensions,
-            SharedVolumeImage wholeImage,
-            final TextureCache textureCache)
-	{
-	    // Populate data fields
-	    final ZoomLevel zoom = center.getZoomLevel();
-
-        // Allocate raster memory
-	    final AbstractTextureLoadAdapter loadAdapter = wholeImage.getLoadAdapter();
-	    final TileFormat tileFormat = loadAdapter.getTileFormat();
-	    bytesPerIntensity = tileFormat.getBitDepth()/8;
-	    channelCount = tileFormat.getChannelCount();
-	    int totalBytes = bytesPerIntensity 
-	            * channelCount
-	            * dimensions[0] * dimensions[1] * dimensions[2];
-	    bytes = ByteBuffer.allocateDirect(totalBytes);
-	    bytes.order(ByteOrder.nativeOrder());
-	    if (bytesPerIntensity == 2)
-	        shorts = bytes.asShortBuffer();
-
-        Set<TileIndex> neededTiles = getCenteredTileSet(tileFormat, center, dimensions, zoom);
-        if (logger.isDebugEnabled()) {
-            logTileRequest(neededTiles);
-        }
-        ExecutorService executorService = Executors.newFixedThreadPool( N_THREADS );
-        List<Future<Boolean>> followUps = new ArrayList<>();
-        totalTiles = neededTiles.size();
-        remainingTiles = neededTiles.size();
-        reportProgress( totalTiles, totalTiles );
-        
-        final ZoomedVoxelIndex farCorner = new ZoomedVoxelIndex(
-                zoom,
-                origin.getX() + dimensions[0],
-                origin.getY() + dimensions[1],
-                origin.getZ() + dimensions[2]
-        );
-        for (final TileIndex tileIx : neededTiles) {
-            Callable<Boolean> fetchTask = new Callable<Boolean>() {
-                @Override
-                public Boolean call() throws Exception {
-                    return fetchTileData(
-                            textureCache, tileIx, loadAdapter, tileFormat, zoom, farCorner
-                    );
-                }
-            };
-            followUps.add( executorService.submit( fetchTask ) );
-        }
-        executorService.shutdown();
-        
-        try {
-            executorService.awaitTermination(5, TimeUnit.MINUTES);
-            for (Future<Boolean> result : followUps) {
-                logger.debug("DEBUG: checking a follow-up.");
-                boolean failureOnResult = false;
-                try {
-                    if (result == null || !result.get()) {
-                        failureOnResult = true;
-                    }
-                } catch ( ExecutionException | RuntimeException rte ) {
-                    logger.error(
-                            "Exception during subvolume fetch.  Request {}..{}.  Exception report follows.",
-                            origin, extent
-                    );
-                    rte.printStackTrace();
-                    failureOnResult = true;
-                }
-                if ( failureOnResult ) {
-                    logger.info("Request for {}..{} had tile gaps.", origin, extent);
-                }
-            }            
-        } catch ( InterruptedException ex ) {
-            if ( progressMonitor != null ) {
-                progressMonitor.close();
-            }
-            logger.error(
-                    "Failure awaiting completion of fetch threads for request {}..{}.  Exception report follows.",
-                    origin, extent
-            );
-            ex.printStackTrace();
-        }
-	}
-
-    // Load an octree subvolume into memory as a dense volume block
-    public Subvolume(
-            Vec3 corner1,
-            Vec3 corner2,
-            double micrometerResolution,
-            SharedVolumeImage wholeImage)
-    {
-        // Use the TileFormat class to convert between micrometer coordinates
-        // and the arcane integer TileIndex coordinates.
-        TileFormat tileFormat = wholeImage.getLoadAdapter().getTileFormat();
-        // Compute correct zoom level based on requested resolution
-        int zoom = tileFormat.zoomLevelForCameraZoom(1.0/micrometerResolution);
-        ZoomLevel zoomLevel = new ZoomLevel(zoom);
-        // Compute extreme tile indices
-        //
-        TileFormat.VoxelXyz vix1 = tileFormat.voxelXyzForMicrometerXyz(
-                new TileFormat.MicrometerXyz(
-                        corner1.getX(), corner1.getY(), corner1.getZ()));
-        TileFormat.VoxelXyz vix2 = tileFormat.voxelXyzForMicrometerXyz(
-                new TileFormat.MicrometerXyz(
-                        corner2.getX(), corner2.getY(), corner2.getZ()));
-        //
-        ZoomedVoxelIndex zvix1 = tileFormat.zoomedVoxelIndexForVoxelXyz(
-                vix1, 
-                zoomLevel, CoordinateAxis.Z);
-        ZoomedVoxelIndex zvix2 = tileFormat.zoomedVoxelIndexForVoxelXyz(
-                vix2, 
-                zoomLevel, CoordinateAxis.Z);
-        //
-        initialize(zvix1, zvix2, wholeImage, null);
-    }
 
     public BufferedImage[] getAsBufferedImages() {
 		int sx = extent.getX();
@@ -385,12 +306,23 @@ public class Subvolume {
         return extent;
     }
 
+    public int getIntensityGlobal(VoxelPosition p, int channelIndex)
+    {
+        return getIntensityGlobal(p.getX(), p.getY(), p.getZ(), channelIndex);
+    }
     public int getIntensityGlobal(ZoomedVoxelIndex v1, int channelIndex)
     {
+        return getIntensityGlobal(
+                v1.getX(), v1.getY(), v1.getZ(),
+            channelIndex);
+    }
+
+    public int getIntensityGlobal(Integer x, Integer y, Integer z, int channelIndex)
+    {
         return getIntensityLocal(new VoxelIndex(
-            v1.getX() - origin.getX(),
-            v1.getY() - origin.getY(),
-            v1.getZ() - origin.getZ()),
+            x - origin.getX(),
+            y - origin.getY(),
+            z - origin.getZ()),
             channelIndex);
     }
 
@@ -445,7 +377,60 @@ public class Subvolume {
                     .append(new Double(tx.getY()).intValue() ).append( "," )
                     .append(new Double(tx.getZ()).intValue() ).append("]");
         }
-        logger.info("Requesting\n" + bldr);
+        logger.info("===SubVolume:: Requesting: " + bldr);
+    }
+
+    private void multiThreadedFetch(Set<TileIndex> neededTiles, final TextureCache textureCache, final AbstractTextureLoadAdapter loadAdapter, final TileFormat tileFormat, final ZoomLevel zoom, final ZoomedVoxelIndex farCorner) {
+        ExecutorService executorService = Executors.newFixedThreadPool( N_THREADS );
+        List<Future<Boolean>> followUps = new ArrayList<>();
+        totalTiles = neededTiles.size();
+        remainingTiles = neededTiles.size();
+        reportProgress( totalTiles, totalTiles );
+        for (final TileIndex tileIx : neededTiles) {
+            Callable<Boolean> fetchTask = new Callable<Boolean>() {
+                @Override
+                public Boolean call() throws Exception {
+                    return fetchTileData(
+                            textureCache, tileIx, loadAdapter, tileFormat, zoom, farCorner
+                    );
+                }
+            };
+            followUps.add( executorService.submit( fetchTask ) );
+        }
+        executorService.shutdown();
+        
+        try {
+            executorService.awaitTermination(5, TimeUnit.MINUTES);
+            for (Future<Boolean> result : followUps) {
+                logger.debug("DEBUG: checking a follow-up.");
+                boolean failureOnResult = false;
+                try {
+                    if (result == null || !result.get()) {
+                        failureOnResult = true;
+                    }
+                } catch ( ExecutionException | RuntimeException rte ) {
+                    logger.error(
+                            "Exception during subvolume fetch.  Request {}..{}.  Exception report follows.",
+                            origin, extent
+                    );
+                    rte.printStackTrace();
+                    failureOnResult = true;
+                }
+                if ( failureOnResult ) {
+                    logger.info("Request for {}..{} had tile gaps.", origin, extent);
+                }
+            }            
+        } catch ( InterruptedException ex ) {
+            if ( progressMonitor != null ) {
+                progressMonitor.close();
+            }
+            logger.error(
+                    "Failure awaiting completion of fetch threads for request {}..{}.  Exception report follows.",
+                    origin, extent
+            );
+            ex.printStackTrace();
+        }
+        
     }
 
     private boolean fetchTileData(TextureCache textureCache, TileIndex tileIx, AbstractTextureLoadAdapter loadAdapter, TileFormat tileFormat, ZoomLevel zoom, ZoomedVoxelIndex farCorner) {
@@ -463,7 +448,12 @@ public class Subvolume {
             }
             // ... if that fails, load the data right now.
             if (tileData == null) {
-                tileData = loadAdapter.loadToRam(tileIx);
+                if (loadAdapter instanceof BlockTiffOctreeLoadAdapter) {
+                    tileData = ((BlockTiffOctreeLoadAdapter)loadAdapter).loadToRam(tileIx, false);
+                }
+                else {
+                    tileData = loadAdapter.loadToRam(tileIx);
+                }
             }
             if (tileData == null) {
                 logger.info("Found no tile data for " + tileIx);
@@ -483,6 +473,7 @@ public class Subvolume {
                 int startY = Math.max(origin.getY(), tileOrigin.getY());
                 int endY = Math.min(farCorner.getY(), tileOrigin.getY() + tileData.getHeight());
                 int overlapY = endY - startY;
+                //System.out.println("TileXyz=" + tileXyz.getX() + "," + tileXyz.getY() + "," + tileXyz.getZ() + ". Start Y=" + startY + ", End Y=" + endY + ", overlapY=" + overlapY);
                 // X
                 int startX = Math.max(origin.getX(), tileOrigin.getX());
                 int endX = Math.min(farCorner.getX(), tileOrigin.getX() + tileData.getUsedWidth());
@@ -554,11 +545,33 @@ OVERFLOW_LABEL:
         return filledToEnd;
     }
 
+    private void allocateRasterMemory(final TileFormat tileFormat) {
+        int[] dimensions = new int[3];
+        dimensions[0] = extent.getX();
+        dimensions[1] = extent.getY();
+        dimensions[2] = extent.getZ();
+        allocateRasterMemory(tileFormat, dimensions);
+    }
+    
+    private void allocateRasterMemory(final TileFormat tileFormat, int[] dimensions) {
+        bytesPerIntensity = tileFormat.getBitDepth()/8;
+        channelCount = tileFormat.getChannelCount();
+        int totalBytes = bytesPerIntensity
+                * channelCount
+                * dimensions[0] * dimensions[1] * dimensions[2];
+        bytes = ByteBuffer.allocateDirect(totalBytes);
+        bytes.order(ByteOrder.nativeOrder());
+        if (bytesPerIntensity == 2)
+            shorts = bytes.asShortBuffer();
+    }
+
     private Set<TileIndex> getNeededTileSet(TileFormat tileFormat, ZoomedVoxelIndex farCorner, ZoomLevel zoom) {
-        Set<TileIndex> neededTiles = new LinkedHashSet<>();
         // Load tiles from volume representation
-        TileIndex tileMin0 = tileFormat.tileIndexForZoomedVoxelIndex(origin, CoordinateAxis.Z);
-        TileIndex tileMax0 = tileFormat.tileIndexForZoomedVoxelIndex(farCorner, CoordinateAxis.Z);
+        final CoordinateAxis sliceAxis = CoordinateAxis.Z;
+        
+        TileIndex tileMin0 = tileFormat.tileIndexForZoomedVoxelIndex(origin, sliceAxis);
+        TileIndex tileMax0 = tileFormat.tileIndexForZoomedVoxelIndex(farCorner, sliceAxis);
+        
         // Guard against y-flip. Make it so general it could find some other future situation too.
         // Enforce that tileMinCtrZ x/y/z are no larger than tileMaxCtrZ x/y/z
         TileIndex tileMin = new TileIndex(
@@ -568,7 +581,7 @@ OVERFLOW_LABEL:
                 tileMin0.getZoom(),
                 tileMin0.getMaxZoom(),
                 tileMin0.getIndexStyle(),
-                tileMin0.getSliceAxis());
+                sliceAxis);
         TileIndex tileMax = new TileIndex(
                 Math.max(tileMin0.getX(), tileMax0.getX()),
                 Math.max(tileMin0.getY(), tileMax0.getY()),
@@ -576,127 +589,191 @@ OVERFLOW_LABEL:
                 tileMax0.getZoom(),
                 tileMax0.getMaxZoom(),
                 tileMax0.getIndexStyle(),
-                tileMax0.getSliceAxis());
-        for (int x = tileMin.getX(); x <= tileMax.getX(); ++x) {
-            for (int y = tileMin.getY(); y <= tileMax.getY(); ++y) {
-                for (int z = tileMin.getZ(); z <= tileMax.getZ(); ++z) {
-                    neededTiles.add(new TileIndex(
-                            x, y, z,
-                        zoom.getLog2ZoomOutFactor(),
-                        tileMin.getMaxZoom(),
-                        tileMin.getIndexStyle(),
-                        tileMin.getSliceAxis()));
-                }
-            }
-        }
+                sliceAxis);
         
-        return neededTiles;
+        final int minWidth = tileMin.getX();
+        final int maxWidth = tileMax.getX();
+        final int minHeight = tileMin.getY();
+        final int maxHeight = tileMax.getY();
+        final int minDepth = tileMin.getZ();
+        final int maxDepth = tileMax.getZ();
+        
+        final int[] xyzFromWhd = new int[] {
+            0, 1, 2
+        };
+
+        return createTileIndexesOverRanges(
+                minDepth, maxDepth, 
+                minWidth, maxWidth,
+                minHeight, maxHeight,
+                xyzFromWhd,
+                zoom,
+                tileMin.getMaxZoom(),
+                tileMin.getIndexStyle(),
+                sliceAxis
+        );
+                
+    }
+    
+    private TileIndex tileIndexForZoomedVoxelIndex(
+            TileFormat tileFormat,
+            ZoomedVoxelIndex ix,
+            CoordinateAxis sliceDirection) 
+    {
+        int zoom = ix.getZoomLevel().getLog2ZoomOutFactor();
+        TileFormat.TileXyz tileXyz = tileXyzForZoomedVoxelIndex(
+                ix, 
+                sliceDirection,
+                tileFormat);
+        int zoomMax = tileFormat.getZoomLevelCount() - 1;
+        return new TileIndex(
+                tileXyz.getX(), tileXyz.getY(), tileXyz.getZ(),
+                zoom, zoomMax, tileFormat.getIndexStyle(), sliceDirection);
     }
 
-    private Set<TileIndex> getCenteredTileSet(TileFormat tileFormat, ZoomedVoxelIndex center, int[] dimensions, ZoomLevel zoom) {
+	/**
+	 * TileIndex xyz containing ZoomedVoxel. BORROWED from TilFormat.
+	 * @param z
+	 * @param zoomLevel
+	 * @param sliceAxis
+	 * @return
+	 */
+	private TileFormat.TileXyz tileXyzForZoomedVoxelIndex(ZoomedVoxelIndex z, CoordinateAxis sliceAxis, TileFormat tileFormat) {
+		int xyz[] = {z.getX(), z.getY(), z.getZ()};
+		// Invert Y axis to convert to Raveler convention from image convention.
+        int[] volumeSize = tileFormat.getVolumeSize();
+        int[] tileSize = tileFormat.getTileSize();
+		int zoomFactor = z.getZoomLevel().getZoomOutFactor();
+		int maxZoomVoxelY = volumeSize[1] / zoomFactor - 1;
+		xyz[1] = maxZoomVoxelY - xyz[1];
+		int depthAxis = sliceAxis.index();
+		for (int i = 0; i < 3; ++i) {
+			if (i == depthAxis)
+				continue; // Don't scale depth axis
+            else if (i == (depthAxis + 1) % 3) {
+				xyz[i] = (xyz[i] - tileFormat.getOrigin()[i])/tileSize[i]; // scale horizontal                
+            }
+			else
+				xyz[i] = xyz[i]/tileSize[i]; // scale vertical
+		}
+		return new TileFormat.TileXyz(xyz[0], xyz[1], xyz[2]);
+	}
+
+    /** Called from 3D feed. */
+    private Set<TileIndex> getCenteredTileSet(TileFormat tileFormat, Vec3 center, double micrometerVoxels, int[] dimensions, ZoomLevel zoomLevel) {
         assert(dimensions[0] % 2 == 0) : "Dimension X must be divisible by 2";
         assert(dimensions[1] % 2 == 0) : "Dimension Y must be divisible by 2";
         assert(dimensions[2] % 2 == 0) : "Dimension Z must be divisible by 2";
+
+        int[] xyzFromWhd = new int[] { 0, 1, 2 };
+        CoordinateAxis sliceAxis = CoordinateAxis.Z;
+        ViewBoundingBox voxelBounds = tileFormat.findViewBounds(
+                dimensions[0], dimensions[1], center, micrometerVoxels, xyzFromWhd
+        );
+        TileBoundingBox tileBoundingBox = tileFormat.viewBoundsToTileBounds(xyzFromWhd, voxelBounds, zoomLevel.getLog2ZoomOutFactor() );
+
+        // Now I have the tile outline.  Can just iterate over that, and for all
+        // required depth.
+        TileIndex.IndexStyle indexStyle = tileFormat.getIndexStyle();
+        int zoomMax = tileFormat.getZoomLevelCount() - 1;
+
+        double halfDepth = dimensions[2] / 2.0;
+        BoundingBox3d bb = tileFormat.calcBoundingBox();
+        int maxDepth = this.calcZCoord(bb, xyzFromWhd, tileFormat, (int)(center.getZ() + halfDepth));
+        int minDepth = maxDepth - dimensions[xyzFromWhd[2]];
+
+        // Side Effect:  origin and extent must be computed here, but they
+        // are being used by other code at caller level.
+        TileFormat.VoxelXyz vox = calcLeastCorner(center, tileFormat, xyzFromWhd, dimensions, minDepth);
+        origin = tileFormat.zoomedVoxelIndexForVoxelXyz(vox, zoomLevel, sliceAxis);
+        extent = new VoxelIndex(
+                dimensions[0],
+                dimensions[1],
+                dimensions[2]);		        
+
+        int minWidth = tileBoundingBox.getwMin();
+        int maxWidth = tileBoundingBox.getwMax();
+        int minHeight = tileBoundingBox.gethMin();
+        int maxHeight = tileBoundingBox.gethMax();
+        return createTileIndexesOverRanges(
+                minDepth, maxDepth,
+                minWidth, maxWidth,
+                minHeight, maxHeight,
+                xyzFromWhd,
+                zoomLevel,
+                zoomMax,
+                indexStyle,
+                sliceAxis);
+    }
+
+    private Set<TileIndex> createTileIndexesOverRanges(
+            int minDepth, int maxDepth,
+            int minWidth, int maxWidth,
+            int minHeight, int maxHeight,
+            int[] xyzFromWhd, 
+            ZoomLevel zoomLevel,
+            int zoomMax,
+            TileIndex.IndexStyle indexStyle,
+            CoordinateAxis sliceAxis) {
+
         Set<TileIndex> neededTiles = new LinkedHashSet<>();
-        // Load tiles from volume representation
-	    ZoomedVoxelIndex centerTileMinVI = new ZoomedVoxelIndex(
-	            zoom,
-	            Math.min(center.getX() - dimensions[0]/2, center.getX() + dimensions[0]/2 + 1),
-                Math.min(center.getY() - dimensions[1]/2, center.getY() + dimensions[1]/2 + 1),
-                center.getZ());
-
-        // Load tiles from volume representation
-	    ZoomedVoxelIndex centerTileMaxVI = new ZoomedVoxelIndex(
-	            zoom,
-	            Math.max(center.getX() - dimensions[0]/2, center.getX() + dimensions[0]/2 + 1),
-                Math.max(center.getY() - dimensions[1]/2, center.getY() + dimensions[1]/2 + 1),
-                center.getZ());
-
-        TileIndex tileMinCtrZ0 = tileFormat.tileIndexForZoomedVoxelIndex(centerTileMinVI, CoordinateAxis.Z);
-        TileIndex tileMaxCtrZ0 = tileFormat.tileIndexForZoomedVoxelIndex(centerTileMaxVI, CoordinateAxis.Z);
-        
-        // Guard against y-flip. Make it so general it could find some other future situation too.
-        // Enforce that tileMinCtrZ x/y/z are no larger than tileMaxCtrZ x/y/z
-        // tileMinCtrZ is the minimum xy value for the tile at the center-z point.
-        TileIndex tileMinCtrZ = new TileIndex(
-                Math.min(tileMinCtrZ0.getX(), tileMaxCtrZ0.getX()),
-                Math.min(tileMinCtrZ0.getY(), tileMaxCtrZ0.getY()),
-                Math.min(tileMinCtrZ0.getZ(), tileMaxCtrZ0.getZ()),
-                tileMinCtrZ0.getZoom(),
-                tileMinCtrZ0.getMaxZoom(),
-                tileMinCtrZ0.getIndexStyle(),
-                tileMinCtrZ0.getSliceAxis());
-        TileIndex tileMaxCtrZ = new TileIndex(
-                Math.max(tileMinCtrZ0.getX(), tileMaxCtrZ0.getX()),
-                Math.max(tileMinCtrZ0.getY(), tileMaxCtrZ0.getY()),
-                Math.max(tileMinCtrZ0.getZ(), tileMaxCtrZ0.getZ()),
-                tileMaxCtrZ0.getZoom(),
-                tileMaxCtrZ0.getMaxZoom(),
-                tileMaxCtrZ0.getIndexStyle(),
-                tileMaxCtrZ0.getSliceAxis());
-
-        int minZ = Integer.MAX_VALUE; // Seminal value.
-        int maxZ = Integer.MIN_VALUE;
-        
-        for (int x = tileMinCtrZ.getX(); x <= tileMaxCtrZ.getX(); ++x) {
-            for (int y = tileMinCtrZ.getY(); y <= tileMaxCtrZ.getY(); ++y) {
-                TileIndex centerTileIndex = new TileIndex(
-                        x,y,center.getZ(),
-                            zoom.getLog2ZoomOutFactor(),
-                            tileMinCtrZ.getMaxZoom(),
-                            tileMinCtrZ.getIndexStyle(),
-                            tileMinCtrZ.getSliceAxis()
-                );
-                
-                neededTiles.add( centerTileIndex );
-                TileIndex nextSlice = centerTileIndex;
-                
-                // Find the center forward in z.
-                int totalPlanes = 0;
-                for (int z = 0; z < dimensions[2]/2 - 1; ++z) {
-                    nextSlice = nextSlice.nextSlice();
-                    neededTiles.add( nextSlice );
-                    if ( nextSlice.getZ() < minZ ) {
-                        minZ = nextSlice.getZ();
-                    }
-                    if ( nextSlice.getZ() > maxZ ) {
-                        maxZ = nextSlice.getZ();
-                    }
-                    totalPlanes++;
+        for (int d = minDepth; d < maxDepth; d++) {
+            for (int w = minWidth; w <= maxWidth; ++w) {
+                for (int h = minHeight; h <= maxHeight; ++h) {
+                    int whd[] = {w, h, d};
+                    TileIndex key = new TileIndex(
+                            whd[xyzFromWhd[0]],
+                            whd[xyzFromWhd[1]],
+                            whd[xyzFromWhd[2]],
+                            zoomLevel.getLog2ZoomOutFactor(),
+                            zoomMax, indexStyle, sliceAxis);
+                    neededTiles.add(key);
+                    
                 }
-                logger.debug("Center forward found " + totalPlanes + " planes.");
-
-                // Find the center backward in z.
-                nextSlice = centerTileIndex;
-                for (int z = 0; z < dimensions[2]/2; ++z) {
-                    nextSlice = nextSlice.previousSlice();
-                    neededTiles.add( nextSlice );
-                    if ( nextSlice.getZ() < minZ ) {
-                        minZ = nextSlice.getZ();
-                    }
-                    if ( nextSlice.getZ() > maxZ ) {
-                        maxZ = nextSlice.getZ();
-                    }
-                    totalPlanes++;
-                }
-                logger.debug("Center forward + center + center backward, found " + totalPlanes + " planes.");
-
             }
-            logger.debug("Total tile set size is " + neededTiles.size());
-
-            // Side Effect:  These values must be computed here, but they
-            // are being used by other code at caller level.
-            origin = new ZoomedVoxelIndex(
-                    zoom,
-                    center.getX() - dimensions[0]/2,
-                    center.getY() - dimensions[1]/2,
-                    Math.min(minZ, maxZ));
-            extent = new VoxelIndex(
-                    dimensions[0],
-                    dimensions[1],
-                    dimensions[2]);
         }
-        
         return neededTiles;
+    }
+    
+    /**
+     * Find the least corner containing the center vec, and within the
+     * size of rectangular solid dictated by the dimensions given.
+     * 
+     * @param center ideal middle of rect solid.
+     * @param tileFormat for convenience methods.
+     * @param xyzFromWhd indirection for axial indices.
+     * @param dimensions sizes for two axes of the rect solid.
+     * @param minDepth size for depth axis of rect solid.
+     * @return least corner.
+     */
+    private TileFormat.VoxelXyz calcLeastCorner(Vec3 center, TileFormat tileFormat, int[] xyzFromWhd, int[] dimensions, int minDepth) {
+        TileFormat.VoxelXyz vox = tileFormat.voxelXyzForMicrometerXyz(
+                new TileFormat.MicrometerXyz(
+                        (int)(center.getX()), 
+                        (int)(center.getY()),
+                        (int)(center.getZ())
+                )
+        );
+        // NOTE: modified coordinate handling.
+        // Other two coords first divide by microns, and then subtract origin.
+        // Not so for the x: opposite order of operations: first subtracting
+        // origin, and then dividing by micrometers.
+        int[] voxelizedCoords = {
+            vox.getX() - dimensions[xyzFromWhd[0]]/2,
+            vox.getY() - dimensions[xyzFromWhd[1]]/2,
+            minDepth
+        };
+        vox = new TileFormat.VoxelXyz(voxelizedCoords);
+        return vox;
+    }
+
+    private int calcZCoord(BoundingBox3d bb, int[] xyzFromWhd, TileFormat tileFormat, int focusDepth) {
+        double zVoxMicrons = tileFormat.getVoxelMicrometers()[xyzFromWhd[2]];
+        int dMin = (int)(bb.getMin().get(xyzFromWhd[2])/zVoxMicrons + 0.5);
+        int dMax = (int)(bb.getMax().get(xyzFromWhd[2])/zVoxMicrons - 0.5);
+        int absoluteTileDepth = (int)Math.round(focusDepth / zVoxMicrons - 0.5);
+        absoluteTileDepth = Math.max(absoluteTileDepth, dMin);
+        absoluteTileDepth = Math.min(absoluteTileDepth, dMax);
+        return absoluteTileDepth - tileFormat.getOrigin()[xyzFromWhd[2]];
     }
 }
