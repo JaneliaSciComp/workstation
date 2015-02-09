@@ -164,7 +164,7 @@ public abstract class SceneInteractor
 	// Use Google maps convention of scroll wheel up to zoom in.
         // (Even though that makes no sense...)
         int notches = event.getWheelRotation();
-        float zoomRatio = (float) Math.pow(2.0, -notches * sensitivity);
+        float zoomRatio = (float) Math.pow(2.0, notches * sensitivity);
         return zoomOut(zoomRatio);
     }
  

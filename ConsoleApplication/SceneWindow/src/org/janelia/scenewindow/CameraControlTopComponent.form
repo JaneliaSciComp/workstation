@@ -61,16 +61,22 @@
                       <Group type="102" attributes="0">
                           <Group type="103" groupAlignment="0" attributes="0">
                               <Group type="102" alignment="0" attributes="0">
+                                  <Component id="localTranslateXSpinner" min="-2" pref="15" max="-2" attributes="0"/>
+                                  <EmptySpace max="-2" attributes="0"/>
                                   <Component id="focusXLabel" min="-2" max="-2" attributes="0"/>
                                   <EmptySpace max="-2" attributes="0"/>
-                                  <Component id="focusXSpinner" max="32767" attributes="0"/>
+                                  <Component id="focusXSpinner" pref="36" max="32767" attributes="0"/>
                               </Group>
                               <Group type="102" alignment="0" attributes="0">
+                                  <Component id="localTranslateYSpinner" min="-2" pref="15" max="-2" attributes="0"/>
+                                  <EmptySpace max="-2" attributes="0"/>
                                   <Component id="focusYLabel" min="-2" max="-2" attributes="0"/>
                                   <EmptySpace max="-2" attributes="0"/>
                                   <Component id="focusYSpinner" max="32767" attributes="0"/>
                               </Group>
                               <Group type="102" alignment="0" attributes="0">
+                                  <Component id="localTranslateZSpinner" min="-2" pref="15" max="-2" attributes="0"/>
+                                  <EmptySpace max="-2" attributes="0"/>
                                   <Component id="focusZLabel" min="-2" max="-2" attributes="0"/>
                                   <EmptySpace max="-2" attributes="0"/>
                                   <Component id="focusZSpinner" max="32767" attributes="0"/>
@@ -99,18 +105,21 @@
                       <Component id="focusXSpinner" alignment="3" min="-2" max="-2" attributes="0"/>
                       <Component id="focusXLabel" alignment="3" min="-2" max="-2" attributes="0"/>
                       <Component id="jLabel1" alignment="3" min="-2" max="-2" attributes="0"/>
+                      <Component id="localTranslateXSpinner" alignment="3" min="-2" max="-2" attributes="0"/>
                   </Group>
                   <EmptySpace max="-2" attributes="0"/>
                   <Group type="103" groupAlignment="3" attributes="0">
                       <Component id="focusYSpinner" alignment="3" min="-2" max="-2" attributes="0"/>
                       <Component id="focusYLabel" alignment="3" min="-2" max="-2" attributes="0"/>
                       <Component id="jLabel2" alignment="3" min="-2" max="-2" attributes="0"/>
+                      <Component id="localTranslateYSpinner" alignment="3" min="-2" max="-2" attributes="0"/>
                   </Group>
                   <EmptySpace max="-2" attributes="0"/>
                   <Group type="103" groupAlignment="3" attributes="0">
                       <Component id="focusZSpinner" alignment="3" min="-2" max="-2" attributes="0"/>
                       <Component id="focusZLabel" alignment="3" min="-2" max="-2" attributes="0"/>
                       <Component id="jLabel3" alignment="3" min="-2" max="-2" attributes="0"/>
+                      <Component id="localTranslateZSpinner" alignment="3" min="-2" max="-2" attributes="0"/>
                   </Group>
                   <EmptySpace max="32767" attributes="0"/>
                   <Component id="resetFocusButton" min="-2" max="-2" attributes="0"/>
@@ -219,6 +228,45 @@
             <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="resetFocusButtonActionPerformed"/>
           </Events>
         </Component>
+        <Component class="javax.swing.JSpinner" name="localTranslateXSpinner">
+          <Properties>
+            <Property name="model" type="javax.swing.SpinnerModel" editor="org.netbeans.modules.form.RADConnectionPropertyEditor">
+              <Connection code="localTranslationXSpinnerModel" type="code"/>
+            </Property>
+            <Property name="toolTipText" type="java.lang.String" editor="org.netbeans.modules.i18n.form.FormI18nStringEditor">
+              <ResourceString bundle="org/janelia/scenewindow/Bundle.properties" key="CameraControlTopComponent.localTranslateXSpinner.toolTipText" replaceFormat="org.openide.util.NbBundle.getMessage({sourceFileName}.class, &quot;{key}&quot;)"/>
+            </Property>
+          </Properties>
+          <Events>
+            <EventHandler event="stateChanged" listener="javax.swing.event.ChangeListener" parameters="javax.swing.event.ChangeEvent" handler="localTranslateXSpinnerStateChanged"/>
+          </Events>
+        </Component>
+        <Component class="javax.swing.JSpinner" name="localTranslateYSpinner">
+          <Properties>
+            <Property name="model" type="javax.swing.SpinnerModel" editor="org.netbeans.modules.form.RADConnectionPropertyEditor">
+              <Connection code="localTranslationYSpinnerModel" type="code"/>
+            </Property>
+            <Property name="toolTipText" type="java.lang.String" editor="org.netbeans.modules.i18n.form.FormI18nStringEditor">
+              <ResourceString bundle="org/janelia/scenewindow/Bundle.properties" key="CameraControlTopComponent.localTranslateYSpinner.toolTipText" replaceFormat="org.openide.util.NbBundle.getMessage({sourceFileName}.class, &quot;{key}&quot;)"/>
+            </Property>
+          </Properties>
+          <Events>
+            <EventHandler event="stateChanged" listener="javax.swing.event.ChangeListener" parameters="javax.swing.event.ChangeEvent" handler="localTranslateYSpinnerStateChanged"/>
+          </Events>
+        </Component>
+        <Component class="javax.swing.JSpinner" name="localTranslateZSpinner">
+          <Properties>
+            <Property name="model" type="javax.swing.SpinnerModel" editor="org.netbeans.modules.form.RADConnectionPropertyEditor">
+              <Connection code="localTranslationZSpinnerModel" type="code"/>
+            </Property>
+            <Property name="toolTipText" type="java.lang.String" editor="org.netbeans.modules.i18n.form.FormI18nStringEditor">
+              <ResourceString bundle="org/janelia/scenewindow/Bundle.properties" key="CameraControlTopComponent.localTranslateZSpinner.toolTipText" replaceFormat="org.openide.util.NbBundle.getMessage({sourceFileName}.class, &quot;{key}&quot;)"/>
+            </Property>
+          </Properties>
+          <Events>
+            <EventHandler event="stateChanged" listener="javax.swing.event.ChangeListener" parameters="javax.swing.event.ChangeEvent" handler="localTranslateZSpinnerStateChanged"/>
+          </Events>
+        </Component>
       </SubComponents>
     </Container>
     <Container class="javax.swing.JPanel" name="rotationPanel">
@@ -245,7 +293,7 @@
                                   <EmptySpace min="0" pref="0" max="32767" attributes="0"/>
                               </Group>
                               <Group type="102" alignment="1" attributes="0">
-                                  <EmptySpace min="0" pref="0" max="32767" attributes="0"/>
+                                  <EmptySpace min="0" pref="24" max="32767" attributes="0"/>
                                   <Component id="resetRotationButton" min="-2" max="-2" attributes="0"/>
                               </Group>
                           </Group>

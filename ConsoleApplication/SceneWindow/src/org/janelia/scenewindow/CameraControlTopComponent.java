@@ -93,7 +93,12 @@ implements LookupListener
             Float.valueOf(0.0f), null, null, Float.valueOf(0.1f));
     private final SpinnerNumberModel focusZSpinnerModel = new SpinnerNumberModel(
             Float.valueOf(0.0f), null, null, Float.valueOf(0.1f));
-    
+    private final SpinnerNumberModel localTranslationXSpinnerModel = new SpinnerNumberModel(
+            Float.valueOf(0.0f), null, null, Float.valueOf(0.1f));
+    private final SpinnerNumberModel localTranslationYSpinnerModel = new SpinnerNumberModel(
+            Float.valueOf(0.0f), null, null, Float.valueOf(0.1f));
+    private final SpinnerNumberModel localTranslationZSpinnerModel = new SpinnerNumberModel(
+            Float.valueOf(0.0f), null, null, Float.valueOf(0.1f));    
     private final String micrometers = "\u00B5"+"m";
 
     public CameraControlTopComponent() {
@@ -135,6 +140,9 @@ implements LookupListener
         jLabel2 = new javax.swing.JLabel();
         jLabel3 = new javax.swing.JLabel();
         resetFocusButton = new javax.swing.JButton();
+        localTranslateXSpinner = new javax.swing.JSpinner();
+        localTranslateYSpinner = new javax.swing.JSpinner();
+        localTranslateZSpinner = new javax.swing.JSpinner();
         rotationPanel = new javax.swing.JPanel();
         rotXSpinner = new javax.swing.JSpinner();
         rotYSpinner = new javax.swing.JSpinner();
@@ -212,6 +220,36 @@ implements LookupListener
             }
         });
 
+        localTranslateXSpinner.setModel(localTranslationXSpinnerModel);
+        localTranslateXSpinner.setToolTipText(org.openide.util.NbBundle.getMessage(CameraControlTopComponent.class, "CameraControlTopComponent.localTranslateXSpinner.toolTipText")); // NOI18N
+        localTranslateXSpinner.addChangeListener(new javax.swing.event.ChangeListener()
+        {
+            public void stateChanged(javax.swing.event.ChangeEvent evt)
+            {
+                localTranslateXSpinnerStateChanged(evt);
+            }
+        });
+
+        localTranslateYSpinner.setModel(localTranslationYSpinnerModel);
+        localTranslateYSpinner.setToolTipText(org.openide.util.NbBundle.getMessage(CameraControlTopComponent.class, "CameraControlTopComponent.localTranslateYSpinner.toolTipText")); // NOI18N
+        localTranslateYSpinner.addChangeListener(new javax.swing.event.ChangeListener()
+        {
+            public void stateChanged(javax.swing.event.ChangeEvent evt)
+            {
+                localTranslateYSpinnerStateChanged(evt);
+            }
+        });
+
+        localTranslateZSpinner.setModel(localTranslationZSpinnerModel);
+        localTranslateZSpinner.setToolTipText(org.openide.util.NbBundle.getMessage(CameraControlTopComponent.class, "CameraControlTopComponent.localTranslateZSpinner.toolTipText")); // NOI18N
+        localTranslateZSpinner.addChangeListener(new javax.swing.event.ChangeListener()
+        {
+            public void stateChanged(javax.swing.event.ChangeEvent evt)
+            {
+                localTranslateZSpinnerStateChanged(evt);
+            }
+        });
+
         javax.swing.GroupLayout focusPanelLayout = new javax.swing.GroupLayout(focusPanel);
         focusPanel.setLayout(focusPanelLayout);
         focusPanelLayout.setHorizontalGroup(
@@ -221,14 +259,20 @@ implements LookupListener
                     .addGroup(focusPanelLayout.createSequentialGroup()
                         .addGroup(focusPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                             .addGroup(focusPanelLayout.createSequentialGroup()
+                                .addComponent(localTranslateXSpinner, javax.swing.GroupLayout.PREFERRED_SIZE, 15, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                                 .addComponent(focusXLabel)
                                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                                .addComponent(focusXSpinner, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+                                .addComponent(focusXSpinner, javax.swing.GroupLayout.DEFAULT_SIZE, 36, Short.MAX_VALUE))
                             .addGroup(focusPanelLayout.createSequentialGroup()
+                                .addComponent(localTranslateYSpinner, javax.swing.GroupLayout.PREFERRED_SIZE, 15, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                                 .addComponent(focusYLabel)
                                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                                 .addComponent(focusYSpinner, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
                             .addGroup(focusPanelLayout.createSequentialGroup()
+                                .addComponent(localTranslateZSpinner, javax.swing.GroupLayout.PREFERRED_SIZE, 15, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                                 .addComponent(focusZLabel)
                                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                                 .addComponent(focusZSpinner, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)))
@@ -248,17 +292,20 @@ implements LookupListener
                 .addGroup(focusPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(focusXSpinner, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                     .addComponent(focusXLabel)
-                    .addComponent(jLabel1))
+                    .addComponent(jLabel1)
+                    .addComponent(localTranslateXSpinner, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addGroup(focusPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(focusYSpinner, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                     .addComponent(focusYLabel)
-                    .addComponent(jLabel2))
+                    .addComponent(jLabel2)
+                    .addComponent(localTranslateYSpinner, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addGroup(focusPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(focusZSpinner, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                     .addComponent(focusZLabel)
-                    .addComponent(jLabel3))
+                    .addComponent(jLabel3)
+                    .addComponent(localTranslateZSpinner, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                 .addComponent(resetFocusButton))
         );
@@ -380,7 +427,7 @@ implements LookupListener
                                 .addComponent(stayUpCheckBox)
                                 .addGap(0, 0, Short.MAX_VALUE))
                             .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, rotationPanelLayout.createSequentialGroup()
-                                .addGap(0, 0, Short.MAX_VALUE)
+                                .addGap(0, 24, Short.MAX_VALUE)
                                 .addComponent(resetRotationButton))))
                     .addGroup(rotationPanelLayout.createSequentialGroup()
                         .addGroup(rotationPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
@@ -532,9 +579,13 @@ implements LookupListener
         // Adjust step size, proportional to zoom value, for a logarithmic effect
         float zoom = ((Number)zoomSpinner.getValue()).floatValue();
         zoomSpinnerModel.setStepSize(0.02f * zoom);
-        focusXSpinnerModel.setStepSize(0.008f * zoom);
-        focusYSpinnerModel.setStepSize(0.008f * zoom);
-        focusZSpinnerModel.setStepSize(0.008f * zoom);
+        float translationStep = 0.008f * zoom;
+        focusXSpinnerModel.setStepSize(translationStep);
+        focusYSpinnerModel.setStepSize(translationStep);
+        focusZSpinnerModel.setStepSize(translationStep);
+        localTranslationXSpinnerModel.setStepSize(translationStep);
+        localTranslationYSpinnerModel.setStepSize(translationStep);
+        localTranslationZSpinnerModel.setStepSize(translationStep);
         // Change camera (maybe)
         updateVantageProperties();
     }//GEN-LAST:event_zoomSpinnerStateChanged
@@ -601,6 +652,21 @@ implements LookupListener
         incrementLocalRotation(localRotZSpinner, new Vector3(0, 0, 1));
     }//GEN-LAST:event_localRotZSpinnerStateChanged
 
+    private void localTranslateXSpinnerStateChanged(javax.swing.event.ChangeEvent evt)//GEN-FIRST:event_localTranslateXSpinnerStateChanged
+    {//GEN-HEADEREND:event_localTranslateXSpinnerStateChanged
+        incrementLocalTranslation(localTranslateXSpinner, new Vector3(1, 0, 0));
+    }//GEN-LAST:event_localTranslateXSpinnerStateChanged
+
+    private void localTranslateYSpinnerStateChanged(javax.swing.event.ChangeEvent evt)//GEN-FIRST:event_localTranslateYSpinnerStateChanged
+    {//GEN-HEADEREND:event_localTranslateYSpinnerStateChanged
+        incrementLocalTranslation(localTranslateYSpinner, new Vector3(0, -1, 0));
+    }//GEN-LAST:event_localTranslateYSpinnerStateChanged
+
+    private void localTranslateZSpinnerStateChanged(javax.swing.event.ChangeEvent evt)//GEN-FIRST:event_localTranslateZSpinnerStateChanged
+    {//GEN-HEADEREND:event_localTranslateZSpinnerStateChanged
+        incrementLocalTranslation(localTranslateZSpinner, new Vector3(0, 0, -1));
+    }//GEN-LAST:event_localTranslateZSpinnerStateChanged
+
     private void incrementLocalRotation(JSpinner spinner, Vector3 axis)
     {
         float angle = ((Number)spinner.getValue()).floatValue();
@@ -612,6 +678,21 @@ implements LookupListener
         Rotation newRot = new Rotation().setFromAxisAngle(axis, (float)(angle * Math.PI/180.0) );
         newRot = new Rotation(selectedVantage.getRotationInGround()).multiply(newRot);
         selectedVantage.setRotationInGround(newRot);
+        selectedVantage.notifyObservers();        
+    }
+    
+    private void incrementLocalTranslation(JSpinner spinner, Vector3 axis)
+    {
+        float distance = ((Number)spinner.getValue()).floatValue();
+        if (distance == 0) return;
+        spinner.setValue(new Integer(0));
+        if (selectedVantage == null)
+            return;
+        // System.out.println("Rotating by "+angle+" degrees");
+        Vector3 dFocus = new Vector3(axis).multiplyScalar(distance);
+        dFocus = selectedVantage.getRotationInGround().multiply(dFocus);
+        dFocus.add(selectedVantage.getFocusPosition());
+        selectedVantage.setFocusPosition(dFocus);
         selectedVantage.notifyObservers();        
     }
     
@@ -633,6 +714,9 @@ implements LookupListener
     private javax.swing.JSpinner localRotXSpinner;
     private javax.swing.JSpinner localRotYSpinner;
     private javax.swing.JSpinner localRotZSpinner;
+    private javax.swing.JSpinner localTranslateXSpinner;
+    private javax.swing.JSpinner localTranslateYSpinner;
+    private javax.swing.JSpinner localTranslateZSpinner;
     private javax.swing.JButton resetAllButton;
     private javax.swing.JButton resetFocusButton;
     private javax.swing.JButton resetRotationButton;
