@@ -13,12 +13,29 @@ import org.janelia.it.workstation.tracing.AnchoredVoxelPath;
 import org.janelia.it.workstation.tracing.SegmentIndex;
 import org.janelia.it.jacs.model.user_data.tiledMicroscope.TmGeoAnnotation;
 import org.janelia.it.workstation.gui.large_volume_viewer.controller.AnchorListener;
+import org.janelia.it.workstation.gui.large_volume_viewer.controller.AnchoredVoxelPathListener;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class Skeleton {
+public class Skeleton implements AnchoredVoxelPathListener {
 	@SuppressWarnings("unused")
     private static final Logger log = LoggerFactory.getLogger(Skeleton.class);
+
+    //---------------------------------IMPLEMENTS AnchoredVoxelPathListener
+    @Override
+    public void addAnchoredVoxelPath(AnchoredVoxelPath path) {
+        addTracedSegment(path);
+    }
+
+    @Override
+    public void addAnchoredVoxelPaths(List<AnchoredVoxelPath> paths) {
+        addTracedSegments(paths);
+    }
+
+    @Override
+    public void removeAnchoredVoxelPath(AnchoredVoxelPath path) {
+        removeTracedSegment(path);
+    }
 	
 	/**
 	 * AnchorSeed holds enough data to nucleate a new Anchor.
@@ -176,26 +193,26 @@ public class Skeleton {
 		}
 	};
 
-    public Slot1<AnchoredVoxelPath> addAnchoredPathSlot = new Slot1<AnchoredVoxelPath>() {
-        @Override
-        public void execute(AnchoredVoxelPath path) {
-            addTracedSegment(path);
-        }
-    };
-
-    public Slot1<List<AnchoredVoxelPath>> addAnchoredPathsSlot = new Slot1<List<AnchoredVoxelPath>>() {
-        @Override
-        public void execute(List<AnchoredVoxelPath> pathList) {
-            addTracedSegments(pathList);
-        }
-    };
-
-    public Slot1<AnchoredVoxelPath> removeAnchoredPathSlot = new Slot1<AnchoredVoxelPath>() {
-        @Override
-        public void execute(AnchoredVoxelPath path) {
-            removeTracedSegment(path);
-        }
-    };
+//    public Slot1<AnchoredVoxelPath> addAnchoredPathSlot = new Slot1<AnchoredVoxelPath>() {
+//        @Override
+//        public void execute(AnchoredVoxelPath path) {
+//            addTracedSegment(path);
+//        }
+//    };
+//
+//    public Slot1<List<AnchoredVoxelPath>> addAnchoredPathsSlot = new Slot1<List<AnchoredVoxelPath>>() {
+//        @Override
+//        public void execute(List<AnchoredVoxelPath> pathList) {
+//            addTracedSegments(pathList);
+//        }
+//    };
+//
+//    public Slot1<AnchoredVoxelPath> removeAnchoredPathSlot = new Slot1<AnchoredVoxelPath>() {
+//        @Override
+//        public void execute(AnchoredVoxelPath path) {
+//            removeTracedSegment(path);
+//        }
+//    };
 
 	public Skeleton() {
 		// Don't make this connection when using workstation database

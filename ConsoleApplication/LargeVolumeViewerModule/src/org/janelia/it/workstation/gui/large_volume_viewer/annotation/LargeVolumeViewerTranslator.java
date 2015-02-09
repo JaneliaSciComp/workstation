@@ -5,6 +5,7 @@ import org.janelia.it.workstation.geom.Vec3;
 import org.janelia.it.workstation.gui.large_volume_viewer.LargeVolumeViewer;
 import org.janelia.it.workstation.gui.large_volume_viewer.skeleton.Anchor;
 import org.janelia.it.workstation.gui.large_volume_viewer.skeleton.Skeleton;
+import org.janelia.it.workstation.gui.large_volume_viewer.controller.AnchoredVoxelPathListener;
 import org.janelia.it.workstation.octree.ZoomLevel;
 import org.janelia.it.workstation.octree.ZoomedVoxelIndex;
 import org.janelia.it.workstation.signal.Signal;
@@ -16,6 +17,7 @@ import org.janelia.it.jacs.model.user_data.tiledMicroscope.*;
 
 import java.awt.*;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 
 
@@ -39,7 +41,16 @@ public class LargeVolumeViewerTranslator {
 
     private AnnotationModel annModel;
     private LargeVolumeViewer largeVolumeViewer;
-
+    private Collection<AnchoredVoxelPathListener> avpListeners = new ArrayList<AnchoredVoxelPathListener>();
+    
+    public void addAnchoredVoxelPathListener(AnchoredVoxelPathListener l) {
+        avpListeners.add(l);
+    }
+    
+    public void removeAnchoredVoxelPathListener(AnchoredVoxelPathListener l) {
+        avpListeners.remove(l);
+    }
+    
     // ----- slots
     public Slot1<TmWorkspace> loadWorkspaceSlot = new Slot1<TmWorkspace>() {
         @Override
@@ -130,9 +141,9 @@ public class LargeVolumeViewerTranslator {
     public Signal clearSkeletonSignal = new Signal();
     public Signal1<Long> setNextParentSignal = new Signal1<Long>();
 
-    public Signal1<AnchoredVoxelPath> anchoredPathAddedSignal = new Signal1<AnchoredVoxelPath>();
-    public Signal1<List<AnchoredVoxelPath>> anchoredPathsAddedSignal = new Signal1<List<AnchoredVoxelPath>>();
-    public Signal1<AnchoredVoxelPath> anchoredPathRemovedSignal = new Signal1<AnchoredVoxelPath>();
+//    public Signal1<AnchoredVoxelPath> anchoredPathAddedSignal = new Signal1<AnchoredVoxelPath>();
+//    public Signal1<List<AnchoredVoxelPath>> anchoredPathsAddedSignal = new Signal1<List<AnchoredVoxelPath>>();
+//    public Signal1<AnchoredVoxelPath> anchoredPathRemovedSignal = new Signal1<AnchoredVoxelPath>();
 
     public Signal1<Color> changeGlobalColorSignal = new Signal1<Color>();
     public Signal1<String> loadColorModelSignal = new Signal1<String>();
@@ -154,9 +165,10 @@ public class LargeVolumeViewerTranslator {
 
         setNextParentSignal.connect(largeVolumeViewer.getSkeletonActor().setNextParentSlot);
 
-        anchoredPathAddedSignal.connect(skeleton.addAnchoredPathSlot);
-        anchoredPathsAddedSignal.connect(skeleton.addAnchoredPathsSlot);
-        anchoredPathRemovedSignal.connect(skeleton.removeAnchoredPathSlot);
+        addAnchoredVoxelPathListener(skeleton);
+//        anchoredPathAddedSignal.connect(skeleton.addAnchoredPathSlot);
+//        anchoredPathsAddedSignal.connect(skeleton.addAnchoredPathsSlot);
+//        anchoredPathRemovedSignal.connect(skeleton.removeAnchoredPathSlot);
 
         changeGlobalColorSignal.connect(largeVolumeViewer.getSkeletonActor().changeGlobalColorSlot);
     }
@@ -246,7 +258,10 @@ public class LargeVolumeViewerTranslator {
     }
 
     public void addAnchoredPath(TmAnchoredPath path) {
-        anchoredPathAddedSignal.emit(TAP2AVP(path));
+        for (AnchoredVoxelPathListener l: avpListeners) {
+            l.addAnchoredVoxelPath(TAP2AVP(path));
+        }
+//        anchoredPathAddedSignal.emit(TAP2AVP(path));
     }
 
     public void addAnchoredPaths(List<TmAnchoredPath> pathList) {
@@ -254,12 +269,18 @@ public class LargeVolumeViewerTranslator {
         for (TmAnchoredPath path: pathList) {
             voxelPathList.add(TAP2AVP(path));
         }
-        anchoredPathsAddedSignal.emit(voxelPathList);
+        for (AnchoredVoxelPathListener l: avpListeners) {
+            l.addAnchoredVoxelPaths(voxelPathList);
+        }
+//        anchoredPathsAddedSignal.emit(voxelPathList);
     }
 
     public void removeAnchoredPaths(List<TmAnchoredPath> pathList) {
         for (TmAnchoredPath path: pathList) {
-        anchoredPathRemovedSignal.emit(TAP2AVP(path));
+            for (AnchoredVoxelPathListener l: avpListeners) {
+                l.removeAnchoredVoxelPath(TAP2AVP(path));
+            }
+//        anchoredPathRemovedSignal.emit(TAP2AVP(path));
         }
     }
 
