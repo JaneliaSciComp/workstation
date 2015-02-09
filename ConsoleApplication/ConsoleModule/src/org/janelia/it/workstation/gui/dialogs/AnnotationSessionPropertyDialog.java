@@ -1,37 +1,6 @@
 package org.janelia.it.workstation.gui.dialogs;
 
-import java.awt.BorderLayout;
-import java.awt.Dimension;
-import java.awt.GridBagConstraints;
-import java.awt.GridLayout;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
-import java.awt.event.WindowAdapter;
-import java.awt.event.WindowEvent;
-import java.util.ArrayList;
-import java.util.Enumeration;
-import java.util.List;
-import java.util.concurrent.Callable;
-
-import javax.swing.*;
-import javax.swing.tree.DefaultMutableTreeNode;
-
 import loci.plugins.config.SpringUtilities;
-
-import org.janelia.it.workstation.api.entity_model.management.ModelMgr;
-import org.janelia.it.workstation.gui.dialogs.choose.EntityChooser;
-import org.janelia.it.workstation.gui.dialogs.choose.OntologyElementChooser;
-import org.janelia.it.workstation.gui.framework.console.Browser;
-import org.janelia.it.workstation.gui.framework.outline.EntityOutline;
-import org.janelia.it.workstation.gui.framework.outline.EntityTreeCellRenderer;
-import org.janelia.it.workstation.gui.framework.outline.OntologyOutline;
-import org.janelia.it.workstation.gui.framework.outline.OntologyTreeCellRenderer;
-import org.janelia.it.workstation.gui.framework.outline.SelectionTreePanel;
-import org.janelia.it.workstation.gui.framework.outline.SessionOutline;
-import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
-import org.janelia.it.workstation.model.utils.AnnotationSession;
-import org.janelia.it.workstation.shared.util.Utils;
-import org.janelia.it.workstation.shared.workers.SimpleWorker;
 import org.janelia.it.jacs.model.entity.Entity;
 import org.janelia.it.jacs.model.entity.EntityConstants;
 import org.janelia.it.jacs.model.entity.EntityData;
@@ -40,6 +9,27 @@ import org.janelia.it.jacs.model.ontology.types.Tag;
 import org.janelia.it.jacs.model.tasks.Task;
 import org.janelia.it.jacs.model.tasks.annotation.AnnotationSessionTask;
 import org.janelia.it.jacs.shared.utils.EntityUtils;
+import org.janelia.it.workstation.api.entity_model.management.ModelMgr;
+import org.janelia.it.workstation.gui.dialogs.choose.EntityChooser;
+import org.janelia.it.workstation.gui.dialogs.choose.OntologyElementChooser;
+import org.janelia.it.workstation.gui.framework.console.Browser;
+import org.janelia.it.workstation.gui.framework.outline.*;
+import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
+import org.janelia.it.workstation.model.utils.AnnotationSession;
+import org.janelia.it.workstation.shared.util.Utils;
+import org.janelia.it.workstation.shared.workers.SimpleWorker;
+
+import javax.swing.*;
+import javax.swing.tree.DefaultMutableTreeNode;
+import java.awt.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.awt.event.WindowAdapter;
+import java.awt.event.WindowEvent;
+import java.util.ArrayList;
+import java.util.Enumeration;
+import java.util.List;
+import java.util.concurrent.Callable;
 
 /**
  * A dialog for creating a new annotation session, or editing an existing one.
@@ -84,10 +74,10 @@ public class AnnotationSessionPropertyDialog extends ModalDialog {
 
         JPanel treesPanel = new JPanel(new GridLayout(1, 2));
 
-        entityTreePanel = new SelectionTreePanel<Entity>("Entities to annotate") {
+        entityTreePanel = new SelectionTreePanel<Entity>("Items to annotate") {
             public void addClicked() {
 
-                final EntityChooser entityChooser = new EntityChooser("Choose entities to annotate", entityOutline);
+                final EntityChooser entityChooser = new EntityChooser("Choose items to annotate", entityOutline);
                 int returnVal = entityChooser.showDialog(AnnotationSessionPropertyDialog.this);
                 if (returnVal != EntityChooser.CHOOSE_OPTION) return;
 

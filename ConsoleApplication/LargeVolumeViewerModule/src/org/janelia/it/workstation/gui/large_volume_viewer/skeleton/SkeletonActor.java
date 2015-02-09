@@ -44,6 +44,7 @@ import org.janelia.it.workstation.signal.Slot;
 import org.janelia.it.workstation.signal.Slot1;
 import org.janelia.it.workstation.tracing.AnchoredVoxelPath;
 import org.janelia.it.workstation.tracing.SegmentIndex;
+import org.janelia.it.workstation.tracing.VoxelPosition;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -479,8 +480,8 @@ implements GLActor
 			if (tracedSegments.containsKey(ix)) {
 				// Is the old traced segment still valid?
 				AnchoredVoxelPath oldSegment = tracedSegments.get(ix).getSegment();
-				List<ZoomedVoxelIndex> p0 = oldSegment.getPath();
-				List<ZoomedVoxelIndex> p1 = segment.getPath();
+				List<VoxelPosition> p0 = oldSegment.getPath();
+				List<VoxelPosition> p1 = segment.getPath();
 				boolean looksTheSame = true;
 				if (p0.size() != p1.size()) // same size?
 					looksTheSame = false;

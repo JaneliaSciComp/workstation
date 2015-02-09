@@ -1,23 +1,5 @@
 package org.janelia.it.workstation.gui.dialogs;
 
-import java.awt.BorderLayout;
-import java.awt.Component;
-import java.awt.Dimension;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.concurrent.Callable;
-import javax.swing.BorderFactory;
-import javax.swing.Box;
-import javax.swing.BoxLayout;
-import javax.swing.JButton;
-import javax.swing.JLabel;
-import javax.swing.JPanel;
-import javax.swing.JScrollPane;
-import javax.swing.JTextPane;
-import javax.swing.SwingConstants;
 import org.janelia.it.jacs.model.entity.Entity;
 import org.janelia.it.jacs.model.entity.EntityConstants;
 import org.janelia.it.jacs.model.entity.EntityData;
@@ -31,8 +13,17 @@ import org.janelia.it.workstation.shared.workers.SimpleWorker;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.swing.*;
+import java.awt.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.concurrent.Callable;
+
 /**
- * A dialog to migrate annotations and references to a set of entities. This
+ * A dialog to migrate annotations and references to a set of items. This
  * dialog is designed to be invoked when the user selects migration sources 
  * in the Left Pane and targets in the Right Pane.
  * 
@@ -47,9 +38,9 @@ public class MigrateEntitiesDialog extends ModalDialog {
     
     private static final String HELP_TEXT = 
             "To use this tool, open collections in both Left and Right Panes, "
-            + "and then select entities so that the entities selected in the Left Pane can be migrated to the corresponding "
-            + "entities in the Right Pane. All annotations will be moved from Left to Right, and then all Folder References to the "
-            + "entities in the Left Pane will be replaced with references to corresponding entities in the Right Pane.";
+            + "and then select items so that the items selected in the Left Pane can be migrated to the corresponding "
+            + "items in the Right Pane. All annotations will be moved from Left to Right, and then all Folder References to the "
+            + "items in the Left Pane will be replaced with references to corresponding items in the Right Pane.";
             
     // UI Elements
     private final JPanel mainPanel;
@@ -157,18 +148,18 @@ public class MigrateEntitiesDialog extends ModalDialog {
                 secSelected = secPane.getViewer().getSelectedEntities();
                 
                 if (mainSelected.isEmpty()) {
-                    this.error = "no entities selected in Right Pane";
+                    this.error = "no items selected in Right Pane";
                     return;
                 }
                 
                 if (secSelected.isEmpty()) {
-                    this.error = "no entities selected in Left Pane";
+                    this.error = "no items selected in Left Pane";
                     return;
                 }
                 
                 
                 if (mainSelected.size()!=secSelected.size()) {
-                    this.error = "different numbers of entities are selected in Left and Right Panes";
+                    this.error = "different numbers of items are selected in Left and Right Panes";
                     return;
                 }
                 
@@ -188,7 +179,7 @@ public class MigrateEntitiesDialog extends ModalDialog {
                     sb.append(HELP_TEXT).append("<br><br>Currently the following issue is preventing migration: ").append(error);
                 }
                 else {
-                    sb.append("Will migrate annotations and replace references to ").append(mainSelected.size()).append(" entities as follows:<br><ul>");
+                    sb.append("Will migrate annotations and replace references to ").append(mainSelected.size()).append(" items as follows:<br><ul>");
                     
                     int c = 0;
                     for(RootedEntity sourceRe : mainSelected) {

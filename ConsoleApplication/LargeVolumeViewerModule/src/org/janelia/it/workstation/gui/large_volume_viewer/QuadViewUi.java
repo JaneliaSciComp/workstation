@@ -44,8 +44,10 @@ import java.net.URL;
 import java.util.Arrays;
 import java.util.Vector;
 import java.util.List;
+import org.janelia.it.workstation.gui.large_volume_viewer.annotation.MatrixDrivenSWCExchanger;
 import org.janelia.it.workstation.gui.passive_3d.Snapshot3DLauncher;
 import org.janelia.it.workstation.gui.util.Icons;
+import org.janelia.it.workstation.shared.util.SWCDataConverter;
 
 /** 
  * Main window for QuadView application.
@@ -123,7 +125,7 @@ public class QuadViewUi extends JPanel
 	// annotation things
     private AnnotationPanel annotationPanel;
 	private AnnotationModel annotationModel = new AnnotationModel();
-	private AnnotationManager annotationMgr = new AnnotationManager(annotationModel, this);
+	private AnnotationManager annotationMgr = new AnnotationManager(annotationModel, this, tileServer);
     private LargeVolumeViewerTranslator largeVolumeViewerTranslator = new LargeVolumeViewerTranslator(annotationModel, largeVolumeViewer);
 
 	// Actions
@@ -157,6 +159,7 @@ public class QuadViewUi extends JPanel
 
 	// annotation-related
     private final CenterNextParentAction centerNextParentAction = new CenterNextParentAction();
+    private TileFormat tileFormat;
     
     private Snapshot3DLauncher snapshot3dLauncher;
 
@@ -268,12 +271,15 @@ public class QuadViewUi extends JPanel
 				zScanSlider.setValue(z);
 				zScanSpinner.setModel(new SpinnerNumberModel(z, z0, z1, 1));
 				// Allow octree zsteps to depend on zoom
-				TileFormat tileFormat = tileServer.getLoadAdapter().getTileFormat();
+				tileFormat = tileServer.getLoadAdapter().getTileFormat();
+                updateSWCDataConverter();
+                
 				zScanMode.setTileFormat(tileFormat);
 				nextZSliceAction.setTileFormat(tileFormat);
 				previousZSliceAction.setTileFormat(tileFormat);
 				advanceZSlicesAction.setTileFormat(tileFormat);
 				goBackZSlicesAction.setTileFormat(tileFormat);
+                skeleton.setTileFormat(tileFormat);
 			}
 			else { // no Z scan
 				zScanPanel.setVisible(false);
@@ -286,7 +292,7 @@ public class QuadViewUi extends JPanel
 		}
 		// TODO update zoom range too?
 	};
-	
+
 	public Slot1<String> setStatusMessageSlot = new Slot1<String>() {
 		@Override
 		public void execute(String message) {
@@ -307,7 +313,9 @@ public class QuadViewUi extends JPanel
         public void execute() {
             Anchor anchor = getSkeletonActor().getNextParent();
             if (anchor != null) {
-                setCameraFocusSlot.execute(anchor.getLocation());
+                setCameraFocusSlot.execute(
+                        tileFormat.micronVec3ForVoxelVec3Cornered(anchor.getLocation())
+                );
             }
         }
     };
@@ -521,6 +529,14 @@ public class QuadViewUi extends JPanel
 		}
 		return result;
 	}
+	
+    private void updateSWCDataConverter() {
+        SWCDataConverter swcDataConverter = new SWCDataConverter();
+        swcDataConverter.setSWCExchanger(
+                new MatrixDrivenSWCExchanger(tileFormat)
+        );
+        annotationModel.setSWCDataConverter(swcDataConverter);
+    }
 	
 	private void setOrthogonalMode() {
 		nwViewer.setVisible(true);
@@ -1150,6 +1166,7 @@ public class QuadViewUi extends JPanel
         // July 1, 2013 elevate url loading from LargeVolumeViewer to QuadViewUi.
         URL url = tmpFile.toURI().toURL();
         snapshot3dLauncher = new Snapshot3DLauncher(
+                largeVolumeViewer.getTileServer(),
                 largeVolumeViewer.getSliceAxis(),
                 camera,
                 getSubvolumeProvider(),
@@ -1157,6 +1174,8 @@ public class QuadViewUi extends JPanel
                 url,
                 imageColorModel
         );
+        snapshot3dLauncher.setAnnotationManager(annotationMgr);
+        volumeImage.setRemoteBasePath(pathToFile);
         return loadURL(url);
     }
 
@@ -1168,7 +1187,9 @@ public class QuadViewUi extends JPanel
         closeWorkspaceRequestSignal.emit();
 
         // then just go ahead and load the file
-        return loadURL(url);
+        boolean rtnVal = loadURL(url);
+        updateSWCDataConverter();
+        return rtnVal;
     }
 
     public boolean loadURL(URL url) {

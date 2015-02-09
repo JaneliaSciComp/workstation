@@ -1,17 +1,11 @@
 package org.janelia.it.workstation.gui.framework.actions;
 
-import java.awt.Component;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.concurrent.Callable;
-
-import javax.swing.JOptionPane;
-
+import org.janelia.it.jacs.model.entity.Entity;
+import org.janelia.it.jacs.model.entity.EntityActorPermission;
+import org.janelia.it.jacs.model.entity.EntityConstants;
+import org.janelia.it.jacs.model.entity.EntityData;
+import org.janelia.it.jacs.model.tasks.Task;
+import org.janelia.it.jacs.shared.utils.StringUtils;
 import org.janelia.it.workstation.api.entity_model.management.ModelMgr;
 import org.janelia.it.workstation.api.entity_model.management.ModelMgrUtils;
 import org.janelia.it.workstation.gui.framework.console.Browser;
@@ -21,14 +15,14 @@ import org.janelia.it.workstation.shared.util.ConcurrentUtils;
 import org.janelia.it.workstation.shared.workers.BackgroundWorker;
 import org.janelia.it.workstation.shared.workers.IndeterminateProgressMonitor;
 import org.janelia.it.workstation.shared.workers.SimpleWorker;
-import org.janelia.it.jacs.model.entity.Entity;
-import org.janelia.it.jacs.model.entity.EntityActorPermission;
-import org.janelia.it.jacs.model.entity.EntityConstants;
-import org.janelia.it.jacs.model.entity.EntityData;
-import org.janelia.it.jacs.model.tasks.Task;
-import org.janelia.it.jacs.shared.utils.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import javax.swing.*;
+import java.awt.*;
+import java.util.*;
+import java.util.List;
+import java.util.concurrent.Callable;
 
 /**
  * This action removes an entity from some parent. If the entity becomes an orphan, then it is completely deleted.
@@ -57,7 +51,7 @@ public class RemoveEntityAction implements Action {
 	
     @Override
     public String getName() {
-    	return rootedEntityList.size()>1?"Remove "+rootedEntityList.size()+" entities":"Remove";
+    	return rootedEntityList.size()>1?"Remove "+rootedEntityList.size()+" items":"Remove";
     }
 	
     @Override
@@ -240,7 +234,7 @@ public class RemoveEntityAction implements Action {
     
                         @Override
                         public String getName() {
-                            return "Remove entities";
+                            return "Remove items";
                         }
             
     					@Override

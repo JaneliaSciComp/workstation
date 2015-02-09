@@ -1247,12 +1247,12 @@ public final class ModelMgr {
         FacadeManager.getFacadeManager().getEntityFacade().deleteStructuredTextAnnotation(annID);
     }
 
-    public RawFileInfo getNearestFileInfo(String basePath, int[] viewerCoord) throws Exception {
-        return FacadeManager.getFacadeManager().getEntityFacade().getNearestFileInfo(basePath, viewerCoord);
+    public CoordinateToRawTransform getCoordToRawTransform(String basePath) throws Exception {
+        return FacadeManager.getFacadeManager().getEntityFacade().getLvvCoordToRawTransform(basePath);
     }
 
-    public Map<Integer,byte[]> getTextureBytes( String basePath, int[] viewerCoord, int cubicDim ) throws Exception {
-        return FacadeManager.getFacadeManager().getEntityFacade().getTextureBytes(basePath, viewerCoord, cubicDim);
+    public Map<Integer,byte[]> getTextureBytes( String basePath, int[] viewerCoord, int[] dimensions ) throws Exception {
+        return FacadeManager.getFacadeManager().getEntityFacade().getTextureBytes(basePath, viewerCoord, dimensions);
     }
 
 }

@@ -14,6 +14,7 @@ import java.text.NumberFormat;
 import org.janelia.it.workstation.geom.CoordinateAxis;
 
 import com.sun.media.jai.codec.ImageDecoder;
+import org.janelia.it.workstation.gui.large_volume_viewer.exception.DataSourceInitializeException;
 
 /**
  * Convert block tiff octree render artifacts to slice pam/lz4 artifacts.
@@ -40,7 +41,7 @@ public class TiffToPam {
 		try {
 			tiffToPam.loadAdapter.setTopFolder(inputTiffFolder);
 			tiffToPam.convertFolder(inputTiffFolder, outputPamFolder);
-		} catch (IOException e) {
+		} catch (DataSourceInitializeException e) {
 			e.printStackTrace();
 			System.exit(1);
 		}

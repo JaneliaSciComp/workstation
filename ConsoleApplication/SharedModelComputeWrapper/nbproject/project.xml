@@ -12,11 +12,31 @@
                     <compile-dependency/>
                     <run-dependency>
                         <release-version>1</release-version>
-                        <specification-version>1.6</specification-version>
+                        <specification-version>1.7</specification-version>
                     </run-dependency>
                 </dependency>
             </module-dependencies>
             <public-packages>
+                <package>com.sun.media.jai.codec</package>
+                <package>com.sun.media.jai.codecimpl</package>
+                <package>com.sun.media.jai.codecimpl.fpx</package>
+                <package>com.sun.media.jai.codecimpl.util</package>
+                <package>com.sun.media.jai.iterator</package>
+                <package>com.sun.media.jai.mlib</package>
+                <package>com.sun.media.jai.opimage</package>
+                <package>com.sun.media.jai.remote</package>
+                <package>com.sun.media.jai.rmi</package>
+                <package>com.sun.media.jai.tilecodec</package>
+                <package>com.sun.media.jai.util</package>
+                <package>com.sun.media.jai.widget</package>
+                <package>javax.media.jai</package>
+                <package>javax.media.jai.iterator</package>
+                <package>javax.media.jai.operator</package>
+                <package>javax.media.jai.registry</package>
+                <package>javax.media.jai.remote</package>
+                <package>javax.media.jai.tilecodec</package>
+                <package>javax.media.jai.util</package>
+                <package>javax.media.jai.widget</package>
                 <package>org.janelia.it.jacs.compute.access</package>
                 <package>org.janelia.it.jacs.compute.api</package>
                 <package>org.janelia.it.jacs.compute.api.support</package>
@@ -71,6 +91,7 @@
                 <package>org.janelia.it.jacs.model.tasks.tic</package>
                 <package>org.janelia.it.jacs.model.tasks.tools</package>
                 <package>org.janelia.it.jacs.model.tasks.utility</package>
+                <package>org.janelia.it.jacs.model.tasks.validation</package>
                 <package>org.janelia.it.jacs.model.tasks.zlatic</package>
                 <package>org.janelia.it.jacs.model.user_data</package>
                 <package>org.janelia.it.jacs.model.user_data.ap16s</package>
@@ -104,6 +125,7 @@
                 <package>org.janelia.it.jacs.model.user_data.tic</package>
                 <package>org.janelia.it.jacs.model.user_data.tiledMicroscope</package>
                 <package>org.janelia.it.jacs.model.user_data.tools</package>
+                <package>org.janelia.it.jacs.model.user_data.validation</package>
                 <package>org.janelia.it.jacs.model.user_data.zlatic</package>
                 <package>org.janelia.it.jacs.model.util</package>
                 <package>org.janelia.it.jacs.model.vo</package>

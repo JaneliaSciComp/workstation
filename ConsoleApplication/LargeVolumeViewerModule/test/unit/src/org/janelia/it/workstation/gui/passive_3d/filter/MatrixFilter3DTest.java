@@ -8,6 +8,7 @@ package org.janelia.it.workstation.gui.passive_3d.filter;
 
 import java.nio.ByteOrder;
 import org.janelia.it.jacs.model.TestCategories;
+import org.junit.Assert;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 

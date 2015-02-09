@@ -11,12 +11,15 @@ import java.io.InputStream;
 import java.net.MalformedURLException;
 import java.net.URISyntaxException;
 import java.net.URL;
+import org.janelia.it.workstation.api.entity_model.management.ModelMgr;
+import org.janelia.it.workstation.gui.large_volume_viewer.exception.DataSourceInitializeException;
 
 public class SharedVolumeImage 
 implements VolumeImage3d
 {
 	private AbstractTextureLoadAdapter loadAdapter;
 	private BoundingBox3d boundingBox3d = new BoundingBox3d();
+    private String remoteBasePath;
 
 	public Signal1<URL> volumeInitializedSignal = new Signal1<URL>();
 
@@ -36,10 +39,12 @@ implements VolumeImage3d
 	public Vec3 getVoxelCenter() {
 	    Vec3 result = new Vec3();
 	    for (int i = 0; i < 3; ++i) {
-	        double range = getBoundingBox3d().getMax().get(i) - getBoundingBox3d().getMin().get(i);
+            final Double boundingMin = getBoundingBox3d().getMin().get(i);
+	        double range = getBoundingBox3d().getMax().get(i) - boundingMin;
 	        int voxelCount = (int)Math.round(range/getResolution(i));
 	        int midVoxel = voxelCount/2;
-	        double center = (midVoxel+0.5)*getResolution(i);
+            double center = 0.0;
+            center = (midVoxel+0.5)*getResolution(i) + boundingMin;
 	        result.set(i, center);
 	    }
 	    return result;
@@ -65,6 +70,16 @@ implements VolumeImage3d
 			return 0;
 		return getLoadAdapter().getTileFormat().getVoxelMicrometers()[2];
 	}
+    
+    public int[] getOrigin() {
+		if (getLoadAdapter() == null) {
+			return new int[]{0,0,0};
+        }
+        else {
+            return getLoadAdapter().getTileFormat().getOrigin();
+        }
+        
+    }
 
 	@Override
 	public int getNumberOfChannels() {
@@ -73,6 +88,10 @@ implements VolumeImage3d
 		return getLoadAdapter().getTileFormat().getChannelCount();
 	}
 
+    public void setRemoteBasePath(String basePath) {
+        this.remoteBasePath = basePath;
+    }
+    
 	@Override
 	public boolean loadURL(URL folderUrl) {
 		// Sanity check before overwriting current view
@@ -119,11 +138,16 @@ implements VolumeImage3d
 				testUrl.openStream();
 				File fileFolder = new File(folderUrl.toURI());
 				BlockTiffOctreeLoadAdapter btola = new BlockTiffOctreeLoadAdapter();
+                //ORDER DEPENDENCY: set this before top folder.
+                if (remoteBasePath != null) {
+                    btola.setRemoteBasePath(remoteBasePath);
+                }
 				btola.setTopFolder(fileFolder);
 				testLoadAdapter = btola;
-			} catch (MalformedURLException e1) {} 
-			catch (IOException e) {} 
-			catch (URISyntaxException e) {}
+            } catch (IOException | URISyntaxException | DataSourceInitializeException ex) {
+                ex.printStackTrace();
+                ModelMgr.getModelMgr().handleException(ex);
+			}
 		}
 
 		// Is this a Raveler format?

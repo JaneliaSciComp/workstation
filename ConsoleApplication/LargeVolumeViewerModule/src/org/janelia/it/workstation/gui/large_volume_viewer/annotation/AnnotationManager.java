@@ -8,7 +8,6 @@ import org.janelia.it.workstation.gui.large_volume_viewer.QuadViewUi;
 import org.janelia.it.workstation.gui.large_volume_viewer.skeleton.Anchor;
 import org.janelia.it.workstation.gui.large_volume_viewer.skeleton.Skeleton;
 
-import org.janelia.it.workstation.octree.ZoomedVoxelIndex;
 import org.janelia.it.workstation.shared.workers.BackgroundWorker;
 import org.janelia.it.workstation.shared.workers.SimpleWorker;
 import org.janelia.it.workstation.signal.Slot;
@@ -30,6 +29,10 @@ import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import org.janelia.it.workstation.gui.large_volume_viewer.ComponentUtil;
+import org.janelia.it.workstation.gui.large_volume_viewer.TileFormat;
+import org.janelia.it.workstation.gui.large_volume_viewer.TileServer;
+import org.janelia.it.workstation.shared.util.ImportExportSWCExchanger;
+import org.janelia.it.workstation.tracing.VoxelPosition;
 
 
 public class AnnotationManager
@@ -55,6 +58,8 @@ public class AnnotationManager
     private QuadViewUi quadViewUi;
 
     private Entity initialEntity;
+    
+    private TileServer tileServer;
 
     // ----- constants
     // AUTOMATIC_TRACING_TIMEOUT for automatic tracing in seconds
@@ -164,19 +169,11 @@ public class AnnotationManager
                         voxelPath.getSegmentIndex().getAnchor1Guid(),
                         voxelPath.getSegmentIndex().getAnchor2Guid());
                 List<List<Integer>> pointList = new ArrayList<>();
-                for (ZoomedVoxelIndex zvi: voxelPath.getPath()) {
-                    if (zvi.getZoomLevel().getZoomOutFactor() != 1) {
-                        // compromise between me and CB: I don't want zoom levels in db, so 
-                        //  if I get one that's not unzoomed, I don't have to handle it
-                        presentError(
-                            "Unexpected zoom level found; path not displayed.",
-                            "Unexpected zoom!");
-                        return;
-                    }
+                for (VoxelPosition vp: voxelPath.getPath()) {
                     List<Integer> tempList = new ArrayList<>();
-                    tempList.add(zvi.getX());
-                    tempList.add(zvi.getY());
-                    tempList.add(zvi.getZ());
+                    tempList.add(vp.getX());
+                    tempList.add(vp.getY());
+                    tempList.add(vp.getZ());
                     pointList.add(tempList);
                 }
                 addAnchoredPath(endpoints, pointList);
@@ -205,12 +202,17 @@ public class AnnotationManager
         }
     };
 
-    public AnnotationManager(AnnotationModel annotationModel, QuadViewUi quadViewUi) {
+    public AnnotationManager(AnnotationModel annotationModel, QuadViewUi quadViewUi, TileServer tileServer) {
         this.annotationModel = annotationModel;
         this.quadViewUi = quadViewUi;
+        this.tileServer = tileServer;
         modelMgr = ModelMgr.getModelMgr();
     }
 
+    public TileFormat getTileFormat() {
+        return tileServer.getLoadAdapter().getTileFormat();
+    }
+    
     public Entity getInitialEntity() {
         return initialEntity;
     }
@@ -371,6 +373,11 @@ public class AnnotationManager
         } else {
             // verify it's a link and not a root or branch:
             TmGeoAnnotation annotation = annotationModel.getGeoAnnotationFromID(annotationID);
+            if (annotation == null) {
+                presentError(
+                        "No annotation to delete.",
+                        "No such annotation");
+            }
             if (annotation.isRoot() || annotation.getChildIds().size() > 1) {
                 presentError(
                         "This annotation is either a root (no parent) or branch (many children), not a link!",
@@ -947,7 +954,7 @@ public class AnnotationManager
         }
 
         TmNeuron neuron = annotationModel.getNeuronFromAnnotationID(annotationID);
-        annotationModel.setCurrentNeuron(neuron);
+        annotationModel.selectNeuron(neuron);
     }
 
     /**
@@ -1061,32 +1068,22 @@ public class AnnotationManager
     }
 
     public void saveColorModel() {
-        SimpleWorker saver = new SimpleWorker() {
-            @Override
-            protected void doStuff() throws Exception {
-                annotationModel.setPreference(AnnotationsConstants.PREF_COLOR_MODEL, quadViewUi.imageColorModelAsString());
-            }
-
-            @Override
-            protected void hadSuccess() {
-                // nothing here
-            }
-
-            @Override
-            protected void hadError(Throwable error) {
-                SessionMgr.getSessionMgr().handleException(error);
-            }
-        };
-        saver.execute();
-
+        savePreference(AnnotationsConstants.PREF_COLOR_MODEL, quadViewUi.imageColorModelAsString());
     }
 
     public void setAutomaticRefinement(final boolean state) {
+        savePreference(AnnotationsConstants.PREF_AUTOMATIC_POINT_REFINEMENT, String.valueOf(state));
+    }
+
+    public void setAutomaticTracing(final boolean state) {
+        savePreference(AnnotationsConstants.PREF_AUTOMATIC_TRACING, String.valueOf(state));
+    }
+
+    public void savePreference( final String name, final String value ) {
         SimpleWorker saver = new SimpleWorker() {
             @Override
             protected void doStuff() throws Exception {
-                annotationModel.setPreference(AnnotationsConstants.PREF_AUTOMATIC_POINT_REFINEMENT,
-                        String.valueOf(state));
+                annotationModel.setPreference( name, value );
             }
 
             @Override
@@ -1101,26 +1098,9 @@ public class AnnotationManager
         };
         saver.execute();
     }
-
-    public void setAutomaticTracing(final boolean state) {
-        SimpleWorker saver = new SimpleWorker() {
-            @Override
-            protected void doStuff() throws Exception {
-                annotationModel.setPreference(AnnotationsConstants.PREF_AUTOMATIC_TRACING,
-                        String.valueOf(state));
-            }
-
-            @Override
-            protected void hadSuccess() {
-                // nothing here
-            }
-
-            @Override
-            protected void hadError(Throwable error) {
-                SessionMgr.getSessionMgr().handleException(error);
-            }
-        };
-        saver.execute();
+    
+    public String retreivePreference( final String name ) {
+        return annotationModel.getPreference(name);
     }
 
     private void tracePathToParent(PathTraceToParentRequest request) {

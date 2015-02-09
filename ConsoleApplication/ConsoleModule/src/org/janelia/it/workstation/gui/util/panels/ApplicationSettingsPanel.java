@@ -28,10 +28,10 @@ public class ApplicationSettingsPanel extends JPanel implements PrefEditor {
     SessionMgr sessionMgr = SessionMgr.getSessionMgr();
     MySessionModelListener sessionModelListener = new MySessionModelListener();
     ButtonGroup buttonLookAndFeelGroup = new ButtonGroup();
-    Map<ButtonModel, String> buttonToLafMap = new HashMap<ButtonModel, String>();
+    Map<ButtonModel, String> buttonToLafMap = new HashMap<>();
 
     ButtonGroup rendererGroup = new ButtonGroup();
-    Map<ButtonModel, String> buttonToRendererMap = new HashMap<ButtonModel, String>();
+    Map<ButtonModel, String> buttonToRendererMap = new HashMap<>();
     
     public ApplicationSettingsPanel(JFrame parentFrame) {
         try {

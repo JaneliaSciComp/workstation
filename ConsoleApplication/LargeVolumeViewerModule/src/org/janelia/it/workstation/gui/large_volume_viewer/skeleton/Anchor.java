@@ -2,8 +2,10 @@ package org.janelia.it.workstation.gui.large_volume_viewer.skeleton;
 
 import java.util.LinkedHashSet;
 import java.util.Set;
+import org.janelia.it.workstation.geom.CoordinateAxis;
 
 import org.janelia.it.workstation.geom.Vec3;
+import org.janelia.it.workstation.gui.large_volume_viewer.TileFormat;
 import org.janelia.it.workstation.signal.Signal1;
 
 public class Anchor {
@@ -34,8 +36,26 @@ public class Anchor {
 	public Signal1<Anchor> anchorMovedSignal = new Signal1<Anchor>();
 	public Signal1<Anchor> anchorMovedSilentSignal = new Signal1<Anchor>();
 
-	public Anchor(Vec3 location, Anchor parent) {
-		this.location = location;
+    /**
+     * Construct a valid anchor, based on information provided from external
+     * source, such as database.  Translates from external to view-like
+     * location.
+     * 
+     * @param locationInVoxel coords for anchor.
+     * @param parent (possibly null) parent, or previous node in tree.
+     * @param tileFormat for translations.
+     */
+	public Anchor(Vec3 locationInVoxel, Anchor parent, TileFormat tileFormat) {
+        TileFormat.MicrometerXyz micron = tileFormat.micrometerXyzForVoxelXyz(
+                new TileFormat.VoxelXyz(
+                        (int)locationInVoxel.getX(),
+                        (int)locationInVoxel.getY(),
+                        (int)locationInVoxel.getZ()
+                ), 
+                CoordinateAxis.Z
+        );
+        // Need to bias the position towards the center of the voxel.
+		this.location = tileFormat.centerJustifyMicrometerCoordsAsVec3(micron);
 		addNeighbor(parent);
 	}
 	

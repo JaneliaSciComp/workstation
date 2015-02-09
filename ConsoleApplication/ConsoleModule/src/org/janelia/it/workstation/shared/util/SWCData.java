@@ -233,6 +233,32 @@ public class SWCData {
     }
 
     /**
+     * THIS was copied form AnnotationModel.  TODO consider refactoring.
+     * note from CB, July 2013: Vaa3d can't handle large coordinates in swc files,
+     * so he added an OFFSET header and recentered on zero when exporting
+     * therefore, if that header is present, respect it
+     *
+     * @return array of offset.
+     * @throws NumberFormatException 
+     */
+    public double[] parseOffset() throws NumberFormatException {
+        double[] offset = new double[3];
+        String offsetHeader = findHeaderLine("OFFSET");
+        if (offsetHeader != null) {
+            String [] items = offsetHeader.split("\\s+");
+            // expect # OFFSET x y z
+            if (items.length == 5) {
+                offset[0] = Double.parseDouble(items[2]);
+                offset[1] = Double.parseDouble(items[3]);
+                offset[2] = Double.parseDouble(items[4]);
+            } else {
+                // ignore the line if we can't parse it
+            }
+        }
+        return offset;
+    }
+    
+    /**
      * this routine is fairly dumb; it just has to write the lines,
      * since the hard work is done in generating the input data (eg, nodes)
      *
