@@ -560,6 +560,12 @@ public class TileFormat
 		return new VoxelXyz(xyz[X_OFFS], xyz[Y_OFFS], xyz[Z_OFFS]);
 	}
     
+    public Vec3 voxelVec3ForMicronVec3(Vec3 micronVec3) {
+        MicrometerXyz micrometerXyz = new MicrometerXyz(micronVec3.getX(), micronVec3.getY(), micronVec3.getZ());
+        VoxelXyz vox = voxelXyzForMicrometerXyz(micrometerXyz);
+        return new Vec3( vox.getX(), vox.getY(), vox.getZ() );
+    }
+    
     public TileFormat.MicrometerXyz micrometerXyzForZoomedVoxelIndex( ZoomedVoxelIndex zv, CoordinateAxis axis ) {
         TileFormat.VoxelXyz vx = voxelXyzForZoomedVoxelIndex(zv, axis);
         return micrometerXyzForVoxelXyz(vx, axis);

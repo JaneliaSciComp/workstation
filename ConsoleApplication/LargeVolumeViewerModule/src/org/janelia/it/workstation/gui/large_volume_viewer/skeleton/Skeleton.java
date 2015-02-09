@@ -204,7 +204,8 @@ public class Skeleton implements AnchoredVoxelPathListener {
 			Anchor anchor = anchorsByGuid.get(tga.getId());
 			if (anchor == null)
 				return;
-			anchor.setLocationSilent(new Vec3(tga.getX(), tga.getY(), tga.getZ()));
+            final Vec3 voxelVec3 = new Vec3(tga.getX(), tga.getY(), tga.getZ());
+			anchor.setLocationSilent(tileFormat.micronVec3ForVoxelVec3Centered(voxelVec3));
 		}
 	};
 

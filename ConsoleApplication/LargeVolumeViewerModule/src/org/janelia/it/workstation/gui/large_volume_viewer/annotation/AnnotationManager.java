@@ -448,7 +448,7 @@ public class AnnotationManager implements AnchorListener
     /**
      * move the annotation with the input ID to the input location
      */
-    public void moveAnnotation(final Long annotationID, final Vec3 location) {
+    public void moveAnnotation(final Long annotationID, final Vec3 micronLocation) {
         if (annotationModel.getCurrentWorkspace() == null) {
             // dialog?
             return;
@@ -456,7 +456,9 @@ public class AnnotationManager implements AnchorListener
             SimpleWorker mover = new SimpleWorker() {
                 @Override
                 protected void doStuff() throws Exception {
-                    annotationModel.moveAnnotation(annotationID, location);
+                    TileFormat tileFormat = getTileFormat();
+                    Vec3 voxelLocation = tileFormat.voxelVec3ForMicronVec3(micronLocation);
+                    annotationModel.moveAnnotation(annotationID, voxelLocation);
                 }
 
                 @Override
