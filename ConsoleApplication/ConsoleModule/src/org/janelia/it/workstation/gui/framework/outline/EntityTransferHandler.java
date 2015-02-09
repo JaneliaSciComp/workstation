@@ -358,14 +358,18 @@ public abstract class EntityTransferHandler extends TransferHandler {
 
         for (RootedEntity rootedEntity : entitiesToAdd) {
 
-            log.debug("  Adding {}", EntityUtils.identify(rootedEntity.getEntity()));
+            Long currParentId = rootedEntity.getEntityData().getParentEntity().getId();
+            log.debug("  Adding {} from current parent {}", EntityUtils.identify(rootedEntity.getEntity()), currParentId);
 
-            EntityData existingEd = EntityUtils.findChildEntityDataWithChildId(parentEntity, rootedEntity.getEntityId());
-            if (EntityUtils.findChildEntityDataWithChildId(parentEntity, rootedEntity.getEntityId())!=null) {
-                log.debug("Target already has this entity, just move it to the end");
-                eds.remove(existingEd);
-                eds.add(existingEd);
-                continue;
+            if (!currParentId.equals(parentEntity.getId())) {
+                // Not a reordering, check for existing instance in target folder
+                EntityData existingEd = EntityUtils.findChildEntityDataWithChildId(parentEntity, rootedEntity.getEntityId());
+                if (EntityUtils.findChildEntityDataWithChildId(parentEntity, rootedEntity.getEntityId())!=null) {
+                    log.debug("Target already has this entity, just move it to the end");
+                    eds.remove(existingEd);
+                    eds.add(existingEd);
+                    continue;
+                }
             }
             
             // Should we delete the sources after copying into the new location (e.g. is this a move?)
@@ -377,7 +381,6 @@ public abstract class EntityTransferHandler extends TransferHandler {
                     DefaultMutableTreeNode childNode = (DefaultMutableTreeNode) enumeration.nextElement();
                     EntityData ed = entityTree.getEntityData(childNode);
                     if (ed != null && ed.getChildEntity() != null && Utils.areSameEntity(rootedEntity.getEntity(), ed.getChildEntity())) {
-                        Long currParentId = rootedEntity.getEntityData().getParentEntity().getId();
                         if (currParentId.equals(parentEntity.getId())) {
                             log.debug("  This is a reordering, so we'll delete the source: " + ed.getId());
                             deleteSourceEds = true;
