@@ -1,13 +1,11 @@
 package org.janelia.it.workstation.gui.dialogs;
 
-import java.awt.BorderLayout;
+import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
+
+import javax.swing.*;
+import java.awt.*;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
-
-import javax.swing.JDialog;
-import javax.swing.SwingUtilities;
-
-import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
 
 /**
  * Base class for dialogs holds common functionality for dialog boxes.

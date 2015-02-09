@@ -954,7 +954,7 @@ public class AnnotationManager
         }
 
         TmNeuron neuron = annotationModel.getNeuronFromAnnotationID(annotationID);
-        annotationModel.setCurrentNeuron(neuron);
+        annotationModel.selectNeuron(neuron);
     }
 
     /**

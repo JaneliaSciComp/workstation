@@ -89,7 +89,7 @@ public class EditMenu extends JMenu {
         menuSetPreferences.setMnemonic('P');
         add(menuSetPreferences);
 
-        menuPrefSystem = new JMenuItem("System...", 'S');
+        menuPrefSystem = new JMenuItem("Application Settings...", 'S');
         menuPrefSystem.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_F3, InputEvent.CTRL_MASK, false));
         menuPrefSystem.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
@@ -98,7 +98,7 @@ public class EditMenu extends JMenu {
         });
         menuSetPreferences.add(menuPrefSystem);
 
-        menuPrefViewer = new JMenuItem("Viewer", 'V');
+        menuPrefViewer = new JMenuItem("Viewer...", 'V');
         menuPrefViewer.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
                 establishPrefController(PrefController.VIEWER_EDITOR);

@@ -1,31 +1,22 @@
 package org.janelia.it.workstation.gui.framework.outline.ontology;
 
-import static com.google.common.base.Preconditions.checkNotNull;
-
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
-
-import javax.swing.JMenu;
-import javax.swing.JMenuItem;
-
+import org.janelia.it.jacs.model.ontology.OntologyElement;
+import org.janelia.it.jacs.model.ontology.types.*;
+import org.janelia.it.jacs.model.ontology.types.Enum;
 import org.janelia.it.workstation.api.entity_model.management.ModelMgrUtils;
 import org.janelia.it.workstation.gui.framework.actions.Action;
 import org.janelia.it.workstation.gui.framework.actions.CreateOntologyTermAction;
 import org.janelia.it.workstation.gui.framework.actions.RemoveAnnotationTermAction;
-import org.janelia.it.jacs.model.ontology.OntologyElement;
-import org.janelia.it.jacs.model.ontology.types.Category;
-import org.janelia.it.jacs.model.ontology.types.Custom;
-import org.janelia.it.jacs.model.ontology.types.Enum;
-import org.janelia.it.jacs.model.ontology.types.EnumItem;
-import org.janelia.it.jacs.model.ontology.types.EnumText;
-import org.janelia.it.jacs.model.ontology.types.Interval;
-import org.janelia.it.jacs.model.ontology.types.OntologyElementType;
-import org.janelia.it.jacs.model.ontology.types.Tag;
-import org.janelia.it.jacs.model.ontology.types.Text;
 import org.janelia.it.workstation.gui.framework.console.Browser;
 import org.janelia.it.workstation.gui.framework.outline.EntityContextMenu;
 import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.workstation.model.entity.RootedEntity;
+
+import javax.swing.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+
+import static com.google.common.base.Preconditions.checkNotNull;
 
 /**
  * Context pop up menu for ontology elements.
@@ -129,7 +120,7 @@ public class OntologyContextMenu extends EntityContextMenu {
         RemoveAnnotationTermAction action = new RemoveAnnotationTermAction(keyTermId, keyTermValue) {
             @Override
             public String getName() {
-                return "  Remove Annotation From Selected Entities";
+                return "  Remove Annotation From Selected Items";
             }
         };
         return getActionItem(action);

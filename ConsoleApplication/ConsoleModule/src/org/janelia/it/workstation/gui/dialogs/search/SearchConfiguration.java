@@ -158,7 +158,7 @@ public class SearchConfiguration {
                 attributeGroups.put(AttrGroup.SAGE, attrListSage);
                 for (SageTerm sageTerm : terms) {
                     String name = SolrUtils.getSageFieldName(sageTerm);
-                    String label = sageTerm.getDisplayName();
+                    String label = sageTerm.getDisplayName()+" ("+ sageTerm.getCv()+")";
                     SearchAttribute attr = new SearchAttribute(name, label, sageTerm.getDefinition(), "date_time".equals(sageTerm.getDataType()) ? DataType.DATE : DataType.STRING, DataStore.SOLR, true);
                     attrListSage.add(attr);
                     attributes.add(attr);

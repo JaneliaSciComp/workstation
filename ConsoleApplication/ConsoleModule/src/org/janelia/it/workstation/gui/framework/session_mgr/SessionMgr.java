@@ -9,6 +9,7 @@ import org.janelia.it.workstation.api.entity_model.management.ModelMgr;
 import org.janelia.it.workstation.api.facade.concrete_facade.ejb.EJBFactory;
 import org.janelia.it.workstation.api.facade.facade_mgr.FacadeManager;
 import org.janelia.it.workstation.api.facade.roles.ExceptionHandler;
+import org.janelia.it.workstation.api.stub.data.FatalCommError;
 import org.janelia.it.workstation.api.stub.data.SystemError;
 import org.janelia.it.workstation.gui.framework.console.Browser;
 import org.janelia.it.workstation.gui.framework.external_listener.ExternalListener;
@@ -528,6 +529,7 @@ public class SessionMgr {
         // System-exit is now handled by NetBeans framework.
         //  System.exit(errorlevel);
         findAndRemoveWindowsSplashFile();
+        System.exit(errorlevel);
     }
 
     public void addSessionModelListener(SessionModelListener sessionModelListener) {
@@ -744,6 +746,7 @@ public class SessionMgr {
                 relogin = true;
             }
 
+            findAndRemoveWindowsSplashFile();
             // Login and start the session
             authenticatedSubject = FacadeManager.getFacadeManager().getComputeFacade().loginSubject();
             if (null != authenticatedSubject) {
@@ -784,7 +787,7 @@ public class SessionMgr {
             log.error("loginUser: exception caught", e);
             isLoggedIn = false;
             log.error("Error logging in", e);
-            throw new SystemError("Cannot authenticate login. The server may be down. Please try again later.");
+            throw new FatalCommError("Cannot authenticate login. The server may be down. Please try again later.");
         }
     }
 

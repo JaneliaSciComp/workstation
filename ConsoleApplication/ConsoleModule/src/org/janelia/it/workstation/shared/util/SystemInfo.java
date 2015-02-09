@@ -6,9 +6,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.*;
-import java.util.Date;
 import java.util.Properties;
-import java.util.Random;
 
 /**
  * Adapted from IDEA code base.
@@ -127,34 +125,26 @@ public class SystemInfo {
     
     public static File getDownloadsDir() {
         String downloadsDir = (String) SessionMgr.getSessionMgr().getModelProperty(SessionMgr.DOWNLOADS_DIR);
-        File downloadsDirFile = null;
+        if (downloadsDir.startsWith("/tmp")) {
+            downloadsDir = null;
+        }
+        File downloadsDirFile;
         if (downloadsDir==null) {
-            if (SystemInfo.isMac) {
-                downloadsDirFile = new File(System.getProperty(USERHOME_SYSPROP_NAME), DOWNLOADS_FINAL_PATH_DIR);
-            }
-            else if (SystemInfo.isLinux) {
-                String userHome = System.getProperty(USERHOME_SYSPROP_NAME);
-                String[] userHomePathParts = userHome.split( System.getProperty("file.separator" ) );
-                String usernameFromPath = "";
-                if ( userHomePathParts.length > 0 ) {
-                    usernameFromPath = userHomePathParts[ userHomePathParts.length - 1 ];                
-                }
-                else {
-                    usernameFromPath += new Random( new Date().getTime() ).nextInt();
-                    log.warn("Using random temp path for downloads: {}.", usernameFromPath);
-                }
-                downloadsDirFile = new File("/tmp/"+ usernameFromPath +"/" + DOWNLOADS_FINAL_PATH_DIR);
-            }
-            else if (SystemInfo.isWindows) {
-                downloadsDirFile = new File(System.getProperty(USERHOME_SYSPROP_NAME), DOWNLOADS_FINAL_PATH_DIR);
-            }
-            else {
-                throw new IllegalStateException("Operation system not supported: "+SystemInfo.OS_NAME_LC);
-            }
-            setDownloadsDir(downloadsDirFile.getAbsolutePath());
+            downloadsDirFile = new File(System.getProperty(USERHOME_SYSPROP_NAME), DOWNLOADS_FINAL_PATH_DIR);
         }
         else {
             downloadsDirFile = new File(downloadsDir);
+        }
+        try {
+            if (!downloadsDirFile.exists()) {
+                boolean success = downloadsDirFile.mkdir();
+                if (success) {
+                    log.debug("Created Download dir: "+downloadsDirFile.getAbsolutePath());
+                }
+            }
+        }
+        catch (Exception e) {
+            log.error("Error trying to test and create a Downloads directory.");
         }
         return downloadsDirFile;
     }

@@ -19,6 +19,7 @@ import org.janelia.it.workstation.api.entity_model.management.ModelMgr;
 import org.janelia.it.jacs.model.entity.Entity;
 import org.janelia.it.jacs.model.user_data.tiledMicroscope.*;
 
+import javax.swing.*;
 import java.awt.*;
 import java.io.File;
 import java.util.ArrayList;
@@ -46,7 +47,13 @@ to accessing those two objects in general.
 
 this class does not interact directly with the UI.  its slots are connected to
 UI elements that select, and its signals are connected with a variety of UI elements
-that need to respond to changing data.
+that need to respond to changing data.  this sometimes makes it hard to know
+whether methods are called in the Java EDT (event thread) or not, and that's
+important for knowing how you have to call the UI updates.  the answer is that
+all the calls that hit the db go through modelMgr and could throw exceptions. 
+so any call that calls modelMgr must catch Exceptions, and therefore it should
+emit its signals on the EDT, because it's probably being called from a 
+SimpleWorker thread.
 */
 {
     public static final String STD_SWC_EXTENSION = ".swc";
@@ -82,6 +89,7 @@ that need to respond to changing data.
         @Override
         public void execute(TmNeuron neuron) {
             setCurrentNeuron(neuron);
+            neuronSelectedSignal.emit(neuron);
         }
     };
 
@@ -118,11 +126,16 @@ that need to respond to changing data.
         } else {
             currentWorkspace = null;
         }
-        workspaceLoadedSignal.emit(workspace);
-
-        // clear current neuron
         setCurrentNeuron(null);
-        neuronSelectedSignal.emit(null);
+
+        final TmWorkspace updateWorkspace = getCurrentWorkspace();
+        SwingUtilities.invokeLater(new Runnable() {
+            @Override
+            public void run() {
+                workspaceLoadedSignal.emit(updateWorkspace);
+                neuronSelectedSignal.emit(null);
+            }
+        });
 
     }
 
@@ -162,10 +175,18 @@ that need to respond to changing data.
         return currentNeuron;
     }
 
+    // this method sets the current neuron but does not
+    //  emit the signal to update the UI
     public void setCurrentNeuron(TmNeuron neuron) {
         currentNeuron = neuron;
         updateCurrentNeuron();
-        neuronSelectedSignal.emit(currentNeuron);
+    }
+
+    // this method sets the current neuron *and*
+    //  updates the UI
+    public void selectNeuron(TmNeuron neuron) {
+        setCurrentNeuron(neuron);
+        neuronSelectedSignal.emit(neuron);
     }
 
     private void updateCurrentNeuron() {
@@ -283,12 +304,21 @@ that need to respond to changing data.
      * @throws Exception
      */
     public void createNeuron(String name) throws Exception {
-        TmNeuron neuron = modelMgr.createTiledMicroscopeNeuron(getCurrentWorkspace().getId(), name);
+        final TmNeuron neuron = modelMgr.createTiledMicroscopeNeuron(getCurrentWorkspace().getId(), name);
 
         updateCurrentWorkspace();
-        workspaceLoadedSignal.emit(getCurrentWorkspace());        
-
         setCurrentNeuron(neuron);
+
+        final TmWorkspace workspace = getCurrentWorkspace();
+
+        SwingUtilities.invokeLater(new Runnable() {
+            @Override
+            public void run() {
+                workspaceLoadedSignal.emit(workspace);
+                neuronSelectedSignal.emit(neuron);
+            }
+        });
+
     }
 
     /**
@@ -302,12 +332,18 @@ that need to respond to changing data.
 
         // update & notify
         updateCurrentWorkspace();
-        workspaceLoadedSignal.emit(getCurrentWorkspace());
+        final TmWorkspace workspace = getCurrentWorkspace();
 
-        TmNeuron neuron = modelMgr.loadNeuron(currentNeuronID);
+        final TmNeuron neuron = modelMgr.loadNeuron(currentNeuronID);
         setCurrentNeuron(neuron);
-        neuronSelectedSignal.emit(getCurrentNeuron());
 
+        SwingUtilities.invokeLater(new Runnable() {
+            @Override
+            public void run() {
+                workspaceLoadedSignal.emit(workspace);
+                neuronSelectedSignal.emit(neuron);
+            }
+        });
     }
 
     public void deleteCurrentNeuron() throws Exception {
@@ -322,16 +358,21 @@ that need to respond to changing data.
         // delete
         modelMgr.deleteEntityTree(deletedNeuron.getId());
 
-        // delete anchor signals
-        ArrayList<TmGeoAnnotation> tempAnnotationList = new ArrayList<>(deletedNeuron.getGeoAnnotationMap().values());
-        annotationsDeletedSignal.emit(tempAnnotationList);
-
-        // delete path signals
-        ArrayList<TmAnchoredPath> tempPathList = new ArrayList<>(deletedNeuron.getAnchoredPathMap().values());
-        anchoredPathsRemovedSignal.emit(tempPathList);
-
+        // things to update:
         updateCurrentWorkspace();
-        workspaceLoadedSignal.emit(getCurrentWorkspace());
+        final TmWorkspace workspace = getCurrentWorkspace();
+        final ArrayList<TmGeoAnnotation> tempAnnotationList = new ArrayList<>(deletedNeuron.getGeoAnnotationMap().values());
+        final ArrayList<TmAnchoredPath> tempPathList = new ArrayList<>(deletedNeuron.getAnchoredPathMap().values());
+
+        SwingUtilities.invokeLater(new Runnable() {
+            @Override
+            public void run() {
+                neuronSelectedSignal.emit(null);
+                annotationsDeletedSignal.emit(tempAnnotationList);
+                anchoredPathsRemovedSignal.emit(tempPathList);
+                workspaceLoadedSignal.emit(workspace);
+            }
+        });
     }
 
     /**
@@ -343,7 +384,6 @@ that need to respond to changing data.
     public void createWorkspace(Entity parentEntity, Long brainSampleID, String name) throws Exception {
         TmWorkspace workspace = modelMgr.createTiledMicroscopeWorkspace(parentEntity.getId(),
                 brainSampleID, name, sessionMgr.getSubject().getKey());
-
         loadWorkspace(workspace);
     }
 
@@ -371,7 +411,7 @@ that need to respond to changing data.
     public void addRootAnnotation(TmNeuron neuron, Vec3 xyz) throws Exception {
         // the null  in this call means "this is a root annotation" (would otherwise
         //  be the parent)
-        TmGeoAnnotation annotation = modelMgr.addGeometricAnnotation(neuron.getId(),
+        final TmGeoAnnotation annotation = modelMgr.addGeometricAnnotation(neuron.getId(),
             null, 0, xyz.x(), xyz.y(), xyz.z(), "");
 
         updateCurrentWorkspace();
@@ -379,8 +419,14 @@ that need to respond to changing data.
             updateCurrentNeuron();
         }
 
-        neuronSelectedSignal.emit(getCurrentNeuron());
-        annotationAddedSignal.emit(annotation);
+        final TmNeuron currNeuron = getCurrentNeuron();
+        SwingUtilities.invokeLater(new Runnable() {
+            @Override
+            public void run() {
+                neuronSelectedSignal.emit(currNeuron);
+                annotationAddedSignal.emit(annotation);
+            }
+        });
     }
 
     /**
@@ -395,8 +441,8 @@ that need to respond to changing data.
             return;
         }
 
-        TmNeuron neuron = getNeuronFromAnnotationID(parentAnn.getId());
-        TmGeoAnnotation annotation = modelMgr.addGeometricAnnotation(neuron.getId(),
+        final TmNeuron neuron = getNeuronFromAnnotationID(parentAnn.getId());
+        final TmGeoAnnotation annotation = modelMgr.addGeometricAnnotation(neuron.getId(),
             parentAnn.getId(), 0, xyz.x(), xyz.y(), xyz.z(), "");
 
         updateCurrentWorkspace();
@@ -404,13 +450,18 @@ that need to respond to changing data.
             updateCurrentNeuron();
         }
 
-        // must come after workspace and neuron are updated:
         if (automatedTracingEnabled()) {
             pathTraceRequestedSignal.emit(annotation.getId());
         }
 
-        neuronSelectedSignal.emit(getCurrentNeuron());
-        annotationAddedSignal.emit(annotation);
+        SwingUtilities.invokeLater(new Runnable() {
+            @Override
+            public void run() {
+                neuronSelectedSignal.emit(neuron);
+                annotationAddedSignal.emit(annotation);
+            }
+        });
+
     }
 
     /**
@@ -420,7 +471,7 @@ that need to respond to changing data.
      * @param location = new location
      * @throws Exception
      */
-    public void moveAnnotation(Long annotationID, Vec3 location) throws Exception {
+    public void moveAnnotation(final Long annotationID, Vec3 location) throws Exception {
         TmGeoAnnotation annotation = getGeoAnnotationFromID(annotationID);
         try {
             modelMgr.updateGeometricAnnotation(annotation, annotation.getIndex(),
@@ -433,13 +484,19 @@ that need to respond to changing data.
             //  position (pre-move)
             // this is unfortunately untested, because I couldn't think of an
             //  easy way to simulate or force a failure!
-            annotationNotMovedSignal.emit(getGeoAnnotationFromID(annotationID));
+            SwingUtilities.invokeLater(new Runnable() {
+                @Override
+                public void run() {
+                    annotationNotMovedSignal.emit(getGeoAnnotationFromID(annotationID));
+                }
+            });
             throw e;
         }
 
         // find each connecting annotation; if there's a traced path to it,
-        //  remove it:
-        TmNeuron neuron = getNeuronFromAnnotationID(annotationID);
+        //  remove it (refresh annotation!):
+        final TmNeuron neuron = getNeuronFromAnnotationID(annotationID);
+
         TmGeoAnnotation parent = neuron.getParentOf(annotation);
         if (parent != null) {
             removeAnchoredPath(annotation, parent);
@@ -449,34 +506,36 @@ that need to respond to changing data.
         }
 
         updateCurrentWorkspace();
-        notesUpdatedSignal.emit(getCurrentWorkspace());
         updateCurrentNeuron();
+        final TmWorkspace workspace = getCurrentWorkspace();
 
-        // must come after workspace and neuron are updated:
         if (automatedTracingEnabled()) {
             // trace to parent, and each child to this parent:
             pathTraceRequestedSignal.emit(annotation.getId());
-            // get neuron again to be sure it's fresh
-            neuron = getNeuronFromAnnotationID(annotation.getId());
-            for (TmGeoAnnotation child: neuron.getChildrenOf(annotation)) {
+            for (TmGeoAnnotation child : neuron.getChildrenOf(annotation)) {
                 pathTraceRequestedSignal.emit(child.getId());
             }
         }
 
-        // this triggers the updates in, eg, the neurite list
-        if (getCurrentNeuron() != null) {
-            if (neuron.getId().equals(getCurrentNeuron().getId())) {
-                neuronSelectedSignal.emit(getCurrentNeuron());
-            }
-        }
+        SwingUtilities.invokeLater(new Runnable() {
+            @Override
+            public void run() {
+                notesUpdatedSignal.emit(workspace);
 
+                if (getCurrentNeuron() != null) {
+                    if (neuron.getId().equals(getCurrentNeuron().getId())) {
+                        neuronSelectedSignal.emit(getCurrentNeuron());
+                    }
+                }
+            }
+        });
     }
 
     /**
      * merge the neurite that has source Annotation into the neurite containing
      * targetAnnotation
      */
-    public void mergeNeurite(Long sourceAnnotationID, Long targetAnnotationID) throws Exception {
+    public void mergeNeurite(final Long sourceAnnotationID, final Long targetAnnotationID) throws Exception {
 
         TmGeoAnnotation sourceAnnotation = getGeoAnnotationFromID(sourceAnnotationID);
         TmNeuron sourceNeuron = getNeuronFromAnnotationID(sourceAnnotationID);
@@ -542,28 +601,38 @@ that need to respond to changing data.
         if (sourceNote != null) {
             modelMgr.deleteStructuredTextAnnotation(sourceNote.getId());
         }
+        // we need a copy of this annotation from before it's deleted for a later update:
+        final List<TmGeoAnnotation> deleteList = new ArrayList<>();
+        deleteList.add(sourceAnnotation);
+
         modelMgr.deleteGeometricAnnotation(sourceAnnotationID);
 
         // update objects *again*, last time:
         updateCurrentWorkspace();
-        notesUpdatedSignal.emit(getCurrentWorkspace());
-        targetNeuron = getNeuronFromAnnotationID(targetAnnotationID);
-        setCurrentNeuron(targetNeuron);
+        final TmWorkspace workspace = getCurrentWorkspace();
+        final TmNeuron updateTargetNeuron = getNeuronFromAnnotationID(targetAnnotationID);
+        setCurrentNeuron(updateTargetNeuron);
 
-        // get fresh target annotation, and redraw its children; trigger
-        //  traced paths
-        TmGeoAnnotation targetAnnotation = getGeoAnnotationFromID(targetAnnotationID);
-        for (TmGeoAnnotation child: targetNeuron.getChildrenOf(targetAnnotation)) {
-            annotationReparentedSignal.emit(child);
+        final TmGeoAnnotation targetAnnotation = getGeoAnnotationFromID(targetAnnotationID);
+        for (TmGeoAnnotation child : updateTargetNeuron.getChildrenOf(targetAnnotation)) {
             if (automatedTracingEnabled()) {
                 pathTraceRequestedSignal.emit(child.getId());
             }
         }
 
-        // undraw deleted annotation
-        List<TmGeoAnnotation> deleteList = new ArrayList<>();
-        deleteList.add(sourceAnnotation);
-        annotationsDeletedSignal.emit(deleteList);
+        SwingUtilities.invokeLater(new Runnable() {
+            @Override
+            public void run() {
+                notesUpdatedSignal.emit(workspace);
+                neuronSelectedSignal.emit(updateTargetNeuron);
+                for (TmGeoAnnotation child : updateTargetNeuron.getChildrenOf(targetAnnotation)) {
+                    annotationReparentedSignal.emit(child);
+                }
+
+                // undraw deleted annotation
+                annotationsDeletedSignal.emit(deleteList);
+            }
+        });
 
     }
 
@@ -574,7 +643,7 @@ that need to respond to changing data.
      * @param link = annotation object
      * @throws Exception
      */
-    public void deleteLink(TmGeoAnnotation link) throws Exception {
+    public void deleteLink(final TmGeoAnnotation link) throws Exception {
         if (link == null) {
             return;
         }
@@ -603,6 +672,7 @@ that need to respond to changing data.
             // if segment to child had a trace, remove it
             removeAnchoredPath(link, child);
         }
+
         // delete the deleted annotation that is to be deleted (and its note, too):
         TmStructuredTextAnnotation note = neuron.getStructuredTextAnnotationMap().get(link.getId());
         if (note != null) {
@@ -615,30 +685,40 @@ that need to respond to changing data.
         removeAnchoredPath(link, parent);
 
         updateCurrentWorkspace();
-        notesUpdatedSignal.emit(getCurrentWorkspace());
+        final TmWorkspace workspace = getCurrentWorkspace();
         updateCurrentNeuron();
+
+        final TmGeoAnnotation updateChild;
+        if (child != null) {
+            neuron = getNeuronFromAnnotationID(child.getId());
+            updateChild = neuron.getGeoAnnotationMap().get(child.getId());
+        } else {
+            updateChild = null;
+        }
 
         // if we're tracing, retrace if there's a new connection
         if (automatedTracingEnabled() && child != null) {
             pathTraceRequestedSignal.emit(child.getId());
         }
 
-        // notifications
+        SwingUtilities.invokeLater(new Runnable() {
+            @Override
+            public void run() {
+                notesUpdatedSignal.emit(workspace);
 
-        // need to delete an anchor (which does undraw it); but then
-        //  need to redraw the neurite, because we need the link
-        //  from the reparenting to appear
-        List<TmGeoAnnotation> deleteList = new ArrayList<>(1);
-        deleteList.add(link);
-        annotationsDeletedSignal.emit(deleteList);
+                // need to delete an anchor (which does undraw it); but then
+                //  need to redraw the neurite, because we need the link
+                //  from the reparenting to appear
+                List<TmGeoAnnotation> deleteList = new ArrayList<>(1);
+                deleteList.add(link);
+                annotationsDeletedSignal.emit(deleteList);
 
-        if (child != null) {
-            // at this point, the child object is stale (still has its old parent);
-            // grab it again from the neuron
-            neuron = getNeuronFromAnnotationID(child.getId());
-            child = neuron.getGeoAnnotationMap().get(child.getId());
-            annotationReparentedSignal.emit(child);
-        }
+                if (updateChild != null) {
+                    annotationReparentedSignal.emit(updateChild);
+                }
+
+            }
+        });
     }
 
     /**
@@ -660,15 +740,10 @@ that need to respond to changing data.
             return;
         }
 
-        // delete annotation
-        // in DAO, delete method is pretty simplistic; it doesn't update parents; however,
-        //  as we're deleting the whole tree, that doesn't matter for us
-        // delete in child-first order
-
         // grab the parent of the root before the root disappears:
         TmGeoAnnotation rootParent = neuron.getParentOf(rootAnnotation);
 
-        List<TmGeoAnnotation> deleteList = neuron.getSubTreeList(rootAnnotation);
+        final List<TmGeoAnnotation> deleteList = neuron.getSubTreeList(rootAnnotation);
         TmStructuredTextAnnotation note;
         for (TmGeoAnnotation annotation: deleteList) {
             // for each annotation, delete any paths traced to its children;
@@ -691,12 +766,19 @@ that need to respond to changing data.
 
 
         updateCurrentWorkspace();
-        notesUpdatedSignal.emit(getCurrentWorkspace());
         updateCurrentNeuron();
+        final TmWorkspace workspace = getCurrentWorkspace();
+        final TmNeuron updateNeuron = getCurrentNeuron();
 
-        // notify the public; "neuronSelected" will update the neurite tree
-        neuronSelectedSignal.emit(getCurrentNeuron());
-        annotationsDeletedSignal.emit(deleteList);
+        SwingUtilities.invokeLater(new Runnable() {
+            @Override
+            public void run() {
+                notesUpdatedSignal.emit(workspace);
+                neuronSelectedSignal.emit(updateNeuron);
+                annotationsDeletedSignal.emit(deleteList);
+            }
+        });
+
     }
 
     /**
@@ -755,7 +837,7 @@ that need to respond to changing data.
 
         // create the new annotation, child of original parent; then
         //  reparent existing annotation to new annotation
-        TmGeoAnnotation newAnnotation = modelMgr.addGeometricAnnotation(neuron.getId(),
+        final TmGeoAnnotation newAnnotation = modelMgr.addGeometricAnnotation(neuron.getId(),
                 annotation2.getId(), 0, newPoint.x(), newPoint.y(), newPoint.z(), "");
 
         //refresh neuron, then again, for updates
@@ -765,7 +847,6 @@ that need to respond to changing data.
 
         // if that segment had a trace, remove it
         removeAnchoredPath(annotation1, annotation2);
-
 
         // updates and signals:
         updateCurrentWorkspace();
@@ -779,10 +860,14 @@ that need to respond to changing data.
             pathTraceRequestedSignal.emit(annotation1.getId());
         }
 
-        annotationAddedSignal.emit(newAnnotation);
-
-        annotation1 = neuron.getGeoAnnotationMap().get(annotation1.getId());
-        annotationReparentedSignal.emit(annotation1);
+        final TmGeoAnnotation updateAnnotation = neuron.getGeoAnnotationMap().get(annotation1.getId());
+        SwingUtilities.invokeLater(new Runnable() {
+            @Override
+            public void run() {
+                annotationAddedSignal.emit(newAnnotation);
+                annotationReparentedSignal.emit(updateAnnotation);
+            }
+        });
     }
 
     /**
@@ -802,7 +887,13 @@ that need to respond to changing data.
         updateCurrentWorkspace();
         if (neuron.getId().equals(getCurrentNeuron().getId())){
             updateCurrentNeuron();
-            neuronSelectedSignal.emit(getCurrentNeuron());
+            final TmNeuron updateNeuron = getCurrentNeuron();
+            SwingUtilities.invokeLater(new Runnable() {
+                @Override
+                public void run() {
+                    neuronSelectedSignal.emit(updateNeuron);
+                }
+            });
         }
     }
 
@@ -813,7 +904,7 @@ that need to respond to changing data.
      * @param newRootID = ID of root of new neurite
      * @throws Exception
      */
-    public void splitNeurite(Long newRootID) throws Exception {
+    public void splitNeurite(final Long newRootID) throws Exception {
         TmGeoAnnotation newRoot = getGeoAnnotationFromID(newRootID);
         TmNeuron neuron = getNeuronFromAnnotationID(newRootID);
         TmGeoAnnotation newRootParent = neuron.getParentOf(newRoot);
@@ -823,11 +914,15 @@ that need to respond to changing data.
         // update and notify
         updateCurrentWorkspace();
         updateCurrentNeuron();
+        final TmNeuron updateNeuron = getCurrentNeuron();
 
-        // the anchor at the split is essentially reparented to none
-        annotationReparentedSignal.emit(getCurrentNeuron().getGeoAnnotationMap().get(newRootID));
-        neuronSelectedSignal.emit(getCurrentNeuron());
-
+        SwingUtilities.invokeLater(new Runnable() {
+            @Override
+            public void run() {
+                annotationReparentedSignal.emit(updateNeuron.getGeoAnnotationMap().get(newRootID));
+                neuronSelectedSignal.emit(updateNeuron);
+            }
+        });
     }
 
     public void addAnchoredPath(TmAnchoredPathEndpoints endpoints, List<List<Integer>> points) throws Exception{
@@ -844,7 +939,6 @@ that need to respond to changing data.
             throw new Exception("anchored path annotations are in different neurons");
         }
 
-
         // now verify that endpoints for path are still where they were when path
         //  was being drawn (ie, make sure user didn't move the endpoints in the meantime)
         // check that the first and last points in the list match the current locations of the
@@ -857,7 +951,7 @@ that need to respond to changing data.
         boolean order1 = annotationAtPoint(ann1, points.get(0)) && annotationAtPoint(ann2, points.get(points.size() - 1));
         boolean order2 = annotationAtPoint(ann2, points.get(0)) && annotationAtPoint(ann1, points.get(points.size() - 1));
         if (!order1 && !order2) {
-            // something's been moved
+            // something's been moved; we should log this?
             return;
         }
 
@@ -868,7 +962,7 @@ that need to respond to changing data.
         }
 
         // transform point list and persist
-        TmAnchoredPath path = modelMgr.addAnchoredPath(neuron1.getId(), endpoints.getAnnotationID1(),
+        final TmAnchoredPath path = modelMgr.addAnchoredPath(neuron1.getId(), endpoints.getAnnotationID1(),
                 endpoints.getAnnotationID2(), points);
 
 
@@ -878,8 +972,12 @@ that need to respond to changing data.
             updateCurrentNeuron();
         }
 
-        // send notification
-        anchoredPathAddedSignal.emit(path);
+        SwingUtilities.invokeLater(new Runnable() {
+            @Override
+            public void run() {
+                anchoredPathAddedSignal.emit(path);
+            }
+        });
 
     }
 
@@ -901,10 +999,15 @@ that need to respond to changing data.
     private void removeAnchoredPath(TmAnchoredPath path) throws  Exception {
         modelMgr.deleteAnchoredPath(path.getId());
 
-        ArrayList<TmAnchoredPath> pathList = new ArrayList<>();
+        final ArrayList<TmAnchoredPath> pathList = new ArrayList<>();
         pathList.add(path);
 
-        anchoredPathsRemovedSignal.emit(pathList);
+        SwingUtilities.invokeLater(new Runnable() {
+            @Override
+            public void run() {
+                anchoredPathsRemovedSignal.emit(pathList);
+            }
+        });
     }
 
     /**
@@ -959,7 +1062,14 @@ that need to respond to changing data.
 
         // updates
         updateCurrentWorkspace();
-        notesUpdatedSignal.emit(getCurrentWorkspace());
+        final TmWorkspace workspace = getCurrentWorkspace();
+
+        SwingUtilities.invokeLater(new Runnable() {
+            @Override
+            public void run() {
+                notesUpdatedSignal.emit(workspace);
+            }
+        });
 
     }
 
@@ -968,7 +1078,14 @@ that need to respond to changing data.
 
         // updates
         updateCurrentWorkspace();
-        notesUpdatedSignal.emit(getCurrentWorkspace());
+        final TmWorkspace workspace = getCurrentWorkspace();
+
+        SwingUtilities.invokeLater(new Runnable() {
+            @Override
+            public void run() {
+                notesUpdatedSignal.emit(workspace);
+            }
+        });
     }
 
     public void setGlobalAnnotationColor(Color color) {
@@ -1031,7 +1148,6 @@ that need to respond to changing data.
     }
 
     public void importSWCData(File swcFile, SimpleWorker worker) throws Exception {
-        setCurrentNeuron(null);
 
         // the constructor also triggers the parsing, but not the validation
         SWCData swcData = SWCData.read(swcFile);
@@ -1051,7 +1167,7 @@ that need to respond to changing data.
         if (neuronName.endsWith(STD_SWC_EXTENSION)) {
             neuronName = neuronName.substring(0, neuronName.length() - STD_SWC_EXTENSION.length());
         }
-        TmNeuron neuron = modelMgr.createTiledMicroscopeNeuron(getCurrentWorkspace().getId(), neuronName);
+        final TmNeuron neuron = modelMgr.createTiledMicroscopeNeuron(getCurrentWorkspace().getId(), neuronName);
 
         // let's go with brute force for now; loop over nodes and
         //  insert into db sequentially, since we have no bulk update
@@ -1101,8 +1217,16 @@ that need to respond to changing data.
 
         // update workspace; update and select new neuron; this will draw points as well
         updateCurrentWorkspace();
-        workspaceLoadedSignal.emit(getCurrentWorkspace());
+        final TmWorkspace workspace = getCurrentWorkspace();
         setCurrentNeuron(neuron);
+
+        SwingUtilities.invokeLater(new Runnable() {
+            @Override
+            public void run() {
+                workspaceLoadedSignal.emit(workspace);
+                neuronSelectedSignal.emit(neuron);
+            }
+        });
 
 
         // normally if automatic tracing is enabled, we'd do that here, but

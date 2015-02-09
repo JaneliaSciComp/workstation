@@ -35,14 +35,14 @@ public class RemoveAnnotationTermAction implements Action {
 	
     @Override
     public String getName() {
-    	return selectedEntities.size()>1?"  Remove \""+annotationKeyName+"\" Annotation From "+selectedEntities.size()+" Entities":"  Remove Annotation";
+    	return selectedEntities.size()>1?"  Remove \""+annotationKeyName+"\" Annotation From "+selectedEntities.size()+" Items":"  Remove Annotation";
     }
 	
     @Override
     public void doAction() {
 
     	if (selectedEntities.size()>1) {
-            int deleteConfirmation = JOptionPane.showConfirmDialog(SessionMgr.getMainFrame(), "Are you sure you want to delete this annotation from all selected entities?", "Delete Annotations", JOptionPane.YES_NO_OPTION);
+            int deleteConfirmation = JOptionPane.showConfirmDialog(SessionMgr.getMainFrame(), "Are you sure you want to delete this annotation from all selected items?", "Delete Annotations", JOptionPane.YES_NO_OPTION);
             if (deleteConfirmation != 0) {
                 return;
             }

@@ -1,5 +1,6 @@
 package org.janelia.it.workstation.gui.framework.outline;
 
+import org.janelia.it.jacs.model.TimebasedIdentifierGenerator;
 import org.janelia.it.jacs.model.entity.Entity;
 import org.janelia.it.jacs.model.entity.EntityConstants;
 import org.janelia.it.jacs.model.entity.EntityData;
@@ -56,7 +57,6 @@ import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
 import static com.google.common.base.Preconditions.checkNotNull;
-import org.janelia.it.jacs.model.TimebasedIdentifierGenerator;
 
 /**
  * Context pop up menu for entities.
@@ -1077,7 +1077,7 @@ public class EntityContextMenu extends JPopupMenu {
             return null;
         }
 
-        JMenuItem mergeItem = new JMenuItem("  Merge " + rootedEntityList.size() + " Selected Entities");
+        JMenuItem mergeItem = new JMenuItem("  Merge " + rootedEntityList.size() + " Selected Neurons");
 
         mergeItem.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent actionEvent) {
