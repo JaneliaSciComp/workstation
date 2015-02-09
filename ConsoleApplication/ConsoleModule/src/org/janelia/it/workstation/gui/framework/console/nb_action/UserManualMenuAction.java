@@ -38,7 +38,7 @@ public final class UserManualMenuAction extends AbstractAction implements Presen
         Desktop desktop = Desktop.isDesktopSupported() ? Desktop.getDesktop() : null;
         if (desktop != null && desktop.isSupported(Desktop.Action.BROWSE)) {
             try {
-                desktop.browse(URI.create("http://wiki.int.janelia.org/wiki/display/JW/Janelia+Workstation+User+Manual"));
+                desktop.browse(URI.create("http://wiki.int.janelia.org/wiki/display/JW/Introduction"));
             }
             catch (Exception ex) {
                 ex.printStackTrace();

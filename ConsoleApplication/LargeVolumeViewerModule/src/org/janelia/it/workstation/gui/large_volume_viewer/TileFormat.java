@@ -1,5 +1,6 @@
 package org.janelia.it.workstation.gui.large_volume_viewer;
 
+import Jama.Matrix;
 import org.janelia.it.workstation.geom.CoordinateAxis;
 import org.janelia.it.workstation.geom.Vec3;
 import org.janelia.it.workstation.gui.viewer3d.BoundingBox3d;
@@ -30,6 +31,8 @@ public class TileFormat
 	private boolean hasZSlices = true;
 	private boolean hasXSlices = false;
 	private boolean hasYSlices = false;
+    private Matrix micronToVoxMatrix;
+    private Matrix voxToMicronMatrix;
 
 	public TileFormat() 
 	{
@@ -350,6 +353,36 @@ public class TileFormat
 		this.volumeSize = volumeSize;
 	}
 
+    /**
+     * @return the micronToVoxMatrix
+     */
+    public Matrix getMicronToVoxMatrix() {
+        establishConversionMatrices();
+        return micronToVoxMatrix;
+    }
+
+    /**
+     * @param micronToVoxMatrix the micronToVoxMatrix to set
+     */
+    public void setMicronToVoxMatrix(Matrix micronToVoxMatrix) {
+        this.micronToVoxMatrix = micronToVoxMatrix;
+    }
+
+    /**
+     * @return the voxToMicronMatrix
+     */
+    public Matrix getVoxToMicronMatrix() {
+        establishConversionMatrices();
+        return voxToMicronMatrix;
+    }
+
+    /**
+     * @param voxToMicronMatrix the voxToMicronMatrix to set
+     */
+    public void setVoxToMicronMatrix(Matrix voxToMicronMatrix) {
+        this.voxToMicronMatrix = voxToMicronMatrix;
+    }
+	
 	public void setTileSize(int[] tileSize) {
         // In case somewhere, the original array is being passed around
         // and used directly, prior to having been reset from defaults.
@@ -483,16 +516,44 @@ public class TileFormat
 		xyz[sliceDirection.index()] += 0.5;
 		return new MicrometerXyz(
 				xyz[0] * getVoxelMicrometers()[X_OFFS],
-				xyz[1]  * getVoxelMicrometers()[Y_OFFS],				
-				xyz[2]  * getVoxelMicrometers()[Z_OFFS]);
+				xyz[1] * getVoxelMicrometers()[Y_OFFS],				
+				xyz[2] * getVoxelMicrometers()[Z_OFFS]);
 	}
-	public VoxelXyz voxelXyzForMicrometerXyz(MicrometerXyz m) {
+
+    public MicrometerXyz micrometerXyzForVoxelXyzMatrix(VoxelXyz v, CoordinateAxis sliceDirection) {
+        establishConversionMatrices();
+        double[] rawVoxels = new double[] {
+            v.getX(), v.getY(), v.getZ(), 1.0
+        };
+        rawVoxels[sliceDirection.index()] += 0.5;
+        Matrix voxels = new Matrix(rawVoxels, 4);
+        Matrix result = getVoxToMicronMatrix().times(voxels);
+        double[][] resultArr = result.getArray();
+        MicrometerXyz m = new MicrometerXyz( 
+                resultArr[X_OFFS][0],
+                resultArr[Y_OFFS][0], 
+                resultArr[Z_OFFS][0] 
+        );
+        return m;
+    }
+
+	public VoxelXyz voxelXyzForMicrometerXyz(MicrometerXyz m) {        
 		return new VoxelXyz(
 				(int)Math.floor(m.getX() / getVoxelMicrometers()[X_OFFS]) - origin[X_OFFS],
 				(int)Math.floor(m.getY() / getVoxelMicrometers()[Y_OFFS]) - origin[Y_OFFS],
 				(int)Math.floor(m.getZ() / getVoxelMicrometers()[Z_OFFS]) - origin[Z_OFFS]);
 	}
-	
+    
+    public VoxelXyz voxelXyzForMicrometerXyzMatrix(MicrometerXyz m) {
+        establishConversionMatrices();
+        double[] rawMicrons = new double[] {
+            m.getX(), m.getY(), m.getZ(), 1.0
+        };
+        Matrix microns = new Matrix(rawMicrons, 4);
+        Matrix result = getMicronToVoxMatrix().times(microns);
+        return new VoxelXyz( (int)result.get(0, 0), (int)result.get(1, 0), (int)result.get(2, 0) );
+    }
+    
 	public VoxelXyz voxelXyzForZoomedVoxelIndex(ZoomedVoxelIndex z, CoordinateAxis sliceAxis) {
 		int zoomFactor = z.getZoomLevel().getZoomOutFactor();
 		int xyz[] = {z.getX(), z.getY(), z.getZ()};
@@ -504,6 +565,22 @@ public class TileFormat
 		}
 		return new VoxelXyz(xyz[X_OFFS], xyz[Y_OFFS], xyz[Z_OFFS]);
 	}
+    
+    public TileFormat.MicrometerXyz micrometerXyzForZoomedVoxelIndex( ZoomedVoxelIndex zv, CoordinateAxis axis ) {
+        TileFormat.VoxelXyz vx = voxelXyzForZoomedVoxelIndex(zv, axis);
+        return micrometerXyzForVoxelXyz(vx, axis);
+    }
+    
+    public Vec3 micronVec3ForVoxelVec3Cornered( Vec3 voxelVec3 ) {
+        TileFormat.VoxelXyz vox = new TileFormat.VoxelXyz(voxelVec3);
+        TileFormat.MicrometerXyz micron = micrometerXyzForVoxelXyz(vox, CoordinateAxis.Z);
+        return new Vec3( micron.getX(), micron.getY(), micron.getZ() );
+    }
+    
+    public Vec3 micronVec3ForVoxelVec3Centered( Vec3 voxelVec3 ) {
+        return micronVec3ForVoxelVec3Cornered( voxelVec3 ).plus( new Vec3( 0.5*voxelMicrometers[0], 0.5*voxelMicrometers[1], -0.5*voxelMicrometers[2] ));
+    }
+    
 	public ZoomedVoxelIndex zoomedVoxelIndexForVoxelXyz(VoxelXyz v, ZoomLevel zoomLevel, CoordinateAxis sliceAxis) 
 	{
 		int zoomFactor = zoomLevel.getZoomOutFactor();
@@ -561,7 +638,20 @@ public class TileFormat
 		}
 		return new TileXyz(xyz[X_OFFS], xyz[Y_OFFS], xyz[Z_OFFS]);
 	}
-	
+    
+    /** 
+     * convenience: return a centered-up version of the micrometer value.
+     * Use this whenever micrometer values need to be pushed onto the screen.
+     */
+    public Vec3 centerJustifyMicrometerCoordsAsVec3(MicrometerXyz microns) {
+        Vec3 v = new Vec3(
+                // Translate from upper left front corner of voxel to center of voxel
+                microns.getX() + 0.5 * voxelMicrometers[0],
+                microns.getY() + 0.5 * voxelMicrometers[1],
+                microns.getZ() - 0.5 * voxelMicrometers[2]);
+        return v;
+    }
+
 	// Volume units can be one of 4 interconvertible types
 	// These classes are intended to enforce type safety between different unit types
 	public static interface Unit {}; // Base unit
@@ -620,6 +710,7 @@ public class TileFormat
 	
 	public static class VoxelXyz extends UnittedVec3Int<VoxelUnit> 
 	{
+		public VoxelXyz(Vec3 coords) {super((int)coords.getX(), (int)coords.getY(), (int)coords.getZ());}
 		public VoxelXyz(int x, int y, int z) {super(x, y, z);}
         public VoxelXyz(int[] xyz) {super(xyz[X_OFFS], xyz[Y_OFFS], xyz[Z_OFFS]);}
 	}; // 2
@@ -658,4 +749,23 @@ public class TileFormat
         return getVoxelMicrometers()[index] * (getOrigin()[index] + getVolumeSize()[index]);
     }
     
+    /** Lazily initialize matrices to move between voxel and stage/micron. */
+    private void establishConversionMatrices() {
+        if (this.micronToVoxMatrix == null  &&  ( origin[X_OFFS] > 0.00001 )) {
+            double[][] voxToMicronArr = new double[][] {
+                {voxelMicrometers[X_OFFS], 0.0, 0.0, origin[X_OFFS] * voxelMicrometers[X_OFFS]},
+                {0.0, voxelMicrometers[Y_OFFS], 0.0, origin[Y_OFFS] * voxelMicrometers[Y_OFFS]},
+                {0.0, 0.0, voxelMicrometers[Z_OFFS], origin[Z_OFFS] * voxelMicrometers[Z_OFFS]},
+                {0.0, 0.0, 0.0, 1.0}
+            };
+            setVoxToMicronMatrix(new Matrix(voxToMicronArr));
+            double[][] micronToVoxArr = new double[][]{
+                {1.0 / voxelMicrometers[X_OFFS], 0.0, 0.0, -origin[X_OFFS]},
+                {0.0, 1.0 / voxelMicrometers[Y_OFFS], 0.0, -origin[Y_OFFS]},
+                {0.0, 0.0, 1.0 / voxelMicrometers[Z_OFFS], -origin[Z_OFFS]},
+                {0.0, 0.0, 0.0, 1.0}
+            };
+            setMicronToVoxMatrix(new Matrix(micronToVoxArr));
+        }
+    }
 }

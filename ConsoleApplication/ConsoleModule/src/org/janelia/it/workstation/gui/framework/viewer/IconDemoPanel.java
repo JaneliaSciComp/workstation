@@ -1,40 +1,8 @@
 package org.janelia.it.workstation.gui.framework.viewer;
 
-import java.awt.BorderLayout;
-import java.awt.Color;
-import java.awt.Component;
-import java.awt.Dimension;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
-import java.awt.event.ComponentAdapter;
-import java.awt.event.ComponentEvent;
-import java.awt.event.KeyAdapter;
-import java.awt.event.KeyEvent;
-import java.awt.event.KeyListener;
-import java.awt.event.MouseEvent;
-import java.awt.event.MouseListener;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
-import java.util.concurrent.Callable;
-import java.util.concurrent.atomic.AtomicBoolean;
-
-import javax.swing.BorderFactory;
-import javax.swing.Box;
-import javax.swing.BoxLayout;
-import javax.swing.JButton;
-import javax.swing.JCheckBoxMenuItem;
-import javax.swing.JLabel;
-import javax.swing.JMenuItem;
-import javax.swing.JOptionPane;
-import javax.swing.JPanel;
-import javax.swing.JPopupMenu;
-import javax.swing.JSeparator;
-import javax.swing.SwingUtilities;
-import javax.swing.UIManager;
-
+import com.google.common.collect.HashMultimap;
+import com.google.common.collect.Multimap;
+import com.google.common.eventbus.Subscribe;
 import org.janelia.it.jacs.model.entity.Entity;
 import org.janelia.it.jacs.model.entity.EntityConstants;
 import org.janelia.it.jacs.model.entity.EntityData;
@@ -55,11 +23,7 @@ import org.janelia.it.workstation.gui.framework.actions.Action;
 import org.janelia.it.workstation.gui.framework.actions.RemoveEntityAction;
 import org.janelia.it.workstation.gui.framework.keybind.KeyboardShortcut;
 import org.janelia.it.workstation.gui.framework.keybind.KeymapUtil;
-import org.janelia.it.workstation.gui.framework.outline.AnnotationFilter;
-import org.janelia.it.workstation.gui.framework.outline.Annotations;
-import org.janelia.it.workstation.gui.framework.outline.EntityContextMenu;
-import org.janelia.it.workstation.gui.framework.outline.EntitySelectionHistory;
-import org.janelia.it.workstation.gui.framework.outline.EntityViewerState;
+import org.janelia.it.workstation.gui.framework.outline.*;
 import org.janelia.it.workstation.gui.framework.session_mgr.BrowserModel;
 import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.workstation.gui.framework.session_mgr.SessionModelListener;
@@ -77,9 +41,13 @@ import org.janelia.it.workstation.shared.workers.SimpleWorker;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.collect.HashMultimap;
-import com.google.common.collect.Multimap;
-import com.google.common.eventbus.Subscribe;
+import javax.swing.*;
+import java.awt.*;
+import java.awt.event.*;
+import java.util.*;
+import java.util.List;
+import java.util.concurrent.Callable;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
  * This viewer shows images in a grid. It is modeled after OS X Finder. It wraps an ImagesPanel and provides a lot of
@@ -99,7 +67,7 @@ public class IconDemoPanel extends IconPanel {
     protected final static int PAGE_SIZE = 500;
 
     // Main components
-    protected JLabel splashPanel;
+    protected JLabel logoPanel;
     protected IconDemoToolbar iconDemoToolbar;
 
     // Status bar
@@ -119,18 +87,18 @@ public class IconDemoPanel extends IconPanel {
     // These members deal with the context and entities within it
     protected RootedEntity contextRootedEntity;
     protected List<RootedEntity> allRootedEntities;
-    protected Multimap<String, RootedEntity> allRootedEntitiesByPathId = HashMultimap.<String, RootedEntity>create();
-    protected Multimap<Long, RootedEntity> allRootedEntitiesByEntityId = HashMultimap.<Long, RootedEntity>create();
+    protected Multimap<String, RootedEntity> allRootedEntitiesByPathId = HashMultimap.create();
+    protected Multimap<Long, RootedEntity> allRootedEntitiesByEntityId = HashMultimap.create();
     protected int numPages;
 
     // These members deal with entities on the current page only
     protected int currPage;
     protected List<RootedEntity> pageRootedEntities;
     protected final Annotations annotations = new Annotations();
-    protected final List<String> allUsers = new ArrayList<String>();
-    protected final Set<String> hiddenUsers = new HashSet<String>();
+    protected final List<String> allUsers = new ArrayList<>();
+    protected final Set<String> hiddenUsers = new HashSet<>();
     protected int currTableHeight = ImagesPanel.DEFAULT_TABLE_HEIGHT;
-    protected final List<String> allImageRoles = new ArrayList<String>();
+    protected final List<String> allImageRoles = new ArrayList<>();
 
     // Tracking of loading operations
     protected AtomicBoolean entityLoadInProgress = new AtomicBoolean(false);
@@ -285,7 +253,7 @@ public class IconDemoPanel extends IconPanel {
 
     protected JPopupMenu getButtonPopupMenu() {
         List<String> selectionIds = ModelMgr.getModelMgr().getEntitySelectionModel().getSelectedEntitiesIds(getSelectionCategory());
-        List<RootedEntity> rootedEntityList = new ArrayList<RootedEntity>();
+        List<RootedEntity> rootedEntityList = new ArrayList<>();
         for (String entityId : selectionIds) {
             RootedEntity re = getRootedEntityById(entityId);
             if (re == null) {
@@ -407,8 +375,8 @@ public class IconDemoPanel extends IconPanel {
         hud = Hud.getSingletonInstance();
         hud.addKeyListener(keyListener);
 
-        splashPanel = new JLabel(Icons.getIcon("workstation_logo_white.png"));
-        add(splashPanel);
+        logoPanel = new JLabel(Icons.getIcon("workstation_logo_white.png"));
+        add(logoPanel);
 
         iconDemoToolbar = createToolbar();
         iconDemoToolbar.addMouseListener(new MouseForwarder(this, "JToolBar->IconDemoPanel"));
@@ -679,7 +647,7 @@ public class IconDemoPanel extends IconPanel {
             goParent();
         }
         else {
-            for (RootedEntity rootedEntity : new ArrayList<RootedEntity>(pageRootedEntities)) {
+            for (RootedEntity rootedEntity : new ArrayList<>(pageRootedEntities)) {
                 if (rootedEntity.getEntityId().equals(entity.getId())) {
                     removeRootedEntity(rootedEntity);
                     return;
@@ -706,7 +674,7 @@ public class IconDemoPanel extends IconPanel {
                     break;
                 }
                 else {
-                    for (final RootedEntity rootedEntity : new ArrayList<RootedEntity>(pageRootedEntities)) {
+                    for (final RootedEntity rootedEntity : new ArrayList<>(pageRootedEntities)) {
                         if (rootedEntity.getEntityId().equals(entity.getId())) {
                             affected = true;
                             break;
@@ -796,7 +764,7 @@ public class IconDemoPanel extends IconPanel {
 
                 // Save the list of users so that when the function actually runs, the
                 // users it affects are the same users that were displayed
-                final List<String> savedUsers = new ArrayList<String>(allUsers);
+                final List<String> savedUsers = new ArrayList<>(allUsers);
 
                 JMenuItem allUsersMenuItem = new JCheckBoxMenuItem("All Users", hiddenUsers.isEmpty());
                 allUsersMenuItem.addActionListener(new ActionListener() {
@@ -841,7 +809,7 @@ public class IconDemoPanel extends IconPanel {
             protected JPopupMenu getPopupImageRoleMenu() {
 
                 final JPopupMenu imageRoleListMenu = new JPopupMenu();
-                final List<String> imageRoles = new ArrayList<String>(allImageRoles);
+                final List<String> imageRoles = new ArrayList<>(allImageRoles);
 
                 for (final String imageRole : imageRoles) {
                     JMenuItem roleMenuItem = new JCheckBoxMenuItem(imageRole, imageRole.equals(getCurrImageRole()));
@@ -984,7 +952,7 @@ public class IconDemoPanel extends IconPanel {
         log.debug("loadEntity {} (@{})", entity.getName(), System.identityHashCode(entity));
 
         List<EntityData> eds = ModelUtils.getSortedEntityDatas(entity);
-        List<EntityData> children = new ArrayList<EntityData>();
+        List<EntityData> children = new ArrayList<>();
         for (EntityData ed : eds) {
             Entity child = ed.getChildEntity();
             if (!EntityUtils.isHidden(ed) && child != null && !(child instanceof ForbiddenEntity)) {
@@ -992,7 +960,7 @@ public class IconDemoPanel extends IconPanel {
             }
         }
 
-        List<RootedEntity> lazyRootedEntities = new ArrayList<RootedEntity>();
+        List<RootedEntity> lazyRootedEntities = new ArrayList<>();
         for (EntityData ed : children) {
             String childId = ModelUtils.getChildUniqueId(rootedEntity.getUniqueId(), ed);
             lazyRootedEntities.add(new RootedEntity(childId, ed));
@@ -1067,7 +1035,7 @@ public class IconDemoPanel extends IconPanel {
 
         entityLoadingWorker = new SimpleWorker() {
 
-            private List<RootedEntity> loadedRootedEntities = new ArrayList<RootedEntity>();
+            private List<RootedEntity> loadedRootedEntities = new ArrayList<>();
 
             @Override
             protected void doStuff() throws Exception {
@@ -1102,7 +1070,7 @@ public class IconDemoPanel extends IconPanel {
 
             @Override
             protected void doStuff() throws Exception {
-                List<Long> entityIds = new ArrayList<Long>();
+                List<Long> entityIds = new ArrayList<>();
                 for (RootedEntity rootedEntity : pageEntities) {
                     entityIds.add(rootedEntity.getEntityId());
                 }
@@ -1331,7 +1299,7 @@ public class IconDemoPanel extends IconPanel {
 
         log.debug("Starting a refresh");
 
-        final List<String> selectedIds = new ArrayList<String>(ModelMgr.getModelMgr().getEntitySelectionModel().getSelectedEntitiesIds(getSelectionCategory()));
+        final List<String> selectedIds = new ArrayList<>(ModelMgr.getModelMgr().getEntitySelectionModel().getSelectedEntitiesIds(getSelectionCategory()));
         final Callable<Void> success = new Callable<Void>() {
             @Override
             public Void call() throws Exception {
@@ -1405,7 +1373,7 @@ public class IconDemoPanel extends IconPanel {
 
         getViewerPane().setTitle(" ");
         removeAll();
-        add(splashPanel, BorderLayout.CENTER);
+        add(logoPanel, BorderLayout.CENTER);
 
         getViewerPane().revalidate();
         getViewerPane().repaint();
@@ -1462,7 +1430,7 @@ public class IconDemoPanel extends IconPanel {
     private synchronized void setRootedEntities(List<RootedEntity> rootedEntities) {
         this.pageRootedEntities = rootedEntities;
 
-        Set<String> imageRoles = new HashSet<String>();
+        Set<String> imageRoles = new HashSet<>();
         for (RootedEntity rootedEntity : rootedEntities) {
             for (EntityData ed : ModelMgrUtils.getAccessibleEntityDatas(rootedEntity.getEntity())) {
                 if (EntityUtils.hasImageRole(ed)) {
@@ -1495,7 +1463,7 @@ public class IconDemoPanel extends IconPanel {
 
     @Override
     public List<RootedEntity> getSelectedEntities() {
-        List<RootedEntity> selectedEntities = new ArrayList<RootedEntity>();
+        List<RootedEntity> selectedEntities = new ArrayList<>();
         if (pageRootedEntities == null) {
             return selectedEntities;
         }
@@ -1526,7 +1494,7 @@ public class IconDemoPanel extends IconPanel {
     }
 
     private List<RootedEntity> getRootedEntitiesById(String id) {
-        List<RootedEntity> res = new ArrayList<RootedEntity>();
+        List<RootedEntity> res = new ArrayList<>();
         // Assume these are path ids
         res.addAll(allRootedEntitiesByPathId.get(id));
         if (res.isEmpty()) {
@@ -1565,7 +1533,7 @@ public class IconDemoPanel extends IconPanel {
     public EntityViewerState saveViewerState() {
         // We could get this from the EntitySelectionModel, but sometimes that 
         // doesn't have the latest select the user is currently making.
-        Set<String> selectedIds = new HashSet<String>();
+        Set<String> selectedIds = new HashSet<>();
         for(AnnotatedImageButton button : imagesPanel.getSelectedButtons()) {
             selectedIds.add(button.getRootedEntity().getId());
         }

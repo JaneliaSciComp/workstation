@@ -5,8 +5,6 @@
  */
 package org.janelia.it.workstation.gui.framework.console.nb_action;
 
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
 import org.janelia.it.workstation.gui.framework.pref_controller.PrefController;
 import org.openide.awt.ActionID;
 import org.openide.awt.ActionReference;
@@ -14,19 +12,22 @@ import org.openide.awt.ActionReferences;
 import org.openide.awt.ActionRegistration;
 import org.openide.util.NbBundle.Messages;
 
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+
 @ActionID(
         category = "Edit/Preferences",
-        id = "SystemPreferencesAction"
+        id = "ApplicationSettingsAction"
 )
 @ActionRegistration(
-        displayName = "#CTL_SystemPreferencesAction"
+        displayName = "#CTL_ApplicationSettingsAction"
 )
 @ActionReferences({
     @ActionReference(path = "Menu/Edit/Preferences", position = 100),
     @ActionReference(path = "Shortcuts", name = "M-F3")
 })
-@Messages("CTL_SystemPreferencesAction=System...")
-public final class SystemPreferencesAction implements ActionListener {
+@Messages("CTL_ApplicationSettingsAction=Application Settings...")
+public final class ApplicationSettingsAction implements ActionListener {
 
     @Override
     public void actionPerformed(ActionEvent e) {

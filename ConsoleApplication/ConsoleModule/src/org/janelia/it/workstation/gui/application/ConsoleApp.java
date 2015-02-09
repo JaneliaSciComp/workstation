@@ -8,7 +8,7 @@ import org.janelia.it.workstation.gui.framework.exception_handlers.UserNotificat
 import org.janelia.it.workstation.gui.framework.pref_controller.PrefController;
 import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.workstation.gui.util.panels.ApplicationSettingsPanel;
-import org.janelia.it.workstation.gui.util.panels.DataSourceSettingsPanel;
+import org.janelia.it.workstation.gui.util.panels.UserAccountSettingsPanel;
 import org.janelia.it.workstation.gui.util.panels.ViewerSettingsPanel;
 import org.janelia.it.workstation.gui.util.server_status.ServerStatusReportManager;
 import org.janelia.it.workstation.shared.util.ConsoleProperties;
@@ -43,22 +43,7 @@ public class ConsoleApp {
         System.setProperty("apple.eawt.quitStrategy", "CLOSE_ALL_WINDOWS");
     }
 
-    public static void main(final String[] args) {
-//    	Toolkit.getDefaultToolkit().getSystemEventQueue().push(new TimedEventQueue());
-    	SwingUtilities.invokeLater(new Runnable() {
-			@Override
-			public void run() {
-		        newBrowser();
-			}
-		});
-    }
-
     public static void newBrowser() {
-        
-        final SplashScreen splash = SplashScreen.getSplashScreen();
-        if (splash == null) {
-            log.warn("No splash screen image configured");
-        }
         
         // Prime the tool-specific properties before the Session is invoked
         ConsoleProperties.load();
@@ -72,7 +57,6 @@ public class ConsoleApp {
             final String versionString = ConsoleProperties.getString("console.versionNumber");
             final boolean internal = (versionString != null) && (versionString.toLowerCase().contains("internal"));
 
-            sessionMgr.setNewBrowserTitle(ConsoleProperties.getString("console.Title") + " " + ConsoleProperties.getString("console.versionNumber"));
             sessionMgr.setApplicationName(ConsoleProperties.getString("console.Title"));
             sessionMgr.setApplicationVersion(ConsoleProperties.getString("console.versionNumber"));
             sessionMgr.setNewBrowserImageIcon(Utils.getClasspathImage("workstation_128_icon.png"));
@@ -116,7 +100,7 @@ public class ConsoleApp {
 //                    client.gui.other.panels.BackupPanel.class,
 //                    client.gui.other.panels.BackupPanel.class);
             sessionMgr.registerPreferenceInterface(ApplicationSettingsPanel.class, ApplicationSettingsPanel.class);
-            sessionMgr.registerPreferenceInterface(DataSourceSettingsPanel.class, DataSourceSettingsPanel.class);
+            sessionMgr.registerPreferenceInterface(UserAccountSettingsPanel.class, UserAccountSettingsPanel.class);
 //            sessionMgr.registerPreferenceInterface(SystemSettingsPanel.class, SystemSettingsPanel.class);
             sessionMgr.registerPreferenceInterface(ViewerSettingsPanel.class, ViewerSettingsPanel.class);
 //            sessionMgr.registerPreferenceInterface(ToolSettingsPanel.class, ToolSettingsPanel.class);
@@ -146,7 +130,7 @@ public class ConsoleApp {
                 final int answer = JOptionPane.showOptionDialog(null, "Please enter your login and email information.", "Information Required",
                         JOptionPane.OK_CANCEL_OPTION, JOptionPane.QUESTION_MESSAGE, null, options, options[0]);
                 if (answer == 0) {
-                    PrefController.getPrefController().getPrefInterface(DataSourceSettingsPanel.class, null);
+                    PrefController.getPrefController().getPrefInterface(UserAccountSettingsPanel.class, null);
                 }
                 else {
                     SessionMgr.getSessionMgr().systemExit();
@@ -160,7 +144,7 @@ public class ConsoleApp {
                 final int answer = JOptionPane.showOptionDialog(null, "Please enter your login information.", "Information Required",
                         JOptionPane.OK_CANCEL_OPTION, JOptionPane.QUESTION_MESSAGE, null, options, options[0]);
                 if (answer == 0) {
-                    PrefController.getPrefController().getPrefInterface(DataSourceSettingsPanel.class, null);
+                    PrefController.getPrefController().getPrefInterface(UserAccountSettingsPanel.class, null);
                 }
                 else {
                     SessionMgr.getSessionMgr().systemExit();
@@ -174,8 +158,6 @@ public class ConsoleApp {
             modelMgr.initErrorOntology();
             modelMgr.addModelMgrObserver(sessionMgr.getAxisServer());
                         
-            if (splash!=null) splash.close();
-            
             Component mainFrame = SessionMgr.getMainFrame();
             sessionMgr.newBrowser();
             mainFrame.setVisible(true);

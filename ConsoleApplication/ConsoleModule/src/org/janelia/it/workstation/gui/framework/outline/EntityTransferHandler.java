@@ -1,20 +1,9 @@
 package org.janelia.it.workstation.gui.framework.outline;
 
-import java.awt.datatransfer.DataFlavor;
-import java.awt.datatransfer.Transferable;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Enumeration;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-
-import javax.swing.JComponent;
-import javax.swing.JTree;
-import javax.swing.TransferHandler;
-import javax.swing.tree.DefaultMutableTreeNode;
-import javax.swing.tree.TreePath;
-
+import org.janelia.it.jacs.model.entity.Entity;
+import org.janelia.it.jacs.model.entity.EntityConstants;
+import org.janelia.it.jacs.model.entity.EntityData;
+import org.janelia.it.jacs.shared.utils.EntityUtils;
 import org.janelia.it.workstation.api.entity_model.management.ModelMgr;
 import org.janelia.it.workstation.api.entity_model.management.ModelMgrUtils;
 import org.janelia.it.workstation.gui.framework.session_mgr.SessionMgr;
@@ -27,12 +16,15 @@ import org.janelia.it.workstation.nb_action.ServiceAcceptorHelper;
 import org.janelia.it.workstation.shared.util.Utils;
 import org.janelia.it.workstation.shared.workers.IndeterminateProgressMonitor;
 import org.janelia.it.workstation.shared.workers.SimpleWorker;
-import org.janelia.it.jacs.model.entity.Entity;
-import org.janelia.it.jacs.model.entity.EntityConstants;
-import org.janelia.it.jacs.model.entity.EntityData;
-import org.janelia.it.jacs.shared.utils.EntityUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import javax.swing.*;
+import javax.swing.tree.DefaultMutableTreeNode;
+import javax.swing.tree.TreePath;
+import java.awt.datatransfer.DataFlavor;
+import java.awt.datatransfer.Transferable;
+import java.util.*;
 
 /**
  * Support for dragging entities and dropping them onto the EntityOutline.
@@ -298,9 +290,11 @@ public abstract class EntityTransferHandler extends TransferHandler {
                     index = ModelMgrUtils.getNumAccessibleChildren(parentEntity);
                 }
             }
-
+                
             final DefaultMutableTreeNode finalParent = parent;
             final int finalIndex = index;
+
+            log.trace("finalParent={}, finalParent={}", finalParent, index);
 
             SimpleWorker worker = new SimpleWorker() {
                 @Override
@@ -329,7 +323,7 @@ public abstract class EntityTransferHandler extends TransferHandler {
                     SessionMgr.getSessionMgr().handleException(error);
                 }
             };
-            worker.setProgressMonitor(new IndeterminateProgressMonitor(SessionMgr.getMainFrame(), "Adding entities...", ""));
+            worker.setProgressMonitor(new IndeterminateProgressMonitor(SessionMgr.getMainFrame(), "Adding items...", ""));
             worker.execute();
         }
         catch (Exception e) {
@@ -364,8 +358,20 @@ public abstract class EntityTransferHandler extends TransferHandler {
 
         for (RootedEntity rootedEntity : entitiesToAdd) {
 
-            log.debug("  Adding {}", EntityUtils.identify(rootedEntity.getEntity()));
+            Long currParentId = rootedEntity.getEntityData().getParentEntity().getId();
+            log.debug("  Adding {} from current parent {}", EntityUtils.identify(rootedEntity.getEntity()), currParentId);
 
+            if (!currParentId.equals(parentEntity.getId())) {
+                // Not a reordering, check for existing instance in target folder
+                EntityData existingEd = EntityUtils.findChildEntityDataWithChildId(parentEntity, rootedEntity.getEntityId());
+                if (EntityUtils.findChildEntityDataWithChildId(parentEntity, rootedEntity.getEntityId())!=null) {
+                    log.debug("Target already has this entity, just move it to the end");
+                    eds.remove(existingEd);
+                    eds.add(existingEd);
+                    continue;
+                }
+            }
+            
             // Should we delete the sources after copying into the new location (e.g. is this a move?)
             boolean deleteSourceEds = deleteSources;
             if (!deleteSources && moveWhenReordering) {
@@ -374,12 +380,11 @@ public abstract class EntityTransferHandler extends TransferHandler {
                 while (enumeration.hasMoreElements()) {
                     DefaultMutableTreeNode childNode = (DefaultMutableTreeNode) enumeration.nextElement();
                     EntityData ed = entityTree.getEntityData(childNode);
-                    // TODO: This check is not exactly correct. If the entity already exists in the target, then this will assume we're reordering, 
-                    // when really we're copying in a duplicate. That leads to some unwanted behavior, but fixing it is a large task, and we're 
-                    // going to replace this entirely with NetBeans stuff in the future, so it's probably not worth fixing right now.
                     if (ed != null && ed.getChildEntity() != null && Utils.areSameEntity(rootedEntity.getEntity(), ed.getChildEntity())) {
-                        log.debug("  This is a reordering, so we'll delete the source: " + ed.getId());
-                        deleteSourceEds = true;
+                        if (currParentId.equals(parentEntity.getId())) {
+                            log.debug("  This is a reordering, so we'll delete the source: " + ed.getId());
+                            deleteSourceEds = true;
+                        }
                     }
                 }
             }

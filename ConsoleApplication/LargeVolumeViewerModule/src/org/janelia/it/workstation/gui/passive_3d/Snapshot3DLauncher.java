@@ -22,10 +22,14 @@ import org.janelia.it.workstation.gui.large_volume_viewer.ImageColorModel;
 import org.janelia.it.workstation.gui.large_volume_viewer.SubvolumeProvider;
 import org.janelia.it.workstation.gui.large_volume_viewer.TileFormat;
 import org.janelia.it.workstation.gui.large_volume_viewer.TileServer;
+import org.janelia.it.workstation.gui.large_volume_viewer.annotation.AnnotationManager;
+import org.janelia.it.workstation.gui.large_volume_viewer.annotation.AnnotationsConstants;
 import org.janelia.it.workstation.gui.passive_3d.top_component.Snapshot3dTopComponent;
-import org.janelia.it.workstation.gui.viewer3d.BoundingBox3d;
 import org.janelia.it.workstation.shared.workers.IndeterminateNoteProgressMonitor;
+import org.janelia.it.workstation.signal.Slot;
 import org.openide.windows.WindowManager;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Sources menu items for presenting the user with their 3D viewer.
@@ -43,8 +47,11 @@ public class Snapshot3DLauncher {
     private URL dataUrl;
     private String basePath;
     private ImageColorModel sharedImageColorModel;
+    private ImageColorModel independentCM;
     private Integer maxIntensity;
     private Integer numberOfChannels;
+    private AnnotationManager annotationManager;
+    private Logger logger = LoggerFactory.getLogger( Snapshot3DLauncher.class );
     
     public Snapshot3DLauncher(
             TileServer tileServer,
@@ -90,6 +97,22 @@ public class Snapshot3DLauncher {
      */
     public void setNumberOfChannels(Integer numberOfChannels) {
         this.numberOfChannels = numberOfChannels;
+    }
+
+    /**
+     * Anno-mgr used for properties handling.
+     * @return the annotationManager
+     */
+    public AnnotationManager getAnnotationManager() {
+        return annotationManager;
+    }
+
+    /**
+     * Anno-mgr used for properties handling.
+     * @param annotationManager the annotationManager to set
+     */
+    public void setAnnotationManager(AnnotationManager annotationManager) {
+        this.annotationManager = annotationManager;
     }
 
     public List<JMenuItem> getSnapshotMenuItems() {
@@ -160,6 +183,7 @@ public class Snapshot3DLauncher {
     
     /** Launches a 3D popup containing raw data represented by camera position. */
     public void launchRaw3dViewer( int[] dimensions ) {
+        saveColorPreference();
         try {            
             RawTiffVolumeSource collector = new RawTiffVolumeSource( 
                     tileServer.getLoadAdapter().getTileFormat(), camera, basePath 
@@ -184,6 +208,7 @@ public class Snapshot3DLauncher {
     
     /** Launches a 3D popup static-block viewer. */
     public void launch3dViewer( int[] dimensions ) {
+        saveColorPreference();
         try {         
             final TileFormat tileFormat = tileServer.getLoadAdapter().getTileFormat();
             final String labelText = labelTextFor3d(dimensions);
@@ -225,7 +250,7 @@ public class Snapshot3DLauncher {
                 new IndeterminateNoteProgressMonitor(SessionMgr.getMainFrame(), frameTitle, collector.getInfo());
         snapshotViewer.setLoadProgressMonitor( monitor );
         establishColorControls( snapshotViewer );
-        snapshotViewer.setLabelText( labelText);
+        snapshotViewer.setLabelText( labelText );
         snapshotViewer.launch( collector );
         makeViewerVisible(snapshotViewer);
     }
@@ -236,10 +261,39 @@ public class Snapshot3DLauncher {
      * @param snapshotViewer will be given a color model.
      */
     private void establishColorControls( Snapshot3d snapshotViewer ) {
-        ImageColorModel independentCM = new ImageColorModel(getMaxIntensity(), getNumberOfChannels());
+        independentCM = new ImageColorModel(getMaxIntensity(), getNumberOfChannels());
         snapshotViewer.setIndependentImageColorModel( independentCM ); 
         snapshotViewer.setSharedImageColorModel( sharedImageColorModel );
-        independentCM.fromString(sharedImageColorModel.asString());
+        setIndependentColorFromPrefs();
+        independentCM.getColorModelChangedSignal().connect(new Slot() {
+            @Override
+            public void execute() {
+                saveColorPreference();
+            }
+        });
+    }
+
+    private void saveColorPreference() {
+        if ( independentCM == null ) {
+            return;
+        }
+        String colorModelSerializeString = independentCM.asString();
+        if ( annotationManager != null && colorModelSerializeString != null ) {
+            logger.info("Saving color model {}.", colorModelSerializeString);
+            annotationManager.savePreference(
+                    AnnotationsConstants.PREF_3D_COLOR_MODEL,
+                    colorModelSerializeString
+            );
+        }
+    }
+
+    private void setIndependentColorFromPrefs() {
+        if (annotationManager != null) {
+            String colorModelString = annotationManager.retreivePreference(AnnotationsConstants.PREF_3D_COLOR_MODEL);
+            if (colorModelString != null) {
+                independentCM.fromString(colorModelString);
+            }
+        }
     }
     
     private void makeViewerVisible(Snapshot3d snapshotViewer) {

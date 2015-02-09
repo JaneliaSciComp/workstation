@@ -36,7 +36,7 @@ public class BulkEditAnnotationKeyValueAction implements Action {
 
     @Override
     public String getName() {
-    	return selectedEntities.size()>1?"Edit \""+tag.toString()+"\" Annotation On "+selectedEntities.size()+" Entities":"Edit Annotation";
+    	return selectedEntities.size()>1?"Edit \""+tag.toString()+"\" Annotation On "+selectedEntities.size()+" Items":"Edit Annotation";
     }
 	
     @Override

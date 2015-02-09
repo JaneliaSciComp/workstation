@@ -5,14 +5,15 @@
  */
 package org.janelia.it.workstation.gui.framework.console.nb_action;
 
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
 import org.janelia.it.workstation.gui.framework.pref_controller.PrefController;
 import org.openide.awt.ActionID;
 import org.openide.awt.ActionReference;
 import org.openide.awt.ActionReferences;
 import org.openide.awt.ActionRegistration;
 import org.openide.util.NbBundle.Messages;
+
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 
 @ActionID(
         category = "Edit/Preferences",
@@ -25,7 +26,7 @@ import org.openide.util.NbBundle.Messages;
     @ActionReference(path = "Menu/Edit/Preferences", position = 200),
     @ActionReference(path = "Shortcuts", name = "C-V")
 })
-@Messages("CTL_ViewerPreferencesAction=Viewer")
+@Messages("CTL_ViewerPreferencesAction=Viewer...")
 public final class ViewerPreferencesAction implements ActionListener {
 
     @Override

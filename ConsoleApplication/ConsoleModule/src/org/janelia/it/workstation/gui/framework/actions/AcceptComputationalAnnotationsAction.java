@@ -31,7 +31,7 @@ public class AcceptComputationalAnnotationsAction implements Action {
 
     @Override
     public String getName() {
-    	return selectedEntities.size()>1?"  Accept All Computational Annotations on "+selectedEntities.size()+" Entities":"  Accept All Computational Annotations on This Entity";
+    	return selectedEntities.size()>1?"  Accept All Computational Annotations on "+selectedEntities.size()+" Items":"  Accept All Computational Annotations on This Item";
     }
 	
     @Override

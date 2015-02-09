@@ -52,7 +52,6 @@ public class Snapshot3dControls {
     private ImageColorModel activeColorModel;
     private List<Action> filterActions;
     private ViewUpdateListener viewUpdateListener;
-    private boolean hasBeenFiltered = false;
     
     public Snapshot3dControls(
             Collection<TextureDataI> textureDatas,
@@ -71,14 +70,6 @@ public class Snapshot3dControls {
         initComponents();
     }
 
-    public boolean hasBeenFiltered() {
-        return hasBeenFiltered;
-    }
-    
-    public void setHasBeenFiltered( boolean filtered ) {
-        hasBeenFiltered = filtered;
-    }
-    
     public void cleanup() {
         for ( JComponent component: components ) {
             Container parent = component.getParent();
@@ -166,7 +157,7 @@ public class Snapshot3dControls {
     }
     
     /** After a filter has been run, use this method to avoid further such changes. */
-    public void deactivateFiltering() {        
+    public void setFilterActiveState( boolean hasBeenFiltered ) {        
         for ( Action action: filterActions ) {
             action.setEnabled( ! hasBeenFiltered );
         }
@@ -201,9 +192,9 @@ public class Snapshot3dControls {
         activeColorModel.getColorModelChangedSignal().addObserver( viewUpdateListener );
         
         filterActions = new ArrayList<>();
-        getFilterActions().add( new FilterMatrixAction( textureDatas, view, MatrixFilter3D.SPHERE_3_3_3, "Filter 3x3x3 Round", this ) );
-        getFilterActions().add( new FilterMatrixAction( textureDatas, view, MatrixFilter3D.AVG_MATRIX_3_3_3, "Filter 3x3x3 Averaging", this ) );
-        getFilterActions().add( new FilterMatrixAction( textureDatas, view, MatrixFilter3D.GAUSS_65_85_85, "Filter Gauss 5x5x5 Sigmas = (0.65,0.85,0.85)", this ) );
+        getFilterActions().add( new FilterMatrixAction( textureDatas, view, MatrixFilter3D.SPHERE_3_3_3, "Filter 3x3x3 Round" ) );
+        getFilterActions().add( new FilterMatrixAction( textureDatas, view, MatrixFilter3D.AVG_MATRIX_3_3_3, "Filter 3x3x3 Averaging" ) );
+        getFilterActions().add( new FilterMatrixAction( textureDatas, view, MatrixFilter3D.GAUSS_65_85_85, "Filter Gauss 5x5x5 Sigmas = (0.65,0.85,0.85)" ) );
         //getFilterActions().add( new FilterMatrixAction( textureDatas, view, MatrixFilter3D.GAUSS_5_5_5, "Filter 5x5x5 Gauss" ) );
     }
     
@@ -211,13 +202,11 @@ public class Snapshot3dControls {
         private Collection<TextureDataI> textureDatas;
         private Snapshot3d view;
         private double[] matrix;
-        private Snapshot3dControls filterState;
-        public FilterMatrixAction( Collection<TextureDataI> textureDatas, Snapshot3d view, double[] matrix, String actionName, Snapshot3dControls filterState ) {
+        public FilterMatrixAction( Collection<TextureDataI> textureDatas, Snapshot3d view, double[] matrix, String actionName ) {
             this.textureDatas = textureDatas;
             this.view = view;
             putValue(Action.NAME, actionName);    
             this.matrix = matrix;
-            this.filterState = filterState;
         }
         
         @Override
@@ -230,22 +219,32 @@ public class Snapshot3dControls {
                             view, getValue(Action.NAME), "Smoothing data..."
                     );
             SimpleWorker sw = new SimpleWorker() {
+                private static final String FILTER_METHOD_PREFIX = " Filter";
 
                 @Override
                 protected void doStuff() throws Exception {
+                    view.setHasBeenFiltered( true );
+                    String actionName = (String)getValue(Action.NAME);
+                    String oldLabelText = view.getLabelText();
+                    int filterPos = oldLabelText.indexOf(FILTER_METHOD_PREFIX);
+                    if (filterPos > -1) {
+                        oldLabelText = oldLabelText.substring(0, filterPos);
+                    }
+                    view.setLabelText(oldLabelText + " " + actionName);
                     filterTextureDatas( progressMonitor );
                 }
 
                 @Override
                 protected void hadSuccess() {
+                    view.setHasBeenFiltered( true );
                     view.reLaunch( textureDatas );
                     view.validate();
                     view.repaint();
-                    filterState.setHasBeenFiltered(true);
                 }
 
                 @Override
                 protected void hadError(Throwable error) {
+                    view.setHasBeenFiltered( false );
                     SessionMgr.getSessionMgr().handleException(error);
                 }
                 

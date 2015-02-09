@@ -104,6 +104,17 @@ public class ViewerManager {
         return viewerPane.getViewer();
     }
 
+    public Viewer getMainViewer() {
+        ViewerPane viewerPane = viewerContainer.getMainViewerPane();
+        return viewerPane.getViewer();
+    }
+
+    public Viewer getSecViewer() {
+        viewerContainer.setSecViewerVisible(true);
+        ViewerPane viewerPane = viewerContainer.getSecViewerPane();
+        return viewerPane.getViewer();
+    }
+    
     public Viewer getMainViewer(Class viewerClass) {
         ViewerPane viewerPane = viewerContainer.getMainViewerPane();
         ensureViewerClass(viewerPane, viewerClass);

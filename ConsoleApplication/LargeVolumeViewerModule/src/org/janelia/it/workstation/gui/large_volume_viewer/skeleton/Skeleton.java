@@ -12,13 +12,15 @@ import org.janelia.it.workstation.signal.Slot1;
 import org.janelia.it.workstation.tracing.AnchoredVoxelPath;
 import org.janelia.it.workstation.tracing.SegmentIndex;
 import org.janelia.it.jacs.model.user_data.tiledMicroscope.TmGeoAnnotation;
+import org.janelia.it.workstation.gui.large_volume_viewer.TileFormat;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 public class Skeleton {
 	@SuppressWarnings("unused")
     private static final Logger log = LoggerFactory.getLogger(Skeleton.class);
-	
+    private TileFormat tileFormat;
+
 	/**
 	 * AnchorSeed holds enough data to nucleate a new Anchor.
 	 * So I can send multiple values in a single argument for Signal1/Slot1.
@@ -29,8 +31,20 @@ public class Skeleton {
 		private Vec3 location;
 		private Anchor parent;
 
-		public AnchorSeed(Vec3 location, Anchor parent) {
-			this.location = location;
+		public AnchorSeed(Vec3 locationInMicrometers, Anchor parent) {
+            TileFormat.VoxelXyz locationInVoxels = 
+                tileFormat.voxelXyzForMicrometerXyz(
+                    new TileFormat.MicrometerXyz(
+                            locationInMicrometers.getX(),
+                            locationInMicrometers.getY(),
+                            locationInMicrometers.getZ()
+                    )
+            );
+			this.location = new Vec3( 
+                    locationInVoxels.getX(), 
+                    locationInVoxels.getY(), 
+                    locationInVoxels.getZ() 
+            );
 			this.parent = parent;
 		}
 		
@@ -70,7 +84,7 @@ public class Skeleton {
 		public void execute(TmGeoAnnotation tga) {
 			Vec3 location = new Vec3(tga.getX(), tga.getY(), tga.getZ());
 			Anchor parentAnchor = anchorsByGuid.get(tga.getParentId());
-			Anchor anchor = new Anchor(location, parentAnchor);
+			Anchor anchor = new Anchor(location, parentAnchor, tileFormat);
 			anchor.setGuid(tga.getId());
 			addAnchor(anchor);
 		}
@@ -99,7 +113,7 @@ public class Skeleton {
                     parentAnchor = tempAnchorsByGuid.get(ann.getParentId());
                 }
 
-                Anchor anchor = new Anchor(location, parentAnchor);
+                Anchor anchor = new Anchor(location, parentAnchor, tileFormat);
                 anchor.setGuid(ann.getId());
                 tempAnchorsByGuid.put(anchor.getGuid(), anchor);
                 anchorList.add(anchor);
@@ -231,6 +245,13 @@ public class Skeleton {
 		return anchor;
 	}
 
+    /**
+     * @param tileFormat the tileFormat to set
+     */
+    public void setTileFormat(TileFormat tileFormat) {
+        this.tileFormat = tileFormat;
+    }
+	
 	public void addAnchors(List<Anchor> anchorList) {
         for (Anchor anchor: anchorList) {
             if (anchors.contains(anchor))
@@ -251,7 +272,7 @@ public class Skeleton {
         anchorAddedSignal.emit(anchorList.get(0));
 	}
 
-	public void addAnchorAtXyz(Vec3 xyz, Anchor parent) {
+	public void addAnchorAtXyz(Vec3 xyz, Anchor parent) {        
 		addAnchorRequestedSignal.emit(new AnchorSeed(xyz, parent));
 	}
 
