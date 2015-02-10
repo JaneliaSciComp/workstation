@@ -40,7 +40,8 @@ public class MigrateEntitiesDialog extends ModalDialog {
             "To use this tool, open collections in both Left and Right Panes, "
             + "and then select items so that the items selected in the Left Pane can be migrated to the corresponding "
             + "items in the Right Pane. All annotations will be moved from Left to Right, and then all Folder References to the "
-            + "items in the Left Pane will be replaced with references to corresponding items in the Right Pane.";
+            + "items in the Left Pane will be replaced with references to corresponding items in the Right Pane.<br><br>"
+            + "More information about this feature is available in the User Manual.";
             
     // UI Elements
     private final JPanel mainPanel;
@@ -148,12 +149,12 @@ public class MigrateEntitiesDialog extends ModalDialog {
                 secSelected = secPane.getViewer().getSelectedEntities();
                 
                 if (mainSelected.isEmpty()) {
-                    this.error = "no items selected in Right Pane";
+                    this.error = "no items selected in Left Pane";
                     return;
                 }
                 
                 if (secSelected.isEmpty()) {
-                    this.error = "no items selected in Left Pane";
+                    this.error = "no items selected in Right Pane";
                     return;
                 }
                 
