@@ -33,12 +33,12 @@ public class NoteListPanel extends JPanel {
     private static final int height = AnnotationPanel.SUBPANEL_STD_HEIGHT;
 
     // ----- slots
-    public Slot1<TmWorkspace> workspaceLoadedSlot = new Slot1<TmWorkspace>() {
-        @Override
-        public void execute(TmWorkspace workspace) {
-            loadWorkspace(workspace);
-        }
-    };
+//    public Slot1<TmWorkspace> workspaceLoadedSlot = new Slot1<TmWorkspace>() {
+//        @Override
+//        public void execute(TmWorkspace workspace) {
+//            loadWorkspace(workspace);
+//        }
+//    };
 
     public Slot1<TmWorkspace> notesUpdatedSlot = new Slot1<TmWorkspace>() {
         @Override

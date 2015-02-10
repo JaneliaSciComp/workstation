@@ -27,6 +27,7 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import org.janelia.it.workstation.gui.large_volume_viewer.controller.GlobalAnnotationListener;
 import org.janelia.it.workstation.gui.large_volume_viewer.controller.TmAnchoredPathListener;
 import org.janelia.it.workstation.gui.large_volume_viewer.controller.TmGeoAnnotationModListener;
 
@@ -70,11 +71,12 @@ SimpleWorker thread.
 
     private Collection<TmGeoAnnotationModListener> tmGeoAnnoModListeners = new ArrayList<>();
     private Collection<TmAnchoredPathListener> tmAnchoredPathListeners = new ArrayList<>();
+    private Collection<GlobalAnnotationListener> globalAnnotationListeners = new ArrayList<>();
     
     // ----- signals
-    public Signal1<TmWorkspace> workspaceLoadedSignal = new Signal1<>();
+//    public Signal1<TmWorkspace> workspaceLoadedSignal = new Signal1<>();
 
-    public Signal1<TmNeuron> neuronSelectedSignal = new Signal1<>();
+//    public Signal1<TmNeuron> neuronSelectedSignal = new Signal1<>();
 
 //    public Signal1<TmGeoAnnotation> annotationAddedSignal = new Signal1<>();
 //    public Signal1<List<TmGeoAnnotation>> annotationsDeletedSignal = new Signal1<>();
@@ -86,7 +88,7 @@ SimpleWorker thread.
 
     public Signal1<Long> pathTraceRequestedSignal = new Signal1<>();
 
-    public Signal1<Color> globalAnnotationColorChangedSignal = new Signal1<>();
+//    public Signal1<Color> globalAnnotationColorChangedSignal = new Signal1<>();
 
     public Signal1<TmWorkspace> notesUpdatedSignal = new Signal1<>();
 
@@ -95,7 +97,8 @@ SimpleWorker thread.
         @Override
         public void execute(TmNeuron neuron) {
             setCurrentNeuron(neuron);
-            neuronSelectedSignal.emit(neuron);
+            fireNeuronSelected(neuron);
+//            neuronSelectedSignal.emit(neuron);
         }
     };
 
@@ -129,6 +132,14 @@ SimpleWorker thread.
         tmAnchoredPathListeners.remove(listener);
     }
     
+    public void addGlobalAnnotationListener(GlobalAnnotationListener listener) {
+        globalAnnotationListeners.add(listener);
+    }
+    
+    public void removeGlobalAnnotationListener(GlobalAnnotationListener listener) {
+        globalAnnotationListeners.remove(listener);
+    }
+    
     // current workspace methods
     public TmWorkspace getCurrentWorkspace() {
         return currentWorkspace;
@@ -154,8 +165,10 @@ SimpleWorker thread.
         SwingUtilities.invokeLater(new Runnable() {
             @Override
             public void run() {
-                workspaceLoadedSignal.emit(updateWorkspace);
-                neuronSelectedSignal.emit(null);
+                fireWorkspaceLoaded(updateWorkspace);
+//                workspaceLoadedSignal.emit(updateWorkspace);
+                fireNeuronSelected(null);
+//                neuronSelectedSignal.emit(null);
             }
         });
 
@@ -208,7 +221,8 @@ SimpleWorker thread.
     //  updates the UI
     public void selectNeuron(TmNeuron neuron) {
         setCurrentNeuron(neuron);
-        neuronSelectedSignal.emit(neuron);
+        fireNeuronSelected(neuron);
+//        neuronSelectedSignal.emit(neuron);
     }
 
     private void updateCurrentNeuron() {
@@ -336,8 +350,10 @@ SimpleWorker thread.
         SwingUtilities.invokeLater(new Runnable() {
             @Override
             public void run() {
-                workspaceLoadedSignal.emit(workspace);
-                neuronSelectedSignal.emit(neuron);
+                fireWorkspaceLoaded(workspace);
+//                workspaceLoadedSignal.emit(workspace);
+                fireNeuronSelected(neuron);
+//                neuronSelectedSignal.emit(neuron);
             }
         });
 
@@ -362,8 +378,10 @@ SimpleWorker thread.
         SwingUtilities.invokeLater(new Runnable() {
             @Override
             public void run() {
-                workspaceLoadedSignal.emit(workspace);
-                neuronSelectedSignal.emit(neuron);
+                fireWorkspaceLoaded(workspace);
+//                workspaceLoadedSignal.emit(workspace);
+                fireNeuronSelected(neuron);
+//                neuronSelectedSignal.emit(neuron);
             }
         });
     }
@@ -389,12 +407,14 @@ SimpleWorker thread.
         SwingUtilities.invokeLater(new Runnable() {
             @Override
             public void run() {
-                neuronSelectedSignal.emit(null);
+                fireNeuronSelected(null);
+//                neuronSelectedSignal.emit(null);
                 fireAnnotationsDeleted(tempAnnotationList);
 //                annotationsDeletedSignal.emit(tempAnnotationList);
                 fireAnchoredPathsRemoved(tempPathList);
 //                anchoredPathsRemovedSignal.emit(tempPathList);
-                workspaceLoadedSignal.emit(workspace);
+                fireWorkspaceLoaded(workspace);
+//                workspaceLoadedSignal.emit(workspace);
             }
         });
     }
@@ -447,7 +467,8 @@ SimpleWorker thread.
         SwingUtilities.invokeLater(new Runnable() {
             @Override
             public void run() {
-                neuronSelectedSignal.emit(currNeuron);
+                fireNeuronSelected(currNeuron);
+//                neuronSelectedSignal.emit(currNeuron);
                 fireAnnotationAdded(annotation);
 //                annotationAddedSignal.emit(annotation);
             }
@@ -482,7 +503,8 @@ SimpleWorker thread.
         SwingUtilities.invokeLater(new Runnable() {
             @Override
             public void run() {
-                neuronSelectedSignal.emit(neuron);
+                fireNeuronSelected(neuron);
+//                neuronSelectedSignal.emit(neuron);
                 fireAnnotationAdded(annotation);
 //                annotationAddedSignal.emit(annotation);
             }
@@ -551,7 +573,8 @@ SimpleWorker thread.
 
                 if (getCurrentNeuron() != null) {
                     if (neuron.getId().equals(getCurrentNeuron().getId())) {
-                        neuronSelectedSignal.emit(getCurrentNeuron());
+                        fireNeuronSelected(getCurrentNeuron());
+//                        neuronSelectedSignal.emit(getCurrentNeuron());
                     }
                 }
             }
@@ -651,7 +674,8 @@ SimpleWorker thread.
             @Override
             public void run() {
                 notesUpdatedSignal.emit(workspace);
-                neuronSelectedSignal.emit(updateTargetNeuron);
+                fireNeuronSelected(updateTargetNeuron);
+//                neuronSelectedSignal.emit(updateTargetNeuron);
                 for (TmGeoAnnotation child : updateTargetNeuron.getChildrenOf(targetAnnotation)) {
                     fireAnnotationReparented(child);
 //                    annotationReparentedSignal.emit(child);
@@ -803,7 +827,8 @@ SimpleWorker thread.
             @Override
             public void run() {
                 notesUpdatedSignal.emit(workspace);
-                neuronSelectedSignal.emit(updateNeuron);
+                fireNeuronSelected(updateNeuron);
+//                neuronSelectedSignal.emit(updateNeuron);
                 fireAnnotationsDeleted(deleteList);
 //                annotationsDeletedSignal.emit(deleteList);
             }
@@ -923,7 +948,8 @@ SimpleWorker thread.
             SwingUtilities.invokeLater(new Runnable() {
                 @Override
                 public void run() {
-                    neuronSelectedSignal.emit(updateNeuron);
+                    fireNeuronSelected(updateNeuron);
+//                    neuronSelectedSignal.emit(updateNeuron);
                 }
             });
         }
@@ -953,7 +979,8 @@ SimpleWorker thread.
             public void run() {
                 fireAnnotationReparented(updateNeuron.getGeoAnnotationMap().get(newRootID));
 //                annotationReparentedSignal.emit(updateNeuron.getGeoAnnotationMap().get(newRootID));
-                neuronSelectedSignal.emit(updateNeuron);
+                fireNeuronSelected(updateNeuron);
+//                neuronSelectedSignal.emit(updateNeuron);
             }
         });
     }
@@ -1129,7 +1156,8 @@ SimpleWorker thread.
                 color.getBlue(), color.getAlpha()));
 
         // persisted, so go ahead and change it
-        globalAnnotationColorChangedSignal.emit(color);
+        fireGlobalAnnotationColorChanged(color);
+//        globalAnnotationColorChangedSignal.emit(color);
     }
 
     public boolean automatedRefinementEnabled() {
@@ -1258,8 +1286,10 @@ SimpleWorker thread.
         SwingUtilities.invokeLater(new Runnable() {
             @Override
             public void run() {
-                workspaceLoadedSignal.emit(workspace);
-                neuronSelectedSignal.emit(neuron);
+//                workspaceLoadedSignal.emit(workspace);
+                fireWorkspaceLoaded(workspace);
+                fireNeuronSelected(neuron);
+//                neuronSelectedSignal.emit(neuron);
             }
         });
 
@@ -1311,4 +1341,23 @@ SimpleWorker thread.
             l.addAnchoredPath(path);
         }
     }
+    
+    private void fireWorkspaceLoaded(TmWorkspace workspace) {
+        for (GlobalAnnotationListener l: globalAnnotationListeners) {
+            l.workspaceLoaded(workspace);
+        }
+    }
+
+    private void fireNeuronSelected(TmNeuron neuron) {
+        for (GlobalAnnotationListener l: globalAnnotationListeners) {
+            l.neuronSelected(neuron);
+        }
+    }
+
+    private void fireGlobalAnnotationColorChanged(Color color) {
+        for (GlobalAnnotationListener l: globalAnnotationListeners) {
+            l.globalAnnotationColorChanged(color);
+        }
+    }
+    
 }

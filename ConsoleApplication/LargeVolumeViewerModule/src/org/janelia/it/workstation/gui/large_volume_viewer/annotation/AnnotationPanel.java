@@ -22,6 +22,7 @@ import java.io.File;
 import javax.swing.border.EmptyBorder;
 import javax.swing.border.TitledBorder;
 import javax.swing.filechooser.FileFilter;
+import org.janelia.it.workstation.gui.large_volume_viewer.controller.PanelController;
 
 
 /**
@@ -90,28 +91,28 @@ public class AnnotationPanel extends JPanel
         }
     };
 
-    public Slot1<TmWorkspace> workspaceLoadedSlot = new Slot1<TmWorkspace>() {
-        @Override
-        public void execute(TmWorkspace workspace) {
-            if (workspace != null) {
-                boolean state;
-                String automaticRefinementPref = workspace.getPreferences().getProperty(AnnotationsConstants.PREF_AUTOMATIC_POINT_REFINEMENT);
-                if (automaticRefinementPref != null) {
-                    state = Boolean.parseBoolean(automaticRefinementPref);
-                } else {
-                    state = false;
-                }
-                automaticRefinementMenuItem.setSelected(state);
-                String automaticTracingPref = workspace.getPreferences().getProperty(AnnotationsConstants.PREF_AUTOMATIC_TRACING);
-                if (automaticTracingPref != null) {
-                    state = Boolean.parseBoolean(automaticTracingPref);
-                } else {
-                    state = false;
-                }
-                automaticTracingMenuItem.setSelected(state);
-            }
-        }
-    };
+//    public Slot1<TmWorkspace> workspaceLoadedSlot = new Slot1<TmWorkspace>() {
+//        @Override
+//        public void execute(TmWorkspace workspace) {
+//            if (workspace != null) {
+//                boolean state;
+//                String automaticRefinementPref = workspace.getPreferences().getProperty(AnnotationsConstants.PREF_AUTOMATIC_POINT_REFINEMENT);
+//                if (automaticRefinementPref != null) {
+//                    state = Boolean.parseBoolean(automaticRefinementPref);
+//                } else {
+//                    state = false;
+//                }
+//                automaticRefinementMenuItem.setSelected(state);
+//                String automaticTracingPref = workspace.getPreferences().getProperty(AnnotationsConstants.PREF_AUTOMATIC_TRACING);
+//                if (automaticTracingPref != null) {
+//                    state = Boolean.parseBoolean(automaticTracingPref);
+//                } else {
+//                    state = false;
+//                }
+//                automaticTracingMenuItem.setSelected(state);
+//            }
+//        }
+//    };
 
     public AnnotationPanel(AnnotationManager annotationMgr, AnnotationModel annotationModel,
         LargeVolumeViewerTranslator largeVolumeViewerTranslator) {
@@ -127,6 +128,26 @@ public class AnnotationPanel extends JPanel
 
     }
 
+    public void loadWorkspace(TmWorkspace workspace) {
+        if (workspace != null) {
+            boolean state;
+            String automaticRefinementPref = workspace.getPreferences().getProperty(AnnotationsConstants.PREF_AUTOMATIC_POINT_REFINEMENT);
+            if (automaticRefinementPref != null) {
+                state = Boolean.parseBoolean(automaticRefinementPref);
+            } else {
+                state = false;
+            }
+            automaticRefinementMenuItem.setSelected(state);
+            String automaticTracingPref = workspace.getPreferences().getProperty(AnnotationsConstants.PREF_AUTOMATIC_TRACING);
+            if (automaticTracingPref != null) {
+                state = Boolean.parseBoolean(automaticTracingPref);
+            } else {
+                state = false;
+            }
+            automaticTracingMenuItem.setSelected(state);
+        }
+    }
+    
     @Override
     public Dimension getPreferredSize() {
         return new Dimension(width, 0);
@@ -134,13 +155,15 @@ public class AnnotationPanel extends JPanel
 
     private void setupSignals() {
         // outgoing from the model:
-        annotationModel.neuronSelectedSignal.connect(neuriteTreePanel.neuronSelectedSlot);
-        annotationModel.neuronSelectedSignal.connect(workspaceNeuronList.neuronSelectedSlot);
-
-        annotationModel.workspaceLoadedSignal.connect(workspaceLoadedSlot);
-        annotationModel.workspaceLoadedSignal.connect(workspaceInfoPanel.workspaceLoadedSlot);
-        annotationModel.workspaceLoadedSignal.connect(workspaceNeuronList.workspaceLoadedSlot);
-        annotationModel.workspaceLoadedSignal.connect(noteListPanel.workspaceLoadedSlot);
+        PanelController panelController = new PanelController(this, noteListPanel, neuriteTreePanel, workspaceNeuronList);
+        panelController.registerForEvents(annotationModel);
+//        annotationModel.neuronSelectedSignal.connect(neuriteTreePanel.neuronSelectedSlot);
+//        annotationModel.neuronSelectedSignal.connect(workspaceNeuronList.neuronSelectedSlot);
+//
+//        annotationModel.workspaceLoadedSignal.connect(workspaceLoadedSlot);
+//        annotationModel.workspaceLoadedSignal.connect(workspaceInfoPanel.workspaceLoadedSlot);
+//        annotationModel.workspaceLoadedSignal.connect(workspaceNeuronList.workspaceLoadedSlot);
+//        annotationModel.workspaceLoadedSignal.connect(noteListPanel.workspaceLoadedSlot);
         annotationModel.notesUpdatedSignal.connect(noteListPanel.notesUpdatedSlot);
 
         // us to model:

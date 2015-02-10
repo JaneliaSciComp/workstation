@@ -39,12 +39,12 @@ public class NeuriteTreePanel extends JPanel
     private static final int height = AnnotationPanel.SUBPANEL_STD_HEIGHT;
 
     // ----- slots
-    public Slot1<TmNeuron> neuronSelectedSlot = new Slot1<TmNeuron>() {
-        @Override
-        public void execute(TmNeuron neuron) {
-            loadNeuron(neuron);
-        }
-    };
+//    public Slot1<TmNeuron> neuronSelectedSlot = new Slot1<TmNeuron>() {
+//        @Override
+//        public void execute(TmNeuron neuron) {
+//            loadNeuron(neuron);
+//        }
+//    };
 
     // ----- signals
     public Signal1<Vec3> cameraPanToSignal = new Signal1<Vec3>();

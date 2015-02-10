@@ -13,7 +13,6 @@ import java.util.*;
 import org.janelia.it.workstation.geom.Vec3;
 import org.janelia.it.workstation.gui.viewer3d.BoundingBox3d;
 import org.janelia.it.workstation.signal.Signal1;
-import org.janelia.it.workstation.signal.Slot1;
 import org.janelia.it.jacs.model.user_data.tiledMicroscope.*;
 
 
@@ -37,18 +36,18 @@ public class WorkspaceNeuronList extends JPanel {
     private NeuronSortOrder neuronSortOrder;
 
     // ----- slots
-    public Slot1<TmWorkspace> workspaceLoadedSlot = new Slot1<TmWorkspace>() {
-        @Override
-        public void execute(TmWorkspace workspace) {
-            loadWorkspace(workspace);
-        }
-    };
-    public Slot1<TmNeuron> neuronSelectedSlot = new Slot1<TmNeuron>() {
-        @Override
-        public void execute(TmNeuron neuron) {
-            selectNeuron(neuron);
-        }
-    };
+//    public Slot1<TmWorkspace> workspaceLoadedSlot = new Slot1<TmWorkspace>() {
+//        @Override
+//        public void execute(TmWorkspace workspace) {
+//            loadWorkspace(workspace);
+//        }
+//    };
+//    public Slot1<TmNeuron> neuronSelectedSlot = new Slot1<TmNeuron>() {
+//        @Override
+//        public void execute(TmNeuron neuron) {
+//            selectNeuron(neuron);
+//        }
+//    };
 
     // ----- signals
     public Signal1<TmNeuron> neuronClickedSignal = new Signal1<TmNeuron>();

@@ -22,6 +22,7 @@ import org.janelia.it.jacs.model.entity.EntityConstants;
 import org.janelia.it.workstation.api.entity_model.management.ModelMgr;
 import org.janelia.it.workstation.geom.CoordinateAxis;
 import org.janelia.it.workstation.gui.large_volume_viewer.TileFormat;
+import org.janelia.it.workstation.gui.large_volume_viewer.controller.GlobalAnnotationListener;
 import org.janelia.it.workstation.gui.large_volume_viewer.controller.TmAnchoredPathListener;
 import org.janelia.it.workstation.gui.large_volume_viewer.controller.TmGeoAnnotationModListener;
 import org.janelia.it.workstation.tracing.VoxelPosition;
@@ -43,7 +44,7 @@ import org.janelia.it.workstation.tracing.VoxelPosition;
  * unfortunately, this class's comments and methods tends to use "anchor" and "annotation"
  * somewhat interchangeably, which can be confusing
  */
-public class LargeVolumeViewerTranslator implements TmGeoAnnotationModListener, TmAnchoredPathListener {
+public class LargeVolumeViewerTranslator implements TmGeoAnnotationModListener, TmAnchoredPathListener, GlobalAnnotationListener {
 
     private AnnotationModel annModel;
     private LargeVolumeViewer largeVolumeViewer;
@@ -58,19 +59,19 @@ public class LargeVolumeViewerTranslator implements TmGeoAnnotationModListener, 
     }
     
     // ----- slots
-    public Slot1<TmWorkspace> loadWorkspaceSlot = new Slot1<TmWorkspace>() {
-        @Override
-        public void execute(TmWorkspace workspace) {
-            workspaceLoaded(workspace);
-        }
-    };
-
-    public Slot1<TmNeuron> selectNeuronSlot = new Slot1<TmNeuron>() {
-        @Override
-        public void execute(TmNeuron neuron) {
-            neuronSelected(neuron);
-        }
-    };
+//    public Slot1<TmWorkspace> loadWorkspaceSlot = new Slot1<TmWorkspace>() {
+//        @Override
+//        public void execute(TmWorkspace workspace) {
+//            workspaceLoaded(workspace);
+//        }
+//    };
+//
+//    public Slot1<TmNeuron> selectNeuronSlot = new Slot1<TmNeuron>() {
+//        @Override
+//        public void execute(TmNeuron neuron) {
+//            neuronSelected(neuron);
+//        }
+//    };
 
 //    public Slot1<TmGeoAnnotation> addAnnotationSlot = new Slot1<TmGeoAnnotation>() {
 //        @Override
@@ -183,9 +184,10 @@ public class LargeVolumeViewerTranslator implements TmGeoAnnotationModListener, 
     }
 
     private void setupSignals() {
-        annModel.workspaceLoadedSignal.connect(loadWorkspaceSlot);
-        annModel.neuronSelectedSignal.connect(selectNeuronSlot);
-        
+//        annModel.workspaceLoadedSignal.connect(loadWorkspaceSlot);
+//        annModel.neuronSelectedSignal.connect(selectNeuronSlot);
+
+        annModel.addGlobalAnnotationListener(this);
 //        annModel.annotationAddedSignal.connect(addAnnotationSlot);
 //        annModel.annotationsDeletedSignal.connect(deleteAnnotationsSlot);
 //        annModel.annotationReparentedSignal.connect(reparentAnnotationSlot);
@@ -195,7 +197,7 @@ public class LargeVolumeViewerTranslator implements TmGeoAnnotationModListener, 
 //        annModel.anchoredPathAddedSignal.connect(addAnchoredPathSlot);
 //        annModel.anchoredPathsRemovedSignal.connect(removeAnchoredPathsSlot);
 
-        annModel.globalAnnotationColorChangedSignal.connect(globalAnnotationColorChangedSlot);
+//        annModel.globalAnnotationColorChangedSignal.connect(globalAnnotationColorChangedSlot);
     }
 
     /**
@@ -205,38 +207,6 @@ public class LargeVolumeViewerTranslator implements TmGeoAnnotationModListener, 
         if (annotation != null) {
             anchorAddedSignal.emit(annotation);
         }
-    }
-
-    /**
-     * called when the model changes the current neuron
-     */
-    public void neuronSelected(TmNeuron neuron) {
-        if (neuron == null) {
-            return;
-        }
-
-        // if there's a selected annotation in the neuron already, don't change it:
-        Anchor anchor = largeVolumeViewer.getSkeletonActor().getNextParent();
-        if (anchor != null && neuron.getGeoAnnotationMap().containsKey(anchor.getGuid())) {
-            return;
-        }
-
-        // if neuron has no annotations, clear old one anyway
-        if (neuron.getGeoAnnotationMap().size() == 0) {
-            setNextParentSignal.emit(null);
-            return;
-        }
-
-        // find some annotation in selected neuron and select it, too
-        // let's select the first endpoint we find:
-        TmGeoAnnotation firstRoot = neuron.getRootAnnotations().get(0);
-        for (TmGeoAnnotation link: neuron.getSubTreeList(firstRoot)) {
-            if (link.getChildIds().size() == 0) {
-                setNextParentSignal.emit(link.getId());
-                return;
-            }
-        }
-
     }
 
     /**
@@ -267,9 +237,69 @@ public class LargeVolumeViewerTranslator implements TmGeoAnnotationModListener, 
         anchorMovedBackSignal.emit(annotation);
     }
 
+    //-----------------------------IMPLEMENTS TmAnchoredPathListener
+    //  This listener functions as a value-remarshalling relay to next listener.
+    @Override
+    public void addAnchoredPath(TmAnchoredPath path) {
+        for (AnchoredVoxelPathListener l: avpListeners) {
+            l.addAnchoredVoxelPath(TAP2AVP(path));
+        }
+//        anchoredPathAddedSignal.emit(TAP2AVP(path));
+    }
+
+    @Override
+    public void removeAnchoredPaths(List<TmAnchoredPath> pathList) {
+        for (TmAnchoredPath path: pathList) {
+            for (AnchoredVoxelPathListener l: avpListeners) {
+                l.removeAnchoredVoxelPath(TAP2AVP(path));
+            }
+//        anchoredPathRemovedSignal.emit(TAP2AVP(path));
+        }
+    }
+
+    public void addAnchoredPaths(List<TmAnchoredPath> pathList) {
+        List<AnchoredVoxelPath> voxelPathList = new ArrayList<>();
+        for (TmAnchoredPath path: pathList) {
+            voxelPathList.add(TAP2AVP(path));
+        }
+        for (AnchoredVoxelPathListener l: avpListeners) {
+            l.addAnchoredVoxelPaths(voxelPathList);
+        }
+//        anchoredPathsAddedSignal.emit(voxelPathList);
+    }
+
+    //--------------------------IMPLEMENTS TmGeoAnnotationModListener
+    @Override
+    public void annotationAdded(TmGeoAnnotation annotation) {
+        addAnnotation(annotation);
+    }
+
+    @Override
+    public void annotationsDeleted(List<TmGeoAnnotation> annotations) {
+        deleteAnnotations(annotations);
+    }
+
+    @Override
+    public void annotationReparented(TmGeoAnnotation annotation) {
+        reparentAnnotation(annotation);
+    }
+
+    @Override
+    public void annotationNotMoved(TmGeoAnnotation annotation) {
+        unmoveAnnotation(annotation);
+    }
+
+    //-----------------------IMPLEMENTS GlobalAnnotationListener
+    @Override
+    public void globalAnnotationColorChanged(Color color) {
+        // just pass through right now
+        changeGlobalColorSignal.emit(color);
+    }
+
     /**
      * called by the model when it loads a new workspace
      */
+    @Override
     public void workspaceLoaded(TmWorkspace workspace) {
         // clear existing
         clearSkeletonSignal.emit();        
@@ -344,57 +374,38 @@ public class LargeVolumeViewerTranslator implements TmGeoAnnotationModListener, 
             addAnchoredPaths(annList);
         }
     }
-
-    //-----------------------------IMPLEMENTS TmAnchoredPathListener
-    //  This listener functions as a value-remarshalling relay to next listener.
+    
+    /**
+     * called when the model changes the current neuron
+     */
     @Override
-    public void addAnchoredPath(TmAnchoredPath path) {
-        for (AnchoredVoxelPathListener l: avpListeners) {
-            l.addAnchoredVoxelPath(TAP2AVP(path));
+    public void neuronSelected(TmNeuron neuron) {
+        if (neuron == null) {
+            return;
         }
-//        anchoredPathAddedSignal.emit(TAP2AVP(path));
-    }
 
-    @Override
-    public void removeAnchoredPaths(List<TmAnchoredPath> pathList) {
-        for (TmAnchoredPath path: pathList) {
-            for (AnchoredVoxelPathListener l: avpListeners) {
-                l.removeAnchoredVoxelPath(TAP2AVP(path));
+        // if there's a selected annotation in the neuron already, don't change it:
+        Anchor anchor = largeVolumeViewer.getSkeletonActor().getNextParent();
+        if (anchor != null && neuron.getGeoAnnotationMap().containsKey(anchor.getGuid())) {
+            return;
+        }
+
+        // if neuron has no annotations, clear old one anyway
+        if (neuron.getGeoAnnotationMap().size() == 0) {
+            setNextParentSignal.emit(null);
+            return;
+        }
+
+        // find some annotation in selected neuron and select it, too
+        // let's select the first endpoint we find:
+        TmGeoAnnotation firstRoot = neuron.getRootAnnotations().get(0);
+        for (TmGeoAnnotation link: neuron.getSubTreeList(firstRoot)) {
+            if (link.getChildIds().size() == 0) {
+                setNextParentSignal.emit(link.getId());
+                return;
             }
-//        anchoredPathRemovedSignal.emit(TAP2AVP(path));
         }
-    }
 
-    public void addAnchoredPaths(List<TmAnchoredPath> pathList) {
-        List<AnchoredVoxelPath> voxelPathList = new ArrayList<>();
-        for (TmAnchoredPath path: pathList) {
-            voxelPathList.add(TAP2AVP(path));
-        }
-        for (AnchoredVoxelPathListener l: avpListeners) {
-            l.addAnchoredVoxelPaths(voxelPathList);
-        }
-//        anchoredPathsAddedSignal.emit(voxelPathList);
-    }
-
-    //--------------------------IMPLEMENTS TmGeoAnnotationModListener
-    @Override
-    public void annotationAdded(TmGeoAnnotation annotation) {
-        addAnnotation(annotation);
-    }
-
-    @Override
-    public void annotationsDeleted(List<TmGeoAnnotation> annotations) {
-        deleteAnnotations(annotations);
-    }
-
-    @Override
-    public void annotationReparented(TmGeoAnnotation annotation) {
-        reparentAnnotation(annotation);
-    }
-
-    @Override
-    public void annotationNotMoved(TmGeoAnnotation annotation) {
-        unmoveAnnotation(annotation);
     }
 
     /**
