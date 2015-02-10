@@ -388,28 +388,31 @@ public class ImportDialog extends ModalDialog {
                                 @Override
                                 public Void call() throws Exception {
                                     
-                                    SimpleWorker worker = new SimpleWorker() {
-                                        
-                                        @Override
-                                        protected void doStuff() throws Exception {
-                                            ModelMgr.getModelMgr().refreshChildren(rootedEntity.getEntity());
-                                        }
-                                        
-                                        @Override
-                                        protected void hadSuccess() {
-                                            RootedEntity importFolder = rootedEntity.getChildByName(importFolderName);
-                                            if (importFolder!=null) {
-                                                SessionMgr.getBrowser().getEntityOutline().expandByUniqueId(importFolder.getUniqueId());
-                                            }
-                                        }
-                                        
-                                        @Override
-                                        protected void hadError(Throwable error) {
-                                            SessionMgr.getSessionMgr().handleException(error);
-                                        }
-                                    };
+                                    if (rootedEntity!=null) {
                                     
-                                    worker.execute();
+                                        SimpleWorker worker = new SimpleWorker() {
+                                            
+                                            @Override
+                                            protected void doStuff() throws Exception {
+                                                ModelMgr.getModelMgr().refreshChildren(rootedEntity.getEntity());
+                                            }
+                                            
+                                            @Override
+                                            protected void hadSuccess() {
+                                                RootedEntity importFolder = rootedEntity.getChildByName(importFolderName);
+                                                if (importFolder!=null) {
+                                                    SessionMgr.getBrowser().getEntityOutline().expandByUniqueId(importFolder.getUniqueId());
+                                                }
+                                            }
+                                            
+                                            @Override
+                                            protected void hadError(Throwable error) {
+                                                SessionMgr.getSessionMgr().handleException(error);
+                                            }
+                                        };
+                                        
+                                        worker.execute();
+                                    }
                                     
                                     return null;
                                 }
